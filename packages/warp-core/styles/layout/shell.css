@@ -53,7 +53,7 @@
 }
 :where([data-scope="shell"] [data-part="brand"] svg) { inline-size: 22px; block-size: 22px; flex: none; }
 :where([data-scope="shell"] [data-part="header"] [data-part="title"]) {
-  flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap;
   font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size);
   font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking);
 }
@@ -74,7 +74,7 @@
 }
 :where([data-scope="shell"] [data-part="command"] > svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); flex: none; color: var(--warp-color-accent-text); }
 :where([data-scope="shell"] [data-part="command-label"], [data-scope="shell"] [data-part="command-hint"], [data-scope="shell"] [data-part="command"] kbd) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 /* -- nav: bottom bar by default ---------------------------------------- */
 :where([data-scope="shell"] [data-part="nav"]) {
@@ -105,7 +105,7 @@
   transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
 }
 :where([data-scope="shell"] [data-part="nav-item"] > [data-part="icon"] svg) { inline-size: 18px; block-size: 18px; }
-:where([data-scope="shell"] [data-part="nav-label"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-inline-size: 100%; }
+:where([data-scope="shell"] [data-part="nav-label"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; max-inline-size: 100%; }
 :where([data-scope="shell"] [data-part="nav-item"]:hover) { color: var(--warp-color-text); }
 :where([data-scope="shell"] [data-part="nav-item"]:hover > [data-part="icon"]) { background: var(--warp-color-surface-hover); }
 :where([data-scope="shell"] [data-part="nav-item"][aria-current]) { color: var(--warp-color-text); }
@@ -121,7 +121,7 @@
 }
 /* the count's spoken half ("12 new"): a visually hidden span, never aria-label on a span (review 03 m2) */
 :where([data-scope="shell"] [data-part="nav-count-label"], [data-scope="doc-tabs"] [data-part="tab-state"]) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 /* the keyboard is up: the bottom bar steps aside so the focused field and
    its action bar own the space (shell sets data-keyboard from visualViewport) */
@@ -179,7 +179,7 @@
   }
 :where([data-scope="shell"] [data-part="command-hint"]) {
     position: static; inline-size: auto; block-size: auto; clip-path: none; flex: 1; text-align: start;
-    overflow: hidden; text-overflow: ellipsis; color: var(--warp-color-text-subtle); opacity: 0;
+    overflow: clip; text-overflow: ellipsis; color: var(--warp-color-text-subtle); opacity: 0;
     transition: opacity var(--warp-duration-fast) var(--warp-ease-out);
   }
 :where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible) [data-part="command-label"]) {
@@ -343,7 +343,7 @@
   inset-block-start: calc(var(--_barh) + 8%); inset-inline-start: 50%; translate: -50% 0;
   inline-size: min(580px, calc(100% - 2 * var(--warp-space-page)));
   background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
-  border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3); overflow: hidden;
+  border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3); overflow: clip;
   animation: warp-enter var(--warp-duration-base) var(--warp-ease-out) both;
 }
 :where([data-scope="shell"] [data-part="sheet"]) { display: none; }

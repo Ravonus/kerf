@@ -74,7 +74,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* visually hidden (live regions, labels) */
 :where([data-part="sr-only"], [data-scope="announcer"]) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 
 /* shared floating panel (menu, popover, select, hover card, context menu) */

@@ -1,7 +1,7 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.inputs-rich {
 /* -- diff */
-  :where([data-scope="diff"]) { border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: hidden; }
+  :where([data-scope="diff"]) { border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: clip; }
   :where([data-scope="diff"] [data-part="head"]) { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; background: var(--warp-color-surface-sunken); border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); font-size: var(--warp-text-caption-size); }
   :where([data-scope="diff"] .sp) { flex: 1; }
   :where(.d-add) { color: var(--warp-color-success-text, var(--warp-color-accent-text)); font-family: var(--warp-font-mono); }

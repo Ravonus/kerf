@@ -103,14 +103,14 @@ export function Agenda(p: AgendaProps) {
   use(swipePages, () => view, () => ({ track: () => track, onStep: (d: 1 | -1) => go(addDays(date.value, d)) }))
   use(longPress, () => view, () => ({ selector: '[data-part="row"][data-id]', onPress: (r: HTMLElement) => { const e = byId(r.dataset.id); if (e) open(e) } }))
   const onKey = (e: KeyboardEvent) => {
-    const r = (e.target as Element).closest<HTMLElement>('[data-part="row"][data-id]')
+    const r = (e.target as Element).closest?.<HTMLElement>('[data-part="row"][data-id]')
     if (!r) return
     const hit = byId(r.dataset.id)
     if (!hit) return
     if (e.key === 'F10' && e.shiftKey) { e.preventDefault(); open(hit) }
     else if (e.key === 'Enter') { e.preventDefault(); p.onOpen ? p.onOpen(hit) : open(hit) }
   }
-  const onClick = (e: MouseEvent) => { const hit = byId((e.target as Element).closest<HTMLElement>('[data-part="row"][data-id]')?.dataset.id); if (hit) p.onOpen?.(hit) }
+  const onClick = (e: MouseEvent) => { const hit = byId((e.target as Element).closest?.<HTMLElement>('[data-part="row"][data-id]')?.dataset.id); if (hit) p.onOpen?.(hit) }
   const onTabs = (e: KeyboardEvent) => {
     const to = ({ ArrowRight: 1, ArrowLeft: -1 } as Record<string, number>)[e.key]
     const days = week.value

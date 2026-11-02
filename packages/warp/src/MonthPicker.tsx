@@ -20,7 +20,7 @@ function PeriodGrid({ title, cells, columns, value, current, prev, next, onPage,
   const stop = derived(() => (cells.some(c => c.v === at.value) ? at.value : cells[0]!.v))
   const focus = () => { flush(); box?.querySelector<HTMLElement>('[role="gridcell"][tabindex="0"]')?.focus() }
   const onKey = (e: KeyboardEvent) => {
-    const el = (e.target as Element).closest<HTMLElement>('[data-v]')
+    const el = (e.target as Element).closest?.<HTMLElement>('[data-v]')
     if (!el) return
     const i = cells.findIndex(c => c.v === el.dataset.v)
     const d = ({ ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns } as Record<string, number>)[e.key]

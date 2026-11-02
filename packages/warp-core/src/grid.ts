@@ -306,16 +306,16 @@ export function grid(root: HTMLElement, opts: GridOptions) {
   }
   const place = (e: Event) => {
     const el = e.target as HTMLElement
-    if (el.closest('input, select, textarea, button, a, label')) return
-    const cell = el.closest<HTMLElement>('tbody td, tbody th')
+    if (el.closest?.('input, select, textarea, button, a, label')) return
+    const cell = el.closest?.<HTMLElement>('tbody td, tbody th')
     const tr = cell?.parentElement as HTMLElement | undefined
     if (!cell || !tr?.dataset.row) return
     go([rows().indexOf(tr), cells(tr).indexOf(cell)], (e as MouseEvent).shiftKey)
   }
   const onDouble = (e: MouseEvent) => {
     const el = e.target as HTMLElement
-    const cell = el.closest<HTMLElement>('tbody td, tbody th')
-    if (!cell || el.closest('input, button')) return
+    const cell = el.closest?.<HTMLElement>('tbody td, tbody th')
+    if (!cell || el.closest?.('input, button')) return
     if (cell.hasAttribute('data-editable')) o.onEdit?.(cell)
     else { const tr = cell.parentElement!, open = tr.getAttribute('aria-expanded'); if (open !== null) o.onToggle?.(tr, open !== 'true') }
   }

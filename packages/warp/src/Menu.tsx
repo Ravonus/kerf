@@ -94,8 +94,8 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         popover="manual"
         id={id}
         aria-labelledby={`${id}-b`}
-        onFocusIn={(e: FocusEvent) => { const t = (e.target as HTMLElement).closest<HTMLElement>('[role="menuitem"]'); if (t) follow(t) }}
-        onPointerMove={(e: PointerEvent) => { const t = (e.target as HTMLElement).closest<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])'); if (t && t !== document.activeElement) t.focus({ preventScroll: true }) }}
+        onFocusIn={(e: FocusEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]'); if (t) follow(t) }}
+        onPointerMove={(e: PointerEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])'); if (t && t !== document.activeElement) t.focus({ preventScroll: true }) }}
       >
         <span ref={n => (face = n)} data-part="shuttle" aria-hidden="true"></span>
         {items.map((e, i) => 'separator' in e

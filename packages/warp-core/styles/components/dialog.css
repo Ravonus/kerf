@@ -54,6 +54,19 @@
 @keyframes warp-rise { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.75); } }
 :where(dialog[data-size="sm"]) { --_w: 420px; }
 :where(dialog[data-size="lg"]) { --_w: 800px; }
+/* placement: where it sits, and it arrives from that edge. Centre is the default and has no attribute */
+:where(dialog[data-scope="dialog"][data-placement="top"]) { margin-block: var(--warp-space-page) auto; --_off: 0 calc(var(--warp-motion-distance) * -1); }
+:where(dialog[data-scope="dialog"][data-placement="bottom"]) { margin-block: auto var(--warp-space-page); --_off: 0 var(--warp-motion-distance); }
+:where(dialog[data-scope="dialog"][data-placement="left"]) { margin-inline: var(--warp-space-page) auto; --_off: calc(var(--warp-motion-distance) * -1) 0; }
+:where(dialog[data-scope="dialog"][data-placement="right"]) { margin-inline: auto var(--warp-space-page); --_off: var(--warp-motion-distance) 0; }
+:where(dialog[data-scope="dialog"][data-placement="full"]) {
+  --_off: 0 var(--warp-motion-distance);
+  inline-size: 100%; block-size: 100dvh; max-block-size: none; margin: 0; border: 0; border-radius: 0;
+}
+:where(dialog[data-scope="dialog"][data-placement]:not([open])) { translate: var(--_off); }
+@starting-style {
+  :where(dialog[data-scope="dialog"][data-placement][open]) { translate: var(--_off); }
+}
 /* backdrop: scrim + the dial's blur (12 · 6 · 0) */
 :where(dialog[data-scope="dialog"], dialog[data-scope="sheet"], dialog[data-scope="palette"])::backdrop {
   background: transparent; backdrop-filter: blur(0px);
@@ -122,6 +135,15 @@
   :where(dialog[data-scope="dialog"] [data-part="footer"] > [data-scope="button"], dialog[data-scope="sheet"] [data-part="footer"] > [data-scope="button"]) {
     block-size: var(--warp-control-lg);
   }
+}
+
+/* presentation="inline": the dialog drawn open in the page's flow, for docs and previews. A non-modal <dialog open>:
+   no top layer, scrim, focus trap or scroll lock. It takes its size's width, up to its box's, and never moves.
+   The four inline rules (dialog, sheet, popover, tooltip) weigh one attribute, outside :where(): a site that splits CSS
+   per component can load the shared floating-panel and placement rules after them, and order must not undo them */
+:where(dialog[data-scope="dialog"])[data-presentation="inline"] {
+  position: relative; inset: auto; z-index: auto; margin: 0; inline-size: min(var(--_w), 100%); block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; scale: none; transition: none;
 }
 
 /* -- Modal backdrop as a part (for non-<dialog> hosts such as the frames) ---------- */

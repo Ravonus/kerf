@@ -93,13 +93,26 @@ export function table(root: HTMLElement, opts: TableOptions) {
     for (const c of cells) c.style.setProperty('--_pin-x', `${w}px`)
   }
   const value = (handle: Element) => handle.setAttribute('aria-valuenow', String((handle.closest('th') as HTMLElement).offsetWidth))
-  const sync = () => { pin(); for (const h of root.querySelectorAll('[data-part="resize"]')) value(h) }
+  // A table wider than its box scrolls, and an overlay scrollbar shows nothing until it moves: data-overflow="start end"
+  // says which sides have more, for the edge shadows, and --_vt/--_vh place them over the viewport (the root is their box).
+  const edges = () => {
+    const v = viewport()
+    if (!v) return
+    const x = Math.abs(v.scrollLeft) // negative in rtl
+    const parts = []
+    if (x > 1) parts.push('start')
+    if (x + v.clientWidth < v.scrollWidth - 1) parts.push('end')
+    const next = parts.join(' ')
+    if ((root.dataset.overflow ?? '') !== next) { if (next) root.dataset.overflow = next; else delete root.dataset.overflow }
+    if (next) { root.style.setProperty('--_vt', `${v.offsetTop}px`); root.style.setProperty('--_vh', `${v.offsetHeight}px`) }
+  }
+  const sync = () => { pin(); for (const h of root.querySelectorAll('[data-part="resize"]')) value(h); edges() }
   const size = (handle: Element, w: number) => {
     const clamped = Math.min(COL_MAX, Math.max(COL_MIN, w))
     ;(handle.closest('th') as HTMLElement).style.minWidth = `${clamped}px`
     handle.setAttribute('aria-valuenow', String(Math.round(clamped)))
   }
-  const onScroll = (e: Event) => root.toggleAttribute('data-scrolled', (e.currentTarget as HTMLElement).scrollLeft !== 0)
+  const onScroll = (e: Event) => { root.toggleAttribute('data-scrolled', (e.currentTarget as HTMLElement).scrollLeft !== 0); edges() }
   const onKey = (e: KeyboardEvent) => {
     const handle = (e.target as Element).closest?.('[data-part="resize"]')
     if (!handle || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return
@@ -133,6 +146,9 @@ export function table(root: HTMLElement, opts: TableOptions) {
   root.addEventListener('pointerdown', onDown)
   const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { o.onWidth?.(root.clientWidth); sync() }) : undefined
   sizes?.observe(root)
+  // the rows can widen the table without the root changing size
+  const inner = root.querySelector<HTMLElement>('[data-part="viewport"] > table')
+  if (inner) sizes?.observe(inner)
   hide(opts.hidden)
   sync()
   return {

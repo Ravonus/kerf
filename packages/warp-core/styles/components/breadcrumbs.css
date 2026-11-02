@@ -9,11 +9,11 @@
 }
 :where([data-scope="breadcrumbs"] a, [data-scope="breadcrumbs"] [data-part="ellipsis"]) {
   display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min); padding-inline: 4px; border-radius: var(--warp-radius-mark);
-  color: var(--warp-color-text-subtle); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-inline-size: 18ch;
+  color: var(--warp-color-text-subtle); text-decoration: none; white-space: nowrap; overflow: clip; text-overflow: ellipsis; max-inline-size: 18ch;
   transition: color var(--warp-duration-fast);
 }
 :where([data-scope="breadcrumbs"] a:hover) { color: var(--warp-color-text); text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
-:where([data-scope="breadcrumbs"] [aria-current="page"]) { color: var(--warp-color-text); font-weight: 500; padding-inline: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="breadcrumbs"] [aria-current="page"]) { color: var(--warp-color-text); font-weight: 500; padding-inline: 4px; white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="breadcrumbs"] [data-part="ellipsis"]) { border: 0; background: transparent; cursor: pointer; font: inherit; letter-spacing: 0.1em; }
 :where([data-scope="breadcrumbs"] [data-part="back"]) { display: none; }
 :where([data-scope="breadcrumbs"]) { container: crumbs / inline-size; min-inline-size: 0; }

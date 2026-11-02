@@ -74,3 +74,37 @@ export function overflow(list: HTMLElement) {
     },
   }
 }
+
+/**
+ * A box whose child scrolls sideways (a board, a timeline) and an overlay scrollbar that shows nothing until it moves:
+ * data-overflow="start end" on `host` (the scroller's parent by default, a `[data-scope="edges"]`) says which sides have
+ * more, and the host draws an edge shadow there, as a wide table does. It follows the scroll, the box's size and its
+ * content growing (a column added) while the box stays put.
+ */
+export function edges(scroller: HTMLElement, host: HTMLElement | undefined = scroller.parentElement ?? scroller) {
+  const at = host ?? scroller
+  const write = () => {
+    const x = Math.abs(scroller.scrollLeft) // negative in rtl
+    const parts = []
+    if (x > 1) parts.push('start')
+    if (x + scroller.clientWidth < scroller.scrollWidth - 1) parts.push('end')
+    const next = parts.join(' ')
+    if ((at.dataset.overflow ?? '') !== next) { if (next) at.dataset.overflow = next; else delete at.dataset.overflow }
+  }
+  const win = scroller.ownerDocument.defaultView!
+  const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(write) : null
+  const watchKids = () => { if (!sizes) return; sizes.disconnect(); sizes.observe(scroller); for (const c of scroller.children) sizes.observe(c) }
+  const kids = sizes && typeof win.MutationObserver === 'function' ? new win.MutationObserver(watchKids) : null
+  kids?.observe(scroller, { childList: true })
+  watchKids()
+  scroller.addEventListener('scroll', write, { passive: true })
+  write()
+  return {
+    update() { write() },
+    destroy() {
+      sizes?.disconnect()
+      kids?.disconnect()
+      scroller.removeEventListener('scroll', write)
+    },
+  }
+}

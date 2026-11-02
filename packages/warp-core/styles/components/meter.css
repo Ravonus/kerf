@@ -4,7 +4,7 @@
 :where([data-scope="meter"]) { display: grid; gap: 6px; }
 :where([data-scope="meter"] [data-part="label-row"]) { display: flex; justify-content: space-between; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="meter"] [data-part="label-row"] > :first-child) { color: var(--warp-color-text); font-weight: 500; }
-:where([data-scope="meter"] [data-part="track"]) { position: relative; block-size: 8px; border-radius: var(--warp-radius-round); background: var(--warp-color-surface-active); overflow: hidden; }
+:where([data-scope="meter"] [data-part="track"]) { position: relative; block-size: 8px; border-radius: var(--warp-radius-round); background: var(--warp-color-surface-active); overflow: clip; }
 :where([data-scope="meter"] [data-part="range"]) {
   position: absolute; inset: 0; border-radius: inherit; background: var(--_solid);
   clip-path: inset(0 calc(100% - var(--_v, 0) * 100%) 0 0 round var(--warp-radius-round));

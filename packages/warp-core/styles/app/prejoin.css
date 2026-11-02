@@ -7,7 +7,7 @@
 :where([data-scope="prejoin"] > [data-part="layout"]) { grid-template-columns: 1.3fr 1fr; align-items: center; }
 }
 :where([data-scope="prejoin"] [data-part="stack"]) { display: grid; gap: var(--warp-space-group); align-content: start; min-inline-size: 0; }
-:where([data-scope="prejoin"] [data-part="preview"]) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--warp-radius-surface); overflow: hidden; }
+:where([data-scope="prejoin"] [data-part="preview"]) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--warp-radius-surface); overflow: clip; }
 :where([data-scope="prejoin"] [data-part="preview"] [data-scope="tile"]) { block-size: 100%; }
 :where([data-scope="prejoin"] [data-part="preview-controls"]) { position: absolute; inset-inline: 0; inset-block-end: 10px; z-index: 4; display: flex; justify-content: center; gap: 8px; }
 :where([data-scope="prejoin"] [data-part="meter"]) { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; block-size: 6px; }

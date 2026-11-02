@@ -54,9 +54,9 @@ export function Fix() {
       <ol data-part="steps">
         {STEPS.map((title, n) => (
           <li key={title}>
-            <button type="button" aria-current={step.value === n ? 'step' : undefined} onClick={() => go(n)}>
+            <Button emphasis="ghost" tone="neutral" aria-current={step.value === n ? 'step' : undefined} onClick={() => go(n)}>
               <span>{n + 1}</span>{title}
-            </button>
+            </Button>
           </li>
         ))}
       </ol>

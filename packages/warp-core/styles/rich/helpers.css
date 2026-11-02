@@ -13,7 +13,7 @@
   :root[data-pointer="coarse"] .seg i { block-size: max(26px, calc(var(--warp-hit-min) - 4px)); }
   :where(.row) { display: flex; flex-wrap: wrap; gap: var(--warp-space-related); align-items: center; }
   :where(.addr-foot) { margin: 0; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
-  :where(.sr) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  :where(.sr) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
   :where(.chips) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   :where(.dt-cap) { margin: 0 0 6px; font: 500 10px/1.2 var(--warp-font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
   :where(.readout span) { white-space: nowrap; }

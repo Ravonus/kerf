@@ -68,8 +68,9 @@ Discrete choices (font pairing, caps, the spring) snap to the nearest stop.
 | Source | the clean look, `old@main:theme/tokens.css:34-40` | a deliberate blend | the field look, `old:theme/tokens.css:29-33` |
 | Body / display | Inter / Inter 600 | Inter / Space Grotesk 500 | Space Grotesk / Instrument Serif 400 |
 | Eyebrow, badge | Inter 500, sentence case | IBM Plex Mono caps, +0.08em | Plex Mono caps, +0.14em |
-| Buttons | Inter 500, sentence case | Inter 500, sentence case | Plex Mono 600 caps, +0.1em (`old:theme/tokens.css:240-243`) |
-| Radius control / surface | 8 / 12px | 5 / 7px | 2 / 2px; chips and switches go square too |
+| Buttons | Inter 500, sentence case; primary in neutral ink | Inter 500, sentence case; primary in accent | Plex Mono 600 caps, +0.1em (`old:theme/tokens.css:240-243`); primary in accent, two-colour fill, hard offset |
+| Surfaces | shadow only, no hairline | hairline | hairline |
+| Radius control / surface | 10 / 14px | 4 / 5px | 2 / 2px; chips and switches go square too |
 | Emphasis line | 1px | 1.5px | 2px |
 | Neutral temperature | slate, hue 255, C 0.011 | graphite, hue 80, C 0.005 | paper and ink, hue 85, C 0.012 |
 | Accent / status chroma | × 0.8 / × 0.85 | × 1 / × 1 | × 1.2 / × 1.1 (capped at sRGB) |

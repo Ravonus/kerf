@@ -7,7 +7,7 @@
 }
 :where([data-scope="inbox"][data-variant="popover"]) {
   inline-size: min(400px, 100%); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3), 0 0 0 1px var(--warp-color-border);
-  overflow: hidden;
+  overflow: clip;
 }
 :where([data-scope="inbox"] [data-part="header"]) { display: flex; align-items: center; gap: var(--warp-space-related); padding: 14px var(--warp-space-group) 6px; }
 :where([data-scope="inbox"] [data-part="header"] h3) { flex: 1; margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.2 var(--warp-text-heading-font); }

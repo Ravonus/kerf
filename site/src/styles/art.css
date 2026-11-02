@@ -1,0 +1,65 @@
+/* The canvas gallery. warp draws the pieces; this hangs them. */
+[data-art="gallery"] [data-art="jump"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight) var(--warp-space-group); margin-block-end: var(--warp-space-group); font-size: 0.9375rem; }
+[data-art="gallery"] [data-art="bar"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related) var(--warp-space-group); }
+[data-art="room"] { margin-block-start: var(--warp-space-section); scroll-margin-block-start: 5rem; }
+[data-art="room"] > h2 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.25rem); letter-spacing: -0.02em; }
+[data-art="room"] > p { max-inline-size: 65ch; margin-block: var(--warp-space-related) var(--warp-space-group); font-size: 1.0625rem; line-height: 1.6; }
+[data-art="wall"] { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--warp-space-section) var(--warp-space-group); }
+[data-art="piece"] { display: flex; flex-direction: column; gap: var(--warp-space-related); min-inline-size: 0; scroll-margin-block-start: 5rem; }
+[data-art="piece"][data-wide] { grid-column: 1 / -1; }
+[data-art="piece"] > h3 { margin: var(--warp-space-tight) 0 0; font-size: 1.125rem; }
+[data-art="piece"] > p { margin: 0; max-inline-size: 60ch; line-height: 1.5; color: var(--warp-color-text-subtle); }
+[data-art="piece"] > details > summary { cursor: pointer; font-size: 0.875rem; color: var(--warp-color-text-subtle); }
+[data-art="piece"] > details pre { max-block-size: 28rem; overflow: auto; }
+
+/* a piece fills its frame; the frame is the ground it was drawn on */
+[data-art="frame"] {
+  position: relative; overflow: hidden; aspect-ratio: 8 / 5; box-sizing: border-box;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
+  background: var(--warp-color-page); color: var(--warp-color-text);
+}
+[data-art="piece"][data-wide] [data-art="frame"] { aspect-ratio: 5 / 2; }
+[id="ramp-wall"] [data-art="frame"] { aspect-ratio: 2 / 1; }
+@media (max-width: 640px) { [data-art="piece"][data-wide] [data-art="frame"] { aspect-ratio: 8 / 5; } }
+[data-art="frame"] > [data-scope="canvas"], [data-art="frame"] > [data-scope="dither"] { position: absolute; inset: 0; block-size: 100%; }
+[data-art="frame"] [data-art="pierce"] { position: absolute; inset: 0; }
+
+/* what a pointer found, set in the corner of the piece */
+[data-art="readout"] {
+  position: absolute; inset-block-end: var(--warp-space-related); inset-inline-start: var(--warp-space-related);
+  padding: 2px 6px; background: color-mix(in oklab, var(--warp-color-surface) 88%, transparent);
+  font-family: var(--warp-font-mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--warp-color-text);
+  pointer-events: none;
+}
+[data-art="readout"]:empty { display: none; }
+/* controls that belong to a piece, in its top corner */
+[data-art="controls"] {
+  position: absolute; inset-block-start: var(--warp-space-related); inset-inline-start: var(--warp-space-related); inset-inline-end: var(--warp-space-related);
+  display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); justify-content: space-between; pointer-events: none;
+}
+[data-art="controls"] > * { pointer-events: auto; }
+/* the table each data piece carries for screen readers */
+[data-art="table"] { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Darkroom: the real picture under the print, and a divider between them */
+[data-art-darkroom] { touch-action: pan-y; cursor: ew-resize; background: var(--warp-color-page); }
+[data-art-darkroom] > img { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover; }
+[data-art-darkroom] > [data-part="print"] { position: absolute; inset: 0; background: var(--warp-color-page); clip-path: inset(0 0 0 var(--split)); }
+[data-art-darkroom] > [data-part="divider"] { position: absolute; inset-block: 0; inset-inline-start: var(--split); inline-size: 2px; margin-inline-start: -1px; background: var(--warp-color-sweep); }
+
+/* Ramp Wall: plates, flush, like a colour test in the margin of a print */
+[data-art-wall] { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(7, 1fr); gap: 1px; background: var(--warp-color-border); }
+[data-art-wall] > button { position: relative; padding: 0; border: 0; background: var(--warp-color-page); cursor: copy; }
+[data-art-wall] > button:focus-visible { outline: 2px solid var(--warp-color-focus); outline-offset: -2px; }
+
+[data-art="controls"][data-art-end] { justify-content: flex-end; }
+[data-art-seed] { inline-size: min(220px, 50%); }
+
+/* The gallery has the page to itself: two columns, and a lone piece takes the row. */
+[data-site="docs"]:has(> [data-art="gallery"]) { grid-template-columns: minmax(0, 1fr); }
+[data-site="doc"][data-art="gallery"] { max-inline-size: 1320px; }
+[data-art="gallery"] [data-art="wall"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-art="piece"]:nth-child(odd):last-child { grid-column: 1 / -1; }
+[data-art="piece"]:nth-child(odd):last-child [data-art="frame"] { aspect-ratio: 5 / 2; }
+[data-art="room"] > h2 { font: 600 calc(1.75 * var(--warp-rem))/1.2 var(--doc-sans); }
+@media (max-width: 719.98px) { [data-art="gallery"] [data-art="wall"] { grid-template-columns: minmax(0, 1fr); } }

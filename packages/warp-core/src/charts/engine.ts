@@ -4,7 +4,8 @@
 // and patch attributes in place. The legend, the chart | table toggle and the enter motion are delegated from the
 // figure, so a binding only has to render the markup.
 import { esc, patch, play } from './scene'
-import { sparkScene } from './spark'
+import { f1 } from './math'
+import { sparkPoints, sparkScene } from './spark'
 import type { Ctx, Form, Plot, TableData, Tip } from './types'
 
 /** The width a chart lays out at when nothing can be measured (the server's first pass). */
@@ -150,10 +151,10 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
   const up = () => { touch = false }
   const leave = (e: PointerEvent) => { if (e.pointerType === 'mouse' && !svg.contains(document.activeElement)) hide() }
   const outside = (e: Event) => { if (!fig.contains(e.target as Node)) hide() }
-  const focusIn = (e: Event) => { const m = (e.target as Element).closest('[data-mark]'); if (m) show(m, true) }
+  const focusIn = (e: Event) => { const m = (e.target as Element).closest?.('[data-mark]'); if (m) show(m, true) }
   const focusOut = (e: FocusEvent) => { if (!svg.contains(e.relatedTarget as Node)) hide() }
   function key(e: KeyboardEvent) {
-    const m = (e.target as Element).closest('[data-mark]')
+    const m = (e.target as Element).closest?.('[data-mark]')
     if (!m) return
     const x = xi(m), y = si(m), find = (fx: number, fs: number) => marks.find(n => xi(n) === fx && si(n) === fs)
     const xs = [...new Set(marks.map(xi))], ys = [...new Set(marks.map(si))], px = xs.indexOf(x), py = ys.indexOf(y), i = marks.indexOf(m)
@@ -175,7 +176,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     for (const g of fig.querySelectorAll('[data-series]')) g.toggleAttribute('data-series-active', g.getAttribute('data-series') === String(index))
   }
   function click(e: Event) {
-    const b = (e.target as Element).closest('button')
+    const b = (e.target as Element).closest?.('button')
     if (!b) return
     if (b.closest('[data-part="view-toggle"]')) {
       fig.dataset.view = b.dataset.view
@@ -190,12 +191,12 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     }
   }
   function over(e: Event) {
-    const b = (e.target as Element).closest('[data-scope="legend"] button') as HTMLElement | null
+    const b = (e.target as Element).closest?.('[data-scope="legend"] button') as HTMLElement | null
     if (!b) return
     if (form.byMark) { const m = svg.querySelector(`[data-mark][data-xi="${b.dataset.si}"]`); if (m) show(m) } else isolate(Number(b.dataset.si))
   }
   function out(e: Event) {
-    if (!(e.target as Element).closest('[data-scope="legend"] button')) return
+    if (!(e.target as Element).closest?.('[data-scope="legend"] button')) return
     if (form.byMark) hide(); else isolate(null)
   }
 
@@ -270,16 +271,53 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
 }
 
 
+/** What a sparkline takes: its values, or its values and the formatter its headline uses (the hover says it the same way). */
+export type SparkInput = number[] | { values: number[]; format?: (value: number) => string }
+const sparkOf = (input: SparkInput) => (Array.isArray(input) ? { values: input, format: undefined } : input)
+
 /** A sparkline's width follows its box; everything else is the parent's label (06 §12: aria-hidden). */
-export function spark(el: SVGSVGElement, values: number[]) {
-  let list = values
+export function spark(el: SVGSVGElement, input: SparkInput) {
+  let list = sparkOf(input).values
+  let format = sparkOf(input).format
+  let home: [string | null, string | null] | undefined // where the dot rests, while a hover has it
   const draw = () => {
     const w = Math.round(el.clientWidth)
     if (!w) return
     el.setAttribute('viewBox', `0 0 ${w} 36`)
     patch(el, sparkScene(list, w))
+    home = undefined
   }
   const size = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(draw)
   size?.observe(el)
-  return { update(v: number[]) { list = v; draw() }, destroy() { size?.disconnect() } }
+  // hover walks the end dot along the line and says the value there; the parent's label stays the meaning
+  const note = el.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'text')
+  note.setAttribute('font-size', '11')
+  note.setAttribute('fill', 'currentColor')
+  const hover = (e: PointerEvent) => {
+    const r = el.getBoundingClientRect(), dot = el.querySelector('.dot')
+    if (!dot || !r.width || !list.length) return
+    const pts = sparkPoints(list, r.width), x = e.clientX - r.left
+    const i = pts.reduce((best, p, n) => (Math.abs(p[0] - x) < Math.abs(pts[best][0] - x) ? n : best), 0)
+    home ??= [dot.getAttribute('cx'), dot.getAttribute('cy')]
+    dot.setAttribute('cx', f1(pts[i][0]))
+    dot.setAttribute('cy', f1(pts[i][1]))
+    const left = pts[i][0] < r.width / 2
+    note.textContent = format ? format(list[i]) : String(list[i])
+    note.setAttribute('text-anchor', left ? 'start' : 'end')
+    note.setAttribute('x', f1(pts[i][0] + (left ? 6 : -6)))
+    note.setAttribute('y', f1(Math.max(10, pts[i][1] - 6)))
+    el.append(note)
+  }
+  const rest = () => {
+    note.remove()
+    const dot = el.querySelector('.dot')
+    if (dot && home) { dot.setAttribute('cx', home[0]!); dot.setAttribute('cy', home[1]!) }
+    home = undefined
+  }
+  el.addEventListener('pointermove', hover)
+  el.addEventListener('pointerleave', rest)
+  return {
+    update(v: SparkInput) { ({ values: list, format } = sparkOf(v)); draw() },
+    destroy() { size?.disconnect(); el.removeEventListener('pointermove', hover); el.removeEventListener('pointerleave', rest) },
+  }
 }

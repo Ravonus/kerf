@@ -5,7 +5,7 @@
    ======================================================================== */
 /* password strength: 4 segments + a caps word; segments fill L→R like the sweep */
 :where([data-scope="strength"]) { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 4px; align-items: center; font-size: var(--warp-text-caption-size); padding-inline: 2px; }
-:where([data-scope="strength"] i) { position: relative; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: hidden; }
+:where([data-scope="strength"] i) { position: relative; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: clip; }
 :where([data-scope="strength"] i)::after { content: ""; position: absolute; inset: 0; background: var(--_t, var(--warp-color-sweep)); clip-path: inset(0 100% 0 0); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease); }
 :where([data-scope="strength"] b) { font: 600 10px/1 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; min-inline-size: 7ch; text-align: end; color: var(--warp-color-text-subtle); }
 :where([data-scope="strength"][data-score="1"]) { --_t: var(--warp-color-critical-solid); }
@@ -95,7 +95,7 @@
 }
 :where([data-scope="editable"] [data-part="preview"] > svg) { position: relative; z-index: 3; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); opacity: 0; transition: opacity var(--warp-duration-fast); }
 :where([data-scope="editable"] [data-part="preview"]:is(:hover, :focus-visible) > svg) { opacity: 1; color: var(--warp-color-sweep); }
-:where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="editable"] [data-part="editor"]) { display: flex; gap: 4px; flex: 1; align-items: center; min-inline-size: 0; }
 :where([data-scope="editable"][data-editing] [data-part="preview"], [data-scope="editable"]:not([data-editing]) [data-part="editor"]) { display: none; }
 :where([data-scope="editable"] [data-part="editor"] > [data-scope="field"]) { flex: 1; }

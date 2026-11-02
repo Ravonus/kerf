@@ -9,6 +9,11 @@
 /* inside an open modal it is a popover (toaster()): undo the UA's popover box */
 :where([data-scope="toast"][data-part="region"]:popover-open) { inset-block-start: auto; inset-inline-start: auto; overflow: visible; border: 0; background: none; color: inherit; }
 :where([data-scope="toast"][data-part="region"][data-moving] [data-part="root"]) { transition: none; }
+/* position: bottom-right is the default and has no attribute. Top corners stack downward (toaster() flips the offset) */
+:where([data-scope="toast"][data-part="region"][data-position^="top"]) { inset-block: calc(var(--warp-space-page) + env(safe-area-inset-top, 0px)) auto; }
+:where([data-scope="toast"][data-part="region"][data-position$="left"]) { inset-inline: var(--warp-space-page) auto; }
+:where([data-scope="toast"][data-part="region"][data-position$="center"]) { inset-inline: 0; margin-inline: auto; }
+:where([data-scope="toast"][data-part="region"][data-position^="top"] [data-part="root"]) { inset-block: 0 auto; transform-origin: 50% 0%; }
 @media (max-width: 599.98px) {
   :where([data-scope="toast"][data-part="region"]) { inset-inline: 8px; inline-size: auto; inset-block-end: calc(8px + env(safe-area-inset-bottom, 0px)); }
 }
@@ -27,6 +32,9 @@
 }
 @starting-style {
   :where([data-scope="toast"][data-part="root"]) { translate: 0 calc(100% + var(--warp-space-page)); opacity: 0; scale: 1; }
+}
+@starting-style {
+  :where([data-scope="toast"][data-part="region"][data-position^="top"] [data-part="root"]) { translate: 0 calc(-100% - var(--warp-space-page)); }
 }
 :where([data-scope="toast"][data-part="root"][data-swiping]) { transition: none; }
 :where([data-scope="toast"][data-part="root"][data-state="closed"]) {

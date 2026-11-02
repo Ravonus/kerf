@@ -128,7 +128,7 @@ test('inks and tier numbers are read at the element, through the cascade', () =>
   const el = document.createElement('div')
   el.className = 'q'
   document.body.append(el)
-  expect(tier(el)).toEqual({ inks: 2, speed: 0, reach: 0, gain: 0.55 })
+  expect(tier(el)).toEqual({ inks: 3, speed: 0, reach: 0, gain: 0.75 })
   el.className = 'o'
   expect(tier(el).inks).toBe(9) // an override wins
   expect(tier(el).speed).toBe(1)
@@ -193,6 +193,47 @@ describe('surface', () => {
     tick(16); tick(32)
     expect(draws).toBe(1)
     s.destroy()
+  })
+
+  test('quiet holds an animated surface still, and the frame says so', async () => {
+    const seen: boolean[] = []
+    box.style.setProperty('--warp-x', '0')
+    const s = surface(canvas, { draw: f => void seen.push(f.still), animate: true })
+    tick(16); tick(32)
+    expect(seen).toEqual([true])
+    box.style.setProperty('--warp-x', '1')
+    box.setAttribute('data-expression', 'vivid')
+    await Promise.resolve()
+    tick(48); tick(64)
+    expect(seen.slice(1)).toEqual([false, false])
+    expect(frames).toHaveLength(1)
+    s.destroy()
+  })
+
+  test('the pointer reaches the frame through the document, in cells, and wakes a settled surface', () => {
+    const seen: { x: number; y: number; down: boolean; in: boolean }[] = []
+    vi.spyOn(box, 'getBoundingClientRect').mockReturnValue({ left: 10, top: 20, width: 300, height: 150 } as DOMRect)
+    vi.stubGlobal('devicePixelRatio', 1)
+    const s = surface(canvas, { draw: f => void seen.push({ ...f.pointer }), pointer: true, cell: 2 })
+    tick()
+    expect(seen).toEqual([{ x: 0, y: 0, down: false, in: false }])
+    const send = (type: string, clientX: number, clientY: number) => document.dispatchEvent(new MouseEvent(type, { clientX, clientY }))
+    send('pointermove', 110, 120)
+    tick()
+    expect(seen[1]).toEqual({ x: 50, y: 50, down: false, in: true })
+    send('pointerdown', 110, 120)
+    tick()
+    expect(seen[2].down).toBe(true)
+    send('pointerup', 900, 900)
+    tick()
+    expect(seen[3]).toMatchObject({ down: false, in: false })
+    send('pointermove', 900, 900) // already outside: nothing to paint
+    tick()
+    expect(seen).toHaveLength(4)
+    s.destroy()
+    send('pointermove', 110, 120)
+    tick()
+    expect(seen).toHaveLength(4)
   })
 
   test('a hidden tab stops the loop, and coming back resumes without a jump in time', () => {

@@ -27,14 +27,14 @@ export const toast = {
  * root. While a modal is open they move into it, or it would make them inert. Newest first; three stack, collapsed, and fan out on hover or focus (which pauses every timer); swipe or
  * Dismiss removes one; F8 focuses the newest.
  */
-export function Toaster() {
+export function Toaster({ position }: { /** Which corner or edge. Bottom right by default. */ position?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' } = {}) {
   const list = state<Toast[]>(toasts().get())
   onCleanup(toasts().subscribe(v => (list.value = v)))
   let region: HTMLElement | undefined
   use(toaster, () => region, () => toasts())
   return (
     <>
-      <section ref={n => (region = n)} data-scope="toast" data-part="region" aria-label="Notifications (F8)" tabindex="-1">
+      <section ref={(n: any) => (region = n)} data-scope="toast" data-part="region" data-position={position === 'bottom-right' ? undefined : position} aria-label="Notifications (F8)" tabindex="-1">
         {list.value.map(t => (
           <div key={t.id} data-scope="toast" data-part="root" data-id={t.id} data-tone={t.tone ?? 'neutral'} data-state={t.state} role="group" aria-label={t.title}>
             {t.loading ? <span data-scope="spinner" data-part="icon" aria-hidden="true"></span> : <Icon name={toneIcon[t.tone ?? 'neutral']} data-part="icon" />}

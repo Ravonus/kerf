@@ -4,12 +4,13 @@ import { derived, flush, onCleanup, state, untrack, watch } from '@weft-js/core'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldShell } from './Field'
-import { use } from '@weft-js/warp-core/weft'
-import '@weft-js/warp-core/styles/rich/body.css'
-import '@weft-js/warp-core/styles/rich/rich-text.css'
-import '@weft-js/warp-core/styles/rich/listbox.css'
-import '@weft-js/warp-core/styles/rich/popover.css'
-import '@weft-js/warp-core/styles/rich/helpers.css'
+import { Tooltip } from './Tooltip'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/rich/body.css'
+import '@weft/warp-core/styles/rich/rich-text.css'
+import '@weft/warp-core/styles/rich/listbox.css'
+import '@weft/warp-core/styles/rich/popover.css'
+import '@weft/warp-core/styles/rich/helpers.css'
 
 /** An entry in the editor's slash menu. */
 export type SlashCommand = { id: string; label: string; hint?: string; shortcut?: string; run: (editor: RichTextHandle) => void }
@@ -156,7 +157,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
     else if (e.key === 'Escape') { e.preventDefault(); close() }
   }
   const Tool = ({ tool: t }: { tool: Tool }) => (
-    <button type="button" data-part="tool" tabindex={flat.value[stop.value] === t ? '0' : '-1'} aria-label={t.label} aria-pressed={pressed.get(t.cmd) ? 'true' : 'false'} title={t.tip} style={t.style} onClick={() => (t.cmd === 'link' ? (handle!.save(), startLink()) : handle!.run(t.cmd))}>{t.glyph()}</button>
+    <Tooltip content={t.tip}><button type="button" data-part="tool" tabindex={flat.value[stop.value] === t ? '0' : '-1'} aria-label={t.label} aria-pressed={pressed.get(t.cmd) ? 'true' : 'false'} style={t.style} onClick={() => (t.cmd === 'link' ? (handle!.save(), startLink()) : handle!.run(t.cmd))}>{t.glyph()}</button></Tooltip>
   )
   const rows = () => [minRows && `min-block-size:${minRows * 1.6}em`, maxRows && `max-block-size:${maxRows * 1.6}em`].filter(Boolean).join(';') || undefined
   return (
@@ -172,10 +173,10 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
         <div data-scope="rte">
           <div data-part="frame">
             {toolbar !== 'none' && (
-              <div ref={n => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest('[data-part="tool"]')) e.preventDefault() }}>
-                {tools.value.map((g, i) => <span key={g[0]!.cmd} style="display:contents">{i > 0 && <span data-part="sep"></span>}{g.map(t => <Tool key={t.cmd} tool={t} />)}</span>)}
+              <div ref={(n: any) => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest?.('[data-part="tool"]')) e.preventDefault() }}>
+                {tools.value.map((g, i) => <span key={g[0].cmd} style="display:contents">{i > 0 && <span data-part="sep"></span>}{g.map(t => <Tool key={t.cmd} tool={t} />)}</span>)}
                 <span data-part="sep"></span>
-                <button type="button" data-part="tool" tabindex="-1" aria-label="Undo" title="Undo · ⌘Z" onClick={() => handle!.run('undo')}><UndoIcon /></button>
+                <Tooltip content="Undo" kbd="⌘Z"><button type="button" data-part="tool" tabindex="-1" aria-label="Undo" onClick={() => handle!.run('undo')}><UndoIcon /></button></Tooltip>
               </div>
             )}
             {linking.value && (

@@ -10,7 +10,7 @@ import { CartDrawer } from '../src/admin/Cart'
 import { Checkout, type PlaceOrderResult, type OrderDraft } from '../src/admin/Checkout'
 import { CsvImport } from '../src/admin/CsvImport'
 import { TypeToConfirm } from '../src/admin/Danger'
-import { IntegrationsGrid, Webhooks, type Integration } from '../src/admin/Integrations'
+import { IntegrationsGrid, Webhooks, urlBreaks, type Integration } from '../src/admin/Integrations'
 import { MembersTable, RolesMatrix, type Member } from '../src/admin/Members'
 import { PlanPicker, UsageMeter } from '../src/admin/Plans'
 import { SaveBar } from '../src/admin/SaveBar'
@@ -31,6 +31,11 @@ beforeAll(() => {
   (HTMLDialogElement.prototype as { showModal: (this: HTMLDialogElement) => void }).showModal ??= function (this: HTMLDialogElement) { this.setAttribute('open', '') }
   ;(HTMLDialogElement.prototype as unknown as { close?: unknown }).close ??= function (this: HTMLDialogElement) { this.removeAttribute('open') }
 })
+
+const pick = (trigger: HTMLElement, label: string) => {
+  trigger.click()
+  ;[...trigger.parentElement!.querySelectorAll<HTMLElement>('[role="option"]')].find(o => o.textContent!.startsWith(label))!.click()
+}
 
 describe('SaveBar', () => {
   const mount = (onSave: Parameters<typeof SaveBar<{ name: string }>>[0]['onSave'] = () => {}, validate?: (v: { name: string }) => Record<string, string>) => {
@@ -133,13 +138,14 @@ describe('MembersTable', () => {
     const view = render(() => <><MembersTable members={people} invites={INVITES} me="ines" roles={ROLES} seats={seats} onRoleChange={(m, role) => { log.push(['role', m.id, role]); people.value = people.value.map(x => (x.id === m.id ? { ...x, role } : x)) }} onRemove={l => { log.push(['rm', l.map(m => m.id)]); people.value = people.value.filter(x => !l.some(y => y.id === x.id)) }} onRestore={l => { log.push(['back']); people.value = [...people.value, ...l] }} onInvite={(e, r) => { log.push(['inv', e, r]) }} /><Toaster /></>)
     return { c: view.container, log, people }
   }
-  const select = (c: HTMLElement, id: string) => c.querySelector<HTMLSelectElement>(`tr[data-id="${id}"] select`)!
+  const select = (c: HTMLElement, id: string) => c.querySelector<HTMLElement>(`tr[data-id="${id}"] [role="combobox"]`)!
   test('seats count pending invites', () => {
     expect(mount().c.textContent).toContain('5 of 10 seats used')
   })
   test('a role change applies at once with Undo', async () => {
     const { c, log } = mount()
-    const s = select(c, 'tomas'); s.value = 'viewer'; fireEvent.change(s); await tick()
+    await tick()
+    pick(select(c, 'tomas'), 'Viewer'); await tick()
     expect(log).toEqual([['role', 'tomas', 'viewer']])
     expect(toasts()).toContain('Tomás Reyes is now Viewer')
     byText(document.body, 'Undo').click(); await tick()
@@ -147,15 +153,17 @@ describe('MembersTable', () => {
   })
   test('the last owner can’t be demoted, and the select says why', async () => {
     const { c, log } = mount()
+    await tick()
     const s = select(c, 'ines')
     expect(document.getElementById(s.getAttribute('aria-describedby')!)!.textContent).toMatch(/only owner/)
-    s.value = 'viewer'; fireEvent.change(s); await tick()
-    expect(s.value).toBe('owner')
+    pick(s, 'Viewer'); await tick()
+    expect(s.textContent).toBe('Owner')
     expect(log).toEqual([])
   })
   test('demoting yourself warns', async () => {
-    const { c, log } = mount(10, [PEOPLE[0]!, { ...PEOPLE[1]!, role: 'owner' }])
-    const s = select(c, 'ines'); s.value = 'member'; fireEvent.change(s); await tick()
+    const { c, log } = mount(10, [PEOPLE[0], { ...PEOPLE[1], role: 'owner' }])
+    await tick()
+    pick(select(c, 'ines'), 'Member'); await tick()
     expect(dialog().textContent).toMatch(/lose access to this page/)
     expect(log).toEqual([])
     byText(dialog(), 'Change my role').click(); await tick()
@@ -319,7 +327,7 @@ describe('AuditLog', () => {
       const rows = () => c.querySelectorAll('tbody tr[data-id]').length
       expect(rows()).toBe(3)
       expect(c.querySelector('time')!.textContent).toBe('4 min ago')
-      expect(c.querySelector('time')!.title).toBe('2026-10-28 13:58 UTC')
+      expect(c.querySelector('time')!.nextElementSibling!.textContent).toBe('2026-10-28 13:58 UTC')
       c.querySelector<HTMLInputElement>('input[value="keys"]')!.click(); await flush()
       expect(rows()).toBe(1)
       const s = field(c, 'Date range') as unknown as HTMLSelectElement
@@ -350,6 +358,15 @@ describe('Integrations', () => {
     items.value = items.value.map(i => (i.id === 'linear' ? { ...i, state: 'connected', detail: 'acme' } : i)); await tick()
     expect(toasts()).toContain('Linear connected')
     expect(document.activeElement!.querySelector('[data-part="sweep-label"]')?.textContent ?? document.activeElement!.textContent).toBe('Configure')
+  })
+  test('a webhook URL offers breaks after slashes and before dots, never inside a word', () => {
+    expect(urlBreaks('https://hooks.acme.dev/deploys/v2?team=web&x=1')).toEqual(['https://', 'hooks', '.acme', '.dev/', 'deploys/', 'v2', '?team=', 'web&', 'x=', '1'])
+    const { container: c } = render(() => <Webhooks hooks={HOOKS} events={['a.b']} onAdd={async () => 'whsec_1'} onTest={async () => ({ status: 200, ms: 1 })} />)
+    const code = c.querySelector<HTMLElement>('[data-part="url"]')!
+    expect(code.textContent).toBe(HOOKS[0].url)
+    expect(code.querySelectorAll('wbr').length).toBe(urlBreaks(HOOKS[0].url).length - 1)
+    expect(code.style.overflowWrap).toBe('break-word') // was anywhere: a URL broke mid-word
+    expect(code.style.wordBreak).toBe('normal')
   })
   test('webhooks: https checked on submit then live; the secret once; Send test reports', async () => {
     const added: unknown[] = []
@@ -390,7 +407,7 @@ describe('CsvImport', () => {
     byText(c, 'Use the sample').click(); await tick()
     expect(document.activeElement!.tagName).toBe('H3')
     expect(c.querySelector('[data-part="step-title"]')!.textContent).toBe('Map people')
-    expect([...c.querySelectorAll<HTMLSelectElement>('select')].map(s => s.value)).toEqual(['name', 'email', 'team', 'start'])
+    expect([...c.querySelectorAll('tbody [role="combobox"]')].map(s => s.textContent)).toEqual(['Full name', 'Email', 'Team', 'Start date'])
     byText(c, 'Preview').click(); await tick()
     expect(c.querySelector('[data-scope="alert"]')!.textContent).toContain('2 of 4 rows need a fix')
     expect([...c.querySelectorAll('td [data-part="error"]')].map(e => e.textContent)).toEqual(['Not a valid email', 'Use YYYY-MM-DD'])
@@ -404,8 +421,7 @@ describe('CsvImport', () => {
   test('with no column on Email, Review says so once and nothing can import', async () => {
     const { c } = mount()
     byText(c, 'Use the sample').click(); await tick()
-    const s = c.querySelectorAll<HTMLSelectElement>('select')[1]
-    s!.value = 'skip'; fireEvent.change(s!); await tick()
+    pick(c.querySelectorAll<HTMLElement>('tbody [role="combobox"]')[1], 'Don’t import'); await tick()
     byText(c, 'Preview').click(); await tick()
     expect(c.querySelector('[data-scope="alert"]')!.textContent).toContain('No column is mapped to Email')
     expect((byText(c, 'Import 0 rows') as HTMLButtonElement).disabled).toBe(true)

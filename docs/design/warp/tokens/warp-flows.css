@@ -71,7 +71,7 @@
   position: relative; flex: 1 1 24px; min-inline-size: 16px; block-size: var(--warp-flow-rail);
   border-radius: 99px; background: var(--warp-color-surface-sunken);
   box-shadow: inset 0 0 0 1px var(--warp-color-border);
-  --warp-sweep-radius: 99px; overflow: hidden;
+  --warp-sweep-radius: 99px; overflow: clip;
 }
 
 /* ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@
 @container auth (min-width: 1000px) {
   :where([data-scope="auth"] > [data-part="layout"]) { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
   :where([data-scope="auth"] [data-part="brand"]) {
-    position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: clip; display: flex; flex-direction: column; justify-content: space-between;
     padding: var(--warp-space-section); gap: var(--warp-space-group);
     background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse);
   }
@@ -170,7 +170,7 @@
 :where([data-part="mark"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: warp-weave-draw calc(480ms * var(--warp-motion-scale) + 1ms) var(--warp-sweep-ease) 160ms forwards; }
 
 /* SignGate (the original's flow / blocker / badge, rebuilt) */
-:where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--warp-radius-surface); overflow: hidden; }
+:where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--warp-radius-surface); overflow: clip; }
 :where([data-scope="gate"]:not([data-state="signed"]) > [data-part="content"]) { filter: blur(calc(2px + 4px * (1 - var(--warp-x)))); opacity: 0.5; pointer-events: none; user-select: none; }
 :where([data-scope="gate"] > [data-part="blocker"]) {
   position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: var(--warp-space-group);
@@ -443,9 +443,9 @@
 
 :where([data-scope="line-item"]) { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding-block: 10px; border-block-start: 1px solid var(--warp-color-border); }
 :where([data-scope="line-item"]:first-child) { border-block-start: 0; }
-:where([data-scope="line-item"] [data-part="thumb"]) { inline-size: 52px; block-size: 52px; border-radius: var(--warp-radius-control); border: 1px solid var(--warp-color-border); overflow: hidden; background: var(--warp-color-surface-sunken); }
+:where([data-scope="line-item"] [data-part="thumb"]) { inline-size: 52px; block-size: 52px; border-radius: var(--warp-radius-control); border: 1px solid var(--warp-color-border); overflow: clip; background: var(--warp-color-surface-sunken); }
 :where([data-scope="line-item"] [data-part="thumb"] svg) { inline-size: 100%; block-size: 100%; display: block; }
-:where([data-scope="line-item"] b) { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="line-item"] b) { display: block; font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="line-item"] small) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="line-item"] [data-part="price"]) { font-variant-numeric: tabular-nums; text-align: end; display: grid; gap: 6px; justify-items: end; }
 

@@ -2,6 +2,7 @@ import { CheckIcon } from '@weft-js/warp-icons'
 import { announce, uid, type AgentQuestion } from '@weft-js/warp-core'
 import { derived, onMount, state, untrack } from '@weft-js/core'
 import { Button } from '../Button'
+import { Checkbox, Radio } from '../Choice'
 import { Input } from '../Field'
 import '../styles'
 import '@weft-js/warp-core/styles/app/question.css'
@@ -36,9 +37,9 @@ export function Question({ question, onAnswer, quiet }: { question: AgentQuestio
           <fieldset disabled={question.closed}>
             <legend>{question.prompt}</legend>
             {options.value.map(o => (
-              <label key={o.value}>
-                <input type={type.value} name={name} checked={picks.value.includes(o.value)} onChange={e => toggle(o.value, (e.currentTarget).checked)} /> {o.label}
-              </label>
+              type.value === 'radio'
+                ? <Radio key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: any) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Radio>
+                : <Checkbox key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: any) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Checkbox>
             ))}
             {picks.value.includes(other) && <Input label="Your answer" value={free.value} onInput={e => (free.value = e.currentTarget.value)} />}
           </fieldset>

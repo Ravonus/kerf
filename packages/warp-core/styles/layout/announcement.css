@@ -11,7 +11,7 @@
    button beside it is inline, so the axes don't meet) */
 :where([data-scope="announcement"] a) { position: relative; }
 :where([data-scope="announcement"] a)::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="announcement"] [data-part="text"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+:where([data-scope="announcement"] [data-part="text"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
 :where([data-scope="announcement"] [data-part="dismiss"]) {
   position: absolute; inset-inline-end: 4px; inset-block-end: 0; display: grid; place-items: center;
   inline-size: max(36px, var(--warp-hit-min)); block-size: max(36px, var(--warp-hit-min)); border: 0; background: none; color: inherit; opacity: 0.75; cursor: pointer;

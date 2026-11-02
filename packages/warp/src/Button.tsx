@@ -1,5 +1,6 @@
-import { derived } from '@weft-js/core'
-import type { Interaction } from '@weft-js/core/interaction'
+import { derived } from 'weft'
+import type { Interaction } from 'weft/interaction'
+import { pressOrigin } from '@weft/warp-core'
 import { Icon, type IconRef } from './Icon'
 import { useUi } from './use-ui'
 import './styles'
@@ -33,13 +34,14 @@ export interface ButtonProps {
   [attr: string]: unknown
 }
 
-const swept = (e: Emphasis) => e === 'soft' || e === 'outline' || e === 'frame'
+const swept = (e: Emphasis) => e !== 'link'
 
 /**
- * A native button (05 §2), the specimen markup exactly: solid, ghost and link draw their sweep in CSS (the ::before
- * wipe); soft and outline append one [data-part="sweep"]; frame carries the six-part signature anatomy (SIGNATURE §1b).
+ * A native button (05 §2): all but link and frame append one [data-part="sweep"], and ::before paints the fill (the wipe,
+ * or at vivid the two blobs that close on where the hand arrived); frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
 export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
+  pressOrigin()
   let host: HTMLButtonElement | undefined
   useUi(() => ui, () => host)
   const canLoad = derived(() => loading !== undefined)
@@ -86,7 +88,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
         content()
       )}
       {loading && <span data-scope="spinner" data-part="spinner" aria-hidden="true"></span>}
-      {(emphasis === 'soft' || emphasis === 'outline') && <span data-part="sweep" aria-hidden="true"></span>}
+      {emphasis !== 'frame' && emphasis !== 'link' && <span data-part="sweep" aria-hidden="true"></span>}
     </button>
   )
 }

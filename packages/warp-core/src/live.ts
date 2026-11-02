@@ -479,7 +479,7 @@ export function pip(el: HTMLElement, opts: { corner?: PipCorner; onMove?(corner:
   }
   let drag: { x: number; y: number; px: number; py: number } | null = null
   const onDown = (e: PointerEvent) => {
-    if ((e.target as Element).closest('button')) return
+    if ((e.target as Element).closest?.('button')) return
     el.setPointerCapture?.(e.pointerId)
     el.setAttribute('data-dragging', '')
     const css = el.style

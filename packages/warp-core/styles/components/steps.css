@@ -12,8 +12,8 @@
 }
 :where([data-scope="steps"] [data-part="indicator"])::before { content: counter(step); }
 :where([data-scope="steps"] [data-part="indicator"] svg[data-icon]) { display: none; inline-size: 14px; block-size: 14px; stroke-width: 2; }
-:where([data-scope="steps"] [data-part="title"]) { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--warp-color-text-subtle); }
-:where([data-scope="steps"] [data-part="description"]) { grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="steps"] [data-part="title"]) { font-weight: 500; white-space: nowrap; overflow: clip; text-overflow: ellipsis; color: var(--warp-color-text-subtle); }
+:where([data-scope="steps"] [data-part="description"]) { grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="steps"] [data-part="item"])::after {
   content: ""; grid-column: 1 / -1; grid-row: 3; block-size: var(--warp-border-emphasis); margin-block-start: var(--warp-space-related);
   background: linear-gradient(to right, var(--warp-color-accent-solid) var(--_fill, 0%), var(--warp-color-border) 0);

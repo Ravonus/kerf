@@ -6,7 +6,7 @@
 :where([data-scope="progress"] [data-part="label-row"] > :first-child) { color: var(--warp-color-text); font-weight: 500; }
 :where([data-scope="progress"] [data-part="value-text"]) { font-variant-numeric: tabular-nums; }
 :where([data-scope="progress"] [data-part="track"]) {
-  position: relative; overflow: hidden; block-size: calc(4px - 1px * var(--warp-x)); border-radius: var(--warp-radius-round);
+  position: relative; overflow: clip; block-size: calc(4px - 1px * var(--warp-x)); border-radius: var(--warp-radius-round);
   background: var(--warp-color-surface-active);
 }
 :where([data-scope="progress"] [data-part="range"]) {

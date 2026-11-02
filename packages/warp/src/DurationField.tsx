@@ -40,7 +40,7 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
     v.set(formatDuration(carry ? balance(t, units) : next), reason)
   }
   const onKey = (e: KeyboardEvent) => {
-    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-u]')
+    const el = (e.target as HTMLElement).closest?.<HTMLElement>('[data-u]')
     if (!el) return
     const u = el.dataset.u as Unit
     const at = units.indexOf(u)

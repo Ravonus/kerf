@@ -23,7 +23,7 @@
   :where([data-scope="emoji"] [role="tab"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); }
   :where([data-scope="emoji"] [data-part="preview"]) { margin: 0; min-block-size: 1.4em; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
   :where(.rx-pill) { display: inline-flex; gap: 4px; align-items: center; padding: 2px 8px; border-radius: 999px; background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font-size: 13px; }
-  :where(.crop) { position: relative; border-radius: var(--warp-radius-surface); overflow: hidden; background: var(--warp-color-surface-sunken); cursor: grab; touch-action: none; outline: none; }
+  :where(.crop) { position: relative; border-radius: var(--warp-radius-surface); overflow: clip; background: var(--warp-color-surface-sunken); cursor: grab; touch-action: none; outline: none; }
   :where(.crop:active) { cursor: grabbing; }
   :where(.crop:focus-visible) { box-shadow: 0 0 0 var(--warp-focus-width) var(--warp-color-focus); }
   :where(.crop canvas) { display: block; inline-size: 100%; block-size: auto; }
@@ -33,7 +33,7 @@
   :where(.crop-ctl) { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   :where(.rng) { display: flex; align-items: center; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
   :where(.rng input) { accent-color: var(--warp-color-accent-solid); inline-size: 120px; min-block-size: 28px; }
-  :where(.cam) { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-sunken); overflow: hidden; border: var(--warp-border-hairline) dashed var(--warp-color-border-control); }
+  :where(.cam) { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-sunken); overflow: clip; border: var(--warp-border-hairline) dashed var(--warp-color-border-control); }
   :where(.cam video) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover; display: none; }
   :where(.cam[data-state="live"] video) { display: block; }
   :where(.cam[data-state="live"] .cam-idle) { display: none; }

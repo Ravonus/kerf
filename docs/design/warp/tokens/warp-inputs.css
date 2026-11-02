@@ -88,22 +88,25 @@
   padding-inline: 0; flex: 1; min-inline-size: 0; inline-size: auto; block-size: auto; align-self: stretch;
   caret-color: var(--warp-color-sweep); font-variant-numeric: var(--_num, normal); text-align: var(--_align, start);
 }
-:where([data-scope="field"] input[data-part="input"], [data-scope="field"] select[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
+:where([data-scope="field"] input[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
 :where([data-scope="field"] [data-part="input"][type="search"])::-webkit-search-cancel-button { display: none; }
+:where([data-scope="field"] [data-part="input"][type="number"]) { appearance: textfield; }
+:where([data-scope="field"] [data-part="input"][type="number"])::-webkit-inner-spin-button, :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-outer-spin-button { appearance: none; margin: 0; }
 :where([data-scope="field"] [data-part="input"]:-webkit-autofill) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
 
-/* textarea: grows from 3 lines to 10; label and icon rest on the first line */
+/* textarea: grows from its rows (--_rows, 3) to 10 or its rows; label and icon rest on the first line. field-sizing:
+   content ignores the rows attribute, so Textarea writes --_rows */
 :where([data-scope="field"] > [data-part="control"]:has(> textarea), [data-scope="field"] > [data-part="control"][data-wrap]) { align-items: flex-start; }
 :where([data-scope="field"] textarea[data-part="input"]) {
   white-space: pre-wrap; overflow-wrap: anywhere; resize: none; field-sizing: content; line-height: 1.5;
   padding-block: calc((var(--warp-field-height) - 1.5em) / 2);
-  min-block-size: calc(4.5em + var(--warp-field-height) - 1.5em); max-block-size: calc(15em + var(--warp-field-height) - 1.5em); overflow: auto;
+  min-block-size: calc(1.5em * var(--_rows, 3) + var(--warp-field-height) - 1.5em); max-block-size: calc(1.5em * max(10, var(--_rows, 3)) + var(--warp-field-height) - 1.5em); overflow: auto;
 }
 :where([data-scope="field"] > [data-part="control"]:is(:has(> textarea), [data-wrap]) > [data-part="icon"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
 :where([data-scope="field"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:has(> textarea), [data-wrap]):not(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > [data-part="label"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
 
 /* every slot paints above the borders */
-:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-scope="popup"])) { position: relative; z-index: 3; }
+:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-part="carrier"], [data-scope="popup"], [data-scope="select"])) { position: relative; z-index: 3; }
 
 /* prefix / suffix: fixed text, not submitted. Floating: shown once the label has lifted. Classic: always. */
 :where([data-scope="field"] :is([data-part="prefix"], [data-part="suffix"])) {
@@ -160,7 +163,7 @@
 :where([data-scope="field"] [data-part="counter"]) { margin-inline-start: auto; flex: none; color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="field"] [data-part="counter"][data-level="near"]) { color: var(--warp-color-caution-text); }
 :where([data-scope="field"] [data-part="counter"][data-level="over"]) { color: var(--warp-color-critical-text); font-weight: 500; }
-:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 
 /* read-only: dashed resting edge, no fill; focus still sweeps */
 :where([data-scope="field"][data-readonly] > [data-part="control"]) { background: transparent; }
@@ -211,7 +214,7 @@
    ======================================================================== */
 /* password strength: 4 segments + a caps word; segments fill L→R like the sweep */
 :where([data-scope="strength"]) { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 4px; align-items: center; font-size: var(--warp-text-caption-size); padding-inline: 2px; }
-:where([data-scope="strength"] i) { position: relative; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: hidden; }
+:where([data-scope="strength"] i) { position: relative; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: clip; }
 :where([data-scope="strength"] i)::after { content: ""; position: absolute; inset: 0; background: var(--_t, var(--warp-color-sweep)); clip-path: inset(0 100% 0 0); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease); }
 :where([data-scope="strength"] b) { font: 600 10px/1 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; min-inline-size: 7ch; text-align: end; color: var(--warp-color-text-subtle); }
 :where([data-scope="strength"][data-score="1"]) { --_t: var(--warp-color-critical-solid); }
@@ -301,7 +304,7 @@
 }
 :where([data-scope="editable"] [data-part="preview"] > svg) { position: relative; z-index: 3; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); opacity: 0; transition: opacity var(--warp-duration-fast); }
 :where([data-scope="editable"] [data-part="preview"]:is(:hover, :focus-visible) > svg) { opacity: 1; color: var(--warp-color-sweep); }
-:where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="editable"] [data-part="editor"]) { display: flex; gap: 4px; flex: 1; align-items: center; min-inline-size: 0; }
 :where([data-scope="editable"][data-editing] [data-part="preview"], [data-scope="editable"]:not([data-editing]) [data-part="editor"]) { display: none; }
 :where([data-scope="editable"] [data-part="editor"] > [data-scope="field"]) { flex: 1; }
@@ -369,13 +372,13 @@
    Off + hover/focus: the ring sweeps. On + hover/focus: accent-hover sweeps inside the rail. */
 :where([data-scope="switch"]) > [data-part="track"] {
   position: relative; flex: none; inline-size: 44px; block-size: 24px; border-radius: var(--warp-radius-round);
-  --warp-sweep-radius: var(--warp-radius-round); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */; background: var(--warp-color-surface-sunken);
+  --warp-sweep-radius: var(--warp-radius-round); --_base: var(--warp-color-border) /* the knob carries off; the ring stays quieter than ink, sweep-vs-base ≥ 3:1 (review 01 M7) */; background: var(--warp-color-surface-active);
 }
-:where([data-scope="switch"]) > [data-part="track"] > [data-part="rail-fill"] { overflow: hidden; }
+:where([data-scope="switch"]) > [data-part="track"] > [data-part="rail-fill"] { overflow: clip; }
 :where([data-scope="switch"]) > input:checked + [data-part="track"] { --_base: var(--warp-color-accent-solid); }
 :where([data-scope="switch"] [data-part="thumb"]) {
   position: absolute; z-index: 3; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 18px; block-size: 18px;
-  border-radius: 50%; background: var(--warp-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  border-radius: var(--warp-radius-round); background: var(--warp-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);   /* the knob's corners follow the track's */
 }
 :where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(20px); background: var(--warp-color-accent-on-solid); }
 :where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--warp-sweep-width) + 1px); }
@@ -420,17 +423,18 @@
 :where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--warp-sweep-width) + 0.5px); }
 :where([data-scope="choice-card"]:has(input:checked) [data-part="meta"]) { color: var(--warp-color-accent-text); }
 
-/* segmented (original Segmented.tsx; review 01 M8): the group rests on the ink control border and
-   does not sweep; hovering or focusing an UNSELECTED option sweeps a ring around that option only.
+/* segmented (original Segmented.tsx; review 01 M8): the group rests as a filled track on the hairline, takes ink
+   only for focus, and does not sweep; hovering or focusing an UNSELECTED option sweeps a ring around that option only.
    The indicator is a rail (§1c): an accent fill that slides to the selection. */
 :where([data-scope="segmented"]) {
   position: relative;   /* the indicator's containing block: the group is no longer a [data-sweep] host */
   display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 3px;
   border-radius: calc(var(--warp-radius-control) + 2px);
-  box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base);
-  background: var(--warp-color-field); isolation: isolate; max-inline-size: 100%;
+  box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-border);
+  background: var(--warp-color-surface-sunken); isolation: isolate; max-inline-size: 100%;
   align-self: start; justify-self: start;   /* a control keeps its height in a grid */
 }
+:where([data-scope="segmented"]:has(input:focus-visible)) { box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base); }
 :where([data-scope="segmented"] > label[data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); border-radius: var(--warp-radius-control); }
 :where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--warp-sweep-width); }
 :where([data-scope="segmented"] > label:has(input:checked)) > :where([data-part="sweep"]) { visibility: hidden; }
@@ -449,7 +453,7 @@
 :where([data-scope="segmented"] input:focus-visible + [data-part="item"]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
 :where([data-scope="segmented"] [data-part="indicator"]) {
   position: absolute; z-index: 2; inset-block: 3px; inset-inline-start: 0;
-  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid); overflow: hidden;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid); overflow: clip;
 }
 :where([data-scope="segmented"][data-size="sm"] [data-part="item"]) { block-size: calc(var(--warp-control-sm) - 8px); font-size: var(--warp-text-caption-size); }
 
@@ -481,7 +485,7 @@
   font-size: var(--warp-text-caption-size); font-weight: 500; white-space: nowrap;
   animation: warp-field-pop var(--warp-duration-base) var(--warp-ease-pop);
 }
-:where([data-scope="tag"] > span) { overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="tag"] > span) { overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="tag"] button) {
   position: relative; display: grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; border: 0; border-radius: 2px;
   background: transparent; color: inherit; opacity: 0.75; cursor: pointer;
@@ -499,7 +503,7 @@
   min-block-size: calc(var(--warp-field-height) - 2px); cursor: pointer; font-size: var(--warp-text-control-size); color: var(--warp-color-text); position: relative; z-index: 3;
 }
 :where([data-scope="field"] > [data-part="control"]:has([data-part="trigger"])) { cursor: pointer; }
-:where([data-scope="field"] [data-part="value"]) { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="field"] [data-part="value"]) { flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="field"] [data-part="value"]:empty)::before { content: attr(data-placeholder); color: transparent; transition: color var(--warp-duration-fast); }
 :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="value"]:empty)::before,
 :where([data-scope="field"]:is([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
@@ -507,45 +511,85 @@
 :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="indicator"]) { color: var(--warp-color-sweep); }
 :where([data-scope="field"] > [data-part="control"]:has([aria-expanded="true"]) [data-part="indicator"]:not([data-part="item"] > *)) { rotate: 180deg; }
 :where([data-scope="field"] > [data-part="control"][data-wrap] > [data-part="indicator"]) { align-self: center; margin-inline-start: auto; }
-/* native select (phones): the real element fills the control, the chevron is painted */
-:where([data-scope="field"] select[data-part="input"]) {
-  cursor: pointer; padding-inline-end: 24px; margin-inline-end: -24px; appearance: none;
-  /* an appearance:none select top-aligns its text in a tall box: centre it with padding instead of height */
-  align-self: stretch; min-block-size: 0; line-height: 1.5; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
+/* Select (redesign §5): a button trigger, and a real <select> behind it as the form's value. The trigger fills the control
+   under the chevron, so the whole box is one press. */
+:where([data-scope="field"] > [data-part="control"]:has(> button[data-part="input"])) { cursor: pointer; }
+:where([data-scope="field"] button[data-part="input"]) {
+  appearance: none; display: flex; align-items: center; border: 0; background: none; color: inherit; font: inherit; font-size: var(--warp-text-control-size); text-align: start;
+  cursor: inherit; outline: none; margin-inline-end: -24px; min-block-size: calc(var(--warp-field-height) - 2px); box-shadow: none;
 }
-:where([data-scope="field"] select[data-part="input"] option) { color: initial; }
-/* warp's list on a real select, with no script (redesign §5): the browser owns open, keyboard, typeahead, top layer and
-   flipping. Where base-select isn't supported, and on touch, the OS control stays. */
-@supports (appearance: base-select) { @media (pointer: fine) {
-  :where([data-scope="field"] select[data-part="input"]), :where([data-scope="field"] select[data-part="input"])::picker(select) { appearance: base-select; }
-  :where([data-scope="field"] select[data-part="input"])::picker-icon { display: none; }
-  :where([data-scope="field"] > [data-part="control"]:has(> select)) { anchor-name: --warp-select; anchor-scope: --warp-select; }
-  :where([data-scope="field"] select[data-part="input"])::picker(select) {
-    box-sizing: border-box; position-anchor: --warp-select; inset: auto; position-area: block-end span-inline-end; position-try-fallbacks: flip-block;
-    min-inline-size: anchor-size(inline); max-block-size: min(320px, calc(100dvh - 16px)); margin-block: 6px; padding: var(--warp-space-tight);
-    color: var(--warp-color-text); background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
-    border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-2); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size);
-    opacity: 0; scale: var(--warp-motion-scale-from);
-    transition: opacity calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in), scale calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
-                overlay calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete, display calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete;
+/* the room the trigger reaches under the chevron (its gap and glyph) is the value's own end padding, so the value's text
+   never runs under the chevron. It can't be the button's padding: field.css's [data-part="input"] { padding-inline: 0 }
+   may load after this file and win, which left a narrow select (a sort bar, a pager's size) 24px short. */
+:where([data-scope="field"] button[data-part="input"] > [data-part="value"]) { padding-inline-end: 24px; }
+:where([data-scope="field"] button[data-part="input"]:disabled) { cursor: not-allowed; }
+:where([data-scope="field"] button[data-part="input"] ~ [data-part="indicator"]) { pointer-events: none; }
+:where([data-scope="field"] button[data-part="input"] > [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
+:where([data-part="carrier"]) { position: absolute; inset-block-end: 0; inset-inline-start: var(--_lead, 0); inline-size: 1px; block-size: 1px; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+/* a table row, a pager, a toolbar: as wide as its value */
+:where([data-scope="field"][data-compact]) { --warp-field-height: max(var(--warp-control-sm), var(--warp-target-min)); display: inline-grid; min-inline-size: 0; margin: 0; padding: 0; gap: 0; vertical-align: middle; }
+:where([data-scope="field"][data-compact] > [data-part="control"]) { padding-inline: var(--warp-space-related); }
+/* with scripting off the real select is the control */
+@media (scripting: none) {
+  :where([data-scope="field"] button[data-part="input"]) { display: none; }
+  :where([data-part="carrier"]) {
+    position: relative; inset: auto; flex: 1; min-inline-size: 0; inline-size: auto; opacity: 1; pointer-events: auto; appearance: none; background: none; color: inherit; font: inherit; cursor: pointer;
+    align-self: stretch; block-size: auto; min-block-size: 0; line-height: 1.5; padding-inline-end: 24px; margin-inline-end: -24px; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
   }
-  :where([data-scope="field"] select[data-part="input"]:open)::picker(select) {
-    opacity: 1; scale: 1;
-    transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-spring-duration) var(--warp-ease-spring),
-                overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete;
-  }
-  @starting-style { :where([data-scope="field"] select[data-part="input"]:open)::picker(select) { opacity: 0; scale: var(--warp-motion-scale-from); } }
-  :where([data-scope="field"] select[data-part="input"] option) {
-    display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: max(32px, var(--warp-target-min)); padding-inline: var(--warp-space-related);
-    border: 0; border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); color: var(--warp-color-text); background: none; cursor: default; font-size: var(--warp-text-body-size); font-weight: 400; letter-spacing: 0; text-transform: none;
-  }
-  :where([data-scope="field"] select[data-part="input"] option:is(:hover, :focus)) { outline: 0; background: var(--warp-color-accent-soft); }
-  :where([data-scope="field"] select[data-part="input"] option:checked) { font-weight: 500; }
-  :where([data-scope="field"] select[data-part="input"] option:disabled) { opacity: var(--warp-opacity-disabled); }
-  :where([data-scope="field"] select[data-part="input"] option)::checkmark { order: 1; margin-inline-start: auto; color: var(--warp-color-accent-text); }
-  :where([data-scope="field"] select[data-part="input"] optgroup) { padding-block-start: var(--warp-space-related); color: var(--warp-color-text-subtle); font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500; letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); }
-  :where([data-scope="field"] > [data-part="control"]:has(select:open) [data-part="indicator"]) { rotate: 180deg; }
-} }
+}
+/* NumberField's steppers: two half-height buttons at the end of the control */
+:where([data-scope="field"] [data-part="steps"]) { flex: none; display: grid; grid-template-rows: 1fr 1fr; align-self: stretch; margin-block: 2px; margin-inline-end: calc(var(--warp-space-tight) * -1); }
+:where([data-scope="field"] [data-part="step"]) {
+  appearance: none; display: grid; place-items: center; inline-size: 24px; min-block-size: 0; padding: 0; border: 0; border-radius: var(--warp-radius-mark); background: none; color: var(--warp-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="field"] [data-part="step"] svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="field"] [data-part="step"]:first-child svg) { rotate: 180deg; }
+:where([data-scope="field"] [data-part="step"]:hover:not(:disabled)) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+:where([data-scope="field"] [data-part="step"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
+@media (pointer: coarse) { :where([data-scope="field"] [data-part="steps"]) { grid-template-rows: none; grid-template-columns: 1fr 1fr; } :where([data-scope="field"] [data-part="step"]) { inline-size: var(--warp-hit-min); } }
+/* its panel, a <dialog>: a popover by the control, or the sheet on a phone. The list scrolls and carries the shuttle, so the
+   search stays put above it. */
+:where([data-scope="select"][data-part="content"]) { font-size: var(--warp-text-body-size); max-block-size: min(var(--_avail, 320px), calc(100dvh - 16px)); overflow: clip; }
+:where([data-scope="select"][data-part="content"]:is(:popover-open, :modal)) { display: flex; flex-direction: column; }
+:where([data-scope="select"][data-part="content"])::backdrop { background: transparent; }
+:where([data-scope="select"] [data-part="handle"], [data-scope="select"] [data-part="sheet-head"]) { display: none; }
+:where([data-scope="select"] [data-part="list"]) { position: relative; isolation: isolate; flex: 1; min-block-size: 0; overflow: auto; overscroll-behavior: contain; outline: none; }
+:where([data-scope="select"] [data-part="list"] > [data-part="shuttle"]) { background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 130%), transparent); }
+:where([data-scope="select"] [data-part="list"]:has(> [data-part="shuttle"]) [data-part="item"][data-highlighted]:not([data-keyboard])) { background: none; }
+:where([data-scope="select"] [data-part="item"]) { outline: none; }
+:where([data-scope="select"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="select"] [data-part="item"][hidden], [data-scope="select"] [role="group"][hidden]) { display: none; }
+:where([data-scope="select"] [data-part="item-hint"]) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); font-weight: 400; }
+:where([data-scope="select"] [data-part="empty"]) { margin: 0; padding: var(--warp-space-related); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="select"] label[data-part="search"]) {
+  flex: none; display: flex; align-items: center; gap: var(--warp-space-related); block-size: var(--warp-control-md); padding-inline: var(--warp-space-related); margin-block-end: var(--warp-space-tight);
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border-control);
+}
+:where([data-scope="select"] label[data-part="search"]:focus-within) { box-shadow: inset 0 0 0 2px var(--warp-color-focus); }
+:where([data-scope="select"] label[data-part="search"] svg) { flex: none; inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); color: var(--warp-color-text-subtle); }
+/* 16px at least: iOS zooms the page on focus below that */
+:where([data-scope="select"] label[data-part="search"] input) {
+  appearance: none; flex: 1; min-inline-size: 0; border: 0; padding: 0; outline: none; background: none; color: inherit; font: inherit; font-size: max(16px, var(--warp-text-control-size));
+}
+:where([data-scope="select"] label[data-part="search"] input)::-webkit-search-cancel-button { display: none; }
+:where([data-scope="select"][data-presentation="sheet"]) {
+  inset: auto 0 0 0; inline-size: 100%; min-inline-size: 0; max-inline-size: none; max-block-size: 86dvh; padding: var(--warp-space-related) var(--warp-space-group) calc(var(--warp-space-group) + env(safe-area-inset-bottom));
+  border-radius: var(--warp-radius-surface) var(--warp-radius-surface) 0 0; border-block-end: 0; box-shadow: var(--warp-elevation-3); transform-origin: bottom center; translate: 0 100%; scale: 1;
+}
+:where([data-scope="select"][data-presentation="sheet"]:modal) { opacity: 1; translate: 0 0; transition: translate var(--warp-duration-slow) var(--warp-ease-out), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; }
+@starting-style { :where([data-scope="select"][data-presentation="sheet"]:modal) { translate: 0 100%; } }
+:where([data-scope="select"][data-presentation="sheet"])::backdrop { background: var(--warp-color-scrim); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="handle"]) { flex: none; display: block; inline-size: 36px; block-size: 4px; margin: 2px auto 10px; border-radius: 999px; background: var(--warp-color-border-strong); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="sheet-head"]) { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-related); margin-block-end: var(--warp-space-related); font-size: var(--warp-text-heading-size); font-weight: 600; }
+:where([data-scope="select"] [data-part="done"]) {
+  appearance: none; min-block-size: max(var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-pad-control); border: 0; border-radius: var(--warp-radius-control);
+  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font: inherit; font-size: var(--warp-text-control-size); font-weight: 500; cursor: pointer;
+}
+:where([data-scope="select"] [data-part="done"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="item"]) { min-block-size: max(44px, var(--warp-target-min)); }
+@media (forced-colors: active) {
+  :where([data-scope="select"] [data-part="item"][data-highlighted]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
 
 /* ===========================================================================
    4 · POPUP + LISTBOX (select, combobox, search suggestions, inline listbox)
@@ -635,7 +679,7 @@
 }
 :where([data-scope="slider"] [data-part="range"]) {
   position: absolute; inset-block: 0; inset-inline-start: calc(var(--_v0) * 100%); inline-size: calc((var(--_v1) - var(--_v0)) * 100%);
-  border-radius: inherit; background: var(--warp-color-accent-solid); overflow: hidden;
+  border-radius: inherit; background: var(--warp-color-accent-solid); overflow: clip;
 }
 :where([data-scope="slider"] [data-part="thumb"]) {
   position: absolute; z-index: 3; inset-block-start: 50%; inset-inline-start: calc(var(--_v) * 100%);
@@ -759,18 +803,18 @@
 }
 :where([data-scope="uploads"] > li:first-child) { border-block-start: 0; }
 :where([data-scope="uploads"] [data-part="thumb"]) { grid-row: span 2; inline-size: 36px; block-size: 36px; border-radius: var(--warp-radius-control); display: grid; place-items: center; background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border); color: var(--warp-color-text-subtle); font: 600 9px/1.25 var(--warp-font-mono); letter-spacing: 0.04em; text-transform: uppercase; background-size: cover; }
-:where([data-scope="uploads"] [data-part="name"]) { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+:where([data-scope="uploads"] [data-part="name"]) { min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 :where([data-scope="uploads"] [data-part="meta"]) { grid-column: 2; display: flex; align-items: center; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="uploads"] [data-part="acts"]) { grid-row: span 2; display: flex; gap: 2px; }
 /* progress is a rail: the fill travels through it */
-:where([data-scope="uploads"] [data-part="progress"]) { position: relative; flex: 1; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: hidden; }
+:where([data-scope="uploads"] [data-part="progress"]) { position: relative; flex: 1; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: clip; }
 :where([data-scope="uploads"] [data-part="progress"] i) { position: absolute; inset: 0; background: var(--warp-color-accent-solid); clip-path: inset(0 calc((1 - var(--_p, 0)) * 100%) 0 0); transition: clip-path calc(var(--warp-sweep-duration) * 0.5) var(--warp-sweep-ease); }
 :where([data-scope="uploads"] li:is([data-status="done"], [data-status="error"]) [data-part="progress"]) { display: none; }
 :where([data-scope="uploads"] li[data-status="done"] [data-part="state"]) { color: var(--warp-color-positive-text); }
 :where([data-scope="uploads"] li[data-status="error"] [data-part="state"]) { color: var(--warp-color-critical-text); }
 :where([data-scope="uploads"] li[data-status="error"] [data-part="thumb"]) { border-color: var(--warp-color-critical-border); color: var(--warp-color-critical-text); background: var(--warp-color-critical-soft); }
 
-:where([data-scope="cropper"]) { position: relative; overflow: hidden; border-radius: var(--warp-radius-control); aspect-ratio: 4 / 3; background: var(--warp-color-surface-sunken); touch-action: none; user-select: none; }
+:where([data-scope="cropper"]) { position: relative; overflow: clip; border-radius: var(--warp-radius-control); aspect-ratio: 4 / 3; background: var(--warp-color-surface-sunken); touch-action: none; user-select: none; }
 :where([data-scope="cropper"] [data-part="image"]) { position: absolute; inset: 0; background: var(--_img) center / cover; scale: var(--_z, 1); transition: scale var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="cropper"] [data-part="frame"]) {
   position: absolute; inline-size: 52%; aspect-ratio: 1; inset-inline-start: var(--_fx, 24%); inset-block-start: var(--_fy, 12%);
@@ -851,7 +895,7 @@
 :where([data-scope="steps"] li:is([data-state="complete"], [aria-current="step"]))::after { clip-path: inset(0); }
 :where([data-scope="steps"] li span)::before { content: counter(step) " · "; font-variant-numeric: tabular-nums; }
 :where([data-scope="steps"] li[aria-current="step"]) { color: var(--warp-color-text); font-weight: 500; }
-:where([data-scope="steps"] li span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="steps"] li span) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 
 
 /* =========================================================================

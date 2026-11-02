@@ -13,11 +13,18 @@
 :where([data-scope="toggle"]:active, [data-scope="chip"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="toggle"]:hover, [data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
 :where([data-scope="toggle"])::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity var(--warp-duration-fast); }
-:where([data-scope="toggle"]:hover) { color: var(--warp-color-text); }
-:where([data-scope="toggle"]:hover)::before { opacity: var(--warp-state-hover); }
+/* hover tints only where hover is real: a touch screen's tap leaves :hover stuck on the toggle */
+@media (hover: hover) { :where([data-scope="toggle"]:hover) { color: var(--warp-color-text); } :where([data-scope="toggle"]:hover)::before { opacity: var(--warp-state-hover); } }
+/* released from pressed (Toggle sets data-released): the stroke leaves with the fill, at once, once nothing holds it */
+:where([data-scope="toggle"][data-released]:not([aria-pressed="true"], :hover, :focus-visible)) > :where([data-part="sweep"], [data-part="sweep-base"]) { transition: none; }
+@media (hover: none) { :where([data-scope="toggle"][data-released]:not([aria-pressed="true"], :focus-visible)) > :where([data-part="sweep"], [data-part="sweep-base"]) { transition: none; } }
 :where([data-scope="toggle"][aria-pressed="true"], [data-scope="toggle"][aria-checked="true"]) {
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
 }
+:where([data-scope="toggle"][data-size="sm"]) { block-size: var(--warp-control-sm); min-inline-size: var(--warp-control-sm); padding-inline: calc(var(--warp-space-related) * 0.75); font-size: var(--warp-text-caption-size); }
+:where([data-scope="toggle"][data-size="lg"]) { block-size: var(--warp-control-lg); min-inline-size: var(--warp-control-lg); padding-inline: var(--warp-pad-control); }
+:where([data-scope="toggle"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
+:where([data-scope="toggle"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
 :where([data-scope="toggle-group"]) {
   display: inline-flex; flex-wrap: wrap; max-inline-size: 100%; gap: 2px; padding: 2px;
   border: var(--warp-border-hairline) solid var(--warp-color-border);

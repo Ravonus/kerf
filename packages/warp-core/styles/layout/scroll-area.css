@@ -3,7 +3,6 @@
 /* ScrollArea — contained scroll, thin bar, keyboard-reachable, edge fade */
 :where([data-scope="scroll-area"]) {
   overflow: auto; overscroll-behavior: contain; min-inline-size: 0; min-block-size: 0;
-  scrollbar-width: thin; scrollbar-color: var(--warp-color-border-strong) transparent;
   scrollbar-gutter: stable;
 }
 :where([data-scope="scroll-area"][data-axis="x"]) {

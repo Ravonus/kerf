@@ -363,7 +363,7 @@ describe('AvailabilityEditor', () => {
     button('Save availability', c).click()
     await flush()
     expect(onSave).not.toHaveBeenCalled()
-    expect(document.activeElement).toBe(c.querySelector('[data-part="range"][data-invalid] select'))
+    expect(document.activeElement).toBe(c.querySelector('[data-part="range"][data-invalid] [role="combobox"]'))
     expect(await said(true)).toMatch(/Fix the highlighted ranges/)
   })
 
@@ -386,7 +386,7 @@ describe('AvailabilityEditor', () => {
     button('Add a range on Monday', c).click()
     await flush()
     expect(c.querySelectorAll('[data-day-of="1"] [data-part="range"]').length).toBe(2)
-    expect(document.activeElement!.tagName).toBe('SELECT')
+    expect(document.activeElement!.getAttribute('role')).toBe('combobox')
     button('Remove Monday range 2', c).click()
     await flush()
     expect(document.activeElement).toBe(c.querySelector('[data-add="1"]'))

@@ -1,5 +1,5 @@
-import { getDial, setDial, Popover, Segmented } from '@weft-js/warp'
-import { onMount, state } from '@weft-js/core'
+import { getDial, Icon, setDial, Popover, Segmented } from '@weft/warp'
+import { onMount, state } from 'weft'
 
 type Theme = 'auto' | 'light' | 'dark'
 type Stop = 'quiet' | 'balanced' | 'vivid'
@@ -16,11 +16,11 @@ export function Appearance() {
     motion.value = getDial('motion')
   })
   return (
-    <Popover align="end" label="Theme" title="Appearance" trigger={{ emphasis: 'ghost', tone: 'neutral', size: 'sm' }}>
+    <Popover align="end" label={<Icon name="palette" />} title="Appearance" trigger={{ emphasis: 'ghost', tone: 'neutral', size: 'sm', 'aria-label': 'Appearance' } as any}>
       <div data-site="dials">
-        <Segmented size="sm" label="Theme" value={theme.value} options={[{ value: 'auto', label: 'Auto' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} onChange={v => { theme.value = v; setDial('theme', v, { persist: true }) }} />
-        <Segmented size="sm" label="Expression" value={expression.value} options={[{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]} onChange={v => { expression.value = v; setDial('expression', v, { persist: true }) }} />
-        <Segmented size="sm" label="Motion" value={motion.value} options={[{ value: 'auto', label: 'Auto' }, { value: 'full', label: 'Full' }, { value: 'reduce', label: 'Reduced' }]} onChange={v => { motion.value = v; setDial('motion', v, { persist: true }) }} />
+        <div data-part="row"><span>Theme</span><Segmented size="sm" label="Theme" value={theme.value} options={[{ value: 'auto', label: 'Auto' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} onChange={v => { theme.value = v; setDial('theme', v, { persist: true }) }} /></div>
+        <div data-part="row"><span>Expression</span><Segmented size="sm" label="Expression" value={expression.value} options={[{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]} onChange={v => { expression.value = v; setDial('expression', v, { persist: true }) }} /></div>
+        <div data-part="row"><span>Motion</span><Segmented size="sm" label="Motion" value={motion.value} options={[{ value: 'auto', label: 'Auto' }, { value: 'full', label: 'Full' }, { value: 'reduce', label: 'Reduced' }]} onChange={v => { motion.value = v; setDial('motion', v, { persist: true }) }} /></div>
       </div>
     </Popover>
   )

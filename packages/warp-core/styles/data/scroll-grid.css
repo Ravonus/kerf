@@ -19,9 +19,9 @@
 :where([data-scope="scroll-grid"] [data-part="corner"]) { z-index: 3; }
 :where([data-scope="scroll-grid"]:focus-visible) { outline: var(--warp-focus-width, 2px) solid var(--warp-color-focus); outline-offset: 2px; }
 :where([data-scope="scroll-grid"] [data-part="cell"], [data-scope="scroll-grid"] [data-part="col-head"], [data-scope="scroll-grid"] [data-part="row-head"], [data-scope="scroll-grid"] [data-part="corner"]) {
-  position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: var(--_cw); block-size: var(--_rh);
+  position: absolute; inset-block-start: 0; inset-inline-start: 0; box-sizing: border-box; inline-size: var(--_cw); block-size: var(--_rh);
   display: flex; align-items: center; justify-content: end; padding-inline: 10px; border-inline-end: 1px solid var(--warp-color-border); border-block-end: 1px solid var(--warp-color-border);
-  white-space: nowrap; overflow: hidden;
+  white-space: nowrap; overflow: clip;
 }
 :where([data-scope="scroll-grid"] [data-part="col-head"], [data-scope="scroll-grid"] [data-part="row-head"], [data-scope="scroll-grid"] [data-part="corner"]) {
   background: var(--warp-color-surface); color: var(--warp-color-text-subtle); font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case);

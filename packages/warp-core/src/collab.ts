@@ -211,7 +211,7 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
   let picked = ''
   const doc = log.ownerDocument
   const all = () => [...log.querySelectorAll<HTMLElement>('[data-scope="message"]')].filter(m => !m.closest('[data-probe]'))
-  const owner = (t: EventTarget | null) => (t as Element).closest<HTMLElement>('[data-scope="message"]')
+  const owner = (t: EventTarget | null) => (t as Element).closest?.<HTMLElement>('[data-scope="message"]')
   const stop = (el: HTMLElement, on: boolean) => { const to = on ? 0 : -1; if (el.tabIndex !== to) el.tabIndex = to }
   const rove = (m: HTMLElement | null | undefined) => {
     for (const x of all()) {
@@ -258,12 +258,12 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
   }
   const onFocus = (e: FocusEvent) => { const m = owner(e.target); if (m) rove(m) }
   const onDown = (e: PointerEvent) => {
-    if (!(e.target as Element).closest('[data-quote]')) return
+    if (!(e.target as Element).closest?.('[data-quote]')) return
     const s = doc.getSelection()
     picked = s && !s.isCollapsed ? s.toString() : ''
   }
   const onUp = (e: PointerEvent) => {
-    if (e.pointerType !== 'touch' || (e.target as Element).closest('button, a')) return
+    if (e.pointerType !== 'touch' || (e.target as Element).closest?.('button, a')) return
     const m = owner(e.target)
     for (const x of all()) if (x !== m) x.removeAttribute('data-actions')
     m?.toggleAttribute('data-actions')
@@ -271,13 +271,13 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
   const onClick = (e: MouseEvent) => {
     const t = e.target as Element
     const m = owner(t)
-    if (t.closest('[data-quote]') && m) return quote(m)
-    if (t.closest('[data-copytext]') && m) {
+    if (t.closest?.('[data-quote]') && m) return quote(m)
+    if (t.closest?.('[data-copytext]') && m) {
       void navigator.clipboard?.writeText(m.querySelector('[data-part="text"]')?.textContent ?? '').catch(() => {})
       confirm(m)
       return announce(doc, 'Message copied')
     }
-    const j = t.closest<HTMLElement>('[data-jump]')
+    const j = t.closest?.<HTMLElement>('[data-jump]')
     if (j) jump(j.dataset.jump!)
   }
   const watch = new (doc.defaultView!).MutationObserver((records: MutationRecord[]) => {
@@ -541,9 +541,9 @@ export function kanban(host: HTMLElement, opts: KanbanOptions) {
     if (to) go(id, to.col, to.index)
   }
   const onBlur = (e: FocusEvent) => { if (lifted && (e.target as HTMLElement).dataset?.id === lifted.id && !host.contains(e.relatedTarget as Node)) drop() }
-  const columnOf = (t: EventTarget | null) => (t as Element).closest<HTMLElement>('[data-part="column"]')
+  const columnOf = (t: EventTarget | null) => (t as Element).closest?.<HTMLElement>('[data-part="column"]')
   const onStart = (e: DragEvent) => {
-    drag = (e.target as Element).closest<HTMLElement>('[data-part="card"]')
+    drag = (e.target as Element).closest?.<HTMLElement>('[data-part="card"]')
     if (!drag || !e.dataTransfer) return
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', drag.dataset.id!)

@@ -3,7 +3,7 @@ import { render } from '@weft-js/core/dom'
 
 const fetchMenu = () => import('./Appearance')
 
-/** The Theme button. The menu behind it is fetched on the way to a press, and takes the button's place already open. */
+/** The Appearance button. The menu behind it is fetched on the way to a press, and takes the button's place already open. */
 export function AppearanceGate() {
   let box: HTMLElement | undefined
   const open = async () => {
@@ -13,8 +13,8 @@ export function AppearanceGate() {
     box!.querySelector('button')!.click()
   }
   return (
-    <span data-site="gate" ref={el => (box = el)}>
-      <Button emphasis="ghost" tone="neutral" size="sm" onClick={open} onPointerEnter={fetchMenu} onFocus={fetchMenu}>Theme</Button>
+    <span data-site="gate" ref={(n: any) => (box = n)}>
+      <Button emphasis="ghost" tone="neutral" size="sm" icon="palette" label="Appearance" onClick={open} onPointerEnter={fetchMenu} onFocus={fetchMenu} />
     </span>
   )
 }

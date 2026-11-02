@@ -409,7 +409,10 @@ function styles(v: unknown): string {
 }
 
 /** A `<select>`'s value: the render then marks the matching `<option selected>`. */
-export function select(value: unknown): string {
+/** `ref` beside a spread compiles the same for both targets; there is no element to hand over on the server. */
+export function ref(): void {}
+
+export function select(value: any): string {
   selects = true
   return attr('value', value)
 }

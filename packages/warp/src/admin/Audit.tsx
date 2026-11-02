@@ -2,6 +2,7 @@ import { agoText, announce, plural } from '@weft-js/warp-core'
 import { derived, onCleanup, state, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { LiveStatus, type LiveState } from '../parts'
+import { Tooltip } from '../Tooltip'
 import { Segmented } from '../Choice'
 import { Select } from '../Select'
 import { Table, type Column } from '../Table'
@@ -34,6 +35,8 @@ const RANGES = [{ value: 'all', label: 'Any time', hours: Infinity }, { value: '
  * The audit log (09 §4.5): a read-only DataTable. Time is relative, exact on hover and focus; each event opens its diff.
  * Filters: actor, action, date range. New rows arrive by key, so a live query never rebuilds the table.
  */
+const stamp = (at: string) => at.replace('T', ' ').replace(/:\d\dZ$/, ' UTC')
+
 export function AuditLog({ events, now, categories = [{ value: 'all', label: 'All' }], live, onExport }: AuditLogProps) {
   const category = state('all')
   const actor = state('all')
@@ -63,7 +66,7 @@ export function AuditLog({ events, now, categories = [{ value: 'all', label: 'Al
     }, 1000)
   }
   const columns: Column<AuditEvent>[] = [
-    { id: 'at', header: 'When', sort: r => r.at, cell: e => <time datetime={e.at} title={e.at.replace('T', ' ').replace(/:\d\dZ$/, ' UTC')} tabindex="0">{agoText(e.at, now)}</time> },
+    { id: 'at', header: 'When', sort: r => r.at, cell: e => { const at = stamp(e.at); return <Tooltip content={at}><time datetime={e.at} tabindex="0">{agoText(e.at, now)}</time></Tooltip> } },
     { id: 'actor', header: 'Who', rowHeader: true, card: 'title' },
     { id: 'what', header: 'What', value: e => `${e.verb} ${e.target}`, cell: e => <>{e.verb} {e.href ? <a href={e.href}>{e.target}</a> : e.target}</> },
     { id: 'ip', header: 'IP', priority: 2, cell: e => <code>{e.ip}</code> },

@@ -8,7 +8,7 @@
     --_wipe: calc(max(0, var(--warp-x) - 0.5) * 80% * var(--warp-motion-scale));
     position: relative; display: grid; gap: var(--warp-space-related); user-select: none;
   }
-  :where([data-scope="calendar"] [data-part="months"]) { display: flex; gap: var(--warp-space-group); overflow: hidden; }
+  :where([data-scope="calendar"] [data-part="months"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--warp-space-group); overflow: clip; }
   :where([data-part="months"][data-anim="next"]) > * { animation: wir-month-next var(--warp-duration-base) var(--warp-ease-out) both; }
   :where([data-part="months"][data-anim="prev"]) > * { animation: wir-month-prev var(--warp-duration-base) var(--warp-ease-out) both; }
   @keyframes wir-month-next { from { opacity: 0; transform: translateX(var(--_slide)); clip-path: inset(0 0 0 var(--_wipe)); } }
@@ -21,7 +21,7 @@
   :where([data-scope="calendar"] [data-part="nav"]) { position: absolute; inset-block-start: 0; z-index: 1; }
   :where([data-scope="calendar"] [data-part="nav"][data-dir="prev"]) { inset-inline-start: 0; }
   :where([data-scope="calendar"] [data-part="nav"][data-dir="next"]) { inset-inline-end: 0; }
-  :where([data-scope="calendar"] table) { border-collapse: collapse; table-layout: fixed; }
+  :where([data-scope="calendar"] table) { inline-size: calc(var(--_cell) * 7); border-collapse: collapse; table-layout: fixed; }   /* a fixed table sizes its panel: without a width the panel cuts Saturday off */
   :where([data-scope="calendar"] th) {
     inline-size: var(--_cell); block-size: 24px; padding: 0; text-align: center;
     font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); color: var(--warp-color-text-subtle);

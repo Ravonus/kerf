@@ -2,7 +2,7 @@
 @layer warp.components {
 /* -- Image: reserves its box (aspect-ratio), fades in, falls back to a weave ----- */
 :where([data-scope="image"]) {
-  position: relative; display: block; overflow: hidden; border-radius: var(--warp-radius-surface);
+  position: relative; display: block; overflow: clip; border-radius: var(--warp-radius-surface);
   aspect-ratio: var(--_ratio, 16 / 9); background: var(--warp-color-surface-sunken);
 }
 :where([data-scope="image"] > img) {

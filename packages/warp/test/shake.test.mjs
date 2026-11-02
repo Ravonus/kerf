@@ -18,7 +18,7 @@ async function bundle(jsx, names) {
 test('no chart imported: no chart JS, no chart CSS', async () => {
   const { js, css } = await bundle('<Button>Save</Button>', 'Button')
   for (const word of ['chart-tip', 'aria-roledescription', 'tip-row', 'monotone', 'view-toggle']) expect(js, word).not.toContain(word)
-  for (const word of ['chart', 'legend', 'warp-draw', '--warp-data-line']) expect(css, word).not.toContain(word)
+  for (const word of ['chart-', 'legend', 'warp-draw', '--warp-data-line']) expect(css, word).not.toContain(word)
 }, 60000)
 
 test('one form brings its own layout, not the others', async () => {

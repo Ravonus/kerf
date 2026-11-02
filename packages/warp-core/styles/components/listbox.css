@@ -13,7 +13,7 @@
 :where([data-scope="select"][data-part="trigger"][aria-expanded="true"]) { border-color: var(--warp-color-focus); box-shadow: 0 0 0 1px var(--warp-color-focus); }
 :where([data-scope="select"][data-part="trigger"] > svg[data-icon]) { color: var(--warp-color-text-subtle); transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="select"][data-part="trigger"][aria-expanded="true"] > svg[data-icon]) { rotate: 180deg; }
-:where([data-scope="select"] [data-part="value"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="select"] [data-part="value"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="select"][data-part="content"]) {
   --_side-x: 0; --_side-y: -1;
   position: fixed; inset: auto; margin: 0; box-sizing: border-box; isolation: isolate; font-family: var(--warp-text-body-font);

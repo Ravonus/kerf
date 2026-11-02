@@ -157,7 +157,8 @@ function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined
 /**
  * The command palette (05 §3; components.html:1109-1113, 1704-1754): an APG combobox in a modal <dialog>. Focus stays in
  * the input. ↑/↓, Home/End and PageUp/PageDown move the active row, Tab goes to the next group, → opens a row's `children`,
- * Enter runs it, ⌘Enter opens its `href` in a new tab. Esc clears the query, then closes and returns focus.
+ * Enter runs it, ⌘Enter opens its `href` in a new tab. Esc clears the query, then closes and returns focus. A nested level
+ * opens and closes (← at the query's start, or Esc once it is empty) with an empty query, and typing there filters its rows.
  *
  * Rows are a pool that only grows: a key press writes text into nodes that already exist, so a query never builds a row
  * and nothing shifts. Matches are painted with the Custom Highlight API. Rows appear only while it's open, so a closed
@@ -192,14 +193,16 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     flush()
     paint(list, q, arranged)
   }
+  const rank = (list: Command[], q: string) => rankCommands(list, q).flatMap(g => g.rows.map(r => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)))
   const answer = (value: string) => {
     query?.abort()
+    const kids = untrack(() => drill.value)
+    if (kids) { active.value = 0; pending.value = false; return show(rank(kids, value), value) } // a nested level filters its own rows
     const ctrl = (query = new AbortController())
     const m = modes?.find(x => value.startsWith(x.prefix))
     const q = m ? value.slice(m.prefix.length) : value
     const statics = m ? m.commands ?? [] : commands ?? []
-    const ranked = rankCommands(statics, q).flatMap(g => g.rows.map(r => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)))
-    let now = ranked
+    let now = rank(statics, q)
     const late: Promise<Command[]>[] = []
     for (const source of (m ? m.sources : sources) ?? []) {
       const got = source(q, ctrl.signal)
@@ -224,10 +227,20 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (input) input.value = ''
     answer('')
   })
+  // entering or leaving a level starts its search afresh: what was typed found the row, it isn't a search of its rows
+  const clear = () => {
+    if (input) input.value = ''
+    typed.value = ''
+  }
   const down = (kids: Command[]) => {
+    clear()
     drill.value = kids
-    active.value = 0
-    show(kids, '')
+    answer('')
+  }
+  const up = () => {
+    clear()
+    drill.value = undefined
+    answer('')
   }
   const run = (at: number, reason: 'pointer' | 'keyboard') => {
     const c = items.value[at]
@@ -247,9 +260,8 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (e.isComposing) return
     if (e.key === 'Escape' && (input?.value || drill.value)) {
       e.preventDefault()
-      if (input) input.value = ''
-      typed.value = ''
-      drill.value = undefined
+      if (!input?.value) return up() // an empty query in a nested level: back up one
+      clear()
       return answer('')
     }
     const count = items.value.length
@@ -270,10 +282,9 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
       e.preventDefault()
       return down(items.value[at].children())
     }
-    if (e.key === 'ArrowLeft' && drill.value) {
+    if (e.key === 'ArrowLeft' && drill.value && !input?.selectionStart) {
       e.preventDefault()
-      drill.value = undefined
-      return answer(input?.value ?? '')
+      return up()
     }
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       const href = items.value[at]?.href
@@ -286,11 +297,9 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (m.pick) return run(at, 'keyboard')
     move(m.to)
   }
-  const onInput = (e: Event) => {
-    const text = (e.currentTarget as HTMLInputElement).value
-    typed.value = text
-    drill.value = undefined
-    answer(text)
+  const onInput = (e: any) => {
+    typed.value = e.currentTarget.value
+    answer(e.currentTarget.value)
   }
   const slots = derived(() => Array.from({ length: size.value }, (_, i) => i))
   // one highlight that travels (redesign §3): it reads the row after the render that moved it

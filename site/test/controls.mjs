@@ -11,13 +11,14 @@ const SCOPE = '[data-site="example"] [data-part="run"]'
 const CONTROLS = `${SCOPE} button:not([disabled]), ${SCOPE} input:not([disabled]), ${SCOPE} [role="checkbox"], ${SCOPE} [role="switch"], ${SCOPE} label`
 const NEUTRAL = /^(reset|clear|cancel|close)$/i // nothing to undo on a fresh example
 
-const look = (page, i) => page.evaluate(([sel, at]) => {
-  const c = document.querySelectorAll(sel)[at]
-  const box = c?.closest('[data-part="run"]')
-  if (!box) return ''
+const look = (page, i) => page.evaluate(([sel, i]) => {
+  const c = document.querySelectorAll(sel)[i]
+  if (!c?.closest('[data-part="run"]')) return ''
+  const box = document.body // a press can answer outside its example: a popover, a toast, or the caret landing in the field
   const fields = [...box.querySelectorAll('input,select,textarea')].map(f => `${f.checked}|${f.value}`)
-  const attrs = [...box.querySelectorAll('*')].map(e => `${e.getAttribute('aria-checked')}${e.getAttribute('aria-pressed')}${e.getAttribute('aria-expanded')}${e.getAttribute('data-state')}${e.hasAttribute('disabled')}`)
-  return `${box.innerText}\n${fields.join()}\n${attrs.join()}\n${box.querySelectorAll('*').length}`
+  const attrs = [...box.querySelectorAll('*')].map(e => `${e.getAttribute('aria-checked')}${e.getAttribute('aria-pressed')}${e.getAttribute('aria-expanded')}${e.getAttribute('data-state')}${e.hasAttribute('disabled')}${e.matches(':popover-open')}`)
+  const focused = document.activeElement === c || document.activeElement === c.control
+  return `${box.innerText}\n${fields}\n${attrs}\n${box.querySelectorAll('*').length}\n${focused}`
 }, [sel_(), i])
 const sel_ = () => CONTROLS
 
@@ -38,6 +39,11 @@ for (const path of pages) {
     await page.locator(CONTROLS).nth(i).waitFor({ state: 'attached' })
     if (when === 'after load') await page.waitForTimeout(800)
     await page.locator(CONTROLS).nth(i).scrollIntoViewIfNeeded()
+    await page.locator(CONTROLS).nth(i).evaluate(e => new Promise(done => { // a forced click lands where the element is now, and flow is still bringing it in
+      let y, still = 0
+      const tick = () => { const now = e.getBoundingClientRect().y; still = now === y ? still + 1 : 0; y = now; still > 2 ? done() : requestAnimationFrame(tick) }
+      tick()
+    }))
     const before = await look(page, i)
     await page.locator(CONTROLS).nth(i).click({ timeout: 4000, force: true }).catch(() => {})
     let after = before
@@ -215,9 +221,28 @@ await behaves('Same page changes in all three', '/', async page => {
   same(await page.evaluate(() => [...document.querySelectorAll('[data-site="arena"] iframe')].every(f => f.contentWindow.crossOriginIsolated)), true, 'the frames have the fine clock')
 })
 
+// Every toolkit page: each example mounts, with no page error and nothing wider than its stage.
+const slugs = Object.values(JSON.parse(readFileSync(new URL('../src/generated/toolkit.json', import.meta.url), 'utf8'))).map(p => `${p.area}/${p.slug}`)
+const unmounted = []
+for (const slug of slugs) {
+  const page = await b.newPage({ viewport: { width: 1280, height: 900 } })
+  page.on('pageerror', e => unmounted.push(`/${slug}: ${e.message.split('\n')[0]}`))
+  await page.goto(`${base}/${slug}`, { waitUntil: 'load' })
+  for (let i = 0; i < 80; i++) {
+    const more = await page.evaluate(() => { const m = document.querySelector('[data-part="mount"]:not([data-ready])'); m?.scrollIntoView(); return !!m })
+    if (!more) break
+    await page.waitForTimeout(200)
+  }
+  const left = await page.locator('[data-part="mount"]:not([data-ready])').count()
+  if (left) unmounted.push(`/${slug}: ${left} never mounted`)
+  await page.close()
+}
+
 await b.close()
+console.log(`${slugs.length} toolkit pages, ${unmounted.length} problems`)
+for (const u of unmounted) console.log(`  toolkit: ${u}`)
 console.log(`${seen.behaviours ?? 0} behaviours passed, ${broken.length} broken`)
 for (const d of broken) console.log(`  broken: ${d}`)
 console.log(`${seen.pages} pages, ${seen.controls} presses, ${dead.length} dead`)
 for (const d of dead) console.log(`  dead: ${d}`)
-process.exit(dead.length || broken.length ? 1 : 0)
+process.exit(dead.length || broken.length || unmounted.length ? 1 : 0)

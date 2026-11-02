@@ -36,7 +36,7 @@ export function PresenceStack({ peers, max = 4, following, onFollow, label = 'Pe
   return (
     <span data-scope="avatar-stack" role="group" aria-label={label}>
       {front.value.map(p => (canFollow.value
-        ? <button key={p.id} type="button" data-hit="" aria-pressed={following === p.id ? 'true' : 'false'} title={`Follow ${p.name}`} style="all:unset;cursor:pointer;border-radius:99px" onClick={() => onFollow!(following === p.id ? null : p)}><span data-part="sr-only">Follow {p.name}</span><PeerAvatar peer={p} size="sm" ring /></button>
+        ? <button key={p.id} type="button" data-hit="" aria-pressed={following === p.id ? 'true' : 'false'} style="all:unset;cursor:pointer;border-radius:99px" onClick={() => onFollow!(following === p.id ? null : p)}><span data-part="sr-only">Follow {p.name}</span><PeerAvatar peer={p} size="sm" ring /></button>
         : <PeerAvatar key={p.id} peer={p} size="sm" ring />))}
       {rest.value.length > 0 && <button ref={n => (more = n)} type="button" data-part="more" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} aria-label={`${rest.value.length} more people`} style="border:0;margin-inline-start:0;cursor:pointer" onClick={() => (open.value = !open.value)}>+{rest.value.length}</button>}
       <div ref={n => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" id={id} aria-label={label}>

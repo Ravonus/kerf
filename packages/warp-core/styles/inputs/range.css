@@ -16,7 +16,7 @@
 }
 :where([data-scope="slider"] [data-part="range"]) {
   position: absolute; inset-block: 0; inset-inline-start: calc(var(--_v0) * 100%); inline-size: calc((var(--_v1) - var(--_v0)) * 100%);
-  border-radius: inherit; background: var(--warp-color-accent-solid); overflow: hidden;
+  border-radius: inherit; background: var(--warp-color-accent-solid); overflow: clip;
 }
 :where([data-scope="slider"] [data-part="thumb"]) {
   position: absolute; z-index: 3; inset-block-start: 50%; inset-inline-start: calc(var(--_v) * 100%);

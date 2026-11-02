@@ -107,32 +107,39 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const onDial = () => win.requestAnimationFrame(() => { const t = current(); if (t) { const { start: at, size } = place(t); jump(at, size) } })
   doc.addEventListener('warp:dial', onDial)
 
-  // The heading nearest the top of the reading band.
-  let spy: IntersectionObserver | undefined
-  if (opts.spy && typeof win.IntersectionObserver === 'function') {
-    const visible = new Set<Element>()
+  // The last heading past the top of the reading band, or the last of all once the page can't scroll further: the
+  // final headings may never reach the band. Read on scroll, since a jump can pass a heading without crossing the band.
+  let unspy: (() => void) | undefined
+  if (opts.spy) {
     const byTarget = new Map<Element, HTMLAnchorElement>()
     for (const a of links()) {
       const el = doc.getElementById(decodeURIComponent(a.hash.slice(1)))
       if (el) byTarget.set(el, a)
     }
     const order = [...byTarget.keys()]
-    spy = new win.IntersectionObserver(list => {
-      for (const e of list) (e.isIntersecting || e.boundingClientRect.top < 0 ? visible.add(e.target) : visible.delete(e.target))
-      const last = order.filter(el => visible.has(el)).at(-1) ?? order[0]
+    let queued = 0
+    const mark = () => {
+      queued = 0
+      const root = doc.documentElement
+      const atEnd = win.scrollY > 0 && win.scrollY + win.innerHeight >= root.scrollHeight - 2
+      const last = atEnd ? order.at(-1) : order.filter(el => el.getBoundingClientRect().top <= win.innerHeight / 4).at(-1) ?? order[0]
       const a = last && byTarget.get(last)
       if (!a || a.hasAttribute('aria-current')) return
       for (const x of links()) x.removeAttribute('aria-current')
       a.setAttribute('aria-current', 'location')
-    }, { rootMargin: '0px 0px -75% 0px' })
-    for (const el of order) spy.observe(el)
+    }
+    const scrolled = () => { queued ||= win.requestAnimationFrame(mark) }
+    win.addEventListener('scroll', scrolled, { passive: true })
+    win.addEventListener('resize', scrolled, { passive: true })
+    mark()
+    unspy = () => { win.removeEventListener('scroll', scrolled); win.removeEventListener('resize', scrolled); if (queued) win.cancelAnimationFrame(queued) }
   }
 
   return {
     update() { settle() },
     destroy() {
       win.cancelAnimationFrame(first)
-      seen.disconnect(); resized?.disconnect(); spy?.disconnect()
+      seen.disconnect(); resized?.disconnect(); unspy?.()
       doc.removeEventListener('warp:dial', onDial)
       nav.removeEventListener('pointerover', over); nav.removeEventListener('pointerout', off)
       nav.removeEventListener('focusin', focus); nav.removeEventListener('focusout', blur)

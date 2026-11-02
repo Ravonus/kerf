@@ -1,4 +1,4 @@
-import { derived, untrack } from '@weft-js/core'
+import { derived } from 'weft'
 import './styles'
 import '@weft-js/warp-core/styles/components/ticker.css'
 
@@ -16,8 +16,8 @@ export interface TickerProps {
  * The real value is in the DOM for readers; under reduced motion it swaps.
  */
 export function Ticker({ value, format, locale }: TickerProps) {
-  const fmt = untrack(() => new Intl.NumberFormat(locale, format))
-  const text = derived(() => fmt.format(value))
+  const fmt = derived(() => new Intl.NumberFormat(locale, format)) // apart from the text: a tick mustn't rebuild it
+  const text = derived(() => fmt.value.format(value))
   const parts = derived(() => {
     // oxlint-disable-next-line typescript/no-misused-spread -- code points are what it wants: a glyph per step, and Intl.Segmenter would cost a hot loop
     const s = [...text.value]

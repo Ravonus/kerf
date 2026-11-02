@@ -48,7 +48,7 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   // Escape: the layer stack already asked to close; the native cancel would close it a second way
   const onCancel = (e: Event) => { e.preventDefault(); if (!justEscaped()) o.onClose() }
   const onClick = (e: MouseEvent) => {
-    if ((e.target as Element).closest('[data-close]')) return o.onClose()
+    if ((e.target as Element).closest?.('[data-close]')) return o.onClose()
     // a press on the backdrop targets the dialog itself, outside its box (keyboard clicks have detail 0: not a press)
     if (e.target !== el || e.detail === 0 || el.getAttribute('role') === 'alertdialog') return
     const r = el.getBoundingClientRect()
@@ -123,7 +123,7 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
     restore = false
     o.onClose()
   }
-  const onClick = (e: MouseEvent) => { if ((e.target as Element).closest('[data-close-popover]')) o.onClose() }
+  const onClick = (e: MouseEvent) => { if ((e.target as Element).closest?.('[data-close-popover]')) o.onClose() }
   el.addEventListener('focusout', onFocusOut)
   el.addEventListener('click', onClick)
   if (o.open) show()
@@ -152,7 +152,7 @@ let current: (() => void) | null = null
  * onto the tip, a press hides it; touch long-press (500ms) shows it for 1.5s. One open at a time; Escape closes it
  * (a passive layer: presses pass through).
  */
-export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side | undefined }) {
+export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side; align?: Align }) {
   let o = opts
   let timer: ReturnType<typeof setTimeout> | undefined
   let remove: (() => void) | undefined
@@ -163,7 +163,7 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
     current?.()
     tip.toggleAttribute('data-warm', performance.now() < warmUntil)
     tip.showPopover?.()
-    place(tip, o.trigger, o.side ?? 'top', 'center', 6)
+    place(tip, o.trigger, o.side ?? 'top', o.align ?? 'center', 6)
     remove = pushLayer({ el: tip, trigger: o.trigger, passive: true, close: hide })
     current = hide
   }

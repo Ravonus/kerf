@@ -47,22 +47,25 @@
   padding-inline: 0; flex: 1; min-inline-size: 0; inline-size: auto; block-size: auto; align-self: stretch;
   caret-color: var(--warp-color-sweep); font-variant-numeric: var(--_num, normal); text-align: var(--_align, start);
 }
-:where([data-scope="field"] input[data-part="input"], [data-scope="field"] select[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
+:where([data-scope="field"] input[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
 :where([data-scope="field"] [data-part="input"][type="search"])::-webkit-search-cancel-button { display: none; }
+:where([data-scope="field"] [data-part="input"][type="number"]) { appearance: textfield; }
+:where([data-scope="field"] [data-part="input"][type="number"])::-webkit-inner-spin-button, :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-outer-spin-button { appearance: none; margin: 0; }
 :where([data-scope="field"] [data-part="input"]:-webkit-autofill) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
 
-/* textarea: grows from 3 lines to 10; label and icon rest on the first line */
+/* textarea: grows from its rows (--_rows, 3) to 10 or its rows; label and icon rest on the first line. field-sizing:
+   content ignores the rows attribute, so Textarea writes --_rows */
 :where([data-scope="field"] > [data-part="control"]:has(> textarea), [data-scope="field"] > [data-part="control"][data-wrap]) { align-items: flex-start; }
 :where([data-scope="field"] textarea[data-part="input"]) {
   white-space: pre-wrap; overflow-wrap: anywhere; resize: none; field-sizing: content; line-height: 1.5;
   padding-block: calc((var(--warp-field-height) - 1.5em) / 2);
-  min-block-size: calc(4.5em + var(--warp-field-height) - 1.5em); max-block-size: calc(15em + var(--warp-field-height) - 1.5em); overflow: auto;
+  min-block-size: calc(1.5em * var(--_rows, 3) + var(--warp-field-height) - 1.5em); max-block-size: calc(1.5em * max(10, var(--_rows, 3)) + var(--warp-field-height) - 1.5em); overflow: auto;
 }
 :where([data-scope="field"] > [data-part="control"]:is(:has(> textarea), [data-wrap]) > [data-part="icon"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
 :where([data-scope="field"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:has(> textarea), [data-wrap]):not(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > [data-part="label"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
 
 /* every slot paints above the borders */
-:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-scope="popup"])) { position: relative; z-index: 3; }
+:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-part="carrier"], [data-scope="popup"], [data-scope="select"])) { position: relative; z-index: 3; }
 
 /* prefix / suffix: fixed text, not submitted. Floating: shown once the label has lifted. Classic: always. */
 :where([data-scope="field"] :is([data-part="prefix"], [data-part="suffix"])) {
@@ -119,7 +122,7 @@
 :where([data-scope="field"] [data-part="counter"]) { margin-inline-start: auto; flex: none; color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="field"] [data-part="counter"][data-level="near"]) { color: var(--warp-color-caution-text); }
 :where([data-scope="field"] [data-part="counter"][data-level="over"]) { color: var(--warp-color-critical-text); font-weight: 500; }
-:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 
 /* read-only: dashed resting edge, no fill; focus still sweeps */
 :where([data-scope="field"][data-readonly] > [data-part="control"]) { background: transparent; }

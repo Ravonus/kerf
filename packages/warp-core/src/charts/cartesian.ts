@@ -258,7 +258,7 @@ export const bubble: Form<ScatterConfig> = {
   table: scatterTable,
   summary: scatterSay,
   plot(c, W, x) {
-    const H = W < 420 ? 190 : 220, ml = 30, mb = 22, { yt, px, py } = scales(c, W, H, ml, 8, 8, mb, 4), rs = (v: number) => 3 + Math.sqrt(v) * 2.4, f = c.format ?? num
+    const H = W < 420 ? 190 : 220, ml = 30, mb = 22, { yt, px, py } = scales(c, W, H, ml, 8, 8, mb, 4), most = Math.max(1e-9, ...c.data.flatMap(g => g.points.map(p => p.size ?? 0))), rs = (v: number) => 3 + Math.sqrt(v / most) * (W < 420 ? 11 : 15), f = c.format ?? num
     return {
       h: H,
       body: [
@@ -424,7 +424,7 @@ export const brush: Form<BrushConfig> = {
     const N = () => Number(svg.querySelector('[data-h]')!.getAttribute('aria-valuemax')) + 1
     const set = (h: string, d: number) => { const v = ctx.view!; if (h === 'b0') v.b0 = clamp(v.b0 + d, 0, v.b1 - MIN); else v.b1 = clamp(v.b1 + d, v.b0 + MIN, N() - 1); draw() }
     const key = (e: Event) => {
-      const k = e as KeyboardEvent, h = (k.target as Element).closest('[data-h]')
+      const k = e as KeyboardEvent, h = (k.target as Element).closest?.('[data-h]')
       const by = { ArrowRight: 1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[k.key]
       if (!h || !by) return
       k.preventDefault()
@@ -432,8 +432,8 @@ export const brush: Form<BrushConfig> = {
       set(h.getAttribute('data-h')!, by)
     }
     const down = (e: Event) => {
-      const p = e as PointerEvent, t = p.target as Element, h = t.closest('[data-h]')?.getAttribute('data-h'), held = t.closest('[data-brush]')
-      if (!h && !held) return
+      const p = e as PointerEvent, t = p.target as Element, h = t.closest?.('[data-h]')?.getAttribute('data-h'), bar = t.closest?.('[data-brush]')
+      if (!h && !bar) return
       p.preventDefault()
       const r = svg.getBoundingClientRect(), W = Number(svg.getAttribute('width')), v = ctx.view!, x0 = p.clientX, a = v.b0, b = v.b1, step = (((W - 48) / (N() - 1)) * r.width) / W
       const move = (m: PointerEvent) => {

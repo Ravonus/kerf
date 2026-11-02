@@ -1,6 +1,6 @@
-import { AlertIcon, SearchIcon, XIcon } from '@weft-js/warp-icons'
-import { field, formReset, labelChars, uid } from '@weft-js/warp-core'
-import { derived, untrack } from '@weft-js/core'
+import { AlertIcon, SearchIcon, XIcon } from '@weft/icons'
+import { field, formInvalid, formReset, labelChars, uid } from '@weft/warp-core'
+import { derived, state, untrack } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import { use } from '@weft-js/warp-core/weft'
 import './fields'
@@ -45,19 +45,23 @@ export type Control = (p: { id: string; readonly describedby?: string | undefine
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
  * after mount warp-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
-export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: unknown; filled?: boolean; attrs?: Record<string, unknown>; group?: boolean | undefined; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
+export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, labelled, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; /** The control takes its name from `aria-labelledby`, not `for`: a press on the label must not click a button. */ labelled?: boolean; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
   const id = untrack(() => given) ?? uid('field')
+  // the browser's message for a constraint that failed (03 §1.3): `error` wins over it
+  const missing = state<string | undefined>(undefined)
+  const problem = derived(() => error ?? missing.value)
   const glyph = derived(() => icon)
   // an error can arrive long after mount, so the block and what points at it follow it
-  const message = derived(() => hint !== undefined || !!error || counter !== undefined)
+  const message = derived(() => hint !== undefined || !!problem.value || counter !== undefined)
   const msg = derived(() => (message.value ? `${id}-msg` : undefined))
   // keyed by position: a label repeats letters
   const chars = derived(() => labelChars(String((label as string | number | undefined) ?? '')).map((c, at) => ({ c, at })))
   // one omit() for every read: the compiler expands `rest` afresh at each use (the proxy reads stay live)
   const live = untrack(() => rest)
   let root: HTMLDivElement | undefined
-  const shell = { id, get describedby() { return msg.value }, get invalid() { return !!error }, rest: live }
+  const shell = { id, get describedby() { return msg.value }, get invalid() { return !!problem.value }, rest: live }
   use(field, () => root, () => [live.value, label] as const)
+  use(formInvalid, () => root, () => (m: string | undefined) => (missing.value = m))
   if (untrack(() => reset)) use(formReset, () => root, () => () => reset!())
   return (
     <div
@@ -67,7 +71,7 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       data-appearance={appearance}
       data-size={size === 'md' ? undefined : size}
       data-counter={counter}
-      data-invalid={error ? '' : undefined}
+      data-invalid={problem.value ? '' : undefined}
       data-disabled={live.disabled ? '' : undefined}
       data-readonly={live.readonly ? '' : undefined}
       {...attrs}
@@ -75,13 +79,13 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       <div data-part="control" data-icon={typeof glyph.value === 'string' ? glyph.value : glyph.value ? '' : undefined} data-sweep="" data-filled={filled ?? live.value ? '' : undefined} data-hold={hold ? '' : undefined} data-wrap={wrap ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         {glyph.value && <span data-part="icon" aria-hidden="true"><span data-part="sweep-base"><Icon name={glyph.value} /></span><span data-part="sweep"><Icon name={glyph.value} /></span></span>}
-        <label data-part="label" for={group ? undefined : id} id={group ? `${id}-l` : undefined}>
+        <label data-part="label" for={group || labelled ? undefined : id} id={group || labelled ? `${id}-l` : undefined}>
           <span data-part="label-text">{label}</span>
           <span data-part="label-chars" aria-hidden="true">{chars.value.map(x => <span key={x.at} data-char data-c={x.c}></span>)}</span>
         </label>
         {prefix !== undefined && <span data-part="prefix">{prefix}</span>}
         {group
-          ? <div data-part="body" role="group" aria-labelledby={`${id}-l`} aria-describedby={msg.value} aria-invalid={error ? 'true' : undefined}>{untrack(() => control(shell))}</div>
+          ? <div data-part="body" role="group" aria-labelledby={`${id}-l`} aria-describedby={msg.value} aria-invalid={problem.value ? 'true' : undefined}>{untrack(() => control(shell))}</div>
           : untrack(() => control(shell))}
         {suffix !== undefined && <span data-part="suffix">{suffix}</span>}
         {clearable && <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${label}`}><XIcon /></button>}
@@ -89,7 +93,7 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       </div>
       {message.value && (
         <div data-part="message" id={msg.value}>
-          {error ? <span data-part="error" role="alert"><AlertIcon /><span>{error}</span></span> : hint !== undefined && <span data-part="hint">{hint}</span>}
+          {problem.value ? <span data-part="error" role="alert"><AlertIcon /><span>{problem.value}</span></span> : hint !== undefined && <span data-part="hint">{hint}</span>}
           {counter !== undefined && <span data-part="counter" aria-live="off"></span>}
         </div>
       )}
@@ -125,13 +129,14 @@ export function Search({ placeholder, ...props }: FieldProps & { placeholder?: s
   )
 }
 
-/** A textarea: grows from 3 lines to 10, Cmd/Ctrl+Enter submits its form (03 §3). */
+/** A textarea: grows from `rows` lines (3) to 10 or `rows`, Cmd/Ctrl+Enter submits its form (03 §3). */
 export function Textarea({ placeholder, rows = 3, ...props }: FieldProps & { placeholder?: string; rows?: number }) {
   return (
     <Field
       {...props}
       control={p => (
-        <textarea data-part="input" id={p.id} rows={rows} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>{untrack(() => p.rest.value)}</textarea>
+        // field-sizing: content ignores the rows attribute, so the height reads it from --_rows
+        <textarea data-part="input" id={p.id} rows={rows} style={`--_rows:${rows}`} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>{untrack(() => p.rest.value)}</textarea>
       )}
     />
   )

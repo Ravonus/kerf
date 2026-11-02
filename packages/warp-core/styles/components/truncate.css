@@ -2,13 +2,13 @@
 @layer warp.components {
 /* -- Truncate: line clamp with an inline Show more; middle truncation for ids/paths */
 :where([data-scope="truncate"] > [data-part="text"]) {
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--_lines, 2); line-clamp: var(--_lines, 2); overflow: hidden;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--_lines, 2); line-clamp: var(--_lines, 2); overflow: clip;
 }
 :where([data-scope="truncate"][data-state="open"] > [data-part="text"]) { -webkit-line-clamp: unset; line-clamp: none; }
 :where([data-scope="truncate"] > [data-part="toggle"]) { all: unset; cursor: pointer; color: var(--warp-color-accent-text); font-size: var(--warp-text-caption-size); font-weight: 500; }
 :where([data-scope="truncate"] > [data-part="toggle"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; border-radius: 2px; }
 :where([data-scope="truncate"][data-mode="middle"]) { display: inline-flex; min-inline-size: 0; max-inline-size: 100%; white-space: nowrap; font-family: var(--warp-font-mono); font-size: var(--warp-text-code-size); }
-:where([data-scope="truncate"][data-mode="middle"] > [data-part="head"]) { overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="truncate"][data-mode="middle"] > [data-part="head"]) { overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="truncate"][data-mode="middle"] > [data-part="tail"]) { flex: none; }
 
 

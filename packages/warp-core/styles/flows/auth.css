@@ -33,7 +33,7 @@
 @container auth (min-width: 1000px) {
 :where([data-scope="auth"] > [data-part="layout"]) { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
 :where([data-scope="auth"] [data-part="brand"]) {
-    position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: clip; display: flex; flex-direction: column; justify-content: space-between;
     padding: var(--warp-space-section); gap: var(--warp-space-group);
     background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse);
   }

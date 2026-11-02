@@ -2,6 +2,6 @@
 @layer warp.data {
 /* distribution bar: one 100% stacked bar + legend */
 :where([data-scope="distribution"]) { display: grid; gap: 10px; }
-:where([data-scope="distribution"] [data-part="bar"]) { display: flex; gap: 2px; block-size: 10px; border-radius: var(--warp-radius-mark); overflow: hidden; }
+:where([data-scope="distribution"] [data-part="bar"]) { display: flex; gap: 2px; block-size: 10px; border-radius: var(--warp-radius-mark); overflow: clip; }
 :where([data-scope="distribution"] [data-part="bar"] > i) { background: var(--_dc); flex: var(--v) 0 0; transition: flex-grow var(--warp-data-tween) var(--warp-ease-out); }
 }

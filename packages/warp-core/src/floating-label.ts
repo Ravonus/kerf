@@ -196,20 +196,22 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
   // oxlint-disable-next-line typescript/no-base-to-string -- the bound value is the app's: a control takes its text
   const reset = formReset(el, () => { if (input && held != null) input.value = String(held); onInput() })
   const onClick = (e: MouseEvent) => {
-    if (!(e.target as Element).closest('[data-part="clear"]') || !input) return
-    input.value = ''
-    input.dispatchEvent(new Event('input', { bubbles: true }))
+    if (!(e.target as Element).closest?.('[data-part="clear"]') || !input) return
+    // a Select's value is its hidden select: the trigger only shows it
+    const holder = box!.querySelector<HTMLSelectElement>('[data-part="carrier"]') ?? input
+    holder.value = ''
+    holder.dispatchEvent(new Event('input', { bubbles: true }))
     input.focus()
   }
   const onDown = (e: PointerEvent) => {
     const t = e.target as Element
     // a composite has no one input: a press on its label (no for) moves focus into the body (04, field shell)
-    if (!input && t.closest('[data-part="label"]')) {
+    if (!input && t.closest?.('[data-part="label"]')) {
       e.preventDefault()
       box?.querySelector<HTMLElement>('[data-part="body"] :is([tabindex="0"], button:not(:disabled), input:not(:disabled))')?.focus()
       return
     }
-    if (!input || t.closest('input, textarea, select, button, [data-scope="popup"], [data-scope="tag"], [data-part="scrub"]')) return
+    if (!input || t.closest?.('input, textarea, select, button, [data-scope="popup"], [data-scope="tag"], [data-part="scrub"]')) return
     e.preventDefault()
     input.focus()
   }

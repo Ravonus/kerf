@@ -10,7 +10,7 @@
   transition: color var(--warp-duration-fast) var(--warp-ease-out);
 }
 :where([data-scope="breadcrumb"] a:hover) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
-:where([data-scope="breadcrumb"] [aria-current]) { color: var(--warp-color-text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; padding-inline: 4px; }
+:where([data-scope="breadcrumb"] [aria-current]) { color: var(--warp-color-text); font-weight: 500; overflow: clip; text-overflow: ellipsis; padding-inline: 4px; }
 :where([data-scope="breadcrumb"] [data-part="ellipsis"]) { display: none; }
 @container (max-width: 999.98px) {
 :where([data-scope="breadcrumb"] li[data-collapse]) { display: none; }

@@ -1,7 +1,7 @@
 # warp signature: the sweep (non-negotiable)
 
 The user's words: the original inputs, and the sweep above all, are **the part of the old design to keep**. Every warp
-designer builds on this. It isn't an option, and it isn't vivid-only. The dial changes speed and which surfaces sweep by default,
+designer builds on this. It isn't an option, and it isn't vivid-only. The dial changes speed and how much a click target answers,
 never whether inputs and controls sweep, and never makes the stroke faint.
 
 The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
@@ -121,7 +121,8 @@ Source: `inputs/choice/Switch.tsx`.
 7. **Messages:** hint and error text slide in (180 ms) under the field.
 
 **Surfaces exception (decided 2026-10-28).** Cards, panels, stat tiles and kanban cards rest on the thin hairline
-border, which keeps the streamlined look. Inputs and controls rest on the ink border. Over a hairline, the full-accent
+border (`--warp-color-surface-line`), which keeps the streamlined look; at quiet they rest on shadow alone, with no
+line. Inputs and controls rest on the ink border; segmented groups and switches rest on the hairline, ink for focus. Over a hairline, the full-accent
 sweep stands out by hue even where the luminance ratio is 1.5–3:1, so surfaces only need sweep-vs-surface ≥ 3:1.
 Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it was invisible.
 
@@ -135,7 +136,7 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 | Floating label + notch | yes | yes | yes |
 | Per-character label tint | yes (subtle by colour) | yes | yes |
 | Icon sweep | yes | yes | yes |
-| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | plus cards, panels, stat rows |
+| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | the same, plus the two-colour button fill. Static cards and panels never sweep; a card you can press does, at every stop |
 
 **Reduced motion:**
 - The sweep becomes an instant border-colour change.

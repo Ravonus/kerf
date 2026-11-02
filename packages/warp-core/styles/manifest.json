@@ -299,6 +299,9 @@
   "inputs/field.css",
   "inputs/file.css"
  ],
+ "edges": [
+  "layout/edges.css"
+ ],
  "editable": [
   "inputs/field.css",
   "inputs/text.css"
@@ -772,7 +775,9 @@
   "components/base.css",
   "components/dialog.css",
   "components/menu.css",
-  "components/listbox.css"
+  "components/listbox.css",
+  "inputs/field.css",
+  "inputs/choice.css"
  ],
  "selection-toolbar": [
   "components/selection-toolbar.css"

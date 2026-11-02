@@ -6,7 +6,7 @@ import '@weft-js/warp-core/styles/components/surface.css'
 
 /**
  * A surface (05 §1, §6: Card, Panel). Interactive cards (`href` or `onClick`) are links or buttons and always carry
- * the sweep; static ones carry `data-sweep="surface"`, which the dial shows only at vivid (`--warp-sweep-surfaces`).
+ * the sweep at every stop; static ones carry `data-sweep="surface"`, which only `data-flair="sweep"` shows.
  */
 export function Card({ eyebrow, title, href, onClick, sweep = true, ui, ref, children, ...rest }: { ref?: ((el: HTMLElement) => void) | undefined; eyebrow?: unknown; title?: unknown; href?: string; onClick?: ((e: MouseEvent) => void) | undefined; sweep?: boolean; ui?: Interaction; children?: unknown; [attr: string]: unknown }) {
   let host: HTMLElement | undefined

@@ -5,7 +5,7 @@
 :where([data-scope="split-pane"]) {
   --_size: 40%; --_hit: max(12px, var(--warp-hit-min));
   display: grid; grid-template-columns: minmax(0, 1fr); min-inline-size: 0; min-block-size: 0;
-  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: hidden;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: clip;
 }
 :where([data-scope="split-pane"] > [data-part="pane"]) { min-inline-size: 0; min-block-size: 0; overflow: auto; container-type: inline-size; overscroll-behavior: contain; }
 :where([data-scope="split-pane"] > [data-part="separator"]) { display: none; }

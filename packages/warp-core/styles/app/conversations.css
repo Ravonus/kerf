@@ -7,8 +7,8 @@
 }
 :where([data-scope="conversations"] a:hover) { background: var(--warp-color-surface-hover); }
 :where([data-scope="conversations"] a[aria-current="page"]) { background: var(--warp-color-surface-raised); box-shadow: 0 0 0 1px var(--warp-color-border); }
-:where([data-scope="conversations"] a b) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="conversations"] a small) { grid-column: 2; color: var(--warp-color-text-subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a b) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a small) { grid-column: 2; color: var(--warp-color-text-subtle); font-size: 12px; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="conversations"] a[data-unread] b) { font-weight: 600; }
 :where([data-scope="conversations"] a[data-unread] small) { color: var(--warp-color-text); }
 :where([data-scope="conversations"] a[data-muted]) { color: var(--warp-color-text-subtle); }

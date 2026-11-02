@@ -3,7 +3,7 @@
 /* tile: video or avatar; state lives on attributes; nothing loops */
 :where([data-scope="tile"]) {
   --_ring: transparent;
-  position: relative; isolation: isolate; overflow: hidden; min-block-size: 0; min-inline-size: 0;
+  position: relative; isolation: isolate; overflow: clip; min-block-size: 0; min-inline-size: 0;
   display: grid; place-items: center; border-radius: var(--warp-radius-surface);
   background: radial-gradient(120% 90% at 30% 20%, color-mix(in oklab, var(--_hue, var(--warp-color-data-1)) 30%, var(--warp-color-surface-raised)), var(--warp-color-surface-sunken));
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 8%, transparent);
@@ -15,7 +15,7 @@
   position: absolute; inset-inline-start: 8px; inset-block-end: 8px; z-index: 2; max-inline-size: calc(100% - 16px);
   display: inline-flex; align-items: center; gap: 6px; block-size: 24px; padding-inline: 8px; border-radius: var(--warp-radius-control);
   background: color-mix(in oklab, var(--warp-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--warp-blur-overlay));
-  font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
 :where([data-scope="tile"] [data-part="name"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
 :where([data-scope="tile"] [data-part="video"]) { position: absolute; inset: 0; z-index: 1; }

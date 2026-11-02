@@ -133,17 +133,18 @@ test('Menu: a menu button names its panel; closed, it is not expanded', async ()
 })
 
 describe('Select', () => {
-  test('a real select: first option shows when nothing is chosen', async () => {
+  test('a real select carries the value: first option shows when nothing is chosen', async () => {
     const { container: c } = render(() => <F.Sort />)
     await tick()
     expect(c.querySelector('select')!.value).toBe('a')
   })
 
-  test('coarse pointers keep the OS control: no list is built', async () => {
+  test('no list until it opens, on any pointer', async () => {
     const { container: c } = render(() => <F.Sort />)
     await tick()
-    c.querySelector('select')!.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
-    expect(document.querySelector('[role="listbox"]')).toBeNull()
+    expect(c.querySelector('[role="listbox"]')).toBeNull()
+    c.querySelector<HTMLElement>('[role="combobox"]')!.click()
+    expect(c.querySelector('[role="listbox"]')).not.toBeNull()
   })
 })
 

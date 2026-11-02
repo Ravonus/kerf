@@ -7,7 +7,7 @@
   min-block-size: var(--warp-control-md); padding: 6px 8px 6px 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
 }
 :where([data-scope="speech"] [data-part="strip"]) { --warp-sweep-radius: var(--warp-radius-control); }
-:where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: hidden; color: var(--warp-color-text-subtle); }
+:where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: clip; color: var(--warp-color-text-subtle); }
 :where([data-scope="speech"][data-state="listening"] [data-part="wave"]) { color: var(--warp-color-accent-text); }
 :where([data-scope="speech"] [data-part="wave"] i) { flex: none; inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 19px * var(--a, 0)); transition: block-size 90ms linear; }
 :where([data-motion="reduce"] [data-scope="speech"] [data-part="wave"] i) { transition: none; block-size: 12px; opacity: calc(0.25 + 0.75 * var(--a, 0)); }

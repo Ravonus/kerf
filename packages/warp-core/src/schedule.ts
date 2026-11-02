@@ -363,8 +363,8 @@ export function calendarDrag(el: HTMLElement, opts: CalendarDragOptions) {
   const onDown = (e: PointerEvent) => {
     if (e.button) return
     const target = e.target as Element
-    const node = target.closest<HTMLElement>('[data-part="event"]')
-    const cell = target.closest<HTMLElement>(horizontal() ? '[data-part="lane"]' : '[data-part="col"]')
+    const node = target.closest?.<HTMLElement>('[data-part="event"]')
+    const cell = target.closest?.<HTMLElement>(horizontal() ? '[data-part="lane"]' : '[data-part="col"]')
     if (!cell) return
     if (e.pointerType === 'touch') {
       if (node && o.onLongPress) press = { x: e.clientX, y: e.clientY, timer: setTimeout(() => { press = null; swallow = true; setTimeout(() => (swallow = false), 600); o.onLongPress!(node.dataset.id!, node) }, LONG_PRESS) }
@@ -377,7 +377,7 @@ export function calendarDrag(el: HTMLElement, opts: CalendarDragOptions) {
       const slot = o.slot(node.dataset.id!)
       if (!slot) return
       e.preventDefault()
-      drag = { mode: target.closest('[data-part="resize"]') ? 'resize' : 'move', pointer: e.pointerId, x0: e.clientX, y0: e.clientY, id: node.dataset.id, origin: slot, date: slot.date, anchor: 0, resource, moved: false }
+      drag = { mode: target.closest?.('[data-part="resize"]') ? 'resize' : 'move', pointer: e.pointerId, x0: e.clientX, y0: e.clientY, id: node.dataset.id, origin: slot, date: slot.date, anchor: 0, resource, moved: false }
     } else {
       e.preventDefault()
       drag = { mode: 'create', pointer: e.pointerId, x0: e.clientX, y0: e.clientY, date, anchor: minuteAt(cell, e), resource, moved: false }
@@ -411,13 +411,13 @@ export function calendarDrag(el: HTMLElement, opts: CalendarDragOptions) {
   const onCancel = () => { cancelPress(); stop(false) }
   const onClick = (e: MouseEvent) => {
     if (swallow) { swallow = false; e.preventDefault(); e.stopPropagation(); return }
-    const node = (e.target as Element).closest<HTMLElement>('[data-part="event"]')
+    const node = (e.target as Element).closest?.<HTMLElement>('[data-part="event"]')
     if (node) o.onPress(node.dataset.id!, node)
   }
   const onDouble = (e: MouseEvent) => {
     const t = e.target as Element
-    if (o.readOnly || t.closest('[data-part="event"]')) return
-    const cell = t.closest<HTMLElement>(horizontal() ? '[data-part="lane"]' : '[data-part="col"]')
+    if (o.readOnly || t.closest?.('[data-part="event"]')) return
+    const cell = t.closest?.<HTMLElement>(horizontal() ? '[data-part="lane"]' : '[data-part="col"]')
     if (cell) o.onSlot?.(cell.dataset.date ?? '', snapTo(minuteAt(cell, e as PointerEvent), o.step ?? 15), cell.dataset.resource)
   }
   const onMenu = (e: Event) => { if (press) e.preventDefault() }
@@ -441,7 +441,7 @@ export function longPress(el: HTMLElement, opts: { selector: string; onPress(row
   let start = { x: 0, y: 0 }
   const clear = () => { clearTimeout(timer); timer = undefined; if (row) delete row.dataset.pressing; row = undefined }
   const down = (e: PointerEvent) => {
-    const r = (e.target as Element).closest<HTMLElement>(o.selector)
+    const r = (e.target as Element).closest?.<HTMLElement>(o.selector)
     if (!r || e.button) return
     clear()
     row = r
@@ -450,7 +450,7 @@ export function longPress(el: HTMLElement, opts: { selector: string; onPress(row
     timer = setTimeout(() => { const hit = row!; clear(); el.ownerDocument.defaultView?.navigator.vibrate?.(8); o.onPress(hit) }, LONG_PRESS)
   }
   const move = (e: PointerEvent) => { if (row && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) clear() }
-  const menu = (e: Event) => { if ((e.target as Element).closest(o.selector)) e.preventDefault() }
+  const menu = (e: Event) => { if ((e.target as Element).closest?.(o.selector)) e.preventDefault() }
   el.addEventListener('pointerdown', down)
   el.addEventListener('pointermove', move)
   el.addEventListener('pointerup', clear)

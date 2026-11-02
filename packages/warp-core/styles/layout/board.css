@@ -20,7 +20,7 @@
   transition: box-shadow var(--warp-duration-fast), outline-color var(--warp-duration-fast);
 }
 :where([data-scope="board"] > [data-part="widget"][data-dragging]) { box-shadow: var(--warp-elevation-3); z-index: 2; outline: 2px dashed var(--warp-color-accent-border); outline-offset: 2px; }
-:where([data-scope="board"] [data-part="body"]) { flex: 1; min-block-size: 0; overflow: hidden; padding: 0 var(--warp-space-group) var(--warp-space-group); }
+:where([data-scope="board"] [data-part="body"]) { flex: 1; min-block-size: 0; overflow: clip; padding: 0 var(--warp-space-group) var(--warp-space-group); }
 :where([data-scope="board"] [data-part="handle"]) {
   display: flex; align-items: center; gap: 8px; min-block-size: 40px; padding-inline: var(--warp-space-group) var(--warp-space-tight);
   font-weight: 600; font-size: var(--warp-text-caption-size); cursor: grab; touch-action: none; border-radius: inherit;

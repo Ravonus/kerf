@@ -44,7 +44,7 @@
   grid-template-rows: 1fr; opacity: 1; visibility: visible;
   transition: grid-template-rows var(--warp-duration-base) var(--warp-ease-in-out), opacity var(--warp-duration-base) var(--warp-ease-out), visibility 0s;
 }
-:where([data-scope="accordion"] [data-part="content"] > div, [data-scope="disclosure"][data-part="content"] > div) { overflow: hidden; min-block-size: 0; }
+:where([data-scope="accordion"] [data-part="content"] > div, [data-scope="disclosure"][data-part="content"] > div) { overflow: clip; min-block-size: 0; }
 :where([data-scope="accordion"] [data-part="content"] > div > div) { padding-block-end: var(--warp-space-group); color: var(--warp-color-text-subtle); }
 :where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="trigger"], [data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="content"] > div > div) { padding-inline: var(--warp-space-tight); }
 }

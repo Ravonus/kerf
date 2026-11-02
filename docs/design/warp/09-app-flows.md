@@ -352,7 +352,7 @@ Four steps on 05 Steps: **Upload → Map → Review → Import**. Each step's he
 
 1. **Upload:** a 03 Dropzone (`accept=".csv"`, first row is the header, row limit in the hint) plus "Use the sample".
    A non-CSV file is refused with a Toast before upload; nothing is sent until Map.
-2. **Map:** a table of CSV column · sample value · "Imports as" (native Select, labelled "Name imports as"). Columns are
+2. **Map:** a table of CSV column · sample value · "Imports as" (CompactSelect, labelled "Name imports as"). Columns are
    pre-mapped by header name; every target can be "Don't import". Email is required: with no column on it, Review
    reports it once, not per row.
 3. **Review:** an Alert says how many rows need a fix (caution) or that all pass (positive); the preview table marks a

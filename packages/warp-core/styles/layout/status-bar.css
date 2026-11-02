@@ -5,7 +5,7 @@
   display: flex; align-items: center; gap: 2px; min-block-size: 26px; padding-inline: var(--warp-space-tight);
   padding-block-end: var(--warp-safe-bottom); background: var(--warp-color-surface-sunken);
   border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
-  font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); overflow: hidden; white-space: nowrap;
+  font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); overflow: clip; white-space: nowrap;
 }
 :where([data-scope="status-bar"] > *) { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; }
 :where([data-scope="status-bar"] > button:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }

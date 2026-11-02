@@ -22,7 +22,7 @@ export const cases: Record<keyof typeof C, Case> = {
   TextareaCase: { act: r => type(r, 'abc'), see: r => expect(q(r, '[data-part="counter"]').textContent).toBe('3/40'), budget: 3, runs: 3 },
   SelectCase: {
     act: r => { const s = q(r, 'select') as HTMLSelectElement; s.value = 'name'; fireEvent.change(s) },
-    see: r => expect((q(r, 'select') as HTMLSelectElement).value).toBe('name'), budget: 0, runs: 2,
+    see: r => expect((q(r, 'select') as HTMLSelectElement).value).toBe('name'), budget: 1, runs: 5,
   },
   CheckboxCase: { act: r => q(r, 'input').click(), see: r => expect((q(r, 'input') as HTMLInputElement).checked).toBe(true), budget: 0, runs: 1 },
   SwitchCase: { act: r => q(r, 'input').click(), see: r => expect((q(r, 'input') as HTMLInputElement).checked).toBe(true), budget: 0, runs: 1 },

@@ -263,6 +263,8 @@ duration by `max(motion-scale, 0.001)`: that keeps a compositor animation alive.
 | `color.sweep` | full accent: light L 0.515, dark L 0.60 | never low-chroma; ≥ 3:1 vs base and surfaces (§6) |
 | `color.sweep-base` | `text` at every stop | ink-strength resting border (`FloatingBorderInput.tsx:20-33`) |
 | `color.sweep-critical` | `critical-solid` | invalid fields pin the sweep "in" |
+| `color.primary.{solid,solid-hover,on-solid}` | neutral · accent · accent | the unadorned solid button; an explicit `tone` still wins |
+| `color.surface-line` | transparent · `color.border` · `color.border` | a surface's resting line: quiet lifts on shadow alone |
 | `sweep.buttons` · `sweep.surfaces` | 1 · 1 · 1 / 0 · 0 · 1 | the dial never removes a sweep; surfaces are opt-in reach below vivid. `data-flair="sweep"` sets both 1, `"none"` is an author opt-out |
 | `frame.track` · `frame.corner` · `frame.weight` · `frame.stroke` | ink (light), ink 62% (dark) · 10px · 2px · 2.6 | frame button, `old:theme/tokens.css:317-493` |
 | `frame.head` · `frame.tail` | registered `<number>`, 0 → 1 on `sweep.ease` | outline drawn in CSS (six segments sized in `cq` units), so no SVG dash gaps past ~200px |

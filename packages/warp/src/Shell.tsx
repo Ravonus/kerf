@@ -225,7 +225,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
           </div>
         </header>
         {!focus.value && (
-          <nav data-part="nav" aria-label={navLabel} id={navId} onClick={(e: MouseEvent) => { if ((e.target as Element).closest('a')) closeNav() }}>
+          <nav data-part="nav" aria-label={navLabel} id={navId} onClick={(e: MouseEvent) => { if ((e.target as Element).closest?.('a')) closeNav() }}>
             {groups.value[0]?.label !== undefined && <p data-part="nav-group" id={`${navId}-g`}>{groups.value[0].label}</p>}
             {switcher && (
               <button type="button" data-part="switcher" data-sweep="" aria-haspopup="menu" aria-expanded={menuOpen.value ? 'true' : 'false'} aria-controls={menuId} onClick={(e: Event) => openMenu(e)} onKeyDown={menuKey}>

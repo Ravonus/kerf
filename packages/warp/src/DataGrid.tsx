@@ -5,7 +5,7 @@ import { Button } from './Button'
 import { Segmented } from './Choice'
 import { Search } from './Field'
 import { PaginationBar } from './Pagination'
-import { Select } from './Select'
+import { CompactSelect, Select } from './Select'
 import { chevron, ColumnsPanel, columnsIcon, Editor, sortIcon, type Column, type TableSort } from './Table'
 import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/data/chips.css'
@@ -257,20 +257,31 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
     const f = current.value.filters
     return (source()).filter(r => all.value.every(c => matchFilter(c.filter, f[c.id] ?? '', read(c, r))))
   })
-  const ordered = derived(() => {
+  // what a tree's cell shows for a row: a parent's own field is often empty, and its number is what it rolls up
+  const rolled = (c: GridColumn<T>, r: T) => {
+    const given = tree?.rollup?.(r, c.id)
+    if (!c.aggregate) return read(c, r)
+    if (kidsOf(r)?.length) return typeof c.aggregate === 'function' ? c.aggregate(leaves(r, kidsOf)) : aggregate(c.aggregate, leaves(r, kidsOf).map(x => read(c, x)))
+    return given ?? read(c, r)
+  }
+  const shownValue = (c: GridColumn<T>, r: T) => (tree && isBranch(r) ? rolled(c, r) : read(c, r))
+  const sorted = (list: readonly T[]) => {
     const s = current.value.sort
     const by = s && all.value.find(c => c.id === s.id)
-    return by ? sortRows(filtered.value, r => read(by, r), s.dir) : filtered.value
-  })
+    return by ? sortRows(list, r => shownValue(by, r), s.dir) : list
+  }
+  const ordered = derived(() => sorted(filtered.value))
   const grouped = derived(() => canGroup && !!current.value.group)
   const treed = derived(() => !!tree || grouped.value)
   const paged = derived(() => (page && !tree ? pageSlice(ordered.value, at.value - 1, page.size) : undefined))
   const lines = derived<Line<T>[]>(() => {
     if (tree) {
       const q = query.value.trim().toLowerCase()
+      const under = new Map<T, readonly T[] | undefined>() // treeRows asks more than once, and each level sorts
+      const kids = (r: T) => { if (!under.has(r)) { const k = kidsOf(r); under.set(r, k && sorted(k)) } return under.get(r) }
       const entries = treeRows(ordered.value, {
-        key: keyOf, kids: kidsOf, branch: isBranch, open: k => !!(open.get(k) as boolean | undefined), closed: k => !!(closedHere.get(k) as boolean | undefined),
-        match: q ? r => all.value.some(c => String((read(c, r) as string | number | null | undefined) ?? '').toLowerCase().includes(q)) : undefined,
+        key: keyOf, kids, branch: isBranch, open: k => !!open.get(k), closed: k => !!closedHere.get(k),
+        match: q ? r => all.value.some(c => String(read(c, r) ?? '').toLowerCase().includes(q)) : undefined,
       })
       const tops = new Map(ordered.value.map((r, i) => [keyOf(r), i % 8 + 1]))
       const out: Line<T>[] = []
@@ -292,31 +303,44 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
       return [{ kind: 'group', id: key, label, rows: members, open: on }, ...(on ? members.map(r => ({ kind: 'row' as const, id: keyOf(r), row: r, level: 2 })) : [])]
     })
   })
-  const visible = derived(() => lines.value.flatMap(l => (l.kind === 'row' ? [l.row] : l.kind === 'group' ? l.rows : [])))
+  // an open group lists its rows twice, as the group and as lines
+  const visible = derived(() => [...new Set(lines.value.flatMap(l => (l.kind === 'row' ? [l.row] : l.kind === 'group' ? l.rows : [])))])
   // a tree's footer counts what its parents roll up, once each, open or not
   const footed = derived(() => (tree ? [...new Set(visible.value.flatMap(r => leaves(r, kidsOf)))] : visible.value))
   const hasDetails = untrack(() => expand !== undefined)
   const say = (s: string) => (status.value = s)
 
   const rowOf = (key: string) => (lines.value.find(l => l.id === key && l.kind === 'row') as Extract<Line<T>, { kind: 'row' }> | undefined)?.row
+  const fetching = new Map<string, Promise<boolean>>()
+  const fetchKids = (key: string, row: T) => {
+    const running = fetching.get(key)
+    if (running) return running
+    const run = (async () => {
+      busy.value = { ...busy.value, [key]: true }
+      try {
+        const got = await tree!.load!(row, query.value)
+        loaded.value = { ...loaded.value, [key]: got }
+        say(`${ctx.title(row)} expanded, ${got.length} ${got.length === 1 ? 'row' : 'rows'} loaded`)
+        return true
+      } catch {
+        open.value = { ...open.value, [key]: false }
+        say(`${ctx.title(row)} couldn’t load`)
+        return false
+      } finally {
+        const { [key]: _, ...rest } = busy.value
+        busy.value = rest
+        fetching.delete(key)
+      }
+    })()
+    fetching.set(key, run)
+    return run
+  }
   const setOpen = async (key: string, on: boolean) => {
     const q = query.value.trim()
     if (q) { closedHere.value = { ...closedHere.value, [key]: !on }; return }
     open.value = { ...open.value, [key]: on }
     const row = rowOf(key)
-    if (!on || !row || kidsOf(row) !== undefined || !tree?.load) return
-    busy.value = { ...busy.value, [key]: true }
-    try {
-      const got = await tree.load(row, query.value)
-      loaded.value = { ...loaded.value, [key]: got }
-      say(`${ctx.title(row)} expanded, ${got.length} ${got.length === 1 ? 'row' : 'rows'} loaded`)
-    } catch {
-      open.value = { ...open.value, [key]: false }
-      say(`${ctx.title(row)} couldn’t load`)
-    } finally {
-      const { [key]: _, ...rest } = busy.value
-      busy.value = rest
-    }
+    if (on && row && kidsOf(row) === undefined && tree?.load) await fetchKids(key, row)
   }
   const isOpen = (key: string) => (query.value.trim() ? !closedHere.get(key) : !!(open.get(key) as boolean | undefined))
   const toggle = (key: string, on?: boolean) => {
@@ -324,12 +348,25 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
     void setOpen(key, on ?? !isOpen(key))
   }
   watch(() => query.value, () => { closedHere.value = {} })
+  let expanding = 0 // a run of Expand all; Collapse all, or a newer run, ends it
   const expandAll = (on: boolean) => {
+    const run = ++expanding
     if (!on) { open.value = {}; return }
-    const next: Record<string, boolean> = {}
-    const walk = (list: readonly T[]) => { for (const r of list) { const kids = kidsOf(r); if (kids?.length) { next[keyOf(r)] = true; walk(kids) } } }
-    walk(ordered.value)
-    open.value = next
+    // a filter's results are the server's, so it only opens what's here; otherwise a branch not loaded yet loads, and so on down
+    const lazy = !query.value.trim() && !!tree?.load
+    const failed: string[] = []
+    const descend = async (list: readonly T[]): Promise<unknown> => {
+      const branches = list.filter(isBranch)
+      if (run !== expanding || !branches.length) return
+      open.value = { ...open.value, ...Object.fromEntries(branches.map(r => [keyOf(r), true])) }
+      return Promise.all(branches.map(async r => {
+        const key = keyOf(r)
+        if (lazy && kidsOf(r) === undefined && !await fetchKids(key, r)) failed.push(ctx.title(r))
+        return descend(kidsOf(r) ?? [])
+      }))
+    }
+    // the status holds one line, and a failure outranks the rows that loaded after it
+    void descend(ordered.value).then(() => { if (failed.length) say(failed.length === 1 ? `${failed[0]} couldn’t load` : `${failed.length} rows couldn’t load`) })
   }
 
   const namedCol = derived(() => all.value.find(c => c.rowHeader) ?? all.value[0])
@@ -337,12 +374,7 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
     id, cols: () => cols.value, keyOf, read, treed: () => treed.value, get tree() { return tree }, kidsOf,
     title: r => String((read(namedCol.value!, r) as string | number | null | undefined) ?? ''),
     query: () => query.value.trim(),
-    rolled(c, r) {
-      const given = tree?.rollup?.(r, c.id)
-      if (!c.aggregate) return read(c, r)
-      if (kidsOf(r)?.length) return typeof c.aggregate === 'function' ? c.aggregate(leaves(r, kidsOf)) : aggregate(c.aggregate, leaves(r, kidsOf).map(x => read(c, x)))
-      return given ?? read(c, r)
-    },
+    rolled,
     commit: (r, c, v) => onEdit?.(r, c, v),
     toggle, editors: new Map(), status: say, expanded, hasDetails, body: r => expand?.(r),
     flip: k => { const { [k]: was, ...rest } = expanded.value; expanded.value = was ? rest : { ...rest, [k]: true } },
@@ -466,7 +498,7 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
                 {cols.value.map(c => (
                   <th key={c.id} role="columnheader">
                     {c.filter === 'select'
-                      ? <label><span data-part="sr-only">{`Filter ${c.header}`}</span><select value={current.value.filters[c.id] ?? ''} onChange={(e: Event) => setFilter(c.id, (e.currentTarget as HTMLSelectElement).value)}><option value="">Any</option>{c.options?.map(o => <option key={o} value={o} selected={o === current.value.filters[c.id]}>{o}</option>)}</select></label>
+                      ? <CompactSelect label={`Filter ${c.header}`} placeholder="Any" value={current.value.filters[c.id] ?? ''} options={(c.options ?? []).map(o => ({ value: o, label: o }))} onValueChange={v => setFilter(c.id, v)} />
                       : c.filter
                         ? <label><span data-part="sr-only">{c.filter === 'min' ? `${c.header} at least` : `Filter ${c.header}`}</span><input value={current.value.filters[c.id] ?? ''} inputmode={c.filter === 'min' ? 'numeric' : undefined} placeholder={c.filter === 'min' ? '≥' : 'Contains…'} onInput={(e: Event) => setFilter(c.id, (e.currentTarget as HTMLInputElement).value)} /></label>
                         : <span data-part="sr-only">{`No filter for ${c.header}`}</span>}

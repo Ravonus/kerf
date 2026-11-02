@@ -1,6 +1,7 @@
 import { onMount, state } from '@weft-js/core'
 import { Button } from '@weft-js/warp'
 import bytes from '../generated/arena.json'
+import built from '../generated/arena-built.json'
 import speed from '../generated/speed.json'
 
 /** What each frame's harness puts on its window. */
@@ -61,7 +62,7 @@ export function Arena() {
     const heard = (e: MessageEvent) => { if (e.origin === location.origin && e.data?.arena) read() }
     addEventListener('message', heard)
     const seen = new IntersectionObserver(([e]) => {
-      if (e!.isIntersecting) for (const r of rows) if (!r.frame!.src) r.frame!.src = `/arena/${r.id}/index.html`
+      if (e.isIntersecting) for (const r of rows) if (r.frame && !r.frame.src) r.frame.src = `/arena/${r.id}/index.html`
       else if (beat) stop()
     })
     seen.observe(box!)
@@ -75,6 +76,8 @@ export function Arena() {
   return (
     <section data-site="arena" ref={el => (box = el)}>
       <h2>The same app in weft, Solid and React</h2>
+      {!built.frames && <p data-part="missing" role="status">The live comparison isn't in this build: its three frames come from <code>arena/build.mjs</code>, which hasn't been run. The measured table below doesn't need them.</p>}
+      {built.frames && <>
       <p data-part="intro">These are three real production builds of one small app, running in your browser now: a counter and a grid of 1,000 cells. Press the buttons and compare what each one had to do.</p>
       <div data-part="actions">
         <Button size="lg" onClick={() => { for (const arena of live()) arena.click(); read() }}>Click all three</Button>
@@ -97,6 +100,7 @@ export function Arena() {
         ))}
       </div>
       <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. <a href="/arena/shared/harness.txt">How this is measured</a>: each update at 60 a second is timed on its own, with nothing watching the page, and the times are added up. One update in 30 runs untimed so its page changes can be counted. Time per update stays empty until a run has about five seconds in it, because a few clicks are too few to compare. On an {speed.machine}, 60 updates a second take {us(speed.arena.weft)} each in weft, {us(speed.arena.solid)} in Solid, {us(speed.arena.react)} in React and {us(speed.arena.raw)} in hand-written DOM.</p>
+      </>}
       <h3>Speed, measured in Chromium</h3>
       <p data-part="intro">weft is faster than Solid in {speed.wins} of these {speed.rows.length} rows and slower in {speed.losses}, marked in red. In the rest the rounds overlap. Times are milliseconds, the median of three rounds on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
       <div data-part="table">

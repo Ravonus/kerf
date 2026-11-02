@@ -234,7 +234,7 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     test('the toast sits at the viewport corner, not in the dialog box', async () => {
       const page = await fresh()
       await raise(page)
-      await page.waitForTimeout(400)
+      await page.waitForTimeout(900)   // past the spring's settle
       const rect = () => page.evaluate(() => { const r = document.querySelector('[data-scope="toast"][data-part="root"]').getBoundingClientRect(); return [Math.round(r.right), Math.round(r.bottom)] })
       const before = await rect()
       await opened(page, 'Open modal')

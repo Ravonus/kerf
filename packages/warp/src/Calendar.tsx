@@ -60,7 +60,7 @@ export function CalendarGrid(p: GridProps) {
     p.onPick(iso as IsoDate, reason)
   }
   const onKey = (e: KeyboardEvent) => {
-    if (!(e.target as Element).closest('[data-part="day"]')) return
+    if (!(e.target as Element).closest?.('[data-part="day"]')) return
     const to = gridKey(e.key, e.shiftKey, cursor.value, firstDay.value, getComputedStyle(box!).direction === 'rtl')
     if (!to) return
     e.preventDefault()
@@ -70,11 +70,11 @@ export function CalendarGrid(p: GridProps) {
     focusCursor()
   }
   const onClick = (e: MouseEvent) => {
-    const b = (e.target as Element).closest<HTMLElement>('[data-part="day"]')
+    const b = (e.target as Element).closest?.<HTMLElement>('[data-part="day"]')
     if (b) pick(b.dataset.date!, 'pointer')
   }
   const onOver = (e: PointerEvent) => {
-    const b = (e.target as Element).closest<HTMLElement>('[data-part="day"]')
+    const b = (e.target as Element).closest?.<HTMLElement>('[data-part="day"]')
     if (p.mode !== 'range' || !b || hover.value === b.dataset.date) return
     hover.value = b.dataset.date!
     p.onHover?.(hover.value as IsoDate)

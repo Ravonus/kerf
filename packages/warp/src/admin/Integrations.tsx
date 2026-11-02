@@ -122,6 +122,18 @@ export interface WebhooksProps {
   onTest: (hook: Webhook) => Promise<{ status: number; ms: number }>
 }
 
+/**
+ * A URL that breaks where a reader would: after a slash or a query's `&` and `=`, before a dot, `?` or `#`, never inside a
+ * word, nor after a hyphen in a host name. Each piece is an inline block, so lines break only between pieces (`<wbr>`
+ * says so to anything reading the markup), and a piece longer than the line still breaks inside as a last resort.
+ */
+export const urlBreaks = (url: string): string[] => url.split(/(?<=[/&=])(?!\/)|(?=[.?#])/).filter(Boolean)
+const Url = ({ href }: { href: string }) => (
+  <code data-part="url" style="white-space:normal;word-break:normal;overflow-wrap:break-word">
+    {urlBreaks(href).map((part, i) => [i ? <wbr /> : null, <span style="display:inline-block;max-inline-size:100%">{part}</span>])}
+  </code>
+)
+
 /** Webhooks (09 §4.6): a DataTable of endpoints. Send test reports the code and time; a new signing secret is shown once. */
 export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
   const adding = state(false)
@@ -155,7 +167,7 @@ export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
   }
   const open = () => { url.value = ''; picked.value = events.slice(0, 2); urlError.value = ''; eventError.value = ''; tried.value = false; adding.value = true }
   const columns: Column<Webhook>[] = [
-    { id: 'url', header: 'Endpoint', rowHeader: true, card: 'title', cell: h => <code style="overflow-wrap:anywhere;white-space:normal">{h.url}</code> },
+    { id: 'url', header: 'Endpoint', rowHeader: true, card: 'title', cell: h => <Url href={h.url} /> },
     { id: 'events', header: 'Events', value: h => h.events.join(', ') },
     { id: 'lastDelivery', header: 'Last delivery', value: h => h.lastDelivery ?? 'None yet' },
     { id: 'healthy', header: 'Health', card: 'badge', value: h => (h.healthy ? 'Healthy' : 'Failing'), cell: h => <Badge tone={h.healthy ? 'positive' : 'critical'} dot>{h.healthy ? 'Healthy' : 'Failing'}</Badge> },

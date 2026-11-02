@@ -45,9 +45,9 @@ export function sanitizeHtml(html: string) {
     let attrs = ''
     if (tag === 'a') { const href = safeUrl(attr(m[3]!, 'href') ?? ''); if (href) attrs = ` href="${esc(href)}" rel="noopener noreferrer"` }
     if (tag === 'span') {
-      if (!/\bdata-mention\b/i.test(m[3]!)) { open.push(tag); out += '<span>'; continue }
-      const title = attr(m[3]!, 'title') ?? ''
-      attrs = ` data-mention="" contenteditable="false" title="${esc(unesc(title))}" role="img" aria-label="Mention: ${esc(unesc(title))}"`
+      if (!/\bdata-mention\b/i.test(m[3])) { open.push(tag); out += '<span>'; continue }
+      const title = attr(m[3], 'title') ?? ''
+      attrs = ` data-mention="" contenteditable="false" role="img" aria-label="Mention: ${esc(unesc(title))}"`
     }
     open.push(tag)
     out += `<${tag}${attrs}>`
@@ -274,8 +274,8 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
   const shortcuts = () => {
     const s = doc.getSelection()
     const block = blockOf(s?.anchorNode ?? null)
-    if (!block || block.closest('li')) return false
-    const text = block.textContent.replace(/ /g, ' ')
+    if (!block || block.closest?.('li')) return false // a bare Text in the editor is a block too, with no closest
+    const text = block.textContent!.replace(/ /g, ' ')
     if (text === '---') { block.textContent = ''; exec('insertHorizontalRule'); return true }
     for (const [re, cmd, value] of BLOCKS) {
       if (!re.test(text)) continue
