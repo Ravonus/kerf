@@ -13,6 +13,20 @@ When two components need the same value, keep it in one place and let both read 
 The simplest way is a parent that owns the state and passes it to both children: values as props, and a box with `bind:`
 when a child changes it. Most sharing is this.
 
+```tsx
+export default function Checkout() {
+  const qty = state(1)
+  return (
+    <>
+      <Stepper bind:value={qty} />
+      <Summary qty={qty.value} />
+    </>
+  )
+}
+```
+
+`Stepper` and `Summary` never talk to each other. They share `qty` because `Checkout` owns it.
+
 ## Share a box
 
 A box doesn't have to live in a component. Made in a module, any component that reads it follows it. Here both panes read
