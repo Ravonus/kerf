@@ -85,7 +85,7 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
 | A test database | `weft/test` |
 
 - **Providers (built):** Drizzle stays in `@weft/start/db/*` as the built-in default and goes through the same seam as
-  the others. `@weft/plugin-db-prisma` and `@weft/plugin-db-native` are plugins, which proves the seam: a client made
+  the others. `@weft/db/plugin-prisma` and `@weft/db/plugin-native` are plugins, which proves the seam: a client made
   through `register` carries the runtime handle, and a plugin's `db` contribution tells the CLI its schema, migrations
   folder and `generate`. With no database there's no provider: `ctx` is yours, and query and mutation work as they do now.
 - **Prisma on SQLite uses the libSQL adapter.** The better-sqlite3 adapter failed on Node, Bun and Deno in our spike.
@@ -94,7 +94,7 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
   own driver instead (`createNative`). Migrations are plain `.sql` files in `migrations/`, and `weft db generate <name>`
   starts one. There's no schema to drift from, so Q015 doesn't apply, and validators are Zod schemas you write. The
   driver stays reachable as `ctx.db.driver`, so nothing weft doesn't cover is out of reach.
-- **Auth on Native:** Better Auth speaks Kysely, so `@weft/plugin-db-native/auth` gives it a Kysely dialect over Native's
+- **Auth on Native:** Better Auth speaks Kysely, so `@weft/db/plugin-native/auth` gives it a Kysely dialect over Native's
   own connection, on all three engines and runtimes. There's no second driver. Its only dependency is `kysely`, added to
   apps with both.
 - **Support tiers:** *tested* combinations run in the matrix on every runtime. *Community* providers implement the slot

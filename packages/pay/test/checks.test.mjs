@@ -11,7 +11,7 @@ import { run as checks } from '../src/checks.mjs'
 
 const ledger = "import { definePay } from '@weft/pay/server'\nexport default definePay({ catalog: [], store, urls: { success: '/', cancel: '/' } })\n"
 const app = { 'src/pay.server.ts': ledger, '.env.example': 'STRIPE_WEBHOOK_SECRET=whsec_placeholder\n' }
-const stripe = { 'pay.rail': { stripe: '@weft/plugin-pay-stripe' } }
+const stripe = { 'pay.rail': { stripe: '@weft/pay/stripe' } }
 const hook = (files, slots = stripe) => checks({ files: Object.keys(files), read: rel => files[rel] ?? '', exists: rel => rel in files, slots })
 const run = async files => ({ diagnostics: await hook({ ...app, ...files }) })
 const codes = r => r.diagnostics.map(d => d.code)

@@ -23,7 +23,7 @@
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
     "@weft/cli": "file:../packages/cli",
-    "@weft/plugin-text": "file:../packages/plugin-text",
+    "@weft/text": "file:../packages/text",
     "typescript": "7.0.2"
   }
 }

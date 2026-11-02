@@ -1,5 +1,5 @@
 // A list source from bound SQL (agorix 03 §5, H6): `columns` is required, identifiers come only from it, and every value
-// is a parameter. `target` is anything with `query(text, params)`: `ctx.db` from `@weft/plugin-db-native`, or a driver.
+// is a parameter. `target` is anything with `query(text, params)`: `ctx.db` from `@weft/db/plugin-native`, or a driver.
 
 import { likeOf, pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
 import { StartError } from '@weft/start/data'

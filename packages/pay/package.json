@@ -10,9 +10,18 @@
     "./server": "./src/server.ts",
     "./drizzle": "./src/drizzle.ts",
     "./test": "./src/test.ts",
-    "./plugin": "./plugin.mjs"
+    "./plugin": "./plugin.mjs",
+    "./stripe": "./src/stripe.ts",
+    "./stripe/plugin": "./stripe-plugin.mjs"
   },
-  "files": ["src", "docs", "plugin.mjs", "plugin.d.mts"],
+  "files": [
+    "src",
+    "docs",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "stripe-plugin.mjs",
+    "stripe-plugin.d.mts"
+  ],
   "scripts": {
     "test": "vitest run"
   },
@@ -33,7 +42,6 @@
     "@testing-library/dom": "10.4.2",
     "@testing-library/user-event": "14.6.8",
     "@weft/cli": "file:../cli",
-    "@weft/plugin-pay-stripe": "file:../plugin-pay-stripe",
     "@weft/start": "file:../start",
     "drizzle-orm": "0.45.4",
     "jsdom": "30.1.3",

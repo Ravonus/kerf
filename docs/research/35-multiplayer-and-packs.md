@@ -15,12 +15,12 @@ drizzle query need no pack, and each pack replaces exactly one thing.
 | `@weft/realtime-webrtc` | Peer transport | none | RTCDataChannel |
 | `@weft/realtime-socketio` | Peer transport, plus `relay()` | none | socket.io |
 | `@weft/realtime-livekit` | Peer transport, plus `livekitTicket` | none | LiveKit |
-| `@weft/db-sql` | List source | `db.adapter`, key `sql` | any tagged SQL |
-| `@weft/db-kysely` | List source | key `kysely` | Kysely |
-| `@weft/db-prisma` | List source | key `prisma` | Prisma |
-| `@weft/db-mongo` | List source, `watchMongo` | key `mongo` | MongoDB |
-| `@weft/db-firestore` | List source | key `firestore` | firebase-admin |
-| `@weft/db-dynamodb` | List source | key `dynamodb` | AWS SDK |
+| `@weft/db/sql` | List source | `db.adapter`, key `sql` | any tagged SQL |
+| `@weft/db/kysely` | List source | key `kysely` | Kysely |
+| `@weft/db/prisma` | List source | key `prisma` | Prisma |
+| `@weft/db/mongo` | List source, `watchMongo` | key `mongo` | MongoDB |
+| `@weft/db/firestore` | List source | key `firestore` | firebase-admin |
+| `@weft/db/dynamodb` | List source | key `dynamodb` | AWS SDK |
 
 The names follow the plan, not research 13's older `@weft/plugin-bus-*`. `postgresBus` stays in `@weft/start`, and
 drizzle stays the default list source in `@weft/start/list/drizzle`, because a scaffolded app already has both drivers.

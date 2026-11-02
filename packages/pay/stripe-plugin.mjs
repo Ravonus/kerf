@@ -5,12 +5,12 @@ import { definePlugin, defineSlot, provide } from 'weft/plugin'
 const slot = defineSlot({ id: 'pay.rail', version: 1, cardinality: 'keyed', sides: ['server', 'client', 'native'] })
 
 export const stripe = definePlugin({
-  name: '@weft/plugin-pay-stripe',
+  name: '@weft/pay/stripe',
   version: '0.0.0',
   weft: '*',
   permissions: { net: ['api.stripe.com'], env: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] },
   contribute: (options = {}) => ({
-    provides: [provide(slot, { key: 'stripe', sides: { server: { module: '@weft/plugin-pay-stripe', export: 'stripeRail', options } } })],
+    provides: [provide(slot, { key: 'stripe', sides: { server: { module: '@weft/pay/stripe', export: 'stripeRail', options } } })],
     agents: { title: 'Pay rail: Stripe', text: 'Stripe Checkout, server side only: `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` for `/_weft/x/pay/stripe`, the webhook URL to give Stripe.' },
     map: [{ want: 'Change the payment provider', call: 'replace this plugin in `plugins`: app code stays', have: 'Stripe Checkout' }],
   }),

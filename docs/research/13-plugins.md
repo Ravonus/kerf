@@ -45,7 +45,7 @@ bars and the font build. No call site should change.
    `text.reserve` pass, say) with JSON data. It cannot run code inside the Rust pass.
    - Third-party transforms go in an optional `vite` field. Those hooks **must** be filtered (P107).
    - Each hook is timed per plugin, and the plugin gets a share of the HMR budget (P108).
-   - `@weft/plugin-text` needs **no** Vite hooks at all.
+   - `@weft/text` needs **no** Vite hooks at all.
 5. **Runtime cost is 0 KB when unused, by construction.**
    - Provider runtime code can only be reached through a slot module, whose `load()` is a dynamic `import()`.
    - The size gate fails if a provider module lands in an entry chunk (P114).
@@ -230,12 +230,12 @@ A slot is defined once, in core or in a package that owns a domain:
 
 | Slot | Card. | Sides | Default when no provider | Providers (first-party) | Phase |
 |---|---|---|---|---|---|
-| `font.build@1` | one | build | `null`: fonts ship as written in CSS (CSS-only). X020 warns on faces without a matched fallback | `@weft/plugin-text` | 2 |
-| `text.measure@1` | one | client, worker | `null`: CSS-only text. Measured contexts are P101 | `@weft/plugin-text` (`slim` or `pretext` engine) | 2 (Surfaces) |
+| `font.build@1` | one | build | `null`: fonts ship as written in CSS (CSS-only). X020 warns on faces without a matched fallback | `@weft/text` | 2 |
+| `text.measure@1` | one | client, worker | `null`: CSS-only text. Measured contexts are P101 | `@weft/text` (`slim` or `pretext` engine) | 2 (Surfaces) |
 | `surface.renderer@1` | keyed by `kind` | client | built in: `canvas2d`, `webgl2` | `@weft/plugin-surface-keel` (`keel-pixel`) | 2 (Surfaces) |
 | `realtime.bus@1` | one | server | built in: `memory` (R002 on multi-instance presets) | `@weft/realtime-redis`, `-nats` ([35](35-multiplayer-and-packs.md)) | 3 / 3b |
-| `db.adapter@1` | keyed by name | server | built in: `drizzle` | `@weft/db-sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb` ([35](35-multiplayer-and-packs.md)) | 3c |
-| `pay.rail@1` | keyed by rail | server, client, native | `null`; `src/pay.server.ts` without a rail is P101, a rail without it PAY014 | `@weft/plugin-pay-stripe` built ([37](37-pay-web.md)); `-storekit`, `-play` | 6c |
+| `db.adapter@1` | keyed by name | server | built in: `drizzle` | `@weft/db/sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb` ([35](35-multiplayer-and-packs.md)) | 3c |
+| `pay.rail@1` | keyed by rail | server, client, native | `null`; `src/pay.server.ts` without a rail is P101, a rail without it PAY014 | `@weft/pay/stripe` built ([37](37-pay-web.md)); `-storekit`, `-play` | 6c |
 | `device.<capability>@1` | keyed by target | native, client | `null`; unguarded use is N031 | `@weft/plugin-device-*` (native-module codegen) | 6b |
 
 **Binding rules** (resolved once, at config load):
@@ -245,7 +245,7 @@ A slot is defined once, in core or in a package that owns a domain:
 | 0, `default` set | default bound and **reported** as `"provider": "weft:default:<name>"` | default keys bound |
 | 0, `default: null` | unbound. Static consumers are **P101** (§2.6) | unbound for that key |
 | 1 | bound | bound per key |
-| 2+ (non-default) | **P100**, unless `slots: { 'text.measure': '@weft/plugin-text' }` names the winner | P100 for a duplicate key |
+| 2+ (non-default) | **P100**, unless `slots: { 'text.measure': '@weft/text' }` names the winner | P100 for a duplicate key |
 
 A plugin always beats the default, and that is reported, never silent. The array order of `plugins` never decides
 anything. weft sorts plugins by `name` for every output, so `[a(), b()]` and `[b(), a()]` produce byte-identical
@@ -315,7 +315,7 @@ export declare function provide<Impl>(slot: SlotDef<string, Impl>, p: Omit<Provi
 ```ts
 // weft.config.ts — the only place plugins are named
 import { defineConfig } from 'weft/config'
-import { text } from '@weft/plugin-text'
+import { text } from '@weft/text'
 import { warp } from '@weft/warp/plugin'
 
 export default defineConfig({
@@ -387,10 +387,10 @@ At config load, weft writes one module per slot to `.weft/slots/` (Astro's codeg
 
 ```ts
 // .weft/slots/text.measure.ts — generated from weft.config.ts. Do not edit (P010).
-// provider: @weft/plugin-text@0.1.0 · implements text.measure@1 · engine: slim · sides: client, worker
-export const provider = { plugin: '@weft/plugin-text', version: '0.1.0', interface: 1 } as const
+// provider: @weft/text@0.1.0 · implements text.measure@1 · engine: slim · sides: client, worker
+export const provider = { plugin: '@weft/text', version: '0.1.0', interface: 1 } as const
 export const load = () =>
-  import('@weft/plugin-text/runtime/measure').then(m => m.createMeasure({ engine: 'slim' }))
+  import('@weft/text/runtime/measure').then(m => m.createMeasure({ engine: 'slim' }))
 ```
 
 ```ts
@@ -446,18 +446,18 @@ export const load = (): never => { throw weftError('P101', 'text.measure', impor
   | `approve` | Writes `.weft/plugins.lock.json` after showing the permission and integrity diff |
 
   ```json
-  { "plugins": [{ "name": "@weft/plugin-text", "version": "0.1.0", "weft": "^0.4.0",
+  { "plugins": [{ "name": "@weft/text", "version": "0.1.0", "weft": "^0.4.0",
       "provides": [{ "slot": "font.build", "interface": 1, "bound": true },
                    { "slot": "text.measure", "interface": 1, "bound": true, "options": { "engine": "slim" } }],
-      "permissions": { "fs": { "read": ["fonts/**"], "write": [".weft/plugins/@weft/plugin-text/**"] }, "native": true },
+      "permissions": { "fs": { "read": ["fonts/**"], "write": [".weft/plugins/@weft/text/**"] }, "native": true },
       "diagnostics": ["X003", "X004", "X022", "X023", "X050-X053"],
       "timing": { "hmr.p95_ms": 0, "build.fonts_ms": 212 } }],
-    "slots": { "text.measure": "@weft/plugin-text", "font.build": "@weft/plugin-text",
+    "slots": { "text.measure": "@weft/text", "font.build": "@weft/text",
                "surface.renderer": { "canvas2d": "weft:default", "webgl2": "weft:default" },
                "realtime.bus": "weft:default:memory" } }
   ```
 - **`weft check --json`** gets a top-level `slots` block with the same shape, and every diagnostic carries an
-  `owner` (`core`, `slot:text.measure` or `@weft/plugin-text`), so an agent knows whose docs to read.
+  `owner` (`core`, `slot:text.measure` or `@weft/text`), so an agent knows whose docs to read.
 - **AGENTS.md:** each plugin contributes one section, which may be at most 1 KB (P112). `weft agents-md` concatenates
   the sections in name order under "Plugins" and keeps the whole file under PLAN §7's 8 KB.
 - **MCP:** the `catalog` tool lists plugin-contributed components, surfaces and slots. `docs` serves the plugin's
@@ -509,13 +509,13 @@ Supply chain:
 ```ts
 import { pluginHarness, conformance } from 'weft/test/plugins'
 import { textMeasure, fontBuild } from 'weft/slots'
-import { text } from '@weft/plugin-text'
+import { text } from '@weft/text'
 
 test('plugin-text manifest and build', async () => {
   const h = await pluginHarness(text({ fonts: fixtureFonts }), { fixture: 'fixtures/blog' })
   expect(h.diagnostics).toEqual([])                       // config-time P-codes
-  expect(h.slots['text.measure'].provider).toBe('@weft/plugin-text')
-  expect(h.emitted('.weft/plugins/@weft/plugin-text/fonts.css').brotli).toBeLessThan(1536)
+  expect(h.slots['text.measure'].provider).toBe('@weft/text')
+  expect(h.emitted('.weft/plugins/@weft/text/fonts.css').brotli).toBeLessThan(1536)
   expect(h.timing.hmr.p95).toBeLessThan(5)
 })
 
@@ -548,7 +548,7 @@ reference:
 
 | Side | How | Fits? |
 |---|---|---|
-| build | napi-rs addon called from the provider module (bytes in, bytes out), as `weft-compiler` does | **Yes.** `font.build` in `@weft/plugin-text` is the first: metrics via `skrifa`, subsetting via a Rust subsetter (`klippa` or `subsetter`; **(unverified: maturity for variable fonts)**). `fontaine` is the JS fallback if the crate slips ([11 §6](11-text-and-type.md)) |
+| build | napi-rs addon called from the provider module (bytes in, bytes out), as `weft-compiler` does | **Yes.** `font.build` in `@weft/text` is the first: metrics via `skrifa`, subsetting via a Rust subsetter (`klippa` or `subsetter`; **(unverified: maturity for variable fonts)**). `fontaine` is the JS fallback if the crate slips ([11 §6](11-text-and-type.md)) |
 | server | `native()` / `remote()` from PLAN §4.3, wrapped by the provider module | **Yes, for coarse calls.** `realtime.bus` over a Rust NATS client, or `db.adapter` for a Rust store. The 06 rule holds: ≥ ~1 ms of CPU or bytes per call |
 | client / worker | A WASM module loaded by the provider's `load()` | **Only if batched.** `text.measure.layout` takes ~0.2 µs per paragraph ([11 §1.6](11-text-and-type.md)). A JS↔WASM crossing per call would cost more than the work, so a Rust text provider must expose batch `layoutMany(buffer)`. A full shaper in WASM (rustybuzz/cosmic-text class) would also blow the 36 KB chunk budget **(unverified size)**. Not in v0 |
 | compiler | — | **No.** §2.4. The compiler takes data |
@@ -573,7 +573,7 @@ reference:
 
 ---
 
-## 3. The first plugin, end to end: `@weft/plugin-text`
+## 3. The first plugin, end to end: `@weft/text`
 
 ### 3.1 Layers
 
@@ -582,12 +582,12 @@ weft (core)          weft/slots: textMeasure, fontBuild slot defs + conformance 
                      weft-compiler: built-in 'text.reserve' and 'skeleton.shape' passes (off until fed data)
 packages/text        weft/text, weft/skeleton: measure(), lines(), fit(), fonts.role(), <Text>, s.text() glue,
                      the estimator over fonts.json. Imports weft:slot/text.measure. No engine. ≤ 2 KB br
-packages/text-engine the slim Pretext fork (another agent): prepare / layout / lines / clear. No weft dependency
-packages/plugin-text @weft/plugin-text: provides text.measure (slim | pretext) and font.build (napi: metrics, subset,
+packages/text the slim Pretext fork (another agent): prepare / layout / lines / clear. No weft dependency
+packages/text @weft/text: provides text.measure (slim | pretext) and font.build (napi: metrics, subset,
                      fallback faces, preloads, fonts.json). Contributes compiler data, X-codes, AGENTS, catalog
 ```
 
-warp, Surfaces and skeletons depend on `weft/text` (the consumer API) and **never** on `@weft/plugin-text`. That is
+warp, Surfaces and skeletons depend on `weft/text` (the consumer API) and **never** on `@weft/text`. That is
 what makes "install it and everything uses it" true: every consumer already reads the slot.
 
 ### 3.2 What "every text use goes through it" means
@@ -664,9 +664,9 @@ question **(unverified)**.
 ### 3.4 Config
 
 ```ts
-// @weft/plugin-text options (Zod)
+// @weft/text options (Zod)
 text({
-  engine: 'slim',            // 'slim' (packages/text-engine, default) | 'pretext' (pinned @chenglou/pretext 1.0.0)
+  engine: 'slim',            // 'slim' (packages/text, default) | 'pretext' (pinned @chenglou/pretext 1.0.0)
   measure: 'auto',           // 'auto': provide text.measure (loaded lazily by consumers) | 'off': font.build only
   fonts: {                   // role → face. The only place font files are declared when the plugin is installed
     body:    { family: 'Inter', src: './fonts/InterVariable.woff2', fallback: 'Arial', axes: { wght: [400, 600] } },
@@ -739,7 +739,7 @@ export const fontBuild = defineSlot<FontBuildV1>()({
 **The plugin definition:**
 
 ```ts
-// packages/plugin-text/src/index.ts
+// packages/text/src/index.ts
 import { definePlugin, provide } from 'weft/plugin'
 import { textMeasure, fontBuild } from 'weft/slots'
 import { z } from 'zod'
@@ -765,11 +765,11 @@ export const text = definePlugin({
   contribute: (o) => ({
     provides: [
       provide(fontBuild, { versions: [1], sides: {
-        build: { module: '@weft/plugin-text/build/fonts', export: 'createFontBuild', options: { subsets: o.subsets } },
+        build: { module: '@weft/text/build/fonts', export: 'createFontBuild', options: { subsets: o.subsets } },
       } }),
       ...(o.measure === 'auto' ? [provide(textMeasure, { versions: [1], sides: {
-        client: { module: '@weft/plugin-text/runtime/measure', export: 'createMeasure', options: { engine: o.engine } },
-        worker: { module: '@weft/plugin-text/runtime/measure.worker', export: 'createMeasure', options: { engine: o.engine } },
+        client: { module: '@weft/text/runtime/measure', export: 'createMeasure', options: { engine: o.engine } },
+        worker: { module: '@weft/text/runtime/measure.worker', export: 'createMeasure', options: { engine: o.engine } },
       } })] : []),
     ],
     compiler: o.measure === 'auto' ? { features: {
@@ -788,11 +788,11 @@ export const text = definePlugin({
 ```
 
 ```ts
-// packages/plugin-text/src/runtime/measure.ts — the only code that reaches the client, as its own chunk
+// packages/text/src/runtime/measure.ts — the only code that reaches the client, as its own chunk
 import type { TextMeasureV1 } from 'weft/slots'
 
 export async function createMeasure({ engine }: { engine: 'slim' | 'pretext' }): Promise<TextMeasureV1> {
-  const e = engine === 'slim' ? await import('@weft/text-engine') : await import('./pretext-adapter')
+  const e = engine === 'slim' ? await import('@weft/text/engine') : await import('./pretext-adapter')
   return {
     engine: { name: engine, version: e.version },
     prepare: (t, f) => e.prepare(t, f.css, { whiteSpace: f.whiteSpace, wordBreak: f.wordBreak, letterSpacing: f.letterSpacing }),
@@ -885,21 +885,21 @@ belongs to the plugin.
 |---|---|---|
 | X001 measured ≠ rendered (dev sampling) | `slot:text.measure` | no (nothing is measured) |
 | X002 `system-ui` on a measured role | `slot:text.measure` | no |
-| X003 prepare before the font loads, no fallback face | `@weft/plugin-text` | no |
-| X004 a style the engine can't predict (`balance`, `hyphens: auto`, `tabular-nums`, `opsz` …) | `@weft/plugin-text` (the list depends on the engine) | no |
+| X003 prepare before the font loads, no fallback face | `@weft/text` | no |
+| X004 a style the engine can't predict (`balance`, `hyphens: auto`, `tabular-nums`, `opsz` …) | `@weft/text` (the list depends on the engine) | no |
 | X005, X006, X008 fluid-type and zoom rules | core (CSS type) | **yes** |
 | X010–X012 canvas text without a mirror, mirror hidden, fallbacks disabled | core (`weft/surface`) | **yes**. `s.text()` itself needs the slot (P101) |
 | X020 `@font-face` without a generated fallback | `slot:font.build` | **yes**, as a warning. The autofix adds `text()` |
 | X021 `font-display: block\|auto` | core (CSS type) | **yes** |
-| X022 font not subset, or over budget | `@weft/plugin-text` | no |
-| X023 preload not used above the fold, or display face not preloaded | `@weft/plugin-text` | no |
+| X022 font not subset, or over budget | `@weft/text` | no |
+| X023 preload not used above the fold, or display face not preloaded | `@weft/text` | no |
 | X030–X034, X036 skeleton rules | core (`weft/skeleton`) | **yes** (bars fall back to estimates) |
 | X035 streamed text without `<Text stream>` | core (`weft/text`) | **yes** |
 | X040, X041 per-glyph DOM motion | core (warp/ds) | **yes** |
-| **X050** (new) a call needs an engine capability the selected `engine` lacks | `@weft/plugin-text` | no. Fix: `engine: 'pretext'` |
-| **X051** (new) a font `src` is remote or missing | `@weft/plugin-text` | no. Fix: self-host the file |
-| **X052** (new) a theme role names a family not declared in `text({ fonts })` | `@weft/plugin-text` | no |
-| **X053** (new) `weft plugins verify` corpus result older than the pinned engine or browser | `@weft/plugin-text` | no |
+| **X050** (new) a call needs an engine capability the selected `engine` lacks | `@weft/text` | no. Fix: `engine: 'pretext'` |
+| **X051** (new) a font `src` is remote or missing | `@weft/text` | no. Fix: self-host the file |
+| **X052** (new) a theme role names a family not declared in `text({ fonts })` | `@weft/text` | no |
+| **X053** (new) `weft plugins verify` corpus result older than the pinned engine or browser | `@weft/text` | no |
 | **X054** (new) row height not computable in a measured context | `slot:text.measure` (core compiler pass) | no |
 
 ### 3.7 Agent surface of the text plugin
@@ -918,7 +918,7 @@ belongs to the plugin.
   { "code": "P101", "owner": "core", "file": "src/routes/chat.tsx", "span": [14, 5, 14, 11],
     "why": "<Chat> needs text.measure (row heights); nothing provides it",
     "fix": { "edits": [{ "file": "weft.config.ts", "insert": "text()", "at": "plugins" }],
-             "install": "pnpm add @weft/plugin-text" } }
+             "install": "pnpm add @weft/text" } }
   ```
 
 ### 3.8 Budgets for plugin-text
@@ -946,10 +946,10 @@ packages/
                   weft/test/plugins (harness, conformance), `weft plugins` CLI, .weft/slots codegen
   text          weft/text + weft/skeleton consumer APIs, no engine
   text-engine   slim Pretext fork (library, no weft dependency)            ← other agent; untouched here
-  plugin-text   @weft/plugin-text: text.measure + font.build providers
+  plugin-text   @weft/text: text.measure + font.build providers
   plugin-bus-*  @weft/plugin-bus-postgres | -redis | -nats | -durable-object     (Phase 3 / 3b)
   plugin-db-*   @weft/plugin-db-kysely | -prisma | …                             (3c)
-  plugin-pay-*  @weft/plugin-pay-stripe | -storekit | -play                      (6c)
+  plugin-pay-*  @weft/pay/stripe | -storekit | -play                      (6c)
   plugin-surface-keel, plugin-device-*, plugin-tailwind
 crates/
   weft-fonts    metrics (skrifa) + subsetting, napi; used by plugin-text's font.build
@@ -965,7 +965,7 @@ buses move out to `plugin-*`.
 | Phase | Plugin-system work |
 |---|---|
 | **1** | Reserve P100–P120 in the catalog, reserve the `plugins` and `slots` keys in the `weft.config.ts` schema (empty), and generate `.weft/slots/` with the built-in defaults only. No `definePlugin` yet: nothing in Phase 1 needs a provider, and designing the API without one real plugin is speculative |
-| **2 (start)** | The minimum API: `definePlugin`, `defineSlot`, `provide`, `one` slots, generated slot modules plus `slots.d.ts`, `weft plugins list\|explain\|add`, a `slots` block in `weft check`, P100–P107, P111–P117, P120. The **first provider is `font.build`** in `@weft/plugin-text`, landing with warp tier 1's font build step |
+| **2 (start)** | The minimum API: `definePlugin`, `defineSlot`, `provide`, `one` slots, generated slot modules plus `slots.d.ts`, `weft plugins list\|explain\|add`, a `slots` block in `weft check`, P100–P107, P111–P117, P120. The **first provider is `font.build`** in `@weft/text`, landing with warp tier 1's font build step |
 | **2 (Surfaces)** | `text.measure` (slim and pretext), the `text.reserve` compiler pass for `<Text reserve>` and `Boundary`, `weft/test/plugins` with conformance and `plugins verify` (P119), `keyed` slots plus `surface.renderer` and `keel-pixel`, Vite hook timing plus P108 |
 | **3** | Server-side slots: `realtime.bus` (`memory` default, postgres provider), P118. warp's measured contexts land with 3c's virtual lists |
 | **3c (before the packs)** | Permissions audit, `.weft/plugins.lock.json`, `approve`, P109, P110, and `--sandbox` in CI. The Agorix packs are the first plugins not written alongside core, so trust tooling lands before they do. `db.adapter` and the bus packs |
@@ -1052,7 +1052,7 @@ These are unused P numbers: P001–P008 and P010 are taken; P009 is left as a ga
 | Turning warp components or `weft/start` into providers | **No.** It would hide where code comes from |
 | A general event or hook bus between plugins | **No.** This is the Nuxt/Astro/Babel failure mode. Slots are the only channel |
 
-**Overall:** build it, small, at the start of Phase 2, with `@weft/plugin-text` as the proving case. It needs no
+**Overall:** build it, small, at the start of Phase 2, with `@weft/text` as the proving case. It needs no
 Vite hooks, has a 0 KB unused cost, binds two slots, contributes compiler data and owns codes. If the text plugin
 can't be expressed cleanly in this model, the model is wrong, and it is cheaper to find that out with one plugin than
 with seven.

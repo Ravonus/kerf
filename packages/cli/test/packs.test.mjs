@@ -9,30 +9,38 @@ import { audit, grants } from '../src/trust.mjs'
 import { bindSlots } from '../src/slots.mjs'
 
 const packages = fileURLToPath(new URL('../../', import.meta.url))
-const packs = readdirSync(packages).filter(d => /^(realtime|db|plugin-pay)-|^pay$/.test(d))
+const realtime = readdirSync(packages).filter(d => /^realtime-/.test(d))
+/** Plugin name, its package's directory, and the entry that defines it. A package can hold several. */
+const packs = [
+  ...realtime.map(d => [`@weft/${d}`, d, 'plugin.mjs']),
+  ...['sql', 'kysely', 'prisma', 'mongo', 'dynamodb', 'firestore'].map(d => [`@weft/db/${d}`, 'db', `plugins/${d}.mjs`]),
+  ['@weft/pay', 'pay', 'plugin.mjs'],
+  ['@weft/pay/stripe', 'pay', 'stripe-plugin.mjs'],
+]
 
-const load = async dir => {
-  const mod = await import(pathToFileURL(join(packages, dir, 'plugin.mjs')).href)
+const load = async name => {
+  const [, dir, file] = packs.find(p => p[0] === name)
+  const mod = await import(pathToFileURL(join(packages, dir, file)).href)
   const plugin = mod.default()
   const manifest = plugin.contribute({ command: 'check', mode: 'development', root: packages })
   return { plugin, manifest }
 }
 
 test('the list of packs', () => {
-  expect(packs.sort()).toEqual(['db-dynamodb', 'db-firestore', 'db-kysely', 'db-mongo', 'db-prisma', 'db-sql', 'pay', 'plugin-pay-stripe', 'realtime-durable-object', 'realtime-livekit', 'realtime-nats', 'realtime-redis', 'realtime-socketio', 'realtime-webrtc'])
+  expect(realtime.sort()).toEqual(['realtime-durable-object', 'realtime-livekit', 'realtime-nats', 'realtime-redis', 'realtime-socketio', 'realtime-webrtc'])
 })
 
-describe.each(packs)('%s', dir => {
+describe.each(packs)('%s', (name, dir) => {
   test('declares what it reaches, and the audit finds nothing undeclared', async () => {
-    const { plugin, manifest } = await load(dir)
-    expect(plugin.name).toBe(`@weft/${dir}`)
-    if (dir !== 'pay') expect(grants(plugin.permissions).length).toBeGreaterThan(0) // pay reaches nothing itself: its rail does
-    const found = audit(packages, join(packages, dir), { manifest, permissions: plugin.permissions })
+    const { plugin, manifest } = await load(name)
+    expect(plugin.name).toBe(name)
+    if (name !== '@weft/pay') expect(grants(plugin.permissions).length).toBeGreaterThan(0) // pay reaches nothing itself: its rail does
+    const found = audit(packages, join(packages, dir), { name, manifest, permissions: plugin.permissions })
     expect(found.undeclared).toEqual([])
   })
 
   test('has an AGENTS section and a conformance test', async () => {
-    const { manifest } = await load(dir)
+    const { manifest } = await load(name)
     expect(manifest.agents.text.length).toBeLessThanOrEqual(1024)
     expect(existsSync(join(packages, dir, 'test'))).toBe(true)
   })
@@ -44,17 +52,17 @@ test('pay is built only from public parts: nothing in weft, start or the CLI nam
 })
 
 test('a rail provides `pay.rail`, keyed, and only on the server', async () => {
-  const stripe = await load('plugin-pay-stripe')
+  const stripe = await load('@weft/pay/stripe')
   expect(stripe.plugin.provides).toEqual([{ slot: 'pay.rail', key: 'stripe' }])
   expect(Object.keys(stripe.manifest.provides[0].sides)).toEqual(['server'])
-  expect(bindSlots({ plugins: [stripe.plugin] }, (code, why) => { throw new Error(`${code} ${why}`) })['pay.rail']).toEqual({ stripe: '@weft/plugin-pay-stripe' })
+  expect(bindSlots({ plugins: [stripe.plugin] }, (code, why) => { throw new Error(`${code} ${why}`) })['pay.rail']).toEqual({ stripe: '@weft/pay/stripe' })
 })
 
 test('a bus provides `realtime.bus`, a list source `db.adapter`, keyed', async () => {
-  const redis = await load('realtime-redis'), mongo = await load('db-mongo'), sql = await load('db-sql')
+  const redis = await load('@weft/realtime-redis'), mongo = await load('@weft/db/mongo'), sql = await load('@weft/db/sql')
   expect(redis.plugin.provides).toEqual(['realtime.bus'])
   expect(mongo.plugin.provides).toEqual([{ slot: 'db.adapter', key: 'mongo' }])
   const slots = bindSlots({ plugins: [redis.plugin, mongo.plugin, sql.plugin] }, (code, why) => { throw new Error(`${code} ${why}`) })
   expect(slots['realtime.bus']).toBe('@weft/realtime-redis')
-  expect(slots['db.adapter']).toMatchObject({ mongo: '@weft/db-mongo', sql: '@weft/db-sql' })
+  expect(slots['db.adapter']).toMatchObject({ mongo: '@weft/db/mongo', sql: '@weft/db/sql' })
 })

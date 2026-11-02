@@ -35,7 +35,7 @@ describe('X-codes', () => {
     expect(x(r).map(d => d.code)).toEqual(['X020', 'X022', 'X021'])
     const x021 = x(r).find(d => d.code === 'X021')
     expect(x021.fix).toMatchObject({ safe: true, edits: [{ text: 'swap' }] })
-    expect(x(r).find(d => d.code === 'X020').why).toContain('add `@weft/plugin-text` and declare it in `text({ fonts })`')
+    expect(x(r).find(d => d.code === 'X020').why).toContain('add `@weft/text` and declare it in `text({ fonts })`')
 
     const fine = "@font-face { font-family: 'Brand'; src: url(./brand-latin.woff2); font-display: swap; unicode-range: U+0000-00FF; }\n" +
       "@font-face { font-family: 'Brand Fallback'; src: local('Arial'); size-adjust: 104%; }\n"

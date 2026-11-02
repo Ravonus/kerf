@@ -4,7 +4,7 @@ import { createHmac } from 'node:crypto'
 import { payRailSuite } from '@weft/pay/test'
 import { definePay, memoryPayStore } from '@weft/pay/server'
 import { product } from '@weft/pay'
-import { stripeRail } from '../src/index'
+import { stripeRail } from '../src/stripe'
 
 const SECRET = 'whsec_placeholder_for_tests'
 const KEY = 'sk_test_mocked'

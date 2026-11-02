@@ -4,8 +4,8 @@ Research date: 2026-10-28. Everything here is measured unless marked **(estimate
 on minified ES2020 output. Accuracy and timing runs used headless Chrome 156.0.8078.48 and Playwright's WebKit 27.2
 on an M4 Max, at load averages 5–31 (all under the 40 that `~/.claude/CLAUDE.md` sets for offloading).
 - **Upstream:** `@chenglou/pretext` 1.0.0, from `npm pack` (sha256 `f1d9ac42…060a`, full value in
-  `packages/text-engine/package.json`).
-- **Prototype:** [`packages/text-engine/`](../../packages/text-engine/). Its README credits Pretext and Cheng Lou,
+  `packages/text/package.json`).
+- **Prototype:** [`packages/text/`](../../packages/text/). Its README credits Pretext and Cheng Lou,
   and its LICENSE carries Pretext's MIT licence and third-party notices.
 - **Background:** builds on [research 11](11-text-and-type.md), §1 (Pretext) and §8 (its 34.5 KB cost).
 

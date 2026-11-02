@@ -25,7 +25,7 @@ export interface TextOptions {
   subsets?: Subset[]
   /** `'auto'` provides `text.measure`, loaded lazily by what uses it; `'off'` leaves it unbound. */
   measure?: 'auto' | 'off'
-  /** `'slim'` is @weft/text-engine; `'pretext'` is pinned upstream (33.9 KB br). */
+  /** `'slim'` is @weft/text/engine; `'pretext'` is pinned upstream (33.9 KB br). */
   engine?: 'slim' | 'pretext'
   /** Pin the custom axes the source never varies and load uncommon latin characters on demand. Builds only. Default `true`. */
   trim?: boolean

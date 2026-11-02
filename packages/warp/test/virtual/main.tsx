@@ -1,7 +1,7 @@
 // The page scripts/virtual.mjs drives: each view with `?n=` items, in a real browser.
-import '../../../plugin-text/node_modules/@fontsource/inter/latin-400.css'
-import '../../../plugin-text/node_modules/@fontsource/inter/latin-500.css'
-import '../../../plugin-text/node_modules/@fontsource/inter/latin-600.css'
+import '../../../text/node_modules/@fontsource/inter/latin-400.css'
+import '../../../text/node_modules/@fontsource/inter/latin-500.css'
+import '../../../text/node_modules/@fontsource/inter/latin-600.css'
 import { state } from 'weft'
 import { render } from 'weft/dom'
 import type { ChatMessage } from '@weft/warp-core'

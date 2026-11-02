@@ -2,11 +2,11 @@
 // WEFT_TEST_POSTGRES names a private instance.
 import { runtime } from '@weft/start/data'
 import { Kysely } from 'kysely'
-import { nativeAuth } from '../src/auth'
-import { createNative, type Driver } from '../src/index'
-import { createDb as mysql } from '../src/mysql'
-import { createDb as postgres } from '../src/postgres'
-import { createDb as sqlite } from '../src/sqlite'
+import { nativeAuth } from '../src/native/auth'
+import { createNative, type Driver } from '../src/native/index'
+import { createDb as mysql } from '../src/native/mysql'
+import { createDb as postgres } from '../src/native/postgres'
+import { createDb as sqlite } from '../src/native/sqlite'
 
 const init = `create table if not exists native_todos (id varchar(36) primary key, title varchar(200) not null);`
 

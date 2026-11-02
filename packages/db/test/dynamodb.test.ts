@@ -3,7 +3,7 @@ import { CreateTableCommand, DeleteTableCommand, DynamoDBClient } from '@aws-sdk
 import { DeleteCommand, DynamoDBDocumentClient, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb'
 import { LIST_ROWS, listSuite } from 'weft/test/plugins'
 import { decodeCursor } from '@weft/start/list'
-import { dynamoSource } from '../src/index'
+import { dynamoSource } from '../src/dynamodb'
 
 const endpoint = process.env.WEFT_TEST_DYNAMO
 const columns = { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }

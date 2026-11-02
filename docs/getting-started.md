@@ -38,7 +38,7 @@ From the app:
 weft-local refresh
 ```
 
-This rebuilds the compiler if the crate changed, rebuilds `@weft/text-engine`, repacks, and replaces the weft packages in that
+This rebuilds the compiler if the crate changed, rebuilds `@weft/text/engine`, repacks, and replaces the weft packages in that
 app. Pass a path to run it from elsewhere. Restart `weft dev` afterwards. The same command moves an existing app that
 depends on `weft` onto the tarballs.
 

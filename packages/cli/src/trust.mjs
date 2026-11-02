@@ -34,10 +34,13 @@ function readLock(root) {
   }
 }
 
-/** Where a plugin is installed: the nearest `node_modules/<name>`, through its symlink. Null for one defined in the config. */
+/** The package a plugin name is in: `@weft/db/mongo` is a subpath of `@weft/db`. */
+export const packageOf = name => name.split('/').slice(0, name.startsWith('@') ? 2 : 1).join('/')
+
+/** Where a plugin is installed: the nearest `node_modules/<package>`, through its symlink. Null for one defined in the config. */
 function packageDir(root, name) {
   for (let dir = root; ; dir = dirname(dir)) {
-    const at = join(dir, 'node_modules', name)
+    const at = join(dir, 'node_modules', packageOf(name))
     if (existsSync(join(at, 'package.json'))) return realpathSync(at)
     if (dirname(dir) === dir) return null
   }
@@ -122,7 +125,9 @@ function entryFile(dir, pkg, subpath) {
  */
 export function audit(root, dir, contribution) {
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
-  const roots = [entryFile(dir, pkg, './plugin') ?? entryFile(dir, pkg, '.')]
+  // A package can hold several plugins, `<package>/<sub>/plugin`, and each answers for its own files.
+  const sub = contribution.name?.startsWith(`${pkg.name}/`) ? contribution.name.slice(pkg.name.length) : ''
+  const roots = [entryFile(dir, pkg, `.${sub}/plugin`) ?? entryFile(dir, pkg, `.${sub}`)]
   for (const ref of contribution.manifest.provides ?? []) {
     for (const [side, { module }] of Object.entries(ref.sides ?? {})) {
       if (side === 'client') continue

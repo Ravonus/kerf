@@ -16,7 +16,7 @@ stays real text, and an app with no surface pays nothing.
 | `s.frame(fn)` only | **`s.draw(fn)` and `s.frame(fn)`** | A chart or a HUD has no reason to run at 60 Hz. `s.draw` paints when something it read changes. `s.frame` also paints every clock tick. Both are tracked, so a paused or reduced-motion `s.frame` still redraws on a box change |
 | `weft/surface/keel` in core | **`@weft/plugin-surface-keel`** | [13](13-plugins.md) §2.9 moved it, and a third `surface.renderer` provider tests the slot. The licence question in §5 is answered: keel-engine is MIT, by the same author, and the plugin keeps the notice |
 | `measure()`, `lines()`, `fit()` in this phase | **Not built** | Nothing here needs them: `s.text()` talks to the slot, and `<Text reserve>` needs no measuring ([31](31-query-shapes.md)). Their first users are the virtualised lists in 3c, which is where they belong |
-| X003/X004 owned by `@weft/plugin-text` | **Reported by `s.text()`** | The consumer holds the mirror's computed style, and both engines share one prediction model, so a per-plugin list has nothing to vary |
+| X003/X004 owned by `@weft/text` | **Reported by `s.text()`** | The consumer holds the mirror's computed style, and both engines share one prediction model, so a per-plugin list has nothing to vary |
 | X010 needs a `s.decorative()` escape | **Kept:** `s.decorative(fn)` just calls `fn`, and `weft check` skips its body | A runtime no-op whose only job is to state intent to the checker |
 | X012 "opts out of the fallback" | **There's no opt-out to take.** X012 catches the CSS that would defeat it: `forced-color-adjust: none`, or a print rule hiding the mirror | An option that exists only to be flagged is a design bug |
 | X009 | **Never defined, so it's defined here:** a `<Surface>` with neither `label` nor `decorative` | That's the gap between X008 and X010: canvas content with no accessible name at all. X007 stays undefined ([26](26-phase-2-completion.md) §7) |
@@ -108,7 +108,7 @@ calls `s.text()`. Slots no consumer in core imports keep the hard P101 error.
 
 ## 6. `text.measure@1`
 
-`@weft/plugin-text` now provides it unless `measure: 'off'`. `engine: 'slim'` (default) is `@weft/text-engine`, and
+`@weft/text` now provides it unless `measure: 'off'`. `engine: 'slim'` (default) is `@weft/text/engine`, and
 `engine: 'pretext'` is pinned upstream. Both are behind `import()`, so installing the plugin stays free (P114).
 
 The contract is `prepare`, `layout`, `lines`, `lineText`, `clear`. `lineText` joins the four calls of research 12
@@ -122,7 +122,7 @@ what proves it (§10).
 **Conformance** lives in `weft/test/plugins`, with the slot, as research 13 §2.11 says. `textMeasureSuite(provider,
 { corpora })` runs in the page: accuracy against the DOM (0 mismatches on Latin, emoji, Arabic; ≤ 0.5% on CJK), purity
 (no layout-forcing DOM reads in `layout`), speed (`layout` over 1k ≤ 0.5 ms, `prepare` over 1k ≤ 15 ms) and fonts
-(results after `clear()` match). `packages/plugin-text/test/conformance.mjs` runs it for both engines in Chrome and
+(results after `clear()` match). `packages/text/test/conformance.mjs` runs it for both engines in Chrome and
 WebKit, and against deliberately bad providers, so the suite is shown to fail.
 
 ## 7. `s.text()` and the mirror

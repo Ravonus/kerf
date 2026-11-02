@@ -84,14 +84,14 @@ export const nativeFiles = ({ db, auth }) => ({
   created_at ${engineSql[db].big} not null${auth ? `,\n  user_id varchar(255) not null references ${db === 'mysql' ? '`user`' : '"user"'} (id) on delete cascade` : ''}
 );
 `,
-  'src/db/index.server.ts': `import { createDb } from '@weft/plugin-db-native/${db}'
+  'src/db/index.server.ts': `import { createDb } from '@weft/db/plugin-native/${db}'
 import { env } from '../env.server'
 
 export const db = createDb({ url: env.DATABASE_URL })
 `,
   ...(auth && {
     'src/auth.server.ts': `import { createAuth } from '@weft/start/auth/better-auth'
-import { nativeAuth } from '@weft/plugin-db-native/auth'
+import { nativeAuth } from '@weft/db/plugin-native/auth'
 import { db } from '#/db/index.server'
 import { env } from './env.server'
 
@@ -253,7 +253,7 @@ if (existsSync('.env')) process.loadEnvFile()
 export default defineConfig({ schema: 'prisma/schema.prisma', datasource: { url: process.env.DATABASE_URL ?? '' } })
 `,
   'src/db/index.server.ts': `${db === 'sqlite' ? "import { mkdirSync } from 'node:fs'\n" : ''}import ${`{ ${ADAPTER[db].name} }`} from '${ADAPTER[db].pkg}'
-import { withWeft } from '@weft/plugin-db-prisma'
+import { withWeft } from '@weft/db/plugin-prisma'
 import { PrismaClient } from '../generated/prisma/client'
 import { env } from '../env.server'
 ${db === 'sqlite' ? "\nmkdirSync('.data', { recursive: true })\n" : ''}

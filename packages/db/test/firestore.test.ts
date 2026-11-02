@@ -3,7 +3,7 @@ import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { LIST_ROWS, listSuite } from 'weft/test/plugins'
 import { decodeCursor } from '@weft/start/list'
-import { firestoreSource } from '../src/index'
+import { firestoreSource } from '../src/firestore'
 
 const host = process.env.FIRESTORE_EMULATOR_HOST
 const spec = { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }

@@ -3,7 +3,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { Kysely, SqliteDialect } from 'kysely'
 import { LIST_ROWS, listSuite } from 'weft/test/plugins'
 import { decodeCursor } from '@weft/start/list'
-import { kyselySource } from '../src/index'
+import { kyselySource } from '../src/kysely'
 
 function database() {
   const raw = new DatabaseSync(':memory:')

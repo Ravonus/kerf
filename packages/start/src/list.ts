@@ -1,5 +1,5 @@
 // The list contract (agorix 03 §5, research 13's `db.adapter@1`): one way to ask for a page or a cursor, whatever holds
-// the rows. `listInput` is a schema a `query` takes as its `input`, and a source is what the `@weft/db-*` packs build.
+// the rows. `listInput` is a schema a `query` takes as its `input`, and a source is what the `@weft/db` subpaths build.
 //
 //   export const tasks = query({
 //     input: listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 25, max: 100 } }),

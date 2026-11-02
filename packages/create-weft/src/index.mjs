@@ -23,15 +23,15 @@ const json = v => JSON.stringify(v, null, 2) + '\n'
 const title = name => name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
 /** `weft.config.ts`, `.json` or `.yaml`: one schema, so the same app in each (research 34 §2). */
-const LAYER_PLUGIN = { prisma: { pkg: '@weft/plugin-db-prisma', name: 'prisma' }, native: { pkg: '@weft/plugin-db-native', name: 'native' } }
+const LAYER_PLUGIN = { prisma: { pkg: '@weft/db/plugin-prisma', name: 'prisma' }, native: { pkg: '@weft/db/plugin-native', name: 'native' } }
 
 const appPlugins = ({ ui, layer }) => [...(ui === 'warp' ? [{ pkg: '@weft/warp', name: 'warp' }] : []), ...(LAYER_PLUGIN[layer] ? [LAYER_PLUGIN[layer]] : [])]
 
 /** What each plugin a scaffold picks declares. `weft check` fails a scaffold where these fall behind the plugin. */
 const GRANTS = {
   '@weft/warp': ['fs.read:node_modules/@weft/warp-core/**', 'fs.write:$TMPDIR/warp-seed-*', 'spawn:node'],
-  '@weft/plugin-db-prisma': ['fs.read:prisma/**', 'fs.write:prisma/migrations/**', 'spawn:node'],
-  '@weft/plugin-db-native': ['fs.read:migrations/**', 'fs.write:migrations/**'],
+  '@weft/db/plugin-prisma': ['fs.read:prisma/**', 'fs.write:prisma/migrations/**', 'spawn:node'],
+  '@weft/db/plugin-native': ['fs.read:migrations/**', 'fs.write:migrations/**'],
 }
 
 /** Choosing a plugin here is approving it. There's no install yet, so `weft plugins approve --all` pins the code later. */

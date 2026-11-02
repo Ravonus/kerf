@@ -82,7 +82,7 @@ const score = s.text(() => `Score ${props.score}`, { x: 8, y: 8, width: 200, fon
 - `font` and `lineHeight` default to the CSS on the mirror. `color` defaults to the surface's. `align` is `left`,
   `center` or `right`. Name a family (X002).
 - It returns `{ el, lineCount, height }`; the last two are boxes.
-- Canvas `s.text()` needs the `text.measure` slot, so add `text()` from `@weft/plugin-text` to `plugins` in
+- Canvas `s.text()` needs the `text.measure` slot, so add `text()` from `@weft/text` to `plugins` in
   weft.config.ts (P101). Its engine loads lazily. On `webgl2` the mirror is the visible text, and no plugin is needed.
 - `s.decorative(() => ctx.fillText(...))` is for text that is truly decoration.
 

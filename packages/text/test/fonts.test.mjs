@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { text } from '../src/index.mjs'
-import { BUDGET, RANGES, createFontBuild, fallbackFace, pinned, rangeText, readAxes, scanAxes, toRange } from '../src/build.mjs'
+import { text } from '../plugin/index.mjs'
+import { BUDGET, RANGES, createFontBuild, fallbackFace, pinned, rangeText, readAxes, scanAxes, toRange } from '../plugin/build.mjs'
 
 const inter = w => fileURLToPath(new URL(`../node_modules/@fontsource/inter/files/inter-latin-${w}-normal.woff2`, import.meta.url))
 
@@ -15,7 +15,7 @@ describe('text() options', () => {
     const p = text({ fonts: { body: { family: 'Inter', src: './fonts/Inter.woff2', fallback: 'Arial' }, mono: { family: 'Plex', src: './p.woff2', fallback: 'Courier New', display: 'optional' } } })
     expect(p.provides).toEqual(['font.build', 'text.measure'])
     const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides
-    expect(ref.sides.build.module).toBe(fileURLToPath(new URL('../src/build.mjs', import.meta.url)))
+    expect(ref.sides.build.module).toBe(fileURLToPath(new URL('../plugin/build.mjs', import.meta.url)))
     expect(ref.sides.build.export).toBe('createFontBuild')
     expect(ref.sides.build.options.fonts).toEqual({
       body: { family: 'Inter', src: './fonts/Inter.woff2', fallback: 'Arial', display: 'swap', weight: 400, style: 'normal', axes: {}, preload: true },

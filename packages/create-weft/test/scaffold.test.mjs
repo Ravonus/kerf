@@ -178,7 +178,7 @@ it('--ui tailwind writes what `weft add tailwind` writes', async () => {
 
 describe('--layer', () => {
   it.each([
-    ['native', 'mysql', 'migrations/0000_todos.sql', '@weft/plugin-db-native/mysql', 'mysql2'],
+    ['native', 'mysql', 'migrations/0000_todos.sql', '@weft/db/plugin-native/mysql', 'mysql2'],
     ['prisma', 'mysql', 'prisma/schema.prisma', '@prisma/adapter-mariadb', '@prisma/client'],
     ['prisma', 'sqlite', 'prisma/schema.prisma', '@prisma/adapter-libsql', '@prisma/client'],
     ['drizzle', 'mysql', 'drizzle.config.ts', '@weft/start/db/mysql', 'mysql2'],

@@ -1,5 +1,5 @@
 // Surfaces in a real browser (research 33 §10): pixels, not recordings. Builds demo/, serves it, and checks the Keel port
-// and both built-in backends.   node test/e2e.mjs <chrome|webkit>     (build ../text-engine first)
+// and both built-in backends.   node test/e2e.mjs <chrome|webkit>     (build ../text first)
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { createServer } from 'node:http'

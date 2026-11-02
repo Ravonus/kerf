@@ -1,6 +1,6 @@
 // text.measure@1 conformance in a real browser (research 33 §6): both engines must pass, and three bad providers must
 // fail, or the suite proves nothing.
-//   node test/conformance.mjs <chrome|webkit>      (build ../text-engine first)
+//   node test/conformance.mjs <chrome|webkit>      (npm run build first)
 import { chromium, webkit } from 'playwright-core'
 import * as esbuild from 'esbuild'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -9,10 +9,10 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const pkg = resolve(here, '..')
-const engine = resolve(pkg, '../text-engine')
+const engine = pkg
 const dist = join(engine, 'dist')
 const browserName = process.argv[2] ?? 'chrome'
-if (!existsSync(join(dist, 'index.js'))) { console.error('build ../text-engine first: npm run build --prefix ../text-engine'); process.exit(1) }
+if (!existsSync(join(dist, 'index.js'))) { console.error('build this package first: npm run build'); process.exit(1) }
 
 const inter = join(pkg, 'node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2')
 const entry = `

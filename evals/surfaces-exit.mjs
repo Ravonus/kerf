@@ -53,7 +53,7 @@ const built = run('npx', ['weft', 'build'])
 parts.build = { ok: built.status === 0 }
 if (!parts.build.ok) console.error(built.stdout.slice(-3000), built.stderr.slice(-2000))
 
-const { chromium } = createRequire(join(repo, 'packages/text-engine/package.json'))('playwright-core')
+const { chromium } = createRequire(join(repo, 'packages/text/package.json'))('playwright-core')
 const port = 4300 + Math.floor(Math.random() * 500)
 const server = spawn('npx', ['weft', 'start'], { cwd: dir, env: { ...process.env, PORT: String(port) }, stdio: 'ignore', detached: true })
 const url = `http://127.0.0.1:${port}/`

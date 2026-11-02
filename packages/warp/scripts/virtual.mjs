@@ -13,8 +13,8 @@ const pkg = join(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(pkg, 'package.json'))
 const arg = (k, d) => process.argv.find(a => a.startsWith(`--${k}=`))?.split('=')[1] ?? d
 const N = Number(arg('n', 10000)), which = arg('browser', 'chromium'), noEngine = process.argv.includes('--no-engine')
-const engine = resolve(pkg, '../text-engine/dist/index.js')
-if (!existsSync(engine)) throw new Error('build ../text-engine first: npm run build --prefix ../text-engine')
+const engine = resolve(pkg, '../text/dist/index.js')
+if (!existsSync(engine)) throw new Error('build ../text first: npm run build --prefix ../text')
 
 async function build(outDir) {
   const { build } = await import('vite')

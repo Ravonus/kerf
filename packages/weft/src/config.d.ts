@@ -120,7 +120,7 @@ export interface WeftConfig {
     }>
   }
   trust?: 'enforce' | 'warn'
-  /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */
+  /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/text' }`. */
   slots?: { [id: string]: string | Record<string, string> }
 }
 

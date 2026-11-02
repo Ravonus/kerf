@@ -169,8 +169,8 @@ export function writeConfigSchema(root) {
   writeFileSync(join(root, '.weft', 'config.schema.json'), `${JSON.stringify(z.toJSONSchema(dataSchema, { unrepresentable: 'any' }), null, 2)}\n`)
 }
 
-/** `@weft/plugin-text` → `text`, the name a plugin's named export goes by. */
-export const pluginName = pkg => pkg.replace(/^@[^/]+\//, '').replace(/^plugin-/, '').replace(/[^a-zA-Z0-9]+(.)?/g, (_, c = '') => c.toUpperCase())
+/** `@weft/text` → `text`, `@weft/db/plugin-native` → `native`: the name a plugin's named export goes by. */
+export const pluginName = pkg => pkg.replace(/^@[^/]+\/(?:[^/]+\/)?/, '').replace(/^plugin-/, '').replace(/[^a-zA-Z0-9]+(.)?/g, (_, c = '') => c.toUpperCase())
 
 /** A plugin module's factory, and its import name: the default, or a named export (`surface-keel` may export `keel`). */
 export function pluginFactory(mod, pkg) {

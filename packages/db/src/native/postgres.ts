@@ -1,7 +1,9 @@
 // Postgres with no ORM: postgres.js, which connects on the first statement, so a build needs no database.
 
-import postgres from 'postgres'
+import { driver } from '../driver'
 import { createNative, type Driver, type Row } from './index'
+
+const { default: postgres } = await driver('@weft/db/plugin-native/postgres', 'postgres', () => import('postgres'))
 
 const LOCK = 7_301_987
 

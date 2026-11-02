@@ -2,7 +2,7 @@
 import { MongoClient } from 'mongodb'
 import { LIST_ROWS, listSuite } from 'weft/test/plugins'
 import { decodeCursor } from '@weft/start/list'
-import { changeTags, mongoSource, watchMongo } from '../src/index'
+import { changeTags, mongoSource, watchMongo } from '../src/mongo'
 
 const spec = { columns: { id: '_id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }
 const url = process.env.WEFT_TEST_MONGO

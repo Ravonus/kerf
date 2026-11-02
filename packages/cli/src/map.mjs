@@ -32,7 +32,7 @@ const ENGINE = { PrismaLibSql: 'sqlite', PrismaPg: 'postgres', PrismaMariaDb: 'm
 export function database(root, layer) {
   if (!layer) return null
   const entry = read(root, 'src/db/index.server.ts')
-  const engine = entry.match(/@weft\/(?:start\/db|plugin-db-native)\/(\w+)/)?.[1] ?? ENGINE[entry.match(/Prisma(?:LibSql|Pg|MariaDb)/)?.[0]] ?? 'unknown'
+  const engine = entry.match(/@weft\/(?:start\/db|db\/plugin-native)\/(\w+)/)?.[1] ?? ENGINE[entry.match(/Prisma(?:LibSql|Pg|MariaDb)/)?.[0]] ?? 'unknown'
   const tables = layer.layer === 'prisma' ? names(read(root, layer.schema), /^model\s+(\w+)/gm)
     : layer.layer === 'native' ? names(sqlText(root, layer.migrations), /create\s+table\s+(?:if\s+not\s+exists\s+)?["`]?(\w+)/gi)
       : names(read(root, 'src/db/schema.ts'), /export\s+const\s+([A-Za-z_$][\w$]*)\s*=\s*\w+Table\s*\(/g)

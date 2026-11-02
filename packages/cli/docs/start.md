@@ -215,7 +215,7 @@ export const myNotes = query({
 })
 ```
 
-Then `weft db live` writes the migration (triggers for SQLite, MySQL and Postgres), and you apply it. Tags are `notes` and `notes:<pk>`; a compound key joins with `:`. `dbChanges(db, tables, { tagged })` maps a change to your own tags, and for MongoDB it's `mongoChanges(db, collections)` from `@weft/db-mongo`.
+Then `weft db live` writes the migration (triggers for SQLite, MySQL and Postgres), and you apply it. Tags are `notes` and `notes:<pk>`; a compound key joins with `:`. `dbChanges(db, tables, { tagged })` maps a change to your own tags, and for MongoDB it's `mongoChanges(db, collections)` from `@weft/db/mongo`.
 
 A notification carries a table and primary keys, never a column. Each client refetches through its own `query`, so `auth` and every filter run for that user: someone who can't see a row gets the same answer as before. An app's own write is not poked twice, and a bulk write is one refetch: over 32 ids in a statement it's a table-level change, which reaches `notes` and every `notes:…`. Limits: at most one flush per 250 ms; a dropped feed pokes every table when it's back.
 

@@ -277,10 +277,10 @@ design (the winner is named) · **Pack** = optional package · **Drop**.
 | List/cursor contract (`parseListParams`, `parseCursorParams`, `buildListResultV2`, `buildCursorResult`, `AgorixError`/`STATUS_FOR_CODE`, `defineColumns`, `expect*Endpoint` validators) | **Adopt** → `weft/start/list` | **Change one default:** allowlists are required and derived from the Drizzle table (closes H6). weft has no pagination contract today; this fills the gap. |
 | `createListHandler` / `createCursorHandler` | **Port** | `query({ input: listInput(table, {...}) })`. No separate handler type. |
 | Drizzle adapter | **Adopt** (core) | Already dependency-free. |
-| Kysely / Prisma / SQL / Mongo / Firestore / DynamoDB adapters | **Pack** `@weft/db-*` | Beyond 07's Drizzle-only plan. `@weft/db-sql` requires maps (H6). |
+| Kysely / Prisma / SQL / Mongo / Firestore / DynamoDB adapters | **Pack** `@weft/db-*` | Beyond 07's Drizzle-only plan. `@weft/db/sql` requires maps (H6). |
 | `rest` DataSource | **Drop** | The typed client replaces it (keep it in the compat shim only). |
 | `RealtimeBus` + `createInMemoryBus` | **Merge (07 wins)** | 07's `realtime.bus: memory→postgres→redis\|nats\|durable-object` with replay in weft. Agorix's id-dedupe window survives as an option. |
-| Postgres trigger SQL + watcher; Mongo change stream | **Merge (Agorix wins on scope)** | They answer "writes outside `mutation`" (cron, other services, psql), which 07 left to R003. **Emit tags, never rows**: `projects`, `projects:<id>`. Postgres in core; Mongo in `@weft/db-mongo`. |
+| Postgres trigger SQL + watcher; Mongo change stream | **Merge (Agorix wins on scope)** | They answer "writes outside `mutation`" (cron, other services, psql), which 07 left to R003. **Emit tags, never rows**: `projects`, `projects:<id>`. Postgres in core; Mongo in `@weft/db/mongo`. |
 | vault `ChannelTransform` (per-subscriber redaction) | **Merge** | A `channel` server option `filter({ msg, ctx }) → msg \| null`, fail-closed. |
 | `rts` / Go / Rust reference servers | **Drop as product; adopt as fixtures** | They become a **protocol conformance suite**. A Rust/Go server for weft is 06's `remote()` and must speak weft's protocol. |
 | `data/scheduler` booking contract | **Drop** (move to an agorix-discord package) | App domain. |
@@ -409,7 +409,7 @@ weft/test             fake transport + protocol conformance suite (ported from r
 @weft/realtime-redis | -nats | -durable-object        buses (07)
 @weft/realtime-livekit | -webrtc | -socketio          transport packs for `trust:'peers'` / interop
 @weft/multiplayer     presence · cursors (anchor) · interaction relay (typed) · syncedScroll/Hash
-@weft/db-kysely | -prisma | -sql | -mongo (+change stream) | -firestore | -dynamodb   list adapters (+ watchers)
+@weft/db/kysely | -prisma | -sql | -mongo (+change stream) | -firestore | -dynamodb   list adapters (+ watchers)
 @weft/agorix-compat   server bridge speaking the Agorix wire on top of weft topics + codemods (temporary)
 ```
 

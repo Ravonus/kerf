@@ -31,7 +31,7 @@ function generate(root, name = 'change') {
 }
 
 export const prisma = definePlugin({
-  name: '@weft/plugin-db-prisma',
+  name: '@weft/db/plugin-prisma',
   version: '0.0.0',
   weft: '*',
   permissions: { fs: { read: ['prisma/**'], write: ['prisma/migrations/**'] }, spawn: ['node'] },

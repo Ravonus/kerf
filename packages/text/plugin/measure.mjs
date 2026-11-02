@@ -1,5 +1,5 @@
 // text.measure@1 (research 33 §6). The slot's generated module calls this through `import()`, so nothing here is in an
-// app until something measures. `slim` is @weft/text-engine, which already has the slot's shape.
+// app until something measures. `slim` is @weft/text/engine, which already has the slot's shape.
 
 /** Pretext's own lines carry their text, so `lineText` only has to hand it back. */
 function pretext(P) {
@@ -14,6 +14,6 @@ function pretext(P) {
 
 export async function createMeasure({ engine = 'slim' } = {}) {
   if (engine === 'pretext') return pretext(await import('@chenglou/pretext'))
-  const { loadTextEngine } = await import('@weft/text-engine')
+  const { loadTextEngine } = await import('../dist/index.js')
   return loadTextEngine()
 }

@@ -30,9 +30,9 @@ function buildNative() {
   run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'weft'))
 }
 
-/** dist/ is gitignored and it's all @weft/text-engine exports, so it's built every time rather than trusted. */
+/** dist/ is gitignored and it's all @weft/text/engine exports, so it's built every time rather than trusted. */
 function buildTextEngine() {
-  const dir = join(pkgs, 'text-engine')
+  const dir = join(pkgs, 'text')
   if (!existsSync(join(dir, 'node_modules'))) run('npm', ['ci', '--silent'], dir)
   run('npm', ['run', '--silent', 'build'], dir)
 }

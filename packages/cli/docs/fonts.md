@@ -1,10 +1,10 @@
 # Fonts
 
-`@weft/plugin-text` is the one place an app's fonts are declared. `weft add text` installs it; then:
+`@weft/text` is the one place an app's fonts are declared. `weft add text` installs it; then:
 
 ```ts
 import { defineConfig } from 'weft/config'
-import { text } from '@weft/plugin-text'
+import { text } from '@weft/text'
 
 export default defineConfig({
   plugins: [

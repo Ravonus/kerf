@@ -1,8 +1,8 @@
 {
-  "name": "@weft/text-engine",
-  "version": "0.0.1",
+  "name": "@weft/text",
+  "version": "0.0.0",
   "private": true,
-  "description": "Slim, per-engine, lazily split build of Pretext (@chenglou/pretext 1.0.0, MIT, by Cheng Lou) behind weft's measure provider",
+  "description": "weft's text: fonts for the build (subsets, matched fallbacks) and exact line breaking in the browser, on Pretext by Cheng Lou (@chenglou/pretext 1.0.0, MIT)",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -11,7 +11,13 @@
     "./test/**"
   ],
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./plugin/index.d.ts",
+      "default": "./plugin/index.mjs"
+    },
+    "./build": "./plugin/build.mjs",
+    "./measure": "./plugin/measure.mjs",
+    "./engine": "./dist/index.js"
   },
   "scripts": {
     "gen": "node scripts/specialize.mjs",
@@ -20,7 +26,8 @@
     "size": "node scripts/build.mjs --minifier terser --json dist/size.json",
     "test": "node scripts/specialize.mjs && vitest run",
     "test:accuracy": "node test/accuracy/run.mjs chrome && node test/accuracy/run.mjs webkit",
-    "typecheck": "node scripts/specialize.mjs && node scripts/typecheck.mjs"
+    "typecheck": "node scripts/specialize.mjs && node scripts/typecheck.mjs",
+    "test:conformance": "npm run build && node test/conformance.mjs chrome && node test/conformance.mjs webkit"
   },
   "pretext": {
     "version": "1.0.0",
@@ -28,12 +35,23 @@
     "sha256": "f1d9ac427846d40d3500854f4ff935272abe657d898e70ec75077065633c060a",
     "integrity": "sha512-BxKiDMxWJhyzL8asvcgg3T9YnUU7OUFsKO8oRaR2SYAPX4Sh2wM9gqTBjrBaZ4fnl84cEQ8czC0Q1M83z3chsA=="
   },
-  "devDependencies": {
+  "dependencies": {
+    "@capsizecss/metrics": "4.4.0",
+    "@capsizecss/unpack": "4.0.1",
     "@chenglou/pretext": "1.0.0",
+    "fontverter": "2.0.0",
+    "subset-font": "2.9.0"
+  },
+  "peerDependencies": {
+    "weft": "*"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "5.3.0",
     "esbuild": "0.28.2",
     "playwright-core": "1.64.1",
     "terser": "5.51.2",
     "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
   }
 }

@@ -1,6 +1,6 @@
 // weft/test/plugins: conformance suites that ship with a slot, so any provider can be held to them (research 13 §2.11).
 // `textMeasureSuite` runs in a page, against real layout: a test double can't show a line count is right. A runner loads
-// it in each pinned browser (packages/plugin-text/test/conformance.mjs).
+// it in each pinned browser (packages/text/test/conformance.mjs).
 
 import type { MeasureProvider } from './surface'
 

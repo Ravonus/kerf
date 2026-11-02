@@ -317,7 +317,7 @@ function hygiene(root) {
     const file = join(root, name)
     if (!existsSync(file)) continue
     const text = readFileSync(file, 'utf8')
-    for (const m of text.matchAll(/from\s+['"](@weft\/plugin-[\w-]+)/g)) {
+    for (const m of text.matchAll(/from\s+['"](@weft\/(?:plugin-[\w-]+|text))/g)) {
       out.push(diagnostic({ code: 'P120', file: name, ...locate(text, m[1]), why: `\`${m[1]}\` is registered in ${name}, which bypasses weft.config.ts.` }))
     }
   }

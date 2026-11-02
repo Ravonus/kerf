@@ -1,9 +1,11 @@
 // A list source over a DynamoDB table, through a `DynamoDBDocumentClient`. DynamoDB has no offset and sorts only inside a
 // partition, so this is cursor mode only: a `Scan` by default, and a `Query` when `partition` and `sortKey` name an index.
 
-import { DeleteCommand, GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
 import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
 import { StartError } from '@weft/start/data'
+import { driver } from './driver'
+
+const { DeleteCommand, GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } = await driver('@weft/db/dynamodb', '@aws-sdk/lib-dynamodb', () => import('@aws-sdk/lib-dynamodb'))
 
 export interface DynamoTarget { client: { send(command: any): Promise<any> }; table: string }
 

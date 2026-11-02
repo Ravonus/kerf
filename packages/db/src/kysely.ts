@@ -1,9 +1,12 @@
 // A list source over Kysely. The types say nothing here: `table` and `columns` are strings, so Kysely's `dynamic`-free
 // builder gets them from the spec, never from a request.
 
-import { sql, type Kysely } from 'kysely'
+import type { Kysely } from 'kysely'
 import { likeOf, pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
 import { StartError } from '@weft/start/data'
+import { driver } from './driver'
+
+const { sql } = await driver('@weft/db/kysely', 'kysely', () => import('kysely'))
 
 export interface KyselySpec extends SourceSpec {
   table: string

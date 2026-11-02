@@ -7,7 +7,7 @@ own diagnostics and `weft add` steps. It uses only what any plugin can use, and 
 ## The shape
 
 ```
-packages/pay/                     packages/plugin-pay-stripe/
+packages/pay/                     packages/pay/ (`src/stripe.ts`)
   plugin.mjs       the manifest     plugin.mjs       a `pay.rail` provider
   src/index.ts     client-safe      src/index.ts     stripeRail(options)
   src/server.ts    the ledger
@@ -74,7 +74,7 @@ const rail = await load('stripe')
 ```
 
 Another provider means another `provide(...)`, and app code doesn't change. A plugin's own slot is named `<plugin name>.<slot>`;
-`pay.rail` is in weft's slot table only because PLAN §7c listed it from the start. `plugin-pay-stripe` is a short manifest,
+`pay.rail` is in weft's slot table only because PLAN §7c listed it from the start. `@weft/pay/stripe` is a short manifest,
 and a good template for a provider.
 
 ## 4. Report your own diagnostics
@@ -107,7 +107,7 @@ sees what a user sees. It's imported from `@weft/pay/test`, since core can't dep
 
 ```js
 export const setup = {
-  with: ['@weft/plugin-pay-stripe'],     // added too
+  with: ['@weft/pay/stripe'],     // added too
   needs: ['db', 'auth'],                 // refused, with nothing changed, until they're there
   run({ engine, layer, read }) {
     return { files: {...}, edits: {...}, env: { STRIPE_SECRET_KEY: 'sk_test_placeholder' }, next: ['...'] }

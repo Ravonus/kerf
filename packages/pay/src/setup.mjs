@@ -72,7 +72,7 @@ export const portal = mutation({
 `
 
 export const setup = {
-  with: ['@weft/plugin-pay-stripe'],
+  with: ['@weft/pay/stripe'],
   needs: ['db', 'auth'],
   run({ engine, layer, read }) {
     const drizzle = layer === 'drizzle'

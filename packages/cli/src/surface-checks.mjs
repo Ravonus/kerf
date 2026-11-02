@@ -146,7 +146,7 @@ function surfaceFileChecks(sf, slots, report) {
       const font = options && ts.isObjectLiteralExpression(options) ? stringOf(prop(options, 'font')?.initializer) : undefined
       const family = font?.replace(/^.*?\d[\d.]*px(\/\S+)?\s*/, '')
       if (family !== undefined && (SYSTEM.test(family) || GENERIC_ONLY.test(family))) report('X002', n.arguments[1], `\`${font}\` can't be measured safely: \`system-ui\`, \`-apple-system\` and generic-only families resolve differently in canvas and CSS. Name a family.`)
-      if (kind === 'canvas2d' && slots && slots['text.measure'] === null) report('P101', n, 'Canvas `s.text()` needs `text.measure`, and nothing provides it: add `text()` from `@weft/plugin-text` to `plugins` in weft.config.ts.')
+      if (kind === 'canvas2d' && slots && slots['text.measure'] === null) report('P101', n, 'Canvas `s.text()` needs `text.measure`, and nothing provides it: add `text()` from `@weft/text` to `plugins` in weft.config.ts.')
     })
   }
 }

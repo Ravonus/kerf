@@ -1,5 +1,5 @@
 // A `font.build@1` provider for the e2e fixture (test/dev-server.setup.mjs binds it through
-// `.weft/slots/font.build.build.json`); @weft/plugin-text's own tests cover the real build.
+// `.weft/slots/font.build.build.json`); @weft/text's own tests cover the real build.
 export function createFontBuild() {
   return {
     async build({ url }) {

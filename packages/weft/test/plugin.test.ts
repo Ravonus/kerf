@@ -9,7 +9,7 @@ import { definePlugin, defineSlot, provide } from '../src/plugin.mjs'
 test('definePlugin: plain data entry, frozen contributions, P115 on bad options', () => {
   const slot = defineSlot({ id: 'text.measure', version: 1, cardinality: 'one', sides: ['client'] })
   const text = definePlugin({
-    name: '@weft/plugin-text',
+    name: '@weft/text',
     version: '0.1.0',
     options: (o: { engine?: string }) => {
       if (o.engine && o.engine !== 'slim') throw Object.assign(new Error('unknown engine'), { path: 'engine' })
@@ -18,7 +18,7 @@ test('definePlugin: plain data entry, frozen contributions, P115 on bad options'
     contribute: o => ({ provides: [provide(slot, { sides: { client: { module: 'x', export: 'y', options: o } } })] }),
   })
   const p = text()
-  expect(JSON.parse(JSON.stringify(p))).toEqual({ name: '@weft/plugin-text', version: '0.1.0', provides: ['text.measure'], options: { engine: 'slim' } })
+  expect(JSON.parse(JSON.stringify(p))).toEqual({ name: '@weft/text', version: '0.1.0', provides: ['text.measure'], options: { engine: 'slim' } })
   expect(p.namespace).toBe('text/')
   const m = p.contribute({ command: 'build', mode: 'production', root: '/' })
   expect(Object.isFrozen(m.provides![0].sides)).toBe(true)

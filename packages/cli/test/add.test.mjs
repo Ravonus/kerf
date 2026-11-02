@@ -203,13 +203,13 @@ describe('weft add db', () => {
   const addDb = (dir, o = {}) => addCommand(dir, 'db', { install: false, ...o })
 
   it('writes the wiring and no todo app; a layer brings its plugin', async () => {
-    const dir = app({ 'weft.config.ts': 'export default {}\n', 'node_modules/@weft/plugin-db-native/package.json': JSON.stringify({ name: '@weft/plugin-db-native', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/@weft/plugin-db-native/plugin.mjs': "import { definePlugin } from 'weft/plugin'\nexport const native = definePlugin({ name: '@weft/plugin-db-native', contribute: () => ({}) })\n" })
+    const dir = app({ 'weft.config.ts': 'export default {}\n', 'node_modules/@weft/db/package.json': JSON.stringify({ name: '@weft/db', type: 'module', exports: { './plugin-native/plugin': './plugin-native/plugin.mjs' } }), 'node_modules/@weft/db/plugin-native/plugin.mjs': "import { definePlugin } from 'weft/plugin'\nexport const native = definePlugin({ name: '@weft/db/plugin-native', contribute: () => ({}) })\n" })
     const r = await addDb(dir, { engine: 'mysql', layer: 'native' })
     expect(r.package).toBe('native on mysql')
-    expect(read(dir, 'src/db/index.server.ts')).toContain('@weft/plugin-db-native/mysql')
+    expect(read(dir, 'src/db/index.server.ts')).toContain('@weft/db/plugin-native/mysql')
     expect(read(dir, '.env')).toContain('mysql://')
     expect(() => read(dir, 'src/server/todos.ts')).toThrow()
-    expect(await names(dir)).toEqual(['@weft/plugin-db-native'])
+    expect(await names(dir)).toEqual(['@weft/db/plugin-native'])
   })
 
   it('keeps an .env, and refuses an app that has a database or a file in the way', async () => {

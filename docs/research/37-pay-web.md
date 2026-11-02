@@ -16,7 +16,7 @@ because a framework feature can use private paths and a plugin can't, and nobody
 | `fakePay`, `payRailSuite` | `@weft/pay/test` | Core can't depend on a plugin, so this isn't `weft/test`. It reaches that only through `net` and `clock` |
 | PAY-codes, `weft add pay` | `src/checks.mjs`, `src/setup.mjs` | The `check` hook and the `setup` data, in the manifest |
 | `drizzlePayStore` | `@weft/pay/drizzle` | Beside the ledger |
-| Stripe | `@weft/plugin-pay-stripe` | A provider. `fetch`, no SDK, server side only |
+| Stripe | `@weft/pay/stripe` | A provider. `fetch`, no SDK, server side only |
 
 What pay needed became API, each with a test that names no plugin:
 

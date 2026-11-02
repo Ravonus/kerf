@@ -185,7 +185,7 @@ describe('weft plugins audit', () => {
     expect(trust(await check(dir))).toEqual([])
   })
 
-  it.each(['plugin-text', 'plugin-media', 'plugin-surface-keel', 'plugin-db-prisma', 'plugin-db-native', 'warp'])('%s declares what it uses', async name => {
+  it.each(['text', 'plugin-media', 'plugin-surface-keel', 'warp'])('%s declares what it uses', async name => {
     const dir = fileURLToPath(new URL(`../../${name}/`, import.meta.url))
     const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
     const mod = await import(pathToFileURL(createRequire(join(dir, 'package.json')).resolve(pkg.exports['./plugin'] ? `${pkg.name}/plugin` : pkg.name)).href)

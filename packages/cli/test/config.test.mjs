@@ -69,7 +69,7 @@ export default defineConfig({
     const r = await loadConfig(
       withConfig(`export default defineConfig({
   plugins: [
-    { name: '@weft/plugin-text', provides: ['text.measure', 'font.build'] },
+    { name: '@weft/text', provides: ['text.measure', 'font.build'] },
     { name: 'pretext-measure', provides: ['text.measure'] },
     { name: 'pretext-measure' },
     { name: 'bus', provides: [{ slot: 'surface.renderer', key: 'keel-pixel' }] },
@@ -81,7 +81,7 @@ export default defineConfig({
     expect(r.diagnostics.map(d => d.code)).toEqual(['P116', 'P008', 'P009'])
     expect(r.slots).toMatchObject({
       'text.measure': 'pretext-measure',
-      'font.build': '@weft/plugin-text',
+      'font.build': '@weft/text',
       'realtime.bus': 'weft:default:memory',
       'surface.renderer': { canvas2d: 'weft:default', 'keel-pixel': 'bus', webgl2: 'weft:default' },
     })

@@ -12,7 +12,7 @@ left in the Phase 2 row, and records each place where the build differs from the
 | Piece | PLAN row text | Built as |
 |---|---|---|
 | Media | `<Media>` for stills, `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013 | `weft/media` (the component and the `?media` record type), `@weft/plugin-media` (the `media.build` provider and the M-code check), `?media` in `weft/vite` (§2) |
-| Fonts | the font build step (subsets, matched fallbacks, preloads) | `@weft/plugin-text` providing `font.build@1`, consumed by `weft/vite` as `weft:fonts` (§3) |
+| Fonts | the font build step (subsets, matched fallbacks, preloads) | `@weft/text` providing `font.build@1`, consumed by `weft/vite` as `weft:fonts` (§3) |
 | Skeletons | skeleton shapes for `<Boundary pending>` | `skeletonShape()` geometry in warp-core, `<Shape>` in warp over the spec's Skeleton CSS, and X031 measured in dev (§4) |
 | Type | fluid `cqi` type tokens | the spec CSS already has them. warp-core gets the typed token layer: `fluid()`, `TYPE_SCALE`, and a test that ties both to the CSS (§5) |
 | Scaffold | `create-weft --ui` | `packages/create-weft`: `create-weft <dir> --ui warp\|headless\|none` (§6) |
@@ -160,7 +160,7 @@ import hero from './hero.jpg?media'
   `<img>` inside a `<picture>`. Wrapping `Media` would mean changing the spec selector, and warp is ported from the
   spec, not redesigned. So apps use `weft/media` directly until the spec grows a `picture` case.
 
-## 3. Fonts: `@weft/plugin-text` and `font.build@1`
+## 3. Fonts: `@weft/text` and `font.build@1`
 
 ```ts
 // weft.config.ts

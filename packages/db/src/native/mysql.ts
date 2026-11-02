@@ -1,8 +1,10 @@
 // MySQL with no ORM: mysql2's pool, which connects on the first statement, so a build needs no database. Files run on
 // one connection with multiple statements on; everything else has it off.
 
-import { createConnection, createPool } from 'mysql2/promise'
+import { driver } from '../driver'
 import { createNative, type Driver, type Row } from './index'
+
+const { createConnection, createPool } = await driver('@weft/db/plugin-native/mysql', 'mysql2', () => import('mysql2/promise'))
 
 const LOCK = 'weft_migrations'
 

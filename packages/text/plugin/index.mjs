@@ -50,7 +50,7 @@ function options(input) {
 }
 
 export const text = definePlugin({
-  name: '@weft/plugin-text',
+  name: '@weft/text',
   version: '0.0.0',
   weft: '*',
   options,
@@ -62,10 +62,10 @@ export const text = definePlugin({
       provide(fontBuild, {
         sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createFontBuild', options: { fonts: o.fonts, subsets: o.subsets, trim: o.trim } } },
       }),
-      ...(o.measure === 'off' ? [] : [provide(textMeasure, { sides: { client: { module: '@weft/plugin-text/measure', export: 'createMeasure', options: { engine: o.engine } } } })]),
+      ...(o.measure === 'off' ? [] : [provide(textMeasure, { sides: { client: { module: '@weft/text/measure', export: 'createMeasure', options: { engine: o.engine } } } })]),
     ],
     agents: {
-      title: 'Fonts (@weft/plugin-text)',
+      title: 'Fonts (@weft/text)',
       text: [
         '- Declare fonts once in `text({ fonts })` in weft.config.ts: `{ body: { family, src, fallback } }`. Never hand-write `@font-face` (X020).',
         "- The build subsets each face by `unicode-range`, adds a metric-matched `\"<Family> Fallback\"` face and preloads `body` and `display`. `weft/vite` loads them: no import. `weft docs fonts`.",
@@ -74,6 +74,6 @@ export const text = definePlugin({
         "- Font stacks name the fallback second: `font-family: \"Inter\", \"Inter Fallback\", sans-serif`. `font-display` is `swap` or `optional`, never `block` (X021).",
       ].join('\n'),
     },
-    catalog: [{ name: 'text', import: '@weft/plugin-text', summary: 'font.build: subsets, matched fallback faces, preloads; text.measure: lazy line breaking for canvas text and exact row heights' }],
+    catalog: [{ name: 'text', import: '@weft/text', summary: 'font.build: subsets, matched fallback faces, preloads; text.measure: lazy line breaking for canvas text and exact row heights' }],
   }),
 })

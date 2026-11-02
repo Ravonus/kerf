@@ -15,12 +15,15 @@ import { sync } from './plugins.mjs'
 import { cssEntry, packages, viteConfig } from './tailwind.mjs'
 import { database } from './map.mjs'
 import { dbLayer } from './start.mjs'
-import { trustStatus } from './trust.mjs'
+import { packageOf, trustStatus } from './trust.mjs'
 
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
-const ALIASES = { warp: '@weft/warp', icons: '@weft/icons', text: '@weft/plugin-text', media: '@weft/plugin-media', 'media-ffmpeg': '@weft/plugin-media-ffmpeg', 'surface-keel': '@weft/plugin-surface-keel', redis: '@weft/realtime-redis', nats: '@weft/realtime-nats', pay: '@weft/pay', 'pay-stripe': '@weft/plugin-pay-stripe' }
+const ALIASES = { warp: '@weft/warp', icons: '@weft/icons', text: '@weft/text', media: '@weft/plugin-media', 'media-ffmpeg': '@weft/plugin-media-ffmpeg', 'surface-keel': '@weft/plugin-surface-keel', redis: '@weft/realtime-redis', nats: '@weft/realtime-nats', pay: '@weft/pay', 'pay-stripe': '@weft/pay/stripe' }
+
+/** Add-ons that aren't on npm yet. A checkout's tarballs still reach them: `local.mjs` pins each with an override. */
+const UNPUBLISHED = new Set(['@weft/text', '@weft/pay', '@weft/plugin-media', '@weft/plugin-media-ffmpeg', '@weft/plugin-surface-keel', '@weft/multiplayer', '@weft/realtime-durable-object', '@weft/realtime-livekit', '@weft/realtime-nats', '@weft/realtime-redis', '@weft/realtime-socketio', '@weft/realtime-webrtc'])
 
 const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'deno.lock': ['deno', 'add'], 'package-lock.json': ['npm', 'install'] }
 
@@ -44,6 +47,13 @@ export function pinned(root, specs) {
   })
   if (Object.keys(local).length) writeFileSync(file, JSON.stringify({ ...pkg, dependencies: { ...pkg.dependencies, ...local } }, null, 2))
   return rest
+}
+
+/** Is `name` pinned to a local tarball in this app (`local.mjs`, the packed gates)? */
+function localOverride(root, name) {
+  const file = join(root, 'package.json')
+  const override = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')).overrides?.[name] : undefined
+  return typeof override === 'string' && override.startsWith('file:')
 }
 
 function installSpecs(root, manager, verb, specs) {
@@ -163,7 +173,7 @@ async function addTailwind(root, { dryRun, install }) {
 }
 
 const ENGINES = ['sqlite', 'postgres', 'mysql']
-const LAYER_PLUGIN = { prisma: '@weft/plugin-db-prisma', native: '@weft/plugin-db-native' }
+const LAYER_PLUGIN = { prisma: '@weft/db/plugin-prisma', native: '@weft/db/plugin-native' }
 
 /** A database on an app that has none: the wiring a scaffold writes, with no todo app. Never touches what's there. */
 async function addDb(root, engine = 'sqlite', { layer = 'drizzle', dryRun, install }) {
@@ -312,14 +322,17 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   const named = names(text, pkg)
   // A config can name a package that isn't installed yet, and importing it then would leave this process's module
   // resolver sure the package has no `exports`, so the load after the install would fail too. Load it once it's there.
-  const present = existsSync(join(root, 'node_modules', pkg, 'package.json'))
+  const present = existsSync(join(root, 'node_modules', packageOf(pkg), 'package.json'))
   if (present && (named || listed((await loadConfig(root)).config, pkg))) return { ok: true, already: true, package: pkg, config, actions: [] }
+
+  const home = packageOf(pkg)
+  if (install && !present && UNPUBLISHED.has(home) && !localOverride(root, home)) throw refused(`${home} isn't on npm yet: this release of weft ships the core packages, and this add-on comes later. Nothing was changed.`)
 
   const actions = []
   const [manager, verb] = installer(root)
   if (install) {
-    actions.push(`install ${pkg} with ${manager}`)
-    if (!dryRun) installSpecs(root, manager, verb, [pkg])
+    actions.push(`install ${home} with ${manager}`)
+    if (!dryRun) installSpecs(root, manager, verb, [home])
   }
   const setup = await setupOf(root, pkg)
   const plan = setup && await planSetup(root, setup)

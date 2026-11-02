@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { LIST_ROWS, listSuite } from 'weft/test/plugins'
 import { decodeCursor } from '@weft/start/list'
-import { prismaSource } from '../src/index'
+import { prismaSource } from '../src/prisma'
 
 const dir = mkdtempSync(join(tmpdir(), 'weft-prisma-'))
 const url = `file:${join(dir, 'test.db')}`

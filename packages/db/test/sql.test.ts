@@ -2,7 +2,7 @@
 import { DatabaseSync } from 'node:sqlite'
 import { LIST_ROWS, listSuite } from 'weft/test/plugins'
 import { decodeCursor } from '@weft/start/list'
-import { postgresTrigger, sqlSource, type SqlSpec } from '../src/index'
+import { postgresTrigger, sqlSource, type SqlSpec } from '../src/sql'
 
 const spec: SqlSpec = { table: 'tasks', columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }
 

@@ -15,8 +15,8 @@ const drivers = db => (db === 'postgres' ? ['postgres'] : db === 'mysql' ? ['mys
 export function stackDeps({ db, auth, layer = 'drizzle', version = '0.0.0' }) {
   if (db === 'none') return { deps: {}, dev: {} }
   const base = pin('@t3-oss/env-core', 'zod', ...(auth ? ['better-auth'] : []))
-  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db), ...(auth ? ['kysely'] : [])), '@weft/plugin-db-native': version }, dev: pin('@types/node') }
-  if (layer === 'prisma') return { deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft/plugin-db-prisma': version }, dev: pin('prisma', '@types/node') }
+  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db), ...(auth ? ['kysely'] : [])), '@weft/db': version }, dev: pin('@types/node') }
+  if (layer === 'prisma') return { deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft/db': version }, dev: pin('prisma', '@types/node') }
   return {
     deps: pin('@t3-oss/env-core', 'drizzle-orm', 'drizzle-zod', 'zod', ...drivers(db), ...(auth ? ['better-auth'] : [])),
     dev: pin('drizzle-kit', '@types/node'),

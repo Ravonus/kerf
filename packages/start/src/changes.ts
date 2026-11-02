@@ -90,7 +90,7 @@ async function pkOf(table: any, dialect: DbHandle['dialect']): Promise<string[]>
 /** `realtime({ changes: dbChanges(db, [todos, notes]) })`: these tables' writes reach `.live`, whoever made them. */
 export function dbChanges(db: { $weft?: DbHandle }, tables: unknown[], options: ChangeOptions = {}): Source {
   const handle = db?.$weft
-  if (!handle?.changes) throw new StartError('R017', '`dbChanges` needs a client from `@weft/start/db/sqlite`, `/postgres` or `/mysql`', 'for MongoDB use `mongoChanges` from `@weft/db-mongo`; for another client, write a `Source`')
+  if (!handle?.changes) throw new StartError('R017', '`dbChanges` needs a client from `@weft/start/db/sqlite`, `/postgres` or `/mysql`', 'for MongoDB use `mongoChanges` from `@weft/db/mongo`; for another client, write a `Source`')
   const names = tables.map(nameOf)
   let source: Promise<Omit<Source, 'name' | 'tables'>> | undefined
   const load = () => (source ??= handle.changes!(names, options))

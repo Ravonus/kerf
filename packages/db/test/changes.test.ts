@@ -1,7 +1,7 @@
 // The change feed on a real MongoDB: `WEFT_TEST_MONGO` a replica set, `WEFT_TEST_MONGO_SOLO` a standalone. Their
 // databases are yours to lose.
 import { createFeed } from '@weft/start/changes'
-import { mongoChanges } from '../src/index'
+import { mongoChanges } from '../src/mongo'
 
 const url = process.env.WEFT_TEST_MONGO
 const solo = process.env.WEFT_TEST_MONGO_SOLO

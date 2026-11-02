@@ -1,8 +1,11 @@
 // Better Auth on Native (research 34 §5): Better Auth speaks Kysely, so this is a Kysely dialect over Native's own
 // connection. One connection on every engine and runtime, with no second driver and no ORM in the app's code.
 
-import { MysqlAdapter, MysqlIntrospector, MysqlQueryCompiler, PostgresAdapter, PostgresIntrospector, PostgresQueryCompiler, SqliteAdapter, SqliteIntrospector, SqliteQueryCompiler, type Dialect, type Kysely } from 'kysely'
+import type { Dialect, Kysely } from 'kysely'
+import { driver } from '../driver'
 import type { NativeDb } from './index'
+
+const { MysqlAdapter, MysqlIntrospector, MysqlQueryCompiler, PostgresAdapter, PostgresIntrospector, PostgresQueryCompiler, SqliteAdapter, SqliteIntrospector, SqliteQueryCompiler } = await driver('@weft/db/plugin-native/auth', 'kysely', () => import('kysely'))
 
 const PARTS = {
   sqlite: { adapter: SqliteAdapter, compiler: SqliteQueryCompiler, introspector: SqliteIntrospector, type: 'sqlite' },

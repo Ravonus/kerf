@@ -1,4 +1,8 @@
-# @weft/text-engine
+# @weft/text
+
+Fonts and text for weft. `text()` for `weft.config.ts` is the main entry, `@weft/text/build` is the Node-only font build, and `@weft/text/measure` and `@weft/text/engine` are what a browser loads: nothing Node-only reaches them.
+
+## The engine
 
 **A slim build of [Pretext](https://github.com/chenglou/pretext) by Cheng Lou (`@chenglou/pretext` 1.0.0, MIT).**
 Pretext does the hard part: it ports Blink's, WebKit's and Gecko's line breaking and their measurement rules to
@@ -21,7 +25,7 @@ the 0.21 KB detector shell (`dist/index.js`).
 ## API
 
 ```ts
-import { loadTextEngine } from '@weft/text-engine'
+import { loadTextEngine } from '@weft/text/engine'
 const te = await loadTextEngine()             // loads only this browser's engine chunk
 const h = te.prepare(text, '16px Inter', { whiteSpace: 'normal' })
 const { height, lineCount } = te.layout(h, width, lineHeight)
