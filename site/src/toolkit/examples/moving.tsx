@@ -388,7 +388,7 @@ export const LinkExternal = () => <Link external href="https://example.com">Open
 
 export const LinkFooter = () => (
   <Row gap="group" justify="center">
-    <Link subtle href="/docs">Docs</Link>
+    <Link subtle href="/learn">Learn</Link>
     <Link subtle href="/toolkit">Components</Link>
     <Link subtle external href="https://example.com">Status</Link>
   </Row>

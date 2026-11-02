@@ -322,7 +322,7 @@ for (const [rel, text] of out) {
 }
 
 /** Each published package carries the licence and says it's early, in its README's first lines. */
-const NOTE = '> **Early release (0.1.0).** weft is young: APIs will change between minor versions, and not every add-on is on npm yet.'
+const NOTE = "> **Early release (0.1.0).** APIs will change between minor versions. weft isn't on npm yet."
 const extra = new Map()
 for (const dir of PUBLIC) {
   const name = JSON.parse(out.get(`packages/${dir}/package.json`)).name
