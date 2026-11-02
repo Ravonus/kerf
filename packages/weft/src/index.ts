@@ -434,13 +434,35 @@ export function name<T>(value: T, label: string): T {
 }
 
 export function derived<T>(fn: () => T): Derived<T> {
+  if (fixed()) return new Once(fn)
   return new Memo(computation(fn, 0))
 }
 
 /** Accessor form used by compiled code (`memo`). */
 export function memo<T>(fn: () => T): () => T {
+  if (fixed()) return once(() => untrack(fn))
   const d = derived(fn)
   return () => d.value
+}
+
+/**
+ * A server render's own derived values can't move: the render reads them in one go and is thrown away. No node, then.
+ * One made outside a render (a module's) or in a `defineState` setup (a store, read across renders) stays live.
+ */
+const fixed = () => rt.server && owner !== null && collecting === null
+
+/** A derived value on a server render: worked out once, when first read, like a memo's first run. */
+class Once<T> implements Derived<T> {
+  private done = false
+  private v!: T
+  constructor(private fn: () => T) {}
+  get value(): T {
+    if (!this.done) {
+      this.v = untrack(this.fn)
+      this.done = true
+    }
+    return this.v
+  }
 }
 
 /**
