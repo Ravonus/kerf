@@ -79,7 +79,7 @@
   background: var(--warp-color-sweep); clip-path: inset(0 100% 0 0);
   animation: warp-arrive-sweep calc(var(--warp-arrive-sweep) * 2) var(--warp-sweep-ease) var(--warp-duration-fast) both;
 }
-:where([data-expression="vivid"] [data-arrive], [data-flair="sweep"] [data-arrive])::after {
+:where([data-flair="sweep"] [data-arrive])::after {
   inset: 0; block-size: auto; background: none; border: var(--warp-sweep-width) solid var(--warp-color-sweep); border-radius: inherit;
 }
 @keyframes warp-arrive {

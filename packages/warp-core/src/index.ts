@@ -4,6 +4,7 @@
 // the weft binding is its own subpath, `@weft/warp-core/weft`.
 export { store, uid, resetIds, type Store, type Action } from './store'
 export { installSweep, sweep, type SweepMachine } from './sweep'
+export { pressOrigin } from './press-origin'
 export { field, floatingLabel, labelChars } from './floating-label'
 export { buildIndex, openIndex, searchIndex, fuzzyIndex, words, type SearchEntry, type SearchHit, type SearchIndex, type SearchWire } from './search'
 export { DIALS, getDial, setDial, dialsFromUrl, type Dial, type DialValue } from './dial'
