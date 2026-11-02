@@ -102,6 +102,7 @@ describe('a client running before the chunks land', () => {
     await page.waitForTimeout(50)
     expect(await page.evaluate(() => window.__plain)).toBeUndefined() // nor a plain resource's own fetch
     expect(await page.$$('template')).toEqual([])
+    await page.waitForFunction(() => !document.querySelector('#app [wk]')) // what only the claim needed goes, as it does after hydrating
     const markers = await page.evaluate(() => {
       const w = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT)
       const out = []

@@ -266,3 +266,24 @@ test('a held Boundary the server gave up on fetches behind its fallback, and sho
     delete page.$wh
   }
 })
+
+test('a Boundary that first runs after its chunk landed claims the content, and holds for nothing', async () => {
+  const load = () => Promise.resolve({ name: 'Ada' })
+  const html = await renderToStringAsync(() => ServerUsers({ load }))
+  const data = JSON.parse(/data-weft>(.*?)<\/script>/.exec(html)![1])
+  const key = Object.keys(data.b)[0]
+  const container = document.body.appendChild(document.createElement('div'))
+  container.innerHTML = html
+  const profile = container.querySelector('.profile')!
+  const page = globalThis as any
+  page.$wc = [{ r: data.r, b: data.b }]
+  try {
+    hydrate(() => ClientUsers({ load }), container, { data: { r: {}, b: { [key]: 'p' }, w: 1 } })
+    expect(hydration.misses).toBe(0)
+    expect(page.$wh).toBeUndefined()
+    expect(profile.isConnected).toBe(true)
+    expect(profile.textContent).toBe('Ada')
+  } finally {
+    delete page.$wc
+  }
+})

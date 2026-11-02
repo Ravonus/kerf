@@ -52,6 +52,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   for (const l of (globalThis as any).$wc ?? []) {
     Object.assign(data.r, l.r)
     Object.assign(data.b, l.b)
+    if (l.s) Object.assign((data.s ??= {}), l.s)
   }
   // What a Boundary still out claims its chunk with, once it lands: a claim like this one, of nodes that came after it.
   if (data?.w) data.w = (root: Element, fn: () => void) => {
@@ -60,6 +61,8 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       fn()
     } finally {
       hydration.registry.clear()
+      const list = hydration.trash.splice(0)
+      setTimeout(() => { for (const n of list) n.nodeType === 1 ? (n as Element).removeAttribute('wk') : n.remove() })
     }
   }
   hydrate(() => <App route={route} />, container, { data })

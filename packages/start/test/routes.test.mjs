@@ -24,6 +24,7 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     ['/cover', 'page', [], ['layout:'], null],
     ['/deferred-meta', 'page', [], ['layout:'], null],
     ['/held', 'page', [], ['layout:'], null],
+    ['/held-island', 'page', [], ['layout:'], null],
     ['/island-bad', 'page', [], ['layout:'], null],
     ['/islands', 'page', [], ['layout:'], null],
     ['/islands-top', 'page', [], ['layout:'], null],

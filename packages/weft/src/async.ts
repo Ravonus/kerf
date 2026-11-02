@@ -191,7 +191,8 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   const key = keys.on ? nextKey() : undefined
   const data = rt.data as Streamed | undefined
   let was = key !== undefined && !rt.server ? data?.b[key] : undefined
-  const page = globalThis as { $wh?: Record<string, (t?: HTMLTemplateElement) => void> | 0; $wc?: Partial<SsrData>[] }
+  const page = globalThis as Page
+  if (was === 'p' && data?.w) was = landed(data, page)[key!] // a lazy island wakes after the client started, and its chunk may be in
   /** It's still coming: the fallback stays, and the content waits for its chunk, which brings the data with it. */
   let held = was === 'p' && !!data?.w && page.$wh !== 0
   const failed = () => (thrown.value = new Error(data!.r[key!]?.e ?? 'server render failed'))
@@ -269,12 +270,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
       // nothing's asked again. Built here, not in the memo: what it reads has to reach the memo.
       waiting[id] = t => {
         held = false
-        for (const l of page.$wc ?? []) {
-          Object.assign(data!.r, l.r)
-          Object.assign(data!.b, l.b)
-          if (l.s) Object.assign((data!.s ??= {}), l.s)
-        }
-        was = data!.b[key!]
+        was = landed(data!, page)[key!]
         if (was === 'e') failed()
         else if (t && was === 'c' && typeof data!.w === 'function') claim(t, data!, () => build(true))
         else build()
@@ -348,6 +344,18 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
 
 /** What a page that's still streaming carries once the client runs: `w` claims a chunk's nodes (@weft/start's client). */
 type Streamed = Omit<SsrData, 'w'> & { w?: 1 | ((root: Element, fn: () => void) => void) }
+
+type Page = { $wh?: Record<string, (t?: HTMLTemplateElement) => void> | 0; $wc?: Partial<SsrData>[] }
+
+/** The page's data with what the stream's chunks have said since (their scripts push to `$wc`): the Boundaries' states. */
+function landed(data: Streamed, page: Page) {
+  for (const l of page.$wc ?? []) {
+    Object.assign(data.r, l.r)
+    Object.assign(data.b, l.b)
+    if (l.s) Object.assign((data.s ??= {}), l.s)
+  }
+  return data.b
+}
 
 /** Run `fn` as a claiming pass over a chunk. Out of its template, whose document has no window for what mounts to ask for. */
 function claim(t: HTMLTemplateElement, data: Streamed, fn: () => void) {

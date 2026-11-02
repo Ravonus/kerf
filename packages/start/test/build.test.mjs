@@ -171,6 +171,23 @@ describe('node preset, end to end', () => {
     }
   }, 30_000)
 
+  test('an island that wakes on sight wakes when a chunk replaces the fallback watching for it', async () => {
+    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const browser = await chromium.launch()
+    try {
+      for (const path of ['/held-island', '/held-island?boot']) {
+        const page = await browser.newPage()
+        await page.goto(server.url + path, { waitUntil: 'commit' })
+        await page.waitForSelector('.wait-awake', { state: 'attached' }) // what the observers have, once the entry's run
+        await page.waitForSelector('.awake')
+        await page.waitForFunction(() => !document.querySelector('.awake').hasAttribute('wk'), null, { timeout: 5000 }) // claimed
+        await page.close()
+      }
+    } finally {
+      await browser.close()
+    }
+  }, 30_000)
+
   test('the entry has no modulepreload: its script tag fetches it', async () => {
     const head = (await (await fetch(server.url + '/about')).text()).split('</head>')[0]
     const entry = /<script type="module" src="([^"]+)"/.exec(head)[1]

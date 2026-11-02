@@ -1,7 +1,7 @@
 // A streamed page on the server: what it keeps, what it sends and when.
 import { setFlagsFromString } from 'node:v8'
 import { runInNewContext } from 'node:vm'
-import { Boundary, derived, resource, state } from 'weft'
+import { Boundary, defineState, derived, resource, state, untrack } from 'weft'
 import { renderToStringAsync } from 'weft/ssr'
 import { FnError, query } from '../src/data'
 import { createHandler, type Manifest } from '../src/server'
@@ -270,6 +270,20 @@ describe('what a failure may say in production', () => {
     const html = await body(await serve({ '/': () => <main><Own /></main> })('/'))
     expect(html).not.toContain('secret_table')
   })
+})
+
+test('a chunk says what its render changed of the page\'s state, once', async () => {
+  const seen = defineState('chunk.seen', () => ({ n: state(0) }))
+  const Late = () => {
+    const r = resource(() => new Promise<number>(ok => setTimeout(ok, 5, 7)))
+    seen.n.value = untrack(() => r.value) ?? 0
+    return <p>{r.value}</p>
+  }
+  const Later = () => <p>{resource(() => new Promise<string>(ok => setTimeout(ok, 30, 'x'))).value}</p>
+  const get = serve({ '/': () => <main><Boundary pending={<i>a</i>}><Late /></Boundary><Boundary pending={<i>b</i>}><Later /></Boundary></main> })
+  const html = await body(await get('/'))
+  const pushes = [...html.matchAll(/\|\|\[\]\)\.push\((.*?)\);\$wb/g)].map(m => JSON.parse(m[1]))
+  expect(pushes.filter(p => p.s).map(p => p.s)).toEqual([{ 'chunk.seen': { n: 7 } }])
 })
 
 test('a streamed page\'s entry is preloaded above its styles, with its script after what it reads', async () => {

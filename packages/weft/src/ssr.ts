@@ -108,9 +108,10 @@ export interface Stream {
 /**
  * The swap: the template before this script (or `t`) replaces the nodes between its key's markers. No key: drop every
  * marker. A Boundary the client already runs is in `$wh` with what to do instead: it gets the template, and claims its
- * content from that. `$wh` is 0 once the stream is over.
+ * content from that. `$wh` is 0 once the stream is over. An island that wakes on sight and starts with this fallback was
+ * being watched by it: gone, it can't be seen, so the content wakes it.
  */
-export const SWAP = `$wb=function(k,t){var d=document,h=self.$wh,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k&&h&&h[k]){n=h[k];delete h[k];t=t||d.currentScript.previousElementSibling;t.remove();return n(t)}if(!k){self.$wh=0;for(n in h)h[n]()}if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();b.replaceWith(t.content);a.remove();t.remove()}`
+export const SWAP = `$wb=function(k,t){var d=document,h=self.$wh,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k&&h&&h[k]){n=h[k];delete h[k];t=t||d.currentScript.previousElementSibling;t.remove();return n(t)}if(!k){self.$wh=0;for(n in h)h[n]()}if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();n=a.previousSibling;n=n&&n.data=='['?n.previousSibling:n;b.replaceWith(t.content);a.remove();t.remove();if(n&&/^wi:.*"v"]$/.test(n.data)&&self.__wq&&(n=n.nextElementSibling))__wq.w(n)}`
 
 /**
  * Render with streaming: `shell` now, then a chunk per Boundary whose resources resolve, re-rendering after each
