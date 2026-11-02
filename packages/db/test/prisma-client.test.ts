@@ -6,13 +6,13 @@ function client() {
   const ran: string[] = []
   const tags = new Set<string>()
   const tx = {
-    async $executeRawUnsafe(sql: string, ...values: unknown[]) {
+    $executeRawUnsafe(sql: string, ...values: unknown[]) {
       ran.push(sql)
       if (sql.startsWith('insert into __weft_migrations')) tags.add(values[0] as string)
-      return 0
+      return Promise.resolve(0)
     },
-    async $queryRawUnsafe() {
-      return [...tags].map(tag => ({ tag }))
+    $queryRawUnsafe() {
+      return Promise.resolve([...tags].map(tag => ({ tag })))
     },
   }
   return { ran, ...tx, $transaction: (fn: (t: typeof tx) => Promise<void>) => fn(tx) }
@@ -25,7 +25,7 @@ test('a file runs statement by statement, and once', async () => {
   const db = withWeft(c, 'sqlite', { migrate: false })
   await db.$weft.migrate(list)
   await db.$weft.migrate(list)
-  expect(c.ran.filter(s => /^CREATE/.test(s))).toEqual(['CREATE TABLE a (id int)', 'CREATE INDEX i ON a(id)'])
+  expect(c.ran.filter(s => s.startsWith('CREATE'))).toEqual(['CREATE TABLE a (id int)', 'CREATE INDEX i ON a(id)'])
 })
 
 test('the server waits on a client it can\'t hold: its gate runs the list once, and `migrate: false` has none to run', async () => {
@@ -34,12 +34,25 @@ test('the server waits on a client it can\'t hold: its gate runs the list once, 
   withWeft(c, 'sqlite')
   withWeft(client(), 'sqlite', { migrate: false })
   expect(runtime.dbs!.size).toBe(before + 2)
-  const [on, off] = [...runtime.dbs!].slice(before)
+  const [on, off] = [...runtime.dbs!].slice(before) as [() => unknown, () => unknown]
   runtime.migrations = { list, report() {} }
   await Promise.all([on(), on()])
   expect(off()).toBeUndefined()
-  expect(c.ran.filter(s => /^CREATE TABLE/.test(s))).toEqual(['CREATE TABLE a (id int)'])
+  expect(c.ran.filter(s => s.startsWith('CREATE TABLE'))).toEqual(['CREATE TABLE a (id int)'])
   runtime.migrations = undefined
+})
+
+test('MySQL: a lock it didn\'t get stops the run, and a failed run lets the connection go without it', async () => {
+  const c = client()
+  const query = (got: number) => (sql: string) => { c.ran.push(sql); return Promise.resolve(sql.includes('get_lock') ? [{ got: BigInt(got) }] : []) }
+  const db = (got: number) => withWeft({ ...c, $queryRawUnsafe: query(got), $transaction: (fn: (t: unknown) => Promise<void>) => fn({ ...c, $queryRawUnsafe: query(got) }) }, 'mysql', { migrate: false })
+  await expect(db(0).$weft.migrate(list)).rejects.toThrow('migration lock')
+  expect(c.ran.filter(s => s.startsWith('CREATE'))).toEqual([])
+  await expect(db(1).$weft.migrate([{ tag: 'b', sql: 'CREATE TABLE b (id int);' }])).resolves.toBeUndefined()
+  expect(c.ran.at(-1)).toContain('release_lock')
+  const failing = { ...c, $queryRawUnsafe: query(1), $executeRawUnsafe: () => Promise.reject(new Error('bad sql')) }
+  await expect(withWeft({ ...failing, $transaction: (fn: (t: unknown) => Promise<void>) => fn(failing) }, 'mysql', { migrate: false }).$weft.migrate(list)).rejects.toThrow('bad sql')
+  expect(c.ran.at(-1)).toContain('release_lock')
 })
 
 test('it is the same client, so Prisma\'s docs stay true', () => {

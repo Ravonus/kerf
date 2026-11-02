@@ -4,6 +4,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
+import type { SQLInputValue } from 'node:sqlite'
 import { createNative, type Driver, type Row } from './index'
 
 interface Conn {
@@ -14,21 +15,22 @@ interface Conn {
 async function open(path: string): Promise<Conn> {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
   let conn: Conn
-  if ((globalThis as any).Bun) {
-    const { Database } = await import('bun:sqlite' as string)
+  if ('Bun' in globalThis) {
+    const { Database } = await import('bun:sqlite')
     const db = new Database(path, { create: true })
     conn = { all: (text, params) => db.prepare(text).all(...params), exec: text => void db.run(text) }
   } else {
     const { DatabaseSync } = await import('node:sqlite')
     const db = new DatabaseSync(path)
     // `node:sqlite` on Deno refuses a boolean, which SQLite stores as 0 or 1 anyway.
-    conn = { all: (text, params) => db.prepare(text).all(...(params.map(v => (typeof v === 'boolean' ? Number(v) : v)) as any[])) as Row[], exec: text => db.exec(text) }
+    conn = { all: (text, params) => db.prepare(text).all(...(params.map(v => (typeof v === 'boolean' ? Number(v) : v)) as SQLInputValue[])), exec: text => db.exec(text) }
   }
   if (path !== ':memory:') conn.exec('pragma journal_mode = wal')
   conn.exec('pragma foreign_keys = on; pragma busy_timeout = 5000')
   return conn
 }
 
+/** A client on one SQLite file, or `:memory:`. */
 export function createDb({ url = 'file:.data/app.db', migrate }: { url?: string; migrate?: boolean } = {}) {
   const path = url.replace(/^file:/, '')
   let conn: Promise<Conn> | undefined
@@ -50,16 +52,18 @@ export function createDb({ url = 'file:.data/app.db', migrate }: { url?: string;
       const c = await connect()
       const before = gate
       let release!: () => void
-      gate = new Promise<void>(ok => (release = ok))
+      gate = new Promise<void>(ok => { release = ok })
       await before
-      c.exec('begin')
       try {
-        const out = await inside.run(true, () => fn({ query }))
-        c.exec('commit')
-        return out
-      } catch (e) {
-        c.exec('rollback')
-        throw e
+        c.exec('begin')
+        try {
+          const out = await inside.run(true, () => fn({ query }))
+          c.exec('commit')
+          return out
+        } catch (e) {
+          c.exec('rollback')
+          throw e
+        }
       } finally {
         release()
       }

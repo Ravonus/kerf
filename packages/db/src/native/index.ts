@@ -3,8 +3,10 @@
 
 import { gate, register, touch, type DbHandle, type Migration } from '@weft-js/start/db/core'
 
+/** One row, by column name. */
 export type Row = Record<string, unknown>
 
+/** What an engine supplies: statements, files of them, a transaction and a lock. */
 export interface Driver<D = unknown> {
   dialect: DbHandle['dialect']
   /** The client underneath, for anything `sql` doesn't cover. */
@@ -19,8 +21,10 @@ export interface Driver<D = unknown> {
   locked<T>(fn: () => Promise<T>): Promise<T>
 }
 
+/** The template tag: its values always go to the driver as parameters. */
 export type Sql = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<Row[]>
 
+/** The client an app holds, as `ctx.db`. */
 export interface NativeDb<D = unknown> {
   sql: Sql
   /** One statement you built, with its values bound. For a tool that writes SQL; in app code use `sql`. */
@@ -38,7 +42,8 @@ const tag = (handle: DbHandle, query: Driver['query']): Sql => (strings, ...valu
   return query(text, values)
 }
 
-export function createNative<D>(driver: Driver<D>, { migrate = true }: { migrate?: boolean } = {}): NativeDb<D> {
+/** A client over any `Driver`, with its migrations behind the same gate as every statement. */
+export function createNative<D>(driver: Driver<D>, { migrate = true }: { migrate?: boolean | undefined } = {}): NativeDb<D> {
   const handle: DbHandle = {
     dialect: driver.dialect,
     exempt: new Set(),

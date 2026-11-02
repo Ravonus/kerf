@@ -3,11 +3,12 @@ import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
 import { decodeCursor } from '@weft-js/start/list'
-import { firestoreSource } from '../src/firestore'
+import { firestoreSource, type FirestoreCollection, type FirestoreQuery } from '../src/firestore'
 
 const host = process.env.FIRESTORE_EMULATOR_HOST
 const spec = { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }
 
+// Needs the Firestore emulator running.
 test.skipIf(!host)('firestoreSource passes db.adapter@1', async () => {
   const db = getFirestore(initializeApp({ projectId: 'weft-test' }))
   const col = db.collection(`t${Date.now()}`)
@@ -21,7 +22,14 @@ test.skipIf(!host)('firestoreSource passes db.adapter@1', async () => {
   expect(checks.filter(c => !c.ok)).toEqual([])
 })
 
+test('an update with nothing in it reads the row: the SDK refuses an empty one', async () => {
+  const doc = { id: 'a', exists: true, data: () => ({ title: 'x' }) }
+  const ref = { get: () => Promise.resolve(doc), update: () => Promise.reject(new Error('at least one field')) }
+  const col = { doc: () => ref } as unknown as FirestoreCollection
+  expect(await firestoreSource(col, spec).update('a', {})).toEqual({ id: 'a', title: 'x' })
+})
+
 test('search and another sort are refused up front', async () => {
-  const b: any = { select: () => b, where: () => b, orderBy: () => b }
-  await expect(firestoreSource(b, spec).list({ mode: 'cursor', limit: 5, offset: 0, after: null, sort: { field: 'status', dir: 'asc' }, search: 'x', filter: {} } as any)).rejects.toThrow('Q002')
+  const b = { select: () => b, where: () => b, orderBy: () => b } as unknown as FirestoreCollection & FirestoreQuery
+  await expect(firestoreSource(b, spec).list({ mode: 'cursor', limit: 5, offset: 0, after: null, sort: { field: 'status', dir: 'asc' }, search: 'x', filter: {} })).rejects.toThrow('Q002')
 })

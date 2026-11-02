@@ -45,9 +45,9 @@ function database() {
   return drizzle(async (text, params, method) => {
     const s = raw.prepare(text)
     s.setReturnArrays(true)
-    if (method === 'run' && !/returning/i.test(text)) return (s.run(...(params as any[])), { rows: [] })
-    const rows = s.all(...(params as any[])) as unknown as unknown[][]
-    return { rows: method === 'get' ? rows[0] ?? [] : rows } as any
+    if (method === 'run' && !/returning/i.test(text)) return (s.run(...(params)), { rows: [] })
+    const rows = s.all(...(params)) as unknown as unknown[][]
+    return { rows: method === 'get' ? rows[0] ?? [] : rows }
   })
 }
 
@@ -55,4 +55,9 @@ test('drizzleSource passes db.adapter@1', async () => {
   const checks = await listSuite({ make: () => drizzleSource({ db: database(), table: tasks }, { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }), decode: decodeCursor })
   expect(checks.filter(c => !c.ok)).toEqual([])
   expect(checks.length).toBeGreaterThan(20)
+})
+
+test('an update with nothing to write reads the row: Drizzle refuses an empty `set`', async () => {
+  const source = drizzleSource({ db: database(), table: tasks }, { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] })
+  expect(await source.update(LIST_ROWS[0]!.id, {})).toMatchObject({ id: LIST_ROWS[0]!.id, title: LIST_ROWS[0]!.title })
 })

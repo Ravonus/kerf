@@ -12,10 +12,14 @@
 
 import { StartError, type StandardSchemaV1 } from './data'
 
+/** One value a filter can hold. */
 export type Scalar = string | number | boolean | null
+/** Which way a sort runs. */
 export type Dir = 'asc' | 'desc'
+/** One field and a direction. */
 export interface Sort { field: string; dir: Dir }
 
+/** A checked request, as a source takes it. */
 export interface ListParams {
   mode: 'page' | 'cursor'
   limit: number
@@ -32,6 +36,7 @@ export interface ListParams {
 /** The envelope warp's `Table` reads. `next` and `prev` go back in as `cursor` or `page`; absent means no such page. */
 export interface ListPage<T> { items: T[]; total?: number; next?: string | number; prev?: string | number }
 
+/** What a list lets a client ask for. */
 export interface ListSpec {
   /** Required, even empty: nothing is sortable, filterable or searchable by default. */
   sort: readonly string[]
@@ -41,6 +46,7 @@ export interface ListSpec {
   pageSize?: { default?: number; max?: number }
 }
 
+/** What a client sends: every field is checked by `listInput`. */
 export interface ListRequest {
   mode?: 'page' | 'cursor'
   page?: number
@@ -56,7 +62,8 @@ const SEARCH_MAX = 200, IN_MAX = 100, CURSOR_MAX = 1024
 const scalar = (v: unknown): v is Scalar => v === null || typeof v === 'boolean' || typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v))
 
 const pack = (v: unknown) => (v instanceof Date ? { $d: v.toISOString() } : v)
-const unpack = (v: any) => (v && typeof v === 'object' && typeof v.$d === 'string' ? new Date(v.$d) : v)
+const stamped = (v: unknown): v is { $d: string } => typeof (v as { $d?: unknown } | null)?.$d === 'string'
+const unpack = (v: unknown) => (stamped(v) ? new Date(v.$d) : v)
 
 /** Opaque to a client, and read with the same care as any other input. */
 export function encodeCursor(value: unknown, id: unknown): string {
@@ -64,12 +71,13 @@ export function encodeCursor(value: unknown, id: unknown): string {
   return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
 }
 
+/** The other way from `encodeCursor`: null for anything that isn't a cursor of ours. */
 export function decodeCursor(text: string): [unknown, unknown] | null {
   if (text.length > CURSOR_MAX) return null
   try {
     const bytes = Uint8Array.from(atob(text.replaceAll('-', '+').replaceAll('_', '/')), c => c.charCodeAt(0))
-    const list = JSON.parse(new TextDecoder().decode(bytes))
-    const fits = (v: any) => scalar(v) || (typeof v?.$d === 'string' && !Number.isNaN(Date.parse(v.$d)))
+    const list: unknown = JSON.parse(new TextDecoder().decode(bytes))
+    const fits = (v: unknown) => scalar(v) || (stamped(v) && !Number.isNaN(Date.parse(v.$d)))
     return Array.isArray(list) && list.length === 2 && list.every(fits) ? [unpack(list[0]), unpack(list[1])] : null
   } catch {
     return null
@@ -103,7 +111,7 @@ export function listInput(spec: ListSpec): StandardSchemaV1<ListRequest | undefi
     const filter: ListParams['filter'] = Object.create(null)
     if (r.filter !== undefined && (typeof r.filter !== 'object' || r.filter === null || Array.isArray(r.filter))) no('`filter` is an object', 'filter')
     else for (const key of Object.keys(r.filter ?? {})) {
-      const v = r.filter![key]
+      const v = r.filter![key]!
       if (!filters.has(key)) no(`\`${key}\` can't be filtered on`, 'filter', key)
       else if (Array.isArray(v) ? !(v.length && v.length <= IN_MAX && v.every(scalar)) : !scalar(v)) no(`\`${key}\` takes a value or a list of up to ${IN_MAX}, not an object`, 'filter', key)
       else filter[key] = v
@@ -112,11 +120,12 @@ export function listInput(spec: ListSpec): StandardSchemaV1<ListRequest | undefi
     const params: ListParams = { mode, limit: size, offset: mode === 'page' ? (page - 1) * size : 0, after, sort, filter, ...(r.search ? { search: r.search } : {}) }
     return { value: params }
   }
-  return { '~standard': { version: 1, vendor: 'weft', validate } } as any
+  return { '~standard': { version: 1, vendor: 'weft', validate } }
 }
 
 // ---- sources --------------------------------------------------------------------------------------------------------
 
+/** The allowlist a source reads and writes through. */
 export interface SourceSpec {
   /** Public name → stored name. Required: only these are selected, returned or written. */
   columns: Record<string, string>
@@ -128,6 +137,7 @@ export interface SourceSpec {
   write?: readonly string[]
 }
 
+/** One table or collection, read and written the same way whatever holds it. */
 export interface ListSource<Row = Record<string, unknown>> {
   list(params: ListParams): Promise<ListPage<Row>>
   get(id: unknown): Promise<Row | null>
@@ -140,7 +150,7 @@ export interface ListSource<Row = Record<string, unknown>> {
 }
 
 /** `db.adapter@1`: what a provider exports. `target` is the driver's handle: a collection, a table, a query function. */
-export interface DbAdapter<T = any> {
+export interface DbAdapter<T = unknown> {
   readonly name: string
   source<Row = Record<string, unknown>>(target: T, spec: SourceSpec): ListSource<Row>
 }
@@ -156,10 +166,18 @@ export interface Plan {
   search?: { columns: string[]; text: string }
 }
 
-export function plan(spec: SourceSpec, p: ListParams): Plan {
-  const stored = (field: string) => (Object.hasOwn(spec.columns, field) ? spec.columns[field] : (() => { throw refuse(`\`${field}\``) })())
+/** Stored name of the row's id. A spec without one can't address a row, so a write can't go nowhere in silence. */
+export function storedId(spec: SourceSpec): string {
   const id = spec.id ?? 'id'
-  const where = Object.keys(p.filter).map(field => ({ column: stored(field), values: [p.filter[field]].flat() }))
+  if (!Object.hasOwn(spec.columns, id)) throw refuse(`\`${id}\` as the id`)
+  return spec.columns[id]!
+}
+
+/** Check a request against `spec`, for a source to run. */
+export function plan(spec: SourceSpec, p: ListParams): Plan {
+  const stored = (field: string) => (Object.hasOwn(spec.columns, field) ? spec.columns[field]! : (() => { throw refuse(`\`${field}\``) })())
+  const id = spec.id ?? 'id'
+  const where = Object.keys(p.filter).map(field => ({ column: stored(field), values: [p.filter[field]!].flat() }))
   if (where.some(w => !w.values.every(scalar))) throw refuse('a filter value that is not a scalar')
   const searching = p.search ? spec.search ?? [] : []
   if (p.search && !searching.length) throw refuse('a search')
@@ -172,9 +190,9 @@ export function plan(spec: SourceSpec, p: ListParams): Plan {
 }
 
 /** A stored row in public names, with only `columns` in it. */
-export const rowOf = (spec: SourceSpec) => {
+export const rowOf = <Row = Record<string, unknown>>(spec: SourceSpec) => {
   const pairs = Object.entries(spec.columns)
-  return (row: any): any => Object.fromEntries(pairs.filter(([, c]) => c in row).map(([f, c]) => [f, row[c]]))
+  return (row: object) => Object.fromEntries(pairs.filter(([, c]) => c in row).map(([f, c]) => [f, (row as Record<string, unknown>)[c]])) as Row
 }
 
 /** A write in stored names. Refuses anything outside `write`, so a client can't set `role` or move an id. */
@@ -185,20 +203,20 @@ export function written(spec: SourceSpec, data: Record<string, unknown>, creatin
   const out: Record<string, unknown> = {}
   for (const field of Object.keys(data)) {
     if (!allowed.has(field) || !Object.hasOwn(spec.columns, field)) throw refuse(`a write to \`${field}\``)
-    out[spec.columns[field]] = data[field]
+    out[spec.columns[field]!] = data[field]
   }
   return out
 }
 
 /** `rows` are in public names, with one more than `limit` in cursor mode when there is a next page. */
-export function pageOf<R>(rows: R[], p: ListParams, field: { sort?: string; id: string }, total?: number): ListPage<R> {
+export function pageOf<R>(rows: R[], p: ListParams, field: { sort?: string | undefined; id: string }, total?: number): ListPage<R> {
   if (p.mode === 'page') {
     const page = p.offset / p.limit + 1
     return { items: rows, ...(total === undefined ? {} : { total }), ...(total !== undefined && p.offset + p.limit < total ? { next: page + 1 } : {}), ...(page > 1 ? { prev: page - 1 } : {}) }
   }
   const more = rows.length > p.limit
   const items = more ? rows.slice(0, p.limit) : rows
-  const last = items.at(-1) as any
+  const last = items.at(-1) as R & Record<string, unknown>
   return { items, ...(total === undefined ? {} : { total }), ...(more ? { next: encodeCursor(field.sort ? last[field.sort] : last[field.id], last[field.id]) } : {}) }
 }
 

@@ -1,15 +1,17 @@
 // A list source from bound SQL: `columns` is required, identifiers come only from it, and every value
 // is a parameter. `target` is anything with `query(text, params)`: `ctx.db` from `@weft-js/db/plugin-native`, or a driver.
 
-import { likeOf, pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft-js/start/list'
+import { likeOf, pageOf, plan, rowOf, storedId, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft-js/start/list'
 import { StartError } from '@weft-js/start/data'
 
+/** Whatever runs a bound statement, and says which dialect it speaks. */
 export interface SqlTarget {
   query(text: string, params: unknown[]): Promise<Record<string, unknown>[]>
   dialect?: 'postgresql' | 'sqlite' | 'mysql'
   $weft?: { dialect: 'postgresql' | 'sqlite' | 'mysql' }
 }
 
+/** A source's allowlist, and the table it covers. */
 export interface SqlSpec extends SourceSpec { table: string }
 
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/
@@ -22,19 +24,20 @@ function ident(dialect: string) {
   }
 }
 
+/** A `ListSource` over one table, as bound SQL. */
 export function sqlSource<Row = Record<string, unknown>>(target: SqlTarget, spec: SqlSpec): ListSource<Row> {
   const dialect = target.dialect ?? target.$weft?.dialect ?? 'postgresql'
   const q = ident(dialect)
   for (const c of [spec.table, ...Object.values(spec.columns)]) q(c)
   const table = q(spec.table)
   const select = Object.values(spec.columns).map(q).join(', ')
-  const reading = rowOf(spec)
-  const idColumn = q(spec.columns[spec.id ?? 'id'])
+  const reading = rowOf<Row>(spec)
+  const idColumn = q(storedId(spec))
   const bind = (params: unknown[]) => (v: unknown) => {
     params.push(v)
     return dialect === 'postgresql' ? `$${params.length}` : '?'
   }
-  const read = async (text: string, params: unknown[]) => (await target.query(text, params)).map(reading) as Row[]
+  const read = async (text: string, params: unknown[]) => (await target.query(text, params)).map(reading)
   const byId = (id: unknown) => { const params: unknown[] = []; return read(`select ${select} from ${table} where ${idColumn} = ${bind(params)(id)}`, params).then(r => r[0] ?? null) }
   return {
     async list(p: ListParams) {
@@ -62,17 +65,17 @@ export function sqlSource<Row = Record<string, unknown>>(target: SqlTarget, spec
       const order = qp.sort ? `${q(qp.sort.column)} ${dir}, ${idColumn} ${dir}` : `${idColumn} asc`
       const cursor = p.mode === 'cursor'
       const counted = params.slice(0, mark)
-      const rows = await read(`select ${select} from ${table}${where(parts)} order by ${order} limit ${Number(cursor ? p.limit + 1 : p.limit)} offset ${Number(p.offset)}`, params)
-      const total = cursor ? undefined : Number((await target.query(`select count(*) as n from ${table}${where(filtered)}`, counted))[0].n)
+      const rows = await read(`select ${select} from ${table}${where(parts)} order by ${order} limit ${Math.trunc(cursor ? p.limit + 1 : p.limit)} offset ${Math.trunc(p.offset)}`, params)
+      const total = cursor ? undefined : Number((await target.query(`select count(*) as n from ${table}${where(filtered)}`, counted))[0]!.n)
       return pageOf(rows, p, { sort: qp.sort?.field, id: qp.id.field }, total)
     },
     get: byId,
     async create(data) {
       const row = written(spec, data, true)
+      const id = data[spec.id ?? 'id']
+      if (id === undefined) throw new StartError('Q002', '`create` needs the id: a generated one can\'t be read back on every dialect', 'generate it before the insert')
       const keys = Object.keys(row), params: unknown[] = [], put = bind(params)
       await target.query(`insert into ${table} (${keys.map(q).join(', ')}) values (${keys.map(k => put(row[k])).join(', ')})`, params)
-      const id = (data as any)[spec.id ?? 'id']
-      if (id === undefined) throw new StartError('Q002', '`create` needs the id: a generated one can\'t be read back on every dialect', 'generate it before the insert')
       return (await byId(id))!
     },
     async update(id, patch) {
@@ -91,6 +94,7 @@ export function sqlSource<Row = Record<string, unknown>>(target: SqlTarget, spec
   }
 }
 
+/** `db.adapter@1` over bound SQL. */
 export const adapter: DbAdapter<SqlTarget> = { name: 'sql', source: (t, spec) => sqlSource(t, spec as SqlSpec) }
 
 /**

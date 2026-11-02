@@ -21,7 +21,8 @@ function reached(file: string, seen = new Set<string>(), out = new Set<string>()
   if (seen.has(file)) return out
   seen.add(file)
   const text = readFileSync(file, 'utf8').replace(/^\s*(?:\/\/|\/?\*).*$/gm, '') // a comment can name a driver
-  for (const [, spec] of text.matchAll(/^(?:import|export)\s+(?!type\b)[^'"\n]*from\s+['"]([^'"]+)['"]|\bimport\(['"]([^'"]+)['"]\)/gm).map(m => [m[0], m[1] ?? m[2]])) {
+  for (const m of text.matchAll(/^(?:import|export)\s+(?!type\b)[^'"\n]*from\s+['"]([^'"]+)['"]|\bimport\(['"]([^'"]+)['"]\)/gm)) {
+    const spec = (m[1] ?? m[2])!
     if (!spec.startsWith('.')) out.add(spec.split('/').slice(0, spec.startsWith('@') ? 2 : 1).join('/').replace(/^mysql2.*/, 'mysql2'))
     else reached(resolve(dirname(file), `${spec}.ts`), seen, out)
   }
@@ -50,9 +51,10 @@ describe.each(entries)('%s', entry => {
 afterEach(() => { for (const name of [...DRIVERS, 'mysql2/promise']) vi.doUnmock(name) })
 
 test('a missing driver names the install command', async () => {
-  await expect(driver('@weft-js/db/kysely', 'not-installed-driver', () => import('not-installed-driver' as string))).rejects.toThrow('@weft-js/db/kysely needs the `not-installed-driver` driver, which isn\'t installed. Run: npm install not-installed-driver')
+  // @ts-expect-error the point is a package that isn't there
+  await expect(driver('@weft-js/db/kysely', 'not-installed-driver', () => import('not-installed-driver'))).rejects.toThrow('@weft-js/db/kysely needs the `not-installed-driver` driver, which isn\'t installed. Run: npm install not-installed-driver')
 })
 
 test('a driver that fails for another reason keeps its own error', async () => {
-  await expect(driver('@weft-js/db/kysely', 'kysely', async () => { throw new Error('boom') })).rejects.toThrow('boom')
+  await expect(driver('@weft-js/db/kysely', 'kysely', () => Promise.reject(new Error('boom')))).rejects.toThrow('boom')
 })

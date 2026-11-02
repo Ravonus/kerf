@@ -1,7 +1,7 @@
 // Better Auth on Native (research 34 §5): Better Auth speaks Kysely, so this is a Kysely dialect over Native's own
 // connection. One connection on every engine and runtime, with no second driver and no ORM in the app's code.
 
-import type { Dialect, Kysely } from 'kysely'
+import type { Dialect } from 'kysely'
 import { driver } from '../driver'
 import type { NativeDb } from './index'
 
@@ -32,13 +32,13 @@ export function nativeAuth(db: NativeDb) {
     createDriver: () => ({
       init: async () => {},
       destroy: async () => {},
-      acquireConnection: async () => connection,
+      acquireConnection: () => Promise.resolve(connection),
       releaseConnection: async () => {},
       beginTransaction: async () => {},
       commitTransaction: async () => {},
       rollbackTransaction: async () => {},
     }),
-    createIntrospector: (kysely: Kysely<any>) => new introspector(kysely),
+    createIntrospector: (kysely: ConstructorParameters<typeof SqliteIntrospector>[0]) => new introspector(kysely),
     createQueryCompiler: () => new compiler(),
   } as unknown as Dialect
   return { dialect, type, transaction: false }

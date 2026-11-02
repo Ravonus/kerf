@@ -15,8 +15,8 @@ test('statements wait for the server\'s migrations, and only a request that send
   let down = true
   const driver: Driver = {
     dialect: 'sqlite', raw: null,
-    query: async text => { if (down) throw new Error('down'); ran.push(text); return [] },
-    exec: async text => { if (down) throw new Error('down'); ran.push(text) },
+    query: text => { if (down) return Promise.reject(new Error('down')); ran.push(text); return Promise.resolve([]) },
+    exec: text => { if (down) return Promise.reject(new Error('down')); ran.push(text); return Promise.resolve() },
     transaction: fn => fn(driver),
     locked: fn => fn(),
   }
@@ -68,11 +68,21 @@ describe.each([
   })
 })
 
+test('a begin that fails rejects, and the statements behind it still run', async () => {
+  const db = sqlite({ url: ':memory:', migrate: false })
+  await db.sql`select 1 as a`
+  const conn = await db.driver()
+  conn.exec('begin')
+  await expect(db.transaction(tx => tx.sql`select 1`)).rejects.toThrow(/within a transaction/)
+  conn.exec('commit')
+  expect(await db.sql`select 1 as a`).toEqual([{ a: 1 }])
+})
+
 test('your own driver works the same way', async () => {
   const seen: unknown[][] = []
   const driver: Driver<string> = {
     dialect: 'postgresql', raw: 'mine', exec: async () => {}, locked: fn => fn(),
-    query: async (text, params) => (seen.push([text, params]), []),
+    query: (text, params) => (seen.push([text, params]), Promise.resolve([])),
     transaction: fn => fn(driver),
   }
   const db = createNative(driver, { migrate: false })

@@ -5,11 +5,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
 import { decodeCursor } from '@weft-js/start/list'
-import { prismaSource } from '../src/prisma'
+import { prismaSource, type PrismaDelegate } from '../src/prisma'
 
 const dir = mkdtempSync(join(tmpdir(), 'weft-prisma-'))
 const url = `file:${join(dir, 'test.db')}`
-let prisma: any
+interface Client { task: PrismaDelegate & { deleteMany(): Promise<unknown>; createMany(args: object): Promise<unknown> }; $disconnect(): Promise<void> }
+let prisma: Client
 
 beforeAll(async () => {
   const env = { ...process.env, DATABASE_URL: url, PRISMA_HIDE_UPDATE_MESSAGE: '1' }
@@ -17,7 +18,7 @@ beforeAll(async () => {
   execFileSync('npx', ['prisma', 'db', 'push'], { env, stdio: 'pipe' })
   const { PrismaClient } = await import('./generated/client')
   const { PrismaLibSql } = await import('@prisma/adapter-libsql')
-  prisma = new PrismaClient({ adapter: new PrismaLibSql({ url }) })
+  prisma = new PrismaClient({ adapter: new PrismaLibSql({ url }) }) as unknown as Client
 })
 afterAll(async () => {
   await prisma?.$disconnect()
@@ -44,6 +45,6 @@ test('a missing row is null, not a thrown P2025', async () => {
 })
 
 test('any other failure stays a failure', async () => {
-  const s = prismaSource({ update: () => Promise.reject(new Error('down')) } as any, spec)
+  const s = prismaSource({ update: () => Promise.reject(new Error('down')) } as unknown as PrismaDelegate, spec)
   await expect(s.update('x', {})).rejects.toThrow('down')
 })

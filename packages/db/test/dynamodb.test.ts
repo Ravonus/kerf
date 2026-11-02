@@ -9,11 +9,19 @@ const endpoint = process.env.WEFT_TEST_DYNAMO
 const columns = { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }
 
 test('page mode is refused, not faked', async () => {
-  await expect(dynamoSource({ client: { send: async () => ({ Items: [] }) }, table: 't' }, { columns }).list({ mode: 'page', limit: 5, offset: 0, after: null, sort: null, filter: {} })).rejects.toThrow('Q002')
+  await expect(dynamoSource({ client: { send: () => Promise.resolve({ Items: [] }) }, table: 't' }, { columns }).list({ mode: 'page', limit: 5, offset: 0, after: null, sort: null, filter: {} })).rejects.toThrow('Q002')
 })
 
+test('an update with nothing in it reads the row, where an empty `set` would be refused', async () => {
+  const sent: object[] = []
+  const client = { send: (c: object) => { sent.push(c); return Promise.resolve({ Item: { id: 'a', title: 'x' } }) } }
+  expect(await dynamoSource({ client, table: 't' }, { columns }).update('a', {})).toEqual({ id: 'a', title: 'x' })
+  expect(sent.map(c => c.constructor.name)).toEqual(['GetCommand'])
+})
+
+// Needs DynamoDB Local running.
 describe.skipIf(!endpoint)('on DynamoDB Local', () => {
-  const raw = new DynamoDBClient({ endpoint, region: 'local', credentials: { accessKeyId: 'x', secretAccessKey: 'x' } })
+  const raw = new DynamoDBClient({ endpoint: endpoint!, region: 'local', credentials: { accessKeyId: 'x', secretAccessKey: 'x' } })
   const client = DynamoDBDocumentClient.from(raw)
   const table = `t${Date.now()}`
   beforeAll(() => raw.send(new CreateTableCommand({
