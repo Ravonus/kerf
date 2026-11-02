@@ -17,7 +17,7 @@ export interface ImageOptions {
   cell?: number
   inks?: number
   contrast?: number
-  /** Light parts of the picture take the strongest ink, which suits dark themes. Default: follows the page's lightness. */
+  /** Light parts of the picture take the strongest ink, which suits dark themes. Default: follows the page's lightness. On a gradient, true runs it the other way round. */
   invert?: boolean
 }
 
@@ -66,8 +66,9 @@ export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): A
       return host.setAttribute('data-state', 'error') // a tainted canvas: the <img> underneath stays
     }
     const image = new ImageData(cols, rows), out = new Uint32Array(image.data.buffer), algorithm = o.algorithm ?? (src ? 'atkinson' : 'bayer8')
-    const light = o.invert ?? (src ? isDark(host) : false)
-    const v = light || !src ? base : base.map(x => 1 - x)
+    // a picture's tones are luma, so it flips unless light takes the strongest ink; a gradient's are ink strength already
+    const flip = src ? !(o.invert ?? isDark(host)) : !!o.invert
+    const v = flip ? base.map(x => 1 - x) : base
     if (isDiffusion(algorithm)) {
       const picked = diffuse(v, cols, rows, inks.length, algorithm)
       for (let i = 0; i < picked.length; i++) out[i] = inks[picked[i]]
