@@ -152,6 +152,25 @@ describe('node preset, end to end', () => {
     }
   }, 30_000)
 
+  test('a CSP that refuses inline handlers still gets every deferred sheet', async () => {
+    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const browser = await chromium.launch()
+    try {
+      const page = await browser.newPage()
+      expect(await (await fetch(server.url + '/late-css')).text()).toContain('media="print"')
+      await page.route(url => url.pathname === '/late-css', async route => {
+        const res = await route.fetch()
+        await route.fulfill({ response: res, headers: { ...res.headers(), 'content-security-policy': "script-src-attr 'none'" } })
+      })
+      await page.goto(server.url + '/late-css')
+      await page.waitForFunction(() => !document.querySelector('link[media="print"]'), undefined, { timeout: 5000 })
+      await page.hover('#late')
+      expect(await page.$eval('#late', n => getComputedStyle(n).color)).toBe('rgb(4, 5, 6)')
+    } finally {
+      await browser.close()
+    }
+  }, 30_000)
+
   test('the entry has no modulepreload: its script tag fetches it', async () => {
     const head = (await (await fetch(server.url + '/about')).text()).split('</head>')[0]
     const entry = /<script type="module" src="([^"]+)"/.exec(head)[1]
