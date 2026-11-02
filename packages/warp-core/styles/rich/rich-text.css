@@ -2,7 +2,7 @@
 @layer warp.inputs-rich {
 /* -- rich text ------------------------------------------------------- */
   :where([data-part="caret-anchor"]) { position: absolute; inline-size: 0; block-size: 0; pointer-events: none; }
-  :where([data-scope="rte"]) { display: grid; gap: var(--warp-space-tight); }
+  :where([data-scope="rte"]) { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-tight); }
   :where([data-scope="rte"] [data-part="frame"]) {
     position: relative; display: flex; flex-direction: column; background: var(--warp-color-surface-raised);
     border: var(--warp-border-hairline) solid var(--warp-color-border-control); border-radius: var(--warp-radius-control);

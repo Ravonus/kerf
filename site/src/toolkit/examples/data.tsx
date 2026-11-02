@@ -199,8 +199,7 @@ const GRID: GridColumn<Project>[] = [
   { id: 'cost', header: 'Cost', numeric: true, sort: true, filter: 'min', aggregate: 'sum', format: money },
 ]
 
-const once = (rows: Project[]) => [...new Set(rows)]
-const spend = (rows: Project[]) => `Total ${money(once(rows).reduce((n, p) => n + p.cost, 0))}`
+const spend = (rows: Project[]) => `Total ${money(rows.reduce((n, p) => n + p.cost, 0))}`
 
 const GROUPED_GRID: GridColumn<Project>[] = [
   { id: 'name', header: 'Project', rowHeader: true, pin: true, sort: true, aggregate: spend },
@@ -299,8 +298,7 @@ const FOUR = { size: 4 }
 
 /* -- ScrollGrid -- */
 
-const room = (text: string) => `${text}\u00a0\u00a0\u00a0`
-const HOURS = Array.from({ length: 24 }, (_, h) => ({ id: String(h), header: room(`${String(h).padStart(2, '0')}:00`) }))
+const HOURS = Array.from({ length: 24 }, (_, h) => ({ id: String(h), header: `${String(h).padStart(2, '0')}:00` }))
 const latency = (r: number, h: number) => 40 + ((r + 3) * 37 + h * h * 11) % 260
 
 export const ScrollGridLatency = () => (
@@ -312,7 +310,7 @@ export const ScrollGridPlay = (p: { rows: number; headerWidth: number }) => (
 )
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-const MONTH_COLUMNS = MONTH_NAMES.map((m, i) => ({ id: String(i), header: room(m) }))
+const MONTH_COLUMNS = MONTH_NAMES.map((m, i) => ({ id: String(i), header: m }))
 const swing = (r: number, m: number) => (((r + 2) * 53 + (m + 1) * 29) % 41) - 14
 const showSwing = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n)}%`
 
@@ -320,7 +318,7 @@ export const ScrollGridNegative = () => (
   <ScrollGrid label="Change in spend by month" corner="Project" rows={500} columns={MONTH_COLUMNS} rowHeader={r => `${PROJECTS[r % 10].name}-${r}`} cell={(r, c) => showSwing(swing(r, Number(c.id)))} negative={(r, c) => swing(r, Number(c.id)) < 0} height="320px" />
 )
 
-const SIZED = [{ id: 'owner', header: room('Owner'), width: 170 }, { id: 'region', header: room('Region'), width: 110 }, { id: 'status', header: room('Status'), width: 96 }, { id: 'cost', header: room('Cost'), width: 96 }]
+const SIZED = [{ id: 'owner', header: 'Owner', width: 170 }, { id: 'region', header: 'Region', width: 110 }, { id: 'status', header: 'Status', width: 96 }, { id: 'cost', header: 'Cost', width: 96 }]
 const fieldOf = (r: number, id: string) => {
   const p = PROJECTS[r % 10]
   return id === 'cost' ? money(p.cost + r) : p[id as 'owner']

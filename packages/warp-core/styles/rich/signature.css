@@ -1,7 +1,7 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.inputs-rich {
 /* -- signature ------------------------------------------------------- */
-  :where([data-scope="signature"] [data-part="pad"]) { position: relative; block-size: 168px; touch-action: none; cursor: crosshair; border-radius: inherit; }
+  :where([data-scope="signature"] [data-part="pad"]) { position: relative; flex: 1; min-inline-size: 0; block-size: 168px; touch-action: none; cursor: crosshair; border-radius: inherit; }
   :where([data-scope="signature"] canvas) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border-radius: inherit; }
   :where([data-scope="signature"] [data-part="baseline"]) {
     position: absolute; inset-inline: 20px; inset-block-end: 40px; border-block-end: var(--warp-border-hairline) dashed var(--warp-color-border-strong);

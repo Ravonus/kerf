@@ -288,7 +288,8 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
       return [{ kind: 'group', id: key, label, rows: members, open: on }, ...(on ? members.map(r => ({ kind: 'row' as const, id: keyOf(r), row: r, level: 2 })) : [])]
     })
   })
-  const visible = derived(() => lines.value.flatMap(l => (l.kind === 'row' ? [l.row] : l.kind === 'group' ? l.rows : [])))
+  // an open group lists its rows twice, as the group and as lines
+  const visible = derived(() => [...new Set(lines.value.flatMap(l => (l.kind === 'row' ? [l.row] : l.kind === 'group' ? l.rows : [])))])
   // a tree's footer counts what its parents roll up, once each, open or not
   const footed = derived(() => (tree ? [...new Set(visible.value.flatMap(r => leaves(r as T, kidsOf)))] : visible.value))
   const hasDetails = untrack(() => expand !== undefined)

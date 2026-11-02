@@ -203,7 +203,8 @@
 /* Center — a measured column with page gutters */
 :where([data-scope="center"]) {
   --_max: var(--warp-layout-content);
-  box-sizing: content-box; max-inline-size: var(--_max); margin-inline: auto;
+  box-sizing: content-box; inline-size: -webkit-fill-available; inline-size: -moz-available; inline-size: stretch; /* a flex parent would shrink it to its content */
+  max-inline-size: var(--_max); margin-inline: auto;
 }
 :where([data-scope="center"][data-max="measure"]) { --_max: var(--warp-layout-measure); }
 :where([data-scope="center"][data-max="narrow"])  { --_max: var(--warp-layout-narrow); }

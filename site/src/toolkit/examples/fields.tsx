@@ -34,7 +34,7 @@ export const PhoneFieldStates = () => (
     <Cell name="Hint"><PhoneField label="Mobile number" hint="We'll text a code." /></Cell>
     <Cell name="Invalid"><PhoneField label="Mobile number" defaultValue="+14155550123" error="This number is already on another account." /></Cell>
     <Cell name="Disabled"><PhoneField label="Mobile number" defaultValue="+14155550123" disabled /></Cell>
-    <Cell name="Read-only"><Input label="Mobile number" type="tel" defaultValue="+1 (415) 555-0123" readonly /></Cell>
+    <Cell name="Read-only"><PhoneField label="Mobile number" defaultValue="+14155550123" readonly /></Cell>
   </Grid>
 )
 
@@ -56,7 +56,7 @@ export const CountrySelectStates = () => (
     <Cell name="Hint"><CountrySelect label="Country" hint="Sets your tax rate." /></Cell>
     <Cell name="Invalid"><CountrySelect label="Country" error="Choose where you're based." /></Cell>
     <Cell name="Disabled"><CountrySelect label="Country" defaultValue="DE" disabled /></Cell>
-    <Cell name="Read-only"><CountrySelect label="Country" defaultValue="DE" readonly open={false} /></Cell>
+    <Cell name="Read-only"><CountrySelect label="Country" defaultValue="DE" readonly /></Cell>
   </Grid>
 )
 
@@ -69,7 +69,7 @@ export const LanguageSelectStates = () => (
     <Cell name="Hint"><LanguageSelect label="Language" hint="Used in emails and on invoices." /></Cell>
     <Cell name="Invalid"><LanguageSelect label="Language" error="Choose a language." /></Cell>
     <Cell name="Disabled"><LanguageSelect label="Language" defaultValue="de" disabled /></Cell>
-    <Cell name="Read-only"><LanguageSelect label="Language" defaultValue="de" readonly open={false} /></Cell>
+    <Cell name="Read-only"><LanguageSelect label="Language" defaultValue="de" readonly /></Cell>
   </Grid>
 )
 
@@ -82,7 +82,7 @@ export const CurrencySelectStates = () => (
     <Cell name="Hint"><CurrencySelect label="Currency" hint="Applies from the next invoice." /></Cell>
     <Cell name="Invalid"><CurrencySelect label="Currency" error="Choose a billing currency." /></Cell>
     <Cell name="Disabled"><CurrencySelect label="Currency" defaultValue="EUR" disabled /></Cell>
-    <Cell name="Read-only"><CurrencySelect label="Currency" defaultValue="EUR" readonly open={false} /></Cell>
+    <Cell name="Read-only"><CurrencySelect label="Currency" defaultValue="EUR" readonly /></Cell>
   </Grid>
 )
 
@@ -97,7 +97,7 @@ export const TimeZoneSelectStates = () => (
     <Cell name="Hint"><TimeZoneSelect label="Time zone" hint="Deploy windows follow this zone." /></Cell>
     <Cell name="Invalid"><TimeZoneSelect label="Time zone" error="Choose a time zone." /></Cell>
     <Cell name="Disabled"><TimeZoneSelect label="Time zone" defaultValue="Europe/Berlin" disabled /></Cell>
-    <Cell name="Read-only"><TimeZoneSelect label="Time zone" defaultValue="Europe/Berlin" readonly open={false} /></Cell>
+    <Cell name="Read-only"><TimeZoneSelect label="Time zone" defaultValue="Europe/Berlin" readonly /></Cell>
   </Grid>
 )
 

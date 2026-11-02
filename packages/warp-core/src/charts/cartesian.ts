@@ -240,7 +240,7 @@ export const bubble: Form<ScatterConfig> = {
   table: scatterTable,
   summary: scatterSay,
   plot(c, W, x) {
-    const H = W < 420 ? 190 : 220, ml = 30, mb = 22, { yt, px, py } = scales(c, W, H, ml, 8, 8, mb, 4), rs = (v: number) => 3 + Math.sqrt(v) * 2.4, f = c.format ?? num
+    const H = W < 420 ? 190 : 220, ml = 30, mb = 22, { yt, px, py } = scales(c, W, H, ml, 8, 8, mb, 4), most = Math.max(1e-9, ...c.data.flatMap(g => g.points.map(p => p.size ?? 0))), rs = (v: number) => 3 + Math.sqrt(v / most) * (W < 420 ? 11 : 15), f = c.format ?? num
     return {
       h: H,
       body: [

@@ -380,18 +380,16 @@ export function SplitMasterDetail() {
 /* -- Center -- */
 
 export const CenterPlay = (p: { max?: 'measure' | 'narrow' | 'content' | 'wide'; gutter?: boolean; intrinsic?: boolean }) => (
-  <div>
-    <Center max={p.max} gutter={p.gutter} intrinsic={p.intrinsic}>
-      <Box tall={96}>A measured column</Box>
-    </Center>
-  </div>
+  <Center max={p.max} gutter={p.gutter} intrinsic={p.intrinsic}>
+    <Box tall={96}>A measured column</Box>
+  </Center>
 )
 
 const MAXES = ['narrow', 'measure', 'content'] as const
 
 export const CenterWidths = () => (
   <Stack gap="related">
-    {MAXES.map(max => <div key={max}><Center max={max}><Box>max="{max}"</Box></Center></div>)}
+    {MAXES.map(max => <Center key={max} max={max}><Box>max="{max}"</Box></Center>)}
   </Stack>
 )
 

@@ -54,6 +54,8 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
   let remove: (() => void) | undefined
   let frame = 0
 
+  const locked = () => trigger.disabled || trigger.getAttribute('aria-readonly') === 'true'
+
   function el(tag: string, part: string, parent?: HTMLElement) {
     const n = doc.createElement(tag)
     n.dataset.part = part
@@ -190,7 +192,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
   }
 
   function show(move?: 'first' | 'last') {
-    if (shown || trigger.disabled) return
+    if (shown || locked()) return
     shown = true
     if (!box) build()
     const b = box!
@@ -280,6 +282,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     const { key } = e
     const printable = key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey
     if (!shown) {
+      if (locked()) return
       if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') { e.preventDefault(); show() }
       else if (key === 'Home' || key === 'End') { e.preventDefault(); show(key === 'Home' ? 'first' : 'last') }
       else if (printable) { e.preventDefault(); show(); if (!find) type(key) }

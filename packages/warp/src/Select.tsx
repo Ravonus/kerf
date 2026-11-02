@@ -102,7 +102,7 @@ function useList(props: ListProps) {
 }
 
 const Chevron = () => <span data-part="indicator" aria-hidden="true"><DownIcon /></span>
-const FOR_CARRIER = ['name', 'form', 'required', 'autocomplete', 'onChange', 'onInput']
+const FOR_CARRIER = ['name', 'form', 'required', 'autocomplete', 'onChange', 'onInput', 'readonly']
 
 /**
  * A select in the field shell, drawn by warp on every device: a popover on a desktop, a sheet on a phone (03 §4), a search
@@ -133,6 +133,7 @@ export function Select(props: Omit<FieldProps, 'value' | 'defaultValue'> & ListP
             aria-describedby={p.describedby}
             aria-invalid={p.invalid ? 'true' : undefined}
             aria-required={p.rest.required ? 'true' : undefined}
+            aria-readonly={p.rest.readonly ? 'true' : undefined}
             onFocus={list.refresh}
             {...omit(p.rest, FOR_CARRIER)}
           >

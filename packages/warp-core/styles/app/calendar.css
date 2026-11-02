@@ -162,7 +162,7 @@
   font: 600 10px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums;
 }
 /* month view */
-:where([data-scope="calendar"] [data-part="month"]) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(96px, 1fr); }
+:where([data-scope="calendar"] [data-part="month"][role="grid"]) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(96px, 1fr); }
 :where([data-scope="calendar"] [data-part="day-cell"]) {
   display: grid; align-content: start; gap: 2px; padding: 4px; min-inline-size: 0;
   border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
