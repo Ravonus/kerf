@@ -37,17 +37,17 @@ export function IconBrowser() {
   const drawing = (name: string, f: Form) => svg(set.value?.[name]?.[f === 'solid' ? 1 : 0] ?? '')
   onMount(() => {
     query.value = new URLSearchParams(location.search).get('q') ?? ''
-    void fetch(files.url).then(r => r.json()).then(s => (set.value = s))
-    const seen = new ResizeObserver(([e]) => {
-      cols.value = Math.max(2, Math.floor(e.contentRect.width / CELL))
+    void fetch(files.url).then(r => r.json()).then(s => {
+      set.value = s
       // warp's list keeps the one row it measured until it really scrolls
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         const list = box.querySelector('[data-scope="virtual"]')
         if (!list) return
-        list.scrollTop += 1
-        requestAnimationFrame(() => (list.scrollTop -= 1))
-      })
+        list.scrollTop = 1
+        setTimeout(() => (list.scrollTop = 0), 50)
+      }, 50)
     })
+    const seen = new ResizeObserver(([e]) => (cols.value = Math.max(2, Math.floor(e.contentRect.width / CELL))))
     seen.observe(box)
     onCleanup(() => seen.disconnect())
   })

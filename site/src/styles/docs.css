@@ -57,12 +57,10 @@
 [data-site="doc"] [data-scope="prose"] [data-scope="codeblock"], [data-site="doc"] [data-scope="prose"] > table { margin-block: var(--warp-space-group) 24px; }
 [data-scope="prose"] :is(h2, h3) { scroll-margin-block-start: 88px; }
 
-/* A numbered guide reads as steps: a numeral in the gutter, a thread down to the next. */
-[data-site="doc"] [data-scope="prose"]:has(h2[data-step]) { padding-inline-start: 44px; position: relative; }
-[data-site="doc"] [data-scope="prose"]:has(h2[data-step]) > p:first-child { margin-inline-start: -44px; }
-[data-site="doc"] [data-scope="prose"] h2[data-step] { position: relative; }
-[data-site="doc"] [data-scope="prose"] h2[data-step]::before { content: attr(data-step); position: absolute; inset-inline-start: -44px; inset-block-start: 50%; translate: 0 -50%; display: grid; place-items: center; inline-size: 28px; block-size: 28px; box-sizing: border-box; border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: 50%; background: var(--warp-color-page); font: 400 var(--doc-micro)/1 var(--warp-font-mono); letter-spacing: 0; color: var(--glow); }
-[data-site="doc"] [data-scope="prose"]:has(h2[data-step])::before { content: ""; position: absolute; inset-inline-start: 13.5px; inset-block: 96px 0; border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+/* A numbered guide reads as steps: a numeral in the gutter, its work indented under it. */
+[data-site="doc"] [data-scope="prose"] h2[data-step] { position: relative; padding-inline-start: 44px; }
+[data-site="doc"] [data-scope="prose"] h2[data-step] ~ :not(h2) { margin-inline-start: 44px; }
+[data-site="doc"] [data-scope="prose"] h2[data-step]::before { content: attr(data-step); position: absolute; inset-inline-start: 0; inset-block-start: 50%; translate: 0 -50%; display: grid; place-items: center; inline-size: 28px; block-size: 28px; box-sizing: border-box; border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: 50%; background: var(--warp-color-page); font: 400 var(--doc-micro)/1 var(--warp-font-mono); letter-spacing: 0; color: var(--glow); }
 
 /* A code block needs no head to say what it is: copy floats in the corner. */
 [data-scope="codeblock"][data-bare] { position: relative; }
@@ -94,4 +92,6 @@
   [data-site="docs"], [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: minmax(0, 1fr); padding-inline: var(--warp-space-page); }
   [data-site="doc-nav"] { display: none; }
   [data-site="doc"] { padding-block-start: var(--warp-space-group); }
+  [data-site="doc"] [data-scope="prose"] h2[data-step] { padding-inline-start: 36px; }
+  [data-site="doc"] [data-scope="prose"] h2[data-step] ~ :not(h2) { margin-inline-start: 0; }
 }
