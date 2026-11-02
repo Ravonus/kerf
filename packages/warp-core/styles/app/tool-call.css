@@ -2,11 +2,11 @@
 @layer warp.app {
 /* tool call card */
 :where([data-scope="tool-call"]) {
-  position: relative; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
+  position: relative; min-inline-size: 0; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
   box-shadow: 0 0 0 1px var(--warp-color-border); font-size: var(--warp-text-caption-size); overflow: clip;
 }
 :where([data-scope="tool-call"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { inset: 0; }
-:where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto 1fr auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
+:where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
 :where([data-scope="tool-call"] summary::-webkit-details-marker) { display: none; }
 :where([data-scope="tool-call"] [data-part="name"]) { font: 500 12.5px/1 var(--warp-font-mono); color: var(--warp-color-text); }
 :where([data-scope="tool-call"] [data-part="arg"]) { color: var(--warp-color-text-subtle); font: 400 12px/1 var(--warp-font-mono); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }

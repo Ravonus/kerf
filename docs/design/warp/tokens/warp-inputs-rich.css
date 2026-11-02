@@ -96,7 +96,7 @@
     --_wipe: calc(max(0, var(--warp-x) - 0.5) * 80% * var(--warp-motion-scale));
     position: relative; display: grid; gap: var(--warp-space-related); user-select: none;
   }
-  :where([data-scope="calendar"] [data-part="months"]) { display: flex; gap: var(--warp-space-group); overflow: clip; }
+  :where([data-scope="calendar"] [data-part="months"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--warp-space-group); overflow: clip; }
   :where([data-part="months"][data-anim="next"]) > * { animation: wir-month-next var(--warp-duration-base) var(--warp-ease-out) both; }
   :where([data-part="months"][data-anim="prev"]) > * { animation: wir-month-prev var(--warp-duration-base) var(--warp-ease-out) both; }
   @keyframes wir-month-next { from { opacity: 0; transform: translateX(var(--_slide)); clip-path: inset(0 0 0 var(--_wipe)); } }
