@@ -57,3 +57,8 @@
   [data-site="story"] [data-site="example"] [data-part="run"] { align-items: start; align-content: start; }
   [data-site="story"] [data-site="example"] [data-part="run"] > * { position: sticky; inset-block-start: calc(var(--warp-flow-top, 57px) + var(--warp-space-group)); }
 }
+/* A demo that isn't in the build is a one-line notice: its pane closes around it, above the code, instead of a tall
+   empty pane beside it. */
+[data-site="page"] [data-site="example"] [data-part="pair"]:has(> [data-part="run"] > [data-part="missing"]) { grid-template-columns: minmax(0, 1fr); }
+[data-site="page"] [data-site="example"] [data-part="pair"] > [data-part="run"]:has(> [data-part="missing"]) { order: 0; min-block-size: 0; padding: var(--warp-space-related); justify-content: start; border-inline: 0; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
+[data-site="example"] [data-part="run"] > [data-part="missing"] { inline-size: auto; margin: 0; }
