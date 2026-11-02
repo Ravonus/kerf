@@ -216,3 +216,4 @@
   [data-site="tk-section"] [data-part="keys"] > div { grid-template-columns: 120px minmax(0, 1fr); }
   [data-site="frame"] [data-part="tools"] { display: none; }
 }
+[data-site="dial"] { display: contents; }

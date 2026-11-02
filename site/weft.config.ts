@@ -4,6 +4,17 @@ import { icons } from '@weft/icons/plugin'
 import { text } from '@weft/plugin-text'
 
 const FILES = 'node_modules/@fontsource'
+// The site's expression, vivid unless the reader chose another stop (src/lib/dial.ts says the same for the dials'
+// server markup; the config can't import from src). In order: the default, warp's saved dials, then a check of the
+// dials as the parser reaches them, so a saved stop other than the default is checked before the first paint and a
+// returning reader's dial doesn't flip on hydration either. It stops watching once the document is parsed.
+const EXPRESSION = 'vivid'
+const dialHead =
+  `<script>document.documentElement.dataset.expression='${EXPRESSION}'</script>${dialScript}` +
+  `<script>(function(){var d=document,e=d.documentElement.dataset.expression;if(!e||e==='${EXPRESSION}')return;` +
+  `var f=function(){d.querySelectorAll('[data-dial="expression"] input[value="'+e+'"]').forEach(function(i){i.checked=true})},` +
+  `o=new MutationObserver(f);o.observe(d.documentElement,{childList:true,subtree:true});` +
+  `d.addEventListener('DOMContentLoaded',function(){f();o.disconnect()})})()</script>`
 // Cross-origin isolation gives the arena's frames a finer clock, and a frame only has it when the page around it does too.
 const ISOLATED = { 'cross-origin-opener-policy': 'same-origin', 'cross-origin-embedder-policy': 'credentialless' }
 
@@ -20,7 +31,7 @@ export default defineConfig({
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',
-    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml"><script>document.documentElement.dataset.expression='vivid'</script>${dialScript}`,
+    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml">${dialHead}`,
   },
   plugins: [
     warp(),

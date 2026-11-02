@@ -878,6 +878,30 @@ await check('flow: the icon grid fades in and out in its window', '/icons', asyn
   if (!r.low.length || Math.max(...r.low) > 0.9) throw new Error(`cells leaving the window's top read ${r.low.join(', ')}`)
 })
 
+// The expression dial is server-rendered as the site's default, so a fresh visitor's never flips on hydration; a
+// returning visitor's saved stop is checked before paint. Every frame from the first is recorded.
+const dialFrames = `window.__dial = []; (function tick() { const v = document.querySelector('[data-dial="expression"] input:checked')?.value; if (v && window.__dial.at(-1) !== v) window.__dial.push(v); if (window.__dial.length < 9 && performance.now() < 6000) requestAnimationFrame(tick) })()`
+await check('dial: the server renders what a fresh visitor sees', '/components', async page => {
+  const html = await (await page.request.get(`${base}/components`)).text()
+  const at = html.indexOf('data-dial="expression"')
+  const seg = html.slice(at, html.indexOf('</div></div>', at))
+  const served = /<input[^>]*value="(\w+)"[^>]*checked|<input[^>]*checked[^>]*value="(\w+)"/.exec(seg)
+  if (!served) throw new Error('no checked stop in the server HTML')
+  await page.waitForTimeout(800)
+  const now = await page.evaluate(() => ({ dial: document.querySelector('[data-dial="expression"] input:checked')?.value, root: document.documentElement.dataset.expression }))
+  same(served[1] ?? served[2], now.dial, 'server vs hydrated')
+  same(now.dial, now.root, 'dial vs page')
+})
+for (const [who, saved, want] of [['fresh', null, 'vivid'], ['returning', 'quiet', 'quiet']]) {
+  await check(`dial: a ${who} visitor's dial never flips on load`, '/components', async page => {
+    await page.goto('about:blank')
+    await page.context().addInitScript(([s, f]) => { if (s) try { localStorage.setItem('warp:dials', JSON.stringify({ expression: s })) } catch {} ; new Function(f)() }, [saved, dialFrames])
+    await page.goto(base + '/components', { waitUntil: 'load' })
+    await page.waitForTimeout(1200)
+    same((await page.evaluate(() => window.__dial)).join(' → '), want, 'stops shown, frame by frame')
+  })
+}
+
 // The playground is one object near the top of the page: the component large on a stage, the controls beside it on a
 // desk and under it on a phone, the live code under both. Nothing in it runs past the page's edge.
 for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
