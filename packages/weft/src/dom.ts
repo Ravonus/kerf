@@ -275,10 +275,10 @@ class Row extends Box<any> implements Owner {
 
 /**
  * A row as a path step: its key, so a row claims the server's row of that key wherever the list has moved it, and no two
- * keys can meet. `:` keeps it from a Boundary's scope, and what's escaped would end a step or the `wk` it's written in. An
- * object says nothing the server and client share, so it's the row's place.
+ * keys can meet. `:` keeps it from a Boundary's scope, and what's escaped would end a step or the `wk` it's written in, or
+ * the parser would rewrite it there (`\r`, NUL). An object says nothing the server and client share, so it's the row's place.
  */
-const rowStep = (k: unknown, i: number) => (k === Object(k) ? `%i${i}` : `:${String(k).replace(/[%/.&<>"]/g, c => `%${c.charCodeAt(0).toString(16)}`)}`)
+const rowStep = (k: unknown, i: number) => (k === Object(k) ? `%i${i}` : `:${String(k).replace(/[%/.&<>"\0\r]/g, c => `%${c.charCodeAt(0).toString(16)}`)}`)
 
 const reader = (box: Box<any>) => () => box.value
 const zero = () => 0

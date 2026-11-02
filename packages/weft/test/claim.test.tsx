@@ -234,3 +234,14 @@ describe('a view of a getter', () => {
     expect(get).toHaveBeenCalledOnce()
   })
 })
+
+test('a key that only differs in what the parser rewrites is still its own row', () => {
+  const ids = ['a\rb', 'a\nb', 'a\0b', 'a�b']
+  const c = put(renderToString(() => <Server.Keyed rows={ids.map(k => row(k))} />))
+  const nodes = [...c.querySelectorAll('a')]
+  expect(new Set(nodes.map(n => n.getAttribute('wk'))).size).toBe(ids.length)
+  hydrate(() => <Client.Keyed rows={ids.map(k => row(k))} />, c)
+  expect(hydration.misses).toBe(0)
+  expect([...c.querySelectorAll('a')]).toEqual(nodes)
+  expect(links(c)).toEqual(ids.map(k => [row(k).t, row(k).href]))
+})
