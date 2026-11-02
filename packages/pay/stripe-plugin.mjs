@@ -9,7 +9,7 @@ export const stripe = definePlugin({
   version: '0.0.0',
   weft: '*',
   permissions: { net: ['api.stripe.com'], env: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] },
-  contribute: (options = {}) => ({
+  contribute: options => ({
     provides: [provide(slot, { key: 'stripe', sides: { server: { module: '@weft-js/pay/stripe', export: 'stripeRail', options } } })],
     agents: { title: 'Pay rail: Stripe', text: 'Stripe Checkout, server side only: `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` for `/_weft/x/pay/stripe`, the webhook URL to give Stripe.' },
     map: [{ want: 'Change the payment provider', call: 'replace this plugin in `plugins`: app code stays', have: 'Stripe Checkout' }],

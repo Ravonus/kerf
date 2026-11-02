@@ -8,6 +8,7 @@
 
 import { PayError, type CheckoutRequest, type PayRail, type PurchaseState, type RailEvent } from './index'
 
+/** Options of `stripeRail()`. The keys default to the environment, which is where they belong. */
 export interface StripeOptions {
   /** Stripe Price ids by `<product>.<plan>` or `<product>`, from your own config. Default: amounts from the catalog. */
   prices?: Record<string, string>
@@ -55,28 +56,44 @@ function form(body: Record<string, unknown>) {
     if (v === undefined || v === null) return
     if (Array.isArray(v)) v.forEach((x, i) => put(`${key}[${i}]`, x))
     else if (typeof v === 'object') for (const [k, x] of Object.entries(v)) put(`${key}[${k}]`, x)
-    else out.append(key, String(v))
+    else out.append(key, `${v as string | number | boolean}`)
   }
   for (const [k, v] of Object.entries(body)) put(k, v)
   return out
 }
 
 const seconds = (s?: number | null) => (s ? s * 1000 : undefined)
-const id = (x: any): string | undefined => (typeof x === 'string' ? x : x?.id)
-const identity = (object: any) => {
+/** The fields of a Stripe object that an event can carry, whichever kind of object it is. */
+interface StripeObject {
+  id: string
+  status: string
+  customer?: unknown
+  metadata?: Record<string, string> | null
+  mode?: string
+  payment_intent?: unknown
+  payment_status?: string
+  refunded?: boolean
+  current_period_end?: number | null
+  items?: { data?: { current_period_end?: number | null }[] } | null
+}
+interface StripeEvent { id?: string; type: string; created: number; data?: { object?: StripeObject } }
+
+/** A reference that Stripe expands into its object on some API versions. */
+const id = (x: unknown): string | undefined => (typeof x === 'string' ? x : (x as { id?: string } | null | undefined)?.id)
+const identity = (object: StripeObject) => {
   const m = object?.metadata ?? {}
   return { ...(m.weft_user && { user: m.weft_user }), ...(m.weft_product && { product: m.weft_product }), ...(m.weft_plan && { plan: m.weft_plan }) }
 }
 
 /** A subscription's paid-through time, which moved onto its items in 2025 API versions. */
-const periodEnd = (sub: any) => seconds(sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end)
+const periodEnd = (sub: StripeObject) => seconds(sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end)
 
 /** One Stripe event as the ledger's, or null for one that says nothing about access. */
-function normalise(event: any): RailEvent | null {
+function normalise(event: StripeEvent): RailEvent | null {
   const object = event.data?.object
   if (!event.id || !object) return null
   const base = { id: event.id, at: event.created * 1000 }
-  const type: string = event.type
+  const { type } = event
   if (type.startsWith('customer.subscription.')) {
     const state = STATES[object.status]
     if (!state) return null
@@ -105,6 +122,7 @@ function normalise(event: any): RailEvent | null {
   return null
 }
 
+/** The Stripe `pay.rail` provider: hosted Checkout, the customer portal, and webhooks verified here. */
 export function stripeRail(options: StripeOptions = {}): PayRail {
   const { prices = {}, api = API, apiVersion = '2025-09-30.clover', tolerance = 300 } = options
   const fetcher = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args))
@@ -121,7 +139,7 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
       headers: { authorization: `Bearer ${secret()}`, 'content-type': 'application/x-www-form-urlencoded', 'stripe-version': apiVersion, ...(idempotencyKey && { 'idempotency-key': idempotencyKey }) },
       body: form(body),
     })
-    const data: any = await res.json().catch(() => null)
+    const data = await res.json().catch(() => null) as { url?: string; error?: { message?: string } } | null
     if (!res.ok) throw new PayError('PAY030', `Stripe refused ${path}: ${data?.error?.message ?? res.status}`, res.status === 429 ? 503 : 502)
     return data
   }
@@ -158,7 +176,7 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
     },
     async portal({ customer, returnUrl }) {
       const session = await call('/v1/billing_portal/sessions', { customer, return_url: returnUrl })
-      return { url: session.url }
+      return { url: session!.url! }
     },
     async verify({ body, headers }) {
       const signing = options.webhookSecret ?? process.env.STRIPE_WEBHOOK_SECRET
@@ -169,7 +187,7 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
       if (!Number.isInteger(t) || !given.length) throw new PayError('PAY011', 'no `stripe-signature` to check')
       if (!(await verified(signing, `${t}.${body}`, given))) throw new PayError('PAY011', 'the signature does not match this body')
       if (Math.abs(Date.now() / 1000 - t) > tolerance) throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
-      const event = normalise(JSON.parse(body))
+      const event = normalise(JSON.parse(body) as StripeEvent)
       return event ? [event] : []
     },
     async refund({ purchase }) {

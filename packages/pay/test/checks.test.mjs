@@ -13,7 +13,7 @@ const ledger = "import { definePay } from '@weft-js/pay/server'\nexport default 
 const app = { 'src/pay.server.ts': ledger, '.env.example': 'STRIPE_WEBHOOK_SECRET=whsec_placeholder\n' }
 const stripe = { 'pay.rail': { stripe: '@weft-js/pay/stripe' } }
 const hook = (files, slots = stripe) => checks({ files: Object.keys(files), read: rel => files[rel] ?? '', exists: rel => rel in files, slots })
-const run = async files => ({ diagnostics: await hook({ ...app, ...files }) })
+const run = files => Promise.resolve({ diagnostics: hook({ ...app, ...files }) })
 const codes = r => r.diagnostics.map(d => d.code)
 const server = "import pay from '../pay.server'\n"
 
@@ -163,7 +163,7 @@ describe('through `weft check`', () => {
   const config = "import pay from '../../../../pay/plugin.mjs'\nexport default { plugins: [pay()] }\n"
   it('reports what the hook found, and `weft fix` applies its edit', async () => {
     const dir = project({ 'weft.config.ts': config, 'src/pay.server.ts': ledger, 'src/server/x.ts': body })
-    const found = dir => check(dir).then(r => r.diagnostics.filter(d => d.code.startsWith('PAY')).map(d => d.code))
+    const found = at => check(at).then(r => r.diagnostics.filter(d => d.code.startsWith('PAY')).map(d => d.code))
     expect(await found(dir)).toEqual(expect.arrayContaining(['PAY015', 'PAY018']))
     await fix(dir)
     expect(readFileSync(join(dir, 'src/server/x.ts'), 'utf8')).toContain("if (await ctx.entitlements.has('pro'))")

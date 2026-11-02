@@ -14,7 +14,7 @@ function reached(file: string, seen = new Set<string>()) {
   if (seen.has(file)) return seen
   seen.add(file)
   for (const m of readFileSync(file, 'utf8').matchAll(/^(?:import|export)\s+(?!type\b)[^'"\n]*from\s+['"](\.[^'"]+)['"]|\bimport\(['"](\.[^'"]+)['"]\)/gm)) {
-    const spec = resolve(dirname(file), m[1] ?? m[2])
+    const spec = resolve(dirname(file), (m[1] ?? m[2])!)
     const next = /\.\w+$/.test(spec) ? spec : `${spec}.ts`
     if (existsSync(next)) reached(next, seen) // text in a template the setup writes isn't an import
   }
@@ -22,7 +22,7 @@ function reached(file: string, seen = new Set<string>()) {
 }
 
 test.each(entries)('%s reaches no Stripe file', (_, file) => {
-  expect(reached(file as string)).not.toContain(stripe)
+  expect(reached(file)).not.toContain(stripe)
 })
 
 test.each(['.', './server'])('importing %s runs no Stripe module', async entry => {

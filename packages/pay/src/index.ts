@@ -5,15 +5,20 @@
 //   export const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 } }, grants: ['pro'] })
 //   <button onClick={() => checkout({ product: 'pro', plan: 'month' })}>Go Pro · {price(pro, 'month').display}</button>
 
+/** How a product is paid for: a subscription renews, a one-time purchase stays, a consumable is used up. */
 export type ProductKind = 'subscription' | 'one-time' | 'consumable'
+/** What the buyer gets: app stores care, and `physical` goods ship. */
 export type ProductUse = 'digital' | 'physical' | 'service'
+/** How often a subscription bills. */
 export type Interval = 'day' | 'week' | 'month' | 'year'
 
 /** Minor units per ISO currency: `{ usd: 999 }` is $9.99. Integers, always (PAY008). */
 export type Amounts = Record<string, number>
 
+/** A subscription's billing option: `Amounts`, with an optional trial and an interval when the plan's name isn't one. */
 export interface Plan { [currency: string]: unknown; trialDays?: number; interval?: Interval }
 
+/** What `product()` takes. `G` is the entitlements it grants and `P` the names of its plans. */
 export interface ProductDef<G extends string = string, P extends string = string> {
   id: string
   kind: ProductKind
@@ -30,6 +35,7 @@ export interface ProductDef<G extends string = string, P extends string = string
   shipping?: boolean
 }
 
+/** A checked, frozen product, as `product()` returns it. */
 export interface Product<G extends string = string, P extends string = string> extends ProductDef<G, P> {
   readonly grants: readonly G[]
 }
@@ -58,24 +64,25 @@ function checkAmounts(id: string, list: [string, unknown][]) {
 
 /** One thing you sell. The only place products are defined, and safe in the client graph: it holds no rail's ids. */
 export function product<const G extends string = never, const P extends string = never>(def: ProductDef<G, P>): Product<G, P> {
-  const { id, kind, plans, price } = def
+  const { id, kind, plans, price: amount } = def
   if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) throw new PayError('PAY021', `product id \`${id}\` must be lowercase letters, digits and dashes`)
   if (kind === 'subscription') {
     if (!plans || !Object.keys(plans).length) throw new PayError('PAY021', `subscription \`${id}\` has no \`plans\``)
-    if (price) throw new PayError('PAY021', `subscription \`${id}\` is priced per plan: drop \`price\``)
+    if (amount) throw new PayError('PAY021', `subscription \`${id}\` is priced per plan: drop \`price\``)
     for (const [name, p] of Object.entries<Plan>(plans)) {
       checkAmounts(`${id}.${name}`, amounts(p))
       if (intervalOf(name, p) === null) throw new PayError('PAY021', `plan \`${id}.${name}\` is no interval: name it \`month\` or \`year\`, or add \`interval\``)
     }
   } else {
     if (plans) throw new PayError('PAY021', `\`${id}\` is ${kind}: \`plans\` are for subscriptions, so use \`price\``)
-    checkAmounts(id, Object.entries(price ?? {}))
+    checkAmounts(id, Object.entries(amount ?? {}))
   }
-  return Object.freeze({ ...def, grants: Object.freeze([...(def.grants ?? [])]) }) as Product<G, P>
+  return Object.freeze({ ...def, grants: Object.freeze([...(def.grants ?? [])]) })
 }
 
 const intervalOf = (name: string, p: Plan): Interval | null => p.interval ?? (INTERVALS.includes(name) ? (name as Interval) : null)
 
+/** One figure to show a buyer, as `price()` returns it. */
 export interface Price {
   amount: number
   currency: string
@@ -129,6 +136,7 @@ export interface CheckoutLine {
   shipping?: boolean
 }
 
+/** What `checkout` asks of a rail: who is buying, what, and where the buyer comes back to. */
 export interface CheckoutRequest {
   /** Who is buying: attached to the rail's records, and read back from its events. */
   user: string

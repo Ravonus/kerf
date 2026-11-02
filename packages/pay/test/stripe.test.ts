@@ -13,11 +13,11 @@ interface Call { url: string; headers: Record<string, string>; body: URLSearchPa
 
 function mock(answer: (url: string) => { status?: number; body: unknown } = () => ({ body: { url: 'https://checkout.mock/s/1' } })) {
   const calls: Call[] = []
-  const fetcher = (async (url: string, init: RequestInit) => {
-    if (!url.startsWith('https://api.stripe.com/')) throw new Error(`unexpected request to ${url}`)
+  const fetcher = ((url: string, init: RequestInit) => {
+    if (!url.startsWith('https://api.stripe.com/')) return Promise.reject(new Error(`unexpected request to ${url}`))
     calls.push({ url, headers: init.headers as Record<string, string>, body: init.body as URLSearchParams })
     const { status = 200, body } = answer(url)
-    return new Response(JSON.stringify(body), { status })
+    return Promise.resolve(new Response(JSON.stringify(body), { status }))
   }) as unknown as typeof fetch
   return { calls, fetcher }
 }
@@ -55,7 +55,7 @@ describe('checkout', () => {
     const { calls, fetcher } = mock()
     const { url } = await rail({ fetch: fetcher }).checkout({ ...request, line: { ...line, trialDays: 7 } })
     expect(url).toBe('https://checkout.mock/s/1')
-    const [{ url: to, headers, body }] = calls
+    const { url: to, headers, body } = calls[0]!
     expect(to).toBe('https://api.stripe.com/v1/checkout/sessions')
     expect(headers).toMatchObject({ authorization: `Bearer ${KEY}`, 'idempotency-key': 'key-1', 'content-type': 'application/x-www-form-urlencoded' })
     expect(headers['stripe-version']).toMatch(/^\d{4}-/)
@@ -76,7 +76,7 @@ describe('checkout', () => {
   test('a mapped price replaces the catalog amount', async () => {
     const { calls, fetcher } = mock()
     await rail({ fetch: fetcher, prices: { 'pro.month': 'price_mapped' } }).checkout(request)
-    const sent = Object.fromEntries(calls[0].body)
+    const sent = Object.fromEntries(calls[0]!.body)
     expect(sent['line_items[0][price]']).toBe('price_mapped')
     expect(sent['line_items[0][price_data][unit_amount]']).toBeUndefined()
   })
@@ -84,7 +84,7 @@ describe('checkout', () => {
   test('a payment puts the metadata on the payment, which its charge inherits', async () => {
     const { calls, fetcher } = mock()
     await rail({ fetch: fetcher }).checkout({ ...request, line: { product: 'tee', name: 'tee', amount: 2500, currency: 'usd', mode: 'payment', quantity: 2, shipping: true } })
-    expect(Object.fromEntries(calls[0].body)).toMatchObject({ mode: 'payment', 'line_items[0][quantity]': '2', 'payment_intent_data[metadata][weft_product]': 'tee', 'shipping_address_collection[allowed_countries][0]': 'US' })
+    expect(Object.fromEntries(calls[0]!.body)).toMatchObject({ mode: 'payment', 'line_items[0][quantity]': '2', 'payment_intent_data[metadata][weft_product]': 'tee', 'shipping_address_collection[allowed_countries][0]': 'US' })
   })
 
   test('Stripe saying no is a typed failure, without the key in it', async () => {
@@ -109,7 +109,7 @@ describe('checkout', () => {
     const placeholder = { secretKey: 'sk_test_placeholder' }
     await expect(rail({ fetch: fetcher, ...placeholder }).checkout(request)).rejects.toMatchObject({ code: 'PAY003' })
     expect(calls).toEqual([])
-    const local = vi.fn(async () => new Response('{"url":"http://127.0.0.1:1/s"}')) as unknown as typeof fetch
+    const local = vi.fn(() => Promise.resolve(new Response('{"url":"http://127.0.0.1:1/s"}'))) as unknown as typeof fetch
     await rail({ fetch: local, api: 'http://127.0.0.1:1', ...placeholder }).checkout(request)
     expect(local).toHaveBeenCalledOnce()
   })
@@ -120,8 +120,8 @@ describe('checkout', () => {
     expect((await r.portal({ customer: 'cus_1', returnUrl: 'https://app.test/a' })).url).toBe('https://billing.mock/p/1')
     await r.refund!({ purchase: 'pi_1' })
     expect(calls.map(c => c.url.replace('https://api.stripe.com', ''))).toEqual(['/v1/billing_portal/sessions', '/v1/refunds'])
-    expect(calls[1].body.get('payment_intent')).toBe('pi_1')
-    expect(calls[1].headers['idempotency-key']).toBe('refund:pi_1')
+    expect(calls[1]!.body.get('payment_intent')).toBe('pi_1')
+    expect(calls[1]!.headers['idempotency-key']).toBe('refund:pi_1')
     await expect(r.refund!({ purchase: 'sub_1' })).rejects.toMatchObject({ code: 'PAY022' })
   })
 })
@@ -132,17 +132,17 @@ describe('verify', () => {
   test('reads a subscription', async () => {
     const [e] = await rail().verify(signed(sub('trialing')))
     expect(e).toMatchObject({ id: 'evt_trialing', purchase: 'sub_1', state: 'trial', user: 'u1', product: 'pro', plan: 'month', customer: 'cus_1' })
-    expect(e.expires).toBeGreaterThan(Date.now())
+    expect(e!.expires).toBeGreaterThan(Date.now())
   })
 
   test.each([['active', 'active'], ['past_due', 'grace'], ['unpaid', 'billing-retry'], ['paused', 'paused'], ['canceled', 'expired'], ['incomplete', 'pending'], ['incomplete_expired', 'expired']])('maps %s to %s', async (status, state) => {
-    expect((await rail().verify(signed(sub(status))))[0].state).toBe(state)
+    expect((await rail().verify(signed(sub(status))))[0]!.state).toBe(state)
   })
 
   test('finds the period on the item, where later API versions keep it', async () => {
     const end = now() + 100
     const [e] = await rail().verify(signed(sub('active', { current_period_end: undefined, items: { data: [{ current_period_end: end }] } })))
-    expect(e.expires).toBe(end * 1000)
+    expect(e!.expires).toBe(end * 1000)
   })
 
   test('a wrong secret, a changed byte, an old time and no header are all refused', async () => {
@@ -174,8 +174,8 @@ describe('verify', () => {
 
   test('a paid payment is active; a bank transfer is pending until it clears', async () => {
     expect((await rail().verify(signed(session({}))))[0]).toMatchObject({ purchase: 'pi_1', state: 'active', user: 'u1', product: 'tee' })
-    expect((await rail().verify(signed(session({ payment_status: 'unpaid' }))))[0].state).toBe('pending')
-    expect((await rail().verify(signed(session({}, 'checkout.session.async_payment_failed'))))[0].state).toBe('expired')
+    expect((await rail().verify(signed(session({ payment_status: 'unpaid' }))))[0]!.state).toBe('pending')
+    expect((await rail().verify(signed(session({}, 'checkout.session.async_payment_failed'))))[0]!.state).toBe('expired')
   })
 
   test('only a whole refund is a refund', async () => {
@@ -186,8 +186,8 @@ describe('verify', () => {
 
   test('a dispute revokes, and winning it restores', async () => {
     const dispute = (type: string, status: string) => ({ id: type, type, created: now(), data: { object: { payment_intent: 'pi_1', status } } })
-    expect((await rail().verify(signed(dispute('charge.dispute.created', 'needs_response'))))[0].state).toBe('revoked')
-    expect((await rail().verify(signed(dispute('charge.dispute.closed', 'won'))))[0].state).toBe('active')
+    expect((await rail().verify(signed(dispute('charge.dispute.created', 'needs_response'))))[0]!.state).toBe('revoked')
+    expect((await rail().verify(signed(dispute('charge.dispute.closed', 'won'))))[0]!.state).toBe('active')
     expect(await rail().verify(signed(dispute('charge.dispute.closed', 'lost')))).toEqual([])
   })
 
