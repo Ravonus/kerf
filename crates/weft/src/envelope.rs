@@ -109,6 +109,9 @@ mod tests {
     /// The same vector `packages/start/test/rust.test.mjs` signs in JS: the two sides agree byte for byte.
     #[test]
     fn matches_the_typescript_signer() {
-        assert_eq!(sign(b"s3cret", "f.abc", CTX, b"{\"input\":{\"q\":\"x\"}}"), "1a4c89d125bdeda4db5f2dd02045bc1044ff4ecfacff00c7f42f602ceef3ad08");
+        assert_eq!(
+            sign(b"s3cret", "f.abc", CTX, b"{\"input\":{\"q\":\"x\"}}"),
+            "1a4c89d125bdeda4db5f2dd02045bc1044ff4ecfacff00c7f42f602ceef3ad08"
+        );
     }
 }

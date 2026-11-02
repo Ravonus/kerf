@@ -39,7 +39,9 @@ pub fn points(printed: &str, map: &oxc_sourcemap::SourceMap) -> Points {
             // Columns count UTF-16 units.
             let (mut units, mut byte) = (0, 0);
             for c in line.chars() {
-                if units >= t.get_dst_col() { break }
+                if units >= t.get_dst_col() {
+                    break;
+                }
                 units += c.len_utf16() as u32;
                 byte += c.len_utf8();
             }
@@ -78,7 +80,9 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
             COPY | LOWERED => {
                 let mut n = 0usize;
                 for d in chars.by_ref() {
-                    if d == NUM { break }
+                    if d == NUM {
+                        break;
+                    }
                     n = n * 10 + d.to_digit(10).unwrap_or(0) as usize;
                 }
                 if c == COPY {
@@ -86,7 +90,9 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
                     stack.push(Seg::Copy(n));
                 } else {
                     let to = at_or_before(n as u32).unwrap_or((0, 0));
-                    if src.is_some() { builder.add_token(line, col, to.0, to.1, src, None) }
+                    if src.is_some() {
+                        builder.add_token(line, col, to.0, to.1, src, None)
+                    }
                     stack.push(Seg::Lowered(to));
                 }
             }
@@ -103,7 +109,9 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
                 match stack.last_mut() {
                     Some(Seg::Copy(p)) => {
                         while next < pts.len() && pts[next].0 as usize == *p {
-                            if src.is_some() { builder.add_token(line, col, pts[next].1, pts[next].2, src, None) }
+                            if src.is_some() {
+                                builder.add_token(line, col, pts[next].1, pts[next].2, src, None)
+                            }
                             next += 1;
                         }
                         *p += c.len_utf8();

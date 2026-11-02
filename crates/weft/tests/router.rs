@@ -74,7 +74,11 @@ fn envelope(user: Value, deadline: u64, iat: u64) -> String {
 }
 
 async fn send(id: &str, ctx: &str, sig: &str, body: &str) -> (StatusCode, Value) {
-    let req = Request::post(format!("/_weft/fn/{id}")).header("weft-ctx", ctx).header("weft-sig", sig).body(Body::from(body.to_string())).unwrap();
+    let req = Request::post(format!("/_weft/fn/{id}"))
+        .header("weft-ctx", ctx)
+        .header("weft-sig", sig)
+        .body(Body::from(body.to_string()))
+        .unwrap();
     let res = app().oneshot(req).await.unwrap();
     let status = res.status();
     let bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();

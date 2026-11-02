@@ -15,7 +15,8 @@ use protocol::{align, key};
 
 /// `out` receives `[width, height]`. Unknown dimensions are NaN; available space is a number,
 /// `-1` for min-content or `+inf` for max-content.
-pub type MeasureFn = extern "C" fn(user: *mut c_void, id: u32, known_w: f32, known_h: f32, avail_w: f32, avail_h: f32, out: *mut f32);
+pub type MeasureFn =
+    extern "C" fn(user: *mut c_void, id: u32, known_w: f32, known_h: f32, avail_w: f32, avail_h: f32, out: *mut f32);
 
 pub struct Tree {
     taffy: TaffyTree<u32>,
@@ -44,11 +45,19 @@ fn space(a: AvailableSpace) -> f32 {
 }
 
 fn bound(v: f32) -> LengthPercentageAuto {
-    if v.is_nan() { LengthPercentageAuto::auto() } else { LengthPercentageAuto::length(v) }
+    if v.is_nan() {
+        LengthPercentageAuto::auto()
+    } else {
+        LengthPercentageAuto::length(v)
+    }
 }
 
 fn dim(v: f32) -> Dimension {
-    if v.is_nan() { Dimension::auto() } else { Dimension::length(v) }
+    if v.is_nan() {
+        Dimension::auto()
+    } else {
+        Dimension::length(v)
+    }
 }
 
 fn align_items(v: u32) -> AlignItems {
@@ -77,12 +86,8 @@ impl Tree {
     /// `measured` leaves get their size from the host callback (text, buttons, inputs).
     pub fn node(&mut self, id: u32, measured: bool) {
         let style = Style { display: Display::Flex, flex_direction: FlexDirection::Column, ..Style::default() };
-        let node = if measured {
-            self.taffy.new_leaf_with_context(style, id)
-        } else {
-            self.taffy.new_leaf(style)
-        }
-        .expect("taffy node");
+        let node = if measured { self.taffy.new_leaf_with_context(style, id) } else { self.taffy.new_leaf(style) }
+            .expect("taffy node");
         if let Some(old) = self.nodes.insert(id, node) {
             let _ = self.taffy.remove(old);
         }
@@ -106,10 +111,7 @@ impl Tree {
         if let Some(old) = self.taffy.parent(c) {
             let _ = self.taffy.remove_child(old, c);
         }
-        let index = self
-            .nodes
-            .get(&before)
-            .and_then(|b| self.taffy.children(p).ok()?.iter().position(|n| n == b));
+        let index = self.nodes.get(&before).and_then(|b| self.taffy.children(p).ok()?.iter().position(|n| n == b));
         match index {
             Some(i) => self.taffy.insert_child_at_index(p, i, c),
             None => self.taffy.add_child(p, c),
@@ -145,9 +147,16 @@ impl Tree {
                 s.min_size.height = bound(v);
                 s.max_size.height = bound(v);
             }
-            key::MIN_HEIGHT => s.min_size.height = if v.is_nan() { LengthPercentageAuto::auto() } else { LengthPercentageAuto::length(v) },
+            key::MIN_HEIGHT => {
+                s.min_size.height =
+                    if v.is_nan() { LengthPercentageAuto::auto() } else { LengthPercentageAuto::length(v) }
+            }
             key::SCROLL => {
-                s.overflow = if v != 0.0 { Point { x: Overflow::Visible, y: Overflow::Scroll } } else { Point { x: Overflow::Visible, y: Overflow::Visible } };
+                s.overflow = if v != 0.0 {
+                    Point { x: Overflow::Visible, y: Overflow::Scroll }
+                } else {
+                    Point { x: Overflow::Visible, y: Overflow::Visible }
+                };
                 s.scrollbar_width = 0.0;
             }
             _ => return,
@@ -178,20 +187,25 @@ impl Tree {
                 Size { width: AvailableSpace::Definite(w), height: AvailableSpace::Definite(h) },
                 |inputs, _, ctx, style| -> LayoutOutput {
                     let id = ctx.map(|c| *c);
-                    compute_leaf_layout(inputs, style, |_, _| 0.0, |known, avail| {
-                        let Some(id) = id else { return Size::ZERO };
-                        let mut out = [0f32; 2];
-                        measure(
-                            user,
-                            id,
-                            known.width.unwrap_or(f32::NAN),
-                            known.height.unwrap_or(f32::NAN),
-                            space(avail.width),
-                            space(avail.height),
-                            out.as_mut_ptr(),
-                        );
-                        Size { width: out[0], height: out[1] }
-                    })
+                    compute_leaf_layout(
+                        inputs,
+                        style,
+                        |_, _| 0.0,
+                        |known, avail| {
+                            let Some(id) = id else { return Size::ZERO };
+                            let mut out = [0f32; 2];
+                            measure(
+                                user,
+                                id,
+                                known.width.unwrap_or(f32::NAN),
+                                known.height.unwrap_or(f32::NAN),
+                                space(avail.width),
+                                space(avail.height),
+                                out.as_mut_ptr(),
+                            );
+                            Size { width: out[0], height: out[1] }
+                        },
+                    )
                 },
             )
             .expect("compute");
@@ -311,7 +325,10 @@ mod tests {
     extern "C" fn fixed(_: *mut c_void, id: u32, kw: f32, kh: f32, _aw: f32, _ah: f32, out: *mut f32) {
         let w = if kw.is_nan() { (id % 100) as f32 * 10.0 } else { kw };
         let h = if kh.is_nan() { 20.0 } else { kh };
-        unsafe { *out = w; *out.add(1) = h; }
+        unsafe {
+            *out = w;
+            *out.add(1) = h;
+        }
     }
 
     fn tree() -> Tree {
@@ -439,7 +456,10 @@ mod tests {
         t.node(150, true); // wants 500 wide: must not widen pane 2 or push the hinge
         t.insert(2, 150, 0);
         t.compute(1, 400.0, 300.0);
-        let xw = |id| { let f = t.frame(id).unwrap(); (f.x, f.w) };
+        let xw = |id| {
+            let f = t.frame(id).unwrap();
+            (f.x, f.w)
+        };
         assert_eq!([xw(2), xw(3), xw(4)], [(0.0, 150.0), (150.0, 20.0), (170.0, 230.0)]);
     }
 }

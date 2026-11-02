@@ -43,10 +43,10 @@ mod functions;
 #[cfg(feature = "native")]
 #[doc(hidden)]
 pub mod native;
-#[cfg(feature = "server")]
-mod server;
 #[cfg(feature = "otel")]
 mod otel;
+#[cfg(feature = "server")]
+mod server;
 
 #[cfg(feature = "core")]
 pub use ctx::{Base, Ctx, Envelope, FromBase, SharedCtx, User, UserCtx};

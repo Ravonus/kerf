@@ -79,8 +79,12 @@ pub fn check(program: &Program<'_>, scoping: &Scoping, source: &str, ssr: Ssr) -
                 }
             }
             if d.source.value == MODULE && d.import_kind.is_value() {
-                let last =
-                    d.specifiers.iter().flatten().filter(|s| matches!(s, ImportDeclarationSpecifier::ImportSpecifier(_))).last();
+                let last = d
+                    .specifiers
+                    .iter()
+                    .flatten()
+                    .filter(|s| matches!(s, ImportDeclarationSpecifier::ImportSpecifier(_)))
+                    .last();
                 if let Some(s) = last {
                     browser_import = Some(s.span().end);
                 }
@@ -277,7 +281,9 @@ impl<'s> Checker<'s> {
                 format!(
                     "`{target}.addEventListener({ty}, …)` in a component is never removed: it outlives the component and fires after it unmounts."
                 ),
-                format!("Use `on({target}, {ty}, …)` from @weft-js/core/browser: its owner removes it. Or remove it in `onCleanup`."),
+                format!(
+                    "Use `on({target}, {ty}, …)` from @weft-js/core/browser: its owner removes it. Or remove it in `onCleanup`."
+                ),
             );
             if let Some(f) = fix {
                 d = d.with_fix(f);
@@ -420,7 +426,11 @@ impl<'s> Checker<'s> {
         };
         let q = self.text(query.span());
         let severity = if self.ssr == Some(true) { Severity::Error } else { Severity::Warning };
-        let maybe = if self.ssr == Some(true) { "This file is server-rendered" } else { "If this component is server-rendered" };
+        let maybe = if self.ssr == Some(true) {
+            "This file is server-rendered"
+        } else {
+            "If this component is server-rendered"
+        };
         let d = Diagnostic::new(
             self.source,
             "W054",
@@ -479,7 +489,10 @@ impl<'s> Checker<'s> {
         let copies_param = matches!((param.map(|p| &p.pattern), a.right.without_parentheses()),
             (Some(BindingPattern::BindingIdentifier(p)), Expression::Identifier(r)) if p.name == r.name);
         let copies_value = self.text(a.right.span()) == self.text(read.span);
-        if target.property.name != "value" || a.operator != AssignmentOperator::Assign || !(copies_param || copies_value) {
+        if target.property.name != "value"
+            || a.operator != AssignmentOperator::Assign
+            || !(copies_param || copies_value)
+        {
             return;
         }
         let (live, boxed) = (live.name.as_str(), boxed.name.as_str());

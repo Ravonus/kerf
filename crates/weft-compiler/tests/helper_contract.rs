@@ -15,10 +15,11 @@ use weft_compiler::{Options, compile};
 fn components() -> Vec<(String, String)> {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut out = Vec::new();
-    let mut stack: Vec<_> = ["packages/weft/test/fixtures", "packages/weft/bench/fixtures", "evals/reference-v3/weft/src"]
-        .iter()
-        .map(|d| repo.join(d))
-        .collect();
+    let mut stack: Vec<_> =
+        ["packages/weft/test/fixtures", "packages/weft/bench/fixtures", "evals/reference-v3/weft/src"]
+            .iter()
+            .map(|d| repo.join(d))
+            .collect();
     while let Some(dir) = stack.pop() {
         for entry in std::fs::read_dir(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())).flatten() {
             let path = entry.path();
@@ -115,7 +116,8 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     let modes = [("dom", false, false), ("dom", true, false), ("dom", false, true), ("ssr", false, true)];
     for (generate, dev, hydratable) in modes {
         for (name, source) in &files {
-            let o = Options { filename: name.clone(), generate: generate.into(), dev, hydratable, ..Default::default() };
+            let o =
+                Options { filename: name.clone(), generate: generate.into(), dev, hydratable, ..Default::default() };
             let out = compile(source, &o);
             let code = out.code.unwrap_or_else(|| panic!("{name} ({generate}): {:?}", out.diagnostics));
             for (from, names) in imports_of(&code) {
@@ -123,7 +125,10 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
                 for n in names {
                     used.insert(format!("{from}:{n}"));
                     if !exports.contains(&n) {
-                        missing.entry(format!("{from}:{n}")).or_default().insert(format!("{name} ({generate}, dev {dev}, hydratable {hydratable})"));
+                        missing
+                            .entry(format!("{from}:{n}"))
+                            .or_default()
+                            .insert(format!("{name} ({generate}, dev {dev}, hydratable {hydratable})"));
                     }
                 }
             }
@@ -131,7 +136,15 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     }
     assert!(missing.is_empty(), "helpers the back end imports but the runtime lacks:\n{missing:#?}");
     // Guard against the check passing vacuously (e.g. the import source changing).
-    for core in ["@weft-js/core/dom:tpl", "@weft-js/core/dom:child", "@weft-js/core/dom:bind", "@weft-js/core/dom:first", "@weft-js/core/ssr:ssr", "@weft-js/core/ssr:hole", "@weft-js/core/ssr:key"] {
+    for core in [
+        "@weft-js/core/dom:tpl",
+        "@weft-js/core/dom:child",
+        "@weft-js/core/dom:bind",
+        "@weft-js/core/dom:first",
+        "@weft-js/core/ssr:ssr",
+        "@weft-js/core/ssr:hole",
+        "@weft-js/core/ssr:key",
+    ] {
         assert!(used.contains(core), "the components no longer import {core}; used: {used:?}");
     }
 }

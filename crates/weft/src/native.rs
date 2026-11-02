@@ -56,7 +56,9 @@ fn wait<F: Future>(mut future: std::pin::Pin<&mut F>) -> F::Output {
 fn wait<F: Future>(future: std::pin::Pin<&mut F>) -> F::Output {
     match future.poll(&mut Context::from_waker(Waker::noop())) {
         Poll::Ready(v) => v,
-        Poll::Pending => panic!("a `native()` function can't wait on WASM: nothing would wake it. Use `remote()` for IO"),
+        Poll::Pending => {
+            panic!("a `native()` function can't wait on WASM: nothing would wake it. Use `remote()` for IO")
+        }
     }
 }
 
@@ -67,11 +69,13 @@ fn dispatch(id: &str, ctx: &str, body: Vec<u8>) -> String {
         Err(e) => return drift_body(&format!("the call's context didn't parse: {e}")).to_string(),
     };
     let Some(handler) = functions().handler(id) else {
-        return drift_body(&format!("this library has no function `{id}`: rebuild it from the current contract")).to_string();
+        return drift_body(&format!("this library has no function `{id}`: rebuild it from the current contract"))
+            .to_string();
     };
     let base = Base::new(id, envelope);
     let call = handler(base.clone(), body);
-    let answer = catch_unwind(AssertUnwindSafe(|| wait(pin!(call)))).unwrap_or_else(|p| Answer::Failed(Failed::Internal(format!("panicked: {}", panic_text(p)))));
+    let answer = catch_unwind(AssertUnwindSafe(|| wait(pin!(call))))
+        .unwrap_or_else(|p| Answer::Failed(Failed::Internal(format!("panicked: {}", panic_text(p)))));
     match answer {
         Answer::Value(value) => ok_body(&value, &base),
         Answer::Failed(Failed::Typed(error)) => json!({ "ok": false, "error": error }).to_string(),
@@ -151,7 +155,14 @@ mod wasm {
     /// # Safety
     /// Each pair is valid UTF-8 from `weft_alloc`.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn weft_call(id: *const u8, id_len: usize, ctx: *const u8, ctx_len: usize, body: *mut u8, body_len: usize) -> u64 {
+    pub unsafe extern "C" fn weft_call(
+        id: *const u8,
+        id_len: usize,
+        ctx: *const u8,
+        ctx_len: usize,
+        body: *mut u8,
+        body_len: usize,
+    ) -> u64 {
         // A panic aborts here: the instance traps, and TS starts a new one. This is how the message gets out first.
         static HOOK: std::sync::Once = std::sync::Once::new();
         HOOK.call_once(|| {

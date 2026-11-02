@@ -42,13 +42,18 @@ fn defaults_that_read_other_props_are_rewritten() {
     let (code, d) = run("export function A({ a, b = a, c = b + 1 }) { return <p title={c}>{b}</p> }");
     assert!(d.is_empty(), "defaults are live reads, not setup reads: {d:?}");
     assert!(code.contains("props.b === undefined ? props.a : props.b"), "{code}");
-    assert!(code.contains("props.c === undefined ? (props.b === undefined ? props.a : props.b) + 1 : props.c"), "{code}");
+    assert!(
+        code.contains("props.c === undefined ? (props.b === undefined ? props.a : props.b) + 1 : props.c"),
+        "{code}"
+    );
     assert!(!code.contains(" a ") && !code.contains("(a)"), "no unbound `a` left: {code}");
 }
 
 #[test]
 fn defaults_keep_list_and_box_reads_live() {
-    let (code, d) = run("import { state } from '@weft-js/core'; const on = state(1); export function A({ n = on.value }) { return <p>{n}</p> }");
+    let (code, d) = run(
+        "import { state } from '@weft-js/core'; const on = state(1); export function A({ n = on.value }) { return <p>{n}</p> }",
+    );
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("props.n === undefined ? on.value : props.n"), "{code}");
 }
@@ -68,8 +73,13 @@ fn rest_props_stay_live() {
 
 #[test]
 fn element_spreads_read_their_attributes_in_order() {
-    let (code, _) = run("export function A(props: any) { return <a title=\"t\" {...props.attrs} href={props.href} {...props}>x</a> }");
-    assert!(code.contains(r#"_$spread(_e1, () => ({ title: "t", ...props.attrs, href: props.href, ...props }))"#), "{code}");
+    let (code, _) = run(
+        "export function A(props: any) { return <a title=\"t\" {...props.attrs} href={props.href} {...props}>x</a> }",
+    );
+    assert!(
+        code.contains(r#"_$spread(_e1, () => ({ title: "t", ...props.attrs, href: props.href, ...props }))"#),
+        "{code}"
+    );
     // without JSX children, the merged props' `children` is the element's hole
     let (code, _) = run("export function A(props: any) { return <p {...props} /> }");
     assert!(code.contains("_$mergeProps(props)") && code.contains("() => _p2.children"), "{code}");
@@ -111,7 +121,8 @@ fn w006_nested_destructuring_has_a_safe_fix() {
 
 #[test]
 fn children_are_memoised_once_per_component() {
-    let (code, d) = run("export function Box({ title, children }) { return <div><h2>{title}</h2>{children}{children}</div> }");
+    let (code, d) =
+        run("export function Box({ title, children }) { return <div><h2>{title}</h2>{children}{children}</div> }");
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains(r#"import { memo as _$weftMemo } from "@weft-js/core""#), "{code}");
     assert_eq!(code.matches("_$weftMemo(() => props.children)").count(), 1, "{code}");
@@ -163,7 +174,9 @@ fn w016_not_for_live_calls_constructors_or_native_attributes() {
 
 #[test]
 fn w017_prop_indexed_by_the_row_item() {
-    let (_, d) = run("export function L({ products, cart }) { return <ul>{products.map(p => <Row key={p.id} n={cart[p.id] ?? 0} />)}</ul> }");
+    let (_, d) = run(
+        "export function L({ products, cart }) { return <ul>{products.map(p => <Row key={p.id} n={cart[p.id] ?? 0} />)}</ul> }",
+    );
     assert_eq!(codes(&d), ["W017"]);
     assert_eq!(d[0].severity, Severity::Warning);
     assert!(d[0].message.contains("`cart[p.id]` reads one entry of the whole `cart` in every row"), "{}", d[0].message);
@@ -207,13 +220,20 @@ export function Row({ stock, live }: { stock: { id: string }; live: State<Record
 }";
     let (_, d) = run(src);
     assert_eq!(codes(&d), ["W017"], "one per box and component: {d:?}");
-    assert!(d[0].message.contains("`live.value[stock.id]` reads one entry of the whole `live.value`"), "{}", d[0].message);
+    assert!(
+        d[0].message.contains("`live.value[stock.id]` reads one entry of the whole `live.value`"),
+        "{}",
+        d[0].message
+    );
     assert!(d[0].message.contains("every `Row`"), "{}", d[0].message);
     assert!(d[0].help.contains("`live.get(stock.id)`") && d[0].help.contains("`State<…>`"), "{}", d[0].help);
     let fix = d[0].fix.as_ref().unwrap();
     assert!(!fix.safe, "a prop is only probably a box");
     let fixed = apply_fix(src, &d[0]);
-    assert!(fixed.contains("derived(() => live.get(stock.id))") && fixed.contains("{live.get(stock.id).price}"), "{fixed}");
+    assert!(
+        fixed.contains("derived(() => live.get(stock.id))") && fixed.contains("{live.get(stock.id).price}"),
+        "{fixed}"
+    );
     assert!(run(&fixed).1.is_empty());
 }
 
@@ -239,14 +259,19 @@ export function List({ stocks, live }: { stocks: { id: string }[]; live: State<R
 }";
     let (_, d) = run(src);
     assert_eq!(codes(&d), ["W017"]);
-    assert!(d[0].message.contains("`live.value[s.id]` reads one entry of the whole `live.value` in every row"), "{}", d[0].message);
+    assert!(
+        d[0].message.contains("`live.value[s.id]` reads one entry of the whole `live.value` in every row"),
+        "{}",
+        d[0].message
+    );
     assert!(d[0].help.contains("`live={live.get(s.id)}`") && d[0].help.contains("in `<StockRow>`"), "{}", d[0].help);
     assert!(!d[0].fix.as_ref().unwrap().safe);
     let fixed = apply_fix(src, &d[0]);
     assert!(fixed.contains("live={live.get(s.id)}"), "{fixed}");
     assert!(run(&fixed).1.is_empty());
     // A plain prop passed down names the child too.
-    let (_, d) = run("export function L({ xs, cart }) { return <ul>{xs.map(x => <Row key={x.id} n={cart[x.id]} />)}</ul> }");
+    let (_, d) =
+        run("export function L({ xs, cart }) { return <ul>{xs.map(x => <Row key={x.id} n={cart[x.id]} />)}</ul> }");
     assert_eq!(codes(&d), ["W017"]);
     assert!(d[0].help.contains("`cart={cart}`") && d[0].help.contains("in `<Row>`"), "{}", d[0].help);
 }
@@ -288,21 +313,22 @@ export function Row({ stock, live }: { stock: { id: string }; live: State<Record
     let fix = d[0].fix.as_ref().unwrap();
     assert!(!fix.safe);
     let fixed = apply_fix(src, &d[0]);
-    assert!(fixed.contains("const quote = derived(() => live.get(stock.id))") && fixed.contains("{quote.value.price}"), "{fixed}");
+    assert!(
+        fixed.contains("const quote = derived(() => live.get(stock.id))") && fixed.contains("{quote.value.price}"),
+        "{fixed}"
+    );
     assert!(run(&fixed.replace("import { untrack,", "import { derived,")).1.is_empty());
 }
 
 #[test]
 fn w018_not_for_snapshots_read_elsewhere_or_of_constants() {
-    let (_, d) = run(
-        "import { state, untrack } from '@weft-js/core'
+    let (_, d) = run("import { state, untrack } from '@weft-js/core'
 export function Form({ initial }: { initial: string }) {
   const text = state('')
   const start = untrack(() => initial)
   const fixed = untrack(() => 42)
   return <p onClick={() => (text.value = start)}>{start} {fixed}</p>
-}",
-    );
+}");
     assert!(d.is_empty(), "{d:?}");
 }
 
@@ -325,45 +351,61 @@ fn alias_reads_the_prop_at_each_use() {
 
 #[test]
 fn alias_paths_chains_and_casts() {
-    let code = clean("export function A(props: any) { const u = props.user as any; const name = u.name!; const n = props.items.length; return <p>{name}{n}</p> }");
+    let code = clean(
+        "export function A(props: any) { const u = props.user as any; const name = u.name!; const n = props.items.length; return <p>{name}{n}</p> }",
+    );
     assert!(code.contains("props.user.name") && code.contains("props.items.length"), "{code}");
 }
 
 #[test]
 fn alias_of_a_destructured_param() {
-    let code = clean("export function A({ items, size = 2 }) { const n = items.length; const s = size; return <p>{n}{s}</p> }");
+    let code = clean(
+        "export function A({ items, size = 2 }) { const n = items.length; const s = size; return <p>{n}{s}</p> }",
+    );
     assert!(code.contains("props.items.length"), "{code}");
     assert!(code.contains("props.size === undefined ? 2 : props.size"), "{code}");
 }
 
 #[test]
 fn alias_destructuring_renames_defaults_and_rest() {
-    let code = clean("export function A(props) { const { amount: a, label = 'x', ...rest } = props; return <p {...rest} title={rest.t}>{a}{label}</p> }");
-    assert!(code.contains("props.amount") && code.contains("props.label === undefined ? \"x\" : props.label"), "{code}");
+    let code = clean(
+        "export function A(props) { const { amount: a, label = 'x', ...rest } = props; return <p {...rest} title={rest.t}>{a}{label}</p> }",
+    );
+    assert!(
+        code.contains("props.amount") && code.contains("props.label === undefined ? \"x\" : props.label"),
+        "{code}"
+    );
     assert!(code.contains("_$restOf(props, [\"amount\", \"label\"])") && code.contains("props.t"), "{code}");
 }
 
 #[test]
 fn alias_default_seen_by_a_closure_above_it() {
-    let code = clean("export function A(props) { function f() { return b } const { b = 1 } = props; return <button onClick={f} /> }");
+    let code = clean(
+        "export function A(props) { function f() { return b } const { b = 1 } = props; return <button onClick={f} /> }",
+    );
     assert!(code.contains("props.b === undefined ? 1 : props.b"), "{code}");
 }
 
 #[test]
 fn alias_shadowing_is_by_binding_not_name() {
-    let code = clean("export function A(props) { const a = props.a; const f = (a) => a + 1; return <p onClick={() => f(a)}>{a}</p> }");
+    let code = clean(
+        "export function A(props) { const a = props.a; const f = (a) => a + 1; return <p onClick={() => f(a)}>{a}</p> }",
+    );
     assert!(code.contains("(a) => a + 1") && code.contains("f(props.a)"), "{code}");
 }
 
 #[test]
 fn alias_refused_when_a_closure_shadows_the_props_name() {
-    let (_, d) = run("export function A(props) { const a = props.a; const f = (props) => a + props; return <p onClick={f} /> }");
+    let (_, d) =
+        run("export function A(props) { const a = props.a; const f = (props) => a + props; return <p onClick={f} /> }");
     assert_eq!(codes(&d), ["W001"], "`props` at the use would be the wrong one");
 }
 
 #[test]
 fn alias_keeps_shorthand_and_other_declarators() {
-    let code = clean("export function A(props) { const a = props.a, b = 1; const o = () => ({ a, b }); return <p onClick={o} /> }");
+    let code = clean(
+        "export function A(props) { const a = props.a, b = 1; const o = () => ({ a, b }); return <p onClick={o} /> }",
+    );
     assert!(code.contains("a: props.a") && code.contains("b = 1"), "{code}");
 }
 
@@ -375,7 +417,9 @@ fn alias_let_never_written_is_fine() {
 
 #[test]
 fn alias_written_is_a_local_override() {
-    let code = clean("export function A(props) { let a = props.a; const f = () => { a = 2; a += 1; a++ }; return <p onClick={f}>{a}</p> }");
+    let code = clean(
+        "export function A(props) { let a = props.a; const f = () => { a = 2; a += 1; a++ }; return <p onClick={f}>{a}</p> }",
+    );
     assert!(code.contains("props = _$localProps(props, [\"a\", 0])"), "{code}");
     assert!(code.contains("props.a = 2") && code.contains("props.a += 1") && code.contains("props.a++"), "{code}");
     let code = clean("export function A(props) { let { a = 1 } = props; return <p onClick={() => a++}>{a}</p> }");
@@ -419,14 +463,18 @@ fn alias_written_with_no_single_prop_is_w001() {
 
 #[test]
 fn bind_gives_the_prop_a_setter_and_a_plain_read_has_none() {
-    let code = clean("import { bind, state } from '@weft-js/core'; export function A() { const n = state(1); return <C n={bind(n)} m={n.value} /> }");
+    let code = clean(
+        "import { bind, state } from '@weft-js/core'; export function A() { const n = state(1); return <C n={bind(n)} m={n.value} /> }",
+    );
     assert!(code.contains("get n() { return n.value; }, set n(_v) { n.value = _v; }"), "{code}");
     assert!(!code.contains("set m"), "{code}");
 }
 
 #[test]
 fn bind_attribute_is_the_same_binding() {
-    let code = clean("import { state } from '@weft-js/core'; export function A() { const count = state(1); return <C bind:count={count} /> }");
+    let code = clean(
+        "import { state } from '@weft-js/core'; export function A() { const count = state(1); return <C bind:count={count} /> }",
+    );
     assert!(code.contains("get count() { return count.value; }, set count(_v) { count.value = _v; }"), "{code}");
     assert!(!code.contains("bind:count"), "{code}");
     let code = clean("export function A(props) { return <C bind:n={props.box} /> }");
@@ -470,7 +518,9 @@ fn alias_not_for_arrays_computed_keys_or_calls() {
 fn alias_passed_to_a_helper_in_the_body_is_still_one_read() {
     let (_, d) = run("export function A(props) { const a = props.a; const c = makeChart(a); return <p>{c}</p> }");
     assert_eq!(codes(&d), ["W001"]);
-    let (_, d) = run("import { state } from '@weft-js/core'; export function A(props) { const a = props.a; const s = state(a); return <p>{s.value}</p> }");
+    let (_, d) = run(
+        "import { state } from '@weft-js/core'; export function A(props) { const a = props.a; const s = state(a); return <p>{s.value}</p> }",
+    );
     assert_eq!(codes(&d), ["W005"]);
 }
 
@@ -482,7 +532,9 @@ fn alias_children_is_the_memo() {
 
 #[test]
 fn alias_a_list_over_it_is_keyed() {
-    let code = clean("export function A(props) { const items = props.items; return <ul>{items.map(x => <li key={x.id}>{x.id}</li>)}</ul> }");
+    let code = clean(
+        "export function A(props) { const items = props.items; return <ul>{items.map(x => <li key={x.id}>{x.id}</li>)}</ul> }",
+    );
     assert!(code.contains("For") && code.contains("props.items"), "{code}");
 }
 
@@ -494,10 +546,17 @@ fn alias_only_in_components() {
 
 #[test]
 fn a_rows_key_is_read_once_as_the_row_is_made() {
-    let code = clean("export function A(p) { return <ul>{p.xs.map(x => <li key={x.id} class={p.on.get(x.id) ? 'a' : ''} onClick={() => go(x.id)}>{x.t}</li>)}</ul> }");
-    assert!(code.contains("const _key$ = x().id;") && code.contains("p.on.get(_key$)") && code.contains("go(_key$)"), "{code}");
+    let code = clean(
+        "export function A(p) { return <ul>{p.xs.map(x => <li key={x.id} class={p.on.get(x.id) ? 'a' : ''} onClick={() => go(x.id)}>{x.t}</li>)}</ul> }",
+    );
+    assert!(
+        code.contains("const _key$ = x().id;") && code.contains("p.on.get(_key$)") && code.contains("go(_key$)"),
+        "{code}"
+    );
     assert!(code.contains("x().t"), "the rest of the row stays live: {code}");
-    let code = clean("export function A(p) { return <ul>{p.xs.map(x => <li key={x.id} onClick={() => [].map(x => x().id)} />)}</ul> }");
+    let code = clean(
+        "export function A(p) { return <ul>{p.xs.map(x => <li key={x.id} onClick={() => [].map(x => x().id)} />)}</ul> }",
+    );
     assert!(!code.contains("_key$"), "rebound inside: {code}");
 }
 
@@ -508,13 +567,18 @@ fn w001_prop_read_in_setup() {
     let src = "export function A({ items }) { const n = items.length + 1; return <p>{n}</p> }";
     let (_, d) = run(src);
     assert_eq!(codes(&d), ["W001"]);
-    assert_eq!(apply_fix(src, &d[0]), "export function A({ items }) { const n = derived(() => items.length + 1); return <p>{n}</p> }");
+    assert_eq!(
+        apply_fix(src, &d[0]),
+        "export function A({ items }) { const n = derived(() => items.length + 1); return <p>{n}</p> }"
+    );
     assert!(!d[0].fix.as_ref().unwrap().safe, "the fix needs `.value` at the use site");
 }
 
 #[test]
 fn w001_box_value_read_in_setup() {
-    let (_, d) = run("import { state } from '@weft-js/core'; export function A() { const c = state(0); const twice = c.value * 2; return <p>{twice}</p> }");
+    let (_, d) = run(
+        "import { state } from '@weft-js/core'; export function A() { const c = state(0); const twice = c.value * 2; return <p>{twice}</p> }",
+    );
     assert_eq!(codes(&d), ["W001"]);
 }
 
@@ -526,8 +590,7 @@ fn w001_helper_call_with_a_prop() {
 
 #[test]
 fn reads_in_jsx_handlers_derived_and_watch_are_fine() {
-    let (_, d) = run(
-        "import { state, derived, watch } from '@weft-js/core'
+    let (_, d) = run("import { state, derived, watch } from '@weft-js/core'
          export function A({ items, onPick }) {
            const q = state('')
            const shown = derived(() => items.filter(i => i.name.includes(q.value)))
@@ -535,8 +598,7 @@ fn reads_in_jsx_handlers_derived_and_watch_are_fine() {
            const pick = (id) => onPick(id, q.value)
            q.value = 'x'
            return <p onClick={() => pick(1)}>{shown.value.length} {q.value}</p>
-         }",
-    );
+         }");
     assert!(d.is_empty(), "{d:?}");
 }
 
@@ -583,7 +645,8 @@ fn optional_map_is_a_keyed_list() {
 
 #[test]
 fn optional_links_before_map_stay_in_the_list_source() {
-    let src = "export function L({ q }) { return <ul>{q?.data.filter(x => x.on).map(x => <li key={x.id}>{x.n}</li>)}</ul> }";
+    let src =
+        "export function L({ q }) { return <ul>{q?.data.filter(x => x.on).map(x => <li key={x.id}>{x.n}</li>)}</ul> }";
     let (code, _) = run(src);
     assert!(code.contains("_$component(For, "), "{code}");
     assert!(code.contains("q?.data.filter((x) => x.on)"), "{code}");
@@ -613,7 +676,8 @@ fn a_rows_key_is_written_once() {
 
 #[test]
 fn list_index_is_live() {
-    let (code, _) = run("export function L({ xs }) { return <ol>{xs.map((x, i) => <li key={x}>{i + 1}. {x}</li>)}</ol> }");
+    let (code, _) =
+        run("export function L({ xs }) { return <ol>{xs.map((x, i) => <li key={x}>{i + 1}. {x}</li>)}</ol> }");
     assert!(code.contains("i() + 1"), "{code}");
 }
 
@@ -628,7 +692,8 @@ fn filter_sort_chain_is_the_list_source() {
 
 #[test]
 fn destructured_row_item() {
-    let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(({ id, name }) => <li key={id}>{name}</li>)}</ul> }");
+    let (code, d) =
+        run("export function L({ xs }) { return <ul>{xs.map(({ id, name }) => <li key={id}>{name}</li>)}</ul> }");
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("by: ({ id, name }) => id"), "{code}");
     assert!(code.contains("_item().name"), "{code}");
@@ -636,7 +701,9 @@ fn destructured_row_item() {
 
 #[test]
 fn destructured_row_rest_and_nested() {
-    let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(([id, { name: [first] }, ...more]) => <li key={id}>{first}{more.length}</li>)}</ul> }");
+    let (code, d) = run(
+        "export function L({ xs }) { return <ul>{xs.map(([id, { name: [first] }, ...more]) => <li key={id}>{first}{more.length}</li>)}</ul> }",
+    );
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("_item()[1].name[0]"), "{code}");
     assert!(code.contains("_item().slice(2).length"), "{code}");
@@ -645,14 +712,18 @@ fn destructured_row_rest_and_nested() {
 #[test]
 fn destructured_row_it_cant_bind_is_w019() {
     for row in ["({ id, ...more })", "({ id, n = 1 })", "([id, n = 1])", "({ id, [k]: n })"] {
-        let (_, d) = run(&format!("const k = 'a'; export function L({{ xs }}) {{ return <ul>{{xs.map({row} => <li key={{id}}>{{id}}</li>)}}</ul> }}"));
+        let (_, d) = run(&format!(
+            "const k = 'a'; export function L({{ xs }}) {{ return <ul>{{xs.map({row} => <li key={{id}}>{{id}}</li>)}}</ul> }}"
+        ));
         assert!(d.iter().any(|x| x.code == "W019"), "{row}: {d:?}");
     }
 }
 
 #[test]
 fn destructured_row_tuple() {
-    let (code, d) = run("export function L({ xs }) { return <ul>{Object.entries(xs).map(([id, name]) => <li key={id}>{name}</li>)}</ul> }");
+    let (code, d) = run(
+        "export function L({ xs }) { return <ul>{Object.entries(xs).map(([id, name]) => <li key={id}>{name}</li>)}</ul> }",
+    );
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("by: ([id, name]) => id"), "{code}");
     assert!(code.contains("_item()[1]"), "{code}");
@@ -667,13 +738,16 @@ fn primitive_lists_need_no_key() {
 
 #[test]
 fn list_inside_conditional() {
-    let (code, _) = run("export function L({ xs, on }) { return <div>{on ? xs.map(x => <p key={x.id}>{x.n}</p>) : null}</div> }");
+    let (code, _) =
+        run("export function L({ xs, on }) { return <div>{on ? xs.map(x => <p key={x.id}>{x.n}</p>) : null}</div> }");
     assert!(code.contains("_$component(For, "), "{code}");
 }
 
 #[test]
 fn conditional_row_roots_are_keyed() {
-    let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(x => (x.on ? <li key={x.id}>{x.n}</li> : <b key={x.id}>off</b>))}</ul> }");
+    let (code, d) = run(
+        "export function L({ xs }) { return <ul>{xs.map(x => (x.on ? <li key={x.id}>{x.n}</li> : <b key={x.id}>off</b>))}</ul> }",
+    );
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("by: (x) => x.id"), "{code}");
     assert!(!code.contains("key"), "every branch's key is removed: {code}");
@@ -681,17 +755,22 @@ fn conditional_row_roots_are_keyed() {
 
 #[test]
 fn fragment_row_roots_are_keyed() {
-    let (code, d) = run("export function L({ xs }) { return <dl>{xs.map(x => <><dt key={x.id}>{x.k}</dt><dd>{x.v}</dd></>)}</dl> }");
+    let (code, d) = run(
+        "export function L({ xs }) { return <dl>{xs.map(x => <><dt key={x.id}>{x.k}</dt><dd>{x.v}</dd></>)}</dl> }",
+    );
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("by: (x) => x.id"), "{code}");
-    let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(x => x.on && <li key={x.id}>{x.n}</li>)}</ul> }");
+    let (code, d) =
+        run("export function L({ xs }) { return <ul>{xs.map(x => x.on && <li key={x.id}>{x.n}</li>)}</ul> }");
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("by: (x) => x.id"), "{code}");
 }
 
 #[test]
 fn w010_rows_keyed_differently() {
-    let (_, d) = run("export function L({ xs }) { return <ul>{xs.map(x => (x.on ? <li key={x.id}>a</li> : <li key={x.name}>b</li>))}</ul> }");
+    let (_, d) = run(
+        "export function L({ xs }) { return <ul>{xs.map(x => (x.on ? <li key={x.id}>a</li> : <li key={x.name}>b</li>))}</ul> }",
+    );
     assert_eq!(codes(&d), ["W010"]);
     assert!(d[0].message.contains("keyed differently"), "{}", d[0].message);
 }
@@ -721,7 +800,9 @@ fn w010_without_an_id_field_has_no_edit() {
 
 #[test]
 fn w013_early_return_in_row() {
-    let (_, d) = run("export function L({ xs }) { return <ul>{xs.map(x => { if (!x.on) return null; return <li key={x.id} /> })}</ul> }");
+    let (_, d) = run(
+        "export function L({ xs }) { return <ul>{xs.map(x => { if (!x.on) return null; return <li key={x.id} /> })}</ul> }",
+    );
     assert!(codes(&d).contains(&"W013"), "{d:?}");
 }
 
@@ -729,13 +810,11 @@ fn w013_early_return_in_row() {
 
 #[test]
 fn w014_error_when_the_spread_list_is_rendered_by_key_here() {
-    let (_, d) = run(
-        "import { derived } from '@weft-js/core'
+    let (_, d) = run("import { derived } from '@weft-js/core'
          export function L({ products, prices }) {
            const merged = derived(() => products.map(p => ({ ...p, price: prices[p.id] ?? p.price })))
            return <ul>{merged.value.map(p => <li key={p.id}>{p.price}</li>)}</ul>
-         }",
-    );
+         }");
     assert_eq!(codes(&d), ["W014"]);
     assert_eq!(d[0].severity, Severity::Error);
     assert!(d[0].message.contains("`merged` is rendered as a keyed list (line 4)"), "{}", d[0].message);
@@ -743,27 +822,23 @@ fn w014_error_when_the_spread_list_is_rendered_by_key_here() {
 
 #[test]
 fn w014_warning_when_the_spread_list_leaves_the_file() {
-    let (_, d) = run(
-        "import { derived } from '@weft-js/core'
+    let (_, d) = run("import { derived } from '@weft-js/core'
          export function App({ products, prices }) {
            const merged = derived(() => products.map(p => ({ ...p, price: prices[p.id] })))
            return <List items={merged.value} />
-         }",
-    );
+         }");
     assert_eq!(codes(&d), ["W014"]);
     assert_eq!(d[0].severity, Severity::Warning);
 }
 
 #[test]
 fn w014_not_for_replacing_one_item() {
-    let (_, d) = run(
-        "import { state } from '@weft-js/core'
+    let (_, d) = run("import { state } from '@weft-js/core'
          export function App() {
            const products = state([])
            const push = (id, price) => { products.value = products.value.map(p => (p.id === id ? { ...p, price } : p)) }
            return <ul>{products.value.map(p => <li key={p.id} onClick={() => push(p.id, 1)}>{p.price}</li>)}</ul>
-         }",
-    );
+         }");
     assert!(d.is_empty(), "{d:?}");
 }
 
@@ -793,7 +868,11 @@ fn w014_project_view_upgrades_a_warning_that_reaches_a_keyed_list() {
     ];
     link_w014(&mut files, |_, spec| (spec == "./List").then(|| "src/List.tsx".to_string()));
     assert_eq!(app_d[0].severity, Severity::Error);
-    assert!(app_d[0].message.contains("`<List items>` renders it as a keyed list (src/List.tsx:1)"), "{}", app_d[0].message);
+    assert!(
+        app_d[0].message.contains("`<List items>` renders it as a keyed list (src/List.tsx:1)"),
+        "{}",
+        app_d[0].message
+    );
 }
 
 #[test]
@@ -835,7 +914,9 @@ fn w015_bare_box_in_jsx_child_and_native_attribute() {
 
 #[test]
 fn passing_a_box_to_a_component_is_allowed() {
-    let (_, d) = run("import { state } from '@weft-js/core'; export function A() { const c = state(''); return <CouponInput value={c} /> }");
+    let (_, d) = run(
+        "import { state } from '@weft-js/core'; export function A() { const c = state(''); return <CouponInput value={c} /> }",
+    );
     assert!(d.is_empty(), "{d:?}");
 }
 
@@ -882,13 +963,19 @@ fn explain_maps_each_jsx_node_to_its_authored_line() {
     let explain = out.explain.expect("explain");
     let ul = explain.iter().find(|x| x.line == 3).expect("an entry on line 3");
     assert_eq!((ul.column, ul.node.as_str()), (5, "<ul>"));
-    assert!(ul.code.contains("_$tpl(\"<ul><li title=\\\"x\\\"></li></ul>\")") && ul.code.contains("_$child("), "{}", ul.code);
+    assert!(
+        ul.code.contains("_$tpl(\"<ul><li title=\\\"x\\\"></li></ul>\")") && ul.code.contains("_$child("),
+        "{}",
+        ul.code
+    );
 }
 
 #[test]
 fn static_aria_booleans_are_written_as_words() {
     // `aria-pressed={false}` means "not pressed", not "not a toggle": ARIA states are the strings true/false.
-    let (code, _) = run("export const A = () => <button aria-pressed={false} aria-hidden={true} disabled={false} hidden={true}>x</button>");
+    let (code, _) = run(
+        "export const A = () => <button aria-pressed={false} aria-hidden={true} disabled={false} hidden={true}>x</button>",
+    );
     assert!(code.contains(r#"<button aria-pressed=\"false\" aria-hidden=\"true\" hidden>"#), "{code}");
 }
 
@@ -899,7 +986,8 @@ fn dev_templates_name_their_source_line() {
     assert!(code.contains("// App.tsx:3 <ul>\n"), "{code}");
     // Only hydratable output passes the place on, to `htpl`'s mismatch warnings.
     assert!(code.contains("_$tpl(\"<ul><li title=\\\"x\\\"></li></ul>\")"), "{code}");
-    let hydratable = compile(TWO_LINES, &Options { filename: "App.tsx".into(), dev: true, hydratable: true, ..Default::default() });
+    let hydratable =
+        compile(TWO_LINES, &Options { filename: "App.tsx".into(), dev: true, hydratable: true, ..Default::default() });
     assert!(hydratable.code.unwrap().contains(", false, \"App.tsx:3 <ul>\")"));
     let prod = compile(TWO_LINES, &Options { filename: "App.tsx".into(), ..Default::default() }).code.unwrap();
     assert!(!prod.contains("App.tsx:3"), "{prod}");
@@ -927,7 +1015,8 @@ fn weft_back_end_source_maps_point_at_the_authored_lines() {
 #[test]
 fn only_hydratable_output_imports_the_claiming_helpers() {
     let imports = |hydratable| {
-        let code = compile(TWO_LINES, &Options { filename: "App.tsx".into(), hydratable, ..Default::default() }).code.unwrap();
+        let code =
+            compile(TWO_LINES, &Options { filename: "App.tsx".into(), hydratable, ..Default::default() }).code.unwrap();
         code.lines().next().unwrap().to_string()
     };
     let client = imports(false);
@@ -940,13 +1029,21 @@ fn only_hydratable_output_imports_the_claiming_helpers() {
 
 #[test]
 fn content_properties_render_on_the_server_and_refuse_children() {
-    let ssr = |src: &str| compile(src, &Options { filename: "App.tsx".into(), generate: "ssr".into(), ..Default::default() });
+    let ssr =
+        |src: &str| compile(src, &Options { filename: "App.tsx".into(), generate: "ssr".into(), ..Default::default() });
     let code = ssr("export const A = (p: any) => <p textContent={p.s} />").code.unwrap();
     assert!(code.contains("\">\" + _$escape(String((p.s) ?? \"\")) + \"</p>\""), "{code}");
     let code = ssr("export const A = (p: any) => <div innerHTML={p.h} />").code.unwrap();
     assert!(code.contains("\">\" + String((p.h) ?? \"\") + \"</div>\""), "{code}");
-    let out = compile("export const A = (p: any) => <p textContent={p.s}>x</p>", &Options { filename: "App.tsx".into(), ..Default::default() });
-    assert!(out.code.is_none() && out.diagnostics[0].message.contains("can't also have children"), "{:?}", out.diagnostics);
+    let out = compile(
+        "export const A = (p: any) => <p textContent={p.s}>x</p>",
+        &Options { filename: "App.tsx".into(), ..Default::default() },
+    );
+    assert!(
+        out.code.is_none() && out.diagnostics[0].message.contains("can't also have children"),
+        "{:?}",
+        out.diagnostics
+    );
 }
 
 // ---- HMR (research 21) -----------------------------------------------------------------------------------------
@@ -958,7 +1055,9 @@ fn hot(source: &str) -> String {
 
 #[test]
 fn hmr_registers_components_and_keeps_body_state() {
-    let code = hot("import { state } from '@weft-js/core'\nexport function Card() { const open = state(false); return <p>{open.value}</p> }\nconst Row = () => <li />");
+    let code = hot(
+        "import { state } from '@weft-js/core'\nexport function Card() { const open = state(false); return <p>{open.value}</p> }\nconst Row = () => <li />",
+    );
     assert!(code.contains(r#"_$keep(state(false), "Card", "open:"#), "{code}");
     assert!(code.contains(r#"import { hot as _$hot, keep as _$keep } from "@weft-js/core/hmr";"#), "{code}");
     assert!(code.contains(r#"_$hot("/app/Card.tsx", { Card: [Card, ""#) && code.contains("Row: [Row, "), "{code}");
@@ -998,7 +1097,8 @@ fn hmr_is_dev_dom_only() {
         assert!(!code.contains("@weft-js/core/hmr") && !code.contains("_$keep"), "{code}");
     }
     // A Start app hydrates in dev too, and keeps the page across a save.
-    let hydrated = compile(src, &Options { dev: true, hmr: true, hydratable: true, ..Default::default() }).code.unwrap();
+    let hydrated =
+        compile(src, &Options { dev: true, hmr: true, hydratable: true, ..Default::default() }).code.unwrap();
     assert!(hydrated.contains("@weft-js/core/hmr"), "{hydrated}");
     assert!(!hot("const x = 1").contains("@weft-js/core/hmr"), "no components, no registration");
 }
@@ -1007,11 +1107,22 @@ fn hmr_is_dev_dom_only() {
 
 #[test]
 fn an_import_after_jsx_compiles() {
-    for o in [Options::default(), Options { hydratable: true, ..Default::default() }, Options { generate: "ssr".into(), ..Default::default() }] {
-        let out = compile("// a — b\nexport const A = () => <p>— x</p>\nimport { state } from '@weft-js/core'\nexport const B = () => <i>{state(1).value}</i>", &o);
+    for o in [
+        Options::default(),
+        Options { hydratable: true, ..Default::default() },
+        Options { generate: "ssr".into(), ..Default::default() },
+    ] {
+        let out = compile(
+            "// a — b\nexport const A = () => <p>— x</p>\nimport { state } from '@weft-js/core'\nexport const B = () => <i>{state(1).value}</i>",
+            &o,
+        );
         let code = out.code.expect("compiles");
         assert!(code.contains(r#"import { state } from "@weft-js/core""#), "{code}");
-        assert_eq!(code.matches("_$tpl(").count() + code.matches("_$htpl(").count(), if o.generate == "ssr" { 0 } else { 2 }, "{code}");
+        assert_eq!(
+            code.matches("_$tpl(").count() + code.matches("_$htpl(").count(),
+            if o.generate == "ssr" { 0 } else { 2 },
+            "{code}"
+        );
     }
 }
 
@@ -1020,9 +1131,12 @@ fn w001_not_on_a_rest_alias() {
     // a rest parameter is a live view of the props: holding it is not a read
     let (_, d) = run("export function A({ a, ...rest }: any) { const x = rest; return <p {...x}>{a}</p> }");
     assert!(d.is_empty(), "{d:?}");
-    let (_, d) = run("export function A({ a, ...rest }: any) { const x = rest.title + '!'; return <p title={x}>{a}</p> }");
+    let (_, d) =
+        run("export function A({ a, ...rest }: any) { const x = rest.title + '!'; return <p title={x}>{a}</p> }");
     assert_eq!(codes(&d), ["W001"], "a member of rest is a prop read");
-    let (code, d) = run("export function A({ a, ...rest }: any) { const x = rest.title; const y = rest.a; return <p title={x}>{a}{y}</p> }");
+    let (code, d) = run(
+        "export function A({ a, ...rest }: any) { const x = rest.title; const y = rest.a; return <p title={x}>{a}{y}</p> }",
+    );
     assert_eq!(codes(&d), ["W001"], "`a` isn't in rest: {code}");
     let (code, d) = run("export function A({ a, ...rest }: any) { const x = rest.title; return <p title={x}>{a}</p> }");
     assert!(d.is_empty() && code.contains("props.title"), "{code}");
@@ -1030,7 +1144,9 @@ fn w001_not_on_a_rest_alias() {
 
 #[test]
 fn a_rest_parameter_is_one_view_however_often_it_is_used() {
-    let (code, _) = run("export function A({ a, ...rest }: any) { const f = () => rest.x; watch(() => rest, () => {}); return <B {...rest} y={rest.y}>{a}</B> }");
+    let (code, _) = run(
+        "export function A({ a, ...rest }: any) { const f = () => rest.x; watch(() => rest, () => {}); return <B {...rest} y={rest.y}>{a}</B> }",
+    );
     assert_eq!(code.matches("_$omit(").count(), 1, "{code}");
 }
 
@@ -1038,7 +1154,10 @@ fn a_rest_parameter_is_one_view_however_often_it_is_used() {
 fn ref_to_a_const_or_an_import_calls_it() {
     let src = "import { register } from './reg'\nconst local = (el: Element) => el\nexport function A() { let mine; return <div><p ref={register}>x</p><i ref={local}>y</i><b ref={mine}>z</b></div> }";
     let (code, _) = run(src);
-    assert!(!code.contains("register = ") && !code.contains("local = _"), "no assignment to a const or an import: {code}");
+    assert!(
+        !code.contains("register = ") && !code.contains("local = _"),
+        "no assignment to a const or an import: {code}"
+    );
     assert!(code.contains("mine = _e"), "a `let` is still assigned: {code}");
 }
 
@@ -1046,13 +1165,17 @@ fn ref_to_a_const_or_an_import_calls_it() {
 fn ref_to_a_variable_beside_a_spread_assigns_it() {
     let (code, _) = run("export function A(props: any) { let el: any; return <p ref={el} {...props}>x</p> }");
     assert!(code.contains("el = _"), "{code}");
-    let (code, _) = run("import { register } from './reg'\nexport function A(props: any) { return <p ref={register} {...props}>x</p> }");
+    let (code, _) = run(
+        "import { register } from './reg'\nexport function A(props: any) { return <p ref={register} {...props}>x</p> }",
+    );
     assert!(!code.contains("register = "), "{code}");
 }
 
 #[test]
 fn a_key_on_the_index_parameter_keys_by_position() {
-    let (code, _) = run("export function L({ xs }: any) { return <ul>{xs.map((x: any, i: number) => <li key={i}>{x.name}</li>)}</ul> }");
+    let (code, _) = run(
+        "export function L({ xs }: any) { return <ul>{xs.map((x: any, i: number) => <li key={i}>{x.name}</li>)}</ul> }",
+    );
     assert!(code.contains("by: (x, i) => i"), "{code}");
 }
 
@@ -1126,23 +1249,36 @@ fn check_reports_exported_variants() {
 
 #[test]
 fn a_rewritten_name_as_a_tag_is_read_live() {
-    let (row, d) = run("const ns = {}; export const C = (p) => <ul>{p.xs.map(g => <li key={g.id}><g.icon class=\"x\" /><g.meta.icon /><ns.Icon /></li>)}</ul>;");
+    let (row, d) = run(
+        "const ns = {}; export const C = (p) => <ul>{p.xs.map(g => <li key={g.id}><g.icon class=\"x\" /><g.meta.icon /><ns.Icon /></li>)}</ul>;",
+    );
     assert!(d.is_empty(), "{d:?}");
     assert!(row.contains("_$component(g().icon, { class: \"x\" })"), "{row}");
     assert!(row.contains("_$component(g().meta.icon, {})"), "{row}");
     assert!(row.contains("_$component(ns.Icon, {})"), "{row}");
     assert!(!row.contains("_$tag"), "{row}");
 
-    let (entries, _) = run("export const C = (p) => <ul>{p.xs.map(({ id, ui, Icon }) => <li key={id}><ui.Icon /><Icon /></li>)}</ul>;");
+    let (entries, _) = run(
+        "export const C = (p) => <ul>{p.xs.map(({ id, ui, Icon }) => <li key={id}><ui.Icon /><Icon /></li>)}</ul>;",
+    );
     assert!(entries.contains("_$component(_item().ui.Icon, {})"), "{entries}");
     assert!(entries.contains("_$component(_item().Icon, {})"), "{entries}");
 
-    let (props, _) = run("export function C({ ui, Icon = Dot, ...rest }) { return <p><ui.Icon /><Icon /><rest.Icon /></p>; }");
+    let (props, _) =
+        run("export function C({ ui, Icon = Dot, ...rest }) { return <p><ui.Icon /><Icon /><rest.Icon /></p>; }");
     assert!(props.contains(".ui.Icon, {})"), "{props}");
     assert!(props.contains("=== undefined ? Dot :"), "{props}");
-    assert!(!props.contains("_$component(ui.Icon") && !props.contains("_$component(Icon") && !props.contains("_$component(rest.Icon"), "{props}");
+    assert!(
+        !props.contains("_$component(ui.Icon")
+            && !props.contains("_$component(Icon")
+            && !props.contains("_$component(rest.Icon"),
+        "{props}"
+    );
 
-    let dev = compile("export const C = (p) => <ul>{p.xs.map(g => <li key={g.id}><g.icon /></li>)}</ul>;", &Options { filename: "App.tsx".into(), dev: true, ..Default::default() });
+    let dev = compile(
+        "export const C = (p) => <ul>{p.xs.map(g => <li key={g.id}><g.icon /></li>)}</ul>;",
+        &Options { filename: "App.tsx".into(), dev: true, ..Default::default() },
+    );
     assert!(dev.code.unwrap().contains("_$component(g().icon, {}, \"g.icon\", \"App.tsx:1\")"));
 }
 
@@ -1150,7 +1286,9 @@ fn a_rewritten_name_as_a_tag_is_read_live() {
 
 #[test]
 fn react_names_compile_to_attributes() {
-    let (code, _) = run(r##"export const A = () => <svg tabIndex={0} viewBox="0 0 1 1" focusable={false}><path strokeWidth="2" clipPath="url(#a)" /><use xlinkHref="#a" /></svg>"##);
+    let (code, _) = run(
+        r##"export const A = () => <svg tabIndex={0} viewBox="0 0 1 1" focusable={false}><path strokeWidth="2" clipPath="url(#a)" /><use xlinkHref="#a" /></svg>"##,
+    );
     for out in ["tabindex=", "stroke-width=", "clip-path=", "xlink:href=", r#"focusable=\"false\""#] {
         assert!(code.contains(out), "{out}: {code}");
     }
@@ -1162,7 +1300,9 @@ fn react_names_compile_to_attributes() {
 #[test]
 fn react_names_compile_for_the_server_and_dynamic_values() {
     let source = "export const A = (p) => <input tabIndex={p.i} defaultValue={p.v} defaultChecked={p.c} />";
-    let ssr = compile(source, &Options { filename: "App.tsx".into(), generate: "ssr".into(), ..Default::default() }).code.unwrap();
+    let ssr = compile(source, &Options { filename: "App.tsx".into(), generate: "ssr".into(), ..Default::default() })
+        .code
+        .unwrap();
     for out in [r#"("tabindex", "#, r#"("value", "#, r#"("checked", "#] {
         assert!(ssr.contains(out), "{out}: {ssr}");
     }
@@ -1172,7 +1312,9 @@ fn react_names_compile_for_the_server_and_dynamic_values() {
 
 #[test]
 fn react_events_compile_to_their_dom_events() {
-    let (code, _) = run("export const A = (p) => <input onDoubleClick={p.a} onClickCapture={p.b} onChange={p.c} onGotPointerCapture={p.d} />");
+    let (code, _) = run(
+        "export const A = (p) => <input onDoubleClick={p.a} onClickCapture={p.b} onChange={p.c} onGotPointerCapture={p.d} />",
+    );
     assert!(code.contains(r#""dblclick""#), "{code}");
     assert!(code.contains(r#".addEventListener("click", "#) && code.contains(", true);"), "{code}");
     assert!(code.contains("_$change("), "{code}");
@@ -1181,7 +1323,8 @@ fn react_events_compile_to_their_dom_events() {
 
 #[test]
 fn inner_html_and_form_values_compile_as_content() {
-    let (code, _) = run(r#"export const A = (p) => <div><p dangerouslySetInnerHTML={p.raw} /><textarea value="a" /></div>"#);
+    let (code, _) =
+        run(r#"export const A = (p) => <div><p dangerouslySetInnerHTML={p.raw} /><textarea value="a" /></div>"#);
     assert!(code.contains("?.__html"), "{code}");
     assert!(!code.contains("dangerouslySetInnerHTML"), "{code}");
     assert!(code.contains(r#"_$bind(() => ("a")"#) && code.contains(".value = v"), "{code}");
@@ -1196,7 +1339,10 @@ fn node(source: &str, name: &str) -> weft_compiler::hydration::Node {
 
 #[test]
 fn facts_name_globals_outside_handlers_only() {
-    let n = node("export function A() { const x = window.matchMedia('(a)'); document.title = 'x'; return <button onClick={() => localStorage.clear()}>{x.matches}</button> }", "A");
+    let n = node(
+        "export function A() { const x = window.matchMedia('(a)'); document.title = 'x'; return <button onClick={() => localStorage.clear()}>{x.matches}</button> }",
+        "A",
+    );
     assert!(n.globals.contains(&"matchMedia".to_string()), "{:?}", n.globals);
     assert!(n.globals.contains(&"document".to_string()), "{:?}", n.globals);
     assert!(!n.globals.contains(&"localStorage".to_string()), "a handler waits for its event: {:?}", n.globals);
@@ -1207,7 +1353,11 @@ fn facts_name_what_cannot_wait() {
     assert!(node("export const A = () => <input autofocus />", "A").early.unwrap().contains("autofocus"));
     assert!(node("export const A = () => <div ref={el => el.focus()} />", "A").early.unwrap().contains("ref"));
     assert!(node("export function A() { let e; return <div ref={el => { e = el }} /> }", "A").early.is_none());
-    assert!(node("export function A() { let e; const go = () => e.focus(); return <div ref={e} onClick={go} /> }", "A").globals.contains(&".focus".to_string()));
+    assert!(
+        node("export function A() { let e; const go = () => e.focus(); return <div ref={e} onClick={go} /> }", "A")
+            .globals
+            .contains(&".focus".to_string())
+    );
 }
 
 #[test]
@@ -1221,7 +1371,10 @@ fn facts_tell_a_box_from_a_function_and_see_calls() {
 
 #[test]
 fn the_visible_hatch_is_a_force() {
-    assert_eq!(node("/* @weft visible */\nexport const A = () => <p onClick={() => 1} />", "A").force.as_deref(), Some("visible"));
+    assert_eq!(
+        node("/* @weft visible */\nexport const A = () => <p onClick={() => 1} />", "A").force.as_deref(),
+        Some("visible")
+    );
 }
 
 #[test]
@@ -1230,7 +1383,9 @@ fn an_island_mark_carries_when_it_loads() {
         filename: "App.tsx".into(),
         generate: "ssr".into(),
         hydratable: true,
-        islands: Some(serde_json::from_str(r#"{"id":"a.tsx","sites":[{"index":0,"hoist":false,"when":"i"}]}"#).unwrap()),
+        islands: Some(
+            serde_json::from_str(r#"{"id":"a.tsx","sites":[{"index":0,"hoist":false,"when":"i"}]}"#).unwrap(),
+        ),
         ..Default::default()
     };
     let code = compile("import { C } from './c'\nexport const A = () => <C />", &opts).code.unwrap();

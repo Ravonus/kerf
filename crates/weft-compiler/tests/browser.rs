@@ -50,7 +50,10 @@ fn w050_listener_without_cleanup_is_fixed_to_on() {
     assert!(flagged(src, w).starts_with("window.addEventListener('keydown'"));
     assert!(w.message.contains("never removed"), "{}", w.message);
     let fixed = apply_fix(src, w);
-    assert!(fixed.contains("import { state } from '@weft-js/core'\nimport { on } from '@weft-js/core/browser'\n"), "{fixed}");
+    assert!(
+        fixed.contains("import { state } from '@weft-js/core'\nimport { on } from '@weft-js/core/browser'\n"),
+        "{fixed}"
+    );
     assert!(fixed.contains("on(window, 'keydown', e => { if (e.key === 'Escape') open.value = false })"), "{fixed}");
     assert!(!has(&check(&fixed), "W050"), "{:?}", check(&fixed));
     assert!(!has(&check(&fixed), "W051"));
@@ -114,8 +117,7 @@ fn w050_only_in_components() {
 #[test]
 fn w050_in_a_handler_has_no_fix() {
     // `on` there would have no owner (W051), so the fix would be wrong.
-    let src =
-        "export function A() {\n  return <button onClick={() => window.addEventListener('keydown', () => {})}>x</button>\n}";
+    let src = "export function A() {\n  return <button onClick={() => window.addEventListener('keydown', () => {})}>x</button>\n}";
     let d = check(src);
     let w = one(&d, "W050");
     assert!(w.fix.is_none());

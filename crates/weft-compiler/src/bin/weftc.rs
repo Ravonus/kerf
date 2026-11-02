@@ -52,7 +52,8 @@ fn main() {
         for _ in 0..n {
             let t = Instant::now();
             for (filename, source) in &sources {
-                let out = compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
+                let out =
+                    compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
                 diagnostics += out.diagnostics.len();
                 std::hint::black_box(out);
             }
@@ -75,7 +76,16 @@ fn main() {
 
     let mut failed = false;
     for (filename, source) in &sources {
-        let out = compile(source, &Options { filename: filename.clone(), check_only: check, dev, explain: explain.is_some(), ..Default::default() });
+        let out = compile(
+            source,
+            &Options {
+                filename: filename.clone(),
+                check_only: check,
+                dev,
+                explain: explain.is_some(),
+                ..Default::default()
+            },
+        );
         if let Some(line) = explain {
             let found: Vec<_> = out.explain.iter().flatten().filter(|x| x.line == line).collect();
             if json {
@@ -94,7 +104,10 @@ fn main() {
             continue;
         }
         for d in &out.diagnostics {
-            eprintln!("{filename}:{}:{} {} {:?}: {}\n  help: {}", d.line, d.column, d.code, d.severity, d.message, d.help);
+            eprintln!(
+                "{filename}:{}:{} {} {:?}: {}\n  help: {}",
+                d.line, d.column, d.code, d.severity, d.message, d.help
+            );
             failed |= d.severity == weft_compiler::Severity::Error;
         }
         if let Some(code) = out.code {
