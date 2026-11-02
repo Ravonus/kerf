@@ -8,6 +8,7 @@
 // --no-rust removes every directory holding cargo or rustc from PATH first, and fails if one is still found.
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { createServer } from 'node:net'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -47,16 +48,20 @@ env.BUN_CONFIG_REGISTRY = url
 env.NPM_CONFIG_REGISTRY = url
 writeFileSync(join(empty, '.npmrc'), `registry=${url}\n`)
 
+// Waits for a 200: a dev server can answer something else while it optimizes its dependencies.
 const probe = async (port, path = '/', tries = 90) => {
+  let last = { status: 0, text: '' }
   for (let i = 0; i < tries; i++) {
     try {
       const r = await fetch(`http://localhost:${port}${path}`)
-      if (r.status < 500) return { status: r.status, text: await r.text() }
+      last = { status: r.status, text: await r.text() }
+      if (r.status === 200) return last
     } catch {}
     await new Promise(ok => setTimeout(ok, 1000))
   }
-  return { status: 0, text: '' }
+  return last
 }
+const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
 function serve(cmd, args, cwd, port) {
   const child = spawn(cmd, args, { cwd, env: { ...env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'], shell: windows, detached: !windows })
   let log = ''
@@ -86,14 +91,15 @@ try {
   await weft(['build'], app)
   step('weft build', existsSync(join(app, '.output')) || existsSync(join(app, 'dist')))
 
-  const port = 3400 + (process.pid % 400)
+  const port = await freePort()
   const dev = serve(...(pm === 'deno' ? ['deno', ['run', '-A', 'npm:@weft-js/cli', 'dev', '--port', String(port)]] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'dev', '--port', String(port)]] : ['npx', ['weft', 'dev', '--port', String(port)]]), app, port)
   const hit = await probe(port)
   dev.stop()
   step('weft dev serves the page', hit.status === 200 && /<html/i.test(hit.text), `HTTP ${hit.status}${hit.status ? '' : ` ${dev.log().slice(-400)}`}`)
 
-  const started = serve(...(pm === 'deno' ? ['deno', ['run', '-A', 'npm:@weft-js/cli', 'start']] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'start']] : ['npx', ['weft', 'start']]), app, port + 1)
-  const live = await probe(port + 1)
+  const livePort = await freePort()
+  const started = serve(...(pm === 'deno' ? ['deno', ['run', '-A', 'npm:@weft-js/cli', 'start']] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'start']] : ['npx', ['weft', 'start']]), app, livePort)
+  const live = await probe(livePort)
   started.stop()
   step('the built app serves the page', live.status === 200 && /<html/i.test(live.text), `HTTP ${live.status}${live.status ? '' : ` ${started.log().slice(-400)}`}`)
 } catch (e) {
