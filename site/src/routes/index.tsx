@@ -77,7 +77,9 @@ export default function Home() {
         <section>
           <h2>One project, front to back</h2>
           <p data-part="intro">A real shop keeps its products in a database. With <code>@weft-js/start</code>, a server query lives beside your components, and each file in <code>src/routes</code> is a page. Database and sign-in are built in, so the whole app is one codebase.</p>
-          <div data-part="server" data-scope="codeblock" innerHTML={show.server}></div>
+          <div data-part="server" data-scope="codeblock"
+            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            innerHTML={show.server}></div>
           <pre data-part="files"><code>{FILES}</code></pre>
           <p data-part="more"><Link href="/docs/start">Read about full-stack weft</Link></p>
         </section>
@@ -88,7 +90,7 @@ export default function Home() {
           <h2>Pages load fast because there is less to download</h2>
           <p data-part="intro">The same dashboard app, built with a UI kit in each framework. Less JavaScript means pages are ready sooner, most of all on phones and slow connections.</p>
           <ul data-part="sizes">
-            {SIZES.map(([name, bytes]) => <li key={name} style={`--share:${bytes / SIZES[SIZES.length - 1][1]}`}><span>{name}</span><i></i><b>{(bytes / 1024).toFixed(1)} KB</b></li>)}
+            {SIZES.map(([name, bytes]) => <li key={name} style={`--share:${bytes / SIZES[SIZES.length - 1]![1]}`}><span>{name}</span><i></i><b>{(bytes / 1024).toFixed(1)} KB</b></li>)}
           </ul>
           <p data-part="note">JavaScript sent to the browser, compressed with brotli, from this repo's <a href="https://github.com/Ravonus/weft/tree/main/evals/compare" rel="external">comparison app</a>.</p>
         </section>

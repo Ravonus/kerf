@@ -159,7 +159,7 @@ export function PaletteDemo() {
 
 // #toast
 export function ToastDemo() {
-  const save = () => toast.promise(new Promise(done => setTimeout(done, 1200)), { pending: 'Deploying', done: 'Deployed', error: 'That failed' })
+  const save = () => toast.promise(new Promise(done => { setTimeout(done, 1200) }), { pending: 'Deploying', done: 'Deployed', error: 'That failed' })
   return (
     <>
       <Button emphasis="soft" onClick={() => toast.show({ title: 'Saved' })}>Show a toast</Button>

@@ -5,10 +5,10 @@ import { level, PALETTE } from './field'
 const STEPS = PALETTE.length
 const TEAL = [[10, 46, 52], [14, 92, 100], [28, 150, 160], [90, 220, 225], [220, 255, 250]]
 const CORAL = [[48, 22, 18], [110, 40, 30], [190, 70, 50], [250, 120, 90], [255, 225, 200]]
-const ramp = (r: number[][]) => [PALETTE[0], ...r.map(c => [...c, 255])]
+const ramp = (r: number[][]) => [PALETTE[0]!, ...r.map(c => [...c, 255])]
 
 /** Index = level + band × STEPS. Bands: the field's green, teal, coral. */
-export const COLOURS = [PALETTE, ramp(TEAL), ramp(CORAL)].flat().map(([r, g, b, a]) => `rgba(${r},${g},${b},${a / 255})`)
+export const COLOURS = [PALETTE, ramp(TEAL), ramp(CORAL)].flat().map(([r, g, b, a]) => `rgba(${r},${g},${b},${a! / 255})`)
 
 export type Threads = { cover: Float32Array; born: Float32Array; band: Uint8Array }
 
@@ -27,8 +27,8 @@ export function threads(cols: number, rows: number, delay = 0.2, centre = 0.5, s
   const put = (x: number, y: number, a: number, at: number, b: number) => {
     const i = y * cols + x
     if (x < 0 || y < 0 || x >= cols || y >= rows) return
-    cover[i] = Math.max(cover[i], a)
-    born[i] = Math.min(born[i], at)
+    cover[i] = Math.max(cover[i]!, a)
+    born[i] = Math.min(born[i]!, at)
     if (a > 0.5) band[i] = b
   }
   WARPS.forEach((wx, w) => {
@@ -64,13 +64,13 @@ export function weaver(cols: number, rows: number, word: Float32Array | null, lo
     let peak = 0
     for (let y = 1; y < ny - 1; y++) for (let x = 1; x < nx - 1; x++) {
       const i = y * nx + x
-      vx[i] = (vx[i] + (ux[i - 1] + ux[i + 1] + ux[i - nx] + ux[i + nx] - 4 * ux[i]) * 0.2 - ux[i] * 0.022) * 0.955
-      vy[i] = (vy[i] + (uy[i - 1] + uy[i + 1] + uy[i - nx] + uy[i + nx] - 4 * uy[i]) * 0.2 - uy[i] * 0.022) * 0.955
+      vx[i] = (vx[i]! + (ux[i - 1]! + ux[i + 1]! + ux[i - nx]! + ux[i + nx]! - 4 * ux[i]!) * 0.2 - ux[i]! * 0.022) * 0.955
+      vy[i] = (vy[i]! + (uy[i - 1]! + uy[i + 1]! + uy[i - nx]! + uy[i + nx]! - 4 * uy[i]!) * 0.2 - uy[i]! * 0.022) * 0.955
     }
     for (let i = 0; i < ux.length; i++) {
-      ux[i] += vx[i]
-      uy[i] += vy[i]
-      peak = Math.max(peak, Math.abs(ux[i]), Math.abs(uy[i]), Math.abs(vx[i]), Math.abs(vy[i]))
+      ux[i]! += vx[i]!
+      uy[i]! += vy[i]!
+      peak = Math.max(peak, Math.abs(ux[i]!), Math.abs(uy[i]!), Math.abs(vx[i]!), Math.abs(vy[i]!))
     }
     moving = peak > 0.02
   }
@@ -87,8 +87,8 @@ export function weaver(cols: number, rows: number, word: Float32Array | null, lo
   const pull = (px: number, py: number, mx: number, my: number) => {
     around(px, py, 30, (i, dx, dy, d) => {
       const f = Math.exp(-(d * d) / 180)
-      vx[i] += (mx * 0.42 - dx * 0.018) * f
-      vy[i] += (my * 0.42 - dy * 0.018) * f
+      vx[i]! += (mx * 0.42 - dx * 0.018) * f
+      vy[i]! += (my * 0.42 - dy * 0.018) * f
     })
     moving = true
   }
@@ -97,8 +97,8 @@ export function weaver(cols: number, rows: number, word: Float32Array | null, lo
     around(px, py, 22, (i, dx, dy, d) => {
       const f = Math.exp(-(d * d) / 120) * 2.6
       const n = d || 1
-      vx[i] += (dx / n) * f
-      vy[i] += (dy / n) * f
+      vx[i]! += (dx / n) * f
+      vy[i]! += (dy / n) * f
     })
     moving = true
   }
@@ -110,21 +110,21 @@ export function weaver(cols: number, rows: number, word: Float32Array | null, lo
       const gx = x / GAP, gy = y / GAP
       const ix = gx | 0, iy = gy | 0, fx = gx - ix, fy = gy - iy
       const a = iy * nx + ix, b = a + 1, c = a + nx, d = c + 1
-      const dx = (ux[a] * (1 - fx) + ux[b] * fx) * (1 - fy) + (ux[c] * (1 - fx) + ux[d] * fx) * fy
-      const dy = (uy[a] * (1 - fx) + uy[b] * fx) * (1 - fy) + (uy[c] * (1 - fx) + uy[d] * fx) * fy
+      const dx = (ux[a]! * (1 - fx) + ux[b]! * fx) * (1 - fy) + (ux[c]! * (1 - fx) + ux[d]! * fx) * fy
+      const dy = (uy[a]! * (1 - fx) + uy[b]! * fx) * (1 - fy) + (uy[c]! * (1 - fx) + uy[d]! * fx) * fy
       energy = Math.min(1, Math.hypot(dx, dy) * 0.09)
       sx = Math.max(0, Math.min(cols - 1, Math.round(x - dx)))
       sy = Math.max(0, Math.min(rows - 1, Math.round(y - dy)))
     }
     const i = sy * cols + sx
-    const age = clock - logo.born[i]
-    const thread = age > 0 ? logo.cover[i] * Math.min(1, age * 5) : 0
-    const flash = age > 0 && age < 0.35 ? (0.35 - age) * 1.6 * logo.cover[i] : 0
+    const age = clock - logo.born[i]!
+    const thread = age > 0 ? logo.cover[i]! * Math.min(1, age * 5) : 0
+    const flash = age > 0 && age < 0.35 ? (0.35 - age) * 1.6 * logo.cover[i]! : 0
     // The shed: alternate threads rise as a slow wave crosses the cloth.
     const shed = ((x >> 1) ^ (y >> 1)) & 1 ? Math.sin(x * 0.07 + y * 0.045 - t * 2.4) * 0.09 : 0
-    const v = level(x, y, cols, rows, t, (word ? word[i] * 0.98 : 0) + thread * 0.5 + flash + energy * 0.8 + shed)
-    let band = energy > 0.34 ? 2 : energy > 0.14 ? 1 : thread > 0.5 ? logo.band[i] : 0
-    if (word && word[i] > 0.5 && energy < 0.14) band = 0
+    const v = level(x, y, cols, rows, t, (word ? word[i]! * 0.98 : 0) + thread * 0.5 + flash + energy * 0.8 + shed)
+    let band = energy > 0.34 ? 2 : energy > 0.14 ? 1 : thread > 0.5 ? logo.band[i]! : 0
+    if (word && word[i]! > 0.5 && energy < 0.14) band = 0
     else if (!band && Math.sin((x / cols) * 3.1 + (y / rows) * 1.7 - t * 0.5) > 0.86) band = 1
     return v + band * STEPS
   }

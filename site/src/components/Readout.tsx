@@ -39,7 +39,7 @@ export function Readout() {
     return () => { clearTimeout(start); resources.disconnect(); dom.disconnect() }
   })
   return (
-    <p data-site="readout" ref={(n: any) => (self = n)} title="Bytes from Resource Timing, DOM writes from a MutationObserver, runs from weft's counter. Live, for this tab.">
+    <p data-site="readout" ref={el => (self = el)} title="Bytes from Resource Timing, DOM writes from a MutationObserver, runs from weft's counter. Live, for this tab.">
       <span>This page</span>
       <span><b>{kb(js.value)}</b> JS</span>
       <span><b>{kb(css.value)}</b> CSS</span>

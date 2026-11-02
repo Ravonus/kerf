@@ -2,7 +2,7 @@
 export type Entry = { id: string; name: string; for: string; demo: string; slug: string; wide?: boolean }
 export type Section = { id: string; title: string; intro: string; entries: Entry[] }
 
-const e = (id: string, name: string, text: string, slug = id, wide = false): Entry => ({ id, name, for: text, demo: `${id.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('')}Demo`, slug, wide })
+const e = (id: string, name: string, text: string, slug = id, wide = false): Entry => ({ id, name, for: text, demo: `${id.split('-').map(w => w[0]!.toUpperCase() + w.slice(1)).join('')}Demo`, slug, wide })
 
 export const SECTIONS: Section[] = [
   {

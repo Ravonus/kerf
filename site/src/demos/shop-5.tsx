@@ -29,7 +29,7 @@ export default function Shop() {
       <Input
         label="Search"
         value={search.value}
-        onInput={(e: any) => (search.value = e.currentTarget.value)}
+        onInput={e => (search.value = e.currentTarget.value)}
       />
       {shown.value.map(p => (
         <p key={p.id}>

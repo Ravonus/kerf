@@ -1,5 +1,4 @@
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
-import { Link } from '@weft-js/start'
+import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
 import { Button, Nav } from '@weft-js/warp'
 import { PageExample } from '../../components/PageExample'
 import pages from '../../generated/docs.json'
@@ -9,10 +8,10 @@ const all = pages as unknown as Record<string, { slug: string; title: string; se
 /** A page's examples: their words and highlighted code, which the page's script then doesn't carry. */
 const examples = async (slug: string) => {
   const { demos } = await import('../../demos')
-  const ids = Object.keys(demos).filter(id => demos[id].page === slug)
+  const ids = Object.keys(demos).filter(id => demos[id]!.page === slug)
   if (!ids.length) return []
   const { default: code } = await import('../../generated/demos.json')
-  return ids.map(id => ({ id, look: demos[id].look, tryIt: demos[id].tryIt, why: demos[id].why, code: (code as Record<string, string>)[id] }))
+  return ids.map(id => ({ id, look: demos[id]!.look, tryIt: demos[id]!.tryIt, why: demos[id]!.why, code: (code as Record<string, string>)[id]! }))
 }
 
 export const load = async ({ params }: LoadArgs<'/docs/[...slug]'>) => {
@@ -34,7 +33,7 @@ const unfold = async (id: string) => {
 
 /* @weft visible */
 function Toc(props: { items: { id: string; text: string }[] }) {
-  return <Nav label="On this page" axis="y" spy>{props.items.map(t => <a key={t.id} href={`#${t.id}`} onClick={() => unfold(t.id)}>{t.text}</a>)}</Nav>
+  return <Nav label="On this page" axis="y" spy>{props.items.map(t => <a key={t.id} href={`#${t.id}`} onClick={() => void unfold(t.id)}>{t.text}</a>)}</Nav>
 }
 
 export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'>) {
@@ -45,9 +44,13 @@ export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'
           <p data-part="crumb">{props.data.parent ? <Link href={`/docs/${props.data.parent.slug}`}>{props.data.parent.title}</Link> : props.data.section}</p>
           <h1>{props.data.title}</h1>
         </header>
-        {props.data.lead && <p data-part="lead" innerHTML={props.data.lead}></p>}
+        {props.data.lead && <p data-part="lead"
+          // oxlint-disable-next-line weft/no-html-sink -- the docs' own Markdown, rendered at build time
+          innerHTML={props.data.lead}></p>}
         <PageExample examples={props.data.examples} />
-        <div data-scope="prose" innerHTML={props.data.html}></div>
+        <div data-scope="prose"
+          // oxlint-disable-next-line weft/no-html-sink -- the docs' own Markdown, rendered at build time
+          innerHTML={props.data.html}></div>
         <footer data-part="pager">
           {props.data.prev && <Link href={`/docs/${props.data.prev.slug}`} class="prev"><span>Previous</span>{props.data.prev.title}</Link>}
           {props.data.next && <Link href={`/docs/${props.data.next.slug}`} class="next"><span>Next</span>{props.data.next.title}</Link>}

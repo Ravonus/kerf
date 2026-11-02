@@ -21,7 +21,7 @@ const one = async ([width, height, path]) => {
   const g = await c.newPage()
   await g.route('**/*.woff2', r => r.abort())
   const held = []
-  await g.route('**/assets/sheet-*.css', async r => { await new Promise(go => held.push(go)); await r.continue() })
+  await g.route('**/assets/sheet-*.css', async r => { await new Promise(go => { held.push(go) }); await r.continue() })
   await g.goto(base + path, { waitUntil: 'commit' })
   await g.waitForTimeout(500)
   const before = await g.evaluate(snap)

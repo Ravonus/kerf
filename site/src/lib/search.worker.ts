@@ -15,7 +15,7 @@ async function wire(url: string): Promise<SearchWire> {
 
 const answer = (id: number, q: string) => postMessage({ id, hits: searchIndex(index!, q, 16) })
 
-addEventListener('message', async (e: MessageEvent) => {
+const receive = async (e: MessageEvent) => {
   if (e.data.load) {
     index = openIndex(await wire(e.data.load))
     if (queued) answer(queued.id, queued.q)
@@ -23,4 +23,5 @@ addEventListener('message', async (e: MessageEvent) => {
   }
   if (index) answer(e.data.id, e.data.q)
   else queued = e.data
-})
+}
+addEventListener('message', e => void receive(e))

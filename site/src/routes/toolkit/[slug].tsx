@@ -25,7 +25,9 @@ export default function ComponentPage(props: RouteProps<typeof load, '/toolkit/[
             <section key={c.name} id={i ? c.label.toLowerCase() : 'preview'}>
               {i > 0 && <h2>{c.label}</h2>}
               <Preview file={c.file} name={c.name} />
-              <div innerHTML={c.html}></div>
+              <div
+                // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from warp's fixtures
+                innerHTML={c.html}></div>
             </section>
           ))}
         </div>
@@ -47,7 +49,9 @@ export default function ComponentPage(props: RouteProps<typeof load, '/toolkit/[
               </table>
             </div>
           : <p>Takes no props.</p>}
-        <div innerHTML={props.data.use}></div>
+        <div
+          // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from warp's source
+          innerHTML={props.data.use}></div>
         <p data-part="src"><Link href={`https://github.com/Ravonus/weft/blob/main/${props.data.file}`} rel="external">{props.data.file}</Link></p>
       </article>
     </>

@@ -20,7 +20,7 @@ const Cell = memo(function Cell({ value }: { value: number }) {
 
 function Grid() {
   count.renders++
-  const [cells, set] = useState(() => new Array<number>(CELLS).fill(0))
+  const [cells, set] = useState(() => Array.from({ length: CELLS }, () => 0))
   setAll = set
   return <div data-grid>{cells.map((value, i) => <Cell key={i} value={value} />)}</div>
 }

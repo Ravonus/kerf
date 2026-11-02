@@ -34,7 +34,9 @@ export function PageExample(props: { examples: PageExampleData[] }) {
           <p>{e.look}</p>
           <div data-part="pair">
             <Demo id={e.id} />
-            <div data-scope="codeblock" innerHTML={e.code}></div>
+            <div data-scope="codeblock"
+              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
+              innerHTML={e.code}></div>
           </div>
           <dl>
             <div><dt>Try this</dt><dd>{e.tryIt}</dd></div>

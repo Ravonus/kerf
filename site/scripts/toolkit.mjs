@@ -1,7 +1,7 @@
 // The toolkit's facts, read from warp's source so they can't drift: its exports, each one's props from the type checker,
 // and which test fixtures render it. Those fixtures are the previews: the same code warp's budgets and a11y suite run.
 import { createRequire } from 'node:module'
-import { dirname, join, relative } from 'node:path'
+import { join, relative } from 'node:path'
 import { readdirSync, readFileSync } from 'node:fs'
 
 const require = createRequire(new URL('../../packages/cli/package.json', import.meta.url))

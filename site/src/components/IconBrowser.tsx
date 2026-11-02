@@ -24,7 +24,7 @@ export function IconBrowser() {
   const cols = state(6)
   const open = state(false)
   const picked = state('')
-  let box!: HTMLDivElement
+  let box: HTMLDivElement | undefined
   const names = derived(() => {
     const q = query.value.trim().toLowerCase()
     return q ? files.names.filter(n => n.includes(q)) : files.names
@@ -38,15 +38,15 @@ export function IconBrowser() {
   onMount(() => {
     query.value = new URLSearchParams(location.search).get('q') ?? ''
     void fetch(files.url).then(r => r.json()).then(s => (set.value = s))
-    const seen = new ResizeObserver(([e]) => (cols.value = Math.max(2, Math.floor(e.contentRect.width / CELL))))
-    seen.observe(box)
+    const seen = new ResizeObserver(([e]) => (cols.value = Math.max(2, Math.floor(e!.contentRect.width / CELL))))
+    seen.observe(box!)
     onCleanup(() => seen.disconnect())
   })
   const show = (name: string) => { picked.value = name; open.value = true }
   return (
-    <div data-site="icons" data-expression={tier.value} data-size={size.value} ref={box}>
+    <div data-site="icons" data-expression={tier.value} data-size={size.value} ref={el => (box = el)}>
       <div data-part="controls">
-        <Search label="Search icons" value={query.value} onInput={(e: any) => (query.value = e.currentTarget.value)} />
+        <Search label="Search icons" value={query.value} onInput={e => (query.value = e.currentTarget.value)} />
         <Segmented label="Tier" value={tier.value} onChange={v => (tier.value = v as Tier)} options={TIERS} />
         <Segmented label="Form" value={form.value} onChange={v => (form.value = v as Form)} options={FORMS} />
         <Segmented label="Size" value={size.value} onChange={v => (size.value = v)} options={SIZES} />
@@ -57,7 +57,9 @@ export function IconBrowser() {
           <div data-part="line" style={`--cols:${cols.value}`}>
             {row().names.map(n => (
               <button type="button" key={n} data-scope="button" data-emphasis="ghost" data-tone="neutral" data-part="cell" onClick={() => show(n)} aria-label={n}>
-                <span data-part="glyph" innerHTML={drawing(n, form.value)}></span>
+                <span data-part="glyph"
+                  // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+                  innerHTML={drawing(n, form.value)}></span>
                 <span data-part="name">{n}</span>
               </button>
             ))}
@@ -69,8 +71,12 @@ export function IconBrowser() {
           {['quiet', 'balanced', 'vivid'].map(t => (
             <div key={t} data-expression={t}>
               <Tag>{t}</Tag>
-              <span data-part="glyph" innerHTML={drawing(picked.value, 'hollow')}></span>
-              <span data-part="glyph" innerHTML={drawing(picked.value, 'solid')}></span>
+              <span data-part="glyph"
+                // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+                innerHTML={drawing(picked.value, 'hollow')}></span>
+              <span data-part="glyph"
+                // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+                innerHTML={drawing(picked.value, 'solid')}></span>
             </div>
           ))}
         </div>

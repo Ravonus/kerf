@@ -7,7 +7,7 @@ export const prerender = true
 export const meta: Meta = { title: 'Examples', description: 'Small working weft programs, each with its code, what to try and why it matters.' }
 
 function Run(props: { id: string }) {
-  return <>{runs[props.id]()}</>
+  return <>{runs[props.id]!()}</>
 }
 
 export default function Examples() {

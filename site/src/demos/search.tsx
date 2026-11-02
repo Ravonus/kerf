@@ -14,7 +14,7 @@ export default function Trips() {
       <Input
         label="Search cities"
         value={query.value}
-        onInput={(e: any) => (query.value = e.currentTarget.value)}
+        onInput={e => (query.value = e.currentTarget.value)}
       />
       <p>{found.value.length} of {CITIES.length}</p>
       <div data-part="tags">

@@ -130,12 +130,12 @@ const unmark = b => cleanText(decode(b.replace(/<[^>]+>/g, ' ').replace(/\[([^\]
 
 /** The sentences a page's `meta` can open with: from the start, up to the first that a reader wouldn't want. */
 function opening(text, skip) {
-  const out = []
+  const kept = []
   for (const s of text.match(/\S.*?[.!?](?=\s+[A-Z"“`]|\s*$)/g) ?? []) {
     if (skip?.test(s) || descriptionProblem(s) || s.length < 25) break
-    out.push(s)
+    kept.push(s)
   }
-  const said = truncate(out.join(' '))
+  const said = truncate(kept.join(' '))
   return descriptionProblem(said) ? '' : said
 }
 
@@ -147,8 +147,8 @@ function blurb(name, doc) {
 /** A docs page's `meta`: the opening of its first paragraph of prose that has one. */
 function summary(md) {
   const blocks = md.replace(/```[\s\S]*?```/g, '\n\n').split(/\n\s*\n/).map(b => b.trim())
-  for (const b of blocks.filter(b => b && !/^(?:#|[-*+] |\d+[.)] |\||>|<|:::)/.test(b))) {
-    const text = opening(unmark(b))
+  for (const para of blocks.filter(b => b && !/^(?:#|[-*+] |\d+[.)] |\||>|<|:::)/.test(b))) {
+    const text = opening(unmark(para))
     if (text.length >= 40) return text
   }
   return ''
@@ -205,12 +205,12 @@ async function buildDocs() {
     const seen = new Map()
     const html = linkify(markdownToHtml(md.replace(/^# [^\n]*\n/, ''), {
       code: codeBlock,
-      heading: (text, level) => {
+      heading: (text, depth) => {
         const base = slugify(text) || 'section'
         const n = seen.get(base) ?? 0
         seen.set(base, n + 1)
         const id = n ? `${base}-${n}` : base
-        if (level === 2) toc.push({ id, text: plain(text) })
+        if (depth === 2) toc.push({ id, text: plain(text) })
         return id
       },
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
@@ -256,7 +256,7 @@ function symbols(docs) {
     for (const name of names) {
       const uses = new RegExp(`\\b${name.replace(/\$/g, '\\$')}\\b`)
       for (const p of docs.flat) {
-        const s = sections(p.md.replace(/^# [^\n]*\n/, '')).find(s => uses.test(s.lines.join('\n')))
+        const s = sections(p.md.replace(/^# [^\n]*\n/, '')).find(x => uses.test(x.lines.join('\n')))
         if (!s) continue
         rows.push({ title: name, url: `/docs/${p.slug}${s.heading ? `#${slugify(s.heading)}` : ''}`, group: 'API', rank: 0.95, parent: s.heading ? `${p.title} / ${s.heading}` : p.title, text: from })
         break
@@ -396,19 +396,19 @@ function buildArt() {
 
 /** The landing's code moment and diagnostic, from the real compiler. */
 function buildShowcase() {
-  const { transform } = loadCompiler(resolveWeft(site))
+  const compiler = loadCompiler(resolveWeft(site))
   const source = `import { state } from '@weft-js/core'
 
 export function Counter() {
   const n = state(0)
   return <button onClick={() => n.value++}>{n.value}</button>
 }`
-  const compiled = transform(source, { filename: 'Counter.tsx' }).code.trim()
+  const compiled = compiler.transform(source, { filename: 'Counter.tsx' }).code.trim()
   const bad = `function Total(props: { count: number }) {
   const total = props.count * 5
   return <b>{total}</b>
 }`
-  const report = transform(bad, { filename: 'Total.tsx' }).diagnostics.find(d => d.code === 'W001')
+  const report = compiler.transform(bad, { filename: 'Total.tsx' }).diagnostics.find(d => d.code === 'W001')
   if (!report) throw new Error('the showcase expects W001')
   const entry = catalog.find(e => e.code === 'W001')
   const good = `function Total(props: { count: number }) {
@@ -416,7 +416,7 @@ export function Counter() {
   return <b>{total.value}</b>
 }`
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
-  const plain = s => s.replaceAll('`', '') // the compiler's words, without the terminal's quoting
+  const unquoted = s => s.replaceAll('`', '') // the compiler's words, without the terminal's quoting
   const marked = (text, lines) => {
     let n = -1
     return `<pre tabindex="0"><code>${highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => { n++; return lines[n] ? `<span data-part="line" data-${lines[n]}="">` : tag })}</code></pre>`
@@ -427,7 +427,7 @@ export function Counter() {
   return <b>{total}</b>
   return <b>{total.value}</b>
 }`
-  const habit = transform(`import { state } from '@weft-js/core'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
+  const habit = compiler.transform(`import { state } from '@weft-js/core'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
   if (!habit) throw new Error('the showcase expects W005')
   const server = `// src/server/shop.ts
 export const products = query({
@@ -440,7 +440,7 @@ const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
   const size = JSON.parse(readFileSync(join(repo, 'evals/results/v3-warp-exit/exit.json'), 'utf8')).size
   const kb = n => +(n / 1024).toFixed(2)
-  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: plain(habit.message), fix: plain(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'add', 3: 'del', 4: 'add' }), code: 'W001', message: plain(report.message), file: `Total.tsx, line ${report.line}`, fix: plain(entry.fix) })
+  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: unquoted(habit.message), fix: unquoted(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'add', 3: 'del', 4: 'add' }), code: 'W001', message: unquoted(report.message), file: `Total.tsx, line ${report.line}`, fix: unquoted(entry.fix) })
 }
 
 /** The arena's table: evals/speed's numbers whichever way they fall, including the rows weft loses. */

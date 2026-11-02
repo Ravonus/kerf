@@ -22,7 +22,7 @@ export default function Shared() {
             <Checkbox
               key={t.id}
               checked={t.done.value}
-              onChange={(e: any) => (t.done.value = e.currentTarget.checked)}
+              onChange={(e: Event & { currentTarget: HTMLInputElement }) => (t.done.value = e.currentTarget.checked)}
             >
               {t.text}
             </Checkbox>

@@ -1,14 +1,14 @@
 import { navigate } from '@weft-js/start'
 import type { SearchHit } from '@weft-js/warp-core'
 import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft-js/warp-icons'
-import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource } from '@weft-js/warp'
+import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource, type IconRef } from '@weft-js/warp'
 import { onMount } from '@weft-js/core'
 import { body, loadTitles, titles } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 
-const go = (href: string) => () => navigate(href)
+const go = (href: string) => () => void navigate(href)
 const ORDER = ['Recent', 'Go to', 'API', 'Guides', 'Components', 'Diagnostics', 'Examples', 'Icons', 'In the text', 'Commands']
-const ICON: Record<string, any> = { API: BoxIcon, Guides: BookIcon, Components: GridIcon, Diagnostics: HashIcon, Examples: PlayIcon, Icons: StarIcon, 'In the text': FileTextIcon }
+const ICON: Record<string, IconRef> = { API: BoxIcon, Guides: BookIcon, Components: GridIcon, Diagnostics: HashIcon, Examples: PlayIcon, Icons: StarIcon, 'In the text': FileTextIcon }
 const PER_GROUP = 4
 const RECENT = 'weft:recent'
 
@@ -48,7 +48,11 @@ function remember(c: Command) {
   } catch {}
 }
 
-const row = (h: SearchHit): Command => ({ label: h.title, group: h.group, icon: ICON[h.group], hint: h.fuzzy ? `Closest match${h.parent ? `, ${h.parent}` : ''}` : h.parent ?? h.text, href: h.url, run: go(h.url), id: h.url })
+const row = (h: SearchHit): Command => {
+  const icon = ICON[h.group]
+  const hint = h.fuzzy ? `Closest match${h.parent ? `, ${h.parent}` : ''}` : h.parent ?? h.text
+  return { label: h.title, group: h.group, ...(icon && { icon }), ...(hint !== undefined && { hint }), href: h.url, run: go(h.url), id: h.url }
+}
 
 /** At most four to a group, and a row that opens the rest in place. */
 function capped(hits: SearchHit[]) {
@@ -56,7 +60,7 @@ function capped(hits: SearchHit[]) {
   for (const h of hits) by.has(h.group) ? by.get(h.group)!.push(h) : by.set(h.group, [h])
   return [...by.values()].flatMap(list => {
     const rows = list.slice(0, PER_GROUP).map(row)
-    if (list.length > PER_GROUP) rows.push({ label: `Show all ${list.length} in ${list[0].group}`, group: list[0].group, children: () => list.map(row) })
+    if (list.length > PER_GROUP) rows.push({ label: `Show all ${list.length} in ${list[0]!.group}`, group: list[0]!.group, children: () => list.map(row) })
     return rows
   })
 }

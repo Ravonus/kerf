@@ -4,6 +4,7 @@ import { TierPicker } from '../../components/TierPicker'
 import { ToolkitDemo } from '../../components/ToolkitDemo'
 import nav from '../../generated/toolkit-nav.json'
 import { CANVAS, PACKS, SECTIONS, type Entry, type Section } from '../../toolkit/entries'
+// oxlint-disable-next-line import/default -- ?raw is a bundler query: the default export is the file's text, which the rule can't see
 import source from '../../toolkit/cases.tsx?raw'
 
 const total = nav.reduce((n, g) => n + g.items.length, 0)
@@ -12,7 +13,7 @@ export const prerender = true
 export const meta: Meta = { title: 'Toolkit', description: `warp is weft's UI kit: ${total} components with keyboard support, three looks and live demos.` }
 
 /** The text between `// #id` and the next marker: the demo's real source. */
-const code = (id: string) => (source.split(`// #${id}\n`)[1] ?? '').split(/\n\/\/ #/)[0].trim()
+const code = (id: string) => (source.split(`// #${id}\n`)[1] ?? '').split(/\n\/\/ #/)[0]!.trim()
 
 function Item({ entry }: { entry: Entry }) {
   return (

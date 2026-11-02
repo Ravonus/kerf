@@ -7,7 +7,7 @@ export default function Tasks() {
   const tasks = state(start)
   const later = () => {
     const [first, ...rest] = tasks.value
-    tasks.value = [...rest, first]
+    tasks.value = [...rest, first!]
   }
   return (
     <Card title="Today">

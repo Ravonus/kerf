@@ -20,7 +20,7 @@ export function NavSheet() {
   return (
     <>
       <Button data-site="menu" emphasis="ghost" tone="neutral" size="sm" icon="menu" label="Menu" onClick={show} onPointerDown={fetchSheet} />
-      <span ref={(n: any) => (box = n)}></span>
+      <span ref={el => (box = el)}></span>
     </>
   )
 }

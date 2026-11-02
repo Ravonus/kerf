@@ -12,7 +12,7 @@ export function SpotlightGate() {
   const load = () => {
     if (asked) return
     asked = true
-    void import('./Spotlight').then(({ Spotlight }) => { stop = render(() => <Spotlight />, box!) as () => void })
+    void import('./Spotlight').then(({ Spotlight }) => { stop = render(() => <Spotlight />, box!) })
   }
   watch(() => spotlightOpen.value, open => { if (open) load() })
   onMount(() => {
@@ -29,5 +29,5 @@ export function SpotlightGate() {
       stop?.()
     })
   })
-  return <div ref={(n: any) => (box = n)}></div>
+  return <div ref={el => (box = el)}></div>
 }

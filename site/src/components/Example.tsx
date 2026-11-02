@@ -7,15 +7,17 @@ import '../styles/example.css'
 export function Example(props: { id: string; plain?: boolean; children?: unknown }) {
   return (
     <section data-site="example">
-      {!props.plain && <h2>{demos[props.id].title}</h2>}
-      <p>{demos[props.id].look}</p>
+      {!props.plain && <h2>{demos[props.id]!.title}</h2>}
+      <p>{demos[props.id]!.look}</p>
       <div data-part="pair">
         <div data-part="run">{props.children}</div>
-        <div data-scope="codeblock" innerHTML={code[props.id]}></div>
+        <div data-scope="codeblock"
+          // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
+          innerHTML={(code as Record<string, string>)[props.id]}></div>
       </div>
       <dl>
-        <div><dt>Try this</dt><dd>{demos[props.id].tryIt}</dd></div>
-        <div><dt>Why it matters</dt><dd>{demos[props.id].why}</dd></div>
+        <div><dt>Try this</dt><dd>{demos[props.id]!.tryIt}</dd></div>
+        <div><dt>Why it matters</dt><dd>{demos[props.id]!.why}</dd></div>
       </dl>
     </section>
   )

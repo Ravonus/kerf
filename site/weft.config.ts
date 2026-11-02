@@ -16,7 +16,7 @@ export default defineConfig({
   site: {
     name: 'weft',
     headers: { '/': ISOLATED, '/arena/**': ISOLATED },
-    url: process.env.WEFT_SITE_URL,
+    ...(process.env.WEFT_SITE_URL === undefined ? {} : { url: process.env.WEFT_SITE_URL }),
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',

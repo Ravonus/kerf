@@ -11,13 +11,13 @@ const SCOPE = '[data-site="example"] [data-part="run"]'
 const CONTROLS = `${SCOPE} button:not([disabled]), ${SCOPE} input:not([disabled]), ${SCOPE} [role="checkbox"], ${SCOPE} [role="switch"], ${SCOPE} label`
 const NEUTRAL = /^(reset|clear|cancel|close)$/i // nothing to undo on a fresh example
 
-const look = (page, i) => page.evaluate(([sel, i]) => {
-  const c = document.querySelectorAll(sel)[i]
+const look = (page, i) => page.evaluate(([sel, at]) => {
+  const c = document.querySelectorAll(sel)[at]
   const box = c?.closest('[data-part="run"]')
   if (!box) return ''
   const fields = [...box.querySelectorAll('input,select,textarea')].map(f => `${f.checked}|${f.value}`)
   const attrs = [...box.querySelectorAll('*')].map(e => `${e.getAttribute('aria-checked')}${e.getAttribute('aria-pressed')}${e.getAttribute('aria-expanded')}${e.getAttribute('data-state')}${e.hasAttribute('disabled')}`)
-  return `${box.innerText}\n${fields}\n${attrs}\n${box.querySelectorAll('*').length}`
+  return `${box.innerText}\n${fields.join()}\n${attrs.join()}\n${box.querySelectorAll('*').length}`
 }, [sel_(), i])
 const sel_ = () => CONTROLS
 
@@ -61,7 +61,7 @@ const behaves = async (name, path, test) => {
 const same = (got, want, what) => { if (String(got) !== String(want)) throw new Error(`${what}: got ${got}, want ${want}`) }
 const until = async (check, what, ms = 8000) => {
   const end = Date.now() + ms
-  while (Date.now() < end) { if (await check()) return; await new Promise(r => setTimeout(r, 50)) }
+  while (Date.now() < end) { if (await check()) return; await new Promise(r => { setTimeout(r, 50) }) }
   throw new Error(`timed out: ${what}`)
 }
 const text = (page, sel) => page.locator(sel).innerText()
@@ -82,7 +82,7 @@ await behaves('Two views of one list', '/examples', async page => {
   await pane(1).locator('label').nth(2).click()
   await until(() => boxes(0).nth(2).isChecked(), 'a tick on the new task shows in Ana')
 })
-await behaves('Hover shared across tabs', '/docs/ui-state', async probe => {
+await behaves('Hover shared across tabs', '/docs/ui-state', async _probe => {
   const box = 'section[data-site="example"] [data-part="run"]'
   const row = (p, pane, i) => p.locator(`${box} [data-scope="surface"]`).nth(pane).locator('label').nth(i)
   const browser = await b.newContext({ viewport: { width: 1280, height: 900 } })
@@ -189,7 +189,7 @@ await behaves('Chat that survives a cut wire', '/examples', async page => {
 await behaves('The agent story', '/', async page => {
   const box = page.locator('[data-site="fix"]')
   await box.scrollIntoViewIfNeeded()
-  const shown = async () => box.locator('output').innerText()
+  const shown = () => box.locator('output').innerText()
   const step = n => box.locator('[data-part="steps"] button').nth(n)
   await step(0).click()
   await box.getByRole('button', { name: '+1' }).click()

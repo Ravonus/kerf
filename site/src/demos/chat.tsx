@@ -38,7 +38,7 @@ export default function Chat() {
           <Input
             label="Message"
             value={draft.value}
-            onInput={(e: any) => (draft.value = e.currentTarget.value)}
+            onInput={e => (draft.value = e.currentTarget.value)}
           />
           <Button type="submit" disabled={!up.value}>Send</Button>
           <Button
