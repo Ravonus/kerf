@@ -1,5 +1,8 @@
 # @weft-js/text
 
+> **Not released yet.** This package isn't published on its own. `weft docs fonts` covers what an app uses from it.
+
+
 Fonts and text for weft. `text()` for `weft.config.ts` is the main entry, `@weft-js/text/build` is the Node-only font build, and `@weft-js/text/measure` and `@weft-js/text/engine` are what a browser loads: nothing Node-only reaches them.
 
 ## The engine
@@ -11,15 +14,18 @@ changes none of that logic. It specialises Pretext per engine, cuts its tables d
 rest into lazy chunks, and puts a small "lite" tier in front for plain Latin and emoji text. Credit for the
 engine goes to Pretext. Bugs in the slicing are ours. Research and numbers: `docs/research/12-text-engine-slim.md`.
 
-## Size (brotli 11, terser, measured 2026-10-28)
+## Size
+
+Brotli 11 after terser, as `npm run build && npm run size` reports it. This build skips `npm run coverage`, which needs
+Chrome, so the "rare" pack is empty and its code is still in the exact tier.
 
 | Engine | Base chunk (what a page loads) | Exact tier (lazy) | Script data + CJK/SEA code (lazy) | Other lazy packs |
 |---|---|---|---|---|
-| Blink | **8.18 KB** (7.75 KB as one file) | 10.47 KB | 12.39 KB | complex 2.0, spacing 0.8, rare 6.9 |
-| WebKit | **9.31 KB** (8.82 KB as one file) | 8.89 KB | 10.29 KB | complex 2.2, spacing 0.8, families 1.9, rare 7.3 |
-| Gecko | 15.29 KB (exact tier in base; no lite tier yet) | n/a | 7.77 KB | complex 2.1, spacing 0.8, rare 7.7 |
+| Blink | **8.17 KB** | 11.22 KB | 12.37 KB | complex 2.0, spacing 0.8 |
+| WebKit | **9.49 KB** | 10.14 KB | 10.31 KB | complex 2.2, spacing 0.8, families 1.9 |
+| Gecko | 16.58 KB (exact tier in base; no lite tier yet) | n/a | 7.84 KB | complex 2.1, spacing 0.8 |
 
-Upstream `prepare` + `layout` + `clearCache` is 33.9 KB br for all engines in one file. The base figures include
+Upstream `prepare` + `layout` + `clearCache` was 33.9 KB br for all engines in one file when research 12 measured it. The base figures include
 the 0.21 KB detector shell (`dist/index.js`).
 
 ## API
