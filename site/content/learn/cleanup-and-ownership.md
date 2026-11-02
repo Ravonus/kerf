@@ -186,7 +186,7 @@ import { on } from '@weft-js/core/browser'
 
 export const keyboard = defineState('keyboard', () => {
   const lastKey = state('')
-  on(window, 'keydown', e => (lastKey.value = e.key))
+  if (typeof window !== 'undefined') on(window, 'keydown', e => (lastKey.value = e.key))
   return { lastKey }
 })
 ```
@@ -308,7 +308,7 @@ import { on } from '@weft-js/core/browser'
 import { Button } from '@weft-js/warp'
 
 function Panel(props: { onClose: () => void }) {
-  on(window, 'keydown', e => { if (e.key === 'Escape') props.onClose() })
+  if (typeof window !== 'undefined') on(window, 'keydown', e => { if (e.key === 'Escape') props.onClose() })
   return <p>Press Escape to close.</p>
 }
 
@@ -394,7 +394,7 @@ import { on } from '@weft-js/core/browser'
 
 export function Settings() {
   const theme = state('light')
-  on(window, 'storage', e => { if (e.key === 'theme' && e.newValue) theme.value = e.newValue })
+  if (typeof window !== 'undefined') on(window, 'storage', e => { if (e.key === 'theme' && e.newValue) theme.value = e.newValue })
   const load = async () => {
     const res = await fetch('/api/settings')
     theme.value = ((await res.json()) as { theme: string }).theme

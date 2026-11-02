@@ -168,7 +168,7 @@ import { on } from '@weft-js/core/browser'
 /** Where the pointer is over `el()`. The listener goes when the caller's owner does. */
 export function pointer(el: () => HTMLElement | undefined) {
   const at = state({ x: 0, y: 0, inside: false })
-  on(window, 'pointermove', e => {
+  if (typeof window !== 'undefined') on(window, 'pointermove', e => {
     const box = el()?.getBoundingClientRect()
     if (!box) return
     const x = Math.round(e.clientX - box.left), y = Math.round(e.clientY - box.top)

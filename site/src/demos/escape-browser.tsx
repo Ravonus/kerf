@@ -8,7 +8,8 @@ export default function Status() {
   const page = lifecycle()
   const dark = media('(prefers-color-scheme: dark)', { ssr: false })
   const presses = state(0)
-  on(window, 'keydown', () => presses.value++)
+  // The server renders this too, and has no window: on() would do nothing there, but its argument has to exist.
+  if (typeof window !== 'undefined') on(window, 'keydown', () => presses.value++)
   return (
     <Card title="The browser, as values">
       <p>Network <Badge tone={isOnline.value ? 'positive' : 'critical'}>{isOnline.value ? 'online' : 'offline'}</Badge></p>

@@ -351,7 +351,7 @@ import { on } from '@weft-js/core/browser'
 
 export function SiteSearch() {
   let field: HTMLInputElement | undefined
-  on(window, 'keydown', e => {
+  if (typeof window !== 'undefined') on(window, 'keydown', e => {
     const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
     if (e.key !== '/' || typing) return
     e.preventDefault()

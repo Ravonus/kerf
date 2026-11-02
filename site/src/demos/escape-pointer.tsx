@@ -5,7 +5,8 @@ import { Card } from '@weft-js/warp'
 /** Where the pointer is over `el()`, as a box. The listener goes when the caller's owner does. */
 function pointer(el: () => HTMLElement | undefined) {
   const at = state({ x: 0, y: 0, inside: false })
-  on(window, 'pointermove', e => {
+  // The server renders this too, and has no window: on() would do nothing there, but its argument has to exist.
+  if (typeof window !== 'undefined') on(window, 'pointermove', e => {
     const box = el()?.getBoundingClientRect()
     if (!box) return
     const x = Math.round(e.clientX - box.left), y = Math.round(e.clientY - box.top)

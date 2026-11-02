@@ -181,7 +181,7 @@ export function Toolbar() {
   const dark = media('(prefers-color-scheme: dark)', { ssr: false })
   const now = state(Date.now())
   const open = state(true)
-  on(window, 'keydown', e => { if (e.key === 'Escape') open.value = false })
+  if (typeof window !== 'undefined') on(window, 'keydown', e => { if (e.key === 'Escape') open.value = false })
   interval('1s', () => (now.value = Date.now()))
   return (
     <p hidden={!open.value}>
@@ -202,6 +202,13 @@ On the server, each value is its server value (`online` and `visible` are `true`
 `media` can't know the screen, so pass what the server should render: `media(query, { ssr: false })`. Leaving it out
 in a server-rendered component is **W054**. The full list, with tabs and the page lifecycle, is in
 [Reference: browser](/reference/browser).
+
+:::pitfall The server has no `window`
+`on` does nothing on the server, but its arguments are still worked out before it's called, and `window` doesn't
+exist there. A server-rendered component that writes `on(window, …)` throws a `ReferenceError` while the page renders.
+Check first, as the example above does: `if (typeof window !== 'undefined') on(window, 'keydown', …)`. An element you
+reach through `ref` doesn't need this, because `onMount` only runs in the browser.
+:::
 
 :::pitfall Create them while the component is set up
 `online()`, `on` and `interval` attach to the component being set up, which is how they know when to stop. Called from
