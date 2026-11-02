@@ -595,6 +595,26 @@ await check('palette Esc steps back before it closes', '/components/command-pale
   await page.keyboard.press('Escape')
   same(await open(), false, 'closed by the last Esc')
 })
+// The nested level says where you are ("Region ›" before the query), and "us" finds the us regions only.
+await check('palette level names itself and matches tightly', '/components/command-palette', async page => {
+  const sec = page.locator('section#CommandPaletteNested')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('button', { hasText: 'Search commands' }).click()
+  const input = page.locator('dialog[open] [role="combobox"]')
+  await input.waitFor()
+  same(await page.locator('dialog[open] [data-part="crumb"]').count(), 0, 'a name at the top level')
+  await input.fill('Move')
+  await page.keyboard.press('Enter')
+  const crumb = page.locator('dialog[open] [data-part="crumb"]')
+  await crumb.waitFor()
+  same(/Region/.test(await crumb.innerText()), true, 'the level is named')
+  const order = await page.evaluate(() => { const c = document.querySelector('dialog[open] [data-part="crumb"]').getBoundingClientRect(), i = document.querySelector('dialog[open] [role="combobox"]').getBoundingClientRect(); return c.right <= i.left + 1 && Math.abs((c.top + c.bottom) / 2 - (i.top + i.bottom) / 2) < 4 })
+  same(order, true, 'the name sits before the query, on its line')
+  await input.fill('us')
+  await page.waitForTimeout(100)
+  const shown = await page.locator('dialog[open] [role="option"]:visible').allInnerTexts()
+  if (!shown.length || shown.some(t => !/\bus-/.test(t))) throw new Error(`"us" shows ${shown.join(', ')}`)
+})
 // A phone week keeps seven readable days and scrolls sideways; the all-day event keeps its name; month chips ellipsize.
 await check('calendar week reads on a phone', '/components/calendar', async page => {
   const sec = page.locator('section#preview') // the Editable week

@@ -1,5 +1,5 @@
 // The logic under DataGrid, the palette, mentions, code and the editors.
-import { aggregate, fuzzy, groupRows, indented, jsonProblem, marked, markdownToHtml, mentionToken, moved, pageList, parseMentions, parseTSV, findTrigger, pivotTable, rankCommands, safeUrl, sanitizeHtml, serializeMentions, shiftMarks, toCSV, tokenize, toTSV, treeRows, hideRule } from '../src'
+import { aggregate, fuzzy, matchStrength, groupRows, indented, jsonProblem, marked, markdownToHtml, mentionToken, moved, pageList, parseMentions, parseTSV, findTrigger, pivotTable, rankCommands, safeUrl, sanitizeHtml, serializeMentions, shiftMarks, toCSV, tokenize, toTSV, treeRows, hideRule } from '../src'
 
 describe('pageList', () => {
   test('keeps the ends and the neighbours', () => {
@@ -46,6 +46,20 @@ describe('palette ranking', () => {
   test('groups in order, keywords answer', () => {
     expect(rankCommands(items, '').map(g => g.name)).toEqual(['Create', 'Go'])
     expect(rankCommands(items, 'prefer')[0].rows[0].item.label).toBe('Open settings')
+  })
+  test('a match at a word start or as written beats scattered letters, which show only when nothing better does', () => {
+    const regions = ['eu-west', 'us-east', 'ap-south', 'us-west', 'eu-north'].map(label => ({ label }))
+    const labels = (q: string) => rankCommands(regions, q).flatMap(g => g.rows.map(r => r.item.label))
+    expect(labels('us')).toEqual(['us-east', 'us-west'])
+    expect(labels('west')).toEqual(['eu-west', 'us-west'])
+    expect(labels('uw')).toEqual(['us-west']) // initials
+    expect(labels('est')).toEqual(['eu-west', 'us-west']) // inside a word as written; us-east's e…s…t is dropped
+    expect(labels('ewt')).toEqual(['eu-west']) // nothing better: scattered letters
+    expect(matchStrength('us', 'eu-west')!.tier).toBe(0)
+    expect(matchStrength('us', 'us-east')).toEqual({ tier: 3, score: 100, hits: [0, 1] })
+    expect(matchStrength('np', 'New project')!.tier).toBe(2)
+    expect(matchStrength('new proj', 'New project')!.tier).toBe(3)
+    expect(matchStrength('set', 'Open settings')!.hits).toEqual([5, 6, 7])
   })
   test('marked alternates runs', () => {
     expect(marked('abc', [1])).toEqual([{ text: 'a', hit: false }, { text: 'b', hit: true }, { text: 'c', hit: false }])

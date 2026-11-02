@@ -70,6 +70,12 @@ export function PaletteNested() {
   const places = () => ['Inbox', 'Archive', 'us-east', 'us-west'].map(p => ({ id: p, label: p, run: () => (ran.value = p) }))
   return <><Button onClick={() => (open.value = true)}>Open</Button><CommandPalette open={open} commands={[{ id: 'move', label: 'Move to…', group: 'Actions', children: places }, { id: 'set', label: 'Settings', group: 'Go to', run: () => (ran.value = 'set') }]} /><output data-out="">{ran.value}</output></>
 }
+/** A level with a name of its own ("Region"), over regions where "us" is in eu-west's letters too. */
+export function PaletteRegions() {
+  const open = state(false)
+  const regions = () => ['eu-west', 'us-east', 'ap-south', 'us-west', 'eu-north'].map(r => ({ id: r, label: r }))
+  return <><Button onClick={() => (open.value = true)}>Open</Button><CommandPalette open={open} commands={[{ id: 'move', label: 'Move storefront to…', title: 'Region', children: regions }, { id: 'tag', label: 'Tag release', children: () => [{ id: 'a', label: 'alpha' }] }]} /></>
+}
 export function MentionsCase() {
   const v = state('Ask @[Ada Lovelace](user:ada) ')
   return <><MentionsInput label="Comment" value={v} triggers={{ '@': search }} /><output data-out="">{v.value}</output></>

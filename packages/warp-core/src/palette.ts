@@ -1,5 +1,8 @@
 // The command palette's ranking and its hotkey (05 §3; components.html:1704-1754).
 
+/** A word starts at `i`: the text's start, or after a space or other mark ("us" starts a word in "eu-west/us-east"). */
+const starts = (t: string, i: number) => i === 0 || !/[\p{L}\p{N}]/u.test(t[i - 1])
+
 /** Letters of `q` in order in `text`. Word starts score more; null when they aren't all there. A blank query matches. */
 export function fuzzy(q: string, text: string): { score: number; hits: number[] } | null {
   if (!q) return { score: 0, hits: [] }
@@ -8,27 +11,69 @@ export function fuzzy(q: string, text: string): { score: number; hits: number[] 
   let score = 0
   for (let i = 0; i < t.length && hits.length < q.length; i++) {
     if (t[i] !== q[hits.length]) continue
-    score += i === 0 || t[i - 1] === ' ' ? 3 : 1
+    score += starts(t, i) ? 3 : 1
     hits.push(i)
   }
   return hits.length === q.length ? { score, hits } : null
 }
 
+/**
+ * How well `q` matches `text`, strongest first: 3 the query as written at a word's start ("us" in "us-east"); 2 at word
+ * starts only, as initials ("np" in "New project") or each word of the query starting a word; 1 the query as written
+ * inside a word; 0 its letters in order anywhere ("us" in "eu-west"). Null when they aren't all there.
+ */
+export function matchStrength(q: string, text: string): { tier: 0 | 1 | 2 | 3; score: number; hits: number[] } | null {
+  if (!q) return { tier: 3, score: 0, hits: [] }
+  const t = text.toLowerCase()
+  const run = (at: number) => Array.from({ length: q.length }, (_, k) => at + k)
+  for (let at = t.indexOf(q); at >= 0; at = t.indexOf(q, at + 1)) if (starts(t, at)) return { tier: 3, score: 100 - at, hits: run(at) }
+  // initials: each letter of the query starts a word, in order
+  const initials: number[] = []
+  for (let i = 0; i < t.length && initials.length < q.length; i++) if (starts(t, i) && t[i] === q[initials.length]) initials.push(i)
+  if (initials.length === q.length && !/\s/.test(q)) return { tier: 2, score: 50 - initials[0], hits: initials }
+  // each word of the query starts a word of the text, in order
+  const words = q.split(/\s+/).filter(Boolean)
+  if (words.length > 1) {
+    const hits: number[] = []
+    let from = 0
+    for (const w of words) {
+      let at = t.indexOf(w, from)
+      while (at >= 0 && !starts(t, at)) at = t.indexOf(w, at + 1)
+      if (at < 0) { hits.length = 0; break }
+      hits.push(...Array.from({ length: w.length }, (_, k) => at + k))
+      from = at + w.length
+    }
+    if (hits.length) return { tier: 2, score: 50 - hits[0], hits }
+  }
+  const inside = t.indexOf(q)
+  if (inside >= 0) return { tier: 1, score: 20 - inside, hits: run(inside) }
+  const loose = fuzzy(q, text)
+  return loose && { tier: 0, ...loose }
+}
+
 export interface Rankable { label: string; group?: string; keywords?: string[] }
 export interface Ranked<C> { item: C; hits: number[] }
 
-/** What a query shows, best first and then gathered by group in the order the groups turn up. */
+/**
+ * What a query shows, best first and then gathered by group in the order the groups turn up. A match at a word's start
+ * or as written ranks before letters scattered in order, and scattered letters show only when nothing matches better:
+ * "us" finds us-east and us-west, not eu-west.
+ */
 export function rankCommands<C extends Rankable>(items: readonly C[], query: string) {
   const q = query.trim().toLowerCase()
-  const found: (Ranked<C> & { score: number })[] = []
+  const found: (Ranked<C> & { tier: number; score: number })[] = []
   for (const item of items) {
-    const own = fuzzy(q, item.label)
-    const alias = own ? undefined : item.keywords?.map(k => fuzzy(q, k)).find(Boolean)
-    if (own || alias) found.push({ item, hits: own?.hits ?? [], score: (own ?? alias)!.score })
+    const own = matchStrength(q, item.label)
+    const alias = item.keywords?.map(k => matchStrength(q, k)).filter(Boolean).sort((a, b) => b!.tier - a!.tier)[0]
+    // a keyword can rank a row higher than its label's scattered letters, but never marks the label
+    const best = own && (!alias || own.tier >= alias.tier) ? own : alias
+    if (best) found.push({ item, hits: own && best === own ? own.hits : [], tier: best.tier, score: best.score })
   }
-  if (q) found.sort((a, b) => b.score - a.score)
+  const strong = found.some(f => f.tier > 0)
+  const shown = q && strong ? found.filter(f => f.tier > 0) : found
+  if (q) shown.sort((a, b) => b.tier - a.tier || b.score - a.score)
   const groups = new Map<string, Ranked<C>[]>()
-  for (const f of found) {
+  for (const f of shown) {
     const name = f.item.group ?? ''
     if (!groups.has(name)) groups.set(name, [])
     groups.get(name)!.push({ item: f.item, hits: f.hits })
