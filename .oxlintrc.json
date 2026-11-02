@@ -11,6 +11,8 @@
     "packages/weft/bench/corpus/**", "packages/warp-core/scripts/contrast-check.mjs", "packages/weft/test/corpus-gen/**", "packages/db/test/generated/**",
     "docs/**", "spikes/**", "evals/*/**", "site/public/**", "site/content/**", "site/review/**"
   ],
+  "env": { "browser": true, "node": true, "es2024": true, "vitest": true },
+  "globals": { "Bun": "readonly", "Deno": "readonly" },
   "rules": {
     // Bugs: dead code, wrong comparisons, names that hide each other.
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrors": "none" }],
@@ -116,6 +118,16 @@
     "vitest/require-mock-type-parameters": "off"
   },
   "overrides": [
+    {
+      // tsc doesn't read .mjs files, so this is what catches a dropped import there.
+      "files": ["**/*.mjs", "**/*.cjs"],
+      "rules": { "no-undef": "warn" }
+    },
+    {
+      // Code here runs inside the page, where the demo defines these.
+      "files": ["packages/plugin-surface-keel/test/e2e.mjs"],
+      "globals": { "lab": "readonly", "hashOf": "readonly", "clock": "readonly", "keelScene": "readonly" }
+    },
     {
       // warp-core is framework-agnostic: the framework is only ever reached from bindings/.
       "files": ["packages/warp-core/src/**"],

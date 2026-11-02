@@ -16,6 +16,9 @@ import { sessionOf } from './mux-session'
 import type { ShareRule } from './share-server'
 import { createScope, defaultStore, guard, liveQueries, missedFeed, tagsOf, validate, type Scope, type ScopeOptions, type Store } from './exec'
 
+// An app's tsc may have no Node types, so `process` is named here.
+const proc = globalThis as unknown as { process?: { env: Record<string, string | undefined>; exit(code: number): void } }
+
 /** What one connection may cost; every number has a default in `LIMITS`. */
 export interface Limits {
   subscriptions: number
@@ -239,7 +242,7 @@ export function createHub(options: HubOptions): Hub {
     bump: tags => void (options.store ?? defaultStore).bump(tags),
     status,
   })
-  const probed: Promise<unknown> = source && !globalThis.process?.env.WEFT_BUILD ? settle(source) : Promise.resolve()
+  const probed: Promise<unknown> = source && !proc.process?.env.WEFT_BUILD ? settle(source) : Promise.resolve()
   probed.catch(() => {})
 
   /** Probes rather than assumes (`what works here`), says what it found once, and refuses to serve what was required. */
@@ -260,7 +263,7 @@ export function createHub(options: HubOptions): Hub {
     if (how.mode === 'feed' || !options.required?.length) return how
     refused = new StartError('R015', `${options.required.map(n => `\`${n}\``).join(', ')} require${options.required.length > 1 ? '' : 's'} a live feed, and this server has ${how.mode === 'poll' ? 'only polling' : 'none'}${how.why ? `: ${how.why}` : ''}`, how.fix ?? 'see `weft doctor`', { status: 503 })
     console.error(`weft ${refused.message}`)
-    if (!options.dev) globalThis.process?.exit(1)
+    if (!options.dev) proc.process?.exit(1)
     return how
   }
 

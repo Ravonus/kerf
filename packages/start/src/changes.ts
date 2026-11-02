@@ -114,7 +114,7 @@ export function dbChanges(db: { $weft?: DbHandle }, tables: unknown[], options: 
 }
 
 /** Set by a platform, read at run time: this process lives for one request. */
-export function functionHost(env: Record<string, string | undefined> = globalThis.process?.env ?? {}): string | undefined {
+export function functionHost(env: Record<string, string | undefined> = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {}): string | undefined {
   if (env.VERCEL) return 'Vercel'
   if (env.NETLIFY || env.NETLIFY_LOCAL) return 'Netlify'
   if (env.AWS_LAMBDA_FUNCTION_NAME) return 'AWS Lambda'
