@@ -290,3 +290,54 @@ test('Media waits to be seen, whatever else is on the page', async () => {
   const { plan } = await project({ 'route.tsx': `import { Media } from 'weft/media'\nconst hero = { src: 'a.jpg' }\nexport default function R() { return <main><Media src={hero} alt="" /></main> }` })
   expect(plan.loads).toMatchObject([{ tag: 'Media', when: 'visible' }])
 })
+
+describe('a handler no call site is seen giving stays client', () => {
+  const go = `const go = () => alert(1)\n`
+  const shapes: Record<string, string> = {
+    'a member of a prop': `function Action({ action }) { return <button onClick={action.onClick}>x</button> }\nexport default function R() { return <Action action={{ onClick: go }} /> }`,
+    'a prop of a prop': `function Action(props) { return <button onClick={props.action.onClick}>x</button> }\nexport default function R() { return <Action action={{ onClick: go }} /> }`,
+    'a default': `function Btn({ onClick = go }) { return <button onClick={onClick}>x</button> }\nexport default function R() { return <Btn /> }`,
+    'a default on the whole parameter': `function Btn(props = { onClick: go }) { return <button onClick={props.onClick}>x</button> }\nexport default function R() { return <Btn /> }`,
+    'a helper that is called': `const pill = ({ onClick }) => <button onClick={onClick}>x</button>\nexport default function R() { return <main>{pill({ onClick: go })}</main> }`,
+    'a component that is called': `function Pill({ onClick }) { return <button onClick={onClick}>x</button> }\nexport default function R() { return <main>{Pill({ onClick: go })}</main> }`,
+    'a positional parameter': `function Row(label, onClick) { return <button onClick={onClick}>{label}</button> }\nexport default function R() { return <main>{Row('x', go)}</main> }`,
+    'a rename': `function Btn({ action: onClick }) { return <button onClick={onClick}>x</button> }\nexport default function R() { return <Btn action={go} /> }`,
+    'a reassigned prop': `function Btn({ onClick }) { onClick = go; return <button onClick={onClick}>x</button> }\nexport default function R() { return <Btn /> }`,
+    'a member written': `function Btn(props) { props.onClick = go; return <button onClick={props.onClick}>x</button> }\nexport default function R() { return <Btn /> }`,
+    'a nested destructure': `function Btn({ cfg: { onClick } }) { return <button onClick={onClick}>x</button> }\nexport default function R() { return <Btn cfg={{ onClick: go }} /> }`,
+    'props handed to a call': `function Div(props) { Object.assign(props, { onClick: go }); return <div {...props}>x</div> }\nexport default function R() { return <Div /> }`,
+    'props in a local': `function Div(props) { const p = props; p.onClick = go; return <div {...props}>x</div> }\nexport default function R() { return <Div /> }`,
+    'arguments': `function Div(props) { arguments[0].onClick = go; return <div {...props}>x</div> }\nexport default function R() { return <Div /> }`,
+    'a component mapped over a list': `const list = [{ onClick: go }]\nfunction Pill({ onClick }) { return <button onClick={onClick}>x</button> }\nexport default function R() { return <main>{list.map(Pill)}</main> }`,
+    'a table read as a value': `function Pill({ onClick }) { return <button onClick={onClick}>x</button> }\nconst KIT = { pill: Pill }\nexport default function R() { return <main>{KIT.pill({ onClick: go })}</main> }`,
+    'an alias that is called': `function Pill({ onClick }) { return <button onClick={onClick}>x</button> }\nconst Press = Pill\nexport default function R() { return <main>{Press({ onClick: go })}</main> }`,
+    'a wrapper that gives the handler': `const wrap = f => () => f({ onClick: go })\nconst Pill = wrap(({ onClick }) => <button onClick={onClick}>x</button>)\nexport default function R() { return <Pill /> }`,
+    'a class method': `class View { Render({ onClick }) { return <button onClick={onClick}>x</button> } }\nexport default function R() { return <main>{new View().Render({ onClick: go })}</main> }`,
+    'a spread of a literal': `export default function R() { return <button {...{ onClick: go }}>x</button> }`,
+    'a spread of a module value': `const a = { onClick: go }\nexport default function R() { return <button {...a}>x</button> }`,
+    'a spread of a prop\'s member': `function Div(p) { return <div {...p.attrs}>x</div> }\nexport default function R() { return <Div attrs={{ onClick: go }} /> }`,
+    'a spread of a named prop': `function Div({ attrs }) { return <div {...attrs}>x</div> }\nexport default function R() { return <Div attrs={{ onClick: go }} /> }`,
+  }
+  test.each(Object.keys(shapes))('%s', async name => {
+    const { plan, routeStatic } = await project({ 'route.tsx': go + shapes[name] })
+    expect(routeStatic && plan.islands.length === 0).toBe(false)
+  })
+})
+
+test('tags are all that reach a forwarding component, through a table and a local too', async () => {
+  const { plan, why, routeStatic } = await project({
+    'kit.tsx': `function Div({ children, ...rest }) { return <div {...rest}>{children}</div> }\nconst TAGS = { div: Div }\nexport function Box({ as, ...rest }) { const Tag = TAGS[as ?? 'div']; return <Tag {...rest} /> }\nexport function Press({ onPress: run, children }) { return <button onClick={run}>{children}</button> }\nexport { Press as Alias }`,
+    'route.tsx': `import { Box, Alias } from './kit'\nexport default function R() { return <Box><Alias>x</Alias></Box> }`,
+  })
+  expect(routeStatic).toBe(true)
+  expect(plan.islands).toEqual([])
+  expect(why('Box') ?? null).toBe(null)
+})
+
+test('a table read as a value frees what it holds, from another file too', async () => {
+  const { why } = await project({
+    'kit.tsx': `function Pill({ onClick }) { return <button onClick={onClick}>x</button> }\nexport const KIT = { pill: Pill }`,
+    'route.tsx': `import { KIT } from './kit'\nconst go = () => {}\nexport default function R() { return <main>{KIT.pill({ onClick: go })}</main> }`,
+  })
+  expect(why('Pill')).toMatch(/onClick/)
+})

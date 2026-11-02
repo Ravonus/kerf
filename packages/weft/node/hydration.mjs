@@ -3,9 +3,9 @@
 // client, and so which call sites in the rest are islands. It only ever errs one way: a binding it can't see through
 // ships, which costs bytes, and nothing it calls static was seen doing anything a client would have to repeat.
 //
-//   client   a handler or `ref` on an element, a top-level side effect, `@weft client`, or a read of anything that is:
-//            weft's reactive API, a query, a binding that made a box. A handler that's only the prop of that name passed
-//            on, and a spread of the props, don't count: they hold nothing unless a call site puts it there
+//   client   a handler, `ref` or spread on an element, a top-level side effect, `@weft client`, or a read of anything that
+//            is: weft's reactive API, a query, a binding that made a box. A component's handler prop passed on, or its props
+//            spread, doesn't count while tags are all that reach it (hydration.rs): only a call site can put anything there
 //   island   a call site of a client component (or one given a handler, or a spread of something else) from code that isn't
 //
 // A caller stays on the client when a site's prop is a function over its local names, or a spread: `$iN` can't hold it
@@ -133,10 +133,20 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
 
   const client = new Map() // node → why
   const all = [...mods.values()].flatMap(m => m.facts.nodes)
+  // Read as a value, a component could be called with anything. A module-level value passes that on to what it holds.
+  const loose = new Set()
+  const free = t => {
+    if (t?.ns) t.ns.facts.nodes.forEach(free)
+    else if (t && typeof t === 'object' && !loose.has(t)) {
+      loose.add(t)
+      if (t.value) for (const u of t.uses) free(local(t.mod, u, new Set()))
+    }
+  }
+  for (const m of mods.values()) for (const u of m.facts.loose) free(local(m, u, new Set()))
   const isClient = t => t === true || (t && typeof t === 'object' && client.has(t))
   for (const n of all) {
     if (n.force === 'static') continue
-    const why = n.force === 'client' ? '`@weft client`' : n.own ?? (n.mod.facts.effects && `the module runs ${n.mod.facts.effects} as it loads`)
+    const why = n.force === 'client' ? '`@weft client`' : n.own ?? (loose.has(n) ? n.passes : null) ?? (n.mod.facts.effects && `the module runs ${n.mod.facts.effects} as it loads`)
     if (why) client.set(n, why)
   }
   const interactive = (n, s) => s.handler || isClient(tagOf(n.mod, s))
@@ -276,7 +286,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
   // A closure can't reach an island, so all of its caller runs in the browser, and nothing but the report says so.
   for (const n of all) {
     const w = client.get(n)
-    if (w?.includes('is a function over local names') && !n.mod.file.includes('/node_modules/')) diagnostics.push({ code: 'H011', file: rel(n.mod.file), line: n.line, why: `${n.name} has to hydrate whole: ${w}`, fix: `move what the function reads to module level, or the control and its function into a component of their own, which then becomes the island` })
+    if (w?.includes('is a function over local names') && !n.mod.file.includes('/node_modules/')) diagnostics.push({ code: 'H011', file: rel(n.mod.file), line: n.line, why: `${n.name} has to hydrate whole: ${w}`, fix: `nothing, when ${n.name} is mostly controls; otherwise move each control and what its function reads into a small component of its own, which becomes the island and leaves the rest static` })
   }
   const defaultOf = file => {
     const m = mods.get(file)

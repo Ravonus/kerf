@@ -21,8 +21,13 @@
 //! When an island may load is the project's call too, so `facts` also says what could make waiting wrong: the globals a
 //! binding touches outside handlers (`window.x` counts as `x`), the methods that move focus or scroll, what it calls while
 //! rendering, and `early`, what must run with the page (`autofocus`, a `ref` callback that does more than keep the node).
+//!
+//! A handler or spread on an element that can only hold what a call site wrote is `passes`, not `own`: a site that gives
+//! a handler is an island by itself. That holds only for a module-level function with a capital name, reading a prop
+//! given under a handler's name or the rest of them, untouched since, and only if JSX tags are all that reach the
+//! function, so `loose` names what's read as a value and could be called with anything.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
@@ -30,6 +35,7 @@ use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
 use oxc_semantic::{Scoping, SemanticBuilder};
 use oxc_span::{GetSpan, SPAN, SourceType, Span};
+use oxc_syntax::reference::ReferenceId;
 use oxc_syntax::symbol::SymbolId;
 use serde::{Deserialize, Serialize};
 
@@ -50,6 +56,8 @@ pub struct HydrationFacts {
     pub effects: Option<String>,
     /// Modules it imports only to run them: an effect if they have one, which the project's view can tell.
     pub side: Vec<String>,
+    /// Module-level names read as something other than a tag, or a table of tags.
+    pub loose: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -59,6 +67,8 @@ pub struct Node {
     pub line: u32,
     /// Why this binding needs the client, on its own.
     pub own: Option<String>,
+    /// A handler or spread that holds only what a call site wrote: `own`, unless something other than a tag reaches this.
+    pub passes: Option<String>,
     /// The `@weft client` / `@weft static` / `@weft visible` comment above it.
     pub force: Option<String>,
     pub uses: Vec<String>,
@@ -267,6 +277,7 @@ fn has_kids(el: &JSXElement<'_>) -> bool {
 struct Frame {
     uses: Vec<String>,
     own: Option<String>,
+    passes: Option<String>,
     early: Option<String>,
     globals: Vec<String>,
     calls: Vec<String>,
@@ -299,61 +310,138 @@ struct Collect<'s> {
     count: u32,
     /// Inside a handler's value: it runs on an event, which replays.
     handler: u32,
-    /// Functions entered, and the outermost one's parameters: a binding's props.
+    /// A module-level function that JSX can name is being read: its props can be followed to the call site.
+    component: bool,
+    /// Functions entered, and what the outermost one's first parameter holds: props given under a handler's name, and
+    /// the objects of props (`props`, `...rest`).
     depth: u32,
-    params: Vec<SymbolId>,
+    handlers: Vec<SymbolId>,
+    objects: Vec<SymbolId>,
 }
 
-fn pattern_symbols(p: &BindingPattern<'_>, out: &mut Vec<SymbolId>) {
-    match p {
-        BindingPattern::BindingIdentifier(id) => out.push(id.symbol_id()),
-        BindingPattern::ObjectPattern(o) => {
-            o.properties.iter().for_each(|x| pattern_symbols(&x.value, out));
-            if let Some(r) = &o.rest {
-                pattern_symbols(&r.argument, out);
-            }
+/// What a component does with its props objects: anything but reading a member or spreading one could change what's in them.
+struct Escapes<'s> {
+    scoping: &'s Scoping,
+    objects: &'s [SymbolId],
+    writing: u32,
+    gone: Vec<SymbolId>,
+    arguments: bool,
+}
+
+impl Escapes<'_> {
+    fn read(&self, e: &Expression<'_>) -> bool {
+        self.writing == 0 && matches!(e.get_inner_expression(), Expression::Identifier(id) if id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_some_and(|s| self.objects.contains(&s)))
+    }
+}
+
+impl<'a> Visit<'a> for Escapes<'_> {
+    fn visit_ts_type(&mut self, _: &TSType<'a>) {}
+
+    fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
+        match it.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()) {
+            Some(s) if self.objects.contains(&s) => self.gone.push(s),
+            None if it.name == "arguments" => self.arguments = true,
+            _ => {}
         }
-        BindingPattern::ArrayPattern(a) => {
-            a.elements.iter().flatten().for_each(|x| pattern_symbols(x, out));
-            if let Some(r) = &a.rest {
-                pattern_symbols(&r.argument, out);
-            }
+    }
+
+    fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
+        if !self.read(&it.object) {
+            walk::walk_static_member_expression(self, it);
         }
-        BindingPattern::AssignmentPattern(a) => pattern_symbols(&a.left, out),
+    }
+
+    fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
+        if self.read(&it.object) {
+            self.visit_expression(&it.expression);
+        } else {
+            walk::walk_computed_member_expression(self, it);
+        }
+    }
+
+    fn visit_jsx_spread_attribute(&mut self, it: &JSXSpreadAttribute<'a>) {
+        if !self.read(&it.argument) {
+            walk::walk_jsx_spread_attribute(self, it);
+        }
+    }
+
+    fn visit_spread_element(&mut self, it: &SpreadElement<'a>) {
+        if !self.read(&it.argument) {
+            walk::walk_spread_element(self, it);
+        }
+    }
+
+    fn visit_assignment_target(&mut self, it: &AssignmentTarget<'a>) {
+        self.writing += 1;
+        walk::walk_assignment_target(self, it);
+        self.writing -= 1;
+    }
+
+    fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {
+        self.writing += 1;
+        walk::walk_simple_assignment_target(self, it);
+        self.writing -= 1;
     }
 }
 
 impl Collect<'_> {
-    fn entered(&mut self, params: &FormalParameters<'_>) {
-        if self.depth == 0 {
-            self.params.clear();
-            params.items.iter().for_each(|p| pattern_symbols(&p.pattern, &mut self.params));
-            if let Some(r) = &params.rest {
-                pattern_symbols(&r.rest.argument, &mut self.params);
-            }
+    /// Before entering a function: at the top of a component, what its parameter can be seen to hold. `scan` walks it.
+    fn props<'a>(&mut self, params: &FormalParameters<'a>, scan: impl FnOnce(&mut Escapes<'_>)) {
+        if self.depth > 0 {
+            return;
         }
-        self.depth += 1;
+        self.handlers.clear();
+        self.objects.clear();
+        if !self.component {
+            return;
+        }
+        // The first parameter alone is the props; a default, or a default on a prop, is a handler no call site wrote.
+        match params.items.first().filter(|p| p.initializer.is_none()).map(|p| &p.pattern) {
+            Some(BindingPattern::BindingIdentifier(id)) => self.objects.push(id.symbol_id()),
+            Some(BindingPattern::ObjectPattern(o)) => {
+                for p in &o.properties {
+                    if let (false, Some(key), BindingPattern::BindingIdentifier(id)) = (p.computed, p.key.static_name(), &p.value)
+                        && is_handler(&key)
+                    {
+                        self.handlers.push(id.symbol_id());
+                    }
+                }
+                if let Some(BindingPattern::BindingIdentifier(id)) = o.rest.as_ref().map(|r| &r.argument) {
+                    self.objects.push(id.symbol_id());
+                }
+            }
+            _ => {}
+        }
+        let scoping = self.scoping;
+        let mut e = Escapes { scoping, objects: &self.objects, writing: 0, gone: Vec::new(), arguments: false };
+        scan(&mut e);
+        let (gone, arguments) = (e.gone, e.arguments);
+        self.objects.retain(|s| !arguments && !gone.contains(s) && !scoping.symbol_is_mutated(*s));
+        self.handlers.retain(|s| !arguments && !scoping.symbol_is_mutated(*s));
     }
 
-    fn is_param(&self, id: &IdentifierReference<'_>) -> bool {
-        id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_some_and(|s| self.params.contains(&s))
+    fn holds(&self, e: &Expression<'_>, list: &[SymbolId]) -> bool {
+        matches!(e.get_inner_expression(), Expression::Identifier(id) if id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_some_and(|s| list.contains(&s)))
     }
 
     /// `onClick={onClick}`, `onClick={props.onClick}`: a handler only if the caller gives one, and a caller that does
-    /// has a handler at its call site, so it's that site that needs the client. The name has to say so: `onClick={go}`
-    /// could hide behind any prop.
+    /// has a handler at its call site, so it's that site that needs the client.
     fn passes_on(&self, a: &JSXAttribute<'_>) -> bool {
         let Some(JSXAttributeValue::ExpressionContainer(c)) = &a.value else { return false };
-        match c.expression.as_expression().map(Expression::get_inner_expression) {
-            Some(Expression::Identifier(id)) => is_handler(&id.name) && self.is_param(id),
-            Some(Expression::StaticMemberExpression(m)) => is_handler(&m.property.name) && matches!(m.object.get_inner_expression(), Expression::Identifier(id) if self.is_param(id)),
-            _ => false,
+        let Some(e) = c.expression.as_expression() else { return false };
+        match e.get_inner_expression() {
+            Expression::StaticMemberExpression(m) => is_handler(&m.property.name) && self.holds(&m.object, &self.objects),
+            e => self.holds(e, &self.handlers),
         }
     }
 
     /// `{...rest}` of a binding's own props: what's in it was written at a call site, which is where it counts.
     fn spreads_props(&self, e: &Expression<'_>) -> bool {
-        matches!(e.get_inner_expression(), Expression::Identifier(id) if self.is_param(id))
+        self.holds(e, &self.objects)
+    }
+
+    fn passes(&mut self, reason: String) {
+        self.frames.last_mut().unwrap().passes.get_or_insert(reason);
     }
 
     fn own(&mut self, reason: String) {
@@ -379,6 +467,7 @@ impl Collect<'_> {
         let frame = self.frames.pop().unwrap();
         if let Some(up) = self.frames.last_mut() {
             up.early = up.early.take().or(frame.early.clone());
+            up.passes = up.passes.take().or(frame.passes.clone());
             for g in &frame.globals {
                 add(&mut up.globals, g.clone());
             }
@@ -456,14 +545,22 @@ impl<'a> Visit<'a> for Collect<'_> {
     fn visit_ts_type(&mut self, _: &TSType<'a>) {}
 
     fn visit_function(&mut self, it: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
-        self.entered(&it.params);
+        self.props(&it.params, |e| walk::walk_function(e, it, flags));
+        self.depth += 1;
         walk::walk_function(self, it, flags);
         self.depth -= 1;
     }
 
     fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
-        self.entered(&it.params);
+        self.props(&it.params, |e| walk::walk_arrow_function_expression(e, it));
+        self.depth += 1;
         walk::walk_arrow_function_expression(self, it);
+        self.depth -= 1;
+    }
+
+    fn visit_class(&mut self, it: &Class<'a>) {
+        self.depth += 1;
+        walk::walk_class(self, it);
         self.depth -= 1;
     }
 
@@ -471,11 +568,19 @@ impl<'a> Visit<'a> for Collect<'_> {
         let open = &it.opening_element;
         if !component_tag(&open.name) {
             for a in &open.attributes {
-                let JSXAttributeItem::Attribute(a) = a else { continue };
+                let a = match a {
+                    JSXAttributeItem::Attribute(a) => a,
+                    JSXAttributeItem::SpreadAttribute(s) => {
+                        let why = format!("a spread on an element (line {})", line_col(self.source, s.span.start).0);
+                        if self.spreads_props(&s.argument) { self.passes(why) } else { self.own(why) }
+                        continue;
+                    }
+                };
                 let name = attr_name(a);
                 let line = line_col(self.source, a.span.start).0;
-                if is_handler(&name) && !self.passes_on(a) {
-                    self.own(format!("`{name}` on an element (line {line})"));
+                if is_handler(&name) {
+                    let why = format!("`{name}` on an element (line {line})");
+                    if self.passes_on(a) { self.passes(why) } else { self.own(why) }
                 }
                 if name.eq_ignore_ascii_case("autofocus") {
                     self.early(format!("`autofocus` (line {line})"));
@@ -549,6 +654,106 @@ impl<'a> Visit<'a> for Collect<'_> {
     }
 }
 
+/// The references that name a tag, by themselves.
+#[derive(Default)]
+struct TagRefs(HashSet<ReferenceId>);
+
+impl<'a> Visit<'a> for TagRefs {
+    fn visit_jsx_element_name(&mut self, it: &JSXElementName<'a>) {
+        let id = match it {
+            JSXElementName::IdentifierReference(id) => id,
+            JSXElementName::MemberExpression(m) => match &m.object {
+                JSXMemberExpressionObject::IdentifierReference(id) => id,
+                _ => return,
+            },
+            _ => return,
+        };
+        self.0.extend(id.reference_id.get());
+    }
+}
+
+/// The module-level names read as values. What a call, a function or JSX reads is one; what a binding holds isn't until
+/// that binding is: a local that's only ever a tag (`const Tag = TAGS[as]`) ends in a tag, and a module-level value is
+/// followed from wherever it's read (`hydration.mjs`).
+struct Loose<'s> {
+    scoping: &'s Scoping,
+    tags: HashSet<ReferenceId>,
+    held: bool,
+    out: Vec<String>,
+}
+
+impl Loose<'_> {
+    fn free<'a>(&mut self, f: impl FnOnce(&mut Self)) {
+        let held = std::mem::replace(&mut self.held, false);
+        f(self);
+        self.held = held;
+    }
+
+    fn holder(&self, id: &BindingIdentifier<'_>) -> bool {
+        let sym = id.symbol_id();
+        self.scoping.symbol_scope_id(sym) == self.scoping.root_scope_id() || (!self.scoping.symbol_is_mutated(sym) && self.scoping.get_resolved_reference_ids(sym).iter().all(|r| self.tags.contains(r)))
+    }
+}
+
+impl<'a> Visit<'a> for Loose<'_> {
+    fn visit_ts_type(&mut self, _: &TSType<'a>) {}
+    fn visit_jsx_element_name(&mut self, _: &JSXElementName<'a>) {}
+    fn visit_jsx_closing_element(&mut self, _: &JSXClosingElement<'a>) {}
+    fn visit_export_specifier(&mut self, _: &ExportSpecifier<'a>) {}
+
+    fn visit_export_default_declaration(&mut self, it: &ExportDefaultDeclaration<'a>) {
+        if !matches!(it.declaration, ExportDefaultDeclarationKind::Identifier(_)) {
+            walk::walk_export_default_declaration(self, it);
+        }
+    }
+
+    fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
+        let Some(sym) = it.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()) else { return };
+        if !self.held && self.scoping.symbol_scope_id(sym) == self.scoping.root_scope_id() {
+            add(&mut self.out, it.name.to_string());
+        }
+    }
+
+    fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
+        match (&it.id, &it.init) {
+            (BindingPattern::BindingIdentifier(id), Some(init)) if self.holder(id) => {
+                let held = std::mem::replace(&mut self.held, true);
+                self.visit_expression(init);
+                self.held = held;
+            }
+            _ => self.free(|l| walk::walk_variable_declarator(l, it)),
+        }
+    }
+
+    fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+        self.free(|l| walk::walk_call_expression(l, it));
+    }
+
+    fn visit_new_expression(&mut self, it: &NewExpression<'a>) {
+        self.free(|l| walk::walk_new_expression(l, it));
+    }
+
+    fn visit_tagged_template_expression(&mut self, it: &TaggedTemplateExpression<'a>) {
+        self.free(|l| walk::walk_tagged_template_expression(l, it));
+    }
+
+    fn visit_function(&mut self, it: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
+        self.free(|l| walk::walk_function(l, it, flags));
+    }
+
+    fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
+        self.free(|l| walk::walk_arrow_function_expression(l, it));
+    }
+
+    fn visit_jsx_element(&mut self, it: &JSXElement<'a>) {
+        self.free(|l| walk::walk_jsx_element(l, it));
+    }
+
+    fn visit_jsx_fragment(&mut self, it: &JSXFragment<'a>) {
+        self.free(|l| walk::walk_jsx_fragment(l, it));
+    }
+}
+
 fn calls(v: &JSXAttributeValue<'_>) -> bool {
     let mut c = Calls::default();
     c.visit_jsx_attribute_value(v);
@@ -572,7 +777,7 @@ const NOT_CODE: &[&str] = &[".css", ".scss", ".sass", ".less", ".styl", ".pcss"]
 
 pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> HydrationFacts {
     let mut out = HydrationFacts::default();
-    let mut c = Collect { scoping, source, frames: Vec::new(), sites: Vec::new(), count: 0, handler: 0, depth: 0, params: Vec::new() };
+    let mut c = Collect { scoping, source, frames: Vec::new(), sites: Vec::new(), count: 0, handler: 0, component: false, depth: 0, handlers: Vec::new(), objects: Vec::new() };
     let mut gap = 0u32;
     for stmt in &program.body {
         let span = stmt.span();
@@ -580,8 +785,9 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
         gap = span.end;
         let line = line_col(source, span.start).0;
         let mut node = |c: &mut Collect, name: String, value: bool, visit: &dyn Fn(&mut Collect)| {
+            c.component = !value && name.starts_with(|l: char| l.is_ascii_uppercase());
             let f = c.framed(|c| visit(c));
-            out.nodes.push(Node { name, line, own: f.own, force: force.clone(), uses: f.uses, sites: std::mem::take(&mut c.sites), value, early: f.early, globals: f.globals, calls: f.calls });
+            out.nodes.push(Node { name, line, own: f.own, passes: f.passes, force: force.clone(), uses: f.uses, sites: std::mem::take(&mut c.sites), value, early: f.early, globals: f.globals, calls: f.calls });
         };
         match stmt {
             Statement::ImportDeclaration(i) => {
@@ -709,6 +915,11 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
             }
         }
     }
+    let mut tags = TagRefs::default();
+    tags.visit_program(program);
+    let mut loose = Loose { scoping, tags: tags.0, held: false, out: Vec::new() };
+    loose.visit_program(program);
+    out.loose = loose.out;
     out
 }
 
