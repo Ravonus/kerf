@@ -41,7 +41,8 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   const per = bindable<number>(() => size, () => undefined, 25, () => s => onSizeChange?.(s))
   const pages = derived(() => Math.max(1, Math.ceil(total / per.value)))
   const current = derived(() => Math.min(pages.value, Math.max(1, at.value)))
-  const fmt = (n: number) => n.toLocaleString(locale ?? 'en-US')
+  const numbers = new Intl.NumberFormat(locale ?? 'en-US')
+  const fmt = (n: number) => numbers.format(n)
   let nav: HTMLElement | undefined
   const go = (p: number) => {
     at.set(Math.min(pages.value, Math.max(1, p)))

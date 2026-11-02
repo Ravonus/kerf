@@ -4,7 +4,8 @@
 export const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 export const f1 = (v: number) => v.toFixed(1)
 export const sum = (a: number[]) => a.reduce((x, y) => x + y, 0)
-export const num = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 2 })
+const plain = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
+export const num = (v: number) => plain.format(v)
 export const pct = (v: number) => `${Math.round(v * 100)}%`
 
 /** The 1st–8th categorical colour; the 9th series onward folds into `other` (06 §3). */

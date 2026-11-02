@@ -48,5 +48,6 @@ const day = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'U
 
 export const money = (cents: number) => dollars.format(cents / 100)
 export const roundMoney = (cents: number) => wholeDollars.format(cents / 100)
-export const count = (n: number) => n.toLocaleString('en-US')
+const number = new Intl.NumberFormat('en-US')
+export const count = (n: number) => number.format(n)
 export const date = (iso: string) => day.format(new Date(iso))
