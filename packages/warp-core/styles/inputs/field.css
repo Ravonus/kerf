@@ -53,12 +53,13 @@
 :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-inner-spin-button, :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-outer-spin-button { appearance: none; margin: 0; }
 :where([data-scope="field"] [data-part="input"]:-webkit-autofill) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
 
-/* textarea: grows from 3 lines to 10; label and icon rest on the first line */
+/* textarea: grows from its rows (--_rows, 3) to 10 or its rows; label and icon rest on the first line. field-sizing:
+   content ignores the rows attribute, so Textarea writes --_rows */
 :where([data-scope="field"] > [data-part="control"]:has(> textarea), [data-scope="field"] > [data-part="control"][data-wrap]) { align-items: flex-start; }
 :where([data-scope="field"] textarea[data-part="input"]) {
   white-space: pre-wrap; overflow-wrap: anywhere; resize: none; field-sizing: content; line-height: 1.5;
   padding-block: calc((var(--warp-field-height) - 1.5em) / 2);
-  min-block-size: calc(4.5em + var(--warp-field-height) - 1.5em); max-block-size: calc(15em + var(--warp-field-height) - 1.5em); overflow: auto;
+  min-block-size: calc(1.5em * var(--_rows, 3) + var(--warp-field-height) - 1.5em); max-block-size: calc(1.5em * max(10, var(--_rows, 3)) + var(--warp-field-height) - 1.5em); overflow: auto;
 }
 :where([data-scope="field"] > [data-part="control"]:is(:has(> textarea), [data-wrap]) > [data-part="icon"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
 :where([data-scope="field"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:has(> textarea), [data-wrap]):not(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > [data-part="label"]) { inset-block-start: calc(var(--warp-field-height) / 2); }

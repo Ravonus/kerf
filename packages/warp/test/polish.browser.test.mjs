@@ -243,3 +243,9 @@ test('a calendar no parent gives a height bounds itself, and opens the week at i
   expect(m.top / m.hour).toBeLessThan(9)
 })
 
+test('a textarea opens at its rows: rows=5 is five lines tall, the default three', async () => {
+  const h = await page.$$eval('#rows textarea', ts => ts.map(t => ({ h: t.clientHeight, line: parseFloat(getComputedStyle(t).lineHeight), pad: parseFloat(getComputedStyle(t).paddingTop) + parseFloat(getComputedStyle(t).paddingBottom) })))
+  expect(Math.round((h[0].h - h[0].pad) / h[0].line)).toBe(5)
+  expect(Math.round((h[1].h - h[1].pad) / h[1].line)).toBe(3)
+})
+

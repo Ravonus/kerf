@@ -4,6 +4,7 @@ import { Button } from '../../src/Button'
 import { PaginationBar } from '../../src/Pagination'
 import { Table } from '../../src/Table'
 import { Toggle } from '../../src/Toggle'
+import { Textarea } from '../../src/Field'
 import { Kanban } from '../../src/collab/Kanban'
 import { Calendar } from '../../src/schedule/Calendar'
 
@@ -45,6 +46,7 @@ render(() => (
     {box('board', 600, <Kanban label="Board" columns={BOARD} height="240px" />)}
     <div id="solid" data-expression="vivid" style="padding:16px"><Button>Deploy now</Button></div>
     <div id="solid-balanced" data-expression="balanced" style="padding:16px"><Button>Deploy now</Button></div>
+    {box('rows', 420, <><Textarea label="Notes" rows={5} /><Textarea label="Short" /></>)}
     {box('tl-phone', 326, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}
     {box('tl-desk', 598, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}
     <div id="month" style="inline-size:598px;block-size:616px">{cal({ views: ['month', 'agenda'], defaultView: 'month' })}</div>

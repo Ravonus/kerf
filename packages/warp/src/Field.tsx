@@ -127,13 +127,14 @@ export function Search({ placeholder, ...props }: FieldProps & { placeholder?: s
   )
 }
 
-/** A textarea: grows from 3 lines to 10, Cmd/Ctrl+Enter submits its form (03 §3). */
+/** A textarea: grows from `rows` lines (3) to 10 or `rows`, Cmd/Ctrl+Enter submits its form (03 §3). */
 export function Textarea({ placeholder, rows = 3, ...props }: FieldProps & { placeholder?: string; rows?: number }) {
   return (
     <Field
       {...props}
       control={p => (
-        <textarea data-part="input" id={p.id} rows={rows} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>{untrack(() => p.rest.value)}</textarea>
+        // field-sizing: content ignores the rows attribute, so the height reads it from --_rows
+        <textarea data-part="input" id={p.id} rows={rows} style={`--_rows:${rows}`} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>{untrack(() => p.rest.value)}</textarea>
       )}
     />
   )
