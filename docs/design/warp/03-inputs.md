@@ -45,7 +45,7 @@ root [data-scope=field] [data-variant?] [data-appearance=line?] [data-invalid|da
    never "F I R S T   N A M E" (review 03 B1: Chrome inserts a space between *inline-block* children). Split on
    plain spaces, not `&nbsp;` (`white-space: pre` keeps them). Never wrap the letters in a second, `aria-hidden` copy
    beside a hidden text copy: `getByLabelText` and `textContent` would then read the label twice.
-   - A **select-only combobox** (a `div[role=combobox]` trigger, the APG pattern) is not labelable, so the label is a
+   - A **select-only combobox** (a `button[role=combobox]` trigger, the APG pattern) takes its name from the label, with no `for`, since a `for` would make a label press click the button and open the list, so the label is a
      `<label id>` and the trigger has `aria-labelledby` = that id **only**. The value is the trigger's content; adding
      the value id to `aria-labelledby` reads it twice ("Plan Team").
    - A **composite** (date segments, phone, chips + input) is a `role=group` named by `aria-labelledby` → the label.
@@ -168,7 +168,7 @@ type OtpProps = Bindable<string> & { length: number; masked?: boolean; label: st
 type InlineEditProps = Bindable<string> & { label: string; placeholder?: string; validate?: (v: string) => string | null };
 type InputGroupProps = { children: JSX.Element[] };   // Addon | Field | Button, joined corners
 type SelectProps<T> = FieldShell & Bindable<T | null> & Openable & { options: Option<T>[] | Group<T>[];
-  presentation?: "auto" | "custom" | "native" };
+  presentation?: "auto" | "popover" | "sheet"; searchable?: boolean };
 type ComboboxProps<T> = FieldShell & Bindable<T | null> & Openable & { options: Option<T>[] | ((q: string, s: AbortSignal) => Promise<Option<T>[]>);
   creatable?: boolean | ((q: string) => T); };
 type MultiComboboxProps<T> = FieldShell & Bindable<T[]> & Openable & Omit<ComboboxProps<T>, keyof Bindable<T | null>>;  // TagsInput
@@ -232,17 +232,20 @@ label float takes `--warp-label-float-duration`. Reduced motion changes colour i
 | **Switch** | track 44×24, knob 18px. **The fill sweeps through the rail** L→R (clip-path, sweep duration) while the knob slides (420ms × motion). Off + hover: the ring sweeps. On + hover: an `accent-hover` layer sweeps through the inside | Switch: Space toggles | `input type=checkbox role=switch`; applies at once (never inside a form with a Save button) | rail per SIGNATURE §1c |
 | **Segmented** | the group rests on the ink border and does **not** sweep. Hovering or focusing an **unselected** option sweeps a ring around that option only (original `Segmented.tsx`); the selected option never sweeps. The accent-solid indicator slides to the selection (420ms, sweep ease): that slide is the rail. The group is `position: relative`, the indicator's containing block | Radio Group | native radios | per-option ring L→R in and out; indicator slide |
 | **Chips** (toggle group) | pill; hover sweeps; pressed pins the sweep on accent-soft and draws the check | button: Space/Enter; single choice uses `role=radio` with roving tabindex | `aria-pressed` | sweep + check draw |
-| **Select** | custom trigger (fine pointer) or native `<select>` (coarse), same shell, chevron rotates | Select-only Combobox: ↓/Enter/Space opens, ↑↓ Home End, typeahead, Enter picks, Esc/Tab closes | `role=combobox` on the trigger, `aria-labelledby` = the `<label id>` only (the value is the trigger's content), `aria-controls` = the listbox, listbox with groups | popup opens with sweep forced; the highlight sweeps in as a fill |
+| **Select** | warp's trigger and list on every device, a sheet on a phone, same shell, chevron rotates | Select-only Combobox: ↓/Enter/Space opens, ↑↓ Home End, typeahead, Enter picks, Esc/Tab closes | `role=combobox` on the trigger, `aria-labelledby` = the `<label id>` only (the value is the trigger's content), `aria-controls` = the listbox, listbox with groups | popup opens with sweep forced; the highlight sweeps in as a fill |
 | **Combobox** | async (350ms; stale results dimmed), creatable ("Create …" last, never the default) | Combobox (list) | `aria-activedescendant`; result count in a polite live region | as Select |
 | **MultiCombobox · TagsInput** | tags wrap inside the box; Enter or comma adds; paste "a, b, c" adds three | ←→ walk the tags, ⌫ highlights then removes | each add and remove is announced | tag pops in |
 | **Listbox** *(gap)* · **Transfer** *(gap)* | always-open list; multi with check boxes; transfer = two listboxes + move buttons; stacks under 520px | Listbox: ↑↓, Space toggles, ⇧↑↓ extends, ⌘A all | `aria-multiselectable` | the highlight fill sweeps |
 | **Cascader** *(gap)* | select trigger; popup with one listbox column per level; the trail stays tinted; value reads "Europe / Germany" | from the trigger: ↑↓ in a column, → or Enter opens the next column, ← goes back | `aria-controls` → the first column; `aria-activedescendant` spans the columns | as Select |
 | **Tree select** *(gap)* | select trigger; `role=tree` popup with tri-state checkboxes | Tree: ↑↓, → expand / first child, ← collapse / parent, Space checks | `aria-haspopup=tree`, `aria-controls` → the tree, `aria-activedescendant` → a treeitem; `aria-checked` true/false/mixed, `aria-expanded` | the check draws itself |
 
-**Native vs custom select.** Fine pointer gets the custom listbox: groups, typeahead, a check mark, styling, filtering.
-Coarse pointer gets native `<select>`: the OS wheel or sheet is faster, accessible, and never clipped by the
-keyboard. Both sit in the same shell, so the sweep, label and message don't change.
-`presentation="native" | "custom"` overrides this. Over ~15 options, or with free text, use Combobox. Up to 5, show
+**One select everywhere.** The owner's call, reversing the earlier split: no device gets the OS picker. Warp draws the
+list on every pointer: a popover where there is room, and under 600px a sheet with a title and Done, where focus moves
+onto the rows because mobile screen readers follow `aria-activedescendant` unreliably. A hidden real `<select>` stays the
+form value, so posting, reset, `required`, autofill and `onChange` all behave, and with scripting off it is what shows.
+The cost: the OS sheet was free for accessibility, so the warp sheet needs its own VoiceOver and TalkBack passes before a
+release. `presentation="popover" | "sheet"` overrides the width rule. Over 15 options the list adds a search (`searchable`
+overrides that); with free text, use Combobox. Up to 5, show
 them (radio, segmented, chips).
 
 ---
@@ -351,7 +354,7 @@ Submit runs `safeParse`. Success emits `z.output`. Failure maps issues to fields
     negative margin on coarse; stepper boxes become 40px; swatches become 36px on an 8px gap.
   - an expander inside `overflow: hidden` is clipped for hit-testing too. Chips and sm/icon buttons use
     `overflow: visible`, and their hover layer clips itself with `border-radius: inherit`.
-  Scrub is fine-pointer only. Native select is used on coarse. Inline text links in prose are exempt (WCAG 2.5.8).
+  Scrub is fine-pointer only. Inline text links in prose are exempt (WCAG 2.5.8).
 - **Icons.** Every decorative `<svg>` carries `aria-hidden="true" focusable="false"`; the `ico()` helper writes it.
 - **Combobox popups are the listbox.** The popup wrapper is presentational (no `role=dialog`); the combobox's
   `aria-controls` points at the listbox. When the popup closes, `aria-activedescendant` is removed with it.
@@ -367,7 +370,7 @@ Submit runs `safeParse`. Success emits `z.output`. Failure maps issues to fields
 | Validate on blur, re-check live after an error, summarise on submit | Show "Invalid email" while someone is typing their first character |
 | Use `inputmode` + `pattern` for numbers | Use `type="number"` (wheel changes, "e", locale bugs) |
 | Show up to 5 options; select from 6–15; combobox beyond | Hide 3 options behind a select |
-| Use the native select on touch | Build a custom picker the keyboard covers |
+| Give a touch picker its own sheet, tall enough for the keyboard | Build a picker the keyboard covers |
 | Let the switch apply at once | Put a switch in a form that also has Save |
 | Pin the sweep (`data-pin`) for drag, open or active states | Invent a new focus ring or a second accent |
 | Use `fields="classic"` when an app wants conventional forms | Fork the markup for classic; it is CSS only |

@@ -1,7 +1,7 @@
 // Select and CompactSelect: warp's list on every device, a real <select> behind it for the form.
 import { flush, render } from 'weft/test'
 import { state } from 'weft'
-import { CompactSelect, Input, Select } from '../src/index'
+import { CompactSelect, Input, NumberField, Select } from '../src/index'
 
 const tick = async () => { await new Promise(r => setTimeout(r)); await flush() }
 const key = (el: Element, k: string, init: KeyboardEventInit = {}) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }))
@@ -381,5 +381,47 @@ describe('CompactSelect', () => {
     const { container: c } = render(() => <form><CompactSelect label="F" name="f" defaultValue="c" options={fruit} /></form>)
     await tick()
     expect(new FormData(c.querySelector('form')!).get('f')).toBe('c')
+  })
+})
+
+describe('NumberField', () => {
+  const spin = (c: Element) => c.querySelector<HTMLInputElement>('[role="spinbutton"]')!
+  test('real text with spinbutton keys, kept inside its bounds', async () => {
+    const v = state<number | null>(5)
+    const { container: c } = render(() => <NumberField label="Seats" min={1} max={20} value={v} />)
+    await tick()
+    const i = spin(c)
+    expect(i.type).toBe('text')
+    expect(i.getAttribute('inputmode')).toBe('numeric')
+    expect([i.getAttribute('aria-valuenow'), i.getAttribute('aria-valuemin'), i.getAttribute('aria-valuemax')]).toEqual(['5', '1', '20'])
+    key(i, 'ArrowUp')
+    expect(v.value).toBe(6)
+    key(i, 'PageUp')
+    expect(v.value).toBe(16)
+    key(i, 'PageUp')
+    expect(v.value).toBe(20)
+    key(i, 'Home')
+    expect(v.value).toBe(1)
+    key(i, 'ArrowDown')
+    expect(v.value).toBe(1)
+  })
+
+  test('typing clamps, junk waits for blur, and the steppers stop at the bound', async () => {
+    const v = state<number | null>(8)
+    const { container: c } = render(() => <NumberField label="Seats" min={1} max={9} value={v} />)
+    await tick()
+    const i = spin(c)
+    const type = (t: string) => { i.value = t; i.dispatchEvent(new Event('input', { bubbles: true })) }
+    type('12')
+    expect(v.value).toBe(9)
+    type('abc')
+    expect(v.value).toBe(9)
+    i.dispatchEvent(new FocusEvent('blur'))
+    expect(i.value).toBe('9')
+    await tick()
+    const [up, down] = c.querySelectorAll<HTMLButtonElement>('[data-part="step"]')
+    expect(up.disabled).toBe(true)
+    down.click()
+    expect(v.value).toBe(8)
   })
 })

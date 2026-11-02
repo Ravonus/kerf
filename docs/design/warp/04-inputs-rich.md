@@ -93,7 +93,7 @@ in the segments, and the field's `error` explains it on blur.
 
 The rule: **use native when the OS control is strictly better and the value fits it. Use a custom sheet when the
 input needs things native can't do** (ranges, presets, unavailable dates, a locale that differs from the device,
-search). `presentation?: "auto" | "popover" | "sheet" | "native"` overrides it. `auto` picks a sheet when the
+search). `presentation?: "auto" | "popover" | "sheet"` overrides it, and Select has no native option (03 §4). `auto` picks a sheet when the
 field's container is under 600px **or** the pointer is coarse and the viewport is under 600px.
 
 | Input | Phone | Why |

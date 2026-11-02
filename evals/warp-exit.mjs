@@ -33,10 +33,11 @@ const log = (...a) => console.error(...a)
 const br = buf => brotliCompressSync(buf, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 
 // §3.7: the v3 shop's total JS. The kit allowance is set from the 2026-10-29 measurement (warp adds 6,280–6,426 B br of JS to
-// the weft shop: the field shell, the sweep machine, Button/Toggle/Select/Badge/Skeleton and their spread helpers),
-// rounded up to 7 KB so a byte-level change doesn't flip the gate; a bigger jump should be looked at, not absorbed.
+// the weft shop: the field shell, the sweep machine, Button/Toggle/Select/Badge/Skeleton and their spread helpers) plus the
+// 4.42 KB of a Select warp draws on every device (redesign §6), rounded up to 11 KB so a byte-level change doesn't flip the
+// gate; a bigger jump should be looked at, not absorbed.
 const APP_BUDGET = 10 * 1024
-export const KIT_ALLOWANCE = 7 * 1024
+export const KIT_ALLOWANCE = 11 * 1024
 const CEILING = 50 * 1024
 
 const results = {}

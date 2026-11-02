@@ -321,7 +321,7 @@ describe('AuditLog', () => {
       const rows = () => c.querySelectorAll('tbody tr[data-id]').length
       expect(rows()).toBe(3)
       expect(c.querySelector('time')!.textContent).toBe('4 min ago')
-      expect(c.querySelector('time')!.title).toBe('2026-10-28 13:58 UTC')
+      expect(c.querySelector('time')!.nextElementSibling!.textContent).toBe('2026-10-28 13:58 UTC')
       c.querySelector<HTMLInputElement>('input[value="keys"]')!.click(); await flush()
       expect(rows()).toBe(1)
       const s = field(c, 'Date range') as unknown as HTMLSelectElement

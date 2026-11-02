@@ -9,7 +9,7 @@ const files = walk(src).map(p => [relative(src, p), readFileSync(p, 'utf8')])
 const hits = re => files.flatMap(([name, text]) => [...text.matchAll(re)].map(m => `${name}: ${m[0]}`))
 
 test('the only <select> is the one Select hides as its form value', () => {
-  expect(hits(/<select\s/g)).toEqual(['Select.tsx: <select'])
+  expect(hits(/<select(?=\s)/g)).toEqual(['Select.tsx: <select'])
 })
 
 test('no input type the browser paints', () => {
