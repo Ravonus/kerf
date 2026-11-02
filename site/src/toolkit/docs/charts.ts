@@ -31,7 +31,7 @@ export const charts: DocGroup = {
         { kind: 'composition', title: 'In context', examples: [chart('BarChartRange', 'With a range switch', 420, 'New `data` moves the bars. Anything in `toolbar` sits beside the view toggle.')] },
       ],
       a11yNotes: ['The toggle in the corner swaps the plot for a real table of the same numbers.', 'Each bar has a label, and a sentence describing the data is written for screen readers. Set `summary` to replace it.'],
-      propDocs: { x: 'The key in each row that names the category.', xName: 'What the x values are, for the table and tooltips.', series: 'The keys to draw, each a string or `{ key, name, color }`.', format: 'Turns a value into text in tooltips, labels and the table.', axisFormat: 'A shorter format for the axis alone.' },
+      propDocs: { layout: '`grouped` side by side, `stacked` on top of each other, or `percent` stacked to 100%.', x: 'The key in each row that names the category.', xName: 'What the x values are, for the table and tooltips.', series: 'The keys to draw, each a string or `{ key, name, color }`.', format: 'Turns a value into text in tooltips, labels and the table.', axisFormat: 'A shorter format for the axis alone.' },
       related: ['LineChart', 'ComboChart', 'Chart'],
     },
     {
@@ -60,7 +60,7 @@ export const charts: DocGroup = {
         ] },
       ],
       a11yNotes: ['Moving along the plot reads the nearest month for every series in the tooltip.', 'The same numbers are one press away in the table view.'],
-      propDocs: { area: 'Fills under each line.', zero: 'Starts the y axis at zero.', direct: 'Labels the lines at their ends instead of in a legend.', annotations: 'Notes pinned to an x value: `{ x, label }`.', references: 'Horizontal lines: `{ y, label }`.', headroom: 'Extra space above the highest value, as a share.' },
+      propDocs: { x: 'The key in each row that names the point on the x axis.', xName: 'What the x values are, for the table and tooltips.', series: 'The keys to draw, each a string or `{ key, name, color }`.', axisFormat: 'A shorter format for the axis alone.', area: 'Fills under each line.', zero: 'Starts the y axis at zero.', direct: 'Labels the lines at their ends instead of in a legend.', annotations: 'Notes pinned to an x value: `{ x, label }`.', references: 'Horizontal lines: `{ y, label }`.', headroom: 'Extra space above the highest value, as a share.' },
       related: ['BarChart', 'ComboChart', 'BrushChart', 'Sparkline'],
     },
     {
@@ -84,7 +84,7 @@ export const charts: DocGroup = {
       component: 'ComboChart',
       summary: 'Draws bars for each period with a line on top, usually a moving average.',
       sections: [{ kind: 'variants', title: 'Example', examples: [chart('ComboChartRequests', 'Bars and a moving average', 420, 'With no `line`, the line is the average of the last `window` bars.')] }],
-      propDocs: { bar: 'The series drawn as bars.', line: 'The series drawn as the line. Leave it out for a moving average.', window: 'How many periods the moving average covers.' },
+      propDocs: { x: 'The key in each row that names the period.', xName: 'What the x values are, for the table and tooltips.', axisFormat: 'A shorter format for the axis alone.', bar: 'The series drawn as bars.', line: 'The series drawn as the line. Leave it out for a moving average.', window: 'How many periods the moving average covers.' },
       related: ['BarChart', 'LineChart'],
     },
     {
@@ -107,20 +107,21 @@ export const charts: DocGroup = {
       component: 'FunnelChart',
       summary: 'Shows how many remain at each step of a process.',
       sections: [{ kind: 'variants', title: 'Example', examples: [chart('FunnelChartSignup', 'Signup funnel', 400, 'Each step also shows its share of the step before.')] }],
+      propDocs: { unit: 'The word after each count, like "visitors".' },
       related: ['SankeyChart', 'BarChart'],
     },
     {
       component: 'ScatterChart',
       summary: 'Plots items by two measures, to show a relationship between them.',
       sections: [{ kind: 'variants', title: 'Example', examples: [chart('ScatterChartProjects', 'Deploys against latency', 440, 'Each group in `data` gets its own colour and legend item.')] }],
-      propDocs: { xName: 'The horizontal measure.', yName: 'The vertical measure.' },
+      propDocs: { sizeName: 'What a point\'s `size` means, for tooltips and the table.', xName: 'The horizontal measure.', yName: 'The vertical measure.' },
       related: ['BubbleChart'],
     },
     {
       component: 'BubbleChart',
       summary: 'A scatter chart with a third measure as the size of each point.',
       sections: [{ kind: 'variants', title: 'Example', examples: [chart('BubbleChartProjects', 'Deploys, latency and cost', 440, 'Each point takes `size` for its area.')] }],
-      propDocs: { sizeName: 'What the size means, for tooltips and the table.' },
+      propDocs: { xName: 'The horizontal measure, for the axis, tooltips and the table.', yName: 'The vertical measure, for the axis, tooltips and the table.', sizeName: 'What the size means, for tooltips and the table.' },
       related: ['ScatterChart'],
     },
     {
@@ -197,7 +198,7 @@ export const charts: DocGroup = {
       component: 'BrushChart',
       summary: 'A long series with a strip below it for dragging out the part to look at.',
       sections: [{ kind: 'variants', title: 'Example', examples: [chart('BrushChartSignups', 'Signups per day', 460, 'Drag in the lower strip to choose a range.')] }],
-      propDocs: { domain: 'The fixed y range.', target: 'A level to watch: `{ y, label }`.', annotation: 'A note on the first value over `target`.', y: 'The key of the value in each row.' },
+      propDocs: { x: 'The key in each row that names the point on the x axis.', ticks: 'The y values that get a label.', domain: 'The fixed y range.', target: 'A level to watch: `{ y, label }`.', annotation: 'A note on the first value over `target`.', y: 'The key of the value in each row.' },
       related: ['LineChart'],
     },
     {
@@ -219,6 +220,7 @@ export const charts: DocGroup = {
         { id: 'SparklineRows', title: 'One per table row', stage: 'fill', height: 240, note: 'It fills the width it is given, so a flexible cell lines the rows up. The ones getting slower turn amber.' },
       ] }],
       a11yNotes: ['A sparkline is hidden from screen readers. Give its parent a label that says what the trend means.'],
+      propDocs: { values: 'The numbers to draw, oldest first.', color: 'The line\'s colour: a warp token such as `var(--warp-color-positive-solid)`, or any CSS colour.' },
       related: ['LineChart', 'StreamChart'],
     },
     {

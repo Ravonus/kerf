@@ -30,20 +30,24 @@ export interface VirtualListProps<T> {
   /** A row's height before it's known. Default 48. */
   estimate?: number
   /** Pixels between rows. */
-  gap?: number | undefined
-  overscan?: number | undefined
+  gap?: number
+  /** Pixels of rows kept rendered past each edge of the view, so a fast scroll shows no gaps. */
+  overscan?: number
   /** Rows on the server and in the first paint. Default 20. */
   initial?: number | undefined
   /** Stay at the end as rows arrive while the user is within this many pixels of it. */
-  stick?: number | undefined
-  from?: 'start' | 'end' | undefined
+  stick?: number
+  /** `end` opens at the last row and grows upward, as a chat does. */
+  from?: 'start' | 'end'
   /** `list` by default; `feed`, `log` and the rest bring their own row role. */
   role?: string
+  /** The role each row takes, such as `option` or `article`. */
   rowRole?: string
   /** Rows take no list semantics: what's inside them says what it is. */
   bareRows?: boolean
   /** Keep this role off the scroller and put it on the list inside. */
   inner?: boolean
+  /** `ol` renders an ordered list with <li> rows; `div` otherwise. */
   tag?: 'div' | 'ol'
   /** Row keys move focus: ↑/↓, Home/End, one tab stop on the rows. */
   roving?: boolean
@@ -51,15 +55,23 @@ export interface VirtualListProps<T> {
   open?: boolean
   /** On a key the list doesn't use. */
   onRowKey?: (e: KeyboardEvent, control: VirtualControl) => void
-  onStart?: (() => void) | undefined
-  onEnd?: (() => void) | undefined
+  /** Called when the view nears the first row: load older rows. */
+  onStart?: () => void
+  /** Called when the view nears the last row: load more. */
+  onEnd?: () => void
+  /** Called with `true` when the list starts holding to the end, and `false` when the user scrolls away. */
   onStick?: (stuck: boolean) => void
-  onDrift?: ((index: number, predicted: number, actual: number) => void) | undefined
-  control?: ((c: VirtualControl) => void) | undefined
+  /** Called when a row's measured height differs from the estimate, with both heights. For tuning. */
+  onDrift?: (index: number, predicted: number, actual: number) => void
+  /** Hands over a control to scroll to, focus or move between rows from outside. */
+  control?: (c: VirtualControl) => void
   /** The scroller's tabindex. Default 0, none with `roving`. */
   tabindex?: number
-  scope?: string | undefined
+  /** The scroller's `data-scope`, for styling it as another component. */
+  scope?: string
+  /** The scroller's `data-part`, when it is a part of a larger component. */
   part?: string
+  /** The inner list's `data-scope`. */
   listScope?: string
   height?: string
   /** `aria-busy`: more is loading. */

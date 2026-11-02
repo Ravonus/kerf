@@ -19,7 +19,7 @@ label · body`, then `root > message`. The label is a `<label id>` whose text is
 `<span data-char>` (one per character), so its text is still the name. Nothing below adds a second shell.
 - **Sweep border.** `data-phase` runs idle → in → out → idle. It enters left to right on hover or focus and exits
   left to right, never reversing. The stroke is `--warp-color-sweep` (full accent, ≥ 3:1 against base and surface at
-  every stop) over `--warp-color-sweep-base`, timed by `--warp-sweep-duration` (`--warp-ref-sweep` 480/620/700ms
+  every stop) over `--warp-color-sweep-base`, timed by `--warp-sweep-duration` (`--warp-ref-sweep` 400/520/580ms
   quiet/balanced/vivid). The icon sweeps with the border. **An error pins the sweep in, painted
   `--warp-color-sweep-critical`**, and the message slides in over 180ms with `role="alert"`.
 - **Popovers stay attached.** A picker's popover is a child of `control`, so the label stays up and the sweep
@@ -559,7 +559,7 @@ continue the entry direction, and leave toward the anchor.
 | **Popover enter / exit** | fade + 4px from the anchor, scale 0.985, `base` | fade + 8px, scale 0.97 | fade + 12px, scale 0.95, spring on scale | fade only, `base × 0.6` |
 | **Sheet enter / exit** | 100% from the bottom, `slow`, in-out; scrim fades | same, ease-out | same, spring (3.5% overshoot) on the last 10% | sheet fades in place; scrim fades |
 | **Range band** | colour only | the band fills from start to end, `fast` | same plus an emphasis edge on the ends | colour only |
-| **Field sweep** | L→R, 480ms | L→R, 620ms | L→R, 700ms; popovers sweep too | phase still runs, 0ms; colour change only |
+| **Field sweep** | L→R, 400ms | L→R, 520ms | L→R, 580ms; popovers sweep too | phase still runs, 0ms; colour change only |
 | **Validation** | sweep pinned critical; message fades in, 180ms | same; message slides 8px, 180ms | same | colour, icon and message; no travel |
 | **Sortable drop** | FLIP `base` | FLIP `base`, ease-out | FLIP with `ease-pop` | instant reorder, 120ms highlight |
 

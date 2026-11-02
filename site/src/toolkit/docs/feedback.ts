@@ -38,6 +38,7 @@ export const feedback: DocGroup = {
       ],
       keyboard: [['F8', 'Moves focus to the newest toast'], ['Esc', 'Leaves the toasts']],
       a11yNotes: ['Toasts are read out through a live region that is on the page from the start.', 'Hovering or focusing the stack pauses every timer.', 'A critical toast with an action stays until it is dismissed.'],
+      propDocs: { position: 'The corner or edge toasts stack in, such as `top-center`. Bottom right otherwise.' },
       related: ['Alert', 'Progress', 'Button'],
     },
     {

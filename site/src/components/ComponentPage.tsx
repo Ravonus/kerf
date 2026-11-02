@@ -6,6 +6,15 @@ import { Playground, type ShownPlayground } from './Playground'
 import { PropsTable } from './PropsTable'
 import { Toc } from './Toc'
 
+/**
+ * A keyboard row's keys as caps: "Enter, F2" is two alternatives ("or" between them, the comma never inside a cap),
+ * "Shift + arrows" joins with a plain "+", and a lowercase word ("click", "arrows") is a word, not a key. A lone ","
+ * ("Enter or ,") is the comma key.
+ */
+export function chords(keys: string): { kind: 'key' | 'word'; text: string }[][] {
+  return keys.split(/,\s+/).filter(Boolean).map(alt => alt.split(/\s+/).filter(Boolean).map(t => (t === '+' || /^[a-z]{3,}$/.test(t) ? { kind: 'word' as const, text: t } : { kind: 'key' as const, text: t })))
+}
+
 type Section = { kind: string; title: string; intro?: string; html?: string; examples?: ShownExample[] }
 type Near = { name: string; slug: string; href: string }
 export type Page = {
@@ -82,7 +91,7 @@ export function ComponentPage(props: { data: Page }) {
             <h2>Accessibility</h2>
             {d.keyboard && (
               <dl data-part="keys">
-                {d.keyboard.map(([keys, does]) => <div key={keys}><dt>{keys.split(' ').map(k => <Kbd key={k}>{k}</Kbd>)}</dt><dd>{does}</dd></div>)}
+                {d.keyboard.map(([keys, does]) => <div key={keys}><dt>{chords(keys).map((alt, i) => <span key={i} data-part="chord">{i > 0 && <span data-part="key-word">or</span>}{alt.map((t, j) => (t.kind === 'key' ? <Kbd key={j}>{t.text}</Kbd> : <span key={j} data-part="key-word">{t.text}</span>))}</span>)}</dt><dd>{does}</dd></div>)}
               </dl>
             )}
             {d.a11yNotes && <ul data-part="notes">{d.a11yNotes.map(n => <li key={n}

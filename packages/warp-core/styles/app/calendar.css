@@ -44,8 +44,18 @@
   display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-block-size: 0; min-inline-size: 0; position: relative;
 }
 :where([data-scope="calendar"] [data-part="head"], [data-scope="calendar"] [data-part="allday"], [data-scope="calendar"] [data-part="cols"]) {
-  display: grid; grid-template-columns: var(--warp-cal-gutter) repeat(var(--_days), minmax(0, 1fr));
+  display: grid; grid-template-columns: var(--_tracks, var(--warp-cal-gutter) repeat(var(--_days), minmax(0, 1fr)));
 }
+/* Week and Day: one scroller for both axes. A day never gets narrower than --warp-cal-day-min (wider for a day whose events
+   overlap; Calendar writes --_tracks and --_week-w), so a narrow box scrolls the week sideways under its hours, which stay
+   put, and the day heads and all-day row stay on top as the hours scroll */
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]) { grid-template-rows: minmax(0, 1fr); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="top"], [data-part="cols"])) { min-inline-size: var(--_week-w, 0px); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="top"]) { position: sticky; inset-block-start: 0; z-index: 9; background: var(--warp-color-surface); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] :is([data-part="head"] > [data-part="corner"], [data-part="allday"] > [data-part="gutter-label"])) {
+  position: sticky; inset-inline-start: 0; z-index: 8; background: var(--warp-color-surface);
+}
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: stretch; justify-self: stretch; display: flex; align-items: center; justify-content: end; }
 :where([data-scope="calendar"] [data-part="head"]) { border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
 :where([data-scope="calendar"] [data-part="dayhead"]) {
   display: flex; align-items: baseline; justify-content: center; gap: 6px; padding-block: 10px 8px;
@@ -65,7 +75,8 @@
   position: relative; overflow: auto; overscroll-behavior: contain; min-block-size: 0;
 }
 :where([data-scope="calendar"] [data-part="cols"]) { position: relative; block-size: calc(var(--warp-cal-hour) * var(--_hours, 24)); }
-:where([data-scope="calendar"] [data-part="gutter"]) { position: relative; }
+/* the hours stay put as a wide week scrolls sideways under them */
+:where([data-scope="calendar"] [data-part="gutter"]) { position: sticky; inset-inline-start: 0; z-index: 8; background: var(--warp-color-surface); }
 :where([data-scope="calendar"] [data-part="hour"]) {
   position: absolute; inset-inline-end: 8px; translate: 0 -50%; font: 500 10.5px/1 var(--warp-font-mono);
   color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap;
@@ -105,6 +116,8 @@
 :where([data-scope="calendar"] [data-part="event"][data-short]) { flex-direction: row; align-items: baseline; gap: 6px; padding-block: 2px; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; flex: 0 1 auto; }
 /* a flex item: without min 0 it never shrinks to its ellipsis */
+/* a short event on one line: the times give way before the name does */
+:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-time"]) { flex-shrink: 1000; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; overflow: clip; text-overflow: ellipsis; min-inline-size: 0; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-start"]) { display: none; font: 500 10.5px/1.2 var(--warp-font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: clip; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
@@ -178,17 +191,20 @@
 }
 :where([data-scope="calendar"] [data-part="day-cell"][data-outside]) { background: var(--warp-color-surface-sunken); color: var(--warp-color-text-subtle); }
 :where([data-scope="calendar"] [data-part="chip"]) {
+  /* a block, not a flex row: the title is its own text, so a long one ends in an ellipsis rather than a hard cut */
   --_c: var(--warp-color-data-1);
-  display: flex; align-items: center; gap: 6px; min-inline-size: 0; block-size: 20px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
-  font-size: 11.5px; line-height: 1; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent); white-space: nowrap; overflow: clip;
+  display: block; min-inline-size: 0; block-size: 20px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
+  font-size: 11.5px; line-height: 20px; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent);
+  white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
-:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; flex: none; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
-/* a phone's day is too narrow for a title: the events become dots, and each keeps its name for assistive tech */
+:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; display: inline-block; vertical-align: 1px; margin-inline-end: 6px; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* a phone's month day is too narrow for a title: its events become dots, and each keeps its name for assistive tech.
+   Only the month's: an all-day event in Week and Day keeps its name */
 @container calendar (max-width: 479.98px) {
 :where([data-scope="calendar"] [data-part="day-cell"]) { grid-template-columns: repeat(auto-fill, 8px); justify-content: start; }
 :where([data-scope="calendar"] [data-part="day-cell"]) > :where(:not([data-part="chip"])) { grid-column: 1 / -1; }
-:where([data-scope="calendar"] [data-part="chip"]) { inline-size: 8px; block-size: 8px; padding: 0; gap: 0; background: none; font-size: 0; }
-:where([data-scope="calendar"] [data-part="chip"])::before { inline-size: 8px; block-size: 8px; }
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"]) { display: flex; inline-size: 8px; block-size: 8px; padding: 0; background: none; font-size: 0; line-height: 0; }
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"])::before { margin: 0; inline-size: 8px; block-size: 8px; }
 }
 :where([data-scope="calendar"] [data-part="more"]) { font: 500 11px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 6px; background: none; border: 0; text-align: start; }
 /* resource / timeline view: rows are people or rooms, time runs across */
@@ -201,7 +217,7 @@
 }
 :where([data-scope="calendar"] [data-part="timeline"]) {
   display: grid; grid-template-columns: var(--_label) minmax(0, 1fr); font-size: var(--warp-text-caption-size);
-  min-inline-size: calc(var(--_label) + var(--_slots, 10) * var(--warp-cal-hour-w));
+  min-inline-size: calc(var(--_label) + var(--_slots, 10) * max(var(--warp-cal-hour-w), var(--_fit, 0px)));
 }
 :where([data-scope="calendar"] [data-part="timeline"] > [data-part="corner"], [data-scope="calendar"] [data-part="lane-label"]) {
   position: sticky; inset-inline-start: 0; z-index: 5; background: var(--warp-color-surface);
@@ -209,22 +225,25 @@
 :where([data-scope="calendar"] [data-part="lane-label"]) { display: flex; align-items: center; gap: 8px; padding: 8px; min-inline-size: 0; overflow: clip; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
 :where([data-scope="calendar"] [data-part="lane-label"] > *) { white-space: nowrap; overflow: clip; text-overflow: ellipsis; max-inline-size: 100%; }
 :where([data-scope="calendar"] [data-part="lane"]) {
-  position: relative; min-block-size: 52px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
+  /* five-minute columns (--_cols): a booking spans its minutes, and the row grows to the tallest name in it; bookings
+     that overlap in one row stack */
+  position: relative; display: grid; grid-template-columns: repeat(var(--_cols, 120), minmax(0, 1fr)); grid-auto-flow: row dense;
+  align-content: center; row-gap: 4px; box-sizing: border-box; min-block-size: 52px; padding-block: 6px;
+  border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
   background-image: repeating-linear-gradient(to right, var(--warp-color-border) 0 1px, transparent 1px calc(100% / var(--_slots, 10)));
 }
 :where([data-scope="calendar"] [data-part="lane"] [data-part="event"]) {
-  inset-block: 6px; block-size: auto; inset-inline-start: calc(100% * var(--_x)); inline-size: calc(100% * var(--_w) - 2px);
-  /* a booking reads its own width: its name on up to two lines, broken between words; on one line with its times under
-     it when there's room; or only its start when the name would be a letter or two a line */
+  position: relative; inset: auto; block-size: auto; min-block-size: 40px; inline-size: auto; min-inline-size: 0; margin-inline-end: 2px;
+  /* a booking reads its own width: its whole name, broken only between words (Calendar widens the hours when a word
+     needs it), with its times under it when there's room; or only its start when it is too narrow for a word */
   container: cal-event / inline-size; flex-direction: column; align-items: stretch; justify-content: center; gap: 1px;
-  padding-inline: calc(4px + var(--warp-cal-bar)) 3px;
+  padding-block: 4px; padding-inline: calc(4px + var(--warp-cal-bar)) 3px;
 }
 :where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) {
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow-wrap: break-word; line-height: 1.25;
+  display: block; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: normal; line-height: 1.25;
 }
 :where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: none; }
 @container cal-event (min-width: 100px) {
-:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) { -webkit-line-clamp: 1; }
 :where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: block; }
 }
 @container cal-event (max-width: 33.98px) {

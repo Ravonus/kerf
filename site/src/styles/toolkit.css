@@ -59,7 +59,13 @@
 [data-site="frame"] [data-part="knobs"] > [data-scope="button"] { justify-self: start; }
 [data-site="frame"] [data-part="knob"] { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
 [data-site="frame"] [data-part="knob"] > [data-part="knob-label"] { font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"] { max-inline-size: 100%; overflow-x: auto; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"] { max-inline-size: 100%; }
+/* measured at its natural width, then wrapped when that is wider than the panel (Playground's wrap()) */
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-measure] { max-inline-size: none; inline-size: max-content; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { display: flex; flex-wrap: wrap; justify-self: stretch; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label { flex: 1 1 auto; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > [data-part="indicator"] { display: none; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label:has(input:checked) { background: var(--warp-color-accent-solid); }
 [data-site="frame"] [data-part="knob"][hidden] { display: none; }
 [data-site="frame"] [data-part="presets"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); }
 
@@ -88,7 +94,9 @@
 [data-site="tk-section"] [data-part="use"] li + li, [data-site="tk-section"] [data-part="notes"] li + li { margin-block-start: var(--warp-space-tight); }
 [data-site="tk-section"] [data-part="keys"] { display: grid; margin: 0; }
 [data-site="tk-section"] [data-part="keys"] > div { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: center; gap: var(--warp-space-group); min-block-size: 44px; border-block-end: var(--warp-border-hairline) solid var(--rule); }
-[data-site="tk-section"] [data-part="keys"] dt { display: flex; flex-wrap: wrap; gap: var(--warp-space-hair); }
+[data-site="tk-section"] [data-part="keys"] dt { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-hair); }
+[data-site="tk-section"] [data-part="keys"] [data-part="chord"] { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-hair); }
+[data-site="tk-section"] [data-part="keys"] [data-part="key-word"] { color: var(--dim); font-size: var(--warp-text-caption-size); }
 [data-site="tk-section"] [data-part="keys"] dd { margin: 0; color: var(--dim); }
 [data-site="tk-section"] [data-part="chips"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); margin: 0; }
 /* Related pages are quiet links, not buttons: names as words, in the body face, underlined on hover. */
@@ -151,14 +159,19 @@
 [data-site="tile"] [data-part="mount"] > * { max-inline-size: 100%; }
 [data-site="tile"] [data-part="words"] { padding: var(--warp-space-tight) var(--warp-space-related); }
 [data-site="tile"] strong { font-size: var(--doc-small); font-weight: 600; }
-[data-site="tile"] [data-part="words"] span { font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
-/* A phone shows the hubs two to a row, with short previews: one column of wide empty cards made /components 25,000px long. */
+[data-site="tile"] [data-part="words"] span { display: none; font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
+/* A phone shows one card to a row, its picture the card's full width above the name and what it is for. The picture
+   lays out at the same working width as on a desktop, so it draws at about 0.8 and its words can be read: a 128px
+   thumbnail beside the name drew most examples at 0.2 to 0.3, and two to a row no better. The stage hugs the picture
+   (fitTile, up to --tile-hug, then a crop), so a one-line example is a short card, not a line in a blank box. */
 @media (max-width: 599.98px) {
-  [data-tk="tiles"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--warp-space-related); }
-  [data-site="tile"] [data-part="stage"] { aspect-ratio: 4 / 3; }
-  [data-site="tile"] [data-part="mount"] { --tile-zoom: 0.6; }
-  [data-site="tile"] [data-part="words"] { padding: var(--warp-space-hair) var(--warp-space-tight); }
-  [data-site="tile"] strong { display: block; overflow-wrap: anywhere; font-size: var(--doc-micro); }
+  [data-tk="tiles"] { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-related); }
+  [data-site="tile"] { grid-template-rows: auto auto; contain-intrinsic-size: auto 200px; }
+  [data-site="tile"] [data-part="stage"] { aspect-ratio: auto; block-size: 120px; }
+  [data-site="tile"] [data-part="mount"] { --tile-hug: 240px; padding: var(--warp-space-related); }
+  [data-site="tile"] [data-part="words"] { display: grid; gap: var(--warp-space-hair); padding: var(--warp-space-tight) var(--warp-space-related) var(--warp-space-related); min-inline-size: 0; }
+  [data-site="tile"] strong { overflow-wrap: anywhere; }
+  [data-site="tile"] [data-part="words"] span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 }
 [data-tk="all"] { margin-block-start: var(--warp-space-group); font-size: var(--doc-small); }
 

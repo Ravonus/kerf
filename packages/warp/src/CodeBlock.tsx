@@ -8,10 +8,12 @@ import '@weft-js/warp-core/styles/rich/code-tabs.css'
 
 /** Props for CodeBlock. */
 export interface CodeBlockProps {
+  /** The source to show, colour and copy. */
   code: string
   /** tsx by default; ts, js, json and sh are coloured too, anything else stays plain. */
-  language?: string | undefined
-  filename?: string | undefined
+  language?: string
+  /** A file name shown in the bar above the code. */
+  filename?: string
   /** Line numbers. */
   lines?: boolean | undefined
   /** Wrap long lines instead of scrolling. */

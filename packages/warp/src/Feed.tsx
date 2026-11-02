@@ -21,9 +21,11 @@ export interface FeedProps<T extends FeedItem> {
   height?: string
   busy?: boolean | undefined
   /** Near the end: load more. */
-  onEnd?: (() => void) | undefined
-  onDrift?: ((index: number, predicted: number, actual: number) => void) | undefined
-  control?: ((c: VirtualControl) => void) | undefined
+  onEnd?: () => void
+  /** Called when an item's measured height differs from the estimate, with both heights. For tuning. */
+  onDrift?: (index: number, predicted: number, actual: number) => void
+  /** Hands over a control to scroll to, focus or move between items from outside. */
+  control?: (c: VirtualControl) => void
   /** An item's whole content. Default: knot, what, when, detail. */
   children?: (item: () => T) => unknown
 }

@@ -88,7 +88,25 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
     if (Object.keys(given).length) values.value = { ...values.value, ...given }
     void previews[props.file]!().then(m => { Case = m[play.example] as typeof Case; show() })
   })
-  onCleanup(() => { gone = true; if (frame) cancelAnimationFrame(frame); stop?.() })
+  // A button per option: a group too wide for the panel wraps onto more rows (the sliding indicator gives way to a
+  // filled pick), and goes back to one row as soon as it fits again.
+  let knobs!: HTMLDivElement
+  const wrap = () => {
+    for (const seg of knobs.querySelectorAll<HTMLElement>('[data-part="knob"] > [data-scope="segmented"]')) {
+      const room = seg.parentElement?.clientWidth ?? 0
+      if (!room) continue // a hidden knob: measured when it shows, since that resizes the panel
+      seg.setAttribute('data-measure', '')
+      const need = seg.offsetWidth
+      seg.removeAttribute('data-measure')
+      seg.toggleAttribute('data-wrap', need > room)
+    }
+  }
+  let watch: ResizeObserver | undefined
+  onMount(() => {
+    wrap()
+    if (typeof ResizeObserver === 'function') (watch = new ResizeObserver(() => wrap())).observe(knobs)
+  })
+  onCleanup(() => { gone = true; watch?.disconnect(); if (frame) cancelAnimationFrame(frame); stop?.() })
   const code = derived(() => print(play, props.name, values.value))
   const html = derived(() => highlight(code.value, 'tsx'))
   return (
@@ -97,7 +115,7 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
         <div data-part="stage" style={play.height ? `--stage-h:${play.height}px` : undefined}>
           <div data-part="mount" data-stage={play.stage ?? 'center'} ref={host}><span data-part="wait" aria-hidden="true"></span></div>
         </div>
-        <div data-part="knobs">
+        <div data-part="knobs" ref={knobs}>
           {play.presets && (
             <div data-part="presets">
               {play.presets.map(p => <Button key={p.label} size="sm" emphasis="soft" tone="neutral" onClick={() => change({ ...startOf(play), ...p.values })}>{p.label}</Button>)}

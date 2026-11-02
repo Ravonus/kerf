@@ -179,6 +179,52 @@ for (const path of ['/components/dither', '/components/select', '/charts/line-ch
     if (!code) throw new Error('no code in any description')
   })
 }
+// A knob with a few options is a button per option, and every one of them is on screen inside the panel; a long list
+// is a dropdown.
+for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
+  await check(`few options are buttons at ${viewport.width}`, '/components/button', async page => {
+    await page.locator('[data-play]').scrollIntoViewIfNeeded()
+    await page.waitForSelector('[data-play] [data-part="knob"] [data-scope="segmented"]')
+    await page.waitForTimeout(400)
+    const knobs = await page.evaluate(() => [...document.querySelectorAll('[data-play] [data-part="knob"]:not([hidden])')].map(k => {
+      const seg = k.querySelector('[data-scope="segmented"]'), panel = k.getBoundingClientRect()
+      const out = seg ? [...seg.querySelectorAll('label')].filter(l => { const r = l.getBoundingClientRect(); return r.width < 8 || r.left < panel.left - 1 || r.right > panel.right + 1 }).map(l => l.textContent) : []
+      return { label: k.querySelector('[data-part="knob-label"], label')?.textContent?.trim(), seg: !!seg, options: seg?.querySelectorAll('label').length ?? 0, select: !!k.querySelector('[data-scope="select"], select'), out }
+    }))
+    for (const name of ['Emphasis', 'Tone', 'Size']) {
+      const k = knobs.find(x => x.label === name)
+      if (!k) throw new Error(`no ${name} knob`)
+      same(k.seg && !k.select, true, `${name} is a button per option`)
+      same(k.out.join(), '', `${name} options off the panel`)
+    }
+  }, viewport)
+}
+// Every prop and event in every API table says what it does. The pages are read as served (the tables are in the
+// server's HTML), so one browser page lists the hubs and the rest is fetches. The allowlisted pages are mid-rewrite
+// elsewhere; take each off as it lands.
+const WORDS_PENDING = new Set(['/components/calendar', '/components/command-palette', '/components/pagination-bar', '/components/data-grid'])
+await check('every api row has a description', '/components', async page => {
+  const hrefs = new Set()
+  for (const hub of ['/components', '/blocks', '/charts']) {
+    if (hub !== '/components') await page.goto(base + hub, { waitUntil: 'load' })
+    for (const h of await page.locator('a[data-site="tile"][href]').evaluateAll(as => as.map(a => a.getAttribute('href')))) hrefs.add(h.split('#')[0])
+  }
+  if (hrefs.size < 150) throw new Error(`only ${hrefs.size} pages listed on the hubs`)
+  const text = html => html.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/g, 'x').trim()
+  const empty = []
+  let rows = 0
+  for (const href of [...hrefs].filter(h => !WORDS_PENDING.has(h))) {
+    const html = await (await fetch(base + href)).text()
+    for (const [, row] of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)) {
+      const cell = /<td data-label="Description"[^>]*>([\s\S]*?)<\/td>/.exec(row)
+      if (!cell) continue
+      rows++
+      if (!text(cell[1])) empty.push(`${href} ${text(/<th\b[^>]*>([\s\S]*?)<\/th>/.exec(row)?.[1] ?? '?')}`)
+    }
+  }
+  if (rows < 1500) throw new Error(`only ${rows} api rows found`)
+  same(empty.join(', '), '', 'empty descriptions')
+})
 // The fold's button is solid and sits under the code, folded or open, so no line runs into it.
 await check('view code sits under the code on a phone', '/components/select', async page => {
   const frame = page.locator('[data-site="frame"]:has(> [data-part="code"][data-fold])').first()
@@ -194,8 +240,7 @@ await check('view code sits under the code on a phone', '/components/select', as
     if (when === 'folded') await frame.getByRole('button', { name: 'View code' }).click()
   }
 }, PHONE)
-// Hub cards: these three previews fit their card (no giant clipped title, no half a table), and a phone gets two
-// short cards to a row instead of one long column.
+// Hub cards: these three previews fit their card (no giant clipped title, no half a table).
 await check('hub previews fit their cards', '/blocks', async page => {
   const out = []
   for (const name of ['conversation', 'bell', 'rolesmatrix']) {
@@ -211,8 +256,10 @@ await check('hub previews fit their cards', '/blocks', async page => {
   }
   same(out.filter(Boolean).join(), '', 'previews past their card')
 })
-// Every hub card is a deliberate picture of its example: scaled into the card, never wider than it, starting at its top
-// (not mid-content), with nothing inside running past the card's edge; a chart shows the whole chart, not its legend.
+// Every hub card is a deliberate picture of its example, at a scale its words can be read (0.3 or more, on a phone as
+// on a desktop): the whole example shrunk to fit, or, when that would be too small, its top at full scale, marked as a
+// crop. Never wider than the card, starting at its top (not mid-content), with nothing inside running past the card's
+// edge; a chart is never cropped, so it shows the whole chart, not its legend.
 for (const path of ['/components', '/blocks', '/charts']) {
   for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
     await check(`hub cards are whole pictures ${path} at ${viewport.width}`, path, async page => {
@@ -225,13 +272,14 @@ for (const path of ['/components', '/blocks', '/charts']) {
       const bad = await page.evaluate(chart => [...document.querySelectorAll('[data-site="tile"]')].flatMap(t => {
         const stage = t.querySelector('[data-part="stage"]'), m = t.querySelector('[data-part="mount"]')
         const st = stage.getBoundingClientRect(), r = m.getBoundingClientRect()
-        const scale = +(/scale\(([\d.]+)\)/.exec(m.style.transform)?.[1] ?? 0)
+        const scale = +(/scale\(([\d.]+)\)/.exec(m.style.transform)?.[1] ?? 0), crop = m.hasAttribute('data-crop')
         const out = []
         if (!scale) out.push('never fitted')
-        else if (scale < 0.25) out.push(`drawn at ${scale.toFixed(2)}`)
+        else if (scale < 0.3) out.push(`drawn at ${scale.toFixed(2)}`)
+        if (crop !== r.bottom > st.bottom + 1) out.push(crop ? 'marked cropped but whole' : 'cut off without a crop')
+        if (chart && crop) out.push('chart cropped')
         if (r.left < st.left - 1 || r.right > st.right + 1) out.push('wider than the card')
         if (r.top < st.top - 1) out.push('starts above the card')
-        if (chart && r.bottom > st.bottom + 1) out.push('chart cut off')
         // a descendant cut by the card's edge (in it, but running past it), with nothing between them that clips it
         const clips = e => { for (let p = e.parentElement; p && p !== m; p = p.parentElement) if (getComputedStyle(p).overflowX !== 'visible') return true; return false }
         const past = [...m.querySelectorAll('*')].find(e => { const box = e.getBoundingClientRect(); return box.width > 0 && box.left < st.right && box.right > Math.min(r.right, st.right) + 2 && !clips(e) })
@@ -242,11 +290,45 @@ for (const path of ['/components', '/blocks', '/charts']) {
     }, viewport)
   }
 }
-for (const path of ['/components', '/blocks']) {
-  await check(`hub is compact on a phone ${path}`, path, async page => {
-    const { cols, tall } = await page.evaluate(() => ({ cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length, tall: document.documentElement.scrollHeight }))
-    same(cols, 2, 'cards to a row')
-    if (tall > 14000) throw new Error(`${tall}px long`)
+// On a phone a hub is one card to a row: the picture the card's full width above the name and a readable line or two of
+// what it is for, every name and description in full view of its card. The picture hugs its example: no taller than
+// 240px (a crop past that), and not a short example in a tall blank box, so the page is long only in proportion to what
+// is on it. Blank is the stage's height less the span its drawn things (text, leaves, and boxes with a fill or a border)
+// cover.
+for (const path of ['/components', '/blocks', '/charts']) {
+  await check(`hub cards read on a phone ${path}`, path, async page => {
+    for (let i = 0; i < 400; i++) {
+      const more = await page.evaluate(() => { const m = document.querySelector('[data-site="tile"] [data-part="mount"]:not([data-ready])'); m?.scrollIntoView({ block: 'center' }); return !!m })
+      if (!more) break
+      await page.waitForTimeout(100)
+    }
+    await page.waitForTimeout(1200)
+    const { cols, bad } = await page.evaluate(() => ({
+      cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length,
+      bad: [...document.querySelectorAll('[data-site="tile"]')].flatMap(t => {
+        const card = t.getBoundingClientRect(), stage = t.querySelector('[data-part="stage"]').getBoundingClientRect()
+        const name = t.querySelector('[data-part="words"] strong'), line = t.querySelector('[data-part="words"] span')
+        const out = []
+        if (stage.width < card.width - 2) out.push(`picture ${Math.round(stage.width)} of ${Math.round(card.width)}px wide`)
+        if (stage.height > 242) out.push(`picture ${Math.round(stage.height)}px tall`)
+        const drawn = e => { if (!e.firstElementChild || /^(svg|img|canvas|input|textarea|select|video)$/.test(e.localName)) return true; const c = getComputedStyle(e); return c.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderBottomWidth) > 0 }
+        let top = Infinity, bottom = -Infinity
+        const cover = b => { if (b.width && b.height) { top = Math.min(top, Math.max(b.top, stage.top)); bottom = Math.max(bottom, Math.min(b.bottom, stage.bottom)) } }
+        const mount = t.querySelector('[data-part="mount"]')
+        for (const e of mount.querySelectorAll('*')) if (!(e.closest('svg') && e.localName !== 'svg') && drawn(e) && getComputedStyle(e).visibility !== 'hidden') cover(e.getBoundingClientRect())
+        const texts = document.createTreeWalker(mount, NodeFilter.SHOW_TEXT)
+        for (let n; (n = texts.nextNode());) if (n.textContent.trim()) { const r = document.createRange(); r.selectNodeContents(n); cover(r.getBoundingClientRect()) }
+        const blank = stage.height - Math.max(0, bottom - top)
+        if (blank > 24 && blank > stage.height * 0.4) out.push(`${Math.round(blank)} of ${Math.round(stage.height)}px blank`)
+        if (!line || !line.textContent.trim() || line.getBoundingClientRect().height < 10) out.push('no description')
+        else if (parseFloat(getComputedStyle(line).fontSize) < 12) out.push(`description at ${getComputedStyle(line).fontSize}`)
+        for (const e of [name, line].filter(Boolean)) { const r = e.getBoundingClientRect(); if (r.top < stage.bottom - 1) out.push(`${e.localName} beside the picture`); if (r.right > card.right + 1 || r.bottom > card.bottom + 1) out.push(`${e.localName} past the card`) }
+        if (name.scrollWidth > name.clientWidth + 1) out.push('name cut')
+        return out.length ? [`${t.dataset.name}: ${out.join(', ')}`] : []
+      }),
+    }))
+    same(cols, 1, 'cards to a row')
+    same(bad.join('; '), '', 'cards')
   }, PHONE)
 }
 // Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow (warp's prose families, with no
@@ -293,7 +375,7 @@ for (const viewport of [undefined, PHONE]) {
   }, viewport)
 }
 // Thin pages: these had one or two examples and now show the states, sizes and real uses beside them.
-for (const [path, least] of [['/components/month-picker', 5], ['/components/week-picker', 4], ['/components/period-picker', 4], ['/components/date-time-field', 5], ['/components/command-palette', 5], ['/components/radio-group', 5], ['/components/number-field', 6], ['/components/language-select', 5], ['/components/currency-select', 5], ['/components/payment-card-input', 3], ['/charts/sparkline', 3]]) {
+for (const [path, least] of [['/components/month-picker', 5], ['/components/week-picker', 4], ['/components/period-picker', 4], ['/components/date-time-field', 5], ['/components/command-palette', 5], ['/components/radio-group', 5], ['/components/number-field', 6], ['/components/language-select', 5], ['/components/currency-select', 5], ['/components/payment-card-input', 3], ['/charts/sparkline', 3], ['/components/canvas', 11]]) {
   await check(`enough examples ${path}`, path, async page => {
     const n = await page.evaluate(() => document.querySelectorAll('[data-site="frame"]:not([data-play])').length)
     if (n < least) throw new Error(`${n} examples, want at least ${least}`)
@@ -302,6 +384,23 @@ for (const [path, least] of [['/components/month-picker', 5], ['/components/week
     same(broken, 0, 'examples that failed')
   })
 }
+// Every Canvas example paints something, on screen: a blank or zero-sized canvas is a broken example.
+await check('canvas examples draw', '/components/canvas', async page => {
+  await mount(page)
+  const blank = []
+  for (const frame of await page.locator('[data-site="frame"]:not([data-play]) [data-part="stage"]').all()) {
+    await frame.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(250)
+    blank.push(await frame.evaluate(s => {
+      const c = s.querySelector('canvas')
+      if (!c || !c.width || !c.height) return `${s.closest('[id]')?.id ?? '?'} has no canvas`
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data
+      for (let i = 3; i < d.length; i += 4) if (d[i]) return ''
+      return `${s.closest('[id]')?.id ?? '?'} is blank`
+    }))
+  }
+  same(blank.filter(Boolean).join(', '), '', 'canvases')
+})
 // A page with no headings has no contents column, so its words take the room.
 for (const path of ['/reference/rules', '/reference/lists', '/reference/async', '/reference/browser']) {
   await check(`no empty contents column ${path}`, path, async page => {
@@ -392,6 +491,140 @@ await check('related links read as words', '/blocks/checkout', async page => {
   if (!links.length) throw new Error('no related links')
   same(links.filter(l => l.button || l.upper === 'uppercase' || /[a-z][A-Z]/.test(l.text)).map(l => l.text).join(), '', 'loud or squashed')
 })
+// Key caps hold keys: "+" and "or" are words between them, and a comma never sits inside a cap ("Enter," was one).
+await check('key caps hold keys only', '/components/data-grid', async page => {
+  const caps = await page.locator('#accessibility [data-part="keys"] kbd').evaluateAll(ks => ks.map(k => k.textContent.trim()))
+  if (!caps.length) throw new Error('no key caps')
+  same(caps.filter(k => k === '+' || k === 'or' || /.,$/.test(k)).join(' '), '', 'not keys')
+})
+// "Go to" and its box are one item: at 1280 they sit on the pages' row, and never apart.
+await check('pagination keeps Go to with its box', '/components/pagination-bar', async page => {
+  const sec = page.locator('section#PaginationBarControlled')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="jump"]').waitFor()
+  const m = await sec.evaluate(s => {
+    const mid = r => (r.top + r.bottom) / 2
+    const l = s.querySelector('label[for$="-go"]').getBoundingClientRect(), i = s.querySelector('[data-part="jump"]').getBoundingClientRect(), o = s.querySelector('[data-scope="pagination"] ol').getBoundingClientRect()
+    return { pair: Math.abs(mid(l) - mid(i)) < 4, row: Math.abs(mid(o) - mid(i)) < 4 }
+  })
+  same(m.pair, true, 'Go to beside its box')
+  same(m.row, true, 'on the pages row')
+})
+// The bubble toolbar takes a real click (no closed tooltip lies over it) and stays on the selection as the page scrolls.
+await check('bubble toolbar takes a click and follows the selection', '/components/rich-text-editor', async page => {
+  const sec = page.locator('section#RichTextEditorBubble')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[contenteditable]').waitFor()
+  await page.waitForTimeout(300)
+  same(await page.evaluate(() => [...document.querySelectorAll('[popover]')].filter(p => !p.matches(':popover-open') && getComputedStyle(p).display !== 'none').length), 0, 'closed popovers laid out')
+  await sec.evaluate(s => {
+    const ed = s.querySelector('[contenteditable]'), t = ed.querySelector('p').firstChild, r = document.createRange()
+    ed.focus(); r.setStart(t, 0); r.setEnd(t, 6)
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r)
+  })
+  await page.waitForTimeout(250)
+  const gap = () => sec.evaluate(s => { const bar = s.querySelector('[role="toolbar"]').getBoundingClientRect(), r = getSelection().getRangeAt(0).getBoundingClientRect(); return Math.round(r.top - bar.bottom) })
+  const before = await gap()
+  const bold = sec.locator('[aria-label="Bold"]')
+  const r = await bold.boundingBox()
+  await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2)
+  await page.waitForTimeout(150)
+  same(await bold.getAttribute('aria-pressed'), 'true', 'Bold pressed')
+  await page.mouse.wheel(0, 200)
+  await page.waitForTimeout(300)
+  const after = await gap()
+  if (Math.abs(after - before) > 2) throw new Error(`toolbar drifted from the selection: ${before}px then ${after}px`)
+})
+// Esc in the palette clears the query, then goes up a level, then closes, as its docs say.
+await check('palette Esc steps back before it closes', '/components/command-palette', async page => {
+  const sec = page.locator('section#CommandPaletteNested')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('button', { hasText: 'Search commands' }).click()
+  const input = page.locator('dialog[open] [role="combobox"]')
+  await input.waitFor()
+  const open = () => page.evaluate(() => !!document.querySelector('dialog[data-scope="palette"][open]'))
+  await input.fill('Dep')
+  await page.keyboard.press('Escape')
+  same(await input.inputValue(), '', 'query after Esc')
+  same(await open(), true, 'open after clearing')
+  await input.fill('Move')
+  await page.keyboard.press('Enter')
+  await input.fill('us')
+  await page.keyboard.press('Escape')
+  same(await input.inputValue(), '', 'level query after Esc')
+  same(await page.locator('dialog[open] [role="option"]').first().textContent().then(t => /us|eu|ap/i.test(t)), true, 'still in the level')
+  await page.keyboard.press('Escape')
+  same(await open(), true, 'open after going up')
+  same(await page.locator('dialog[open] [role="option"]').first().textContent().then(t => /Move storefront/.test(t)), true, 'back at the top')
+  await page.keyboard.press('Escape')
+  same(await open(), false, 'closed by the last Esc')
+})
+// A phone week keeps seven readable days and scrolls sideways; the all-day event keeps its name; month chips ellipsize.
+await check('calendar week reads on a phone', '/components/calendar', async page => {
+  const sec = page.locator('section#preview') // the Editable week
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="col"]').first().waitFor()
+  await page.waitForTimeout(300)
+  const m = await sec.evaluate(s => {
+    const cols = [...s.querySelectorAll('[data-part="col"]')].map(c => c.getBoundingClientRect().width)
+    const chip = s.querySelector('[data-part="allday"] [data-part="chip"]')
+    return { days: cols.length, min: Math.min(...cols), chipFont: chip ? parseFloat(getComputedStyle(chip).fontSize) : 0 }
+  })
+  same(m.days, 7, 'days')
+  if (m.min < 120) throw new Error(`a day is ${Math.round(m.min)}px wide`)
+  if (m.chipFont < 10) throw new Error('the all-day event is a bare dot')
+}, { width: 390, height: 844 })
+await check('month chips ellipsize', '/components/calendar', async page => {
+  const sec = page.locator('section#CalendarMonth')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="day-cell"]').first().waitFor()
+  await page.waitForTimeout(300)
+  const bad = await sec.evaluate(s => [...s.querySelectorAll('[data-part="day-cell"] [data-part="chip"]')].filter(c => c.scrollWidth > c.clientWidth + 1 && getComputedStyle(c).textOverflow !== 'ellipsis').map(c => c.textContent))
+  same(bad.join(), '', 'chips cut without an ellipsis')
+})
+// Vivid buttons work like Keel's: flat at rest, pulled up and left off a hard offset under the hand, set back down by a press.
+await check('vivid buttons pull out on hover', '/components/button?expression=vivid', async page => {
+  const btn = page.locator('[data-part="mount"] [data-scope="button"]:not([data-emphasis])').first()
+  await btn.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(1200)
+  const look = () => btn.evaluate(e => { const c = getComputedStyle(e); return { t: c.translate, off: c.boxShadow.match(/(-?[\d.]+)px (-?[\d.]+)px 0px 0px/)?.slice(1, 3).join(' ') } })
+  same((await look()).off, '0 0', 'offset at rest')
+  const box = await btn.boundingBox()
+  await page.mouse.move(box.x + 8, box.y + box.height / 2)
+  await page.waitForTimeout(700)
+  const over = await look()
+  same(over.t, '-2px -2px', 'hover moves up and left')
+  if (over.off === '0 0') throw new Error('hover shows no offset')
+  // the offset is the page's opposite: black on light, white on dark
+  const shade = () => btn.evaluate(e => { const g = document.createElement('canvas').getContext('2d'); g.fillStyle = getComputedStyle(e).boxShadow.match(/^(.*?\)) -?[\d.]+px/)[1]; g.fillRect(0, 0, 1, 1); return [...g.getImageData(0, 0, 1, 1).data.slice(0, 3)].join() })
+  const dark = await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches || document.documentElement.dataset.theme === 'dark')
+  same(await shade(), dark ? '255,255,255' : '0,0,0', 'offset colour')
+  await page.mouse.down()
+  await page.waitForTimeout(100)
+  same((await look()).off, '0 0', 'press sets it down')
+  await page.mouse.up()
+})
+
+// The fill wipes in from the left by default; only a button with `follow` spreads from the pointer.
+await check('fill wipes by default, follows on request', '/components/button?expression=vivid', async page => {
+  const sec = page.locator('section[data-site="tk-section"]:has(h2:text-is("Fill that follows"))')
+  await sec.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(1500)
+  const wipe = sec.locator('[data-scope="button"]:not([data-follow])').first(), follow = sec.locator('[data-scope="button"][data-follow]').first()
+  const fill = el => el.evaluate(e => { const c = getComputedStyle(e, '::before'); return { t: c.transform, img: c.backgroundImage } })
+  same((await fill(wipe)).t, 'matrix(0, 0, 0, 1, 0, 0)', 'wipe at rest')
+  for (const [el, name] of [[wipe, 'wipe'], [follow, 'follow']]) {
+    const box = await el.boundingBox()
+    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height / 2)
+    await page.waitForTimeout(900)
+    const f = await fill(el)
+    same(f.t, 'matrix(1, 0, 0, 1, 0, 0)', `${name} covers on hover`)
+    if (name === 'follow' && !/radial-gradient/.test(f.img)) throw new Error('follow draws no spread')
+    await page.mouse.move(5, 5)
+    await page.waitForTimeout(900)
+  }
+})
+
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

@@ -279,6 +279,7 @@ export const data: DocGroup = {
       keyboard: [['Alt + arrows', 'Moves the focused card'], ['Space', 'Picks up or drops the card'], ['← → ↑ ↓', 'Moves a card that\'s picked up'], ['Esc', 'Puts a card back']],
       a11yNotes: ['There are three ways to move a card, and only one needs a pointer. The Move button lists every destination.', 'Every move is announced with where the card landed.', 'On a touch screen the Move button opens a sheet.'],
       propDocs: {
+        onDrift: 'Called when a card\'s measured height differs from the estimate, with both heights. For tuning.',
         columns: 'A state, or a list the board follows and `onMove` reports to.',
         onMove: 'Called with the card\'s id, the column and the index.',
         onAdd: 'Shows Add card in each column, and is called with the column and the title.',

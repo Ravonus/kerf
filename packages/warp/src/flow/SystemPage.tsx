@@ -106,6 +106,7 @@ export interface SystemPageProps {
   secondary?: { label: unknown; onClick?: (() => void) | undefined; href?: string }
   /** 404: the search field. */
   onSearch?: (q: string) => void
+  /** The 404 search field's label. Default "Search". */
   searchLabel?: string
   /** 500: `retry` from `<Boundary>`. */
   onRetry?: (() => void) | undefined
@@ -119,9 +120,13 @@ export interface SystemPageProps {
   backAt?: unknown
   /** 403: what was asked for and by whom. */
   object?: { title: string; owner?: string }
+  /** 403: the signed-in account, as in "You're signed in as ana@tessel.dev". */
   account?: string
+  /** 403: the access request: who approves it, whether it is pending, and what sending or withdrawing does. */
   request?: AccessRequest
+  /** 403: other signed-in accounts, offered in a Switch account menu. */
   accounts?: SwitchAccount[]
+  /** Called with the account picked, or undefined to sign in as someone else. */
   onSwitch?: (id: string | undefined) => void
   /** 403: access came through: `children` is the object, loaded in place. */
   granted?: boolean

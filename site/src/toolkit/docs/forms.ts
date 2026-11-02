@@ -56,7 +56,7 @@ export const forms: DocGroup = {
       ],
       keyboard: [['Tab', 'Moves in and out'], ['Esc', 'Clears a `clearable` field']],
       a11yNotes: ['The label is a real `<label>`, and the hint and error are tied to the input with `aria-describedby`.', 'An error is announced when it appears.'],
-      propDocs: { ...fieldProps, icon: 'An icon before the text.', prefix: 'Fixed text before the value, like `https://`.', suffix: 'Fixed text after the value, like a unit.', clearable: 'A clear button, shown once there is a value.', counter: 'The most it should hold. Draws a count under the field.' },
+      propDocs: { type: 'The native input type, such as `email`, `url` or `password`. Text otherwise.', ...fieldProps, icon: 'An icon before the text.', prefix: 'Fixed text before the value, like `https://`.', suffix: 'Fixed text after the value, like a unit.', clearable: 'A clear button, shown once there is a value.', counter: 'The most it should hold. Draws a count under the field.' },
       related: ['Field', 'Textarea', 'Search', 'Select'],
     },
     {

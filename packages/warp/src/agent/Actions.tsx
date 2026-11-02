@@ -32,13 +32,18 @@ export type Feedback = 'up' | 'down' | null
 
 /** Props for MessageActions. */
 export interface MessageActionsProps {
-  onCopy?: (el: HTMLElement) => unknown
-  onFeedback?: ((value: Feedback, reason?: string) => void) | undefined
+  /** Adds Copy, and is called with the pressed button. Copy the message text here. */
+  onCopy?: (el: HTMLElement) => void
+  /** Called with `up`, `down` or null when thumbs change, and the reason picked for a thumbs down. */
+  onFeedback?: (value: Feedback, reason?: string) => void
   reasons?: string[]
-  onRegenerate?: (() => void) | undefined
-  onBranch?: (() => void) | undefined
+  /** Adds Regenerate: ask for a new answer. */
+  onRegenerate?: () => void
+  /** Adds Branch: start a new conversation from this message. */
+  onBranch?: () => void
   stopped?: boolean
-  branch?: { index: number; count: number; onChange: (index: number) => void } | undefined
+  /** Which of several answers is shown, with arrows between them. */
+  branch?: { index: number; count: number; onChange: (index: number) => void }
 }
 
 /**

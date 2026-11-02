@@ -24,18 +24,24 @@ export type MeetingPlannerProps = {
   loadAttendees?: (q: string, signal: AbortSignal) => Promise<Attendee[]>
   /** The app's own suggestions; else they come from everyone's `busy`. */
   loadSlots?: (input: { attendees: Attendee[]; date: string; duration: number }) => number[] | Promise<number[]>
+  /** The meeting's starting length, in minutes. Default 30. */
   duration?: number
   durations?: number[]
   title?: string
+  /** The meeting link the form starts with, such as a video call URL. */
   link?: string
   tags?: string[]
   /** The strip's hours, minutes since midnight. */
-  from?: number | undefined
-  to?: number | undefined
-  timeZone?: string | undefined
-  today?: string | undefined
-  locale?: string | undefined
-  hourCycle?: string | undefined
+  from?: number
+  /** Where the strip's hours end, in minutes since midnight. */
+  to?: number
+  /** The IANA zone times are shown in, such as `Europe/Berlin`. */
+  timeZone?: string
+  /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
+  today?: string
+  locale?: string
+  /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
+  hourCycle?: string
   onSubmit: (m: MeetingDetails) => void | Promise<unknown>
   onUndo?: () => void
 }

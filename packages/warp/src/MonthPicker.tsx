@@ -93,8 +93,10 @@ export function MonthPicker({ value, defaultValue, onValueChange, open, defaultO
   )
 }
 
-/** Props for WeekPicker. */
-export type WeekPickerProps = RichFieldProps & Bindable<IsoWeek | null> & Openable & { numbering?: 'iso' | 'locale' }
+export type WeekPickerProps = RichFieldProps & Bindable<IsoWeek | null> & Openable & {
+  /** The day each grid row starts on: `iso` (the default) starts on Monday, so a row is one ISO 8601 week; `locale` starts on the locale's first day of the week. The value is an ISO week either way. */
+  numbering?: 'iso' | 'locale'
+}
 
 const weekName = (w: string, locale: string) => {
   const s = isoWeekStart(w)

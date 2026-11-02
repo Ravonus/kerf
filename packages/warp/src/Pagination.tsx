@@ -12,25 +12,36 @@ import '@weft-js/warp-core/styles/data/load-more.css'
 
 /** Props for PaginationBar. */
 export type PaginationBarProps = {
-  label?: string | undefined
+  /** The nav landmark's name; give each bar on a page its own. */
+  label?: string
   /** offset (default): numbered pages. cursor: Previous and Next, for a list with no page count. */
   mode?: 'offset' | 'cursor'
   /** 1-based. */
   page?: State<number> | number
+  /** The page it opens on when `page` isn't given. */
   defaultPage?: number
+  /** Hears the new page (offset) or page index (cursor) on every move. */
   onPageChange?: (page: number) => void
   /** offset: how many rows there are. */
   total?: number
-  size?: State<number> | number | undefined
+  /** Rows per page: a State to share it, or a number. 25 without it. */
+  size?: State<number> | number
+  /** The choices in the rows-per-page menu. */
   sizes?: number[]
+  /** Hears a new rows-per-page choice; the bar goes back to page 1. */
   onSizeChange?: (size: number) => void
-  /** cursor */
+  /** cursor: there is a page after this one, so Next is on. */
   hasMore?: boolean
+  /** cursor: there is a page before this one, so Previous is on. */
   hasPrev?: boolean
+  /** cursor: the 0-based page showing, which `onPageChange` steps from. */
   pageIndex?: number
+  /** cursor: how many rows there are in all, when known ("Showing 50 of 1,200"). */
   supply?: number
+  /** cursor: how many rows have loaded so far; `(pageIndex + 1) * size` without it. */
   totalFetched?: number
-  locale?: string | undefined
+  /** The locale its numbers are written in. en-US without it. */
+  locale?: string
 }
 
 /**
@@ -72,10 +83,11 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   }
   const id = uid('pg')
   const first = derived(() => (total ? (current.value - 1) * per.value + 1 : 0))
+  // "Go to" and its box are one item, so the bar never wraps between them: the pair moves to the next line together
   return (
     <nav ref={n => (nav = n)} data-scope="pagination" aria-label={label}>
       <span data-part="field">
-        <span aria-hidden="true">Rows per page</span>
+        <span aria-hidden="true">Rows<span data-part="long"> per page</span></span>
         <CompactSelect label="Rows per page" value={String(per.value)} options={sizes.map(s => ({ value: String(s), label: String(s) }))} onValueChange={v => { per.set(+v); at.set(1) }} />
       </span>
       <span>{`${fmt(first.value)}–${fmt(Math.min(total, current.value * per.value))} of ${fmt(total)}`}</span>
@@ -85,8 +97,10 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
         {pageList(current.value, pages.value).map((p, i) => <li key={p === 'gap' ? `gap${i}` : p} data-part={p === 'gap' ? 'gap' : undefined} aria-hidden={p === 'gap' ? 'true' : undefined}>{p === 'gap' ? '…' : <button type="button" data-part="page" aria-current={p === current.value ? 'page' : undefined} aria-label={`Page ${p}`} onClick={() => go(p)}>{p}</button>}</li>)}
         <li><button type="button" data-part="page" data-edge="" disabled={current.value === pages.value} aria-label="Next page" onClick={() => go(current.value + 1)}>›</button></li>
       </ol>
-      <label data-part="field" for={`${id}-go`}>Go to<span data-part="sr-only"> page</span></label>
-      <input id={`${id}-go`} data-part="jump" inputmode="numeric" placeholder={String(pages.value)} onKeyDown={jump} />
+      <span data-part="field" data-goto="">
+        <label for={`${id}-go`}>Go to<span data-part="sr-only"> page</span></label>
+        <input id={`${id}-go`} data-part="jump" inputmode="numeric" placeholder={String(pages.value)} onKeyDown={jump} />
+      </span>
     </nav>
   )
 }

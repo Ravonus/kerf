@@ -37,7 +37,8 @@ export interface ConnBannerProps {
   contractFailed?: boolean
   /** Seconds to the next try: weft's backoff. */
   retryIn?: number
-  onRetry?: (() => void) | undefined
+  /** Adds Retry now, to try before the backoff runs out. */
+  onRetry?: () => void
   /** Saved changes waiting to sync. */
   changes?: number
   /** Save drafts, then reload. */
@@ -119,7 +120,8 @@ export interface RateLimitedProps {
   /** "You can run 5 exports a minute." */
   description?: unknown
   /** The action that hit the limit: disabled, labelled "Try again in 20s", and back by itself. */
-  trigger?: ButtonProps | undefined
+  trigger?: ButtonProps
+  /** Called when the wait is over and the action is back. */
   onDone?: () => void
 }
 

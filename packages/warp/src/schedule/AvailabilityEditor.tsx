@@ -16,9 +16,10 @@ export type Availability = { week: WeekDay[]; overrides: Override[] }
 export type AvailabilityEditorProps = {
   defaultValue: Availability
   /** "New York (EDT)". */
-  zoneLabel?: string | undefined
-  today?: string | undefined
-  locale?: string | undefined
+  zoneLabel?: string
+  /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
+  today?: string
+  locale?: string
   /** Times on offer, minutes. */
   from?: number | undefined
   to?: number | undefined

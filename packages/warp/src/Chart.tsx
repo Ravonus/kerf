@@ -16,10 +16,11 @@ export type ChartFrame = {
   /** Beside the view toggle: a layout switch, a range picker. */
   toolbar?: unknown
   /** Replaces the plot, in the same frame (06 §12). With no data the frame shows `empty` on its own. */
-  state?: 'loading' | 'empty' | 'error' | undefined
-  loading?: string | undefined
-  empty?: { title: string; detail?: unknown }
-  error?: { title: string; detail?: unknown }
+  state?: 'loading' | 'empty' | 'error'
+  loading?: string
+  /** The title and detail shown in place of the plot when there is no data. */
+  empty?: { title: string; detail?: any }
+  error?: { title: string; detail?: any }
   /** The next step under an empty or error state: a Retry button. */
   action?: unknown
 }

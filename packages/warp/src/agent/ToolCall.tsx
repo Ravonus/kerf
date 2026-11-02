@@ -13,6 +13,7 @@ export interface ToolCallProps {
   call: AgentTool
   /** Called with the arguments as edited, and whether "always allow" is ticked. Approval never auto-runs. */
   onApprove?: (args: string, always: boolean) => void
+  /** Called when the call is denied. */
   onDeny?: () => void
   /** The "always allow" line, scoped to tool and resource: "Always allow edits in src/calendar". */
   alwaysAllow?: string | undefined

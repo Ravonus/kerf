@@ -26,7 +26,9 @@ export interface ScrollGridProps {
   corner?: string
   /** Default `480px`. */
   height?: string
+  /** Each row's height, in pixels. Default 34. */
   rowHeight?: number
+  /** The pinned first column's width, in pixels. Default 132. */
   headerWidth?: number
   /** Marks a cell critical (a negative value). */
   negative?: (row: number, column: GridColumn) => boolean

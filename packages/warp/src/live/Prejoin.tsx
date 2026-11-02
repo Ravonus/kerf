@@ -24,14 +24,19 @@ export interface PrejoinProps {
   preview?: () => unknown
   /** 0 to 1. For a 10 Hz level, set `--level` on [data-part="meter"] yourself: nothing re-renders either way. */
   level?: number
+  /** Whether your mic starts on. */
   mic?: boolean
+  /** Whether your camera starts on. */
   camera?: boolean
+  /** Called with the mic toggle's new state. */
   onMic?: (on: boolean) => void
+  /** Called with the camera toggle's new state. */
   onCamera?: (on: boolean) => void
   devices?: PrejoinDevices
   onDevice?: (kind: 'mic' | 'camera' | 'speaker', id: string) => void
   onTestSound?: (() => void) | undefined
   joining?: boolean
+  /** The join button's words. Default "Join now". */
   joinLabel?: string
   onJoin?: ((name: string) => void) | undefined
 }

@@ -24,6 +24,7 @@ export const actions: DocGroup = {
           { prop: 'loading' },
           { prop: 'full' },
           { prop: 'fill', when: { prop: 'emphasis', is: ['frame'] } },
+          { prop: 'follow', when: { prop: 'emphasis', is: ['solid', 'soft', 'outline', 'ghost'] } },
         ],
         presets: [
           { label: 'Main action', values: { emphasis: 'solid', tone: 'accent' } },
@@ -36,6 +37,7 @@ export const actions: DocGroup = {
           { id: 'ButtonEmphasis', title: 'Emphasis', note: 'Use `emphasis` to set how loud the button is, from `solid` down to `link`.' },
           { id: 'ButtonTones', title: 'Tone', note: 'Use `tone` to say what the action means. `critical` is for anything destructive.', stage: 'start' },
           { id: 'ButtonSizes', title: 'Sizes', note: 'Use `size` for `sm`, `md` or `lg`.' },
+          { id: 'ButtonFollow', title: 'Fill that follows', note: 'By default the fill wipes in from the left and out to the right. Add `follow` and, at vivid, it spreads from where the pointer comes in instead.' },
           { id: 'ButtonWithIcon', title: 'With an icon', note: 'Use `icon` to draw one before the label.' },
           { id: 'ButtonIconOnly', title: 'Icon only', note: 'Needs `label`: it becomes the accessible name.' },
           { id: 'ButtonFull', title: 'Full width', note: 'Use `full` to take the width of the container.', stage: 'narrow' },
@@ -61,6 +63,7 @@ export const actions: DocGroup = {
         label: 'The accessible name, for an icon-only button.',
         type: '`button` by default, so a button in a form never submits it by accident.',
         loading: 'Shows a spinner, keeps the button\'s width and swallows presses.',
+        follow: 'At vivid, the hover fill spreads from where the pointer comes in instead of wiping in from the left.',
       },
       related: ['Toggle', 'Menu', 'Chip'],
     },

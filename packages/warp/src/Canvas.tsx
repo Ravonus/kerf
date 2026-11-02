@@ -11,6 +11,7 @@ export interface CanvasProps {
   draw: (frame: Frame) => boolean | void
   /** Moves at balanced and vivid. Quiet and reduced motion paint one frame, with `still` set. */
   animate?: boolean
+  /** Caps the frame rate while it animates. Uncapped by default, at the display's rate. */
   fps?: number
   /** Whole-cell mode: `width` and `height` count cells of this many CSS pixels, scaled up without smoothing. */
   cell?: number

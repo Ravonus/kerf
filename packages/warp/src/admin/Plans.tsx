@@ -26,6 +26,7 @@ export type BillingPlan = { id: string; name: string; /** Per seat, per month. *
 
 /** Props for PlanPicker. */
 export interface PlanPickerProps {
+  /** The plans to compare, one card each. */
   plans: BillingPlan[]
   current: string
   /** The checked card; a usage meter can preselect the next tier through it. */
@@ -34,8 +35,9 @@ export interface PlanPickerProps {
   seats: number
   daysLeft: number
   periodDays?: number
-  currency?: string | undefined
-  locale?: string | undefined
+  /** The ISO 4217 code prices are shown in, such as `EUR`. */
+  currency?: string
+  locale?: string
   /** The server's proration. Default: `prorate` from the numbers above. */
   preview?: (plan: BillingPlan, interval: BillingInterval) => Promise<Proration> | Proration
   /** What stops working on a downgrade, listed in the dialog. */

@@ -14,9 +14,11 @@ export type MoveSheetProps = {
   event: CalEvent | null
   /** Everything else on the calendar: a start that collides is disabled. */
   events: CalEvent[]
-  firstDayOfWeek?: number | undefined
-  locale?: string | undefined
-  hourCycle?: string | undefined
+  /** The day the week strip starts on, 0 for Sunday to 6. Default 1, Monday. */
+  firstDayOfWeek?: number
+  locale?: string
+  /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
+  hourCycle?: string
   step?: number
   onMove: (e: CalEvent, to: Slot) => void
   onClose?: () => void

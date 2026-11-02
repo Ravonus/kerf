@@ -483,6 +483,8 @@ const cleanDoc = text => {
   return SPEC_WORDS.test(said) ? '' : said
 }
 
+/** The most options a playground shows as one button each; past it, a dropdown. */
+const FEW = 6
 /** Knobs, finished from the type checker: options, the control that suits them, and the default the code compares against. */
 function finishKnobs(play, props, where) {
   return {
@@ -491,7 +493,9 @@ function finishKnobs(play, props, where) {
       const p = props.find(x => x.name === k.prop)
       if (!p && k.prop !== 'children' && !k.options && !k.control) throw new Error(`${where}: no prop ${k.prop}`)
       const options = k.options ?? p?.values
-      const control = k.control ?? (p?.type === 'boolean' ? 'switch' : options ? (options.length <= 5 ? 'segmented' : 'select') : p?.type === 'number' ? 'slider' : 'text')
+      // A choice is a button per option while there are few enough to read at a glance; a long list is a dropdown.
+      const choice = options && (k.control === 'select' || k.control === 'segmented' || (!k.control && p?.type !== 'boolean'))
+      const control = choice ? (options.length <= FEW ? 'segmented' : 'select') : k.control ?? (p?.type === 'boolean' ? 'switch' : p?.type === 'number' ? 'slider' : 'text')
       const unquoted = p?.default?.replace(/^['"]|['"]$/g, '')
       const fallback = k.default !== undefined ? k.default : unquoted === 'true' ? true : unquoted === 'false' ? false : unquoted !== undefined && unquoted !== '' && !isNaN(+unquoted) ? +unquoted : unquoted
       const initial = k.initial !== undefined ? k.initial : fallback !== undefined ? fallback : control === 'switch' ? false : options?.[0] ?? ''

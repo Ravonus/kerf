@@ -19,8 +19,24 @@ export const canvas: DocGroup = {
         { kind: 'variants', title: 'Variants', examples: [
           fill('CanvasBars', 'One drawing', 260, '`draw` gets a scaled context. Resolve a token through CSS before you paint with it. Returning true asks for another frame.'),
           fill('CanvasWave', 'Animated', 260, '`animate` runs every frame. Quiet and reduced motion get one still frame.'),
-          fill('CanvasPointer', 'Follows the pointer', 260, '`pointer` fills `frame.pointer` and repaints when it moves. Move across the dots.'),
+        ] },
+        { kind: 'composition', title: 'Pointer', intro: '`pointer` fills `frame.pointer` with where it is, whether it is over the canvas and whether it is pressed, and repaints when it moves.', examples: [
+          fill('CanvasPointer', 'Follows the pointer', 260, 'Move across the dots.'),
+          fill('CanvasTrail', 'A fading trail', 260, 'Each move adds a point; `animate` fades the old ones out. Keep per-canvas state in the component, not the module.'),
+          fill('CanvasRipples', 'Press to ripple', 260, '`pointer.down` turns true on a press over the canvas. Compare it with the last frame to catch the press itself.'),
+          fill('CanvasNeedle', 'Eases, then stops', 260, 'No `animate`: the needle returns true while it is still moving, so frames stop as soon as it arrives.'),
+        ] },
+        { kind: 'composition', title: 'Data and text', intro: 'Text on a canvas takes the page\'s font through CSS, and a token\'s colour the same way.', examples: [
+          fill('CanvasLive', 'A live line', 260, '`fps={30}` is plenty for a chart that scrolls, and costs half the frames.'),
+        ] },
+        { kind: 'composition', title: 'Theme and dial', examples: [
+          fill('CanvasThemed', 'Colours kept until the theme changes', 260, 'Read colours once and keep them. `onTheme` runs before the repaint when the theme or dial changes, so drop them there.'),
+          fill('CanvasOrbits', 'Reads the expression dial', 260, '`frame.tier` carries the dial\'s numbers where the canvas sits: more dots and faster at vivid, fewer at quiet.'),
+        ] },
+        { kind: 'composition', title: 'Pixels', examples: [
           fill('CanvasCells', 'Whole cells', 260, '`cell` draws in big square pixels. `fps` slows the clock.'),
+          fill('CanvasLife', 'Game of Life', 260, 'In cell mode `width` and `height` count cells, so one cell is one `fillRect(x, y, 1, 1)`.'),
+          fill('CanvasNight', 'An opaque picture', 260, '`context={{ alpha: false }}` for a drawing that covers every pixel: the page skips blending it.'),
         ] },
       ],
       a11yNotes: ['With `label` it is an image with that name. Without one it is decorative and hidden from screen readers.', 'Canvas has a size of zero until its container has one, so set a height.'],
@@ -59,7 +75,7 @@ export const canvas: DocGroup = {
         { kind: 'composition', title: 'In context', examples: [fill('DitherFieldHero', 'Hero', 340, 'Children sit on top. `fade` clears a side for type.')] },
       ],
       a11yNotes: ['It moves at the vivid and balanced dials, and holds still at quiet and under reduced motion.', 'It is decorative unless you give it a `label`.'],
-      propDocs: { kind: 'The named field, or your own function of `(x, y, t)`.', spark: 'The colours a disturbed cell takes.', fade: 'Dissolves toward `left`, `right`, `top`, `bottom`, or `edges`.', cell: 'CSS pixels per dither cell.', fill: 'Fills the nearest positioned parent, for a section background.', ratio: 'CSS aspect ratio. Defaults to 16 / 9.' },
+      propDocs: { ramp: 'The inks: a tone such as `accent`, or your own list of colours.', pattern: 'The ordered-dither tile: `bayer2`, `bayer4`, `bayer8`, `blue` noise or `halftone`.', pointer: 'How the field answers the pointer: `ripple`, `pull` or `shockwave`, or several.', fps: 'Caps the frame rate while it moves.', kind: 'The named field, or your own function of `(x, y, t)`.', spark: 'The colours a disturbed cell takes.', fade: 'Dissolves toward `left`, `right`, `top`, `bottom`, or `edges`.', cell: 'CSS pixels per dither cell.', fill: 'Fills the nearest positioned parent, for a section background.', ratio: 'CSS aspect ratio. Defaults to 16 / 9.' },
       related: ['Dither', 'DitherGlyph', 'Canvas'],
     },
     {
@@ -116,7 +132,7 @@ export const canvas: DocGroup = {
         ] },
       ],
       a11yNotes: ['A `text` glyph is real text. Give a `path` or `draw` glyph a `label`.'],
-      propDocs: { path: 'An SVG path, for a logo.', box: 'The size of the box the path was drawn in.', stroke: 'Line width, for a path made of lines.', fit: 'The share of the box the shape fills, 0 to 1.', draw: 'Paints the shape on a canvas, in cells.', font: 'The font for `text`.', weight: 'The font weight for `text`.' },
+      propDocs: { ramp: 'The inks: a tone such as `accent`, or your own list of colours.', pattern: 'The ordered-dither tile: `bayer2`, `bayer4`, `bayer8`, `blue` noise or `halftone`.', pointer: 'How the field answers the pointer: `ripple`, `pull` or `shockwave`, or several.', fps: 'Caps the frame rate while it moves.', path: 'An SVG path, for a logo.', box: 'The size of the box the path was drawn in.', stroke: 'Line width, for a path made of lines.', fit: 'The share of the box the shape fills, 0 to 1.', draw: 'Paints the shape on a canvas, in cells.', font: 'The font for `text`.', weight: 'The font weight for `text`.' },
       related: ['DitherField', 'Dither'],
     },
   ],

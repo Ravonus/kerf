@@ -49,6 +49,7 @@ export const overlays: DocGroup = {
       keyboard: [['Esc', 'Closes and returns focus to the opener'], ['Tab', 'Stays inside the dialog']],
       a11yNotes: ['It is a native `<dialog>`, so everything behind it is inert.', 'The title names it and the description describes it.', 'Focus goes to `autofocus`, else the title, and back to the opener on every way of closing.'],
       propDocs: {
+        mark: 'An icon or result mark drawn above the title, such as a success check.',
         inline: 'Draws it open in the page\'s flow instead of over it: no top layer, scrim or focus trap. For docs and previews; `open` still shows and hides it.',
         open: 'A `state` holding whether it is open. The modal writes `false` when people close it.',
         title: 'Names the dialog.',

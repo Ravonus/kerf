@@ -44,8 +44,9 @@ export interface ShellProps {
   /** The phone bar's title; always shown in focus. */
   title?: unknown
   /** The tablet and desktop header's path. The last is the current page. */
-  crumbs?: Crumb[] | undefined
-  depth?: 'root' | 'child' | undefined
+  crumbs?: Crumb[]
+  /** `child` puts a back button in the brand's place on a phone, for a page under another. */
+  depth?: 'root' | 'child'
   /** Phone, depth child: the back button in the brand's place. */
   back?: { label: string; href?: string; onClick?: (() => void) | undefined }
   /** Focus variant: Close at the start and the step count at the end. */
@@ -59,9 +60,10 @@ export interface ShellProps {
   /** The first group is the main list; the rest are saved views and the like (sidebar only, the More sheet below). */
   nav?: NavGroup[] | undefined
   /** The nav's pinned items, above the collapse toggle. */
-  foot?: NavItem[] | undefined
-  current?: string | undefined
-  navLabel?: string | undefined
+  foot?: NavItem[]
+  current?: string
+  /** Names the navigation landmark for screen readers. */
+  navLabel?: string
   /** false · true: the rail · 'hidden': no rail either, the edge tab opens the sidebar. A box, so the shell can write it. */
   collapsed?: State<boolean | 'hidden'> | undefined
   /** Names main when `island`, or the region around a preview. */

@@ -53,7 +53,8 @@ export interface TableProps<T> {
   rows: readonly T[] | State<readonly T[]> | Derived<readonly T[]> | Resource<readonly T[] | ListPage<T>>
   /** Names the table (required, 06 §5). It stays in the accessibility tree when `captionHidden`. */
   caption: string
-  captionHidden?: boolean | undefined
+  /** Hides the caption on screen. Screen readers still hear it. */
+  captionHidden?: boolean
   columns: Column<T>[]
   /** The field that identifies a row, or how to get it. Default `id`. */
   rowKey?: (string | ((row: T) => string)) | undefined
@@ -61,24 +62,30 @@ export interface TableProps<T> {
   phone?: 'cards' | 'columns' | undefined
   density?: 'compact' | 'cozy' | 'comfortable' | undefined
   /** Show the filter field, labelled this. */
-  filter?: string | undefined
-  query?: State<string> | undefined
+  filter?: string
+  /** A state holding the filter text, so you can read or set it. */
+  query?: State<string>
+  /** A state holding the sorted column and direction, so you can read or set it. */
   sort?: State<TableSort | undefined>
-  onSortChange?: ((sort: TableSort) => void) | undefined
+  /** Called with the column and direction when someone sorts. */
+  onSortChange?: (sort: TableSort) => void
   /** The rows arrive sorted, filtered and paged (a Resource's are): the table only reports what's asked. */
   server?: boolean | undefined
   /** Checkboxes, Shift-click ranges and the bulk bar. */
-  selection?: boolean | State<Record<string, boolean>> | undefined
-  onSelectionChange?: ((keys: string[]) => void) | undefined
+  selection?: boolean | State<Record<string, boolean>>
+  /** Called with the keys of every selected row after each change. */
+  onSelectionChange?: (keys: string[]) => void
   /** The bulk bar's actions. */
-  bulk?: ((keys: string[]) => unknown) | undefined
-  page?: { size: number } | undefined
-  onPageChange?: ((to: unknown, reason: 'next' | 'prev') => void) | undefined
+  bulk?: (keys: string[]) => any
+  page?: { size: number }
+  /** Called on Next or Previous, with the page or server cursor to load. */
+  onPageChange?: (to: unknown, reason: 'next' | 'prev') => void
   /** A row's details. Default a list of every column. */
   expand?: ((row: T) => unknown) | undefined
   /** inline (default): they slide open in place at every width. sheet: a panel over the table below 1000px. */
-  details?: 'inline' | 'sheet' | undefined
-  onEdit?: ((row: T, column: string, value: unknown) => void) | undefined
+  details?: 'inline' | 'sheet'
+  /** Called with the row, the column's id and the new value when a cell edit is committed. */
+  onEdit?: (row: T, column: string, value: any) => void
   /** The toolbar's own actions. */
   actions?: unknown
   /** The Columns disclosure. */
@@ -86,11 +93,14 @@ export interface TableProps<T> {
   /** Columns hidden from the start, in the server's HTML too. Bind a State to keep what people choose. */
   hiddenColumns?: readonly string[] | State<readonly string[]> | undefined
   /** Forces a state; a Resource's own is used otherwise. */
-  status?: TableStatus | undefined
-  empty?: { title?: unknown; text?: unknown; action?: unknown } | undefined
-  error?: { title?: unknown; text?: unknown } | undefined
-  onRetry?: (() => void) | undefined
-  maxHeight?: string | undefined
+  status?: TableStatus
+  /** What to show when there are no rows: a title, a line of text and an action. */
+  empty?: { title?: any; text?: any; action?: any }
+  error?: { title?: any; text?: any }
+  /** Called by the error state's Retry. A Resource refreshes itself as well. */
+  onRetry?: () => void
+  /** A CSS height past which the body scrolls under a sticky header, such as `480px`. */
+  maxHeight?: string
   /** The outline level of the table's state and sheet headings, under the page's h1. */
   heading?: number | undefined
 }

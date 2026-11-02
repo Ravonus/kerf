@@ -78,7 +78,7 @@ Discrete choices (font pairing, caps, the spring) snap to the nearest stop.
 | Overlay backdrop blur | 12px | 6px | 0 (flat, opaque) |
 | Motion | × 0.85, 4px travel, standard curve | × 1, 8px, expo-out | × 1.2, 12px, expo-out + spring pop |
 | Stagger | 16ms | 32ms | 48ms |
-| Sweep (signature, every stop) | 480ms; fields, controls, rails, buttons | 620ms; same | 700ms; + cards, panels, stat rows |
+| Sweep (signature, every stop) | 400ms; fields, controls, rails, buttons | 520ms; same | 580ms; + cards, panels, stat rows |
 | Sweep stroke | full accent, 1px | full accent, 1.5px | full accent, 1.5px |
 
 **Why balanced is the default.** Inter body text sits on any site; Space Grotesk headings and mono eyebrows keep
@@ -111,7 +111,7 @@ segmented indicator) and buttons at all stops; cards, panels and stat rows join 
   any width), and a tone copy of the label wipes in. On leave it all
   keeps going right (`→ -1`). The filled variant slides a tone fill in from the left and out to the right.
 - **Rails** (`old:components/inputs/choice/Switch.tsx`): the accent fill sweeps *through* the rail as the knob
-  slides (620 / 420ms). Hover while on: an `accent-hover` layer sweeps through the inside. Hover while off: the ring
+  slides (520 / 420ms). Hover while on: an `accent-hover` layer sweeps through the inside. Hover while off: the ring
   sweeps around the rail. Slider fills and the segmented indicator use the same parts.
 
 **The floating border field.** The label rests inside the field at its text size; on hover, focus or value it
@@ -194,7 +194,7 @@ become a slow opacity pulse. Loops that should hold their frame read `--warp-loo
 | Menu, popover, toast | `base` 200ms | ease-out `(0.16,1,0.3,1)` (`old:motion/presets.ts:41`) | `motion.distance` 8px |
 | Dialog, sheet, page | `slow` 320ms | ease-out; sheets in-out (`old:motion/presets.ts:155`) | sheets 100% of their edge |
 | Scale accents (switch thumb, badge pop) | `base` | `ease-pop` (spring at vivid) | — |
-| Sweep (all stops) | `sweep-duration` 480 / 620 / 700ms | in-out `(0.65,0,0.35,1)` (`old:theme/tokens.css:250`) | full width |
+| Sweep (all stops) | `sweep-duration` 400 / 520 / 580ms | in-out `(0.65,0,0.35,1)` (`old:theme/tokens.css:250`) | full width |
 | Label float | 520ms | `(0.16,1,0.3,1)` | border to notch |
 
 Durations scale by stop: × 0.85 / × 1 / × 1.2.

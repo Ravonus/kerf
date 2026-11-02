@@ -16,10 +16,11 @@ export type EventPopoverProps = {
   /** The element it hangs from; focus returns there. */
   anchor: () => HTMLElement | undefined
   /** "New York (EDT)". */
-  zoneLabel?: string | undefined
-  locale?: string | undefined
-  hourCycle?: string | undefined
-  side?: Side | undefined
+  zoneLabel?: string
+  locale?: string
+  /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
+  hourCycle?: string
+  side?: Side
   align?: Align
   onEdit?: ((e: CalEvent) => void) | undefined
   onDelete?: ((e: CalEvent) => void) | undefined

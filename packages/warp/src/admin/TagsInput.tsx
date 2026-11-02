@@ -16,7 +16,8 @@ export interface TagsInputProps {
   /** Called when the tags change, to clear a stale error. */
   onEdit?: (() => void) | undefined
   /** Enter with nothing typed: the form's submit. */
-  onSubmit?: () => unknown
+  onSubmit?: () => void
+  /** Focuses the field when it mounts. */
   autofocus?: boolean
   [attr: string]: unknown
 }

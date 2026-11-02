@@ -19,8 +19,9 @@ export type RichFieldProps = FieldShell & {
   name?: string | undefined
   locale?: string | undefined
   /** Pins "today" (server render, tests); the browser's clock otherwise. */
-  today?: string | undefined
-  presentation?: Presentation | undefined
+  today?: string
+  /** `auto` opens a popover, or a sheet when the viewport is under 600px wide; `popover` and `sheet` force one. */
+  presentation?: Presentation
 }
 
 /**

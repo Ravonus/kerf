@@ -10,6 +10,8 @@ export interface DialogOptions {
   open: boolean
   /** Called on every close path the user takes (Escape, backdrop, [data-close]); the binding writes open = false. */
   onClose(): void
+  /** Escape's first use inside the dialog (clear a search, go up a level): return true to stay open. */
+  onEscape?(): boolean
 }
 
 /**
@@ -33,7 +35,7 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
       const a = opener.getBoundingClientRect(), r = el.getBoundingClientRect()
       el.style.setProperty('--warp-origin', `${Math.round(a.left + a.width / 2 - r.left)}px ${Math.round(a.top + a.height / 2 - r.top)}px`)
     }
-    remove = pushLayer({ el, modal: true, close: () => o.onClose() })
+    remove = pushLayer({ el, modal: true, close: () => o.onClose(), escape: () => !!o.onEscape?.() })
     const first = el.querySelector<HTMLElement>('[autofocus], [data-initial]') ?? el.querySelector<HTMLElement>('[data-part="title"]')
     if (first && !first.matches(focusable)) first.tabIndex = -1
     first?.focus({ preventScroll: true })
@@ -46,7 +48,7 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
     opener = null
   }
   // Escape: the layer stack already asked to close; the native cancel would close it a second way
-  const onCancel = (e: Event) => { e.preventDefault(); if (!justEscaped()) o.onClose() }
+  const onCancel = (e: Event) => { e.preventDefault(); if (!justEscaped() && !o.onEscape?.()) o.onClose() }
   const onClick = (e: MouseEvent) => {
     if ((e.target as Element).closest?.('[data-close]')) return o.onClose()
     // a press on the backdrop targets the dialog itself, outside its box (keyboard clicks have detail 0: not a press)

@@ -18,11 +18,13 @@ export type EventEditorProps = {
   open: State<boolean>
   /** What it edits; rebuild the fields by passing a new object. */
   event: CalEvent | null
-  isNew?: boolean | undefined
-  calendars?: CalendarSource[] | undefined
-  timeZone?: string | undefined
-  locale?: string | undefined
-  today?: string | undefined
+  isNew?: boolean
+  calendars?: CalendarSource[]
+  /** The IANA zone the times are edited in, such as `Europe/Berlin`. */
+  timeZone?: string
+  locale?: string
+  /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
+  today?: string
   onSave: (e: CalEvent) => void
   onCancel?: () => void
 }
