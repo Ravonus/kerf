@@ -7,7 +7,7 @@ import '@weft-js/warp-core/styles/components/toggle-button.css'
 import '@weft-js/warp-core/styles/components/chip.css' // the pressed toggle's forced-colours rule lives with the chip
 
 /** A toggle button (05 §2): `aria-pressed`, the sweep held while pressed. */
-export function Toggle({ pressed, icon, label, size, ui, ref, children, onClick, onPointerEnter, ...rest }: { ref?: ((el: HTMLButtonElement) => void) | undefined; onClick?: ((e: MouseEvent) => void) | undefined; onPointerEnter?: ((e: PointerEvent) => void) | undefined; pressed: boolean; icon?: IconRef | undefined; label?: string | undefined; size?: 'sm' | 'md' | 'lg' | undefined; ui?: Interaction; children?: unknown; [attr: string]: unknown }) {
+export function Toggle({ pressed, icon, label, size, ui, ref, children, onClick, onPointerEnter, ...rest }: { ref?: ((el: HTMLButtonElement) => void) | undefined; onClick?: ((e: MouseEvent) => void) | undefined; /** Called as the pointer comes over the button. */ onPointerEnter?: ((e: PointerEvent) => void) | undefined; pressed: boolean; icon?: IconRef | undefined; label?: string | undefined; size?: 'sm' | 'md' | 'lg' | undefined; ui?: Interaction; children?: unknown; [attr: string]: unknown }) {
   let host: HTMLButtonElement | undefined
   useUi(() => ui, () => host)
   const glyph = derived(() => icon)

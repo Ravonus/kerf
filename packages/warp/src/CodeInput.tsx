@@ -11,6 +11,7 @@ type CodeOwn = Bindable<string> & {
   /** After a form's reset put the value back. */
   onReset?: () => void
   language?: string | undefined
+  /** Numbers each line in a gutter. Default `true`; off while `wrap` is on. */
   lineNumbers?: boolean
   tabSize?: 2 | 4
   /** Soft-wraps long lines; line numbers then give way, since a number no longer means one row. */

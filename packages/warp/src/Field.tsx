@@ -20,6 +20,7 @@ interface FieldBase {
   suffix?: unknown
   /** floating (default, or the app's `warp({ fields })`) · classic: the label above. */
   variant?: 'floating' | 'classic' | undefined
+  /** `line`: only a bottom line under the value, no box or fill. The boxed field otherwise. */
   appearance?: 'line' | undefined
   size?: 'sm' | 'md' | 'lg' | undefined
   /** A clear button (shown once there is a value). */
@@ -29,6 +30,7 @@ interface FieldBase {
   id?: string | undefined
   value?: string | undefined
   disabled?: boolean | undefined
+  /** Shows the value and lets it be selected and copied, but not changed. */
   readonly?: boolean | undefined
   onInput?: ((e: InputEvent & { currentTarget: HTMLInputElement & HTMLTextAreaElement }) => void) | undefined
 }

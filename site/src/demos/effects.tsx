@@ -4,6 +4,7 @@ import { Button, Card } from '@weft-js/warp'
 export default function Stopwatch() {
   const running = state(false)
   const tenths = state(0)
+  const picked = state(false)
   let lap: HTMLInputElement | undefined
 
   // Runs when `running` changes. The function it returns cleans up before the next run, and when the component goes.
@@ -18,7 +19,8 @@ export default function Stopwatch() {
       <p><strong>{(tenths.value / 10).toFixed(1)} s</strong></p>
       <Button onClick={() => (running.value = !running.value)}>{running.value ? 'Stop' : 'Start'}</Button>
       <input ref={(el: HTMLInputElement) => (lap = el)} aria-label="Lap" readOnly value={`Lap at ${(tenths.value / 10).toFixed(1)} s`} />
-      <Button emphasis="ghost" tone="neutral" onClick={() => lap?.select()}>Select the lap</Button>
+      <Button emphasis="ghost" tone="neutral" onClick={() => { lap?.focus(); lap?.select(); picked.value = true }}>Select the lap</Button>
+      {picked.value && <p>Selected. Copy it with Ctrl+C or Cmd+C.</p>}
     </Card>
   )
 }
