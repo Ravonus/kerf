@@ -10,7 +10,7 @@
 // side the server rendered. Both take a key where they're created (research 19 §2.4); a boundary's content and
 // fallback render in two fixed scopes under it (`<key>c/`, `<key>f/`), so the keys line up either way.
 
-import { DEV, context, createRoot, derived, effect, flush, getOwner, memo, onCleanup, rt, state, untrack, watch, type SsrData, type State } from './index'
+import { DEV, context, createRoot, derived, effect, getOwner, memo, onCleanup, rt, state, untrack, watch, type SsrData, type State } from './index'
 import { keys, nextKey, under } from './keys'
 
 export const timing = { showAfter: 150, hold: 400 }
@@ -279,7 +279,6 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
         else if (t && was === 'c' && typeof data!.w === 'function') claim(t, data!, () => build(true))
         else build()
         if (!untrack(() => loading.value)) show.value = 'content'
-        flush()
       }
       onCleanup(() => void delete waiting[id])
     }
@@ -350,10 +349,10 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
 /** What a page that's still streaming carries once the client runs: `w` claims a chunk's nodes (@weft/start's client). */
 type Streamed = Omit<SsrData, 'w'> & { w?: 1 | ((root: Element, fn: () => void) => void) }
 
-/** Run `fn` as a claiming pass over a chunk. In a live document, as a template's isn't: what mounts asks its nodes for a window. */
+/** Run `fn` as a claiming pass over a chunk. Out of its template, whose document has no window for what mounts to ask for. */
 function claim(t: HTMLTemplateElement, data: Streamed, fn: () => void) {
   const box = document.createElement('div')
-  box.append(document.importNode(t.content, true))
+  box.append(t.content)
   const state = rt.state
   rt.data = data as SsrData
   rt.state = data.s

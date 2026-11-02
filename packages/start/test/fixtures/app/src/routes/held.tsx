@@ -1,4 +1,4 @@
-import { Boundary, resource, state } from 'weft'
+import { Boundary, onMount, resource, state } from 'weft'
 import type { RouteProps } from '@weft/start'
 import { later } from '../db'
 
@@ -14,8 +14,10 @@ export const load = async ({ request }: { request: Request }) => {
 function Late(props: { v: Promise<string>; inner: Promise<string> }) {
   const r = resource(() => props.v)
   const n = state(0)
+  let el: HTMLElement
+  onMount(() => void ((globalThis as any).__mounted = el.isConnected && !!el.ownerDocument.defaultView))
   return (
-    <section class="late">
+    <section class="late" ref={e => (el = e)}>
       <button class="more" onClick={() => n.value++}>{r.value} {n.value}</button>
       <Boundary pending={<p class="wait-inner">Inner</p>}><Inner v={props.inner} /></Boundary>
     </section>

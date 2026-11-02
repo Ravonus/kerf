@@ -106,31 +106,33 @@ test('a failed query in production says only that it failed, on the page and in 
 })
 
 test('a Boundary of reads landing one at a time renders once for them, not once each', async () => {
-  let renders = 0
-  // Each reply a tick after the last, as a busy connection answers: far inside the window a render's reads land in.
-  const replies: (() => void)[] = []
-  const reply = async () => {
-    await new Promise(ok => setImmediate(ok))
-    for (const go of replies.splice(0, 1)) go()
-    if (replies.length) void reply()
+  // Replies a timer tick apart, each far enough from the last for a pass to run between. The window a slow read would
+  // close never closes here, so this doesn't depend on how fast the machine is: the last reply is what lands them.
+  const timer = globalThis.setTimeout
+  const spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((fn: () => void, ms?: number, ...a: unknown[]) => (ms === 4 ? 0 : timer(fn, ms, ...(a as [])))) as any)
+  try {
+    let renders = 0
+    let sent = 0
+    const one = query({ $id: 'stream.one', run: async ({ input }: any) => {
+      await new Promise(ok => timer(ok, ++sent))
+      return input
+    } } as any) as any
+    const Cell = (props: { n: number }) => {
+      const r = one(() => props.n)
+      return <li>{r.value}</li>
+    }
+    const Many = () => {
+      renders++
+      return <ul>{Array.from({ length: 30 }, (_, n) => <Cell n={n} />)}</ul>
+    }
+    const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Many /></Boundary></main> })
+    const html = await body(await get('/'))
+    expect(html).toContain('<template><ul')
+    expect(html).not.toContain('$wb()')
+    expect(renders).toBeLessThan(5)
+  } finally {
+    spy.mockRestore()
   }
-  const one = query({ $id: 'stream.one', run: async ({ input }: any) => {
-    await new Promise<void>(ok => { if (replies.push(ok) === 60) void reply() })
-    return input
-  } } as any) as any
-  const Cell = (props: { n: number }) => {
-    const r = one(() => props.n)
-    return <li>{r.value}</li>
-  }
-  const Many = () => {
-    renders++
-    return <ul>{Array.from({ length: 60 }, (_, n) => <Cell n={n} />)}</ul>
-  }
-  const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Many /></Boundary></main> })
-  const html = await body(await get('/'))
-  expect(html).toContain('<template><ul')
-  expect(html).not.toContain('$wb()')
-  expect(renders).toBeLessThan(8)
 })
 
 test('a read slower than the others doesn\'t hold them back', async () => {

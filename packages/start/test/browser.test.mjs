@@ -33,6 +33,19 @@ async function record(page) {
   return () => page.evaluate(() => { window.__writes.push(...window.__mo.takeRecords().map(x => `${x.type}:${x.target.nodeName}`)); return window.__writes.splice(0) })
 }
 
+test('a client that starts after a failure lands takes its error view, and doesn\'t read it again', async () => {
+  const fetched = []
+  const page = await browser.newPage()
+  page.on('request', r => r.url().includes('/_weft/') && fetched.push(r.url()))
+  await page.goto(url + '/held?ms=0')
+  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForSelector('[role=alert]')
+  await page.waitForTimeout(100)
+  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(fetched).toEqual([])
+  await page.close()
+})
+
 test('a server-rendered page hydrates with 0 key misses and 0 DOM writes', async () => {
   const { page, errors } = await open('/users/1')
   expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
@@ -70,6 +83,7 @@ describe('a client running before the chunks land', () => {
     // Not a timing assumption: it's what these tests are of.
     expect(await page.$('.wait-late')).not.toBeNull()
     expect(await page.$('.late')).toBeNull()
+    expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
     return { page, errors, fetched }
   }
 
@@ -79,6 +93,7 @@ describe('a client running before the chunks land', () => {
     await page.waitForSelector('.inner')
     await page.waitForSelector('.plain')
     expect(await page.textContent('.more')).toBe('landed 0')
+    expect(await page.evaluate(() => window.__mounted)).toBe(true) // on the page by then, in a document with a window
     await page.click('.more')
     await page.waitForFunction(() => document.querySelector('.more').textContent === 'landed 1')
     expect(await page.textContent('.inner')).toBe('inside')

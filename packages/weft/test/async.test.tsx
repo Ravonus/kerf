@@ -241,3 +241,28 @@ test('a Boundary that goes away takes its content with it; one that stays keeps 
   await flush()
   expect(gone).toHaveBeenCalledOnce()
 })
+
+test('a held Boundary the server gave up on fetches behind its fallback, and shows no empty content', async () => {
+  const html = renderToString(() => ServerUsers({ load: api(0).load }))
+  const key = /<p wk="([^"]+)f\/0" class="skeleton">/.exec(html)![1]
+  const id = encodeURIComponent(key)
+  const container = document.body.appendChild(document.createElement('div'))
+  container.innerHTML = html.replace(/<p wk="[^"]+" class="skeleton">.*?<\/p>/, m => `<!--wb:${id}-->${m}<!--/wb:${id}-->`)
+  const skeleton = container.querySelector('.skeleton')!
+  const page = globalThis as any
+  try {
+    hydrate(() => ClientUsers({ load: api(50).load }), container, { data: { r: {}, b: { [key]: 'p' }, w: 1 } })
+    expect(hydration.misses).toBe(0)
+    expect(skeleton.isConnected).toBe(true)
+    page.$wh[id]()
+    await flush()
+    expect(skeleton.isConnected).toBe(true)
+    expect(container.querySelector('.profile')).toBeNull()
+    await vi.advanceTimersByTimeAsync(400)
+    await flush()
+    expect(container.querySelector('.skeleton')).toBeNull()
+    expect(container.querySelector('.profile')!.textContent).toBe('Ada')
+  } finally {
+    delete page.$wh
+  }
+})
