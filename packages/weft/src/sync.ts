@@ -25,7 +25,7 @@ const WHOLE = ''
 function line(inst: Instance): Line | undefined {
   let l = lines.get(inst.app)
   if (l || typeof BroadcastChannel === 'undefined') return l
-  const made: Line = { bc: new BroadcastChannel(`weft:state:${inst.app.name}`), slots: new Map(), refs: 0, tab: crypto.randomUUID(), dirty: new Set() }
+  const made: Line = { bc: new BroadcastChannel(`weft:state:${inst.app.name}`), slots: new Map(), refs: 0, tab: crypto.getRandomValues(new Uint32Array(2)).join('.'), /* randomUUID is missing on plain http */ dirty: new Set() }
   made.bc.onmessage = e => receive(made, e.data)
   lines.set(inst.app, (l = made))
   return l

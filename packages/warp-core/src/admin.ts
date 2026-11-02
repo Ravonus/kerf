@@ -255,8 +255,19 @@ export type CheckoutError = { code: 'CARD_DECLINED'; reason: string } | { code: 
 /** Which step a typed order error returns to (09 §6.2). */
 export const errorStep = (e: CheckoutError) => (e.code === 'CARD_DECLINED' ? 'payment' : e.code === 'OUT_OF_STOCK' ? 'cart' : 'review')
 
-/** A client key for one attempt at an order: a retry resends it, a definite refusal takes a new one. */
-export const newOrderKey = () => globalThis.crypto.randomUUID()
+/**
+ * A client key for one attempt at an order: a retry resends it, a definite refusal takes a new one.
+ * A v4 UUID. A page on plain http (a LAN address) has no `randomUUID`, so it falls back to `getRandomValues`.
+ */
+export const newOrderKey = (): string => {
+  const c = globalThis.crypto
+  if (typeof c.randomUUID === 'function') return c.randomUUID()
+  const b = c.getRandomValues(new Uint8Array(16))
+  b[6] = (b[6]! & 0x0f) | 0x40
+  b[8] = (b[8]! & 0x3f) | 0x80
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('')
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
+}
 
 /** Opens a `<details>` while its host is at least `from` wide (the sticky summary column), and shuts it below. */
 export function openWhenWide(el: HTMLDetailsElement, from: number) {
