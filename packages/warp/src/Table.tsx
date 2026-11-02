@@ -231,7 +231,7 @@ function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
   return (
     <>
       <tr ref={(n: any) => (tr = n)} role="row" data-id={key()} data-selected={on() ? '' : undefined} data-clickable={ctx.details ? '' : undefined} onClick={ctx.details ? click : undefined}>
-        {ctx.sel && <td role="cell" data-part="select" data-pinned="first"><label data-scope="checkbox"><input type="checkbox" checked={ctx.sel.get(key())} aria-label={`Select ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.pick(key(), e)} /><span data-part="control"><svg viewBox="0 0 24 24" aria-hidden="true"><path data-part="check" pathLength="1" d="M5 12.5 L9.5 17 L19 7" /></svg></span></label></td>}
+        {ctx.sel && <td role="cell" data-part="select" data-pinned="first"><label data-scope="checkbox"><input type="checkbox" checked={ctx.sel.get(key())} aria-label={`Select ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.pick(key(), e)} /><span data-part="control"><span data-part="mark" aria-hidden="true"></span></span></label></td>}
         {ctx.details && <td role="cell" style="padding-inline:4px"><button type="button" data-part="expand" aria-expanded={opened() ? 'true' : 'false'} aria-controls={mounted.value ? detail() : undefined} aria-label={`Details for ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.toggle(row, e.currentTarget as HTMLElement)}>{chevron()}</button></td>}
         {ctx.cols().map(c => <Cell key={c.id} row={row} col={c} ctx={ctx} />)}
       </tr>

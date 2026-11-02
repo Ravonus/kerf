@@ -26,7 +26,7 @@ export function Switch({ children, hint, size, placement = 'end', ...rest }: { c
   )
 }
 
-/** A native checkbox (03 §4): the box never fills, the check draws in; `indeterminate` is the real property. */
+/** A native checkbox (03 §4): the box never fills, the check wipes in, and CSS draws both, so a list of them stays small; `indeterminate` is the real property. */
 export function Checkbox({ children, hint, error, indeterminate, ...rest }: { checked?: boolean; indeterminate?: boolean; hint?: any; error?: any; children?: any; [attr: string]: any }) {
   let input: HTMLInputElement | undefined
   use((el: HTMLInputElement, on: boolean | undefined) => {
@@ -36,10 +36,7 @@ export function Checkbox({ children, hint, error, indeterminate, ...rest }: { ch
   return (
     <label data-scope="checkbox" data-invalid={error ? '' : undefined}>
       <input ref={(n: any) => (input = n)} type="checkbox" aria-invalid={error ? 'true' : undefined} {...rest} />
-      <span data-part="control" data-sweep="">
-        {sweepParts()}
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path data-part="check" pathLength="1" d="M5 12.5 L9.5 17 L19 7" /><path data-part="dash" pathLength="1" d="M6 12h12" /></svg>
-      </span>
+      <span data-part="control" data-sweep=""><span data-part="mark" aria-hidden="true"></span></span>
       <span data-part="label">{children}</span>
       {(error ?? hint) !== undefined && <span data-part="hint">{error ?? hint}</span>}
     </label>
