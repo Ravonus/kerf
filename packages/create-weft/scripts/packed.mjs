@@ -216,12 +216,12 @@ function withoutRust() {
   const bin = join(root, 'no-rust-bin')
   mkdirSync(bin)
   for (const tool of ['node', 'npm', 'npx', 'ffmpeg', 'ffprobe']) {
-    const found = execFileSync('shell', ['-c', `command -v ${tool} || true`], { encoding: 'utf8' }).trim()
+    const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8' }).trim()
     if (found) symlinkSync(found, join(bin, tool))
   }
   const PATH = [bin, '/usr/bin', '/bin'].join(':')
   for (const tool of ['cargo', 'rustc', 'rustup']) {
-    const found = execFileSync('shell', ['-c', `command -v ${tool} || true`], { encoding: 'utf8', env: { PATH } }).trim()
+    const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8', env: { PATH } }).trim()
     if (found) throw new Error(`${found} is on the no-Rust PATH: this gate needs a machine where it's elsewhere`)
   }
   return { ...process.env, PATH }

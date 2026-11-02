@@ -21,6 +21,8 @@ for (const dir of packages) run(`packages/${dir}`, 'npm', 'ci', '--no-audit', '-
 run('site', 'npm', 'ci', '--no-audit', '--no-fund')
 run('packages/weft', 'npm', 'run', 'build:native')
 run('packages/text', 'node', 'scripts/specialize.mjs')
+process.env.DATABASE_URL ??= 'file:./setup.db' // prisma wants one to generate, and never opens it
+run('packages/db', 'npx', 'prisma', 'generate') // tests and their types read the client
 // The site's types read what these generate.
 run('site/arena', 'npm', 'ci', '--no-audit', '--no-fund')
 run('site', 'node', 'arena/build.mjs')
