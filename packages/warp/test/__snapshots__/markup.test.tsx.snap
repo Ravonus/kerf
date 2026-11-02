@@ -1235,7 +1235,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 </span>
 </label>
-<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4">
+<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4" style="--_rows: 4;">
 </textarea>
 </div>
 <div data-part="message" id="field-4-msg">
@@ -1548,7 +1548,7 @@ exports[`Fields: server HTML 1`] = `
 </span>
 </span>
 </label>
-<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4">
+<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4" style="--_rows:4">
 </textarea>
 </div>
 <div data-part="message" id="field-4-msg">
