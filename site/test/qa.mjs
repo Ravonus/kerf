@@ -244,6 +244,28 @@ for (const path of ['/components', '/blocks']) {
     if (tall > 14000) throw new Error(`${tall}px long`)
   }, PHONE)
 }
+// Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow, and below the fold they wait
+// (a build purges rules for data-flow values it never sees, so check the animation, not the attribute).
+for (const path of ['/docs/rules', '/docs/lists']) {
+  await check(`docs content flows ${path}`, path, async page => {
+    const { blocks, moving } = await page.evaluate(() => {
+      const els = [...document.querySelectorAll('[data-scope="prose"] > [data-flow]')]
+      return { blocks: els.length, moving: els.filter(e => getComputedStyle(e).animationName !== 'none').length }
+    })
+    if (!blocks) throw new Error('no prose blocks in the flow')
+    same(moving, blocks, 'blocks animating')
+  })
+}
+// Thin pages: these had one or two examples and now show the states, sizes and real uses beside them.
+for (const [path, least] of [['/components/month-picker', 5], ['/components/week-picker', 4], ['/components/period-picker', 4], ['/components/date-time-field', 5], ['/components/command-palette', 5], ['/components/radio-group', 5], ['/components/number-field', 6], ['/components/language-select', 5], ['/components/currency-select', 5], ['/components/payment-card-input', 3], ['/charts/sparkline', 3]]) {
+  await check(`enough examples ${path}`, path, async page => {
+    const n = await page.evaluate(() => document.querySelectorAll('[data-site="frame"]:not([data-play])').length)
+    if (n < least) throw new Error(`${n} examples, want at least ${least}`)
+    await mount(page)
+    const failed = await page.evaluate(() => [...document.querySelectorAll('[data-part="mount"]')].filter(m => /failed to load/.test(m.textContent)).length)
+    same(failed, 0, 'examples that failed')
+  })
+}
 // A page with no headings has no contents column, so its words take the room.
 for (const path of ['/docs/rules', '/docs/lists', '/docs/async', '/docs/browser']) {
   await check(`no empty contents column ${path}`, path, async page => {
