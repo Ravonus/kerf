@@ -179,6 +179,32 @@ for (const path of ['/components/dither', '/components/select', '/charts/line-ch
     if (!code) throw new Error('no code in any description')
   })
 }
+// Every prop and event in every API table says what it does. The pages are read as served (the tables are in the
+// server's HTML), so one browser page lists the hubs and the rest is fetches. The allowlisted pages are mid-rewrite
+// elsewhere; take each off as it lands.
+const WORDS_PENDING = new Set(['/components/calendar', '/components/command-palette', '/components/pagination-bar', '/components/data-grid'])
+await check('every api row has a description', '/components', async page => {
+  const hrefs = new Set()
+  for (const hub of ['/components', '/blocks', '/charts']) {
+    if (hub !== '/components') await page.goto(base + hub, { waitUntil: 'load' })
+    for (const h of await page.locator('a[data-site="tile"][href]').evaluateAll(as => as.map(a => a.getAttribute('href')))) hrefs.add(h.split('#')[0])
+  }
+  if (hrefs.size < 150) throw new Error(`only ${hrefs.size} pages listed on the hubs`)
+  const text = html => html.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/g, 'x').trim()
+  const empty = []
+  let rows = 0
+  for (const href of [...hrefs].filter(h => !WORDS_PENDING.has(h))) {
+    const html = await (await fetch(base + href)).text()
+    for (const [, row] of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)) {
+      const cell = /<td data-label="Description"[^>]*>([\s\S]*?)<\/td>/.exec(row)
+      if (!cell) continue
+      rows++
+      if (!text(cell[1])) empty.push(`${href} ${text(/<th\b[^>]*>([\s\S]*?)<\/th>/.exec(row)?.[1] ?? '?')}`)
+    }
+  }
+  if (rows < 1500) throw new Error(`only ${rows} api rows found`)
+  same(empty.join(', '), '', 'empty descriptions')
+})
 // The fold's button is solid and sits under the code, folded or open, so no line runs into it.
 await check('view code sits under the code on a phone', '/components/select', async page => {
   const frame = page.locator('[data-site="frame"]:has(> [data-part="code"][data-fold])').first()

@@ -22,13 +22,20 @@ export interface AssistantProps {
   quiet?: boolean
   /** Render a block of answer text yourself (Markdown, say); the default is `Prose`. */
   render?: (text: string, answer: Answer) => any
+  /** Called when a tool call is approved, with its arguments as edited and whether to always allow it. */
   onApprove?: (tool: AgentTool, args: string, always: boolean) => void
+  /** Called when a tool call is denied. */
   onDeny?: (tool: AgentTool) => void
   alwaysAllow?: (tool: AgentTool) => string | undefined
+  /** Called with a question's id and the answer picked or typed. */
   onAnswer?: (id: string, answer: string | string[]) => void
+  /** Called with `up`, `down` or null when thumbs change, and the reason picked for a thumbs down. */
   onFeedback?: (value: Feedback, reason?: string) => void
+  /** Adds Regenerate: ask for a new answer. */
   onRegenerate?: () => void
+  /** Adds Branch: start a new conversation from this answer. */
   onBranch?: () => void
+  /** Which of several answers is shown, with arrows between them. */
   branch?: { index: number; count: number; onChange: (index: number) => void }
 }
 

@@ -15,6 +15,7 @@ export type AvailabilityEditorProps = {
   defaultValue: Availability
   /** "New York (EDT)". */
   zoneLabel?: string
+  /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
   today?: string
   locale?: string
   /** Times on offer, minutes. */

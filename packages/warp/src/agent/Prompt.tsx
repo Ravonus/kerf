@@ -18,6 +18,7 @@ export interface PromptControl { insert(text: string): void; focus(): void }
 
 export interface PromptProps {
   value?: State<string> | string
+  /** Called with the draft on every keystroke. */
   onValueChange?: (v: string) => void
   onSubmit?: (text: string) => void
   /** Pressing Stop or Escape while busy. Stop keeps what arrived. */
@@ -30,21 +31,33 @@ export interface PromptProps {
   label?: string
   placeholder?: string
   tools?: PromptTool[]
+  /** The picked model's id: a state, or a plain value with `onModelChange`. */
   model?: State<string> | string
   models?: ModelOption[]
+  /** Called with the id of the model picked. */
   onModelChange?: (id: string) => void
   context?: ContextUse
+  /** Called from the context meter's Compact: summarise the conversation to free room. */
   onCompact?: () => void
+  /** Attached files shown as chips above the input, with upload progress. */
   files?: PromptFile[]
   /** Your own attachment row, in place of `files`. */
   attachments?: any
+  /** Called with the files picked or dropped. */
   onAttach?: (files: File[]) => void
+  /** Called with a file's id when its chip is removed. */
   onRemoveFile?: (id: string) => void
+  /** What `/` offers: one suggestion each, with a description. */
   commands?: PromptSuggestion[]
+  /** What `@` offers: one suggestion each, with a description. */
   mentions?: PromptSuggestion[]
+  /** Whether the Web toggle is on. */
   web?: boolean
+  /** Called with the Web toggle's new state. */
   onWebChange?: (on: boolean) => void
+  /** Whether dictation is on: the mic button turns critical. */
   mic?: boolean
+  /** Called when the mic button is pressed. */
   onMic?: () => void
   /** Phone: fewer tools, the model's short name. */
   compact?: boolean

@@ -139,7 +139,7 @@ export const dates: DocGroup = {
       ],
       keyboard: [['Arrows', 'Move by day or week'], ['Page Up / Page Down', 'Change the month'], ['Home / End', 'Go to the start or end of the week'], ['Enter or Space', 'Picks the day']],
       a11yNotes: ['It has no visible label, so `aria-label` is required.', 'Every day button says the full date and its state.'],
-      propDocs: { selection: '`single`, `multiple` or `range`. The value changes shape to match.', months: 'One to three months side by side.' },
+      propDocs: { 'aria-label': 'Names the calendar for screen readers, since it has no visible label.', firstDayOfWeek: 'The day each row starts on, 0 for Sunday to 6. The locale\'s otherwise.', weekNumbers: 'Shows the week number at the start of each row.', today: 'Pins today\'s date, for server rendering and tests. The browser\'s clock otherwise.', isDateUnavailable: 'Return true for a day that can\'t be picked: it shows struck through.', selection: '`single`, `multiple` or `range`. The value changes shape to match.', months: 'One to three months side by side.' },
       related: ['DateField', 'DateRangeField', 'Calendar'],
     },
     {

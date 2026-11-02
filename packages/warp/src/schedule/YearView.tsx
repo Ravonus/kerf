@@ -14,15 +14,19 @@ export type YearViewProps = {
   /** Events for the picked day's detail: from `events`, or fetched by the app when it is picked. */
   events?: CalEvent[]
   year?: number
+  /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
   today?: string
   locale?: string
+  /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
   hourCycle?: string
+  /** The day each month's rows start on, 0 for Sunday to 6. The locale's otherwise. */
   firstDayOfWeek?: number
   /** Inside a Calendar: return true when the day or month opened there, and the picker stays out of the way. */
   openDay?: (iso: IsoDate) => boolean | void
   openMonth?: (iso: IsoDate) => boolean | void
   /** Open straight away; off, a pick shows the detail and offers the jump. */
   direct?: boolean
+  /** Called with the new year when you page. */
   onYearChange?: (y: number) => void
 }
 

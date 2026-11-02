@@ -5,11 +5,14 @@ import { Box, state, untrack, type State } from 'weft'
 export interface Bindable<T> {
   value?: State<T> | T
   defaultValue?: T
+  /** Called with each new value, and whether a pointer, a key or code made the change. */
   onValueChange?: (v: T, reason: ChangeReason) => void
 }
 export interface Openable {
   open?: State<boolean> | boolean
+  /** Starts open, when the component keeps its own open state. */
   defaultOpen?: boolean
+  /** Called with `true` when it opens and `false` when it closes. */
   onOpenChange?: (o: boolean) => void
 }
 

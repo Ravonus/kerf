@@ -41,6 +41,7 @@ export interface CheckoutProps {
   defaultCountry?: string
   addressProvider?: AddressProvider
   taxRate?: number
+  /** The ISO 4217 code prices are shown in, such as `EUR`. */
   currency?: string
   locale?: string
   /** The Payment step's body: a PayFrame, in a provider's slot. warp never renders card fields. */

@@ -59,7 +59,7 @@ export const canvas: DocGroup = {
         { kind: 'composition', title: 'In context', examples: [fill('DitherFieldHero', 'Hero', 340, 'Children sit on top. `fade` clears a side for type.')] },
       ],
       a11yNotes: ['It moves at the vivid and balanced dials, and holds still at quiet and under reduced motion.', 'It is decorative unless you give it a `label`.'],
-      propDocs: { kind: 'The named field, or your own function of `(x, y, t)`.', spark: 'The colours a disturbed cell takes.', fade: 'Dissolves toward `left`, `right`, `top`, `bottom`, or `edges`.', cell: 'CSS pixels per dither cell.', fill: 'Fills the nearest positioned parent, for a section background.', ratio: 'CSS aspect ratio. Defaults to 16 / 9.' },
+      propDocs: { ramp: 'The inks: a tone such as `accent`, or your own list of colours.', pattern: 'The ordered-dither tile: `bayer2`, `bayer4`, `bayer8`, `blue` noise or `halftone`.', pointer: 'How the field answers the pointer: `ripple`, `pull` or `shockwave`, or several.', fps: 'Caps the frame rate while it moves.', kind: 'The named field, or your own function of `(x, y, t)`.', spark: 'The colours a disturbed cell takes.', fade: 'Dissolves toward `left`, `right`, `top`, `bottom`, or `edges`.', cell: 'CSS pixels per dither cell.', fill: 'Fills the nearest positioned parent, for a section background.', ratio: 'CSS aspect ratio. Defaults to 16 / 9.' },
       related: ['Dither', 'DitherGlyph', 'Canvas'],
     },
     {
@@ -116,7 +116,7 @@ export const canvas: DocGroup = {
         ] },
       ],
       a11yNotes: ['A `text` glyph is real text. Give a `path` or `draw` glyph a `label`.'],
-      propDocs: { path: 'An SVG path, for a logo.', box: 'The size of the box the path was drawn in.', stroke: 'Line width, for a path made of lines.', fit: 'The share of the box the shape fills, 0 to 1.', draw: 'Paints the shape on a canvas, in cells.', font: 'The font for `text`.', weight: 'The font weight for `text`.' },
+      propDocs: { ramp: 'The inks: a tone such as `accent`, or your own list of colours.', pattern: 'The ordered-dither tile: `bayer2`, `bayer4`, `bayer8`, `blue` noise or `halftone`.', pointer: 'How the field answers the pointer: `ripple`, `pull` or `shockwave`, or several.', fps: 'Caps the frame rate while it moves.', path: 'An SVG path, for a logo.', box: 'The size of the box the path was drawn in.', stroke: 'Line width, for a path made of lines.', fit: 'The share of the box the shape fills, 0 to 1.', draw: 'Paints the shape on a canvas, in cells.', font: 'The font for `text`.', weight: 'The font weight for `text`.' },
       related: ['DitherField', 'Dither'],
     },
   ],

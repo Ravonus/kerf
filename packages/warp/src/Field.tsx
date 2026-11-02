@@ -14,7 +14,9 @@ export interface FieldProps {
   error?: any
   /** Leading icon: it sweeps with the border. */
   icon?: IconRef
+  /** Text or an element inside the field before the value, such as `$`. */
   prefix?: any
+  /** Text or an element inside the field after the value, such as `kg`. */
   suffix?: any
   /** floating (default, or the app's `warp({ fields })`) · classic: the label above. */
   variant?: 'floating' | 'classic'

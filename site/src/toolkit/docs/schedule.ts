@@ -25,7 +25,7 @@ export const schedule: DocGroup = {
         { kind: 'composition', title: 'In context', examples: [{ id: 'AgendaDayToday', title: 'Today', note: 'It goes inside an element with `data-scope="agenda"`, which holds its styles.', stage: 'narrow', height: 380 }] },
         { kind: 'states', title: 'States', examples: [{ id: 'AgendaDayEmpty', title: 'Nothing scheduled', note: 'An `AgendaDay` with no events on its `day` says nothing is scheduled.', stage: 'narrow' }] },
       ],
-      propDocs: { events: 'Events for any days. Only `day`\'s are shown.', day: 'The date to show.', now: 'The wall time for the now line.', label: 'The list\'s accessible name.' },
+      propDocs: { hourCycle: '`h12` for AM and PM, `h23` for a 24-hour clock. The locale\'s otherwise.', events: 'Events for any days. Only `day`\'s are shown.', day: 'The date to show.', now: 'The wall time for the now line.', label: 'The list\'s accessible name.' },
       related: ['Agenda'],
     },
     {

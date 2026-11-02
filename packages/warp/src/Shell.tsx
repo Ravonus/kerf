@@ -38,6 +38,7 @@ export interface ShellProps {
   title?: any
   /** The tablet and desktop header's path. The last is the current page. */
   crumbs?: Crumb[]
+  /** `child` puts a back button in the brand's place on a phone, for a page under another. */
   depth?: 'root' | 'child'
   /** Phone, depth child: the back button in the brand's place. */
   back?: { label: string; href?: string; onClick?: () => void }
@@ -54,6 +55,7 @@ export interface ShellProps {
   /** The nav's pinned items, above the collapse toggle. */
   foot?: NavItem[]
   current?: string
+  /** Names the navigation landmark for screen readers. */
   navLabel?: string
   /** false · true: the rail · 'hidden': no rail either, the edge tab opens the sidebar. A box, so the shell can write it. */
   collapsed?: State<boolean | 'hidden'>

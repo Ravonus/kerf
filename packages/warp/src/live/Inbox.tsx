@@ -40,7 +40,9 @@ const label = (n: Note) => `${sentence(n)}${n.read ? '' : ', unread'}, ${n.time}
 export interface InboxProps {
   /** Newest first. Undefined while the first load runs: skeletons, once. */
   items: Note[] | undefined | { value: Note[] | undefined } | (() => Note[] | undefined)
+  /** The connection's state, shown in the foot as "Up to date" or "Connecting…". */
   live?: LiveState | (() => LiveState)
+  /** The filter tabs, in order. Default all, unread and mentions. */
   tabs?: InboxTab[]
   title?: string
   variant?: 'popover'
@@ -49,9 +51,13 @@ export interface InboxProps {
   /** Updates waiting to sync (offline, reconnecting). */
   queued?: number
   viewAll?: string
+  /** Adds a settings button to the header, and is called when it is pressed. */
   settings?: () => void
+  /** Called with a row's id once it has been seen or opened. */
   onRead?: (id: string) => void
+  /** Called when Mark all as read is pressed. */
   onReadAll?: () => void
+  /** Called with a row's id when it is dismissed. */
   onDismiss?: (id: string) => void
   /** Undo a dismiss: put the row back. */
   onRestore?: (note: Note) => void

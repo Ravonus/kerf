@@ -116,9 +116,11 @@ export interface MeetingRoomProps {
   participants: Participant[] | { value: Participant[] } | (() => Participant[])
   self: Participant
   layout?: State<MeetingLayout> | MeetingLayout
+  /** Called with the layout picked in the switcher. */
   onLayoutChange?: (l: MeetingLayout) => void
   /** Elapsed time, already formatted (the caller owns the clock). */
   timer?: any
+  /** Shows a Rec badge in the header. */
   recording?: boolean
   /** The room's connection: `room.status`, mapped. */
   live?: string | (() => string)
@@ -131,23 +133,36 @@ export interface MeetingRoomProps {
   /** The shared screen, for presentation layout. */
   share?: () => any
   presenter?: string
+  /** What is being shared, in the presentation header. Default "Shared screen". */
   shareTitle?: string
   board?: () => any
   /** The Chat panel's body. */
   chat?: () => any
   /** Below People: "Invite people". */
   invite?: () => any
+  /** Whether your mic is on: a state the room writes, or a value with `onMic`. */
   mic?: State<boolean> | boolean
+  /** Whether your camera is on: a state the room writes, or a value with `onCamera`. */
   camera?: State<boolean> | boolean
+  /** Whether your hand is raised: a state the room writes, or a value with `onHand`. */
   hand?: State<boolean> | boolean
+  /** Whether you are sharing your screen: a state the room writes, or a value with `onShare`. */
   sharing?: State<boolean> | boolean
+  /** The open side panel, `people` or `chat`, or null for none. */
   sidebar?: State<'people' | 'chat' | null> | 'people' | 'chat' | null
+  /** The emoji the React button sends. Default 🎉. */
   reaction?: string
+  /** Called with the mic's new state. Start or stop the track here. */
   onMic?: (on: boolean) => void
+  /** Called with the camera's new state. Start or stop the track here. */
   onCamera?: (on: boolean) => void
+  /** Called with `true` when you raise your hand and `false` when you lower it. */
   onHand?: (on: boolean) => void
+  /** Called with `true` to start sharing your screen and `false` to stop. */
   onShare?: (on: boolean) => void
+  /** Called with the emoji when you react. */
   onReact?: (emoji: string) => void
+  /** Called when Leave is pressed. */
   onLeave?: () => void
   /** More: replaces the phone's default, which opens the People and Chat panel. */
   onMore?: () => void

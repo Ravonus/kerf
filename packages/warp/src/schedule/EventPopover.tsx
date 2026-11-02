@@ -17,6 +17,7 @@ export type EventPopoverProps = {
   /** "New York (EDT)". */
   zoneLabel?: string
   locale?: string
+  /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
   hourCycle?: string
   side?: Side
   align?: Align

@@ -26,7 +26,9 @@ export interface NotificationPreferencesProps {
   digest?: string
   /** The channel the digest applies to. */
   digestChannel?: string
+  /** The email delivery choices, such as instant, hourly or daily. */
   digests?: { value: string; label: string }[]
+  /** Called with the delivery picked. A rejected promise puts the old one back. */
   onDigest?: (digest: string) => void | Promise<unknown>
   /** Enables Reset to defaults. */
   defaults?: { value: PrefValues; digest?: string }

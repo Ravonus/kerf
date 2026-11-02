@@ -7,9 +7,11 @@ import '@weft/warp-core/styles/rich/codeblock.css'
 import '@weft/warp-core/styles/rich/code-tabs.css'
 
 export interface CodeBlockProps {
+  /** The source to show, colour and copy. */
   code: string
   /** tsx by default; ts, js, json and sh are coloured too, anything else stays plain. */
   language?: string
+  /** A file name shown in the bar above the code. */
   filename?: string
   /** Line numbers. */
   lines?: boolean

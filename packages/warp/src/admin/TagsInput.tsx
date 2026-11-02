@@ -16,6 +16,7 @@ export interface TagsInputProps {
   onEdit?: () => void
   /** Enter with nothing typed: the form's submit. */
   onSubmit?: () => void
+  /** Focuses the field when it mounts. */
   autofocus?: boolean
   [attr: string]: any
 }

@@ -37,15 +37,22 @@ export function AgendaDay({ events, day, now, locale, hourCycle, label }: { even
 
 export type AgendaProps = {
   events: CalEvent[]
+  /** The day it opens on: a state it writes as you page, or a plain value. */
   date?: State<string> | string
   defaultDate?: string
+  /** Called with the new day when you page or jump to today. */
   onDateChange?: (d: string) => void
   title?: any
+  /** The calendars the events belong to, for their colours and names. */
   calendars?: CalendarSource[]
+  /** The IANA zone times are shown in, such as `Europe/Berlin`. The browser's otherwise. */
   timeZone?: string
+  /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
   today?: string
+  /** Pins the current time, for server rendering and tests. The browser's clock otherwise. */
   now?: string
   locale?: string
+  /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
   hourCycle?: string
   firstDayOfWeek?: number
   /** Long press: open your own sheet. Without it the built-in MoveSheet opens and calls `onMove`. */

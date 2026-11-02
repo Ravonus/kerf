@@ -10,7 +10,9 @@ export type DateFieldProps = RichFieldProps & Bindable<IsoDate | null> & Openabl
   min?: IsoDate
   max?: IsoDate
   isDateUnavailable?: (d: IsoDate) => boolean
+  /** The day each calendar row starts on, 0 for Sunday to 6. The locale's otherwise. */
   firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6
+  /** Shows the week number at the start of each calendar row. */
   weekNumbers?: boolean
   parse?: (text: string, today: IsoDate) => IsoDate | null
 }
@@ -81,11 +83,14 @@ export function DateField({ value, defaultValue, onValueChange, open, defaultOpe
 export type RangeCompare = 'previous-period' | 'previous-year' | DateRange
 export type DateRangeFieldProps = RichFieldProps & Bindable<DateRange> & Openable & {
   presets?: RangePreset[] | 'default' | false
+  /** The id of the chosen preset, such as "Last 7 days". Null when the dates were picked by hand. */
   preset?: string | null
+  /** Called with the preset's id when one is picked, and null when the dates are changed by hand. */
   onPresetChange?: (id: string | null) => void
   min?: IsoDate
   max?: IsoDate
   maxDays?: number
+  /** Return true for a day that can't start or end the range: it shows struck through. */
   isDateUnavailable?: (d: IsoDate) => boolean
   months?: 1 | 2 | 'auto'
   compare?: RangeCompare | null

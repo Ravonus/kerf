@@ -18,8 +18,10 @@ export type EventEditorProps = {
   event: CalEvent | null
   isNew?: boolean
   calendars?: CalendarSource[]
+  /** The IANA zone the times are edited in, such as `Europe/Berlin`. */
   timeZone?: string
   locale?: string
+  /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
   today?: string
   onSave: (e: CalEvent) => void
   onCancel?: () => void

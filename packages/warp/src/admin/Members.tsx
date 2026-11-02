@@ -37,18 +37,22 @@ export function SeatsMeter({ used, total }: { used: number; total: number }) {
 }
 
 export interface MembersTableProps {
+  /** Everyone in the workspace, one row each. */
   members: readonly Member[] | State<readonly Member[]>
+  /** Pending invitations, listed under the members. */
   invites?: readonly Invite[] | State<readonly Invite[]>
   /** The signed-in member's id. */
   me: string
   roles: Role[]
   owner?: string
   seats: number
+  /** Called with the member and the role picked for them. */
   onRoleChange: (member: Member, role: string) => void
   onRemove: (members: Member[]) => Promise<void> | void
   /** Undo for a removal. */
   onRestore?: (members: Member[]) => void
   onInvite: (emails: string[], role: string) => Promise<void> | void
+  /** Called with the invite when Resend is pressed. */
   onResend?: (invite: Invite) => void
   onRevoke?: (invite: Invite) => void
 }

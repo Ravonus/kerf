@@ -28,11 +28,16 @@ interface ListProps {
   placeholder?: string
   value?: State<string | null> | string | null
   defaultValue?: string | null
+  /** Called with the picked option's value, and whether a pointer, a key or code picked it. */
   onValueChange?: (value: string, reason: ChangeReason) => void
   open?: State<boolean> | boolean
+  /** Starts open, when the component keeps its own open state. */
   defaultOpen?: boolean
+  /** Called with `true` when the list opens and `false` when it closes. */
   onOpenChange?: (open: boolean) => void
+  /** `auto` opens a popover, or a sheet when the viewport is under 600px wide; `popover` and `sheet` force one. */
   presentation?: Presentation
+  /** Puts a search field at the top of the list. On by itself past 15 options. */
   searchable?: boolean
 }
 

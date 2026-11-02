@@ -34,17 +34,23 @@ export function DitherField({ kind, smooth, ramp, spark, pattern, cell, inks, sp
 export interface DitherProps {
   /** An image to dither. The real <img> stays underneath, for alt text, for no script and for a cross-origin failure. */
   src?: string
+  /** The image's alt text, kept on the real <img> underneath. */
   alt?: string
+  /** The image's CORS mode. A cross-origin image needs it to be read and dithered. */
   crossorigin?: 'anonymous' | 'use-credentials'
   /** With no `src`: the gradient to dither. Default a soft diagonal. */
   gradient?: Gradient
   /** `atkinson` by default for images, `bayer8` for gradients. */
   algorithm?: Algorithm
+  /** The inks: a tone such as `accent`, or your own list of colours. */
   ramp?: Ramp
+  /** CSS pixels per dither cell. Larger cells give a coarser, chunkier picture. */
   cell?: number
+  /** How many inks of the ramp to use. Default: the tier's. */
   inks?: number
   contrast?: number
   invert?: boolean
+  /** Fills the nearest positioned parent instead of keeping a ratio, for a section background. */
   fill?: boolean
   ratio?: string | number
   label?: string

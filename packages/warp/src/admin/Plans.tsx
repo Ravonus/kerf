@@ -24,6 +24,7 @@ import '@weft/warp-core/styles/flows/confirm.css'
 export type BillingPlan = { id: string; name: string; /** Per seat, per month. */ price: number; description?: string; features: string[]; limits?: Record<string, number> }
 
 export interface PlanPickerProps {
+  /** The plans to compare, one card each. */
   plans: BillingPlan[]
   current: string
   /** The checked card; a usage meter can preselect the next tier through it. */
@@ -32,6 +33,7 @@ export interface PlanPickerProps {
   seats: number
   daysLeft: number
   periodDays?: number
+  /** The ISO 4217 code prices are shown in, such as `EUR`. */
   currency?: string
   locale?: string
   /** The server's proration. Default: `prorate` from the numbers above. */

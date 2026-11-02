@@ -95,7 +95,7 @@ export const live: DocGroup = {
         { kind: 'variants', title: 'Variants', examples: [{ id: 'TileWithCamera', title: 'With video', note: '`video` returns your own element. An image stands in here.', height: 240 }] },
       ],
       a11yNotes: ['The state is in its name: "Mara Lindqvist, hand raised".', 'Set `--level` on the tile for the audio bars. Nothing re-renders.'],
-      propDocs: { p: 'The participant.', self: 'Shows You.', video: 'Return the video element.' },
+      propDocs: { role: 'The tile\'s role. Default `group`; inside a list, `listitem`.', p: 'The participant.', self: 'Shows You.', video: 'Return the video element.' },
       related: ['MeetingRoom'],
     },
     {

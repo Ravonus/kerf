@@ -94,8 +94,10 @@ export const stepSlots = (step: number, min?: string, max?: string) => {
 }
 
 export type TimeFieldProps = RichFieldProps & Bindable<IsoTime | null> & Openable & {
+  /** `h12` shows AM and PM, `h23` a 24-hour clock, `auto` the locale's. */
   hourCycle?: 'h12' | 'h23' | 'auto'
   step?: number
+  /** Adds a seconds segment. */
   seconds?: boolean
   min?: IsoTime
   max?: IsoTime
@@ -167,7 +169,9 @@ export function TimeField({ value, defaultValue, onValueChange, open, defaultOpe
 export type DateTimeFieldProps = RichFieldProps & Bindable<IsoDateTime | null> & Openable & {
   min?: IsoDate
   max?: IsoDate
+  /** Return true for a day that can't be picked: it shows struck through. */
   isDateUnavailable?: (d: IsoDate) => boolean
+  /** The day each calendar row starts on, 0 for Sunday to 6. The locale's otherwise. */
   firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6
   step?: number
 }
