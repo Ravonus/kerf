@@ -35,7 +35,13 @@ const pub = join(site, 'public')
 rmSync(join(pub, 'search'), { recursive: true, force: true })
 rmSync(join(pub, 'docs'), { recursive: true, force: true })
 for (const d of [out, join(pub, 'search'), join(pub, 'docs/codes')]) mkdirSync(d, { recursive: true })
-const write = (file, value) => writeFileSync(join(out, file), JSON.stringify(value))
+/** warp's three areas of the site, by the group's file. Everything else is core components. */
+const AREAS = { charts: 'charts', agent: 'blocks', admin: 'blocks', collab: 'blocks', flow: 'blocks', live: 'blocks', schedule: 'blocks' }
+const areaOf = file => AREAS[file] ?? 'components'
+const hrefs = new Map()
+/** A `/toolkit/x` written anywhere in the words, as the page's real address. Paths like src/toolkit are left alone. */
+const live = text => text.replace(/(?<![\w.-])\/toolkit(?:\/([a-z0-9-]+))?(?![\w.-]*\/)/g, (all, slug) => (slug ? hrefs.get(slug) ?? (slug === 'art' ? '/art' : `/components/${slug}`) : '/components'))
+const write = (file, value) => writeFileSync(join(out, file), live(JSON.stringify(value)))
 
 // ------------------------------------------------------------------ numbers
 
@@ -298,6 +304,43 @@ const PROP_WORDS = {
   height: 'Its height, in pixels.', width: 'Its width.', ratio: 'Width to height.', gap: 'The space between children, from warp\'s space scale.', as: 'The element it renders as.', variant: 'Which form it takes.', count: 'The number it shows.', locale: 'The language and region used to format values.', href: 'Where it links.', ui: 'A row from `interaction()`, which it fills and draws.', onSubmit: 'Called with the values when submitted.', onSave: 'Called with the result when saved.', onCancel: 'Called when dismissed.', onDelete: 'Called when deleted.', onRemove: 'Called when removed.',
 }
 const HIDDEN_PROPS = new Set(['ui', 'ref', 'class', 'style', 'key'])
+/** Plain headings for what the group files call an example. */
+const PLAIN = { Emphasis: 'Variants', Tone: 'Tones', 'With an icon': 'Icons', 'Every state': 'States', Alignment: 'Alignment' }
+const plainTitle = t => PLAIN[t] ?? t
+/**
+ * A component page's order, the same everywhere: one preview, then an H2 per real option, simplest first. Examples in a
+ * generic section ("Variants", "In context") each become their own H2; a named section, like Placement, keeps its
+ * examples together under it. A group's file can name the opening preview with `hero`.
+ */
+function arrange(doc) {
+  const shown = doc.sections.filter(s => s.kind !== 'prose')
+  const by = kind => shown.filter(s => s.kind === kind).flatMap(s => s.examples)
+  const hero = doc.hero ? { id: doc.hero, ...shown.flatMap(s => s.examples).find(e => e.id === doc.hero) } : (by('variants')[0] ?? by('composition')[0] ?? by('states')[0])
+  const generic = /^(Variants?|States?|In context|Examples?|Composition)$/
+  const rank = { variants: 10, sizes: 11, states: 12, composition: 13, prose: 14 }
+  const first = ['Placement', 'Alignment', 'Variants', 'Sizes', 'Tones']
+  const weight = s => (first.includes(s.title) ? first.indexOf(s.title) : rank[s.kind])
+  const parts = doc.sections.flatMap(s => {
+    if (s.kind === 'prose') return [s]
+    const rest = s.examples.filter(e => e.id !== hero?.id)
+    if (!rest.length) return []
+    if (!generic.test(s.title)) return [{ ...s, examples: rest }]
+    return rest.map(e => ({ kind: /^sizes?$/i.test(e.title) ? 'sizes' : s.kind, title: plainTitle(e.title), intro: e.note, examples: [{ ...e, note: undefined }] }))
+  }).sort((a, b) => weight(a) - weight(b))
+  return { hero, parts }
+}
+
+/** The shortest thing that shows a component in use, for the Usage heading. */
+function usageOf(doc, name, found, play) {
+  const line = `import { ${name} } from '@weft/warp'`
+  const from = play && !play.code.includes('{children}') ? null : play?.code
+  const start = play && Object.fromEntries(play.knobs.map(k => [k.prop, k.initial]))
+  if (from) return `${line}\n\n${from.replace('{props}', '').replace('{children}', String(start.children ?? ''))}`
+  if (doc.usage) return `${line}\n\n${doc.usage}`
+  const first = arrange(doc).hero, f = first && found.get(first.id)
+  return f?.stateless && f.body.split('\n').length <= 10 ? `${line}\n\n${f.body}` : line
+}
+
 const SPEC_WORDS = /§|\bSIGNATURE\b|\bspecimen\b/
 const GITHUB_SRC = 'https://github.com/Ravonus/weft/blob/main/'
 
@@ -334,7 +377,9 @@ function buildToolkit() {
   const blank = { all: 0, none: 0 }
   const slugFor = name => facts.get(name)?.slug
   const order = GROUPS.flatMap(g => g.docs.map(d => d.component))
+  const areaIn = n => areaOf(GROUPS.find(g => g.docs.some(d => d.component === n)).file)
   const seen = new Set()
+  for (const g of GROUPS) for (const d of g.docs) if (facts.get(d.component)) hrefs.set(facts.get(d.component).slug, `/${areaOf(g.file)}/${facts.get(d.component).slug}`)
   for (const g of GROUPS) {
     const path = join(site, 'src/toolkit/examples', `${g.file}.tsx`)
     const found = existsSync(path) ? readExamples(path) : new Map()
@@ -356,7 +401,9 @@ function buildToolkit() {
         const text = showExample(f, c.name)
         return { ...ref, code: codeBlock(text, 'tsx'), lines: text.split('\n').length }
       }
-      const sections = doc.sections.map(s => (s.kind === 'prose' ? { ...s, html: markdownToHtml(s.md) } : { ...s, intro: s.intro && inline(s.intro), examples: s.examples.map(e => ({ ...example(e), note: e.note && inline(e.note) })) }))
+      const { hero, parts: arranged } = arrange(doc)
+      const shownHero = hero && example(hero)
+      const sections = arranged.map(s => (s.kind === 'prose' ? { ...s, html: markdownToHtml(s.md) } : { ...s, intro: s.intro && inline(s.intro), examples: s.examples.map(e => ({ ...example(e), note: e.note && inline(e.note) })) }))
       const visible = c.props.filter(p => !HIDDEN_PROPS.has(p.name) && !doc.hideProps?.includes(p.name))
       const rows = visible.map(p => propRow(p, doc))
       blank.all += rows.length
@@ -364,20 +411,20 @@ function buildToolkit() {
       const groups = [['Props', rows.filter(r => !/^on[A-Z]/.test(r.name))], ['Events', rows.filter(r => /^on[A-Z]/.test(r.name))]].filter(([, list]) => list.length).map(([title, list]) => ({ title, rows: list }))
       const first = doc.sections.find(s => s.kind !== 'prose')?.examples[0]
       const tile = doc.tile ?? first?.id
-      const related = (doc.related ?? []).filter(slugFor).map(name => ({ name, slug: slugFor(name) }))
+      const related = (doc.related ?? []).filter(slugFor).map(name => ({ name, slug: slugFor(name), href: hrefs.get(slugFor(name)) }))
       const play = doc.playground && finishKnobs(doc.playground, c.props, c.name)
       if (play && !found.has(play.example)) problems.push(`${c.name}: no export ${play.example}`)
-      const heads = [...(play ? [{ id: 'playground', text: 'Playground' }] : []), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.keyboard || doc.a11yNotes ? [{ id: 'accessibility', text: 'Accessibility' }] : []), { id: 'api', text: 'API' }, ...(related.length ? [{ id: 'related', text: 'Related' }] : [])]
+      const heads = [{ id: 'installation', text: 'Installation' }, { id: 'usage', text: 'Usage' }, ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...(play ? [{ id: 'playground', text: 'Playground' }] : []), ...(doc.keyboard || doc.a11yNotes ? [{ id: 'accessibility', text: 'Accessibility' }] : []), { id: 'api-reference', text: 'API Reference' }]
       const i = order.indexOf(c.name)
-      const near = n => n && facts.get(n) && { name: n, slug: slugFor(n) }
+      const near = n => n && facts.get(n) && areaIn(n) === areaOf(g.file) && { name: n, slug: slugFor(n), href: hrefs.get(slugFor(n)) }
       pages[c.slug] = {
-        name: c.name, slug: c.slug, group: g.title, file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
-        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name) })) }, playground: play, sections, keyboard: doc.keyboard, a11yNotes: doc.a11yNotes?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
+        name: c.name, slug: c.slug, area: areaOf(g.file), group: g.title, usage: codeBlock(usageOf(doc, c.name, found, play), 'tsx'), file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
+        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: doc.a11yNotes?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
       }
       const refs = doc.sections.flatMap(s => s.examples ?? [])
-      tiles.push({ name: c.name, slug: c.slug, summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center' })
+      tiles.push({ name: c.name, slug: c.slug, href: hrefs.get(c.slug), summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center' })
     }
-    index.push({ title: g.title, id: slugify(g.title), file: g.file, intro: g.intro, pack: g.pack, tiles })
+    index.push({ title: g.title, area: areaOf(g.file), id: slugify(g.title), file: g.file, intro: g.intro, pack: g.pack, tiles })
   }
   const missing = [...facts.keys()].filter(n => !seen.has(n))
   if (problems.length) throw new Error(`the toolkit's docs:\n  ${problems.join('\n  ')}`)
@@ -385,10 +432,10 @@ function buildToolkit() {
   write('toolkit.json', pages)
   write('toolkit-index.json', { total: facts.size, groups: index })
   // the rail: a component with no page yet still has no link
-  write('toolkit-nav.json', index.filter(g => g.tiles.length).map(g => ({ group: g.title, items: g.tiles.map(({ name, slug }) => ({ name, slug })) })))
+  write('toolkit-nav.json', index.filter(g => g.tiles.length).map(g => ({ group: g.title, area: g.area, items: g.tiles.map(({ name, slug, href }) => ({ name, slug, href })) })))
   if (missing.length) console.log(`[content] no docs yet for ${missing.length}: ${missing.join(' ')}`)
   console.log(`[content] props with no words: ${blank.none} of ${blank.all}`)
-  return Object.values(pages).map(p => ({ title: p.name, url: `/toolkit/${p.slug}`, group: 'Components', rank: 0.9, parent: p.group, text: p.summary }))
+  return Object.values(pages).map(p => ({ title: p.name, url: hrefs.get(p.slug), group: 'Components', rank: 0.9, parent: p.group, text: p.summary }))
 }
 
 /** One line of words: `code` becomes code, and nothing else is expected. */

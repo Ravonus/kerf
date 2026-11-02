@@ -8,6 +8,7 @@ export const overlays: DocGroup = {
     {
       component: 'Modal',
       summary: 'A dialog that stops the page until it is answered.',
+      hero: 'ModalDefault',
       use: {
         when: ['A decision people must make before going on', 'A short task that needs their full attention'],
         instead: [{ name: 'Drawer', why: 'people want to see the page while they work' }, { name: 'Popover', why: 'it is a small panel the page can carry on without' }, { name: 'Toaster', why: 'it only tells people something happened' }],
@@ -17,20 +18,29 @@ export const overlays: DocGroup = {
         code: '<Modal open={open}{props} footer={<Button data-close="">Done</Button>}>\n  ...\n</Modal>',
         knobs: [
           { prop: 'title', control: 'text', initial: 'Rename project', default: '' },
+          { prop: 'placement', control: 'select', options: ['center', 'top', 'bottom', 'left', 'right', 'full'], initial: 'center', default: 'center' },
           { prop: 'size', control: 'segmented', options: ['sm', 'md', 'lg'], initial: 'md', default: 'md' },
           { prop: 'tone', control: 'segmented', options: ['neutral', 'critical'], initial: 'neutral', default: 'neutral' },
           { prop: 'alert', control: 'switch', initial: false, default: false },
         ],
       },
       sections: [
+        { kind: 'variants', title: 'Placement', intro: 'Use `placement` to choose where the modal opens.', examples: [
+          { id: 'ModalCenter', title: 'Center', height: 120 },
+          { id: 'ModalTop', title: 'Top', height: 120 },
+          { id: 'ModalBottom', title: 'Bottom', height: 120 },
+          { id: 'ModalLeft', title: 'Left', height: 120 },
+          { id: 'ModalRight', title: 'Right', height: 120 },
+          { id: 'ModalFull', title: 'Full', height: 120 },
+        ] },
         { kind: 'variants', title: 'Variants', examples: [
-          { id: 'ModalRename', title: 'A short form', note: 'Give a field `autofocus` and focus lands there on open.', height: 220 },
-          { id: 'ModalSizes', title: 'Sizes' },
+          { id: 'ModalSizes', title: 'Sizes', note: 'Use `size` for how wide the modal is: `sm`, `md` or `lg`.' },
+          { id: 'ModalRename', title: 'With form', note: 'Give a field `autofocus` and focus lands there on open.', height: 220 },
           { id: 'ModalResult', title: 'With a mark', note: '`mark` draws above the title.' },
         ] },
         { kind: 'states', title: 'States', examples: [
-          { id: 'ModalConfirm', title: 'Alert', note: '`alert` won\'t close from a press outside. `autofocus` on the safe button.', height: 220 },
-          { id: 'ModalLongBody', title: 'Long content', note: 'The body scrolls on its own.' },
+          { id: 'ModalConfirm', title: 'Alert', note: 'With `alert`, a press outside does not close it. Put `autofocus` on the safe button.', height: 220 },
+          { id: 'ModalLongBody', title: 'Scrollable content', note: 'The body scrolls on its own, and the header and footer stay put.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'ModalInvite', title: 'Invite a teammate', height: 220 }] },
       ],
@@ -42,6 +52,7 @@ export const overlays: DocGroup = {
         description: 'A line under the title, read out on open.',
         footer: 'The buttons. Anything with `data-close` closes the modal.',
         size: '`sm`, `md` or `lg`.',
+        placement: 'Where it opens: `center`, `top`, `bottom`, `left`, `right` or `full`.',
         alert: 'For a question that must be answered: no closing from a press outside.',
         tone: 'Colours the header. `critical` for destructive questions.',
       },
@@ -50,6 +61,7 @@ export const overlays: DocGroup = {
     {
       component: 'Drawer',
       summary: 'A panel that slides in from the edge, for details and side tasks.',
+      hero: 'DrawerDeployDetails',
       use: {
         when: ['Details of something picked from a list', 'A longer form or a set of filters'],
         instead: [{ name: 'Modal', why: 'it is a decision, not a task' }, { name: 'Popover', why: 'a few controls near the button will do' }],
@@ -57,11 +69,16 @@ export const overlays: DocGroup = {
       playground: {
         example: 'DrawerPlay',
         code: '<Drawer open={open}{props} title="Deploy d-4821" description="storefront, on main">\n  ...\n</Drawer>',
-        knobs: [{ prop: 'side', control: 'segmented', options: ['auto', 'right', 'left', 'bottom'], initial: 'right', default: 'auto' }],
+        knobs: [{ prop: 'side', control: 'segmented', options: ['auto', 'right', 'left', 'top', 'bottom'], initial: 'right', default: 'auto' }],
       },
       sections: [
+        { kind: 'variants', title: 'Placement', intro: 'Use `side` to choose the edge. The default, `auto`, is the right side, and the bottom on phones.', examples: [
+          { id: 'DrawerRight', title: 'Right', height: 120 },
+          { id: 'DrawerLeft', title: 'Left', height: 120 },
+          { id: 'DrawerTop', title: 'Top', height: 120 },
+          { id: 'DrawerBottom', title: 'Bottom', height: 120 },
+        ] },
         { kind: 'variants', title: 'Variants', examples: [
-          { id: 'DrawerSides', title: 'Sides', note: 'The default, `auto`, is the right side, and the bottom on phones.' },
           { id: 'DrawerFooter', title: 'With a footer', note: 'The footer stays in place while the body scrolls.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
@@ -100,8 +117,8 @@ export const overlays: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'PopoverBasic', title: 'A short note', height: 220 },
-          { id: 'PopoverSides', title: 'Sides', note: '`side` is a wish: if there is no room it flips.', height: 260 },
-          { id: 'PopoverAligns', title: 'Alignment', note: '`align` lines it up with the button.', height: 220 },
+          { id: 'PopoverSides', title: 'Placement', note: 'Use `side` to pick where it opens. With no room there, it flips.', height: 260 },
+          { id: 'PopoverAligns', title: 'Alignment', note: 'Use `align` to line it up with the button.', height: 220 },
           { id: 'PopoverTrigger', title: 'Trigger styles', note: '`trigger` takes any Button prop.', height: 220 },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'PopoverClose', title: 'Closing from inside', note: 'Anything with `data-close-popover` closes it.', height: 260 }] },
@@ -125,6 +142,7 @@ export const overlays: DocGroup = {
     {
       component: 'Tooltip',
       summary: 'A short hint on hover or keyboard focus.',
+      hero: 'TooltipBasic',
       use: {
         when: ['Naming an icon button', 'Showing the shortcut for an action'],
         instead: [{ name: 'Popover', why: 'it holds anything to press, or more than a few words' }],
@@ -141,7 +159,8 @@ export const overlays: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'TooltipBasic', title: 'A hint', note: 'Hover, or tab to the button.' },
-          { id: 'TooltipSides', title: 'Sides', note: 'If there is no room it flips.' },
+          { id: 'TooltipSides', title: 'Placement', note: 'Use `side` to pick where it opens. With no room there, it flips.' },
+          { id: 'TooltipAligns', title: 'Alignment', note: 'Use `align` to line it up with its trigger.' },
           { id: 'TooltipShortcut', title: 'With a shortcut', note: '`kbd` draws a key beside the words.' },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'TooltipWhyDisabled', title: 'Saying why it is disabled', note: 'Use `aria-disabled`: a truly `disabled` button can\'t be focused or hovered.' }] },
@@ -156,6 +175,7 @@ export const overlays: DocGroup = {
         content: 'The words. Plain text only.',
         kbd: 'A key hint beside the words.',
         side: 'Which side it opens on.',
+        align: 'How it lines up with its trigger.',
         children: 'The trigger: one focusable element.',
       },
       related: ['Popover', 'Button', 'Kbd'],

@@ -69,16 +69,24 @@ const dedent = text => {
   return lines.map(l => l.slice(margin)).join('\n').trim()
 }
 
-/** A fragment's children, for a page: the wrapper is there to satisfy the file, and a reader doesn't paste it. */
-function unwrap(text) {
-  const inner = /^<>\s*([\s\S]*?)\s*<\/>$/.exec(text.trim())
-  return inner ? dedent(`\n${' '.repeat(/\n( *)\S/.exec(text)?.[1]?.length ?? 0)}${inner[1]}`) : text.trim()
+const names = binding => (ts.isIdentifier(binding) ? [binding.text] : binding.elements.flatMap(e => (ts.isOmittedExpression(e) ? [] : names(e.name))))
+
+/** The shared world's declarations, so an example that uses them can be pasted without this site's files. */
+function readWorld(path) {
+  const sf = ts.createSourceFile(path, readFileSync(path, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+  const decls = new Map(), imports = []
+  sf.forEachChild(n => {
+    if (ts.isImportDeclaration(n)) { for (const e of n.importClause?.namedBindings?.elements ?? []) imports.push({ name: e.name.text, from: n.moduleSpecifier.text }); return }
+    const text = n.getText().replace(/^export /, '')
+    if (ts.isVariableStatement(n)) for (const d of n.declarationList.declarations) for (const name of names(d.name)) decls.set(name, text)
+    else if (n.name && ts.isIdentifier(n.name)) decls.set(n.name.text, text)
+  })
+  return { decls, imports }
 }
 
 /**
- * Each named export of an examples file, with what a reader needs to paste it: a stateless example is its JSX, a stateful
- * one its whole function under a name without the component's prefix. Either way the import lines and any helper it uses
- * come first. Imports from the shared world read `./data`, since that is what they are to a reader.
+ * Each named export of an examples file, with what a reader needs to paste it: the component under a short name, the
+ * imports it uses, and every helper and piece of the shared world it reaches, so the code runs on its own.
  */
 export function readExamples(path) {
   const text = readFileSync(path, 'utf8')
@@ -86,41 +94,50 @@ export function readExamples(path) {
   const imports = []
   const helpers = new Map()
   const exported = new Map()
+  let world
   sf.forEachChild(n => {
     if (ts.isImportDeclaration(n)) {
-      if (n.importClause?.isTypeOnly) return
-      const names = n.importClause?.namedBindings?.elements?.map(e => e.name.text) ?? []
-      imports.push({ from: n.moduleSpecifier.text, names })
+      if (n.moduleSpecifier.text.endsWith('/world')) { world = readWorld(join(dirname(path), `${n.moduleSpecifier.text}.ts`)); return }
+      imports.push({ from: n.moduleSpecifier.text, names: n.importClause?.namedBindings?.elements?.map(e => e.name.text) ?? [], type: n.importClause?.isTypeOnly })
       return
     }
     const isExported = ts.canHaveModifiers(n) && ts.getModifiers(n)?.some(m => m.kind === ts.SyntaxKind.ExportKeyword)
     if (ts.isFunctionDeclaration(n) && n.name) (isExported ? exported : helpers).set(n.name.text, n)
-    if (ts.isVariableStatement(n)) for (const d of n.declarationList.declarations) if (ts.isIdentifier(d.name)) (isExported ? exported : helpers).set(d.name.text, n)
+    if (ts.isVariableStatement(n)) for (const d of n.declarationList.declarations) for (const name of names(d.name)) (isExported ? exported : helpers).set(name, n)
+    if (ts.isTypeAliasDeclaration(n) || ts.isInterfaceDeclaration(n)) helpers.set(n.name.text, n)
   })
-  const uses = (source, name) => new RegExp(`(?<![\\w.])${name.replace(/\$/g, '\\$')}\\b`).test(source)
+  const uses = (source, name) => new RegExp(`(?<![\\w'"-]|(?<!\\.\\.)\\.)${name.replace(/\$/g, '\\$')}\\b`).test(source)
   const out = new Map()
   for (const [name, node] of exported) {
     const fn = ts.isFunctionDeclaration(node) ? node : node.declarationList.declarations[0].initializer
     const stateless = fn && ts.isArrowFunction(fn) && !ts.isBlock(fn.body) && !fn.parameters.length
-    let body = stateless ? unwrap(dedent(`${' '.repeat(sf.getLineAndCharacterOfPosition(fn.body.getStart()).character)}${fn.body.getText().replace(/^\(\s*|\s*\)$/g, '')}`)) : node.getText().replace(/^export /, '')
-    const seen = new Set()
+    const body = stateless ? dedent(`${' '.repeat(sf.getLineAndCharacterOfPosition(fn.body.getStart()).character)}${fn.body.getText().replace(/^\(\s*|\s*\)$/g, '')}`) : node.getText().replace(/^export /, '')
+    const seen = new Set(), from = new Set()
     const pull = source => {
       for (const [h, n] of helpers) if (!seen.has(h) && uses(source, h)) { seen.add(h); pull(n.getText()) }
+      for (const [h, d] of world?.decls ?? []) if (!from.has(h) && !helpers.has(h) && uses(source, h)) { from.add(h); pull(d) }
     }
     pull(body)
-    const local = [...new Set([...helpers].filter(([h]) => seen.has(h)).map(([, n]) => n))].map(n => n.getText())
+    const local = [...new Set([...[...world?.decls ?? []].filter(([h]) => from.has(h)).map(([, d]) => d), ...[...helpers].filter(([h]) => seen.has(h)).map(([, n]) => n.getText())])]
     const all = [body, ...local].join('\n')
-    const head = imports.flatMap(({ from, names }) => {
+    const direct = new Set(imports.flatMap(i => i.names))
+    const typed = (world?.imports ?? []).filter(i => !direct.has(i.name) && uses(all, i.name))
+    const head = [...imports.flatMap(({ from, names, type }) => {
       const used = names.filter(n => uses(all, n))
-      return used.length ? [`import { ${used.join(', ')} } from '${from.startsWith('.') ? './data' : from}'`] : []
-    })
+      return used.length ? [`import ${type ? 'type ' : ''}{ ${used.join(', ')} } from '${from}'`] : []
+    }), ...[...new Set(typed.map(i => i.from))].map(f => `import type { ${typed.filter(i => i.from === f).map(i => i.name).join(', ')} } from '${f}'`)]
     out.set(name, { name, stateless, body, head, local })
   }
   return out
 }
 
-/** The code a reader sees for one example. */
+/** The code a reader sees and copies for one example: a whole file that runs once pasted. */
 export function showExample(found, component) {
-  const shown = found.stateless ? found.body : found.body.replaceAll(found.name, found.name.startsWith(component) && found.name !== component ? found.name.slice(component.length) : found.name)
-  return [found.head.join('\n'), found.local.join('\n\n'), shown].filter(Boolean).join('\n\n')
+  const short = found.name.startsWith(component) && found.name !== component ? found.name.slice(component.length) : found.name
+  const taken = found.head.some(l => new RegExp(`\\b${short}\\b`).test(l)) || found.local.some(l => new RegExp(`(function|const|type) ${short}\\b`).test(l))
+  const name = taken || !/^[A-Z]/.test(short) ? found.name : short
+  const shown = found.stateless
+    ? `export function ${name}() {\n  return (\n${found.body.split('\n').map(l => (l ? `    ${l}` : l)).join('\n')}\n  )\n}`
+    : `export ${found.body.replaceAll(found.name, name)}`
+  return [found.head.join('\n'), shown, found.local.join('\n\n')].filter(Boolean).join('\n\n')
 }

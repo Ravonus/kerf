@@ -471,7 +471,7 @@ export const EVENTS = [
 ]
 
 // -- the collab pack: the same people, in a room --
-import type { ChatConversation, ChatMessage, CommentThreadData, CursorPeer, IntegrityEvent, IntegrityStats, Peer, ShareContact, ShareMember, Version, ViewportPeer } from '@weft/warp'
+import type { ChatConversation, CommentThreadData, IntegrityEvent, ShareContact, ShareMember, Version, ViewportPeer, ChatMessage, CursorPeer, IntegrityStats, Peer } from '@weft/warp'
 
 export const PEERS: Peer[] = PEOPLE.map((p, i) => ({ id: p.id, name: p.name, color: i + 1 }))
 export const [MARA, JUN, PRIYA, TOMAS, LENA, NOOR, SAM, INES] = PEERS

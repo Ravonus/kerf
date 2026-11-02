@@ -20,7 +20,7 @@ export type ExampleRef = {
 }
 
 export type Section =
-  | { kind: 'variants' | 'states' | 'composition'; title: string; intro?: string; examples: ExampleRef[] }
+  | { kind: 'variants' | 'sizes' | 'states' | 'composition'; title: string; intro?: string; examples: ExampleRef[] }
   | { kind: 'prose'; title: string; md: string }
 
 export type Knob = {
@@ -55,6 +55,8 @@ export type Doc = {
   component: string
   /** One plain sentence, at most 120 characters. The page's lede and its meta description. */
   summary: string
+  /** The example that opens the page. Else the first one, simplest section first. */
+  hero?: string
   use?: { when: string[]; instead?: { name: string; why: string }[] }
   playground?: Playground
   sections: Section[]

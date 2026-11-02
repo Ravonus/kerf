@@ -8,6 +8,7 @@ export const actions: DocGroup = {
     {
       component: 'Button',
       summary: 'Runs an action. Use one main button per screen, and quieter ones around it.',
+      hero: 'ButtonDefault',
       use: {
         when: ['The press changes something here and now', 'One main action per view, with quieter ones around it'],
         instead: [{ name: 'Link', why: 'it goes to another page' }, { name: 'Toggle', why: 'it stays pressed' }, { name: 'Menu', why: 'there are several actions and little room' }],
@@ -32,12 +33,12 @@ export const actions: DocGroup = {
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
-          { id: 'ButtonEmphasis', title: 'Emphasis', note: 'Six levels of `emphasis`, loudest first. Fixed when the button is made.' },
-          { id: 'ButtonTones', title: 'Tone', note: 'Each `tone` against the `emphasis` levels that show colour.', stage: 'start' },
-          { id: 'ButtonSizes', title: 'Sizes' },
-          { id: 'ButtonWithIcon', title: 'With an icon' },
+          { id: 'ButtonEmphasis', title: 'Emphasis', note: 'Use `emphasis` to set how loud the button is, from `solid` down to `link`.' },
+          { id: 'ButtonTones', title: 'Tone', note: 'Use `tone` to say what the action means. `critical` is for anything destructive.', stage: 'start' },
+          { id: 'ButtonSizes', title: 'Sizes', note: 'Use `size` for `sm`, `md` or `lg`.' },
+          { id: 'ButtonWithIcon', title: 'With an icon', note: 'Use `icon` to draw one before the label.' },
           { id: 'ButtonIconOnly', title: 'Icon only', note: 'Needs `label`: it becomes the accessible name.' },
-          { id: 'ButtonFull', title: 'Full width', stage: 'narrow' },
+          { id: 'ButtonFull', title: 'Full width', note: 'Use `full` to take the width of the container.', stage: 'narrow' },
         ] },
         { kind: 'states', title: 'States', examples: [
           { id: 'ButtonLoading', title: 'Loading', note: 'The label stays the accessible name, presses are swallowed and focus stays put.' },
@@ -125,6 +126,8 @@ export const actions: DocGroup = {
           { id: 'MenuBasic', title: 'Actions', note: 'Icons, `shortcut` hints, a separator, and `tone` for the destructive one.', height: 220 },
           { id: 'MenuGroups', title: 'Groups', note: 'A `group` entry names what follows.', height: 220 },
           { id: 'MenuTrigger', title: 'Trigger styles', note: '`trigger` takes any Button prop.', height: 220 },
+          { id: 'MenuPlacement', title: 'Placement', note: 'Use `side` to pick where it opens.', height: 260 },
+          { id: 'MenuAlignment', title: 'Alignment', note: 'Use `align` to line it up with the button.', height: 220 },
         ] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'MenuRowActions', title: 'A row\'s actions', stage: 'narrow', height: 220 }] },
       ],

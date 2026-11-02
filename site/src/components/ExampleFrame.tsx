@@ -5,7 +5,7 @@ import type { ExampleRef } from '../toolkit/types'
 export type ShownExample = ExampleRef & { code: string; lines: number }
 
 /** Lines that show before the code folds. */
-const FOLD = 6
+const FOLD = 3
 
 /**
  * The page's one object: stage, then code docked under it. The stage's own controls and the fold are plain attributes,
@@ -14,7 +14,7 @@ const FOLD = 6
 export function ExampleFrame(props: { file: string; example: ShownExample; hero?: boolean }) {
   const ex = props.example
   return (
-    <div data-site="frame" data-hero={props.hero ? '' : undefined}>
+    <div data-site="frame" data-flow="card" data-hero={props.hero ? '' : undefined}>
       <div data-part="tools">
         {ex.replay && <Button emphasis="ghost" tone="neutral" size="sm" icon="rotate-ccw" data-act="stage-replay">Replay</Button>}
         <span data-part="spacer"></span>
@@ -27,7 +27,7 @@ export function ExampleFrame(props: { file: string; example: ShownExample; hero?
       </div>
       <div data-part="code" data-fold={ex.lines > FOLD && !ex.codeOpen ? '' : undefined}>
         <div innerHTML={ex.code}></div>
-        {ex.lines > FOLD && !ex.codeOpen && <Button emphasis="outline" tone="neutral" size="sm" data-act="stage-code">Show code</Button>}
+        {ex.lines > FOLD && !ex.codeOpen && <Button emphasis="outline" tone="neutral" size="sm" data-act="stage-code">View code</Button>}
       </div>
     </div>
   )

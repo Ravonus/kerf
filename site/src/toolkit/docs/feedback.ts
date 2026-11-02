@@ -25,6 +25,7 @@ export const feedback: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'ToasterBasic', title: 'A confirmation', note: 'Mount one `Toaster` near the root, then call `toast.show` from anywhere.' },
+          { id: 'ToasterPosition', title: 'Position', note: 'Use `position` on `Toaster` to pick the corner.', height: 200 },
           { id: 'ToasterTones', title: 'Tones', note: 'Each `tone` brings its own icon.' },
           { id: 'ToasterUndo', title: 'With an action', note: 'An `action` gives people ten seconds to take it.' },
         ] },

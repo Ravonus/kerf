@@ -4,7 +4,7 @@ import { onMount } from 'weft'
 
 export type NavGroup = { title: string; items: { href: string; label: string }[] }
 
-/** The left rail. The current link is brought into view once on arrival: with 238 of them it may be far down. */
+/** The left rail, for docs and warp alike: every page's name, always showing. The current link is brought into view on arrival. */
 export function SideNav(props: { label: string; groups: NavGroup[] }) {
   let box!: HTMLElement
   onMount(() => {

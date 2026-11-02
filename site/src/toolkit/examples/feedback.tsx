@@ -351,3 +351,21 @@ export const LiveStatusHeader = () => (
     <LiveStatus state="live" label="Log stream">Streaming</LiveStatus>
   </Row>
 )
+
+const CORNERS = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'] as const
+
+export function ToasterPosition() {
+  const position = state<(typeof CORNERS)[number]>('bottom-right')
+  const show = (corner: (typeof CORNERS)[number]) => {
+    position.value = corner
+    toast.show({ title: 'Deploy finished', description: `Shown ${corner.replace('-', ' ')}.` })
+  }
+  return (
+    <>
+      <Grid cols={3} gap="tight">
+        {CORNERS.map(corner => <Button key={corner} emphasis="outline" tone="neutral" onClick={() => show(corner)}>{corner}</Button>)}
+      </Grid>
+      <Toaster position={position.value} />
+    </>
+  )
+}

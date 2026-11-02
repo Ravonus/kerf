@@ -13,7 +13,7 @@ const FORM_PROPS = {
 
 export const flow: DocGroup = {
   file: 'flow',
-  title: 'Flow',
+  title: 'Sign-in and onboarding',
   intro: 'Sign-in, onboarding and other step-by-step journeys.',
   pack: true,
   docs: [

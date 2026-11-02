@@ -71,7 +71,7 @@ export default function Home() {
           <h2>A UI kit comes with it</h2>
           <p data-part="intro">The buttons and fields so far are warp, weft's own component library: {components} components, with keyboard support, themes and 651 icons. The shop gets a checkout.</p>
           <Example id="shop-5" plain><Shop5 /></Example>
-          <p data-part="more"><Link href="/toolkit">Browse the toolkit</Link></p>
+          <p data-part="more"><Link href="/components">Browse the components</Link></p>
         </section>
 
         <section>

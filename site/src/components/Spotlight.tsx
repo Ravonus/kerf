@@ -15,7 +15,7 @@ const RECENT = 'weft:recent'
 const PAGES: Command[] = [
   { label: 'Docs', group: 'Go to', icon: BookIcon, href: '/docs', run: go('/docs') },
   { label: 'Examples', group: 'Go to', icon: PlayIcon, href: '/examples', run: go('/examples') },
-  { label: 'Toolkit', group: 'Go to', icon: GridIcon, href: '/toolkit', run: go('/toolkit') },
+  { label: 'Components', group: 'Go to', icon: GridIcon, href: '/components', run: go('/components') },
   { label: 'Icons', group: 'Go to', icon: StarIcon, href: '/icons', run: go('/icons') },
 ]
 const COMMANDS: Command[] = [

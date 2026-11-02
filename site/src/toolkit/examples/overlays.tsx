@@ -2,12 +2,12 @@ import { derived, state } from 'weft'
 import { Badge, Button, Checkbox, Chip, Drawer, Icon, Input, Modal, Popover, Row, Select, Snippet, Stack, Switch, Text, Tooltip } from '@weft/warp'
 import { DEPLOYS, TONE_OF, type Status } from '../world'
 
-export function ModalPlay(p: { size: 'sm' | 'md' | 'lg'; alert: boolean; tone: 'neutral' | 'critical'; title: string }) {
+export function ModalPlay(p: { size: 'sm' | 'md' | 'lg'; placement: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'full'; alert: boolean; tone: 'neutral' | 'critical'; title: string }) {
   const open = state(false)
   return (
     <>
       <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Open the modal</Button>
-      <Modal open={open} size={p.size} alert={p.alert} tone={p.tone === 'critical' ? 'critical' : undefined} title={p.title} description="Everyone on the project sees this." footer={<Button data-close="">Done</Button>}>
+      <Modal open={open} size={p.size} placement={p.placement} alert={p.alert} tone={p.tone === 'critical' ? 'critical' : undefined} title={p.title} description="Everyone on the project sees this." footer={<Button data-close="">Done</Button>}>
         <Text subtle>Press Done, the cross, or Escape to close.</Text>
       </Modal>
     </>
@@ -118,7 +118,7 @@ export function ModalInvite() {
   )
 }
 
-export function DrawerPlay(p: { side: 'auto' | 'right' | 'left' | 'bottom' }) {
+export function DrawerPlay(p: { side: 'auto' | 'right' | 'left' | 'top' | 'bottom' }) {
   const open = state(false)
   return (
     <>
@@ -327,3 +327,143 @@ export const TooltipStatusRow = () => (
   </Row>
 )
 
+
+export function ModalDefault() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Open modal</Button>
+      <Modal open={open} title="Rename project" footer={<Button data-close="">Done</Button>}>
+        <Text subtle>Press Done, the cross or Escape to close.</Text>
+      </Modal>
+    </>
+  )
+}
+
+export function ModalCenter() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Center</Button>
+      <Modal open={open} placement="center" title="Rename project" footer={<Button data-close="">Done</Button>}>
+        <Text subtle>The default: centred on the page.</Text>
+      </Modal>
+    </>
+  )
+}
+
+export function ModalTop() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Top</Button>
+      <Modal open={open} placement="top" title="Search the workspace" footer={<Button data-close="">Done</Button>}>
+        <Text subtle>Sits near the top, for search and quick commands.</Text>
+      </Modal>
+    </>
+  )
+}
+
+export function ModalBottom() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Bottom</Button>
+      <Modal open={open} placement="bottom" title="Share this deploy" footer={<Button data-close="">Done</Button>}>
+        <Text subtle>Rises from the bottom edge.</Text>
+      </Modal>
+    </>
+  )
+}
+
+export function ModalLeft() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Left</Button>
+      <Modal open={open} placement="left" title="Project menu" footer={<Button data-close="">Done</Button>}>
+        <Text subtle>Fills the left side, for navigation.</Text>
+      </Modal>
+    </>
+  )
+}
+
+export function ModalRight() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Right</Button>
+      <Modal open={open} placement="right" title="Deploy details" footer={<Button data-close="">Done</Button>}>
+        <Text subtle>Fills the right side, for details.</Text>
+      </Modal>
+    </>
+  )
+}
+
+export function ModalFull() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Full</Button>
+      <Modal open={open} placement="full" title="Compare two deploys" footer={<Button data-close="">Done</Button>}>
+        <Text subtle>Covers the whole window, for wide work.</Text>
+      </Modal>
+    </>
+  )
+}
+
+export function DrawerRight() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Right</Button>
+      <Drawer open={open} side="right" title="Deploy d-4821">
+        <Text subtle>For details of what you pressed.</Text>
+      </Drawer>
+    </>
+  )
+}
+
+export function DrawerLeft() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Left</Button>
+      <Drawer open={open} side="left" title="Projects">
+        <Text subtle>For navigation.</Text>
+      </Drawer>
+    </>
+  )
+}
+
+export function DrawerTop() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Top</Button>
+      <Drawer open={open} side="top" title="Search">
+        <Text subtle>For a search or a short notice.</Text>
+      </Drawer>
+    </>
+  )
+}
+
+export function DrawerBottom() {
+  const open = state(false)
+  return (
+    <>
+      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Bottom</Button>
+      <Drawer open={open} side="bottom" title="Share">
+        <Text subtle>For a quick task, and on phones.</Text>
+      </Drawer>
+    </>
+  )
+}
+
+export const TooltipAligns = () => (
+  <>
+    <Tooltip content="Lines up with the start" align="start"><Button emphasis="outline" tone="neutral">Start</Button></Tooltip>
+    <Tooltip content="Centred on the button" align="center"><Button emphasis="outline" tone="neutral">Center</Button></Tooltip>
+    <Tooltip content="Lines up with the end" align="end"><Button emphasis="outline" tone="neutral">End</Button></Tooltip>
+  </>
+)

@@ -85,7 +85,7 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
   const code = derived(() => print(play, props.name, values.value))
   const html = derived(() => highlight(code.value, 'tsx'))
   return (
-    <div data-site="frame" data-play={play.stage === 'fill' ? 'wide' : ''} data-hero="">
+    <div data-site="frame" data-flow="card" data-play={play.stage === 'fill' ? 'wide' : ''} data-hero="">
       <div data-part="pair">
         <div data-part="stage" style={play.height ? `--stage-h:${play.height}px` : undefined}>
           <div data-part="mount" data-stage={play.stage ?? 'center'} ref={host}><span data-part="wait" aria-hidden="true"></span></div>

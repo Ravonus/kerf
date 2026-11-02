@@ -5,6 +5,8 @@ import { PROJECTS } from '../world'
 
 export const ButtonPlay = (p: ButtonProps) => <Button {...p} />
 
+export const ButtonDefault = () => <Button>Deploy</Button>
+
 export const ButtonEmphasis = () => (
   <>
     <Button>Deploy</Button>
@@ -275,3 +277,19 @@ export function CommandPaletteRun() {
     </Stack>
   )
 }
+
+export const MenuPlacement = () => (
+  <>
+    {(['top', 'bottom', 'left', 'right'] as const).map(side => (
+      <Menu key={side} label={side} side={side} trigger={{ emphasis: 'outline', tone: 'neutral' }} items={[{ label: 'Rename' }, { label: 'Duplicate' }, { label: 'Archive' }]} />
+    ))}
+  </>
+)
+
+export const MenuAlignment = () => (
+  <>
+    {(['start', 'center', 'end'] as const).map(align => (
+      <Menu key={align} label={align} align={align} trigger={{ emphasis: 'outline', tone: 'neutral' }} items={[{ label: 'Rename' }, { label: 'Duplicate' }, { label: 'Archive' }]} />
+    ))}
+  </>
+)
