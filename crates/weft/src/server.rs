@@ -126,7 +126,7 @@ async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: Hea
     let answer = match outcome {
         Ok(Ok(answer)) => answer,
         Ok(Err(e)) if e.is_panic() => {
-            Answer::Failed(Failed::Internal(format!("panicked: {}", crate::functions::panic_text(e.into_panic()))))
+            Answer::Failed(Failed::Internal(format!("panicked: {}", crate::functions::panic_text(&*e.into_panic()))))
         }
         Ok(Err(e)) => Answer::Failed(Failed::Internal(e.to_string())),
         Err(_) => {

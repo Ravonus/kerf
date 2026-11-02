@@ -75,7 +75,7 @@ fn dispatch(id: &str, ctx: &str, body: Vec<u8>) -> String {
     let base = Base::new(id, envelope);
     let call = handler(base.clone(), body);
     let answer = catch_unwind(AssertUnwindSafe(|| wait(pin!(call))))
-        .unwrap_or_else(|p| Answer::Failed(Failed::Internal(format!("panicked: {}", panic_text(p)))));
+        .unwrap_or_else(|p| Answer::Failed(Failed::Internal(format!("panicked: {}", panic_text(&*p)))));
     match answer {
         Answer::Value(value) => ok_body(&value, &base),
         Answer::Failed(Failed::Typed(error)) => json!({ "ok": false, "error": error }).to_string(),
@@ -131,22 +131,26 @@ mod wasm {
     fn give(text: String) -> u64 {
         let bytes = text.into_bytes().into_boxed_slice();
         let len = bytes.len() as u64;
-        ((Box::into_raw(bytes) as *mut u8 as u64) << 32) | len
+        ((Box::into_raw(bytes).cast::<u8>() as u64) << 32) | len
     }
 
+    /// # Safety
+    /// `ptr` and `len` are valid UTF-8 that outlives `'a`.
     unsafe fn text<'a>(ptr: *const u8, len: usize) -> &'a str {
+        // SAFETY: the caller's contract above.
         unsafe { std::str::from_utf8_unchecked(std::slice::from_raw_parts(ptr, len)) }
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn weft_alloc(len: usize) -> *mut u8 {
-        Box::into_raw(vec![0u8; len].into_boxed_slice()) as *mut u8
+        Box::into_raw(vec![0u8; len].into_boxed_slice()).cast::<u8>()
     }
 
     /// # Safety
     /// `ptr` and `len` are what `weft_alloc`, `weft_call` or `weft_contract` handed out.
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn weft_free(ptr: *mut u8, len: usize) {
+        // SAFETY: the caller hands back a boxed slice of exactly `len` bytes.
         drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, len)) });
     }
 
@@ -168,11 +172,15 @@ mod wasm {
         HOOK.call_once(|| {
             std::panic::set_hook(Box::new(|info| {
                 let message = info.to_string();
+                // SAFETY: the host copies the bytes out during the call; `message` is live and UTF-8.
                 unsafe { panicked(message.as_ptr(), message.len()) }
-            }))
+            }));
         });
+        // SAFETY: `body` is a `weft_alloc` box of `body_len` bytes, and it's ours now.
         let body = unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, body_len)) }.into_vec();
-        give(super::dispatch(unsafe { text(id, id_len) }, unsafe { text(ctx, ctx_len) }, body))
+        // SAFETY: the caller keeps both strings, valid UTF-8, for the whole call.
+        let (id, ctx) = unsafe { (text(id, id_len), text(ctx, ctx_len)) };
+        give(super::dispatch(id, ctx, body))
     }
 
     #[unsafe(no_mangle)]
@@ -181,6 +189,7 @@ mod wasm {
     }
 
     pub(crate) fn time() -> f64 {
+        // SAFETY: a plain import: no arguments, no memory.
         unsafe { now() }
     }
 }

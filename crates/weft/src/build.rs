@@ -5,6 +5,7 @@
 
 use std::collections::BTreeMap;
 use std::env;
+use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -209,9 +210,10 @@ pub(crate) fn render(contract: &Value, service: &str) -> Result<String, String> 
             for (code, schema) in &s.errors {
                 let data = format!("{name}{code}");
                 extra += &alias(&data, &add(&mut space, schema, &data)?);
-                variants += &format!("{code}({data}),\n");
+                let _ = writeln!(variants, "{code}({data}),");
             }
-            body += &format!(
+            let _ = write!(
+                body,
                 r#"
 /// `{id}`'s declared errors, and `Internal` for the rest: any `std::error::Error` converts, so `?` works.
 #[derive(Debug, ::serde::Serialize)]
@@ -241,8 +243,9 @@ impl ::weft::Failure for {name}Error {{
             format!("{name}Error")
         };
 
-        methods += &format!(
-            "/// `{id}`\nfn {method}(&self, ctx: ::weft::{ctx}{input}) -> impl ::std::future::Future<Output = ::std::result::Result<{name}Output, {error}>> + Send;\n",
+        let _ = writeln!(
+            methods,
+            "/// `{id}`\nfn {method}(&self, ctx: ::weft::{ctx}{input}) -> impl ::std::future::Future<Output = ::std::result::Result<{name}Output, {error}>> + Send;",
             id = s.id,
             method = s.method,
             ctx = s.ctx,
@@ -252,8 +255,9 @@ impl ::weft::Failure for {name}Error {{
         } else {
             ("_: ()".to_string(), "ctx")
         };
-        table += &format!(
-            ".add({id:?}, {{ let s = service.clone(); move |ctx: ::weft::{ctx}, {param}| {{ let s = s.clone(); async move {{ s.{method}({args}).await }} }} }})\n",
+        let _ = writeln!(
+            table,
+            ".add({id:?}, {{ let s = service.clone(); move |ctx: ::weft::{ctx}, {param}| {{ let s = s.clone(); async move {{ s.{method}({args}).await }} }} }})",
             id = s.id,
             ctx = s.ctx,
             method = s.method,
@@ -261,7 +265,7 @@ impl ::weft::Failure for {name}Error {{
     }
 
     let text = format!(
-        r#"{types}
+        r"{types}
 {extra}
 {body}
 /// The contract's hash: `GET /_weft/health` reports it, and neither side runs a binary built from another one.
@@ -278,7 +282,7 @@ pub fn functions<S: Service>(service: S) -> ::weft::Functions {{
     ::weft::Functions::new({service:?}, CONTRACT_HASH)
     {table}
 }}
-"#,
+",
         types = space.to_stream(),
     );
     let file = syn::parse_file(&text).map_err(|e| format!("generated code didn't parse: {e}"))?;
@@ -290,6 +294,7 @@ pub fn functions<S: Service>(service: S) -> ::weft::Functions {{
 }
 
 #[cfg(test)]
+#[allow(clippy::needless_pass_by_value, reason = "fixtures take `json!` literals")]
 mod tests {
     use super::*;
 

@@ -399,7 +399,7 @@ impl<'s> Analyzer<'s> {
         }
         self.comps.push(ctx);
         f(self);
-        let ctx = self.comps.pop().unwrap();
+        let ctx = self.comps.pop().expect("pushed above, and `f` leaves the stack as it found it");
         self.component_entry_diagnostics(&ctx);
         self.snapshot_diagnostics(&ctx);
     }
@@ -412,7 +412,7 @@ impl<'s> Analyzer<'s> {
         let mut scan = ComponentEntryReads { a: self, ctx, depth, found: Vec::new() };
         scan.visit_expression(e);
         let found = scan.found;
-        let ctx = self.comps.last_mut().unwrap();
+        let Some(ctx) = self.comps.last_mut() else { return };
         for hit in found {
             if !ctx.entries.iter().any(|h| h.read == hit.read) {
                 ctx.entries.push(hit);
@@ -561,7 +561,7 @@ impl<'s> Analyzer<'s> {
                     // Lowered live anyway (`props.user.name`), so the output is right while the error stands.
                     self.destructure_props(inner, props, &sub, ctx);
                 }
-                _ => {}
+                BindingPattern::ArrayPattern(_) => {}
             }
         }
         if let Some(rest) = &obj.rest
@@ -648,7 +648,6 @@ impl<'s> Analyzer<'s> {
     /// `const { a, b = 1, ...rest } = props`: the same live reads as the parameter's pattern. The pattern must be one
     /// that can be: known keys, no array patterns, at most one rest in a component and none below the top.
     fn alias_pattern(&mut self, obj: &ObjectPattern<'_>, init: &Expression<'_>) -> bool {
-        let Some((root, path)) = self.prop_path(init) else { return false };
         fn plain(obj: &ObjectPattern<'_>) -> bool {
             obj.properties.iter().all(|p| {
                 static_key(&p.key).is_some()
@@ -656,10 +655,11 @@ impl<'s> Analyzer<'s> {
                         BindingPattern::BindingIdentifier(_) => true,
                         BindingPattern::AssignmentPattern(a) => matches!(a.left, BindingPattern::BindingIdentifier(_)),
                         BindingPattern::ObjectPattern(inner) => inner.rest.is_none() && plain(inner),
-                        _ => false,
+                        BindingPattern::ArrayPattern(_) => false,
                     }
             }) && obj.rest.as_ref().is_none_or(|r| matches!(r.argument, BindingPattern::BindingIdentifier(_)))
         }
+        let Some((root, path)) = self.prop_path(init) else { return false };
         let Some(ctx) = self.comps.last() else { return false };
         let span = key(ctx.span);
         if !plain(obj) {
@@ -684,7 +684,7 @@ impl<'s> Analyzer<'s> {
                 return false;
             }
         }
-        let mut ctx = self.comps.pop().unwrap();
+        let Some(mut ctx) = self.comps.pop() else { return false };
         self.destructure_props(obj, &props, &base, &mut ctx);
         self.comps.push(ctx);
         true
@@ -764,7 +764,7 @@ impl<'s> Analyzer<'s> {
                 match self.alias(init) {
                     Some(rewrite) => {
                         if self.written(sym) {
-                            let span = self.comps.last().unwrap().span;
+                            let Some(span) = self.comps.last().map(|c| c.span) else { return };
                             match &rewrite {
                                 Rewrite::Prop { props, path } if path.len() == 1 => {
                                     let (props, k) = (props.clone(), path[0].clone());
@@ -779,7 +779,9 @@ impl<'s> Analyzer<'s> {
                             }
                         }
                         self.plan.rewrites.insert(sym, rewrite);
-                        self.comps.last_mut().unwrap().prop_syms.insert(sym);
+                        if let Some(c) = self.comps.last_mut() {
+                            c.prop_syms.insert(sym);
+                        }
                         true
                     }
                     None => false,
@@ -827,7 +829,7 @@ impl<'s> Analyzer<'s> {
         }
         let decl = ctx.body_decl;
         if let Some(d) = decl
-            && !self.comps.last_mut().unwrap().reported_decls.insert(key(d))
+            && self.comps.last_mut().is_some_and(|c| !c.reported_decls.insert(key(d)))
         {
             return;
         }
@@ -1324,7 +1326,9 @@ impl<'a> Visit<'a> for Analyzer<'_> {
                     jsx: Vec::new(),
                     other: false,
                 };
-                self.comps.last_mut().unwrap().snapshots.push(snap);
+                if let Some(c) = self.comps.last_mut() {
+                    c.snapshots.push(snap);
+                }
             }
         }
         let prev_decl = self.comps.last().and_then(|c| c.body_decl);

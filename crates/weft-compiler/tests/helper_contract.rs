@@ -2,6 +2,8 @@
 //! `@weft-js/core/ssr` must be exported by `packages/weft/src`. Compiles the repo's own components (test fixtures, the v3
 //! reference app, the size fixtures) in each output mode: DOM, DOM dev, hydratable DOM, and SSR.
 
+#![allow(clippy::unwrap_used, reason = "a panic in a test is the failure report")]
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 

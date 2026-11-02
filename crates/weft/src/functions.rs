@@ -77,6 +77,7 @@ impl Functions {
     }
 
     /// One function. Called by generated code.
+    #[must_use]
     pub fn add<C, I, O, E, F, Fut>(mut self, id: &'static str, f: F) -> Self
     where
         C: FromBase + Send + 'static,
@@ -152,7 +153,7 @@ pub(crate) fn drift_body(detail: &str) -> Value {
     json!({ "ok": false, "error": { "code": "Drift", "message": detail } })
 }
 
-pub(crate) fn panic_text(p: Box<dyn std::any::Any + Send>) -> String {
+pub(crate) fn panic_text(p: &(dyn std::any::Any + Send)) -> String {
     p.downcast_ref::<&str>()
         .map(std::string::ToString::to_string)
         .or_else(|| p.downcast_ref::<String>().cloned())

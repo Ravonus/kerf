@@ -19,6 +19,7 @@ pub mod style;
 mod transform;
 
 #[cfg(feature = "node")]
+#[cfg_attr(test, allow(dead_code, reason = "Node-API registers exports outside test builds"))]
 mod node;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
@@ -78,7 +79,7 @@ impl Default for Options {
             hydratable: false,
             explain: false,
             hmr: false,
-            groups: Default::default(),
+            groups: std::collections::HashMap::default(),
             tagged_parts: false,
             shapes: None,
             islands: None,
@@ -148,16 +149,7 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     };
     diagnostics.extend(browser::check(&program, &scoping, source, ssr));
     // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
-    let (groups, group_uses) = style::apply(
-        &allocator,
-        &mut program,
-        &scoping,
-        source,
-        &options.filename,
-        &options.groups,
-        options.tagged_parts,
-        &mut diagnostics,
-    );
+    let (groups, group_uses) = style::apply(&allocator, &mut program, &scoping, source, options, &mut diagnostics);
     diagnostics.retain(|d| (d.start as usize) <= authored);
     diagnostics.sort_by_key(|d| d.start);
     let mut facts = plan.facts.clone();
@@ -217,7 +209,7 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
         origins,
         map: points.as_ref().map(|p| (p, source)),
     };
-    match emit::emit(&printed, o) {
+    match emit::emit(&printed, &o) {
         Ok(out) => Output {
             code: Some(out.code + footer.as_deref().unwrap_or("")),
             map: out.map,

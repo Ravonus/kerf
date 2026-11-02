@@ -235,10 +235,9 @@ pub extern "C" fn wl_tree_new(measure: MeasureFn, user: *mut c_void) -> *mut Tre
 /// `t` must come from `wl_tree_new` and not be used afterwards.
 #[no_mangle]
 pub unsafe extern "C" fn wl_tree_free(t: *mut Tree) {
-    unsafe {
-        if !t.is_null() {
-            drop(Box::from_raw(t));
-        }
+    if !t.is_null() {
+        // SAFETY: the caller hands back a pointer from `wl_tree_new`, whose `Box` this reclaims once.
+        drop(unsafe { Box::from_raw(t) });
     }
 }
 
@@ -249,45 +248,56 @@ macro_rules! tree {
     };
 }
 
+/// # Safety
+/// `t` must be a live tree from `wl_tree_new`, used from one thread.
 #[no_mangle]
-pub extern "C" fn wl_node(t: *mut Tree, id: u32, measured: u32) {
+pub unsafe extern "C" fn wl_node(t: *mut Tree, id: u32, measured: u32) {
     tree!(t).node(id, measured != 0);
 }
+/// # Safety
+/// `t` must be a live tree from `wl_tree_new`, used from one thread.
 #[no_mangle]
-pub extern "C" fn wl_remove(t: *mut Tree, id: u32) {
+pub unsafe extern "C" fn wl_remove(t: *mut Tree, id: u32) {
     tree!(t).remove(id);
 }
+/// # Safety
+/// `t` must be a live tree from `wl_tree_new`, used from one thread.
 #[no_mangle]
-pub extern "C" fn wl_insert(t: *mut Tree, parent: u32, id: u32, before: u32) {
+pub unsafe extern "C" fn wl_insert(t: *mut Tree, parent: u32, id: u32, before: u32) {
     tree!(t).insert(parent, id, before);
 }
+/// # Safety
+/// `t` must be a live tree from `wl_tree_new`, used from one thread.
 #[no_mangle]
-pub extern "C" fn wl_set(t: *mut Tree, id: u32, k: u32, v: f32) {
+pub unsafe extern "C" fn wl_set(t: *mut Tree, id: u32, k: u32, v: f32) {
     tree!(t).set(id, k, v);
 }
+/// # Safety
+/// `t` must be a live tree from `wl_tree_new`, used from one thread.
 #[no_mangle]
-pub extern "C" fn wl_dirty(t: *mut Tree, id: u32) {
+pub unsafe extern "C" fn wl_dirty(t: *mut Tree, id: u32) {
     tree!(t).dirty(id);
 }
+/// # Safety
+/// `t` must be a live tree from `wl_tree_new`, used from one thread.
 #[no_mangle]
-pub extern "C" fn wl_compute(t: *mut Tree, root: u32, w: f32, h: f32) {
+pub unsafe extern "C" fn wl_compute(t: *mut Tree, root: u32, w: f32, h: f32) {
     tree!(t).compute(root, w, h);
 }
 
 /// Writes `[x, y, w, h, contentW, contentH]` into `out`. Returns 0 for an unknown id.
 ///
 /// # Safety
-/// `out` must point to 6 writable floats.
+/// `t` must be a live tree from `wl_tree_new`, used from one thread. `out` must point to 6 writable floats.
 #[no_mangle]
 pub unsafe extern "C" fn wl_frame(t: *mut Tree, id: u32, out: *mut f32) -> u32 {
-    unsafe {
-        match tree!(t).frame(id) {
-            Some(f) => {
-                std::ptr::copy_nonoverlapping([f.x, f.y, f.w, f.h, f.content_w, f.content_h].as_ptr(), out, 6);
-                1
-            }
-            None => 0,
+    match tree!(t).frame(id) {
+        Some(f) => {
+            // SAFETY: the source is this 6-float array, and the caller guarantees `out` has room for 6.
+            unsafe { std::ptr::copy_nonoverlapping([f.x, f.y, f.w, f.h, f.content_w, f.content_h].as_ptr(), out, 6) };
+            1
         }
+        None => 0,
     }
 }
 
@@ -295,7 +305,7 @@ pub unsafe extern "C" fn wl_frame(t: *mut Tree, id: u32, out: *mut f32) -> u32 {
 
 #[cfg(target_arch = "wasm32")]
 mod wasm {
-    use super::*;
+    use super::{c_void, wl_tree_new, Tree};
 
     #[link(wasm_import_module = "env")]
     extern "C" {
@@ -322,6 +332,7 @@ mod wasm {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp, reason = "layout is whole points here: an inexact result is the failure")]
 mod tests {
     use super::*;
 
@@ -329,6 +340,7 @@ mod tests {
     extern "C" fn fixed(_: *mut c_void, id: u32, kw: f32, kh: f32, _aw: f32, _ah: f32, out: *mut f32) {
         let w = if kw.is_nan() { (id % 100) as f32 * 10.0 } else { kw };
         let h = if kh.is_nan() { 20.0 } else { kh };
+        // SAFETY: the `MeasureFn` contract: `out` has room for `[width, height]`.
         unsafe {
             *out = w;
             *out.add(1) = h;
