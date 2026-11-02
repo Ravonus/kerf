@@ -8,7 +8,7 @@ import nav from '../../generated/toolkit-nav.json'
 import '../../styles/docs.css'
 import '../../styles/toolkit.css'
 
-const groups = [{ title: 'Toolkit', items: [{ href: '/toolkit', label: 'All components' }] }, ...nav.map(g => ({ title: g.group, items: g.items.map(i => ({ href: `/toolkit/${i.slug}`, label: i.name })) }))]
+const groups = [{ title: 'Toolkit', items: [{ href: '/toolkit', label: 'All components' }, { href: '/toolkit/art', label: 'Art gallery' }] }, ...nav.map(g => ({ title: g.group, items: g.items.map(i => ({ href: `/toolkit/${i.slug}`, label: i.name })) }))]
 
 export default function ToolkitLayout(props: RouteProps) {
   return (
