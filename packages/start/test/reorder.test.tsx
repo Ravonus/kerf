@@ -262,3 +262,14 @@ test('a navigation\'s entries older than a write do not land', async () => {
   await tick()
   expect(shown()).toEqual(['open'])
 })
+
+test('a streaming page\'s chunks land in the cache as they arrive, under anything written here since', async () => {
+  const chunk = (done: boolean) => (globalThis as any).$wc.push({ c: [['rows', undefined, rows(done), ['rows']]], b: {} })
+  chunk(true)
+  expect(cache.get(list)).toEqual(rows(true))
+  await ready(false)
+  chunk(true) // read before that value got here
+  await tick()
+  expect(shown()).toEqual(['open'])
+  expect(reads()).toEqual([])
+})

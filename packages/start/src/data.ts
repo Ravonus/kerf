@@ -936,6 +936,14 @@ if (typeof document !== 'undefined' && !runtime.scope) {
   client.seeds = undefined
   const el = document.getElementById('weft-cache')
   if (el) seed(JSON.parse(el.textContent!))
+  // A stream's chunks say what landed: here is everything so far, and each one's script pushes the next.
+  // They were read for this page, so anything written here since is newer.
+  const landed = ((globalThis as any).$wc ||= []) as { c: Wire[] }[], since = clock
+  for (const l of landed) seed(l.c, since)
+  landed.push = (...l) => {
+    for (const x of l) seed(x.c, since)
+    return Array.prototype.push.apply(landed, l)
+  }
   let owed: string[] = []
   const back = () => {
     if (document.hidden) return
