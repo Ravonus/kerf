@@ -1,6 +1,7 @@
 // The core in plain DOM, no framework: the sweep's helpers, the label anatomy, roving focus, the dials.
 import { vi } from 'vitest'
 import { copyButtons } from '../src/copy'
+import { edges } from '../src/indicator'
 import { DIALS, getDial, setDial } from '../src/dial'
 import { labelChars } from '../src/floating-label'
 import { nextIndex, roving } from '../src/focus'
@@ -156,4 +157,25 @@ test('copy: a highlighted block keeps its newlines', async () => {
   await Promise.resolve(); await Promise.resolve()
   expect(writeText).toHaveBeenCalledWith('one\ntwo')
   stop()
+})
+
+test('edges: the box says which sides of its sideways scroller have more, in rtl too', () => {
+  const box = html('<div data-scope="edges"><div id="s"><i></i></div></div>')
+  const s = box.querySelector<HTMLElement>('#s')!
+  let left = 0
+  Object.defineProperty(s, 'scrollWidth', { configurable: true, get: () => 1000 })
+  Object.defineProperty(s, 'clientWidth', { configurable: true, get: () => 400 })
+  Object.defineProperty(s, 'scrollLeft', { configurable: true, get: () => left })
+  const a = edges(s)
+  expect(box.dataset.overflow).toBe('end')
+  left = 300; s.dispatchEvent(new Event('scroll'))
+  expect(box.dataset.overflow).toBe('start end')
+  left = 600; s.dispatchEvent(new Event('scroll'))
+  expect(box.dataset.overflow).toBe('start')
+  left = -600; s.dispatchEvent(new Event('scroll')) // rtl counts down from 0
+  expect(box.dataset.overflow).toBe('start')
+  left = 0; Object.defineProperty(s, 'scrollWidth', { configurable: true, get: () => 400 })
+  a.update()
+  expect(box.dataset.overflow).toBeUndefined() // it fits: no shadow
+  a.destroy()
 })

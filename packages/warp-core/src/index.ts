@@ -12,7 +12,7 @@ export { DIALS, getDial, setDial, dialsFromUrl, type Dial, type DialValue } from
 export { nextIndex, roving, anchor, type Orientation, type Placement } from './focus'
 export { pushLayer, onTopModal, place, justEscaped, type Layer, type Side, type Align } from './layers'
 export { dialog, popover, tooltip, type DialogOptions, type PopoverOptions } from './overlays'
-export { indicator, overflow, type IndicatorOptions } from './indicator'
+export { edges, indicator, overflow, type IndicatorOptions } from './indicator'
 export { moveShuttle } from './shuttle'
 export { listbox, type ListboxOptions, type ListItem } from './listbox'
 export { slider, type SliderOptions } from './slider'

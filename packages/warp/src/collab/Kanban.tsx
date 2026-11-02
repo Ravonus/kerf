@@ -1,5 +1,5 @@
 import { MoreIcon } from '@weft/icons'
-import { announce, findCard, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/warp-core'
+import { announce, edges, findCard, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/warp-core'
 import { Box, derived, flush, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
@@ -11,6 +11,7 @@ import '../styles'
 import '@weft/warp-core/styles/data/base.css'
 import '@weft/warp-core/styles/data/kanban.css'
 import '@weft/warp-core/styles/app/kanban.css'
+import '@weft/warp-core/styles/layout/edges.css'
 
 
 export type KanbanCardData = BoardCard & { label?: string; color?: number; assignee?: string; /** Footer text: a due date, a count. */ meta?: string }
@@ -142,6 +143,7 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
     onMove?.(id, next[at.col].id, at.index)
   }
   use(kanban, () => host, () => ({ columns: () => untrack(() => board.value), onMove: move, focus }))
+  use(edges, () => host) // a column cut at the stage's edge gets a shadow there, as a wide table's does
   const ctx: Ctx = {
     board: () => board.value,
     move,
@@ -163,8 +165,10 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
   const place = derived(() => (moving.value ? findCard(board.value, moving.value.id) : null))
   return (
     <>
-      <div ref={(n: any) => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
-        {board.value.map(c => <Column key={c.id} col={() => board.value.find(x => x.id === c.id) ?? c} ctx={ctx} hint={hint} />)}
+      <div data-scope="edges">
+        <div ref={(n: any) => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
+          {board.value.map(c => <Column key={c.id} col={() => board.value.find(x => x.id === c.id) ?? c} ctx={ctx} hint={hint} />)}
+        </div>
       </div>
       <p data-part="sr-only" id={hint}>Alt plus arrow keys move this card. Space picks it up. The move button lists every destination.</p>
       <Drawer open={sheetOpen} title={`Move ${moving.value?.title ?? ''}`} side="bottom">

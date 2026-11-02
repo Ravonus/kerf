@@ -159,3 +159,24 @@ test('vivid on light: the hovered solid lands a highlight edge round its fill, a
   const inkL = lum(ink)
   expect((Math.max(inkL, fill) + 0.05) / (Math.min(inkL, fill) + 0.05)).toBeGreaterThanOrEqual(4.5)
 })
+
+test('a Kanban board cut at its box shows an edge shadow on the side with more, like a wide table', async () => {
+  const look = () => page.evaluate(() => {
+    const e = document.querySelector('#board [data-scope="edges"]'), k = e.querySelector('[data-scope="kanban"]')
+    return { overflow: e.dataset.overflow ?? '', start: getComputedStyle(e, '::before').opacity, end: getComputedStyle(e, '::after').opacity, sw: k.scrollWidth, cw: k.clientWidth, x: k.scrollLeft, ew: e.getBoundingClientRect().width }
+  })
+  const rest = await look()
+  expect(rest.sw).toBeGreaterThan(rest.cw)
+  expect(rest.ew).toBeLessThanOrEqual(600)
+  expect(rest.overflow).toBe('end')
+  await page.waitForTimeout(250)
+  expect((await look()).end).toBe('1')
+  expect((await look()).start).toBe('0')
+  await page.evaluate(() => { const k = document.querySelector('#board [data-scope="kanban"]'); k.style.scrollSnapType = 'none'; k.scrollLeft = k.scrollWidth })
+  await page.waitForTimeout(250)
+  const far = await look()
+  expect(far.x).toBeGreaterThan(0)
+  expect(far.overflow).toBe('start')
+  expect(far.start).toBe('1')
+  expect(far.end).toBe('0')
+})

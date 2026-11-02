@@ -4,11 +4,13 @@ import { Button } from '../../src/Button'
 import { PaginationBar } from '../../src/Pagination'
 import { Table } from '../../src/Table'
 import { Toggle } from '../../src/Toggle'
+import { Kanban } from '../../src/collab/Kanban'
 
 const rows = [{ id: 'a', name: 'Alpha', cost: 1 }, { id: 'b', name: 'Beta', cost: 2 }]
 const columns = [{ id: 'name', header: 'Name', sort: true }, { id: 'cost', header: 'Cost', sort: true, numeric: true }]
 const WIDE = Array.from({ length: 9 }, (_, i) => ({ id: `c${i}`, header: `Column ${i}` }))
 const wideRows = [0, 1].map(r => ({ id: `r${r}`, ...Object.fromEntries(WIDE.map(c => [c.id, `value ${r}-${c.id}`])) }))
+const BOARD = ['Backlog', 'Doing', 'In review', 'Done'].map((t, i) => ({ id: `k${i}`, title: t, cards: [{ id: `k${i}c`, title: `Prorate seats on plan change ${i}` }] }))
 const box = (id: string, w: number, ui: any) => <div id={id} style={`inline-size:${w}px`}>{ui}</div>
 
 function Toggles() {
@@ -28,6 +30,7 @@ render(() => (
     {box('sortbar', 342, <Table caption="Narrow" rows={rows} columns={columns} picker={false} sort={state({ id: 'cost', dir: 'ascending' as const })} />)}
     {box('pager', 360, <PaginationBar total={200} size={25} />)}
     {box('wide', 420, <Table caption="Wide" rows={wideRows} columns={WIDE} picker={false} phone="columns" />)}
+    {box('board', 600, <Kanban label="Board" columns={BOARD} height="240px" />)}
     <div id="solid" data-expression="vivid" style="padding:16px"><Button>Deploy now</Button></div>
     <div id="solid-balanced" data-expression="balanced" style="padding:16px"><Button>Deploy now</Button></div>
   </>
