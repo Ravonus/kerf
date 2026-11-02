@@ -83,3 +83,8 @@ Where weft loses, all stacks in one run: server throughput on every database pag
 (2,188 ms, 292, 408), hydration on `/todos` (376 ms, 118, 167), HTML brotli (31 KB on `/admin`, 3, 6), DOM nodes (about double), boot
 (about 900 ms, 200, 400), and `race.toggles`, which fails on weft only. Where it wins: mobile LCP on most database pages, and JS
 against Next by 118 to 147 KB. Against Solid, JS is smaller on landing and catalog and larger on admin.
+
+A second first run, commit `8db76dd` (`ecc436e` plus Windows harness and path fixes, no tuning), GatorBuilder (i9-13900K, Windows 11),
+3 samples, private Postgres, installed Chrome: `first-run-windows.json`. Peak CPU reached 100% with WSL busy, so read its timings as
+the pattern, not the value. Numbers from the two hosts are never compared with each other. It shows the same losses: admin server memory
+2.1 GB, `race.toggles` 0 of 3, `/todos` 40 req/s against 300 and 90, `/admin/nested` 20 against 360 and 112.
