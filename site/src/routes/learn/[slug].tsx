@@ -10,10 +10,11 @@ const all = pages as unknown as Record<string, Page>
 
 /** The page with each demo's highlighted source and words filled in, so none of that is in the page's script. */
 export const load = async ({ params }: LoadArgs<'/learn/[slug]'>) => {
-  const page = all[params.slug] ?? notFound()
+  const page = all[params.slug]
+  if (!page) return notFound()
   const { demos } = await import('../../demos')
   const { default: code } = await import('../../generated/demos.json')
-  const blocks = page.blocks.map(b => ('demo' in b ? { demo: b.demo, code: (code as Record<string, string>)[b.demo] ?? '', tryIt: demos[b.demo]?.tryIt ?? '' } : { html: b.html }))
+  const blocks = page.blocks.map((b): { html: string } | { demo: string; code: string; tryIt: string } => ('demo' in b ? { demo: b.demo, code: (code as Record<string, string>)[b.demo] ?? '', tryIt: demos[b.demo]?.tryIt ?? '' } : { html: b.html }))
   return { ...page, blocks }
 }
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })

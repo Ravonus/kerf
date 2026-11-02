@@ -1,5 +1,4 @@
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
-import { Link } from '@weft-js/start'
+import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
 import { Button } from '@weft-js/warp'
 import { PageExample } from '../../components/PageExample'
 import { Toc } from '../../components/Toc'
@@ -31,7 +30,9 @@ export default function ReferencePage(props: RouteProps<typeof load, '/reference
           <p data-part="crumb">{props.data.parent ? <Link href={`/reference/${props.data.parent.slug}`}>{props.data.parent.title}</Link> : props.data.section}</p>
           <h1>{props.data.title}</h1>
         </header>
-        {props.data.lead && <p data-part="lead" innerHTML={props.data.lead}></p>}
+        {props.data.lead && <p data-part="lead"
+          // oxlint-disable-next-line weft/no-html-sink -- the reference's own Markdown, rendered at build time
+          innerHTML={props.data.lead}></p>}
         <p data-part="actions">
           <Button emphasis="outline" tone="neutral" size="sm" icon="copy" data-act="copy" data-copy-url={`/reference/${props.data.slug}.md`}>Copy as Markdown</Button>
         </p>
