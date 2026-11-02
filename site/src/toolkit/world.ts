@@ -105,21 +105,21 @@ export const PLANS: BillingPlan[] = [
 ]
 
 export const BILLS: Invoice[] = [
-  { id: '10', date: 'Oct 1', number: 'INV-2026-10', status: 'paid', amount: 8560, pdf: '#invoice' },
-  { id: '09', date: 'Sep 1', number: 'INV-2026-09', status: 'paid', amount: 8230, pdf: '#invoice' },
-  { id: '08', date: 'Aug 1', number: 'INV-2026-08', status: 'paid', amount: 8010, pdf: '#invoice' },
-  { id: '07', date: 'Jul 1', number: 'INV-2026-07', status: 'paid', amount: 7620, pdf: '#invoice' },
-  { id: '06', date: 'Jun 1', number: 'INV-2026-06', status: 'paid', amount: 7690, pdf: '#invoice' },
-  { id: '05', date: 'May 1', number: 'INV-2026-05', status: 'paid', amount: 7380, pdf: '#invoice' },
-  { id: '04', date: 'Apr 1', number: 'INV-2026-04', status: 'paid', amount: 7240, pdf: '#invoice' },
-  { id: '03', date: 'Mar 1', number: 'INV-2026-03', status: 'paid', amount: 6710, pdf: '#invoice' },
+  { id: '10', date: 'Oct 1', number: 'INV-2026-10', status: 'paid', amount: 8560, pdf: '/samples/invoice.pdf' },
+  { id: '09', date: 'Sep 1', number: 'INV-2026-09', status: 'paid', amount: 8230, pdf: '/samples/invoice.pdf' },
+  { id: '08', date: 'Aug 1', number: 'INV-2026-08', status: 'paid', amount: 8010, pdf: '/samples/invoice.pdf' },
+  { id: '07', date: 'Jul 1', number: 'INV-2026-07', status: 'paid', amount: 7620, pdf: '/samples/invoice.pdf' },
+  { id: '06', date: 'Jun 1', number: 'INV-2026-06', status: 'paid', amount: 7690, pdf: '/samples/invoice.pdf' },
+  { id: '05', date: 'May 1', number: 'INV-2026-05', status: 'paid', amount: 7380, pdf: '/samples/invoice.pdf' },
+  { id: '04', date: 'Apr 1', number: 'INV-2026-04', status: 'paid', amount: 7240, pdf: '/samples/invoice.pdf' },
+  { id: '03', date: 'Mar 1', number: 'INV-2026-03', status: 'paid', amount: 6710, pdf: '/samples/invoice.pdf' },
 ]
 export const OVERDUE_BILLS: Invoice[] = [{ id: '11', date: 'Nov 1', number: 'INV-2026-11', status: 'failed', amount: 8930 }, { id: '10r', date: 'Oct 1', number: 'INV-2026-10', status: 'retrying', amount: 8560 }, ...BILLS.slice(1, 4)]
 
 export const CARDS: PaymentMethod[] = [{ id: 'visa', brand: 'Visa', last4: '4242', expires: '08/28', default: true }, { id: 'mc', brand: 'Mastercard', last4: '4444', expires: '02/27' }]
 
 export const AUDIT: AuditEvent[] = [
-  { id: 'a1', at: '2026-10-31T16:42:00Z', actor: 'Priya Raman', category: 'deploys', verb: 'deployed', target: 'storefront', href: '#deploy', ip: '84.12.3.9' },
+  { id: 'a1', at: '2026-10-31T16:42:00Z', actor: 'Priya Raman', category: 'deploys', verb: 'deployed', target: 'storefront', ip: '84.12.3.9' },
   { id: 'a2', at: '2026-10-31T15:27:00Z', actor: 'Sam Okafor', category: 'deploys', verb: 'rolled back', target: 'mobile-bff', ip: '10.4.0.22' },
   { id: 'a3', at: '2026-10-31T13:58:00Z', actor: 'Mara Lindqvist', category: 'keys', verb: 'created API key', target: 'CI deploys', ip: '84.12.3.2' },
   { id: 'a4', at: '2026-10-31T09:12:00Z', actor: 'Jun Tanaka', category: 'members', verb: 'changed the role of', target: 'Tomás Oliveira', ip: '10.4.0.31', diff: [{ field: 'Role', from: 'Viewer', to: 'Member' }] },
