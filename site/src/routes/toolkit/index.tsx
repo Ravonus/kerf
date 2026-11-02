@@ -4,7 +4,7 @@ import { StageBar } from '../../components/StageBar'
 import { ToolkitFilter } from '../../components/ToolkitFilter'
 import index from '../../generated/toolkit-index.json'
 
-type Tile = { name: string; slug: string; summary: string; id?: string }
+type Tile = { name: string; slug: string; summary: string; id?: string; stage?: string }
 type Group = { title: string; id: string; file: string; intro: string; pack?: boolean; tiles: Tile[] }
 const groups = (index.groups as Group[]).filter(g => g.tiles.length)
 const PACK = 4
@@ -16,7 +16,7 @@ export const meta: Meta = { title: 'Toolkit', description: `warp is weft's UI ki
 function Card(props: { file: string; tile: Tile; hidden?: boolean }) {
   return (
     <Link href={`/toolkit/${props.tile.slug}`} data-site="tile" data-name={props.tile.name.toLowerCase()} data-rest={props.hidden ? '' : undefined}>
-      <div data-part="stage">{props.tile.id && <Preview file={props.file} id={props.tile.id} tile />}</div>
+      <div data-part="stage">{props.tile.id && <Preview file={props.file} id={props.tile.id} stage={props.tile.stage} tile />}</div>
       <div data-part="words"><strong>{props.tile.name}</strong><span>{props.tile.summary}</span></div>
     </Link>
   )

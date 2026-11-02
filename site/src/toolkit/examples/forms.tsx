@@ -1,5 +1,5 @@
 import { derived, state, untrack } from 'weft'
-import { Button, Checkbox, CompactSelect, Field, Grid, Input, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
+import { Button, Checkbox, CompactSelect, Field, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS } from '../world'
 
 /** One state in a States grid: its name, then the field. */
@@ -671,3 +671,15 @@ export const CompactSelectStates = () => (
     <CompactSelect label="Region" options={REGION_OPTIONS} defaultValue="us-east" disabled />
   </>
 )
+
+export const NumberFieldBasic = () => <NumberField label="Retries" defaultValue={3} min={0} max={10} />
+
+export function NumberFieldSeats() {
+  const seats = state<number | null>(8)
+  return (
+    <Stack gap="related">
+      <NumberField label="Seats" value={seats} min={1} max={50} hint="$12 a seat, each month." />
+      <Text subtle>Total: ${(seats.value ?? 0) * 12} a month</Text>
+    </Stack>
+  )
+}

@@ -60,6 +60,8 @@ export type Doc = {
   sections: Section[]
   /** The index tile: an export, default the page's first example. */
   tile?: string
+  /** How the tile lays that export out, when it isn't one of the page's examples. */
+  tileStage?: Stage
   keyboard?: [keys: string, action: string][]
   a11yNotes?: string[]
   /** Fills in what the source's doc comments don't say. */

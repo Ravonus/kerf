@@ -374,7 +374,8 @@ function buildToolkit() {
         name: c.name, slug: c.slug, group: g.title, file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
         use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name) })) }, playground: play, sections, keyboard: doc.keyboard, a11yNotes: doc.a11yNotes?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
       }
-      tiles.push({ name: c.name, slug: c.slug, summary: doc.summary, id: tile })
+      const refs = doc.sections.flatMap(s => s.examples ?? [])
+      tiles.push({ name: c.name, slug: c.slug, summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center' })
     }
     index.push({ title: g.title, id: slugify(g.title), file: g.file, intro: g.intro, pack: g.pack, tiles })
   }

@@ -46,7 +46,7 @@
 [data-site="doc"] [data-part="actions"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-tight) var(--warp-space-related); margin-block-end: 32px; }
 
 /* -- prose -- */
-[data-site="doc"] [data-scope="prose"] { max-inline-size: none; color: var(--dim); font-size: var(--doc-body); line-height: 1.7; }
+[data-site="doc"] [data-scope="prose"] { display: block; max-inline-size: none; color: var(--dim); font-size: var(--doc-body); line-height: 1.7; }
 [data-site="doc"] [data-scope="prose"] :is(p, ul, ol, table, blockquote) { max-inline-size: 68ch; }
 [data-site="doc"] [data-scope="prose"] > :first-child { margin-block-start: 0; }
 [data-site="doc"] [data-scope="prose"] > p { margin-block: 0 var(--warp-space-group); }

@@ -374,5 +374,19 @@ export const forms: DocGroup = {
       propDocs: { label: 'The accessible name. Not drawn.', options: 'The list, the same as Select.', value: 'A string, or a `State` to bind.', name: 'Puts it in a form with a hidden input.', describedby: 'The id of text that explains it.' },
       related: ['Select', 'Pagination', 'Table'],
     },
+    {
+      component: 'NumberField',
+      summary: 'A number you can type or step, with arrow keys and two buttons.',
+      use: { when: ['An exact number, like seats or a retry count'], instead: [{ name: 'Slider', why: 'a rough value is enough' }] },
+      sections: [
+        { kind: 'variants', title: 'Variants', examples: [
+          { id: 'NumberFieldBasic', title: 'Bounds', note: '`min`, `max` and `step` limit the steppers and the arrow keys.', stage: 'narrow' },
+        ] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'NumberFieldSeats', title: 'Buying seats', stage: 'narrow' }] },
+      ],
+      keyboard: [['↑ ↓', 'Steps up or down'], ['PageUp PageDown', 'Steps by ten'], ['Home End', 'Jumps to the bound, when there is one']],
+      propDocs: { step: 'How far one press moves it.', min: 'The lowest it can step to.', max: 'The highest it can step to.' },
+      related: ['Input', 'Slider'],
+    },
   ],
 }

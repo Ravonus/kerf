@@ -29,8 +29,8 @@ function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { 
   const text = derived(() => String(value.value ?? ''))
   const number = derived(() => Number(value.value))
   if (k.control === 'switch') return <Switch checked={!!value.value} onChange={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).checked)}>{k.label}</Switch>
-  if (k.control === 'segmented') return <Segmented size="sm" label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, v)} />
-  if (k.control === 'select') return <Select label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, v)} />
+  if (k.control === 'segmented') return <><span data-part="knob-label">{k.label}</span><Segmented size="sm" label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, typeof k.options![0] === 'number' ? +v : v)} /></>
+  if (k.control === 'select') return <Select label={k.label} value={text.value} options={options} onValueChange={(v: string | null) => props.set(k.prop, typeof k.options![0] === 'number' ? Number(v) : v)} />
   if (k.control === 'slider') return <Slider label={k.label} value={number.value} min={k.min} max={k.max} step={k.step} onChange={(v: number) => props.set(k.prop, v)} />
   return <Input label={k.label} value={text.value} onInput={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).value)} />
 }

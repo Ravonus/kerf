@@ -14,6 +14,7 @@ export function ToolkitFilter(props: { groups: { id: string; title: string; coun
       for (const t of g.querySelectorAll<HTMLElement>('[data-site="tile"]')) {
         const hit = (!q || (t.getAttribute('data-name') ?? '').includes(q) || t.textContent!.toLowerCase().includes(q)) && (!t.hasAttribute('data-rest') || !!q || on.value === g.id)
         t.hidden = !hit
+        t.toggleAttribute('data-show', hit)
         if (hit) here++
       }
       g.hidden = !here || (on.value !== null && on.value !== g.id)

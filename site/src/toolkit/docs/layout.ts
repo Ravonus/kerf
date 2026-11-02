@@ -9,6 +9,8 @@ export const layout: DocGroup = {
   docs: [
     {
       component: 'Grid',
+      tile: 'GridTile',
+      tileStage: 'fill',
       summary: 'Even columns that fit themselves: as many as suit the room, up to the most you allow.',
       use: {
         when: ['Cards, tiles or stats of equal weight', 'A set of items that should reflow without breakpoints'],
@@ -53,6 +55,8 @@ export const layout: DocGroup = {
     },
     {
       component: 'Stack',
+      tile: 'StackTile',
+      tileStage: 'fill',
       summary: 'Puts things in a column with even space between them.',
       use: {
         when: ['Anything that reads top to bottom', 'Groups of fields, text or rows, where the gap says how related they are'],
@@ -90,6 +94,8 @@ export const layout: DocGroup = {
     },
     {
       component: 'Row',
+      tile: 'RowTile',
+      tileStage: 'fill',
       summary: 'Puts things side by side and wraps them when they run out of room.',
       use: {
         when: ['Buttons, tags and small clusters', 'A header with a title and actions'],
@@ -131,6 +137,8 @@ export const layout: DocGroup = {
     },
     {
       component: 'Split',
+      tile: 'SplitTile',
+      tileStage: 'fill',
       summary: 'A fixed side next to a fluid main area, stacked when the container is narrow.',
       use: {
         when: ['Settings with a list of sections', 'A list next to its detail', 'A page with a sidebar inside the content'],
@@ -232,6 +240,8 @@ export const layout: DocGroup = {
     },
     {
       component: 'Frame',
+      tile: 'FrameTile',
+      tileStage: 'fill',
       summary: 'A box that holds its shape, for images, video and previews.',
       use: { when: ['Images and video that must not shift the page as they load', 'Thumbnails of mixed sizes that should line up'], instead: [{ name: 'Card', why: 'it needs a surface and padding' }] },
       playground: {

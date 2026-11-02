@@ -1,4 +1,4 @@
-import { onCleanup, onMount, state } from 'weft'
+import { onCleanup, onMount } from 'weft'
 import { on } from 'weft/browser'
 import { render } from 'weft/dom'
 import { previews } from '../generated/previews'
@@ -10,7 +10,6 @@ import { previews } from '../generated/previews'
  */
 export function Preview({ file, id, stage = 'center', tile }: { file: string; id: string; stage?: string; tile?: boolean }) {
   let host!: HTMLDivElement
-  const failed = state(false)
   let stop: (() => void) | undefined
   let gone = false
   const show = (Case: any) => {
@@ -27,12 +26,16 @@ export function Preview({ file, id, stage = 'center', tile }: { file: string; id
       if (gone) return
       loaded = m[id]
       show(loaded)
-    }).catch(e => { console.error(e); failed.value = true })
+    }).catch(e => {
+      console.error(e)
+      host.textContent = 'This example failed to load.'
+      host.toggleAttribute('data-ready', true)
+    })
   })
   onCleanup(() => { gone = true; stop?.() })
   return (
     <div data-part="mount" data-stage={stage} inert={tile ? true : undefined} ref={host}>
-      {failed.value ? <p>This example failed to load.</p> : <span data-part="wait" aria-hidden="true"></span>}
+      <span data-part="wait" aria-hidden="true"></span>
     </div>
   )
 }

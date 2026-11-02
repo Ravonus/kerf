@@ -772,3 +772,20 @@ export function ShellFocus() {
 }
 
 const FOCUS_STEPS = ['Connect a repository', 'Choose a region', 'Check your settings']
+
+/* -- Index tiles -- */
+
+export const GridTile = () => <Grid cols={3} min="xs" gap="related">{SIX.map(n => <Box key={n} tall={64}>{n}</Box>)}</Grid>
+
+export const StackTile = () => <Stack gap="related">{['One', 'Two', 'Three'].map(n => <Box key={n}>{n}</Box>)}</Stack>
+
+export const RowTile = () => <Row gap="related" justify="center"><Box>One</Box><Box>Two</Box><Box>Three</Box></Row>
+
+export const SplitTile = () => (
+  <Split width="rail" gap="related" style="grid-template-columns:30% minmax(0,1fr)">
+    <Box tall={140}>Side</Box>
+    <Box tall={140}>Main</Box>
+  </Split>
+)
+
+export const FrameTile = () => <Frame ratio="21:9"><Box>21:9</Box></Frame>

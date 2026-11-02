@@ -44,6 +44,9 @@
 [data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) 248px; }
 [data-site="frame"] [data-part="knobs"] { display: grid; align-content: start; gap: var(--warp-space-group); padding: var(--warp-space-group); background: var(--warp-color-surface); border-inline-start: var(--warp-border-hairline) solid var(--rule); }
 [data-site="frame"] [data-part="knobs"] > [data-scope="button"] { justify-self: start; }
+[data-site="frame"] [data-part="knob"] { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
+[data-site="frame"] [data-part="knob"] > [data-part="knob-label"] { font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"] { max-inline-size: 100%; overflow-x: auto; }
 [data-site="frame"] [data-part="knob"][hidden] { display: none; }
 [data-site="frame"] [data-part="presets"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); }
 
@@ -100,6 +103,8 @@
 [data-site="tile"] [data-part="stage"] { aspect-ratio: 16 / 10; overflow: hidden; container-type: inline-size; display: grid; background: var(--warp-color-surface-sunken); border-block-end: var(--warp-border-hairline) solid var(--rule); }
 [data-site="tile"] [data-part="mount"] { zoom: 0.72; padding: var(--warp-space-group); min-block-size: 0; pointer-events: none; overflow: hidden; }
 [data-site="tile"] [data-part="mount"][data-stage="narrow"] { inline-size: 100%; }
+[data-site="tile"] [data-part="mount"][data-stage="center"] { align-content: safe center; }
+[data-site="tile"] [data-part="mount"] > * { max-inline-size: 100%; }
 [data-site="tile"] [data-part="words"] { display: grid; gap: var(--warp-space-hair); align-content: start; padding: var(--warp-space-related) var(--warp-space-group) var(--warp-space-group); }
 [data-site="tile"] strong { font-size: var(--doc-small); font-weight: 600; }
 [data-site="tile"] [data-part="words"] span { font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
@@ -107,6 +112,7 @@
 
 @media (max-width: 899.98px) {
   [data-site="stage-bar"] { position: static; }
+  [data-site="frame"] [data-part="stage"] { overflow-x: auto; }
   [data-site="frame"][data-play] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); }
   [data-site="frame"] [data-part="knobs"] { border-inline-start: 0; border-block-start: var(--warp-border-hairline) solid var(--rule); }
   [data-part="mount"] { padding: var(--warp-space-group); }
