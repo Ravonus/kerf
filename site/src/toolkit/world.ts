@@ -368,8 +368,8 @@ export const SIGNUP_FUNNEL = [
 ]
 
 const REGION_GROUP: Record<string, string> = { 'eu-west': 'Europe', 'eu-north': 'Europe', 'us-east': 'Americas', 'us-west': 'Americas' }
-const pointsIn = (group: string) => PROJECTS.filter(p => (REGION_GROUP[p.region] ?? 'Elsewhere') === group).map(p => ({ name: p.name, x: p.deploys, y: p.latency, size: p.cost }))
-/** Every project: deploys, latency in ms, and monthly cost for the size. */
+const pointsIn = (group: string) => PROJECTS.filter(p => (REGION_GROUP[p.region] ?? 'Elsewhere') === group).map(p => ({ name: p.name, x: p.deploys, y: p.latency, size: Math.round(p.cost / 100) }))
+/** Every project: deploys, latency in ms, and monthly cost in hundreds of dollars for the size. */
 export const PROJECT_POINTS = ['Europe', 'Americas', 'Elsewhere'].map(name => ({ name, points: pointsIn(name) }))
 
 const wobble = (i: number) => Math.sin(i * 12.9898) * 43758.5453 % 1
@@ -425,14 +425,14 @@ export const LATENCY_DAYS = Array.from({ length: 30 }, (_, i) => {
   return { label: `Oct ${i + 1}`, open: Math.round(open), close: Math.round(close), high: Math.round(Math.max(open, close) + 3 + Math.abs(wobble(i)) * 9), low: Math.round(Math.min(open, close) - 3 - Math.abs(wobble(i + 9)) * 7) }
 })
 
-/** From September's bill to October's. */
-export const COST_BRIDGE = [
-  { name: 'September', value: 8560, total: true },
-  { name: 'More builds', value: 420 },
-  { name: 'Egress', value: 180 },
-  { name: 'Reserved plan', value: -150 },
-  { name: 'Credits', value: -80 },
-  { name: 'October', value: 8930, total: true },
+/** From last quarter's paying seats to this quarter's. */
+export const SEATS_BRIDGE = [
+  { name: 'Q3', value: 820, total: true },
+  { name: 'New teams', value: 210 },
+  { name: 'Expansion', value: 96 },
+  { name: 'Contraction', value: -38 },
+  { name: 'Churn', value: -74 },
+  { name: 'Q4', value: 1014, total: true },
 ]
 
 /** One day per row, since the start of the year's second half. */
