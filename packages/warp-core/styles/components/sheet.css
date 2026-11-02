@@ -97,7 +97,7 @@
 
 /* presentation="inline": the sheet drawn open in the page's flow at its side's shape (docs, previews): no top layer,
    scrim or drag. Its height is its content's; a box that wants it at an edge puts it there */
-:where(dialog[data-scope="sheet"][data-presentation="inline"]) {
+:where(dialog[data-scope="sheet"])[data-presentation="inline"] {
   position: relative; inset: auto; margin: 0; max-inline-size: 100%; block-size: auto; max-block-size: none;
   opacity: 1; translate: none; transition: none;
 }

@@ -138,8 +138,10 @@
 }
 
 /* presentation="inline": the dialog drawn open in the page's flow, for docs and previews. A non-modal <dialog open>:
-   no top layer, scrim, focus trap or scroll lock. It takes its size's width, up to its box's, and never moves */
-:where(dialog[data-scope="dialog"][data-presentation="inline"]) {
+   no top layer, scrim, focus trap or scroll lock. It takes its size's width, up to its box's, and never moves.
+   The four inline rules (dialog, sheet, popover, tooltip) weigh one attribute, outside :where(): a site that splits CSS
+   per component can load the shared floating-panel and placement rules after them, and order must not undo them */
+:where(dialog[data-scope="dialog"])[data-presentation="inline"] {
   position: relative; inset: auto; z-index: auto; margin: 0; inline-size: min(var(--_w), 100%); block-size: auto; max-block-size: none;
   opacity: 1; translate: none; scale: none; transition: none;
 }

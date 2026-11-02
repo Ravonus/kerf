@@ -29,8 +29,8 @@
 :where([data-scope="tooltip"] kbd) { margin-inline-start: 6px; font: 500 10.5px/1.25 var(--warp-font-mono); opacity: 0.75; }
 
 /* presentation="inline": the tip shown under its trigger, in the page's flow (docs, previews) */
-:where([data-scope="tooltip"][data-part="content"][data-presentation="inline"]) {
-  position: relative; inset: auto; display: block; inline-size: max-content; margin-block-start: 6px;
+:where([data-scope="tooltip"][data-part="content"])[data-presentation="inline"] {
+  position: relative; inset: auto; display: block; inline-size: fit-content; max-inline-size: min(240px, 100%); margin-block-start: 6px;
   opacity: 1; translate: none; scale: none; transition: none;
 }
 }

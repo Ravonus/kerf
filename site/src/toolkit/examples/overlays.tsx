@@ -483,7 +483,7 @@ export function DrawerTile() {
   const open = state(true)
   const d = DEPLOYS[0]
   return (
-    <div style="display:flex;justify-content:flex-end">
+    <div style="display:flex;justify-content:flex-end;min-inline-size:0">
       <Drawer inline open={open} side="right" title={d.message} description={`${d.project}, ${d.id}`}>
         <Stack gap="related">
           <Row justify="between"><Text subtle>Status</Text><Badge tone={TONE_OF[d.status as Status]} dot>{d.status}</Badge></Row>
@@ -496,8 +496,8 @@ export function DrawerTile() {
 }
 
 export const PopoverTile = () => (
-  <div style="display:grid;justify-items:center">
-    <Popover inline label="What is a preview?" title="Preview deploys" description="Every branch gets its own address, so you can try a change before it goes live." />
+  <div style="display:grid;justify-items:center;inline-size:100%">
+    <Popover inline label="Details" title="Preview deploys" description="Every branch gets its own address, so you can try a change before it goes live." />
   </div>
 )
 

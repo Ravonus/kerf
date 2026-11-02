@@ -106,7 +106,7 @@ export const overlays: DocGroup = {
     {
       component: 'Popover',
       tile: 'PopoverTile',
-      tileStage: 'center',
+      tileStage: 'narrow',
       summary: 'A small panel that opens from a button and stays out of the way.',
       use: {
         when: ['A few controls or a short note, next to what they affect', 'People may carry on with the page while it is open'],

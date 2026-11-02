@@ -261,6 +261,37 @@ for (const path of ['/docs/rules', '/docs/lists']) {
     same(moving, blocks, 'blocks animating')
   })
 }
+// The overlay cards on the hub show the surface open (warp's `inline`), not only the button that opens it.
+await check('hub overlay cards show their surface /components', '/components', async page => {
+  await mount(page)
+  const cards = await page.evaluate(() => ['modal', 'drawer', 'popover', 'tooltip'].map(name => {
+    const el = document.querySelector(`[data-site="tile"][data-name="${name}"] [data-presentation="inline"]`)
+    if (!el) return `${name}: no surface`
+    const r = el.getBoundingClientRect(), s = getComputedStyle(el), stage = el.closest('[data-part="mount"]').parentElement.getBoundingClientRect()
+    const whole = r.left >= stage.left - 1 && r.right <= stage.right + 1 // the card shows all of its width, nothing cut at the side
+    return r.width > 20 && r.height > 10 && whole && +s.opacity === 1 && s.position === 'relative' && !el.matches(':modal, :popover-open') ? '' : `${name}: ${Math.round(r.width)}x${Math.round(r.height)} ${s.position} ${s.opacity}${whole ? '' : ' cut'}`
+  }).filter(Boolean))
+  same(cards.join('; '), '', 'overlay cards')
+})
+// A long webhook URL wraps after a slash or before a dot, never mid-word (it broke anywhere).
+for (const viewport of [undefined, PHONE]) {
+  await check(`webhook URLs break at slashes and dots ${viewport ? 'phone' : 'desktop'}`, '/blocks/webhooks', async page => {
+    await mount(page)
+    const bad = await page.evaluate(() => [...document.querySelectorAll('[data-part="url"]')].flatMap(code => {
+      const text = code.textContent, r = document.createRange(), out = []
+      let top, at = 0
+      const walk = document.createTreeWalker(code, NodeFilter.SHOW_TEXT)
+      for (let n = walk.nextNode(); n; n = walk.nextNode()) for (let i = 0; i < n.length; i++, at++) {
+        r.setStart(n, i); r.setEnd(n, i + 1)
+        const y = Math.round(r.getClientRects()[0]?.top ?? top)
+        if (top !== undefined && y > top + 2 && !(/[/&=]/.test(text[at - 1]) || /[.?#]/.test(text[at]))) out.push(`${text.slice(at - 5, at)}|${text.slice(at, at + 5)}`)
+        top = y
+      }
+      return out
+    }))
+    same(bad.join(', '), '', 'mid-word breaks')
+  }, viewport)
+}
 // Thin pages: these had one or two examples and now show the states, sizes and real uses beside them.
 for (const [path, least] of [['/components/month-picker', 5], ['/components/week-picker', 4], ['/components/period-picker', 4], ['/components/date-time-field', 5], ['/components/command-palette', 5], ['/components/radio-group', 5], ['/components/number-field', 6], ['/components/language-select', 5], ['/components/currency-select', 5], ['/components/payment-card-input', 3], ['/charts/sparkline', 3]]) {
   await check(`enough examples ${path}`, path, async page => {
