@@ -30,3 +30,6 @@ netlify.env
 *.pem
 *.key
 *.p12
+
+# cli tests check a copy of start's fixture here (packages/cli/test/helpers.mjs startApp).
+packages/start/test/.tmp/
