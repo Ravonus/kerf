@@ -1,7 +1,7 @@
 import { state } from 'weft'
 import { Badge, Button, Calendar, Card, DateField, DateRangeField, DateTimeField, DurationField, InlineCalendar, MonthPicker, PeriodPicker, RecurrenceField, Row, Stack, Text, TimeField, WeekPicker, Tag, Grid, compareRange } from '@weft/warp'
 import type { DateRange, IsoDate, IsoDateTime, IsoDuration, IsoTime } from '@weft/warp'
-import { CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, INVOICES, ROOMS } from '../world'
+import { CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, INVOICES, MONTH_EVENTS, ROOMS } from '../world'
 
 type Event = (typeof EVENTS)[number]
 
@@ -37,7 +37,8 @@ export function CalendarWeek() {
 
 const COMPACT_VIEWS = ['month', 'agenda'] as const
 
-export const CalendarMonth = () => <Calendar events={EVENTS} calendars={CALENDARS} views={COMPACT_VIEWS} defaultView="month" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
+/** The month carries the whole month's meetings, not only this week's. */
+export const CalendarMonth = () => <Calendar events={MONTH_EVENTS} calendars={CALENDARS} views={COMPACT_VIEWS} defaultView="month" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
 
 const DAY_VIEWS = ['day', 'week'] as const
 

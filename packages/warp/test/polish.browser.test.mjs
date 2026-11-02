@@ -277,11 +277,28 @@ test('a phone day shows its all-day event by name, and a short event\'s name bef
   expect(m.title.w).toBeGreaterThanOrEqual(m.title.need - 1) // "Standup" whole; the times give way first
 })
 
-test('month chips end a long name in an ellipsis, not a hard cut', async () => {
-  const chips = await page.$$eval('#month [data-part="day-cell"] [data-part="chip"]', cs => cs.map(c => ({ text: c.textContent, over: c.scrollWidth > c.clientWidth + 1, ellipsis: getComputedStyle(c).textOverflow, display: getComputedStyle(c).display })))
-  const long = chips.filter(c => c.over)
+test('month chips end a long name in an ellipsis, not a hard cut, or take a second line where the day has room', async () => {
+  const chips = await page.$$eval('#month [data-part="day-cell"] [data-part="chip"]', cs => cs.map(c => ({ text: c.textContent, over: c.scrollWidth > c.clientWidth + 1, ellipsis: getComputedStyle(c).textOverflow, display: getComputedStyle(c).display, wrap: c.hasAttribute('data-wrap'), clamp: getComputedStyle(c).webkitLineClamp, h: c.getBoundingClientRect().height })))
+  const long = chips.filter(c => c.over && !c.wrap)
   expect(long.map(c => c.text)).toContain('Release 2026.11 to every region')
   for (const c of long) { expect(c.ellipsis, c.text).toBe('ellipsis'); expect(c.display).toBe('block') }
+  const wrapped = chips.filter(c => c.wrap)
+  expect(wrapped.length).toBeGreaterThan(0) // "Quarter close" and "Retro" sit alone in a tall day
+  for (const c of wrapped) { expect(c.clamp, c.text).toBe('2'); expect(c.h, c.text).toBeLessThanOrEqual(34.5) }
+})
+
+test('a month day fills its room before it says "+N more", and shows everything when it can', async () => {
+  const days = await page.$$eval('#month [data-part="day-cell"]', cells => cells.map(c => {
+    const box = c.getBoundingClientRect(), more = c.querySelector('[data-part="more"]'), chips = c.querySelectorAll('[data-part="chip"]').length
+    const n = +(/(\d+) events/.exec(c.querySelector('.sr').textContent)?.[1] ?? 0)
+    const last = [...c.children].filter(k => !k.classList.contains('sr')).at(-1).getBoundingClientRect()
+    return { date: c.dataset.date, n, chips, more: more ? +/\d+/.exec(more.textContent)[0] : 0, left: box.bottom - parseFloat(getComputedStyle(c).paddingBlockEnd) - last.bottom }
+  }))
+  for (const d of days) {
+    expect(d.chips + d.more, d.date).toBe(d.n)
+    if (d.more) expect(d.left, `${d.date}: room for another chip behind +${d.more} more`).toBeLessThan(20)
+  }
+  expect(days.filter(d => d.more).length).toBeGreaterThan(0)
 })
 
 test('the month shows all its weeks in the height it has, with "+N more" for days that hold more', async () => {

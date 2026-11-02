@@ -440,6 +440,9 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   )
 }
 
+/** A month chip's heights in calendar.css: one line, two lines, and the gap between rows. The date above them is DATE_H. */
+const CHIP_H = 18, CHIP_2H = 34, CHIP_GAP = 2, DATE_H = 16
+
 function MonthGrid({ c }: { c: Ctx }) {
   const hint = uid('month')
   const weeks = derived(() => monthCells(c.date.value, c.first.value))
@@ -454,8 +457,9 @@ function MonthGrid({ c }: { c: Ctx }) {
   let panel: HTMLDivElement | undefined
   use(popover, () => panel, () => ({ open: moreOpen.value, trigger: moreAt.value!, side: 'bottom' as const, align: 'start' as const, onClose: () => (moreOpen.value = false) }))
   // The weeks share the height the calendar has (calendar.css), so a whole month is in view: a day shows the chips its
-  // row has room for, and "+N more" for the rest. Until measured, three and "+N more" (fit 4), as the server renders.
-  const fit = state(4)
+  // row has room for, and "+N more" for the rest. `room` is the height under the date, measured; until then (and on a
+  // phone, whose days draw dots) three and "+N more", as the server renders.
+  const room = state<number | null>(null)
   onMount(() => {
     const win = grid?.ownerDocument.defaultView
     if (!grid || !win || typeof win.ResizeObserver !== 'function') return
@@ -463,18 +467,25 @@ function MonthGrid({ c }: { c: Ctx }) {
       const cell = grid!.querySelector<HTMLElement>('[role="gridcell"]')
       if (!cell) return
       const cs = win.getComputedStyle(cell)
-      // a phone's days draw dots that wrap in a row (calendar.css): three and "+N more", as before
-      if (cs.display !== 'grid' || cs.gridTemplateColumns.split(' ').length > 1) { fit.value = 4; return }
-      const chip = 22 // 20px chips, 2px gap
-      const room = cell.clientHeight - parseFloat(cs.paddingBlockStart) - parseFloat(cs.paddingBlockEnd) - (cell.querySelector<HTMLElement>('[aria-hidden="true"]:not([data-part])')?.offsetHeight ?? 18) - 2
-      fit.value = Math.max(1, Math.floor((room + 2) / chip))
+      if (cs.display !== 'grid' || cs.gridTemplateColumns.split(' ').length > 1) { room.value = null; return }
+      const date = cell.querySelector<HTMLElement>('[aria-hidden="true"]:not([data-part])')?.offsetHeight ?? DATE_H
+      room.value = cell.clientHeight - parseFloat(cs.paddingBlockStart) - parseFloat(cs.paddingBlockEnd) - date - CHIP_GAP
     }
     const ro = new win.ResizeObserver(measure)
     ro.observe(grid)
     onCleanup(() => ro.disconnect())
   })
-  /** The chips a day shows, and how many go behind "+N more" (which takes a chip's room). */
-  const shownOn = (list: CalEvent[]) => { const n = list.length <= fit.value ? list.length : Math.max(0, fit.value - 1); return { chips: list.slice(0, n), more: list.length - n } }
+  /**
+   * The chips a day shows, how many go behind "+N more" (which takes a chip's room), and how many of the first may take
+   * a second line for a long name: as many as the room left over holds. A short name stays one line either way.
+   */
+  const shownOn = (list: CalEvent[]) => {
+    const r = room.value
+    const fit = r === null ? 4 : Math.max(1, Math.floor((r + CHIP_GAP) / (CHIP_H + CHIP_GAP)))
+    const n = list.length <= fit ? list.length : Math.max(0, fit - 1)
+    const wrap = r === null || n < list.length ? 0 : Math.max(0, Math.min(n, Math.floor((r + CHIP_GAP - n * (CHIP_H + CHIP_GAP)) / (CHIP_2H - CHIP_H))))
+    return { chips: list.slice(0, n).map((e, i) => ({ e, wrap: i < wrap })), more: list.length - n }
+  }
   const openDay = (iso: string) => { c.date.set(iso); c.view.set('day'); c.say(`Day view, ${fmt(iso, { dateStyle: 'full' }, c.env.locale.value)}`) }
   const onKey = (e: KeyboardEvent) => {
     const cell = (e.target as Element).closest?.<HTMLElement>('[role="gridcell"]')
@@ -514,7 +525,7 @@ function MonthGrid({ c }: { c: Ctx }) {
                 <div key={x.iso} data-part="day-cell" role="gridcell" tabindex={x.iso === cursor.value ? '0' : '-1'} data-date={x.iso} data-outside={x.outside ? '' : undefined} aria-current={x.iso === c.env.today.value ? 'date' : undefined}>
                   <span class="sr">{label(x.iso, onDay(x.iso))}</span>
                   <span aria-hidden="true">{ymd(x.iso)[2]}</span>
-                  {shownOn(onDay(x.iso)).chips.map(e => <span key={e.id} data-part="chip" data-cal={e.cal ?? 1} style={tint(e.cal)} aria-hidden="true">{e.title}</span>)}
+                  {shownOn(onDay(x.iso)).chips.map(({ e, wrap }) => <span key={e.id} data-part="chip" data-cal={e.cal ?? 1} data-wrap={wrap ? '' : undefined} style={tint(e.cal)} aria-hidden="true">{e.title}</span>)}
                   {shownOn(onDay(x.iso)).more > 0 && <button type="button" data-part="more" tabindex="-1" aria-hidden="true">+{shownOn(onDay(x.iso)).more} more</button>}
                 </div>
               ))}

@@ -902,6 +902,24 @@ for (const [who, saved, want] of [['fresh', null, 'vivid'], ['returning', 'quiet
   })
 }
 
+// The month fills each day before "+N more", across a month with something in every week.
+await check('month days show what fits, across the month', '/components/calendar', async page => {
+  const sec = page.locator('section#CalendarMonth')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="day-cell"]').first().waitFor()
+  await page.waitForTimeout(400)
+  const days = await sec.evaluate(s => [...s.querySelectorAll('[data-part="day-cell"]')].map(c => {
+    const box = c.getBoundingClientRect(), more = c.querySelector('[data-part="more"]')
+    const kids = [...c.children].filter(k => !k.classList.contains('sr')), last = kids.at(-1).getBoundingClientRect()
+    return { date: c.dataset.date, n: +(/(\d+) events/.exec(c.querySelector('.sr').textContent)?.[1] ?? 0), chips: c.querySelectorAll('[data-part="chip"]').length, more: more ? +/\d+/.exec(more.textContent)[0] : 0, left: box.bottom - parseFloat(getComputedStyle(c).paddingBlockEnd) - last.bottom, over: kids.some(k => k.getBoundingClientRect().bottom > box.bottom + 0.5) }
+  }))
+  same(days.filter(d => d.chips + d.more !== d.n).map(d => d.date).join(), '', 'days that lose events')
+  same(days.filter(d => d.more && d.left >= 20).map(d => `${d.date} (${Math.round(d.left)}px left)`).join(), '', 'room for another chip behind "+N more"')
+  same(days.filter(d => d.over).map(d => d.date).join(), '', 'chips cut by their day')
+  const weeks = Array.from({ length: days.length / 7 }, (_, w) => days.slice(w * 7, w * 7 + 7).some(d => d.n))
+  same(weeks.filter(Boolean).length, weeks.length, 'weeks with events')
+  if (Math.max(...days.filter(d => d.more).map(d => d.chips)) < 2) throw new Error('a full day shows one chip and "+N more"')
+})
 // The playground is one object near the top of the page: the component large on a stage, the controls beside it on a
 // desk and under it on a phone, the live code under both. Nothing in it runs past the page's edge.
 for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
