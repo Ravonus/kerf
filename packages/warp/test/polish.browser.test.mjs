@@ -257,3 +257,24 @@ test('vivid: a small button lifts on a small offset, not the full bar under a 24
   expect(off.solid).toBeGreaterThan(0)
   expect(off.copy).toBeLessThanOrEqual(off.solid / 2)
 })
+
+test('a bell\'s count sits on the glyph\'s corner, a compact badge that leaves the bell itself clear, at every density', async () => {
+  const bells = await page.$$eval('#bells [data-scope="bell"]', bs => bs.map(b => {
+    const g = b.querySelector('[data-scope="button"] svg').getBoundingClientRect()
+    const c = b.querySelector('[data-scope="badge"]').getBoundingClientRect()
+    return {
+      text: b.querySelector('[data-scope="badge"]').textContent, glyph: g.width, h: c.height, w: c.width,
+      across: Math.max(0, Math.min(g.right, c.right) - Math.max(g.left, c.left)), down: Math.max(0, Math.min(g.bottom, c.bottom) - Math.max(g.top, c.top)),
+      right: c.left >= g.left + g.width / 2, above: c.top < g.top,
+    }
+  }))
+  expect(bells.map(b => b.text)).toEqual(['3', '9+', '3', '9+', '3', '9+'])
+  for (const b of bells) {
+    expect(b.glyph).toBe(16)
+    expect(b.h).toBeLessThanOrEqual(16)
+    expect(b.w).toBeLessThanOrEqual(24)
+    expect(b.right && b.above).toBe(true)
+    expect(b.across).toBeLessThanOrEqual(5) // was 9 of the glyph's 16px under a 27×19 badge
+    expect(b.down).toBeLessThanOrEqual(6)
+  }
+})

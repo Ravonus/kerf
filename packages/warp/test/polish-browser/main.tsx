@@ -8,6 +8,7 @@ import { Textarea } from '../../src/Field'
 import { CodeBlock } from '../../src/CodeBlock'
 import { Kanban } from '../../src/collab/Kanban'
 import { Calendar } from '../../src/schedule/Calendar'
+import { Bell } from '../../src/live/Bell'
 
 const rows = [{ id: 'a', name: 'Alpha', cost: 1 }, { id: 'b', name: 'Beta', cost: 2 }]
 const columns = [{ id: 'name', header: 'Name', sort: true }, { id: 'cost', header: 'Cost', sort: true, numeric: true }]
@@ -52,6 +53,9 @@ render(() => (
     {box('tl-phone', 326, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}
     {box('tl-desk', 598, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}
     <div id="month" style="inline-size:598px;block-size:616px">{cal({ views: ['month', 'agenda'], defaultView: 'month' })}</div>
+    <div id="bells" style="display:flex;gap:24px;padding:16px">
+      {['compact', 'cozy', 'comfortable'].map(d => <div data-density={d} style="display:flex;gap:16px"><Bell count={3} /><Bell count={12} /></div>)}
+    </div>
     {box('week-free', 900, cal({ views: ['week', 'day'], defaultView: 'week', workingHours: [540, 1080] }))}
   </>
 ), document.getElementById('app')!)
