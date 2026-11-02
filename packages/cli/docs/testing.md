@@ -6,6 +6,7 @@ A new app has no test runner. Add one:
 npm install -D vitest jsdom @testing-library/dom @testing-library/user-event
 ```
 
+<!-- example: skip @weft-js/core/vite has no type declarations yet (TS7016 under strict) -->
 ```ts
 // vitest.config.ts
 import weft from '@weft-js/core/vite'

@@ -4,8 +4,9 @@ Two checks before a change is done: see it work in the running app, and get its 
 
 ## The running app: `weft browser` or `__weft__.agent`
 
-Serve the app with the weft() Vite plugin (`vite`). In dev, every page loads @weft-js/core/agent. Drive it whichever way you
-can reach it:
+Run the app in dev: `weft dev`, or `vite` for an app without `@weft-js/start`. In dev, every page loads
+`@weft-js/core/agent`, as long as `@testing-library/dom` and `@testing-library/user-event` are installed (they are what
+`weft docs testing` adds; without them a page gets only the devtools graph). Drive it whichever way you can reach it:
 
 - **Your own browser** (a browser tool that runs JS, any agent): open the app's URL, then
   `await __weft__.agent.run('snapshot')`, `await __weft__.agent.act({ role: 'button', name: 'Add' }, 'click')`, …
