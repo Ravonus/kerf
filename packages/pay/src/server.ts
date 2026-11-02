@@ -146,8 +146,8 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
   const { store, urls, leeway = 3 * DAY } = options
   const userOf = options.user ?? (ctx => ctx?.user?.id)
   const slot = options.slot ?? (() => {
-    // @ts-expect-error a generated module, declared in .weft/slots.d.ts once bound
-    return import('weft:slot/pay.rail')
+    // A generated module, declared in .weft/slots.d.ts only once bound: an expect-error would be wrong in one case or the other.
+    return import('weft:slot/pay.rail' as string)
   })
   let override: PayRail | undefined
   const rails = new Map<string, Promise<PayRail>>()
