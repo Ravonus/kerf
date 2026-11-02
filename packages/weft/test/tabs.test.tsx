@@ -97,6 +97,18 @@ describe("sync: 'tabs'", () => {
   }
   const lineText = (n: string) => screen.getByLabelText(`lines ${n}`).textContent
 
+  test('tabs sync on plain http, where the browser has no crypto.randomUUID', async () => {
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true })
+    try {
+      two()
+      await user.click(screen.getByRole('button', { name: 'note a' }))
+      await flush()
+      expect(screen.getByLabelText('note b').textContent).toBe('a')
+    } finally {
+      Reflect.deleteProperty(crypto, 'randomUUID')
+    }
+  })
+
   test('a write reaches the other tab and only touches its readers', async () => {
     two()
     await user.click(screen.getByRole('button', { name: 'note a' }))

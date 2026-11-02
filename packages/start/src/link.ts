@@ -21,7 +21,8 @@ const PONG = 1500
 /** The line went because the leader did: not the network's fault, so reopen at once. */
 export const HANDOVER = 4900
 
-export const tab = typeof crypto === 'undefined' ? '' : crypto.randomUUID().slice(0, 8)
+// getRandomValues, not randomUUID: a page on plain http (a LAN address) has no randomUUID, and this runs on import.
+export const tab = typeof crypto === 'undefined' ? '' : crypto.getRandomValues(new Uint32Array(1))[0]!.toString(36)
 const locks = (): LockManager | undefined => (typeof navigator !== 'undefined' ? navigator.locks : undefined)
 export const shareable = () => !!locks() && typeof BroadcastChannel !== 'undefined'
 
