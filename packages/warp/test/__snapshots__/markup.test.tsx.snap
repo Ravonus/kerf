@@ -701,32 +701,16 @@ exports[`Choices: client DOM after mount 1`] = `
 <label data-scope="checkbox">
 <input type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="sweep-base">
+<span aria-hidden="true" data-part="mark">
 </span>
-<span aria-hidden="true" data-part="sweep">
-</span>
-<svg aria-hidden="true" viewBox="0 0 24 24">
-<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
-</path>
-<path d="M6 12h12" data-part="dash" pathLength="1">
-</path>
-</svg>
 </span>
 <span data-part="label">Agree</span>
 </label>
 <label data-invalid="" data-scope="checkbox">
 <input aria-invalid="true" type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="sweep-base">
+<span aria-hidden="true" data-part="mark">
 </span>
-<span aria-hidden="true" data-part="sweep">
-</span>
-<svg aria-hidden="true" viewBox="0 0 24 24">
-<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
-</path>
-<path d="M6 12h12" data-part="dash" pathLength="1">
-</path>
-</svg>
 </span>
 <span data-part="label">Mixed</span>
 <span data-part="hint">Pick one</span>
@@ -825,32 +809,16 @@ exports[`Choices: server HTML 1`] = `
 <label data-scope="checkbox">
 <input type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="sweep-base">
+<span aria-hidden="true" data-part="mark">
 </span>
-<span aria-hidden="true" data-part="sweep">
-</span>
-<svg aria-hidden="true" viewBox="0 0 24 24">
-<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
-</path>
-<path d="M6 12h12" data-part="dash" pathLength="1">
-</path>
-</svg>
 </span>
 <span data-part="label">Agree</span>
 </label>
 <label data-invalid="" data-scope="checkbox">
 <input aria-invalid="true" type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="sweep-base">
+<span aria-hidden="true" data-part="mark">
 </span>
-<span aria-hidden="true" data-part="sweep">
-</span>
-<svg aria-hidden="true" viewBox="0 0 24 24">
-<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
-</path>
-<path d="M6 12h12" data-part="dash" pathLength="1">
-</path>
-</svg>
 </span>
 <span data-part="label">Mixed</span>
 <span data-part="hint">Pick one</span>

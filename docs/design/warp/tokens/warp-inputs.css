@@ -348,24 +348,53 @@
   border-radius: var(--warp-radius-mark); --warp-sweep-radius: var(--warp-radius-mark);
 }
 :where([data-scope="radio"]) > [data-part="control"] { border-radius: 50%; --warp-sweep-radius: 50%; }
-:where([data-scope="checkbox"] > [data-part="control"] svg) {
-  position: relative; z-index: 3; inline-size: 70%; block-size: 70%; fill: none; overflow: visible;
-  stroke: var(--warp-color-accent-solid); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before,
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
+  /* the sweep's two parts (warp.signature §1), as the control's own: a list of 200 boxes is 400 elements fewer */
+  content: ""; position: absolute; inset: 0; box-sizing: border-box; pointer-events: none; border-radius: inherit;
+  --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
+  transition: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
+              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+              --_a 0s linear var(--_latch, 0s);
 }
-:where([data-expression="vivid"] [data-scope="checkbox"] > [data-part="control"] svg) { stroke-linecap: square; stroke-linejoin: miter; }
-:where([data-scope="checkbox"] > [data-part="control"] path) {
-  stroke-dasharray: 1; stroke-dashoffset: 1;
-  transition: stroke-dashoffset calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+@media (hover: none) {
+  :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before,
+  :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after { --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--warp-sweep-duration)); }
 }
-:where([data-scope="checkbox"]) > input:checked:not(:indeterminate) + [data-part="control"] [data-part="check"],
-:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] [data-part="dash"] { stroke-dashoffset: 0; }
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before {
+  z-index: 1; color: var(--warp-color-sweep-base); border: var(--warp-sweep-base-width) solid currentColor;
+  clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
+}
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
+  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--warp-sweep-width) solid currentColor;
+  clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+}
+:where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--warp-color-sweep-critical); opacity: 1; }
+/* the mark: the check's stroke runs left to right, so a wipe that way draws it */
+:where([data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) {
+  --_check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 L9.5 17 L19 7'/%3E%3C/svg%3E");
+  --_dash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+  position: relative; z-index: 3; inline-size: 70%; block-size: 70%; background: var(--warp-color-accent-solid);
+  mask: var(--_check) center / 100% 100% no-repeat; clip-path: inset(-20% 120% -20% -20%);
+  transition: clip-path calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-expression="vivid"] [data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) {
+  --_check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpath d='M5 12.5 L9.5 17 L19 7'/%3E%3C/svg%3E");
+  --_dash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='square'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+}
+:where([data-scope="checkbox"]) > input:checked + [data-part="control"] > [data-part="mark"],
+:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] > [data-part="mark"] { clip-path: inset(-20%); }
+:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] > [data-part="mark"] { mask-image: var(--_dash); }
+@media (forced-colors: active) {
+  :where([data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) { forced-color-adjust: none; background: CanvasText; }
+}
 :where([data-scope="radio"]) > [data-part="control"]::after {
   content: ""; position: relative; z-index: 3; inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--warp-color-accent-solid);
   transform: scale(0); transition: transform calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
 }
 :where([data-scope="radio"]) > input:checked + [data-part="control"]::after { transform: scale(1); }
 :where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] { --_a: 1; }
-:where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] > [data-part="sweep"] { color: var(--warp-color-sweep-critical); }
+:where([data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] > [data-part="sweep"] { color: var(--warp-color-sweep-critical); }
 
 /* switch (SIGNATURE §1c): the accent fill moves THROUGH the rail as the knob slides.
    Off + hover/focus: the ring sweeps. On + hover/focus: accent-hover sweeps inside the rail. */
