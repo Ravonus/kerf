@@ -7,9 +7,10 @@ import { FnError, query } from '../src/data'
 import { createHandler, type Manifest } from '../src/server'
 
 const page = (id: string, file: string) => ({ id, file, layouts: [], pattern: id, params: [], kind: 'page' as const })
+// `hold: 0`: these are of what streams, and their reads land within the default hold.
 const serve = (routes: Record<string, () => unknown>, options: object = {}) => {
   const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: Object.keys(routes).map(p => page(p, p)) }
-  const handler = createHandler({ manifest, modules: Object.fromEntries(Object.entries(routes).map(([p, c]) => [p, { default: c }])) as any, ...options })
+  const handler = createHandler({ manifest, modules: Object.fromEntries(Object.entries(routes).map(([p, c]) => [p, { default: c }])) as any, hold: 0, ...options })
   return (path: string) => handler(new Request(`http://localhost${path}`))
 }
 
@@ -225,11 +226,11 @@ describe('what a failure may say in production', () => {
     }
     return <main><Boundary pending={<i>wait</i>} error={(e: any) => <b>{e.message}</b>}><Read /></Boundary></main>
   }
-  const deferred = async (e: unknown) => {
+  const deferred = async (e: unknown, hold = 0) => {
     const diagnostics: string[] = []
     const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [page('/', '/')] }
     const load = async () => ({ list: new Promise((_, no) => setTimeout(no, 5, e)) })
-    const handler = createHandler({ manifest, modules: { '/': { default: View, load } } as any, onDiagnostic: (d: any) => diagnostics.push(d.message) })
+    const handler = createHandler({ manifest, modules: { '/': { default: View, load } } as any, onDiagnostic: (d: any) => diagnostics.push(d.message), hold })
     return { html: await body(await handler(new Request('http://localhost/'))), diagnostics }
   }
   const failure = (html: string) => Object.values(script(html, 'weft-data').r as Record<string, { e?: string }>).map(r => r.e)
@@ -239,6 +240,15 @@ describe('what a failure may say in production', () => {
     expect(html).not.toContain('secret_table')
     expect(html).toContain('<template><b')
     expect(html).toContain('Server function failed.</b></template>')
+    expect(new Set(failure(html))).toEqual(new Set(['Server function failed.']))
+    expect(diagnostics.join()).toContain('secret_table')
+  })
+
+  test('one that rejects within the hold renders its error in the page, saying as little', async () => {
+    const { html, diagnostics } = await deferred(new Error('relation "secret_table" does not exist'), 25)
+    expect(html).not.toContain('secret_table')
+    expect(html).not.toContain('<template>')
+    expect(html).toMatch(/<b[^>]*>Server function failed\.<\/b>/)
     expect(new Set(failure(html))).toEqual(new Set(['Server function failed.']))
     expect(diagnostics.join()).toContain('secret_table')
   })
