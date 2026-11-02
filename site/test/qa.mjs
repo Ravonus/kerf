@@ -254,6 +254,11 @@ await check('timeline names are not cut', '/components/calendar', async page => 
   const cut = await sec.evaluate(s => [...s.querySelectorAll('[data-part="lane"] [data-part="event"]')].filter(e => { const words = document.createRange(); words.selectNodeContents(e.querySelector('[data-part="event-title"]')); const w = words.getBoundingClientRect(), box = e.getBoundingClientRect(); return w.right > box.right + 1 || w.bottom > box.bottom + 1 }).map(e => e.querySelector('[data-part="event-title"]').textContent))
   same(cut.join(), '', 'cut names')
 })
+// The Ticker playground's starting value is big enough for en-IN's grouping to show.
+await check('ticker shows en-IN grouping', '/components/ticker?locale=en-IN', async page => {
+  await page.locator('[data-play]').scrollIntoViewIfNeeded()
+  await page.waitForFunction(() => /12,48,120/.test(document.querySelector('[data-play] [data-part="stage"]')?.textContent ?? ''), null, { timeout: 8000 }).catch(async () => { throw new Error(`shows ${await page.locator('[data-play] [data-part="stage"]').textContent()}`) })
+})
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

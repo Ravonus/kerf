@@ -149,7 +149,8 @@ export const showing: DocGroup = {
         example: 'TickerPlay',
         code: '<Ticker{props} />',
         knobs: [
-          { prop: 'value', control: 'slider', min: 0, max: 100000, step: 137, initial: 48120, default: 0 },
+          // Past 100,000 so en-IN's lakh grouping (12,48,120) visibly differs from en-US (1,248,120).
+          { prop: 'value', control: 'slider', min: 0, max: 5000000, step: 1371, initial: 1248120, default: 0 },
           { prop: 'locale', control: 'segmented', options: ['en-US', 'de-DE', 'en-IN'], initial: 'en-US', default: '' },
         ],
       },
