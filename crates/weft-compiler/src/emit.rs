@@ -393,6 +393,9 @@ impl<'t> Emitter<'t> {
                 Some(p) if self.dev => format!("/* {p} */ "),
                 _ => String::new(),
             };
+            if !b.decls.is_empty() {
+                return format!("{note}{ssr}((_k) => {{ let {}; return {}; }})", b.decls.join(", "), parts.join(" + "));
+            }
             return format!("{note}{ssr}((_k) => {})", parts.join(" + "));
         }
         let t = format!("_t{}", self.templates.len() + 1);
@@ -507,8 +510,18 @@ impl<'t> Emitter<'t> {
             }
             let props = self.props(&el.opening_element.attributes, Vec::new(), true);
             let spread = self.helper("spread");
+            // Server: one merged object for the attributes and, with no JSX children, what goes inside.
+            let mut shared = None;
             if self.ssr {
-                Self::server(b, Piece::Code(format!("{spread}({props})")));
+                if has_kids || void {
+                    Self::server(b, Piece::Code(format!("{spread}({props})")));
+                } else {
+                    self.n += 1;
+                    let p = format!("_p{}", self.n);
+                    b.decls.push(p.clone());
+                    Self::server(b, Piece::Code(format!("{spread}({p} = {props})")));
+                    shared = Some(p);
+                }
             } else {
                 let el_var = self.node(b, &path);
                 self.n += 1;
@@ -530,9 +543,9 @@ impl<'t> Emitter<'t> {
             if has_kids {
                 self.kids(el, b, &path);
             } else {
-                // The server reads the merged props again; a merged object reads its sources on every access anyway.
                 let inner = self.helper("inner");
-                self.hole_code(b, &path, format!("() => {inner}({props}, {tag:?})"), false, None);
+                let p = shared.unwrap_or(props);
+                self.hole_code(b, &path, format!("() => {inner}({p}, {tag:?})"), false, None);
             }
             Self::put(b, &format!("</{tag}>"));
             return;
