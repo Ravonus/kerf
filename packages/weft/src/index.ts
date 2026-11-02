@@ -59,6 +59,9 @@ export const rt: {
   data?: SsrData
   /** Server only: fetches the current render started, and a hole resolver (weft/ssr). */
   wait?: Promise<unknown>[]
+  /** Server only: the resources this pass has values for. Client: a tick's cancelled hydrate runs, false once a real one is among them. */
+  got?: number
+  probe?: boolean
   /** Resources outside any Boundary: `settle()` waits for them, since they have nowhere to stream to. */
   top?: Promise<unknown>[]
   resolve?: (v: unknown) => string

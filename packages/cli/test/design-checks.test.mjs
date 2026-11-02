@@ -76,6 +76,9 @@ describe('D012 reads the policy a browser would apply', () => {
     ['a host the entry may come from', "style-src 'unsafe-inline'; script-src https://cdn.example.com", ['warning']],
     ['no script at all, so nothing switches the sheets on', "style-src 'unsafe-inline'; script-src 'none'", ['error']],
     ['a nonce weft doesn\'t put on its scripts', "style-src 'unsafe-inline'; script-src 'nonce-abc' 'strict-dynamic'", ['error']],
+    ['strict-dynamic ignores the \'self\' beside it', "style-src 'unsafe-inline'; script-src 'nonce-a' 'strict-dynamic' 'self'", ['error']],
+    ['inline scripts alone still switch the sheets on', "style-src 'unsafe-inline'; script-src 'unsafe-inline'", []],
+    ['a default that allows inline scripts', "default-src 'unsafe-inline'", []],
     ['everything allowed', "style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'", []],
     ['a policy on neither', "img-src 'self'", []],
   ])('%s', async (_, policy, want) => { expect(await found(in_(policy))).toEqual(want) })

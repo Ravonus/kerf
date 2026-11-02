@@ -25,7 +25,7 @@ function Late(props: { v: Promise<string>; inner: Promise<string> }) {
 }
 
 function Inner(props: { v: Promise<string> }) {
-  const r = resource(() => props.v)
+  const r = resource(async () => await props.v)
   return <p class="inner">{r.value}</p>
 }
 
@@ -40,7 +40,7 @@ function Plain() {
 }
 
 function Bad(props: { v: Promise<string> }) {
-  const r = resource(() => props.v)
+  const r = resource(() => Promise.all([props.v]).then(([v]) => v))
   return <p class="ok">{r.value}</p>
 }
 

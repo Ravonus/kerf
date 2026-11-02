@@ -98,7 +98,7 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
     const { payload } = await methods.verifyJWT({ body: { token } })
     if (!payload) return ANONYMOUS
     if (!read) {
-      const live = await (await (auth as any).$context).internalAdapter.listSessions(payload.sub)
+      const live = await (await (auth as any).$context).internalAdapter.listSessions(payload.sub, { onlyActiveSessions: true })
       if (!live.some((s: { id: string }) => s.id === payload.sid)) return ANONYMOUS
     }
     const { iss, aud, exp, iat, sub, sid, ...user } = payload

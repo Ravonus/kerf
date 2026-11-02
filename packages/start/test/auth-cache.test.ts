@@ -287,6 +287,13 @@ describe('API tokens', () => {
     expect((await post(openWrite, undefined, t)).status).toBe(401)
   })
 
+  test('a token can\'t write once its session has expired, though the row is still there', async () => {
+    const { cookie, id } = await fresh()
+    const { token: t } = await token(cookie)
+    await db.update(sess).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(sess.userId, id))
+    expect((await post(openWrite, undefined, t)).status).toBe(401)
+  })
+
   test('with no fixed URL no token is accepted: iss and aud would go unchecked', async () => {
     const { cookie } = await fresh()
     const url = process.env.BETTER_AUTH_URL

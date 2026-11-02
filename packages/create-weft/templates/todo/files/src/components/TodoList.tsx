@@ -1,7 +1,6 @@
 import { CheckCircleIcon, InboxIcon, XIcon } from '@weft/icons'
-import { invalidate } from '@weft/start'
 import { Button, Checkbox, Heading, Progress, Skeleton, Stack, Text, toast } from '@weft/warp'
-import { derived, onCleanup, onMount } from 'weft'
+import { derived } from 'weft'
 import type { View } from '#/lib/views'
 import { deleteTodo, listTodos, toggleTodo } from '#/server/todos'
 
@@ -29,16 +28,6 @@ export function TodoList({ view }: { view: View }) {
   const empty = derived(() => blank[view])
 
   // Another tab, or another device, may have changed the list while this one was in the background.
-  onMount(() => {
-    const refresh = () => { if (!document.hidden) invalidate('todos') }
-    addEventListener('focus', refresh)
-    document.addEventListener('visibilitychange', refresh)
-    onCleanup(() => {
-      removeEventListener('focus', refresh)
-      document.removeEventListener('visibilitychange', refresh)
-    })
-  })
-
   return (
     <Stack gap="group">
       <div class="tally">

@@ -729,7 +729,7 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
     untrack(() => {
       for (const e of touched) {
         drop(e) // only this call's prediction goes
-        if (overlap && !(err instanceof FnError)) e.held = true // the reply was lost, not the write: it may have landed
+        if (overlap && (!(err instanceof FnError) || err.status >= 500)) e.held = true // the reply was lost, not the write: it may have landed
       }
       flush() // readers roll back now, not when the read below answers
       for (const e of touched) relieve(e)

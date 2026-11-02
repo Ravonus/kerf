@@ -142,6 +142,16 @@ test('SSR, data awaited: the content is in the HTML and hydrates without refetch
   expect(container.querySelector('.profile')!.textContent).toBe('Grace')
 })
 
+test('SSR with `data: false`: a synchronous throw reaches the page only as `shown` puts it', async () => {
+  vi.useRealTimers()
+  let seen: unknown
+  await renderToStringAsync(() => {
+    seen = resource(() => { throw new Error('secret') }, { data: false }).error
+    return ''
+  }, { shown: () => new Error('Server function failed.') })
+  expect((seen as Error).message).toBe('Server function failed.')
+})
+
 test('SSR with `data: false`: the value stays out of the page data, and a synchronous read hydrates with 0 writes', async () => {
   vi.useRealTimers()
   // A toy cache, as @weft/start's request cache behaves: a promise first, the value itself once it's known.

@@ -290,6 +290,18 @@ test('a streaming page\'s chunks land in the cache as they arrive, under anythin
   expect(reads()).toEqual([])
 })
 
+test('a gateway\'s 5xx after a write may have committed too, so its entry reads again', async () => {
+  await ready()
+  const gone = set({ id: 'a', done: true })
+  calls[0].no(new FnError({ message: 'server function answered 502' }, 502))
+  await expect(gone).rejects.toThrow('502')
+  await tick()
+  expect(reads().length).toBe(1)
+  reads()[0].ok(read(true))
+  await tick()
+  expect(shown()).toEqual(['done'])
+})
+
 test('a lost write whose read fails too rolls back at once and keeps the list, and reads again when the network returns', async () => {
   seed([['rows', undefined, rows(false), ['rows']]])
   render(Guarded)

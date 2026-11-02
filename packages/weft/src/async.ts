@@ -44,8 +44,8 @@ const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
 /** While a Boundary's `pending` renders: the resources it's waiting for (weft/shape). */
 export const waiting = context<Tracked[] | undefined>(undefined)
 
-/** A server render's: `shown` is a failure as a page may show it, and `got` counts the resources this pass has values for. */
-type Pass = typeof rt & { shown?: (e: unknown) => unknown; got?: number }
+/** A server render's: `shown` is a failure as a page may show it. */
+type Pass = typeof rt & { shown?: (e: unknown) => unknown }
 
 const thenable = (v: any): v is PromiseLike<any> => v != null && typeof v.then === 'function'
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
@@ -90,7 +90,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
         if (!boundaries.use) rt.top?.push(done)
       } else settle(out)
     } catch (e) {
-      fail(e)
+      fail(shown(e))
     }
   } else if (rt.server) {
     const flying = key !== undefined ? rt.flight?.get(key) : undefined
@@ -127,6 +127,8 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
         ctrl?.abort()
         const c = (ctrl = new AbortController())
         let out: Promise<T> | T
+        if (rt.probe === undefined) setTimeout(() => (rt.probe = undefined))
+        rt.probe = hydrated && rt.probe !== false
         try { out = fetcher(c.signal) } catch (e) { out = Promise.reject(e) }
         return [out, c] as const
       },

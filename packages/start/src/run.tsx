@@ -290,13 +290,19 @@ export async function start(routes: ClientRoutes, options: { container?: Element
  */
 function deferred(path: string, level: number, key: string): PromiseLike<unknown> {
   let got: Promise<unknown> | undefined
-  return {
-    then(ok, no) {
-      got ??= ask(new URL(path, location.href)).then(r => (r.ok ? r.json() : Promise.reject(new Error('Server function failed.')))).then((next: RoutePayload) => (next.m[level].data as any)[key])
+  const value = () => {
+    if (rt.probe) return new Promise(() => {}) // a hydrate run only tracks its reads, and nothing waits on what it gets
+    if (!got) {
+      got = ask(new URL(path, location.href)).then(r => (r.ok ? r.json() : Promise.reject(new Error('Server function failed.')))).then((next: RoutePayload) => (next.m[level].data as any)[key])
       got.catch(() => (got = undefined))
-      return got.then(ok, no)
-    },
+    }
+    return got
   }
+  return {
+    then: (ok, no) => value().then(ok, no),
+    catch: (no: any) => value().catch(no),
+    finally: (fn: any) => value().finally(fn),
+  } as PromiseLike<unknown>
 }
 
 const ask = (url: URL, signal?: AbortSignal) => fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, { signal, headers: { accept: 'application/json' } })

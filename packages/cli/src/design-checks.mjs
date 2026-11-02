@@ -213,7 +213,8 @@ function inlineAllowed(policy, ...names) {
 /** Can any script of the page's own run? The client entry can switch on what an inline script was refused. */
 function scriptsRun(policy) {
   const lists = policy.get(['script-src-elem', 'script-src', 'default-src'].find(n => policy.has(n)))
-  return !lists || lists.every(l => /'self'/i.test(l) || l.replace(/'[^']*'/g, '').trim() !== '')
+  // Past `strict-dynamic` a browser ignores hosts, 'self' and 'unsafe-inline', and weft's scripts carry no nonce.
+  return !lists || lists.every(l => !/'strict-dynamic'/i.test(l) && (/'self'/i.test(l) || l.replace(/'[^']*'/g, '').trim() !== '' || /'unsafe-inline'/i.test(l) && !/'(?:nonce|sha\d+)-/i.test(l)))
 }
 
 export function hasTokens(root) {
