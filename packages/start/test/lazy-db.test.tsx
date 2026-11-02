@@ -1,6 +1,5 @@
 // A request that touches no database doesn't need one (the database down, or never started): migrations wait for the
 // first statement, run once however many requests arrive together, and a request that does use a dead database gets Q016.
-import type { Loose } from './loose'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -8,7 +7,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { mutation, query } from '@weft-js/start'
 import { runtime } from '@weft-js/start/data'
 import { createDb } from '../src/db/sqlite'
-import { createHandler, type Manifest } from '../src/server'
+import { createHandler, type Manifest, type RouteModule } from '../src/server'
 
 const notes = sqliteTable('notes', { id: integer().primaryKey(), body: text().notNull() })
 const list = [{ tag: '0000', sql: 'create table notes (id integer primary key, body text not null);' }]
@@ -25,9 +24,9 @@ function app(url: string, migrations = () => list) {
   const db = createDb({ schema: { notes }, url })
   const spy = vi.spyOn(db.$weft, 'migrate')
   const found: { code: string; message: string }[] = []
-  const modules: Loose = {
+  const modules: Record<string, RouteModule> = {
     home: { default: () => <h1>Marketing</h1> },
-    notes: { default: (p: Loose) => <p>{`${p.data.count} notes`}</p>, load: async () => ({ count: (await db.select().from(notes)).length }) },
+    notes: { default: (p: { data: { count: number } }) => <p>{`${p.data.count} notes`}</p>, load: async () => ({ count: (await db.select().from(notes)).length }) },
   }
   const handler = createHandler({ manifest, modules, migrations, onDiagnostic: d => found.push(d) })
   return { db, spy, found, handler, get: (path: string) => handler(new Request(`http://app.test${path}`)) }

@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 // `.live`, `stream` and reconnects over @weft-js/core/test's fake transport (research 30 §7): the real hub, the real client, a
 // memory bus, no sockets.
-import type { Loose } from './loose'
 import { createRoot, state, untrack, watch } from '@weft-js/core'
 import { clock, flush, net, page, render, screen } from '@weft-js/core/test'
 import { mutation, query, skip, stale, stream, topic, tracked, type StandardSchemaV1 } from '@weft-js/start'
@@ -10,8 +9,9 @@ import { configure, hub } from '@weft-js/start/hub'
 import { seed } from '@weft-js/start/data'
 
 type Todo = { id: string; title: string }
-const any: StandardSchemaV1<Loose> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
-const row = any as StandardSchemaV1<Record<string, Loose>>
+const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const typed = <T,>() => any as StandardSchemaV1<T>
+type Price = { symbol?: string; price: number }
 
 let db: Todo[]
 let runs: number
@@ -21,9 +21,9 @@ beforeEach(() => {
 })
 
 const listTodos = query({ $id: 'live.list', tags: ['todos'], run: () => (runs++, db.map(t => ({ ...t }))) })
-const byList = query({ $id: 'live.by', input: row, tags: ({ id }) => [`list:${id}`], run: ({ input }) => (runs++, `list ${input.id}`) })
+const byList = query({ $id: 'live.by', input: typed<{ id: string }>(), tags: ({ id }) => [`list:${id}`], run: ({ input }) => (runs++, `list ${input.id}`) })
 const untagged = query({ $id: 'live.none', run: () => 1 })
-const rename = mutation({ $id: 'live.rename', input: row, invalidates: ['todos'], run: ({ input }) => { db.find(t => t.id === input.id)!.title = input.title } })
+const rename = mutation({ $id: 'live.rename', input: typed<{ id: string; title: string }>(), invalidates: ['todos'], run: ({ input }) => { db.find(t => t.id === input.id)!.title = input.title } })
 
 function List() {
   const todos = listTodos.live()
@@ -215,16 +215,17 @@ describe('reconnects', () => {
   })
 })
 
-const priceTopic = topic('prices', { key: any as StandardSchemaV1<unknown, string>, message: any })
-const prices = stream({ $id: 'live.prices', input: row, message: row, async *run({ input, signal, lastEventId }) { yield* priceTopic.subscribe(input.symbols as string[], { signal, after: lastEventId }) } })
+const priceTopic = topic('prices', { key: any as StandardSchemaV1<unknown, string>, message: typed<Price>() })
+const prices = stream({ $id: 'live.prices', input: typed<{ symbols: string[] }>(), message: typed<Price>(), async *run({ input, signal, lastEventId }) { yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId }) } })
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
 const counter = stream({ $id: 'live.count', async *run({ lastEventId }) { let n = Number(lastEventId ?? 0); for (;;) { yield tracked(String(++n), n); if (n % 2 === 0) return } } })
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
 const secret = stream({ $id: 'live.secret', auth: 'user', async *run() { yield 'hidden' } })
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
 const once = stream({ $id: 'live.once', async *run() { yield 1; yield 2 } })
+const numeric: StandardSchemaV1<unknown, number> = { '~standard': { version: 1, vendor: 't', validate: v => (typeof v === 'number' ? { value: v } : { issues: [{ message: 'not a number' }] }) } }
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const broken = stream({ $id: 'live.broken', message: { '~standard': { version: 1, vendor: 't', validate: (v: Loose) => (typeof v === 'number' ? { value: v } : { issues: [{ message: 'not a number' }] }) } } as StandardSchemaV1<unknown, number>, async *run() { yield 'nope' as Loose } })
+const broken = stream({ $id: 'live.broken', message: numeric, async *run() { yield 'nope' as unknown as number } })
 
 function Tick() {
   const tick = prices({ symbols: ['A'] })

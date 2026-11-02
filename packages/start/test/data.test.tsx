@@ -2,7 +2,6 @@
 // The client data cache over @weft-js/core/test's fake transport (research 27 §7): queries, dedupe, in-place updates,
 // optimistic overlays and rollbacks, single-flight refreshes, the shared tagged cache and the Q/S diagnostics. No
 // server and no Vite plugin: the definitions keep their `run`, and calls go to the executor in process.
-import type { Loose } from './loose'
 import { state } from '@weft-js/core'
 import { flush, net, render, screen } from '@weft-js/core/test'
 import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@weft-js/start'
@@ -11,7 +10,7 @@ import { checkTags } from '../src/exec'
 
 type Todo = { id: string; title: string; done: boolean }
 const id: StandardSchemaV1<{ id: string }> = {
-  '~standard': { version: 1, vendor: 't', validate: (v: Loose) => (typeof v?.id === 'string' ? { value: v } : { issues: [{ message: 'expected a string', path: ['id'] }] }) },
+  '~standard': { version: 1, vendor: 't', validate: v => (typeof (v as { id?: unknown } | null)?.id === 'string' ? { value: v as { id: string } } : { issues: [{ message: 'expected a string', path: ['id'] }] }) },
 }
 
 let db: Todo[]
@@ -202,7 +201,7 @@ describe('diagnostics', () => {
   })
 
   test('Q002: input the schema rejects', async () => {
-    await expect(getTodo.fetch({ id: 4 as Loose })).rejects.toMatchObject({ code: 'Q002', status: 400, issues: [{ message: 'expected a string', path: ['id'] }] })
+    await expect(getTodo.fetch({ id: 4 as unknown as string })).rejects.toMatchObject({ code: 'Q002', status: 400, issues: [{ message: 'expected a string', path: ['id'] }] })
   })
 
   test('Q004: a mutation inside a query (a GET)', async () => {

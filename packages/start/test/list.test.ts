@@ -1,15 +1,15 @@
 // `listInput` on its own, and the default `db.adapter` provider through the suite, on a real Drizzle over node:sqlite.
-import type { Loose } from './loose'
 import { DatabaseSync } from 'node:sqlite'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { drizzle } from 'drizzle-orm/sqlite-proxy'
 import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import { decodeCursor, encodeCursor, listInput } from '@weft-js/start/list'
+import type { SchemaIssue } from '@weft-js/start/data'
+import { decodeCursor, encodeCursor, listInput, type ListParams } from '@weft-js/start/list'
 import { drizzleSource } from '@weft-js/start/list/drizzle'
 
 const input = listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 10, max: 50 } })
-const parse = (v: unknown): Loose => input['~standard'].validate(v)
-const bad = (v: unknown) => parse(v).issues?.map((i: Loose) => i.message)
+const parse = (v: unknown) => input['~standard'].validate(v) as { value?: ListParams; issues?: readonly SchemaIssue[] }
+const bad = (v: unknown) => parse(v).issues?.map(i => i.message)
 
 test('a request becomes params', () => {
   expect(parse(undefined).value).toMatchObject({ mode: 'page', limit: 10, offset: 0, after: null, sort: null })

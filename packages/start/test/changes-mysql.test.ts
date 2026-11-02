@@ -1,7 +1,6 @@
 // The change feed on a real MySQL. `WEFT_TEST_MYSQL=mysql://…`, a database that's yours to lose.
-import type { Loose } from './loose'
 import { createPool } from 'mysql2/promise'
-import { createFeed } from '../src/changes'
+import { createFeed, type Poke } from '../src/changes'
 import { changeStatements } from '../src/changes-sql.mjs'
 import { mysqlChanges } from '../src/db/changes-mysql'
 
@@ -28,7 +27,7 @@ describe.skipIf(!url)('mysql change feed', () => {
     await pool.end()
   })
   const on = () => {
-    const pokes: Loose[] = []
+    const pokes: Poke[] = []
     const s = source()
     return { pokes, s, feed: createFeed(s, { emit: p => pokes.push(p), status() {} }, { hold: 25, throttle: 25 }) }
   }
@@ -38,10 +37,10 @@ describe.skipIf(!url)('mysql change feed', () => {
     const how = await f.s.probe()
     expect(how).toMatchObject({ mode: 'feed', via: 'mysql-log' })
     await f.feed.start(how)
-    const [r] = (await pool.query(`insert into live_a (secret) values ('hunter2')`)) as Loose
+    const [r] = (await pool.query(`insert into live_a (secret) values ('hunter2')`)) as [{ insertId: number }, unknown]
     await until(() => f.pokes.length > 0)
     expect(f.pokes).toEqual([{ t: ['live_a', `live_a:${r.insertId}`] }])
-    const [cols] = (await pool.query('select * from __weft_changes')) as Loose
+    const [cols] = await pool.query('select * from __weft_changes')
     expect(JSON.stringify(cols)).not.toContain('hunter2')
     await f.feed.stop()
   })

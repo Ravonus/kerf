@@ -1,22 +1,30 @@
 // `remote()` against a stand-in sidecar on a real socket (research 36): what crosses, and every way a call can come back.
 // The real crate is covered by `cargo test` in crates/weft and by evals/phase5a-exit.mjs.
 import type { AddressInfo } from 'node:net'
-import type { Loose } from './loose'
 import { createHmac } from 'node:crypto'
 import { mkdtempSync, renameSync, writeFileSync } from 'node:fs'
-import { createServer, type Server } from 'node:http'
+import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { describe, expect, test, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
-import { fns, mutation, query, raise, StartError } from '../src/data'
-import { createScope, fetchQuery, memoryStore, runMutation } from '../src/exec'
+import { fns, mutation, query, raise, StartError, type Impl } from '../src/data'
+import { createScope, fetchQuery, memoryStore, runMutation, type ScopeOptions } from '../src/exec'
 import { describe as contract, nativeProblem } from '../src/contract.mjs'
 import { readCargo, urlVariable as cliVariable } from '../src/sidecar.mjs'
-import { native, remote, sign, urlVariable } from '../src/rust'
+import { native, remote, sign, urlVariable, type Claims } from '../src/rust'
 
 const SECRET = 's3cret'
-type Seen = { url: string; headers: Record<string, Loose>; body: string; envelope: Loose }
+type Envelope = { user: Claims | null; deadlineMs: number; iat: number; traceparent: string }
+type Seen = { url: string; headers: IncomingHttpHeaders; body: string; envelope: Envelope }
+type Found = Parameters<NonNullable<ScopeOptions['onDiagnostic']>>[0]
+type Member = { id: string; org: string; plan: string }
+/** The contract, as far as these tests read it. */
+interface Described {
+  functions: { errors?: string[]; impl: { ctx: string; output: { properties: Record<string, unknown> } } }[]
+  services: Record<string, { hash: string; functions: string[] }>
+  diagnostics: { code: string; why: string }[]
+}
 let server: Server
 let base: string
 let seen: Seen[] = []
@@ -48,14 +56,14 @@ afterEach(() => {
   delete process.env.WEFT_RUST_SECRET
 })
 
-const scope = (options: Loose = {}, init: RequestInit = {}) => createScope(new Request('http://localhost/x', init), { store: memoryStore(), ...options })
+const scope = (options: ScopeOptions = {}, init: RequestInit = {}) => createScope(new Request('http://localhost/x', init), { store: memoryStore(), ...options })
 const search = remote('rust://search')
 let n = 0
-const define = (def: Loose, kind: 'query' | 'mutation' = 'query') => {
-  const make: Loose = kind === 'query' ? query : mutation
+const define = (def: object, kind: 'query' | 'mutation' = 'query') => {
+  const make = (kind === 'query' ? query : mutation) as (d: object) => { $id: string }
   return make({ $id: `f${++n}.abc123`, impl: search, output: z.any(), ...def })
 }
-const fnOf = (q: Loose) => fns.get(q.$id)!
+const fnOf = (q: { $id: string }) => fns.get(q.$id)!
 
 test('a call is signed over the function, the claims and the body, and carries no cookie', async () => {
   answer = () => ({ json: { ok: true, value: [1], tags: [], touched: [] } })
@@ -66,7 +74,7 @@ test('a call is signed over the function, the claims and the body, and carries n
   expect(c.url).toBe(`/_weft/fn/${q.$id}`)
   expect(c.body).toBe('{"input":{"q":"x"}}')
   expect(c.headers.cookie).toBeUndefined()
-  expect(c.headers['weft-sig']).toBe(createHmac('sha256', SECRET).update(`weft1\n${q.$id}\n${c.headers['weft-ctx']}\n${c.body}`).digest('hex'))
+  expect(c.headers['weft-sig']).toBe(createHmac('sha256', SECRET).update(`weft1\n${q.$id}\n${String(c.headers['weft-ctx'])}\n${c.body}`).digest('hex'))
   expect(c.envelope.user).toEqual({ id: '7', roles: ['admin'] }) // claims, not the user: no email
   expect(c.envelope.deadlineMs).toBe(10_000)
   expect(Math.abs(c.envelope.iat - Date.now())).toBeLessThan(5000)
@@ -132,7 +140,7 @@ test('each failure of the sidecar has its code, and none of them leaks an addres
   const q = define({})
   const code = async (status: number, json: unknown) => {
     answer = () => ({ status, json })
-    const e: Loose = await fetchQuery(scope(), fnOf(q), undefined).catch(x => x)
+    const e = (await fetchQuery(scope(), fnOf(q), undefined).catch(x => x)) as StartError
     expect(e).toBeInstanceOf(StartError)
     expect(e.message).not.toContain(base)
     return [e.code, e.status]
@@ -180,7 +188,7 @@ test('the CLI and the server spell the variable the same way', () => {
 
 test('`claims` chooses what a sidecar sees', async () => {
   answer = () => ({ json: { ok: true, value: 1 } })
-  const q = define({ impl: remote('rust://search', { claims: (u: Loose) => ({ id: u.id, tenant: u.org, plan: u.plan }) }) })
+  const q = define({ impl: remote('rust://search', { claims: user => { const u = user as Member; return { id: u.id, tenant: u.org, plan: u.plan } } }) })
   await fetchQuery(scope({ context: () => ({ user: { id: 'u', org: 'o', plan: 'pro', email: 'x' } }) }), fnOf(q), undefined)
   expect(seen[0]!.envelope.user).toEqual({ id: 'u', tenant: 'o', plan: 'pro' })
 })
@@ -235,7 +243,7 @@ describe('the caches', () => {
     answer = reply({ touched: ['docs', 'users'] })
     const out: string[] = []
     const q = define({ tags: ['docs'] })
-    await fetchQuery(scope({ dev: true, onDiagnostic: (d: Loose) => out.push(d.code + d.message) }), fnOf(q), undefined)
+    await fetchQuery(scope({ dev: true, onDiagnostic: d => out.push(d.code + d.message) }), fnOf(q), undefined)
     expect(out).toEqual([expect.stringMatching(/^Q011.*table `users`/)])
   })
 })
@@ -252,8 +260,8 @@ test('a replaced function in a test crosses nothing', async () => {
 })
 
 describe('the contract', () => {
-  const entry = (kind: string, id: string, def: Loose) => [id, { kind, $id: id, def: { impl: search, ...def } }]
-  const of = (...fs: Loose[]) => contract(new Map(fs))
+  const entry = (kind: string, id: string, def: object): [string, unknown] => [id, { kind, $id: id, def: { impl: search, ...def } }]
+  const of = (...fs: [string, unknown][]) => contract(new Map(fs)) as Described
 
   test('a function with `impl` names its service, its context and its wire', () => {
     const at = z.codec(z.iso.datetime(), z.date(), { decode: s => new Date(s), encode: d => d.toISOString() })
@@ -262,25 +270,25 @@ describe('the contract', () => {
       entry('mutation', 'b.111111', { output: z.null(), auth: 'user', errors: { Gone: z.object({ id: z.string() }) } }),
       entry('query', 'c.111111', { output: z.string(), cache: { life: 'minutes', scope: 'user' } }),
       entry('query', 'd.111111', { output: z.string(), impl: remote('rust://other') }),
-    ) as Loose
+    )
     expect(diagnostics).toEqual([])
-    expect(functions[0].impl).toMatchObject({ kind: 'remote', target: 'rust://search', service: 'search', ctx: 'shared' })
-    expect(functions[0].impl.output.properties.at).toMatchObject({ type: 'string', format: 'date-time' }) // what Rust sends, not the Date
-    expect(functions[1].impl).toMatchObject({ ctx: 'user', errors: { Gone: { type: 'object' } } })
-    expect(functions[1].errors).toContain('Gone')
-    expect(functions[2].impl.ctx).toBe('ctx')
+    expect(functions[0]!.impl).toMatchObject({ kind: 'remote', target: 'rust://search', service: 'search', ctx: 'shared' })
+    expect(functions[0]!.impl.output.properties.at).toMatchObject({ type: 'string', format: 'date-time' }) // what Rust sends, not the Date
+    expect(functions[1]!.impl).toMatchObject({ ctx: 'user', errors: { Gone: { type: 'object' } } })
+    expect(functions[1]!.errors).toContain('Gone')
+    expect(functions[2]!.impl.ctx).toBe('ctx')
     expect(Object.keys(services).sort()).toEqual(['other', 'search'])
-    expect(services.search.functions).toEqual(['a.111111', 'b.111111', 'c.111111'])
+    expect(services.search!.functions).toEqual(['a.111111', 'b.111111', 'c.111111'])
   })
 
   test('the hash moves with a schema, and only for its own service', () => {
     const pair = () => [entry('query', 'a.1', { output: z.string() }), entry('query', 'b.1', { output: z.string(), impl: remote('rust://other') })]
-    const one = of(...pair()) as Loose
-    const same = of(...pair()) as Loose
-    const edited = of(entry('query', 'a.1', { output: z.number() }), pair()[1]) as Loose
+    const one = of(...pair())
+    const same = of(...pair())
+    const edited = of(entry('query', 'a.1', { output: z.number() }), pair()[1]!)
     expect(same.services).toEqual(one.services)
-    expect(edited.services.search.hash).not.toBe(one.services.search.hash)
-    expect(edited.services.other.hash).toBe(one.services.other.hash)
+    expect(edited.services.search!.hash).not.toBe(one.services.search!.hash)
+    expect(edited.services.other!.hash).toBe(one.services.other!.hash)
   })
 
   test('an app with no sidecar has no `services`', () => {
@@ -288,7 +296,7 @@ describe('the contract', () => {
   })
 
   test('R101: no output, what JSON can\'t carry, a one-way transform; a codec passes', () => {
-    const codes = (def: Loose) => (of(entry('query', 'x.1', def)) as Loose).diagnostics.filter((d: Loose) => d.code === 'R101').length
+    const codes = (def: object) => of(entry('query', 'x.1', def)).diagnostics.filter(d => d.code === 'R101').length
     expect(codes({})).toBe(1)
     expect(codes({ output: z.date() })).toBe(1)
     expect(codes({ output: z.bigint() })).toBe(1)
@@ -302,13 +310,13 @@ describe('the contract', () => {
   })
 
   test('R101 is only for `impl`: a TS function keeps C001', () => {
-    const { diagnostics } = contract(new Map([['t', { kind: 'query', $id: 't.1', def: { output: z.date() } }]]) as Loose) as Loose
-    expect(diagnostics.map((d: Loose) => d.code)).toEqual(['C001'])
+    const { diagnostics } = contract(new Map([['t', { kind: 'query', $id: 't.1', def: { output: z.date() } }]])) as Described
+    expect(diagnostics.map(d => d.code)).toEqual(['C001'])
   })
 
   test('R102: object unions, wherever they sit; `.nullable()` and scalars pass; the setting allows them', () => {
     const union = z.union([z.object({ a: z.string() }), z.object({ b: z.string() })])
-    const codes = (def: Loose, rust?: Loose) => (contract(new Map([entry('query', 'x.1', def)] as Loose), rust) as Loose).diagnostics.filter((d: Loose) => d.code === 'R102').map((d: Loose) => /'s `([^`]+)` is a plain/.exec(d.why)![1])
+    const codes = (def: object, rust?: Parameters<typeof contract>[1]) => (contract(new Map([entry('query', 'x.1', def)]), rust) as Described).diagnostics.filter(d => d.code === 'R102').map(d => /'s `([^`]+)` is a plain/.exec(d.why)![1])
     expect(codes({ output: union })).toEqual(['output'])
     expect(codes({ output: z.null(), input: z.object({ a: z.array(union) }) })).toEqual(['input.a'])
     expect(codes({ output: z.null(), errors: { E: union } })).toEqual(['error E'])
@@ -353,7 +361,7 @@ describe('native()', () => {
   const dlopen = process.dlopen.bind(process)
   let dir: string
   let addons: Record<string, { hash: string; call: (id: string, ctx: string, body: string) => unknown }>
-  let calls: { id: string; ctx: Loose; body: Loose }[]
+  let calls: { id: string; ctx: Envelope; body: unknown }[]
   const manifest = (m: unknown) => {
     writeFileSync(join(dir, 'next.json'), JSON.stringify(m))
     renameSync(join(dir, 'next.json'), join(dir, 'manifest.json'))
@@ -362,7 +370,7 @@ describe('native()', () => {
     writeFileSync(join(dir, file), '')
     addons[join(dir, file)] = { hash, call }
   }
-  const fn = (def: Loose = {}, impl: Loose = native('media')) => fnOf(query({ $id: `n${++n}.abc123`, output: z.any(), ...def, impl }))
+  const fn = (def: object = {}, impl: Impl = native('media')) => fnOf(query({ $id: `n${++n}.abc123`, output: z.any(), ...def, impl }))
   const signedIn = (user: unknown) => scope({ context: () => ({ user }) })
 
   beforeEach(() => {
@@ -370,7 +378,7 @@ describe('native()', () => {
     process.env.WEFT_NATIVE_DIR = dir
     addons = {}
     calls = []
-    process.dlopen = ((mod: Loose, file: string) => {
+    process.dlopen = (mod: { exports: unknown }, file: string) => {
       const a = addons[file]
       if (!a) throw new Error(`no such addon: ${file}`)
       mod.exports = {
@@ -380,7 +388,7 @@ describe('native()', () => {
           return Promise.resolve(a.call(id, ctx, body))
         },
       }
-    }) as Loose
+    }
   })
   afterEach(() => {
     process.dlopen = dlopen
@@ -488,8 +496,8 @@ describe('native()', () => {
   test('R105: a cached Rust query with tags that reported no table, once', async () => {
     addon('m.node', 'h')
     manifest({ media: { hash: 'h', addon: 'm.node' } })
-    const found: Loose[] = []
-    const make = () => scope({ dev: true, onDiagnostic: (d: Loose) => found.push(d) })
+    const found: Found[] = []
+    const make = () => scope({ dev: true, onDiagnostic: d => found.push(d) })
     const f = fn({ tags: ['docs'], cache: { life: 'seconds' } })
     await fetchQuery(make(), f, undefined)
     await fetchQuery(make(), f, { again: 1 })

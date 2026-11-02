@@ -1,9 +1,8 @@
 // The change feed on a real Postgres. `WEFT_TEST_POSTGRES=postgres://…` turns these on, and its database is yours to lose:
 // they drop and create their tables. `WEFT_TEST_PGBOUNCER`: the same database through pgBouncer in transaction mode.
-import type { Loose } from './loose'
 import postgres from 'postgres'
 import { changeStatements } from '../src/changes-sql.mjs'
-import { createFeed, type Probe, type Sink, type Source } from '../src/changes'
+import { createFeed, type Poke, type Probe, type Sink, type Source } from '../src/changes'
 import { postgresChanges } from '../src/db/changes-postgres'
 
 const url = process.env.WEFT_TEST_POSTGRES!
@@ -19,7 +18,7 @@ function source(sql: ReturnType<typeof postgres>, tables = ['live_a', 'live_b'],
   return { name: 'postgresql', tables, ...postgresChanges({ url, client: sql, tables, heartbeat: 100, interval: 100, ...extra }) }
 }
 function sinkless(s: Source, how?: Probe, throttle = 25) {
-  const pokes: Loose[] = []
+  const pokes: Poke[] = []
   const status: (string | undefined)[] = []
   const feed = createFeed(s, { emit: p => pokes.push(p), status: d => status.push(d) }, { hold: 25, throttle })
   return { pokes, status, feed, start: async () => feed.start(how ?? (await s.probe())) }
@@ -76,7 +75,7 @@ describe.skipIf(!url)('postgres change feed', () => {
     expect(f.pokes).toEqual([])
     await sql`insert into live_b values (1, 2)`
     await until(() => f.pokes.length > 0)
-    expect(f.pokes[0].t).toEqual(['live_b', 'live_b:1:2'])
+    expect(f.pokes[0]!.t).toEqual(['live_b', 'live_b:1:2'])
     await f.feed.stop()
   })
 

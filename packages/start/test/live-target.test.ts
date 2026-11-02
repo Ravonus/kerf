@@ -1,5 +1,4 @@
 // What each deploy target can do for live data, from its preset alone, and what `verify` may touch.
-import type { Loose } from './loose'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -61,16 +60,16 @@ describe('verify targets', () => {
   test('`true` finds the two variables, and tells a newcomer what to set', () => {
     expect(resolveTarget(true, { env: { WEFT_STAGING_URL: 'https://staging.x.dev' } })).toMatchObject({ url: 'https://staging.x.dev', db: undefined })
     expect(resolveTarget(true, { env: { STAGING_DATABASE_URL: 'postgres://u@staging/x' } })).toMatchObject({ db: 'postgres://u@staging/x' })
-    expect((resolveTarget(true, { env: {} }) as Loose).missing).toMatch(/WEFT_STAGING_URL.*STAGING_DATABASE_URL/s)
+    expect((resolveTarget(true, { env: {} }) as { missing: string }).missing).toMatch(/WEFT_STAGING_URL.*STAGING_DATABASE_URL/s)
   })
   test('a name reads `live.targets`; its `db` is a variable', () => {
     const targets = { staging: { url: 'https://s.x.dev', db: 'S_DB', production: false } }
     expect(resolveTarget('staging', { targets, env: { S_DB: 'postgres://u@h/x' } })).toEqual({ name: 'staging', url: 'https://s.x.dev', db: 'postgres://u@h/x', marked: true })
-    expect((resolveTarget('staging', { targets, env: {} }) as Loose).missing).toMatch(/`S_DB`/)
-    expect((resolveTarget('qa', { targets, env: {} }) as Loose).missing).toMatch(/live: \{ targets/)
+    expect((resolveTarget('staging', { targets, env: {} }) as { missing: string }).missing).toMatch(/`S_DB`/)
+    expect((resolveTarget('qa', { targets, env: {} }) as { missing: string }).missing).toMatch(/live: \{ targets/)
   })
   test('`{ db: undefined }` is an unset variable, not a target', () => {
-    expect((resolveTarget({ db: undefined }, { env: {} }) as Loose).missing).toMatch(/env var/)
+    expect((resolveTarget({ db: undefined }, { env: {} }) as { missing: string }).missing).toMatch(/env var/)
   })
   test.each([
     ['https://prod.acme.com'], ['https://app-production.acme.com'], ['https://www.acme.com'], ['https://live.acme.com'],

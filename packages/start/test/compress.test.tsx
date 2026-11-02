@@ -1,5 +1,4 @@
 // HTML and data are compressed for a client that takes it, with no setting.
-import type { Loose } from './loose'
 import type * as Zlib from 'node:zlib'
 import { brotliDecompressSync, gunzipSync, createBrotliDecompress } from 'node:zlib'
 import { vi } from 'vitest'
@@ -9,7 +8,7 @@ import { createHandler, type Manifest } from '../src/server'
 const zlib = vi.hoisted(() => ({ brotliCompress: 0, gzip: 0 }))
 vi.mock('node:zlib', async real => {
   const z = await real<typeof Zlib>()
-  const counted = (name: 'brotliCompress' | 'gzip') => (...args: Loose[]) => (zlib[name]++, (z[name] as Loose)(...args))
+  const counted = (name: 'brotliCompress' | 'gzip') => (...args: unknown[]) => (zlib[name]++, (z[name] as (...a: unknown[]) => void)(...args))
   return { ...z, brotliCompress: counted('brotliCompress'), gzip: counted('gzip') }
 })
 

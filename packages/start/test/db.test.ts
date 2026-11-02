@@ -1,8 +1,8 @@
 // The database layer in process (research 28 §2): one connection through Drizzle's proxy, migrations, the transaction
 // gate, the touched-tables check, Q013/Q014, and the tables as validators. Postgres repeats the core when
 // WEFT_TEST_POSTGRES names a private instance; the runtime matrix runs the whole app on it.
-import type { Loose } from './loose'
 import { AsyncLocalStorage } from 'node:async_hooks'
+import type { ZodString } from 'zod'
 import { eq, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { mysqlTable, varchar } from 'drizzle-orm/mysql-core'
@@ -19,6 +19,13 @@ import { readMigrations } from '../src/migrations.mjs'
 const todos = sqliteTable('todos', { id: text().primaryKey(), title: text().notNull(), done: integer({ mode: 'boolean' }).notNull().default(false) })
 const notes = sqliteTable('notes', { id: integer().primaryKey(), todoId: text('todo_id').notNull() })
 const schema = { todos, notes }
+type Described = { '~standard': { jsonSchema: { input(o: { target: string }): { required: string[] } } } }
+/** What the Postgres and MySQL `createDb`s share that the lazy test calls: their tables differ, so no one signature fits both. */
+interface LazyDb {
+  $weft: { migrate(list: unknown[]): Promise<void> }
+  select(): { from(table: object): Promise<unknown[]> }
+  transaction<T>(fn: (tx: { insert(table: object): { values(row: object): Promise<T> } }) => Promise<T>): Promise<T>
+}
 const init = [{ tag: '0000_init', sql: 'create table todos (id text primary key, title text not null, done integer not null default 0);\n--> statement-breakpoint\ncreate table notes (id integer primary key, todo_id text not null);' }]
 
 const als = new AsyncLocalStorage<Scope>()
@@ -94,7 +101,7 @@ test('Q014: a missing table is the migration that wasn\'t applied, with the fix'
 
 test('Q011: a table no tag names, per function, once; a `table:*` tag counts and parallel functions don\'t mix', async () => {
   const db = await fresh()
-  const untagged = query({ $id: 'untagged', tags: ['todos'], run: async () => (await db.select().from(todos)).concat(await db.select({ id: sql`id`, title: sql`'x'`, done: sql`0` }).from(notes) as Loose) })
+  const untagged = query({ $id: 'untagged', tags: ['todos'], run: async () => (await db.select().from(todos)).concat(await db.select({ id: sql`id`, title: sql`'x'`, done: sql`0` }).from(notes) as typeof todos.$inferSelect[]) })
   const byId = query({ $id: 'byId', tags: ['todos:1'], run: () => db.select().from(todos) })
   const write = mutation({ $id: 'untaggedWrite', invalidates: ['todos'], run: () => db.insert(notes).values({ id: 1, todoId: '1' }) })
   const a = scoped()
@@ -123,13 +130,13 @@ test('Q011 stays out of production and off exempt tables', async () => {
 })
 
 test('schemasOf: a table is its validator; `refine` and `pick` narrow it, and it reaches JSON Schema', () => {
-  const s = schemasOf(schema, { todos: { title: (t: Loose) => t.min(2) } })
+  const s = schemasOf(schema, { todos: { title: (t: ZodString) => t.min(2) } })
   expect(s.todos.insert.pick({ title: true }).safeParse({ title: 'ok' }).success).toBe(true)
   expect(s.todos.insert.pick({ title: true }).safeParse({ title: 'x' }).success).toBe(false)
   expect(s.todos.select.safeParse({ id: '1', title: 'ok' }).success).toBe(false) // select: every column
   expect(s.todos.update.safeParse({ done: true }).success).toBe(true)
   expect(Object.keys(s)).toEqual(['todos', 'notes'])
-  expect((s.todos.insert as Loose)['~standard'].jsonSchema.input({ target: 'draft-2020-12' }).required).toEqual(['id', 'title'])
+  expect((s.todos.insert as typeof s.todos.insert & Described)['~standard'].jsonSchema.input({ target: 'draft-2020-12' }).required).toEqual(['id', 'title'])
 })
 
 test('readMigrations: the journal\'s order, and nothing for an app with no folder', async () => {
@@ -154,12 +161,12 @@ describe.each([
 
   // Needs a real server, named by WEFT_TEST_POSTGRES or WEFT_TEST_MYSQL.
   test.skipIf(!url)('statements and transactions wait for one run; a dead server is Q016', async () => {
-    const make: Loose = (await load()).createDb
+    const make = (await load()).createDb as (o: { schema: object; url: string | undefined }) => LazyDb
     const tag = `lazy_${Date.now()}`
     const db = make({ schema: { table }, url })
     const migrate = vi.spyOn(db.$weft, 'migrate')
     runtime.migrations = { list: [{ tag, sql: 'drop table if exists weft_lazy;\n--> statement-breakpoint\ncreate table weft_lazy (id varchar(36) primary key);' }], report() {} }
-    await Promise.all([db.select().from(table), db.select().from(table), db.transaction((tx: Loose) => tx.insert(table).values({ id: 'a' }))])
+    await Promise.all([db.select().from(table), db.select().from(table), db.transaction(tx => tx.insert(table).values({ id: 'a' }))])
     expect(migrate).toHaveBeenCalledTimes(1)
     expect(await db.select().from(table)).toEqual([{ id: 'a' }])
 
@@ -210,6 +217,6 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
     await db.execute(sql`drop table weft_test_rows`)
     const gone = query({ $id: 'pgGone', tags: ['weft_test_rows'], run: () => db.select().from(rows) })
     await expect(fetchQuery(scoped().scope, fnOf(gone), undefined)).rejects.toMatchObject({ code: 'Q014' })
-    await (db as Loose).$client.end()
+    await (db as typeof db & { $client: { end(): Promise<void> } }).$client.end()
   })
 })

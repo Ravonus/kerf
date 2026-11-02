@@ -1,12 +1,11 @@
 // `server.extension` (extension.ts): the seam a plugin reaches the server through. This names no plugin on purpose.
-import type { Loose } from './loose'
 import { describe, expect, test, vi } from 'vitest'
-import { createHandler } from '../src/server'
+import { createHandler, type Manifest } from '../src/server'
 import { createScope, fetchQuery } from '../src/exec'
-import { fns, query } from '../src/data'
+import { fns, query, type Context } from '../src/data'
 import type { ServerExtension } from '../src/extension'
 
-const manifest = { routes: [], layouts: [] } as Loose
+const manifest: Manifest = { dir: 'src/routes', routes: [], layouts: [] }
 
 describe('a plugin on the server', () => {
   test('its routes are `/_weft/x/<key>/...`, loaded on first use, and it reports through the API', async () => {
@@ -21,8 +20,8 @@ describe('a plugin on the server', () => {
   })
 
   test('it adds to `ctx`, after the app, and guards a call', async () => {
-    query({ $id: 'x.q', run: ({ ctx }: Loose) => ctx.seen })
-    const extensions: ServerExtension[] = [{ context: ctx => ({ seen: `by ${(ctx as Loose).user}` }), guard: f => { if (f.id === 'x.no') throw new Error('refused') } }]
+    query({ $id: 'x.q', run: ({ ctx }) => (ctx as Context & { seen: string }).seen })
+    const extensions: ServerExtension[] = [{ context: ctx => ({ seen: `by ${(ctx as Context & { user: string }).user}` }), guard: f => { if (f.id === 'x.no') throw new Error('refused') } }]
     const scope = createScope(new Request('http://x/'), { context: () => ({ user: 'u1' }), extensions })
     expect((await fetchQuery(scope, fns.get('x.q')!, undefined)).v).toBe('by u1')
     query({ $id: 'x.no', run: () => 1 })
@@ -30,7 +29,7 @@ describe('a plugin on the server', () => {
   })
 
   test('`personal` keeps a key out of a shared cache', async () => {
-    query({ $id: 'x.cached', cache: { life: 'minutes' }, run: ({ ctx }: Loose) => ctx.mine })
+    query({ $id: 'x.cached', cache: { life: 'minutes' }, run: ({ ctx }) => (ctx as Context & { mine: string }).mine })
     const extensions: ServerExtension[] = [{ context: () => ({ mine: 1 }), personal: ['mine'] }]
     await expect(fetchQuery(createScope(new Request('http://x/'), { extensions }), fns.get('x.cached')!, undefined)).rejects.toMatchObject({ code: 'Q006' })
   })

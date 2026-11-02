@@ -1,10 +1,9 @@
 // A page's chunks are preloaded with its HTML, so they don't wait for the entry to import them.
-import type { Loose } from './loose'
 import { createHandler, type Manifest } from '../src/server'
 
-const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [{ id: '/', file: 'home', layouts: [], pattern: '/', params: [], kind: 'page' }] } as Loose
+const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [{ id: '/', file: 'home', layouts: [], pattern: '/', params: [], kind: 'page' }] }
 const page = (chunks: Record<string, { js: { href: string }[] }>) =>
-  createHandler({ manifest, modules: { home: { default: () => <h1>Lemon</h1> } } as Loose, chunks, assets: { entry: '/entry.js' } })(new Request('http://localhost/')).then(r => r.text())
+  createHandler({ manifest, modules: { home: { default: () => <h1>Lemon</h1> } }, chunks, assets: { entry: '/entry.js' } })(new Request('http://localhost/')).then(r => r.text())
 
 test('the route on the page has its chunks preloaded once, and the entry not at all', async () => {
   const html = await page({ '/': { js: [{ href: '/home.js' }, { href: '/shared.js' }, { href: '/shared.js' }, { href: '/entry.js' }] } })

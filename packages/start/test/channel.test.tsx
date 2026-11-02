@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
 // `channel` and `sharedState` over @weft-js/core/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
 // a memory bus, no sockets. `test/channel-ws.test.mjs` runs the protocol over a real WebSocket.
-import type { Loose } from './loose'
 import { createRoot, defineState, state } from '@weft-js/core'
 import { clock, flush, net, render, screen } from '@weft-js/core/test'
-import { channel, sharedState, skip, StartError, type StandardSchemaV1 } from '@weft-js/start'
+import { channel, sharedState, skip, StartError, type Context, type StandardSchemaV1 } from '@weft-js/start'
 import { hub } from '@weft-js/start/hub'
 import { keepOpen } from '../src/channel'
 
-const any: StandardSchemaV1<Loose> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
-const text: StandardSchemaV1<unknown, { text: string }> = { '~standard': { version: 1, vendor: 't', validate: (v: Loose) => (typeof v?.text === 'string' && v.text.length <= 8 ? { value: v } : { issues: [{ message: 'bad text' }] }) } }
-const Msg: StandardSchemaV1<unknown, { id: number; text: string }> = { '~standard': { version: 1, vendor: 't', validate: (v: Loose) => (typeof v?.id === 'number' ? { value: v } : { issues: [{ message: 'no id' }] }) } }
+const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const text: StandardSchemaV1<unknown, { text: string }> = { '~standard': { version: 1, vendor: 't', validate: v => { const t = (v as { text?: unknown } | null)?.text; return typeof t === 'string' && t.length <= 8 ? { value: v as { text: string } } : { issues: [{ message: 'bad text' }] } } } }
+const Msg: StandardSchemaV1<unknown, { id: number; text: string }> = { '~standard': { version: 1, vendor: 't', validate: v => (typeof (v as { id?: unknown } | null)?.id === 'number' ? { value: v as { id: number; text: string } } : { issues: [{ message: 'no id' }] }) } }
+
+type Visitor = Context & { user?: { id: string } | null }
 
 let nextId = 0
 let members: Record<string, string[]>
@@ -22,7 +23,7 @@ beforeEach(() => {
 const room = channel({
   $id: 'chat.room',
   params: any as StandardSchemaV1<unknown, { roomId: string }>,
-  authorize: ({ ctx, params }) => !!members[params.roomId]?.includes((ctx as Loose).user?.id),
+  authorize: ({ ctx, params }) => !!members[params.roomId]?.includes((ctx as Visitor).user?.id ?? ''),
   client: { say: text, boom: any },
   server: { said: Msg, typing: any },
   on: {
@@ -30,6 +31,7 @@ const room = channel({
     boom: () => { throw new Error('secret detail') },
   },
 })
+type RoomConnection = ReturnType<typeof room.connect>
 
 function Chat(props: { roomId: string }) {
   const chat = room.connect(() => ({ roomId: props.roomId }))
@@ -83,7 +85,7 @@ describe('channel', () => {
 
   test('a bad message is refused with its issues, and nothing is published', async () => {
     net.context({ user: { id: 'ann' } })
-    let error: Loose
+    let error!: StartError & { issues: { message: string }[] }
     function Probe() {
       const chat = room.connect({ roomId: 'a' })
       const said = chat.collect('said')
@@ -94,22 +96,22 @@ describe('channel', () => {
     screen.getByRole('button').click()
     await net.settle()
     expect(error.code).toBe('Q002')
-    expect(error.issues[0].message).toBe('bad text')
+    expect(error.issues[0]!.message).toBe('bad text')
     expect(screen.getByRole('button').textContent).toBe('0')
   })
 
   test('a handler that throws answers plainly in production terms, and a name like `constructor` finds nothing', async () => {
     net.context({ user: { id: 'ann' } })
-    const out: Loose[] = []
-    let conn: Loose
+    const out: string[] = []
+    let conn!: RoomConnection
     function Probe() {
       conn = room.connect({ roomId: 'a' })
       return <p />
     }
     render(Probe)
     await net.settle()
-    await conn.send('constructor' as Loose, {}).catch((e: Loose) => out.push(e.code))
-    await conn.send('toString' as Loose, {}).catch((e: Loose) => out.push(e.code))
+    await conn.send('constructor' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
+    await conn.send('toString' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
     expect(out).toEqual(['Q002', 'Q002'])
   })
 
@@ -171,7 +173,7 @@ describe('channel', () => {
   test('out of the window: `collect` empties, `resets` ticks, onReset fires', async () => {
     net.context({ user: { id: 'ann' } })
     const fired = vi.fn()
-    let conn: Loose
+    let conn!: RoomConnection
     function Probe() {
       conn = room.connect({ roomId: 'a' })
       conn.onReset(fired)
@@ -193,12 +195,12 @@ describe('channel', () => {
 
   test('a send in flight when the socket dies rejects; one sent while down waits for the rejoin', async () => {
     net.context({ user: { id: 'ann' } })
-    let conn: Loose
     const slow = channel({
       $id: 'chat.slow', authorize: () => true,
       client: { hold: any, go: any }, server: {},
       on: { hold: () => new Promise(() => {}), go: () => {} },
     })
+    let conn!: ReturnType<typeof slow.connect>
     function Probe() {
       conn = slow.connect()
       return <p />
@@ -262,7 +264,7 @@ describe('channel', () => {
   test('`skip` leaves, a new param moves the reader', async () => {
     net.context({ user: { id: 'bob' } })
     const id = state<string | null>(null)
-    let chat: Loose
+    let chat!: RoomConnection
     function Probe() {
       chat = room.connect(() => (id.value ? { roomId: id.value } : skip))
       return <p aria-label="status">{chat.status.value}</p>
@@ -295,7 +297,7 @@ describe('channel', () => {
   test('over the rate limit closes the socket, and the client reconnects', async () => {
     net.context({ user: { id: 'ann' } })
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    let conn: Loose
+    let conn!: RoomConnection
     function Probe() {
       conn = room.connect({ roomId: 'a' })
       return <p />
@@ -324,7 +326,7 @@ describe('sharedState', () => {
   beforeEach(() => { writers = ['ann'] })
   const slide = sharedState('deck', {
     $id: 'deck.slide', key: any as StandardSchemaV1<unknown, string>, value: any as StandardSchemaV1<unknown, number>, initial: 0,
-    authorize: { read: ({ ctx }) => !!(ctx as Loose).user, write: ({ ctx }) => writers.includes((ctx as Loose).user?.id) },
+    authorize: { read: ({ ctx }) => !!(ctx as Visitor).user, write: ({ ctx }) => writers.includes((ctx as Visitor).user?.id ?? '') },
   })
   const meeting = defineState('meeting', () => {
     const value = slide.connect('d1')
@@ -362,7 +364,7 @@ describe('sharedState', () => {
     await flush()
     await net.settle()
     expect(shown()).toBe('0')
-    expect((meeting.value.error as Loose).code).toBe('R011')
+    expect((meeting.value.error as StartError).code).toBe('R011')
   })
 
   test('a later reader gets the value, and a server write reaches it', async () => {
@@ -392,9 +394,9 @@ describe('what multiplayer needs of a room', () => {
   const lively = channel({
     $id: 'chat.lively',
     params: any as StandardSchemaV1<unknown, { roomId: string }>,
-    authorize: ({ ctx }) => (ctx as Loose).user?.id !== 'out',
+    authorize: ({ ctx }) => (ctx as Visitor).user?.id !== 'out',
     client: { me: any, only: any, gone: any },
-    server: { hi: any, tick: any },
+    server: { hi: any as StandardSchemaV1<unknown, { id: string }>, tick: any },
     on: {
       me: async ({ id, room: here }) => { await here.publish('hi', { id }, { to: id }) },
       only: async ({ msg, room: here }) => { await here.publish('hi', { id: 'nobody' }, { to: msg as string }) },
@@ -409,7 +411,7 @@ describe('what multiplayer needs of a room', () => {
       <>
         <p aria-label="status">{chat.status.value}</p>
         <p aria-label="room">{chat.room.value ?? 'none'}</p>
-        <ul>{hi.value.map((m: Loose) => <li key={m.id}>{m.id}</li>)}</ul>
+        <ul>{hi.value.map(m => <li key={m.id}>{m.id}</li>)}</ul>
         <button onClick={() => void chat.send('me', {})}>me</button>
         <button onClick={() => void chat.send('only', 'someone-else')}>only</button>
         <button onClick={() => void chat.send('gone', {})}>tick</button>
@@ -489,7 +491,7 @@ test('a hidden tab parks its socket, unless a sibling is looking (`share`)', asy
   hide(false)
   await net.settle()
   keepOpen.stay = undefined
-  delete (document as Loose).visibilityState
+  delete (document as { visibilityState?: string }).visibilityState
   stop()
   await clock.advance(30_000)
   clock.uninstall()

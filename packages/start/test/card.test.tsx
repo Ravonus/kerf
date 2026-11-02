@@ -1,6 +1,5 @@
 // The built-in share card (research 20 §10): real PNGs through the real renderer, in both schemes and at the sizes a
 // page can throw at it. `CARD_OUT=<dir>` keeps them, to look at.
-import type { Loose } from './loose'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
@@ -23,10 +22,10 @@ const cases = {
 }
 const out = process.env.CARD_OUT
 
-async function draw(name: string, props: Loose) {
-  const found: Loose[] = []
+async function draw(name: string, props: Parameters<typeof DefaultCard>[0]) {
+  const found: unknown[] = []
   const html = renderToString(() => <DefaultCard {...props} />, { hydratable: false })
-  const png = await renderCard(html, undefined, fonts, { onDiagnostic: (d: Loose) => found.push(d) })
+  const png = await renderCard(html, undefined, fonts, { onDiagnostic: (d: unknown) => found.push(d) })
   if (out) { mkdirSync(out, { recursive: true }); writeFileSync(join(out, `${name}.png`), png) }
   return { png, html, found }
 }

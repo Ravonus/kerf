@@ -1,16 +1,21 @@
 // Auth in process (research 28 §3): Better Auth on an in-memory SQLite, the session in `ctx`, `auth: 'user'`, sign-in
 // through a mutation, the full load when the session changes, guards before children, per-user shared caches. The
 // passwords and secret are throwaway test values made here.
-import type { Loose } from './loose'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { mutation, query, redirect } from '@weft-js/start'
+import { mutation, query, redirect, type Context, type StandardSchemaV1 } from '@weft-js/start'
 import { fnOf, StartError } from '@weft-js/start/data'
 import { forward, session, sessionChanged } from '../src/auth'
 import { createAuth } from '../src/auth/better-auth'
 import { drizzleAuth } from '../src/auth/drizzle'
 import { createDb } from '../src/db/sqlite'
 import { createScope, fetchQuery, memoryStore, runMutation } from '../src/exec'
-import { createHandler, type Manifest } from '../src/server'
+import { createHandler, type HandlerOptions, type Manifest, type RouteModule } from '../src/server'
+
+type User = { id: string; email: string }
+type Signed = Context & { user: User }
+type Visitor = Context & { user?: User | null }
+type Credentials = { email: string; password: string }
+const credentials: StandardSchemaV1<Credentials> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v as Credentials }) } }
 
 const when = (name: string) => integer(name, { mode: 'timestamp' }).notNull()
 const user = sqliteTable('user', { id: text().primaryKey(), name: text().notNull(), email: text().notNull().unique(), emailVerified: integer('email_verified', { mode: 'boolean' }).notNull(), image: text(), createdAt: when('created_at'), updatedAt: when('updated_at') })
@@ -45,8 +50,8 @@ beforeAll(async () => {
   ;({ cookie } = await signUp('ada@example.test'))
 })
 
-const whoami = query({ $id: 'whoami', auth: 'user', run: ({ ctx }) => (ctx as Loose).user.email })
-const signOutless = mutation({ $id: 'needsUser', auth: 'user', run: ({ ctx }) => (ctx as Loose).user.id })
+const whoami = query({ $id: 'whoami', auth: 'user', run: ({ ctx }) => (ctx as Signed).user.email })
+const signOutless = mutation({ $id: 'needsUser', auth: 'user', run: ({ ctx }) => (ctx as Signed).user.id })
 
 test('session(): no cookie is null with no query; a cookie is the user', async () => {
   const spy = vi.spyOn(auth.api, 'getSession')
@@ -73,7 +78,7 @@ test('A003: `auth: \'user\'` with a context that never called session()', async 
 test('a `scope: \'user\'` cache holds one value per user and answers no one nothing', async () => {
   const store = memoryStore()
   let runs = 0
-  const mine = query({ $id: 'mine', cache: { life: 'minutes', scope: 'user' }, tags: ['mine'], run: ({ ctx }) => (runs++, (ctx as Loose).user?.email ?? 'nobody') })
+  const mine = query({ $id: 'mine', cache: { life: 'minutes', scope: 'user' }, tags: ['mine'], run: ({ ctx }) => (runs++, (ctx as Visitor).user?.email ?? 'nobody') })
   const other = (await signUp('bob@example.test')).cookie
   const get = (c?: string) => fetchQuery(createScope(as(c), { context, store }), fnOf(mine), undefined).then(e => e.v)
   expect(await get(cookie)).toBe('ada@example.test')
@@ -83,23 +88,23 @@ test('a `scope: \'user\'` cache holds one value per user and answers no one noth
 })
 
 test('a plain cached query still can\'t read ctx.user (Q006)', async () => {
-  const leak = query({ $id: 'leak', cache: { life: 'minutes' }, run: ({ ctx }: Loose) => ctx.user?.email })
+  const leak = query({ $id: 'leak', cache: { life: 'minutes' }, run: ({ ctx }) => (ctx as Visitor).user?.email })
   await expect(fetchQuery(createScope(as(cookie), { context, store: memoryStore() }), fnOf(leak), undefined)).rejects.toMatchObject({ code: 'Q006' })
 })
 
 test('forward(): cookies reach the response; a failure is an FnError with Better Auth\'s message and status', async () => {
   const headers = new Headers()
-  const ctx = { request: as(), response: { headers } } as Loose
-  const ok = await forward(ctx, auth.api.signInEmail({ body: { email: 'ada@example.test', password }, asResponse: true }))
-  expect((ok as Loose).user.email).toBe('ada@example.test')
+  const ctx = { request: as(), response: { headers } } as Context
+  const ok = await forward<{ user: User }>(ctx, auth.api.signInEmail({ body: { email: 'ada@example.test', password }, asResponse: true }))
+  expect(ok.user.email).toBe('ada@example.test')
   expect(headers.getSetCookie().join()).toContain('session_token=')
   await expect(forward(ctx, auth.api.signInEmail({ body: { email: 'ada@example.test', password: 'wrong-password' }, asResponse: true }))).rejects.toMatchObject({ status: 401, message: expect.stringMatching(/invalid/i) })
 })
 
 test('createAuth exempts its tables from Q011 and keeps the app\'s options', () => {
   expect([...db.$weft.exempt].sort()).toEqual(['account', 'session', 'user', 'verification'])
-  expect((auth.options as Loose).telemetry.enabled).toBe(false)
-  expect((auth.options as Loose).baseURL).toBe(base)
+  expect((auth.options as { telemetry: { enabled: boolean } }).telemetry.enabled).toBe(false)
+  expect(auth.options.baseURL).toBe(base)
 })
 
 test('A001: a short or missing secret on a production server; dev and tests pass', () => {
@@ -122,18 +127,18 @@ describe('the handler', () => {
     layouts: [{ id: 'layout:', file: 'root', dir: '' }, { id: 'layout:app', file: 'guard', dir: 'app', parent: 'layout:' }],
     routes: [{ id: '/app/page', file: 'page', layouts: ['layout:', 'layout:app'], pattern: '/app/page', params: [], kind: 'page' }, { id: '/login', file: 'login', layouts: ['layout:'], pattern: '/login', params: [], kind: 'page' }],
   }
-  const Pass = (p: Loose) => p.children
-  const modules: Loose = {
+  const Pass = (p: { children?: unknown }) => p.children
+  const modules: Record<string, RouteModule> = {
     root: { default: Pass },
-    guard: { default: Pass, load: async ({ ctx }: Loose) => { ran.push('guard'); await new Promise(ok => { setTimeout(ok, 5) }); return ctx.user ?? redirect('/login') } },
+    guard: { default: Pass, load: async ({ ctx }) => { ran.push('guard'); await new Promise(ok => { setTimeout(ok, 5) }); return (ctx as Visitor).user ?? redirect('/login') } },
     page: { default: () => 'page', load: () => { ran.push('page'); return {} } },
     login: { default: () => 'login' },
   }
   const found: { code: string; severity: string }[] = []
-  const handler = createHandler({ manifest, modules, auth: auth as Loose, context, dev: true, onDiagnostic: d => found.push(d) })
+  const handler = createHandler({ manifest, modules, auth: auth as NonNullable<HandlerOptions['auth']>, context, dev: true, onDiagnostic: d => found.push(d) })
   const call = (name: string, cookieHeader?: string) => handler(new Request(`${base}/_weft/fn/${name}`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-weft': '1', ...(cookieHeader && { cookie: cookieHeader }) }, body: JSON.stringify({ i: { email: 'ada@example.test', password } }) }))
-  mutation({ $id: 'login', run: ({ input, ctx }: Loose) => forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true })).then(() => redirect('/app/page')) })
-  mutation({ $id: 'silentLogin', run: ({ input, ctx }: Loose) => forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true })).then(() => null) })
+  mutation({ $id: 'login', input: credentials, run: ({ input, ctx }) => forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true })).then(() => redirect('/app/page')) })
+  mutation({ $id: 'silentLogin', input: credentials, run: ({ input, ctx }) => forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true })).then(() => null) })
 
   test('a layout\'s redirect runs before its children, which never run', async () => {
     ran.length = 0

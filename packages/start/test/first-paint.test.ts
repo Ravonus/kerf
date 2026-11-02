@@ -1,9 +1,8 @@
-import type { Loose } from './loose'
 import { pieces } from '@weft-js/core/node-purge'
 import { firstPaint } from '../src/first-paint'
 
 const css = `@layer a,b;@layer a{:root{--warp-x:1px;--warp-y:2px}}@layer b{[data-scope=one]{width:var(--warp-x)}[data-scope=two]{height:var(--warp-y)}[data-scope=two]:hover{color:red}}`
-const table = pieces([['a.css', css]]) as Loose
+const table = pieces([['a.css', css]])
 const paintOf = (t = table) => firstPaint(t, ['a.css'])
 const one = '<div data-scope="one"></div>', two = '<div data-scope="two"></div>'
 
@@ -39,7 +38,7 @@ test('responses at the same time share nothing', async () => {
 })
 
 test('the gate goes in once, with its CSS-only timeout, and its reveal never does', () => {
-  const paint = paintOf(pieces([['a.css', css + '[data-weft=styled]{visibility:visible}']]) as Loose)
+  const paint = paintOf(pieces([['a.css', css + '[data-weft=styled]{visibility:visible}']]))
   const css1 = paint('<aside data-weft="styled"></aside>')
   expect(css1).toContain('visibility:hidden')
   expect(css1).toContain('weft-gate 0s 3s forwards')
@@ -48,13 +47,13 @@ test('the gate goes in once, with its CSS-only timeout, and its reveal never doe
 })
 
 test('a sheet this page doesn\'t have adds nothing, whatever the HTML holds: a route\'s CSS stays on its route', () => {
-  const t = pieces([['a.css', css], ['route.css', '[data-scope=one]{color:red}']]) as Loose
+  const t = pieces([['a.css', css], ['route.css', '[data-scope=one]{color:red}']])
   expect(firstPaint(t, ['a.css'])(one)).not.toContain('color:red')
   expect(firstPaint(t, ['a.css', 'route.css'])(one)).toContain('color:red')
 })
 
 test('a tier dial the head sets is in, one it never names is not', () => {
-  const t = pieces([['a.css', ':root{--warp-z:1}[data-expression=vivid]{--warp-z:2}[data-expression=quiet]{--warp-z:3}b{width:var(--warp-z)}']]) as Loose
+  const t = pieces([['a.css', ':root{--warp-z:1}[data-expression=vivid]{--warp-z:2}[data-expression=quiet]{--warp-z:3}b{width:var(--warp-z)}']])
   const got = firstPaint(t, ['a.css'], "<script>document.documentElement.dataset.expression='vivid'</script>")('<b></b>')
   expect(got).toContain('[data-expression=vivid]')
   expect(got).not.toContain('[data-expression=quiet]')
