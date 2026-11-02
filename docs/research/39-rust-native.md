@@ -1,4 +1,4 @@
-# 37. Rust in-process: `native()`, the WASM fallback and `weft add rust`
+# 39. Rust in-process: `native()`, the WASM fallback and `weft add rust`
 
 Status: built for Phase 5b, 2026-10-31. It refines PLAN §4.3 and settles the addon half of §11's question. Spike:
 `spikes/rust-native/`. Exit check: `evals/phase5b-exit.mjs`, results in `evals/results/phase5b-exit.md`. Its sibling is

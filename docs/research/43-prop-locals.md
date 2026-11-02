@@ -1,4 +1,4 @@
-# 40. Prop locals
+# 43. Prop locals
 
 W001 used to reject `const amount = props.amount`. The rule existed because a component body runs once, so a copy of
 a prop silently stopped updating, and agents hit that in every eval. The fix for the bug didn't need to forbid the

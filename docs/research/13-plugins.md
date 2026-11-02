@@ -235,7 +235,7 @@ A slot is defined once, in core or in a package that owns a domain:
 | `surface.renderer@1` | keyed by `kind` | client | built in: `canvas2d`, `webgl2` | `@weft-js/plugin-surface-keel` (`keel-pixel`) | 2 (Surfaces) |
 | `realtime.bus@1` | one | server | built in: `memory` (R002 on multi-instance presets) | `@weft-js/realtime-redis`, `-nats` ([35](35-multiplayer-and-packs.md)) | 3 / 3b |
 | `db.adapter@1` | keyed by name | server | built in: `drizzle` | `@weft-js/db/sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb` ([35](35-multiplayer-and-packs.md)) | 3c |
-| `pay.rail@1` | keyed by rail | server, client, native | `null`; `src/pay.server.ts` without a rail is P101, a rail without it PAY014 | `@weft-js/pay/stripe` built ([37](37-pay-web.md)); `-storekit`, `-play` | 6c |
+| `pay.rail@1` | keyed by rail | server, client, native | `null`; `src/pay.server.ts` without a rail is P101, a rail without it PAY014 | `@weft-js/pay/stripe` built ([38](38-pay-web.md)); `-storekit`, `-play` | 6c |
 | `device.<capability>@1` | keyed by target | native, client | `null`; unguarded use is N031 | `@weft/plugin-device-*` (native-module codegen) | 6b |
 
 **Binding rules** (resolved once, at config load):

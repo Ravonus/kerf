@@ -1,4 +1,4 @@
-//! `native()` (PLAN §4.3, research 37): a service's functions in-process. One crossing per function, as with a sidecar,
+//! `native()` (PLAN §4.3, research 39): a service's functions in-process. One crossing per function, as with a sidecar,
 //! with no HTTP and no signature: nothing outside the process can reach it.
 //!
 //! A real addon runs each call on the host's worker pool, so a long one doesn't hold the event loop. A `.wasm` is the

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Phase 5b's exit check (PLAN §9, "5b. Rust: native"; research 37): a CPU-bound demo beats its TS `run` by at least 5× on
+// Phase 5b's exit check (PLAN §9, "5b. Rust: native"; research 39): a CPU-bound demo beats its TS `run` by at least 5× on
 // Node and Bun. The same app is built twice. Before: `thumbnail` is a TS `run`, written with typed arrays as a careful
 // author writes it. After: it's `impl: media`, and a crate does the same arithmetic, which this script holds it to:
 //

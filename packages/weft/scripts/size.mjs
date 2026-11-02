@@ -31,7 +31,7 @@ const hydratable = new Set(['v3 shop app (hydrate)'])
 // The full runtime lands on exactly 13.37 KB because the owner likes the number: src/egg.ts pads it with data no app
 // ships. Every change to the runtime shifts it, so run scripts/egg.mjs last, after any merge.
 // Hard caps, in KB of 1024 bytes as printed below: the full runtime 13.37 (it fails the run above that; the speed paths
-// are why it isn't 10, docs/research/39-speed-lab.md), the `weft` entry 6.90 (Solid's solid-js is 7,812 B).
+// are why it isn't 10, docs/research/42-speed-lab.md), the `weft` entry 6.90 (Solid's solid-js is 7,812 B).
 const budgets = { 'hello world': 3072, 'runtime (every export)': 13691, 'core (the `weft` entry)': 7066, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
 
 const rows = {}

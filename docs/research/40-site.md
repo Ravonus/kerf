@@ -1,4 +1,4 @@
-# weft site: research and recommendation
+# 40. weft site: research and recommendation
 
 Observed 2026-10-31 in the built-in browser and with direct fetches. Keystroke and navigation timings are one or two samples on a Mac at load 15–37, so read them as ranks, not benchmarks.
 

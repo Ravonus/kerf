@@ -1,12 +1,11 @@
-# warp audit, 2026-10-31
+# 41. warp audit, 2026-10-31
 
 Everything here was rendered in Chromium and looked at. Base components: `packages/warp/test/bench` at
 quiet/balanced/vivid × light/dark, plus the overlays opened and frames of the modal's enter. Packs (agent, admin,
 collab, schedule, live, flow, rich, surfaces, charts, table, shell, virtual): the a11y gallery in balanced dark. Those
 were checked as whole pages, so a pack grade is a page impression, not a per-state review.
 
-Screenshots are outside the repo:
-`/private/tmp/claude-501/-Users-ravonus-dev-lemonstand-weft/5b9ac326-8108-49b9-87f8-0b8371e360fb/scratchpad/before/`.
+Screenshots were kept in a temporary folder outside the repo and aren't kept.
 
 Grades: **done** (would show it), **weak** (works, no feeling), **ugly** (visibly wrong), **missing** (no weft component).
 

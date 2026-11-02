@@ -1,4 +1,4 @@
-# 39. The speed lab
+# 42. The speed lab
 
 Every optimisation in the runtime's update and list paths is a named switch in `packages/weft/src/flags.ts`. Each is
 behaviour-neutral: turning one off changes speed and size and nothing else, and the suite proves it by passing both ways

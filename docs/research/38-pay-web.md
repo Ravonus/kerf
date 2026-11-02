@@ -1,4 +1,4 @@
-# 37 — `@weft-js/pay`, the web half: what was built, and what changed from research 10
+# 38. `@weft-js/pay`, the web half: what was built, and what changed from research 10
 
 Built 2026-10-31 from PLAN §4.4 and Phase 6c, inside §7c's slot model. Native rails, the policy table, `weft pay explain`
 and `weft pay sync` are not built. Everything here was checked with `fakePay`, mocked Stripe HTTP and a local mock server,

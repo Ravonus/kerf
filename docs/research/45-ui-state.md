@@ -1,4 +1,4 @@
-# 40. Shared UI state: `interaction()`, `ui`, `share`, one socket per client
+# 45. Shared UI state: `interaction()`, `ui`, `share`, one socket per client
 
 Status: **built on `claude/weft-share`, 2026-11-01. The section below says where the build departs from this spec, which is otherwise kept as written.**
 
@@ -317,8 +317,8 @@ Tests: hover across panes, tabs and three clients; a late joiner's snapshot; war
 leader close with a watcher proving no flash; leader crash mid-hover (`Page.crash`); follower close mid-hover; an element
 removed under the pointer; navigation mid-hover; echo (one in, one out: frames `[2, 0, 0]` across three clients, then
 silence); a real `watch` not running for a remote hover; touch; offline; no Web Locks; two builds; newest tab; stuck leader;
-a sweep over 40 rows under the socket limit. Screenshots: [same page](40-ui-state/1-same-page.png),
-[tabs](40-ui-state/2-across-tabs.png), [clients](40-ui-state/3-across-clients.png).
+a sweep over 40 rows under the socket limit. Screenshots: [same page](45-ui-state/1-same-page.png),
+[tabs](45-ui-state/2-across-tabs.png), [clients](45-ui-state/3-across-clients.png).
 
 **Proven:** the API shape on two components, zero server changes for the wire, one socket across 8 tabs, handover and both
 clean-up paths, the echo argument, and the no-locks fallback with `navigator.locks` removed by script.

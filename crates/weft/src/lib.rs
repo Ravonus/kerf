@@ -1,4 +1,4 @@
-//! The Rust side of weft's `remote()` and `native()` (PLAN §4.3, research 36 and 37). A sidecar or an addon implements
+//! The Rust side of weft's `remote()` and `native()` (PLAN §4.3, research 36 and 39). A sidecar or an addon implements
 //! server functions declared in TypeScript: Zod stays the source of truth, `.weft/contract.json` carries it, and `weft::build::generate` turns it into
 //! serde types, a typed error enum per function and one `Service` trait, so a change on the TS side stops `cargo` exactly
 //! where the Rust no longer matches.

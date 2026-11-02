@@ -1,4 +1,4 @@
-# 41. Prop inference
+# 44. Prop inference
 
 Goal: an untyped component is fully typed in the editor, `weft check` and CI, with nothing to write. `props.count` is
 `number` because the caller passes a number, and misuse is a real error at the real source.
