@@ -18,7 +18,8 @@
 [data-site="note"] { background: var(--warp-color-surface-sunken); }
 [data-site="note"] > :last-child { margin-block-end: 0; }
 
-[data-site="example"][data-learn] { margin-block: var(--warp-space-group) calc(var(--warp-space-section) * 0.75); }
+/* Learn's demos are short and sit in the reading flow: rendered up front, so anchors, the rail and a press land where they look. */
+[data-site="example"][data-learn] { content-visibility: visible; margin-block: var(--warp-space-group) calc(var(--warp-space-section) * 0.75); }
 [data-site="example"][data-learn] [data-part="run"] { min-block-size: 180px; }
 [data-site="example"][data-learn] [data-part="try"] { max-inline-size: 68ch; margin: 0; font-size: calc(0.9375 * var(--warp-rem)); line-height: 1.55; color: var(--warp-color-text-subtle); }
 [data-site="example"][data-learn] [data-part="try"] strong { color: var(--warp-color-text); font-weight: 600; }
