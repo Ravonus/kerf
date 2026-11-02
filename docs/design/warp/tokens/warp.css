@@ -1449,10 +1449,10 @@
       animation-timing-function: var(--warp-ref-flow-ease), linear;
       animation-fill-mode: backwards, forwards;   /* no effect in between: no stacking context, no containing block at rest */
       /* in by a share of cover, so it is on screen while it moves; a tall element is capped and never sits half faded.
-         Out only in the exit phase, so anything resting at the top of a page stays whole. */
+         Out only in the exit phase, so anything resting at the top of a page stays whole; a tall one starts by 55%, while it is still seen. */
       animation-range:
         entry calc(var(--_flow-i) * var(--warp-ref-flow-step)) cover calc(min(var(--_flow-r), 340px) + var(--_flow-i) * var(--warp-ref-flow-step)),
-        exit max(0%, 100% - var(--_flow-e)) exit 100%;
+        exit max(0%, min(100% - var(--_flow-e), 55%)) exit 100%;
       transform-origin: var(--_flow-o, 50% 50%);
     }
     /* a focused field never fades; a jump target arrives whole. Not through the gate: that inherits, and html is :focus-within */

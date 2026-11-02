@@ -23,7 +23,7 @@
 /* the touch clock's fill: below vivid the hover layer wipes in L→R at once and leaves through the right, so it never reverses.
    At vivid (--warp-btn-fill) the wipe stands clear and two blobs of the tone close on where the hand arrived, then part at
    the seam and leave by their own edges: the ground is revealed, never repainted. --_a is the sweep's switch, so hover,
-   focus, hold, open and touch all arrive free, and the sweep draws the ink edge as the fill lands. */
+   focus, hold, open and touch all arrive free, and the ink edge fades in as the fill lands. */
 :where([data-scope="button"]) {
   --_x: var(--warp-mx); --_y: var(--warp-my);
   --_pa: var(--_solid-hover);
@@ -45,7 +45,12 @@
 }
 :where([data-scope="button"]:is([data-emphasis="frame"], [data-emphasis="link"], :disabled, [aria-disabled="true"])) { --warp-btn-fill: 0; }
 /* the sweep on solid and ghost is vivid's ink edge, so it is off below vivid */
-:where([data-scope="button"]:not([data-emphasis]), [data-scope="button"][data-emphasis="ghost"]) { --_on: var(--warp-btn-fill); --warp-color-sweep: var(--_off); }
+:where([data-scope="button"]:not([data-emphasis]), [data-scope="button"][data-emphasis="ghost"]) { --_on: 0; --warp-color-sweep: var(--_off); }
+/* it fades in whole with the fill: drawn along the edge, it read as a broken line halfway round */
+:where([data-scope="button"]:not([data-emphasis]), [data-scope="button"][data-emphasis="ghost"]) > :where([data-part="sweep"]) {
+  clip-path: none; opacity: calc(var(--_a, 0) * var(--warp-btn-fill));
+  transition: var(--_edges), opacity var(--warp-duration-base) var(--warp-ease-out);
+}
 :where([data-scope="button"]:is(:disabled, [aria-disabled="true"])) { --_on: 0; }
 :where([data-scope="button"])::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;

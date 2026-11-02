@@ -69,6 +69,8 @@ function enqueue(run: Run) {
 }
 
 // One observer for every surface: a dial is an attribute on any ancestor, and the OS settings are two media queries.
+// A write of the value already there is no change: a repaint resolves its inks through a probe element, so hearing one
+// would let any script that re-stamps a dial when the DOM changes spin the page forever, in microtasks.
 type Heard = (target: Node) => void
 const hearers = new Set<Heard>()
 let unhear: (() => void) | undefined
@@ -78,8 +80,8 @@ function hear(fn: Heard) {
   if (!unhear) {
     const tell = (target: Node) => { for (const h of hearers) h(target) }
     const root = document.documentElement
-    const dials = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(list => { for (const m of list) tell(m.target) })
-    dials?.observe(root, { attributes: true, subtree: true, attributeFilter: ['data-theme', 'data-expression', 'data-motion'] })
+    const dials = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(list => { for (const m of list) if ((m.target as Element).getAttribute(m.attributeName!) !== m.oldValue) tell(m.target) })
+    dials?.observe(root, { attributes: true, attributeOldValue: true, subtree: true, attributeFilter: ['data-theme', 'data-expression', 'data-motion'] })
     const media = typeof matchMedia === 'function' ? ['(prefers-color-scheme: dark)', '(prefers-reduced-motion: reduce)'].map(q => matchMedia(q)) : []
     const change = () => tell(root)
     for (const m of media) m.addEventListener?.('change', change)
