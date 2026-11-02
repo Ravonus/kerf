@@ -123,7 +123,7 @@ export interface MeetingRoomProps {
   /** Called with the layout picked in the switcher. */
   onLayoutChange?: (l: MeetingLayout) => void
   /** Elapsed time, already formatted (the caller owns the clock). */
-  timer?: any
+  timer?: unknown
   /** Shows a Rec badge in the header. */
   recording?: boolean
   /** The room's connection: `room.status`, mapped. */
@@ -143,7 +143,7 @@ export interface MeetingRoomProps {
   /** The Chat panel's body. */
   chat?: () => unknown
   /** Below People: "Invite people". */
-  invite?: () => any
+  invite?: () => unknown
   /** Whether your mic is on: a state the room writes, or a value with `onMic`. */
   mic?: State<boolean> | boolean
   /** Whether your camera is on: a state the room writes, or a value with `onCamera`. */

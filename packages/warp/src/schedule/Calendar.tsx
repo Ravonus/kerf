@@ -22,6 +22,7 @@ import '@weft-js/warp-core/styles/layout/edges.css'
 
 /** Which occurrences of a repeating event a change covers. */
 export type RecurrenceScope = 'this' | 'following' | 'all'
+/** Where an edited event lands: its new times, its timeline row, and which occurrences of a repeat it covers. */
 export type EventChange = { start: string; end: string; resource?: string; scope?: RecurrenceScope }
 /** A timeline row: a room or a person. `meta` is the quiet line under its name ("8 seats"). */
 export type Resource = { id: string; name: string; meta?: string }
@@ -346,7 +347,7 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
   return (
     <div data-scope="edges" data-part="grid" data-view="time" role="grid" aria-label={fmt(days.value[0], { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length};--warp-edges-start:var(--warp-cal-gutter);${tracks.value}`} onKeyDown={onKey}>
-      <div ref={(n: any) => (scroller = n)} data-part="scroller">
+      <div ref={(n: HTMLDivElement) => (scroller = n)} data-part="scroller">
         <div data-part="top">
           <div data-part="head" role="row">
             <span data-part="corner" aria-hidden="true"></span>
@@ -358,7 +359,7 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
             {bars.value.map(b => <div key={b.id} data-part="chip" data-cal={b.event.cal ?? 1} data-id={b.id} role="gridcell" tabindex={stop.value === b.id ? '0' : '-1'} aria-label={c.name(b.event)} style={`${tint(b.event.cal)};grid-column:${b.col + 2} / span ${b.span};grid-row:${b.row + 1}`}>{b.event.title}</div>)}
           </div>
         </div>
-        <div ref={(n: any) => (cols = n)} data-part="cols" role="row">
+        <div ref={(n: HTMLDivElement) => (cols = n)} data-part="cols" role="row">
           <div data-part="gutter" aria-hidden="true">
             {Array.from({ length: 23 }, (_, i) => i + 1).map(h => <span key={h} data-part="hour" style={`top:${hours(h * 60)}`}>{c.time(h * 60)}</span>)}
             {nowAt.value !== null && <span data-part="now-label" style={`--_top:${hours(nowAt.value)}`}>{c.time(nowAt.value)}</span>}
@@ -517,9 +518,9 @@ function Timeline({ c }: { c: Ctx }) {
     const titles = () => [...box!.querySelectorAll<HTMLElement>('[data-part="lane"] [data-part="event-title"]')].filter(t => t.offsetWidth)
     const cut = () => titles().some(t => { const r = doc.createRange(); r.selectNodeContents(t); const w = r.getBoundingClientRect(), b = t.getBoundingClientRect(); return w.right > b.right + 0.5 || w.left < b.left - 0.5 })
     box.style.removeProperty('--_fit')
-    const lane = box.querySelector<HTMLElement>('[data-part="lane"]')
-    if (!lane) return
-    let hour = lane.getBoundingClientRect().width / Math.max(1, untrack(() => slots.value))
+    const first = box.querySelector<HTMLElement>('[data-part="lane"]')
+    if (!first) return
+    let hour = first.getBoundingClientRect().width / Math.max(1, untrack(() => slots.value))
     for (let i = 0; i < 24 && cut(); i++) box.style.setProperty('--_fit', `${(hour += 8)}px`)
   }
   let frame = 0

@@ -184,8 +184,8 @@ test('a Kanban board cut at its box shows an edge shadow on the side with more, 
 const calendarIn = id => `#${id} [data-scope="calendar"][data-part="root"]`
 
 // every booking's whole name shows inside its box, and no word is split across lines
-const timelineNames = sel => page.evaluate(sel => {
-  const root = document.querySelector(sel), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
+const timelineNames = sel => page.evaluate(at => {
+  const root = document.querySelector(at), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
   const events = [...root.querySelectorAll('[data-part="lane"] [data-part="event"]')].map(e => {
     const t = e.querySelector('[data-part="event-title"]'), st = e.querySelector('[data-part="event-start"]')
     const shown = el => getComputedStyle(el).display !== 'none'
@@ -236,8 +236,8 @@ test('a desktop timeline shows every name whole, and the now line runs under the
 test('a phone week keeps all seven days at a readable width and scrolls sideways, with the hours and day heads in place', async () => {
   const sel = calendarIn('week-phone')
   await page.locator(sel).scrollIntoViewIfNeeded()
-  const m = await page.evaluate(sel => {
-    const root = document.querySelector(sel), sc = root.querySelector('[data-view="time"] > [data-part="scroller"]')
+  const m = await page.evaluate(at => {
+    const root = document.querySelector(at), sc = root.querySelector('[data-view="time"] > [data-part="scroller"]')
     const cols = [...root.querySelectorAll('[data-part="col"]')].map(c => c.getBoundingClientRect().width)
     const titles = [...root.querySelectorAll('[data-part="col"] [data-part="event"] [data-part="event-title"]')].map(t => ({ name: t.textContent, w: t.getBoundingClientRect().width, shown: t.getBoundingClientRect().width >= t.scrollWidth - 1 }))
     const gutter = root.querySelector('[data-part="cols"] > [data-part="gutter"]')

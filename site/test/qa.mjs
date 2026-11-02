@@ -313,10 +313,10 @@ for (const path of ['/components', '/blocks', '/charts']) {
         if (stage.height > 242) out.push(`picture ${Math.round(stage.height)}px tall`)
         const drawn = e => { if (!e.firstElementChild || /^(svg|img|canvas|input|textarea|select|video)$/.test(e.localName)) return true; const c = getComputedStyle(e); return c.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderBottomWidth) > 0 }
         let top = Infinity, bottom = -Infinity
-        const cover = b => { if (b.width && b.height) { top = Math.min(top, Math.max(b.top, stage.top)); bottom = Math.max(bottom, Math.min(b.bottom, stage.bottom)) } }
-        const mount = t.querySelector('[data-part="mount"]')
-        for (const e of mount.querySelectorAll('*')) if (!(e.closest('svg') && e.localName !== 'svg') && drawn(e) && getComputedStyle(e).visibility !== 'hidden') cover(e.getBoundingClientRect())
-        const texts = document.createTreeWalker(mount, NodeFilter.SHOW_TEXT)
+        const cover = r => { if (r.width && r.height) { top = Math.min(top, Math.max(r.top, stage.top)); bottom = Math.max(bottom, Math.min(r.bottom, stage.bottom)) } }
+        const holder = t.querySelector('[data-part="mount"]')
+        for (const e of holder.querySelectorAll('*')) if (!(e.closest('svg') && e.localName !== 'svg') && drawn(e) && getComputedStyle(e).visibility !== 'hidden') cover(e.getBoundingClientRect())
+        const texts = document.createTreeWalker(holder, NodeFilter.SHOW_TEXT)
         for (let n; (n = texts.nextNode());) if (n.textContent.trim()) { const r = document.createRange(); r.selectNodeContents(n); cover(r.getBoundingClientRect()) }
         const blank = stage.height - Math.max(0, bottom - top)
         if (blank > 24 && blank > stage.height * 0.4) out.push(`${Math.round(blank)} of ${Math.round(stage.height)}px blank`)

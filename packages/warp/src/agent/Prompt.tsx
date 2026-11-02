@@ -47,7 +47,7 @@ export interface PromptProps {
   /** Attached files shown as chips above the input, with upload progress. */
   files?: PromptFile[]
   /** Your own attachment row, in place of `files`. */
-  attachments?: any
+  attachments?: unknown
   /** Called with the files picked or dropped. */
   onAttach?: (files: File[]) => void
   /** Called with a file's id when its chip is removed. */

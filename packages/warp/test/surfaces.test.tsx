@@ -183,7 +183,7 @@ describe('CommandPalette', () => {
     expect(dlg.hasAttribute('open')).toBe(true)
     type(input, 'Dep')
     await flush()
-    await new Promise(r => setTimeout(r, 100)) // past the layer stack's Escape window: a cancel on its own (a back gesture)
+    await new Promise(r => { setTimeout(r, 100) }) // past the layer stack's Escape window: a cancel on its own (a back gesture)
     dlg.dispatchEvent(new Event('cancel', { cancelable: true }))
     await flush()
     expect(input.value).toBe('')

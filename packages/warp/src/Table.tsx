@@ -76,7 +76,7 @@ export interface TableProps<T> {
   /** Called with the keys of every selected row after each change. */
   onSelectionChange?: (keys: string[]) => void
   /** The bulk bar's actions. */
-  bulk?: (keys: string[]) => any
+  bulk?: ((keys: string[]) => unknown) | undefined
   page?: { size: number }
   /** Called on Next or Previous, with the page or server cursor to load. */
   onPageChange?: (to: unknown, reason: 'next' | 'prev') => void
@@ -85,7 +85,7 @@ export interface TableProps<T> {
   /** inline (default): they slide open in place at every width. sheet: a panel over the table below 1000px. */
   details?: 'inline' | 'sheet'
   /** Called with the row, the column's id and the new value when a cell edit is committed. */
-  onEdit?: (row: T, column: string, value: any) => void
+  onEdit?: ((row: T, column: string, value: unknown) => void) | undefined
   /** The toolbar's own actions. */
   actions?: unknown
   /** The Columns disclosure. */
@@ -95,8 +95,8 @@ export interface TableProps<T> {
   /** Forces a state; a Resource's own is used otherwise. */
   status?: TableStatus
   /** What to show when there are no rows: a title, a line of text and an action. */
-  empty?: { title?: any; text?: any; action?: any }
-  error?: { title?: any; text?: any }
+  empty?: { title?: unknown; text?: unknown; action?: unknown } | undefined
+  error?: { title?: unknown; text?: unknown } | undefined
   /** Called by the error state's Retry. A Resource refreshes itself as well. */
   onRetry?: () => void
   /** A CSS height past which the body scrolls under a sticky header, such as `480px`. */

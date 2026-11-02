@@ -22,7 +22,7 @@ export interface AssistantProps {
   /** Was there on load: approvals and questions take no focus and announce nothing. */
   quiet?: boolean | undefined
   /** Render a block of answer text yourself (Markdown, say); the default is `Prose`. */
-  render?: (text: string, answer: Answer) => any
+  render?: (text: string, answer: Answer) => unknown
   /** Called when a tool call is approved, with its arguments as edited and whether to always allow it. */
   onApprove?: (tool: AgentTool, args: string, always: boolean) => void
   /** Called when a tool call is denied. */
@@ -90,7 +90,7 @@ export function Assistant(p: AssistantProps) {
         {st.value === 'error' && <Alert tone="critical" title="The answer failed">{p.answer.error}{p.onRegenerate && <> <Button emphasis="link" tone="neutral" onClick={p.onRegenerate}>Retry</Button></>}</Alert>}
         {many.value && <Sources items={p.answer.sources} base={base} />}
       </div>
-      {!busy.value && <MessageActions stopped={st.value === 'stopped'} onCopy={el => copyConfirm(el, answerText(untrack(() => p.answer)))} onFeedback={p.onFeedback} onRegenerate={p.onRegenerate} onBranch={p.onBranch} branch={p.branch} />}
+      {!busy.value && <MessageActions stopped={st.value === 'stopped'} onCopy={el => void copyConfirm(el, answerText(untrack(() => p.answer)))} onFeedback={p.onFeedback} onRegenerate={p.onRegenerate} onBranch={p.onBranch} branch={p.branch} />}
     </article>
   )
 }

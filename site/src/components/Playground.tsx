@@ -90,6 +90,7 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
   })
   // A button per option: a group too wide for the panel wraps onto more rows (the sliding indicator gives way to a
   // filled pick), and goes back to one row as soon as it fits again.
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let knobs!: HTMLDivElement
   const wrap = () => {
     for (const seg of knobs.querySelectorAll<HTMLElement>('[data-part="knob"] > [data-scope="segmented"]')) {

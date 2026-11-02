@@ -54,7 +54,7 @@ export function InviteDialog({ open, roles, defaultRole, seatsLeft, onSend }: In
       {armed.value && (
         <Modal open={open} title="Invite people" description="They get an email with a link that works for 7 days." footer={<><Button emphasis="frame" data-close="">Cancel</Button><Button loading={busy.value} onClick={send}>Send invites</Button></>}>
           <form ref={n => (root = n)} data-scope="stack" style="padding-block-start:var(--warp-space-related)" novalidate onSubmit={(e: Event) => e.preventDefault()}>
-            <TagsInput label="Email addresses" autofocus hint="Enter or comma adds one. Paste a list to add many." error={error.value} value={emails} valid={adminEmail} onEdit={() => (error.value = '')} onSubmit={send} />
+            <TagsInput label="Email addresses" autofocus hint="Enter or comma adds one. Paste a list to add many." error={error.value} value={emails} valid={adminEmail} onEdit={() => (error.value = '')} onSubmit={() => void send()} />
             <Select label="Role" options={roles} value={role.value} onChange={(e: Event) => (role.value = (e.currentTarget as HTMLInputElement).value)} />
           </form>
         </Modal>

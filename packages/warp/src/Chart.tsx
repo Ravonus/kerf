@@ -19,8 +19,8 @@ export type ChartFrame = {
   state?: 'loading' | 'empty' | 'error'
   loading?: string
   /** The title and detail shown in place of the plot when there is no data. */
-  empty?: { title: string; detail?: any }
-  error?: { title: string; detail?: any }
+  empty?: { title: string; detail?: unknown }
+  error?: { title: string; detail?: unknown }
   /** The next step under an empty or error state: a Retry button. */
   action?: unknown
 }

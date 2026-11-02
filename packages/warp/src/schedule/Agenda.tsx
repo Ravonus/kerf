@@ -43,7 +43,7 @@ export type AgendaProps = {
   defaultDate?: string
   /** Called with the new day when you page or jump to today. */
   onDateChange?: (d: string) => void
-  title?: any
+  title?: unknown
   /** The calendars the events belong to, for their colours and names. */
   calendars?: CalendarSource[]
   /** The IANA zone times are shown in, such as `Europe/Berlin`. The browser's otherwise. */
