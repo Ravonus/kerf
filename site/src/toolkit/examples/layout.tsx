@@ -5,12 +5,16 @@ import { DEPLOYS, PEOPLE, PROJECTS, REGIONS, TONE_OF, TRAFFIC } from '../world'
 // Layout has no look of its own, so each box is a small project card.
 const BOX = 'display:grid;align-content:center;gap:2px;padding:var(--warp-space-related);border:var(--warp-border-hairline) solid var(--warp-color-border);border-radius:var(--warp-radius-surface);background:var(--warp-color-surface);color:var(--warp-color-text);font-size:var(--warp-text-caption-size);min-inline-size:0'
 
+/** A box given only a number shows that project. */
+const projectOf = (c: any) => {
+  const n = Number(typeof c === 'function' ? c() : c)
+  return Number.isInteger(n) && n > 0 ? PROJECTS[(n - 1) % PROJECTS.length] : undefined
+}
+
 function Box({ tall, children, ...rest }: { tall?: number; children?: any; [attr: string]: any }) {
   return (
     <div style={tall ? `${BOX};min-block-size:${tall}px` : BOX} {...rest}>
-      {typeof children === 'number'
-        ? <><strong>{PROJECTS[(children - 1) % PROJECTS.length].name}</strong><span style="color:var(--warp-color-text-subtle)">{PROJECTS[(children - 1) % PROJECTS.length].region}</span></>
-        : children}
+      {projectOf(children) ? <><strong>{projectOf(children).name}</strong><span style="color:var(--warp-color-text-subtle)">{projectOf(children).region}</span></> : children}
     </div>
   )
 }
