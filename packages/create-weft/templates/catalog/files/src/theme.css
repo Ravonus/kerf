@@ -5,7 +5,7 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; }
 .site { display: flex; flex-direction: column; min-block-size: 100dvh; }
-/* warp's Split and Grid answer to their container, and outside a Shell the page has to provide one */
+/* what this file's @container rules answer to */
 .site > main { flex: 1; container-type: inline-size; }
 
 .site-head {

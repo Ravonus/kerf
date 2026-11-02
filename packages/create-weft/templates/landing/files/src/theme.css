@@ -6,8 +6,7 @@ html { scroll-behavior: smooth; scroll-padding-block-start: var(--warp-space-pag
 
 body { margin: 0; }
 .site { display: flex; flex-direction: column; min-block-size: 100dvh; }
-/* warp's Split and Grid answer to their container, and outside a Shell the page has to provide one */
-.site > main { flex: 1; container-type: inline-size; }
+.site > main { flex: 1; }
 
 /* the ember line */
 .site-head::before {

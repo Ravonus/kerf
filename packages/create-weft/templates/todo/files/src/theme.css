@@ -49,8 +49,6 @@ body { margin: 0; }
   border-block-end: 1px solid var(--warp-color-border);
 }
 .todo [data-scope="checkbox"] { flex: 1; min-inline-size: 0; overflow-wrap: anywhere; }
-/* warp's input is a 1px speck under the box: stretched over the row, it's the thing a tap or a test really lands on */
-.todo [data-scope="checkbox"] > input { inset: 0; inline-size: 100%; block-size: 100%; pointer-events: auto; cursor: pointer; }
 .todo:has(input:checked) [data-part="label"] { color: var(--warp-color-text-subtle); text-decoration: line-through; }
 @media (hover: hover) {
   .todo > [data-scope="button"] { opacity: 0; }
