@@ -16,12 +16,11 @@ const WORDS: Record<string, string> = {
   settings: 'Deploys run on every push to main.',
 }
 
-export function TabsPlay(p: { variant: 'line' | 'pill' | 'enclosed'; disabled: boolean }) {
+export function TabsPlay(p: { variant: 'line' | 'pill' | 'enclosed' }) {
   const tab = state('overview')
-  const options = SECTIONS.map(o => ({ ...o, disabled: untrack(() => p.disabled) && o.value === 'logs' }))
   return (
     <Stack>
-      <Tabs label="Project" variant={p.variant} value={tab.value} onChange={v => (tab.value = v)} options={options}>
+      <Tabs label="Project" variant={p.variant} value={tab.value} onChange={v => (tab.value = v)} options={SECTIONS}>
         {v => <Text>{WORDS[v]}</Text>}
       </Tabs>
     </Stack>
@@ -195,7 +194,7 @@ export function NavPlay(p: { axis: 'x' | 'y' }) {
   )
 }
 
-export function NavRow() {
+export function NavAcross() {
   const at = state('Deploys')
   const go = (e: Event, name: string) => { e.preventDefault(); at.value = name }
   return (
@@ -205,7 +204,7 @@ export function NavRow() {
   )
 }
 
-export function NavColumn() {
+export function NavDown() {
   const at = state('Deploys')
   const go = (e: Event, name: string) => { e.preventDefault(); at.value = name }
   return (
@@ -324,24 +323,24 @@ function ProjectRow(p: { name: string; owner: string }) {
   return <Row justify="between" gap="group"><Text>{p.name}</Text><Text subtle>{p.owner}</Text></Row>
 }
 
-export function LoadMorePlay(p: { auto: boolean; step: number }) {
-  const shown = state(untrack(() => p.step))
+export function LoadMorePlay(p: { auto: boolean; message: string }) {
+  const shown = state(4)
   const loading = state(false)
   const done = derived(() => shown.value >= PROJECTS.length)
   let box: HTMLElement | undefined
   const load = () => {
     loading.value = true
-    setTimeout(() => { shown.value += p.step; loading.value = false }, 800)
+    setTimeout(() => { shown.value += 3; loading.value = false }, 800)
   }
   return (
     <Stack gap="related" ref={(n: HTMLElement) => (box = n)} style="block-size:240px;overflow-y:auto">
       {PROJECTS.slice(0, shown.value).map(x => <ProjectRow key={x.id} name={x.name} owner={x.owner} />)}
-      <LoadMore auto={p.auto} root={() => box ?? null} loading={loading.value} done={done.value} message={done.value ? 'That is every project.' : ''} onLoad={load} />
+      <LoadMore auto={p.auto} root={() => box ?? null} loading={loading.value} done={done.value} message={p.message} onLoad={load} />
     </Stack>
   )
 }
 
-export function LoadMoreButton() {
+export function LoadMoreOnPress() {
   const shown = state(3)
   const loading = state(false)
   const load = () => {

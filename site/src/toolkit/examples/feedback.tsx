@@ -61,7 +61,7 @@ export const ToasterPromise = () => {
   )
 }
 
-export const ToasterStack = () => {
+export const ToasterSeveral = () => {
   const many = () => ['eu-west', 'us-east', 'ap-south', 'eu-north'].forEach((region, i) => setTimeout(() => toast.show({ title: `${region} is up to date`, tone: 'positive' }), i * 250))
   return (
     <>
@@ -120,10 +120,10 @@ export const AlertWithActions = () => (
 export function AlertDismiss() {
   const shown = state(true)
   return (
-    <Stack align="center">
+    <Stack>
       {shown.value
         ? <Alert tone="info" title="New: preview comments" onDismiss={() => (shown.value = false)}>Your team can now comment on any preview.</Alert>
-        : <Button emphasis="ghost" tone="neutral" onClick={() => (shown.value = true)}>Show it again</Button>}
+        : <Row justify="center"><Button emphasis="ghost" tone="neutral" onClick={() => (shown.value = true)}>Show it again</Button></Row>}
     </Stack>
   )
 }
@@ -152,8 +152,8 @@ export function AlertUsage() {
   )
 }
 
-export const ProgressPlay = (p: { label: string; value: number; shape: 'linear' | 'circle'; tone: ToastTone; indeterminate: boolean }) => (
-  <Stack><Progress label={p.label} value={p.indeterminate ? undefined : p.value} shape={p.shape} tone={p.tone} /></Stack>
+export const ProgressPlay = (p: { label: string; value: number; shape: 'linear' | 'circle'; tone: ToastTone }) => (
+  <Stack><Progress label={p.label} value={p.value} shape={p.shape} tone={p.tone} /></Stack>
 )
 
 export const ProgressBar = () => (
@@ -283,9 +283,9 @@ export const ShapePlay = (p: { kind: 'text' | 'list' | 'card' | 'media' | 'table
 
 export const ShapeList = () => <Stack><Shape kind="list" rows={3} /></Stack>
 
-export const ShapeText = () => <Stack><Shape kind="text" lines={4} /></Stack>
+export const ShapeParagraph = () => <Stack><Shape kind="text" lines={4} /></Stack>
 
-export const ShapeCard = () => <Stack><Shape kind="card" media="16/9" lines={2} /></Stack>
+export const ShapeTile = () => <Stack><Shape kind="card" media="16/9" lines={2} /></Stack>
 
 export const ShapeTable = () => <Stack><Shape kind="table" rows={4} cols={4} /></Stack>
 

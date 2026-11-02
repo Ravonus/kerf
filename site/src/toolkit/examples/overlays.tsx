@@ -45,7 +45,7 @@ export function ModalSizes() {
   )
 }
 
-export function ModalAlert() {
+export function ModalConfirm() {
   const open = state(false)
   const kept = state(true)
   return (
@@ -167,9 +167,12 @@ export function DrawerDeployDetails() {
   const picked = state(DEPLOYS[0])
   const show = (d: typeof DEPLOYS[number]) => { picked.value = d; open.value = true }
   return (
-    <Stack gap="tight">
+    <Stack gap="related" divided>
       {DEPLOYS.slice(0, 4).map(d => (
-        <Button key={d.id} full emphasis="ghost" tone="neutral" onClick={() => show(d)}>{d.project}: {d.message}</Button>
+        <Row key={d.id} justify="between" gap="group">
+          <Stack gap="hair"><Text>{d.project}</Text><Text role="caption" subtle>{d.message}</Text></Stack>
+          <Button size="sm" emphasis="ghost" tone="neutral" onClick={() => show(d)}>Details</Button>
+        </Row>
       ))}
       <Drawer open={open} title={picked.value.message} description={`${picked.value.project}, ${picked.value.id}`}>
         <Stack gap="related">

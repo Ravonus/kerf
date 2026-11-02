@@ -9,7 +9,7 @@ export const moving: DocGroup = {
       component: 'Tabs',
       summary: 'Switches between views of the same thing, one at a time.',
       use: {
-        when: ['Three to seven views of one thing, where people only need one at a time', 'Filtering one list by a single value, with the `pill` variant'],
+        when: ['Three to seven views of one thing, where people only need one at a time', 'Filtering one list by a single value, with the pill variant'],
         instead: [{ name: 'Nav', why: 'each view is its own page with its own URL' }, { name: 'Segmented', why: 'it is a form value, with no panel under it' }, { name: 'Accordion', why: 'people may want several sections open' }],
       },
       playground: {
@@ -18,7 +18,6 @@ export const moving: DocGroup = {
         stage: 'fill',
         knobs: [
           { prop: 'variant', control: 'segmented', options: ['line', 'pill', 'enclosed'], initial: 'line', default: 'line' },
-          { prop: 'disabled', control: 'switch', label: 'One tab disabled', initial: false, default: false },
         ],
       },
       sections: [
@@ -97,8 +96,8 @@ export const moving: DocGroup = {
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
-          { id: 'NavRow', title: 'A row', note: 'Mark the current page with `aria-current`. `Link` from `@weft/start` does that for you.' },
-          { id: 'NavColumn', title: 'A column', note: '`axis="y"` puts the bar beside the links.', height: 220 },
+          { id: 'NavAcross', title: 'A row', note: 'Mark the current page with `aria-current`. `Link` from `@weft/start` does that for you.' },
+          { id: 'NavDown', title: 'A column', note: '`axis="y"` puts the bar beside the links.', height: 220 },
         ] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'NavProductHeader', title: 'App header', stage: 'fill' },
@@ -171,12 +170,12 @@ export const moving: DocGroup = {
         height: 300,
         knobs: [
           { prop: 'auto', control: 'switch', initial: false, default: true },
-          { prop: 'step', control: 'slider', label: 'Rows per load', min: 1, max: 5, step: 1, initial: 4, default: 4 },
+          { prop: 'message', control: 'text', initial: 'That is every project.', default: '' },
         ],
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
-          { id: 'LoadMoreButton', title: 'With a button', note: '`auto={false}` waits for a press. Draw your own loading rows while `loading` is on.', stage: 'narrow', height: 300 },
+          { id: 'LoadMoreOnPress', title: 'With a button', note: '`auto={false}` waits for a press. Draw your own loading rows while `loading` is on.', stage: 'narrow', height: 300 },
           { id: 'LoadMoreScrolling', title: 'While scrolling', note: 'Loads as the end comes near. Pass `root` when the list scrolls in its own box.', stage: 'narrow', height: 280 },
         ] },
         { kind: 'states', title: 'States', examples: [

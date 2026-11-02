@@ -29,7 +29,7 @@ export const overlays: DocGroup = {
           { id: 'ModalResult', title: 'With a mark', note: '`mark` draws above the title.' },
         ] },
         { kind: 'states', title: 'States', examples: [
-          { id: 'ModalAlert', title: 'Alert', note: '`alert` won\'t close from a press outside. `autofocus` on the safe button.', height: 220 },
+          { id: 'ModalConfirm', title: 'Alert', note: '`alert` won\'t close from a press outside. `autofocus` on the safe button.', height: 220 },
           { id: 'ModalLongBody', title: 'Long content', note: 'The body scrolls on its own.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'ModalInvite', title: 'Invite a teammate', height: 220 }] },
@@ -65,7 +65,7 @@ export const overlays: DocGroup = {
           { id: 'DrawerFooter', title: 'With a footer', note: 'The footer stays in place while the body scrolls.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'DrawerDeployDetails', title: 'Details of a row', stage: 'narrow', height: 260 },
+          { id: 'DrawerDeployDetails', title: 'Details of a row', stage: 'narrow', height: 300 },
           { id: 'DrawerFilters', title: 'Filters' },
         ] },
       ],

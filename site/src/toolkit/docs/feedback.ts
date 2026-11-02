@@ -14,7 +14,7 @@ export const feedback: DocGroup = {
       },
       playground: {
         example: 'ToasterPlay',
-        code: 'toast.show({ title: \'Saved\', tone: \'positive\' })\n\n<Toaster />',
+        code: 'toast.show({ title, description, tone, action })\n\n<Toaster />',
         knobs: [
           { prop: 'title', control: 'text', initial: 'Deploy finished', default: '' },
           { prop: 'description', control: 'text', initial: 'storefront is live in eu-west.', default: '' },
@@ -30,7 +30,7 @@ export const feedback: DocGroup = {
         ] },
         { kind: 'states', title: 'States', examples: [
           { id: 'ToasterPromise', title: 'Following a promise', note: '`toast.promise` shows one toast from pending to done, in place.' },
-          { id: 'ToasterStack', title: 'Several at once', note: 'Three stack up, and fan out on hover. Hovering pauses every timer.' },
+          { id: 'ToasterSeveral', title: 'Several at once', note: 'Three stack up, and fan out on hover. Hovering pauses every timer.' },
           { id: 'ToasterDismissed', title: 'Closing from code', note: '`duration: 0` keeps it up until `toast.dismiss` with the id `toast.show` returned.' },
           { id: 'ToasterAfterRedirect', title: 'On arrival', note: 'Fire one as a page mounts, to finish what the last page started.', replay: true },
         ] },
@@ -96,7 +96,6 @@ export const feedback: DocGroup = {
           { prop: 'value', control: 'slider', min: 0, max: 100, step: 1, initial: 64, default: -1 },
           { prop: 'shape', control: 'segmented', options: ['linear', 'circle'], initial: 'linear', default: 'linear' },
           { prop: 'tone', control: 'select', options: ['accent', 'neutral', 'positive', 'info', 'caution', 'critical'], initial: 'accent', default: 'accent' },
-          { prop: 'indeterminate', control: 'switch', label: 'No value yet', initial: false, default: false },
         ],
       },
       sections: [
@@ -125,7 +124,7 @@ export const feedback: DocGroup = {
       summary: 'Shows that something is working, when you can\'t say how long it will take.',
       use: {
         when: ['A short wait of unknown length', 'A small area is busy'],
-        instead: [{ name: 'Progress', why: 'you know how far along it is' }, { name: 'Skeleton', why: 'you know the shape of what is coming' }, { name: 'Button', why: 'the button itself started it: use `loading`' }],
+        instead: [{ name: 'Progress', why: 'you know how far along it is' }, { name: 'Skeleton', why: 'you know the shape of what is coming' }, { name: 'Button', why: 'the button itself started it: use loading' }],
       },
       playground: {
         example: 'SpinnerPlay',
@@ -185,7 +184,7 @@ export const feedback: DocGroup = {
       component: 'Shape',
       summary: 'A ready-made loading placeholder for a list, card, table or block of text.',
       use: {
-        when: ['As the `pending` of a `Boundary`', 'Any loading state that looks like a list, card or table'],
+        when: ['As the pending of a Boundary', 'Any loading state that looks like a list, card or table'],
         instead: [{ name: 'Skeleton', why: 'the layout is unusual and you need to build it by hand' }],
       },
       playground: {
@@ -202,8 +201,8 @@ export const feedback: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'ShapeList', title: 'List', note: '`avatar={false}` drops the circle.', stage: 'narrow', height: 220 },
-          { id: 'ShapeText', title: 'Text', stage: 'narrow' },
-          { id: 'ShapeCard', title: 'Card', note: '`media` is the picture\'s ratio. Leave it out for none.', stage: 'narrow', height: 340 },
+          { id: 'ShapeParagraph', title: 'Text', stage: 'narrow' },
+          { id: 'ShapeTile', title: 'Card', note: '`media` is the picture\'s ratio. Leave it out for none.', stage: 'narrow', height: 340 },
           { id: 'ShapeTable', title: 'Table', stage: 'fill', height: 240 },
           { id: 'ShapeMedia', title: 'Media', stage: 'fill', height: 260 },
         ] },

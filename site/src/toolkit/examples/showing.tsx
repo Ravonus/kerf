@@ -2,9 +2,9 @@ import { onCleanup, state } from 'weft'
 import { Badge, Button, Card, Code, CodeBlock, Grid, Heading, Icon, Input, Kbd, Markdown, Row, Segmented, Snippet, Stack, Tag, Text, Ticker } from '@weft/warp'
 import { DEPLOYS, PROJECTS, TONE_OF } from '../world'
 
-export const CardPlay = (p: { eyebrow: string; title: string; press: boolean; sweep: boolean }) => (
+export const CardPlay = (p: { eyebrow: string; title: string; sweep: boolean }) => (
   <Stack>
-    <Card eyebrow={p.eyebrow} title={p.title} sweep={p.sweep} onClick={p.press ? () => {} : undefined}>
+    <Card eyebrow={p.eyebrow} title={p.title} sweep={p.sweep}>
       <Text subtle>Live in eu-west, updated 2 minutes ago.</Text>
     </Card>
   </Stack>
@@ -16,7 +16,7 @@ export const CardStatic = () => (
   </Card>
 )
 
-export const CardLink = () => (
+export const CardAsLink = () => (
   <Card href="/toolkit/button" eyebrow="Guide" title="Roll back a deploy">
     <Text subtle>Promote any earlier deploy in about ten seconds.</Text>
   </Card>
@@ -53,7 +53,7 @@ export const CardStats = () => (
 )
 
 export const CardProjectGrid = () => (
-  <Grid min="sm" gap="related">
+  <Grid min="md" gap="related">
     {PROJECTS.slice(0, 6).map(p => (
       <Card key={p.id} href="/toolkit/card" eyebrow={p.region} title={p.name}>
         <Row justify="between">
@@ -113,8 +113,8 @@ export const BadgeOnAButton = () => (
   <Button emphasis="outline" tone="neutral" icon="bell">Alerts <Badge count tone="critical" emphasis="solid" srText="new">2</Badge></Button>
 )
 
-export const TagPlay = (p: { children: string; tone: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'; swatch: boolean; removable: boolean }) => (
-  <Tag tone={p.tone} swatch={p.swatch} onRemove={p.removable ? () => {} : undefined}>{p.children}</Tag>
+export const TagPlay = (p: { children: string; tone: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'; swatch: boolean }) => (
+  <Tag tone={p.tone} swatch={p.swatch}>{p.children}</Tag>
 )
 
 export const TagPlain = () => (
@@ -199,9 +199,7 @@ export const KbdShortcutList = () => (
   </Stack>
 )
 
-export const TickerPlay = (p: { value: number; style: 'decimal' | 'currency' | 'percent' }) => (
-  <Text role="title"><Ticker value={p.style === 'percent' ? p.value / 100000 : p.value} locale="en-US" format={p.style === 'currency' ? { style: 'currency', currency: 'USD' } : p.style === 'percent' ? { style: 'percent', maximumFractionDigits: 1 } : undefined} /></Text>
-)
+export const TickerPlay = (p: { value: number; locale: string }) => <Text role="title"><Ticker value={p.value} locale={p.locale} /></Text>
 
 export function TickerStep() {
   const n = state(412)
@@ -238,7 +236,7 @@ export function TickerLiveTraffic() {
   }, 1400)
   onCleanup(() => clearInterval(timer))
   return (
-    <Grid min="xs" gap="related">
+    <Grid cols={2} gap="related">
       <Card eyebrow="Requests a minute"><Text role="title"><Ticker value={rate.value} locale="en-US" /></Text></Card>
       <Card eyebrow="Errors a minute"><Text role="title"><Ticker value={errors.value} locale="en-US" /></Text></Card>
     </Grid>
@@ -332,8 +330,8 @@ export const HeadingPageTop = () => (
   </Stack>
 )
 
-export const TextPlay = (p: { children: string; role: 'body' | 'display' | 'title' | 'heading' | 'label' | 'caption' | 'eyebrow' | 'code'; ink: 'normal' | 'subtle' | 'faint'; tone: 'none' | 'accent' | 'positive' | 'caution' | 'critical' | 'info' }) => (
-  <Text role={p.role} subtle={p.ink === 'subtle'} faint={p.ink === 'faint'} tone={p.tone === 'none' ? undefined : p.tone}>{p.children}</Text>
+export const TextPlay = (p: { children: string; role: 'body' | 'display' | 'title' | 'heading' | 'label' | 'caption' | 'eyebrow' | 'code'; subtle: boolean; faint: boolean; tone: 'none' | 'accent' | 'positive' | 'caution' | 'critical' | 'info' }) => (
+  <Text role={p.role} subtle={p.subtle} faint={p.faint} tone={p.tone === 'none' ? undefined : p.tone}>{p.children}</Text>
 )
 
 export const TextRoles = () => (

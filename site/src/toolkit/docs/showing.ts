@@ -20,14 +20,13 @@ export const showing: DocGroup = {
         knobs: [
           { prop: 'eyebrow', control: 'text', initial: 'Project', default: '' },
           { prop: 'title', control: 'text', initial: 'storefront', default: '' },
-          { prop: 'press', control: 'switch', label: 'Pressable', initial: false, default: false },
           { prop: 'sweep', control: 'switch', initial: true, default: true },
         ],
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'CardStatic', title: 'Static', stage: 'narrow' },
-          { id: 'CardLink', title: 'A link', note: '`href` makes the whole card a link.', stage: 'narrow' },
+          { id: 'CardAsLink', title: 'A link', note: '`href` makes the whole card a link.', stage: 'narrow' },
           { id: 'CardPress', title: 'A button', note: '`onClick` makes the whole card a button.', stage: 'narrow' },
           { id: 'CardBare', title: 'Bare', note: 'Every part is optional, and `sweep={false}` drops the hover line.', stage: 'narrow' },
         ] },
@@ -95,12 +94,11 @@ export const showing: DocGroup = {
       },
       playground: {
         example: 'TagPlay',
-        code: '<Tag{props}>{children}</Tag>',
+        code: '<Tag{props} onRemove={remove}>{children}</Tag>',
         knobs: [
           { prop: 'children', control: 'text', label: 'Label', initial: 'frontend', default: '' },
           { prop: 'tone', control: 'select', options: ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'], initial: 'neutral', default: 'neutral' },
           { prop: 'swatch', control: 'switch', initial: false, default: false },
-          { prop: 'removable', control: 'switch', initial: true, default: false },
         ],
       },
       sections: [
@@ -149,10 +147,10 @@ export const showing: DocGroup = {
       use: { when: ['A figure that changes while people watch'], instead: [{ name: 'Text', why: 'the number stays the same' }] },
       playground: {
         example: 'TickerPlay',
-        code: '<Ticker value={48120} locale="en-US" />',
+        code: '<Ticker{props} />',
         knobs: [
           { prop: 'value', control: 'slider', min: 0, max: 100000, step: 137, initial: 48120, default: 0 },
-          { prop: 'style', control: 'segmented', label: 'Format', options: ['decimal', 'currency', 'percent'], initial: 'decimal', default: 'decimal' },
+          { prop: 'locale', control: 'segmented', options: ['en-US', 'de-DE', 'en-IN'], initial: 'en-US', default: '' },
         ],
       },
       sections: [
@@ -174,7 +172,7 @@ export const showing: DocGroup = {
       summary: 'One icon by name, from warp\'s set.',
       use: {
         when: ['A picture beside a word, or a label on a button'],
-        instead: [{ name: 'Button', why: 'it can be pressed: use its `icon` prop' }],
+        instead: [{ name: 'Button', why: 'it can be pressed: use its icon prop' }],
       },
       playground: {
         example: 'IconPlay',
@@ -207,7 +205,7 @@ export const showing: DocGroup = {
     },
     {
       component: 'Heading',
-      summary: 'A real heading. `level` sets the outline and the size follows.',
+      summary: 'A real heading. Its level sets the page outline, and its size follows.',
       use: { when: ['Titling a page or a section'], instead: [{ name: 'Text', why: 'it looks like a heading but isn\'t one in the outline' }] },
       playground: {
         example: 'HeadingPlay',
@@ -239,7 +237,8 @@ export const showing: DocGroup = {
         knobs: [
           { prop: 'children', control: 'text', label: 'Text', initial: 'Deployed two minutes ago', default: '' },
           { prop: 'role', control: 'select', options: ['body', 'display', 'title', 'heading', 'label', 'caption', 'eyebrow', 'code'], initial: 'body', default: 'body' },
-          { prop: 'ink', control: 'segmented', options: ['normal', 'subtle', 'faint'], initial: 'normal', default: 'normal' },
+          { prop: 'subtle', control: 'switch', initial: false, default: false },
+          { prop: 'faint', control: 'switch', initial: false, default: false },
           { prop: 'tone', control: 'select', options: ['none', 'accent', 'positive', 'caution', 'critical', 'info'], initial: 'none', default: 'none' },
         ],
       },
@@ -344,7 +343,7 @@ export const showing: DocGroup = {
         code: '<Markdown source={source} />',
         stage: 'fill',
         height: 240,
-        knobs: [{ prop: 'source', control: 'text', initial: '## Release notes\n\nPreviews now **stay up** for 30 days.', default: '' }],
+        knobs: [{ prop: 'source', control: 'text', initial: 'Previews now **stay up** for 30 days. See the [guide](/docs).', default: '' }],
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
