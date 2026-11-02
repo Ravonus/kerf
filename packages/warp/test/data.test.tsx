@@ -137,13 +137,12 @@ test('a Resource of a list page: loading, then its rows and cursors, untouched b
   expect(pages).toEqual(['c2'])
 })
 
-test('a closed table holds no Columns panel, and a wide one no phone sort bar', async () => {
+test('a closed table holds no Columns panel', async () => {
   const { container: c } = render(() => <Table caption="P" rows={rows} columns={columns} />)
   await flush()
   const open = [...c.querySelectorAll('button')].find(b => b.textContent === 'Columns')!
   expect(c.querySelector('[popover]')).toBeNull()
   expect(open.hasAttribute('aria-controls')).toBe(false)
-  expect(c.querySelector('[data-part="sortbar"]')).toBeNull()
   open.click()
   await flush()
   expect(c.querySelector('[popover]')).not.toBeNull()

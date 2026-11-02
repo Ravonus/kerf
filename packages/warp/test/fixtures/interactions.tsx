@@ -52,7 +52,7 @@ export const cases: Record<keyof typeof C, Case> = {
   DrawerCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 3, runs: 1 },
   TableSortCase: {
     act: r => q(r, '[data-part="sort"]').click(),
-    see: r => { expect(q(r, 'th[data-col="name"]').getAttribute('aria-sort')).toBe('ascending'); expect(r.querySelector('tbody tr td[data-col="name"]')!.textContent).toBe('Apollo') }, budget: 3, runs: 12,
+    see: r => { expect(q(r, 'th[data-col="name"]').getAttribute('aria-sort')).toBe('ascending'); expect(r.querySelector('tbody tr td[data-col="name"]')!.textContent).toBe('Apollo') }, budget: 3, runs: 13,
   },
   TableSelectCase: {
     act: r => r.querySelectorAll<HTMLElement>('tbody input')[1].click(),

@@ -94,7 +94,6 @@ export const chevron = () => <svg aria-hidden="true" focusable="false" viewBox="
 export const sortIcon = () => <svg data-part="sort-icon" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.5v7M2 5.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
 export const columnsIcon = () => <ColumnsIcon />
 const SKELETON_ROWS = 6
-const CARDS_BELOW = 600 // table width: the phone cards' @container query, so the sort bar exists only there
 const DETAILS_FROM = 1000 // table width: below it `details="sheet"` opens the sheet (06 §5)
 
 const isResource = (r: any): r is Resource<any> => typeof r?.refresh === 'function'
@@ -303,7 +302,6 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const picking = state(false)
   // the panel is built on first open and kept, so a closed table carries none of its checkboxes
   const picked = state(false)
-  const small = state(false)
 
   const source = () => { const r: any = rows; return isResource(r) ? r.value : isState(r) ? r.value : r }
   const remote = derived(() => !!server || isResource(rows))
@@ -404,7 +402,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
     return typed.value ? 'Try a shorter term, or clear the filter.' : empty?.text
   })
 
-  use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value, onWidth: w => (small.value = w < CARDS_BELOW) }))
+  use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value }))
   onCleanup(() => (sheet.value = undefined))
 
   const toolbar = derived(() => filter !== undefined || actions !== undefined || !!picker)
@@ -434,7 +432,8 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
           <Button emphasis="ghost" onClick={() => write({})}>Clear</Button>
         </div>
       )}
-      {phone === 'cards' && small.value && sortable.value.length > 0 && (
+      {/* Always there and shown by the phone cards' @container query, or it would arrive after hydration and push the rows down. */}
+      {phone === 'cards' && sortable.value.length > 0 && (
         <div data-part="sortbar">
           <Select label="Sort by" size="sm" value={order.value?.id ?? ''} placeholder="None" options={sortable.value.map(c => ({ value: c.id, label: c.header }))} onChange={(e: any) => { const c = cols.value.find(x => x.id === e.currentTarget.value); if (c) askSort(c, order.value?.dir ?? 'ascending') }} />
           <Button emphasis="outline" tone="neutral" size="sm" aria-label="Toggle sort direction" disabled={!order.value} onClick={() => { const c = cols.value.find(x => x.id === order.value?.id); if (c) askSort(c, order.value!.dir === 'ascending' ? 'descending' : 'ascending') }}>{order.value?.dir === 'ascending' ? '↑' : '↓'}</Button>

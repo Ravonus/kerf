@@ -50,7 +50,7 @@ export function Ordinary() {
       </Grid>
       <Tabs label="Pick" value="a" onChange={() => {}} options={[{ value: 'a', label: 'First' }, { value: 'b', label: 'Second' }]}>{(v: string) => <p>Panel {v}</p>}</Tabs>
       <Accordion defaultOpen={['a']} items={[{ value: 'a', title: 'Open', content: 'Shown' }, { value: 'b', title: 'Shut', content: 'Hidden' }]} />
-      <Table caption="People" rows={rows} columns={[{ id: 'name', header: 'Name', cell: (r: any) => r.name }, { id: 'delta', header: 'Change', cell: (r: any) => r.delta }]} />
+      <Table caption="People" rows={rows} columns={[{ id: 'name', header: 'Name', cell: (r: any) => r.name, sort: true }, { id: 'delta', header: 'Change', cell: (r: any) => r.delta }]} />
       <Progress value={40} label="Loading" />
       <Skeleton />
     </Stack>

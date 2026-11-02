@@ -395,7 +395,8 @@
   :where([data-scope="table"][data-phone="cards"] tbody tr[data-selected]) { border-color: var(--warp-color-accent-border); box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
   :where([data-scope="table"][data-phone="cards"] [data-part="resize"]) { display: none; }
 }
-:where([data-scope="table"] [data-part="sortbar"]) { display: flex; align-items: center; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="table"] [data-part="sortbar"]) { display: none; align-items: center; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+@container table (max-width: 599.98px) { :where([data-scope="table"] [data-part="sortbar"]) { display: flex; } }
 
 /* -- tablet: detail sheet (fewer columns; the row opens every field) ------- */
 :where([data-scope="table"] [data-part="sheet"]) {

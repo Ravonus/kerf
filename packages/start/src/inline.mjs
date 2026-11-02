@@ -22,8 +22,8 @@ const SELECTOR_WORD = /\[\s*([\w-]+)\s*(?:([~|^$*]?=)\s*(?:"((?:[^"\\]|\\.)*)"|'
 // A reference the shell's text can't be compared with, so nothing is ruled out on its value.
 const ENTITY = /&(?!(?:amp|quot|lt|gt);)/
 const ANY_VALUE = '=*'
-// Set on <html> by a script or `setDial`, so the server's HTML can't vouch for them.
-const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|warp|scope)$/
+// Set by a script, on <html> or `setDial` or as a chart comes into view, so the server's HTML can't vouch for them.
+const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|warp|scope|enter)$/
 // `dialScript` restores these before the first paint, so the server's HTML doesn't show them.
 const DIALS = 'quiet balanced vivid floating classic compact cozy comfortable sweep none'.split(' ')
 // Rules that can't paint until someone acts, so the late sheet is soon enough for them. A state the server can render
