@@ -15,7 +15,7 @@ describe('warp props changed after mount', () => {
     const { container: c } = render(() => <Button emphasis={emphasis.value} fill>Go</Button>)
     const button = () => c.querySelector('button')!
     expect(button().hasAttribute('data-emphasis')).toBe(false)
-    expect(c.querySelector('[data-part="sweep"]')).toBeNull()
+    expect(c.querySelector('[data-part="sweep"]')).not.toBeNull()
     emphasis.value = 'outline'
     await flush()
     expect(button().getAttribute('data-emphasis')).toBe('outline')

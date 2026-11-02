@@ -216,7 +216,7 @@ describe('RichTextEditor', () => {
   test('a named textbox behind a one-stop toolbar', async () => {
     const { container: c } = render(() => <C.RteCase />)
     await tick()
-    const content = c.querySelector<HTMLElement>('[data-part="content"]')!
+    const content = c.querySelector<HTMLElement>('[data-part="content"][role="textbox"]')!
     expect(content.getAttribute('role')).toBe('textbox')
     expect(content.getAttribute('aria-multiline')).toBe('true')
     expect(document.getElementById(content.getAttribute('aria-labelledby')!)?.textContent).toContain('Notes')
@@ -231,7 +231,7 @@ describe('RichTextEditor', () => {
   })
   test('what enters from a value is sanitized', async () => {
     const { container: c } = render(() => <C.RteCase />)
-    expect(c.querySelector('[data-part="content"]')!.innerHTML).toBe('<p>Hello <strong>world</strong></p>')
+    expect(c.querySelector('[data-part="content"][role="textbox"]')!.innerHTML).toBe('<p>Hello <strong>world</strong></p>')
   })
   test('markdown format renders into the editor', async () => {
     const { container: c } = render(() => <C.RteMarkdownCase />)

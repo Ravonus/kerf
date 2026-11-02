@@ -1482,9 +1482,10 @@
   :where(*) { scrollbar-width: thin; }                                     /* not inherited */
   :where(html) { scrollbar-width: auto; }
   @supports not (scrollbar-color: auto) {
-    ::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
-    ::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: var(--warp-color-border-strong) padding-box; }
-    ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+    /* never the page's: a styled root scrollbar is a classic one, and takes its width from a fixed overlay */
+    :where(:not(html))::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
+    :where(:not(html))::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: var(--warp-color-border-strong) padding-box; }
+    :where(:not(html))::-webkit-scrollbar-track, :where(:not(html))::-webkit-scrollbar-corner { background: transparent; }
   }
   /* a <details> keeps find-in-page and its no-script behaviour; only the marker goes */
   :where(summary) { list-style: none; cursor: pointer; }

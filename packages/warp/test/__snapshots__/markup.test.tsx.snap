@@ -144,7 +144,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="title">Failed</div>
 <div data-part="description">Try again.</div>
 <div data-part="actions">
-<button data-scope="button" data-size="sm" type="button">Retry</button>
+<button data-scope="button" data-size="sm" data-sweep="" type="button">Retry<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 <button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -325,7 +327,9 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="title">Failed</div>
 <div data-part="description">Try again.</div>
 <div data-part="actions">
-<button data-scope="button" data-size="sm" type="button">Retry</button>
+<button data-scope="button" data-size="sm" data-sweep="" type="button">Retry<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 <button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -364,14 +368,18 @@ exports[`Alerts: server HTML 1`] = `
 
 exports[`Buttons: client DOM after mount 1`] = `
 "<div>
-<button data-scope="button" type="button">Solid</button>
+<button data-scope="button" data-sweep="" type="button">Solid<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="soft" data-scope="button" data-sweep="" data-tone="accent" type="button">Soft<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
 <button data-emphasis="outline" data-scope="button" data-size="sm" data-sweep="" type="button">Outline<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" type="button">Ghost</button>
+<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" data-sweep="" type="button">Ghost<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="link" data-scope="button" type="button">Link</button>
 <button data-emphasis="frame" data-scope="button" data-sweep="" type="button">
 <span aria-hidden="true" data-part="frame-corners">
@@ -471,7 +479,7 @@ exports[`Buttons: client DOM after mount 1`] = `
 </path>
 </svg>Frame fill</span>
 </button>
-<button data-scope="button" type="button">
+<button data-scope="button" data-sweep="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
@@ -487,8 +495,10 @@ exports[`Buttons: client DOM after mount 1`] = `
 </path>
 <path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
-</svg>With icon</button>
-<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+</svg>With icon<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-sweep="" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
@@ -499,11 +509,15 @@ exports[`Buttons: client DOM after mount 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button data-scope="button" type="button">
+<button data-scope="button" data-sweep="" type="button">
 <span data-part="label">Can load</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" type="button">
+<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
@@ -517,6 +531,8 @@ exports[`Buttons: client DOM after mount 1`] = `
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
 <button aria-busy="true" aria-disabled="true" data-emphasis="outline" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">Outline loading</span>
@@ -525,20 +541,26 @@ exports[`Buttons: client DOM after mount 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button aria-controls="x" data-scope="button" id="b1" type="submit">Submit</button>
+<button aria-controls="x" data-scope="button" data-sweep="" id="b1" type="submit">Submit<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>"
 `;
 
 exports[`Buttons: server HTML 1`] = `
 "<div>
-<button data-scope="button" type="button">Solid</button>
+<button data-scope="button" data-sweep="" type="button">Solid<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="soft" data-scope="button" data-sweep="" data-tone="accent" type="button">Soft<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
 <button data-emphasis="outline" data-scope="button" data-size="sm" data-sweep="" type="button">Outline<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" type="button">Ghost</button>
+<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" data-sweep="" type="button">Ghost<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="link" data-scope="button" type="button">Link</button>
 <button data-emphasis="frame" data-scope="button" data-sweep="" type="button">
 <span aria-hidden="true" data-part="frame-corners">
@@ -638,7 +660,7 @@ exports[`Buttons: server HTML 1`] = `
 </path>
 </svg>Frame fill</span>
 </button>
-<button data-scope="button" type="button">
+<button data-scope="button" data-sweep="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
@@ -654,8 +676,10 @@ exports[`Buttons: server HTML 1`] = `
 </path>
 <path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
-</svg>With icon</button>
-<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+</svg>With icon<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-sweep="" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
@@ -666,11 +690,15 @@ exports[`Buttons: server HTML 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button data-scope="button" type="button">
+<button data-scope="button" data-sweep="" type="button">
 <span data-part="label">Can load</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" type="button">
+<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
@@ -684,6 +712,8 @@ exports[`Buttons: server HTML 1`] = `
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
 <button aria-busy="true" aria-disabled="true" data-emphasis="outline" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">Outline loading</span>
@@ -692,7 +722,9 @@ exports[`Buttons: server HTML 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button aria-controls="x" data-scope="button" id="b1" type="submit">Submit</button>
+<button aria-controls="x" data-scope="button" data-sweep="" id="b1" type="submit">Submit<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>"
 `;
 
@@ -1922,7 +1954,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 </div>
 <div data-part="body">x</div>
 <div data-part="footer">
-<button data-close="" data-scope="button" type="button">OK</button>
+<button data-close="" data-scope="button" data-sweep="" type="button">OK<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="dlg-3-t" data-scope="dialog" data-size="lg" role="alertdialog">
@@ -1964,7 +1998,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 </div>
 <div data-part="body">z</div>
 <div data-part="footer">
-<button data-scope="button" type="button">Go</button>
+<button data-scope="button" data-sweep="" type="button">Go<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="sheet-5-t" data-scope="sheet" data-side="right">
@@ -2057,7 +2093,9 @@ exports[`Overlays: server HTML 1`] = `
 </div>
 <div data-part="body">x</div>
 <div data-part="footer">
-<button data-close="" data-scope="button" type="button">OK</button>
+<button data-close="" data-scope="button" data-sweep="" type="button">OK<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="dlg-3-t" data-scope="dialog" data-size="lg" role="alertdialog">
@@ -2099,7 +2137,9 @@ exports[`Overlays: server HTML 1`] = `
 </div>
 <div data-part="body">z</div>
 <div data-part="footer">
-<button data-scope="button" type="button">Go</button>
+<button data-scope="button" data-sweep="" type="button">Go<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="sheet-5-t" data-scope="sheet" data-side="right">
