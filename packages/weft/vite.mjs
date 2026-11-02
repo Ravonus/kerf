@@ -29,7 +29,9 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), 'src')
 const keyed = {
   name: 'weft:keyed',
   enforce: 'pre',
-  resolveId: { filter: { id: /^@weft-js\/core$/ }, handler: () => join(SRC, 'index.ts') },
+  // Through the resolver: Vite dates every installed .ts (`?v=`), and a bare path here would load a second runtime in
+  // dev beside the one the core's own files import, with its own scopes.
+  resolveId: { filter: { id: /^@weft-js\/core$/ }, handler(source, importer, options) { return this.resolve(join(SRC, 'index.ts'), importer, { ...options, skipSelf: true }) } },
   transform: {
     filter: { id: { include: /\.[cm]?[jt]sx?(\?|$)/, exclude: /[\\/]packages[\\/]weft[\\/]src[\\/]|[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/ }, code: /\.(?:get|set|linked)\b|\[\s*['"`](?:get|set|linked)['"`]\s*\]|\{[^{}]*\blinked\b[^{}]*\}\s*=\s*state\b/ },
     handler(code, id) {
