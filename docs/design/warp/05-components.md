@@ -62,7 +62,7 @@ restyling the parts, so `warp-components.css` cannot change how inputs, data or 
 | Component | Sweep | Notes |
 |---|---|---|
 | Button, outline / soft | border sweep, tone-coloured | solid and ghost use the fill wipe (`::before` 7% layer, L→R, leaves right) |
-| Button, **frame** | SIGNATURE §1b exactly: bracket corners at rest (10px, 2px stroke, track ink); on hover or focus the active corners sweep in, the **CSS six-segment outline** (`--warp-frame-head` / `--warp-frame-tail`, 2.6px) draws from the left edge along top and bottom and meets at the right, and the tone-coloured label wipes to text colour. Out: the outline's tail follows its head through the right side. **380ms** (`--warp-frame-duration`: 300 · 380 · 380) | `data-fill`: tone fill slides in from the left (`-101% → 0`) and out to the right (`→ 101%`); the label copy reads in on-solid ink. Corners never rounder than 2px. Touch: `data-touch-effect` shows the full in-state for one sweep. One implementation, in `warp.css`; this file only sets tone, ink and shape |
+| Button, **frame** | SIGNATURE §1b exactly: bracket corners at rest (10px, 2px stroke, track ink); on hover or focus the active corners sweep in, the **CSS six-segment outline** (`--warp-frame-head` / `--warp-frame-tail`, 2.6px) draws from the left edge along top and bottom and meets at the right, and the tone-coloured label wipes to text colour. Out: the outline's tail follows its head through the right side. **620ms** (`--warp-frame-duration`: 480 · 620 · 700) | `data-fill`: tone fill slides in from the left (`-101% → 0`) and out to the right (`→ 101%`); the label copy reads in on-solid ink. Corners never rounder than 2px. Touch: `data-touch-effect` shows the full in-state for one sweep. One implementation, in `warp.css`; this file only sets tone, ink and shape |
 | Chip, pill, toggle, segmented, select trigger | border sweep; holds while pressed/open | the selected segmented face does not sweep; the rail indicator travels instead (§1c) |
 | Menu, select listbox | the panel's border draws in as it opens, holds while open | |
 | Command palette input row | border sweep, radius 0 (flush with the dialog); held in while the input has focus, which is always while open | |
@@ -74,7 +74,7 @@ restyling the parts, so `warp-components.css` cannot change how inputs, data or 
 | Rails (§1c) | tabs indicator, segmented face, progress range, meter range move on the sweep curve | progress and meter use `clip-path`, so the leading edge keeps its radius |
 | Skeleton | the shimmer is the sweep, L→R | strength 35% · 68% · 100%; still under reduced motion |
 
-**The dial** sets speed (240 · 300 · 340ms from foundations; the frame button 300 · 380 · 380) and reach (static surfaces only at vivid). Interactive
+**The dial** sets speed (480 · 620 · 700ms from foundations; the frame button the same) and reach (static surfaces only at vivid). Interactive
 components sweep at every stop: the dial never decides whether the signature exists. `data-flair="none"` (buttons
 off) is the only switch, and even then frame buttons keep their corners.
 

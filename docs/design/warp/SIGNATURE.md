@@ -66,8 +66,9 @@ Source: `buttons/core/Button.frame.tsx` and `theme/tokens.css:228-480`.
      copy of the label in the **text** colour wipes in over it, left to right, with `clip-path`.
 3. **On leave:** the outline **keeps travelling** (its tail follows its head, the original's `dashoffset: 0 → -1`),
    so it exits through the right side. The corners and content clip out to the right.
-4. **Timing: 380 ms**, `cubic-bezier(0.65,0,0.35,1)`: the original's `--btn-sweep-duration`, longer than the 300 ms
-   field sweep. Token `--warp-frame-duration` (quiet 300 ms, balanced 380 ms, vivid 380 ms; 0 under reduced motion).
+4. **Timing: 620 ms**, `cubic-bezier(0.65,0,0.35,1)`: the field sweep's own clock, so every stroke draws at one speed (the
+   original's `--btn-sweep-duration` ran 760 ms). Token `--warp-frame-duration` (quiet 480 ms, balanced 620 ms, vivid 700 ms;
+   0 under reduced motion).
    The frame host runs every part on it.
 5. **Filled variant** (`btn-border-sweep-filled`): a tone fill slides in from the left (`translateX(-101%) → 0`) and
    leaves to the right (`→ 101%`).
@@ -132,7 +133,7 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 |---|---|---|---|
 | Sweep | present everywhere it's used | present, the original | present, the original |
 | Sweep colour | full accent (only faster) | full accent | full accent, richer contrast |
-| Sweep speed | about 240 ms | 300 ms | 300–380 ms |
+| Sweep speed | about 480 ms | 620 ms | 620–760 ms |
 | Floating label + notch | yes | yes | yes |
 | Per-character label tint | yes (subtle by colour) | yes | yes |
 | Icon sweep | yes | yes | yes |

@@ -25,7 +25,7 @@ The audit's main finding is that the first 150 ms is empty. So warp runs two clo
 
 - **The touch clock answers the hand.** 0–120 ms, front-loaded. Hover colour is instant in and fades out over 160 ms.
   Press is instant. This is what makes it feel wired to the pointer.
-- **The thread clock is the grace note.** The sweep and the frame, 240–380 ms. Decorative, never awaited, never blocks.
+- **The thread clock is the grace note.** The sweep and the frame, 480–760 ms. Decorative, never awaited, never blocks.
 
 No hover ever waits on the thread clock again.
 

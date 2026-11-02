@@ -245,13 +245,13 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
       var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%);
   transition:
-    transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out),
+    transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
     --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D));     /* snaps in; collapses unseen after the exit */
 }
 :where([data-scope="button"]:hover, [data-scope="button"]:focus-visible, [data-scope="button"][data-hold], [data-scope="button"][data-state="open"], [data-scope="button"][aria-expanded="true"])::before {
   transform: scaleX(1); transform-origin: left center;
-  transition-duration: var(--warp-duration-base), var(--_D), 1ms;
+  transition-duration: var(--warp-sweep-duration), var(--_D), 1ms;
 }
 /* a tap is shorter than the fill, so a finger gets it at once and watches it part */
 @media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
