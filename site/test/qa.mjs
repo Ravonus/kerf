@@ -1,4 +1,5 @@
 // What the site's QA pass found, kept found: `node test/qa.mjs [base]` against a running site. Exits 1 on any failure.
+// QA_ONLY=<regex> runs only the checks whose names match.
 import { createRequire } from 'node:module'
 
 const { chromium } = createRequire(new URL('../../packages/warp/package.json', import.meta.url))('playwright-core')
@@ -6,7 +7,9 @@ const base = process.argv[2] ?? 'http://localhost:3300'
 const b = await chromium.launch()
 const failed = []
 let passed = 0
+const only = process.env.QA_ONLY ? new RegExp(process.env.QA_ONLY) : undefined
 const check = async (name, path, test, viewport = { width: 1280, height: 900 }) => {
+  if (only && !only.test(name)) return
   const page = await b.newPage({ viewport })
   try {
     await page.goto(base + path, { waitUntil: 'load' })
@@ -134,6 +137,23 @@ await check('scroll spy reaches the end', '/docs/getting-started', async page =>
   same(await current(), first, 'back at the top')
 })
 
+// The size control draws at the size it says, in a build too (where `[data-size=…]` rules are purged), and names show whole.
+await check('icon sizes reach the drawings', '/icons', async page => {
+  await page.waitForSelector('[data-site="icons"] [data-part="cell"] svg path', { state: 'attached' })
+  for (const size of ['16', '24', '32']) {
+    await page.locator(`[data-site="icons"] input[value="${size}"]`).click()
+    await page.waitForTimeout(300)
+    const { drawn, cut } = await page.evaluate(() => {
+      const cells = [...document.querySelectorAll('[data-site="icons"] [data-part="cell"]')]
+      return {
+        drawn: cells[0].querySelector('svg').getBoundingClientRect().width,
+        cut: cells.filter(c => { const n = c.querySelector('[data-part="name"]'); return n.scrollWidth > n.clientWidth + 1 || n.getBoundingClientRect().bottom > c.getBoundingClientRect().bottom + 1 }).map(c => c.ariaLabel),
+      }
+    })
+    same(drawn, size, `drawn at ${size}`)
+    same(cut.join(), '', `names cut at ${size}`)
+  }
+})
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)
