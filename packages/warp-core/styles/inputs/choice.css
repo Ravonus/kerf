@@ -192,8 +192,12 @@
 :where([data-scope="field"] > [data-part="control"]:has(> button[data-part="input"])) { cursor: pointer; }
 :where([data-scope="field"] button[data-part="input"]) {
   appearance: none; display: flex; align-items: center; border: 0; background: none; color: inherit; font: inherit; font-size: var(--warp-text-control-size); text-align: start;
-  cursor: inherit; outline: none; padding-inline-end: 24px; margin-inline-end: -24px; min-block-size: calc(var(--warp-field-height) - 2px); box-shadow: none;
+  cursor: inherit; outline: none; margin-inline-end: -24px; min-block-size: calc(var(--warp-field-height) - 2px); box-shadow: none;
 }
+/* the room the trigger reaches under the chevron (its gap and glyph) is the value's own end padding, so the value's text
+   never runs under the chevron. It can't be the button's padding: field.css's [data-part="input"] { padding-inline: 0 }
+   may load after this file and win, which left a narrow select (a sort bar, a pager's size) 24px short. */
+:where([data-scope="field"] button[data-part="input"] > [data-part="value"]) { padding-inline-end: 24px; }
 :where([data-scope="field"] button[data-part="input"]:disabled) { cursor: not-allowed; }
 :where([data-scope="field"] button[data-part="input"] ~ [data-part="indicator"]) { pointer-events: none; }
 :where([data-scope="field"] button[data-part="input"] > [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }

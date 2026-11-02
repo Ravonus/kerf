@@ -58,3 +58,19 @@ test('a toggle released from pressed keeps no stroke once the pointer leaves', a
   await page.waitForTimeout(700)
   expect(await t.evaluate(b => getComputedStyle(b.querySelector('[data-part="sweep"]')).getPropertyValue('--_sr').trim())).toBe('0%')
 })
+
+const clearOfChevron = sel => page.evaluate(sel => {
+  const f = document.querySelector(sel)
+  const v = f.querySelector('[data-part="value"]'), i = f.querySelector('[data-part="indicator"]')
+  const r = document.createRange(); r.selectNodeContents(v)
+  return { text: v.textContent, textEnd: r.getBoundingClientRect().right, chevron: i.getBoundingClientRect().left, clipped: v.scrollWidth > v.clientWidth + 0.5 }
+}, sel)
+
+test('a narrow select keeps its value clear of the chevron (sort bar, pager size)', async () => {
+  for (const sel of ['#sortbar [data-part="sortbar"] [data-scope="field"]', '#pager [data-scope="field"]']) {
+    const m = await clearOfChevron(sel)
+    expect(m.text.length).toBeGreaterThan(0)
+    expect(m.textEnd).toBeLessThanOrEqual(m.chevron)
+    expect(m.clipped).toBe(false)
+  }
+})
