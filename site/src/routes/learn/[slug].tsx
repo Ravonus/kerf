@@ -1,0 +1,62 @@
+import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import { Button } from '@weft-js/warp'
+import { LearnDemo } from '../../components/LearnDemo'
+import { Toc } from '../../components/Toc'
+import pages from '../../generated/learn.json'
+
+type Block = { html: string } | { demo: string }
+type Page = { slug: string; title: string; section: string; box: string; blocks: Block[]; toc: { id: string; text: string; depth?: number }[]; description: string; prev?: { slug: string; title: string }; next?: { slug: string; title: string } }
+const all = pages as unknown as Record<string, Page>
+
+/** The page with each demo's highlighted source and words filled in, so none of that is in the page's script. */
+export const load = async ({ params }: LoadArgs<'/learn/[slug]'>) => {
+  const page = all[params.slug] ?? notFound()
+  const { demos } = await import('../../demos')
+  const { default: code } = await import('../../generated/demos.json')
+  const blocks = page.blocks.map(b => ('demo' in b ? { demo: b.demo, code: (code as Record<string, string>)[b.demo] ?? '', tryIt: demos[b.demo]?.tryIt ?? '' } : { html: b.html }))
+  return { ...page, blocks }
+}
+export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })
+export const prerender = () => Object.keys(all).map(slug => ({ slug }))
+
+export default function LearnPage(props: RouteProps<typeof load, '/learn/[slug]'>) {
+  return (
+    <>
+      <article data-site="doc" data-vt="main">
+        <header>
+          <p data-part="crumb"><Link href="/learn">Learn</Link><span aria-hidden="true">/</span>{props.data.section}</p>
+          <h1>{props.data.title}</h1>
+        </header>
+        <aside data-site="you-will-learn">
+          <p data-part="label">You will learn</p>
+          <div
+            // oxlint-disable-next-line weft/no-html-sink -- this site's own Markdown, rendered at build time
+            innerHTML={props.data.box}></div>
+        </aside>
+        <p data-part="actions">
+          <Button emphasis="outline" tone="neutral" size="sm" icon="copy" data-act="copy" data-copy-url={`/learn/${props.data.slug}.md`}>Copy as Markdown</Button>
+        </p>
+        {props.data.blocks.map((b, i) => ('demo' in b
+          ? (
+            <section key={i} data-site="example" data-learn="">
+              <div data-part="pair">
+                <LearnDemo id={b.demo} />
+                <div data-scope="codeblock"
+                  // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
+                  innerHTML={b.code}></div>
+              </div>
+              {b.tryIt && <p data-part="try"><strong>Try this:</strong> {b.tryIt}</p>}
+            </section>
+          )
+          : <div key={i} data-scope="prose"
+            // oxlint-disable-next-line weft/no-html-sink -- this site's own Markdown, rendered at build time
+            innerHTML={b.html}></div>))}
+        <footer data-part="pager">
+          {props.data.prev ? <Link href={`/learn/${props.data.prev.slug}`} class="prev"><span>Previous</span>{props.data.prev.title}</Link> : <Link href="/learn" class="prev"><span>Previous</span>Overview</Link>}
+          {props.data.next ? <Link href={`/learn/${props.data.next.slug}`} class="next"><span>Next</span>{props.data.next.title}</Link> : <Link href="/reference" class="next"><span>Next</span>Reference</Link>}
+        </footer>
+      </article>
+      {props.data.toc.length > 0 && <Toc items={props.data.toc} />}
+    </>
+  )
+}

@@ -6,7 +6,8 @@ export function Footer() {
     <footer data-site="footer">
       <Readout />
       <nav aria-label="Footer">
-        <Link href="/docs">Docs</Link>
+        <Link href="/learn">Learn</Link>
+        <Link href="/reference">Reference</Link>
         <Link href="/examples">Examples</Link>
         <Link href="/components">Components</Link>
         <Link href="/icons">Icons</Link>

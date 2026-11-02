@@ -13,7 +13,8 @@ const PER_GROUP = 4
 const RECENT = 'weft:recent'
 
 const PAGES: Command[] = [
-  { label: 'Docs', group: 'Go to', icon: BookIcon, href: '/docs', run: go('/docs') },
+  { label: 'Learn', group: 'Go to', icon: BookIcon, href: '/learn', run: go('/learn') },
+  { label: 'Reference', group: 'Go to', icon: BoxIcon, href: '/reference', run: go('/reference') },
   { label: 'Examples', group: 'Go to', icon: PlayIcon, href: '/examples', run: go('/examples') },
   { label: 'Components', group: 'Go to', icon: GridIcon, href: '/components', run: go('/components') },
   { label: 'Icons', group: 'Go to', icon: StarIcon, href: '/icons', run: go('/icons') },
@@ -27,7 +28,7 @@ const COMMANDS: Command[] = [
   { label: 'Expression: vivid', group: 'Commands', icon: SlidersIcon, run: () => setDial('expression', 'vivid', { persist: true }) },
   {
     label: 'Copy this page as Markdown', group: 'Commands', icon: ClipboardIcon,
-    run: () => { if (location.pathname.startsWith('/docs/')) void fetch(`${location.pathname}.md`).then(r => r.text()).then(t => navigator.clipboard?.writeText(t)) },
+    run: () => { if (/^\/(learn|reference)\/./.test(location.pathname)) void fetch(`${location.pathname}.md`).then(r => r.text()).then(t => navigator.clipboard?.writeText(t)) },
   },
   ...PAGES.map(p => ({ ...p, label: `Go to ${p.label}`, group: 'Commands' })),
 ]

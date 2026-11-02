@@ -125,7 +125,7 @@ for (const [path, frames] of [['/', '[data-site="arena"] iframe'], ['/examples',
 }
 
 // The contents list reaches the last heading at the end of a page, and comes back.
-await check('scroll spy reaches the end', '/docs/getting-started', async page => {
+await check('scroll spy reaches the end', '/learn/installation', async page => {
   const current = () => page.locator('[data-site="toc"] [aria-current]').innerText()
   const first = await current()
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
@@ -251,7 +251,7 @@ for (const path of ['/components', '/blocks']) {
 }
 // Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow (warp's prose families, with no
 // attribute from the build), and below the fold they wait. Check the animation, not markup.
-for (const path of ['/docs/rules', '/docs/lists']) {
+for (const path of ['/reference/rules', '/reference/lists', '/learn/passing-props']) {
   await check(`docs content flows ${path}`, path, async page => {
     const { blocks, moving } = await page.evaluate(() => {
       const els = [...document.querySelectorAll('[data-scope="prose"] > :is(p, ul, ol, dl, blockquote, table)')]
@@ -303,11 +303,48 @@ for (const [path, least] of [['/components/month-picker', 5], ['/components/week
   })
 }
 // A page with no headings has no contents column, so its words take the room.
-for (const path of ['/docs/rules', '/docs/lists', '/docs/async', '/docs/browser']) {
+for (const path of ['/reference/rules', '/reference/lists', '/reference/async', '/reference/browser']) {
   await check(`no empty contents column ${path}`, path, async page => {
     const { toc, links } = await page.evaluate(() => ({ toc: document.querySelectorAll('[data-site="toc"]').length, links: document.querySelectorAll('[data-site="toc"] a').length }))
     if (toc && !links) throw new Error('an empty contents column')
   }, { width: 1440, height: 900 })
+}
+// Learn: the landing and every chapter fit a 375 px phone, open with "You will learn", and end with a pager.
+for (const path of ['/learn', '/learn/installation', '/learn/passing-props', '/learn/bind', '/learn/entries', '/learn/full-stack', '/learn/effects']) {
+  await check(`learn fits 375 px ${path}`, path, async page => {
+    await mount(page)
+    same(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0, 'page overflow')
+  }, { width: 375, height: 812 })
+  if (path === '/learn') continue
+  await check(`learn page parts ${path}`, path, async page => {
+    const parts = await page.evaluate(() => ({ box: document.querySelector('[data-site="you-will-learn"] li')?.textContent ?? '', pager: document.querySelectorAll('[data-part="pager"] a').length, nav: !!document.querySelector('[data-site="doc-nav"] a[aria-current]') }))
+    if (!parts.box) throw new Error('no "You will learn" box')
+    same(parts.pager, 2, 'pager links')
+    same(parts.nav, true, 'the rail marks this page')
+  })
+}
+// A challenge's solution stays hidden until asked for.
+await check('learn challenges hide their solution', '/learn/passing-props', async page => {
+  const sol = page.locator('[data-site="challenge"] details').first()
+  same(await sol.evaluate(d => d.open), false, 'open at first')
+  await sol.locator('summary').click()
+  same(await sol.evaluate(d => d.open), true, 'open after a click')
+})
+// A Learn demo runs: the stepper writes the parent's box through bind:.
+await check('learn bind demo writes the parent', '/learn/bind', async page => {
+  await mount(page)
+  const run = page.locator('[data-site="example"] [data-part="run"]').first()
+  await run.getByRole('button', { name: '+' }).click()
+  await page.waitForFunction(() => /Booked for 3 people/.test(document.querySelector('[data-site="example"] [data-part="run"]')?.textContent ?? ''), null, { timeout: 4000 })
+})
+// Every old /docs address answers a permanent redirect to its new home, `.md` twins included.
+for (const [from, to] of [['/docs', '/learn'], ['/docs/getting-started', '/learn/installation'], ['/docs/rules', '/reference/rules'], ['/docs/codes/W001', '/reference/codes/W001'], ['/docs/props.md', '/reference/props.md']]) {
+  await check(`old ${from} redirects`, '/learn', async page => {
+    const r = await page.request.get(base + from, { maxRedirects: 0 })
+    same(r.status(), 308, 'status')
+    same(new URL(r.headers().location, base).pathname, to, 'location')
+    same((await page.request.get(base + to)).status(), 200, 'the new page')
+  })
 }
 // A demo missing from the build shows its notice in a pane its own size, not a tall empty one.
 await check('a missing demo closes its pane around the notice', '/examples', async page => {

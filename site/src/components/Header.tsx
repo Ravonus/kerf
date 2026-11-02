@@ -6,7 +6,8 @@ import { SearchTrigger } from './SearchTrigger'
 import { Nav } from '@weft-js/warp'
 
 export const NAV = [
-  { href: '/docs', label: 'Docs' },
+  { href: '/learn', label: 'Learn' },
+  { href: '/reference', label: 'Reference' },
   { href: '/components', label: 'Components' },
   { href: '/blocks', label: 'Blocks' },
   { href: '/charts', label: 'Charts' },

@@ -5,8 +5,8 @@ import { createRequire } from 'node:module'
 
 const { chromium } = createRequire(new URL('../../packages/warp/package.json', import.meta.url))('playwright-core')
 const base = process.argv[2] ?? 'http://localhost:3300'
-const docs = Object.keys(JSON.parse(readFileSync(new URL('../src/generated/docs.json', import.meta.url), 'utf8'))).map(s => `/docs/${s}`)
-const pages = [...docs, '/', '/examples']
+const read = f => Object.keys(JSON.parse(readFileSync(new URL(`../src/generated/${f}.json`, import.meta.url), 'utf8')))
+const pages = [...read('learn').map(s => `/learn/${s}`), ...read('reference').map(s => `/reference/${s}`), '/learn', '/', '/examples']
 const SCOPE = '[data-site="example"] [data-part="run"]'
 const CONTROLS = `${SCOPE} button:not([disabled]), ${SCOPE} input:not([disabled]), ${SCOPE} [role="checkbox"], ${SCOPE} [role="switch"], ${SCOPE} label`
 const NEUTRAL = /^(reset|clear|cancel|close)$/i // nothing to undo on a fresh example
@@ -88,13 +88,13 @@ await behaves('Two views of one list', '/examples', async page => {
   await pane(1).locator('label').nth(2).click()
   await until(() => boxes(0).nth(2).isChecked(), 'a tick on the new task shows in Ana')
 })
-await behaves('Hover shared across tabs', '/docs/ui-state', async _probe => {
+await behaves('Hover shared across tabs', '/reference/ui-state', async _probe => {
   const box = 'section[data-site="example"] [data-part="run"]'
   const row = (p, pane, i) => p.locator(`${box} [data-scope="surface"]`).nth(pane).locator('label').nth(i)
   const browser = await b.newContext({ viewport: { width: 1280, height: 900 } })
   const page = await browser.newPage()
   try {
-    await page.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await page.goto(`${base}/reference/ui-state`, { waitUntil: 'load' })
     await page.locator(box).scrollIntoViewIfNeeded()
     await page.waitForTimeout(500)
     await row(page, 0, 0).hover()
@@ -102,7 +102,7 @@ await behaves('Hover shared across tabs', '/docs/ui-state', async _probe => {
     same(await row(page, 1, 0).evaluate(el => el.hasAttribute('data-remote')), false, 'that is this page, not someone else')
     same(await row(page, 1, 1).evaluate(el => el.hasAttribute('data-hold')), false, 'the other row stays dark')
     const other = await browser.newPage()
-    await other.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await other.goto(`${base}/reference/ui-state`, { waitUntil: 'load' })
     await other.locator(box).scrollIntoViewIfNeeded()
     await until(() => row(other, 0, 0).evaluate(el => el.hasAttribute('data-remote')), 'a second tab sees the hover, marked remote')
     await until(async () => /1 elsewhere/.test(await text(other, box)), 'and says so')
@@ -110,7 +110,7 @@ await behaves('Hover shared across tabs', '/docs/ui-state', async _probe => {
     await until(async () => !(await row(other, 0, 0).evaluate(el => el.hasAttribute('data-hold'))), 'it clears when the pointer leaves')
     // Another browser, across the socket: it may share `demo:` keys and nothing else (src/realtime.server.ts).
     const elsewhere = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage()
-    await elsewhere.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await elsewhere.goto(`${base}/reference/ui-state`, { waitUntil: 'load' })
     await elsewhere.locator(box).scrollIntoViewIfNeeded()
     await elsewhere.waitForTimeout(800)
     await row(page, 0, 1).hover()

@@ -15,9 +15,9 @@ export default function Examples() {
   return (
     <div data-site="page" data-part="reading">
       <h1>Examples</h1>
-      <p data-part="intro">Each of these is running on this page, and the code beside it is the code that is running. New to weft? Start with the small ones under this shop. <Link href="/docs/getting-started">Set up a project</Link> when you want to try one yourself.</p>
+      <p data-part="intro">Each of these is running on this page, and the code beside it is the code that is running. New to weft? Start with the small ones under this shop. <Link href="/learn/installation">Set up a project</Link> when you want to try one yourself.</p>
       <Example id="shop-5" title="A whole small shop" lead><Shop /></Example>
-      {Object.keys(demos).filter(id => !id.startsWith('shop-')).map(id => <Example key={id} id={id}><Run id={id} /></Example>)}
+      {Object.keys(demos).filter(id => !id.startsWith('shop-') && !demos[id]!.learn).map(id => <Example key={id} id={id}><Run id={id} /></Example>)}
     </div>
   )
 }

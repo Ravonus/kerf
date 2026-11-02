@@ -33,7 +33,7 @@ export default function Home() {
           <h1>The TypeScript framework for fast web apps.</h1>
           <p>Write components in TSX, as you would in React. weft compiles them into small, direct page updates, and comes with routing, data, a UI kit and errors your coding agent can act on.</p>
           <div data-part="next">
-            <Link data-scope="button" data-size="lg" href="/docs/getting-started">Get started</Link>
+            <Link data-scope="button" data-size="lg" href="/learn">Get started</Link>
             <Link data-part="quiet" href="/examples">See examples</Link>
           </div>
           <p data-part="install"><code>node packages/create-weft/scripts/local.mjs new my-app</code><span>weft is not on npm yet, so run this from a checkout of the repo.</span></p>
@@ -75,7 +75,7 @@ export default function Home() {
           <p data-part="intro">A real shop keeps its products in a database. With <code>@weft-js/start</code>, a server query lives beside your components, and each file in <code>src/routes</code> is a page. Database and sign-in are built in, so the whole app is one codebase.</p>
           <div data-part="server" data-scope="codeblock" innerHTML={show.server}></div>
           <pre data-part="files"><code>{FILES}</code></pre>
-          <p data-part="more"><Link href="/docs/start">Read about full-stack weft</Link></p>
+          <p data-part="more"><Link href="/learn/full-stack">Read about full-stack weft</Link></p>
         </section>
 
         <Arena />
@@ -95,8 +95,8 @@ export default function Home() {
           <h2 data-flow="heading">Build something</h2>
           <p data-part="intro">Set up a project in a couple of minutes, then work through the short guides.</p>
           <div data-part="next">
-            <Link data-scope="button" data-size="lg" href="/docs/getting-started">Get started</Link>
-            <Link data-part="quiet" href="/docs">Read the docs</Link>
+            <Link data-scope="button" data-size="lg" href="/learn">Get started</Link>
+            <Link data-part="quiet" href="/reference">Read the reference</Link>
           </div>
         </section>
       </div>
