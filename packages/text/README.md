@@ -2,7 +2,6 @@
 
 > **Not released yet.** This package isn't published on its own. `weft docs fonts` covers what an app uses from it.
 
-
 Fonts and text for weft. `text()` for `weft.config.ts` is the main entry, `@weft-js/text/build` is the Node-only font build, and `@weft-js/text/measure` and `@weft-js/text/engine` are what a browser loads: nothing Node-only reaches them.
 
 ## The engine
