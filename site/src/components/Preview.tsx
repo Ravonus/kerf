@@ -5,11 +5,14 @@ import { previews } from '../generated/previews'
 
 /** The narrowest a card lays each kind of stage out at: a chart or a form squeezed into a card's width breaks apart. */
 const LEAST: Record<string, number> = { center: 0, narrow: 340, start: 420, fill: 440 }
+/** The smallest a card draws a picture to fit it whole: below this its words are specks, so it shows its top instead. */
+const READABLE = 0.3
 
 /**
  * A hub card's preview is a picture of the example: laid out at a working width (`--tile-zoom` of the card, never
- * under the stage's least), then scaled to the card and centred. A tall one shrinks to fit while it stays readable,
- * or with `fit="contain"` always; otherwise it keeps its width and shows its top, fading out at the card's edge.
+ * under the stage's least), then scaled to the card and centred. A tall one shrinks to fit while it stays readable
+ * (most of its width's scale, and never under READABLE), or with `fit="contain"` always; otherwise it keeps its width
+ * and shows its top, fading out at the card's edge, and says so in `data-crop`.
  */
 function fitTile(host: HTMLElement, fit?: string, width?: number) {
   const stage = host.parentElement
@@ -24,11 +27,12 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
   let crop = false
   if (ch * s > H) {
     const all = H / ch
-    if (fit === 'top' || (fit !== 'contain' && all < s * 0.6)) crop = true
+    if (fit === 'top' || (fit !== 'contain' && (all < s * 0.6 || all < READABLE))) crop = true
     else s = all
   }
   const x = (W - vw * s) / 2, y = crop ? 0 : (H - ch * s) / 2
   host.style.transform = `translate(${x}px, ${y}px) scale(${s})`
+  host.toggleAttribute('data-crop', crop)
   // The fade stops short of the stage's bottom rule, so the card keeps its line under the picture.
   stage.style.maskImage = crop ? 'linear-gradient(#000 calc(100% - 44px), transparent calc(100% - 1px), #000 calc(100% - 1px))' : ''
   host.style.opacity = '1'
