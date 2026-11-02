@@ -7,7 +7,7 @@ const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const read = f => readFileSync(new URL(`../../ui-core/styles/${f}`, import.meta.url), 'utf8')
-const css = ['warp.css', 'layout/tokens.css', 'layout/split.css', 'inputs/field.css', 'inputs/choice.css', 'components/button.css'].map(read).join('\n')
+const css = ['warp.css', 'layout/tokens.css', 'layout/split.css', 'inputs/field.css', 'inputs/choice.css', 'components/button.css', 'data/table.css'].map(read).join('\n')
 let browser
 beforeAll(async () => { browser = await chromium.launch() })
 afterAll(() => browser?.close())
@@ -32,6 +32,12 @@ test('Split splits with no container around it, and a narrow container still sta
 test('a checkbox input takes the click itself, so role-based tools reach it', async () => {
   const p = await page('<label data-scope="checkbox"><input type="checkbox" aria-label="Pick"><span data-part="control" data-sweep><span data-part="sweep"></span></span></label>')
   await p.getByRole('checkbox', { name: 'Pick' }).check({ timeout: 3000 })
+  expect(await p.getByRole('checkbox').isChecked()).toBe(true)
+})
+
+test('a table row checkbox is reachable by role', async () => {
+  const p = await page('<table data-scope="table"><tbody><tr><td data-part="select"><label data-scope="checkbox"><input type="checkbox" aria-label="Select row"><span data-part="control"></span></label></td></tr></tbody></table>')
+  await p.getByRole('checkbox', { name: 'Select row' }).check({ timeout: 3000 })
   expect(await p.getByRole('checkbox').isChecked()).toBe(true)
 })
 
