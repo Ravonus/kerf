@@ -215,7 +215,7 @@ describe('U001–U005: interaction() and ui', () => {
   const codes = async files => (await check(project(files))).diagnostics.map(d => d.code).filter(c => c.startsWith('U'))
 
   it('a key that can never match', async () => {
-    expect(await codes({ 'src/A.tsx': page('const row = interaction({ share: `r:${Math.random()}` }); return <Button ui={row}>x</Button>') })).toEqual(['U001'])
+    expect(await codes({ 'src/A.tsx': page(`const row = interaction({ share: \`r:\${Math.random()}\` }); return <Button ui={row}>x</Button>`) })).toEqual(['U001'])
   })
   it('a key the user chose', async () => {
     expect(await codes({ 'src/A.tsx': page('const row = interaction({ share: location.pathname + "x" }); return <Button ui={row}>x</Button>') })).toEqual(['U002'])

@@ -159,7 +159,7 @@ describe('page metadata reaches every agent surface', () => {
   it('`weft docs meta` is a topic, and every H-code is real', async () => {
     expect((await docs(fixture, 'meta')).text).toMatch(/Set `meta` as you build the page/)
     expect(topics.meta).toContain('H011')
-    expect(catalog.filter(e => /^H0/.test(e.code) && e.proposed)).toEqual([])
+    expect(catalog.filter(e => e.code.startsWith('H0') && e.proposed)).toEqual([])
     expect((await docs(fixture, 'H001')).text).toContain('reported by weft check')
   })
 })

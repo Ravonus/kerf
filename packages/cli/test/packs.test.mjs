@@ -9,7 +9,7 @@ import { audit, grants } from '../src/trust.mjs'
 import { bindSlots } from '../src/slots.mjs'
 
 const packages = fileURLToPath(new URL('../../', import.meta.url))
-const realtime = readdirSync(packages).filter(d => /^realtime-/.test(d))
+const realtime = readdirSync(packages).filter(d => d.startsWith('realtime-'))
 /** Plugin name, its package's directory, and the entry that defines it. A package can hold several. */
 const packs = [
   ...realtime.map(d => [`@weft-js/${d}`, d, 'plugin.mjs']),
@@ -46,7 +46,7 @@ describe.each(packs)('%s', (name, dir) => {
   })
 })
 
-test('pay is built only from public parts: nothing in weft, start or the CLI names it', async () => {
+test('pay is built only from public parts: nothing in weft, start or the CLI names it', () => {
   const stray = execFileSync('git', ['grep', '-lE', "@weft-js/pay|PayRail|entitlementTag|definePay|fakePay", '--', 'weft/src', 'weft/vite.mjs', 'start/src', 'cli/src'], { cwd: packages, encoding: 'utf8' }).trim().split('\n').filter(f => f && !['cli/src/add.mjs', 'cli/src/docs.mjs'].includes(f)) // an alias in `weft add`, and a line pointing at the walkthrough
   expect(stray).toEqual([])
 })

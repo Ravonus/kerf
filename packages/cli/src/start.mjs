@@ -9,6 +9,7 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseEnv } from 'node:util'
+import { dbLayer } from './db-layer.mjs'
 import { diagnostic, locate, positions } from './diag.mjs'
 import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
@@ -40,11 +41,11 @@ async function site(root) {
 
 /** `site` with what plugins know about the app's look (`card` in a manifest): warp's colours, the text plugin's faces. */
 export function siteOf(loaded) {
-  const site = loaded.config?.site ?? {}
+  const base = loaded.config?.site ?? {}
   const given = (loaded.contributions ?? []).map(c => c.manifest.card).filter(Boolean)
-  if (!given.length) return site
+  if (!given.length) return base
   const card = Object.assign({}, ...given)
-  return { ...site, card: { ...card, ...site.card, fonts: { ...card.fonts, ...site.card?.fonts } } }
+  return { ...base, card: { ...card, ...base.card, fonts: { ...card.fonts, ...base.card?.fonts } } }
 }
 
 /** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
@@ -149,39 +150,11 @@ export async function startCommand(root, { runtime } = {}) {
   const child = spawn(chosen === hostRuntime() ? process.execPath : cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } })
   process.once('SIGINT', () => child.kill('SIGINT'))
   process.once('SIGTERM', () => child.kill('SIGTERM'))
-  return new Promise(ok => child.on('close', code => (sidecars.close(), ok(code ?? 0))))
+  return new Promise(ok => { child.on('close', code => { sidecars.close(); ok(code ?? 0) }) })
 }
 
 /** The hash `weft db generate` records and Q015 compares. */
 export const schemaHash = text => createHash('sha256').update(text).digest('hex').slice(0, 16)
-
-/** The app's data layer: the plugin that declares one, or Drizzle, which is built in. Null with no database. */
-export async function dbLayer(root, loaded) {
-  const { contributions = [] } = loaded ?? await loadConfig(root)
-  const plugin = contributions.find(c => c.manifest.db)?.manifest.db
-  if (plugin) return plugin
-  // Drizzle has no plugin to say so: its config file, or a client from `@weft-js/start/db/*`, does.
-  const entry = join(root, 'src/db/index.server.ts')
-  return existsSync(join(root, 'drizzle.config.ts')) || (existsSync(entry) && readFileSync(entry, 'utf8').includes('@weft-js/start/db/')) ? DRIZZLE : null
-}
-
-const DRIZZLE = {
-  layer: 'drizzle',
-  schema: 'src/db/schema.ts',
-  migrations: 'drizzle',
-  generate(root) {
-    let bin
-    try {
-      const req = createRequire(join(root, 'package.json'))
-      bin = join(dirname(req.resolve('drizzle-kit')), 'bin.cjs')
-    } catch {
-      throw Object.assign(new Error('drizzle-kit is not installed in this project'), { code: 'E_USAGE' })
-    }
-    const r = spawnSync(process.execPath, [bin, 'generate'], { cwd: root, encoding: 'utf8' })
-    if (r.status !== 0) throw Object.assign(new Error(`drizzle-kit generate failed:\n${r.stdout}${r.stderr}`), { code: 'E_INTERNAL' })
-    return r.stdout.trim()
-  },
-}
 
 /** `weft db generate [name]`: the data layer's migration, on Node like all of dev (research 28 §2, 34 §4). */
 export async function dbCommand(root, sub, name) {

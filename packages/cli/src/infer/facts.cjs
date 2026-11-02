@@ -178,7 +178,7 @@ const isOpening = (ts, n) => ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingEle
  */
 function fileFacts(ts, file, text, options = {}) {
   const hash = hashOf(text)
-  if (!/\.tsx$/.test(file)) return { file, hash, comps: [], sites: [], imports: new Map(), wraps: new Map(), escaped: new Set(), exported: new Set(), parse: null }
+  if (!file.endsWith('.tsx')) return { file, hash, comps: [], sites: [], imports: new Map(), wraps: new Map(), escaped: new Set(), exported: new Set(), parse: null }
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
   const comps = [], sites = []
   const imports = new Map(), wraps = new Map(), escaped = new Set(), exported = new Set()

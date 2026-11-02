@@ -122,9 +122,9 @@ function layoutOf(el) {
     if (!c.includes('flex') && !c.includes('grid')) return null
     const dir = c.includes('flex-col') ? 'Stack' : c.includes('flex') ? 'Row' : null
     if (!dir) return null
-    const gap = c.find(x => /^gap-/.test(x))?.slice(4)
+    const gap = c.find(x => x.startsWith('gap-'))?.slice(4)
     const name = SPACE_NAMES.includes(gap) ? gap : TW_SPACE.get(gap)
-    return { primitive: dir, gap: name, attr: cls, exact: c.every(x => ['flex', 'flex-col', 'flex-row', 'flex-wrap'].includes(x) || /^gap-/.test(x)) && (!gap || !!name) }
+    return { primitive: dir, gap: name, attr: cls, exact: c.every(x => ['flex', 'flex-col', 'flex-row', 'flex-wrap'].includes(x) || x.startsWith('gap-')) && (!gap || !!name) }
   }
   const style = el.attr('style')
   if (!style) return null
@@ -157,7 +157,7 @@ function literalColor(v) {
   if (s === 'white') return [255, 255, 255]
   if (s === 'black') return [0, 0, 0]
   const h = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(s)?.[1]
-  if (h) return (h.length === 3 ? [...h].map(c => c + c) : h.match(/../g)).map(x => parseInt(x, 16))
+  if (h) return (h.length === 3 ? Array.from(h, c => c + c) : h.match(/../g)).map(x => parseInt(x, 16))
   const m = /^rgb\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\)$/.exec(s)
   return m ? m.slice(1).map(Number) : null
 }
@@ -232,7 +232,6 @@ export function designChecks(root, { files: all, exclude = [], tokens }) {
     const solids = new Map()
 
     for (const el of scan.elements) {
-      const tagName = [el.start + 1, el.tagEnd]
       // -- values --
       if (tokens) {
         const style = el.attr('style')

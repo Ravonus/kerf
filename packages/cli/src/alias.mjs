@@ -18,7 +18,7 @@ function rulesIn(dir) {
   const tsconfig = join(dir, 'tsconfig.json')
   if (existsSync(tsconfig)) {
     const host = { ...ts.sys, readDirectory: () => [] }
-    const { options } = ts.parseJsonConfigFileContent(ts.readConfigFile(tsconfig, ts.sys.readFile).config, host, dir)
+    const { options } = ts.parseJsonConfigFileContent(ts.readConfigFile(tsconfig, path => ts.sys.readFile(path)).config, host, dir)
     const base = options.pathsBasePath ?? options.baseUrl ?? dir
     for (const [pattern, [target]] of Object.entries(options.paths ?? {})) add(pattern, resolve(base, target))
   }

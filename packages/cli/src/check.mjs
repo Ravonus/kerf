@@ -24,7 +24,8 @@ import { stateChecks } from './state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
-import { dbLayer, routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
+import { dbLayer } from './db-layer.mjs'
+import { routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
 
 const posix = p => p.split('\\').join('/')
 
@@ -104,7 +105,7 @@ export async function check(root, options = {}) {
   // Style groups (research 23): the project's definitions first, so each file compiles with the groups it imports.
   const style = await styleModule(weft)
   const sfiles = style ? styleFiles(root, config) : []
-  const scan = sfiles.some(f => readFileSync(join(root, f), 'utf8').includes('@weft-js/core/style')) ? style.scanProject(root, sfiles, compiler.transform) : null
+  const scan = sfiles.some(f => readFileSync(join(root, f), 'utf8').includes('@weft-js/core/style')) ? style.scanProject(root, sfiles, (...a) => compiler.transform(...a)) : null
 
   const files = []
   const posByAbs = new Map()
@@ -116,7 +117,7 @@ export async function check(root, options = {}) {
     const groups = scan ? style.importedGroups(abs, text, f => scan.groups.filter(g => join(root, g.file) === f)) : {}
     const out = compiler.transform(text, Object.keys(groups).length ? { filename: abs, checkOnly: true, groups } : { filename: rel, checkOnly: true })
     const diagnostics = out.diagnostics.map(d => {
-      const start = pos.fromByte(d.start)
+      const from = pos.fromByte(d.start)
       const end = pos.fromByte(d.end)
       const fix = d.fix && {
         description: d.fix.description,
@@ -127,7 +128,7 @@ export async function check(root, options = {}) {
           return { file: rel, span: pos.span(a, b), offset: [a, b], text: e.text }
         }),
       }
-      return diagnostic({ code: d.code, severity: d.severity, file: rel, span: pos.span(start, end), offset: [start, end], why: d.message, help: d.help, fix })
+      return diagnostic({ code: d.code, severity: d.severity, file: rel, span: pos.span(from, end), offset: [from, end], why: d.message, help: d.help, fix })
     })
     files.push({ abs, rel, text, diagnostics })
   }
@@ -195,7 +196,7 @@ async function rustChecks(root, loaded) {
     const { writeContract } = await start(root, 'contract')
     const preset = { node: 'node', bun: 'bun', deno: 'deno_server' }[loaded.config?.runtime ?? 'node']
     const { contract, diagnostics } = await writeContract({ root, site: loaded.config?.site, rust, preset })
-    const out = diagnostics.filter(d => /^R1/.test(d.code)).map(d => diagnostic({ ...d, file: '.weft/contract.json' }))
+    const out = diagnostics.filter(d => d.code.startsWith('R1')).map(d => diagnostic({ ...d, file: '.weft/contract.json' }))
     if (out.some(d => d.severity === 'error')) return out
     for (const service of Object.keys(contract.services ?? {})) {
       if (rust?.services?.[service]?.external) continue
@@ -274,7 +275,7 @@ async function socketChecks(root) {
   const out = []
   let withIds
   for (const f of readdirSync(src, { recursive: true, withFileTypes: true })) {
-    if (!f.isFile() || !/\.[cm]?[jt]sx?$/.test(f.name) || /\.d\.ts$/.test(f.name)) continue
+    if (!f.isFile() || !/\.[cm]?[jt]sx?$/.test(f.name) || f.name.endsWith('.d.ts')) continue
     const abs = join(f.parentPath, f.name), rel = relative(root, abs).replaceAll('\\', '/'), text = readFileSync(abs, 'utf8')
     const hand = /from\s+['"]crossws|\bdefineWebSocketHandler\b/.exec(text)
     if (hand) out.push(diagnostic({ code: 'R004', file: rel, ...locate(text, hand[0]), why: 'A WebSocket handler of its own skips the Origin check, `authorize`, the limits and resume. Use `channel`.' }))

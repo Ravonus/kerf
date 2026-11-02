@@ -8,7 +8,7 @@ import { call, close, launch, screenshot, spill, tabs, waitForTab } from './clie
 export const actions = ['click', 'dblclick', 'hover', 'focus', 'clear', 'fill', 'type', 'press', 'select', 'check', 'uncheck']
 export const expectations = ['visible', 'absent', 'text', 'exactText', 'value', 'checked', 'unchecked', 'disabled', 'enabled', 'focused', 'count']
 
-const sleep = ms => new Promise(r => setTimeout(r, ms))
+const sleep = ms => new Promise(r => { setTimeout(r, ms) })
 
 /**
  * @param {string} root project root
@@ -27,14 +27,14 @@ export async function browser(root, cmd, p = {}, o = {}) {
       await page('navigate', { to: p.route ?? '/' })
       // Same tab id after the load (@weft-js/core/agent keeps it in sessionStorage); wait for the new document to say hello.
       const until = Date.now() + 15_000
-      for (;;) {
+      do {
         await sleep(150)
         try {
           const info = await page('info', {}, { timeout: 2000 })
           if (info.url !== before.url || p.route === new URL(before.url).pathname) return info
         } catch {}
-        if (Date.now() > until) return waitForTab(root, o)
-      }
+      } while (Date.now() <= until)
+      return waitForTab(root, o)
     }
     case 'snapshot': {
       const out = await page('snapshot', { interactive: p.interactive, scope: p.scope, delta: p.delta, graph: p.graph })

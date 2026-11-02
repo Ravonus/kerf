@@ -13,6 +13,7 @@ import { exportsOf, loadCompiler, resolveWeft } from './weft.mjs'
 const docsDir = fileURLToPath(new URL('../docs/', import.meta.url))
 const fileTopics = Object.fromEntries(readdirSync(docsDir).filter(f => f.endsWith('.md')).map(f => [f.slice(0, -3), f]))
 
+/** What `weft docs` can show, with the line that says what each topic covers. */
 export const topics = {
   rules: 'The seven rules: boxes, derived, live JSX and props, run-once bodies (start here)',
   props: 'How props stay live; W001, W005, W006',
@@ -52,7 +53,7 @@ function status(code, info) {
   if (e.by === 'compiler') return st?.implemented ? `reported${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
   if (e.by === 'test') return 'reported by @weft-js/core/test after each test'
   if (e.by === 'gate') return 'reported by `weft test --gate` on a diff'
-  if (/^T/.test(e.code)) return st?.implemented ? `reported by weft check on test files${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
+  if (e.code.startsWith('T')) return st?.implemented ? `reported by weft check on test files${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
   if (e.by === 'start') return 'reported by @weft-js/start when it serves or renders the route, and by weft check and `weft routes --meta`'
   if (e.by === 'cli' && e.code.startsWith('H')) return 'reported by weft check and by `weft routes --meta`, per route, on what the routes produce'
   if (e.by === 'cli') return e.proposed ? 'reported by weft check (proposed code, research 17)' : 'reported by weft check'
@@ -65,8 +66,8 @@ function codePage(code, info) {
   const e = entry(code)
   const lines = [`# ${code} (${e.severity})`, '', e.catches + '.', '', `**Fix:** ${e.fix}.`, '', `**Status in weft@${info.weft.version}:** ${status(code, info)}.`]
   if (e.example) lines.push('', 'Triggers it:', '', '```tsx', e.example, '```')
-  if (/^T/.test(code)) lines.push('', 'A test that needs it on purpose keeps it with a reason: `// weft-allow ' + code + ': <why>` in the file header (whole file) or on the line above.')
-  const topic = Object.entries(topics).find(([, d]) => d.includes(code)) ?? (/^T/.test(code) ? ['testing'] : undefined)
+  if (code.startsWith('T')) lines.push('', 'A test that needs it on purpose keeps it with a reason: `// weft-allow ' + code + ': <why>` in the file header (whole file) or on the line above.')
+  const topic = Object.entries(topics).find(([, d]) => d.includes(code)) ?? (code.startsWith('T') ? ['testing'] : undefined)
   if (topic) lines.push('', `More: \`weft docs ${topic[0]}\`.`)
   return lines.join('\n')
 }

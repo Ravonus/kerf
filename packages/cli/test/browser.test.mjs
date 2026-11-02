@@ -26,6 +26,7 @@ describe('cli words', () => {
 
 const chrome = findChrome()
 
+// Drives a real browser, and CI machines and containers may not have Chrome.
 describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => {
   let root, server
   const run = (cmd, p) => browser(root, cmd, p)
@@ -38,7 +39,7 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     writeFileSync(join(root, 'package.json'), '{ "type": "module", "private": true }')
     server = await createServer({ root, configFile: false, logLevel: 'silent', plugins: [weft()], server: { port: 0, strictPort: false } })
     await server.listen()
-    await new Promise(r => setTimeout(r, 100)) // .weft/dev.json is written on 'listening'
+    await new Promise(r => { setTimeout(r, 100) }) // .weft/dev.json is written on 'listening'
     await run('launch', { route: '/' })
   }, 60_000)
 
@@ -68,7 +69,7 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
 
   it('pauses the clock from page load: nothing loads until time advances', async () => {
     await run('time', { op: 'pause', reload: true })
-    await new Promise(r => setTimeout(r, 1500))
+    await new Promise(r => { setTimeout(r, 1500) })
     expect(await run('time', { op: 'status' })).toMatchObject({ installed: true })
     expect(await run('assert', { target: { role: 'list', name: 'Products' }, expect: { absent: true }, timeout: 100 })).toMatchObject({ ok: true })
     await run('time', { op: 'advance', ms: 300 })

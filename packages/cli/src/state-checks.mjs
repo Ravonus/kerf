@@ -10,7 +10,7 @@ import { local } from './alias.mjs'
 import { diagnostic, positions } from './diag.mjs'
 import { discover } from './files.mjs'
 
-const isServerModule = rel => /^src\/server\//.test(rel) || /\.server\.[cm]?[jt]sx?$/.test(rel)
+const isServerModule = rel => rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
 const KEEPS_OBJECTS = new Set(['map', 'filter', 'flatMap', 'slice', 'sort', 'toSorted', 'reverse', 'concat', 'find', 'at', 'structuredClone'])
 const ESCAPES = new Set(['untrack', 'optimistic'])
 
@@ -73,6 +73,7 @@ function scan(rel, text, queries, report) {
   }
   /** The first handle a function's body reads: the source `state.linked` follows. */
   function handleIn(node) {
+    /** @type {string | undefined} */
     let found
     const walk = n => {
       if (found) return

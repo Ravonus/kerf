@@ -9,7 +9,7 @@ import ts from 'typescript'
 import { z } from 'zod'
 import { diagnostic, locate } from './diag.mjs'
 import { checkSite } from './site.mjs'
-import { contributions } from './plugins.mjs'
+import { contributions } from './contributions.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
@@ -201,7 +201,7 @@ function loadPlugin(root, entry) {
 /** A JSON or YAML config as what a `.ts` one evaluates to. */
 function readDataConfig(root, file, text) {
   const data = file.endsWith('.json') ? JSON.parse(text) : nativeRequire('yaml').parse(text)
-  const { $schema, ...config } = data ?? {}
+  const { $schema: _schema, ...config } = data ?? {}
   if (Array.isArray(config.plugins)) config.plugins = config.plugins.map(p => loadPlugin(root, p))
   return config
 }

@@ -134,7 +134,7 @@ describe('weft check: the style D-codes and .weft/styles.json', () => {
   it('a clean project gets no style codes, and the matrix is written', async () => {
     const dir = clean()
     const r = await check(dir)
-    expect(r.diagnostics.filter(d => /^D0/.test(d.code))).toEqual([])
+    expect(r.diagnostics.filter(d => d.code.startsWith('D0'))).toEqual([])
     expect(r.styles).toEqual({ groups: 2, matrix: '.weft/styles.json' })
     const m = JSON.parse(readFileSync(join(dir, '.weft/styles.json'), 'utf8'))
     expect(Object.keys(m.groups)).toEqual(['order-card', 'status-badge'])
@@ -179,7 +179,7 @@ export const G = () => <p {...orderCard()} {...statusBadge()} />
 `,
     })
     const r = await check(dir)
-    const style = r.diagnostics.filter(d => /^D0/.test(d.code)).map(d => `${d.file}:${d.span[0]} ${d.code} ${d.severity} ${d.why}`)
+    const style = r.diagnostics.filter(d => d.code.startsWith('D0')).map(d => `${d.file}:${d.span[0]} ${d.code} ${d.severity} ${d.why}`)
     expect(style).toEqual([
       // D021 is reported on the later group by name, naming the other; D024 (b) on each definition
       'src/cards.tsx:4 D021 warning groups invoice-card (src/cards.tsx:20) and order-card resolve to 100% the same CSS',

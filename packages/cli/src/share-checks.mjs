@@ -24,7 +24,7 @@ const rowsOf = sf => {
 const warpNames = sf => {
   const names = new Map()
   for (const n of sf.statements) {
-    if (!ts.isImportDeclaration(n) || !/^@weft-js\/warp/.test(n.moduleSpecifier.text) || !n.importClause?.namedBindings || !ts.isNamedImports(n.importClause.namedBindings)) continue
+    if (!ts.isImportDeclaration(n) || !n.moduleSpecifier.text.startsWith('@weft-js/warp') || !n.importClause?.namedBindings || !ts.isNamedImports(n.importClause.namedBindings)) continue
     for (const s of n.importClause.namedBindings.elements) names.set(s.name.text, (s.propertyName ?? s.name).text)
   }
   return names

@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, resolve } from 'node:path'
 import { discover } from './files.mjs'
 import { loadConfig } from './load-config.mjs'
-import { dbLayer } from './start.mjs'
+import { dbLayer } from './db-layer.mjs'
 import { listSurfaces } from './surface-checks.mjs'
 
 const read = (root, rel) => (existsSync(join(root, rel)) ? readFileSync(join(root, rel), 'utf8') : '')

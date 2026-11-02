@@ -32,7 +32,7 @@ const loopCallbacks = new Set(['forEach', 'map', 'flatMap', 'filter', 'some', 'e
 const timerCalls = new Set(['setTimeout', 'setInterval', 'requestAnimationFrame', 'setImmediate'])
 const exts = ['', '.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs', '/index.ts', '/index.tsx', '/index.js']
 
-const kindOf = file => (/\.tsx$/.test(file) ? ts.ScriptKind.TSX : /\.jsx$/.test(file) ? ts.ScriptKind.JSX : /\.[mc]?ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS)
+const kindOf = file => (file.endsWith('.tsx') ? ts.ScriptKind.TSX : file.endsWith('.jsx') ? ts.ScriptKind.JSX : /\.[mc]?ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS)
 export const parse = (text, file) => ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kindOf(file))
 const isFn = n => n && (ts.isArrowFunction(n) || ts.isFunctionExpression(n) || ts.isFunctionDeclaration(n))
 export const norm = n => n.getText().replace(/\s+/g, ' ').replace(/;$/, '')
@@ -233,7 +233,7 @@ export function checkTestFile(text, rel, options = {}) {
   }
   const helperAsserting = new Set()
   const helperCache = new Map()
-  for (const [local, imp] of imports) {
+  for (const [binding, imp] of imports) {
     if (!imp.abs || /\.(test|spec)\./.test(imp.abs)) continue
     if (!helperCache.has(imp.abs)) {
       let names = new Set()
@@ -243,7 +243,7 @@ export function checkTestFile(text, rel, options = {}) {
       } catch {}
       helperCache.set(imp.abs, names)
     }
-    if (helperCache.get(imp.abs).has(imp.name)) helperAsserting.add(local)
+    if (helperCache.get(imp.abs).has(imp.name)) helperAsserting.add(binding)
   }
   const asserting = assertingFunctions(sf, helperAsserting)
 
@@ -327,7 +327,7 @@ export function checkTestFile(text, rel, options = {}) {
       else if (why.loop) looped.push([m.call, why.text])
       else report('T008', m.call, `This \`expect\` only runs ${why.text}, so the test can pass without checking anything.`)
     })
-    if (!always) for (const [call, text] of looped) report('T008', call, `Every \`expect\` in this test runs ${text}, so the test can pass without checking anything.`)
+    if (!always) for (const [call, how] of looped) report('T008', call, `Every \`expect\` in this test runs ${how}, so the test can pass without checking anything.`)
 
     if (ts.isBlock(body)) assertsWhatItSet(body.statements, report)
   }

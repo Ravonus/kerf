@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { EventEmitter } from 'node:events'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -161,7 +161,7 @@ describe('agents', () => {
     expect(out.overLimit).toBe(false)
   })
 
-  it('a diagnostic tells an agent what to do, as the code it can act on', async () => {
+  it('a diagnostic tells an agent what to do, as the code it can act on', () => {
     const dir = app({ ...goalOnly, 'src/goal.tsx': 'function Row(props) { return <li>{props.a}</li> }\nexport const X = 1\n' })
     const r = spawnSync(process.execPath, [bin, 'tsc', '--json', '--root', dir], { encoding: 'utf8' })
     const d = JSON.parse(r.stdout).diagnostics[0]
@@ -235,7 +235,7 @@ describe('the dev listener', () => {
     const bad = await next('done')
     expect(bad.diagnostics).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 4 }])
     expect(JSON.parse(readFileSync(join(dir, '.weft/props.json'), 'utf8')).diagnostics).toHaveLength(1)
-    await new Promise(ok => setTimeout(ok, 5))
+    await new Promise(ok => { setTimeout(ok, 5) })
     expect(server.sent.map(m => m.type)).toContain('error')
     writeFileSync(file, good)
     server.watcher.emit('change', file)

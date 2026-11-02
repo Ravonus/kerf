@@ -54,7 +54,7 @@ describe('W044', () => {
   it('is in the catalog, as a warning', () => {
     expect(entry('W044')).toMatchObject({ severity: 'warning', by: 'cli' })
   })
-  it.each(['crypto.randomUUID()', 'Date.now()', 'Math.random()', '`row-${Date.now()}`'])('flags key={%s}', async key => {
+  it.each(['crypto.randomUUID()', 'Date.now()', 'Math.random()', `\`row-\${Date.now()}\``])('flags key={%s}', async key => {
     const [d] = w044(await check(app(`<ul>{[1].map(n => <li key={${key}}>{n}</li>)}</ul>`)))
     expect(d).toMatchObject({ severity: 'warning', file })
     expect(d.why).toContain('differs between the server and the client')

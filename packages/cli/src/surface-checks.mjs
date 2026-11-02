@@ -40,7 +40,7 @@ function surfaceCalls(sf) {
 
 function propNames(call) {
   const schema = prop(call.def, 'props')?.initializer
-  if (schema && ts.isCallExpression(schema) && /\.object$/.test(schema.expression.getText()) && ts.isObjectLiteralExpression(schema.arguments[0] ?? schema)) return schema.arguments[0].properties.map(p => p.name.getText())
+  if (schema && ts.isCallExpression(schema) && schema.expression.getText().endsWith('.object') && ts.isObjectLiteralExpression(schema.arguments[0] ?? schema)) return schema.arguments[0].properties.map(p => p.name.getText())
   const type = call.node.typeArguments?.[0]
   if (type && ts.isTypeLiteralNode(type)) return type.members.map(m => m.name?.getText()).filter(Boolean)
   return []
@@ -112,7 +112,7 @@ function glyphChecks(sf, report) {
     const span = returnedSpan(fn)
     if (!span) return
     const text = knownString(sf, source)
-    const count = text === undefined ? 0 : [...text].length
+    const count = text === undefined ? 0 : Array.from(text).length
     if (count > GLYPHS) report('X040', node, `Per-grapheme spans over ${count} graphemes: each is a DOM node, a style and a composited layer once it animates. Use word-level motion or a Surface.`)
     const hidden = attrOf(span, 'aria-hidden') || spreads(span)
     const parent = jsxParent(node)
@@ -133,7 +133,7 @@ function surfaceFileChecks(sf, slots, report) {
     if (!ts.isCallExpression(n) || !ts.isPropertyAccessExpression(n.expression)) return
     const method = n.expression.name.text
     if ((method === 'fillText' || method === 'strokeText') && !inside(n)) report('X010', n, `\`${method}\` in a surface draws text only the canvas knows about: no selection, find, translation or screen reader. Use \`s.text()\`, or \`s.decorative()\` for text that is truly decoration.`)
-    if (method === 'setAttribute' && stringOf(n.arguments[0]) === 'aria-hidden' && /\.el$/.test(n.expression.expression.getText())) report('X011', n, 'This hides the surface or its text mirror from assistive tech. Leave the mirror to weft.')
+    if (method === 'setAttribute' && stringOf(n.arguments[0]) === 'aria-hidden' && n.expression.expression.getText().endsWith('.el')) report('X011', n, 'This hides the surface or its text mirror from assistive tech. Leave the mirror to weft.')
   })
   for (const call of calls) {
     const kindNode = prop(call.def, 'kind')?.initializer

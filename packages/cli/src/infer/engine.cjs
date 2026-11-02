@@ -228,7 +228,6 @@ class Engine {
       return st
     }
     const outer = sites.filter(s => !(s.site.in === c.name && s.file === c.file))
-    const counted = outer.length ? outer : sites
     if (!outer.length) st.noCallers = true
 
     const memo = new Map()

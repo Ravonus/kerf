@@ -30,7 +30,7 @@ const io = () => {
 
 describe('the plugin lock', () => {
   // Through the real CLI: a fresh process sees the updated package, as it does after a real install.
-  it('reports a new permission, blocks check until it is approved, then passes', async () => {
+  it('reports a new permission, blocks check until it is approved, then passes', () => {
     const dir = app(body())
     expect(weft('plugins', 'approve', '--all', '--root', dir).status).toBe(0)
     expect(weft('check', '--root', dir).status).toBe(0)
@@ -187,9 +187,9 @@ describe('weft plugins audit', () => {
 
   it.each(['text', 'plugin-media', 'plugin-surface-keel', 'warp'])('%s declares what it uses', async name => {
     const dir = fileURLToPath(new URL(`../../${name}/`, import.meta.url))
-    const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
-    const mod = await import(pathToFileURL(createRequire(join(dir, 'package.json')).resolve(pkg.exports['./plugin'] ? `${pkg.name}/plugin` : pkg.name)).href)
-    const instance = pluginFactory(mod, pkg.name).value()
+    const meta = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
+    const mod = await import(pathToFileURL(createRequire(join(dir, 'package.json')).resolve(meta.exports['./plugin'] ? `${meta.name}/plugin` : meta.name)).href)
+    const instance = pluginFactory(mod, meta.name).value()
     expect(auditPackage(dir, dir, { permissions: instance.permissions, manifest: instance.contribute({ command: 'check', mode: 'development', root: dir }) }).undeclared).toEqual([])
   })
 })

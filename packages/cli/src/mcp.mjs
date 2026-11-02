@@ -3,6 +3,7 @@
 // Every tool returns the same JSON as the CLI's `--json`, as text and as structuredContent.
 
 import { agentMap } from './map.mjs'
+import { once } from 'node:events'
 import { createInterface } from 'node:readline'
 import { check } from './check.mjs'
 import { docs, topics } from './docs.mjs'
@@ -50,6 +51,7 @@ function browserTools() {
   ]
 }
 
+/** What `weft mcp` offers an agent: each tool's name, its description and the arguments it takes. */
 export const tools = [
   {
     name: 'docs',
@@ -164,6 +166,7 @@ export async function handle(root, msg) {
   }
 }
 
+/** Answer newline-delimited JSON-RPC from `input`, one message at a time; resolves once `input` has closed and the last answer is out. */
 export function serve(root, input = process.stdin, output = process.stdout) {
   const rl = createInterface({ input, crlfDelay: Infinity })
   const write = obj => output.write(`${JSON.stringify(obj)}\n`)
@@ -181,5 +184,5 @@ export function serve(root, input = process.stdin, output = process.stdout) {
       if (res) write(res)
     })
   })
-  return new Promise(done => rl.on('close', () => queue.then(done)))
+  return once(rl, 'close').then(() => queue)
 }

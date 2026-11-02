@@ -63,7 +63,7 @@ async fn main() -> std::io::Result<()> {
 weft::native!(contract::functions(${pascal(name)}));
 `}`
 
-const fn = (name, binding, file) => `import { query } from '@weft-js/start/data'
+const fn = (name, binding) => `import { query } from '@weft-js/start/data'
 import { z } from 'zod'
 import { ${binding} } from './rust'
 

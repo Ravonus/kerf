@@ -14,7 +14,7 @@ import { findConfig, loadConfig, pluginFactory, pluginName } from './load-config
 import { sync } from './plugins.mjs'
 import { cssEntry, packages, viteConfig } from './tailwind.mjs'
 import { database } from './map.mjs'
-import { dbLayer } from './start.mjs'
+import { dbLayer } from './db-layer.mjs'
 import { packageOf, trustStatus } from './trust.mjs'
 
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
@@ -139,7 +139,7 @@ function viteWithTailwind(file, text) {
 }
 
 /** Tailwind's packages, the Vite plugin, and the top of src/app.css, imported first by the root layout. */
-async function addTailwind(root, { dryRun, install }) {
+function addTailwind(root, { dryRun, install }) {
   if (!existsSync(join(root, 'package.json'))) throw refused('`weft add tailwind` needs a package.json. Nothing was changed.')
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const cssFile = join(root, 'src/app.css')

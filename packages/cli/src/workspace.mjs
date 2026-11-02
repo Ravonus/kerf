@@ -79,7 +79,7 @@ export function runVitest(dir, files, { bin, timeoutMs = 120_000, config } = {})
     let stderr = ''
     child.stderr.on('data', d => { if (stderr.length < 20_000) stderr += d })
     let timedOut = false
-    const timer = setTimeout(() => { timedOut = true; try { process.kill(-child.pid, 'SIGKILL') } catch {} }, timeoutMs)
+    const timer = setTimeout(() => { timedOut = true; try { if (child.pid !== undefined) process.kill(-child.pid, 'SIGKILL') } catch {} }, timeoutMs)
     child.on('close', () => {
       clearTimeout(timer)
       const tests = new Map(), loadErrors = new Map()

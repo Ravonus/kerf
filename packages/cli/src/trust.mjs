@@ -13,6 +13,7 @@ export const lockFile = '.weft/plugins.lock.json'
 
 const refused = message => Object.assign(new Error(message), { code: 'E_TRUST' })
 const posix = p => p.split(sep).join('/')
+/** @param {string[]} list */
 const sorted = list => [...new Set(list)].sort()
 
 /** Permissions as flat strings, one per grant, so a lock diff reads line by line: `fs.read:fonts/**`, `native`. */
@@ -102,8 +103,8 @@ function scanFile(text, file) {
 }
 
 const EXTENSIONS = ['', '.mjs', '.js', '.cjs', '.ts', '.tsx', '.mts', '/index.mjs', '/index.js', '/index.ts']
-const source = /\.(?:[cm]?[jt]s|[jt]sx)$/
-const onDisk = path => EXTENSIONS.map(e => path + e).find(p => source.test(p) && existsSync(p)) ?? null
+const sourceFile = /\.(?:[cm]?[jt]s|[jt]sx)$/
+const onDisk = path => EXTENSIONS.map(e => path + e).find(p => sourceFile.test(p) && existsSync(p)) ?? null
 
 /** A package export's file for this runtime. */
 function exportTarget(value) {
@@ -138,6 +139,7 @@ export function audit(root, dir, contribution) {
   const seen = new Set()
   const queue = roots.filter(f => f && !relative(dir, f).startsWith('..'))
   const uses = []
+  /** @type {Set<string>} */
   const dependencies = new Set()
   while (queue.length) {
     const file = queue.pop()

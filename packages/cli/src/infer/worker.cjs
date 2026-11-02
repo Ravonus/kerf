@@ -52,7 +52,7 @@ function rested() {
 async function first() {
   running = true
   try { await report(performance.now()) } catch (e) { parentPort.postMessage({ type: 'failed', message: e.stack }) } finally { running = false }
-  drain()
+  await drain()
 }
 
 async function report(t, files) {
@@ -90,8 +90,8 @@ parentPort.on('message', msg => {
   if (msg === 'close') { clearTimeout(timer); clearTimeout(writes); session.close(); process.exit(0) }
   pending.add(msg)
   clearTimeout(timer)
-  timer = setTimeout(drain, debounce)
+  timer = setTimeout(() => void drain(), debounce)
 })
 
 parentPort.postMessage({ type: 'ready', needed: session.engine.needed() })
-if (session.engine.needed()) first()
+if (session.engine.needed()) void first()

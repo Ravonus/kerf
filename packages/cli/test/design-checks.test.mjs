@@ -46,7 +46,7 @@ describe('role drift', () => {
       'src/A.tsx': `${IMPORT}export const A = () => <><Heading level={1} role="display">A</Heading><Heading level={1} role="display">B</Heading></>`,
       'src/B.tsx': `${IMPORT}export const B = () => <Heading level={1}>C</Heading>`,
     })
-    const [d, ...rest] = result.diagnostics.filter(d => d.code === 'D006')
+    const [d, ...rest] = result.diagnostics.filter(x => x.code === 'D006')
     expect(rest).toEqual([])
     expect(apply(root, d)).toContain('<Heading role="display" level={1}>C</Heading>')
   })
@@ -57,7 +57,7 @@ describe('role drift', () => {
       'src/C.tsx': `${IMPORT}export const C = () => <Heading level={3}>D</Heading>`,
     })
     const ds = result.diagnostics.filter(d => d.code === 'D006')
-    expect(ds.map(d => d.file).sort()).toEqual(['src/A.tsx', 'src/B.tsx'])
+    expect(ds.map(d => d.file).sort((a, b) => a.localeCompare(b))).toEqual(['src/A.tsx', 'src/B.tsx'])
     const fixed = apply(root, ds.find(d => d.file === 'src/B.tsx'))
     expect(fixed).toContain('<Heading level={3}>C</Heading>')
     expect(fixed).toContain(`import { Heading } from '@weft-js/warp'`)
@@ -82,7 +82,7 @@ describe('role drift', () => {
 
   test('D007 a bare link is swapped for Link, and the import follows', async () => {
     const { root, result } = await run(`import { Row } from '@weft-js/warp'\nexport const P = () => <Row as="nav"><a href="/a">Home</a></Row>`)
-    const d = result.diagnostics.find(d => d.code === 'D007')
+    const d = result.diagnostics.find(x => x.code === 'D007')
     expect(d.fix.safe).toBe(false)
     const fixed = apply(root, d)
     expect(fixed).toContain('<Link href="/a">Home</Link>')
@@ -104,13 +104,13 @@ describe('role drift', () => {
 describe('values (an app with warp)', () => {
   test('D001 a raw colour, with no autofix', async () => {
     const { result } = await run(`export const P = () => <p style={{ color: '#7c3aed' }}>x</p>`)
-    const d = result.diagnostics.find(d => d.code === 'D001')
+    const d = result.diagnostics.find(x => x.code === 'D001')
     expect(d.why).toContain('#7c3aed')
     expect(d.fix.edits).toBeUndefined()
   })
   test('D002 a scale step by hand has a safe fix that keeps the type', async () => {
     const { root, result } = await run(`export const P = () => <p style={{ padding: '16px' }}>x</p>`)
-    const d = result.diagnostics.find(d => d.code === 'D002')
+    const d = result.diagnostics.find(x => x.code === 'D002')
     expect(d.fix.safe).toBe(true)
     expect(apply(root, d)).toContain(`padding: 'var(--warp-space-group)'`)
     expect(codes(await check(root, { files: ['src/Page.tsx'] }))).toEqual([])
@@ -140,11 +140,11 @@ describe('values (an app with warp)', () => {
   })
   test('D004 a hand-rolled stack becomes <Stack> with its import', async () => {
     const { root, result } = await run(`export function P() {\n  return <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}><p>x</p></div>\n}\n`)
-    const d = result.diagnostics.find(d => d.code === 'D004')
+    const d = result.diagnostics.find(x => x.code === 'D004')
     const text = apply(root, d)
     expect(text).toContain(`<Stack gap="group"><p>x</p></Stack>`)
     expect(text.startsWith(`import { Stack } from '@weft-js/warp'\n`)).toBe(true)
-    expect((await check(root, { files: ['src/Page.tsx'] })).diagnostics.filter(d => d.code === 'D004')).toEqual([])
+    expect((await check(root, { files: ['src/Page.tsx'] })).diagnostics.filter(x => x.code === 'D004')).toEqual([])
   })
   test('D004 Tailwind classes, into an existing import', async () => {
     const { root, result } = await run(`import { Card } from '@weft-js/warp'\nexport const P = () => <section class="flex gap-2"><Card /></section>\n`)
@@ -205,7 +205,7 @@ describe('contrast and accessibility (every app)', () => {
     `<input aria-label="Name" />`,
     `<input type="hidden" />`,
     `<input {...attrs} />`,
-    '<><label for={`${id}-a`}>Name</label><input id={`${id}-a`} /></>',
+    `<><label for={\`\${id}-a\`}>Name</label><input id={\`\${id}-a\`} /></>`,
     `<input aria-hidden="true" tabindex={-1} name="website" />`,
     `<Field label="Name" for="a"><input id="a" /></Field>`,
     `<Field label="Name"><input /></Field>`,
@@ -228,7 +228,7 @@ describe('contrast and accessibility (every app)', () => {
     const { root, result } = await run(`export const P = () => <div onClick={() => {}}>x</div>\n`, bare)
     expect(apply(root, result.diagnostics.find(d => d.code === 'D033'))).toContain(`<button type="button" onClick={() => {}}>x</button>`)
     const two = await run(`export const P = () => <p tabindex="3">x</p>\n`, bare)
-    const d = two.result.diagnostics.find(d => d.code === 'D037')
+    const d = two.result.diagnostics.find(x => x.code === 'D037')
     expect(d.fix.safe).toBe(true)
     expect(apply(two.root, d)).toContain(`tabindex="0"`)
   })
@@ -269,7 +269,7 @@ describe('weft fix', () => {
   test('applies the safe fixes and leaves the suggestions', async () => {
     const root = project({ ...warpPkg, 'src/Page.tsx': `export const P = () => <section style={{ padding: '16px', gap: 8 }} tabindex="2"><div onClick={() => {}}>x</div></section>\n` })
     const { applied } = await fix(root, { files: ['src/Page.tsx'] })
-    expect(applied.map(a => a.code).sort()).toEqual(['D002', 'D002', 'D037'])
+    expect(applied.map(a => a.code).sort((a, b) => a.localeCompare(b))).toEqual(['D002', 'D002', 'D037'])
     const text = readFileSync(join(root, 'src/Page.tsx'), 'utf8')
     expect(text).toContain(`padding: 'var(--warp-space-group)', gap: 'var(--warp-space-related)'`)
     expect(text).toContain('tabindex="0"')
