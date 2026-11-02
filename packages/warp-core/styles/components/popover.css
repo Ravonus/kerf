@@ -6,6 +6,12 @@
 :where([data-scope="popover"] [data-part="title"]) { margin: 0 0 var(--warp-space-tight); font-weight: 600; font-size: var(--warp-text-body-size); }
 :where([data-scope="popover"] [data-part="description"]) { margin: 0 0 var(--warp-space-group); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); line-height: var(--warp-text-caption-leading); }
 
+/* presentation="inline": the panel drawn open under its trigger, in the page's flow (docs, previews) */
+:where([data-scope="popover"][data-part="content"][data-presentation="inline"]) {
+  position: relative; inset: auto; display: block; margin-block-start: var(--warp-space-tight); max-block-size: none;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
+
 /* -- Hover card --------------------------------------------------------------- */
 :where([data-scope="hover-card"][data-part="content"]) { inline-size: 300px; padding: var(--warp-space-group); display: grid; gap: var(--warp-space-related); }
 }

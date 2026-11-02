@@ -304,3 +304,24 @@ test('a webhook URL wraps after a slash or before a dot, never inside a word, in
     expect(/[/&=]$/.test(before) || /^[.?#]/.test(after), `${text}: broke "${before}|${after}"`).toBe(true)
   }
 })
+
+test('an inline Modal, Drawer, Popover and Tooltip draw their surface open in their box, in flow, with no top layer', async () => {
+  const seen = await page.evaluate(() => ['in-modal', 'in-drawer', 'in-popover', 'in-tooltip'].map(id => {
+    const box = document.getElementById(id)
+    const el = box.querySelector('[data-presentation="inline"]')
+    const s = getComputedStyle(el), r = el.getBoundingClientRect(), b = box.getBoundingClientRect()
+    const trigger = box.querySelector(':scope > button, :scope > [data-scope="button"]')
+    return {
+      id, position: s.position, opacity: +s.opacity, visible: s.display !== 'none' && r.width > 40 && r.height > 20,
+      inside: r.left >= b.left - 1 && r.right <= b.right + 1 && r.top >= b.top - 1 && r.bottom <= b.bottom + 1,
+      topLayer: el.matches(':modal') || el.matches(':popover-open'), backdrop: getComputedStyle(el, '::backdrop').backgroundColor,
+      below: trigger ? r.top >= trigger.getBoundingClientRect().bottom : true, modalPage: document.documentElement.matches(':has(dialog:modal)'),
+    }
+  }))
+  for (const s of seen) {
+    expect(s, s.id).toMatchObject({ position: 'relative', opacity: 1, visible: true, inside: true, topLayer: false, below: true, modalPage: false })
+  }
+  // the drawer keeps its side's shape: it sits at the box's end
+  const end = await page.evaluate(() => Math.abs(document.querySelector('#in-drawer dialog').getBoundingClientRect().right - document.getElementById('in-drawer').getBoundingClientRect().right))
+  expect(end).toBeLessThan(1)
+})

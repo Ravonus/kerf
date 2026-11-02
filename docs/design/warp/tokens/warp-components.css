@@ -645,6 +645,13 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   }
 }
 
+/* presentation="inline": the dialog drawn open in the page's flow, for docs and previews. A non-modal <dialog open>:
+   no top layer, scrim, focus trap or scroll lock. It takes its size's width, up to its box's, and never moves */
+:where(dialog[data-scope="dialog"][data-presentation="inline"]) {
+  position: relative; inset: auto; z-index: auto; margin: 0; inline-size: min(var(--_w), 100%); block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
+
 /* -- Sheet: side on wide screens, bottom on phones -------------------------- */
 :where(dialog[data-scope="sheet"]) {
   --_tx: 1; --_ty: 0; --_drag: 0px;
@@ -740,11 +747,24 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="sheet"][data-dragging] > [data-part="footer"]) { transition: none; }
 :where([data-scope="sheet"] > [data-part="body"]) { padding-block-end: calc(var(--warp-pad-surface) + var(--_lift, 0px)); }
 
+/* presentation="inline": the sheet drawn open in the page's flow at its side's shape (docs, previews): no top layer,
+   scrim or drag. Its height is its content's; a box that wants it at an edge puts it there */
+:where(dialog[data-scope="sheet"][data-presentation="inline"]) {
+  position: relative; inset: auto; margin: 0; max-inline-size: 100%; block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; transition: none;
+}
+
 /* -- Popover --------------------------------------------------------------- */
 :where([data-scope="popover"][data-part="content"]:focus) { outline: none; }   /* focus lands on a text-only toggletip itself */
 :where([data-scope="popover"][data-part="content"]) { inline-size: max-content; max-inline-size: min(340px, calc(100vw - 16px)); padding: var(--warp-space-group); }
 :where([data-scope="popover"] [data-part="title"]) { margin: 0 0 var(--warp-space-tight); font-weight: 600; font-size: var(--warp-text-body-size); }
 :where([data-scope="popover"] [data-part="description"]) { margin: 0 0 var(--warp-space-group); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); line-height: var(--warp-text-caption-leading); }
+
+/* presentation="inline": the panel drawn open under its trigger, in the page's flow (docs, previews) */
+:where([data-scope="popover"][data-part="content"][data-presentation="inline"]) {
+  position: relative; inset: auto; display: block; margin-block-start: var(--warp-space-tight); max-block-size: none;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
 
 /* -- Tooltip (hint: never essential) ------------------------------------------ */
 :where([data-scope="tooltip"][data-part="content"]) {
@@ -773,6 +793,12 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="tooltip"][data-part="content"][data-warm]:popover-open) { transition-duration: 0ms; }
 }
 :where([data-scope="tooltip"] kbd) { margin-inline-start: 6px; font: 500 10.5px/1.25 var(--warp-font-mono); opacity: 0.75; }
+
+/* presentation="inline": the tip shown under its trigger, in the page's flow (docs, previews) */
+:where([data-scope="tooltip"][data-part="content"][data-presentation="inline"]) {
+  position: relative; inset: auto; display: block; inline-size: max-content; margin-block-start: 6px;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
 
 /* -- Hover card --------------------------------------------------------------- */
 :where([data-scope="hover-card"][data-part="content"]) { inline-size: 300px; padding: var(--warp-space-group); display: grid; gap: var(--warp-space-related); }

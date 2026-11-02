@@ -137,6 +137,13 @@
   }
 }
 
+/* presentation="inline": the dialog drawn open in the page's flow, for docs and previews. A non-modal <dialog open>:
+   no top layer, scrim, focus trap or scroll lock. It takes its size's width, up to its box's, and never moves */
+:where(dialog[data-scope="dialog"][data-presentation="inline"]) {
+  position: relative; inset: auto; z-index: auto; margin: 0; inline-size: min(var(--_w), 100%); block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
+
 /* -- Modal backdrop as a part (for non-<dialog> hosts such as the frames) ---------- */
 :where([data-scope="backdrop"]) {
   position: fixed; inset: 0; z-index: var(--warp-z-overlay); background: var(--warp-color-scrim); backdrop-filter: blur(var(--warp-blur-overlay));

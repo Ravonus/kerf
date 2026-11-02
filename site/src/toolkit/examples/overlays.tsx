@@ -467,3 +467,42 @@ export const TooltipAligns = () => (
     <Tooltip content="Lines up with the end" align="end"><Button emphasis="outline" tone="neutral">End</Button></Tooltip>
   </>
 )
+
+// Hub cards: each overlay drawn open in the card with `inline` (in flow, no top layer), so the card shows the surface
+// itself, not the button that opens it.
+export function ModalTile() {
+  const open = state(true)
+  return (
+    <Modal inline open={open} size="sm" title="Rename project" description="Everyone on the project sees the new name." footer={<><Button emphasis="ghost" tone="neutral" data-close="">Cancel</Button><Button data-close="">Save</Button></>}>
+      <Input label="Project name" value="storefront" />
+    </Modal>
+  )
+}
+
+export function DrawerTile() {
+  const open = state(true)
+  const d = DEPLOYS[0]
+  return (
+    <div style="display:flex;justify-content:flex-end">
+      <Drawer inline open={open} side="right" title={d.message} description={`${d.project}, ${d.id}`}>
+        <Stack gap="related">
+          <Row justify="between"><Text subtle>Status</Text><Badge tone={TONE_OF[d.status as Status]} dot>{d.status}</Badge></Row>
+          <Row justify="between"><Text subtle>Author</Text><Text>{d.author}</Text></Row>
+          <Row justify="between"><Text subtle>Branch</Text><Text>{d.branch}</Text></Row>
+        </Stack>
+      </Drawer>
+    </div>
+  )
+}
+
+export const PopoverTile = () => (
+  <div style="display:grid;justify-items:center">
+    <Popover inline label="What is a preview?" title="Preview deploys" description="Every branch gets its own address, so you can try a change before it goes live." />
+  </div>
+)
+
+export const TooltipTile = () => (
+  <div style="display:grid;justify-items:center">
+    <Tooltip inline content="Runs on every region" kbd="⌘D"><Button emphasis="outline" tone="neutral">Deploy everywhere</Button></Tooltip>
+  </div>
+)

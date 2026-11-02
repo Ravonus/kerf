@@ -7,6 +7,8 @@ export const overlays: DocGroup = {
   docs: [
     {
       component: 'Modal',
+      tile: 'ModalTile',
+      tileStage: 'narrow',
       summary: 'A dialog that stops the page until it is answered.',
       hero: 'ModalDefault',
       use: {
@@ -47,6 +49,7 @@ export const overlays: DocGroup = {
       keyboard: [['Esc', 'Closes and returns focus to the opener'], ['Tab', 'Stays inside the dialog']],
       a11yNotes: ['It is a native `<dialog>`, so everything behind it is inert.', 'The title names it and the description describes it.', 'Focus goes to `autofocus`, else the title, and back to the opener on every way of closing.'],
       propDocs: {
+        inline: 'Draws it open in the page\'s flow instead of over it: no top layer, scrim or focus trap. For docs and previews; `open` still shows and hides it.',
         open: 'A `state` holding whether it is open. The modal writes `false` when people close it.',
         title: 'Names the dialog.',
         description: 'A line under the title, read out on open.',
@@ -60,6 +63,8 @@ export const overlays: DocGroup = {
     },
     {
       component: 'Drawer',
+      tile: 'DrawerTile',
+      tileStage: 'narrow',
       summary: 'A panel that slides in from the edge, for details and side tasks.',
       hero: 'DrawerDeployDetails',
       use: {
@@ -89,6 +94,7 @@ export const overlays: DocGroup = {
       keyboard: [['Esc', 'Closes and returns focus to the opener'], ['Tab', 'Stays inside the drawer']],
       a11yNotes: ['It is a native `<dialog>`, so the page behind is inert.', 'Focus goes to `autofocus`, else the title, never the handle.'],
       propDocs: {
+        inline: 'Draws it open in the page\'s flow at its side\'s shape: no top layer, scrim or focus trap. For docs and previews; `open` still shows and hides it.',
         open: 'A `state` holding whether it is open. The drawer writes `false` when people close it.',
         title: 'Names the drawer.',
         description: 'A line under the title.',
@@ -99,6 +105,8 @@ export const overlays: DocGroup = {
     },
     {
       component: 'Popover',
+      tile: 'PopoverTile',
+      tileStage: 'center',
       summary: 'A small panel that opens from a button and stays out of the way.',
       use: {
         when: ['A few controls or a short note, next to what they affect', 'People may carry on with the page while it is open'],
@@ -130,6 +138,7 @@ export const overlays: DocGroup = {
       keyboard: [['Enter', 'Opens it and moves focus inside'], ['Esc', 'Closes and returns focus to the button'], ['Tab', 'Leaving the panel closes it']],
       a11yNotes: ['It is a non-modal dialog, named by its title, else by its button.', 'The button reports whether it is open.'],
       propDocs: {
+        inline: 'Draws the panel open under its trigger, in the page\'s flow: no top layer or light dismiss. The trigger still shows and hides it. For docs and previews.',
         label: 'The button\'s text.',
         title: 'A heading in the panel. Also names it.',
         description: 'A line under the title.',
@@ -141,6 +150,8 @@ export const overlays: DocGroup = {
     },
     {
       component: 'Tooltip',
+      tile: 'TooltipTile',
+      tileStage: 'center',
       summary: 'A short hint on hover or keyboard focus.',
       hero: 'TooltipBasic',
       use: {
@@ -172,6 +183,7 @@ export const overlays: DocGroup = {
       keyboard: [['Tab', 'Focusing the trigger shows it'], ['Esc', 'Hides it']],
       a11yNotes: ['Never put anything essential in a tooltip: touch has no hover.', 'The tip describes its trigger, unless the trigger\'s name already says the same words.', 'The trigger must be one focusable element.'],
       propDocs: {
+        inline: 'Shows the tip under its trigger, in the page\'s flow, without waiting for hover. For docs and previews.',
         content: 'The words. Plain text only.',
         kbd: 'A key hint beside the words.',
         side: 'Which side it opens on.',

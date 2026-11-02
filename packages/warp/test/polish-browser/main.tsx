@@ -10,6 +10,10 @@ import { Kanban } from '../../src/collab/Kanban'
 import { Calendar } from '../../src/schedule/Calendar'
 import { Bell } from '../../src/live/Bell'
 import { Webhooks } from '../../src/admin/Integrations'
+import { Modal } from '../../src/Modal'
+import { Drawer } from '../../src/Drawer'
+import { Popover } from '../../src/Popover'
+import { Tooltip } from '../../src/Tooltip'
 
 const rows = [{ id: 'a', name: 'Alpha', cost: 1 }, { id: 'b', name: 'Beta', cost: 2 }]
 const columns = [{ id: 'name', header: 'Name', sort: true }, { id: 'cost', header: 'Cost', sort: true, numeric: true }]
@@ -62,6 +66,12 @@ render(() => (
       {['compact', 'cozy', 'comfortable'].map(d => <div data-density={d} style="display:flex;gap:16px"><Bell count={3} /><Bell count={12} /></div>)}
     </div>
     {[['hooks-desk', 760], ['hooks-phone', 340]].map(([id, w]) => box(id as string, w as number, <Webhooks hooks={HOOKS} events={['deploy.succeeded']} onAdd={async () => 'whsec_x'} onTest={async () => ({ status: 200, ms: 1 })} />))}
+    <div id="inline-overlays" style="display:grid;gap:24px;inline-size:520px;padding:16px">
+      <div id="in-modal"><Modal inline open={state(true)} size="sm" title="Rename project" footer={<Button data-close="">Save</Button>}>Everyone sees the new name.</Modal></div>
+      <div id="in-drawer" style="display:flex;justify-content:flex-end"><Drawer inline open={state(true)} side="right" title="Deploy d-4821">Rows</Drawer></div>
+      <div id="in-popover"><Popover inline label="What is a preview?" title="Preview deploys" description="Every branch gets its own address." /></div>
+      <div id="in-tooltip"><Tooltip inline content="Runs on every region"><Button>Deploy everywhere</Button></Tooltip></div>
+    </div>
     {box('week-free', 900, cal({ views: ['week', 'day'], defaultView: 'week', workingHours: [540, 1080] }))}
   </>
 ), document.getElementById('app')!)
