@@ -53,7 +53,7 @@ function DocSection(props: { file: string; section: Section }) {
   )
 }
 
-/** Every component's page, in one order: preview, install, usage, one heading per real option, then the reference. */
+/** Every component's page, in one order: preview, install, try it, usage, one heading per real option, then the reference. */
 export function ComponentPage(props: { data: Page }) {
   const d = props.data
   return (
@@ -62,10 +62,17 @@ export function ComponentPage(props: { data: Page }) {
         <header>
           <h1>{d.name}</h1>
           <p data-part="lede">{d.summary}</p>
-          <p data-part="links"><Link href={d.source} rel="external">Source</Link><span>Package <code data-scope="code">@weft/warp</code></span>{d.playground && <a href="#playground">Playground</a>}</p>
+          <p data-part="links"><Link href={d.source} rel="external">Source</Link><span>Package <code data-scope="code">@weft/warp</code></span>{d.playground && <a href="#playground">Try it</a>}</p>
         </header>
         {d.hero && <section id="preview" data-site="tk-default"><ExampleFrame file={d.file} example={d.hero} hero /></section>}
         <section id="installation" data-site="tk-section"><h2 data-flow="heading">Installation</h2><Install /></section>
+        {d.playground && (
+          <section id="playground" data-site="tk-section" data-try="">
+            <h2 data-flow="heading">Try it</h2>
+            <p data-part="note" data-flow="item">Change the controls: the preview and its code update together. The address keeps what you set, so you can link to it.</p>
+            <Playground file={d.file} name={d.name} play={d.playground} />
+          </section>
+        )}
         <section id="usage" data-site="tk-section"><h2 data-flow="heading">Usage</h2><div innerHTML={d.usage}></div></section>
         {d.sections.map(s => <DocSection key={s.title} file={d.file} section={s} />)}
         {d.use && (
@@ -77,7 +84,6 @@ export function ComponentPage(props: { data: Page }) {
             </div>
           </section>
         )}
-        {d.playground && <section id="playground" data-site="tk-section"><h2 data-flow="heading">Playground</h2><Playground file={d.file} name={d.name} play={d.playground} /></section>}
         {(d.keyboard || d.a11yNotes) && (
           <section id="accessibility" data-site="tk-section">
             <h2 data-flow="heading">Accessibility</h2>

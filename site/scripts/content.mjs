@@ -436,7 +436,7 @@ function buildToolkit() {
       const related = (doc.related ?? []).filter(slugFor).map(name => ({ name, slug: slugFor(name), href: hrefs.get(slugFor(name)) }))
       const play = doc.playground && finishKnobs(doc.playground, c.props, c.name)
       if (play && !found.has(play.example)) problems.push(`${c.name}: no export ${play.example}`)
-      const heads = [{ id: 'installation', text: 'Installation' }, { id: 'usage', text: 'Usage' }, ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...(play ? [{ id: 'playground', text: 'Playground' }] : []), { id: 'accessibility', text: 'Accessibility' }, { id: 'api-reference', text: 'API Reference' }]
+      const heads = [{ id: 'installation', text: 'Installation' }, ...(play ? [{ id: 'playground', text: 'Try it' }] : []), { id: 'usage', text: 'Usage' }, ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), { id: 'accessibility', text: 'Accessibility' }, { id: 'api-reference', text: 'API Reference' }]
       const i = order.indexOf(c.name)
       const near = n => n && facts.get(n) && areaIn(n) === areaOf(g.file) && { name: n, slug: slugFor(n), href: hrefs.get(slugFor(n)) }
       pages[c.slug] = {
