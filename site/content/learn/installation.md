@@ -1,14 +1,22 @@
-# Getting started
+# Installation
 
-This page takes you from an empty folder to a running weft app, then has you change it. You'll need Node 26 and npm.
-Once weft is published, Bun or Deno can take Node's place: the CLI, `weft dev` and `weft build` all run on either one, with no
-Node installed.
+:::learn
+- How to make a new weft app and start it
+- Where Rust fits in, and why you don't need it
+- How to change the page and check your work
+:::
+
+This page takes you from an empty folder to a running weft app, then has you change it. You need Node 26 and npm.
+Once weft is published, Bun or Deno can take Node's place: the CLI, `weft dev` and `weft build` all run on either one, with
+no Node installed.
 
 Rust isn't needed to use weft. The compiler comes with it as WebAssembly, which runs anywhere, and a native addon for your
-platform installs by itself and makes builds faster. Rust only comes in if you choose to write [Rust sidecars](/docs/rust).
+platform installs by itself and makes builds faster. Rust only comes in if you choose to write
+[Rust server functions](/learn/rust).
 
 weft isn't on npm yet, so for now the commands below run from a checkout of the repo, and building that checkout's compiler
-does take Rust (`cargo`). Once weft is published, `npm create @weft-js` will replace the first two steps and no Rust is involved.
+does take Rust (`cargo`). Once weft is published, `npm create @weft-js` will replace the first two steps and no Rust is
+involved.
 
 ## 1. Get the repo
 
@@ -62,7 +70,10 @@ npx weft build
 
 `weft check` reads the whole app and reports mistakes with a code and a fix. `weft build` makes the production build.
 
-## Where to next
+## Recap
 
-Read [The rules](/docs/rules) next. There are nine, and they cover how every component behaves. To see more first, the
-[examples](/examples) each show running code beside its source.
+- `local.mjs new` makes an app from a checkout today. `npm create @weft-js` will do it once weft is published.
+- `npx weft dev` runs it, `npx weft check` checks it and `npx weft build` builds it.
+- Rust is only for code you choose to write in Rust.
+
+Next, [your first component](/learn/your-first-component).
