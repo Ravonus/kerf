@@ -60,7 +60,9 @@
    controls add up to docks under both, never folded, with its own copy button. -- */
 [data-site="frame"][data-play] [data-part="tools"] [data-part="play-live"] { display: inline-flex; align-items: center; gap: var(--warp-space-tight); padding-inline: var(--warp-space-tight); font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
 [data-site="frame"][data-play] [data-part="play-live"] [data-part="dot"] { inline-size: 6px; block-size: 6px; border-radius: 50%; background: var(--warp-color-positive-solid, var(--warp-color-accent-solid)); }
-[data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) 264px; }
+/* The panel takes a little under half the frame, up to 320px (264px left four short options cut or ragged): the stage
+   gives way but stays the wider of the two. Six options still need two rows, so they lay out as an even 3×2 grid. */
+[data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) clamp(264px, 48%, 320px); }
 [data-site="frame"][data-play] [data-part="stage"] { --stage-h: 320px; }
 [data-site="frame"][data-play] [data-part="stage"]:has(> [data-part="mount"][data-stage="center"]) { --stage-h: 300px; }
 [data-site="frame"][data-play="wide"] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); }
@@ -72,12 +74,14 @@
 [data-site="frame"] [data-part="knob"] { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
 [data-site="frame"] [data-part="knobs"] [data-part="knob-label"] { font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
 [data-site="frame"] [data-part="knob"] [data-scope="segmented"] { max-inline-size: 100%; }
-/* measured at its natural width, then wrapped when that is wider than the panel (Playground's wrap()) */
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-measure] { max-inline-size: none; inline-size: max-content; }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { display: flex; flex-wrap: wrap; justify-self: stretch; }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label { flex: 1 1 auto; }
+/* measured at its natural width (Playground's wrap()); too wide for the panel, it becomes an even grid of equal columns,
+   or, when none fits, gives way to the same choice as a dropdown */
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-measure] { display: inline-grid; max-inline-size: none; inline-size: max-content; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { grid-auto-flow: row; grid-template-columns: repeat(var(--seg-cols, 2), minmax(0, 1fr)); justify-self: stretch; }
 [data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > [data-part="indicator"] { display: none; }
 [data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label:has(input:checked) { background: var(--warp-color-accent-solid); }
+[data-site="frame"] [data-part="knob"]:not([data-fallback]) > [data-scope="field"]:has([role="combobox"]):not(:only-child),
+[data-site="frame"] [data-part="knob"][data-fallback] > :is([data-part="knob-label"], [data-scope="segmented"]) { display: none; }
 [data-site="frame"] [data-part="knob"][hidden] { display: none; }
 /* switches read as a list: a run of them sits closer together than the labelled controls */
 [data-site="frame"] [data-part="knob"][data-control="switch"] + [data-part="knob"][data-control="switch"] { margin-block-start: calc(var(--warp-space-tight) - var(--warp-space-group)); }

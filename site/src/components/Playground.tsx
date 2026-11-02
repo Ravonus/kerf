@@ -33,7 +33,8 @@ function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { 
   const text = derived(() => String(value.value ?? ''))
   const number = derived(() => Number(value.value))
   if (k.control === 'switch') return <Switch checked={!!value.value} onChange={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).checked)}>{k.label}</Switch>
-  if (k.control === 'segmented') return <><span data-part="knob-label">{k.label}</span><Segmented size="sm" label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, option(k, v))} /></>
+  // A button per option, with the same choice as a dropdown beside it for when no even grid of them fits (wrap()).
+  if (k.control === 'segmented') return <><span data-part="knob-label">{k.label}</span><Segmented size="sm" label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, option(k, v))} /><Select label={k.label} value={text.value} options={options} onValueChange={(v: string | null) => props.set(k.prop, v === null ? v : option(k, v))} /></>
   if (k.control === 'select') return <Select label={k.label} value={text.value} options={options} onValueChange={(v: string | null) => props.set(k.prop, v === null ? v : option(k, v))} />
   if (k.control === 'slider') return <Slider label={k.label} value={number.value} min={k.min} max={k.max} step={k.step} onChange={(v: number) => props.set(k.prop, v)} />
   return <Input label={k.label} value={text.value} onInput={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).value)} />
@@ -86,23 +87,39 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
     if (Object.keys(given).length) values.value = { ...values.value, ...given }
     previews[props.file]!().then(m => { Case = m[play.example]; show() })
   })
-  // A button per option: a group too wide for the panel wraps onto more rows (the sliding indicator gives way to a
-  // filled pick), and goes back to one row as soon as it fits again.
+  // A button per option, on one row while they fit. A group too wide for the panel lays its options out as an even grid
+  // (equal columns that divide them: six as 3×2, four as 2×2; the sliding indicator gives way to a filled pick), never a
+  // ragged wrap that ends a row mid-group. When no even grid fits (five long options), the knob shows its dropdown.
+  // Measured from the widest option, since the options share one width: fonts arriving late re-measure.
   let knobs!: HTMLDivElement
   const wrap = () => {
     for (const seg of knobs.querySelectorAll<HTMLElement>('[data-part="knob"] > [data-scope="segmented"]')) {
-      const room = seg.parentElement?.clientWidth ?? 0
+      const knob = seg.parentElement!
+      const room = knob.clientWidth
       if (!room) continue // a hidden knob: measured when it shows, since that resizes the panel
+      knob.removeAttribute('data-fallback')
+      seg.removeAttribute('data-wrap')
       seg.setAttribute('data-measure', '')
-      const need = seg.offsetWidth
+      const cell = Math.max(...[...seg.querySelectorAll<HTMLElement>(':scope > label [data-part="item"]')].map(i => i.scrollWidth))
+      const n = seg.querySelectorAll(':scope > label').length
+      const css = getComputedStyle(seg)
+      const gap = parseFloat(css.columnGap) || 0, pad = (parseFloat(css.paddingInlineStart) || 0) + (parseFloat(css.paddingInlineEnd) || 0)
       seg.removeAttribute('data-measure')
-      seg.toggleAttribute('data-wrap', need > room)
+      const fits = (cols: number) => cols * cell + (cols - 1) * gap + pad <= room
+      if (fits(n)) continue
+      let cols = 0
+      for (let c = n - 1; c >= 2 && !cols; c--) if (n % c === 0 && fits(c)) cols = c
+      if (cols) {
+        seg.setAttribute('data-wrap', '')
+        seg.style.setProperty('--seg-cols', String(cols))
+      } else knob.setAttribute('data-fallback', '')
     }
   }
   let watch: ResizeObserver | undefined
   onMount(() => {
     wrap()
     if (typeof ResizeObserver === 'function') (watch = new ResizeObserver(() => wrap())).observe(knobs)
+    document.fonts?.ready.then(() => { if (!gone) wrap() })
   })
   onCleanup(() => { gone = true; watch?.disconnect(); if (frame) cancelAnimationFrame(frame); stop?.() })
   const code = derived(() => print(play, props.name, values.value))

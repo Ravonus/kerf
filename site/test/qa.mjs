@@ -181,7 +181,7 @@ for (const path of ['/components/dither', '/components/select', '/charts/line-ch
   })
 }
 // A knob with a few options is a button per option, and every one of them is on screen inside the panel; a long list
-// is a dropdown.
+// is a dropdown. On a desk the panel is at least 300px, and Button's six emphases and six tones take two even rows.
 for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
   await check(`few options are buttons at ${viewport.width}`, '/components/button', async page => {
     await page.locator('[data-play]').scrollIntoViewIfNeeded()
@@ -190,7 +190,8 @@ for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
     const knobs = await page.evaluate(() => [...document.querySelectorAll('[data-play] [data-part="knob"]:not([hidden])')].map(k => {
       const seg = k.querySelector('[data-scope="segmented"]'), panel = k.getBoundingClientRect()
       const out = seg ? [...seg.querySelectorAll('label')].filter(l => { const r = l.getBoundingClientRect(); return r.width < 8 || r.left < panel.left - 1 || r.right > panel.right + 1 }).map(l => l.textContent) : []
-      return { label: k.querySelector('[data-part="knob-label"], label')?.textContent?.trim(), seg: !!seg, options: seg?.querySelectorAll('label').length ?? 0, select: !!k.querySelector('[data-scope="select"], select'), out }
+      const shows = e => !!e && e.getClientRects().length > 0
+      return { label: k.querySelector('[data-part="knob-label"], label')?.textContent?.trim(), seg: shows(seg), options: seg?.querySelectorAll('label').length ?? 0, select: shows(k.querySelector('[role="combobox"]')), out }
     }))
     for (const name of ['Emphasis', 'Tone', 'Size']) {
       const k = knobs.find(x => x.label === name)
@@ -198,6 +199,53 @@ for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
       same(k.seg && !k.select, true, `${name} is a button per option`)
       same(k.out.join(), '', `${name} options off the panel`)
     }
+    if (viewport.width === 1280) {
+      const { panel, rows } = await page.evaluate(() => ({
+        panel: document.querySelector('[data-play] [data-part="knobs"]').getBoundingClientRect().width,
+        rows: Object.fromEntries([...document.querySelectorAll('[data-play] [data-part="knob"]:has(> [data-scope="segmented"])')].map(k => [k.querySelector('[data-part="knob-label"]').textContent, new Set([...k.querySelectorAll('[data-scope="segmented"] > label')].map(l => Math.round(l.getBoundingClientRect().top))).size])),
+      }))
+      if (panel < 300) throw new Error(`a ${Math.round(panel)}px panel`)
+      same(`${rows.Emphasis} ${rows.Tone}`, '2 2', 'rows of Emphasis and Tone')
+    }
+  }, viewport)
+}
+// Every playground's few-option knobs, on a desk and a phone: one row of buttons whose words show whole, or, when they
+// can't fit one row, an even grid of equal columns (six as 3×2), never a ragged wrap that ends a row mid-group; when no
+// even grid fits, a dropdown in their place. A long list is a dropdown, as above.
+for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
+  await check(`playground option buttons sit on even rows at ${viewport.width}`, '/components', async page => {
+    const { readFileSync } = await import('node:fs')
+    const pages = JSON.parse(readFileSync(new URL('../src/generated/toolkit.json', import.meta.url), 'utf8'))
+    const paths = Object.values(pages).filter(p => p.playground?.knobs.some(k => k.control === 'segmented')).map(p => `/${p.area}/${p.slug}`)
+    if (paths.length < 30) throw new Error(`only ${paths.length} playgrounds with option buttons`)
+    const bad = []
+    for (const path of paths) {
+      await page.goto(base + path, { waitUntil: 'load' })
+      await page.locator('#playground').scrollIntoViewIfNeeded()
+      await page.waitForSelector('#playground [data-part="knob"] > [data-scope="segmented"]', { state: 'attached', timeout: 8000 }).catch(() => {})
+      await page.evaluate(() => document.fonts.ready)
+      await page.waitForTimeout(250)
+      bad.push(...await page.evaluate(path => [...document.querySelectorAll('#playground [data-part="knob"]:not([hidden]):has(> [data-scope="segmented"])')].flatMap(k => {
+        const name = `${path} ${k.querySelector('[data-part="knob-label"]').textContent}`
+        const seg = k.querySelector(':scope > [data-scope="segmented"]'), pick = k.querySelector('[role="combobox"]')
+        const shows = e => !!e && e.getClientRects().length > 0
+        if (!shows(seg)) return shows(pick) ? [] : [`${name}: neither buttons nor a dropdown`]
+        if (shows(pick)) return [`${name}: buttons and a dropdown`]
+        const room = k.getBoundingClientRect(), items = [...seg.querySelectorAll(':scope > label')]
+        const boxes = items.map(l => l.getBoundingClientRect())
+        const out = []
+        const cut = items.filter((l, i) => { const t = l.querySelector('[data-part="item"]'); return t.scrollWidth > t.clientWidth + 1 || boxes[i].right > room.right + 1 || boxes[i].left < room.left - 1 }).map(l => l.textContent)
+        if (cut.length) out.push(`${cut.join('/')} cut`)
+        const tops = [...new Set(boxes.map(b => Math.round(b.top)))]
+        if (tops.length > 1) {
+          const per = tops.map(t => boxes.filter(b => Math.round(b.top) === t))
+          const even = per.every(r => r.length === per[0].length) && boxes.every(b => Math.abs(b.width - boxes[0].width) < 1.5) && per.every(r => r.every((b, i) => Math.abs(b.left - per[0][i].left) < 1.5))
+          if (!even) out.push(`ragged rows ${per.map(r => r.length).join('+')}`)
+        }
+        return out.length ? [`${name}: ${out.join(', ')}`] : []
+      }), path))
+    }
+    same(bad.join('; '), '', 'option buttons')
   }, viewport)
 }
 // Every prop and event in every API table says what it does. The pages are read as served (the tables are in the
@@ -792,7 +840,7 @@ for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
       const wide = path === '/components/table' // a fill stage keeps the full width and puts the controls under it
       if (viewport.width === 1280 && !wide) {
         if (!(r.knobs.l >= r.stage.r - 1 && Math.abs(r.knobs.t - r.stage.t) < 2)) throw new Error(`controls not beside the stage: stage ${JSON.stringify(r.stage)} controls ${JSON.stringify(r.knobs)}`)
-        if (r.stage.w < r.knobs.w * 1.4) throw new Error(`stage ${r.stage.w}px is not the large part beside ${r.knobs.w}px of controls`)
+        if (r.stage.w < r.knobs.w) throw new Error(`stage ${r.stage.w}px is not the large part beside ${r.knobs.w}px of controls`)
       } else if (r.knobs.t < r.stage.b - 1) throw new Error(`controls not under the stage: stage bottom ${r.stage.b}, controls top ${r.knobs.t}`)
       if (r.code.t < Math.max(r.stage.b, r.knobs.b) - 1) throw new Error('the code is not under the stage and controls')
     }, viewport)
