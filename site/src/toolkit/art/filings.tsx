@@ -12,7 +12,7 @@ export default function Filings(_: ArtProps) {
   const draw = ({ ctx, width, height, dt, pointer, tier }: Frame) => {
     const c = colours(ctx.canvas), nc = Math.ceil(width / PITCH), nr = Math.ceil(height / PITCH), fresh = nc !== cols || nr !== rows
     if (fresh) { cols = nc; rows = nr; angle = new Float32Array(cols * rows) }
-    const ax = width * 0.33, bx = width * 0.67, py = height / 2, poles = [[ax, py, 1], [bx, py, -1], ...(pointer.in ? [[pointer.x, pointer.y, 2.2 * polarity]] : [])] as number[][]
+    const ax = width * 0.33, bx = width * 0.67, mid = height / 2, poles = [[ax, mid, 1], [bx, mid, -1], ...(pointer.in ? [[pointer.x, pointer.y, 2.2 * polarity]] : [])] as number[][]
     const k = fresh || !dt ? 1 : Math.min(1, dt * (tier.reach > 0 ? 12 : 60)), buckets: number[][] = [[], [], []]
     let moving = false
     for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) {
@@ -21,7 +21,7 @@ export default function Filings(_: ArtProps) {
       for (const [qx, qy, q] of poles) { const dx = px - qx!, dy = py - qy!, d = dx * dx + dy * dy + 80, s = (q! * 30000) / d; fx += (dx / Math.sqrt(d)) * s; fy += (dy / Math.sqrt(d)) * s }
       const want = Math.atan2(fy, fx), turn = ((want - angle[i]! + Math.PI * 3) % (Math.PI * 2)) - Math.PI
       if (Math.abs(turn) > 0.01) moving = true
-      const now = (angle[i] += turn * k)!, power = Math.hypot(fx, fy), tick = LENGTH * Math.min(1, 0.5 + power * 0.1), cos = (Math.cos(now) * tick) / 2, sin = (Math.sin(now) * tick) / 2
+      const now = (angle[i]! += turn * k), power = Math.hypot(fx, fy), tick = LENGTH * Math.min(1, 0.5 + power * 0.1), cos = (Math.cos(now) * tick) / 2, sin = (Math.sin(now) * tick) / 2
       buckets[power > 7 ? 0 : power > 1.6 ? 1 : 2]!.push(px - cos, py - sin, px + cos, py + sin)
     }
     ctx.clearRect(0, 0, width, height)

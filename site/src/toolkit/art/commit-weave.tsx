@@ -19,7 +19,7 @@ const year = (() => {
 })()
 const peak = Math.max(...year), total = year.reduce((a, b) => a + b, 0)
 
-export default function CommitWeave(_: ArtProps) {
+export default function CommitWeave(_props: ArtProps) {
   const found = state('')
   const draw = ({ ctx, width, height, pointer }: Frame) => {
     const c = colours(ctx.canvas), mx = 18, my = 26, cw = (width - mx * 2) / WEEKS, ch = (height - my * 2) / DAYS
