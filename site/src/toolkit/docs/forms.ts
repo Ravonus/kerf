@@ -21,6 +21,7 @@ export const forms: DocGroup = {
   docs: [
     {
       component: 'Input',
+      tile: 'InputClearableCounter',
       summary: 'One line of text: a name, an email, a URL.',
       use: {
         when: ['A short answer people type', 'Any native input type: email, password, url, tel'],
@@ -60,6 +61,7 @@ export const forms: DocGroup = {
     },
     {
       component: 'Textarea',
+      tile: 'TextareaCounter',
       summary: 'Several lines of text that grow as people write.',
       use: { when: ['Descriptions, notes and messages'], instead: [{ name: 'Input', why: 'one line is enough' }, { name: 'RichTextEditor', why: 'people need formatting' }, { name: 'MentionsInput', why: 'people tag each other' }] },
       playground: {
@@ -90,6 +92,7 @@ export const forms: DocGroup = {
     },
     {
       component: 'Search',
+      tile: 'SearchPlaceholder',
       summary: 'A text field for finding things, with a search icon and a clear button.',
       use: { when: ['Filtering a list as people type', 'Finding something across the app'], instead: [{ name: 'Combobox', why: 'people pick one suggestion' }, { name: 'CommandPalette', why: 'it runs actions' }] },
       playground: {
@@ -146,7 +149,7 @@ export const forms: DocGroup = {
           { id: 'SelectSearchable', title: 'Search in the list', note: '`searchable` adds it. Lists over 15 options get it anyway.', stage: 'narrow', height: 340 },
           { id: 'SelectSizes', title: 'Sizes', stage: 'narrow' },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'SelectStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'SelectStates', title: 'Every state', note: 'For a value people can see but not change, show a read-only Input.', stage: 'fill', height: 320 }] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'SelectLinked', title: 'Show what was picked', note: 'Pass a `State` to `value` and it stays bound.', stage: 'narrow', height: 340 },
           { id: 'FormInvite', title: 'Invite a teammate', note: 'Send one with a bad address, then a good one.', stage: 'narrow', height: 420 },

@@ -1,5 +1,5 @@
 import { derived, state, untrack } from 'weft'
-import { Button, Card, Checkbox, CompactSelect, Field, Grid, Input, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
+import { Button, Checkbox, CompactSelect, Field, Grid, Input, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS } from '../world'
 
 /** One state in a States grid: its name, then the field. */
@@ -29,7 +29,7 @@ const TARGET_OPTIONS = [
 export const InputPlay = (p: any) => <Input {...p} hint={p.hint || undefined} />
 
 export const InputVariants = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Input label="Project name" defaultValue="storefront" />
     <Input label="Project name" defaultValue="storefront" variant="classic" />
     <Input label="Project name" defaultValue="storefront" appearance="line" />
@@ -67,7 +67,7 @@ export const InputClearableCounter = () => (
 )
 
 export const InputStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><Input label="Project name" /></Cell>
     <Cell name="Filled"><Input label="Project name" defaultValue="storefront" /></Cell>
     <Cell name="Hint"><Input label="Project name" hint="Lowercase letters and dashes." /></Cell>
@@ -100,9 +100,10 @@ export function FormProjectSettings() {
     if (!problem.value) toast.show({ title: 'Settings saved', description: `${name.value} runs ${copies.value} copies in ${region.value}.` })
   }
   return (
-    <Card title="Project settings">
+    <>
       <Stack as="form" gap="group" onSubmit={save}>
-        <Grid min="sm" gap="group">
+        <Text role="heading">Project settings</Text>
+        <Grid cols={2} gap="group">
           <Input label="Project name" value={name.value} error={problem.value} onInput={e => (name.value = e.currentTarget.value)} />
           <Select label="Region" options={REGION_OPTIONS} value={region} hint="Moving a project redeploys it." />
         </Grid>
@@ -115,7 +116,7 @@ export function FormProjectSettings() {
         </Row>
       </Stack>
       <Toaster />
-    </Card>
+    </>
   )
 }
 
@@ -133,7 +134,7 @@ export const TextareaRows = () => (
 export const TextareaCounter = () => <Textarea label="Release note" counter={140} defaultValue="Product images now load from the edge, about 40% faster." />
 
 export const TextareaVariants = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Textarea label="Description" defaultValue="The public shop." />
     <Textarea label="Description" defaultValue="The public shop." variant="classic" />
     <Textarea label="Description" defaultValue="The public shop." appearance="line" />
@@ -141,7 +142,7 @@ export const TextareaVariants = () => (
 )
 
 export const TextareaStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><Textarea label="Description" /></Cell>
     <Cell name="Filled"><Textarea label="Description" defaultValue="The public shop, served from the edge." /></Cell>
     <Cell name="Hint"><Textarea label="Description" hint="Shown on the project's card." /></Cell>
@@ -191,7 +192,7 @@ export const SearchPlaceholder = () => (
 )
 
 export const SearchStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><Search label="Search projects" /></Cell>
     <Cell name="Filled"><Search label="Search projects" defaultValue="checkout" /></Cell>
     <Cell name="Hint"><Search label="Search projects" hint="Name, owner or region." /></Cell>
@@ -241,13 +242,13 @@ export const SelectSizes = () => (
 )
 
 export const SelectStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><Select label="Region" placeholder="Choose a region" options={REGION_OPTIONS} /></Cell>
     <Cell name="Filled"><Select label="Region" options={REGION_OPTIONS} defaultValue="us-east" /></Cell>
     <Cell name="Hint"><Select label="Region" options={REGION_OPTIONS} hint="Moving a project redeploys it." /></Cell>
     <Cell name="Invalid"><Select label="Region" placeholder="Choose a region" options={REGION_OPTIONS} error="Choose where this project runs." /></Cell>
     <Cell name="Disabled"><Select label="Region" options={REGION_OPTIONS} defaultValue="us-east" disabled /></Cell>
-    <Cell name="Read-only"><Select label="Region" options={REGION_OPTIONS} defaultValue="us-east" readonly open={false} /></Cell>
+    <Cell name="Read-only"><Input label="Region" defaultValue="us-east" readonly /></Cell>
   </Grid>
 )
 
@@ -309,7 +310,7 @@ export function CheckboxHint() {
 }
 
 export const CheckboxStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Off"><Checkbox>Deploy on push</Checkbox></Cell>
     <Cell name="On"><Checkbox checked>Deploy on push</Checkbox></Cell>
     <Cell name="Part of a set"><Checkbox indeterminate>Deploy on push</Checkbox></Cell>
@@ -446,7 +447,7 @@ export const SwitchPlacement = () => (
 export const SwitchHint = () => <Switch checked hint="Every pull request gets its own address.">Preview deploys</Switch>
 
 export const SwitchStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Off"><Switch>Preview deploys</Switch></Cell>
     <Cell name="On"><Switch checked>Preview deploys</Switch></Cell>
     <Cell name="Hint"><Switch hint="Every pull request gets its own address.">Preview deploys</Switch></Cell>
@@ -585,7 +586,7 @@ export const FieldAnatomy = () => (
 )
 
 export const FieldLabelStyles = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={2} gap="group">
     <Input label="Project name" hint="Floats on the border." />
     <Input label="Project name" hint="Sits above the field." variant="classic" />
   </Grid>

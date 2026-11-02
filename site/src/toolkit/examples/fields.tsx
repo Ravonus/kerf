@@ -1,5 +1,5 @@
 import { state } from 'weft'
-import { AddressField, Button, Card, CardNumberText, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft/warp'
+import { AddressField, Button, CardNumberText, CodeBlock, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft/warp'
 import type { ProviderAppearance, ProviderField } from '@weft/warp'
 import { PEOPLE, PROJECTS } from '../world'
 
@@ -28,13 +28,13 @@ export function PhoneFieldBasic() {
 export const PhoneFieldCountries = () => <PhoneField label="Mobile number" defaultCountry="DE" countries={TEAM_COUNTRIES} defaultValue="+4915112345678" />
 
 export const PhoneFieldStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><PhoneField label="Mobile number" /></Cell>
     <Cell name="Filled"><PhoneField label="Mobile number" defaultValue="+14155550123" /></Cell>
     <Cell name="Hint"><PhoneField label="Mobile number" hint="We'll text a code." /></Cell>
     <Cell name="Invalid"><PhoneField label="Mobile number" defaultValue="+14155550123" error="This number is already on another account." /></Cell>
     <Cell name="Disabled"><PhoneField label="Mobile number" defaultValue="+14155550123" disabled /></Cell>
-    <Cell name="Read-only"><PhoneField label="Mobile number" defaultValue="+14155550123" readonly /></Cell>
+    <Cell name="Read-only"><Input label="Mobile number" type="tel" defaultValue="+1 (415) 555-0123" readonly /></Cell>
   </Grid>
 )
 
@@ -50,7 +50,7 @@ export const CountrySelectBasic = () => <CountrySelect label="Country" preferred
 export const CountrySelectLimited = () => <CountrySelect label="Billing country" options={NEAR_COUNTRIES} defaultValue="SE" hint="Tessel invoices in these three." />
 
 export const CountrySelectStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><CountrySelect label="Country" /></Cell>
     <Cell name="Filled"><CountrySelect label="Country" defaultValue="DE" /></Cell>
     <Cell name="Hint"><CountrySelect label="Country" hint="Sets your tax rate." /></Cell>
@@ -63,7 +63,7 @@ export const CountrySelectStates = () => (
 export const LanguageSelectBasic = () => <LanguageSelect label="Language" preferred={NEAR_LANGUAGES} defaultValue="ja" />
 
 export const LanguageSelectStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><LanguageSelect label="Language" /></Cell>
     <Cell name="Filled"><LanguageSelect label="Language" defaultValue="de" /></Cell>
     <Cell name="Hint"><LanguageSelect label="Language" hint="Used in emails and on invoices." /></Cell>
@@ -76,7 +76,7 @@ export const LanguageSelectStates = () => (
 export const CurrencySelectBasic = () => <CurrencySelect label="Currency" preferred={NEAR_CURRENCIES} defaultValue="EUR" />
 
 export const CurrencySelectStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><CurrencySelect label="Currency" /></Cell>
     <Cell name="Filled"><CurrencySelect label="Currency" defaultValue="EUR" /></Cell>
     <Cell name="Hint"><CurrencySelect label="Currency" hint="Applies from the next invoice." /></Cell>
@@ -91,7 +91,7 @@ export const TimeZoneSelectBasic = () => <TimeZoneSelect label="Time zone" defau
 export const TimeZoneSelectOffices = () => <TimeZoneSelect label="Office" zones={OFFICE_ZONES} defaultValue="Asia/Tokyo" />
 
 export const TimeZoneSelectStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><TimeZoneSelect label="Time zone" /></Cell>
     <Cell name="Filled"><TimeZoneSelect label="Time zone" defaultValue="Europe/Berlin" /></Cell>
     <Cell name="Hint"><TimeZoneSelect label="Time zone" hint="Deploy windows follow this zone." /></Cell>
@@ -107,9 +107,10 @@ export function FormWorkspaceRegion() {
     toast.show({ title: 'Workspace updated', description: 'New invoices use these settings.' })
   }
   return (
-    <Card title="Workspace region">
+    <>
       <Stack as="form" gap="group" onSubmit={save}>
-        <Grid min="sm" gap="group">
+        <Text role="heading">Workspace region</Text>
+        <Grid cols={2} gap="group">
           <CountrySelect label="Country" name="country" preferred={NEAR_COUNTRIES} defaultValue="SE" />
           <LanguageSelect label="Language" name="language" preferred={NEAR_LANGUAGES} defaultValue="en" />
           <CurrencySelect label="Currency" name="currency" preferred={NEAR_CURRENCIES} defaultValue="EUR" />
@@ -118,13 +119,13 @@ export function FormWorkspaceRegion() {
         <Row justify="end"><Button type="submit">Save changes</Button></Row>
       </Stack>
       <Toaster />
-    </Card>
+    </>
   )
 }
 
 /* ---- AddressField ---- */
 
-const OFFICE = { country: 'SE', lines: ['Sveavägen 44'], locality: 'Stockholm', postalCode: '111 34' }
+const OFFICE = { country: 'DE', lines: ['Torstraße 140'], locality: 'Berlin', postalCode: '10119' }
 
 const STREETS = [
   { id: 'a', label: '548 Market Street', secondary: 'San Francisco, CA 94104', address: { country: 'US', lines: ['548 Market Street'], locality: 'San Francisco', region: 'CA', postalCode: '94104' } },
@@ -140,7 +141,7 @@ export const AddressFieldBasic = () => <AddressField label="Billing address" def
 
 export const AddressFieldLookup = () => <AddressField label="Shipping address" provider={streetProvider} countries={['US', 'CA']} />
 
-export const AddressFieldErrors = () => <AddressField label="Billing address" defaultValue={OFFICE} errors={{ postalCode: 'This postal code doesn\'t match Stockholm.' }} />
+export const AddressFieldErrors = () => <AddressField label="Billing address" defaultValue={OFFICE} errors={{ postalCode: 'This postal code doesn\'t match Berlin.' }} />
 
 export function FormBilling() {
   const pay = (e: Event) => {
@@ -148,18 +149,19 @@ export function FormBilling() {
     toast.show({ title: 'Billing details saved' })
   }
   return (
-    <Card title="Billing details">
+    <>
       <Stack as="form" gap="group" onSubmit={pay}>
-        <Input label="Company" autocomplete="organization" defaultValue="Tessel AB" />
+        <Text role="heading">Billing details</Text>
+        <Input label="Company" autocomplete="organization" defaultValue="Tessel GmbH" />
         <AddressField label="Billing address" name="address" defaultValue={OFFICE} />
-        <Grid min="sm" gap="group">
-          <PhoneField label="Phone" name="phone" defaultCountry="SE" countries={TEAM_COUNTRIES} />
+        <Grid cols={2} gap="group">
+          <PhoneField label="Phone" name="phone" defaultCountry="DE" countries={TEAM_COUNTRIES} />
           <CurrencySelect label="Currency" name="currency" preferred={NEAR_CURRENCIES} defaultValue="EUR" />
         </Grid>
         <Row justify="end"><Button type="submit">Save details</Button></Row>
       </Stack>
       <Toaster />
-    </Card>
+    </>
   )
 }
 
@@ -195,7 +197,7 @@ export function PlaceLookupInputPicked() {
 }
 
 export const PlaceLookupInputStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><PlaceLookupInput label="Office location" search={findPlace} /></Cell>
     <Cell name="Filled"><PlaceLookupInput label="Office location" search={findPlace} defaultValue={PLACES[1]} /></Cell>
     <Cell name="Hint"><PlaceLookupInput label="Office location" search={findPlace} hint="Used to pick a region." /></Cell>
@@ -211,9 +213,10 @@ export const PlaceLookupInputStates = () => (
 function testProvider(el: HTMLElement, look: ProviderAppearance): ProviderField {
   const input = el.ownerDocument.createElement('input')
   input.inputMode = 'numeric'
-  input.placeholder = '4242 4242 4242 4242'
   input.setAttribute('aria-label', 'Test card number')
   Object.assign(input.style, { all: 'unset', width: '100%', font: `${look.fontSize} ${look.fontFamily}`, color: look.color })
+  input.onfocus = () => (input.placeholder = '4242 4242 4242 4242')
+  input.onblur = () => (input.placeholder = '')
   el.append(input)
   return {
     on(event, send) {
@@ -235,7 +238,7 @@ const failedProvider = (el: HTMLElement, look: ProviderAppearance) => {
 export const PaymentCardInputBasic = () => <PaymentCardInput label="Card details" mount={testProvider} />
 
 export const PaymentCardInputStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><PaymentCardInput label="Card details" mount={testProvider} /></Cell>
     <Cell name="Hint"><PaymentCardInput label="Card details" mount={testProvider} hint="Charged on the 1st of each month." /></Cell>
     <Cell name="Invalid"><PaymentCardInput label="Card details" mount={failedProvider} /></Cell>
@@ -294,7 +297,7 @@ export const CodeInputWrap = () => <CodeInput label="Run command" language="sh" 
 export const CodeInputErrorLine = () => <CodeInput label="Post-deploy hook" language="ts" defaultValue={SCRIPT} rows={8} errorLine={3} error="Line 3: health.status is a string here." />
 
 export const CodeInputStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><CodeInput label="Run command" language="sh" rows={3} /></Cell>
     <Cell name="Filled"><CodeInput label="Run command" language="sh" rows={3} defaultValue="node server.js" /></Cell>
     <Cell name="Hint"><CodeInput label="Run command" language="sh" rows={3} hint="Runs once in every copy." /></Cell>
@@ -322,10 +325,9 @@ export const JsonEditorSchema = () => <JsonEditor label="tessel.json" defaultVal
 export const JsonEditorBroken = () => <JsonEditor label="tessel.json" defaultValue={'{\n  "region": "eu-west",\n  "copies": 3,\n}'} rows={5} />
 
 export const JsonEditorStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><JsonEditor label="tessel.json" rows={3} /></Cell>
     <Cell name="Filled"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 3 }'} /></Cell>
-    <Cell name="Hint"><JsonEditor label="tessel.json" rows={3} hint="Overrides the project's settings." /></Cell>
     <Cell name="Invalid"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 0 }'} schema={checkConfig} /></Cell>
     <Cell name="Disabled"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 3 }'} disabled /></Cell>
     <Cell name="Read-only"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 3 }'} readonly /></Cell>
@@ -352,7 +354,7 @@ export const KeyValueEditorJson = () => <KeyValueEditor label="Response headers"
 export const KeyValueEditorDuplicate = () => <KeyValueEditor label="Environment variables" keyLabel="Name" defaultValue={[...ENV, { key: 'LOG_LEVEL', value: 'debug' }]} />
 
 export const KeyValueEditorStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={2} gap="group">
     <Cell name="Empty"><KeyValueEditor label="Response headers" /></Cell>
     <Cell name="Filled"><KeyValueEditor label="Response headers" defaultValue={HEADERS} /></Cell>
     <Cell name="Hint"><KeyValueEditor label="Response headers" hint="Added to every response." defaultValue={HEADERS} /></Cell>
@@ -387,7 +389,7 @@ export function MentionsInputComment() {
 }
 
 export const MentionsInputStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><MentionsInput label="Comment" triggers={MENTIONS} /></Cell>
     <Cell name="Filled"><MentionsInput label="Comment" triggers={MENTIONS} defaultValue="Thanks @[Priya Raman](user:priya)!" /></Cell>
     <Cell name="Hint"><MentionsInput label="Comment" triggers={MENTIONS} hint="Type @ to tag someone." /></Cell>
@@ -414,13 +416,13 @@ export function RichTextEditorMarkdown() {
   return (
     <Stack gap="related">
       <RichTextEditor label="Release notes" format="markdown" value={text} />
-      <Text role="code" subtle>{text.value}</Text>
+      <CodeBlock code={text.value} language="markdown" />
     </Stack>
   )
 }
 
 export const RichTextEditorStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><RichTextEditor label="Notes" toolbar="none" /></Cell>
     <Cell name="Filled"><RichTextEditor label="Notes" toolbar="none" defaultValue="<p>Shipped on <strong>Friday</strong>.</p>" /></Cell>
     <Cell name="Hint"><RichTextEditor label="Notes" toolbar="none" hint="Type / for blocks, @ to tag someone." mentions={people} /></Cell>
@@ -442,7 +444,7 @@ The public shop, served from the **edge**.
 See [the deploy guide](https://tessel.dev/docs) for more.
 `
 
-export const MarkdownEditorBasic = () => <MarkdownEditor label="README" defaultValue={README} rows={11} />
+export const MarkdownEditorBasic = () => <MarkdownEditor label="README" defaultValue={README} />
 
 export const MarkdownEditorShort = () => <MarkdownEditor label="Changelog entry" rows={5} defaultValue={'**Fixed:** retries on timed out calls.'} hint="⌘B and ⌘I wrap the selection." />
 
@@ -472,7 +474,7 @@ export function SignaturePadBasic() {
 export const SignaturePadTyped = () => <SignaturePad label="Signature" defaultValue={{ method: 'typed', text: 'Mara Lindqvist', svg: '' }} />
 
 export const SignaturePadStates = () => (
-  <Grid min="sm" gap="group">
+  <Grid cols={3} gap="group">
     <Cell name="Empty"><SignaturePad label="Signature" /></Cell>
     <Cell name="Hint"><SignaturePad label="Signature" hint="Sign as Mara Lindqvist, Owner." /></Cell>
     <Cell name="Invalid"><SignaturePad label="Signature" error="Sign before you continue." /></Cell>
@@ -492,7 +494,7 @@ export function FormDataAgreement() {
     <Stack as="form" gap="group" onSubmit={submit}>
       <Stack gap="hair">
         <Text role="heading">Data processing agreement</Text>
-        <Text subtle>Tessel AB will process logs only to run your deploys.</Text>
+        <Text subtle>Tessel GmbH will process logs only to run your deploys.</Text>
       </Stack>
       <SignaturePad label="Signature" value={signature} error={tried.value && !signature.value ? 'Sign before you continue.' : undefined} />
       <Button type="submit" full>{done.value ? 'Signed' : 'Sign agreement'}</Button>

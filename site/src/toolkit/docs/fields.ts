@@ -19,7 +19,7 @@ export const fields: DocGroup = {
           { id: 'PhoneFieldBasic', title: 'Watch the value', note: 'Type a US number. The value stays empty until the number is complete.', stage: 'narrow', height: 180 },
           { id: 'PhoneFieldCountries', title: 'A short country list', note: '`countries` limits the list. A pasted `+49…` picks its country.', stage: 'narrow', height: 280 },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'PhoneFieldStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'PhoneFieldStates', title: 'Every state', note: 'For a number people can see but not change, show a read-only Input.', stage: 'fill', height: 320 }] },
       ],
       keyboard: [['Tab', 'Moves from the country button to the number']],
       a11yNotes: ['A native `tel` input, so phones show the keypad and SMS autofill works.', 'The field says how many digits are missing when people leave it.'],
@@ -35,7 +35,7 @@ export const fields: DocGroup = {
           { id: 'CountrySelectBasic', title: 'Pin the likely ones', note: '`preferred` puts these first. Search covers the rest.', stage: 'narrow', height: 340 },
           { id: 'CountrySelectLimited', title: 'A short list', note: '`options` limits it.', stage: 'narrow', height: 280 },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'CountrySelectStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'CountrySelectStates', title: 'Every state', note: 'Read-only also needs `open={false}`, which keeps the list shut.', stage: 'fill', height: 320 }] },
       ],
       keyboard: listKeys,
       propDocs: picker,
@@ -46,7 +46,7 @@ export const fields: DocGroup = {
       summary: 'Pick a language. Each one also shows its own name, so people can find theirs.',
       sections: [
         { kind: 'variants', title: 'Examples', examples: [{ id: 'LanguageSelectBasic', title: 'Pin the likely ones', note: 'Search for `日本語` or `Japanese`: both find it.', stage: 'narrow', height: 340 }] },
-        { kind: 'states', title: 'States', examples: [{ id: 'LanguageSelectStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'LanguageSelectStates', title: 'Every state', note: 'Read-only also needs `open={false}`, which keeps the list shut.', stage: 'fill', height: 320 }] },
       ],
       keyboard: listKeys,
       propDocs: { ...picker, endonyms: 'Shows each language\'s own name beside it.' },
@@ -57,7 +57,7 @@ export const fields: DocGroup = {
       summary: 'Pick a currency by name, code or symbol.',
       sections: [
         { kind: 'variants', title: 'Examples', examples: [{ id: 'CurrencySelectBasic', title: 'Pin the likely ones', note: 'Each row shows the name, code and symbol.', stage: 'narrow', height: 340 }] },
-        { kind: 'states', title: 'States', examples: [{ id: 'CurrencySelectStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'CurrencySelectStates', title: 'Every state', note: 'Read-only also needs `open={false}`, which keeps the list shut.', stage: 'fill', height: 320 }] },
       ],
       keyboard: listKeys,
       propDocs: picker,
@@ -71,7 +71,7 @@ export const fields: DocGroup = {
           { id: 'TimeZoneSelectBasic', title: 'Every zone', note: 'Search by city, zone or an offset like `+5:30`.', stage: 'narrow', height: 360 },
           { id: 'TimeZoneSelectOffices', title: 'A short list', note: '`zones` limits it to the ones you use.', stage: 'narrow', height: 340 },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'TimeZoneSelectStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'TimeZoneSelectStates', title: 'Every state', note: 'Read-only also needs `open={false}`, which keeps the list shut.', stage: 'fill', height: 320 }] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'FormWorkspaceRegion', title: 'Workspace region form', note: 'All four pickers, posting with a plain form.', stage: 'fill', height: 320 }] },
       ],
       keyboard: listKeys,
@@ -137,6 +137,7 @@ export const fields: DocGroup = {
     },
     {
       component: 'CodeInput',
+      tile: 'CodeInputWrap',
       summary: 'A code field with colours, line numbers and Tab that indents.',
       use: { when: ['A script, a command or a config people edit by hand'], instead: [{ name: 'JsonEditor', why: 'it\'s JSON and should be checked' }, { name: 'CodeBlock', why: 'it\'s only for reading' }] },
       sections: [
@@ -154,6 +155,7 @@ export const fields: DocGroup = {
     },
     {
       component: 'JsonEditor',
+      tile: 'JsonEditorBroken',
       summary: 'A code field for JSON that points to the line with the mistake.',
       sections: [
         { kind: 'variants', title: 'Examples', examples: [
@@ -161,7 +163,7 @@ export const fields: DocGroup = {
           { id: 'JsonEditorBroken', title: 'A parse error', note: 'Delete the trailing comma and the error goes.', stage: 'fill', height: 220 },
           { id: 'JsonEditorSchema', title: 'Your own check', note: '`schema` gets the parsed value and returns a message. Change the value to `3`.', stage: 'fill', height: 260 },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'JsonEditorStates', title: 'Every state', stage: 'fill', height: 440 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'JsonEditorStates', title: 'Empty, filled, invalid, disabled and read-only', note: 'The line under the field reports on the JSON.', stage: 'fill', height: 440 }] },
       ],
       keyboard: [['Tab', 'Indents'], ['Esc then Tab', 'Leaves the field']],
       propDocs: { ...shell, schema: 'Checks the parsed value. What it returns shows as the error.', tabSize: '2 or 4 spaces, used by Format too.', rows: 'The height in lines.' },
@@ -177,7 +179,7 @@ export const fields: DocGroup = {
           { id: 'KeyValueEditorJson', title: 'Form or JSON', note: '`json` adds a switch. Both views edit the same value.', stage: 'fill', height: 280 },
           { id: 'KeyValueEditorDuplicate', title: 'A repeated key', note: 'A warning, not a block: the last one wins.', stage: 'fill', height: 320 },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'KeyValueEditorStates', title: 'Empty, filled, hint and invalid', stage: 'fill', height: 460 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'KeyValueEditorStates', title: 'Empty, filled, hint and invalid', stage: 'fill', height: 420 }] },
       ],
       keyboard: [['Tab', 'Moves from cell to cell'], ['Enter', 'On Add row, adds one and moves to it']],
       propDocs: { ...shell, value: 'The rows as `{ key, value }`, or a `State` to bind.', onValueChange: 'Hears the new rows and why they changed.', keyLabel: 'The first column\'s heading.', valueLabel: 'The second column\'s heading.', json: 'Adds a switch to a JSON view of the same value.' },
@@ -201,6 +203,7 @@ export const fields: DocGroup = {
     },
     {
       component: 'RichTextEditor',
+      tile: 'RichTextEditorLimited',
       summary: 'Formatted text with a toolbar, Markdown shortcuts and / for blocks.',
       use: { when: ['Long notes, articles, descriptions with structure'], instead: [{ name: 'MarkdownEditor', why: 'people prefer to see the source' }, { name: 'Textarea', why: 'plain text will do' }] },
       sections: [
@@ -208,7 +211,7 @@ export const fields: DocGroup = {
           { id: 'RichTextEditorBasic', title: 'Release notes', note: 'Try `/` on an empty line, `@`, or `#` and a space.', stage: 'fill', height: 300 },
           { id: 'RichTextEditorBubble', title: 'A bubble toolbar', note: '`toolbar="bubble"` shows it over a selection.', stage: 'narrow', height: 200 },
           { id: 'RichTextEditorLimited', title: 'Fewer tools', note: '`marks` and `blocks` choose the buttons.', stage: 'narrow', height: 200 },
-          { id: 'RichTextEditorMarkdown', title: 'Store Markdown', note: '`format="markdown"` reads and writes Markdown. People still see formatted text.', stage: 'fill', height: 360 },
+          { id: 'RichTextEditorMarkdown', title: 'Store Markdown', note: '`format="markdown"` reads and writes Markdown. People still see formatted text.', stage: 'fill', height: 460 },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'RichTextEditorStates', title: 'Empty, filled, hint and invalid', stage: 'fill', height: 360 }] },
       ],
@@ -219,11 +222,12 @@ export const fields: DocGroup = {
     },
     {
       component: 'MarkdownEditor',
+      tile: 'MarkdownEditorShort',
       summary: 'Write Markdown beside a live preview.',
       use: { when: ['READMEs, changelogs, docs: people who like seeing the source'], instead: [{ name: 'RichTextEditor', why: 'people shouldn\'t need to know Markdown' }] },
       sections: [
         { kind: 'variants', title: 'Examples', examples: [
-          { id: 'MarkdownEditorBasic', title: 'A README', note: 'Side by side when there\'s room, tabs when there isn\'t.', stage: 'fill', height: 380 },
+          { id: 'MarkdownEditorBasic', title: 'A README', note: 'Side by side when there\'s room, tabs when there isn\'t.', stage: 'fill', height: 400 },
           { id: 'MarkdownEditorShort', title: 'A short entry', stage: 'fill', height: 240 },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'MarkdownEditorStates', title: 'Every state', stage: 'fill', height: 900 }] },
