@@ -515,8 +515,7 @@ impl<'t> Emitter<'t> {
             if self.ssr {
                 if has_kids || void {
                     // The merged view is only read here, all at once: its sources go straight to the writer.
-                    let merge = format!("{}(", self.helper("mergeProps"));
-                    let code = match props.strip_prefix(&merge).and_then(|p| p.strip_suffix(')')) {
+                    let code = match props.strip_prefix("_$mergeProps(").and_then(|p| p.strip_suffix(')')) {
                         Some(sources) => format!("{}({sources})", self.helper("spreads")),
                         None => format!("{spread}({props})"),
                     };
@@ -525,6 +524,10 @@ impl<'t> Emitter<'t> {
                     self.n += 1;
                     let p = format!("_p{}", self.n);
                     b.decls.push(p.clone());
+                    let props = match props.strip_prefix("_$mergeProps(").and_then(|q| q.strip_suffix(')')) {
+                        Some(sources) => format!("{}({sources})", self.helper("merged")),
+                        None => props,
+                    };
                     Self::server(b, Piece::Code(format!("{spread}({p} = {props})")));
                     shared = Some(p);
                 }

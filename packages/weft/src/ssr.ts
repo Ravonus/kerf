@@ -507,6 +507,29 @@ export function spreads(...sources: any[]): string {
   return out
 }
 
+/**
+ * `mergeProps(...sources)` for a spread element without JSX children, as a plain object: its attributes and what goes
+ * inside are each read once, right away, so a view's traps would only cost. `children` stays a getter, read in its place.
+ */
+export function merged(...sources: any[]): Record<string, any> {
+  const keys: (string | symbol)[] = []
+  const owner = new Map<string | symbol, any>()
+  for (const s of sources) {
+    const o = Object(typeof s === 'function' ? s() : s)
+    for (const k of Reflect.ownKeys(o)) {
+      if (!owner.has(k)) keys.push(k)
+      owner.set(k, o)
+    }
+  }
+  const out: Record<string | symbol, any> = {}
+  for (const k of keys) {
+    const o = owner.get(k)
+    if (k === 'children') Object.defineProperty(out, k, { get: () => o[k], enumerable: true, configurable: true })
+    else out[k] = o[k]
+  }
+  return out
+}
+
 /** What a spread element without JSX children holds: content its props set, or `children`. */
 export function inner(props: Record<string, any>, tag: string): unknown {
   const raw = props.dangerouslySetInnerHTML?.__html ?? props.innerHTML

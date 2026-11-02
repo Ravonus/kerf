@@ -608,7 +608,8 @@ export const omit = (props: object, keys: string[]): any => view([props], keys)
 /** `<div {...rest}>`: a plain copy of `props` without `keys`, read where the element's spread reads its attributes. */
 export function restOf(props: any, keys: string[]) {
   const out: any = {}
-  for (const k in props) if (!keys.includes(k)) out[k] = props[k]
+  // Not `for in`: over a view (a Proxy) it asks for every key's descriptor and walks the prototype, which costs more than the copy.
+  for (const k of Reflect.ownKeys(props)) if (typeof k === 'string' && !keys.includes(k)) out[k] = props[k]
   return out
 }
 
