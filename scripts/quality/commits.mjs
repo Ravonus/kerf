@@ -19,9 +19,11 @@ if (!base) { console.log('no base branch here: nothing to compare'); process.exi
 const FIX = /\b(?:fix(?:es|ed)?|bug|regression|crash(?:es|ed)?|broke(?:n)?|leak(?:s|ed)?)\b/i
 const SOURCE = /^(?:packages\/[^/]+\/(?:src|bin|bindings|plugin|node)\/|crates\/[^/]+\/src\/)/
 const TEST = /(?:^|\/)(?:test|tests)\/|\.(?:test|spec)\.|(?:^|\/)evals\//
+// The last commit before these rules existed: history up to it was written under no rule, and stays as it was.
+const BEFORE_RULES = 'fa5dae8842ab67389ca9f2b971995fcad0fbee16'
 const problems = []
-const range = `${git('merge-base', base, 'HEAD').trim()}..HEAD`
-for (const sha of git('rev-list', '--no-merges', range).split('\n').filter(Boolean)) {
+const range = [`${git('merge-base', base, 'HEAD').trim()}..HEAD`, ...(has(BEFORE_RULES) ? [`^${BEFORE_RULES}`] : [])]
+for (const sha of git('rev-list', '--no-merges', ...range).split('\n').filter(Boolean)) {
   const message = git('show', '-s', '--format=%B', sha)
   const subject = message.split('\n')[0]
   const files = git('show', '--format=', '--name-only', sha).split('\n').filter(Boolean)
