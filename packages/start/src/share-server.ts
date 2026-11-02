@@ -1,4 +1,4 @@
-// The server's half of `interaction({ share })` (research 40 §6, §7). One join per socket, `$share`, and every key goes
+// The server's half of `interaction({ share })` (research 45 §6, §7). One join per socket, `$share`, and every key goes
 // through `realtime({ share })`: no such option, no join (R011), and a key it refuses gets nothing and can say nothing.
 //
 //   rooms     64 hub channels, by a hash of the key, so bus subscriptions stay bounded. One listener per instance: an

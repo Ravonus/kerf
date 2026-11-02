@@ -1,5 +1,5 @@
 // `weft lsp`: TypeScript 7 loads no plugins and its content mappers refuse `.tsx`, so the one place left to stand is
-// between the editor and `tsc --lsp`. Buffers go in as their shadows; positions are mapped both ways (research 41 §6).
+// between the editor and `tsc --lsp`. Buffers go in as their shadows; positions are mapped both ways (research 44 §6).
 
 import { spawn } from 'node:child_process'
 import { realpathSync } from 'node:fs'

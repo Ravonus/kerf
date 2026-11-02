@@ -86,7 +86,7 @@ export interface WeftConfig {
     design?: boolean
     /** `false` turns the route pass off: H001–H007 and H011–H016 per route, which runs the app's loaders once. Default on. */
     routes?: boolean
-    /** Prop inference (research 41). `false` turns it off; `'manual'` leaves written types to `weft fix` instead of `weft dev`. Default on. */
+    /** Prop inference (research 44). `false` turns it off; `'manual'` leaves written types to `weft fix` instead of `weft dev`. Default on. */
     props?: boolean | 'manual'
   }
   plugins?: readonly PluginEntry[]

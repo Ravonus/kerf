@@ -1,5 +1,5 @@
 // The sidecar supervisor (research 36 §5): what `weft dev`, `weft build`, `weft start` and `weft check` do for the Rust
-// behind `remote()`, and for `native()`'s libraries (research 37). It runs in the CLI, never in the server bundle:
+// behind `remote()`, and for `native()`'s libraries (research 39). It runs in the CLI, never in the server bundle:
 // `remote()` is only `fetch`, so a built server runs anywhere, and a sidecar deployed on its own is one environment
 // variable away.
 //

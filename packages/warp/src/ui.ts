@@ -1,4 +1,4 @@
-// How warp draws `ui`, from any source (research 40). The `weft()` plugin imports this where `ui=` is used, so a
+// How warp draws `ui`, from any source (research 45). The `weft()` plugin imports this where `ui=` is used, so a
 // component that never gets a `ui` carries none of it.
 //
 // A lit row is `data-hold`, warp's existing word for "drawn active with no pointer on it", so no component needs a new

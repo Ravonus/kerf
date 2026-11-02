@@ -1,4 +1,4 @@
-// What one file says about its components, from syntax alone (research 41 §4). No checker here: this runs on every save
+// What one file says about its components, from syntax alone (research 44 §4). No checker here: this runs on every save
 // and is cached by content, so the common file, with nothing to infer, costs a parse. CommonJS because the tsserver
 // plugin loads it synchronously; `ts` is passed in because a plugin must use the TypeScript that hosts it.
 
@@ -81,7 +81,7 @@ function bodyUses(ts, sf, comp) {
   }
   const shadows = (node, name) => node.parameters?.some(p => ts.isIdentifier(p.name) && p.name.text === name)
   const visit = (node, scope) => {
-    // `const { a } = props`, `let n = props.n`: another name for the prop (research 40). Only the first level.
+    // `const { a } = props`, `let n = props.n`: another name for the prop (research 43). Only the first level.
     if (ts.isVariableDeclaration(node) && node.initializer) {
       const init = node.initializer
       if (ts.isIdentifier(init) && scope.has(init.text) && ts.isObjectBindingPattern(node.name)) patternKeys(ts, sf, node.name, info)

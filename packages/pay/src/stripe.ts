@@ -37,7 +37,7 @@ const encoder = new TextEncoder()
 
 const fromHex = (s: string) => (/^[0-9a-f]{64}$/.test(s) ? Uint8Array.from(s.match(/../g)!, b => parseInt(b, 16)) : undefined)
 
-/** The runtime's own constant-time compare, in native code. A wasm build was measured against it: see research 37. */
+/** The runtime's own constant-time compare, in native code. A wasm build was measured against it: see research 38. */
 async function verified(secret: string, text: string, signatures: string[]) {
   const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'])
   const message = encoder.encode(text)

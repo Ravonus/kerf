@@ -1,4 +1,4 @@
-// U001–U005 in `weft check` (research 40 §10): `interaction({ share })` and `ui`. TypeScript's parser only, no type
+// U001–U005 in `weft check` (research 45 §10): `interaction({ share })` and `ui`. TypeScript's parser only, no type
 // checking: what's read is the call's own text, and a name counts as an interaction row only if this file made it.
 
 import { existsSync, readFileSync } from 'node:fs'

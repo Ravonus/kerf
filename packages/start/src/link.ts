@@ -1,4 +1,4 @@
-// One browser, one socket (research 40 §5). Every tab gets the same thing it always had, a duplex line of text frames,
+// One browser, one socket (research 45 §5). Every tab gets the same thing it always had, a duplex line of text frames,
 // and only one tab, the leader, holds the WebSocket under them all. `channel.ts`, `live.ts` and `share.ts` ride it and
 // know nothing about tabs: a line is a socket to them, and to the server, which gives each its own connection (mux.ts).
 // That is why `id`, `exceptSelf`, `left`, `limits` and acks all mean what they did: per tab.

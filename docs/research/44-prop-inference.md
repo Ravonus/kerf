@@ -178,7 +178,7 @@ unions move together, and getting that wrong is worse than asking.
 
 ## 10. `bind`
 
-`bind:x={box}` is typed as the box's value, but the compiler doesn't lower it: research 40 chose `x={bind(box)}`,
+`bind:x={box}` is typed as the box's value, but the compiler doesn't lower it: research 43 chose `x={bind(box)}`,
 because TypeScript would otherwise report `x` missing. Left alone, the child would silently get a prop named `bind:x`.
 So it's **W086**, and `weft fix` rewrites it. `bind(box)` needs nothing here: it types as the value. If the spelling
 is ever compiled, delete `spelling()` in the engine; the shadow already handles it.

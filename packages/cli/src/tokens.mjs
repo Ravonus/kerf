@@ -1,4 +1,4 @@
-// `weft tokens`: warp's resolved tokens as DTCG 2025.10 (PLAN §6, research 36), for Figma, Style Dictionary and Terrazzo.
+// `weft tokens`: warp's resolved tokens as DTCG 2025.10 (PLAN §6, research 37), for Figma, Style Dictionary and Terrazzo.
 // warp owns the values, so this asks the app's warp, with the app's seed and overrides, and writes what it returns.
 
 import { mkdirSync, writeFileSync } from 'node:fs'

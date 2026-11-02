@@ -1,4 +1,4 @@
-// `interaction()` (research 40): UI state as plain boxes. `hover`, `focus` and `pressed` are this page's and
+// `interaction()` (research 45): UI state as plain boxes. `hover`, `focus` and `pressed` are this page's and
 // nothing else's, so an effect on them can't run for somebody else's hover and can't echo: what arrives from elsewhere
 // is only ever written to `remote`, and only the three local boxes are sent. `share` makes one row per key on this page
 // (same page = same box); `@weft-js/start/share` carries it further. Neither `weft` nor a warp component pulls this in.

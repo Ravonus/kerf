@@ -1,4 +1,4 @@
-// @weft-js/core/ds: the design language's closed vocabulary (PLAN §6, research 36), the names every primitive, style group and
+// @weft-js/core/ds: the design language's closed vocabulary (PLAN §6, research 37), the names every primitive, style group and
 // D-code agrees on. Names only: the values are warp's tokens (./style/vocab.ts maps these to them), the primitives are
 // `@weft-js/warp`, and the checks are `weft check`'s D-codes. `weft tokens` exports the resolved values as DTCG.
 

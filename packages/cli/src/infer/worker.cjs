@@ -1,4 +1,4 @@
-// The dev listener's thread (research 41 §7). It takes file names, waits out a burst of saves, and works out what they
+// The dev listener's thread (research 44 §7). It takes file names, waits out a burst of saves, and works out what they
 // changed. HMR never waits on it: the main thread only posts a name here, and TypeScript runs in its own process.
 
 const { createHash } = require('node:crypto')

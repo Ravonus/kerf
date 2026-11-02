@@ -1,9 +1,9 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), research 20 §6, §10 (H001–H008, H011–H016), PLAN §12 (H009, H010, partial hydration), research 23 §3 (D020–D025, style groups), research 36 (D001–D039, the design language),
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6, §10 (H001–H008, H011–H016), PLAN §12 (H009, H010, partial hydration), research 23 §3 (D020–D025, style groups), research 37 (D001–D039, the design language),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
 // research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
-// 30 §8 (W052, W053, T013, R001–R023, realtime), research 36 §8 and 37 (R101–R109, Rust), plus the codes proposed in research 17 (marked `proposed`).
+// 30 §8 (W052, W053, T013, R001–R023, realtime), research 36 §8 and 39 (R101–R109, Rust), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -150,7 +150,7 @@ export const catalog = [
     example: "import { bind, state } from '@weft-js/core'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
   },
 
-  // The design language (PLAN §6, research 36): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.
+  // The design language (PLAN §6, research 37): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.
   { code: 'D001', severity: 'error', by: 'cli', catches: 'A raw colour in `style`, app CSS, or a Tailwind arbitrary or palette class, in an app with warp\'s tokens: it won\'t follow the theme, the dials or dark mode', fix: 'Use a colour token or a `tone`. No autofix: a token follows the theme, the raw value didn\'t' },
   { code: 'D002', severity: 'error', by: 'cli', catches: 'Spacing off the scale, or a scale step written by hand (`padding: 16px`, `p-[13px]`, `gap-3`)', fix: 'A step of `hair tight related group section page`; autofix when the value is exactly one' },
   { code: 'D003', severity: 'warning', by: 'cli', catches: 'Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`)', fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--warp-elevation-*`; autofix for an exact radius' },

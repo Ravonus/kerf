@@ -125,7 +125,7 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 
 | Code | Catches | Fix |
 |---|---|---|
-| W001 | A prop or `.value` used to compute something in the component body outside `derived`/`watch`/JSX/handlers, including passing it to a helper (`makeChart(items)`) and `.map` in setup. Only naming a prop isn't one: `const x = props.y` and destructuring compile to live reads (research 40) | Wrap in `derived`, move into `watch`, or `untrack()` if a snapshot is intended |
+| W001 | A prop or `.value` used to compute something in the component body outside `derived`/`watch`/JSX/handlers, including passing it to a helper (`makeChart(items)`) and `.map` in setup. Only naming a prop isn't one: `const x = props.y` and destructuring compile to live reads (research 43) | Wrap in `derived`, move into `watch`, or `untrack()` if a snapshot is intended |
 | W002 | Writing state inside `derived` | Move to a handler or make the target `derived` |
 | W003 | `watch` writes state that its own source reads (cycle) | Use `derived` |
 | W004 | `watch` that only copies one value into another | Replace with `derived` (autofix) |

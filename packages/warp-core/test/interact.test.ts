@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Research 40: real events into anything with a `.value`.
+// Research 45: real events into anything with a `.value`.
 import { interact } from '../src/interact'
 
 const flags = () => ({ hover: { value: false }, focus: { value: false }, pressed: { value: false } })

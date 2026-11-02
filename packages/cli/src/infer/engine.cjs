@@ -1,4 +1,4 @@
-// Prop inference (research 41). Facts come from syntax; the types come from whichever checker the host wraps, asked
+// Prop inference (research 44). Facts come from syntax; the types come from whichever checker the host wraps, asked
 // about the call sites in the program's own terms. A round writes each component's annotation into its file's shadow;
 // the next round sees the types that made possible (a prop forwarded to another inferred component, a component passed
 // as a prop). Rounds stop when nothing changes, and a project with nothing to infer never starts a checker.

@@ -1,4 +1,4 @@
-// Client-side search over a prebuilt index (research 38 §2). A build calls `buildIndex` and writes the JSON; the page calls
+// Client-side search over a prebuilt index (research 40 §2). A build calls `buildIndex` and writes the JSON; the page calls
 // `openIndex` once and `searchIndex` per key press. Terms are sorted, so a prefix is a binary search and a range of
 // postings: no index is built at runtime, and a query allocates almost nothing.
 

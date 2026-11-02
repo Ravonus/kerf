@@ -1,7 +1,7 @@
 import { fuzzyIndex, openIndex, searchIndex, type SearchHit, type SearchIndex, type SearchWire } from '@weft-js/warp-core'
 import files from '../generated/search.json'
 
-// Two tiers (research 38 §2). T0, titles, stays in this module for the life of the page and answers a key press in the
+// Two tiers (research 40 §2). T0, titles, stays in this module for the life of the page and answers a key press in the
 // same frame. T1, body text, lives in a worker. Both come from Cache Storage on a later visit, so search works offline
 // once it has loaded. `seen` makes a repeat query no work at all.
 

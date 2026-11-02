@@ -1,4 +1,4 @@
-// Research 40: shared UI state in a real browser. Real pointer, real tabs, real sockets, real locks.
+// Research 45: shared UI state in a real browser. Real pointer, real tabs, real sockets, real locks.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'

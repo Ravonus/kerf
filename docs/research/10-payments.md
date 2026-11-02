@@ -1,6 +1,6 @@
 # 10 — Payments: one catalog, every rail, web + iOS + Android
 
-> Built differently from this note in one way: pay is the plugin `@weft-js/pay`, not `weft/pay`, and `fakePay` comes from `@weft-js/pay/test`. T030 is PAY031. See research 37.
+> Built differently from this note in one way: pay is the plugin `@weft-js/pay`, not `weft/pay`, and `fakePay` comes from `@weft-js/pay/test`. T030 is PAY031. See research 38.
 
 Research date: 2026-10-28. Store payment rules in the US are mid-litigation on that date. Every policy statement here
 carries its source and date, and the design treats the rules as **versioned data**, not code. Statements marked

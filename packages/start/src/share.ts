@@ -1,4 +1,4 @@
-// `interaction({ share })` past this page (research 40 §4, §5). The only layer that knows tabs and the network, and only
+// `interaction({ share })` past this page (research 45 §4, §5). The only layer that knows tabs and the network, and only
 // an app that shares loads it: the `weft()` plugin imports it where `share:` is used.
 //
 //   tabs    every tab posts its bits to one BroadcastChannel and keeps every sibling's, so there's no relay to run.

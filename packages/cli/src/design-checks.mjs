@@ -1,4 +1,4 @@
-// The design D-codes in `weft check` (PLAN §6, research 36). Two families:
+// The design D-codes in `weft check` (PLAN §6, research 37). Two families:
 //
 //   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has warp's tokens to use instead (`@weft-js/warp`
 //              in package.json), so an app that chose raw Tailwind or its own CSS is left alone.
