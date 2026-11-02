@@ -353,7 +353,17 @@ const SPEC_WORDS = /§|\bSIGNATURE\b|\bspecimen\b/
 const GITHUB_SRC = 'https://github.com/Ravonus/weft/blob/main/'
 
 /** A prop's row: the prop's own comment, then the page's, then the common word, and never a spec reference. */
-const propRow = (p, doc) => ({ name: p.name, type: p.type, required: p.required, default: p.default, doc: (doc.propDocs?.[p.name] ?? cleanDoc(p.doc)) || PROP_WORDS[p.name] || '' })
+/** A default the words name, as in "`md` by default", when it's one of the prop's own values. */
+const namedDefault = (p, words) => {
+  const named = /`([^`]+)` by default/.exec(words)?.[1]
+  return named !== undefined && p.values?.map(String).includes(named) ? (typeof p.values[0] === 'string' ? `'${named}'` : named) : undefined
+}
+/** The default the source states, else the one the words name; an optional switch left out is off. */
+const propDefault = (p, words) => p.default ?? namedDefault(p, words) ?? (!p.required && !p.worked && p.type === 'boolean' ? 'false' : undefined)
+const propRow = (p, doc) => {
+  const words = (doc.propDocs?.[p.name] ?? cleanDoc(p.doc)) || PROP_WORDS[p.name] || ''
+  return { name: p.name, type: p.type, required: p.required, default: propDefault(p, words), doc: words }
+}
 const cleanDoc = text => {
   const said = text.replace(/\s*\((?:[^()]*§[^()]*|components\.html[^()]*)\)/g, '').replace(/\s+\[?\d{2} §[\d.]+\]?/g, '').trim()
   return SPEC_WORDS.test(said) ? '' : said

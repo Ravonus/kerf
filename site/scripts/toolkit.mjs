@@ -33,6 +33,15 @@ export function readToolkit(repo) {
     const defaults = new Map()
     const first = decl.parameters?.[0] ?? decl.initializer?.parameters?.[0]
     if (first && ts.isObjectBindingPattern(first.name)) for (const el of first.name.elements) if (el.initializer) defaults.set((el.propertyName ?? el.name).getText(), el.initializer.getText())
+    // Components that keep `props` whole say their defaults where they read them: `props.size ?? 'md'`. Only a plain
+    // literal counts, and only when every read agrees.
+    const fallbacks = new Map()
+    for (const [, prop, value] of decl.getText().matchAll(/\bprops\.(\w+)\s*\?\?\s*('[^'\n]*'|"[^"\n]*"|-?\d[\d_.]*|true|false)(?=\s*[,;)}\]:])/g)) fallbacks.set(prop, fallbacks.has(prop) && fallbacks.get(prop) !== value ? null : value)
+    for (const [prop, value] of fallbacks) if (value !== null && !defaults.has(prop)) defaults.set(prop, value)
+    // A prop the file falls back from with something worked out (`props.searchable ?? items.length > LONG`) has no one
+    // default, and mustn't be shown one.
+    const fileText = decl.getSourceFile().text
+    const worked = new Set([...fileText.matchAll(/\.(\w+)\s*\?\?\s*(?!('[^'\n]*'|"[^"\n]*"|-?\d[\d_.]*|true|false)\s*[,;)}\]:])/g)].map(m => m[1]))
     if (param) {
       const type = checker.getTypeOfSymbolAtLocation(param, decl)
       for (const p of type.getProperties?.() ?? []) {
@@ -47,7 +56,8 @@ export function readToolkit(repo) {
           name: p.name,
           type: oneLine(checker.typeToString(t, undefined, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope)).replace(/ \| undefined$/, ''),
           required: !(p.flags & ts.SymbolFlags.Optional),
-          default: defaults.get(p.name),
+          default: defaults.get(p.name) ?? p.getJsDocTags(checker).find(t => t.name === 'default')?.text?.map(x => x.text).join('').trim(),
+          worked: worked.has(p.name) && !defaults.has(p.name) ? true : undefined,
           doc: oneLine(ts.displayPartsToString(p.getDocumentationComment(checker))),
         })
       }

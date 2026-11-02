@@ -94,6 +94,24 @@
 [data-site="props"] code { font-size: var(--doc-micro); }
 [data-site="props"] td:nth-child(2) { min-inline-size: 180px; max-inline-size: 280px; overflow-wrap: anywhere; }
 [data-site="props"] td:last-child { color: var(--dim); }
+[data-site="props"] td[data-label="Default"]:not(:has(code)) { color: var(--dim); }
+/* A narrow column stacks each prop, so the description isn't pushed off the side leaving tall empty rows. */
+[data-site="props"] { container-type: inline-size; }
+@container (max-width: 560px) {
+  [data-site="props"] :is(table, tbody, tr, th, td) { display: block; }
+  [data-site="props"] table { min-inline-size: 0; }
+  [data-site="props"] tbody th { white-space: normal; overflow-wrap: anywhere; }
+  [data-site="props"] thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  [data-site="props"] tbody tr { padding: var(--warp-space-related); }
+  [data-site="props"] tbody tr + tr { border-block-start: var(--warp-border-hairline) solid var(--rule); }
+  [data-site="props"] tbody :is(th, td) { padding: 0; border: 0; }
+  [data-site="props"] tbody th { margin-block-end: var(--warp-space-hair); }
+  [data-site="props"] td[data-label="Type"] { overflow-wrap: anywhere; }
+  [data-site="props"] td[data-label] { position: relative; padding-inline-start: 6em; min-inline-size: 0; max-inline-size: none; }
+  [data-site="props"] td[data-label]::before { content: attr(data-label); position: absolute; inset-inline-start: 0; font: 400 var(--doc-tiny)/1.9 var(--warp-font-mono); color: var(--dim); }
+  [data-site="props"] td[data-label="Description"] { padding-inline-start: 0; margin-block-start: var(--warp-space-hair); }
+  [data-site="props"] td[data-label="Description"]::before { content: none; }
+}
 [data-site="props"] [data-part="req"] { display: inline-block; inline-size: 6px; block-size: 6px; margin-inline-start: 6px; vertical-align: middle; border-radius: 50%; background: var(--warp-color-critical-text); }
 
 /* -- the index -- */

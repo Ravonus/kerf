@@ -154,6 +154,26 @@ await check('icon sizes reach the drawings', '/icons', async page => {
     same(cut.join(), '', `names cut at ${size}`)
   }
 })
+// API tables: on a phone each prop stacks (no sideways scroll, no description pushed off the side); everywhere,
+// backticks are code and an unknown default says so with a dash.
+for (const path of ['/components/slider', '/components/modal', '/blocks/checkout']) {
+  await check(`api table stacks on a phone ${path}`, path, async page => {
+    await page.locator('#api-reference').scrollIntoViewIfNeeded()
+    const over = await page.evaluate(() => [...document.querySelectorAll('[data-site="props"]')].map(p => p.scrollWidth - p.clientWidth).filter(n => n > 0))
+    same(over.join(), '', 'sideways overflow')
+  }, PHONE)
+}
+for (const path of ['/components/dither', '/components/select', '/charts/line-chart']) {
+  await check(`api words render code ${path}`, path, async page => {
+    const { ticks, blank, code } = await page.evaluate(() => {
+      const cells = [...document.querySelectorAll('[data-site="props"] tbody td')]
+      return { ticks: cells.filter(c => c.textContent.includes('`')).length, blank: cells.filter(c => c.dataset.label === 'Default' && !c.textContent.trim()).length, code: document.querySelectorAll('[data-site="props"] td[data-label="Description"] code').length }
+    })
+    same(ticks, 0, 'cells with raw backticks')
+    same(blank, 0, 'empty Default cells')
+    if (!code) throw new Error('no code in any description')
+  })
+}
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)
