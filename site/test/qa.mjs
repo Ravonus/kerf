@@ -496,6 +496,20 @@ await check('desktop week shows seven days', '/components/calendar', async page 
     if (m.wide > 1) throw new Error(`${id} scrolls ${m.wide}px sideways`)
   }
 })
+// Out of working hours is one quiet shade at both ends of the day: no picture, no loud colour, no unlabelled slab at 18:00.
+await check('out-of-hours shading is quiet and the same at both ends', '/components/calendar', async page => {
+  const sec = await calendarIn(page, 'CalendarBusyDay', 'Day')
+  const m = await sec.evaluate(s => {
+    const col = s.querySelector('[data-part="col"]')
+    const off = [...col.querySelectorAll(':scope > [data-part="off-hours"]')].map(o => ({ bg: getComputedStyle(o).backgroundImage + getComputedStyle(o).backgroundColor, h: o.getBoundingClientRect().height }))
+    const strays = [...s.querySelectorAll('[data-part="col"] > :not([data-part="off-hours"], [data-part="event"], [data-part="now"], [data-part="ghost"], [data-part="draft"], [data-part="readout"])')].map(e => e.outerHTML.slice(0, 60))
+    return { off, strays }
+  })
+  same(m.off.length, 2, 'shaded spans')
+  same(m.off[0].bg === m.off[1].bg, true, 'the evening is shaded like the morning')
+  if (/url\(/.test(m.off[1].bg)) throw new Error(`a picture in the evening: ${m.off[1].bg.slice(0, 80)}`)
+  same(m.strays.join(), '', 'other things in a day column')
+})
 // The Ticker playground's starting value is big enough for en-IN's grouping to show.
 await check('ticker shows en-IN grouping', '/components/ticker?locale=en-IN', async page => {
   await page.locator('[data-play]').scrollIntoViewIfNeeded()

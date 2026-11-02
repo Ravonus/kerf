@@ -95,10 +95,12 @@
 }
 :where([data-scope="calendar"] [data-part="col"][data-weekend]) { background-color: color-mix(in oklab, var(--warp-color-surface-sunken) 60%, transparent); }
 :where([data-scope="calendar"] [data-part="col"][aria-current="date"]) { background-color: color-mix(in oklab, var(--warp-color-accent-soft) 35%, transparent); }
-/* availability / working hours: calm band behind events, never intercepts */
-:where([data-scope="calendar"] [data-part="band"]) {
+/* out of working hours: the same quiet shade before the day starts and after it ends, behind events, never intercepts.
+   Its own part name: a page's "band" (a site's woven strip) once drew over the evening as a loud green slab */
+:where([data-scope="calendar"] [data-part="off-hours"]) {
   position: absolute; inset-inline: 0; pointer-events: none; inset-block-start: var(--_top); block-size: var(--_h);
-  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--warp-color-text) 4%, transparent) 0 1px, transparent 1px 7px);
+  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--warp-color-text) 4%, transparent) 0 1px, transparent 1px 7px),
+    color-mix(in oklab, var(--warp-color-surface-sunken) 55%, transparent);
 }
 /* the event */
 :where([data-scope="calendar"] [data-part="event"]) {

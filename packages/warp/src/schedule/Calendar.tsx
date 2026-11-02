@@ -304,8 +304,8 @@ function Column({ day, c, stop, weekend }: { day: string; c: Ctx; stop: string |
   })
   return (
     <div data-part="col" role="gridcell" data-date={day} data-weekend={weekend ? '' : undefined} aria-current={today.value ? 'date' : undefined}>
-      <span data-part="band" style={`--_top:0px;--_h:${hours(hrs.value[0])}`}></span>
-      <span data-part="band" style={`--_top:${hours(hrs.value[1])};--_h:${hours(1440 - hrs.value[1])}`}></span>
+      <span data-part="off-hours" style={`--_top:0px;--_h:${hours(hrs.value[0])}`}></span>
+      <span data-part="off-hours" style={`--_top:${hours(hrs.value[1])};--_h:${hours(1440 - hrs.value[1])}`}></span>
       {ghost.value && <span data-part="ghost" style={`--_top:${hours(ghost.value.s)};--_h:${hours(ghost.value.e - ghost.value.s)}`}></span>}
       {segs.value.map(s => <EventBlock key={s.id} seg={s} lane={lanes.value.get(s.id) ?? { col: 0, cols: 1, span: 1 }} c={c} stop={stop === s.id} />)}
       {draft.value && <span data-part="draft" style={`--_top:${hours(draft.value.s)};--_h:${hours(draft.value.e - draft.value.s)}`}>New event · {c.span(draft.value.s, draft.value.e)}</span>}

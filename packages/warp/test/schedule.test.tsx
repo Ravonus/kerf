@@ -56,11 +56,20 @@ describe('Calendar', () => {
     expect(c.querySelectorAll('[data-part="event"][tabindex="0"]').length).toBe(1)
   })
 
+  test('out of working hours is its own part, one shade before the day and after it', () => {
+    const { container: c } = calendar({ defaultView: 'day', workingHours: [540, 1080] })
+    const off = [...c.querySelectorAll<HTMLElement>('[data-part="col"] > [data-part="off-hours"]')]
+    expect(off.map(o => [o.style.getPropertyValue('--_top'), o.style.getPropertyValue('--_h')])).toEqual([['0px', 'calc(var(--warp-cal-hour) * 9)'], ['calc(var(--warp-cal-hour) * 18)', 'calc(var(--warp-cal-hour) * 6)']])
+    // "band" is a common page part name: a site's own rule for it drew a picture over the evening
+    expect(c.querySelector('[data-part="band"]')).toBeNull()
+  })
+
   test('week and day names are never ellipsized: they break between words and the grid makes room', () => {
     const css = readFileSync(`${process.cwd()}/../warp-core/styles/app/calendar.css`, 'utf8')
     const title = /:where\(\[data-scope="calendar"\] \[data-part="event"\] \[data-part="event-title"\]\) \{([^}]*)\}/.exec(css)![1]
     expect(title).toContain('white-space: normal')
     expect(title).not.toContain('ellipsis')
+    expect(css).not.toMatch(/\[data-part="band"\]/)
   })
 
   test('M lifts, arrows step by the snap and a day, Escape puts it back with nothing saved', async () => {
