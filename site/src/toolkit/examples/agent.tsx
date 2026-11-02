@@ -105,7 +105,7 @@ export const AssistantWaiting = () => <Assistant answer={WAITING} />
 
 export function UserMessageEditable() {
   const text = state('Roll back mobile-bff in every region')
-  return <UserMessage key={text.value} text={text.value} onEdit={next => (text.value = next)} />
+  return <UserMessage text={text.value} onEdit={next => (text.value = next)} />
 }
 
 export const UserMessageLong = () => <UserMessage text="Compare d-4819 with the last good deploy of mobile-bff. Tell me what changed, whether the change explains the failed check, and what you would do next." />
@@ -335,13 +335,13 @@ export const ContextMeterLevels = () => (
 
 export function ContextMeterCompact() {
   const used = state(186000)
-  return <ContextMeter key={used.value} used={used.value} limit={200000} parts={CONTEXT.parts} showTokens onCompact={() => (used.value = 38000)} />
+  return <ContextMeter used={used.value} limit={200000} parts={CONTEXT.parts} showTokens onCompact={() => (used.value = 38000)} />
 }
 
 export const TraceViewerRun = () => <TraceViewer spans={TRACE} label="Last answer" />
 
 export const ArtifactPanelConfig = () => (
-  <div style="block-size:340px">
+  <div style="block-size:280px">
     <ArtifactPanel title="tessel.yaml" versions={CONFIG_VERSIONS}>
       <Stack gap="related">
         <Row gap="related"><Text role="label">mobile-bff</Text><Badge tone="info">ap-south</Badge></Row>

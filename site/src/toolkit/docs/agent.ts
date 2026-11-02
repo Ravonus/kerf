@@ -234,7 +234,7 @@ export const agent: DocGroup = {
     {
       component: 'ArtifactPanel',
       summary: 'Something the assistant made, with its preview, its code and earlier versions.',
-      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'ArtifactPanelConfig', title: 'A config file', note: 'Pick an earlier version, then look at Code.', stage: 'fill', height: 340 }] }],
+      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'ArtifactPanelConfig', title: 'A config file', note: 'Pick an earlier version, then look at Code.', stage: 'fill', height: 280 }] }],
       keyboard: [['Left and Right', 'Move between the tabs'], ['Up and Down', 'Move through the versions']],
       propDocs: { title: 'The name.', versions: 'Newest first. Each may have its own `code`.', version: 'The version on show, if you want to hold it yourself.', onVersion: 'A version was picked.', code: 'The code when versions have none.', onOpen: 'Adds an Open in editor button.', children: 'The preview.' },
       related: ['Conversation', 'CodeBlock'],
