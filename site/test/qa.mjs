@@ -259,6 +259,12 @@ await check('ticker shows en-IN grouping', '/components/ticker?locale=en-IN', as
   await page.locator('[data-play]').scrollIntoViewIfNeeded()
   await page.waitForFunction(() => /12,48,120/.test(document.querySelector('[data-play] [data-part="stage"]')?.textContent ?? ''), null, { timeout: 8000 }).catch(async () => { throw new Error(`shows ${await page.locator('[data-play] [data-part="stage"]').textContent()}`) })
 })
+// Related pages are quiet links with their names as words, not loud buttons in squashed capitals.
+await check('related links read as words', '/blocks/checkout', async page => {
+  const links = await page.locator('[data-site="related"] a').evaluateAll(as => as.map(a => ({ text: a.innerText, button: a.dataset.scope === 'button', upper: getComputedStyle(a).textTransform })))
+  if (!links.length) throw new Error('no related links')
+  same(links.filter(l => l.button || l.upper === 'uppercase' || /[a-z][A-Z]/.test(l.text)).map(l => l.text).join(), '', 'loud or squashed')
+})
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

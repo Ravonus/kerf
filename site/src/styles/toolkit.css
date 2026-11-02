@@ -95,6 +95,12 @@
 [data-site="tk-section"] [data-part="keys"] dt { display: flex; flex-wrap: wrap; gap: var(--warp-space-hair); }
 [data-site="tk-section"] [data-part="keys"] dd { margin: 0; color: var(--dim); }
 [data-site="tk-section"] [data-part="chips"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); margin: 0; }
+/* Related pages are quiet links, not buttons: names as words, in the body face, underlined on hover. */
+[data-site="related"] { align-items: baseline; margin-block-start: var(--warp-space-group); }
+[data-site="related"] > span { margin-inline-end: var(--warp-space-tight); font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
+[data-site="related"] a { padding: var(--warp-space-hair) var(--warp-space-related); border: var(--warp-border-hairline) solid var(--rule); border-radius: var(--warp-radius-control); font-size: var(--doc-small); color: var(--ink); text-decoration: none; text-transform: none; letter-spacing: normal; }
+[data-site="related"] a:hover { border-color: var(--warp-color-border-strong); text-decoration: underline; text-underline-offset: 3px; }
+[data-site="related"] a:focus-visible { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
 
 /* the props table */
 [data-site="props"] { margin-block-end: var(--warp-space-group); }

@@ -17,6 +17,8 @@ export type Page = {
   parts: string[]; scope?: string; states: string[]
   related: Near[]; toc: { id: string; text: string; depth?: number }[]; prev?: Near; next?: Near
 }
+/** A component's name as words: `OrderConfirmation` reads "Order confirmation". */
+const words = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/ ([A-Z])(?=[a-z])/g, (_, c: string) => ` ${c.toLowerCase()}`)
 const slugOf = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 function Example(props: { file: string; example: ShownExample; alone: boolean }) {
@@ -88,7 +90,7 @@ export function ComponentPage(props: { data: Page }) {
               <p data-part="chips">{d.parts.map(p => <code key={p} data-scope="code">{p}</code>)}</p>
             </>
           )}
-          {d.related.length > 0 && <p data-part="chips" data-site="related"><span>Related</span>{d.related.map(r => <Link key={r.slug} href={r.href} data-scope="button" data-emphasis="outline" data-tone="neutral" data-size="sm">{r.name}</Link>)}</p>}
+          {d.related.length > 0 && <p data-part="chips" data-site="related"><span>Related</span>{d.related.map(r => <Link key={r.slug} href={r.href}>{words(r.name)}</Link>)}</p>}
         </section>
         <footer data-part="pager">
           {d.prev && <Link href={d.prev.href} class="prev"><span>Previous</span>{d.prev.name}</Link>}
