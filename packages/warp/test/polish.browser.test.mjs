@@ -74,3 +74,25 @@ test('a narrow select keeps its value clear of the chevron (sort bar, pager size
     expect(m.clipped).toBe(false)
   }
 })
+
+test('a table wider than its box scrolls and shows an edge shadow on the side with more', async () => {
+  const look = () => page.evaluate(() => {
+    const t = document.querySelector('#wide [data-scope="table"]'), v = t.querySelector('[data-part="viewport"]')
+    return { overflow: t.dataset.overflow ?? '', start: getComputedStyle(t, '::before').opacity, end: getComputedStyle(t, '::after').opacity, sw: v.scrollWidth, cw: v.clientWidth, x: v.scrollLeft }
+  })
+  const rest = await look()
+  expect(rest.sw).toBeGreaterThan(rest.cw)
+  expect(rest.overflow).toBe('end')
+  await page.waitForTimeout(250)
+  expect((await look()).end).toBe('1')
+  expect((await look()).start).toBe('0')
+  await page.evaluate(() => { const v = document.querySelector('#wide [data-part="viewport"]'); v.scrollLeft = v.scrollWidth })
+  await page.waitForTimeout(250)
+  const far = await look()
+  expect(far.x).toBeGreaterThan(0)
+  expect(far.overflow).toBe('start')
+  expect(far.start).toBe('1')
+  expect(far.end).toBe('0')
+  // a table that fits says nothing
+  expect(await page.evaluate(() => document.querySelector('#sortbar [data-scope="table"]').dataset.overflow ?? '')).toBe('')
+})

@@ -15,6 +15,21 @@
 :where([data-scope="table"] [data-part="toolbar"] [data-scope="field"]) { flex: 1 1 220px; max-inline-size: 340px; }
 :where([data-scope="table"] [data-part="toolbar"] [data-part="spacer"]) { flex: 1; }
 :where([data-scope="table"] [data-part="count"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+/* more columns off a side: an edge shadow over the viewport on that side (warp-core's table() writes data-overflow and
+   the viewport's place, --_vt/--_vh). A pinned first column has its own shadow, so the start one stands down. */
+:where([data-scope="table"])::before, :where([data-scope="table"])::after {
+  content: ""; position: absolute; z-index: 5; pointer-events: none; opacity: 0;
+  inset-block-start: calc(var(--_vt, 0px) + var(--warp-border-hairline)); block-size: max(0px, calc(var(--_vh, 0px) - 2 * var(--warp-border-hairline)));
+  inline-size: 24px; --_shade: color-mix(in oklab, var(--warp-color-text) 14%, transparent);
+  transition: opacity var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="table"])::before { inset-inline-start: var(--warp-border-hairline); background: linear-gradient(to right, var(--_shade), transparent); border-start-start-radius: var(--warp-radius-surface); border-end-start-radius: var(--warp-radius-surface); }
+:where([data-scope="table"])::after { inset-inline-end: var(--warp-border-hairline); background: linear-gradient(to left, var(--_shade), transparent); border-start-end-radius: var(--warp-radius-surface); border-end-end-radius: var(--warp-radius-surface); }
+:where([data-scope="table"]:dir(rtl))::before { background: linear-gradient(to left, var(--_shade), transparent); }
+:where([data-scope="table"]:dir(rtl))::after { background: linear-gradient(to right, var(--_shade), transparent); }
+:where([data-scope="table"][data-overflow~="start"]:not(:has([data-pinned])))::before, :where([data-scope="table"][data-overflow~="end"])::after { opacity: 1; }
+:where([data-scope="table"][data-phone="cards"])::before, :where([data-scope="table"][data-phone="cards"])::after { display: none; }
+/* stacked cards don't scroll sideways */
 /* viewport: the one scroll container; sticky header + first column live in it */
 :where([data-scope="table"] [data-part="viewport"]) {
   position: relative; overflow: auto; max-block-size: var(--warp-table-max-h, none); overscroll-behavior-x: contain;
