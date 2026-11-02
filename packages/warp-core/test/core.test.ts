@@ -72,6 +72,23 @@ test('dials: written on <html>, auto removes the attribute, bad values throw, ch
   expect(seen).toEqual(['expression=vivid', 'theme=dark', 'theme=auto'])
 })
 
+test('dials: a persisted initial value is kept, so a page whose own default differs keeps it on reload', () => {
+  localStorage.removeItem('warp:dials')
+  setDial('expression', 'quiet', { persist: true })
+  expect(JSON.parse(localStorage.getItem('warp:dials')!)).toEqual({ expression: 'quiet' })
+  setDial('expression', 'balanced', { persist: true })
+  expect(JSON.parse(localStorage.getItem('warp:dials')!)).toEqual({ expression: 'balanced' })
+  setDial('theme', 'dark', { persist: true })
+  setDial('theme', 'auto', { persist: true })
+  expect(JSON.parse(localStorage.getItem('warp:dials')!)).toEqual({ expression: 'balanced' })
+  // the reload: the page's head says vivid, then the kept dials apply over it (dialScript)
+  const root = document.createElement('html')
+  root.dataset.expression = 'vivid'
+  Object.assign(root.dataset, JSON.parse(localStorage.getItem('warp:dials') || '{}'))
+  expect(getDial('expression', root)).toBe('balanced')
+  localStorage.removeItem('warp:dials')
+})
+
 test('copy: a highlighted block keeps its newlines', async () => {
   const writeText = vi.fn(async () => {})
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })

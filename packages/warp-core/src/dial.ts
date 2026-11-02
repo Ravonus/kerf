@@ -16,11 +16,14 @@ export type DialValue<D extends Dial> = (typeof DIALS)[D]['values'][number]
 const AUTO_REMOVES = new Set<Dial>(['theme', 'motion', 'flair'])
 // `dialScript` in @weft/warp/plugin reads this key before the first paint.
 const KEY = 'warp:dials'
+// Only an "auto" that removes the attribute goes unsaid. Any other value is kept as chosen, the initial one too: a page
+// can set its own default (a head script, `warp({ dials })`), so leaving `balanced` out would hand it back to that default.
+const unsaid = (name: Dial, value: string) => AUTO_REMOVES.has(name) && value === 'auto'
 
 function remember(name: Dial, value: string) {
   try {
     const held = JSON.parse(localStorage.getItem(KEY) ?? '{}')
-    if (value === DIALS[name].initial) delete held[name]
+    if (unsaid(name, value)) delete held[name]
     else held[name] = value
     localStorage.setItem(KEY, JSON.stringify(held))
   } catch {} // private windows and blocked storage: the dial still works for this page
@@ -52,7 +55,7 @@ export function setDial<D extends Dial>(
   if (persist) remember(name, value)
   if (url) {
     const q = new URLSearchParams(location.search)
-    if (value === DIALS[name].initial) q.delete(name)
+    if (unsaid(name, value)) q.delete(name)
     else q.set(name, value)
     history.replaceState(history.state, '', (q.size ? `?${q}` : location.pathname) + location.hash)
   }
