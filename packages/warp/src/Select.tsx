@@ -117,6 +117,7 @@ export function Select(props: Omit<FieldProps, 'value' | 'defaultValue'> & ListP
   return (
     <Field
       {...omit(props, OWN)}
+      label={props.label}
       filled
       labelled
       reset={list.onReset}

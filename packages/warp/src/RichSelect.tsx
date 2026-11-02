@@ -67,7 +67,7 @@ const Option = ({ id, row, selected, active, onPick }: { id: string; row: Row; s
 )
 
 /** A field whose control is one value button over a search list: the frame of TimeZoneSelect and the Intl selects. */
-function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, icon, text, title, search, rows, match, count, hint, label, name, presentation, disabled, readonly, locale, today, ...rest }: RichFieldProps & Bindable<string | null> & Openable & { icon?: IconRef; text: (v: string, locale: string) => string; title: string; search: string; rows: (locale: string, today: string) => Row[]; match?: (r: Row, q: string) => boolean; count?: (n: number, q: string) => string; hint?: unknown }) {
+function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, icon, text, title, search, rows, match, count, hint, label, name, presentation, disabled, readonly, locale, today, ...rest }: RichFieldProps & Bindable<string | null> & Openable & { icon?: IconRef | undefined; text: (v: string, locale: string) => string; title: string; search: string; rows: (locale: string, today: string) => Row[]; match?: ((r: Row, q: string) => boolean) | undefined; count?: ((n: number, q: string) => string) | undefined; hint?: unknown }) {
   const env = usePickerEnv(() => locale, () => today)
   const v = bindable<string | null>(() => value, () => defaultValue, null, () => onValueChange)
   const pop = useOpen(() => open, () => defaultOpen, () => onOpenChange)

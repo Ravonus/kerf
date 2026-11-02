@@ -13,7 +13,7 @@ describe('Table phone cards', () => {
   function sized() {
     const seen: ResizeObserverCallback[] = []
     const was = window.ResizeObserver
-    window.ResizeObserver = class { constructor(fn: ResizeObserverCallback) { seen.push(fn) } observe() {} unobserve() {} disconnect() {} } as unknown as typeof ResizeObserver
+    window.ResizeObserver = class { constructor(fn: ResizeObserverCallback) { seen.push(fn) } observe() {} unobserve() {} disconnect() {} }
     onTestFinished(() => { window.ResizeObserver = was })
     return async (root: HTMLElement, w: number) => {
       Object.defineProperty(root, 'clientWidth', { configurable: true, value: w })

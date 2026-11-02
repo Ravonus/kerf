@@ -15,12 +15,12 @@ export function Tooltip({ content, kbd, side, align, inline, children }: { conte
   const flat = untrack(() => !!inline)
   let tip: HTMLDivElement | undefined
   // the trigger is the element before the tip; it is described by the tip unless its name already says the same
-  const attach = (el: HTMLElement, o: { side?: Side; align?: Align }) => {
+  const attach = (el: HTMLElement, o: { side?: Side | undefined; align?: Align | undefined }) => {
     const trigger = el.previousElementSibling as HTMLElement
     if (trigger.getAttribute('aria-label') !== el.textContent) trigger.setAttribute('aria-describedby', [trigger.getAttribute('aria-describedby'), id].filter(Boolean).join(' '))
     if (flat) return { update() {}, destroy() {} } // shown in flow: nothing to place, open or close
     const action = tooltip(el, { trigger, side: o.side, align: o.align })
-    return { update: (n: { side?: Side; align?: Align }) => action.update({ trigger, side: n.side, align: n.align }), destroy: () => action.destroy() }
+    return { update: (n: { side?: Side | undefined; align?: Align | undefined }) => action.update({ trigger, side: n.side, align: n.align }), destroy: () => action.destroy() }
   }
   use(attach, () => tip, () => ({ side, align }))
   return (

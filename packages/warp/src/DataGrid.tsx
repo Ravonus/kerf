@@ -280,7 +280,7 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
       const under = new Map<T, readonly T[] | undefined>() // treeRows asks more than once, and each level sorts
       const kids = (r: T) => { if (!under.has(r)) { const k = kidsOf(r); under.set(r, k && sorted(k)) } return under.get(r) }
       const entries = treeRows(ordered.value, {
-        key: keyOf, kids, branch: isBranch, open: k => open.get(k) === true, closed: k => closedHere.get(k) === true,
+        key: keyOf, kids, branch: isBranch, open: k => open.get(k), closed: k => closedHere.get(k),
         match: q ? r => all.value.some(c => String((read(c, r) as string | number | null | undefined) ?? '').toLowerCase().includes(q)) : undefined,
       })
       const tops = new Map(ordered.value.map((r, i) => [keyOf(r), i % 8 + 1]))

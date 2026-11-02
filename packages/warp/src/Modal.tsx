@@ -23,7 +23,7 @@ export function Modal({ open, title, description, footer, size, placement, alert
   const flat = untrack(() => !!inline)
   if (!flat) use(dialog, () => el, () => ({ open: open.value, onClose: () => (open.value = false) }))
   // inline: [data-close] still closes it, by `open`, as the dialog action would
-  const closer = flat ? (e: Event) => { if ((e.target as Element).closest?.('[data-close]')) open.value = false } : undefined
+  const closer = (e: Event) => { if (flat && (e.target as Element).closest?.('[data-close]')) open.value = false }
   return (
     <dialog ref={n => (el = n)} open={flat ? open.value : undefined} data-presentation={flat ? 'inline' : undefined} onClick={closer} data-scope="dialog" role={alert ? 'alertdialog' : undefined} data-size={size === 'md' ? undefined : size} data-placement={placement === 'center' ? undefined : placement} data-tone={tone} aria-labelledby={`${id}-t`} aria-describedby={hasDescription.value ? `${id}-d` : undefined}>
       <div data-part="header">

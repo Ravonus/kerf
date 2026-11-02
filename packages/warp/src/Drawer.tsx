@@ -25,7 +25,7 @@ export function Drawer({ open, title, description, footer, side = 'auto', inline
     if (on && el) el.dataset.side = placed()
     return { open: on, onClose: () => (open.value = false) }
   })
-  const closer = flat ? (e: Event) => { if ((e.target as Element).closest?.('[data-close]')) open.value = false } : undefined
+  const closer = (e: Event) => { if (flat && (e.target as Element).closest?.('[data-close]')) open.value = false }
   return (
     <dialog ref={n => (el = n)} open={flat ? open.value : undefined} data-presentation={flat ? 'inline' : undefined} onClick={closer} data-scope="sheet" aria-labelledby={`${id}-t`} aria-describedby={hasDescription.value ? `${id}-d` : undefined} data-side={untrack(() => (side === 'auto' ? 'right' : side))}>
       <button type="button" data-part="handle" aria-label="Sheet height: tall. Press to shrink."></button>
