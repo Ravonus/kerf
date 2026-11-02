@@ -15,7 +15,7 @@ test('Bayer tiles are the standard matrices, and every threshold is used once', 
 })
 
 // Spectral test without an FFT: difference from each neighbour is high for blue noise and flat for white.
-const roughness = (t: Float32Array, n: number) => { let s = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) s += Math.abs(t[y * n + x] - t[y * n + (x + 1) % n]); return s / (n * n) }
+const roughness = (t: Float32Array, n: number) => { let s = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) s += Math.abs(t[y * n + x]! - t[y * n + (x + 1) % n]!); return s / (n * n) }
 
 test('blue noise is high-pass: neighbours differ more than random, and low thresholds never clump', () => {
   const { n, t } = tile('blue')
@@ -81,7 +81,7 @@ test('the lattice is the field to within a tone step, at a sixteenth of the call
   const b = sample(f, 160, 90, 3, new Float32Array(14400), 4)
   expect(calls).toBeLessThan(full / 12)
   let worst = 0
-  for (let i = 0; i < a.length; i++) worst = Math.max(worst, Math.abs(a[i] - b[i]))
+  for (let i = 0; i < a.length; i++) worst = Math.max(worst, Math.abs(a[i]! - b[i]!))
   expect(worst).toBeLessThan(0.04)
   expect(stepFor(4000)).toBe(1)
   expect(stepFor(130000)).toBe(4)
@@ -205,7 +205,7 @@ describe('surface', () => {
     hidden.mockReturnValue(false)
     document.dispatchEvent(new Event('visibilitychange'))
     tick(9000); tick(9016)
-    expect(times.at(-1)! - times[1]).toBeLessThan(0.05)
+    expect(times.at(-1)! - times[1]!).toBeLessThan(0.05)
     s.destroy()
   })
 

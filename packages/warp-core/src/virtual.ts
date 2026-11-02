@@ -32,19 +32,19 @@ export class Sizes {
     for (let i = 1; i < tree.length; i++) {
       const size = this.all[i - 1] ?? 0
       this.sum += size
-      tree[i] += size
+      tree[i]! += size
       const up = i + (i & -i)
-      if (up < tree.length) tree[up] += tree[i]
+      if (up < tree.length) tree[up]! += tree[i]!
     }
     this.tree = tree
   }
 
   set(i: number, size: number) {
-    const delta = size - this.all[i]
+    const delta = size - this.all[i]!
     if (!delta) return 0
     this.all[i] = size
     this.sum += delta
-    for (let at = i + 1; at < this.tree.length; at += at & -at) this.tree[at] += delta
+    for (let at = i + 1; at < this.tree.length; at += at & -at) this.tree[at]! += delta
     return delta
   }
 
@@ -57,7 +57,7 @@ export class Sizes {
   /** The sum of the sizes before `i`. */
   offset(i: number) {
     let sum = 0
-    for (let at = Math.min(i, this.all.length); at > 0; at -= at & -at) sum += this.tree[at]
+    for (let at = Math.min(i, this.all.length); at > 0; at -= at & -at) sum += this.tree[at]!
     return sum
   }
 
@@ -68,7 +68,7 @@ export class Sizes {
     let at = 0, left = y
     for (let step = 1 << (31 - Math.clz32(this.tree.length - 1)); step; step >>= 1) {
       const next = at + step
-      if (next < this.tree.length && next <= n && this.tree[next] <= left) { at = next; left -= this.tree[next] }
+      if (next < this.tree.length && next <= n && this.tree[next]! <= left) { at = next; left -= this.tree[next]! }
     }
     return Math.min(at, n - 1)
   }
@@ -116,7 +116,7 @@ export interface Virtualizer {
   refresh(from?: number, to?: number): void
   /** Take this element as `key`'s row: it's positioned and watched. Returns the release. */
   attach(el: HTMLElement, key: VirtualKey): () => void
-  scrollTo(index: number, align?: VirtualAlign): void
+  scrollTo(index: number, align?: VirtualAlign | undefined): void
   scrollToEnd(): void
   /** The row at the top of the viewport, and the pixels of it above the edge. */
   anchor(): { index: number; within: number }
@@ -157,7 +157,7 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
   const head = () => o.head ?? 0
   const room = () => (viewport || FALLBACK_VIEWPORT) - head()
   const sizeFor = (i: number) => {
-    const seen = known.get(keys[i])
+    const seen = known.get(keys[i]!)
     if (seen && seen.cross === cross) return seen.size + gap()
     return (o.size?.(i, cross) ?? seen?.size ?? estimate(i)) + gap()
   }
@@ -176,7 +176,7 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       row.el.style.transform = horizontal ? `translateX(${at}px)` : `translateY(${at}px)`
     }
     if (!o.sized) return
-    const size = sizes.get(i) - gap()
+    const size = sizes.get(i)! - gap()
     if (size === row.size) return
     row.size = size
     if (horizontal) row.el.style.inlineSize = `${size}px`
@@ -239,13 +239,13 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
     while (same < shared && old[same] === next[same]) same++
     keys = next
     if (same === old.length) { // the common case, a growing list: nothing above moves
-      for (let i = same; i < next.length; i++) { index.set(next[i], i); sizes.push(sizeFor(i)) }
+      for (let i = same; i < next.length; i++) { index.set(next[i]!, i); sizes.push(sizeFor(i)) }
       bounds()
       if (o.stick != null && stuck) end()
       range()
       return
     }
-    const at = position(), held = sizes.at(at), key = old[held], within = at - sizes.offset(held)
+    const at = position(), held = sizes.at(at), key = old[held]!, within = at - sizes.offset(held)
     index = new Map(next.map((k, i) => [k, i]))
     sizes.fill(next.map((_, i) => sizeFor(i)))
     for (const k of known.keys()) if (!index.has(k)) known.delete(k)
@@ -271,10 +271,10 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       const size = rowBox(e)
       if (!size) continue // display: none, or a detached row
       known.set(key, { size, cross })
-      if (Math.abs(size + gap() - sizes.get(i)) > 0.01) changed.push([i, key, size])
+      if (Math.abs(size + gap() - sizes.get(i)!) > 0.01) changed.push([i, key, size])
     }
     if (!changed.length) return
-    anchored(() => { for (const [i, , size] of changed) { o.onDrift?.(i, sizes.get(i) - gap(), size); sizes.set(i, size + gap()) } })
+    anchored(() => { for (const [i, , size] of changed) { o.onDrift?.(i, sizes.get(i)! - gap(), size); sizes.set(i, size + gap()) } })
   }) : null
 
   const measure = () => {

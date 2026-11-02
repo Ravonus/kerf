@@ -11,7 +11,7 @@ test('labelWindow keeps both ends and never crowds the last', () => {
   const w = [...labelWindow(12, 5)].sort((a, b) => a - b)
   expect(w[0]).toBe(0)
   expect(w[w.length - 1]).toBe(11)
-  for (let i = 1; i < w.length; i++) expect(w[i] - w[i - 1]).toBeGreaterThanOrEqual(2)
+  for (let i = 1; i < w.length; i++) expect(w[i]! - w[i - 1]!).toBeGreaterThanOrEqual(2)
 })
 
 test('a monotone line never overshoots the data', () => {
@@ -77,9 +77,9 @@ test('the action runs on plain DOM: one tab stop, walk, tooltip, legend', () => 
   const { fig, action } = mount(line, cfg)
   const marks = () => [...fig.querySelectorAll<SVGElement>('[data-mark]')]
   expect(marks().filter(m => m.getAttribute('tabindex') === '0')).toHaveLength(1)
-  marks()[0].focus()
+  marks()[0]!.focus()
   expect(fig.querySelector('[data-part="chart-tip"]')!.textContent).toContain('Jan')
-  marks()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))
+  marks()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))
   expect(document.activeElement!.getAttribute('data-xi')).toBe('2')
   fig.querySelector<HTMLElement>('[data-si="1"]')!.click()
   expect(fig.querySelector('[data-series="1"]')).toBeNull()
@@ -88,7 +88,7 @@ test('the action runs on plain DOM: one tab stop, walk, tooltip, legend', () => 
 })
 
 test('bars stay the same nodes across a layout swap', () => {
-  const { fig, action } = mount(bar, { ...cfg, layout: 'grouped' as const })
+  const { fig, action } = mount(bar, { ...cfg, layout: 'grouped' as 'grouped' | 'stacked' })
   const m = fig.querySelector('[data-xi="1"][data-si="1"]')!
   action.update({ form: bar, cfg: { ...cfg, layout: 'stacked' as const }, id: 'c' })
   expect(fig.querySelector('[data-xi="1"][data-si="1"]')).toBe(m)

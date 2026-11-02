@@ -8,8 +8,8 @@ export interface MenuOptions {
   /** Which item takes focus on open (↑ on a trigger opens at the last). */
   at?: 'first' | 'last'
   /** Anchor it to the trigger while open (placed once shown, followed through scroll and resize). */
-  side?: Side
-  align?: Align
+  side?: Side | undefined
+  align?: Align | undefined
   onClose(): void
 }
 

@@ -7,7 +7,7 @@ export type SegmentType = 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second
 export interface Segment { type: SegmentType; min: number; max: number; len: number; value: number | null; buf: string; ph: string }
 export type SegmentPart = Segment | { literal: string; at: number }
 export type SegmentKind = 'date' | 'time' | 'month'
-export interface SegmentOptions { hourCycle?: 'h12' | 'h23' | 'auto'; seconds?: boolean }
+export interface SegmentOptions { hourCycle?: 'h12' | 'h23' | 'auto'; seconds?: boolean | undefined }
 
 const PLACEHOLDER: Record<string, Partial<Record<SegmentType, string>>> = {
   en: { day: 'dd', month: 'mm', year: 'yyyy', hour: 'hh', minute: 'mm', second: 'ss' },
@@ -37,12 +37,12 @@ export function segmentParts(kind: SegmentKind, locale: string, o: SegmentOption
   const parts = new Intl.DateTimeFormat(locale, kind === 'time'
     ? { hour: 'numeric', minute: '2-digit', second: o.seconds ? '2-digit' : undefined, hourCycle: h12 ? 'h12' : 'h23', timeZone: 'UTC' }
     : { year: 'numeric', month: '2-digit', day: kind === 'date' ? '2-digit' : undefined, timeZone: 'UTC' }).formatToParts(sample)
-  const ph = PLACEHOLDER[locale.slice(0, 2)] ?? PLACEHOLDER.en
+  const ph = PLACEHOLDER[locale.slice(0, 2)] ?? PLACEHOLDER.en!
   const spec: Partial<Record<SegmentType, [number, number, number]>> = { day: [1, 31, 2], month: [1, 12, 2], year: [1, 9999, 4], hour: h12 ? [1, 12, 2] : [0, 23, 2], minute: [0, 59, 2], second: [0, 59, 2], dayPeriod: [0, 1, 1] }
   const out: SegmentPart[] = []
   for (const p of parts) {
     const s = spec[p.type as SegmentType]
-    if (s) out.push({ type: p.type as SegmentType, min: s[0], max: s[1], len: s[2], value: null, buf: '', ph: ph[p.type as SegmentType] ?? dayPeriods(locale)[0] })
+    if (s) out.push({ type: p.type as SegmentType, min: s[0], max: s[1], len: s[2], value: null, buf: '', ph: ph[p.type as SegmentType] ?? dayPeriods(locale)[0]! })
     else if (p.type === 'literal') out.push({ literal: p.value.replace(/\s+/g, ' '), at: out.length })
   }
   return out
@@ -93,7 +93,7 @@ export function segmentValueText(s: Segment, periods: [string, string], locale: 
 export interface Press {
   parts: SegmentPart[]
   /** The segment (index among segments) focus moves to, if any. */
-  move?: number
+  move?: number | undefined
   /** The key was this widget's: the binding calls preventDefault. */
   handled: boolean
 }
@@ -101,8 +101,8 @@ export interface Press {
 /** One key on segment `at` (an index among segments): digits fill and advance, ↑/↓ step and wrap, Backspace clears. */
 export function press(parts: SegmentPart[], at: number, key: string, o: { year: number; meta?: boolean; rtl?: boolean }): Press {
   const segs = parts.filter(isSegment)
-  const s = segs[at]
-  const next = (patch: Partial<Segment>, move?: number): Press => ({ parts: parts.map(p => (p === s ? { ...s, ...patch } : p)), move, handled: true })
+  const s = segs[at]!
+  const next = (patch: Partial<Segment>, move?: number | undefined): Press => ({ parts: parts.map(p => (p === s ? { ...s, ...patch } : p)), move, handled: true })
   const last = segs.length - 1
   const forward = at < last ? at + 1 : undefined
   if (/^\d$/.test(key) && s.type !== 'dayPeriod') {

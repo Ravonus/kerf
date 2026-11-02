@@ -8,7 +8,7 @@ function bayer(n: number) {
   for (let s = 1; s < n; s *= 2) {
     const next = new Array(s * s * 4)
     for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
-      const v = m[y * s + x] * 4
+      const v = m[y * s + x]! * 4
       next[y * 2 * s + x] = v
       next[y * 2 * s + x + s] = v + 2
       next[(y + s) * 2 * s + x] = v + 3
@@ -34,11 +34,11 @@ function blue(n: number) {
   }
   for (let rank = 0; rank < size; rank++) {
     let best = -1, low = Infinity
-    for (let i = 0; i < size; i++) if (out[i] < 0 && energy[i] < low) { low = energy[i]; best = i }
+    for (let i = 0; i < size; i++) if (out[i]! < 0 && energy[i]! < low) { low = energy[i]!; best = i }
     out[best] = (rank + 0.5) / size
     const bx = best % n, by = (best / n) | 0
     let w = 0
-    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) energy[((by + dy + n) % n) * n + (bx + dx + n) % n] += weight[w++]
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) energy[((by + dy + n) % n) * n + (bx + dx + n) % n]! += weight[w++]!
   }
   return out
 }
@@ -50,7 +50,7 @@ function halftone(n: number) {
     const x = i % n, y = (i / n) | 0
     spot[i] = Math.cos(Math.PI * 2 * (x + y + 1) / n) + Math.cos(Math.PI * 2 * (x - y) / n)
   }
-  order.sort((a, b) => spot[b] - spot[a] || a - b)
+  order.sort((a, b) => spot[b]! - spot[a]! || a - b)
   const out = new Float32Array(size)
   order.forEach((at, rank) => { out[at] = 1 - (rank + 0.5) / size })
   return out

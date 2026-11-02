@@ -6,7 +6,7 @@ export type Orientation = 'horizontal' | 'vertical'
  * The index a key moves to in a composite of `count` items (tablist, toolbar, segmented, radio group): arrows step
  * and wrap, Home/End jump, right-to-left flips the horizontal arrows. -1 when the key does nothing.
  */
-export function nextIndex(key: string, at: number, count: number, { orientation = 'horizontal', rtl = false }: { orientation?: Orientation; rtl?: boolean } = {}) {
+export function nextIndex(key: string, at: number, count: number, { orientation = 'horizontal', rtl = false }: { orientation?: Orientation | undefined; rtl?: boolean } = {}) {
   if (count === 0) return -1
   const [back, forward] = orientation === 'vertical' ? ['ArrowUp', 'ArrowDown'] : rtl ? ['ArrowRight', 'ArrowLeft'] : ['ArrowLeft', 'ArrowRight']
   if (key === back) return (at - 1 + count) % count
@@ -20,7 +20,7 @@ export function nextIndex(key: string, at: number, count: number, { orientation 
  * Roving focus as an action: one tab stop in `container`, arrow keys move focus among `items` (skipping disabled
  * ones); `onMove` runs with the item focus lands on, for widgets where selection follows focus (tabs).
  */
-export function roving(container: HTMLElement, opts: { items: string; orientation?: Orientation; onMove?: (el: HTMLElement, index: number) => void }) {
+export function roving(container: HTMLElement, opts: { items: string; orientation?: Orientation | undefined; onMove?: (el: HTMLElement, index: number) => void }) {
   let o = opts
   const onKey = (e: KeyboardEvent) => {
     const items = [...container.querySelectorAll<HTMLElement>(o.items)].filter(el => !el.matches(':disabled, [aria-disabled="true"]'))
@@ -30,8 +30,8 @@ export function roving(container: HTMLElement, opts: { items: string; orientatio
     const to = nextIndex(e.key, at, items.length, { orientation: o.orientation, rtl })
     if (to < 0) return
     e.preventDefault()
-    items[to].focus()
-    o.onMove?.(items[to], to)
+    items[to]!.focus()
+    o.onMove?.(items[to]!, to)
   }
   container.addEventListener('keydown', onKey)
   return {

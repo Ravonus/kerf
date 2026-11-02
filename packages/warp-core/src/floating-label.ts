@@ -55,9 +55,9 @@ function delays(field: Element) {
 // bits, as the canvas read it once was (so 0.99 still counts as see-through)
 function alpha(c: string) {
   const m = /^rgba\(.*,\s*([\d.]+)\)$|\/\s*([\d.]+)(%?)\s*\)$/.exec(c)
-  return m ? Math.round((+(m[1] ?? m[2]) / (m[3] ? 100 : 1)) * 255) / 255 : 1
+  return m ? Math.round((+(m[1] ?? m[2])! / (m[3] ? 100 : 1)) * 255) / 255 : 1
 }
-const docOffset = (el: HTMLElement) => {
+const docOffset = (el: HTMLElement): [number, number] => {
   let x = 0, y = 0
   for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) {
     x += n.offsetLeft + (n === el ? 0 : n.clientLeft)

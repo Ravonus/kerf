@@ -35,7 +35,7 @@ export function tones(source: CanvasImageSource, cols: number, rows: number) {
   g.imageSmoothingQuality = 'high'
   g.drawImage(source, (cols - w) / 2, (rows - h) / 2, w, h)
   const px = g.getImageData(0, 0, cols, rows).data, out = new Float32Array(cols * rows)
-  for (let i = 0; i < out.length; i++) out[i] = (px[i * 4] * 0.2126 + px[i * 4 + 1] * 0.7152 + px[i * 4 + 2] * 0.0722) / 255
+  for (let i = 0; i < out.length; i++) out[i] = (px[i * 4]! * 0.2126 + px[i * 4 + 1]! * 0.7152 + px[i * 4 + 2]! * 0.0722) / 255
   return out
 }
 
@@ -70,7 +70,7 @@ export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): A
     const v = light || !src ? base : base.map(x => 1 - x)
     if (isDiffusion(algorithm)) {
       const picked = diffuse(v, cols, rows, inks.length, algorithm)
-      for (let i = 0; i < picked.length; i++) out[i] = inks[picked[i]]
+      for (let i = 0; i < picked.length; i++) out[i] = inks[picked[i]!]!
     } else quantize(v, cols, rows, tile(algorithm), inks, out)
     ctx.clearRect(0, 0, width, height)
     ctx.putImageData(image, 0, 0)

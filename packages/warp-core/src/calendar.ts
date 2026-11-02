@@ -50,7 +50,7 @@ export interface DayState {
   selected: boolean
   /** The gridcell's aria-selected: the ends and the band of a range too. */
   cellSelected: boolean
-  range?: 'start' | 'mid' | 'end' | 'solo'
+  range?: 'start' | 'mid' | 'end' | 'solo' | undefined
   preview: boolean
   compare: boolean
   today: boolean
@@ -77,7 +77,7 @@ export function dayState(iso: IsoDate, c: CalendarContext): DayState {
     if (v?.start) {
       let e = v.end
       if (!e && c.hover) { e = c.hover as IsoDate; previewing = true }
-      const [lo, hi] = ordered(v.start, e ?? v.start)
+      const [lo, hi] = ordered(v.start, e ?? v.start) as [string, string]
       if (iso === lo || iso === hi) selected = !previewing || iso === v.start
       if (lo !== hi && iso >= lo && iso <= hi) {
         range = iso === lo ? 'start' : iso === hi ? 'end' : 'mid'

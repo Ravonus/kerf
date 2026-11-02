@@ -90,7 +90,7 @@ export function inviteProblem(emails: readonly string[], seatsLeft: number) {
 
 /* ---- usage meters (09 §4.3) ---- */
 
-export interface MeterParts { tone?: 'caution' | 'critical'; percent: number; fill: number; over: number; warn: number }
+export interface MeterParts { tone?: 'caution' | 'critical' | undefined; percent: number; fill: number; over: number; warn: number }
 
 /** Neutral under 80%, caution from 80%, critical at 100%; past the limit the rail rescales so the overage shows as stripes. */
 export function meterParts(value: number, limit: number): MeterParts {
@@ -119,7 +119,7 @@ export function prorate(o: { from: { name: string; price: number }; to: { name: 
 
 /* ---- CSV import (09 §4.7) ---- */
 
-export interface CsvTable { headers: string[]; rows: string[][]; problem?: string }
+export interface CsvTable { headers: string[]; rows: string[][]; problem?: string | undefined }
 export interface ImportTarget { id: string; label: string; required?: boolean; aliases?: string[]; check?: (value: string) => string | undefined }
 export interface ImportIssue { row: number; path: string; message: string }
 export const SKIP_COLUMN = 'skip'
@@ -223,7 +223,7 @@ export function addressProblems(a: Address | null, country: string) {
   for (const [part, label] of f.fields) {
     const v = addressPart(a, part).trim()
     if (!v && !/optional/i.test(label)) out[part] = `Enter a ${label.toLowerCase()}.`
-    else if (part === 'postalCode' && v && f.postal && !f.postal.test(v)) out[part] = f.postalMessage
+    else if (part === 'postalCode' && v && f.postal && !f.postal.test(v)) out[part] = f.postalMessage!
   }
   return out
 }

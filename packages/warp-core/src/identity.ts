@@ -37,7 +37,7 @@ export function formatPhone(input: string, c: PhoneCountry) {
 /** The caret after a reformat: behind the same number of digits it was (04 §1.3). */
 export function caretAfter(shown: string, digitsBefore: number) {
   let pos = 0, seen = 0
-  while (pos < shown.length && seen < digitsBefore) { if (/\d/.test(shown[pos])) seen++; pos++ }
+  while (pos < shown.length && seen < digitsBefore) { if (/\d/.test(shown[pos]!)) seen++; pos++ }
   return pos
 }
 /** The country a pasted `+…` number belongs to: the longest dial code, the current country winning a tie. */
@@ -61,7 +61,7 @@ export function zoneRows(locale: string, date = todayIso(), zones?: string[]): Z
     const [long, short] = zoneNames(locale, zone, date)
     const city = zoneCity(zone)
     const search = `${zone} ${city} ${long} ${short} ${offset}`.toLowerCase().replace(/[_\s]/g, '')
-    return { zone, city, region: zone.includes('/') ? zone.split('/')[0] : '', offset, search }
+    return { zone, city, region: zone.includes('/') ? zone.split('/')[0]! : '', offset, search }
   })
 }
 /** Search: city, zone, Intl names, abbreviations, and offsets typed like `+5:30`. */
@@ -69,7 +69,7 @@ export function matchZone(row: ZoneRow, query: string) {
   const q = query.toLowerCase().replace(/[_\s]/g, '')
   if (!q) return true
   const off = /^[+-]?(\d{1,2})(?::?(\d{2}))?$/.exec(q)
-  if (off) return row.offset.slice(3).replace(/^[+-]/, '').startsWith(`${off[1].padStart(2, '0')}:${off[2] ?? ''}`) && (q[0] !== '-' || row.offset[3] === '-') && (q[0] !== '+' || row.offset[3] === '+')
+  if (off) return row.offset.slice(3).replace(/^[+-]/, '').startsWith(`${off[1]!.padStart(2, '0')}:${off[2] ?? ''}`) && (q[0] !== '-' || row.offset[3] === '-') && (q[0] !== '+' || row.offset[3] === '+')
   return row.search.includes(q)
 }
 
@@ -86,7 +86,7 @@ export const cardBrand = (bin: string) => (/^3[47]/.test(bin) ? 'American Expres
 export const cardMask = (last4: string, brand = '') => (/american/i.test(brand) ? `•••• •••••• •${last4}` : `•••• ${last4}`)
 
 /** AddressField (04 §3): the country decides the fields, their order, labels and postal rule. */
-export interface Address { country: string; lines: string[]; locality?: string; dependentLocality?: string; region?: string; postalCode?: string; sortingCode?: string; organization?: string; recipient?: string }
+export interface Address { country: string; lines: string[]; locality?: string; dependentLocality?: string; region?: string | undefined; postalCode?: string; sortingCode?: string; organization?: string; recipient?: string }
 export type AddressPart = 'line1' | 'line2' | 'locality' | 'region' | 'postalCode'
 export interface AddressFormat { fields: [part: AddressPart, label: string, span: number, autocomplete: string][]; postal?: RegExp; postalMessage?: string }
 

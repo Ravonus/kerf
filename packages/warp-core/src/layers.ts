@@ -6,7 +6,7 @@ export interface Layer {
   el: HTMLElement
   close(reason: 'escape' | 'outside'): void
   /** The element that opened it: a press on it is not "outside". */
-  trigger?: Element | null
+  trigger?: Element | null | undefined
   /** Modal layers (dialogs) handle their own outside press (backdrop). */
   modal?: boolean
   /** Tooltips: closed by Escape, ignored by presses. */
@@ -33,7 +33,7 @@ function stackOf(doc: Document) {
   doc.addEventListener('pointerdown', e => {
     const t = e.target as Node
     for (let i = stack!.length - 1; i >= 0; i--) {
-      const l = stack![i]
+      const l = stack![i]!
       if (l.passive) continue
       if (l.modal || l.el.contains(t) || l.trigger?.contains(t)) break
       l.close('outside')

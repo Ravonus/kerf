@@ -18,8 +18,8 @@ export interface PanelOptions {
   trigger: HTMLElement
   onClose(): void
   presentation?: Presentation
-  side?: Side
-  align?: Align
+  side?: Side | undefined
+  align?: Align | undefined
 }
 
 /**

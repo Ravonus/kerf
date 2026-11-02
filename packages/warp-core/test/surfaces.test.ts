@@ -45,7 +45,7 @@ describe('palette ranking', () => {
   })
   test('groups in order, keywords answer', () => {
     expect(rankCommands(items, '').map(g => g.name)).toEqual(['Create', 'Go'])
-    expect(rankCommands(items, 'prefer')[0].rows[0].item.label).toBe('Open settings')
+    expect(rankCommands(items, 'prefer')[0]!.rows[0]!.item.label).toBe('Open settings')
   })
   test('marked alternates runs', () => {
     expect(marked('abc', [1])).toEqual([{ text: 'a', hit: false }, { text: 'b', hit: true }, { text: 'c', hit: false }])
@@ -61,7 +61,7 @@ describe('mentions', () => {
   })
   test('an edit before shifts a mark; one inside drops it', () => {
     const { text, marks } = parseMentions('a @[B](user:b) c')
-    expect(shiftMarks(marks, text, `x${text}`)[0].start).toBe(marks[0].start + 1)
+    expect(shiftMarks(marks, text, `x${text}`)[0]!.start).toBe(marks[0]!.start + 1)
     expect(shiftMarks(marks, text, 'a @ c')).toEqual([])
   })
   test('a trigger only at a word start, and not inside a mark', () => {
@@ -121,6 +121,7 @@ describe('sanitizeHtml', () => {
 })
 
 describe('markdownToHtml', () => {
+  test('a stray NUL marker in the source stays text', () => expect(markdownToHtml('a \u00007\u0000 b')).not.toContain('undefined'))
   test('headings, lists, code, links', () => {
     const h = markdownToHtml('# A\n\n- b\n- c\n\n`d` **e** [f](https://x.dev)')
     expect(h).toContain('<li>b</li>')

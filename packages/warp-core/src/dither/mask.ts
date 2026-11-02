@@ -13,18 +13,18 @@ function blur(v: Float32Array, cols: number, rows: number, r: number) {
     for (let y = 0; y < rows; y++) {
       let sum = 0
       const row = y * cols
-      for (let x = -r; x <= r; x++) sum += out[row + Math.max(0, Math.min(cols - 1, x))]
+      for (let x = -r; x <= r; x++) sum += out[row + Math.max(0, Math.min(cols - 1, x))]!
       for (let x = 0; x < cols; x++) {
         tmp[row + x] = sum / div
-        sum += out[row + Math.min(cols - 1, x + r + 1)] - out[row + Math.max(0, x - r)]
+        sum += out[row + Math.min(cols - 1, x + r + 1)]! - out[row + Math.max(0, x - r)]!
       }
     }
     for (let x = 0; x < cols; x++) {
       let sum = 0
-      for (let y = -r; y <= r; y++) sum += tmp[Math.max(0, Math.min(rows - 1, y)) * cols + x]
+      for (let y = -r; y <= r; y++) sum += tmp[Math.max(0, Math.min(rows - 1, y)) * cols + x]!
       for (let y = 0; y < rows; y++) {
         out[y * cols + x] = sum / div
-        sum += tmp[Math.min(rows - 1, y + r + 1) * cols + x] - tmp[Math.max(0, y - r) * cols + x]
+        sum += tmp[Math.min(rows - 1, y + r + 1) * cols + x]! - tmp[Math.max(0, y - r) * cols + x]!
       }
     }
   }
@@ -66,6 +66,6 @@ export function rasterMask(source: MaskSource, cols: number, rows: number, famil
   g.fillStyle = g.strokeStyle = '#fff'
   draw(g, source, cols, rows, family)
   const px = g.getImageData(0, 0, c.width, c.height).data, shape = new Float32Array(cols * rows)
-  for (let i = 3, p = 0; i < px.length; i += 4, p++) shape[((p / c.width | 0) >> 2) * cols + ((p % c.width) >> 2)] += px[i] / (255 * SS * SS)
+  for (let i = 3, p = 0; i < px.length; i += 4, p++) shape[((p / c.width | 0) >> 2) * cols + ((p % c.width) >> 2)]! += px[i]! / (255 * SS * SS)
   return { shape, halo: blur(shape, cols, rows, Math.max(2, Math.round(rows / 18))) }
 }

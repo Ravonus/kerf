@@ -31,7 +31,7 @@ export const donut: Form<DonutConfig> = {
         }),
         !pie && [s('text', { class: 'center-v', x: mid, y: mid + 6, 'text-anchor': 'middle', 'aria-hidden': 'true' }, f(total)), s('text', { class: 'center-l', x: mid, y: mid + 24, 'text-anchor': 'middle', 'aria-hidden': 'true' }, unit)],
       ],
-      tip: i => { const d = c.data[i]; return { rows: [[d.color ?? color(i), d.name, f(d.value)]] } },
+      tip: i => { const d = c.data[i]!; return { rows: [[d.color ?? color(i), d.name, f(d.value)]] } },
       on(m, svg) {
         const fig = svg.closest('figure')!, v = svg.querySelector('.center-v'), l = svg.querySelector('.center-l')
         fig.toggleAttribute('data-isolate', !!m)
@@ -50,7 +50,7 @@ const A0 = -Math.PI / 2, SPAN = Math.PI * 1.5
 export const radial: Form<RadialConfig> = {
   kind: 'radial bar chart',
   table: c => tableOf(['Name', 'Progress'], c.data.map(d => [d.name, pct(d.value)])),
-  summary: c => { const a = [...c.data].sort((p, q) => q.value - p.value), z = a[a.length - 1]; return `${a[0].name} is closest to target at ${pct(a[0].value)}; ${z.name} is furthest at ${pct(z.value)}.` },
+  summary: c => { const a = [...c.data].sort((p, q) => q.value - p.value), z = a[a.length - 1]!; return `${a[0]!.name} is closest to target at ${pct(a[0]!.value)}; ${z.name} is furthest at ${pct(z.value)}.` },
   plot(c, W) {
     const size = Math.min(W, 230), mid = size / 2, sw = 12
     return {
@@ -70,10 +70,10 @@ export const radar: Form<RadarConfig> = {
   kind: 'radar chart',
   swatch: 'line',
   legend: c => c.data.map((v, i) => ({ name: v.name, color: color(i) })),
-  table: c => tableOf(['Axis', ...c.data.map(v => v.name)], c.axes.map((a, i) => [a, ...c.data.map(v => (c.format ?? num)(v.values[i]))])),
+  table: c => tableOf(['Axis', ...c.data.map(v => v.name)], c.axes.map((a, i) => [a, ...c.data.map(v => (c.format ?? num)(v.values[i]!))])),
   summary: c => `${c.data.map(v => v.name).join(' and ')} scored on ${c.axes.length} axes.`,
   plot(c, W, x) {
-    const size = Math.min(W, 250), mid = size / 2, R = mid - 26, n = c.axes.length, f = c.format ?? num, P = (i: number, r: number) => [mid + r * Math.sin((i / n) * TAU), mid - r * Math.cos((i / n) * TAU)]
+    const size = Math.min(W, 250), mid = size / 2, R = mid - 26, n = c.axes.length, f = c.format ?? num, P = (i: number, r: number): [number, number] => [mid + r * Math.sin((i / n) * TAU), mid - r * Math.cos((i / n) * TAU)]
     const ring = (k: number) => c.axes.map((_, i) => P(i, R * k).map(f1).join(',')).join(' ')
     return {
       h: size,
@@ -83,7 +83,7 @@ export const radar: Form<RadarConfig> = {
         c.data.map((v, si) => !x.hidden.has(si) && s('g', { 'data-series': si, style: `--_dc:${color(si)}` },
           s('polygon', { class: 's-poly', points: v.values.map((val, i) => P(i, R * val).map(f1).join(',')).join(' ') }),
           v.values.map((val, i) => { const [X, Y] = P(i, R * val); return mark('circle', i, si, `${v.name}, ${c.axes[i]}: ${f(val)}`, { class: 's-pt', cx: f1(X), cy: f1(Y), r: 3.5 }) }))))],
-      tip: i => ({ title: c.axes[i], rows: c.data.map((v, si): TipRow => [color(si), v.name, f(v.values[i])]) }),
+      tip: i => ({ title: c.axes[i]!, rows: c.data.map((v, si): TipRow => [color(si), v.name, f(v.values[i]!)]) }),
     }
   },
 }
@@ -113,7 +113,7 @@ export const gauge: Form<GaugeConfig> = {
   table: c => tableOf(['Band', 'Range'], [...(c.bands ?? BANDS).map(([a, b], i): [string, string] => [`Band ${i + 1}`, `${pct(a)}–${pct(b)}`]), ['Current', pct(c.data)]]),
   summary: c => `${c.label ?? c.title}: ${pct(c.data)}.`,
   plot(c, W) {
-    const size = Math.min(W, 260), cx = size / 2, cy = size * 0.56, R = size * 0.4, sw = 14, v = c.data, bands = c.bands ?? BANDS, at = (t: number) => Math.PI * (1 + t), hit = bands.find(([a, b]) => v >= a && v <= b)?.[2] ?? bands[0][2], [nx, ny] = polar(cx, cy, R - 22, at(v))
+    const size = Math.min(W, 260), cx = size / 2, cy = size * 0.56, R = size * 0.4, sw = 14, v = c.data, bands = c.bands ?? BANDS, at = (t: number) => Math.PI * (1 + t), hit = bands.find(([a, b]) => v >= a && v <= b)?.[2] ?? bands[0]![2], [nx, ny] = polar(cx, cy, R - 22, at(v))
     return {
       h: f1Num(cy + 44),
       body: [centred(W, size,
@@ -130,13 +130,13 @@ const f1Num = (v: number) => +f1(v)
 
 export type FunnelConfig = Base<{ name: string; value: number }[]> & { format?: Fmt; unit?: string }
 const short = (v: number) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(v))
-const ofPrev = (c: FunnelConfig, i: number) => Math.round((c.data[i].value / c.data[i - 1].value) * 100)
+const ofPrev = (c: FunnelConfig, i: number) => Math.round((c.data[i]!.value / c.data[i - 1]!.value) * 100)
 export const funnel: Form<FunnelConfig> = {
   kind: 'funnel chart',
   table: c => tableOf(['Step', c.unit ?? 'Value', 'Of previous'], c.data.map((d, i) => [d.name, (c.format ?? num)(d.value), i ? `${ofPrev(c, i)}%` : '–'])),
-  summary: c => { const a = c.data, z = a[a.length - 1]; return `Of ${(c.format ?? num)(a[0].value)} at ${a[0].name}, ${pct(z.value / a[0].value)} reach ${z.name}.` },
+  summary: c => { const a = c.data, z = a[a.length - 1]!; return `Of ${(c.format ?? num)(a[0]!.value)} at ${a[0]!.name}, ${pct(z.value / a[0]!.value)} reach ${z.name}.` },
   plot(c, W) {
-    const H = W < 420 ? 190 : 220, bh = (H - 10) / c.data.length - 6, x = lin(0, c.data[0].value, 0, W - 120), f = c.format ?? num
+    const H = W < 420 ? 190 : 220, bh = (H - 10) / c.data.length - 6, x = lin(0, c.data[0]!.value, 0, W - 120), f = c.format ?? num
     return {
       h: H,
       body: c.data.map((d, i) => {
@@ -156,7 +156,7 @@ export const treemap: Form<TreemapConfig> = {
   kind: 'treemap',
   legend: c => (groupsOf(c).length > 1 ? groupsOf(c).map((name, i): LegendItem => ({ name, color: color(i) })) : []),
   table: c => tableOf(['Name', 'Group', 'Value'], [...c.data].sort((a, b) => b.value - a.value).map(d => [d.name, d.group ?? '', (c.format ?? num)(d.value)])),
-  summary: c => { const a = [...c.data].sort((p, q) => q.value - p.value); return `${a.length} items, ${(c.format ?? num)(sum(a.map(d => d.value)))} in total; the largest is ${a[0].name} at ${(c.format ?? num)(a[0].value)}.` },
+  summary: c => { const a = [...c.data].sort((p, q) => q.value - p.value); return `${a.length} items, ${(c.format ?? num)(sum(a.map(d => d.value)))} in total; the largest is ${a[0]!.name} at ${(c.format ?? num)(a[0]!.value)}.` },
   plot(c, W, x) {
     const H = W < 420 ? 220 : 260, g = groupsOf(c), f = c.format ?? num, fs = c.short ?? f, list = c.data.filter(d => !x.hidden.has(g.indexOf(d.group ?? ''))).sort((a, b) => b.value - a.value), t = sum(list.map(d => d.value))
     const cells = squarify(list.map(d => ({ ...d, a: (d.value / t) * W * H })), 0, 0, W, H)
@@ -175,27 +175,27 @@ export const treemap: Form<TreemapConfig> = {
 export type SankeyConfig = Base<{ from: number; to: number; value: number }[]> & { nodes: { name: string; column: number }[]; format?: Fmt }
 export const sankey: Form<SankeyConfig> = {
   kind: 'sankey diagram',
-  table: c => tableOf(['From', 'To', 'Value'], c.data.map(l => [c.nodes[l.from].name, c.nodes[l.to].name, (c.format ?? num)(l.value)])),
-  summary: c => { const top = c.data.reduce((a, b) => (b.value > a.value ? b : a)); return `The largest flow is ${c.nodes[top.from].name} to ${c.nodes[top.to].name}, ${(c.format ?? num)(top.value)}.` },
+  table: c => tableOf(['From', 'To', 'Value'], c.data.map(l => [c.nodes[l.from]!.name, c.nodes[l.to]!.name, (c.format ?? num)(l.value)])),
+  summary: c => { const top = c.data.reduce((a, b) => (b.value > a.value ? b : a)); return `The largest flow is ${c.nodes[top.from]!.name} to ${c.nodes[top.to]!.name}, ${(c.format ?? num)(top.value)}.` },
   plot(c, W) {
     const H = W < 420 ? 220 : 250, { nodes, data: links } = c, f = c.format ?? num, cols = [...new Set(nodes.map(n => n.column))], last = Math.max(...cols, 1), nw = 10, pad = 14, colX = (k: number) => 4 + k * ((W - nw - 90) / last)
     const val = nodes.map((_, i) => Math.max(sum(links.filter(l => l.from === i).map(l => l.value)), sum(links.filter(l => l.to === i).map(l => l.value))))
-    const k = Math.min(...cols.map(col => { const ns = nodes.flatMap((n, i) => (n.column === col ? [i] : [])); return (H - 10 - pad * (ns.length - 1)) / sum(ns.map(i => val[i])) }))
+    const k = Math.min(...cols.map(col => { const ns = nodes.flatMap((n, i) => (n.column === col ? [i] : [])); return (H - 10 - pad * (ns.length - 1)) / sum(ns.map(i => val[i]!)) }))
     const pos: { x: number; y: number; h: number; o: number; io: number }[] = []
-    for (const col of cols) { let y = 4; nodes.forEach((n, i) => { if (n.column !== col) return; pos[i] = { x: colX(col), y, h: val[i] * k, o: 0, io: 0 }; y += val[i] * k + pad }) }
+    for (const col of cols) { let y = 4; nodes.forEach((n, i) => { if (n.column !== col) return; pos[i] = { x: colX(col), y, h: val[i]! * k, o: 0, io: 0 }; y += val[i]! * k + pad }) }
     const first = nodes.filter(n => n.column === cols[0]).length
     return {
       h: H,
       body: [
         links.map((l, i) => {
-          const A = pos[l.from], B = pos[l.to], w = l.value * k, y0 = A.y + A.o + w / 2, y1 = B.y + B.io + w / 2, x0 = A.x + nw, x1 = B.x, mx = (x0 + x1) / 2
+          const A = pos[l.from]!, B = pos[l.to]!, w = l.value * k, y0 = A.y + A.o + w / 2, y1 = B.y + B.io + w / 2, x0 = A.x + nw, x1 = B.x, mx = (x0 + x1) / 2
           A.o += w
           B.io += w
-          return mark('path', i, 0, `${nodes[l.from].name} → ${nodes[l.to].name}: ${f(l.value)}`, { class: 's-flow', style: `--_dc:${color(l.from < first ? l.from : l.to % 2 ? 3 : 5)}`, 'stroke-width': f1(Math.max(1, w)), d: `M${f1(x0)},${f1(y0)}C${f1(mx)},${f1(y0)} ${f1(mx)},${f1(y1)} ${f1(x1)},${f1(y1)}` })
+          return mark('path', i, 0, `${nodes[l.from]!.name} → ${nodes[l.to]!.name}: ${f(l.value)}`, { class: 's-flow', style: `--_dc:${color(l.from < first ? l.from : l.to % 2 ? 3 : 5)}`, 'stroke-width': f1(Math.max(1, w)), d: `M${f1(x0)},${f1(y0)}C${f1(mx)},${f1(y0)} ${f1(mx)},${f1(y1)} ${f1(x1)},${f1(y1)}` })
         }),
-        nodes.map((n, i) => [s('rect', { x: pos[i].x, y: pos[i].y, width: nw, height: pos[i].h, rx: 2, fill: 'var(--warp-color-text)' }),
-          s('text', { class: 'lab', style: halo, x: pos[i].x + nw + 6, y: pos[i].y + pos[i].h / 2 + 4 }, n.name),
-          s('text', { class: 'lab-sub', style: halo, x: pos[i].x + nw + 6, y: pos[i].y + pos[i].h / 2 + 16 }, f(val[i]))]),
+        nodes.map((n, i) => [s('rect', { x: pos[i]!.x, y: pos[i]!.y, width: nw, height: pos[i]!.h, rx: 2, fill: 'var(--warp-color-text)' }),
+          s('text', { class: 'lab', style: halo, x: pos[i]!.x + nw + 6, y: pos[i]!.y + pos[i]!.h / 2 + 4 }, n.name),
+          s('text', { class: 'lab-sub', style: halo, x: pos[i]!.x + nw + 6, y: pos[i]!.y + pos[i]!.h / 2 + 16 }, f(val[i]!))]),
       ],
     }
   },
@@ -203,11 +203,11 @@ export const sankey: Form<SankeyConfig> = {
 
 export type HeatConfig = Base<number[][]> & { weeks: string[]; days?: string[]; unit?: string }
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const cap = (u: string) => u[0].toUpperCase() + u.slice(1)
+const cap = (u: string) => u[0]!.toUpperCase() + u.slice(1)
 export const heat: Form<HeatConfig> = {
   kind: 'heatmap',
   ramp: 0,
-  table: c => tableOf(['Week', ...(c.days ?? DAYS)], c.data.map((w, i) => [c.weeks[i], ...w])),
+  table: c => tableOf(['Week', ...(c.days ?? DAYS)], c.data.map((w, i) => [c.weeks[i]!, ...w])),
   summary: c => { const all = c.data.flat(); return `${c.data.length} weeks, ${num(sum(all))} ${c.unit ?? 'events'} in total, ${num(Math.max(...all))} at most in a day.` },
   plot(c, W, x) {
     const unit = c.unit ?? 'events', days = c.days ?? DAYS, max = Math.max(...c.data.flat()), bucket = (v: number) => (v === 0 ? 0 : Math.min(5, 1 + Math.floor((v / (max + 1)) * 5)))
@@ -222,7 +222,7 @@ export const heat: Form<HeatConfig> = {
           c.weeks.slice(off).map((w, i) => { const end = i === n - 1 && i > 0; return show.has(i) && s('text', { x: ml + i * (cell + gap), y: mt - 6, 'text-anchor': end ? 'end' : 'start', dx: end ? cell : undefined }, w) })),
         c.data.map((w, i) => i >= off && w.map((v, j) => mark('rect', i, j, `${c.weeks[i]} ${days[j]}: ${v} ${unit}`, { class: 'cell', style: `--_dc:${seq(bucket(v))};--i:${i - off}`, x: ml + (i - off) * (cell + gap), y: mt + j * (cell + gap), width: cell, height: cell, rx: r }))),
       ],
-      tip: (i, j) => ({ title: `${c.weeks[i]} · ${days[j]}`, rows: [[seq(bucket(c.data[i][j])), cap(unit), String(c.data[i][j])]] }),
+      tip: (i, j) => ({ title: `${c.weeks[i]} · ${days[j]}`, rows: [[seq(bucket(c.data[i]![j]!)), cap(unit), String(c.data[i]![j])]] }),
     }
   },
 }
@@ -234,7 +234,7 @@ export const tile: Form<TileConfig> = {
   kind: 'tile map',
   ramp: 1,
   table: c => tableOf(['Tile', c.unit ?? 'Value'], [...c.data].sort((a, b) => b.value - a.value).map(d => [d.id, d.value])),
-  summary: c => { const a = [...c.data].sort((p, q) => q.value - p.value); return `${a.length} tiles; the highest is ${a[0].id} at ${num(a[0].value)}.` },
+  summary: c => { const a = [...c.data].sort((p, q) => q.value - p.value); return `${a.length} tiles; the highest is ${a[0]!.id} at ${num(a[0]!.value)}.` },
   plot(c, W) {
     const L = (c.tiles ?? US_TILES).split('|').map(r => r.split(',')), cols = Math.max(...L.map(r => r.length)), cs = Math.min(30, (W - 4) / cols - 2), g = 2, by = new Map(c.data.map(d => [d.id, d.value])), max = Math.max(...c.data.map(d => d.value))
     const b = (v: number) => Math.min(5, 1 + Math.floor((v / (max + 1)) * 5)), ox = (W - cols * (cs + g)) / 2

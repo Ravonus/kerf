@@ -48,12 +48,12 @@ test('roving: one tab stop, arrows move focus and report where it landed, disabl
   const moved: number[] = []
   const r = roving(g, { items: 'button', onMove: (_, i) => moved.push(i) })
   const [a, , c] = g.querySelectorAll('button')
-  a.focus()
-  a.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+  a!.focus()
+  a!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
   expect(document.activeElement).toBe(c)
   expect(moved).toEqual([1])
   r.destroy()
-  c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+  c!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
   expect(document.activeElement).toBe(c)
 })
 

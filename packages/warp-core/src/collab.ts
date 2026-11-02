@@ -16,7 +16,7 @@ export function peerColor(p: { id: string; color?: number }) {
   return (h % 8) + 1
 }
 
-export const firstName = (name: string) => name.trim().split(/\s+/)[0]
+export const firstName = (name: string) => name.trim().split(/\s+/)[0]!
 
 /** "Ana", "Ana and Kofi", "Ana, Kofi and Mei". */
 export function joinNames(names: readonly string[]) {
@@ -149,10 +149,10 @@ export function textParts(text: string, names: readonly string[] = []): TextPart
   const parts: TextPart[] = []
   let from = 0
   for (const m of text.matchAll(new RegExp(`(^|\\s)(@(?:${by}))(?=$|[\\s.,!?:;])`, 'g'))) {
-    const at = m.index + m[1].length
+    const at = m.index + m[1]!.length
     if (at > from) parts.push({ mention: false, text: text.slice(from, at), at: from })
-    parts.push({ mention: true, text: m[2], at })
-    from = at + m[2].length
+    parts.push({ mention: true, text: m[2]!, at })
+    from = at + m[2]!.length
   }
   if (from < text.length) parts.push({ mention: false, text: text.slice(from), at: from })
   return parts
@@ -161,7 +161,7 @@ export function textParts(text: string, names: readonly string[] = []): TextPart
 /** The @word the caret sits at the end of, or null. */
 export function mentionQuery(value: string, caret: number) {
   const m = /(^|\s)@([\p{L}\p{N}_-]*)$/u.exec(value.slice(0, caret))
-  return m ? { start: m.index + m[1].length, query: m[2] } : null
+  return m ? { start: m.index + m[1]!.length, query: m[2] } : null
 }
 
 /** Replace the @word at the caret with `@name `; the new value and caret. */
@@ -424,7 +424,7 @@ export type BoardSpot = { col: number; index: number }
 
 export function findCard(columns: readonly BoardColumn<any>[], id: string): BoardSpot | null {
   for (let col = 0; col < columns.length; col++) {
-    const index = columns[col].cards.findIndex(c => c.id === id)
+    const index = columns[col]!.cards.findIndex(c => c.id === id)
     if (index >= 0) return { col, index }
   }
   return null
@@ -434,7 +434,7 @@ export function findCard(columns: readonly BoardColumn<any>[], id: string): Boar
 export function moveCard<C extends BoardCard>(columns: readonly BoardColumn<C>[], id: string, col: number, index: number): BoardColumn<C>[] {
   const from = findCard(columns, id)
   if (!from || !columns[col]) return [...columns]
-  const card = columns[from.col].cards[from.index]
+  const card = columns[from.col]!.cards[from.index]!
   return columns.map((c, i) => {
     const cards = c.cards.filter(x => x.id !== id)
     if (i === col) cards.splice(Math.max(0, Math.min(index, cards.length)), 0, card)
@@ -459,8 +459,8 @@ export function stepCard(columns: readonly BoardColumn<any>[], id: string, key: 
 export function moveLine(columns: readonly BoardColumn<any>[], id: string) {
   const at = findCard(columns, id)
   if (!at) return ''
-  const c = columns[at.col]
-  return `Moved ${c.cards[at.index].title} to ${c.title}, position ${at.index + 1} of ${c.cards.length}`
+  const c = columns[at.col]!
+  return `Moved ${c.cards[at.index]!.title} to ${c.title}, position ${at.index + 1} of ${c.cards.length}`
 }
 
 export interface KanbanOptions {
@@ -548,7 +548,7 @@ export function kanban(host: HTMLElement, opts: KanbanOptions) {
     const col = [...host.querySelectorAll('[data-part="column"]')].indexOf(ol.closest('[data-part="column"]')!)
     const id = drag.dataset.id!
     const all = o.columns(), from = findCard(all, id)
-    const before = ph.dataset.before ? Number(ph.dataset.before) - 1 : all[col].cards.length
+    const before = ph.dataset.before ? Number(ph.dataset.before) - 1 : all[col]!.cards.length
     const index = from?.col === col && from.index < before ? before - 1 : before
     ph.remove()
     o.onMove(id, col, index)
@@ -676,7 +676,7 @@ export interface IntegrityStats { sent: number; received: number; duplicate: num
 export function p95(values: readonly number[]) {
   if (!values.length) return 0
   const s = [...values].sort((a, b) => a - b)
-  return s[Math.min(s.length - 1, Math.floor(s.length * 0.95))]
+  return s[Math.min(s.length - 1, Math.floor(s.length * 0.95))]!
 }
 
 /** The counts DataIntegrity shows: feed it what a channel sends and receives. `receive` says what became of a seq. */

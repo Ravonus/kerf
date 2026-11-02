@@ -174,11 +174,11 @@ export function readOnView(el: HTMLElement, opts: { items: string; active?: bool
   }
 }
 
-export interface NotifyItem { id?: string; title: string; description?: string; tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'; urgent?: boolean; action?: { label: string; onClick(): void } }
+export interface NotifyItem { id?: string | undefined; title: string; description?: string | undefined; tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info' | undefined; urgent?: boolean; action?: { label: string; onClick(): void } }
 export interface NotifyPolicyOptions {
   /** Is the inbox on screen? Then nothing toasts and arrivals are only announced. */
   open(): boolean
-  show(t: NotifyItem & { id?: string }): string
+  show(t: NotifyItem & { id?: string | undefined }): string
   dismiss(id: string): void
   announce(text: string, assertive?: boolean): void
   /** How many arrivals inside `quiet` make a burst. */
@@ -318,11 +318,11 @@ export function gridNav(el: HTMLElement, opts: { rows?: string; targets: string 
     const g = grid()
     let r = g.findIndex(row => row.includes(e.target as HTMLElement))
     if (r < 0) return
-    let c = g[r].indexOf(e.target as HTMLElement)
+    let c = g[r]!.indexOf(e.target as HTMLElement)
     const rtl = getComputedStyle(el).direction === 'rtl'
     const ctrl = e.ctrlKey || e.metaKey
     const last = g.length - 1
-    const end = g[r].length - 1
+    const end = g[r]!.length - 1
     if (e.key === 'ArrowRight') c += rtl ? -1 : 1
     else if (e.key === 'ArrowLeft') c += rtl ? 1 : -1
     else if (e.key === 'ArrowDown') r++
@@ -333,7 +333,7 @@ export function gridNav(el: HTMLElement, opts: { rows?: string; targets: string 
     e.preventDefault()
     r = Math.max(0, Math.min(last, r))
     c = Math.max(0, Math.min(end, c))
-    const t = g[r][c]
+    const t = g[r]![c]!
     rove(t)
     t.focus()
   }
@@ -676,7 +676,7 @@ export function transportSim(initial: TransportConfig, env: SimEnv = {}) {
           note: c.state === 'reconnecting' && c.retryAt ? `Retry ${c.attempt} in ${Math.max(0, (c.retryAt - at) / 1000).toFixed(1)} s` : notes[k],
         }
       }
-      return { live: lane(LANES[0]), stream: lane(LANES[1]), channel: lane(LANES[2]) }
+      return { live: lane(LANES[0]!), stream: lane(LANES[1]!), channel: lane(LANES[2]!) }
     },
     start() { restart(); emit() },
     configure(next: Partial<TransportConfig>) {
@@ -769,8 +769,8 @@ export function toolbar(el: HTMLElement, opts: { items: string }) {
     const to = nextIndex(e.key, at, list.length, { rtl: getComputedStyle(el).direction === 'rtl' })
     if (to < 0) return
     e.preventDefault()
-    rove(list[to])
-    list[to].focus()
+    rove(list[to]!)
+    list[to]!.focus()
   }
   const onFocus = (e: FocusEvent) => { if ((e.target as Element).matches?.(o.items)) rove(e.target as HTMLElement) }
   el.addEventListener('keydown', onKey)

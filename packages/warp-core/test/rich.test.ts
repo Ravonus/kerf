@@ -38,7 +38,7 @@ describe('identity', () => {
   test('the caret stays behind its digit', () => expect(caretAfter('(415) 555', 4)).toBe(7))
   test('a pasted +44 is the UK', () => expect(inferCountry('+442079460958', us)?.code).toBe('GB'))
   test('card brands', () => { expect(cardBrand('378282')).toBe('American Express'); expect(cardMask('4242')).toBe('•••• 4242') })
-  test('Japan runs big to small', () => expect(addressFormat('JP').fields[0][0]).toBe('postalCode'))
+  test('Japan runs big to small', () => expect(addressFormat('JP').fields[0]![0]).toBe('postalCode'))
   test('address parts', () => expect(withAddressPart({ country: 'US', lines: ['a'] }, 'line2', 'b').lines).toEqual(['a', 'b']))
   test('signature svg', () => expect(signatureSvg([[[0, 0, 2], [1, 1, 2]]])).toContain('<path d="M0 0Q'))
 })

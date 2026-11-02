@@ -29,7 +29,7 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
       i === j ? t.removeAttribute('tabindex') : t.setAttribute('tabindex', '-1')
       document.getElementById(`p${j}`)!.hidden = i !== j
     })
-    tabs[i].focus()
+    tabs[i]!.focus()
     face.update()
     scroll.update(tabs[i])
   }
@@ -42,11 +42,11 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
   expect(bar.style.getPropertyValue('--warp-b')).toMatch(/px$/)
   expect(bar.hasAttribute('data-instant')).toBe(false)
 
-  tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
+  tabs[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
   expect(document.activeElement).toBe(tabs[2])
   expect(document.getElementById('p2')!.hidden).toBe(false)
-  tabs[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }))
-  expect(tabs[0].getAttribute('aria-selected')).toBe('true')
+  tabs[2]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }))
+  expect(tabs[0]!.getAttribute('aria-selected')).toBe('true')
   expect(list.querySelectorAll('[role="tab"]:not([tabindex="-1"])')).toHaveLength(1)
   face.destroy()
   scroll.destroy()

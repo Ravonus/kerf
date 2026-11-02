@@ -26,7 +26,7 @@ let scratch: CanvasRenderingContext2D | null | undefined
 /** One computed colour as packed RGBA. Modern colours serialise as oklch() or color(), so a canvas does the conversion. */
 export function pack(css: string) {
   const m = css.match(/^rgba?\((\d+)[ ,]+(\d+)[ ,]+(\d+)(?:[ ,/]+([\d.]+))?\)$/)
-  if (m) return ((Math.round((m[4] === undefined ? 1 : +m[4]) * 255) << 24) | (+m[3] << 16) | (+m[2] << 8) | +m[1]) >>> 0
+  if (m) return ((Math.round((m[4] === undefined ? 1 : +m[4]) * 255) << 24) | (+m[3]! << 16) | (+m[2]! << 8) | +m[1]!) >>> 0
   if (scratch === undefined) {
     const c = document.createElement('canvas')
     c.width = c.height = 1
@@ -37,7 +37,7 @@ export function pack(css: string) {
   scratch.fillStyle = css
   scratch.fillRect(0, 0, 1, 1)
   const d = scratch.getImageData(0, 0, 1, 1).data
-  return ((d[3] << 24) | (d[2] << 16) | (d[1] << 8) | d[0]) >>> 0
+  return ((d[3]! << 24) | (d[2]! << 16) | (d[1]! << 8) | d[0]!) >>> 0
 }
 
 /** The ramp as packed RGBA, resolved where `el` sits. */

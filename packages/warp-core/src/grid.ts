@@ -7,7 +7,7 @@ export function pageList(cur: number, total: number): (number | 'gap')[] {
   const near = [...new Set([1, cur - 1, cur, cur + 1, total])].filter(p => p >= 1 && p <= total).sort((a, b) => a - b)
   const out: (number | 'gap')[] = []
   near.forEach((p, i) => {
-    const skip = i ? p - near[i - 1] : 1
+    const skip = i ? p - near[i - 1]! : 1
     if (skip === 2) out.push(p - 1) // a gap of one page is that page
     else if (skip > 2) out.push('gap')
     out.push(p)
@@ -19,7 +19,7 @@ export function pageList(cur: number, total: number): (number | 'gap')[] {
 export function infiniteScroll(el: HTMLElement, opts: { onReach(): void; root?: HTMLElement | null }) {
   let o = opts
   const Observer = el.ownerDocument.defaultView?.IntersectionObserver
-  const seen = Observer && new Observer(([e]) => { if (e.isIntersecting) o.onReach() }, { root: o.root ?? null, rootMargin: '120px' })
+  const seen = Observer && new Observer(([e]) => { if (e!.isIntersecting) o.onReach() }, { root: o.root ?? null, rootMargin: '120px' })
   seen?.observe(el)
   return { update: (next: typeof opts) => void (o = next), destroy: () => seen?.disconnect() }
 }
@@ -57,7 +57,7 @@ export function aggregate(kind: Aggregate, values: readonly unknown[]) {
   return kind === 'sum' ? sum : kind === 'avg' ? sum / n.length : kind === 'min' ? Math.min(...n) : Math.max(...n)
 }
 
-export interface TreeEntry<T> { row: T; key: string; level: number; size: number; pos: number; parent?: string; branch: boolean; context?: boolean; hit?: boolean }
+export interface TreeEntry<T> { row: T; key: string; level: number; size: number; pos: number; parent?: string | undefined; branch: boolean; context?: boolean | undefined; hit?: boolean | undefined }
 
 export interface TreeSource<T> {
   key(row: T): string
@@ -88,7 +88,7 @@ export function treeRows<T>(roots: readonly T[], s: TreeSource<T>) {
     }
     return on
   }
-  const walk = (rows: readonly T[], level: number, parent?: string) => {
+  const walk = (rows: readonly T[], level: number, parent?: string | undefined) => {
     const shown = s.match ? rows.filter(wanted) : rows
     shown.forEach((row, i) => {
       const key = s.key(row)
@@ -198,7 +198,7 @@ export function grid(root: HTMLElement, opts: GridOptions) {
         const cell = cells(all[r])[c]
         if (!cell) continue
         cell.setAttribute('aria-selected', 'true')
-        touched.add(all[r].dataset.row!)
+        touched.add(all[r]!.dataset.row!)
       }
     }
     o.onSelect?.([...touched])
@@ -213,7 +213,7 @@ export function grid(root: HTMLElement, opts: GridOptions) {
   const copy = async () => {
     const picked = selected()
     const lines = new Map<Element, string[]>()
-    for (const c of picked.length ? picked : [target(at)].filter(Boolean)) {
+    for (const c of picked.length ? picked : [target(at)].filter(Boolean) as Element[]) {
       const line = lines.get(c.parentElement!) ?? []
       line.push(c.textContent!.trim())
       lines.set(c.parentElement!, line)
@@ -222,12 +222,12 @@ export function grid(root: HTMLElement, opts: GridOptions) {
     if (!table.length) return
     await doc.defaultView!.navigator.clipboard?.writeText(toTSV(table)).catch(() => {})
     for (const c of picked) { c.removeAttribute('data-copied'); void c.offsetWidth; c.setAttribute('data-copied', '') }
-    o.onStatus?.(`Copied ${table.length} × ${table[0].length} cells`)
+    o.onStatus?.(`Copied ${table.length} × ${table[0]!.length} cells`)
   }
 
   const parentOf = (i: number, all: HTMLElement[]) => {
-    const level = +all[i].getAttribute('aria-level')!
-    for (let j = i - 1; j >= 0; j--) if (+all[j].getAttribute('aria-level')! < level) return j
+    const level = +all[i]!.getAttribute('aria-level')!
+    for (let j = i - 1; j >= 0; j--) if (+all[j]!.getAttribute('aria-level')! < level) return j
     return -1
   }
   const onKey = (e: KeyboardEvent) => {

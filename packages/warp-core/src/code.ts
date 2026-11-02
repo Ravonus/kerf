@@ -10,7 +10,7 @@ export function indented(text: string, start: number, end: number, size: number,
   const lines = text.slice(from, stop).split('\n')
   const next = lines.map(l => (outdent ? l.replace(new RegExp(`^ {1,${size}}`), '') : pad + l))
   const insert = next.join('\n')
-  const first = next[0].length - lines[0].length
+  const first = next[0]!.length - lines[0]!.length
   return { from, to: stop, insert, start: Math.max(from, start + first), end: end + insert.length - (stop - from) }
 }
 
@@ -25,7 +25,7 @@ const RULES: Record<string, RegExp> = {
 
 /** The spans to colour. Keys of a JSON object stay plain, so its values read first. */
 export function tokenize(text: string, language = 'code') {
-  const rule = RULES[language] ?? RULES.code
+  const rule = RULES[language] ?? RULES.code!
   const spans: CodeSpan[] = []
   for (const m of text.matchAll(rule)) {
     const kind: CodeToken | undefined = m[1] ? (m[2] ? undefined : 'string') : m[3] ? 'number' : m[4] ? 'keyword' : m[5] ? 'comment' : undefined
@@ -35,7 +35,7 @@ export function tokenize(text: string, language = 'code') {
 }
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' }
-const esc = (s: string) => s.replace(/[&<>]/g, c => HTML_ESCAPES[c])
+const esc = (s: string) => s.replace(/[&<>]/g, c => HTML_ESCAPES[c]!)
 const TSX_KEYWORDS = 'import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|class|extends|new|await|async|type|interface|typeof|keyof|as|try|catch|throw|yield'
 const SHELL = /(#[^\n]*)|("[^"\n]*"|'[^'\n]*')|(?<![\w-])(--?[\w-]+)|^(\s*\w[\w-]*)/gm
 const TSX = new RegExp(

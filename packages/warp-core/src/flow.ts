@@ -86,7 +86,7 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
 
   const onPop = () => {
     if (!o.history) return
-    const to = stepFromSearch(win.location.search, o.history, o.steps) ?? o.steps[0]
+    const to = stepFromSearch(win.location.search, o.history, o.steps) ?? o.steps[0]!
     if (to === at) return
     moved(to, false)
     o.onStep(to)
@@ -109,9 +109,9 @@ export type FlowSurface = 'field' | 'alert' | 'rate-limit' | 'toast' | 'banner'
 
 export interface FlowError {
   surface: FlowSurface
-  code?: string
+  code?: string | undefined
   title: string
-  description?: string
+  description?: string | undefined
   /** By field name, for `surface: 'field'`. */
   fields: Record<string, string>
   /** "2 fields need attention", said on submit. */
@@ -154,10 +154,10 @@ const tries = (n: number | undefined) => (n === undefined ? '' : n === 1 ? ' 1 t
 
 /** One message per cause: what happened and what to do, in one sentence. Takes a `FnError`, anything like one, or a string. */
 export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowErrorOptions = {}): FlowError {
-  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string; status?: number; message?: string; issues?: readonly IssueLike[]; data?: any; extra?: any; name?: string } & Record<string, any>
+  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string | undefined; status?: number; message?: string; issues?: readonly IssueLike[]; data?: any; extra?: any; name?: string } & Record<string, any>
   const data = e.data ?? e.extra ?? e
   const base = { code: e.code, fields: {} as Record<string, string> }
-  const alert = (title: string, description?: string): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
+  const alert = (title: string, description?: string | undefined): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
   const fields = issueFields(e.issues)
   const named = Object.keys(fields).length
   if (named) return { ...base, surface: 'field', fields, title: e.message ?? fieldSummary(named), summary: fieldSummary(named), focus: 'field', live: 'polite' }
@@ -223,7 +223,7 @@ export function passwordStrength(v: string): PasswordStrength {
   let score = v.length < 8 ? 0 : Math.min(4, kinds - 1 + (v.length >= 12 ? 1 : 0) + (v.length >= 16 ? 1 : 0))
   if (v.length >= 8) score = Math.max(1, score)
   if (/^(.)\1+$/.test(v)) score = Math.min(score, 1)
-  const [label, tone] = STRENGTH[score]
+  const [label, tone] = STRENGTH[score]!
   return { score: score as PasswordStrength['score'], label, tone }
 }
 
@@ -567,8 +567,8 @@ export function createShortcuts() {
       const live = [...list].filter(s => !s.when || s.when())
       const open = (s: Shortcut) => (!isSingleKey(s.keys) || (singleKeys && !isTextTarget(e.target)))
       const pending = e.timeStamp - heldAt < SEQUENCE_MS ? held : []
-      const next = pending.filter(h => matches(h.steps[0], e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
-      const start = live.filter(open).map(s => ({ s, steps: s.keys.trim().split(/\s+/) })).filter(h => matches(h.steps[0], e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
+      const next = pending.filter(h => matches(h.steps[0]!, e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
+      const start = live.filter(open).map(s => ({ s, steps: s.keys.trim().split(/\s+/) })).filter(h => matches(h.steps[0]!, e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
       const hits = [...next, ...start]
       const done = hits.find(h => !h.steps.length)
       held = done ? [] : hits

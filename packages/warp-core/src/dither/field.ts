@@ -36,7 +36,7 @@ export interface FieldOptions {
   fade?: Fade
   /** Seconds a mask takes to draw itself on, left to right, with a flash where it lands. Needs motion. */
   reveal?: number
-  fps?: number
+  fps?: number | undefined
 }
 
 export type Fade = 'left' | 'right' | 'top' | 'bottom' | 'edges'
@@ -109,12 +109,12 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
         energy = p.energy
         if (energy) at = clamp(Math.round(y + p.oy), rows - 1) * cols + clamp(Math.round(x + p.ox), cols - 1)
       }
-      const tone = tones[at]
-      let v = tone * tone * 0.95 * gain * (g ? g[i] : 1) + energy * 0.55
+      const tone = tones[at]!
+      let v = tone * tone * 0.95 * gain * (g ? g[i]! : 1) + energy * 0.55
       if (m) {
         const age = sweep ? clock - (x / cols) * sweep : 1
-        const on = age <= 0 ? 0 : age >= 0.2 ? 1 : age * 5, flash = age > 0 && age < 0.3 ? (0.3 - age) * 2 * m.shape[at] : 0
-        v = v * 0.42 + m.halo[at] * 0.34 * gain * on + m.shape[at] * (0.46 + tone * 0.72) * on + flash
+        const on = age <= 0 ? 0 : age >= 0.2 ? 1 : age * 5, flash = age > 0 && age < 0.3 ? (0.3 - age) * 2 * m.shape[at]! : 0
+        v = v * 0.42 + m.halo[at]! * 0.34 * gain * on + m.shape[at]! * (0.46 + tone * 0.72) * on + flash
       }
       shown[i] = v
       heat[i] = energy
@@ -125,9 +125,9 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
   /** Disturbed cells take the spark inks at the level they already dithered to. */
   function ignite() {
     const top = inks.length - 1, n = pattern.n, bits = n - 1, spread = o.spread ?? 0.9, shift = (1 - spread) / 2
-    for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) if (heat[i] > HOT) {
-      const level = shown[i] * top + pattern.t[(y & bits) * n + (x & bits)] * spread + shift
-      if (level >= 1) out[i] = sparks![Math.min(sparks!.length - 1, (level | 0) + 1)]
+    for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) if (heat[i]! > HOT) {
+      const level = shown[i]! * top + pattern.t[(y & bits) * n + (x & bits)]! * spread + shift
+      if (level >= 1) out[i] = sparks![Math.min(sparks!.length - 1, (level | 0) + 1)]!
     }
   }
 

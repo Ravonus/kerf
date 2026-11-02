@@ -12,9 +12,9 @@ export interface SearchEntry {
   /** Static rank, 0 to 1. */
   rank?: number
   /** What it sits under, shown beside it: a page's title for a heading. */
-  parent?: string
+  parent?: string | undefined
   /** Words shown beside the title, indexed with it. */
-  text?: string
+  text?: string | undefined
   /** Words to index and not show. */
   keywords?: string
 }
@@ -22,7 +22,7 @@ export interface SearchEntry {
 export interface SearchWire {
   groups: string[]
   /** [title, url, group, rank × 100, parent, text] */
-  docs: [string, string, number, number, string?, string?][]
+  docs: [string, string, number, number, (string | undefined)?, (string | undefined)?][]
   /** Sorted, newline-separated. */
   terms: string
   /** For each term, its doc ids as base-36 deltas; `,` between ids, `;` between terms. */
@@ -33,8 +33,8 @@ export interface SearchHit {
   title: string
   url: string
   group: string
-  parent?: string
-  text?: string
+  parent?: string | undefined
+  text?: string | undefined
   score: number
   /** From the fallback for a typo, not from the index. */
   fuzzy?: boolean
@@ -71,7 +71,7 @@ export function buildIndex(entries: SearchEntry[]): SearchWire {
     }
   })
   const terms = [...byTerm.keys()].sort()
-  const post = terms.map(t => byTerm.get(t)!.map((id, i, all) => (id - (i ? all[i - 1] : 0)).toString(36)).join(',')).join(';')
+  const post = terms.map(t => byTerm.get(t)!.map((id, i, all) => (id - (i ? all[i - 1]! : 0)).toString(36)).join(',')).join(';')
   return {
     groups,
     docs: entries.map(e => [e.title, e.url, groups.indexOf(e.group), Math.round((e.rank ?? 0.5) * 100), e.parent, e.text]),
@@ -106,15 +106,15 @@ function lowerBound(terms: string[], q: string) {
   let lo = 0, hi = terms.length
   while (lo < hi) {
     const mid = (lo + hi) >>> 1
-    if (terms[mid] < q) lo = mid + 1
+    if (terms[mid]! < q) lo = mid + 1
     else hi = mid
   }
   return lo
 }
 
 const hitOf = (ix: SearchIndex, id: number, score: number, isFuzzy?: boolean): SearchHit => {
-  const d = ix.wire.docs[id]
-  return { title: d[0], url: d[1], group: ix.wire.groups[d[2]], parent: d[4], text: d[5], score, ...(isFuzzy && { fuzzy: true }) }
+  const d = ix.wire.docs[id]!
+  return { title: d[0], url: d[1], group: ix.wire.groups[d[2]]!, parent: d[4], text: d[5], score, ...(isFuzzy && { fuzzy: true }) }
 }
 
 /** The best `limit` matches: every word of `query` as a prefix, ranked exact, title prefix, word in the title, the rest. */
@@ -126,9 +126,9 @@ export function searchIndex(ix: SearchIndex, query: string, limit = 40): SearchH
   const found: number[] = []
   parts.forEach((part, n) => {
     const from = lowerBound(ix.terms, part)
-    for (let t = from; t < ix.terms.length && ix.terms[t].startsWith(part); t++) {
-      for (let p = ix.starts[t]; p < ix.starts[t + 1]; p++) {
-        const id = ix.post[p]
+    for (let t = from; t < ix.terms.length && ix.terms[t]!.startsWith(part); t++) {
+      for (let p = ix.starts[t]!;  p < ix.starts[t + 1]!; p++) {
+        const id = ix.post[p]!
         // Seen by every earlier word, or (for the first word) not seen yet.
         if (ix.seen[id] === mark * 16 + n) {
           ix.seen[id] = mark * 16 + n + 1
@@ -142,9 +142,9 @@ export function searchIndex(ix: SearchIndex, query: string, limit = 40): SearchH
     }
   })
   const scored = found.map(id => {
-    const t = ix.lower[id]
+    const t = ix.lower[id]!
     const base = t === q ? 1000 : t.startsWith(q) ? 600 : (t.includes(` ${q}`) || t.includes(`.${q}`)) ? 300 : t.includes(q) ? 200 : 100
-    return { id, score: base * (0.5 + ix.wire.docs[id][3] / 100) - t.length / 100 }
+    return { id, score: base * (0.5 + ix.wire.docs[id]![3] / 100) - t.length / 100 }
   })
   scored.sort((a, b) => b.score - a.score)
   return scored.slice(0, limit).map(s => hitOf(ix, s.id, s.score))

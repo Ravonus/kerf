@@ -43,7 +43,7 @@ export function marked(label: string, hits: readonly number[]) {
   for (let i = 0; i < label.length; i++) {
     const hit = on.has(i)
     if (runs.at(-1)?.hit === hit) runs.at(-1)!.text += label[i]
-    else runs.push({ text: label[i], hit })
+    else runs.push({ text: label[i]!, hit })
   }
   return runs
 }

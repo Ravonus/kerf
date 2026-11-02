@@ -37,21 +37,21 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
   }
   const kick = (px: number, py: number, r: number, wide: number, strength: number) => around(px, py, r, (i, dx, dy, d) => {
     const f = Math.exp(-(d * d) / wide) * strength * power * scale, n = d || 1
-    vx[i] += (dx / n) * f
-    vy[i] += (dy / n) * f
+    vx[i]! += (dx / n) * f
+    vy[i]! += (dy / n) * f
   })
 
   function tick() {
     let peak = 0
     for (let y = 1; y < ny - 1; y++) for (let x = 1; x < nx - 1; x++) {
       const i = y * nx + x
-      vx[i] = (vx[i] + (ux[i - 1] + ux[i + 1] + ux[i - nx] + ux[i + nx] - 4 * ux[i]) * 0.2 - ux[i] * 0.022) * 0.955
-      vy[i] = (vy[i] + (uy[i - 1] + uy[i + 1] + uy[i - nx] + uy[i + nx] - 4 * uy[i]) * 0.2 - uy[i] * 0.022) * 0.955
+      vx[i] = (vx[i]! + (ux[i - 1]! + ux[i + 1]! + ux[i - nx]! + ux[i + nx]! - 4 * ux[i]!) * 0.2 - ux[i]! * 0.022) * 0.955
+      vy[i] = (vy[i]! + (uy[i - 1]! + uy[i + 1]! + uy[i - nx]! + uy[i + nx]! - 4 * uy[i]!) * 0.2 - uy[i]! * 0.022) * 0.955
     }
     for (let i = 0; i < size; i++) {
-      ux[i] += vx[i]
-      uy[i] += vy[i]
-      peak = Math.max(peak, Math.abs(ux[i]), Math.abs(uy[i]), Math.abs(vx[i]), Math.abs(vy[i]))
+      ux[i]! += vx[i]!
+      uy[i]! += vy[i]!
+      peak = Math.max(peak, Math.abs(ux[i]!), Math.abs(uy[i]!), Math.abs(vx[i]!), Math.abs(vy[i]!))
     }
     moving = peak > 0.02
   }
@@ -64,8 +64,8 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
       ly = y
       if (pulls) around(x, y, 30 * scale, (i, dx, dy, d) => {
         const f = Math.exp(-(d * d) / (180 * scale * scale)) * power
-        vx[i] += (mx * 0.42 - dx * 0.018 / scale) * f
-        vy[i] += (my * 0.42 - dy * 0.018 / scale) * f
+        vx[i]! += (mx * 0.42 - dx * 0.018 / scale) * f
+        vy[i]! += (my * 0.42 - dy * 0.018 / scale) * f
       })
       if (ripple && (mx || my)) kick(x, y, 16 * scale, 60 * scale * scale, Math.hypot(mx, my) * 0.3)
     },
@@ -81,8 +81,8 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
       if (!moving) { self.ox = self.oy = self.energy = 0; return }
       const gx = x / GAP, gy = y / GAP, ix = gx | 0, iy = gy | 0, fx = gx - ix, fy = gy - iy
       const a = iy * nx + ix, b = a + 1, c = a + nx, d = c + 1
-      const dx = (ux[a] * (1 - fx) + ux[b] * fx) * (1 - fy) + (ux[c] * (1 - fx) + ux[d] * fx) * fy
-      const dy = (uy[a] * (1 - fx) + uy[b] * fx) * (1 - fy) + (uy[c] * (1 - fx) + uy[d] * fx) * fy
+      const dx = (ux[a]! * (1 - fx) + ux[b]! * fx) * (1 - fy) + (ux[c]! * (1 - fx) + ux[d]! * fx) * fy
+      const dy = (uy[a]! * (1 - fx) + uy[b]! * fx) * (1 - fy) + (uy[c]! * (1 - fx) + uy[d]! * fx) * fy
       self.ox = -dx
       self.oy = -dy
       self.energy = Math.min(1, Math.hypot(dx, dy) * 0.07 / scale)

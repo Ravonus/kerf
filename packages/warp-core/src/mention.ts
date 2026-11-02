@@ -17,7 +17,7 @@ export function parseMentions(value: string) {
   let from = 0
   for (const m of value.matchAll(TOKEN)) {
     text += value.slice(from, m.index)
-    const shown = m[1] + m[2]
+    const shown = m[1]! + m[2]!
     marks.push({ start: text.length, end: text.length + shown.length, token: m[0] })
     text += shown
     from = m.index + m[0].length
@@ -51,8 +51,8 @@ export function shiftMarks(marks: readonly MentionMark[], was: string, now: stri
 export function findTrigger(text: string, caret: number, triggers: readonly string[], marks: readonly MentionMark[] = []) {
   const before = text.slice(0, caret)
   const m = /(?:^|\s)(\S)([\w-]*)$/.exec(before)
-  if (!m || !triggers.includes(m[1])) return undefined
-  const at = caret - m[2].length - 1
+  if (!m || !triggers.includes(m[1]!)) return undefined
+  const at = caret - m[2]!.length - 1
   if (marks.some(k => at >= k.start && at < k.end)) return undefined
   return { trigger: m[1], query: m[2], at }
 }

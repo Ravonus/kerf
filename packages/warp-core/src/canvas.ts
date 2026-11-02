@@ -19,11 +19,11 @@ export interface SurfaceOptions {
   /** Paints one frame. Return true to be called again next frame, for work that settles on its own. */
   draw: (frame: Frame) => boolean | void
   animate?: boolean
-  fps?: number
+  fps?: number | undefined
   /** Whole-cell mode: one backing pixel per cell, scaled up without smoothing and snapped to device pixels. */
   cell?: number
   maxDpr?: number
-  context?: CanvasRenderingContext2DSettings
+  context?: CanvasRenderingContext2DSettings | undefined
   /** Called when a theme, tier or motion dial changes around the canvas, before the repaint. */
   onTheme?: () => void
 }
@@ -122,7 +122,7 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
   const size = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => { sized = false; invalidate() })
   size?.observe(box)
   const seer = typeof IntersectionObserver === 'undefined' ? undefined : new IntersectionObserver(([e]) => {
-    seen = e.isIntersecting
+seen = e!.isIntersecting
     box.toggleAttribute('data-fx-offscreen', !seen)
     last = 0
     wake()

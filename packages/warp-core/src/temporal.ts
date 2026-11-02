@@ -104,7 +104,7 @@ export function parseDate(text: string, locale: string, today = todayIso()): Iso
     return c + y > now + 50 ? c + y - 100 : c + y
   }
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s)
-  if (iso) return valid(+iso[1], +iso[2], +iso[3])
+  if (iso) return valid(+iso[1]!, +iso[2]!, +iso[3]!)
   const lower = s.toLowerCase()
   let month = 0
   for (const loc of [locale, 'en']) for (let i = 1; i <= 12 && !month; i++) for (const style of ['long', 'short'] as const) {
@@ -113,14 +113,14 @@ export function parseDate(text: string, locale: string, today = todayIso()): Iso
   }
   const nums = (s.match(/\d+/g) ?? []).map(Number)
   if (month && nums.length >= 2) {
-    const y = nums.find(n => n > 31) ?? nums[1]
+    const y = nums.find(n => n > 31) ?? nums[1]!
     return valid(year(y), month, nums.find(n => n !== y && n <= 31) ?? 0)
   }
   if (nums.length === 3) {
     const order = formatter(locale, { year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(0)).filter(p => p.type !== 'literal').map(p => p.type)
     const o: Record<string, number> = {}
-    order.forEach((t, i) => (o[t] = nums[i]))
-    return valid(year(o.year), o.month, o.day)
+    order.forEach((t, i) => (o[t] = nums[i]!))
+    return valid(year(o.year!), o.month!, o.day!)
   }
   return null
 }
@@ -128,7 +128,7 @@ export function parseDate(text: string, locale: string, today = todayIso()): Iso
 export function parseTime(text: string): IsoTime | null {
   const m = /(\d{1,2})[:.h]?(\d{2})?\s*([ap])?/i.exec(text.trim())
   if (!m) return null
-  let h = +m[1]
+  let h = +m[1]!
   const mi = +(m[2] ?? 0)
   if (m[3]) h = h % 12 + (/p/i.test(m[3]) ? 12 : 0)
   return h < 24 && mi < 60 ? `${pad(h)}:${pad(mi)}` as IsoTime : null
@@ -142,7 +142,7 @@ export const fromMinutes = (m: number) => `${pad(Math.floor(m / 60))}:${pad(m % 
 export function offsetAt(zone: string, utcMs: number) {
   const name = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'longOffset' }).formatToParts(new Date(utcMs)).find(p => p.type === 'timeZoneName')!.value
   const m = /([+-])(\d{2}):?(\d{2})?/.exec(name)
-  return m ? (m[1] === '-' ? -1 : 1) * (+m[2] * 60 + +(m[3] ?? 0)) : 0
+  return m ? (m[1] === '-' ? -1 : 1) * (+m[2]! * 60 + +(m[3] ?? 0)) : 0
 }
 /** `UTC+01:00` for a zone at a date. */
 export const offsetName = (zone: string, date: string) => {

@@ -26,9 +26,9 @@ export interface CalEvent {
   attendees?: string[]
   video?: string | boolean
   /** Timeline row. */
-  resource?: string
+  resource?: string | undefined
 }
-export type Slot = { date: string; s: number; e: number; resource?: string }
+export type Slot = { date: string; s: number; e: number; resource?: string | undefined }
 export type DaySegment = { event: CalEvent; id: string; s: number; e: number; head: boolean; tail: boolean }
 export type Lane = { col: number; cols: number; span: number }
 /** A pair of minutes, start then end. */
@@ -131,7 +131,7 @@ export function layoutDay<T extends { id: string; s: number; e: number }>(list: 
 export function allDayBars(events: CalEvent[], days: string[]) {
   const rows: number[] = []
   const bars: { event: CalEvent; id: string; col: number; span: number; row: number }[] = []
-  const first = days[0], last = days[days.length - 1]
+  const first = days[0]!, last = days[days.length - 1]!
   const list = events.filter(e => e.allDay && dateOf(e.start) <= last && dateOf(e.end) >= first).sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : a.end > b.end ? -1 : 1))
   for (const event of list) {
     const col = Math.max(0, daysBetween(first, dateOf(event.start)))
@@ -209,7 +209,7 @@ export function eventName(e: CalEvent, locale: string, hourCycle?: string) {
 
 export const snapTo = (m: number, step = 15) => Math.round(m / step) * step
 
-export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string): Slot {
+export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string | undefined): Slot {
   const len = origin.e - origin.s
   const s = clamp(snapTo(origin.s + dm, step), 0, DAY - Math.min(len, DAY))
   return { date, s, e: s + len, resource: resource ?? origin.resource }
@@ -256,33 +256,33 @@ export function eventKey(key: string, id: string, events: CalEvent[], rtl = fals
   if (i < 0) return null
   if (key === 'ArrowDown') return order[i + 1]?.id ?? null
   if (key === 'ArrowUp') return order[i - 1]?.id ?? null
-  if (key === 'Home') return order[0].id
-  if (key === 'End') return order[order.length - 1].id
+  if (key === 'Home') return order[0]!.id
+  if (key === 'End') return order[order.length - 1]!.id
   if (key !== 'ArrowLeft' && key !== 'ArrowRight') return null
   const forward = (key === 'ArrowRight') !== rtl
-  const day = dateOf(order[i].start), m = minuteOf(order[i].start)
+  const day = dateOf(order[i]!.start), m = minuteOf(order[i]!.start)
   const days = [...new Set(order.map(e => dateOf(e.start)))].filter(d => (forward ? d > day : d < day))
   const to = forward ? days[0] : days[days.length - 1]
   if (!to) return null
-  return order.filter(e => dateOf(e.start) === to).sort((a, b) => Math.abs(minuteOf(a.start) - m) - Math.abs(minuteOf(b.start) - m))[0].id
+  return order.filter(e => dateOf(e.start) === to).sort((a, b) => Math.abs(minuteOf(a.start) - m) - Math.abs(minuteOf(b.start) - m))[0]!.id
 }
 
 /** ←→ along a lane, ↑↓ to the nearest booking in the next row (07 §2.5). */
 export function laneKey(key: string, id: string, rows: { id: string; s: number }[][]) {
   const r = rows.findIndex(l => l.some(x => x.id === id))
   if (r < 0) return null
-  const lane = rows[r], i = lane.findIndex(x => x.id === id)
+  const lane = rows[r]!, i = lane.findIndex(x => x.id === id)
   if (key === 'ArrowRight') return lane[i + 1]?.id ?? null
   if (key === 'ArrowLeft') return lane[i - 1]?.id ?? null
-  if (key === 'Home') return lane[0].id
-  if (key === 'End') return lane[lane.length - 1].id
+  if (key === 'Home') return lane[0]!.id
+  if (key === 'End') return lane[lane.length - 1]!.id
   if (key !== 'ArrowDown' && key !== 'ArrowUp') return null
   const d = key === 'ArrowDown' ? 1 : -1
-  for (let n = r + d; n >= 0 && n < rows.length; n += d) if (rows[n].length) return [...rows[n]].sort((a, b) => Math.abs(a.s - lane[i].s) - Math.abs(b.s - lane[i].s))[0].id
+  for (let n = r + d; n >= 0 && n < rows.length; n += d) if (rows[n]!.length) return [...rows[n]!].sort((a, b) => Math.abs(a.s - lane[i]!.s) - Math.abs(b.s - lane[i]!.s))[0]!.id
   return null
 }
 
-export type DragPreview = Slot & { mode: 'move' | 'resize' | 'create'; id?: string; origin?: Slot }
+export type DragPreview = Slot & { mode: 'move' | 'resize' | 'create'; id?: string | undefined; origin?: Slot | undefined }
 export interface CalendarDragOptions {
   /** `x` for a timeline: lanes, with time running across and `from`..`to` minutes on it. */
   axis?: 'x' | 'y'
@@ -297,7 +297,7 @@ export interface CalendarDragOptions {
   onPress(id: string, el: HTMLElement): void
   onLongPress?(id: string, el: HTMLElement): void
   /** A double-click on an empty slot. */
-  onSlot?(date: string, minute: number, resource?: string): void
+  onSlot?(date: string, minute: number, resource?: string | undefined): void
 }
 
 const LONG_PRESS = 400
@@ -310,7 +310,7 @@ const LONG_PRESS = 400
 export function calendarDrag(el: HTMLElement, opts: CalendarDragOptions) {
   let o = opts
   const doc = el.ownerDocument
-  type Drag = { mode: DragPreview['mode']; pointer: number; x0: number; y0: number; id?: string; origin?: Slot; date: string; anchor: number; resource?: string; moved: boolean; preview?: DragPreview }
+  type Drag = { mode: DragPreview['mode']; pointer: number; x0: number; y0: number; id?: string | undefined; origin?: Slot | undefined; date: string; anchor: number; resource?: string | undefined; moved: boolean; preview?: DragPreview }
   let drag: Drag | null = null
   let press: { timer: ReturnType<typeof setTimeout>; x: number; y: number } | null = null
   let swallow = false
@@ -383,7 +383,7 @@ export function calendarDrag(el: HTMLElement, opts: CalendarDragOptions) {
       slot = { ...dragCreate(d.date, d.anchor, c ? minuteAt(c, e) : d.anchor, step), resource: d.resource }
     }
     d.preview = { ...slot, mode: d.mode, id: d.id, origin: d.origin }
-    o.onPreview(d.preview)
+    o.onPreview(d.preview!)
   }
   const onUp = () => { cancelPress(); stop(true) }
   const onCancel = () => { cancelPress(); stop(false) }
@@ -606,7 +606,7 @@ export function suggestSlots(people: Attendee[], date: string, opts: { len: numb
   const busy = people.map(p => p.busy ?? [])
   const list: { s: number; fit: number }[] = []
   for (let s = from; s + len <= to; s += step) {
-    if (!isFree(busy, s, len) || (list.length && s - list[list.length - 1].s < gap)) continue
+    if (!isFree(busy, s, len) || (list.length && s - list[list.length - 1]!.s < gap)) continue
     list.push({ s, fit: withinHours(people, date, s, len, zone) })
   }
   return list.sort((a, b) => b.fit - a.fit || a.s - b.s).slice(0, limit).map(x => x.s).sort((a, b) => a - b)
@@ -615,7 +615,7 @@ export function suggestSlots(people: Attendee[], date: string, opts: { len: numb
 // -- availability -----------------------------------------------------------------------------------------------------
 
 export interface WeekDay { day: number; on: boolean; ranges: Range[] }
-export interface Override { id: string; date: string; ranges: Range[] | null; note?: string }
+export interface Override { id: string; date: string; ranges: Range[] | null; note?: string | undefined }
 
 /** One message per range, '' when it's fine (07 §6.4). */
 export const rangeIssues = (ranges: Range[]) => ranges.map((r, i) => (r[1] <= r[0] ? 'Ends before it starts' : ranges.some((q, j) => j !== i && r[0] < q[1] && q[0] < r[1]) ? 'Overlaps another range' : ''))

@@ -7,7 +7,7 @@ import { onTopModal } from './layers'
 import { store, uid } from './store'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
-export interface ToastInput { title: string; description?: string; tone?: Tone; action?: { label: string; onClick(): void }; duration?: number; id?: string; /** Spinner in place of the icon; it stays until updated. */ loading?: boolean }
+export interface ToastInput { title: string; description?: string | undefined; tone?: Tone | undefined; action?: { label: string; onClick(): void }; duration?: number; id?: string | undefined; /** Spinner in place of the icon; it stays until updated. */ loading?: boolean }
 export interface Toast extends ToastInput { id: string; life: number; state?: 'closed' | 'swiped' }
 export interface ToastPromise<T> { pending: string | ToastInput; done: string | ToastInput | ((value: T) => string | ToastInput); error: string | ToastInput | ((reason: unknown) => string | ToastInput) }
 

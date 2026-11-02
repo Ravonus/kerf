@@ -155,10 +155,10 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     const x = xi(m), y = si(m), find = (fx: number, fs: number) => marks.find(n => xi(n) === fx && si(n) === fs)
     const xs = [...new Set(marks.map(xi))], ys = [...new Set(marks.map(si))], px = xs.indexOf(x), py = ys.indexOf(y), i = marks.indexOf(m)
     let next: Element | undefined
-    if (e.key === 'ArrowRight') next = find(xs[Math.min(xs.length - 1, px + 1)], y) ?? marks[Math.min(marks.length - 1, i + 1)]
-    else if (e.key === 'ArrowLeft') next = find(xs[Math.max(0, px - 1)], y) ?? marks[Math.max(0, i - 1)]
-    else if (e.key === 'ArrowUp') next = find(x, ys[Math.max(0, py - 1)])
-    else if (e.key === 'ArrowDown') next = find(x, ys[Math.min(ys.length - 1, py + 1)])
+    if (e.key === 'ArrowRight') next = find(xs[Math.min(xs.length - 1, px + 1)]!, y) ?? marks[Math.min(marks.length - 1, i + 1)]
+    else if (e.key === 'ArrowLeft') next = find(xs[Math.max(0, px - 1)]!, y) ?? marks[Math.max(0, i - 1)]
+    else if (e.key === 'ArrowUp') next = find(x, ys[Math.max(0, py - 1)]!)
+    else if (e.key === 'ArrowDown') next = find(x, ys[Math.min(ys.length - 1, py + 1)]!)
     else if (e.key === 'Home') next = marks[0]
     else if (e.key === 'End') next = marks[marks.length - 1]
     else if (e.key === 'Escape') return hide()
@@ -212,7 +212,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
   // The markup arrives with data-enter="wait" and its motion already playing. Off screen that would be wasted, so it
   // is taken off until the chart is a quarter in view: once, on first view, never again on a resize redraw.
   const seen = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(es => {
-    if (es[es.length - 1].isIntersecting) { enter(); seen!.disconnect() } else fig.removeAttribute('data-enter')
+    if (es[es.length - 1]!.isIntersecting) { enter(); seen!.disconnect() } else fig.removeAttribute('data-enter')
   }, { threshold: 0.25 })
   const size = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
     const w = Math.round(area.clientWidth)

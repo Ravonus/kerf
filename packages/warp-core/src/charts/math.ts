@@ -33,16 +33,16 @@ export function labelWindow(n: number, max: number) {
 /** Monotone-x cubic: a line never invents a peak the data lacks. */
 export function monotone(pts: number[][]) {
   const n = pts.length
-  if (n < 2) return n ? `M${f1(pts[0][0])},${f1(pts[0][1])}` : ''
+  if (n < 2) return n ? `M${f1(pts[0]![0]!)},${f1(pts[0]![1]!)}` : ''
   const dx: number[] = [], dy: number[] = [], m: number[] = [], t: number[] = []
-  for (let i = 0; i < n - 1; i++) { dx[i] = pts[i + 1][0] - pts[i][0]; dy[i] = pts[i + 1][1] - pts[i][1]; m[i] = dy[i] / dx[i] }
-  t[0] = m[0]
-  t[n - 1] = m[n - 2]
-  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i])
-  let d = `M${f1(pts[0][0])},${f1(pts[0][1])}`
+  for (let i = 0; i < n - 1; i++) { dx[i] = pts[i + 1]![0]! - pts[i]![0]!; dy[i] = pts[i + 1]![1]! - pts[i]![1]!; m[i] = dy[i]! / dx[i]! }
+  t[0] = m[0]!
+  t[n - 1] = m[n - 2]!
+  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1]! * m[i]! <= 0 ? 0 : (3 * (dx[i - 1]! + dx[i]!)) / ((2 * dx[i]! + dx[i - 1]!) / m[i - 1]! + (dx[i]! + 2 * dx[i - 1]!) / m[i]!)
+  let d = `M${f1(pts[0]![0]!)},${f1(pts[0]![1]!)}`
   for (let i = 0; i < n - 1; i++) {
-    const h = dx[i] / 3
-    d += `C${f1(pts[i][0] + h)},${f1(pts[i][1] + t[i] * h)} ${f1(pts[i + 1][0] - h)},${f1(pts[i + 1][1] - t[i + 1] * h)} ${f1(pts[i + 1][0])},${f1(pts[i + 1][1])}`
+    const h = dx[i]! / 3
+    d += `C${f1(pts[i]![0]! + h)},${f1(pts[i]![1]! + t[i]! * h)} ${f1(pts[i + 1]![0]! - h)},${f1(pts[i + 1]![1]! - t[i + 1]! * h)} ${f1(pts[i + 1]![0]!)},${f1(pts[i + 1]![1]!)}`
   }
   return d
 }
@@ -55,7 +55,7 @@ export function barPath(x: number, y: number, w: number, h: number, r: number, d
   return `M${X},${B}V${f1(y + r)}Q${X},${Y} ${f1(x + r)},${Y}H${f1(x + w - r)}Q${R},${Y} ${R},${f1(y + r)}V${B}Z`
 }
 
-export const polar = (cx: number, cy: number, r: number, a: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)]
+export const polar = (cx: number, cy: number, r: number, a: number): [number, number] => [cx + r * Math.cos(a), cy + r * Math.sin(a)]
 
 /** An open arc, clockwise from `a0` to `a1`. */
 export function arc(cx: number, cy: number, R: number, a0: number, a1: number) {
@@ -100,4 +100,4 @@ export function squarify<T extends { a: number }>(list: T[], x: number, y: numbe
 }
 
 /** The value at `p` of an ascending list (the specimen's floor quantile). */
-export const quantile = (sorted: number[], p: number) => sorted[Math.floor(p * (sorted.length - 1))]
+export const quantile = (sorted: number[], p: number) => sorted[Math.floor(p * (sorted.length - 1))]!

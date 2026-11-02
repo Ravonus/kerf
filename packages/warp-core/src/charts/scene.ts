@@ -76,7 +76,7 @@ export function play(tweens: Tween[], ms: number) {
   let frame = requestAnimationFrame(function step(now) {
     const k = Math.min(1, (now - t0) / ms), e = 1 - (1 - k) ** 3
     if (k >= 1) return land()
-    for (const t of tweens) t.el.setAttribute(t.name, t.bits.reduce((out, b, i) => out + b + (i < t.to.length ? t.from[i] + (t.to[i] - t.from[i]) * e : ''), ''))
+    for (const t of tweens) t.el.setAttribute(t.name, t.bits.reduce((out, b, i) => out + b + (i < t.to.length ? t.from[i]! + (t.to[i]! - t.from[i]!) * e : ''), ''))
     frame = requestAnimationFrame(step)
   })
   return () => { cancelAnimationFrame(frame); land() }

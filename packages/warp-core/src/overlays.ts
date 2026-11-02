@@ -75,8 +75,8 @@ export interface PopoverOptions {
   open: boolean
   trigger: HTMLElement
   onClose(): void
-  side?: Side
-  align?: Align
+  side?: Side | undefined
+  align?: Align | undefined
 }
 
 /**
@@ -150,7 +150,7 @@ let current: (() => void) | null = null
  * onto the tip, a press hides it; touch long-press (500ms) shows it for 1.5s. One open at a time; Escape closes it
  * (a passive layer: presses pass through).
  */
-export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side }) {
+export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side | undefined }) {
   let o = opts
   let timer: ReturnType<typeof setTimeout> | undefined
   let remove: (() => void) | undefined

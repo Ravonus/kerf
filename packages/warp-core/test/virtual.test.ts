@@ -3,7 +3,7 @@ import { Sizes, slices, virtualizer, type VirtualOptions } from '../src/virtual'
 
 const brute = (s: number[], y: number) => {
   let at = 0
-  for (let i = 0; i < s.length; i++) { if (at + s[i] > y) return i; at += s[i] }
+  for (let i = 0; i < s.length; i++) { if (at + s[i]! > y) return i; at += s[i]! }
   return s.length - 1
 }
 
@@ -155,9 +155,9 @@ test('scrollTo lands exactly on a far row, in each alignment', () => {
   l.v.scrollTo(700)
   expect(l.top()).toBe(at)
   l.v.scrollTo(700, 'end')
-  expect(l.top()).toBe(at + l.v.sizes.get(700) - 400)
+  expect(l.top()).toBe(at + l.v.sizes.get(700)! - 400)
   l.v.scrollTo(700, 'center')
-  expect(l.top()).toBe(at - (400 - l.v.sizes.get(700)) / 2)
+  expect(l.top()).toBe(at - (400 - l.v.sizes.get(700)!) / 2)
 })
 
 test('slices runs to the end across tasks, and stops when asked', async () => {

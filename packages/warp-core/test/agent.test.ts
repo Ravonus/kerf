@@ -76,7 +76,7 @@ describe('foldAnswer', () => {
     expect(a).toEqual(foldAnswer(e))
     const copy = JSON.stringify(foldAnswer(e.slice(0, 2)))
     const before = foldAnswer(e.slice(0, 2))
-    foldAnswer(before, e[2])
+    foldAnswer(before, e[2]!)
     expect(JSON.stringify(before)).toBe(copy)
     expect(seen[0]).not.toBe(seen[3])
   })
@@ -92,7 +92,7 @@ test('parseText: paragraphs, lists, closed and open fences', () => {
 })
 
 test('parseText keys a growing block by where it starts', () => {
-  expect(parseText('a')[0].at).toBe(parseText('a b c')[0].at)
+  expect(parseText('a')[0]!.at).toBe(parseText('a b c')[0]!.at)
   expect(parseText('')).toEqual([])
 })
 
@@ -143,8 +143,8 @@ test('traceRows flattens onto one axis and hides what is collapsed', () => {
   expect(new Set(rows.map(r => r.color)).size).toBe(4)
   const shut = traceRows(SPANS, new Set(['a']))
   expect(shut.map(r => r.id)).toEqual(['r', 'a', 'b'])
-  expect(shut[1].open).toBe(false)
-  expect(shut[2].color).toBe(rows[3].color)
+  expect(shut[1]!.open).toBe(false)
+  expect(shut[2]!.color).toBe(rows[3]!.color)
   expect(traceRows([])).toEqual([])
 })
 

@@ -52,7 +52,7 @@ export function sample(field: Field, cols: number, rows: number, t: number, out:
   for (let y = 0, i = 0; y < rows; y++) {
     const gy = (y * k) | 0, fy = y * k - gy, top = gy * lw
     for (let x = 0; x < cols; x++, i++) {
-      const gx = (x * k) | 0, fx = x * k - gx, a = lattice[top + gx], b = lattice[top + gx + 1], c = lattice[top + lw + gx], d = lattice[top + lw + gx + 1]
+      const gx = (x * k) | 0, fx = x * k - gx, a = lattice[top + gx]!, b = lattice[top + gx + 1]!, c = lattice[top + lw + gx]!, d = lattice[top + lw + gx + 1]!
       out[i] = a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy
     }
   }
