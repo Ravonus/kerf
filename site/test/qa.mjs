@@ -313,7 +313,8 @@ for (const path of ['/reference/rules', '/reference/lists', '/reference/async', 
 for (const path of ['/learn', '/learn/installation', '/learn/passing-props', '/learn/bind', '/learn/entries', '/learn/full-stack', '/learn/effects']) {
   await check(`learn fits 375 px ${path}`, path, async page => {
     await mount(page)
-    same(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0, 'page overflow')
+    // Past the viewport, not past clientWidth: a classic scrollbar makes clientWidth narrower than the page can be.
+    same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow')
   }, { width: 375, height: 812 })
   if (path === '/learn') continue
   await check(`learn page parts ${path}`, path, async page => {
