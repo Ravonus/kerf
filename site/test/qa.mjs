@@ -257,10 +257,11 @@ await check('hub previews fit their cards', '/blocks', async page => {
   }
   same(out.filter(Boolean).join(), '', 'previews past their card')
 })
-// Every hub card is a deliberate picture of its example, at a scale its words can be read (0.3 or more, on a phone as
-// on a desktop): the whole example shrunk to fit, or, when that would be too small, its top at full scale, marked as a
-// crop. Never wider than the card, starting at its top (not mid-content), with nothing inside running past the card's
-// edge; a chart is never cropped, so it shows the whole chart, not its legend.
+// Every hub card is a deliberate picture of its example, at a scale its words can be read (half size or more on a
+// desktop, where a card is at least 260px wide and three or fewer to a row; 0.3 or more on a phone, whose one column
+// hugs its example): the whole example shrunk to fit, or, when that would be too small, its top at full scale, marked
+// as a crop. Never wider than the card, starting at its top (not mid-content), with nothing inside running past the
+// card's edge; a chart is never cropped, so it shows the whole chart, not its legend.
 for (const path of ['/components', '/blocks', '/charts']) {
   for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
     await check(`hub cards are whole pictures ${path} at ${viewport.width}`, path, async page => {
@@ -270,13 +271,19 @@ for (const path of ['/components', '/blocks', '/charts']) {
         await page.waitForTimeout(100)
       }
       await page.waitForTimeout(1200)
-      const bad = await page.evaluate(chart => [...document.querySelectorAll('[data-site="tile"]')].flatMap(t => {
+      const least = viewport.width >= 600 ? 0.5 : 0.3
+      if (viewport.width >= 1000) {
+        const { cols, width } = await page.evaluate(() => ({ cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length, width: Math.min(...[...document.querySelectorAll('[data-site="tile"] [data-part="stage"]')].map(s => s.getBoundingClientRect().width)) }))
+        if (cols > 3) throw new Error(`${cols} cards to a row`)
+        if (width < 260) throw new Error(`a picture ${Math.round(width)}px wide`)
+      }
+      const bad = await page.evaluate(([chart, least]) => [...document.querySelectorAll('[data-site="tile"]')].flatMap(t => {
         const stage = t.querySelector('[data-part="stage"]'), m = t.querySelector('[data-part="mount"]')
         const st = stage.getBoundingClientRect(), r = m.getBoundingClientRect()
         const scale = +(/scale\(([\d.]+)\)/.exec(m.style.transform)?.[1] ?? 0), crop = m.hasAttribute('data-crop')
         const out = []
         if (!scale) out.push('never fitted')
-        else if (scale < 0.3) out.push(`drawn at ${scale.toFixed(2)}`)
+        else if (scale < least - 0.005) out.push(`drawn at ${scale.toFixed(2)}`)
         if (crop !== r.bottom > st.bottom + 1) out.push(crop ? 'marked cropped but whole' : 'cut off without a crop')
         if (chart && crop) out.push('chart cropped')
         if (r.left < st.left - 1 || r.right > st.right + 1) out.push('wider than the card')
@@ -286,7 +293,7 @@ for (const path of ['/components', '/blocks', '/charts']) {
         const past = [...m.querySelectorAll('*')].find(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left < st.right && b.right > Math.min(r.right, st.right) + 2 && !clips(e) })
         if (past) out.push(`${past.localName}${past.dataset.part ? `[${past.dataset.part}]` : ''} past its edge`)
         return out.length ? [`${t.dataset.name}: ${out.join(', ')}`] : []
-      }), path === '/charts')
+      }), [path === '/charts', least])
       same(bad.join('; '), '', 'cards')
     }, viewport)
   }

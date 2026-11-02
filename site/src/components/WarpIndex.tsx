@@ -24,7 +24,7 @@ function Card(props: { file: string; tile: Tile }) {
 export function WarpIndex(props: { area: Area; title: string; lede: string }) {
   const groups = (index.groups as Group[]).filter(g => g.tiles.length && g.area === props.area)
   return (
-    <article data-site="doc" data-home="">
+    <article data-site="doc" data-home="" data-area={props.area}>
       <header>
         <h1>{props.title}</h1>
         <p data-part="lede" innerHTML={props.lede}></p>

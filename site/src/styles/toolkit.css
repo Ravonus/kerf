@@ -169,14 +169,18 @@
 [data-tk="group"] > header { display: grid; gap: var(--warp-space-tight); margin-block-end: var(--warp-space-group); }
 [data-tk="group"] h2 { font: 600 var(--doc-h2)/1.25 var(--doc-sans); letter-spacing: -0.015em; text-transform: none; color: var(--ink); text-box: normal; }
 [data-tk="group"] > header p { max-inline-size: 68ch; color: var(--dim); font-size: var(--doc-small); line-height: 1.5; }
-[data-tk="tiles"] { --warp-flow-cols: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: var(--warp-space-group); }
+/* A desktop hub is three cards to a row (two on a narrower window), each picture about 300px wide: four to a row drew
+   them at 150 to 220px, where an example's words were specks. Its picture is 3:2 (a chart's 4:3, since a chart always
+   shows whole) and draws at half size or more: below that it shows its top instead (--tile-readable, fitTile). */
+[data-tk="tiles"] { --warp-flow-cols: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--warp-space-group); }
 [data-site="tile"] { display: grid; grid-template-rows: auto 1fr; contain-intrinsic-size: auto 200px; border: var(--warp-border-hairline) solid var(--rule); border-radius: var(--warp-radius-surface); overflow: hidden; background: var(--warp-color-surface); color: var(--ink); text-decoration: none; transition: border-color var(--warp-duration-fast) var(--warp-ease-out); }
 [data-site="tile"][hidden], [data-site="tile"][data-rest]:not([data-show]) { display: none; }
 [data-site="tile"]:hover { border-color: var(--warp-color-border-strong); }
 [data-site="tile"]:hover { translate: 0 -1px; }
 /* A card's preview is a picture: the example lays out at a working width and Preview scales it to the card (fitTile). */
-[data-site="tile"] [data-part="stage"] { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--warp-color-surface); border-block-end: var(--warp-border-hairline) solid var(--rule); }
-[data-site="tile"] [data-part="mount"] { --tile-zoom: 0.8; position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: var(--tile-w, 100%); container-type: inline-size; padding: var(--warp-space-group); pointer-events: none; transform-origin: 0 0; opacity: 0; }
+[data-site="tile"] [data-part="stage"] { position: relative; aspect-ratio: 3 / 2; overflow: hidden; background: var(--warp-color-surface); border-block-end: var(--warp-border-hairline) solid var(--rule); }
+@media (min-width: 600px) { [data-area="charts"] [data-site="tile"] [data-part="stage"] { aspect-ratio: 4 / 3; } }
+[data-site="tile"] [data-part="mount"] { --tile-zoom: 0.8; --tile-readable: 0.5; position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: var(--tile-w, 100%); container-type: inline-size; padding: var(--warp-space-group); pointer-events: none; transform-origin: 0 0; opacity: 0; }
 [data-site="tile"] [data-part="mount"]:not([data-ready]) { inset: 0; inline-size: auto; transform: none; opacity: 1; }
 [data-site="tile"] [data-part="mount"][data-stage="narrow"] { justify-self: auto; }
 [data-site="tile"] [data-part="mount"] > * { max-inline-size: 100%; }
@@ -191,7 +195,7 @@
   [data-tk="tiles"] { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-related); }
   [data-site="tile"] { grid-template-rows: auto auto; contain-intrinsic-size: auto 200px; }
   [data-site="tile"] [data-part="stage"] { aspect-ratio: auto; block-size: 120px; }
-  [data-site="tile"] [data-part="mount"] { --tile-hug: 240px; padding: var(--warp-space-related); }
+  [data-site="tile"] [data-part="mount"] { --tile-hug: 240px; --tile-readable: 0.3; padding: var(--warp-space-related); }
   [data-site="tile"] [data-part="words"] { display: grid; gap: var(--warp-space-hair); padding: var(--warp-space-tight) var(--warp-space-related) var(--warp-space-related); min-inline-size: 0; }
   [data-site="tile"] strong { overflow-wrap: anywhere; }
   [data-site="tile"] [data-part="words"] span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
