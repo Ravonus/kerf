@@ -11,6 +11,7 @@
 :where([data-copy][data-state="copied"] [data-part="indicator"] > svg:last-child) { opacity: 1; scale: 1; color: var(--warp-color-positive-text); }
 :where([data-copy][data-state="copied"]:not([data-emphasis])) { --_ink: var(--_ink-on); }
 :where([data-copy][data-state="copied"]:not([data-emphasis]) [data-part="indicator"] > svg:last-child) { color: inherit; }
+:where([data-copy][data-state="failed"], [data-act="copy"][data-failed]) { color: var(--warp-color-critical-text); }
 
 /* ---------------------------------------------------------------------------
    2 · OVERLAYS

@@ -89,6 +89,36 @@ test('dials: a persisted initial value is kept, so a page whose own default diff
   localStorage.removeItem('warp:dials')
 })
 
+test('copy: a refused clipboard write is caught and shows a failed state', async () => {
+  const writeText = vi.fn(async () => { throw new DOMException('Write permission denied.', 'NotAllowedError') })
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+  const unhandled = vi.fn()
+  process.on('unhandledRejection', unhandled)
+  html('<div data-scope="announcer" aria-live="polite"></div><button data-act="copy" data-copy="" data-copy-text="x"></button>')
+  const stop = copyButtons()
+  const b = document.querySelector<HTMLElement>('[data-act="copy"]')!
+  b.click()
+  await new Promise(r => setTimeout(r, 80))
+  expect(writeText).toHaveBeenCalledWith('x')
+  expect(b.hasAttribute('data-failed')).toBe(true)
+  expect(b.hasAttribute('data-done')).toBe(false)
+  expect(b.dataset.state).toBe('failed')
+  expect(document.querySelector('[data-scope="announcer"]')!.textContent).toMatch(/Couldn’t copy/)
+  expect(unhandled).not.toHaveBeenCalled()
+  process.off('unhandledRejection', unhandled)
+  // no clipboard at all fails the same way, and a later copy that lands clears it
+  Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
+  b.click()
+  await new Promise(r => setTimeout(r, 0))
+  expect(b.dataset.state).toBe('failed')
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(async () => {}) }, configurable: true })
+  b.click()
+  await new Promise(r => setTimeout(r, 0))
+  expect(b.hasAttribute('data-failed')).toBe(false)
+  expect(b.dataset.state).toBe('copied')
+  stop()
+})
+
 test('copy: a highlighted block keeps its newlines', async () => {
   const writeText = vi.fn(async () => {})
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
