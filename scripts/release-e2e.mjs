@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Proves the install: serves a directory of tarballs from a local registry, then from an empty folder runs what a new user
 // runs, with no repo in reach. Needs only Node and this script's neighbour registry.mjs, so it can be copied to a machine
-// that has neither the repo nor Rust.
+// that has neither the repo nor Rust, plus a Chrome or Edge (`CHROME` names one): serving HTML proves nothing about
+// hydration, so with no browser the run fails.
 //
 //   node release-e2e.mjs <dir of .tgz> <empty dir> [--registry-script <path>] [--pm npm|bun|deno] [--no-rust]
 //
@@ -43,6 +44,8 @@ const sh = (cmd, args, cwd) => new Promise((ok, fail) => {
 if (values['no-rust']) step('no Rust on PATH', spawnSync('cargo', ['--version'], { env, shell: windows }).status !== 0)
 
 const { serveRegistry } = await import(pathToFileURL(script).href)
+const { findChrome, launch } = await import(pathToFileURL(join(dirname(script), 'cdp.mjs')).href)
+const { prepare } = await import(pathToFileURL(join(dirname(script), 'hot-checks.mjs')).href)
 const { url, close } = await serveRegistry(tarballs)
 env.npm_config_registry = url
 env.BUN_CONFIG_REGISTRY = url
@@ -63,6 +66,19 @@ const probe = async (port, path = '/', tries = 90) => {
   return last
 }
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
+/** A real page: the route with a live query, clicked until its counter moves, with no error and each module loaded once. */
+async function hydrates(chrome, port, what) {
+  const page = await chrome.page(`http://localhost:${port}/hot`)
+  let count, query
+  for (let i = 0; i < 120 && !/[1-9]$/.test(count ?? ''); i++) {
+    await new Promise(ok => setTimeout(ok, 500))
+    try { count = await page.eval(`document.querySelector('#c')?.click(), document.querySelector('#c')?.textContent`); query = await page.eval(`document.querySelector('#q')?.textContent`) } catch {}
+  }
+  const urls = await page.eval(`performance.getEntriesByType('resource').map(r => r.name)`).catch(() => [])
+  const twice = urls.filter(u => /\.[jt]sx?(\?|$)/.test(u)).map(u => u.replace(/\?.*$/, '')).filter((u, i, all) => all.indexOf(u) !== i)
+  const problems = [!/[1-9]$/.test(count ?? '') && `the counter never moved (${count})`, query !== 'S1' && `the query shows ${query}`, twice.length && `loaded twice: ${twice[0]}`, page.errors.length && page.errors[0].slice(0, 300)].filter(Boolean)
+  step(`${what} hydrates in a browser`, !problems.length, problems.join('; '))
+}
 function serve(cmd, args, cwd, port) {
   const child = spawn(cmd, args, { cwd, env: { ...env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'], shell: windows, detached: !windows })
   let log = ''
@@ -91,20 +107,26 @@ try {
   if (values['expect-backend']) step(`compiler is ${values['expect-backend']}`, doctor.compiler?.kind === values['expect-backend'])
   const checked = JSON.parse(await weft(['check', '--json'], app))
   step('weft check', checked.ok === true, checked.ok ? '' : JSON.stringify(checked.diagnostics).slice(0, 400))
+  prepare(app) // after the check: a route with a counter and a live query, not written to pass one
   await weft(['build'], app)
   step('weft build', existsSync(join(app, '.output')) || existsSync(join(app, 'dist')))
 
+  if (!findChrome()) throw new Error('no Chrome or Edge here: set CHROME')
+  const chrome = await launch()
   const port = await freePort()
   const dev = serve(...(pm === 'deno' ? ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli', 'dev', '--port', String(port)]] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'dev', '--port', String(port)]] : ['npx', ['weft', 'dev', '--port', String(port)]]), app, port)
   const hit = await probe(port)
+  await hydrates(chrome, port, 'weft dev')
   dev.stop()
   step('weft dev serves the page', hit.status === 200 && /<html/i.test(hit.text), `HTTP ${hit.status}${hit.status ? '' : ` ${dev.log().slice(-400)}`}`)
 
   const livePort = await freePort()
   const started = serve(...(pm === 'deno' ? ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli', 'start']] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'start']] : ['npx', ['weft', 'start']]), app, livePort)
   const live = await probe(livePort)
+  await hydrates(chrome, livePort, 'the built app')
   started.stop()
   step('the built app serves the page', live.status === 200 && /<html/i.test(live.text), `HTTP ${live.status}${live.status ? '' : ` ${started.log().slice(-400)}`}`)
+  await chrome.close()
 } catch (e) {
   step('the run reached its end', false, e.message)
 }
