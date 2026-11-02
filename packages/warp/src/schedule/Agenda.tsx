@@ -39,29 +39,29 @@ export function AgendaDay({ events, day, now, locale, hourCycle, label }: { even
 export type AgendaProps = {
   events: CalEvent[]
   /** The day it opens on: a state it writes as you page, or a plain value. */
-  date?: State<string> | string
-  defaultDate?: string
+  date?: State<string> | string | undefined
+  defaultDate?: string | undefined
   /** Called with the new day when you page or jump to today. */
-  onDateChange?: (d: string) => void
-  title?: unknown
+  onDateChange?: ((d: string) => void) | undefined
+  title?: unknown | undefined
   /** The calendars the events belong to, for their colours and names. */
-  calendars?: CalendarSource[]
+  calendars?: CalendarSource[] | undefined
   /** The IANA zone times are shown in, such as `Europe/Berlin`. The browser's otherwise. */
-  timeZone?: string
+  timeZone?: string | undefined
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
-  today?: string
+  today?: string | undefined
   /** Pins the current time, for server rendering and tests. The browser's clock otherwise. */
-  now?: string
-  locale?: string
+  now?: string | undefined
+  locale?: string | undefined
   /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
-  hourCycle?: string
-  firstDayOfWeek?: number
+  hourCycle?: string | undefined
+  firstDayOfWeek?: number | undefined
   /** Long press: open your own sheet. Without it the built-in MoveSheet opens and calls `onMove`. */
   onLongPress?: ((e: CalEvent) => void) | undefined
   onMove?: (e: CalEvent, to: { start: string; end: string; resource?: string | undefined }) => void
-  onOpen?: (e: CalEvent) => void
+  onOpen?: ((e: CalEvent) => void) | undefined
   /** The FAB opens the editor; Save calls this. */
-  onCreate?: (e: CalEvent) => void
+  onCreate?: ((e: CalEvent) => void) | undefined
 }
 
 /**

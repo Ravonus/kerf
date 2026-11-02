@@ -19,31 +19,31 @@ export type MeetingDetails = { attendees: Attendee[]; title: string; link: strin
 /** Props for MeetingPlanner. */
 export type MeetingPlannerProps = {
   date: string
-  attendees?: Attendee[]
+  attendees?: Attendee[] | undefined
   /** Search for people to add. */
-  loadAttendees?: (q: string, signal: AbortSignal) => Promise<Attendee[]>
+  loadAttendees?: ((q: string, signal: AbortSignal) => Promise<Attendee[]>) | undefined
   /** The app's own suggestions; else they come from everyone's `busy`. */
-  loadSlots?: (input: { attendees: Attendee[]; date: string; duration: number }) => number[] | Promise<number[]>
+  loadSlots?: ((input: { attendees: Attendee[]; date: string; duration: number }) => number[] | Promise<number[]>) | undefined
   /** The meeting's starting length, in minutes. Default 30. */
-  duration?: number
-  durations?: number[]
-  title?: string
+  duration?: number | undefined
+  durations?: number[] | undefined
+  title?: string | undefined
   /** The meeting link the form starts with, such as a video call URL. */
-  link?: string
-  tags?: string[]
+  link?: string | undefined
+  tags?: string[] | undefined
   /** The strip's hours, minutes since midnight. */
-  from?: number
+  from?: number | undefined
   /** Where the strip's hours end, in minutes since midnight. */
-  to?: number
+  to?: number | undefined
   /** The IANA zone times are shown in, such as `Europe/Berlin`. */
-  timeZone?: string
+  timeZone?: string | undefined
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
-  today?: string
-  locale?: string
+  today?: string | undefined
+  locale?: string | undefined
   /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
-  hourCycle?: string
+  hourCycle?: string | undefined
   onSubmit: (m: MeetingDetails) => void | Promise<unknown>
-  onUndo?: () => void
+  onUndo?: (() => void) | undefined
 }
 
 const BUSY_BAR = 'position:absolute;inset-block:7px;border-radius:3px;background:color-mix(in oklab,var(--warp-color-text) 22%,transparent)'

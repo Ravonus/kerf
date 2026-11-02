@@ -45,29 +45,29 @@ export interface InboxProps {
   /** Newest first. Undefined while the first load runs: skeletons, once. */
   items: Note[] | undefined | { value: Note[] | undefined } | (() => Note[] | undefined)
   /** The connection's state, shown in the foot as "Up to date" or "Connecting…". */
-  live?: LiveState | (() => LiveState)
+  live?: (LiveState | (() => LiveState)) | undefined
   /** The filter tabs, in order. Default all, unread and mentions. */
-  tabs?: InboxTab[]
-  title?: string
+  tabs?: InboxTab[] | undefined
+  title?: string | undefined
   variant?: 'popover' | undefined
   /** Is the inbox on screen? Rows are read after 2 s visible only while it is. */
-  open?: boolean
+  open?: boolean | undefined
   /** Updates waiting to sync (offline, reconnecting). */
-  queued?: number
-  viewAll?: string
+  queued?: number | undefined
+  viewAll?: string | undefined
   /** Adds a settings button to the header, and is called when it is pressed. */
-  settings?: () => void
+  settings?: (() => void) | undefined
   /** Called with a row's id once it has been seen or opened. */
-  onRead?: (id: string) => void
+  onRead?: ((id: string) => void) | undefined
   /** Called when Mark all as read is pressed. */
-  onReadAll?: () => void
+  onReadAll?: (() => void) | undefined
   /** Called with a row's id when it is dismissed. */
-  onDismiss?: (id: string) => void
+  onDismiss?: ((id: string) => void) | undefined
   /** Undo a dismiss: put the row back. */
-  onRestore?: (note: Note) => void
-  onAction?: (note: Note, action: string) => void
+  onRestore?: ((note: Note) => void) | undefined
+  onAction?: ((note: Note, action: string) => void) | undefined
   /** The row is a link to its object. */
-  onOpen?: (note: Note) => void
+  onOpen?: ((note: Note) => void) | undefined
 }
 
 /**

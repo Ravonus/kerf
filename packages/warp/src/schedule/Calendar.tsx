@@ -23,7 +23,7 @@ import '@weft-js/warp-core/styles/layout/edges.css'
 /** Which occurrences of a repeating event a change covers. */
 export type RecurrenceScope = 'this' | 'following' | 'all'
 /** Where an edited event lands: its new times, its timeline row, and which occurrences of a repeat it covers. */
-export type EventChange = { start: string; end: string; resource?: string; scope?: RecurrenceScope }
+export type EventChange = { start: string; end: string; resource?: string | undefined; scope?: RecurrenceScope | undefined }
 /** A timeline row: a room or a person. `meta` is the quiet line under its name ("8 seats"). */
 export type Resource = { id: string; name: string; meta?: string }
 type Reason = 'pointer' | 'keyboard' | 'touch'
@@ -33,68 +33,68 @@ export type CalendarProps = {
   /** The events to show, in every view. Times are wall-clock ISO strings (`2026-11-04T09:30`), or dates for all-day ones. */
   events: CalEvent[]
   /** The calendars events belong to (an event's `cal`): the rail lists them with a checkbox each, and the editor offers them. */
-  calendars?: CalendarSource[]
+  calendars?: CalendarSource[] | undefined
   /** The view showing: a State to share it, or a value. */
-  view?: State<CalView> | CalView
+  view?: State<CalView> | CalView | undefined
   /** The view it opens on when `view` isn't given. Week without either. */
-  defaultView?: CalView
+  defaultView?: CalView | undefined
   /** Hears every change of view, by tab, key or the mini month. */
-  onViewChange?: (v: CalView) => void
+  onViewChange?: ((v: CalView) => void) | undefined
   /** The views offered as tabs, in this order. All six without it. */
-  views?: CalView[]
+  views?: CalView[] | undefined
   /** The date the view is on (`2026-11-04`): a State to share it, or a value. */
-  date?: State<string> | string
+  date?: State<string> | string | undefined
   /** The date it opens on when `date` isn't given. Today without either. */
-  defaultDate?: string
+  defaultDate?: string | undefined
   /** Hears the new date when the arrows, Today, the mini month or a drill-in move it. */
-  onDateChange?: (d: string) => void
+  onDateChange?: ((d: string) => void) | undefined
   /** The toolbar chip's zone. Without one, wall times show as they are. */
-  timeZone?: State<string | null> | string
+  timeZone?: State<string | null> | string | undefined
   /** Hears a zone picked from the toolbar chip, or null for wall times. */
-  onTimeZoneChange?: (z: string | null) => void
+  onTimeZoneChange?: ((z: string | null) => void) | undefined
   /** Secondary zones in the rail. */
-  zones?: { label: string; zone: string }[]
+  zones?: { label: string; zone: string }[] | undefined
   /** Today's date (`2026-11-02`), marked in every view. The browser's date after mount without it, so hydration writes nothing. */
-  today?: string
+  today?: string | undefined
   /** The now line's wall time; the browser's clock after mount without it. */
-  now?: string
+  now?: string | undefined
   /** The locale for day and month names, times and the first day of the week. The browser's without it. */
-  locale?: string
+  locale?: string | undefined
   /** `h12` or `h23` to force a clock; the locale's without it. */
-  hourCycle?: string
+  hourCycle?: string | undefined
   /** The week's first day, 0 for Sunday to 6 for Saturday. The locale's without it. */
-  firstDayOfWeek?: number
+  firstDayOfWeek?: number | undefined
   /** Minutes a drag or resize snaps to. 15 without it. */
-  snap?: number
+  snap?: number | undefined
   /**
    * Working hours as minutes from midnight, `[start, end]`: `[540, 1020]` is 09:00 to 17:00 (not `[9, 17]`). The rest of
    * the day is banded, and Week and Day open scrolled to just before `start`. 08:00 to 18:00 without it.
    */
-  workingHours?: [number, number]
+  workingHours?: [number, number] | undefined
   /** The toolbar LiveStatus. */
   live?: LiveState | undefined
   /** Timeline rows; events point at one with `resource`. */
-  resources?: Resource[]
+  resources?: Resource[] | undefined
   /** The timeline's span, in minutes from midnight like `workingHours`: `[480, 1080]` (08:00 to 18:00) without it. */
-  timeline?: [number, number]
+  timeline?: [number, number] | undefined
   /** Year view's counts; from `events` without it. */
-  counts?: Record<string, number>
+  counts?: Record<string, number> | undefined
   /** Turns off dragging, resizing, creating and the keyboard move mode. Events still open their popover. */
-  readOnly?: boolean
+  readOnly?: boolean | undefined
   /** A rejected promise puts the event back and announces why (07 §2.6). */
-  onMove?: (e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>
+  onMove?: ((e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>) | undefined
   /** An event's edge dragged to a new time. A rejected promise puts it back and announces why. */
-  onResize?: (e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>
+  onResize?: ((e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>) | undefined
   /** A new event saved from the editor, after a drag over empty time, a press on a slot or New event. */
-  onCreate?: (e: CalEvent) => void
+  onCreate?: ((e: CalEvent) => void) | undefined
   /** An event saved from the editor; `scope` says which of a repeating event's occurrences. */
-  onEdit?: (e: CalEvent, scope?: RecurrenceScope) => void
+  onEdit?: ((e: CalEvent, scope?: RecurrenceScope) => void) | undefined
   /** An event deleted after its confirmation; `scope` says which of a repeating event's occurrences. */
-  onDelete?: (e: CalEvent, scope?: RecurrenceScope) => void
+  onDelete?: ((e: CalEvent, scope?: RecurrenceScope) => void) | undefined
   /** An event's popover opened, by press or Enter. */
-  onOpen?: (e: CalEvent) => void
+  onOpen?: ((e: CalEvent) => void) | undefined
   /** Join pressed in the popover of an event with a `video` link. */
-  onJoin?: (e: CalEvent) => void
+  onJoin?: ((e: CalEvent) => void) | undefined
 }
 
 const LABEL: Record<CalView, string> = { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda', timeline: 'Timeline', year: 'Year' }
@@ -346,7 +346,7 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { days: days.value, next: (k, id) => eventKey(k, id, list.value, getComputedStyle(e.target as Element).direction === 'rtl') })
   const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
   return (
-    <div data-scope="edges" data-part="grid" data-view="time" role="grid" aria-label={fmt(days.value[0], { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length};--warp-edges-start:var(--warp-cal-gutter);${tracks.value}`} onKeyDown={onKey}>
+    <div data-scope="edges" data-part="grid" data-view="time" role="grid" aria-label={fmt(days.value[0]!, { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length};--warp-edges-start:var(--warp-cal-gutter);${tracks.value}`} onKeyDown={onKey}>
       <div ref={(n: HTMLDivElement) => (scroller = n)} data-part="scroller">
         <div data-part="top">
           <div data-part="head" role="row">
@@ -531,7 +531,7 @@ function Timeline({ c }: { c: Ctx }) {
     void box?.ownerDocument.fonts?.ready.then(refit)
     if (typeof ResizeObserver === 'undefined' || !scroller) return
     let w = 0
-    const ro = new ResizeObserver(r => { const n = Math.round(r[0].contentRect.width); if (n !== w) { w = n; refit() } })
+    const ro = new ResizeObserver(r => { const n = Math.round(r[0]!.contentRect.width); if (n !== w) { w = n; refit() } })
     ro.observe(scroller)
     onCleanup(() => { ro.disconnect(); cancelAnimationFrame(frame) })
   })

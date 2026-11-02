@@ -71,15 +71,15 @@ export function Tile({ p, self, video, role = 'group' }: { p: Participant; self?
 export interface ControlBarProps {
   mic: boolean
   camera: boolean
-  sharing?: boolean
-  hand?: boolean
+  sharing?: boolean | undefined
+  hand?: boolean | undefined
   side?: 'people' | 'chat' | null | undefined
   /** Icons only, no Chat or People (they go in More), and Leave icon-only (07 §3.3). */
   compact?: boolean | undefined
   onToggle: (control: 'mic' | 'camera' | 'share' | 'hand' | 'react' | 'chat' | 'people' | 'more') => void
-  onLeave?: () => void
+  onLeave?: (() => void) | undefined
   /** Stands in for the control's name while a control has an open menu of its own. */
-  more?: string
+  more?: string | undefined
 }
 
 // the visible label is inside the name (WCAG 2.5.3), and the name stays when the label hides
@@ -119,57 +119,57 @@ export interface MeetingRoomProps {
   title: string
   participants: Participant[] | { value: Participant[] } | (() => Participant[])
   self: Participant
-  layout?: State<MeetingLayout> | MeetingLayout
+  layout?: State<MeetingLayout> | MeetingLayout | undefined
   /** Called with the layout picked in the switcher. */
-  onLayoutChange?: (l: MeetingLayout) => void
+  onLayoutChange?: ((l: MeetingLayout) => void) | undefined
   /** Elapsed time, already formatted (the caller owns the clock). */
-  timer?: unknown
+  timer?: unknown | undefined
   /** Shows a Rec badge in the header. */
-  recording?: boolean
+  recording?: boolean | undefined
   /** The room's connection: `room.status`, mapped. */
   live?: string | (() => string) | undefined
   /** Phone: speaker layout, no switcher, icon-only Leave. Unset: decided by the room's own width after mount. */
   compact?: boolean | undefined
   /** Dark island by default (07 §7). */
-  theme?: 'dark' | 'light'
+  theme?: 'dark' | 'light' | undefined
   /** Media is the caller's: warp never touches getUserMedia. Return the <video> for a participant. */
   video?: Video | undefined
   /** The shared screen, for presentation layout. */
-  share?: () => unknown
-  presenter?: string
+  share?: (() => unknown) | undefined
+  presenter?: string | undefined
   /** What is being shared, in the presentation header. Default "Shared screen". */
-  shareTitle?: string
-  board?: () => unknown
+  shareTitle?: string | undefined
+  board?: (() => unknown) | undefined
   /** The Chat panel's body. */
-  chat?: () => unknown
+  chat?: (() => unknown) | undefined
   /** Below People: "Invite people". */
-  invite?: () => unknown
+  invite?: (() => unknown) | undefined
   /** Whether your mic is on: a state the room writes, or a value with `onMic`. */
-  mic?: State<boolean> | boolean
+  mic?: State<boolean> | boolean | undefined
   /** Whether your camera is on: a state the room writes, or a value with `onCamera`. */
-  camera?: State<boolean> | boolean
+  camera?: State<boolean> | boolean | undefined
   /** Whether your hand is raised: a state the room writes, or a value with `onHand`. */
-  hand?: State<boolean> | boolean
+  hand?: State<boolean> | boolean | undefined
   /** Whether you are sharing your screen: a state the room writes, or a value with `onShare`. */
-  sharing?: State<boolean> | boolean
+  sharing?: State<boolean> | boolean | undefined
   /** The open side panel, `people` or `chat`, or null for none. */
-  sidebar?: State<'people' | 'chat' | null> | 'people' | 'chat' | null
+  sidebar?: State<'people' | 'chat' | null> | 'people' | 'chat' | null | undefined
   /** The emoji the React button sends. Default 🎉. */
-  reaction?: string
+  reaction?: string | undefined
   /** Called with the mic's new state. Start or stop the track here. */
-  onMic?: (on: boolean) => void
+  onMic?: ((on: boolean) => void) | undefined
   /** Called with the camera's new state. Start or stop the track here. */
-  onCamera?: (on: boolean) => void
+  onCamera?: ((on: boolean) => void) | undefined
   /** Called with `true` when you raise your hand and `false` when you lower it. */
-  onHand?: (on: boolean) => void
+  onHand?: ((on: boolean) => void) | undefined
   /** Called with `true` to start sharing your screen and `false` to stop. */
-  onShare?: (on: boolean) => void
+  onShare?: ((on: boolean) => void) | undefined
   /** Called with the emoji when you react. */
-  onReact?: (emoji: string) => void
+  onReact?: ((emoji: string) => void) | undefined
   /** Called when Leave is pressed. */
-  onLeave?: () => void
+  onLeave?: (() => void) | undefined
   /** More: replaces the phone's default, which opens the People and Chat panel. */
-  onMore?: () => void
+  onMore?: (() => void) | undefined
 }
 
 /**

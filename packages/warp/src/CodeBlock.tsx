@@ -11,9 +11,9 @@ export interface CodeBlockProps {
   /** The source to show, colour and copy. */
   code: string
   /** tsx by default; ts, js, json and sh are coloured too, anything else stays plain. */
-  language?: string
+  language?: string | undefined
   /** A file name shown in the bar above the code. */
-  filename?: string
+  filename?: string | undefined
   /** Line numbers. */
   lines?: boolean | undefined
   /** Wrap long lines instead of scrolling. */

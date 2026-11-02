@@ -13,22 +13,22 @@ export type YearViewProps = {
   /** Names the section when the year alone won't do: two on a page. */
   label?: string | undefined
   /** Events for the picked day's detail: from `events`, or fetched by the app when it is picked. */
-  events?: CalEvent[]
-  year?: number
+  events?: CalEvent[] | undefined
+  year?: number | undefined
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
-  today?: string
-  locale?: string
+  today?: string | undefined
+  locale?: string | undefined
   /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
-  hourCycle?: string
+  hourCycle?: string | undefined
   /** The day each month's rows start on, 0 for Sunday to 6. The locale's otherwise. */
-  firstDayOfWeek?: number
+  firstDayOfWeek?: number | undefined
   /** Inside a Calendar: return true when the day or month opened there, and the picker stays out of the way. */
-  openDay?: (iso: IsoDate) => boolean | void
-  openMonth?: (iso: IsoDate) => boolean | void
+  openDay?: ((iso: IsoDate) => boolean | void) | undefined
+  openMonth?: ((iso: IsoDate) => boolean | void) | undefined
   /** Open straight away; off, a pick shows the detail and offers the jump. */
-  direct?: boolean
+  direct?: boolean | undefined
   /** Called with the new year when you page. */
-  onYearChange?: (y: number) => void
+  onYearChange?: ((y: number) => void) | undefined
 }
 
 const events = (n: number) => (n ? `${n} event${n > 1 ? 's' : ''}` : 'no events')

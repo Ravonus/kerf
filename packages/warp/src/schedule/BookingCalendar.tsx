@@ -19,22 +19,22 @@ export type BookingCalendarProps = {
   /** The times for a day: a list, or read from the date. */
   slots: BookingSlot[] | ((date: string) => BookingSlot[])
   /** The picked day: a state it writes, or a plain value with `onDateChange`. */
-  date?: State<IsoDate | null> | IsoDate
+  date?: State<IsoDate | null> | IsoDate | undefined
   /** The day picked at the start, when the calendar keeps its own state. */
-  defaultDate?: IsoDate
+  defaultDate?: IsoDate | undefined
   /** Called with the day picked. Load that day's slots here. */
-  onDateChange?: (d: IsoDate) => void
-  duration?: number
-  min?: string
-  max?: string
-  isDateUnavailable?: (d: IsoDate) => boolean
-  loading?: boolean
-  error?: unknown
+  onDateChange?: ((d: IsoDate) => void) | undefined
+  duration?: number | undefined
+  min?: string | undefined
+  max?: string | undefined
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
+  loading?: boolean | undefined
+  error?: unknown | undefined
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
-  today?: string
-  locale?: string
+  today?: string | undefined
+  locale?: string | undefined
   /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
-  hourCycle?: string
+  hourCycle?: string | undefined
   /** Rejecting keeps the confirm step and says why. */
   onBook: (b: BookingDetails) => void | Promise<unknown>
 }

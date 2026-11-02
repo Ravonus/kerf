@@ -12,17 +12,17 @@ import '@weft-js/warp-core/styles/data/tooltip.css'
 /** What every chart shares around its plot: the caption, the toolbar and the loading, empty and error states. */
 export type ChartFrame = {
   title: string
-  description?: unknown
+  description?: unknown | undefined
   /** Beside the view toggle: a layout switch, a range picker. */
-  toolbar?: unknown
+  toolbar?: unknown | undefined
   /** Replaces the plot, in the same frame (06 §12). With no data the frame shows `empty` on its own. */
-  state?: 'loading' | 'empty' | 'error'
-  loading?: string
+  state?: 'loading' | 'empty' | 'error' | undefined
+  loading?: string | undefined
   /** The title and detail shown in place of the plot when there is no data. */
-  empty?: { title: string; detail?: unknown }
-  error?: { title: string; detail?: unknown }
+  empty?: { title: string; detail?: unknown } | undefined
+  error?: { title: string; detail?: unknown } | undefined
   /** The next step under an empty or error state: a Retry button. */
-  action?: unknown
+  action?: unknown | undefined
 }
 type Props<C> = ChartFrame & C & { form: Form<C> }
 

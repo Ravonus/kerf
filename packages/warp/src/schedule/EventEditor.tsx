@@ -18,15 +18,15 @@ export type EventEditorProps = {
   open: State<boolean>
   /** What it edits; rebuild the fields by passing a new object. */
   event: CalEvent | null
-  isNew?: boolean
-  calendars?: CalendarSource[]
+  isNew?: boolean | undefined
+  calendars?: CalendarSource[] | undefined
   /** The IANA zone the times are edited in, such as `Europe/Berlin`. */
-  timeZone?: string
-  locale?: string
+  timeZone?: string | undefined
+  locale?: string | undefined
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
-  today?: string
+  today?: string | undefined
   onSave: (e: CalEvent) => void
-  onCancel?: () => void
+  onCancel?: (() => void) | undefined
 }
 
 /** The event editor (07 §2.1, `#ev-sheet`): a Sheet, right on wide screens and bottom on a phone; the fields path for every drag. */
