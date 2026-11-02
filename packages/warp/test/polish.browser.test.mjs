@@ -278,3 +278,29 @@ test('a bell\'s count sits on the glyph\'s corner, a compact badge that leaves t
     expect(b.down).toBeLessThanOrEqual(6)
   }
 })
+
+test('a webhook URL wraps after a slash or before a dot, never inside a word, in the table and on a phone', async () => {
+  const lines = await page.$$eval('#hooks-desk [data-part="url"], #hooks-phone [data-part="url"]', codes => codes.map(code => {
+    const text = code.textContent
+    const r = document.createRange()
+    const breaks = []
+    let top, at = 0
+    const walk = document.createTreeWalker(code, NodeFilter.SHOW_TEXT)
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      for (let i = 0; i < n.length; i++, at++) {
+        r.setStart(n, i); r.setEnd(n, i + 1)
+        const y = Math.round(r.getClientRects()[0]?.top ?? top)
+        if (top !== undefined && y > top + 2) breaks.push(at)
+        top = y
+      }
+    }
+    const box = code.parentElement.getBoundingClientRect(), own = code.getBoundingClientRect()
+    return { text, fits: own.right <= box.right + 1, breaks: breaks.map(i => [text.slice(Math.max(0, i - 6), i), text.slice(i, i + 6)]) }
+  }))
+  expect(lines.length).toBe(4)
+  expect(lines.flatMap(l => l.breaks).length).toBeGreaterThan(0) // they do wrap: the test sees line breaks
+  for (const { text, fits } of lines) expect(fits, text).toBe(true)
+  for (const { text, breaks } of lines) for (const [before, after] of breaks) {
+    expect(/[/&=]$/.test(before) || /^[.?#]/.test(after), `${text}: broke "${before}|${after}"`).toBe(true)
+  }
+})

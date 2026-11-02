@@ -10,7 +10,7 @@ import { CartDrawer } from '../src/admin/Cart'
 import { Checkout, type PlaceOrderResult, type OrderDraft } from '../src/admin/Checkout'
 import { CsvImport } from '../src/admin/CsvImport'
 import { TypeToConfirm } from '../src/admin/Danger'
-import { IntegrationsGrid, Webhooks, type Integration } from '../src/admin/Integrations'
+import { IntegrationsGrid, Webhooks, urlBreaks, type Integration } from '../src/admin/Integrations'
 import { MembersTable, RolesMatrix, type Member } from '../src/admin/Members'
 import { PlanPicker, UsageMeter } from '../src/admin/Plans'
 import { SaveBar } from '../src/admin/SaveBar'
@@ -352,6 +352,15 @@ describe('Integrations', () => {
     items.value = items.value.map(i => (i.id === 'linear' ? { ...i, state: 'connected', detail: 'acme' } : i)); await tick()
     expect(toasts()).toContain('Linear connected')
     expect(document.activeElement!.querySelector('[data-part="sweep-label"]')?.textContent ?? document.activeElement!.textContent).toBe('Configure')
+  })
+  test('a webhook URL offers breaks after slashes and before dots, never inside a word', () => {
+    expect(urlBreaks('https://hooks.acme.dev/deploys/v2?team=web&x=1')).toEqual(['https://', 'hooks', '.acme', '.dev/', 'deploys/', 'v2', '?team=', 'web&', 'x=', '1'])
+    const { container: c } = render(() => <Webhooks hooks={HOOKS} events={['a.b']} onAdd={async () => 'whsec_1'} onTest={async () => ({ status: 200, ms: 1 })} />)
+    const code = c.querySelector<HTMLElement>('[data-part="url"]')!
+    expect(code.textContent).toBe(HOOKS[0].url)
+    expect(code.querySelectorAll('wbr').length).toBe(urlBreaks(HOOKS[0].url).length - 1)
+    expect(code.style.overflowWrap).toBe('break-word') // was anywhere: a URL broke mid-word
+    expect(code.style.wordBreak).toBe('normal')
   })
   test('webhooks: https checked on submit then live; the secret once; Send test reports', async () => {
     const added: any[] = []
