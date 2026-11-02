@@ -221,6 +221,22 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
     },
     {
       "code": "H011",
+      "file": "src/routes/together.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/together",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/ui-state.tsx",
+      "help": "export const meta: Meta = { title: "Left pane", description: "Tools for builders." }",
+      "route": "/ui-state",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title comes from the page ("Left pane · Acme"), and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
       "file": "src/routes/users/index.tsx",
       "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
       "route": "/users",
@@ -249,7 +265,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "help": "Give each page its own title in \`meta\`, from what is on it.",
       "route": "/chat",
       "severity": "warning",
-      "why": "9 routes share this title: /chat, /island-bad, /islands-top, /lazy-early, and 5 more ("Acme").",
+      "why": "10 routes share this title: /chat, /island-bad, /islands-top, /lazy-early, and 6 more ("Acme").",
     },
     {
       "code": "H013",
@@ -257,7 +273,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "help": "Give each page its own description in \`meta\`, from what is on it.",
       "route": "/chat",
       "severity": "warning",
-      "why": "19 routes share this description (the site default): /chat, /cover, /gate, /island-bad, and 15 more ("Tools for builders.").",
+      "why": "21 routes share this description (the site default): /chat, /cover, /gate, /island-bad, and 17 more ("Tools for builders.").",
     },
   ],
   "ok": false,
@@ -4429,6 +4445,320 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
       ],
       "url": "/todos",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/together.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Acme",
+            "height": 630,
+            "url": "/_weft/og/together.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/together",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/together",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/together",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/together.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/together",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/ui-state.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Left pane · Acme",
+            "height": 630,
+            "url": "/_weft/og/ui-state.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Left pane · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/ui-state",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "auto",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Left pane · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/ui-state",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Left pane · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/ui-state",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/ui-state.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Left pane · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/ui-state",
     },
     {
       "card": "built-in",

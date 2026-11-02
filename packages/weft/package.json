@@ -37,6 +37,7 @@
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
     "./sync": "./src/sync.ts",
+    "./interaction": "./src/interaction.ts",
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
     "./ds": "./src/ds.ts",

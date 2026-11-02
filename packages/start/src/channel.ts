@@ -1,9 +1,10 @@
-// `channel` and `sharedState` (research 32): definitions on both sides, and the browser's half. One socket per tab
-// (`/_weft/ws`), one join per id + params, shared by every reader and held by this module, so a remount within `keep`
+// `channel` and `sharedState` (research 32): definitions on both sides, and the browser's half. One line per tab on the
+// browser's one socket (link.ts), one join per id + params, shared by every reader and held by this module, so a remount within `keep`
 // finds its messages. The socket server is socket.ts, and `room.in(params).publish` reaches it through
 // `runtime.channels`, so nothing of the server ships here.
 
 import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
+import { HANDOVER, openLine, socketDown } from './link'
 import { currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track, type Context, type Fn, type Skip, type StandardSchemaV1 } from './data'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
@@ -239,6 +240,9 @@ function owned(fn: Fn) {
   if (!getOwner()) throw new StartError('W051', DEV ? `\`${fn.$id}.connect()\` was called outside a component or scope: nothing would close it` : fn.$id, DEV ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`' : undefined)
 }
 
+/** `@weft/start/share`'s way in: a join that nothing on the page declared, so a tab shares this socket and its lifecycle. */
+export const connectBuiltIn = ($id: string) => connect({ kind: 'channel', $id, def: {} } as Fn, undefined, { keep: 0 })
+
 function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<any, any> {
   owned(fn)
   if (currentScope()) {
@@ -372,12 +376,9 @@ export interface SocketLink {
   close(): void
 }
 
-/** The browser's WebSocket. `done` gets the close code. */
+/** This tab's line on the browser's one socket (link.ts). `done` gets the close code. */
 function browser(frame: (d: any[]) => void, done: (code: number) => void): SocketLink {
-  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_weft/ws`)
-  ws.onmessage = e => frame(JSON.parse(e.data))
-  ws.onclose = e => done(e.code)
-  return { send: t => { if (ws.readyState === 1) ws.send(t) }, close: () => ws.close() }
+  return openLine('c', '', text => frame(JSON.parse(text)), done)
 }
 
 /** weft/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
@@ -400,6 +401,9 @@ let build: string | undefined
 let nudge: (() => void) | undefined
 let parked = false
 let hiddenAt: ReturnType<typeof setTimeout> | undefined
+
+/** A leader tab can be hidden while a sibling is looking: `@weft/start/share` says when this socket must stay. */
+export const keepOpen: { stay?: () => boolean } = {}
 
 const send = (f: unknown[]) => live?.send(JSON.stringify(f))
 const statusAll = (s: ChannelStatus) => { for (const j of joins.values()) if (!j.refused) j.status.value = s }
@@ -527,7 +531,7 @@ async function run() {
     if (n) n.reconnects++
     if (code === 4401) for (const j of joins.values()) j.status.value = 'unauthorized'
     else statusAll('reconnecting')
-    if (!n) await sleep(backoff())
+    if (!n) await sleep(code === HANDOVER ? 0 : backoff())
   }
   running = false
   attempt = 0
@@ -547,12 +551,21 @@ function park() {
   parked = true
   live?.close()
 }
+const parkHidden = () => {
+  if (keepOpen.stay?.()) hiddenAt = setTimeout(parkHidden, HIDDEN)
+  else park()
+}
 function onVisibility() {
   clearTimeout(hiddenAt)
-  if (document.visibilityState === 'hidden') hiddenAt = setTimeout(park, HIDDEN)
+  if (document.visibilityState === 'hidden') hiddenAt = setTimeout(parkHidden, HIDDEN)
   else wake()
 }
-const onOffline = () => live?.close()
+/** A sibling came back while this tab's socket was parked. */
+export const wakeSocket = () => wake()
+const onOffline = () => {
+  socketDown()
+  live?.close()
+}
 
 function listen(on: boolean) {
   if (typeof window === 'undefined') return

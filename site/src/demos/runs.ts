@@ -12,6 +12,7 @@ import prices from './prices'
 import kit from './ui-kit'
 import search from './search'
 import shared from './shared'
+import uiState from './ui-state'
 import habit from './habit'
 import shop1 from './shop-1'
 import shop2 from './shop-2'
@@ -20,6 +21,7 @@ import shop4 from './shop-4'
 import shop5 from './shop-5'
 
 export const runs: Record<string, () => unknown> = {
+  'ui-state': uiState,
   'shop-1': shop1,
   'shop-2': shop2,
   'shop-3': shop3,

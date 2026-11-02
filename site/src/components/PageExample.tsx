@@ -2,6 +2,7 @@ import Later from '../demos/async'
 import Lists from '../demos/lists'
 import Props from '../demos/props'
 import Rules from '../demos/rules'
+import UiState from '../demos/ui-state'
 import '@weft/warp-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
@@ -19,6 +20,7 @@ function Demo(props: { id: string }) {
       {props.id === 'props' && <Props />}
       {props.id === 'lists' && <Lists />}
       {props.id === 'async' && <Later />}
+      {props.id === 'ui-state' && <UiState />}
     </div>
   )
 }

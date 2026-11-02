@@ -916,7 +916,7 @@
   @media (hover: none) { :where([data-sweep]:active, [data-sweep-trigger]:active [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):active [data-sweep]) { --_a: 1; } }
   :where([data-sweep]:is(:focus-visible, :has(:focus-visible), [data-pin], [data-hold], [data-confirm], [data-invalid], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"], :popover-open),
          [data-sweep]:has(> [aria-expanded="true"], > [data-part="heading"] [aria-expanded="true"]),
-         :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
+         :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [data-hold], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
          :is([data-scope="field"] > [data-part="control"], [data-scope="field"][data-sweep], [data-scope="composer"], [data-part="input-row"], [data-sweep-focus="within"]):focus-within,
          dialog[data-scope="palette"][open] > [data-sweep], [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
 
