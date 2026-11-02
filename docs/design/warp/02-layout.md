@@ -27,7 +27,7 @@ desktop 1280, plus galleries of every part; the picker also flips `fields: float
    (`[data-scope="surface"][data-sweep]`, gated by `--warp-sweep-surfaces`: on at vivid or with
    `data-flair="sweep"`), on doc tabs and pager cards, and on the command field (the real floating-border field).
    Layout only sets `--warp-color-sweep-base` and `--warp-sweep-radius`; the phase machine is the shared one
-   (`specimens/warp-sweep.js`, weft `sweep()`): every exit keeps travelling right, at 400 · 520 · 580ms.
+   (`specimens/warp-sweep.js`, weft `sweep()`): every exit keeps travelling right, at 240 · 300 · 340ms.
    **Bases follow the surfaces exception.** Controls (the command field, the workspace switcher) rest on the ink
    sweep-base, so sweep-vs-base is ≥ 3:1 (measured 3.03–3.16 at every stop and theme). Nav items, doc tabs and the
    phone command ring have no resting border (base `transparent`), so the sweep is measured against the surface
@@ -457,7 +457,7 @@ back-to-top (StickyBar, BackToTop), wrap/cluster (Row), bleed/inset, skip link, 
 
 | Finding | Fix |
 |---|---|
-| 01 B3 · exits snapped off | The specimen runs the shared `warp-sweep.js`; measured: every layout host exits as `out` travelling right, then `idle` (400 / 520 / 580ms), and goes straight to `idle` under reduced motion |
+| 01 B3 · exits snapped off | The specimen runs the shared `warp-sweep.js`; measured: every layout host exits as `out` travelling right, then `idle` (240 / 300 / 340ms), and goes straight to `idle` under reduced motion |
 | 01 M7 · command trigger 1.47:1 | The command field and switcher rest on the ink base: sweep-vs-base 3.03–3.16, sweep-vs-surface 4.7–5.3, every stop and theme |
 | 01 minor 3 · no fields toggle | The template picker has Fields: Floating / Classic (`?f=classic`) |
 | 01 minor 5 · char delays assumed 520 | Delays read `warpSweep.duration()` |

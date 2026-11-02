@@ -230,7 +230,7 @@ z: `base 0 · raised 1 · sticky 100 · dock 200 · overlay 300 · menu 400 · m
 |---|---|---|
 | `duration.instant` · `fast` · `base` · `slow` | 80 · 120 · 200 · 320ms | × `motion-k` (0.85 / 1 / 1.2), × 0.6 when reduced |
 | `duration.exit-k` | 0.7 | exit = enter × 0.7 |
-| `sweep.duration` | 400 / 520 / 580ms by stop | × `motion-scale`; 0 when reduced (instant colour change) |
+| `sweep.duration` | 240 / 300 / 340ms by stop | × `motion-scale`; 0 when reduced (instant colour change) |
 | `ease.out` | quiet `(0.2,0,0,1)`, else `(0.16,1,0.3,1)` | enters (`old:motion/presets.ts:41`) |
 | `ease.in` | `(0.4,0,1,1)` | exits |
 | `ease.in-out` | `(0.65,0,0.35,1)` | moves, sweep (`old:motion/presets.ts:42`) |
@@ -258,7 +258,7 @@ duration by `max(motion-scale, 0.001)`: that keeps a compositor animation alive.
 
 | Token | quiet · balanced · vivid | Notes |
 |---|---|---|
-| `sweep.duration` · `sweep.ease` | 400 · 520 · 580ms · `(0.65,0,0.35,1)` | `old:components/overlays/primitives/SweepBorderOverlay.tsx:31-61` |
+| `sweep.duration` · `sweep.ease` | 240 · 300 · 340ms · `(0.65,0,0.35,1)` | `old:components/overlays/primitives/SweepBorderOverlay.tsx:31-61` |
 | `sweep.width` · `sweep.base-width` | 1 · 1.5 · 1.5px · 1px | stroke thickens with the dial, the resting border never does |
 | `color.sweep` | full accent: light L 0.515, dark L 0.60 | never low-chroma; ≥ 3:1 vs base and surfaces (§6) |
 | `color.sweep-base` | `text` at every stop | ink-strength resting border (`FloatingBorderInput.tsx:20-33`) |

@@ -113,15 +113,16 @@ test('a Shell deep in the page gates its own host, not the page: flow keeps runn
   await close()
 })
 
-test('a code block resting at the fold is mid-scan, and the scan runs under its text, never over it', async () => {
+test('a code block resting at the fold finishes its scan, and the scan runs under its text, never over it', async () => {
   const { page, close } = await stage(`<div style="block-size:560px"></div>
     <figure data-scope="codeblock" id="code" style="margin:0;block-size:240px;inline-size:600px"><pre id="pre" style="margin:0;overflow:clip">${"import { Button } from '@weft/warp'; ".repeat(4)}</pre></figure>
     <div style="block-size:3000px"></div>`)
+  await page.waitForTimeout(1200) // the scan plays once on a timer; it never rests part way
   const m = await page.evaluate(() => {
     const c = document.getElementById('code'), a = getComputedStyle(c, '::after')
     return { scale: a.scale, z: a.zIndex, iso: getComputedStyle(c).isolation, bg: a.backgroundColor, host: getComputedStyle(c).backgroundColor }
   })
-  expect(m.scale).not.toBe('0 1') // part way: this is the state that cut lines at a fixed column
+  expect(m.scale).toBe('0 1') // done: part way was the state that cut lines at a fixed column
   expect(m.z).toBe('-1')
   expect(m.iso).toBe('isolate')
   // the text paints above the scan: the pixel under a glyph's stem is the ink, not the scan's ground

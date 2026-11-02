@@ -101,7 +101,7 @@
 @property --_a { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --_sl { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
 @property --_sr { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
-@property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 520ms; }
+@property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 300ms; }
 @layer warp.tokens {
 
 /* ---------------------------------------------------------------------------
@@ -169,13 +169,13 @@
   --warp-ref-stagger: 32ms;
   --warp-ref-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --warp-ref-ease-pop: cubic-bezier(0.16, 1, 0.3, 1);
-  /* signature: the original sweep, quickened to 520ms; buttons sweep, surfaces don't */
+  /* signature: the original sweep, quickened to 300ms; buttons sweep, surfaces don't */
   /* the two clocks (redesign §2-3): how this stop feels in the hand */
   --warp-ref-spring: linear(0, 0.085, 0.261, 0.454, 0.625, 0.761, 0.86, 0.927, 0.969, 0.993, 1.005, 1.01, 1.011, 1);   /* ζ 0.82: settles once, 1.1% over */
   --warp-ref-spring-ms: 380ms; --warp-ref-press: 0.97; --warp-ref-touch-out: 160ms;
   --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 300ms; --warp-ref-offset: 0px;
-  --warp-ref-sweep: 520ms;     --warp-ref-sweep-k: 1;
-  --warp-ref-frame: 640ms;     /* frame button: the original's 760ms --btn-sweep-duration, a tad quicker */
+  --warp-ref-sweep: 300ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 380ms;     /* frame button: the original's 760ms --btn-sweep-duration, at half */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
   --warp-ref-sweep-base: var(--warp-color-text);
   /* fields rest neutral at every stop; the accent tint arrives with the sweep (hover, focus) */
@@ -235,8 +235,8 @@
   --warp-ref-spring: cubic-bezier(0.2, 0, 0, 1);
   --warp-ref-spring-ms: 240ms; --warp-ref-press: 0.985; --warp-ref-touch-out: 120ms;
   --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 180ms; --warp-ref-offset: 0px;
-  --warp-ref-sweep: 400ms;     --warp-ref-sweep-k: 1;
-  --warp-ref-frame: 490ms;     /* frame, quieter: 640 at the same 400/520 ratio */
+  --warp-ref-sweep: 240ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 300ms;     /* frame, quieter: 380 at the same 240/300 ratio */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
   --warp-ref-sweep-base: var(--warp-color-text);
   --warp-ref-field-fill: var(--warp-color-surface-raised);
@@ -297,8 +297,8 @@
   --warp-ref-spring: linear(0, 0.154, 0.44, 0.701, 0.883, 0.985, 1.029, 1.038, 1.032, 1.021, 1.011, 1.004, 1, 0.999, 1);
   --warp-ref-spring-ms: 520ms; --warp-ref-press: 0.96; --warp-ref-touch-out: 200ms;
   --warp-ref-shuttle-head: 150ms; --warp-ref-shuttle-tail: 420ms; --warp-ref-offset: 3px;
-  --warp-ref-sweep: 580ms;     --warp-ref-sweep-k: 1;
-  --warp-ref-frame: 640ms;     /* frame: the original 760, a tad quicker, top of the vivid range */
+  --warp-ref-sweep: 340ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 380ms;     /* frame: the original 760 at half, top of the vivid range */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;   /* the sweep answers a click target; a static surface keeps its hairline */
   --warp-ref-sweep-base: var(--warp-color-text);
   /* neutral at rest (00 §10); accent-soft arrives with the sweep */
@@ -700,7 +700,7 @@
   --warp-stagger-max: 6;                                         /* items; later ones share the last delay */
 
   /* -- signature: sweep + floating border label ------------------------- */
-  --warp-sweep-duration: calc(var(--warp-ref-sweep) * var(--warp-motion-scale)); /* 400 · 520 · 580; 0 = instant */
+  --warp-sweep-duration: calc(var(--warp-ref-sweep) * var(--warp-motion-scale)); /* 240 · 300 · 340; 0 = instant */
   --warp-sweep-ease: cubic-bezier(0.65, 0, 0.35, 1);
   --warp-sweep-ease-in: cubic-bezier(0.3, 0.55, 0.15, 1);        /* in leaves at once (redesign §2); out keeps the original curve */
   --warp-sweep-width: calc(1px + 0.5px * min(1, var(--warp-x) * 2));   /* stroke 1 · 1.5 · 1.5 */
@@ -714,7 +714,7 @@
   /* frame button (§1b): track = ink (#050505-strength) in light, ink at 62% in dark */
   --warp-frame-track: light-dark(var(--warp-color-text), color-mix(in oklab, var(--warp-color-text) 62%, transparent));
   --warp-frame-corner: 10px; --warp-frame-weight: 2px; --warp-frame-stroke: 2.6;
-  --warp-frame-duration: calc(var(--warp-ref-frame) * var(--warp-motion-scale)); /* 490 · 640 · 640; 0 = instant */
+  --warp-frame-duration: calc(var(--warp-ref-frame) * var(--warp-motion-scale)); /* 300 · 380 · 380; 0 = instant */
   --warp-color-sweep-critical: var(--warp-color-critical-solid);
   --warp-color-field: var(--warp-ref-field-fill);                  /* at rest */
   --warp-color-field-active: var(--warp-ref-field-fill-active);    /* hover / focus, with the sweep */
@@ -1034,7 +1034,7 @@
      The outline is CSS, not SVG: an SVG dash with pathLength + non-scaling-stroke
      is measured in screen px in Chrome and leaves gaps past ~200px wide. Here two
      registered numbers, --warp-frame-head (head) and --warp-frame-tail (tail), run 0 → 1 on the
-     frame's own 640ms curve (the original 760ms --btn-sweep-duration, quickened; --warp-frame-duration); each of six
+     frame's own 380ms curve (the original 760ms --btn-sweep-duration, at half; --warp-frame-duration); each of six
      2.6px segments sizes itself from them with container units, so the drawn length is exact at any size.
      Label: at rest in the tone (the original .btn-idle-accent); the copy wipes in L→R in the text colour.
      This is the only frame implementation: pages supply the button's fill, ink and shape, nothing else.
@@ -1042,7 +1042,7 @@
      <span data-part="sweep-corners"><i></i><i></i><i></i><i></i></span>
      <span data-part="sweep-outline"><i></i><i></i><i></i><i></i><i></i><i></i></span>
      <span data-part="sweep-label">…</span><span data-part="sweep-content" aria-hidden="true">…</span>  */
-  /* the frame host runs on the frame's duration, so every part (and sweep()) reads 760ms */
+  /* the frame host runs on the frame's duration, so every part (and sweep()) reads the frame's time */
   :where([data-sweep]:has(> [data-part="sweep-outline"])) { --warp-sweep-duration: var(--warp-frame-duration); }
   :where([data-part="frame-corners"], [data-part="sweep-corners"]) {
     position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--warp-frame-track);
