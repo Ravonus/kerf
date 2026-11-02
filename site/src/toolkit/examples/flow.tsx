@@ -1,6 +1,6 @@
 import { derived, state } from 'weft'
 import {
-  AuthDone, AuthScreen, Badge, Button, Card, Checklist, Coachmark, ConnBanner, Flow, Input, InviteAccept, MagicLinkSent, MfaSetup, OtpField, OtpStep, PasskeyButton, PasswordMeter, RateLimited, ReauthDialog, ResetPassword, Row,
+  AuthDone, AuthScreen, Badge, Button, Card, Checklist, Coachmark, ConnBanner, Flow, Heading, Input, InviteAccept, MagicLinkSent, MfaSetup, OtpField, OtpStep, PasskeyButton, PasswordMeter, RateLimited, ReauthDialog, ResetPassword, Row,
   Segmented, Select, ShortcutsOverlay, SignGate, SignGateBadge, SignIn, SignUp, SsoButtons, Stack, SystemPage, Text, Toaster, Tour,
 } from '@weft/warp'
 import type { SignInValues, SignStatus, SignUpValues } from '@weft/warp'
@@ -31,6 +31,14 @@ export function SignInTessel() {
     </>
   )
 }
+
+export const SignInTile = () => (
+  <Stack gap="related" style="inline-size:260px">
+    <Heading level={3}>Sign in to Tessel</Heading>
+    <Input label="Work email" placeholder="you@tessel.dev" />
+    <Button full>Sign in</Button>
+  </Stack>
+)
 
 export const SignInFailed = () => <SignIn heading="h3" title="Sign in to Tessel" error="That email and password don't match." onForgot={() => {}} />
 
@@ -69,6 +77,13 @@ export function PasswordMeterLive() {
     </Stack>
   )
 }
+
+export const SignUpTile = () => (
+  <Stack gap="related" style="inline-size:260px">
+    <Input label="New password" type="password" autocomplete="off" defaultValue="sample" />
+    <PasswordMeter value="sample" />
+  </Stack>
+)
 
 export function OtpFieldCheck() {
   const status = state<'idle' | 'checking' | 'success'>('idle')
@@ -305,6 +320,14 @@ export function FlowNewProject() {
 }
 
 // -- system states --
+
+export const SystemPageTile = () => (
+  <Stack gap="tight" align="center">
+    <Heading level={3}>We can't find that page</Heading>
+    <Text subtle>404 · Not found</Text>
+    <Button size="sm">Go to dashboard</Button>
+  </Stack>
+)
 
 export const SystemPage404 = () => <SystemPage as="h3" kind="404" onSearch={() => {}} searchLabel="Search Tessel" primary={{ label: 'Go to dashboard' }} secondary={{ label: 'Report a broken link' }} meta="/projects/9921 · ref req_8f2a1c" />
 

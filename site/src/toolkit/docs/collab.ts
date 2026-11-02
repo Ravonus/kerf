@@ -10,7 +10,7 @@ export const collab: DocGroup = {
       component: 'Thread',
       summary: 'A chat: messages, day dividers, typing, reactions and a composer.',
       use: { when: ['A channel or a conversation', 'Long histories: only the rows on screen are drawn'], instead: [{ name: 'CommentThread', why: 'the talk hangs off one spot in a document' }] },
-      tile: 'ThreadReadOnly',
+      tile: 'ThreadTile',
       sections: [
         { kind: 'composition', title: 'In context', examples: [{ id: 'ThreadIncident', title: 'An incident channel', note: 'Send a message: it goes out, then Sam types and answers. All of it is a stub.', stage: 'fill', height: 580 }] },
         { kind: 'variants', title: 'Variants', examples: [{ id: 'ThreadReadOnly', title: 'Read only', note: 'No `onSend`, no composer.', stage: 'fill', height: 260 }] },

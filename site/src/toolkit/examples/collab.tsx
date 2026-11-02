@@ -46,6 +46,8 @@ export function ThreadIncident() {
   )
 }
 
+export const ThreadTile = () => <Message message={CHAT[2]} />
+
 export const ThreadReadOnly = () => <Thread label="Deploy d-4819 discussion" height="240px" messages={EARLY_CHAT} />
 
 export function ConversationListInbox() {

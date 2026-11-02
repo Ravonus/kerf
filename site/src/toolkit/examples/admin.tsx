@@ -1,6 +1,6 @@
 import { state } from 'weft'
 import {
-  ApiKeys, AuditLog, Button, Card, CartButton, CartDrawer, Checkout, ConfirmDialog, CsvImport, DangerZone, Input, IntegrationsGrid, InviteDialog,
+  ApiKeys, AuditLog, Badge, Button, Card, CartButton, CartDrawer, Checkout, ConfirmDialog, CsvImport, DangerZone, Input, IntegrationsGrid, InviteDialog,
   Invoices, LineItem, MembersTable, OrderConfirmation, OrderTracker, PayFrame, PaymentMethods, PlanPicker, Row, RolesMatrix, SaveBar, SeatsMeter,
   Segmented, Select, SettingRow, SettingsLayout, SettingsSection, Stack, Switch, TagsInput, Text, Toaster, TypeToConfirm, UsageMeter, UsageMeters, Webhooks,
 } from '@weft/warp'
@@ -47,12 +47,13 @@ export function SettingsLayoutProject() {
 }
 
 export const SettingsLayoutTile = () => (
-  <SettingsWidth>
-    <SettingsSection id="tile-general" title="General" description="How storefront appears across Tessel.">
-    <SettingRow title="Preview environments" description="Every pull request gets its own URL."><Switch size="sm" defaultChecked aria-label="Preview environments" /></SettingRow>
-    <SettingRow title="Failed deploys" description="Mail the owner when one fails."><Switch size="sm" defaultChecked aria-label="Failed deploys" /></SettingRow>
-  </SettingsSection>
-  </SettingsWidth>
+  <Stack style="inline-size:340px">
+    <SettingsWidth>
+      <SettingsSection id="tile-general" title="Deploys" description="How storefront ships.">
+        <SettingRow title="Preview environments" description="A URL for every pull request."><Switch size="sm" defaultChecked aria-label="Preview environments" /></SettingRow>
+      </SettingsSection>
+    </SettingsWidth>
+  </Stack>
 )
 
 export const SettingsSectionNotifications = () => (
@@ -172,7 +173,12 @@ export function MembersTableTeam() {
 
 const FIRST_FOUR = TEAM_MEMBERS.slice(0, 4)
 
-export const MembersTableTile = () => <MembersTable members={FIRST_FOUR} me="mara" roles={TEAM_ROLES} seats={12} onRoleChange={() => {}} onRemove={() => {}} onInvite={() => {}} />
+export const MembersTableTile = () => (
+  <Stack gap="related" style="inline-size:300px">
+    <SeatsMeter used={10} total={12} />
+    {FIRST_FOUR.map(m => <Row key={m.id} justify="between"><Text>{m.name}</Text><Badge>{m.role}</Badge></Row>)}
+  </Stack>
+)
 
 export const SeatsMeterLevels = () => (
   <Stack gap="group">
@@ -254,7 +260,11 @@ export function ApiKeysTest() {
 
 const THREE_KEYS = API_KEYS.slice(0, 3)
 
-export const ApiKeysTile = () => <ApiKeys keys={THREE_KEYS} now={NOW} onCreate={async () => ''} onRevoke={() => {}} />
+export const ApiKeysTile = () => (
+  <Stack gap="related" style="inline-size:300px">
+    {THREE_KEYS.map(k => <Row key={k.id} justify="between"><Text>{k.name}</Text><Badge>{k.scopes[0]}</Badge></Row>)}
+  </Stack>
+)
 
 // -- billing --
 
@@ -274,7 +284,11 @@ export function PlanPickerTeam() {
 
 const TWO_PLANS = PLANS.slice(0, 2)
 
-export const PlanPickerTile = () => <PlanPicker plans={TWO_PLANS} current="team" seats={8} daysLeft={9} onChange={() => {}} />
+export const PlanPickerTile = () => (
+  <Row gap="related">
+    {TWO_PLANS.map(plan => <Card key={plan.id} title={plan.name}><Text subtle>${plan.price} per seat</Text></Card>)}
+  </Row>
+)
 
 export const UsageMeterLevels = () => (
   <Stack gap="group">
@@ -335,7 +349,11 @@ export const AuditLogWorkspace = () => <AuditLog events={AUDIT} now={NOW} catego
 
 const LATEST_EVENTS = AUDIT.slice(0, 3)
 
-export const AuditLogTile = () => <AuditLog events={LATEST_EVENTS} now={NOW} categories={AUDIT_CATEGORIES} />
+export const AuditLogTile = () => (
+  <Stack gap="related" style="inline-size:320px">
+    {LATEST_EVENTS.map(e => <Text key={e.id}>{e.actor} {e.verb} {e.target}</Text>)}
+  </Stack>
+)
 
 export function IntegrationsGridWorkspace() {
   const items = state<readonly Integration[]>(INTEGRATIONS)

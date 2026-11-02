@@ -20,6 +20,7 @@ export const flow: DocGroup = {
     {
       component: 'SignIn',
       summary: 'A sign-in form with passkey, single sign-on, email and password, and Forgot.',
+      tile: 'SignInTile',
       use: { when: ['The screen where people come back'], instead: [{ name: 'SignUp', why: 'they are new' }, { name: 'ReauthDialog', why: 'they are already in and doing something sensitive' }] },
       sections: [
         { kind: 'composition', title: 'In context', examples: [{ id: 'SignInTessel', title: 'Signing in to Tessel', note: 'Nothing is sent: `onSubmit` is a stub. Sample values only, never a real password.', stage: 'narrow', height: 600 }] },
@@ -31,6 +32,7 @@ export const flow: DocGroup = {
     {
       component: 'AuthScreen',
       summary: 'The page around a sign-in form. On wide screens it adds a brand panel.',
+      tile: 'SignInTile',
       sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'AuthScreenSplit', title: 'Around a sign-in form', note: 'It follows its own width: full bleed under 600, a card to 999, split from 1000.', stage: 'fill', height: 700 }] }],
       a11yNotes: ['The brand panel is decorative, so it is hidden from assistive tech.'],
       propDocs: { logo: 'Your logo.', name: 'Your product\'s name.', quote: 'A line on the brand panel.', cite: 'Who said it.', brand: 'Your own brand panel.' },
@@ -39,6 +41,7 @@ export const flow: DocGroup = {
     {
       component: 'SignUp',
       summary: 'Creates an account: name, email, a checked password and the terms.',
+      tile: 'SignUpTile',
       sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'SignUpTessel', title: 'A new workspace', note: 'Use sample values. `onSubmit` is a stub.', stage: 'narrow', height: 640 }] }],
       propDocs: { ...FORM_PROPS, title: 'The heading.', lede: 'One line under it.', submitLabel: 'The main button\'s words.', terms: 'The terms checkbox\'s words, links included.', providers: 'Single sign-on providers.', onProvider: 'Called with the provider\'s id.', onSignIn: 'Shows the link to sign in.' },
       related: ['SignIn', 'PasswordMeter', 'AuthDone'],
@@ -178,6 +181,7 @@ export const flow: DocGroup = {
     {
       component: 'SystemPage',
       summary: 'The pages for not found, no access, server error, maintenance and nothing yet.',
+      tile: 'SystemPageTile',
       sections: [{ kind: 'variants', title: 'Variants', examples: [
         { id: 'SystemPage404', title: 'Not found', stage: 'narrow', height: 420 },
         { id: 'SystemPage403', title: 'No access', note: 'Asking for access moves it to pending, with Withdraw.', stage: 'narrow', height: 520 },
