@@ -1017,14 +1017,31 @@
   }
   :where([data-part="sweep"]:empty) { border: var(--warp-sweep-width) solid currentColor; }
   :where([data-part="sweep-base"]:empty) { border: var(--warp-sweep-base-width) solid currentColor; }
+  /* the clip's corners, physical (top-left, top-right, bottom-right, bottom-left): a joined item squares its start
+     (--_js: 0) or end (--_je: 0) corners; a vertical group sets --_round to top, top, bottom, bottom */
+  :where([data-part="sweep"], [data-part="sweep-base"]) {
+    --_rs: calc(var(--warp-sweep-radius) * var(--_js, 1)); --_re: calc(var(--warp-sweep-radius) * var(--_je, 1));
+    --_round: var(--_rs) var(--_re) var(--_re) var(--_rs);
+  }
+  :where([data-part="sweep"], [data-part="sweep-base"]):where(:dir(rtl)) { --_round: var(--_re) var(--_rs) var(--_rs) var(--_re); }
+  /* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+     hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+     Logical edges, so RTL flips; a vertical group does the same with top and bottom.
+     Any group opts in with [data-joined] (data-joined="vertical" for a column); warp's own groups are joined in their
+     own files (segmented, toggle group, attached button group, tabs, pagination). */
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+  :where([data-joined="vertical"] > [data-sweep]) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
   /* the base wipes away ahead of the stroke and is back the moment the host lets go */
   :where([data-part="sweep-base"]) {
     z-index: 1; color: var(--warp-color-sweep-base);
-    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
+    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--_round, var(--warp-sweep-radius)));
   }
   :where([data-part="sweep"]) {
     z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on);
-    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--_round, var(--warp-sweep-radius)));
   }
   /* error: pinned in by the switch, painted critical */
   :where([data-invalid] > [data-part="sweep"], [data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--warp-color-sweep-critical); opacity: 1; }

@@ -30,6 +30,14 @@
 :where([data-scope="tabs"] > [data-part="content"]) { min-inline-size: 0; }
 :where([data-scope="tabs"] > [data-part="content"]:focus-visible) { outline-offset: 4px; border-radius: var(--warp-radius-control); }
 :where([data-scope="tabs"] > [data-part="content"][hidden]) { display: none; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="tabs"] > [data-part="list"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-part="trigger"][data-sweep]:not(:nth-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="tabs"] > [data-part="list"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-part="trigger"][data-sweep]:not(:nth-last-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]:not(:nth-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]:not(:nth-last-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
 :where([data-scope="tabs"] > [data-part="content"]:not([hidden])) { animation: warp-settle var(--warp-spring-duration) var(--warp-ease-spring); }
 @keyframes warp-settle { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.5); } }
 /* pill */

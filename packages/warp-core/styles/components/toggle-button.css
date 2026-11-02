@@ -49,6 +49,14 @@
   transition: translate var(--warp-sweep-duration) var(--warp-sweep-ease), inline-size var(--warp-sweep-duration) var(--warp-sweep-ease);
 }
 :where([data-scope="toggle-group"] > [data-part="indicator"][data-instant]) { transition: none; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="toggle-group"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="toggle"][data-sweep]:not(:nth-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="toggle-group"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="toggle"][data-sweep]:not(:nth-last-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]:not(:nth-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]:not(:nth-last-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
 
 
 

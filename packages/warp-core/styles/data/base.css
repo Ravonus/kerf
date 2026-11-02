@@ -39,6 +39,11 @@
 }
 :where([data-motion="reduce"]) :is([data-part="skeleton"], [data-scope="flow"] .edge[data-live]) { animation: none !important; }
 :where(mark[data-part="hit"]) { background: color-mix(in oklab, var(--warp-color-caution-solid) 28%, transparent); color: inherit; border-radius: 2px; padding-inline: 1px; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="pagination"] ol > li:not(:first-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="pagination"] ol > li:not(:last-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep"], [data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
 /* chart | table toggle: 38px faces inside a 2px-padded, 1px-bordered rail */
 :where([data-part="view-toggle"] button) { position: relative; }
 :where([data-part="view-toggle"] button)::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }

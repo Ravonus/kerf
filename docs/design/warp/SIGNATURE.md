@@ -44,6 +44,11 @@ The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
    - buttons (`btn-border-sweep`, plus a filled variant)
    - cards, panels, chips, pills, segmented controls, accordion, stat rows, skeleton
    - the generic `SweepBorderOverlay`, for any custom surface
+8. **Joined groups:** in a row of items with shared edges (segmented controls, toggle groups, attached button groups,
+   pagination, tabs) a hovered item draws only its outer edges, so it never boxes itself in: the first draws start, top
+   and bottom; middle items top and bottom; the last end, top and bottom. Its inner corners go square. The edges are
+   logical, so RTL flips them, and a vertical group (`data-orientation`/`aria-orientation="vertical"`) does the same
+   with top and bottom. Any other group opts in with `data-joined` (`data-joined="vertical"` for a column).
 
 ## 1b. The frame button (`btn-border-sweep`): match it exactly
 
