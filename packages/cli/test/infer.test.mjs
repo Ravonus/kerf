@@ -24,14 +24,14 @@ function app(files = {}, { version = 7, plugin } = {}) {
   const dir = mkdtempSync(join(tmp, 'infer-'))
   made.push(dir)
   cpSync(join(here, 'fixtures/infer'), dir, { recursive: true })
-  mkdirSync(join(dir, 'node_modules/@weft'), { recursive: true })
-  symlinkSync(join(cli, '../weft'), join(dir, 'node_modules/weft'))
-  symlinkSync(cli, join(dir, 'node_modules/@weft/cli'))
-  symlinkSync(join(cli, '../start'), join(dir, 'node_modules/@weft/start'))
+  mkdirSync(join(dir, 'node_modules/@weft-js'), { recursive: true })
+  symlinkSync(join(cli, '../weft'), join(dir, 'node_modules/@weft-js/core'))
+  symlinkSync(cli, join(dir, 'node_modules/@weft-js/cli'))
+  symlinkSync(join(cli, '../start'), join(dir, 'node_modules/@weft-js/start'))
   if (version === 7) symlinkSync(join(cli, '../weft/node_modules/typescript'), join(dir, 'node_modules/typescript'))
   if (plugin) {
     const config = JSON.parse(readFileSync(join(dir, 'tsconfig.json'), 'utf8'))
-    config.compilerOptions.plugins = [{ name: '@weft/cli/ts-plugin' }]
+    config.compilerOptions.plugins = [{ name: '@weft-js/cli/ts-plugin' }]
     writeFileSync(join(dir, 'tsconfig.json'), JSON.stringify(config))
   }
   for (const [f, text] of Object.entries(files)) {
@@ -72,7 +72,7 @@ describe.each([['tsgo', 7], ['typescript 6', 6]])('inference on %s', (_, version
   }, 60_000)
 
   it('bind: satisfies a required prop, and a box of the wrong type is an error', async () => {
-    const page = box => `import { state } from 'weft'\nfunction Card(props: { n: number }) { return <b>{props.n}</b> }\nexport default function P() { const box = state(${box}); return <Card bind:n={box} /> }\n`
+    const page = box => `import { state } from '@weft-js/core'\nfunction Card(props: { n: number }) { return <b>{props.n}</b> }\nexport default function P() { const box = state(${box}); return <Card bind:n={box} /> }\n`
     expect((await run(app({ ...goalOnly, 'src/goal.tsx': page('1') }, { version }))).list).toEqual([])
     expect((await run(app({ ...goalOnly, 'src/goal.tsx': page("'a'") }, { version }))).list).toMatchObject([{ code: 'TS2322', file: 'src/goal.tsx', line: 3 }])
   }, 60_000)
@@ -147,7 +147,7 @@ describe('after the checker rests', () => {
   })
 
   it('bind(box) at a site reads as the value', async () => {
-    const r = await run(app({ ...goalOnly, 'src/goal.tsx': "import { bind, state } from 'weft'\nfunction Inc(props) { return <b onClick={() => props.n++}>+</b> }\nexport default function P() { const box = state(0); return <Inc n={bind(box)} /> }\n" }))
+    const r = await run(app({ ...goalOnly, 'src/goal.tsx': "import { bind, state } from '@weft-js/core'\nfunction Inc(props) { return <b onClick={() => props.n++}>+</b> }\nexport default function P() { const box = state(0); return <Inc n={bind(box)} /> }\n" }))
     expect(r.types.Inc).toBe('{ n: number }')
     expect(r.list).toEqual([])
   }, 60_000)

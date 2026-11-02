@@ -1,4 +1,4 @@
-// weft/persist: `state(init, { persist })` inside a defineState scope (research 14 §2.7, research 29 §2–3). Backends:
+// @weft-js/core/persist: `state(init, { persist })` inside a defineState scope (research 14 §2.7, research 29 §2–3). Backends:
 // local, session, cookie (the one a server can read) and memory (idb comes later). The weft() Vite plugin imports this
 // where the option is used.
 //

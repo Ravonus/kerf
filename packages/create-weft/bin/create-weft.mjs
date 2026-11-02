@@ -11,7 +11,7 @@ import { CONFIGS, DB, LAYERS, RUNTIMES, scaffold, UI } from '../src/index.mjs'
 import { resolveChoices } from '../src/wizard.mjs'
 import { pin } from '../scripts/tarballs.mjs'
 
-const usage = `Usage: create-weft [dir] [--ui ${UI.join('|')}] [--db ${DB.join('|')}] [--layer ${LAYERS.join('|')}] [--[no-]auth] [--auth-provider better-auth|custom] [--runtime ${RUNTIMES.join('|')}] [--config ${CONFIGS.join('|')}] [--pm <manager>] [--[no-]git] [--[no-]install] [--name <name>] [--tarballs <dir>] [--yes]`
+const usage = `Usage: npm create @weft-js -- [dir] [--ui ${UI.join('|')}] [--db ${DB.join('|')}] [--layer ${LAYERS.join('|')}] [--[no-]auth] [--auth-provider better-auth|custom] [--runtime ${RUNTIMES.join('|')}] [--config ${CONFIGS.join('|')}] [--pm <manager>] [--[no-]git] [--[no-]install] [--name <name>] [--tarballs <dir>] [--yes]`
 const string = { type: 'string' }, boolean = { type: 'boolean' }
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -60,7 +60,7 @@ try {
   console.log(`\nCreated ${files.length} files in ${dir}`)
   if (choices.git) step('git init', 'git', ['init', '--quiet'], dir)
   const installed = choices.install && step('The install', choices.pm, ['install'], dir)
-  const weft = { npm: 'npx weft', pnpm: 'pnpm exec weft', bun: 'bunx --bun weft', deno: 'deno run -A npm:@weft/cli', yarn: 'yarn weft' }[choices.pm]
+  const weft = { npm: 'npx weft', pnpm: 'pnpm exec weft', bun: 'bunx --bun weft', deno: 'deno run -A npm:@weft-js/cli', yarn: 'yarn weft' }[choices.pm]
   // AGENTS.md comes from the weft just installed, so it always matches the compiler the app runs.
   if (installed) {
     const [command, ...args] = weft.split(' ')

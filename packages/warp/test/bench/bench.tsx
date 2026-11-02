@@ -1,8 +1,8 @@
 // The toolkit on one page, every base component in the states a person sees, for looking at (not for tests):
 // scripts/shots.mjs photographs it at every dial stop. ?expression=quiet|balanced|vivid ?theme=light|dark
-import { render } from 'weft/dom'
-import { state } from 'weft'
-import { dialsFromUrl } from '@weft/warp-core'
+import { render } from '@weft-js/core/dom'
+import { state } from '@weft-js/core'
+import { dialsFromUrl } from '@weft-js/warp-core'
 import { Accordion, Menu, RadioGroup, Slider, Ticker, Alert, Badge, Button, Card, Checkbox, Chip, CommandPalette, Drawer, Grid, Input, Kbd, Modal, Popover, Progress, Row, Search, Segmented, Select, Skeleton, Spinner, Stack, Switch, Table, Tabs, Tag, Textarea, Toaster, Toggle, Tooltip, toast, Heading, Text, Nav, Link } from '../../src/index'
 
 const TONES = ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'] as const

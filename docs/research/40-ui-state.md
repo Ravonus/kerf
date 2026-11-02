@@ -14,7 +14,7 @@ Status: **built on `claude/weft-share`, 2026-11-01. The section below says where
 - **`ui`** is on Button, Checkbox, Switch, Radio, Toggle, Chip and Card. All draw through `[data-sweep][data-hold]`, so only two CSS selectors changed. Others get U005 rather than a silent attribute.
 - **WebKit offline, §12.** Two things. Playwright's WebKit keeps `navigator.onLine` true under `setOffline` and lets a new socket straight back in, so that test was watching a network that never went. And a real offline close event may never come, so `browser()` in `channel.ts` now reports the link down itself when `onLine` is false. The test now goes offline the way a device does, in all three engines.
 - **U-codes:** U001–U004 as in §10, and U005 is `ui` on a component that doesn't take it. §10's U005 (`share` in an unkeyed list) isn't built.
-- **Not built from §10:** `weft/test`'s `net.ui`, fake locks. Real locks stay in `ui-state.browser.test.mjs`.
+- **Not built from §10:** `@weft-js/core/test`'s `net.ui`, fake locks. Real locks stay in `ui-state.browser.test.mjs`.
 
 ---
 
@@ -30,8 +30,8 @@ noun to explain it, it is out.
 ## 1. The API
 
 ```tsx
-import { interaction } from 'weft/interaction'
-import { Button, Checkbox } from '@weft/warp'
+import { interaction } from '@weft-js/core/interaction'
+import { Button, Checkbox } from '@weft-js/warp'
 
 function TodoRow({ todo }) {
   const row = interaction({ share: `todo:${todo.id}` })   // drop `share` and nothing else changes
@@ -77,12 +77,12 @@ so "hovering either lights both" needs nothing.
 
 | Feature | Today | Decision |
 |---|---|---|
-| `sync: 'tabs'` | persisted box, LWW per key, own `BroadcastChannel` | **Keep the API.** It is durable data with conflict rules, not UI state. Move its channel onto the shared line once that exists; `weft/sync` must still work with no `@weft/start`. |
-| `tabs.channel` (`tab()` in the brief) | typed `BroadcastChannel`, `weft/browser` | **Keep.** App messages between tabs, no server. Not on any route below. |
+| `sync: 'tabs'` | persisted box, LWW per key, own `BroadcastChannel` | **Keep the API.** It is durable data with conflict rules, not UI state. Move its channel onto the shared line once that exists; `@weft-js/core/sync` must still work with no `@weft-js/start`. |
+| `tabs.channel` (`tab()` in the brief) | typed `BroadcastChannel`, `@weft-js/core/browser` | **Keep.** App messages between tabs, no server. Not on any route below. |
 | `channel` | one socket per tab | **Keep the API, replace the transport**: its `SocketLink` becomes the leader link (§5.7). Same frames. |
 | `sharedState` | a `channel` with `$set`, `$v`, `$?` | **Keep.** Gets the leader link for free. Stays the only home of shared *data*. Never mixed with UI state. |
 | `topic` | server-side fan-out for streams | **Untouched.** No client half; the browser reaches it through a `stream`. |
-| `@weft/multiplayer` presence, `Cursors` | a `channel` fragment, own throttle, peers by TTL | **Keep; its shape became the template.** `share` copies its answers: no server roster, ask and answer, TTL, volatile. Who-is-this and pointers stay there. `share` is anonymous on purpose. |
+| `@weft-js/multiplayer` presence, `Cursors` | a `channel` fragment, own throttle, peers by TTL | **Keep; its shape became the template.** `share` copies its answers: no server roster, ask and answer, TTL, volatile. Who-is-this and pointers stay there. `share` is anonymous on purpose. |
 | `/_weft/rt` (SSE, `live`, `stream`) | one connection per tab | **Not touched by this spec, and it is the honest gap in "one client, one socket"** (§13, Q4). Closed since: see As built. |
 
 Removed:
@@ -100,16 +100,16 @@ real job. Say so plainly rather than count a rename.
 
 | Layer | Knows | Does not know |
 |---|---|---|
-| `@weft/warp-core` `interact(el, flags)` | DOM events; writes to anything with `.value` | weft, boxes, keys, networks |
-| `@weft/warp` every component's `ui`, `@weft/warp/ui` | how to draw from any source (`data-hold`, `data-remote`) | where the state came from |
-| `weft/interaction` | boxes, one row per key on a page | tabs, sockets |
-| `@weft/start/share` | tabs, locks, the socket, routing | elements |
+| `@weft-js/warp-core` `interact(el, flags)` | DOM events; writes to anything with `.value` | weft, boxes, keys, networks |
+| `@weft-js/warp` every component's `ui`, `@weft-js/warp/ui` | how to draw from any source (`data-hold`, `data-remote`) | where the state came from |
+| `@weft-js/core/interaction` | boxes, one row per key on a page | tabs, sockets |
+| `@weft-js/start/share` | tabs, locks, the socket, routing | elements |
 | `realtime({ share })`, `share` room | authorisation, stamping senders | hover; it carries three bits |
 
 `weft` can't import `warp-core`, and a warp component must not import `interact`, or every Button pays. So they meet at seams,
 the pattern `features.sync` set: a component calls `ui.attach`, a method on an object only an `interaction()` user has, and
-`weft/interaction` delegates to `seams.attach` (set by `@weft/warp/ui`) and `seams.line` (set by `@weft/start/share`). The
-`weft()` plugin injects those imports where `ui=` and `share:` appear, as it does `weft/sync`. Forgetting them in a non-plugin
+`@weft-js/core/interaction` delegates to `seams.attach` (set by `@weft-js/warp/ui`) and `seams.line` (set by `@weft-js/start/share`). The
+`weft()` plugin injects those imports where `ui=` and `share:` appear, as it does `@weft-js/core/sync`. Forgetting them in a non-plugin
 build throws in dev with the fix.
 
 Touch: `interact` ignores `pointerType === 'touch'` for hover, so `hover` stays false. `pressed` still works, and a phone
@@ -214,7 +214,7 @@ channels sharded by key hash (64) so bus subscriptions stay bounded while a clie
 - **Per key.** `authorize({ ctx, key })` runs on join, and again at the session re-check and on `session:<user>` pokes, using the
   same machinery as `channel`. A `key` that encodes a tenant is checked by the app, not guessed by weft.
 - **No identity by default.** Bits and an opaque id. The id is stable per connection, so peers can correlate one client across
-  keys; only a joined peer can, and §13 Q5 offers per-key ids if that matters. Names belong to `@weft/multiplayer`, which is a
+  keys; only a joined peer can, and §13 Q5 offers per-key ids if that matters. Names belong to `@weft-js/multiplayer`, which is a
   decision someone made.
 - **Hover is a behavioural signal.** What a user lingers on, in a shared document, is more than it looks. `share` is opt-in per
   element for that reason, and **docs must say so**. Focus in a sensitive form tells peers which field; warp must not share by
@@ -234,7 +234,7 @@ through warp's `use`, so hydration writes no attributes. If the pointer is alrea
 read once, only under `(hover: hover)`, because `:hover` sticks after a tap.
 
 Islands: one row per key per document, not per island, so two islands of one page share a box as panes do. Keeping the
-registry module-level does that, provided all islands resolve one `weft/interaction`. An island that hydrates late joins late
+registry module-level does that, provided all islands resolve one `@weft-js/core/interaction`. An island that hydrates late joins late
 and gets the snapshot. The share module loads with the first island that uses it. Tested only for a full page (§12).
 
 ## 9. Accessibility
@@ -261,7 +261,7 @@ and gets the snapshot. The share module loads with the first island that uses it
 **The prototype hit W001 in its first line:** `` interaction({ share: `todo:${props.id}` }) `` fails to compile, because the key is
 read once at setup. See §13 Q2. It's a real ergonomic bug in the approved one-liner.
 
-**`weft/test`.** `tabs` already fakes `BroadcastChannel`. Add `net.ui(key, { hover: 2 })` as peers, `net.uiSent()`, and fake
+**`@weft-js/core/test`.** `tabs` already fakes `BroadcastChannel`. Add `net.ui(key, { hover: 2 })` as peers, `net.uiSent()`, and fake
 `locks` so a `render()` can lead and a test can `tabs.kill(n)`. T012 covers an open line. Everything that needs real locks stays
 a Playwright test in `packages/start/test`. Rule: never fake a lock in an e2e test.
 
@@ -277,8 +277,8 @@ Brotli q11, production Vite, minified, a page with one Button and one Checkbox:
 | `share` | 7989 B | +2227 B, once |
 
 **"Zero bytes" is false as written:** about 27 B per component, for the `ui` branch and the ref. The owner should know the real
-number. A compiler pass could drop it, and I don't recommend one for 27 B. `@weft/start` has `sideEffects: false`, which drops
-a bare `import '@weft/start/share'` without a sound (the first measurement here did): the module must be listed.
+number. A compiler pass could drop it, and I don't recommend one for 27 B. `@weft-js/start` has `sideEffects: false`, which drops
+a bare `import '@weft-js/start/share'` without a sound (the first measurement here did): the module must be listed.
 
 ## 12. Prototype: what it proves
 
@@ -325,7 +325,7 @@ clean-up paths, the echo argument, and the no-locks fallback with `navigator.loc
 
 **Only specified:** batched joins; `realtime({ share })`; the leader link under `channel` and `sharedState`, with its three server
 changes (§5.7), which is the riskiest thing left; visibility-aware parking; two instances behind a bus; islands; plugin injection;
-`weft/test` fakes; `weft check` codes; every warp component beyond two.
+`@weft-js/core/test` fakes; `weft check` codes; every warp component beyond two.
 
 `evals/compare/measure.mjs` was **not run**: nothing here is merged, and the only always-on change is the 55 B in §11. It must
 run before this lands, per the repo's rule.
@@ -373,12 +373,12 @@ Nothing has to migrate, and nothing changes for an app that doesn't opt in. Hand
 when touched. Order of work: (1) `share` batched and built in, `realtime({ share })`; (2) `ui` across warp, mechanical, each
 `:hover`-only rule gaining `[data-hold]`, dozens of selectors (count before starting), generated by `split-css` from the tokens; (3) the link under
 `channel` and `sharedState` with §5.7's server changes, behind the full channel and multiplayer e2e suites; (4) rt, per Q4.
-`@weft/multiplayer` needs no change until (3), which fixes its `id`.
+`@weft-js/multiplayer` needs no change until (3), which fixes its `id`.
 
 ## 16. Where it could still get messy
 
 - **`remote` beside `hover`** is one more thing to read for anyone drawing by hand. It's the price of the safety in §1.
-- **§5.7 touches the two busiest files in `@weft/start`**, and connection id semantics leak into every `left` and `exceptSelf`.
+- **§5.7 touches the two busiest files in `@weft-js/start`**, and connection id semantics leak into every `left` and `exceptSelf`.
   If it goes badly, the honest fallback is `share` on its link and channels on theirs: two sockets, the thing this set out to end.
 - **`seams` plus plugin injection** is invisible wiring. It's a known pattern here, but a third use should make someone stop.
 - **`data-hold` overloads a word:** an app's own hold and a `ui`'s are one attribute on one element, and `attach` will fight a

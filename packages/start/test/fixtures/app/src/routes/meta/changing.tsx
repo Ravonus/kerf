@@ -1,5 +1,5 @@
 // A loader whose data differs on every request: the built-in card reads only the head, so its URL can't change.
-import type { Meta, RouteProps } from '@weft/start'
+import type { Meta, RouteProps } from '@weft-js/start'
 
 let n = 0
 export const load = () => ({ at: ++n })

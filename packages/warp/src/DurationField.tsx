@@ -1,6 +1,6 @@
-import { TimerIcon } from '@weft/icons'
-import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft/warp-core'
-import { derived, state, untrack } from 'weft'
+import { TimerIcon } from '@weft-js/warp-icons'
+import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
 import { bindable, Composite, Hidden, usePickerEnv, type Bindable, type RichFieldProps } from './Picker'
 
 type Unit = 'd' | 'h' | 'm' | 's'

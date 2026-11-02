@@ -133,7 +133,7 @@ export function generated(root, loaded) {
     }
     files[slotFile(id)] = `${header}\n${body}`
   }
-  // Build-side providers, for weft/vite to import in Node (it can't load the generated .ts): research 26 §3.1.
+  // Build-side providers, for @weft-js/core/vite to import in Node (it can't load the generated .ts): research 26 §3.1.
   for (const [id, binding] of Object.entries(loaded.slots)) {
     if (binding && typeof binding === 'object') {
       const keys = {}

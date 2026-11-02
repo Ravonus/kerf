@@ -1,12 +1,12 @@
 // What the agent pack's components share: glyphs from the app specimen, the sweep's two parts, an icon button, a value
 // held in a State or a plain prop, and the thin progress bar.
-import { type IconComponent } from '@weft/icons'
-import { installSweep } from '@weft/warp-core'
-import { Box, onMount, state, untrack, type State } from 'weft'
+import { type IconComponent } from '@weft-js/warp-icons'
+import { installSweep } from '@weft-js/warp-core'
+import { Box, onMount, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/components/progress.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/components/progress.css'
 
 /** The two sweep parts a [data-sweep] host carries. */
 export const Sweep = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>

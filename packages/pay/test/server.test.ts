@@ -2,12 +2,12 @@
 // tags on to the hub, and an app with no `src/pay.server.ts` that has no such route at all.
 import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core'
 import { createHmac } from 'node:crypto'
-import { product, PayError, type PayRail } from '@weft/pay'
-import { definePay, extension, memoryPayStore } from '@weft/pay/server'
-import { drizzlePayStore } from '@weft/pay/drizzle'
-import { runtime } from '@weft/start/data'
-import { createDb } from '@weft/start/db/sqlite'
-import { createHandler } from '@weft/start/server'
+import { product, PayError, type PayRail } from '@weft-js/pay'
+import { definePay, extension, memoryPayStore } from '@weft-js/pay/server'
+import { drizzlePayStore } from '@weft-js/pay/drizzle'
+import { runtime } from '@weft-js/start/data'
+import { createDb } from '@weft-js/start/db/sqlite'
+import { createHandler } from '@weft-js/start/server'
 
 const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 } }, grants: ['pro'] })
 const urls = { success: '/', cancel: '/' }

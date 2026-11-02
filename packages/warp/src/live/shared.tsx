@@ -1,8 +1,8 @@
 // What the live pack's components share: glyphs from the specimen's 24 grid, and reading a prop that may be a plain
 // value, a weft State or Signal, or a getter (07 §4.5: `count={() => …}`, `items={inbox}`).
-import { AlertIcon, AtIcon, BellIcon, BoardIcon, BoltIcon, CalendarIcon, CamIcon, CamOffIcon, ChatIcon, CheckIcon, CommentIcon, FlagIcon, GridIcon, HandIcon, LeaveIcon, LockIcon, MicIcon, MicOffIcon, MoreIcon, PlusIcon, PresentIcon, RefreshIcon, ScreenIcon, SignalIcon, SmileIcon, SpeakerIcon, UsersIcon, XIcon, iconSet } from '@weft/icons'
-import { hueOf } from '@weft/warp-core'
-import { Box, state, untrack, type State } from 'weft'
+import { AlertIcon, AtIcon, BellIcon, BoardIcon, BoltIcon, CalendarIcon, CamIcon, CamOffIcon, ChatIcon, CheckIcon, CommentIcon, FlagIcon, GridIcon, HandIcon, LeaveIcon, LockIcon, MicIcon, MicOffIcon, MoreIcon, PlusIcon, PresentIcon, RefreshIcon, ScreenIcon, SignalIcon, SmileIcon, SpeakerIcon, UsersIcon, XIcon, iconSet } from '@weft-js/warp-icons'
+import { hueOf } from '@weft-js/warp-core'
+import { Box, state, untrack, type State } from '@weft-js/core'
 
 const GLYPHS = { bell: BellIcon, at: AtIcon, comment: CommentIcon, flag: FlagIcon, check: CheckIcon, alert: AlertIcon, cal: CalendarIcon, more: MoreIcon, x: XIcon, plus: PlusIcon, lock: LockIcon, refresh: RefreshIcon, bolt: BoltIcon, mic: MicIcon, micoff: MicOffIcon, cam: CamIcon, camoff: CamOffIcon, screen: ScreenIcon, hand: HandIcon, smile: SmileIcon, chat: ChatIcon, users: UsersIcon, leave: LeaveIcon, signal: SignalIcon, grid: GridIcon, speaker: SpeakerIcon, present: PresentIcon, board: BoardIcon }
 

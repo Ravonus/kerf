@@ -244,7 +244,7 @@ What a page fetches:
 - **Async exactness.** The exact tier and its packs load on demand.
   - Until they arrive, `layout()` returns an estimate marked `exact: false`, and the same handle becomes exact when
     `ready` settles.
-  - weft/text must re-lay-out on `ready`, or call `load(needs(...))` before first paint for content known ahead.
+  - @weft-js/core/text must re-lay-out on `ready`, or call `load(needs(...))` before first paint for content known ahead.
   - Narrow columns (under ~100 px, or long URLs) trigger the exact tier often.
 - **Coverage drift.** The rare split depends on `src/coverage/*.json`.
   - A stale file costs lazy loads, never accuracy.

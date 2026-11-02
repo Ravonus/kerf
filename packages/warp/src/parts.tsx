@@ -1,19 +1,19 @@
-import { CheckIcon } from '@weft/icons'
+import { CheckIcon } from '@weft-js/warp-icons'
 // Small 05 and 02 atoms the app patterns and flows share, each the specimen markup. Internal: not exported from the
 // index, so a pack that needs one pays only for its own CSS.
-import { derived } from 'weft'
+import { derived } from '@weft-js/core'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
 import './styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/avatar.css'
-import '@weft/warp-core/styles/components/badge.css' // the status dot
-import '@weft/warp-core/styles/components/empty-state.css'
-import '@weft/warp-core/styles/components/live-status.css'
-import '@weft/warp-core/styles/components/spinner.css'
-import '@weft/warp-core/styles/components/steps.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/banner.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/avatar.css'
+import '@weft-js/warp-core/styles/components/badge.css' // the status dot
+import '@weft-js/warp-core/styles/components/empty-state.css'
+import '@weft-js/warp-core/styles/components/live-status.css'
+import '@weft-js/warp-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/components/steps.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/banner.css'
 
 /** One path on the 24 grid, for a glyph the shared Icon set doesn't carry. */
 export const Glyph = ({ d, ...rest }: { d: string; [attr: string]: any }) => <svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false" {...rest}><path d={d} /></svg>

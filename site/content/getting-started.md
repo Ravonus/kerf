@@ -8,7 +8,7 @@ Rust isn't needed to use weft. The compiler comes with it as WebAssembly, which 
 platform installs by itself and makes builds faster. Rust only comes in if you choose to write [Rust sidecars](/docs/rust).
 
 weft isn't on npm yet, so for now the commands below run from a checkout of the repo, and building that checkout's compiler
-does take Rust (`cargo`). Once weft is published, `npm create weft` will replace the first two steps and no Rust is involved.
+does take Rust (`cargo`). Once weft is published, `npm create @weft-js` will replace the first two steps and no Rust is involved.
 
 ## 1. Get the repo
 
@@ -37,7 +37,7 @@ Open the address it prints. You'll see a card with a button that counts your cli
 
 ## 4. Change something
 
-Open `src/routes/index.tsx`. Add `derived` to the import from `weft`, and work out a new value under `count`:
+Open `src/routes/index.tsx`. Add `derived` to the import from `@weft-js/core`, and work out a new value under `count`:
 
 ```tsx
 const count = state(0)

@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Button, Card, Checkbox } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Button, Card, Checkbox } from '@weft-js/warp'
 
 // One list, two views of it. In a real app it comes from a server `query`.
 const task = (id: number, text: string) => ({

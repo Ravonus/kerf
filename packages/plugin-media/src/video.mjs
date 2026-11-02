@@ -1,5 +1,5 @@
 // Video, audio and GIF-to-video for media.build@1 (research 15 §3.3–3.4), through whichever providers media.encode@1
-// has bound (`@weft/plugin-media-ffmpeg`).
+// has bound (`@weft-js/plugin-media-ffmpeg`).
 //   Keep what is already delivered: an H.264 source at or under the top width is remuxed, not re-encoded, and an
 //   efficient codec has to beat the H.264 file by 15% to ship (re-encoding a lossy source can't win at a fixed target).
 //   Quality: a CRF search at the top width, sampled SSIMULACRA2 frames with mean ≥ target and worst frame ≥ target − 5.
@@ -20,7 +20,7 @@ export const AUDIO = /\.(mp3|wav|flac|ogg|oga|opus|m4a|aac)$/i
 const SMALLER = 0.85
 const COMPATIBLE = 'video/h264'
 const short = bytes => createHash('sha256').update(bytes).digest('hex').slice(0, 8)
-const need = (o, key) => ({ code: 'P101', severity: 'error', message: `${o} needs \`media.encode\` for ${key}, and nothing provides it. Add \`mediaFfmpeg()\` from @weft/plugin-media-ffmpeg to \`plugins\` in weft.config.ts.` })
+const need = (o, key) => ({ code: 'P101', severity: 'error', message: `${o} needs \`media.encode\` for ${key}, and nothing provides it. Add \`mediaFfmpeg()\` from @weft-js/plugin-media-ffmpeg to \`plugins\` in weft.config.ts.` })
 const errored = (name, e) => ({ asset: null, files: [], diagnostics: [{ code: e.code ?? 'M019', severity: 'error', message: `${name}: ${e.message}` }] })
 
 /** A temp file for ffmpeg to read: `work(path)` runs with the bytes on disk. */

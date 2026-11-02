@@ -37,12 +37,12 @@ function schemaDrift(root, layer) {
   return [diagnostic({ code: 'Q015', file: layer.schema, why: existsSync(file) ? 'The schema changed since the last `weft db generate`: the database will not match it.' : 'No migrations yet: the first request that reads a table fails with Q014.' })]
 }
 
-/** I001–I003: the walk a build does (@weft/icons/compile), when the project has the package. */
+/** I001–I003: the walk a build does (@weft-js/warp-icons/compile), when the project has the package. */
 async function iconChecks(root) {
   const require = createRequire(join(root, 'package.json'))
   let compile
-  for (const from of [() => require.resolve('@weft/icons/compile'), () => createRequire(require.resolve('@weft/warp'))
-    .resolve('@weft/icons/compile')]) {
+  for (const from of [() => require.resolve('@weft-js/warp-icons/compile'), () => createRequire(require.resolve('@weft-js/warp'))
+    .resolve('@weft-js/warp-icons/compile')]) {
     try { compile = from(); break } catch { /* not this way */ }
   }
   if (!compile) return []
@@ -50,7 +50,7 @@ async function iconChecks(root) {
   return findings(root).map(f => diagnostic({ code: f.code, file: f.file, span: [f.line, f.column, f.line, f.column], why: f.why }))
 }
 
-/** H010: what the last build or `weft dev` found keeps an island from waiting (`.weft/hydration.json`, weft/hydration). */
+/** H010: what the last build or `weft dev` found keeps an island from waiting (`.weft/hydration.json`, @weft-js/core/hydration). */
 function hydrationChecks(root) {
   const file = join(root, '.weft', 'hydration.json')
   if (!existsSync(file)) return []
@@ -104,7 +104,7 @@ export async function check(root, options = {}) {
   // Style groups (research 23): the project's definitions first, so each file compiles with the groups it imports.
   const style = await styleModule(weft)
   const sfiles = style ? styleFiles(root, config) : []
-  const scan = sfiles.some(f => readFileSync(join(root, f), 'utf8').includes('weft/style')) ? style.scanProject(root, sfiles, compiler.transform) : null
+  const scan = sfiles.some(f => readFileSync(join(root, f), 'utf8').includes('@weft-js/core/style')) ? style.scanProject(root, sfiles, compiler.transform) : null
 
   const files = []
   const posByAbs = new Map()
@@ -280,7 +280,7 @@ async function socketChecks(root) {
     if (hand) out.push(diagnostic({ code: 'R004', file: rel, ...locate(text, hand[0]), why: 'A WebSocket handler of its own skips the Origin check, `authorize`, the limits and resume. Use `channel`.' }))
     if (!/\b(channel|sharedState)\s*[(<]/.test(text) || !/^src\/server\/|\.server\.[cm]?[jt]sx?$/.test(rel)) continue
     if (withIds === undefined) {
-      try { withIds = (await import(pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft/start/vite')).href)).withIds } catch { withIds = null }
+      try { withIds = (await import(pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft-js/start/vite')).href)).withIds } catch { withIds = null }
     }
     try { withIds?.(text, abs, rel) } catch (e) {
       if (e.code !== 'R001') continue
@@ -307,7 +307,7 @@ function hygiene(root) {
       deps = pkg.dependencies ?? {}
     } catch {}
     for (const name of SOCKET_PACKAGES) {
-      if (deps[name]) out.push(diagnostic({ code: 'R007', file: 'package.json', ...locate(text, `"${name}"`), why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in weft/test. Use \`stream\`, \`.live()\` or \`channel\`.` }))
+      if (deps[name]) out.push(diagnostic({ code: 'R007', file: 'package.json', ...locate(text, `"${name}"`), why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in @weft-js/core/test. Use \`stream\`, \`.live()\` or \`channel\`.` }))
     }
     for (const [name, cmd] of Object.entries(scripts)) {
       if (!/^weft(\s|$)/.test(cmd.trim())) {
@@ -319,7 +319,7 @@ function hygiene(root) {
     const file = join(root, name)
     if (!existsSync(file)) continue
     const text = readFileSync(file, 'utf8')
-    for (const m of text.matchAll(/from\s+['"](@weft\/(?:plugin-[\w-]+|text))/g)) {
+    for (const m of text.matchAll(/from\s+['"](@weft-js\/(?:plugin-[\w-]+|text))/g)) {
       out.push(diagnostic({ code: 'P120', file: name, ...locate(text, m[1]), why: `\`${m[1]}\` is registered in ${name}, which bypasses weft.config.ts.` }))
     }
   }

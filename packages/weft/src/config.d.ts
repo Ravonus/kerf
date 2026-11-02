@@ -27,7 +27,7 @@ export type SlotId =
   | (string & {})
 
 /**
- * A `plugins` entry: what a `weft/plugin` factory returns (`warp()`), or plain data `{ name, provides }`.
+ * A `plugins` entry: what a `@weft-js/core/plugin` factory returns (`warp()`), or plain data `{ name, provides }`.
  * `weft check` runs a factory's pure `contribute()` and validates the rest as data (P100, P111–P117, P009).
  */
 export interface PluginEntry {
@@ -120,7 +120,7 @@ export interface WeftConfig {
     }>
   }
   trust?: 'enforce' | 'warn'
-  /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/text' }`. */
+  /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft-js/text' }`. */
   slots?: { [id: string]: string | Record<string, string> }
 }
 

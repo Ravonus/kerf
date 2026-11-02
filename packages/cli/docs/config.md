@@ -2,11 +2,11 @@
 
 `weft.config.ts` is the default. `weft.config.json` and `weft.config.yaml` take the same keys, and `weft check` writes
 `.weft/config.schema.json` for editor completion. In JSON and YAML a plugin is a package name or `[name, options]`, like
-`["@weft/warp", { "fields": "classic" }]`; anything that needs a function belongs in `weft.config.ts`. Keep one file:
+`["@weft-js/warp", { "fields": "classic" }]`; anything that needs a function belongs in `weft.config.ts`. Keep one file:
 two is P010. `weft add <plugin>` installs a plugin and adds it to whichever format you use; `weft add tailwind` sets up Tailwind, `weft add db mysql --layer native` adds a database, and `weft add auth` adds Better Auth to it.
 
 ```ts
-import { defineConfig } from 'weft/config'
+import { defineConfig } from '@weft-js/core/config'
 
 export default defineConfig({
   scope: { write: ['src/**', 'test/**'], forbid: ['.env*'] },
@@ -25,9 +25,9 @@ export default defineConfig({
     inlineCss: false, // default true: each page carries what its first paint needs; false keeps plain links
     criticalCss: false, // default true: one hashed sheet plus a first-paint part; false splits by chunk and inlines up to 48 KB
     criticalKeep: ['theme-x'], // words of selectors a first paint keeps, for classes a head script sets
-    head: dialScript, // raw HTML in every page's head, before the stylesheets: dialScript from @weft/warp/plugin restores `setDial(…, { persist: true })` before the first paint
+    head: dialScript, // raw HTML in every page's head, before the stylesheets: dialScript from @weft-js/warp/plugin restores `setDial(…, { persist: true })` before the first paint
   },
-  plugins: [warp()],   // plugin factories (weft/plugin); a plain `{ name, provides }` entry is data only
+  plugins: [warp()],   // plugin factories (@weft-js/core/plugin); a plain `{ name, provides }` entry is data only
   slots: {},           // names the winner when two plugins provide one slot
 })
 ```
@@ -48,7 +48,7 @@ export default defineConfig({
 
 ## Plugins
 
-A plugin is a factory made with `definePlugin` from `weft/plugin`. Its pure `contribute(options, env)` returns what it
+A plugin is a factory made with `definePlugin` from `@weft-js/core/plugin`. Its pure `contribute(options, env)` returns what it
 adds: slot providers, `tokens` (`--<namespace>-*`), one AGENTS.md section (≤ 1 KB), catalog entries and diagnostic
 codes in its namespace. Components stay normal imports.
 
@@ -73,7 +73,7 @@ records what you approved, plus a hash of each installed plugin's files. Commit 
   monorepo, check the ignore file at the repository root yourself.
 - `weft add` never approves. It tells you what the plugin asks for, and the next `weft check` stops until you do.
 - A plugin that asks for nothing and passes the audit needs no approval, and `approve` pins it if you want that.
-- `create-weft` approves the plugins you pick. It can't hash code before the install, so run
+- `npm create @weft-js` approves the plugins you pick. It can't hash code before the install, so run
   `weft plugins approve --all` once to pin them.
 - `trust: 'warn'` in the config turns P109 and P110 into warnings, for a project that vets dependencies some other way.
 

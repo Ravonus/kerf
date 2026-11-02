@@ -2,8 +2,8 @@
 // weft-allow T004: persistence writes land on a macrotask; `tick` waits for that, not for an update
 import { screen } from '@testing-library/dom'
 import { z } from 'zod'
-import { defineState, derived, flush as flushGraph, state, StateError } from 'weft'
-import { flush, memoryStorage, render, scope, touches } from 'weft/test'
+import { defineState, derived, flush as flushGraph, state, StateError } from '@weft-js/core'
+import { flush, memoryStorage, render, scope, touches } from '@weft-js/core/test'
 
 const tick = () => new Promise(r => setTimeout(r))
 

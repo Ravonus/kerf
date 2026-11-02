@@ -3,8 +3,8 @@
 // weft-allow T005: framework test of compiled output; it checks the exact DOM and classes the compiler writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { state } from 'weft'
-import { flush, render, touches } from 'weft/test'
+import { state } from '@weft-js/core'
+import { flush, render, touches } from '@weft-js/core/test'
 import { seen, seenRef } from './fixtures/refs'
 
 test('children are built once, however often and wherever the component reads them', async () => {

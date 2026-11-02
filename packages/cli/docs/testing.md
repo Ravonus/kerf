@@ -1,7 +1,7 @@
-# Testing (`weft/test`, vitest)
+# Testing (`@weft-js/core/test`, vitest)
 
 ```tsx
-import { clock, flush, render, screen, user } from 'weft/test'
+import { clock, flush, render, screen, user } from '@weft-js/core/test'
 
 render(App, { api })
 await flush()
@@ -29,7 +29,7 @@ await expect(() => api.pushPrice('p1', 2)).toTouchAtMost(1, { runs: 10 })
 | T003 | `n.value = 5; expect(n.value).toBe(5)` | Act through the UI, assert what depends on it |
 | T004 | `setTimeout` sleeps, real timers, `waitFor` | `flush()`, `clock.advance(ms)` |
 | T005 | `container`, selectors, classes, `innerHTML`, test ids, app state in a component test (warning) | Role, label, text |
-| T006 | `vi.mock('weft')`, mocking the component under test | Fake the edges (API, storage) |
+| T006 | `vi.mock('@weft-js/core')`, mocking the component under test | Fake the edges (API, storage) |
 | T007 | Snapshots | Behavior assertions |
 | T008 | `expect` under `if`/`?:`/`&&`/`catch`, or only inside loops | Assert the condition, then assert unconditionally |
 | T009 | `.only`, `.skip`, `fit`, `xit` | Remove it; `test.fails` for a test meant to fail |
@@ -37,4 +37,4 @@ await expect(() => api.pushPrice('p1', 2)).toTouchAtMost(1, { runs: 10 })
 A deliberate exception needs a reason: `// weft-allow T007: the exported SVG is the product`. In the file's header
 comments it covers the whole file; elsewhere, its own line and the next.
 
-Plugins can use this clock too: `fakePay` from `@weft/pay/test` plays a rail on it, through your real webhook and ledger. `weft docs pay`.
+Plugins can use this clock too: `fakePay` from `@weft-js/pay/test` plays a rail on it, through your real webhook and ledger. `weft docs pay`.

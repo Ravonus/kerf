@@ -18,7 +18,7 @@ if (!existsSync(engine)) throw new Error('build ../text first: npm run build --p
 
 async function build(outDir) {
   const { build } = await import('vite')
-  const { default: weft } = await import('weft/vite')
+  const { default: weft } = await import('@weft-js/core/vite')
   const slot = { name: 'measure-slot', enforce: 'pre', resolveId: s => (s === 'weft:slot/text.measure' && !noEngine ? '\0measure' : null), load: i => (i === '\0measure' ? `export const provider = 'slim'\nexport const load = () => import(${JSON.stringify(engine)}).then(m => m.loadTextEngine())\n` : null) }
   await build({ root: join(pkg, 'test/virtual'), base: './', logLevel: 'silent', plugins: [slot, weft()], build: { outDir, emptyOutDir: true } })
 }

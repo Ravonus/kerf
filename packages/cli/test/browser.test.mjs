@@ -1,10 +1,10 @@
 // `weft browser` end to end: a Vite dev server with the weft() plugin, a headless Chrome as a plain host page (no
-// automation library), and every command relayed through the dev server to weft/agent in the page.
+// automation library), and every command relayed through the dev server to @weft-js/core/agent in the page.
 import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { browser, cliParams } from '../src/browser/commands.mjs'
 import { findChrome } from '../src/browser/client.mjs'
@@ -81,7 +81,7 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     expect(await run('net', { op: 'online' })).toMatchObject({ online: true })
   })
 
-  it('records a session into a weft/test test', async () => {
+  it('records a session into a @weft-js/core/test test', async () => {
     await run('record', { op: 'start' })
     await run('act', { target: { role: 'button', name: 'Add Milk' }, action: 'click' })
     await run('assert', { target: { role: 'button', name: 'Add Milk' }, expect: { enabled: true } })

@@ -1,13 +1,13 @@
-import { uid } from '@weft/warp-core'
-import { chart, SSR_RADIUS, SSR_WIDTH, tableHTML, toHTML, type Ctx, type Form } from '@weft/warp-core/charts'
-import { derived, untrack } from 'weft'
-import { use } from '@weft/warp-core/weft'
+import { uid } from '@weft-js/warp-core'
+import { chart, SSR_RADIUS, SSR_WIDTH, tableHTML, toHTML, type Ctx, type Form } from '@weft-js/warp-core/charts'
+import { derived, untrack } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/data/tokens.css'
-import '@weft/warp-core/styles/data/base.css'
-import '@weft/warp-core/styles/data/chart.css'
-import '@weft/warp-core/styles/data/legend.css'
-import '@weft/warp-core/styles/data/tooltip.css'
+import '@weft-js/warp-core/styles/data/tokens.css'
+import '@weft-js/warp-core/styles/data/base.css'
+import '@weft-js/warp-core/styles/data/chart.css'
+import '@weft-js/warp-core/styles/data/legend.css'
+import '@weft-js/warp-core/styles/data/tooltip.css'
 
 export type ChartFrame = {
   title: string

@@ -1,6 +1,6 @@
 // The dither family on one page, for scripts/dither.mjs and for looking at. ?only=<id> renders one section by itself, so a
 // measurement sees that surface alone.
-import { render } from 'weft/dom'
+import { render } from '@weft-js/core/dom'
 import { Canvas, Dither, DitherField, DitherGlyph } from '../../src/index'
 import './page.css'
 

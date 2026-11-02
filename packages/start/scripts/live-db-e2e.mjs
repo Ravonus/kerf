@@ -48,9 +48,9 @@ async function setup() {
 }
 
 const env = { ...process.env, NODE_ENV: 'production' }
-// A fixture inside the package has no `@weft/start` of its own.
-mkdirSync(`${fixture}/node_modules/@weft`, { recursive: true })
-if (!existsSync(`${fixture}/node_modules/@weft/start`)) symlinkSync(fileURLToPath(new URL('..', import.meta.url)), `${fixture}/node_modules/@weft/start`)
+// A fixture inside the package has no `@weft-js/start` of its own.
+mkdirSync(`${fixture}/node_modules/@weft-js`, { recursive: true })
+if (!existsSync(`${fixture}/node_modules/@weft-js/start`)) symlinkSync(fileURLToPath(new URL('..', import.meta.url)), `${fixture}/node_modules/@weft-js/start`)
 if (!process.env.SKIP_BUILD) {
   const b = spawnSync(process.execPath, ['test/build-app.mjs', JSON.stringify({ root: fixture, site: { name: 'x', url: 'http://localhost' }, preset: 'node_server', logLevel: 'error' })], { cwd: new URL('..', import.meta.url), env: { ...env, WEFT_BUILD: '1' }, stdio: 'inherit' })
   if (b.status) throw new Error('build failed')

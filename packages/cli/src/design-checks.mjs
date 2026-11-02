@@ -1,6 +1,6 @@
 // The design D-codes in `weft check` (PLAN §6, research 36). Two families:
 //
-//   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has warp's tokens to use instead (`@weft/warp`
+//   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has warp's tokens to use instead (`@weft-js/warp`
 //              in package.json), so an app that chose raw Tailwind or its own CSS is left alone.
 //   D011, D030–D039  contrast and accessibility, in every app.
 //
@@ -20,7 +20,7 @@ const SPACE = new Map([[2, 'hair'], [4, 'tight'], [8, 'related'], [16, 'group']]
 const SPACE_NAMES = 'hair tight related group section page'.split(' ')
 /** warp's radii at the quiet stop, where a raw radius is most likely to have been copied from. */
 const RADIUS = new Map([[4, 'mark'], [8, 'control'], [12, 'surface']])
-const WARP = '@weft/warp'
+const WARP = '@weft-js/warp'
 /** The role each heading level takes by default: the same table as warp's `Heading` (packages/warp/src/Type.tsx). */
 const HEADING_ROLE = { 1: 'title', 2: 'heading', 3: 'heading', 4: 'label', 5: 'label', 6: 'label' }
 
@@ -192,7 +192,7 @@ export function hasTokens(root) {
   if (!existsSync(file)) return false
   try {
     const { dependencies, devDependencies } = JSON.parse(readFileSync(file, 'utf8'))
-    return '@weft/warp' in { ...dependencies, ...devDependencies }
+    return '@weft-js/warp' in { ...dependencies, ...devDependencies }
   } catch {
     return false
   }

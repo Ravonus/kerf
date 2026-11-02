@@ -50,9 +50,9 @@ describe.each(entries)('%s', entry => {
 afterEach(() => { for (const name of [...DRIVERS, 'mysql2/promise']) vi.doUnmock(name) })
 
 test('a missing driver names the install command', async () => {
-  await expect(driver('@weft/db/kysely', 'not-installed-driver', () => import('not-installed-driver' as string))).rejects.toThrow('@weft/db/kysely needs the `not-installed-driver` driver, which isn\'t installed. Run: npm install not-installed-driver')
+  await expect(driver('@weft-js/db/kysely', 'not-installed-driver', () => import('not-installed-driver' as string))).rejects.toThrow('@weft-js/db/kysely needs the `not-installed-driver` driver, which isn\'t installed. Run: npm install not-installed-driver')
 })
 
 test('a driver that fails for another reason keeps its own error', async () => {
-  await expect(driver('@weft/db/kysely', 'kysely', async () => { throw new Error('boom') })).rejects.toThrow('boom')
+  await expect(driver('@weft-js/db/kysely', 'kysely', async () => { throw new Error('boom') })).rejects.toThrow('boom')
 })

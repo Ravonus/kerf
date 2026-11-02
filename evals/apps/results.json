@@ -322,63 +322,63 @@
        },
        "modules": [
         {
-         "m": "node_modules/@weft/warp/src/Table.tsx",
+         "m": "node_modules/@weft-js/warp/src/Table.tsx",
          "br": 4331
         },
         {
-         "m": "node_modules/@weft/warp/src/Shell.tsx",
+         "m": "node_modules/@weft-js/warp/src/Shell.tsx",
          "br": 3253
         },
         {
-         "m": "node_modules/@weft/warp-core/src/floating-label.ts",
+         "m": "node_modules/@weft-js/warp-core/src/floating-label.ts",
          "br": 1529
         },
         {
-         "m": "node_modules/@weft/warp-core/src/sweep.ts",
+         "m": "node_modules/@weft-js/warp-core/src/sweep.ts",
          "br": 1425
         },
         {
-         "m": "node_modules/weft/src/index.ts",
+         "m": "node_modules/@weft-js/core/src/index.ts",
          "br": 1092
         },
         {
-         "m": "node_modules/weft/src/dom.ts",
+         "m": "node_modules/@weft-js/core/src/dom.ts",
          "br": 953
         },
         {
-         "m": "node_modules/@weft/warp-core/src/table.ts",
+         "m": "node_modules/@weft-js/warp-core/src/table.ts",
          "br": 852
         },
         {
-         "m": "node_modules/@weft/warp/src/Field.tsx",
+         "m": "node_modules/@weft-js/warp/src/Field.tsx",
          "br": 852
         },
         {
-         "m": "node_modules/@weft/warp-core/src/overlays.ts",
+         "m": "node_modules/@weft-js/warp-core/src/overlays.ts",
          "br": 629
         },
         {
-         "m": "node_modules/@weft/warp-core/src/shell.ts",
+         "m": "node_modules/@weft-js/warp-core/src/shell.ts",
          "br": 429
         },
         {
-         "m": "node_modules/weft/src/dom-next.ts",
+         "m": "node_modules/@weft-js/core/src/dom-next.ts",
          "br": 396
         },
         {
-         "m": "node_modules/@weft/warp/src/Button.tsx",
+         "m": "node_modules/@weft-js/warp/src/Button.tsx",
          "br": 386
         },
         {
-         "m": "node_modules/@weft/warp-core/src/layers.ts",
+         "m": "node_modules/@weft-js/warp-core/src/layers.ts",
          "br": 368
         },
         {
-         "m": "node_modules/@weft/warp-core/src/menu.ts",
+         "m": "node_modules/@weft-js/warp-core/src/menu.ts",
          "br": 334
         },
         {
-         "m": "node_modules/@weft/warp/src/Select.tsx",
+         "m": "node_modules/@weft-js/warp/src/Select.tsx",
          "br": 289
         }
        ]
@@ -680,15 +680,15 @@
          "br": 1410
         },
         {
-         "m": "node_modules/weft/src/index.ts",
+         "m": "node_modules/@weft-js/core/src/index.ts",
          "br": 1223
         },
         {
-         "m": "node_modules/weft/src/dom.ts",
+         "m": "node_modules/@weft-js/core/src/dom.ts",
          "br": 1012
         },
         {
-         "m": "node_modules/weft/src/dom-next.ts",
+         "m": "node_modules/@weft-js/core/src/dom-next.ts",
          "br": 230
         },
         {
@@ -704,7 +704,7 @@
          "br": 146
         },
         {
-         "m": "node_modules/weft/src/keys.ts",
+         "m": "node_modules/@weft-js/core/src/keys.ts",
          "br": 62
         },
         {
@@ -5337,7 +5337,7 @@
          "br": 2180
         },
         {
-         "m": "node_modules/@weft/start/src/data.ts",
+         "m": "node_modules/@weft-js/start/src/data.ts",
          "br": 2169
         },
         {
@@ -5345,7 +5345,7 @@
          "br": 1659
         },
         {
-         "m": "node_modules/weft/src/index.ts",
+         "m": "node_modules/@weft-js/core/src/index.ts",
          "br": 1558
         },
         {
@@ -5353,11 +5353,11 @@
          "br": 1286
         },
         {
-         "m": "node_modules/weft/src/dom.ts",
+         "m": "node_modules/@weft-js/core/src/dom.ts",
          "br": 1254
         },
         {
-         "m": "node_modules/@weft/start/src/client.tsx",
+         "m": "node_modules/@weft-js/start/src/client.tsx",
          "br": 910
         },
         {
@@ -5377,7 +5377,7 @@
          "br": 754
         },
         {
-         "m": "node_modules/weft/src/claim.ts",
+         "m": "node_modules/@weft-js/core/src/claim.ts",
          "br": 665
         },
         {
@@ -5385,7 +5385,7 @@
          "br": 659
         },
         {
-         "m": "node_modules/@weft/start/src/form.tsx",
+         "m": "node_modules/@weft-js/start/src/form.tsx",
          "br": 505
         }
        ]
@@ -5400,7 +5400,7 @@
        },
        "modules": [
         {
-         "m": "node_modules/weft/src/index.ts",
+         "m": "node_modules/@weft-js/core/src/index.ts",
          "br": 1558
         },
         {
@@ -5408,15 +5408,15 @@
          "br": 1437
         },
         {
-         "m": "node_modules/weft/src/dom.ts",
+         "m": "node_modules/@weft-js/core/src/dom.ts",
          "br": 1254
         },
         {
-         "m": "node_modules/@weft/start/src/client.tsx",
+         "m": "node_modules/@weft-js/start/src/client.tsx",
          "br": 910
         },
         {
-         "m": "node_modules/weft/src/claim.ts",
+         "m": "node_modules/@weft-js/core/src/claim.ts",
          "br": 665
         },
         {
@@ -5424,11 +5424,11 @@
          "br": 659
         },
         {
-         "m": "node_modules/weft/src/dom-next.ts",
+         "m": "node_modules/@weft-js/core/src/dom-next.ts",
          "br": 462
         },
         {
-         "m": "node_modules/weft/src/head.ts",
+         "m": "node_modules/@weft-js/core/src/head.ts",
          "br": 447
         },
         {
@@ -5448,11 +5448,11 @@
          "br": 277
         },
         {
-         "m": "node_modules/@weft/start/src/router.ts",
+         "m": "node_modules/@weft-js/start/src/router.ts",
          "br": 247
         },
         {
-         "m": "node_modules/@weft/start/src/view.tsx",
+         "m": "node_modules/@weft-js/start/src/view.tsx",
          "br": 237
         },
         {
@@ -5471,7 +5471,7 @@
        },
        "modules": [
         {
-         "m": "node_modules/weft/src/index.ts",
+         "m": "node_modules/@weft-js/core/src/index.ts",
          "br": 1558
         },
         {
@@ -5479,15 +5479,15 @@
          "br": 1437
         },
         {
-         "m": "node_modules/weft/src/dom.ts",
+         "m": "node_modules/@weft-js/core/src/dom.ts",
          "br": 1254
         },
         {
-         "m": "node_modules/@weft/start/src/client.tsx",
+         "m": "node_modules/@weft-js/start/src/client.tsx",
          "br": 910
         },
         {
-         "m": "node_modules/weft/src/claim.ts",
+         "m": "node_modules/@weft-js/core/src/claim.ts",
          "br": 665
         },
         {
@@ -5495,11 +5495,11 @@
          "br": 659
         },
         {
-         "m": "node_modules/weft/src/dom-next.ts",
+         "m": "node_modules/@weft-js/core/src/dom-next.ts",
          "br": 462
         },
         {
-         "m": "node_modules/weft/src/head.ts",
+         "m": "node_modules/@weft-js/core/src/head.ts",
          "br": 447
         },
         {
@@ -5519,11 +5519,11 @@
          "br": 277
         },
         {
-         "m": "node_modules/@weft/start/src/router.ts",
+         "m": "node_modules/@weft-js/start/src/router.ts",
          "br": 247
         },
         {
-         "m": "node_modules/@weft/start/src/view.tsx",
+         "m": "node_modules/@weft-js/start/src/view.tsx",
          "br": 237
         },
         {

@@ -1,7 +1,7 @@
 // The examples in warp-core's README, run as they're written (test/fixtures/direct-*.tsx): behaviour with no warp component.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { AccountMenu } from './fixtures/direct-menu'
 import { Settings } from './fixtures/direct-tabs'
 

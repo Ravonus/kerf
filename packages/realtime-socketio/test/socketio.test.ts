@@ -1,7 +1,7 @@
 // A real Socket.IO server and real clients, through the transport suite.
 import { createServer } from 'node:http'
 import { Server } from 'socket.io'
-import { transportSuite } from '@weft/multiplayer/test'
+import { transportSuite } from '@weft-js/multiplayer/test'
 import { relay, socketioTicket } from '../src/relay'
 import { socketio } from '../src/index'
 

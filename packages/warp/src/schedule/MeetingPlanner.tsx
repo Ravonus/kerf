@@ -1,6 +1,6 @@
-import { ClockIcon, SendIcon, XIcon } from '@weft/icons'
-import { announce, asTime, clock, clockRange, fmt, minutes, sharedFree, suggestSlots, uid, withinHours, zoneCity, zoneMinute, type Attendee, type IsoTime, type Range } from '@weft/warp-core'
-import { derived, flush, state, untrack, watch } from 'weft'
+import { ClockIcon, SendIcon, XIcon } from '@weft-js/warp-icons'
+import { announce, asTime, clock, clockRange, fmt, minutes, sharedFree, suggestSlots, uid, withinHours, zoneCity, zoneMinute, type Attendee, type IsoTime, type Range } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, watch } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Card } from '../Card'
@@ -11,8 +11,8 @@ import { Avatar } from '../parts'
 import { usePickerEnv } from '../Picker'
 import { TimeField } from '../TimeField'
 import { SweepParts, confirmSweep } from './bits'
-import '@weft/warp-core/styles/app/booking.css'
-import '@weft/warp-core/styles/app/calendar.css'
+import '@weft-js/warp-core/styles/app/booking.css'
+import '@weft-js/warp-core/styles/app/calendar.css'
 
 export type MeetingDetails = { attendees: Attendee[]; title: string; link: string; tags: string[]; date: string; s: number; e: number }
 export type MeetingPlannerProps = {

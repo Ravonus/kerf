@@ -1,9 +1,9 @@
 // Type by role (01 §2, PLAN §6): the spec defines the roles as tokens and leaves the element to the app, so these
 // are what an app reads them through. A size, weight or colour is never a prop.
-import { untrack } from 'weft'
-import type { TextRole, Tone } from 'weft/ds'
+import { untrack } from '@weft-js/core'
+import type { TextRole, Tone } from '@weft-js/core/ds'
 import './styles'
-import '@weft/warp-core/styles/components/link.css'
+import '@weft-js/warp-core/styles/components/link.css'
 import './type.css'
 
 type Open = { children?: any; [attr: string]: any }

@@ -1,14 +1,14 @@
-import { LeftIcon, ShieldCheckIcon } from '@weft/icons'
-import { clockLabel, otpInput, uid } from '@weft/warp-core'
-import { derived, state, untrack, watch } from 'weft'
+import { LeftIcon, ShieldCheckIcon } from '@weft-js/warp-icons'
+import { clockLabel, otpInput, uid } from '@weft-js/warp-core'
+import { derived, state, untrack, watch } from '@weft-js/core'
 import { Button } from '../Button'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { Mark, FormError, StepFrame, Submit, TextLink, Title, useCooldown, useStepForm, type FlowForm } from './kit'
 import '../fields'
-import '@weft/warp-core/styles/inputs/field.css'
-import '@weft/warp-core/styles/inputs/text.css'
-import '@weft/warp-core/styles/flows/otp.css'
-import '@weft/warp-core/styles/flows/auth.css'
+import '@weft-js/warp-core/styles/inputs/field.css'
+import '@weft-js/warp-core/styles/inputs/text.css'
+import '@weft-js/warp-core/styles/flows/otp.css'
+import '@weft-js/warp-core/styles/flows/auth.css'
 
 export interface OtpFieldProps {
   label?: any

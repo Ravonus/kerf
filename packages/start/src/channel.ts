@@ -3,7 +3,7 @@
 // finds its messages. The socket server is socket.ts, and `room.in(params).publish` reaches it through
 // `runtime.channels`, so nothing of the server ships here.
 
-import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
+import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
 import { HANDOVER, openLine, socketDown } from './link'
 import { currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track, type Context, type Fn, type Skip, type StandardSchemaV1 } from './data'
 
@@ -240,7 +240,7 @@ function owned(fn: Fn) {
   if (!getOwner()) throw new StartError('W051', DEV ? `\`${fn.$id}.connect()\` was called outside a component or scope: nothing would close it` : fn.$id, DEV ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`' : undefined)
 }
 
-/** `@weft/start/share`'s way in: a join that nothing on the page declared, so a tab shares this socket and its lifecycle. */
+/** `@weft-js/start/share`'s way in: a join that nothing on the page declared, so a tab shares this socket and its lifecycle. */
 export const connectBuiltIn = ($id: string) => connect({ kind: 'channel', $id, def: {} } as Fn, undefined, { keep: 0 })
 
 function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<any, any> {
@@ -381,7 +381,7 @@ function browser(frame: (d: any[]) => void, done: (code: number) => void): Socke
   return openLine('c', '', text => frame(JSON.parse(text)), done)
 }
 
-/** weft/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
+/** @weft-js/core/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
 const FAKE = './channel-fake.ts' // with its extension: nothing resolves this one for a linked package
 function fake(frame: (d: any[]) => void, done: (code: number) => void): SocketLink {
   let link: SocketLink | undefined
@@ -402,7 +402,7 @@ let nudge: (() => void) | undefined
 let parked = false
 let hiddenAt: ReturnType<typeof setTimeout> | undefined
 
-/** A leader tab can be hidden while a sibling is looking: `@weft/start/share` says when this socket must stay. */
+/** A leader tab can be hidden while a sibling is looking: `@weft-js/start/share` says when this socket must stay. */
 export const keepOpen: { stay?: () => boolean } = {}
 
 const send = (f: unknown[]) => live?.send(JSON.stringify(f))
@@ -578,7 +578,7 @@ function listen(on: boolean) {
   if (!on) clearTimeout(hiddenAt)
 }
 
-/** weft/test, after each test. */
+/** @weft-js/core/test, after each test. */
 function reset() {
   for (const j of joins.values()) clearTimeout(j.timer)
   joins.clear()

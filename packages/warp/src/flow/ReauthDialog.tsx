@@ -1,5 +1,5 @@
-import { uid } from '@weft/warp-core'
-import { derived, untrack, type State } from 'weft'
+import { uid } from '@weft-js/warp-core'
+import { derived, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Input } from '../Field'
 import { Modal } from '../Modal'

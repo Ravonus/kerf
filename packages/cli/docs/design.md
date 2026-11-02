@@ -1,10 +1,10 @@
 # Design: tokens, primitives, D-codes
 
-An app with warp has one design language: `@weft/warp`'s primitives and components, on warp's tokens. Name what a thing
+An app with warp has one design language: `@weft-js/warp`'s primitives and components, on warp's tokens. Name what a thing
 is, and the look follows the theme, the dials and the density.
 
 ```tsx
-import { Button, Card, Heading, Input, Row, Stack, Text } from '@weft/warp'
+import { Button, Card, Heading, Input, Row, Stack, Text } from '@weft-js/warp'
 
 export function Billing() {
   return (
@@ -45,7 +45,7 @@ export function Billing() {
 
 `gap`: `none hair tight related group section page`, a relationship and not a size: `related` inside a thing, `group`
 between things, `section` between sections. `as` picks the element: `div section article main header footer nav aside
-form ul ol`. There are no breakpoint props, since boxes answer to their container. `weft/ds` exports these names as
+form ul ol`. There are no breakpoint props, since boxes answer to their container. `@weft-js/core/ds` exports these names as
 constants and types.
 
 `style={{ … }}` and `class` still work; the D-codes below tell you when they leave the system. For a named look of your
@@ -56,7 +56,7 @@ own, use a style group (`weft docs style`), not a class list.
 `weft check` reports them. `weft fix` applies the safe autofixes. A fix that changes an element is a suggested edit in
 `fix.edits`; a raw colour has none, since a token follows the theme and the raw value didn't.
 
-Where the app has warp's tokens (`@weft/warp` in package.json; headless `@weft/warp-core` ships none):
+Where the app has warp's tokens (`@weft-js/warp` in package.json; headless `@weft-js/warp-core` ships none):
 
 | Code | Catches | Fix |
 |---|---|---|

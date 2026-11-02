@@ -1,6 +1,6 @@
-import { KeyIcon, LeftIcon, MailIcon } from '@weft/icons'
-import { clockLabel, emailError, passwordRules, uid } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
+import { KeyIcon, LeftIcon, MailIcon } from '@weft-js/warp-icons'
+import { clockLabel, emailError, passwordRules, uid } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -8,8 +8,8 @@ import { Input } from '../Field'
 import { FormError, Mark, Rail, StepFrame, Submit, TextLink, Title, useCooldown, useStepForm, type FlowForm, type Heading } from './kit'
 import { PasswordMeter } from './SignUp'
 import '../styles'
-import '@weft/warp-core/styles/flows/auth.css'
-import '@weft/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/flows/auth.css'
+import '@weft-js/warp-core/styles/layout/row.css'
 
 const Back = ({ onBack }: { onBack: () => void }) => <div><Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} onClick={onBack}>Back</Button></div>
 

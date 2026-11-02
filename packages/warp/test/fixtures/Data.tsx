@@ -1,6 +1,6 @@
 // The table and shell at full stretch, for the a11y suite (test/a11y) and a look in a browser: every feature on, plus
 // the states a table can be in. Separate from Variants so a markup snapshot isn't tied to demo data.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Badge } from '../../src/Badge'
 import { Button } from '../../src/Button'
 import { Shell } from '../../src/Shell'

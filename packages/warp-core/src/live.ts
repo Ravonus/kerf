@@ -602,7 +602,7 @@ export function transportSim(initial: TransportConfig, env: SimEnv = {}) {
   const logOf = (who: string, text: string) => { log = [...log, { at: (now() - start) / 1000, who, text }].slice(-40) }
   const name = (cid: 'sse' | 'ws') => (cid === 'ws' ? 'channel' : 'sse')
   const invalid = () => transportError(cfg)
-  const wireOf = (cid: 'sse' | 'ws') => (cfg.wire === 'tabs' ? 'BroadcastChannel' : cfg.wire === 'fake' ? 'weft/test fake pair' : cid === 'sse' ? 'SSE · POST /_weft/rt' : 'WebSocket · crossws')
+  const wireOf = (cid: 'sse' | 'ws') => (cfg.wire === 'tabs' ? 'BroadcastChannel' : cfg.wire === 'fake' ? '@weft-js/core/test fake pair' : cid === 'sse' ? 'SSE · POST /_weft/rt' : 'WebSocket · crossws')
   const blocked = (cid: 'sse' | 'ws') => cfg.wire !== 'tabs' && (cfg.network === 'offline' || (cfg.network === 'wsblock' && cid === 'ws' && cfg.wire === 'default'))
   const note = (cid: 'sse' | 'ws', text: string) => { for (const [k, , c] of LANES) if (c === cid) notes[k] = text }
   const sample = () => {

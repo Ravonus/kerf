@@ -3,8 +3,8 @@
 // production bundle. Interactive transactions keep the lock and the statements on one connection. It stays Prisma's own
 // client, so weft can't hold a statement: the server runs the gate per request instead, and a failed run doesn't fail it.
 
-import { gate, register, touch, type DbHandle, type Migration } from '@weft/start/db/core'
-import { runtime } from '@weft/start/data'
+import { gate, register, touch, type DbHandle, type Migration } from '@weft-js/start/db/core'
+import { runtime } from '@weft-js/start/data'
 
 type Dialect = DbHandle['dialect']
 interface Tx {

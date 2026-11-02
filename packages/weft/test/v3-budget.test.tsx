@@ -1,7 +1,7 @@
 // The v3 shop app's §3.7 work budgets, as tests. Reference app: evals/reference-v3/weft.
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { flush, render, touches } from 'weft/test'
+import { flush, render, touches } from '@weft-js/core/test'
 import { App } from '../../../evals/reference-v3/weft/src/App'
 import { App as SpreadApp } from './fixtures/v3-spread/App'
 

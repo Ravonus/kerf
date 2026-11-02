@@ -1,7 +1,7 @@
 // M001–M013 in `weft check` (research 15 §7.5; the static rules of research 26 §2.5). Runs as this plugin's `check`
 // hook over the project's .tsx/.jsx files, with the JSX view `weft check` passes in `ctx`.
 import { basename, dirname, extname, join, normalize } from 'node:path'
-import { probe } from 'weft/media-probe'
+import { probe } from '@weft-js/core/media-probe'
 import { unsafeSvg } from './svg.mjs'
 
 const IMAGE = /\.(png|jpe?g|gif|webp|avif|svg)$/i

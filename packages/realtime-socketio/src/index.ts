@@ -1,9 +1,9 @@
 // Cursors through a Socket.IO relay you already run, for apps moving off one. The relay (`./relay`) checks the ticket the
 // room signed, and stamps every frame with the ticket's subject, so a client can't speak as anyone else.
 
-import { createRoot, derived, state, untrack } from 'weft'
+import { createRoot, derived, state, untrack } from '@weft-js/core'
 import { io, type Socket } from 'socket.io-client'
-import type { PeerLink, PeerRoom, PeerTransport } from '@weft/multiplayer'
+import type { PeerLink, PeerRoom, PeerTransport } from '@weft-js/multiplayer'
 
 export interface SocketIoOptions {
   /** The relay. */

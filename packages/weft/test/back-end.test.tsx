@@ -2,8 +2,8 @@
 // (oracle.test.tsx) checks whole components against Solid's recorded output and the server render.
 // weft-allow T005: framework test of compiled output; it checks the exact DOM and classes the back end writes
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { flush } from 'weft'
-import { render } from 'weft/dom'
+import { flush } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import * as basics from './fixtures/next/Basics'
 import { Main as Bench } from './fixtures/next/Bench'
 import * as two from './fixtures/next/Step2'
@@ -45,7 +45,7 @@ describe('weft back end: basics', () => {
   it('compiles without Solid-shaped helpers', () => {
     const out = transform(readFileSync(resolve(__dirname, 'fixtures/next/Basics.tsx'), 'utf8'), { filename: 'Basics.tsx' })
     expect(out.diagnostics).toEqual([])
-    const imported = /import \{([^}]*)\} from "weft\/dom"/.exec(out.code)![1]
+    const imported = /import \{([^}]*)\} from "@weft-js\/core\/dom"/.exec(out.code)![1]
     const helpers = ['attr', 'bind', 'child', 'cls', 'component', 'css', 'delegate', 'memo', 'mergeProps', 'on', 'tpl']
     for (const name of imported.split(',').map(s => s.trim().split(' ')[0])) expect(helpers).toContain(name)
     expect(out.code).not.toMatch(/insert|createComponent|template\(|delegateEvents/)
@@ -134,7 +134,7 @@ describe('weft back end, step 2', () => {
   })
 
   it('element spreads: later attributes win, values stay live, handlers are listeners', async () => {
-    const { state } = await import('weft')
+    const { state } = await import('@weft-js/core')
     const tone = state('info')
     const clicks: string[] = []
     const rest = state<Record<string, any>>({ id: 'spread', href: '/a', title: 'spread title', class: 'x', onClick: () => clicks.push('a') })
@@ -159,7 +159,7 @@ describe('weft back end, step 2', () => {
   })
 
   it('a spread\'s children fill an element that has none, and stay live', async () => {
-    const { state } = await import('weft')
+    const { state } = await import('@weft-js/core')
     const rest = state<Record<string, any>>({ title: 't', children: 'first' })
     const root = mount(() => two.Content({ get rest() { return rest.value } } as any))
     const kids = root.querySelector('.kids')!

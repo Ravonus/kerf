@@ -7,7 +7,7 @@
     "noEmit": true,
     "skipLibCheck": true,
     "jsx": "preserve",
-    "jsxImportSource": "weft",
+    "jsxImportSource": "@weft-js/core",
     "lib": [
       "es2023",
       "dom",
@@ -19,7 +19,7 @@
       ]
     },
     "types": [
-      "weft/client"
+      "@weft-js/core/client"
     ]
   },
   "include": [

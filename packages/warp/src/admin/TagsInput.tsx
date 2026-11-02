@@ -1,9 +1,9 @@
-import { addTags, announce } from '@weft/warp-core'
-import { derived, state, type State } from 'weft'
+import { addTags, announce } from '@weft-js/warp-core'
+import { derived, state, type State } from '@weft-js/core'
 import { Field } from '../Field'
 import { Tag } from '../Tag'
 import { afterFlush } from './atoms'
-import '@weft/warp-core/styles/inputs/choice.css'
+import '@weft-js/warp-core/styles/inputs/choice.css'
 
 export interface TagsInputProps {
   label: string

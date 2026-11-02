@@ -51,7 +51,7 @@ export function serveRegistry(dir, port = 0) {
   const here = new Set(manifests.map(m => m.pkg.name))
   for (const { file, tar, pkg } of manifests) {
     // Addons for platforms not packed here: Deno fails an install on any optional dependency it can't find.
-    if (pkg.optionalDependencies) pkg.optionalDependencies = Object.fromEntries(Object.entries(pkg.optionalDependencies).filter(([name]) => here.has(name) || !name.startsWith('@weft/')))
+    if (pkg.optionalDependencies) pkg.optionalDependencies = Object.fromEntries(Object.entries(pkg.optionalDependencies).filter(([name]) => here.has(name) || !name.startsWith('@weft-js/')))
     packages.set(pkg.name, { file, pkg, tgz: withManifest(tar, pkg) })
   }
   const server = createServer(async (req, res) => {
@@ -67,7 +67,7 @@ export function serveRegistry(dir, port = 0) {
         const released = '2026-01-01T00:00:00.000Z'
         return res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ name, 'dist-tags': { latest: pkg.version }, time: { [pkg.version]: released, created: released, modified: released }, versions: { [pkg.version]: { ...pkg, dist } } }))
       }
-      if (name.startsWith('@weft/compiler-') || name.startsWith('@weft/')) return res.writeHead(404).end('{}')
+      if (name.startsWith('@weft-js/')) return res.writeHead(404).end('{}')
       const upstream = await fetch(`${UPSTREAM}/${url.pathname.slice(1)}`, { headers: { accept: req.headers.accept ?? 'application/json' } })
       res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' }).end(Buffer.from(await upstream.arrayBuffer()))
     } catch (e) {

@@ -1,10 +1,10 @@
-import { CheckIcon } from '@weft/icons'
-import { announce, uid, type AgentQuestion } from '@weft/warp-core'
-import { derived, onMount, state, untrack } from 'weft'
+import { CheckIcon } from '@weft-js/warp-icons'
+import { announce, uid, type AgentQuestion } from '@weft-js/warp-core'
+import { derived, onMount, state, untrack } from '@weft-js/core'
 import { Button } from '../Button'
 import { Input } from '../Field'
 import '../styles'
-import '@weft/warp-core/styles/app/question.css'
+import '@weft-js/warp-core/styles/app/question.css'
 
 /**
  * Question (07 §1.3): the run pauses and asks. A fieldset with the question as legend, radios or checkboxes, optional

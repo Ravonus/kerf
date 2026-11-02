@@ -66,7 +66,7 @@ export interface TableDef { name: string; pk: string[] }
 export interface ChangeOptions {
   /** Direct `postgres://…` for the listener, when the app's URL goes through a pooler. */
   listenUrl?: string
-  /** `'external'`: a separately deployed listener publishes to the bus (`listen` from `@weft/start/listen`). */
+  /** `'external'`: a separately deployed listener publishes to the bus (`listen` from `@weft-js/start/listen`). */
   listener?: 'external'
   /** Map a change to tags your queries use. Default `[table, `${table}:${id}`]`. */
   tagged?: (change: Change) => string[]
@@ -90,7 +90,7 @@ async function pkOf(table: any, dialect: DbHandle['dialect']): Promise<string[]>
 /** `realtime({ changes: dbChanges(db, [todos, notes]) })`: these tables' writes reach `.live`, whoever made them. */
 export function dbChanges(db: { $weft?: DbHandle }, tables: unknown[], options: ChangeOptions = {}): Source {
   const handle = db?.$weft
-  if (!handle?.changes) throw new StartError('R017', '`dbChanges` needs a client from `@weft/start/db/sqlite`, `/postgres` or `/mysql`', 'for MongoDB use `mongoChanges` from `@weft/db/mongo`; for another client, write a `Source`')
+  if (!handle?.changes) throw new StartError('R017', '`dbChanges` needs a client from `@weft-js/start/db/sqlite`, `/postgres` or `/mysql`', 'for MongoDB use `mongoChanges` from `@weft-js/db/mongo`; for another client, write a `Source`')
   const names = tables.map(nameOf)
   let source: Promise<Omit<Source, 'name' | 'tables'>> | undefined
   const load = () => (source ??= handle.changes!(names, options))

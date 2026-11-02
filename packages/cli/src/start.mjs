@@ -1,5 +1,5 @@
-// `weft dev`, `weft build` and `weft routes` for an app with src/routes: they run @weft/start (research 25 §6–7).
-// @weft/start resolves from the app first (its own version), then from this workspace.
+// `weft dev`, `weft build` and `weft routes` for an app with src/routes: they run @weft-js/start (research 25 §6–7).
+// @weft-js/start resolves from the app first (its own version), then from this workspace.
 
 import { writeMap } from './map.mjs'
 import { spawn, spawnSync } from 'node:child_process'
@@ -18,16 +18,16 @@ import { attachProps } from './props-listener.mjs'
 export async function start(root, sub) {
   let file
   try {
-    file = createRequire(join(root, 'package.json')).resolve(`@weft/start/${sub}`)
+    file = createRequire(join(root, 'package.json')).resolve(`@weft-js/start/${sub}`)
   } catch {
     const sibling = new URL(`../../start/src/${sub}.mjs`, import.meta.url)
-    if (!existsSync(sibling)) throw Object.assign(new Error('@weft/start is not installed in this project'), { code: 'E_USAGE' })
+    if (!existsSync(sibling)) throw Object.assign(new Error('@weft-js/start is not installed in this project'), { code: 'E_USAGE' })
     file = sibling
   }
   return import(typeof file === 'string' ? pathToFileURL(file).href : file.href)
 }
 
-/** The config's `site` (metadata defaults), and the config diagnostics. Slot files are synced first, so weft/vite
+/** The config's `site` (metadata defaults), and the config diagnostics. Slot files are synced first, so @weft-js/core/vite
  * finds the build-side providers (`.weft/slots/<id>.build.json`, research 26 §3.1). */
 async function site(root) {
   const loaded = await loadConfig(root)
@@ -160,9 +160,9 @@ export async function dbLayer(root, loaded) {
   const { contributions = [] } = loaded ?? await loadConfig(root)
   const plugin = contributions.find(c => c.manifest.db)?.manifest.db
   if (plugin) return plugin
-  // Drizzle has no plugin to say so: its config file, or a client from `@weft/start/db/*`, does.
+  // Drizzle has no plugin to say so: its config file, or a client from `@weft-js/start/db/*`, does.
   const entry = join(root, 'src/db/index.server.ts')
-  return existsSync(join(root, 'drizzle.config.ts')) || (existsSync(entry) && readFileSync(entry, 'utf8').includes('@weft/start/db/')) ? DRIZZLE : null
+  return existsSync(join(root, 'drizzle.config.ts')) || (existsSync(entry) && readFileSync(entry, 'utf8').includes('@weft-js/start/db/')) ? DRIZZLE : null
 }
 
 const DRIZZLE = {
@@ -248,7 +248,7 @@ async function dbListen(root) {
   const { withRealtime } = await start(root, 'contract')
   await withRealtime({ root, site: config.site }, async ({ changes, bus }, server) => {
     if (!changes) throw Object.assign(new Error('`src/realtime.server.ts` has no `changes`'), { code: 'E_USAGE' })
-    const { listen } = await server.ssrLoadModule('@weft/start/listen')
+    const { listen } = await server.ssrLoadModule('@weft-js/start/listen')
     const stop = await listen({ changes, bus: bus ?? { name: 'memory' } })
     await new Promise(ok => { process.once('SIGINT', ok); process.once('SIGTERM', ok) })
     await stop()

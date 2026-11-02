@@ -1,6 +1,6 @@
 // What every data layer shares (research 28 §2, 34 §4): the gate that applies the server's migrations before a database's
 // first statement, and the touched-tables record behind Q011. A provider is any client with a `$weft` handle made through
-// `register`. No driver imports, so `@weft/start/db/sqlite` doesn't load Postgres, or the other way round.
+// `register`. No driver imports, so `@weft-js/start/db/sqlite` doesn't load Postgres, or the other way round.
 
 import { currentScope, runtime, StartError } from '../data'
 

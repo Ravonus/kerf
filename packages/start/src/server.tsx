@@ -23,8 +23,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { BaseRootRoute, BaseRoute, RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, isNotFound } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
-import { rt } from 'weft'
-import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
+import { rt } from '@weft-js/core'
+import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site } from '@weft-js/core/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
 import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
@@ -455,7 +455,7 @@ export function createHandler(options: HandlerOptions) {
   async function media(url: URL, request: Request): Promise<Response> {
     const m = /^\/_weft\/m\/([0-9a-f]{32})\/(\d+)\.([a-z0-9]+)$/.exec(url.pathname)
     const server = await mediaServer()
-    if (!server) options.onDiagnostic?.({ code: 'M017', severity: 'error', message: 'M017: a media URL was requested, but nothing provides `media.server`. Add `media()` from `@weft/plugin-media` to `plugins`' })
+    if (!server) options.onDiagnostic?.({ code: 'M017', severity: 'error', message: 'M017: a media URL was requested, but nothing provides `media.server`. Add `media()` from `@weft-js/plugin-media` to `plugins`' })
     const out = m && (await server?.serve({ hash: m[1], width: Number(m[2]), format: m[3], accept: request.headers.get('accept') ?? '' }))
     if (!out) return new Response('Not found', { status: 404 })
     const headers = new Headers({ 'content-type': out.type, 'cache-control': 'public, max-age=31536000, immutable', etag: `"${m![1]}-${out.width}-${out.format}"`, 'x-content-type-options': 'nosniff' })

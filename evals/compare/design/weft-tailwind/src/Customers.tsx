@@ -1,4 +1,4 @@
-import { state, derived } from 'weft'
+import { state, derived } from '@weft-js/core'
 import { Button, Card, PageHeader, control } from './ui'
 
 type Status = 'Active' | 'Trial' | 'Past due'

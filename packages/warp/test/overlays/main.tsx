@@ -1,6 +1,6 @@
 // The page overlays.browser.test.mjs drives: overlays near the viewport's edges, and inside a Modal.
-import { render } from 'weft/dom'
-import { state } from 'weft'
+import { render } from '@weft-js/core/dom'
+import { state } from '@weft-js/core'
 import { Button, DateField, Drawer, Menu, Modal, Slider, Toaster, toast } from '../../src/index'
 import { ComboField } from '../../src/Combobox'
 

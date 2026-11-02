@@ -1,11 +1,11 @@
-// Hydration (weft/dom): adopt the DOM `renderToString` produced instead of building it. Each template root the
+// Hydration (@weft-js/core/dom): adopt the DOM `renderToString` produced instead of building it. Each template root the
 // server wrote carries its key (` wk="0.1/0"`, research 19 §2.4); compiled hydratable output claims elements by
 // key (`tpl`), walks over the server's hole ranges (`first`/`next`) and adopts their nodes (`child`). A key with no
 // server element is a miss: dev builds warn, every build counts it in `hydration.misses`, and the client renders
 // that template fresh so the app still works.
 //
 // Hydration is one synchronous pass over the whole container. Events fired before it finishes are dropped, unless the
-// app has lazy islands: then `@weft/start`'s capture script holds them for `drain` (island.ts).
+// app has lazy islands: then `@weft-js/start`'s capture script holds them for `drain` (island.ts).
 
 import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
 import { hchild } from './claim'

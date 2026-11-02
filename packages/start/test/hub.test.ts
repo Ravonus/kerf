@@ -1,12 +1,12 @@
 // The hub and `/_weft/rt` without a server: rings and cursors, backpressure, limits, the Origin check and the bus
 // contract. What a sink does, a real connection does; test/rt.test.mjs runs the same protocol over HTTP.
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { channel, memoryBus, mutation, query, realtime, StartError, stream, topic, tracked } from '@weft/start'
-import { configure, hub, resetHub, rtRoute, type Sink } from '@weft/start/hub'
-import { postgresBus } from '@weft/start/bus/postgres'
+import { channel, memoryBus, mutation, query, realtime, StartError, stream, topic, tracked } from '@weft-js/start'
+import { configure, hub, resetHub, rtRoute, type Sink } from '@weft-js/start/hub'
+import { postgresBus } from '@weft-js/start/bus/postgres'
 import { attach, socketRoute } from '../src/socket'
 import { createScope, fetchQuery, liveQueries, runMutation } from '../src/exec'
-import { currentScope, enter, fns, runtime } from '@weft/start/data'
+import { currentScope, enter, fns, runtime } from '@weft-js/start/data'
 
 // What server.tsx sets: the request scope, found through AsyncLocalStorage.
 const als = new AsyncLocalStorage<any>()
@@ -450,9 +450,9 @@ describe('channels on the hub', () => {
 })
 
 test('a plugin\'s bus waits for its first use, and only then loads', async () => {
-  const { slotBus, memoryBus } = await import('@weft/start/bus')
+  const { slotBus, memoryBus } = await import('@weft-js/start/bus')
   let loads = 0
-  const bus = slotBus('@weft/realtime-redis', async () => (loads++, memoryBus()))
+  const bus = slotBus('@weft-js/realtime-redis', async () => (loads++, memoryBus()))
   expect(bus.name).toBe('redis')
   await bus.close?.()
   expect(loads).toBe(0)

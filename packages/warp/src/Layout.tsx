@@ -1,20 +1,20 @@
 // Layout primitives (02 §3, PLAN §6): each is the spec's `data-scope` box and nothing else. Relationships, not pixels:
 // `gap` is the closed Space scale, widths are named, and there is no breakpoint prop, since the boxes answer to their
 // container. `as` picks the element from the tags below; weft has no dynamic tag, so each is one compiled template.
-import { untrack } from 'weft'
-import type { Space } from 'weft/ds'
+import { untrack } from '@weft-js/core'
+import type { Space } from '@weft-js/core/ds'
 import './styles'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/base.css'
-import '@weft/warp-core/styles/layout/stack.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/grid.css'
-import '@weft/warp-core/styles/layout/split.css'
-import '@weft/warp-core/styles/layout/center.css'
-import '@weft/warp-core/styles/layout/cover.css'
-import '@weft/warp-core/styles/layout/frame.css'
-import '@weft/warp-core/styles/layout/spacer.css'
-import '@weft/warp-core/styles/layout/inset.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/base.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/grid.css'
+import '@weft-js/warp-core/styles/layout/split.css'
+import '@weft-js/warp-core/styles/layout/center.css'
+import '@weft-js/warp-core/styles/layout/cover.css'
+import '@weft-js/warp-core/styles/layout/frame.css'
+import '@weft-js/warp-core/styles/layout/spacer.css'
+import '@weft-js/warp-core/styles/layout/inset.css'
 import './layout.css'
 
 type Open = { children?: any; [attr: string]: any }

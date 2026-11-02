@@ -1,7 +1,7 @@
 // nats against a real server, through the `realtime.bus` suite. `WEFT_TEST_NATS` is the path to a binary.
 import { spawn, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
-import { busSuite } from 'weft/test/plugins'
+import { busSuite } from '@weft-js/core/test/plugins'
 import { bus, natsBus } from '../src/index'
 
 const freePort = () => new Promise<number>(ok => { const s = createServer().listen(0, () => { const { port } = s.address() as any; s.close(() => ok(port)) }) })

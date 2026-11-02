@@ -1,10 +1,10 @@
-import { menu, moveShuttle, uid, type Align, type Side } from '@weft/warp-core'
-import { onCleanup, onMount, state } from 'weft'
+import { menu, moveShuttle, uid, type Align, type Side } from '@weft-js/warp-core'
+import { onCleanup, onMount, state } from '@weft-js/core'
 import { Button, type ButtonProps } from './Button'
 import { Icon, type IconRef } from './Icon'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/menu.css'
+import '@weft-js/warp-core/styles/components/menu.css'
 
 export type MenuEntry =
   | { label: string; onSelect?: () => void; icon?: IconRef; shortcut?: string; tone?: 'critical'; disabled?: boolean; href?: string }

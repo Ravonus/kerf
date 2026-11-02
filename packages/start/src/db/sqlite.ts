@@ -1,4 +1,4 @@
-// SQLite for `@weft/start` (research 28 §1): Node's and Deno's `node:sqlite` or Bun's `bun:sqlite` behind Drizzle's
+// SQLite for `@weft-js/start` (research 28 §1): Node's and Deno's `node:sqlite` or Bun's `bun:sqlite` behind Drizzle's
 // proxy driver, so no native binary and the same async API as Postgres. One connection, opened on the first statement
 // (`weft build` loads this module and must not touch a file). A transaction's body is async, so it holds a gate:
 // statements outside it wait, or a rollback would take another request's writes with it.
@@ -62,7 +62,7 @@ export type SqliteDb<S extends Record<string, unknown>> = SqliteRemoteDatabase<S
 
 export function createDb<S extends Record<string, unknown>>({ schema, url = 'file:.data/app.db', migrate = true }: SqliteOptions<S>): SqliteDb<S> {
   if (/^[a-z][a-z0-9+.-]+:\/\//i.test(url) && !url.startsWith('file:'))
-    throw new StartError('Q013', `\`@weft/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``, 'use `file:<path>`, or `createDb` from `@weft/start/db/postgres` for a Postgres URL')
+    throw new StartError('Q013', `\`@weft-js/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``, 'use `file:<path>`, or `createDb` from `@weft-js/start/db/postgres` for a Postgres URL')
   const path = url.replace(/^file:/, '')
   let conn: Promise<Conn> | undefined
   const connect = () => (conn ??= open(path).catch(e => { conn = undefined; throw e }))

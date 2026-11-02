@@ -13,15 +13,15 @@ const full = {
   'src/routes/_layout.tsx': 'export default p => p.children\n',
   'src/routes/todos/[id].tsx': 'export default () => <h1>Hi</h1>\n',
   'src/server/todos.ts': "export const listTodos = query({ run: () => [] })\nexport const addTodo = mutation({ run: () => {} })\nexport const room = channel({})\n",
-  'src/db/index.server.ts': "import { createDb } from '@weft/start/db/postgres'\n",
+  'src/db/index.server.ts': "import { createDb } from '@weft-js/start/db/postgres'\n",
   'src/db/schema.ts': "export const todos = pgTable('todos', {})\nexport const users = pgTable('users', {})\n",
-  'src/auth.server.ts': "import { createAuth } from '@weft/start/auth/better-auth'\n",
+  'src/auth.server.ts': "import { createAuth } from '@weft-js/start/auth/better-auth'\n",
   'src/env.server.ts': 'export default {}\n',
 }
 
 describe('weft map', () => {
   it('names a hand-written auth provider as custom', async () => {
-    const dir = project({ 'weft.config.ts': 'export default {}\n', 'src/auth.server.ts': "import { defineAuth } from '@weft/start/auth'\n" })
+    const dir = project({ 'weft.config.ts': 'export default {}\n', 'src/auth.server.ts': "import { defineAuth } from '@weft-js/start/auth'\n" })
     expect((await agentMap(dir)).stack.auth).toBe('custom')
   })
 
@@ -44,7 +44,7 @@ describe('weft map', () => {
   })
 
   it('a plugin adds its own rows', async () => {
-    const plugin = "import { definePlugin } from 'weft/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({ map: [{ want: 'Audit log', call: '`acme audit`' }] }) })\n"
+    const plugin = "import { definePlugin } from '@weft-js/core/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({ map: [{ want: 'Audit log', call: '`acme audit`' }] }) })\n"
     const dir = project({ 'node_modules/acme/package.json': JSON.stringify({ name: 'acme', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/acme/plugin.mjs': plugin, 'weft.config.yaml': 'plugins: [acme]\n' })
     expect(want(await agentMap(dir), 'Audit log').call).toBe('`acme audit`')
   })

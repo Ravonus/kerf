@@ -8,9 +8,9 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { renderToString } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
-import { flush, render } from 'weft/test'
+import { renderToString } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
+import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../src/hydrate'
 
 type Comp = (props: any) => any

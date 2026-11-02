@@ -1,7 +1,7 @@
-import { DownIcon } from '@weft/icons'
+import { DownIcon } from '@weft-js/warp-icons'
 import { Field, type FieldProps } from './Field'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/inputs/choice.css' // the select and the field's chevron
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/inputs/choice.css' // the select and the field's chevron
 
 export type Option = { value: string; label: string; disabled?: boolean }
 export type OptionGroup = { group: string; options: Option[] }
@@ -14,7 +14,7 @@ function Choice({ o }: { o: Option | OptionGroup }) {
 
 /**
  * A select in the field shell, always a real <select>. On fine pointers, CSS gives it warp's list through base-select, with
- * no script; on touch and where that isn't supported the OS popup stays (03 §4, redesign §5). selectMenu() in @weft/warp-core
+ * no script; on touch and where that isn't supported the OS popup stays (03 §4, redesign §5). selectMenu() in @weft-js/warp-core
  * is the scripted list for an app that wants warp's list in every browser.
  */
 export function Select({ options, placeholder, ...props }: FieldProps & { options: (Option | OptionGroup)[]; placeholder?: string; onChange?: (e: Event) => void }) {

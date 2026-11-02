@@ -235,7 +235,7 @@ log(`scaffold in ${dir}`)
 must('node', [join(repo, 'packages/create-weft/bin/create-weft.mjs'), dir, '--db', 'none', '--ui', 'none', '--name', 'search'], repo)
 const pkgFile = join(dir, 'package.json')
 const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'))
-for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === 'weft' || name.startsWith('@weft/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft/', ''))}`
+for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
 pkg.dependencies.zod = '4.6.7'
 writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
 must('npm', ['install', '--no-audit', '--no-fund'])

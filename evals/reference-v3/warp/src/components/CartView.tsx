@@ -1,5 +1,5 @@
-import { derived, type State } from 'weft'
-import { Badge, Button, Card } from '@weft/warp'
+import { derived, type State } from '@weft-js/core'
+import { Badge, Button, Card } from '@weft-js/warp'
 import type { Product } from '../api'
 import type { Cart } from '../App'
 import { money } from '../format'

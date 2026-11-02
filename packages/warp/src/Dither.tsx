@@ -1,10 +1,10 @@
-import { ditherField, ditherImage, type Algorithm, type FieldOptions, type Gradient, type MaskSource, type Ramp } from '@weft/warp-core/dither'
-import { derived } from 'weft'
-import { use } from '@weft/warp-core/weft'
+import { ditherField, ditherImage, type Algorithm, type FieldOptions, type Gradient, type MaskSource, type Ramp } from '@weft-js/warp-core/dither'
+import { derived } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/canvas/dither.css'
+import '@weft-js/warp-core/styles/canvas/dither.css'
 
-export type { Algorithm, Field as FieldFn, FieldName, Gradient, MaskSource, Pattern, PointerMode, Ramp } from '@weft/warp-core/dither'
+export type { Algorithm, Field as FieldFn, FieldName, Gradient, MaskSource, Pattern, PointerMode, Ramp } from '@weft-js/warp-core/dither'
 
 const box = (ratio: string | number | undefined, style: unknown) => [ratio === undefined ? undefined : `aspect-ratio:${ratio}`, style].filter(Boolean).join(';') || undefined
 

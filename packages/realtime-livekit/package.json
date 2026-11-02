@@ -1,8 +1,8 @@
 {
-  "name": "@weft/realtime-livekit",
-  "version": "0.0.0",
+  "name": "@weft-js/realtime-livekit",
+  "version": "0.1.0",
   "private": true,
-  "description": "@weft/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
+  "description": "@weft-js/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -17,14 +17,27 @@
     "livekit-client": "2.23.0"
   },
   "peerDependencies": {
-    "@weft/start": "*",
-    "weft": "*",
-    "@weft/multiplayer": "*"
+    "@weft-js/start": "*",
+    "@weft-js/core": "*",
+    "@weft-js/multiplayer": "*"
   },
   "devDependencies": {
-    "@weft/start": "file:../start",
+    "@weft-js/start": "file:../start",
     "vitest": "5.0.5",
-    "weft": "file:../weft",
-    "@weft/multiplayer": "file:../multiplayer"
-  }
+    "@weft-js/core": "file:../weft",
+    "@weft-js/multiplayer": "file:../multiplayer"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "README.md",
+    "LICENSE"
+  ]
 }

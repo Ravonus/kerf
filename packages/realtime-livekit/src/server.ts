@@ -1,5 +1,5 @@
 // The token, for `multiplayer({ ticket })`: signed with the room's identity, so no client can name itself to LiveKit.
-import { roomId, signTicket } from '@weft/multiplayer/server'
+import { roomId, signTicket } from '@weft-js/multiplayer/server'
 
 export interface LivekitTicketOptions {
   /** Default `LIVEKIT_API_KEY`. */

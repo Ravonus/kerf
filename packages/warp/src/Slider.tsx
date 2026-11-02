@@ -1,8 +1,8 @@
-import { slider as action, uid } from '@weft/warp-core'
-import { derived } from 'weft'
-import { use } from '@weft/warp-core/weft'
+import { slider as action, uid } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 import './fields'
-import '@weft/warp-core/styles/inputs/range.css'
+import '@weft-js/warp-core/styles/inputs/range.css'
 
 export interface SliderProps {
   label: string

@@ -1,16 +1,16 @@
-// @weft/pay/server (research 10 §3, 37): one ledger for every rail. A rail's `verify` turns the bytes it received into events;
+// @weft-js/pay/server (research 10 §3, 37): one ledger for every rail. A rail's `verify` turns the bytes it received into events;
 // `ingest` folds them into `purchases`; entitlements are read from those, against the catalog, so nothing else can grant
 // anything. `src/pay.server.ts` default-exports what `definePay` returns, and that value is a `server.extension`: it is
-// how this package reaches the server, through the slot any plugin can use. No line of @weft/start names payments.
+// how this package reaches the server, through the slot any plugin can use. No line of @weft-js/start names payments.
 //
 // Delivery is at least once, in any order. An event applies by the rail's own clock, so an old one changes nothing and a
 // repeat lands on what it already wrote; `mark` comes last, because a crash before it should redeliver. A failure answers
 // 500 for the same reason. A terminal state wins a tie: a refund and a renewal in the same second is a refund.
 
-import type { ServerExtension } from '@weft/start/extension'
+import type { ServerExtension } from '@weft-js/start/extension'
 import { entitlementTag, PayError, type CheckoutLine, type Interval, type PayRail, type Plan, type Product, type PurchaseState, type RailEvent } from './index'
 
-declare module '@weft/start' {
+declare module '@weft-js/start' {
   interface Context {
     /** What this user holds, from verified rail events. Await it. */
     entitlements: Entitlements
@@ -36,7 +36,7 @@ export interface Purchase {
   customer: string | null
 }
 
-/** Where the ledger lives. `drizzlePayStore` in `@weft/start/pay/drizzle`, or write these five for any database. */
+/** Where the ledger lives. `drizzlePayStore` in `@weft-js/start/pay/drizzle`, or write these five for any database. */
 export interface PayStore {
   /** Not durable: refused on a production server (PAY016). */
   readonly memory?: boolean
@@ -86,7 +86,7 @@ export interface PayOptions<P extends Product> {
   leeway?: number
 }
 
-/** The server log: @weft/start passes its own. */
+/** The server log: @weft-js/start passes its own. */
 export type PayReport = (d: { code: string; severity: string; message: string }) => void
 
 export interface CheckoutInput<P extends Product = Product> {

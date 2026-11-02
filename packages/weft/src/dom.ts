@@ -1,4 +1,4 @@
-// weft/dom: `render`, `hydrate`, the keyed list, and the helpers weft's back end emits (most live in dom-next.ts;
+// @weft-js/core/dom: `render`, `hydrate`, the keyed list, and the helpers weft's back end emits (most live in dom-next.ts;
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
@@ -22,7 +22,7 @@ export function createComponent<P>(Comp: (props: P) => any, props: P, name?: str
   if (!DEV || !name) return untrack(() => Comp(props))
   const prev = devComponent.label, prevId = devComponent.id
   devComponent.label = `<${name}> (${loc})`
-  devComponent.id = ++instances // tells instances apart in the dev graph (weft/devtools)
+  devComponent.id = ++instances // tells instances apart in the dev graph (@weft-js/core/devtools)
   try { return untrack(() => Comp(props)) } finally { devComponent.label = prev; devComponent.id = prevId }
 }
 
@@ -184,7 +184,7 @@ function inOrder(next: Node[], current: Node[]): Set<Node> {
 export function insert(parent: Mountable, value: any, marker?: Node | null) {
   let current = EMPTY
   const at = marker ?? null
-  // Dev: hot-swappable components (weft/hmr) are accessors, so a static array of them (`<><A /><B /></>`) is live.
+  // Dev: hot-swappable components (@weft-js/core/hmr) are accessors, so a static array of them (`<><A /><B /></>`) is live.
   if (DEV && Array.isArray(value) && value.some(v => typeof v === 'function')) {
     const list = value
     value = () => list

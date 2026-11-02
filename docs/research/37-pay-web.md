@@ -1,4 +1,4 @@
-# 37 — `@weft/pay`, the web half: what was built, and what changed from research 10
+# 37 — `@weft-js/pay`, the web half: what was built, and what changed from research 10
 
 Built 2026-10-31 from PLAN §4.4 and Phase 6c, inside §7c's slot model. Native rails, the policy table, `weft pay explain`
 and `weft pay sync` are not built. Everything here was checked with `fakePay`, mocked Stripe HTTP and a local mock server,
@@ -11,22 +11,22 @@ because a framework feature can use private paths and a plugin can't, and nobody
 
 | Piece | Where | Why there |
 |---|---|---|
-| Catalog, `price`, `PayRail` | `@weft/pay` | Client-safe, no dependencies |
-| Ledger, `definePay`, `memoryPayStore` | `@weft/pay/server` | Rail-neutral, so a rail is only an adapter (research 13 §6). PAY017 keeps it out of the client graph |
-| `fakePay`, `payRailSuite` | `@weft/pay/test` | Core can't depend on a plugin, so this isn't `weft/test`. It reaches that only through `net` and `clock` |
+| Catalog, `price`, `PayRail` | `@weft-js/pay` | Client-safe, no dependencies |
+| Ledger, `definePay`, `memoryPayStore` | `@weft-js/pay/server` | Rail-neutral, so a rail is only an adapter (research 13 §6). PAY017 keeps it out of the client graph |
+| `fakePay`, `payRailSuite` | `@weft-js/pay/test` | Core can't depend on a plugin, so this isn't `@weft-js/core/test`. It reaches that only through `net` and `clock` |
 | PAY-codes, `weft add pay` | `src/checks.mjs`, `src/setup.mjs` | The `check` hook and the `setup` data, in the manifest |
-| `drizzlePayStore` | `@weft/pay/drizzle` | Beside the ledger |
-| Stripe | `@weft/pay/stripe` | A provider. `fetch`, no SDK, server side only |
+| `drizzlePayStore` | `@weft-js/pay/drizzle` | Beside the ledger |
+| Stripe | `@weft-js/pay/stripe` | A provider. `fetch`, no SDK, server side only |
 
 What pay needed became API, each with a test that names no plugin:
 
 | Added | For |
 |---|---|
-| `server.extension@1` (`@weft/start/extension`) | Routes under `/_weft/x/<key>/`, `ctx`, guards, enforced options, personal keys, a boot check |
+| `server.extension@1` (`@weft-js/start/extension`) | Routes under `/_weft/x/<key>/`, `ctx`, guards, enforced options, personal keys, a boot check |
 | `FnOptions` | Options on `query` and `mutation`, by augmentation |
 | 2-argument `tags` | Query tags that read `ctx` (§5) |
 | `answer` on an error | Any plugin's typed error, status included |
-| `net.extension` | A plugin's server part in `weft/test` |
+| `net.extension` | A plugin's server part in `@weft-js/core/test` |
 | `setup` in a manifest | `weft add` writes what a plugin describes |
 | `docs` in a manifest, and plugin codes in `weft docs` | `weft docs pay`, `weft docs PAY012` |
 
@@ -42,13 +42,13 @@ webhook exists because `src/pay.server.ts` does.
 
 The client graph never sees a rail: the provider declares only the `server` side, and Checkout is a redirect, so no page
 needs Stripe.js or a publishable key. An app without the plugin has none of it in its bundle, which the packed gate asserts;
-that gate caught an error-name literal in `dbError` before pay moved out. In `@weft/start` nothing is left but the generic
+that gate caught an error-name literal in `dbError` before pay moved out. In `@weft-js/start` nothing is left but the generic
 seam. The ledger and the rail use only `fetch` and WebCrypto, so neither ties an app to Node.
 
 ## 3. Changes from research 10
 
 - **`entitlements` and `checkout` are the app's own server functions**, in `src/server/pay.ts`, not imports from
-  `@weft/pay`. `weft/start` gives a function its id from `export const x = query({…})` in a server module, and §7c wants
+  `@weft-js/pay`. `weft/start` gives a function its id from `export const x = query({…})` in a server module, and §7c wants
   nothing hidden. So a page reads `entitlements.live().value?.includes('pro')`: a list, since a `Set` doesn't survive JSON.
 - **`checkout` returns no `Resource<CheckoutResult>`.** On the web it's a mutation that redirects, and `purchased` is
   unknowable at that moment anyway. The native half can add one.

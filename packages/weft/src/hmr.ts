@@ -1,4 +1,4 @@
-// weft/hmr: hot updates for dev builds (PLAN §3.6, research 21). Only compiled dev modules import it (the compiler's
+// @weft-js/core/hmr: hot updates for dev builds (PLAN §3.6, research 21). Only compiled dev modules import it (the compiler's
 // `hmr` option, set by the weft() Vite plugin when serving); production builds never do.
 //
 // Each top-level component is registered under `file#Name` with a hash of its source. A registered component mounts

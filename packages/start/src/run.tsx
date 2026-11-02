@@ -9,9 +9,9 @@
 // the cache). Redirects from loaders and server functions navigate (at most 5 in a row); a
 // mutation that invalidates a tag the current route's loaders read refetches the route data in place.
 
-import { drain, enter, hydrate, level as staticLevel, wake } from 'weft/dom'
-import { flush } from 'weft'
-import { setHead } from 'weft/head'
+import { drain, enter, hydrate, level as staticLevel, wake } from '@weft-js/core/dom'
+import { flush } from '@weft-js/core'
+import { setHead } from '@weft-js/core/head'
 import { applyMatches, client, createRouteState, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
 import { App } from './view'
 import { ErrorPage, NotFoundPage } from './builtin'

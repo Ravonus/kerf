@@ -1,7 +1,7 @@
 // The table and shell driven as a user would: the cases budget.test.tsx doesn't reach.
 import { fireEvent } from '@testing-library/dom'
-import { resource, state } from 'weft'
-import { flush, render } from 'weft/test'
+import { resource, state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Shell } from '../src/Shell'
 import { Table, type Column } from '../src/Table'
 

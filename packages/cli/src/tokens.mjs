@@ -11,11 +11,11 @@ export async function writeTokens(root) {
   root = resolve(root)
   let plugin
   try {
-    plugin = await import(pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft/warp/plugin')).href)
+    plugin = await import(pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft-js/warp/plugin')).href)
   } catch {
-    throw Object.assign(new Error('`weft tokens` exports warp\'s tokens, and this app has no @weft/warp'), { code: 'E_NO_WARP' })
+    throw Object.assign(new Error('`weft tokens` exports warp\'s tokens, and this app has no @weft-js/warp'), { code: 'E_NO_WARP' })
   }
-  const css = (await loadConfig(root)).contributions.find(c => c.name === '@weft/warp')?.manifest.tokens?.css ?? ''
+  const css = (await loadConfig(root)).contributions.find(c => c.name === '@weft-js/warp')?.manifest.tokens?.css ?? ''
   const dir = join(root, '.weft', 'tokens')
   mkdirSync(dir, { recursive: true })
   const files = plugin.dtcg(css)

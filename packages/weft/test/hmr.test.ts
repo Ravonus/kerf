@@ -4,20 +4,20 @@
 // Each "module" is source text compiled by the real compiler (dev, `hmr`) and evaluated with a fake `import.meta.hot`,
 // the way Vite re-executes an accepted module: same file name, a new module instance, importers left as they were.
 import { createRequire } from 'node:module'
-import * as core from 'weft'
-import { defineState, flush, onCleanup, onMount, state, watch } from 'weft'
-import * as dom from 'weft/dom'
-import { component, render } from 'weft/dom'
-import * as hmr from 'weft/hmr'
-import { hmrStats } from 'weft/hmr'
+import * as core from '@weft-js/core'
+import { defineState, flush, onCleanup, onMount, state, watch } from '@weft-js/core'
+import * as dom from '@weft-js/core/dom'
+import { component, render } from '@weft-js/core/dom'
+import * as hmr from '@weft-js/core/hmr'
+import { hmrStats } from '@weft-js/core/hmr'
 
 const { transform } = createRequire(import.meta.url)('../compiler.cjs')
 
 type Exports = Record<string, any>
 const modules: Record<string, Exports> = {
   weft: { ...core, defineState, onCleanup, onMount, state, watch },
-  'weft/dom': dom,
-  'weft/hmr': hmr,
+  '@weft-js/core/dom': dom,
+  '@weft-js/core/hmr': hmr,
 }
 
 /** Compile `source` as `file` and run it; its exports become importable as `file`. */
@@ -60,7 +60,7 @@ const click = (el: Element) => el.dispatchEvent(new MouseEvent('click', { bubble
 describe('compiled output', () => {
   test('components register; a component-only module accepts its own updates', () => {
     const { code, hot } = load(file('Counter.tsx'), `
-      import { state } from 'weft'
+      import { state } from '@weft-js/core'
       export function Counter() { const count = state(0); return <button>{count.value}</button> }`)
     expect(code).toMatch(/_\$keep\(state\(0\), "Counter", "count:[0-9a-f]+"\)/)
     expect(code).toContain('_$hot(')
@@ -69,12 +69,12 @@ describe('compiled output', () => {
 
   test('a module that exports state, or mounts the app, passes the update to its importers', () => {
     const store = load(file('store.tsx'), `
-      import { state } from 'weft'
+      import { state } from '@weft-js/core'
       export const shared = state(0)
       export function Badge() { return <b>{shared.value}</b> }`)
     expect(store.hot.accepted).toBe(false)
     const entry = load(file('main.tsx'), `
-      import { render } from 'weft/dom'
+      import { render } from '@weft-js/core/dom'
       function App() { return <p>hi</p> }
       const el = document.createElement('div')
       render(() => <App />, el)`)
@@ -82,19 +82,19 @@ describe('compiled output', () => {
   })
 
   test('production and non-hmr output carry none of it', () => {
-    const src = `import { state } from 'weft'\nexport function C() { const s = state(0); return <i>{s.value}</i> }`
+    const src = `import { state } from '@weft-js/core'\nexport function C() { const s = state(0); return <i>{s.value}</i> }`
     for (const compile of [{ dev: false, hmr: true }, { dev: true, hmr: false }]) {
       const out = transform(src, { filename: '/app/C.tsx', generate: 'dom', ...compile }).code as string
-      expect(out).not.toMatch(/_\$keep|_\$hot|weft\/hmr|import\.meta\.hot/)
+      expect(out).not.toMatch(/_\$keep|_\$hot|@weft-js\/core\/hmr|import\.meta\.hot/)
     }
     const ssr = transform(src, { filename: '/app/C.tsx', generate: 'ssr', dev: true, hmr: true }).code as string
-    expect(ssr).not.toMatch(/_\$keep|weft\/hmr/)
+    expect(ssr).not.toMatch(/_\$keep|@weft-js\/core\/hmr/)
   })
 })
 
 describe('updates', () => {
   const counter = (label: string, init = '0', name = 'count') => `
-    import { state } from 'weft'
+    import { state } from '@weft-js/core'
     export function Counter() {
       const ${name} = state(${init})
       return <button onClick={() => ${name}.value++}>${label} {${name}.value}</button>
@@ -143,7 +143,7 @@ describe('updates', () => {
   test('an edit to a parent keeps the state of the children it re-creates', () => {
     const f = file('Page.tsx')
     const page = (title: string) => `
-      import { state } from 'weft'
+      import { state } from '@weft-js/core'
       function Item(props) { const n = state(0); return <li onClick={() => n.value++}>{props.label} {n.value}</li> }
       export function Page() { const open = state(true); return <section><h2>${title}</h2><ul><Item label="a" /><Item label="b" /></ul></section> }`
     const { exports } = load(f, page('One'))
@@ -187,7 +187,7 @@ describe('updates', () => {
   test('no duplicate listeners or leaked effects after many updates', () => {
     const f = file('Keys.tsx')
     const keys = (label: string) => `
-      import { state, watch, onMount, onCleanup } from 'weft'
+      import { state, watch, onMount, onCleanup } from '@weft-js/core'
       export function Keys() {
         const count = state(0)
         const onKey = () => { globalThis.__keys++ }
@@ -236,7 +236,7 @@ describe('updates', () => {
   test('defineState scopes survive their module re-running', () => {
     const f = file('cart.tsx')
     const cart = (label: string) => `
-      import { defineState, state } from 'weft'
+      import { defineState, state } from '@weft-js/core'
       export const cart = defineState('hmr-cart-${n}', () => { const lines = state(0); return { lines, add() { lines.value++ } } })
       export function Lines() { return <p>${label} {cart.lines.value}</p> }`
     const first = load(f, cart('lines')).exports
@@ -256,7 +256,7 @@ describe('gate: HMR with 1k mounted components (PLAN §3.7, ≤ 50 ms p95)', () 
     const N = 1000
     const dir = `/app/gate${++n}`
     const comp = (i: number, label: string) => `
-      import { state } from 'weft'
+      import { state } from '@weft-js/core'
       export function C${i}(props) {
         const count = state(${i})
         return <li class="row" onClick={() => count.value++}><b>${label}</b> {props.label} {count.value}</li>

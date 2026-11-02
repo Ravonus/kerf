@@ -1,9 +1,9 @@
 // The rich inputs, server-rendered and hydrated: every node claimed, nothing written, as in hydrate.test.tsx.
-import { resetIds } from '@weft/warp-core'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
+import { resetIds } from '@weft-js/warp-core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
 import { hydration } from '../../weft/src/hydrate'
-// @ts-expect-error: query imports (weft/vite)
+// @ts-expect-error: query imports (@weft-js/core/vite)
 import * as server from './fixtures/Rich.tsx?weft-ssr'
 // @ts-expect-error
 import * as client from './fixtures/Rich.tsx?weft-hydrate'

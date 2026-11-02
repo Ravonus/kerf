@@ -1,12 +1,12 @@
 // Server render → hydrate round trips of the v3 reference app (evals/reference-v3/weft). The same sources load
-// twice: `?weft-ssr` compiles them for weft/ssr, `?weft-hydrate` for hydratable weft/dom (vite.mjs), both with
+// twice: `?weft-ssr` compiles them for @weft-js/core/ssr, `?weft-hydrate` for hydratable @weft-js/core/dom (vite.mjs), both with
 // weft's own back end (research 19 §2.4: keys are source paths, ` wk="0.1/0"`).
 // weft-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { attr, renderToString } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
-import { flush } from 'weft/test'
+import { attr, renderToString } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
+import { flush } from '@weft-js/core/test'
 import { hydration } from '../src/hydrate'
 // @ts-expect-error: query imports (vite.mjs)
 import { App as ServerApp } from '../../../evals/reference-v3/weft/src/App.tsx?weft-ssr'

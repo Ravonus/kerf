@@ -1,7 +1,7 @@
 // A list source over a Prisma model delegate: `prismaSource(ctx.db.task, { columns })`. It only reads what a delegate
 // has, so it needs nothing from `@prisma/client` and works with any generated client.
 
-import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
+import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft-js/start/list'
 
 export interface PrismaDelegate {
   findMany(args: any): Promise<any[]>

@@ -1,5 +1,5 @@
-// The list contract (agorix 03 §5, research 13's `db.adapter@1`): one way to ask for a page or a cursor, whatever holds
-// the rows. `listInput` is a schema a `query` takes as its `input`, and a source is what the `@weft/db` subpaths build.
+// The list contract: one way to ask for a page or a cursor, whatever holds
+// the rows. `listInput` is a schema a `query` takes as its `input`, and a source is what the `@weft-js/db` subpaths build.
 //
 //   export const tasks = query({
 //     input: listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 25, max: 100 } }),
@@ -7,7 +7,7 @@
 //   })
 //
 // Every name a client sends is checked against an allowlist twice, here and against the source's `columns`, so no
-// request reaches an identifier (agorix H6). A filter value is a scalar or a list of them: an object is refused, which
+// request reaches an identifier. A filter value is a scalar or a list of them: an object is refused, which
 // is what stops `{ $ne: null }` reaching a document store. Only `columns` are selected, returned or written.
 
 import { StartError, type StandardSchemaV1 } from './data'
@@ -118,7 +118,7 @@ export function listInput(spec: ListSpec): StandardSchemaV1<ListRequest | undefi
 // ---- sources --------------------------------------------------------------------------------------------------------
 
 export interface SourceSpec {
-  /** Public name → stored name. Required (agorix H6): only these are selected, returned or written. */
+  /** Public name → stored name. Required: only these are selected, returned or written. */
   columns: Record<string, string>
   /** The public name of the row's id. Default `id`. */
   id?: string

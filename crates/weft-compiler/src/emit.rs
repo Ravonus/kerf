@@ -396,7 +396,7 @@ impl<'t> Emitter<'t> {
             return format!("{note}{ssr}((_k) => {})", parts.join(" + "));
         }
         let t = format!("_t{}", self.templates.len() + 1);
-        // Hydratable output claims the server's elements (`htpl`, weft/dom's claim.ts); client-only output doesn't ship that.
+        // Hydratable output claims the server's elements (`htpl`, @weft-js/core/dom's claim.ts); client-only output doesn't ship that.
         let tpl = self.helper(if self.hydratable { "htpl" } else { "tpl" });
         let html = serde_json::to_string(&b.html).unwrap();
         // An SVG element outside an <svg> (a component returning <path/>) is parsed inside one, then lifted out.

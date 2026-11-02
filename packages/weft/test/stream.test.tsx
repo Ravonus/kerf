@@ -3,8 +3,8 @@
 // 0 DOM writes. The server and client compile the same fixture (`?weft-ssr` / `?weft-hydrate`, vite.mjs).
 // weft-allow T005: framework test of streaming SSR; server markup, chunk order and node identity are the subject
 // weft-allow T004: the stream interleaves resolves with its own macrotask ticks and timeout, so resolve order needs real timers
-import { renderToStream, SWAP } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
+import { renderToStream, SWAP } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
 import { hydration } from '../src/hydrate'
 // @ts-expect-error: query imports (vite.mjs)
 import { Bare as ServerBare, Page as ServerPage } from './fixtures/ssr/Streamed.tsx?weft-ssr'

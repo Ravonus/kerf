@@ -1,9 +1,9 @@
 // Taking `linked` off `state` counts as a mention. This file has to stay free of the dotted and bracket forms: either one
-// would bring weft/keyed in and hide a failure.
-import { state } from 'weft'
+// would bring @weft-js/core/keyed in and hide a failure.
+import { state } from '@weft-js/core'
 
 const { linked } = state
 
-test('a page that only destructures linked gets weft/keyed', () => {
+test('a page that only destructures linked gets @weft-js/core/keyed', () => {
   expect(linked(() => 3).value).toBe(3)
 })

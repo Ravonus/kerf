@@ -1,6 +1,6 @@
-import { derived, onMount, state } from 'weft'
-import { Button } from '@weft/warp'
-import '@weft/warp-core/styles/rich/codeblock.css'
+import { derived, onMount, state } from '@weft-js/core'
+import { Button } from '@weft-js/warp'
+import '@weft-js/warp-core/styles/rich/codeblock.css'
 import show from '../generated/showcase.json'
 
 const START = 2

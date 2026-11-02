@@ -1,7 +1,7 @@
 // The schedule pack on the a11y gallery (?part=schedule): rendered by test/a11y/gallery.tsx. Everything on one page with
 // real data; `?open=…` opens an overlay. Named `XCase` exports are the hydration suite's.
-import { countByDay, type Attendee, type CalEvent, type IsoDate, type WeekDay } from '@weft/warp-core'
-import { state } from 'weft'
+import { countByDay, type Attendee, type CalEvent, type IsoDate, type WeekDay } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
 import { Toaster } from '../../src/Toast'
 import { Agenda } from '../../src/schedule/Agenda'
 import { AvailabilityEditor } from '../../src/schedule/AvailabilityEditor'

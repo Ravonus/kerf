@@ -1,17 +1,17 @@
-import { announce, countdownLabel, countdownParts, levelMeter, uid } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
+import { announce, countdownLabel, countdownParts, levelMeter, uid } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { Avatar } from '../parts'
 import { Button } from '../Button'
 import { Card } from '../Card'
 import { Input } from '../Field'
 import { Select, type Option } from '../Select'
 import { Spinner } from '../Spinner'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { avatarTint, G, held } from './shared'
 import '../fields'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/tile.css'
-import '@weft/warp-core/styles/app/prejoin.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/tile.css'
+import '@weft-js/warp-core/styles/app/prejoin.css'
 
 const BARS = Array.from({ length: 16 }, (_, i) => i)
 export interface PrejoinDevices { mics?: Option[]; cameras?: Option[]; speakers?: Option[] }

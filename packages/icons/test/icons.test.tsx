@@ -1,6 +1,6 @@
 // The markup warp's CSS expects, and the component API.
-import { render } from 'weft/test'
-import { CheckIcon, XIcon, iconSet } from '@weft/icons'
+import { render } from '@weft-js/core/test'
+import { CheckIcon, XIcon, iconSet } from '@weft-js/warp-icons'
 
 test('decorative by default; label names it', () => {
   const { container } = render(() => <div><CheckIcon /><XIcon label="Close" /></div>)

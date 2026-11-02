@@ -274,8 +274,8 @@ for (const [where, from, to, mode] of patches) {
       if (text.includes(from)) { out.set(rel, text.replace(from, to)); hit = true }
       continue
     }
-    if (from !== to && text.includes(from)) { out.set(rel, text.replaceAll(from, to)); hit = true }
-    else if (text.includes(to)) present = true
+    if (text.includes(to)) present = true // a `to` can hold its `from`, so it comes first
+    else if (text.includes(from)) { out.set(rel, text.replaceAll(from, to)); hit = true }
   }
   if (!hit && !present && mode !== 'any') missed.push(`${where}: ${from}`)
 }

@@ -1,5 +1,5 @@
 // The js-framework-benchmark entry, as packages/weft/test/fixtures/next/Bench.tsx has it, without its buttons.
-import { flush, state, type State } from 'weft'
+import { flush, state, type State } from '@weft-js/core'
 import { adjectives, colors, nouns, random } from '../shared/words.js'
 
 type Row = { id: number; label: State<string> }

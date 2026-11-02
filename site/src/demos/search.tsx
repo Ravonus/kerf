@@ -1,5 +1,5 @@
-import { derived, state } from 'weft'
-import { Card, Input, Tag } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { Card, Input, Tag } from '@weft-js/warp'
 
 const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima', 'Lagos', 'Porto']
 

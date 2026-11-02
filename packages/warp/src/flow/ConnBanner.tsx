@@ -1,13 +1,13 @@
-import { ClockIcon, RefreshIcon, SparkleIcon, WifiIcon, WifiOffIcon } from '@weft/icons'
-import { announce, connView } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
+import { ClockIcon, RefreshIcon, SparkleIcon, WifiIcon, WifiOffIcon } from '@weft-js/warp-icons'
+import { announce, connView } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack, watch } from '@weft-js/core'
 import { Button, type ButtonProps } from '../Button'
 import { useCooldown } from './kit'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/flows/conn.css'
-import '@weft/warp-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/flows/conn.css'
+import '@weft-js/warp-core/styles/components/spinner.css'
 
 type Live<T> = T | { readonly value: T } | (() => { readonly value: T } | T)
 
@@ -15,7 +15,7 @@ const read = <T,>(v: Live<T>): T => {
   const x = typeof v === 'function' ? (v as () => any)() : v
   return x !== null && typeof x === 'object' && 'value' in x ? x.value : x
 }
-/** `online` from weft/browser, its result, or a boolean: a factory is called once. */
+/** `online` from @weft-js/core/browser, its result, or a boolean: a factory is called once. */
 function liveOf<T>(get: () => Live<T>) {
   const src = untrack(get)
   const once = typeof src === 'function' ? untrack(() => (src as () => any)()) : undefined
@@ -26,7 +26,7 @@ const RECOVERED_S = 3
 const LATER_MS = 30 * 60 * 1000
 
 export interface ConnBannerProps {
-  /** `online` from `weft/browser`, its derived, or a boolean. */
+  /** `online` from `@weft-js/core/browser`, its derived, or a boolean. */
   online?: Live<boolean>
   /** The `.live` state (07 §4.4): `live`, `connecting`, `reconnecting`, `offline`. */
   state?: Live<string | undefined>

@@ -1,8 +1,8 @@
 // The compiler lowers a list over an array nothing re-reads to a plain `.map`. Server, hydration and updates stay the same.
 // weft-allow T005: framework test of hydration; node identity is the subject
-import { flush } from 'weft'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
+import { flush } from '@weft-js/core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
 import { Grid as ServerGrid } from './fixtures/ssr/FixedList.tsx?weft-ssr'
 import { Grid, write } from './fixtures/ssr/FixedList.tsx?weft-hydrate'
 

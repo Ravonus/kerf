@@ -1,10 +1,10 @@
 # Fonts
 
-`@weft/text` is the one place an app's fonts are declared. `weft add text` installs it; then:
+`@weft-js/text` is the one place an app's fonts are declared. `weft add text` installs it; then:
 
 ```ts
-import { defineConfig } from 'weft/config'
-import { text } from '@weft/text'
+import { defineConfig } from '@weft-js/core/config'
+import { text } from '@weft-js/text'
 
 export default defineConfig({
   plugins: [
@@ -44,7 +44,7 @@ Keep one axis by naming it in `axes`, such as `axes: { SOFT: [0, 100] }`, for va
 (only your own source is read). `trim: false` turns all of it off. `weft dev` always serves whole faces, so an axis you are
 editing responds.
 
-**There is nothing to import.** `weft/vite` loads the generated CSS in the client entry (Start) or the page (an HTML app).
+**There is nothing to import.** `@weft-js/core/vite` loads the generated CSS in the client entry (Start) or the page (an HTML app).
 `import 'weft:fonts'` still works and changes nothing. `import { preloads } from 'weft:fonts/preloads'` gives the preload
 list to a custom server.
 

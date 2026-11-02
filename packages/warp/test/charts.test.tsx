@@ -1,14 +1,14 @@
 // Every chart form through SSR + hydrate (0 misses, 0 writes), then the one interaction model on the adopted markup.
 import { fireEvent } from '@testing-library/dom'
-import { resetIds } from '@weft/warp-core'
-import { state } from 'weft'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { flush, render } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import { BarChart, LineChart, Sparkline, StreamChart } from '../src/Charts'
 import { revenue, seats } from './fixtures/ChartData'
-// @ts-expect-error: query imports (weft/vite)
+// @ts-expect-error: query imports (@weft-js/core/vite)
 import * as server from './fixtures/ChartCases.tsx?weft-ssr'
 // @ts-expect-error
 import * as client from './fixtures/ChartCases.tsx?weft-hydrate'

@@ -1,4 +1,4 @@
-// weft/ssr: the string renderer, and the helpers weft's back end emits for `generate: 'ssr'` (research 19 §3). It
+// @weft-js/core/ssr: the string renderer, and the helpers weft's back end emits for `generate: 'ssr'` (research 19 §3). It
 // runs on weft's own reactive core with effects off. Each template renders as `ssr(k => "<li" + key(k) + … )`: `k`
 // is the instance's hydration key (research 19 §2.4), written as ` wk="…"` on the root when the output is
 // hydratable, and each hole renders in its own scope (`hole(k, slot, value)`), wrapped in `<!--[-->…<!--]-->` when
@@ -360,7 +360,7 @@ export function escape(s: string, attr?: boolean): string {
 
 /**
  * ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. `WORDS`
- * attributes write booleans as the words (`aria-pressed="false"`), as weft/dom does.
+ * attributes write booleans as the words (`aria-pressed="false"`), as @weft-js/core/dom does.
  */
 export function attr(name: string, value: any): string {
   name = attribute(name)

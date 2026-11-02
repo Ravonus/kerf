@@ -1,8 +1,8 @@
-import { derived, DEV, effect, flush, onCleanup, onMount, state, untrack } from 'weft'
-import { measureEngine, type MeasureHandle, type MeasureProvider } from 'weft/text'
-import { slices, virtualizer, type VirtualAlign, type VirtualKey, type Virtualizer } from '@weft/warp-core'
+import { derived, DEV, effect, flush, onCleanup, onMount, state, untrack } from '@weft-js/core'
+import { measureEngine, type MeasureHandle, type MeasureProvider } from '@weft-js/core/text'
+import { slices, virtualizer, type VirtualAlign, type VirtualKey, type Virtualizer } from '@weft-js/warp-core'
 import './styles'
-import '@weft/warp-core/styles/data/virtual.css'
+import '@weft-js/warp-core/styles/data/virtual.css'
 
 export interface VirtualControl {
   scrollTo(key: VirtualKey, align?: VirtualAlign): void

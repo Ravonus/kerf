@@ -1,8 +1,8 @@
-import { untrack } from 'weft'
-import type { Interaction } from 'weft/interaction'
+import { untrack } from '@weft-js/core'
+import type { Interaction } from '@weft-js/core/interaction'
 import { useUi } from './use-ui'
 import './styles'
-import '@weft/warp-core/styles/components/surface.css'
+import '@weft-js/warp-core/styles/components/surface.css'
 
 /**
  * A surface (05 §1, §6: Card, Panel). Interactive cards (`href` or `onClick`) are links or buttons and always carry

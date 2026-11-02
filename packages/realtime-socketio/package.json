@@ -1,8 +1,8 @@
 {
-  "name": "@weft/realtime-socketio",
-  "version": "0.0.0",
+  "name": "@weft-js/realtime-socketio",
+  "version": "0.1.0",
   "private": true,
-  "description": "@weft/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
+  "description": "@weft-js/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -17,9 +17,9 @@
     "socket.io-client": "4.8.4"
   },
   "peerDependencies": {
-    "@weft/start": "*",
-    "weft": "*",
-    "@weft/multiplayer": "*",
+    "@weft-js/start": "*",
+    "@weft-js/core": "*",
+    "@weft-js/multiplayer": "*",
     "socket.io": "^4.8.0"
   },
   "peerDependenciesMeta": {
@@ -28,10 +28,23 @@
     }
   },
   "devDependencies": {
-    "@weft/start": "file:../start",
+    "@weft-js/start": "file:../start",
     "vitest": "5.0.5",
-    "weft": "file:../weft",
-    "@weft/multiplayer": "file:../multiplayer",
+    "@weft-js/core": "file:../weft",
+    "@weft-js/multiplayer": "file:../multiplayer",
     "socket.io": "4.8.4"
-  }
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "README.md",
+    "LICENSE"
+  ]
 }

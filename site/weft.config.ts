@@ -1,7 +1,7 @@
-import { defineConfig } from 'weft/config'
-import { dialScript, warp } from '@weft/warp/plugin'
-import { icons } from '@weft/icons/plugin'
-import { text } from '@weft/text'
+import { defineConfig } from '@weft-js/core/config'
+import { dialScript, warp } from '@weft-js/warp/plugin'
+import { icons } from '@weft-js/warp-icons/plugin'
+import { text } from '@weft-js/text'
 
 const FILES = 'node_modules/@fontsource'
 // Cross-origin isolation gives the arena's frames a finer clock, and a frame only has it when the page around it does too.

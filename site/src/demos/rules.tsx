@@ -1,5 +1,5 @@
-import { derived, state } from 'weft'
-import { Button, Card } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { Button, Card } from '@weft-js/warp'
 
 export default function Basket() {
   const price = 12

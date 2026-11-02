@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-// The client over weft/test's fake socket: the real channel client and the real socket server. One process is one
+// The client over @weft-js/core/test's fake socket: the real channel client and the real socket server. One process is one
 // client, so the other peers are frames from `net.publish`. Two real browsers are scripts/e2e-browsers.mjs.
-import { channel, type StandardSchemaV1 } from '@weft/start'
-import { state } from 'weft'
-import { net, render, screen } from 'weft/test'
+import { channel, type StandardSchemaV1 } from '@weft-js/start'
+import { state } from '@weft-js/core'
+import { net, render, screen } from '@weft-js/core/test'
 import { applyPeer, cursors, expire, hue, locate, presence, readCursor, relay, resolve } from '../src/index'
 import { multiplayer } from '../src/server'
 

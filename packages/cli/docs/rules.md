@@ -1,5 +1,5 @@
 ```tsx
-import { state, derived } from 'weft'
+import { state, derived } from '@weft-js/core'
 
 export function Cart({ items, taxRate }: { items: Item[]; taxRate: number }) {
   const coupon = state<string | null>(null)

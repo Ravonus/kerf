@@ -1,7 +1,9 @@
-# @weft/cli (Phase 1 agent layer)
+# @weft-js/cli (Phase 1 agent layer)
+
+> **Early release (0.1.0).** weft is young: APIs will change between minor versions, and not every add-on is on npm yet.
 
 The `weft` binary for agents: `weft.config.ts`, `weft check --json`, `weft tasks --json`, a generated AGENTS.md and an
-MCP server (PLAN §7, §7b, §7c, §9 Phase 1). It uses the compiler only through the public `weft/compiler` `transform()`.
+MCP server (PLAN §7, §7b, §7c, §9 Phase 1). It uses the compiler only through the public `@weft-js/core/compiler` `transform()`.
 What this build changes or adds to PLAN: [docs/research/17-agent-layer.md](../../docs/research/17-agent-layer.md).
 
 ```bash
@@ -48,7 +50,7 @@ One shape everywhere (`check`, `tasks`, MCP):
 ## weft.config.ts
 
 ```ts
-import { defineConfig } from 'weft/config'   // resolves to @weft/cli/config until packages/weft ships the subpath
+import { defineConfig } from '@weft-js/core/config'   // resolves to @weft-js/cli/config until packages/weft ships the subpath
 
 export default defineConfig({
   scope: { write: ['src/**'], forbid: ['.env*'] },
@@ -69,7 +71,7 @@ is `weft docs config` / `weft docs diagnostics`.
 Test files (`test.include` in weft.config.ts, default `**/*.{test,spec}.*`) get T001–T009 (PLAN §7b). A test that
 needs one on purpose says why: `// weft-allow T004, T005: <reason>` in the file's header comments covers the file;
 anywhere else it covers its own line and the next. An allow without a reason doesn't count. Autofixes: T009 removes
-`.only` (safe) or `.skip` (suggested); T004 replaces a zero-delay sleep with `flush()` (suggested). `weft/test` adds
+`.only` (safe) or `.skip` (suggested); T004 replaces a zero-delay sleep with `flush()` (suggested). `@weft-js/core/test` adds
 a runtime T001: a test that finishes without an assertion fails.
 
 ## Layout
@@ -84,7 +86,7 @@ a runtime T001: a test that finishes without an assertion fails.
 | `src/catalog.mjs` | W-, T- and P-codes; each W- and T-code has an example that `probe()`/`probeTests()` checks really reports it |
 | `src/docs.mjs`, `docs/*.md`, `src/agents-md.mjs` | Docs topics and AGENTS.md, generated from the installed weft (version, exports, codes it reports) |
 | `src/tasks.mjs`, `src/mcp.mjs` | `weft tasks`; the MCP server |
-| `src/style.mjs` | `weft style find\|explain\|matrix`, D020 (class soup) and the matrix's D-codes in `weft check`; the matrix itself is `weft/style/matrix` |
+| `src/style.mjs` | `weft style find\|explain\|matrix`, D020 (class soup) and the matrix's D-codes in `weft check`; the matrix itself is `@weft-js/core/style/matrix` |
 
 Not built yet: `weft run`, `fix`, `dev`, `build`, `test`, `browser`, `create` and `plugins` (`weft tasks` lists them
 as `available: false`), the tsc pass with TS→W mapping, content-hash caching, P001/P005/P006 (they need a diff), and

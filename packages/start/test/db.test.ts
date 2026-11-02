@@ -6,8 +6,8 @@ import { eq, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { mysqlTable, varchar } from 'drizzle-orm/mysql-core'
 import { integer as pgInteger, pgTable, text as pgText } from 'drizzle-orm/pg-core'
-import { mutation, query } from '@weft/start'
-import { fnOf, runtime, StartError } from '@weft/start/data'
+import { mutation, query } from '@weft-js/start'
+import { fnOf, runtime, StartError } from '@weft-js/start/data'
 import { createScope, fetchQuery, runMutation } from '../src/exec'
 import { schemasOf } from '../src/db/index'
 import { createDb } from '../src/db/sqlite'
@@ -79,7 +79,7 @@ test('a transaction holds the connection: outside statements wait, a rollback ta
 test('Q013: a URL the driver can\'t open, with the password out of the message', () => {
   const err = (() => { try { createDb({ schema, url: 'postgres://u:secret@localhost/x' }) } catch (e) { return e as StartError } })()!
   expect(err.code).toBe('Q013')
-  expect(err.message).toContain('@weft/start/db/postgres')
+  expect(err.message).toContain('@weft-js/start/db/postgres')
   expect(err.message).not.toContain('secret')
 })
 

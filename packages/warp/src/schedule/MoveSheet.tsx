@@ -1,12 +1,12 @@
-import { LeftIcon, RightIcon } from '@weft/icons'
-import { clock, clockRange, dateOf, fmt, longDuration, moveSlots, slotOf, weekDates, type CalEvent, type Slot } from '@weft/warp-core'
-import { derived, state, untrack, type State } from 'weft'
+import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
+import { clock, clockRange, dateOf, fmt, longDuration, moveSlots, slotOf, weekDates, type CalEvent, type Slot } from '@weft-js/warp-core'
+import { derived, state, untrack, type State } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Chip } from '../Chip'
 import { Drawer } from '../Drawer'
 import { SweepParts, confirmSweep } from './bits'
-import '@weft/warp-core/styles/app/booking.css'
+import '@weft-js/warp-core/styles/app/booking.css'
 
 export type MoveSheetProps = {
   open: State<boolean>

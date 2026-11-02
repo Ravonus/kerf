@@ -1,4 +1,4 @@
-# 18 — Phase 1: weft/ssr, hydration, Boundary and resource
+# 18 — Phase 1: @weft-js/core/ssr, hydration, Boundary and resource
 
 > **Partly superseded (2026-10-29).** §2 (the SSR helpers), §3 (hydration keys from the owner tree) and §5 (the
 > helper contract with Solid's SSR output) describe the first version, built on Solid 2's back end. Since research 19
@@ -13,21 +13,21 @@ Statements marked **(unverified)** were not checked.
 **The task** (PLAN §3.6 "Runtime: … SSR string renderer, hydration (dom-expressions keys)" and "Async/errors in markup",
 §3.1 `resource`, §6.2 skeleton timing, §3.7 js-framework-benchmark gate):
 
-1. a `weft/ssr` string renderer and hydration, from Solid 2's SSR and hydratable back ends;
+1. a `@weft-js/core/ssr` string renderer and hydration, from Solid 2's SSR and hydratable back ends;
 2. `<Boundary>` for pending and error states, with the §6.2 timing;
 3. `resource`;
 4. dev names through the back end's `sourceNames`;
-5. the helper contract for `weft/ssr`;
+5. the helper contract for `@weft-js/core/ssr`;
 6. js-framework-benchmark, weft and Solid in the same run.
 
 **What was built** (branch `phase1-define-state`, on top of the uncommitted defineState work):
 
 | Path | What |
 |---|---|
-| [`crates/weft-compiler/src/lib.rs`](../../crates/weft-compiler/src/lib.rs) | Option plumbing only: `generate` (`"dom"`/`"ssr"`), `hydratable`, `sourceNames`. SSR output imports from `weft/ssr`. No pass changed. |
-| [`packages/weft/src/ssr.ts`](../../packages/weft/src/ssr.ts) | `weft/ssr`: `renderToString`, `renderToStringAsync`, and the 19 helpers SSR output imports. |
-| [`packages/weft/src/hydrate.ts`](../../packages/weft/src/hydrate.ts) | `hydrate()` and the hydration walk helpers, re-exported from `weft/dom`. |
-| [`packages/weft/src/async.ts`](../../packages/weft/src/async.ts) | `resource` and `<Boundary>`, exported from `weft`. |
+| [`crates/weft-compiler/src/lib.rs`](../../crates/weft-compiler/src/lib.rs) | Option plumbing only: `generate` (`"dom"`/`"ssr"`), `hydratable`, `sourceNames`. SSR output imports from `@weft-js/core/ssr`. No pass changed. |
+| [`packages/weft/src/ssr.ts`](../../packages/weft/src/ssr.ts) | `@weft-js/core/ssr`: `renderToString`, `renderToStringAsync`, and the 19 helpers SSR output imports. |
+| [`packages/weft/src/hydrate.ts`](../../packages/weft/src/hydrate.ts) | `hydrate()` and the hydration walk helpers, re-exported from `@weft-js/core/dom`. |
+| [`packages/weft/src/async.ts`](../../packages/weft/src/async.ts) | `resource` and `<Boundary>`, exported from `@weft-js/core`. |
 | `packages/weft/src/index.ts`, `dom.ts` | The core's id hooks (`rt`, `childKey`, `runWith`), effect options (`scope`, `name`, `loc`), hydration claims in `insert`, dev names in `createComponent`. |
 | [`packages/weft/vite.mjs`](../../packages/weft/vite.mjs) | SSR output for Vite's SSR transforms, `weft({ hydratable })`, and `?weft-ssr` / `?weft-hydrate` imports that load one source tree compiled either way in the same process. |
 | `packages/weft/test/ssr.test.ts`, `async.test.tsx`, `ssr-contract.test.ts` | 15 tests: round trips of `evals/reference-v3/weft`, Boundary timing and errors, resource, both SSR paths, the helper contract. |
@@ -42,7 +42,7 @@ Statements marked **(unverified)** were not checked.
    server element (all 40+ elements stay connected), and makes **0 DOM mutations** during hydration **(measured,
    MutationObserver)**. Afterwards the handlers and bindings work: a click updates the hydrated row in place, and
    the select filter and Add both work.
-2. **weft/ssr runs on weft's own reactive core.** Effects are off on the server. Hydration keys then come from the
+2. **@weft-js/core/ssr runs on weft's own reactive core.** Effects are off on the server. Hydration keys then come from the
    same owner tree on both sides, using Solid 2's id scheme: memos, roots and `scope()` holes take an id from their
    owner, and each element takes one. The server and client differ only in what the compiler emits; the rules are
    shared. That cost the core about 0.20 KB br.
@@ -55,8 +55,8 @@ Statements marked **(unverified)** were not checked.
      aborted at once.
    - A fallback the server rendered is claimed, not replaced, and held 400 ms from hydration.
 4. **The SSR helper contract holds.** Solid's whole SSR fixture corpus was compiled through weft at the pinned rev:
-   dev and prod, hydratable or not. It imports 19 distinct helpers, and every one exists in `weft/ssr`. The
-   hydratable DOM corpus needs five helpers `weft/dom` doesn't have yet (`applyRef`, `claimElement`, `getOwner`,
+   dev and prod, hydratable or not. It imports 19 distinct helpers, and every one exists in `@weft-js/core/ssr`. The
+   hydratable DOM corpus needs five helpers `@weft-js/core/dom` doesn't have yet (`applyRef`, `claimElement`, `getOwner`,
    `setAttributeNS`, `spread`). All five are on the compiler-hardening branch; the test allows exactly those five
    until it merges.
 5. **js-framework-benchmark: 1.067× Solid's CPU geomean in the same run, inside the ≤ 1.10× gate.** weft wins
@@ -71,7 +71,7 @@ them straight onto `solidjs_compiler::CompileOptions`:
 
 | weft option | back end | notes |
 |---|---|---|
-| `generate: "dom" \| "ssr"` | `Generate::Dom` / `Generate::Ssr` | SSR output's default module is `weft/ssr`; a caller-set `moduleName` still wins. |
+| `generate: "dom" \| "ssr"` | `Generate::Dom` / `Generate::Ssr` | SSR output's default module is `@weft-js/core/ssr`; a caller-set `moduleName` still wins. |
 | `hydratable` | `hydratable` | DOM output asks for elements by key (`getNextElement`); SSR output writes the keys (`ssrHydrationKey`). |
 | `sourceNames` | `SourceNames::all(sourceNames && dev)` | Dev builds only: binding labels (`li.children`), source locations, component names. |
 
@@ -81,13 +81,13 @@ that way. The query follows relative `.tsx`/`.jsx` imports, while `.ts` modules 
 one Vitest process can render on the "server" and hydrate on the "client" from the same sources. `sourceNames` is on
 whenever the plugin is in dev.
 
-## 2. weft/ssr
+## 2. @weft-js/core/ssr
 
 **Why weft's own core, not a port of Solid's server runtime.** Solid's `web/src/server.ts` is 7,300 lines. Most of it
 is streaming, async retry slots, live holes, frames and link claims. The part weft needs is small, if both sides
 build the same owner tree. So the server runs weft's real core with one switch (`rt.server`) that skips effects,
 watchers and `onMount`. Memos, `derived`, `state` and the keyed list are the same code on both sides. `For` and
-`createComponent` are re-exported from `weft/dom`; neither touches the DOM until it's called on the client.
+`createComponent` are re-exported from `@weft-js/core/dom`; neither touches the DOM until it's called on the client.
 
 **Holes.** `ssr(template, ...holes)` concatenates static parts and resolves holes:
 
@@ -185,7 +185,7 @@ Not done in Phase 1:
 - Errors thrown later, inside a reactive update, are not caught. Only errors during render and failed resources are.
 - There's no streaming, so the server sends the fallback or waits.
 - Events fired before hydration are dropped. `runHydrationEvents` is a no-op until there's a capture script.
-- `weft/test` has no deterministic clock yet. The timing tests use Vitest's fake timers.
+- `@weft-js/core/test` has no deterministic clock yet. The timing tests use Vitest's fake timers.
 
 ## 5. Helper contract
 
@@ -281,7 +281,7 @@ weft's mean ÷ Solid's mean; below 1 is weft faster.
   row lists "`<Boundary pending>` timing". That timing exists now, so the row should become "skeleton shapes for
   `pending`".
 - **§3.7:** record "1.067× Solid's CPU geomean, Chrome 156, 2026-10-29 (pass); memory 1.4–1.5× (open)" against the ≤ 1.10× gate.
-- **§4.5:** "one instance … per server request" is now true. weft/ssr makes one app per render pass, seeded with
+- **§4.5:** "one instance … per server request" is now true. @weft-js/core/ssr makes one app per render pass, seeded with
   `renderToString(code, { app: { state } })`. Serializing scope state into the page for hydration is still open.
 - **§7b Testing:** the deterministic `clock` becomes a dependency of Boundary tests. Until it exists, they use
   Vitest's fake timers.

@@ -11,7 +11,7 @@ Code written with React habits runs as React would. On native elements these wor
   `xlinkHref` becomes `xlink:href`. Case-sensitive attributes such as `viewBox` and `gradientUnits` stay as written.
 
 The compiler resolves names it can see (`crates/weft-compiler/src/react.rs`), so they cost nothing at run time. A spread
-resolves its keys in `attrName` (`weft/dom`). One gap: on an SVG element a spread lowercases only `tabIndex`,
+resolves its keys in `attrName` (`@weft-js/core/dom`). One gap: on an SVG element a spread lowercases only `tabIndex`,
 `crossOrigin`, `hrefLang` and `referrerPolicy`; other HTML-only camelCase names there keep their case. SVG font attributes
 (`unitsPerEm`, `horizAdvX`), which no browser reads, also keep their case in a spread. An app with no `{...spread}` on an
 element ships none of this.
@@ -33,7 +33,7 @@ Three things differ from weft before this was added:
 - **`onChange` fires on every edit, as in React**, not on blur. One edit fires it once: on a text input per keystroke,
   and on a checkbox, radio, select or file input when the value changes. On a `<form>` it hears its fields per
   keystroke. A `change` event with no `input` before it, such as `fireEvent.change` in a test, still fires it. To act
-  on commit, use `onBlur`, or `on(el, 'change', fn)` from `weft/browser`. `onInput` is unchanged, and W042 is retired.
+  on commit, use `onBlur`, or `on(el, 'change', fn)` from `@weft-js/core/browser`. `onInput` is unchanged, and W042 is retired.
 - **`false` is written as a word on `contentEditable`, `spellCheck`, `draggable` and `focusable`**, as `aria-*` already
   was. Removing the attribute would inherit or fall back to the default instead of turning the state off.
 - **`select` with `defaultValue={x}` follows `x`**: it behaves as `value`. React reads it once.

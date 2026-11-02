@@ -75,7 +75,7 @@ The scripts were throwaway and are not in the repo.
    - **swaps** the skeleton for content (never morphs it in place) unless it has exact per-key heights;
    - **fills the viewport** with the skeleton;
    - makes undimensioned media a diagnostic.
-9. **API:** `weft/text` provides `measure`, `lines`, `fit`, `fonts`, `<Text>` and `s.text()` for Surfaces.
+9. **API:** `@weft-js/core/text` provides `measure`, `lines`, `fit`, `fonts`, `<Text>` and `s.text()` for Surfaces.
    `weft/skeleton` is a sibling: `query.shape`, `<Boundary pending="shape">`, and the compiler-emitted shape variant.
    **Diagnostics:** `X001`–`X041`. **Phases:** fonts and tokens in Phase 2 with warp; measure and mirror with Surfaces;
    shape skeletons with Start (Phase 3); virtualised chat and grid in 3c.
@@ -241,8 +241,8 @@ Pretext's split maps one-to-one onto weft's primitives:
 - Width comes from one shared `ResizeObserver` box per element, written as `state`.
 
 ```ts
-import { state, derived, watch } from 'weft'
-import { measure, fonts } from 'weft/text'
+import { state, derived, watch } from '@weft-js/core'
+import { measure, fonts } from '@weft-js/core/text'
 
 const width = state(0)                              // written by s.box / ResizeObserver, batched per frame
 const font = fonts.role('body')                     // Derived<{ css: '16px Inter', lineHeight: 24, epoch: n }>
@@ -614,8 +614,8 @@ Setup:
 ### 8.1 API
 
 ```ts
-// weft/text — Pretext lives behind a lazy import; nothing here is in the base runtime
-import { measure, lines, fit, fonts, Text } from 'weft/text'
+// @weft-js/core/text — Pretext lives behind a lazy import; nothing here is in the base runtime
+import { measure, lines, fit, fonts, Text } from '@weft-js/core/text'
 
 // One role → one font string, line height and trims, from warp tokens (resolved to px, whole sizes)
 const body = fonts.role('body')            // Derived<FontRole>; epoch bumps when the real face loads
@@ -702,10 +702,10 @@ query({ input, output: PostList, run, shape: { title: { example: 'Release notes 
 - **Body and prose stay fixed `rem` per form factor** (today's 16/15/14), plus the coarse-pointer 16 px floor. Reading
   text should not scale with the container. Today's form-factor table remains for body only.
 - **Trimmed boxes:** `text-box: trim-both cap alphabetic` on buttons, badges, chips, eyebrows and headings, with the
-  metrics fallback behind `@supports`. Heights in `weft/text` subtract the trims.
+  metrics fallback behind `@supports`. Heights in `@weft-js/core/text` subtract the trims.
 - **`font-optical-sizing: auto`** with Inter variable. Vivid pins display `opsz` to its max.
 - **`--warp-measure` per stop** (72/66/60ch), and `text-wrap` per role as in §3.4.
-- **Px-resolved role strings** (`--warp-text-body-canvas: 400 16px Inter`) exported for `weft/text` and Surfaces,
+- **Px-resolved role strings** (`--warp-text-body-canvas: 400 16px Inter`) exported for `@weft-js/core/text` and Surfaces,
   so the measured font can't drift from CSS (X001).
 - **Measured roles avoid what Pretext can't see.** `[data-numeric]` (`tabular-nums`) stays on single-line cells.
 
@@ -713,8 +713,8 @@ query({ input, output: PostList, run, shape: { title: { example: 'Release notes 
 
 | Metric | Budget | Measured basis |
 |---|---|---|
-| Base runtime added by `weft/text` when unused | **0 KB** | lazy chunk |
-| `weft/text` wrapper | ≤ 2 KB br | — |
+| Base runtime added by `@weft-js/core/text` when unused | **0 KB** | lazy chunk |
+| `@weft-js/core/text` wrapper | ≤ 2 KB br | — |
 | Pretext chunk | ≤ 36 KB br, pinned version | 34.5 KB |
 | Generated font CSS (faces + fallbacks) | ≤ 1.5 KB br, inlined | — |
 | Fonts above the fold, latin, balanced | ≤ 100 KB | 70 KB (Inter wght + Space Grotesk) |
@@ -780,7 +780,7 @@ Per-glyph motion:
 |---|---|
 | **1. Core** | Nothing at runtime. Reserve `X0xx` in the catalog |
 | **2. UI (warp tier 1)** | The font build step (subsetting, fallback faces, `fonts.json`, preloads), fluid display and title tokens on `cqi`, `text-box` trims with the fallback, `--warp-measure`, `text-wrap`, `<Boundary pending>` timing (150 ms / 400 ms), `SkeletonScope` + reduced-motion and forced-colours bars. X005, X006, X008, X020–X023, X030, X031, X034 |
-| **2. Surfaces** | `weft/text` lazy chunk (`measure`, `lines`, `fit`, `fonts.role`), `s.text()` with the mirror, forced-colours and print fallbacks, Canvas2D only. X001–X004, X010–X012, X040, X041 |
+| **2. Surfaces** | `@weft-js/core/text` lazy chunk (`measure`, `lines`, `fit`, `fonts.role`), `s.text()` with the mirror, forced-colours and print fallbacks, Canvas2D only. X001–X004, X010–X012, X040, X041 |
 | **3. Start** | `query` `output` → `.shape`, last-seen shape records in the client cache, the compiler's shape variant, `pending="shape"`, SSR advance-table estimates, `<Text reserve>`. X032, X033, X036 |
 | **3c. warp tier 2** | Virtualised chat, feed, kanban and data grid on exact heights, `<Text stream>`, worker preparation on low-end devices. X035 |
 | **Later** | SDF/MSDF text for `webgl2` Surfaces, WebGPU atlas, text-around-shape helpers, `EditContext` editors, HTML-in-canvas once it ships |

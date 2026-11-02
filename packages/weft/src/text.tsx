@@ -1,8 +1,8 @@
-// weft/text: <Text> (research 31 §6). `reserve` holds the text's place while it isn't here yet, with placeholder text
+// @weft-js/core/text: <Text> (research 31 §6). `reserve` holds the text's place while it isn't here yet, with placeholder text
 // in the real element, so the browser gives it the real font, width and wrapping and there's nothing to measure. It
 // marks the placeholder for warp's SkeletonScope (05 §5) and has no CSS of its own. `stream` is X035's fix.
 
-import { derived, effect, flush, onCleanup, onMount, state, untrack } from 'weft'
+import { derived, effect, flush, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { placeholder } from './shape'
 
 export interface TextProps {

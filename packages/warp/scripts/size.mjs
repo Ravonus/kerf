@@ -10,7 +10,7 @@
 //   node scripts/size.mjs --json     machine-readable
 import { brotliCompressSync, constants } from 'node:zlib'
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 const br = text => brotliCompressSync(Buffer.from(text), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 
@@ -112,8 +112,8 @@ export const ENTRIES = {
 
 async function measure(name, [imp, jsx]) {
   const id = '\0size-entry.tsx'
-  const imps = imp.split(',').filter(Boolean).map(i => (i.startsWith('.') ? `import '${i}'\n` : `import { ${i} } from '@weft/warp'\n`)).join('')
-  const code = `import { render } from 'weft/dom'\nimport { state } from 'weft'\n${imps}const open = state(false)\nrender(() => ${jsx}, document.body)\n`
+  const imps = imp.split(',').filter(Boolean).map(i => (i.startsWith('.') ? `import '${i}'\n` : `import { ${i} } from '@weft-js/warp'\n`)).join('')
+  const code = `import { render } from '@weft-js/core/dom'\nimport { state } from '@weft-js/core'\n${imps}const open = state(false)\nrender(() => ${jsx}, document.body)\n`
   const out = await build({
     configFile: false,
     logLevel: 'silent',

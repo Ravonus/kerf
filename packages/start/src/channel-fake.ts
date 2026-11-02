@@ -1,4 +1,4 @@
-// weft/test's socket (research 32 §7): the real socket.ts and hub, a memory bus, frames through JSON.
+// @weft-js/core/test's socket (research 32 §7): the real socket.ts and hub, a memory bus, frames through JSON.
 
 import { fakeScope, fns, net, runtime, track } from './data'
 import type { SocketLink } from './channel'

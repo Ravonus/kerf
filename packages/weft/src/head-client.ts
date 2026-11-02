@@ -1,4 +1,4 @@
-// weft/head: the client half of page metadata (research 20 §3). The router calls `setHead` after a navigation with the
+// @weft-js/core/head: the client half of page metadata (research 20 §3). The router calls `setHead` after a navigation with the
 // next route's merged metadata: the same object the server wrote. It's for the tab title and history, not crawlers,
 // which only read the server's HTML.
 

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-// The client data cache over weft/test's fake transport (research 27 §7): queries, dedupe, in-place updates,
+// The client data cache over @weft-js/core/test's fake transport (research 27 §7): queries, dedupe, in-place updates,
 // optimistic overlays and rollbacks, single-flight refreshes, the shared tagged cache and the Q/S diagnostics. No
 // server and no Vite plugin: the definitions keep their `run`, and calls go to the executor in process.
-import { state } from 'weft'
-import { flush, net, render, screen } from 'weft/test'
-import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@weft/start'
-import { produce, runtime, share } from '@weft/start/data'
+import { state } from '@weft-js/core'
+import { flush, net, render, screen } from '@weft-js/core/test'
+import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@weft-js/start'
+import { produce, runtime, share } from '@weft-js/start/data'
 import { checkTags } from '../src/exec'
 
 type Todo = { id: string; title: string; done: boolean }

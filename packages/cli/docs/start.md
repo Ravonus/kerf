@@ -1,4 +1,4 @@
-# Full stack: `@weft/start`
+# Full stack: `@weft-js/start`
 
 Needs one of Node, Bun or Deno, and no Rust (`weft docs rust` is opt-in). An app builds for and runs on all three.
 
@@ -13,13 +13,13 @@ src/auth.server.ts       the auth provider (Better Auth by default), mounted at 
 src/context.server.ts    what `ctx` holds
 ```
 
-Any auth provider works: `defineAuth` from `@weft/start/auth` takes a `handler(request)` for `/api/auth/*` and a
+Any auth provider works: `defineAuth` from `@weft-js/start/auth` takes a `handler(request)` for `/api/auth/*` and a
 `session(request)` that returns `{ user, session }`. `ctx.user` and `auth: 'user'` come from those two.
 
 ## Routes
 
 ```tsx
-import type { LoadArgs, Meta, RouteProps } from '@weft/start'
+import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
 
 export const load = async ({ params, ctx }: LoadArgs<'/lists/[id]'>) => ({ list: await getList.fetch({ id: params.id }) })
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.list.name })
@@ -39,8 +39,8 @@ Links are `<Link href>`; code navigates with `navigate(href)`.
 
 ```ts
 // src/server/todos.ts
-import { mutation, query } from '@weft/start'
-import { schemasOf } from '@weft/start/db'
+import { mutation, query } from '@weft-js/start'
+import { schemasOf } from '@weft-js/start/db'
 import { and, eq } from 'drizzle-orm'
 import * as schema from '../db/schema'
 
@@ -114,7 +114,7 @@ A guard: `export const load = ({ ctx }: LoadArgs) => ctx.user ?? redirect('/logi
 ## Runtimes
 
 The CLI runs on whichever of the three starts it, with none of the others installed: `bun --bun`, or `deno run -A
-npm:@weft/cli`. `npm create weft`, `bun create weft` and `deno run -A npm:create-weft` each scaffold for their own runtime
+npm:@weft-js/cli`. `npm create @weft-js`, `bun create @weft-js` and `deno run -A npm:@weft-js/create` each scaffold for their own runtime
 and package manager. HMR and sockets in `weft dev` work on all three.
 
 A save in `weft dev` keeps the page: a component or route swaps in place with its `state`, typed input, focus and scroll;
@@ -173,8 +173,8 @@ undefined after a reset: start again, or read from the database.
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft/start'
-import { postgresBus } from '@weft/start/bus/postgres'
+import { realtime } from '@weft-js/start'
+import { postgresBus } from '@weft-js/start/bus/postgres'
 export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), origins: ['https://other.example'], maxDuration: 300 })
 ```
 
@@ -182,14 +182,14 @@ export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), origins: 
 response limit in seconds: streams end 10 s earlier and resume. `stale` is true when the server runs a newer build
 than this tab: offer a reload.
 
-`weft add @weft/realtime-redis` or `@weft/realtime-nats` puts a bus in `plugins`, on `REDIS_URL` or `NATS_URL`; a `bus` set here
-still wins. `durableObjectBus({ namespace })` (`@weft/realtime-durable-object`, the `cloudflare_durable` preset only) needs a
+`weft add @weft-js/realtime-redis` or `@weft-js/realtime-nats` puts a bus in `plugins`, on `REDIS_URL` or `NATS_URL`; a `bus` set here
+still wins. `durableObjectBus({ namespace })` (`@weft-js/realtime-durable-object`, the `cloudflare_durable` preset only) needs a
 binding, so it's set here.
 
 Payments: `weft add pay`, then `ctx.entitlements` and `requires: ['pro']` on any function. `weft docs pay`. A query's `tags`
 can take `ctx`, for one user's tag: `tags: (_, ctx) => [`orders:${ctx.user.id}`]`.
 
-**Testing** uses the real hub and client over `weft/test`'s fake transport: `await net.settle()`, then
+**Testing** uses the real hub and client over `@weft-js/core/test`'s fake transport: `await net.settle()`, then
 `await net.push(prices, message)`, `await net.poke('todos')`, `await net.drop()`, `net.offline()`, `net.reconnects()`,
 `net.subscriptions()`.
 
@@ -199,8 +199,8 @@ can take `ctx`, for one user's tag: `tags: (_, ctx) => [`orders:${ctx.user.id}`]
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft/start'
-import { dbChanges } from '@weft/start/changes'
+import { realtime } from '@weft-js/start'
+import { dbChanges } from '@weft-js/start/changes'
 import { db } from './server/db'
 import { notes } from './server/schema'
 
@@ -215,7 +215,7 @@ export const myNotes = query({
 })
 ```
 
-Then `weft db live` writes the migration (triggers for SQLite, MySQL and Postgres), and you apply it. Tags are `notes` and `notes:<pk>`; a compound key joins with `:`. `dbChanges(db, tables, { tagged })` maps a change to your own tags, and for MongoDB it's `mongoChanges(db, collections)` from `@weft/db/mongo`.
+Then `weft db live` writes the migration (triggers for SQLite, MySQL and Postgres), and you apply it. Tags are `notes` and `notes:<pk>`; a compound key joins with `:`. `dbChanges(db, tables, { tagged })` maps a change to your own tags, and for MongoDB it's `mongoChanges(db, collections)` from `@weft-js/db/mongo`.
 
 A notification carries a table and primary keys, never a column. Each client refetches through its own `query`, so `auth` and every filter run for that user: someone who can't see a row gets the same answer as before. An app's own write is not poked twice, and a bulk write is one refetch: over 32 ids in a statement it's a table-level change, which reaches `notes` and every `notes:…`. Limits: at most one flush per 250 ms; a dropped feed pokes every table when it's back.
 
@@ -255,7 +255,7 @@ export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: 
 
 `weft db listen` loads your server modules from source, so it runs from a checkout with dependencies installed, and with the same env as the app. A listener that stops is noticed: its heartbeat ends, and within a minute `.live()` shows `reconnecting`.
 
-**`live: { required: true }`** (or `q.live(input, { required: true })`) refuses to ship a page that only looks live. `weft check` and `weft build` fail with R013 when the target can't do it. What only a running server can know fails at startup with R015: the process stops rather than serve stale data, and in dev it says so instead. For a health route, `liveHealth()` from `@weft/start` answers `ok: false` while a required query has no working feed. An outage after a good start reports there too, and doesn't stop the server: restarting wouldn't bring the database back, and the feed recovers by itself.
+**`live: { required: true }`** (or `q.live(input, { required: true })`) refuses to ship a page that only looks live. `weft check` and `weft build` fail with R013 when the target can't do it. What only a running server can know fails at startup with R015: the process stops rather than serve stale data, and in dev it says so instead. For a health route, `liveHealth()` from `@weft-js/start` answers `ok: false` while a required query has no working feed. An outage after a good start reports there too, and doesn't stop the server: restarting wouldn't bring the database back, and the feed recovers by itself.
 
 **`verify`** proves the chain end to end on every `weft check` and `weft build`, cached by query and contract:
 
@@ -317,7 +317,7 @@ in the database: read history with a query, `chat.collect` the new messages with
 reset.
 
 ```tsx
-import { invalidate, skip } from '@weft/start'
+import { invalidate, skip } from '@weft-js/start'
 const history = listMessages({ roomId })
 const said = chat.collect('said', { key: m => m.id })
 chat.onReset(() => invalidate('messages'))
@@ -354,13 +354,13 @@ const slide = deckSlide.connect(() => (id.value ? id.value : skip))    // in a d
 
 Its value lives in server memory: it survives a restart only while another instance runs. What must last is a mutation.
 
-**Tabs:** `tabs.channel('cart', schema)` from `weft/browser` is a validated `BroadcastChannel`: `.post(msg)`, `.on(fn)`,
+**Tabs:** `tabs.channel('cart', schema)` from `@weft-js/core/browser` is a validated `BroadcastChannel`: `.post(msg)`, `.on(fn)`,
 `.value`. `state(init, { persist: { in: 'local', schema, version: 1 }, sync: 'tabs' })` in a `defineState` keeps a box the
 same in every tab, by key for plain objects, last writer wins. It needs `persist`, and not `session` (S008).
 
 **Testing:** `room.connect` runs the real server code over the fake socket: `await net.settle()`, then
 `await net.publish(room, { roomId }, 'said', row)`, `net.sent(room)`, `await net.drop()`, `await net.offline()`,
-`await net.session({ user })`. From `weft/test`, `tabs.post(name, msg)` and `tabs.posted(name)` play another tab, and two
+`await net.session({ user })`. From `@weft-js/core/test`, `tabs.post(name, msg)` and `tabs.posted(name)` play another tab, and two
 `render()`s sharing one `storage` are two tabs.
 
 ## CSS on a page

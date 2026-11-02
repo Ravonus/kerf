@@ -1,6 +1,6 @@
-// weft/ds: the design language's closed vocabulary (PLAN §6, research 36), the names every primitive, style group and
+// @weft-js/core/ds: the design language's closed vocabulary (PLAN §6, research 36), the names every primitive, style group and
 // D-code agrees on. Names only: the values are warp's tokens (./style/vocab.ts maps these to them), the primitives are
-// `@weft/warp`, and the checks are `weft check`'s D-codes. `weft tokens` exports the resolved values as DTCG.
+// `@weft-js/warp`, and the checks are `weft check`'s D-codes. `weft tokens` exports the resolved values as DTCG.
 
 export const SPACE = ['none', 'hair', 'tight', 'related', 'group', 'section', 'page'] as const
 export const TONE = ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'] as const

@@ -271,7 +271,7 @@ Modal's latest-callback-ref workaround is moot in weft, because components run o
 
 ## 7. Recommendation
 
-### 7.1 Canonical v1 component set (`weft/ds`, Agorix look as the default theme)
+### 7.1 Canonical v1 component set (`@weft-js/core/ds`, Agorix look as the default theme)
 
 About 50 components, plus the 8 PLAN §6 layout primitives (`Stack Row Split Switch Grid Center Surface Frame`).
 
@@ -291,7 +291,7 @@ About 50 components, plus the 8 PLAN §6 layout primitives (`Stack Row Split Swi
 **Later in v1, behind Zag:** `TagsInput`, `PinInput`, `FileUpload`, `TreeView`, `Splitter`, `Carousel`, `Rating`,
 `Editable`, `TimePicker`, `VirtualList`.
 
-**Packs:** each pack is a separate package that depends only on `weft/ds` tokens and parts, so any of them can be
+**Packs:** each pack is a separate package that depends only on `@weft-js/core/ds` tokens and parts, so any of them can be
 skipped:
 - `@weft/ds-charts`
 - `-motion`
@@ -312,7 +312,7 @@ skipped:
 ### 7.2 API conventions every component follows
 
 ```ts
-import type { State } from 'weft'
+import type { State } from '@weft-js/core'
 
 type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'   // PLAN §6; 'gold' → theme pin
 type Emphasis = 'ghost' | 'subtle' | 'soft' | 'solid' | 'outline'                 // replaces fill/outline/borderSweep flags

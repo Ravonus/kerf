@@ -1,7 +1,7 @@
 // `<Icon name>`. Literal names compile to the icon itself; what reaches this file is a name the build could only bound,
-// or not bound at all, and @weft/icons/names holds exactly those.
-import { resolve, type IconActionName, type IconName, type IconVariant } from '@weft/icons/names'
-import { untrack } from 'weft'
+// or not bound at all, and @weft-js/warp-icons/names holds exactly those.
+import { resolve, type IconActionName, type IconName, type IconVariant } from '@weft-js/warp-icons/names'
+import { untrack } from '@weft-js/core'
 import type { ActionIconProps, IconTrigger } from './action'
 import type { IconComponent, IconProps } from './svg'
 

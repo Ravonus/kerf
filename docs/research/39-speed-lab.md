@@ -76,7 +76,7 @@ Muted runs are only good flat out: at 60 Hz the muted figure came out above the 
 Speed paths cost bytes only where they run. Three things keep them out of a page that doesn't use them:
 
 - **A list that can't re-run isn't a `For`.** Over a top-level `const` made here as an array, with no `key`, the compiler keeps the plain `.map`. That took `For`, its rows, keys and list hooks out of the arena: 1,025 B.
-- **`.get`, `.set` and `state.linked` are `weft/keyed`.** A module that mentions them brings it in (vite.mjs `keyed`), `box['get']` and `const { linked } = state` included; the plugin resolves `weft` to the core alone. A word match costs at worst those bytes, as `map.get` does. A name only known at run time (`box[name]`) or a renamed `state` isn't seen, so that module adds `import 'weft/keyed'`. Without the plugin, the `weft` entry has them always.
+- **`.get`, `.set` and `state.linked` are `@weft-js/core/keyed`.** A module that mentions them brings it in (vite.mjs `keyed`), `box['get']` and `const { linked } = state` included; the plugin resolves `weft` to the core alone. A word match costs at worst those bytes, as `map.get` does. A name only known at run time (`box[name]`) or a renamed `state` isn't seen, so that module adds `import '@weft-js/core/keyed'`. Without the plugin, the `weft` entry has them always.
 - **The longest-run search installs with `For`,** like `trade` and `wipe`. Elsewhere, nodes already in order stay and the rest move.
 
 ## Adaptive thresholds

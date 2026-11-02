@@ -1,4 +1,4 @@
-// weft/devtools: the live reactive graph in dev builds, for agents (`weft browser snapshot`/`set`) and people (the
+// @weft-js/core/devtools: the live reactive graph in dev builds, for agents (`weft browser snapshot`/`set`) and people (the
 // overlay, Alt+Shift+G). The weft() Vite plugin loads it when serving; production builds never do.
 //
 //   Cart.total = 42.5 ← Cart.subtotal, Cart.coupon → 1 binding in <Cart>
@@ -132,7 +132,7 @@ export function set(target: string, value: unknown) {
   return graph(ids.get(n))[0]
 }
 
-/** Uncaught errors since the last call, with the binding or component they came from (`weft` on the error). */
+/** Uncaught errors since the last call, with the binding or component they came from (`@weft-js/core` on the error). */
 const caught: { message: string; at?: string; stack?: string }[] = []
 export function errors() {
   return caught.splice(0)

@@ -1,4 +1,4 @@
-//! Style groups (research 23 §2.5), spike. A `group('order-card', { … })` from `weft/style` is data: it is evaluated
+//! Style groups (research 23 §2.5), spike. A `group('order-card', { … })` from `@weft-js/core/style` is data: it is evaluated
 //! here, at build (W060 names the first value that isn't a literal), and reported in `facts.groups`. Call sites lower
 //! to plain attributes, which the back end already compiles to static template HTML and one binding per reactive
 //! value:
@@ -128,7 +128,7 @@ pub fn apply<'a>(
         for spec in d.specifiers.iter().flatten() {
             let ImportDeclarationSpecifier::ImportSpecifier(s) = spec else { continue };
             let Some(sym) = s.local.symbol_id.get() else { continue };
-            if from == "weft/style" && s.imported.name() == "group" {
+            if from == "@weft-js/core/style" && s.imported.name() == "group" {
                 group_fn = Some(sym);
             } else if from.starts_with('.') {
                 let key = format!("{}#{}", resolve(filename, from), s.imported.name());

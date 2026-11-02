@@ -6,7 +6,7 @@ const MISSING = new Set(['ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND'])
 /** True when this failure is `pkg` itself not being there, not something inside it failing to load. */
 const isMissing = (error: any, pkg: string) => (MISSING.has(error?.code) || /cannot find (module|package)|failed to (load|resolve)/i.test(String(error?.message))) && String(error?.message).includes(pkg)
 
-/** `await driver('@weft/db/kysely', 'kysely', () => import('kysely'))`. The import stays literal so a bundler still sees it. */
+/** `await driver('@weft-js/db/kysely', 'kysely', () => import('kysely'))`. The import stays literal so a bundler still sees it. */
 export async function driver<T>(subpath: string, pkg: string, load: () => Promise<T>): Promise<T> {
   try {
     return await load()

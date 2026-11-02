@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-// `channel` and `sharedState` over weft/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
+// `channel` and `sharedState` over @weft-js/core/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
 // a memory bus, no sockets. `test/channel-ws.test.mjs` runs the protocol over a real WebSocket.
-import { createRoot, defineState, state } from 'weft'
-import { clock, flush, net, render, screen } from 'weft/test'
-import { channel, sharedState, skip, StartError, type StandardSchemaV1 } from '@weft/start'
-import { hub } from '@weft/start/hub'
+import { createRoot, defineState, state } from '@weft-js/core'
+import { clock, flush, net, render, screen } from '@weft-js/core/test'
+import { channel, sharedState, skip, StartError, type StandardSchemaV1 } from '@weft-js/start'
+import { hub } from '@weft-js/start/hub'
 import { keepOpen } from '../src/channel'
 
 const any: StandardSchemaV1<any> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
@@ -286,7 +286,7 @@ describe('channel', () => {
       room.connect({ roomId: 'a' })
     })
     await net.settle()
-    const { leaks } = await import('weft/test')
+    const { leaks } = await import('@weft-js/core/test')
     expect(leaks().join()).toContain('chat.room')
     close()
   })

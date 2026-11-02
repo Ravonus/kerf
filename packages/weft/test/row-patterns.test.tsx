@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { state } from 'weft'
-import { flush, render, screen } from 'weft/test'
+import { state } from '@weft-js/core'
+import { flush, render, screen } from '@weft-js/core/test'
 
 function Rows({ rows }: { rows: () => [string, { name: [string] }, ...number[]][] }) {
   return <ul>{rows().map(([id, { name: [first] }, ...more]) => <li key={id}>{first}:{more.length}</li>)}</ul>

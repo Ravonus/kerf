@@ -6,8 +6,8 @@
     "build": "vite build"
   },
   "dependencies": {
-    "weft": "file:../../../../packages/weft",
-    "@weft/cli": "file:../../../../packages/cli"
+    "@weft-js/core": "file:../../../../packages/weft",
+    "@weft-js/cli": "file:../../../../packages/cli"
   },
   "devDependencies": {
     "vite": "8.3.5",

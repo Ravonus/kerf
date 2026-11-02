@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // `tabs.channel` and `sync: 'tabs'` (research 32 §1): a `render()` is a tab, a shared `storage` is the shared
-// `localStorage`, and weft/test's BroadcastChannel carries the messages.
+// `localStorage`, and @weft-js/core/test's BroadcastChannel carries the messages.
 import { createRoot, state } from '../src/index'
 import { defineState } from '../src/scope'
 import '../src/persist'

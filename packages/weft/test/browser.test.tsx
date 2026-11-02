@@ -1,11 +1,11 @@
-// weft/browser (PLAN §4.2, research 07 §6): values that subscribe on first read, share one listener per
-// (target, type), go with their owner, and have a defined server value. Plus weft/test's page fakes and T012.
+// @weft-js/core/browser (PLAN §4.2, research 07 §6): values that subscribe on first read, share one listener per
+// (target, type), go with their owner, and have a defined server value. Plus @weft-js/core/test's page fakes and T012.
 import { screen } from '@testing-library/dom'
-import { createRoot, defineState, derived, devComponent } from 'weft'
-import { interval, lifecycle, media, on, online, visible } from 'weft/browser'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { assertNoLeaks, flush, leaks, net, page, render } from 'weft/test'
+import { createRoot, defineState, derived, devComponent } from '@weft-js/core'
+import { interval, lifecycle, media, on, online, visible } from '@weft-js/core/browser'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { assertNoLeaks, flush, leaks, net, page, render } from '@weft-js/core/test'
 // @ts-expect-error: query imports (vite.mjs)
 import { Status as ServerStatus } from './fixtures/browser/Status.tsx?weft-ssr'
 // @ts-expect-error

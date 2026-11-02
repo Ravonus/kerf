@@ -1,9 +1,9 @@
 // The change feed without a database: tags, coalescing, the barrier, status and modes. A fake source plays the database;
 // test/changes-postgres.test.ts and changes-sqlite.test.ts run the same promises against real ones.
-import { memoryBus, query, type Sink, type Source } from '@weft/start'
-import { configure, hub, liveHealth, resetHub, type Sink as ConnSink } from '@weft/start/hub'
-import { createFeed, dbChanges, functionHost } from '@weft/start/changes'
-import { listen } from '@weft/start/listen'
+import { memoryBus, query, type Sink, type Source } from '@weft-js/start'
+import { configure, hub, liveHealth, resetHub, type Sink as ConnSink } from '@weft-js/start/hub'
+import { createFeed, dbChanges, functionHost } from '@weft-js/start/changes'
+import { listen } from '@weft-js/start/listen'
 import { createScope, fetchQuery, invalidate, liveQueries, memoryStore } from '../src/exec'
 import { onNetwork } from '../src/db/changes-sqlite'
 
@@ -204,7 +204,7 @@ describe('coalescing', () => {
     configure({ changes: source, store })
     await hub().probed
     await open([[1, 'q', 'c.list']])
-    const read = async () => (await fetchQuery(createScope(request(), { store }), (await import('@weft/start/data')).fns.get('c.cached')!, undefined)).v
+    const read = async () => (await fetchQuery(createScope(request(), { store }), (await import('@weft-js/start/data')).fns.get('c.cached')!, undefined)).v
     expect(await read()).toBe(1)
     expect(await read()).toBe(1)
     source.sink().changes([{ table: 'todos', id: '1' }])

@@ -1,9 +1,9 @@
-import { popover, uid, type Align, type Side } from '@weft/warp-core'
-import { state } from 'weft'
+import { popover, uid, type Align, type Side } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
 import { Button, type ButtonProps } from './Button'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/popover.css'
+import '@weft-js/warp-core/styles/components/popover.css'
 
 /**
  * A button that opens a non-modal dialog panel (05 §3; components.html:574-586, 1557-1571): the outline trigger holds

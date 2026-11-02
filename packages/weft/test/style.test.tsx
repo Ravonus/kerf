@@ -1,13 +1,13 @@
-// Style groups (research 23, weft/style): the compiler lowers call sites to attributes, the emitter writes CSS for
+// Style groups (research 23, @weft-js/core/style): the compiler lowers call sites to attributes, the emitter writes CSS for
 // the values call sites can produce, a reactive axis is one attribute write, and SSR → hydrate claims the attributes
 // with no writes. The groups shop is spikes/style-groups/shop-groups.
 // weft-allow T005: framework test of compiled markup, SSR and hydration; attributes and node identity are the subject
 import { screen } from '@testing-library/dom'
-import { state } from 'weft'
-import { renderToString } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
-import { flush, render, touches } from 'weft/test'
-import { group } from 'weft/style'
+import { state } from '@weft-js/core'
+import { renderToString } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
+import { flush, render, touches } from '@weft-js/core/test'
+import { group } from '@weft-js/core/style'
 import { hydration } from '../src/hydrate'
 import { emitGroups, GroupError, resolve, type GroupSource, type GroupUse } from '../src/style/css'
 // @ts-expect-error: query imports (vite.mjs)
@@ -27,7 +27,7 @@ const badge = group('badge', {
 
 afterEach(() => { document.body.innerHTML = '' })
 
-const SRC = `import { group } from 'weft/style'
+const SRC = `import { group } from '@weft-js/core/style'
 export const card = group('order-card', {
   base: { surface: 'raised', pad: 'group', emphasis: 'subtle' },
   axes: { status: { open: { tone: 'info' }, shipped: { tone: 'positive' }, late: { tone: 'critical' } } },
@@ -69,7 +69,7 @@ describe('compiler: call sites lower to attributes', () => {
   })
 
   test('W060: a value that isn\'t a literal is named', () => {
-    const out = transform(`import { group } from 'weft/style'\nconst px = 13\nexport const g = group('g', { axes: { size: { big: { pad: px } } } })`, { filename: '/a.tsx' })
+    const out = transform(`import { group } from '@weft-js/core/style'\nconst px = 13\nexport const g = group('g', { axes: { size: { big: { pad: px } } } })`, { filename: '/a.tsx' })
     expect(out.diagnostics.map(d => d.code)).toEqual(['W060'])
     expect(out.diagnostics[0].message).toBe("group can't be evaluated at build: `px` at g.axes.size.big.pad isn't a literal")
   })

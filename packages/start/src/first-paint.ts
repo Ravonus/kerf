@@ -1,7 +1,7 @@
 // The first-paint CSS of whatever HTML is passed in, by lookups: the build's `pieces` table, nothing parsed here. It reads
 // the HTML rather than a list kept while rendering, so a cached or prerendered page, a static level and a streamed chunk
 // take one path, nothing is shared between requests, and the same HTML always gets the same CSS.
-import { markup } from 'weft/markup'
+import { markup } from '@weft-js/core/markup'
 
 export interface Pieces {
   names: string[]; layers: string; wraps: string[]; pieces: [number, number, string, string][]

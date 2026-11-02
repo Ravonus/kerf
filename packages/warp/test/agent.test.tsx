@@ -1,8 +1,8 @@
 // The agent pack driven as a user would: keyboard paths, states, focus moves and announcements.
 import { fireEvent } from '@testing-library/dom'
-import { foldAnswer, type AgentEvent, type AgentTool, type DictationEngine, type DictationEvents } from '@weft/warp-core'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import { foldAnswer, type AgentEvent, type AgentTool, type DictationEngine, type DictationEvents } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Toaster } from '../src/Toast'
 import { BranchSwitcher, MessageActions } from '../src/agent/Actions'
 import { AgentPlan } from '../src/agent/AgentPlan'

@@ -1,5 +1,5 @@
-import { onMount, state } from 'weft'
-import { Button } from '@weft/warp'
+import { onMount, state } from '@weft-js/core'
+import { Button } from '@weft-js/warp'
 import bytes from '../generated/arena.json'
 import speed from '../generated/speed.json'
 

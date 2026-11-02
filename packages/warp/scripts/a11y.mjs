@@ -35,7 +35,7 @@ export const DIALS = ['quiet', 'balanced', 'vivid', 'classic', 'floating', 'comp
 
 export async function buildGallery(outDir) {
   const { build } = await import('vite')
-  const { default: weft } = await import('weft/vite')
+  const { default: weft } = await import('@weft-js/core/vite')
   await build({ root: join(pkg, 'test', 'a11y'), base: './', logLevel: 'silent', plugins: [weft({ purge: { keep: DIALS } })], build: { outDir, emptyOutDir: true } })
   return outDir
 }

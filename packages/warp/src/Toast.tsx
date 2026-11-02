@@ -1,12 +1,12 @@
-import { XIcon } from '@weft/icons'
-import { toaster, toastStore, type Toast, type ToastInput, type ToastPromise } from '@weft/warp-core'
-import { onCleanup, state } from 'weft'
+import { XIcon } from '@weft-js/warp-icons'
+import { toaster, toastStore, type Toast, type ToastInput, type ToastPromise } from '@weft-js/warp-core'
+import { onCleanup, state } from '@weft-js/core'
 import { Icon, toneIcon } from './Icon'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/button.css' // the action and dismiss buttons' markup
-import '@weft/warp-core/styles/components/spinner.css'
-import '@weft/warp-core/styles/components/toast.css'
+import '@weft-js/warp-core/styles/components/button.css' // the action and dismiss buttons' markup
+import '@weft-js/warp-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/components/toast.css'
 
 let store: ReturnType<typeof toastStore> | undefined
 const toasts = () => (store ??= toastStore())

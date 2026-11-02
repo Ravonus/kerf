@@ -24,7 +24,7 @@ stacks are the fair framework test; warp and MUI each bring a design system, so 
 
 `feed/` in each stack is a second page, so it doesn't touch the dashboard's numbers: 10,000 rows of wrapped text
 (`shared/feed.ts`, `shared/feed.css`) on the stack's usual virtualiser. warp uses `VirtualList` with exact heights from
-`text.measure`; weft without warp uses `@weft/warp-core`'s `virtualizer`, measuring rows as they render; Solid, React + Radix and
+`text.measure`; weft without warp uses `@weft-js/warp-core`'s `virtualizer`, measuring rows as they render; Solid, React + Radix and
 React + Zustand use TanStack Virtual with `measureElement`; MUI uses react-virtuoso. The script scrolls 120 px a frame down and
 then up, and reads back how far each on-screen row moved. Anything but 120 is a visible jump. It also jumps to row 7,777.
 

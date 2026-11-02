@@ -1,4 +1,4 @@
-// weft/test's realtime transport (research 30 §7): the real hub, a memory bus, frames through JSON.
+// @weft-js/core/test's realtime transport (research 30 §7): the real hub, a memory bus, frames through JSON.
 
 import { fakeScope, FnError, net, runtime } from './data'
 import type { Body } from './hub'

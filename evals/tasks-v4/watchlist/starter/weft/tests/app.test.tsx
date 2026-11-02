@@ -1,6 +1,6 @@
 // weft-allow T005: the watchlist's acceptance contract names data-testid values (symbol, count, portfolio)
 import { screen as dom, within } from '@testing-library/dom'
-import { render, screen } from 'weft/test'
+import { render, screen } from '@weft-js/core/test'
 import { seedStocks, type Api } from '../src/api'
 import { App } from '../src/App'
 

@@ -14,7 +14,7 @@ describe('weft check on evals/reference-v3/weft', () => {
     expect(r.files).toEqual(['src/App.tsx', 'src/components/CartView.tsx', 'src/components/Header.tsx', 'src/components/ProductList.tsx', 'src/components/ProductRow.tsx', 'src/main.tsx'])
     expect(r.diagnostics).toEqual([])
     expect(r.config).toBeNull()
-    expect(r.weft.version).toBe('0.0.0')
+    expect(r.weft.version).toBe('0.1.0')
   })
 
   it('reports slot bindings: defaults are named, never silent', async () => {
@@ -70,7 +70,7 @@ describe('project view: cross-file W014', () => {
 
   it('keeps the warning when the box goes to a component that never lists it', async () => {
     const dir = project({
-      'src/App.tsx': `import { state } from 'weft'
+      'src/App.tsx': `import { state } from '@weft-js/core'
 import { Count } from './Count'
 export function App() {
   const xs = state([{ id: 'a', price: 1 }])
@@ -89,7 +89,7 @@ export function App() {
 
   it('follows props through derived and a second component', async () => {
     const dir = project({
-      'src/App.tsx': `import { state } from 'weft'
+      'src/App.tsx': `import { state } from '@weft-js/core'
 import { Shell } from './Shell'
 export function App() {
   const xs = state([{ id: 'a', price: 1 }])
@@ -102,7 +102,7 @@ export function Shell(props: { rows: { id: string; price: number }[]; onBump: ()
   return <main onClick={props.onBump}><Table items={props.rows} /></main>
 }
 `,
-      'src/Table.tsx': `import { derived } from 'weft'
+      'src/Table.tsx': `import { derived } from '@weft-js/core'
 export function Table({ items }: { items: { id: string; price: number }[] }) {
   const sorted = derived(() => [...items].sort((a, b) => a.price - b.price))
   return <ul>{sorted.value.map(p => <li key={p.id}>{p.price}</li>)}</ul>
@@ -119,7 +119,7 @@ export function Table({ items }: { items: { id: string; price: number }[] }) {
 
 describe('diagnostic shape', () => {
   it('converts byte offsets to UTF-16 lines and columns, with edits for autofixes', async () => {
-    const dir = project({ 'src/Badge.tsx': `import { state } from 'weft'\n// é ü 🎉\nexport function Badge() {\n  const n = state(0)\n  return <p title="é🎉">{n}</p>\n}\n` })
+    const dir = project({ 'src/Badge.tsx': `import { state } from '@weft-js/core'\n// é ü 🎉\nexport function Badge() {\n  const n = state(0)\n  return <p title="é🎉">{n}</p>\n}\n` })
     const r = await check(dir, { files: ['src/Badge.tsx'] })
     const [d] = r.diagnostics
     const text = readFileSync(join(dir, 'src/Badge.tsx'), 'utf8')
@@ -153,22 +153,22 @@ describe('diagnostic shape', () => {
   })
 
   it('reports P120 for a weft plugin wired straight into vite.config.ts', async () => {
-    const dir = project({ 'vite.config.ts': "import { text } from '@weft/text'\nexport default { plugins: [text().vite] }\n" })
+    const dir = project({ 'vite.config.ts': "import { text } from '@weft-js/text'\nexport default { plugins: [text().vite] }\n" })
     const r = await check(dir)
     expect(r.diagnostics.map(d => [d.code, d.file, d.span])).toEqual([['P120', 'vite.config.ts', [1, 23, 1, 40]]])
   })
 
   it('never compiles files under scope.forbid', async () => {
     const dir = project({
-      'weft.config.ts': "import { defineConfig } from 'weft/config'\nexport default defineConfig({ scope: { forbid: ['src/components/**'] } })\n",
+      'weft.config.ts': "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ scope: { forbid: ['src/components/**'] } })\n",
     })
     const r = await check(dir)
     expect(r.files).toEqual(['src/App.tsx', 'src/main.tsx'])
   })
 
-  it('reports the weft/browser codes with their edits (W050, W051, W054)', async () => {
-    const clock = `import { state } from 'weft'
-import { media, online } from 'weft/browser'
+  it('reports the @weft-js/core/browser codes with their edits (W050, W051, W054)', async () => {
+    const clock = `import { state } from '@weft-js/core'
+import { media, online } from '@weft-js/core/browser'
 export const up = online()
 export function Clock() {
   const now = state(0)
@@ -185,7 +185,7 @@ export function Clock() {
     expect(w051.fix.edits).toBeUndefined()
     expect(apply(w054)).toContain("media('(prefers-color-scheme: dark)', { ssr: false })")
     const fixed = apply(w050)
-    expect(fixed).toContain("import { media, online, interval } from 'weft/browser'")
+    expect(fixed).toContain("import { media, online, interval } from '@weft-js/core/browser'")
     expect(fixed).toContain('interval(1000, () => { now.value++ })')
     expect(w050.docs).toBe('weft docs W050')
   })
@@ -211,7 +211,7 @@ describe('Q015', () => {
 })
 
 describe('U001–U005: interaction() and ui', () => {
-  const page = body => `import { interaction } from 'weft/interaction'\nimport { Button, Tabs } from '@weft/warp'\nexport function A() {\n${body}\n}\n`
+  const page = body => `import { interaction } from '@weft-js/core/interaction'\nimport { Button, Tabs } from '@weft-js/warp'\nexport function A() {\n${body}\n}\n`
   const codes = async files => (await check(project(files))).diagnostics.map(d => d.code).filter(c => c.startsWith('U'))
 
   it('a key that can never match', async () => {

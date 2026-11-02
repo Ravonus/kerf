@@ -27,7 +27,7 @@ export const payEvents = ${table}('pay_events', {
   }[engine]()
 }
 
-const catalog = `import { product } from '@weft/pay'
+const catalog = `import { product } from '@weft-js/pay'
 
 // What you sell. Amounts are minor units (999 is $9.99), and no rail's ids belong here: this file reaches the client.
 export const pro = product({
@@ -40,14 +40,14 @@ export const pro = product({
 })
 `
 
-const ledger = store => `${store === 'drizzle' ? "import { drizzlePayStore } from '@weft/pay/drizzle'\nimport { definePay } from '@weft/pay/server'\nimport { db } from '#/db/index.server'\nimport { payEvents, purchases } from '#/db/schema'\n" : "import { definePay, memoryPayStore } from '@weft/pay/server'\n"}import * as catalog from './pay/catalog'
+const ledger = store => `${store === 'drizzle' ? "import { drizzlePayStore } from '@weft-js/pay/drizzle'\nimport { definePay } from '@weft-js/pay/server'\nimport { db } from '#/db/index.server'\nimport { payEvents, purchases } from '#/db/schema'\n" : "import { definePay, memoryPayStore } from '@weft-js/pay/server'\n"}import * as catalog from './pay/catalog'
 
 // Served at /_weft/x/pay/<rail>, the webhook URL to give your provider. A verified event is the only grant.
 export default definePay({ catalog, store: ${store === 'drizzle' ? 'drizzlePayStore(db, { purchases, payEvents })' : 'memoryPayStore()'}, urls: { success: '/', cancel: '/' } })
 `
 
-const functions = `import { entitlementTag } from '@weft/pay'
-import { mutation, query, redirect } from '@weft/start'
+const functions = `import { entitlementTag } from '@weft-js/pay'
+import { mutation, query, redirect } from '@weft-js/start'
 import pay from '../pay.server'
 
 /** What the signed-in user holds, live: a verified event pokes this user's tag. Render from it; enforce with \`requires\`. */
@@ -72,7 +72,7 @@ export const portal = mutation({
 `
 
 export const setup = {
-  with: ['@weft/pay/stripe'],
+  with: ['@weft-js/pay/stripe'],
   needs: ['db', 'auth'],
   run({ engine, layer, read }) {
     const drizzle = layer === 'drizzle'

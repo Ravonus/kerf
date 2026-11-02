@@ -1,7 +1,7 @@
-// weft/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
-// no IO here: weft/vite builds the record (with @weft/plugin-media's `media.build` provider, or a header probe
+// @weft-js/core/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
+// no IO here: @weft-js/core/vite builds the record (with @weft-js/plugin-media's `media.build` provider, or a header probe
 // without one), and this renders it with dimensions, a placeholder, `srcset` and `sizes`, so nothing shifts. Video and
-// audio records come from @weft/plugin-media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
+// audio records come from @weft-js/plugin-media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
 
 import { onMount, untrack } from './index'
 import type { Timeline } from './media-timeline'

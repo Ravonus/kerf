@@ -1,4 +1,4 @@
-import { onMount, state, stats } from 'weft'
+import { onMount, state, stats } from '@weft-js/core'
 
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`
 

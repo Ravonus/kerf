@@ -1,8 +1,8 @@
 // The fixture's client entry: start() with a probe around hydration for the e2e tests (DOM writes, key misses).
 import 'weft:fonts'
 import './entry.css'
-import { start } from '@weft/start/client'
-import { hydration } from 'weft/dom'
+import { start } from '@weft-js/start/client'
+import { hydration } from '@weft-js/core/dom'
 import * as routes from 'virtual:weft/routes'
 
 const writes: MutationRecord[] = []

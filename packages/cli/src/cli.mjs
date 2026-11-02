@@ -210,7 +210,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       }
       case 'icons': {
         if (args.positional[0] !== 'publish' || !args.positional[1]) { say('usage: weft icons publish <dir>'); return 1 }
-        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft/icons/compile')).href)
+        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft-js/warp-icons/compile')).href)
         const out = await publish(resolve(args.root, args.positional[1]))
         if (args.json) print(out)
         else say(`${out.files} files for ${out.icons} icons in ${out.dir}. Nothing was uploaded: host that folder, then set icons({ source }).`)

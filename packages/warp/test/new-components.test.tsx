@@ -1,5 +1,5 @@
 // Menu, Accordion, Slider, RadioGroup, Ticker, the Select menu and toast.promise: roles, keyboard, state.
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import * as F from './fixtures/NewParts'
 
 const tick = () => new Promise(r => setTimeout(r))

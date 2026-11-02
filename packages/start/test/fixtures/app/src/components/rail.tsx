@@ -1,4 +1,4 @@
-import { onMount } from 'weft'
+import { onMount } from '@weft-js/core'
 
 /** Takes its children from the page, and has work of its own to do once mounted, as warp's Nav does. */
 export function Rail(props: { children?: unknown }) {

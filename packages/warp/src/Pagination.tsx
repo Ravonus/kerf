@@ -1,13 +1,13 @@
-import { infiniteScroll, pageList, uid } from '@weft/warp-core'
-import { derived, flush, untrack, type State } from 'weft'
+import { infiniteScroll, pageList, uid } from '@weft-js/warp-core'
+import { derived, flush, untrack, type State } from '@weft-js/core'
 import { Button } from './Button'
 import { bindable } from './bind'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/data/tokens.css'
-import '@weft/warp-core/styles/data/base.css'
-import '@weft/warp-core/styles/data/pagination.css'
-import '@weft/warp-core/styles/data/load-more.css'
+import '@weft-js/warp-core/styles/data/tokens.css'
+import '@weft-js/warp-core/styles/data/base.css'
+import '@weft-js/warp-core/styles/data/pagination.css'
+import '@weft-js/warp-core/styles/data/load-more.css'
 
 export type PaginationBarProps = {
   label?: string

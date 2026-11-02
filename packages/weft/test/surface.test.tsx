@@ -1,9 +1,9 @@
-// weft/surface (research 33): one paint per change, nothing re-rendered, the mirror, the clock, tokens, SSR.
+// @weft-js/core/surface (research 33): one paint per change, nothing re-rendered, the mirror, the clock, tokens, SSR.
 // weft-allow T005: the host, canvas and mirror are the contract here, so these tests read them directly
-import { state } from 'weft'
-import { render, screen, flush, canvasCalls, fakeMeasure, touches, clock as time } from 'weft/test'
-import { renderToString } from 'weft/ssr'
-import { clock, defineSurface, integerFit, Surface } from 'weft/surface'
+import { state } from '@weft-js/core'
+import { render, screen, flush, canvasCalls, fakeMeasure, touches, clock as time } from '@weft-js/core/test'
+import { renderToString } from '@weft-js/core/ssr'
+import { clock, defineSurface, integerFit, Surface } from '@weft-js/core/surface'
 import { Sized, Target } from './fixtures/ssr/Surf.tsx?weft-ssr'
 
 const paints = (c: HTMLCanvasElement, name = 'clearRect') => canvasCalls(c).filter(x => x.name === name).length

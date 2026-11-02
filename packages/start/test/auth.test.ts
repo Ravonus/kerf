@@ -2,8 +2,8 @@
 // through a mutation, the full load when the session changes, guards before children, per-user shared caches. The
 // passwords and secret are throwaway test values made here.
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { mutation, query, redirect } from '@weft/start'
-import { fnOf, runtime, StartError } from '@weft/start/data'
+import { mutation, query, redirect } from '@weft-js/start'
+import { fnOf, runtime, StartError } from '@weft-js/start/data'
 import { forward, session, sessionChanged } from '../src/auth'
 import { createAuth } from '../src/auth/better-auth'
 import { drizzleAuth } from '../src/auth/drizzle'

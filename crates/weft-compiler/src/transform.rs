@@ -55,7 +55,7 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
         imports.push(("memo", "_$weftMemo"));
     }
     if !imports.is_empty() {
-        program.body.insert(0, t.import("weft", &imports));
+        program.body.insert(0, t.import("@weft-js/core", &imports));
     }
 }
 

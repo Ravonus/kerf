@@ -24,7 +24,7 @@ The checker's view is delivered four ways, all over one engine (`packages/cli/sr
 | Where | How | Status |
 |---|---|---|
 | `weft check`, `weft tsc`, dev | TypeScript 7's API with an in-memory file overlay | Works on 7.0.2 |
-| VS Code today | tsserver plugin (`@weft/cli/ts-plugin`) | Tested over the TS server protocol |
+| VS Code today | tsserver plugin (`@weft-js/cli/ts-plugin`) | Tested over the TS server protocol |
 | An editor on TypeScript 7 | `weft lsp`, a proxy in front of `tsc --lsp` | Tested over LSP; no VS Code client written |
 | A project on TypeScript 6 | The same engine over a language service | Tested |
 

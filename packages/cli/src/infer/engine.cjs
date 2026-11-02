@@ -223,7 +223,7 @@ class Engine {
     const prev = this.state.get(c.id) ?? {}
     const st = { keys: new Map(), sites: sites.length, pins: prev.pins ?? new Map(), shape: prev.shape, anyFrom: [], noCallers: false }
     if (this.routes(c.file) && c.isDefault) {
-      st.type = `import('@weft/start').RouteProps${facts.exportsLoad ? '<typeof load>' : ''}`
+      st.type = `import('@weft-js/start').RouteProps${facts.exportsLoad ? '<typeof load>' : ''}`
       st.route = true
       return st
     }

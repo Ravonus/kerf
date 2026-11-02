@@ -1,10 +1,10 @@
-import { XIcon } from '@weft/icons'
-import { derived } from 'weft'
+import { XIcon } from '@weft-js/warp-icons'
+import { derived } from '@weft-js/core'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
 import './styles'
-import '@weft/warp-core/styles/components/button.css' // the close button's markup
-import '@weft/warp-core/styles/components/alert.css'
+import '@weft-js/warp-core/styles/components/button.css' // the close button's markup
+import '@weft-js/warp-core/styles/components/alert.css'
 
 /**
  * An inline alert (05 §5): icon, title, description, actions, close. Status is never colour alone: the icon and the

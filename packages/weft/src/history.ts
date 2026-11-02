@@ -1,4 +1,4 @@
-// weft/history: undo and redo for scopes with `{ history: { limit } }` (research 14 §2.10), and the action
+// @weft-js/core/history: undo and redo for scopes with `{ history: { limit } }` (research 14 §2.10), and the action
 // transactions they need. One step per action call (nested calls join the outer); writes outside any action group per
 // microtask into one step named `<scope>.write`. Boxes with `history: false` are left out. The weft() Vite plugin
 // imports this where the option is used.

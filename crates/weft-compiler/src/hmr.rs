@@ -2,7 +2,7 @@
 //!
 //! Every top-level component (`function Card`, `const Card = () => …`, exported or not) is registered under
 //! `file#Card` with a hash of its own source mixed with the rest of the module's, so a new module version swaps the
-//! implementation in place and re-renders only the components whose hash changed (weft/hmr).
+//! implementation in place and re-renders only the components whose hash changed (@weft-js/core/hmr).
 //!
 //! A component's body-level `const x = state(init)` becomes `_$keep(state(init), "Card", "x:<hash of init>")`: an
 //! edit that keeps the name and the initializer keeps the value; renaming the box or changing its initializer resets it.
@@ -58,7 +58,7 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &s
     }
     let rest = rest.0;
     let list: Vec<String> = comps.iter().map(|(n, h)| format!("{n}: [{n}, \"{:x}\"]", h ^ rest)).collect();
-    let mut out = format!("\nimport {{ hot as _$hot{} }} from \"weft/hmr\";\n", if keeps { ", keep as _$keep" } else { "" });
+    let mut out = format!("\nimport {{ hot as _$hot{} }} from \"@weft-js/core/hmr\";\n", if keeps { ", keep as _$keep" } else { "" });
     out.push_str(&format!("if (import.meta.hot) {{\n\t_$hot({file:?}, {{ {} }});\n", list.join(", ")));
     if accept {
         out.push_str("\timport.meta.hot.accept();\n");
@@ -231,7 +231,7 @@ pub fn names<'a>(allocator: &'a Allocator, program: &mut Program<'a>, file: &str
             }
         }
     }
-    any.then(|| "\nimport { name as _$name } from \"weft\";\n".to_string())
+    any.then(|| "\nimport { name as _$name } from \"@weft-js/core\";\n".to_string())
 }
 
 fn name_decls<'a>(ast: &AstBuilder<'a>, allocator: &'a Allocator, v: &mut VariableDeclaration<'a>, owner: &str) -> bool {

@@ -1,13 +1,13 @@
-import { announce, coachSpot, tourSpot, uid } from '@weft/warp-core'
-import { derived, state, untrack, watch, type State } from 'weft'
+import { announce, coachSpot, tourSpot, uid } from '@weft-js/warp-core'
+import { derived, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { bindable } from '../Picker'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/components/tour.css'
-import '@weft/warp-core/styles/flows/tour.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/components/tour.css'
+import '@weft-js/warp-core/styles/flows/tour.css'
 
 export interface TourStep {
   /** A CSS selector: `[data-tour=new]`. */

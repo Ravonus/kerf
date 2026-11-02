@@ -122,7 +122,7 @@ struct Gen<'s> {
     source: &'s str,
     /// Components with a variant: local symbol → the tag the variant is under here.
     variants: HashMap<SymbolId, String>,
-    /// Symbols of `Text` from `weft/text`: it stays itself, so its element and class survive.
+    /// Symbols of `Text` from `@weft-js/core/text`: it stays itself, so its element and class survive.
     text: Option<SymbolId>,
     /// `weft`'s own imports: `derived` stays, `resource` is read by its fetcher, and the rest (`state`…) is setup.
     weft: HashMap<SymbolId, String>,
@@ -555,9 +555,9 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
                 _ => continue,
             };
             let Some(sym) = sym else { continue };
-            if from == "weft/text" && imported == "Text" {
+            if from == "@weft-js/core/text" && imported == "Text" {
                 g.text = Some(sym);
-            } else if from == "weft" {
+            } else if from == "@weft-js/core" {
                 g.weft.insert(sym, imported);
             } else if from.starts_with('.') && known.is_some_and(|k| k.contains_key(&format!("{}#{imported}", crate::style::resolve(filename, from)))) {
                 let local = spec.local().name.to_string();
@@ -598,7 +598,7 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
     if code.is_empty() {
         return Shapes { code, exports };
     }
-    let mut head = String::from("import { shapeAny as $$sa, shapeRead as $$sr, shapeText as $$st } from \"weft/shape\";\n");
+    let mut head = String::from("import { shapeAny as $$sa, shapeRead as $$sr, shapeText as $$st } from \"@weft-js/core/shape\";\n");
     for s in &g.used {
         head.push_str(&import_lines[s]);
     }

@@ -41,7 +41,7 @@ const EDGES = {
   'parens.ts': `export const a = ${'('.repeat(500)}1${')'.repeat(500)}\n`,
 }
 
-const GROUP = `import { group } from 'weft/style'\nexport const card = group('order-card', { base: { gap: 'tight' }, axes: { status: { late: { gap: 'loose' } } } })\n`
+const GROUP = `import { group } from '@weft-js/core/style'\nexport const card = group('order-card', { base: { gap: 'tight' }, axes: { status: { late: { gap: 'loose' } } } })\n`
 const GROUP_USE = `import { card } from './card'\nexport const Row = () => <p {...card({ status: 'late' })}>x</p>\n`
 
 function walk(dir, out) {

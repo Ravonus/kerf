@@ -86,7 +86,7 @@ export function kids(props: Record<string, any>, el: Element) {
 }
 
 /**
- * `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. A component weft/hmr
+ * `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. A component @weft-js/core/hmr
  * registered (`$$h`) mounts through it, so a new module version can swap it in place.
  */
 export function component<P>(Comp: (props: P) => unknown, props: P, name?: string, loc?: string) {

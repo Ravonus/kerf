@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
-// `.live`, `stream` and reconnects over weft/test's fake transport (research 30 §7): the real hub, the real client, a
+// `.live`, `stream` and reconnects over @weft-js/core/test's fake transport (research 30 §7): the real hub, the real client, a
 // memory bus, no sockets.
-import { state, untrack, watch } from 'weft'
-import { clock, flush, net, page, render, screen } from 'weft/test'
-import { createRoot } from 'weft'
-import { mutation, query, skip, stale, stream, topic, tracked, type StandardSchemaV1 } from '@weft/start'
-import { backoff } from '@weft/start/live'
-import { configure, hub } from '@weft/start/hub'
-import { seed } from '@weft/start/data'
+import { state, untrack, watch } from '@weft-js/core'
+import { clock, flush, net, page, render, screen } from '@weft-js/core/test'
+import { createRoot } from '@weft-js/core'
+import { mutation, query, skip, stale, stream, topic, tracked, type StandardSchemaV1 } from '@weft-js/start'
+import { backoff } from '@weft-js/start/live'
+import { configure, hub } from '@weft-js/start/hub'
+import { seed } from '@weft-js/start/data'
 
 type Todo = { id: string; title: string }
 const any: StandardSchemaV1<any> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
@@ -162,7 +162,7 @@ describe('.live', () => {
   test('a live query that leaks past its test is T012', async () => {
     const stop = createRoot(dispose => { listTodos.live(); return dispose })
     await net.settle()
-    const { leaks } = await import('weft/test')
+    const { leaks } = await import('@weft-js/core/test')
     expect(leaks().join()).toContain('live.list')
     stop()
     expect(leaks()).toEqual([])

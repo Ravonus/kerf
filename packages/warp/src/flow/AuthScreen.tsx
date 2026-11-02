@@ -1,8 +1,8 @@
-import { WeaveIcon } from '@weft/icons'
+import { WeaveIcon } from '@weft-js/warp-icons'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/flows/auth.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/flows/auth.css'
 
 const THREADS = Array.from({ length: 24 }, (_, i) => ({ x: 12 + i * 26 }))
 const WEFT = [[180, 0.15, 0.75], [300, 0.35, 0.95], [420, 0.05, 0.55], [560, 0.25, 0.85]].map(([y, a, b], i) => ({ i, d: `M${a * 640} ${y} H${b * 640}` }))

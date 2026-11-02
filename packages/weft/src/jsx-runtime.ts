@@ -1,4 +1,4 @@
-// JSX types for `jsxImportSource: "weft"`. Types only: the compiler turns JSX into DOM code, so nothing imports this
+// JSX types for `jsxImportSource: "@weft-js/core"`. Types only: the compiler turns JSX into DOM code, so nothing imports this
 // at runtime. Intrinsic elements check event handlers (`currentTarget` is the element) and leave other attributes open.
 
 type Handler<E extends Event, T> = (event: E & { currentTarget: T; target: EventTarget }) => void

@@ -1,5 +1,5 @@
 // `weft style find|explain|matrix` and the style D-codes (research 23 §2.4, §3). The matrix comes from the installed
-// weft (`weft/style/matrix`): the project is scanned with its compiler, so the CLI, the MCP tools and the Vite
+// weft (`@weft-js/core/style/matrix`): the project is scanned with its compiler, so the CLI, the MCP tools and the Vite
 // plugin's `.weft/styles.json` agree. D020 (class soup) is found here, on the source text: groups never write a class.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -33,7 +33,7 @@ export function styleFiles(root, config = {}) {
 export async function styleMatrix(root, { write = false } = {}) {
   const weft = resolveWeft(root)
   const mod = await styleModule(weft)
-  if (!mod) throw Object.assign(new Error(`weft@${weft.version} has no style groups (weft/style/matrix)`), { code: 'E_NO_STYLE' })
+  if (!mod) throw Object.assign(new Error(`weft@${weft.version} has no style groups (@weft-js/core/style/matrix)`), { code: 'E_NO_STYLE' })
   const { config } = await loadConfig(root)
   const scan = mod.scanProject(root, styleFiles(root, config), loadCompiler(weft).transform)
   const matrix = mod.buildMatrix(scan.groups, scan.uses)
@@ -225,7 +225,7 @@ function attributesOf(group, sel, part) {
 }
 
 export function formatFind(r) {
-  if (!r.groups.length) return `no group fits "${r.query}" (${r.total} groups). Define one with group() from weft/style; \`weft docs style\` has the rules.`
+  if (!r.groups.length) return `no group fits "${r.query}" (${r.total} groups). Define one with group() from @weft-js/core/style; \`weft docs style\` has the rules.`
   const lines = r.groups.map(g => {
     const axes = Object.entries(g.axes).map(([a, v]) => `${a}: ${Array.isArray(v) ? v.join('|') : v}`).join(' · ')
     return `${g.name.padEnd(18)} ${g.file}${g.doc ? `\n    ${g.doc}` : ''}\n    ${[axes, g.parts.length ? `parts: ${g.parts.join(', ')}` : '', g.states.length ? `states: ${g.states.join(', ')}` : '', `${g.uses} uses`].filter(Boolean).join(' · ')}`

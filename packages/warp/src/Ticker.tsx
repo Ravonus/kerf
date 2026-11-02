@@ -1,6 +1,6 @@
-import { derived, untrack } from 'weft'
+import { derived, untrack } from '@weft-js/core'
 import './styles'
-import '@weft/warp-core/styles/components/ticker.css'
+import '@weft-js/warp-core/styles/components/ticker.css'
 
 export interface TickerProps {
   value: number

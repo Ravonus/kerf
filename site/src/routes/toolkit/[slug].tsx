@@ -1,4 +1,4 @@
-import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft/start'
+import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
 import { Preview } from '../../components/Preview'
 import { TierPicker } from '../../components/TierPicker'
 import pages from '../../generated/toolkit.json'

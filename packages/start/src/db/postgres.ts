@@ -1,4 +1,4 @@
-// Postgres for `@weft/start` (research 28 §2): Drizzle on postgres.js, pure JS on Node, Bun and Deno. The client
+// Postgres for `@weft-js/start` (research 28 §2): Drizzle on postgres.js, pure JS on Node, Bun and Deno. The client
 // connects on the first statement, so `weft build` and a page with no queries need no database. Migrations hold an
 // advisory lock, so instances starting together apply each file once.
 
@@ -24,7 +24,7 @@ const LOCK = 7_301_986
 export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10 }: PostgresOptions<S>): PostgresDb<S> {
   if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`@weft/start/db/postgres\` needs a \`postgres://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft/start/db/sqlite` for a file')
+    throw new StartError('Q013', `\`@weft-js/start/db/postgres\` needs a \`postgres://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite` for a file')
   // Idle connections close, so a stopped server can exit.
   const client = postgres(url, { max, idle_timeout: 20, onnotice: () => {} })
   const handle: DbHandle = {

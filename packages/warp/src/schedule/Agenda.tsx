@@ -1,14 +1,14 @@
-import { PlusIcon } from '@weft/icons'
-import { addDays, agendaItems, announce, at, clock, dayDots, eventsOn, fmt, longDuration, longPress, slide, swipePages, uid, weekDates, weekStart, ymd, type AgendaItem, type CalEvent, type IsoDate, type Slot } from '@weft/warp-core'
-import { derived, flush, state, untrack, type State } from 'weft'
+import { PlusIcon } from '@weft-js/warp-icons'
+import { addDays, agendaItems, announce, at, clock, dayDots, eventsOn, fmt, longDuration, longPress, slide, swipePages, uid, weekDates, weekStart, ymd, type AgendaItem, type CalEvent, type IsoDate, type Slot } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { bindable, usePickerEnv } from '../Picker'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { RepeatGlyph, tint, useNow } from './bits'
 import { EventEditor, type CalendarSource } from './EventEditor'
 import { MoveSheet } from './MoveSheet'
-import '@weft/warp-core/styles/app/agenda.css'
-import '@weft/warp-core/styles/components/fab.css'
+import '@weft-js/warp-core/styles/app/agenda.css'
+import '@weft-js/warp-core/styles/components/fab.css'
 
 const summary = (e: CalEvent) => [e.location, e.video ? 'Video call' : '', e.attendees?.length ? `${e.attendees.length} people` : ''].filter(Boolean).join(' · ')
 

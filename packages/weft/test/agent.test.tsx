@@ -1,10 +1,10 @@
 // weft-allow T004, T005: the bridge's clock replaces the page's timers itself, and one test clicks the raw DOM the way another browser tool would
-// weft/agent and weft/devtools: what an agent sees and does in the running app (research 22). No weft/test here: the
+// @weft-js/core/agent and @weft-js/core/devtools: what an agent sees and does in the running app (research 22). No @weft-js/core/test here: the
 // bridge brings its own page fakes (clock, network), and these tests check them.
-import { derived, onCleanup, state } from 'weft'
-import { render } from 'weft/dom'
-import { act, assert, clock, net, record, run, snapshot } from 'weft/agent'
-import { graph, set } from 'weft/devtools'
+import { derived, onCleanup, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
+import { act, assert, clock, net, record, run, snapshot } from '@weft-js/core/agent'
+import { graph, set } from '@weft-js/core/devtools'
 
 function Stock(props: { stock: number }) {
   const qty = state(0)
@@ -76,7 +76,7 @@ test('set writes state by its graph name; derived values refuse', async () => {
   expect(() => set('Nope.x', 1)).toThrow(/no state named Nope\.x/)
 })
 
-test('record turns acts and asserts into a weft/test test', async () => {
+test('record turns acts and asserts into a @weft-js/core/test test', async () => {
   mount(() => <Stock stock={2} />)
   record.start()
   await act({ role: 'button', name: 'Add' }, 'click')
@@ -86,7 +86,7 @@ test('record turns acts and asserts into a weft/test test', async () => {
   const { code, asserts } = record.code({ component: 'Stock', from: './Stock', props: '{ stock: 2 }' })
   expect(asserts).toBe(2)
   expect(code).toBe(`import { expect, test } from 'vitest'
-import { render, screen, user } from 'weft/test'
+import { render, screen, user } from '@weft-js/core/test'
 import { Stock } from "./Stock"
 
 test("recorded: /", async () => {

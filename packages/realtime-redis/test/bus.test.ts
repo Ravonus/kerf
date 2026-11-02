@@ -2,7 +2,7 @@
 // runs its own, so it can restart it); without it the server half skips, which is reported, not hidden.
 import { spawn, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
-import { busSuite } from 'weft/test/plugins'
+import { busSuite } from '@weft-js/core/test/plugins'
 import { bus, redisBus } from '../src/index'
 
 const freePort = () => new Promise<number>(ok => { const s = createServer().listen(0, () => { const { port } = s.address() as any; s.close(() => ok(port)) }) })

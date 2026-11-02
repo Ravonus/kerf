@@ -1,9 +1,9 @@
-// weft/surface: canvas and WebGL as layout children (PLAN §5, research 33). `setup` runs once on the client, props are
+// @weft-js/core/surface: canvas and WebGL as layout children (PLAN §5, research 33). `setup` runs once on the client, props are
 // live, and a paint reads boxes like a binding does: when one changes, one paint is booked on the next frame and nothing
 // else runs. No app pays for this unless it imports it.
 /// <reference path="./slots.d.ts" />
 
-import { createRoot, DEV, effect, flush, getOwner, onCleanup, onMount, state, untrack, within, type StandardSchema, type State } from 'weft'
+import { createRoot, DEV, effect, flush, getOwner, onCleanup, onMount, state, untrack, within, type StandardSchema, type State } from '@weft-js/core'
 import { surfaceText, type PaintedText, type SurfaceText, type TextHost, type TextOptions } from './surface-text'
 
 export type { MeasureHandle, MeasureLine, MeasureProvider, SurfaceText, TextOptions } from './surface-text'

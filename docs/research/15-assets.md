@@ -94,7 +94,7 @@ precompression, brotli budgets).
 11. **Live video can't be "swapped" for saving, and doesn't need to be** (§5.5). Every live player is MSE or WebRTC,
     which have nothing to save. The answer is a download action that remuxes the H.264 rung, which every ladder
     already carries, into MP4 with `-c copy` (no re-encode).
-12. **Packaging (§6, §8):** `@weft/plugin-media` provides `media.analyze@1`, `media.encode@1` (keyed by codec),
+12. **Packaging (§6, §8):** `@weft-js/plugin-media` provides `media.analyze@1`, `media.encode@1` (keyed by codec),
     `media.quality@1` and `media.cdn@1`.
     - **Bundled:** sharp/libvips (Apache-2.0 + LGPL-3.0) for AVIF/WebP/JPEG/PNG, SVGO, and a SSIMULACRA2 crate in
       `crates/weft-media` (napi).
@@ -445,8 +445,8 @@ Readings:
   exists (Chrome 83, Firefox 132, Safari 15.4), and fall back to rAF on `currentTime`.
 
 ```ts
-// weft/media — the timeline is a box bundle, like query() results
-import { Media, timeline } from 'weft/media'
+// @weft-js/core/media — the timeline is a box bundle, like query() results
+import { Media, timeline } from '@weft-js/core/media'
 import dance from './dance.gif?media&audio=./beat.opus'   // build muxes audio into the video rungs
 
 export function Hero() {
@@ -660,7 +660,7 @@ Encode cost: ThumbHash 1.3–5.3 ms, BlurHash 2.8–4.3 ms.
 | Image codecs | `Accept` on the image request (measured, Chrome 156: `image/jxl,image/avif,image/webp,…`) | All engines send `Accept` for images | Server mode negotiates on it (`Vary: Accept`). Static mode uses `<picture><source type>` |
 | Video codecs, smooth, power-efficient | `navigator.mediaCapabilities.decodingInfo()` | Chrome 66, Firefox 63, Safari 13 | Picking the `<video>` source. Prefer `powerEfficient`; on battery-limited devices (below) never pick a non-power-efficient codec |
 | Viewport, DPR, width | `sizes` + `srcset` (the browser decides); `Sec-CH-Width` / `Sec-CH-DPR` | Client hints: Chrome only | Static: the browser chooses from layout-derived `srcset`. Server: hints only refine an `f=auto&w=auto` URL, never required |
-| Visibility | `IntersectionObserver`, `loading="lazy"` | All | Lazy by default except `priority`. Video rungs load `preload="none"` off-screen, and pause when hidden (`visible` from `weft/browser`) |
+| Visibility | `IntersectionObserver`, `loading="lazy"` | All | Lazy by default except `priority`. Video rungs load `preload="none"` off-screen, and pause when hidden (`visible` from `@weft-js/core/browser`) |
 | Save-Data, effective type | `Save-Data` header, `navigator.connection` | **Chrome only** | Lower the target by 10 points (80 → 70) and cap DPR at 1.5. Never swap in compatible copies under Save-Data |
 | Device power | `navigator.deviceMemory`, `hardwareConcurrency`, the `powerEfficient` flag | `deviceMemory`: Chrome only | Under 4 GB, pick the power-efficient decoder and never start client encoding (§5.4c) |
 | Reduced data and motion | `prefers-reduced-data` **(unverified support; not in BCD)**, `prefers-reduced-motion` | Motion: all | Posters instead of autoplay |
@@ -851,15 +851,15 @@ With `encoder: 'off'`:
 
 | Slot | Card. | Sides | Default when no provider | First-party providers |
 |---|---|---|---|---|
-| `media.analyze@1` | one | build, server | **Bundled in plugin-media:** sharp metadata + stats, a bounded header probe, ffprobe when an ffmpeg provider is present | `@weft/plugin-media` (sharp); `@weft/plugin-media-vision` (faces and objects for focus, opt-in) |
-| `media.encode@1` | **keyed by codec** (`image/avif`, `image/webp`, `image/jpeg`, `image/png`, `image/jxl`, `image/svg+xml`, `video/av1`, `video/vp9`, `video/hevc`, `video/h264`, `audio/opus`, `audio/aac`) | build, server, worker, client | Bundled: sharp for the four image keys, SVGO for SVG. **Video and audio keys are unbound** → a video asset is P101 at its import, with the autofix "add `mediaFfmpeg()`" | `@weft/plugin-media` (sharp, SVGO), `@weft/plugin-media-ffmpeg` (video, audio, GIF→video), `@weft/plugin-media-jxl` (libjxl), `@weft/plugin-media-rust` (ravif/rav1e/image-rs via `crates/weft-media`, napi; for Deno/edge also WASM), `@weft/plugin-media-wasm` (jSquash codecs, client/worker side) |
+| `media.analyze@1` | one | build, server | **Bundled in plugin-media:** sharp metadata + stats, a bounded header probe, ffprobe when an ffmpeg provider is present | `@weft-js/plugin-media` (sharp); `@weft-js/plugin-media-vision` (faces and objects for focus, opt-in) |
+| `media.encode@1` | **keyed by codec** (`image/avif`, `image/webp`, `image/jpeg`, `image/png`, `image/jxl`, `image/svg+xml`, `video/av1`, `video/vp9`, `video/hevc`, `video/h264`, `audio/opus`, `audio/aac`) | build, server, worker, client | Bundled: sharp for the four image keys, SVGO for SVG. **Video and audio keys are unbound** → a video asset is P101 at its import, with the autofix "add `mediaFfmpeg()`" | `@weft-js/plugin-media` (sharp, SVGO), `@weft-js/plugin-media-ffmpeg` (video, audio, GIF→video), `@weft-js/plugin-media-jxl` (libjxl), `@weft-js/plugin-media-rust` (ravif/rav1e/image-rs via `crates/weft-media`, napi; for Deno/edge also WASM), `@weft-js/plugin-media-wasm` (jSquash codecs, client/worker side) |
 | `media.quality@1` | one | build, server | `null` → `quality: 'fast'` fixed knobs, reported as such in `weft plugins` | Bundled: SSIMULACRA2 via `crates/weft-media` (Rust `ssimulacra2` crate, napi). VMAF comes with the ffmpeg provider |
-| `media.cdn@1` | one | build, server | `null` → weft serves its own files (static) or its own endpoint (server mode) | `@weft/plugin-media-cloudflare`, `-imgproxy`, `-vercel`, `-cloudinary` |
+| `media.cdn@1` | one | build, server | `null` → weft serves its own files (static) or its own endpoint (server mode) | `@weft-js/plugin-media-cloudflare`, `-imgproxy`, `-vercel`, `-cloudinary` |
 
 - **Why keyed `media.encode`:** two real providers per key exist (sharp vs ravif for AVIF; ffmpeg vs WebCodecs for
   H.264), and different keys come from different packages. 13 §2.2's rule (a slot needs two real providers or an
   absent mode) holds for all four slots.
-- **No slot for the swap runtime or the timeline.** They are plugin-media's own code, reached through `weft/media`'s
+- **No slot for the swap runtime or the timeline.** They are plugin-media's own code, reached through `@weft-js/core/media`'s
   lazy `load()` (P114): 0 KB when `encoder: 'off'` and no timeline is used.
 - **Interfaces (sketch):**
 
@@ -901,7 +901,7 @@ export interface MediaCdnV1 {
 | SVGO 4.1.0 | MIT | — | **Bundled** |
 | `ssimulacra2` Rust crate (in `crates/weft-media`) | BSD-2-Clause **(unverified version)** | — | **Bundled** (napi prebuilt per platform; WASM fallback) |
 | ThumbHash 0.1.1 | MIT | — | **Bundled** (build-side encode only; the 1.1 KB decoder ships only to Surfaces) |
-| ffmpeg | LGPL-2.1+ by default; **GPL-2.0+ when built with x264/x265** (ffmpeg-static's binaries are GPL builds, which KEEL pins) | **H.264 and HEVC encoders/decoders fall under the MPEG LA / Via LA and Access Advance pools.** Distributing an encoder can need a licence (x264 has a commercial licence). AV1, VP9 and Opus are royalty-free (AOM, Google, IETF), though third-party pools assert claims **(unverified relevance)**. AAC: Via LA pool; ffmpeg's native `aac` encoder is LGPL; libfdk-aac is non-free | **Opt-in** (`@weft/plugin-media-ffmpeg`). Uses a user-installed ffmpeg or a pinned binary with a SHA-256 allowlist (KEEL's model). weft never redistributes a GPL ffmpeg inside its own packages |
+| ffmpeg | LGPL-2.1+ by default; **GPL-2.0+ when built with x264/x265** (ffmpeg-static's binaries are GPL builds, which KEEL pins) | **H.264 and HEVC encoders/decoders fall under the MPEG LA / Via LA and Access Advance pools.** Distributing an encoder can need a licence (x264 has a commercial licence). AV1, VP9 and Opus are royalty-free (AOM, Google, IETF), though third-party pools assert claims **(unverified relevance)**. AAC: Via LA pool; ffmpeg's native `aac` encoder is LGPL; libfdk-aac is non-free | **Opt-in** (`@weft-js/plugin-media-ffmpeg`). Uses a user-installed ffmpeg or a pinned binary with a SHA-256 allowlist (KEEL's model). weft never redistributes a GPL ffmpeg inside its own packages |
 | SVT-AV1, libvpx, libopus, libaom | BSD-family + AOM patent licence | Royalty-free | Through the ffmpeg provider |
 | libjxl / `cjxl` | BSD-3-Clause | Royalty-free (Google/Cloudinary grant) | **Opt-in** |
 | ravif / rav1e / image-rs / oxipng | BSD-3 / BSD-2 / MIT-Apache / MIT | AV1 royalty-free | **Opt-in** (`-rust`): no native deps, works where sharp's binaries don't (WASI, edge) |
@@ -914,7 +914,7 @@ export interface MediaCdnV1 {
 - **Decoding H.264 and HEVC in the browser is the browser vendor's licence**, not the app's. Serving H.264 files
   needs nothing.
 
-### 6.3 Conformance (`weft/test/plugins`)
+### 6.3 Conformance (`@weft-js/core/test/plugins`)
 
 - **`media.encode@1`:**
   - round-trip decode;
@@ -936,12 +936,12 @@ export interface MediaCdnV1 {
 
 ### 7.1 The primitive: `<Media>`, one source, everything automatic
 
-`<Media>` lives in `weft/media` (consumer API; it needs no provider for plain behaviour). warp re-exports it as warp's
+`<Media>` lives in `@weft-js/core/media` (consumer API; it needs no provider for plain behaviour). warp re-exports it as warp's
 media component with tokens: radius, the focus ring, and the reduced-motion poster treatment. There is one primitive
 for stills, GIFs and video. The asset's `kind` decides the element (`<img>`, `<picture>` or `<video>`).
 
 ```tsx
-import { Media } from 'weft/media'
+import { Media } from '@weft-js/core/media'
 import hero from './hero.jpg?media'                 // typed: MediaAsset<'photo'> — w, h, dominant, lqip, variants
 import demo from './demo.gif?media'                 // MediaAsset<'animation'>: becomes <video> if that wins
 import tour from './tour.mov?media'                 // MediaAsset<'video'>: ladder + H.264 + poster
@@ -994,8 +994,8 @@ the rest of weft, so agents need no new idea.
 
 ```ts
 // weft.config.ts
-import { media } from '@weft/plugin-media'
-import { mediaFfmpeg } from '@weft/plugin-media-ffmpeg'      // opt-in: video, audio, GIF→video (prints licence notes)
+import { media } from '@weft-js/plugin-media'
+import { mediaFfmpeg } from '@weft-js/plugin-media-ffmpeg'      // opt-in: video, audio, GIF→video (prints licence notes)
 
 export default defineConfig({
   plugins: [
@@ -1015,8 +1015,8 @@ export default defineConfig({
 })
 ```
 
-The name collides with `media` in `weft/browser` (reactive `matchMedia`). The import path disambiguates. M-diagnostics
-and `weft plugins explain` say `@weft/plugin-media`, so an agent never confuses the two. **(Open: rename to
+The name collides with `media` in `@weft-js/core/browser` (reactive `matchMedia`). The import path disambiguates. M-diagnostics
+and `weft plugins explain` say `@weft-js/plugin-media`, so an agent never confuses the two. **(Open: rename to
 `assets()` if the eval shows confusion.)**
 
 ### 7.5 Diagnostics: `M001`–`M016` (new prefix; unused in PLAN and research 01–14)
@@ -1040,13 +1040,13 @@ and `weft plugins explain` say `@weft/plugin-media`, so an agent never confuses 
 | M015 | HDR, wide-gamut or > 8-bit source that a bound encoder would flatten (KEEL's colour rule) | Keep the original (`quality: 'lossless'`), or opt into tone-mapping explicitly |
 | M016 | `<Media src>` from a dynamic string with no `z.media()` record and no server probe (no dimensions before render) | **Autofix:** type the field `z.media()`. X030 is the runtime echo |
 
-Ownership: `@weft/plugin-media` owns M001–M016. **It takes over X030's fix text when installed** (13 §3.6 rule:
+Ownership: `@weft-js/plugin-media` owns M001–M016. **It takes over X030's fix text when installed** (13 §3.6 rule:
 contract codes fire whichever provider is bound).
 
 ### 7.6 AGENTS.md block (≤ 8 lines)
 
 ```md
-## Media (@weft/plugin-media)
+## Media (@weft-js/plugin-media)
 - Import media with `?media` and render `<Media src={x} alt="…" />`. Never hand-write srcset, sizes, width/height or blur placeholders.
 - Put media inside warp layout (Grid, Split, Center, Frame) so sizes are computed; unknown layout above the fold is M010.
 - Mark the one hero image `priority`. Nothing else.
@@ -1064,8 +1064,8 @@ contract codes fire whichever provider is bound).
 
 ```
 packages/
-  media             weft/media: <Media>, timeline(), z.media() codec, swap + chooser runtime (lazy chunk), no encoders
-  plugin-media      @weft/plugin-media: media.analyze/encode (sharp, SVGO)/quality providers, layout pass data,
+  media             @weft-js/core/media: <Media>, timeline(), z.media() codec, swap + chooser runtime (lazy chunk), no encoders
+  plugin-media      @weft-js/plugin-media: media.analyze/encode (sharp, SVGO)/quality providers, layout pass data,
                     manifest + emit, server route (server slot), M001–M016, `weft media` CLI subcommands
   plugin-media-ffmpeg | -jxl | -rust | -wasm | -cloudflare | -imgproxy | -vercel | -vision     (opt-in providers)
 crates/
@@ -1080,7 +1080,7 @@ crates/
 | **1** | Reserve `M0xx` in the catalog, plus the `media.*` slot ids. No runtime |
 | **2 (warp tier 1)** | `<Media>` for stills, `?media`, plugin-media with sharp + SVGO, AVIF + compatible fallback, SSIMULACRA2 search, LQIP + dominant + dimensions, shape-skeleton tie-in, `sizes` from warp primitives through `weft-layout` (web probes), `sizes="auto"` fallback. M001–M003, M007–M010, M012, M013. **It lands with the font build step:** the same build-provider path, and the second real `build`-side plugin after `font.build` |
 | **3 (Start)** | `z.media()`, `ctx.media.ingest`, the server route + storage + `Accept` negotiation (`encoder: 'server'` and all dynamic media), header probes, M016, `media.cdn@1` with one provider (imgproxy) |
-| **3c (warp tier 2)** | `@weft/plugin-media-ffmpeg`: GIF → video, ladders, posters, audio mux, `timeline()`, M004–M006, M011. **`encoder: 'background'`** with the swap runtime + `decodingInfo` chooser, M014. Gates: a headful `contextmenu` save test (Chrome, Firefox, Safari) and a Firefox lane for the rVFC video swap |
+| **3c (warp tier 2)** | `@weft-js/plugin-media-ffmpeg`: GIF → video, ladders, posters, audio mux, `timeline()`, M004–M006, M011. **`encoder: 'background'`** with the swap runtime + `decodingInfo` chooser, M014. Gates: a headful `contextmenu` save test (Chrome, Firefox, Safari) and a Firefox lane for the rVFC video swap |
 | **5b (Rust native)** | `-rust` provider (ravif, rav1e) for WASI/edge builds; `native('media')` on the server route's hot path |
 | **6b (native)** | ThumbHash placeholders and dimensions in the Swift/Kotlin hosts. Native `Image` uses the same manifest, with HEIC/AVIF per platform |
 | **Later** | Live: `media.player@1` + `media.clip`; client encoding (`client: true`); JXL lossless-JPEG as the efficient file |

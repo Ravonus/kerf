@@ -1,10 +1,10 @@
-import { LeftIcon, RightIcon } from '@weft/icons'
-import { addMonths, announce, clock, eventsOn, fmt, minuteOf, monthStart, monthSummary, monthWeeks, motionOff, uid, weekStart, weekdays, ymd, yearKey, yearLevel, yearMonths, yearTotal, type CalEvent, type IsoDate } from '@weft/warp-core'
-import { derived, flush, state, untrack } from 'weft'
+import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
+import { addMonths, announce, clock, eventsOn, fmt, minuteOf, monthStart, monthSummary, monthWeeks, motionOff, uid, weekStart, weekdays, ymd, yearKey, yearLevel, yearMonths, yearTotal, type CalEvent, type IsoDate } from '@weft-js/warp-core'
+import { derived, flush, state, untrack } from '@weft-js/core'
 import { Button } from '../Button'
 import { usePickerEnv } from '../Picker'
 import './bits'
-import '@weft/warp-core/styles/app/year.css'
+import '@weft-js/warp-core/styles/app/year.css'
 
 export type YearViewProps = {
   /** `{ [isoDay]: n }`: a year's counts only (07 §2.7). */

@@ -1,5 +1,5 @@
 // withWeft on a stand-in client: the real one runs in the database matrix (create-weft/scripts/db-matrix.mjs).
-import { runtime } from '@weft/start/data'
+import { runtime } from '@weft-js/start/data'
 import { withWeft } from '../src/prisma-client'
 
 function client() {

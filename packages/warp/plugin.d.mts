@@ -1,4 +1,4 @@
-import type { PluginInstance } from 'weft/plugin'
+import type { PluginInstance } from '@weft-js/core/plugin'
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
 export const dialScript: string

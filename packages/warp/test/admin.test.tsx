@@ -1,8 +1,8 @@
 // The admin pack driven as a user would.
 import { fireEvent } from '@testing-library/dom'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
-import type { CartLine } from '@weft/warp-core'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
+import type { CartLine } from '@weft-js/warp-core'
 import { ApiKeys, type ApiKey } from '../src/admin/ApiKeys'
 import { AuditLog } from '../src/admin/Audit'
 import { Invoices, PayFrame, PaymentMethods } from '../src/admin/Billing'

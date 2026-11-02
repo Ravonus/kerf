@@ -1,4 +1,4 @@
-import { Link, type Meta } from '@weft/start'
+import { Link, type Meta } from '@weft-js/start'
 import { Arena } from '../components/Arena'
 import { Example } from '../components/Example'
 import numbers from '../generated/numbers.json'
@@ -76,7 +76,7 @@ export default function Home() {
 
         <section>
           <h2>One project, front to back</h2>
-          <p data-part="intro">A real shop keeps its products in a database. With <code>@weft/start</code>, a server query lives beside your components, and each file in <code>src/routes</code> is a page. Database and sign-in are built in, so the whole app is one codebase.</p>
+          <p data-part="intro">A real shop keeps its products in a database. With <code>@weft-js/start</code>, a server query lives beside your components, and each file in <code>src/routes</code> is a page. Database and sign-in are built in, so the whole app is one codebase.</p>
           <div data-part="server" data-scope="codeblock" innerHTML={show.server}></div>
           <pre data-part="files"><code>{FILES}</code></pre>
           <p data-part="more"><Link href="/docs/start">Read about full-stack weft</Link></p>

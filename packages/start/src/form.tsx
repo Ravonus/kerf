@@ -5,7 +5,7 @@
 //
 // Reachable only from routes that import it, so an app without forms doesn't pay.
 
-import { derived, flush, state, untrack, type Derived } from 'weft'
+import { derived, flush, state, untrack, type Derived } from '@weft-js/core'
 import { currentScope, decodeForm, fieldsOf, fnOf, FnError, StartError, SUBMIT, type Mutation, type SchemaIssue } from './data'
 import type { FormFailure } from './exec'
 

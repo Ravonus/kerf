@@ -21,14 +21,14 @@
 
 import { readFileSync, statSync } from 'node:fs'
 
-const PURE = { weft: new Set(['For', 'mergeProps']), '@weft/start': new Set(['Link']) }
-const OPAQUE = /^(weft|@weft\/start)(\/|$)/
+const PURE = { weft: new Set(['For', 'mergeProps']), '@weft-js/start': new Set(['Link']) }
+const OPAQUE = /^(weft|@weft-js\/start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
 /** weft API that needs nothing from the page and starts nothing by itself. */
 const QUIET = {
   weft: new Set(['state', 'derived', 'memo', 'untrack', 'batch', 'flush', 'onCleanup', 'For', 'mergeProps', 'name', 'getOwner', 'view', 'omit', 'restOf']),
-  'weft/style': { has: () => true },
-  '@weft/start': new Set(['Link', 'Form']),
+  '@weft-js/core/style': { has: () => true },
+  '@weft-js/start': new Set(['Link', 'Form']),
 }
 const STARTS = new Set(['onMount', 'watch', 'effect'])
 const DATA = new Set(['resource', 'Boundary'])
@@ -113,7 +113,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     return i ? across(mod, i.source, i.imported, seen) : false
   }
   const across = (mod, spec, name, seen) => {
-    if (spec === 'weft/style') return false
+    if (spec === '@weft-js/core/style') return false
     if (OPAQUE.test(spec)) return !PURE[spec]?.has(name)
     const file = mod.resolved.get(spec)
     if (!file) return true
@@ -199,9 +199,9 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       for (const u of names) {
         const i = owner.mod.imports.get(u)
         if (i && OPAQUE.test(i.source)) {
-          if (i.source === 'weft' && STARTS.has(i.imported)) start ??= `\`${i.imported}\` in ${at(owner)}`
-          else if (i.source === 'weft' && DATA.has(i.imported)) data ??= `\`${i.imported}\` in ${at(owner)}`
-          else if (i.source === 'weft' && BOXES.has(i.imported)) {
+          if (i.source === '@weft-js/core' && STARTS.has(i.imported)) start ??= `\`${i.imported}\` in ${at(owner)}`
+          else if (i.source === '@weft-js/core' && DATA.has(i.imported)) data ??= `\`${i.imported}\` in ${at(owner)}`
+          else if (i.source === '@weft-js/core' && BOXES.has(i.imported)) {
             if (owner.value) halt(`\`${owner.name}\` is a box at module level (${at(owner)}): a write from outside couldn't reach an island that isn't running`, `make the box inside the component, or pass it down from one that runs: nothing else keeps this island from waiting`)
           } else if (!QUIET[i.source]?.has(i.imported)) halt(`\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
           continue
@@ -279,7 +279,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
 }
 
 function external(spec, file) {
-  return file.includes('/node_modules/') && !/\/node_modules\/@weft\//.test(file) && !spec.startsWith('.')
+  return file.includes('/node_modules/') && !/\/node_modules\/@weft-js\//.test(file) && !spec.startsWith('.')
 }
 
 function read(file, transform, cache) {

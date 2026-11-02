@@ -1,17 +1,17 @@
-import { ColumnsIcon } from '@weft/icons'
-import { checkState, filterRows, hideRule, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from 'weft'
+import { ColumnsIcon } from '@weft-js/warp-icons'
+import { checkState, filterRows, hideRule, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from '@weft-js/core'
 import { Button } from './Button'
 import { Checkbox } from './Choice'
 import { Search } from './Field'
 import { Select } from './Select'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/popover.css' // the Columns panel
-import '@weft/warp-core/styles/data/tokens.css'
-import '@weft/warp-core/styles/data/base.css'
-import '@weft/warp-core/styles/data/table.css'
-import '@weft/warp-core/styles/data/desc.css'
+import '@weft-js/warp-core/styles/components/popover.css' // the Columns panel
+import '@weft-js/warp-core/styles/data/tokens.css'
+import '@weft-js/warp-core/styles/data/base.css'
+import '@weft-js/warp-core/styles/data/table.css'
+import '@weft-js/warp-core/styles/data/desc.css'
 
 export interface Column<T> {
   id: string

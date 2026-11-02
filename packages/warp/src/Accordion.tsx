@@ -1,8 +1,8 @@
-import { DownIcon } from '@weft/icons'
-import { nextIndex, uid } from '@weft/warp-core'
-import { state, untrack } from 'weft'
+import { DownIcon } from '@weft-js/warp-icons'
+import { nextIndex, uid } from '@weft-js/warp-core'
+import { state, untrack } from '@weft-js/core'
 import './styles'
-import '@weft/warp-core/styles/components/accordion.css'
+import '@weft-js/warp-core/styles/components/accordion.css'
 
 export type AccordionItem = { value: string; title: any; content: any; disabled?: boolean }
 export interface AccordionProps {

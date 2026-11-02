@@ -1,9 +1,9 @@
-import { DownIcon } from '@weft/icons'
+import { DownIcon } from '@weft-js/warp-icons'
 // Small pieces the admin pack shares. Internal: not exported from the barrel.
-import { flush, type State, state, untrack, watch } from 'weft'
+import { flush, type State, state, untrack, watch } from '@weft-js/core'
 import '../fields'
-import '@weft/warp-core/styles/inputs/choice.css'
-import '@weft/warp-core/styles/inputs/text.css'
+import '@weft-js/warp-core/styles/inputs/choice.css'
+import '@weft-js/warp-core/styles/inputs/text.css'
 
 /** A value given plainly or as a State box. */
 export const read = <T,>(v: T | State<T>): T => (v !== null && typeof v === 'object' && !Array.isArray(v) && 'value' in (v as object) ? (v as State<T>).value : v as T)

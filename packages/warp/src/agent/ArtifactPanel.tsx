@@ -1,13 +1,13 @@
-import { CopyIcon, ExternalIcon } from '@weft/icons'
-import { announce, copyConfirm, indicator, nextIndex, uid } from '@weft/warp-core'
-import { derived, onMount, state, untrack } from 'weft'
+import { CopyIcon, ExternalIcon } from '@weft-js/warp-icons'
+import { announce, copyConfirm, indicator, nextIndex, uid } from '@weft-js/warp-core'
+import { derived, onMount, state, untrack } from '@weft-js/core'
 import { Badge } from '../Badge'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { IconButton, held, Sweep, useSweep } from './bits'
 import '../styles'
-import '@weft/warp-core/styles/components/tabs.css'
-import '@weft/warp-core/styles/app/artifact.css'
-import '@weft/warp-core/styles/app/versions.css'
+import '@weft-js/warp-core/styles/components/tabs.css'
+import '@weft-js/warp-core/styles/app/artifact.css'
+import '@weft-js/warp-core/styles/app/versions.css'
 
 export type ArtifactVersion = { id: string; label: string; meta?: string; code?: string; named?: boolean }
 const VIEWS = ['Preview', 'Code', 'Versions'] as const

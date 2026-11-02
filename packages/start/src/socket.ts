@@ -1,5 +1,5 @@
 // The server's half of `channel` and `sharedState` (research 32 §4): one socket per tab, many joins. `attach` knows
-// nothing about crossws, so the same code runs behind `/_weft/ws` and behind weft/test's fake. A room is a hub channel
+// nothing about crossws, so the same code runs behind `/_weft/ws` and behind @weft-js/core/test's fake. A room is a hub channel
 // (`weft:c:<id>:<params>`), so rings, cursors, gaps and fan-out are the hub's, and a join listens before it replays.
 //
 //   checks       the upgrade: exact Origin (a missing one is refused), a wildcard in `origins` (R004).

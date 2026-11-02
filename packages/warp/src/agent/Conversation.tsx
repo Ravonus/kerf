@@ -1,12 +1,12 @@
-import { DownIcon } from '@weft/icons'
-import { stick } from '@weft/warp-core'
-import { derived, state } from 'weft'
+import { DownIcon } from '@weft-js/warp-icons'
+import { stick } from '@weft-js/warp-core'
+import { derived, state } from '@weft-js/core'
 import { Button } from '../Button'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/thread.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/thread.css'
 
 /**
  * Conversation (07 §1.1, §1.3, §1.6): role=log with aria-live off (a turn announces its own end), keyed turns as

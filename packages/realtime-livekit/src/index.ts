@@ -1,9 +1,9 @@
 // Cursors over a LiveKit room. `ticket` from the server is the token, and LiveKit proves a frame's sender: a participant's
 // identity is the connection the room signed it for. The room is there for audio and video too: `link.room`.
 
-import { createRoot, derived, state, untrack } from 'weft'
+import { createRoot, derived, state, untrack } from '@weft-js/core'
 import { Room, RoomEvent } from 'livekit-client'
-import type { PeerLink, PeerRoom, PeerTransport } from '@weft/multiplayer'
+import type { PeerLink, PeerRoom, PeerTransport } from '@weft-js/multiplayer'
 
 const TOPIC = 'weft'
 

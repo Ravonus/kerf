@@ -1,6 +1,6 @@
 // Every icon by name: an app that takes names from data pays for the whole set here, and only here.
-import * as all from '@weft/icons'
-import type { IconComponent } from '@weft/icons'
+import * as all from '@weft-js/warp-icons'
+import type { IconComponent } from '@weft-js/warp-icons'
 import { actions, names, type IconActionName, type IconName, type IconVariant } from './gen/names'
 
 export { actions, names, type IconActionName, type IconName, type IconVariant }

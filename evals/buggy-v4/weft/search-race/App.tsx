@@ -1,4 +1,4 @@
-import { derived, state, watch } from 'weft'
+import { derived, state, watch } from '@weft-js/core'
 import type { Api, Holding, Sector, Stock } from './api'
 import { DetailsPanel } from './components/DetailsPanel'
 import { Header } from './components/Header'

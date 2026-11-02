@@ -25,7 +25,7 @@ glue at the bottom of the crate.
 
 ```ts
 // src/server/rust.ts: the only place Rust targets are named
-import { remote } from '@weft/start/rust'
+import { remote } from '@weft-js/start/rust'
 export const search = remote('rust://search')
 ```
 
@@ -40,17 +40,17 @@ export const searchDocs = query({
 ```
 
 `output` is required on an `impl`. `crates/search` is the crate, unless config says otherwise. `weft add rust` writes all of
-this; the `weft` path is inside `@weft/start`, because the crate isn't on crates.io yet:
+this; the `weft` path is inside `@weft-js/start`, because the crate isn't on crates.io yet:
 
 ```toml
 # crates/search/Cargo.toml
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-weft = { path = "../../node_modules/@weft/start/crate" }
+weft = { path = "../../node_modules/@weft-js/start/crate" }
 
 [build-dependencies]
-weft = { path = "../../node_modules/@weft/start/crate", default-features = false, features = ["build"] }
+weft = { path = "../../node_modules/@weft-js/start/crate", default-features = false, features = ["build"] }
 ```
 
 ```rust
@@ -100,7 +100,7 @@ weft::native!(contract::functions(Media));
 
 ```ts
 // src/server/rust.ts
-import { native } from '@weft/start/rust'
+import { native } from '@weft-js/start/rust'
 export const media = native('media')          // options: timeout, claims, validate, as for remote()
 ```
 

@@ -1,6 +1,6 @@
-// `@weft/start/auth`: what weft needs from any auth provider (research 34 §5). A provider is `src/auth.server.ts`'s default
+// `@weft-js/start/auth`: what weft needs from any auth provider (research 34 §5). A provider is `src/auth.server.ts`'s default
 // export: `handler` serves its routes under `basePath`, and `session` says who a request is. Nothing here knows Better
-// Auth (`@weft/start/auth/better-auth`, the default), so a hand-written provider has no private path to work around.
+// Auth (`@weft-js/start/auth/better-auth`, the default), so a hand-written provider has no private path to work around.
 
 import { FnError, type Context } from './data'
 

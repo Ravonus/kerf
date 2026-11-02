@@ -11,7 +11,7 @@ const pkg = join(here, '..')
 const fixtures = {
   'hello world': join(pkg, 'bench/fixtures/hello.tsx'),
   counter: join(pkg, 'bench/fixtures/counter.tsx'),
-  'counter + weft/browser': join(pkg, 'bench/fixtures/browser.tsx'),
+  'counter + @weft-js/core/browser': join(pkg, 'bench/fixtures/browser.tsx'),
   'runtime (every export)': join(pkg, 'bench/fixtures/runtime-all.ts'),
   'core (the `weft` entry)': join(pkg, 'bench/fixtures/core-all.ts'),
   'v3 shop app': join(pkg, '../../evals/reference-v3/weft/src/main.tsx'),
@@ -19,8 +19,8 @@ const fixtures = {
   'v3 shop app (hydrate)': join(pkg, 'bench/fixtures/hydrate-shop.tsx'),
   'Boundary + resource': join(pkg, 'bench/fixtures/async.tsx'),
   'js-framework-benchmark': join(pkg, 'bench/fixtures/jfb.tsx'),
-  'setHead (weft/head)': join(pkg, 'bench/fixtures/head.ts'),
-  '<Media> (weft/media)': join(pkg, 'bench/fixtures/media.tsx'),
+  'setHead (@weft-js/core/head)': join(pkg, 'bench/fixtures/head.ts'),
+  '<Media> (@weft-js/core/media)': join(pkg, 'bench/fixtures/media.tsx'),
   'pending="shape" page': join(pkg, 'bench/fixtures/shape.tsx'),
   'same page, no shape': join(pkg, 'bench/fixtures/shape-none.tsx'),
   '<Surface> canvas2d': join(pkg, 'bench/fixtures/surface-canvas.tsx'),
@@ -43,7 +43,7 @@ for (const [name, entry] of Object.entries(fixtures)) {
     configFile: false,
     logLevel: 'silent',
     plugins: [weft({ hydratable: hydratable.has(name) })],
-    resolve: { alias: [{ find: /^weft\/head$/, replacement: join(pkg, 'src/head-client.ts') }, { find: /^weft\/media$/, replacement: join(pkg, 'src/media.tsx') }, { find: /^weft\/surface$/, replacement: join(pkg, 'src/surface.tsx') }, { find: /^weft\/(dom|persist|history|browser|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
+    resolve: { alias: [{ find: /^@weft-js\/core\/head$/, replacement: join(pkg, 'src/head-client.ts') }, { find: /^@weft-js\/core\/media$/, replacement: join(pkg, 'src/media.tsx') }, { find: /^@weft-js\/core\/surface$/, replacement: join(pkg, 'src/surface.tsx') }, { find: /^weft\/(dom|persist|history|browser|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
   const code = [out].flat().flatMap(o => o.output).filter(c => c.type === 'chunk').map(c => c.code).join('\n')

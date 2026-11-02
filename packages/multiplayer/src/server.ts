@@ -8,11 +8,11 @@
 //   })
 //
 // Who a peer is comes from `user`, never from the client: a connection names only its own state and cursor, and every
-// frame is stamped here with the connection that sent it (agorix M3, C3). There's no roster on the server: each client
+// frame is stamped here with the connection that sent it. There's no roster on the server: each client
 // answers an `ask`, peers expire without a beat, so any bus works and a dead instance's peers just age out.
 
-import { StartError } from '@weft/start/data'
-import type { Context, StandardSchemaV1 } from '@weft/start'
+import { StartError } from '@weft-js/start/data'
+import type { Context, StandardSchemaV1 } from '@weft-js/start'
 
 export interface PeerUser { id: string; name?: string; [key: string]: unknown }
 export interface Peer<S = unknown> { id: string; user: PeerUser; state: S; at: number }

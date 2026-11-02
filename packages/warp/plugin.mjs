@@ -14,7 +14,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { definePlugin } from 'weft/plugin'
+import { definePlugin } from '@weft-js/core/plugin'
 import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
@@ -235,7 +235,7 @@ function cardColors(seed, dials) {
   }
 }
 
-const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D007). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/warp-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
+const agents = `Import components from \`@weft-js/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D007). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft-js/warp-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
 
 const catalog = [
   ['Stack', 'Vertical flow; `gap` is the relationship'],
@@ -323,16 +323,16 @@ const catalog = [
   ['GaugeChart', 'Banded gauge with a needle'],
   ['Sparkline', 'Inline trend, aria-hidden inside a labelled parent'],
   ['Shell', 'App shell: bottom bar, rail or sidebar by its own width; header, account menu, More sheet, focus variant'],
-].map(([name, summary]) => ({ name, import: '@weft/warp', summary }))
+].map(([name, summary]) => ({ name, import: '@weft-js/warp', summary }))
 
 export const warp = definePlugin({
-  name: '@weft/warp',
-  version: '0.0.0',
+  name: '@weft-js/warp',
+  version: '0.1.0',
   weft: '*',
   namespace: 'D',
   options,
   // A custom seed runs warp-core's contrast checker over a temporary copy of its stylesheet (checkSeed).
-  permissions: { fs: { read: ['node_modules/@weft/warp-core/**'], write: ['$TMPDIR/warp-seed-*'] }, spawn: ['node'] },
+  permissions: { fs: { read: ['node_modules/@weft-js/warp-core/**'], write: ['$TMPDIR/warp-seed-*'] }, spawn: ['node'] },
   contribute(o) {
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
@@ -346,7 +346,7 @@ export const warp = definePlugin({
       agents: { title: 'warp (UI kit)', text: agents },
       card: cardColors(seed, o.dials),
       catalog,
-      map: [{ want: 'UI components', call: 'Import from `@weft/warp`; `weft plugins` has the catalog', have: `${catalog.length} components` }],
+      map: [{ want: 'UI components', call: 'Import from `@weft-js/warp`; `weft plugins` has the catalog', have: `${catalog.length} components` }],
       diagnostics: [
         { code: 'D010', catches: 'A token override, alone or with the seed, that leaves text, a control boundary or the focus ring below WCAG contrast at some dial stop', fix: 'Change the token or seed; the message lists each failing pair', severity: 'error' },
       ],

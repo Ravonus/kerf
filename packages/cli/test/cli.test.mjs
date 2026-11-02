@@ -10,7 +10,7 @@ const weft = (...args) => {
 }
 
 describe('weft (bin)', () => {
-  it('routes and routes --meta read an app with src/routes (@weft/start from the workspace)', () => {
+  it('routes and routes --meta read an app with src/routes (@weft-js/start from the workspace)', () => {
     const app = join(import.meta.dirname, '../../start/test/fixtures/app')
     const list = JSON.parse(weft('routes', '--json', '--root', app).stdout)
     expect(list.routes.map(r => r.path)).toContain('/users/[id]')
@@ -85,7 +85,7 @@ describe('weft (bin)', () => {
     expect(['native', 'wasm']).toContain(r.compiler.kind)
     expect(r).toMatchObject({ ok: true, rust: { required: false } })
     expect(formatDoctor(r)).toContain('Not needed for weft')
-    expect(compilerLine({ kind: 'wasm', wanted: ['@weft/compiler-x'] })).toContain('Optional, and faster: @weft/compiler-x')
+    expect(compilerLine({ kind: 'wasm', wanted: ['@weft-js/compiler-x'] })).toContain('Optional, and faster: @weft-js/compiler-x')
     expect(compilerLine({ kind: 'wasm', wanted: [] })).toContain('none is needed')
   })
 
@@ -101,10 +101,10 @@ describe('live data on a deploy target', () => {
   const app = join(import.meta.dirname, '../../start/test/fixtures/live-db')
   const codes = out => JSON.parse(out).diagnostics.map(d => d.code)
 
-  // The fixture has its own package.json, so `@weft/start` isn't a self-import and a checkout has nothing to find.
+  // The fixture has its own package.json, so `@weft-js/start` isn't a self-import and a checkout has nothing to find.
   beforeAll(() => {
-    const start = join(app, 'node_modules/@weft/start')
-    mkdirSync(join(app, 'node_modules/@weft'), { recursive: true })
+    const start = join(app, 'node_modules/@weft-js/start')
+    mkdirSync(join(app, 'node_modules/@weft-js'), { recursive: true })
     rmSync(start, { recursive: true, force: true })
     symlinkSync(join(import.meta.dirname, '../../start'), start)
   })

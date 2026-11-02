@@ -1,13 +1,13 @@
-import { bellCount, bellLabel, bump, popover, uid, type Align, type Side } from '@weft/warp-core'
-import { derived, onMount, state, untrack, watch, type State } from 'weft'
+import { bellCount, bellLabel, bump, popover, uid, type Align, type Side } from '@weft-js/warp-core'
+import { derived, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Badge } from '../Badge'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { G, val } from './shared'
 import '../styles'
-import '@weft/warp-core/styles/components/popover.css'
-import '@weft/warp-core/styles/app/bell.css'
-import '@weft/warp-core/styles/app/badge.css'
+import '@weft-js/warp-core/styles/components/popover.css'
+import '@weft-js/warp-core/styles/app/bell.css'
+import '@weft-js/warp-core/styles/app/badge.css'
 
 export interface BellProps {
   /** Unread count: a number, a State or a getter. */

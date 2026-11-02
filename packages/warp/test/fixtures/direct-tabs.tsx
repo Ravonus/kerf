@@ -1,8 +1,8 @@
-import { indicator, nextIndex } from '@weft/warp-core'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/warp.css'
-import '@weft/warp-core/styles/components/tabs.css'
-import { state } from 'weft'
+import { indicator, nextIndex } from '@weft-js/warp-core'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/warp.css'
+import '@weft-js/warp-core/styles/components/tabs.css'
+import { state } from '@weft-js/core'
 
 const names = ['Plan', 'Billing', 'Team']
 

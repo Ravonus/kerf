@@ -2,9 +2,9 @@
 import '../../../text/node_modules/@fontsource/inter/latin-400.css'
 import '../../../text/node_modules/@fontsource/inter/latin-500.css'
 import '../../../text/node_modules/@fontsource/inter/latin-600.css'
-import { state } from 'weft'
-import { render } from 'weft/dom'
-import type { ChatMessage } from '@weft/warp-core'
+import { state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
+import type { ChatMessage } from '@weft-js/warp-core'
 import { Feed, Kanban, ScrollGrid, Thread, Toaster, VirtualList, type KanbanCardData, type KanbanColumn, type VirtualControl } from '../../src/index'
 
 const q = new URLSearchParams(location.search)

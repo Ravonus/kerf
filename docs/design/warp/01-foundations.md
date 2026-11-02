@@ -411,7 +411,7 @@ same pairs live in the browser.
 
 ```ts
 // weft.config.ts
-import { defineConfig } from "weft";
+import { defineConfig } from "@weft-js/core";
 
 export default defineConfig({
   ui: {
@@ -476,7 +476,7 @@ wrapped in `:where()` (specificity 0). Rules of the road:
 - **Tailwind v4:** put warp first so utilities win, and alias tokens into the theme:
   ```css
   @layer warp, theme, base, components, utilities;
-  @import "@weft/warp/warp.css";
+  @import "@weft-js/warp/warp.css";
   @import "tailwindcss";
   @theme inline { --color-accent: var(--warp-color-accent-solid); --radius-control: var(--warp-radius-control); }
   ```

@@ -1,13 +1,13 @@
-import { PinIcon } from '@weft/icons'
-import { peerColor, roving, type Peer } from '@weft/warp-core'
-import { Box, derived, state, untrack, type State } from 'weft'
+import { PinIcon } from '@weft-js/warp-icons'
+import { peerColor, roving, type Peer } from '@weft-js/warp-core'
+import { Box, derived, state, untrack, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Avatar } from '../parts'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { tint } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/conversations.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/conversations.css'
 
 export type ChatConversation = Peer & {
   /** Last message. */

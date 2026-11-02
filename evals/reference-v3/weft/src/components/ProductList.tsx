@@ -1,4 +1,4 @@
-import { derived, type State } from 'weft'
+import { derived, type State } from '@weft-js/core'
 import type { Category, Product } from '../api'
 import type { Cart } from '../App'
 import { ProductRow } from './ProductRow'

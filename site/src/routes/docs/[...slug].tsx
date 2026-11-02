@@ -1,6 +1,6 @@
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft/start'
-import { Link } from '@weft/start'
-import { Button, Nav } from '@weft/warp'
+import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import { Link } from '@weft-js/start'
+import { Button, Nav } from '@weft-js/warp'
 import { PageExample } from '../../components/PageExample'
 import pages from '../../generated/docs.json'
 

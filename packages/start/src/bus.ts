@@ -1,5 +1,5 @@
 // The fan-out bus (research 30 §3): strings, at-most-once, ordered per publisher. Tags, topics, rings and cursors stay
-// in the hub, so a bus is three methods. `@weft/realtime-redis`, `-nats` and `-durable-object` implement this interface.
+// in the hub, so a bus is three methods. `@weft-js/realtime-redis`, `-nats` and `-durable-object` implement this interface.
 
 export interface Bus {
   readonly name: string

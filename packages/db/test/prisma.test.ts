@@ -3,8 +3,8 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { LIST_ROWS, listSuite } from 'weft/test/plugins'
-import { decodeCursor } from '@weft/start/list'
+import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
+import { decodeCursor } from '@weft-js/start/list'
 import { prismaSource } from '../src/prisma'
 
 const dir = mkdtempSync(join(tmpdir(), 'weft-prisma-'))

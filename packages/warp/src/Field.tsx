@@ -1,10 +1,10 @@
-import { AlertIcon, SearchIcon, XIcon } from '@weft/icons'
-import { field, formReset, labelChars, uid } from '@weft/warp-core'
-import { derived, untrack } from 'weft'
+import { AlertIcon, SearchIcon, XIcon } from '@weft-js/warp-icons'
+import { field, formReset, labelChars, uid } from '@weft-js/warp-core'
+import { derived, untrack } from '@weft-js/core'
 import { Icon, type IconRef } from './Icon'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './fields'
-import '@weft/warp-core/styles/inputs/text.css'
+import '@weft-js/warp-core/styles/inputs/text.css'
 
 export interface FieldProps {
   /** The accessible name, drawn as the floating border label (or above, classic). Required. */

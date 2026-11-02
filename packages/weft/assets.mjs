@@ -1,4 +1,4 @@
-// Build-side slots in weft/vite (research 26 §2–3): `?media` imports (`media.build@1`) and `weft:fonts`
+// Build-side slots in @weft-js/core/vite (research 26 §2–3): `?media` imports (`media.build@1`) and `weft:fonts`
 // (`font.build@1`). `weft plugins sync` writes `.weft/slots/<id>.build.json` for each bound build-side provider; this
 // imports the provider module in Node and serves or emits the files it returns. With no provider, `?media` still
 // gives dimensions (a header probe) and the fonts modules are empty. With a font build the client imports `weft:fonts`

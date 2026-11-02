@@ -1,9 +1,9 @@
 // A component tag rooted at a name the pre-pass rewrites (`<g.icon />` in a row, `<ui.Icon />` from a prop) is read
 // like any other use of that name, on the server, on the client and through hydration.
 // weft-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
-import { renderToString } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
-import { flush, render } from 'weft/test'
+import { renderToString } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
+import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../src/hydrate'
 import { groups, reverse, Rows, swap } from './fixtures/ssr/MemberTags'
 // @ts-expect-error: query imports (vite.mjs)

@@ -1,4 +1,4 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 import { Readout } from './Readout'
 
 export function Footer() {

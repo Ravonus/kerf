@@ -2,8 +2,8 @@
 // `*`, `>` or a space, so a subject is `weft.<base64url of the channel>`. A reconnect is the `gap`.
 
 import { connect, type NatsConnection } from '@nats-io/transport-node'
-import type { Bus } from '@weft/start/bus'
-import { StartError } from '@weft/start/data'
+import type { Bus } from '@weft-js/start/bus'
+import { StartError } from '@weft-js/start/data'
 
 export interface NatsBusOptions {
   /** `nats://host:4222`, or several. */

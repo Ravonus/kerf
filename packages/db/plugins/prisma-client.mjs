@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { definePlugin } from 'weft/plugin'
+import { definePlugin } from '@weft-js/core/plugin'
 
 const DIR = 'prisma/migrations'
 
@@ -31,7 +31,7 @@ function generate(root, name = 'change') {
 }
 
 export const prisma = definePlugin({
-  name: '@weft/db/plugin-prisma',
+  name: '@weft-js/db/plugin-prisma',
   version: '0.0.0',
   weft: '*',
   permissions: { fs: { read: ['prisma/**'], write: ['prisma/migrations/**'] }, spawn: ['node'] },

@@ -1,4 +1,4 @@
-import { state, watch } from 'weft'
+import { state, watch } from '@weft-js/core'
 import type { Api, Stock } from './api'
 import { Header } from './components/Header'
 import { StockList } from './components/StockList'

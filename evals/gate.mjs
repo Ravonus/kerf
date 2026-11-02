@@ -85,7 +85,7 @@ async function scenario(name, { before, after, tests }) {
   rmSync(dir, { recursive: true, force: true })
   mkdirSync(dir, { recursive: true })
   const write = (rel, text) => { mkdirSync(dirname(join(dir, rel)), { recursive: true }); writeFileSync(join(dir, rel), text) }
-  write('vitest.config.ts', `import weft from 'weft/vite'
+  write('vitest.config.ts', `import weft from '@weft-js/core/vite'
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [weft()],

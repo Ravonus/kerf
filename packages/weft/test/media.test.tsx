@@ -1,12 +1,12 @@
-// weft/media (research 26 §2): the header probe, <Media>'s markup, and weft/vite's `?media` and `weft:fonts` loaders,
+// @weft-js/core/media (research 26 §2): the header probe, <Media>'s markup, and @weft-js/core/vite's `?media` and `weft:fonts` loaders,
 // with and without a build-side provider.
 // weft-allow T005: the markup is the contract here (srcset, sizes, dimensions), so the test reads attributes
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { render } from 'weft/test'
-import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from 'weft/media'
-import { flush } from 'weft'
+import { render } from '@weft-js/core/test'
+import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from '@weft-js/core/media'
+import { flush } from '@weft-js/core'
 import { probe } from '../media-probe.mjs'
 import { assets, readSources } from '../assets.mjs'
 
@@ -208,7 +208,7 @@ test('<Media> of a single-file asset (a vector, or no provider) is one img, with
   expect(img.getAttribute('style')).not.toContain('background')
 })
 
-describe('weft/vite assets', () => {
+describe('@weft-js/core/vite assets', () => {
   let root: string
   const provider = join(import.meta.dirname, 'fixtures', 'media', 'provider.mjs')
   beforeEach(() => {

@@ -1,11 +1,11 @@
-import { UndoIcon, XIcon } from '@weft/icons'
-import { paintStrokes, signatureSvg, strokeWidth, uid, type Stroke } from '@weft/warp-core'
-import { derived, flush, state, untrack } from 'weft'
+import { UndoIcon, XIcon } from '@weft-js/warp-icons'
+import { paintStrokes, signatureSvg, strokeWidth, uid, type Stroke } from '@weft-js/warp-core'
+import { derived, flush, state, untrack } from '@weft-js/core'
 import { Button } from './Button'
 import { Field, type FieldProps } from './Field'
 import { bindable, type Bindable } from './Picker'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/rich/signature.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/signature.css'
 
 export type SignatureValue = { method: 'drawn' | 'typed'; strokes?: Stroke[]; text?: string; svg: string }
 export type SignaturePadProps = Omit<FieldProps, 'value' | 'defaultValue'> & Bindable<SignatureValue | null>

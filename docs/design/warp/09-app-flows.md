@@ -388,7 +388,7 @@ After the first item exists, the empty state never returns for that user (it bec
 
 ### 5.3 Offline and reconnect
 
-Reads `online()` from `weft/browser` and the `.live` state (07 §4.4).
+Reads `online()` from `@weft-js/core/browser` and the `.live` state (07 §4.4).
 - **Offline:** caution Banner under the shell header: "You're offline. Changes are saved on this device and sync when
   you reconnect." plus "Retrying in 4s" and Retry now. Items edited offline show "Waiting to sync" chips. Server-only
   actions disable with a reason. Full offline page only for routes with no cached data.
@@ -404,7 +404,7 @@ reload, so nothing typed is lost. If a mutation fails because the contract chang
 failed action's Toast says "Reload to finish saving".
 
 ```ts
-import { online } from 'weft/browser'
+import { online } from '@weft-js/core/browser'
 const conn = connection()            // { state: LiveState, stale: Signal<boolean> }
 <ConnBanner online={online} state={conn.state} stale={conn.stale} onReload={saveDraftsAndReload} />
 ```

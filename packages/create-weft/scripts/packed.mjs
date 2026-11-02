@@ -43,14 +43,14 @@ async function mediaApp(app, weft, log, sh) {
   await ff('-f', 'lavfi', '-i', 'testsrc2=s=640x360:d=1', '-frames:v', '1', '-q:v', '2', 'src/routes/hero.jpg')
   await ff('-f', 'lavfi', '-i', 'testsrc2=s=320x180:d=1', '-frames:v', '1', 'src/routes/card.png')
   mkdirSync(join(app, 'src/server'), { recursive: true })
-  writeFileSync(join(app, 'src/server/upload.ts'), `import { mutation, query } from '@weft/start'
-import { z } from '@weft/start/media'
+  writeFileSync(join(app, 'src/server/upload.ts'), `import { mutation, query } from '@weft-js/start'
+import { z } from '@weft-js/start/media'
 
 let last: unknown = null
 export const lastUpload = query({ tags: ['upload'], output: z.media().nullable(), run: () => last as any })
 export const upload = mutation({ input: z.object({ file: z.file() }), invalidates: ['upload'], run: async ({ input, ctx }) => (last = await ctx.media.ingest(input.file)) })
 `)
-  writeFileSync(join(app, 'src/routes/media.tsx'), `import { Media, timeline } from 'weft/media'
+  writeFileSync(join(app, 'src/routes/media.tsx'), `import { Media, timeline } from '@weft-js/core/media'
 import hero from './hero.jpg?media'
 import card from './card.png?media'
 import loop from './loop.gif?media'
@@ -74,11 +74,11 @@ export default function Page() {
 `)
 }
 
-/** `weft add rust` on a packed install: the crate comes with @weft/start, and `weft check` passes without an edit. */
+/** `weft add rust` on a packed install: the crate comes with @weft-js/start, and `weft check` passes without an edit. */
 async function rustApp(app, weft, log, sh) {
   await sh(weft, ['add', 'rust', 'hasher'], app)
   const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
-  if (!cargo.includes('path = "../../node_modules/@weft/start/crate"')) throw new Error(`rust: the crate isn't the one @weft/start shipped:\n${cargo}`)
+  if (!cargo.includes('path = "../../node_modules/@weft-js/start/crate"')) throw new Error(`rust: the crate isn't the one @weft-js/start shipped:\n${cargo}`)
   const checked = JSON.parse((await sh(weft, ['check', '--json'], app)).stdout)
   if (!checked.ok) throw new Error(`rust: weft check: ${JSON.stringify(checked.diagnostics)}`)
   log('weft add rust, check: pass')
@@ -146,8 +146,8 @@ async function payApp(app, weft, mock, log, sh) {
   if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) await sh(weft, ['plugins', 'sync'], app)
   if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) throw new Error('pay: the rail is not pointed at the mock')
   writeFileSync(join(app, 'no-network.mjs'), LOOPBACK_ONLY)
-  writeFileSync(join(app, 'src/server/report.ts'), `import { query } from '@weft/start'\n\nexport const report = query({ auth: 'user', requires: ['pro'], run: () => 'the numbers' })\n`)
-  writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from '@weft/pay'
+  writeFileSync(join(app, 'src/server/report.ts'), `import { query } from '@weft-js/start'\n\nexport const report = query({ auth: 'user', requires: ['pro'], run: () => 'the numbers' })\n`)
+  writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from '@weft-js/pay'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements } from '#/server/pay'
 
@@ -279,7 +279,7 @@ await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ na
 
   await sh('npm', ['install', '--silent'], app)
   const weft = join(app, 'node_modules/.bin/weft')
-  if (wasm) rmSync(join(app, 'node_modules/@weft', hostAddon), { recursive: true, force: true })
+  if (wasm) rmSync(join(app, 'node_modules/@weft-js', hostAddon), { recursive: true, force: true })
   const { compiler } = JSON.parse((await sh(weft, ['doctor', '--json'], app)).stdout)
   if (compiler.kind !== (wasm ? 'wasm' : 'native')) throw new Error(`${name}: compiling with ${JSON.stringify(compiler)}`)
   log(`compiler ${compiler.kind}: pass`)
@@ -304,7 +304,7 @@ await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ na
   const client = readdirSync(join(app, '.output/public/assets')).filter(f => f.endsWith('.js')).map(f => readFileSync(join(app, '.output/public/assets', f), 'utf8')).join('')
   if (/STRIPE_|api\.stripe\.com|checkout\/sessions/.test(client)) throw new Error(`${name}: a rail reached the client`)
   clients[name] = Object.fromEntries(readdirSync(join(app, '.output/public/assets')).sort().map(f => [f, readFileSync(join(app, '.output/public/assets', f), 'utf8')]))
-  if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client)) throw new Error(`${name}: @weft/pay is in the bundle of an app that sells nothing`)
+  if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client)) throw new Error(`${name}: @weft-js/pay is in the bundle of an app that sells nothing`)
 
   // Production takes the host's environment, so the scaffold's .env goes in by hand.
   const envFile = join(app, '.env')

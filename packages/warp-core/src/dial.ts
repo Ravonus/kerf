@@ -14,7 +14,7 @@ export const DIALS = {
 export type Dial = keyof typeof DIALS
 export type DialValue<D extends Dial> = (typeof DIALS)[D]['values'][number]
 const AUTO_REMOVES = new Set<Dial>(['theme', 'motion', 'flair'])
-// `dialScript` in @weft/warp/plugin reads this key before the first paint.
+// `dialScript` in @weft-js/warp/plugin reads this key before the first paint.
 const KEY = 'warp:dials'
 
 function remember(name: Dial, value: string) {

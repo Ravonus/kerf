@@ -1,3 +1,3 @@
-import { defineConfig } from 'weft/config'
-import warp from '@weft/warp/plugin'
+import { defineConfig } from '@weft-js/core/config'
+import warp from '@weft-js/warp/plugin'
 export default defineConfig({ plugins: [warp()] })

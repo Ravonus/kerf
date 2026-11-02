@@ -1,4 +1,4 @@
-// @weft/start: what route files import (research 25) and server modules define (research 27). A route module exports
+// @weft-js/start: what route files import (research 25) and server modules define (research 27). A route module exports
 // its component (`default`) and, when it needs them, `load` (async data, often `await q.fetch()`), `meta` (research
 // 20 §3: static, awaited before the first byte, never reactive) and `prerender` (the params `weft build` writes as
 // static pages, with their share cards; `true` on a route without params).
@@ -8,7 +8,7 @@
 //   export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name, description: data.bio })
 //   export default function User(props: RouteProps<typeof load, '/users/[id]'>) { return <h1>{props.data.name}</h1> }
 
-import type { Merged, Meta as MetaObject, Site } from 'weft/ssr'
+import type { Merged, Meta as MetaObject, Site } from '@weft-js/core/ssr'
 import type { Context } from './data'
 
 export { Link } from './view'
@@ -24,7 +24,7 @@ export { liveHealth, realtime, realtimeStats, topic, tracked, type Limits, type 
 export { dbChanges, type Change, type ChangeOptions, type Probe, type Sink, type Source } from './changes'
 export { memoryBus, type Bus } from './bus'
 export { listInput, type DbAdapter, type ListPage, type ListParams, type ListRequest, type ListSource, type ListSpec, type SourceSpec } from './list'
-export type { Merged, Site } from 'weft/ssr'
+export type { Merged, Site } from '@weft-js/core/ssr'
 
 /** Filled by the generated `.weft/routes.d.ts` with every route file's path (`'/users/[id]': true`). */
 export interface RouteFiles {}

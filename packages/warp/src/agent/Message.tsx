@@ -1,11 +1,11 @@
-import { CopyIcon, EditIcon } from '@weft/icons'
-import { copyConfirm, installSweep } from '@weft/warp-core'
-import { onMount, state, untrack } from 'weft'
+import { CopyIcon, EditIcon } from '@weft-js/warp-icons'
+import { copyConfirm, installSweep } from '@weft-js/warp-core'
+import { onMount, state, untrack } from '@weft-js/core'
 import { Button } from '../Button'
 import { Textarea } from '../Field'
 import { IconButton, Sweep } from './bits'
 import '../styles'
-import '@weft/warp-core/styles/app/message.css'
+import '@weft-js/warp-core/styles/app/message.css'
 
 /**
  * The user's turn (07 §1.1): a prompt bubble with edit and copy. `arrive` is a message just sent: it enters and

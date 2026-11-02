@@ -1,5 +1,5 @@
-import { announce, connectionAnnouncement, liveState, type LiveState } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
+import { announce, connectionAnnouncement, liveState, type LiveState } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack, watch } from '@weft-js/core'
 import { Banner, LiveStatus } from '../parts'
 import { Button } from '../Button'
 import { val } from './shared'

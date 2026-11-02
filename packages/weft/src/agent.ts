@@ -1,13 +1,13 @@
-// weft/agent: drive and inspect the running app from inside the page, in whatever browser the agent already has
+// @weft-js/core/agent: drive and inspect the running app from inside the page, in whatever browser the agent already has
 // (Claude's browser pane, Claude in Chrome, Codex's browser, a headless Chrome). Dev builds only; the weft() Vite
 // plugin loads it when serving. Two ways in, one implementation:
 //
 //   - the agent's own browser runs JS: `await __weft__.agent.snapshot()`, `await __weft__.agent.act({ role: 'button', name: 'Add' }, 'click')`
 //   - `weft browser …` / the `weft mcp` browser tools: the dev server relays each command to the open tab (vite.mjs)
 //
-// Queries and actions are weft/test's own (Testing Library role/label/text queries, user-event), so what an agent does
-// here records straight into a `weft/test` test. Snapshots are the page's roles and names with refs, plus the reactive
-// graph with real names (weft/devtools). The clock and the network are faked in the page, like weft/test's `clock` and
+// Queries and actions are @weft-js/core/test's own (Testing Library role/label/text queries, user-event), so what an agent does
+// here records straight into a `@weft-js/core/test` test. Snapshots are the page's roles and names with refs, plus the reactive
+// graph with real names (@weft-js/core/devtools). The clock and the network are faked in the page, like @weft-js/core/test's `clock` and
 // `net`, for reconnect and timeout scenarios.
 
 import { getConfig, screen, within } from '@testing-library/dom'
@@ -209,7 +209,7 @@ export async function act(target: Target, action: Action, value?: string) {
 }
 
 /**
- * What an assertion checks, in weft/test's words: `visible`, `absent`, `text` (contains), `exactText`, `value`,
+ * What an assertion checks, in @weft-js/core/test's words: `visible`, `absent`, `text` (contains), `exactText`, `value`,
  * `checked`, `unchecked`, `disabled`, `enabled`, `focused`, `count`.
  */
 export type Expectation = { visible: true } | { absent: true } | { text: string } | { exactText: string } | { value: string } | { checked: true } | { unchecked: true } | { disabled: true } | { enabled: true } | { focused: true } | { count: number }
@@ -332,7 +332,7 @@ export interface CodeOptions {
   name?: string
 }
 
-/** The recorded steps as a `weft/test` test: role/label/text queries, user actions, clock and net, real assertions. */
+/** The recorded steps as a `@weft-js/core/test` test: role/label/text queries, user actions, clock and net, real assertions. */
 export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
   const comp = o.component ?? 'App'
   const used = new Set(['render', 'screen'])
@@ -386,7 +386,7 @@ export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
   body.splice(renderAt, 0, `render(${comp}${o.props ? `, ${o.props}` : ''})`)
   const lines = [
     `import { expect, test } from 'vitest'`,
-    `import { ${[...used].sort().join(', ')} } from 'weft/test'`,
+    `import { ${[...used].sort().join(', ')} } from '@weft-js/core/test'`,
     `import { ${comp} } from ${JSON.stringify(o.from ?? `./${comp}`)}`,
     ...(o.imports ?? []),
     '',
@@ -419,7 +419,7 @@ let installed = false
 const g = globalThis as any
 
 /**
- * The page's clock, faked like weft/test's `clock`: `pause()` stops time for timers, intervals, rAF, `Date` and
+ * The page's clock, faked like @weft-js/core/test's `clock`: `pause()` stops time for timers, intervals, rAF, `Date` and
  * `performance.now`; `advance(ms)` runs what falls due, in order; `resume()` hands pending timers back to real time.
  * Timers scheduled before `pause()` stay on real time: pass `{ reload: true }` to pause from the next page load.
  */
@@ -502,7 +502,7 @@ const netState = { online: true, latency: 0 }
 /**
  * The network as the app sees it: `offline()` makes `navigator.onLine` false, fires `offline`, fails `fetch` and new
  * sockets, and drops open WebSockets and EventSources; `latency(ms)` delays every `fetch`; `drop()` closes the open
- * sockets without going offline (a server restart). Same words as weft/test's `net`. The dev server's own socket is
+ * sockets without going offline (a server restart). Same words as @weft-js/core/test's `net`. The dev server's own socket is
  * never touched.
  */
 export const net = {
@@ -605,7 +605,7 @@ export async function run(name: string, args: unknown = {}) {
 
 if (typeof window !== 'undefined' && !(window as any).__weft_agent__) {
   ;(window as any).__weft_agent__ = true
-  getConfig() // the queries are configured once, like weft/test's
+  getConfig() // the queries are configured once, like @weft-js/core/test's
   patchNetwork()
   patchConsole()
   listen()

@@ -37,23 +37,23 @@ const registry = await new Promise(ok => server.stdout.once('data', d => ok(d.to
 const FLOWS = {
   // Not what this gate is for, but the hot reload checks hold for all three.
   node: {
-    create: [windows ? 'npx.cmd' : 'npx', '--yes', `create-weft@${version}`, 'demo', '--yes', '--no-git', '--install'],
+    create: [windows ? 'npx.cmd' : 'npx', '--yes', `@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--install'],
     install: [],
-    weft: ['node', join('node_modules', '@weft', 'cli', 'bin', 'weft.mjs')],
+    weft: ['node', join('node_modules', '@weft-js', 'cli', 'bin', 'weft.mjs')],
   },
   bun: {
-    create: ['bun', 'x', '--bun', `create-weft@${version}`, 'demo', '--yes', '--no-git', '--install'],
+    create: ['bun', 'x', '--bun', `@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--install'],
     install: [],
-    weft: ['bun', '--bun', join('node_modules', '@weft', 'cli', 'bin', 'weft.mjs')],
+    weft: ['bun', '--bun', join('node_modules', '@weft-js', 'cli', 'bin', 'weft.mjs')],
   },
   deno: {
-    create: ['deno', 'run', '-A', `npm:create-weft@${version}`, 'demo', '--yes', '--no-git', '--install'],
+    create: ['deno', 'run', '-A', `npm:@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--install'],
     install: [['deno', 'install']], // the app's dependencies, into node_modules
-    weft: ['deno', 'run', '-A', 'npm:@weft/cli'],
+    weft: ['deno', 'run', '-A', 'npm:@weft-js/cli'],
   },
 }
 
-const ROOM = `import { channel } from '@weft/start'
+const ROOM = `import { channel } from '@weft-js/start'
 import { z } from 'zod'
 export const room = channel({ params: z.object({ id: z.string() }), authorize: () => true,
   client: { say: z.object({ text: z.string() }) }, server: { said: z.object({ text: z.string() }) },

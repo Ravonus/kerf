@@ -1,6 +1,6 @@
 // Surfaces in `weft check` (research 33 §8): X002 and X009–X012 for surfaces and their text, X040 and X041 for per-glyph
 // markup, and P101 for a surface that needs a slot nothing provides. X001, X003 and X004 need the live mirror, so
-// weft/surface reports those in dev. `listSurfaces` is the catalog behind `weft surfaces` and the MCP tool.
+// @weft-js/core/surface reports those in dev. `listSurfaces` is the catalog behind `weft surfaces` and the MCP tool.
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -146,7 +146,7 @@ function surfaceFileChecks(sf, slots, report) {
       const font = options && ts.isObjectLiteralExpression(options) ? stringOf(prop(options, 'font')?.initializer) : undefined
       const family = font?.replace(/^.*?\d[\d.]*px(\/\S+)?\s*/, '')
       if (family !== undefined && (SYSTEM.test(family) || GENERIC_ONLY.test(family))) report('X002', n.arguments[1], `\`${font}\` can't be measured safely: \`system-ui\`, \`-apple-system\` and generic-only families resolve differently in canvas and CSS. Name a family.`)
-      if (kind === 'canvas2d' && slots && slots['text.measure'] === null) report('P101', n, 'Canvas `s.text()` needs `text.measure`, and nothing provides it: add `text()` from `@weft/text` to `plugins` in weft.config.ts.')
+      if (kind === 'canvas2d' && slots && slots['text.measure'] === null) report('P101', n, 'Canvas `s.text()` needs `text.measure`, and nothing provides it: add `text()` from `@weft-js/text` to `plugins` in weft.config.ts.')
     })
   }
 }
@@ -184,7 +184,7 @@ export function surfaceChecks(root, { files, exclude = [], slots }) {
   }
   for (const f of sources.values()) {
     const glyphs = /\.[jt]sx$/.test(f.rel) && /\.map\(/.test(f.text) && /<span\b/.test(f.text)
-    const surfaces = f.text.includes('weft/surface')
+    const surfaces = f.text.includes('@weft-js/core/surface')
     if (!glyphs && !surfaces) continue
     let sf
     try {
@@ -199,7 +199,7 @@ export function surfaceChecks(root, { files, exclude = [], slots }) {
     surfaceFileChecks(sf, slots, report)
     if (!/\.[jt]sx$/.test(f.rel)) continue
     const scan = scanJsx(f.text, f.rel)
-    const local = scan.imports.find(i => i.source === 'weft/surface' && i.imported === 'Surface')?.local
+    const local = scan.imports.find(i => i.source === '@weft-js/core/surface' && i.imported === 'Surface')?.local
     for (const el of scan.elements) {
       if (el.name !== local) continue
       const spread = el.attrs.some(a => a.kind === 'spread')

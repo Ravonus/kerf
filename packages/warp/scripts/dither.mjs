@@ -18,7 +18,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/cs
 
 async function build(outDir) {
   const { build } = await import('vite')
-  const { default: weft } = await import('weft/vite')
+  const { default: weft } = await import('@weft-js/core/vite')
   await build({ root: join(pkg, 'test/dither'), base: './', logLevel: 'silent', plugins: [weft()], build: { outDir, emptyOutDir: true } })
 }
 const serve = dist => new Promise(ok => { const s = createServer((q, r) => { const path = q.url.split('?')[0]; const p = join(dist, path === '/' ? 'index.html' : path); if (!existsSync(p) || statSync(p).isDirectory()) { r.writeHead(404); return r.end() } r.writeHead(200, { 'content-type': types[extname(p)] ?? 'application/octet-stream' }); r.end(readFileSync(p)) }).listen(0, '127.0.0.1', () => ok(s)) })

@@ -1,5 +1,5 @@
 // weft app state: defineState (PLAN §4.5, research 14 §2). Phase 1: client instances, names, $reset, $snapshot.
-// History (weft/history, which also owns action transactions) and persistence (weft/persist) are separate modules
+// History (@weft-js/core/history, which also owns action transactions) and persistence (@weft-js/core/persist) are separate modules
 // that register here; the weft() Vite plugin imports each one into the modules that use its option, so an app that
 // uses neither ships neither. Diagnostic text, dev names and the S004/S010 checks are dev-only.
 //
@@ -52,7 +52,7 @@ export function createApp(options: AppOptions = {}): App {
 
 /**
  * Which app a handle means: the one its owner was rendered in, else the current one. The client has one app per tab;
- * `weft/test` makes a fresh one per `render()`, and weft/ssr one per render pass (one request, never shared).
+ * `@weft-js/core/test` makes a fresh one per `render()`, and @weft-js/core/ssr one per render pass (one request, never shared).
  */
 let current: App = createApp()
 const root = current
@@ -76,13 +76,13 @@ export function withApp<T>(app: App, fn: () => T): T {
   return appContext.provide(app, fn)
 }
 
-/** End an app: dispose every scope instance's owner (weft/test, when a render unmounts). */
+/** End an app: dispose every scope instance's owner (@weft-js/core/test, when a render unmounts). */
 export function disposeApp(app: App) {
   for (const inst of app.instances.values()) inst.dispose()
   app.instances.clear()
 }
 
-// ---- features: weft/history and weft/persist register here -------------------------------------------------------
+// ---- features: @weft-js/core/history and @weft-js/core/persist register here -------------------------------------------------------
 
 export interface Timeline {
   clear(): void
@@ -143,7 +143,7 @@ interface ScopeDef {
   h?: unknown
 }
 
-/** Set by weft/hmr: a second `defineState` with a known name is a module re-run, not a duplicate. */
+/** Set by @weft-js/core/hmr: a second `defineState` with a known name is a module re-run, not a duplicate. */
 export const hmr = { on: false }
 
 const defs = new Map<string, ScopeDef>()
@@ -163,7 +163,7 @@ export class Instance {
     this.name = def.name
     if (def.options.history) {
       if (DEV && !features.history)
-        throw new StateError('S009', `\`${def.name}\` sets \`history\`, but weft/history isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/history'`")
+        throw new StateError('S009', `\`${def.name}\` sets \`history\`, but @weft-js/core/history isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/history'`")
       this.history = features.history!.create(this, def.options.history.limit)
     }
     const [shape, boxes] = collect(() => createRoot(d => ((this.dispose = d), def.setup()), null))
@@ -174,7 +174,7 @@ export class Instance {
     for (const [key, v] of Object.entries(shape)) {
       if (DEV && key[0] === '$') throw new StateError('S009', `\`${def.name}\` returns \`${key}\`; $-names are reserved`, `rename \`${key}\``)
       if (v instanceof Box) { named.set(v, key); if (DEV) writable++ }
-      // Actions are transactions only where weft/history is loaded; otherwise an action is the function itself.
+      // Actions are transactions only where @weft-js/core/history is loaded; otherwise an action is the function itself.
       if (typeof v === 'function') { if (DEV) actions++; this.api[key] = features.history ? features.history.action(`${def.name}.${key}`, v as Fn) : v }
       else this.api[key] = v
     }
@@ -190,20 +190,20 @@ export class Instance {
       owners.set(box, this)
       if (box.opts?.persist) {
         if (DEV && !features.persist)
-          throw new StateError('S008', `\`${def.name}\` persists a box, but weft/persist isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/persist'`")
+          throw new StateError('S008', `\`${def.name}\` persists a box, but @weft-js/core/persist isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/persist'`")
         if (DEV && !name) throw new StateError('S008', `\`${def.name}\` persists a box it doesn't return or name`, "return it from the setup, or give it `name: '…'`")
         features.persist!.load(this, box, name!)
       }
       if (name && name in seed) box.v = seed[name] // before setup returns: nothing has read it yet
       if (box.opts?.sync) {
-        if (DEV && !features.sync) throw new StateError('S008', `\`${def.name}\` syncs a box, but weft/sync isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/sync'`")
+        if (DEV && !features.sync) throw new StateError('S008', `\`${def.name}\` syncs a box, but @weft-js/core/sync isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/sync'`")
         if (DEV && !name) throw new StateError('S008', `\`${def.name}\` syncs a box it doesn't return or name`, "return it from the setup, or give it `name: '…'`")
         features.sync!.attach(this, box, name!)
       }
       box.h = onWrite
     }
     if (DEV) {
-      // The dev graph (weft/devtools): the scope's boxes and returned derived values, until the app ends.
+      // The dev graph (@weft-js/core/devtools): the scope's boxes and returned derived values, until the app ends.
       const nodes: (Box<any> | Memo<any>['node'])[] = [...boxes]
       for (const [key, v] of Object.entries(this.api)) if (v instanceof Memo) { v.node.n = `${def.name}.${key}`; nodes.push(v.node) }
       for (const n of nodes) graph.add(n)

@@ -1,4 +1,4 @@
-// Video, audio and GIF-to-video on real encodes through @weft/plugin-media-ffmpeg: the ladder, what's kept, GIF delays,
+// Video, audio and GIF-to-video on real encodes through @weft-js/plugin-media-ffmpeg: the ladder, what's kept, GIF delays,
 // the keep-the-GIF rule, audio muxing and the compatible copy. Skipped where ffmpeg isn't installed.
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createMediaEncode } from '@weft/plugin-media-ffmpeg/build'
-import { KEYS } from '@weft/plugin-media-ffmpeg'
+import { createMediaEncode } from '@weft-js/plugin-media-ffmpeg/build'
+import { KEYS } from '@weft-js/plugin-media-ffmpeg'
 import { createMediaBuild, findScorer } from '../src/build.mjs'
 import { createMediaServer } from '../src/server.mjs'
 

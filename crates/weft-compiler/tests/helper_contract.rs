@@ -1,5 +1,5 @@
-//! Helper contract (research 16 §6.3, research 19): every helper weft's back end imports from `weft`, `weft/dom` or
-//! `weft/ssr` must be exported by `packages/weft/src`. Compiles the repo's own components (test fixtures, the v3
+//! Helper contract (research 16 §6.3, research 19): every helper weft's back end imports from `@weft-js/core`, `@weft-js/core/dom` or
+//! `@weft-js/core/ssr` must be exported by `packages/weft/src`. Compiles the repo's own components (test fixtures, the v3
 //! reference app, the size fixtures) in each output mode: DOM, DOM dev, hydratable DOM, and SSR.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -102,9 +102,9 @@ fn imports_of(code: &str) -> BTreeMap<String, BTreeSet<String>> {
 fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/weft/src");
     let modules: BTreeMap<&str, BTreeSet<String>> = [
-        ("weft", exports_of(&runtime.join("index.ts"))),
-        ("weft/dom", exports_of(&runtime.join("dom.ts"))),
-        ("weft/ssr", exports_of(&runtime.join("ssr.ts"))),
+        ("@weft-js/core", exports_of(&runtime.join("index.ts"))),
+        ("@weft-js/core/dom", exports_of(&runtime.join("dom.ts"))),
+        ("@weft-js/core/ssr", exports_of(&runtime.join("ssr.ts"))),
     ]
     .into();
 
@@ -131,7 +131,7 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     }
     assert!(missing.is_empty(), "helpers the back end imports but the runtime lacks:\n{missing:#?}");
     // Guard against the check passing vacuously (e.g. the import source changing).
-    for core in ["weft/dom:tpl", "weft/dom:child", "weft/dom:bind", "weft/dom:first", "weft/ssr:ssr", "weft/ssr:hole", "weft/ssr:key"] {
+    for core in ["@weft-js/core/dom:tpl", "@weft-js/core/dom:child", "@weft-js/core/dom:bind", "@weft-js/core/dom:first", "@weft-js/core/ssr:ssr", "@weft-js/core/ssr:hole", "@weft-js/core/ssr:key"] {
         assert!(used.contains(core), "the components no longer import {core}; used: {used:?}");
     }
 }

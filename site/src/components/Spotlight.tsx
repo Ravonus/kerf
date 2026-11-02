@@ -1,8 +1,8 @@
-import { navigate } from '@weft/start'
-import type { SearchHit } from '@weft/warp-core'
-import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft/icons'
-import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource } from '@weft/warp'
-import { onMount } from 'weft'
+import { navigate } from '@weft-js/start'
+import type { SearchHit } from '@weft-js/warp-core'
+import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft-js/warp-icons'
+import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource } from '@weft-js/warp'
+import { onMount } from '@weft-js/core'
 import { body, loadTitles, titles } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 

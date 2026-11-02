@@ -1,5 +1,5 @@
-import { dbChanges, realtime } from '@weft/start'
-import { postgresBus } from '@weft/start/bus/postgres'
+import { dbChanges, realtime } from '@weft-js/start'
+import { postgresBus } from '@weft-js/start/bus/postgres'
 import { db } from './db'
 import { notes } from './schema'
 

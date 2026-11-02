@@ -1,4 +1,4 @@
-// weft/test/plugins: conformance suites that ship with a slot, so any provider can be held to them (research 13 §2.11).
+// @weft-js/core/test/plugins: conformance suites that ship with a slot, so any provider can be held to them (research 13 §2.11).
 // `textMeasureSuite` runs in a page, against real layout: a test double can't show a line count is right. A runner loads
 // it in each pinned browser (packages/text/test/conformance.mjs).
 
@@ -132,7 +132,7 @@ export async function textMeasureSuite(p: MeasureProvider, o: MeasureSuiteOption
   return out
 }
 
-// ---- realtime.bus@1 and db.adapter@1 (agorix 03 §5): plain Node, against a real server where the provider has one ----
+// ---- realtime.bus@1 and db.adapter@1: plain Node, against a real server where the provider has one ----
 
 const pause = (ms: number) => new Promise(ok => setTimeout(ok, ms))
 const settle = async (done: () => boolean, ms = 5000) => {

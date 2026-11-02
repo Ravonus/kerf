@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 // What `text()` in weft.config.ts binds: the slim engine on the text.measure slot.
 const engine = fileURLToPath(new URL('../../../../packages/text/dist/index.js', import.meta.url))

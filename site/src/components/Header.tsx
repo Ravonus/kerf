@@ -1,8 +1,8 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 import { AppearanceGate } from './AppearanceGate'
 import { Mark } from './Mark'
 import { NavSheet } from './NavSheet'
-import { Nav } from '@weft/warp'
+import { Nav } from '@weft-js/warp'
 
 export const NAV = [
   { href: '/docs', label: 'Docs' },

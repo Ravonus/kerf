@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { join, resolve } from 'node:path'
 import sharp from 'sharp'
 import { optimize } from 'svgo'
-import { probe } from 'weft/media-probe'
+import { probe } from '@weft-js/core/media-probe'
 import { DEFAULTS, FIXED, encoders, hex, isPhoto, MIME } from './build.mjs'
 import { unsafeSvg } from './svg.mjs'
 import { sniff, uploads } from './upload.mjs'
@@ -68,7 +68,7 @@ function storage(o, root, encode) {
     if (known) return { ...known.asset, name }
     const kind = sniff(bytes)
     if (kind) {
-      if (!encode['video/h264']) refuse('M018', `${name} is ${kind}, and nothing here encodes it: add \`mediaFfmpeg()\` from @weft/plugin-media-ffmpeg to \`plugins\`, with ffmpeg on the server.`)
+      if (!encode['video/h264']) refuse('M018', `${name} is ${kind}, and nothing here encodes it: add \`mediaFfmpeg()\` from @weft-js/plugin-media-ffmpeg to \`plugins\`, with ffmpeg on the server.`)
       mkdirSync(join(dir, hash), { recursive: true })
       return timed.ingest(hash, bytes, name, kind)
     }

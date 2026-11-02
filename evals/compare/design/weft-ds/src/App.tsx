@@ -1,5 +1,5 @@
-import { state, derived, onMount, onCleanup } from 'weft'
-import { Center, Heading, Row, Spacer, Stack, Text } from '@weft/warp'
+import { state, derived, onMount, onCleanup } from '@weft-js/core'
+import { Center, Heading, Row, Spacer, Stack, Text } from '@weft-js/warp'
 import { Settings } from './Settings'
 import { Customers } from './Customers'
 import { Pricing } from './Pricing'

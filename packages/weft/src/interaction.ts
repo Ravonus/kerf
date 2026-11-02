@@ -1,7 +1,7 @@
 // `interaction()` (research 40): UI state as plain boxes. `hover`, `focus` and `pressed` are this page's and
 // nothing else's, so an effect on them can't run for somebody else's hover and can't echo: what arrives from elsewhere
 // is only ever written to `remote`, and only the three local boxes are sent. `share` makes one row per key on this page
-// (same page = same box); `@weft/start/share` carries it further. Neither `weft` nor a warp component pulls this in.
+// (same page = same box); `@weft-js/start/share` carries it further. Neither `weft` nor a warp component pulls this in.
 
 import { DEV, createRoot, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from './index'
 
@@ -21,7 +21,7 @@ export interface Interaction {
 
 export interface InteractionOptions {
   /**
-   * Share it. Same key, same row: on this page at once, across tabs and clients in a `@weft/start` app. Read once: a
+   * Share it. Same key, same row: on this page at once, across tabs and clients in a `@weft-js/start` app. Read once: a
    * function is how a prop goes in (`share: () => \`todo:${props.id}\``), and a new key is a new `key` on the component.
    */
   share?: string | (() => string)
@@ -29,7 +29,7 @@ export interface InteractionOptions {
 
 export interface ShareLine { set(bits: number): void; leave(): void }
 
-/** `@weft/warp/ui` and `@weft/start/share` plug in here, as `weft/sync` does for `features.sync`. */
+/** `@weft-js/warp/ui` and `@weft-js/start/share` plug in here, as `@weft-js/core/sync` does for `features.sync`. */
 export const seams: {
   attach?: (el: HTMLElement, ui: Interaction) => Action
   line?: (key: string, heard: (counts: Counts) => void) => ShareLine
@@ -42,7 +42,7 @@ function row(): Interaction & { remote: State<Counts> } {
   const made: Interaction & { remote: State<Counts> } = {
     hover: state(false), focus: state(false), pressed: state(false), remote: state(NONE),
     attach(el) {
-      if (DEV && !seams.attach) throw new Error("interaction(): nothing draws `ui`\n  fix: import '@weft/warp/ui'")
+      if (DEV && !seams.attach) throw new Error("interaction(): nothing draws `ui`\n  fix: import '@weft-js/warp/ui'")
       return seams.attach!(el, made)
     },
   }

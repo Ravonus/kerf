@@ -1,5 +1,5 @@
 // `weft browser` commands, shared by the CLI and the `weft mcp` browser tools. Each takes structured params and
-// returns JSON; the page side is weft/agent (packages/weft/src/agent.ts).
+// returns JSON; the page side is @weft-js/core/agent (packages/weft/src/agent.ts).
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join } from 'node:path'
@@ -25,7 +25,7 @@ export async function browser(root, cmd, p = {}, o = {}) {
     case 'open': {
       const before = await page('info', {})
       await page('navigate', { to: p.route ?? '/' })
-      // Same tab id after the load (weft/agent keeps it in sessionStorage); wait for the new document to say hello.
+      // Same tab id after the load (@weft-js/core/agent keeps it in sessionStorage); wait for the new document to say hello.
       const until = Date.now() + 15_000
       for (;;) {
         await sleep(150)

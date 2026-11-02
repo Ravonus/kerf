@@ -32,5 +32,5 @@ parent's value changes is what `linked` already does. Components that never writ
 
 Leaving the component takes `bind:x={box}` at the call site, which gives that prop a setter. `x={bind(box)}` lowers to
 the same thing; TypeScript reports a required `x` as missing with `bind:x`, and `bind` types as the box's value. No
-existing idiom covered this (`bind` in weft/dom is an internal helper). Inferring setters from `n={box.value}` was
+existing idiom covered this (`bind` in @weft-js/core/dom is an internal helper). Inferring setters from `n={box.value}` was
 rejected: a prop that looks one-way mustn't write parent state.

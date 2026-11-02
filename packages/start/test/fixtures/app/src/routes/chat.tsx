@@ -1,4 +1,4 @@
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { room } from '../server/chat'
 
 export default function Chat() {

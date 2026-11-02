@@ -1,11 +1,11 @@
-import { caretPoint, comboPopup, findTrigger, mentionToken, parseMentions, serializeMentions, shiftMarks, uid, type MentionItem, type MentionMark } from '@weft/warp-core'
-import { derived, flush, onCleanup, state, untrack, watch } from 'weft'
+import { caretPoint, comboPopup, findTrigger, mentionToken, parseMentions, serializeMentions, shiftMarks, uid, type MentionItem, type MentionMark } from '@weft-js/warp-core'
+import { derived, flush, onCleanup, state, untrack, watch } from '@weft-js/core'
 import { bindable, type Bindable } from './bind'
 import { Field, type FieldShell } from './Field'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/rich/listbox.css'
-import '@weft/warp-core/styles/rich/popover.css'
-import '@weft/warp-core/styles/rich/helpers.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/popover.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
 
 export type MentionsInputProps = FieldShell & Bindable<string> & {
   /** Trigger character → its search. Superseded calls are aborted. */

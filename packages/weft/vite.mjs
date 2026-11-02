@@ -11,27 +11,27 @@ import { buildMatrix } from './node/matrix.mjs'
 
 const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 
-// Scope options backed by their own module: an app pays for weft/persist, weft/history and weft/sync only where it uses them.
+// Scope options backed by their own module: an app pays for @weft-js/core/persist, @weft-js/core/history and @weft-js/core/sync only where it uses them.
 const FEATURES = [
-  [/\bpersist\s*:/, 'weft/persist'],
-  [/\bhistory\s*:\s*\{/, 'weft/history'],
-  [/\bsync\s*:\s*['"]tabs['"]/, 'weft/sync'],
+  [/\bpersist\s*:/, '@weft-js/core/persist'],
+  [/\bhistory\s*:\s*\{/, '@weft-js/core/history'],
+  [/\bsync\s*:\s*['"]tabs['"]/, '@weft-js/core/sync'],
 ]
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), 'src')
 
 /**
  * A module that mentions `.get`, `.set` or `.linked`, the same with brackets (`box['get']`), or `const { linked } = state`
- * brings in weft/keyed, so a page with none doesn't carry them. A word match costs at worst those bytes (`map.get`). A name
- * only known when it runs (`box[name]`) or a renamed `state` can't be seen: that module imports 'weft/keyed' itself. Past this plugin, `weft` is the core alone. In a
+ * brings in @weft-js/core/keyed, so a page with none doesn't carry them. A word match costs at worst those bytes (`map.get`). A name
+ * only known when it runs (`box[name]`) or a renamed `state` can't be seen: that module imports '@weft-js/core/keyed' itself. Past this plugin, `weft` is the core alone. In a
  * dependency it takes naming weft as well, or every package with a Map would count.
  */
 const keyed = {
   name: 'weft:keyed',
   enforce: 'pre',
-  resolveId: { filter: { id: /^weft$/ }, handler: () => join(SRC, 'index.ts') },
+  resolveId: { filter: { id: /^@weft-js\/core$/ }, handler: () => join(SRC, 'index.ts') },
   transform: {
-    filter: { id: { include: /\.[cm]?[jt]sx?(\?|$)/, exclude: /[\\/]packages[\\/]weft[\\/]src[\\/]|[\\/]node_modules[\\/]weft[\\/]/ }, code: /\.(?:get|set|linked)\b|\[\s*['"`](?:get|set|linked)['"`]\s*\]|\{[^{}]*\blinked\b[^{}]*\}\s*=\s*state\b/ },
+    filter: { id: { include: /\.[cm]?[jt]sx?(\?|$)/, exclude: /[\\/]packages[\\/]weft[\\/]src[\\/]|[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/ }, code: /\.(?:get|set|linked)\b|\[\s*['"`](?:get|set|linked)['"`]\s*\]|\{[^{}]*\blinked\b[^{}]*\}\s*=\s*state\b/ },
     handler(code, id) {
       if (id.includes('node_modules') && !code.includes('weft')) return
       return { code: `import ${JSON.stringify(join(SRC, 'keyed.ts'))};${code}`, map: null }
@@ -53,12 +53,12 @@ const features = {
 
 /**
  * `ui=` and `interaction({ share })` need a module that only a package beyond weft has: warp draws `ui`, and
- * `@weft/start` carries `share` past the page. Where the app has that package, it's imported where it's used; where it
+ * `@weft-js/start` carries `share` past the page. Where the app has that package, it's imported where it's used; where it
  * doesn't, `interaction()` still works, on this page.
  */
 const INTERACTION = [
-  [/\bui=\{/, '@weft/warp/ui'],
-  [/\bshare\s*:/, '@weft/start/share'],
+  [/\bui=\{/, '@weft-js/warp/ui'],
+  [/\bshare\s*:/, '@weft-js/start/share'],
 ]
 const interactionFeatures = {
   name: 'weft:interaction',
@@ -66,7 +66,7 @@ const interactionFeatures = {
   transform: {
     filter: { id: { include: /\.[cm]?[jt]sx?$/, exclude: /node_modules|[\\/]packages[\\/](weft|warp|ui-core|start)[\\/]src[\\/]/ }, code: /\bui=\{|\bshare\s*:/ },
     async handler(code, id) {
-      if (!/\bui=\{/.test(code) && !code.includes('weft/interaction')) return
+      if (!/\bui=\{/.test(code) && !code.includes('@weft-js/core/interaction')) return
       const add = []
       for (const [re, mod] of INTERACTION) if (re.test(code) && (await this.resolve(mod, id))) add.push(`import '${mod}';`)
       return add.length ? { code: `${add.join('')}${code}`, map: null } : undefined
@@ -79,7 +79,7 @@ const flags = off => ({
   name: 'weft:flags',
   enforce: 'pre',
   transform: {
-    filter: { id: /[\\/]weft[\\/]src[\\/]flags\.ts$/ },
+    filter: { id: /[\\/](?:weft|@weft-js[\\/]core)[\\/]src[\\/]flags\.ts$/ },
     handler(code) {
       const names = [...(off ?? []), ...(process.env.WEFT_OFF?.split(',').filter(Boolean) ?? [])]
       if (!names.length) return
@@ -89,7 +89,7 @@ const flags = off => ({
   },
 })
 
-// Slots weft/surface imports dynamically: it has to build in an app that never ran `weft plugins sync` (research 33 §5).
+// Slots @weft-js/core/surface imports dynamically: it has to build in an app that never ran `weft plugins sync` (research 33 §5).
 const CORE_SLOTS = new Set(['text.measure', 'surface.renderer', 'pay.rail'])
 const UNSYNCED = '\0weft:slot-unsynced/'
 
@@ -211,7 +211,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
     if (mtime === undefined) return []
     if (scanned.get(file) !== mtime || !defs.has(file)) {
       const code = readFileSync(file, 'utf8')
-      const found = code.includes('weft/style') ? transform(code, { filename: file, checkOnly: true }).facts.groups : []
+      const found = code.includes('@weft-js/core/style') ? transform(code, { filename: file, checkOnly: true }).facts.groups : []
       defs.set(file, found)
       scanned.set(file, mtime)
     }
@@ -241,7 +241,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
   function validate(ctx, file, groups) {
     for (const g of groups) {
       const where = `${relative(root, file)}:${g.line}`
-      for (const [other, gs] of defs) if (other !== file && gs.some(x => x.name === g.name)) ctx.error(`weft/style: group ${g.name} (${where}) is also defined in ${relative(root, other)}`)
+      for (const [other, gs] of defs) if (other !== file && gs.some(x => x.name === g.name)) ctx.error(`@weft-js/core/style: group ${g.name} (${where}) is also defined in ${relative(root, other)}`)
       const { base, axes = {}, parts = {}, states = {}, compounds = [] } = g.def
       try {
         resolveIntent(base ?? {}, `group ${g.name} (${where}) base`)
@@ -249,7 +249,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
         for (const [k, i] of Object.entries({ ...parts, ...states })) resolveIntent(i, `group ${g.name} (${where}) ${k}`)
         for (const [n, c] of compounds.entries()) resolveIntent(c.set, `group ${g.name} (${where}) compound ${n}`)
       } catch (e) {
-        if (e instanceof GroupError) ctx.error(`D025 weft/style: ${e.message}`)
+        if (e instanceof GroupError) ctx.error(`D025 @weft-js/core/style: ${e.message}`)
         throw e
       }
     }
@@ -332,7 +332,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
         if (!matrix) return
         // The project-wide style codes (research 23 §3): errors stop the build, the rest are warnings.
         for (const d of writeMatrix().diagnostics) {
-          const text = `${d.code} weft/style: ${d.message}\n  help: ${d.help}`
+          const text = `${d.code} @weft-js/core/style: ${d.message}\n  help: ${d.help}`
           const loc = { file: join(root, d.file), line: d.line, column: 0 }
           if (d.severity === 'error') this.error({ message: text, loc })
           else this.warn({ message: text, loc })
@@ -350,7 +350,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
 
 /**
  * `hydratable`: DOM output that adopts server HTML (`hydrate`), and SSR output with hydration keys. Vite's SSR
- * transforms get SSR output (imports from weft/ssr). `import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`)
+ * transforms get SSR output (imports from @weft-js/core/ssr). `import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`)
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
  */
 /*
@@ -358,7 +358,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
  * (style groups, below).
  */
 /**
- * @weft/icons' build pass, when the build has the package: only the icons, names and tiers the app uses ship
+ * @weft-js/warp-icons' build pass, when the build has the package: only the icons, names and tiers the app uses ship
  * (packages/icons/compile.mjs). Two hooks, because a rewrite has to see the source before weft compiles it and a resolve
  * has to run after weft's own, so a server build's importers keep their mode.
  */
@@ -368,14 +368,14 @@ function icons() {
   const drawings = new Map()
   let config, loading
   const load = (ctx, importer) => (loading ??= (async () => {
-    const found = await ctx.resolve('@weft/icons/compile', importer, { skipSelf: true })
+    const found = await ctx.resolve('@weft-js/warp-icons/compile', importer, { skipSelf: true })
     // an app may reach icons only through warp: the next file, nearer the package, can still find it
     if (!found) { loading = undefined; return null }
     const { pass, rewrite, unknownMessage, trimTiers } = await import(pathToFileURL(found.id.replace(/\?.*$/, '')).href)
     const alias = join(config.root, '.weft', 'tokens', 'icons.alias.json') // icons({ tier }) wrote this: a stop, or the package itself for every tier
     const options = existsSync(alias) ? JSON.parse(readFileSync(alias, 'utf8')) : {}
-    const named = options['@weft/icons']
-    const out = pass({ root: config.root, command: config.command, tier: named && (named.split('/')[2] ?? 'all'), source: options['@weft/icons/source'] })
+    const named = options['@weft-js/warp-icons']
+    const out = pass({ root: config.root, command: config.command, tier: named && (named.split('/')[2] ?? 'all'), source: options['@weft-js/warp-icons/source'] })
     return { ...out, rewrite, unknownMessage, trimTiers }
   })())
   const fail = (ctx, p) => {
@@ -388,7 +388,7 @@ function icons() {
       enforce: 'pre',
       configResolved(c) { config = c },
       transform: {
-        filter: { id: /\.[jt]sx?(\?|$)/, code: /@weft\/(icons|warp)|\/\*#__PURE__\*\/ icon\(|export default pack/ },
+        filter: { id: /\.[jt]sx?(\?|$)/, code: /@weft-js\/(icons|warp)|\/\*#__PURE__\*\/ icon\(|export default pack/ },
         async handler(code, id) {
           // a build reads the pack as a namespace (rewrite), and this default would keep every icon alive
           if (/icons\/src\/gen\/index\.tsx/.test(id)) return config.command === 'build' ? "export * from './all'\n" : null
@@ -415,14 +415,14 @@ function icons() {
       name: 'weft:icons',
       enforce: 'pre',
       resolveId: {
-        filter: { id: /^(@weft\/icons(\/names|\/quiet|\/balanced|\/vivid)?$|\0weft:icon\/)/ },
+        filter: { id: /^(@weft-js\/icons(\/names|\/quiet|\/balanced|\/vivid)?$|\0weft:icon\/)/ },
         async handler(source, importer) {
           if (source.startsWith(ONE)) return source
           if (config.command !== 'build' || !importer) return null
           const p = await load(this, importer)
           if (!p) return null
           fail(this, p)
-          return source === '@weft/icons/names' ? NAMES : null
+          return source === '@weft-js/warp-icons/names' ? NAMES : null
         },
       },
       load: {
@@ -437,7 +437,7 @@ function icons() {
 }
 
 /*
- * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
+ * `hmr` (default: when serving, outside vitest): client modules register their components with @weft-js/core/hmr and accept
  * their own updates (research 21). Never for SSR output.
  */
 export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions, off } = {}) {
@@ -458,7 +458,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
     },
     async resolveId(source, importer) {
       const mode = importer && MODE.exec(importer)
-      if (!mode || !(source.startsWith('.') || source.startsWith('@weft/'))) return null // first-party packages ship TSX
+      if (!mode || !(source.startsWith('.') || source.startsWith('@weft-js/'))) return null // first-party packages ship TSX
       const r = await this.resolve(source, importer.slice(0, mode.index), { skipSelf: true })
       return r && /\.[jt]sx$/.test(r.id) ? r.id + mode[0] : r
     },
@@ -502,7 +502,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
 }
 
 /**
- * Dev serving only: load weft/agent (or just weft/devtools when Testing Library isn't installed) into every page, and
+ * Dev serving only: load @weft-js/core/agent (or just @weft-js/core/devtools when Testing Library isn't installed) into every page, and
  * relay `weft browser` / MCP commands to an open tab over Vite's own socket (research 22). `POST /__weft/agent`
  * `{ cmd, args, tab? }` → the tab's result; `GET /__weft/agent` lists the tabs. The URL goes to `.weft/dev.json`.
  */
@@ -511,7 +511,7 @@ const ENTRY = '/@weft-agent.js'
 function agent() {
   const req = createRequire(import.meta.url)
   const can = ['@testing-library/dom', '@testing-library/user-event', 'dom-accessibility-api'].every(m => { try { req.resolve(m); return true } catch { return false } })
-  const entry = can ? 'weft/agent' : 'weft/devtools'
+  const entry = can ? '@weft-js/core/agent' : '@weft-js/core/devtools'
   /** tab id → { client, url, title, visible, focused, seen } */
   const tabs = new Map()
   const pending = new Map()
@@ -526,7 +526,7 @@ function agent() {
     apply: (_, env) => env.command === 'serve' && env.mode !== 'test', // not vitest's own server
     config: () => ({
       // One copy of weft in the page: the app's graph and the bridge's must be the same module instance.
-      optimizeDeps: { exclude: ['weft'], include: can ? ['weft > @testing-library/dom', 'weft > @testing-library/user-event', 'weft > dom-accessibility-api'] : [] },
+      optimizeDeps: { exclude: ['@weft-js/core'], include: can ? ['@weft-js/core > @testing-library/dom', '@weft-js/core > @testing-library/user-event', '@weft-js/core > dom-accessibility-api'] : [] },
     }),
     // A virtual entry, so Vite resolves and transforms the import like any app module.
     resolveId: id => (id === ENTRY ? ENTRY : null),

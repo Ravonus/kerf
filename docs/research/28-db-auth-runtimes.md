@@ -1,4 +1,4 @@
-# 28. Drizzle, Better Auth, the contract and three runtimes: `@weft/start` (Phase 3, third slice)
+# 28. Drizzle, Better Auth, the contract and three runtimes: `@weft-js/start` (Phase 3, third slice)
 
 Status: **built 2026-10-30; §9 records what was built and measured.** Inputs: PLAN §4, §4.1,
 research 02 §3 (T3 patterns), 06 (runtimes), 25 §6 (Nitro), 27 §9 (where this slice plugs in). Spike:
@@ -37,7 +37,7 @@ writes with it. So a transaction holds a gate: statements outside it wait, and s
 export const todos = sqliteTable('todos', { id: text().primaryKey(), userId: text('user_id').notNull(), title: text().notNull(), done: integer({ mode: 'boolean' }).notNull().default(false) })
 
 // src/db/index.server.ts
-import { createDb } from '@weft/start/db/sqlite'     // or '@weft/start/db/postgres'
+import { createDb } from '@weft-js/start/db/sqlite'     // or '@weft-js/start/db/postgres'
 export const db = createDb({ schema, url: env.DATABASE_URL })
 
 // src/context.server.ts: the plug from research 27 §1
@@ -53,9 +53,9 @@ export const addTodo = mutation({ input, auth: 'user', invalidates: ['todos'], r
 - **The connection opens on the first statement.** `weft build` loads every server module (the contract, §6), and
   loading one must not touch a database.
 - **`schemasOf(schema)`** is `drizzle-zod` per table: `{ select, insert, update }`. They're Zod 4, so Standard
-  Schemas, so they go straight into `input` (and the contract). `@weft/start/db` carries it; the drivers don't.
+  Schemas, so they go straight into `input` (and the contract). `@weft-js/start/db` carries it; the drivers don't.
 - **Client safety.** `src/db/schema.ts` has no connection, so a type or a client-side schema can come from it. Any
-  import of `@weft/start/db*` or `@weft/start/auth` that reaches the client graph is **Q012** at build. Server modules
+  import of `@weft-js/start/db*` or `@weft-js/start/auth` that reaches the client graph is **Q012** at build. Server modules
   and `load` are already stripped (research 25, 27), so Q012 only fires on a real leak.
 
 **Migrations are drizzle-kit's files, applied by weft.** `weft db generate` runs `drizzle-kit generate` (on Node, like
@@ -144,7 +144,7 @@ answers Q014 with that fix.
 | Code | Severity | Catches | Fix |
 |---|---|---|---|
 | Q011 | warning | A function touched a table its `tags`/`invalidates` don't name | Add the tag |
-| Q012 | error | `@weft/start/db*` or `@weft/start/auth` reached the client graph | Import it from a server module |
+| Q012 | error | `@weft-js/start/db*` or `@weft-js/start/auth` reached the client graph | Import it from a server module |
 | Q013 | error | A database URL the driver can't open, or a driver missing on this runtime | Use the matching entry, or install the driver |
 | Q014 | error | A table doesn't exist: migrations weren't generated or applied | `weft db generate` |
 | Q015 | warning | The schema changed since the last `weft db generate` | `weft db generate` |
@@ -164,8 +164,8 @@ on Node, Bun and Deno. The e2e spec is the agent's acceptance test, not its guid
 
 ## 9. Built
 
-Built as designed, in `@weft/start` (`./db`, `./db/sqlite`, `./db/postgres`, `./auth`, `./contract`), `create-weft` and
-`@weft/cli`. Measured 2026-10-30 on Node 22.22, Bun 1.3.14, Deno 2.9.8 and Postgres 16.13.
+Built as designed, in `@weft-js/start` (`./db`, `./db/sqlite`, `./db/postgres`, `./auth`, `./contract`), `create-weft` and
+`@weft-js/cli`. Measured 2026-10-30 on Node 22.22, Bun 1.3.14, Deno 2.9.8 and Postgres 16.13.
 
 **Exit check: passed** ([result](../../evals/results/phase3-exit.md),
 [findings](../../evals/results/phase3-exit-FINDINGS.md)). The scaffold plus an agent's todo sharing passes 24 hidden e2e

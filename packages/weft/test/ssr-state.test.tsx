@@ -1,9 +1,9 @@
 // The defineState payload and `cookie` persist across a server render and hydration (research 29 §2–3): what a server
 // sees, 0 key misses and 0 DOM writes on the client, the late write for local storage, S002, S010 and S013.
 // weft-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
-import { renderToStream, renderToString } from 'weft/ssr'
-import { hydrate, render } from 'weft/dom'
-import { flush } from 'weft/test'
+import { renderToStream, renderToString } from '@weft-js/core/ssr'
+import { hydrate, render } from '@weft-js/core/dom'
+import { flush } from '@weft-js/core/test'
 import { rt } from '../src/index'
 import { hydration } from '../src/hydrate'
 import { useApp, createApp } from '../src/scope'

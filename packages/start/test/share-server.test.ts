@@ -1,8 +1,8 @@
 // The server's half of `interaction({ share })`, over `attach` with a fake peer: access, batching, snapshots, leaving.
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { memoryBus, realtime } from '@weft/start'
-import { configure, createHub, resetHub } from '@weft/start/hub'
-import { runtime } from '@weft/start/data'
+import { memoryBus, realtime } from '@weft-js/start'
+import { configure, createHub, resetHub } from '@weft-js/start/hub'
+import { runtime } from '@weft-js/start/data'
 import { createScope } from '../src/exec'
 import { attach } from '../src/socket'
 

@@ -1,8 +1,8 @@
-// A list source from bound SQL (agorix 03 §5, H6): `columns` is required, identifiers come only from it, and every value
-// is a parameter. `target` is anything with `query(text, params)`: `ctx.db` from `@weft/db/plugin-native`, or a driver.
+// A list source from bound SQL: `columns` is required, identifiers come only from it, and every value
+// is a parameter. `target` is anything with `query(text, params)`: `ctx.db` from `@weft-js/db/plugin-native`, or a driver.
 
-import { likeOf, pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
-import { StartError } from '@weft/start/data'
+import { likeOf, pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft-js/start/list'
+import { StartError } from '@weft-js/start/data'
 
 export interface SqlTarget {
   query(text: string, params: unknown[]): Promise<Record<string, unknown>[]>
@@ -95,7 +95,7 @@ export const adapter: DbAdapter<SqlTarget> = { name: 'sql', source: (t, spec) =>
 
 /**
  * A trigger so writes from anywhere (cron, psql, another service) reach `.live` queries, on the postgres bus: tags, never
- * rows (agorix H1). Run the text once in a migration.
+ * rows. Run the text once in a migration.
  */
 export function postgresTrigger({ table, id = 'id', tag = table }: { table: string; id?: string; tag?: string }): string {
   const q = ident('postgresql')

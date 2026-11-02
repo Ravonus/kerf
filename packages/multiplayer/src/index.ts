@@ -1,5 +1,5 @@
 // Presence, cursors, a typed relay and synced scroll, on a `channel` connection (research 35). A library: nothing here
-// is a plugin, and an app that doesn't import it ships none of it. The server's half is `@weft/multiplayer/server`.
+// is a plugin, and an app that doesn't import it ships none of it. The server's half is `@weft-js/multiplayer/server`.
 //
 //   const chat = doc.connect(() => ({ id: props.id }))
 //   const room = presence(chat, { state: () => ({ typing: typing.value }) })
@@ -7,8 +7,8 @@
 //   const pointers = cursors(room)        // follows the pointer; <Cursors of={pointers} /> draws the others
 //   const clicks = relay<{ ping: { at: string } }>(chat); clicks.on('ping', e => flash(e.data.at, e.peer))
 
-import { derived, effect, onCleanup, onMount, state, untrack, type Derived, type State } from 'weft'
-import type { Connection } from '@weft/start'
+import { derived, effect, onCleanup, onMount, state, untrack, type Derived, type State } from '@weft-js/core'
+import type { Connection } from '@weft-js/start'
 
 export interface PeerUser { id: string; name?: string; [key: string]: unknown }
 export interface Peer<S = unknown> { id: string; user: PeerUser; state: S; at: number }
@@ -17,7 +17,7 @@ export interface CursorAt { a?: string; x: number; y: number; style?: string }
 // What `presence` needs of a connection: the `mp.*` names are the fragment's, which a `doc.connect()`'s types don't say.
 type Conn = Pick<Connection<any, any>, 'status' | 'room' | 'on' | 'send' | 'onReset'>
 
-/** What a transport pack is handed to carry cursors around the server (`@weft/realtime-webrtc`, `-livekit`, `-socketio`). */
+/** What a transport pack is handed to carry cursors around the server (`@weft-js/realtime-webrtc`, `-livekit`, `-socketio`). */
 export interface PeerRoom {
   /** This connection, as the server named it. */
   readonly self: string
@@ -304,7 +304,7 @@ export function hue(id: string): number {
 
 export interface RelayEvent<D> { peer: string; kind: string; data: D }
 
-/** Something a peer did, delivered to a callback. Never a synthetic DOM event (agorix M5): the page decides what it means. */
+/** Something a peer did, delivered to a callback. Never a synthetic DOM event: the page decides what it means. */
 export function relay<K extends Record<string, unknown>>(conn: Pick<Conn, 'on' | 'send'>) {
   const handlers = new Map<string, Set<(e: RelayEvent<any>) => void>>()
   conn.on('mp.relay', ({ id, kind, data }: { id: string; kind: string; data: unknown }) => { for (const f of handlers.get(kind) ?? []) f({ peer: id, kind, data }) })
@@ -321,7 +321,7 @@ export function relay<K extends Record<string, unknown>>(conn: Pick<Conn, 'on' |
   }
 }
 
-// ---- synced scroll and hash: the box, not the DOM (agorix 03 §5) ------------------------------------------------------
+// ---- synced scroll and hash: the box, not the DOM ------------------------------------------------------
 
 /** One scroll position in a shared box, as a fraction, so different heights land on the same place. */
 export function syncedScroll(box: State<number>, element: () => HTMLElement | Window = () => window) {

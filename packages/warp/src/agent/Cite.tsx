@@ -1,9 +1,9 @@
-import { citePreview, installSweep, type AgentSource } from '@weft/warp-core'
-import { state } from 'weft'
-import { use } from '@weft/warp-core/weft'
+import { citePreview, installSweep, type AgentSource } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 import '../styles'
-import '@weft/warp-core/styles/components/popover.css'
-import '@weft/warp-core/styles/app/cite.css'
+import '@weft-js/warp-core/styles/components/popover.css'
+import '@weft-js/warp-core/styles/app/cite.css'
 
 /**
  * A citation (07 §1.3, §1.6): a link to source n named "Source n", with a preview on hover and focus. The preview sits

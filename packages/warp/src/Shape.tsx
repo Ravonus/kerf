@@ -1,4 +1,4 @@
-import { skeletonShape, isPart, type ShapeSpec, type SkeletonBox, type SkeletonPart } from '@weft/warp-core'
+import { skeletonShape, isPart, type ShapeSpec, type SkeletonBox, type SkeletonPart } from '@weft-js/warp-core'
 import './skeleton-css'
 
 const part = (p: SkeletonPart) => <span data-scope="skeleton" data-shape={p.shape === 'text' ? undefined : p.shape} style={p.style}></span>

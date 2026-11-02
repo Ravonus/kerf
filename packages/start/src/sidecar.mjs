@@ -28,7 +28,7 @@ import { isServerModule } from './vite.mjs'
 export function usesRemote(root) {
   const src = join(root, 'src')
   if (!existsSync(src)) return false
-  return readdirSync(src, { recursive: true, withFileTypes: true }).some(f => f.isFile() && /\.[cm]?[jt]sx?$/.test(f.name) && /['"]@weft\/start\/rust['"]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')))
+  return readdirSync(src, { recursive: true, withFileTypes: true }).some(f => f.isFile() && /\.[cm]?[jt]sx?$/.test(f.name) && /['"]@weft-js\/start\/rust['"]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')))
 }
 
 /** Same spelling as `urlVariable` in rust.ts, which can't share a module with this one: it ships in the server bundle. */

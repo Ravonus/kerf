@@ -1,16 +1,16 @@
-import { announce, formatMs, installSweep, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
+import { announce, formatMs, installSweep, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { LiveStatus } from '../parts'
 import { Button } from '../Button'
 import { Select } from '../Select'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { G, val } from './shared'
 import '../fields'
-import '@weft/warp-core/styles/inputs/choice.css'
-import '@weft/warp-core/styles/components/alert.css'
-import '@weft/warp-core/styles/app/transport.css'
+import '@weft-js/warp-core/styles/inputs/choice.css'
+import '@weft-js/warp-core/styles/components/alert.css'
+import '@weft-js/warp-core/styles/app/transport.css'
 
-const WIRES: [TransportWire, string, string, string][] = [['default', 'weft default', 'SSE + WebSocket', 'One SSE (.live, stream) and one WebSocket (channel) per tab'], ['tabs', 'Tabs only', 'BroadcastChannel', "tabs.channel: this browser's tabs, no server"], ['fake', 'Fake', 'weft/test', 'In-memory pair with a network model']]
+const WIRES: [TransportWire, string, string, string][] = [['default', 'weft default', 'SSE + WebSocket', 'One SSE (.live, stream) and one WebSocket (channel) per tab'], ['tabs', 'Tabs only', 'BroadcastChannel', "tabs.channel: this browser's tabs, no server"], ['fake', 'Fake', '@weft-js/core/test', 'In-memory pair with a network model']]
 const BUSES: [TransportBus, string, string][] = [['memory', '+0 ms', 'One process. The default'], ['postgres', '+4 ms', 'LISTEN / NOTIFY'], ['redis', '+2 ms', 'Pub/sub'], ['nats', '+1 ms', 'Subjects'], ['durable-object', '+8 ms', 'Cloudflare preset only']]
 const PRESETS = [{ value: 'single', label: 'Single instance' }, { value: 'multi', label: 'Multi-instance' }, { value: 'cf', label: 'Cloudflare' }]
 const NETS = [{ value: 'good', label: 'Good' }, { value: 'slow', label: 'Slow (×6)' }, { value: 'lossy', label: 'Lossy (spikes, drops)' }, { value: 'wsblock', label: 'WebSocket blocked' }, { value: 'offline', label: 'Offline' }]

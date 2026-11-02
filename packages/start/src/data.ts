@@ -10,11 +10,11 @@
 //
 // The cache entry's value is `base` with each pending layer applied. New bases are structurally shared with the old
 // one, so unchanged rows keep their identity and `For` keeps them. This module ships to the client; the executor
-// (exec.ts) is the server's, and the in-process fake transport weft/test turns on loads it on demand. Realtime
+// (exec.ts) is the server's, and the in-process fake transport @weft-js/core/test turns on loads it on demand. Realtime
 // (research 30) costs a query app one method here: `q.live()` imports live.ts on its first call.
 
-import { DEV, createRoot, derived, effect, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from 'weft'
-import { fill, mask } from 'weft/shape'
+import { DEV, createRoot, derived, effect, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from '@weft-js/core'
+import { fill, mask } from '@weft-js/core/shape'
 import { client } from './router'
 
 // ---- definitions ------------------------------------------------------------------------------------------------
@@ -53,14 +53,14 @@ export interface SchemaIssue { readonly message: string; readonly path?: readonl
 
 /**
  * What `run` and `load` get. Augment it with what `src/context.server.ts` returns:
- * `declare module '@weft/start' { interface Context { db: Db; user: User | null } }`.
+ * `declare module '@weft-js/start' { interface Context { db: Db; user: User | null } }`.
  */
 export interface Context {
   request: Request
   /** Headers merged into the response (cookies a sign-in sets). */
   response: { headers: Headers }
   /** Uploads and CMS images (research 29 §6): `ingest` stores the original and returns the record `z.media()` validates. */
-  media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<import('weft/media').MediaAsset> }
+  media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<import('@weft-js/core/media').MediaAsset> }
 }
 
 /** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
@@ -83,7 +83,7 @@ type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly strin
 /** Read before `run`, for one user's tag: `tags: (_, ctx) => [`entitlements:${ctx.user.id}`]`. */
 type QueryTags<I, A> = Tags<[input: I, ctx: Ctx<A>]>
 
-/** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft/start/rust` (research 36, 37). */
+/** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft-js/start/rust` (research 36, 37). */
 export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: any): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
 
 /** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
@@ -196,7 +196,7 @@ let auto = 0
 
 // ---- errors and redirects -----------------------------------------------------------------------------------
 
-/** A diagnostic thrown by @weft/start: `code` (Q001…) and a fix in the message, like weft's StateError. */
+/** A diagnostic thrown by @weft-js/start: `code` (Q001…) and a fix in the message, like weft's StateError. */
 export class StartError extends Error {
   constructor(public code: string, message: string, fix?: string, public extra: Record<string, unknown> = {}) {
     super(`${code}: ${message}${fix ? `\n  fix: ${fix}` : ''}`)
@@ -335,7 +335,7 @@ export const stale: Derived<boolean> = rt.stale
 
 const go = (href: string, replace?: boolean) => (runtime.navigate ? runtime.navigate(href, replace) : void client.navigate?.(href, { replace }))
 
-/** weft/test's controls, when it's loaded; the first look registers the cache reset it runs after each test. */
+/** @weft-js/core/test's controls, when it's loaded; the first look registers the cache reset it runs after each test. */
 let registered = false
 export const net = () => {
   const n = (globalThis as any)[Symbol.for('weft.net')] as NetControl | undefined
@@ -349,7 +349,7 @@ export const net = () => {
   return n
 }
 
-/** weft/test's fake-transport controls (research 27 §7). */
+/** @weft-js/core/test's fake-transport controls (research 27 §7). */
 export interface NetControl {
   latency: number
   ctx?: object
@@ -725,7 +725,7 @@ export const http: Transport = {
 }
 
 /**
- * weft/test's fake transport: the server's executor in process, with the controls weft/test's `net` sets (latency,
+ * @weft-js/core/test's fake transport: the server's executor in process, with the controls @weft-js/core/test's `net` sets (latency,
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
 export const fakeScope = (exec: typeof import('./exec'), n: NetControl, request: Request) =>

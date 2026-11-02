@@ -1,4 +1,4 @@
-import { Toggle } from '@weft/warp'
+import { Toggle } from '@weft-js/warp'
 
 type Tab = 'products' | 'cart'
 type Props = { tab: Tab; count: number; onTab: (tab: Tab) => void }

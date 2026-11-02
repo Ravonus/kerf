@@ -1,5 +1,5 @@
-import { derived, state, watch } from 'weft'
-import { group } from 'weft/style'
+import { derived, state, watch } from '@weft-js/core'
+import { group } from '@weft-js/core/style'
 import type { Api, Product } from './api'
 import { CartView } from './components/CartView'
 import { Header } from './components/Header'

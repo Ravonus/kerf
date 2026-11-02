@@ -70,7 +70,7 @@ carries a compact tree instead:
 | optional, nullable | absent, `null` | research 11's rule; `.meta({ probability })` of 0.5 or more keeps it |
 | number, boolean | the value `0`, `false` | same |
 
-`@weft/start` evaluates server modules once to get the schemas: the dev server's SSR environment in dev, and a private
+`@weft-js/start` evaluates server modules once to get the schemas: the dev server's SSR environment in dev, and a private
 Vite server at build, the same way `.weft/contract.json` is written. It runs only when a project uses
 `pending="shape"` or `.shape`. Without those, no module is loaded and the stubs are unchanged.
 
@@ -108,10 +108,10 @@ would fire effects and queries with fake ids.
 ran and registered its resource. The variant only says which query it wants (`$$sr(listPosts)`), and the Boundary
 finds that resource, with the real input, however that input was computed.
 
-**warp apps** load the skeleton CSS with `<Shape>` or `<Skeleton>`, or `import '@weft/warp/skeleton'` when neither is
+**warp apps** load the skeleton CSS with `<Shape>` or `<Skeleton>`, or `import '@weft-js/warp/skeleton'` when neither is
 on the page. Without it (no warp), the reservation still holds: the placeholder is transparent, with no shimmer.
 
-**Cost.** Variants are emitted only when `weft/vite` asks (`options.shapes`), and each is a plain function nothing
+**Cost.** Variants are emitted only when `@weft-js/core/vite` asks (`options.shapes`), and each is a plain function nothing
 imports until a `pending="shape"` reaches it, so tree-shaking removes the rest. A component with no consumer costs 0
 bytes in production (§9). Across modules, the plugin tells the compiler which relative imports have variants, the same
 way it passes style groups, so a variant never imports a name that doesn't exist. A re-exporting barrel counts as no
@@ -121,10 +121,10 @@ variant.
 style="display:contents">`, so flex and grid parents lay out the variant's elements as they will the content's. X031's
 measuring walks through `display: contents`.
 
-## 6. `<Text reserve>` (`weft/text`)
+## 6. `<Text reserve>` (`@weft-js/core/text`)
 
 ```tsx
-import { Text } from 'weft/text'
+import { Text } from '@weft-js/core/text'
 <Text as="p" reserve={200}>{post.value?.body}</Text>       // 200 characters' worth, until the text arrives
 <Text as="h2" reserve={posts.shape?.[0].title}>{title}</Text>   // a sample string
 ```
@@ -193,10 +193,10 @@ Two things this measurement changed:
 | runtime (every export) | 6.37 KB | 6.45 KB |
 | `Boundary` + `resource` | 3.64 KB | 3.72 KB (+82 B) |
 | a `pending="shape"` page, against the same page with a hand-written fallback | 3.91 KB | 4.26 KB (+350 B) |
-| `@weft/start`'s client: `fill` and `mask` | | at most 407 B, on every page that loads a query |
+| `@weft-js/start`'s client: `fill` and `mask` | | at most 407 B, on every page that loads a query |
 
 A component no `pending="shape"` reaches costs 0 bytes: `test/shape-size.test.ts` checks that neither its variant nor
-weft/shape reaches the bundle. `Text` is only in a page that imports `weft/text`.
+@weft-js/core/shape reaches the bundle. `Text` is only in a page that imports `@weft-js/core/text`.
 
 **Hydration.** A streamed `pending="shape"` fallback, then the content, hydrates with 0 misses and 0 writes.
 

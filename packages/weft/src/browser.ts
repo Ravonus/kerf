@@ -1,4 +1,4 @@
-// weft/browser: browser events as reactive values (PLAN §4.2, research 07 §6): `online`, `visible`, `lifecycle`,
+// @weft-js/core/browser: browser events as reactive values (PLAN §4.2, research 07 §6): `online`, `visible`, `lifecycle`,
 // `media`, `on`, `interval` and `tabs.channel` (research 32); `storage` is `state(…, { persist })` inside `defineState`
 // (§4.5).
 //
@@ -15,7 +15,7 @@ type Handlers = Set<Handler> & { h?: Handler }
 
 const targets = new WeakMap<EventTarget, Map<string, Handlers>>()
 
-/** Dev only: what is open right now and how to close it, for weft/test's leak check (T012). */
+/** Dev only: what is open right now and how to close it, for @weft-js/core/test's leak check (T012). */
 export const open = new Map<object, [what: string, close: () => void]>()
 
 const where = () => (devComponent.label ? ` in ${devComponent.label}` : '')

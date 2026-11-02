@@ -1,5 +1,5 @@
-// `@weft/warp-core/weft`: `use` puts an action on an element from a weft component, with no @weft/warp installed.
-import { createRoot, flush, runMounts, state } from 'weft'
+// `@weft-js/warp-core/weft`: `use` puts an action on an element from a weft component, with no @weft-js/warp installed.
+import { createRoot, flush, runMounts, state } from '@weft-js/core'
 import { use } from '../bindings/weft'
 
 const action = () => {

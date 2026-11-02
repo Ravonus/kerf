@@ -4,19 +4,19 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { brotliCompressSync, constants } from 'node:zlib'
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 const br = text => brotliCompressSync(Buffer.from(text), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 const pkg = new URL('..', import.meta.url).pathname
 
-// A project inside the package, so it resolves weft. Its alias file picks the tiers; '@weft/icons' to itself means all of them.
+// A project inside the package, so it resolves weft. Its alias file picks the tiers; '@weft-js/warp-icons' to itself means all of them.
 function project(alias) {
   const dir = mkdtempSync(join(pkg, '.tmp-'))
   mkdirSync(join(dir, '.weft', 'tokens'), { recursive: true })
   writeFileSync(join(dir, '.weft', 'tokens', 'icons.alias.json'), JSON.stringify(alias))
   return dir
 }
-const ALL = { '@weft/icons': '@weft/icons' }
+const ALL = { '@weft-js/warp-icons': '@weft-js/warp-icons' }
 async function bundle(code, { alias = ALL } = {}) {
   const root = project(alias)
   writeFileSync(join(root, 'app.tsx'), code) // the build scans the project's files
@@ -32,7 +32,7 @@ async function run(code, root) {
   const files = (Array.isArray(out) ? out : [out]).flatMap(o => o.output)
   return { chunks: files.filter(f => f.type === 'chunk').map(f => f.code), js: files.filter(f => f.type === 'chunk').map(f => f.code).join('\n'), css: files.filter(f => f.fileName.endsWith('.css')).map(f => String(f.source)).join('\n') }
 }
-const page = (names, from = '@weft/icons') => `import { render } from 'weft/dom'\nimport { ${names.join(', ')} } from '${from}'\nrender(() => <div>${names.map(n => `<${n} />`).join('')}</div>, document.body)\n`
+const page = (names, from = '@weft-js/warp-icons') => `import { render } from '@weft-js/core/dom'\nimport { ${names.join(', ')} } from '${from}'\nrender(() => <div>${names.map(n => `<${n} />`).join('')}</div>, document.body)\n`
 
 test('one icon imported: its drawing ships, and no other', async () => {
   const one = await bundle(page(['CheckIcon']))
@@ -46,13 +46,13 @@ test('one icon imported: its drawing ships, and no other', async () => {
 }, 60000)
 
 test('importing iconSet alone brings no drawing', async () => {
-  const { js } = await bundle(`import { render } from 'weft/dom'\nimport { iconSet } from '@weft/icons'\nconst Icon = iconSet({})\nrender(() => <div>{typeof Icon}</div>, document.body)\n`)
+  const { js } = await bundle(`import { render } from '@weft-js/core/dom'\nimport { iconSet } from '@weft-js/warp-icons'\nconst Icon = iconSet({})\nrender(() => <div>{typeof Icon}</div>, document.body)\n`)
   expect(js).not.toContain('data-p')
 }, 60000)
 
 test('a static tier compiles one tier in: no switch attributes, no switch CSS, no other tier', async () => {
   {
-    const { js, css } = await bundle(page(['CheckIcon', 'AlertIcon']), { alias: { '@weft/icons': '@weft/icons/vivid' } })
+    const { js, css } = await bundle(page(['CheckIcon', 'AlertIcon']), { alias: { '@weft-js/warp-icons': '@weft-js/warp-icons/vivid' } })
     expect(js).toContain('data-p')
     expect(js).not.toContain('data-t')
     expect(js).not.toContain('stroke-linecap')
@@ -75,12 +75,12 @@ test('per tier, per icon: what an icon costs in each build', async () => {
 }, 60000)
 
 // All three forms name one icon, so all three must build to the same bytes. Each path's cost, for the report.
-const render = "import { render } from 'weft/dom'\n"
+const render = "import { render } from '@weft-js/core/dom'\n"
 const forms = {
-  named: `${render}import { BellIcon } from '@weft/icons'\nrender(() => <div><BellIcon /></div>, document.body)\n`,
-  pack: `${render}import Icons from '@weft/icons'\nrender(() => <div><Icons.Bell /></div>, document.body)\n`,
-  namespace: `${render}import * as Icons from '@weft/icons'\nrender(() => <div><Icons.Bell /></div>, document.body)\n`,
-  name: `${render}import { Icon } from '@weft/icons/all'\nrender(() => <div><Icon name="bell" /></div>, document.body)\n`,
+  named: `${render}import { BellIcon } from '@weft-js/warp-icons'\nrender(() => <div><BellIcon /></div>, document.body)\n`,
+  pack: `${render}import Icons from '@weft-js/warp-icons'\nrender(() => <div><Icons.Bell /></div>, document.body)\n`,
+  namespace: `${render}import * as Icons from '@weft-js/warp-icons'\nrender(() => <div><Icons.Bell /></div>, document.body)\n`,
+  name: `${render}import { Icon } from '@weft-js/warp-icons/all'\nrender(() => <div><Icon name="bell" /></div>, document.body)\n`,
 }
 test.each(Object.keys(forms))('%s: exactly one icon, the same output as a named import', async form => {
   const base = await bundle(forms.named), out = await bundle(forms[form])
@@ -91,12 +91,12 @@ test.each(Object.keys(forms))('%s: exactly one icon, the same output as a named 
 }, 60000)
 test('a variant ships its own drawing, not the plain one', async () => {
   const plain = await bundle(forms.named)
-  const solid = await bundle(`${render}import { BellIconSolid } from '@weft/icons'\nrender(() => <div><BellIconSolid /></div>, document.body)\n`)
+  const solid = await bundle(`${render}import { BellIconSolid } from '@weft-js/warp-icons'\nrender(() => <div><BellIconSolid /></div>, document.body)\n`)
   expect(solid.js).not.toBe(plain.js)
   process.stderr.write(`BYTES BellIcon ${br(plain.js)}, BellIconSolid ${br(solid.js)}\n`)
 }, 60000)
 test('a dynamic name: the pack is its own chunk, and the page stays small', async () => {
-  const lazy = await bundle(`${render}import { Icon } from '@weft/icons/all'\nconst n = location.hash.slice(1)\nrender(() => <div><Icon name={n} /></div>, document.body)\n`)
+  const lazy = await bundle(`${render}import { Icon } from '@weft-js/warp-icons/all'\nconst n = location.hash.slice(1)\nrender(() => <div><Icon name={n} /></div>, document.body)\n`)
   expect(lazy.chunks.length).toBeGreaterThan(1)
   const [main, ...rest] = lazy.chunks.toSorted((a, b) => a.length - b.length)
   process.stderr.write(`BYTES dynamic: page ${br(main)} B js, pack chunk ${br(rest.join(''))} B\n`)
@@ -106,7 +106,7 @@ test('a dynamic name: the pack is its own chunk, and the page stays small', asyn
 test('an action costs nothing unless that one is used', async () => {
   const none = await bundle(forms.named)
   expect(none.css).not.toMatch(/weft-(trash|bell|check|refresh|copy)/)
-  const trash = await bundle(`${render}import { TrashIconAction } from '@weft/icons'\nrender(() => <div><TrashIconAction /></div>, document.body)\n`)
+  const trash = await bundle(`${render}import { TrashIconAction } from '@weft-js/warp-icons'\nrender(() => <div><TrashIconAction /></div>, document.body)\n`)
   expect(trash.css).toContain('weft-trash'); expect(trash.css).not.toContain('weft-bell')
   expect(trash.css).toContain('prefers-reduced-motion'); expect(trash.css).toContain('--warp-motion-scale')
   process.stderr.write(`BYTES TrashIconAction: ${br(trash.js)} B js, ${br(trash.css)} B css (plain icon ${br(none.js)} js, ${br(none.css)} css)\n`)

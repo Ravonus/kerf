@@ -1,4 +1,4 @@
-import { fuzzyIndex, openIndex, searchIndex, type SearchHit, type SearchIndex, type SearchWire } from '@weft/warp-core'
+import { fuzzyIndex, openIndex, searchIndex, type SearchHit, type SearchIndex, type SearchWire } from '@weft-js/warp-core'
 import files from '../generated/search.json'
 
 // Two tiers (research 38 §2). T0, titles, stays in this module for the life of the page and answers a key press in the

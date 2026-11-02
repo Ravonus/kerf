@@ -76,5 +76,5 @@ test('the client build of a route has no load, meta or prerender, and no import 
   const out = stripServerExports(readFileSync(file, 'utf8'), file)
   expect(out).not.toMatch(/export const (load|meta|prerender)|db\.user|notFound|from '..\/..\/db'/) // `typeof load` in a type stays: types are erased
   expect(out).toContain('export default function User')
-  expect(out).toMatch(/import \{ type RouteProps \} from '@weft\/start'|import type/)
+  expect(out).toMatch(/import \{ type RouteProps \} from '@weft-js\/start'|import type/)
 })

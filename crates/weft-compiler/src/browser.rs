@@ -2,8 +2,8 @@
 //! over the program, after `analyze`.
 //!
 //! - W050: a raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no
-//!   matching cleanup. Listeners and intervals in an owned place get an edit to `on`/`interval` (weft/browser).
-//! - W051: a weft/browser value, listener or interval created where there is no owner: module scope, a timer, a
+//!   matching cleanup. Listeners and intervals in an owned place get an edit to `on`/`interval` (@weft-js/core/browser).
+//! - W051: a @weft-js/core/browser value, listener or interval created where there is no owner: module scope, a timer, a
 //!   promise callback, an event handler, or after `await`.
 //! - W052: `watch(() => tick.value, m => { list.value = [...list.value, m] })`: a stream folded by hand into a
 //!   component's `state`, which is lost when the component unmounts (the v3 bug). A stream is a call of something
@@ -22,19 +22,19 @@ use oxc_syntax::scope::ScopeFlags;
 
 use crate::diag::{Diagnostic, Edit, Fix, Severity};
 
-pub const MODULE: &str = "weft/browser";
+pub const MODULE: &str = "@weft-js/core/browser";
 const VALUES: [&str; 4] = ["online", "visible", "lifecycle", "media"];
 
 /// Whether the file is server-rendered, for W054: `Some(true)` for SSR and hydratable output, `None` when only
 /// checking (it may be), `Some(false)` for a client-only build.
 pub type Ssr = Option<bool>;
 
-/// Local bindings of weft/browser's values (`online`, `visible`, `lifecycle`, `media`): their results are boxes.
+/// Local bindings of @weft-js/core/browser's values (`online`, `visible`, `lifecycle`, `media`): their results are boxes.
 pub fn value_imports(program: &Program<'_>) -> HashSet<SymbolId> {
     imports(program).into_iter().filter(|(_, (name, _))| VALUES.contains(&name.as_str())).map(|(s, _)| s).collect()
 }
 
-/// weft/browser import bindings: symbol → (imported name, local name).
+/// @weft-js/core/browser import bindings: symbol → (imported name, local name).
 fn imports(program: &Program<'_>) -> HashMap<SymbolId, (String, String)> {
     let mut out = HashMap::new();
     for stmt in &program.body {
@@ -154,9 +154,9 @@ struct Checker<'s> {
     imports: HashMap<SymbolId, (String, String)>,
     bound: HashMap<String, u32>,
     last_import: Option<u32>,
-    /// The end of the last specifier of a weft/browser import, where a fix adds a name.
+    /// The end of the last specifier of a @weft-js/core/browser import, where a fix adds a name.
     browser_import: Option<u32>,
-    /// Symbols holding a live value: a weft/browser value, or `query.live(…)`.
+    /// Symbols holding a live value: a @weft-js/core/browser value, or `query.live(…)`.
     live: HashSet<SymbolId>,
     /// Bindings imported from a server module: calling one in a component reads a query or a stream.
     server_imports: HashSet<SymbolId>,
@@ -191,7 +191,7 @@ impl<'s> Checker<'s> {
         &self.source[span.start as usize..span.end as usize]
     }
 
-    /// The weft/browser export this callee is, if it is one.
+    /// The @weft-js/core/browser export this callee is, if it is one.
     fn browser_fn(&self, callee: &Expression<'_>) -> Option<&str> {
         let Expression::Identifier(id) = callee.without_parentheses() else {
             return None;
@@ -214,7 +214,7 @@ impl<'s> Checker<'s> {
         Role::Unowned("at module scope")
     }
 
-    /// The local name to call weft/browser's `name` by, and the import edit it needs; `None` when the name is taken.
+    /// The local name to call @weft-js/core/browser's `name` by, and the import edit it needs; `None` when the name is taken.
     fn browser_name(&self, name: &str) -> Option<(String, Option<Edit>)> {
         if let Some((_, local)) = self.imports.values().find(|(n, _)| n == name) {
             return Some((local.clone(), None));
@@ -277,7 +277,7 @@ impl<'s> Checker<'s> {
                 format!(
                     "`{target}.addEventListener({ty}, …)` in a component is never removed: it outlives the component and fires after it unmounts."
                 ),
-                format!("Use `on({target}, {ty}, …)` from weft/browser: its owner removes it. Or remove it in `onCleanup`."),
+                format!("Use `on({target}, {ty}, …)` from @weft-js/core/browser: its owner removes it. Or remove it in `onCleanup`."),
             );
             if let Some(f) = fix {
                 d = d.with_fix(f);
@@ -292,7 +292,7 @@ impl<'s> Checker<'s> {
                     Severity::Error,
                     (span.start, span.end),
                     "`setInterval` in a component is never cleared: it keeps running after the component unmounts.",
-                    "Use `interval(ms, fn)` from weft/browser: its owner clears it. Or `clearInterval` in `onCleanup`.",
+                    "Use `interval(ms, fn)` from @weft-js/core/browser: its owner clears it. Or `clearInterval` in `onCleanup`.",
                 );
                 if let Some(f) = fix {
                     d = d.with_fix(f);
@@ -371,7 +371,7 @@ impl<'s> Checker<'s> {
         }
     }
 
-    /// W051 and W054 on a call of a weft/browser export.
+    /// W051 and W054 on a call of a @weft-js/core/browser export.
     fn browser_call(&mut self, call: &CallExpression<'_>, name: &str) {
         if let Role::Unowned(why) = self.ownership() {
             let what = if VALUES.contains(&name) {

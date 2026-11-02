@@ -3,9 +3,9 @@
 Hover, focus and press are usually a pile of event handlers. `interaction()` makes them plain values you can read, draw and share. An app that doesn't use it ships none of it.
 
 ```tsx
-import { derived, watch } from 'weft'
-import { interaction } from 'weft/interaction'
-import { Button, Checkbox } from '@weft/warp'
+import { derived, watch } from '@weft-js/core'
+import { interaction } from '@weft-js/core/interaction'
+import { Button, Checkbox } from '@weft-js/warp'
 
 function TodoRow({ todo }) {
   const row = interaction({ share: () => `todo:${todo.id}` })
@@ -38,7 +38,7 @@ Give a warp component the row with `ui`, and it fills the row from real events a
 | Other tabs of this browser | `BroadcastChannel`, one post a frame at most | nothing |
 | Other browsers | one socket per browser, held by one tab | allow it, below |
 
-Drop `share` and the row is private to that one `interaction()` call. An app without `@weft/start` shares on the page only.
+Drop `share` and the row is private to that one `interaction()` call. An app without `@weft-js/start` shares on the page only.
 
 When the tab holding the socket closes or crashes, another tab takes over; nothing flashes, and nobody sees a gap except, for one round trip, a hover made during the handover. When a tab or client goes, what it held clears.
 
@@ -47,7 +47,7 @@ When the tab holding the socket closes or crashes, another tab takes over; nothi
 Sharing with other clients is off until you say who may, in `src/realtime.server.ts`:
 
 ```ts
-import { realtime } from '@weft/start'
+import { realtime } from '@weft-js/start'
 
 export default realtime({ share: ({ ctx, key }) => canSeeTodo(ctx.user, key) })
 ```
@@ -62,7 +62,7 @@ export default realtime({
 
 Either form runs when a client joins and at each session re-check, and uses the same `ctx` as a channel's `authorize`. A rule that throws refuses what it was asked. With no `share` the socket refuses every key (R011), and a refused key still works between tabs. `() => true` must be written out.
 
-Peers see the three bits and an opaque connection id. No name, no pointer position, nothing typed. For names and cursors use `@weft/multiplayer`.
+Peers see the three bits and an opaque connection id. No name, no pointer position, nothing typed. For names and cursors use `@weft-js/multiplayer`.
 
 **Hover tells people things.** What someone lingers on in a shared document, or which field of a form has focus, is a real signal. warp never shares by default: you opt in row by row, and it's worth telling your users.
 

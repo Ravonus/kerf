@@ -1,6 +1,6 @@
-import { Button } from '@weft/warp'
-import { state } from 'weft'
-import { render } from 'weft/dom'
+import { Button } from '@weft-js/warp'
+import { state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 
 const fetchSheet = () => import('./NavDrawer')
 

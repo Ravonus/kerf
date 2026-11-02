@@ -1,4 +1,4 @@
-import { flush, onCleanup, onMount, state, watch } from 'weft'
+import { flush, onCleanup, onMount, state, watch } from '@weft-js/core'
 import { COLOURS, threads, weaver } from '../lib/loom'
 
 const low = () => {

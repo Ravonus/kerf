@@ -1,5 +1,5 @@
-import { Link, type Meta } from '@weft/start'
-import { CodeBlock } from '@weft/warp'
+import { Link, type Meta } from '@weft-js/start'
+import { CodeBlock } from '@weft-js/warp'
 import { TierPicker } from '../../components/TierPicker'
 import { ToolkitDemo } from '../../components/ToolkitDemo'
 import nav from '../../generated/toolkit-nav.json'

@@ -1,11 +1,11 @@
 // The rich inputs: keyboard behaviour against 04 §1.3–1.4, ARIA wiring, and SSR + hydration with the locale pinned.
-import { resetIds } from '@weft/warp-core'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { flush, render } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import * as C from './fixtures/Rich'
-// @ts-expect-error: query imports (weft/vite)
+// @ts-expect-error: query imports (@weft-js/core/vite)
 import * as server from './fixtures/Rich.tsx?weft-ssr'
 // @ts-expect-error
 import * as client from './fixtures/Rich.tsx?weft-hydrate'

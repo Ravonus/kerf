@@ -1,6 +1,6 @@
 // weft-allow T005: the shop's acceptance contract names data-testid values (name, qty, total)
 import { screen as dom, within } from '@testing-library/dom'
-import { render, screen, user } from 'weft/test'
+import { render, screen, user } from '@weft-js/core/test'
 import type { Api, Product } from '../src/api'
 import { App } from '../src/App'
 

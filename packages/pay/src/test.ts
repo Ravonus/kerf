@@ -1,10 +1,10 @@
 // fakePay (research 10 §8): a second `pay.rail` provider, which keeps a rail's state machine in memory. Every event goes the
 // way a real one does, signed, through the app's own `webhook`, ledger and tag pokes, so a test asserts what the user sees
-// and what the server grants. It holds no key and opens no connection, and it reaches weft/test only through `net` and
+// and what the server grants. It holds no key and opens no connection, and it reaches @weft-js/core/test only through `net` and
 // `clock`, which any plugin can use. `payRailSuite` is what a rail, this one included, is held to.
 
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { clock, net } from 'weft/test'
+import { clock, net } from '@weft-js/core/test'
 import { definePay, memoryPayStore, type Pay, type PayOptions, type Purchase } from './server'
 import { PayError, type CheckoutRequest, type Interval, type PayRail, type Product, type PurchaseState, type RailEvent } from './index'
 

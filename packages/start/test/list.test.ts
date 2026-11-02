@@ -2,9 +2,9 @@
 import { DatabaseSync } from 'node:sqlite'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { drizzle } from 'drizzle-orm/sqlite-proxy'
-import { LIST_ROWS, listSuite } from 'weft/test/plugins'
-import { decodeCursor, encodeCursor, listInput } from '@weft/start/list'
-import { drizzleSource } from '@weft/start/list/drizzle'
+import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
+import { decodeCursor, encodeCursor, listInput } from '@weft-js/start/list'
+import { drizzleSource } from '@weft-js/start/list/drizzle'
 
 const input = listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 10, max: 50 } })
 const parse = (v: unknown): any => input['~standard'].validate(v)

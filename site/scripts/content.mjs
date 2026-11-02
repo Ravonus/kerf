@@ -66,9 +66,9 @@ const LEADS = {
   rules: 'Nine rules cover how every weft component behaves. The example below uses most of them. Nearly all carry a code, so when you break one, the build names it and says how to fix it.',
   lists: 'Lists and conditionals work as they do in React: `.map` with a `key`, `&&` and ternaries. This page covers the mistakes to avoid and the few habits that keep a long list fast.',
   async: 'Load data with `resource`, and say what to show while it loads with `Boundary`. On the server, weft can wait for that data so the first page arrives filled in.',
-  start: '`@weft/start` is the full-stack part of weft: routes from files, server functions, a database, auth and realtime. A new app from `create-weft` already has it.',
-  browser: "`weft/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
-  testing: '`weft/test` renders components under vitest and drives them as a user would. `weft check` also flags tests that would pass whatever the code did.',
+  start: '`@weft-js/start` is the full-stack part of weft: routes from files, server functions, a database, auth and realtime. A new app from `create-weft` already has it.',
+  browser: "`@weft-js/core/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
+  testing: '`@weft-js/core/test` renders components under vitest and drives them as a user would. `weft check` also flags tests that would pass whatever the code did.',
 }
 
 /** The nav. A page's source is `weft docs <topic>` wherever one exists, so the site and the CLI read one file. */
@@ -314,10 +314,10 @@ function buildToolkit() {
     if (!found.length) orphans.push(c.name)
     const cases = found.slice(0, 4).map((f, i) => {
       const names = f.tags.filter(t => components.some(x => x.name === t))
-      const code = `import { ${names.join(', ')} } from '@weft/warp'\n\n${f.source}`
+      const code = `import { ${names.join(', ')} } from '@weft-js/warp'\n\n${f.source}`
       return { file: f.file, name: f.name, label: i ? `Variant ${i}` : 'Preview', html: codeBlock(code, 'tsx') }
     })
-    pages[c.slug] = { ...c, lede: cleanDoc(c.doc), description: blurb(c.name, cleanDoc(c.doc)), cases, use: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx') }
+    pages[c.slug] = { ...c, lede: cleanDoc(c.doc), description: blurb(c.name, cleanDoc(c.doc)), cases, use: codeBlock(`import { ${c.name} } from '@weft-js/warp'`, 'tsx') }
   }
   const order = ['Layout', 'Type', 'Actions', 'Inputs', 'Dates and time', 'Overlays', 'Feedback', 'Surfaces', 'Data', 'Charts', 'Agent', 'Schedule', 'Live', 'Collaboration', 'Flow', 'Admin', 'More']
   const nav = order.map(group => ({ group, items: components.filter(c => c.group === group).map(({ name, slug }) => ({ name, slug })) })).filter(g => g.items.length)
@@ -397,7 +397,7 @@ function buildArt() {
 /** The landing's code moment and diagnostic, from the real compiler. */
 function buildShowcase() {
   const { transform } = loadCompiler(resolveWeft(site))
-  const source = `import { state } from 'weft'
+  const source = `import { state } from '@weft-js/core'
 
 export function Counter() {
   const n = state(0)
@@ -427,7 +427,7 @@ export function Counter() {
   return <b>{total}</b>
   return <b>{total.value}</b>
 }`
-  const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
+  const habit = transform(`import { state } from '@weft-js/core'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
   if (!habit) throw new Error('the showcase expects W005')
   const server = `// src/server/shop.ts
 export const products = query({

@@ -1,8 +1,8 @@
 # How pay is built
 
-A plugin is one pure manifest. `@weft/pay` is the worked example: payments, with a webhook, a ledger, a fake for tests, its
+A plugin is one pure manifest. `@weft-js/pay` is the worked example: payments, with a webhook, a ledger, a fake for tests, its
 own diagnostics and `weft add` steps. It uses only what any plugin can use, and a test holds that to be true: `weft`,
-`@weft/start` and the CLI don't name it. Read `packages/pay/plugin.mjs` next to this page. It's about 60 lines.
+`@weft-js/start` and the CLI don't name it. Read `packages/pay/plugin.mjs` next to this page. It's about 60 lines.
 
 ## The shape
 
@@ -17,14 +17,14 @@ packages/pay/                     packages/pay/ (`src/stripe.ts`)
   docs/pay.md      `weft docs pay`
 ```
 
-Two packages, because they answer different questions. `@weft/pay` is what payments means here, and it names no provider.
+Two packages, because they answer different questions. `@weft-js/pay` is what payments means here, and it names no provider.
 A rail is how a payment happens. `fakePay` is a second rail, which is how you know the seam is real.
 
 ## 1. Start from `definePlugin`
 
 ```js
 export const pay = definePlugin({
-  name: '@weft/pay', version: '0.0.0', weft: '*', namespace: 'PAY', permissions: {},
+  name: '@weft-js/pay', version: '0.0.0', weft: '*', namespace: 'PAY', permissions: {},
   contribute: () => ({ provides: [...], diagnostics, check, docs, setup, agents, catalog, map }),
 })
 ```
@@ -43,12 +43,12 @@ Pay provides `server.extension`, the slot for anything that needs a server prese
 
 ```js
 provide(defineSlot({ id: 'server.extension', version: 1, cardinality: 'keyed', sides: ['server'] }),
-  { key: 'pay', sides: { server: { module: '@weft/pay/server', export: 'extension' } } })
+  { key: 'pay', sides: { server: { module: '@weft-js/pay/server', export: 'extension' } } })
 ```
 
 The key is the mount: `/_weft/x/pay/...`. A keyed provider also needs `src/<key>.server.ts`, the app's own configuration, and
 weft passes that module's default export to your provider. So `src/pay.server.ts` is `definePay({...})`, and the provider is
-one line: `extension = app => app`. A `ServerExtension` (`@weft/start/extension`) may have any of:
+one line: `extension = app => app`. A `ServerExtension` (`@weft-js/start/extension`) may have any of:
 
 | Member | What it does | What pay uses it for |
 | --- | --- | --- |
@@ -59,7 +59,7 @@ one line: `extension = app => app`. A `ServerExtension` (`@weft/start/extension`
 | `personal` | `ctx` keys a shared cache can't read | `entitlements` (Q006) |
 | `check(dev)` | Refuses a bad boot | The in-memory ledger in production |
 
-Types follow: augment `Context` and `FnOptions` in `declare module '@weft/start'`, and `ctx.entitlements` and `requires`
+Types follow: augment `Context` and `FnOptions` in `declare module '@weft-js/start'`, and `ctx.entitlements` and `requires`
 are typed in any app that imports your server module. An error class with an `answer` getter reaches the client as a
 typed error, with that code and status.
 
@@ -74,7 +74,7 @@ const rail = await load('stripe')
 ```
 
 Another provider means another `provide(...)`, and app code doesn't change. A plugin's own slot is named `<plugin name>.<slot>`;
-`pay.rail` is in weft's slot table only because PLAN §7c listed it from the start. `@weft/pay/stripe` is a short manifest,
+`pay.rail` is in weft's slot table only because PLAN §7c listed it from the start. `@weft-js/pay/stripe` is a short manifest,
 and a good template for a provider.
 
 ## 4. Report your own diagnostics
@@ -96,10 +96,10 @@ PAY011 (a webhook handler with no signature check). Test a hook as a plain funct
 
 ## 5. Give it a fake
 
-A plugin that talks to the outside world ships the fake with it. `fakePay` is a real `PayRail` in memory, and reaches `weft/test`
+A plugin that talks to the outside world ships the fake with it. `fakePay` is a real `PayRail` in memory, and reaches `@weft-js/core/test`
 only through what's public: `net.extension(pay)` puts your extension in the test's scope and resets it afterwards, `net.poke`
 delivers tags to live queries, `clock` moves time. Events go through the app's real webhook and ledger, so a test
-sees what a user sees. It's imported from `@weft/pay/test`, since core can't depend on a plugin.
+sees what a user sees. It's imported from `@weft-js/pay/test`, since core can't depend on a plugin.
 
 ## 6. Make `weft add` do the wiring
 
@@ -107,7 +107,7 @@ sees what a user sees. It's imported from `@weft/pay/test`, since core can't dep
 
 ```js
 export const setup = {
-  with: ['@weft/pay/stripe'],     // added too
+  with: ['@weft-js/pay/stripe'],     // added too
   needs: ['db', 'auth'],                 // refused, with nothing changed, until they're there
   run({ engine, layer, read }) {
     return { files: {...}, edits: {...}, env: { STRIPE_SECRET_KEY: 'sk_test_placeholder' }, next: ['...'] }

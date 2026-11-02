@@ -103,7 +103,7 @@ variable. A failed dev build leaves the manifest alone, so the old library keeps
 | A `.wasm` that won't build is a warning | The addon runs on this machine; it's only an error on a preset that needs the fallback | `rust.services.<name>.wasm: false` |
 | `weft::native!`, not a `#[napi]` in the app | An app shouldn't learn napi, and the same line builds for WASM | |
 | R105 needs `tags` | A cached query with no tags reads no table: that's a pure function, and asking it to `touch` would be noise | |
-| The crate ships inside `@weft/start` | It isn't on crates.io, and this way runtime, codegen and TS can't disagree on a version | |
+| The crate ships inside `@weft-js/start` | It isn't on crates.io, and this way runtime, codegen and TS can't disagree on a version | |
 | `native` is `weft add rust`'s default | One hot function is the common case, and it's the one with nothing to run | `--remote` |
 
 ## 7. What it costs
@@ -150,5 +150,5 @@ R103 gains a library from another contract, refused when it loads. A name used b
 - WASM holds the event loop for the whole call.
 - `UV_THREADPOOL_SIZE` is set from JS, which holds only if nothing used the pool first. The check passes on `weft start`; an app
   that does disk IO at module load before `native()` runs would keep 4.
-- The crate still isn't on crates.io. `weft add rust` writes a path into `node_modules/@weft/start/crate`, so `cargo` needs
+- The crate still isn't on crates.io. `weft add rust` writes a path into `node_modules/@weft-js/start/crate`, so `cargo` needs
   `npm install` to have run.

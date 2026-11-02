@@ -1,5 +1,5 @@
-import { at, asTime, dateOf, fmt, minuteOf, minutes, type CalEvent, type IsoDate, type IsoTime } from '@weft/warp-core'
-import { derived, flush, state, untrack, type State } from 'weft'
+import { at, asTime, dateOf, fmt, minuteOf, minutes, type CalEvent, type IsoDate, type IsoTime } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Switch } from '../Choice'
 import { DateField } from '../DateField'

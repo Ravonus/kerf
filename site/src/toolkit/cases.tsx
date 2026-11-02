@@ -1,7 +1,7 @@
 // The toolkit page's demos. Each sits between // #id and the next marker, and the page shows that text as its code, so
 // what you read is what is running.
-import { state } from 'weft'
-import { Accordion, Alert, Badge, Button, Canvas, Card, Checkbox, Chip, CommandPalette, Dither, DitherField, DitherGlyph, Drawer, Input, Kbd, Menu, Modal, Popover, Progress, RadioGroup, Search, Segmented, Select, Skeleton, Slider, Spinner, Switch, Table, Tabs, Tag, Textarea, Ticker, Toaster, Toggle, Tooltip, toast } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Accordion, Alert, Badge, Button, Canvas, Card, Checkbox, Chip, CommandPalette, Dither, DitherField, DitherGlyph, Drawer, Input, Kbd, Menu, Modal, Popover, Progress, RadioGroup, Search, Segmented, Select, Skeleton, Slider, Spinner, Switch, Table, Tabs, Tag, Textarea, Ticker, Toaster, Toggle, Tooltip, toast } from '@weft-js/warp'
 
 // #button
 export function ButtonDemo() {

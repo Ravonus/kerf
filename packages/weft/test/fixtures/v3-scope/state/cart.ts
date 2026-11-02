@@ -1,4 +1,4 @@
-import { defineState, derived, state } from 'weft'
+import { defineState, derived, state } from '@weft-js/core'
 import type { Product } from '../api'
 
 export type CartLine = { qty: number; addedPrice: number }

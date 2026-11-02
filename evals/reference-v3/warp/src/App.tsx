@@ -1,5 +1,5 @@
-import { derived, state, watch } from 'weft'
-import { Skeleton } from '@weft/warp'
+import { derived, state, watch } from '@weft-js/core'
+import { Skeleton } from '@weft-js/warp'
 import type { Api, Product } from './api'
 import { CartView } from './components/CartView'
 import { Header } from './components/Header'

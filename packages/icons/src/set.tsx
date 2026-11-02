@@ -1,6 +1,6 @@
-// `<Icon name>` over the icons you list: a name is a lookup, so only a list can stay tree-shakable. `@weft/icons/all` is
+// `<Icon name>` over the icons you list: a name is a lookup, so only a list can stay tree-shakable. `@weft-js/warp-icons/all` is
 // the same thing over every icon, for an app that takes names from data. An icon itself passes straight through.
-import { untrack } from 'weft'
+import { untrack } from '@weft-js/core'
 import type { IconComponent, IconProps } from './svg'
 
 export function iconSet<const S extends Record<string, IconComponent>>(icons: S) {

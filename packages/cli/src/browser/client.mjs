@@ -1,4 +1,4 @@
-// The `weft browser` transport: commands go to the dev server, which relays them to an open tab of the app (weft/agent
+// The `weft browser` transport: commands go to the dev server, which relays them to an open tab of the app (@weft-js/core/agent
 // in the page). No browser automation library: the page is whatever browser the agent or person already has open. When
 // there is none (CI, a sandbox), `launch` starts a plain headless Chrome on the app as a host page, and `screenshot`
 // reads it over the DevTools protocol.
@@ -75,7 +75,7 @@ export function findChrome() {
 
 const stateFile = root => join(root, '.weft', 'browser', 'chrome.json')
 
-/** Start a headless Chrome on `route` (a plain page; weft/agent in it connects back to the dev server). */
+/** Start a headless Chrome on `route` (a plain page; @weft-js/core/agent in it connects back to the dev server). */
 export async function launch(root, route = '/', { url, headed = false } = {}) {
   const exe = findChrome()
   if (!exe) throw fail('E_NO_CHROME', 'no Chrome or Chromium found; open the app in your own browser instead, or set WEFT_CHROME')

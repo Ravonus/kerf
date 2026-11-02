@@ -64,7 +64,7 @@ query sends no user at all.
 
 ## 5. The supervisor
 
-It lives in the CLI's side of `@weft/start` (`sidecar.mjs`), and never in the server bundle, so `remote()` stays `fetch` and
+It lives in the CLI's side of `@weft-js/start` (`sidecar.mjs`), and never in the server bundle, so `remote()` stays `fetch` and
 edge presets can call a sidecar run elsewhere.
 
 - **dev:** a small HTTP proxy holds a stable port. A rebuild starts a new child, waits for health, swaps, and drains the
@@ -80,7 +80,7 @@ timeout would expire in a queue of ~20 s, and a first request that fails is wors
 
 | Decision | Why | One setting away |
 |---|---|---|
-| `@weft/start/rust`, not `weft/rust` | `weft` has no server; every server export lives here | |
+| `@weft-js/start/rust`, not `weft/rust` | `weft` has no server; every server export lives here | |
 | The address is env, not config | It differs per deployment, and it sits next to the secret | `url` on `remote()` |
 | External sidecars | Some belong on another host | `rust.services.<name>.external` |
 | Another crate path | `crates/<name>` is the default | `rust.services.<name>.crate` |

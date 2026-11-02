@@ -1,4 +1,4 @@
-// weft/plugin: the whole plugin authoring surface (research 13 §2.3, minimal Phase 2 slice).
+// @weft-js/core/plugin: the whole plugin authoring surface (research 13 §2.3, minimal Phase 2 slice).
 
 export type Side = 'build' | 'client' | 'worker' | 'server' | 'native'
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json }

@@ -20,7 +20,7 @@ export interface AuthOptions<S extends Record<string, unknown>, O extends Better
 export function createAuth<S extends Record<string, unknown>, const O extends BetterAuthOptions = {}>({ db, schema, secret, options }: AuthOptions<S, O>) {
   const handle = db.$weft
   if (options?.database) for (const name of ['user', 'session', 'account', 'verification']) handle.exempt.add(name)
-  else throw new StartError('A005', 'Better Auth has no store', 'pass `options.database`: `drizzleAuth(db, schema)` from @weft/start/auth/drizzle, or your data layer\'s adapter')
+  else throw new StartError('A005', 'Better Auth has no store', 'pass `options.database`: `drizzleAuth(db, schema)` from @weft-js/start/auth/drizzle, or your data layer\'s adapter')
   const auth = betterAuth({
     secret,
     // A build's prerender holds no environment; a server takes `BETTER_AUTH_URL`, or the request's origin.

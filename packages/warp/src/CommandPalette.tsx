@@ -1,15 +1,15 @@
-import { SearchIcon } from '@weft/icons'
-import { dialog, listKey, moveShuttle, paletteHotkey, rankCommands, uid } from '@weft/warp-core'
-import { derived, effect, flush, state, untrack, watch } from 'weft'
+import { SearchIcon } from '@weft-js/warp-icons'
+import { dialog, listKey, moveShuttle, paletteHotkey, rankCommands, uid } from '@weft-js/warp-core'
+import { derived, effect, flush, state, untrack, watch } from '@weft-js/core'
 import { bindable, type Openable } from './bind'
 import { Icon, type IconRef } from './Icon'
 import { Kbd } from './Kbd'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/dialog.css'
-import '@weft/warp-core/styles/components/menu.css'
-import '@weft/warp-core/styles/components/command-palette.css'
-import '@weft/warp-core/styles/components/palette-motion.css'
+import '@weft-js/warp-core/styles/components/dialog.css'
+import '@weft-js/warp-core/styles/components/menu.css'
+import '@weft-js/warp-core/styles/components/command-palette.css'
+import '@weft-js/warp-core/styles/components/palette-motion.css'
 
 export interface Command {
   id?: string

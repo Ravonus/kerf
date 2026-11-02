@@ -1,6 +1,6 @@
 // Regressions from the Kobalte audit that jsdom can see; layout, stacking and Escape are in overlays.browser.test.mjs.
-import { flush, render } from 'weft/test'
-import { state } from 'weft'
+import { flush, render } from '@weft-js/core/test'
+import { state } from '@weft-js/core'
 import { AddressField, CodeInput, DateField, DateRangeField, DateTimeField, DurationField, Input, JsonEditor, KeyValueEditor, MarkdownEditor, MentionsInput, Menu, MonthPicker, PhoneField, PlaceLookupInput, RecurrenceField, SignaturePad, Slider, TimeField, TimeZoneSelect } from '../src/index'
 import { ComboField } from '../src/Combobox'
 

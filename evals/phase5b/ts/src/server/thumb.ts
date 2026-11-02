@@ -1,4 +1,4 @@
-import { query, raise } from '@weft/start/data'
+import { query, raise } from '@weft-js/start/data'
 import { z } from 'zod'
 import { thumbnail as make } from './image'
 

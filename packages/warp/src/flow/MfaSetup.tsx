@@ -1,6 +1,6 @@
-import { DownloadIcon } from '@weft/icons'
-import { announce, copyText, mapFlowError } from '@weft/warp-core'
-import { derived, state, type State } from 'weft'
+import { DownloadIcon } from '@weft-js/warp-icons'
+import { announce, copyText, mapFlowError } from '@weft-js/warp-core'
+import { derived, state, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Input } from '../Field'
@@ -8,7 +8,7 @@ import { Modal } from '../Modal'
 import { toast } from '../Toast'
 import { Flow } from './Flow'
 import { TextLink } from './kit'
-import '@weft/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/row.css'
 
 export interface MfaSetupProps {
   open: State<boolean>

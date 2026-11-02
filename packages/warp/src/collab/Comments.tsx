@@ -1,14 +1,14 @@
-import { CheckIcon } from '@weft/icons'
-import { announce, arrivalTracker, isSheet, uid, type Peer } from '@weft/warp-core'
-import { derived, onMount, state, untrack, watch, type State } from 'weft'
+import { CheckIcon } from '@weft-js/warp-icons'
+import { announce, arrivalTracker, isSheet, uid, type Peer } from '@weft-js/warp-core'
+import { derived, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { PeerAvatar, read, SWEEP, type Live } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/comment-thread.css'
-import '@weft/warp-core/styles/app/comment-anchor.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/comment-thread.css'
+import '@weft-js/warp-core/styles/app/comment-anchor.css'
 
 export interface Comment { id: string; author: Peer; time: string; text: string }
 export interface CommentThreadData { id: string; comments: Comment[]; resolved?: boolean }

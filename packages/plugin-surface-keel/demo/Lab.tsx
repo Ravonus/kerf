@@ -1,6 +1,6 @@
 // What test/e2e.mjs drives in a real browser: both built-in backends, the mirror, a box on the outside.
-import { state } from 'weft'
-import { clock, defineSurface, Surface } from 'weft/surface'
+import { state } from '@weft-js/core'
+import { clock, defineSurface, Surface } from '@weft-js/core/surface'
 
 export const lab = { level: state(20), title: state('A surface title long enough to wrap onto a second line of the canvas'), paints: 0, setups: 0, frames: 0, frame: 0, body: 0, gl: null as any, heading: null as any, scripts: null as any, other: state('مرحبا بالعالم 春天到了 中文排版') }
 

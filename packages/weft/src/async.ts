@@ -30,7 +30,7 @@ export interface ResourceOptions<T> {
   initial?: T
   /**
    * `false`: the value isn't written into the page's data or read back from it, because the caller's own cache
-   * transfers it (@weft/start's query cache, research 27 §4). The fetcher is called on every server pass (return the
+   * transfers it (@weft-js/start's query cache, research 27 §4). The fetcher is called on every server pass (return the
    * value synchronously once it's known) and during hydration (return the transferred value synchronously, so the
    * resource settles as it's created and hydration writes nothing).
    */
@@ -41,7 +41,7 @@ export interface ResourceOptions<T> {
 
 type Tracked = { first: State<boolean>; err: State<unknown>; refresh(): void; shape?: ResourceOptions<any>['shape'] }
 const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
-/** While a Boundary's `pending` renders: the resources it's waiting for (weft/shape). */
+/** While a Boundary's `pending` renders: the resources it's waiting for (@weft-js/core/shape). */
 export const waiting = context<Tracked[] | undefined>(undefined)
 
 const thenable = (v: any): v is PromiseLike<any> => v != null && typeof v.then === 'function'

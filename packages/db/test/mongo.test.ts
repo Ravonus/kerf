@@ -1,7 +1,7 @@
 // The `db.adapter` suite and the change stream on a real server: `WEFT_TEST_MONGO` names a replica set.
 import { MongoClient } from 'mongodb'
-import { LIST_ROWS, listSuite } from 'weft/test/plugins'
-import { decodeCursor } from '@weft/start/list'
+import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
+import { decodeCursor } from '@weft-js/start/list'
 import { changeTags, mongoSource, watchMongo } from '../src/mongo'
 
 const spec = { columns: { id: '_id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }

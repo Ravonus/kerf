@@ -1,5 +1,5 @@
-import { derived, type State } from 'weft'
-import { Card, Search, Select } from '@weft/warp'
+import { derived, type State } from '@weft-js/core'
+import { Card, Search, Select } from '@weft-js/warp'
 import type { Category, Product } from '../api'
 import type { Cart } from '../App'
 import { ProductRow } from './ProductRow'

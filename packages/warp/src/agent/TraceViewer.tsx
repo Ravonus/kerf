@@ -1,9 +1,9 @@
-import { formatSeconds, traceKey, traceRows, traceSummary, type TraceSpan } from '@weft/warp-core'
-import { derived, state, untrack } from 'weft'
+import { formatSeconds, traceKey, traceRows, traceSummary, type TraceSpan } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/trace.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/trace.css'
 
 /**
  * TraceViewer (07 §1.3): nested spans on a shared time axis, an APG treegrid. One tab stop; ↑/↓, Home/End move, →/←

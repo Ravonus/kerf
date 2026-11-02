@@ -1,5 +1,5 @@
-import { derived, state } from 'weft'
-import { Badge, Button, Card, Input } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { Badge, Button, Card, Input } from '@weft-js/warp'
 
 const products = [
   { id: 1, name: 'Coffee', price: 12, count: state(0) },

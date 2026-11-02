@@ -2,7 +2,7 @@
 // and a frame is fanned out with the ticket's subject as its sender.
 
 import type { Server, Socket } from 'socket.io'
-import { roomId, signTicket, verifyTicket } from '@weft/multiplayer/server'
+import { roomId, signTicket, verifyTicket } from '@weft-js/multiplayer/server'
 
 const FRAME = 1024
 

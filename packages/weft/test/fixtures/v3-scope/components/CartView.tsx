@@ -1,4 +1,4 @@
-import { derived } from 'weft'
+import { derived } from '@weft-js/core'
 import type { Product } from '../api'
 import { cart } from '../state/cart'
 import { money } from '../format'

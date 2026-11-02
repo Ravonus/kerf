@@ -1,5 +1,6 @@
 // The `--db` and `--auth` part of a scaffold (research 28 §6): a database, a todo app on it, and with `--auth` a
 // sign-in/sign-up flow and a guarded `/todos`. Pinned versions, so a scaffold builds what the matrix tested.
+import { readFileSync } from 'node:fs'
 
 const VERSIONS = {
   '@types/node': '26.6.5',
@@ -12,11 +13,14 @@ const pin = (...names) => Object.fromEntries(names.map(n => [n, VERSIONS[n]]))
 
 const drivers = db => (db === 'postgres' ? ['postgres'] : db === 'mysql' ? ['mysql2'] : [])
 
-export function stackDeps({ db, auth, layer = 'drizzle', version = '0.0.0' }) {
+/** Every scaffold pins what it shipped with: this package and weft's others go out at one version. */
+export const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
+
+export function stackDeps({ db, auth, layer = 'drizzle', version = VERSION }) {
   if (db === 'none') return { deps: {}, dev: {} }
   const base = pin('@t3-oss/env-core', 'zod', ...(auth ? ['better-auth'] : []))
-  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db), ...(auth ? ['kysely'] : [])), '@weft/db': version }, dev: pin('@types/node') }
-  if (layer === 'prisma') return { deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft/db': version }, dev: pin('prisma', '@types/node') }
+  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db), ...(auth ? ['kysely'] : [])), '@weft-js/db': version }, dev: pin('@types/node') }
+  if (layer === 'prisma') return { deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft-js/db': version }, dev: pin('prisma', '@types/node') }
   return {
     deps: pin('@t3-oss/env-core', 'drizzle-orm', 'drizzle-zod', 'zod', ...drivers(db), ...(auth ? ['better-auth'] : [])),
     dev: pin('drizzle-kit', '@types/node'),
@@ -54,10 +58,10 @@ function drizzleFiles({ db, auth }) {
   return {
     'drizzle.config.ts': `import { defineConfig } from 'drizzle-kit'\n\nexport default defineConfig({ dialect: '${{ postgres: 'postgresql', sqlite: 'sqlite', mysql: 'mysql' }[db]}', schema: './src/db/schema.ts', out: './drizzle' })\n`,
     'src/db/schema.ts': { postgres: pgSchema, sqlite: sqliteSchema, mysql: mysqlSchema }[db](auth),
-    'src/db/index.server.ts': `import { createDb } from '@weft/start/db/${db}'\nimport { env } from '../env.server'\nimport * as schema from './schema'\n\nexport const db = createDb({ schema, url: env.DATABASE_URL })\n`,
+    'src/db/index.server.ts': `import { createDb } from '@weft-js/start/db/${db}'\nimport { env } from '../env.server'\nimport * as schema from './schema'\n\nexport const db = createDb({ schema, url: env.DATABASE_URL })\n`,
     'src/server/todos.ts': todosServer(auth, db),
     ...(auth && {
-      'src/auth.server.ts': `import { createAuth } from '@weft/start/auth/better-auth'\nimport { drizzleAuth } from '@weft/start/auth/drizzle'\nimport { db } from '#/db/index.server'\nimport * as schema from './db/schema'\nimport { env } from './env.server'\n\nexport default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { database: drizzleAuth(db, schema) } })\n`,
+      'src/auth.server.ts': `import { createAuth } from '@weft-js/start/auth/better-auth'\nimport { drizzleAuth } from '@weft-js/start/auth/drizzle'\nimport { db } from '#/db/index.server'\nimport * as schema from './db/schema'\nimport { env } from './env.server'\n\nexport default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { database: drizzleAuth(db, schema) } })\n`,
     }),
   }
 }
@@ -228,7 +232,7 @@ export const verification = pgTable('verification', {
 `
 
 export const context = auth => auth
-  ? `import { session } from '@weft/start/auth'
+  ? `import { session } from '@weft-js/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
@@ -236,7 +240,7 @@ export default async ({ request }: { request: Request }) => ({ db, ...(await ses
 
 type Session = Awaited<ReturnType<typeof auth.session>>
 
-declare module '@weft/start' {
+declare module '@weft-js/start' {
   interface Context {
     db: typeof db
     user: Session['user']
@@ -248,7 +252,7 @@ declare module '@weft/start' {
 
 export default () => ({ db })
 
-declare module '@weft/start' {
+declare module '@weft-js/start' {
   interface Context {
     db: typeof db
   }
@@ -260,8 +264,8 @@ function todosServer(auth, db) {
   const mine = auth ? `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` : `eq(todos.id, input.id)`
   // MySQL has no \`returning\`.
   const returning = db === 'mysql' ? '' : '.returning()'
-  return `import { mutation, query } from '@weft/start'
-import { schemasOf } from '@weft/start/db'
+  return `import { mutation, query } from '@weft-js/start'
+import { schemasOf } from '@weft-js/start/db'
 import { ${auth ? 'and, ' : ''}asc, eq, not } from 'drizzle-orm'
 import { z } from 'zod'
 import * as schema from '#/db/schema'
@@ -308,8 +312,8 @@ export const deleteTodo = mutation({
 `
 }
 
-const sessionServer = () => `import { mutation, query, redirect } from '@weft/start'
-import { forward } from '@weft/start/auth'
+const sessionServer = () => `import { mutation, query, redirect } from '@weft-js/start'
+import { forward } from '@weft-js/start/auth'
 import { z } from 'zod'
 import auth from '#/auth.server'
 
@@ -345,7 +349,7 @@ export const signOut = mutation({
 })
 `
 
-const guard = () => `import { redirect, type LoadArgs, type RouteProps } from '@weft/start'
+const guard = () => `import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
 
 // The guard: a layout's \`load\` runs before its pages', so nothing under /todos runs for a visitor.
 export const load = ({ ctx }: LoadArgs) => {
@@ -378,7 +382,7 @@ const attr = (ui, part) => (ui === 'tailwind' ? ` class="${tw[part]}"` : '')
 /** The page's controls in each UI kit: warp's components, or plain elements with the same roles and names. */
 export const controls = ui => ui === 'warp'
   ? {
-      imports: `import { Alert, Button, Card, Checkbox, Input } from '@weft/warp'\n`,
+      imports: `import { Alert, Button, Card, Checkbox, Input } from '@weft-js/warp'\n`,
       card: (title, body) => `<Card title=${JSON.stringify(title)}>${body}</Card>`,
       input: (label, box, type = 'text') => `<Input label=${JSON.stringify(label)} type="${type}" value={${box}.value} onInput={e => (${box}.value = e.currentTarget.value)} />`,
       submit: (label, pending) => `<Button type="submit" loading={${pending}}>${label}</Button>`,
@@ -396,8 +400,8 @@ export const controls = ui => ui === 'warp'
 
 export function todosPage(ui, auth) {
   const c = controls(ui)
-  return `import type { Meta } from '@weft/start'
-import { Boundary, state } from 'weft'
+  return `import type { Meta } from '@weft-js/start'
+import { Boundary, state } from '@weft-js/core'
 ${c.imports}import { addTodo, deleteTodo, listTodos, toggleTodo } from '#/server/todos'
 
 export const meta: Meta = { title: 'Todos' }
@@ -441,8 +445,8 @@ export default function Todos() {
 
 export function loginPage(ui) {
   const c = controls(ui)
-  return `import { redirect, type LoadArgs, type Meta } from '@weft/start'
-import { state } from 'weft'
+  return `import { redirect, type LoadArgs, type Meta } from '@weft-js/start'
+import { state } from '@weft-js/core'
 ${c.imports}import { signIn, signUp } from '#/server/session'
 
 export const load = ({ ctx }: LoadArgs) => {

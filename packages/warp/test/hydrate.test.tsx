@@ -1,13 +1,13 @@
 // Every component, server-rendered (`?weft-ssr`) and hydrated (`?weft-hydrate`): hydration claims every node (0
 // misses) and writes nothing to the DOM, ids included (resetIds before each render, as an app's server and client
 // entries do). The hydrated component then works: its interaction shows the same result as a client render.
-import { resetIds } from '@weft/warp-core'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { flush } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import { cases } from './fixtures/interactions'
-// @ts-expect-error: query imports (weft/vite)
+// @ts-expect-error: query imports (@weft-js/core/vite)
 import * as server from './fixtures/Cases.tsx?weft-ssr'
 // @ts-expect-error
 import * as client from './fixtures/Cases.tsx?weft-hydrate'

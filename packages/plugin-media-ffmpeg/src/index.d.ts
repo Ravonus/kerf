@@ -1,4 +1,4 @@
-import type { PluginInstance } from 'weft/plugin'
+import type { PluginInstance } from '@weft-js/core/plugin'
 
 export interface MediaFfmpegOptions {
   /** 'system' (the default) runs `ffmpeg` and `ffprobe` from PATH; otherwise the path of ffmpeg. */

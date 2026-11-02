@@ -1,13 +1,13 @@
-import { arrivals, groupByDay, uid } from '@weft/warp-core'
-import { derived } from 'weft'
+import { arrivals, groupByDay, uid } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
 import { Avatar, type LiveState } from '../parts'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { avatarTint, G, val } from './shared'
 import '../styles'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/activity.css'
-import '@weft/warp-core/styles/app/activity-feed.css'
-import '@weft/warp-core/styles/app/sync.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/activity.css'
+import '@weft-js/warp-core/styles/app/activity-feed.css'
+import '@weft-js/warp-core/styles/app/sync.css'
 
 export interface ActivityItem { id: string; actor: string; verb: string; object?: string; detail?: string; time: string; datetime?: string; day?: string }
 

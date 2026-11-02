@@ -1,5 +1,5 @@
-import { onCleanup, onMount, state } from 'weft'
-import { render } from 'weft/dom'
+import { onCleanup, onMount, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import { previews } from '../generated/previews'
 
 /* @weft visible */

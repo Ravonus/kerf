@@ -1,5 +1,5 @@
-import { render } from 'weft/dom'
-import { VirtualList, type VirtualControl } from '@weft/warp'
+import { render } from '@weft-js/core/dom'
+import { VirtualList, type VirtualControl } from '@weft-js/warp'
 import { feed } from '../../shared/feed'
 import '../../shared/feed.css'
 

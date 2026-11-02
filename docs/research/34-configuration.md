@@ -15,7 +15,7 @@ weft, the seam is wrong.
 |---|---|---|
 | Setup | `create-weft` flags | No wizard, few choices |
 | Config file | `weft.config.ts`, `.mts`, `.js`, `.mjs` | No JSON or YAML |
-| Database | Drizzle on SQLite or Postgres | `db.adapter` is reserved, `@weft/start/db` imports Drizzle, no MySQL |
+| Database | Drizzle on SQLite or Postgres | `db.adapter` is reserved, `@weft-js/start/db` imports Drizzle, no MySQL |
 | Auth | Better Auth | `auth.ts` imports the Drizzle adapter directly |
 | warp | `warp({ seed, fields })` | Dials are set in markup; fonts, radius and tokens aren't config |
 | Styling | Style groups, `headless`, `none` | Tailwind adapter waits for Phase 4 |
@@ -32,7 +32,7 @@ site: { name: Acme, title: "%s · Acme" }
 runtime: node
 db: { engine: mysql, layer: native }
 plugins:
-  - - "@weft/warp"
+  - - "@weft-js/warp"
     - seed: { accent: "#0a7d4f" }
       dials: { expression: quiet, density: compact }
       radius: soft
@@ -40,7 +40,7 @@ plugins:
   - ["@acme/weft-audit", { level: strict }]
 ```
 
-- **TypeScript or data, same result.** A plugin is `warp()` in TypeScript or `["@weft/warp", { … }]` in JSON and YAML.
+- **TypeScript or data, same result.** A plugin is `warp()` in TypeScript or `["@weft-js/warp", { … }]` in JSON and YAML.
   Data formats can't hold functions, so anything that needs one uses `weft.config.ts`.
 - **Editors:** `weft check` writes `.weft/config.schema.json`, so JSON and YAML get completion through `$schema`. Plugin
   options aren't in it yet, because plugins validate them with a function rather than a schema.
@@ -82,10 +82,10 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
 | A schema hash for drift | Q015 |
 | Insert and select schemas | `schemas.todos.insert`, `<Form>` |
 | The adapter Better Auth needs | Auth |
-| A test database | `weft/test` |
+| A test database | `@weft-js/core/test` |
 
-- **Providers (built):** Drizzle stays in `@weft/start/db/*` as the built-in default and goes through the same seam as
-  the others. `@weft/db/plugin-prisma` and `@weft/db/plugin-native` are plugins, which proves the seam: a client made
+- **Providers (built):** Drizzle stays in `@weft-js/start/db/*` as the built-in default and goes through the same seam as
+  the others. `@weft-js/db/plugin-prisma` and `@weft-js/db/plugin-native` are plugins, which proves the seam: a client made
   through `register` carries the runtime handle, and a plugin's `db` contribution tells the CLI its schema, migrations
   folder and `generate`. With no database there's no provider: `ctx` is yours, and query and mutation work as they do now.
 - **Prisma on SQLite uses the libSQL adapter.** The better-sqlite3 adapter failed on Node, Bun and Deno in our spike.
@@ -94,7 +94,7 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
   own driver instead (`createNative`). Migrations are plain `.sql` files in `migrations/`, and `weft db generate <name>`
   starts one. There's no schema to drift from, so Q015 doesn't apply, and validators are Zod schemas you write. The
   driver stays reachable as `ctx.db.driver`, so nothing weft doesn't cover is out of reach.
-- **Auth on Native:** Better Auth speaks Kysely, so `@weft/db/plugin-native/auth` gives it a Kysely dialect over Native's
+- **Auth on Native:** Better Auth speaks Kysely, so `@weft-js/db/plugin-native/auth` gives it a Kysely dialect over Native's
   own connection, on all three engines and runtimes. There's no second driver. Its only dependency is `kysely`, added to
   apps with both.
 - **Support tiers:** *tested* combinations run in the matrix on every runtime. *Community* providers implement the slot
@@ -116,7 +116,7 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
 - **Auth:** the provider is the default export of `src/auth.server.ts`, written with `defineAuth`: a `handler` for
   everything under `/api/auth`, a `session` that says who a request is, and optional `basePath` and `$weft.check()`.
   That's the whole contract, so it's a file and not a generated `auth.provider` slot: an app has one provider and already
-  imports it. Better Auth is the default (`@weft/start/auth/better-auth`, kept in `@weft/start` as Drizzle is) and takes
+  imports it. Better Auth is the default (`@weft-js/start/auth/better-auth`, kept in `@weft-js/start` as Drizzle is) and takes
   its store from `db.adapter`. `auth: 'user'` works with any provider. `create-weft --auth-provider custom` writes the
   stub. `weft add auth` adds Better Auth to an app with a database, and stops rather than replace a provider.
 - **warp (built):** `warp()` takes `dials` (expression, density, flair, theme), `radius`, `fonts` and `tokens`, in any
@@ -131,7 +131,7 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
   override that breaks a pair. A seed set in markup isn't fitted, because the check runs at build time.
 - **Styling (built):** the Tailwind adapter moved up from Phase 4. `create-weft --ui tailwind` and `weft add tailwind`
   write the same files. In a warp app Tailwind's reset stays out, because its `base` layer would beat warp, and
-  `@weft/warp/tailwind.css` maps warp tokens to theme values. D020 is off in an app with `tailwindcss` installed.
+  `@weft-js/warp/tailwind.css` maps warp tokens to theme values. D020 is off in an app with `tailwindcss` installed.
   `headless` and `none` stay, and plain CSS works as it did.
 
 ## 6. Aliases (built)
@@ -201,4 +201,4 @@ The map is a matrix of *what you want → what to call*, listing only what this 
 | **D. Auth** | `defineAuth`, Better Auth over any adapter, `weft add auth` | A hand-written provider passes the same auth checks with no change to weft |
 
 **Costs:** every option multiplies testing. The matrix covers the tested tiers rather than every combination, and this
-work comes before 3c, because 3c's `@weft/db-*` packs build on these slots.
+work comes before 3c, because 3c's `@weft-js/db-*` packs build on these slots.

@@ -3,7 +3,7 @@ import Lists from '../demos/lists'
 import Props from '../demos/props'
 import Rules from '../demos/rules'
 import UiState from '../demos/ui-state'
-import '@weft/warp-core/styles/rich/codeblock.css'
+import '@weft-js/warp-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
 /** What the route's loader sends for one example; none of it is in the page's script. */

@@ -1,6 +1,6 @@
 // One small app per warp component: the component plus a driver (a plain button, or the component's own control)
 // for the one interaction its work budget and hydration round trip cover (test/budget.test.tsx, hydrate.test.tsx).
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 // each from its own file: the ?weft-ssr / ?weft-hydrate query follows .tsx imports (not the index.ts barrel)
 import { Alert } from '../../src/Alert'
 import { Badge } from '../../src/Badge'

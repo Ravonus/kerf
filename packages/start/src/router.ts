@@ -5,9 +5,9 @@
 // renders its new route, and everything inside it goes. One state per request on the server (passed down as a
 // prop), one per tab on the client.
 
-import { state, untrack, type State } from 'weft'
-import type { SsrData } from 'weft'
-import type { Merged } from 'weft/ssr'
+import { state, untrack, type State } from '@weft-js/core'
+import type { SsrData } from '@weft-js/core'
+import type { Merged } from '@weft-js/core/ssr'
 import type { Wire } from './data'
 
 /**

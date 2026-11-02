@@ -1,8 +1,8 @@
 // Previews for the warp components the test fixtures only reach through a parent, written in the same small form. Each
 // shows the component alone, so its toolkit page has one preview of its own.
-import { state } from 'weft'
-import { InviteDialog, Conversation, PeerMark, PeerSelection, ShareDialog, AgendaDay, BranchSwitcher, Cite, Code, CodeBlock, ControlBar, EventEditor, EventPopover, Field, LineItem, LockIndicator, ModelPicker, MoveSheet, OrderTracker, PasskeyButton, PasswordMeter, Prose, Snippet, Sources, SsoButtons, TagsInput, Tile, UserMessage, Button } from '@weft/warp'
-import type { CalEvent } from '@weft/warp-core'
+import { state } from '@weft-js/core'
+import { InviteDialog, Conversation, PeerMark, PeerSelection, ShareDialog, AgendaDay, BranchSwitcher, Cite, Code, CodeBlock, ControlBar, EventEditor, EventPopover, Field, LineItem, LockIndicator, ModelPicker, MoveSheet, OrderTracker, PasskeyButton, PasswordMeter, Prose, Snippet, Sources, SsoButtons, TagsInput, Tile, UserMessage, Button } from '@weft-js/warp'
+import type { CalEvent } from '@weft-js/warp-core'
 
 const day = '2026-11-03'
 const standup: CalEvent = { id: 'a', title: 'Weekly standup', start: `${day}T09:30`, end: `${day}T10:00` }

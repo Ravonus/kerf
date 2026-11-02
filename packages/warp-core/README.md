@@ -1,15 +1,17 @@
-# @weft/warp-core
+# @weft-js/warp-core
 
-warp's CSS and behaviour with no components: plain TypeScript over the DOM. `@weft/warp` is built on it. Nothing in the
+> **Early release (0.1.0).** weft is young: APIs will change between minor versions, and not every add-on is on npm yet.
+
+warp's CSS and behaviour with no components: plain TypeScript over the DOM. `@weft-js/warp` is built on it. Nothing in the
 main entry imports a framework, so it also works under React, Solid or no framework at all.
 
 ## When to skip it
 
 Most weft apps should skip it.
 
-- **You want finished components:** install `@weft/warp`. It brings this package with it.
-- **You want no warp at all:** you don't need either package. `create-weft --ui none` and `--ui tailwind` install neither.
-- **You want your own markup and warp's keyboard, focus and motion:** this package is for you. `create-weft --ui headless`
+- **You want finished components:** install `@weft-js/warp`. It brings this package with it.
+- **You want no warp at all:** you don't need either package. `npm create @weft-js -- --ui none` and `--ui tailwind` install neither.
+- **You want your own markup and warp's keyboard, focus and motion:** this package is for you. `npm create @weft-js -- --ui headless`
   sets it up.
 
 ## What's in it
@@ -17,13 +19,13 @@ Most weft apps should skip it.
 - **Behaviour:** `menu`, `dialog`, `popover`, `tooltip`, `indicator`, `roving`, `slider` and more. Each is an action,
   `(el, options) => { update, destroy }`.
 - **Helpers:** pure functions such as `nextIndex`, `place` and `uid`.
-- **CSS:** `@weft/warp-core/styles/warp.css` has the tokens. Each component has its own file, such as
-  `@weft/warp-core/styles/components/tabs.css`. Skip them and bring your own CSS if you like.
+- **CSS:** `@weft-js/warp-core/styles/warp.css` has the tokens. Each component has its own file, such as
+  `@weft-js/warp-core/styles/components/tabs.css`. Skip them and bring your own CSS if you like.
 - **Other entries:** `/motion`, `/charts`, `/canvas`, `/dither` and `/search`.
 
 ## `use`: an action in a weft component
 
-`use` comes from `@weft/warp-core/weft`, the one entry that needs `weft`. It starts the action once the element is in the
+`use` comes from `@weft-js/warp-core/weft`, the one entry that needs `weft`. It starts the action once the element is in the
 document, never on the server. It calls `update` when the options change and `destroy` with the component.
 
 ```ts
@@ -47,11 +49,11 @@ bar.destroy() // when the element goes
 `indicator` slides the `data-part="indicator"` element to the selected tab.
 
 ```tsx
-import { indicator, nextIndex } from '@weft/warp-core'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/warp.css'
-import '@weft/warp-core/styles/components/tabs.css'
-import { state } from 'weft'
+import { indicator, nextIndex } from '@weft-js/warp-core'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/warp.css'
+import '@weft-js/warp-core/styles/components/tabs.css'
+import { state } from '@weft-js/core'
 
 const names = ['Plan', 'Billing', 'Team']
 
@@ -98,9 +100,9 @@ export function Settings() {
 calls `onClose`. Showing and hiding the panel is yours. Here that's `hidden`. Items need `tabindex="-1"`.
 
 ```tsx
-import { menu } from '@weft/warp-core'
-import { use } from '@weft/warp-core/weft'
-import { state } from 'weft'
+import { menu } from '@weft-js/warp-core'
+import { use } from '@weft-js/warp-core/weft'
+import { state } from '@weft-js/core'
 
 export function AccountMenu() {
   const open = state(false)

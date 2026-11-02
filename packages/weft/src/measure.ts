@@ -2,7 +2,7 @@
 // reactive calls over it. Until the engine is here a box is null, and with no provider bound it stays null, so a caller
 // keeps working on whatever it did before it had an exact height.
 
-import { derived, effect, onCleanup, rt, state, untrack, type Derived, type State } from 'weft'
+import { derived, effect, onCleanup, rt, state, untrack, type Derived, type State } from '@weft-js/core'
 
 /** `text.measure@1` (research 33 §6), what `weft:slot/text.measure` loads. */
 export interface MeasureProvider {

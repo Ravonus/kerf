@@ -1,9 +1,9 @@
-import { contextLevel, formatTokens } from '@weft/warp-core'
-import { derived } from 'weft'
+import { contextLevel, formatTokens } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
 import { Button } from '../Button'
 import { Tooltip } from '../Tooltip'
 import '../styles'
-import '@weft/warp-core/styles/app/context-meter.css'
+import '@weft-js/warp-core/styles/app/context-meter.css'
 
 export type ContextUse = { used: number; limit: number; parts?: { label: string; tokens: number }[] }
 

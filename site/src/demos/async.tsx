@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Badge, Button, Card, Spinner } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Badge, Button, Card, Spinner } from '@weft-js/warp'
 
 const save = () => new Promise(done => setTimeout(done, 800))
 

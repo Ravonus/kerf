@@ -1,4 +1,4 @@
-import { Link, type Meta } from '@weft/start'
+import { Link, type Meta } from '@weft-js/start'
 import { Example } from '../../components/Example'
 import { demos } from '../../demos'
 import { runs } from '../../demos/runs'

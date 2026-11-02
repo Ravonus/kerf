@@ -1,4 +1,4 @@
-// @weft/warp-core/canvas: a canvas that looks after itself (08 §6.7). It tracks size and pixel ratio, stops off screen and in
+// @weft-js/warp-core/canvas: a canvas that looks after itself (08 §6.7). It tracks size and pixel ratio, stops off screen and in
 // a hidden tab, gives reduced motion one still frame, and shares one requestAnimationFrame between every surface on the
 // page. With nothing to paint there is no frame scheduled at all, so an idle page costs nothing.
 import { reducedMotion } from './motion'

@@ -1783,7 +1783,7 @@ requestAnimationFrame(levels);
 })();
 
 /* ============================================================================
-   06 · COLLABORATION. weft (@weft/multiplayer): const peers = presence(channel)
+   06 · COLLABORATION. weft (@weft-js/multiplayer): const peers = presence(channel)
    cursors ride channel({ delivery: 'latest' }); positions are anchored to
    elements (data-anchor), so they line up at any viewport size.
    ========================================================================== */
@@ -2185,7 +2185,7 @@ async function prefsSave(apply, msg, bulkOrCell) {
 
 /* -- TransportPicker (07 §4.7): a dev sandbox over weft's real wires ------------------------------- */
 (function transport() {
-  const WIRES = [["default", "weft default", "SSE + WebSocket", "One SSE (.live, stream) and one WebSocket (channel) per tab"], ["tabs", "Tabs only", "BroadcastChannel", "tabs.channel: this browser's tabs, no server"], ["fake", "Fake", "weft/test", "In-memory pair with a network model"]];
+  const WIRES = [["default", "weft default", "SSE + WebSocket", "One SSE (.live, stream) and one WebSocket (channel) per tab"], ["tabs", "Tabs only", "BroadcastChannel", "tabs.channel: this browser's tabs, no server"], ["fake", "Fake", "@weft-js/core/test", "In-memory pair with a network model"]];
   const BUSES = [["memory", "memory", "+0 ms", "One process. The default"], ["postgres", "postgres", "+4 ms", "LISTEN / NOTIFY"], ["redis", "redis", "+2 ms", "Pub/sub"], ["nats", "nats", "+1 ms", "Subjects"], ["durable-object", "durable-object", "+8 ms", "Cloudflare preset only"]];
   const BUSMS = { memory: 0, postgres: 4, redis: 2, nats: 1, "durable-object": 8 };
   const PRESETS = [["single", "Single instance"], ["multi", "Multi-instance"], ["cf", "Cloudflare"]];
@@ -2220,7 +2220,7 @@ async function prefsSave(apply, msg, bulkOrCell) {
   const T = () => `+${((performance.now() - S.t0) / 1000).toFixed(1)}s`;
   const addLog = (who, msg) => { log.append(h(`<li><span>${T()}</span><b>${who}</b><span>${esc(msg)}</span></li>`)); while (log.children.length > 40) log.firstElementChild.remove(); log.scrollTop = log.scrollHeight; };
   const invalid = () => S.wire === "default" && S.bus === "memory" && S.preset === "multi" ? ["R002 · memory bus on a multi-instance preset", "Each instance would only see its own events. Use postgres, redis or nats."] : null;
-  const wireOf = (conn) => S.wire === "tabs" ? "BroadcastChannel" : S.wire === "fake" ? "weft/test fake pair" : conn === "sse" ? "SSE · POST /_weft/rt" : "WebSocket · crossws";
+  const wireOf = (conn) => S.wire === "tabs" ? "BroadcastChannel" : S.wire === "fake" ? "@weft-js/core/test fake pair" : conn === "sse" ? "SSE · POST /_weft/rt" : "WebSocket · crossws";
   const sampleMs = (conn) => {
     if (S.wire === "tabs") return 0.6 + Math.random() * 0.8;
     let base = S.wire === "fake" ? Math.random() * 2 : 20 + Math.random() * 40 + BUSMS[S.bus];

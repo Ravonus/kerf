@@ -1,11 +1,11 @@
-import { CalendarIcon, ClockIcon } from '@weft/icons'
-import { daysIn, dayPeriods, fieldName, fmt, fmtTime, fromMinutes, hour12, isoOf, listKey, minutes, pad, readDate, readTime, uid, wallTimeIssue, type ChangeReason, type IsoDate, type IsoDateTime, type IsoTime, type SegmentPart, type TimeZoneId } from '@weft/warp-core'
-import { derived, flush, onMount, state, untrack } from 'weft'
+import { CalendarIcon, ClockIcon } from '@weft-js/warp-icons'
+import { daysIn, dayPeriods, fieldName, fmt, fmtTime, fromMinutes, hour12, isoOf, listKey, minutes, pad, readDate, readTime, uid, wallTimeIssue, type ChangeReason, type IsoDate, type IsoDateTime, type IsoTime, type SegmentPart, type TimeZoneId } from '@weft-js/warp-core'
+import { derived, flush, onMount, state, untrack } from '@weft-js/core'
 import { CalendarGrid } from './Calendar'
 import { Composite, Hidden, isSheet, messages, Panel, Trigger, bindable, useOpen, usePickerEnv, type Bindable, type Openable, type RichFieldProps } from './Picker'
 import { Segments, type SegmentState } from './Segments'
-import '@weft/warp-core/styles/rich/listbox.css'
-import '@weft/warp-core/styles/rich/datetime.css'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/datetime.css'
 
 /** The slot list (04 TimeField): a listbox with an active option, not a row of tab stops. */
 function Slots({ slots, selected, locale, hourCycle, label, onPick, meta }: { slots: string[]; selected: string | null; locale: string; hourCycle?: string; label: string; onPick: (t: string, r: ChangeReason) => void; meta?: boolean }) {

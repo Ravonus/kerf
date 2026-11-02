@@ -4,8 +4,8 @@
 //
 //   presence(chat, { transport: webrtc({ iceServers: [{ urls: 'stun:stun.example.com' }] }) })
 
-import { createRoot, derived, effect, state, untrack } from 'weft'
-import type { PeerLink, PeerRoom, PeerTransport } from '@weft/multiplayer'
+import { createRoot, derived, effect, state, untrack } from '@weft-js/core'
+import type { PeerLink, PeerRoom, PeerTransport } from '@weft-js/multiplayer'
 
 export interface WebRtcOptions {
   /** STUN and TURN. Default none: peers on one network. */

@@ -1,5 +1,5 @@
-import { Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft/warp'
-import { derived, onCleanup, onMount, state } from 'weft'
+import { Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft-js/warp'
+import { derived, onCleanup, onMount, state } from '@weft-js/core'
 import files from '../generated/icons.json'
 
 type Tier = 'quiet' | 'balanced' | 'vivid'
@@ -74,7 +74,7 @@ export function IconBrowser() {
             </div>
           ))}
         </div>
-        <Snippet code={`import { ${pascal(picked.value)}Icon, ${pascal(picked.value)}IconSolid } from '@weft/icons'`} />
+        <Snippet code={`import { ${pascal(picked.value)}Icon, ${pascal(picked.value)}IconSolid } from '@weft-js/warp-icons'`} />
       </Modal>
     </div>
   )

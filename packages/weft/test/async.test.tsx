@@ -1,10 +1,10 @@
 // resource and <Boundary>: §6.2 timing (150 ms, then held 400 ms), errors and retry, and the SSR round trips.
 // weft-allow T004, T005: framework test of hydration and resource timing; it reads the server DOM and lets real timers fire
 import { screen } from '@testing-library/dom'
-import { renderToString, renderToStringAsync } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
-import { flush, render } from 'weft/test'
-import { Boundary, resource, state } from 'weft'
+import { renderToString, renderToStringAsync } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
+import { flush, render } from '@weft-js/core/test'
+import { Boundary, resource, state } from '@weft-js/core'
 import { hydration } from '../src/hydrate'
 import { Users, type Load } from './fixtures/ssr/Users'
 // @ts-expect-error: query imports (vite.mjs)
@@ -144,7 +144,7 @@ test('SSR, data awaited: the content is in the HTML and hydrates without refetch
 
 test('SSR with `data: false`: the value stays out of the page data, and a synchronous read hydrates with 0 writes', async () => {
   vi.useRealTimers()
-  // A toy cache, as @weft/start's request cache behaves: a promise first, the value itself once it's known.
+  // A toy cache, as @weft-js/start's request cache behaves: a promise first, the value itself once it's known.
   const known = new Map<string, { name: string }>()
   const read = (id: string) => known.get(id) ?? new Promise<{ name: string }>(ok => setTimeout(() => { known.set(id, { name: names[id] }); ok(known.get(id)!) }, 1))
   const html = await renderToStringAsync(() => ServerCached({ read }))

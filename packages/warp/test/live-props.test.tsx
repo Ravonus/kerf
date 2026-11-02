@@ -1,7 +1,7 @@
 // A prop read in JSX stays live: changing it after mount updates the component. Each of these used to be an `untrack`
 // snapshot taken in setup, which showed the first value for good.
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { SettingRow, SettingsSection } from '../src/admin'
 import { LockedField } from '../src/collab'
 import { Accordion, Button } from '../src/index'

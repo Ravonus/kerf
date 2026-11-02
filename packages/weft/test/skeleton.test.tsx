@@ -1,7 +1,7 @@
 // X031 (research 11 §8.5, research 26 §4): in dev, <Boundary> measures its pending fallback and the content at the
 // swap and warns when the boxes differ by more than 1 px.
 // weft-allow T004, T005: fake timers drive the Boundary's 150 ms / 400 ms timing; the boxes are found by class to mock their layout
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { Users, type Load } from './fixtures/ssr/Users'
 
 const load: Load = () => new Promise(ok => setTimeout(() => ok({ name: 'Ada' }), 200))

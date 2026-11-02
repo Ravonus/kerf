@@ -8,9 +8,9 @@ import { loadConfig } from '../src/load-config.mjs'
 import { explain, list } from '../src/plugins.mjs'
 import { project } from './helpers.mjs'
 
-/** Two fixture plugins defined with weft/plugin, in a config that lists them in `order`. */
-const config = ({ order = ['fonts', 'kit'], kit = '', fonts = '', extra = '' } = {}) => `import { defineConfig } from 'weft/config'
-import { definePlugin, defineSlot, provide } from 'weft/plugin'
+/** Two fixture plugins defined with @weft-js/core/plugin, in a config that lists them in `order`. */
+const config = ({ order = ['fonts', 'kit'], kit = '', fonts = '', extra = '' } = {}) => `import { defineConfig } from '@weft-js/core/config'
+import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
 
 const fontBuild = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })
 const surface = defineSlot({ id: 'surface.renderer', version: 1, cardinality: 'keyed', sides: ['client'] })
@@ -53,7 +53,7 @@ export default defineConfig({ plugins: [${order.map(n => `all.${n}`).join(', ')}
 
 const codes = r => r.diagnostics.map(d => d.code)
 
-describe('weft/plugin + weft plugins', () => {
+describe('@weft-js/core/plugin + weft plugins', () => {
   it('lists plugins sorted by name, with the slots they provide and bind', async () => {
     const dir = project({ 'weft.config.ts': config() })
     const r = await list(dir)
@@ -145,7 +145,7 @@ describe('weft/plugin + weft plugins', () => {
   })
 
   it('data-only entries still work, and nothing is generated without plugins', async () => {
-    const dir = project({ 'weft.config.ts': "import { defineConfig } from 'weft/config'\nexport default defineConfig({ plugins: [{ name: 'x', provides: ['text.measure'] }] })\n" })
+    const dir = project({ 'weft.config.ts': "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ plugins: [{ name: 'x', provides: ['text.measure'] }] })\n" })
     const r = await list(dir)
     expect(r.plugins).toMatchObject([{ name: 'x', provides: [{ slot: 'text.measure', bound: true, interface: null }] }])
     const bare = project()

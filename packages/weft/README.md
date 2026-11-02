@@ -1,17 +1,19 @@
 # weft (Phase 1 compiler spike)
 
+> **Early release (0.1.0).** weft is young: APIs will change between minor versions, and not every add-on is on npm yet.
+
 The client runtime, compiler binding, Vite plugin and test utilities from the Phase 1 compiler spike. Results, numbers
 and what Phase 1 proper should change: [docs/research/16-compiler-spike.md](../../docs/research/16-compiler-spike.md).
 
 | Import | What |
 |---|---|
 | `weft` | `state` (with `.get(key)` keyed reads), `state.linked`, `derived`, `watch`, `onCleanup`, `onMount`, `untrack`, `flush`, `context`, `defineState`, `resource`, `<Boundary>` |
-| `weft/persist`, `weft/history` | `defineState`'s `persist` and `history` options; the Vite plugin imports each where it's used |
-| `weft/dom` | `render`, `hydrate`, plus the helpers compiled templates call and the keyed `For` |
-| `weft/ssr` | `renderToString`, `renderToStringAsync` (resources awaited), plus the helpers SSR output calls |
-| `weft/test` | `render` (a fresh app per call: `{ state, storage }` seed scopes and share storage), `scope()`, `memoryStorage()`, `flush`, `touches()`, and `expect(fn).toTouchAtMost(n, { runs })` |
-| `weft/vite` | `weft({ hydratable })`: a filtered transform hook calling the native compiler (SSR output for Vite's SSR transforms; `?weft-ssr`/`?weft-hydrate` imports for tests), and one adding the `persist`/`history` imports. Production builds also drop CSS nothing can reach: a `data-scope`, `data-part`, `data-variant`, `data-tone` or `data-emphasis` value no built file mentions, then the tokens and keyframes left unused. It also splits `:where(A B)` into `:where(A) :where(B)`, which browsers can file by its last part instead of testing on every element. `weft({ purge: { keep: ['knob'] } })` keeps a name built at run time; `purge: false` turns it off. |
-| `weft/compiler` | `transform(source, options)` → `{ code, map, diagnostics }`, and `backend`: which build is running |
+| `@weft-js/core/persist`, `@weft-js/core/history` | `defineState`'s `persist` and `history` options; the Vite plugin imports each where it's used |
+| `@weft-js/core/dom` | `render`, `hydrate`, plus the helpers compiled templates call and the keyed `For` |
+| `@weft-js/core/ssr` | `renderToString`, `renderToStringAsync` (resources awaited), plus the helpers SSR output calls |
+| `@weft-js/core/test` | `render` (a fresh app per call: `{ state, storage }` seed scopes and share storage), `scope()`, `memoryStorage()`, `flush`, `touches()`, and `expect(fn).toTouchAtMost(n, { runs })` |
+| `@weft-js/core/vite` | `weft({ hydratable })`: a filtered transform hook calling the native compiler (SSR output for Vite's SSR transforms; `?weft-ssr`/`?weft-hydrate` imports for tests), and one adding the `persist`/`history` imports. Production builds also drop CSS nothing can reach: a `data-scope`, `data-part`, `data-variant`, `data-tone` or `data-emphasis` value no built file mentions, then the tokens and keyframes left unused. It also splits `:where(A B)` into `:where(A) :where(B)`, which browsers can file by its last part instead of testing on every element. `weft({ purge: { keep: ['knob'] } })` keeps a name built at run time; `purge: false` turns it off. |
+| `@weft-js/core/compiler` | `transform(source, options)` → `{ code, map, diagnostics }`, and `backend`: which build is running |
 
 ```bash
 npm install
@@ -22,7 +24,7 @@ node scripts/gen-corpus.mjs 1000 && node scripts/bench.mjs
 ```
 
 Only working on weft itself takes Rust. An install gets `native/weft-compiler.wasm`, built from the same crate, and the
-`@weft/compiler-<platform>` addon that fits, from `optionalDependencies`; `compiler.cjs` loads the addon when it can and WASM
+`@weft-js/compiler-<platform>` addon that fits, from `optionalDependencies`; `compiler.cjs` loads the addon when it can and WASM
 when it can't. `test/compiler-parity.test.ts` holds both to the same bytes and diagnostics. `scripts/build-platform.mjs` builds
 those packages and publishes nothing; `.github/workflows/compiler-release.yml` runs it per platform.
 

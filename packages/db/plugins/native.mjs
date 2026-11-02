@@ -1,8 +1,8 @@
 // native() for weft.config.ts (research 34 §4): the no-ORM data layer. It holds what the CLI needs: where migrations
-// live and how `weft db generate` starts one. The runtime is `@weft/db/plugin-native/<engine>`.
+// live and how `weft db generate` starts one. The runtime is `@weft-js/db/plugin-native/<engine>`.
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { definePlugin } from 'weft/plugin'
+import { definePlugin } from '@weft-js/core/plugin'
 
 const DIR = 'migrations'
 
@@ -17,7 +17,7 @@ function generate(root, name = 'change') {
 }
 
 export const native = definePlugin({
-  name: '@weft/db/plugin-native',
+  name: '@weft-js/db/plugin-native',
   version: '0.0.0',
   weft: '*',
   permissions: { fs: { read: ['migrations/**'], write: ['migrations/**'] } },

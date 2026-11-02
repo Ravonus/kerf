@@ -2,7 +2,7 @@
 // mirror is always on, so selection, find, translation, screen readers, forced colours and print need nothing else.
 // A surface with no 2D context has no text path: there the mirror itself is the visible text.
 
-import { DEV, effect, onCleanup, state, type State } from 'weft'
+import { DEV, effect, onCleanup, state, type State } from '@weft-js/core'
 import { loadMeasure, type MeasureHandle, type MeasureProvider } from './measure'
 
 export type { MeasureHandle, MeasureLine, MeasureProvider } from './measure'

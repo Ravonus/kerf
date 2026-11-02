@@ -1,7 +1,7 @@
 // The `db.adapter` suite on SQLite (node:sqlite), and on Postgres when `WEFT_TEST_POSTGRES` names a throwaway database.
 import { DatabaseSync } from 'node:sqlite'
-import { LIST_ROWS, listSuite } from 'weft/test/plugins'
-import { decodeCursor } from '@weft/start/list'
+import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
+import { decodeCursor } from '@weft-js/start/list'
 import { postgresTrigger, sqlSource, type SqlSpec } from '../src/sql'
 
 const spec: SqlSpec = { table: 'tasks', columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }

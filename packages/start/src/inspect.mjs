@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createServer, parseSync } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 import weftStart, { startDir } from './vite.mjs'
 import { deployUrl, descriptionProblem } from './derive.mjs'
 import { filePath, scanRoutes } from './routes.mjs'
@@ -75,7 +75,7 @@ export async function routesMeta({ root, site = {}, preset }) {
   try {
     const { manifest, modules } = await server.ssrLoadModule('virtual:weft/routes')
     const { createHandler, cardPath } = await server.ssrLoadModule(join(startDir, 'server.tsx'))
-    const { mergeMeta, headTags } = await server.ssrLoadModule('weft/ssr')
+    const { mergeMeta, headTags } = await server.ssrLoadModule('@weft-js/core/ssr')
     await server.ssrLoadModule('virtual:weft/fns').catch(() => {})
     // An app's server code often validates its environment as it loads, and this may not be that environment. Its pages
     // can still be looked at: one that needs it answers 500, which is H016.

@@ -1,11 +1,11 @@
-import { announce } from '@weft/warp-core'
-import { derived, state } from 'weft'
+import { announce } from '@weft-js/warp-core'
+import { derived, state } from '@weft-js/core'
 import { Button } from '../Button'
 import { Modal } from '../Modal'
 import { read, type Live } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/versions.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/versions.css'
 
 export interface Version { id: string; title: string; /** "Mei · 10:02" */ meta: string; named?: boolean; current?: boolean }
 

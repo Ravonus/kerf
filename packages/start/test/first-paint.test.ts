@@ -1,4 +1,4 @@
-import { pieces } from 'weft/node-purge'
+import { pieces } from '@weft-js/core/node-purge'
 import { firstPaint } from '../src/first-paint'
 
 const css = `@layer a,b;@layer a{:root{--warp-x:1px;--warp-y:2px}}@layer b{[data-scope=one]{width:var(--warp-x)}[data-scope=two]{height:var(--warp-y)}[data-scope=two]:hover{color:red}}`

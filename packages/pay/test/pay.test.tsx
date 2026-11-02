@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 // weft/pay end to end over `fakePay` (research 10 §8): a real mutation opens the checkout, a signed webhook goes through
 // the real ledger, and a `.live` query shows the grant. Nothing here reaches a network.
-import { derived } from 'weft'
-import { clock, net, render, screen, user } from 'weft/test'
-import { entitlementTag, price, product } from '@weft/pay'
-import { definePay, memoryPayStore } from '@weft/pay/server'
-import { fakePay } from '@weft/pay/test'
-import { mutation, query, redirect } from '@weft/start'
+import { derived } from '@weft-js/core'
+import { clock, net, render, screen, user } from '@weft-js/core/test'
+import { entitlementTag, price, product } from '@weft-js/pay'
+import { definePay, memoryPayStore } from '@weft-js/pay/server'
+import { fakePay } from '@weft-js/pay/test'
+import { mutation, query, redirect } from '@weft-js/start'
 
 const DAY = 86_400_000
 const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } }, grants: ['pro'] })
@@ -20,7 +20,7 @@ const report = query({ $id: 'pay.report', auth: 'user', requires: ['pro'], run: 
 const export_ = mutation({ $id: 'pay.export', auth: 'user', requires: ['pro'], run: () => 'done' })
 const has = query({ $id: 'pay.has', auth: 'user', run: async ({ ctx }) => ctx.entitlements.has('pro') })
 
-declare module '@weft/start' { interface Context { user: { id: string } | null } }
+declare module '@weft-js/start' { interface Context { user: { id: string } | null } }
 
 function Paywall() {
   const mine = entitlements.live()

@@ -1,9 +1,9 @@
-// weft/test itself: user actions and the clock end in flush(), and a test that never asserts fails (T001).
+// @weft-js/core/test itself: user actions and the clock end in flush(), and a test that never asserts fails (T001).
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
-import { resource, state } from 'weft'
-import { interval } from 'weft/browser'
-import { clock, render, screen, user } from 'weft/test'
+import { resource, state } from '@weft-js/core'
+import { interval } from '@weft-js/core/browser'
+import { clock, render, screen, user } from '@weft-js/core/test'
 
 function Counter() {
   const n = state(0)

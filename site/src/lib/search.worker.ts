@@ -1,4 +1,4 @@
-import { openIndex, searchIndex, type SearchIndex, type SearchWire } from '@weft/warp-core/search'
+import { openIndex, searchIndex, type SearchIndex, type SearchWire } from '@weft-js/warp-core/search'
 
 // The body index, off the main thread. A query that lands before the index waits for it; only the newest waiter runs.
 let index: SearchIndex | undefined

@@ -117,7 +117,7 @@ if (!process.argv.includes('--skip-a11y')) {
   const gallery = await buildGallery(join(results.size.work, 'gallery'))
   // The audit sets the dials from outside the build, so the shop's audited copy keeps the tiers its size build drops.
   const shop = join(results.size.work, 'warp')
-  writeFileSync(join(shop, 'vite.audit.ts'), `import weft from 'weft/vite'\nexport default { plugins: [weft({ purge: { keep: ${JSON.stringify(DIALS)} } })] }\n`)
+  writeFileSync(join(shop, 'vite.audit.ts'), `import weft from '@weft-js/core/vite'\nexport default { plugins: [weft({ purge: { keep: ${JSON.stringify(DIALS)} } })] }\n`)
   await exec('npx', ['vite', 'build', '--logLevel', 'silent', '--config', 'vite.audit.ts', '--outDir', 'dist-audit'], { cwd: shop, timeout: 300_000 })
   const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), { name: 'shop', dir: join(shop, 'dist-audit') }], { log: l => log(`   ${l}`) })
   const failures = r.results.flatMap(run => [

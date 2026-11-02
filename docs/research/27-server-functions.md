@@ -1,8 +1,8 @@
-# 27. Server functions, the tagged cache and `redirect()`: `@weft/start` (Phase 3, second slice)
+# 27. Server functions, the tagged cache and `redirect()`: `@weft-js/start` (Phase 3, second slice)
 
 Status: **designed and built 2026-10-29** in `packages/start` (`src/data.ts`, `src/exec.ts`, `src/server.tsx`,
 `src/vite.mjs`), with one option added to `resource` in `packages/weft/src/async.ts` and the fake transport in
-`weft/test`. Inputs: PLAN §4 and §4.5, research 02 §3–§4 (server functions, the five caching primitives), 14 §3
+`@weft-js/core/test`. Inputs: PLAN §4 and §4.5, research 02 §3–§4 (server functions, the five caching primitives), 14 §3
 (server state stays in the query cache, optimistic overlays, S011), 25 (routing, streaming, the first slice).
 
 This note fixes the API and the diagnostics, and records what was built, the decisions behind it, sizes and gaps.
@@ -13,7 +13,7 @@ each plugs in.
 
 ```ts
 // src/server/todos.ts: a server module (src/server/** or *.server.ts)
-import { query, mutation, redirect } from '@weft/start'
+import { query, mutation, redirect } from '@weft-js/start'
 import { z } from 'zod'
 
 export const listTodos = query({
@@ -70,7 +70,7 @@ server cache. PLAN §4's example is updated.
 
 **Context.** `run` and `load` get `ctx`: `{ request, response: { headers }, ...app }`. The app part comes from
 `src/context.server.ts` (`export default async ({ request }) => ({ db, user })`), typed by augmenting
-`interface Context` in `@weft/start`. That's the plug for Drizzle (`ctx.db`) and Better Auth (`ctx.user`, cookies
+`interface Context` in `@weft-js/start`. That's the plug for Drizzle (`ctx.db`) and Better Auth (`ctx.user`, cookies
 through `ctx.response.headers`). A cached (shared) query's `ctx.request` throws **Q006** on any read: a value cached
 for everyone must not depend on one user's cookies. (PLAN §4 asked for a type error; the runtime check comes first,
 and `scope: 'user'` comes with auth.)
@@ -88,7 +88,7 @@ Files under `src/server/**` and named `*.server.ts(x)` are **server modules**. T
   the client JS for a marker string from the fixture's db module, as research 25 does for loaders.
 - **Server:** `virtual:weft/fns` imports every server module, so `/_weft/fn/<id>` can answer before any page
   imported the function. Ids register as the modules load.
-- `query`/`mutation` imported from `@weft/start` in a file that isn't a server module is **Q003** (the plugin errors
+- `query`/`mutation` imported from `@weft-js/start` in a file that isn't a server module is **Q003** (the plugin errors
   at transform time: its `run` and imports would ship to the client).
 
 Without the plugin (unit tests under plain vitest) definitions keep their `run`, ids come from the export order
@@ -181,7 +181,7 @@ As research 14 §3.3, built:
 ## 6. Diagnostics: Q001–Q010 and S011
 
 `Q` is unused in the catalog (W, T, P, H, M, D, X are taken; research 14 owns S). `start`: reported by
-`@weft/start` while serving or running (throws carry `code`); `start` codes print in the server log as `[weft] Q…`.
+`@weft-js/start` while serving or running (throws carry `code`); `start` codes print in the server log as `[weft] Q…`.
 
 | Code | Severity | Catches | Fix |
 |---|---|---|---|
@@ -197,15 +197,15 @@ As research 14 §3.3, built:
 | **Q010** | error | A mutation request without the CSRF proof (POST + JSON + `x-weft`, same origin) | Call mutations through their stub, not a hand-made `fetch` or form |
 | **S011** | warning | `optimistic` updated a query its mutation's invalidated tags didn't cover (research 14 §3.3) | Add the query's tag to `invalidates` |
 
-## 7. Testing without a server: the fake transport in `weft/test`
+## 7. Testing without a server: the fake transport in `@weft-js/core/test`
 
-`weft/test` importing sets a marker (`Symbol.for('weft.net')`) that the `@weft/start` client runtime checks: with
+`@weft-js/core/test` importing sets a marker (`Symbol.for('weft.net')`) that the `@weft-js/start` client runtime checks: with
 it, calls go **in process** to the same executor the server uses (input validation, the request cache, tags,
 single-flight, JSON round trip), so a component test covers the client cache, overlays, rollbacks and invalidation
 with no HTTP and no Vite plugin. `net` grows:
 
 ```ts
-import { net, render, flush } from 'weft/test'
+import { net, render, flush } from '@weft-js/core/test'
 net.context({ db: fakeDb, user: { id: 'u1' } })     // the ctx the functions see
 net.latency(50)                                      // every call waits 50 ms (with fake timers, clock.tick)
 net.fail(addTodo, new Error('nope'))                 // the next call rejects (optimistic rollback)
@@ -216,13 +216,13 @@ await net.offline()                                  // calls reject with an Off
 ```
 
 Every test starts with a fresh client cache, no latency, no handlers and no failures. Inside an in-process call the
-fake request's scope is current (weft/test's `AsyncLocalStorage`), so a `run` that calls another function makes a
+fake request's scope is current (@weft-js/core/test's `AsyncLocalStorage`), so a `run` that calls another function makes a
 server call, as on a real server (that's how Q004 shows up in a unit test). Server diagnostics (Q005, Q007) print as
 `console.warn`.
 
 ## 8. Built: what was measured
 
-**DOM work** (jsdom under `weft/test`, and Chrome on the fixture's `/todos` under `weft dev`):
+**DOM work** (jsdom under `@weft-js/core/test`, and Chrome on the fixture's `/todos` under `weft dev`):
 
 | Interaction | Writes |
 |---|---|
@@ -242,7 +242,7 @@ whose `load` read the `todos` tag) is refetched once.
 | `start()` (router, levels, `Link`, navigation, `setHead`) | 4.43 KB |
 | `start()` + `query`/`mutation` and the client cache (with `resource`) | 8.36 KB |
 | **The data runtime, the difference** | **3.93 KB**, only in apps that use a query |
-| `exec` chunk (the executor, for weft/test's in-process transport) | 2.27 KB, emitted, never loaded by a browser |
+| `exec` chunk (the executor, for @weft-js/core/test's in-process transport) | 2.27 KB, emitted, never loaded by a browser |
 
 **Tests:**
 
@@ -274,7 +274,7 @@ server module imports that db, so the stubs are covered there too.
 
 - **`defineState` SSR state payload and `cookie` persist: not built.** They don't fall out of this slice:
   `renderToStream` makes a fresh app per render pass, so the payload needs the last pass's instantiated scopes
-  serialized after the stream (research 14 §2.9), and the cookie backend needs `weft/persist` to read request cookies
+  serialized after the stream (research 14 §2.9), and the cookie backend needs `@weft-js/core/persist` to read request cookies
   on the server (through `ctx.request`) and write them through `ctx.response.headers`. Both are the next state slice,
   with S013.
 - **The next slice, built:** Drizzle, Better Auth, `create-weft --db --auth --runtime`, `.weft/contract.json` and the

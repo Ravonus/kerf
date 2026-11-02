@@ -1,5 +1,5 @@
-// weft/test: render, user-level queries and actions, flush, a deterministic clock, the work-budget assertion
-// (§7b, §10b), the page fakes for weft/browser (`net`, `page`, `tabs`) and the leak check (T012).
+// @weft-js/core/test: render, user-level queries and actions, flush, a deterministic clock, the work-budget assertion
+// (§7b, §10b), the page fakes for @weft-js/core/browser (`net`, `page`, `tabs`) and the leak check (T012).
 //
 //   render(Counter)
 //   await user.click(screen.getByRole('button', { name: 'Add' }))             // ends in flush()
@@ -181,9 +181,9 @@ afterEach(context => {
     throw new Error(`T001: "${context.task.name}" made no assertion, so it passes as long as nothing throws.\n  fix: assert what the user sees, e.g. expect(screen.getByRole('button').textContent).toBe('Count 1'). Docs: weft docs T001`)
 })
 
-// ---- weft/browser: the leak check (T012) and the page fakes -----------------------------------------------------
+// ---- @weft-js/core/browser: the leak check (T012) and the page fakes -----------------------------------------------------
 
-/** What weft/browser has open right now: listeners, intervals and subscribed values, with where they were made. */
+/** What @weft-js/core/browser has open right now: listeners, intervals and subscribed values, with where they were made. */
 export const leaks = (): string[] => [...open.values()].map(([what]) => what)
 
 /**
@@ -232,9 +232,9 @@ installPage()
 const fire = (target: EventTarget, type: string, init?: object) => target.dispatchEvent(Object.assign(new Event(type), init))
 
 /**
- * The fake transport for @weft/start's server functions (research 27 §7). With weft/test loaded, `query`/`mutation`
+ * The fake transport for @weft-js/start's server functions (research 27 §7). With @weft-js/core/test loaded, `query`/`mutation`
  * calls run in process through the server's executor (validation, request cache, tags, single-flight, a JSON round
- * trip) instead of HTTP. @weft/start finds these controls under a global symbol, so weft doesn't depend on it.
+ * trip) instead of HTTP. @weft-js/start finds these controls under a global symbol, so weft doesn't depend on it.
  */
 type FnRef = { $id: string } | string
 const fnId = (f: FnRef) => (typeof f === 'string' ? f : f.$id)
@@ -249,15 +249,15 @@ const transport = {
   inflight: new Set<Promise<unknown>>(),
   /** Inside a call, the fake request's scope: nested calls in a `run` are server calls, as on a real server. */
   als: new AsyncLocalStorage<unknown>(),
-  /** @weft/start registers its client cache reset here. */
+  /** @weft-js/start registers its client cache reset here. */
   resets: [] as (() => void)[],
-  /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as weft/browser's. */
+  /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as @weft-js/core/browser's. */
   open,
-  /** The channel fake while a socket is open (@weft/start's channel.ts). */
+  /** The channel fake while a socket is open (@weft-js/start's channel.ts). */
   ws: undefined as undefined | { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> },
   /** What this client's sockets sent. */
   sent: [] as { id: string; name: string; msg: unknown }[],
-  /** The realtime fake while one is connected (@weft/start's live.ts). */
+  /** The realtime fake while one is connected (@weft-js/start's live.ts). */
   rt: undefined as undefined | { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] },
   /** Times the realtime connection was lost. */
   reconnects: 0,
@@ -278,7 +278,7 @@ function resetTransport() {
   for (const r of transport.resets) r()
 }
 
-/** The network as weft/browser's `online()` and @weft/start's server functions see it. */
+/** The network as @weft-js/core/browser's `online()` and @weft-js/start's server functions see it. */
 export const net = {
   /** Offline: `online()` turns false, and server function calls reject with an `OfflineError`. */
   offline() { fake.online = false; fire(window, 'offline'); return flush() },

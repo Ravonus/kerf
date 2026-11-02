@@ -61,7 +61,7 @@ export async function outputs() {
   const icons = await load()
   return {
     'all.tsx': file(icons),
-    // the pack, for `import Icons from '@weft/icons'`: its own file, since a module can't default-export itself to TypeScript
+    // the pack, for `import Icons from '@weft-js/warp-icons'`: its own file, since a module can't default-export itself to TypeScript
     'index.tsx': `${head}import * as pack from './all'\n\nexport * from './all'\nexport default pack\n`,
     'names.ts': `${head}export const names = ${JSON.stringify(Object.keys(icons))} as const\nexport type IconName = (typeof names)[number]\nexport type IconVariant = 'solid' | 'action'\nexport const actions = ${JSON.stringify(Object.keys(ACTIONS))} as const\nexport type IconActionName = (typeof actions)[number]\n`,
     ...Object.fromEntries(Object.keys(ACTIONS).flatMap(name => {

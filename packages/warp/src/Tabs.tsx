@@ -1,8 +1,8 @@
-import { indicator, nextIndex, overflow, uid } from '@weft/warp-core'
-import { untrack } from 'weft'
-import { use } from '@weft/warp-core/weft'
+import { indicator, nextIndex, overflow, uid } from '@weft-js/warp-core'
+import { untrack } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/tabs.css'
+import '@weft-js/warp-core/styles/components/tabs.css'
 
 export type TabOption<V extends string> = { value: V; label: any; disabled?: boolean }
 

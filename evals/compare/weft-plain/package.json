@@ -1,1 +1,1 @@
-{"name":"compare-weft-plain","private":true,"type":"module","dependencies":{"@weft/warp-core":"file:../../../packages/warp-core","weft":"file:../../../packages/weft"},"devDependencies":{"vite":"8.3.5"}}
+{"name":"compare-weft-plain","private":true,"type":"module","dependencies":{"@weft-js/warp-core":"file:../../../packages/warp-core","@weft-js/core":"file:../../../packages/weft"},"devDependencies":{"vite":"8.3.5"}}

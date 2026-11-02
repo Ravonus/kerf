@@ -85,7 +85,7 @@ export const demos: Record<string, Demo> = {
     title: 'Two views of one list',
     look: 'Ana and Ben see the same list. Here both panes are in your browser and share the same state, so nothing crosses a network.',
     tryIt: 'Add a task in either pane, then tick a box. It ticks in the other pane too.',
-    why: 'Tasks and ticks show in both panes with no sync code. With @weft/start the list comes from a server query, and .live() keeps other visitors in step the same way.',
+    why: 'Tasks and ticks show in both panes with no sync code. With @weft-js/start the list comes from a server query, and .live() keeps other visitors in step the same way.',
   },
   habit: {
     title: 'A React habit, caught by the compiler',
@@ -119,7 +119,7 @@ export const demos: Record<string, Demo> = {
   },
   ask: {
     title: 'Ask the app',
-    look: 'A small todo app above its reactive graph. The JSON is what graph() from weft/devtools returns. Development builds only: this frame is one.',
+    look: 'A small todo app above its reactive graph. The JSON is what graph() from @weft-js/core/devtools returns. Development builds only: this frame is one.',
     tryIt: 'Press Add a task, then Finish one. Only the lines that changed light up.',
     why: 'An agent sees the same JSON through weft mcp, with your real names, so it can check what depends on what instead of guessing.',
   },

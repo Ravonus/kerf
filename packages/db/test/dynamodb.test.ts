@@ -1,8 +1,8 @@
 // The `db.adapter` suite on DynamoDB Local: `WEFT_TEST_DYNAMO` is its endpoint. A scan, then a query through an index.
 import { CreateTableCommand, DeleteTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { DeleteCommand, DynamoDBDocumentClient, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb'
-import { LIST_ROWS, listSuite } from 'weft/test/plugins'
-import { decodeCursor } from '@weft/start/list'
+import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
+import { decodeCursor } from '@weft-js/start/list'
 import { dynamoSource } from '../src/dynamodb'
 
 const endpoint = process.env.WEFT_TEST_DYNAMO

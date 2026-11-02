@@ -1,5 +1,5 @@
 // The server's realtime hub (research 30 §5). No runtime imports, so one hub runs behind `/_weft/rt` and behind
-// weft/test's fake transport: both hand it a sink, and only the HTTP sink knows about bytes.
+// @weft-js/core/test's fake transport: both hand it a sink, and only the HTTP sink knows about bytes.
 //
 //   rings        one for pokes, always listening, so a rendered page's cursor can replay the gap before it connects;
 //                one per topic channel, alive while someone listens and one window longer. Cursors are
@@ -174,7 +174,7 @@ export interface Hub {
   close(c: Conn): void
   find(k: string): Conn | undefined
   connections(): Conn[]
-  /** weft/test: a message straight to every reader of a stream. */
+  /** @weft-js/core/test: a message straight to every reader of a stream. */
   push(id: string, msg: unknown): number
   /** Server-side counts for tests and `weft browser`. */
   stats(): { connections: number; subscriptions: number; channels: number }
@@ -643,7 +643,7 @@ export function liveHealth(): LiveState & { ok: boolean; required: boolean } {
   const h = hub(), s = h.live(), required = !!h.required
   return { ...s, required, ok: !required || ((s.mode === 'feed' || s.mode === 'external') && !s.down) }
 }
-/** weft/test, after each test. */
+/** @weft-js/core/test, after each test. */
 export const resetHub = () => {
   const old = current
   current = undefined

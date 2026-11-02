@@ -1,10 +1,10 @@
-import { filterShortcuts, isApple, markParts, shortcutLabels, shortcuts as registry, type Shortcut, type Shortcuts } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack, type State } from 'weft'
+import { filterShortcuts, isApple, markParts, shortcutLabels, shortcuts as registry, type Shortcut, type Shortcuts } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack, type State } from '@weft-js/core'
 import { Search } from '../Field'
 import { Kbd } from '../Kbd'
 import { Modal } from '../Modal'
 import '../styles'
-import '@weft/warp-core/styles/flows/shortcuts.css'
+import '@weft-js/warp-core/styles/flows/shortcuts.css'
 
 /**
  * The keyboard shortcuts overlay (09 §7): `?` opens a Dialog (a bottom sheet on phones) of what's registered now,

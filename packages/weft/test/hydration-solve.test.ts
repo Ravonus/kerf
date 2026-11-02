@@ -62,7 +62,7 @@ test('it follows re-exports and barrels', async () => {
 
 test('reactivity reaches callers through what they read', async () => {
   const { why } = await project({
-    'route.tsx': `import { state } from 'weft'\nconst n = state(0)\nfunction Show() { return <p>{n.value}</p> }\nexport default function R() { return <Show /> }`,
+    'route.tsx': `import { state } from '@weft-js/core'\nconst n = state(0)\nfunction Show() { return <p>{n.value}</p> }\nexport default function R() { return <Show /> }`,
   })
   expect(why('Show')).toBeTruthy()
 })
@@ -103,7 +103,7 @@ test('the hatches: `@weft client` keeps code on the client, `@weft static` stops
   const forced = await project({ 'route.tsx': `/* @weft client */\nexport default function R() { return <p>x</p> }` })
   expect(forced.routeStatic).toBe(false)
   const held = await project({
-    'route.tsx': `import { state } from 'weft'\nconst n = state(0)\n/* @weft static */\nexport default function R() { return <p>{n.value}</p> }`,
+    'route.tsx': `import { state } from '@weft-js/core'\nconst n = state(0)\n/* @weft static */\nexport default function R() { return <p>{n.value}</p> }`,
   })
   expect(held.routeStatic).toBe(true)
 })
@@ -142,21 +142,21 @@ const at = async (body: string, extra: Record<string, string> = {}) => {
 }
 
 test('handlers alone wait for an event', async () => {
-  const { load, diagnostics } = await at(`import { state } from 'weft'\nexport function C() { const n = state(0); return <button onClick={() => { document.title = 'x'; n.value++ }}>{n.value}</button> }`)
+  const { load, diagnostics } = await at(`import { state } from '@weft-js/core'\nexport function C() { const n = state(0); return <button onClick={() => { document.title = 'x'; n.value++ }}>{n.value}</button> }`)
   expect(load).toMatchObject({ when: 'interaction', tag: 'C' })
   expect(diagnostics).toEqual([])
 })
 
 test('work that stays inside waits for the viewport, and work that reaches out doesn\'t wait, with a fix', async () => {
-  const inside = await at(`import { onMount, state } from 'weft'\nexport function C() { const n = state(0); onMount(() => { window.setTimeout(() => { n.value = 1 }, 10) }); return <p>{n.value}</p> }`)
+  const inside = await at(`import { onMount, state } from '@weft-js/core'\nexport function C() { const n = state(0); onMount(() => { window.setTimeout(() => { n.value = 1 }, 10) }); return <p>{n.value}</p> }`)
   expect(inside.load.when).toBe('visible')
-  const out = await at(`import { onMount } from 'weft'\nexport function C() { onMount(() => { document.title = 'x' }); return <p onClick={() => {}}>c</p> }`)
+  const out = await at(`import { onMount } from '@weft-js/core'\nexport function C() { onMount(() => { document.title = 'x' }); return <p onClick={() => {}}>c</p> }`)
   expect(out.load).toMatchObject({ when: 'load', why: expect.stringMatching(/document/) })
   expect(out.diagnostics).toMatchObject([{ code: 'H010', file: 'route.tsx', fix: expect.stringMatching(/@weft visible/) }])
 })
 
 test('moving focus can\'t wait, and neither can autofocus or a ref that works', async () => {
-  expect((await at(`import { onMount } from 'weft'\nexport function C() { let e; onMount(() => e.focus()); return <input ref={e} /> }`)).load.when).toBe('load')
+  expect((await at(`import { onMount } from '@weft-js/core'\nexport function C() { let e; onMount(() => e.focus()); return <input ref={e} /> }`)).load.when).toBe('load')
   const auto = await at(`export function C() { return <input autofocus onInput={() => {}} /> }`)
   expect(auto.load.when).toBe('load')
   expect(auto.diagnostics).toEqual([]) // nothing to fix: it's what was asked for
@@ -164,18 +164,18 @@ test('moving focus can\'t wait, and neither can autofocus or a ref that works', 
 })
 
 test('what a child does counts, through the props the island keeps', async () => {
-  const load = (await at(`import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`, { 'd.tsx': `import { onMount } from 'weft'\nexport function D() { onMount(() => { navigator.vibrate(1) }); return <p /> }` })).load
+  const load = (await at(`import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`, { 'd.tsx': `import { onMount } from '@weft-js/core'\nexport function D() { onMount(() => { navigator.vibrate(1) }); return <p /> }` })).load
   expect(load.when).toBe('load')
   const { plan } = await project({
     'c.tsx': `export function C(props) { return <div onClick={() => {}}>{props.make()}</div> }`,
-    'd.tsx': `import { onMount } from 'weft'\nexport function D() { onMount(() => {}); return <p /> }`,
+    'd.tsx': `import { onMount } from '@weft-js/core'\nexport function D() { onMount(() => {}); return <p /> }`,
     'route.tsx': `import { C } from './c'\nimport { D } from './d'\nconst make = () => <D />\nexport default function R() { return <C make={make} /> }`,
   })
   expect(plan.loads[0].when).toBe('visible')
 })
 
 test('a box at module level or a module that runs can\'t wait: nothing else would reach the island', async () => {
-  const box = await at(`import { state } from 'weft'\nconst n = state(0)\nexport function C() { return <p onClick={() => { n.value++ }}>{n.value}</p> }`)
+  const box = await at(`import { state } from '@weft-js/core'\nconst n = state(0)\nexport function C() { return <p onClick={() => { n.value++ }}>{n.value}</p> }`)
   expect(box.load).toMatchObject({ when: 'load', why: expect.stringMatching(/module level/) })
   expect(box.diagnostics[0].code).toBe('H010')
   expect((await at(`import './setup'\nexport function C() { return <p onClick={() => {}} /> }`, { 'setup.ts': `globalThis.x = 1` })).load.when).toBe('load')
@@ -185,12 +185,12 @@ test('server data wants to be running once seen, a mutation passed along doesn\'
   const server = { 'x.server.ts': `export const list = () => 1; export const add = () => 1` }
   expect((await at(`import { list } from './x.server'\nexport function C() { const l = list(); return <p onClick={() => {}}>{l.value}</p> }`, server)).load.when).toBe('visible')
   expect((await at(`import { add } from './x.server'\nimport { F } from './f'\nexport function C() { return <F of={add} /> }`, { ...server, 'f.tsx': `export function F(props) { return <form onSubmit={() => props.of()} /> }` })).load.when).toBe('interaction')
-  expect((await at(`import { Boundary } from 'weft'\nexport function C() { return <Boundary><p onClick={() => {}} /></Boundary> }`)).load.when).toBe('visible')
+  expect((await at(`import { Boundary } from '@weft-js/core'\nexport function C() { return <Boundary><p onClick={() => {}} /></Boundary> }`)).load.when).toBe('visible')
 })
 
 test('the hatches: `@weft client` keeps its meaning, `@weft visible` overrules the proof', async () => {
   expect((await at(`/* @weft client */\nexport function C() { return <p onClick={() => {}} /> }`)).load).toMatchObject({ when: 'load', why: expect.stringMatching(/@weft client/) })
-  const seen = await at(`import { onMount } from 'weft'\n/* @weft visible */\nexport function C() { onMount(() => { document.title = 'x' }); return <p /> }`)
+  const seen = await at(`import { onMount } from '@weft-js/core'\n/* @weft visible */\nexport function C() { onMount(() => { document.title = 'x' }); return <p /> }`)
   expect(seen.load.when).toBe('visible')
   expect(seen.diagnostics).toEqual([])
 })

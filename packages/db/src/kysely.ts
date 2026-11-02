@@ -2,11 +2,11 @@
 // builder gets them from the spec, never from a request.
 
 import type { Kysely } from 'kysely'
-import { likeOf, pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
-import { StartError } from '@weft/start/data'
+import { likeOf, pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft-js/start/list'
+import { StartError } from '@weft-js/start/data'
 import { driver } from './driver'
 
-const { sql } = await driver('@weft/db/kysely', 'kysely', () => import('kysely'))
+const { sql } = await driver('@weft-js/db/kysely', 'kysely', () => import('kysely'))
 
 export interface KyselySpec extends SourceSpec {
   table: string

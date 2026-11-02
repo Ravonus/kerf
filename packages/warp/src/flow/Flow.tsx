@@ -1,11 +1,11 @@
-import { stepFlow } from '@weft/warp-core'
-import { derived, state, untrack, watch, type State } from 'weft'
+import { stepFlow } from '@weft-js/warp-core'
+import { derived, state, untrack, watch, type State } from '@weft-js/core'
 import { bindable } from '../Picker'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/flows/flow.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/flows/flow.css'
 
 export interface FlowStep {
   id: string

@@ -29,7 +29,7 @@ const planned = ['state', 'derived', 'resource', 'Boundary', 'watch', 'onMount',
 /** Commands AGENTS.md leaves to `weft tasks --json`: rarely run by hand, or taught in their own section. */
 const elsewhere = new Set(['agents-md', 'doctor', 'mcp', 'plugins', 'start', 'style', 'surfaces', 'tasks', 'tokens'])
 /** The app-facing part of subpaths whose other exports are helpers compiled code calls. */
-const entryPoints = { 'weft/dom': ['render', 'hydrate'], 'weft/ssr': ['renderToString', 'renderToStringAsync'], 'weft/browser': ['online', 'visible', 'lifecycle', 'media', 'on', 'interval'] }
+const entryPoints = { '@weft-js/core/dom': ['render', 'hydrate'], '@weft-js/core/ssr': ['renderToString', 'renderToStringAsync'], '@weft-js/core/browser': ['online', 'visible', 'lifecycle', 'media', 'on', 'interval'] }
 
 /** The Full stack section, with this app's alias for its source. */
 function fullStack(root) {
@@ -46,8 +46,8 @@ export async function agentsMd(root) {
   const core = info.exports.weft ?? []
   const missing = planned.filter(n => !core.includes(n))
 
-  // Style-group codes (D0xx, W060) and `weft style` belong to the Styling section, which only a weft with weft/style gets.
-  const styled = info.exports['weft/style']?.includes('group')
+  // Style-group codes (D0xx, W060) and `weft style` belong to the Styling section, which only a weft with @weft-js/core/style gets.
+  const styled = info.exports['@weft-js/core/style']?.includes('group')
   const dcodes = catalog.filter(e => /^D0/.test(e.code) && (e.by === 'cli' || info.status[e.code]?.implemented)).map(e => e.code).sort()
   const startApp = existsSync(join(root, 'src', 'routes'))
   const tcodes = catalog.filter(e => e.code.startsWith('T') && info.status[e.code]?.implemented).map(e => e.code)
@@ -76,14 +76,14 @@ export async function agentsMd(root) {
     `## API in weft@${info.weft.version}`,
     '',
     `- \`weft\`: ${core.filter(n => planned.includes(n)).map(n => `\`${n}\``).join(', ')}` + (core.includes('state') ? ', `state.linked`' : ''),
-    ...['weft/dom', 'weft/ssr'].map((mod, i, all) => {
+    ...['@weft-js/core/dom', '@weft-js/core/ssr'].map((mod, i, all) => {
       const names = entryPoints[mod].filter(n => info.exports[mod]?.includes(n))
       const last = all.slice(i + 1).every(m => !entryPoints[m].some(n => info.exports[m]?.includes(n)))
       return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}.${last ? ' The rest are for compiled code; never import them.' : ''}` : ''
     }).filter(Boolean),
-    info.exports['weft/browser'] ? `- \`weft/browser\`: ${entryPoints['weft/browser'].filter(n => info.exports['weft/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`; hover and press as state: \`weft docs ui-state\`.` : '',
-    info.exports['weft/surface'] ? '- `weft/surface`: canvas and WebGL, never raw `<canvas>`: `weft docs surface`.' : '',
-    info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].filter(n => !['canvasCalls', 'cleanup', 'fakeMeasure', 'leaks'].includes(n)).map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
+    info.exports['@weft-js/core/browser'] ? `- \`@weft-js/core/browser\`: ${entryPoints['@weft-js/core/browser'].filter(n => info.exports['@weft-js/core/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`; hover and press as state: \`weft docs ui-state\`.` : '',
+    info.exports['@weft-js/core/surface'] ? '- `@weft-js/core/surface`: canvas and WebGL, never raw `<canvas>`: `weft docs surface`.' : '',
+    info.exports['@weft-js/core/test'] ? `- \`@weft-js/core/test\`: ${info.exports['@weft-js/core/test'].filter(n => !['canvasCalls', 'cleanup', 'fakeMeasure', 'leaks'].includes(n)).map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
     missing.length ? `- Not in this version yet: ${missing.map(n => `\`${n}\``).join(', ')}. Don't import them.` : '',
     '',
     '## Diagnostics',
@@ -100,7 +100,7 @@ export async function agentsMd(root) {
     ...(styled
       ? ['## Styling',
          '',
-         `**Run \`weft style find <what it is>\` first**, then reuse a group or add an axis value; never class lists. New: \`const card = group('card', { base: { pad: 'group' }, axes: { status: { late: { tone: 'critical' } } } })\` from \`weft/style\`, \`<li {...card({ status })}>\`. Tokens only. ${ranges(dcodes)}, W060: \`weft docs style\`, \`weft docs design\`; \`weft fix\` applies the safe fixes.`,
+         `**Run \`weft style find <what it is>\` first**, then reuse a group or add an axis value; never class lists. New: \`const card = group('card', { base: { pad: 'group' }, axes: { status: { late: { tone: 'critical' } } } })\` from \`@weft-js/core/style\`, \`<li {...card({ status })}>\`. Tokens only. ${ranges(dcodes)}, W060: \`weft docs style\`, \`weft docs design\`; \`weft fix\` applies the safe fixes.`,
          '']
       : []),
     '## Commands',
@@ -112,7 +112,7 @@ export async function agentsMd(root) {
     ...(sections.length ? ['## Plugins', '', ...sections] : []),
     '## More',
     '',
-    `\`weft docs <topic>\` or \`weft mcp\`: \`rules\`, \`props\`, \`lists\`, \`async\`, \`testing\`, \`browser\`, \`verify\`, ${startApp ? '`start`, ' : ''}${info.exports['weft/style'] ? '`style`, ' : ''}${info.exports['weft/surface'] ? '`surface`, ' : ''}\`config\`, \`diagnostics\`, \`commands\`.`,
+    `\`weft docs <topic>\` or \`weft mcp\`: \`rules\`, \`props\`, \`lists\`, \`async\`, \`testing\`, \`browser\`, \`verify\`, ${startApp ? '`start`, ' : ''}${info.exports['@weft-js/core/style'] ? '`style`, ' : ''}${info.exports['@weft-js/core/surface'] ? '`surface`, ' : ''}\`config\`, \`diagnostics\`, \`commands\`.`,
     '',
   ]
     .filter((line, i, all) => !(line === '' && all[i - 1] === ''))

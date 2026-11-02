@@ -1,7 +1,7 @@
-// @weft/warp-core: warp without a framework. The spec CSS (styles/, split per component) and the behaviour as plain TS
+// @weft-js/warp-core: warp without a framework. The spec CSS (styles/, split per component) and the behaviour as plain TS
 // over the DOM: actions shaped (el, opts) => { update, destroy }, small stores for stateful widgets, and the pure
 // helpers a binding needs to render the specimen markup. Nothing here imports a framework (test/agnostic.test.mjs);
-// the weft binding is its own subpath, `@weft/warp-core/weft`.
+// the weft binding is its own subpath, `@weft-js/warp-core/weft`.
 export { store, uid, resetIds, type Store, type Action } from './store'
 export { installSweep, sweep, type SweepMachine } from './sweep'
 export { field, floatingLabel, labelChars } from './floating-label'

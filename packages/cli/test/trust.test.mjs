@@ -13,7 +13,7 @@ import { buildCommand, devCommand } from '../src/start.mjs'
 import { approveCommand, audit as auditPackage, auditCommand, grants, lockFile } from '../src/trust.mjs'
 import { bin, project } from './helpers.mjs'
 
-const body = (permissions = '{}', extra = '') => `import { definePlugin } from 'weft/plugin'\n${extra}\nexport default definePlugin({ name: 'acme', version: '1.0.0', permissions: ${permissions}, options: o => o ?? {}, contribute: () => ({}) })\n`
+const body = (permissions = '{}', extra = '') => `import { definePlugin } from '@weft-js/core/plugin'\n${extra}\nexport default definePlugin({ name: 'acme', version: '1.0.0', permissions: ${permissions}, options: o => o ?? {}, contribute: () => ({}) })\n`
 const pkg = { name: 'acme', version: '1.0.0', type: 'module', exports: { './plugin': './plugin.mjs' } }
 const installed = (source = body()) => ({ 'node_modules/acme/package.json': JSON.stringify(pkg), 'node_modules/acme/plugin.mjs': source })
 const app = (source, config = "{ plugins: ['acme'] }") => project({ ...installed(source), 'weft.config.json': config.replace(/(\w+):/g, '"$1":').replaceAll("'", '"') })
@@ -83,7 +83,7 @@ describe('the plugin lock', () => {
   })
 
   it('an unchanged plugin stays approved, and narrowing a permission needs no approval', async () => {
-    const dir = project({ 'weft.config.ts': "import { definePlugin } from 'weft/plugin'\nconst p = definePlugin({ name: 'mine', version: '1.0.0', permissions: { env: ['A', 'B'] }, options: o => o ?? {}, contribute: () => ({}) })\nexport default { plugins: [p()] }\n" })
+    const dir = project({ 'weft.config.ts': "import { definePlugin } from '@weft-js/core/plugin'\nconst p = definePlugin({ name: 'mine', version: '1.0.0', permissions: { env: ['A', 'B'] }, options: o => o ?? {}, contribute: () => ({}) })\nexport default { plugins: [p()] }\n" })
     await approve(dir)
     expect((await audit(dir)).plugins[0]).toMatchObject({ source: 'config', integrity: null, blocked: false })
     writeFileSync(join(dir, 'weft.config.ts'), readFileSync(join(dir, 'weft.config.ts'), 'utf8').replace("['A', 'B']", "['A']"))
@@ -166,7 +166,7 @@ describe('weft plugins audit', () => {
 
   it('follows relative imports and modules named by slots, and says which dependencies it stopped at', async () => {
     const dir = project({
-      ...installed(`import { definePlugin, defineSlot, provide } from 'weft/plugin'\nimport './lib/a.mjs'\nimport 'left-pad'\nconst build = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })\nexport default definePlugin({ name: 'acme', version: '1.0.0', options: o => o ?? {}, contribute: () => ({ provides: [provide(build, { sides: { build: { module: 'acme/build', export: 'b' } } })] }) })\n`),
+      ...installed(`import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'\nimport './lib/a.mjs'\nimport 'left-pad'\nconst build = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })\nexport default definePlugin({ name: 'acme', version: '1.0.0', options: o => o ?? {}, contribute: () => ({ provides: [provide(build, { sides: { build: { module: 'acme/build', export: 'b' } } })] }) })\n`),
       'node_modules/acme/package.json': JSON.stringify({ ...pkg, exports: { './plugin': './plugin.mjs', './build': './build.mjs' } }),
       'node_modules/left-pad/package.json': JSON.stringify({ name: 'left-pad', main: 'index.js' }),
       'node_modules/left-pad/index.js': '',
@@ -174,7 +174,7 @@ describe('weft plugins audit', () => {
       'node_modules/acme/build.mjs': "import 'node:fs'\n",
       'weft.config.json': '{ "plugins": ["acme"] }',
     })
-    expect((await audit(dir)).plugins[0]).toMatchObject({ undeclared: ['fs', 'spawn'], dependencies: ['left-pad', 'weft'] })
+    expect((await audit(dir)).plugins[0]).toMatchObject({ undeclared: ['fs', 'spawn'], dependencies: ['@weft-js/core', 'left-pad'] })
   })
 
   it('blocks undeclared use in check even for a plugin that asks for nothing, until it is accepted', async () => {

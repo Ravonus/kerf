@@ -48,7 +48,7 @@ fn defaults_that_read_other_props_are_rewritten() {
 
 #[test]
 fn defaults_keep_list_and_box_reads_live() {
-    let (code, d) = run("import { state } from 'weft'; const on = state(1); export function A({ n = on.value }) { return <p>{n}</p> }");
+    let (code, d) = run("import { state } from '@weft-js/core'; const on = state(1); export function A({ n = on.value }) { return <p>{n}</p> }");
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("props.n === undefined ? on.value : props.n"), "{code}");
 }
@@ -57,7 +57,7 @@ fn defaults_keep_list_and_box_reads_live() {
 fn rest_props_stay_live() {
     // on an element: a plain copy, read by the element's one spread binding (no view, no merged object)
     let (code, _) = run("export function A({ a, ...rest }) { return <div {...rest}>{a}</div> }");
-    assert!(code.contains(r#"import { restOf as _$restOf } from "weft""#), "{code}");
+    assert!(code.contains(r#"import { restOf as _$restOf } from "@weft-js/core""#), "{code}");
     assert!(code.contains(r#"_$spread(_e1, () => ({ ..._$restOf(props, ["a"]) }))"#), "{code}");
     assert!(!code.contains("_$omit") && !code.contains("_$mergeProps"), "{code}");
     // passed on as a value: one live view
@@ -113,7 +113,7 @@ fn w006_nested_destructuring_has_a_safe_fix() {
 fn children_are_memoised_once_per_component() {
     let (code, d) = run("export function Box({ title, children }) { return <div><h2>{title}</h2>{children}{children}</div> }");
     assert!(d.is_empty(), "{d:?}");
-    assert!(code.contains(r#"import { memo as _$weftMemo } from "weft""#), "{code}");
+    assert!(code.contains(r#"import { memo as _$weftMemo } from "@weft-js/core""#), "{code}");
     assert_eq!(code.matches("_$weftMemo(() => props.children)").count(), 1, "{code}");
     assert_eq!(code.matches("_children").count(), 3, "one declaration, two reads: {code}");
     assert!(!code.contains("return props.children"), "no read bypasses the memo: {code}");
@@ -130,7 +130,7 @@ fn children_memo_in_props_form_and_expression_arrows() {
 #[test]
 fn children_memo_only_when_read() {
     let (code, _) = run("export function A({ children, a }) { return <p>{a}</p> }");
-    assert!(!code.contains("_$weftMemo") && !code.contains("from \"weft\""), "{code}");
+    assert!(!code.contains("_$weftMemo") && !code.contains("from \"@weft-js/core\""), "{code}");
     let (code, _) = run("export function A({ children }) { const _children = 1; return <p>{children}{_children}</p> }");
     assert!(code.contains("const _children$ = _$weftMemo("), "avoids the name in use: {code}");
 }
@@ -150,7 +150,7 @@ fn w016_call_with_nothing_reactive_in_a_component_prop() {
 #[test]
 fn w016_not_for_live_calls_constructors_or_native_attributes() {
     let (_, d) = run(
-        "import { state } from 'weft'
+        "import { state } from '@weft-js/core'
          export function L({ xs, rate }) {
            const q = state('')
            return <ul title={stamp()}>{xs.map(x => <Row key={x.id} price={fmt(x.price * rate)} hit={match(q.value)} at={new Date()} />)}</ul>
@@ -173,7 +173,7 @@ fn w017_prop_indexed_by_the_row_item() {
 
 #[test]
 fn w017_box_value_indexed_by_the_row_item_autofixes_to_get() {
-    let src = "import { state } from 'weft'
+    let src = "import { state } from '@weft-js/core'
 export function L({ products }) {
   const cart = state({})
   return <ul>{products.map(p => <li key={p.id}>{cart.value[p.id]} / {cart.value[p.id] * p.price}</li>)}</ul>
@@ -200,7 +200,7 @@ fn w017_not_for_handlers_constant_keys_or_setup() {
 #[test]
 fn w017_row_component_reads_an_entry_of_a_box_prop() {
     // v4 eval: a row read `live.value[stock.id]`, so every quote re-ran all 200 rows' formatters.
-    let src = "import { derived, type State } from 'weft'
+    let src = "import { derived, type State } from '@weft-js/core'
 export function Row({ stock, live }: { stock: { id: string }; live: State<Record<string, { price: number }>> }) {
   const quote = derived(() => live.value[stock.id])
   return <li title={String(live.value[stock.id].price)}>{live.value[stock.id].price} {quote.value.price}</li>
@@ -219,7 +219,7 @@ export function Row({ stock, live }: { stock: { id: string }; live: State<Record
 
 #[test]
 fn w017_local_box_indexed_by_a_prop_autofixes_safely() {
-    let src = "import { state } from 'weft'
+    let src = "import { state } from '@weft-js/core'
 export function Badge({ id }: { id: string }) {
   const counts = state<Record<string, number>>({})
   return <b>{counts.value[id] ?? 0}</b>
@@ -233,7 +233,7 @@ export function Badge({ id }: { id: string }) {
 #[test]
 fn w017_row_passes_an_entry_of_a_box_prop_to_a_child() {
     // v4 eval: `<StockRow live={live.value[s.id]} />`, the React/Solid shape, re-ran every row on every quote.
-    let src = "import type { State } from 'weft'
+    let src = "import type { State } from '@weft-js/core'
 export function List({ stocks, live }: { stocks: { id: string }[]; live: State<Record<string, number>> }) {
   return <ul>{stocks.map(s => <StockRow key={s.id} stock={s} live={live.value[s.id]} />)}</ul>
 }";
@@ -255,7 +255,7 @@ export function List({ stocks, live }: { stocks: { id: string }[]; live: State<R
 fn w017_not_for_box_keys_callbacks_handlers_setup_or_constant_keys() {
     // The v4 reference App: whole-record reads that run once per component, not once per row.
     let (_, d) = run(
-        "import { derived, state, untrack, type State } from 'weft'
+        "import { derived, state, untrack, type State } from '@weft-js/core'
 export function App({ stock, live, onPick }: { stock: { id: string }; live: State<Record<string, number>>; onPick: (n: number) => void }) {
   const tab = state('a')
   const views = state<Record<string, string>>({})
@@ -275,7 +275,7 @@ export function App({ stock, live, onPick }: { stock: { id: string }; live: Stat
 #[test]
 fn w018_untracked_snapshot_rendered_in_jsx() {
     // v4 eval: the W001 fix text offers `untrack()`; a row that took it rendered prices that never moved.
-    let src = "import { untrack, type State } from 'weft'
+    let src = "import { untrack, type State } from '@weft-js/core'
 export function Row({ stock, live }: { stock: { id: string }; live: State<Record<string, { price: number }>> }) {
   const quote = untrack(() => live.get(stock.id))
   return <li data-price={quote.price}>{quote.price}</li>
@@ -295,7 +295,7 @@ export function Row({ stock, live }: { stock: { id: string }; live: State<Record
 #[test]
 fn w018_not_for_snapshots_read_elsewhere_or_of_constants() {
     let (_, d) = run(
-        "import { state, untrack } from 'weft'
+        "import { state, untrack } from '@weft-js/core'
 export function Form({ initial }: { initial: string }) {
   const text = state('')
   const start = untrack(() => initial)
@@ -419,20 +419,20 @@ fn alias_written_with_no_single_prop_is_w001() {
 
 #[test]
 fn bind_gives_the_prop_a_setter_and_a_plain_read_has_none() {
-    let code = clean("import { bind, state } from 'weft'; export function A() { const n = state(1); return <C n={bind(n)} m={n.value} /> }");
+    let code = clean("import { bind, state } from '@weft-js/core'; export function A() { const n = state(1); return <C n={bind(n)} m={n.value} /> }");
     assert!(code.contains("get n() { return n.value; }, set n(_v) { n.value = _v; }"), "{code}");
     assert!(!code.contains("set m"), "{code}");
 }
 
 #[test]
 fn bind_attribute_is_the_same_binding() {
-    let code = clean("import { state } from 'weft'; export function A() { const count = state(1); return <C bind:count={count} /> }");
+    let code = clean("import { state } from '@weft-js/core'; export function A() { const count = state(1); return <C bind:count={count} /> }");
     assert!(code.contains("get count() { return count.value; }, set count(_v) { count.value = _v; }"), "{code}");
     assert!(!code.contains("bind:count"), "{code}");
     let code = clean("export function A(props) { return <C bind:n={props.box} /> }");
     assert!(code.contains("set n(_v) { props.box.value = _v; }"), "{code}");
     for src in [
-        "import { state } from 'weft'; export function A() { const n = state(1); return <input bind:value={n} /> }",
+        "import { state } from '@weft-js/core'; export function A() { const n = state(1); return <input bind:value={n} /> }",
         "export function A() { return <C bind:n={1} /> }",
         "export function A() { return <C bind:n /> }",
     ] {
@@ -444,9 +444,9 @@ fn bind_attribute_is_the_same_binding() {
 #[test]
 fn bind_outside_a_component_prop_is_w061() {
     for src in [
-        "import { bind, state } from 'weft'; export function A() { const n = state(1); return <input value={bind(n)} /> }",
-        "import { bind, state } from 'weft'; export function A() { const n = state(1); const v = bind(n); return <p /> }",
-        "import { bind } from 'weft'; export function A() { return <C n={bind(1)} /> }",
+        "import { bind, state } from '@weft-js/core'; export function A() { const n = state(1); return <input value={bind(n)} /> }",
+        "import { bind, state } from '@weft-js/core'; export function A() { const n = state(1); const v = bind(n); return <p /> }",
+        "import { bind } from '@weft-js/core'; export function A() { return <C n={bind(1)} /> }",
     ] {
         let (_, d) = run(src);
         assert!(codes(&d).contains(&"W061"), "{src}");
@@ -470,7 +470,7 @@ fn alias_not_for_arrays_computed_keys_or_calls() {
 fn alias_passed_to_a_helper_in_the_body_is_still_one_read() {
     let (_, d) = run("export function A(props) { const a = props.a; const c = makeChart(a); return <p>{c}</p> }");
     assert_eq!(codes(&d), ["W001"]);
-    let (_, d) = run("import { state } from 'weft'; export function A(props) { const a = props.a; const s = state(a); return <p>{s.value}</p> }");
+    let (_, d) = run("import { state } from '@weft-js/core'; export function A(props) { const a = props.a; const s = state(a); return <p>{s.value}</p> }");
     assert_eq!(codes(&d), ["W005"]);
 }
 
@@ -514,7 +514,7 @@ fn w001_prop_read_in_setup() {
 
 #[test]
 fn w001_box_value_read_in_setup() {
-    let (_, d) = run("import { state } from 'weft'; export function A() { const c = state(0); const twice = c.value * 2; return <p>{twice}</p> }");
+    let (_, d) = run("import { state } from '@weft-js/core'; export function A() { const c = state(0); const twice = c.value * 2; return <p>{twice}</p> }");
     assert_eq!(codes(&d), ["W001"]);
 }
 
@@ -527,7 +527,7 @@ fn w001_helper_call_with_a_prop() {
 #[test]
 fn reads_in_jsx_handlers_derived_and_watch_are_fine() {
     let (_, d) = run(
-        "import { state, derived, watch } from 'weft'
+        "import { state, derived, watch } from '@weft-js/core'
          export function A({ items, onPick }) {
            const q = state('')
            const shown = derived(() => items.filter(i => i.name.includes(q.value)))
@@ -569,7 +569,7 @@ fn optional_map_is_a_keyed_list() {
     assert!(code.contains("x().name"), "{code}");
     assert!(!code.contains(".map"), "no plain `.map` over accessor reads: {code}");
 
-    let src = "import { state } from 'weft'\nexport function L() { const posts = state(null); return <ul>{posts.value?.map(p => <li key={p.id}>{p.title}</li>)}</ul> }";
+    let src = "import { state } from '@weft-js/core'\nexport function L() { const posts = state(null); return <ul>{posts.value?.map(p => <li key={p.id}>{p.title}</li>)}</ul> }";
     let (code, d) = run(src);
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("return posts.value;"), "`each` reads the box live: {code}");
@@ -730,7 +730,7 @@ fn w013_early_return_in_row() {
 #[test]
 fn w014_error_when_the_spread_list_is_rendered_by_key_here() {
     let (_, d) = run(
-        "import { derived } from 'weft'
+        "import { derived } from '@weft-js/core'
          export function L({ products, prices }) {
            const merged = derived(() => products.map(p => ({ ...p, price: prices[p.id] ?? p.price })))
            return <ul>{merged.value.map(p => <li key={p.id}>{p.price}</li>)}</ul>
@@ -744,7 +744,7 @@ fn w014_error_when_the_spread_list_is_rendered_by_key_here() {
 #[test]
 fn w014_warning_when_the_spread_list_leaves_the_file() {
     let (_, d) = run(
-        "import { derived } from 'weft'
+        "import { derived } from '@weft-js/core'
          export function App({ products, prices }) {
            const merged = derived(() => products.map(p => ({ ...p, price: prices[p.id] })))
            return <List items={merged.value} />
@@ -757,7 +757,7 @@ fn w014_warning_when_the_spread_list_leaves_the_file() {
 #[test]
 fn w014_not_for_replacing_one_item() {
     let (_, d) = run(
-        "import { state } from 'weft'
+        "import { state } from '@weft-js/core'
          export function App() {
            const products = state([])
            const push = (id, price) => { products.value = products.value.map(p => (p.id === id ? { ...p, price } : p)) }
@@ -770,7 +770,7 @@ fn w014_not_for_replacing_one_item() {
 #[test]
 fn w014_project_view_upgrades_a_warning_that_reaches_a_keyed_list() {
     let app = compile(
-        "import { derived } from 'weft'
+        "import { derived } from '@weft-js/core'
          import { List as ProductList } from './List'
          export function App({ products, prices }) {
            const merged = derived(() => products.map(p => ({ ...p, price: prices[p.id] })))
@@ -798,7 +798,7 @@ fn w014_project_view_upgrades_a_warning_that_reaches_a_keyed_list() {
 
 #[test]
 fn w014_project_view_leaves_unkeyed_targets_alone() {
-    let src = "import { derived } from 'weft'
+    let src = "import { derived } from '@weft-js/core'
          export function Grid(props) { return <p>{props.rows.length}</p> }
          export function Keyed(props) { return <ul>{props.rows.map(r => <li key={r.id} />)}</ul> }
          export function App({ products, prices }) {
@@ -822,7 +822,7 @@ fn w014_project_view_leaves_unkeyed_targets_alone() {
 
 #[test]
 fn w015_bare_box_in_jsx_child_and_native_attribute() {
-    let src = "import { state } from 'weft'; export function A() { const n = state(0); return <input value={n} title={n.value}>{n}</input> }";
+    let src = "import { state } from '@weft-js/core'; export function A() { const n = state(0); return <input value={n} title={n.value}>{n}</input> }";
     let (_, d) = run(src);
     assert_eq!(codes(&d), ["W015", "W015"]);
     let mut fixed = src.to_string();
@@ -835,7 +835,7 @@ fn w015_bare_box_in_jsx_child_and_native_attribute() {
 
 #[test]
 fn passing_a_box_to_a_component_is_allowed() {
-    let (_, d) = run("import { state } from 'weft'; export function A() { const c = state(''); return <CouponInput value={c} /> }");
+    let (_, d) = run("import { state } from '@weft-js/core'; export function A() { const c = state(''); return <CouponInput value={c} /> }");
     assert!(d.is_empty(), "{d:?}");
 }
 
@@ -907,7 +907,7 @@ fn dev_templates_name_their_source_line() {
 
 #[test]
 fn weft_back_end_source_maps_point_at_the_authored_lines() {
-    let source = "import { state } from 'weft'\n\nconst helper = () => 1\n\nexport function A() {\n  const count = state(helper())\n  return (\n    <section>\n      <button onClick={() => count.value++}>\n        {count.value * 2}\n      </button>\n    </section>\n  )\n}\n";
+    let source = "import { state } from '@weft-js/core'\n\nconst helper = () => 1\n\nexport function A() {\n  const count = state(helper())\n  return (\n    <section>\n      <button onClick={() => count.value++}>\n        {count.value * 2}\n      </button>\n    </section>\n  )\n}\n";
     let out = compile(source, &Options { filename: "App.tsx".into(), source_map: true, ..Default::default() });
     let code = out.code.unwrap();
     assert!(!code.contains(['\u{E000}', '\u{E001}', '\u{E002}', '\u{E003}']), "{code}");
@@ -958,9 +958,9 @@ fn hot(source: &str) -> String {
 
 #[test]
 fn hmr_registers_components_and_keeps_body_state() {
-    let code = hot("import { state } from 'weft'\nexport function Card() { const open = state(false); return <p>{open.value}</p> }\nconst Row = () => <li />");
+    let code = hot("import { state } from '@weft-js/core'\nexport function Card() { const open = state(false); return <p>{open.value}</p> }\nconst Row = () => <li />");
     assert!(code.contains(r#"_$keep(state(false), "Card", "open:"#), "{code}");
-    assert!(code.contains(r#"import { hot as _$hot, keep as _$keep } from "weft/hmr";"#), "{code}");
+    assert!(code.contains(r#"import { hot as _$hot, keep as _$keep } from "@weft-js/core/hmr";"#), "{code}");
     assert!(code.contains(r#"_$hot("/app/Card.tsx", { Card: [Card, ""#) && code.contains("Row: [Row, "), "{code}");
     assert!(code.contains("import.meta.hot.accept();"), "{code}");
 }
@@ -982,7 +982,7 @@ fn hmr_key_follows_the_initializer() {
 #[test]
 fn hmr_accepts_only_component_modules() {
     assert!(!hot("export const total = 1\nexport function C() { return <i /> }").contains("accept()"));
-    assert!(!hot("import { render } from 'weft/dom'\nfunction App() { return <i /> }\nrender(() => <App />, document.body)").contains("accept()"));
+    assert!(!hot("import { render } from '@weft-js/core/dom'\nfunction App() { return <i /> }\nrender(() => <App />, document.body)").contains("accept()"));
     assert!(hot("function App() { return <i /> }\nexport default App\nexport type P = { a: 1 }").contains("accept()"));
 }
 
@@ -995,12 +995,12 @@ fn hmr_is_dev_dom_only() {
         Options { dev: true, hmr: true, generate: "ssr".into(), ..Default::default() },
     ] {
         let code = compile(src, &o).code.unwrap();
-        assert!(!code.contains("weft/hmr") && !code.contains("_$keep"), "{code}");
+        assert!(!code.contains("@weft-js/core/hmr") && !code.contains("_$keep"), "{code}");
     }
     // A Start app hydrates in dev too, and keeps the page across a save.
     let hydrated = compile(src, &Options { dev: true, hmr: true, hydratable: true, ..Default::default() }).code.unwrap();
-    assert!(hydrated.contains("weft/hmr"), "{hydrated}");
-    assert!(!hot("const x = 1").contains("weft/hmr"), "no components, no registration");
+    assert!(hydrated.contains("@weft-js/core/hmr"), "{hydrated}");
+    assert!(!hot("const x = 1").contains("@weft-js/core/hmr"), "no components, no registration");
 }
 
 // ---- warp findings (research 24 §6) ----------------------------------------------------------------------------
@@ -1008,9 +1008,9 @@ fn hmr_is_dev_dom_only() {
 #[test]
 fn an_import_after_jsx_compiles() {
     for o in [Options::default(), Options { hydratable: true, ..Default::default() }, Options { generate: "ssr".into(), ..Default::default() }] {
-        let out = compile("// a — b\nexport const A = () => <p>— x</p>\nimport { state } from 'weft'\nexport const B = () => <i>{state(1).value}</i>", &o);
+        let out = compile("// a — b\nexport const A = () => <p>— x</p>\nimport { state } from '@weft-js/core'\nexport const B = () => <i>{state(1).value}</i>", &o);
         let code = out.code.expect("compiles");
-        assert!(code.contains(r#"import { state } from "weft""#), "{code}");
+        assert!(code.contains(r#"import { state } from "@weft-js/core""#), "{code}");
         assert_eq!(code.matches("_$tpl(").count() + code.matches("_$htpl(").count(), if o.generate == "ssr" { 0 } else { 2 }, "{code}");
     }
 }
@@ -1066,13 +1066,13 @@ fn shaped(source: &str) -> String {
 #[test]
 fn no_variants_unless_asked() {
     let (code, _) = run("export function A() { return <p>{1}</p> }");
-    assert!(!code.contains("$shape") && !code.contains("weft/shape"), "{code}");
+    assert!(!code.contains("$shape") && !code.contains("@weft-js/core/shape"), "{code}");
 }
 
 #[test]
 fn a_variant_keeps_markup_and_drops_behaviour() {
     let code = shaped(
-        "import { q } from './q'; import { state } from 'weft';
+        "import { q } from './q'; import { state } from '@weft-js/core';
          export function Feed() {
            const posts = q({ limit: 5 }); const n = state(0);
            return <ul id=\"a\" class=\"l\" onClick={() => n.value++}>{posts.value?.map(p => <li key={p.id}><b>{p.title}</b><i>{n.value}</i></li>)}</ul>
@@ -1107,7 +1107,7 @@ fn imported_variants_come_from_options_shapes() {
 
 #[test]
 fn pending_shape_is_lowered_with_no_options() {
-    let src = "import { Boundary } from 'weft'; function Feed() { return <p>{1 + 1}</p> } export function P() { return <Boundary pending=\"shape\"><Feed /></Boundary> }";
+    let src = "import { Boundary } from '@weft-js/core'; function Feed() { return <p>{1 + 1}</p> } export function P() { return <Boundary pending=\"shape\"><Feed /></Boundary> }";
     let (code, d) = run(src);
     assert!(d.is_empty(), "{d:?}");
     assert!(code.contains("$$site0"), "{code}");
@@ -1212,7 +1212,7 @@ fn facts_name_what_cannot_wait() {
 
 #[test]
 fn facts_tell_a_box_from_a_function_and_see_calls() {
-    let src = "import { state } from 'weft'\nimport { list } from './server/x'\nexport const cart = state(0)\nexport const A = () => <p onClick={() => list()}>{list().value}</p>\nexport const B = () => <p onClick={() => list()}>b</p>";
+    let src = "import { state } from '@weft-js/core'\nimport { list } from './server/x'\nexport const cart = state(0)\nexport const A = () => <p onClick={() => list()}>{list().value}</p>\nexport const B = () => <p onClick={() => list()}>b</p>";
     assert!(node(src, "cart").value);
     assert!(!node(src, "A").value);
     assert_eq!(node(src, "A").calls, vec!["list"]);

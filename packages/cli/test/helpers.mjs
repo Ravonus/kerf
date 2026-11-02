@@ -13,7 +13,7 @@ afterAll(() => {
 })
 
 /**
- * A copy of the v3 reference app inside this package (so `zod` and `weft/config` resolve from it), with edits.
+ * A copy of the v3 reference app inside this package (so `zod` and `@weft-js/core/config` resolve from it), with edits.
  * @param {Record<string, string>} files extra or replaced files
  * @param {(src: Record<string, string>) => void} [edit]
  */

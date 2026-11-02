@@ -1,5 +1,5 @@
-// @weft/pay (PLAN §4.4, research 10): the catalog, and what a `pay.rail` provider implements. Safe in the client graph: nothing
-// here reaches a rail or a server. App code names products and plans; a rail is one line in `plugins`. `@weft/pay/server`
+// @weft-js/pay (PLAN §4.4, research 10): the catalog, and what a `pay.rail` provider implements. Safe in the client graph: nothing
+// here reaches a rail or a server. App code names products and plans; a rail is one line in `plugins`. `@weft-js/pay/server`
 // holds the ledger, and `checkout()` never grants anything: the grant arrives from a verified rail event.
 //
 //   export const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 } }, grants: ['pro'] })
@@ -37,7 +37,7 @@ export interface Product<G extends string = string, P extends string = string> e
 const INTERVALS: readonly string[] = ['day', 'week', 'month', 'year']
 const META = new Set(['trialDays', 'interval'])
 
-/** Thrown with a stable `code`. `answer` is the shape @weft/start sends any plugin's error to the client in. */
+/** Thrown with a stable `code`. `answer` is the shape @weft-js/start sends any plugin's error to the client in. */
 export class PayError extends Error {
   override name = 'PayError'
   constructor(readonly code: string, message: string, readonly status = 400) {

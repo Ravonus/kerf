@@ -1,5 +1,5 @@
-import { onMount, state } from 'weft'
-import { Button, Card } from '@weft/warp'
+import { onMount, state } from '@weft-js/core'
+import { Button, Card } from '@weft-js/warp'
 
 const rows = Array.from({ length: 1000 }, (_, i) => ({
   id: i,

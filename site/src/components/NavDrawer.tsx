@@ -1,6 +1,6 @@
-import { Link } from '@weft/start'
-import { Drawer } from '@weft/warp'
-import { type State } from 'weft'
+import { Link } from '@weft-js/start'
+import { Drawer } from '@weft-js/warp'
+import { type State } from '@weft-js/core'
 
 const LINKS = [['/docs', 'Docs'], ['/examples', 'Examples'], ['/toolkit', 'Toolkit'], ['/icons', 'Icons']] as const
 

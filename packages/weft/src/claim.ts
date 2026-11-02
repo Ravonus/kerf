@@ -146,7 +146,7 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
     if (!keys.hydrating) return insert(parent, v, marker)
     // One element where a range would be (ssr.ts `hole`): the walk stopped on it, and building it claims it.
     if (once === 1 && marker?.nodeType === 1) {
-      // Dev: a hot-swappable component (weft/hmr) is an accessor, and has to stay live.
+      // Dev: a hot-swappable component (@weft-js/core/hmr) is an accessor, and has to stay live.
       if (DEV && typeof v === 'function') {
         let current: Node[] = [marker]
         let at = marker.nextSibling

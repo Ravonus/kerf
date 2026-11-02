@@ -20,7 +20,7 @@ install. To fix that everywhere, set `min-release-age=3` in `~/.npmrc` and drop 
 weft-local new my-app --yes
 ```
 
-It takes the same flags as `create-weft`, such as `--ui tailwind --db postgres --layer prisma`. Without `--yes` it asks. Then:
+It takes the same flags as `npm create @weft-js`, such as `--ui tailwind --db postgres --layer prisma`. Without `--yes` it asks. Then:
 
 ```bash
 cd my-app
@@ -38,7 +38,7 @@ From the app:
 weft-local refresh
 ```
 
-This rebuilds the compiler if the crate changed, rebuilds `@weft/text/engine`, repacks, and replaces the weft packages in that
+This rebuilds the compiler if the crate changed, rebuilds `@weft-js/text/engine`, repacks, and replaces the weft packages in that
 app. Pass a path to run it from elsewhere. Restart `weft dev` afterwards. The same command moves an existing app that
 depends on `weft` onto the tarballs.
 

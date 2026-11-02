@@ -1,8 +1,8 @@
 // The `db.adapter` suite on the Firestore emulator: `FIRESTORE_EMULATOR_HOST`, as the SDK reads it.
 import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { LIST_ROWS, listSuite } from 'weft/test/plugins'
-import { decodeCursor } from '@weft/start/list'
+import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
+import { decodeCursor } from '@weft-js/start/list'
 import { firestoreSource } from '../src/firestore'
 
 const host = process.env.FIRESTORE_EMULATOR_HOST

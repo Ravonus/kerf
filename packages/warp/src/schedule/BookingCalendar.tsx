@@ -1,5 +1,5 @@
-import { announce, clock, fmt, longDuration, minutes, uid, type IsoDate, type IsoTime } from '@weft/warp-core'
-import { derived, flush, state, untrack, type State } from 'weft'
+import { announce, clock, fmt, longDuration, minutes, uid, type IsoDate, type IsoTime } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { InlineCalendar } from '../Calendar'
 import { Alert } from '../Alert'
@@ -7,8 +7,8 @@ import { usePickerEnv } from '../Picker'
 import { Skeleton } from '../Skeleton'
 import { TimeField } from '../TimeField'
 import { SweepParts, confirmSweep } from './bits'
-import '@weft/warp-core/styles/app/booking.css'
-import '@weft/warp-core/styles/rich/calendar-grid.css'
+import '@weft-js/warp-core/styles/app/booking.css'
+import '@weft-js/warp-core/styles/rich/calendar-grid.css'
 
 /** A start in minutes; `disabled` shows it taken rather than hiding it. */
 export type BookingSlot = { s: number; disabled?: boolean }

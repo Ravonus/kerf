@@ -349,7 +349,7 @@ export function scanProject(root: string, files: string[], transform: Transform)
     const abs = resolvePath(file)
     if (!defs.has(abs)) {
       const code = existsSync(abs) ? readFileSync(abs, 'utf8') : ''
-      defs.set(abs, code.includes('weft/style') ? (transform(code, { filename: abs, checkOnly: true }).facts.groups ?? []).map(g => ({ ...g, file: relative(root, abs).split('\\').join('/') })) : [])
+      defs.set(abs, code.includes('@weft-js/core/style') ? (transform(code, { filename: abs, checkOnly: true }).facts.groups ?? []).map(g => ({ ...g, file: relative(root, abs).split('\\').join('/') })) : [])
     }
     return defs.get(abs)!
   }

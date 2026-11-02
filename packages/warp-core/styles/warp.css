@@ -20,7 +20,7 @@
                       ="area" keeps the visual box and adds a centred hit-min expander (::after)
      data-prose       reading text: prose size + leading, the dial's measure, text-wrap: pretty
      data-text-canvas a canvas host: re-resolves the px role strings (--warp-text-*-canvas) against
-                      its own container, for weft/text and Surfaces (01-foundations §2, Type)
+                      its own container, for @weft-js/core/text and Surfaces (01-foundations §2, Type)
      data-numeric     figures on a face with tnum at every stop (vivid's serif has none)
      data-trim        ="display": non-heading text that sets text-box: var(--warp-text-display-trim) keeps
                       its trimmed box through the font swap (h1–h6 and the hero title do this already)
@@ -117,7 +117,7 @@
 /* -- the expression dial ------------------------------------------------- */
 :root, [data-expression="balanced"] {
   --warp-x: 0.5;
-  --warp-icon-o: inline; --warp-icon-q: none; --warp-icon-b: inline; --warp-icon-v: none; --warp-icon-weft: 2; /* @weft/icons' tier, 10 §8 */
+  --warp-icon-o: inline; --warp-icon-q: none; --warp-icon-b: inline; --warp-icon-v: none; --warp-icon-weft: 2; /* @weft-js/warp-icons' tier, 10 §8 */
   --warp-ref-neutral-h: 80;  --warp-ref-neutral-c: 0.005;   /* graphite, a hint warm */
   --warp-ref-accent-k: 1;    --warp-ref-tone-k: 1;
   --warp-ref-depth: 0.7;
@@ -607,7 +607,7 @@
   --warp-text-emphasis-style: var(--warp-ref-emphasis-style);
   --warp-text-emphasis-color: var(--warp-color-accent-text);
 
-  /* -- type · canvas role strings (weft/text, Surfaces) ------------------
+  /* -- type · canvas role strings (@weft-js/core/text, Surfaces) ------------------
      A canvas `font` can't read var() or calc(): these resolve to "weight Npx family-stack" (read them
      with getComputedStyle(host).getPropertyValue). Line height, tracking and case aren't part of a canvas
      font: read the matching -leading / -tracking / -case tokens. The fluid roles resolve here, at the scope

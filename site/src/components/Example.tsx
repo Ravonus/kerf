@@ -1,6 +1,6 @@
 import { demos } from '../demos'
 import code from '../generated/demos.json'
-import '@weft/warp-core/styles/rich/codeblock.css'
+import '@weft-js/warp-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
 /** A live example: what it is, the running result beside its real source, what to try, and why it matters. */

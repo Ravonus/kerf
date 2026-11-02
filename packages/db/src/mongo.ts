@@ -1,10 +1,10 @@
 // A list source over a MongoDB collection, and writes from anywhere as tag pokes. Every filter is `$eq`/`$in` on a
-// checked scalar and a search is an escaped `$regex`, so a request has no way to name an operator (agorix H6). Takes
+// checked scalar and a search is an escaped `$regex`, so a request has no way to name an operator. Takes
 // whatever has the driver's collection methods, so `mongodb` is the app's dependency.
 
-import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
-import { hub } from '@weft/start/hub'
-import type { Source } from '@weft/start/changes'
+import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft-js/start/list'
+import { hub } from '@weft-js/start/hub'
+import type { Source } from '@weft-js/start/changes'
 
 export interface MongoCollection {
   collectionName?: string

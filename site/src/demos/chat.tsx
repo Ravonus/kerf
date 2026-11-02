@@ -1,6 +1,6 @@
-import { skip } from '@weft/start'
-import { state } from 'weft'
-import { Badge, Button, Card, Input } from '@weft/warp'
+import { skip } from '@weft-js/start'
+import { state } from '@weft-js/core'
+import { Badge, Button, Card, Input } from '@weft-js/warp'
 import { wire } from '../lib/wire'
 import { room } from '../server/chat'
 

@@ -1,13 +1,13 @@
-import { ClockIcon, InfoIcon, PinIcon, RepeatIcon, UsersIcon, VideoIcon } from '@weft/icons'
-import { clockRange, dateOf, fmt, longDuration, popover, ruleSentence, parseRule, slotOf, type Align, type CalEvent, type Side } from '@weft/warp-core'
-import { derived, type State } from 'weft'
+import { ClockIcon, InfoIcon, PinIcon, RepeatIcon, UsersIcon, VideoIcon } from '@weft-js/warp-icons'
+import { clockRange, dateOf, fmt, longDuration, popover, ruleSentence, parseRule, slotOf, type Align, type CalEvent, type Side } from '@weft-js/warp-core'
+import { derived, type State } from '@weft-js/core'
 import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/components/popover.css'
-import '@weft/warp-core/styles/app/avatar-stack.css'
-import '@weft/warp-core/styles/app/event-card.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/components/popover.css'
+import '@weft-js/warp-core/styles/app/avatar-stack.css'
+import '@weft-js/warp-core/styles/app/event-card.css'
 
 export type EventPopoverProps = {
   event: CalEvent | null

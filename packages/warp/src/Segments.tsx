@@ -1,7 +1,7 @@
-import { dayPeriods, fieldName, hour12, isComplete, isEmpty, isSegment, ymd, parseDate, parseTime, press, segmentParts, segmentText, segmentValueText, settle, writeParts, type SegmentKind, type SegmentOptions, type SegmentPart, type IsoDate } from '@weft/warp-core'
-import { derived, flush, state, untrack, watch } from 'weft'
-import { formReset } from '@weft/warp-core'
-import { use } from '@weft/warp-core/weft'
+import { dayPeriods, fieldName, hour12, isComplete, isEmpty, isSegment, ymd, parseDate, parseTime, press, segmentParts, segmentText, segmentValueText, settle, writeParts, type SegmentKind, type SegmentOptions, type SegmentPart, type IsoDate } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, watch } from '@weft-js/core'
+import { formReset } from '@weft-js/warp-core'
+import { use } from '@weft-js/warp-core/weft'
 
 const keyOf = (p: SegmentPart) => (isSegment(p) ? p.type : `l${p.at}`)
 

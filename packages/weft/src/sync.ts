@@ -1,4 +1,4 @@
-// weft/sync: `state(init, { persist, sync: 'tabs' })` in a defineState scope (research 14 §2.8, research 32 §1). One
+// @weft-js/core/sync: `state(init, { persist, sync: 'tabs' })` in a defineState scope (research 14 §2.8, research 32 §1). One
 // BroadcastChannel per app; the weft() Vite plugin imports this where the option is used.
 //
 // A write goes out as the top-level keys that changed, for a plain object, else as the whole value, coalesced per

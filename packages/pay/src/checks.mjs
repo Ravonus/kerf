@@ -162,10 +162,10 @@ function clientReads(rel, sf, reads) {
 
 /** A server entry in the client graph: it would carry the ledger, and it can't run there. */
 function serverImports(rel, text, out) {
-  for (const m of text.matchAll(/from\s+['"](@weft\/pay\/(?:server|drizzle))['"]/g)) out.push({ code: 'PAY017', ...spanOf(rel, m.index, m[0].length), why: `\`${m[1]}\` is imported in client code: the ledger runs on the server only.` })
+  for (const m of text.matchAll(/from\s+['"](@weft-js\/pay\/(?:server|drizzle))['"]/g)) out.push({ code: 'PAY017', ...spanOf(rel, m.index, m[0].length), why: `\`${m[1]}\` is imported in client code: the ledger runs on the server only.` })
 }
 
-/** @param {import('weft/plugin').CheckContext} ctx */
+/** @param {import('@weft-js/core/plugin').CheckContext} ctx */
 export function run(ctx) {
   const out = []
   const rels = ctx.files.filter(r => r.startsWith('src/') && !isTest(r) && !r.endsWith('.d.ts'))
@@ -179,7 +179,7 @@ export function run(ctx) {
     const server = isServer(rel)
     secrets(rel, text, server, out)
     if (!server) serverImports(rel, text, out)
-    if (!(/@weft\/pay|entitlements|requires:|\bcheckout\b|\bproduct\(|PayRail|price_|prod_|plink_/.test(text) || STRIPE_EVENT.test(text))) continue
+    if (!(/@weft-js\/pay|entitlements|requires:|\bcheckout\b|\bproduct\(|PayRail|price_|prod_|plink_/.test(text) || STRIPE_EVENT.test(text))) continue
     const sf = parse(rel, text)
     webhooks(rel, text, sf, out)
     money(rel, sf, out)

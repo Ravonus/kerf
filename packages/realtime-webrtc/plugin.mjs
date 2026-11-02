@@ -1,10 +1,10 @@
 // webrtc() for weft.config.ts: no slot, since a page passes the transport to `presence`. Listed, what it reaches is on
 // the record. A browser talks to STUN, TURN and peers directly, and none of that goes through the server.
-import { definePlugin } from 'weft/plugin'
+import { definePlugin } from '@weft-js/core/plugin'
 
 export const webrtc = definePlugin({
-  name: '@weft/realtime-webrtc',
-  version: '0.0.0',
+  name: '@weft-js/realtime-webrtc',
+  version: '0.1.0',
   weft: '*',
   permissions: { net: ['browser:peers', 'browser:ice-servers'] },
   contribute: () => ({

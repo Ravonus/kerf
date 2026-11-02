@@ -34,7 +34,7 @@ function readLock(root) {
   }
 }
 
-/** The package a plugin name is in: `@weft/db/mongo` is a subpath of `@weft/db`. */
+/** The package a plugin name is in: `@weft-js/db/mongo` is a subpath of `@weft-js/db`. */
 export const packageOf = name => name.split('/').slice(0, name.startsWith('@') ? 2 : 1).join('/')
 
 /** Where a plugin is installed: the nearest `node_modules/<package>`, through its symlink. Null for one defined in the config. */

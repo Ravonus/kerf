@@ -2,7 +2,7 @@
 // inspectable and joinable like any other table. An entry of its own, so an app on another data layer needs no drizzle-orm.
 
 import { eq, getTableName } from 'drizzle-orm'
-import type { DbHandle } from '@weft/start/db/core'
+import type { DbHandle } from '@weft-js/start/db/core'
 import type { PayStore, Purchase } from './server'
 
 export function drizzlePayStore(db: { $weft: DbHandle }, tables: { purchases: any; payEvents: any }): PayStore {

@@ -1,11 +1,11 @@
 // @vitest-environment node
 // An app that draws no chart pays nothing for charts (06 §2), and one form doesn't bring the others.
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 async function bundle(jsx, names) {
   const id = '\0shake-entry.tsx'
-  const code = `import { render } from 'weft/dom'\nimport { ${names} } from '@weft/warp'\nrender(() => ${jsx}, document.body)\n`
+  const code = `import { render } from '@weft-js/core/dom'\nimport { ${names} } from '@weft-js/warp'\nrender(() => ${jsx}, document.body)\n`
   const out = await build({
     configFile: false, logLevel: 'silent', root: new URL('..', import.meta.url).pathname,
     plugins: [weft(), { name: 'entry', resolveId: s => (s === 'shake-entry.tsx' ? id : null), load: i => (i === id ? code : null) }],

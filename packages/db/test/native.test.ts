@@ -1,6 +1,6 @@
 // The Native layer: bound values, migrations once, transactions. MySQL and Postgres repeat it when WEFT_TEST_MYSQL or
 // WEFT_TEST_POSTGRES names a private instance.
-import { runtime } from '@weft/start/data'
+import { runtime } from '@weft-js/start/data'
 import { Kysely } from 'kysely'
 import { nativeAuth } from '../src/native/auth'
 import { createNative, type Driver } from '../src/native/index'

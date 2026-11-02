@@ -12,7 +12,7 @@ const pkg = base ?? join(here, '../../packages/weft')
 const name = process.env.NAME ?? (base ? 'weft-base' : 'weft')
 const alone = base || process.env.NAME
 const weft = (await import(join(pkg, 'vite.mjs'))).default
-const alias = [{ find: /^weft\/dom$/, replacement: join(pkg, 'src/dom.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }]
+const alias = [{ find: /^@weft-js\/core\/dom$/, replacement: join(pkg, 'src/dom.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }]
 const define = { 'process.env.NODE_ENV': '"production"' }
 const stacks = {
   [name]: { root: 'weft', plugins: [weft()], resolve: { alias } },

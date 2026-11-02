@@ -1,8 +1,7 @@
 {
-  "name": "@weft/warp-core",
-  "version": "0.0.0",
-  "private": true,
-  "description": "warp without a framework: the spec CSS split per component, and behaviour as plain TS over the DOM (the sweep, the floating label, the dials, motion, and small machines for stateful widgets). @weft/warp sits on it; use it directly when you want your own markup.",
+  "name": "@weft-js/warp-core",
+  "version": "0.1.0",
+  "description": "warp core: tokens, CSS and framework-agnostic behaviour",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -10,10 +9,11 @@
   ],
   "files": [
     "src",
-    "bindings",
     "styles",
+    "bindings",
     "scripts/contrast-check.mjs",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": "./src/index.ts",
@@ -26,7 +26,7 @@
     "./styles/*": "./styles/*"
   },
   "peerDependencies": {
-    "weft": "*"
+    "@weft-js/core": "*"
   },
   "peerDependenciesMeta": {
     "weft": {
@@ -37,10 +37,19 @@
     "jsdom": "30.1.3",
     "lightningcss": "1.33.0",
     "vitest": "5.0.5",
-    "weft": "file:../weft"
+    "@weft-js/core": "file:../weft"
   },
   "scripts": {
     "build:css": "node scripts/split-css.mjs",
     "test": "node scripts/split-css.mjs --check && vitest run"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ]
 }

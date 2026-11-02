@@ -1,4 +1,4 @@
-import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context, getOwner } from 'weft'
+import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context, getOwner } from '@weft-js/core'
 
 test('reads are consistent straight after a write', () => {
   const a = state(1)

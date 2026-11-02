@@ -77,10 +77,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   must('node', [join(repo, 'packages/create-weft/bin/create-weft.mjs'), dir, '--db', 'none', '--ui', 'none', '--name', 'rt'], repo)
   const file = join(dir, 'package.json')
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === 'weft' || name.startsWith('@weft/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft/', ''))}`
+  for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
   pkg.dependencies.postgres = '4.0.0'
-  pkg.dependencies['@weft/realtime-redis'] = `file:${join(repo, 'packages/realtime-redis')}`
-  pkg.dependencies['@weft/realtime-nats'] = `file:${join(repo, 'packages/realtime-nats')}`
+  pkg.dependencies['@weft-js/realtime-redis'] = `file:${join(repo, 'packages/realtime-redis')}`
+  pkg.dependencies['@weft-js/realtime-nats'] = `file:${join(repo, 'packages/realtime-nats')}`
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   const fixture = join(here, '../test/fixtures/app/src')
   cpSync(join(fixture, 'server/feed.ts'), join(dir, 'src/server/feed.ts'))
@@ -88,10 +88,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   cpSync(join(fixture, 'routes/live.tsx'), join(dir, 'src/routes/live.tsx'))
   cpSync(join(fixture, 'server/chat.ts'), join(dir, 'src/server/chat.ts'))
   cpSync(join(fixture, 'routes/chat.tsx'), join(dir, 'src/routes/chat.tsx'))
-  writeFileSync(join(dir, 'src/realtime.server.ts'), `import { realtime } from '@weft/start'
-import { postgresBus } from '@weft/start/bus/postgres'
-import { redisBus } from '@weft/realtime-redis'
-import { natsBus } from '@weft/realtime-nats'
+  writeFileSync(join(dir, 'src/realtime.server.ts'), `import { realtime } from '@weft-js/start'
+import { postgresBus } from '@weft-js/start/bus/postgres'
+import { redisBus } from '@weft-js/realtime-redis'
+import { natsBus } from '@weft-js/realtime-nats'
 const { WEFT_RT_POSTGRES: pg, WEFT_RT_REDIS: redis, WEFT_RT_NATS: nats } = process.env
 export default realtime(pg ? { bus: postgresBus({ url: pg }) } : redis ? { bus: redisBus({ url: redis }) } : nats ? { bus: natsBus({ servers: nats }) } : {})
 `)

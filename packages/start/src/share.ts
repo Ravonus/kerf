@@ -13,8 +13,8 @@
 // no path. A tab is a pure function of `tabs` and `clients`, and the socket a pure diff against them (`reconcile`), so a
 // new leader runs the code an old one ran.
 
-import { createRoot, effect, untrack } from 'weft'
-import { NONE, seams, type Counts, type ShareLine } from 'weft/interaction'
+import { createRoot, effect, untrack } from '@weft-js/core'
+import { NONE, seams, type Counts, type ShareLine } from '@weft-js/core/interaction'
 import { connectBuiltIn, keepOpen, wakeSocket } from './channel'
 import { BEAT, campaign, freeTab, holdTab, probeLink, tab, whenGone, type Campaign } from './link'
 

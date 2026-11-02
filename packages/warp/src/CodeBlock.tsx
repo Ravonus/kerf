@@ -1,10 +1,10 @@
-import { CopyIcon, CheckIcon } from '@weft/icons'
-import { highlight } from '@weft/warp-core'
+import { CopyIcon, CheckIcon } from '@weft-js/warp-icons'
+import { highlight } from '@weft-js/warp-core'
 import './styles'
-import '@weft/warp-core/styles/components/button.css'
-import '@weft/warp-core/styles/components/copy.css'
-import '@weft/warp-core/styles/rich/codeblock.css'
-import '@weft/warp-core/styles/rich/code-tabs.css'
+import '@weft-js/warp-core/styles/components/button.css'
+import '@weft-js/warp-core/styles/components/copy.css'
+import '@weft-js/warp-core/styles/rich/codeblock.css'
+import '@weft-js/warp-core/styles/rich/code-tabs.css'
 
 export interface CodeBlockProps {
   code: string
@@ -27,7 +27,7 @@ function CopyButton({ text }: { text?: string }) {
 
 /**
  * Code, coloured on the server (04 CodeBlock). It has no state, so it hydrates to nothing: `copyButtons()` from
- * `@weft/warp-core`, called once anywhere in the app, runs every copy button in the document.
+ * `@weft-js/warp-core`, called once anywhere in the app, runs every copy button in the document.
  */
 export function CodeBlock({ code, language = 'tsx', filename, lines, wrap }: CodeBlockProps) {
   return (

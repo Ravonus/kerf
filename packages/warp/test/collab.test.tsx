@@ -1,9 +1,9 @@
 import { onTestFinished } from 'vitest'
 // The collab pack driven as a user would (07 §5, §6; 06 §10).
 import { fireEvent } from '@testing-library/dom'
-import type { ChatMessage, CursorPeer, FormOp, Peer } from '@weft/warp-core'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import type { ChatMessage, CursorPeer, FormOp, Peer } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Toaster } from '../src/Toast'
 import { AutoTrack } from '../src/collab/AutoTrack'
 import { CommentAnchor, CommentRail, CommentThread, type CommentThreadData } from '../src/collab/Comments'

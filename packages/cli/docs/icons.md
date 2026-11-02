@@ -1,6 +1,6 @@
 # Icons
 
-`@weft/icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has two forms, hollow, the default, and solid, drawn apart in every tier and shaded with dither. Rules: `docs/design/warp/10-icons.md`.
+`@weft-js/warp-icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has two forms, hollow, the default, and solid, drawn apart in every tier and shaded with dither. Rules: `docs/design/warp/10-icons.md`.
 
 `weft add icons` installs it and adds `icons()` to the config. warp already depends on it.
 
@@ -9,13 +9,13 @@
 Three forms, and all three build to the same bytes:
 
 ```tsx
-import { CheckIcon } from '@weft/icons'
+import { CheckIcon } from '@weft-js/warp-icons'
 <CheckIcon />
 
-import Icons from '@weft/icons'           // or: import * as Icons
+import Icons from '@weft-js/warp-icons'           // or: import * as Icons
 <Icons.Check />
 
-import { Icon } from '@weft/warp'         // or: '@weft/icons/icon'
+import { Icon } from '@weft-js/warp'         // or: '@weft-js/warp-icons/icon'
 <Icon name="check" />
 ```
 
@@ -83,7 +83,7 @@ With no options each icon carries its tiers, and CSS shows the one for the neare
 To compile one tier in, with no switch, name it in the config:
 
 ```ts
-import { icons } from '@weft/icons/plugin'
+import { icons } from '@weft-js/warp-icons/plugin'
 
 export default { plugins: [icons({ tier: 'vivid' })] }
 ```

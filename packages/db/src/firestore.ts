@@ -2,8 +2,8 @@
 // document id is the row's id. Firestore can't search inside a string, and a range is one field at a time, so `search`
 // is a prefix on the first search column, and can't be combined with another sort.
 
-import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
-import { StartError } from '@weft/start/data'
+import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft-js/start/list'
+import { StartError } from '@weft-js/start/data'
 
 const NAME = '__name__', HIGH = '', IN_MAX = 30
 

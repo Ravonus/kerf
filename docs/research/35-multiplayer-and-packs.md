@@ -8,22 +8,22 @@ drizzle query need no pack, and each pack replaces exactly one thing.
 
 | Package | What it is | Slot | Backed by |
 | --- | --- | --- | --- |
-| `@weft/multiplayer` | Library: presence, cursors, relay, synced scroll | none | a `channel` |
-| `@weft/realtime-redis` | Bus (moved from `@weft/start`) | `realtime.bus` | ioredis |
-| `@weft/realtime-nats` | Bus (moved) | `realtime.bus` | NATS |
-| `@weft/realtime-durable-object` | Bus and its class (moved) | none: a binding, not an env var | Cloudflare |
-| `@weft/realtime-webrtc` | Peer transport | none | RTCDataChannel |
-| `@weft/realtime-socketio` | Peer transport, plus `relay()` | none | socket.io |
-| `@weft/realtime-livekit` | Peer transport, plus `livekitTicket` | none | LiveKit |
-| `@weft/db/sql` | List source | `db.adapter`, key `sql` | any tagged SQL |
-| `@weft/db/kysely` | List source | key `kysely` | Kysely |
-| `@weft/db/prisma` | List source | key `prisma` | Prisma |
-| `@weft/db/mongo` | List source, `watchMongo` | key `mongo` | MongoDB |
-| `@weft/db/firestore` | List source | key `firestore` | firebase-admin |
-| `@weft/db/dynamodb` | List source | key `dynamodb` | AWS SDK |
+| `@weft-js/multiplayer` | Library: presence, cursors, relay, synced scroll | none | a `channel` |
+| `@weft-js/realtime-redis` | Bus (moved from `@weft-js/start`) | `realtime.bus` | ioredis |
+| `@weft-js/realtime-nats` | Bus (moved) | `realtime.bus` | NATS |
+| `@weft-js/realtime-durable-object` | Bus and its class (moved) | none: a binding, not an env var | Cloudflare |
+| `@weft-js/realtime-webrtc` | Peer transport | none | RTCDataChannel |
+| `@weft-js/realtime-socketio` | Peer transport, plus `relay()` | none | socket.io |
+| `@weft-js/realtime-livekit` | Peer transport, plus `livekitTicket` | none | LiveKit |
+| `@weft-js/db/sql` | List source | `db.adapter`, key `sql` | any tagged SQL |
+| `@weft-js/db/kysely` | List source | key `kysely` | Kysely |
+| `@weft-js/db/prisma` | List source | key `prisma` | Prisma |
+| `@weft-js/db/mongo` | List source, `watchMongo` | key `mongo` | MongoDB |
+| `@weft-js/db/firestore` | List source | key `firestore` | firebase-admin |
+| `@weft-js/db/dynamodb` | List source | key `dynamodb` | AWS SDK |
 
-The names follow the plan, not research 13's older `@weft/plugin-bus-*`. `postgresBus` stays in `@weft/start`, and
-drizzle stays the default list source in `@weft/start/list/drizzle`, because a scaffolded app already has both drivers.
+The names follow the plan, not research 13's older `@weft/plugin-bus-*`. `postgresBus` stays in `@weft-js/start`, and
+drizzle stays the default list source in `@weft-js/start/list/drizzle`, because a scaffolded app already has both drivers.
 
 Left out on purpose: a `crud()` generator (the compiler can't see what a call returns), a channel `filter` hook (`to`
 covers it), SSE plus POST as a socket fallback, a Web Locks leader tab, R007 (`trust: 'peers'` has no field to read:
@@ -63,7 +63,7 @@ required, so a row can't return a column nobody named (agorix H6). A source decl
 
 ## 6. How it's checked
 
-`busSuite`, `listSuite` and `LIST_ROWS` are in `weft/test/plugins`, `transportSuite` in `@weft/multiplayer/test`. Each
+`busSuite`, `listSuite` and `LIST_ROWS` are in `@weft-js/core/test/plugins`, `transportSuite` in `@weft-js/multiplayer/test`. Each
 runs on the real thing when its variable is set: `WEFT_TEST_REDIS`, `WEFT_TEST_NATS`, `WEFT_TEST_POSTGRES`,
 `WEFT_TEST_MONGO`, `WEFT_TEST_DYNAMO`, `FIRESTORE_EMULATOR_HOST`. `packages/cli/test/packs.test.mjs` runs every pack
 through the permissions audit.

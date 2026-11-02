@@ -57,7 +57,7 @@ let nextId = 0
 /** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
 let at = 0
 let queue: Computation[] = []
-/** weft/keyed: tells a box's entry readers about a write. */
+/** @weft-js/core/keyed: tells a box's entry readers about a write. */
 let keyed: ((box: Box<any>, prev: any, v: any) => void) | undefined
 export const setKeyed = (f: typeof keyed) => { keyed = f }
 /** The newest queued effect's id, and whether one came out of creation order. */
@@ -68,12 +68,12 @@ let scheduled = false
 /** `onMount` callbacks waiting for their nodes to be placed: run after `render` and at the end of each `flush`. */
 let mounts: (() => void)[] = []
 
-/** SSR and hydration switches: `server` skips effects (weft/ssr); `data` is the page's server data (weft/dom hydrate). */
+/** SSR and hydration switches: `server` skips effects (@weft-js/core/ssr); `data` is the page's server data (@weft-js/core/dom hydrate). */
 export const rt: {
   server: boolean
   /** The render's data: resolved resources and boundary states by key, written by the server, read by hydrate. */
   data?: SsrData
-  /** Server only: fetches the current render started, and a hole resolver (weft/ssr). */
+  /** Server only: fetches the current render started, and a hole resolver (@weft-js/core/ssr). */
   wait?: Promise<unknown>[]
   /** Resources outside any Boundary: `settle()` waits for them, since they have nowhere to stream to. */
   top?: Promise<unknown>[]
@@ -84,15 +84,15 @@ export const rt: {
   stream?: Map<string, string>
   /** The state payload of the page being hydrated: each scope takes its entry once, as it's created (research 29 §2). */
   state?: Record<string, Record<string, unknown>>
-  /** A server process (@weft/start): a scope reached outside a render throws S002 instead of sharing one app. */
+  /** A server process (@weft-js/start): a scope reached outside a render throws S002 instead of sharing one app. */
   isolated?: boolean
-  /** weft/test: slot overrides for this render (`render(App, {}, { slots })`), so a slot needs no generated module. */
+  /** @weft-js/core/test: slot overrides for this render (`render(App, {}, { slots })`), so a slot needs no generated module. */
   slots?: Record<string, unknown>
 } = { server: false }
 
 export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'>; /** `defineState` boxes that differ from `init`, by scope */ s?: Record<string, Record<string, unknown>> }
 
-/** Reactive work counter, read by `weft/test` (`toTouchAtMost(n, { runs })`). */
+/** Reactive work counter, read by `@weft-js/core/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }
 
 /** The empty list every graph list starts as (never written: `add` replaces it). */
@@ -284,7 +284,7 @@ function unwrap(v: any): any {
 
 const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) && v !== flat && v.some(live))
 
-/** The last row list made of single elements (weft/dom `For`): nothing in it is live, and `place` can take it as it is. */
+/** The last row list made of single elements (@weft-js/core/dom `For`): nothing in it is live, and `place` can take it as it is. */
 export let flat: unknown = NONE
 export const setFlat = (list: unknown) => { flat = list }
 
@@ -324,7 +324,7 @@ export function flush() {
   } while (queue.length)
 }
 
-/** Run pending `onMount` callbacks (in creation order). weft/dom calls it once `render`/`hydrate` placed the app. */
+/** Run pending `onMount` callbacks (in creation order). @weft-js/core/dom calls it once `render`/`hydrate` placed the app. */
 export function runMounts() {
   while (mounts.length) {
     const batch = mounts
@@ -424,7 +424,7 @@ export interface Linked<T> extends State<T> {
   readonly conflict: Derived<{ theirs: T; base: T } | undefined>
 }
 
-/** A box. `.linked`, `.get` and `.set` come with weft/keyed, which the `weft` entry and the Vite plugin bring in. */
+/** A box. `.linked`, `.get` and `.set` come with @weft-js/core/keyed, which the `weft` entry and the Vite plugin bring in. */
 export const state: {
   <T>(init: T, options?: StateOptions<T>): State<T>
   linked<T>(source: () => T, options?: { key: () => unknown }): Linked<T>
@@ -439,7 +439,7 @@ export class Memo<T> implements Derived<T> {
   }
 }
 
-/** Dev only: named boxes and derived values that are alive now, for the graph (weft/devtools). */
+/** Dev only: named boxes and derived values that are alive now, for the graph (@weft-js/core/devtools). */
 export const named = new Set<Box<any> | Computation>()
 
 /**
@@ -504,7 +504,7 @@ function settle(node: Computation) {
   }
 }
 
-/** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
+/** A child hole (@weft-js/core/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
 export function hole<H>(value: () => unknown, apply: (value: any, was: any, h: H) => void, h?: H) {
   if (rt.server) return
   settle(computation(value, 2, apply, h))

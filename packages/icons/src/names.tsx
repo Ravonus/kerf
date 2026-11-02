@@ -1,7 +1,7 @@
 // A name to its icon. This file is what dev and tests see, with every icon in. A build swaps it for a module holding only
 // the names the app uses (compile.mjs), so nothing here reaches production unless a name is truly dynamic.
-import * as all from '@weft/icons'
-import type { IconComponent } from '@weft/icons'
+import * as all from '@weft-js/warp-icons'
+import type { IconComponent } from '@weft-js/warp-icons'
 import { lookup, type IconActionName, type IconName, type IconVariant } from './all'
 
 export type { IconActionName, IconName, IconVariant }

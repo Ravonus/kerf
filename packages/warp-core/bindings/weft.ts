@@ -1,6 +1,6 @@
-// The weft binding, and the one file in this package that imports a framework. `@weft/warp-core` itself never does
-// (test/agnostic.test.mjs), so this stays behind its own subpath: `@weft/warp-core/weft`.
-import { onCleanup, onMount, untrack, watch } from 'weft'
+// The weft binding, and the one file in this package that imports a framework. `@weft-js/warp-core` itself never does
+// (test/agnostic.test.mjs), so this stays behind its own subpath: `@weft-js/warp-core/weft`.
+import { onCleanup, onMount, untrack, watch } from '@weft-js/core'
 import type { Action } from '../src/store'
 
 /**

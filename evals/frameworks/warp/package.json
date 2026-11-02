@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@weft/warp": "file:../../../packages/warp",
-    "@weft/warp-core": "file:../../../packages/warp-core",
-    "weft": "file:../../../packages/weft"
+    "@weft-js/warp": "file:../../../packages/warp",
+    "@weft-js/warp-core": "file:../../../packages/warp-core",
+    "@weft-js/core": "file:../../../packages/weft"
   },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",

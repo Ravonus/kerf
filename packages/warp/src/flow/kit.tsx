@@ -1,16 +1,16 @@
 // What the flow screens share (09 §1): the title, mark and rail parts, the step's form frame and its error surfaces.
 // Internal, except what the barrel names.
-import { announce, mapFlowError, secondsClock, type FlowError, type FlowErrorOptions } from '@weft/warp-core'
-import { derived, flush, onCleanup, onMount, state, untrack, watch } from 'weft'
+import { announce, mapFlowError, secondsClock, type FlowError, type FlowErrorOptions } from '@weft-js/warp-core'
+import { derived, flush, onCleanup, onMount, state, untrack, watch } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button, type ButtonProps } from '../Button'
 import { Banner } from '../parts'
 import { toast } from '../Toast'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/flows/meter.css' // the result mark
-import '@weft/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/flows/meter.css' // the result mark
+import '@weft-js/warp-core/styles/layout/stack.css'
 
 export type Heading = 'h1' | 'h2' | 'h3'
 

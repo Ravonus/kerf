@@ -2,8 +2,8 @@
 // reconnect, and whatever was published meanwhile is gone: every `ready` after the first is the `gap`.
 
 import { Redis } from 'ioredis'
-import type { Bus } from '@weft/start/bus'
-import { StartError } from '@weft/start/data'
+import type { Bus } from '@weft-js/start/bus'
+import { StartError } from '@weft-js/start/data'
 
 export interface RedisBusOptions {
   /** `redis://…` or `rediss://…`. */

@@ -1,11 +1,11 @@
 // Canvas and the dither family: markup, a11y, the server's output, and that one app's bytes aren't another's.
-import { resetIds } from '@weft/warp-core'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { flush, render } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import { Canvas, Dither, DitherField, DitherGlyph } from '../src/index'
-// @ts-expect-error: query imports (weft/vite)
+// @ts-expect-error: query imports (@weft-js/core/vite)
 import * as server from './fixtures/pack-dither.tsx?weft-ssr'
 // @ts-expect-error
 import * as client from './fixtures/pack-dither.tsx?weft-hydrate'

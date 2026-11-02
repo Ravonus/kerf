@@ -1,6 +1,6 @@
 // The intent vocabulary of style groups (research 23 §2.1): research 03's closed keys and token names, resolved to
 // declarations through warp's token variables (docs/design/warp/tokens/warp.css, `--warp-*`). Both the types in
-// weft/style and the build-time resolver (./css.ts) read this one table. Plain data: the Vite plugin imports it in
+// @weft-js/core/style and the build-time resolver (./css.ts) read this one table. Plain data: the Vite plugin imports it in
 // Node, so no syntax beyond what type stripping erases.
 
                                              

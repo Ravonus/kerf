@@ -13,7 +13,7 @@ const weft = (...args) => {
   return { code: r.status, stdout: r.stdout, stderr: r.stderr }
 }
 
-const cards = `import { group } from 'weft/style'
+const cards = `import { group } from '@weft-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
@@ -33,7 +33,7 @@ export const statusBadge = group('status-badge', {
 })
 `
 
-const orders = `import { state } from 'weft'
+const orders = `import { state } from '@weft-js/core'
 import { orderCard, statusBadge } from './cards'
 
 export function Orders(props: { orders: { id: string; name: string; status: 'open' | 'shipped' | 'late' }[] }) {

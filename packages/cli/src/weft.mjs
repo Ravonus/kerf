@@ -1,4 +1,4 @@
-// The installed weft: its compiler (only through the public `weft/compiler` transform()), version and exports.
+// The installed weft: its compiler (only through the public `@weft-js/core/compiler` transform()), version and exports.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -9,7 +9,7 @@ const own = createRequire(import.meta.url)
 
 /** The project's own weft wins; the CLI's weft (its dev/peer dependency) is the fallback. */
 export function resolveWeft(root) {
-  const tries = [() => createRequire(join(root, 'package.json')).resolve('weft/compiler'), () => own.resolve('weft/compiler')]
+  const tries = [() => createRequire(join(root, 'package.json')).resolve('@weft-js/core/compiler'), () => own.resolve('@weft-js/core/compiler')]
   for (const [i, attempt] of tries.entries()) {
     let path
     try {
@@ -22,7 +22,7 @@ export function resolveWeft(root) {
     const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
     return { from: i === 0 ? 'project' : 'cli', dir, version: pkg.version, pkg, compilerPath: path }
   }
-  throw Object.assign(new Error('weft is not installed: `weft/compiler` resolves neither from the project nor from @weft/cli'), { code: 'E_NO_WEFT' })
+  throw Object.assign(new Error('weft is not installed: `@weft-js/core/compiler` resolves neither from the project nor from @weft-js/cli'), { code: 'E_NO_WEFT' })
 }
 
 const compilers = new Map()
@@ -59,7 +59,7 @@ export function exportsOf(weft, subpaths = ['.', './dom', './ssr', './test', './
       }
     }
     read(file)
-    out[sub === '.' ? 'weft' : `weft/${sub.slice(2)}`] = [...names].sort()
+    out[sub === '.' ? '@weft-js/core' : `@weft-js/core/${sub.slice(2)}`] = [...names].sort()
   }
   return out
 }

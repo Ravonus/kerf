@@ -1,11 +1,11 @@
-import { indicator, uid } from '@weft/warp-core'
-import { untrack } from 'weft'
-import type { Interaction } from 'weft/interaction'
+import { indicator, uid } from '@weft-js/warp-core'
+import { untrack } from '@weft-js/core'
+import type { Interaction } from '@weft-js/core/interaction'
 import { Icon, type IconRef } from './Icon'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { useUi } from './use-ui'
 import './fields'
-import '@weft/warp-core/styles/inputs/choice.css'
+import '@weft-js/warp-core/styles/inputs/choice.css'
 
 const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
 

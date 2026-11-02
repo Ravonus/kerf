@@ -5,7 +5,7 @@
 //
 // A poke is a local `cache.invalidate`: readers refetch through `query`, and the keyed list writes what changed.
 
-import { DEV, batch, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
+import { DEV, batch, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
 import type { AuthScope, Context, Fn, LiveApi, LiveMode, LiveOptions, LiveStatus, Skip, StandardSchemaV1 } from './data'
 import type { Body, SubEntry, Tracked } from './hub'
 import { HANDOVER, noSockets, openLine, type Line } from './link'
@@ -240,7 +240,7 @@ const socket: Link = {
 }
 
 /**
- * weft/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
+ * @weft-js/core/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
  * fake, and through it the hub, as chunks of every app, used or not.
  */
 const FAKE = './live-fake.ts'
@@ -467,7 +467,7 @@ function listen(on: boolean) {
   if (!on) clearTimeout(hiddenAt)
 }
 
-/** weft/test, after each test. */
+/** @weft-js/core/test, after each test. */
 function reset() {
   for (const s of subs.values()) clearTimeout(s.timer)
   subs.clear()

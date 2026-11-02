@@ -1,6 +1,6 @@
 // Each component's work budget (PLAN §3.7 discipline): after mount, one interaction (fixtures/interactions.ts) may
 // cost at most its budget of DOM mutations and reactive re-runs, and must show its result.
-import { flush, render, touches } from 'weft/test'
+import { flush, render, touches } from '@weft-js/core/test'
 import * as C from './fixtures/Cases'
 import { cases } from './fixtures/interactions'
 

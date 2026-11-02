@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 import { devRunner, devSockets } from './dev-runtime.mjs'
 import weftStart, { startDir } from './vite.mjs'
 

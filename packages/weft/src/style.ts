@@ -1,4 +1,4 @@
-// weft/style: named style groups (research 23). A group is data: intent keys and token names (./style/vocab.ts),
+// @weft-js/core/style: named style groups (research 23). A group is data: intent keys and token names (./style/vocab.ts),
 // typed here and evaluated at build by the compiler, which also lowers every call site to plain attributes:
 //
 //   <li {...productRow({ stock: s })}>      →  <li data-g="product-row" data-stock={s}>   (one attribute binding)

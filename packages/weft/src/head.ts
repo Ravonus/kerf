@@ -1,7 +1,7 @@
 // Page metadata (research 20). Metadata is plain data, merged once per request and written as static tags at the
 // top of `<head>` in the server's first response: link-preview crawlers don't run JS (§1). Nothing here is
-// reactive, and components can't add to it. `mergeMeta` and `metaTags` are server-side (exported from weft/ssr);
-// `headTags` is the pure tag list both the string writer and the client's `setHead` (weft/head) use.
+// reactive, and components can't add to it. `mergeMeta` and `metaTags` are server-side (exported from @weft-js/core/ssr);
+// `headTags` is the pure tag list both the string writer and the client's `setHead` (@weft-js/core/head) use.
 
 /** `site` in weft.config.ts: the defaults every page starts from (§2). */
 export interface Site {

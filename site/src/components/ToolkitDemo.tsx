@@ -1,5 +1,5 @@
-import { onCleanup, onMount, state } from 'weft'
-import { render } from 'weft/dom'
+import { onCleanup, onMount, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 
 /* @weft visible */
 /** One live demo: the demos' file loads when the first one nears the view, so the page itself stays light. */

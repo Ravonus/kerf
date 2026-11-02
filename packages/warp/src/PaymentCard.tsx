@@ -1,9 +1,9 @@
-import { CardIcon } from '@weft/icons'
-import { cardBrand, cardMask } from '@weft/warp-core'
-import { derived, state, untrack } from 'weft'
+import { CardIcon } from '@weft-js/warp-icons'
+import { cardBrand, cardMask } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
 import { Field, type FieldProps } from './Field'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/rich/payment.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/payment.css'
 
 export interface ProviderField { on(e: 'focus' | 'blur' | 'change', f: (ev: { complete?: boolean; error?: string }) => void): void; destroy(): void }
 export interface ProviderAppearance { fontFamily: string; fontSize: string; color: string; errorColor: string; borderRadius: string; borderColor: string }

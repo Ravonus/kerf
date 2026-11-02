@@ -1,4 +1,4 @@
-import { Link, type Meta } from '@weft/start'
+import { Link, type Meta } from '@weft-js/start'
 import nav from '../../generated/docs-nav.json'
 
 export const prerender = true

@@ -28,7 +28,7 @@ export function nativeAuthSql(db) {
 const nativeTodos = auth => {
   const use = auth ? `\n  auth: 'user',` : ''
   const mine = auth ? ' and user_id = \${ctx.user.id}' : ''
-  return `import { mutation, query } from '@weft/start'
+  return `import { mutation, query } from '@weft-js/start'
 import { z } from 'zod'
 
 interface Todo { id: string; title: string; done: boolean }
@@ -84,14 +84,14 @@ export const nativeFiles = ({ db, auth }) => ({
   created_at ${engineSql[db].big} not null${auth ? `,\n  user_id varchar(255) not null references ${db === 'mysql' ? '`user`' : '"user"'} (id) on delete cascade` : ''}
 );
 `,
-  'src/db/index.server.ts': `import { createDb } from '@weft/db/plugin-native/${db}'
+  'src/db/index.server.ts': `import { createDb } from '@weft-js/db/plugin-native/${db}'
 import { env } from '../env.server'
 
 export const db = createDb({ url: env.DATABASE_URL })
 `,
   ...(auth && {
-    'src/auth.server.ts': `import { createAuth } from '@weft/start/auth/better-auth'
-import { nativeAuth } from '@weft/db/plugin-native/auth'
+    'src/auth.server.ts': `import { createAuth } from '@weft-js/start/auth/better-auth'
+import { nativeAuth } from '@weft-js/db/plugin-native/auth'
 import { db } from '#/db/index.server'
 import { env } from './env.server'
 
@@ -179,7 +179,7 @@ export const prismaAuthModels = db => authModels(db).replace('  todos         To
 const prismaTodos = auth => {
   const use = auth ? `\n  auth: 'user',` : ''
   const mine = auth ? `, userId: ctx.user.id` : ''
-  return `import { mutation, query } from '@weft/start'
+  return `import { mutation, query } from '@weft-js/start'
 import { z } from 'zod'
 
 const byId = z.object({ id: z.string() })
@@ -253,7 +253,7 @@ if (existsSync('.env')) process.loadEnvFile()
 export default defineConfig({ schema: 'prisma/schema.prisma', datasource: { url: process.env.DATABASE_URL ?? '' } })
 `,
   'src/db/index.server.ts': `${db === 'sqlite' ? "import { mkdirSync } from 'node:fs'\n" : ''}import ${`{ ${ADAPTER[db].name} }`} from '${ADAPTER[db].pkg}'
-import { withWeft } from '@weft/db/plugin-prisma'
+import { withWeft } from '@weft-js/db/plugin-prisma'
 import { PrismaClient } from '../generated/prisma/client'
 import { env } from '../env.server'
 ${db === 'sqlite' ? "\nmkdirSync('.data', { recursive: true })\n" : ''}
@@ -261,7 +261,7 @@ const adapter = new ${ADAPTER[db].name}(${ADAPTER[db].make})
 export const db = withWeft(new PrismaClient({ adapter, log: [{ emit: 'event', level: 'query' }] }), '${PROVIDER[db]}')
 `,
   ...(auth && {
-    'src/auth.server.ts': `import { createAuth } from '@weft/start/auth/better-auth'
+    'src/auth.server.ts': `import { createAuth } from '@weft-js/start/auth/better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { db } from '#/db/index.server'
 import { env } from './env.server'
@@ -273,7 +273,7 @@ export default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { datab
 })
 
 /** `--auth-provider custom`: the seam, with nothing behind it yet. An app that compiles, with no one signed in. */
-export const customAuth = `import { defineAuth } from '@weft/start/auth'
+export const customAuth = `import { defineAuth } from '@weft-js/start/auth'
 
 // Your auth provider. weft needs only these: \`handler\` serves everything under /api/auth, and \`session\` says who a
 // request is, which is \`ctx.user\`. \`auth: 'user'\` on a query or mutation works with whatever you return here.

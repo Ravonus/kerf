@@ -1,13 +1,13 @@
-import { emailError, passwordRules, passwordStrength, uid } from '@weft/warp-core'
-import { derived, state, untrack } from 'weft'
+import { emailError, passwordRules, passwordStrength, uid } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
 import { Checkbox } from '../Choice'
 import { Input } from '../Field'
 import { FormError, StepFrame, Submit, TextLink, Title, useStepForm, type FlowForm } from './kit'
 import { SsoButtons, type SsoProvider } from './Sso'
 import '../styles'
-import '@weft/warp-core/styles/flows/auth.css'
-import '@weft/warp-core/styles/components/meter.css'
-import '@weft/warp-core/styles/inputs/pickers.css' // the rules list
+import '@weft-js/warp-core/styles/flows/auth.css'
+import '@weft-js/warp-core/styles/components/meter.css'
+import '@weft-js/warp-core/styles/inputs/pickers.css' // the rules list
 
 /** Strength Meter (05) and the rules list (03) under a new password. Each rule says itself: the colour is never alone. */
 export function PasswordMeter({ value }: { value: string }) {

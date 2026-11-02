@@ -32,7 +32,7 @@ Observed 2026-10-31 in the built-in browser and with direct fetches. Keystroke a
 - **`/examples`.** Solid's layout: list plus live editor, with an output pane of DOM writes and bundle bytes.
 - **`/warp`.** Overview with the dial, Foundations, then one page per component.
 - **`/llms.txt`, `/llms-full.txt`, `/search.json`.** Generated, same source as the pages.
-- Built on weft and warp, prerendered through `@weft/start`'s `prerender` export.
+- Built on weft and warp, prerendered through `@weft-js/start`'s `prerender` export.
 
 ## 2. Search and spotlight
 
@@ -94,7 +94,7 @@ Three levels, cheapest first; a page uses the lowest that makes the point.
 
 ## 5. Examples
 
-Each is under about 40 lines. Transport demos use the `weft/test` fake in the browser and **say so**; the same code runs against a real server, with a repo link.
+Each is under about 40 lines. Transport demos use the `@weft-js/core/test` fake in the browser and **say so**; the same code runs against a real server, with a repo link.
 
 | # | Example | Reads like | Proves |
 |---|---|---|---|

@@ -1,4 +1,4 @@
-// MySQL for `@weft/start` (research 34 §4): Drizzle on mysql2, pure JS. The pool connects on the first statement, so
+// MySQL for `@weft-js/start` (research 34 §4): Drizzle on mysql2, pure JS. The pool connects on the first statement, so
 // `weft build` and a page with no queries need no database. MySQL commits around DDL, so a failed migration can't roll back; a named lock keeps
 // instances starting together from applying a file twice.
 
@@ -24,7 +24,7 @@ const LOCK = 'weft_migrations'
 export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10 }: MysqlOptions<S>): MysqlDb<S> {
   if (!url && process.env.WEFT_BUILD) url = 'mysql://localhost/build' // a build loads this module and never connects
   if (!/^mysql:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`@weft/start/db/mysql\` needs a \`mysql://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft/start/db/sqlite`')
+    throw new StartError('Q013', `\`@weft-js/start/db/mysql\` needs a \`mysql://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite`')
   // No `maxIdle` below the limit: that starts mysql2's reaper, a timer that keeps a finished `weft build` alive forever.
   const pool = createPool({ uri: url, connectionLimit: max })
   const handle: DbHandle = {

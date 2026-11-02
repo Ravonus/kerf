@@ -1,9 +1,9 @@
-import { announce, uid } from '@weft/warp-core'
-import { state } from 'weft'
+import { announce, uid } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
 import { Button } from '../Button'
 import { G } from './shared'
 import '../styles'
-import '@weft/warp-core/styles/app/push-ask.css'
+import '@weft-js/warp-core/styles/app/push-ask.css'
 
 /**
  * Push soft-ask (07 §4.2, P2): an in-app card before the browser's prompt. `onAccept` is where the caller calls

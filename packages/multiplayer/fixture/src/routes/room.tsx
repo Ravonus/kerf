@@ -1,10 +1,10 @@
-import { state, untrack } from 'weft'
+import { state, untrack } from '@weft-js/core'
 import { doc, title } from '../server/doc'
-import { cursors, presence, relay, type PeerTransport } from '@weft/multiplayer'
-import { Cursors } from '@weft/multiplayer/ui'
-import { webrtc } from '@weft/realtime-webrtc'
-import { socketio } from '@weft/realtime-socketio'
-import { livekit } from '@weft/realtime-livekit'
+import { cursors, presence, relay, type PeerTransport } from '@weft-js/multiplayer'
+import { Cursors } from '@weft-js/multiplayer/ui'
+import { webrtc } from '@weft-js/realtime-webrtc'
+import { socketio } from '@weft-js/realtime-socketio'
+import { livekit } from '@weft-js/realtime-livekit'
 
 function chosen(urls: { socketio: string; livekit: string } | undefined): PeerTransport | undefined {
   const via = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('via')

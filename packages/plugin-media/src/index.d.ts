@@ -1,4 +1,4 @@
-import type { PluginInstance } from 'weft/plugin'
+import type { PluginInstance } from '@weft-js/core/plugin'
 
 export interface MediaOptions {
   /** Efficient formats in front of the source-format fallback. Default `['avif']`. */

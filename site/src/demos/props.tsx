@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Button, Card } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Button, Card } from '@weft-js/warp'
 
 function Price(props: { dollars: number }) {
   return <strong>${props.dollars.toFixed(2)}</strong>

@@ -1,7 +1,7 @@
 // HTML and data are compressed for a client that takes it, with no setting.
 import { brotliDecompressSync, gunzipSync, createBrotliDecompress } from 'node:zlib'
 import { vi } from 'vitest'
-import { Boundary, resource } from 'weft'
+import { Boundary, resource } from '@weft-js/core'
 import { createHandler, type Manifest } from '../src/server'
 
 const zlib = vi.hoisted(() => ({ brotliCompress: 0, gzip: 0 }))

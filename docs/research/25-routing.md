@@ -1,4 +1,4 @@
-# 25. Routing, streaming SSR and share cards: `@weft/start` (Phase 3, first slice)
+# 25. Routing, streaming SSR and share cards: `@weft-js/start` (Phase 3, first slice)
 
 Status: **built 2026-10-29** in `packages/start`, with streaming in `packages/weft/src/ssr.ts` and the CLI commands
 in `packages/cli`. Inputs: PLAN §4, research 02 (full stack), 18 (SSR and Boundaries) and 20 (metadata and OG,
@@ -86,7 +86,7 @@ when the app has no route file for them.
 
 ## 4. Streaming SSR
 
-`weft/ssr` gains `renderToStream(code, { timeout? })` → `{ shell, chunks, data() }`:
+`@weft-js/core/ssr` gains `renderToStream(code, { timeout? })` → `{ shell, chunks, data() }`:
 
 - **Shell first.** The page response writes, in order: the whole `<head>` (every meta tag, from awaited data only),
   CSS and modulepreload links, the entry script, `<div id="app">shell</div>` (pending Boundaries render their
@@ -135,11 +135,11 @@ Fixture timings (M4 Max): about 25 ms for the first card (font load), 3–10 ms 
 
 ## 6. Nitro, `weft dev`, `weft build`
 
-`@weft/start/vite` exports the Vite plugin `weftStart({ root, site, routesDir, timeout, fonts })`. It provides the
+`@weft-js/start/vite` exports the Vite plugin `weftStart({ root, site, routesDir, timeout, fonts })`. It provides the
 virtual modules `virtual:weft/routes` (server or client half, by environment consumer), `virtual:weft/app` (site,
 build id, fonts), `virtual:weft/entry-server` (exports `{ fetch }` for Nitro) and `virtual:weft/entry-client` (or the
 app's `src/entry.client.ts`). It also sets `server.fs.allow`, and a watcher re-scans routes when a route file is
-added or removed. `@weft/start/app` composes `weft({ hydratable: true })`, `weftStart` and Nitro's Vite plugin
+added or removed. `@weft-js/start/app` composes `weft({ hydratable: true })`, `weftStart` and Nitro's Vite plugin
 (`nitro/vite`, pinned `3.0.260903-beta`), and merges any user `vite.config`.
 
 - `weft dev [--port n]`: Vite dev server, SSR through Nitro's dev worker.
@@ -193,7 +193,7 @@ Brotli, minified, measured with Vite 8:
 
 | What | brotli |
 |---|---|
-| Hydrate-only page (weft/dom + one component) | 1.96 KB |
+| Hydrate-only page (@weft-js/core/dom + one component) | 1.96 KB |
 | The same page through `start()` (router, levels, `Link`, navigation, `setHead`, built-in 404/error) | 5.20 KB |
 | **Router + navigation, the difference** | **3.25 KB** |
 | The whole fixture client (every chunk: entry, dom, 9 route and layout chunks, streaming page) | 10.4 KB |

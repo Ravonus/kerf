@@ -34,7 +34,7 @@ test('H002: a static-only preset and a param route whose card is rendered on dem
 test('H006: meta that reads a box or calls a hook, found in the source', () => {
   const found = []
   const report = (why, file) => found.push([file, why.slice(0, 30)])
-  h006(`import { state } from 'weft'\nconst n = state(1)\nexport const meta = () => ({ title: String(n.value) })`, 'a.tsx', report)
+  h006(`import { state } from '@weft-js/core'\nconst n = state(1)\nexport const meta = () => ({ title: String(n.value) })`, 'a.tsx', report)
   h006(`export function meta({ data }) { const t = useTitle(); return { title: t } }`, 'b.tsx', report)
   h006(`export const meta = ({ data }) => ({ title: data.name })\nconst x = y.value`, 'c.tsx', report)
   expect(found).toEqual([['a.tsx', '`meta` reads a box (`.value`):'], ['b.tsx', '`meta` calls `useTitle()`: met']])

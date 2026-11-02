@@ -104,7 +104,7 @@ describe('explainGroup', () => {
 
 describe('the project scan and the Vite build', () => {
   const files = {
-    'src/card.tsx': "import { group } from 'weft/style'\n/** A card. */\nexport const card = group('card', { base: { pad: 'group' }, axes: { tone: { a: { tone: 'info' }, b: { tone: 'critical' } } }, parts: { title: { text: 'title' } } })\n",
+    'src/card.tsx': "import { group } from '@weft-js/core/style'\n/** A card. */\nexport const card = group('card', { base: { pad: 'group' }, axes: { tone: { a: { tone: 'info' }, b: { tone: 'critical' } } }, parts: { title: { text: 'title' } } })\n",
     'src/main.tsx': "import { card } from './card'\nexport const A = (p: { b: boolean }) => <div {...card({ tone: p.b ? 'b' : 'a' })}><h3 {...card.title}>x</h3></div>\n",
   }
   const tmp = () => {

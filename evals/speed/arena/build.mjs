@@ -11,7 +11,7 @@ const from = join(here, '../../../site/arena')
 const site = join(here, '../dist/.arena') // a copy, so these resolve against this bench's packages
 const out = join(here, '..', process.env.OUT ?? 'dist/arena')
 const weft = (await import(join(pkg, 'vite.mjs'))).default
-const alias = [{ find: /^weft\/dom$/, replacement: join(pkg, 'src/dom.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }]
+const alias = [{ find: /^@weft-js\/core\/dom$/, replacement: join(pkg, 'src/dom.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }]
 const name = process.env.NAME ?? 'weft'
 const only = process.env.NAME ? [name] : [name, 'solid', 'react', 'raw']
 if (!process.env.NAME) rmSync(out, { recursive: true, force: true })

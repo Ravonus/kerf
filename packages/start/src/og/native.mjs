@@ -6,8 +6,8 @@ export async function native() {
 }
 
 /**
- * A prerender runs from a bundle in the app's `node_modules/.nitro`. An app that links `@weft/start` from a workspace
- * has no hoisted `@takumi-rs/core` there, so a build says where @weft/start is (app.mjs).
+ * A prerender runs from a bundle in the app's `node_modules/.nitro`. An app that links `@weft-js/start` from a workspace
+ * has no hoisted `@takumi-rs/core` there, so a build says where @weft-js/start is (app.mjs).
  */
 async function linked(error) {
   const from = globalThis.process?.env.WEFT_START_DIR

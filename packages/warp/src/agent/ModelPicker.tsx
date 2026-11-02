@@ -1,14 +1,14 @@
-import { DownIcon } from '@weft/icons'
-import { announce, nextIndex, popover, uid } from '@weft/warp-core'
-import { derived, state } from 'weft'
+import { DownIcon } from '@weft-js/warp-icons'
+import { announce, nextIndex, popover, uid } from '@weft-js/warp-core'
+import { derived, state } from '@weft-js/core'
 import { Badge } from '../Badge'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { held } from './bits'
 import '../styles'
-import '@weft/warp-core/styles/components/popover.css'
-import '@weft/warp-core/styles/app/prompt.css'
-import '@weft/warp-core/styles/app/suggest.css'
-import '@weft/warp-core/styles/app/model-menu.css'
+import '@weft-js/warp-core/styles/components/popover.css'
+import '@weft-js/warp-core/styles/app/prompt.css'
+import '@weft-js/warp-core/styles/app/suggest.css'
+import '@weft-js/warp-core/styles/app/model-menu.css'
 
 export type ModelOption = { id: string; name: string; short?: string; provider?: string; description?: string; capabilities?: string[]; context?: string; cost?: string }
 

@@ -1,5 +1,5 @@
 // @vitest-environment node
-// What a consumer installs: the code, the CSS and what @weft/warp's plugin reads, and nothing that only builds or tests it.
+// What a consumer installs: the code, the CSS and what @weft-js/warp's plugin reads, and nothing that only builds or tests it.
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 

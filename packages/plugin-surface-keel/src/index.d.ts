@@ -7,7 +7,7 @@ export declare function recipeTheme(recipe?: { seed?: string; culture?: string; 
 /** A theme as `--keel-*` CSS variables at an integer scale. */
 export declare function themeTokens(theme: unknown, scale?: number): Record<string, string>
 
-declare module 'weft/surface' {
+declare module '@weft-js/core/surface' {
   interface SurfaceKinds {
     /** `s.px`: KEEL's PixelRenderer. */
     'keel-pixel': { px: any }

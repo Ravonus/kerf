@@ -1,6 +1,6 @@
 // The server's executor for queries and mutations (research 27 §3–§4). No runtime imports beyond data.ts, so the
 // same code runs in the request handler (server.tsx, which finds the scope through AsyncLocalStorage) and in
-// weft/test's in-process fake transport.
+// @weft-js/core/test's in-process fake transport.
 //
 //   request scope  key → entry (promise, then value and tags): a query runs at most once per request; loaders, every
 //                  render pass of a streamed page and a mutation's refreshes share it. Its resolved entries are the
@@ -9,7 +9,7 @@
 //                  bumps the versions of the tags it invalidates).
 
 import { shapeTree } from './shape.mjs'
-import type { MediaAsset } from 'weft/media'
+import type { MediaAsset } from '@weft-js/core/media'
 import type { ServerExtension } from './extension'
 import { FnError, enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 import { unavailable } from './db/core'
@@ -49,7 +49,7 @@ export interface Touched { read: Set<string>; write: Set<string> }
 
 export interface FormFailure { id: string; key?: string; values: Record<string, unknown>; errors: Record<string, string>; message?: string; status: number }
 
-/** The `media.server@1` provider (`@weft/plugin-media/server`, research 29 §6). */
+/** The `media.server@1` provider (`@weft-js/plugin-media/server`, research 29 §6). */
 export interface MediaServer {
   ingest(bytes: Uint8Array, options: { name?: string }): Promise<MediaAsset>
   serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{ bytes: Uint8Array; type: string; width: number; format: string; negotiated: boolean; temporary?: boolean } | null>
@@ -59,7 +59,7 @@ export interface ScopeOptions {
   /** The app's context (`src/context.server.ts`). */
   context?: (args: { request: Request }) => object | Promise<object>
   store?: Store
-  /** Tests (weft/test `net.handle`): a replacement `run` by function id. */
+  /** Tests (@weft-js/core/test `net.handle`): a replacement `run` by function id. */
   handlers?: Map<string, (input: any, ctx: any) => unknown>
   onDiagnostic?: (d: { code: string; severity: string; message: string }) => void
   dev?: boolean
@@ -87,7 +87,7 @@ function extended(ctx: Context, options: ScopeOptions): Context {
 const mediaApi = (options: ScopeOptions): Context['media'] => ({
   async ingest(file, { name } = {}) {
     const server = await options.media?.()
-    if (!server) throw new StartError('M017', '`ctx.media` needs a `media.server` provider', 'add `media()` from `@weft/plugin-media` to `plugins` in weft.config.ts', { status: 500 })
+    if (!server) throw new StartError('M017', '`ctx.media` needs a `media.server` provider', 'add `media()` from `@weft-js/plugin-media` to `plugins` in weft.config.ts', { status: 500 })
     const bytes = file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())
     try {
       return await server.ingest(bytes, { name: name ?? (file as File).name })

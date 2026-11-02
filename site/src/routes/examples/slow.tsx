@@ -1,6 +1,6 @@
-import { Boundary, resource } from 'weft'
-import { Card, Skeleton } from '@weft/warp'
-import type { LoadArgs, Meta, RouteProps } from '@weft/start'
+import { Boundary, resource } from '@weft-js/core'
+import { Card, Skeleton } from '@weft-js/warp'
+import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
 import './slow.css'
 
 const later = <T,>(ms: number, value: T) =>

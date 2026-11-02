@@ -3,7 +3,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import { renderToString } from 'weft/ssr'
+import { renderToString } from '@weft-js/core/ssr'
 import { DefaultCard } from '../src/og/DefaultCard'
 import { renderCard } from '../src/og/index.mjs'
 import { cardTitleSize } from '../src/derive.mjs'

@@ -1,13 +1,13 @@
-import { DownIcon, GlobeIcon, SearchIcon } from '@weft/icons'
-import { caretAfter, currencyCodes, currencySymbol, digitsOf, displayName, formatPhone, inferCountry, languageCodes, listKey, localZone, matchZone, nationalLength, PHONE_COUNTRIES, regionCodes, regionOf, uid, zoneCity, zoneRows, type ChangeReason, type CountryCode, type E164, type IsoDate, type PhoneCountry, type TimeZoneId } from '@weft/warp-core'
-import { derived, flush, onMount, state, untrack } from 'weft'
+import { DownIcon, GlobeIcon, SearchIcon } from '@weft-js/warp-icons'
+import { caretAfter, currencyCodes, currencySymbol, digitsOf, displayName, formatPhone, inferCountry, languageCodes, listKey, localZone, matchZone, nationalLength, PHONE_COUNTRIES, regionCodes, regionOf, uid, zoneCity, zoneRows, type ChangeReason, type CountryCode, type E164, type IsoDate, type PhoneCountry, type TimeZoneId } from '@weft-js/warp-core'
+import { derived, flush, onMount, state, untrack } from '@weft-js/core'
 import { Field } from './Field'
 import type { IconRef } from './Icon'
 import { bindable, Composite, Hidden, Panel, useOpen, usePickerEnv, type Bindable, type Openable, type RichFieldProps } from './Picker'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/rich/listbox.css'
-import '@weft/warp-core/styles/rich/timezone.css'
-import '@weft/warp-core/styles/rich/phone.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/timezone.css'
+import '@weft-js/warp-core/styles/rich/phone.css'
 
 export type Row = { key: string; main: string; sub?: string; meta?: string; code?: string; pin?: string; search: string }
 

@@ -1,6 +1,6 @@
-import { onCleanup, onMount, watch } from 'weft'
-import { copyButtons } from '@weft/warp-core'
-import { render } from 'weft/dom'
+import { onCleanup, onMount, watch } from '@weft-js/core'
+import { copyButtons } from '@weft-js/warp-core'
+import { render } from '@weft-js/core/dom'
 import { spotlightOpen } from '../lib/spotlight'
 
 /** The ⌘K launcher fetched on first use. Everything in it stays out of a page nobody searches from. */

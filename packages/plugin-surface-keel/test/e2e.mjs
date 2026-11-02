@@ -8,7 +8,7 @@ import { dirname, extname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium, webkit } from 'playwright-core'
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const demo = join(pkg, 'demo')

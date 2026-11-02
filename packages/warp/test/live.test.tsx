@@ -1,7 +1,7 @@
 // The live pack driven as a user: keyboard paths, states, error paths, focus moves, announcements.
 import { fireEvent } from '@testing-library/dom'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { ActivityFeed } from '../src/live/ActivityFeed'
 import { Bell } from '../src/live/Bell'
 import { ConnectionBanner, ConnectionPill } from '../src/live/Connection'

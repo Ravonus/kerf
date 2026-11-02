@@ -1,8 +1,8 @@
-import type { AgentSource } from '@weft/warp-core'
-import { derived } from 'weft'
+import type { AgentSource } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
 import { Sweep, useSweep } from './bits'
 import '../styles'
-import '@weft/warp-core/styles/app/sources.css'
+import '@weft-js/warp-core/styles/app/sources.css'
 
 /** Sources (07 §1.1): numbered cards, the same numbers as the cites. `base` ties them to their Cite hrefs. */
 export function Sources({ items, base }: { items: AgentSource[]; base: string }) {

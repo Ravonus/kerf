@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Button, Card, Checkbox } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Button, Card, Checkbox } from '@weft-js/warp'
 
 const start = ['Buy beans', 'Grind', 'Brew', 'Drink'].map(id => ({ id }))
 

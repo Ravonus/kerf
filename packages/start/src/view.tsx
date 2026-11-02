@@ -3,7 +3,7 @@
 // hydration keys line up. A level's hole reads only its route id: params and data reach the component as live
 // props, so a navigation that keeps the route re-runs only the bindings that read what changed.
 
-import { untrack } from 'weft'
+import { untrack } from '@weft-js/core'
 import { active, level, type RouteState } from './router'
 
 // The route state travels as a prop, not a context: a level's view runs later, in the hole that shows it, under that

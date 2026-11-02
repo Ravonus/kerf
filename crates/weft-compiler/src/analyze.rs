@@ -1,5 +1,5 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics (W001, W005, W006,
-//! W010, W013, W014, W015, W016, W017, W018, W019; the weft/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
+//! W010, W013, W014, W015, W016, W017, W018, W019; the @weft-js/core/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
 //! facts `weft check`'s project view joins across files (`project`).
 
 use std::collections::{HashMap, HashSet};
@@ -885,7 +885,7 @@ impl<'s> Analyzer<'s> {
 
     fn is_bind(&self, call: &CallExpression<'_>) -> bool {
         let Expression::Identifier(id) = &call.callee else { return false };
-        symbol_of(self.scoping, id).and_then(|s| self.imports.get(&s)).is_some_and(|(from, name)| from == "weft" && name == "bind")
+        symbol_of(self.scoping, id).and_then(|s| self.imports.get(&s)).is_some_and(|(from, name)| from == "@weft-js/core" && name == "bind")
     }
 
     /// W016: `<App api={createFakeApi()} />`. A component prop compiles to a getter, so a call in it runs again on
@@ -1744,11 +1744,11 @@ impl<'a, 'x, 's> Visit<'a> for ComponentEntryReads<'x, 's> {
 }
 
 /// Symbols initialized with a reactive box: `state(…)`, `state.linked(…)`, `derived(…)`, `resource(…)`, and the
-/// weft/browser values (`online()`, `media(q)` …).
+/// @weft-js/core/browser values (`online()`, `media(q)` …).
 struct Boxes<'s> {
     scoping: &'s Scoping,
     set: HashSet<SymbolId>,
-    /// weft/browser value imports.
+    /// @weft-js/core/browser value imports.
     browser: HashSet<SymbolId>,
     /// `const`s made as arrays here: `[…]`, `Array.from(…)`, `new Array(…)`.
     arrays: HashSet<SymbolId>,

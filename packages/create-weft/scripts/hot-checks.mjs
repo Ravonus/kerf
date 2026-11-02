@@ -5,18 +5,18 @@ import { join } from 'node:path'
 import { findChrome, launch } from './cdp.mjs'
 
 const FILES = {
-  'src/components/HotCounter.tsx': `import { state } from 'weft'
+  'src/components/HotCounter.tsx': `import { state } from '@weft-js/core'
 export function HotCounter() {
   const n = state(0)
   return <button id="c" onClick={() => n.value++}>one {n.value}</button>
 }
 `,
-  'src/server/hot.ts': `import { query } from '@weft/start'
+  'src/server/hot.ts': `import { query } from '@weft-js/start'
 export const who = query({ run: () => 'S1' })
 `,
   'src/routes/hot.css': `#t { color: rgb(1, 2, 3) }
 `,
-  'src/routes/hot.tsx': `import { state } from 'weft'
+  'src/routes/hot.tsx': `import { state } from '@weft-js/core'
 import { HotCounter } from '#/components/HotCounter'
 import { who } from '#/server/hot'
 import './hot.css'

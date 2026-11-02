@@ -1,10 +1,10 @@
-import { LeftIcon, RightIcon } from '@weft/icons'
-import { addMonths, dayState, fmt, gridKey, isoWeek, isWeekend, isUnavailable, messages, monthEnd, monthStart, monthWeeks, ymd, weekStart, weekdays, type CalendarContext, type CalendarMode, type CalendarValue, type ChangeReason, type DateRange, type IsoDate } from '@weft/warp-core'
-import { derived, flush, state, untrack, watch } from 'weft'
+import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
+import { addMonths, dayState, fmt, gridKey, isoWeek, isWeekend, isUnavailable, messages, monthEnd, monthStart, monthWeeks, ymd, weekStart, weekdays, type CalendarContext, type CalendarMode, type CalendarValue, type ChangeReason, type DateRange, type IsoDate } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, watch } from '@weft-js/core'
 import { Button } from './Button'
 import { bindable, uid, usePickerEnv, type Bindable } from './Picker'
 import './styles'
-import '@weft/warp-core/styles/rich/calendar-grid.css'
+import '@weft-js/warp-core/styles/rich/calendar-grid.css'
 
 export interface GridProps {
   mode: CalendarMode

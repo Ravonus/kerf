@@ -1,7 +1,7 @@
 // media.build@1 (research 15 §2–4, research 26 §2.4): one source file in, a MediaAsset and its files out.
 //   probe (sharp, EXIF orientation) → width ladder → per-format quality search at the largest width (SSIMULACRA2,
 //   the libjxl tool) → encode every width → dominant colour + 16 px WebP placeholder. SVG: refuse unsafe files
-//   (M012), then SVGO. With a media.encode@1 provider (@weft/plugin-media-ffmpeg), src/video.mjs takes video, audio
+//   (M012), then SVGO. With a media.encode@1 provider (@weft-js/plugin-media-ffmpeg), src/video.mjs takes video, audio
 //   and animated GIFs; without one, a GIF stays as it is and video is P101.
 // Cached by content hash under `cacheDir`, so dev restarts and rebuilds don't re-encode. With `encoder: 'server'` the
 // build only stores the original: the variants are media.server@1's to encode (research 29 §6).
@@ -13,7 +13,7 @@ import { basename, extname, join } from 'node:path'
 import { promisify } from 'node:util'
 import sharp from 'sharp'
 import { optimize } from 'svgo'
-import { probe } from 'weft/media-probe'
+import { probe } from '@weft-js/core/media-probe'
 import { createMediaServer } from './server.mjs'
 import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
@@ -145,7 +145,7 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   if (meta.format === 'gif' && (meta.pages ?? 1) > 1) {
     const converted = await gif({ bytes, name, stem, audio, meta, width, height }, o, encode, findScorer(o.quality.scorer))
     if (converted) return converted
-    if (bytes.length > o.gifLimit) diagnostics.push({ code: 'M004', severity: 'warning', message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF, and it ships as is${encode['video/h264'] ? ': nothing beat it by 15%' : '. Add `mediaFfmpeg()` from @weft/plugin-media-ffmpeg to turn it into video'}.` })
+    if (bytes.length > o.gifLimit) diagnostics.push({ code: 'M004', severity: 'warning', message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF, and it ships as is${encode['video/h264'] ? ': nothing beat it by 15%' : '. Add `mediaFfmpeg()` from @weft-js/plugin-media-ffmpeg to turn it into video'}.` })
     const fileName = `${stem}-${short(bytes)}.gif`
     return { asset: { kind: 'graphic', src: fileName, width, height, type: MIME.gif, sources: [], name, quality: 'original' }, files: [{ name: fileName, bytes }], diagnostics }
   }
