@@ -411,7 +411,7 @@ for (const path of ['/reference/rules', '/reference/lists', '/reference/async', 
   }, { width: 1440, height: 900 })
 }
 // Learn: the landing and every chapter fit a 375 px phone, open with "You will learn", and end with a pager.
-for (const path of ['/learn', '/learn/installation', '/learn/passing-props', '/learn/bind', '/learn/entries', '/learn/full-stack', '/learn/effects']) {
+for (const path of ['/learn', '/learn/quick-start', '/learn/installation', '/learn/describing-the-ui', '/learn/passing-props', '/learn/bind', '/learn/entries', '/learn/effects', '/learn/full-stack', '/learn/server-functions', '/learn/theming', '/learn/testing']) {
   await check(`learn fits 375 px ${path}`, path, async page => {
     await mount(page)
     // Past the viewport, not past clientWidth: a classic scrollbar makes clientWidth narrower than the page can be.
@@ -439,6 +439,70 @@ await check('learn bind demo writes the parent', '/learn/bind', async page => {
   await run.getByRole('button', { name: '+' }).click()
   await page.waitForFunction(() => /Booked for 3 people/.test(document.querySelector('[data-site="example"] [data-part="run"]')?.textContent ?? ''), null, { timeout: 4000 })
 })
+// Learn's rail folds: only this page's chapter is open, a heading toggles its chapter, and a viewer's choice is kept.
+await check('learn rail folds to this chapter', '/learn/bind', async page => {
+  const folds = page.locator('[data-site="doc-nav"] [data-part="fold"]')
+  const states = () => folds.evaluateAll(bs => bs.map(b => `${b.textContent.trim()}=${b.getAttribute('aria-expanded')}`))
+  const open = (await states()).filter(s => s.endsWith('=true'))
+  same(open.join(), '3. Adding interactivity=true', 'open chapters')
+  const link = page.locator('[data-site="doc-nav"] a[aria-current]')
+  same(await link.isVisible(), true, 'the current link shows')
+  const other = folds.filter({ hasText: 'Managing state' })
+  await other.click()
+  same(await other.getAttribute('aria-expanded'), 'true', 'opened by a click')
+  same(await page.locator(`#${await other.getAttribute('aria-controls')} a`).first().isVisible(), true, 'its pages show')
+  await other.focus()
+  await page.keyboard.press('Enter')
+  same(await other.getAttribute('aria-expanded'), 'false', 'closed by Enter')
+  await page.keyboard.press(' ')
+  same(await other.getAttribute('aria-expanded'), 'true', 'opened by Space')
+  // Closing this page's chapter and reloading opens it again: arriving on a page always shows its link.
+  await folds.filter({ hasText: 'Adding interactivity' }).click()
+  await page.reload({ waitUntil: 'load' })
+  await page.waitForFunction(() => document.querySelector('[data-site="doc-nav"] [data-part="fold"][aria-controls]')?.closest('[data-scope="nav"]') !== null)
+  await page.waitForTimeout(500)
+  const after = await states()
+  same(after.filter(s => s.endsWith('=true')).sort().join(), ['3. Adding interactivity=true', '4. Managing state=true'].join(), 'open after a reload')
+})
+// The contents rail on a Learn page is the toolkit's: warp's Nav with its accent bar, following the heading in view.
+await check('learn contents rail tracks the scroll', '/learn/state', async page => {
+  const bar = page.locator('[data-site="toc"] [data-scope="nav"] > [data-part="indicator"]')
+  await page.waitForSelector('[data-site="toc"] [data-scope="nav"][data-ready]')
+  const at = () => bar.evaluate(b => b.getBoundingClientRect().top)
+  const top = await at()
+  same(await bar.evaluate(b => getComputedStyle(b).opacity), 1, 'the bar shows')
+  await page.evaluate(() => document.querySelectorAll('[data-site="doc"] h2')[3]?.scrollIntoView())
+  await page.waitForTimeout(700)
+  if (!(await at() > top)) throw new Error('the bar did not move down with the page')
+}, { width: 1440, height: 900 })
+// A deep dive starts closed, and a pitfall is labelled.
+await check('learn deep dives start closed', '/learn/components-run-once', async page => {
+  const dive = page.locator('[data-site="deepdive"]').first()
+  same(await dive.evaluate(d => d.open), false, 'open at first')
+  await dive.locator('summary').click()
+  same(await dive.evaluate(d => d.open), true, 'open after a click')
+})
+// On a phone the chapters are in the menu's sheet, folded the same way, and opening one keeps the sheet up.
+await check('learn sheet folds on a phone', '/learn/bind', async page => {
+  await page.locator('[data-site="menu"]').click()
+  const sheet = page.locator('[data-site="sheet-nav"]')
+  await sheet.waitFor()
+  const fold = sheet.locator('[data-part="fold"]').filter({ hasText: 'Managing state' })
+  same(await fold.getAttribute('aria-expanded'), 'false', 'closed at first')
+  await fold.click()
+  same(await fold.getAttribute('aria-expanded'), 'true', 'opened')
+  same(await sheet.isVisible(), true, 'the sheet stays up')
+  same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow')
+}, { width: 375, height: 812 })
+// A Learn page that was split answers its old address with a permanent redirect, `.md` twin included.
+for (const [from, to] of [['/learn/lists-and-conditions', '/learn/rendering-lists'], ['/learn/lists-and-conditions.md', '/learn/rendering-lists.md']]) {
+  await check(`old ${from} redirects`, '/learn', async page => {
+    const r = await page.request.get(base + from, { maxRedirects: 0 })
+    same(r.status(), 308, 'status')
+    same(new URL(r.headers().location, base).pathname, to, 'location')
+    same((await page.request.get(base + to)).status(), 200, 'the new page')
+  })
+}
 // Every old /docs address answers a permanent redirect to its new home, `.md` twins included.
 for (const [from, to] of [['/docs', '/learn'], ['/docs/getting-started', '/learn/installation'], ['/docs/rules', '/reference/rules'], ['/docs/codes/W001', '/reference/codes/W001'], ['/docs/props.md', '/reference/props.md']]) {
   await check(`old ${from} redirects`, '/learn', async page => {
