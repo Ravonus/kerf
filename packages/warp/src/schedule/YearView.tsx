@@ -124,7 +124,7 @@ export function YearView(p: YearViewProps) {
           <div key={m.month} data-part="year-month" data-current={m.current ? '' : undefined}>
             <button type="button" data-part="month-title" id={`${id}-${m.month}`} data-month={m.month} tabindex="-1">{m.name} <small>{m.total}<span class="sr"> events</span></small></button>
             <div role="grid" aria-labelledby={`${id}-${m.month}`}>
-              <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><abbr title={h[0]}>{h[0][0]}</abbr></span>)}</div>
+              <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><span aria-hidden="true">{h[0][0]}</span><span class="sr">{h[0]}</span></span>)}</div>
               {m.weeks.map(w => (
                 <div key={w.key} role="row">
                   {w.cells.map(c => (c.iso

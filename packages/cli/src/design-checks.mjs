@@ -139,6 +139,8 @@ function layoutOf(el) {
 }
 
 const NATIVE = { button: 'Button', select: 'Select', textarea: 'Textarea' }
+// the input types a browser paints, and the warp control for each; `Input` passes `type` through, so it counts too
+const NATIVE_TYPES = { date: 'DateField', 'datetime-local': 'DateTimeField', time: 'TimeField', month: 'MonthPicker', week: 'DateField', number: 'NumberField', range: 'Slider', color: 'ColorField', checkbox: 'Checkbox', radio: 'Radio', file: 'a dropzone' }
 const INTERACTIVE = new Set(['a', 'button', 'input', 'select', 'textarea', 'summary', 'Button', 'Toggle', 'Input', 'Search', 'Textarea', 'Select', 'Checkbox', 'Switch', 'Chip', 'Link'])
 const STATIC = new Set(['div', 'span', 'p', 'li', 'section', 'article', 'td', 'tr', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'label'])
 
@@ -279,6 +281,9 @@ export function designChecks(root, { files: all, exclude = [], tokens }) {
             edits: [{ start: el.start + 1, end: el.tagEnd, text: 'Link' }, { start: close + 2, end: el.end - 1, text: 'Link' }, ...addImport(f.text, ['Link'])].sort((a, b) => b.start - a.start),
           } : undefined)
         }
+        const typed = (el.name === 'input' || el.name === 'Input') && NATIVE_TYPES[el.attr('type')?.value]
+        if (typed && !el.attr('hidden') && !el.attr('data-part')) report('D005', el.start, el.tagEnd, `\`type="${el.attr('type').value}"\` is painted by the browser: <${typed}> is warp's.`)
+        if (/^[a-z]/.test(el.name) && el.name !== 'iframe' && el.attr('title')) report('D005', el.start, el.tagEnd, 'A `title` tooltip: the browser paints it, late, and never on touch or keyboard. Use <Tooltip>, or `aria-label` for a name.')
         if (NATIVE[el.name] && !localComponents.has(NATIVE[el.name])) {
           const swap = el.name === 'button' && !el.attr('class') && !el.attr('className') && !el.attr('style') && f.text.slice(el.start, el.end).includes('</button')
           report('D005', el.start, el.tagEnd, `Native <${el.name}> in a warp app: <${NATIVE[el.name]}> brings the focus ring, the sweep, the tones and the touch target.`, swap ? {

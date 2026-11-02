@@ -177,7 +177,7 @@
 :where([data-scope="table"] [data-part="viewport"]) {
   position: relative; overflow: auto; max-block-size: var(--warp-table-max-h, none); overscroll-behavior-x: contain;
   border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
-  background: var(--warp-color-surface-raised); scrollbar-width: thin; scrollbar-color: var(--warp-color-border-strong) transparent;
+  background: var(--warp-color-surface-raised);
 }
 :where([data-scope="table"] table) {
   inline-size: 100%; border-collapse: separate; border-spacing: 0; table-layout: auto;

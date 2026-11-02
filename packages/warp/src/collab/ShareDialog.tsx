@@ -36,7 +36,9 @@ export interface ShareDialogProps {
   onLinkAccess: (link: ShareLink) => void
 }
 
-const roles = () => ROLES.map(([value, label]) => ({ value, label }))
+const ROLE_OPTIONS = ROLES.map(([value, label]) => ({ value, label }))
+const MEMBER_OPTIONS = [...ROLE_OPTIONS, { value: 'remove', label: 'Remove' }]
+const ACCESS_OPTIONS = [{ value: 'restricted', label: 'Restricted' }, { value: 'anyone', label: 'Anyone with link' }]
 
 /**
  * The share dialog (07 §6.2): the invite combobox with chips, a role per person, link access, Copy link with one
@@ -73,7 +75,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
           <div style="flex:1;min-inline-size:0">
             <ComboField label="Add people or email" minChars={1} text={() => typed.value} onText={t => (typed.value = t)} find={find} row={(p: ShareContact) => ({ main: p.name, sub: p.email })} onPick={(p: ShareContact) => add(p.email)} />
           </div>
-          <CompactSelect label="Role for new people" value={role.value} options={roles()} onValueChange={v => (role.value = v as any)} />
+          <CompactSelect label="Role for new people" value={role.value} options={ROLE_OPTIONS} onValueChange={v => (role.value = v as any)} />
           <Button onClick={invite}>Invite</Button>
         </form>
         {chips.value.length > 0 && <div style="display:flex;flex-wrap:wrap;gap:6px;margin-block-start:8px">{chips.value.map(c => <Tag key={c} onRemove={() => (chips.value = chips.value.filter(x => x !== c))}>{c}</Tag>)}</div>}
@@ -85,15 +87,15 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
               {m.role === 'owner'
                 ? <span>Owner</span>
                 : <>
-                    <CompactSelect label={`Role for ${m.name}`} value={m.role} options={[...roles(), { value: 'remove', label: 'Remove' }]} onValueChange={v => onRoleChange(m, v === 'remove' ? null : v as any)} />
+                    <CompactSelect label={`Role for ${m.name}`} value={m.role} options={MEMBER_OPTIONS} onValueChange={v => onRoleChange(m, v === 'remove' ? null : v as any)} />
                   </>}
             </div>
           ))}
         </div>
         <div data-part="link">
           <LinkIcon />
-          <CompactSelect label="Link access" value={access.value.access} options={[{ value: 'restricted', label: 'Restricted' }, { value: 'anyone', label: 'Anyone with link' }]} onValueChange={v => onLinkAccess({ ...access.value, access: v as any })} />
-          {access.value.access === 'anyone' && <CompactSelect label="Link role" value={access.value.role} options={roles()} onValueChange={v => onLinkAccess({ ...access.value, role: v as any })} />}
+          <CompactSelect label="Link access" value={access.value.access} options={ACCESS_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, access: v as any })} />
+          {access.value.access === 'anyone' && <CompactSelect label="Link role" value={access.value.role} options={ROLE_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, role: v as any })} />}
           <span data-part="spacer" style="flex:1"></span>
           <span ref={(n: any) => (copy = n)} style="display:contents">
             <Button emphasis="outline" tone="neutral" size="sm" onClick={(e: MouseEvent) => {

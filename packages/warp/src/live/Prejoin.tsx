@@ -124,10 +124,10 @@ export function ScheduledLobby({ title, children, to, now, joinable, opensAt, on
       {children !== undefined && <p>{children}</p>}
       <Countdown to={to} now={now} onDone={() => (ended.value = true)} />
       <p>
-        <Button size="sm" disabled={!can.value} title={!can.value && opensAt ? `Opens at ${opensAt}` : undefined} aria-describedby={!can.value && opensAt ? id : undefined} onClick={() => onJoin?.()}>Join</Button>
+        <Button size="sm" disabled={!can.value} aria-describedby={!can.value && opensAt ? id : undefined} onClick={() => onJoin?.()}>Join</Button>
         {onAddToCalendar && <Button emphasis="outline" tone="neutral" size="sm" onClick={onAddToCalendar}><G name="cal" />Add to calendar</Button>}
       </p>
-      {opensAt && !can.value && <span id={id} data-part="sr-only">Opens at {opensAt}</span>}
+      {opensAt && !can.value && <small id={id}>Opens at {opensAt}</small>}
     </Card>
   )
 }

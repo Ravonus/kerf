@@ -1,7 +1,9 @@
 import { addDays, fmt, formReset, occurrences, parseRule, ruleSentence, stringifyRule, weekOrder, weekdayName, weekdayOrdinal, DAYS, dow, ymd, type Frequency, type IsoDate, type Rule } from '@weft/warp-core'
 import { derived, flush, state } from 'weft'
 import { Chip } from './Chip'
-import { Input, Textarea } from './Field'
+import { DateField } from './DateField'
+import { Textarea } from './Field'
+import { NumberField } from './NumberField'
 import { bindable, usePickerEnv, type Bindable } from './Picker'
 import { use } from '@weft/warp-core/weft'
 import '@weft/warp-core/styles/rich/recurrence.css'
@@ -71,7 +73,6 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
     const on = rule.value.BYDAY
     set({ BYDAY: on.includes(d) ? (on.length > 1 ? on.filter(x => x !== d) : on) : [...on, d] })
   }
-  const num = (e: InputEvent, lo: number, hi: number) => Math.max(lo, Math.min(hi, parseInt((e.currentTarget as HTMLInputElement).value) || lo))
   const setEnd = (m: 'never' | 'count' | 'until') => set(m === 'count' ? { COUNT: 10, UNTIL: null } : m === 'until' ? { COUNT: null, UNTIL: addDays(dtstart, 60) as IsoDate } : { COUNT: null, UNTIL: null })
   let root: HTMLDivElement | undefined
   use(formReset, () => root, () => () => { v.reset(); asText.value = false })
@@ -92,7 +93,7 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
           <div class="rr-grid">
             <div class="stack">
               <ChipRadios label="Frequency" value={rule.value.FREQ} options={frequencies.map(f => ({ value: f, label: titled(f) }))} onChange={f => set({ FREQ: f, BYDAY: f === 'WEEKLY' ? rule.value.BYDAY : [], BYMONTHDAY: null })} />
-              <Input label="Every (interval)" type="number" inputmode="numeric" min="1" max="99" value={String(rule.value.INTERVAL)} onInput={e => set({ INTERVAL: num(e, 1, 99) })} />
+              <NumberField label="Every (interval)" min={1} max={99} value={rule.value.INTERVAL} onValueChange={n => set({ INTERVAL: n ?? 1 })} />
               {rule.value.FREQ === 'WEEKLY' && (
                 <div role="group" aria-label="On these days" class="chips">
                   {order.value.map(d => <Chip key={d} data-day={d} pressed={rule.value.BYDAY.includes(d)} onClick={() => toggleDay(d)}><span aria-hidden="true">{weekdayName(d, env.locale.value, 'short')}</span><span class="sr">{weekdayName(d, env.locale.value)}</span></Chip>)}
@@ -100,8 +101,8 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
               )}
               {rule.value.FREQ === 'MONTHLY' && <ChipRadios label="On" value={monthlyNow.value} options={monthly.value} onChange={m => set(monthly.value.find(o => o.value === m)!.patch)} />}
               <ChipRadios label="Ends" value={endMode.value} options={[{ value: 'never', label: 'Never ends' }, { value: 'count', label: 'After…' }, { value: 'until', label: 'On date…' }]} onChange={setEnd} />
-              {endMode.value === 'count' && <Input label="Occurrences" type="number" inputmode="numeric" min="1" value={String(rule.value.COUNT)} onInput={e => set({ COUNT: num(e, 1, 999) })} />}
-              {endMode.value === 'until' && <Input label="Last date (YYYY-MM-DD)" value={rule.value.UNTIL ?? ''} onInput={e => { const t = e.currentTarget.value; if (/^\d{4}-\d{2}-\d{2}$/.test(t)) set({ UNTIL: t as IsoDate }) }} />}
+              {endMode.value === 'count' && <NumberField label="Occurrences" min={1} max={999} value={rule.value.COUNT} onValueChange={n => set({ COUNT: n ?? 1 })} />}
+              {endMode.value === 'until' && <DateField label="Last date" value={(rule.value.UNTIL ?? null) as IsoDate | null} onValueChange={d => { if (d) set({ UNTIL: d }) }} />}
             </div>
             <div class="stack">
               <p class="dt-cap">Next {preview}</p>

@@ -1475,3 +1475,23 @@
   [data-flow-state="wait"] { opacity: 0; translate: 0 var(--warp-ref-flow-y); }
   [data-flow-state="in"] { transition: opacity var(--warp-duration-slow) var(--warp-ease-out) calc(var(--_flow-i, 0) * var(--warp-stagger)), translate var(--warp-duration-slow) var(--warp-ease-out) calc(var(--_flow-i, 0) * var(--warp-stagger)); }
 }
+
+/* -- the browser's own chrome, themed (scrollbars stay the compositor's: a painted one would cost every scroll) --------- */
+@layer warp.base {
+  :root { scrollbar-color: var(--warp-color-border-strong) transparent; } /* inherited */
+  :where(*) { scrollbar-width: thin; }                                     /* not inherited */
+  :where(html) { scrollbar-width: auto; }
+  @supports not (scrollbar-color: auto) {
+    ::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
+    ::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: var(--warp-color-border-strong) padding-box; }
+    ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+  }
+  /* a <details> keeps find-in-page and its no-script behaviour; only the marker goes */
+  :where(summary) { list-style: none; cursor: pointer; }
+  :where(summary)::-webkit-details-marker { display: none; }
+  :where(:not([data-scope] *) > summary:not(:has(svg)), .rr-grid summary)::before {
+    content: ""; display: inline-block; inline-size: 0.4em; block-size: 0.4em; margin-inline-end: 0.5em; vertical-align: 0.12em; border-block-end: 1.5px solid currentColor; border-inline-end: 1.5px solid currentColor;
+    rotate: -45deg; transition: rotate var(--warp-duration-fast) var(--warp-ease-out);
+  }
+  :where(details[open] > summary)::before { rotate: 45deg; }
+}

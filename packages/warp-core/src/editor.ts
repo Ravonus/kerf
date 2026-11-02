@@ -47,7 +47,7 @@ export function sanitizeHtml(html: string) {
     if (tag === 'span') {
       if (!/\bdata-mention\b/i.test(m[3])) { open.push(tag); out += '<span>'; continue }
       const title = attr(m[3], 'title') ?? ''
-      attrs = ` data-mention="" contenteditable="false" title="${esc(unesc(title))}" role="img" aria-label="Mention: ${esc(unesc(title))}"`
+      attrs = ` data-mention="" contenteditable="false" role="img" aria-label="Mention: ${esc(unesc(title))}"`
     }
     open.push(tag)
     out += `<${tag}${attrs}>`

@@ -2,6 +2,7 @@ import { agoText, announce, plural } from '@weft/warp-core'
 import { derived, onCleanup, state, type State } from 'weft'
 import { Button } from '../Button'
 import { LiveStatus, type LiveState } from '../parts'
+import { Tooltip } from '../Tooltip'
 import { Segmented } from '../Choice'
 import { Select } from '../Select'
 import { Table, type Column } from '../Table'
@@ -61,7 +62,7 @@ export function AuditLog({ events, now, categories = [{ value: 'all', label: 'Al
     }, 1000)
   }
   const columns: Column<AuditEvent>[] = [
-    { id: 'at', header: 'When', sort: r => r.at, cell: e => <time datetime={e.at} title={e.at.replace('T', ' ').replace(/:\d\dZ$/, ' UTC')} tabindex="0">{agoText(e.at, now)}</time> },
+    { id: 'at', header: 'When', sort: r => r.at, cell: e => <Tooltip content={e.at.replace('T', ' ').replace(/:\d\dZ$/, ' UTC')}><time datetime={e.at} tabindex="0">{agoText(e.at, now)}</time></Tooltip> },
     { id: 'actor', header: 'Who', rowHeader: true, card: 'title' },
     { id: 'what', header: 'What', value: e => `${e.verb} ${e.target}`, cell: e => <>{e.verb} {e.href ? <a href={e.href}>{e.target}</a> : e.target}</> },
     { id: 'ip', header: 'IP', priority: 2, cell: e => <code>{e.ip}</code> },

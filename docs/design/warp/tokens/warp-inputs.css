@@ -90,6 +90,8 @@
 }
 :where([data-scope="field"] input[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
 :where([data-scope="field"] [data-part="input"][type="search"])::-webkit-search-cancel-button { display: none; }
+:where([data-scope="field"] [data-part="input"][type="number"]) { appearance: textfield; }
+:where([data-scope="field"] [data-part="input"][type="number"])::-webkit-inner-spin-button, :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-outer-spin-button { appearance: none; margin: 0; }
 :where([data-scope="field"] [data-part="input"]:-webkit-autofill) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
 
 /* textarea: grows from 3 lines to 10; label and icon rest on the first line */
@@ -519,7 +521,7 @@
 :where([data-scope="field"] button[data-part="input"] > [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
 :where([data-part="carrier"]) { position: absolute; inset-block-end: 0; inset-inline-start: var(--_lead, 0); inline-size: 1px; block-size: 1px; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
 /* a table row, a pager, a toolbar: as wide as its value */
-:where([data-scope="field"][data-compact]) { display: inline-grid; min-inline-size: 0; vertical-align: middle; }
+:where([data-scope="field"][data-compact]) { --warp-field-height: max(var(--warp-control-sm), var(--warp-target-min)); display: inline-grid; min-inline-size: 0; margin: 0; padding: 0; gap: 0; vertical-align: middle; }
 :where([data-scope="field"][data-compact] > [data-part="control"]) { padding-inline: var(--warp-space-related); }
 /* with scripting off the real select is the control */
 @media (scripting: none) {
@@ -529,6 +531,16 @@
     align-self: stretch; block-size: auto; min-block-size: 0; line-height: 1.5; padding-inline-end: 24px; margin-inline-end: -24px; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
   }
 }
+/* NumberField's steppers: two half-height buttons at the end of the control */
+:where([data-scope="field"] [data-part="steps"]) { flex: none; display: grid; grid-template-rows: 1fr 1fr; align-self: stretch; margin-block: 2px; margin-inline-end: calc(var(--warp-space-tight) * -1); }
+:where([data-scope="field"] [data-part="step"]) {
+  appearance: none; display: grid; place-items: center; inline-size: 24px; min-block-size: 0; padding: 0; border: 0; border-radius: var(--warp-radius-mark); background: none; color: var(--warp-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="field"] [data-part="step"] svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="field"] [data-part="step"]:first-child svg) { rotate: 180deg; }
+:where([data-scope="field"] [data-part="step"]:hover:not(:disabled)) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+:where([data-scope="field"] [data-part="step"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
+@media (pointer: coarse) { :where([data-scope="field"] [data-part="steps"]) { grid-template-rows: none; grid-template-columns: 1fr 1fr; } :where([data-scope="field"] [data-part="step"]) { inline-size: var(--warp-hit-min); } }
 /* its panel, a <dialog>: a popover by the control, or the sheet on a phone. The list scrolls and carries the shuttle, so the
    search stays put above it. */
 :where([data-scope="select"][data-part="content"]) { font-size: var(--warp-text-body-size); max-block-size: min(var(--_avail, 320px), calc(100dvh - 16px)); overflow: hidden; }

@@ -191,6 +191,7 @@
   :where(label[data-part="search"]) { display: flex; align-items: center; gap: 8px; block-size: var(--warp-control-md); padding-inline: 10px; margin-block-end: 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border-control); }
   :where(label[data-part="search"]:focus-within) { border-color: var(--warp-color-focus); box-shadow: 0 0 0 1px var(--warp-color-focus); }
   :where(label[data-part="search"] input) { all: unset; flex: 1; min-inline-size: 0; font-size: var(--warp-text-control-size); }
+  :where(label[data-part="search"] input)::-webkit-search-cancel-button { display: none; }
   :where(label[data-part="search"] input::placeholder) { color: var(--warp-color-text-subtle); }
   :where(label[data-part="search"] svg) { inline-size: 16px; block-size: 16px; color: var(--warp-color-text-subtle); flex: none; }
 

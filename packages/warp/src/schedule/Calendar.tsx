@@ -8,6 +8,7 @@ import { bindable, usePickerEnv } from '../Picker'
 import { Popover } from '../Popover'
 import { TimeZoneSelect } from '../RichSelect'
 import { Segmented } from '../Choice'
+import { Tooltip } from '../Tooltip'
 import { use } from '@weft/warp-core/weft'
 import { AgendaDay } from './Agenda'
 import { RepeatGlyph, SweepParts, confirmSweep, tint, useNow, useWidth } from './bits'
@@ -246,9 +247,9 @@ function EventBlock({ seg, lane, c, stop }: { seg: DaySegment; lane: { col: numb
   return (
     <div data-part="event" data-sweep="" data-cal={e.value.cal ?? 1} data-id={seg.id} role="button" tabindex={stop ? '0' : '-1'} aria-roledescription="event" aria-haspopup="dialog" aria-expanded={c.popOpen.value && c.popped.value === seg.id ? 'true' : undefined} aria-keyshortcuts="Enter M Delete" data-tentative={e.value.tentative ? '' : undefined} data-declined={e.value.declined ? '' : undefined} data-locked={e.value.locked ? '' : undefined} data-short={len.value <= 30 ? '' : undefined} data-state={state_.value} style={style.value}>
       <SweepParts />
-      <span class="sr">{c.name(e.value)}</span>
+      <span class="sr">{c.name(e.value)}{shift.value ? '. Clocks change during this event; times are wall-clock' : ''}</span>
       <span data-part="event-title" aria-hidden="true">{e.value.recurrence && <RepeatGlyph />}{e.value.recurrence ? ' ' : ''}{e.value.title}</span>
-      <span data-part="event-time" aria-hidden="true">{shift.value ? <abbr title={`Clocks change during this event; times are wall-clock`}>{c.span(seg.s, seg.e)}</abbr> : c.span(seg.s, seg.e)}</span>
+      <span data-part="event-time" aria-hidden="true">{c.span(seg.s, seg.e)}{shift.value ? ' · clocks change' : ''}</span>
       {len.value >= 90 && e.value.location && <span data-part="event-meta" aria-hidden="true">{e.value.location}</span>}
       {!e.value.locked && !c.p.readOnly && <span data-part="resize" aria-hidden="true"></span>}
     </div>
@@ -486,7 +487,7 @@ function MiniMonth({ c }: { c: Ctx }) {
         <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label="Next month" onClick={() => (cursor.value = stepDate('month', cursor.value, 1))} />
       </div>
       <div ref={(n: any) => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
-        <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><abbr title={h[0]} aria-hidden="true">{h[0][0]}</abbr><span class="sr">{h[0]}</span></span>)}</div>
+        <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><span aria-hidden="true">{h[0][0]}</span><span class="sr">{h[0]}</span></span>)}</div>
         {weeks.value.map(w => (
           <div key={w.key} role="row">
             {w.days.map(d => (d.iso
@@ -511,7 +512,7 @@ function ZoneChip({ c }: { c: Ctx }) {
   use(popover, () => panel, () => ({ open: open.value, trigger: chip!, side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
     <>
-      <button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} title={`Times shown in ${c.zone.value}`} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button>
+      <Tooltip content={`Times shown in ${c.zone.value}`}><button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button></Tooltip>
       <div ref={(n: any) => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
         {built.value && <TimeZoneSelect label="Time zone" value={c.zone.value} referenceDate={c.date.value} today={c.env.today.value} locale={c.env.locale.value} onValueChange={(z: string | null) => { c.zone.set(z); open.value = false; c.say(`Times shown in ${z}`) }} />}
       </div>

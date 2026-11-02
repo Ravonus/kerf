@@ -24,7 +24,7 @@
     position: sticky; inset-block-start: var(--_barh, 0px);
   }
 :where([data-scope="master-detail"] > [data-part="list"]) { border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); }
-:where([data-scope="master-detail"] > *) { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--warp-color-border-strong) transparent; }
+:where([data-scope="master-detail"] > *) { overflow-y: auto; overscroll-behavior: contain; }
 }
 @container (min-width: 1000px) {
 :where([data-scope="master-detail"]) { grid-template-columns: var(--warp-layout-list) minmax(0, 1fr); }

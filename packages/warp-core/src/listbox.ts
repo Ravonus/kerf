@@ -216,14 +216,13 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
       b.removeAttribute('aria-modal')
       for (const r of all) r.el.removeAttribute('tabindex')
       trigger.setAttribute('aria-controls', id)
-      trigger.focus({ preventScroll: true })
       b.style.minInlineSize = `${control.getBoundingClientRect().width}px`
       b.showPopover?.()
+      ;(find ?? trigger).focus({ preventScroll: true }) // a dialog shown as a popover takes focus for itself, and Safari never gave it to a pressed button
       reposition()
       remove = pushLayer({ el: b, trigger: control, close: () => hide(true) })
       win.addEventListener('resize', follow)
       win.addEventListener('scroll', follow, true)
-      find?.focus({ preventScroll: true })
     }
     measure()
     at = -1

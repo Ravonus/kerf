@@ -52,9 +52,9 @@ export function Tile({ p, self, video, role = 'group' }: { p: Participant; self?
     >
       {camera.value ? <div data-part="video">{slot!(p)}</div> : <Avatar name={p.name} size="xl" style={avatarTint(p.id)} />}
       <span data-part="flags">
-        {p.handRaised && <span data-part="flag" data-kind="hand" title="Hand raised"><G name="hand" /></span>}
-        {p.network === 'poor' && <span data-part="flag" data-tone="caution" title="Poor connection"><G name="signal" /></span>}
-        {p.isMuted && <span data-part="flag" data-tone="critical" title="Muted"><G name="micoff" /></span>}
+        {p.handRaised && <span data-part="flag" data-kind="hand" role="img" aria-label="Hand raised"><G name="hand" /></span>}
+        {p.network === 'poor' && <span data-part="flag" data-tone="caution" role="img" aria-label="Poor connection"><G name="signal" /></span>}
+        {p.isMuted && <span data-part="flag" data-tone="critical" role="img" aria-label="Muted"><G name="micoff" /></span>}
       </span>
       <span data-part="name">
         {!p.isMuted && <span data-part="level"><i></i><i></i><i></i></span>}
@@ -273,7 +273,7 @@ function Person({ p, sub }: { p: Participant; sub: string }) {
     <li>
       <Avatar name={p.name} size="sm" style={avatarTint(p.id)} />
       <span>{p.name}<small>{sub}</small></span>
-      {p.handRaised && <span title="Hand raised"><G name="hand" /></span>}
+      {p.handRaised && <span role="img" aria-label="Hand raised"><G name="hand" /></span>}
       {p.isMuted ? <G name="micoff" /> : <G name="mic" />}
     </li>
   )

@@ -58,8 +58,7 @@
 :where([data-scope="calendar"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: center; justify-self: end; padding-inline-end: 8px; font: 500 10px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em; }
 :where([data-scope="calendar"] [data-part="allday-cell"]) { display: grid; gap: 2px; align-content: start; padding: 3px; border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); min-inline-size: 0; }
 :where([data-scope="calendar"] [data-part="scroller"]) {
-  position: relative; overflow: auto; overscroll-behavior: contain; min-block-size: 0; scrollbar-width: thin;
-  scrollbar-color: var(--warp-color-border-strong) transparent;
+  position: relative; overflow: auto; overscroll-behavior: contain; min-block-size: 0;
 }
 :where([data-scope="calendar"] [data-part="cols"]) { position: relative; block-size: calc(var(--warp-cal-hour) * var(--_hours, 24)); }
 :where([data-scope="calendar"] [data-part="gutter"]) { position: relative; }
