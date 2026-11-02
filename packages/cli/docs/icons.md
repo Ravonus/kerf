@@ -28,7 +28,7 @@ Props on any of them:
 <CheckIcon tier="vivid" />    // this tier whatever the page's expression is
 ```
 
-An icon you don't use costs nothing. One adds about 147 B of brotli with all tiers in. `sideEffects` lists only CSS, so a named import ships that icon.
+An icon you don't use costs nothing. One adds about 164 B of brotli with all tiers in. `sideEffects` lists only CSS, so a named import ships that icon.
 
 ## Names and variants
 
@@ -57,7 +57,7 @@ It fails the build, and so does a variant an icon doesn't have.
 
 The build follows a name through variables, props, conditionals, maps and component boundaries, and ships what it finds. A name it can't follow, such as one from an API, is legal. `weft check` reports it as I002 with the file and the cost (I003 if the pack itself is passed around). That use then gets one of two things:
 
-- **The pack, as its own chunk.** The default. About 118 KB of brotli for all 651 in one tier, loaded only by a page that reaches it. A page stays about 1.5 KB bigger than one with no dynamic name.
+- **The pack, as its own chunk.** The default. About 111 KB of brotli for all 651 with every tier in, loaded only by a page that reaches it. A page stays about 1.6 KB bigger than one with no dynamic name.
 - **Single icons from a URL.** `icons({ source: 'https://cdn.example.com/icons/' })`. Nothing of the pack is built; each icon is fetched when first drawn.
 
 `weft icons publish <dir>` writes every icon and variant as static `.svg` files, with a `manifest.json`, for that URL. It writes files and uploads nothing. Action icons aren't published.
@@ -74,7 +74,7 @@ Five icons have a built-in animation: `trash` (the lid lifts), `bell` (it rings)
 <TrashIconAction action="press" />    // 'hover' | 'focus' | 'press' | 'on'
 ```
 
-It's CSS alone, and each one's stylesheet ships only if that icon is used (about 230 B of CSS and 140 B of JS). Outlines ease; pixels move in whole cells, in frames. warp's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.
+It's CSS alone, and each one's stylesheet ships only if that icon is used (about 230 B of CSS and 50 B of JS, brotli). Outlines ease; pixels move in whole cells, in frames. warp's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.
 
 ## Tiers
 
