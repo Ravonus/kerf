@@ -23,8 +23,10 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
   const W = stage.clientWidth, H = hug || stage.clientHeight
   if (!W || !H) return
   const zoom = parseFloat(css.getPropertyValue('--tile-zoom')) || 0.8
-  const vw = width ?? Math.max(W / zoom, LEAST[host.dataset.stage ?? 'center'] ?? 0)
+  let vw = width ?? Math.max(W / zoom, LEAST[host.dataset.stage ?? 'center'] ?? 0)
   host.style.setProperty('--tile-w', `${vw}px`)
+  // An example with a least width of its own past that one is laid out at it, so the picture holds all of it.
+  if (host.scrollWidth > vw + 1) { vw = host.scrollWidth; host.style.setProperty('--tile-w', `${vw}px`) }
   const ch = host.offsetHeight
   let s = W / vw
   let crop = false
