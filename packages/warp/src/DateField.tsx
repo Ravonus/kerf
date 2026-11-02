@@ -54,7 +54,7 @@ export function DateField({ value, defaultValue, onValueChange, open, defaultOpe
       onReset={() => { own.value = null; started.value = false }}
       filled={v.value !== null || started.value}
       hold={pop.value}
-      attrs={{ onClick: (e: MouseEvent) => { if (!disabled && isSheet(e.currentTarget as Element, presentation) && (e.target as Element).closest('[data-part="segment"]')) pop.set(true) } }}
+      attrs={{ onClick: (e: MouseEvent) => { if (!disabled && isSheet(e.currentTarget as Element, presentation) && (e.target as Element).closest?.('[data-part="segment"]')) pop.set(true) } }}
       control={() => (
         <>
           <Segments required={rest.required} kind="date" locale={env.locale.value} value={v.value} today={env.today.value} clears={clears.value} disabled={disabled} readonly={readonly} onEdit={onEdit} onBlurPartial={() => (own.value = 'Enter a complete date, or pick one from the calendar.')} />

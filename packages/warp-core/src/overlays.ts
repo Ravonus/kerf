@@ -47,7 +47,7 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   // Escape: the layer stack already asked to close; the native cancel would close it a second way
   const onCancel = (e: Event) => { e.preventDefault(); if (!justEscaped()) o.onClose() }
   const onClick = (e: MouseEvent) => {
-    if ((e.target as Element).closest('[data-close]')) return o.onClose()
+    if ((e.target as Element).closest?.('[data-close]')) return o.onClose()
     // a press on the backdrop targets the dialog itself, outside its box (keyboard clicks have detail 0: not a press)
     if (e.target !== el || e.detail === 0 || el.getAttribute('role') === 'alertdialog') return
     const r = el.getBoundingClientRect()
@@ -121,7 +121,7 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
     restore = false
     o.onClose()
   }
-  const onClick = (e: MouseEvent) => { if ((e.target as Element).closest('[data-close-popover]')) o.onClose() }
+  const onClick = (e: MouseEvent) => { if ((e.target as Element).closest?.('[data-close-popover]')) o.onClose() }
   el.addEventListener('focusout', onFocusOut)
   el.addEventListener('click', onClick)
   if (o.open) show()

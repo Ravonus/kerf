@@ -128,7 +128,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     empty = el('p', 'empty', box)
     empty.textContent = 'No match'
     empty.hidden = true
-    const rowAt = (e: Event) => rows.findIndex(r => r.el === (e.target as Element).closest('[role="option"]'))
+    const rowAt = (e: Event) => rows.findIndex(r => r.el === (e.target as Element).closest?.('[role="option"]'))
     list.onpointermove = e => { if (e.pointerType === 'touch') return; const i = rowAt(e); if (i >= 0 && i !== at) go(i, false) }
     list.onmousedown = e => e.preventDefault() // focus stays where the keys are
     list.onclick = e => { const i = rowAt(e); if (i >= 0) pick(i, e.detail ? 'pointer' : 'keyboard') }
@@ -187,7 +187,8 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     place(box, control, 'bottom', 'start', GAP)
   }
   const follow = (e: Event) => {
-    if (box!.contains(e.target as Node) || frame) return
+    // a resize's target is the window, which no node contains; the panel's own scroll needn't move it
+    if ((e.type === 'scroll' && box!.contains(e.target as Node)) || frame) return
     frame = win.requestAnimationFrame(reposition)
   }
 

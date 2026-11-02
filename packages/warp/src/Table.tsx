@@ -225,7 +225,7 @@ function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
     })
   })
   const click = (e: MouseEvent) => {
-    if ((e.target as Element).closest('button, input, select, a, label, [data-editable]')) return
+    if ((e.target as Element).closest?.('button, input, select, a, label, [data-editable]')) return
     ctx.toggle(row, (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[data-part="expand"]')!)
   }
   return (

@@ -225,7 +225,7 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     if (props.roving && !e.altKey && !e.ctrlKey && !e.metaKey) {
       const n = keys.value.length
       const to = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : e.key === 'Home' ? -n : e.key === 'End' ? n : 0
-      if (to && (e.target as HTMLElement).closest('[data-part="row"]') === e.target) {
+      if (to && (e.target as HTMLElement).closest?.('[data-part="row"]') === e.target) {
         e.preventDefault()
         control.move(to)
         return

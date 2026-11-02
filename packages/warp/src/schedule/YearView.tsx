@@ -82,7 +82,7 @@ export function YearView(p: YearViewProps) {
     say(`${fmt(m, { month: 'long', year: 'numeric' }, env.locale.value)}, ${s.total} events`)
   }
   const onKey = (e: KeyboardEvent) => {
-    const c = (e.target as Element).closest<HTMLElement>('[data-day]')
+    const c = (e.target as Element).closest?.<HTMLElement>('[data-day]')
     if (!c || e.metaKey || e.ctrlKey) return
     const to = yearKey(e.key, e.shiftKey, c.dataset.day!, first.value, getComputedStyle(c).direction === 'rtl')
     if (!to) return
@@ -94,9 +94,9 @@ export function YearView(p: YearViewProps) {
   }
   const onClick = (e: MouseEvent) => {
     const t = e.target as Element
-    const title = t.closest<HTMLElement>('[data-part="month-title"]')
+    const title = t.closest?.<HTMLElement>('[data-part="month-title"]')
     if (title) return month(title.dataset.month!)
-    const c = t.closest<HTMLElement>('[data-day]')
+    const c = t.closest?.<HTMLElement>('[data-day]')
     if (c) day(c.dataset.day!)
   }
   const detail = derived(() => {

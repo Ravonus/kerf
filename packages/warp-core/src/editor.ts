@@ -273,7 +273,7 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
   const shortcuts = () => {
     const s = doc.getSelection()
     const block = blockOf(s?.anchorNode ?? null)
-    if (!block || block.closest('li')) return false
+    if (!block || block.closest?.('li')) return false // a bare Text in the editor is a block too, with no closest
     const text = block.textContent!.replace(/ /g, ' ')
     if (text === '---') { block.textContent = ''; exec('insertHorizontalRule'); return true }
     for (const [re, cmd, value] of BLOCKS) {

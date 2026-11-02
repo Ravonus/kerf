@@ -120,7 +120,7 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
     if (e.key === 'Enter') { e.preventDefault(); open1(n) }
     if (e.key === 'Delete') { e.preventDefault(); dismiss(n, e.currentTarget as HTMLElement) }
   }
-  const pressRow = (e: MouseEvent, n: Note) => { if (!(e.target as Element).closest('button, a')) open1(n) }
+  const pressRow = (e: MouseEvent, n: Note) => { if (!(e.target as Element).closest?.('button, a')) open1(n) }
   const toTop = () => { list?.scrollTo?.({ top: 0 }); if (list) list.scrollTop = 0; fresh.value = 0 }
   const onScroll = () => { if (list!.scrollTop <= 0) fresh.value = 0 }
   const sync = derived(() => {

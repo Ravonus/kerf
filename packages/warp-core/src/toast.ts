@@ -139,8 +139,8 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
   // swipe: the toast follows the pointer; past 35% of its width or a flick (> 0.5px/ms) dismisses it that way
   let drag: { el: HTMLElement; x: number; t: number; id: string } | null = null
   const onDown = (e: PointerEvent) => {
-    const el = (e.target as Element).closest<HTMLElement>('[data-scope="toast"][data-part="root"]')
-    if (!el || (e.target as Element).closest('button') || !el.dataset.id) return
+    const el = (e.target as Element).closest?.<HTMLElement>('[data-scope="toast"][data-part="root"]')
+    if (!el || (e.target as Element).closest?.('button') || !el.dataset.id) return
     drag = { el, x: e.clientX, t: e.timeStamp, id: el.dataset.id }
     el.setPointerCapture?.(e.pointerId)
     el.setAttribute('data-swiping', '')

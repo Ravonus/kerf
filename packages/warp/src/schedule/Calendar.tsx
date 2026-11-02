@@ -185,7 +185,7 @@ function useCalendar(p: CalendarProps) {
   })
   /** Keys shared by the grid and the timeline: the roving stop, Enter, M, Delete, and move mode. */
   const eventKeys = (e: KeyboardEvent, opts: { days?: string[]; resources?: string[]; next: (key: string, id: string) => string | null }) => {
-    const el = (e.target as Element).closest<HTMLElement>('[data-id]')
+    const el = (e.target as Element).closest?.<HTMLElement>('[data-id]')
     if (!el) return
     const id = el.dataset.id!
     const rtl = getComputedStyle(el).direction === 'rtl'
@@ -297,7 +297,7 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   use(calendarDrag, () => cols, () => c.dragOpts())
   onMount(() => { if (scroller && cols) scroller.scrollTop = (cols.offsetHeight / 24) * 7.6 })
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { days: days.value, next: (k, id) => eventKey(k, id, list.value, getComputedStyle(e.target as Element).direction === 'rtl') })
-  const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
+  const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
   return (
     <div data-part="grid" role="grid" aria-label={fmt(days.value[0], { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length}`} onKeyDown={onKey}>
       <div data-part="head" role="row">
@@ -337,7 +337,7 @@ function MonthGrid({ c }: { c: Ctx }) {
   use(popover, () => panel, () => ({ open: moreOpen.value, trigger: moreAt.value!, side: 'bottom' as const, align: 'start' as const, onClose: () => (moreOpen.value = false) }))
   const openDay = (iso: string) => { c.date.set(iso); c.view.set('day'); c.say(`Day view, ${fmt(iso, { dateStyle: 'full' }, c.env.locale.value)}`) }
   const onKey = (e: KeyboardEvent) => {
-    const cell = (e.target as Element).closest<HTMLElement>('[role="gridcell"]')
+    const cell = (e.target as Element).closest?.<HTMLElement>('[role="gridcell"]')
     if (!cell) return
     const to = gridKey(e.key, e.shiftKey, cursor.value, c.first.value, getComputedStyle(cell).direction === 'rtl')
     if (!to) return
@@ -350,8 +350,8 @@ function MonthGrid({ c }: { c: Ctx }) {
   }
   const onClick = (e: MouseEvent) => {
     const t = e.target as Element
-    const btn = t.closest<HTMLElement>('[data-part="more"]')
-    const cell = t.closest<HTMLElement>('[role="gridcell"]')
+    const btn = t.closest?.<HTMLElement>('[data-part="more"]')
+    const cell = t.closest?.<HTMLElement>('[role="gridcell"]')
     if (!cell) return
     if (btn) {
       more.value = { iso: cell.dataset.date!, list: eventsOn(c.visible.value, cell.dataset.date!) }
@@ -395,7 +395,7 @@ function AgendaView({ c }: { c: Ctx }) {
   return (
     <div data-part="scroller">
       <div data-scope="agenda">
-        <div data-part="page" onClick={(e: MouseEvent) => { const el = (e.target as Element).closest<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }} onKeyDown={(e: KeyboardEvent) => { const el = (e.target as Element).closest<HTMLElement>('[data-id]'); if (el && e.key === 'Enter') c.openPopover(el.dataset.id!, el) }}>
+        <div data-part="page" onClick={(e: MouseEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }} onKeyDown={(e: KeyboardEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el && e.key === 'Enter') c.openPopover(el.dataset.id!, el) }}>
           {days.value.map(d => (
             <section key={d}>
               <div data-part="day-title"><h4>{fmt(d, { weekday: 'long' }, c.env.locale.value)}</h4><span class="muted">{fmt(d, { month: 'short', day: 'numeric' }, c.env.locale.value)}</span></div>
@@ -486,7 +486,7 @@ function MiniMonth({ c }: { c: Ctx }) {
         <Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} label="Previous month" onClick={() => (cursor.value = stepDate('month', cursor.value, -1))} />
         <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label="Next month" onClick={() => (cursor.value = stepDate('month', cursor.value, 1))} />
       </div>
-      <div ref={(n: any) => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
+      <div ref={(n: any) => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest?.<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
         <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><span aria-hidden="true">{h[0][0]}</span><span class="sr">{h[0]}</span></span>)}</div>
         {weeks.value.map(w => (
           <div key={w.key} role="row">

@@ -170,7 +170,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
         <div data-scope="rte">
           <div data-part="frame">
             {toolbar !== 'none' && (
-              <div ref={(n: any) => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest('[data-part="tool"]')) e.preventDefault() }}>
+              <div ref={(n: any) => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest?.('[data-part="tool"]')) e.preventDefault() }}>
                 {tools.value.map((g, i) => <span key={g[0].cmd} style="display:contents">{i > 0 && <span data-part="sep"></span>}{g.map(t => <Tool key={t.cmd} tool={t} />)}</span>)}
                 <span data-part="sep"></span>
                 <Tooltip content="Undo" kbd="⌘Z"><button type="button" data-part="tool" tabindex="-1" aria-label="Undo" onClick={() => handle!.run('undo')}><UndoIcon /></button></Tooltip>

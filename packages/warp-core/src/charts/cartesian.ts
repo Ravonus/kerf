@@ -395,7 +395,7 @@ export const brush: Form<BrushConfig> = {
     const N = () => Number(svg.querySelector('[data-h]')!.getAttribute('aria-valuemax')) + 1
     const set = (h: string, s: number) => { const v = ctx.view; if (h === 'b0') v.b0 = clamp(v.b0 + s, 0, v.b1 - MIN); else v.b1 = clamp(v.b1 + s, v.b0 + MIN, N() - 1); draw() }
     const key = (e: Event) => {
-      const k = e as KeyboardEvent, h = (k.target as Element).closest('[data-h]')
+      const k = e as KeyboardEvent, h = (k.target as Element).closest?.('[data-h]')
       const by = { ArrowRight: 1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[k.key]
       if (!h || !by) return
       k.preventDefault()
@@ -403,7 +403,7 @@ export const brush: Form<BrushConfig> = {
       set(h.getAttribute('data-h')!, by)
     }
     const down = (e: Event) => {
-      const p = e as PointerEvent, t = p.target as Element, h = t.closest('[data-h]')?.getAttribute('data-h'), bar = t.closest('[data-brush]')
+      const p = e as PointerEvent, t = p.target as Element, h = t.closest?.('[data-h]')?.getAttribute('data-h'), bar = t.closest?.('[data-brush]')
       if (!h && !bar) return
       p.preventDefault()
       const r = svg.getBoundingClientRect(), W = Number(svg.getAttribute('width')), v = ctx.view, x0 = p.clientX, a = v.b0, b = v.b1, step = (((W - 48) / (N() - 1)) * r.width) / W

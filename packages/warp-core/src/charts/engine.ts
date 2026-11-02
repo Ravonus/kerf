@@ -147,10 +147,10 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
   const up = () => { touch = false }
   const leave = (e: PointerEvent) => { if (e.pointerType === 'mouse' && !svg.contains(document.activeElement)) hide() }
   const outside = (e: Event) => { if (!fig.contains(e.target as Node)) hide() }
-  const focusIn = (e: Event) => { const m = (e.target as Element).closest('[data-mark]'); if (m) show(m, true) }
+  const focusIn = (e: Event) => { const m = (e.target as Element).closest?.('[data-mark]'); if (m) show(m, true) }
   const focusOut = (e: FocusEvent) => { if (!svg.contains(e.relatedTarget as Node)) hide() }
   function key(e: KeyboardEvent) {
-    const m = (e.target as Element).closest('[data-mark]')
+    const m = (e.target as Element).closest?.('[data-mark]')
     if (!m) return
     const x = xi(m), y = si(m), find = (fx: number, fs: number) => marks.find(n => xi(n) === fx && si(n) === fs)
     const xs = [...new Set(marks.map(xi))], ys = [...new Set(marks.map(si))], px = xs.indexOf(x), py = ys.indexOf(y), i = marks.indexOf(m)
@@ -172,7 +172,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     for (const g of fig.querySelectorAll('[data-series]')) g.toggleAttribute('data-series-active', g.getAttribute('data-series') === String(index))
   }
   function click(e: Event) {
-    const b = (e.target as Element).closest('button')
+    const b = (e.target as Element).closest?.('button')
     if (!b) return
     if (b.closest('[data-part="view-toggle"]')) {
       fig.dataset.view = b.dataset.view
@@ -187,12 +187,12 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     }
   }
   function over(e: Event) {
-    const b = (e.target as Element).closest('[data-scope="legend"] button') as HTMLElement | null
+    const b = (e.target as Element).closest?.('[data-scope="legend"] button') as HTMLElement | null
     if (!b) return
     if (form.byMark) { const m = svg.querySelector(`[data-mark][data-xi="${b.dataset.si}"]`); if (m) show(m) } else isolate(Number(b.dataset.si))
   }
   function out(e: Event) {
-    if (!(e.target as Element).closest('[data-scope="legend"] button')) return
+    if (!(e.target as Element).closest?.('[data-scope="legend"] button')) return
     if (form.byMark) hide(); else isolate(null)
   }
 
