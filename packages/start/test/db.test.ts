@@ -2,7 +2,7 @@
 // gate, the touched-tables check, Q013/Q014, and the tables as validators. Postgres repeats the core when
 // WEFT_TEST_POSTGRES names a private instance; the runtime matrix runs the whole app on it.
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { eq, sql } from 'drizzle-orm'
+import { eq, inArray, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { mysqlTable, varchar } from 'drizzle-orm/mysql-core'
 import { integer as pgInteger, pgTable, text as pgText } from 'drizzle-orm/pg-core'
@@ -197,6 +197,15 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
     }
     expect(await count(createPg({ schema: { rows }, url, migrate: false, max: 1 }))).toBeGreaterThan(0)
     expect(await count(createPg({ schema: { rows }, url, migrate: false, max: 1, prepare: false }))).toBe(0)
+  })
+
+  test('a list that grows doesn\'t fill the connection with a statement per length', async () => {
+    const { createDb: createPg } = await import('../src/db/postgres')
+    const db = createPg({ schema: { rows }, url, migrate: false, max: 1 })
+    await db.$weft.migrate(table)
+    for (let n = 1; n <= 100; n++) await db.select().from(rows).where(inArray(rows.id, Array.from({ length: n }, (_, i) => `id${i}`)))
+    const [{ n }] = await db.execute(sql`select count(*)::int as n from pg_prepared_statements where statement like '%weft_test_rows%' and from_sql = false`)
+    expect(n).toBeLessThanOrEqual(32)
   })
 
   test('same API, migrations, Q011 and Q014; Q013 on a file URL', async () => {

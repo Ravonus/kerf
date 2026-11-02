@@ -17,7 +17,8 @@ export interface PostgresOptions<S extends Record<string, unknown>> {
   max?: number
   /**
    * Keep each statement prepared on its connection (default true). Drizzle asks for neither, and an unprepared statement
-   * with parameters is two round trips, a describe before every bind. Off behind a pooler in transaction mode.
+   * with parameters is two round trips, a describe before every bind. Off behind a pooler in transaction mode. A long
+   * list isn't kept: each length is a statement of its own, and each statement stays in the connection's memory.
    */
   prepare?: boolean
 }
@@ -25,6 +26,8 @@ export interface PostgresOptions<S extends Record<string, unknown>> {
 export type PostgresDb<S extends Record<string, unknown>> = PostgresJsDatabase<S> & { $weft: DbHandle }
 
 const LOCK = 7_301_986
+/** The most parameters a statement that's kept takes. Past it, `inArray` over a growing list is what's asking. */
+const KEPT = 32
 
 export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10, prepare = true }: PostgresOptions<S>): PostgresDb<S> {
   if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
@@ -55,7 +58,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
       if (key === 'begin') return async (...a: Parameters<typeof t.begin>) => (await ready(), t.begin(...a))
       if (key !== 'unsafe') return Reflect.get(t, key)
       return (text: string, params?: any[], options?: object) => {
-        const send = () => t.unsafe(text, params, { ...options, prepare })
+        const send = () => t.unsafe(text, params, { ...options, prepare: prepare && (params?.length ?? 0) <= KEPT })
         const after = <T>(go: () => PromiseLike<T>) => Promise.resolve(ready()).then(go)
         return { values: () => after(() => send().values()), then: (ok: any, no: any) => after(send).then(ok, no) }
       }
