@@ -150,6 +150,7 @@ describe('CommandPalette', () => {
     await flush()
     expect(input.value).toBe('')
     expect(labels()).toHaveLength(4)
+    expect(input.closest('dialog')!.hasAttribute('open')).toBe(true)
     type(input, 'arch')
     await flush()
     type(input, 'arch', 0)
@@ -166,6 +167,30 @@ describe('CommandPalette', () => {
     key(input, 'Escape') // an empty query in a level goes back up
     await flush()
     expect(labels()).toHaveLength(2)
+    expect(input.closest('dialog')!.hasAttribute('open')).toBe(true)
+    key(input, 'Escape') // the top level with nothing typed: now it closes
+    await flush()
+    expect(input.closest('dialog')!.hasAttribute('open')).toBe(false)
+  })
+  test('Esc clears a typed query first and keeps the palette open; the next Esc closes it, and the dialog\'s own cancel steps back the same way', async () => {
+    const input = await opened()
+    const dlg = input.closest('dialog')!
+    type(input, 'Dep')
+    await flush()
+    key(input, 'Escape')
+    await flush()
+    expect(input.value).toBe('')
+    expect(dlg.hasAttribute('open')).toBe(true)
+    type(input, 'Dep')
+    await flush()
+    await new Promise(r => setTimeout(r, 100)) // past the layer stack's Escape window: a cancel on its own (a back gesture)
+    dlg.dispatchEvent(new Event('cancel', { cancelable: true }))
+    await flush()
+    expect(input.value).toBe('')
+    expect(dlg.hasAttribute('open')).toBe(true)
+    key(input, 'Escape')
+    await flush()
+    expect(dlg.hasAttribute('open')).toBe(false)
   })
   test('the arrows wrap and the input keeps focus through aria-activedescendant', async () => {
     const input = await opened()

@@ -12,11 +12,15 @@ import '@weft/warp-core/styles/components/command-palette.css'
 import '@weft/warp-core/styles/components/palette-motion.css'
 
 export interface Command {
+  /** Stable key for the row; the label is used when it is left out. */
   id?: string
+  /** The row's words, searched by fuzzy letters. */
   label: string
   /** Rows gather under their group's heading. */
   group?: string
+  /** A glyph before the label. */
   icon?: IconRef
+  /** Keys shown at the row's end, like "⌘N". Shown only: binding the key is the app's. */
   shortcut?: string
   /** Quiet text at the row's end: where it lives, or the words that matched. */
   hint?: string
@@ -28,6 +32,7 @@ export interface Command {
   href?: string
   /** → on the row, or picking a row with no `run`, shows these in the same list. */
   children?: () => Command[]
+  /** What picking the row does. It runs after the palette has closed, so what it opens takes focus. */
   run?: () => void
 }
 
@@ -39,23 +44,32 @@ export type CommandSource = (query: string, signal: AbortSignal) => Command[] | 
 
 /** What a first character changes to: `>` for commands, `@` for one kind of thing. */
 export interface CommandMode {
+  /** The first characters that switch to this mode, like ">" or "@". */
   prefix: string
+  /** The mode's name, shown in the input row while it is on. */
   label: string
+  /** The input's placeholder while the mode is on. */
   placeholder?: string
+  /** The rows searched in this mode, in place of the palette's `commands`. */
   commands?: Command[]
+  /** Searched as you type in this mode, after its `commands`. */
   sources?: CommandSource[]
 }
 
 export type CommandPaletteProps = Openable & {
+  /** The rows searched as you type, grouped by their `group`. */
   commands?: Command[]
   /** Searched as you type, after `commands`. */
   sources?: CommandSource[]
+  /** Prefixes that switch what is searched: `>` for commands, `@` for people. */
   modes?: CommandMode[]
   /** The order groups show in, whatever order rows arrive. Groups not named follow. */
   groupOrder?: string[]
   /** Hears every command run, however it was picked. */
   onRun?: (command: Command, reason: 'pointer' | 'keyboard') => void
+  /** The dialog's accessible name, and the input's label. */
   label?: string
+  /** The input's placeholder when no mode is on. */
   placeholder?: string
   /** The key that opens it with ⌘ or Ctrl. `false` leaves opening to the app. */
   hotkey?: string | false
@@ -180,7 +194,14 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   let list: HTMLDivElement | undefined
   let query: AbortController | undefined
   let shown: Command[] = []
-  use(dialog, () => el, () => ({ open: flag.value, onClose: () => flag.set(false) }))
+  // Esc steps back before it closes: a query clears first, then an empty nested level goes up one, then the palette
+  // closes. The dialog's layer asks this first, so the step holds whether the key reached the input or the dialog.
+  const back = () => {
+    if (input?.value) { clear(); answer(''); return true }
+    if (untrack(() => drill.value)) { up(); return true }
+    return false
+  }
+  use(dialog, () => el, () => ({ open: flag.value, onClose: () => flag.set(false), onEscape: back }))
   if (untrack(() => hotkey) !== false) use(paletteHotkey, () => el, () => ({ key: String(hotkey), slash, onPress: () => flag.set(!untrack(() => flag.value)) }))
 
   const show = (next: Command[], q: string) => {
@@ -256,12 +277,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   }
   const onKey = (e: KeyboardEvent) => {
     if (e.isComposing) return
-    if (e.key === 'Escape' && (input?.value || drill.value)) {
-      e.preventDefault()
-      if (!input?.value) return up() // an empty query in a nested level: back up one
-      clear()
-      return answer('')
-    }
+    if (e.key === 'Escape') { if (!e.defaultPrevented && back()) e.preventDefault(); return } // the layer took it first
     const count = items.value.length
     if (!count) return
     const at = active.value

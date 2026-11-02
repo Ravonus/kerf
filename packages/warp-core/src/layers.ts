@@ -11,6 +11,8 @@ export interface Layer {
   modal?: boolean
   /** Tooltips: closed by Escape, ignored by presses. */
   passive?: boolean
+  /** The layer's own use of Escape before it closes (clear a query, go up a level): true when it used the key. */
+  escape?(): boolean
 }
 
 const stacks = new WeakMap<Document, Layer[]>()
@@ -28,7 +30,7 @@ function stackOf(doc: Document) {
     const top = stack!.at(-1)!
     e.preventDefault()
     escapedAt = performance.now()
-    top.close('escape')
+    if (!top.escape?.()) top.close('escape')
   }, true)
   doc.addEventListener('pointerdown', e => {
     const t = e.target as Node
