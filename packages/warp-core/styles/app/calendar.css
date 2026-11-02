@@ -189,6 +189,8 @@
   content: ""; position: absolute; inset-inline-start: -5px; inset-block-start: calc(-4px - var(--warp-border-emphasis) / 2);
   inline-size: 8px; block-size: 8px; border-radius: 99px; background: var(--warp-color-sweep);
 }
+/* a run of the line between events (Calendar draws it only in the lanes free at that minute): no dot mid-column */
+:where([data-scope="calendar"] [data-part="now"][data-cut])::before { content: none; }
 :where([data-scope="calendar"] [data-part="now-label"]) {
   position: absolute; z-index: 4; inset-inline-end: 4px; inset-block-start: var(--_top); translate: 0 -50%;
   padding: 2px 4px; border-radius: var(--warp-radius-mark); background: var(--warp-color-sweep); color: var(--warp-color-accent-on-solid);

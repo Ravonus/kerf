@@ -6,7 +6,7 @@ import type { CalEvent } from '@weft/warp-core'
 import { Agenda } from '../src/schedule/Agenda'
 import { AvailabilityEditor } from '../src/schedule/AvailabilityEditor'
 import { BookingCalendar } from '../src/schedule/BookingCalendar'
-import { Calendar } from '../src/schedule/Calendar'
+import { Calendar, nowSpans } from '../src/schedule/Calendar'
 import { MeetingPlanner } from '../src/schedule/MeetingPlanner'
 import { MoveSheet } from '../src/schedule/MoveSheet'
 import { YearView } from '../src/schedule/YearView'
@@ -54,6 +54,17 @@ describe('Calendar', () => {
     expect(c.querySelectorAll('[data-part="col"]').length || c.querySelectorAll('[data-date][role="gridcell"]').length).toBe(7)
     expect(c.querySelectorAll('[data-part="now"]').length).toBe(1)
     expect(c.querySelectorAll('[data-part="event"][tabindex="0"]').length).toBe(1)
+  })
+
+  test('the now line runs only in the lanes free at that minute, lane edge to lane edge', () => {
+    const lanes = new Map([['a', { col: 0, cols: 3, span: 1 }], ['b', { col: 1, cols: 3, span: 1 }], ['c', { col: 2, cols: 3, span: 1 }]])
+    const segs = [{ id: 'a', s: 600, e: 660 }, { id: 'b', s: 620, e: 700 }, { id: 'c', s: 600, e: 630 }]
+    expect(nowSpans(null, segs, lanes)).toEqual([])
+    expect(nowSpans(500, segs, lanes)).toEqual([{ a: 0, b: 1, inset: '' }]) // nothing over it: the whole column, with its dot
+    expect(nowSpans(625, segs, lanes)).toEqual([])                         // every lane taken: only the gutter's label says the time
+    const third = nowSpans(645, [segs[0], segs[1]], lanes)                  // the last lane is free: from its edge to the column's
+    expect(third).toEqual([{ a: 2, b: 3, inset: 'inset-inline:calc((100% - 6px) * 2 / 3 + 2px) 0px' }])
+    expect(nowSpans(625, [segs[1], segs[2]], lanes)).toEqual([{ a: 0, b: 1, inset: 'inset-inline:0px calc(100% - (100% - 6px) * 1 / 3)' }])
   })
 
   test('out of working hours is its own part, one shade before the day and after it', () => {

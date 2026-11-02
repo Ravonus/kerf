@@ -301,6 +301,24 @@ test('a month day fills its room before it says "+N more", and shows everything 
   expect(days.filter(d => d.more).length).toBeGreaterThan(0)
 })
 
+test('the now line never peeks out beside the events over it: no tick at the edge, no dash past the last lane', async () => {
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel)
+    return [...root.querySelectorAll('[data-part="col"]')].flatMap(col => [...col.querySelectorAll(':scope > [data-part="now"]')].map(now => {
+      const r = now.getBoundingClientRect(), dot = getComputedStyle(now, '::before').content
+      const hit = [...col.querySelectorAll('[data-part="event"]')].filter(e => { const b = e.getBoundingClientRect(); return b.top <= r.top && b.bottom >= r.top && b.left < r.right - 1 && b.right > r.left + 1 }).map(e => e.dataset.id)
+      return { day: col.dataset.date, w: r.width, hit, dot, edge: Math.abs(r.left - col.getBoundingClientRect().left) < 1 }
+    }))
+  }, calendarIn('week-free'))
+  for (const n of m) {
+    expect(n.hit, n.day).toEqual([])
+    expect(n.w, n.day).toBeGreaterThan(12)
+    if (!n.edge) expect(n.dot, n.day).toBe('none')
+  }
+  // 10:40 on Wednesday the 4th is inside "Incident review: mobile-bff", the whole column at that minute
+  expect(m.filter(n => n.day === '2026-11-04')).toEqual([])
+})
+
 test('the month shows all its weeks in the height it has, with "+N more" for days that hold more', async () => {
   const m = await page.evaluate(sel => {
     const root = document.querySelector(sel), sc = root.querySelector('[data-part="main"] [data-part="scroller"]')
