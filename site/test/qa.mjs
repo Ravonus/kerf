@@ -203,7 +203,7 @@ for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
 // Every prop and event in every API table says what it does. The pages are read as served (the tables are in the
 // server's HTML), so one browser page lists the hubs and the rest is fetches. The allowlisted pages are mid-rewrite
 // elsewhere; take each off as it lands.
-const WORDS_PENDING = new Set(['/components/calendar', '/components/command-palette', '/components/pagination-bar', '/components/data-grid'])
+const WORDS_PENDING = new Set([])
 await check('every api row has a description', '/components', async page => {
   const hrefs = new Set()
   for (const hub of ['/components', '/blocks', '/charts']) {
@@ -526,6 +526,12 @@ await check('key caps hold keys only', '/components/data-grid', async page => {
   const caps = await page.locator('#accessibility [data-part="keys"] kbd').evaluateAll(ks => ks.map(k => k.textContent.trim()))
   if (!caps.length) throw new Error('no key caps')
   same(caps.filter(k => k === '+' || k === 'or' || /.,$/.test(k)).join(' '), '', 'not keys')
+})
+// A desk shows every DataGrid example whole: no column cut behind the edge ("$1,240" showed as "$1,24").
+await check('data grid examples fit a desk', '/components/data-grid', async page => {
+  await mount(page)
+  const over = await page.evaluate(() => [...document.querySelectorAll('section[id] [data-scope="table"] > [data-part="viewport"]')].map(v => ({ id: v.closest('section[id]').id, over: v.scrollWidth - v.clientWidth })).filter(v => v.over > 1))
+  same(over.map(v => `${v.id} ${v.over}px`).join(', '), '', 'grids wider than their stage')
 })
 // "Go to" and its box are one item: at 1280 they sit on the pages' row, and never apart.
 await check('pagination keeps Go to with its box', '/components/pagination-bar', async page => {
