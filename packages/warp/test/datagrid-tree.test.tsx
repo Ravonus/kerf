@@ -117,3 +117,31 @@ describe('DataGrid tree', () => {
     expect(c.textContent).toContain('bad couldn’t load')
   })
 })
+
+// The site's "A tree" example: Cost is a money-formatted sum, and its header sorts like the others.
+describe('DataGrid tree: the site example', () => {
+  test('Cost sorts by what each team rolls up, both ways, and its children with it', async () => {
+    const { DataGridTree } = await import('../../../site/src/toolkit/examples/data')
+    const { container: c } = render(() => <DataGridTree />)
+    await settle()
+    const costs = () => [...c.querySelectorAll('tbody tr[data-row]')].map(r => r.querySelector('td:last-child')!.textContent)
+    const tops = () => [...c.querySelectorAll('tbody tr[data-row][aria-level="1"]')].map(r => (r as HTMLElement).dataset.row)
+    const sort = header(c, 'cost').querySelector('button')!
+    expect(tops()).toEqual(['Platform', 'Web', 'Data', 'Mobile'])
+    press(sort)
+    await settle()
+    expect(header(c, 'cost').getAttribute('aria-sort')).toBe('ascending')
+    expect(tops()).toEqual(['Mobile', 'Web', 'Platform', 'Data'])
+    press(sort)
+    await settle()
+    expect(header(c, 'cost').getAttribute('aria-sort')).toBe('descending')
+    expect(tops()).toEqual(['Data', 'Platform', 'Web', 'Mobile'])
+    press(button(c, 'Expand all'))
+    await settle()
+    const num = (s: string | null) => Number(s!.replace(/[$,]/g, ''))
+    const platform = shown(c).slice(shown(c).indexOf('Platform') + 1, shown(c).indexOf('Web'))
+    const kids = platform.map(id => num(c.querySelector(`tr[data-row="${id}"] td:last-child`)!.textContent))
+    expect(kids).toEqual([...kids].sort((a, b) => b - a))
+    expect(costs()[0]).toBe('$3,920')
+  })
+})
