@@ -113,6 +113,31 @@ test('a Shell deep in the page gates its own host, not the page: flow keeps runn
   await close()
 })
 
+test('a code block resting at the fold is mid-scan, and the scan runs under its text, never over it', async () => {
+  const { page, close } = await stage(`<div style="block-size:560px"></div>
+    <figure data-scope="codeblock" id="code" style="margin:0;block-size:240px;inline-size:600px"><pre id="pre" style="margin:0;overflow:clip">${"import { Button } from '@weft/warp'; ".repeat(4)}</pre></figure>
+    <div style="block-size:3000px"></div>`)
+  const m = await page.evaluate(() => {
+    const c = document.getElementById('code'), a = getComputedStyle(c, '::after')
+    return { scale: a.scale, z: a.zIndex, iso: getComputedStyle(c).isolation, bg: a.backgroundColor, host: getComputedStyle(c).backgroundColor }
+  })
+  expect(m.scale).not.toBe('0 1') // part way: this is the state that cut lines at a fixed column
+  expect(m.z).toBe('-1')
+  expect(m.iso).toBe('isolate')
+  // the text paints above the scan: the pixel under a glyph's stem is the ink, not the scan's ground
+  const box = await page.evaluate(() => { const b = document.getElementById('pre').getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height } })
+  const shot = await page.screenshot({ clip: { x: box.x, y: box.y, width: Math.ceil(box.w), height: Math.ceil(box.h) } })
+  const inked = await page.evaluate(async b64 => {
+    const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode()
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0)
+    const d = g.getImageData(0, 0, img.width, img.height).data, cols = new Set()
+    for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] < 450) cols.add((i / 4) % img.width)
+    return { cols: cols.size, width: img.width, last: Math.max(...cols) }
+  }, shot.toString('base64'))
+  expect(inked.last).toBeGreaterThan(inked.width * 0.95) // ink reaches the box's end: nothing covers the lines' tails
+  await close()
+})
+
 const ABOVE = `<div style="block-size:900px"></div>`
 const BELOW = `<div style="block-size:3000px"></div>`
 async function stage(body, { expression = 'balanced', head = '' } = {}) {

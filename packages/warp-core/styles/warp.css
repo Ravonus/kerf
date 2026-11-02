@@ -1435,7 +1435,7 @@
   :where([data-scope="chart"], [data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-fade; --_flow-o: 50% 100%; }
   :where([data-scope="gallery"] [data-part="item"], figure, [data-flow="image"]) { --_flow-in: warp-in-image; --_flow-out: warp-out-image; }
   :where([data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3), [data-flow="heading"]) { --_flow-in: warp-in-heading; --_flow-out: warp-out-none; }
-  :where([data-scope="codeblock"], [data-flow="code"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; position: relative; overflow: clip; }
+  :where([data-scope="codeblock"], [data-flow="code"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; position: relative; overflow: clip; isolation: isolate; }
   :where([data-scope="form"] > *, [data-scope="field"], [data-flow="form"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-none; }
   :where([data-scope="kanban"] [data-part="card"], [data-flow="deal"]) { --_flow-in: warp-in-deal; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
 
@@ -1492,8 +1492,11 @@
       display: block; animation: var(--warp-flow-gate, warp-in-value) auto var(--warp-ref-flow-ease) backwards;
       animation-timeline: --warp-flow-host; animation-range: entry 0 cover var(--warp-ref-flow-reach);
     }
+    /* the scan passes under the code, never over it: scrubbed by the scroll, a block that rests near the fold would hold
+       it part way, and as a cover that cut every line at the same column for as long as the page sat there */
     :where([data-scope="codeblock"], [data-flow="code"])::after {
-      content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--warp-color-surface-sunken); transform-origin: 100% 50%; scale: 0 1;
+      content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%; scale: 0 1;
+      background: color-mix(in oklab, var(--warp-color-accent-soft) 70%, var(--warp-color-surface-sunken));
       animation: var(--warp-flow-gate, warp-in-scan) auto linear backwards;
       animation-timeline: --warp-flow-host; animation-range: entry 0 cover calc(var(--warp-ref-flow-reach) * 1.3);
     }
