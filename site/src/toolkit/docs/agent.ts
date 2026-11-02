@@ -34,7 +34,7 @@ export const agent: DocGroup = {
         { kind: 'states', title: 'States', examples: [
           { id: 'AssistantFailed', title: 'Failed', note: 'Retry runs it again.', stage: 'fill' },
           { id: 'AssistantStopped', title: 'Stopped', note: 'What arrived is kept.', stage: 'fill' },
-          { id: 'AssistantWaiting', title: 'Waiting for the first word', stage: 'fill' },
+          { id: 'AssistantWaiting', title: 'Waiting for the first word', note: 'An assistant `answer` with no content yet shows that a reply is on its way.', stage: 'fill' },
         ] },
       ],
       a11yNotes: ['The end of an answer is announced once. Set `quiet` on turns that were already there on load, so they take no focus.'],
@@ -53,7 +53,7 @@ export const agent: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'UserMessageEditable', title: 'Editable', note: 'Passing `onEdit` adds the pencil. Saving hands you the new text.', stage: 'fill' },
-          { id: 'UserMessageLong', title: 'A long message', stage: 'fill' },
+          { id: 'UserMessageLong', title: 'A long message', note: 'Use `text` to show a message from the person, which wraps over as many lines as it needs.', stage: 'fill' },
         ] },
       ],
       keyboard: [['Escape', 'Cancels an edit']],
@@ -90,7 +90,7 @@ export const agent: DocGroup = {
         { kind: 'states', title: 'States', examples: [
           { id: 'PromptBusy', title: 'Busy', note: 'Send becomes Stop. What you send meanwhile goes to `onQueue`.', stage: 'fill' },
           { id: 'PromptBlocked', title: 'Blocked', note: '`blocked` says why Send is off, and the button stays focusable.', stage: 'fill' },
-          { id: 'PromptUploading', title: 'Uploading a file', stage: 'fill' },
+          { id: 'PromptUploading', title: 'Uploading a file', note: 'A file in `files` with a `progress` between 0 and 1 shows an upload still under way.', stage: 'fill' },
         ] },
       ],
       keyboard: [['Enter', 'Sends'], ['Shift+Enter', 'Adds a line'], ['Escape', 'Stops a running answer'], ['/ or @', 'Opens commands or people'], ['Up and Down', 'Move through the open list']],
@@ -164,7 +164,7 @@ export const agent: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'QuestionPickScope', title: 'One answer', note: '`free` adds Something else. Continue reads the choice back.', stage: 'narrow', height: 280 },
-          { id: 'QuestionManyAnswers', title: 'Several answers', stage: 'narrow', height: 260 },
+          { id: 'QuestionManyAnswers', title: 'Several answers', note: 'A question with `multiple` set lets people pick more than one of its `options`.', stage: 'narrow', height: 260 },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'QuestionClosed', title: 'Closed', note: 'The run stopped before anyone answered.', stage: 'narrow', height: 240 }] },
       ],

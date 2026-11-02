@@ -61,14 +61,14 @@ export const feedback: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'AlertTones', title: 'Tones', note: 'Icon and words carry the meaning, so it never depends on colour.', stage: 'fill', height: 360 },
-          { id: 'AlertTitleOnly', title: 'Title only', stage: 'fill' },
-          { id: 'AlertBodyOnly', title: 'Text only', stage: 'fill' },
-          { id: 'AlertWithActions', title: 'With actions', stage: 'fill' },
+          { id: 'AlertTitleOnly', title: 'Title only', note: 'An alert needs only a `title` when nothing more has to be said.', stage: 'fill' },
+          { id: 'AlertBodyOnly', title: 'Text only', note: 'An alert can carry just text, with no `title`.', stage: 'fill' },
+          { id: 'AlertWithActions', title: 'With actions', note: 'Use `actions` to add buttons under the message.', stage: 'fill' },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'AlertDismiss', title: 'Dismissible', note: '`onDismiss` adds the close button. You remove the alert.', stage: 'fill' }] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'AlertFormError', title: 'A form error', note: 'Press Add domain with the box empty. `live` announces it.', stage: 'narrow', height: 300 },
-          { id: 'AlertUsage', title: 'Close to a limit', stage: 'fill' },
+          { id: 'AlertUsage', title: 'Close to a limit', note: 'An alert with `tone` set to `caution` and an `actions` button warns about a limit and offers a fix.', stage: 'fill' },
         ] },
       ],
       a11yNotes: ['`live` sets `role="alert"`, which interrupts screen readers. Keep it for new errors.', 'An alert on the page at load is not announced.'],
@@ -109,7 +109,7 @@ export const feedback: DocGroup = {
           { id: 'ProgressIndeterminate', title: 'No value yet', note: 'Leave out `value` until you have one.', stage: 'narrow' },
           { id: 'ProgressRun', title: 'Moving', note: 'Change `value` and the bar follows.', stage: 'narrow', replay: true },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'ProgressPlanUsage', title: 'Plan usage', stage: 'narrow', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'ProgressPlanUsage', title: 'Plan usage', note: 'Use `value` for how full each bar is, and `tone` to flag one that needs attention.', stage: 'narrow', height: 300 }] },
       ],
       a11yNotes: ['`label` is required: it names the bar, and it is the text above it.', 'With no `value`, the bar is announced as busy with its label.'],
       propDocs: {
@@ -141,8 +141,8 @@ export const feedback: DocGroup = {
           { id: 'SpinnerInline', title: 'Beside text', note: 'With words next to it, leave out `label`: it is then decorative.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'SpinnerRefresh', title: 'Refreshing', stage: 'narrow' },
-          { id: 'SpinnerPanel', title: 'A waiting panel', stage: 'narrow', height: 220 },
+          { id: 'SpinnerRefresh', title: 'Refreshing', note: 'A spinner with a `label` stands in for a button while a refresh runs.', stage: 'narrow' },
+          { id: 'SpinnerPanel', title: 'A waiting panel', note: 'Use `size` set to `lg` for a spinner that fills a waiting panel.', stage: 'narrow', height: 220 },
         ] },
       ],
       a11yNotes: ['`label` makes it a named status. Without one it is hidden from screen readers.', 'Under reduced motion it pulses instead of turning.'],
@@ -173,7 +173,7 @@ export const feedback: DocGroup = {
           { id: 'SkeletonLines', title: 'Lines', note: '`lines` stacks text lines. The last is shorter.', stage: 'narrow' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'SkeletonProfile', title: 'A person row' },
+          { id: 'SkeletonProfile', title: 'A person row', note: 'Use `shape` and `width` to sketch a person row while it loads.' },
           { id: 'SkeletonThenContent', title: 'Then the content', note: 'Match the content\'s size, so nothing jumps.', stage: 'narrow', replay: true },
         ] },
       ],
@@ -202,10 +202,10 @@ export const feedback: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'ShapeList', title: 'List', note: '`avatar={false}` drops the circle.', stage: 'narrow', height: 220 },
-          { id: 'ShapeParagraph', title: 'Text', stage: 'narrow' },
+          { id: 'ShapeParagraph', title: 'Text', note: 'Use `kind="text"` with `lines` to draw a placeholder paragraph.', stage: 'narrow' },
           { id: 'ShapeTile', title: 'Card', note: '`media` is the picture\'s ratio. Leave it out for none.', stage: 'narrow', height: 340 },
-          { id: 'ShapeTable', title: 'Table', stage: 'fill', height: 240 },
-          { id: 'ShapeMedia', title: 'Media', stage: 'fill', height: 260 },
+          { id: 'ShapeTable', title: 'Table', note: 'Use `kind="table"` with `rows` and `cols` to draw a placeholder table.', stage: 'fill', height: 240 },
+          { id: 'ShapeMedia', title: 'Media', note: 'Use `kind="media"` with `media` to draw a placeholder image at a set ratio.', stage: 'fill', height: 260 },
         ] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'ShapeBoundary', title: 'Waiting on data', note: 'Give it the content\'s counts, so the swap moves nothing.', stage: 'narrow', height: 200, replay: true },
@@ -245,7 +245,7 @@ export const feedback: DocGroup = {
           { id: 'LiveStatusWords', title: 'Your own words', note: 'Children replace the default word.' },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'LiveStatusDrop', title: 'Losing the connection', note: 'Pass the state you have, and it follows.' }] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'LiveStatusHeader', title: 'A panel header', stage: 'narrow' }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'LiveStatusHeader', title: 'A panel header', note: 'Use `state` and `label` to show whether a stream is live beside a heading.', stage: 'narrow' }] },
       ],
       a11yNotes: ['It is a live status, so changes are announced. `label` says what the connection is for.'],
       propDocs: { state: 'The connection: `connecting`, `live`, `reconnecting` or `offline`.', label: 'What is connected, for screen readers: "Log stream: live".', children: 'Replaces the default word.' },

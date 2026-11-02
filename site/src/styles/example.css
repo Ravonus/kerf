@@ -37,3 +37,10 @@
 [data-site="example"] [data-part="receipt"] { display: grid; gap: var(--warp-space-related); margin: 0; }
 [data-site="example"] [data-part="receipt"] p { display: flex; justify-content: space-between; gap: var(--warp-space-related); margin: 0; padding: var(--warp-space-tight) var(--warp-space-related); background: linear-gradient(90deg, var(--warp-color-accent-soft) var(--share, 0%), transparent 0); }
 [data-site="example"] [data-part="receipt"] [data-part="total"] { background: none; border-block-start: 1px solid var(--warp-color-border); }
+
+/* Each example gets a stage of its own, and the pairs take turns. */
+[data-site="page"] [data-site="example"]:nth-of-type(even) [data-part="pair"] { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+[data-site="page"] [data-site="example"]:nth-of-type(even) [data-part="run"] { order: 2; border-inline-end: 0; border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+[data-site="page"] [data-site="example"]:nth-of-type(3n + 1) [data-part="run"] { background: var(--warp-color-accent-soft); }
+[data-site="page"] [data-site="example"]:nth-of-type(3n + 2) [data-part="run"] { background: var(--warp-color-surface-sunken); }
+@media (max-width: 759.98px) { [data-site="page"] [data-site="example"]:nth-of-type(even) [data-part="pair"] { grid-template-columns: minmax(0, 1fr); } [data-site="page"] [data-site="example"]:nth-of-type(even) [data-part="run"] { order: 0; border-inline-start: 0; } }

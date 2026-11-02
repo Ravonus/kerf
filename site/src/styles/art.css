@@ -54,3 +54,12 @@
 
 [data-art="controls"][data-art-end] { justify-content: flex-end; }
 [data-art-seed] { inline-size: min(220px, 50%); }
+
+/* The gallery has the page to itself: two columns, and a lone piece takes the row. */
+[data-site="docs"]:has(> [data-art="gallery"]) { grid-template-columns: minmax(0, 1fr); }
+[data-site="doc"][data-art="gallery"] { max-inline-size: 1320px; }
+[data-art="gallery"] [data-art="wall"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-art="piece"]:nth-child(odd):last-child { grid-column: 1 / -1; }
+[data-art="piece"]:nth-child(odd):last-child [data-art="frame"] { aspect-ratio: 5 / 2; }
+[data-art="room"] > h2 { font: 600 calc(1.75 * var(--warp-rem))/1.2 var(--doc-sans); }
+@media (max-width: 719.98px) { [data-art="gallery"] [data-art="wall"] { grid-template-columns: minmax(0, 1fr); } }

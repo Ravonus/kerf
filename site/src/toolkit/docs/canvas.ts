@@ -9,6 +9,7 @@ export const canvas: DocGroup = {
   docs: [
     {
       component: 'Canvas',
+      hero: 'CanvasWave',
       summary: 'A canvas that handles sizing, sharp pixels, off-screen pausing and reduced motion for you.',
       use: {
         when: ['You need to draw something warp has no component for'],
@@ -28,6 +29,7 @@ export const canvas: DocGroup = {
     },
     {
       component: 'DitherField',
+      hero: 'DitherFieldHero',
       summary: 'A moving dithered texture for backgrounds, in the theme\'s colours.',
       use: {
         when: ['A hero or section that needs a living background'],
@@ -83,7 +85,7 @@ export const canvas: DocGroup = {
           fill('DitherRadial', 'A radial gradient', 320, '`from` and `to` run from 0 to 1.'),
           fill('DitherAlgorithms', 'Algorithms', 460, 'Patterns stay steady and suit gradients. `floyd` and `atkinson` hold more detail in images.'),
         ] },
-        { kind: 'composition', title: 'In context', examples: [fill('DitherBanner', 'A status banner', 280)] },
+        { kind: 'composition', title: 'In context', examples: [fill('DitherBanner', 'A status banner', 280, 'Use `gradient` and `ramp` to shade a banner, and `ratio` to set its shape.')] },
       ],
       a11yNotes: ['An image keeps its `alt`. A gradient is decorative unless you give it a `label`.'],
       propDocs: { gradient: 'With no `src`: `{ angle, radial, from, to }`.', algorithm: '`atkinson` by default for images, `bayer8` for gradients.', invert: 'Swaps light and dark.', contrast: 'Tone contrast, around 1.' },

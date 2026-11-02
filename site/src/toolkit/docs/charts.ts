@@ -225,7 +225,7 @@ export const charts: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Example', examples: [chart('ChartForm', 'A form in the frame', 420, 'Every named chart is this with its `form` filled in.')] },
         { kind: 'states', title: 'States', examples: [
-          chart('ChartLoading', 'Loading', 300),
+          chart('ChartLoading', 'Loading', 300, 'Set `state` to `loading` to show a placeholder in place of the chart.'),
           chart('ChartEmpty', 'Empty', 300, 'With no data the frame shows `empty` on its own.'),
           chart('ChartRetry', 'Error and retry', 420, 'Press Retry. `state` swaps the plot in the same frame.'),
         ] },

@@ -25,7 +25,7 @@ export const live: DocGroup = {
         { kind: 'composition', title: 'In context', examples: [{ id: 'InboxPage', title: 'As a page', note: 'Approve, dismiss and undo all work. Rows are marked read after two seconds on screen.', stage: 'fill', height: 520 }] },
         { kind: 'states', title: 'States', examples: [
           { id: 'InboxLoading', title: 'First load', note: '`items` stays undefined until it arrives.', stage: 'fill', height: 280 },
-          { id: 'InboxEmpty', title: 'Empty', stage: 'fill', height: 240 },
+          { id: 'InboxEmpty', title: 'Empty', note: 'An `Inbox` with no `items` shows its empty state.', stage: 'fill', height: 240 },
         ] },
       ],
       keyboard: [['Left and Right', 'Move between the tabs'], ['Up and Down', 'Move between notifications']],

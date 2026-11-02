@@ -31,8 +31,8 @@ export const showing: DocGroup = {
           { id: 'CardBare', title: 'Bare', note: 'Every part is optional, and `sweep={false}` drops the hover line.', stage: 'narrow' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'CardStats', title: 'A row of figures', stage: 'fill', height: 180 },
-          { id: 'CardProjectGrid', title: 'A grid of projects', stage: 'fill', height: 420 },
+          { id: 'CardStats', title: 'A row of figures', note: 'Use `eyebrow` and `title` for a label and a figure, laid out in a `Grid`.', stage: 'fill', height: 180 },
+          { id: 'CardProjectGrid', title: 'A grid of projects', note: 'Give a card `href` to make the whole card a link.', stage: 'fill', height: 420 },
         ] },
       ],
       a11yNotes: ['A card with `href` is a real link, and with `onClick` a real button, so don\'t put other buttons or links inside those.'],
@@ -66,13 +66,13 @@ export const showing: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'BadgeDot', title: 'With a dot', note: '`dot` adds a status dot.' },
-          { id: 'BadgeTones', title: 'Tones' },
+          { id: 'BadgeTones', title: 'Tones', note: 'Use `tone` to colour a badge by what it means.' },
           { id: 'BadgeEmphasis', title: 'Emphasis', note: '`soft` by default.' },
           { id: 'BadgeCount', title: 'Counts', note: '`count` makes it round. `srText` says what is being counted.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'BadgeProjectList', title: 'Status in a list', stage: 'narrow', height: 340 },
-          { id: 'BadgeOnAButton', title: 'A count on a button' },
+          { id: 'BadgeProjectList', title: 'Status in a list', note: 'Use `dot` with a `tone` to show each row\'s status at a glance.', stage: 'narrow', height: 340 },
+          { id: 'BadgeOnAButton', title: 'A count on a button', note: 'Use `count` to show a number badge inside a button.' },
         ] },
       ],
       a11yNotes: ['The words carry the status, so it never depends on colour.', 'A count alone means little to a screen reader: use `srText`.'],
@@ -104,11 +104,11 @@ export const showing: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'TagPlain', title: 'Plain' },
-          { id: 'TagTones', title: 'Tones' },
+          { id: 'TagTones', title: 'Tones', note: 'Use `tone` to colour a tag.' },
           { id: 'TagSwatches', title: 'With a swatch', note: '`swatch` adds a dot of colour, for categories.' },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'TagRemovable', title: 'Removable', note: '`onRemove` adds the cross. When the text is an expression, pass `label` to name it.' }] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'TagAddToProject', title: 'Adding labels', stage: 'narrow', height: 220 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'TagAddToProject', title: 'Adding labels', note: 'Use `onRemove` to give each tag a button that takes it off.', stage: 'narrow', height: 220 }] },
       ],
       a11yNotes: ['The remove button is named "Remove" plus the tag\'s text.'],
       propDocs: {
@@ -134,8 +134,8 @@ export const showing: DocGroup = {
           { id: 'KbdCombo', title: 'A combination', note: 'One `Kbd` for each key.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'KbdInSentence', title: 'In a sentence', stage: 'narrow' },
-          { id: 'KbdShortcutList', title: 'A list of shortcuts', stage: 'narrow', height: 240 },
+          { id: 'KbdInSentence', title: 'In a sentence', note: 'Wrap each key in `Kbd` to show it as a key inside a sentence.', stage: 'narrow' },
+          { id: 'KbdShortcutList', title: 'A list of shortcuts', note: 'Put one `Kbd` per key in a row to list shortcuts beside what they do.', stage: 'narrow', height: 240 },
         ] },
       ],
       a11yNotes: ['It is a real `<kbd>`. For symbols like ⌘, say the name nearby where it matters.'],
@@ -158,7 +158,7 @@ export const showing: DocGroup = {
           { id: 'TickerStep', title: 'Rolling', note: 'Only digits that change move. A new leading digit arrives on its own.' },
           { id: 'TickerFormats', title: 'Formats', note: '`format` takes anything `Intl.NumberFormat` does.' },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'TickerLiveTraffic', title: 'Live figures', stage: 'fill', height: 180 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'TickerLiveTraffic', title: 'Live figures', note: 'Pass a changing `value` to `Ticker` and the figure follows it.', stage: 'fill', height: 180 }] },
       ],
       a11yNotes: ['The real number is in the page for screen readers, and the digits are hidden from them.', 'Under reduced motion the number swaps without rolling.'],
       propDocs: {
@@ -191,7 +191,7 @@ export const showing: DocGroup = {
           { id: 'IconSet', title: 'Some of the set', note: 'The [icons page](/icons) has them all.', stage: 'fill', height: 420 },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'IconLabelled', title: 'With a meaning', note: 'Icons are hidden from screen readers. `label` gives one a name.' }] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'IconFeatureList', title: 'A feature list', stage: 'narrow', height: 220 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'IconFeatureList', title: 'A feature list', note: 'Use `name` and `size` to put an icon beside each line of a list.', stage: 'narrow', height: 220 }] },
       ],
       a11yNotes: ['Icons are decorative unless they have a `label`.'],
       propDocs: {
@@ -221,7 +221,7 @@ export const showing: DocGroup = {
           { id: 'HeadingLevels', title: 'Levels', note: 'Each level picks its look, so an `h1` is one size everywhere.', stage: 'start', height: 240 },
           { id: 'HeadingRoles', title: 'Roles', note: '`role` changes the look and leaves the outline alone.', stage: 'start', height: 260 },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'HeadingPageTop', title: 'A page\'s outline', stage: 'start', height: 340 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'HeadingPageTop', title: 'A page\'s outline', note: 'Use `level` for the outline, with a single `1` at the top and `2` for each section under it.', stage: 'start', height: 340 }] },
       ],
       a11yNotes: ['Don\'t skip levels: screen reader users move through a page by its headings.'],
       propDocs: { level: 'The place in the outline, from 1 to 6.', role: 'The look: `display`, `title`, `heading` or `label`.' },
@@ -249,7 +249,7 @@ export const showing: DocGroup = {
           { id: 'TextTones', title: 'Tones', note: '`tone` colours it. Pair it with words, not just colour.', stage: 'start' },
           { id: 'TextInline', title: 'Inside a sentence', note: '`inline` makes it a span.', stage: 'narrow' },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'TextDeployNote', title: 'Roles working together', stage: 'narrow', height: 220 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'TextDeployNote', title: 'Roles working together', note: 'Use `role` to pick `eyebrow`, `heading` or `caption` text, and `tone` to colour a line.', stage: 'narrow', height: 220 }] },
       ],
       a11yNotes: ['`role` here is a look, not an ARIA role: it never reaches the HTML `role` attribute.', 'Every text colour meets contrast on warp\'s surfaces, except `faint`, which is for what people can do without.'],
       propDocs: {
@@ -274,9 +274,9 @@ export const showing: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'CodeInSentence', title: 'In a sentence', stage: 'narrow' },
-          { id: 'CodeNames', title: 'Names and values' },
+          { id: 'CodeNames', title: 'Names and values', note: 'Use `Code` to mark a name or value inside a sentence.' },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'CodeOnACard', title: 'On a card', stage: 'narrow' }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'CodeOnACard', title: 'On a card', note: 'A `Code` can sit inline in a sentence, here on a card, to mark a commit, a branch and a region.', stage: 'narrow' }] },
       ],
       related: ['CodeBlock', 'Snippet', 'Kbd'],
     },
@@ -299,12 +299,12 @@ export const showing: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'CodeBlockBasic', title: 'Plain', stage: 'fill', height: 260 },
-          { id: 'CodeBlockFilename', title: 'With a filename', stage: 'fill', height: 260 },
-          { id: 'CodeBlockLines', title: 'With line numbers', stage: 'fill', height: 260 },
+          { id: 'CodeBlockFilename', title: 'With a filename', note: 'Use `filename` to show the file\'s name above the code.', stage: 'fill', height: 260 },
+          { id: 'CodeBlockLines', title: 'With line numbers', note: 'Use `lines` to number each line.', stage: 'fill', height: 260 },
           { id: 'CodeBlockWrap', title: 'Wrapping', note: '`wrap` breaks long lines. Without it they scroll.', stage: 'fill', height: 160 },
           { id: 'CodeBlockJson', title: 'Other languages', note: '`tsx`, `ts`, `js`, `json` and `sh` are coloured. Anything else stays plain.', stage: 'fill', height: 320 },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'CodeBlockChooser', title: 'One task, three ways', stage: 'fill', height: 220 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'CodeBlockChooser', title: 'One task, three ways', note: 'Pair a `Segmented` control with `CodeBlock` to let people pick which version of the code to read.', stage: 'fill', height: 220 }] },
       ],
       keyboard: [['Tab', 'Focuses the code, so arrow keys can scroll it']],
       a11yNotes: ['Long lines scroll, so the block takes focus for keyboard users.', 'It is coloured on the server and needs no script. `copyButtons()` from `@weft/warp-core`, called once, runs every copy button.'],
@@ -328,7 +328,7 @@ export const showing: DocGroup = {
           { id: 'SnippetInstall', title: 'A command', note: 'The copy button copies the command, not the `$`.', stage: 'narrow' },
           { id: 'SnippetPrompts', title: 'Prompts', note: '`prompt` changes the sign, and an empty one removes it.', stage: 'narrow', height: 220 },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'SnippetGetStarted', title: 'Getting started', stage: 'narrow', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'SnippetGetStarted', title: 'Getting started', note: 'Use `code` for a one-line command, one for each step.', stage: 'narrow', height: 300 }] },
       ],
       a11yNotes: ['The prompt is hidden from screen readers.'],
       propDocs: { code: 'What is shown and copied.', prompt: 'The sign before it. Pass `""` for none.' },
@@ -348,12 +348,12 @@ export const showing: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'MarkdownNotes', title: 'Headings, lists and quotes', stage: 'fill', height: 360 },
-          { id: 'MarkdownTable', title: 'Tables', stage: 'fill', height: 220 },
-          { id: 'MarkdownCode', title: 'Code', stage: 'fill', height: 220 },
+          { id: 'MarkdownTable', title: 'Tables', note: 'Use `source` with a Markdown table to show rows and columns.', stage: 'fill', height: 220 },
+          { id: 'MarkdownCode', title: 'Code', note: 'Use `source` with a fenced block to show code inside Markdown text.', stage: 'fill', height: 220 },
           { id: 'MarkdownNewTab', title: 'Links in a new tab', note: '`linkTarget="_blank"` for text from outside your app.', stage: 'fill' },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'MarkdownSafe', title: 'Raw HTML', note: 'It is escaped and shows as text, so user content can\'t run a script.', stage: 'fill' }] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'MarkdownComment', title: 'A review comment', stage: 'narrow', height: 260 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'MarkdownComment', title: 'A review comment', note: 'Use `source` to render a comment as formatted text inside a card.', stage: 'narrow', height: 260 }] },
       ],
       a11yNotes: ['Start from the right heading level for where it sits, as the source sets the outline.'],
       propDocs: { source: 'The Markdown.', linkTarget: 'Where links open.' },

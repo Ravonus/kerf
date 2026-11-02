@@ -1,4 +1,4 @@
-import { Button, Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft/warp'
+import { Button, getDial, Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft/warp'
 import { derived, onCleanup, onMount, state } from 'weft'
 import files from '../generated/icons.json'
 
@@ -19,6 +19,7 @@ export function IconBrowser() {
   const set = state<Set | undefined>(undefined)
   const query = state('')
   const tier = state<Tier>('balanced')
+  onMount(() => { tier.value = getDial('expression') })
   const form = state<Form>('hollow')
   const size = state('32')
   const cols = state(6)

@@ -41,7 +41,7 @@ export const layout: DocGroup = {
         ] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'GridDashboard', title: 'A dashboard', note: 'Four stats, with a full-width card under them.', stage: 'fill', height: 300 },
-          { id: 'GridProjectCards', title: 'Project cards', stage: 'fill', height: 300 },
+          { id: 'GridProjectCards', title: 'Project cards', note: 'Use `min` for the narrowest a card may get and `cols` for the most that sit across.', stage: 'fill', height: 300 },
         ] },
       ],
       a11yNotes: ['Grid changes how things look, not their order. Reading and tab order follow the source.', 'Pass `as="ul"` for a real list of items.'],
@@ -79,8 +79,8 @@ export const layout: DocGroup = {
           { id: 'StackDivided', title: 'Divided', note: '`divided` draws a hairline between children, with the gap on both sides of it.', stage: 'narrow', height: 220 },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'StackNotifications', title: 'A settings group', stage: 'narrow', height: 320 },
-          { id: 'StackDeployLog', title: 'A list of deploys', stage: 'narrow', height: 300 },
+          { id: 'StackNotifications', title: 'A settings group', note: 'Use `divided` to draw a line between the items in a group, and `gap` to set the space.', stage: 'narrow', height: 320 },
+          { id: 'StackDeployLog', title: 'A list of deploys', note: 'Use `divided` to separate each deploy from the next.', stage: 'narrow', height: 300 },
         ] },
       ],
       a11yNotes: ['Pass `as="ul"` or `as="ol"` when the children are a list, and `as="form"` for a form.'],
@@ -169,7 +169,7 @@ export const layout: DocGroup = {
         ] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'SplitSettings', title: 'A settings page', note: 'Pick a section. Each side is a container, so what\'s inside reflows by its own width.', stage: 'fill', height: 360 },
-          { id: 'SplitMasterDetail', title: 'List and detail', stage: 'fill', height: 320 },
+          { id: 'SplitMasterDetail', title: 'List and detail', note: 'Use `width` to size the list column, and the detail takes the rest.', stage: 'fill', height: 320 },
         ] },
       ],
       a11yNotes: ['Stacked, the children keep source order, so put what people need first first. `side` changes which one is fixed, not the order.'],
@@ -205,7 +205,7 @@ export const layout: DocGroup = {
           { id: 'CenterGutter', title: 'Gutter', note: '`gutter` adds the page\'s side margin and clears a phone\'s notch.', stage: 'fill', height: 180 },
           { id: 'CenterIntrinsic', title: 'Centre the content too', note: '`intrinsic` also centres each child at its own width.', stage: 'fill', height: 220 },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'CenterArticle', title: 'An article', stage: 'fill', height: 280 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'CenterArticle', title: 'An article', note: 'Use `max` set to `measure` to hold text to a comfortable line length.', stage: 'fill', height: 280 }] },
       ],
       propDocs: {
         max: 'How wide it may get: `narrow`, `measure`, `content` or `wide`.',
@@ -228,7 +228,7 @@ export const layout: DocGroup = {
         ] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'CoverSignIn', title: 'A sign-in page', note: 'Previews pin the screen\'s height with `--warp-viewport-block`. In an app, leave that out.', stage: 'fill', height: 580 },
-          { id: 'CoverNotFound', title: 'A not found page', stage: 'fill', height: 420 },
+          { id: 'CoverNotFound', title: 'A not found page', note: 'Use `Cover` to fill the screen and `Center` to put a message in the middle.', stage: 'fill', height: 420 },
         ] },
       ],
       a11yNotes: ['It sets no landmark. Pass `as="main"` when it is the page.'],
@@ -255,7 +255,7 @@ export const layout: DocGroup = {
           { id: 'FrameRatios', title: 'Ratios', note: 'The sunken colour shows until the media arrives, so the page never jumps.', stage: 'fill', height: 200 },
           { id: 'FrameMedia', title: 'Media crops to fit', note: 'An image, video, canvas or SVG directly inside fills the frame and crops.', stage: 'fill', height: 300 },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'FramePreviews', title: 'Deploy previews', stage: 'fill', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'FramePreviews', title: 'Deploy previews', note: 'Use `ratio` to give each preview the same shape, here 16:9.', stage: 'fill', height: 300 }] },
       ],
       a11yNotes: ['Frame draws nothing itself, so give an image its `alt` as usual.'],
       propDocs: { ratio: 'Width to height. `16:9` by default.' },
@@ -274,8 +274,8 @@ export const layout: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [{ id: 'InsetPads', title: 'Padding', note: 'Two sizes from the space scale.', stage: 'fill', height: 160 }] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'InsetBuildLog', title: 'Build output', stage: 'narrow', height: 260 },
-          { id: 'InsetInvoiceTotal', title: 'An invoice summary', stage: 'narrow', height: 300 },
+          { id: 'InsetBuildLog', title: 'Build output', note: 'Use `Inset` to set a block of output apart inside a card.', stage: 'narrow', height: 260 },
+          { id: 'InsetInvoiceTotal', title: 'An invoice summary', note: 'Use `Inset` to set a summary apart from the text around it.', stage: 'narrow', height: 300 },
         ] },
       ],
       propDocs: { pad: 'The padding: `group`, or `section` for more.' },
@@ -292,7 +292,7 @@ export const layout: DocGroup = {
           { id: 'SpacerTwo', title: 'Two spacers', note: 'They share the free space evenly, which centres what\'s between them.', stage: 'fill', height: 130 },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'SpacerToolbar', title: 'A toolbar', stage: 'fill', height: 120 },
+          { id: 'SpacerToolbar', title: 'A toolbar', note: 'Put a `Spacer` between items in a row to push the ones after it to the far end.', stage: 'fill', height: 120 },
           { id: 'SpacerCardFooter', title: 'Buttons along the bottom', note: 'Two cards of different lengths still line up their buttons.', stage: 'fill', height: 260 },
         ] },
       ],

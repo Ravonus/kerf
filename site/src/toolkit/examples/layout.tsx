@@ -2,11 +2,17 @@ import { state, untrack } from 'weft'
 import { Badge, Button, Card, Center, Cover, Frame, Grid, Heading, Input, Inset, Nav, Progress, Row, Segmented, Shell, Spacer, Split, Stack, Switch, Text, Toggle } from '@weft/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS, TONE_OF, TRAFFIC } from '../world'
 
-// Layout has no look of its own, so these tinted boxes make it visible.
-const TINT = 'display:grid;place-content:center;padding:var(--warp-space-related);text-align:center;font-size:var(--warp-text-caption-size);color:var(--warp-color-accent-text);background:var(--warp-color-accent-soft);border:var(--warp-border-hairline) solid var(--warp-color-accent-border);border-radius:var(--warp-radius-control)'
+// Layout has no look of its own, so each box is a small project card.
+const BOX = 'display:grid;align-content:center;gap:2px;padding:var(--warp-space-related);border:var(--warp-border-hairline) solid var(--warp-color-border);border-radius:var(--warp-radius-surface);background:var(--warp-color-surface);color:var(--warp-color-text);font-size:var(--warp-text-caption-size);min-inline-size:0'
 
 function Box({ tall, children, ...rest }: { tall?: number; children?: any; [attr: string]: any }) {
-  return <div style={tall ? `${TINT};min-block-size:${tall}px` : TINT} {...rest}>{children}</div>
+  return (
+    <div style={tall ? `${BOX};min-block-size:${tall}px` : BOX} {...rest}>
+      {typeof children === 'number'
+        ? <><strong>{PROJECTS[(children - 1) % PROJECTS.length].name}</strong><span style="color:var(--warp-color-text-subtle)">{PROJECTS[(children - 1) % PROJECTS.length].region}</span></>
+        : children}
+    </div>
+  )
 }
 
 const EIGHT = [1, 2, 3, 4, 5, 6, 7, 8]

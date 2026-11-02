@@ -23,7 +23,7 @@ export const schedule: DocGroup = {
       use: { when: ['Today\'s events in a sidebar or a dashboard card'] },
       sections: [
         { kind: 'composition', title: 'In context', examples: [{ id: 'AgendaDayToday', title: 'Today', note: 'It goes inside an element with `data-scope="agenda"`, which holds its styles.', stage: 'narrow', height: 380 }] },
-        { kind: 'states', title: 'States', examples: [{ id: 'AgendaDayEmpty', title: 'Nothing scheduled', stage: 'narrow' }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'AgendaDayEmpty', title: 'Nothing scheduled', note: 'An `AgendaDay` with no events on its `day` says nothing is scheduled.', stage: 'narrow' }] },
       ],
       propDocs: { events: 'Events for any days. Only `day`\'s are shown.', day: 'The date to show.', now: 'The wall time for the now line.', label: 'The list\'s accessible name.' },
       related: ['Agenda'],
@@ -74,8 +74,8 @@ export const schedule: DocGroup = {
       sections: [
         { kind: 'composition', title: 'In context', examples: [{ id: 'BookingCalendarOnboarding', title: 'Book an onboarding call', note: 'Weekends are closed, and taken times stay visible but cannot be picked.', stage: 'fill', height: 460 }] },
         { kind: 'states', title: 'States', examples: [
-          { id: 'BookingCalendarLoading', title: 'Loading', stage: 'fill', height: 420 },
-          { id: 'BookingCalendarFailed', title: 'Times failed to load', stage: 'fill', height: 420 },
+          { id: 'BookingCalendarLoading', title: 'Loading', note: 'Set `loading` to show that times are on their way.', stage: 'fill', height: 420 },
+          { id: 'BookingCalendarFailed', title: 'Times failed to load', note: 'Use `error` to say the times could not be loaded.', stage: 'fill', height: 420 },
         ] },
       ],
       a11yNotes: ['Each time is a pressed-or-not button. A typed time is always offered as well.'],

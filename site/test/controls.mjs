@@ -216,19 +216,19 @@ await behaves('Same page changes in all three', '/', async page => {
 })
 
 // Every toolkit page: each example mounts, with no page error and nothing wider than its stage.
-const slugs = Object.keys(JSON.parse(readFileSync(new URL('../src/generated/toolkit.json', import.meta.url), 'utf8')))
+const slugs = Object.values(JSON.parse(readFileSync(new URL('../src/generated/toolkit.json', import.meta.url), 'utf8'))).map(p => `${p.area}/${p.slug}`)
 const unmounted = []
 for (const slug of slugs) {
   const page = await b.newPage({ viewport: { width: 1280, height: 900 } })
-  page.on('pageerror', e => unmounted.push(`/toolkit/${slug}: ${e.message.split('\n')[0]}`))
-  await page.goto(`${base}/toolkit/${slug}`, { waitUntil: 'load' })
+  page.on('pageerror', e => unmounted.push(`/${slug}: ${e.message.split('\n')[0]}`))
+  await page.goto(`${base}/${slug}`, { waitUntil: 'load' })
   for (let i = 0; i < 80; i++) {
     const more = await page.evaluate(() => { const m = document.querySelector('[data-part="mount"]:not([data-ready])'); m?.scrollIntoView(); return !!m })
     if (!more) break
     await page.waitForTimeout(200)
   }
   const left = await page.locator('[data-part="mount"]:not([data-ready])').count()
-  if (left) unmounted.push(`/toolkit/${slug}: ${left} never mounted`)
+  if (left) unmounted.push(`/${slug}: ${left} never mounted`)
   await page.close()
 }
 

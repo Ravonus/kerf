@@ -77,6 +77,9 @@
 /* -- docs home -- */
 [data-site="doc"] [data-part="cards"] { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--warp-space-group); margin-block-start: 32px; }
 [data-site="doc"] [data-part="cards"] section { padding: var(--warp-space-group) calc(var(--warp-space-group) * 1.25); border: var(--warp-border-hairline) solid var(--rule); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface); }
+[data-site="doc"] [data-part="cards"] section { overflow: clip; padding-block-start: 0; }
+[data-site="doc"] [data-part="cards"] [data-part="thumb"] { margin-inline: calc(var(--warp-space-group) * -1.25); margin-block-end: var(--warp-space-related); block-size: 96px; overflow: clip; }
+[data-site="doc"] [data-part="cards"] [data-art="frame"] { block-size: 96px; aspect-ratio: auto; }
 [data-site="doc"] [data-part="cards"] h2 { margin: 0 0 var(--warp-space-related); font: 600 var(--doc-small)/1.4 var(--doc-sans); color: var(--ink); }
 [data-site="doc"] [data-part="cards"] ul { display: grid; gap: var(--warp-space-tight); margin: 0; padding: 0; list-style: none; font-size: var(--doc-small); }
 [data-site="doc"] [data-part="cards"] a { color: var(--ink); text-decoration: none; }

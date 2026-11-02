@@ -305,7 +305,11 @@ const PROP_WORDS = {
 }
 const HIDDEN_PROPS = new Set(['ui', 'ref', 'class', 'style', 'key'])
 /** Plain headings for what the group files call an example. */
-const PLAIN = { Emphasis: 'Variants', Tone: 'Tones', 'With an icon': 'Icons', 'Every state': 'States', Alignment: 'Alignment' }
+const PLAIN = {
+  Emphasis: 'Variants', 'Label and line styles': 'Variants', 'Label styles': 'Variants', Tone: 'Tones', 'With an icon': 'Icons', 'With icons': 'Icons', 'Types and icons': 'With icon',
+  'Every state': 'States', 'Each state': 'States', 'Off, on and disabled': 'States', 'Empty, hint and invalid': 'States', 'Empty, filled, hint and invalid': 'States', 'Empty, filled and disabled': 'States',
+  'Live check': 'Validation', 'Hint and error': 'Validation', Align: 'Alignment', 'A short form': 'With form',
+}
 const plainTitle = t => PLAIN[t] ?? t
 /**
  * A component page's order, the same everywhere: one preview, then an H2 per real option, simplest first. Examples in a

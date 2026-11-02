@@ -1,4 +1,4 @@
-import { Segmented } from '@weft/warp'
+import { getDial, Segmented } from '@weft/warp'
 import { onCleanup, onMount, state } from 'weft'
 import { render } from 'weft/dom'
 import { enrol } from './shared'
@@ -63,5 +63,6 @@ export function ArtDial() {
     stop.value = v
     document.querySelector('[data-art="stages"]')?.setAttribute('data-expression', v)
   }
+  onMount(() => pick(getDial('expression')))
   return <Segmented label="Expression" value={stop.value} onChange={pick} options={STOPS} />
 }

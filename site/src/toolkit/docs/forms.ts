@@ -43,15 +43,15 @@ export const forms: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'InputVariants', title: 'Label and line styles', note: 'The default, `variant="classic"` and `appearance="line"`. Set the default once with `warp({ fields })`.', stage: 'fill' },
-          { id: 'InputSizes', title: 'Sizes', stage: 'narrow' },
+          { id: 'InputSizes', title: 'Sizes', note: 'Use `size` to pick `sm`, `md` or `lg`.', stage: 'narrow' },
           { id: 'InputTypes', title: 'Types and icons', note: 'Every native attribute passes through: `type`, `autocomplete`, `inputmode`.', stage: 'narrow' },
-          { id: 'InputAffixes', title: 'Prefix and suffix', stage: 'narrow' },
+          { id: 'InputAffixes', title: 'Prefix and suffix', note: 'Use `prefix` and `suffix` to show fixed text before and after the value.', stage: 'narrow' },
           { id: 'InputClearableCounter', title: 'Clear button and counter', note: '`clearable` shows once there is text. `counter` is the most it should hold.', stage: 'narrow' },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'InputStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'InputStates', title: 'Every state', note: 'An input can show a `hint` or an `error`, and can be `disabled` or `readonly`.', stage: 'fill', height: 320 }] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'InputSlug', title: 'Live check', note: 'Clear the field to see the error.', stage: 'narrow' },
-          { id: 'FormProjectSettings', title: 'Project settings form', stage: 'fill', height: 520 },
+          { id: 'FormProjectSettings', title: 'Project settings form', note: 'Fields share one form, and an input\'s `error` shows when its value is not valid.', stage: 'fill', height: 520 },
         ] },
       ],
       keyboard: [['Tab', 'Moves in and out'], ['Esc', 'Clears a `clearable` field']],
@@ -79,10 +79,10 @@ export const forms: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'TextareaRows', title: 'Starting height', note: '`rows` is where it starts. It grows to ten lines as people type.', stage: 'narrow' },
-          { id: 'TextareaCounter', title: 'Counter', stage: 'narrow' },
-          { id: 'TextareaVariants', title: 'Label and line styles', stage: 'fill' },
+          { id: 'TextareaCounter', title: 'Counter', note: 'Use `counter` to set a character limit and show how much of it is used.', stage: 'narrow' },
+          { id: 'TextareaVariants', title: 'Label and line styles', note: 'Use `variant` and `appearance` to change the field\'s style, here `classic` and `line`.', stage: 'fill' },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'TextareaStates', title: 'Every state', stage: 'fill', height: 380 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'TextareaStates', title: 'Every state', note: 'A textarea can show a `hint` or an `error`, and can be `disabled` or `readonly`.', stage: 'fill', height: 380 }] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'TextareaReleaseNote', title: 'Post a release note', note: 'Write something and press ⌘ Enter.', stage: 'narrow', height: 300 }] },
       ],
       keyboard: [['Enter', 'A new line'], ['⌘ Enter', 'Submits its form']],
@@ -111,7 +111,7 @@ export const forms: DocGroup = {
           { id: 'SearchSizes', title: 'Sizes', stage: 'narrow' },
           { id: 'SearchPlaceholder', title: 'Placeholder', note: 'Say what can be searched. The label still names the field.', stage: 'narrow' },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'SearchStates', title: 'Every state', stage: 'fill', height: 320 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'SearchStates', title: 'Every state', note: 'A search field can show a `hint` or an `error`, and can be `disabled` or `readonly`.', stage: 'fill', height: 320 }] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'SearchProjects', title: 'Filter a list', note: 'Try `jun` or `eu-west`.', stage: 'narrow', height: 280 }] },
       ],
       keyboard: [['Esc', 'Clears the text'], ['Enter', 'Submits its form']],
@@ -145,9 +145,9 @@ export const forms: DocGroup = {
           { id: 'SelectBasic', title: 'A plain list', note: 'With no value the first option shows, as a native select does.', stage: 'narrow', height: 260 },
           { id: 'SelectPlaceholder', title: 'Placeholder', note: 'Use `placeholder` when no answer should be assumed.', stage: 'narrow', height: 280 },
           { id: 'SelectHints', title: 'Options with a hint', note: 'An option\'s `hint` is a quieter second line.', stage: 'narrow', height: 260 },
-          { id: 'SelectGroups', title: 'Groups and disabled options', stage: 'narrow', height: 300 },
+          { id: 'SelectGroups', title: 'Groups and disabled options', note: 'Give `options` a `group` to sort them under headings, and mark one `disabled` to show it without letting it be picked.', stage: 'narrow', height: 300 },
           { id: 'SelectSearchable', title: 'Search in the list', note: '`searchable` adds it. Lists over 15 options get it anyway.', stage: 'narrow', height: 340 },
-          { id: 'SelectSizes', title: 'Sizes', stage: 'narrow' },
+          { id: 'SelectSizes', title: 'Sizes', note: 'Use `size` to pick `sm`, `md` or `lg`.', stage: 'narrow' },
         ] },
         { kind: 'states', title: 'States', examples: [{ id: 'SelectStates', title: 'Every state', note: 'For a value people can see but not change, show a read-only Input.', stage: 'fill', height: 320 }] },
         { kind: 'composition', title: 'In context', examples: [
@@ -178,9 +178,9 @@ export const forms: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'CheckboxBasic', title: 'Plain' },
-          { id: 'CheckboxHint', title: 'With a hint' },
+          { id: 'CheckboxHint', title: 'With a hint', note: 'A checkbox\'s `hint` is a quieter second line under its label.' },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'CheckboxStates', title: 'Every state', stage: 'fill', height: 200 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'CheckboxStates', title: 'Every state', note: 'A checkbox can be `checked`, `indeterminate` or `disabled`, and can show a `hint` or an `error`.', stage: 'fill', height: 200 }] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'CheckboxSelectAll', title: 'Select all', note: 'The parent shows a dash while only some are on.', stage: 'narrow', height: 240 },
           { id: 'CheckboxConfirm', title: 'Confirm before deleting', note: 'Press Delete without ticking it.', stage: 'narrow' },
@@ -206,7 +206,7 @@ export const forms: DocGroup = {
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [{ id: 'RadioStrategy', title: 'A set with hints', note: 'The shared `name` is what makes them one set.', stage: 'narrow' }] },
-        { kind: 'states', title: 'States', examples: [{ id: 'RadioStates', title: 'Off, on and disabled' }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'RadioStates', title: 'Off, on and disabled', note: 'A radio can be `checked`, `disabled`, or both.' }] },
       ],
       keyboard: [['↑ ↓', 'Moves to the next choice and picks it'], ['Tab', 'Moves in and out of the set']],
       a11yNotes: ['These are real radios, so arrow keys and form values work as usual.', 'Wrap a hand-built set in an element with `role="radiogroup"` and a name.'],
@@ -245,11 +245,11 @@ export const forms: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'SwitchBasic', title: 'Plain' },
-          { id: 'SwitchSizes', title: 'Sizes', stage: 'narrow' },
+          { id: 'SwitchSizes', title: 'Sizes', note: 'Use `size` to pick `sm` or `md`.', stage: 'narrow' },
           { id: 'SwitchPlacement', title: 'Placement', note: '`placement` picks the side the switch sits on.', stage: 'narrow' },
-          { id: 'SwitchHint', title: 'With a hint', stage: 'narrow' },
+          { id: 'SwitchHint', title: 'With a hint', note: 'A switch\'s `hint` is a quieter second line under its label.', stage: 'narrow' },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'SwitchStates', title: 'Every state', stage: 'fill', height: 200 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'SwitchStates', title: 'Every state', note: 'A switch can be on or off, show a `hint`, or be `disabled` either way.', stage: 'fill', height: 200 }] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'SwitchSettings', title: 'Settings that apply at once', note: 'Each flip takes effect and says so.', stage: 'narrow', height: 280 }] },
       ],
       keyboard: [['Space', 'Toggles']],
@@ -277,11 +277,11 @@ export const forms: DocGroup = {
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'SliderBasic', title: 'One value', stage: 'narrow' },
           { id: 'SliderFormat', title: 'Formatted value', note: '`format` draws the number with its unit.', stage: 'narrow' },
-          { id: 'SliderStep', title: 'Steps', stage: 'narrow' },
+          { id: 'SliderStep', title: 'Steps', note: 'Use `step` to snap the value to fixed jumps, here every 25.', stage: 'narrow' },
           { id: 'SliderRange', title: 'A range', note: 'Two numbers make two thumbs. `names` tells screen readers which is which.', stage: 'narrow' },
         ] },
-        { kind: 'states', title: 'States', examples: [{ id: 'SliderDisabled', title: 'Disabled', stage: 'narrow' }] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'SliderAutoscale', title: 'Autoscale limits', stage: 'narrow' }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'SliderDisabled', title: 'Disabled', note: 'Use `disabled` to show a value that cannot be changed.', stage: 'narrow' }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'SliderAutoscale', title: 'Autoscale limits', note: 'Pass a pair of numbers as `value` for a range with a low and a high end, and `names` to label each end.', stage: 'narrow' }] },
       ],
       keyboard: [['← →', 'One step down or up'], ['Page Up Page Down', 'A bigger step'], ['Home End', 'The minimum or maximum']],
       a11yNotes: ['Each thumb has the `slider` role and is named by the label.', 'People who can\'t drag can tap the track or use the keys.'],
@@ -303,9 +303,9 @@ export const forms: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'SegmentedBasic', title: 'Plain' },
-          { id: 'SegmentedIcons', title: 'With icons' },
-          { id: 'SegmentedSizes', title: 'Sizes' },
-          { id: 'SegmentedDisabledOption', title: 'A disabled option' },
+          { id: 'SegmentedIcons', title: 'With icons', note: 'Give an option an `icon` to draw it beside its label.' },
+          { id: 'SegmentedSizes', title: 'Sizes', note: 'Use `size` to pick `sm` or `md`.' },
+          { id: 'SegmentedDisabledOption', title: 'A disabled option', note: 'Mark an option `disabled` to show it without letting it be picked.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'SegmentedDeploys', title: 'Filter with counts', note: 'An option\'s `count` shows how many match.', stage: 'narrow', height: 240 }] },
       ],
@@ -334,12 +334,12 @@ export const forms: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'FieldAnatomy', title: 'Every part', note: 'Icon, prefix, suffix, clear button, hint and counter. Input, Select and the rich fields all pass these on.', stage: 'narrow' },
-          { id: 'FieldLabelStyles', title: 'Label styles', stage: 'fill' },
+          { id: 'FieldLabelStyles', title: 'Label styles', note: 'Use `variant` to put the label on the border, which is the default, or `classic` to put it above the field.', stage: 'fill' },
           { id: 'FieldError', title: 'Hint and error', note: 'An error takes the hint\'s place, so the layout doesn\'t jump.', stage: 'narrow' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'FieldCustomControl', title: 'An action on the edge', note: '`Input` takes every `Field` prop, so `end` adds to the right edge.', stage: 'narrow' },
-          { id: 'FieldForm', title: 'A short form', stage: 'narrow' },
+          { id: 'FieldForm', title: 'A short form', note: 'Fields stack into a form, and `autocomplete` lets the browser fill in the name and email.', stage: 'narrow' },
         ] },
       ],
       a11yNotes: ['Use the `id` and `describedby` that `control` receives, so the label, hint and error stay tied to your control.'],
@@ -363,10 +363,10 @@ export const forms: DocGroup = {
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [{ id: 'CompactSelectBasic', title: 'Plain', note: '`label` is the accessible name. It isn\'t drawn.', height: 260 }] },
-        { kind: 'states', title: 'States', examples: [{ id: 'CompactSelectStates', title: 'Empty, filled and disabled', height: 260 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'CompactSelectStates', title: 'Empty, filled and disabled', note: 'A compact select can show a `placeholder` when empty, hold a chosen value, or be `disabled`.', height: 260 }] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'CompactSelectRows', title: 'Rows per page', stage: 'narrow', height: 320 },
-          { id: 'CompactSelectRoles', title: 'A role in each row', stage: 'narrow', height: 340 },
+          { id: 'CompactSelectRows', title: 'Rows per page', note: 'A compact select suits a small choice beside other content, here the number of rows per page.', stage: 'narrow', height: 320 },
+          { id: 'CompactSelectRoles', title: 'A role in each row', note: 'Give each row its own compact select, with `defaultValue` set to the person\'s current role.', stage: 'narrow', height: 340 },
         ] },
       ],
       keyboard: [['Enter Space', 'Opens, or picks the highlighted option'], ['↑ ↓', 'Moves through the options'], ['Esc', 'Closes and returns focus']],
@@ -382,7 +382,7 @@ export const forms: DocGroup = {
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'NumberFieldBasic', title: 'Bounds', note: '`min`, `max` and `step` limit the steppers and the arrow keys.', stage: 'narrow' },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'NumberFieldSeats', title: 'Buying seats', stage: 'narrow' }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'NumberFieldSeats', title: 'Buying seats', note: 'Use `min` and `max` to limit the count, and read `value` to work out a total.', stage: 'narrow' }] },
       ],
       keyboard: [['↑ ↓', 'Steps up or down'], ['PageUp PageDown', 'Steps by ten'], ['Home End', 'Jumps to the bound, when there is one']],
       propDocs: { step: 'How far one press moves it.', min: 'The lowest it can step to.', max: 'The highest it can step to.' },

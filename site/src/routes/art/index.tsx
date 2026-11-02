@@ -10,6 +10,7 @@ export const meta: Meta = { title: 'Art', description: 'Twenty-eight pieces draw
 
 export default function ArtGallery() {
   return (
+    <div data-site="docs" data-expression="balanced">
     <article data-site="doc" data-art="gallery">
       <header>
         <h1>Art</h1>
@@ -20,11 +21,11 @@ export default function ArtGallery() {
       <div data-art="stages">
         {ROOMS.map(room => (
           <section key={room.kind} id={room.kind} data-art="room">
-            <h2>{room.title}</h2>
+            <h2 data-flow="heading">{room.title}</h2>
             <p>{room.intro}</p>
             <div data-art="wall">
               {room.pieces.map(([slug, piece]) => (
-                <section key={slug} id={slug} data-art="piece" data-wide={piece.wide ? '' : undefined}>
+                <section key={slug} id={slug} data-art="piece" data-flow="image" data-wide={piece.wide ? '' : undefined}>
                   <ArtStage id={slug} />
                   <h3>{piece.name}</h3>
                   <p>{piece.description}</p>
@@ -36,5 +37,6 @@ export default function ArtGallery() {
         ))}
       </div>
     </article>
+    </div>
   )
 }

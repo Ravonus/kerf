@@ -166,7 +166,7 @@ export const collab: DocGroup = {
       component: 'SyncIndicator',
       summary: 'A quiet word beside the title: Saved, Saving or Offline.',
       sections: [
-        { kind: 'states', title: 'States', examples: [{ id: 'SyncIndicatorStates', title: 'Each state' }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'SyncIndicatorStates', title: 'Each state', note: 'Use `state` to show `saved`, `saving` or `offline`.' }] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'SyncIndicatorTitle', title: 'While you type', stage: 'narrow', height: 240 }] },
       ],
       propDocs: { state: '`saved`, `saving` or `offline`.' },

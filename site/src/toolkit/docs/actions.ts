@@ -45,10 +45,10 @@ export const actions: DocGroup = {
           { id: 'ButtonDisabled', title: 'Disabled', note: 'Prefer `aria-disabled`: the button stays focusable, so people can find out why.' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'ButtonDeleteProject', title: 'Delete confirmation', stage: 'narrow' },
-          { id: 'ButtonFormFooter', title: 'Form footer', stage: 'narrow' },
-          { id: 'ButtonEmptyState', title: 'Empty state', height: 280 },
-          { id: 'ButtonSaveAsync', title: 'Save with progress' },
+          { id: 'ButtonDeleteProject', title: 'Delete confirmation', note: 'Give the confirming button `tone="critical"` and the way out a quiet `ghost` button.', stage: 'narrow' },
+          { id: 'ButtonFormFooter', title: 'Form footer', note: 'End a form with a `ghost` button to cancel and a main button with `type="submit"`.', stage: 'narrow' },
+          { id: 'ButtonEmptyState', title: 'Empty state', note: 'A single button with an `icon` gives an empty view one clear next step.', height: 280 },
+          { id: 'ButtonSaveAsync', title: 'Save with progress', note: 'Set `loading` while the work runs, then confirm with a toast.' },
         ] },
       ],
       keyboard: [['Enter', 'Presses the button'], ['Space', 'Presses the button']],
@@ -83,10 +83,10 @@ export const actions: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'ToggleToolbar', title: 'Formatting toolbar', note: 'Each one is independent, so any number can be on.' },
-          { id: 'ToggleSizes', title: 'Sizes' },
+          { id: 'ToggleSizes', title: 'Sizes', note: 'Use `size` to pick `sm`, `md` or `lg`.' },
           { id: 'ToggleIconOnly', title: 'Icon only', note: 'Pass `label` for the accessible name.' },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'ToggleWatch', title: 'Watch a project', stage: 'narrow' }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'ToggleWatch', title: 'Watch a project', note: 'Use `pressed` to show whether the project is being watched, and flip it in `onClick`.', stage: 'narrow' }] },
       ],
       keyboard: [['Enter', 'Toggles'], ['Space', 'Toggles']],
       a11yNotes: ['`pressed` sets `aria-pressed`, so the state is announced. Keep the label the same in both states.'],
@@ -109,9 +109,9 @@ export const actions: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'ChipFilters', title: 'Filters with counts', note: 'A pressed chip draws its check. `count` is optional.' },
-          { id: 'ChipIcons', title: 'With an icon' },
+          { id: 'ChipIcons', title: 'With an icon', note: 'Use `icon` to put a small icon before a chip\'s label.' },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'ChipFilterList', title: 'Filtering a list', stage: 'narrow', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'ChipFilterList', title: 'Filtering a list', note: 'Each chip\'s `pressed` turns one filter on or off, and the list shows what matches.', stage: 'narrow', height: 300 }] },
       ],
       keyboard: [['Enter', 'Toggles'], ['Space', 'Toggles']],
       propDocs: { pressed: 'Whether the filter is on.', count: 'A number after the label, usually the matches.' },
@@ -129,7 +129,7 @@ export const actions: DocGroup = {
           { id: 'MenuPlacement', title: 'Placement', note: 'Use `side` to pick where it opens.', height: 260 },
           { id: 'MenuAlignment', title: 'Alignment', note: 'Use `align` to line it up with the button.', height: 220 },
         ] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'MenuRowActions', title: 'A row\'s actions', stage: 'narrow', height: 220 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'MenuRowActions', title: 'A row\'s actions', note: 'Use `items` to list a row\'s actions, and `trigger` to make the button quiet enough to sit in a row.', stage: 'narrow', height: 220 }] },
       ],
       keyboard: [['Enter', 'Opens, or picks the highlighted item'], ['↑ ↓', 'Moves through the items'], ['Home End', 'Jumps to the first or last'], ['Esc', 'Closes and returns focus'], ['A letter', 'Jumps to the next item starting with it']],
       propDocs: { label: 'The trigger\'s text.', items: 'The entries: an action, `{ separator: true }` or `{ group }`.', trigger: 'Button props for the trigger.', side: 'Which side it opens on.', align: 'How it lines up with the trigger.' },
