@@ -11,7 +11,7 @@ import { z } from 'zod'
 export const Bars = defineSurface({
   name: 'bars',
   kind: 'canvas2d',                                // or 'webgl2'
-  props: z.object({ data: z.array(z.number()) }),  // or defineSurface<{ data: number[] }>({ ... })
+  props: z.object({ data: z.array(z.number()) }),  // or defineSurface<{ data: number[] }, 'canvas2d'>({ ... })
   setup(s, props) {                                // runs once; `props.data` is live, so never destructure it
     s.draw(() => {                                 // repaints when a box it read changes; the canvas is cleared first
       const { width, height } = s.size.value       // CSS px, live
@@ -33,7 +33,7 @@ A control beside the surface needs only a box and a live prop. Nothing re-render
 import { state } from '@weft-js/core'
 import { defineSurface, Surface } from '@weft-js/core/surface'
 
-export const Stars = defineSurface<{ density: number }>({
+export const Stars = defineSurface<{ density: number }, 'canvas2d'>({   // name the kind too, so `s.ctx` is typed
   name: 'stars',
   kind: 'canvas2d',
   setup(s, props) {

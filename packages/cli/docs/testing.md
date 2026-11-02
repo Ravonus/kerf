@@ -1,5 +1,21 @@
 # Testing (`@weft-js/core/test`, vitest)
 
+A new app has no test runner. Add one:
+
+```bash
+npm install -D vitest jsdom @testing-library/dom @testing-library/user-event
+```
+
+```ts
+// vitest.config.ts
+import weft from '@weft-js/core/vite'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({ plugins: [weft()], test: { environment: 'jsdom' } })
+```
+
+Then `npx vitest run`. A test:
+
 ```tsx
 import { state } from '@weft-js/core'
 import { render, screen, user } from '@weft-js/core/test'

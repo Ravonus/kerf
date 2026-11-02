@@ -82,6 +82,7 @@ With no options each icon carries its tiers, and CSS shows the one for the neare
 
 To compile one tier in, with no switch, name it in the config:
 
+<!-- example: skip @weft-js/warp-icons/plugin has no type declarations yet (TS7016 under strict) -->
 ```ts
 import { icons } from '@weft-js/warp-icons/plugin'
 

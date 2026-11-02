@@ -46,6 +46,7 @@ A bad signature answers 400; a failure answers 500, so the rail delivers it agai
 
 **Enforce on the server.** What the client shows is decoration (PAY013):
 
+<!-- example: skip fragments of a server module -->
 ```ts
 export const report = query({ auth: 'user', requires: ['pro'], run: ({ ctx }) => buildReport(ctx) })  // a typed 403: ENTITLEMENT_REQUIRED
 if (!(await ctx.entitlements.has('pro'))) redirect('/pricing')                                          // await it (PAY015)

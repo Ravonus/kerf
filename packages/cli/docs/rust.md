@@ -29,8 +29,13 @@ import { remote } from '@weft-js/start/rust'
 export const search = remote('rust://search')
 ```
 
+<!-- example: skip imports src/server/rust.ts from the block above -->
 ```ts
 // src/server/docs.ts
+import { query } from '@weft-js/start'
+import { z } from 'zod'
+import { search } from './rust'
+
 export const searchDocs = query({
   input: z.object({ q: z.string().trim().min(1).max(200), limit: z.int().min(1).max(50).default(10) }),
   output: z.array(z.object({ id: z.string(), title: z.string(), score: z.number() })),
@@ -140,6 +145,7 @@ All three have `ctx.touch(table)`, `ctx.tag(tag)`, `ctx.remaining()`, `ctx.cance
 
 ## Typed errors
 
+<!-- example: skip a fragment of src/server/docs.ts -->
 ```ts
 export const getDoc = query({ input, output, errors: { NotFound: z.object({ id: z.string() }) }, impl: search })
 // a TS body raises the same thing: run: () => raise('NotFound', { id })
