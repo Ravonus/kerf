@@ -440,7 +440,7 @@ function buildToolkit() {
         use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
       }
       const refs = doc.sections.flatMap(s => s.examples ?? [])
-      tiles.push({ name: c.name, slug: c.slug, href: hrefs.get(c.slug), summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center' })
+      tiles.push({ name: c.name, slug: c.slug, href: hrefs.get(c.slug), summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center', fit: doc.tileFit ?? (areaOf(g.file) === 'charts' ? 'contain' : undefined), width: doc.tileWidth })
     }
     index.push({ title: g.title, area: areaOf(g.file), id: slugify(g.title), file: g.file, intro: g.intro, pack: g.pack, tiles })
   }

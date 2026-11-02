@@ -173,6 +173,7 @@ export const flow: DocGroup = {
     {
       component: 'Coachmark',
       summary: 'One tip on one control: a beacon, and a card when pressed.',
+      tile: 'CoachmarkTile',
       sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'CoachmarkNewFeature', title: 'A new button', height: 260 }] }],
       keyboard: [['Esc', 'Closes the card']],
       propDocs: { target: 'A selector for what it points at.', title: 'The tip\'s heading.', body: 'The tip.', onDismiss: 'Remember the dismissal here.' },

@@ -41,6 +41,7 @@ export const admin: DocGroup = {
     {
       component: 'Checkout',
       summary: 'Cart, address, shipping, payment and review, as one guided flow.',
+      tileWidth: 380,
       tile: 'CheckoutTile',
       sections: [
         { kind: 'composition', title: 'In context', examples: [{ id: 'CheckoutShop', title: 'The Tessel shop', note: 'Nothing is charged. Try the code `TESSEL10`. Going back keeps what you typed.', stage: 'fill', height: 460 }] },
@@ -211,6 +212,7 @@ export const admin: DocGroup = {
     {
       component: 'Webhooks',
       summary: 'Endpoints that get your events, with a test button and a signing secret shown once.',
+      tileWidth: 470,
       sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'WebhooksEndpoints', title: 'Deploy events', note: 'Add endpoint shows the secret once. Send test calls a stub here.', stage: 'fill', height: 320 }] }],
       propDocs: { hooks: 'The endpoints.', events: 'The events people can pick.', onAdd: 'Adds the endpoint and returns its signing secret.', onTest: 'Sends a sample event and returns the status and time.' },
       related: ['ApiKeys', 'IntegrationsGrid'],

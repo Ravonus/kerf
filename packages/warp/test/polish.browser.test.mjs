@@ -180,3 +180,66 @@ test('a Kanban board cut at its box shows an edge shadow on the side with more, 
   expect(far.start).toBe('1')
   expect(far.end).toBe('0')
 })
+
+const calendarIn = id => `#${id} [data-scope="calendar"][data-part="root"]`
+
+test('a phone timeline keeps names readable: two lines at most, broken between words, or the start time; and it scrolls with a shadow', async () => {
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
+    const events = [...root.querySelectorAll('[data-part="lane"] [data-part="event"]')].map(e => {
+      const t = e.querySelector('[data-part="event-title"]'), st = e.querySelector('[data-part="event-start"]')
+      const line = parseFloat(getComputedStyle(t).lineHeight) || 16
+      const shown = el => getComputedStyle(el).display !== 'none'
+      return { w: e.getBoundingClientRect().width, title: shown(t), start: shown(st), titleH: t.getBoundingClientRect().height, titleW: t.getBoundingClientRect().width, line }
+    })
+    return { events, sw: sc.scrollWidth, cw: sc.clientWidth, overflow: root.querySelector('[data-scope="edges"]').dataset.overflow ?? '' }
+  }, calendarIn('tl-phone'))
+  expect(m.events.length).toBe(5)
+  expect(m.sw).toBeGreaterThan(m.cw) // an hour keeps its width, so the day scrolls sideways
+  expect(m.overflow).toBe('end')
+  for (const e of m.events) {
+    expect(e.w).toBeGreaterThanOrEqual(30) // never the 20px slivers that stacked a letter a line
+    if (e.title) { expect(e.titleH).toBeLessThanOrEqual(e.line * 2.2); expect(e.titleW).toBeGreaterThanOrEqual(36) } // never a letter or two a line
+    else expect(e.start).toBe(true)
+  }
+  // the half-hour booking is the narrow one: its start time stands in for its name
+  expect(m.events.filter(e => e.start && !e.title).length).toBe(1)
+})
+
+test('a desktop timeline fits without scrolling, and the now line runs under the bookings', async () => {
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
+    const ev = root.querySelector('[data-id="c"]'), now = root.querySelector('[data-part="lane"] [data-part="now"]')
+    return { sw: sc.scrollWidth, cw: sc.clientWidth, overflow: root.querySelector('[data-scope="edges"]').dataset.overflow ?? '', evZ: +getComputedStyle(ev).zIndex, nowZ: +getComputedStyle(now).zIndex }
+  }, calendarIn('tl-desk'))
+  expect(m.sw).toBeLessThanOrEqual(m.cw + 1)
+  expect(m.overflow).toBe('')
+  expect(m.nowZ).toBeLessThan(m.evZ)
+})
+
+test('the month shows all its weeks in the height it has, with "+N more" for days that hold more', async () => {
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel), sc = root.querySelector('[data-part="main"] [data-part="scroller"]')
+    const cells = [...root.querySelectorAll('[data-part="day-cell"]')]
+    const last = cells[cells.length - 1].getBoundingClientRect(), box = sc.getBoundingClientRect()
+    const clipped = cells.filter(c => [...c.children].some(k => k.getBoundingClientRect().bottom > c.getBoundingClientRect().bottom + 0.5)).length
+    return { weeks: cells.length / 7, sh: sc.scrollHeight, ch: sc.clientHeight, lastIn: last.bottom <= box.bottom + 1, clipped, more: root.querySelectorAll('[data-part="more"]').length }
+  }, '#month [data-scope="calendar"][data-part="root"]')
+  expect(m.weeks).toBeGreaterThanOrEqual(5)
+  expect(m.sh).toBeLessThanOrEqual(m.ch + 1)
+  expect(m.lastIn).toBe(true) // the 23rd-30th week is on screen, not below a fold with no cue
+  expect(m.clipped).toBe(0) // no chip or "+N more" is cut by its day
+  expect(m.more).toBeGreaterThan(0)
+})
+
+test('a calendar no parent gives a height bounds itself, and opens the week at its working hours', async () => {
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel), sc = root.querySelector('[data-part="scroller"]'), cols = root.querySelector('[data-part="cols"]')
+    return { h: root.getBoundingClientRect().height, vh: innerHeight, top: sc.scrollTop, hour: cols.offsetHeight / 24, scrolls: sc.scrollHeight > sc.clientHeight }
+  }, calendarIn('week-free'))
+  expect(m.h).toBeLessThanOrEqual(m.vh + 1)
+  expect(m.scrolls).toBe(true)
+  expect(m.top / m.hour).toBeGreaterThan(8) // workingHours [540, 1080]: 09:00, half an hour before
+  expect(m.top / m.hour).toBeLessThan(9)
+})
+

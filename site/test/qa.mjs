@@ -206,6 +206,37 @@ await check('hub previews fit their cards', '/blocks', async page => {
   }
   same(out.filter(Boolean).join(), '', 'previews past their card')
 })
+// Every hub card is a deliberate picture of its example: scaled into the card, never wider than it, starting at its top
+// (not mid-content), with nothing inside running past the card's edge; a chart shows the whole chart, not its legend.
+for (const path of ['/components', '/blocks', '/charts']) {
+  for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
+    await check(`hub cards are whole pictures ${path} at ${viewport.width}`, path, async page => {
+      for (let i = 0; i < 400; i++) {
+        const more = await page.evaluate(() => { const m = document.querySelector('[data-site="tile"] [data-part="mount"]:not([data-ready])'); m?.scrollIntoView({ block: 'center' }); return !!m })
+        if (!more) break
+        await page.waitForTimeout(100)
+      }
+      await page.waitForTimeout(1200)
+      const bad = await page.evaluate(chart => [...document.querySelectorAll('[data-site="tile"]')].flatMap(t => {
+        const stage = t.querySelector('[data-part="stage"]'), m = t.querySelector('[data-part="mount"]')
+        const st = stage.getBoundingClientRect(), r = m.getBoundingClientRect()
+        const scale = +(/scale\(([\d.]+)\)/.exec(m.style.transform)?.[1] ?? 0)
+        const out = []
+        if (!scale) out.push('never fitted')
+        else if (scale < 0.25) out.push(`drawn at ${scale.toFixed(2)}`)
+        if (r.left < st.left - 1 || r.right > st.right + 1) out.push('wider than the card')
+        if (r.top < st.top - 1) out.push('starts above the card')
+        if (chart && r.bottom > st.bottom + 1) out.push('chart cut off')
+        // a descendant cut by the card's edge (in it, but running past it), with nothing between them that clips it
+        const clips = e => { for (let p = e.parentElement; p && p !== m; p = p.parentElement) if (getComputedStyle(p).overflowX !== 'visible') return true; return false }
+        const past = [...m.querySelectorAll('*')].find(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left < st.right && b.right > Math.min(r.right, st.right) + 2 && !clips(e) })
+        if (past) out.push(`${past.localName}${past.dataset.part ? `[${past.dataset.part}]` : ''} past its edge`)
+        return out.length ? [`${t.dataset.name}: ${out.join(', ')}`] : []
+      }), path === '/charts')
+      same(bad.join('; '), '', 'cards')
+    }, viewport)
+  }
+}
 for (const path of ['/components', '/blocks']) {
   await check(`hub is compact on a phone ${path}`, path, async page => {
     const { cols, tall } = await page.evaluate(() => ({ cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length, tall: document.documentElement.scrollHeight }))

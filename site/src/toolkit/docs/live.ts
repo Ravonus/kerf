@@ -9,6 +9,7 @@ export const live: DocGroup = {
     {
       component: 'Bell',
       summary: 'The notifications button in the app bar, with a count of what is unread.',
+      tileWidth: 160,
       tile: 'BellTile',
       sections: [{ kind: 'composition', title: 'In context', examples: [
         { id: 'BellWithInbox', title: 'With an inbox', note: 'Read something and the count follows.', height: 480 },

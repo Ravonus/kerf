@@ -85,6 +85,7 @@ export const moving: DocGroup = {
     {
       component: 'Nav',
       summary: 'A row or column of links with a bar that slides to the current one.',
+      tileWidth: 360,
       use: {
         when: ['Links to the pages of an app or a section', 'A table of contents that follows the reader'],
         instead: [{ name: 'Tabs', why: 'the views swap in place and have no URL' }, { name: 'Menu', why: 'the links run actions, or there are too many to show' }],

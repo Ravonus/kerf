@@ -64,6 +64,14 @@ export type Doc = {
   tile?: string
   /** How the tile lays that export out, when it isn't one of the page's examples. */
   tileStage?: Stage
+  /**
+   * How the card fits the example. Each card lays it out at a working width, then scales it to the card. `contain`
+   * shrinks a tall example until all of it shows (charts do this); `top` keeps the width and shows its top, fading out.
+   * Unset, a tall example shrinks while it stays readable and otherwise shows its top.
+   */
+  tileFit?: 'contain' | 'top'
+  /** The width, in CSS pixels, the card lays the example out at before scaling it. Smaller draws it larger. */
+  tileWidth?: number
   keyboard?: [keys: string, action: string][]
   a11yNotes?: string[]
   /** Fills in what the source's doc comments don't say. */

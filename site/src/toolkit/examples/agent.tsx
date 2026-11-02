@@ -3,6 +3,7 @@ import type { State } from 'weft'
 import { AgentPlan, ArtifactPanel, Assistant, Badge, BranchSwitcher, Button, Checkpoint, Cite, ContextMeter, Conversation, MessageActions, ModelPicker, Prompt, Prose, Question, Reasoning, Row, Shimmer, Sources, SpeechInput, Stack, Suggestions, Text, ToolCall, TraceViewer, UserMessage, foldAnswer } from '@weft/warp'
 import type { AgentEvent, AgentTool, Answer, PlanStep, PromptControl, PromptFile, QueuedMessage, Suggestion } from '@weft/warp'
 import { copyConfirm } from '@weft/warp-core'
+import { SparkleIcon } from '@weft/icons'
 import { COMMANDS, CONFIG_VERSIONS, CONTEXT, DEPLOY_SOURCES, MENTIONS, MODELS, ROLLBACK_ASK, ROLLBACK_DENIED, ROLLBACK_RUN, TRACE, WHY_FAILED } from '../world'
 
 const QUESTION = 'Why did the mobile-bff deploy fail?'
@@ -193,6 +194,7 @@ const REPORT = 'Three failed checks held the deploy back [1].\n\n- `d-4801` is s
 
 export const ProseAnswer = () => (
   <div data-scope="assistant">
+    <span data-part="mark"><SparkleIcon /></span>
     <div data-part="content"><Prose text={REPORT} sources={CITED} base="report" /></div>
   </div>
 )

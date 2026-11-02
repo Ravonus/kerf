@@ -284,6 +284,18 @@ export function TourDashboard() {
   )
 }
 
+/**
+ * The hub's card. The beacon is placed on the page by the button's screen position, which a scaled card can't follow,
+ * so the card shows the control it marks and the tip's words.
+ */
+export const CoachmarkTile = () => (
+  <Stack gap="related" align="center">
+    <Button emphasis="outline" tone="neutral">Roll back</Button>
+    <Text role="label">One press rollback</Text>
+    <Text subtle>Puts the last good deploy back in about thirty seconds.</Text>
+  </Stack>
+)
+
 export function CoachmarkNewFeature() {
   const seen = state(false)
   return (

@@ -5,7 +5,7 @@ import { DialSwitch } from './DialSwitch'
 import { Preview } from './Preview'
 import { ToolkitFilter } from './ToolkitFilter'
 
-type Tile = { name: string; slug: string; href: string; summary: string; id?: string; stage?: string }
+type Tile = { name: string; slug: string; href: string; summary: string; id?: string; stage?: string; fit?: string; width?: number }
 type Group = { title: string; area: string; id: string; file: string; intro: string; tiles: Tile[] }
 
 const NOUN: Record<Area, string> = { components: 'component', blocks: 'block', charts: 'chart' }
@@ -14,7 +14,7 @@ function Card(props: { file: string; tile: Tile }) {
   const t = props.tile
   return (
     <Link href={t.href} data-site="tile" data-flow="card" data-name={t.name.toLowerCase()}>
-      <div data-part="stage">{t.id && <Preview file={props.file} id={t.id} stage={t.stage} tile />}</div>
+      <div data-part="stage">{t.id && <Preview file={props.file} id={t.id} stage={t.stage} fit={t.fit} width={t.width} tile />}</div>
       <div data-part="words"><strong>{t.name}</strong></div>
     </Link>
   )

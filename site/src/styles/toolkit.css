@@ -147,13 +147,12 @@
 [data-site="tile"][hidden], [data-site="tile"][data-rest]:not([data-show]) { display: none; }
 [data-site="tile"]:hover { border-color: var(--warp-color-border-strong); }
 [data-site="tile"]:hover { translate: 0 -1px; }
-[data-site="tile"] [data-part="stage"] { aspect-ratio: 16 / 9; overflow: hidden; container-type: inline-size; display: grid; background: var(--warp-color-surface); border-block-end: var(--warp-border-hairline) solid var(--rule); }
-[data-site="tile"] [data-part="mount"] { zoom: 0.8; padding: var(--warp-space-group); min-block-size: 0; pointer-events: none; overflow: hidden; }
-[data-site="tile"] [data-part="mount"][data-stage="narrow"] { inline-size: 100%; }
-[data-site="tile"] [data-part="mount"][data-stage="center"] { align-content: safe center; }
+/* A card's preview is a picture: the example lays out at a working width and Preview scales it to the card (fitTile). */
+[data-site="tile"] [data-part="stage"] { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--warp-color-surface); border-block-end: var(--warp-border-hairline) solid var(--rule); }
+[data-site="tile"] [data-part="mount"] { --tile-zoom: 0.8; position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: var(--tile-w, 100%); container-type: inline-size; padding: var(--warp-space-group); pointer-events: none; transform-origin: 0 0; opacity: 0; }
+[data-site="tile"] [data-part="mount"]:not([data-ready]) { inset: 0; inline-size: auto; transform: none; opacity: 1; }
+[data-site="tile"] [data-part="mount"][data-stage="narrow"] { justify-self: auto; }
 [data-site="tile"] [data-part="mount"] > * { max-inline-size: 100%; }
-/* A bell is one small button: its card draws it larger so there's something to see. */
-[data-site="tile"][data-name="bell"] [data-part="mount"] { zoom: 1.4; }
 [data-site="tile"] [data-part="words"] { padding: var(--warp-space-tight) var(--warp-space-related); }
 [data-site="tile"] strong { font-size: var(--doc-small); font-weight: 600; }
 [data-site="tile"] [data-part="words"] span { font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
@@ -161,7 +160,7 @@
 @media (max-width: 599.98px) {
   [data-tk="tiles"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--warp-space-related); }
   [data-site="tile"] [data-part="stage"] { aspect-ratio: 4 / 3; }
-  [data-site="tile"] [data-part="mount"] { zoom: 0.6; padding: var(--warp-space-related); }
+  [data-site="tile"] [data-part="mount"] { --tile-zoom: 0.6; }
   [data-site="tile"] [data-part="words"] { padding: var(--warp-space-hair) var(--warp-space-tight); }
   [data-site="tile"] strong { display: block; overflow-wrap: anywhere; font-size: var(--doc-micro); }
 }
