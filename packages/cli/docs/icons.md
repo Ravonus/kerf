@@ -1,6 +1,6 @@
 # Icons
 
-`@weft-js/warp-icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has two forms, hollow, the default, and solid, drawn apart in every tier and shaded with dither. Rules: `docs/design/warp/10-icons.md`.
+`@weft-js/warp-icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has two forms, hollow (the default) and solid, drawn apart in every tier and shaded with dither.
 
 `weft add icons` installs it and adds `icons()` to the config. warp already depends on it.
 
@@ -98,4 +98,4 @@ The pixel tier is exact at 16, 32 and 48. At 20 and 24 a 1× screen rounds cells
 
 A solid cuts its marks with `--warp-icon-knock`, which defaults to `Canvas`. On a coloured surface, like a solid button, set it to that surface's colour.
 
-Icons are `currentColor`. The weft stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--warp-color-accent-text) }` colours it. Its weight is `--warp-icon-weft`. A solid icon cuts its detail out with the page background, `--warp-icon-knock`: set it on a surface of another colour.
+Icons are `currentColor`. The weft stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--warp-color-accent-text) }` colours it. Its weight is `--warp-icon-weft`.

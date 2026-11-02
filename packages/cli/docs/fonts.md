@@ -61,9 +61,9 @@ h1 { font-family: "Fraunces", "Fraunces Fallback", Georgia, serif; }
 
 | Code | Catches |
 |---|---|
-| X020 | A hand-written `@font-face`: declare it in `text({ fonts })` |
+| X020 | A hand-written `@font-face` with no `"<Family> Fallback"` face, so the swap shifts layout: declare it in `text({ fonts })` |
 | X021 | `font-display: block` or `auto`, which hide text while the font loads |
-| X022 | Over budget: 100 KB of preloads or 1.5 KB of font CSS (brotli). Preload fewer faces or use fewer weights |
+| X022 | A hand-written `@font-face` with no `unicode-range`, or the font build over budget: 100 KB of preloads or 1.5 KB of font CSS (brotli). Preload fewer faces or use fewer weights |
 | X023 | A preload no `@font-face` uses |
 
 The plugin also provides `text.measure`, line breaking for canvas text and exact row heights. It loads only when something

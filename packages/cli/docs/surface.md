@@ -30,6 +30,9 @@ export function Page() {
 A control beside the surface needs only a box and a live prop. Nothing re-renders when it moves:
 
 ```tsx
+import { state } from '@weft-js/core'
+import { defineSurface, Surface } from '@weft-js/core/surface'
+
 export const Stars = defineSurface<{ density: number }>({
   name: 'stars',
   kind: 'canvas2d',
@@ -90,14 +93,19 @@ const score = s.text(() => `Score ${props.score}`, { x: 8, y: 8, width: 200, fon
 
 jsdom has no canvas, so `@weft-js/core/test` gives it a recording one:
 
+<!-- example: skip imports the Page above from its own file -->
 ```tsx
-import { render, canvasCalls, fakeMeasure, flush, clock } from '@weft-js/core/test'
+import { canvasCalls, clock, fakeMeasure, flush, render } from '@weft-js/core/test'
+import { expect, test } from 'vitest'
+import { Page } from './Page'   // the Bars page above
 
-clock.install()
-render(Page, {}, { slots: { 'text.measure': fakeMeasure() } })
-await flush()
-await clock.advance(16)   // a frame
-expect(canvasCalls(document.querySelector('canvas')!).filter(c => c.name === 'fillRect')).toHaveLength(3)
+test('draws a bar per value', async () => {
+  clock.install()
+  render(Page, {}, { slots: { 'text.measure': fakeMeasure() } })
+  await flush()
+  await clock.advance(16)   // a frame
+  expect(canvasCalls(document.querySelector('canvas')!).filter(c => c.name === 'fillRect')).toHaveLength(3)
+})
 ```
 
 `weft surfaces --json` (MCP `surfaces`) lists what the project already has.

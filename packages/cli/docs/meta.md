@@ -9,12 +9,19 @@ Writing a page includes writing what a search result or a shared link says about
 on what the reader gets, from what is on the page:
 
 ```tsx
+import type { Meta } from '@weft-js/start'
+
 export const meta: Meta = { title: 'Pricing', description: 'Three plans, billed monthly, and what each one includes.' }
 ```
 
 On a param route, build it from `data` and `params`, so each page says what it is:
 
+<!-- example: skip needs the app's own getUser query -->
 ```tsx
+// src/routes/users/[id].tsx
+import { notFound, type LoadArgs, type Meta } from '@weft-js/start'
+import { getUser } from '#/server/users'
+
 export const load = async ({ params }: LoadArgs<'/users/[id]'>) => (await getUser.fetch({ id: params.id })) ?? notFound()
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name, description: data.bio })
 ```
@@ -36,7 +43,8 @@ With no `meta`, or a `meta` that leaves a field out:
   `routes/x.og.tsx` replaces one route's card, `_default.og.tsx` every card; `og: { image: '/x.png' }` or `image: false`
   skips it. The URL holds a hash of what it draws, so it's cached forever and changes when the page does.
 - **`twitter:card`** is `summary_large_image` when there is an image. **Canonical and `og:url`** come from the origin.
-- **Structured data:** a `WebSite` on `/`, and nothing else unless `jsonLd` sets it: weft doesn't guess.
+- **Structured data:** a `WebSite` on `/` when `site.name` is set, and nothing else unless `jsonLd` sets it: weft
+  doesn't guess.
 
 Pages with a card are drawn by `weft build` when they have no params or are in `prerender`. Every other param page's
 card is drawn on the first request, and only for params the route's own `load` accepts. A static host has no server, so

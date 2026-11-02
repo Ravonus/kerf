@@ -2,7 +2,7 @@
 
 A plugin is one pure manifest. `@weft-js/pay` is the worked example: payments, with a webhook, a ledger, a fake for tests, its
 own diagnostics and `weft add` steps. It uses only what any plugin can use, and a test holds that to be true: `weft`,
-`@weft-js/start` and the CLI don't name it. Read `packages/pay/plugin.mjs` next to this page. It's about 60 lines.
+`@weft-js/start` and the CLI don't name it. Read `packages/pay/plugin.mjs` next to this page. It's 50 lines.
 
 ## The shape
 
@@ -24,15 +24,15 @@ A rail is how a payment happens. `fakePay` is a second rail, which is how you kn
 
 ```js
 export const pay = definePlugin({
-  name: '@weft-js/pay', version: '0.0.0', weft: '*', namespace: 'PAY', permissions: {},
+  name: '@weft-js/pay', version: '0.1.0', weft: '*', namespace: 'PAY', permissions: {},
   contribute: () => ({ provides: [...], diagnostics, check, docs, setup, agents, catalog, map }),
 })
 ```
 
 `weft check` loads every plugin, so `plugin.mjs` stays pure and light: no I/O, nothing heavy imported. Heavy parts sit behind
 `import()`. `namespace` is the prefix of your diagnostic codes, by default `<name>/`. `permissions` is what the plugin
-reaches. Pay reaches nothing, so it's `{}`; the Stripe plugin declares `net: ['api.stripe.com']`, and `weft add` shows that for
-approval.
+reaches. Pay reaches nothing, so it's `{}`; the Stripe plugin declares `net: ['api.stripe.com']` and the two `env` keys it reads,
+and `weft add` shows them for approval (`weft docs config` has the lock).
 
 ## 2. Reach the server with a slot
 
@@ -74,7 +74,7 @@ const rail = await load('stripe')
 ```
 
 Another provider means another `provide(...)`, and app code doesn't change. A plugin's own slot is named `<plugin name>.<slot>`;
-`pay.rail` is in weft's slot table only because PLAN §7c listed it from the start. `@weft-js/pay/stripe` is a short manifest,
+`pay.rail` keeps its short name only because it was in weft's slot table from the start. `@weft-js/pay/stripe` is a short manifest,
 and a good template for a provider.
 
 ## 4. Report your own diagnostics
@@ -122,7 +122,7 @@ changes. `env` goes to `.env` and `.env.example`: use placeholders.
 
 - `agents`: one paragraph for the generated `AGENTS.md`, 1 KB at most.
 - `docs`: `{ topic, summary, file }`, served by `weft docs <topic>`.
-- `catalog`: your exports, in `weft catalog`.
+- `catalog`: your exports, `{ name, import, summary }`, listed by `weft plugins --json`.
 - `map`: "want this, call that" lines.
 - `diagnostics`: each is a page: `weft docs PAY012`.
 
@@ -140,4 +140,4 @@ changes. `env` goes to `.env` and `.env.example`: use placeholders.
 ## Rust, and when not to
 
 A plugin can carry its own wasm, with a TS fallback and nothing in client bytes. Measure first. `packages/pay/bench/verify.mjs`
-did, for webhook verification, and pay stayed on WebCrypto: research 37 has the numbers.
+did, for webhook verification, and pay stayed on WebCrypto, which was fast enough.

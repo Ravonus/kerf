@@ -30,7 +30,7 @@ export function Billing() {
 | Thing | Use |
 |---|---|
 | Vertical flow | `Stack gap align divided` |
-| Horizontal cluster | `Row gap justify align wrap reflow` (`reflow` stacks it below a step; PLAN's `Switch`) |
+| Horizontal cluster | `Row gap justify align wrap reflow` (`reflow` stacks it below a width step) |
 | Columns | `Grid min cols gap` |
 | Side + main | `Split side width at gap` |
 | Measured column | `Center max gutter intrinsic` |
@@ -65,7 +65,7 @@ Where the app has warp's tokens (`@weft-js/warp` in package.json; headless `@wef
 | D003 | Raw type, radius, shadow | `Heading`, `Text`, radius and elevation tokens; autofix for an exact radius |
 | D004 | Layout spelled out on an element | `Stack`, `Row` (suggested edit) |
 | D040 | The style gate (`data-weft="styled"`) on main content or an h1 | A secondary part, or no marker |
-| D005 | Native `<button>`, `<select>`, `<textarea>` | The warp component (suggested edit for a button) |
+| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, an input type such as `date`, `number` or `range`, or a `title` tooltip | The warp component (suggested edit for a button) |
 | D006 | One heading level at two roles across the app, or a bare `<hN>` beside `<Heading>` | Match the level's main role (suggested edit at each site) |
 | D007 | A bare `<a href>` | `<Link>`, or `Shell`'s `nav` (suggested edit) |
 

@@ -1,18 +1,30 @@
 # Testing (`@weft-js/core/test`, vitest)
 
 ```tsx
-import { clock, flush, render, screen, user } from '@weft-js/core/test'
+import { state } from '@weft-js/core'
+import { render, screen, user } from '@weft-js/core/test'
+import { expect, test } from 'vitest'
 
-render(App, { api })
-await flush()
-await user.click(screen.getByRole('button', { name: 'Add Apple' }))
-expect(screen.getByRole('button', { name: 'Cart (1)' })).toBeTruthy()
-await expect(() => api.pushPrice('p1', 2)).toTouchAtMost(1, { runs: 10 })
+function Cart() {
+  const count = state(0)
+  return <button type="button" onClick={() => count.value++}>Cart ({count.value})</button>
+}
+
+test('adding to the cart', async () => {
+  render(Cart)
+  await user.click(screen.getByRole('button', { name: 'Cart (0)' }))
+  expect(screen.getByRole('button', { name: 'Cart (1)' })).toBeTruthy()
+  await expect(() => user.click(screen.getByRole('button'))).toTouchAtMost(1, { runs: 2 })
+})
 ```
 
-- `render(Component, props)` mounts into the document with a fresh app; unmounted after each test.
+- `render(Component, props, options)` mounts into the document with a fresh app; unmounted after each test.
+  `options.state` seeds `defineState` scopes, `options.storage` (`memoryStorage()`) is shared between renders to play
+  two tabs or a reload, and `options.slots` binds plugin slots. `scope(handle)` runs one scope with no UI.
+- `flush()` applies pending updates. Every `user` action and `clock.advance` already ends in one.
 - `screen` has role, label and text queries only (`getByRole`, `getByLabelText`, `getByText`, with `getAll`/`query`/`find`).
-- `user.click/type/clear/keyboard/selectOptions/…` (`@testing-library/user-event`) each end in `flush()`: never sleep or `waitFor`.
+- `user.click`, `dblClick`, `type`, `clear`, `keyboard`, `hover`, `unhover`, `tab`, `selectOptions`, `deselectOptions`,
+  `upload` and `paste` (`@testing-library/user-event`) each end in `flush()`: never sleep or `waitFor`.
 - `clock.install()` before the code schedules timers, then `await clock.advance(ms)` (or `clock.runAll()`): drives
   timers, rAF, `Date` and the resources that wait on them, and flushes. Uninstalled after each test.
 - `touches(fn)` returns `{ mutations, runs, … }` for one interaction. `toTouchAtMost(n, { runs })` bounds both: DOM writes
@@ -20,7 +32,9 @@ await expect(() => api.pushPrice('p1', 2)).toTouchAtMost(1, { runs: 10 })
 
 ## Junk tests: T001–T009
 
-`weft check` reports these on `*.test.*` files. A test that finishes without an assertion also fails at runtime (T001).
+`weft check` reports these on test files (`test.include` in the config). A test that finishes without an assertion
+also fails at runtime (T001). T012 and T013 are about open listeners and real sockets: `weft docs browser` and
+`weft docs start`; T010, T011 and T020 are the gate: `weft docs verify`.
 
 | Code | Catches | Instead |
 |---|---|---|

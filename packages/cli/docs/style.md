@@ -16,6 +16,8 @@ export const orderCard = group('order-card', {
   defaults: { status: 'open' },
 })
 
+type Order = { name: string; date: string; status: 'open' | 'shipped' | 'late' }
+
 export function OrderCard(props: { order: Order; selected: boolean }) {
   return (
     <article {...orderCard({ status: props.order.status, selected: props.selected })}>

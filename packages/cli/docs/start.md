@@ -18,10 +18,13 @@ Any auth provider works: `defineAuth` from `@weft-js/start/auth` takes a `handle
 
 ## Routes
 
+<!-- example: skip needs the app's own getList query -->
 ```tsx
+// src/routes/lists/[id].tsx
 import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
+import { getList } from '#/server/lists'
 
-export const load = async ({ params, ctx }: LoadArgs<'/lists/[id]'>) => ({ list: await getList.fetch({ id: params.id }) })
+export const load = async ({ params }: LoadArgs<'/lists/[id]'>) => ({ list: await getList.fetch({ id: params.id }) })
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.list.name })
 export default function List(props: RouteProps<typeof load, '/lists/[id]'>) { return <h1>{props.data.list.name}</h1> }
 ```
@@ -41,11 +44,12 @@ Links are `<Link href>`; code navigates with `navigate(href)`.
 // src/server/todos.ts
 import { mutation, query } from '@weft-js/start'
 import { schemasOf } from '@weft-js/start/db'
-import { and, eq } from 'drizzle-orm'
-import * as schema from '../db/schema'
+import { eq } from 'drizzle-orm'
+import { z } from 'zod'
+import * as schema from '#/db/schema'
 
 const { todos } = schema
-const schemas = schemasOf(schema, { todos: { title: s => s.trim().min(1) } })
+const schemas = schemasOf(schema, { todos: { title: (s: z.ZodString) => s.trim().min(1) } })
 
 export const listTodos = query({
   tags: ['todos'],                  // what invalidates it
@@ -57,7 +61,7 @@ export const addTodo = mutation({
   input: schemas.todos.insert.pick({ title: true }),
   auth: 'user',
   invalidates: ['todos'],           // queries with this tag come back in the same response
-  optimistic: ({ input }, cache) => cache.update(listTodos, undefined, l => void l.push({ id: `tmp:${input.title}`, title: input.title, done: false, userId: '' })),
+  optimistic: ({ input }, cache) => cache.update(listTodos, undefined, l => void l.push({ id: `tmp:${input.title}`, title: input.title, done: false, userId: '', createdAt: 0 })),
   run: async ({ input, ctx }) => {
     const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(), userId: ctx.user.id, createdAt: Date.now(), ...input }).returning()
     return row
@@ -94,9 +98,15 @@ tables' names: Q011 checks them at run time, in `weft dev`, not in `weft check`.
 
 ## Auth
 
-`ctx.user` and `ctx.session` come from `session(auth, request)` in `src/context.server.ts`. Sign-in is a mutation:
+`ctx.user` and `ctx.session` come from `session(auth, request)` (`@weft-js/start/auth`) in `src/context.server.ts`. Sign-in is a mutation:
 
 ```ts
+// src/server/session.ts
+import { mutation, redirect } from '@weft-js/start'
+import { forward } from '@weft-js/start/auth'
+import { z } from 'zod'
+import auth from '#/auth.server'
+
 export const signIn = mutation({
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
@@ -145,6 +155,12 @@ A live query needs `tags` (W053), and its mutations need one of them in `invalid
 **Topics and streams carry messages.** Define them in server modules, next to queries:
 
 ```ts
+// src/server/prices.ts
+import { stream, topic } from '@weft-js/start'
+import { z } from 'zod'
+
+const Price = z.object({ symbol: z.string(), price: z.number() })
+
 export const priceTopic = topic('prices', { key: z.string().max(12), message: Price })
 export const prices = stream({
   input: z.object({ symbols: z.array(z.string().max(12)).max(50) }),   // bound it (R005)
@@ -154,7 +170,7 @@ export const prices = stream({
     yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId })   // subscribe first (R006)
   },
 })
-await priceTopic.publish('AAPL', { symbol: 'AAPL', price: 1 })         // anywhere on the server
+// anywhere on the server: await priceTopic.publish('AAPL', { symbol: 'AAPL', price: 1 })
 ```
 
 ```tsx
@@ -175,7 +191,8 @@ undefined after a reset: start again, or read from the database.
 // src/realtime.server.ts
 import { realtime } from '@weft-js/start'
 import { postgresBus } from '@weft-js/start/bus/postgres'
-export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), origins: ['https://other.example'], maxDuration: 300 })
+
+export default realtime({ bus: postgresBus({ url: process.env.DATABASE_URL! }), origins: ['https://other.example'], maxDuration: 300 })
 ```
 
 `postgresBus` needs a direct connection: pgBouncer in transaction mode breaks LISTEN. `maxDuration` is the platform's
@@ -197,21 +214,29 @@ can take `ctx`, for one user's tag: `tags: (_, ctx) => [`orders:${ctx.user.id}`]
 
 `.live()` already follows mutations. A cron job, `psql`, a worker or another service writes nowhere near them: give the database's writes to `realtime` and they reach the same queries, the same way.
 
+<!-- example: skip needs a notes table in the app's schema -->
 ```ts
 // src/realtime.server.ts
 import { realtime } from '@weft-js/start'
 import { dbChanges } from '@weft-js/start/changes'
-import { db } from './server/db'
-import { notes } from './server/schema'
+import { db } from '#/db/index.server'
+import { notes } from '#/db/schema'
 
 export default realtime({ changes: dbChanges(db, [notes]) })
 ```
 
+<!-- example: skip needs a notes table in the app's schema -->
 ```ts
+// src/server/notes.ts
+import { query } from '@weft-js/start'
+import { eq } from 'drizzle-orm'
+import { notes } from '#/db/schema'
+
 export const myNotes = query({
   tags: ['notes'],                               // table name, or `notes:${id}` for one row
+  auth: 'user',
   live: { required: true, verify: 'staging' },   // both optional
-  run: (_, { ctx }) => db.select().from(notes).where(eq(notes.owner, ctx.user.id)),
+  run: ({ ctx }) => ctx.db.select().from(notes).where(eq(notes.owner, ctx.user.id)),
 })
 ```
 
@@ -246,6 +271,7 @@ Polling here is the framework's watcher, in one place on the server. R007 and T0
 
 **On Vercel, Netlify, Lambda, Azure Functions, Firebase, Cloudflare and Deno Deploy** a process ends with its request, so nothing can hold a connection. Mutations still work, and `.live()` shows `degraded` (R014). Two ways to get the feed: deploy to a server preset, or run one always-on listener anywhere, with a bus both can reach:
 
+<!-- example: skip two files in one block; needs a notes table -->
 ```ts
 // listener.ts: on a VPS, Fly or Railway. `weft db listen` runs it.
 export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: dbChanges(db, [notes]) })
@@ -285,8 +311,13 @@ A target must be named with `production: false`, or have a host that says stagin
 anything else use a mutation and `.live()`. Define it in a server module. `authorize` is required (R001), and runs on
 every join and every 5 minutes.
 
+<!-- example: skip needs the app's own Message schema, isMember and insertMessage -->
 ```ts
 // src/server/chat.ts
+import { channel } from '@weft-js/start'
+import { z } from 'zod'
+import { isMember, insertMessage, Message } from '#/server/messages'
+
 export const room = channel({
   params: z.object({ roomId: z.string().max(64) }),
   authorize: ({ ctx, params }) => isMember(ctx.user, params.roomId),   // false: status 'unauthorized' (R011)
@@ -300,7 +331,7 @@ export const room = channel({
   },
   limits: { perSecond: 10 },                                           // default 20 a second per socket
 })
-await room.in({ roomId }).publish('said', row)                         // from a mutation or a job
+// from a mutation or a job: await room.in({ roomId }).publish('said', row)
 ```
 
 ```tsx
@@ -316,8 +347,10 @@ that, or on a new server, `collect` empties, `chat.resets` ticks and `chat.onRes
 in the database: read history with a query, `chat.collect` the new messages with `key`, and invalidate the query on a
 reset.
 
+<!-- example: skip continues the chat example above -->
 ```tsx
-import { invalidate, skip } from '@weft-js/start'
+import { derived } from '@weft-js/core'
+import { invalidate } from '@weft-js/start'
 const history = listMessages({ roomId })
 const said = chat.collect('said', { key: m => m.id })
 chat.onReset(() => invalidate('messages'))
@@ -343,7 +376,11 @@ kick re-checks that user's sockets at once. A user whose session ended is closed
 **Shared state** is one value per key, last writer wins, as a box. A write is optimistic. A refused one goes back and
 sets `.error`.
 
+<!-- example: skip needs the app's isParticipant and isPresenter rules -->
 ```ts
+import { sharedState, skip } from '@weft-js/start'
+import { z } from 'zod'
+
 export const deckSlide = sharedState('deck-slide', {
   key: z.string().max(64), value: z.number().int().max(999), initial: 0,
   authorize: { read: isParticipant, write: isPresenter },              // ({ ctx, key }) => boolean, both required
@@ -354,9 +391,8 @@ const slide = deckSlide.connect(() => (id.value ? id.value : skip))    // in a d
 
 Its value lives in server memory: it survives a restart only while another instance runs. What must last is a mutation.
 
-**Tabs:** `tabs.channel('cart', schema)` from `@weft-js/core/browser` is a validated `BroadcastChannel`: `.post(msg)`, `.on(fn)`,
-`.value`. `state(init, { persist: { in: 'local', schema, version: 1 }, sync: 'tabs' })` in a `defineState` keeps a box the
-same in every tab, by key for plain objects, last writer wins. It needs `persist`, and not `session` (S008).
+**Tabs** need no server: `tabs.channel` is in `weft docs browser`, and a box kept the same in every tab
+(`sync: 'tabs'`) is in `weft docs state`.
 
 **Testing:** `room.connect` runs the real server code over the fake socket: `await net.settle()`, then
 `await net.publish(room, { roomId }, 'said', row)`, `net.sent(room)`, `await net.drop()`, `await net.offline()`,
