@@ -57,8 +57,15 @@ test('a streamed chunk never links a sheet the head already asked for: it brings
   const first = s.late([{ href: '/a.css' }], '<template><div data-scope="menu"></div></template>')
   expect(first).not.toContain('<link')
   expect(first).toContain('data-scope="menu"')
-  expect(first).not.toContain('color:green') // the head sent the card's rules
   expect(s.late([], '<template><div data-scope="menu"></div></template>')).toBe('')
+})
+
+test('a chunk repeats what it reaches of the head\'s rules, in sheet order, or a rule it adds would outrank a later one', () => {
+  const sheet = `:where([data-scope="btn"]){color:red}:where([data-tone="ghost"]){color:blue}${filler(4000)}`
+  const s = pageStyles({ inline: { '/o.css': sheet }, critical }, [{ href: '/o.css' }], '<i data-tone="ghost"></i>')
+  const rules = s.late([], '<b data-scope="btn" data-tone="ghost"></b>')
+  expect(rules.indexOf('color:red')).toBeGreaterThan(-1)
+  expect(rules.indexOf('color:blue')).toBeGreaterThan(rules.indexOf('color:red'))
 })
 
 test('a chunk\'s rules go in front of the head\'s sheets, so those keep winning once they load', () => {

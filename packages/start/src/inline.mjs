@@ -110,19 +110,8 @@ function paints(selector, found) {
   return !LATER.test(rest.replace(/\[[^\]]*\]/g, '')) && present(rest, found)
 }
 
-/**
- * Already sent, going by what `sent` reached: every word of it, since the purge goes by words where `present` lets a root
- * attribute through. A root rule stays: the purge cut its tokens to what those rules read.
- */
-function repeats(selector, sent) {
-  const rest = required(selector)
-  if (!sent || ROOTED.test(rest) || !paints(selector, sent)) return false
-  for (const d of demands(rest)) if (!sent.has(d.value ?? d) && !sent.has(ANY_VALUE) && !ROOT_ATTR.test(d)) return false
-  return true
-}
-
-/** A sheet without what can't show in the first paint, nor what `sent` already reached. */
-function firstPaint(css, parse, found, sent) {
+/** A sheet without what can't show in the first paint. */
+function firstPaint(css, parse, found) {
   const walk = source => print(parse(source).flatMap(n => {
     if (n.body === undefined) return [n]
     if (PRINT.test(n.head) || FORCED_COLORS.test(n.head)) return []
@@ -131,7 +120,7 @@ function firstPaint(css, parse, found, sent) {
       return body ? [{ head: n.head, body }] : []
     }
     if (n.head[0] === '@') return [n]
-    const kept = selectors(n.head).filter(s => paints(s, found) && !repeats(s, sent))
+    const kept = selectors(n.head).filter(s => paints(s, found))
     return kept.length ? [{ head: kept.join(','), body: n.body }] : []
   }))
   return walk(css)
@@ -186,14 +175,14 @@ function read(sources, known, found) {
   return found
 }
 
-/** The rules `found` reaches in these sheets, but for those `sent` did. Kept by the page's shape, not its text, so rows don't miss it. */
-function criticalCss(sheets, found, { parse, purge }, sent) {
-  const key = `${sheets.map(s => s.href).join()}|${[...found].sort().join()}|${sent ? [...sent].sort().join() : ''}`
+/** The rules `found` reaches in these sheets. Kept by the page's shape, not its text, so rows don't miss it. */
+function criticalCss(sheets, found, { parse, purge }) {
+  const key = `${sheets.map(s => s.href).join()}|${[...found].sort().join()}`
   let css = critical.get(key)
   if (css === undefined) {
     // Keeps a value the shell's words can't vouch for, as firstPaint does.
     const has = w => found.has(w) || found.has(ANY_VALUE) || !/^-{0,2}[\w-]+$/.test(w)
-    css = usedFaces(purge(sheets.map(s => firstPaint(s.css, parse, found, sent)), { has }).join(''), parse)
+    css = usedFaces(purge(sheets.map(s => firstPaint(s.css, parse, found)), { has }).join(''), parse)
     if (critical.size >= CRITICAL_MAX) critical.delete(critical.keys().next().value)
     critical.set(key, css)
   }
@@ -232,7 +221,8 @@ export function pageStyles(assets, css = [], html = '', head) {
       if (!split) return links
       const found = read([chunk], known, new Set(sent))
       if (found.size === sent.size) return links
-      const rules = criticalCss(inline, found, assets.critical, sent)
+      // All of them, repeats too: warp's rules weigh nothing, so order decides, and new ones alone would land after the head's.
+      const rules = criticalCss(inline, found, assets.critical)
       sent = found
       return links + (rules && `<style>${rules}</style><script>${MOVE}</script>\n`)
     },
