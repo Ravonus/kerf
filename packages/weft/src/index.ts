@@ -572,8 +572,24 @@ export function view(sources: any[], skip: string[] = []): any {
   if (rt.server) sources = sources.map(s => (typeof s === 'function' ? once(s) : s))
   const at = (s: any) => Object(typeof s === 'function' ? s() : s)
   const kept = (k: any) => !skip.includes(k)
+  // Which source holds each key, later winning, in the order keys were first met. Once on a server, for the same reason.
+  let held: Map<string | symbol, any> | undefined
+  const owners = () => {
+    if (held) return held
+    const map = new Map<string | symbol, any>()
+    for (const s of sources) {
+      const o = at(s)
+      for (const k of Reflect.ownKeys(o)) if (kept(k)) map.set(k, o)
+    }
+    if (rt.server) held = map
+    return map
+  }
   return new Proxy({}, {
     get(_, k) {
+      if (rt.server) {
+        const o = owners().get(k)
+        if (o) return o[k]
+      }
       if (kept(k))
         for (let i = sources.length - 1; i >= 0; i--) {
           const s = at(sources[i])
@@ -581,11 +597,7 @@ export function view(sources: any[], skip: string[] = []): any {
         }
     },
     has: (_, k) => kept(k) && sources.some(s => k in at(s)),
-    ownKeys: () => {
-      const out: (string | symbol)[] = []
-      for (const s of sources) for (const k of Reflect.ownKeys(at(s))) if (kept(k) && !out.includes(k)) out.push(k)
-      return out
-    },
+    ownKeys: () => [...owners().keys()],
     getOwnPropertyDescriptor: (_, k) => (kept(k) ? { configurable: true, enumerable: true } : undefined),
   })
 }

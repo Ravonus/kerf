@@ -163,16 +163,19 @@ function vocabulary(sheets, id) {
 /** Adds to `found` what these sources have of the sheets' words. */
 function read(sources, known, found) {
   const see = w => { if (known.has(w)) found.add(w) }
+  const once = (seen, value) => !seen.has(value) && !!seen.add(value) // a page of rows repeats a few values thousands of times
+  const names = new Set(), values = new Set(), classes = new Set()
   for (const source of sources) {
     for (const m of source.matchAll(ATTR)) {
-      see(m[1].toLowerCase())
+      if (once(names, m[1])) see(m[1].toLowerCase())
       const value = m[2] ?? m[3] ?? m[4]
-      if (!value) continue
+      if (!value || !once(values, value)) continue
       if (ENTITY.test(value)) found.add(ANY_VALUE)
       for (const w of value.split(/\s+/)) see(w)
     }
     for (const m of source.matchAll(CLASS)) {
       const value = m[1] ?? m[2] ?? m[3]
+      if (!once(classes, value)) continue
       if (ENTITY.test(value)) found.add(ANY_VALUE)
       for (const w of value.split(/\s+/)) see(`.${w}`)
     }

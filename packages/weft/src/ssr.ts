@@ -457,7 +457,7 @@ export function select(value: any): string {
 export function spread(props: Record<string, any>): string {
   let out = ''
   for (const k of Reflect.ownKeys(props) as string[]) {
-    if (k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || /^on[A-Z]/.test(k)) continue
+    if (k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || (k[0] === 'o' && /^on[A-Z]/.test(k))) continue
     out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, props[k])
   }
   return out
