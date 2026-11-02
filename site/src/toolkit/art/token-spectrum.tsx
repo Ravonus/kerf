@@ -35,7 +35,7 @@ export default function TokenSpectrum(_: ArtProps) {
   }
   const draw = ({ ctx, width, height, dt, pointer }: Frame) => {
     if (stale) reread(ctx.canvas.parentElement!)
-    const c = colours(ctx.canvas), mx = 42, my = 22, w = width - mx * 2, h = height - my * 2 - 12, X = (v: number) => mx + (v / MAX_C) * w, Y = (v: number) => my + (1 - v) * h
+    const c = colours(ctx.canvas), mx = 42, my = 22, w = width - mx * 2, h = height - my * 2 - 12, across = (chroma: number) => mx + (chroma / MAX_C) * w, up = (light: number) => my + (1 - light) * h
     let settling = false
     const k = Math.min(1, (dt || 0.016) * 7)
     for (let i = 0; i < COUNT; i++) {
@@ -46,8 +46,8 @@ export default function TokenSpectrum(_: ArtProps) {
     ctx.clearRect(0, 0, width, height)
     ctx.font = '11px var(--warp-font-mono, monospace)'
     ctx.fillStyle = c.rule
-    for (let v = 0; v <= 1.001; v += 0.25) ctx.fillRect(mx, Math.round(Y(v)), w, 1)
-    for (let v = 0; v <= MAX_C; v += 0.1) ctx.fillRect(Math.round(X(v)), my, 1, h)
+    for (let v = 0; v <= 1.001; v += 0.25) ctx.fillRect(mx, Math.round(up(v)), w, 1)
+    for (let v = 0; v <= MAX_C; v += 0.1) ctx.fillRect(Math.round(across(v)), my, 1, h)
     ctx.fillStyle = c.axis
     ctx.fillText('L', 16, my + 10)
     ctx.fillText('chroma →', mx + w - 54, my + h + 16)
@@ -57,12 +57,12 @@ export default function TokenSpectrum(_: ArtProps) {
       const base = f * FAMILY
       ctx.strokeStyle = fills[base + 3]!
       ctx.beginPath()
-      for (let s = 0; s < 4; s++) { const i = base + s; s ? ctx.lineTo(X(cs[i]!), Y(ls[i]!)) : ctx.moveTo(X(cs[i]!), Y(ls[i]!)) }
+      for (let s = 0; s < 4; s++) { const i = base + s; s ? ctx.lineTo(across(cs[i]!), up(ls[i]!)) : ctx.moveTo(across(cs[i]!), up(ls[i]!)) }
       ctx.stroke()
     }
     let near = -1, best = 196
     for (let i = 0; i < COUNT; i++) {
-      const x = X(cs[i]!), y = Y(ls[i]!)
+      const x = across(cs[i]!), y = up(ls[i]!)
       ctx.fillStyle = fills[i]!
       ctx.beginPath()
       ctx.arc(x, y, 5, 0, 6.2832)
@@ -71,7 +71,7 @@ export default function TokenSpectrum(_: ArtProps) {
       ctx.stroke()
       if (pointer.in) { const d = (x - pointer.x) ** 2 + (y - pointer.y) ** 2; if (d < best) { best = d; near = i } }
     }
-    if (near >= 0) { ctx.strokeStyle = c.hot; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(cs[near]!), Y(ls[near]!), 8, 0, 6.2832); ctx.stroke() }
+    if (near >= 0) { ctx.strokeStyle = c.hot; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(across(cs[near]!), up(ls[near]!), 8, 0, 6.2832); ctx.stroke() }
     found.value = near >= 0 ? `${NAMES[near]}  L ${ls[near]!.toFixed(3)}  C ${cs[near]!.toFixed(3)}` : ''
     if (!settling && moving.value) moving.value = false
     return settling
