@@ -341,8 +341,10 @@ test('a bell\'s count sits on the glyph\'s corner, a compact badge that leaves t
     expect(b.h).toBeLessThanOrEqual(16)
     expect(b.w).toBeLessThanOrEqual(24)
     expect(b.right && b.above).toBe(true)
-    expect(b.across).toBeLessThanOrEqual(5) // was 9 of the glyph's 16px under a 27×19 badge
-    expect(b.down).toBeLessThanOrEqual(6)
+    // only the glyph box's empty top-end corner, 2px each way: the bell's dome and shoulder stay whole (was 4×5, which
+    // with the ring hid the shoulder and read as half a bell)
+    expect(b.across).toBeLessThanOrEqual(2)
+    expect(b.down).toBeLessThanOrEqual(2)
   }
 })
 
