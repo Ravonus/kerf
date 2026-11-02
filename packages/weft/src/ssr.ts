@@ -200,6 +200,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
       }
     },
     async hold(ms) {
+      if (ms <= 0) return
       const deadline = Date.now() + ms
       const way = headway(got)
       for (let n = 1; wait.length && pending().length && n < (options.passes ?? 50); n++) {
