@@ -13,9 +13,12 @@ function Count(props: { n: Promise<number> }) {
 
 // The sheet is past the first-paint budget, so the head carries the shell's rules and the chunk needs the rest.
 export default function StreamSheet(props: RouteProps<typeof load>) {
+  // Read outside any Boundary, so the shell waits on it: a render slow enough for the head to go first.
+  const shell = resource(() => later(10, 'ready'))
   return (
     <main data-scope="shell-card">
       {props.data.x && <p data-scope="extra-card">extra</p>}
+      <p class="ready">{shell.value}</p>
       <Boundary pending={<p class="skeleton">Loading</p>}>
         <Count n={props.data.n} />
       </Boundary>

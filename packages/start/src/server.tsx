@@ -340,7 +340,8 @@ export function createHandler(options: HandlerOptions) {
     // The route rendered before: its head goes out now, from what that render needed, and the page follows it.
     const shape = `${status} ${saveData(request) ? 1 : 0} ${r.levels.map(l => l.id).join()}`
     const known = heads.get(shape)
-    if (known) {
+    // Only for a render slow enough to wait on: a fast page goes out whole, compressed once and kept.
+    if (known && known.ms >= EARLY_MS) {
       // A session read can set cookies, which have to be in the headers: read it before they go.
       if (request.headers.has('cookie')) await scope.ctx().catch(() => {})
       const set = [...scope.headers].length
@@ -352,8 +353,10 @@ export function createHandler(options: HandlerOptions) {
         async start(controller) {
           controller.enqueue(enc.encode(head))
           try {
+            const t0 = performance.now()
             s = render()
             await s.settle() // queries read outside a Boundary have nowhere to stream to
+            const ms = performance.now() - t0
             const p = shaped()
             const capturing = !!options.lazy || p.streaming
             // What this page has beyond the head: sheets, rules, and chunks that render didn't reach.
@@ -365,7 +368,7 @@ export function createHandler(options: HandlerOptions) {
             if ([...scope.headers].length !== set) {
               heads.set(shape, null)
               options.onDiagnostic?.({ code: 'E_HEAD', severity: 'warning', message: `${path}: a render set a response header after the head was sent, so this route now renders before sending anything.` })
-            } else remember(shape, { ...p, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length, preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join('') })
+            } else remember(shape, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length, preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join('') })
             await rest(controller, styles, p.streaming)
           } catch (e) {
             heads.set(shape, null)
@@ -378,12 +381,14 @@ export function createHandler(options: HandlerOptions) {
       return withHeaders(new Response(body, init), scope)
     }
 
+    const t0 = performance.now()
     s = render()
     await s.settle() // queries read outside a Boundary have nowhere to stream to
+    const ms = performance.now() - t0
     const p = shaped()
     const styles = pageStyles(assets, p.sheets, s.shell, site.head)
     const capturing = !!options.lazy || p.streaming
-    if (known === undefined && !options.dev) remember(shape, { ...p, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length })
+    if (known !== null && !options.dev) remember(shape, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length })
     const head =
       top + p.preloads +
       // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
@@ -615,7 +620,9 @@ export function createHandler(options: HandlerOptions) {
 }
 
 const HEADS_MAX = 512
-interface Head { sheets: { href: string }[]; preloads: string; now: boolean; capture: boolean; fold: boolean; split: boolean; found: Set<string> }
+/** A render this long (ms) sends its head first. Under it, waiting for the whole page costs less than streaming it. */
+const EARLY_MS = 4
+interface Head { ms: number; sheets: { href: string }[]; preloads: string; now: boolean; capture: boolean; fold: boolean; split: boolean; found: Set<string> }
 
 /** A complete page's text. Its Response holds no body until `compressed` gives it one: compressed, it's never read. */
 const whole = new WeakMap<Response, string>()
