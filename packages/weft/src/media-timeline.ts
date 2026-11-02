@@ -5,12 +5,14 @@
 import { batch, derived, getOwner, onCleanup, state, watch, type Derived, type State } from './index'
 import type { MediaAsset } from './media'
 
+/** A timeline's named moments and how it follows its element. */
 export interface TimelineOptions<C extends string> {
   /** Seconds from the start, by name. */
   cues?: Record<C, number>
   loop?: boolean
 }
 
+/** Code in sync with a video or audio element: the current time, and which cue it's on. */
 export interface Timeline<C extends string = string> {
   /** Write to seek. */
   currentTime: State<number>
@@ -35,7 +37,7 @@ export function timeline<C extends string = never>(asset: MediaAsset, options: T
   const over = state(false)
   const reached = state<C | null>(null)
   const failure = state<Error | null>(null)
-  const cues = Object.entries<number>(options.cues ?? ({} as Record<C, number>)).sort((a, b) => a[1] - b[1]) as [C, number][]
+  const cues = Object.entries<number>(options.cues ?? ({})).sort((a, b) => a[1] - b[1]) as [C, number][]
   const listeners = new Map<C, Set<() => void>>()
   let media: HTMLMediaElement | undefined
   let seen = 0

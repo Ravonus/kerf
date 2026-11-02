@@ -5,10 +5,12 @@ import { OWNKEYS } from './flags'
 import { Box, DIRTY, listener, NONE, plain, reach, read, setKeyed, state } from './index'
 import { linked } from './linked'
 
-const own = (x: any) => Reflect.ownKeys(x).flatMap((k): PropertyKey | PropertyKey[] => (typeof k === 'string' ? [k, +k] : k))
+const own = (x: unknown) => Reflect.ownKeys(x as object).flatMap((k): PropertyKey | PropertyKey[] => (typeof k === 'string' ? [k, +k] : k))
+
+type Entries = Record<PropertyKey, unknown> | null | undefined
 
 Box.prototype.set = function (update) {
-  const v: any = this.v
+  const v: unknown = this.v
   const draft = Array.isArray(v) ? v.slice() : v && typeof v === 'object' ? { ...v } : v
   update(draft)
   this.w(draft)
@@ -21,7 +23,7 @@ Box.prototype.get = function (key) {
     if (!s) k.set(key, (s = { v: undefined, f: undefined, o: NONE, b: this, key }))
     read(s)
   }
-  return (this.v as any)?.[key]
+  return this.v?.[key]
 }
 
 // Entry readers only: they re-run when their entry changed. Between plain objects only their own keys can differ, so
@@ -32,7 +34,7 @@ setKeyed((box, prev, v) => {
   if (many) box.c = many.length
   for (const key of many || (k.keys() as Iterable<PropertyKey>)) {
     const s = k.get(key)
-    if (s && !Object.is(prev?.[key], v?.[key])) reach(s, DIRTY)
+    if (s && !Object.is((prev as Entries)?.[key], (v as Entries)?.[key])) reach(s, DIRTY)
   }
 })
 

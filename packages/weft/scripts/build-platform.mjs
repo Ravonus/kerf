@@ -41,7 +41,7 @@ function verify() {
   const wanted = Object.keys(pkg.optionalDependencies ?? {}).sort()
   const table = platforms.map(p => `@weft-js/compiler-${p.name}`).sort()
   const bad = []
-  if (wanted.join() !== table.join()) bad.push(`optionalDependencies and platforms.cjs disagree: ${wanted} / ${table}`)
+  if (wanted.join() !== table.join()) bad.push(`optionalDependencies and platforms.cjs disagree: ${wanted.join()} / ${table.join()}`)
   for (const [name, version] of Object.entries(pkg.optionalDependencies ?? {})) if (version !== pkg.version) bad.push(`${name} is pinned to ${version}, @weft-js/core is ${pkg.version}`)
   for (const p of platforms) {
     const file = join(dirOf(p), 'package.json')

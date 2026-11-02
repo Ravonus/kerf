@@ -5,92 +5,96 @@
 
 /** `site` in weft.config.ts: the defaults every page starts from (§2). */
 export interface Site {
-  name?: string
+  name?: string | undefined
   /** Absolute origin (and base path) for canonical, og:url and relative images. */
-  url?: string
+  url?: string | undefined
   /** Title template; a page's title fills `%s`. A page without a title gets `name`. */
-  title?: string
-  description?: string
+  title?: string | undefined
+  description?: string | undefined
   /** `en_US` style (og:locale). */
-  locale?: string
+  locale?: string | undefined
   /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
-  image?: 'auto' | Image | false
-  twitter?: Twitter
+  image?: Image | false | undefined
+  twitter?: Twitter | undefined
   /** The generated card's look. Colours come from warp and fonts from the text plugin when the app has them. */
-  card?: CardTheme
+  card?: CardTheme | undefined
   /** `false`: no stylesheet text in the page, just links. */
-  inlineCss?: boolean
+  inlineCss?: boolean | undefined
   /** `false`: one sheet per chunk, inline up to 48 KB, instead of a first-paint part of the build's one sheet. */
-  criticalCss?: boolean
+  criticalCss?: boolean | undefined
   /** Words of selectors a first paint keeps whatever the HTML holds: for a class a head script sets. */
-  criticalKeep?: string[]
+  criticalKeep?: string[] | undefined
   /** Raw HTML for every page's head, before the stylesheets: what has to run before the first paint. Not escaped. */
-  head?: string
+  head?: string | undefined
 }
 
 /** One colour scheme of the generated card. */
 export interface CardColors {
-  background?: string
-  text?: string
-  subtle?: string
-  accent?: string
+  background?: string | undefined
+  text?: string | undefined
+  subtle?: string | undefined
+  accent?: string | undefined
 }
 
 export interface CardTheme extends CardColors {
   /** Which colours the card uses: one image is shown on every feed, so it picks. Default `dark`. */
-  scheme?: 'dark' | 'light'
-  light?: CardColors
-  dark?: CardColors
+  scheme?: 'dark' | 'light' | undefined
+  light?: CardColors | undefined
+  dark?: CardColors | undefined
   /** Faces for the card's title and text: a family, the font file (from the app root) and its weight. */
-  fonts?: { display?: CardFont; body?: CardFont }
+  fonts?: { display?: CardFont; body?: CardFont } | undefined
 }
 
 export interface CardFont {
   family: string
   src: string
-  weight?: number
+  weight?: number | undefined
 }
 
+/** A social image: a URL, or a URL with its size and description. */
 export type Image = string | { url: string; width?: number; height?: number; alt?: string }
 
+/** The page's `twitter:` tags. */
 export interface Twitter {
-  card?: 'summary' | 'summary_large_image' | 'app' | 'player'
-  site?: string
-  creator?: string
-  title?: string
-  description?: string
-  image?: string
+  card?: 'summary' | 'summary_large_image' | 'app' | 'player' | undefined
+  site?: string | undefined
+  creator?: string | undefined
+  title?: string | undefined
+  description?: string | undefined
+  image?: string | undefined
 }
 
+/** The page's `og:` tags. */
 export interface Og {
-  type?: string
-  title?: string
-  description?: string
-  image?: 'auto' | Image | false
-  siteName?: string
-  locale?: string
+  type?: string | undefined
+  title?: string | undefined
+  description?: string | undefined
+  image?: Image | false | undefined
+  siteName?: string | undefined
+  locale?: string | undefined
 }
 
+/** One more tag for the head: a named or property `<meta>`, or a `<link>`. */
 export type Extra = { name: string; content: string } | { property: string; content: string } | { rel: string; href: string }
 
 /** One layout's or route's metadata. Later metas win; `og` and `twitter` merge by key. */
 export interface Meta {
   /** Fills the site's template; `{ absolute }` skips it. */
-  title?: string | { absolute: string }
-  description?: string
-  og?: Og
-  twitter?: Twitter
+  title?: string | { absolute: string } | undefined
+  description?: string | undefined
+  og?: Og | undefined
+  twitter?: Twitter | undefined
   /** Tags weft doesn't model (theme-color, hreflang alternates, verification). */
-  extra?: readonly Extra[]
+  extra?: readonly Extra[] | undefined
   /** Structured data, written as `application/ld+json`. `false` drops what a layout or weft set. */
-  jsonLd?: object | readonly object[] | false
+  jsonLd?: object | readonly object[] | false | undefined
 }
 
 /** The merged result: what one page writes. */
 export interface Merged {
   title: string
-  description?: string
-  url?: string
+  description?: string | undefined
+  url?: string | undefined
   og: Og
   twitter: Twitter
   extra: Extra[]
@@ -141,6 +145,7 @@ export function headTags(m: Merged, path: string): Tag[] {
   const description = og.description ?? m.description
   const tags: Tag[] = [['title', {}, m.title]]
   const meta = (key: 'name' | 'property', k: string, v: unknown) => {
+    // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
     if (v != null && v !== '') tags.push(['meta', { [key]: k, content: String(v) }])
   }
   meta('name', 'description', m.description)
@@ -175,7 +180,7 @@ const esc = (s: string) => s.replace(/[&<"]/g, c => (c === '&' ? '&amp;' : c ===
 export function metaTags(m: Merged, path: string): string {
   const tags = headTags(m, path).map(([tag, attrs, text]) => {
     let a = ''
-    for (const k in attrs) a += ` ${k}="${esc(attrs[k])}"`
+    for (const k in attrs) a += ` ${k}="${esc(attrs[k]!)}"`
     return tag === 'title' ? `<title data-wm>${esc(text!)}</title>` : `<${tag}${a} data-wm>`
   })
   // Crawlers read this from the first response only, so it's here and not in `headTags`, which the client shares.
@@ -186,6 +191,7 @@ export function metaTags(m: Merged, path: string): string {
 /** JSON that can't end its `<script>` or an HTML comment: everything that could is written as an escape. */
 const jsonText = (v: unknown) => JSON.stringify(v).replace(/[<>&\u2028\u2029]/g, c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)
 
+/** What a render writes to `<head>`: the app's defaults, and how a page's tags merge into them. */
 export interface HeadOptions {
   site?: Site
   /** Layout metas then the route's, outer to inner. */

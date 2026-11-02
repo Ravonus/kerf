@@ -31,7 +31,7 @@ function apply(shell: string, chunks: string[]) {
     for (const script of holder.querySelectorAll('script')) {
       const t = script.previousElementSibling as HTMLTemplateElement | null
       if (t) document.body.appendChild(t)
-      const call = /\$wb\(("[^"]*")?\)$/.exec(script.textContent!)!
+      const call = /\$wb\(("[^"]*")?\)$/.exec(script.textContent)!
       $wb(call[1] ? JSON.parse(call[1]) : undefined, t ?? undefined)
     }
   }

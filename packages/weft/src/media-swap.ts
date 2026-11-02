@@ -15,16 +15,17 @@ const DWELL = 150
 const VIDEO_CAP = 2 * 1024 * 1024
 const CONTROLS = 48
 
-const saving = () => (navigator as any).connection?.saveData === true
-const idle = (run: () => void) => ((window as any).requestIdleCallback ?? setTimeout)(run)
+const saving = () => (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true
+const idle = (run: () => void) => (window.requestIdleCallback ?? setTimeout)(run)
 
 const cached = (url: string) => fetch(url, { cache: 'only-if-cached', mode: 'same-origin' }).then(r => {
   void r.body?.cancel()
+  // oxlint-disable-next-line typescript/only-throw-error -- only `Promise.any` sees this, and it only needs a rejection; an Error here costs bytes
   if (!r.ok) throw r
 })
 
 function intent(el: HTMLElement, run: () => void) {
-  let timer: any
+  let timer: ReturnType<typeof setTimeout> | undefined
   const now = () => { clearTimeout(timer); run() }
   el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') timer = setTimeout(now, DWELL) })
   el.addEventListener('pointerleave', () => clearTimeout(timer))
@@ -73,6 +74,7 @@ function videoSwap(a: HTMLVideoElement, url: string, lead = 0.6) {
     b.src = url
     above(a, b)
     b.style.opacity = '0'
+    // oxlint-disable-next-line no-promise-executor-return -- `addEventListener` returns nothing a promise looks at, and braces cost bytes in <Media>
     const once = (name: string) => new Promise(ok => b.addEventListener(name, ok, { once: true }))
     await once('loadeddata')
     const flip = () => {
@@ -114,14 +116,14 @@ export function attach(el: HTMLImageElement | HTMLVideoElement, asset: MediaAsse
   const mode = saving() ? 'never' : asset.swap ?? 'intent'
   if (el instanceof HTMLVideoElement) void choose(el, asset)
   if (mode === 'never') return
-  let run: () => void
+  let run: () => unknown
   if (el instanceof HTMLImageElement) run = () => stillSwap(el)
   else if (copy.type === 'image/gif') run = gifOverlay(el, copy)
   else if ((copy.bytes ?? Infinity) <= VIDEO_CAP) run = videoSwap(el, copy.src)
   else return
   // Already in the HTTP cache from an earlier visit: use it now. `only-if-cached` never touches the network, and a blob
   // or Cache Storage copy wouldn't do, because a `blob:` URL can't be saved.
-  const urls = (el as HTMLImageElement).srcset?.split(', ').map(c => c.split(' ')[0]) || [copy.src]
+  const urls = (el as HTMLImageElement).srcset?.split(', ').map(c => c.split(' ')[0]!) || [copy.src]
   void Promise.any(urls.map(cached)).then(run, () => {})
   if (mode === 'intent') intent(el, run)
   else if ((copy.ratio ?? 1) <= 1.5) idle(run)

@@ -21,10 +21,10 @@ afterEach(() => { document.body.textContent = '' })
 
 function client(name: Name) {
   const root = mount()
-  render(() => Dom[name]({} as never), root)
+  render(() => Dom[name]({}), root)
   return root
 }
-const html = (name: Name) => renderToString(() => Server[name]({} as never))
+const html = (name: Name) => renderToString(() => Server[name]({}))
 function server(name: Name) {
   const root = mount()
   root.innerHTML = html(name)
@@ -33,7 +33,7 @@ function server(name: Name) {
 function hydrated(name: Name) {
   const root = server(name)
   const before = root.innerHTML
-  hydrate(() => Client[name]({} as never), root)
+  hydrate(() => Client[name]({}), root)
   expect(hydration.misses).toBe(0)
   expect(root.innerHTML).toBe(before) // hydration adopts what the server wrote and wipes nothing
   return root

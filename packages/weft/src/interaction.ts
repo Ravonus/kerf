@@ -5,9 +5,12 @@
 
 import { DEV, createRoot, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from './index'
 
+/** How many pointers hover, how many focuses sit inside, and how many presses are down. */
 export interface Counts { hover: number; focus: number; pressed: number }
+/** What an action directive returns: `update` after a prop change, `destroy` at the end. */
 export interface Action { update(): void; destroy(): void }
 
+/** A hover, focus and press tracker, with the handlers that feed it. */
 export interface Interaction {
   /** On this page: safe to run logic on. */
   hover: State<boolean>
@@ -19,6 +22,7 @@ export interface Interaction {
   attach(el: HTMLElement): Action
 }
 
+/** How `interaction` behaves. */
 export interface InteractionOptions {
   /**
    * Share it. Same key, same row: on this page at once, across tabs and clients in a `@weft-js/start` app. Read once: a
@@ -27,6 +31,7 @@ export interface InteractionOptions {
   share?: string | (() => string)
 }
 
+/** One tracker's line into a shared one: `set` reports its bits, `leave` takes them away. */
 export interface ShareLine { set(bits: number): void; leave(): void }
 
 /** `@weft-js/warp/ui` and `@weft-js/start/share` plug in here, as `@weft-js/core/sync` does for `features.sync`. */
@@ -35,7 +40,9 @@ export const seams: {
   line?: (key: string, heard: (counts: Counts) => void) => ShareLine
 } = {}
 
+/** Nothing hovered, focused or pressed. */
 export const NONE: Counts = Object.freeze({ hover: 0, focus: 0, pressed: 0 })
+/** Hover, focus and pressed as one number, so a change costs a compare. */
 export const bitsOf = (hover: boolean, focus: boolean, pressed: boolean) => (hover ? 1 : 0) | (focus ? 2 : 0) | (pressed ? 4 : 0)
 
 function row(): Interaction & { remote: State<Counts> } {
@@ -51,6 +58,7 @@ function row(): Interaction & { remote: State<Counts> } {
 
 const page = new Map<string, { ui: ReturnType<typeof row>; refs: number; close(): void }>()
 
+/** Tracks hover, focus and press on an element, for what a style can't reach. */
 export function interaction(options: InteractionOptions = {}): Interaction {
   const share = options.share
   if (share === undefined || typeof document === 'undefined') return row()
@@ -63,9 +71,9 @@ export function interaction(options: InteractionOptions = {}): Interaction {
       if (line) effect(() => bitsOf(ui.hover.value, ui.focus.value, ui.pressed.value), (bits, was) => { if (was !== undefined || bits) line.set(bits) })
       return { ui, refs: 0, close() { line?.leave(); dispose() } }
     }, null)
-    page.set(key, held!)
+    page.set(key, held)
   }
-  const entry = held!
+  const entry = held
   entry.refs++
   if (getOwner()) onCleanup(() => {
     if (--entry.refs) return

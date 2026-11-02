@@ -213,7 +213,7 @@ test('dev validates props against the schema', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   const schema = { '~standard': { version: 1, vendor: 't', validate: (v: any) => (v.n > 1 ? { issues: [{ message: 'too big', path: ['n'] }] } : { value: v }) } }
   const n = state(0)
-  const S = defineSurface<{ n: number }>({ name: 'v', kind: 'canvas2d', props: schema as any, setup() {} })
+  const S = defineSurface<{ n: number }>({ name: 'v', kind: 'canvas2d', props: schema, setup() {} })
   function Page() { return <Surface use={S} n={n.value} label="v" /> }
   render(Page)
   await flush()

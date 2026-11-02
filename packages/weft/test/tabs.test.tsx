@@ -109,8 +109,8 @@ describe("sync: 'tabs'", () => {
     await Promise.all([user.click(screen.getByRole('button', { name: 'add a' })), user.click(screen.getByRole('button', { name: 'add b' }))])
     await flush()
     await flush()
-    expect(JSON.parse(lineText('a')!)).toEqual({ a: 1, b: 1 })
-    expect(JSON.parse(lineText('b')!)).toEqual({ a: 1, b: 1 })
+    expect(JSON.parse(lineText('a'))).toEqual({ a: 1, b: 1 })
+    expect(JSON.parse(lineText('b'))).toEqual({ a: 1, b: 1 })
     expect(JSON.parse(storage.getItem('weft:app:cart-sync.lines')!).data).toEqual({ a: 1, b: 1 })
   })
 
@@ -142,7 +142,7 @@ describe("sync: 'tabs'", () => {
     bc.postMessage({ s: 'cart-sync.lines', at: now + 1000, t: 'y', p: { k: 1, j: 1 }, d: [] })
     await flush()
     bc.close()
-    expect(JSON.parse(lineText('a')!)).toEqual({ k: 2, j: 1 })
+    expect(JSON.parse(lineText('a'))).toEqual({ k: 2, j: 1 })
   })
 
   test("`session`, or no persist, is S008", () => {

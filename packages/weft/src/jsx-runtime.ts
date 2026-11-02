@@ -23,11 +23,13 @@ type Bubble<T> = {
   [K in keyof GlobalEventHandlersEventMap as `on${Capitalize<K & string>}`]?: Handler<GlobalEventHandlersEventMap[K], T>
 } & { [K in keyof Camel as `on${K}`]?: Handler<GlobalEventHandlersEventMap[Camel[K]], T> } & { onDoubleClick?: Handler<MouseEvent, T> }
 /** Every event, and React's `onClickCapture` form of it. */
+// oxlint-disable-next-line typescript/no-redundant-type-constituents -- a false positive: the mapped keys here aren't a union with `string` anywhere
 type Events<T> = Bubble<T> & { [K in keyof Bubble<T> & string as `${K}Capture`]?: Bubble<T>[K] }
 
+/** What an HTML or SVG element takes in JSX: its events, `ref`, `class`, `style`, and any other attribute. */
 export type HTMLAttributes<T> = Events<T> & {
   children?: unknown
-  key?: string | number
+  key?: string | number | undefined
   /** `ref={el}` assigns a variable (`let el!: HTMLInputElement`); `ref={fn}` calls it with the element. */
   ref?: T | ((el: T) => void)
   class?: unknown
@@ -40,10 +42,15 @@ export type HTMLAttributes<T> = Events<T> & {
   [attr: string]: unknown
 }
 
+/** The types TypeScript reads to check JSX. */
 export namespace JSX {
-  export type Element = any
+  /** What a JSX expression is. */
+  export type Element = unknown
+  /** Names the prop that holds what's between the tags. */
   export interface ElementChildrenAttribute { children: {} }
-  export interface IntrinsicAttributes { key?: string | number; [bound: `bind:${string}`]: unknown }
+  /** What every component takes, whatever its props: `key`, and `bind:` on a prop. */
+  export interface IntrinsicAttributes { key?: string | number | undefined; [bound: `bind:${string}`]: unknown }
+  /** Every tag and what it takes. */
   export type IntrinsicElements = { [K in keyof HTMLElementTagNameMap]: HTMLAttributes<HTMLElementTagNameMap[K]> } & {
     [K in Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>]: HTMLAttributes<SVGElementTagNameMap[K]>
   }

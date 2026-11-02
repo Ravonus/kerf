@@ -1,8 +1,10 @@
 // The weft.config.ts surface (PLAN §7b manifest, §7c reserved `plugins`/`slots`). Validated by `weft check` (P-codes).
+import type { CardTheme } from './head'
 
 /** A JSON Schema object, or anything with Zod's `~standard`/`_zod` shape (converted with `z.toJSONSchema`). */
 export type ArgsSchema = Record<string, unknown>
 
+/** A named command for `weft run`. */
 export interface TaskDef {
   /** Shell command `weft run <name>` will run, from the project root. */
   run: string
@@ -15,6 +17,7 @@ export interface TaskDef {
   args?: ArgsSchema
 }
 
+/** The slots a plugin can fill. */
 export type SlotId =
   | 'font.build'
   | 'text.measure'
@@ -53,9 +56,9 @@ export interface SiteConfig {
   locale?: string
   /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
   /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
-  image?: 'auto' | false | string | { url: string; width?: number; height?: number; alt?: string }
+  image?: false | string | { url: string; width?: number; height?: number; alt?: string }
   /** The generated card's look, over what warp and the text plugin give it. */
-  card?: import('./head').CardTheme
+  card?: CardTheme
   twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
   /** `false`: no stylesheet text in the page, just links. */
   inlineCss?: boolean
@@ -67,6 +70,7 @@ export interface SiteConfig {
   head?: string
 }
 
+/** Everything `weft.config.ts` can say. */
 export interface WeftConfig {
   /** Where agents may write, may read, and may never touch (globs from the project root). */
   scope?: { write?: readonly string[]; read?: readonly string[]; forbid?: readonly string[] }
@@ -124,4 +128,5 @@ export interface WeftConfig {
   slots?: { [id: string]: string | Record<string, string> }
 }
 
+/** The config, checked and returned as given. */
 export declare function defineConfig<const C extends WeftConfig>(config: C): C

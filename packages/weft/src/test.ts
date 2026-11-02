@@ -20,6 +20,7 @@ import { open } from './browser'
 export { scope } from './scope'
 export { memoryStorage } from './memory'
 
+/** Waits for writes to reach the DOM, and for what they started to settle. */
 export async function flush() {
   for (let i = 0; i < 3; i++) {
     await Promise.resolve()
@@ -34,7 +35,7 @@ const mounted = new Set<() => void>()
  * `options.state` seeds scopes (`{ cart: { note: 'hi' } }`); pass one `storage` to several renders to test reloads.
  * Unmounted automatically after each test.
  */
-export function render<P extends object>(Comp: (props: P) => any, props: P = {} as P, options: AppOptions & { /** Slot overrides: `{ 'text.measure': fakeMeasure() }`. */ slots?: Record<string, unknown> } = {}) {
+export function render<P extends object>(Comp: (props: P) => unknown, props: P = {} as P, options: AppOptions & { /** Slot overrides: `{ 'text.measure': fakeMeasure() }`. */ slots?: Record<string, unknown> } = {}) {
   const app = createApp(options)
   useApp(app)
   if (options.slots) rt.slots = options.slots
@@ -50,8 +51,9 @@ export function render<P extends object>(Comp: (props: P) => any, props: P = {} 
   return { container, unmount }
 }
 
+/** Unmounts everything `render` mounted, and clears what a test set up. */
 export function cleanup() {
-  for (const unmount of [...mounted]) unmount()
+  for (const unmount of Array.from(mounted)) unmount()
   rt.slots = undefined
 }
 
@@ -64,7 +66,7 @@ function recording(canvas: HTMLCanvasElement) {
   const log: { name: string; args: unknown[] }[] = []
   calls.set(canvas, log)
   const values: Record<string, unknown> = {}
-  const ctx: any = new Proxy({}, {
+  const ctx: unknown = new Proxy({}, {
     get(_, key: string) {
       if (key in values) return values[key]
       if (key === 'measureText') return (text: string) => ({ width: text.length * 8, fontBoundingBoxAscent: 12, fontBoundingBoxDescent: 4 })
@@ -86,7 +88,7 @@ if (typeof HTMLCanvasElement !== 'undefined') {
   HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement) {
     if (!contexts.has(this)) contexts.set(this, recording(this))
     return contexts.get(this)
-  } as any
+  } as unknown as typeof HTMLCanvasElement.prototype.getContext
 }
 
 /** A deterministic `text.measure` for jsdom: every character is 8 px wide and lines break at spaces. */
@@ -117,8 +119,11 @@ export function fakeMeasure() {
  * There is no container, selector or test-id query (T005).
  */
 export const screen = {
+  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByRole: dom.getByRole, getAllByRole: dom.getAllByRole, queryByRole: dom.queryByRole, queryAllByRole: dom.queryAllByRole, findByRole: dom.findByRole, findAllByRole: dom.findAllByRole,
+  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByLabelText: dom.getByLabelText, getAllByLabelText: dom.getAllByLabelText, queryByLabelText: dom.queryByLabelText, queryAllByLabelText: dom.queryAllByLabelText, findByLabelText: dom.findByLabelText, findAllByLabelText: dom.findAllByLabelText,
+  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByText: dom.getByText, getAllByText: dom.getAllByText, queryByText: dom.queryByText, queryAllByText: dom.queryAllByText, findByText: dom.findByText, findAllByText: dom.findAllByText,
 }
 
@@ -127,11 +132,11 @@ type Actions = Pick<UserEvent, 'click' | 'dblClick' | 'type' | 'clear' | 'keyboa
 
 let session: UserEvent | undefined
 const act = <K extends keyof Actions>(name: K) =>
-  (async (...args: any[]) => {
+  (async (...args: unknown[]) => {
     session ??= userEvent.setup({ advanceTimers: ms => (clock.installed ? vi.advanceTimersByTimeAsync(ms).then(() => {}) : undefined) })
-    await (session[name] as (...a: any[]) => Promise<void>)(...args)
+    await (session[name] as (...a: unknown[]) => Promise<void>)(...args)
     await flush()
-  }) as Actions[K]
+  }) as unknown as Actions[K]
 
 /** User actions (`@testing-library/user-event`); each one ends in `flush()`, so there is nothing to wait for (T004). */
 export const user: Actions = {
@@ -193,7 +198,7 @@ export const leaks = (): string[] => [...open.values()].map(([what]) => what)
 export function assertNoLeaks() {
   if (!open.size) return
   const list = leaks()
-  for (const [, close] of [...open.values()]) close()
+  for (const [, close] of Array.from(open.values())) close()
   throw new Error(
     `T012: the test ended with ${list.length} open subscription${list.length > 1 ? 's' : ''}, listener${list.length > 1 ? 's' : ''} or interval${list.length > 1 ? 's' : ''}:\n${list.map(w => `  - ${w}`).join('\n')}\n` +
       '  fix: unmount what the test created (`render` unmounts itself; call the `dispose` of any `createRoot`), or fix the leak: create them in setup, where their owner removes them',
@@ -204,18 +209,18 @@ const fake = { online: true, visibility: 'visible' as DocumentVisibilityState, f
 const lists = new Map<string, EventTarget & { media: string; matches: boolean }>()
 
 function installPage() {
-  if (typeof document == 'undefined') return
+  if (typeof document === 'undefined') return
   const define = (o: object, key: string, get: () => unknown) => Object.defineProperty(o, key, { configurable: true, get })
   define(navigator, 'onLine', () => fake.online)
   define(document, 'visibilityState', () => fake.visibility)
-  define(document, 'hidden', () => fake.visibility == 'hidden')
+  define(document, 'hidden', () => fake.visibility === 'hidden')
   Object.defineProperty(document, 'hasFocus', { configurable: true, value: () => fake.focus })
   // jsdom has no matchMedia: one MediaQueryList per query, matching what `page.media` set (default false).
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: (media: string) => {
       let list = lists.get(media)
-      if (!list) lists.set(media, (list = Object.defineProperty(Object.assign(new EventTarget(), { media }), 'matches', { get: () => fake.media.get(media) ?? false }) as any))
+      if (!list) lists.set(media, (list = Object.defineProperty(Object.assign(new EventTarget(), { media }), 'matches', { get: () => fake.media.get(media) ?? false }) as unknown as NonNullable<typeof list>))
       return list
     },
   })
@@ -243,7 +248,7 @@ const transport = {
   ctx: undefined as object | undefined,
   online: () => fake.online,
   fails: new Map<string, unknown[]>(),
-  handlers: new Map<string, (input: any, ctx: any) => unknown>(),
+  handlers: new Map<string, (input: never, ctx: never) => unknown>(),
   log: [] as { id: string; kind: string; input: unknown }[],
   /** Calls in flight (`net.settle()` waits for them). */
   inflight: new Set<Promise<unknown>>(),
@@ -264,7 +269,7 @@ const transport = {
   /** Server extensions for this test (`net.extension`): a plugin's fake runs through the real scope. */
   extensions: [] as { reset?(): void }[],
 }
-;(globalThis as any)[Symbol.for('weft.net')] = transport
+;(globalThis as unknown as Record<symbol, unknown>)[Symbol.for('weft.net')] = transport
 
 function resetTransport() {
   for (const e of transport.extensions) e.reset?.()
@@ -295,7 +300,7 @@ export const net = {
     transport.fails.set(id, [...(transport.fails.get(id) ?? []), error])
   },
   /** Replace `fn`'s `run`: `net.handle(listTodos, () => [{ id: '1', title: 'Milk', done: false }])`. */
-  handle<I = any, O = unknown>(fn: FnRef, run: (input: I, ctx: any) => O | Promise<O>) { transport.handlers.set(fnId(fn), run) },
+  handle<I = never, O = unknown>(fn: FnRef, run: (input: I, ctx: never) => O | Promise<O>) { transport.handlers.set(fnId(fn), run) },
   /** The calls so far, in order: `{ id, kind, input }`. */
   calls() { return transport.log.slice() },
   /** A message straight to every reader of `stream`, as the server would send it. Returns how many got it. */
@@ -338,7 +343,7 @@ export const net = {
     for (let i = 0; i < 100; i++) {
       await flush()
       if (!transport.inflight.size) return
-      await Promise.allSettled([...transport.inflight])
+      await Promise.allSettled(transport.inflight)
     }
     throw new Error('net.settle(): calls kept starting (a refetch loop?)')
   },
@@ -369,10 +374,10 @@ class FakeLine {
 }
 
 function deliver(name: string, data: unknown, from?: FakeLine) {
-  queueMicrotask(() => { for (const line of [...(lines.get(name) ?? [])]) if (line !== from) line.onmessage?.({ data }) })
+  queueMicrotask(() => { for (const line of Array.from(lines.get(name) ?? [])) if (line !== from) line.onmessage?.({ data }) })
 }
 
-if (typeof document != 'undefined') (globalThis as any).BroadcastChannel = FakeLine
+if (typeof document !== 'undefined') (globalThis as Record<string, unknown>).BroadcastChannel = FakeLine
 
 /**
  * Other tabs. Two `render()`s are two tabs: each gets its own channels, and a shared `storage` is the shared
@@ -411,6 +416,7 @@ export const page = {
   },
 }
 
+/** What `toTouchAtMost` counts a write's cost by. */
 export type Touches = {
   mutations: number
   /** Reactive computations re-run (derived values and bindings). */

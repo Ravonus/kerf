@@ -31,6 +31,7 @@ const EDGES = {
   'empty.tsx': '',
   'bom.tsx': '﻿export const A = () => <p>x</p>\n',
   'crlf.tsx': 'export function A() {\r\n  return <p>a</p>\r\n}\r\n',
+  // oxlint-disable-next-line no-template-curly-in-string -- the `${` is the case: source text the compilers have to agree on
   'unicode.tsx': 'export const A = () => <p title="日本語 🎉 é">שלום 𝒳   x</p>\n/* 🎉 */ const b = <div>{`é${1}🎉`}</div>\n',
   'lone-surrogate.tsx': 'export const s = "\\ud800"; export const A = () => <p>{"\uD800"}</p>\n',
   'syntax-error.tsx': 'export const A = () => <div><span></div>\n',

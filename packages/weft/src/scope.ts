@@ -6,10 +6,12 @@
 // A scope is a named setup function over ordinary boxes. It runs once per app instance, lazily, on first access.
 // Functions it returns are actions: each call is one transaction (one undo step), and nested calls join the outer.
 
-import { Box, DEV, Memo, collect, context, createRoot, named as graph, rt, untrack, type Derived, type State } from './index'
+// oxlint-disable-next-line import/no-cycle -- this file builds on the core, and the `weft` entry re-exports it
+import { Box, DEV, Memo, collect, context, createRoot, named as graph, rt, untrack, type Derived } from './index'
 
 // ---- diagnostics ------------------------------------------------------------------------------------------------
 
+/** A misuse of state, with its code and how to fix it. */
 export class StateError extends Error {
   constructor(public code: string, message: string, fix: string) {
     super(`${code}: ${message}\n  fix: ${fix}`)
@@ -41,8 +43,8 @@ export interface AppOptions {
 export interface App {
   name: string
   seed: Record<string, Record<string, unknown>>
-  storage?: StorageLike
-  cookies?: AppOptions['cookies']
+  storage?: StorageLike | undefined
+  cookies?: AppOptions['cookies'] | undefined
   instances: Map<ScopeDef, Instance>
 }
 
@@ -95,15 +97,15 @@ export const features: {
     /** Wraps a returned function: one transaction per call, nested calls join the outer. */
     action<F extends Fn>(name: string, fn: F): F
     /** A write to a box in a scope with history. */
-    record(inst: Instance, box: Box<any>, before: unknown): void
+    record(inst: Instance, box: Box<unknown>, before: unknown): void
     /** Write without recording (undo, redo, reset). */
     replay(fn: () => void): void
   }
-  persist?: { load(inst: Instance, box: Box<any>, name: string): void; write(inst: Instance, box: Box<any>): void }
-  sync?: { attach(inst: Instance, box: Box<any>, name: string): void; write(inst: Instance, box: Box<any>): void }
+  persist?: { load(inst: Instance, box: Box<unknown>, name: string): void; write(inst: Instance, box: Box<unknown>): void }
+  sync?: { attach(inst: Instance, box: Box<unknown>, name: string): void; write(inst: Instance, box: Box<unknown>): void }
 } = {}
 
-function onWrite(box: Box<any>, before: unknown) {
+function onWrite(box: Box<unknown>, before: unknown) {
   const inst = owners.get(box)!
   if (inst.history) features.history!.record(inst, box, before)
   if (box.opts?.persist) features.persist!.write(inst, box)
@@ -112,11 +114,13 @@ function onWrite(box: Box<any>, before: unknown) {
 
 // ---- scopes -----------------------------------------------------------------------------------------------------
 
-type Fn = (...args: any[]) => any
-type ScopeShape = Record<string, State<any> | Derived<any> | Fn | unknown>
+type Fn = (...args: never[]) => unknown
+type ScopeShape = Record<string, unknown>
 
+/** One step of a scope's undo history: what happened, and when. */
 export interface HistoryEntry { action: string; at: number }
 
+/** A scope's undo log. */
 export interface History {
   undo(): void
   redo(): void
@@ -126,6 +130,7 @@ export interface History {
   readonly entries: Derived<readonly HistoryEntry[]>
 }
 
+/** What `defineState` returns: the setup's values, and the scope's name, reset and history. */
 export type ScopeHandle<N extends string, T> = T & {
   readonly $name: N
   /** Every box back to its initial value; persisted boxes rewritten; history cleared. */
@@ -147,13 +152,13 @@ interface ScopeDef {
 export const hmr = { on: false }
 
 const defs = new Map<string, ScopeDef>()
-export const owners = new WeakMap<Box<any>, Instance>()
+export const owners = new WeakMap<Box<unknown>, Instance>()
 const building = new Set<ScopeDef>()
 
 export class Instance {
   api: Record<string, unknown> = {}
-  boxes: Box<any>[]
-  inits = new Map<Box<any>, unknown>()
+  boxes: Box<unknown>[]
+  inits = new Map<Box<unknown>, unknown>()
   history?: Timeline
   name: string
   /** Disposes the setup's owner: its watchers and the browser values it reads (`disposeApp`). */
@@ -169,7 +174,7 @@ export class Instance {
     const [shape, boxes] = collect(() => createRoot(d => ((this.dispose = d), def.setup()), null))
     this.boxes = boxes
 
-    const named = new Map<Box<any>, string>()
+    const named = new Map<Box<unknown>, string>()
     let writable = 0, actions = 0
     for (const [key, v] of Object.entries(shape)) {
       if (DEV && key[0] === '$') throw new StateError('S009', `\`${def.name}\` returns \`${key}\`; $-names are reserved`, `rename \`${key}\``)
@@ -204,7 +209,7 @@ export class Instance {
     }
     if (DEV) {
       // The dev graph (@weft-js/core/devtools): the scope's boxes and returned derived values, until the app ends.
-      const nodes: (Box<any> | Memo<any>['node'])[] = [...boxes]
+      const nodes: (Box<unknown> | Memo<unknown>['node'])[] = [...boxes]
       for (const [key, v] of Object.entries(this.api)) if (v instanceof Memo) { v.node.n = `${def.name}.${key}`; nodes.push(v.node) }
       for (const n of nodes) graph.add(n)
       const dispose = this.dispose
@@ -231,7 +236,7 @@ export function unserializable(v: unknown, path: string): string | void {
   if (typeof v === 'number') return Number.isFinite(v) ? undefined : `${path} is ${v}`
   if (typeof v !== 'object') return `${path} is a ${typeof v}`
   const proto = Object.getPrototypeOf(v)
-  if (!Array.isArray(v) && proto !== Object.prototype && proto !== null) return `${path} is a ${(v as object).constructor?.name ?? 'class instance'}`
+  if (!Array.isArray(v) && proto !== Object.prototype && proto !== null) return `${path} is a ${(v).constructor?.name ?? 'class instance'}`
   for (const [k, x] of Object.entries(v)) {
     const bad = unserializable(x, `${path}.${k}`)
     if (bad) return bad
@@ -335,7 +340,7 @@ export function scope<H extends { readonly $name: string }>(handle: H, options: 
     get(_, key) {
       const prev = useApp(app)
       try {
-        const v = (handle as any)[key]
+        const v = (handle as Record<PropertyKey, unknown>)[key]
         if (typeof v !== 'function') return v
         const run = (...a: unknown[]) => { const p = useApp(app); try { return v(...a) } finally { useApp(p) } }
         return Object.defineProperty(run, 'name', { value: v.name })

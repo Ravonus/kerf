@@ -66,14 +66,14 @@ try {
   for (let r = 0; r < EDITS + 5; r++) {
     const i = (r * 397 + 11) % N
     const text = `edit${r}`
-    await page.evaluate(([i, text]) => {
+    await page.evaluate(([at, want]) => {
       const ul = document.querySelector('ul')
       const mo = new MutationObserver(() => {
-        if (ul.children[i]?.firstChild?.textContent === text) { mo.disconnect(); window.__seen() }
+        if (ul.children[at]?.firstChild?.textContent === want) { mo.disconnect(); window.__seen() }
       })
       mo.observe(ul, { childList: true, subtree: true, characterData: true })
     }, [i, text])
-    const seen = new Promise(r => (resolveSeen = r))
+    const seen = new Promise(ok => { resolveSeen = ok })
     changed = 0
     const start = performance.now()
     writeFileSync(join(root, 'src', `C${i}.tsx`), comp(i, text))
@@ -83,7 +83,7 @@ try {
       total.push(end - start)
       afterWatcher.push(end - changed)
     }
-    const kept = await page.evaluate(i => document.querySelector('ul').children[i].textContent, i)
+    const kept = await page.evaluate(at => document.querySelector('ul').children[at].textContent, i)
     if (!kept.endsWith(` x ${i}`)) throw new Error(`state lost on edit ${r}: ${kept}`)
   }
   const reloads = await page.evaluate(() => performance.getEntriesByType('navigation').length)

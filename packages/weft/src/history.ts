@@ -6,9 +6,9 @@
 import { Box, DEV, derived } from './index'
 import { features, owners, type History, type HistoryEntry, type Instance, type Timeline } from './scope'
 
-type Change = { box: Box<any>; before: unknown }
-type Tx = { name: string; changes: Map<Box<any>, Change> }
-type Step = { entry: HistoryEntry; changes: { box: Box<any>; before: unknown; after: unknown }[] }
+type Change = { box: Box<unknown>; before: unknown }
+type Tx = { name: string; changes: Map<Box<unknown>, Change> }
+type Step = { entry: HistoryEntry; changes: { box: Box<unknown>; before: unknown; after: unknown }[] }
 
 let tx: Tx | null = null
 let loose: Tx | null = null
@@ -75,7 +75,7 @@ features.history = {
     return log
   },
   action(name, fn) {
-    const wrapped = ((...args: unknown[]) => {
+    const wrapped = ((...args: never[]) => {
       if (tx) return fn(...args)
       const t: Tx = (tx = { name, changes: new Map() })
       try {

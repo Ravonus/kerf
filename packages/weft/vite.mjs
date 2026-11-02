@@ -183,7 +183,7 @@ async function importedShapes(ctx, code, id) {
     if (!file || !/\.[jt]sx$/.test(file)) continue
     const found = exportsOf(file)
     const key = resolvePath(dirname(id), spec).replace(EXT, '')
-    for (const n of [...(def ? ['default'] : []), ...(names ?? '').split(',').map(n => n.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0])])
+    for (const n of [...(def ? ['default'] : []), ...(names ?? '').split(',').map(x => x.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0])])
       if (found.includes(n)) out[`${key}#${n}`] = true
   }
   return out
@@ -232,7 +232,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
       const key = resolvePath(dirname(id), spec).replace(EXT, '')
       for (const n of names.split(',')) {
         const imported = n.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0]
-        const g = found.find(g => g.binding === imported)
+        const g = found.find(x => x.binding === imported)
         if (g) out[`${key}#${imported}`] = { name: g.name, def: g.def }
       }
     }
@@ -442,6 +442,7 @@ function icons() {
  * `hmr` (default: when serving, outside vitest): client modules register their components with @weft-js/core/hmr and accept
  * their own updates (research 21). Never for SSR output.
  */
+/** The Vite plugin: compiles TSX, wires hydration, styles and purging, and relays `weft browser` in dev. */
 export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions, off } = {}) {
   let isDev = false
   let isHot = false
@@ -553,16 +554,16 @@ function agent() {
         if (p) { pending.delete(data.id); p(data) }
       })
       server.ws.on('vite:ws:disconnect', (_, client) => { for (const [id, t] of tabs) if (t.client === client) tabs.delete(id) })
-      server.middlewares.use('/__weft/agent', (req, res) => {
+      server.middlewares.use('/__weft/agent', (ask, res) => {
         const send = (status, body) => { res.statusCode = status; res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(body)) }
         // Only the CLI and MCP (a custom header, so a web page can't send it cross-site without a preflight we refuse).
-        if (req.headers['x-weft-agent'] !== '1' || (req.headers.origin && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(req.headers.origin)))
+        if (ask.headers['x-weft-agent'] !== '1' || (ask.headers.origin && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(ask.headers.origin)))
           return send(403, { ok: false, error: 'weft agent requests need the x-weft-agent header' })
         const list = () => [...tabs.entries()].map(([tab, t]) => ({ tab, url: t.url, title: t.title, visible: t.visible, focused: t.focused }))
-        if (req.method === 'GET') return send(200, { ok: true, agent: can, tabs: list() })
+        if (ask.method === 'GET') return send(200, { ok: true, agent: can, tabs: list() })
         let body = ''
-        req.on('data', d => { body += d })
-        req.on('end', () => {
+        ask.on('data', d => { body += d })
+        ask.on('end', () => {
           let msg
           try { msg = JSON.parse(body || '{}') } catch { return send(400, { ok: false, error: 'bad JSON' }) }
           const tab = pick(msg.tab)

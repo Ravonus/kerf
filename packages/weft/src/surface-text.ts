@@ -7,6 +7,10 @@ import { loadMeasure, type MeasureHandle, type MeasureProvider } from './measure
 
 export type { MeasureHandle, MeasureLine, MeasureProvider } from './measure'
 
+/** Newer properties a browser may have. */
+type Css = CSSStyleDeclaration & { textWrapStyle?: string; textWrap?: string; fontVariationSettings?: string }
+
+/** How a surface's text is set: font, width, wrapping, and whether it has to match the DOM exactly. */
 export interface TextOptions {
   x: number
   y: number
@@ -24,6 +28,7 @@ export interface TextOptions {
   class?: string
 }
 
+/** Text prepared for a surface: what it lays out to, and how to draw it. */
 export interface SurfaceText {
   /** The mirror. Never hide it from assistive tech (X011). */
   el: HTMLElement
@@ -92,13 +97,13 @@ function inspect(el: HTMLElement, font: string, exact: boolean | undefined) {
     warn('X002', `s.text() measures \`${font}\`: \`system-ui\`, \`-apple-system\` and generic-only families aren't safe to measure. Name a family.`)
   const fonts = document.fonts
   if (fonts?.check && !fonts.check(font)) {
-    const first = family.split(',')[0].trim().replace(/^["']|["']$/g, '')
+    const first = family.split(',')[0]!.trim().replace(/^["']|["']$/g, '')
     if (![...fonts].some(f => f.family.replace(/^["']|["']$/g, '') === `${first} Fallback`)) warn('X003', `s.text() prepared \`${font}\` before the font loaded, and there's no "${first} Fallback" face: it's measured on another font until the swap. Declare it in \`text({ fonts })\`.`)
   }
   if (!exact) {
     const odd = [
-      ['text-wrap', (c as any).textWrapStyle ?? (c as any).textWrap, /balance|pretty/], ['hyphens', c.hyphens, /auto/], ['word-spacing', c.wordSpacing, /^[^0n]/], ['letter-spacing', c.letterSpacing, /^[^0n]/],
-      ['font-feature-settings', c.fontFeatureSettings, /^[^n]/], ['font-variant-numeric', c.fontVariantNumeric, /^[^n]/], ['font-variation-settings', (c as any).fontVariationSettings, /^[^n]/],
+      ['text-wrap', (c as Css).textWrapStyle ?? (c as Css).textWrap, /balance|pretty/], ['hyphens', c.hyphens, /auto/], ['word-spacing', c.wordSpacing, /^[^0n]/], ['letter-spacing', c.letterSpacing, /^[^0n]/],
+      ['font-feature-settings', c.fontFeatureSettings, /^[^n]/], ['font-variant-numeric', c.fontVariantNumeric, /^[^n]/], ['font-variation-settings', (c as Css).fontVariationSettings, /^[^n]/],
     ].filter(([, v, re]) => v && (re as RegExp).test(v as string)).map(([p, v]) => `\`${p}: ${v}\``)
     if (odd.length) warn('X004', `s.text() can't predict ${odd.join(', ')}. Drop it, or pass \`exact: false\`.`)
   }
@@ -133,7 +138,7 @@ export function surfaceText(host: TextHost, text: string | (() => string), optio
       color = o.color ?? getComputedStyle(host.el).color
       handle = provider.prepare(el.textContent ?? '', font, { segments: true })
       laid = undefined
-      if (handle.ready) handle.ready.then(() => { laid = undefined; host.invalidate() }) // an exact tier or pack arrived: lay out again
+      if (handle.ready) void handle.ready.then(() => { laid = undefined; host.invalidate() }) // an exact tier or pack arrived: lay out again
     },
   }
   nodes.add(live)

@@ -10,7 +10,7 @@ const load: Load = () => new Promise(ok => setTimeout(() => ok({ name: 'Ada' }),
 function layout(skeleton: number) {
   return vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
     const h = this.classList.contains('skeleton') ? skeleton : 40
-    return { top: 0, left: 0, bottom: h, right: 300, width: 300, height: h, x: 0, y: 0, toJSON() {} } as DOMRect
+    return { top: 0, left: 0, bottom: h, right: 300, width: 300, height: h, x: 0, y: 0, toJSON() {} }
   })
 }
 

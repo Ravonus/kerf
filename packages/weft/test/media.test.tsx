@@ -82,7 +82,7 @@ test('<Media> GIF as video: muted autoplay loop as an image; a pause control pas
   let v = document.querySelector('video')!
   expect(v.getAttribute('role')).toBe('img')
   expect(v.hasAttribute('autoplay') && v.hasAttribute('loop')).toBe(true)
-  expect((v as HTMLVideoElement).muted).toBe(true)
+  expect(v.muted).toBe(true)
   expect(v.hasAttribute('controls')).toBe(false)
   unmount()
   render(() => <Media src={{ ...gif, duration: 6 }} alt="Spinner" />)
@@ -136,7 +136,7 @@ test('timeline: writes are commands, frames write time, cues fire on crossing an
 
   t.playing.value = true
   flush()
-  await 0
+  await Promise.resolve()
   expect(el.plays).toBe(1)
   el.present(1)
   expect(t.currentTime.value).toBe(1)
@@ -168,8 +168,8 @@ test('timeline: a blocked play() leaves it paused, with the error in a box', asy
   t.bind(el as any)
   t.playing.value = true
   flush()
-  await 0
-  await 0
+  await Promise.resolve()
+  await Promise.resolve()
   flush()
   expect(t.playing.value).toBe(false)
   expect(t.error.value?.message).toBe('NotAllowedError')
@@ -270,7 +270,7 @@ describe('@weft-js/core/vite assets', () => {
   })
 
   test('weft:fonts: empty without font.build; with it, the CSS, the preloads, the files and .weft/fonts.json', async () => {
-    let { load } = plugin('build')
+    const { load } = plugin('build')
     expect(await load('\0weft:fonts.css')).toBe('')
     expect(await load('\0weft:fonts/preloads')).toBe('export const preloads = []\n')
 

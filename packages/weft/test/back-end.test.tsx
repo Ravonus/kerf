@@ -91,7 +91,7 @@ describe('weft back end: basics', () => {
     it('runs every benchmark operation', () => {
       const root = mount(Bench)
       const rows = () => [...root.querySelectorAll('tbody tr')]
-      const label = (i: number) => rows()[i].querySelector('td:nth-child(2) a')!.textContent!
+      const label = (i: number) => rows()[i].querySelector('td:nth-child(2) a')!.textContent
       const go = (sel: string) => {
         click(sel)(root)
         flush()
@@ -138,14 +138,14 @@ describe('weft back end, step 2', () => {
     const tone = state('info')
     const clicks: string[] = []
     const rest = state<Record<string, any>>({ id: 'spread', href: '/a', title: 'spread title', class: 'x', onClick: () => clicks.push('a') })
-    const root = mount(() => two.Spread({ get rest() { return rest.value }, get tone() { return tone.value } } as any))
+    const root = mount(() => two.Spread({ get rest() { return rest.value }, get tone() { return tone.value } }))
     const a = root.querySelector('a')!
     expect(a.id).toBe('spread')
     expect(a.getAttribute('href')).toBe('/a')
     expect(a.title).toBe('fixed')
     expect(a.getAttribute('data-tone')).toBe('info')
     expect(a.className).toBe('x')
-    expect(a.textContent!.trim()).toBe('link')
+    expect(a.textContent.trim()).toBe('link')
     a.click()
     rest.value = { href: '/b', onClick: () => clicks.push('b') }
     tone.value = 'warn'
@@ -161,7 +161,7 @@ describe('weft back end, step 2', () => {
   it('a spread\'s children fill an element that has none, and stay live', async () => {
     const { state } = await import('@weft-js/core')
     const rest = state<Record<string, any>>({ title: 't', children: 'first' })
-    const root = mount(() => two.Content({ get rest() { return rest.value } } as any))
+    const root = mount(() => two.Content({ get rest() { return rest.value } }))
     const kids = root.querySelector('.kids')!
     expect([kids.textContent, kids.getAttribute('title')]).toEqual(['first', 't'])
     rest.value = { children: 'second' }

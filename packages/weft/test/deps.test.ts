@@ -1,5 +1,6 @@
 // Runs keep their links when they read the same things: what must hold when they don't.
-import { Box, createRoot, derived, effect, flush, onCleanup, state, stats } from '@weft-js/core'
+import type { Box } from '@weft-js/core'
+import { createRoot, derived, effect, flush, onCleanup, state, stats } from '@weft-js/core'
 
 const readers = (box: unknown) => ((box as Box<unknown>).f ? 1 : 0) + (box as Box<unknown>).o.length
 

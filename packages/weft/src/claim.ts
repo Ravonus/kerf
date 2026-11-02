@@ -4,22 +4,29 @@
 // its range. Client-only output imports `tpl` and `child` (dom-next.ts) instead, so none of this ships there.
 
 import { DEV, hole, untrack } from './index'
+// oxlint-disable-next-line import/no-cycle -- dom.ts re-exports this file as its public door, and this file calls its shared helpers
 import { insert, place, write, type Hold } from './dom'
 import { keys, nextKey, under } from './keys'
+// oxlint-disable-next-line import/no-cycle -- island.ts and this file both sit behind dom.ts; this reads its marker test
 import { marks } from './island'
+// oxlint-disable-next-line import/no-cycle -- hydrate.ts starts the claim, and the claim records what it swept in hydrate's state
 import { hydration } from './hydrate'
 
+/** A template root while hydrating: `$k` is its key, which its holes scope theirs under. */
+type Keyed = Node & { $k?: string }
+
 /**
- * `tpl` for hydratable output: `htpl(html)()` clones it. `svg`: the root is an SVG element outside an <svg>. `place`
+ * `tpl` for hydratable output: `htpl(html)()` clones it. `svg`: the root is an SVG element outside an <svg>. `where`
  * (dev builds): `file:line <tag>`, for warnings. While keys are on, each instance takes the next key; while
  * hydrating, the server's element with that key is claimed.
  */
-export function htpl(html: string, svg?: boolean, place?: string): () => Node {
+export function htpl(html: string, svg?: boolean, where?: string): () => Node {
   let node: Node | undefined
-  const tag = /^<([\w:-]+)/.exec(html)![1]
+  const tag = /^<([\w:-]+)/.exec(html)![1]!
   const clone = () => {
     if (!node) {
       const t = document.createElement('template')
+      // oxlint-disable-next-line weft/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
       t.innerHTML = svg ? `<svg>${html}</svg>` : html
       node = svg ? t.content.firstChild!.firstChild! : t.content.firstChild!
     }
@@ -34,17 +41,17 @@ export function htpl(html: string, svg?: boolean, place?: string): () => Node {
         hydration.registry.delete(key)
         keys.miss = false
         hydration.trash.push(el)
-        ;(el as any).$k = key
+        ;(el as Keyed).$k = key
         return el
       }
       hydration.misses++
       keys.miss = true
       if (DEV) {
-        const at = place ?? html.slice(0, 60)
+        const at = where ?? html.slice(0, 60)
         console.warn(el ? `weft: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh` : `weft: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`)
       }
     }
-    const fresh = clone() as any
+    const fresh = clone() as Keyed
     fresh.$k = key
     return fresh
   }
@@ -67,6 +74,7 @@ function over(n: Node | null): Node | null {
 
 /** `firstChild` / `nextSibling` in hydratable output. Outside hydration there are no ranges and they're the same. */
 export const first = (n: Node) => over(n.firstChild)
+/** `nextSibling`, stepping over a server hole range the same way. */
 export const next = (n: Node) => over(n.nextSibling)
 
 /**
@@ -88,7 +96,7 @@ function range(parent: Node, marker: Node | undefined): Node[] {
       }
       if (d === ']') depth++
       else if (d === '[' && depth-- === 0) {
-        hydration.trash.push(n as ChildNode)
+        hydration.trash.push(n)
         return nodes.reverse()
       }
     }
@@ -101,7 +109,7 @@ function range(parent: Node, marker: Node | undefined): Node[] {
  * The value's nodes, reusing the server's: claimed elements are already the server's nodes; text takes the next
  * server text node (rewritten only if it differs); `<!--,-->` separators the server put between texts are kept.
  */
-function adopt(value: any, server: Node[], at: { i: number }, out: Node[]): Node[] {
+function adopt(value: unknown, server: Node[], at: { i: number }, out: Node[]): Node[] {
   while (typeof value === 'function') value = value()
   if (value == null || typeof value === 'boolean' || value === '') return out
   if (Array.isArray(value)) {
@@ -111,14 +119,15 @@ function adopt(value: any, server: Node[], at: { i: number }, out: Node[]): Node
   if (value instanceof Node) {
     const i = server.indexOf(value, at.i)
     if (i >= 0) {
-      for (let j = at.i; j < i; j++) if (isSeparator(server[j])) keepUntilSwept(server[j], out)
+      for (let j = at.i; j < i; j++) if (isSeparator(server[j]!)) keepUntilSwept(server[j]!, out)
       at.i = i + 1
     }
     out.push(value)
     return out
   }
+  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
   const text = String(value)
-  while (at.i < server.length && isSeparator(server[at.i])) keepUntilSwept(server[at.i++], out)
+  while (at.i < server.length && isSeparator(server[at.i]!)) keepUntilSwept(server[at.i++]!, out)
   const n = server[at.i]
   if (n && n.nodeType === 3) {
     at.i++
@@ -140,7 +149,7 @@ const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
  * `slot` name the hole's scope (its template's key and its index). `once`: `value` builds static content (a
  * component, an element) and runs once, untracked (`2`: `marker` is the page's data script, not a hole); otherwise a function value is read reactively.
  */
-export function hchild(parent: Element, value: unknown, marker?: Node | null, root?: any, slot?: number, once?: 1 | 2) {
+export function hchild(parent: Element, value: unknown, marker?: Node | null, root?: Keyed, slot?: number, once?: 1 | 2) {
   const claim = () => {
     let v = once ? untrack(value as () => unknown) : value
     if (!keys.hydrating) return insert(parent, v, marker)
@@ -150,7 +159,7 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
       if (DEV && typeof v === 'function') {
         let current: Node[] = [marker]
         let at = marker.nextSibling
-        return void hole(v as () => unknown, x => {
+        return hole(v as () => unknown, x => {
           at = current.at(-1)?.nextSibling ?? at
           current = place(parent, x, current, at)
         })
@@ -159,7 +168,7 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
       return
     }
     // Claim the server's nodes on the first run; later runs place values as usual.
-    let current = range(parent, marker ?? undefined)
+    const current = range(parent, marker ?? undefined)
     const at = marker ?? null
     // a fragment's holes must stay live: read flat here, a root `<>{cond && …}</>` would never update
     if (Array.isArray(v) && v.flat(Infinity).some(x => typeof x === 'function')) { const list = v; v = () => list }

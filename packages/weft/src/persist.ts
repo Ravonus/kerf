@@ -18,8 +18,8 @@ type Options = Exclude<Exclude<StateOptions<unknown>['persist'], undefined>, str
 type Envelope = { v: number; at: number; data: unknown }
 type Slot = { store: StorageLike; key: string; opts: Options }
 
-const slots = new WeakMap<Box<any>, Slot>()
-const pending = new Set<Box<any>>()
+const slots = new WeakMap<Box<unknown>, Slot>()
+const pending = new Set<Box<unknown>>()
 
 /** A cookie's name for a key: `:` isn't a cookie-name character. */
 const cookieName = (key: string) => key.replace(/:/g, '.')
@@ -55,13 +55,13 @@ function backend(inst: Instance, where: string, maxAge?: number): StorageLike {
   return (inst.app.storage ??= memoryStorage()) // no Web Storage (server, blocked storage): lives as long as the app
 }
 
-function options(scope: string, name: string, box: Box<any>): Options {
+function options(scope: string, name: string, box: Box<unknown>): Options {
   const p = box.opts!.persist!
   const object = box.v !== null && typeof box.v === 'object'
   const o: Options = typeof p === 'string' ? { in: p } : p
   if (DEV) {
     if (o.in !== 'local' && o.in !== 'session' && o.in !== 'cookie' && o.in !== 'memory')
-      throw new StateError('S008', `\`${scope}.${name}\` persists to '${o.in}', which weft doesn't have yet`, "use 'local', 'session', 'cookie' or 'memory'")
+      throw new StateError('S008', `\`${scope}.${name}\` persists to '${o.in as string}', which weft doesn't have yet`, "use 'local', 'session', 'cookie' or 'memory'")
     if (object && !o.schema)
       throw new StateError('S008', `\`${scope}.${name}\` persists an object or array without a schema`, `persist: { in: '${o.in}', schema: z.…(), version: 1 }`)
     if (o.migrate && o.version === undefined)
@@ -71,12 +71,12 @@ function options(scope: string, name: string, box: Box<any>): Options {
 }
 
 function validate<T>(schema: StandardSchema<T>, value: unknown): { value: T } | string {
-  const r: any = schema['~standard'].validate(value)
+  const r = schema['~standard'].validate(value)
   if (r instanceof Promise) return 'the schema validates asynchronously; local and session read synchronously'
-  return r.issues ? r.issues.map((i: { message: string }) => i.message).join('; ') : { value: r.value }
+  return r.issues ? r.issues.map(i => i.message).join('; ') : { value: r.value }
 }
 
-function load(inst: Instance, box: Box<any>, name: string) {
+function load(inst: Instance, box: Box<unknown>, name: string) {
   const opts = options(inst.name, name, box)
   const store = backend(inst, opts.in, opts.maxAge)
   const key = `weft:${inst.app.name}:${inst.name}.${name}`
@@ -86,7 +86,7 @@ function load(inst: Instance, box: Box<any>, name: string) {
   try { raw = store.getItem(key) } catch {}
   if (raw === null) return
   const corrupt = (why: string) => {
-    try { store.setItem(`${key}:corrupt`, raw!); store.removeItem(key) } catch {}
+    try { store.setItem(`${key}:corrupt`, raw); store.removeItem(key) } catch {}
     if (DEV) report('S003', `the stored \`${inst.name}.${name}\` couldn't be read (${why}); using its initial value`, 'bump `version` and add `migrate[n]` when the schema changes')
   }
   let env: Envelope
@@ -98,7 +98,7 @@ function load(inst: Instance, box: Box<any>, name: string) {
   for (let v = env.v; v < version; v++) {
     const step = opts.migrate?.[v]
     if (!step) return corrupt(`stored v${env.v}, current v${version}, no migrate[${v}]`)
-    try { data = step(data) } catch (e) { return corrupt(`migrate[${v}] threw: ${(e as Error).message}`) }
+    try { data = step(data as never) } catch (e) { return corrupt(`migrate[${v}] threw: ${(e as Error).message}`) }
   }
   if (opts.schema) {
     const r = validate(opts.schema, data)
@@ -117,8 +117,8 @@ function load(inst: Instance, box: Box<any>, name: string) {
 }
 
 /** Dev-only S013: the first read in a server render of a box the server can't see the stored value of. */
-function readsOnServer(box: Box<any>, name: string, where: string) {
-  const { get, set } = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(box), 'value')!
+function readsOnServer(box: Box<unknown>, name: string, where: string) {
+  const value = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(box), 'value')!
   let told = false
   Object.defineProperty(box, 'value', {
     get() {
@@ -126,9 +126,9 @@ function readsOnServer(box: Box<any>, name: string, where: string) {
         told = true
         report('S013', `\`${name}\` persists to '${where}', which a server can't read: the page shows its initial value, then flashes to the stored one`, "`persist: { in: 'cookie' }` if it's small, or render it client-only")
       }
-      return get!.call(box)
+      return value.get!.call(box)
     },
-    set(v) { set!.call(box, v) },
+    set(v) { value.set!.call(box, v) },
   })
 }
 

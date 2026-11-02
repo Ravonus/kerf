@@ -13,6 +13,9 @@ for (const name of ['css', 'matrix', 'vocab']) {
   const code = stripTypeScriptTypes(readFileSync(new URL(`${name}.ts`, src), 'utf8')).replace(/(from '\.\/\w+)\.ts'/g, "$1.mjs'")
   const file = new URL(`${name}.mjs`, out)
   if (!check) writeFileSync(file, code)
-  else if (readFileSync(file, 'utf8') !== code) stale++, console.error(`node/${name}.mjs is stale: run node scripts/node-style.mjs`)
+  else if (readFileSync(file, 'utf8') !== code) {
+    stale++
+    console.error(`node/${name}.mjs is stale: run node scripts/node-style.mjs`)
+  }
 }
 process.exit(stale ? 1 : 0)

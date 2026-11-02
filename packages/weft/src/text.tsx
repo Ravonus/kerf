@@ -5,6 +5,7 @@
 import { derived, effect, flush, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { placeholder } from './shape'
 
+/** `<Text>`'s props: its tag, whether it reserves room, and how a stream's blocks are rendered. */
 export interface TextProps {
   as?: 'p' | 'span' | 'div' | 'li' | 'h1' | 'h2' | 'h3' | 'h4'
   /** Hold a place while there's no text: a length, a sample string (from `.shape`), or `true` for one line's worth. */
@@ -15,13 +16,13 @@ export interface TextProps {
    */
   stream?: boolean
   /** With `stream`: render a complete block (Markdown, say). The tail stays plain text until its block closes. */
-  format?: (block: string) => any
+  format?: ((block: string) => unknown) | undefined
   class?: string
   style?: string
-  children?: any
+  children?: unknown
 }
 
-const hosts: Record<string, (a: () => any, c: () => any) => any> = {
+const hosts: Record<string, (a: () => Record<string, unknown>, c: () => unknown) => unknown> = {
   p: (a, c) => <p {...a()}>{c()}</p>,
   span: (a, c) => <span {...a()}>{c()}</span>,
   div: (a, c) => <div {...a()}>{c()}</div>,
@@ -54,7 +55,7 @@ export function streamBlocks(text: string): { done: string[]; tail: string } {
 }
 
 /** Blocks are appended, so a complete one is never written twice. */
-function Blocks(props: { text: () => string; format?: (block: string) => any }) {
+function Blocks(props: { text: () => string; format?: ((block: string) => unknown) | undefined }) {
   const parts = derived(() => streamBlocks(props.text()))
   const list = derived(() => parts.value.done.map((text, i) => ({ text, i })))
   return (
@@ -65,11 +66,12 @@ function Blocks(props: { text: () => string; format?: (block: string) => any }) 
   )
 }
 
+/** Text that can hold its place while it loads, and keep its lines still while it streams. */
 export function Text(props: TextProps) {
   let el: HTMLElement | undefined
   const kid = derived(() => (typeof props.children === 'function' ? props.children() : props.children))
   const streaming = untrack(() => props.stream)
-  const shown = state<any>(streaming ? untrack(() => kid.value) : undefined) // one write per frame, however many tokens
+  const shown = state<unknown>(streaming ? untrack(() => kid.value) : undefined) // one write per frame, however many tokens
   const value = streaming ? shown : kid
   const busy = derived(() => !!props.reserve && (value.value == null || value.value === '' || value.value === false))
   const sample = () => (typeof props.reserve === 'string' ? props.reserve : placeholder(typeof props.reserve === 'number' ? props.reserve : 80))
@@ -98,9 +100,9 @@ export function Text(props: TextProps) {
   }
   const content = () => {
     if (busy.value) return <span data-skeleton style="color:transparent">{sample()}</span>
-    return live.value ? <Blocks text={() => value.value ?? ''} format={props.format} /> : value.value
+    return live.value ? <Blocks text={() => (value.value ?? '') as string} format={props.format} /> : value.value
   }
-  return hosts[untrack(() => props.as) ?? (streaming ? 'div' : 'p')](
+  return hosts[untrack(() => props.as) ?? (streaming ? 'div' : 'p')]!(
     () => ({
       class: props.class,
       style: props.style,

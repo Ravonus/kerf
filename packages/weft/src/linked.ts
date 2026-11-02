@@ -1,4 +1,5 @@
 // Separate from the core so an app that writes no prop locals and no `state.linked` doesn't carry them.
+// oxlint-disable-next-line import/no-cycle -- this file builds on the core, and the entry re-exports `localProps`
 import { Box, derived, untrack, type Linked } from './index'
 
 /**
@@ -12,7 +13,7 @@ export const linked = <T>(source: () => T, options?: { key: () => unknown }): Li
   const from = derived<{ k: unknown }>(((prev?: { k: unknown }) => {
     const k = options ? options.key() : src.value
     return prev && Object.is(prev.k, k) ? prev : { k }
-  }) as () => { k: unknown })
+  }))
   const local = new Box<{ v: T; from: { k: unknown }; base: T } | undefined>(undefined)
   const edit = () => {
     const f = from.value
@@ -29,8 +30,8 @@ export const linked = <T>(source: () => T, options?: { key: () => unknown }): Li
       const l = local.v
       local.value = { v, from: f, base: l && l.from === f ? l.base : untrack(() => src.value) }
     },
-    set(update) { const d: any = this.value; update(d); this.value = d },
-    get(key) { return (this.value as any)?.[key] },
+    set(update) { const d = this.value; update(d); this.value = d },
+    get(key) { return this.value?.[key] as T[typeof key] },
     conflict: derived(() => {
       const l = edit()
       const theirs = src.value
@@ -44,7 +45,7 @@ export const linked = <T>(source: () => T, options?: { key: () => unknown }): Li
  * reads through a linked state, so a write holds in this component until the parent's value next changes, and only a
  * prop given with `bind(box)` has a setter that takes it further. `written`: each key, then its default or 0.
  */
-export function localProps(props: any, written: unknown[]) {
+export function localProps(props: Record<PropertyKey, unknown>, written: unknown[]) {
   const boxes = new Map<PropertyKey, Linked<unknown>>()
   for (let i = 0; i < written.length; i += 2) {
     const k = written[i] as string, fallback = written[i + 1] as (() => unknown) | 0

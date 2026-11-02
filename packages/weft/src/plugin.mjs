@@ -78,7 +78,7 @@ export function definePlugin(def) {
       contribute: { value: contribute },
       weft: { value: def.weft ?? '*' },
       namespace: { value: namespace },
-      permissions: { value: freeze({ ...(def.permissions ?? {}) }) },
+      permissions: { value: freeze({ ...def.permissions }) },
     })
     return instance
   }
