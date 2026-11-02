@@ -53,6 +53,7 @@ export interface TableProps<T> {
   columns: Column<T>[]
   /** The field that identifies a row, or how to get it. Default `id`. */
   rowKey?: string | ((row: T) => string)
+  /** `cards` stacks each row in a container under 480px wide; `columns` scrolls sideways instead. */
   phone?: 'cards' | 'columns'
   density?: 'compact' | 'cozy' | 'comfortable'
   /** Show the filter field, labelled this. */
@@ -94,7 +95,9 @@ export const chevron = () => <svg aria-hidden="true" focusable="false" viewBox="
 export const sortIcon = () => <svg data-part="sort-icon" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.5v7M2 5.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
 export const columnsIcon = () => <ColumnsIcon />
 const SKELETON_ROWS = 6
-const CARDS_BELOW = 600 // table width: the phone cards' @container query, so the sort bar exists only there
+// Table width. warp-data.css draws cards below 600 for data-phone="cards", which also catches a desktop column; from
+// here up the root says "columns" once it's measured, so cards are for a container a table really can't fill.
+const CARDS_BELOW = 480
 const DETAILS_FROM = 1000 // table width: below it `details="sheet"` opens the sheet (06 §5)
 
 const isResource = (r: any): r is Resource<any> => typeof r?.refresh === 'function'
@@ -302,7 +305,9 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const picking = state(false)
   // the panel is built on first open and kept, so a closed table carries none of its checkboxes
   const picked = state(false)
-  const small = state(false)
+  const width = state<number | undefined>(undefined)
+  const small = derived(() => width.value !== undefined && width.value < CARDS_BELOW)
+  const shape = derived(() => (phone === 'cards' && (width.value ?? 0) >= CARDS_BELOW ? 'columns' : phone))
 
   const source = () => { const r: any = rows; return isResource(r) ? r.value : isState(r) ? r.value : r }
   const remote = derived(() => !!server || isResource(rows))
@@ -403,14 +408,14 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
     return typed.value ? 'Try a shorter term, or clear the filter.' : empty?.text
   })
 
-  use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value, onWidth: w => (small.value = w < CARDS_BELOW) }))
+  use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value, onWidth: w => (width.value = w) }))
   onCleanup(() => (sheet.value = undefined))
 
   const toolbar = derived(() => filter !== undefined || actions !== undefined || !!picker)
   const hideable = derived(() => cols.value.filter(c => !c.pin))
   const flip = (c: Column<T>, shown: boolean) => { hidden.value = shown ? hidden.value.filter(x => x !== c.id) : [...hidden.value, c.id] }
   return (
-    <div ref={(n: any) => (el = n)} data-scope="table" data-phone={phone} data-state={phase.value} data-density={density} id={id}>
+    <div ref={(n: any) => (el = n)} data-scope="table" data-phone={shape.value} data-state={phase.value} data-density={density} id={id}>
       {untrack(() => hidden.value.length > 0) && <style data-part="hide" innerHTML={untrack(() => hideRule(id, hidden.value))}></style>}
       {toolbar.value && (
         <div data-part="toolbar">
