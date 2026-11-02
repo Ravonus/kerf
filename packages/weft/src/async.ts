@@ -158,8 +158,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
  */
 /** Content's own holes, which a client reads after `scoped` has ended and the server read inside it: same scope, same keys. */
 function inScope(c: unknown) {
-  const late = (v: unknown): boolean => typeof v === 'function' || (Array.isArray(v) && v.some(late))
-  if (!late(c)) return c
+  if (typeof c !== 'function' && !Array.isArray(c)) return c
   const { p, n } = keys
   const read = (v: unknown): unknown => {
     while (typeof v === 'function') v = v()

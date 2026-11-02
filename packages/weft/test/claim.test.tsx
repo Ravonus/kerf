@@ -119,7 +119,7 @@ test('a key miss writes what the server would have: attributes and handlers, and
   b.click()
   expect(on).toHaveBeenCalledOnce()
   expect(c.querySelector('span')!.getAttribute('title')).toBe('x') // what's after the miss still claims
-  expect(warn.mock.calls.some(a => /rendered fresh \(`hydration.misses`\)/.test(a[0]))).toBe(true)
+  expect(warn.mock.calls.some(a => /1 hydration miss\(es\), first wk=/.test(a[0]))).toBe(true)
 })
 
 describe('a view of a getter', () => {

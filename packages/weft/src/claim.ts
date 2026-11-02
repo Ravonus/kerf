@@ -36,7 +36,7 @@ export function htpl(html: string, svg?: boolean, place?: string): () => Node {
         ;(el as any).$k = key
         return el
       }
-      hydration.misses++
+      if (!hydration.misses++) hydration.first = key
       // No server nodes under this template: its bindings write, and the holes below it build, until the hole it's in ends.
       keys.hydrating = false
       if (DEV) {
@@ -157,15 +157,12 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
     const at = marker ?? null
     // a fragment's holes must stay live: read flat here, a root `<>{cond && …}</>` would never update
     if (Array.isArray(v) && v.flat(Infinity).some(x => typeof x === 'function')) { const list = v; v = () => list }
-    let done = typeof v !== 'function'
-    if (done) current = place(parent, adopt(v, current, { i: 0 }, []), current, at)
-    else {
-      let claimed = false
-      done = hole(v as () => unknown, x => {
-        current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)
-        claimed = true
-      })
+    let claimed = false
+    const write = (x: unknown) => {
+      current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)
+      claimed = true
     }
+    const done = typeof v !== 'function' ? (write(v), true) : hole(v as () => unknown, write)
     keys.hydrating = true
     if (done && marker?.nodeType === 8) hydration.trash.push(marker as ChildNode) // nothing comes back here
   }

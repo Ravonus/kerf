@@ -466,15 +466,15 @@ export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | 
 /** First run. A node that read nothing reactive and owns nothing can never re-run: its owner drops it (memory). */
 function settle(node: Computation) {
   run(node)
-  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
+  const done = node.s === NONE && !node.owned
+  if (done && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
+  return done
 }
 
 /** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. True: it read nothing, so it's done. */
 export function hole(value: () => unknown, apply: (value: any) => void) {
   if (rt.server) return false
-  const node = computation(value, 2, apply)
-  settle(node)
-  return node.s === NONE && !node.owned
+  return settle(computation(value, 2, apply))
 }
 
 export function onCleanup(fn: () => void) {

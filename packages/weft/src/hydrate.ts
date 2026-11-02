@@ -12,14 +12,14 @@ import { hchild } from './claim'
 import { keys } from './keys'
 
 let told = 0
-export const hydration = { misses: 0, registry: new Map<string, Element>(), /** What only the claim needed. */ trash: [] as (ChildNode | Element)[] }
+export const hydration = { misses: 0, first: '', registry: new Map<string, Element>(), /** What only the claim needed. */ trash: [] as (ChildNode | Element)[] }
 
 /**
  * After the claim: drop the markers and keys nothing reads again. Later than the pass itself, so hydrating still writes
  * nothing to the DOM, and a page's reads of its nodes don't pay for a tree that holds hundreds of them.
  */
 export function sweep() {
-  if (hydration.misses > told) console.warn(`weft: ${(told = hydration.misses)} element(s) had no server node to claim and were rendered fresh (\`hydration.misses\`). The server and the client disagree about the page.`)
+  if (hydration.misses > told) console.warn(`weft: ${(told = hydration.misses)} hydration miss(es), first wk=${hydration.first}`)
   const list = hydration.trash
   hydration.trash = []
   if (list.length) setTimeout(() => {
