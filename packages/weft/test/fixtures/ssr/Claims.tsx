@@ -22,3 +22,7 @@ export const Rows = ({ lines }: { lines: string[] }) => <ul>{lines.map(l => <Ite
 function Item({ l }: { l: string }) {
   return <>{l ? <li>{l}</li> : <li>none</li>}</>
 }
+
+export const Keyed = ({ rows }: { rows: { id: any; href: string; t: string }[] }) => <div>{rows.map(r => <a key={r.id} href={r.href}>{r.t}</a>)}</div>
+
+export const Holes = ({ a, b }: { a: { value: string }; b: { value: string } }) => <p>{a.value}{b.value}<u>c</u></p>

@@ -3,7 +3,7 @@
 // code imports `render` (or `hydrate`) and nothing else from here.
 
 import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, runMounts, untrack, view, within, type Owner } from './index'
-import { keys, step, under } from './keys'
+import { keys, under } from './keys'
 
 export { memo }
 export { attr, bind, change, child, cls, component, css, delegate, focus, kids, on, spread, tpl } from './dom-next'
@@ -273,6 +273,13 @@ class Row extends Box<any> implements Owner {
   }
 }
 
+/**
+ * A row as a path step: its key, so a row claims the server's row of that key wherever the list has moved it, and no two
+ * keys can meet. `:` keeps it from a Boundary's scope, and what's escaped would end a step or the `wk` it's written in. An
+ * object says nothing the server and client share, so it's the row's place.
+ */
+const rowStep = (k: unknown, i: number) => (k === Object(k) ? `%i${i}` : `:${String(k).replace(/[%/.&<>"]/g, c => `%${c.charCodeAt(0).toString(16)}`)}`)
+
 const reader = (box: Box<any>) => () => box.value
 const zero = () => 0
 
@@ -302,8 +309,9 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
         const item = list[i]
         let key = props.by ? props.by(item, i) : item
         if (paths) {
-          if (paths.has(key)) key = { duplicate: key }
-          paths.add(key)
+          const id = key === Object(key) ? key : String(key)
+          if (paths.has(id)) key = { duplicate: key }
+          paths.add(id)
         }
         let row = left ? undefined : order[i]
         if (row && row.key !== key) {
@@ -322,7 +330,13 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
         } else {
           const r = (row = new Row(item, key, parent, indexed ? new Box(i) : undefined))
           const make = () => props.children(reader(r), r.index ? reader(r.index) : zero)
-          r.nodes = within(r, keys.on ? () => under(base + step(key, i) + '/', make) : make)
+          // A row the server didn't render builds itself and no more: the next row still claims.
+          r.nodes = within(r, keys.on ? () => under(base + rowStep(key, i) + '/', () => {
+            const { hydrating } = keys
+            const nodes = make()
+            keys.hydrating = hydrating
+            return nodes
+          }) : make)
         }
         next[i] = row
       }

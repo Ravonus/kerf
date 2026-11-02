@@ -557,7 +557,7 @@ export function context<T>(fallback?: T) {
 
 function once<T>(fn: () => T) {
   let done = false, v: T
-  return () => (done ? v : ((done = true), (v = fn())))
+  return () => (done ? v : ((v = fn()), (done = true), v))
 }
 
 /**

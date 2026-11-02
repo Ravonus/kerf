@@ -91,17 +91,78 @@ test('a derived that read nothing is a constant: its readers have nothing to fol
   expect(live.value).toBe(3)
 })
 
-test('row keys stay short: a place and a check, not the key', () => {
-  const id = '56073491-ac3c-9075-b1b6-a00a646d99e2'
-  const html = renderToString(() => <Server.Lines lines={[id]} />)
-  expect((/wk="[^"]*\/0"/.exec(html.replace(`href="/${id}"`, '')) ?? [''])[0]).not.toContain(id)
+const row = (id: any, t = String(id)) => ({ id, href: `/${t}`, t })
+const links = (c: Element) => [...c.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')])
+
+test('two keys are two rows, whatever their hash: `Aa` and `BB` at one index share nothing', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const c = put(renderToString(() => <Server.Keyed rows={[row('Aa', 'one')]} />))
+  const server = c.querySelector('a')
+  hydrate(() => <Client.Keyed rows={[row('BB', 'two')]} />, c)
+  expect(hydration.misses).toBe(1)
+  expect(links(c)).toEqual([['two', '/two']])
+  expect(c.querySelector('a')).not.toBe(server)
 })
 
-test('a list that moved on since the server rendered builds its rows, with their attributes', async () => {
+test('a row put in before hydration builds that row alone: those after it keep their nodes', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const c = put(renderToString(() => <Server.Keyed rows={['a', 'b', 'c'].map(k => row(k))} />))
+  const [a, b, last] = c.querySelectorAll('a')
+  ;(last as any).typed = 'still here'
+  hydrate(() => <Client.Keyed rows={['a', 'b', 'n', 'c'].map(k => row(k))} />, c)
+  expect(hydration.misses).toBe(1)
+  expect(links(c).map(l => l[0])).toEqual(['a', 'b', 'n', 'c'])
+  expect([...c.querySelectorAll('a')].filter((_, i) => i !== 2)).toEqual([a, b, last])
+  expect((last as any).typed).toBe('still here')
+})
+
+test('a row that moved keeps its node, wherever it went', () => {
+  const c = put(renderToString(() => <Server.Keyed rows={['a', 'b', 'c'].map(k => row(k))} />))
+  const [a, b, last] = c.querySelectorAll('a')
+  hydrate(() => <Client.Keyed rows={['c', 'a', 'b'].map(k => row(k))} />, c)
+  expect(hydration.misses).toBe(0)
+  expect([...c.querySelectorAll('a')]).toEqual([last, a, b])
+})
+
+test('a key can hold anything: nothing in it ends the attribute, a step, or another row', () => {
+  const ids = ['a"><img src=x onerror=1>', 'a/b', 'a.b', 'a%2Fb', 'a&amp;b', 'a&b', '0c', '<b>']
+  const c = put(renderToString(() => <Server.Keyed rows={ids.map(k => row(k))} />))
+  expect(c.querySelector('img')).toBeNull()
+  const nodes = [...c.querySelectorAll('a')]
+  expect(new Set(nodes.map(n => n.getAttribute('wk'))).size).toBe(ids.length)
+  hydrate(() => <Client.Keyed rows={ids.map(k => row(k))} />, c)
+  expect(hydration.misses).toBe(0)
+  expect([...c.querySelectorAll('a')]).toEqual(nodes)
+})
+
+test('keys that read the same, and objects with no key to speak of, claim by place and never share a scope', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const rows = () => [{ id: 1, href: '/n', t: 'n' }, { id: '1', href: '/s', t: 's' }, { id: 'x', href: '/x', t: 'x' }, { id: 'x', href: '/y', t: 'y' }, { id: {}, href: '/o', t: 'o' }, { id: {}, href: '/p', t: 'p' }]
+  const c = put(renderToString(() => <Server.Keyed rows={rows()} />))
+  const nodes = [...c.querySelectorAll('a')]
+  expect(new Set(nodes.map(n => n.getAttribute('wk'))).size).toBe(rows().length)
+  hydrate(() => <Client.Keyed rows={rows()} />, c)
+  expect(hydration.misses).toBe(0)
+  expect([...c.querySelectorAll('a')]).toEqual(nodes)
+  expect(links(c)).toEqual(rows().map(r => [r.t, r.href]))
+})
+
+test('an empty hole takes nothing from the full hole before it', () => {
+  const b = state('')
+  const c = put(renderToString(() => <Server.Holes a={{ get value() { return 'x' } }} b={{ value: '' }} />))
+  expect(c.textContent).toBe('xc')
+  hydrate(() => <Client.Holes a={{ get value() { return 'x' } }} b={b} />, c)
+  expect(c.textContent).toBe('xc')
+  b.value = 'y'
+  flush()
+  expect(c.textContent).toBe('xyc')
+})
+
+test('a list that moved on since the server rendered puts its rows in order, with their attributes', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   const c = put(renderToString(() => <Server.Lines lines={['a', 'b']} />))
   hydrate(() => <Client.Lines lines={['b', 'a']} />, c)
-  expect(hydration.misses).toBeGreaterThan(0)
+  expect(hydration.misses).toBe(0)
   expect([...c.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')])).toEqual([['b', '/b'], ['a', '/a']])
   warn.mockRestore()
 })
@@ -111,6 +172,7 @@ test('a key miss writes what the server would have: attributes and handlers, and
   const on = vi.fn()
   const c = put(renderToString(() => <Server.Wrong title="x" on={on} />))
   for (const el of c.querySelectorAll('button')) el.removeAttribute('wk')
+  const after = c.querySelector('span')
   hydrate(() => <Client.Wrong title="x" on={on} />, c)
   expect(hydration.misses).toBe(1)
   const b = c.querySelector('button')!
@@ -118,7 +180,7 @@ test('a key miss writes what the server would have: attributes and handlers, and
   expect(b.textContent).toBe('x')
   b.click()
   expect(on).toHaveBeenCalledOnce()
-  expect(c.querySelector('span')!.getAttribute('title')).toBe('x') // what's after the miss still claims
+  expect(c.querySelector('span')).toBe(after) // what's after the miss still claims
   expect(warn.mock.calls.some(a => /1 hydration miss\(es\), first wk=/.test(a[0]))).toBe(true)
 })
 
@@ -139,6 +201,19 @@ describe('a view of a getter', () => {
     flush()
     expect(v.a).toBe(5)
     expect(seen).toEqual([1, 5])
+  })
+
+  test('a key in two sources is listed once', () => {
+    const v = view([{ a: 1, b: 2 }, () => ({ b: 3, c: 4 }), { a: 5 }])
+    expect(Object.keys(v)).toEqual(['a', 'b', 'c'])
+    expect({ ...v }).toEqual({ a: 5, b: 3, c: 4 })
+    expect(Object.keys(view([{ a: 1, b: 2 }, { a: 3 }], ['b']))).toEqual(['a'])
+  })
+
+  test('on the server, a source that throws is asked again', () => {
+    const v = (() => { rt.server = true; try { let n = 0; return view([() => { if (!n++) throw new Error('late'); return { a: 1 } }]) } finally { rt.server = false } })()
+    expect(() => v.a).toThrow('late')
+    expect(v.a).toBe(1)
   })
 
   test('on the server the source runs once, however many reads', () => {
