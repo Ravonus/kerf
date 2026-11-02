@@ -29,7 +29,7 @@ export type BookingCalendarProps = {
   max?: string | undefined
   isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
   loading?: boolean | undefined
-  error?: unknown | undefined
+  error?: unknown
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
   today?: string | undefined
   locale?: string | undefined

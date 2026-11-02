@@ -87,7 +87,7 @@ export interface TableProps<T> {
   /** Called with the row, the column's id and the new value when a cell edit is committed. */
   onEdit?: ((row: T, column: string, value: unknown) => void) | undefined
   /** The toolbar's own actions. */
-  actions?: unknown | undefined
+  actions?: unknown
   /** The Columns disclosure. */
   picker?: boolean | undefined
   /** Columns hidden from the start, in the server's HTML too. Bind a State to keep what people choose. */

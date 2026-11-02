@@ -123,7 +123,7 @@ export interface MeetingRoomProps {
   /** Called with the layout picked in the switcher. */
   onLayoutChange?: ((l: MeetingLayout) => void) | undefined
   /** Elapsed time, already formatted (the caller owns the clock). */
-  timer?: unknown | undefined
+  timer?: unknown
   /** Shows a Rec badge in the header. */
   recording?: boolean | undefined
   /** The room's connection: `room.status`, mapped. */

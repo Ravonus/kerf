@@ -8,14 +8,14 @@ import { Segments, type SegmentState } from './Segments'
 
 /** Props for DateField. */
 export type DateFieldProps = RichFieldProps & Bindable<IsoDate | null> & Openable & {
-  min?: IsoDate
-  max?: IsoDate
-  isDateUnavailable?: (d: IsoDate) => boolean
+  min?: IsoDate | undefined
+  max?: IsoDate | undefined
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
   /** The day each calendar row starts on, 0 for Sunday to 6. The locale's otherwise. */
-  firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6
+  firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined
   /** Shows the week number at the start of each calendar row. */
-  weekNumbers?: boolean
-  parse?: (text: string, today: IsoDate) => IsoDate | null
+  weekNumbers?: boolean | undefined
+  parse?: ((text: string, today: IsoDate) => IsoDate | null) | undefined
 }
 
 /**
