@@ -253,19 +253,30 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
     const f = current.value.filters
     return (source() as readonly T[]).filter(r => all.value.every(c => matchFilter(c.filter, f[c.id] ?? '', read(c, r))))
   })
-  const ordered = derived(() => {
+  // what a tree's cell shows for a row: a parent's own field is often empty, and its number is what it rolls up
+  const rolled = (c: GridColumn<T>, r: T) => {
+    const given = tree?.rollup?.(r, c.id)
+    if (!c.aggregate) return read(c, r)
+    if (kidsOf(r)?.length) return typeof c.aggregate === 'function' ? c.aggregate(leaves(r, kidsOf)) : aggregate(c.aggregate, leaves(r, kidsOf).map(x => read(c, x)))
+    return given ?? read(c, r)
+  }
+  const shownValue = (c: GridColumn<T>, r: T) => (tree && isBranch(r) ? rolled(c, r) : read(c, r))
+  const sorted = (list: readonly T[]) => {
     const s = current.value.sort
     const by = s && all.value.find(c => c.id === s.id)
-    return by ? sortRows(filtered.value, r => read(by, r), s.dir) : filtered.value
-  })
+    return by ? sortRows(list, r => shownValue(by, r), s.dir) : list
+  }
+  const ordered = derived(() => sorted(filtered.value))
   const grouped = derived(() => canGroup && !!current.value.group)
   const treed = derived(() => !!tree || grouped.value)
   const paged = derived(() => (page && !tree ? pageSlice(ordered.value, at.value - 1, page.size) : undefined))
   const lines = derived<Line<T>[]>(() => {
     if (tree) {
       const q = query.value.trim().toLowerCase()
+      const under = new Map<T, readonly T[] | undefined>() // treeRows asks more than once, and each level sorts
+      const kids = (r: T) => { if (!under.has(r)) { const k = kidsOf(r); under.set(r, k && sorted(k)) } return under.get(r) }
       const entries = treeRows(ordered.value, {
-        key: keyOf, kids: kidsOf, branch: isBranch, open: k => !!open.get(k), closed: k => !!closedHere.get(k),
+        key: keyOf, kids, branch: isBranch, open: k => !!open.get(k), closed: k => !!closedHere.get(k),
         match: q ? r => all.value.some(c => String(read(c, r) ?? '').toLowerCase().includes(q)) : undefined,
       })
       const tops = new Map(ordered.value.map((r, i) => [keyOf(r), i % 8 + 1]))
@@ -334,12 +345,7 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
     id, cols: () => cols.value, keyOf, read, treed: () => treed.value, get tree() { return tree }, kidsOf,
     title: r => String(read(namedCol.value, r) ?? ''),
     query: () => query.value.trim(),
-    rolled(c, r) {
-      const given = tree?.rollup?.(r, c.id)
-      if (!c.aggregate) return read(c, r)
-      if (kidsOf(r)?.length) return typeof c.aggregate === 'function' ? c.aggregate(leaves(r, kidsOf)) : aggregate(c.aggregate, leaves(r, kidsOf).map(x => read(c, x)))
-      return given ?? read(c, r)
-    },
+    rolled,
     commit: (r, c, v) => onEdit?.(r, c, v),
     toggle, editors: new Map(), status: say, expanded, hasDetails, body: r => expand?.(r),
     flip: k => { const { [k]: was, ...rest } = expanded.value; expanded.value = was ? rest : { ...rest, [k]: true } },
