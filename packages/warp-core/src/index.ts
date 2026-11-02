@@ -5,6 +5,7 @@
 export { store, uid, resetIds, type Store, type Action } from './store'
 export { installSweep, sweep, type SweepMachine } from './sweep'
 export { pressOrigin } from './press-origin'
+export { flow } from './flow'
 export { field, floatingLabel, labelChars } from './floating-label'
 export { buildIndex, openIndex, searchIndex, fuzzyIndex, words, type SearchEntry, type SearchHit, type SearchIndex, type SearchWire } from './search'
 export { DIALS, getDial, setDial, dialsFromUrl, type Dial, type DialValue } from './dial'
