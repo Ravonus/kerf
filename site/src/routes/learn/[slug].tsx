@@ -1,20 +1,29 @@
-import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import { Link, notFound, redirect, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
 import { Button } from '@weft-js/warp'
 import { LearnDemo } from '../../components/LearnDemo'
 import { Toc } from '../../components/Toc'
+import moved from '../../generated/learn-moved.json'
 import pages from '../../generated/learn.json'
 
 type Block = { html: string } | { demo: string }
 type Page = { slug: string; title: string; section: string; box: string; blocks: Block[]; toc: { id: string; text: string; depth?: number }[]; description: string; prev?: { slug: string; title: string }; next?: { slug: string; title: string } }
 const all = pages as unknown as Record<string, Page>
 
+/** A page that moved, as its new address: a renamed slug, or its `.md` twin. Not prerendered, so the server answers 308. */
+function movedTo(slug: string) {
+  const md = slug.endsWith('.md') ? '.md' : ''
+  const to = (moved as Record<string, string>)[md ? slug.slice(0, -3) : slug]
+  return to && `/learn/${to}${md}`
+}
+
 /** The page with each demo's highlighted source and words filled in, so none of that is in the page's script. */
 export const load = async ({ params }: LoadArgs<'/learn/[slug]'>) => {
   const page = all[params.slug]
+  const to = movedTo(params.slug)
+  if (to) return redirect(to, 308)
   if (!page) return notFound()
-  const { demos } = await import('../../demos')
-  const { default: code } = await import('../../generated/demos.json')
-  const blocks = page.blocks.map((b): { html: string } | { demo: string; code: string; tryIt: string } => ('demo' in b ? { demo: b.demo, code: (code as Record<string, string>)[b.demo] ?? '', tryIt: demos[b.demo]?.tryIt ?? '' } : { html: b.html }))
+  const [{ demos }, { tries }, { default: code }] = await Promise.all([import('../../demos'), import('../../demos/tries'), import('../../generated/demos.json')])
+  const blocks = page.blocks.map((b): { html: string } | { demo: string; code: string; tryIt: string } => ('demo' in b ? { demo: b.demo, code: (code as Record<string, string>)[b.demo] ?? '', tryIt: tries[b.demo] ?? demos[b.demo]?.tryIt ?? '' } : { html: b.html }))
   return { ...page, blocks }
 }
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })

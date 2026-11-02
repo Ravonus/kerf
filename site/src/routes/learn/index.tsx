@@ -25,7 +25,7 @@ export default function LearnHome(props: RouteProps<typeof load>) {
         <h2 id="quick-start">Quick start</h2>
         <p>Once weft is on npm, one command makes an app:</p>
         <pre data-part="cmd"><code>npm create @weft-js</code></pre>
-        <p>weft isn't on npm yet. For now, run this from a checkout of the repo. <Link href="/learn/installation">Installation</Link> has every step.</p>
+        <p>weft isn't on npm yet. For now, run this from a checkout of the repo. <Link href="/learn/installation">Installation</Link> has every step, and <Link href="/learn/quick-start">Quick start</Link> tours the main ideas in a few minutes.</p>
         <pre data-part="cmd"><code>node packages/create-weft/scripts/local.mjs new my-app</code></pre>
         <p>A component is a function that returns TSX. This one keeps a count in <code data-scope="code">state</code> and shows it. The code is the code running beside it.</p>
         <section data-site="example" data-learn="">
@@ -46,8 +46,8 @@ export default function LearnHome(props: RouteProps<typeof load>) {
             <li key={g.section}>
               <span data-part="n" aria-hidden="true">{n + 1}</span>
               <div>
-                <h3><Link href={`/learn/${g.items[0]!.slug}`}>{g.section}</Link></h3>
-                <p>{all[g.items[0]!.slug]?.description}</p>
+                <h3><Link href={`/learn/${g.overview ?? g.items[0]!.slug}`}>{g.section}</Link></h3>
+                <p>{all[g.overview ?? g.items[0]!.slug]?.description}</p>
                 <ul>{g.items.map(i => <li key={i.slug}><Link href={`/learn/${i.slug}`}>{i.title}</Link></li>)}</ul>
               </div>
             </li>

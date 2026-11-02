@@ -1,10 +1,10 @@
 /* Learn: the tutorial's own parts, on the docs shell. Tokens only, so it follows the dials like the rest of warp. */
-[data-site="you-will-learn"], [data-site="challenge"], [data-site="note"] {
+[data-site="you-will-learn"], [data-site="challenge"], [data-site="note"], [data-site="pitfall"], [data-site="deepdive"] {
   box-sizing: border-box; max-inline-size: 68ch; margin-block: 0 var(--warp-space-group); padding: var(--warp-space-group) calc(var(--warp-space-group) * 1.25);
   border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface); color: var(--warp-color-text-subtle);
 }
 [data-site="you-will-learn"] { border-inline-start: 3px solid var(--warp-color-accent-text); background: var(--warp-color-accent-soft); }
-:is([data-site="you-will-learn"], [data-site="challenge"]) [data-part="label"] { margin: 0 0 var(--warp-space-tight); font: 400 calc(0.75 * var(--warp-rem))/1.4 var(--warp-font-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--warp-color-accent-text); }
+:is([data-site="you-will-learn"], [data-site="challenge"], [data-site="pitfall"], [data-site="deepdive"]) [data-part="label"] { margin: 0 0 var(--warp-space-tight); font: 400 calc(0.75 * var(--warp-rem))/1.4 var(--warp-font-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--warp-color-accent-text); }
 [data-site="you-will-learn"] ul { display: grid; gap: var(--warp-space-tight); margin: 0; padding-inline-start: 1.2em; line-height: 1.55; color: var(--warp-color-text); }
 [data-site="you-will-learn"] p { margin: 0; }
 
@@ -17,6 +17,21 @@
 [data-site="challenge"] details[open] summary { margin-block-end: var(--warp-space-related); }
 [data-site="note"] { background: var(--warp-color-surface-sunken); }
 [data-site="note"] > :last-child { margin-block-end: 0; }
+
+/* Pitfall: a mistake that's easy to make. Deep dive: depth for the curious, closed until opened. Both read like React's. */
+[data-site="pitfall"] { border-inline-start: 3px solid var(--warp-color-caution-solid, var(--warp-color-accent-text)); background: var(--warp-color-caution-soft, var(--warp-color-surface-sunken)); }
+[data-site="pitfall"] [data-part="label"] { color: var(--warp-color-caution-text, var(--warp-color-accent-text)); }
+:is([data-site="pitfall"], [data-site="note"]) [data-part="title"] { margin: 0 0 var(--warp-space-tight); font-weight: 600; color: var(--warp-color-text); }
+[data-site="pitfall"] > :last-child, [data-site="deepdive"] [data-part="body"] > :last-child { margin-block-end: 0; }
+[data-site="deepdive"] { padding-block: var(--warp-space-related); }
+[data-site="deepdive"] summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--warp-space-tight) var(--warp-space-related); cursor: pointer; list-style: none; }
+[data-site="deepdive"] summary::-webkit-details-marker { display: none; }
+[data-site="deepdive"] summary::after { content: "Show more"; margin-inline-start: auto; font-size: var(--doc-small, calc(0.875 * var(--warp-rem))); color: var(--warp-color-accent-text); }
+[data-site="deepdive"][open] summary::after { content: "Show less"; }
+[data-site="deepdive"] summary [data-part="label"] { margin: 0; }
+[data-site="deepdive"] summary [data-part="title"] { font-weight: 600; color: var(--warp-color-text); }
+[data-site="deepdive"] summary:focus-visible { outline: 2px solid var(--warp-color-focus, var(--warp-color-accent-text)); outline-offset: 4px; border-radius: 4px; }
+[data-site="deepdive"] [data-part="body"] { margin-block-start: var(--warp-space-related); padding-block-start: var(--warp-space-related); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
 
 /* Learn's demos are short and sit in the reading flow: rendered up front, so anchors, the rail and a press land where they look. */
 [data-site="example"][data-learn] { content-visibility: visible; margin-block: var(--warp-space-group) calc(var(--warp-space-section) * 0.75); }
@@ -42,5 +57,5 @@
 [data-learn-home] [data-part="path"] ul a:hover { color: var(--ink); }
 @media (max-width: 599.98px) {
   [data-learn-home] [data-part="path"] > li { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-related); }
-  [data-site="you-will-learn"], [data-site="challenge"], [data-site="note"] { padding: var(--warp-space-related) var(--warp-space-group); }
+  [data-site="you-will-learn"], [data-site="challenge"], [data-site="note"], [data-site="pitfall"], [data-site="deepdive"] { padding: var(--warp-space-related) var(--warp-space-group); }
 }

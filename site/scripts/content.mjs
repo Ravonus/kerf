@@ -122,41 +122,98 @@ const SECTIONS = [
   ]],
 ]
 
-/** Learn: the tutorial, in teaching order. Each page is `site/content/learn/<slug>.md`, read top to bottom. */
+/**
+ * Learn: the tutorial, in teaching order. Each page is `site/content/learn/<slug>.md`, read top to bottom. A chapter's first
+ * page, when its slug is the chapter's own (see OVERVIEW), previews every page after it.
+ */
 const LEARN = [
   ['Get started', [
+    ['quick-start', 'Quick start'],
+    ['tutorial', 'Tutorial: a shop with a server'],
+    ['thinking-in-weft', 'Thinking in weft'],
     ['installation', 'Installation'],
+    ['setup', 'Editor and TypeScript setup'],
+    ['diagnostics', 'Diagnostics and weft check'],
+    ['working-with-agents', 'Working with AI agents'],
   ]],
   ['Describing the UI', [
+    ['describing-the-ui', 'Describing the UI'],
     ['your-first-component', 'Your first component'],
+    ['importing-and-exporting', 'Importing and exporting components'],
+    ['writing-markup-with-tsx', 'Writing markup with TSX'],
+    ['javascript-in-tsx', 'JavaScript in TSX with braces'],
     ['passing-props', 'Passing props'],
-    ['lists-and-conditions', 'Lists and conditions'],
+    ['conditional-rendering', 'Conditional rendering'],
+    ['rendering-lists', 'Rendering lists'],
+    ['components-run-once', 'Components run once'],
+    ['your-ui-as-a-tree', 'Your UI as a tree'],
   ]],
   ['Adding interactivity', [
+    ['adding-interactivity', 'Adding interactivity'],
     ['responding-to-events', 'Responding to events'],
-    ['state', 'State'],
+    ['state', 'State: a box with .value'],
+    ['how-updates-reach-the-dom', 'How an update reaches the DOM'],
+    ['updating-objects-and-arrays', 'Updating objects and arrays'],
     ['bind', 'Writing to a parent with bind:'],
+    ['forms-and-inputs', 'Forms and inputs'],
   ]],
   ['Managing state', [
+    ['managing-state', 'Managing state'],
+    ['reacting-to-input', 'Reacting to input with state'],
+    ['choosing-state-structure', 'Choosing the state structure'],
     ['derived', 'Derived values'],
-    ['sharing-state', 'Sharing state'],
-    ['entries', 'Reading one entry'],
-    ['ui-state', 'Hover, focus and press'],
-  ]],
-  ['Data and the server', [
-    ['loading-data', 'Loading data'],
-    ['full-stack', 'Routes and server functions'],
-    ['live-data', 'Live data'],
-  ]],
-  ['Styling and warp', [
-    ['styling', 'Styling'],
-    ['warp', 'Using warp'],
+    ['sharing-state', 'Sharing state between components'],
+    ['passing-data-deeply', 'Passing data deeply'],
+    ['entries', 'Keyed state and entries'],
+    ['ui-state', 'Hover, focus and shared UI state'],
+    ['app-wide-state', 'App-wide state with defineState'],
   ]],
   ['Escape hatches', [
-    ['effects', 'Effects and refs'],
-    ['rust', 'Rust, when you want it'],
+    ['escape-hatches', 'Escape hatches'],
+    ['refs-and-the-dom', 'Refs and the DOM'],
+    ['effects', 'Effects'],
+    ['you-might-not-need-an-effect', 'You might not need an effect'],
+    ['cleanup-and-ownership', 'Cleanup and ownership'],
+    ['reusing-logic', 'Reusing logic'],
+    ['async-and-loading', 'Async and loading states'],
+    ['text-media-and-shapes', 'Text, media and shapes'],
+  ]],
+  ['Full-stack apps', [
+    ['full-stack', 'Full-stack apps'],
+    ['routing-and-layouts', 'Routing and layouts'],
+    ['loading-data', 'Loading data'],
+    ['server-functions', 'Server functions'],
+    ['database', 'Database'],
+    ['auth', 'Auth'],
+    ['forms-and-validation', 'Forms and validation'],
+    ['live-data', 'Realtime and live data'],
+    ['uploads-and-media', 'Uploads and media'],
+    ['payments', 'Payments'],
+    ['metadata-and-share-images', 'Metadata and share images'],
+    ['ssr-and-hydration', 'SSR, islands and hydration'],
+    ['deploying', 'Runtimes and deploying'],
+  ]],
+  ['Styling and warp', [
+    ['styling-and-warp', 'Styling and warp'],
+    ['styling', 'Styling and style groups'],
+    ['warp', 'Using warp'],
+    ['theming', 'Theming'],
+    ['icons', 'Icons'],
+    ['fonts', 'Fonts'],
+    ['accessibility', 'Accessibility'],
+  ]],
+  ['Testing and tooling', [
+    ['testing-and-tooling', 'Testing and tooling'],
+    ['testing', 'Testing'],
+    ['plugins', 'Plugins'],
+    ['performance', 'Performance and bundle size'],
+    ['rust', 'Rust, in depth'],
   ]],
 ]
+/** A chapter's overview page: the one whose slug is the chapter's name. Get started has /learn itself. */
+const overviewOf = (section, items) => items.find(([slug]) => slug === slugify(section.replace(/ apps$/, '')))?.[0]
+/** Learn pages that moved, old slug to new. src/routes/learn answers each with a 308, `.md` twins included. */
+const MOVED = { 'lists-and-conditions': 'rendering-lists' }
 
 function diagnosticsIndex() {
   const families = { W: 'Compiler', D: 'Design', T: 'Tests', P: 'Plugins and config', H: 'Head and metadata', Q: 'Queries', S: 'State', F: 'Forms', I: 'Icons', A: 'Auth', C: 'Contracts', R: 'Realtime', X: 'Surfaces and fonts', M: 'Media' }
@@ -274,12 +331,14 @@ async function buildReference() {
 }
 
 /**
- * A Learn page's blocks. Plain Markdown, plus four fences of our own, each opened by a line that starts `:::` and closed
- * by a line that is only `:::`:
- *   :::learn          the "You will learn" box (a list)
- *   :::demo <id>      a live demo from src/demos, beside its own source (one line, no closing fence)
- *   :::note           an aside
- *   :::challenge <t>  a "Try it" task; a `:::solution` line inside starts its hidden answer
+ * A Learn page's blocks. Plain Markdown, plus fences of our own, each opened by a line that starts `:::` and closed by a
+ * line that is only `:::`:
+ *   :::learn             the "You will learn" box (a list)
+ *   :::demo <id>         a live demo from src/demos, beside its own source (one line, no closing fence)
+ *   :::note [title]      an aside
+ *   :::pitfall [title]   a mistake that is easy to make, and what to do instead
+ *   :::deepdive <title>  an aside for the curious, closed until opened
+ *   :::challenge <t>     a "Try it" task; a `:::solution` line inside starts its hidden answer
  */
 function learnBlocks(md, slugs, demoIds) {
   const r = renderer(slugs)
@@ -291,7 +350,7 @@ function learnBlocks(md, slugs, demoIds) {
   const lines = md.replace(/^# [^\n]*\n/, '').split('\n')
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i]
-    const fence = /^:::(learn|demo|note|challenge)\s*(.*)$/.exec(l)
+    const fence = /^:::(learn|demo|note|pitfall|deepdive|challenge)\s*(.*)$/.exec(l)
     if (!fence) { buf.push(l); continue }
     const [, kind, arg] = fence
     if (kind === 'demo') {
@@ -306,7 +365,14 @@ function learnBlocks(md, slugs, demoIds) {
     const plainHtml = text => linkify(markdownToHtml(text, { code: codeBlock }), slugs)
     if (kind === 'learn') { box = plainHtml(inner.join('\n')); continue }
     flush()
-    if (kind === 'note') { blocks.push({ html: `<aside data-site="note">${plainHtml(inner.join('\n'))}</aside>` }); continue }
+    const titled = arg ? `<p data-part="title">${inline(arg)}</p>` : ''
+    if (kind === 'note') { blocks.push({ html: `<aside data-site="note">${titled}${plainHtml(inner.join('\n'))}</aside>` }); continue }
+    if (kind === 'pitfall') { blocks.push({ html: `<aside data-site="pitfall"><p data-part="label">Pitfall</p>${titled}${plainHtml(inner.join('\n'))}</aside>` }); continue }
+    if (kind === 'deepdive') {
+      if (!arg) throw new Error('learn: a :::deepdive needs a title')
+      blocks.push({ html: `<details data-site="deepdive"><summary><span data-part="label">Deep dive</span><span data-part="title">${inline(arg)}</span></summary><div data-part="body">${plainHtml(inner.join('\n'))}</div></details>` })
+      continue
+    }
     const at = inner.indexOf(':::solution')
     const task = at < 0 ? inner : inner.slice(0, at)
     const answer = at < 0 ? [] : inner.slice(at + 1)
@@ -336,7 +402,8 @@ function buildLearn(reference) {
       next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title },
     }
   })
-  const nav = LEARN.map(([section, items]) => ({ section, items: items.map(([slug, title]) => ({ slug, title })) }))
+  const nav = LEARN.map(([section, items]) => ({ section, overview: overviewOf(section, items) ?? null, items: items.map(([slug, title]) => ({ slug, title })) }))
+  for (const [from, to] of Object.entries(MOVED)) if (!pages[to] || pages[from]) throw new Error(`learn: ${from} moves to ${to}, which must exist while ${from} doesn't`)
   return { nav, pages, flat }
 }
 
@@ -731,14 +798,14 @@ const toolkit = buildToolkit()
 buildArt()
 buildShowcase()
 buildSpeed()
-// The shop's steps mark the lines each one added, so the code on the page shows the app growing.
+// The shop's steps, and any demo named `<name>-step-<n>`, mark the lines each one added, so the code shows the app growing.
 // `ask` is a frame, so what it shows is the app inside it. `slow` shows the page it loads.
 const SHOWN = { 'ask.tsx': 'arena/graph/main.tsx', 'slow.tsx': 'src/routes/examples/slow.tsx' }
 const demoText = f => readFileSync(join(site, SHOWN[f] ?? `src/demos/${f}`), 'utf8').trim()
 const demoHtml = f => {
   const text = demoText(f)
-  const step = /^shop-(\d)\.tsx$/.exec(f)
-  const before = step && step[1] !== '1' ? new Set(demoText(`shop-${step[1] - 1}.tsx`).split('\n')) : undefined
+  const step = /^(shop|.+-step)-(\d+)\.tsx$/.exec(f)
+  const before = step && step[2] !== '1' ? new Set(demoText(`${step[1]}-${step[2] - 1}.tsx`).split('\n')) : undefined
   let n = -1
   const lines = text.split('\n')
   const html = highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => (before && lines[++n].trim() && !before.has(lines[n]) ? '<span data-part="line" data-new="">' : tag))
@@ -754,6 +821,7 @@ write('numbers.json', numbers())
 write('reference-nav.json', docs.nav)
 write('reference.json', docs.pages)
 write('learn-nav.json', learn.nav)
+write('learn-moved.json', MOVED)
 write('learn.json', learn.pages)
 const search = buildSearch(docs, learn, [...toolkit, ...buildIcons()])
 buildLlms(docs, learn)
