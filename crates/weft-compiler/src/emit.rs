@@ -1087,6 +1087,9 @@ impl<'t> Emitter<'t> {
                             None => continue,
                             Some(e) if element && key == "ref" && self.assignable(e) => format!("{k}: {}", self.assigner(e)),
                             Some(e) if passes_as_value(e) => format!("{k}: {}", self.expr(e)),
+                            // A server element reads each attribute once, right away: a value costs less than a getter.
+                            // What renders (children, JSX) stays a getter, so it renders in its place.
+                            Some(e) if element && self.ssr && key != "children" && !has_jsx(e) => format!("{k}: {}", self.expr(e)),
                             Some(e) => format!("get {k}() {{ return {}; }}", self.expr(e)),
                         },
                         Some(JSXAttributeValue::Element(e)) => format!("get {k}() {{ return {}; }}", self.element(e)),
@@ -1110,6 +1113,13 @@ impl<'t> Emitter<'t> {
 
 /// Builds a conditional around its test's reader (`_c()`, or an inline memo).
 type Rest = Box<dyn Fn(&str) -> String>;
+
+/// `e` holds JSX somewhere.
+fn has_jsx(e: &Expression<'_>) -> bool {
+    let mut v = Outermost::default();
+    v.visit_expression(e);
+    !v.found.is_empty()
+}
 
 /// `c ? a : b` or `c && a` / `c || a` / `c ?? a` where a branch holds JSX.
 fn has_jsx_branch(e: &Expression<'_>) -> bool {
