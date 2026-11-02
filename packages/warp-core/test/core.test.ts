@@ -119,6 +119,34 @@ test('copy: a refused clipboard write is caught and shows a failed state', async
   stop()
 })
 
+test('copy: a refusal on a page with no announcer still says so, aloud and in words beside the button', async () => {
+  vi.useFakeTimers()
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(async () => { throw new DOMException('denied', 'NotAllowedError') }) }, configurable: true })
+  html('<div data-scope="codeblock"><div data-part="head"><button data-act="copy" data-copy="" aria-label="Copy code"><span data-part="indicator"></span></button></div><code>x</code></div>')
+  const stop = copyButtons()
+  const b = document.querySelector<HTMLElement>('[data-act="copy"]')!
+  b.click()
+  await vi.advanceTimersByTimeAsync(80)
+  const live = document.querySelector<HTMLElement>('[data-scope="announcer"][aria-live="polite"]')
+  expect(live).not.toBeNull()
+  expect(live!.getAttribute('role')).toBe('status')
+  expect(live!.textContent).toMatch(/Couldn’t copy/)
+  const note = b.querySelector<HTMLElement>(':scope > [data-part="copy-note"]')
+  expect(note?.textContent).toBe('Couldn’t copy')
+  expect(note?.getAttribute('aria-hidden')).toBe('true') // the name stays "Copy code"; the live region speaks
+  // a second refusal reuses both: one announcer, one note
+  b.click()
+  await vi.advanceTimersByTimeAsync(80)
+  expect(document.querySelectorAll('[data-scope="announcer"]').length).toBe(1)
+  expect(b.querySelectorAll('[data-part="copy-note"]').length).toBe(1)
+  // and the note goes with the failed state
+  await vi.advanceTimersByTimeAsync(2500)
+  expect(b.dataset.state).toBeUndefined()
+  expect(b.querySelector('[data-part="copy-note"]')).toBeNull()
+  stop()
+  vi.useRealTimers()
+})
+
 test('copy: a highlighted block keeps its newlines', async () => {
   const writeText = vi.fn(async () => {})
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
