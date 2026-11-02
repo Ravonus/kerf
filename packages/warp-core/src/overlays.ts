@@ -150,7 +150,7 @@ let current: (() => void) | null = null
  * onto the tip, a press hides it; touch long-press (500ms) shows it for 1.5s. One open at a time; Escape closes it
  * (a passive layer: presses pass through).
  */
-export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side }) {
+export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side; align?: Align }) {
   let o = opts
   let timer: ReturnType<typeof setTimeout> | undefined
   let remove: (() => void) | undefined
@@ -161,7 +161,7 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
     current?.()
     tip.toggleAttribute('data-warm', performance.now() < warmUntil)
     tip.showPopover?.()
-    place(tip, o.trigger, o.side ?? 'top', 'center', 6)
+    place(tip, o.trigger, o.side ?? 'top', o.align ?? 'center', 6)
     remove = pushLayer({ el: tip, trigger: o.trigger, passive: true, close: hide })
     current = hide
   }

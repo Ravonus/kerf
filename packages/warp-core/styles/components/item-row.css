@@ -6,7 +6,7 @@
   padding: 10px var(--warp-pad-control); border-radius: var(--warp-radius-control);
 }
 :where([data-scope="item"] > [data-part="media"]) { grid-row: span 2; }
-:where([data-scope="item"] > [data-part="title"]) { font-weight: 500; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="item"] > [data-part="title"]) { font-weight: 500; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="item"] > [data-part="description"]) { grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); min-inline-size: 0; }
 :where([data-scope="item"] > [data-part="actions"]) { grid-column: 3; grid-row: 1 / span 2; display: flex; gap: 4px; align-items: center; position: relative; z-index: 1; }
 :where([data-scope="item"]:has([data-overlay]):hover) { background: color-mix(in oklab, currentColor 7%, transparent); }

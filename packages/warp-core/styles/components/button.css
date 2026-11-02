@@ -92,7 +92,7 @@
   --_layer-a: calc(var(--warp-state-hover) * (1 - var(--_on, 0)));
   --_tone-ink: var(--_ink-on); --warp-sweep-fill: var(--_solid); --warp-sweep-radius: 0px;
   /* the original is square-capped and mitred: never rounder than 2px */
-  border-color: transparent; border-radius: min(var(--warp-radius-mark), 2px); overflow: hidden;
+  border-color: transparent; border-radius: min(var(--warp-radius-mark), 2px); overflow: clip;
 }
 :where([data-scope="button"][data-emphasis="frame"][data-tone]:not([data-tone="accent"])) { --_tone: var(--_text); }
 :where([data-scope="button"][data-emphasis="frame"][data-tone="neutral"]) { --_tone: var(--warp-color-text); }

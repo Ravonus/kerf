@@ -4,7 +4,7 @@
    quiet 0.35 · balanced 0.7 · vivid 1 · reduced motion: still (×0) ------------------- */
 :where([data-scope="skeleton"]) {
   --_shim: calc((0.35 + 0.65 * var(--warp-x)) * var(--warp-motion-scale));
-  position: relative; overflow: hidden; display: block; block-size: 12px; border-radius: var(--warp-radius-mark);
+  position: relative; overflow: clip; display: block; block-size: 12px; border-radius: var(--warp-radius-mark);
   background: var(--warp-color-surface-active); color: transparent;
 }
 :where([data-scope="skeleton"])::after {
@@ -18,7 +18,7 @@
 
 /* -- Skeleton scope: while aria-busy, real children become shimmer blocks of their own shape */
 :where([data-scope="skeleton-scope"][aria-busy="true"] [data-skeleton]) {
-  position: relative; overflow: hidden; color: transparent !important; border-color: transparent !important;
+  position: relative; overflow: clip; color: transparent !important; border-color: transparent !important;
   background: var(--warp-color-surface-active) !important; border-radius: var(--warp-radius-mark); user-select: none; pointer-events: none;
 }
 :where([data-scope="skeleton-scope"][aria-busy="true"] [data-skeleton] > *) { visibility: hidden; }

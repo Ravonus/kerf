@@ -6,7 +6,7 @@
   display: inline-flex; overflow: clip; line-height: 1.15; block-size: 1.15em;
   mask-image: linear-gradient(transparent, #000 0.12em, #000 calc(100% - 0.12em), transparent);
 }
-:where([data-scope="ticker"] > [data-part="sr"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="ticker"] > [data-part="sr"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 :where([data-scope="ticker"] [data-part="digit"]) { inline-size: 1ch; block-size: 1.15em; overflow: visible; }
 :where([data-scope="ticker"] [data-part="digit"])::before {
   content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9"; display: block; white-space: pre; text-align: center;

@@ -75,6 +75,7 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
     const open = expanded()
     let y = 0
     const front = list[0]?.offsetHeight ?? 0
+    const dir = region.dataset.position?.startsWith('top') ? 1 : -1   // top corners stack downward
     list.forEach((el, i) => {
       el.style.zIndex = String(100 - i)
       const behind = i > 0 && !open
@@ -83,13 +84,13 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
       el.style.maxBlockSize = behind ? `${front}px` : ''
       el.style.overflow = behind ? 'hidden' : ''
       if (open) {
-        el.style.setProperty('--_y', `${-y}px`)
+        el.style.setProperty('--_y', `${dir * y}px`)
         el.style.setProperty('--_s', '1')
         el.style.setProperty('--_o', i < 5 ? '1' : '0')
         y += el.offsetHeight + 8
       } else {
         const k = Math.min(i, 3)
-        el.style.setProperty('--_y', `${-k * 12}px`)
+        el.style.setProperty('--_y', `${dir * k * 12}px`)
         el.style.setProperty('--_s', String(1 - k * 0.05))
         el.style.setProperty('--_o', i < 3 ? '1' : '0')
       }

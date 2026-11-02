@@ -12,7 +12,7 @@ import '@weft/warp-core/styles/components/dialog.css' // the backdrop and the pa
  * the bottom on phones (`side="auto"`: bottom under 600px, decided when it opens). The handle shows only at the
  * bottom. Initial focus goes to [autofocus], else the title, never the handle.
  */
-export function Drawer({ open, title, description, footer, side = 'auto', children }: { open: State<boolean>; title: any; description?: any; footer?: any; side?: 'auto' | 'right' | 'left' | 'bottom'; children?: any }) {
+export function Drawer({ open, title, description, footer, side = 'auto', children }: { open: State<boolean>; title: any; description?: any; footer?: any; side?: 'auto' | 'right' | 'left' | 'bottom' | 'top'; children?: any }) {
   const id = uid('sheet')
   const hasDescription = derived(() => description !== undefined)
   const foot = derived(() => footer) // one build of the footer, however often it is read
