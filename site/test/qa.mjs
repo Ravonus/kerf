@@ -213,6 +213,13 @@ for (const path of ['/components', '/blocks']) {
     if (tall > 14000) throw new Error(`${tall}px long`)
   }, PHONE)
 }
+// A page with no headings has no contents column, so its words take the room.
+for (const path of ['/docs/rules', '/docs/lists', '/docs/async', '/docs/browser']) {
+  await check(`no empty contents column ${path}`, path, async page => {
+    const { toc, links } = await page.evaluate(() => ({ toc: document.querySelectorAll('[data-site="toc"]').length, links: document.querySelectorAll('[data-site="toc"] a').length }))
+    if (toc && !links) throw new Error('an empty contents column')
+  }, { width: 1440, height: 900 })
+}
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

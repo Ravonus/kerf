@@ -42,7 +42,8 @@ export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'
           {props.data.next && <Link href={`/docs/${props.data.next.slug}`} class="next"><span>Next</span>{props.data.next.title}</Link>}
         </footer>
       </article>
-      <Toc items={props.data.toc} />
+      {/* No headings, no contents column: the grid only makes room for one that's there. */}
+      {props.data.toc.length > 0 && <Toc items={props.data.toc} />}
     </>
   )
 }

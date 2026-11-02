@@ -95,7 +95,7 @@ export function ComponentPage(props: { data: Page }) {
           {d.next && <Link href={d.next.href} class="next"><span>Next</span>{d.next.name}</Link>}
         </footer>
       </article>
-      {d.area !== 'blocks' && <Toc items={d.toc} />}
+      {d.area !== 'blocks' && d.toc.length > 0 && <Toc items={d.toc} />}
     </>
   )
 }
