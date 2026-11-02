@@ -4,7 +4,15 @@
 
 use std::collections::{HashMap, HashSet};
 
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    ArrowFunctionBody, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget,
+    AssignmentTargetPropertyIdentifier, BindingIdentifier, BindingPattern, CallExpression, ChainElement,
+    ComputedMemberExpression, Expression, FormalParameters, Function, IdentifierReference, ImportDeclaration,
+    ImportDeclarationSpecifier, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
+    JSXElement, JSXElementName, JSXExpressionContainer, JSXFragment, JSXOpeningElement, ObjectExpression,
+    ObjectPattern, ObjectPropertyKind, Program, PropertyKey, ReturnStatement, SimpleAssignmentTarget, Statement,
+    StaticMemberExpression, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+};
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::{Scoping, SymbolId};
 use oxc_span::{GetSpan, Span};
@@ -203,7 +211,7 @@ pub fn row_roots<'b, 'a>(e: &'b Expression<'a>, out: &mut Vec<&'b JSXElement<'a>
                     JSXChild::Element(el) => out.push(el),
                     JSXChild::ExpressionContainer(c) => {
                         if let Some(e) = c.expression.as_expression() {
-                            row_roots(e, out)
+                            row_roots(e, out);
                         }
                     }
                     _ => {}
@@ -601,7 +609,7 @@ impl<'s> Analyzer<'s> {
     }
 
     fn written(&self, sym: SymbolId) -> bool {
-        self.scoping.get_resolved_references(sym).any(|r| r.is_write())
+        self.scoping.get_resolved_references(sym).any(oxc_semantic::Reference::is_write)
     }
 
     /// `const x = props.y`: `x` is another name for the prop, so each use reads it live.
@@ -818,10 +826,10 @@ impl<'s> Analyzer<'s> {
             return;
         }
         let decl = ctx.body_decl;
-        if let Some(d) = decl {
-            if !self.comps.last_mut().unwrap().reported_decls.insert(key(d)) {
-                return;
-            }
+        if let Some(d) = decl
+            && !self.comps.last_mut().unwrap().reported_decls.insert(key(d))
+        {
+            return;
         }
         let mut d = Diagnostic::new(
             self.source,
@@ -867,7 +875,8 @@ impl<'s> Analyzer<'s> {
     /// `<Card person={bind(name)} />`: the one way a child's write reaches the parent.
     fn bound_prop(&mut self, attr: &JSXAttribute<'_>) {
         let Some(JSXAttributeValue::ExpressionContainer(c)) = &attr.value else { return };
-        let Some(Expression::CallExpression(call)) = c.expression.as_expression().map(|e| e.get_inner_expression())
+        let Some(Expression::CallExpression(call)) =
+            c.expression.as_expression().map(oxc_ast::ast::Expression::get_inner_expression)
         else {
             return;
         };
@@ -1114,7 +1123,7 @@ impl<'s> Analyzer<'s> {
             row_roots(ret, &mut roots);
         }
         self.scoping.symbol_scope_id(sym) == self.scoping.root_scope_id()
-            && !self.scoping.get_resolved_references(sym).any(|r| r.is_write())
+            && !self.scoping.get_resolved_references(sym).any(oxc_semantic::Reference::is_write)
             && self.arrays.contains(&sym)
             && !roots.iter().any(|el| el.opening_element.attributes.iter().any(is_key_attr))
     }
@@ -1135,7 +1144,7 @@ impl<'s> Analyzer<'s> {
             seen.push(whole.clone());
             let read = self.text(hit.read);
             let index_text = self.text(hit.index);
-            let name = hit.boxed.map(|b| self.text(b)).unwrap_or_else(|| whole.rsplit('.').next().unwrap_or(&whole));
+            let name = hit.boxed.map_or_else(|| whole.rsplit('.').next().unwrap_or(&whole), |b| self.text(b));
             // Passed straight to a child component (`<Row live={live.value[s.id]} />`): the child's reads of that
             // prop are what re-run, so say where the entry should be read.
             let child = found.iter().filter(|h| self.text(h.whole) == whole).find_map(|h| h.child.as_ref());
@@ -1263,7 +1272,7 @@ impl<'s> Analyzer<'s> {
     }
 }
 
-impl<'a, 's> Visit<'a> for Analyzer<'s> {
+impl<'a> Visit<'a> for Analyzer<'_> {
     fn visit_statement(&mut self, it: &Statement<'a>) {
         if let Statement::VariableDeclaration(d) = it
             && self.body_level().is_some()
@@ -1291,7 +1300,7 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
             BindingPattern::BindingIdentifier(id) => Some((id.name.to_string(), binding_symbol(id))),
             _ => None,
         };
-        let init = it.init.as_ref().map(|e| e.without_parentheses());
+        let init = it.init.as_ref().map(oxc_ast::ast::Expression::without_parentheses);
         if let (Some((n, _)), Some(Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_))) =
             (&name, init)
         {
@@ -1599,7 +1608,7 @@ struct Reactive<'x, 's> {
     found: bool,
 }
 
-impl<'a, 'x, 's> Visit<'a> for Reactive<'x, 's> {
+impl<'a> Visit<'a> for Reactive<'_, '_> {
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
         if let Some(sym) = symbol_of(self.a.scoping, it)
             && (self.a.plan.rewrites.contains_key(&sym)
@@ -1640,7 +1649,7 @@ struct RowEntry {
     child: Option<(String, String)>,
 }
 
-impl<'x, 's> EntryReads<'x, 's> {
+impl EntryReads<'_, '_> {
     fn is_prop(&self, id: &IdentifierReference<'_>) -> bool {
         symbol_of(self.a.scoping, id).is_some_and(|s| self.a.comps.iter().any(|c| c.prop_syms.contains(&s)))
     }
@@ -1656,7 +1665,7 @@ fn reads_any(scoping: &Scoping, e: &Expression<'_>, hit: impl Fn(SymbolId) -> bo
         hit: F,
         found: bool,
     }
-    impl<'a, 'z, F: Fn(SymbolId) -> bool> Visit<'a> for Uses<'z, F> {
+    impl<'a, F: Fn(SymbolId) -> bool> Visit<'a> for Uses<'_, F> {
         fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
             self.found |= symbol_of(self.scoping, it).is_some_and(&self.hit);
         }
@@ -1666,7 +1675,7 @@ fn reads_any(scoping: &Scoping, e: &Expression<'_>, hit: impl Fn(SymbolId) -> bo
     u.found
 }
 
-impl<'a, 'x, 's> Visit<'a> for EntryReads<'x, 's> {
+impl<'a> Visit<'a> for EntryReads<'_, '_> {
     fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
         if self.depth == 1 && self.reads_item(&it.expression) {
             let whole = match it.object.without_parentheses() {
@@ -1740,7 +1749,7 @@ struct ComponentEntryReads<'x, 's> {
     found: Vec<EntryHit>,
 }
 
-impl<'a, 'x, 's> Visit<'a> for ComponentEntryReads<'x, 's> {
+impl<'a> Visit<'a> for ComponentEntryReads<'_, '_> {
     fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
         if self.depth == 0
             && let Expression::StaticMemberExpression(m) = it.object.without_parentheses()
@@ -1818,7 +1827,7 @@ fn makes_array(e: &Expression<'_>) -> bool {
     }
 }
 
-impl<'a, 's> Visit<'a> for Boxes<'s> {
+impl<'a> Visit<'a> for Boxes<'_> {
     fn visit_variable_declaration(&mut self, it: &VariableDeclaration<'a>) {
         if it.kind.is_const() {
             for d in &it.declarations {
@@ -1835,7 +1844,7 @@ impl<'a, 's> Visit<'a> for Boxes<'s> {
 
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
         if let (BindingPattern::BindingIdentifier(id), Some(Expression::CallExpression(call))) =
-            (&it.id, it.init.as_ref().map(|e| e.without_parentheses()))
+            (&it.id, it.init.as_ref().map(oxc_ast::ast::Expression::without_parentheses))
         {
             let boxed = match &call.callee {
                 Expression::Identifier(c) => {
@@ -1862,7 +1871,7 @@ struct MemberUse<'s> {
     props: Vec<String>,
 }
 
-impl<'a, 's> Visit<'a> for MemberUse<'s> {
+impl<'a> Visit<'a> for MemberUse<'_> {
     fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
         if let Expression::Identifier(id) = &it.object
             && self.sym.is_some()

@@ -18,4 +18,4 @@ paths = [
 
 [[allowlists]]
 description = "The placeholders the pay plugin writes and its tests look for, and a WebSocket header name"
-regexes = ['''sk_test_placeholder''', '''whsec_placeholder''', '''sec-websocket-(?:version|key)''']
+regexes = ['''sk_test_placeholder''', '''whsec_placeholder''', '''sec-websocket-(?:version|key)''', '''dGhlIHNhbXBsZSBub25jZQ==''']

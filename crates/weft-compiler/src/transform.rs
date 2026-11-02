@@ -14,7 +14,15 @@
 use std::collections::{HashMap, HashSet};
 
 use oxc_allocator::{Allocator, CloneIn, TakeIn, Vec as ArenaVec};
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrayExpressionElement, ArrowFunctionBody, ArrowFunctionExpression, AssignmentOperator, AssignmentTarget,
+    BindingIdentifier, BindingPattern, ChainElement, Expression, FormalParameter, FormalParameterKind,
+    FormalParameters, Function, FunctionBody, IdentifierName, IdentifierReference, ImportDeclarationSpecifier,
+    ImportOrExportKind, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXClosingElement, JSXElement,
+    JSXElementName, JSXExpression, JSXMemberExpression, JSXMemberExpressionObject, JSXOpeningElement, ModuleExportName,
+    NumberBase, ObjectProperty, Program, SimpleAssignmentTarget, Statement, StringLiteral, VariableDeclarationKind,
+    VariableDeclarator,
+};
 use oxc_ast::builder::AstBuilder;
 use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::{Scoping, SymbolId};
@@ -80,7 +88,7 @@ struct Transformer<'a, 'p> {
 }
 
 /// Node constructors.
-impl<'a, 'p> Transformer<'a, 'p> {
+impl<'a> Transformer<'a, '_> {
     fn str(&self, s: &str) -> &'a str {
         self.allocator.alloc_str(s)
     }
@@ -359,7 +367,7 @@ impl<'a, 'p> Transformer<'a, 'p> {
 
     fn take_defaults(&mut self, pattern: &mut BindingPattern<'a>) {
         let BindingPattern::ObjectPattern(obj) = pattern else { return };
-        for prop in obj.properties.iter_mut() {
+        for prop in &mut obj.properties {
             match &mut prop.value {
                 BindingPattern::AssignmentPattern(ap) => {
                     let BindingPattern::BindingIdentifier(id) = &ap.left else { continue };
@@ -471,12 +479,12 @@ fn strip_keys<'a>(
     match e.without_parentheses_mut() {
         Expression::JSXElement(el) => strip_element(t, el, spans, first, by),
         Expression::JSXFragment(f) => {
-            for child in f.children.iter_mut() {
+            for child in &mut f.children {
                 match child {
                     JSXChild::Element(el) => strip_element(t, el, spans, first, by),
                     JSXChild::ExpressionContainer(c) => {
                         if let Some(e) = c.expression.as_expression_mut() {
-                            strip_keys(t, e, spans, first, by)
+                            strip_keys(t, e, spans, first, by);
                         }
                     }
                     _ => {}
@@ -524,13 +532,13 @@ fn last_return<'b, 'a>(statements: &'b mut ArenaVec<'a, Statement<'a>>) -> Optio
 
 struct Unspan;
 
-impl<'a> VisitMut<'a> for Unspan {
+impl VisitMut<'_> for Unspan {
     fn visit_span(&mut self, span: &mut Span) {
         *span = SPAN;
     }
 }
 
-impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
+impl<'a> VisitMut<'a> for Transformer<'a, '_> {
     /// Aliases go first, so a closure above one already reads it live, defaults included.
     fn visit_statements(&mut self, it: &mut ArenaVec<'a, Statement<'a>>) {
         let aliases = &self.plan.aliases;
@@ -590,7 +598,7 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
     fn visit_jsx_opening_element(&mut self, it: &mut JSXOpeningElement<'a>) {
         // `<div {...rest}>`: the element's spread reads every attribute anyway, so it gets a plain copy, not a view.
         if matches!(it.name, JSXElementName::Identifier(_) | JSXElementName::NamespacedName(_)) {
-            for attr in it.attributes.iter_mut() {
+            for attr in &mut it.attributes {
                 if let JSXAttributeItem::SpreadAttribute(s) = attr
                     && let Some(Rewrite::Rest { props, exclude, .. }) = self.rest_of(&s.argument)
                 {

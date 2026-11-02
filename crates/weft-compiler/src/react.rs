@@ -185,7 +185,7 @@ pub fn takes_words(name: &str) -> bool {
 /// event. `onChange` stays `change`: the back end gives it React's meaning (see `change` in @weft-js/core/dom).
 pub fn event(name: &str) -> Option<(String, bool)> {
     let rest = name.strip_prefix("on")?;
-    rest.chars().next().filter(|c| c.is_ascii_uppercase())?;
+    rest.chars().next().filter(char::is_ascii_uppercase)?;
     let bare = rest.strip_suffix("Capture").filter(|r| !r.ends_with("Pointer"));
     let event = bare.unwrap_or(rest).to_ascii_lowercase();
     let capture = bare.is_some();

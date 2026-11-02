@@ -152,10 +152,10 @@ impl Tree {
                     if v.is_nan() { LengthPercentageAuto::auto() } else { LengthPercentageAuto::length(v) }
             }
             key::SCROLL => {
-                s.overflow = if v != 0.0 {
-                    Point { x: Overflow::Visible, y: Overflow::Scroll }
-                } else {
+                s.overflow = if v == 0.0 {
                     Point { x: Overflow::Visible, y: Overflow::Visible }
+                } else {
+                    Point { x: Overflow::Visible, y: Overflow::Scroll }
                 };
                 s.scrollbar_width = 0.0;
             }
@@ -235,8 +235,10 @@ pub extern "C" fn wl_tree_new(measure: MeasureFn, user: *mut c_void) -> *mut Tre
 /// `t` must come from `wl_tree_new` and not be used afterwards.
 #[no_mangle]
 pub unsafe extern "C" fn wl_tree_free(t: *mut Tree) {
-    if !t.is_null() {
-        drop(Box::from_raw(t));
+    unsafe {
+        if !t.is_null() {
+            drop(Box::from_raw(t));
+        }
     }
 }
 
@@ -249,27 +251,27 @@ macro_rules! tree {
 
 #[no_mangle]
 pub extern "C" fn wl_node(t: *mut Tree, id: u32, measured: u32) {
-    tree!(t).node(id, measured != 0)
+    tree!(t).node(id, measured != 0);
 }
 #[no_mangle]
 pub extern "C" fn wl_remove(t: *mut Tree, id: u32) {
-    tree!(t).remove(id)
+    tree!(t).remove(id);
 }
 #[no_mangle]
 pub extern "C" fn wl_insert(t: *mut Tree, parent: u32, id: u32, before: u32) {
-    tree!(t).insert(parent, id, before)
+    tree!(t).insert(parent, id, before);
 }
 #[no_mangle]
 pub extern "C" fn wl_set(t: *mut Tree, id: u32, k: u32, v: f32) {
-    tree!(t).set(id, k, v)
+    tree!(t).set(id, k, v);
 }
 #[no_mangle]
 pub extern "C" fn wl_dirty(t: *mut Tree, id: u32) {
-    tree!(t).dirty(id)
+    tree!(t).dirty(id);
 }
 #[no_mangle]
 pub extern "C" fn wl_compute(t: *mut Tree, root: u32, w: f32, h: f32) {
-    tree!(t).compute(root, w, h)
+    tree!(t).compute(root, w, h);
 }
 
 /// Writes `[x, y, w, h, contentW, contentH]` into `out`. Returns 0 for an unknown id.
@@ -278,12 +280,14 @@ pub extern "C" fn wl_compute(t: *mut Tree, root: u32, w: f32, h: f32) {
 /// `out` must point to 6 writable floats.
 #[no_mangle]
 pub unsafe extern "C" fn wl_frame(t: *mut Tree, id: u32, out: *mut f32) -> u32 {
-    match tree!(t).frame(id) {
-        Some(f) => {
-            std::ptr::copy_nonoverlapping([f.x, f.y, f.w, f.h, f.content_w, f.content_h].as_ptr(), out, 6);
-            1
+    unsafe {
+        match tree!(t).frame(id) {
+            Some(f) => {
+                std::ptr::copy_nonoverlapping([f.x, f.y, f.w, f.h, f.content_w, f.content_h].as_ptr(), out, 6);
+                1
+            }
+            None => 0,
         }
-        None => 0,
     }
 }
 

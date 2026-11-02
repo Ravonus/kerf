@@ -16,7 +16,12 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrowFunctionBody, ArrowFunctionExpression, BindingIdentifier, BindingPattern, CallExpression,
+    ChainElement, Declaration, ExportDefaultDeclarationKind, Expression, FormalParameters, Function,
+    IdentifierReference, ImportDeclarationSpecifier, JSXAttribute, JSXAttributeItem, JSXAttributeName,
+    JSXAttributeValue, JSXChild, JSXElement, JSXElementName, JSXFragment, LogicalOperator, Program, Statement,
+};
 use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
 use oxc_semantic::{Scoping, SymbolId};
@@ -503,10 +508,10 @@ impl<'a> VisitMut<'a> for Replace<'a, '_> {
         if let Some(n) = self.pending.iter().position(|s| *s == a.span.start) {
             let text = self.allocator.alloc_str(&format!("<a shape={{$$site{n}}} />"));
             let parsed = Parser::new(self.allocator, text, SourceType::tsx()).parse_expression();
-            if let Ok(Expression::JSXElement(mut el)) = parsed {
-                if let Some(JSXAttributeItem::Attribute(attr)) = el.opening_element.attributes.first_mut() {
-                    std::mem::swap(a, attr);
-                }
+            if let Ok(Expression::JSXElement(mut el)) = parsed
+                && let Some(JSXAttributeItem::Attribute(attr)) = el.opening_element.attributes.first_mut()
+            {
+                std::mem::swap(a, attr);
             }
         }
         walk_mut::walk_jsx_attribute(self, a);
@@ -534,7 +539,7 @@ fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
             Statement::VariableDeclaration(d) => vars.push((&**d, false)),
             Statement::ExportDeclaration(e) => match &e.declaration {
                 Declaration::FunctionDeclaration(f) => {
-                    comps.extend(function(f, f.id.iter().map(|i| i.name.to_string()).collect()))
+                    comps.extend(function(f, f.id.iter().map(|i| i.name.to_string()).collect()));
                 }
                 Declaration::VariableDeclaration(d) => vars.push((&**d, true)),
                 _ => {}
@@ -546,7 +551,7 @@ fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
             }
             Statement::ExportDefaultDeclaration(e) => match &e.declaration {
                 ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
-                    comps.extend(function(f, vec!["default".into()]))
+                    comps.extend(function(f, vec!["default".into()]));
                 }
                 ExportDefaultDeclarationKind::ArrowFunctionExpression(f) => {
                     let (statements, expression) = arrow_body(f);
@@ -559,7 +564,7 @@ fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
                     });
                 }
                 ExportDefaultDeclarationKind::Identifier(i) => {
-                    names.entry(i.name.to_string()).or_default().push("default".into())
+                    names.entry(i.name.to_string()).or_default().push("default".into());
                 }
                 _ => {}
             },
@@ -655,7 +660,7 @@ pub fn apply<'a>(
                 let tag = format!("{}{local}$$v", if is_component_name(&local) { "" } else { "V" });
                 g.variants.insert(sym, tag.clone());
                 g.imports.insert(sym, tag.clone());
-                import_lines.insert(sym, format!("import {{ {imported}$shape as {tag} }} from {:?};\n", from));
+                import_lines.insert(sym, format!("import {{ {imported}$shape as {tag} }} from {from:?};\n"));
             }
         }
     }

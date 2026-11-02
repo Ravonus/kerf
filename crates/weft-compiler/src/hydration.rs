@@ -25,7 +25,12 @@
 use std::collections::HashMap;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    ArrowFunctionExpression, BindingPattern, CallExpression, Declaration, ExportDefaultDeclarationKind, Expression,
+    Function, IdentifierReference, ImportDeclarationSpecifier, JSXAttribute, JSXAttributeItem, JSXAttributeName,
+    JSXAttributeValue, JSXChild, JSXElement, JSXElementName, JSXFragment, JSXMemberExpressionObject,
+    ObjectPropertyKind, Program, Statement, StaticMemberExpression, TSType, VariableDeclarator,
+};
 use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
 use oxc_semantic::{Scoping, SemanticBuilder};
@@ -333,11 +338,11 @@ impl Collect<'_> {
     }
 
     /// An attribute on a plain element: a handler's value runs on its event.
-    fn attribute<'a>(&mut self, a: &JSXAttributeItem<'a>) {
+    fn attribute(&mut self, a: &JSXAttributeItem<'_>) {
         let on = matches!(a, JSXAttributeItem::Attribute(a) if attr_name(a) != "ref" && is_handler(&attr_name(a)));
-        self.handler += on as u32;
+        self.handler += u32::from(on);
         self.visit_jsx_attribute_item(a);
-        self.handler -= on as u32;
+        self.handler -= u32::from(on);
     }
 
     fn framed(&mut self, f: impl FnOnce(&mut Self)) -> Frame {
@@ -475,11 +480,11 @@ impl<'a> Visit<'a> for Collect<'_> {
                     }
                     let f = self.framed(|c| {
                         let on = name != "ref" && is_handler(&name);
-                        c.handler += on as u32;
+                        c.handler += u32::from(on);
                         if let Some(v) = &a.value {
                             c.visit_jsx_attribute_value(v);
                         }
-                        c.handler -= on as u32;
+                        c.handler -= u32::from(on);
                     });
                     attrs.push(Attr { name, kind, uses: f.uses, own: f.own });
                 }
@@ -662,7 +667,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                             });
                         }
                         node(&mut c, names.first().cloned().unwrap_or_default(), holds_value(d), &|c| {
-                            c.visit_variable_declarator(d)
+                            c.visit_variable_declarator(d);
                         });
                     }
                 }

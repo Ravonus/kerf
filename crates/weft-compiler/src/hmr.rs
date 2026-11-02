@@ -11,7 +11,10 @@
 //! at the top level (an entry). Otherwise Vite passes the update to its importers, which re-run it.
 
 use oxc_allocator::{Allocator, TakeIn, Vec as ArenaVec};
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Function,
+    FunctionBody, Program, Statement, VariableDeclaration,
+};
 use oxc_ast::builder::AstBuilder;
 use oxc_span::{GetSpan, SPAN, Span};
 
@@ -23,7 +26,7 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &s
     let mut rest = Fnv::new();
     let mut accept = true;
     let mut keeps = false;
-    for stmt in program.body.iter_mut() {
+    for stmt in &mut program.body {
         let span = stmt.span();
         let mixed = match &*stmt {
             // `export const Card = () => …, other = 1`
@@ -83,7 +86,7 @@ fn components<'s, 'a>(stmt: &'s mut Statement<'a>) -> Vec<(String, Option<&'s mu
         },
         Statement::ExportDefaultDeclaration(e) => {
             if let ExportDefaultDeclarationKind::FunctionDeclaration(f) = &mut e.declaration {
-                function(f, &mut out)
+                function(f, &mut out);
             }
         }
         _ => {}
@@ -105,13 +108,13 @@ fn function<'s, 'a>(f: &'s mut Function<'a>, out: &mut Vec<(String, Option<&'s m
 }
 
 fn variables<'s, 'a>(v: &'s mut VariableDeclaration<'a>, out: &mut Vec<(String, Option<&'s mut FunctionBody<'a>>)>) {
-    for d in v.declarations.iter_mut() {
+    for d in &mut v.declarations {
         let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
         if !is_component(&id.name) {
             continue;
         }
         let name = id.name.to_string();
-        match d.init.as_mut().map(|e| e.get_inner_expression_mut()) {
+        match d.init.as_mut().map(oxc_ast::ast::Expression::get_inner_expression_mut) {
             Some(Expression::ArrowFunctionExpression(a)) => {
                 if let ArrowFunctionBody::FunctionBody(body) = &mut a.body {
                     out.push((name, Some(body)));
@@ -138,9 +141,9 @@ fn wrap_state<'a>(
     source: &str,
 ) -> bool {
     let mut any = false;
-    for stmt in body.statements.iter_mut() {
+    for stmt in &mut body.statements {
         let Statement::VariableDeclaration(v) = stmt else { continue };
-        for d in v.declarations.iter_mut() {
+        for d in &mut v.declarations {
             let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
             let Some(init) = &mut d.init else { continue };
             let Expression::CallExpression(call) = &*init else { continue };
@@ -216,7 +219,7 @@ impl Fnv {
     }
     fn add(&mut self, s: &str) {
         for b in s.bytes() {
-            self.0 = (self.0 ^ b as u64).wrapping_mul(0x100000001b3);
+            self.0 = (self.0 ^ u64::from(b)).wrapping_mul(0x100000001b3);
         }
     }
 }
@@ -228,7 +231,7 @@ pub fn names<'a>(allocator: &'a Allocator, program: &mut Program<'a>, file: &str
     let ast = AstBuilder::new(allocator);
     let stem = std::path::Path::new(file).file_stem().and_then(|s| s.to_str()).unwrap_or("module").to_string();
     let mut any = false;
-    for stmt in program.body.iter_mut() {
+    for stmt in &mut program.body {
         if let Statement::VariableDeclaration(v) = &mut *stmt {
             any |= name_decls(&ast, allocator, v, &stem);
         } else if let Statement::ExportDeclaration(e) = &mut *stmt
@@ -238,7 +241,7 @@ pub fn names<'a>(allocator: &'a Allocator, program: &mut Program<'a>, file: &str
         }
         for (comp, body) in components(stmt) {
             let Some(body) = body else { continue };
-            for s in body.statements.iter_mut() {
+            for s in &mut body.statements {
                 if let Statement::VariableDeclaration(v) = s {
                     any |= name_decls(&ast, allocator, v, &comp);
                 }
@@ -255,7 +258,7 @@ fn name_decls<'a>(
     owner: &str,
 ) -> bool {
     let mut any = false;
-    for d in v.declarations.iter_mut() {
+    for d in &mut v.declarations {
         let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
         let Some(init) = &mut d.init else { continue };
         if !reactive_init(init) {

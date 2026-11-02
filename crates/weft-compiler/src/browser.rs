@@ -14,7 +14,12 @@
 
 use std::collections::{HashMap, HashSet};
 
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrowFunctionBody, ArrowFunctionExpression, AssignmentOperator, AssignmentTarget, AwaitExpression,
+    BindingIdentifier, BindingPattern, CallExpression, Expression, Function, IdentifierReference,
+    ImportDeclarationSpecifier, JSXAttribute, JSXAttributeName, JSXAttributeValue, NewExpression, ObjectPropertyKind,
+    Program, Statement, VariableDeclarator,
+};
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::{Scoping, SymbolId};
 use oxc_span::{GetSpan, Span};
@@ -83,8 +88,7 @@ pub fn check(program: &Program<'_>, scoping: &Scoping, source: &str, ssr: Ssr) -
                     .specifiers
                     .iter()
                     .flatten()
-                    .filter(|s| matches!(s, ImportDeclarationSpecifier::ImportSpecifier(_)))
-                    .last();
+                    .rfind(|s| matches!(s, ImportDeclarationSpecifier::ImportSpecifier(_)));
                 if let Some(s) = last {
                     browser_import = Some(s.span().end);
                 }
@@ -405,7 +409,12 @@ impl<'s> Checker<'s> {
         let Some(query) = call.arguments.first() else {
             return;
         };
-        let edit = match call.arguments.get(1).and_then(|a| a.as_expression()).map(|e| e.without_parentheses()) {
+        let edit = match call
+            .arguments
+            .get(1)
+            .and_then(|a| a.as_expression())
+            .map(oxc_ast::ast::Expression::without_parentheses)
+        {
             None if call.arguments.len() == 1 => {
                 Edit { start: query.span().end, end: query.span().end, text: ", { ssr: false }".into() }
             }
@@ -551,22 +560,22 @@ fn single_expression<'b, 'a>(f: &'b Expression<'a>) -> Option<&'b Expression<'a>
     let statements = match f.without_parentheses() {
         Expression::ArrowFunctionExpression(f) => match &f.body {
             ArrowFunctionBody::FunctionBody(body) => &body.statements,
-            body => return body.as_expression().map(|e| e.without_parentheses()),
+            body => return body.as_expression().map(oxc_ast::ast::Expression::without_parentheses),
         },
         Expression::FunctionExpression(f) => &f.body.as_ref()?.statements,
         _ => return None,
     };
     match statements.as_slice() {
         [Statement::ExpressionStatement(s)] => Some(s.expression.without_parentheses()),
-        [Statement::ReturnStatement(r)] => r.argument.as_ref().map(|e| e.without_parentheses()),
+        [Statement::ReturnStatement(r)] => r.argument.as_ref().map(oxc_ast::ast::Expression::without_parentheses),
         _ => None,
     }
 }
 
-impl<'a, 's> Visit<'a> for Checker<'s> {
+impl<'a> Visit<'a> for Checker<'_> {
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
         if let BindingPattern::BindingIdentifier(id) = &it.id
-            && let Some(init) = it.init.as_ref().map(|e| e.without_parentheses())
+            && let Some(init) = it.init.as_ref().map(oxc_ast::ast::Expression::without_parentheses)
         {
             if is_fn(init) {
                 self.pending_name = Some(id.name.to_string());

@@ -91,7 +91,7 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
                 } else {
                     let to = at_or_before(n as u32).unwrap_or((0, 0));
                     if src.is_some() {
-                        builder.add_token(line, col, to.0, to.1, src, None)
+                        builder.add_token(line, col, to.0, to.1, src, None);
                     }
                     stack.push(Seg::Lowered(to));
                 }
@@ -110,7 +110,7 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
                     Some(Seg::Copy(p)) => {
                         while next < pts.len() && pts[next].0 as usize == *p {
                             if src.is_some() {
-                                builder.add_token(line, col, pts[next].1, pts[next].2, src, None)
+                                builder.add_token(line, col, pts[next].1, pts[next].2, src, None);
                             }
                             next += 1;
                         }
@@ -126,7 +126,7 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
                     if let (Some(Seg::Lowered(to)), true) = (stack.last(), src.is_some())
                         && !matches!(chars.peek(), Some(&COPY | &LOWERED))
                     {
-                        builder.add_token(line, col, to.0, to.1, src, None)
+                        builder.add_token(line, col, to.0, to.1, src, None);
                     }
                 } else {
                     col += c.len_utf16() as u32;

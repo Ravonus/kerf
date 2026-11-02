@@ -24,7 +24,11 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 
 use oxc_allocator::{Allocator, TakeIn, Vec as ArenaVec};
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, BindingPattern, CallExpression, Declaration, Expression, ImportDeclarationSpecifier, JSXAttributeItem,
+    JSXAttributeName, JSXAttributeValue, JSXExpression, JSXOpeningElement, ObjectPropertyKind, Program, PropertyKey,
+    PropertyKind, Statement,
+};
 use oxc_ast::builder::AstBuilder;
 use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::{Scoping, SymbolId};
@@ -154,7 +158,7 @@ pub fn apply<'a>(
     // Definitions: `const x = group('name', { … })` at the top level, exported or not.
     let mut defs = Vec::new();
     let mut handled = HashSet::new();
-    for stmt in program.body.iter_mut() {
+    for stmt in &mut program.body {
         let start = stmt.span().start;
         let (decl, exported) = match stmt {
             Statement::VariableDeclaration(d) => (d, false),
@@ -164,7 +168,7 @@ pub fn apply<'a>(
             },
             _ => continue,
         };
-        for d in decl.declarations.iter_mut() {
+        for d in &mut decl.declarations {
             let (BindingPattern::BindingIdentifier(id), Some(Expression::CallExpression(call))) = (&d.id, &mut d.init)
             else {
                 continue;
@@ -229,7 +233,7 @@ pub fn apply<'a>(
     (defs, lower.uses)
 }
 
-/// The JSDoc block that ends right before `at` (only whitespace between), as plain text.
+/// The `JSDoc` block that ends right before `at` (only whitespace between), as plain text.
 fn doc_before(source: &str, at: u32) -> Option<String> {
     let before = source[..at as usize].trim_end();
     let body = before.strip_suffix("*/")?;
@@ -496,7 +500,7 @@ impl<'a> Lower<'a, '_> {
                 let attr = state_attr(&key);
                 match &p.value {
                     Expression::BooleanLiteral(b) if aria => {
-                        out.push(self.text(&attr, if b.value { "true" } else { "false" }))
+                        out.push(self.text(&attr, if b.value { "true" } else { "false" }));
                     }
                     Expression::BooleanLiteral(b) if b.value => out.push(self.text(&attr, "")),
                     Expression::BooleanLiteral(_) => {}

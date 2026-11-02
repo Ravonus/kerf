@@ -25,7 +25,10 @@
 use std::collections::{BTreeSet, HashMap};
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    BindingPattern, Expression, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
+    JSXElement, JSXElementName, JSXFragment, Program, Statement,
+};
 use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
@@ -142,11 +145,11 @@ struct Outermost<'a> {
 impl<'a> Visit<'a> for Outermost<'a> {
     fn visit_jsx_element(&mut self, it: &JSXElement<'a>) {
         // SAFETY: every node lives in the arena for the whole `dom` call; the visitor only hands out shorter borrows.
-        self.found.push(Jsx::El(unsafe { &*(it as *const JSXElement<'a>) }));
+        self.found.push(Jsx::El(unsafe { &*std::ptr::from_ref::<JSXElement<'a>>(it) }));
     }
     fn visit_jsx_fragment(&mut self, it: &JSXFragment<'a>) {
         // SAFETY: as above.
-        self.found.push(Jsx::Frag(unsafe { &*(it as *const JSXFragment<'a>) }));
+        self.found.push(Jsx::Frag(unsafe { &*std::ptr::from_ref::<JSXFragment<'a>>(it) }));
     }
 }
 
@@ -369,7 +372,7 @@ enum Kid<'a> {
     Expr(&'a Expression<'a>),
 }
 
-impl<'t> Emitter<'t> {
+impl Emitter<'_> {
     fn helper(&mut self, name: &'static str) -> String {
         self.helpers.insert(name);
         format!("_${name}")
@@ -432,19 +435,18 @@ impl<'t> Emitter<'t> {
     }
 
     fn element(&mut self, el: &JSXElement<'_>) -> String {
-        let (label, code) = match component_name(&el.opening_element.name, self.text) {
-            Some(name) => (format!("<{name}>"), self.component(el, name)),
-            None => {
-                let before = self.templates.len();
-                let code = self.template(el);
-                // The template it clones, then the code.
-                let shown = match self.templates.get(before) {
-                    Some(t) if self.templates.len() > before => format!("{}\n  {code}", t.lines().last().unwrap_or(t)),
-                    _ => code.clone(),
-                };
-                self.explain(el.span, format!("<{}>", tag_name(&el.opening_element.name)), &shown);
-                return code;
-            }
+        let (label, code) = if let Some(name) = component_name(&el.opening_element.name, self.text) {
+            (format!("<{name}>"), self.component(el, name))
+        } else {
+            let before = self.templates.len();
+            let code = self.template(el);
+            // The template it clones, then the code.
+            let shown = match self.templates.get(before) {
+                Some(t) if self.templates.len() > before => format!("{}\n  {code}", t.lines().last().unwrap_or(t)),
+                _ => code.clone(),
+            };
+            self.explain(el.span, format!("<{}>", tag_name(&el.opening_element.name)), &shown);
+            return code;
         };
         self.explain(el.span, label, &code);
         code
@@ -552,15 +554,11 @@ impl<'t> Emitter<'t> {
             .filter(|(p, _)| p.len() == path.len() && &p[..p.len() - 1] == parent && p[p.len() - 1] < last)
             .max_by_key(|(p, _)| p[p.len() - 1])
             .map(|(p, v)| (p[p.len() - 1], v.clone()));
-        let (mut from, steps) = match sibling {
-            Some((at, v)) => (v, last - at),
-            None => {
-                let p = self.node(b, parent);
-                (
-                    if self.hydratable { format!("{}({p})", self.helper("first")) } else { format!("{p}.firstChild") },
-                    last,
-                )
-            }
+        let (mut from, steps) = if let Some((at, v)) = sibling {
+            (v, last - at)
+        } else {
+            let p = self.node(b, parent);
+            (if self.hydratable { format!("{}({p})", self.helper("first")) } else { format!("{p}.firstChild") }, last)
         };
         for _ in 0..steps {
             from = if self.hydratable {
@@ -814,7 +812,7 @@ impl<'t> Emitter<'t> {
                     }
                 }
                 Some(other) => {
-                    self.fail("weft back end: a JSX element as an attribute value needs `{…}`", other.span())
+                    self.fail("weft back end: a JSX element as an attribute value needs `{…}`", other.span());
                 }
             }
         }
@@ -1401,7 +1399,11 @@ fn static_value(e: &Expression<'_>) -> Option<Static> {
         Expression::BooleanLiteral(b) => Some(if b.value { Static::True } else { Static::Absent }),
         Expression::NullLiteral(_) => Some(Static::Absent),
         Expression::TemplateLiteral(t) if t.expressions.is_empty() => Some(Static::Text(
-            t.quasis.first().and_then(|q| q.value.cooked.as_ref()).map(|c| c.to_string()).unwrap_or_default(),
+            t.quasis
+                .first()
+                .and_then(|q| q.value.cooked.as_ref())
+                .map(std::string::ToString::to_string)
+                .unwrap_or_default(),
         )),
         _ => None,
     }
@@ -1433,7 +1435,7 @@ fn prop_key(k: &str) -> String {
 /// JSX children after JSX's whitespace rules (React's: lines trimmed, whitespace-only lines with newlines dropped).
 fn children<'a>(kids: &'a oxc_allocator::Vec<'a, JSXChild<'a>>, _text: &str) -> Vec<Kid<'a>> {
     let mut out = Vec::new();
-    for k in kids.iter() {
+    for k in kids {
         match k {
             JSXChild::Text(t) => {
                 if let Some(s) = clean_text(t.value.as_str()) {
@@ -1501,15 +1503,12 @@ fn decode_entities(s: &str) -> String {
             }?;
             Some((c, e))
         });
-        match decoded {
-            Some((c, e)) => {
-                out.push(c);
-                rest = &tail[e + 1..];
-            }
-            None => {
-                out.push('&');
-                rest = &tail[1..];
-            }
+        if let Some((c, e)) = decoded {
+            out.push(c);
+            rest = &tail[e + 1..];
+        } else {
+            out.push('&');
+            rest = &tail[1..];
         }
     }
     out.push_str(rest);

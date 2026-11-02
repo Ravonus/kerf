@@ -43,21 +43,19 @@ fn app() -> Router {
             ctx.tag(format!("doc:{}", q.q));
             Ok::<_, weft::Error>(vec![Hit { id: q.q }])
         })
-        .add("who.a", |ctx: Ctx, _: ()| async move { Ok::<_, weft::Error>(ctx.user().map(|u| u.id.clone())) })
-        .add("mine.a", |ctx: UserCtx, _: ()| async move { Ok::<_, weft::Error>(ctx.user().roles.clone()) })
+        .add("who.a", |ctx: Ctx, (): ()| async move { Ok::<_, weft::Error>(ctx.user().map(|u| u.id.clone())) })
+        .add("mine.a", |ctx: UserCtx, (): ()| async move { Ok::<_, weft::Error>(ctx.user().roles.clone()) })
         .add("missing.a", |_: Ctx, q: Q| async move { Err::<(), E>(E::NotFound { id: q.q }) })
-        .add("boom.a", |_: Ctx, _: ()| async move {
-            if true {
-                panic!("the secret detail");
-            }
+        .add("boom.a", |_: Ctx, (): ()| async move {
+            assert!(!true, "the secret detail");
             Ok::<(), weft::Error>(())
         })
-        .add("fails.a", |_: Ctx, _: ()| async move { Err::<(), _>(weft::Error::msg("the secret detail")) })
-        .add("slow.a", |_: Ctx, _: ()| async move {
+        .add("fails.a", |_: Ctx, (): ()| async move { Err::<(), _>(weft::Error::msg("the secret detail")) })
+        .add("slow.a", |_: Ctx, (): ()| async move {
             tokio::time::sleep(Duration::from_secs(5)).await;
             Ok::<(), weft::Error>(())
         })
-        .add("late.a", |ctx: Ctx, _: ()| async move {
+        .add("late.a", |ctx: Ctx, (): ()| async move {
             let before = ctx.remaining();
             tokio::time::sleep(Duration::from_millis(30)).await;
             Ok::<_, weft::Error>(before > ctx.remaining() && !ctx.cancelled())
@@ -149,7 +147,7 @@ async fn the_deadline_ends_the_wait() {
 async fn what_serde_refuses_is_drift() {
     let (status, body) = call("find.a", json!({ "query": "x" })).await;
     assert_eq!((status, &body["error"]["code"]), (StatusCode::UNPROCESSABLE_ENTITY, &json!("Drift")));
-    assert!(body["error"]["message"].as_str().unwrap().contains("q"), "{body}");
+    assert!(body["error"]["message"].as_str().unwrap().contains('q'), "{body}");
 }
 
 #[tokio::test]
