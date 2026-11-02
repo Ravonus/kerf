@@ -96,3 +96,40 @@ test('a table wider than its box scrolls and shows an edge shadow on the side wi
   // a table that fits says nothing
   expect(await page.evaluate(() => document.querySelector('#sortbar [data-scope="table"]').dataset.overflow ?? '')).toBe('')
 })
+
+test('vivid: the pointer fill on a solid button is clearly lighter than its rest; balanced is unchanged', async () => {
+  const lum = c => { const m = c.match(/[\d.]+/g).map(Number); const f = x => { x /= 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4 }; return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]) }
+  const sample = async sel => {
+    const b = page.locator(`${sel} button`)
+    await page.mouse.move(5, 800)
+    await page.waitForTimeout(900)
+    const box = await b.boundingBox()
+    const shot = async () => {
+      const buf = await page.screenshot({ clip: { x: box.x + box.width - 6, y: box.y + box.height / 2, width: 1, height: 1 } })
+      return buf
+    }
+    const restBuf = await shot()
+    await page.mouse.move(box.x + 4, box.y + box.height / 2)
+    await page.waitForTimeout(900)
+    const hoverBuf = await shot()
+    await page.mouse.move(5, 800)
+    return [restBuf, hoverBuf]
+  }
+  // read the pixel through a canvas in the page, so no image library is needed
+  const px = buf => page.evaluate(async b64 => {
+    const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode()
+    const c = document.createElement('canvas'); c.width = 1; c.height = 1; const g = c.getContext('2d'); g.drawImage(img, 0, 0)
+    const d = g.getImageData(0, 0, 1, 1).data; return `rgb(${d[0]},${d[1]},${d[2]})`
+  }, buf.toString('base64'))
+  const [vr, vh] = await sample('#solid')
+  const rest = lum(await px(vr)), hover = lum(await px(vh))
+  expect(hover / rest).toBeGreaterThan(1.12)
+  // ink on the landed fill still reads: on-solid vs the fill stays at 4.5:1
+  const ink = await page.evaluate(() => getComputedStyle(document.querySelector('#solid button')).color)
+  const [a, b] = [await px(vr), await px(vh)].map(c => c.match(/\d+/g).map(Number))
+  expect(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeGreaterThan(40) // a different, brighter ink, not a shade
+  const inkL = lum(ink.startsWith('rgb') ? ink : 'rgb(250,250,250)')
+  expect((Math.max(inkL, hover) + 0.05) / (Math.min(inkL, hover) + 0.05)).toBeGreaterThanOrEqual(4.5)
+  const [br, bh] = await sample('#solid-balanced')
+  expect(lum(await px(bh))).toBeLessThanOrEqual(lum(await px(br)) + 0.005) // balanced still darkens on hover, as before
+})

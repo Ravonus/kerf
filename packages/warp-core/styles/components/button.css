@@ -32,6 +32,24 @@
   --_off: light-dark(var(--warp-color-text), color-mix(in oklab, var(--_solid) 42%, var(--warp-color-surface)));
 }
 :where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 5%, var(--_solid-hover)); }
+/* a solid's fill is lighter, brighter ink than its rest, spreading from the hand: the hover shade (darker in light) next to
+   the rest read as nothing happening. The fill leans to the highlight, and on light its lightness stops at 0.53, where the
+   on-solid ink still has 4.5:1 (on dark the lift only adds contrast). Without relative colour, a smaller safe mix. Only
+   vivid draws it (--warp-btn-fill). */
+:where([data-scope="button"]:not([data-emphasis])) {
+  --_pa: color-mix(in oklab, var(--warp-color-highlight-solid) 8%, var(--_solid));
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 11%, var(--_solid));
+}
+@supports (color: oklch(from red l c h)) {
+  :where([data-scope="button"]:not([data-emphasis])) {
+    --_pa: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)) min(l, 0.53) c h), color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)));
+    --_pb: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)) min(l, 0.53) calc(c * 1.1) h), color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)));
+  }
+}
+:where([data-scope="button"][data-tone="neutral"]:not([data-emphasis])) {
+  --_pa: color-mix(in oklab, white 10%, var(--_solid));
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 6%, color-mix(in oklab, white 16%, var(--_solid)));
+}
 /* the primary action reads the stop's primary, which is ink at quiet */
 :where([data-scope="button"]:not([data-emphasis], [data-tone])) {
   --_solid: var(--warp-color-primary-solid); --_solid-hover: var(--warp-color-primary-solid-hover); --_ink-on: var(--warp-color-primary-on-solid);
