@@ -80,7 +80,7 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
             <div>
               <Button size="sm" ref={n => (ok = n)} onClick={() => leave(() => onApprove?.(args.value, always.value))}><CheckIcon />Approve</Button>
               <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny?.())}>Deny</Button>
-              {alwaysAllow !== undefined && <Checkbox checked={always.value} onChange={(e: any) => (always.value = e.currentTarget.checked)}>{alwaysAllow}</Checkbox>}
+              {alwaysAllow !== undefined && <Checkbox checked={always.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (always.value = e.currentTarget.checked)}>{alwaysAllow}</Checkbox>}
             </div>
           </div>
         )}

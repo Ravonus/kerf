@@ -14,6 +14,7 @@ export interface Pointer {
   in: boolean
 }
 
+/** What a canvas's draw function gets each frame. */
 export interface Frame {
   ctx: CanvasRenderingContext2D
   /** CSS pixels, or cells when the surface has a `cell`. */
@@ -39,12 +40,12 @@ export interface SurfaceOptions {
   fps?: number | undefined
   /** Whole-cell mode: one backing pixel per cell, scaled up without smoothing and snapped to device pixels. */
   cell?: number | undefined
-  maxDpr?: number
-  context?: CanvasRenderingContext2DSettings
+  maxDpr?: number | undefined
+  context?: CanvasRenderingContext2DSettings | undefined
   /** Track the pointer into `Frame.pointer`, and paint when it moves over the canvas. */
-  pointer?: boolean
+  pointer?: boolean | undefined
   /** Called when a theme, tier or motion dial changes around the canvas, before the repaint. */
-  onTheme?: () => void
+  onTheme?: (() => void) | undefined
 }
 
 /** A canvas surface: the action, plus repainting on request and telling if it's seen. */
@@ -174,7 +175,7 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
   }
   const listen = () => {
     if (o.pointer && !untrack) untrack = track(follow)
-    else if (!o.pointer && untrack) untrack = void untrack()
+    else if (!o.pointer && untrack) { untrack(); untrack = undefined }
   }
 
   const size = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => { sized = false; invalidate() })

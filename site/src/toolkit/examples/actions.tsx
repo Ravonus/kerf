@@ -1,6 +1,6 @@
 import { state, untrack } from '@weft-js/core'
 import { Button, Chip, CommandPalette, Input, Menu, Row, Stack, Text, Toggle, Toaster, toast } from '@weft-js/warp'
-import type { ButtonProps } from '@weft-js/warp'
+import type { ButtonProps, Command, CommandMode } from '@weft-js/warp'
 import { PEOPLE, PROJECTS, REGIONS } from '../world'
 
 export const ButtonPlay = (p: ButtonProps) => <Button {...p} />
@@ -107,7 +107,7 @@ export function ButtonSaveAsync() {
   const saving = state(false)
   const save = async () => {
     saving.value = true
-    await new Promise(done => setTimeout(done, 1500))
+    await new Promise(done => { setTimeout(done, 1500) })
     saving.value = false
     toast.show({ title: 'Saved', description: 'Your changes are live.' })
   }
@@ -254,7 +254,7 @@ export const MenuRowActions = () => (
   </Row>
 )
 
-const COMMANDS = [
+const COMMANDS: Command[] = [
   { id: 'deploy', label: 'Deploy storefront', group: 'Projects', icon: 'rocket', shortcut: '⌘D' },
   { id: 'logs', label: 'Open logs', group: 'Projects', icon: 'external' },
   { id: 'settings', label: 'Open settings', group: 'Go to', icon: 'settings', shortcut: '⌘,' },
@@ -287,7 +287,7 @@ export function CommandPaletteRun() {
 export function CommandPaletteNested() {
   const open = state(false)
   const region = state('eu-west')
-  const commands = [
+  const commands: Command[] = [
     { id: 'region', label: 'Move storefront to…', group: 'Projects', icon: 'globe', children: () => REGIONS.map(({ region: r }) => ({ id: r, label: r, group: 'Regions', icon: 'pin', run: () => (region.value = r) })) },
     { id: 'deploy', label: 'Deploy storefront', group: 'Projects', icon: 'rocket', shortcut: '⌘D' },
   ]
@@ -301,8 +301,8 @@ export function CommandPaletteNested() {
 }
 
 /** Projects come from a search you run: return a promise and its rows land under the commands, without moving the active row. */
-const findProjects = async (query: string, signal: AbortSignal) => {
-  await new Promise(done => setTimeout(done, 250))
+const findProjects = async (query: string, signal: AbortSignal): Promise<Command[]> => {
+  await new Promise(done => { setTimeout(done, 250) })
   if (signal.aborted || !query) return []
   return PROJECTS.filter(p => p.name.includes(query.toLowerCase())).map(p => ({ id: p.id, label: p.name, group: 'Projects', icon: 'folder', hint: `${p.region} · ${p.status}` }))
 }
@@ -320,7 +320,7 @@ export function CommandPaletteSearch() {
 }
 
 /** A first character switches what is searched: `@` finds people and `#` finds projects. */
-const MODES = [
+const MODES: CommandMode[] = [
   { prefix: '@', label: 'People', placeholder: 'Find a teammate', commands: PEOPLE.map(p => ({ id: p.id, label: p.name, group: 'People', icon: 'user', hint: p.team })) },
   { prefix: '#', label: 'Projects', placeholder: 'Find a project', commands: PROJECTS.map(p => ({ id: p.id, label: p.name, group: 'Projects', icon: 'folder', hint: p.region })) },
 ]

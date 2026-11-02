@@ -28,6 +28,6 @@ export const guarded = (open: State<boolean>, may: () => boolean) => ({
 }) as State<boolean>
 
 /** The compact select in a table cell (specimen `roleSel`). */
-export const InlineSelect = ({ label, value, options, describedby, onValueChange }: { label: string; value: string; options: { value: string; label: string }[]; describedby?: string; onValueChange: (value: string) => void }) => (
+export const InlineSelect = ({ label, value, options, describedby, onValueChange }: { label: string; value: string; options: { value: string; label: string }[]; describedby?: string | undefined; onValueChange: (value: string) => void }) => (
   <CompactSelect label={label} value={value} options={options} describedby={describedby} onValueChange={onValueChange} />
 )

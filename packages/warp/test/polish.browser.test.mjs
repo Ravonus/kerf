@@ -27,7 +27,7 @@ beforeAll(async () => {
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise(r => server.once('listening', r))
+  await new Promise(r => { server.once('listening', r) })
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   page.on('pageerror', e => errors.push(e.message))
@@ -59,8 +59,8 @@ test('a toggle released from pressed keeps no stroke once the pointer leaves', a
   expect(await t.evaluate(b => getComputedStyle(b.querySelector('[data-part="sweep"]')).getPropertyValue('--_sr').trim())).toBe('0%')
 })
 
-const clearOfChevron = sel => page.evaluate(sel => {
-  const f = document.querySelector(sel)
+const clearOfChevron = sel => page.evaluate(s => {
+  const f = document.querySelector(s)
   const v = f.querySelector('[data-part="value"]'), i = f.querySelector('[data-part="indicator"]')
   const r = document.createRange(); r.selectNodeContents(v)
   return { text: v.textContent, textEnd: r.getBoundingClientRect().right, chevron: i.getBoundingClientRect().left, clipped: v.scrollWidth > v.clientWidth + 0.5 }

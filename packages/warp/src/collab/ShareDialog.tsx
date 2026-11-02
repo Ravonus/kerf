@@ -81,7 +81,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
           <div style="flex:1;min-inline-size:0">
             <ComboField label="Add people or email" minChars={1} text={() => typed.value} onText={t => (typed.value = t)} find={find} row={(p: ShareContact) => ({ main: p.name, sub: p.email })} onPick={(p: ShareContact) => add(p.email)} />
           </div>
-          <CompactSelect label="Role for new people" value={role.value} options={ROLE_OPTIONS} onValueChange={v => (role.value = v as any)} />
+          <CompactSelect label="Role for new people" value={role.value} options={ROLE_OPTIONS} onValueChange={v => (role.value = v as ShareRole)} />
           <Button onClick={invite}>Invite</Button>
         </form>
         {chips.value.length > 0 && <div style="display:flex;flex-wrap:wrap;gap:6px;margin-block-start:8px">{chips.value.map(c => <Tag key={c} onRemove={() => (chips.value = chips.value.filter(x => x !== c))}>{c}</Tag>)}</div>}
@@ -93,15 +93,15 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
               {m.role === 'owner'
                 ? <span>Owner</span>
                 : <>
-                    <CompactSelect label={`Role for ${m.name}`} value={m.role} options={MEMBER_OPTIONS} onValueChange={v => onRoleChange(m, v === 'remove' ? null : v as any)} />
+                    <CompactSelect label={`Role for ${m.name}`} value={m.role} options={MEMBER_OPTIONS} onValueChange={v => onRoleChange(m, v === 'remove' ? null : (v as ShareRole))} />
                   </>}
             </div>
           ))}
         </div>
         <div data-part="link">
           <LinkIcon />
-          <CompactSelect label="Link access" value={access.value.access} options={ACCESS_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, access: v as any })} />
-          {access.value.access === 'anyone' && <CompactSelect label="Link role" value={access.value.role} options={ROLE_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, role: v as any })} />}
+          <CompactSelect label="Link access" value={access.value.access} options={ACCESS_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, access: v as ShareLink['access'] })} />
+          {access.value.access === 'anyone' && <CompactSelect label="Link role" value={access.value.role} options={ROLE_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, role: v as ShareRole })} />}
           <span data-part="spacer" style="flex:1"></span>
           <span ref={n => (copy = n)} style="display:contents">
             <Button emphasis="outline" tone="neutral" size="sm" onClick={(e: MouseEvent) => {

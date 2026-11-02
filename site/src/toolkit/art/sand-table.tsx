@@ -34,7 +34,7 @@ export default function SandTable(_: ArtProps) {
       const d = rake[i]! - sand[i]!
       if (Math.abs(d) < 0.004) continue
       moved++
-      sand[i] += d * 0.012 + (sand[i - 1]! + sand[i + 1]! + sand[i - W]! + sand[i + W]! - 4 * sand[i]!) * 0.05
+      sand[i]! += d * 0.012 + (sand[i - 1]! + sand[i + 1]! + sand[i - W]! + sand[i + W]! - 4 * sand[i]!) * 0.05
     }
     return moved
   }

@@ -16,7 +16,8 @@ function print(play: ShownPlayground, name: string, v: Values) {
     const x = v[k.prop]
     return x === true ? ` ${k.prop}` : typeof x === 'string' ? ` ${k.prop}="${x}"` : ` ${k.prop}={${JSON.stringify(x)}}`
   }).join('')
-  const kids = String(v.children ?? '')
+  const c = v.children
+  const kids = c == null ? '' : typeof c === 'string' ? c : JSON.stringify(c)
   const line = (kids ? play.code : play.code.replace(/>\{children\}<\/[\w.]+>/, ' />')).replace('{props}', () => attrs).replace('{children}', () => kids)
   return `import { ${name} } from '@weft-js/warp'\n\n${line}`
 }
@@ -30,7 +31,7 @@ function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { 
   const k = untrack(() => props.knob)
   const options = (k.options ?? []).map(o => ({ value: String(o), label: String(o) }))
   const value = derived(() => props.values.value[k.prop])
-  const text = derived(() => String(value.value ?? ''))
+  const text = derived(() => (value.value == null ? '' : String(value.value as string | number | boolean)))
   const number = derived(() => Number(value.value))
   if (k.control === 'switch') return <Switch checked={!!value.value} onChange={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).checked)}>{k.label}</Switch>
   if (k.control === 'segmented') return <><span data-part="knob-label">{k.label}</span><Segmented size="sm" label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, option(k, v))} /></>
@@ -49,8 +50,9 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
   const play = props.play
   const seed = untrack(() => startOf(props.play))
   const values = state<Values>(seed)
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
-  let Case: any
+  let Case: ((values: Record<string, unknown>) => unknown) | undefined
   let stop: (() => void) | undefined
   let frame = 0
   let gone = false
@@ -60,7 +62,8 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
     stop?.()
     host.replaceChildren()
     const v = Object.fromEntries(play.knobs.filter(k => shown(k, values.value)).map(k => [k.prop, values.value[k.prop]]))
-    stop = render(() => <Case {...v} />, host) as any
+    const Shown = Case
+    stop = render(() => <Shown {...v} />, host)
     host.toggleAttribute('data-ready', true)
   }
   const sync = () => {
@@ -83,7 +86,7 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
       if (raw !== null) given[k.prop] = k.control === 'switch' ? raw === 'true' : k.control === 'slider' ? +raw : option(k, raw)
     }
     if (Object.keys(given).length) values.value = { ...values.value, ...given }
-    previews[props.file]!().then(m => { Case = m[play.example]; show() })
+    void previews[props.file]!().then(m => { Case = m[play.example] as typeof Case; show() })
   })
   onCleanup(() => { gone = true; if (frame) cancelAnimationFrame(frame); stop?.() })
   const code = derived(() => print(play, props.name, values.value))
@@ -107,7 +110,9 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
       <div data-part="code">
         <figure data-scope="codeblock" data-bare="">
           <div data-part="head"><Button emphasis="ghost" tone="neutral" size="sm" icon="copy" label="Copy code" data-act="copy" data-copy="" data-copy-text={code.value} /></div>
-          <pre tabindex="0"><code innerHTML={html.value}></code></pre>
+          <pre tabindex="0"><code
+            // oxlint-disable-next-line weft/no-html-sink -- highlight escapes every character of the code it marks up
+            innerHTML={html.value}></code></pre>
         </figure>
       </div>
     </div>

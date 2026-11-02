@@ -15,9 +15,9 @@ function dusk() {
   c.height = H
   const g = c.getContext('2d')!, px = g.createImageData(W, H), sky = [[0.98, 0.72, 0.5], [0.72, 0.42, 0.52], [0.16, 0.16, 0.34]]
   for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i += 4) {
-    const v = y / H, u = x / W, up = clamp((0.72 - v) / 0.72), k = up * 2, a = sky[k < 1 ? 0 : 1], b = sky[k < 1 ? 1 : 2], m = k < 1 ? k : k - 1
+    const v = y / H, u = x / W, up = clamp((0.72 - v) / 0.72), k = up * 2, a = sky[k < 1 ? 0 : 1]!, b = sky[k < 1 ? 1 : 2]!, m = k < 1 ? k : k - 1
     const cloud = smooth(0.52, 0.8, fbm(u * 5 + 3, v * 16, 5)) * 0.5
-    let r = mix(a[0], b[0], m) + cloud * 0.25, gr = mix(a[1], b[1], m) + cloud * 0.16, bl = mix(a[2], b[2], m) + cloud * 0.12
+    let r = mix(a[0]!, b[0]!, m) + cloud * 0.25, gr = mix(a[1]!, b[1]!, m) + cloud * 0.16, bl = mix(a[2]!, b[2]!, m) + cloud * 0.12
     const d = Math.hypot((u - 0.66) * 2.13, v - 0.52), sun = smooth(0.1, 0.092, d), glow = Math.exp(-d * d * 7) * 0.6
     r += glow + sun; gr += glow * 0.7 + sun * 0.9; bl += glow * 0.35 + sun * 0.7
     for (let n = 0; n < 3; n++) {
@@ -32,6 +32,7 @@ function dusk() {
 
 export default function Darkroom(_: ArtProps) {
   const split = state(52), algorithm = state('atkinson'), cell = state('3'), print = state<string | undefined>(typeof document === 'undefined' ? undefined : dusk())
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
   const slide = (e: PointerEvent) => {
     if (!e.buttons && e.type !== 'pointerdown') return

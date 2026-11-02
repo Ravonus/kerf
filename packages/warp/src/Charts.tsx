@@ -60,8 +60,10 @@ export function StreamChart(p: ChartFrame & Omit<StreamConfig, 'paused'>) {
 
 /** No axes, end dot, `aria-hidden`: a sparkline is context inside a labelled parent. */
 /** `format` says a hovered point the way the headline beside it does (`v => \`${v}%\``), so the unit carries over. */
-export function Sparkline({ values, color, format }: { values: number[]; color?: string; format?: (value: number) => string }) {
+export function Sparkline({ values, color, format }: { values: number[]; color?: string | undefined; format?: ((value: number) => string) | undefined }) {
   let svg: SVGSVGElement | undefined
   use(sparkAction, () => svg, () => (format ? { values, format } : values))
-  return <svg ref={(n: any) => (svg = n)} data-part="spark" viewBox={`0 0 ${SSR_WIDTH} 36`} aria-hidden="true" preserveAspectRatio="none" style={`display:block;inline-size:100%;block-size:36px;overflow:visible${color ? `;--_dc:${color}` : ''}`} innerHTML={toHTML(sparkScene(untrack(() => values), SSR_WIDTH))}></svg>
+  return <svg ref={n => (svg = n)} data-part="spark" viewBox={`0 0 ${SSR_WIDTH} 36`} aria-hidden="true" preserveAspectRatio="none" style={`display:block;inline-size:100%;block-size:36px;overflow:visible${color ? `;--_dc:${color}` : ''}`}
+    // oxlint-disable-next-line weft/no-html-sink -- toHTML escapes every text and attribute of the scene
+    innerHTML={toHTML(sparkScene(untrack(() => values), SSR_WIDTH))}></svg>
 }

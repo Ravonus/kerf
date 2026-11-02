@@ -7,7 +7,7 @@ import { Toggle } from '../../src/Toggle'
 import { Textarea } from '../../src/Field'
 import { CodeBlock } from '../../src/CodeBlock'
 import { Kanban } from '../../src/collab/Kanban'
-import { Calendar } from '../../src/schedule/Calendar'
+import { Calendar, type CalendarProps } from '../../src/schedule/Calendar'
 import { Bell } from '../../src/live/Bell'
 import { Webhooks } from '../../src/admin/Integrations'
 import { Modal } from '../../src/Modal'
@@ -30,20 +30,20 @@ const EVENTS = [
   ...[2, 3, 4, 5, 6].flatMap(d => [ev(`s${d}`, 'Standup', d, '09:30', '09:45'), ev(`x${d}`, 'Focus block', d, '14:00', '16:00', undefined, 2), ev(`y${d}`, 'Review', d, '16:00', '17:00', undefined, 3), ev(`z${d}`, 'Wrap-up', d, '17:00', '17:30')]),
   ev('late', 'Quarter close', 27, '10:00', '11:00'), ev('last', 'Retro', 30, '15:00', '16:00'),
 ]
-const cal = (props: any) => <Calendar events={EVENTS} resources={ROOMS} today="2026-11-02" now="2026-11-04T10:40" defaultDate="2026-11-04" locale="en-US" firstDayOfWeek={1} readOnly {...props} />
+const cal = (props: Partial<CalendarProps>) => <Calendar events={EVENTS} resources={ROOMS} today="2026-11-02" now="2026-11-04T10:40" defaultDate="2026-11-04" locale="en-US" firstDayOfWeek={1} readOnly {...props} />
 const HOOKS = [
   { id: 'h1', url: 'https://hooks.example-commerce.com/integrations/deploys/production-receiver?team=storefront&format=json', events: ['deploy.succeeded', 'deploy.failed'], healthy: true, lastDelivery: '2 minutes ago' },
   { id: 'h2', url: 'https://api.acme.dev/webhooks/weft', events: ['member.added'], healthy: false },
 ]
-const box = (id: string, w: number, ui: any) => <div id={id} style={`inline-size:${w}px`}>{ui}</div>
+const box = (id: string, w: number, ui: unknown) => <div id={id} style={`inline-size:${w}px`}>{ui}</div>
 
 function Toggles() {
   const on = [state(true), state(true), state(true)]
   return (
     <div id="toggles" style="display:flex;gap:16px;align-items:center;padding:8px">
-      <Toggle size="sm" pressed={on[0].value} onClick={() => (on[0].value = !on[0].value)}>Bold</Toggle>
-      <Toggle pressed={on[1].value} onClick={() => (on[1].value = !on[1].value)}>Bold</Toggle>
-      <Toggle size="lg" pressed={on[2].value} onClick={() => (on[2].value = !on[2].value)}>Bold</Toggle>
+      <Toggle size="sm" pressed={on[0]!.value} onClick={() => (on[0]!.value = !on[0]!.value)}>Bold</Toggle>
+      <Toggle pressed={on[1]!.value} onClick={() => (on[1]!.value = !on[1]!.value)}>Bold</Toggle>
+      <Toggle size="lg" pressed={on[2]!.value} onClick={() => (on[2]!.value = !on[2]!.value)}>Bold</Toggle>
     </div>
   )
 }
@@ -65,7 +65,7 @@ render(() => (
     <div id="bells" style="display:flex;gap:24px;padding:16px">
       {['compact', 'cozy', 'comfortable'].map(d => <div data-density={d} style="display:flex;gap:16px"><Bell count={3} /><Bell count={12} /></div>)}
     </div>
-    {[['hooks-desk', 760], ['hooks-phone', 340]].map(([id, w]) => box(id as string, w as number, <Webhooks hooks={HOOKS} events={['deploy.succeeded']} onAdd={async () => 'whsec_x'} onTest={async () => ({ status: 200, ms: 1 })} />))}
+    {[['hooks-desk', 760], ['hooks-phone', 340]].map(([id, w]) => box(id as string, w as number, <Webhooks hooks={HOOKS} events={['deploy.succeeded']} onAdd={() => Promise.resolve('whsec_x')} onTest={() => Promise.resolve({ status: 200, ms: 1 })} />))}
     <div id="inline-overlays" style="display:grid;gap:24px;inline-size:520px;padding:16px">
       <div id="in-modal"><Modal inline open={state(true)} size="sm" title="Rename project" footer={<Button data-close="">Save</Button>}>Everyone sees the new name.</Modal></div>
       <div id="in-drawer" style="display:flex;justify-content:flex-end"><Drawer inline open={state(true)} side="right" title="Deploy d-4821">Rows</Drawer></div>

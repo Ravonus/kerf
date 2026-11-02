@@ -5,7 +5,7 @@ import code from './ramp-wall.tsx?raw'
 
 export const meta: Meta = { name: 'Ramp Wall', description: 'Every ramp through every pattern, as plates. Click one and its props are on your clipboard.', kind: 'field', code, wide: true, rest: true }
 
-const RAMPS: Ramp[] = ['accent', 'neutral', 'positive', 'caution', 'critical', 'info', 'highlight']
+const RAMPS = ['accent', 'neutral', 'positive', 'caution', 'critical', 'info', 'highlight'] as const satisfies readonly Ramp[]
 const PATTERNS: Algorithm[] = ['bayer2', 'bayer4', 'bayer8', 'blue', 'halftone']
 
 export default function RampWall(_: ArtProps) {

@@ -9,7 +9,7 @@ const colours = inks({ line: '--warp-color-border-control', hot: '--warp-color-a
 
 export default function Pluck(_: ArtProps) {
   const u = new Float32Array(STRINGS * NODES), v = new Float32Array(STRINGS * NODES)
-  let lx = -1, ly = 0, due = 0, ready = false
+  let lx = -1, due = 0, ready = false
 
   /** Bends string `s` into a soft triangle peaking at `k` along it, the shape a finger leaves. */
   function bend(s: number, k: number, size: number) {
@@ -22,7 +22,7 @@ export default function Pluck(_: ArtProps) {
       const at = s * NODES
       for (let n = 1; n < NODES - 1; n++) { const i = at + n; v[i] = (v[i]! + (u[i - 1]! + u[i + 1]! - 2 * u[i]!) * WAVE) * DAMP }
     }
-    for (let i = 0; i < u.length; i++) { u[i] += v[i]!; const a = Math.abs(u[i]!) + Math.abs(v[i]!); if (a > peak) peak = a }
+    for (let i = 0; i < u.length; i++) { u[i]! += v[i]!; const a = Math.abs(u[i]!) + Math.abs(v[i]!); if (a > peak) peak = a }
     return peak
   }
   // A still is a chord caught mid-ring: the first run of it, frozen.
@@ -40,7 +40,6 @@ export default function Pluck(_: ArtProps) {
         for (let s = Math.max(0, a); s <= Math.min(STRINGS - 1, b); s++) if (s + 1 > Math.min(lx, pointer.x) / gap && s + 1 <= Math.max(lx, pointer.x) / gap) bend(s, Math.max(0.1, Math.min(0.9, (pointer.y - my) / (height - my * 2))), dir * (pointer.down ? 22 : 13))
       }
       lx = pointer.x
-      ly = pointer.y
     } else lx = -1
     let peak = 0
     if (tier.reach > 0) {

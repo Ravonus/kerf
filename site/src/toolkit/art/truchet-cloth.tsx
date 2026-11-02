@@ -21,7 +21,7 @@ export default function TruchetCloth({ live = true }: ArtProps) {
     ctx.lineCap = 'butt'
     for (const [wide, colour] of [[width, ink], [width - 2, ground]] as const) {
       ctx.beginPath()
-      for (const i of list) tile(ctx, i, turns[i])
+      for (const i of list) tile(ctx, i, turns[i]!)
       ctx.lineWidth = wide
       ctx.strokeStyle = colour
       ctx.stroke()
@@ -35,15 +35,15 @@ export default function TruchetCloth({ live = true }: ArtProps) {
       turns = new Float32Array(cols * rows)
       targets = new Uint8Array(cols * rows)
       all.length = 0
-      for (let i = 0; i < turns.length; i++) { targets[i] = random() < 0.5 ? 0 : 1; turns[i] = targets[i] * (PI / 2); all.push(i) }
+      for (let i = 0; i < turns.length; i++) { targets[i] = random() < 0.5 ? 0 : 1; turns[i] = targets[i]! * (PI / 2); all.push(i) }
     }
     const over = pointer.in ? Math.floor(pointer.y / SIZE) * cols + Math.floor(pointer.x / SIZE) : -1
     if (active < 0 && over >= 0 && over !== last && over < turns.length) { active = last = over; phase = 0 }
     if (!still && active < 0 && (wait -= dt * tier.speed) < 0) { active = (random() * turns.length) | 0; phase = 0; wait = 0.14 }
     if (active >= 0) {
       phase += dt / TWEEN
-      if (phase >= 1) { targets[active] ^= 1; turns[active] = targets[active] * (PI / 2); active = -1 }
-      else turns[active] = targets[active] * (PI / 2) + smooth(0, 1, phase) * (PI / 2)
+      if (phase >= 1) { targets[active]! ^= 1; turns[active] = targets[active]! * (PI / 2); active = -1 }
+      else turns[active] = targets[active]! * (PI / 2) + smooth(0, 1, phase) * (PI / 2)
     }
     ctx.clearRect(0, 0, width, height)
     ribbon(ctx, all, 12, c.line, c.ground)

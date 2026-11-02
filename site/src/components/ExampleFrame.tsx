@@ -32,7 +32,9 @@ export function ExampleFrame(props: { file: string; example: ShownExample; hero?
         <Preview file={props.file} id={ex.id} stage={ex.stage} />
       </div>
       <div data-part="code" data-fold={ex.lines > FOLD && !ex.codeOpen ? '' : undefined}>
-        <div innerHTML={ex.code}></div>
+        <div
+          // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's examples
+          innerHTML={ex.code}></div>
         {ex.lines > FOLD && !ex.codeOpen && <Button emphasis="outline" tone="neutral" size="sm" data-act="stage-code">View code</Button>}
       </div>
     </div>

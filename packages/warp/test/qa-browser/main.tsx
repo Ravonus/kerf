@@ -6,7 +6,7 @@ import { Table } from '../../src/Table'
 
 const rows = [{ id: 'a', name: 'Alpha', cost: 1 }, { id: 'b', name: 'Beta', cost: 2 }]
 const columns = [{ id: 'name', header: 'Name', sort: true }, { id: 'cost', header: 'Cost', sort: true, numeric: true }]
-const box = (id: string, w: number, ui: any) => <div id={id} style={`inline-size:${w}px`}>{ui}</div>
+const box = (id: string, w: number, ui: unknown) => <div id={id} style={`inline-size:${w}px`}>{ui}</div>
 
 render(() => (
   <>

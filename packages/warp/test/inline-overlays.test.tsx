@@ -4,7 +4,7 @@ import { flush, render } from '@weft-js/core/test'
 import { state } from '@weft-js/core'
 import { Button, Drawer, Modal, Popover, Tooltip } from '../src/index'
 
-const spy = (proto: any, name: string) => {
+const spy = (proto: Record<string, unknown>, name: string) => {
   const calls: string[] = []
   const was = proto[name]
   proto[name] = function (this: Element) { calls.push(this.getAttribute('data-scope') ?? '') }
@@ -12,7 +12,7 @@ const spy = (proto: any, name: string) => {
 }
 
 test('Modal and Drawer inline: a non-modal <dialog open> in flow, never showModal, and data-close closes by `open`', async () => {
-  const modal = spy(HTMLDialogElement.prototype, 'showModal')
+  const modal = spy(HTMLDialogElement.prototype as unknown as Record<string, unknown>, 'showModal')
   try {
     const m = state(true), d = state(true)
     const { container: c } = render(() => <>
@@ -20,7 +20,7 @@ test('Modal and Drawer inline: a non-modal <dialog open> in flow, never showModa
       <Drawer inline open={d} side="right" title="Deploy">Rows</Drawer>
     </>)
     await flush()
-    const [dlg, sheet] = [...c.querySelectorAll('dialog')]
+    const [dlg, sheet] = [...c.querySelectorAll('dialog')] as [HTMLDialogElement, HTMLDialogElement]
     for (const el of [dlg, sheet]) {
       expect(el.hasAttribute('open')).toBe(true)
       expect(el.getAttribute('data-presentation')).toBe('inline')

@@ -223,7 +223,7 @@ describe('surface', () => {
     expect(seen[1]).toEqual({ x: 50, y: 50, down: false, in: true })
     send('pointerdown', 110, 120)
     tick()
-    expect(seen[2].down).toBe(true)
+    expect(seen[2]!.down).toBe(true)
     send('pointerup', 900, 900)
     tick()
     expect(seen[3]).toMatchObject({ down: false, in: false })

@@ -15,7 +15,7 @@ import '@weft-js/warp-core/styles/layout/edges.css'
 
 
 /** A card on the board, with what warp draws on it. */
-export type KanbanCardData = BoardCard & { label?: string | undefined; color?: number; assignee?: string; /** Footer text: a due date, a count. */ meta?: string | undefined }
+export type KanbanCardData = BoardCard & { label?: string | undefined; color?: number | undefined; assignee?: string | undefined; /** Footer text: a due date, a count. */ meta?: string | undefined }
 /** A board column of warp cards. */
 export type KanbanColumn = BoardColumn<KanbanCardData>
 
@@ -168,7 +168,7 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
   return (
     <>
       <div data-scope="edges">
-        <div ref={(n: any) => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
+        <div ref={n => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
           {board.value.map(c => <Column key={c.id} col={() => board.value.find(x => x.id === c.id) ?? c} ctx={ctx} hint={hint} />)}
         </div>
       </div>

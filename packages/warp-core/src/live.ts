@@ -80,7 +80,7 @@ export function bump(el: Element, attr = 'data-bump') {
 /** The inbox's tabs. */
 export type InboxTab = 'all' | 'unread' | 'mentions'
 /** The least an inbox item needs. */
-export interface NoteLike { id: string; read?: boolean; kind?: string | undefined; day?: string }
+export interface NoteLike { id: string; read?: boolean | undefined; kind?: string | undefined; day?: string | undefined }
 
 /** The items on one inbox tab. */
 export const filterNotes = <T extends NoteLike>(items: readonly T[], tab: InboxTab) =>
@@ -90,7 +90,7 @@ export const filterNotes = <T extends NoteLike>(items: readonly T[], tab: InboxT
 export const unreadCount = (items: readonly NoteLike[]) => items.filter(n => !n.read).length
 
 /** Items by their `day` label, in order of first appearance (a list is newest first). */
-export function groupByDay<T extends { day?: string }>(items: readonly T[], fallback = 'Today') {
+export function groupByDay<T extends { day?: string | undefined }>(items: readonly T[], fallback = 'Today') {
   const days = new Map<string, T[]>()
   for (const n of items) {
     const d = n.day ?? fallback

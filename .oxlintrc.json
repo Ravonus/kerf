@@ -129,6 +129,16 @@
       "globals": { "lab": "readonly", "hashOf": "readonly", "clock": "readonly", "keelScene": "readonly" }
     },
     {
+      // Code here runs inside the page, where the bundled warp-core dither entry is the global `dither`.
+      "files": ["packages/warp/test/dither-*.browser.test.mjs"],
+      "globals": { "dither": "readonly" }
+    },
+    {
+      // An art piece shows its own source: `./x.tsx?raw` is the file's text, not the module, so it is neither a cycle nor a self-import.
+      "files": ["site/src/toolkit/art/*.tsx"],
+      "rules": { "import/no-self-import": "off", "import/no-cycle": "off" }
+    },
+    {
       // warp-core is framework-agnostic: the framework is only ever reached from bindings/.
       "files": ["packages/warp-core/src/**"],
       "rules": { "no-restricted-imports": ["error", { "patterns": [{ "group": ["@weft-js/*", "react", "react-dom", "react/*", "solid-js", "solid-js/*", "vue", "svelte", "svelte/*", "preact", "preact/*"], "message": "warp-core must not import a framework. Put this in bindings/." }] }] }

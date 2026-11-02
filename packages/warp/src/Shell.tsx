@@ -19,13 +19,13 @@ export interface NavItem {
   id: string
   label: string
   icon?: NavIcon | undefined
-  href?: string
-  onSelect?: () => void
+  href?: string | undefined
+  onSelect?: (() => void) | undefined
   count?: number | undefined
   /** Spoken after the count. Default " new". */
-  countLabel?: string
+  countLabel?: string | undefined
   /** One of the phone bottom bar's tabs. Default the first group's first four. */
-  tab?: boolean
+  tab?: boolean | undefined
 }
 /** A run of nav items under an optional label. */
 export type NavGroup = { label?: string | undefined; items: NavItem[] }
@@ -40,12 +40,12 @@ export type Workspace = { id: string; name: string; initials: string; meta?: str
 export interface ShellProps {
   /** app (default) · focus: a wizard or checkout, with no nav. */
   variant?: 'app' | 'focus' | undefined
-  brand?: { name: string; href?: string; mark?: unknown }
+  brand?: { name: string; href?: string; mark?: unknown } | undefined
   /** The phone bar's title; always shown in focus. */
   title?: unknown
   /** The tablet and desktop header's path. The last is the current page. */
-  crumbs?: Crumb[]
-  depth?: 'root' | 'child'
+  crumbs?: Crumb[] | undefined
+  depth?: 'root' | 'child' | undefined
   /** Phone, depth child: the back button in the brand's place. */
   back?: { label: string; href?: string; onClick?: (() => void) | undefined }
   /** Focus variant: Close at the start and the step count at the end. */
@@ -54,20 +54,20 @@ export interface ShellProps {
   command?: { label?: string | undefined; hint?: string; shortcut?: string; onOpen: () => void }
   /** Header actions, between the command field and the account button. */
   actions?: unknown
-  account?: { name: string; email?: string; initials: string; items?: MenuEntry[] }
-  switcher?: { current: string; workspaces: Workspace[]; onSwitch: (id: string) => void }
+  account?: { name: string; email?: string; initials: string; items?: MenuEntry[] } | undefined
+  switcher?: { current: string; workspaces: Workspace[]; onSwitch: (id: string) => void } | undefined
   /** The first group is the main list; the rest are saved views and the like (sidebar only, the More sheet below). */
-  nav?: NavGroup[]
+  nav?: NavGroup[] | undefined
   /** The nav's pinned items, above the collapse toggle. */
-  foot?: NavItem[]
+  foot?: NavItem[] | undefined
   current?: string | undefined
-  navLabel?: string
+  navLabel?: string | undefined
   /** false · true: the rail · 'hidden': no rail either, the edge tab opens the sidebar. A box, so the shell can write it. */
-  collapsed?: State<boolean | 'hidden'>
+  collapsed?: State<boolean | 'hidden'> | undefined
   /** Names main when `island`, or the region around a preview. */
   label?: string | undefined
   /** A shell inside a page (a preview, a story): main becomes a named region, as a document has one main. */
-  island?: boolean
+  island?: boolean | undefined
   dock?: unknown
   /** Dialogs, toasts and palettes: outside main, in the top layer or fixed, so nothing here takes up room. */
   overlays?: unknown

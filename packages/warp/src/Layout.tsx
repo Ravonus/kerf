@@ -64,27 +64,27 @@ function Element({ as, ...rest }: Box) {
 }
 
 /** Vertical flow; the gap is the relationship between the children. */
-export function Stack({ gap, align, divided, ...rest }: Box & { align?: 'start' | 'center' | 'end'; divided?: boolean }) {
+export function Stack({ gap, align, divided, ...rest }: Box & { align?: 'start' | 'center' | 'end' | undefined; divided?: boolean | undefined }) {
   return <Element data-scope="stack" data-gap={gap} data-align={align} data-divided={divided ? '' : undefined} {...rest} />
 }
 
 /** A horizontal cluster that wraps. `reflow` makes it a Stack below that step; `wrap={false}` keeps it on one line. */
-export function Row({ gap, justify, align, wrap, reflow, ...rest }: Box & { justify?: 'start' | 'between' | 'end' | 'center'; align?: 'start' | 'baseline'; wrap?: boolean; reflow?: Step }) {
+export function Row({ gap, justify, align, wrap, reflow, ...rest }: Box & { justify?: 'start' | 'between' | 'end' | 'center' | undefined; align?: 'start' | 'baseline' | undefined; wrap?: boolean | undefined; reflow?: Step | undefined }) {
   return <Element data-scope="row" data-gap={gap} data-justify={justify === 'start' ? undefined : justify} data-align={align} data-wrap={wrap === false ? 'none' : undefined} data-reflow={reflow} {...rest} />
 }
 
 /** Intrinsic columns: as many as fit at `min`, never more than `cols`. A child with `data-span="full"` takes the row. */
-export function Grid({ gap, min, cols, ...rest }: Box & { min?: 'xs' | 'sm' | 'md' | 'lg' | undefined; cols?: 2 | 3 | 4 | 6 }) {
+export function Grid({ gap, min, cols, ...rest }: Box & { min?: 'xs' | 'sm' | 'md' | 'lg' | undefined; cols?: 2 | 3 | 4 | 6 | undefined }) {
   return <Element data-scope="grid" data-gap={gap} data-min={min} data-cols={cols} {...rest} />
 }
 
 /** A fixed side and a fluid main, stacked below its step. Each child is a container. */
-export function Split({ gap, side, width, at, ...rest }: Box & { side?: 'start' | 'end' | undefined; width?: 'rail' | 'nav' | 'list' | 'half' | undefined; at?: Step }) {
+export function Split({ gap, side, width, at, ...rest }: Box & { side?: 'start' | 'end' | undefined; width?: 'rail' | 'nav' | 'list' | 'half' | undefined; at?: Step | undefined }) {
   return <Element data-scope="split" data-gap={gap} data-side={side === 'start' ? undefined : side} data-width={width} data-at={at === 'tablet' ? undefined : at} {...rest} />
 }
 
 /** A measured column, centred, with page gutters when `gutter` is set. */
-export function Center({ max, gutter, intrinsic, ...rest }: Box & { max?: 'measure' | 'narrow' | 'content' | 'wide' | undefined; gutter?: boolean; intrinsic?: boolean }) {
+export function Center({ max, gutter, intrinsic, ...rest }: Box & { max?: 'measure' | 'narrow' | 'content' | 'wide' | undefined; gutter?: boolean | undefined; intrinsic?: boolean | undefined }) {
   return <Element data-scope="center" data-max={max === 'content' ? undefined : max} data-gutter={gutter ? '' : undefined} data-intrinsic={intrinsic ? '' : undefined} {...rest} />
 }
 
@@ -94,7 +94,7 @@ export function Cover({ gap, min, ...rest }: Box & { min?: 'screen' | 'fill' | u
 }
 
 /** A fixed-ratio media box with no chrome of its own. */
-export function Frame({ ratio, ...rest }: Box & { ratio?: 'square' | '4:3' | '3:2' | '16:9' | '21:9' | '3:4' | '9:16' }) {
+export function Frame({ ratio, ...rest }: Box & { ratio?: 'square' | '4:3' | '3:2' | '16:9' | '21:9' | '3:4' | '9:16' | undefined }) {
   return <Element data-scope="frame" data-ratio={ratio === '16:9' ? undefined : ratio} {...rest} />
 }
 
@@ -104,6 +104,6 @@ export function Spacer(rest: Open) {
 }
 
 /** A sunken, padded region. */
-export function Inset({ pad, ...rest }: Box & { pad?: 'group' | 'section' }) {
+export function Inset({ pad, ...rest }: Box & { pad?: 'group' | 'section' | undefined }) {
   return <Element data-scope="inset" data-pad={pad === 'section' ? pad : undefined} {...rest} />
 }

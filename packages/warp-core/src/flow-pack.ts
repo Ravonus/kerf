@@ -6,6 +6,7 @@ import { announce } from './toast'
 
 // ---- step machine (09 §1.1) -----------------------------------------------------------------------------------------
 
+/** Which way a step change moves, for the slide. */
 export type FlowDirection = 'forward' | 'back'
 
 /** Which way a step change moves: by position in `ids`. */
@@ -27,15 +28,16 @@ export function stepUrl(href: string, param: string, id: string) {
   return u.pathname + u.search + u.hash
 }
 
+/** Options for the step flow action. */
 export interface StepFlowOptions {
   step: string
   steps: readonly string[]
   /** The label for a step: it is announced. */
   label(id: string): string | undefined
   /** The query parameter that mirrors the step; history stays alone without it. */
-  history?: string
+  history?: string | undefined
   /** A polite "Step 2 of 4, Shipping" on arrival (default true). */
-  announce?: boolean
+  announce?: boolean | undefined
   /** The URL or Back moved the flow. */
   onStep(id: string): void
 }
@@ -60,7 +62,7 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
     step.dataset.state = 'leaving'
     const end = () => { if (live && step.dataset.state === 'leaving') delete step.dataset.state }
     const running = step.getAnimations?.() ?? []
-    if (running.length) Promise.allSettled(running.map(a => a.finished)).then(end)
+    if (running.length) void Promise.allSettled(running.map(a => a.finished)).then(end)
     else end()
   }
 
@@ -86,7 +88,7 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
 
   const onPop = () => {
     if (!o.history) return
-    const to = stepFromSearch(win.location.search, o.history, o.steps) ?? o.steps[0]
+    const to = stepFromSearch(win.location.search, o.history, o.steps) ?? o.steps[0]!
     if (to === at) return
     moved(to, false)
     o.onStep(to)
@@ -105,13 +107,15 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
 
 // ---- error mapping (09 §1.3): one message per cause -----------------------------------------------------------------
 
+/** Where an error shows: by a field, in an alert, as a rate-limit countdown, a toast or a banner. */
 export type FlowSurface = 'field' | 'alert' | 'rate-limit' | 'toast' | 'banner'
 
+/** One error, mapped to the one place it shows and what it says. */
 export interface FlowError {
   surface: FlowSurface
-  code?: string
+  code?: string | undefined
   title: string
-  description?: string
+  description?: string | undefined
   /** By field name, for `surface: 'field'`. */
   fields: Record<string, string>
   /** "2 fields need attention", said on submit. */
@@ -119,19 +123,23 @@ export interface FlowError {
   /** Where focus goes. */
   focus: 'field' | 'alert' | 'stay'
   /** The live region it goes to; `undefined`: none. */
-  live?: 'polite' | 'assertive'
-  retryAfter?: number
-  until?: string
-  attemptsLeft?: number
+  live?: 'polite' | 'assertive' | undefined
+  retryAfter?: number | undefined
+  until?: string | undefined
+  attemptsLeft?: number | undefined
 }
+
+/** What a server sends with an error, past the code: the fields mapFlowError reads, and whatever a domain adds. */
+export type FlowData = { until?: string; retryAfter?: number; attemptsLeft?: number } & Record<string, unknown>
 
 interface IssueLike { message: string; path?: readonly (PropertyKey | { readonly key: PropertyKey })[] }
 
+/** What `mapFlowError` needs beyond the error itself. */
 export interface FlowErrorOptions {
   /** `online().value`: a failed submit while offline is a Banner, not a server error. */
   online?: boolean
   /** Copy by code, for a domain error the table doesn't know. */
-  copy?: Record<string, string | ((data: any) => string)>
+  copy?: Record<string, string | ((data: FlowData) => string)>
 }
 
 /** Field name by field name from Zod or Standard Schema issues: `a.b`, and the first message wins. */
@@ -144,6 +152,7 @@ export function issueFields(issues: readonly IssueLike[] = []) {
   return fields
 }
 
+/** "2 fields need attention": the line said on submit. */
 export const fieldSummary = (n: number) => (n === 1 ? '1 field needs attention' : `${n} fields need attention`)
 
 const utc = (iso: string) => {
@@ -154,8 +163,8 @@ const tries = (n: number | undefined) => (n === undefined ? '' : n === 1 ? ' 1 t
 
 /** One message per cause: what happened and what to do, in one sentence. Takes a `FnError`, anything like one, or a string. */
 export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowErrorOptions = {}): FlowError {
-  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string; status?: number; message?: string; issues?: readonly IssueLike[]; data?: any; extra?: any; name?: string } & Record<string, any>
-  const data = e.data ?? e.extra ?? e
+  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string; status?: number; message?: string; issues?: readonly IssueLike[]; data?: FlowData; extra?: FlowData; name?: string }
+  const data: FlowData = e.data ?? e.extra ?? e
   const base = { code: e.code, fields: {} as Record<string, string> }
   const alert = (title: string, description?: string): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
   const fields = issueFields(e.issues)
@@ -165,10 +174,12 @@ export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowE
   if (known) return alert(typeof known === 'function' ? known(data) : known)
   switch (e.code) {
     case 'INVALID_CREDENTIALS': return alert("That email and password don't match.", 'Try again, or reset your password.')
-    case 'LOCKED': return { ...alert(`This account is locked until ${utc(data.until)}.`, 'Reset your password to get back in sooner.'), until: data.until }
+    case 'LOCKED': return { ...alert(`This account is locked${data.until ? ` until ${utc(data.until)}` : ''}.`, 'Reset your password to get back in sooner.'), until: data.until }
     case 'RATE_LIMITED': return { ...base, surface: 'rate-limit', title: 'Too many tries.', retryAfter: data.retryAfter, focus: 'stay', live: 'polite' }
     case 'WRONG_CODE': return { ...base, surface: 'field', fields: { code: `That code didn't work.${tries(data.attemptsLeft)}` }, title: `That code didn't work.${tries(data.attemptsLeft)}`, attemptsLeft: data.attemptsLeft, focus: 'field', live: 'assertive' }
     case 'EXPIRED': return { ...base, surface: 'field', fields: { code: 'That code expired. We sent a new one.' }, title: 'That code expired. We sent a new one.', focus: 'field', live: 'assertive' }
+    case undefined:
+    default: break
   }
   if (e.code === 'STALE_SCHEMA' || e.code === 'CONTRACT_CHANGED') return { ...base, surface: 'banner', title: 'A new version is ready.', description: 'Reload to finish saving.', focus: 'stay', live: 'polite' }
   if (!online) return { ...base, surface: 'banner', title: "You're offline.", description: 'Your changes are kept. Try again when you reconnect.', focus: 'stay', live: 'assertive' }
@@ -200,19 +211,23 @@ export async function copyText(doc: Document, text: string) {
 
 // ---- email and password (09 §2.3) -----------------------------------------------------------------------------------
 
+/** A loose shape check for an email address: something, `@`, a domain with a dot. The server is the real check. */
 export const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)
 
 /** The format message on blur: never "Invalid input". Empty says nothing until submit. */
 export const emailError = (v: string) => (v && !isEmail(v) ? "That doesn't look like an email. Check for a typo." : undefined)
 
+/** One line of the password checklist. */
 export interface PasswordRule { id: string; label: string; met: boolean }
 
+/** The checklist shown under a new password, each rule with whether `v` meets it. */
 export const passwordRules = (v: string): PasswordRule[] => [
   { id: 'length', label: 'At least 8 characters', met: v.length >= 8 },
   { id: 'letter', label: 'One letter', met: /\p{L}/u.test(v) },
   { id: 'number', label: 'One number', met: /\d/.test(v) },
 ]
 
+/** `passwordStrength`'s answer: a score from 0 to 4, its word and its tone. */
 export type PasswordStrength = { score: 0 | 1 | 2 | 3 | 4; label: string; tone: 'critical' | 'caution' | 'positive' }
 
 const STRENGTH = [['Too short', 'critical'], ['Weak', 'critical'], ['Fair', 'caution'], ['Good', 'positive'], ['Strong', 'positive']] as const
@@ -223,14 +238,16 @@ export function passwordStrength(v: string): PasswordStrength {
   let score = v.length < 8 ? 0 : Math.min(4, kinds - 1 + (v.length >= 12 ? 1 : 0) + (v.length >= 16 ? 1 : 0))
   if (v.length >= 8) score = Math.max(1, score)
   if (/^(.)\1+$/.test(v)) score = Math.min(score, 1)
-  const [label, tone] = STRENGTH[score]
+  const [label, tone] = STRENGTH[score]!
   return { score: score as PasswordStrength['score'], label, tone }
 }
 
 // ---- OTP (03 §3, 09 §2.3): one input, painted cells ----------------------------------------------------------------
 
+/** Digits only, cut to `length`: what a pasted or typed code becomes. */
 export const otpClean = (v: string, length: number) => v.replace(/\D/g, '').slice(0, length)
 
+/** Options for the OTP input action. */
 export interface OtpOptions {
   length: number
   invalid: boolean
@@ -295,6 +312,7 @@ export function otpInput(el: HTMLElement, opts: OtpOptions) {
 
 // ---- tour (09 §3.2) ------------------------------------------------------------------------------------------------
 
+/** A rectangle in viewport pixels: the tour's target or its card. */
 export interface TourBox { x: number; y: number; w: number; h: number }
 
 /** Where the card goes: beside the target with a flip; on a phone, docked to the edge away from it. */
@@ -315,13 +333,14 @@ function findTarget(doc: Document, selector: string) {
   return all.find(t => t.getClientRects().length) ?? all[0] ?? null
 }
 
+/** Options for the tour spotlight action. */
 export interface TourSpotOptions {
   /** The step's target selector. */
   target: string
   /** The step number: the same target can come twice. */
   step: number
   /** The target stays pressable ("Try it: click New"); otherwise the scrim blocks every press. */
-  interactive?: boolean
+  interactive?: boolean | undefined
   onNext(): void
   onPrev(): void
   onClose(): void
@@ -479,10 +498,11 @@ export function coachSpot(root: HTMLElement, opts: { target: string; open: boole
 
 // ---- connection (09 §5.3, §5.4) -------------------------------------------------------------------------------------
 
+/** What the connection banner shows; `undefined`: nothing. */
 export type ConnView = 'offline' | 'reconnecting' | 'online' | 'stale' | undefined
 
 /** What the banner shows: offline over reconnecting over a stale deploy; `recovered` is the short "Back online". */
-export function connView({ online, state, stale, recovered }: { online: boolean; state?: string; stale?: boolean; recovered?: boolean }): ConnView {
+export function connView({ online, state, stale, recovered }: { online: boolean; state?: string | undefined; stale?: boolean | undefined; recovered?: boolean | undefined }): ConnView {
   if (!online || state === 'offline') return 'offline'
   if (state === 'reconnecting' || state === 'connecting') return 'reconnecting'
   if (recovered) return 'online'
@@ -491,6 +511,7 @@ export function connView({ online, state, stale, recovered }: { online: boolean;
 
 // ---- keyboard shortcuts (09 §7) -------------------------------------------------------------------------------------
 
+/** One keyboard shortcut in the registry. */
 export interface Shortcut {
   /** Space-separated steps, `+` within one: `?`, `g m`, `mod+k`. `mod` is ⌘ on Apple platforms and Ctrl elsewhere. */
   keys: string
@@ -508,6 +529,7 @@ const SEQUENCE_MS = 1000
 const MODS = new Set(['mod', 'ctrl', 'cmd', 'alt', 'shift'])
 const parts = (step: string) => (step === '+' ? ['+'] : step.split('+'))
 
+/** Whether `mod` means ⌘: an Apple platform, from the navigator. */
 export const isApple = (nav: { platform?: string; userAgent?: string } | undefined) => /mac|iphone|ipad|ipod/i.test(nav?.platform ?? nav?.userAgent ?? '')
 
 /** The chips for each step: `[['⌘', 'K']]`, or `[['Ctrl', 'K']]`, `[['G'], ['M']]`. */
@@ -567,8 +589,8 @@ export function createShortcuts() {
       const live = [...list].filter(s => !s.when || s.when())
       const open = (s: Shortcut) => (!isSingleKey(s.keys) || (singleKeys && !isTextTarget(e.target)))
       const pending = e.timeStamp - heldAt < SEQUENCE_MS ? held : []
-      const next = pending.filter(h => matches(h.steps[0], e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
-      const start = live.filter(open).map(s => ({ s, steps: s.keys.trim().split(/\s+/) })).filter(h => matches(h.steps[0], e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
+      const next = pending.filter(h => matches(h.steps[0] ?? '', e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
+      const start = live.filter(open).map(s => ({ s, steps: s.keys.trim().split(/\s+/) }))  .filter(h => matches(h.steps[0] ?? '', e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
       const hits = [...next, ...start]
       const done = hits.find(h => !h.steps.length)
       held = done ? [] : hits
@@ -606,6 +628,7 @@ export function createShortcuts() {
     },
   }
 }
+/** A shortcuts registry, as `createShortcuts` makes it. */
 export type Shortcuts = ReturnType<typeof createShortcuts>
 
 /** The app's one registry: `shortcuts.register({ keys, label, group, when, run })`. */

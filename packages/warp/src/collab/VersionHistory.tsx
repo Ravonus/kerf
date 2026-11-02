@@ -8,7 +8,7 @@ import '@weft-js/warp-core/styles/app/tokens.css'
 import '@weft-js/warp-core/styles/app/versions.css'
 
 /** One saved version of a document. */
-export interface Version { id: string; title: string; /** "Mei · 10:02" */ meta: string; named?: boolean; current?: boolean | undefined }
+export interface Version { id: string; title: string; /** "Mei · 10:02" */ meta: string; named?: boolean | undefined; current?: boolean | undefined }
 
 /**
  * Version history (07 §6.2): named versions carry the accent dot. A version previews read-only (`preview` draws it,

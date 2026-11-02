@@ -30,7 +30,7 @@ export default function SelvedgePlan(_: ArtProps) {
       return
     }
     const r = at[n]!
-    if (w > h * 0.8 ? true : false) {
+    if (w > h * 0.8) {
       const a = w * r
       lines.push(x + a, y, 0, h)
       room(ctx, c, gain, n * 2 + 1, x, y, a, h, depth + 1, lines)
@@ -48,7 +48,7 @@ export default function SelvedgePlan(_: ArtProps) {
     for (let i = 0; i < NODES; i++) {
       const d = to[i]! - at[i]!
       speed[i] = (speed[i]! + d * dt * 90) * Math.exp(-dt * 11)
-      at[i] += speed[i]! * dt * 14
+      at[i]! += speed[i]! * dt * 14
       if (Math.abs(d) > 0.0008 || Math.abs(speed[i]!) > 0.0008) moving = true
       else at[i] = to[i]!
     }

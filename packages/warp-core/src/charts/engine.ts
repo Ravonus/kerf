@@ -297,15 +297,16 @@ export function spark(el: SVGSVGElement, input: SparkInput) {
     const r = el.getBoundingClientRect(), dot = el.querySelector('.dot')
     if (!dot || !r.width || !list.length) return
     const pts = sparkPoints(list, r.width), x = e.clientX - r.left
-    const i = pts.reduce((best, p, n) => (Math.abs(p[0] - x) < Math.abs(pts[best][0] - x) ? n : best), 0)
+    const i = pts.reduce((best, p, n) => (Math.abs(p[0] - x) < Math.abs(pts[best]![0] - x) ? n : best), 0)
+    const [px, py] = pts[i]!, value = list[i]!
     home ??= [dot.getAttribute('cx'), dot.getAttribute('cy')]
-    dot.setAttribute('cx', f1(pts[i][0]))
-    dot.setAttribute('cy', f1(pts[i][1]))
-    const left = pts[i][0] < r.width / 2
-    note.textContent = format ? format(list[i]) : String(list[i])
+    dot.setAttribute('cx', f1(px))
+    dot.setAttribute('cy', f1(py))
+    const left = px < r.width / 2
+    note.textContent = format ? format(value) : String(value)
     note.setAttribute('text-anchor', left ? 'start' : 'end')
-    note.setAttribute('x', f1(pts[i][0] + (left ? 6 : -6)))
-    note.setAttribute('y', f1(Math.max(10, pts[i][1] - 6)))
+    note.setAttribute('x', f1(px + (left ? 6 : -6)))
+    note.setAttribute('y', f1(Math.max(10, py - 6)))
     el.append(note)
   }
   const rest = () => {

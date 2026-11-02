@@ -432,8 +432,8 @@ export const brush: Form<BrushConfig> = {
       set(h.getAttribute('data-h')!, by)
     }
     const down = (e: Event) => {
-      const p = e as PointerEvent, t = p.target as Element, h = t.closest?.('[data-h]')?.getAttribute('data-h'), bar = t.closest?.('[data-brush]')
-      if (!h && !bar) return
+      const p = e as PointerEvent, t = p.target as Element, h = t.closest?.('[data-h]')?.getAttribute('data-h'), onBrush = t.closest?.('[data-brush]')
+      if (!h && !onBrush) return
       p.preventDefault()
       const r = svg.getBoundingClientRect(), W = Number(svg.getAttribute('width')), v = ctx.view!, x0 = p.clientX, a = v.b0, b = v.b1, step = (((W - 48) / (N() - 1)) * r.width) / W
       const move = (m: PointerEvent) => {

@@ -11,14 +11,14 @@ const SCOPE = '[data-site="example"] [data-part="run"]'
 const CONTROLS = `${SCOPE} button:not([disabled]), ${SCOPE} input:not([disabled]), ${SCOPE} [role="checkbox"], ${SCOPE} [role="switch"], ${SCOPE} label`
 const NEUTRAL = /^(reset|clear|cancel|close)$/i // nothing to undo on a fresh example
 
-const look = (page, i) => page.evaluate(([sel, i]) => {
-  const c = document.querySelectorAll(sel)[i]
+const look = (page, i) => page.evaluate(([sel, at]) => {
+  const c = document.querySelectorAll(sel)[at]
   if (!c?.closest('[data-part="run"]')) return ''
   const box = document.body // a press can answer outside its example: a popover, a toast, or the caret landing in the field
   const fields = [...box.querySelectorAll('input,select,textarea')].map(f => `${f.checked}|${f.value}`)
   const attrs = [...box.querySelectorAll('*')].map(e => `${e.getAttribute('aria-checked')}${e.getAttribute('aria-pressed')}${e.getAttribute('aria-expanded')}${e.getAttribute('data-state')}${e.hasAttribute('disabled')}${e.matches(':popover-open')}`)
   const focused = document.activeElement === c || document.activeElement === c.control
-  return `${box.innerText}\n${fields}\n${attrs}\n${box.querySelectorAll('*').length}\n${focused}`
+  return `${box.innerText}\n${fields.join()}\n${attrs.join()}\n${box.querySelectorAll('*').length}\n${focused}`
 }, [sel_(), i])
 const sel_ = () => CONTROLS
 

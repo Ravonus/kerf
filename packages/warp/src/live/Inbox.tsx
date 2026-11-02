@@ -23,16 +23,16 @@ export interface Note {
   actor: string
   kind: NoteKind
   verb: string
-  object?: string
-  detail?: string
+  object?: string | undefined
+  detail?: string | undefined
   /** Already formatted: the caller owns the clock. */
   time: string
   /** "Today", "Yesterday": see `dayLabel`. */
-  day?: string
+  day?: string | undefined
   source?: string | undefined
-  quote?: string
-  read?: boolean
-  actions?: NoteAction[]
+  quote?: string | undefined
+  read?: boolean | undefined
+  actions?: NoteAction[] | undefined
 }
 
 const KIND: Record<NoteKind, [GlyphName, string]> = { mention: ['at', 'accent'], comment: ['comment', 'info'], assign: ['flag', 'caution'], approve: ['check', 'positive'], system: ['alert', 'critical'], invite: ['cal', 'accent'] }

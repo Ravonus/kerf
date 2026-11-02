@@ -24,7 +24,7 @@ import '@weft-js/warp-core/styles/flows/roles-matrix.css'
 /** A role a member can hold. */
 export type Role = { value: string; label: string; /** Can reach this page; demoting yourself below it warns. */ manages?: boolean }
 /** One member of the team. */
-export type Member = { id: string; name: string; email: string; role: string; lastActive?: string }
+export type Member = { id: string; name: string; email: string; role: string; lastActive?: string | undefined }
 /** An invite still waiting for an answer. */
 export type Invite = { id: string; email: string; role: string; sent: string }
 
@@ -69,8 +69,8 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
   const leaving = state<Member[]>([])
   const selected = state<Record<string, boolean>>({})
   let demote: { m: Member; role: string } | undefined
-  const people = derived(() => read(members) as readonly Member[])
-  const pending = derived(() => (read(invites ?? []) as readonly Invite[]))
+  const people = derived(() => read(members))
+  const pending = derived(() => read(invites ?? []))
   const used = derived(() => people.value.length + pending.value.length)
   const label = (v: string) => roles.find(r => r.value === v)?.label ?? v
   const locked = (m: Member) => isLastOwner(people.value as Member[], m, owner)

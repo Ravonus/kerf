@@ -67,7 +67,7 @@ const Option = ({ id, row, selected, active, onPick }: { id: string; row: Row; s
 )
 
 /** A field whose control is one value button over a search list: the frame of TimeZoneSelect and the Intl selects. */
-function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, icon, text, title, search, rows, match, count, hint, label, name, presentation, disabled, readonly, locale, today, ...rest }: RichFieldProps & Bindable<string | null> & Openable & { icon?: IconRef; text: (v: string, locale: string) => string; title: string; search: string; rows: (locale: string, today: string) => Row[]; match?: (r: Row, q: string) => boolean; count?: (n: number, q: string) => string; hint?: any }) {
+function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, icon, text, title, search, rows, match, count, hint, label, name, presentation, disabled, readonly, locale, today, ...rest }: RichFieldProps & Bindable<string | null> & Openable & { icon?: IconRef | undefined; text: (v: string, locale: string) => string; title: string; search: string; rows: (locale: string, today: string) => Row[]; match?: ((r: Row, q: string) => boolean) | undefined; count?: ((n: number, q: string) => string) | undefined; hint?: unknown }) {
   const env = usePickerEnv(() => locale, () => today)
   const v = bindable<string | null>(() => value, () => defaultValue, null, () => onValueChange)
   const pop = useOpen(() => open, () => defaultOpen, () => onOpenChange)
@@ -86,7 +86,7 @@ function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOp
       hold={pop.value}
       control={() => (
         <>
-          <button ref={(n: any) => (trigger = n)} type="button" data-part="pick" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-label={`${label}, ${shown.value || 'none'}`} aria-disabled={readonly ? 'true' : undefined} disabled={disabled} onClick={() => { if (!readonly) pop.set(!pop.value) }}>
+          <button ref={n => (trigger = n)} type="button" data-part="pick" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-label={`${label}, ${shown.value || 'none'}`} aria-disabled={readonly ? 'true' : undefined} disabled={disabled} onClick={() => { if (!readonly) pop.set(!pop.value) }}>
             <span>{shown.value}</span><DownIcon />
           </button>
           <Hidden name={name} value={() => v.value ?? ''} />
@@ -225,10 +225,10 @@ export function PhoneField({ value, defaultValue, onValueChange, country, defaul
       reset={() => { v.reset(); own.value = undefined; code.value = inferCountry(v.value ?? '', code.value, list) ?? code.value; text.value = v.value ? formatPhone(v.value.slice(code.value.dial.length + 1), code.value).shown : ''; if (input) input.value = text.value }}
       control={p => (
         <div data-part="body">
-          <button ref={(n: any) => (button = n)} type="button" data-part="country" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-disabled={readonly ? 'true' : undefined} disabled={disabled} onClick={() => { if (!readonly) pop.set(!pop.value) }}>
+          <button ref={n => (button = n)} type="button" data-part="country" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-disabled={readonly ? 'true' : undefined} disabled={disabled} onClick={() => { if (!readonly) pop.set(!pop.value) }}>
             <span aria-hidden="true"><b>{code.value.code}</b>+{code.value.dial}</span><span class="sr">Country: {name_.value}, +{code.value.dial}</span><DownIcon />
           </button>
-          <input ref={(n: any) => (input = n)} data-part="input" id={p.id} type="tel" inputmode="tel" autocomplete="tel-national" placeholder={placeholder.value} aria-describedby={p.describedby} value={text.value} required={p.rest.required} disabled={disabled} readonly={readonly} onInput={e => { const el = e.currentTarget as HTMLInputElement; sync(el.value, el.selectionStart) }} onBlur={onBlur} onPaste={onPaste} />
+          <input ref={n => (input = n)} data-part="input" id={p.id} type="tel" inputmode="tel" autocomplete="tel-national" placeholder={placeholder.value} aria-describedby={p.describedby} value={text.value} required={p.rest.required} disabled={disabled} readonly={readonly} onInput={e => { const el = e.currentTarget; sync(el.value, el.selectionStart) }} onBlur={onBlur} onPaste={onPaste} />
           <Hidden name={name} value={() => v.value ?? ''} />
         </div>
       )}

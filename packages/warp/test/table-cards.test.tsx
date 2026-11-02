@@ -2,7 +2,7 @@
 import { flush, render } from '@weft-js/core/test'
 import { Table, type Column } from '../src/Table'
 
-const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))
+const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
 const settle = async () => { await tick(); await flush(); await tick(); await flush() }
 
 describe('Table phone cards', () => {
@@ -13,7 +13,7 @@ describe('Table phone cards', () => {
   function sized() {
     const seen: ResizeObserverCallback[] = []
     const was = window.ResizeObserver
-    window.ResizeObserver = class { constructor(fn: ResizeObserverCallback) { seen.push(fn) } observe() {} unobserve() {} disconnect() {} } as any
+    window.ResizeObserver = class { constructor(fn: ResizeObserverCallback) { seen.push(fn) } observe() {} unobserve() {} disconnect() {} }
     onTestFinished(() => { window.ResizeObserver = was })
     return async (root: HTMLElement, w: number) => {
       Object.defineProperty(root, 'clientWidth', { configurable: true, value: w })

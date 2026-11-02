@@ -29,5 +29,5 @@ export interface CanvasProps {
 export function Canvas({ draw, animate, fps, cell, context, onTheme, pointer, label, ...rest }: CanvasProps) {
   let node: HTMLCanvasElement | undefined
   use(surface, () => node, () => ({ draw, animate, fps, cell, context, onTheme, pointer }))
-  return <div {...rest} data-scope="canvas"><canvas ref={(n: any) => (node = n)} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}></canvas></div>
+  return <div {...rest} data-scope="canvas"><canvas ref={n => (node = n)} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}></canvas></div>
 }

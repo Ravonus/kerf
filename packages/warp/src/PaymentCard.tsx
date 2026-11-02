@@ -6,7 +6,7 @@ import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/rich/payment.css'
 
 /** The card field a payment provider mounts, as far as warp talks to it. */
-export interface ProviderField { on(e: 'focus' | 'blur' | 'change', f: (ev: { complete?: boolean; error?: string }) => void): void; destroy(): void }
+export interface ProviderField { on(e: 'focus' | 'blur' | 'change', f: (ev: { complete?: boolean | undefined; error?: string | undefined }) => void): void; destroy(): void }
 /** The field styles warp hands a provider, since its iframe can't read ours. */
 export interface ProviderAppearance { fontFamily: string; fontSize: string; color: string; errorColor: string; borderRadius: string; borderColor: string }
 /** Props for PaymentCardInput. */

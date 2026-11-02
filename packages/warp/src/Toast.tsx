@@ -34,7 +34,7 @@ export function Toaster({ position }: { /** Which corner or edge. Bottom right b
   use(toaster, () => region, () => toasts())
   return (
     <>
-      <section ref={(n: any) => (region = n)} data-scope="toast" data-part="region" data-position={position === 'bottom-right' ? undefined : position} aria-label="Notifications (F8)" tabindex="-1">
+      <section ref={n => (region = n)} data-scope="toast" data-part="region" data-position={position === 'bottom-right' ? undefined : position} aria-label="Notifications (F8)" tabindex="-1">
         {list.value.map(t => (
           <div key={t.id} data-scope="toast" data-part="root" data-id={t.id} data-tone={t.tone ?? 'neutral'} data-state={t.state} role="group" aria-label={t.title}>
             {t.loading ? <span data-scope="spinner" data-part="icon" aria-hidden="true"></span> : <Icon name={toneIcon[t.tone ?? 'neutral']} data-part="icon" />}

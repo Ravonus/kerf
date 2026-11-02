@@ -13,10 +13,10 @@ import { tile, type Pattern } from './tiles'
 /** Options for an animated dither field. */
 export interface FieldOptions {
   /** A named field, or your own function of (x, y, t). */
-  kind?: FieldName | Field
+  kind?: FieldName | Field | undefined
   /** Your own `kind` is smooth: evaluate it on a sparse lattice and interpolate, as the named fields do. */
-  smooth?: boolean
-  ramp?: Ramp
+  smooth?: boolean | undefined
+  ramp?: Ramp | undefined
   /** Inks a disturbed cell takes instead, so a push shows in a second colour. */
   spark?: Ramp | undefined
   pattern?: Pattern | undefined
@@ -104,7 +104,7 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
     }
   }
 
-  function compose(clock: number, stirred: boolean) {
+  function compose(now: number, stirred: boolean) {
     const gain = o.gain ?? dials.gain, m = mask, p = stirred ? push : undefined, g = ground, sweep = moves() && !reducedMotion(host) ? o.reveal ?? 0 : 0
     hot = false
     for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) {
@@ -117,7 +117,7 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
       const tone = tones[at]!
       let v = tone * tone * 0.95 * gain * (g ? g[i]! : 1) + energy * 0.55
       if (m) {
-        const age = sweep ? clock - (x / cols) * sweep : 1
+        const age = sweep ? now - (x / cols) * sweep : 1
         const on = age <= 0 ? 0 : age >= 0.2 ? 1 : age * 5, flash = age > 0 && age < 0.3 ? (0.3 - age) * 2 * m.shape[at]! : 0
         v = v * 0.42 + m.halo[at]! * 0.34 * gain * on + m.shape[at]! * (0.46 + tone * 0.72) * on + flash
       }

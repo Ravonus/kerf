@@ -26,7 +26,9 @@ function Example(props: { file: string; example: ShownExample; alone: boolean })
   return (
     <section id={ex.id} data-site="ex">
       {!props.alone && <h3>{ex.title}</h3>}
-      {ex.note && <p data-part="note" innerHTML={ex.note}></p>}
+      {ex.note && <p data-part="note"
+        // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+        innerHTML={ex.note}></p>}
       <ExampleFrame file={props.file} example={ex} />
     </section>
   )
@@ -37,8 +39,12 @@ function DocSection(props: { file: string; section: Section }) {
   return (
     <section id={slugOf(s.title)} data-site="tk-section">
       <h2>{s.title}</h2>
-      {s.html && <div data-scope="prose" innerHTML={s.html}></div>}
-      {s.intro && <p data-part="note" innerHTML={s.intro}></p>}
+      {s.html && <div data-scope="prose"
+        // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+        innerHTML={s.html}></div>}
+      {s.intro && <p data-part="note"
+        // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+        innerHTML={s.intro}></p>}
       {s.examples?.map(e => <Example key={e.id} file={props.file} example={e} alone={s.examples!.length === 1} />)}
     </section>
   )
@@ -57,7 +63,9 @@ export function ComponentPage(props: { data: Page }) {
         </header>
         {d.hero && <section id="preview" data-site="tk-default"><ExampleFrame file={d.file} example={d.hero} hero /></section>}
         <section id="installation" data-site="tk-section"><h2>Installation</h2><Install /></section>
-        <section id="usage" data-site="tk-section"><h2>Usage</h2><div innerHTML={d.usage}></div></section>
+        <section id="usage" data-site="tk-section"><h2>Usage</h2><div
+          // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+          innerHTML={d.usage}></div></section>
         {d.sections.map(s => <DocSection key={s.title} file={d.file} section={s} />)}
         {d.use && (
           <section id="when-to-use" data-site="tk-section">
@@ -77,7 +85,9 @@ export function ComponentPage(props: { data: Page }) {
                 {d.keyboard.map(([keys, does]) => <div key={keys}><dt>{keys.split(' ').map(k => <Kbd key={k}>{k}</Kbd>)}</dt><dd>{does}</dd></div>)}
               </dl>
             )}
-            {d.a11yNotes && <ul data-part="notes">{d.a11yNotes.map(n => <li key={n} innerHTML={n}></li>)}</ul>}
+            {d.a11yNotes && <ul data-part="notes">{d.a11yNotes.map(n => <li key={n}
+              // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+              innerHTML={n}></li>)}</ul>}
           </section>
         )}
         <section id="api-reference" data-site="tk-section">

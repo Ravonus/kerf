@@ -20,7 +20,7 @@ function threading(n: number) {
   return out
 }
 // 2/2/1/3 twill on eight shafts: each treadle lifts a run of them.
-const TIE = Array.from({ length: SHAFTS }, (_, t) => Array.from({ length: SHAFTS }, (_, s) => { const k = (s - t + SHAFTS) % SHAFTS; return k < 2 || k === 3 ? 1 : 0 }))
+const TIE = Array.from({ length: SHAFTS }, (_, t) => Array.from({ length: SHAFTS }, (__, s) => { const k = (s - t + SHAFTS) % SHAFTS; return k < 2 || k === 3 ? 1 : 0 }))
 
 export default function Draft({ live = true }: ArtProps) {
   let image: ImageData | undefined, out = new Uint32Array(0), inksNow: Uint32Array | undefined, thread = new Uint8Array(0), cols = 0

@@ -37,6 +37,7 @@ const RANGES = [{ value: 'all', label: 'Any time', hours: Infinity }, { value: '
  */
 const stamp = (at: string) => at.replace('T', ' ').replace(/:\d\dZ$/, ' UTC')
 
+/** The audit log: who did what and when, filtered by category and actor, with an export. */
 export function AuditLog({ events, now, categories = [{ value: 'all', label: 'All' }], live, onExport }: AuditLogProps) {
   const category = state('all')
   const actor = state('all')

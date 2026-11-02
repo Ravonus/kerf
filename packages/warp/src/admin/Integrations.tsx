@@ -26,7 +26,7 @@ import '@weft-js/warp-core/styles/flows/choice.css'
 /** Where an integration stands. */
 export type IntegrationState = 'connected' | 'error' | 'off' | 'pending'
 /** One card of the integrations grid. */
-export type Integration = { id: string; name: string; summary: string; state: IntegrationState; detail?: string; failure?: string; can?: string[] }
+export type Integration = { id: string; name: string; summary: string; state: IntegrationState; detail?: string | undefined; failure?: string | undefined; can?: string[] | undefined }
 const BADGE: Record<IntegrationState, [string, Tone | undefined, boolean]> = { connected: ['Connected', 'positive', true], error: ['Needs attention', 'critical', true], off: ['Not connected', undefined, false], pending: ['Connecting…', 'caution', true] }
 
 /** Props for IntegrationsGrid. */

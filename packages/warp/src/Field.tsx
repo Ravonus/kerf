@@ -45,7 +45,7 @@ export type Control = (p: { id: string; readonly describedby?: string | undefine
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
  * after mount warp-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
-export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, labelled, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; /** The control takes its name from `aria-labelledby`, not `for`: a press on the label must not click a button. */ labelled?: boolean; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
+export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, labelled, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: unknown; filled?: boolean; attrs?: Record<string, unknown>; group?: boolean; /** The control takes its name from `aria-labelledby`, not `for`: a press on the label must not click a button. */ labelled?: boolean; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
   const id = untrack(() => given) ?? uid('field')
   // the browser's message for a constraint that failed (03 §1.3): `error` wins over it
   const missing = state<string | undefined>(undefined)
