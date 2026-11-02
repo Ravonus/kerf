@@ -152,6 +152,37 @@ describe('node preset, end to end', () => {
     }
   }, 30_000)
 
+  test('a route that rendered before sends its head first, and brings what this render reaches beyond it', async () => {
+    const plain = await (await fetch(server.url + '/stream-sheet')).text()
+    const again = await (await fetch(server.url + '/stream-sheet')).text()
+    const app = html => html.slice(html.indexOf('<div id="app">'), html.indexOf('</div>\n<script type="application/json" id="weft-route">'))
+    expect(app(again)).toBe(app(plain))
+    const head = again.slice(0, again.indexOf('</head>'))
+    expect(head).toContain('shell-card')
+    expect(head).toMatch(/<link rel="modulepreload" href="\/assets\/entry\.client-[\w-]+\.js">/)
+    expect(head).not.toContain('extra-card')
+
+    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const browser = await chromium.launch()
+    try {
+      const page = await browser.newPage()
+      await page.route('**/*.css', async route => { await new Promise(ok => setTimeout(ok, 300)); await route.continue() })
+      await page.addInitScript(() => {
+        new MutationObserver((_, o) => {
+          const el = document.querySelector('[data-scope="extra-card"]')
+          if (el) { window.seen = getComputedStyle(el).color; o.disconnect() }
+        }).observe(document, { subtree: true, childList: true })
+      })
+      await page.goto(server.url + '/stream-sheet?x')
+      await page.waitForSelector('#app [data-scope="late-card"]')
+      expect(await page.evaluate(() => window.seen)).toBe('rgb(7, 8, 9)') // styled from the first frame, with the sheet still out
+      await page.waitForFunction(() => window.__weft?.hydrated)
+      expect(await page.evaluate(() => window.__weft)).toMatchObject({ misses: 0, hydrated: true })
+    } finally {
+      await browser.close()
+    }
+  }, 30_000)
+
   /** The page with this policy on it, the document only, as a host would send it. */
   async function under(policy, path) {
     const { chromium } = createRequire(import.meta.url)('playwright-core')

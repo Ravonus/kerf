@@ -214,22 +214,26 @@ const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
  * stylesheets, and `late(sheets, chunk)`: what a streamed chunk needs in front of it. A parser-inserted link holds all
  * that follows until it loads, so a sheet the head has already asked for is never one: the chunk brings the rules its own
  * HTML reaches, and they move in front of those sheets, which have to keep winning once they load. A sheet the head
- * lacks can only be a link, and its Boundary swaps once it's here.
+ * lacks can only be a link, and its Boundary swaps once it's here. `seen`: an earlier render's `{ split, found }`, for a head
+ * sent before this page's HTML exists; its `late` then brings what the HTML has beyond that.
  */
-export function pageStyles(assets, css = [], html = '', head) {
+export function pageStyles(assets, css = [], html = '', head, seen) {
   const first = `<style>${LAYER_ORDER}</style>\n`
   const inline = css.filter(c => assets.inline?.[c.href] !== undefined).map(c => ({ href: c.href, css: assets.inline[c.href] }))
   const raw = inline.reduce((n, s) => n + s.css.length, 0)
-  const split = !!assets.critical && inline.length > 0 && raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
+  const split = seen ? seen.split : !!assets.critical && inline.length > 0 && raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
   const carried = new Set(css.map(c => c.href))
   const known = split && vocabulary(inline, inline.map(s => s.href).join())
-  let sent = split && read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? known.dials : []))
+  let sent = split && (seen ? new Set(seen.found) : read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? known.dials : [])))
   const tags = split
     ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` + css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<link rel="stylesheet" href="${esc(c.href)}" media="print" data-late>`).join('') +
       `<noscript>${inline.map(s => blocking(s.href).trim()).join('')}</noscript>\n<script>${LATE_SHEETS}</script>\n`
     : css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<style>${assets.inline[c.href]}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`).join('')
   return {
     head: first + tags,
+    split,
+    /** The words the page's rules have reached so far. */
+    found: () => sent || new Set(),
     late(sheets = [], chunk = '') {
       const hrefs = sheets.map(s => s.href).filter(h => !carried.has(h))
       for (const h of hrefs) carried.add(h)

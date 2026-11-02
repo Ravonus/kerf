@@ -146,6 +146,15 @@ export function createHandler(options: HandlerOptions) {
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
   for (const r of manifest.routes) if (mod(r.file)?.default) comps[r.id] = mod(r.file)!.default!
   const statics = new Set(options.statics)
+  /**
+   * What each route's last render needed in its head, by status, Save-Data and levels: the next request sends that head
+   * before it renders. `null`: a route whose render sets headers, so it renders first.
+   */
+  const heads = new Map<string, Head | null>()
+  const remember = (shape: string, head: Head) => {
+    if (heads.size >= HEADS_MAX && !heads.has(shape)) heads.clear()
+    heads.set(shape, head)
+  }
   /** The route state of a server render: where a static level is in it, it marks where each level starts (`region`). */
   const stateOf = (r: Resolved, payload: RoutePayload) => {
     const route = createRouteState({ ...payload, m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
@@ -278,36 +287,36 @@ export function createHandler(options: HandlerOptions) {
     }
     const shown = (e: unknown) => exec.shown(e, scope)
     const stalled = () => options.onDiagnostic?.({ code: 'E_STREAM', severity: 'warning', message: `${path}: a render stopped reading anything new, so what's still out is left to the client. Is a query's input different on every render, a \`Date.now()\` say?` })
-    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, shown, stalled, app: { cookies: cookieJar(request) }, landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(), ...since() })});` })
-    await s.settle() // queries read outside a Boundary have nowhere to stream to
-    const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
+    const render = () => renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, shown, stalled, app: { cookies: cookieJar(request) }, landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(), ...since() })});` })
+    let s!: Stream
     const assets = options.assets ?? {}
-    const parts = islandsOf(s.shell)
-    // A Boundary is waiting: the page is usable before it lands, so the client starts now, not at the last byte.
-    const streaming = Object.values(s.data()?.b ?? {}).includes('p')
-    const now = !parts.lazy.length || payload.m.some(m => !m.s) || !!payload.i?.length
-    const styles = pageStyles(assets, pageSheets(assets.css, parts, options.chunks), s.shell, site.head)
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
-    const head =
+    const top =
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
       metaTags(r.head, url.pathname) + '\n' +
       (site.head ? site.head + '\n' : '') +
-      (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
-      // The entry's own script tag, just below, already fetches it. Above the styles: a preload found past 50 KB of CSS starts late.
-      modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
-      // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
-      (assets.entry && streaming ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') +
-      styles.head +
-      (options.lazy || streaming ? `<script>${capture(now)}</script>\n` : '') +
-      // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
-      (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
-      (assets.entry && !streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
-      `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payload)}</script>\n` +
+      (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('')
+    // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
+    const dev = options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : ''
+    /** What this render's head needs, from its HTML. */
+    const shaped = () => {
+      const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
+      const parts = islandsOf(s.shell)
+      // A Boundary is waiting: the page is usable before it lands, so the client starts now, not at the last byte.
+      const streaming = Object.values(s.data()?.b ?? {}).includes('p')
+      const now = !parts.lazy.length || payload.m.some(m => !m.s) || !!payload.i?.length
+      // The entry's own script tag already fetches it. Above the styles: a preload found past 50 KB of CSS starts late.
+      const preloads = modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets)
+      return { payload, parts, streaming, now, preloads, sheets: pageSheets(assets.css, parts, options.chunks) }
+    }
+    /** From `<div id="app">` to what's left to stream. */
+    const page_ = (p: ReturnType<typeof shaped>) =>
+      `<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(p.payload)}</script>\n` +
       (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '') +
       // Async, and after all it reads, so it can run while the stream goes on.
-      (streaming ? (since(), dataTags({ ...pageData(s.data(), scope)!, w: 1 }, news())) : '') +
-      (assets.entry && streaming ? `<script type="module" async src="${esc(assets.entry)}"></script>\n` : '')
-    const finish = async () => {
+      (p.streaming ? (since(), dataTags({ ...pageData(s.data(), scope)!, w: 1 }, news())) : '') +
+      (assets.entry && p.streaming ? `<script type="module" async src="${esc(assets.entry)}"></script>\n` : '')
+    const finish = async (streaming: boolean) => {
       const cached = wire(scope)
       // Read after the queries ran: what's published from here on, the first connect replays (research 30 §1).
       if (scope.live) await hub().ready()
@@ -317,24 +326,84 @@ export function createHandler(options: HandlerOptions) {
       return stale + dataTags(pageData(s.data(), scope), cached) + rt + '</body>\n</html>\n'
     }
     const status = r.status === 200 && scope.form ? scope.form.status : r.status
-    const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(parts.fold.length && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
+    const enc = new TextEncoder()
+    const rest = async (controller: ReadableStreamDefaultController<Uint8Array>, styles: ReturnType<typeof pageStyles>, streaming: boolean) => {
+      try {
+        for await (const chunk of s.chunks) controller.enqueue(enc.encode(styles.late(pageSheets([], islandsOf(chunk), options.chunks), chunk) + chunk + '\n'))
+      } catch (e) {
+        options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
+      }
+      controller.enqueue(enc.encode(await finish(streaming)))
+      controller.close()
+    }
+
+    // The route rendered before: its head goes out now, from what that render needed, and the page follows it.
+    const shape = `${status} ${saveData(request) ? 1 : 0} ${r.levels.map(l => l.id).join()}`
+    const known = heads.get(shape)
+    if (known) {
+      // A session read can set cookies, which have to be in the headers: read it before they go.
+      if (request.headers.has('cookie')) await scope.ctx().catch(() => {})
+      const set = [...scope.headers].length
+      const styles = pageStyles(assets, known.sheets, '', site.head, known)
+      const head = top + known.preloads + (assets.entry ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') + styles.head +
+        (known.capture ? `<script>${capture(known.now)}</script>\n` : '') + dev + '</head>\n<body>\n'
+      const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(known.fold && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
+      const body = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          controller.enqueue(enc.encode(head))
+          try {
+            s = render()
+            await s.settle() // queries read outside a Boundary have nowhere to stream to
+            const p = shaped()
+            const capturing = !!options.lazy || p.streaming
+            // What this page has beyond the head: sheets, rules, and chunks that render didn't reach.
+            const have = new Set(known.preloads.split(/(?=<link )/))
+            const more = p.preloads.split(/(?=<link )/).filter(l => l && !have.has(l)).join('')
+            const lead = styles.late(p.sheets, s.shell) + more + (capturing && !known.capture ? `<script>${capture(p.now)}</script>\n` : '')
+            controller.enqueue(enc.encode(lead + page_(p) + (assets.entry && !p.streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '')))
+            // A render that set a header after they went can't use this: the route goes back to rendering first.
+            if ([...scope.headers].length !== set) {
+              heads.set(shape, null)
+              options.onDiagnostic?.({ code: 'E_HEAD', severity: 'warning', message: `${path}: a render set a response header after the head was sent, so this route now renders before sending anything.` })
+            } else remember(shape, { ...p, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length, preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join('') })
+            await rest(controller, styles, p.streaming)
+          } catch (e) {
+            heads.set(shape, null)
+            options.onDiagnostic?.({ code: 'E_HEAD', severity: 'error', message: `${path}: ${String(e)}` })
+            controller.enqueue(enc.encode('<p>Something went wrong. <a href="">Reload</a></p>\n</body>\n</html>\n'))
+            controller.close()
+          }
+        },
+      })
+      return withHeaders(new Response(body, init), scope)
+    }
+
+    s = render()
+    await s.settle() // queries read outside a Boundary have nowhere to stream to
+    const p = shaped()
+    const styles = pageStyles(assets, p.sheets, s.shell, site.head)
+    const capturing = !!options.lazy || p.streaming
+    if (known === undefined && !options.dev) remember(shape, { ...p, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length })
+    const head =
+      top + p.preloads +
+      // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
+      (assets.entry && p.streaming ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') +
+      styles.head +
+      (capturing ? `<script>${capture(p.now)}</script>\n` : '') +
+      dev +
+      (assets.entry && !p.streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
+      '</head>\n<body>\n' + page_(p)
+    const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(p.parts.fold.length && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
     // No Boundary is waiting, so there's nothing to stream: the page goes out in one piece.
-    if (!streaming) {
+    if (!p.streaming) {
       const res = new Response(null, init)
-      whole.set(res, head + (await finish()))
+      whole.set(res, head + (await finish(false)))
       return withHeaders(res, scope)
     }
-    const enc = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         controller.enqueue(enc.encode(head))
-        try {
-          for await (const chunk of s.chunks) controller.enqueue(enc.encode(styles.late(pageSheets([], islandsOf(chunk), options.chunks), chunk) + chunk + '\n'))
-        } catch (e) {
-          options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
-        }
-        controller.enqueue(enc.encode(await finish()))
-        controller.close()
+        await rest(controller, styles, true)
       },
     })
     return withHeaders(new Response(body, init), scope)
@@ -544,6 +613,9 @@ export function createHandler(options: HandlerOptions) {
   }
   return Object.assign(handler, { resolve })
 }
+
+const HEADS_MAX = 512
+interface Head { sheets: { href: string }[]; preloads: string; now: boolean; capture: boolean; fold: boolean; split: boolean; found: Set<string> }
 
 /** A complete page's text. Its Response holds no body until `compressed` gives it one: compressed, it's never read. */
 const whole = new WeakMap<Response, string>()

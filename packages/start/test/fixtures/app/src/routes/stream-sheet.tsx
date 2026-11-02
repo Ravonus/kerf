@@ -3,7 +3,8 @@ import type { RouteProps } from '@weft/start'
 import { later } from '../db'
 import './stream-sheet.css'
 
-export const load = async () => ({ n: later(40, 7) })
+// `?x`: the shell reaches a rule an earlier render of the route didn't, after that render's head was kept.
+export const load = async ({ request }: { request: Request }) => ({ n: later(40, 7), x: new URL(request.url).searchParams.has('x') })
 
 function Count(props: { n: Promise<number> }) {
   const r = resource(() => props.n)
@@ -14,6 +15,7 @@ function Count(props: { n: Promise<number> }) {
 export default function StreamSheet(props: RouteProps<typeof load>) {
   return (
     <main data-scope="shell-card">
+      {props.data.x && <p data-scope="extra-card">extra</p>}
       <Boundary pending={<p class="skeleton">Loading</p>}>
         <Count n={props.data.n} />
       </Boundary>
