@@ -94,7 +94,9 @@
 [data-site="tk-section"] [data-part="use"] li + li, [data-site="tk-section"] [data-part="notes"] li + li { margin-block-start: var(--warp-space-tight); }
 [data-site="tk-section"] [data-part="keys"] { display: grid; margin: 0; }
 [data-site="tk-section"] [data-part="keys"] > div { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: center; gap: var(--warp-space-group); min-block-size: 44px; border-block-end: var(--warp-border-hairline) solid var(--rule); }
-[data-site="tk-section"] [data-part="keys"] dt { display: flex; flex-wrap: wrap; gap: var(--warp-space-hair); }
+[data-site="tk-section"] [data-part="keys"] dt { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-hair); }
+[data-site="tk-section"] [data-part="keys"] [data-part="chord"] { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-hair); }
+[data-site="tk-section"] [data-part="keys"] [data-part="key-word"] { color: var(--dim); font-size: var(--warp-text-caption-size); }
 [data-site="tk-section"] [data-part="keys"] dd { margin: 0; color: var(--dim); }
 [data-site="tk-section"] [data-part="chips"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); margin: 0; }
 /* Related pages are quiet links, not buttons: names as words, in the body face, underlined on hover. */

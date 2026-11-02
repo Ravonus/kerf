@@ -433,6 +433,12 @@ await check('related links read as words', '/blocks/checkout', async page => {
   if (!links.length) throw new Error('no related links')
   same(links.filter(l => l.button || l.upper === 'uppercase' || /[a-z][A-Z]/.test(l.text)).map(l => l.text).join(), '', 'loud or squashed')
 })
+// Key caps hold keys: "+" and "or" are words between them, and a comma never sits inside a cap ("Enter," was one).
+await check('key caps hold keys only', '/components/data-grid', async page => {
+  const caps = await page.locator('#accessibility [data-part="keys"] kbd').evaluateAll(ks => ks.map(k => k.textContent.trim()))
+  if (!caps.length) throw new Error('no key caps')
+  same(caps.filter(k => k === '+' || k === 'or' || /.,$/.test(k)).join(' '), '', 'not keys')
+})
 // "Go to" and its box are one item: at 1280 they sit on the pages' row, and never apart.
 await check('pagination keeps Go to with its box', '/components/pagination-bar', async page => {
   const sec = page.locator('section#PaginationBarControlled')
