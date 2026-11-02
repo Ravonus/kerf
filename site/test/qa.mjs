@@ -46,7 +46,9 @@ for (const path of ['/blocks/notification-preferences', '/blocks/push-soft-ask',
         return [...s.querySelectorAll('[data-scope="calendar"] [data-part="months"], [data-scope="tool-call"], textarea')].filter(e => e.getBoundingClientRect().right > edge + 1).map(e => e.dataset.scope ?? e.dataset.part ?? e.localName)
       }),
     }))
-    same(over, 0, 'page overflow')
+    // Below 0 is no overflow: headless Chromium hides scrollbars but html's `scrollbar-gutter: stable` still keeps
+    // their 15px, so the content is narrower than clientWidth reports. Only a positive difference scrolls sideways.
+    same(Math.max(0, over), 0, 'page overflow')
     same(stages.join(), '', 'past the stage edge')
   }, PHONE)
 }
