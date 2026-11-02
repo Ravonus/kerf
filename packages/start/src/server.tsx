@@ -329,7 +329,7 @@ export function createHandler(options: HandlerOptions) {
       async start(controller) {
         controller.enqueue(enc.encode(head))
         try {
-          for await (const chunk of s.chunks) controller.enqueue(enc.encode(styles.late(pageSheets([], islandsOf(chunk), options.chunks)) + chunk + '\n'))
+          for await (const chunk of s.chunks) controller.enqueue(enc.encode(styles.late(pageSheets([], islandsOf(chunk), options.chunks), chunk) + chunk + '\n'))
         } catch (e) {
           options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
         }

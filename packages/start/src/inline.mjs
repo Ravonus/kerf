@@ -89,9 +89,11 @@ function* demands(selector) {
   }
 }
 
+const ROOTED = /^\s*(?::root|html|body)\b/
+
 /** Can the shell match this, going by the attributes, their values and the classes it has? Anything else stays. */
 function present(rest, found) {
-  if (/^\s*(?::root|html|body)\b/.test(rest)) return true
+  if (ROOTED.test(rest)) return true
   let root = false
   for (const d of demands(rest)) {
     if (typeof d === 'string') {
@@ -108,8 +110,19 @@ function paints(selector, found) {
   return !LATER.test(rest.replace(/\[[^\]]*\]/g, '')) && present(rest, found)
 }
 
-/** A sheet without what can't show in the first paint. */
-function firstPaint(css, parse, found) {
+/**
+ * Already sent, going by what `sent` reached: every word of it, since the purge goes by words where `present` lets a root
+ * attribute through. A root rule stays: the purge cut its tokens to what those rules read.
+ */
+function repeats(selector, sent) {
+  const rest = required(selector)
+  if (!sent || ROOTED.test(rest) || !paints(selector, sent)) return false
+  for (const d of demands(rest)) if (!sent.has(d.value ?? d) && !sent.has(ANY_VALUE) && !ROOT_ATTR.test(d)) return false
+  return true
+}
+
+/** A sheet without what can't show in the first paint, nor what `sent` already reached. */
+function firstPaint(css, parse, found, sent) {
   const walk = source => print(parse(source).flatMap(n => {
     if (n.body === undefined) return [n]
     if (PRINT.test(n.head) || FORCED_COLORS.test(n.head)) return []
@@ -118,7 +131,7 @@ function firstPaint(css, parse, found) {
       return body ? [{ head: n.head, body }] : []
     }
     if (n.head[0] === '@') return [n]
-    const kept = selectors(n.head).filter(s => paints(s, found))
+    const kept = selectors(n.head).filter(s => paints(s, found) && !repeats(s, sent))
     return kept.length ? [{ head: kept.join(','), body: n.body }] : []
   }))
   return walk(css)
@@ -152,13 +165,10 @@ function vocabulary(sheets, id) {
   return words
 }
 
-/** The rules these words can reach in these sheets. Kept by the page's shape, not its text, so rows don't miss it. */
-function criticalCss(sheets, html, head, { parse, purge }) {
-  const id = sheets.map(s => s.href).join()
-  const known = vocabulary(sheets, id)
-  const found = new Set(head?.includes('warp:dials') ? DIALS : [])
+/** Adds to `found` what these sources have of the sheets' words. */
+function read(sources, known, found) {
   const see = w => { if (known.has(w)) found.add(w) }
-  for (const source of [html, head ?? '']) {
+  for (const source of sources) {
     for (const m of source.matchAll(ATTR)) {
       see(m[1].toLowerCase())
       const value = m[2] ?? m[3] ?? m[4]
@@ -173,24 +183,33 @@ function criticalCss(sheets, html, head, { parse, purge }) {
     }
     for (const m of source.matchAll(PROP)) see(m[0])
   }
-  const key = `${id}|${[...found].sort().join()}`
+  return found
+}
+
+/** The rules `found` reaches in these sheets, but for those `sent` did. Kept by the page's shape, not its text, so rows don't miss it. */
+function criticalCss(sheets, found, { parse, purge }, sent) {
+  const key = `${sheets.map(s => s.href).join()}|${[...found].sort().join()}|${sent ? [...sent].sort().join() : ''}`
   let css = critical.get(key)
   if (css === undefined) {
     // Keeps a value the shell's words can't vouch for, as firstPaint does.
     const has = w => found.has(w) || found.has(ANY_VALUE) || !/^-{0,2}[\w-]+$/.test(w)
-    css = usedFaces(purge(sheets.map(s => firstPaint(s.css, parse, found)), { has }).join(''), parse)
+    css = usedFaces(purge(sheets.map(s => firstPaint(s.css, parse, found, sent)), { has }).join(''), parse)
     if (critical.size >= CRITICAL_MAX) critical.delete(critical.keys().next().value)
     critical.set(key, css)
   }
   return css
 }
 
+// Put the `<style>` before this script in front of the head's first link.
+const MOVE = `(s=>{var d=document,l=d.head.querySelector('link[rel=stylesheet]');l&&l.before(s)})(document.currentScript.previousElementSibling)`
 const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
 
 /**
  * `assets.inline` is `{ href: css }`, and `assets.critical` weft's `{ parse, purge }` (none in dev). Returns the head's
- * stylesheets, and `late(hrefs)`: the links a streamed chunk needs in front of it. A parser-inserted link holds the inline
- * script after it, so a Boundary swaps only once its styles are here.
+ * stylesheets, and `late(sheets, chunk)`: what a streamed chunk needs in front of it. A parser-inserted link holds all
+ * that follows until it loads, so a sheet the head has already asked for is never one: the chunk brings the rules its own
+ * HTML reaches, and they move in front of those sheets, which have to keep winning once they load. A sheet the head
+ * lacks can only be a link, and its Boundary swaps once it's here.
  */
 export function pageStyles(assets, css = [], html = '', head) {
   const first = `<style>${LAYER_ORDER}</style>\n`
@@ -198,17 +217,24 @@ export function pageStyles(assets, css = [], html = '', head) {
   const raw = inline.reduce((n, s) => n + s.css.length, 0)
   const split = !!assets.critical && inline.length > 0 && raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
   const carried = new Set(css.map(c => c.href))
-  const deferred = split ? inline.map(s => s.href) : []
+  const known = split && vocabulary(inline, inline.map(s => s.href).join())
+  let sent = split && read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? DIALS : []))
   const tags = split
-    ? `<style>${criticalCss(inline, html, head, assets.critical)}</style>\n` + css.map(c =>
+    ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` + css.map(c =>
       assets.inline?.[c.href] === undefined ? blocking(c.href) : `<link rel="stylesheet" href="${esc(c.href)}" media="print" onload="this.media='all'">\n<noscript>${blocking(c.href).trim()}</noscript>\n`).join('')
     : css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<style>${assets.inline[c.href]}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`).join('')
   return {
     head: first + tags,
-    late(sheets = []) {
-      const hrefs = [...deferred.splice(0), ...sheets.map(s => s.href).filter(h => !carried.has(h))]
+    late(sheets = [], chunk = '') {
+      const hrefs = sheets.map(s => s.href).filter(h => !carried.has(h))
       for (const h of hrefs) carried.add(h)
-      return hrefs.map(blocking).join('')
+      const links = hrefs.map(blocking).join('')
+      if (!split) return links
+      const found = read([chunk], known, new Set(sent))
+      if (found.size === sent.size) return links
+      const rules = criticalCss(inline, found, assets.critical, sent)
+      sent = found
+      return links + (rules && `<style>${rules}</style><script>${MOVE}</script>\n`)
     },
   }
 }

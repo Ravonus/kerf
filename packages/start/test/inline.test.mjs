@@ -52,10 +52,30 @@ test('dials the head restores before paint keep their rules', () => {
   expect(pageStyles(a, css, html).head).not.toContain('vivid')
 })
 
-test('a streamed chunk gets each deferred sheet and each new island sheet once, as blocking links', () => {
+test('a streamed chunk never links a sheet the head already asked for: it brings the rules it reaches, once', () => {
   const s = pageStyles(assets, css, html)
-  expect(s.late([{ href: '/a.css' }, { href: '/island.css' }])).toBe('<link rel="stylesheet" href="/a.css">\n<link rel="stylesheet" href="/island.css">\n')
-  expect(s.late([{ href: '/island.css' }])).toBe('')
+  const first = s.late([{ href: '/a.css' }], '<template><div data-scope="menu"></div></template>')
+  expect(first).not.toContain('<link')
+  expect(first).toContain('data-scope="menu"')
+  expect(first).not.toContain('color:green') // the head sent the card's rules
+  expect(s.late([], '<template><div data-scope="menu"></div></template>')).toBe('')
+})
+
+test('a chunk\'s rules go in front of the head\'s sheets, so those keep winning once they load', () => {
+  const s = pageStyles(assets, css, html)
+  expect(s.late([], '<div data-scope="menu"></div>')).toMatch(/<\/style><script>.*link\[rel=stylesheet\].*l\.before\(s\).*previousElementSibling\)<\/script>\n$/)
+})
+
+test('a sheet the head lacks is still a blocking link, once', () => {
+  const s = pageStyles(assets, css, html)
+  expect(s.late([{ href: '/island.css' }], '')).toBe('<link rel="stylesheet" href="/island.css">\n')
+  expect(s.late([{ href: '/island.css' }], '')).toBe('')
+})
+
+test('a token only a chunk reads comes with that chunk, though the head cut it', () => {
+  const sheet = `:root{--used:1;--late:2}:where([data-scope="card"]){color:var(--used)}:where([data-scope="menu"]){color:var(--late)}${filler(4000)}`
+  const s = pageStyles({ inline: { '/tokens.css': sheet }, critical }, [{ href: '/tokens.css' }], html)
+  expect(s.late([], '<div data-scope="menu"></div>')).toContain('--late:2')
 })
 
 test('a whole-inline page has nothing deferred, so a chunk adds only what the head lacked', () => {
