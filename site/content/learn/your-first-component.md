@@ -36,6 +36,7 @@ once. Work out values in JSX, or with `derived` (see [Derived values](/learn/der
 
 A component in its own file is an ordinary export. A route's page is the file's `export default`:
 
+<!-- example: skip imports Greeting from the demo above, saved as src/components/Greeting.tsx -->
 ```tsx
 // src/routes/index.tsx
 import { Greeting } from '../components/Greeting'

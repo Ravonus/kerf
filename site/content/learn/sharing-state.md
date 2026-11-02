@@ -14,6 +14,17 @@ The simplest way is a parent that owns the state and passes it to both children:
 when a child changes it. Most sharing is this.
 
 ```tsx
+import { state } from '@weft-js/core'
+
+function Stepper(props: { value?: number }) {
+  let { value = 1 } = props
+  return <button type="button" onClick={() => value++}>{value}</button>
+}
+
+function Summary(props: { qty: number }) {
+  return <p>{props.qty} in the basket</p>
+}
+
 export default function Checkout() {
   const qty = state(1)
   return (
@@ -42,6 +53,8 @@ once per app, the first time something reads it. Any component imports it and re
 :::demo scope
 
 ```tsx
+import { defineState, derived, state } from '@weft-js/core'
+
 export const basket = defineState('basket', () => {
   const items = state<string[]>([])
   const count = derived(() => items.value.length)

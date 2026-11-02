@@ -20,6 +20,7 @@ src/routes/_layout.tsx      wraps every page below it
 
 A page is the file's default export. `load` fetches its data on the server, and `meta` sets its title and description:
 
+<!-- example: skip needs a getList query in the app's src/server/lists.ts -->
 ```tsx
 import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
 import { getList } from '#/server/lists'
@@ -42,23 +43,29 @@ functions:
 ```ts
 // src/server/todos.ts
 import { mutation, query } from '@weft-js/start'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { todos } from '../db/schema'
+import { todos } from '#/db/schema'
 
 export const listTodos = query({
   tags: ['todos'],
-  run: ({ ctx }) => ctx.db.select().from(todos),
+  auth: 'user',
+  run: ({ ctx }) => ctx.db.select().from(todos).where(eq(todos.userId, ctx.user.id)),
 })
 
 export const addTodo = mutation({
   input: z.object({ title: z.string().min(1) }),
+  auth: 'user',
   invalidates: ['todos'],
   run: async ({ input, ctx }) => {
-    const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(), ...input }).returning()
+    const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(), userId: ctx.user.id, createdAt: Date.now(), ...input }).returning()
     return row
   },
 })
 ```
+
+The `todos` table is the one a new app's `src/db/schema.ts` has. `auth: 'user'` is explained under
+[Database and auth](#database-and-auth).
 
 In a component, a query is a resource, and a mutation is an async function:
 

@@ -42,7 +42,9 @@ export const orderCard = group('order-card', {
   defaults: { status: 'open' },
 })
 
-<article {...orderCard({ status: order.status })}>…</article>
+export function Order(props: { status: 'open' | 'late'; number: string }) {
+  return <article {...orderCard({ status: props.status })}>Order {props.number}</article>
+}
 ```
 
 `weft style find` shows the groups that fit what you're making. The [Style groups reference](/reference/style) has the full

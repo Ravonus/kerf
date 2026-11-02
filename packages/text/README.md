@@ -24,6 +24,7 @@ the 0.21 KB detector shell (`dist/index.js`).
 
 ## API
 
+<!-- example: skip @weft-js/text/engine ships no type declarations yet, and text, width and lineHeight are yours -->
 ```ts
 import { loadTextEngine } from '@weft-js/text/engine'
 const te = await loadTextEngine()             // loads only this browser's engine chunk
