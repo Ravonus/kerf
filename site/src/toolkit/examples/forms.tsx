@@ -1,5 +1,5 @@
-import { derived, state, untrack } from 'weft'
-import { Badge, Button, Checkbox, CompactSelect, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
+import { derived, state, untrack } from '@weft-js/core'
+import { Badge, Button, Checkbox, CompactSelect, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft-js/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS } from '../world'
 
 /** One state in a States grid: its name, then the field. */

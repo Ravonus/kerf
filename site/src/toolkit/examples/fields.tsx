@@ -1,6 +1,6 @@
-import { state } from 'weft'
-import { AddressField, Button, Card, CardNumberText, CodeBlock, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft/warp'
-import type { ProviderAppearance, ProviderField } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { AddressField, Button, Card, CardNumberText, CodeBlock, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft-js/warp'
+import type { ProviderAppearance, ProviderField } from '@weft-js/warp'
 import { PEOPLE, PROJECTS } from '../world'
 
 /** One state in a States grid: its name, then the field. */

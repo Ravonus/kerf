@@ -1,5 +1,5 @@
-import { state, untrack } from 'weft'
-import { Badge, Button, Card, Center, Cover, Frame, Grid, Heading, Input, Inset, Nav, Progress, Row, Segmented, Shell, Spacer, Split, Stack, Switch, Text, Toggle } from '@weft/warp'
+import { state, untrack } from '@weft-js/core'
+import { Badge, Button, Card, Center, Cover, Frame, Grid, Heading, Input, Inset, Nav, Progress, Row, Segmented, Shell, Spacer, Split, Stack, Switch, Text, Toggle } from '@weft-js/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS, TONE_OF, TRAFFIC } from '../world'
 
 // Layout has no look of its own, so each box is a small project card.

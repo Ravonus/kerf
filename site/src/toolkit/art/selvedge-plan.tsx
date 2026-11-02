@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
 import { inks, rng, type ArtProps, type Meta } from './shared'
 import code from './selvedge-plan.tsx?raw'
 

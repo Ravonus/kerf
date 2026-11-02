@@ -1,9 +1,9 @@
-import { surface, type Frame, type SurfaceOptions } from '@weft/warp-core/canvas'
-import { use } from '@weft/warp-core/weft'
+import { surface, type Frame, type SurfaceOptions } from '@weft-js/warp-core/canvas'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
 import '@weft-js/warp-core/styles/canvas/canvas.css'
 
-export type { Frame, Pointer } from '@weft/warp-core/canvas'
+export type { Frame, Pointer } from '@weft-js/warp-core/canvas'
 
 /** Props for Canvas. */
 export interface CanvasProps {

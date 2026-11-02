@@ -1,6 +1,6 @@
-import { Boundary, derived, onCleanup, onMount, resource, state, untrack } from 'weft'
-import { Alert, Badge, Button, Card, Grid, Heading, Input, LiveStatus, Progress, Row, Shape, Skeleton, Spinner, Stack, Text, Toaster, toast } from '@weft/warp'
-import type { LiveState } from '@weft/warp'
+import { Boundary, derived, onCleanup, onMount, resource, state, untrack } from '@weft-js/core'
+import { Alert, Badge, Button, Card, Grid, Heading, Input, LiveStatus, Progress, Row, Shape, Skeleton, Spinner, Stack, Text, Toaster, toast } from '@weft-js/warp'
+import type { LiveState } from '@weft-js/warp'
 import { PROJECTS } from '../world'
 
 type ToastTone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'

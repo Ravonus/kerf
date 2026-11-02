@@ -1,4 +1,4 @@
-import { Button } from '@weft/warp'
+import { Button } from '@weft-js/warp'
 import { Preview } from './Preview'
 import type { ExampleRef } from '../toolkit/types'
 

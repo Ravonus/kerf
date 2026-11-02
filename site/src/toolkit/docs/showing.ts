@@ -196,7 +196,7 @@ export const showing: DocGroup = {
       ],
       a11yNotes: ['Icons are decorative unless they have a `label`.'],
       propDocs: {
-        name: 'Which icon, or an icon imported from `@weft/icons`.',
+        name: 'Which icon, or an icon imported from `@weft-js/warp-icons`.',
         size: 'Width and height, in pixels or any CSS length.',
         solid: 'The filled drawing.',
         action: 'Runs the moving part: `hover`, `focus`, `press` or `on`.',
@@ -308,7 +308,7 @@ export const showing: DocGroup = {
         { kind: 'composition', title: 'In context', examples: [{ id: 'CodeBlockChooser', title: 'One task, three ways', note: 'Pair a `Segmented` control with `CodeBlock` to let people pick which version of the code to read.', stage: 'fill', height: 220 }] },
       ],
       keyboard: [['Tab', 'Focuses the code, so arrow keys can scroll it']],
-      a11yNotes: ['Long lines scroll, so the block takes focus for keyboard users.', 'It is coloured on the server and needs no script. `copyButtons()` from `@weft/warp-core`, called once, runs every copy button.'],
+      a11yNotes: ['Long lines scroll, so the block takes focus for keyboard users.', 'It is coloured on the server and needs no script. `copyButtons()` from `@weft-js/warp-core`, called once, runs every copy button.'],
       related: ['Snippet', 'Code', 'CodeInput', 'Markdown'],
     },
     {

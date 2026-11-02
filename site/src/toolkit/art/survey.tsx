@@ -1,4 +1,4 @@
-import { DitherField } from '@weft/warp'
+import { DitherField } from '@weft-js/warp'
 import { clamp, fbm, smooth, type ArtProps, type Meta } from './shared'
 import code from './survey.tsx?raw'
 

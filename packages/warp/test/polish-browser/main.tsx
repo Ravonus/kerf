@@ -1,5 +1,5 @@
-import { render } from 'weft/dom'
-import { state } from 'weft'
+import { render } from '@weft-js/core/dom'
+import { state } from '@weft-js/core'
 import { Button } from '../../src/Button'
 import { PaginationBar } from '../../src/Pagination'
 import { Table } from '../../src/Table'
@@ -57,7 +57,7 @@ render(() => (
     {box('board', 600, <Kanban label="Board" columns={BOARD} height="240px" />)}
     <div id="solid" data-expression="vivid" style="padding:16px"><Button>Deploy now</Button></div>
     <div id="solid-balanced" data-expression="balanced" style="padding:16px"><Button>Deploy now</Button></div>
-    <div id="code-vivid" data-expression="vivid" style="padding:16px;inline-size:480px"><CodeBlock code="import { Button } from '@weft/warp'" /></div>
+    <div id="code-vivid" data-expression="vivid" style="padding:16px;inline-size:480px"><CodeBlock code="import { Button } from '@weft-js/warp'" /></div>
     {box('rows', 420, <><Textarea label="Notes" rows={5} /><Textarea label="Short" /></>)}
     {box('tl-phone', 326, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}
     {box('tl-desk', 598, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}

@@ -1,6 +1,6 @@
-import { getDial } from '@weft/warp'
-import { onMount } from 'weft'
-import { on } from 'weft/browser'
+import { getDial } from '@weft-js/warp'
+import { onMount } from '@weft-js/core'
+import { on } from '@weft-js/core/browser'
 
 const EXPRESSIONS = ['quiet', 'balanced', 'vivid']
 const THEMES = ['page', 'light', 'dark']

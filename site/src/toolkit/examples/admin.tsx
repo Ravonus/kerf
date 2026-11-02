@@ -1,10 +1,10 @@
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import {
   ApiKeys, AuditLog, Badge, Button, Card, CartButton, CartDrawer, Checkout, ConfirmDialog, CsvImport, DangerZone, Input, IntegrationsGrid, InviteDialog,
   Invoices, LineItem, MembersTable, OrderConfirmation, OrderTracker, PayFrame, PaymentMethods, PlanPicker, Row, RolesMatrix, SaveBar, SeatsMeter,
   Segmented, Select, SettingRow, SettingsLayout, SettingsSection, Stack, Switch, TagsInput, Text, Toaster, TypeToConfirm, UsageMeter, UsageMeters, Webhooks,
-} from '@weft/warp'
-import type { ApiKey, Integration, Invite, Member, OrderStage, PaymentMethod, Permission, PlaceOrderResult, Webhook } from '@weft/warp'
+} from '@weft-js/warp'
+import type { ApiKey, Integration, Invite, Member, OrderStage, PaymentMethod, Permission, PlaceOrderResult, Webhook } from '@weft-js/warp'
 import { API_KEYS, AUDIT, AUDIT_CATEGORIES, BILLS, CARDS, IMPORT_SAMPLE, IMPORT_TARGETS, INTEGRATIONS, INVITE_ROLES, NOW, OVERDUE_BILLS, PEOPLE, PLANS, SHOP_CART, SHOP_SHIPPING, TEAM_INVITES, TEAM_MEMBERS, TEAM_PERMISSIONS, TEAM_ROLES, WEBHOOKS, WEBHOOK_EVENTS } from '../world'
 
 const wait = (ms: number) => new Promise(done => setTimeout(done, ms))

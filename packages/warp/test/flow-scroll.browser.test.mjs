@@ -115,7 +115,7 @@ test('a Shell deep in the page gates its own host, not the page: flow keeps runn
 
 test('a code block resting at the fold is mid-scan, and the scan runs under its text, never over it', async () => {
   const { page, close } = await stage(`<div style="block-size:560px"></div>
-    <figure data-scope="codeblock" id="code" style="margin:0;block-size:240px;inline-size:600px"><pre id="pre" style="margin:0;overflow:clip">${"import { Button } from '@weft/warp'; ".repeat(4)}</pre></figure>
+    <figure data-scope="codeblock" id="code" style="margin:0;block-size:240px;inline-size:600px"><pre id="pre" style="margin:0;overflow:clip">${"import { Button } from '@weft-js/warp'; ".repeat(4)}</pre></figure>
     <div style="block-size:3000px"></div>`)
   const m = await page.evaluate(() => {
     const c = document.getElementById('code'), a = getComputedStyle(c, '::after')

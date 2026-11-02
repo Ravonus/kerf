@@ -1,5 +1,5 @@
-import { Search } from '@weft/warp'
-import { state } from 'weft'
+import { Search } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 
 /** Filters the tiles the page already has: it only sets attributes, so a keystroke costs what a style change costs. */
 export function ToolkitFilter(props: { noun: string }) {

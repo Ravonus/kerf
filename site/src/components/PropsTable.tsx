@@ -1,5 +1,5 @@
-import { Button } from '@weft/warp'
-import { state } from 'weft'
+import { Button } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 
 type Row = { name: string; type: string; required: boolean; default?: string; doc: string }
 

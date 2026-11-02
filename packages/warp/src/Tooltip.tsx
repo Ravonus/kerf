@@ -1,6 +1,6 @@
-import { tooltip, uid, type Align, type Side } from '@weft/warp-core'
-import { untrack } from 'weft'
-import { use } from '@weft/warp-core/weft'
+import { tooltip, uid, type Align, type Side } from '@weft-js/warp-core'
+import { untrack } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
 import '@weft-js/warp-core/styles/components/tooltip.css'
 

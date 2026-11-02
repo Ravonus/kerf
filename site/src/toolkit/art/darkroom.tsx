@@ -1,5 +1,5 @@
-import { Dither, Segmented, type Algorithm } from '@weft/warp'
-import { state } from 'weft'
+import { Dither, Segmented, type Algorithm } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 import { fbm, clamp, mix, smooth, type ArtProps, type Meta } from './shared'
 import code from './darkroom.tsx?raw'
 

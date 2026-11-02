@@ -1,8 +1,8 @@
-import { DownIcon } from '@weft/icons'
-import { derived, untrack } from 'weft'
+import { DownIcon } from '@weft-js/warp-icons'
+import { derived, untrack } from '@weft-js/core'
 import { bindable, type Bindable } from './bind'
 import { Field, type FieldShell } from './Field'
-import '@weft/warp-core/styles/inputs/text.css'
+import '@weft-js/warp-core/styles/inputs/text.css'
 
 export type NumberFieldProps = FieldShell & Bindable<number | null> & { min?: number; max?: number; step?: number; name?: string; required?: boolean }
 

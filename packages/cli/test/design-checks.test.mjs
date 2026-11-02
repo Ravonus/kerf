@@ -153,7 +153,7 @@ describe('values (an app with warp)', () => {
     expect(text).toContain(`<Row as="section" gap="related"><Card /></Row>`)
   })
   test('D005 an input type or title the browser paints', async () => {
-    const { result } = await run(`import { Input } from '@weft/warp'\nexport const A = () => <><Input label="N" type="number" /><input type="date" aria-label="D" /><span title="x">y</span><input data-part="sr-only" type="range" aria-label="R" /><iframe title="f" /></>`)
+    const { result } = await run(`import { Input } from '@weft-js/warp'\nexport const A = () => <><Input label="N" type="number" /><input type="date" aria-label="D" /><span title="x">y</span><input data-part="sr-only" type="range" aria-label="R" /><iframe title="f" /></>`)
     expect(result.diagnostics.filter(d => d.code === 'D005')).toHaveLength(3)
   })
 

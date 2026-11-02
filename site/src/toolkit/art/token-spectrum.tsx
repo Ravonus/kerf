@@ -1,6 +1,6 @@
-import { Canvas, Slider, type CanvasFrame as Frame } from '@weft/warp'
-import { palette } from '@weft/warp-core/dither'
-import { state } from 'weft'
+import { Canvas, Slider, type CanvasFrame as Frame } from '@weft-js/warp'
+import { palette } from '@weft-js/warp-core/dither'
+import { state } from '@weft-js/core'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './token-spectrum.tsx?raw'
 

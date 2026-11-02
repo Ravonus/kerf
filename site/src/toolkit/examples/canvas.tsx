@@ -1,5 +1,5 @@
-import { Button, Canvas, Dither, DitherField, DitherGlyph, Grid, Heading, Inset, Row, Stack, Text } from '@weft/warp'
-import type { CanvasFrame, DitherFieldProps, DitherGlyphProps, DitherProps } from '@weft/warp'
+import { Button, Canvas, Dither, DitherField, DitherGlyph, Grid, Heading, Inset, Row, Stack, Text } from '@weft-js/warp'
+import type { CanvasFrame, DitherFieldProps, DitherGlyphProps, DitherProps } from '@weft-js/warp'
 import { TRAFFIC } from '../world'
 
 const STAGE = 'block-size:240px'

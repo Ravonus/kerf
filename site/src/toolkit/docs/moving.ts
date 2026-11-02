@@ -97,7 +97,7 @@ export const moving: DocGroup = {
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
-          { id: 'NavAcross', title: 'A row', note: 'Mark the current page with `aria-current`. `Link` from `@weft/start` does that for you.' },
+          { id: 'NavAcross', title: 'A row', note: 'Mark the current page with `aria-current`. `Link` from `@weft-js/start` does that for you.' },
           { id: 'NavDown', title: 'A column', note: '`axis="y"` puts the bar beside the links.', height: 220 },
         ] },
         { kind: 'composition', title: 'In context', examples: [

@@ -1,7 +1,7 @@
 // Fixes from the toolkit pages. jsdom has no layout, so a CSS fix is held by its rule; the behaviour ones are driven.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { BubbleChart } from '../src/Charts'
 import { DataGrid } from '../src/DataGrid'
 import { Feed } from '../src/Feed'

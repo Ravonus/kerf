@@ -1,5 +1,5 @@
-import { popover, uid, type Align, type Side } from '@weft/warp-core'
-import { state, untrack } from 'weft'
+import { popover, uid, type Align, type Side } from '@weft-js/warp-core'
+import { state, untrack } from '@weft-js/core'
 import { Button, type ButtonProps } from './Button'
 import { use } from '@weft-js/warp-core/weft'
 import './styles'

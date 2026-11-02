@@ -5,12 +5,12 @@ import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldShell } from './Field'
 import { Tooltip } from './Tooltip'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/rich/body.css'
-import '@weft/warp-core/styles/rich/rich-text.css'
-import '@weft/warp-core/styles/rich/listbox.css'
-import '@weft/warp-core/styles/rich/popover.css'
-import '@weft/warp-core/styles/rich/helpers.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/body.css'
+import '@weft-js/warp-core/styles/rich/rich-text.css'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/popover.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
 
 /** An entry in the editor's slash menu. */
 export type SlashCommand = { id: string; label: string; hint?: string; shortcut?: string; run: (editor: RichTextHandle) => void }

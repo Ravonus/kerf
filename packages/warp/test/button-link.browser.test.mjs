@@ -1,5 +1,5 @@
 // @vitest-environment node
-// A button that is a link, in Chrome, with @weft/icons' CSS loaded first, as it is when a page imports an icon before warp.
+// A button that is a link, in Chrome, with @weft-js/warp-icons' CSS loaded first, as it is when a page imports an icon before warp.
 // A layer ranks by when the page first names it, so icons.css opening warp.components before warp.css declared the order
 // put warp.base above warp.components, and a bare link's accent ink beat the button's: same hue on same hue.
 import { readdirSync, readFileSync } from 'node:fs'

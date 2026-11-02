@@ -1,5 +1,5 @@
 // Small pieces the admin pack shares. Internal: not exported from the barrel.
-import { flush, type State, state, untrack, watch } from 'weft'
+import { flush, type State, state, untrack, watch } from '@weft-js/core'
 import { CompactSelect } from '../Select'
 import '../fields'
 import '@weft-js/warp-core/styles/inputs/choice.css'

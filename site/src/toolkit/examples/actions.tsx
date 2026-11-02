@@ -1,6 +1,6 @@
-import { state, untrack } from 'weft'
-import { Button, Chip, CommandPalette, Input, Menu, Row, Stack, Text, Toggle, Toaster, toast } from '@weft/warp'
-import type { ButtonProps } from '@weft/warp'
+import { state, untrack } from '@weft-js/core'
+import { Button, Chip, CommandPalette, Input, Menu, Row, Stack, Text, Toggle, Toaster, toast } from '@weft-js/warp'
+import type { ButtonProps } from '@weft-js/warp'
 import { PEOPLE, PROJECTS, REGIONS } from '../world'
 
 export const ButtonPlay = (p: ButtonProps) => <Button {...p} />

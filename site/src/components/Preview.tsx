@@ -1,6 +1,6 @@
-import { onCleanup, onMount } from 'weft'
-import { on } from 'weft/browser'
-import { render } from 'weft/dom'
+import { onCleanup, onMount } from '@weft-js/core'
+import { on } from '@weft-js/core/browser'
+import { render } from '@weft-js/core/dom'
 import { previews } from '../generated/previews'
 
 /** The narrowest a card lays each kind of stage out at: a chart or a form squeezed into a card's width breaks apart. */

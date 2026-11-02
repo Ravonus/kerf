@@ -1,4 +1,4 @@
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft/start'
+import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
 import { ComponentPage } from '../../components/ComponentPage'
 import { pageIn, slugsIn } from '../../lib/pages'
 

@@ -1,5 +1,5 @@
-import { getDial, Segmented, setDial } from '@weft/warp'
-import { onMount, state } from 'weft'
+import { getDial, Segmented, setDial } from '@weft-js/warp'
+import { onMount, state } from '@weft-js/core'
 
 const STOPS = [{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]
 

@@ -126,7 +126,7 @@
 /* -- the expression dial ------------------------------------------------- */
 :root, [data-expression="balanced"] {
   --warp-x: 0.5;
-  --warp-icon-o: inline; --warp-icon-q: none; --warp-icon-b: inline; --warp-icon-v: none; --warp-icon-weft: 2; /* @weft/icons' tier, 10 §8 */
+  --warp-icon-o: inline; --warp-icon-q: none; --warp-icon-b: inline; --warp-icon-v: none; --warp-icon-weft: 2; /* @weft-js/warp-icons' tier, 10 §8 */
   --warp-ref-neutral-h: 80;  --warp-ref-neutral-c: 0.0015;  /* true graphite: the dial reads cool · none · warm */
   --warp-ref-accent-k: 1;    --warp-ref-tone-k: 1;
   --warp-ref-depth: 0.7;     --warp-ref-depth-rest: 0;  --warp-ref-rest-ambient: 0;   /* flat at rest: hairlines layer, shadows only on overlays */

@@ -1,6 +1,6 @@
-import { derived, state } from 'weft'
-import { ActivityFeed, Bell, Button, Card, ConnectionBanner, ConnectionPill, ControlBar, Countdown, Grid, Inbox, Inset, Lobby, MeetingRoom, NotificationPreferences, Prejoin, PushSoftAsk, Row, ScheduledLobby, Stack, Text, Tile, Toaster, TransportPicker, toast } from '@weft/warp'
-import type { Note, Participant } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { ActivityFeed, Bell, Button, Card, ConnectionBanner, ConnectionPill, ControlBar, Countdown, Grid, Inbox, Inset, Lobby, MeetingRoom, NotificationPreferences, Prejoin, PushSoftAsk, Row, ScheduledLobby, Stack, Text, Tile, Toaster, TransportPicker, toast } from '@weft-js/warp'
+import type { Note, Participant } from '@weft-js/warp'
 import { ACTIVITY, CALL, CALL_DEVICES, CALL_SELF, CHANNELS, NOTES, PREF_GROUPS, PREF_LOCKED, PREF_OFFERED, PREFS } from '../world'
 
 const pause = (ms: number) => new Promise(done => setTimeout(done, ms))

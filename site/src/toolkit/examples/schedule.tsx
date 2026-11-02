@@ -1,8 +1,8 @@
-import { state } from 'weft'
-import { Agenda, AgendaDay, AvailabilityEditor, BookingCalendar, Button, Card, EventEditor, EventPopover, MeetingPlanner, MoveSheet, Row, Stack, Text, Toaster, YearView, toast } from '@weft/warp'
-import type { BookingDetails, BookingSlot, IsoDate } from '@weft/warp'
-import { at, clock } from '@weft/warp-core'
-import type { CalEvent, Slot } from '@weft/warp-core'
+import { state } from '@weft-js/core'
+import { Agenda, AgendaDay, AvailabilityEditor, BookingCalendar, Button, Card, EventEditor, EventPopover, MeetingPlanner, MoveSheet, Row, Stack, Text, Toaster, YearView, toast } from '@weft-js/warp'
+import type { BookingDetails, BookingSlot, IsoDate } from '@weft-js/warp'
+import { at, clock } from '@weft-js/warp-core'
+import type { CalEvent, Slot } from '@weft-js/warp-core'
 import { DEPLOYS_BY_DAY, SCHEDULE_NOW, ON_CALL_HOURS, TEAM_CALENDARS, TEAM_EVENTS, TEAM_MORE, TEAM_ROOM, TEAM_ZONE, TODAY } from '../world'
 
 const REVIEW = TEAM_EVENTS.find(e => e.id === 'e4')!

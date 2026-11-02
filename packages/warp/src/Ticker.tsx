@@ -1,4 +1,4 @@
-import { derived } from 'weft'
+import { derived } from '@weft-js/core'
 import './styles'
 import '@weft-js/warp-core/styles/components/ticker.css'
 

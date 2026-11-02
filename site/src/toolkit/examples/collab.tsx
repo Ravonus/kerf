@@ -1,9 +1,9 @@
-import { onCleanup, onMount, state } from 'weft'
+import { onCleanup, onMount, state } from '@weft-js/core'
 import {
   AutoTrack, Button, Card, CommentAnchor, CommentRail, CommentThread, Composer, ConflictAlert, ConversationList, Cursors, DataIntegrity, Following, Heading, Input, LockIndicator, LockedField,
   Message, PeerMark, PeerSelection, PresenceStack, Row, SectionPeers, Segmented, Select, ShareDialog, Spacer, Stack, Switch, SyncIndicator, SyncedForm, Text, Textarea, Thread, Toaster, TypingIndicator, VersionHistory, ViewportRail,
-} from '@weft/warp'
-import type { ChatConversation, CommentThreadData, ComposerFile, ComposerSend, IntegrityEvent, ShareLink, ShareMember, ShareRole, SyncState, Version, ChatMessage, CursorPeer, MessageReaction, Peer } from '@weft/warp'
+} from '@weft-js/warp'
+import type { ChatConversation, CommentThreadData, ComposerFile, ComposerSend, IntegrityEvent, ShareLink, ShareMember, ShareRole, SyncState, Version, ChatMessage, CursorPeer, MessageReaction, Peer } from '@weft-js/warp'
 import { CHAT, COMMENT_OWNER, COMMENT_TIMEOUTS, CONVERSATIONS, CURSOR_PEERS, INES, INTEGRITY_EVENTS, INTEGRITY_STATS, JUN, LENA, MARA, NOOR, PEERS, PRIYA, SAM, SHARE_MEMBERS, SHARE_PEOPLE, TOMAS, VERSIONS, VIEWPORT_PEERS } from '../world'
 
 const wait = (ms: number) => new Promise(done => setTimeout(done, ms))

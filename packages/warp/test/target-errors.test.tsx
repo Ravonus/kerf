@@ -2,7 +2,7 @@
 import { fireEvent } from '@testing-library/dom'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { Kanban } from '../src/collab/Kanban'
 import { Select } from '../src/Select'
 import { RichTextEditor } from '../src/RichTextEditor'

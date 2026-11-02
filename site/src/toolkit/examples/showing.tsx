@@ -1,5 +1,5 @@
-import { onCleanup, state } from 'weft'
-import { Badge, Button, Card, Code, CodeBlock, Grid, Heading, Icon, Input, Kbd, Markdown, Row, Segmented, Snippet, Stack, Tag, Text, Ticker } from '@weft/warp'
+import { onCleanup, state } from '@weft-js/core'
+import { Badge, Button, Card, Code, CodeBlock, Grid, Heading, Icon, Input, Kbd, Markdown, Row, Segmented, Snippet, Stack, Tag, Text, Ticker } from '@weft-js/warp'
 import { DEPLOYS, PROJECTS, TONE_OF } from '../world'
 
 export const CardPlay = (p: { eyebrow: string; title: string; sweep: boolean }) => (

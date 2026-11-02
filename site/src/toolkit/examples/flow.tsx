@@ -1,10 +1,10 @@
-import { derived, state } from 'weft'
+import { derived, state } from '@weft-js/core'
 import {
   AuthDone, AuthScreen, Badge, Button, Card, Checklist, Coachmark, ConnBanner, Flow, Heading, Input, InviteAccept, MagicLinkSent, MfaSetup, OtpField, OtpStep, PasskeyButton, PasswordMeter, RateLimited, ReauthDialog, ResetPassword, Row,
   Segmented, Select, ShortcutsOverlay, SignGate, SignGateBadge, SignIn, SignUp, SsoButtons, Stack, SystemPage, Text, Toaster, Tour,
-} from '@weft/warp'
-import type { SignInValues, SignStatus, SignUpValues } from '@weft/warp'
-import { createShortcuts } from '@weft/warp-core'
+} from '@weft-js/warp'
+import type { SignInValues, SignStatus, SignUpValues } from '@weft-js/warp'
+import { createShortcuts } from '@weft-js/warp-core'
 import { PEOPLE, PROJECTS } from '../world'
 
 const wait = (ms: number) => new Promise(done => setTimeout(done, ms))

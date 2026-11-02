@@ -1,5 +1,5 @@
-import { getDial, Icon, setDial, Popover, Segmented } from '@weft/warp'
-import { onMount, state } from 'weft'
+import { getDial, Icon, setDial, Popover, Segmented } from '@weft-js/warp'
+import { onMount, state } from '@weft-js/core'
 
 type Theme = 'auto' | 'light' | 'dark'
 type Stop = 'quiet' | 'balanced' | 'vivid'

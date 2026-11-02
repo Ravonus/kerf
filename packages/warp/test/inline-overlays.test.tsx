@@ -1,7 +1,7 @@
 // `inline` draws an overlay open in the page's flow (docs, hub previews): the surface is there with no top layer, no
 // scrim, no focus trap and no placement, and `open` (or the trigger) still shows and hides it.
-import { flush, render } from 'weft/test'
-import { state } from 'weft'
+import { flush, render } from '@weft-js/core/test'
+import { state } from '@weft-js/core'
 import { Button, Drawer, Modal, Popover, Tooltip } from '../src/index'
 
 const spy = (proto: any, name: string) => {

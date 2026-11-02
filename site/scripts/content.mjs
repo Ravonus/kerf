@@ -302,7 +302,7 @@ const PROP_WORDS = {
   value: 'The current value, when you own the state.', defaultValue: 'The starting value, when the component owns the state.', defaultChecked: 'Starts checked.', checked: 'Whether it is on.', onChange: 'Called with the new value.', onInput: 'Called on each keystroke.',
   onClick: 'Called when pressed.', onSelect: 'Called with what was picked.', onClose: 'Called after it closes.', onOpen: 'Called after it opens.', open: 'A state box that holds whether it is open.', disabled: 'Turns it off, and takes it out of the tab order.', readOnly: 'Shows the value but does not let it change.', required: 'The form will not submit without it.',
   name: 'The name it posts under in a form.', id: 'The element id. One is made for you if you leave it out.', placeholder: 'Sample text shown while empty. Never a substitute for a label.', tone: 'What it means: neutral, accent, positive, caution, critical or info.', size: 'Control size. `md` by default.', emphasis: 'How loud it is.',
-  icon: 'An icon name from `@weft/icons`, or a component.', title: 'The heading.', description: 'One supporting line under the title.', footer: 'What sits at the bottom, usually actions.', options: 'What can be picked.', items: 'The rows it shows.', rows: 'The data, one object per row.', columns: 'One definition per column.', caption: 'Names the table for screen readers.',
+  icon: 'An icon name from `@weft-js/warp-icons`, or a component.', title: 'The heading.', description: 'One supporting line under the title.', footer: 'What sits at the bottom, usually actions.', options: 'What can be picked.', items: 'The rows it shows.', rows: 'The data, one object per row.', columns: 'One definition per column.', caption: 'Names the table for screen readers.',
   data: 'The series to draw.', format: 'Turns a value into the text shown.', min: 'The lowest allowed value.', max: 'The highest allowed value.', step: 'How far one key press moves it.', loading: 'Shows that work is under way.', full: 'Takes the whole width of its container.', side: 'Which edge it sits on.', align: 'How it lines up with what opened it.', placement: 'Where it opens relative to what opened it.',
   height: 'Its height, in pixels.', width: 'Its width.', ratio: 'Width to height.', gap: 'The space between children, from warp\'s space scale.', as: 'The element it renders as.', variant: 'Which form it takes.', count: 'The number it shows.', locale: 'The language and region used to format values.', href: 'Where it links.', ui: 'A row from `interaction()`, which it fills and draws.', onSubmit: 'Called with the values when submitted.', onSave: 'Called with the result when saved.', onCancel: 'Called when dismissed.', onDelete: 'Called when deleted.', onRemove: 'Called when removed.',
 }
@@ -339,7 +339,7 @@ function arrange(doc) {
 
 /** The shortest thing that shows a component in use, for the Usage heading. */
 function usageOf(doc, name, found, play) {
-  const line = `import { ${name} } from '@weft/warp'`
+  const line = `import { ${name} } from '@weft-js/warp'`
   const from = play && !play.code.includes('{children}') ? null : play?.code
   const start = play && Object.fromEntries(play.knobs.map(k => [k.prop, k.initial]))
   const kids = String(start?.children ?? '')
@@ -437,7 +437,7 @@ function buildToolkit() {
       const near = n => n && facts.get(n) && areaIn(n) === areaOf(g.file) && { name: n, slug: slugFor(n), href: hrefs.get(slugFor(n)) }
       pages[c.slug] = {
         name: c.name, slug: c.slug, area: areaOf(g.file), group: g.title, usage: codeBlock(usageOf(doc, c.name, found, play), 'tsx'), file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
-        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
+        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft-js/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
       }
       const refs = doc.sections.flatMap(s => s.examples ?? [])
       tiles.push({ name: c.name, slug: c.slug, href: hrefs.get(c.slug), summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center', fit: doc.tileFit ?? (areaOf(g.file) === 'charts' ? 'contain' : undefined), width: doc.tileWidth })

@@ -233,7 +233,7 @@ export const charts: DocGroup = {
           chart('ChartRetry', 'Error and retry', 420, 'Press Retry. `state` swaps the plot in the same frame.'),
         ] },
       ],
-      propDocs: { form: 'The layout to draw, from `@weft/warp-core/charts`.' },
+      propDocs: { form: 'The layout to draw, from `@weft-js/warp-core/charts`.' },
       related: ['BarChart', 'LineChart'],
     },
   ],

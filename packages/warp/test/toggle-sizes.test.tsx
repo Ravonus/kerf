@@ -1,6 +1,6 @@
 // The site's example, so a press on it is a press someone can see.
 import { fireEvent } from '@testing-library/dom'
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { ToggleSizes } from '../../../site/src/toolkit/examples/actions'
 
 const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))

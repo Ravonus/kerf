@@ -70,7 +70,7 @@ export const INVOICES = [
 ]
 
 // -- the admin pack: Tessel's own settings, billing and shop --
-import type { ApiKey, AuditEvent, BillingPlan, Integration, Invite, Invoice, Member, PaymentMethod, Role, Webhook } from '@weft/warp'
+import type { ApiKey, AuditEvent, BillingPlan, Integration, Invite, Invoice, Member, PaymentMethod, Role, Webhook } from '@weft-js/warp'
 
 /** "Now" for anything that says how long ago, so the words never change. */
 export const NOW = '2026-10-31T17:00:00Z'
@@ -162,8 +162,8 @@ export const IMPORT_TARGETS = [
 export const IMPORT_SAMPLE = { name: 'tessel-team.csv', text: 'Name,Email,Team,Role\nDara Nowak,dara@tessel.dev,Web,member\nKai Sorensen,kai@tessel,Data,member\nAmir Saleh,amir@tessel.dev,Mobile,owner\nRosa Delgado,rosa@tessel.dev,Platform,admin\n' }
 
 // ---- The assistant: Tessel's help for a deploy that went wrong ----------------------------------------------------
-import type { ActivityItem, AgentEvent, Availability, ContextUse, ModelOption, Note, PromptSuggestion, Participant, TraceSpan, ArtifactVersion, AgentSource } from '@weft/warp'
-import type { Attendee, CalEvent, PrefGroup } from '@weft/warp-core'
+import type { ActivityItem, AgentEvent, Availability, ContextUse, ModelOption, Note, PromptSuggestion, Participant, TraceSpan, ArtifactVersion, AgentSource } from '@weft-js/warp'
+import type { Attendee, CalEvent, PrefGroup } from '@weft-js/warp-core'
 
 export const DEPLOY_SOURCES: AgentSource[] = [
   { title: 'd-4819 build log', path: 'mobile-bff · 15:27', snippet: 'health check failed: upstream timed out after 3000 ms in ap-south' },
@@ -471,7 +471,7 @@ export const EVENTS = [
 ]
 
 // -- the collab pack: the same people, in a room --
-import type { ChatConversation, CommentThreadData, IntegrityEvent, ShareContact, ShareMember, Version, ViewportPeer, ChatMessage, CursorPeer, IntegrityStats, Peer } from '@weft/warp'
+import type { ChatConversation, CommentThreadData, IntegrityEvent, ShareContact, ShareMember, Version, ViewportPeer, ChatMessage, CursorPeer, IntegrityStats, Peer } from '@weft-js/warp'
 
 export const PEERS: Peer[] = PEOPLE.map((p, i) => ({ id: p.id, name: p.name, color: i + 1 }))
 export const [MARA, JUN, PRIYA, TOMAS, LENA, NOOR, SAM, INES] = PEERS

@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { palette, quantize, rasterMask, tile, type Mask } from '@weft/warp-core/dither'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { palette, quantize, rasterMask, tile, type Mask } from '@weft-js/warp-core/dither'
 import { smooth, noise, type ArtProps, type Meta } from './shared'
 import code from './bad-signal.tsx?raw'
 

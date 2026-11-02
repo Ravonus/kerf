@@ -1,5 +1,5 @@
-import { Link } from '@weft/start'
-import { Kbd } from '@weft/warp'
+import { Link } from '@weft-js/start'
+import { Kbd } from '@weft-js/warp'
 import { ExampleFrame, type ShownExample } from './ExampleFrame'
 import { Install } from './Install'
 import { Playground, type ShownPlayground } from './Playground'
@@ -53,7 +53,7 @@ export function ComponentPage(props: { data: Page }) {
         <header>
           <h1>{d.name}</h1>
           <p data-part="lede">{d.summary}</p>
-          <p data-part="links"><Link href={d.source} rel="external">Source</Link><span>Package <code data-scope="code">@weft/warp</code></span>{d.playground && <a href="#playground">Playground</a>}</p>
+          <p data-part="links"><Link href={d.source} rel="external">Source</Link><span>Package <code data-scope="code">@weft-js/warp</code></span>{d.playground && <a href="#playground">Playground</a>}</p>
         </header>
         {d.hero && <section id="preview" data-site="tk-default"><ExampleFrame file={d.file} example={d.hero} hero /></section>}
         <section id="installation" data-site="tk-section"><h2>Installation</h2><Install /></section>

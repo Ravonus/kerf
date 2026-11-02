@@ -1,4 +1,4 @@
-import { render } from 'weft/dom'
+import { render } from '@weft-js/core/dom'
 import { Sparkline } from '../../src/Charts'
 import { RichTextEditor } from '../../src/RichTextEditor'
 import { Select } from '../../src/Select'

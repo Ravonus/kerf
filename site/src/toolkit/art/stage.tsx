@@ -1,6 +1,6 @@
-import { getDial, Segmented } from '@weft/warp'
-import { onCleanup, onMount, state } from 'weft'
-import { render } from 'weft/dom'
+import { getDial, Segmented } from '@weft-js/warp'
+import { onCleanup, onMount, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import { enrol } from './shared'
 
 const PIECES: Record<string, () => Promise<any>> = {

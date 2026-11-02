@@ -1,5 +1,5 @@
-import { Link, type Meta } from '@weft/start'
-import { CodeBlock } from '@weft/warp'
+import { Link, type Meta } from '@weft-js/start'
+import { CodeBlock } from '@weft-js/warp'
 import { ROOMS } from '../../toolkit/art'
 import { ArtDial, ArtStage } from '../../toolkit/art/stage'
 import '../../styles/art.css'

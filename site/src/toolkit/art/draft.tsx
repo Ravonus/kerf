@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { palette } from '@weft/warp-core/dither'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { palette } from '@weft-js/warp-core/dither'
 import { rng, type ArtProps, type Meta } from './shared'
 import code from './draft.tsx?raw'
 

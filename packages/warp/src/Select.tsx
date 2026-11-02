@@ -1,12 +1,12 @@
-import { DownIcon } from '@weft/icons'
-import { flush, derived, omit, state, untrack, type State } from 'weft'
-import { formReset, listbox, uid, type ChangeReason, type ListItem, type Presentation } from '@weft/warp-core'
+import { DownIcon } from '@weft-js/warp-icons'
+import { flush, derived, omit, state, untrack, type State } from '@weft-js/core'
+import { formReset, listbox, uid, type ChangeReason, type ListItem, type Presentation } from '@weft-js/warp-core'
 import { bindable } from './bind'
 import { Field, type FieldProps } from './Field'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './fields'
-import '@weft/warp-core/styles/components/listbox.css'
-import '@weft/warp-core/styles/inputs/choice.css' // the select and the field's chevron
+import '@weft-js/warp-core/styles/components/listbox.css'
+import '@weft-js/warp-core/styles/inputs/choice.css' // the select and the field's chevron
 
 export type Option = { value: string; label: string; disabled?: boolean; /** A second, quieter line of text in the row. */ hint?: string }
 export type OptionGroup = { group: string; options: Option[] }

@@ -1,5 +1,5 @@
 // When a Table is cards: the width that decides it, measured the way the table measures it.
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { Table, type Column } from '../src/Table'
 
 const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))

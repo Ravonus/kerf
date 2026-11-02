@@ -1,4 +1,4 @@
-import { DitherField } from '@weft/warp'
+import { DitherField } from '@weft-js/warp'
 import { rng, clamp, type ArtProps, type Meta } from './shared'
 import code from './turing-cloth.tsx?raw'
 

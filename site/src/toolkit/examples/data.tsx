@@ -1,6 +1,6 @@
-import { onCleanup, onMount, state } from 'weft'
-import { Badge, Button, DataGrid, Feed, Kanban, PivotTable, Row, ScrollGrid, Stack, Table, Text, Toggle, VirtualList } from '@weft/warp'
-import type { Column, GridColumn, GridTree, GridView, KanbanCardData, KanbanColumn, PivotMeasure, TableSort, VirtualControl } from '@weft/warp'
+import { onCleanup, onMount, state } from '@weft-js/core'
+import { Badge, Button, DataGrid, Feed, Kanban, PivotTable, Row, ScrollGrid, Stack, Table, Text, Toggle, VirtualList } from '@weft-js/warp'
+import type { Column, GridColumn, GridTree, GridView, KanbanCardData, KanbanColumn, PivotMeasure, TableSort, VirtualControl } from '@weft-js/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, TONE_OF, type Status } from '../world'
 
 type Project = (typeof PROJECTS)[number]

@@ -1,5 +1,5 @@
-import { Button, getDial, Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft/warp'
-import { derived, onCleanup, onMount, state } from 'weft'
+import { Button, getDial, Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft-js/warp'
+import { derived, onCleanup, onMount, state } from '@weft-js/core'
 import files from '../generated/icons.json'
 
 type Tier = 'quiet' | 'balanced' | 'vivid'

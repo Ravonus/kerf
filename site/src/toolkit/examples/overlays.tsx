@@ -1,5 +1,5 @@
-import { derived, state } from 'weft'
-import { Badge, Button, Checkbox, Chip, Drawer, Icon, Input, Modal, Popover, Row, Select, Snippet, Stack, Switch, Text, Tooltip } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { Badge, Button, Checkbox, Chip, Drawer, Icon, Input, Modal, Popover, Row, Select, Snippet, Stack, Switch, Text, Tooltip } from '@weft-js/warp'
 import { DEPLOYS, TONE_OF, type Status } from '../world'
 
 export function ModalPlay(p: { size: 'sm' | 'md' | 'lg'; placement: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'full'; alert: boolean; tone: 'neutral' | 'critical'; title: string }) {

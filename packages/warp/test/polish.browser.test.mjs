@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 180_000 })

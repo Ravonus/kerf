@@ -1,7 +1,7 @@
-import { Button, Input, Segmented, Select, Slider, Switch } from '@weft/warp'
-import { highlight } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
-import { render } from 'weft/dom'
+import { Button, Input, Segmented, Select, Slider, Switch } from '@weft-js/warp'
+import { highlight } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import { previews } from '../generated/previews'
 import type { Knob, Playground as Play } from '../toolkit/types'
 
@@ -18,7 +18,7 @@ function print(play: ShownPlayground, name: string, v: Values) {
   }).join('')
   const kids = String(v.children ?? '')
   const line = (kids ? play.code : play.code.replace(/>\{children\}<\/[\w.]+>/, ' />')).replace('{props}', () => attrs).replace('{children}', () => kids)
-  return `import { ${name} } from '@weft/warp'\n\n${line}`
+  return `import { ${name} } from '@weft-js/warp'\n\n${line}`
 }
 
 const shown = (k: Knob, v: Values) => !k.when || k.when.is.includes(v[k.when.prop])

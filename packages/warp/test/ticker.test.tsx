@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Ticker } from '../src/Ticker'
 
 const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))

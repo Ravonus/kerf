@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { state } from 'weft'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 import { clamp, inks, rng, type ArtProps, type Meta } from './shared'
 import code from './latency-rain.tsx?raw'
 

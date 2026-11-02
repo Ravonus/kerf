@@ -1,7 +1,7 @@
-import { state } from 'weft'
-import { interval } from 'weft/browser'
-import { bar, line } from '@weft/warp-core/charts'
-import { BarChart, BoxPlot, BrushChart, BubbleChart, Button, CandlestickChart, Card, Chart, ComboChart, DonutChart, FunnelChart, GaugeChart, Grid, HeatGrid, Histogram, LineChart, RadarChart, RadialChart, Row, SankeyChart, ScatterChart, Segmented, Sparkline, Stack, StreamChart, Sunburst, Text, TileMap, Treemap, WaterfallChart } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { interval } from '@weft-js/core/browser'
+import { bar, line } from '@weft-js/warp-core/charts'
+import { BarChart, BoxPlot, BrushChart, BubbleChart, Button, CandlestickChart, Card, Chart, ComboChart, DonutChart, FunnelChart, GaugeChart, Grid, HeatGrid, Histogram, LineChart, RadarChart, RadialChart, Row, SankeyChart, ScatterChart, Segmented, Sparkline, Stack, StreamChart, Sunburst, Text, TileMap, Treemap, WaterfallChart } from '@weft-js/warp'
 import { BUILD_FLOW, SEATS_BRIDGE, COST_BY_SERVICE, DEPLOY_HEAT, DEPLOY_WEEKS, DEPLOYS_BY_TEAM, GOALS, LATENCIES, LATENCY_BY_REGION, LATENCY_DAYS, PLAN_MIX, PROJECT_COSTS, PROJECT_POINTS, PROJECT_TREE, REGION_SLICES, REQUESTS_BY_REGION, SIGNUP_FUNNEL, SIGNUPS_DAILY, SKILLS, SPEND_TREE, TEAMS_BY_STATE, TRAFFIC } from '../world'
 
 const dollars = (v: number) => `$${v.toLocaleString('en-US')}`

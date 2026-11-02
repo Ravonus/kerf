@@ -1,6 +1,6 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { palette } from '@weft/warp-core/dither'
-import { state } from 'weft'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { palette } from '@weft-js/warp-core/dither'
+import { state } from '@weft-js/core'
 import { type ArtProps, type Meta } from './shared'
 import code from './bundle-tartan.tsx?raw'
 

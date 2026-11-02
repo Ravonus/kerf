@@ -1,4 +1,4 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 import index from '../generated/toolkit-index.json'
 import type { Area } from '../lib/pages'
 import { DialSwitch } from './DialSwitch'

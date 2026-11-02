@@ -1,6 +1,6 @@
-import { state } from 'weft'
-import { Badge, Button, Calendar, Card, DateField, DateRangeField, DateTimeField, DurationField, InlineCalendar, MonthPicker, PeriodPicker, RecurrenceField, Row, Stack, Text, TimeField, WeekPicker, Tag, Grid, compareRange } from '@weft/warp'
-import type { DateRange, IsoDate, IsoDateTime, IsoDuration, IsoTime } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Badge, Button, Calendar, Card, DateField, DateRangeField, DateTimeField, DurationField, InlineCalendar, MonthPicker, PeriodPicker, RecurrenceField, Row, Stack, Text, TimeField, WeekPicker, Tag, Grid, compareRange } from '@weft-js/warp'
+import type { DateRange, IsoDate, IsoDateTime, IsoDuration, IsoTime } from '@weft-js/warp'
 import { CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, INVOICES, ROOMS } from '../world'
 
 type Event = (typeof EVENTS)[number]

@@ -1,6 +1,6 @@
-import { Link } from '@weft/start'
-import { Nav } from '@weft/warp'
-import { onMount } from 'weft'
+import { Link } from '@weft-js/start'
+import { Nav } from '@weft-js/warp'
+import { onMount } from '@weft-js/core'
 
 export type NavGroup = { title: string; items: { href: string; label: string }[] }
 

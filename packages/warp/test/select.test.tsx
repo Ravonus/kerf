@@ -1,6 +1,6 @@
 // Select and CompactSelect: warp's list on every device, a real <select> behind it for the form.
-import { flush, render } from 'weft/test'
-import { state } from 'weft'
+import { flush, render } from '@weft-js/core/test'
+import { state } from '@weft-js/core'
 import { CompactSelect, Input, NumberField, Select } from '../src/index'
 
 const tick = async () => { await new Promise(r => setTimeout(r)); await flush() }
