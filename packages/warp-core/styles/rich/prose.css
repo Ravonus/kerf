@@ -28,7 +28,7 @@
   :where([data-scope="prose"] hr) { border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
   :where([data-scope="prose"] [data-part="footnotes"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); padding-inline-start: 1.2em; }
   :where([data-scope="prose"] sup a) { text-decoration: none; font-weight: 600; }
-  :where([data-part="diagram"]) { margin: 0; border: var(--warp-border-hairline) dashed var(--warp-color-border-control); border-radius: var(--warp-radius-surface); overflow: hidden; }
+  :where([data-part="diagram"]) { margin: 0; border: var(--warp-border-hairline) dashed var(--warp-color-border-control); border-radius: var(--warp-radius-surface); overflow: clip; }
   :where([data-part="diagram"] figcaption) { padding: 6px 12px; font-size: 11px; color: var(--warp-color-text-subtle); border-block-end: var(--warp-border-hairline) dashed var(--warp-color-border); }
   :where([data-part="diagram"] figcaption span) { font: 500 10px/1 var(--warp-font-mono); text-transform: uppercase; letter-spacing: .08em; padding: 2px 5px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); margin-inline-end: 6px; }
   :where([data-part="diagram"] pre) { margin: 0; padding: 10px 12px; font: 400 var(--warp-text-code-size)/1.6 var(--warp-font-mono); }

@@ -1,7 +1,7 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.flows {
 /* SignGate (the original's flow / blocker / badge, rebuilt) */
-:where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--warp-radius-surface); overflow: hidden; }
+:where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--warp-radius-surface); overflow: clip; }
 :where([data-scope="gate"]:not([data-state="signed"]) > [data-part="content"]) { filter: blur(calc(2px + 4px * (1 - var(--warp-x)))); opacity: 0.5; pointer-events: none; user-select: none; }
 :where([data-scope="gate"] > [data-part="blocker"]) {
   position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: var(--warp-space-group);

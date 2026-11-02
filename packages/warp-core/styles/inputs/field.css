@@ -121,7 +121,7 @@
 :where([data-scope="field"] [data-part="counter"]) { margin-inline-start: auto; flex: none; color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="field"] [data-part="counter"][data-level="near"]) { color: var(--warp-color-caution-text); }
 :where([data-scope="field"] [data-part="counter"][data-level="over"]) { color: var(--warp-color-critical-text); font-weight: 500; }
-:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 
 /* read-only: dashed resting edge, no fill; focus still sweeps */
 :where([data-scope="field"][data-readonly] > [data-part="control"]) { background: transparent; }

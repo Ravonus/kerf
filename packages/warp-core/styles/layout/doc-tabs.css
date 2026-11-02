@@ -2,7 +2,7 @@
 @layer warp.layout {
 /* the count's spoken half ("12 new"): a visually hidden span, never aria-label on a span (review 03 m2) */
 :where([data-scope="shell"] [data-part="nav-count-label"], [data-scope="doc-tabs"] [data-part="tab-state"]) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 /* Doc tabs — closable, reorderable document tabs (role=tablist; ←/→ Home/End select,
    Delete closes, Alt+←/→ reorders). Every tab controls the one tabpanel below it.

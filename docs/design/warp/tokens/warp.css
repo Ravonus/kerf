@@ -127,6 +127,8 @@
   --warp-ref-depth: 0.7;     --warp-ref-depth-rest: 0;  --warp-ref-rest-ambient: 0;   /* flat at rest: hairlines layer, shadows only on overlays */
   --warp-ref-air: 0.85;      --warp-ref-control-step: -2px;   /* the drafting table: tight */
   --warp-btn-fill: 0;
+  --warp-ref-primary-solid: var(--warp-color-accent-solid); --warp-ref-primary-solid-hover: var(--warp-color-accent-solid-hover); --warp-ref-primary-on-solid: var(--warp-color-accent-on-solid);
+  --warp-ref-surface-line: var(--warp-color-border);
   --warp-ref-hair: -0.03;    --warp-ref-page: 0;              /* crisper hairline */
   --warp-ref-body-leading: 1.5;
   --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -185,6 +187,9 @@
   --warp-ref-depth: 1.2;     --warp-ref-depth-rest: 1.2; --warp-ref-rest-ambient: 1;  /* surfaces float on shadow */
   --warp-ref-air: 1.2;       --warp-ref-control-step: 4px;    /* the quiet room: roomy */
   --warp-btn-fill: 0;
+  /* the primary action is ink, not accent; surfaces lift on shadow alone, with no hairline */
+  --warp-ref-primary-solid: var(--warp-color-neutral-solid); --warp-ref-primary-solid-hover: var(--warp-color-neutral-solid-hover); --warp-ref-primary-on-solid: var(--warp-color-neutral-on-solid);
+  --warp-ref-surface-line: transparent;
   --warp-ref-hair: 0.032;    --warp-ref-page: -0.012;         /* the hairline all but goes; a deeper page lifts white cards */
   --warp-ref-body-leading: 1.6;
   --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -242,6 +247,8 @@
   --warp-ref-depth: 0.35;    --warp-ref-depth-rest: 0.35; --warp-ref-rest-ambient: 0;
   --warp-ref-air: 1;         --warp-ref-control-step: 0px;
   --warp-btn-fill: 1;   /* vivid: Keel's two-colour fill, lift and offset */
+  --warp-ref-primary-solid: var(--warp-color-accent-solid); --warp-ref-primary-solid-hover: var(--warp-color-accent-solid-hover); --warp-ref-primary-on-solid: var(--warp-color-accent-on-solid);
+  --warp-ref-surface-line: var(--warp-color-border);
   --warp-ref-hair: 0;        --warp-ref-page: 0;
   --warp-ref-body-leading: 1.55;
   --warp-font-sans: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -428,6 +435,10 @@
      text passes 4.5:1 on page, surface, raised, sunken and its own soft.
      min(…, cap) = the sRGB chroma ceiling at that lightness for the default
      hues; `weft tokens build` computes the cap per seed hue. */
+  --warp-color-primary-solid:       var(--warp-ref-primary-solid);
+  --warp-color-primary-solid-hover: var(--warp-ref-primary-solid-hover);
+  --warp-color-primary-on-solid:    var(--warp-ref-primary-on-solid);
+  --warp-color-surface-line:        var(--warp-ref-surface-line);
   --warp-color-neutral-solid:       var(--warp-color-surface-inverse);
   --warp-color-neutral-solid-hover: light-dark(oklch(0.33 var(--_c) var(--_h)), oklch(0.86 var(--_c) var(--_h)));
   --warp-color-neutral-on-solid:    var(--warp-color-on-inverse);
@@ -1181,7 +1192,7 @@
      the plain "Alt text": not spelled out, and not the floated uppercase "ALT TEXT" (Chrome applies
      text-transform to names). The older form (bare inline <span data-char>A</span>) still works. */
   :where([data-scope="field"] [data-part="label"] [data-part="label-text"], [data-part="label-text"]:has(+ [data-part="label-chars"])) {
-    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%);
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%);
     white-space: nowrap; text-transform: none; letter-spacing: normal;
   }
   :where([data-scope="field"] [data-part="label"] [data-char][data-c], [data-part="label-chars"] > [data-char][data-c])::before { content: attr(data-c); }
@@ -1369,22 +1380,25 @@
 /* warp.flow: automatic scroll choreography. Scrubbed on the compositor, stateless, nothing to hydrate. */
 @layer warp.tokens {
   :root, [data-expression="balanced"] {
-    --warp-ref-flow-reach: 112px; --warp-ref-flow-out: 96px;  --warp-ref-flow-step: 14px;
-    --warp-ref-flow-y: 20px;      --warp-ref-flow-x: 14px;    --warp-ref-flow-s: 0.975;
+    --warp-ref-flow-reach: 20%;   --warp-ref-flow-out: 200px; --warp-ref-flow-step: 14px;   /* reach: a share of the view timeline's cover range, so the move is seen */
+    --warp-ref-flow-y: 28px;      --warp-ref-flow-x: 20px;    --warp-ref-flow-s: 0.965;
+    --warp-ref-flow-z: 1.025;     --warp-ref-flow-clip: 3%;
     --warp-ref-flow-r: 0.6deg;    --warp-ref-flow-floor: 0.12;
-    --warp-ref-flow-ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+    --warp-ref-flow-ease: cubic-bezier(0.3, 0.45, 0.45, 1);
   }
   [data-expression="quiet"] {
-    --warp-ref-flow-reach: 72px;  --warp-ref-flow-out: 64px;  --warp-ref-flow-step: 0px;
-    --warp-ref-flow-y: 6px;       --warp-ref-flow-x: 0px;     --warp-ref-flow-s: 0.995;
+    --warp-ref-flow-reach: 12%;   --warp-ref-flow-out: 120px; --warp-ref-flow-step: 0px;
+    --warp-ref-flow-y: 10px;      --warp-ref-flow-x: 8px;     --warp-ref-flow-s: 0.99;
+    --warp-ref-flow-z: 1.008;     --warp-ref-flow-clip: 0%;
     --warp-ref-flow-r: 0deg;      --warp-ref-flow-floor: 0.5;
     --warp-ref-flow-ease: linear;
   }
   [data-expression="vivid"] {
-    --warp-ref-flow-reach: 168px; --warp-ref-flow-out: 120px; --warp-ref-flow-step: 24px;
-    --warp-ref-flow-y: 40px;      --warp-ref-flow-x: 28px;    --warp-ref-flow-s: 0.94;
+    --warp-ref-flow-reach: 26%;   --warp-ref-flow-out: 280px; --warp-ref-flow-step: 24px;
+    --warp-ref-flow-y: 48px;      --warp-ref-flow-x: 36px;    --warp-ref-flow-s: 0.94;
+    --warp-ref-flow-z: 1.04;      --warp-ref-flow-clip: 6%;
     --warp-ref-flow-r: 1.4deg;    --warp-ref-flow-floor: 0;
-    --warp-ref-flow-ease: var(--warp-ref-spring);
+    --warp-ref-flow-ease: cubic-bezier(0.3, 0.45, 0.45, 1);   /* never a spring: the scroll drives this, and overshoot reads as jitter */
   }
   /* the gate: one inherited custom property silences a whole subtree, with no :not() in any family selector */
   @media print { :root { --warp-flow-gate: none; } }
@@ -1397,14 +1411,19 @@
     /* a flowed element is a containing block for position: fixed, so hosts of non-top-layer fixed parts stay out */
     :has(> [data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"])) { --warp-flow-gate: none; }
   /* the budget: past the 120th sibling nothing is armed. Long lists go virtual, and those rows use @starting-style on mount */
-  :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"]):nth-child(n + 121) { --warp-flow-gate: none; }
+  :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-flow]):nth-child(n + 121) { --warp-flow-gate: none; }
 }
 
 @layer warp.flow {
-  /* every family names its pair; nothing else differs in the machinery */
-  :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"], [data-flow="card"]) { --_flow-in: warp-in-card; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
-  :where([data-scope="table"] tbody > tr, [data-flow="row"]) { --_flow-in: warp-in-row; --_flow-out: warp-out-row; --warp-flow-reach: min(var(--warp-ref-flow-reach), 56px); --warp-flow-out: 40px; }
-  :where([data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li, [data-flow="item"]) { --_flow-in: warp-in-item; --_flow-out: warp-out-fade; --warp-flow-reach: 64px; }
+  /* every family names its pair; nothing else differs in the machinery.
+     view() binds to the nearest scroll container and hidden overflow makes one, so warp clips with overflow: clip: an
+     element that isn't a real scroller must leave the page's timeline alone. */
+  :where([data-scope="surface"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"], [data-flow="card"]) { --_flow-in: warp-in-card; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
+  :where([data-scope="tile"], [data-flow="tile"]) { --_flow-in: warp-in-tile; --_flow-out: warp-out-card; }
+  /* a table's viewport is a real scroller, so its rows read the timeline of the table outside it, one after another */
+  :where([data-scope="table"]:has(> [data-part="viewport"])) { view-timeline: --warp-flow-host block; }
+  :where([data-scope="table"] tbody > tr, [data-flow="row"]) { --_flow-in: warp-in-row; --_flow-out: warp-out-row; --warp-flow-reach: calc(var(--warp-ref-flow-reach) * 0.7); }
+  :where([data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li, [data-flow="item"]) { --_flow-in: warp-in-item; --_flow-out: warp-out-fade; --warp-flow-reach: calc(var(--warp-ref-flow-reach) * 0.8); }
   :where([data-scope="stat"], [data-flow="stat"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; }
   :where([data-scope="chart"], [data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-fade; --_flow-o: 50% 100%; }
   :where([data-scope="gallery"] [data-part="item"], figure, [data-flow="image"]) { --_flow-in: warp-in-image; --_flow-out: warp-out-image; }
@@ -1414,7 +1433,6 @@
   :where([data-scope="kanban"] [data-part="card"], [data-flow="deal"]) { --_flow-in: warp-in-deal; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
 
   :where([data-scope="kanban"] [data-part="card"]:nth-child(even)) { --_flow-s: -1; }
-  :where(:focus-within, :target) { --warp-flow-gate: none; } /* a focused field never fades; a jump target arrives whole */
 
   @media screen { @supports (animation-timeline: view()) {
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
@@ -1430,11 +1448,19 @@
       animation-duration: auto, auto;
       animation-timing-function: var(--warp-ref-flow-ease), linear;
       animation-fill-mode: backwards, forwards;   /* no effect in between: no stacking context, no containing block at rest */
+      /* in by a share of cover, so it is on screen while it moves; a tall element is capped and never sits half faded.
+         Out only in the exit phase, so anything resting at the top of a page stays whole. */
       animation-range:
-        entry calc(var(--_flow-i) * var(--warp-ref-flow-step)) entry calc(min(100%, var(--_flow-r)) + var(--_flow-i) * var(--warp-ref-flow-step)),
+        entry calc(var(--_flow-i) * var(--warp-ref-flow-step)) cover calc(min(var(--_flow-r), 340px) + var(--_flow-i) * var(--warp-ref-flow-step)),
         exit max(0%, 100% - var(--_flow-e)) exit 100%;
       transform-origin: var(--_flow-o, 50% 50%);
     }
+    /* a focused field never fades; a jump target arrives whole. Not through the gate: that inherits, and html is :focus-within */
+    :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
+      [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
+      [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
+      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3), [data-scope="codeblock"],
+      [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])):where(:focus-within, :target) { animation-name: none; }
     /* stagger: siblings in one row arrive in order, by column. The grid tells us its column count, or 4 */
     @supports (width: calc(sibling-index() * 1px)) {
       :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="stat"], [data-scope="gallery"] [data-part="item"], [data-scope="form"] > *, [data-scope="kanban"] [data-part="card"]) {
@@ -1442,24 +1468,29 @@
       }
     }
     /* parts that run off their host's timeline */
+    :where([data-scope="table"]:has(> [data-part="viewport"]) tbody > tr) { animation-timeline: --warp-flow-host, --warp-flow-host; }
+    @supports (width: calc(sibling-index() * 1px)) {
+      :where([data-scope="table"]:has(> [data-part="viewport"]) tbody > tr) { --_flow-i: min(calc(sibling-index() - 1), 12); }
+    }
     :where([data-scope="stat"] [data-part="value"]) {
       display: block; animation: var(--warp-flow-gate, warp-in-value) auto var(--warp-ref-flow-ease) backwards;
-      animation-timeline: --warp-flow-host; animation-range: entry 0 entry min(100%, var(--warp-ref-flow-reach));
+      animation-timeline: --warp-flow-host; animation-range: entry 0 cover var(--warp-ref-flow-reach);
     }
     :where([data-scope="codeblock"], [data-flow="code"])::after {
       content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--warp-color-surface-sunken); transform-origin: 100% 50%; scale: 0 1;
       animation: var(--warp-flow-gate, warp-in-scan) auto linear backwards;
-      animation-timeline: --warp-flow-host; animation-range: entry 0 entry min(100%, calc(var(--warp-ref-flow-reach) * 1.6));
+      animation-timeline: --warp-flow-host; animation-range: entry 0 cover calc(var(--warp-ref-flow-reach) * 1.3);
     }
   } }
 
   @keyframes warp-in-fade    { from { opacity: 0; } }
   @keyframes warp-in-card    { from { opacity: 0; translate: 0 var(--warp-ref-flow-y); scale: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-tile    { from { opacity: 0; translate: 0 calc(var(--warp-ref-flow-y) * 1.4); } }
   @keyframes warp-in-row     { from { opacity: 0; translate: calc(var(--warp-ref-flow-x) * -1) 0; } }
   @keyframes warp-in-item    { from { opacity: 0; translate: 0 calc(var(--warp-ref-flow-y) * 0.5); } }
   @keyframes warp-in-chart   { from { opacity: 0; scale: 1 calc(1 - (1 - var(--warp-ref-flow-s)) * 2); } }
-  @keyframes warp-in-image   { from { opacity: 0; scale: calc(2 - var(--warp-ref-flow-s)); } }
-  @keyframes warp-in-heading { from { opacity: 0; translate: calc(var(--warp-ref-flow-x) * -0.6) calc(var(--warp-ref-flow-y) * 0.3); } }
+  @keyframes warp-in-image   { from { opacity: 0; scale: var(--warp-ref-flow-z); clip-path: inset(var(--warp-ref-flow-clip)); } to { clip-path: inset(0); } }
+  @keyframes warp-in-heading { from { opacity: 0; translate: calc(var(--warp-ref-flow-x) * -1) 0; } }
   @keyframes warp-in-deal    { from { opacity: 0; translate: 0 calc(var(--warp-ref-flow-y) * -0.6); rotate: calc(var(--warp-ref-flow-r) * var(--_flow-s, 1)); } }
   @keyframes warp-in-value   { from { opacity: 0; translate: 0 0.4em; } }
   @keyframes warp-in-scan    { from { scale: 1 1; } }

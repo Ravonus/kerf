@@ -33,7 +33,7 @@
 }
 :where([dir="rtl"] [data-scope="composer"] [data-part="quote-draft"]) { box-shadow: inset -2px 0 0 var(--warp-color-sweep); }
 :where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-by"]) { font-size: var(--warp-text-caption-size); font-weight: 600; }
-:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: clip; }
 :where([data-scope="composer"] [data-part="quote-draft"] > [data-scope="button"]) { grid-column: 2; grid-row: 1 / span 2; }
 :where([data-scope="composer"] [data-part="hint"][data-state="error"]) { color: var(--warp-color-critical-text); }
 @media (forced-colors: active) {

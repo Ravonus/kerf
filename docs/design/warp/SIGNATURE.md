@@ -121,7 +121,8 @@ Source: `inputs/choice/Switch.tsx`.
 7. **Messages:** hint and error text slide in (180 ms) under the field.
 
 **Surfaces exception (decided 2026-10-28).** Cards, panels, stat tiles and kanban cards rest on the thin hairline
-border, which keeps the streamlined look. Inputs and controls rest on the ink border. Over a hairline, the full-accent
+border (`--warp-color-surface-line`), which keeps the streamlined look; at quiet they rest on shadow alone, with no
+line. Inputs and controls rest on the ink border; segmented groups and switches rest on the hairline, ink for focus. Over a hairline, the full-accent
 sweep stands out by hue even where the luminance ratio is 1.5–3:1, so surfaces only need sweep-vs-surface ≥ 3:1.
 Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it was invisible.
 

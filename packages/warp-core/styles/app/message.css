@@ -65,7 +65,7 @@
   border-inline-start: 2px solid var(--warp-color-sweep); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle);
 }
 :where([data-scope="message"] [data-part="quote"] [data-part="quote-by"]) { font-weight: 600; color: var(--warp-color-text); }
-:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: clip; }
 :where([data-scope="message"][data-mine] [data-part="bubble"] [data-part="quote"]) { border-inline-start-color: var(--warp-color-accent-on-solid); color: color-mix(in oklab, var(--warp-color-accent-on-solid) 85%, transparent); }
 :where([data-scope="message"][data-mine] [data-part="quote"] [data-part="quote-by"]) { color: var(--warp-color-accent-on-solid); }
 :where([data-scope="message"] [data-part="bubble"] > :not([data-part^="sweep"])) { position: relative; z-index: 3; }

@@ -124,6 +124,8 @@
   display: grid; grid-template-rows: auto minmax(0, 1fr); min-block-size: 0; block-size: 100%;
   background: var(--warp-color-surface); color: var(--warp-color-text);
 }
+/* the month in a picker's popover sizes the panel, and inline-size containment would make its intrinsic width zero */
+:where([data-scope="calendar"][data-part="root"]:is(dialog[data-scope="popover"] *)) { container-type: normal; block-size: auto; }
 :where([data-scope="calendar"] [data-part="range-label"] small) { color: var(--warp-color-text-subtle); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size); font-weight: 400; letter-spacing: 0; }
 :where([data-scope="calendar"] [data-part="tz"]) {
   display: inline-flex; align-items: center; gap: 6px; block-size: 26px; padding-inline: 8px;
@@ -209,7 +211,7 @@
   inset-block-start: var(--_top); block-size: max(var(--_h), 20px);
   inset-inline-start: calc((100% - 6px) * var(--_col, 0) / var(--_cols, 1) + 2px);
   inline-size: calc((100% - 6px) * var(--_span, 1) / var(--_cols, 1) - 2px);
-  display: flex; flex-direction: column; gap: 1px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 1px; overflow: clip;
   padding: 4px 6px 4px calc(6px + var(--warp-cal-bar));
   border-radius: calc(var(--warp-radius-control) - 1px);
   background: color-mix(in oklab, var(--_c) var(--warp-cal-tint), var(--warp-color-surface-raised));
@@ -219,9 +221,9 @@
   transition: box-shadow var(--warp-duration-fast) var(--warp-ease-out), opacity var(--warp-duration-fast);
 }
 :where([data-scope="calendar"] [data-part="event"][data-short]) { flex-direction: row; align-items: baseline; gap: 6px; padding-block: 2px; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="calendar"] [data-part="event"] svg[data-icon]) { inline-size: 12px; block-size: 12px; vertical-align: -1px; }
 :where([data-scope="calendar"] [data-part="event"][data-tentative]) {
   background:
@@ -293,9 +295,16 @@
 :where([data-scope="calendar"] [data-part="chip"]) {
   --_c: var(--warp-color-data-1);
   display: flex; align-items: center; gap: 6px; min-inline-size: 0; block-size: 20px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
-  font-size: 11.5px; line-height: 1; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent); white-space: nowrap; overflow: hidden;
+  font-size: 11.5px; line-height: 1; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent); white-space: nowrap; overflow: clip;
 }
 :where([data-scope="calendar"] [data-part="chip"])::before { content: ""; flex: none; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* a phone's day is too narrow for a title: the events become dots, and each keeps its name for assistive tech */
+@container calendar (max-width: 479.98px) {
+  :where([data-scope="calendar"] [data-part="day-cell"]) { grid-template-columns: repeat(auto-fill, 8px); justify-content: start; }
+  :where([data-scope="calendar"] [data-part="day-cell"]) > :where(:not([data-part="chip"])) { grid-column: 1 / -1; }
+  :where([data-scope="calendar"] [data-part="chip"]) { inline-size: 8px; block-size: 8px; padding: 0; gap: 0; background: none; font-size: 0; }
+  :where([data-scope="calendar"] [data-part="chip"])::before { inline-size: 8px; block-size: 8px; }
+}
 :where([data-scope="calendar"] [data-part="more"]) { font: 500 11px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 6px; background: none; border: 0; text-align: start; }
 
 /* resource / timeline view: rows are people or rooms, time runs across */
@@ -346,7 +355,7 @@
 :where([data-scope="agenda"] [data-part="strip"] button i) { display: flex; gap: 2px; block-size: 4px; }
 :where([data-scope="agenda"] [data-part="strip"] button i::before) { content: none; }
 :where([data-scope="agenda"] [data-part="strip"] button i em) { inline-size: 4px; block-size: 4px; border-radius: 9px; background: var(--_c); }
-:where([data-scope="agenda"] [data-part="viewport"]) { position: relative; overflow: hidden; min-block-size: 0; touch-action: pan-y; }
+:where([data-scope="agenda"] [data-part="viewport"]) { position: relative; overflow: clip; min-block-size: 0; touch-action: pan-y; }
 :where([data-scope="agenda"] [data-part="track"]) {
   display: grid; grid-template-columns: repeat(3, 100%); block-size: 100%;
   translate: calc(-100% + var(--_dx, 0px)) 0;
@@ -415,7 +424,7 @@
 :where([data-scope="room"] [data-part="stage"] > [data-part="rail"]) { display: grid; grid-auto-rows: 96px; gap: var(--warp-tile-gap); align-content: start; overflow: auto; scrollbar-width: none; }
 :where([data-scope="room"] [data-part="stage"][data-layout="board"] > [data-part="rail"]) { grid-auto-rows: 72px; }
 :where([data-scope="room"] [data-part="share"]) {
-  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--warp-radius-surface); overflow: hidden;
+  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--warp-radius-surface); overflow: clip;
   background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border);
 }
 :where([data-scope="room"] [data-part="share"] header) { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); border-block-end: 1px solid var(--warp-color-border); }
@@ -423,7 +432,7 @@
 /* tile: video or avatar; state lives on attributes; nothing loops */
 :where([data-scope="tile"]) {
   --_ring: transparent;
-  position: relative; isolation: isolate; overflow: hidden; min-block-size: 0; min-inline-size: 0;
+  position: relative; isolation: isolate; overflow: clip; min-block-size: 0; min-inline-size: 0;
   display: grid; place-items: center; border-radius: var(--warp-radius-surface);
   background: radial-gradient(120% 90% at 30% 20%, color-mix(in oklab, var(--_hue, var(--warp-color-data-1)) 30%, var(--warp-color-surface-raised)), var(--warp-color-surface-sunken));
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 8%, transparent);
@@ -435,7 +444,7 @@
   position: absolute; inset-inline-start: 8px; inset-block-end: 8px; z-index: 2; max-inline-size: calc(100% - 16px);
   display: inline-flex; align-items: center; gap: 6px; block-size: 24px; padding-inline: 8px; border-radius: var(--warp-radius-control);
   background: color-mix(in oklab, var(--warp-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--warp-blur-overlay));
-  font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
 :where([data-scope="tile"] [data-part="name"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
 :where([data-scope="tile"] [data-part="video"]) { position: absolute; inset: 0; z-index: 1; }
@@ -469,7 +478,7 @@
 /* PiP self-view: draggable, snaps to the nearest corner */
 :where([data-scope="pip"]) {
   position: absolute; z-index: var(--warp-z-dock); inline-size: clamp(120px, 22cqi, 200px); aspect-ratio: 16 / 10;
-  inset-inline-end: 16px; inset-block-end: 80px; border-radius: var(--warp-radius-surface); overflow: hidden;
+  inset-inline-end: 16px; inset-block-end: 80px; border-radius: var(--warp-radius-surface); overflow: clip;
   box-shadow: var(--warp-elevation-3), 0 0 0 1px var(--warp-color-border-strong); cursor: grab; touch-action: none;
   translate: var(--_px, 0) var(--_py, 0); transition: translate var(--warp-duration-slow) var(--warp-ease-out);
 }
@@ -506,7 +515,7 @@
 :where([data-scope="room"] [data-part="sidebar"]) {
   grid-column: 2; grid-row: 2; inline-size: 300px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-block-size: 0;
   margin: 0 var(--warp-space-related) var(--warp-space-related) 0; border-radius: var(--warp-radius-surface);
-  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border); overflow: hidden;
+  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border); overflow: clip;
   animation: warp-side-in var(--warp-duration-slow) var(--warp-ease-out);
 }
 :where([data-scope="room"] [data-part="sidebar"][hidden]) { display: none; }
@@ -523,7 +532,7 @@
 :where([data-scope="prejoin"] > [data-part="layout"]) { display: grid; gap: var(--warp-space-group); }
 @container prejoin (min-width: 600px) { :where([data-scope="prejoin"] > [data-part="layout"]) { grid-template-columns: 1.3fr 1fr; align-items: center; } }
 :where([data-scope="prejoin"] [data-part="stack"]) { display: grid; gap: var(--warp-space-group); align-content: start; min-inline-size: 0; }
-:where([data-scope="prejoin"] [data-part="preview"]) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--warp-radius-surface); overflow: hidden; }
+:where([data-scope="prejoin"] [data-part="preview"]) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--warp-radius-surface); overflow: clip; }
 :where([data-scope="prejoin"] [data-part="preview"] [data-scope="tile"]) { block-size: 100%; }
 :where([data-scope="prejoin"] [data-part="preview-controls"]) { position: absolute; inset-inline: 0; inset-block-end: 10px; z-index: 4; display: flex; justify-content: center; gap: 8px; }
 :where([data-scope="prejoin"] [data-part="meter"]) { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; block-size: 6px; }
@@ -537,7 +546,7 @@
    3 · NOTIFICATIONS (bell, center, item, push prompt, activity feed)
    ------------------------------------------------------------------------ */
 :where([data-scope="bell"]) { position: relative; }
-:where([data-scope="bell"] [data-part="content"]:popover-open) { display: grid; inline-size: min(400px, calc(100vw - 16px)); max-inline-size: none; max-block-size: min(520px, calc(100dvh - 88px)); padding: 0; overflow: hidden; }
+:where([data-scope="bell"] [data-part="content"]:popover-open) { display: grid; inline-size: min(400px, calc(100vw - 16px)); max-inline-size: none; max-block-size: min(520px, calc(100dvh - 88px)); padding: 0; overflow: clip; }
 :where([data-scope="bell"] > [data-scope="badge"][data-count]) {
   position: absolute; inset-block-start: 2px; inset-inline-end: 0; translate: 30% -20%; block-size: 17px; min-inline-size: 17px; padding-inline: 4px; font-size: 10.5px;
   box-shadow: 0 0 0 2px var(--warp-color-surface); pointer-events: none;
@@ -549,7 +558,7 @@
 }
 :where([data-scope="inbox"][data-variant="popover"]) {
   inline-size: min(400px, 100%); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3), 0 0 0 1px var(--warp-color-border);
-  overflow: hidden;
+  overflow: clip;
 }
 :where([data-scope="inbox"] [data-part="header"]) { display: flex; align-items: center; gap: var(--warp-space-related); padding: 14px var(--warp-space-group) 6px; }
 :where([data-scope="inbox"] [data-part="header"] h3) { flex: 1; margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.2 var(--warp-text-heading-font); }
@@ -768,7 +777,7 @@
   border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); color: inherit; text-decoration: none;
   font-size: 12.5px; line-height: 1.35;
 }
-:where([data-scope="sources"] a b) { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="sources"] a b) { display: block; font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="sources"] a small) { color: var(--warp-color-text-subtle); font: 500 10.5px/1.4 var(--warp-font-mono); }
 :where([data-scope="sources"] a > i) { grid-row: span 2; font: 600 10px/18px var(--warp-font-mono); font-style: normal; inline-size: 18px; text-align: center; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); color: var(--warp-color-text-subtle); }
 /* tool call card: running → done | failed | needs approval. The sweep host is the frame around the
@@ -779,13 +788,13 @@
 /* tool call card */
 :where([data-scope="tool-call"]) {
   position: relative; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
-  box-shadow: 0 0 0 1px var(--warp-color-border); font-size: var(--warp-text-caption-size); overflow: hidden;
+  box-shadow: 0 0 0 1px var(--warp-color-border); font-size: var(--warp-text-caption-size); overflow: clip;
 }
 :where([data-scope="tool-call"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { inset: 0; }
 :where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto 1fr auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
 :where([data-scope="tool-call"] summary::-webkit-details-marker) { display: none; }
 :where([data-scope="tool-call"] [data-part="name"]) { font: 500 12.5px/1 var(--warp-font-mono); color: var(--warp-color-text); }
-:where([data-scope="tool-call"] [data-part="arg"]) { color: var(--warp-color-text-subtle); font: 400 12px/1 var(--warp-font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="tool-call"] [data-part="arg"]) { color: var(--warp-color-text-subtle); font: 400 12px/1 var(--warp-font-mono); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="tool-call"] [data-part="dur"]) { font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="tool-call"] [data-part="chev"]) { transition: rotate var(--warp-duration-base) var(--warp-ease-out); color: var(--warp-color-text-subtle); }
 :where([data-scope="tool-call"][open] [data-part="chev"]) { rotate: 90deg; }
@@ -839,7 +848,7 @@
 /* ---------------------------------------------------------------------------
    6 · COLLABORATION (cursors, presence, locks, conflicts, synced selection)
    ------------------------------------------------------------------------ */
-:where([data-scope="cursors"]) { position: absolute; inset: 0; pointer-events: none; z-index: var(--warp-z-overlay); overflow: hidden; }
+:where([data-scope="cursors"]) { position: absolute; inset: 0; pointer-events: none; z-index: var(--warp-z-overlay); overflow: clip; }
 :where([data-scope="cursor"]) {
   position: absolute; inset: 0 auto auto 0; translate: var(--_x) var(--_y);
   transition: translate calc(120ms * var(--warp-motion-scale)) linear;
@@ -959,7 +968,7 @@
 /* trace spans: nested bars on a shared time axis */
 :where([data-scope="trace"]) { display: grid; gap: 3px; font: 500 11.5px/1 var(--warp-font-mono); }
 :where([data-scope="trace"] div) { display: grid; grid-template-columns: 120px 1fr 48px; align-items: center; gap: 8px; }
-:where([data-scope="trace"] span:first-child) { padding-inline-start: calc(var(--_d, 0) * 10px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--warp-color-text); }
+:where([data-scope="trace"] span:first-child) { padding-inline-start: calc(var(--_d, 0) * 10px); overflow: clip; text-overflow: ellipsis; white-space: nowrap; color: var(--warp-color-text); }
 :where([data-scope="trace"] i) { position: relative; block-size: 10px; }
 :where([data-scope="trace"] i)::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: calc(var(--_x) * 100%); inline-size: max(2px, calc(var(--_w) * 100%)); border-radius: 2px; background: var(--_c, var(--warp-color-data-1)); }
 :where([data-scope="trace"] em) { font-style: normal; color: var(--warp-color-text-subtle); text-align: end; }
@@ -998,8 +1007,8 @@
 }
 :where([data-scope="conversations"] a:hover) { background: var(--warp-color-surface-hover); }
 :where([data-scope="conversations"] a[aria-current="page"]) { background: var(--warp-color-surface-raised); box-shadow: 0 0 0 1px var(--warp-color-border); }
-:where([data-scope="conversations"] a b) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="conversations"] a small) { grid-column: 2; color: var(--warp-color-text-subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a b) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a small) { grid-column: 2; color: var(--warp-color-text-subtle); font-size: 12px; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="conversations"] a[data-unread] b) { font-weight: 600; }
 :where([data-scope="conversations"] a[data-unread] small) { color: var(--warp-color-text); }
 :where([data-scope="conversations"] a[data-muted]) { color: var(--warp-color-text-subtle); }
@@ -1123,7 +1132,7 @@
   min-block-size: var(--warp-control-md); padding: 6px 8px 6px 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
 }
 :where([data-scope="speech"] [data-part="strip"]) { --warp-sweep-radius: var(--warp-radius-control); }
-:where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: hidden; color: var(--warp-color-text-subtle); }
+:where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: clip; color: var(--warp-color-text-subtle); }
 :where([data-scope="speech"][data-state="listening"] [data-part="wave"]) { color: var(--warp-color-accent-text); }
 :where([data-scope="speech"] [data-part="wave"] i) { flex: none; inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 19px * var(--a, 0)); transition: block-size 90ms linear; }
 :where([data-motion="reduce"] [data-scope="speech"] [data-part="wave"] i) { transition: none; block-size: 12px; opacity: calc(0.25 + 0.75 * var(--a, 0)); }
@@ -1136,11 +1145,11 @@
 
 /* ArtifactPanel: preview / code / versions beside the conversation (sheet on phones) */
 :where([data-scope="artifact"] [data-part="head"]) { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
-:where([data-scope="artifact"] [data-part="head"] b) { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/1.2 var(--warp-text-heading-font); }
+:where([data-scope="artifact"] [data-part="head"] b) { flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/1.2 var(--warp-text-heading-font); }
 :where([data-scope="artifact"] [data-part="panel"]) { min-block-size: 220px; overflow: auto; padding: 12px; }
 :where([data-scope="artifact"] [data-part="preview"]) { display: grid; gap: 6px; padding: 14px; border-radius: var(--warp-radius-control); background: var(--warp-color-page); box-shadow: inset 0 0 0 1px var(--warp-color-border); font-size: 13px; }
 :where([data-scope="artifact"] pre) { margin: 0; padding: 10px 12px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font: 400 12px/1.6 var(--warp-font-mono); overflow: auto; }
-:where([data-scope="artifact"]) { border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 1px var(--warp-color-border); border-inline-start: 0; overflow: hidden; }
+:where([data-scope="artifact"]) { border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 1px var(--warp-color-border); border-inline-start: 0; overflow: clip; }
 
 /* AvailabilityEditor: weekly hours (a switch per day + time ranges) and date overrides */
 :where([data-scope="availability"]) { container: availability / inline-size; display: grid; gap: var(--warp-space-group); }
@@ -1332,7 +1341,7 @@
 :where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { font: 500 var(--warp-text-caption-size)/1.2 var(--warp-text-body-font); color: var(--warp-color-text); }
 :where([data-scope="prefs-matrix"] [data-scope="checkbox"]) { grid-template-columns: auto; justify-items: center; justify-self: center; row-gap: 3px; column-gap: 0; }
 /* the channel name under each box: hidden on wide grids (the column header names it), shown when the grid restacks */
-:where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 :where([data-scope="prefs-matrix"] [data-part="na"]) { color: var(--warp-color-text-faint); font: 500 13px/1 var(--warp-font-mono); }
 :where([data-scope="prefs-matrix"] [data-part="na"]:focus-visible, [data-scope="prefs-matrix"] [data-part="na"]:focus) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -4px; border-radius: var(--warp-radius-control); }
 :where([data-scope="prefs-matrix"] [data-scope="checkbox"]:has(input:focus-visible)) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 3px; border-radius: var(--warp-radius-control); }
@@ -1350,7 +1359,7 @@
   :where([data-scope="prefs-matrix"] :is([role="rowheader"], [data-part="corner"])) { grid-column: 1 / -1; padding-block-end: 2px; }
   :where([data-scope="prefs-matrix"] :is([role="gridcell"], [role="columnheader"]:not([data-part="corner"]))) { min-block-size: 0; padding-block: 2px; }
   :where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: static; inline-size: auto; block-size: auto; overflow: visible; clip-path: none; font-size: 11.5px; color: var(--warp-color-text-subtle); }
-  :where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  :where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
   :where([data-scope="prefs-matrix"] [data-part="na"]) { display: grid; justify-items: center; gap: 3px; }
   :where([data-scope="prefs-matrix"] [data-part="status"]) { margin-inline-start: 0; flex-basis: 100%; }
 }
@@ -1387,7 +1396,7 @@
 :where([data-scope="transport"] [data-part="figures"] dd) { margin: 0; font: 500 13px/1.3 var(--warp-text-numeric-font, var(--warp-font-mono)); font-variant-numeric: tabular-nums; }
 :where([data-scope="transport"] [data-part="figures"] dd[data-tone="caution"]) { color: var(--warp-color-caution-text); }
 :where([data-scope="transport"] [data-part="figures"] dd[data-tone="critical"]) { color: var(--warp-color-critical-text); }
-:where([data-scope="transport"] [data-part="bars"]) { display: flex; align-items: end; gap: 2px; block-size: 26px; min-inline-size: 0; max-inline-size: 240px; overflow: hidden; }
+:where([data-scope="transport"] [data-part="bars"]) { display: flex; align-items: end; gap: 2px; block-size: 26px; min-inline-size: 0; max-inline-size: 240px; overflow: clip; }
 :where([data-scope="transport"] [data-part="bars"] i) {
   flex: 1 1 0; max-inline-size: 6px; min-inline-size: 2px; block-size: calc(2px + 24px * var(--h, 0)); border-radius: 1px;
   background: color-mix(in oklab, var(--warp-color-sweep) 75%, transparent); transition: block-size var(--warp-duration-base) var(--warp-ease-out);
@@ -1427,7 +1436,7 @@
   border-inline-start: 2px solid var(--warp-color-sweep); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle);
 }
 :where([data-scope="message"] [data-part="quote"] [data-part="quote-by"]) { font-weight: 600; color: var(--warp-color-text); }
-:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: clip; }
 :where([data-scope="message"][data-mine] [data-part="bubble"] [data-part="quote"]) { border-inline-start-color: var(--warp-color-accent-on-solid); color: color-mix(in oklab, var(--warp-color-accent-on-solid) 85%, transparent); }
 :where([data-scope="message"][data-mine] [data-part="quote"] [data-part="quote-by"]) { color: var(--warp-color-accent-on-solid); }
 :where([data-scope="message"] [data-part="bubble"] > :not([data-part^="sweep"])) { position: relative; z-index: 3; }
@@ -1439,7 +1448,7 @@
 }
 :where([dir="rtl"] [data-scope="composer"] [data-part="quote-draft"]) { box-shadow: inset -2px 0 0 var(--warp-color-sweep); }
 :where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-by"]) { font-size: var(--warp-text-caption-size); font-weight: 600; }
-:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: clip; }
 :where([data-scope="composer"] [data-part="quote-draft"] > [data-scope="button"]) { grid-column: 2; grid-row: 1 / span 2; }
 :where([data-scope="composer"] [data-part="hint"][data-state="error"]) { color: var(--warp-color-critical-text); }
 

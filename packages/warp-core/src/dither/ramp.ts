@@ -61,5 +61,5 @@ export interface Tier { inks: number; speed: number; reach: number; gain: number
 export function tier(el: Element): Tier {
   const s = getComputedStyle(el), read = (name: string, fallback: number) => { const v = parseFloat(s.getPropertyValue(name)); return Number.isNaN(v) ? fallback : v }
   const x = read('--warp-x', 0.5)
-  return { inks: read('--warp-dither-inks', 2 + 2 * x), speed: read('--warp-dither-speed', x), reach: read('--warp-dither-reach', Math.min(1, x * 1.4)), gain: read('--warp-dither-gain', 0.55 + x / 2) }
+  return { inks: read('--warp-dither-inks', Math.max(3, 2 + 2 * x)), speed: read('--warp-dither-speed', x), reach: read('--warp-dither-reach', Math.min(1, x * 1.4)), gain: read('--warp-dither-gain', Math.max(0.75, 0.55 + x / 2)) }
 }

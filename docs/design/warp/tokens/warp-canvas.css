@@ -19,7 +19,7 @@
   [data-scope="dither"] {
     position: relative;
     display: block;
-    overflow: hidden;
+    overflow: clip;
     inline-size: 100%;
     font-family: var(--warp-font-display, inherit);
     isolation: isolate;
@@ -64,7 +64,7 @@
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
-    overflow: hidden;
+    overflow: clip;
     clip-path: inset(50%);
     white-space: nowrap;
   }

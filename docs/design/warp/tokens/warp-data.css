@@ -275,7 +275,7 @@
   transition: grid-template-rows calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-out);
 }
 :where([data-scope="table"] [data-part="slide"][data-closing]) { grid-template-rows: 0fr; }
-:where([data-scope="table"] [data-part="slide"] > div) { min-block-size: 0; overflow: hidden; }
+:where([data-scope="table"] [data-part="slide"] > div) { min-block-size: 0; overflow: clip; }
 :where([data-scope="table"] [data-part="slide"] > div > div) { padding-block: var(--warp-space-group); }
 
 /* a row's checkbox: the box and the check without the sweep's layers, since every row has one. Select-all keeps the sweep. */
@@ -492,7 +492,7 @@
 
 /* distribution bar: one 100% stacked bar + legend */
 :where([data-scope="distribution"]) { display: grid; gap: 10px; }
-:where([data-scope="distribution"] [data-part="bar"]) { display: flex; gap: 2px; block-size: 10px; border-radius: var(--warp-radius-mark); overflow: hidden; }
+:where([data-scope="distribution"] [data-part="bar"]) { display: flex; gap: 2px; block-size: 10px; border-radius: var(--warp-radius-mark); overflow: clip; }
 :where([data-scope="distribution"] [data-part="bar"] > i) { background: var(--_dc); flex: var(--v) 0 0; transition: flex-grow var(--warp-data-tween) var(--warp-ease-out); }
 
 /* ===========================================================================
@@ -627,8 +627,8 @@
 /* ===========================================================================
    LIST · rows with leading / content / trailing; swipe actions on touch
    ======================================================================== */
-:where([data-scope="list"]) { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised); overflow: hidden; }
-:where([data-scope="list"] > li) { position: relative; overflow: hidden; }
+:where([data-scope="list"]) { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised); overflow: clip; }
+:where([data-scope="list"] > li) { position: relative; overflow: clip; }
 :where([data-scope="list"] > li + li) { border-block-start: 1px solid var(--warp-color-border); }
 :where([data-scope="list"] [data-part="item"]) {
   position: relative; z-index: 1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px;
@@ -640,8 +640,8 @@
 :where([data-scope="list"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
 :where([data-scope="list"] [data-part="item"][data-dragging]) { transition: none; }
 :where([data-scope="list"] [data-part="content"]) { min-inline-size: 0; display: grid; justify-items: start; text-align: start; }
-:where([data-scope="list"] [data-part="content"] b) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="list"] [data-part="content"] span) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="list"] [data-part="content"] b) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="list"] [data-part="content"] span) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="list"] [data-part="trailing"]) { display: flex; align-items: center; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="list"] [data-part="actions"]) { position: absolute; inset-block: 0; inset-inline-end: 0; display: flex; }
 :where([data-scope="list"] [data-part="actions"] button) {
@@ -878,7 +878,7 @@
 :where([data-scope="scroll-grid"] [data-part="cell"], [data-scope="scroll-grid"] [data-part="col-head"], [data-scope="scroll-grid"] [data-part="row-head"], [data-scope="scroll-grid"] [data-part="corner"]) {
   position: absolute; inset-block-start: 0; inset-inline-start: 0; box-sizing: border-box; inline-size: var(--_cw); block-size: var(--_rh);
   display: flex; align-items: center; justify-content: end; padding-inline: 10px; border-inline-end: 1px solid var(--warp-color-border); border-block-end: 1px solid var(--warp-color-border);
-  white-space: nowrap; overflow: hidden;
+  white-space: nowrap; overflow: clip;
 }
 :where([data-scope="scroll-grid"] [data-part="col-head"], [data-scope="scroll-grid"] [data-part="row-head"], [data-scope="scroll-grid"] [data-part="corner"]) {
   background: var(--warp-color-surface); color: var(--warp-color-text-subtle); font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case);
@@ -1074,7 +1074,7 @@
 
 /* map + node graph ----------------------------------------------------------------------- */
 :where([data-scope="map"]) {
-  position: relative; overflow: hidden; block-size: 340px; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
+  position: relative; overflow: clip; block-size: 340px; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
   background: var(--warp-color-surface-sunken); touch-action: none; cursor: grab; container-type: inline-size;
 }
 :where([data-scope="map"] svg) { display: block; inline-size: 100%; block-size: 100%; }
@@ -1109,7 +1109,7 @@
 :where([data-scope="map"] [data-part="controls"] button:focus-visible) { outline: 2px solid var(--warp-color-focus); }
 :where([data-scope="map"] [data-part="controls"] button[aria-pressed="true"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
 :where([data-scope="map"] [data-part="attribution"]) { position: absolute; inset-block-end: 4px; inset-inline-end: 6px; font: 400 10px/1.25 var(--warp-text-body-font); color: var(--warp-color-text-subtle); }
-:where([data-scope="flow"]) { position: relative; block-size: 340px; overflow: hidden; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
+:where([data-scope="flow"]) { position: relative; block-size: 340px; overflow: clip; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
   background: radial-gradient(circle, var(--warp-color-border) 1px, transparent 1.2px) 0 0 / 18px 18px, var(--warp-color-surface-sunken); touch-action: none; }
 :where([data-scope="flow"] svg) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
 :where([data-scope="flow"] .edge) { fill: none; stroke: var(--warp-color-border-strong); stroke-width: 1.75; }

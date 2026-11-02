@@ -5,6 +5,8 @@
   display: grid; grid-template-rows: auto minmax(0, 1fr); min-block-size: 0; block-size: 100%;
   background: var(--warp-color-surface); color: var(--warp-color-text);
 }
+/* the month in a picker's popover sizes the panel, and inline-size containment would make its intrinsic width zero */
+:where([data-scope="calendar"][data-part="root"]:is(dialog[data-scope="popover"] *)) { container-type: normal; block-size: auto; }
 :where([data-scope="calendar"] [data-part="range-label"] small) { color: var(--warp-color-text-subtle); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size); font-weight: 400; letter-spacing: 0; }
 :where([data-scope="calendar"] [data-part="tz"]) {
   display: inline-flex; align-items: center; gap: 6px; block-size: 26px; padding-inline: 8px;
@@ -89,7 +91,7 @@
   inset-block-start: var(--_top); block-size: max(var(--_h), 20px);
   inset-inline-start: calc((100% - 6px) * var(--_col, 0) / var(--_cols, 1) + 2px);
   inline-size: calc((100% - 6px) * var(--_span, 1) / var(--_cols, 1) - 2px);
-  display: flex; flex-direction: column; gap: 1px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 1px; overflow: clip;
   padding: 4px 6px 4px calc(6px + var(--warp-cal-bar));
   border-radius: calc(var(--warp-radius-control) - 1px);
   background: color-mix(in oklab, var(--_c) var(--warp-cal-tint), var(--warp-color-surface-raised));
@@ -99,9 +101,9 @@
   transition: box-shadow var(--warp-duration-fast) var(--warp-ease-out), opacity var(--warp-duration-fast);
 }
 :where([data-scope="calendar"] [data-part="event"][data-short]) { flex-direction: row; align-items: baseline; gap: 6px; padding-block: 2px; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="calendar"] [data-part="event"] svg[data-icon]) { inline-size: 12px; block-size: 12px; vertical-align: -1px; }
 :where([data-scope="calendar"] [data-part="event"][data-tentative]) {
   background:
@@ -171,9 +173,16 @@
 :where([data-scope="calendar"] [data-part="chip"]) {
   --_c: var(--warp-color-data-1);
   display: flex; align-items: center; gap: 6px; min-inline-size: 0; block-size: 20px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
-  font-size: 11.5px; line-height: 1; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent); white-space: nowrap; overflow: hidden;
+  font-size: 11.5px; line-height: 1; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent); white-space: nowrap; overflow: clip;
 }
 :where([data-scope="calendar"] [data-part="chip"])::before { content: ""; flex: none; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* a phone's day is too narrow for a title: the events become dots, and each keeps its name for assistive tech */
+@container calendar (max-width: 479.98px) {
+:where([data-scope="calendar"] [data-part="day-cell"]) { grid-template-columns: repeat(auto-fill, 8px); justify-content: start; }
+:where([data-scope="calendar"] [data-part="day-cell"]) > :where(:not([data-part="chip"])) { grid-column: 1 / -1; }
+:where([data-scope="calendar"] [data-part="chip"]) { inline-size: 8px; block-size: 8px; padding: 0; gap: 0; background: none; font-size: 0; }
+:where([data-scope="calendar"] [data-part="chip"])::before { inline-size: 8px; block-size: 8px; }
+}
 :where([data-scope="calendar"] [data-part="more"]) { font: 500 11px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 6px; background: none; border: 0; text-align: start; }
 /* resource / timeline view: rows are people or rooms, time runs across */
 :where([data-scope="calendar"] [data-part="timeline"]) { display: grid; grid-template-columns: 148px minmax(0, 1fr); font-size: var(--warp-text-caption-size); }

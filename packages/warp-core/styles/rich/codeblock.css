@@ -2,7 +2,7 @@
 @layer warp.inputs-rich {
 /* -- codeblock */
   :where([data-scope="code"]) { font: 400 0.88em var(--warp-font-mono); padding: 0.1em 0.38em; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border); overflow-wrap: anywhere; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-  :where([data-scope="codeblock"]) { margin: 0; border-radius: var(--warp-radius-surface); border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface-sunken); overflow: hidden; min-inline-size: 0; }
+  :where([data-scope="codeblock"]) { margin: 0; border-radius: var(--warp-radius-surface); border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface-sunken); overflow: clip; min-inline-size: 0; }
   :where([data-scope="codeblock"] [data-part="head"]) { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); font-size: var(--warp-text-caption-size); }
   :where([data-scope="codeblock"] [data-part="head"] .sp) { flex: 1; }
   :where([data-scope="codeblock"] [data-part="file"]) { font-family: var(--warp-font-mono); color: var(--warp-color-text); }

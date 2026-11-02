@@ -4,7 +4,7 @@
    Space+drag or two fingers pan; ⌘/Ctrl+wheel or pinch zoom; +/−/0 keys. */
 :where([data-scope="canvas"]) {
   --_x: 0px; --_y: 0px; --_z: 1;
-  position: relative; overflow: hidden; touch-action: none; min-block-size: 240px; cursor: grab;
+  position: relative; overflow: clip; touch-action: none; min-block-size: 240px; cursor: grab;
   background-color: var(--warp-color-page);
   background-image: radial-gradient(circle, var(--warp-color-border-strong) 1px, transparent 1.4px);
   background-size: calc(20px * var(--_z)) calc(20px * var(--_z)); background-position: var(--_x) var(--_y);
@@ -17,7 +17,7 @@
 }
 :where([data-scope="canvas"] > [data-part="minimap"]) {
   position: absolute; inset-inline-end: var(--warp-space-related); inset-block-end: var(--warp-space-related); inline-size: 120px; aspect-ratio: 4 / 3;
-  background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); overflow: hidden;
+  background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); overflow: clip;
 }
 :where([data-scope="canvas"] > [data-part="minimap"] [data-part="viewport"]) { position: absolute; border: 1.5px solid var(--warp-color-accent-solid); border-radius: 2px; background: var(--warp-color-accent-soft); }
 @container (max-width: 599.98px) {

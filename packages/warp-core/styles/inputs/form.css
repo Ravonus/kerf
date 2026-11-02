@@ -70,5 +70,5 @@
 :where([data-scope="steps"] li:is([data-state="complete"], [aria-current="step"]))::after { clip-path: inset(0); }
 :where([data-scope="steps"] li span)::before { content: counter(step) " · "; font-variant-numeric: tabular-nums; }
 :where([data-scope="steps"] li[aria-current="step"]) { color: var(--warp-color-text); font-weight: 500; }
-:where([data-scope="steps"] li span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="steps"] li span) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 }

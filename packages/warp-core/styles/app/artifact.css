@@ -4,9 +4,9 @@
 :where([data-scope="artifact"]) { display: grid; grid-template-rows: auto minmax(0, 1fr); min-block-size: 0; border-inline-start: 1px solid var(--warp-color-border); background: var(--warp-color-surface); }
 /* ArtifactPanel: preview / code / versions beside the conversation (sheet on phones) */
 :where([data-scope="artifact"] [data-part="head"]) { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
-:where([data-scope="artifact"] [data-part="head"] b) { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/1.2 var(--warp-text-heading-font); }
+:where([data-scope="artifact"] [data-part="head"] b) { flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/1.2 var(--warp-text-heading-font); }
 :where([data-scope="artifact"] [data-part="panel"]) { min-block-size: 220px; overflow: auto; padding: 12px; }
 :where([data-scope="artifact"] [data-part="preview"]) { display: grid; gap: 6px; padding: 14px; border-radius: var(--warp-radius-control); background: var(--warp-color-page); box-shadow: inset 0 0 0 1px var(--warp-color-border); font-size: 13px; }
 :where([data-scope="artifact"] pre) { margin: 0; padding: 10px 12px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font: 400 12px/1.6 var(--warp-font-mono); overflow: auto; }
-:where([data-scope="artifact"]) { border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 1px var(--warp-color-border); border-inline-start: 0; overflow: hidden; }
+:where([data-scope="artifact"]) { border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 1px var(--warp-color-border); border-inline-start: 0; overflow: clip; }
 }

@@ -9,7 +9,7 @@
 :where(:root:not([data-motion="full"])) :is([data-part="skeleton"], [data-scope="flow"] .edge[data-live]) { animation: none !important; }
 }
 :where([data-motion="reduce"]) :is([data-part="skeleton"], [data-scope="flow"] .edge[data-live]) { animation: none !important; }
-:where([data-scope="flow"]) { position: relative; block-size: 340px; overflow: hidden; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
+:where([data-scope="flow"]) { position: relative; block-size: 340px; overflow: clip; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
   background: radial-gradient(circle, var(--warp-color-border) 1px, transparent 1.2px) 0 0 / 18px 18px, var(--warp-color-surface-sunken); touch-action: none; }
 :where([data-scope="flow"] svg) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
 :where([data-scope="flow"] .edge) { fill: none; stroke: var(--warp-color-border-strong); stroke-width: 1.75; }

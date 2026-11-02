@@ -3,7 +3,7 @@
 /* -- Surface (card / panel / stat): interactive ones always sweep; static ones at vivid */
 :where([data-scope="surface"]) {
   position: relative; display: grid; gap: var(--warp-space-related); padding: var(--warp-pad-surface);
-  background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-border);
+  background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-surface-line);
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1); color: var(--warp-color-text);
   transition: box-shadow var(--warp-touch-out) var(--warp-ease-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }

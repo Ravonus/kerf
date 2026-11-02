@@ -22,7 +22,7 @@
   :where([data-scope="tests"]) { display: grid; gap: 8px; font-size: var(--warp-text-body-size); }
   :where([data-scope="tests"] [data-part="summary"]) { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
   :where([data-scope="tests"] [data-part="summary"] span) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
-  :where([data-scope="tests"] [data-part="bar"]) { display: flex; block-size: 6px; border-radius: 999px; overflow: hidden; gap: 2px; }
+  :where([data-scope="tests"] [data-part="bar"]) { display: flex; block-size: 6px; border-radius: 999px; overflow: clip; gap: 2px; }
   :where([data-scope="tests"] [data-k="pass"]) { --k: var(--warp-color-success-solid, var(--warp-color-accent-solid)); }
   :where([data-scope="tests"] [data-k="fail"]) { --k: var(--warp-color-critical-solid); }
   :where([data-scope="tests"] [data-k="skip"]) { --k: var(--warp-color-border-strong); }

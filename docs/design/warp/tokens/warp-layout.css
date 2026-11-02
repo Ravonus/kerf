@@ -101,7 +101,7 @@
   --warp-color-sweep-base: transparent; --warp-sweep-radius: var(--warp-radius-round);
 }
 :where([data-part="panel"][data-sweep], [data-scope="surface"][data-sweep]) {
-  --warp-color-sweep-base: var(--warp-color-border); --warp-sweep-radius: var(--warp-radius-surface);
+  --warp-color-sweep-base: var(--warp-color-surface-line); --warp-sweep-radius: var(--warp-radius-surface);
   border-color: transparent;
 }
 :where([data-scope="surface"][data-sweep]:is(:hover, :focus-visible, :has(:focus-visible))) { --warp-color-sweep-base: var(--warp-color-border-strong); }
@@ -226,7 +226,7 @@
 /* Frame — fixed aspect media box (no chrome of its own) */
 :where([data-scope="frame"]) {
   --_ratio: 16 / 9;
-  aspect-ratio: var(--_ratio); overflow: hidden; display: grid; place-items: center;
+  aspect-ratio: var(--_ratio); overflow: clip; display: grid; place-items: center;
   background: var(--warp-color-surface-sunken);
 }
 :where([data-scope="frame"] > img, [data-scope="frame"] > video, [data-scope="frame"] > canvas, [data-scope="frame"] > svg) {
@@ -327,7 +327,7 @@
 }
 :where([data-scope="shell"] [data-part="brand"] svg) { inline-size: 22px; block-size: 22px; flex: none; }
 :where([data-scope="shell"] [data-part="header"] [data-part="title"]) {
-  flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap;
   font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size);
   font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking);
 }
@@ -349,7 +349,7 @@
 }
 :where([data-scope="shell"] [data-part="command"] > svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); flex: none; color: var(--warp-color-accent-text); }
 :where([data-scope="shell"] [data-part="command-label"], [data-scope="shell"] [data-part="command-hint"], [data-scope="shell"] [data-part="command"] kbd) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 
 /* -- nav: bottom bar by default ---------------------------------------- */
@@ -381,7 +381,7 @@
   transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
 }
 :where([data-scope="shell"] [data-part="nav-item"] > [data-part="icon"] svg) { inline-size: 18px; block-size: 18px; }
-:where([data-scope="shell"] [data-part="nav-label"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-inline-size: 100%; }
+:where([data-scope="shell"] [data-part="nav-label"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; max-inline-size: 100%; }
 :where([data-scope="shell"] [data-part="nav-item"]:hover) { color: var(--warp-color-text); }
 :where([data-scope="shell"] [data-part="nav-item"]:hover > [data-part="icon"]) { background: var(--warp-color-surface-hover); }
 :where([data-scope="shell"] [data-part="nav-item"][aria-current]) { color: var(--warp-color-text); }
@@ -397,7 +397,7 @@
 }
 /* the count's spoken half ("12 new"): a visually hidden span, never aria-label on a span (review 03 m2) */
 :where([data-scope="shell"] [data-part="nav-count-label"], [data-scope="doc-tabs"] [data-part="tab-state"]) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 /* the keyboard is up: the bottom bar steps aside so the focused field and
    its action bar own the space (shell sets data-keyboard from visualViewport) */
@@ -457,7 +457,7 @@
   }
   :where([data-scope="shell"] [data-part="command-hint"]) {
     position: static; inline-size: auto; block-size: auto; clip-path: none; flex: 1; text-align: start;
-    overflow: hidden; text-overflow: ellipsis; color: var(--warp-color-text-subtle); opacity: 0;
+    overflow: clip; text-overflow: ellipsis; color: var(--warp-color-text-subtle); opacity: 0;
     transition: opacity var(--warp-duration-fast) var(--warp-ease-out);
   }
   /* floated: hover, focus, or the sweep is in */
@@ -626,7 +626,7 @@
   inset-block-start: calc(var(--_barh) + 8%); inset-inline-start: 50%; translate: -50% 0;
   inline-size: min(580px, calc(100% - 2 * var(--warp-space-page)));
   background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
-  border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3); overflow: hidden;
+  border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3); overflow: clip;
   animation: warp-enter var(--warp-duration-base) var(--warp-ease-out) both;
 }
 :where([data-scope="shell"] [data-part="sheet"]) { display: none; }
@@ -668,7 +668,7 @@
   transition: color var(--warp-duration-fast) var(--warp-ease-out);
 }
 :where([data-scope="breadcrumb"] a:hover) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
-:where([data-scope="breadcrumb"] [aria-current]) { color: var(--warp-color-text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; padding-inline: 4px; }
+:where([data-scope="breadcrumb"] [aria-current]) { color: var(--warp-color-text); font-weight: 500; overflow: clip; text-overflow: ellipsis; padding-inline: 4px; }
 :where([data-scope="breadcrumb"] [data-part="ellipsis"]) { display: none; }
 @container (max-width: 999.98px) {
   :where([data-scope="breadcrumb"] li[data-collapse]) { display: none; }
@@ -807,7 +807,7 @@
 :where([data-scope="split-pane"]) {
   --_size: 40%; --_hit: max(12px, var(--warp-hit-min));
   display: grid; grid-template-columns: minmax(0, 1fr); min-inline-size: 0; min-block-size: 0;
-  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: hidden;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: clip;
 }
 :where([data-scope="split-pane"] > [data-part="pane"]) { min-inline-size: 0; min-block-size: 0; overflow: auto; container-type: inline-size; overscroll-behavior: contain; }
 :where([data-scope="split-pane"] > [data-part="separator"]) { display: none; }
@@ -1045,7 +1045,7 @@
    button beside it is inline, so the axes don't meet) */
 :where([data-scope="announcement"] a) { position: relative; }
 :where([data-scope="announcement"] a)::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="announcement"] [data-part="text"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+:where([data-scope="announcement"] [data-part="text"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
 :where([data-scope="announcement"] [data-part="dismiss"]) {
   position: absolute; inset-inline-end: 4px; inset-block-end: 0; display: grid; place-items: center;
   inline-size: max(36px, var(--warp-hit-min)); block-size: max(36px, var(--warp-hit-min)); border: 0; background: none; color: inherit; opacity: 0.75; cursor: pointer;
@@ -1180,7 +1180,7 @@
   display: flex; align-items: center; gap: 2px; min-block-size: 26px; padding-inline: var(--warp-space-tight);
   padding-block-end: var(--warp-safe-bottom); background: var(--warp-color-surface-sunken);
   border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
-  font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); overflow: hidden; white-space: nowrap;
+  font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); overflow: clip; white-space: nowrap;
 }
 :where([data-scope="status-bar"] > *) { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; }
 :where([data-scope="status-bar"] > button:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
@@ -1204,7 +1204,7 @@
   transition: box-shadow var(--warp-duration-fast), outline-color var(--warp-duration-fast);
 }
 :where([data-scope="board"] > [data-part="widget"][data-dragging]) { box-shadow: var(--warp-elevation-3); z-index: 2; outline: 2px dashed var(--warp-color-accent-border); outline-offset: 2px; }
-:where([data-scope="board"] [data-part="body"]) { flex: 1; min-block-size: 0; overflow: hidden; padding: 0 var(--warp-space-group) var(--warp-space-group); }
+:where([data-scope="board"] [data-part="body"]) { flex: 1; min-block-size: 0; overflow: clip; padding: 0 var(--warp-space-group) var(--warp-space-group); }
 :where([data-scope="board"] [data-part="handle"]) {
   display: flex; align-items: center; gap: 8px; min-block-size: 40px; padding-inline: var(--warp-space-group) var(--warp-space-tight);
   font-weight: 600; font-size: var(--warp-text-caption-size); cursor: grab; touch-action: none; border-radius: inherit;
@@ -1226,7 +1226,7 @@
    Space+drag or two fingers pan; ⌘/Ctrl+wheel or pinch zoom; +/−/0 keys. */
 :where([data-scope="canvas"]) {
   --_x: 0px; --_y: 0px; --_z: 1;
-  position: relative; overflow: hidden; touch-action: none; min-block-size: 240px; cursor: grab;
+  position: relative; overflow: clip; touch-action: none; min-block-size: 240px; cursor: grab;
   background-color: var(--warp-color-page);
   background-image: radial-gradient(circle, var(--warp-color-border-strong) 1px, transparent 1.4px);
   background-size: calc(20px * var(--_z)) calc(20px * var(--_z)); background-position: var(--_x) var(--_y);
@@ -1239,7 +1239,7 @@
 }
 :where([data-scope="canvas"] > [data-part="minimap"]) {
   position: absolute; inset-inline-end: var(--warp-space-related); inset-block-end: var(--warp-space-related); inline-size: 120px; aspect-ratio: 4 / 3;
-  background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); overflow: hidden;
+  background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); overflow: clip;
 }
 :where([data-scope="canvas"] > [data-part="minimap"] [data-part="viewport"]) { position: absolute; border: 1.5px solid var(--warp-color-accent-solid); border-radius: 2px; background: var(--warp-color-accent-soft); }
 @container (max-width: 599.98px) { :where([data-scope="canvas"] > [data-part="minimap"]) { display: none; } }

@@ -14,8 +14,9 @@
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
-  transition: scale var(--warp-spring-duration) var(--warp-ease-spring), translate var(--warp-spring-duration) var(--warp-ease-spring),
-              box-shadow var(--warp-spring-duration) var(--warp-ease-spring),
+  --_settle: calc(var(--warp-spring-duration) - var(--warp-btn-fill) * 300ms * var(--warp-motion-scale));   /* vivid's offset is a key going back up: it never lingers */
+  transition: scale var(--_settle) var(--warp-ease-spring), translate var(--_settle) var(--warp-ease-spring),
+              box-shadow var(--_settle) var(--warp-ease-spring),
               border-color var(--warp-touch-out) var(--warp-ease-out), color var(--warp-touch-out) var(--warp-ease-out);
 }
 :where([data-scope="button"]:hover) { transition-property: scale, translate, box-shadow; }
@@ -26,19 +27,25 @@
 :where([data-scope="button"]) {
   --_x: var(--warp-mx); --_y: var(--warp-my);
   --_pa: var(--_solid-hover);
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 16%, var(--_solid-hover));
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 9%, var(--_solid-hover));
+  /* the hard offset: ink on light, a deep tint of the fill on dark, where cream would read as a sticker */
+  --_off: light-dark(var(--warp-color-text), color-mix(in oklab, var(--_solid) 42%, var(--warp-color-surface)));
 }
-:where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 8%, var(--_solid-hover)); }
+:where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 5%, var(--_solid-hover)); }
+/* the primary action reads the stop's primary, which is ink at quiet */
+:where([data-scope="button"]:not([data-emphasis], [data-tone])) {
+  --_solid: var(--warp-color-primary-solid); --_solid-hover: var(--warp-color-primary-solid-hover); --_ink-on: var(--warp-color-primary-on-solid);
+}
 /* a held or keyboard state has no hand: it closes on the middle */
 :where([data-scope="button"]:is(:focus-visible, [data-hold], [data-state="open"], [aria-expanded="true"]):not(:hover)) { --_x: 50%; --_y: 50%; }
 /* tints: the ink stays --_text on every frame, so nothing has to be timed */
 :where([data-scope="button"]:is([data-emphasis="soft"], [data-emphasis="outline"], [data-emphasis="ghost"])) {
   --_pa: color-mix(in oklab, var(--_solid) 22%, var(--warp-color-surface));
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 28%, var(--warp-color-surface));
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 10%, var(--_pa));
 }
 :where([data-scope="button"]:is([data-emphasis="frame"], [data-emphasis="link"], :disabled, [aria-disabled="true"])) { --warp-btn-fill: 0; }
 /* the sweep on solid and ghost is vivid's ink edge, so it is off below vivid */
-:where([data-scope="button"]:not([data-emphasis]), [data-scope="button"][data-emphasis="ghost"]) { --_on: var(--warp-btn-fill); --warp-color-sweep: var(--warp-color-text); }
+:where([data-scope="button"]:not([data-emphasis]), [data-scope="button"][data-emphasis="ghost"]) { --_on: var(--warp-btn-fill); --warp-color-sweep: var(--_off); }
 :where([data-scope="button"]:is(:disabled, [aria-disabled="true"])) { --_on: 0; }
 :where([data-scope="button"])::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
@@ -48,17 +55,18 @@
   --_fa: calc(var(--_fr) * (var(--_x) + 7%) * var(--warp-lead-a, 1));
   --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--warp-lead-b, 1));
   --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
-  background-color: color-mix(in oklab, var(--_layer) calc((1 - var(--warp-btn-fill)) * 100%), transparent);
+  /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
+  background-color: color-mix(in oklab, var(--_layer) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo)) * 100%), transparent));
   opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a));
   transform: scaleX(var(--warp-btn-fill)); transform-origin: right center;
   background-origin: border-box;
   background-image:
     radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),
-      var(--_pb) 0 80%, color-mix(in oklab, var(--_pb) 55%, transparent) 93%, transparent 100%),
+      var(--_pb) 0 58%, color-mix(in oklab, var(--_pb) 50%, transparent) 80%, transparent 100%),
     radial-gradient(ellipse calc(var(--_fb) * 0.5) 185% at calc(var(--_x) + var(--_fb) * 0.5 + var(--_fo) * var(--_fb)) var(--_y),
-      var(--_pb) 0 84%, color-mix(in oklab, var(--_pb) 55%, transparent) 94%, transparent 100%),
+      var(--_pb) 0 62%, color-mix(in oklab, var(--_pb) 50%, transparent) 82%, transparent 100%),
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
-      var(--_pa) 0 100%, transparent 100%);
+      var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%);
   transition:
     transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out),
     --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
@@ -74,7 +82,7 @@
 @media (hover: hover) {
   :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
     translate: calc(-1px * var(--warp-btn-fill) * var(--warp-motion-scale)) calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale));
-    box-shadow: calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--warp-color-text);
+    box-shadow: calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
   }
 }
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
@@ -112,9 +120,12 @@
 :where([data-scope="button"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
 /* vivid: no soft shadow to lift with, so a solid rests on a hard ink offset and presses into it */
-:where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) { box-shadow: var(--warp-offset) var(--warp-offset) 0 var(--warp-color-text); }
+:where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) {
+  box-shadow: var(--warp-offset) var(--warp-offset) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--warp-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--warp-btn-fill) * 7%), transparent));
+}
 :where([data-scope="button"]:not([data-emphasis]):active) {
-  scale: calc(var(--warp-press) + (1 - var(--warp-press)) * var(--warp-btn-fill)); translate: var(--warp-offset) var(--warp-offset); box-shadow: 0 0 0 var(--warp-color-text);
+  scale: calc(var(--warp-press) + (1 - var(--warp-press)) * var(--warp-btn-fill)); translate: var(--warp-offset) var(--warp-offset); box-shadow: 0 0 0 var(--_off);
 }
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a) * 1.55); }
 :where([data-scope="button"][data-emphasis="soft"]) {

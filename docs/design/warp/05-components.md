@@ -125,7 +125,8 @@ CopyButton(props: { value: string | (() => string); label?: string; onCopied?(ok
 ```
 
 **Press (redesign.md §3).** A press is instant and takes `--warp-press` scale; release settles on `--warp-ease-spring`. Vivid
-solid buttons rest on `--warp-offset` and press into it instead of scaling.
+solid buttons rest on `--warp-offset` (ink on light, a deep tint of the fill on dark), press into it instead of scaling,
+and settle in 220ms rather than the stop's full spring.
 
 ## 3. Overlays
 

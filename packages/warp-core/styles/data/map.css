@@ -2,7 +2,7 @@
 @layer warp.data {
 /* map + node graph ----------------------------------------------------------------------- */
 :where([data-scope="map"]) {
-  position: relative; overflow: hidden; block-size: 340px; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
+  position: relative; overflow: clip; block-size: 340px; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border);
   background: var(--warp-color-surface-sunken); touch-action: none; cursor: grab; container-type: inline-size;
 }
 :where([data-scope="map"] svg) { display: block; inline-size: 100%; block-size: 100%; }

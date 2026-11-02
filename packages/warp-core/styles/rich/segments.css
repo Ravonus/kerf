@@ -19,7 +19,7 @@
   }
   :where([data-scope="field"] [data-part="trigger"]) { position: relative; }   /* after all: unset; the expander below needs it */
   :where([data-scope="field"] [data-part="trigger"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-  :where([data-scope="field"] [data-part="trigger"]:hover, [data-scope="field"] [data-part="trigger"][aria-expanded="true"]) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
+  :where([data-scope="field"] [data-part="trigger"]:hover, [data-scope="field"] [data-part="trigger"][aria-expanded="true"]) { color: var(--warp-color-text); background: transparent /* the control's fill and ring run unbroken behind it */; }
   :where([data-scope="field"] [data-part="trigger"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
   :where([data-scope="field"] [data-part="trigger"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
 }

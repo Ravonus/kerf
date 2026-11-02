@@ -110,7 +110,7 @@
   transition: grid-template-rows calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-out);
 }
 :where([data-scope="table"] [data-part="slide"][data-closing]) { grid-template-rows: 0fr; }
-:where([data-scope="table"] [data-part="slide"] > div) { min-block-size: 0; overflow: hidden; }
+:where([data-scope="table"] [data-part="slide"] > div) { min-block-size: 0; overflow: clip; }
 :where([data-scope="table"] [data-part="slide"] > div > div) { padding-block: var(--warp-space-group); }
 /* a row's checkbox: the box and the check without the sweep's layers, since every row has one. Select-all keeps the sweep. */
 :where([data-scope="table"] tbody [data-scope="checkbox"] > [data-part="control"]) { box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-sweep-base); }

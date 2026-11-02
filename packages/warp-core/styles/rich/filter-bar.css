@@ -7,7 +7,7 @@
   :where([data-scope="filterbar"] [data-part="fchip"]) {
     display: inline-flex; align-items: stretch; block-size: max(var(--warp-control-sm), calc(var(--warp-hit-min) - 8px)); border-radius: var(--warp-radius-round);
     border: var(--warp-border-hairline) solid var(--warp-color-accent-border); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
-    font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); overflow: hidden; animation: warp-enter var(--warp-duration-base) var(--warp-ease-pop) both;
+    font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); overflow: clip; animation: warp-enter var(--warp-duration-base) var(--warp-ease-pop) both;
   }
   :where([data-scope="filterbar"] [data-part="fchip"] button) { all: unset; display: inline-flex; align-items: center; gap: 4px; padding-inline: 10px 6px; cursor: pointer; }
   :where([data-scope="filterbar"] [data-part="fchip"] button:hover) { background: color-mix(in oklab, currentColor 8%, transparent); }

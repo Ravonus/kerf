@@ -25,7 +25,7 @@
 :where([data-until="desktop"]) { display: none !important; }
 }
 :where([data-part="panel"][data-sweep], [data-scope="surface"][data-sweep]) {
-  --warp-color-sweep-base: var(--warp-color-border); --warp-sweep-radius: var(--warp-radius-surface);
+  --warp-color-sweep-base: var(--warp-color-surface-line); --warp-sweep-radius: var(--warp-radius-surface);
   border-color: transparent;
 }
 :where([data-part="switcher"] [data-part="org"]) { display: grid; min-inline-size: 0; flex: 1; line-height: 1.2; }

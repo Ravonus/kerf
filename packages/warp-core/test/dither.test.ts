@@ -128,7 +128,7 @@ test('inks and tier numbers are read at the element, through the cascade', () =>
   const el = document.createElement('div')
   el.className = 'q'
   document.body.append(el)
-  expect(tier(el)).toEqual({ inks: 2, speed: 0, reach: 0, gain: 0.55 })
+  expect(tier(el)).toEqual({ inks: 3, speed: 0, reach: 0, gain: 0.75 })
   el.className = 'o'
   expect(tier(el).inks).toBe(9) // an override wins
   expect(tier(el).speed).toBe(1)

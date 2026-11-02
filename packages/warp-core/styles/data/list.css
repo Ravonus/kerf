@@ -4,8 +4,8 @@
 :where([data-scope="table"], [data-scope="chart"], [data-scope="stat"], [data-scope="kanban"],
        [data-scope="meter"], [data-scope="ring"], [data-scope="delta"], [data-scope="list"],
        [data-scope="desc"], [data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
-:where([data-scope="list"]) { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised); overflow: hidden; }
-:where([data-scope="list"] > li) { position: relative; overflow: hidden; }
+:where([data-scope="list"]) { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised); overflow: clip; }
+:where([data-scope="list"] > li) { position: relative; overflow: clip; }
 :where([data-scope="list"] > li + li) { border-block-start: 1px solid var(--warp-color-border); }
 :where([data-scope="list"] [data-part="item"]) {
   position: relative; z-index: 1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px;
@@ -17,8 +17,8 @@
 :where([data-scope="list"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
 :where([data-scope="list"] [data-part="item"][data-dragging]) { transition: none; }
 :where([data-scope="list"] [data-part="content"]) { min-inline-size: 0; display: grid; justify-items: start; text-align: start; }
-:where([data-scope="list"] [data-part="content"] b) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="list"] [data-part="content"] span) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="list"] [data-part="content"] b) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="list"] [data-part="content"] span) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="list"] [data-part="trailing"]) { display: flex; align-items: center; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="list"] [data-part="actions"]) { position: absolute; inset-block: 0; inset-inline-end: 0; display: flex; }
 :where([data-scope="list"] [data-part="actions"] button) {

@@ -3,7 +3,7 @@
 /* Frame — fixed aspect media box (no chrome of its own) */
 :where([data-scope="frame"]) {
   --_ratio: 16 / 9;
-  aspect-ratio: var(--_ratio); overflow: hidden; display: grid; place-items: center;
+  aspect-ratio: var(--_ratio); overflow: clip; display: grid; place-items: center;
   background: var(--warp-color-surface-sunken);
 }
 :where([data-scope="frame"] > img, [data-scope="frame"] > video, [data-scope="frame"] > canvas, [data-scope="frame"] > svg) {

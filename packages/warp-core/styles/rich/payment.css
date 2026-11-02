@@ -3,7 +3,7 @@
 /* -- payment: a hosted iframe's footprint inside the shell */
   :where([data-part="provider"]) { flex: 1; display: flex; align-items: center; gap: 14px; min-inline-size: 0; block-size: 100%; outline: none; cursor: text; font: 400 var(--warp-text-control-size) var(--warp-font-mono); }
   :where([data-part="provider"] .pv-mock) { color: transparent; transition: color var(--warp-duration-fast); white-space: nowrap; }
-  :where([data-part="provider"] .pv-mock:first-child) { flex: 1; overflow: hidden; }
+  :where([data-part="provider"] .pv-mock:first-child) { flex: 1; overflow: clip; }
   :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled]) .pv-mock) { color: var(--warp-color-text-subtle); }
   :where([data-part="provider"].typing .pv-mock:first-child) { color: var(--warp-color-text); }
   :where([data-part="provider"] .pv-tag) { display: inline-flex; align-items: center; gap: 4px; font: 500 9px/1 var(--warp-font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--warp-color-text-subtle); }

@@ -20,7 +20,7 @@
 :where([data-scope="room"] [data-part="stage"] > [data-part="rail"]) { display: grid; grid-auto-rows: 96px; gap: var(--warp-tile-gap); align-content: start; overflow: auto; scrollbar-width: none; }
 :where([data-scope="room"] [data-part="stage"][data-layout="board"] > [data-part="rail"]) { grid-auto-rows: 72px; }
 :where([data-scope="room"] [data-part="share"]) {
-  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--warp-radius-surface); overflow: hidden;
+  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--warp-radius-surface); overflow: clip;
   background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border);
 }
 :where([data-scope="room"] [data-part="share"] header) { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); border-block-end: 1px solid var(--warp-color-border); }
@@ -32,7 +32,7 @@
 :where([data-scope="room"] [data-part="sidebar"]) {
   grid-column: 2; grid-row: 2; inline-size: 300px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-block-size: 0;
   margin: 0 var(--warp-space-related) var(--warp-space-related) 0; border-radius: var(--warp-radius-surface);
-  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border); overflow: hidden;
+  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border); overflow: clip;
   animation: warp-side-in var(--warp-duration-slow) var(--warp-ease-out);
 }
 :where([data-scope="room"] [data-part="sidebar"][hidden]) { display: none; }
