@@ -11,7 +11,7 @@
 [data-site="frame"][data-code] [data-part="stage"], [data-site="frame"][data-code] [data-part="stage-tools"], [data-site="frame"][data-code] [data-act="stage-code"] { display: none; }
 [data-site="frame"][data-code] > [data-part="code"] { border-block-start: 0; }
 [data-site="frame"][data-code] > [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: none; }
-[data-site="frame"][data-code] > [data-part="code"][data-fold]::after { display: none; }
+[data-site="frame"][data-code] > [data-part="code"][data-fold] > div:first-child::after { display: none; }
 [data-site="frame"] [data-part="spacer"] { flex: 1; }
 [data-site="frame"] [data-part="stage"] {
   --stage-h: 200px;
@@ -40,9 +40,12 @@
 [data-site="frame"] > [data-part="code"] [data-scope="codeblock"] { border: 0; border-radius: 0; }
 [data-site="frame"] > [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: 104px; }
 [data-site="frame"][data-open] > [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: none; }
-[data-site="frame"] > [data-part="code"][data-fold]::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 72px; background: linear-gradient(transparent, var(--warp-color-surface-sunken)); pointer-events: none; }
-[data-site="frame"][data-open] > [data-part="code"][data-fold]::after { display: none; }
-[data-site="frame"] > [data-part="code"] > [data-act="stage-code"] { position: absolute; z-index: 1; inset-block-end: var(--warp-space-related); inset-inline-start: 50%; translate: -50% 0; }
+/* The fold's button sits in its own solid bar under the code, never over it: a fade above it ends the folded lines. */
+[data-site="frame"] > [data-part="code"][data-fold] { display: grid; justify-items: center; row-gap: var(--warp-space-tight); padding-block-end: var(--warp-space-related); background: var(--warp-color-surface-sunken); }
+[data-site="frame"] > [data-part="code"][data-fold] > div:first-child { position: relative; justify-self: stretch; min-inline-size: 0; }
+[data-site="frame"] > [data-part="code"][data-fold] > div:first-child::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 48px; background: linear-gradient(transparent, var(--warp-color-surface-sunken)); pointer-events: none; }
+[data-site="frame"][data-open] > [data-part="code"][data-fold] > div:first-child::after { display: none; }
+[data-site="frame"] > [data-part="code"] > [data-act="stage-code"] { background: var(--warp-color-surface); }
 
 /* the playground: stage left, knobs right */
 [data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) 248px; }

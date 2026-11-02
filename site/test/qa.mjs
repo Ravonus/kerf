@@ -174,6 +174,21 @@ for (const path of ['/components/dither', '/components/select', '/charts/line-ch
     if (!code) throw new Error('no code in any description')
   })
 }
+// The fold's button is solid and sits under the code, folded or open, so no line runs into it.
+await check('view code sits under the code on a phone', '/components/select', async page => {
+  const frame = page.locator('[data-site="frame"]:has(> [data-part="code"][data-fold])').first()
+  await frame.locator('> [data-part="code"]').scrollIntoViewIfNeeded()
+  const clear = () => frame.evaluate(f => {
+    const code = f.querySelector(':scope > [data-part="code"] [data-scope="codeblock"]').getBoundingClientRect(), button = f.querySelector('[data-act="stage-code"]')
+    return { gap: Math.round(button.getBoundingClientRect().top - code.bottom), solid: !/rgba\(.*, 0\)|transparent/.test(getComputedStyle(button).backgroundColor) }
+  })
+  for (const when of ['folded', 'open']) {
+    const { gap, solid } = await clear()
+    if (gap < 0) throw new Error(`${when}: the button overlaps the code by ${-gap}px`)
+    same(solid, true, `${when}: solid button`)
+    if (when === 'folded') await frame.getByRole('button', { name: 'View code' }).click()
+  }
+}, PHONE)
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)
