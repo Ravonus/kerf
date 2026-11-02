@@ -1002,7 +1002,8 @@
     --_td: calc(var(--_kk) * (min(4 * var(--_tq) * var(--_tq) * var(--_tq), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tq)) * (1 - var(--_tq)) * (1 - var(--_tq))))
                  * var(--_kw) / max(0.0001, var(--_kw) + 3 * var(--_ks))
               + (1 - var(--_kk)) * (min(4 * var(--_tp) * var(--_tp) * var(--_tp), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tp)) * (1 - var(--_tp)) * (1 - var(--_tp)))));
-    --_sl: calc(var(--_td) * 100%); --_sr: calc((1 - var(--_hd)) * 100%);
+    /* once the tail is all the way out, the head goes back to the start too: at rest both edges sit at the right, as ever */
+    --_sl: calc(var(--_td) * 100%); --_sr: calc((1 - var(--_hd) * (1 - clamp(0, (var(--_td) - 0.999) * 1000, 1))) * 100%);
     --_edges: --_kc calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * 2 * var(--warp-sweep-duration)),
               --_kh calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
               --_ks calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear,

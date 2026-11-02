@@ -162,9 +162,11 @@ test('a 50 ms hover draws the stroke all the way round, then it leaves L→R (SI
   expect(top).toBeGreaterThan(0)                                     // it got all the way round...
   expect(Math.max(...trace.slice(0, top).map(e => e.sl))).toBeLessThan(0.5) // ...before the tail moved
   for (let i = 1; i < trace.length; i++) {
+    if (cover(trace[i]) === 0) continue // gone: at rest both edges go back to the right
     expect(trace[i].sr).toBeLessThanOrEqual(trace[i - 1].sr + 0.01)  // the head never goes back
     expect(trace[i].sl).toBeGreaterThanOrEqual(trace[i - 1].sl - 0.01) // nor the tail: it leaves L→R
   }
+  expect(trace.at(-1)).toEqual({ sl: 100, sr: 100 })
   expect(cover(trace.at(-1))).toBe(0)
   await close()
 })
