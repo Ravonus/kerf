@@ -1,4 +1,5 @@
 // The schedule pack driven as a user would: views, keyboard move, the card, dialogs, rollback, and the fields paths (07 §2, §6.4).
+import { readFileSync } from 'node:fs'
 import { state } from 'weft'
 import { flush, render } from 'weft/test'
 import type { CalEvent } from '@weft/warp-core'
@@ -53,6 +54,13 @@ describe('Calendar', () => {
     expect(c.querySelectorAll('[data-part="col"]').length || c.querySelectorAll('[data-date][role="gridcell"]').length).toBe(7)
     expect(c.querySelectorAll('[data-part="now"]').length).toBe(1)
     expect(c.querySelectorAll('[data-part="event"][tabindex="0"]').length).toBe(1)
+  })
+
+  test('week and day names are never ellipsized: they break between words and the grid makes room', () => {
+    const css = readFileSync(`${process.cwd()}/../warp-core/styles/app/calendar.css`, 'utf8')
+    const title = /:where\(\[data-scope="calendar"\] \[data-part="event"\] \[data-part="event-title"\]\) \{([^}]*)\}/.exec(css)![1]
+    expect(title).toContain('white-space: normal')
+    expect(title).not.toContain('ellipsis')
   })
 
   test('M lifts, arrows step by the snap and a day, Escape puts it back with nothing saved', async () => {

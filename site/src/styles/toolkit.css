@@ -28,6 +28,8 @@
    midnight. The stage's height is that bound. */
 [data-site="frame"] [data-part="mount"][data-stage="fill"]:has(> [data-scope="calendar"]) { block-size: var(--stage-h); }
 [data-site="frame"] [data-part="mount"][data-stage="fill"] > [data-scope="calendar"] { block-size: 100%; min-block-size: 0; }
+/* and it is an app's window: edge to edge in its frame, so a desktop week has the room for all seven days */
+[data-site="frame"] [data-part="mount"][data-stage="fill"]:has(> [data-scope="calendar"]) { padding: 0; }
 [data-part="mount"] { box-sizing: border-box; min-inline-size: 0; padding: 32px; }
 [data-part="mount"][data-stage="center"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-group); }
 [data-part="mount"][data-stage="narrow"] { display: grid; align-content: center; justify-self: center; inline-size: min(100%, 424px); }

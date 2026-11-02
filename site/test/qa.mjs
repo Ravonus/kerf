@@ -443,6 +443,59 @@ await check('timeline names are not cut', '/components/calendar', async page => 
   const cut = await sec.evaluate(s => [...s.querySelectorAll('[data-part="lane"] [data-part="event"]')].filter(e => { const words = document.createRange(); words.selectNodeContents(e.querySelector('[data-part="event-title"]')); const w = words.getBoundingClientRect(), box = e.getBoundingClientRect(); return w.right > box.right + 1 || w.bottom > box.bottom + 1 }).map(e => e.querySelector('[data-part="event-title"]').textContent))
   same(cut.join(), '', 'cut names')
 })
+/** Names in a week or day grid (timed or all-day) that don't read whole: past their event's edge, ellipsized, or broken inside a word. */
+const cutNames = sec => sec.evaluate(s => [...s.querySelectorAll('[data-part="col"] > [data-part="event"], [data-part="allday"] > [data-part="chip"]')].filter(e => {
+  const t = e.querySelector('[data-part="event-title"]') ?? e, box = e.getBoundingClientRect(), r = document.createRange()
+  r.selectNodeContents(t)
+  const w = r.getBoundingClientRect()
+  if (w.right > box.right + 1 || w.bottom > box.bottom + 1 || getComputedStyle(t).textOverflow === 'ellipsis') return true
+  // a word on two lines has two boxes
+  const text = [...t.childNodes].find(n => n.nodeType === 3 && n.textContent.trim())
+  if (!text) return false
+  let at = 0
+  return text.textContent.split(/(\s+)/).some(word => {
+    const from = at
+    at += word.length
+    if (!word.trim()) return false
+    const wr = document.createRange()
+    wr.setStart(text, from)
+    wr.setEnd(text, at)
+    return wr.getClientRects().length > 1
+  })
+}).map(e => (e.querySelector('[data-part="event-title"]') ?? e).textContent))
+/** Shows a calendar example in a view (its tab) and waits for it to fit its names. */
+const calendarIn = async (page, id, view) => {
+  const sec = page.locator(`section#${id}`)
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="col"]').first().waitFor()
+  if (view) await sec.locator('[role="tab"]', { hasText: view }).click()
+  await page.evaluate(() => document.fonts.ready)
+  await page.waitForTimeout(600)
+  return sec
+}
+// Day and week views read every name whole too, on a desk and a phone ("Incident re…", "Billing walkthrou…" were cut).
+for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
+  for (const [id, view] of [['CalendarBusyDay', 'Day'], ['CalendarBusyDay', 'Week'], ['preview', 'Week']]) {
+    await check(`${view.toLowerCase()} names are not cut ${id} at ${viewport.width}`, '/components/calendar', async page => {
+      const sec = await calendarIn(page, id, view)
+      same((await cutNames(sec)).join(), '', 'cut names')
+    }, viewport)
+  }
+}
+// A desk's week shows all seven days at once, with nothing to scroll sideways (it showed Monday to Thursday).
+await check('desktop week shows seven days', '/components/calendar', async page => {
+  for (const [id, view] of [['preview', 'Week'], ['CalendarBusyDay', 'Week']]) {
+    const sec = await calendarIn(page, id, view)
+    const m = await sec.evaluate(s => {
+      const sc = s.querySelector('[data-part="scroller"]:has(> [data-part="cols"])'), r = sc.getBoundingClientRect()
+      const cols = [...sc.querySelectorAll('[data-part="col"]')].map(c => c.getBoundingClientRect())
+      return { days: cols.length, inView: cols.filter(c => c.left >= r.left - 1 && c.right <= r.right + 1).length, wide: sc.scrollWidth - sc.clientWidth }
+    })
+    same(m.days, 7, `${id} days`)
+    same(m.inView, 7, `${id} days in view`)
+    if (m.wide > 1) throw new Error(`${id} scrolls ${m.wide}px sideways`)
+  }
+})
 // The Ticker playground's starting value is big enough for en-IN's grouping to show.
 await check('ticker shows en-IN grouping', '/components/ticker?locale=en-IN', async page => {
   await page.locator('[data-play]').scrollIntoViewIfNeeded()
