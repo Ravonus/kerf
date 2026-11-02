@@ -30,6 +30,8 @@ const EVENTS = [
   ev('e', 'Roadmap', 4, '15:00', '16:30', 'cedar'),
   ...[2, 3, 4, 5, 6].flatMap(d => [ev(`s${d}`, 'Standup', d, '09:30', '09:45'), ev(`x${d}`, 'Focus block', d, '14:00', '16:00', undefined, 2), ev(`y${d}`, 'Review', d, '16:00', '17:00', undefined, 3), ev(`z${d}`, 'Wrap-up', d, '17:00', '17:30')]),
   ev('late', 'Quarter close', 27, '10:00', '11:00'), ev('last', 'Retro', 30, '15:00', '16:00'),
+  { id: 'oncall', title: 'Jun on call', start: '2026-11-02', end: '2026-11-04', allDay: true, cal: 2 },
+  { id: 'rel', title: 'Release 2026.11 to every region', start: '2026-11-06', end: '2026-11-06', allDay: true, cal: 1 },
 ]
 const cal = (props: any) => <Calendar events={EVENTS} resources={ROOMS} today="2026-11-02" now="2026-11-04T10:40" defaultDate="2026-11-04" locale="en-US" firstDayOfWeek={1} readOnly {...props} />
 const HOOKS = [
@@ -74,6 +76,8 @@ render(() => (
       <div id="in-tooltip"><Tooltip inline content="Runs on every region"><Button>Deploy everywhere</Button></Tooltip></div>
     </div>
     {box('rte-bubble', 520, <RichTextEditor label="Release notes" toolbar="bubble" defaultValue="<p>Select some of this text to see the toolbar.</p>" />)}
+    {box('week-phone', 358, cal({ views: ['week', 'day', 'month'], defaultView: 'week', workingHours: [540, 1080] }))}
+    {box('day-phone', 358, cal({ views: ['day', 'week'], defaultView: 'day', workingHours: [540, 1080] }))}
     {box('week-free', 900, cal({ views: ['week', 'day'], defaultView: 'week', workingHours: [540, 1080] }))}
   </>
 ), document.getElementById('app')!)

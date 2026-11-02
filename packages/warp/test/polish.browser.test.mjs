@@ -183,38 +183,105 @@ test('a Kanban board cut at its box shows an edge shadow on the side with more, 
 
 const calendarIn = id => `#${id} [data-scope="calendar"][data-part="root"]`
 
-test('a phone timeline keeps names readable: two lines at most, broken between words, or the start time; and it scrolls with a shadow', async () => {
-  const m = await page.evaluate(sel => {
-    const root = document.querySelector(sel), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
-    const events = [...root.querySelectorAll('[data-part="lane"] [data-part="event"]')].map(e => {
-      const t = e.querySelector('[data-part="event-title"]'), st = e.querySelector('[data-part="event-start"]')
-      const line = parseFloat(getComputedStyle(t).lineHeight) || 16
-      const shown = el => getComputedStyle(el).display !== 'none'
-      return { w: e.getBoundingClientRect().width, title: shown(t), start: shown(st), titleH: t.getBoundingClientRect().height, titleW: t.getBoundingClientRect().width, line }
-    })
-    return { events, sw: sc.scrollWidth, cw: sc.clientWidth, overflow: root.querySelector('[data-scope="edges"]').dataset.overflow ?? '' }
-  }, calendarIn('tl-phone'))
+// every booking's whole name shows inside its box, and no word is split across lines
+const timelineNames = sel => page.evaluate(sel => {
+  const root = document.querySelector(sel), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
+  const events = [...root.querySelectorAll('[data-part="lane"] [data-part="event"]')].map(e => {
+    const t = e.querySelector('[data-part="event-title"]'), st = e.querySelector('[data-part="event-start"]')
+    const shown = el => getComputedStyle(el).display !== 'none'
+    const words = document.createRange(); words.selectNodeContents(t)
+    const w = words.getBoundingClientRect(), box = e.getBoundingClientRect()
+    // a word split over two lines has letters on two different line tops
+    const split = []
+    for (const m of t.textContent.matchAll(/\S+/g)) {
+      const r = document.createRange(), node = t.firstChild
+      if (!node || node.nodeType !== 3) continue
+      r.setStart(node, m.index); r.setEnd(node, m.index + m[0].length)
+      const tops = new Set([...r.getClientRects()].map(x => Math.round(x.top)))
+      if (tops.size > 1) split.push(m[0])
+    }
+    return { name: t.textContent, w: box.width, title: shown(t), start: shown(st), cut: shown(t) && (w.right > box.right + 1 || w.bottom > box.bottom + 1 || w.left < box.left - 1), split }
+  })
+  return { events, sw: sc.scrollWidth, cw: sc.clientWidth, overflow: root.querySelector('[data-scope="edges"]').dataset.overflow ?? '' }
+}, sel)
+
+test('a phone timeline shows every booking\'s whole name, broken only between words, and scrolls with a shadow', async () => {
+  await page.waitForTimeout(100) // the hours settle their width a frame after mount
+  const m = await timelineNames(calendarIn('tl-phone'))
   expect(m.events.length).toBe(5)
   expect(m.sw).toBeGreaterThan(m.cw) // an hour keeps its width, so the day scrolls sideways
   expect(m.overflow).toBe('end')
   for (const e of m.events) {
     expect(e.w).toBeGreaterThanOrEqual(30) // never the 20px slivers that stacked a letter a line
-    if (e.title) { expect(e.titleH).toBeLessThanOrEqual(e.line * 2.2); expect(e.titleW).toBeGreaterThanOrEqual(36) } // never a letter or two a line
-    else expect(e.start).toBe(true)
+    expect(e.cut, e.name).toBe(false)
+    expect(e.split, e.name).toEqual([])
+    if (!e.title) expect(e.start).toBe(true)
   }
-  // the half-hour booking is the narrow one: its start time stands in for its name
-  expect(m.events.filter(e => e.start && !e.title).length).toBe(1)
+  // "Billing walkthrough" and "Incident review: mobile-bff" are an hour or less: they show whole, not "walkth…"
+  expect(m.events.filter(e => e.title).map(e => e.name)).toEqual(expect.arrayContaining(['Billing walkthrough', 'Design crit']))
 })
 
-test('a desktop timeline fits without scrolling, and the now line runs under the bookings', async () => {
-  const m = await page.evaluate(sel => {
-    const root = document.querySelector(sel), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
-    const ev = root.querySelector('[data-id="c"]'), now = root.querySelector('[data-part="lane"] [data-part="now"]')
-    return { sw: sc.scrollWidth, cw: sc.clientWidth, overflow: root.querySelector('[data-scope="edges"]').dataset.overflow ?? '', evZ: +getComputedStyle(ev).zIndex, nowZ: +getComputedStyle(now).zIndex }
+test('a desktop timeline shows every name whole, and the now line runs under the bookings', async () => {
+  const m = await timelineNames(calendarIn('tl-desk'))
+  for (const e of m.events) { expect(e.cut, e.name).toBe(false); expect(e.split, e.name).toEqual([]) }
+  // it only scrolls when an hour had to widen for a word, and then says so with its edge shadow
+  expect(m.sw > m.cw + 1 ? m.overflow : '').toBe(m.sw > m.cw + 1 ? 'end' : '')
+  const z = await page.evaluate(sel => {
+    const root = document.querySelector(sel), ev = root.querySelector('[data-id="c"]'), now = root.querySelector('[data-part="lane"] [data-part="now"]')
+    return { evZ: +getComputedStyle(ev).zIndex, nowZ: +getComputedStyle(now).zIndex }
   }, calendarIn('tl-desk'))
-  expect(m.sw).toBeLessThanOrEqual(m.cw + 1)
-  expect(m.overflow).toBe('')
-  expect(m.nowZ).toBeLessThan(m.evZ)
+  expect(z.nowZ).toBeLessThan(z.evZ)
+})
+
+test('a phone week keeps all seven days at a readable width and scrolls sideways, with the hours and day heads in place', async () => {
+  const sel = calendarIn('week-phone')
+  await page.locator(sel).scrollIntoViewIfNeeded()
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel), sc = root.querySelector('[data-view="time"] > [data-part="scroller"]')
+    const cols = [...root.querySelectorAll('[data-part="col"]')].map(c => c.getBoundingClientRect().width)
+    const titles = [...root.querySelectorAll('[data-part="col"] [data-part="event"] [data-part="event-title"]')].map(t => ({ name: t.textContent, w: t.getBoundingClientRect().width, shown: t.getBoundingClientRect().width >= t.scrollWidth - 1 }))
+    const gutter = root.querySelector('[data-part="cols"] > [data-part="gutter"]')
+    const before = gutter.getBoundingClientRect().left
+    sc.scrollLeft = 200
+    const after = gutter.getBoundingClientRect().left
+    const head = root.querySelector('[data-part="top"]'), headTop = head.getBoundingClientRect().top
+    sc.scrollTop += 300
+    const headTop2 = head.getBoundingClientRect().top
+    const chip = root.querySelector('[data-part="allday"] [data-part="chip"]')
+    return { days: cols.length, min: Math.min(...cols), sw: sc.scrollWidth, cw: sc.clientWidth, titles, shadow: root.querySelector('[data-view="time"]').dataset.overflow ?? '', gutterStays: Math.abs(after - before) < 1, headStays: Math.abs(headTop2 - headTop) < 1, chip: { w: chip.getBoundingClientRect().width, font: parseFloat(getComputedStyle(chip).fontSize), text: chip.textContent } }
+  }, sel)
+  expect(m.days).toBe(7)
+  expect(m.min).toBeGreaterThanOrEqual(120)
+  expect(m.sw).toBeGreaterThan(m.cw)
+  expect(m.shadow).toContain('end') // the side with more days is shaded
+  expect(m.gutterStays).toBe(true)
+  expect(m.headStays).toBe(true)
+  // an event's name reads: at least a word of it, never "D…"
+  for (const t of m.titles) expect(t.w, t.name).toBeGreaterThanOrEqual(Math.min(48, t.name.length * 5))
+  // the all-day event keeps its name, not a bare dot
+  expect(m.chip.font).toBeGreaterThan(10)
+  expect(m.chip.w).toBeGreaterThan(60)
+})
+
+test('a phone day shows its all-day event by name, and a short event\'s name before its times', async () => {
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel)
+    const chip = root.querySelector('[data-part="allday"] [data-part="chip"]')
+    const standup = [...root.querySelectorAll('[data-part="event"]')].find(e => e.textContent.includes('Standup'))
+    const t = standup?.querySelector('[data-part="event-title"]')
+    return { chip: chip && { w: chip.getBoundingClientRect().width, font: parseFloat(getComputedStyle(chip).fontSize), text: chip.textContent }, title: t && { w: t.getBoundingClientRect().width, need: t.scrollWidth } }
+  }, calendarIn('day-phone'))
+  expect(m.chip.text).toBe('Jun on call')
+  expect(m.chip.font).toBeGreaterThan(10)
+  expect(m.chip.w).toBeGreaterThan(80)
+  expect(m.title.w).toBeGreaterThanOrEqual(m.title.need - 1) // "Standup" whole; the times give way first
+})
+
+test('month chips end a long name in an ellipsis, not a hard cut', async () => {
+  const chips = await page.$$eval('#month [data-part="day-cell"] [data-part="chip"]', cs => cs.map(c => ({ text: c.textContent, over: c.scrollWidth > c.clientWidth + 1, ellipsis: getComputedStyle(c).textOverflow, display: getComputedStyle(c).display })))
+  const long = chips.filter(c => c.over)
+  expect(long.map(c => c.text)).toContain('Release 2026.11 to every region')
+  for (const c of long) { expect(c.ellipsis, c.text).toBe('ellipsis'); expect(c.display).toBe('block') }
 })
 
 test('the month shows all its weeks in the height it has, with "+N more" for days that hold more', async () => {

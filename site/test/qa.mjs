@@ -433,6 +433,29 @@ await check('related links read as words', '/blocks/checkout', async page => {
   if (!links.length) throw new Error('no related links')
   same(links.filter(l => l.button || l.upper === 'uppercase' || /[a-z][A-Z]/.test(l.text)).map(l => l.text).join(), '', 'loud or squashed')
 })
+// A phone week keeps seven readable days and scrolls sideways; the all-day event keeps its name; month chips ellipsize.
+await check('calendar week reads on a phone', '/components/calendar', async page => {
+  const sec = page.locator('section#CalendarWeek')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="col"]').first().waitFor()
+  await page.waitForTimeout(300)
+  const m = await sec.evaluate(s => {
+    const cols = [...s.querySelectorAll('[data-part="col"]')].map(c => c.getBoundingClientRect().width)
+    const chip = s.querySelector('[data-part="allday"] [data-part="chip"]')
+    return { days: cols.length, min: Math.min(...cols), chipFont: chip ? parseFloat(getComputedStyle(chip).fontSize) : 0 }
+  })
+  same(m.days, 7, 'days')
+  if (m.min < 120) throw new Error(`a day is ${Math.round(m.min)}px wide`)
+  if (m.chipFont < 10) throw new Error('the all-day event is a bare dot')
+}, { width: 390, height: 844 })
+await check('month chips ellipsize', '/components/calendar', async page => {
+  const sec = page.locator('section#CalendarMonth')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="day-cell"]').first().waitFor()
+  await page.waitForTimeout(300)
+  const bad = await sec.evaluate(s => [...s.querySelectorAll('[data-part="day-cell"] [data-part="chip"]')].filter(c => c.scrollWidth > c.clientWidth + 1 && getComputedStyle(c).textOverflow !== 'ellipsis').map(c => c.textContent))
+  same(bad.join(), '', 'chips cut without an ellipsis')
+})
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

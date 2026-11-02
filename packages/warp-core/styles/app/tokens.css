@@ -5,6 +5,7 @@
     --warp-cal-hour: calc(48px * var(--warp-density-k));          /* 36 · 48 · 60 px per hour */
     --warp-cal-gutter: 52px;
     --warp-cal-hour-w: 64px;                                       /* a timeline hour's least width: past it the rows scroll sideways */
+    --warp-cal-day-min: 128px;                                     /* a week day's least width (more for a day of overlaps): past it the week scrolls sideways */
     --warp-cal-max-h: 100dvh;                                      /* the calendar's own bound when no parent gives it a height */
     --warp-cal-bar: calc(var(--warp-border-emphasis) + 1px);      /* event colour edge 2 · 2.5 · 3 */
     --warp-cal-tint: 15%;                                          /* event fill = category over surface */
