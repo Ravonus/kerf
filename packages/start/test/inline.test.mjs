@@ -82,6 +82,40 @@ test('a static route from an install keeps the stylesheets of the kit components
   expect(page).not.toContain('modal')
 })
 
+describe('a static route through a kit barrel', () => {
+  const kit = async (files, page) => {
+    const root = mkdtempSync(join(tmpdir(), 'weft-kit-')), dir = join(root, 'node_modules/@weft/kit/src')
+    for (const [f, text] of Object.entries(files)) { mkdirSync(dirname(join(dir, f)), { recursive: true }); writeFileSync(join(dir, f), text) }
+    const ctx = { resolve: async (spec, from) => ({ id: spec === '@weft/kit' ? join(dir, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
+    return assetsOnly(ctx, page, join(root, 'src/routes/a.tsx'), root)
+  }
+  const Modal = { 'Modal.tsx': `import './modal.css'\nexport const Modal = () => null\n` }
+
+  test('finds a component in a second declarator', async () => {
+    const page = await kit({ 'index.ts': `export { Badge } from './pills'\nexport { Modal } from './Modal'\n`, ...Modal, 'pills.tsx': `import { p } from './inner'\nexport const Pill = () => p, Badge = () => p\n`, 'inner.tsx': `import './pills.css'\nexport const p = 1\n` }, `import { Badge } from '@weft/kit'\n`)
+    expect(page).toContain('pills.css')
+    expect(page).not.toContain('modal')
+  })
+
+  test('finds a component in a destructured export', async () => {
+    expect(await kit({ 'index.ts': `export { Badge } from './pills'\n`, 'pills.tsx': `import { p } from './inner'\nexport const { Badge } = p\n`, 'inner.tsx': `import './pills.css'\nexport const p = 1\n` }, `import { Badge } from '@weft/kit'\n`)).toContain('pills.css')
+  })
+
+  test('keeps what a barrel imports for its side effects, and not what it imports for a name', async () => {
+    const page = await kit({ 'index.ts': `import './base.css'\nimport './setup'\nimport { used } from './helper'\nexport { Modal } from './Modal'\nexport const count = used\n`, ...Modal, 'setup.tsx': `import './setup.css'\n`, 'helper.tsx': `import './helper.css'\nexport const used = 1\n` }, `import { Modal } from '@weft/kit'\n`)
+    expect(page).toContain('base.css')
+    expect(page).toContain('setup.css')
+    expect(page).toContain('modal.css')
+    expect(page).not.toContain('helper.css')
+  })
+
+  test('follows `export * as K` only for K, and takes all of it', async () => {
+    const files = { 'index.ts': `export * as K from './k'\nexport { Modal } from './Modal'\n`, ...Modal, 'k.tsx': `import { b } from './b'\nexport const a = b\n`, 'b.tsx': `import './k.css'\nexport const b = 1\n` }
+    expect(await kit(files, `import { K } from '@weft/kit'\n`)).toContain('k.css')
+    expect(await kit(files, `import { Modal } from '@weft/kit'\n`)).not.toContain('k.css')
+  })
+})
+
 test('the first paint leaves out rules for classes, attributes and values the shell doesn\'t have, not a :where alternative', () => {
   const sheet = `.plan{color:red}.hero{color:blue}:where([data-role=eyebrow]){color:red}:where([data-role=lede]){color:blue}[data-state=open]{color:red}:where(.gone,.hero){margin:0}:not(.gone){padding:0}${filler(4000)}`
   const page = pageStyles({ inline: { '/b.css': sheet }, critical }, [{ href: '/b.css' }], '<p class="hero" data-role="lede" data-id="7"></p>').head
