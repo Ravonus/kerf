@@ -7,12 +7,12 @@ import {
 import type { ApiKey, Integration, Invite, Member, OrderStage, PaymentMethod, Permission, PlaceOrderResult, Webhook } from '@weft-js/warp'
 import { API_KEYS, AUDIT, AUDIT_CATEGORIES, BILLS, CARDS, IMPORT_SAMPLE, IMPORT_TARGETS, INTEGRATIONS, INVITE_ROLES, NOW, OVERDUE_BILLS, PEOPLE, PLANS, SHOP_CART, SHOP_SHIPPING, TEAM_INVITES, TEAM_MEMBERS, TEAM_PERMISSIONS, TEAM_ROLES, WEBHOOKS, WEBHOOK_EVENTS } from '../world'
 
-const wait = (ms: number) => new Promise(done => setTimeout(done, ms))
+const wait = (ms: number) => new Promise<void>(done => { setTimeout(done, ms) })
 
 // -- settings --
 
 // A row only lays out side by side inside a `settings` container, which SettingsLayout normally provides.
-const SettingsWidth = ({ children }: { children: any }) => <div style="container: settings / inline-size">{children}</div>
+const SettingsWidth = ({ children }: { children: unknown }) => <div style="container: settings / inline-size">{children}</div>
 
 const SECTIONS = [{ id: 'general', label: 'General' }, { id: 'deploys', label: 'Deploys' }, { id: 'alerts', label: 'Notifications' }, { id: 'project-danger', label: 'Danger zone', tone: 'critical' as const }]
 const REGIONS = [{ value: 'eu-west', label: 'eu-west' }, { value: 'us-east', label: 'us-east' }, { value: 'ap-south', label: 'ap-south' }]
@@ -351,7 +351,7 @@ export const PayFrameLoading = () => <PayFrame title="Card fields from your paym
 
 // -- audit and integrations --
 
-export const AuditLogWorkspace = () => <AuditLog events={AUDIT} now={NOW} categories={AUDIT_CATEGORIES} live="live" onExport={async () => ({ retryAfter: 20 })} />
+export const AuditLogWorkspace = () => <AuditLog events={AUDIT} now={NOW} categories={AUDIT_CATEGORIES} live="live" onExport={() => Promise.resolve({ retryAfter: 20 })} />
 
 const LATEST_EVENTS = AUDIT.slice(0, 3)
 
@@ -373,7 +373,7 @@ export function IntegrationsGridWorkspace() {
     <>
       <IntegrationsGrid
         items={items}
-        onConnect={connect}
+        onConnect={item => void connect(item)}
         onDisconnect={item => mark(item.id, { state: 'off' })}
         onRestore={item => mark(item.id, { state: 'connected' })}
         settings={item => <Input label="Channel or team" defaultValue={item.detail} />}
@@ -471,7 +471,7 @@ export function CheckoutShop() {
 
 export const CheckoutTile = () => <OrderTracker stage="packed" />
 
-export const OrderConfirmationPlaced = () => <OrderConfirmation orderId="T-2041" email={PEOPLE[0].email} stage="packed" note="Standard delivery, arrives Thu 6 Nov." onTrack={() => {}} onContinue={() => {}} />
+export const OrderConfirmationPlaced = () => <OrderConfirmation orderId="T-2041" email={PEOPLE[0]!.email} stage="packed" note="Standard delivery, arrives Thu 6 Nov." onTrack={() => {}} onContinue={() => {}} />
 
 const STAGES: { value: OrderStage; label: string }[] = [{ value: 'placed', label: 'Placed' }, { value: 'packed', label: 'Packed' }, { value: 'shipped', label: 'Shipped' }, { value: 'delivered', label: 'Delivered' }]
 

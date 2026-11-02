@@ -164,7 +164,7 @@ export function DrawerFooter() {
 
 export function DrawerDeployDetails() {
   const open = state(false)
-  const picked = state(DEPLOYS[0])
+  const picked = state(DEPLOYS[0]!)
   const show = (d: typeof DEPLOYS[number]) => { picked.value = d; open.value = true }
   return (
     <Stack gap="related" divided>
@@ -481,7 +481,7 @@ export function ModalTile() {
 
 export function DrawerTile() {
   const open = state(true)
-  const d = DEPLOYS[0]
+  const d = DEPLOYS[0]!
   return (
     <div style="display:flex;justify-content:flex-end;min-inline-size:0">
       <Drawer inline open={open} side="right" title={d.message} description={`${d.project}, ${d.id}`}>

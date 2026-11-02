@@ -1,5 +1,8 @@
 // One small product behind every example: Tessel, a deploy tool. The same people, projects and numbers everywhere, so a
 // table, a chart and a feed read as one app. Dates are fixed so server and client always agree.
+import type { ActivityItem, AgentEvent, AgentSource, ApiKey, ArtifactVersion, AuditEvent, Availability, BillingPlan, ChatConversation, ChatMessage, CommentThreadData, ContextUse, CursorPeer, Integration, IntegrityEvent, IntegrityStats, Invite, Invoice, Member, ModelOption, Note, Participant, PaymentMethod, Peer, PromptSuggestion, Role, ShareContact, ShareMember, TraceSpan, Version, ViewportPeer, Webhook } from '@weft-js/warp'
+import type { Attendee, CalEvent, PrefGroup } from '@weft-js/warp-core'
+
 export const PEOPLE = [
   { id: 'mara', name: 'Mara Lindqvist', email: 'mara@tessel.dev', role: 'Owner', team: 'Platform', initials: 'ML' },
   { id: 'jun', name: 'Jun Tanaka', email: 'jun@tessel.dev', role: 'Admin', team: 'Platform', initials: 'JT' },
@@ -70,7 +73,6 @@ export const INVOICES = [
 ]
 
 // -- the admin pack: Tessel's own settings, billing and shop --
-import type { ApiKey, AuditEvent, BillingPlan, Integration, Invite, Invoice, Member, PaymentMethod, Role, Webhook } from '@weft-js/warp'
 
 /** "Now" for anything that says how long ago, so the words never change. */
 export const NOW = '2026-10-31T17:00:00Z'
@@ -162,8 +164,6 @@ export const IMPORT_TARGETS = [
 export const IMPORT_SAMPLE = { name: 'tessel-team.csv', text: 'Name,Email,Team,Role\nDara Nowak,dara@tessel.dev,Web,member\nKai Sorensen,kai@tessel,Data,member\nAmir Saleh,amir@tessel.dev,Mobile,owner\nRosa Delgado,rosa@tessel.dev,Platform,admin\n' }
 
 // ---- The assistant: Tessel's help for a deploy that went wrong ----------------------------------------------------
-import type { ActivityItem, AgentEvent, Availability, ContextUse, ModelOption, Note, PromptSuggestion, Participant, TraceSpan, ArtifactVersion, AgentSource } from '@weft-js/warp'
-import type { Attendee, CalEvent, PrefGroup } from '@weft-js/warp-core'
 
 export const DEPLOY_SOURCES: AgentSource[] = [
   { title: 'd-4819 build log', path: 'mobile-bff · 15:27', snippet: 'health check failed: upstream timed out after 3000 ms in ap-south' },
@@ -449,7 +449,7 @@ export const CAL_TODAY = '2026-11-02'
 export const CAL_NOW = '2026-11-04T10:40'
 export const CALENDARS = ['Releases', 'On-call', 'Team', 'Customers'].map((name, i) => ({ id: i + 1, name }))
 export const ROOMS = [{ id: 'atlas', name: 'Atlas', meta: '8 seats' }, { id: 'birch', name: 'Birch', meta: '6 seats' }, { id: 'cedar', name: 'Cedar', meta: '12 seats' }]
-export const EVENTS = [
+export const EVENTS: CalEvent[] = [
   { id: 'e1', title: 'Standup', start: '2026-11-02T09:30', end: '2026-11-02T09:45', cal: 3, recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' },
   { id: 'e2', title: 'Standup', start: '2026-11-03T09:30', end: '2026-11-03T09:45', cal: 3, recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' },
   { id: 'e3', title: 'Standup', start: '2026-11-04T09:30', end: '2026-11-04T09:45', cal: 3, recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' },
@@ -471,10 +471,9 @@ export const EVENTS = [
 ]
 
 // -- the collab pack: the same people, in a room --
-import type { ChatConversation, CommentThreadData, IntegrityEvent, ShareContact, ShareMember, Version, ViewportPeer, ChatMessage, CursorPeer, IntegrityStats, Peer } from '@weft-js/warp'
 
 export const PEERS: Peer[] = PEOPLE.map((p, i) => ({ id: p.id, name: p.name, color: i + 1 }))
-export const [MARA, JUN, PRIYA, TOMAS, LENA, NOOR, SAM, INES] = PEERS
+export const [MARA, JUN, PRIYA, TOMAS, LENA, NOOR, SAM, INES] = PEERS as [Peer, Peer, Peer, Peer, Peer, Peer, Peer, Peer]
 
 export const CONVERSATIONS: ChatConversation[] = [
   { id: 'incidents', name: '# incidents', color: 3, channel: true, preview: 'Sam: Rolled back, 5xx are dropping', time: '15:41', unread: 3, pinned: true },

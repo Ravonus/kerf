@@ -14,12 +14,15 @@ const WAITING = foldAnswer([])
 const CITED = DEPLOY_SOURCES.slice(1)
 
 /** Plays a scripted run: in an app these events come from your stream. */
-async function play(answer: State<Answer>, events: AgentEvent[]) {
-  for (const event of events) {
-    await new Promise(done => setTimeout(done, 450))
-    if (answer.value.state === 'stopped') return
+function play(answer: State<Answer>, events: AgentEvent[]) {
+  let at = 0
+  const next = () => {
+    const event = events[at++]
+    if (!event || answer.value.state === 'stopped') return
     answer.value = foldAnswer(answer.value, event)
+    setTimeout(next, 450)
   }
+  setTimeout(next, 450)
 }
 
 type Turn = { id: number; text: string; answer: State<Answer> }
@@ -41,7 +44,7 @@ export const ConversationTile = () => (
 
 export function ConversationDeployHelp() {
   const turns = state<Turn[]>([{ id: 1, text: QUESTION, answer: state(FINISHED) }])
-  const last = () => turns.value[turns.value.length - 1].answer
+  const last = () => turns.value[turns.value.length - 1]!.answer
   const busy = derived(() => ['waiting', 'streaming', 'approval'].includes(last().value.state))
   const send = (text: string) => {
     const answer = state(foldAnswer([]))
@@ -120,7 +123,7 @@ export function BranchSwitcherVersions() {
   const at = state(1)
   return (
     <Stack gap="related">
-      <Prose text={VERSIONS[at.value]} />
+      <Prose text={VERSIONS[at.value]!} />
       <Row gap="related">
         <Text role="caption" subtle>Regenerated twice</Text>
         <BranchSwitcher index={at.value} count={VERSIONS.length} onChange={i => (at.value = i)} />
@@ -135,7 +138,7 @@ export function MessageActionsFeedback() {
     <Stack gap="related">
       <Prose text="Rollback finished. `mobile-bff` is back on `d-4801`." />
       <MessageActions
-        onCopy={el => { copyConfirm(el, 'Rollback finished.'); said.value = 'Copied' }}
+        onCopy={el => { void copyConfirm(el, 'Rollback finished.'); said.value = 'Copied' }}
         onFeedback={(value, reason) => (said.value = reason ?? (value ? `Rated ${value}` : 'Rating cleared'))}
         onRegenerate={() => (said.value = 'Regenerating')}
         onBranch={() => (said.value = 'New branch')}
@@ -166,10 +169,9 @@ const ROLLBACK: AgentTool = { id: 'rollback', name: 'rollback', args: '{\n  "pro
 
 export function ToolCallApproval() {
   const call = state(ROLLBACK)
-  const approve = async (args: string) => {
+  const approve = (args: string) => {
     call.value = { ...call.value, args, state: 'running' }
-    await new Promise(done => setTimeout(done, 1400))
-    call.value = { ...call.value, state: 'done', ms: 1400, output: 'mobile-bff is on d-4801' }
+    setTimeout(() => { call.value = { ...call.value, state: 'done', ms: 1400, output: 'mobile-bff is on d-4801' } }, 1400)
   }
   return (
     <Stack gap="related">
@@ -363,8 +365,8 @@ const fakeEngine = (on: Parameters<NonNullable<Parameters<typeof SpeechInput>[0]
       let i = 0
       on.onState('listening')
       timer = setInterval(() => {
-        if (i < WORDS.length) { on.onTranscript(i ? WORDS[i - 1] : '', WORDS[i].slice(i ? WORDS[i - 1].length : 0)); on.onLevel(0.3 + (i % 2) * 0.4); i++ }
-        else { on.onTranscript(WORDS[WORDS.length - 1], ''); clearInterval(timer); on.onState('idle') }
+        if (i < WORDS.length) { on.onTranscript(i ? WORDS[i - 1]! : '', WORDS[i]!.slice(i ? WORDS[i - 1]!.length : 0)); on.onLevel(0.3 + (i % 2) * 0.4); i++ }
+        else { on.onTranscript(WORDS[WORDS.length - 1]!, ''); clearInterval(timer); on.onState('idle') }
       }, 800)
     },
     stop() { clearInterval(timer); on.onState('idle') },

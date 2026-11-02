@@ -1,6 +1,6 @@
 import { state } from '@weft-js/core'
 import { Badge, Button, Calendar, Card, DateField, DateRangeField, DateTimeField, DurationField, InlineCalendar, MonthPicker, PeriodPicker, RecurrenceField, Row, Stack, Text, TimeField, WeekPicker, Tag, Grid, compareRange } from '@weft-js/warp'
-import type { DateRange, IsoDate, IsoDateTime, IsoDuration, IsoTime } from '@weft-js/warp'
+import type { DateRange, IsoDate, IsoDateTime, IsoDuration, IsoMonth, IsoTime, IsoWeek } from '@weft-js/warp'
 import { CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, INVOICES, ROOMS } from '../world'
 
 type Event = (typeof EVENTS)[number]
@@ -8,7 +8,7 @@ type Event = (typeof EVENTS)[number]
 const TODAY: IsoDate = '2026-11-02'
 
 /** One state in a States grid: its name, then the field. */
-const Cell = (p: { name: string; children?: any }) => (
+const Cell = (p: { name: string; children?: unknown }) => (
   <Stack gap="tight">
     <Text role="caption" subtle>{p.name}</Text>
     {p.children}
@@ -20,7 +20,7 @@ const isWeekend = (d: IsoDate) => [0, 6].includes(new Date(`${d}T12:00Z`).getUTC
 
 function useEvents() {
   const events = state<Event[]>(EVENTS)
-  const change = (e: Event, to: Partial<Event>) => (events.value = events.value.map(x => (x.id === e.id ? { ...x, ...to } : x)))
+  const change = (e: Event, to: Partial<Event>) => { events.value = events.value.map(x => (x.id === e.id ? { ...x, ...to } : x)) }
   return {
     events,
     change,
@@ -37,19 +37,19 @@ export function CalendarWeek() {
 
 const COMPACT_VIEWS = ['month', 'agenda'] as const
 
-export const CalendarMonth = () => <Calendar events={EVENTS} calendars={CALENDARS} views={COMPACT_VIEWS} defaultView="month" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
+export const CalendarMonth = () => <Calendar events={EVENTS} calendars={CALENDARS} views={[...COMPACT_VIEWS]} defaultView="month" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
 
 const DAY_VIEWS = ['day', 'week'] as const
 
 /** Wednesday's morning runs five meetings into each other: they share the column side by side, in lanes. */
 export function CalendarBusyDay() {
   const s = useEvents()
-  return <Calendar events={s.events.value} calendars={CALENDARS} views={DAY_VIEWS} defaultView="day" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} workingHours={[540, 1080]} onMove={s.change} onResize={s.change} />
+  return <Calendar events={s.events.value} calendars={CALENDARS} views={[...DAY_VIEWS]} defaultView="day" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} workingHours={[540, 1080]} onMove={s.change} onResize={s.change} />
 }
 
 const AGENDA_VIEWS = ['agenda', 'week'] as const
 
-export const CalendarAgenda = () => <Calendar events={EVENTS} calendars={CALENDARS} views={AGENDA_VIEWS} defaultView="agenda" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
+export const CalendarAgenda = () => <Calendar events={EVENTS} calendars={CALENDARS} views={[...AGENDA_VIEWS]} defaultView="agenda" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
 
 const ROOM_VIEWS = ['timeline', 'day'] as const
 /** The rooms' working day, in minutes: 09:00 to 17:00 gives each hour room for a name. */
@@ -57,12 +57,12 @@ const ROOM_HOURS: [number, number] = [540, 1020]
 
 export function CalendarRooms() {
   const s = useEvents()
-  return <Calendar events={s.events.value} calendars={CALENDARS} resources={ROOMS} views={ROOM_VIEWS} timeline={ROOM_HOURS} defaultView="timeline" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" onMove={s.change} onResize={s.change} />
+  return <Calendar events={s.events.value} calendars={CALENDARS} resources={ROOMS} views={[...ROOM_VIEWS]} timeline={ROOM_HOURS} defaultView="timeline" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" onMove={s.change} onResize={s.change} />
 }
 
 // -- DateField
 
-export const DateFieldPlay = (p: { label?: string; hint?: string; disabled?: boolean; weekNumbers?: boolean }) => (
+export const DateFieldPlay = (p: { label: string; hint?: string | undefined; disabled?: boolean | undefined; weekNumbers?: boolean | undefined }) => (
   <DateField defaultValue="2026-11-14" today={TODAY} {...p} />
 )
 
@@ -118,12 +118,12 @@ export const DateRangeFieldPresets = () => (
 )
 
 const REPORTING = [
-  { id: 'sprint', label: 'This sprint', range: () => ({ start: '2026-10-26', end: '2026-11-06' }) },
-  { id: 'q3', label: 'Q3', range: () => ({ start: '2026-07-01', end: '2026-09-30' }) },
-  { id: 'ytd', label: 'Year to date', range: (t: IsoDate) => ({ start: '2026-01-01', end: t }) },
+  { id: 'sprint', label: 'This sprint', range: (): DateRange => ({ start: '2026-10-26', end: '2026-11-06' }) },
+  { id: 'q3', label: 'Q3', range: (): DateRange => ({ start: '2026-07-01', end: '2026-09-30' }) },
+  { id: 'ytd', label: 'Year to date', range: (t: IsoDate): DateRange => ({ start: '2026-01-01', end: t }) },
 ]
 
-const Q3 = { start: '2026-07-01', end: '2026-09-30' }
+const Q3: DateRange = { start: '2026-07-01', end: '2026-09-30' }
 
 export const DateRangeFieldCustom = () => <DateRangeField label="Report on" today={TODAY} presets={REPORTING} defaultValue={Q3} />
 
@@ -259,8 +259,8 @@ const DAY_HOUR = ['d', 'h'] as const
 
 export const DurationFieldUnits = () => (
   <Stack gap="group">
-    <DurationField label="Health check every" units={MIN_SEC} defaultValue="PT30S" />
-    <DurationField label="Keep previews for" units={DAY_HOUR} defaultValue="P7DT12H" />
+    <DurationField label="Health check every" units={[...MIN_SEC]} defaultValue="PT30S" />
+    <DurationField label="Keep previews for" units={[...DAY_HOUR]} defaultValue="P7DT12H" />
   </Stack>
 )
 
@@ -305,7 +305,7 @@ export const InlineCalendarBooking = () => <InlineCalendar aria-label="Pick a da
 // -- Month, week and period
 
 export function MonthPickerInvoice() {
-  const month = state<string | null>('2026-10')
+  const month = state<IsoMonth | null>('2026-10')
   return (
     <Stack gap="related">
       <MonthPicker label="Invoice month" today={TODAY} value={month} max="2026-11" />
@@ -342,7 +342,7 @@ const usd = (n: number) => `$${n.toLocaleString('en-US')}`
 
 /** Pick a month and the list shows that month's invoice; Show all clears it. */
 export function MonthPickerInvoices() {
-  const month = state<string | null>('2026-09')
+  const month = state<IsoMonth | null>('2026-09')
   const shown = () => INVOICES.filter(i => !month.value || i.date.startsWith(month.value))
   return (
     <Stack gap="group">
@@ -367,7 +367,7 @@ export function MonthPickerInvoices() {
 }
 
 export function WeekPickerSprint() {
-  const week = state<string | null>('2026-W45')
+  const week = state<IsoWeek | null>('2026-W45')
   return (
     <Stack gap="related">
       <WeekPicker label="Sprint week" today={TODAY} value={week} />
@@ -399,7 +399,7 @@ const HOURS = [7.5, 8, 6, 8.5, 4]
 
 /** A timesheet: the week picks the dates, and each day's hours sit beside them. */
 export function WeekPickerTimesheet() {
-  const week = state<string | null>('2026-W44')
+  const week = state<IsoWeek | null>('2026-W44')
   const day = (i: number) => new Date(mondayOf(week.value!).getTime() + i * 86400000).toISOString().slice(5, 10)
   return (
     <Stack gap="group">
@@ -479,7 +479,7 @@ export function RecurrenceFieldBackup() {
 
 const DAILY_WEEKLY = ['DAILY', 'WEEKLY'] as const
 
-export const RecurrenceFieldLimited = () => <RecurrenceField label="Digest email" dtstart="2026-11-02" defaultValue="FREQ=DAILY" frequencies={DAILY_WEEKLY} preview={3} locale="en-US" />
+export const RecurrenceFieldLimited = () => <RecurrenceField label="Digest email" dtstart="2026-11-02" defaultValue="FREQ=DAILY" frequencies={[...DAILY_WEEKLY]} preview={3} locale="en-US" />
 
 export const RecurrenceFieldCustom = () => <RecurrenceField label="Report" dtstart="2026-11-02" defaultValue="FREQ=MONTHLY;BYDAY=FR;BYSETPOS=-1;BYHOUR=9" locale="en-US" />
 

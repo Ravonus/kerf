@@ -3,7 +3,7 @@ import { ActivityFeed, Bell, Button, Card, ConnectionBanner, ConnectionPill, Con
 import type { Note, Participant } from '@weft-js/warp'
 import { ACTIVITY, CALL, CALL_DEVICES, CALL_SELF, CHANNELS, NOTES, PREF_GROUPS, PREF_LOCKED, PREF_OFFERED, PREFS } from '../world'
 
-const pause = (ms: number) => new Promise(done => setTimeout(done, ms))
+const pause = (ms: number) => new Promise(done => { setTimeout(done, ms) })
 
 /** A note list you can read, act on and dismiss. In an app, these calls go to your server. */
 function useInbox() {
@@ -77,7 +77,7 @@ export function ConnectionBannerOffline() {
   }
   return (
     <Stack gap="related">
-      <ConnectionBanner state={status} onRetry={retry} />
+      <ConnectionBanner state={status} onRetry={() => void retry()} />
       <Row gap="related" justify="between">
         <ConnectionPill state={status} />
         <Button emphasis="outline" tone="neutral" size="sm" onClick={() => (status.value = status.value === 'offline' ? 'live' : 'offline')}>{status.value === 'offline' ? 'Reconnect' : 'Lose the connection'}</Button>
@@ -198,7 +198,7 @@ export function PrejoinIncidentCall() {
         ? <Row gap="related"><Text>{joined.value} is in the call.</Text><Button emphasis="outline" tone="neutral" size="sm" onClick={() => (joined.value = '')}>Go back</Button></Row>
         : (
           <Stack gap="related">
-            <Prejoin name="Priya Raman" devices={CALL_DEVICES} level={0.4} joining={joining.value} onJoin={join} onTestSound={() => (said.value = 'Test sound played')} />
+            <Prejoin name="Priya Raman" devices={CALL_DEVICES} level={0.4} joining={joining.value} onJoin={n => void join(n)} onTestSound={() => (said.value = 'Test sound played')} />
             {said.value && <Text role="caption" subtle>{said.value}</Text>}
           </Stack>
         )}

@@ -1,4 +1,5 @@
 import { onCleanup, state } from '@weft-js/core'
+import type { IconName } from '@weft-js/warp'
 import { Badge, Button, Card, Code, CodeBlock, Grid, Heading, Icon, Input, Kbd, Markdown, Row, Segmented, Snippet, Stack, Tag, Text, Ticker } from '@weft-js/warp'
 import { DEPLOYS, PROJECTS, TONE_OF } from '../world'
 
@@ -245,7 +246,7 @@ export function TickerLiveTraffic() {
 
 const LOOK = ['rocket', 'clock', 'server', 'globe', 'activity', 'bell', 'user', 'users', 'settings', 'database', 'cloud', 'terminal', 'shield', 'key', 'lock', 'search', 'filter', 'download', 'upload', 'external', 'copy', 'trash', 'pencil', 'star'] as const
 
-export const IconPlay = (p: { name: string; size: number; solid: boolean }) => <Icon name={p.name as any} size={p.size} solid={p.solid} />
+export const IconPlay = (p: { name: IconName; size: number; solid: boolean }) => <Icon name={p.name} size={p.size} solid={p.solid} />
 
 export const IconSet = () => <Grid min="xs" gap="group">{LOOK.map(name => <Stack key={name} gap="tight" align="center"><Icon name={name} size={24} /><Text role="caption" subtle>{name}</Text></Stack>)}</Grid>
 
@@ -415,7 +416,7 @@ const SAMPLE = JSON.stringify(DEPLOYS[0], null, 2)
 
 export const CodeBlockJson = () => <CodeBlock language="json" filename="deploy.json" code={SAMPLE} />
 
-const STACKS: Record<string, string> = {
+const STACKS = {
   ts: `const res = await tessel.deploy({ project: 'storefront' })\nconsole.log(res.url)`,
   sh: `tessel deploy --project storefront`,
   json: `{ "project": "storefront" }`,
