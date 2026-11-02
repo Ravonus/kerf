@@ -106,13 +106,6 @@
 }
 /* a tap is shorter than the fill, so a finger gets it at once and watches it part */
 @media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
-/* Keel's lift: up and left off a deeper offset. The press below wins, and focus never lifts */
-@media (hover: hover) {
-  :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
-    translate: calc(-1px * var(--warp-btn-fill) * var(--warp-motion-scale)) calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale));
-    box-shadow: calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
-  }
-}
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
 :where([data-scope="button"][data-tone]:not([data-tone="accent"]):not([data-tone="neutral"])) { --warp-color-sweep: var(--_text); }
 
@@ -147,15 +140,24 @@
 }
 :where([data-scope="button"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
-/* vivid: no soft shadow to lift with, so a solid rests on a hard ink offset and presses into it */
+/* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
+   it back down: it never sinks into the page */
 :where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) {
-  box-shadow: var(--warp-offset) var(--warp-offset) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
   background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--warp-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--warp-btn-fill) * 7%), transparent));
 }
 :where([data-scope="button"]:not([data-emphasis]):active) {
-  scale: calc(var(--warp-press) + (1 - var(--warp-press)) * var(--warp-btn-fill)); translate: var(--warp-offset) var(--warp-offset); box-shadow: 0 0 0 var(--_off);
+  translate: 0 0; box-shadow: 0 0 0 var(--_off);
 }
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a) * 1.55); }
+/* Keel's pull-out: the button rests flat and, under the hand, comes up and left off a hard offset that grows in behind
+   it. It sits after the rest so its offset wins; the press sets it back down, and focus never lifts */
+@media (hover: hover) {
+  :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
+    translate: calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale)) calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale));
+    box-shadow: calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  }
+}
 :where([data-scope="button"][data-emphasis="soft"]) {
   --_fill: var(--_soft); --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--warp-state-hover);
 }
