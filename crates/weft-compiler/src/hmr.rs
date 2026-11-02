@@ -10,6 +10,8 @@
 //! The module accepts its own updates only when every export is a component and it doesn't call `render`/`hydrate`
 //! at the top level (an entry). Otherwise Vite passes the update to its importers, which re-run it.
 
+use std::fmt::Write as _;
+
 use oxc_allocator::{Allocator, TakeIn, Vec as ArenaVec};
 use oxc_ast::ast::{
     Argument, ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Function,
@@ -65,7 +67,7 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &s
         "\nimport {{ hot as _$hot{} }} from \"@weft-js/core/hmr\";\n",
         if keeps { ", keep as _$keep" } else { "" }
     );
-    out.push_str(&format!("if (import.meta.hot) {{\n\t_$hot({file:?}, {{ {} }});\n", list.join(", ")));
+    let _ = writeln!(out, "if (import.meta.hot) {{\n\t_$hot({file:?}, {{ {} }});", list.join(", "));
     if accept {
         out.push_str("\timport.meta.hot.accept();\n");
     }
@@ -171,9 +173,8 @@ fn exports_only_types(stmt: &Statement) -> bool {
     match stmt {
         Statement::ExportDeclaration(e) => match &e.declaration {
             Declaration::FunctionDeclaration(f) => f.id.as_ref().is_some_and(|i| is_component(&i.name)),
-            Declaration::VariableDeclaration(_) => true, // counted against the components found in it
             Declaration::ClassDeclaration(_) | Declaration::TSEnumDeclaration(_) => false,
-            _ => true, // types
+            _ => true, // types, and variables: those are counted against the components found in them
         },
         Statement::ExportNamedDeclaration(e) => {
             e.export_kind.is_type()
@@ -215,11 +216,11 @@ struct Fnv(u64);
 
 impl Fnv {
     fn new() -> Self {
-        Self(0xcbf29ce484222325)
+        Self(0xcbf2_9ce4_8422_2325)
     }
     fn add(&mut self, s: &str) {
         for b in s.bytes() {
-            self.0 = (self.0 ^ u64::from(b)).wrapping_mul(0x100000001b3);
+            self.0 = (self.0 ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3);
         }
     }
 }

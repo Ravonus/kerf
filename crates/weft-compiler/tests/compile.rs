@@ -1182,7 +1182,11 @@ fn a_key_on_the_index_parameter_keys_by_position() {
 // ---- shape variants (research 31 §5) ---------------------------------------------------------------------------
 
 fn shaped(source: &str) -> String {
-    let opts = Options { filename: "/app/App.tsx".into(), shapes: Some(Default::default()), ..Default::default() };
+    let opts = Options {
+        filename: "/app/App.tsx".into(),
+        shapes: Some(std::collections::HashMap::default()),
+        ..Default::default()
+    };
     compile(source, &opts).code.expect("compiled")
 }
 

@@ -23,6 +23,7 @@
 //! Not yet (steps 3–4): SSR output, hydration by path key, dev names, source maps.
 
 use std::collections::{BTreeSet, HashMap};
+use std::fmt::Write as _;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
@@ -208,8 +209,13 @@ pub struct Emitted {
     pub explain: Vec<Explained>,
 }
 
+/// A string as a JS literal.
+fn js_string(s: &str) -> String {
+    serde_json::to_string(s).expect("a string always serializes")
+}
+
 /// Compile the pre-pass's printed program to DOM code (or server code, `ssr`) importing from `module`.
-pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
+pub fn emit(code: &str, o: &EmitOptions) -> Result<Emitted, Error> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(o.filename).unwrap_or_else(|_| SourceType::tsx());
     let parsed = Parser::new(&allocator, code, source_type).parse();
@@ -263,10 +269,10 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     let mut head = String::new();
     if !e.helpers.is_empty() {
         let names: Vec<String> = e.helpers.iter().map(|h| format!("{h} as _${h}")).collect();
-        head.push_str(&format!("import {{ {} }} from {:?};\n", names.join(", "), module));
+        let _ = writeln!(head, "import {{ {} }} from {:?};", names.join(", "), module);
     }
     if e.uses_for && !imports_binding(&program, "For") {
-        head.push_str(&format!("import {{ For }} from {module:?};\n"));
+        let _ = writeln!(head, "import {{ For }} from {module:?};");
     }
     // Templates go after the module's imports, so a reader meets the imports first.
     let mut out = head + &imports;
@@ -280,7 +286,7 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     out.push_str(&trim_marked_newlines(&body));
     if !e.delegated.is_empty() {
         let names: Vec<String> = e.delegated.iter().map(|n| format!("{n:?}")).collect();
-        out.push_str(&format!("\n_$delegate([{}]);\n", names.join(", ")));
+        let _ = writeln!(out, "\n_$delegate([{}]);", names.join(", "));
     }
     e.explained.sort_by_key(|x| (x.line, x.column));
     let (out, map) =
@@ -436,7 +442,7 @@ impl Emitter<'_> {
 
     fn element(&mut self, el: &JSXElement<'_>) -> String {
         let (label, code) = if let Some(name) = component_name(&el.opening_element.name, self.text) {
-            (format!("<{name}>"), self.component(el, name))
+            (format!("<{name}>"), self.component(el, &name))
         } else {
             let before = self.templates.len();
             let code = self.template(el);
@@ -474,13 +480,13 @@ impl Emitter<'_> {
             ops: Vec::new(),
             slots: 0,
         };
-        self.walk(el, &mut b, vec![]);
+        self.walk(el, &mut b, &[]);
         if self.ssr {
             // `ssr(_k => "<li" + key(_k) + … )`: static parts and holes, in document order.
             let mut parts: Vec<String> = Vec::new();
             for p in &b.ssr {
                 parts.push(match p {
-                    Piece::Static(s) => serde_json::to_string(s).unwrap(),
+                    Piece::Static(s) => js_string(s),
                     Piece::Code(c) => c.clone(),
                 });
             }
@@ -494,7 +500,7 @@ impl Emitter<'_> {
         let t = format!("_t{}", self.templates.len() + 1);
         // Hydratable output claims the server's elements (`htpl`, @weft-js/core/dom's claim.ts); client-only output doesn't ship that.
         let tpl = self.helper(if self.hydratable { "htpl" } else { "tpl" });
-        let html = serde_json::to_string(&b.html).unwrap();
+        let html = js_string(&b.html);
         // An SVG element outside an <svg> (a component returning <path/>) is parsed inside one, then lifted out.
         let svg = matches!(&el.opening_element.name, JSXElementName::Identifier(id) if SVG.contains(&id.name.as_str()));
         let place = if self.dev { self.place(el.span, &tag_name(&el.opening_element.name)) } else { None };
@@ -519,7 +525,7 @@ impl Emitter<'_> {
             out.push(' ');
             out.push_str(o);
         }
-        out.push_str(&format!(" return {root}; }})()"));
+        let _ = write!(out, " return {root}; }})()");
         out
     }
 
@@ -547,7 +553,7 @@ impl Emitter<'_> {
         if let Some((_, v)) = b.vars.iter().find(|(p, _)| p == path) {
             return v.clone();
         }
-        let (parent, last) = (&path[..path.len() - 1], *path.last().unwrap());
+        let (&last, parent) = path.split_last().expect("`vars` starts with the root, the one empty path");
         let sibling = b
             .vars
             .iter()
@@ -573,7 +579,7 @@ impl Emitter<'_> {
         v
     }
 
-    fn walk(&mut self, el: &JSXElement<'_>, b: &mut Build, path: Vec<usize>) {
+    fn walk(&mut self, el: &JSXElement<'_>, b: &mut Build, path: &[usize]) {
         let tag = match &el.opening_element.name {
             JSXElementName::Identifier(id) => id.name.to_string(),
             JSXElementName::NamespacedName(n) => format!("{}:{}", n.namespace.name, n.name.name),
@@ -599,12 +605,12 @@ impl Emitter<'_> {
                 && (has_kids || void)
                 && let Some(object) = self.spread_object(&el.opening_element.attributes)
             {
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let spread = self.helper("spread");
                 b.ops.push(format!("{spread}({el_var}, () => ({object}));"));
                 Self::put(b, ">");
                 if !void {
-                    self.kids(el, b, &path);
+                    self.kids(el, b, path);
                     Self::put(b, &format!("</{tag}>"));
                 }
                 return;
@@ -614,7 +620,7 @@ impl Emitter<'_> {
             if self.ssr {
                 Self::server(b, Piece::Code(format!("{spread}({props})")));
             } else {
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 self.n += 1;
                 let p = format!("_p{}", self.n);
                 b.ops.push(format!("const {p} = {props}; {spread}({el_var}, () => ({{ ...{p} }}));"));
@@ -626,7 +632,7 @@ impl Emitter<'_> {
                     } else {
                         format!("{p}.children")
                     };
-                    self.hole_code(b, &path, format!("() => {kids}"), false, None);
+                    self.hole_code(b, path, format!("() => {kids}"), false, None);
                     Self::put(b, &format!("</{tag}>"));
                     return;
                 }
@@ -636,11 +642,11 @@ impl Emitter<'_> {
                 return;
             }
             if has_kids {
-                self.kids(el, b, &path);
+                self.kids(el, b, path);
             } else {
                 // The server reads the merged props again; a merged object reads its sources on every access anyway.
                 let inner = self.helper("inner");
-                self.hole_code(b, &path, format!("() => {inner}({props}, {tag:?})"), false, None);
+                self.hole_code(b, path, format!("() => {inner}({props}, {tag:?})"), false, None);
             }
             Self::put(b, &format!("</{tag}>"));
             return;
@@ -667,7 +673,7 @@ impl Emitter<'_> {
                 if self.ssr {
                     continue;
                 }
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let h = self.expr(expr);
                 if capture {
                     b.ops.push(format!("{el_var}.addEventListener({event:?}, {h}, true);"));
@@ -704,7 +710,7 @@ impl Emitter<'_> {
                 if self.ssr {
                     continue;
                 }
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let r = self.expr(expr);
                 let call = self.helper("ref");
                 b.ops.push(if self.assignable(expr) {
@@ -717,16 +723,14 @@ impl Emitter<'_> {
             // React focuses on mount; the attribute alone only works during page load.
             if name == "autofocus" && !self.ssr {
                 let v = attr_expression(attr).map_or("true".to_string(), |e| self.expr(e));
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let focus = self.helper("focus");
                 b.ops.push(format!("{focus}({el_var}, {v});"));
             }
             // A <textarea> or <select> has no value attribute: the value is its content or its selected option.
             if (tag == "textarea" || tag == "select") && (name == "value" || name == "defaultValue") {
                 let v = match &attr.value {
-                    Some(JSXAttributeValue::StringLiteral(s)) => {
-                        serde_json::to_string(&decode_entities(s.value.as_str())).unwrap()
-                    }
+                    Some(JSXAttributeValue::StringLiteral(s)) => js_string(&decode_entities(s.value.as_str())),
                     Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                         Some(e) => self.expr(e),
                         None => continue,
@@ -802,7 +806,7 @@ impl Emitter<'_> {
                                 }
                             } else if !self.hydratable && self.is_key(&e) {
                                 // Hydrating, the server wrote it and a write would be a mutation: bind skips it.
-                                let el_var = self.node(b, &path);
+                                let el_var = self.node(b, path);
                                 let w = self.write(&el_var, kind, &name, &e, "undefined");
                                 b.ops.push(format!("{w};"));
                             } else {
@@ -819,7 +823,7 @@ impl Emitter<'_> {
         // A <select>'s value is set after its children, so the matching <option> exists by then.
         let late = tag == "select" && !dynamic.is_empty();
         if !dynamic.is_empty() && !late {
-            let el_var = self.node(b, &path);
+            let el_var = self.node(b, path);
             b.ops.push(self.bind(&el_var, &dynamic));
         }
         Self::put(b, ">");
@@ -829,9 +833,9 @@ impl Emitter<'_> {
         if let Some(c) = content {
             Self::server(b, Piece::Code(c));
         }
-        self.kids(el, b, &path);
+        self.kids(el, b, path);
         if late {
-            let el_var = self.node(b, &path);
+            let el_var = self.node(b, path);
             b.ops.push(self.bind(&el_var, &dynamic));
         }
         Self::put(b, &format!("</{tag}>"));
@@ -866,7 +870,7 @@ impl Emitter<'_> {
                 Kid::El(e) if !is_component(e, self.text) => {
                     let mut p = path.clone();
                     p.push(index);
-                    self.walk(e, b, p);
+                    self.walk(e, b, &p);
                     index += 1;
                     in_text = false;
                 }
@@ -967,7 +971,7 @@ impl Emitter<'_> {
         let mut body = String::new();
         for (i, (kind, name, _)) in dynamic.iter().enumerate() {
             let a = self.write(el, kind, name, &format!("v[{i}]"), &format!("p[{i}]"));
-            body.push_str(&format!(" v[{i}] !== p[{i}] && {a};"));
+            let _ = write!(body, " v[{i}] !== p[{i}] && {a};");
         }
         format!("{bind}(() => [{}], (v, p = []) => {{{body} }});", values.join(", "))
     }
@@ -977,7 +981,7 @@ impl Emitter<'_> {
     /// A child as a value for `_$child` or a children array: text as a string, JSX lowered, expressions deferred.
     fn kid_value(&mut self, k: &Kid<'_>) -> String {
         match k {
-            Kid::Text(t) => serde_json::to_string(&decode_entities(t)).unwrap(),
+            Kid::Text(t) => js_string(&decode_entities(t)),
             Kid::El(e) => self.element(e),
             Kid::Frag(f) => self.fragment(f),
             Kid::Expr(e) => match e.get_inner_expression() {
@@ -1049,7 +1053,7 @@ impl Emitter<'_> {
         }
     }
 
-    fn component(&mut self, el: &JSXElement<'_>, name: String) -> String {
+    fn component(&mut self, el: &JSXElement<'_>, name: &str) -> String {
         let key = if name == "For" {
             self.uses_for = true;
             list_key(el)
@@ -1069,7 +1073,7 @@ impl Emitter<'_> {
                 let slot = self.helper("slot");
                 fields.push(format!("get children() {{ return {slot}(() => [{}]); }}", vs.join(", ")));
             }
-            [Kid::Text(t)] => fields.push(format!("children: {}", serde_json::to_string(&decode_entities(t)).unwrap())),
+            [Kid::Text(t)] => fields.push(format!("children: {}", js_string(&decode_entities(t)))),
             [Kid::Expr(e)] if passes_as_value(e) => {
                 let v = self.expr(e);
                 let v = match self.keys.last().filter(|_| keyed && !self.ssr) {
@@ -1094,11 +1098,11 @@ impl Emitter<'_> {
         let component = self.helper("component");
         let callee = match tag_read(el) {
             Some(read) => self.expr(read),
-            None => name.clone(),
+            None => name.to_string(),
         };
         if let Some((id, values, slotted, when)) = island {
             let call = self.helper("island");
-            let names = serde_json::to_string(&values).unwrap();
+            let names = serde_json::to_string(&values).expect("a list of strings always serializes");
             let slotted = slotted && !kids.is_empty();
             let tail = match (slotted, when.is_empty()) {
                 (true, true) => ", 1".to_string(),
@@ -1139,7 +1143,7 @@ impl Emitter<'_> {
                     fields.push(match &a.value {
                         None => format!("{k}: true"),
                         Some(JSXAttributeValue::StringLiteral(s)) => {
-                            format!("{k}: {}", serde_json::to_string(&decode_entities(s.value.as_str())).unwrap())
+                            format!("{k}: {}", js_string(&decode_entities(s.value.as_str())))
                         }
                         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                             None => continue,
@@ -1210,7 +1214,7 @@ impl Emitter<'_> {
                     let field = match &a.value {
                         None => format!("{k}: true"),
                         Some(JSXAttributeValue::StringLiteral(s)) => {
-                            format!("{k}: {}", serde_json::to_string(&decode_entities(s.value.as_str())).unwrap())
+                            format!("{k}: {}", js_string(&decode_entities(s.value.as_str())))
                         }
                         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                             None => continue,

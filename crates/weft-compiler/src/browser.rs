@@ -214,9 +214,8 @@ impl<'s> Checker<'s> {
             if f.awaited {
                 return Role::Unowned("after `await`");
             }
-            match f.role {
-                Role::Inherit => continue,
-                r => return r,
+            if f.role != Role::Inherit {
+                return f.role;
             }
         }
         Role::Unowned("at module scope")
@@ -238,7 +237,7 @@ impl<'s> Checker<'s> {
         Some((name.to_string(), Some(edit)))
     }
 
-    fn fix(&self, name: &str, call: Span, args: String, description: String) -> Option<Fix> {
+    fn fix(&self, name: &str, call: Span, args: &str, description: String) -> Option<Fix> {
         let (local, import) = self.browser_name(name)?;
         let mut edits = vec![Edit { start: call.start, end: call.end, text: format!("{local}({args})") }];
         edits.extend(import);
@@ -255,7 +254,7 @@ impl<'s> Checker<'s> {
         f(self);
         self.fns.pop();
         if component {
-            let c = self.comps.pop().unwrap();
+            let c = self.comps.pop().expect("pushed above, and `f` leaves the stack as it found it");
             self.finish_component(c);
         } else if let Some(c) = self.comps.last_mut() {
             c.fn_depth -= 1;
@@ -324,6 +323,10 @@ impl<'s> Checker<'s> {
         }
     }
 
+    fn comp(&mut self) -> &mut Comp {
+        self.comps.last_mut().expect("`raw` returns when no component encloses the call")
+    }
+
     /// W050: raw listeners and intervals, recorded on the enclosing component and judged when it ends.
     fn raw(&mut self, call: &CallExpression<'_>) {
         if self.comps.is_empty() {
@@ -338,29 +341,28 @@ impl<'s> Checker<'s> {
             Some(o) => Some(self.text(o.span())),
         };
         let args = &call.arguments;
-        let arg = |i: usize| args.get(i).map(|a| self.text(a.span()));
         let owned = self.ownership() == Role::Owned;
         match name {
             "addEventListener" if args.len() >= 2 => {
                 let target = target.unwrap_or("window").to_string();
-                let ty = arg(0).unwrap().to_string();
+                let ty = self.text(args[0].span()).to_string();
                 let all = Span::new(args[0].span().start, args[args.len() - 1].span().end);
                 let fix = (owned && args.len() <= 3)
                     .then(|| {
                         self.fix(
                             "on",
                             call.span,
-                            format!("{target}, {}", self.text(all)),
+                            &format!("{target}, {}", self.text(all)),
                             format!("Listen with `on({target}, {ty}, …)` (removed with its owner)"),
                         )
                     })
                     .flatten();
-                self.comps.last_mut().unwrap().listens.push((call.span, target, ty, fix));
+                self.comp().listens.push((call.span, target, ty, fix));
             }
             "removeEventListener" if !args.is_empty() => {
                 let target = target.unwrap_or("window").to_string();
-                let ty = arg(0).unwrap().to_string();
-                self.comps.last_mut().unwrap().removes.insert((target, ty));
+                let ty = self.text(args[0].span()).to_string();
+                self.comp().removes.insert((target, ty));
             }
             "setInterval" if object.is_none() || target.is_some_and(|t| GLOBALS.contains(&t)) => {
                 let fix = (owned && args.len() == 2 && !args.iter().any(|a| matches!(a, Argument::SpreadElement(_))))
@@ -368,15 +370,15 @@ impl<'s> Checker<'s> {
                         self.fix(
                             "interval",
                             call.span,
-                            format!("{}, {}", arg(1).unwrap(), arg(0).unwrap()),
+                            &format!("{}, {}", self.text(args[1].span()), self.text(args[0].span())),
                             "Use `interval(ms, fn)` (cleared with its owner)".into(),
                         )
                     })
                     .flatten();
-                self.comps.last_mut().unwrap().intervals.push((call.span, fix));
+                self.comp().intervals.push((call.span, fix));
             }
-            "clearInterval" => self.comps.last_mut().unwrap().clears = true,
-            "close" if object.is_some() => self.comps.last_mut().unwrap().closes = true,
+            "clearInterval" => self.comp().clears = true,
+            "close" if object.is_some() => self.comp().closes = true,
             _ => {}
         }
     }

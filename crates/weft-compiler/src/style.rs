@@ -128,11 +128,10 @@ pub fn apply<'a>(
     program: &mut Program<'a>,
     scoping: &Scoping,
     source: &str,
-    filename: &str,
-    imported: &HashMap<String, Imported>,
-    tagged_parts: bool,
+    options: &crate::Options,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> (Vec<GroupDef>, Vec<GroupUse>) {
+    let (filename, imported, tagged_parts) = (options.filename.as_str(), &options.groups, options.tagged_parts);
     let mut group_fn = None;
     let mut metas: HashMap<SymbolId, Meta> = HashMap::new();
     for stmt in &program.body {
@@ -576,8 +575,8 @@ fn distance(a: &str, b: &str) -> usize {
     for (i, row) in d.iter_mut().enumerate() {
         row[0] = i;
     }
-    for j in 0..=b.len() {
-        d[0][j] = j;
+    for (j, cell) in d[0].iter_mut().enumerate() {
+        *cell = j;
     }
     for i in 1..=a.len() {
         for j in 1..=b.len() {
@@ -619,7 +618,7 @@ impl<'a> VisitMut<'a> for Lower<'a, '_> {
                 Expression::CallExpression(c) => me.meta_of(&c.callee).is_some(),
                 _ => false,
             },
-            _ => false,
+            JSXAttributeItem::Attribute(_) => false,
         };
         let roots: Vec<(Span, String)> = it
             .attributes
@@ -629,7 +628,7 @@ impl<'a> VisitMut<'a> for Lower<'a, '_> {
                     Expression::CallExpression(c) => self.meta_of(&c.callee).map(|m| (s.span, m.name.clone())),
                     _ => None,
                 },
-                _ => None,
+                JSXAttributeItem::Attribute(_) => None,
             })
             .collect();
         if let [(_, first), .., (span, last)] = roots.as_slice() {

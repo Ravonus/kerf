@@ -23,6 +23,7 @@
 //! rendering, and `early`, what must run with the page (`autofocus`, a `ref` callback that does more than keep the node).
 
 use std::collections::HashMap;
+use std::fmt::Write as _;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
@@ -175,7 +176,7 @@ fn attr_name(a: &JSXAttribute<'_>) -> String {
 struct Closed<'s> {
     scoping: &'s Scoping,
     span: Span,
-    closed: bool,
+    reads_only_module: bool,
     code: bool,
 }
 
@@ -186,7 +187,7 @@ impl<'a> Visit<'a> for Closed<'_> {
         if self.scoping.symbol_scope_id(sym) != self.scoping.root_scope_id()
             && !(at.start >= self.span.start && at.end <= self.span.end)
         {
-            self.closed = false;
+            self.reads_only_module = false;
         }
     }
     fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
@@ -227,9 +228,9 @@ fn plain_shape(e: &Expression<'_>) -> bool {
 
 fn attr_kind(scoping: &Scoping, a: &JSXAttribute<'_>) -> &'static str {
     let check = |visit: &dyn Fn(&mut Closed)| {
-        let mut c = Closed { scoping, span: a.span, closed: true, code: false };
+        let mut c = Closed { scoping, span: a.span, reads_only_module: true, code: false };
         visit(&mut c);
-        (c.closed, c.code)
+        (c.reads_only_module, c.code)
     };
     let (closed, code, plain) = match &a.value {
         None | Some(JSXAttributeValue::StringLiteral(_)) => return "lit",
@@ -273,11 +274,11 @@ fn attr_kind(scoping: &Scoping, a: &JSXAttribute<'_>) -> &'static str {
 }
 
 fn kids_closed(scoping: &Scoping, el: &JSXElement<'_>) -> bool {
-    let mut c = Closed { scoping, span: el.span, closed: true, code: false };
+    let mut c = Closed { scoping, span: el.span, reads_only_module: true, code: false };
     for k in &el.children {
         c.visit_jsx_child(k);
     }
-    c.closed
+    c.reads_only_module
 }
 
 fn has_kids(el: &JSXElement<'_>) -> bool {
@@ -328,13 +329,16 @@ struct Collect<'s> {
 }
 
 impl Collect<'_> {
+    fn frame(&mut self) -> &mut Frame {
+        self.frames.last_mut().expect("`facts` visits only through `framed`")
+    }
+
     fn own(&mut self, reason: String) {
-        let f = self.frames.last_mut().unwrap();
-        f.own.get_or_insert(reason);
+        self.frame().own.get_or_insert(reason);
     }
 
     fn early(&mut self, reason: String) {
-        self.frames.last_mut().unwrap().early.get_or_insert(reason);
+        self.frame().early.get_or_insert(reason);
     }
 
     /// An attribute on a plain element: a handler's value runs on its event.
@@ -348,7 +352,7 @@ impl Collect<'_> {
     fn framed(&mut self, f: impl FnOnce(&mut Self)) -> Frame {
         self.frames.push(Frame::default());
         f(self);
-        let frame = self.frames.pop().unwrap();
+        let frame = self.frames.pop().expect("pushed above, and `f` leaves the stack as it found it");
         if let Some(up) = self.frames.last_mut() {
             up.early = up.early.take().or(frame.early.clone());
             for g in &frame.globals {
@@ -363,7 +367,7 @@ impl Collect<'_> {
 
     fn global(&mut self, name: &str) {
         if self.handler == 0 {
-            add(&mut self.frames.last_mut().unwrap().globals, name.to_string());
+            add(&mut self.frame().globals, name.to_string());
         }
     }
 
@@ -390,7 +394,7 @@ impl Collect<'_> {
 impl<'a> Visit<'a> for Collect<'_> {
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
         if let Some(name) = self.top(it) {
-            add(&mut self.frames.last_mut().unwrap().uses, name);
+            add(&mut self.frame().uses, name);
         } else if it.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_none()
             && !WINDOW.contains(&it.name.as_str())
         {
@@ -411,7 +415,7 @@ impl<'a> Visit<'a> for Collect<'_> {
             match it.callee.get_inner_expression() {
                 Expression::Identifier(id) => {
                     if let Some(name) = self.top(id) {
-                        add(&mut self.frames.last_mut().unwrap().calls, name);
+                        add(&mut self.frame().calls, name);
                     }
                 }
                 Expression::StaticMemberExpression(m) => {
@@ -421,7 +425,7 @@ impl<'a> Visit<'a> for Collect<'_> {
                     if let Expression::Identifier(id) = m.object.get_inner_expression()
                         && let Some(name) = self.top(id)
                     {
-                        add(&mut self.frames.last_mut().unwrap().calls, name);
+                        add(&mut self.frame().calls, name);
                     }
                 }
                 _ => {}
@@ -794,7 +798,7 @@ impl<'a> Visit<'a> for Hoist<'_> {
                     }
                     attrs.push(' ');
                     if attr_kind(self.scoping, a) == "value" {
-                        attrs.push_str(&format!("{name}={{_p.v[{k}]}}"));
+                        let _ = write!(attrs, "{name}={{_p.v[{k}]}}");
                         k += 1;
                     } else {
                         attrs.push_str(text(a.span));
@@ -807,7 +811,7 @@ impl<'a> Visit<'a> for Hoist<'_> {
                     (_, true) => "{_p.s}".to_string(),
                     _ => String::new(),
                 };
-                self.out.push_str(&format!("\nexport const $i{index} = (_p) => <{tag}{attrs}>{body}</{tag}>;\n"));
+                let _ = writeln!(self.out, "\nexport const $i{index} = (_p) => <{tag}{attrs}>{body}</{tag}>;");
             }
         }
         walk::walk_jsx_element(self, it);
