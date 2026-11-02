@@ -8,7 +8,7 @@ import type { DbHandle } from '../db/core'
 const PROVIDER = { sqlite: 'sqlite', postgresql: 'pg', mysql: 'mysql' } as const
 
 export function drizzleAuth(db: { $weft: DbHandle }, schema?: Record<string, unknown>) {
-  for (const name of ['user', 'session', 'account', 'verification']) {
+  for (const name of ['user', 'session', 'account', 'verification', 'jwks']) {
     const t = schema?.[name]
     if (isTable(t)) db.$weft.exempt.add(getTableName(t))
   }

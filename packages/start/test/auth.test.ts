@@ -96,7 +96,7 @@ test('forward(): cookies reach the response; a failure is an FnError with Better
 })
 
 test('createAuth exempts its tables from Q011 and keeps the app\'s options', () => {
-  expect([...db.$weft.exempt].sort()).toEqual(['account', 'session', 'user', 'verification'])
+  expect([...db.$weft.exempt].sort()).toEqual(['account', 'jwks', 'session', 'user', 'verification'])
   expect((auth.options as any).telemetry.enabled).toBe(false)
   expect((auth.options as any).baseURL).toBe(base)
 })

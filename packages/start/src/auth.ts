@@ -7,7 +7,10 @@ import { FnError, type Context } from './data'
 export interface AuthProvider<U = unknown, S = unknown> {
   /** Serves everything under `basePath`. */
   handler(request: Request): Promise<Response> | Response
-  /** Who this request is. Anonymous is `{ user: null, session: null }`, and should cost no query. */
+  /**
+   * Who this request is. Anonymous is `{ user: null, session: null }`, and should cost no query. A provider that caches
+   * sessions may answer a GET from the cache, and must ask its store for any other method: that's what a mutation runs on.
+   */
   session(request: Request): Promise<{ user: U | null; session: S | null }>
   /** Where `handler` is mounted (default `/api/auth`). */
   basePath?: string
