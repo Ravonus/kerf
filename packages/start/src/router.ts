@@ -140,6 +140,9 @@ export interface NavigateOptions {
   scroll?: false
 }
 
+/** This tab's line to the app's other tabs: a list of tags a write invalidated, or `0` when the session changed. */
+export const peers = typeof document !== 'undefined' && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('weft:tags') : undefined
+
 /** Go to `href` without a page load (a full load before `start()` ran, or for another origin). */
 export function navigate(href: string, options?: NavigateOptions): Promise<void> {
   if (client.navigate) return client.navigate(href, options)

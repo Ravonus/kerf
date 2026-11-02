@@ -12,7 +12,7 @@
 import { drain, enter, hydrate, level as staticLevel, wake } from 'weft/dom'
 import { flush } from 'weft'
 import { setHead } from 'weft/head'
-import { applyMatches, client, createRouteState, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
+import { applyMatches, client, createRouteState, peers, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
 import { App } from './view'
 import { ErrorPage, NotFoundPage } from './builtin'
 
@@ -26,6 +26,7 @@ export interface ClientRoutes {
 
 /** Hydrate the page in `#app` and take over its links. Resolves once hydrated. */
 const SLOW_FADE = 100 // ms from asking for a fade to it starting
+const RETRY = 1000, RETRIES = 30_000 // ms before a failed refresh goes again, doubling
 
 export async function start(routes: ClientRoutes, options: { container?: Element } = {}) {
   const container = options.container ?? document.getElementById('app')!
@@ -58,6 +59,8 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   let refreshing: { ctrl: AbortController; tags: string[] } | undefined
   /** Tags invalidated while a navigation was out: its route may read them, and that's only known when it lands. */
   let owed: string[] = []
+  let again: ReturnType<typeof setTimeout> | undefined
+  let tries = 0
   let warm: { path: string; at: number; since: number; res: Promise<Response> } | undefined
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   let fades = !(navigator.hardwareConcurrency <= 4)
@@ -140,14 +143,17 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     if (fades && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const started = performance.now()
       const fade = fading = document.startViewTransition(swap)
-      void fade.ready.then(() => { if (performance.now() - started > SLOW_FADE) fades = false }, () => {})
+      void fade.ready.then(() => {
+        if (performance.now() - started > SLOW_FADE) fades = false
+        return fade.finished
+      }).catch(() => {}).then(() => { if (fading === fade) fading = undefined })
       await fade.updateCallbackDone
     }
     else swap()
   }
   client.navigate = go
 
-  /** The page's own data again, in place: no history, no scroll, no fade. Only another refresh ever stops one. A failed one leaves the page as it is. */
+  /** The page's own data again, in place: no history, no scroll, no fade. Only another refresh ever stops one. A failed one leaves the page as it is, and goes again. */
   async function refresh(t: string[]) {
     t = [...new Set([...t, ...(refreshing?.tags ?? [])])]
     refreshing?.ctrl.abort()
@@ -162,9 +168,19 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       await needs(next)
       if (self.ctrl.signal.aborted) return
       apply(next, url, url.pathname + url.search, since, false)()
-    } catch {}
+      tries = 0
+    } catch {
+      if (refreshing === self) {
+        owed.push(...t)
+        clearTimeout(again)
+        again = setTimeout(owing, Math.min(RETRIES, RETRY * 2 ** tries++))
+      }
+    }
     if (refreshing === self) refreshing = undefined
   }
+  const owing = () => { if (!current && !refreshing) settle() }
+  addEventListener('online', owing)
+  addEventListener('focus', owing)
 
   // A mutation invalidated tags: when the route's loaders read one, refetch the route data.
   client.invalidated = t => {
@@ -191,7 +207,11 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   document.addEventListener('click', e => {
     const gone = ended
     ended = undefined
-    if (gone && e.target === document.documentElement) void gone.then(() => (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)?.click())
+    if (!gone || e.target !== document.documentElement) return
+    void gone.then(() => {
+      const under = document.elementFromPoint(e.clientX, e.clientY)
+      if (under !== document.documentElement) under?.dispatchEvent(new MouseEvent('click', e)) // an icon, a modifier key: the same click
+    })
   }, true)
   // A link the pointer rests on, or the keyboard lands on, has its chunks and data by the time it is pressed.
   // `data-preload="off"` on a link opts out, and so does Save-Data.
@@ -219,6 +239,8 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       settle()
     }
   })
+  // Another tab signed out or in: nothing here belongs to who's signed in now. Hidden too, so it's gone before anyone looks.
+  peers?.addEventListener('message', m => { if (!m.data) location.reload() })
   // Last: a replayed click on a link needs the listener above, or it's a full page load.
   const q = (window as any).__wq
   if (q) {

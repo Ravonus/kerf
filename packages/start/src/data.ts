@@ -13,9 +13,9 @@
 // (exec.ts) is the server's, and the in-process fake transport weft/test turns on loads it on demand. Realtime
 // (research 30) costs a query app one method here: `q.live()` imports live.ts on its first call.
 
-import { DEV, createRoot, derived, effect, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from 'weft'
+import { DEV, createRoot, derived, effect, flush, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from 'weft'
 import { fill, mask } from 'weft/shape'
-import { client } from './router'
+import { client, peers } from './router'
 
 // ---- definitions ------------------------------------------------------------------------------------------------
 
@@ -307,7 +307,9 @@ export const net = () => {
     registered = true
     n.resets.push(() => {
       cache.clear()
-      callId = open = 0
+      clearTimeout(again)
+      again = undefined
+      tries = callId = open = 0
     })
   }
   return n
@@ -411,7 +413,7 @@ function use(fn: Fn, input: unknown): Resource<any> {
       e.held = true // the prediction shows now, and a read waits for the calls behind it
       return v
     }
-    return load(e)
+    return e.has.value ? load(e).catch(() => untrack(() => e.value.value)) : load(e) // a failed refetch leaves what's on screen
   }, {
     data: false,
     shape: {
@@ -482,8 +484,6 @@ interface Entry {
   run: number
   /** A value was turned away while layers were on it: it reads again once they're done. */
   held?: boolean
-  /** Tags invalidated while a first load was out, when its own tags aren't known yet. */
-  missed?: Set<string>
   /** When a server value last landed. */
   at: number
 }
@@ -491,6 +491,9 @@ interface Entry {
 const entries = new Map<string, Entry>()
 /** Orders what reaches an entry: a read or a navigation that left before `gen` is older than what's there. */
 let clock = 0
+/** When each tag was last invalidated: a value read before that is out of date, whether or not the cache held it then. */
+const written = new Map<string, number>()
+const passed = (tags: string[], since: number) => tags.some(t => written.get(t)! > since)
 /** Each query's latest entry: a skeleton for other args takes its shape (research 31 §4). */
 const lastSeen = new Map<string, Entry>()
 /** Objects an optimistic layer made (`cache.isOptimistic(row)`). */
@@ -516,18 +519,21 @@ function entry(fn: Fn, input: unknown): Entry {
       return { key, id: fn.$id, input, base, has, stale, layers, value, tags: [], readers: 0, since: 0, gen: 0, run: 0, at: 0 }
     }, null)
     entries.set(key, e)
-    if (entries.size > ENTRIES) evict()
+    if (entries.size > ceiling) evict(e)
   }
   return e
 }
 
 const ENTRIES = 1000
-/** A search box writes an entry per keystroke for the tab's life. What nothing reads goes, least recently used first. */
-function evict() {
+/** When to look again: a quarter past what's left, so a page with thousands of readers doesn't walk them all per entry. */
+let ceiling = ENTRIES
+/** A search box writes an entry per keystroke for the tab's life. What nothing reads goes, least recently used first. `made` is about to get its reader. */
+function evict(made: Entry) {
   for (const e of entries.values()) {
-    if (entries.size <= ENTRIES) return
-    if (!e.readers && !e.p && !untrack(() => e.layers.value.length) && lastSeen.get(e.id) !== e) entries.delete(e.key)
+    if (entries.size <= ENTRIES) break
+    if (e !== made && !e.readers && !e.p && !untrack(() => e.layers.value.length) && lastSeen.get(e.id) !== e) entries.delete(e.key)
   }
+  ceiling = Math.max(ENTRIES, entries.size + (entries.size >> 2))
 }
 
 const fresh = (e: Entry) => e.has.value && !e.stale.value
@@ -546,13 +552,13 @@ function load(e: Entry): Promise<unknown> {
   const p: Promise<unknown> = transport().query(e.id, e.input).then(
     a => {
       if (e.p === p) e.p = undefined
+      tries = 0
       if (a.r !== undefined) {
         go(a.r, true)
         throw { isRedirect: true, href: a.r, status: 307 }
       }
-      const tags = a.t ?? [], missed = tags.some(t => e.missed?.has(t))
-      if (!e.p) e.missed = undefined
-      if (missed) return load(e)
+      const tags = a.t ?? []
+      if (untrack(() => !e.has.value) && passed(tags, since)) return load(e) // a first load's tags come with its answer
       if (!land(e, a.v, tags, since)) {
         if (e.p) return e.p
         if (untrack(() => e.stale.value)) return load(e)
@@ -561,10 +567,41 @@ function load(e: Entry): Promise<unknown> {
     },
     err => {
       if (e.p === p) e.p = undefined
+      untrack(() => {
+        if (!e.has.value) return
+        if (err instanceof FnError && (err.status === 401 || err.status === 403)) forget(e)
+        else if (!isRedirect(err) && (!(err instanceof FnError) || err.status >= 500)) retry()
+      })
       throw err
     },
   )
   return (e.p = p)
+}
+
+/** The server refused this session, so the value may not be this user's any more: readers get the first-load error. */
+function forget(e: Entry) {
+  e.has.value = false
+  e.base.value = undefined
+  if (lastSeen.get(e.id) === e) lastSeen.delete(e.id)
+}
+
+/** How often a failed read is tried again, doubling, for as long as something on screen is out of date. */
+const RETRY = 1000, RETRIES = 30_000
+let again: ReturnType<typeof setTimeout> | undefined
+let tries = 0
+
+function retry() {
+  if (again === undefined) again = setTimeout(owed, Math.min(RETRIES, RETRY * 2 ** tries++))
+}
+
+/** Read what readers are owed, once the tab can use it. `online` and a returning tab come here at once. */
+function owed() {
+  clearTimeout(again)
+  again = undefined
+  if (globalThis.document?.hidden || navigator.onLine === false) return // `back` or `online` comes here
+  untrack(() => {
+    for (const e of entries.values()) if (e.readers && e.has.value && e.stale.value && !e.p && !e.held && !predicted(e)) load(e).catch(() => {})
+  })
 }
 
 /** A read or a navigation's value lands, unless something newer got here after it left, or layers are on the entry. */
@@ -607,25 +644,30 @@ function setBase(e: Entry, v: unknown, tags: string[]) {
 
 /** Seed the cache from the server (the page's `#weft-cache`, a navigation's `c`). `since`: when that navigation left. */
 export function seed(list: Wire[] | null | undefined, since = Infinity) {
-  for (const [id, input, v, tags] of list ?? []) land(entry(fns.get(id) ?? ({ $id: id } as Fn), input), v, tags, since)
+  for (const [id, input, v, tags] of list ?? []) {
+    const e = entry(fns.get(id) ?? ({ $id: id } as Fn), input)
+    if (land(e, v, tags, since) && passed(tags, since)) outdate(e)
+  }
 }
 
 /** Mark entries with any of `tags` stale: entries with readers refetch now, the rest on their next read. */
 function staleTags(tags: string[], except: Set<string> = new Set()) {
   if (!tags.length) return
+  ++clock
+  for (const t of tags) {
+    written.delete(t) // in order of use, like `entries`
+    written.set(t, clock)
+  }
+  for (const t of written.keys()) {
+    if (written.size <= ENTRIES) break
+    written.delete(t)
+  }
   untrack(() => {
-    for (const e of entries.values()) {
-      if (except.has(e.key)) continue
-      if (e.tags.some(t => tags.includes(t))) outdate(e)
-      else if (e.p && !e.tags.length) for (const t of tags) (e.missed ??= new Set()).add(t) // its tags come with its answer
-    }
+    for (const e of entries.values()) if (!except.has(e.key) && e.tags.some(t => tags.includes(t))) outdate(e)
   })
+  owed() // one a failed read left stale has nothing else to wake it
   client.invalidated?.(tags)
 }
-
-/** Tabs of this app tell each other what a write invalidated. */
-export const tabs = 'weft:tags'
-const peers = typeof document !== 'undefined' && typeof BroadcastChannel !== 'undefined' && !runtime.scope ? new BroadcastChannel(tabs) : undefined
 
 /** How old a value can be when its tab comes back and still be left alone. */
 const FOCUS = 30_000
@@ -635,14 +677,15 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
   if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [], !!form)).v
   const m = ++callId
   const touched = new Set<Entry>()
-  if (!open++) run++
-  const overlap = run
+  let overlap = 0
   untrack(() => calls.value++)
-  if (fn.def.optimistic) untrack(() => fn.def.optimistic!({ input }, overlay(m, touched)))
-  const refresh = [...entries.values()].filter(e => e.readers > 0).map(e => [e.id, e.input] as [string, unknown])
   const drop = (e: Entry) => { e.layers.value = e.layers.value.filter(l => l.m !== m) }
   const wait = (e: Entry) => { e.layers.value = e.layers.value.map(l => (l.m === m ? { ...l, waiting: true } : l)) }
   try {
+    if (fn.def.optimistic) untrack(() => fn.def.optimistic!({ input }, overlay(m, touched)))
+    const refresh = [...entries.values()].filter(e => e.readers > 0).map(e => [e.id, e.input] as [string, unknown])
+    if (!open++) run++
+    overlap = run
     const a = await settled(() => transport().mutate(fn.$id, input, refresh, form))
     let out: unknown
     untrack(() => {
@@ -660,7 +703,7 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
         } else {
           setBase(e, w[2], w[3])
           drop(e)
-          if (open) e.run = overlap
+          e.run = overlap
         }
       }
       for (const e of touched) {
@@ -679,15 +722,17 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
       out = a.v
     })
     if (a.t?.length) peers?.postMessage(a.t)
+    if (a.x) peers?.postMessage(0)
     if (a.r !== undefined) a.x ? location.assign(a.r) : go(a.r)
     return out
   } catch (err) {
     untrack(() => {
       for (const e of touched) {
         drop(e) // only this call's prediction goes
-        if (!(err instanceof FnError)) e.held = true // the reply was lost, not the write: it may have landed
-        relieve(e)
+        if (overlap && !(err instanceof FnError)) e.held = true // the reply was lost, not the write: it may have landed
       }
+      flush() // readers roll back now, not when the read below answers
+      for (const e of touched) relieve(e)
       error.value = err
     })
     throw err
@@ -756,6 +801,8 @@ export const cache: OptimisticCache & { invalidate(...tags: string[]): void; cle
   clear() {
     entries.clear()
     lastSeen.clear()
+    written.clear()
+    ceiling = ENTRIES
     made = new WeakSet()
   },
 }
@@ -944,15 +991,22 @@ if (typeof document !== 'undefined' && !runtime.scope) {
     for (const x of l) seed(x.c, since)
     return Array.prototype.push.apply(landed, l)
   }
-  let owed: string[] = []
+  let later: string[] = []
   const back = () => {
     if (document.hidden) return
     const old = performance.now() - FOCUS
-    untrack(() => { for (const e of entries.values()) if (e.readers && e.has.value && e.at < old) outdate(e) })
-    if (owed.length) staleTags(owed.splice(0))
+    // Showing and focus can come apart: one already stale is being read, and marking it again would throw that read away.
+    untrack(() => { for (const e of entries.values()) if (e.readers && e.has.value && e.at < old && !e.stale.value) outdate(e) })
+    if (later.length) staleTags(later.splice(0))
+    owed()
   }
   // A hidden tab reads nothing until it shows: every open tab refetching on every write is what this would cost otherwise.
-  if (peers) peers.onmessage = m => { if (document.hidden) owed.push(...m.data); else staleTags(m.data) }
+  if (peers) peers.onmessage = m => {
+    if (!m.data) return // the session changed: run.tsx reloads
+    if (document.hidden) later.push(...m.data)
+    else staleTags(m.data)
+  }
   addEventListener('focus', back)
+  addEventListener('online', owed)
   document.addEventListener('visibilitychange', back)
 }

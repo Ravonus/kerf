@@ -2,6 +2,7 @@
 // Replies in any order (research 40 §5): a transport whose answers the test hands out by hand, so a reply can be as late as
 // a real one. The fake's one fixed latency can't reorder anything. The final screen has to be the database's state, whichever
 // order the network picked.
+import { Boundary } from 'weft'
 import { flush, render, screen } from 'weft/test'
 import { cache, mutation, query, type StandardSchemaV1 } from '@weft/start'
 import { FnError, runtime, seed, type Answer } from '@weft/start/data'
@@ -26,6 +27,8 @@ const push = mutation({
   run: () => {},
 })
 const plain = mutation({ $id: 'plain', invalidates: ['rows'], run: () => {} })
+const bad = mutation({ $id: 'bad', invalidates: ['rows'], optimistic: () => { throw new Error('bad prediction') }, run: () => {} })
+const row = query({ $id: 'row', input: toggleInput as StandardSchemaV1<any>, tags: ['rows'], run: () => 0 as any })
 
 interface Call { kind: string; id: string; input: unknown; ok(a: Answer): void; no(e: unknown): void }
 let calls: Call[]
@@ -46,6 +49,19 @@ function List() {
   return <ul>{(l.value ?? []).map(r => <li key={r.id}>{r.done ? 'done' : 'open'}</li>)}</ul>
 }
 const shown = () => screen.getAllByRole('listitem').map(li => li.textContent)
+function Guarded() {
+  return <Boundary pending={<p>loading</p>} error={e => <p>failed</p>}><List /></Boundary>
+}
+const lost = () => new TypeError('Failed to fetch')
+/** A tab left this long ago comes back. */
+function returns(...events: (() => void)[]) {
+  const real = performance.now.bind(performance)
+  const spy = vi.spyOn(performance, 'now').mockImplementation(() => real() + 60_000)
+  for (const fire of events) fire()
+  spy.mockRestore()
+}
+const focus = () => window.dispatchEvent(new Event('focus'))
+const showing = () => document.dispatchEvent(new Event('visibilitychange'))
 const tick = async () => { await new Promise(ok => setTimeout(ok)); await flush() }
 
 async function ready(done = false) {
@@ -272,4 +288,182 @@ test('a streaming page\'s chunks land in the cache as they arrive, under anythin
   await tick()
   expect(shown()).toEqual(['open'])
   expect(reads()).toEqual([])
+})
+
+test('a lost write whose read fails too rolls back at once and keeps the list, and reads again when the network returns', async () => {
+  seed([['rows', undefined, rows(false), ['rows']]])
+  render(Guarded)
+  await flush()
+  const p = set({ id: 'a', done: true })
+  await flush()
+  expect(shown()).toEqual(['done'])
+  calls[0].no(lost())
+  await p.catch(() => {})
+  await flush()
+  expect(shown()).toEqual(['open']) // not when the read answers: it may never
+  expect(reads().length).toBe(1)
+  reads()[0].no(lost())
+  await tick()
+  expect(shown()).toEqual(['open'])
+  expect(screen.queryByText('failed')).toBeNull()
+  window.dispatchEvent(new Event('online'))
+  await tick()
+  expect(reads().length).toBe(2)
+  reads()[1].ok(read(true)) // it had landed after all
+  await tick()
+  expect(shown()).toEqual(['done'])
+})
+
+test('a tab back after 30 s with the network down keeps its list, and recovers by itself', async () => {
+  seed([['rows', undefined, rows(false), ['rows']]])
+  render(Guarded)
+  await flush()
+  returns(focus)
+  await tick()
+  expect(reads().length).toBe(1)
+  reads()[0].no(lost())
+  await tick()
+  expect(shown()).toEqual(['open'])
+  await new Promise(ok => setTimeout(ok, 1100)) // no `online` event: the server was what went away
+  expect(reads().length).toBe(2)
+  reads()[1].ok(read(true))
+  await tick()
+  expect(shown()).toEqual(['done'])
+})
+
+test('a server that refuses a background read leaves the list, unless it refused the session', async () => {
+  seed([['rows', undefined, rows(false), ['rows']]])
+  render(Guarded)
+  await flush()
+  cache.invalidate('rows')
+  await tick()
+  reads()[0].no(new FnError({ message: 'down' }, 500))
+  await tick()
+  expect(shown()).toEqual(['open'])
+  cache.invalidate('rows')
+  await tick()
+  reads().at(-1)!.no(new FnError({ code: 'A002', message: 'signed out' }, 401))
+  await tick()
+  expect(cache.get(list)).toBeUndefined()
+  reads().at(-1)!.no(new FnError({ code: 'A002', message: 'signed out' }, 401))
+  await tick()
+  expect(screen.getByText('failed')).toBeTruthy()
+  expect(screen.queryAllByRole('listitem')).toEqual([])
+})
+
+test('a first load with nothing to show takes the error view', async () => {
+  render(Guarded)
+  await tick()
+  reads()[0].no(lost())
+  await tick()
+  expect(screen.getByText('failed')).toBeTruthy()
+})
+
+test('showing and focus arriving apart read each entry once', async () => {
+  await ready()
+  returns(showing)
+  await tick()
+  returns(focus)
+  await tick()
+  expect(reads().length).toBe(1)
+  reads()[0].ok(read(true))
+  await tick()
+  expect(shown()).toEqual(['done'])
+  focus()
+  await tick()
+  expect(reads().length).toBe(1)
+})
+
+test('past the limit no live reader is evicted, and idle entries still go', async () => {
+  const live = 1300
+  const Row = (p: { i: number }) => { const r = row(() => ({ i: p.i })); return <i>{() => String(r.value)}</i> }
+  render(() => <div>{Array.from({ length: live }, (_, i) => <Row i={i} />)}</div>)
+  await tick()
+  for (const c of reads()) c.ok({ v: 1, t: ['rows'] })
+  await tick()
+  calls.length = 0
+  cache.invalidate('rows')
+  await tick()
+  expect(reads().length).toBe(live)
+  for (const c of reads()) c.ok({ v: 2, t: ['rows'] })
+  await tick()
+})
+
+test('past the limit what nothing reads goes, oldest first', async () => {
+  seed(Array.from({ length: 2000 }, (_, i) => ['row', { i }, i, []] as any))
+  expect(cache.get(row, { i: 0 })).toBeUndefined()
+  expect(cache.get(row, { i: 1999 })).toBe(1999)
+})
+
+test('two plain calls answered in the same task: neither reply is believed, and one read says what is true', async () => {
+  await ready()
+  const a = plain(), b = plain()
+  calls[0].ok(reply(true)); calls[1].ok(reply(false))
+  await Promise.all([a, b])
+  await tick()
+  expect(reads().length).toBe(1)
+  reads()[0].ok(read(true))
+  await tick()
+  expect(shown()).toEqual(['done'])
+})
+
+test('an `optimistic` that throws fails its call and leaves nothing behind', async () => {
+  await ready()
+  await expect(bad()).rejects.toThrow('bad prediction')
+  expect(bad.pending.value).toBe(false)
+  const first = plain()
+  calls[0].ok(reply(true))
+  await first
+  await tick()
+  const second = plain()
+  calls[1].ok(reply(false))
+  await second
+  await tick()
+  expect(reads()).toEqual([])
+  expect(shown()).toEqual(['open'])
+})
+
+test('a value read before a write is out of date even for a key the cache did not hold then', async () => {
+  await ready()
+  const since = router.now!()
+  const p = plain()
+  calls[0].ok({ t: ['rows'], c: [] })
+  await p
+  await tick()
+  router.seed!([['row', { i: 1 }, 'old', ['rows']], ['row', { i: 2 }, 'kept', ['else']]], since)
+  expect(await Promise.race([row.fetch({ i: 2 } as any), 'waits'])).toBe('kept')
+  const n = reads().length
+  const late = row.fetch({ i: 1 } as any)
+  expect(reads().length).toBe(n + 1)
+  reads().at(-1)!.ok({ v: 'new', t: ['rows'] })
+  expect(await late).toBe('new')
+})
+
+test('a stream chunk read before a write is out of date even for a key the cache did not hold then', async () => {
+  await ready()
+  const p = plain()
+  calls[0].ok({ t: ['rows'], c: [] })
+  await p
+  await tick()
+  ;(globalThis as any).$wc.push({ c: [['row', { i: 3 }, 'old', ['rows']]] })
+  const n = reads().length
+  const late = row.fetch({ i: 3 } as any)
+  expect(reads().length).toBe(n + 1)
+  reads().at(-1)!.ok({ v: 'new', t: ['rows'] })
+  expect(await late).toBe('new')
+})
+
+test('a fetch under a prediction reads only after the call behind it answers', async () => {
+  seed([['rows', undefined, rows(false), ['rows']]])
+  cache.invalidate('rows')
+  const p = set({ id: 'a', done: true })
+  expect(await list.fetch()).toEqual(rows(true))
+  expect(reads()).toEqual([])
+  calls[0].ok({ t: ['else'] })
+  await p
+  await tick()
+  expect(reads().length).toBe(1)
+  reads()[0].ok(read(true))
+  await tick()
+  expect(cache.get(list)).toEqual(rows(true))
 })
