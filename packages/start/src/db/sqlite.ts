@@ -3,6 +3,8 @@
 // (`weft build` loads this module and must not touch a file). A transaction's body is async, so it holds a gate:
 // statements outside it wait, or a rollback would take another request's writes with it.
 
+// oxlint-disable-next-line typescript/triple-slash-reference -- an installed app's tsc doesn't include this file by itself, and it declares a module, so nothing can import it
+/// <reference path="./bun-sqlite.d.ts" />
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
