@@ -162,10 +162,13 @@
 [data-site="tile"] [data-part="words"] span { display: none; font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
 /* A phone shows one card to a row, its picture the card's full width above the name and what it is for. The picture
    lays out at the same working width as on a desktop, so it draws at about 0.8 and its words can be read: a 128px
-   thumbnail beside the name drew most examples at 0.2 to 0.3, and two to a row no better. */
+   thumbnail beside the name drew most examples at 0.2 to 0.3, and two to a row no better. The stage hugs the picture
+   (fitTile, up to --tile-hug, then a crop), so a one-line example is a short card, not a line in a blank box. */
 @media (max-width: 599.98px) {
   [data-tk="tiles"] { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-related); }
-  [data-site="tile"] { contain-intrinsic-size: auto 300px; }
+  [data-site="tile"] { grid-template-rows: auto auto; contain-intrinsic-size: auto 200px; }
+  [data-site="tile"] [data-part="stage"] { aspect-ratio: auto; block-size: 120px; }
+  [data-site="tile"] [data-part="mount"] { --tile-hug: 240px; padding: var(--warp-space-related); }
   [data-site="tile"] [data-part="words"] { display: grid; gap: var(--warp-space-hair); padding: var(--warp-space-tight) var(--warp-space-related) var(--warp-space-related); min-inline-size: 0; }
   [data-site="tile"] strong { overflow-wrap: anywhere; }
   [data-site="tile"] [data-part="words"] span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }

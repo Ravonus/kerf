@@ -291,18 +291,35 @@ for (const path of ['/components', '/blocks', '/charts']) {
   }
 }
 // On a phone a hub is one card to a row: the picture the card's full width above the name and a readable line or two of
-// what it is for, every name and description in full view of its card, and no card taller than a third of the screen
-// or so, so the page is long only in proportion to what is on it.
+// what it is for, every name and description in full view of its card. The picture hugs its example: no taller than
+// 240px (a crop past that), and not a short example in a tall blank box, so the page is long only in proportion to what
+// is on it. Blank is the stage's height less the span its drawn things (text, leaves, and boxes with a fill or a border)
+// cover.
 for (const path of ['/components', '/blocks', '/charts']) {
   await check(`hub cards read on a phone ${path}`, path, async page => {
+    for (let i = 0; i < 400; i++) {
+      const more = await page.evaluate(() => { const m = document.querySelector('[data-site="tile"] [data-part="mount"]:not([data-ready])'); m?.scrollIntoView({ block: 'center' }); return !!m })
+      if (!more) break
+      await page.waitForTimeout(100)
+    }
+    await page.waitForTimeout(1200)
     const { cols, bad } = await page.evaluate(() => ({
       cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length,
       bad: [...document.querySelectorAll('[data-site="tile"]')].flatMap(t => {
         const card = t.getBoundingClientRect(), stage = t.querySelector('[data-part="stage"]').getBoundingClientRect()
-        const name = t.querySelector('strong'), line = t.querySelector('[data-part="words"] span')
+        const name = t.querySelector('[data-part="words"] strong'), line = t.querySelector('[data-part="words"] span')
         const out = []
         if (stage.width < card.width - 2) out.push(`picture ${Math.round(stage.width)} of ${Math.round(card.width)}px wide`)
-        if (card.height > 320) out.push(`${Math.round(card.height)}px tall`)
+        if (stage.height > 242) out.push(`picture ${Math.round(stage.height)}px tall`)
+        const drawn = e => { if (!e.firstElementChild || /^(svg|img|canvas|input|textarea|select|video)$/.test(e.localName)) return true; const c = getComputedStyle(e); return c.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderBottomWidth) > 0 }
+        let top = Infinity, bottom = -Infinity
+        const cover = b => { if (b.width && b.height) { top = Math.min(top, Math.max(b.top, stage.top)); bottom = Math.max(bottom, Math.min(b.bottom, stage.bottom)) } }
+        const mount = t.querySelector('[data-part="mount"]')
+        for (const e of mount.querySelectorAll('*')) if (!(e.closest('svg') && e.localName !== 'svg') && drawn(e) && getComputedStyle(e).visibility !== 'hidden') cover(e.getBoundingClientRect())
+        const texts = document.createTreeWalker(mount, NodeFilter.SHOW_TEXT)
+        for (let n; (n = texts.nextNode());) if (n.textContent.trim()) { const r = document.createRange(); r.selectNodeContents(n); cover(r.getBoundingClientRect()) }
+        const blank = stage.height - Math.max(0, bottom - top)
+        if (blank > 24 && blank > stage.height * 0.4) out.push(`${Math.round(blank)} of ${Math.round(stage.height)}px blank`)
         if (!line || !line.textContent.trim() || line.getBoundingClientRect().height < 10) out.push('no description')
         else if (parseFloat(getComputedStyle(line).fontSize) < 12) out.push(`description at ${getComputedStyle(line).fontSize}`)
         for (const e of [name, line].filter(Boolean)) { const r = e.getBoundingClientRect(); if (r.top < stage.bottom - 1) out.push(`${e.localName} beside the picture`); if (r.right > card.right + 1 || r.bottom > card.bottom + 1) out.push(`${e.localName} past the card`) }
