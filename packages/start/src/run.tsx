@@ -49,7 +49,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined, id => Promise.resolve(island(id)))
   route.around = (_d, _id, body) => enter(body)
   // What landed while the chunks loaded: from here on, a Boundary that's still out is held, and its chunk builds it.
-  for (const l of (globalThis as any).$wc ?? []) {
+  if (data) for (const l of (globalThis as any).$wc ?? []) {
     Object.assign(data.r, l.r)
     Object.assign(data.b, l.b)
     if (l.s) Object.assign((data.s ??= {}), l.s)
@@ -67,6 +67,15 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   }
   hydrate(() => <App route={route} />, container, { data })
   client.route = route
+  // The stream broke or failed before its last script: what's held takes its default, not a skeleton for good.
+  if (data?.w) {
+    const over = () => {
+      const h = (globalThis as any).$wh
+      ;(globalThis as any).$wh = 0
+      for (const k in h || {}) h[k]()
+    }
+    document.readyState === 'complete' ? over() : addEventListener('load', over, { once: true })
+  }
 
   let current: AbortController | undefined
   let refreshing: { ctrl: AbortController; tags: string[] } | undefined
@@ -82,6 +91,16 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const needs = (next: RoutePayload) => Promise.all([...next.m.map(m => chunk(m.id)), ...(next.i ?? []).map(island)])
   const reads = (t: string[]) => tags.some(l => l.some(x => t.includes(x)))
 
+  /** The page moved on: a chunk still out is the old URL's, so it's dropped when it lands and what's held builds from this data. */
+  function release() {
+    const h = (globalThis as any).$wh
+    for (const k of Object.keys(h || {})) {
+      const build = h[k]
+      h[k] = () => {}
+      build()
+    }
+  }
+
   function apply(next: RoutePayload, url: URL, path: string, since: number, scroll: boolean) {
     at = path
     if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
@@ -91,6 +110,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       applyMatches(route, next.m.map(revive), path, next.s)
       if (next.m.some(m => m.s)) current_(url.pathname)
       if (next.h) setHead(next.h, url.pathname)
+      release()
       flush()
       if (scroll) {
         const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))

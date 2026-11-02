@@ -8,7 +8,7 @@ export const load = async ({ request }: { request: Request }) => {
   const ms = Number(params.get('ms') ?? 0)
   if (params.has('ok')) (globalThis as any).__heldOk = true
   const bad = (globalThis as any).__heldOk ? later(ms, 'recovered') : later(ms, 0).then((): string => { throw new Error('no luck') })
-  return { late: later(ms, 'landed'), bad, inner: later(ms * 2, 'inside') }
+  return { late: later(ms, 'landed' + (params.get('tag') ?? '')), bad, inner: later(ms * 2, 'inside') }
 }
 
 function Late(props: { v: Promise<string>; inner: Promise<string> }) {
@@ -47,6 +47,7 @@ function Bad(props: { v: Promise<string> }) {
 export default function Held(props: RouteProps<typeof load>) {
   return (
     <main>
+      <a class="same" href="/held?ms=0&tag=2">Same route</a>
       <Boundary pending={<p class="wait-late">Waiting</p>}>
         <Late v={props.data.late} inner={props.data.inner} />
       </Boundary>

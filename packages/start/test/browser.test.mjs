@@ -87,6 +87,16 @@ describe('a client running before the chunks land', () => {
     return { page, errors, fetched }
   }
 
+  test('a navigation on the same route drops the old URL\'s chunk: the page keeps the new data', async () => {
+    const { page, errors } = await held()
+    await page.click('a.same')
+    await page.waitForSelector('.late')
+    await page.waitForTimeout(3000) // past the old chunk
+    expect(await page.textContent('.late .more')).toContain('landed2')
+    expect(errors).toEqual([])
+    await page.close()
+  })
+
   test('it claims what the server rendered, and asks for nothing', async () => {
     const { page, errors, fetched } = await held()
     await page.waitForSelector('.late')
