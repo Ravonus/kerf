@@ -920,7 +920,8 @@
 :where([data-scope="pagination"] [data-part="page"][aria-current="page"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
 :where([data-scope="pagination"] [data-part="page"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
 :where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
-:where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; }
+/* the spacer gives back its own column gap, so an empty spacer never pushes Go to onto the next line */
+:where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; margin-inline-end: -14px; }
 :where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; flex: none; white-space: nowrap; }
 /* the sm jump input: on touch the transparent block band makes the 44px hit area, and negative margins give it back */
 :where([data-scope="pagination"] [data-part="jump"]) {
