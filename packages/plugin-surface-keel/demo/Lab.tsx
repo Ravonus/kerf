@@ -2,7 +2,7 @@
 import { state } from '@weft-js/core'
 import { clock, defineSurface, Surface } from '@weft-js/core/surface'
 
-export const lab = { level: state(20), title: state('A surface title long enough to wrap onto a second line of the canvas'), paints: 0, setups: 0, frames: 0, frame: 0, body: 0, gl: null as any, heading: null as any, scripts: null as any, other: state('مرحبا بالعالم 春天到了 中文排版') }
+export const lab = { level: state(20), title: state('A surface title long enough to wrap onto a second line of the canvas'), paints: 0, setups: 0, frames: 0, frame: 0, body: 0, gl: null as unknown, heading: null as unknown, scripts: null as unknown, other: state('مرحبا بالعالم 春天到了 中文排版') }
 
 export const Bars = defineSurface<{ level: number; title: string; other: string }>({
   name: 'bars',
@@ -12,7 +12,7 @@ export const Bars = defineSurface<{ level: number; title: string; other: string 
     lab.scripts = s.text(() => props.other, { x: 10, y: 120, width: 220, font: '16px Arial', lineHeight: 24 })
     s.draw(() => {
       lab.paints++
-      s.ctx.fillStyle = s.tokens.accent.css
+      s.ctx.fillStyle = s.tokens.accent!.css
       s.ctx.fillRect(10, s.size.value.height - 20, props.level, 10)
     })
   },
@@ -31,7 +31,7 @@ export const Tint = defineSurface<{ level: number }>({
     s.frame(t => {
       lab.frames++
       lab.frame = t.frame
-      const [r, g, b] = s.tokens.accent.linear
+      const [r, g, b] = s.tokens.accent!.linear
       s.gl.clearColor(r, g, b * (props.level / 100), 1)
       s.gl.clear(s.gl.COLOR_BUFFER_BIT)
     })
