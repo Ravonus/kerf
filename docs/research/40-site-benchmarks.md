@@ -88,3 +88,7 @@ A second first run, commit `8db76dd` (`ecc436e` plus Windows harness and path fi
 3 samples, private Postgres, installed Chrome: `first-run-windows.json`. Peak CPU reached 100% with WSL busy, so read its timings as
 the pattern, not the value. Numbers from the two hosts are never compared with each other. It shows the same losses: admin server memory
 2.1 GB, `race.toggles` 0 of 3, `/todos` 40 req/s against 300 and 90, `/admin/nested` 20 against 360 and 112.
+
+## Past the two fix passes
+
+The rules above allowed two fix passes. On 2026-11-01 the owner asked for more work on the bad numbers, so everything measured after pass 2 is tuning past the pre-registered limit, and it's labelled that way in any result. The first-run numbers stay as they were recorded, and catalog stays the holdout: no change is made for its numbers.
