@@ -11,7 +11,8 @@
     "check": "node scripts/check.mjs",
     "fix": "node scripts/fix.mjs",
     "hooks": "git config core.hooksPath .githooks",
-    "check:prove": "node scripts/quality/prove.mjs"
+    "check:prove": "node scripts/quality/prove.mjs",
+    "proof:intel": "node scripts/intel/proof.mjs"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
