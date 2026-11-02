@@ -168,7 +168,7 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
   return (
     <>
       <div data-scope="edges">
-        <div ref={(n: any) => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
+        <div ref={n => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
           {board.value.map(c => <Column key={c.id} col={() => board.value.find(x => x.id === c.id) ?? c} ctx={ctx} hint={hint} />)}
         </div>
       </div>

@@ -8,7 +8,7 @@ import { Feed } from '../src/Feed'
 import { CountrySelect, PhoneField } from '../src/RichSelect'
 import { Select } from '../src/Select'
 
-const settle = async () => { for (let i = 0; i < 4; i++) { await flush(); await new Promise(r => setTimeout(r)) } }
+const settle = async () => { for (let i = 0; i < 4; i++) { await flush(); await new Promise(r => { setTimeout(r) }) } }
 const css = (file: string) => readFileSync(join(process.cwd(), '../warp-core/styles', file), 'utf8')
 const flat = (file: string) => css(file).replace(/\s+/g, ' ')
 const OPTIONS = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Beta' }]
@@ -78,7 +78,7 @@ test('BubbleChart: the biggest bubble fits whatever unit size comes in', async (
   const radii = [...c.querySelectorAll('circle[data-mark]')].map(m => Number(m.getAttribute('r'))).sort((a, b) => b - a)
   expect(radii).toHaveLength(2)
   expect(radii[0]).toBeLessThanOrEqual(18)
-  expect(radii[1] - 3).toBeCloseTo((radii[0] - 3) / 2, 0) // area, not radius, follows the value
+  expect(radii[1]! - 3).toBeCloseTo((radii[0]! - 3) / 2, 0) // area, not radius, follows the value
 })
 
 describe('rules with no jsdom layout to prove them', () => {

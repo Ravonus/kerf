@@ -11,7 +11,7 @@ vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
 const read = file => readFileSync(join(styles, file), 'utf8')
-const css = ['warp.css', 'components/base.css', 'components/surface.css', 'data/table.css'].filter(f => { try { return read(f) } catch {} }).map(read).join('\n')
+const css = ['warp.css', 'components/base.css', 'components/surface.css', 'data/table.css'].filter(f => { try { return read(f) } catch { return false } }).map(read).join('\n')
 
 const rows = Array.from({ length: 4 }, (_, i) => `<tr id="row-${i}"><td>Row ${i}</td></tr>`).join('')
 const PAGE = `
@@ -45,7 +45,7 @@ async function open(options, expression = 'balanced') {
 }
 
 test('warp clips with overflow: clip; only the page lock is overflow: hidden', () => {
-  const files = readdirSync(styles, { recursive: true }).filter(f => f.endsWith('.css'))
+  const files = readdirSync(styles, { recursive: true, encoding: 'utf8' }).filter(f => f.endsWith('.css'))
   const hidden = files.flatMap(f => read(f).split('\n').filter(l => /(^|[^-\w])overflow:\s*hidden/.test(l) && !/html/.test(l)).map(l => `${f}: ${l.trim()}`))
   expect(hidden).toEqual([])
 })

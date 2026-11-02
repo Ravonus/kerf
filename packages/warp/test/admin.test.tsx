@@ -34,7 +34,7 @@ beforeAll(() => {
 
 const pick = (trigger: HTMLElement, label: string) => {
   trigger.click()
-  ;[...trigger.parentElement!.querySelectorAll<HTMLElement>('[role="option"]')].find(o => o.textContent!.startsWith(label))!.click()
+  ;[...trigger.parentElement!.querySelectorAll<HTMLElement>('[role="option"]')].find(o => o.textContent.startsWith(label))!.click()
 }
 
 describe('SaveBar', () => {
@@ -161,7 +161,7 @@ describe('MembersTable', () => {
     expect(log).toEqual([])
   })
   test('demoting yourself warns', async () => {
-    const { c, log } = mount(10, [PEOPLE[0], { ...PEOPLE[1], role: 'owner' }])
+    const { c, log } = mount(10, [PEOPLE[0]!, { ...PEOPLE[1]!, role: 'owner' }])
     await tick()
     pick(select(c, 'ines'), 'Member'); await tick()
     expect(dialog().textContent).toMatch(/lose access to this page/)
@@ -361,10 +361,10 @@ describe('Integrations', () => {
   })
   test('a webhook URL offers breaks after slashes and before dots, never inside a word', () => {
     expect(urlBreaks('https://hooks.acme.dev/deploys/v2?team=web&x=1')).toEqual(['https://', 'hooks', '.acme', '.dev/', 'deploys/', 'v2', '?team=', 'web&', 'x=', '1'])
-    const { container: c } = render(() => <Webhooks hooks={HOOKS} events={['a.b']} onAdd={async () => 'whsec_1'} onTest={async () => ({ status: 200, ms: 1 })} />)
+    const { container: c } = render(() => <Webhooks hooks={HOOKS} events={['a.b']} onAdd={() => Promise.resolve('whsec_1')} onTest={() => Promise.resolve({ status: 200, ms: 1 })} />)
     const code = c.querySelector<HTMLElement>('[data-part="url"]')!
-    expect(code.textContent).toBe(HOOKS[0].url)
-    expect(code.querySelectorAll('wbr').length).toBe(urlBreaks(HOOKS[0].url).length - 1)
+    expect(code.textContent).toBe(HOOKS[0]!.url)
+    expect(code.querySelectorAll('wbr').length).toBe(urlBreaks(HOOKS[0]!.url).length - 1)
     expect(code.style.overflowWrap).toBe('break-word') // was anywhere: a URL broke mid-word
     expect(code.style.wordBreak).toBe('normal')
   })
@@ -421,7 +421,7 @@ describe('CsvImport', () => {
   test('with no column on Email, Review says so once and nothing can import', async () => {
     const { c } = mount()
     byText(c, 'Use the sample').click(); await tick()
-    pick(c.querySelectorAll<HTMLElement>('tbody [role="combobox"]')[1], 'Don’t import'); await tick()
+    pick(c.querySelectorAll<HTMLElement>('tbody [role="combobox"]')[1]!, 'Don’t import'); await tick()
     byText(c, 'Preview').click(); await tick()
     expect(c.querySelector('[data-scope="alert"]')!.textContent).toContain('No column is mapped to Email')
     expect((byText(c, 'Import 0 rows') as HTMLButtonElement).disabled).toBe(true)

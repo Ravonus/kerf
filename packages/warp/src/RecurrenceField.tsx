@@ -74,7 +74,7 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
     const on = rule.value.BYDAY
     set({ BYDAY: on.includes(d) ? (on.length > 1 ? on.filter(x => x !== d) : on) : [...on, d] })
   }
-  const setEnd = (m: 'never' | 'count' | 'until') => set(m === 'count' ? { COUNT: 10, UNTIL: null } : m === 'until' ? { COUNT: null, UNTIL: addDays(dtstart, 60) as IsoDate } : { COUNT: null, UNTIL: null })
+  const setEnd = (m: 'never' | 'count' | 'until') => set(m === 'count' ? { COUNT: 10, UNTIL: null } : m === 'until' ? { COUNT: null, UNTIL: addDays(dtstart, 60) } : { COUNT: null, UNTIL: null })
   let root: HTMLDivElement | undefined
   use(formReset, () => root, () => () => { v.reset(); asText.value = false })
   return (
@@ -103,7 +103,7 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
               {rule.value.FREQ === 'MONTHLY' && <ChipRadios label="On" value={monthlyNow.value} options={monthly.value} onChange={m => set(monthly.value.find(o => o.value === m)!.patch)} />}
               <ChipRadios label="Ends" value={endMode.value} options={[{ value: 'never', label: 'Never ends' }, { value: 'count', label: 'After…' }, { value: 'until', label: 'On date…' }]} onChange={setEnd} />
               {endMode.value === 'count' && <NumberField label="Occurrences" min={1} max={999} value={rule.value.COUNT} onValueChange={n => set({ COUNT: n ?? 1 })} />}
-              {endMode.value === 'until' && <DateField label="Last date" value={(rule.value.UNTIL ?? null) as IsoDate | null} onValueChange={d => { if (d) set({ UNTIL: d }) }} />}
+              {endMode.value === 'until' && <DateField label="Last date" value={rule.value.UNTIL ?? null} onValueChange={d => { if (d) set({ UNTIL: d }) }} />}
             </div>
             <div class="stack">
               <p class="dt-cap">Next {preview}</p>

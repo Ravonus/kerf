@@ -38,8 +38,8 @@ export function Question({ question, onAnswer, quiet }: { question: AgentQuestio
             <legend>{question.prompt}</legend>
             {options.value.map(o => (
               type.value === 'radio'
-                ? <Radio key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: any) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Radio>
-                : <Checkbox key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: any) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Checkbox>
+                ? <Radio key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: Event & { currentTarget: HTMLInputElement }) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Radio>
+                : <Checkbox key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: Event & { currentTarget: HTMLInputElement }) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Checkbox>
             ))}
             {picks.value.includes(other) && <Input label="Your answer" value={free.value} onInput={e => (free.value = e.currentTarget.value)} />}
           </fieldset>

@@ -4,6 +4,7 @@ import { bindable, type Bindable } from './bind'
 import { Field, type FieldShell } from './Field'
 import '@weft-js/warp-core/styles/inputs/text.css'
 
+/** Props for NumberField. */
 export type NumberFieldProps = FieldShell & Bindable<number | null> & { min?: number; max?: number; step?: number; name?: string; required?: boolean }
 
 const PAGE = 10
@@ -49,7 +50,7 @@ export function NumberField({ value, defaultValue, onValueChange, min, max, step
       end={<span data-part="steps">{stepper('Increase', step, max !== undefined && v.value !== null && v.value >= max)}{stepper('Decrease', -step, min !== undefined && v.value !== null && v.value <= min)}</span>}
       control={p => (
         <input
-          ref={(n: any) => (input = n)}
+          ref={n => (input = n)}
           data-part="input"
           id={p.id}
           role="spinbutton"

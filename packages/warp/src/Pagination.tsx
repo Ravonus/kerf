@@ -73,7 +73,7 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   const id = uid('pg')
   const first = derived(() => (total ? (current.value - 1) * per.value + 1 : 0))
   return (
-    <nav ref={(n: any) => (nav = n)} data-scope="pagination" aria-label={label}>
+    <nav ref={n => (nav = n)} data-scope="pagination" aria-label={label}>
       <span data-part="field">
         <span aria-hidden="true">Rows per page</span>
         <CompactSelect label="Rows per page" value={String(per.value)} options={sizes.map(s => ({ value: String(s), label: String(s) }))} onValueChange={v => { per.set(+v); at.set(1) }} />

@@ -3,13 +3,13 @@ import { flush, render } from '@weft-js/core/test'
 import { state } from '@weft-js/core'
 import { CompactSelect, Input, NumberField, Select } from '../src/index'
 
-const tick = async () => { await new Promise(r => setTimeout(r)); await flush() }
+const tick = async () => { await new Promise(r => { setTimeout(r) }); await flush() }
 const key = (el: Element, k: string, init: KeyboardEventInit = {}) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }))
 const fruit = [{ value: 'a', label: 'Apple' }, { value: 'b', label: 'Bean', disabled: true }, { value: 'c', label: 'Corn' }, { value: 'd', label: 'Cress' }]
 const parts = (c: Element) => ({ trigger: c.querySelector<HTMLButtonElement>('[role="combobox"]')!, carrier: c.querySelector<HTMLSelectElement>('select')!, value: c.querySelector('[data-part="value"]')! })
 const list = (c: Element) => c.querySelector('[role="listbox"]')!
 const active = (t: Element) => document.getElementById(t.getAttribute('aria-activedescendant') ?? '')?.textContent
-async function mount(ui: () => any) {
+async function mount(ui: () => unknown) {
   const { container: c } = render(ui)
   document.body.append(c)
   await tick()
@@ -134,7 +134,7 @@ describe('keyboard', () => {
     key(trigger, 'n')
     expect(active(trigger)).toBe('New Haven')
     key(trigger, 'Escape')
-    await new Promise(r => setTimeout(r, 520))
+    await new Promise(r => { setTimeout(r, 520) })
     key(trigger, 'n'); key(trigger, 'e'); key(trigger, 'w'); key(trigger, ' '); key(trigger, 'y')
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
     expect(active(trigger)).toBe('New York')
@@ -154,10 +154,10 @@ describe('the list', () => {
     await tick()
     const opts = [...c.querySelectorAll('[role="option"]')]
     expect(opts.map(o => o.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false'])
-    expect(opts[2].getAttribute('aria-disabled')).toBe('true')
+    expect(opts[2]!.getAttribute('aria-disabled')).toBe('true')
     expect(c.querySelector('[role="group"]')!.getAttribute('aria-label')).toBe('Veg')
     expect(list(c).getAttribute('aria-label')).toBe('Food')
-    expect(opts[1].textContent).toContain('sweet')
+    expect(opts[1]!.textContent).toContain('sweet')
   })
 
   test('a press on a row picks with reason pointer and focus never leaves the trigger', async () => {
@@ -167,7 +167,7 @@ describe('the list', () => {
     await tick()
     expect(document.activeElement).toBe(trigger)
     const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
-    const row = c.querySelectorAll<HTMLElement>('[role="option"]')[2]
+    const row = c.querySelectorAll<HTMLElement>('[role="option"]')[2]!
     row.dispatchEvent(down)
     expect(down.defaultPrevented).toBe(true)
     row.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }))
@@ -181,7 +181,7 @@ describe('the list', () => {
     const { c, trigger } = await mount(() => <Select label="Fruit" onValueChange={v => heard.push(v)} options={fruit} />)
     trigger.click()
     await tick()
-    c.querySelectorAll<HTMLElement>('[role="option"]')[1].click()
+    c.querySelectorAll<HTMLElement>('[role="option"]')[1]!.click()
     expect(heard).toEqual([])
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
   })
@@ -264,9 +264,9 @@ describe('on a phone', () => {
     expect(trigger.getAttribute('aria-activedescendant')).toBeNull()
     const rows = c.querySelectorAll<HTMLElement>('[role="option"]')
     expect(document.activeElement).toBe(rows[2])
-    key(rows[2], 'ArrowDown')
+    key(rows[2]!, 'ArrowDown')
     expect(document.activeElement).toBe(rows[3])
-    key(rows[3], 'Enter')
+    key(rows[3]!, 'Enter')
     await tick()
     expect(document.activeElement).toBe(trigger)
   })
@@ -419,7 +419,7 @@ describe('NumberField', () => {
     i.dispatchEvent(new FocusEvent('blur'))
     expect(i.value).toBe('9')
     await tick()
-    const [up, down] = c.querySelectorAll<HTMLButtonElement>('[data-part="step"]')
+    const [up, down] = [...c.querySelectorAll<HTMLButtonElement>('[data-part="step"]')] as [HTMLButtonElement, HTMLButtonElement]
     expect(up.disabled).toBe(true)
     down.click()
     expect(v.value).toBe(8)

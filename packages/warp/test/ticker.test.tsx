@@ -2,7 +2,7 @@ import { state } from '@weft-js/core'
 import { flush, render } from '@weft-js/core/test'
 import { Ticker } from '../src/Ticker'
 
-const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))
+const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
 const settle = async () => { await tick(); await flush(); await tick(); await flush() }
 
 describe('Ticker', () => {

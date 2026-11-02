@@ -13,10 +13,10 @@ import { tile, type Pattern } from './tiles'
 /** Options for an animated dither field. */
 export interface FieldOptions {
   /** A named field, or your own function of (x, y, t). */
-  kind?: FieldName | Field
+  kind?: FieldName | Field | undefined
   /** Your own `kind` is smooth: evaluate it on a sparse lattice and interpolate, as the named fields do. */
-  smooth?: boolean
-  ramp?: Ramp
+  smooth?: boolean | undefined
+  ramp?: Ramp | undefined
   /** Inks a disturbed cell takes instead, so a push shows in a second colour. */
   spark?: Ramp | undefined
   pattern?: Pattern | undefined

@@ -320,8 +320,8 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
         {days.value.map((d, i) => <div key={d} data-part="allday-cell" style={`grid-column:${i + 2};grid-row:1 / span ${Math.max(1, ...bars.value.map(b => b.row + 1))}`}></div>)}
         {bars.value.map(b => <div key={b.id} data-part="chip" data-cal={b.event.cal ?? 1} data-id={b.id} role="gridcell" tabindex={stop.value === b.id ? '0' : '-1'} aria-label={c.name(b.event)} style={`${tint(b.event.cal)};grid-column:${b.col + 2} / span ${b.span};grid-row:${b.row + 1}`}>{b.event.title}</div>)}
       </div>
-        <div ref={(n: any) => (scroller = n)} data-part="scroller">
-          <div ref={(n: any) => (cols = n)} data-part="cols" role="row">
+        <div ref={n => (scroller = n)} data-part="scroller">
+          <div ref={n => (cols = n)} data-part="cols" role="row">
             <div data-part="gutter" aria-hidden="true">
               {Array.from({ length: 23 }, (_, i) => i + 1).map(h => <span key={h} data-part="hour" style={`top:${hours(h * 60)}`}>{c.time(h * 60)}</span>)}
               {nowAt.value !== null && <span data-part="now-label" style={`--_top:${hours(nowAt.value)}`}>{c.time(nowAt.value)}</span>}
@@ -444,8 +444,8 @@ function AgendaView({ c }: { c: Ctx }) {
 /** Timeline (07 §2.5): rows of rooms or people over hours, one roving stop, the same drag on the x axis. */
 function Timeline({ c }: { c: Ctx }) {
   const hint = uid('tl')
-  const range = derived(() => c.p.timeline ?? [480, 1080])
-  const width = derived(() => range.value[1]! - range.value[0]!)
+  const range = derived((): [number, number] => c.p.timeline ?? [480, 1080])
+  const width = derived(() => range.value[1] - range.value[0])
   const slots = derived(() => Math.round(width.value / 60))
   const marks = derived(() => Array.from({ length: slots.value }, (_, i) => range.value[0] + i * 60))
   const day = derived(() => c.date.value)
@@ -468,8 +468,8 @@ function Timeline({ c }: { c: Ctx }) {
   // (ellipsed), or only the start time, so a narrow one never stacks a letter a line
   return (
     <div data-scope="edges" data-part="timeline-edges">
-      <div ref={(n: any) => (scroller = n)} data-part="scroller">
-        <div ref={(n: any) => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey} style={`--_slots:${slots.value}`}>
+      <div ref={n => (scroller = n)} data-part="scroller">
+        <div ref={n => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey} style={`--_slots:${slots.value}`}>
           <span data-part="corner" aria-hidden="true"></span>
           <div data-part="marks" class="muted" aria-hidden="true" style={`display:grid;grid-template-columns:repeat(${marks.value.length},1fr)`}>{marks.value.map(m => <span key={m}>{c.time(m)}</span>)}</div>
           {rows.value.map(r => (
@@ -529,7 +529,7 @@ function MiniMonth({ c }: { c: Ctx }) {
         <Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} label="Previous month" onClick={() => (cursor.value = stepDate('month', cursor.value, -1))} />
         <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label="Next month" onClick={() => (cursor.value = stepDate('month', cursor.value, 1))} />
       </div>
-      <div ref={(n: any) => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest?.<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
+      <div ref={n => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest?.<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
         <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><span aria-hidden="true">{h[0][0]}</span><span class="sr">{h[0]}</span></span>)}</div>
         {weeks.value.map(w => (
           <div key={w.key} role="row">
@@ -555,8 +555,8 @@ function ZoneChip({ c }: { c: Ctx }) {
   use(popover, () => panel, () => ({ open: open.value, trigger: chip!, side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
     <>
-      <Tooltip content={`Times shown in ${c.zone.value}`}><button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button></Tooltip>
-      <div ref={(n: any) => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
+      <Tooltip content={`Times shown in ${c.zone.value}`}><button ref={n => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button></Tooltip>
+      <div ref={n => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
         {built.value && <TimeZoneSelect label="Time zone" value={c.zone.value} referenceDate={c.date.value} today={c.env.today.value} locale={c.env.locale.value} onValueChange={(z: string | null) => { c.zone.set(z); open.value = false; c.say(`Times shown in ${z}`) }} />}
       </div>
     </>

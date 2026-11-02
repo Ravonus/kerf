@@ -193,7 +193,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     flush()
     paint(list, q, arranged)
   }
-  const rank = (list: Command[], q: string) => rankCommands(list, q).flatMap(g => g.rows.map(r => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)))
+  const rank = (cmds: Command[], q: string) => rankCommands(cmds, q).flatMap(g => g.rows.map(r => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)))
   const answer = (value: string) => {
     query?.abort()
     const kids = untrack(() => drill.value)
@@ -297,7 +297,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (m.pick) return run(at, 'keyboard')
     move(m.to)
   }
-  const onInput = (e: any) => {
+  const onInput = (e: Event & { currentTarget: HTMLInputElement }) => {
     typed.value = e.currentTarget.value
     answer(e.currentTarget.value)
   }

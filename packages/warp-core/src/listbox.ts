@@ -17,18 +17,18 @@ const GAP = 6
 const MAX_HEIGHT = 320
 
 /** One row of a listbox. */
-export type ListItem = { value: string; label: string; disabled?: boolean; hint?: string; group?: string }
+export type ListItem = { value: string; label: string; disabled?: boolean | undefined; hint?: string | undefined; group?: string | undefined }
 
 /** Options for `listbox`. */
 export interface ListboxOptions {
   /** Given, it holds the list open or shut; left out, the list answers to the keys and presses alone. */
-  open?: boolean
+  open?: boolean | undefined
   label: string
   items: ListItem[]
   value: string
-  presentation?: Presentation
+  presentation?: Presentation | undefined
   /** A search input over the rows. */
-  search?: boolean
+  search?: boolean | undefined
   onPick(value: string, reason: ChangeReason): void
   onOpenChange?(open: boolean): void
 }

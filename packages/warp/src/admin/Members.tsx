@@ -69,8 +69,8 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
   const leaving = state<Member[]>([])
   const selected = state<Record<string, boolean>>({})
   let demote: { m: Member; role: string } | undefined
-  const people = derived(() => read(members) as readonly Member[])
-  const pending = derived(() => (read(invites ?? []) as readonly Invite[]))
+  const people = derived(() => read(members))
+  const pending = derived(() => read(invites ?? []))
   const used = derived(() => people.value.length + pending.value.length)
   const label = (v: string) => roles.find(r => r.value === v)?.label ?? v
   const locked = (m: Member) => isLastOwner(people.value as Member[], m, owner)

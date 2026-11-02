@@ -419,8 +419,10 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const hideable = derived(() => cols.value.filter(c => !c.pin))
   const flip = (c: Column<T>, show: boolean) => { hidden.value = show ? hidden.value.filter(x => x !== c.id) : [...hidden.value, c.id] }
   return (
-    <div ref={(n: any) => (el = n)} data-scope="table" data-phone={shape.value} data-state={phase.value} data-density={density} id={id}>
-      {untrack(() => hidden.value.length > 0) && <style data-part="hide" innerHTML={untrack(() => hideRule(id, hidden.value))}></style>}
+    <div ref={n => (el = n)} data-scope="table" data-phone={shape.value} data-state={phase.value} data-density={density} id={id}>
+      {untrack(() => hidden.value.length > 0) && <style data-part="hide"
+        // oxlint-disable-next-line weft/no-html-sink -- hideRule builds a CSS rule from escaped column ids, no markup
+        innerHTML={untrack(() => hideRule(id, hidden.value))}></style>}
       {toolbar.value && (
         <div data-part="toolbar">
           {filter !== undefined && <Search label={filter} value={typed.value} onInput={(e: Event) => (typed.value = (e.currentTarget as HTMLInputElement).value)} />}

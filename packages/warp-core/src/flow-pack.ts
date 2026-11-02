@@ -35,9 +35,9 @@ export interface StepFlowOptions {
   /** The label for a step: it is announced. */
   label(id: string): string | undefined
   /** The query parameter that mirrors the step; history stays alone without it. */
-  history?: string
+  history?: string | undefined
   /** A polite "Step 2 of 4, Shipping" on arrival (default true). */
-  announce?: boolean
+  announce?: boolean | undefined
   /** The URL or Back moved the flow. */
   onStep(id: string): void
 }
@@ -164,7 +164,7 @@ const tries = (n: number | undefined) => (n === undefined ? '' : n === 1 ? ' 1 t
 /** One message per cause: what happened and what to do, in one sentence. Takes a `FnError`, anything like one, or a string. */
 export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowErrorOptions = {}): FlowError {
   const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string; status?: number; message?: string; issues?: readonly IssueLike[]; data?: FlowErrorData; extra?: FlowErrorData; name?: string }
-  const data: FlowErrorData = e.data ?? e.extra ?? (e as FlowErrorData)
+  const data: FlowErrorData = e.data ?? e.extra ?? e
   const base = { code: e.code, fields: {} as Record<string, string> }
   const alert = (title: string, description?: string): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
   const fields = issueFields(e.issues)
@@ -178,6 +178,7 @@ export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowE
     case 'RATE_LIMITED': return { ...base, surface: 'rate-limit', title: 'Too many tries.', retryAfter: data.retryAfter, focus: 'stay', live: 'polite' }
     case 'WRONG_CODE': return { ...base, surface: 'field', fields: { code: `That code didn't work.${tries(data.attemptsLeft)}` }, title: `That code didn't work.${tries(data.attemptsLeft)}`, attemptsLeft: data.attemptsLeft, focus: 'field', live: 'assertive' }
     case 'EXPIRED': return { ...base, surface: 'field', fields: { code: 'That code expired. We sent a new one.' }, title: 'That code expired. We sent a new one.', focus: 'field', live: 'assertive' }
+    case undefined:
     default: break
   }
   if (e.code === 'STALE_SCHEMA' || e.code === 'CONTRACT_CHANGED') return { ...base, surface: 'banner', title: 'A new version is ready.', description: 'Reload to finish saving.', focus: 'stay', live: 'polite' }
@@ -339,7 +340,7 @@ export interface TourSpotOptions {
   /** The step number: the same target can come twice. */
   step: number
   /** The target stays pressable ("Try it: click New"); otherwise the scrim blocks every press. */
-  interactive?: boolean
+  interactive?: boolean | undefined
   onNext(): void
   onPrev(): void
   onClose(): void
@@ -501,7 +502,7 @@ export function coachSpot(root: HTMLElement, opts: { target: string; open: boole
 export type ConnView = 'offline' | 'reconnecting' | 'online' | 'stale' | undefined
 
 /** What the banner shows: offline over reconnecting over a stale deploy; `recovered` is the short "Back online". */
-export function connView({ online, state, stale, recovered }: { online: boolean; state?: string; stale?: boolean; recovered?: boolean }): ConnView {
+export function connView({ online, state, stale, recovered }: { online: boolean; state?: string | undefined; stale?: boolean | undefined; recovered?: boolean | undefined }): ConnView {
   if (!online || state === 'offline') return 'offline'
   if (state === 'reconnecting' || state === 'connecting') return 'reconnecting'
   if (recovered) return 'online'

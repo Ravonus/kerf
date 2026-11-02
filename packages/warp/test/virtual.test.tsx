@@ -72,7 +72,7 @@ test('VirtualList: the same window over new keys renders the new rows, not just 
   items.value = Array.from({ length: 100 }, (_, i) => ({ id: i * 5 }))
   await settle()
   expect(rows(c).length).toBe(before)
-  expect(rows(c)[1].textContent).toBe('5')
+  expect(rows(c)[1]!.textContent).toBe('5')
 })
 
 const mei = { id: 'mei', name: 'Mei' }, me = { id: 'me', name: 'Me' }, ana = { id: 'ana', name: 'Ana' }

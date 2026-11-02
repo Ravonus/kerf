@@ -440,8 +440,8 @@ describe('ShareDialog', () => {
     const { c, log } = setup()
     await tick()
     const people = qa(c, '[data-part="person"]')
-    expect(people[0].querySelector('[role="combobox"]')).toBeNull()
-    const sel = q<HTMLElement>(people[1], '[role="combobox"]')
+    expect(people[0]!.querySelector('[role="combobox"]')).toBeNull()
+    const sel = q<HTMLElement>(people[1]!, '[role="combobox"]')
     expect(sel.textContent).toBe('Editor')
     const pick = (t: HTMLElement, label: string) => { t.click(); [...t.parentElement!.querySelectorAll<HTMLElement>('[role="option"]')].find(o => o.textContent === label)!.click() }
     pick(sel, 'Viewer')
