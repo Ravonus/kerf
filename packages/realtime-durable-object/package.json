@@ -1,6 +1,6 @@
 {
   "name": "@weft-js/realtime-durable-object",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "@weft-js/realtime-durable-object: a Cloudflare Durable Object as the realtime bus, on cloudflare_durable",
   "license": "MIT",
   "type": "module",
