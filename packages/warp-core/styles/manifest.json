@@ -814,6 +814,9 @@
  "shortcuts": [
   "flows/shortcuts.css"
  ],
+ "sidenav": [
+  "layout/sidenav.css"
+ ],
  "signature": [
   "rich/signature.css",
   "rich/markdown.css"

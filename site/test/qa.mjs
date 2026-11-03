@@ -477,8 +477,8 @@ for (const [path, section] of [['/learn/effects', '5. Escape hatches'], ['/refer
       const box = rail.getBoundingClientRect(), at = link.getBoundingClientRect()
       return {
         sticky: getComputedStyle(rail.parentElement).position,
-        missing: folds.filter(b => !['true', 'false'].includes(b.getAttribute('aria-expanded'))).length,
-        open: folds.filter(b => b.getAttribute('aria-expanded') === 'true').map(b => b.textContent.trim()),
+        missing: folds.filter(f => !['true', 'false'].includes(f.getAttribute('aria-expanded'))).length,
+        open: folds.filter(f => f.getAttribute('aria-expanded') === 'true').map(f => f.textContent.trim()),
         holder: link.closest('[data-part="sections"] > li').querySelector('button[data-fold], [data-part="group-label"]')?.textContent.trim(),
         inView: at.top >= box.top - 1 && at.bottom <= box.bottom + 1 && at.height > 0,
         over: Math.max(0, document.documentElement.scrollWidth - innerWidth),

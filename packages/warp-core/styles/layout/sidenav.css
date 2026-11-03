@@ -1,0 +1,54 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* SideNav — a docs sidebar made of a NavList whose sections fold. From 900px a sticky rail that scrolls on its own;
+   below, a slim bar that names the section and page and opens the same list in a sheet. --warp-sidenav-top is the
+   height of whatever sticks above it (the page's header). */
+:where([data-scope="sidenav"]) {
+  position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); z-index: var(--warp-z-sticky); align-self: start;
+  min-inline-size: 0; font-size: var(--warp-text-caption-size);
+}
+:where([data-scope="sidenav"] > [data-part="rail"]) { display: none; }
+:where([data-scope="sidenav"] > [data-part="bar"]) {
+  display: flex; align-items: center; gap: var(--warp-space-tight); inline-size: 100%; box-sizing: border-box;
+  min-block-size: var(--warp-control-md); padding: 0 var(--warp-space-related); margin: 0;
+  border: 0; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
+  background: color-mix(in oklab, var(--warp-color-page) 88%, transparent); backdrop-filter: blur(12px);
+  color: var(--warp-color-text-subtle); font: inherit; font-weight: 500; text-align: start; cursor: pointer;
+}
+:where([data-scope="sidenav"] > [data-part="bar"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
+:where([data-scope="sidenav"] [data-part="bar-section"]) { flex: none; color: var(--warp-color-text); }
+:where([data-scope="sidenav"] [data-part="bar-page"]) { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="sidenav"] [data-part="bar-icon"]) { display: inline-flex; margin-inline-start: auto; flex: none; }
+:where([data-scope="sidenav"] [data-part="bar-icon"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
+:where([data-scope="sidenav"] [data-scope="navlist"]) { gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); }
+:where([data-scope="sidenav"] [data-part="sections"]) { gap: 2px; }
+:where([data-scope="sidenav"] [data-part="sections"] > li > [data-part="group-label"]) { margin-block: var(--warp-space-tight) 2px; }
+:where([data-scope="sidenav"] [data-scope="navlist"] [data-part="item"]) { min-block-size: 30px; }
+:where([data-scope="sidenav"] [data-part="item"][data-fold]) { color: var(--warp-color-text); font-weight: 600; }
+:where([data-scope="sidenav"] [data-part="item"][data-fold]:focus-visible),
+:where([data-scope="sidenav"] a[data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
+:where([data-scope="sidenav"] [data-part="chevron"]) { display: inline-flex; color: var(--warp-color-text-subtle); }
+:where([data-scope="sidenav"] [data-part="chevron"] svg) { inline-size: var(--warp-icon-sm, 14px); block-size: var(--warp-icon-sm, 14px); }
+:where([data-scope="sidenav"] [data-part="sections"] ul[hidden]) { display: none; }
+:where([data-scope="sidenav"] [data-part="sections"] > li > ul) { margin-block: 2px var(--warp-space-tight); }
+:where([data-scope="sidenav"] [data-part="filter"]) {
+  inline-size: 100%; box-sizing: border-box; min-block-size: var(--warp-control-sm, 32px); padding: 0 var(--warp-space-related);
+  border: var(--warp-border-hairline) solid var(--warp-color-border-control); border-radius: var(--warp-radius-control);
+  background: var(--warp-color-field); color: var(--warp-color-text); font: inherit;
+}
+:where([data-scope="sidenav"] [data-part="filter"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
+:where([data-scope="sidenav"] [data-part="empty"]) { margin: 0; padding-inline: 10px; color: var(--warp-color-text-subtle); }
+:where([data-scope="sidenav"] [data-part="sheet-nav"]) { padding-block-end: var(--warp-space-group); }
+@media (min-width: 900px) {
+:where([data-scope="sidenav"]) { z-index: auto; max-block-size: calc(var(--warp-viewport-block) - var(--warp-sidenav-top, 0px)); display: flex; flex-direction: column; }
+:where([data-scope="sidenav"] > [data-part="bar"]) { display: none; }
+:where([data-scope="sidenav"] > [data-part="rail"]) {
+    display: grid; align-content: start; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+    padding-block: var(--warp-space-group); padding-inline-end: var(--warp-space-tight);
+  }
+:where([data-scope="sidenav"] > [data-part="rail"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
+}
+@media print {
+:where([data-scope="sidenav"]) { display: none !important; }
+}
+}

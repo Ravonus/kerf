@@ -47,9 +47,9 @@ test('a fold toggles and is remembered under the key; the current section reopen
 })
 
 test('blocked storage: folds still work for the visit', async () => {
-  const get = Storage.prototype.getItem, set = Storage.prototype.setItem
-  Storage.prototype.getItem = () => { throw new Error('blocked') }
-  Storage.prototype.setItem = () => { throw new Error('blocked') }
+  const blocked = () => { throw new Error('blocked') }
+  const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked)
+  const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked)
   try {
     const { container: c } = render(() => <SideNav label="Docs" current="/docs/props" sections={SECTIONS} />)
     await flush()
@@ -57,7 +57,7 @@ test('blocked storage: folds still work for the visit', async () => {
     advanced.click(); await flush()
     expect(advanced.getAttribute('aria-expanded')).toBe('true')
   } finally {
-    Storage.prototype.getItem = get; Storage.prototype.setItem = set
+    get.mockRestore(); set.mockRestore()
   }
 })
 
@@ -66,10 +66,10 @@ test('the filter keeps matching pages, opens their sections, and says when nothi
   await flush()
   const box = rail(c).querySelector<HTMLInputElement>('[data-part="filter"]')!
   expect(box.getAttribute('aria-label')).toBe('Filter docs')
-  box.value = 'ref'; box.dispatchEvent(new Event('input')); await flush()
+  box.value = 'ref'; box.dispatchEvent(new Event('input', { bubbles: true })); await flush()
   expect([...rail(c).querySelectorAll('a')].map(a => a.textContent)).toEqual(['Refs'])
   expect(folds(c).map(b => b.getAttribute('aria-expanded'))).toEqual(['true'])
-  box.value = 'zzz'; box.dispatchEvent(new Event('input')); await flush()
+  box.value = 'zzz'; box.dispatchEvent(new Event('input', { bubbles: true })); await flush()
   expect(rail(c).querySelector('[data-part="empty"]')!.textContent).toContain('zzz')
 })
 
