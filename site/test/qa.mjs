@@ -506,7 +506,7 @@ for (const [path, section] of [['/learn/effects', '5. Escape hatches'], ['/refer
 // The long rails have a filter that keeps the matching pages.
 for (const [path, word, want] of [['/components/button', 'date', /Date/], ['/reference/state', 'hydrat', /hydrat/i]]) {
   await check(`side nav filters ${path}`, path, async page => {
-    const box = page.locator(`${RAIL} [data-part="filter"]`)
+    const box = page.locator('[data-scope="sidenav"] [data-part="filter"]')
     await box.fill(word)
     await page.waitForTimeout(200)
     const names = await page.locator(`${RAIL} a`).allInnerTexts()
@@ -572,7 +572,7 @@ for (const path of ['/learn/bind', '/reference/state', '/components/button', '/b
     await page.keyboard.press('Escape')
     await closed('Escape')
     await opened()
-    await page.mouse.click(360, 400)
+    await page.mouse.click(340, 400) // clear of the panel (320 px) and of a classic scrollbar
     await closed('a backdrop tap')
   }, { width: 375, height: 812 })
 }

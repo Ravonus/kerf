@@ -87,9 +87,11 @@ export function SideNav(props: SideNavProps) {
         </div>
         <div data-part="scroll">
           {props.lead && props.lead.length > 0 && (
-            <ul data-part="lead" data-scope="navlist">
-              {props.lead.map(i => <li key={i.href}><a data-part="item" href={i.href} aria-current={props.current?.startsWith(i.href) ? 'true' : undefined}>{i.label}</a></li>)}
-            </ul>
+            <div data-part="lead" data-scope="navlist">
+              <ul>
+                {props.lead.map(i => <li key={i.href}><a data-part="item" href={i.href} aria-current={props.current?.startsWith(i.href) ? 'true' : undefined}>{i.label}</a></li>)}
+              </ul>
+            </div>
           )}
           {props.filter && (
             <input type="search" data-part="filter" placeholder={filterText()} aria-label={filterText()} value={query.value} onInput={(e: Event) => (query.value = (e.currentTarget as HTMLInputElement).value)} />

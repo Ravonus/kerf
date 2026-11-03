@@ -64,13 +64,13 @@ test('blocked storage: folds still work for the visit', async () => {
 test('the filter keeps matching pages, opens their sections, and says when nothing matches', async () => {
   const { container: c } = render(() => <SideNav label="Docs" current="/docs/props" sections={SECTIONS} filter remember={false} />)
   await flush()
-  const box = rail(c).querySelector<HTMLInputElement>('[data-part="filter"]')!
+  const box = c.querySelector<HTMLInputElement>('[data-scope="sidenav"] [data-part="filter"]')!
   expect(box.getAttribute('aria-label')).toBe('Filter docs')
   box.value = 'ref'; box.dispatchEvent(new Event('input', { bubbles: true })); await flush()
   expect([...rail(c).querySelectorAll('a')].map(a => a.textContent)).toEqual(['Refs'])
   expect(folds(c).map(b => b.getAttribute('aria-expanded'))).toEqual(['true'])
   box.value = 'zzz'; box.dispatchEvent(new Event('input', { bubbles: true })); await flush()
-  expect(rail(c).querySelector('[data-part="empty"]')!.textContent).toContain('zzz')
+  expect(c.querySelector('[data-scope="sidenav"] [data-part="empty"]')!.textContent).toContain('zzz')
 })
 
 test('laid over the page, a button outside opens it; close, Escape, the backdrop, a link and a new page close it', async () => {
@@ -82,7 +82,7 @@ test('laid over the page, a button outside opens it; close, Escape, the backdrop
   const root = c.querySelector<HTMLElement>('[data-scope="sidenav"]')!
   const menu = c.querySelector<HTMLButtonElement>('#menu')!
   const isOpen = () => root.hasAttribute('data-open')
-  const press = async () => { menu.focus(); menu.click(); await flush(); await new Promise(r => requestAnimationFrame(r)) }
+  const press = async () => { menu.focus(); menu.click(); await flush(); await new Promise(r => { requestAnimationFrame(r) }) }
   await press()
   expect(isOpen()).toBe(true)
   expect(menu.getAttribute('aria-expanded')).toBe('true')
