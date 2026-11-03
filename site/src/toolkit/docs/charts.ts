@@ -65,8 +65,6 @@ export const charts: DocGroup = {
     },
     {
       component: 'DonutChart',
-      // Wide enough for the legend on one row: at the default 440 it wraps, and the card can only draw it at under 0.3.
-      tileWidth: 620,
       summary: 'Splits one total into a few parts, with the total in the middle.',
       use: {
         when: ['One total split into six parts or fewer'],

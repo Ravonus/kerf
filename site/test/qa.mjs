@@ -1054,7 +1054,7 @@ await check('every playground renders', '/components', async page => {
     const ok = await page.waitForSelector('#playground [data-part="mount"][data-ready]', { timeout: 8000 }).then(() => true, () => false)
     await page.waitForTimeout(150)
     const r = await page.evaluate(() => ({ kids: document.querySelector('#playground [data-part="mount"]')?.childElementCount ?? 0, code: document.querySelector('#playground [data-play] > [data-part="code"] pre')?.innerText ?? '', failed: /failed to load/.test(document.querySelector('#playground')?.textContent ?? ''), over: document.documentElement.scrollWidth - document.documentElement.clientWidth }))
-    const why = [!ok && 'never mounted', !r.kids && 'empty stage', !/from '@weft\/warp'/.test(r.code) && 'no code', r.failed && 'failed to load', r.over > 0 && `overflows ${r.over}px`, ...errors].filter(Boolean)
+    const why = [!ok && 'never mounted', !r.kids && 'empty stage', !/from '@weft-js\/warp'/.test(r.code) && 'no code', r.failed && 'failed to load', r.over > 0 && `overflows ${r.over}px`, ...errors].filter(Boolean)
     if (why.length) bad.push(`${path} (${why.join(', ')})`)
   }
   same(bad.join('; '), '', 'playgrounds')
