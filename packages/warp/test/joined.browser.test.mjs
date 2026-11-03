@@ -19,6 +19,7 @@ const PAGE = `
   ${seg('size', ['sm', 'md', 'lg'])}
   <div dir="rtl">${seg('rtl', ['a', 'b', 'c'])}</div>
   ${seg('one', ['only'])}
+  <div style="inline-size:240px">${seg('grid', ['solid', 'soft', 'outline', 'ghost', 'link', 'plain']).replace('role="radiogroup"', 'role="radiogroup" data-wrap style="grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))"')}</div>
   ${toggles('tg', ['b', 'i', 'u'])}
   ${toggles('vt', ['top', 'mid', 'end'], 'aria-orientation="vertical" style="flex-direction:column"')}
   <div data-scope="button-group" data-attached id="bg"><button data-scope="button" data-emphasis="outline" data-sweep id="bg-1"><span data-part="sweep-base"></span><span data-part="sweep"></span>Undo</button><button data-scope="button" data-emphasis="outline" data-sweep id="bg-2"><span data-part="sweep-base"></span><span data-part="sweep"></span>Redo</button></div>
@@ -49,6 +50,12 @@ test('segmented: first draws start, top, bottom; middle top and bottom; last end
   expect(await edges('size-md')).toEqual({ drawn: 'Top Bottom', round: '' })
   expect(await edges('size-lg')).toEqual({ drawn: 'Top Right Bottom', round: 'TopRight BottomRight' })
   expect(await edges('one-only')).toEqual({ drawn: 'Left Top Right Bottom', round: 'TopLeft TopRight BottomRight BottomLeft' })
+})
+
+test('a segmented group laid out over rows ([data-wrap]) strokes each item\'s whole box, row starts and middles too', async () => {
+  for (const t of ['solid', 'soft', 'outline', 'ghost', 'link', 'plain']) expect(await edges(`grid-${t}`), t).toEqual({ drawn: 'Left Top Right Bottom', round: 'TopLeft TopRight BottomRight BottomLeft' })
+  const rows = await page.$$eval('#grid > label', ls => new Set(ls.map(l => Math.round(l.getBoundingClientRect().top))).size)
+  expect(rows).toBe(2)
 })
 
 test('the edges are logical: in RTL the first item draws its right edge', async () => {

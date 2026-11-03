@@ -211,6 +211,31 @@ for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
     }
   }, viewport)
 }
+// A group laid out as an even grid is rows of items in their own cells, not one joined row: each option hovered strokes
+// its whole box ("ghost" and "caution" start row two, and drew only their top and bottom). One row still joins.
+await check('wrapped option buttons stroke closed boxes', '/components/button', async page => {
+  await page.locator('[data-play]').scrollIntoViewIfNeeded()
+  await page.waitForSelector('[data-play] [data-part="knob"] [data-scope="segmented"][data-wrap]')
+  await page.evaluate(() => document.fonts.ready)
+  await page.waitForTimeout(400)
+  const knob = name => page.locator('[data-play] [data-part="knob"]', { has: page.locator('[data-part="knob-label"]', { hasText: new RegExp(`^\\s*${name}\\s*$`) }) })
+  const drawn = l => l.locator(':scope > [data-part="sweep"]').evaluate(n => { const g = getComputedStyle(n); return ['Left', 'Top', 'Right', 'Bottom'].filter(s => parseFloat(g[`border${s}Width`]) > 0).join(' ') })
+  const open = []
+  for (const name of ['Emphasis', 'Tone']) {
+    const seg = knob(name).locator(':scope > [data-scope="segmented"]')
+    same(await seg.getAttribute('data-wrap'), '', `${name} is laid out as a grid`)
+    for (const l of await seg.locator(':scope > label:not(:has(input:checked))').all()) {
+      await l.hover()
+      await page.waitForTimeout(80)
+      const d = await drawn(l)
+      if (d !== 'Left Top Right Bottom') open.push(`${name} ${(await l.textContent()).trim()}: ${d}`)
+    }
+  }
+  same(open.join('; '), '', 'open-sided strokes')
+  const size = await knob('Size').locator(':scope > [data-scope="segmented"] > label').all()
+  same(await knob('Size').locator(':scope > [data-scope="segmented"]').getAttribute('data-wrap'), null, 'Size on one row')
+  same(`${await drawn(size[0])} / ${await drawn(size[1])} / ${await drawn(size[size.length - 1])}`, 'Left Top Bottom / Top Bottom / Top Right Bottom', 'one row joins')
+})
 // Every playground's few-option knobs, on a desk and a phone: one row of buttons whose words show whole, or, when they
 // can't fit one row, an even grid of equal columns (six as 3×2), never a ragged wrap that ends a row mid-group; when no
 // even grid fits, a dropdown in their place. A long list is a dropdown, as above.
