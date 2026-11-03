@@ -35,8 +35,9 @@ test('a checkbox input takes the click itself, so role-based tools reach it', as
   expect(await p.getByRole('checkbox').isChecked()).toBe(true)
 })
 
-test('the phone sort bar shows at a phone table\'s width and no wider', async () => {
-  const shown = async width => (await page(`<div data-scope="table" data-phone="cards" style="inline-size:${width}px"><div id="b" data-part="sortbar">x</div></div>`)).$eval('#b', n => getComputedStyle(n).display)
+test('the phone sort bar shows at a phone width of the table\'s container and no wider', async () => {
+  // the table isn't a container itself (each nested one costs the page a style pass), so it follows the one it's in
+  const shown = async width => (await page(`<div style="container-type:inline-size;inline-size:${width}px"><div data-scope="table" data-phone="cards"><div id="b" data-part="sortbar">x</div></div></div>`)).$eval('#b', n => getComputedStyle(n).display)
   expect(await shown(800)).toBe('none')
   expect(await shown(400)).toBe('flex')
 })

@@ -309,6 +309,10 @@
   --warp-ref-fluid-unit: 1vw;                                          /* iOS 15: no container units */
 }
 @supports (width: 1cqi) { :root { --warp-ref-fluid-unit: 1cqi; } }   /* the nearest inline-size container */
+/* the shell's main isn't a container (each one costs the page a style pass), so its unit is the shell's less the nav */
+@supports (width: 1cqi) {
+  :where([data-scope="shell"]:not([data-form] *, [data-form]) > [data-part="layout"] > [data-part="main"]) { --warp-ref-fluid-unit: calc((100cqi - var(--_navw)) / 100); }
+}
 @media (max-width: 1023.98px) { :root:not([data-form]) { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; } }
 @media (max-width: 599.98px)  { :root:not([data-form]) { --warp-ref-rem-k: 1; --warp-ref-root-size: 1rem; } }
 :root[data-form="tablet"] { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; }
@@ -375,7 +379,7 @@
    ------------------------------------------------------------------------ */
 
 :root, [data-expression], [data-density], [data-form], [data-pointer],
-[data-motion], [data-flair], [data-warp] {
+[data-motion], [data-flair], [data-warp], [data-scope="shell"] > [data-part="layout"] > [data-part="main"] {
   /* private shorthands */
   --_h: var(--warp-ref-neutral-h);
   --_c: var(--warp-ref-neutral-c);
