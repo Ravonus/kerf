@@ -209,7 +209,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         let timer: ReturnType<typeof setTimeout> | undefined
         const late = await Promise.race([
           Promise.all(wait).then(() => false),
-          new Promise<boolean>(ok => (timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true))),
+          new Promise<boolean>(ok => { timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true) }),
         ])
         clearTimeout(timer)
         if (late) return
@@ -244,7 +244,7 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
     }, null)
   } finally {
     useApp(prevApp)
-    Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve, flight: prev.flight, stream: prev.stream, shown: (prev as any).shown })
+    Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve, flight: prev.flight, stream: prev.stream, shown: (prev as typeof prev & { shown?: unknown }).shown })
     Object.assign(keys, prevKeys)
     writeKeys = prevWrite
     quiet = prevQuiet
@@ -500,24 +500,26 @@ export function spread(props: Record<string, unknown>): string {
  * Each key of `sources` merged (`mergeProps`: a later source wins a key, which keeps its first place) with the source it
  * comes from. A source is an object or a getter for one. They're few, so asking them beats building a map.
  */
-function merge(sources: any[], each: (k: string, o: any) => void) {
-  const all = sources.map(s => Object(typeof s === 'function' ? s() : s))
-  for (let i = 0; i < all.length; i++)
-    for (const k of Reflect.ownKeys(all[i]) as string[]) {
+function merge(sources: unknown[], each: (k: string, o: Record<string, unknown>) => void) {
+  const all = sources.map(s => Object(typeof s === 'function' ? s() : s) as Record<string, unknown>)
+  for (let i = 0; i < all.length; i++) {
+    const own = all[i]!
+    for (const k of Reflect.ownKeys(own) as string[]) {
       let seen = false
-      for (let j = 0; j < i && !seen; j++) seen = Object.hasOwn(all[j], k)
+      for (let j = 0; j < i && !seen; j++) seen = Object.hasOwn(all[j]!, k)
       if (seen) continue
-      let o = all[i]
-      for (let j = all.length - 1; j > i; j--) if (Object.hasOwn(all[j], k)) { o = all[j]; break }
+      let o = own
+      for (let j = all.length - 1; j > i; j--) if (Object.hasOwn(all[j]!, k)) { o = all[j]!; break }
       each(k, o)
     }
+  }
 }
 
 /**
  * `<div a={x} {...rest}>` with JSX children: `spread(mergeProps(...sources))` without the view, since the server reads
  * every key once.
  */
-export function spreads(...sources: any[]): string {
+export function spreads(...sources: unknown[]): string {
   if (sources.length === 1) return spread(Object(typeof sources[0] === 'function' ? sources[0]() : sources[0]))
   let out = ''
   merge(sources, (k, o) => {
@@ -530,8 +532,8 @@ export function spreads(...sources: any[]): string {
  * `mergeProps(...sources)` for a spread element without JSX children, as a plain object: its attributes and what goes
  * inside are each read once, right away, so a view's traps would only cost. `children` stays a getter, read in its place.
  */
-export function merged(...sources: any[]): Record<string, any> {
-  const out: Record<string, any> = {}
+export function merged(...sources: unknown[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
   merge(sources, (k, o) => {
     if (k === 'children') Object.defineProperty(out, k, { get: () => o[k], enumerable: true, configurable: true })
     else out[k] = o[k]

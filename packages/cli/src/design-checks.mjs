@@ -428,8 +428,8 @@ export function designChecks(root, { files: all, exclude = [], tokens }) {
       if (tokens) declaration({ prop, value: m[2].trim(), start, end: start + m[2].trimEnd().length }, theming ? (code, from, to, why, fix) => report(code, from, to, why, fix, 'warning') : report)
       if ((prop === 'outline' || prop === 'outline-width') && /^(none|0(px)?)\s*$/.test(m[2])) {
         const rule = css.lastIndexOf('}', m.index)
-        const selector = css.slice(rule + 1, css.indexOf('{', rule + 1))
-        if (/:focus(?!-within)/.test(selector) && !/box-shadow|border/.test(css.slice(m.index, css.indexOf('}', m.index)))) report('D036', start, start + m[2].trimEnd().length, `\`${selector.trim()}\` removes the focus ring with nothing in its place: keyboard users lose their place (WCAG 2.4.7).`)
+        const focused = css.slice(rule + 1, css.indexOf('{', rule + 1))
+        if (/:focus(?!-within)/.test(focused) && !/box-shadow|border/.test(css.slice(m.index, css.indexOf('}', m.index)))) report('D036', start, start + m[2].trimEnd().length, `\`${focused.trim()}\` removes the focus ring with nothing in its place: keyboard users lose their place (WCAG 2.4.7).`)
       }
     }
   }

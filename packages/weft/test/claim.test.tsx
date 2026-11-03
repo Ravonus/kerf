@@ -4,9 +4,8 @@ import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { createRoot, derived, effect, flush, rt, state, view } from '@weft-js/core'
 import { hydration } from '../src/hydrate'
-// @ts-expect-error: query imports (vite.mjs)
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module: the same file compiled for the server, then for hydration
 import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'
-// @ts-expect-error
 import * as Client from './fixtures/ssr/Claims.tsx?weft-hydrate'
 
 afterEach(() => { document.body.textContent = ''; vi.restoreAllMocks() })
@@ -16,7 +15,7 @@ const put = (html: string) => {
   c.innerHTML = html
   return c
 }
-const settle = () => new Promise(ok => setTimeout(ok))
+const settle = () => new Promise(ok => { setTimeout(ok) })
 const comments = (c: Element) => {
   const w = document.createTreeWalker(c, 128), out: string[] = []
   while (w.nextNode()) out.push((w.currentNode as Comment).data)
@@ -39,7 +38,7 @@ test('a row whose root is a fragment around a conditional claims too', () => {
   expect(c.querySelector('li')).toBe(row)
 })
 
-test('an empty hole is one marker, and a later value goes where it stood', async () => {
+test('an empty hole is one marker, and a later value goes where it stood', () => {
   const on = state(false)
   const html = renderToString(() => <Server.Nothing on={on} />)
   expect(html).toContain('<b>a</b><!----><u>c</u>')
@@ -91,11 +90,11 @@ test('a derived that read nothing is a constant: its readers have nothing to fol
   expect(live.value).toBe(3)
 })
 
-const row = (id: any, t = String(id)) => ({ id, href: `/${t}`, t })
+const row = (id: unknown, t = String(id)) => ({ id, href: `/${t}`, t })
 const links = (c: Element) => [...c.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')])
 
 test('two keys are two rows, whatever their hash: `Aa` and `BB` at one index share nothing', () => {
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
   const c = put(renderToString(() => <Server.Keyed rows={[row('Aa', 'one')]} />))
   const server = c.querySelector('a')
   hydrate(() => <Client.Keyed rows={[row('BB', 'two')]} />, c)
@@ -105,15 +104,15 @@ test('two keys are two rows, whatever their hash: `Aa` and `BB` at one index sha
 })
 
 test('a row put in before hydration builds that row alone: those after it keep their nodes', () => {
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
   const c = put(renderToString(() => <Server.Keyed rows={['a', 'b', 'c'].map(k => row(k))} />))
   const [a, b, last] = c.querySelectorAll('a')
-  ;(last as any).typed = 'still here'
+  ;(last as Element & { typed?: string }).typed = 'still here'
   hydrate(() => <Client.Keyed rows={['a', 'b', 'n', 'c'].map(k => row(k))} />, c)
   expect(hydration.misses).toBe(1)
   expect(links(c).map(l => l[0])).toEqual(['a', 'b', 'n', 'c'])
   expect([...c.querySelectorAll('a')].filter((_, i) => i !== 2)).toEqual([a, b, last])
-  expect((last as any).typed).toBe('still here')
+  expect((last as Element & { typed?: string }).typed).toBe('still here')
 })
 
 test('a row that moved keeps its node, wherever it went', () => {
@@ -136,7 +135,7 @@ test('a key can hold anything: nothing in it ends the attribute, a step, or anot
 })
 
 test('keys that read the same, and objects with no key to speak of, claim by place and never share a scope', () => {
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
   const rows = () => [{ id: 1, href: '/n', t: 'n' }, { id: '1', href: '/s', t: 's' }, { id: 'x', href: '/x', t: 'x' }, { id: 'x', href: '/y', t: 'y' }, { id: {}, href: '/o', t: 'o' }, { id: {}, href: '/p', t: 'p' }]
   const c = put(renderToString(() => <Server.Keyed rows={rows()} />))
   const nodes = [...c.querySelectorAll('a')]
@@ -160,7 +159,7 @@ test('an empty hole in a range takes nothing from what is before it', () => {
   expect(c.textContent).toBe('oneiyc')
 })
 
-test('a list that moved on since the server rendered puts its rows in order, with their attributes', async () => {
+test('a list that moved on since the server rendered puts its rows in order, with their attributes', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   const c = put(renderToString(() => <Server.Lines lines={['a', 'b']} />))
   hydrate(() => <Client.Lines lines={['b', 'a']} />, c)
@@ -187,7 +186,7 @@ test('a key miss writes what the server would have: attributes and handlers, and
 })
 
 test('a miss in one hole ends with it: the next hole still claims', () => {
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
   const c = put(renderToString(() => <Server.Beside on={() => {}} />))
   const [first, last] = c.querySelectorAll('button')
   first.removeAttribute('wk')

@@ -261,12 +261,12 @@ test('a held Boundary the server gave up on fetches behind its fallback, and sho
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html.replace(/<p wk="[^"]+" class="skeleton">.*?<\/p>/, m => `<!--wb:${id}-->${m}<!--/wb:${id}-->`)
   const skeleton = container.querySelector('.skeleton')!
-  const page = globalThis as any
+  const page = globalThis as typeof globalThis & { $wh?: Record<string, () => void>; $wc?: unknown[] }
   try {
     hydrate(() => ClientUsers({ load: api(50).load }), container, { data: { r: {}, b: { [key]: 'p' }, w: 1 } })
     expect(hydration.misses).toBe(0)
     expect(skeleton.isConnected).toBe(true)
-    page.$wh[id]()
+    page.$wh![id]!()
     await flush()
     expect(skeleton.isConnected).toBe(true)
     expect(container.querySelector('.profile')).toBeNull()
@@ -287,7 +287,7 @@ test('a Boundary that first runs after its chunk landed claims the content, and 
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
   const profile = container.querySelector('.profile')!
-  const page = globalThis as any
+  const page = globalThis as typeof globalThis & { $wh?: Record<string, () => void>; $wc?: unknown[] }
   page.$wc = [{ r: data.r, b: data.b }]
   try {
     hydrate(() => ClientUsers({ load }), container, { data: { r: {}, b: { [key]: 'p' }, w: 1 } })

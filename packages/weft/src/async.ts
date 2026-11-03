@@ -114,8 +114,8 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
           settle(out)
           record({ v: out })
         }
-      } catch (e) {
-        e = shown(e)
+      } catch (caught) {
+        const e = shown(caught)
         fail(e)
         record({ e: message(e) })
       }
@@ -164,10 +164,6 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
   }
 }
 
-/**
- * `<Boundary pending={<Skeleton />} error={(e, retry) => …}>…</Boundary>`. Without `error`, a failure renders
- * nothing (dev builds log it).
- */
 /** Content's own holes, which a client reads after `scoped` has ended and the server read inside it: same scope, same keys. */
 function inScope(c: unknown) {
   if (typeof c !== 'function' && !Array.isArray(c)) return c
@@ -179,6 +175,10 @@ function inScope(c: unknown) {
   return () => (keys.on ? under(p, () => ((keys.n = n), read(c))) : c)
 }
 
+/**
+ * `<Boundary pending={<Skeleton />} error={(e, retry) => …}>…</Boundary>`. Without `error`, a failure renders
+ * nothing (dev builds log it).
+ */
 export function Boundary(props: { pending?: unknown; /** What `pending="shape"` compiles to: a variant, its place reserved from the first paint. */ shape?: () => unknown; error?: (e: unknown, retry: () => void) => unknown; children?: unknown }) {
   const parent = getOwner()
   const list: Tracked[] = []
@@ -270,10 +270,10 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
     onCleanup(() => clearTimeout(timer))
     if (held) {
       const id = encodeURIComponent(key!)
-      const waiting = (page.$wh ||= {})
+      const holds = (page.$wh ||= {})
       // Its chunk, or none when the server gave up on it. The chunk's data is what the server rendered it from, so
       // nothing's asked again. Built here, not in the memo: what it reads has to reach the memo.
-      waiting[id] = t => {
+      holds[id] = t => {
         held = false
         was = landed(data!, page)[key!]
         if (was === 'e') failed()
@@ -281,7 +281,7 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
         else build()
         if (!untrack(() => loading.value)) show.value = 'content'
       }
-      onCleanup(() => void delete waiting[id])
+      onCleanup(() => void delete holds[id])
     }
   }
 
@@ -366,7 +366,7 @@ function landed(data: Streamed, page: Page) {
 function claim(t: HTMLTemplateElement, data: Streamed, fn: () => void) {
   const box = document.createElement('div')
   box.append(t.content)
-  const state = rt.state
+  const outer = rt.state
   rt.data = data as SsrData
   rt.state = data.s
   Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })
@@ -375,7 +375,7 @@ function claim(t: HTMLTemplateElement, data: Streamed, fn: () => void) {
   } finally {
     Object.assign(keys, { on: false, hydrating: false, p: '', n: 0 })
     rt.data = undefined
-    rt.state = state
+    rt.state = outer
   }
 }
 
