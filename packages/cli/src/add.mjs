@@ -256,7 +256,7 @@ async function addAuth(root, { dryRun, install }) {
     const env = join(root, '.env')
     if (!(existsSync(env) && readFileSync(env, 'utf8').includes('BETTER_AUTH_SECRET'))) writeFileSync(env, `${existsSync(env) ? `${readFileSync(env, 'utf8').trimEnd()}\n` : ''}BETTER_AUTH_SECRET=${randomBytes(32).toString('base64')}\nBETTER_AUTH_URL=http://localhost:5173\n`)
   }
-  actions.push('add BETTER_AUTH_SECRET to .env', ...(layer.schema ? ['next: `weft db generate`'] : []), 'next: `weft db migrate`', "next: add `auth: 'user'` to what needs a user, and link to /login")
+  actions.push('add BETTER_AUTH_SECRET to .env', ...(layer.schema ? ['next: `weft db generate`'] : []), 'next: reload the app: the migration applies on the next request', "next: add `auth: 'user'` to what needs a user, and link to /login")
   return { ok: true, package: `Better Auth on ${layer.layer}`, actions, ...(dryRun && { dryRun: true }) }
 }
 

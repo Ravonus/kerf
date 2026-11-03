@@ -1,9 +1,10 @@
 // `weft add` (research 34 §7): one insert into any config format, and no change at all when it can't be sure.
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { addCommand, pinned } from '../src/add.mjs'
+import { DB_COMMANDS } from '../src/start.mjs'
 import { loadConfig } from '../src/load-config.mjs'
 import { project } from './helpers.mjs'
 
@@ -152,6 +153,27 @@ describe('weft add', () => {
     expect(read(dir, '.env')).toMatch(/BETTER_AUTH_SECRET=.{40}/)
     expect(read(dir, 'src/context.server.ts')).toContain('session(auth, request)')
     await expect(add(dir, 'auth')).rejects.toThrow('already exists')
+  })
+
+  it('the next steps auth prints name only `weft db` commands that exist', async () => {
+    const dir = project({ 'weft.config.ts': 'export default {}\n', 'package.json': '{"name":"a","dependencies":{}}\n' })
+    await add(dir, 'db')
+    const next = (await add(dir, 'auth')).actions.filter(a => a.startsWith('next:')).join('\n')
+    for (const [, command] of next.matchAll(/weft db (\w+)/g)) expect(DB_COMMANDS).toContain(command)
+    expect(next).toContain('applies on the next request')
+  })
+
+  it('no package or doc names a `weft db` command that does not exist', () => {
+    const repo = join(import.meta.dirname, '../../..')
+    const dirs = [...readdirSync(join(repo, 'packages')).map(p => join(repo, 'packages', p, 'src')), join(repo, 'packages/cli/docs'), join(repo, 'site/content')]
+    const named = []
+    for (const dir of dirs.filter(d => existsSync(d))) {
+      for (const f of readdirSync(dir, { recursive: true, withFileTypes: true })) {
+        if (!f.isFile() || !/\.(?:[cm]?[jt]sx?|md)$/.test(f.name)) continue
+        for (const [, command] of readFileSync(join(f.parentPath, f.name), 'utf8').matchAll(/weft db (\w+)/g)) named.push(`${command} in ${f.name}`)
+      }
+    }
+    expect(named.filter(n => !DB_COMMANDS.includes(n.split(' ')[0]))).toEqual([])
   })
 })
 

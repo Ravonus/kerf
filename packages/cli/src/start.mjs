@@ -156,11 +156,14 @@ export async function startCommand(root, { runtime } = {}) {
 /** The hash `weft db generate` records and Q015 compares. */
 export const schemaHash = text => createHash('sha256').update(text).digest('hex').slice(0, 16)
 
+/** What `weft db` takes. There's no `migrate`: new migrations apply on the next request. */
+export const DB_COMMANDS = ['generate', 'live', 'listen']
+
 /** `weft db generate [name]`: the data layer's migration, on Node like all of dev (research 28 §2, 34 §4). */
 export async function dbCommand(root, sub, name) {
+  if (!DB_COMMANDS.includes(sub)) throw Object.assign(new Error(`weft db ${sub ?? ''}: use generate (new migrations apply on the next request), live or listen`), { code: 'E_USAGE' })
   if (sub === 'live') return dbLive(root)
   if (sub === 'listen') return dbListen(root)
-  if (sub !== 'generate') throw Object.assign(new Error(`weft db ${sub ?? ''}: use generate (new migrations apply on the next request), live or listen`), { code: 'E_USAGE' })
   const layer = await dbLayer(root)
   if (!layer) throw Object.assign(new Error('this app has no database: `weft add db` adds one'), { code: 'E_USAGE' })
   const output = layer.generate(root, name)

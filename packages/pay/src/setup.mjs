@@ -91,7 +91,7 @@ export const setup = {
       },
       env: { STRIPE_SECRET_KEY: 'sk_test_placeholder', STRIPE_WEBHOOK_SECRET: 'whsec_placeholder' },
       next: [
-        ...(drizzle ? ['`weft db generate`', '`weft db migrate`'] : ['`src/pay.server.ts` starts on `memoryPayStore()`: write a `PayStore` on your data layer (PAY016)']),
+        ...(drizzle ? ['`weft db generate`, then reload: the migration applies on the next request'] : ['`src/pay.server.ts` starts on `memoryPayStore()`: write a `PayStore` on your data layer (PAY016)']),
         'put your real test keys in .env, and give Stripe the webhook URL /_weft/x/pay/stripe',
       ],
     }
