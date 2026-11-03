@@ -61,6 +61,16 @@ test('keyframes stay only while something runs them', () => {
   expect(out(live)).toBe('')
 })
 
+test('keyframes inside a layer go when nothing runs them, and so do the tokens only they read', () => {
+  const css = '@layer warp.flow{:root{--warp-y:8px}[data-flow=tile]{animation:rise 1s}@keyframes rise{from{translate:0 var(--warp-y)}}}'
+  expect(out(css, 'tile')).toBe(css)
+  expect(out(css)).toBe('')
+})
+
+test('a data-flow motion no build file names goes', () => {
+  expect(out('[data-flow=row]{color:red}[data-flow=icon]{color:blue}', 'row')).toBe('[data-flow=row]{color:red}')
+})
+
 test('keep and template stems save names built at run time', () => {
   expect(purge(['[data-scope=knob]{color:red}'], words([], ['knob']))[0]).toContain('knob')
   // oxlint-disable-next-line no-template-curly-in-string -- source text: a template literal is what's being scanned

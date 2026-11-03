@@ -6,8 +6,9 @@
 // Attributes set from fixed names, in a component or in the app: a value that's in no built file can't reach them. That
 // takes in the dials with tiers (data-expression, data-fields, data-density, data-flair, data-form): an app that switches a
 // tier at run time has the tier's name in its build, and `setDial` brings all of them. data-theme and data-motion stay:
-// those rules answer the OS, and they're small.
-const KEYED = /\[data-(?:scope|part|variant|tone|emphasis|size|appearance|expression|fields|density|flair|form)=["']?([^\]"']+)["']?\]/g
+// those rules answer the OS, and they're small. data-flow names a scroll motion from markup, so a motion no page asks
+// for goes with its keyframes.
+const KEYED = /\[data-(?:scope|part|variant|tone|emphasis|size|appearance|flow|expression|fields|density|flair|form)=["']?([^\]"']+)["']?\]/g
 const OWNED_PROP = /^--(?:warp-|_)/
 
 /** Split at top-level `sep`, skipping strings and brackets. */
@@ -172,6 +173,8 @@ function flatten(css) {
 }
 
 const ANIMATED = /^@(?:-\w+-)?keyframes\b/
+/** A sheet without its keyframes at any depth (warp's sit in its layers): what's left is what can run one. */
+const unanimated = nodes => nodes.filter(n => !ANIMATED.test(n.head)).map(n => (n.body !== undefined && GROUPING.test(n.head) ? { head: n.head, body: print(unanimated(parse(n.body))) } : n))
 
 /** The words of built JS or HTML, in the form `purge` reads. A word ending in `-` came from a template: it covers a prefix. */
 export function words(sources, keep = []) {
@@ -189,14 +192,16 @@ export function words(sources, keep = []) {
 export function purge(sheets, found) {
   const { has } = found
   let out = sheets.map(css => print(prune(parse(css), has)))
+  // keyframes and tokens free each other: a dropped animation's keyframes may be the last to read a token
   for (;;) {
+    const rest = out.map(css => print(unanimated(parse(css)))).join('')
+    out = out.map(css => dropKeyframes(css, rest, has))
     const seen = reads(out)
     const next = out.map(css => dropProps(css, name => seen.has(name) || has(name)))
     if (next.join('') === out.join('')) break
     out = next
   }
-  const rest = out.map(css => print(parse(css).filter(n => !ANIMATED.test(n.head)))).join('')
-  return out.map(css => flatten(dropKeyframes(css, rest, has)))
+  return out.map(flatten)
 }
 
 /** Interaction: a state nothing is in when the page first paints. */
