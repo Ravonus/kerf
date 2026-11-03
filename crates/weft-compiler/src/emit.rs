@@ -1200,7 +1200,7 @@ impl Emitter<'_> {
         for p in &o.properties {
             match p {
                 ObjectPropertyKind::ObjectProperty(p) if p.kind == PropertyKind::Init && !p.method => {
-                    any |= jsx(&p.value)
+                    any |= jsx(&p.value);
                 }
                 ObjectPropertyKind::ObjectProperty(_) => return None,
                 ObjectPropertyKind::SpreadProperty(_) => {}
@@ -1247,14 +1247,14 @@ impl Emitter<'_> {
                         format!("() => ({e})")
                     });
                 }
-                JSXAttributeItem::Attribute(a) => {
-                    let key = match &a.name {
+                JSXAttributeItem::Attribute(attr) => {
+                    let key = match &attr.name {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
                         JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
                     };
                     // `bind:count={box}`: the child reads the box, and its writes reach it.
                     if let (false, JSXAttributeName::NamespacedName(ns), Some(e)) =
-                        (element, &a.name, attr_expression(a))
+                        (element, &attr.name, attr_expression(attr))
                         && ns.namespace.name == "bind"
                     {
                         let (k, target) = (prop_key(ns.name.name.as_str()), self.expr(e));
@@ -1267,7 +1267,7 @@ impl Emitter<'_> {
                         continue;
                     }
                     let k = prop_key(&key);
-                    let field = match &a.value {
+                    let field = match &attr.value {
                         None => format!("{k}: true"),
                         Some(JSXAttributeValue::StringLiteral(s)) => {
                             format!("{k}: {}", js_string(&decode_entities(s.value.as_str())))

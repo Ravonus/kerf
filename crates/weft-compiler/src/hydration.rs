@@ -625,9 +625,9 @@ impl<'a> Visit<'a> for Collect<'_> {
                     JSXAttributeItem::SpreadAttribute(s) => {
                         let why = format!("a spread on an element (line {})", line_col(self.source, s.span.start).0);
                         if self.spreads_props(&s.argument) {
-                            self.passes(why)
+                            self.passes(why);
                         } else {
-                            self.own(why)
+                            self.own(why);
                         }
                         continue;
                     }
