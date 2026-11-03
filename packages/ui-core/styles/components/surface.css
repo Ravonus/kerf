@@ -7,9 +7,12 @@
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1); color: var(--warp-color-text);
   transition: box-shadow var(--warp-touch-out) var(--warp-ease-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
-:where(a[data-scope="surface"], button[data-scope="surface"]) { text-decoration: none; text-align: start; font: inherit; cursor: pointer; }
-:where(a[data-scope="surface"]:hover, button[data-scope="surface"]:hover) { box-shadow: var(--warp-elevation-2); transition-duration: 0ms, var(--warp-spring-duration); }
-:where(a[data-scope="surface"]:active, button[data-scope="surface"]:active) { scale: calc((1 + var(--warp-press) * 3) / 4 + 0.0025); transition-duration: 0ms; }
+:where(a[data-scope="surface"]),
+:where(button[data-scope="surface"]) { text-decoration: none; text-align: start; font: inherit; cursor: pointer; }
+:where(a[data-scope="surface"]:hover),
+:where(button[data-scope="surface"]:hover) { box-shadow: var(--warp-elevation-2); transition-duration: 0ms, var(--warp-spring-duration); }
+:where(a[data-scope="surface"]:active),
+:where(button[data-scope="surface"]:active) { scale: calc((1 + var(--warp-press) * 3) / 4 + 0.0025); transition-duration: 0ms; }
 :where([data-scope="surface"] [data-part="eyebrow"]) {
   font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
   letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);

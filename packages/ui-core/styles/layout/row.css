@@ -13,7 +13,8 @@
 :where([data-scope="row"][data-align="baseline"])  { align-items: baseline; }
 :where([data-scope="row"] > [data-grow])           { flex: 1 1 0; min-inline-size: 0; }
 @container (max-width: 599.98px) {
-:where([data-scope="row"][data-reflow="tablet"], [data-scope="row"][data-reflow="desktop"]) {
+:where([data-scope="row"][data-reflow="tablet"]),
+  :where([data-scope="row"][data-reflow="desktop"]) {
     flex-direction: column; align-items: stretch;
   }
 }

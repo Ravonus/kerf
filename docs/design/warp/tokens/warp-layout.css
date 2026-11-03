@@ -83,7 +83,8 @@
 :where([data-contain])       { container-type: inline-size; }
 
 /* visibility by container step (nearest container) — never by hover */
-@container (max-width: 599.98px) { :where([data-from="tablet"], [data-from="desktop"]) { display: none !important; } }
+@container (max-width: 599.98px) { :where([data-from="tablet"]),
+ :where([data-from="desktop"]) { display: none !important; } }
 @container (max-width: 999.98px) { :where([data-from="desktop"]) { display: none !important; } }
 @container (min-width: 600px)    { :where([data-until="tablet"]) { display: none !important; } }
 @container (min-width: 1000px)   { :where([data-until="desktop"]) { display: none !important; } }
@@ -100,11 +101,14 @@
 :where([data-scope="shell"] [data-part="nav-item"][data-sweep]) {
   --warp-color-sweep-base: transparent; --warp-sweep-radius: var(--warp-radius-round);
 }
-:where([data-part="panel"][data-sweep], [data-scope="surface"][data-sweep]) {
+:where([data-part="panel"][data-sweep]),
+:where([data-scope="surface"][data-sweep]) {
   --warp-color-sweep-base: var(--warp-color-border); --warp-sweep-radius: var(--warp-radius-surface);
   border-color: transparent;
 }
-:where([data-scope="surface"][data-sweep]:is(:hover, :focus-visible, :has(:focus-visible))) { --warp-color-sweep-base: var(--warp-color-border-strong); }
+:where([data-scope="surface"][data-sweep]:is(:hover)),
+:where([data-scope="surface"][data-sweep]:is(:focus-visible)),
+:where([data-scope="surface"][data-sweep]:is(:has(:focus-visible))) { --warp-color-sweep-base: var(--warp-color-border-strong); }
 
 /* ===========================================================================
    2 · PRIMITIVES
@@ -136,7 +140,8 @@
 :where([data-scope="row"][data-align="baseline"])  { align-items: baseline; }
 :where([data-scope="row"] > [data-grow])           { flex: 1 1 0; min-inline-size: 0; }
 @container (max-width: 599.98px) {
-  :where([data-scope="row"][data-reflow="tablet"], [data-scope="row"][data-reflow="desktop"]) {
+  :where([data-scope="row"][data-reflow="tablet"]),
+  :where([data-scope="row"][data-reflow="desktop"]) {
     flex-direction: column; align-items: stretch;
   }
 }
@@ -228,7 +233,10 @@
   aspect-ratio: var(--_ratio); overflow: hidden; display: grid; place-items: center;
   background: var(--warp-color-surface-sunken);
 }
-:where([data-scope="frame"] > img, [data-scope="frame"] > video, [data-scope="frame"] > canvas, [data-scope="frame"] > svg) {
+:where([data-scope="frame"] > img),
+:where([data-scope="frame"] > video),
+:where([data-scope="frame"] > canvas),
+:where([data-scope="frame"] > svg) {
   inline-size: 100%; block-size: 100%; object-fit: cover; display: block;
 }
 :where([data-scope="frame"][data-ratio="square"]) { --_ratio: 1; }
@@ -350,7 +358,9 @@
   color: var(--warp-color-text-subtle); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 :where([data-scope="shell"] [data-part="command"] > svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); flex: none; color: var(--warp-color-accent-text); }
-:where([data-scope="shell"] [data-part="command-label"], [data-scope="shell"] [data-part="command-hint"], [data-scope="shell"] [data-part="command"] kbd) {
+:where([data-scope="shell"] [data-part="command-label"]),
+:where([data-scope="shell"] [data-part="command-hint"]),
+:where([data-scope="shell"] [data-part="command"] kbd) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 
@@ -368,7 +378,9 @@
 :where([data-scope="shell"] [data-part="nav-list"]) { display: flex; margin: 0; padding: 0; list-style: none; }
 :where([data-scope="shell"] [data-part="nav-list"] > li) { display: flex; flex: 1 1 0; min-inline-size: 0; }
 :where([data-scope="shell"] [data-part="nav-list"] > li:not([data-tab])) { display: none; }
-:where([data-scope="shell"] [data-part="nav-group"], [data-scope="shell"] [data-part="nav-extra"], [data-scope="shell"] [data-part="nav-foot"]) { display: none; }
+:where([data-scope="shell"] [data-part="nav-group"]),
+:where([data-scope="shell"] [data-part="nav-extra"]),
+:where([data-scope="shell"] [data-part="nav-foot"]) { display: none; }
 :where([data-scope="shell"] [data-part="nav-item"]) {
   position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px; min-block-size: var(--warp-layout-tabbar); padding: 6px 2px;
@@ -398,7 +410,8 @@
   font: 600 10.5px/16px var(--warp-text-body-font); text-align: center; font-variant-numeric: tabular-nums;
 }
 /* the count's spoken half ("12 new"): a visually hidden span, never aria-label on a span (review 03 m2) */
-:where([data-scope="shell"] [data-part="nav-count-label"], [data-scope="doc-tabs"] [data-part="tab-state"]) {
+:where([data-scope="shell"] [data-part="nav-count-label"]),
+:where([data-scope="doc-tabs"] [data-part="tab-state"]) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 /* the keyboard is up: the bottom bar steps aside so the focused field and
@@ -526,7 +539,8 @@
   :where([data-scope="shell"][data-nav-open] [data-part="nav-item"][aria-current] svg) { color: var(--warp-color-accent-text); }
   :where([data-scope="shell"][data-nav-open] [data-part="nav-count"]) { position: static; margin-inline-start: auto; }
   :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"]) { flex-direction: row; align-items: center; }
-  :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] li, [data-scope="shell"][data-nav-open] [data-part="nav-foot"] > a) { flex: 1; }
+  :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] li),
+  :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] > a) { flex: 1; }
 }
 @container warp-shell (min-width: 1000px) {
   :where([data-scope="shell"]:not([data-collapsed]) [data-part="layout"]) { --_navw: var(--warp-layout-sidebar); }
@@ -578,7 +592,8 @@
     background: var(--warp-color-surface-overlay); color: var(--warp-color-text-subtle); box-shadow: var(--warp-elevation-1); cursor: pointer;
     transition: inline-size var(--warp-duration-fast) var(--warp-ease-out), color var(--warp-duration-fast);
   }
-  :where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:hover, :focus-visible)) { inline-size: 28px; color: var(--warp-color-text); }
+  :where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:hover)),
+  :where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:focus-visible)) { inline-size: 28px; color: var(--warp-color-text); }
   :where([data-scope="shell"][data-collapsed="hidden"][data-nav-open] [data-part="edge-tab"]) { inset-inline-start: var(--warp-layout-sidebar); }
   :where([data-scope="shell"][data-collapsed="hidden"][data-nav-open] [data-part="edge-tab"] svg) { transform: scaleX(-1); }
 }
@@ -595,7 +610,8 @@
 
 /* -- dock: a sticky action bar that clears the bottom bar, safe area and keyboard */
 :where([data-scope="shell"]) { --_dock: calc(var(--warp-layout-tabbar) + var(--warp-safe-bottom)); }
-:where([data-scope="shell"][data-variant="focus"], [data-scope="shell"][data-keyboard]) { --_dock: 0px; }
+:where([data-scope="shell"][data-variant="focus"]),
+:where([data-scope="shell"][data-keyboard]) { --_dock: 0px; }
 @container warp-shell (min-width: 600px) { :where([data-scope="shell"] [data-part="layout"]) { --_dock: 0px; } }
 :where([data-scope="shell"] [data-part="dock"]) {
   position: sticky; inset-block-end: var(--_dock); z-index: calc(var(--warp-z-sticky) - 1);
@@ -634,7 +650,8 @@
 :where([data-scope="shell"] [data-part="sheet"]) { display: none; }
 @container warp-shell (max-width: 599.98px) {
   /* on phone, menus become bottom sheets and the palette goes full screen */
-  :where([data-scope="shell"] [data-part="menu"], [data-scope="shell"] [data-part="sheet"]) {
+  :where([data-scope="shell"] [data-part="menu"]),
+  :where([data-scope="shell"] [data-part="sheet"]) {
     display: block; position: fixed; z-index: var(--warp-z-modal);
     inset: auto 0 0 0; inline-size: auto; max-block-size: calc(var(--warp-viewport-block) - var(--_barh));
     padding: 6px var(--warp-space-related) calc(var(--warp-space-group) + var(--warp-safe-bottom));
@@ -647,7 +664,8 @@
     content: ""; display: block; inline-size: 36px; block-size: 4px; margin: 4px auto 10px;
     border-radius: 999px; background: var(--warp-color-border-strong);
   }
-  :where([data-scope="shell"] [data-part="sheet"][hidden], [data-scope="shell"] [data-part="menu"][hidden]) { display: none; }
+  :where([data-scope="shell"] [data-part="sheet"][hidden]),
+  :where([data-scope="shell"] [data-part="menu"][hidden]) { display: none; }
   :where([data-scope="shell"] [data-part="palette"]) {
     inset: 0; translate: none; inline-size: auto; border-radius: 0; border: 0;
     padding-block-start: var(--warp-safe-top); padding-block-end: var(--warp-keyboard);
@@ -715,7 +733,8 @@
 :where([data-scope="master-detail"]) {
   display: grid; grid-template-columns: minmax(0, 1fr); min-inline-size: 0;
 }
-:where([data-scope="master-detail"] > [data-part="list"], [data-scope="master-detail"] > [data-part="detail"]) {
+:where([data-scope="master-detail"] > [data-part="list"]),
+:where([data-scope="master-detail"] > [data-part="detail"]) {
   container-type: inline-size; min-inline-size: 0; background: var(--warp-color-page);
 }
 @container (max-width: 599.98px) {
@@ -829,10 +848,14 @@
     background-size: 4px 18px; background-repeat: repeat-y; background-position: center; opacity: 0.0;
     transition: opacity var(--warp-duration-fast);
   }
-  :where([data-scope="split-pane"] > [data-part="separator"]:is(:hover, :focus-visible, [data-dragging]))::before {
+  :where([data-scope="split-pane"] > [data-part="separator"]:is(:hover))::before,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is(:focus-visible))::before,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is([data-dragging]))::before {
     background: var(--warp-color-accent-solid); inline-size: var(--warp-border-emphasis); inset-inline-start: calc(var(--warp-border-emphasis) / -2);
   }
-  :where([data-scope="split-pane"] > [data-part="separator"]:is(:hover, :focus-visible, [data-dragging]))::after { opacity: 1; }
+  :where([data-scope="split-pane"] > [data-part="separator"]:is(:hover))::after,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is(:focus-visible))::after,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is([data-dragging]))::after { opacity: 1; }
   :where([data-scope="split-pane"][data-orientation="vertical"] > [data-part="separator"]) { inline-size: auto; block-size: 0; cursor: row-resize; }
   :where([data-scope="split-pane"][data-orientation="vertical"] > [data-part="separator"])::before { inset-inline: 0; inset-block: -0.5px auto; inline-size: auto; block-size: 1px; }
   :where([data-scope="split-pane"][data-orientation="vertical"] > [data-part="separator"])::after { inset-inline: 0; inset-block-start: calc(var(--_hit) / -2); inline-size: auto; block-size: var(--_hit); }
@@ -1321,14 +1344,33 @@
 /* formatted values are isolated, so "−1.284,50 €" or "١٬٢٨٤٫٥٠ US$" never reorders against the words around it */
 :where([data-format]) { unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
 /* identifiers keep their own order in every direction: order ids, SKUs, codes, e-mail, phone, URLs */
-:where([data-format="id"], [data-format="code"]) { direction: ltr; unicode-bidi: isolate; }
+:where([data-format="id"]),
+:where([data-format="code"]) { direction: ltr; unicode-bidi: isolate; }
 /* icons that point (back, next, send, undo, a list's chevron) mirror; icons that depict things never do */
 :where([data-flip]:dir(rtl)) { scale: -1 1; }
 /* scripts that join (Arabic, Syriac, N'Ko, Adlam, Hanifi Rohingya, Mongolian) or have no case:
    no tracking and no case transform, or the letters break apart. These are the tokens the dials set. */
 /* only where a lang is declared: these tokens inherit, and a bare :lang() is tested on every element */
-:where([lang]):is(:lang(ar), :lang(fa), :lang(ur), :lang(ps), :lang(sd), :lang(ug), :lang(ckb), :lang(syr), :lang(nqo), :lang(ff-Adlm), :lang(rhg), :lang(mn-Mong),
-    :lang(he), :lang(yi), :lang(th), :lang(hi), :lang(bn), :lang(ja), :lang(zh), :lang(ko)) {
+:where([lang]):is(:lang(ar)),
+:where([lang]):is(:lang(fa)),
+:where([lang]):is(:lang(ur)),
+:where([lang]):is(:lang(ps)),
+:where([lang]):is(:lang(sd)),
+:where([lang]):is(:lang(ug)),
+:where([lang]):is(:lang(ckb)),
+:where([lang]):is(:lang(syr)),
+:where([lang]):is(:lang(nqo)),
+:where([lang]):is(:lang(ff-Adlm)),
+:where([lang]):is(:lang(rhg)),
+:where([lang]):is(:lang(mn-Mong)),
+:where([lang]):is(:lang(he)),
+:where([lang]):is(:lang(yi)),
+:where([lang]):is(:lang(th)),
+:where([lang]):is(:lang(hi)),
+:where([lang]):is(:lang(bn)),
+:where([lang]):is(:lang(ja)),
+:where([lang]):is(:lang(zh)),
+:where([lang]):is(:lang(ko)) {
   --warp-text-eyebrow-tracking: 0em; --warp-text-eyebrow-case: none;
   --warp-text-label-tracking: 0em; --warp-text-label-case: none;
   --warp-text-button-tracking: 0em; --warp-text-button-case: none;
@@ -1375,9 +1417,9 @@
 
 /* View Transitions (opt-in: config `transitions: "view"` emits @view-transition
    and names). Main swaps as a route; named elements morph (shared element). */
-::view-transition-group(*) { animation-duration: var(--warp-duration-push); animation-timing-function: var(--warp-ease-out); }
-::view-transition-old(warp-main) { animation: warp-route-out calc(var(--warp-duration-route) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
-::view-transition-new(warp-main) { animation: warp-route-in var(--warp-duration-route) var(--warp-ease-out) both; }
+:where(:root)::view-transition-group(*) { animation-duration: var(--warp-duration-push); animation-timing-function: var(--warp-ease-out); }
+:where(:root)::view-transition-old(warp-main) { animation: warp-route-out calc(var(--warp-duration-route) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
+:where(:root)::view-transition-new(warp-main) { animation: warp-route-in var(--warp-duration-route) var(--warp-ease-out) both; }
 
 /* ===========================================================================
    6 · ENVIRONMENT: foldables, print
@@ -1389,17 +1431,28 @@
   }
 }
 @media print {
-  :where([data-scope="shell"] [data-part="header"], [data-scope="shell"] [data-part="nav"],
-         [data-scope="shell"] [data-part="skip"], [data-scope="shell"] [data-part="scrim"],
-         [data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
+  :where([data-scope="shell"] [data-part="header"]),
+  :where([data-scope="shell"] [data-part="nav"]),
+  :where([data-scope="shell"] [data-part="skip"]),
+  :where([data-scope="shell"] [data-part="scrim"]),
+  :where([data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
   :where([data-scope="shell"] [data-part="layout"]) { display: block; min-block-size: 0; }
   :where([data-scope="master-detail"]) { display: block; block-size: auto; position: static; }
-  :where([data-scope="scroll-area"], [data-scope="master-detail"] > *) { overflow: visible; block-size: auto; mask-image: none; }
+  :where([data-scope="scroll-area"]),
+  :where([data-scope="master-detail"] > *) { overflow: visible; block-size: auto; mask-image: none; }
   :where([data-scope="split"] > [data-sticky]) { position: static; }
-  :where([data-scope="shell"] [data-part="dock"], [data-scope="shell"] [data-part="menu"], [data-scope="shell"] [data-part="sheet"],
-         [data-scope="shell"] [data-part="palette"], [data-scope="consent"], [data-scope="announcement"], [data-scope="topnav"],
-         [data-scope="float-panel"], [data-scope="back-to-top"], [data-scope="route-progress"], [data-scope="docs"] [data-part="sidenav"],
-         [data-scope="anchor-nav"]) { display: none !important; }
+  :where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]),
+  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
   :where([data-scope="split"]) { display: block; }
   :where(main a[href^="http"])::after { content: " (" attr(href) ")"; font-size: 0.85em; color: var(--warp-color-text-subtle); }
 }

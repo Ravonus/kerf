@@ -6,7 +6,9 @@
 :where([data-part="confirm-field"]) { position: relative; display: block; border-radius: var(--warp-radius-control); }
 :where([data-part="confirm-field"][data-match]) { --warp-color-sweep: var(--warp-color-sweep-critical); }   /* JS holds the phase "in" while it matches */
 :where([data-part="confirm-field"][data-match]) > input { border-color: var(--warp-color-critical-border); }
-:where(dialog[data-scope="dialog"], dialog[data-scope="sheet"], dialog[data-scope="palette"]) {
+:where(dialog[data-scope="dialog"]),
+:where(dialog[data-scope="sheet"]),
+:where(dialog[data-scope="palette"]) {
   box-sizing: border-box; padding: 0; color: var(--warp-color-text);
   background: var(--warp-color-surface-overlay);
   border: var(--warp-border-hairline) solid var(--warp-color-border);
@@ -41,7 +43,8 @@
   :where(dialog[data-scope="dialog"][open]) { opacity: 0; translate: 0 var(--warp-motion-distance); scale: var(--warp-motion-scale-from); }
 }
 /* the pick: one pass of weft across the top edge as it arrives, then gone */
-:where(dialog[data-scope="dialog"][open], dialog[data-scope="sheet"][open]):where(:not([data-flair="none"]))::before {
+:where(dialog[data-scope="dialog"][open]):where(:not([data-flair="none"]))::before,
+:where(dialog[data-scope="sheet"][open]):where(:not([data-flair="none"]))::before {
   content: ""; position: absolute; inset: -1px -1px auto; block-size: var(--warp-sweep-width); background: var(--warp-color-sweep); border-radius: inherit;
   pointer-events: none; transform-origin: 0 50%;
   animation: warp-pick calc(var(--warp-sweep-duration) * 1.2) var(--warp-sweep-ease-in) both;
@@ -49,48 +52,61 @@
 :where(dialog[data-tone="critical"])::before { background: var(--warp-color-sweep-critical); }
 @keyframes warp-pick { from { scale: 0 1; opacity: 1; } 62% { scale: 1 1; opacity: 1; } to { scale: 1 1; opacity: 0; } }
 /* contents arrive after the panel, once, in reading order */
-:where(dialog[data-scope="dialog"][open]) > :where([data-part="body"], [data-part="footer"]) { animation: warp-rise var(--warp-spring-duration) var(--warp-ease-spring) calc(var(--warp-stagger) * var(--_i, 1)) backwards; }
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="body"]),
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="footer"]) { animation: warp-rise var(--warp-spring-duration) var(--warp-ease-spring) calc(var(--warp-stagger) * var(--_i, 1)) backwards; }
 :where(dialog[data-scope="dialog"][open]) > :where([data-part="footer"]) { --_i: 2; }
 @keyframes warp-rise { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.75); } }
 :where(dialog[data-size="sm"]) { --_w: 420px; }
 :where(dialog[data-size="lg"]) { --_w: 800px; }
 /* backdrop: scrim + the dial's blur (12 · 6 · 0) */
-:where(dialog[data-scope="dialog"], dialog[data-scope="sheet"], dialog[data-scope="palette"])::backdrop {
+:where(dialog[data-scope="dialog"])::backdrop,
+:where(dialog[data-scope="sheet"])::backdrop,
+:where(dialog[data-scope="palette"])::backdrop {
   background: transparent; backdrop-filter: blur(0px);
   transition: background-color calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
               backdrop-filter calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
               overlay calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) allow-discrete,
               display calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) allow-discrete;
 }
-:where(dialog[data-scope="dialog"][open], dialog[data-scope="sheet"][open], dialog[data-scope="palette"][open])::backdrop {
+:where(dialog[data-scope="dialog"][open])::backdrop,
+:where(dialog[data-scope="sheet"][open])::backdrop,
+:where(dialog[data-scope="palette"][open])::backdrop {
   background: var(--warp-color-scrim); backdrop-filter: blur(var(--warp-blur-overlay));
   transition: background-color var(--warp-duration-slow) var(--warp-ease-out), backdrop-filter var(--warp-duration-slow) var(--warp-ease-out),
               overlay var(--warp-duration-slow) allow-discrete, display var(--warp-duration-slow) allow-discrete;
 }
 @starting-style {
-  :where(dialog[data-scope="dialog"][open], dialog[data-scope="sheet"][open], dialog[data-scope="palette"][open])::backdrop { background: transparent; backdrop-filter: blur(0px); }
+  :where(dialog[data-scope="dialog"][open])::backdrop,
+  :where(dialog[data-scope="sheet"][open])::backdrop,
+  :where(dialog[data-scope="palette"][open])::backdrop { background: transparent; backdrop-filter: blur(0px); }
 }
 
 /* parts (shared by dialog, alert dialog and sheet) */
-:where([data-scope="dialog"] [data-part="header"], [data-scope="sheet"] [data-part="header"]) {
+:where([data-scope="dialog"] [data-part="header"]),
+:where([data-scope="sheet"] [data-part="header"]) {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--warp-space-tight) var(--warp-space-group); align-items: start;
   padding: var(--warp-pad-surface) var(--warp-pad-surface) var(--warp-space-group);
 }
-:where([data-scope="dialog"] [data-part="title"], [data-scope="sheet"] [data-part="title"]) {
+:where([data-scope="dialog"] [data-part="title"]),
+:where([data-scope="sheet"] [data-part="title"]) {
   margin: 0; font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size);
   font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); line-height: var(--warp-text-heading-leading);
 }
-:where([data-scope="dialog"] [data-part="description"], [data-scope="sheet"] [data-part="description"]) {
+:where([data-scope="dialog"] [data-part="description"]),
+:where([data-scope="sheet"] [data-part="description"]) {
   grid-column: 1; margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading);
 }
-:where([data-scope="dialog"] [data-part="close"], [data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -6px; margin-inline-end: -8px; }
-:where([data-scope="dialog"] [data-part="body"], [data-scope="sheet"] [data-part="body"]) {
+:where([data-scope="dialog"] [data-part="close"]),
+:where([data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -6px; margin-inline-end: -8px; }
+:where([data-scope="dialog"] [data-part="body"]),
+:where([data-scope="sheet"] [data-part="body"]) {
   overflow: auto; overscroll-behavior: contain; padding: 0 var(--warp-pad-surface) var(--warp-pad-surface);
   display: grid; gap: var(--warp-space-group); align-content: start; min-block-size: 0;
 }
 /* a floating field as the body's first child: room for its label to rise into the notch (the body scrolls, so it clips) */
 :where([data-scope="dialog"], [data-scope="sheet"]) > :where([data-part="body"]:has(> [data-scope="field"]:first-child)) { padding-block-start: var(--warp-space-related); }
-:where([data-scope="dialog"] [data-part="footer"], [data-scope="sheet"] [data-part="footer"]) {
+:where([data-scope="dialog"] [data-part="footer"]),
+:where([data-scope="sheet"] [data-part="footer"]) {
   display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--warp-space-related);
   padding: var(--warp-space-group) var(--warp-pad-surface);
   border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
@@ -118,8 +134,10 @@
   @starting-style {
     :where(dialog[data-scope="dialog"]:not([role="alertdialog"]):not([data-placement="center"])[open]) { translate: 0 calc(100% * var(--warp-motion-scale)); scale: 1; }
   }
-  :where(dialog[data-scope="dialog"] [data-part="footer"], dialog[data-scope="sheet"] [data-part="footer"]) { flex-direction: column; align-items: stretch; }
-  :where(dialog[data-scope="dialog"] [data-part="footer"] > [data-scope="button"], dialog[data-scope="sheet"] [data-part="footer"] > [data-scope="button"]) {
+  :where(dialog[data-scope="dialog"] [data-part="footer"]),
+  :where(dialog[data-scope="sheet"] [data-part="footer"]) { flex-direction: column; align-items: stretch; }
+  :where(dialog[data-scope="dialog"] [data-part="footer"] > [data-scope="button"]),
+  :where(dialog[data-scope="sheet"] [data-part="footer"] > [data-scope="button"]) {
     block-size: var(--warp-control-lg);
   }
 }
@@ -144,8 +162,11 @@
    colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
 @media (forced-colors: active) {
 /* list items: the active option or item reads as the system selection */
-  :where([data-scope="menu"] [data-part="item"]:is(:focus, [data-state="open"]), [data-scope="select"] [data-part="item"][data-highlighted],
-         [data-scope="palette"] [data-part="item"][aria-selected="true"], [role="listbox"] [role="option"][data-highlighted]) {
+  :where([data-scope="menu"] [data-part="item"]:is(:focus)),
+  :where([data-scope="menu"] [data-part="item"]:is([data-state="open"])),
+  :where([data-scope="select"] [data-part="item"][data-highlighted]),
+  :where([data-scope="palette"] [data-part="item"][aria-selected="true"]),
+  :where([role="listbox"] [role="option"][data-highlighted]) {
     forced-color-adjust: none; background: Highlight; color: HighlightText; box-shadow: none;
   }
 }

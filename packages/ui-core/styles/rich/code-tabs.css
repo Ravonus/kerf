@@ -6,7 +6,8 @@
   :where([data-scope="codetabs"] [role="tab"][aria-selected="true"]) { color: var(--warp-color-text); background: var(--warp-color-surface-sunken); border-color: var(--warp-color-border); box-shadow: inset 0 2px 0 var(--warp-color-accent-solid); }
   :where([data-scope="codetabs"] [role="tab"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); }
   /* touch targets (review 02 M7), after the all: unset rules they extend */
-  :where([data-scope="codetabs"] [role="tab"], [data-scope="emoji"] [role="tab"]) { min-block-size: var(--warp-hit-min); box-sizing: border-box; display: inline-flex; align-items: center; }
+  :where([data-scope="codetabs"] [role="tab"]),
+  :where([data-scope="emoji"] [role="tab"]) { min-block-size: var(--warp-hit-min); box-sizing: border-box; display: inline-flex; align-items: center; }
   :where([data-scope="prose"] [data-part="anchor"]) { display: inline-grid; place-items: center; min-inline-size: var(--warp-hit-min); min-block-size: var(--warp-hit-min); margin-block: calc((1lh - var(--warp-hit-min)) / 2); vertical-align: middle; }
   :where([data-scope="jsontree"] .jt-row) { min-block-size: max(22px, calc(var(--warp-hit-min) - 8px)); }
   :where(.crop-ctl input[type="range"]) { block-size: var(--warp-hit-min); }

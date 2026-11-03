@@ -16,7 +16,8 @@
 :where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; }
 :where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; }
 /* sm native controls: on touch the transparent block band makes the 44px hit area, and negative margins give it back */
-:where([data-scope="pagination"] :is(select, [data-part="jump"])) {
+:where([data-scope="pagination"] :is(select)),
+:where([data-scope="pagination"] :is([data-part="jump"])) {
   --_band: max(0px, calc((var(--warp-hit-min) - var(--warp-control-sm)) / 2));
   block-size: calc(var(--warp-control-sm) + 2 * var(--_band)); margin-block: calc(-1 * var(--_band));
   border: 0 solid transparent; border-block-width: var(--_band); background-clip: padding-box;
@@ -25,7 +26,8 @@
 }
 :where([data-scope="pagination"] select) { padding-inline: 9px; }
 :where([data-scope="pagination"] [data-part="jump"]) { inline-size: 56px; padding-inline: 9px; box-sizing: border-box; }
-:where([data-scope="pagination"] :is(select, [data-part="jump"]):focus-visible) { outline: 2px solid var(--warp-color-focus); }
+:where([data-scope="pagination"] :is(select):focus-visible),
+:where([data-scope="pagination"] :is([data-part="jump"]):focus-visible) { outline: 2px solid var(--warp-color-focus); }
 @container (max-width: 520px) {
 :where([data-scope="pagination"] [data-part="page"]:not([aria-current], [data-edge])) { display: none; }
 :where([data-scope="pagination"] [data-part="gap"]) { display: none; }

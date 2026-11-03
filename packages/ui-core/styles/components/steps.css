@@ -25,7 +25,8 @@
 :where([data-scope="steps"] [data-state="complete"] [data-part="indicator"])::before { content: none; }
 :where([data-scope="steps"] [data-state="complete"] [data-part="indicator"] svg[data-icon]) { display: block; }
 :where([data-scope="steps"] [data-state="current"] [data-part="indicator"]) { border-color: var(--warp-color-accent-solid); color: var(--warp-color-accent-text); box-shadow: 0 0 0 calc(var(--warp-border-emphasis) - 1px) var(--warp-color-accent-solid); }
-:where([data-scope="steps"] [data-state="current"] [data-part="title"], [data-scope="steps"] [data-state="complete"] [data-part="title"]) { color: var(--warp-color-text); }
+:where([data-scope="steps"] [data-state="current"] [data-part="title"]),
+:where([data-scope="steps"] [data-state="complete"] [data-part="title"]) { color: var(--warp-color-text); }
 :where([data-scope="steps"] [data-state="error"] [data-part="indicator"]) { border-color: var(--warp-color-critical-text); color: var(--warp-color-critical-text); }
 :where([data-scope="steps"] [data-part="compact"]) { display: none; }
 @container steps (max-width: 520px) {

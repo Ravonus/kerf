@@ -37,6 +37,7 @@
 :where([data-scope="composer"] [data-part="quote-draft"] > [data-scope="button"]) { grid-column: 2; grid-row: 1 / span 2; }
 :where([data-scope="composer"] [data-part="hint"][data-state="error"]) { color: var(--warp-color-critical-text); }
 @media (forced-colors: active) {
-:where([data-scope="message"] [data-part="quote"], [data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
+:where([data-scope="message"] [data-part="quote"]),
+  :where([data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
 }
 }

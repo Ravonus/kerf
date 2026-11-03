@@ -1,9 +1,16 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
 /* shared: numerals, eyebrow, sweep host gates -------------------------------- */
-:where([data-scope="table"], [data-scope="chart"], [data-scope="stat"], [data-scope="kanban"],
-       [data-scope="meter"], [data-scope="ring"], [data-scope="delta"], [data-scope="list"],
-       [data-scope="desc"], [data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="table"]),
+:where([data-scope="chart"]),
+:where([data-scope="stat"]),
+:where([data-scope="kanban"]),
+:where([data-scope="meter"]),
+:where([data-scope="ring"]),
+:where([data-scope="delta"]),
+:where([data-scope="list"]),
+:where([data-scope="desc"]),
+:where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
 :where([data-scope="list"]) { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised); overflow: hidden; }
 :where([data-scope="list"] > li) { position: relative; overflow: hidden; }
 :where([data-scope="list"] > li + li) { border-block-start: 1px solid var(--warp-color-border); }
@@ -13,7 +20,8 @@
   background: var(--warp-color-surface-raised); color: inherit; text-decoration: none; touch-action: pan-y;
   transition: transform var(--warp-duration-base) var(--warp-ease-out), background-color var(--warp-duration-fast);
 }
-:where([data-scope="list"] a[data-part="item"]:hover, [data-scope="list"] button[data-part="item"]:hover) { background: color-mix(in oklab, var(--warp-color-text) calc(var(--warp-state-hover) * 100%), var(--warp-color-surface-raised)); }
+:where([data-scope="list"] a[data-part="item"]:hover),
+:where([data-scope="list"] button[data-part="item"]:hover) { background: color-mix(in oklab, var(--warp-color-text) calc(var(--warp-state-hover) * 100%), var(--warp-color-surface-raised)); }
 :where([data-scope="list"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
 :where([data-scope="list"] [data-part="item"][data-dragging]) { transition: none; }
 :where([data-scope="list"] [data-part="content"]) { min-inline-size: 0; display: grid; justify-items: start; text-align: start; }

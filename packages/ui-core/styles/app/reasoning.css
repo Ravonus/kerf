@@ -14,5 +14,6 @@
   color: var(--warp-color-text-subtle); line-height: 1.6; font-size: 13px; max-block-size: 180px; overflow: auto;
 }
 :where([data-scope="reasoning"][data-state="streaming"] [data-part="body"]) { border-inline-start-color: var(--warp-color-sweep); }
-:where([data-scope="prompt"] [data-part="model"], [data-scope="reasoning"] summary) { block-size: max(28px, var(--warp-hit-min)); }
+:where([data-scope="prompt"] [data-part="model"]),
+:where([data-scope="reasoning"] summary) { block-size: max(28px, var(--warp-hit-min)); }
 }

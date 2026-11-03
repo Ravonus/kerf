@@ -38,9 +38,17 @@
 :where([data-scope="anchor-nav"] > details > ol) { margin: 0 var(--warp-pad-control) var(--warp-space-related); }
 }
 @media print {
-:where([data-scope="shell"] [data-part="dock"], [data-scope="shell"] [data-part="menu"], [data-scope="shell"] [data-part="sheet"],
-         [data-scope="shell"] [data-part="palette"], [data-scope="consent"], [data-scope="announcement"], [data-scope="topnav"],
-         [data-scope="float-panel"], [data-scope="back-to-top"], [data-scope="route-progress"], [data-scope="docs"] [data-part="sidenav"],
-         [data-scope="anchor-nav"]) { display: none !important; }
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]),
+  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
 }
 }

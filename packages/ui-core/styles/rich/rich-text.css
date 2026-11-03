@@ -33,7 +33,8 @@
   :where([data-scope="rte"] [data-part="content"] blockquote) { padding-inline-start: 12px; border-inline-start: var(--warp-border-emphasis) solid var(--warp-color-accent-solid); color: var(--warp-color-text-subtle); }
   :where([data-scope="rte"] [data-part="content"] code) { padding: 1px 4px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font-size: 0.88em; }
   :where([data-scope="rte"] [data-part="content"] a) { color: var(--warp-color-accent-text); text-underline-offset: 2px; }
-  :where([data-scope="rte"] [data-part="content"] ul, [data-scope="rte"] [data-part="content"] ol) { padding-inline-start: 1.3em; }
+  :where([data-scope="rte"] [data-part="content"] ul),
+  :where([data-scope="rte"] [data-part="content"] ol) { padding-inline-start: 1.3em; }
   :where([data-scope="rte"] [data-part="content"] [data-mention]) { padding: 0 3px; border-radius: var(--warp-radius-mark); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font-weight: 500; }
   :where([data-scope="rte"] [data-part="content"]:empty)::before, :where([data-scope="rte"] [data-part="content"] > p:only-child:has(> br:only-child))::before { content: attr(data-placeholder); color: var(--warp-color-text-subtle); pointer-events: none; }
   :where([data-scope="rte"] [data-part="linkbar"]) { display: flex; gap: 6px; padding: 6px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }

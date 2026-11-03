@@ -17,5 +17,6 @@
   ::highlight(warp-code-string) { color: var(--warp-color-accent-text); }
   ::highlight(warp-code-number) { color: var(--warp-color-info-text); }
   ::highlight(warp-code-keyword) { color: var(--warp-color-positive-text); }
-  @media (pointer: coarse) { :where(.code-in textarea, .code-in [data-part="layer"]) { font-size: 16px; } }
+  @media (pointer: coarse) { :where(.code-in textarea),
+ :where(.code-in [data-part="layer"]) { font-size: 16px; } }
 }

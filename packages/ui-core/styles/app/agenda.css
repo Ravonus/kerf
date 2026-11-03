@@ -38,7 +38,8 @@
   -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   transition: background-color var(--warp-duration-fast), scale var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="agenda"] [data-part="row"]:active, [data-scope="agenda"] [data-part="row"][data-pressing]) { background: var(--warp-color-surface-hover); }
+:where([data-scope="agenda"] [data-part="row"]:active),
+:where([data-scope="agenda"] [data-part="row"][data-pressing]) { background: var(--warp-color-surface-hover); }
 :where([data-scope="agenda"] [data-part="row"][data-lifted]) { scale: calc(1 + 0.02 * var(--warp-motion-scale)); background: var(--warp-color-surface-raised); box-shadow: var(--warp-elevation-2); }
 :where([data-scope="agenda"] [data-part="row"] time) { display: grid; align-content: start; gap: 2px; font: 500 13px/1.2 var(--warp-text-body-font); font-variant-numeric: tabular-nums; }
 :where([data-scope="agenda"] [data-part="row"] time small) { color: var(--warp-color-text-subtle); font-size: 12px; font-weight: 400; }
@@ -57,20 +58,23 @@
 :where([data-arrive])::after,
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
-  :where([data-scope="agenda"] [data-part="now"] i, [data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"] i),
+  :where([data-scope="agenda"] [data-part="now"] i::before),
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,
   :where([data-scope="versions"] li[data-named] > i),
   :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
-:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"], [aria-selected="true"]),
-         [data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b,
-         [data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b,
-         [data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"], [aria-checked="true"]),
-         [data-scope="run"] > li[data-state="done"] [data-part="dot"],
-         [data-scope="plan"] li[data-state="done"] [data-part="box"],
-         [data-scope="message"][data-mine] [data-part="bubble"],
-         [data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"])),
+  :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-selected="true"])),
+  :where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b),
+  :where([data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"])),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"])),
+  :where([data-scope="run"] > li[data-state="done"] [data-part="dot"]),
+  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]),
+  :where([data-scope="message"][data-mine] [data-part="bubble"]),
+  :where([data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 }
 @keyframes warp-now-in { from { clip-path: inset(-6px 100% -6px 0); } to { clip-path: inset(-6px 0 -6px 0); } }
 }

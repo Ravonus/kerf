@@ -1,9 +1,16 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
 /* shared: numerals, eyebrow, sweep host gates -------------------------------- */
-:where([data-scope="table"], [data-scope="chart"], [data-scope="stat"], [data-scope="kanban"],
-       [data-scope="meter"], [data-scope="ring"], [data-scope="delta"], [data-scope="list"],
-       [data-scope="desc"], [data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="table"]),
+:where([data-scope="chart"]),
+:where([data-scope="stat"]),
+:where([data-scope="kanban"]),
+:where([data-scope="meter"]),
+:where([data-scope="ring"]),
+:where([data-scope="delta"]),
+:where([data-scope="list"]),
+:where([data-scope="desc"]),
+:where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
 :where([data-scope="table"]) {
   --_row: var(--warp-table-row); --_px: var(--warp-table-pad-x);
   position: relative; display: grid; gap: var(--warp-space-related); min-inline-size: 0;
@@ -25,13 +32,15 @@
   font-size: var(--warp-text-body-size); line-height: 1.35; color: var(--warp-color-text);
 }
 :where([data-scope="table"] caption) { text-align: start; padding: var(--warp-space-group) var(--_px) var(--warp-space-related); font-weight: 600; }
-:where([data-scope="table"] th, [data-scope="table"] td) {
+:where([data-scope="table"] th),
+:where([data-scope="table"] td) {
   block-size: var(--_row); padding: 0 var(--_px); text-align: start; vertical-align: middle; white-space: nowrap;
   border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
   background: var(--_cell-bg, var(--warp-color-surface-raised));
   transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
 }
-:where([data-scope="table"] tbody tr:last-child > *) { border-block-end: 0; }
+:where([data-scope="table"] tbody tr:last-child > td),
+:where([data-scope="table"] tbody tr:last-child > th) { border-block-end: 0; }
 :where([data-scope="table"] thead th) {
   position: sticky; inset-block-start: 0; z-index: 2; block-size: var(--warp-table-head);
   background: var(--warp-color-surface); color: var(--warp-color-text-subtle);
@@ -60,7 +69,8 @@
   min-block-size: var(--warp-hit-min); margin-inline: -6px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
   font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
 }
-:where([data-scope="table"] [data-align="end"] [data-part="sort"], [data-scope="table"] [data-numeric] [data-part="sort"]) { flex-direction: row-reverse; }
+:where([data-scope="table"] [data-align="end"] [data-part="sort"]),
+:where([data-scope="table"] [data-numeric] [data-part="sort"]) { flex-direction: row-reverse; }
 :where([data-scope="table"] [data-part="sort"]:hover) { color: var(--warp-color-text); }
 :where([data-scope="table"] [data-part="sort"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
 :where([data-scope="table"] [data-part="sort-icon"]) { inline-size: 10px; block-size: 10px; flex: none; opacity: 0.35; transition: opacity var(--warp-duration-fast), transform var(--warp-duration-base) var(--warp-ease-out); }
@@ -77,14 +87,18 @@
   content: ""; inline-size: 1px; block-size: 45%; background: var(--warp-color-border-strong);
   transition: block-size var(--warp-duration-fast), background-color var(--warp-duration-fast), inline-size var(--warp-duration-fast);
 }
-:where([data-scope="table"] [data-part="resize"]:is(:hover, :focus-visible, [data-active]))::before { block-size: 100%; inline-size: 2px; background: var(--warp-color-accent-solid); }
+:where([data-scope="table"] [data-part="resize"]:is(:hover))::before,
+:where([data-scope="table"] [data-part="resize"]:is(:focus-visible))::before,
+:where([data-scope="table"] [data-part="resize"]:is([data-active]))::before { block-size: 100%; inline-size: 2px; background: var(--warp-color-accent-solid); }
 :where([data-scope="table"] [data-part="resize"]:focus-visible) { outline: none; }
 :where([data-scope="table"] th:has([data-part="resize"])) { position: sticky; }
 /* rows: hover = state layer; selected = accent soft + emphasis line on the leading edge */
-:where([data-scope="table"] tbody tr:hover > *) { transition-duration: 0ms; }
+:where([data-scope="table"] tbody tr:hover > td),
+:where([data-scope="table"] tbody tr:hover > th) { transition-duration: 0ms; }
 :where([data-scope="table"] tbody tr:hover) { --_cell-bg: color-mix(in oklab, var(--warp-color-text) calc(var(--warp-state-hover) * 100%), var(--warp-color-surface-raised)); }
 :where([data-scope="table"] tbody tr[data-selected]) { --_cell-bg: var(--warp-color-accent-soft); }
-:where([data-scope="table"] tbody tr[data-selected] > :first-child) { box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
+:where([data-scope="table"] tbody tr[data-selected] > td:first-child),
+:where([data-scope="table"] tbody tr[data-selected] > th:first-child) { box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
 :where([data-scope="table"] tbody tr[data-clickable]) { cursor: pointer; }
 :where([data-scope="table"] tbody tr:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
 :where([data-scope="table"] [data-part="select"]) { inline-size: calc(20px + var(--_px) * 2); padding-inline: var(--_px); }
@@ -178,7 +192,8 @@
    Each cell labels itself from data-label. */
 @container (max-width: 599.98px) {
 :where([data-scope="table"][data-phone="cards"] [data-part="viewport"]) { border: 0; background: none; overflow: visible; max-block-size: none; }
-:where([data-scope="table"][data-phone="cards"] :is(table, tbody)) { display: block; }
+:where([data-scope="table"][data-phone="cards"] :is(table)),
+  :where([data-scope="table"][data-phone="cards"] :is(tbody)) { display: block; }
 :where([data-scope="table"][data-phone="cards"] thead) { display: none; }
 :where([data-scope="table"][data-phone="cards"] tbody) { display: grid; gap: var(--warp-space-related); }
 :where([data-scope="table"][data-phone="cards"] tbody tr:not([data-part="detail"])) {
@@ -186,26 +201,37 @@
     padding: 12px 14px; background: var(--_cell-bg, var(--warp-color-surface-raised));
     border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
   }
-:where([data-scope="table"][data-phone="cards"] tbody tr > td, [data-scope="table"][data-phone="cards"] tbody tr > th) {
+:where([data-scope="table"][data-phone="cards"] tbody tr > td),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th) {
     display: flex; justify-content: space-between; align-items: baseline; gap: var(--warp-space-group);
     block-size: auto; min-block-size: 0; padding: 3px 0; border: 0; background: none; grid-column: 1 / -1; white-space: normal;
     position: static; text-align: end; box-shadow: none !important;
   }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-label])::before {
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-label])::before,
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-label])::before {
     content: attr(data-label); flex: none; text-align: start; color: var(--warp-color-text-subtle);
     font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case);
   }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="title"]) { grid-column: 2; grid-row: 1; justify-content: start; text-align: start; padding-block-end: 6px; font-size: calc(var(--warp-text-body-size) + 1px); }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="title"]) { display: grid; gap: 1px; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > :has(> [data-part="expand"])) { grid-column: 3; grid-row: 2; justify-content: end; padding: 0; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="title"])::before { content: none; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="title"]),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="title"]) { grid-column: 2; grid-row: 1; justify-content: start; text-align: start; padding-block-end: 6px; font-size: calc(var(--warp-text-body-size) + 1px); }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="title"]),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="title"]) { display: grid; gap: 1px; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td:has(> [data-part="expand"])),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th:has(> [data-part="expand"])) { grid-column: 3; grid-row: 2; justify-content: end; padding: 0; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="title"])::before,
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="title"])::before { content: none; }
 :where([data-scope="table"][data-phone="cards"] tbody tr[data-part="detail"] > td) { display: block; padding-inline: 14px; text-align: start; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-part="select"]) { grid-column: 1; grid-row: 1; inline-size: auto; padding: 0 0 6px;
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-part="select"]),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-part="select"]) { grid-column: 1; grid-row: 1; inline-size: auto; padding: 0 0 6px;
     min-block-size: var(--warp-target-min); min-inline-size: var(--warp-target-min); align-items: center; justify-content: center; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="badge"]) { grid-column: 3; grid-row: 1; padding-block-end: 6px; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="badge"])::before { content: none; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-priority]) { display: flex; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="hide"]) { display: none; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="badge"]),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="badge"]) { grid-column: 3; grid-row: 1; padding-block-end: 6px; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="badge"])::before,
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="badge"])::before { content: none; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-priority]),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-priority]) { display: flex; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="hide"]),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="hide"]) { display: none; }
 :where([data-scope="table"][data-phone="cards"] tbody tr[data-selected]) { border-color: var(--warp-color-accent-border); box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
 :where([data-scope="table"][data-phone="cards"] [data-part="resize"]) { display: none; }
 }
@@ -225,7 +251,8 @@
 :where([data-scope="table"] [data-part="sheet"] > header) { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-block-end: 1px solid var(--warp-color-border); }
 :where([data-scope="table"] [data-part="sheet"] > div) { overflow: auto; padding: 16px; }
 /* grid: header drag-reorder, group rows, aggregate rows, filter row ---------- */
-:where([data-scope="table"] table:is([role="grid"], [role="treegrid"]) tbody :is(td, th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="table"] table:is([role="grid"], [role="treegrid"]) tbody :is(td):focus-visible),
+:where([data-scope="table"] table:is([role="grid"], [role="treegrid"]) tbody :is(th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
 :where([data-scope="table"] tbody [aria-selected="true"]) { --_cell-bg: var(--warp-color-accent-soft); background: var(--warp-color-accent-soft); }
 :where([data-scope="table"] th[draggable="true"]) { cursor: grab; }
 :where([data-scope="table"] th[data-drop-before])::before,
@@ -234,7 +261,8 @@
 }
 :where([data-scope="table"] th[data-drop-before])::before { inset-inline-start: -1px; }
 :where([data-scope="table"] th[data-drop-after])::before { inset-inline-end: -1px; }
-:where([data-scope="table"] tr[data-part="group"] > *) {
+:where([data-scope="table"] tr[data-part="group"] > td),
+:where([data-scope="table"] tr[data-part="group"] > th) {
   background: var(--warp-color-surface-sunken); font-weight: 600; block-size: calc(var(--warp-table-row) - 4px);
   position: sticky; inset-block-start: var(--warp-table-head); z-index: 1;
 }
@@ -244,9 +272,11 @@
 :where([data-scope="table"] tr[data-part="group"] button svg) { inline-size: 14px; block-size: 14px; transition: rotate var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="table"] tr[data-part="group"] button[aria-expanded="true"] svg) { rotate: 90deg; }
 :where([data-scope="table"] tr[data-part="group"] button:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; border-radius: 3px; }
-:where([data-scope="table"] tr[data-part="aggregate"] > *) { border-block-start: 1px solid var(--warp-color-border-strong); font-weight: 600; background: var(--warp-color-surface-raised); }
+:where([data-scope="table"] tr[data-part="aggregate"] > td),
+:where([data-scope="table"] tr[data-part="aggregate"] > th) { border-block-start: 1px solid var(--warp-color-border-strong); font-weight: 600; background: var(--warp-color-surface-raised); }
 :where([data-scope="table"] tr[data-part="filters"] th) { padding-block: 4px; background: var(--warp-color-surface); }
-:where([data-scope="table"] tr[data-part="filters"] input, [data-scope="table"] tr[data-part="filters"] select) {
+:where([data-scope="table"] tr[data-part="filters"] input),
+:where([data-scope="table"] tr[data-part="filters"] select) {
   inline-size: 100%; min-inline-size: 72px; block-size: 28px; padding-inline: 8px; border: 1px solid var(--warp-color-border-control); border-radius: calc(var(--warp-radius-control) - 2px);
   background: var(--warp-color-surface-raised); color: var(--warp-color-text); font: 400 max(12px, var(--warp-input-font-min))/var(--warp-text-control-leading) var(--warp-text-body-font);
 }
@@ -258,8 +288,10 @@
 /* phone cards: the cells stack 2px apart (a 30px pitch), so on a coarse pointer the card row is the target
    (a tap opens the row's sheet, as on any other cell); editable cells stay keyboard targets (Enter / F2) */
 @container (max-width: 599.98px) {
-@media (pointer: coarse) { :where(:root:not([data-pointer="fine"]) [data-scope="table"][data-phone="cards"] tbody tr > [data-editable]) { pointer-events: none; } }
-:where([data-pointer="coarse"] [data-scope="table"][data-phone="cards"] tbody tr > [data-editable]) { pointer-events: none; }
+@media (pointer: coarse) { :where(:root:not([data-pointer="fine"]) [data-scope="table"][data-phone="cards"] tbody tr > td[data-editable]),
+ :where(:root:not([data-pointer="fine"]) [data-scope="table"][data-phone="cards"] tbody tr > th[data-editable]) { pointer-events: none; } }
+:where([data-pointer="coarse"] [data-scope="table"][data-phone="cards"] tbody tr > td[data-editable]),
+  :where([data-pointer="coarse"] [data-scope="table"][data-phone="cards"] tbody tr > th[data-editable]) { pointer-events: none; }
 }
 :where([data-scope="table"][data-tree]) {
   --_indent: var(--warp-table-indent);
@@ -274,7 +306,8 @@
 /* pinned cells are sticky, which is a containing block too */
 :where([data-scope="table"][data-tree] [data-part="tree-cell"] > [data-part="tree-label"]) { display: inline-flex; align-items: center; gap: var(--warp-space-related); min-inline-size: 0; }
 /* level guides: one hairline per ancestor level, through the centre of that level's toggle */
-:where([data-scope="table"][data-tree] tr:not([aria-level="1"]) > [data-part="tree-cell"])::before {
+:where([data-scope="table"][data-tree] tr:not([aria-level="1"]) > td[data-part="tree-cell"])::before,
+:where([data-scope="table"][data-tree] tr:not([aria-level="1"]) > th[data-part="tree-cell"])::before {
   content: ""; position: absolute; inset-block: 0; pointer-events: none;
   inset-inline-start: calc(var(--_px) + 11.5px); inline-size: calc((var(--_lvl, 1) - 1) * var(--_indent));
   background: repeating-linear-gradient(to right, var(--_guide) 0 1px, transparent 1px var(--_indent));
@@ -282,12 +315,15 @@
 }
 :where([data-scope="table"][data-tree] [data-part="tree-cell"]:dir(rtl))::before { background: repeating-linear-gradient(to left, var(--_guide) 0 1px, transparent 1px var(--_indent)); }
 /* vivid: the branch's colour runs down the leading edge of every row in it */
-:where([data-scope="table"][data-tree] tbody tr > :first-child) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint)) 0 0 var(--_bc, transparent); }
-:where([data-scope="table"][data-tree] tbody tr > :first-child:dir(rtl)) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint) * -1) 0 0 var(--_bc, transparent); }
+:where([data-scope="table"][data-tree] tbody tr > td:first-child),
+:where([data-scope="table"][data-tree] tbody tr > th:first-child) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint)) 0 0 var(--_bc, transparent); }
+:where([data-scope="table"][data-tree] tbody tr > td:first-child:dir(rtl)),
+:where([data-scope="table"][data-tree] tbody tr > th:first-child:dir(rtl)) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint) * -1) 0 0 var(--_bc, transparent); }
 /* parents: name in medium weight; aggregates (sum of descendants) in the subtle ink so leaf values read first */
 :where([data-scope="table"][data-tree] tr[aria-expanded] [data-part="primary"]) { font-weight: 600; }
 :where([data-scope="table"][data-tree] tr[aria-expanded] td[data-numeric]) { color: var(--warp-color-text-subtle); font-weight: 500; }
-:where([data-scope="table"][data-tree] tr[data-context] > *) { color: var(--warp-color-text-subtle); }
+:where([data-scope="table"][data-tree] tr[data-context] > td),
+:where([data-scope="table"][data-tree] tr[data-context] > th) { color: var(--warp-color-text-subtle); }
 /* an ancestor shown only because a descendant matches the filter */
 /* the toggle: a 24px chevron box (pointer only; the row's aria-expanded is the state), hit-min on coarse */
 :where([data-scope="table"][data-tree] [data-part="toggle"]) {
@@ -304,31 +340,45 @@
 :where([data-scope="table"][data-tree] tr[aria-busy="true"] [data-part="toggle"] svg) { opacity: 0.4; }
 /* focus: a row or a cell (APG treegrid). The row ring is drawn by its cells (a tr outline is unreliable
    with border-collapse: separate); forced colours use a real outline (box-shadow is dropped there) */
-:where([data-scope="table"][data-tree] tbody tr:focus-visible > *) { box-shadow: inset 0 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
-:where([data-scope="table"][data-tree] tbody tr:focus-visible > :first-child) { box-shadow: inset 2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
-:where([data-scope="table"][data-tree] tbody tr:focus-visible > :last-child) { box-shadow: inset -2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
-:where([data-scope="table"][data-tree] tbody tr:focus-visible > :first-child:dir(rtl)) { box-shadow: inset -2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
-:where([data-scope="table"][data-tree] tbody tr:focus-visible > :last-child:dir(rtl)) { box-shadow: inset 2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
-:where([data-scope="table"][data-tree] tbody :is(td, th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
-:where([data-scope="table"][data-tree] tbody tr:is(:focus, :focus-within)) { --_cell-bg: var(--warp-color-accent-soft); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > td),
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > th) { box-shadow: inset 0 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > td:first-child),
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > th:first-child) { box-shadow: inset 2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > td:last-child),
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > th:last-child) { box-shadow: inset -2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > td:first-child:dir(rtl)),
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > th:first-child:dir(rtl)) { box-shadow: inset -2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > td:last-child:dir(rtl)),
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > th:last-child:dir(rtl)) { box-shadow: inset 2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody :is(td):focus-visible),
+:where([data-scope="table"][data-tree] tbody :is(th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="table"][data-tree] tbody tr:is(:focus)),
+:where([data-scope="table"][data-tree] tbody tr:is(:focus-within)) { --_cell-bg: var(--warp-color-accent-soft); }
 /* lazy children: one loading row at the child level until they arrive */
-:where([data-scope="table"][data-tree] tr[data-part="loading"] > *) { color: var(--warp-color-text-subtle); }
+:where([data-scope="table"][data-tree] tr[data-part="loading"] > td),
+:where([data-scope="table"][data-tree] tr[data-part="loading"] > th) { color: var(--warp-color-text-subtle); }
 :where([data-scope="table"][data-tree] tr[data-part="loading"] [data-part="skeleton"]) { display: inline-block; vertical-align: middle; inline-size: 96px; margin-inline-start: var(--warp-space-related); }
-:where([data-scope="table"][data-tree] tr[data-enter] > *) {
+:where([data-scope="table"][data-tree] tr[data-enter] > td),
+:where([data-scope="table"][data-tree] tr[data-enter] > th) {
   animation: warp-tree-in var(--warp-duration-base) var(--warp-ease-out) both;
   animation-delay: calc(min(var(--i, 0), 8) * var(--warp-stagger) * 0.5);
 }
 @media (forced-colors: active) {
 :where([data-scope="table"][data-tree] tbody tr:focus-visible) { outline: 2px solid Highlight; outline-offset: -2px; }
-:where([data-scope="table"][data-tree] tbody :is(td, th):focus-visible) { outline-color: Highlight; }
+:where([data-scope="table"][data-tree] tbody :is(td):focus-visible),
+  :where([data-scope="table"][data-tree] tbody :is(th):focus-visible) { outline-color: Highlight; }
 :where([data-scope="table"][data-tree] [data-part="tree-cell"])::before { background: repeating-linear-gradient(to right, GrayText 0 1px, transparent 1px var(--_indent)); opacity: 1; forced-color-adjust: none; }
-:where([data-scope="table"][data-tree] tr[data-context] > *) { color: GrayText; }
-:where([data-scope="table"][data-tree] tbody tr:is(:focus, :focus-within)) { --_cell-bg: Canvas; }
+:where([data-scope="table"][data-tree] tr[data-context] > td),
+  :where([data-scope="table"][data-tree] tr[data-context] > th) { color: GrayText; }
+:where([data-scope="table"][data-tree] tbody tr:is(:focus)),
+  :where([data-scope="table"][data-tree] tbody tr:is(:focus-within)) { --_cell-bg: Canvas; }
 }
 @media (prefers-reduced-motion: reduce) {
-:where(:root:not([data-motion="full"]) [data-scope="table"][data-tree] tr[data-enter] > *) { animation-duration: 120ms; animation-delay: 0ms; }
+:where(:root:not([data-motion="full"]) [data-scope="table"][data-tree] tr[data-enter] > td),
+  :where(:root:not([data-motion="full"]) [data-scope="table"][data-tree] tr[data-enter] > th) { animation-duration: 120ms; animation-delay: 0ms; }
 }
-:where([data-motion="reduce"] [data-scope="table"][data-tree] tr[data-enter] > *) { animation-duration: 120ms; animation-delay: 0ms; }
+:where([data-motion="reduce"] [data-scope="table"][data-tree] tr[data-enter] > td),
+:where([data-motion="reduce"] [data-scope="table"][data-tree] tr[data-enter] > th) { animation-duration: 120ms; animation-delay: 0ms; }
 @keyframes warp-slide-open { from { grid-template-rows: 0fr; } }
 @keyframes warp-flash-up-a   { from { background-color: var(--warp-color-data-up-flash); } }
 @keyframes warp-flash-up-b   { from { background-color: var(--warp-color-data-up-flash); } }

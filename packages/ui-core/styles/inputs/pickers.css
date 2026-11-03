@@ -89,7 +89,8 @@
 :where([data-scope="tree"] [data-part="row"]) {
   position: relative; display: flex; gap: 8px; align-items: center; min-block-size: 32px; padding-inline: 6px 8px; border-radius: calc(var(--warp-radius-control) - 2px); cursor: pointer;
 }
-:where([data-scope="tree"] [data-part="row"]:hover, [data-scope="tree"] [role="treeitem"][data-highlighted] > [data-part="row"]) { background: var(--warp-color-accent-soft); }
+:where([data-scope="tree"] [data-part="row"]:hover),
+:where([data-scope="tree"] [role="treeitem"][data-highlighted] > [data-part="row"]) { background: var(--warp-color-accent-soft); }
 :where([data-scope="tree"] [role="treeitem"][data-highlighted] > [data-part="row"])::after { content: ""; position: absolute; inset-block: 6px; inset-inline-start: 0; inline-size: 2px; border-radius: 2px; background: var(--warp-color-accent-solid); }
 :where([data-scope="tree"] [data-part="twisty"]) { inline-size: 14px; block-size: 14px; flex: none; color: var(--warp-color-text-subtle); transition: rotate var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="tree"] [role="treeitem"]:not([aria-expanded])) > [data-part="row"] [data-part="twisty"] { visibility: hidden; }
@@ -97,10 +98,12 @@
 :where([data-scope="tree"] [data-part="box"]) {
   position: relative; inline-size: 16px; block-size: 16px; flex: none; box-sizing: border-box; border: 1.5px solid var(--warp-color-border-control); border-radius: 4px; display: grid; place-items: center;
 }
-:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"], [data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"]) { border-color: var(--warp-color-accent-solid); color: var(--warp-color-accent-solid); }
+:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"]),
+:where([data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"]) { border-color: var(--warp-color-accent-solid); color: var(--warp-color-accent-solid); }
 :where([data-scope="tree"] [data-part="box"] svg) { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2.6; }
 :where([data-scope="tree"] [data-part="box"] path) { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 420ms var(--warp-sweep-ease); }
-:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"] [data-part="check"], [data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"] [data-part="dash"]) { stroke-dashoffset: 0; }
+:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"] [data-part="check"]),
+:where([data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"] [data-part="dash"]) { stroke-dashoffset: 0; }
 
 /* gradient editor: the bar previews the gradient; stops are slider thumbs on it */
 :where([data-scope="gradient"]) { display: grid; gap: var(--warp-space-group); }
@@ -127,7 +130,8 @@
   display: flex; gap: var(--warp-space-group); align-items: center; padding: 10px 12px; border-radius: var(--warp-radius-surface, 10px);
   color: inherit; text-decoration: none; cursor: pointer; transition: background-color var(--warp-duration-fast);
 }
-:where([data-scope="hover-scope"]:hover, [data-scope="hover-scope"]:focus-visible) { background: var(--warp-color-surface-sunken); }
+:where([data-scope="hover-scope"]:hover),
+:where([data-scope="hover-scope"]:focus-visible) { background: var(--warp-color-surface-sunken); }
 :where([data-scope="hover-scope"]:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; }
 :where([data-scope="hover-scope"] [data-part="text"]) { display: grid; gap: 2px; min-inline-size: 0; }
 :where([data-scope="hover-scope"] [data-part="text"] small) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }

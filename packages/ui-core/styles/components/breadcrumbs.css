@@ -7,7 +7,8 @@
   content: ""; inline-size: 14px; block-size: 14px; flex: none; background: var(--warp-color-text-faint);
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M10 7l5 5-5 5'/%3E%3C/svg%3E") center / contain no-repeat;
 }
-:where([data-scope="breadcrumbs"] a, [data-scope="breadcrumbs"] [data-part="ellipsis"]) {
+:where([data-scope="breadcrumbs"] a),
+:where([data-scope="breadcrumbs"] [data-part="ellipsis"]) {
   display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min); padding-inline: 4px; border-radius: var(--warp-radius-mark);
   color: var(--warp-color-text-subtle); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-inline-size: 18ch;
   transition: color var(--warp-duration-fast);

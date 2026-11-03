@@ -25,10 +25,14 @@
     background-size: 4px 18px; background-repeat: repeat-y; background-position: center; opacity: 0.0;
     transition: opacity var(--warp-duration-fast);
   }
-:where([data-scope="split-pane"] > [data-part="separator"]:is(:hover, :focus-visible, [data-dragging]))::before {
+:where([data-scope="split-pane"] > [data-part="separator"]:is(:hover))::before,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is(:focus-visible))::before,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is([data-dragging]))::before {
     background: var(--warp-color-accent-solid); inline-size: var(--warp-border-emphasis); inset-inline-start: calc(var(--warp-border-emphasis) / -2);
   }
-:where([data-scope="split-pane"] > [data-part="separator"]:is(:hover, :focus-visible, [data-dragging]))::after { opacity: 1; }
+:where([data-scope="split-pane"] > [data-part="separator"]:is(:hover))::after,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is(:focus-visible))::after,
+  :where([data-scope="split-pane"] > [data-part="separator"]:is([data-dragging]))::after { opacity: 1; }
 :where([data-scope="split-pane"][data-orientation="vertical"] > [data-part="separator"]) { inline-size: auto; block-size: 0; cursor: row-resize; }
 :where([data-scope="split-pane"][data-orientation="vertical"] > [data-part="separator"])::before { inset-inline: 0; inset-block: -0.5px auto; inline-size: auto; block-size: 1px; }
 :where([data-scope="split-pane"][data-orientation="vertical"] > [data-part="separator"])::after { inset-inline: 0; inset-block-start: calc(var(--_hit) / -2); inline-size: auto; block-size: var(--_hit); }

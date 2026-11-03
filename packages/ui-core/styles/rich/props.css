@@ -5,7 +5,8 @@
   :where([data-scope="props"]:focus-visible) { box-shadow: 0 0 0 var(--warp-focus-width) var(--warp-color-focus); }
   :where([data-scope="props"] table) { border-collapse: collapse; font-size: 13px; min-inline-size: 560px; inline-size: 100%; }
   :where([data-scope="props"] caption) { text-align: start; padding: 8px 10px; font-weight: 600; }
-  :where([data-scope="props"] :is(th, td)) { padding: 7px 10px; text-align: start; vertical-align: top; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+  :where([data-scope="props"] :is(th)),
+  :where([data-scope="props"] :is(td)) { padding: 7px 10px; text-align: start; vertical-align: top; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
   :where([data-scope="props"] thead th) { font: 500 10px/1.2 var(--warp-font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
   :where([data-scope="props"] tbody th) { font-weight: 500; white-space: nowrap; }
   :where([data-scope="props"] code) { font: 400 12px var(--warp-font-mono); }

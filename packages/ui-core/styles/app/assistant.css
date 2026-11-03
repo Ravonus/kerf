@@ -22,25 +22,38 @@
 /* the streaming caret: a 2px accent bar after the last token; it blinks only while waiting, never while tokens flow */
 :where([data-scope="assistant"] > [data-part="actions"]) { grid-column: 2; display: flex; align-items: center; gap: 0; margin-block-start: 6px; color: var(--warp-color-text-subtle); }
 :where([data-scope="assistant"] [data-part="content"] > *) { min-inline-size: 0; }
-:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(p, ul, ol, pre):last-child)::after {
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(pre):last-child)::after {
   content: ""; display: inline-block; inline-size: 0.5em; block-size: 1.05em; margin-inline-start: 2px; vertical-align: -0.15em;
   background: var(--warp-color-sweep); border-radius: 1px;
 }
-:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p, ul, ol, pre):last-child)::after {
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after {
   content: ""; display: inline-block; inline-size: 0.5em; block-size: 1.05em; vertical-align: -0.15em; background: var(--warp-color-sweep);
   animation: warp-caret 1s steps(1) infinite;
 }
 :where([data-scope="assistant"] [data-part="token"]) { animation: warp-fade-in calc(var(--warp-duration-fast) * var(--warp-motion-scale)) linear; }
 :where([data-scope="assistant"] [data-part="actions"] [data-scope="button"][aria-pressed="true"]) { color: var(--warp-color-accent-text); }
-:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p, ul, ol, pre):last-child)::after { animation: none; opacity: 0.6; }
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after { animation: none; opacity: 0.6; }
 @media (prefers-reduced-motion: reduce) {
-:where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p, ul, ol, pre):last-child)::after { animation: none; opacity: 0.6; }
+:where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after { animation: none; opacity: 0.6; }
 }
 @media (forced-colors: active) {
 :where([data-arrive])::after,
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
-  :where([data-scope="agenda"] [data-part="now"] i, [data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"] i),
+  :where([data-scope="agenda"] [data-part="now"] i::before),
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,

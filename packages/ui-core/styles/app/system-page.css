@@ -9,8 +9,10 @@
 :where([data-scope="system-page"] [data-part="body"]) { display: grid; justify-items: center; gap: 14px; max-inline-size: 460px; }
 :where([data-scope="system-page"] [data-part="art"]) { position: relative; inline-size: 132px; block-size: 84px; color: var(--warp-color-text); margin-block-end: 6px; }
 :where([data-scope="system-page"] [data-part="code"]) { font: 500 var(--warp-text-eyebrow-size)/1 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
-:where([data-scope="system-page"] :is(h2, h3)) { margin: 0; font: var(--warp-text-title-weight) var(--warp-text-title-size)/1.1 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking); }
-:where([data-scope="system-page"] :is(h2, h3):focus) { outline: none; }
+:where([data-scope="system-page"] :is(h2)),
+:where([data-scope="system-page"] :is(h3)) { margin: 0; font: var(--warp-text-title-weight) var(--warp-text-title-size)/1.1 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking); }
+:where([data-scope="system-page"] :is(h2):focus),
+:where([data-scope="system-page"] :is(h3):focus) { outline: none; }
 :where([data-scope="system-page"] p) { margin: 0; color: var(--warp-color-text-subtle); }
 :where([data-scope="system-page"] [data-part="actions"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-block-start: 6px; }
 :where([data-scope="system-page"] [data-part="meta"]) { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; font: 400 var(--warp-text-caption-size)/1.4 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
@@ -27,7 +29,8 @@
   min-block-size: max(40px, var(--warp-hit-min)); padding-inline: 8px; border-radius: var(--warp-radius-control); cursor: pointer; font-size: var(--warp-text-body-size);
 }
 :where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"] small) { display: block; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
-:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]:is(:hover, :focus-visible)) { background: var(--warp-color-surface-hover); outline: none; }
+:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]:is(:hover)),
+:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]:is(:focus-visible)) { background: var(--warp-color-surface-hover); outline: none; }
 :where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]:focus-visible) { box-shadow: inset 0 0 0 var(--warp-focus-width) var(--warp-color-focus); }
 /* the weave with a lock knot: warp threads, weft threads that draw once, a padlock on the crossing */
 :where([data-scope="system-page"] [data-part="weave"]) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; overflow: visible; }
@@ -38,7 +41,8 @@
   animation-delay: calc(var(--i, 0) * var(--warp-stagger) * 3);
 }
 :where([data-scope="system-page"] [data-part="weave"] [data-part="lock"]) { fill: var(--warp-color-surface); stroke: var(--warp-color-text); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-:where([data-scope="system-page"] [data-part="weave"] :is([data-part="shackle"], [data-part="keyhole"])) { fill: none; stroke: var(--warp-color-text); stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+:where([data-scope="system-page"] [data-part="weave"] :is([data-part="shackle"])),
+:where([data-scope="system-page"] [data-part="weave"] :is([data-part="keyhole"])) { fill: none; stroke: var(--warp-color-text); stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 :where([data-motion="reduce"] [data-scope="system-page"] [data-part="weave"] path[pathLength]) { animation: none; stroke-dashoffset: 0; }
 @media (prefers-reduced-motion: reduce) {
 :where(:root:not([data-motion="full"]) [data-scope="system-page"] [data-part="weave"] path[pathLength]) { animation: none; stroke-dashoffset: 0; }
@@ -46,7 +50,8 @@
 @media (forced-colors: active) {
 :where([data-scope="system-page"] [data-part="weave"] path[pathLength]) { stroke: CanvasText; }
 :where([data-scope="system-page"] [data-part="weave"] [data-part="lock"]) { fill: Canvas; stroke: CanvasText; }
-:where([data-scope="system-page"] [data-part="weave"] :is([data-part="shackle"], [data-part="keyhole"])) { stroke: CanvasText; }
+:where([data-scope="system-page"] [data-part="weave"] :is([data-part="shackle"])),
+  :where([data-scope="system-page"] [data-part="weave"] :is([data-part="keyhole"])) { stroke: CanvasText; }
 }
 @keyframes warp-app-weave { to { stroke-dashoffset: 0; } }
 }

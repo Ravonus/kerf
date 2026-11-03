@@ -6,6 +6,7 @@
   border: 0; border-radius: var(--warp-radius-round); background: transparent; color: var(--warp-color-text-subtle); cursor: pointer;
 }
 :where([data-scope="toggletip"][data-part="trigger"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="toggletip"][data-part="trigger"]:hover, [data-scope="toggletip"][data-part="trigger"][aria-expanded="true"]) { color: var(--warp-color-accent-text); }
+:where([data-scope="toggletip"][data-part="trigger"]:hover),
+:where([data-scope="toggletip"][data-part="trigger"][aria-expanded="true"]) { color: var(--warp-color-accent-text); }
 :where([data-scope="toggletip"][data-part="trigger"] svg) { inline-size: 16px; block-size: 16px; }
 }

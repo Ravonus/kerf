@@ -1,7 +1,8 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.inputs-rich {
 /* -- json-tree */
-  :where([data-scope="jsontree"], [data-scope="jsontree"] ul) { list-style: none; margin: 0; padding: 0; }
+  :where([data-scope="jsontree"]),
+  :where([data-scope="jsontree"] ul) { list-style: none; margin: 0; padding: 0; }
   :where([data-scope="jsontree"]) { font: 400 var(--warp-text-code-size)/1.7 var(--warp-font-mono); margin-block-start: 8px; padding: 8px; border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-sunken); max-block-size: 280px; overflow: auto; }
   :where([data-scope="jsontree"] ul) { padding-inline-start: 16px; border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); margin-inline-start: 7px; }
   :where([data-scope="jsontree"] [aria-expanded="false"] > ul) { display: none; }
@@ -14,7 +15,9 @@
   :where([data-scope="jsontree"] .jt-sp) { inline-size: 12px; flex: none; }
   :where([data-scope="jsontree"] .jt-k)::after { content: ":"; color: var(--warp-color-text-subtle); }
   :where([data-scope="jsontree"] .jt-string) { color: var(--warp-color-accent-text); }
-  :where([data-scope="jsontree"] :is(.jt-number, .jt-boolean, .jt-null)) { color: var(--warp-color-info-text, var(--warp-color-text)); }
+  :where([data-scope="jsontree"] :is(.jt-number)),
+  :where([data-scope="jsontree"] :is(.jt-boolean)),
+  :where([data-scope="jsontree"] :is(.jt-null)) { color: var(--warp-color-info-text, var(--warp-color-text)); }
   :where([data-scope="jsontree"] .jt-sum) { color: var(--warp-color-text-subtle); }
   :where([data-scope="jsontree"] .jt-t) { font-size: 10px; padding: 1px 5px; border-radius: var(--warp-radius-mark); border: var(--warp-border-hairline) solid var(--warp-color-border); color: var(--warp-color-text-subtle); }
 }

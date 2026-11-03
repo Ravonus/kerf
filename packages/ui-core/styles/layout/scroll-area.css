@@ -25,7 +25,8 @@
   }
 }
 @media print {
-:where([data-scope="scroll-area"], [data-scope="master-detail"] > *) { overflow: visible; block-size: auto; mask-image: none; }
+:where([data-scope="scroll-area"]),
+  :where([data-scope="master-detail"] > *) { overflow: visible; block-size: auto; mask-image: none; }
 }
 @keyframes warp-edge-fade {
   0%   { --_warp-fs: 0px;  --_warp-fe: 24px; }

@@ -12,18 +12,22 @@
 :where([data-scope="comparison"] thead th small) { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); font-weight: 400; margin-block: 2px 10px; }
 :where([data-scope="comparison"] tbody th) { text-align: start; font-weight: 400; color: var(--warp-color-text); }
 :where([data-scope="comparison"] tbody th small) { display: block; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
-:where([data-scope="comparison"] tbody :is(th, td)) { padding: 11px 14px; border-block-end: 1px solid var(--warp-color-border); }
+:where([data-scope="comparison"] tbody :is(th)),
+:where([data-scope="comparison"] tbody :is(td)) { padding: 11px 14px; border-block-end: 1px solid var(--warp-color-border); }
 :where([data-scope="comparison"] tbody td) { text-align: center; }
 :where([data-scope="comparison"] tbody td[data-featured]) { background: color-mix(in oklab, var(--warp-color-accent-soft) 55%, transparent); }
 :where([data-scope="comparison"] tr[data-part="section"] th) { padding-block: 20px 8px; font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
 :where([data-scope="comparison"] [data-part="yes"]) { color: var(--warp-color-positive-text); }
 :where([data-scope="comparison"] [data-part="no"]) { color: var(--warp-color-text-subtle); }
-:where([data-scope="comparison"] [data-part="yes"] svg, [data-scope="comparison"] [data-part="no"] svg) { inline-size: 18px; block-size: 18px; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; }
+:where([data-scope="comparison"] [data-part="yes"] svg),
+:where([data-scope="comparison"] [data-part="no"] svg) { inline-size: 18px; block-size: 18px; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; }
 :where([data-scope="comparison"] [data-part="picker"]) { display: none; }
 @container (max-width: 620px) {
 :where([data-scope="comparison"] [data-part="picker"]) { display: flex; margin-block-end: 10px; }
-:where([data-scope="comparison"] :is(th, td)[data-plan]:not([data-shown])) { display: none; }
-:where([data-scope="comparison"] :is(th, td)) { padding-inline: 8px; }
+:where([data-scope="comparison"] :is(th)[data-plan]:not([data-shown])),
+  :where([data-scope="comparison"] :is(td)[data-plan]:not([data-shown])) { display: none; }
+:where([data-scope="comparison"] :is(th)),
+  :where([data-scope="comparison"] :is(td)) { padding-inline: 8px; }
 :where([data-scope="comparison"] [data-plan][data-shown]) { inline-size: 31%; }
 :where([data-scope="comparison"] thead th [data-scope="button"]) { block-size: auto; min-block-size: var(--warp-control-sm); padding-block: 6px; line-height: 1.2; }
 :where([data-scope="comparison"] thead th [data-scope="button"]) { inline-size: 100%; white-space: normal; text-align: center; }

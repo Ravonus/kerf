@@ -1,7 +1,9 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.flows {
 /* a step's heading takes focus on arrival; it must not show a ring for that */
-:where([data-part="step-title"], [data-part-title], [data-part="title"][tabindex="-1"]):focus { outline: none; }
+:where([data-part="step-title"]):focus,
+:where([data-part-title]):focus,
+:where([data-part="title"][tabindex="-1"]):focus { outline: none; }
 :where([data-part="rail"]:has(> [data-part="rail-fill"])) {   /* only flows' own rails, never marketing's story rail */
   position: relative; flex: 1 1 24px; min-inline-size: 16px; block-size: var(--warp-flow-rail);
   border-radius: 99px; background: var(--warp-color-surface-sunken);

@@ -29,7 +29,8 @@
   :where([data-scope="tests"] [data-part="bar"] i) { background: var(--k); }
   :where([data-scope="tests"] details) { border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); }
   :where([data-scope="tests"] summary) { display: flex; gap: 8px; align-items: center; padding: 8px 10px; cursor: pointer; font-weight: 500; min-block-size: var(--warp-hit-min); box-sizing: border-box; }
-  :where([data-scope="tests"] summary > span:first-child, [data-scope="tests"] li)::before { content: ""; inline-size: 8px; block-size: 8px; border-radius: 999px; background: var(--k); flex: none; }
+  :where([data-scope="tests"] summary > span:first-child)::before,
+  :where([data-scope="tests"] li)::before { content: ""; inline-size: 8px; block-size: 8px; border-radius: 999px; background: var(--k); flex: none; }
   :where([data-scope="tests"] summary > span:first-child) { inline-size: 8px; block-size: 8px; border-radius: 999px; background: var(--k); }
   :where([data-scope="tests"] summary .dim) { margin-inline-start: auto; }
   :where([data-scope="tests"] ul) { list-style: none; margin: 0; padding: 0 10px 8px; display: grid; gap: 4px; }

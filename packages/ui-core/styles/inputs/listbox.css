@@ -46,7 +46,8 @@
 :where([role="option"][aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
 :where([role="option"] mark) { background: none; color: var(--warp-color-accent-text); font-weight: 600; }
 :where([role="option"][data-kind="create"]) { color: var(--warp-color-accent-text); }
-:where([data-scope="listbox"] [data-part="group-label"], [data-scope="popup"] [data-part="group-label"]) {
+:where([data-scope="listbox"] [data-part="group-label"]),
+:where([data-scope="popup"] [data-part="group-label"]) {
   padding: 8px var(--warp-space-related) 4px; font-family: var(--warp-label-font); font-size: var(--warp-label-float-size);
   letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-rest); font-weight: var(--warp-label-float-weight);
 }

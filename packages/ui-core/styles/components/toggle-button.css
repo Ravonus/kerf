@@ -10,12 +10,15 @@
   cursor: pointer; -webkit-tap-highlight-color: transparent;
   transition: color var(--warp-touch-out) var(--warp-ease-out), background-color var(--warp-touch-out) var(--warp-ease-out), border-color var(--warp-touch-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
-:where([data-scope="toggle"]:active, [data-scope="chip"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
-:where([data-scope="toggle"]:hover, [data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
+:where([data-scope="toggle"]:active),
+:where([data-scope="chip"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="toggle"]:hover),
+:where([data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
 :where([data-scope="toggle"])::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity var(--warp-duration-fast); }
 :where([data-scope="toggle"]:hover) { color: var(--warp-color-text); }
 :where([data-scope="toggle"]:hover)::before { opacity: var(--warp-state-hover); }
-:where([data-scope="toggle"][aria-pressed="true"], [data-scope="toggle"][aria-checked="true"]) {
+:where([data-scope="toggle"][aria-pressed="true"]),
+:where([data-scope="toggle"][aria-checked="true"]) {
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
 }
 :where([data-scope="toggle-group"]) {
@@ -23,11 +26,13 @@
   border: var(--warp-border-hairline) solid var(--warp-color-border);
   border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken);
 }
-:where([data-scope="toggle-group"] [data-scope="toggle"]:is([aria-pressed="true"], [aria-checked="true"])) { --_on: 0; }
+:where([data-scope="toggle-group"] [data-scope="toggle"]:is([aria-pressed="true"])),
+:where([data-scope="toggle-group"] [data-scope="toggle"]:is([aria-checked="true"])) { --_on: 0; }
 :where([data-scope="toggle-group"] [data-scope="toggle"]) { block-size: calc(var(--warp-control-md) - 6px); min-inline-size: calc(var(--warp-control-md) - 6px); }
 /* the face sits 3px inside the rail; its hit area still reaches hit-min (44px on touch) through the rail's padding */
 :where([data-scope="toggle-group"] [data-scope="toggle"])::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(-3px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="toggle-group"] [data-scope="toggle"][aria-pressed="true"], [data-scope="toggle-group"] [data-scope="toggle"][aria-checked="true"]) {
+:where([data-scope="toggle-group"] [data-scope="toggle"][aria-pressed="true"]),
+:where([data-scope="toggle-group"] [data-scope="toggle"][aria-checked="true"]) {
   background: var(--warp-color-surface-raised); color: var(--warp-color-text); border-color: var(--warp-color-border);
   box-shadow: var(--warp-elevation-1);
 }
@@ -51,7 +56,9 @@
    colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
 @media (forced-colors: active) {
 /* pressed toggles, chips, the segmented face and its sliding indicator: Highlight fill, HighlightText ink */
-  :where([data-scope="toggle"]:is([aria-pressed="true"], [aria-checked="true"]), [data-scope="chip"][aria-pressed="true"]) {
+  :where([data-scope="toggle"]:is([aria-pressed="true"])),
+  :where([data-scope="toggle"]:is([aria-checked="true"])),
+  :where([data-scope="chip"][aria-pressed="true"]) {
     forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; box-shadow: none;
   }
   :where([data-scope="toggle-group"]:has(> [data-part="indicator"]) [data-scope="toggle"][aria-checked="true"]) { background: transparent; border-color: transparent; }

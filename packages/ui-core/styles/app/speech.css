@@ -20,7 +20,8 @@
 :where([data-scope="speech"] [data-part="mic"]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="speech"] [data-part="mic"] [data-part="level"]) { color: var(--warp-color-positive-text); }
 @media (forced-colors: active) {
-:where([data-scope="speech"] [data-part="wave"] i, [data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
+:where([data-scope="speech"] [data-part="wave"] i),
+  :where([data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
 :where([data-scope="speech"][data-state="listening"] [data-part="wave"] i) { background: Highlight; }
 }
 }

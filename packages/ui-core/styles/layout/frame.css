@@ -6,7 +6,10 @@
   aspect-ratio: var(--_ratio); overflow: hidden; display: grid; place-items: center;
   background: var(--warp-color-surface-sunken);
 }
-:where([data-scope="frame"] > img, [data-scope="frame"] > video, [data-scope="frame"] > canvas, [data-scope="frame"] > svg) {
+:where([data-scope="frame"] > img),
+:where([data-scope="frame"] > video),
+:where([data-scope="frame"] > canvas),
+:where([data-scope="frame"] > svg) {
   inline-size: 100%; block-size: 100%; object-fit: cover; display: block;
 }
 :where([data-scope="frame"][data-ratio="square"]) { --_ratio: 1; }

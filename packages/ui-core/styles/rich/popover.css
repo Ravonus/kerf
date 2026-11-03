@@ -13,7 +13,8 @@
   :where([data-scope="popover"]:not([data-part])[data-align="end"]) { inset-inline-start: auto; inset-inline-end: 0; transform-origin: top right; }
   :where([data-scope="popover"]:not([data-part])[data-state="open"]) { animation: wir-pop-in var(--warp-duration-base) var(--warp-ease-pop) both; }
   :where([data-scope="popover"]:not([data-part])[data-state="closed"]) { animation: wir-pop-out calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
-  :where([data-scope="popover"]:not([data-part]) [data-part="handle"], [data-scope="popover"]:not([data-part]) [data-part="sheet-head"]) { display: none; }
+  :where([data-scope="popover"]:not([data-part]) [data-part="handle"]),
+  :where([data-scope="popover"]:not([data-part]) [data-part="sheet-head"]) { display: none; }
   /* sheet: a bottom sheet on phones (fixed to the nearest transformed frame or the window) */
   :where([data-scope="popover"]:not([data-part])[data-presentation="sheet"]) {
     position: fixed; inset: auto 0 0 0; z-index: var(--warp-z-modal); min-inline-size: 0;

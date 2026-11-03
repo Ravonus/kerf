@@ -39,7 +39,9 @@
   --_days: 7;
   display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-block-size: 0; min-inline-size: 0; position: relative;
 }
-:where([data-scope="calendar"] [data-part="head"], [data-scope="calendar"] [data-part="allday"], [data-scope="calendar"] [data-part="cols"]) {
+:where([data-scope="calendar"] [data-part="head"]),
+:where([data-scope="calendar"] [data-part="allday"]),
+:where([data-scope="calendar"] [data-part="cols"]) {
   display: grid; grid-template-columns: var(--warp-cal-gutter) repeat(var(--_days), minmax(0, 1fr));
 }
 :where([data-scope="calendar"] [data-part="head"]) { border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
@@ -111,7 +113,8 @@
   box-shadow: inset var(--warp-cal-bar) 0 0 color-mix(in oklab, var(--_c) 55%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--_c) 40%, transparent);
 }
 :where([data-scope="calendar"] [data-part="event"][data-declined] [data-part="event-title"]) { text-decoration: line-through; color: var(--warp-color-text-subtle); }
-:where([data-scope="calendar"] [data-part="event"]:is([aria-selected="true"], [aria-expanded="true"])) { z-index: 3; box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), var(--warp-elevation-2); }
+:where([data-scope="calendar"] [data-part="event"]:is([aria-selected="true"])),
+:where([data-scope="calendar"] [data-part="event"]:is([aria-expanded="true"])) { z-index: 3; box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), var(--warp-elevation-2); }
 :where([data-scope="calendar"] [data-part="event"][data-state="dragging"]) {
   z-index: 6; cursor: grabbing; opacity: 0.97; transition: none;
   box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), var(--warp-elevation-3);
@@ -126,7 +129,8 @@
   border-radius: 2px; background: var(--_c); opacity: 0; transition: opacity var(--warp-duration-fast);
 }
 :where([data-scope="calendar"] [data-part="event"]:hover [data-part="resize"])::after { opacity: 0.8; }
-:where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { inset: 0; }
+:where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep"]),
+:where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep-base"]) { inset: 0; }
 :where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep-base"]) { opacity: 0; }
 /* origin ghost while dragging, and the draft while creating */
 :where([data-scope="calendar"] [data-part="ghost"]) {
@@ -187,13 +191,15 @@
   inset-block: 6px; block-size: auto; inset-inline-start: calc(100% * var(--_x)); inline-size: calc(100% * var(--_w) - 2px);
 }
 :where([data-scope="calendar"] [data-part="lane"][data-busy]) { background-color: color-mix(in oklab, var(--warp-color-text) 3%, transparent); }
-:where([data-scope="calendar"] [data-part="mini"] [role="row"], [data-scope="calendar"] [data-part="month"] [role="row"],
-       [data-scope="calendar"] [data-part="timeline"] [role="row"]) { display: contents; }
+:where([data-scope="calendar"] [data-part="mini"] [role="row"]),
+:where([data-scope="calendar"] [data-part="month"] [role="row"]),
+:where([data-scope="calendar"] [data-part="timeline"] [role="row"]) { display: contents; }
 :where([data-scope="calendar"] [data-part="mini"] [role="columnheader"]) { font: 500 10.5px/24px var(--warp-font-mono); color: var(--warp-color-text-subtle); }
 :where([data-scope="calendar"] [data-part="mini"] [role="columnheader"] abbr) { text-decoration: none; }
 :where([data-scope="calendar"] [data-part="mini"] [role="gridcell"][data-outside]) { display: grid; place-items: center; block-size: 26px; color: var(--warp-color-text-faint); }
-:where([data-scope="calendar"] [data-part="mini"] [data-day]:focus-visible, [data-scope="calendar"] [data-part="month"] [role="gridcell"]:focus-visible,
-       [data-scope="calendar"] [data-part="timeline"] [role="gridcell"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:focus-visible),
+:where([data-scope="calendar"] [data-part="month"] [role="gridcell"]:focus-visible),
+:where([data-scope="calendar"] [data-part="timeline"] [role="gridcell"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
 :where([data-scope="calendar"] [data-part="mini"] [data-day][aria-selected="true"]:not([aria-current="date"])) { box-shadow: inset 0 0 0 var(--warp-border-emphasis) var(--warp-color-accent-solid); border-radius: var(--warp-radius-round); }
 :where([data-scope="calendar"] [data-part="mini-note"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); min-block-size: 1.4em; }
 :where([data-scope="calendar"] [data-part="month"] [role="gridcell"]) { cursor: pointer; }
@@ -202,26 +208,29 @@
 :where([data-arrive])::after,
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
-  :where([data-scope="agenda"] [data-part="now"] i, [data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"] i),
+  :where([data-scope="agenda"] [data-part="now"] i::before),
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,
   :where([data-scope="versions"] li[data-named] > i),
   :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
-:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"], [aria-selected="true"]),
-         [data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b,
-         [data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b,
-         [data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"], [aria-checked="true"]),
-         [data-scope="run"] > li[data-state="done"] [data-part="dot"],
-         [data-scope="plan"] li[data-state="done"] [data-part="box"],
-         [data-scope="message"][data-mine] [data-part="bubble"],
-         [data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
-:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range],
-         [data-scope="reactions"] button[aria-pressed="true"],
-         [data-scope="call-controls"] [data-part="control"][aria-pressed="true"],
-         [data-scope="question"] label:has(:checked),
-         [data-scope="versions"] li[aria-current="true"],
-         [data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"])),
+  :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-selected="true"])),
+  :where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b),
+  :where([data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"])),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"])),
+  :where([data-scope="run"] > li[data-state="done"] [data-part="dot"]),
+  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]),
+  :where([data-scope="message"][data-mine] [data-part="bubble"]),
+  :where([data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
+  :where([data-scope="reactions"] button[aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="question"] label:has(:checked)),
+  :where([data-scope="versions"] li[aria-current="true"]),
+  :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
 :where([data-scope="calendar"] [data-part="event"]) { border: 1px solid CanvasText; }
 :where([data-scope="calendar"] [data-part="now"]) { border-block-start-color: Highlight; }
 :where([data-scope="calendar"] [data-part="now-label"]) { color: HighlightText; }

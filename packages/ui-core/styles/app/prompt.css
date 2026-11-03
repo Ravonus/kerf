@@ -8,5 +8,6 @@
 }
 :where([data-scope="prompt"] [data-part="model"]:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
 :where([data-scope="prompt"] [data-part="model"] i) { inline-size: 6px; block-size: 6px; border-radius: 9px; background: var(--warp-color-positive-solid); }
-:where([data-scope="prompt"] [data-part="model"], [data-scope="reasoning"] summary) { block-size: max(28px, var(--warp-hit-min)); }
+:where([data-scope="prompt"] [data-part="model"]),
+:where([data-scope="reasoning"] summary) { block-size: max(28px, var(--warp-hit-min)); }
 }

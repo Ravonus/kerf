@@ -10,9 +10,12 @@
 :where([data-scope="strength"] b) { font: 600 10px/1 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; min-inline-size: 7ch; text-align: end; color: var(--warp-color-text-subtle); }
 :where([data-scope="strength"][data-score="1"]) { --_t: var(--warp-color-critical-solid); }
 :where([data-scope="strength"][data-score="2"]) { --_t: var(--warp-color-caution-solid); }
-:where([data-scope="strength"]:is([data-score="3"], [data-score="4"])) { --_t: var(--warp-color-positive-solid); }
-:where([data-scope="strength"][data-score="1"] i:nth-child(-n+1), [data-scope="strength"][data-score="2"] i:nth-child(-n+2),
-       [data-scope="strength"][data-score="3"] i:nth-child(-n+3), [data-scope="strength"][data-score="4"] i)::after { clip-path: inset(0); }
+:where([data-scope="strength"]:is([data-score="3"])),
+:where([data-scope="strength"]:is([data-score="4"])) { --_t: var(--warp-color-positive-solid); }
+:where([data-scope="strength"][data-score="1"] i:nth-child(-n+1))::after,
+:where([data-scope="strength"][data-score="2"] i:nth-child(-n+2))::after,
+:where([data-scope="strength"][data-score="3"] i:nth-child(-n+3))::after,
+:where([data-scope="strength"][data-score="4"] i)::after { clip-path: inset(0); }
 :where([data-scope="strength"][data-score="1"] b) { color: var(--warp-color-critical-text); }
 :where([data-scope="strength"][data-score="2"] b) { color: var(--warp-color-caution-text); }
 :where([data-scope="strength"]:is([data-score="3"], [data-score="4"]) b) { color: var(--warp-color-positive-text); }
@@ -97,7 +100,8 @@
 :where([data-scope="editable"] [data-part="preview"]:is(:hover, :focus-visible) > svg) { opacity: 1; color: var(--warp-color-sweep); }
 :where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="editable"] [data-part="editor"]) { display: flex; gap: 4px; flex: 1; align-items: center; min-inline-size: 0; }
-:where([data-scope="editable"][data-editing] [data-part="preview"], [data-scope="editable"]:not([data-editing]) [data-part="editor"]) { display: none; }
+:where([data-scope="editable"][data-editing] [data-part="preview"]),
+:where([data-scope="editable"]:not([data-editing]) [data-part="editor"]) { display: none; }
 :where([data-scope="editable"] [data-part="editor"] > [data-scope="field"]) { flex: 1; }
 
 /* input group (InputGroup): fields, add-ons and buttons joined edge to edge */
@@ -105,8 +109,10 @@
 :where([data-scope="input-group"] > *) { min-inline-size: 0; }
 :where([data-scope="input-group"] > [data-scope="field"]) { flex: 1; }
 :where([data-scope="input-group"] > :not(:first-child)) { margin-inline-start: -1px; }
-:where([data-scope="input-group"] > [data-scope="field"]:not(:last-child) > [data-part="control"], [data-scope="input-group"] > :not([data-scope="field"]):not(:last-child)) { border-start-end-radius: 0; border-end-end-radius: 0; --warp-sweep-radius: 0px; }
-:where([data-scope="input-group"] > [data-scope="field"]:not(:first-child) > [data-part="control"], [data-scope="input-group"] > :not([data-scope="field"]):not(:first-child)) { border-start-start-radius: 0; border-end-start-radius: 0; --warp-sweep-radius: 0px; }
+:where([data-scope="input-group"] > [data-scope="field"]:not(:last-child) > [data-part="control"]),
+:where([data-scope="input-group"] > :not([data-scope="field"]):not(:last-child)) { border-start-end-radius: 0; border-end-end-radius: 0; --warp-sweep-radius: 0px; }
+:where([data-scope="input-group"] > [data-scope="field"]:not(:first-child) > [data-part="control"]),
+:where([data-scope="input-group"] > :not([data-scope="field"]):not(:first-child)) { border-start-start-radius: 0; border-end-start-radius: 0; --warp-sweep-radius: 0px; }
 :where([data-scope="input-group"] > [data-scope="button"]) { block-size: var(--warp-field-height); }
 :where([data-scope="input-group"] > [data-part="addon"]) {
   display: inline-flex; align-items: center; padding-inline: var(--warp-pad-control); block-size: var(--warp-field-height); box-sizing: border-box;

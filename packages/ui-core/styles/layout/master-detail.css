@@ -4,7 +4,8 @@
 :where([data-scope="master-detail"]) {
   display: grid; grid-template-columns: minmax(0, 1fr); min-inline-size: 0;
 }
-:where([data-scope="master-detail"] > [data-part="list"], [data-scope="master-detail"] > [data-part="detail"]) {
+:where([data-scope="master-detail"] > [data-part="list"]),
+:where([data-scope="master-detail"] > [data-part="detail"]) {
   container-type: inline-size; min-inline-size: 0; background: var(--warp-color-page);
 }
 @container (max-width: 599.98px) {
@@ -36,11 +37,14 @@
   }
 }
 @media print {
-:where([data-scope="shell"] [data-part="header"], [data-scope="shell"] [data-part="nav"],
-         [data-scope="shell"] [data-part="skip"], [data-scope="shell"] [data-part="scrim"],
-         [data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
+:where([data-scope="shell"] [data-part="header"]),
+  :where([data-scope="shell"] [data-part="nav"]),
+  :where([data-scope="shell"] [data-part="skip"]),
+  :where([data-scope="shell"] [data-part="scrim"]),
+  :where([data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
 :where([data-scope="master-detail"]) { display: block; block-size: auto; position: static; }
-:where([data-scope="scroll-area"], [data-scope="master-detail"] > *) { overflow: visible; block-size: auto; mask-image: none; }
+:where([data-scope="scroll-area"]),
+  :where([data-scope="master-detail"] > *) { overflow: visible; block-size: auto; mask-image: none; }
 }
 @keyframes warp-push-in {
   from { opacity: calc(1 - var(--warp-motion-scale) * 0.6); transform: translateX(calc(var(--warp-motion-push) * var(--_dir, 1))); }

@@ -15,7 +15,8 @@
 }
 :where([data-expression="vivid"] [data-scope="empty-state"] [data-part="title"] em) { font-family: var(--warp-text-display-font); font-weight: 400; font-size: 1.2em; }
 :where([data-scope="empty-state"] [data-part="title"] em) { font-style: italic; }
-:where([data-expression="quiet"] [data-scope="empty-state"] [data-part="title"] em, [data-expression="balanced"] [data-scope="empty-state"] [data-part="title"] em) { font-style: normal; }
+:where([data-expression="quiet"] [data-scope="empty-state"] [data-part="title"] em),
+:where([data-expression="balanced"] [data-scope="empty-state"] [data-part="title"] em) { font-style: normal; }
 :where([data-scope="empty-state"] [data-part="description"]) { margin: 0; color: var(--warp-color-text-subtle); }
 :where([data-scope="empty-state"] [data-part="actions"]) { display: flex; gap: var(--warp-space-related); flex-wrap: wrap; justify-content: center; margin-block-start: var(--warp-space-related); }
 }

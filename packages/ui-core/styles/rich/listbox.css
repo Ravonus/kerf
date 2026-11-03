@@ -6,7 +6,8 @@
     display: flex; align-items: center; gap: 10px; min-block-size: var(--warp-control-sm); padding-inline: 10px;
     border-radius: var(--warp-radius-control); cursor: pointer; font-variant-numeric: tabular-nums; white-space: nowrap;
   }
-  :where([data-part="listbox"] [role="option"]:hover, [data-part="listbox"] [role="option"][data-active]) { background: var(--warp-color-surface-hover); }
+  :where([data-part="listbox"] [role="option"]:hover),
+  :where([data-part="listbox"] [role="option"][data-active]) { background: var(--warp-color-surface-hover); }
   :where([data-part="listbox"] [role="option"][aria-selected="true"]) { color: var(--warp-color-accent-text); font-weight: 500; }
   :where([data-part="listbox"] [role="option"][aria-selected="true"])::after { content: ""; margin-inline-start: auto; inline-size: 6px; block-size: 6px; border-radius: 999px; background: var(--warp-color-accent-solid); }
   :where([data-part="listbox"]:focus-visible [role="option"][data-active]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }

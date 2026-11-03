@@ -1,9 +1,16 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
 /* shared: numerals, eyebrow, sweep host gates -------------------------------- */
-:where([data-scope="table"], [data-scope="chart"], [data-scope="stat"], [data-scope="kanban"],
-       [data-scope="meter"], [data-scope="ring"], [data-scope="delta"], [data-scope="list"],
-       [data-scope="desc"], [data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="table"]),
+:where([data-scope="chart"]),
+:where([data-scope="stat"]),
+:where([data-scope="kanban"]),
+:where([data-scope="meter"]),
+:where([data-scope="ring"]),
+:where([data-scope="delta"]),
+:where([data-scope="list"]),
+:where([data-scope="desc"]),
+:where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
 :where([data-scope="delta"]) {
   display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;
   font-size: var(--warp-text-caption-size); font-weight: 500; line-height: 1;

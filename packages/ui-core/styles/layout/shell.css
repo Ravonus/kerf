@@ -75,7 +75,9 @@
   color: var(--warp-color-text-subtle); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 :where([data-scope="shell"] [data-part="command"] > svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); flex: none; color: var(--warp-color-accent-text); }
-:where([data-scope="shell"] [data-part="command-label"], [data-scope="shell"] [data-part="command-hint"], [data-scope="shell"] [data-part="command"] kbd) {
+:where([data-scope="shell"] [data-part="command-label"]),
+:where([data-scope="shell"] [data-part="command-hint"]),
+:where([data-scope="shell"] [data-part="command"] kbd) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 /* -- nav: bottom bar by default ---------------------------------------- */
@@ -92,7 +94,9 @@
 :where([data-scope="shell"] [data-part="nav-list"]) { display: flex; margin: 0; padding: 0; list-style: none; }
 :where([data-scope="shell"] [data-part="nav-list"] > li) { display: flex; flex: 1 1 0; min-inline-size: 0; }
 :where([data-scope="shell"] [data-part="nav-list"] > li:not([data-tab])) { display: none; }
-:where([data-scope="shell"] [data-part="nav-group"], [data-scope="shell"] [data-part="nav-extra"], [data-scope="shell"] [data-part="nav-foot"]) { display: none; }
+:where([data-scope="shell"] [data-part="nav-group"]),
+:where([data-scope="shell"] [data-part="nav-extra"]),
+:where([data-scope="shell"] [data-part="nav-foot"]) { display: none; }
 :where([data-scope="shell"] [data-part="nav-item"]) {
   position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px; min-block-size: var(--warp-layout-tabbar); padding: 6px 2px;
@@ -122,7 +126,8 @@
   font: 600 10.5px/16px var(--warp-text-body-font); text-align: center; font-variant-numeric: tabular-nums;
 }
 /* the count's spoken half ("12 new"): a visually hidden span, never aria-label on a span (review 03 m2) */
-:where([data-scope="shell"] [data-part="nav-count-label"], [data-scope="doc-tabs"] [data-part="tab-state"]) {
+:where([data-scope="shell"] [data-part="nav-count-label"]),
+:where([data-scope="doc-tabs"] [data-part="tab-state"]) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 /* the keyboard is up: the bottom bar steps aside so the focused field and
@@ -243,7 +248,8 @@
 :where([data-scope="shell"][data-nav-open] [data-part="nav-item"][aria-current] svg) { color: var(--warp-color-accent-text); }
 :where([data-scope="shell"][data-nav-open] [data-part="nav-count"]) { position: static; margin-inline-start: auto; }
 :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"]) { flex-direction: row; align-items: center; }
-:where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] li, [data-scope="shell"][data-nav-open] [data-part="nav-foot"] > a) { flex: 1; }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] li),
+  :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] > a) { flex: 1; }
 }
 @container warp-shell (min-width: 1000px) {
 :where([data-scope="shell"]:not([data-collapsed]) [data-part="layout"]) { --_navw: var(--warp-layout-sidebar); }
@@ -294,7 +300,8 @@
     background: var(--warp-color-surface-overlay); color: var(--warp-color-text-subtle); box-shadow: var(--warp-elevation-1); cursor: pointer;
     transition: inline-size var(--warp-duration-fast) var(--warp-ease-out), color var(--warp-duration-fast);
   }
-:where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:hover, :focus-visible)) { inline-size: 28px; color: var(--warp-color-text); }
+:where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:hover)),
+  :where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:focus-visible)) { inline-size: 28px; color: var(--warp-color-text); }
 :where([data-scope="shell"][data-collapsed="hidden"][data-nav-open] [data-part="edge-tab"]) { inset-inline-start: var(--warp-layout-sidebar); }
 :where([data-scope="shell"][data-collapsed="hidden"][data-nav-open] [data-part="edge-tab"] svg) { transform: scaleX(-1); }
 }
@@ -311,7 +318,8 @@
 :where([data-scope="shell"][data-variant="focus"] [data-part="nav"]) { display: none; }
 /* -- dock: a sticky action bar that clears the bottom bar, safe area and keyboard */
 :where([data-scope="shell"]) { --_dock: calc(var(--warp-layout-tabbar) + var(--warp-safe-bottom)); }
-:where([data-scope="shell"][data-variant="focus"], [data-scope="shell"][data-keyboard]) { --_dock: 0px; }
+:where([data-scope="shell"][data-variant="focus"]),
+:where([data-scope="shell"][data-keyboard]) { --_dock: 0px; }
 @container warp-shell (min-width: 600px) {
 :where([data-scope="shell"] [data-part="layout"]) { --_dock: 0px; }
 }
@@ -350,7 +358,8 @@
 }
 :where([data-scope="shell"] [data-part="sheet"]) { display: none; }
 @container warp-shell (max-width: 599.98px) {
-:where([data-scope="shell"] [data-part="menu"], [data-scope="shell"] [data-part="sheet"]) {
+:where([data-scope="shell"] [data-part="menu"]),
+  :where([data-scope="shell"] [data-part="sheet"]) {
     display: block; position: fixed; z-index: var(--warp-z-modal);
     inset: auto 0 0 0; inline-size: auto; max-block-size: calc(var(--warp-viewport-block) - var(--_barh));
     padding: 6px var(--warp-space-related) calc(var(--warp-space-group) + var(--warp-safe-bottom));
@@ -363,7 +372,8 @@
     content: ""; display: block; inline-size: 36px; block-size: 4px; margin: 4px auto 10px;
     border-radius: 999px; background: var(--warp-color-border-strong);
   }
-:where([data-scope="shell"] [data-part="sheet"][hidden], [data-scope="shell"] [data-part="menu"][hidden]) { display: none; }
+:where([data-scope="shell"] [data-part="sheet"][hidden]),
+  :where([data-scope="shell"] [data-part="menu"][hidden]) { display: none; }
 :where([data-scope="shell"] [data-part="palette"]) {
     inset: 0; translate: none; inline-size: auto; border-radius: 0; border: 0;
     padding-block-start: var(--warp-safe-top); padding-block-end: var(--warp-keyboard);
@@ -389,14 +399,24 @@
   animation: warp-route-in var(--warp-duration-route) var(--warp-ease-out) both;
 }
 @media print {
-:where([data-scope="shell"] [data-part="header"], [data-scope="shell"] [data-part="nav"],
-         [data-scope="shell"] [data-part="skip"], [data-scope="shell"] [data-part="scrim"],
-         [data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
+:where([data-scope="shell"] [data-part="header"]),
+  :where([data-scope="shell"] [data-part="nav"]),
+  :where([data-scope="shell"] [data-part="skip"]),
+  :where([data-scope="shell"] [data-part="scrim"]),
+  :where([data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
 :where([data-scope="shell"] [data-part="layout"]) { display: block; min-block-size: 0; }
-:where([data-scope="shell"] [data-part="dock"], [data-scope="shell"] [data-part="menu"], [data-scope="shell"] [data-part="sheet"],
-         [data-scope="shell"] [data-part="palette"], [data-scope="consent"], [data-scope="announcement"], [data-scope="topnav"],
-         [data-scope="float-panel"], [data-scope="back-to-top"], [data-scope="route-progress"], [data-scope="docs"] [data-part="sidenav"],
-         [data-scope="anchor-nav"]) { display: none !important; }
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]),
+  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
 }
 @keyframes warp-route-in {
   from { opacity: 0; transform: translateY(calc(var(--warp-motion-distance) * 0.75)); }

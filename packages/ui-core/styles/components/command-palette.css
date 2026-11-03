@@ -25,7 +25,8 @@
 }
 /* the palette input sweeps (review 01 M1): one thread along the panel's edge, not a box inside it, held while it has focus */
 :where([data-scope="palette"] [data-part="input-row"]) { --warp-sweep-radius: 0px; }
-:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep"], [data-part="sweep-base"]) {
+:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep"]),
+:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) {
   inset: auto 0 calc(var(--warp-border-hairline) * -1); block-size: 0; border-radius: 0; border-width: var(--warp-sweep-width) 0 0;
 }
 :where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) { border-width: var(--warp-border-hairline) 0 0; color: var(--warp-color-border); }

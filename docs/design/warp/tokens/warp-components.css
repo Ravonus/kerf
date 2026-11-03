@@ -30,11 +30,15 @@
    --warp-sweep-radius (match the host's corners), --warp-color-sweep (tone) and
    --_on (the signature's gate; static surfaces use the dial's surface reach).
    ------------------------------------------------------------------------ */
-:where([data-scope="chip"], [data-scope="pill"]) { --warp-sweep-radius: var(--warp-radius-round); }
-:where([data-scope="surface"], [data-scope="menu"][data-part="content"], [data-scope="select"][data-part="content"],
-       [data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
+:where([data-scope="chip"]),
+:where([data-scope="pill"]) { --warp-sweep-radius: var(--warp-radius-round); }
+:where([data-scope="surface"]),
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
 :where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--warp-sweep-surfaces); }
-:where([data-part="content"][hidden], [data-part="content"][popover]:not(:popover-open)) { display: none; }
+:where([data-part="content"][hidden]),
+:where([data-part="content"][popover]:not(:popover-open)) { display: none; }
 /* bracket corners: [data-part="frame-corners"] + [data-part="sweep-corners"] (warp.signature §1b) */
 
 /* ---------------------------------------------------------------------------
@@ -78,7 +82,8 @@
   stroke-linecap: round; stroke-linejoin: round;
 }
 :where([data-expression="vivid"] svg[data-icon]) { stroke-linecap: square; stroke-linejoin: miter; }
-:where([data-expression="quiet"] svg[data-icon], [data-expression="balanced"] svg[data-icon]) { stroke-linecap: round; stroke-linejoin: round; }
+:where([data-expression="quiet"] svg[data-icon]),
+:where([data-expression="balanced"] svg[data-icon]) { stroke-linecap: round; stroke-linejoin: round; }
 
 /* kbd */
 :where(kbd[data-scope="kbd"]) {
@@ -89,13 +94,16 @@
 }
 
 /* visually hidden (live regions, labels) */
-:where([data-part="sr-only"], [data-scope="announcer"]) {
+:where([data-part="sr-only"]),
+:where([data-scope="announcer"]) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 
 /* shared floating panel (menu, popover, select, hover card, context menu) */
-:where([data-scope="menu"][data-part="content"], [data-scope="popover"][data-part="content"],
-       [data-scope="select"][data-part="content"], [data-scope="hover-card"][data-part="content"]) {
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="popover"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="hover-card"][data-part="content"]) {
   --_side-x: 0; --_side-y: -1;   /* the anchor is above → enter downward, leave upward */
   position: fixed; inset: auto; margin: 0; box-sizing: border-box;
   min-inline-size: 180px; max-inline-size: min(360px, calc(100vw - 16px));
@@ -117,8 +125,14 @@
     overlay calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete,
     display calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete;
 }
-:where([data-scope="menu"][data-part="content"], [data-scope="popover"][data-part="content"],
-       [data-scope="select"][data-part="content"], [data-scope="hover-card"][data-part="content"]):where(:popover-open, [data-state="open"]) {
+:where([data-scope="menu"][data-part="content"]):where(:popover-open),
+:where([data-scope="menu"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="popover"][data-part="content"]):where(:popover-open),
+:where([data-scope="popover"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="select"][data-part="content"]):where(:popover-open),
+:where([data-scope="select"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="hover-card"][data-part="content"]):where(:popover-open),
+:where([data-scope="hover-card"][data-part="content"]):where([data-state="open"]) {
   opacity: 1; translate: 0 0; scale: 1;
   transition:
     opacity var(--warp-duration-fast) var(--warp-ease-out),
@@ -127,8 +141,10 @@
     overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete;
 }
 @starting-style {
-  :where([data-scope="menu"][data-part="content"], [data-scope="popover"][data-part="content"],
-         [data-scope="select"][data-part="content"], [data-scope="hover-card"][data-part="content"]):popover-open {
+  :where([data-scope="menu"][data-part="content"]):popover-open,
+  :where([data-scope="popover"][data-part="content"]):popover-open,
+  :where([data-scope="select"][data-part="content"]):popover-open,
+  :where([data-scope="hover-card"][data-part="content"]):popover-open {
     opacity: 0; scale: var(--warp-motion-scale-from);
     translate: calc(var(--_side-x) * var(--warp-motion-distance)) calc(var(--_side-y) * var(--warp-motion-distance));
   }
@@ -168,7 +184,10 @@
   transform: scaleX(0); transform-origin: right center;
   transition: transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out);
 }
-:where([data-scope="button"]:hover, [data-scope="button"]:focus-visible, [data-scope="button"][data-state="open"], [data-scope="button"][aria-expanded="true"])::before {
+:where([data-scope="button"]:hover)::before,
+:where([data-scope="button"]:focus-visible)::before,
+:where([data-scope="button"][data-state="open"])::before,
+:where([data-scope="button"][aria-expanded="true"])::before {
   transform: scaleX(1); transform-origin: left center; transition-duration: var(--warp-duration-base);
 }
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
@@ -190,7 +209,8 @@
 }
 :where([data-scope="button"][data-emphasis="frame"][data-tone]:not([data-tone="accent"])) { --_tone: var(--_text); }
 :where([data-scope="button"][data-emphasis="frame"][data-tone="neutral"]) { --_tone: var(--warp-color-text); }
-:where([data-scope="button"][data-emphasis="frame"]:hover, [data-scope="button"][data-emphasis="frame"]:focus-visible) { color: var(--_ink); }
+:where([data-scope="button"][data-emphasis="frame"]:hover),
+:where([data-scope="button"][data-emphasis="frame"]:focus-visible) { color: var(--_ink); }
 /* solid sweep fill, clipped to the button. warp.css slides the fill in with a translate, which paints it outside a
    button with overflow: visible (the hit area's ::after needs visible). Here the fill stays put and wipes through
    clip-path instead: the same L→R edge on the same curve, never outside the box, and the 44px hit area and the
@@ -207,7 +227,8 @@
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
 /* vivid: no soft shadow to lift with, so a solid rests on a hard ink offset and presses into it */
 :where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) { box-shadow: var(--warp-offset) var(--warp-offset) 0 var(--warp-color-text); }
-:where([data-expression="vivid"] [data-scope="button"]:not([data-emphasis]):active, [data-expression="vivid"][data-scope="button"]:not([data-emphasis]):active) {
+:where([data-expression="vivid"] [data-scope="button"]:not([data-emphasis]):active),
+:where([data-expression="vivid"][data-scope="button"]:not([data-emphasis]):active) {
   scale: 1; translate: var(--warp-offset) var(--warp-offset); box-shadow: 0 0 0 var(--warp-color-text);
 }
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--_layer-a) * 1.55); }
@@ -222,7 +243,8 @@
 :where([data-scope="button"][data-emphasis="ghost"]) {
   --_fill: transparent; --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--warp-state-hover);
 }
-:where([data-scope="button"][data-emphasis="ghost"][data-tone="neutral"], [data-scope="button"][data-emphasis="outline"][data-tone="neutral"]) {
+:where([data-scope="button"][data-emphasis="ghost"][data-tone="neutral"]),
+:where([data-scope="button"][data-emphasis="outline"][data-tone="neutral"]) {
   --_ink: var(--warp-color-text);
 }
 :where([data-scope="button"][data-emphasis="link"]) {
@@ -242,11 +264,13 @@
 :where([data-scope="button"][data-icon-only][data-size="sm"]) { inline-size: var(--warp-control-sm); }
 :where([data-scope="button"][data-icon-only][data-size="lg"]) { inline-size: var(--warp-control-lg); }
 :where([data-scope="button"][data-icon-only])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="button"]:disabled, [data-scope="button"][aria-disabled="true"]:not([data-loading])) {
+:where([data-scope="button"]:disabled),
+:where([data-scope="button"][aria-disabled="true"]:not([data-loading])) {
   opacity: var(--warp-opacity-disabled); cursor: not-allowed;
 }
 :where([data-scope="button"]:disabled)::before, :where([data-scope="button"][aria-disabled="true"])::before { opacity: 0; }
-:where([data-scope="button"]:disabled:active, [data-scope="button"][aria-disabled="true"]:active) { scale: 1; translate: 0 0; }
+:where([data-scope="button"]:disabled:active),
+:where([data-scope="button"][aria-disabled="true"]:active) { scale: 1; translate: 0 0; }
 :where([data-scope="button"][data-full]) { inline-size: 100%; }
 /* loading: width is kept, the label hides visually, a spinner sits on top */
 :where([data-scope="button"][data-loading]) { cursor: progress; }
@@ -280,12 +304,15 @@
   cursor: pointer; -webkit-tap-highlight-color: transparent;
   transition: color var(--warp-touch-out) var(--warp-ease-out), background-color var(--warp-touch-out) var(--warp-ease-out), border-color var(--warp-touch-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
-:where([data-scope="toggle"]:active, [data-scope="chip"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
-:where([data-scope="toggle"]:hover, [data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
+:where([data-scope="toggle"]:active),
+:where([data-scope="chip"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="toggle"]:hover),
+:where([data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
 :where([data-scope="toggle"])::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity var(--warp-duration-fast); }
 :where([data-scope="toggle"]:hover) { color: var(--warp-color-text); }
 :where([data-scope="toggle"]:hover)::before { opacity: var(--warp-state-hover); }
-:where([data-scope="toggle"][aria-pressed="true"], [data-scope="toggle"][aria-checked="true"]) {
+:where([data-scope="toggle"][aria-pressed="true"]),
+:where([data-scope="toggle"][aria-checked="true"]) {
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
 }
 :where([data-scope="toggle-group"]) {
@@ -293,11 +320,13 @@
   border: var(--warp-border-hairline) solid var(--warp-color-border);
   border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken);
 }
-:where([data-scope="toggle-group"] [data-scope="toggle"]:is([aria-pressed="true"], [aria-checked="true"])) { --_on: 0; }
+:where([data-scope="toggle-group"] [data-scope="toggle"]:is([aria-pressed="true"])),
+:where([data-scope="toggle-group"] [data-scope="toggle"]:is([aria-checked="true"])) { --_on: 0; }
 :where([data-scope="toggle-group"] [data-scope="toggle"]) { block-size: calc(var(--warp-control-md) - 6px); min-inline-size: calc(var(--warp-control-md) - 6px); }
 /* the face sits 3px inside the rail; its hit area still reaches hit-min (44px on touch) through the rail's padding */
 :where([data-scope="toggle-group"] [data-scope="toggle"])::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(-3px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="toggle-group"] [data-scope="toggle"][aria-pressed="true"], [data-scope="toggle-group"] [data-scope="toggle"][aria-checked="true"]) {
+:where([data-scope="toggle-group"] [data-scope="toggle"][aria-pressed="true"]),
+:where([data-scope="toggle-group"] [data-scope="toggle"][aria-checked="true"]) {
   background: var(--warp-color-surface-raised); color: var(--warp-color-text); border-color: var(--warp-color-border);
   box-shadow: var(--warp-elevation-1);
 }
@@ -335,9 +364,12 @@
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1); color: var(--warp-color-text);
   transition: box-shadow var(--warp-touch-out) var(--warp-ease-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
-:where(a[data-scope="surface"], button[data-scope="surface"]) { text-decoration: none; text-align: start; font: inherit; cursor: pointer; }
-:where(a[data-scope="surface"]:hover, button[data-scope="surface"]:hover) { box-shadow: var(--warp-elevation-2); transition-duration: 0ms, var(--warp-spring-duration); }
-:where(a[data-scope="surface"]:active, button[data-scope="surface"]:active) { scale: calc((1 + var(--warp-press) * 3) / 4 + 0.0025); transition-duration: 0ms; }
+:where(a[data-scope="surface"]),
+:where(button[data-scope="surface"]) { text-decoration: none; text-align: start; font: inherit; cursor: pointer; }
+:where(a[data-scope="surface"]:hover),
+:where(button[data-scope="surface"]:hover) { box-shadow: var(--warp-elevation-2); transition-duration: 0ms, var(--warp-spring-duration); }
+:where(a[data-scope="surface"]:active),
+:where(button[data-scope="surface"]:active) { scale: calc((1 + var(--warp-press) * 3) / 4 + 0.0025); transition-duration: 0ms; }
 :where([data-scope="surface"] [data-part="eyebrow"]) {
   font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
   letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
@@ -399,7 +431,9 @@
 :where([data-part="confirm-field"]) { position: relative; display: block; border-radius: var(--warp-radius-control); }
 :where([data-part="confirm-field"][data-match]) { --warp-color-sweep: var(--warp-color-sweep-critical); }   /* JS holds the phase "in" while it matches */
 :where([data-part="confirm-field"][data-match]) > input { border-color: var(--warp-color-critical-border); }
-:where(dialog[data-scope="dialog"], dialog[data-scope="sheet"], dialog[data-scope="palette"]) {
+:where(dialog[data-scope="dialog"]),
+:where(dialog[data-scope="sheet"]),
+:where(dialog[data-scope="palette"]) {
   box-sizing: border-box; padding: 0; color: var(--warp-color-text);
   background: var(--warp-color-surface-overlay);
   border: var(--warp-border-hairline) solid var(--warp-color-border);
@@ -434,7 +468,8 @@
   :where(dialog[data-scope="dialog"][open]) { opacity: 0; translate: 0 var(--warp-motion-distance); scale: var(--warp-motion-scale-from); }
 }
 /* the pick: one pass of weft across the top edge as it arrives, then gone */
-:where(dialog[data-scope="dialog"][open], dialog[data-scope="sheet"][open]):where(:not([data-flair="none"]))::before {
+:where(dialog[data-scope="dialog"][open]):where(:not([data-flair="none"]))::before,
+:where(dialog[data-scope="sheet"][open]):where(:not([data-flair="none"]))::before {
   content: ""; position: absolute; inset: -1px -1px auto; block-size: var(--warp-sweep-width); background: var(--warp-color-sweep); border-radius: inherit;
   pointer-events: none; transform-origin: 0 50%;
   animation: warp-pick calc(var(--warp-sweep-duration) * 1.2) var(--warp-sweep-ease-in) both;
@@ -442,48 +477,61 @@
 :where(dialog[data-tone="critical"])::before { background: var(--warp-color-sweep-critical); }
 @keyframes warp-pick { from { scale: 0 1; opacity: 1; } 62% { scale: 1 1; opacity: 1; } to { scale: 1 1; opacity: 0; } }
 /* contents arrive after the panel, once, in reading order */
-:where(dialog[data-scope="dialog"][open]) > :where([data-part="body"], [data-part="footer"]) { animation: warp-rise var(--warp-spring-duration) var(--warp-ease-spring) calc(var(--warp-stagger) * var(--_i, 1)) backwards; }
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="body"]),
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="footer"]) { animation: warp-rise var(--warp-spring-duration) var(--warp-ease-spring) calc(var(--warp-stagger) * var(--_i, 1)) backwards; }
 :where(dialog[data-scope="dialog"][open]) > :where([data-part="footer"]) { --_i: 2; }
 @keyframes warp-rise { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.75); } }
 :where(dialog[data-size="sm"]) { --_w: 420px; }
 :where(dialog[data-size="lg"]) { --_w: 800px; }
 /* backdrop: scrim + the dial's blur (12 · 6 · 0) */
-:where(dialog[data-scope="dialog"], dialog[data-scope="sheet"], dialog[data-scope="palette"])::backdrop {
+:where(dialog[data-scope="dialog"])::backdrop,
+:where(dialog[data-scope="sheet"])::backdrop,
+:where(dialog[data-scope="palette"])::backdrop {
   background: transparent; backdrop-filter: blur(0px);
   transition: background-color calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
               backdrop-filter calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
               overlay calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) allow-discrete,
               display calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) allow-discrete;
 }
-:where(dialog[data-scope="dialog"][open], dialog[data-scope="sheet"][open], dialog[data-scope="palette"][open])::backdrop {
+:where(dialog[data-scope="dialog"][open])::backdrop,
+:where(dialog[data-scope="sheet"][open])::backdrop,
+:where(dialog[data-scope="palette"][open])::backdrop {
   background: var(--warp-color-scrim); backdrop-filter: blur(var(--warp-blur-overlay));
   transition: background-color var(--warp-duration-slow) var(--warp-ease-out), backdrop-filter var(--warp-duration-slow) var(--warp-ease-out),
               overlay var(--warp-duration-slow) allow-discrete, display var(--warp-duration-slow) allow-discrete;
 }
 @starting-style {
-  :where(dialog[data-scope="dialog"][open], dialog[data-scope="sheet"][open], dialog[data-scope="palette"][open])::backdrop { background: transparent; backdrop-filter: blur(0px); }
+  :where(dialog[data-scope="dialog"][open])::backdrop,
+  :where(dialog[data-scope="sheet"][open])::backdrop,
+  :where(dialog[data-scope="palette"][open])::backdrop { background: transparent; backdrop-filter: blur(0px); }
 }
 
 /* parts (shared by dialog, alert dialog and sheet) */
-:where([data-scope="dialog"] [data-part="header"], [data-scope="sheet"] [data-part="header"]) {
+:where([data-scope="dialog"] [data-part="header"]),
+:where([data-scope="sheet"] [data-part="header"]) {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--warp-space-tight) var(--warp-space-group); align-items: start;
   padding: var(--warp-pad-surface) var(--warp-pad-surface) var(--warp-space-group);
 }
-:where([data-scope="dialog"] [data-part="title"], [data-scope="sheet"] [data-part="title"]) {
+:where([data-scope="dialog"] [data-part="title"]),
+:where([data-scope="sheet"] [data-part="title"]) {
   margin: 0; font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size);
   font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); line-height: var(--warp-text-heading-leading);
 }
-:where([data-scope="dialog"] [data-part="description"], [data-scope="sheet"] [data-part="description"]) {
+:where([data-scope="dialog"] [data-part="description"]),
+:where([data-scope="sheet"] [data-part="description"]) {
   grid-column: 1; margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading);
 }
-:where([data-scope="dialog"] [data-part="close"], [data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -6px; margin-inline-end: -8px; }
-:where([data-scope="dialog"] [data-part="body"], [data-scope="sheet"] [data-part="body"]) {
+:where([data-scope="dialog"] [data-part="close"]),
+:where([data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -6px; margin-inline-end: -8px; }
+:where([data-scope="dialog"] [data-part="body"]),
+:where([data-scope="sheet"] [data-part="body"]) {
   overflow: auto; overscroll-behavior: contain; padding: 0 var(--warp-pad-surface) var(--warp-pad-surface);
   display: grid; gap: var(--warp-space-group); align-content: start; min-block-size: 0;
 }
 /* a floating field as the body's first child: room for its label to rise into the notch (the body scrolls, so it clips) */
 :where([data-scope="dialog"], [data-scope="sheet"]) > :where([data-part="body"]:has(> [data-scope="field"]:first-child)) { padding-block-start: var(--warp-space-related); }
-:where([data-scope="dialog"] [data-part="footer"], [data-scope="sheet"] [data-part="footer"]) {
+:where([data-scope="dialog"] [data-part="footer"]),
+:where([data-scope="sheet"] [data-part="footer"]) {
   display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--warp-space-related);
   padding: var(--warp-space-group) var(--warp-pad-surface);
   border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
@@ -511,8 +559,10 @@
   @starting-style {
     :where(dialog[data-scope="dialog"]:not([role="alertdialog"]):not([data-placement="center"])[open]) { translate: 0 calc(100% * var(--warp-motion-scale)); scale: 1; }
   }
-  :where(dialog[data-scope="dialog"] [data-part="footer"], dialog[data-scope="sheet"] [data-part="footer"]) { flex-direction: column; align-items: stretch; }
-  :where(dialog[data-scope="dialog"] [data-part="footer"] > [data-scope="button"], dialog[data-scope="sheet"] [data-part="footer"] > [data-scope="button"]) {
+  :where(dialog[data-scope="dialog"] [data-part="footer"]),
+  :where(dialog[data-scope="sheet"] [data-part="footer"]) { flex-direction: column; align-items: stretch; }
+  :where(dialog[data-scope="dialog"] [data-part="footer"] > [data-scope="button"]),
+  :where(dialog[data-scope="sheet"] [data-part="footer"] > [data-scope="button"]) {
     block-size: var(--warp-control-lg);
   }
 }
@@ -547,7 +597,8 @@
   }
 }
 :where(dialog[data-scope="sheet"][data-dragging]) { transition: none; user-select: none; }
-:where(dialog[data-scope="sheet"][data-side="right"], dialog[data-scope="sheet"]:not([data-side])) {
+:where(dialog[data-scope="sheet"][data-side="right"]),
+:where(dialog[data-scope="sheet"]:not([data-side])) {
   inset: 0 0 0 auto; inline-size: min(420px, calc(100vw - 48px)); block-size: 100dvh;
   border-block: 0; border-inline-end: 0;
   border-start-start-radius: var(--warp-radius-surface); border-end-start-radius: var(--warp-radius-surface);
@@ -593,7 +644,8 @@
 :where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
 /* initial focus lands on the title (tabindex="-1"), never the grabber; a programmatic
    landing spot needs no ring of its own */
-:where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus, [data-scope="dialog"] [data-part="title"][tabindex="-1"]:focus) { outline: none; }
+:where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus),
+:where([data-scope="dialog"] [data-part="title"][tabindex="-1"]:focus) { outline: none; }
 /* snap points: the sheet is one 92% panel translated down by --_drag. The footer is lifted by
    --_lift (the resting snap's offset, set on snap, not per drag frame), so the primary action sits
    at the bottom of the visible part at every snap point, above the safe area. It moves on the
@@ -646,18 +698,23 @@
 /* -- Menu (dropdown, context, submenu; also the action sheet on phones) ----- */
 :where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; overflow: visible; }
 /* the panel's border draws in L→R as it opens and holds while open (sweep child, inset over the hairline) */
-:where([data-scope="menu"] [data-part="item"], [data-scope="select"] [data-part="item"], [data-scope="palette"] [data-part="item"]) {
+:where([data-scope="menu"] [data-part="item"]),
+:where([data-scope="select"] [data-part="item"]),
+:where([data-scope="palette"] [data-part="item"]) {
   position: relative; display: flex; align-items: center; gap: var(--warp-space-related);
   min-block-size: max(32px, var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-space-related) var(--warp-pad-control);
   border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); outline: none;
   color: var(--warp-color-text); cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
   transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
 }
-:where([data-scope="menu"] [data-part="item"]:focus, [data-scope="menu"] [data-part="item"][data-state="open"],
-       [data-scope="select"] [data-part="item"][data-highlighted], [data-scope="palette"] [data-part="item"][aria-selected="true"]) {
+:where([data-scope="menu"] [data-part="item"]:focus),
+:where([data-scope="menu"] [data-part="item"][data-state="open"]),
+:where([data-scope="select"] [data-part="item"][data-highlighted]),
+:where([data-scope="palette"] [data-part="item"][aria-selected="true"]) {
   background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent);
 }
-:where([data-scope="menu"] [data-part="item"]:focus-visible, [data-scope="select"] [data-part="item"][data-highlighted][data-keyboard]) {
+:where([data-scope="menu"] [data-part="item"]:focus-visible),
+:where([data-scope="select"] [data-part="item"][data-highlighted][data-keyboard]) {
   box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-focus);
 }
 :where([data-scope="menu"][data-part="content"]:has(> [data-part="shuttle"])) { isolation: isolate; }
@@ -666,19 +723,23 @@
 :where([data-scope="menu"][data-part="content"] > [data-part="shuttle"]) { background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 130%), transparent); }
 :where([data-scope="menu"] [data-part="item"][aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); }
 :where([data-scope="menu"] [data-part="item"][data-tone="critical"]) { color: var(--warp-color-critical-text); }
-:where([data-scope="menu"] [data-part="item"] > svg[data-icon], [data-scope="palette"] [data-part="item"] > svg[data-icon]) { color: var(--warp-color-text-subtle); }
+:where([data-scope="menu"] [data-part="item"] > svg[data-icon]),
+:where([data-scope="palette"] [data-part="item"] > svg[data-icon]) { color: var(--warp-color-text-subtle); }
 :where([data-scope="menu"] [data-part="item"][data-tone="critical"] > svg[data-icon]) { color: inherit; }
 :where([data-scope="menu"] [data-part="item-label"]) { flex: 1; min-inline-size: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-:where([data-scope="menu"] [data-part="shortcut"], [data-scope="palette"] [data-part="shortcut"]) {
+:where([data-scope="menu"] [data-part="shortcut"]),
+:where([data-scope="palette"] [data-part="shortcut"]) {
   margin-inline-start: auto; padding-inline-start: var(--warp-space-group);
   font: 400 11.5px/1 var(--warp-font-mono); letter-spacing: 0.02em; color: var(--warp-color-text-subtle);
 }
 :where([data-scope="menu"] [data-part="indicator"]) { inline-size: var(--warp-icon-md); display: grid; place-items: center; color: var(--warp-color-accent-text); }
-:where([data-scope="menu"] [role="menuitemcheckbox"]:not([aria-checked="true"]) [data-part="indicator"] > *,
-       [data-scope="menu"] [role="menuitemradio"]:not([aria-checked="true"]) [data-part="indicator"] > *) { visibility: hidden; }
+:where([data-scope="menu"] [role="menuitemcheckbox"]:not([aria-checked="true"]) [data-part="indicator"] > *),
+:where([data-scope="menu"] [role="menuitemradio"]:not([aria-checked="true"]) [data-part="indicator"] > *) { visibility: hidden; }
 :where([data-scope="menu"] [role="menuitemradio"] [data-part="indicator"] > i) { inline-size: 6px; block-size: 6px; border-radius: 999px; background: currentColor; }
 :where([data-scope="menu"] [data-part="separator"]) { block-size: var(--warp-border-hairline); margin: var(--warp-space-tight) calc(var(--warp-space-tight) * -1); background: var(--warp-color-border); border: 0; }
-:where([data-scope="menu"] [data-part="group-label"], [data-scope="palette"] [data-part="group-label"], [data-scope="select"] [data-part="group-label"]) {
+:where([data-scope="menu"] [data-part="group-label"]),
+:where([data-scope="palette"] [data-part="group-label"]),
+:where([data-scope="select"] [data-part="group-label"]) {
   padding: var(--warp-space-related) var(--warp-space-related) var(--warp-space-tight);
   font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
   letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
@@ -769,7 +830,8 @@
 }
 /* the palette input sweeps (review 01 M1): one thread along the panel's edge, not a box inside it, held while it has focus */
 :where([data-scope="palette"] [data-part="input-row"]) { --warp-sweep-radius: 0px; }
-:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep"], [data-part="sweep-base"]) {
+:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep"]),
+:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) {
   inset: auto 0 calc(var(--warp-border-hairline) * -1); block-size: 0; border-radius: 0; border-width: var(--warp-sweep-width) 0 0;
 }
 :where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) { border-width: var(--warp-border-hairline) 0 0; color: var(--warp-color-border); }
@@ -885,7 +947,8 @@
   border-width: 0 0 var(--warp-sweep-width);
 }
 :where([data-scope="accordion"] [data-part="heading"]) { margin: 0; font: inherit; }
-:where([data-scope="accordion"] [data-part="trigger"], [data-scope="disclosure"][data-part="trigger"]) {
+:where([data-scope="accordion"] [data-part="trigger"]),
+:where([data-scope="disclosure"][data-part="trigger"]) {
   display: flex; align-items: center; gap: var(--warp-space-related); inline-size: 100%;
   min-block-size: max(var(--warp-control-lg), var(--warp-target-min)); padding-block: var(--warp-space-related);
   border: 0; background: transparent; color: var(--warp-color-text); cursor: pointer; text-align: start;
@@ -894,24 +957,30 @@
 }
 :where([data-scope="accordion"] [data-part="trigger"]:hover) { background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent); }
 :where([data-scope="accordion"] [data-part="trigger"]:focus-visible) { outline-offset: -2px; }
-:where([data-scope="accordion"] [data-part="trigger"] > [data-part="chevron"], [data-scope="disclosure"] [data-part="chevron"]) {
+:where([data-scope="accordion"] [data-part="trigger"] > [data-part="chevron"]),
+:where([data-scope="disclosure"] [data-part="chevron"]) {
   margin-inline-start: auto; color: var(--warp-color-text-subtle); transition: rotate var(--warp-duration-base) var(--warp-ease-in-out);
 }
-:where([data-scope="accordion"] [data-part="trigger"][aria-expanded="true"] > [data-part="chevron"], [data-scope="disclosure"][aria-expanded="true"] [data-part="chevron"]) { rotate: 180deg; }
-:where([data-scope="accordion"] [data-part="content"], [data-scope="disclosure"][data-part="content"]) {
+:where([data-scope="accordion"] [data-part="trigger"][aria-expanded="true"] > [data-part="chevron"]),
+:where([data-scope="disclosure"][aria-expanded="true"] [data-part="chevron"]) { rotate: 180deg; }
+:where([data-scope="accordion"] [data-part="content"]),
+:where([data-scope="disclosure"][data-part="content"]) {
   display: grid; grid-template-rows: 0fr; opacity: 0;
   transition: grid-template-rows calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
               opacity calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
               visibility 0s linear calc(var(--warp-duration-base) * var(--warp-duration-exit-k));
   visibility: hidden;
 }
-:where([data-scope="accordion"] [data-part="content"][data-state="open"], [data-scope="disclosure"][data-part="content"][data-state="open"]) {
+:where([data-scope="accordion"] [data-part="content"][data-state="open"]),
+:where([data-scope="disclosure"][data-part="content"][data-state="open"]) {
   grid-template-rows: 1fr; opacity: 1; visibility: visible;
   transition: grid-template-rows var(--warp-duration-base) var(--warp-ease-in-out), opacity var(--warp-duration-base) var(--warp-ease-out), visibility 0s;
 }
-:where([data-scope="accordion"] [data-part="content"] > div, [data-scope="disclosure"][data-part="content"] > div) { overflow: hidden; min-block-size: 0; }
+:where([data-scope="accordion"] [data-part="content"] > div),
+:where([data-scope="disclosure"][data-part="content"] > div) { overflow: hidden; min-block-size: 0; }
 :where([data-scope="accordion"] [data-part="content"] > div > div) { padding-block-end: var(--warp-space-group); color: var(--warp-color-text-subtle); }
-:where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="trigger"], [data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="content"] > div > div) { padding-inline: var(--warp-space-tight); }
+:where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="trigger"]),
+:where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="content"] > div > div) { padding-inline: var(--warp-space-tight); }
 
 /* -- Breadcrumbs ----------------------------------------------------------------- */
 :where([data-scope="breadcrumbs"] ol) { display: flex; align-items: center; flex-wrap: nowrap; gap: 2px; margin: 0; padding: 0; list-style: none; min-inline-size: 0; }
@@ -920,7 +989,8 @@
   content: ""; inline-size: 14px; block-size: 14px; flex: none; background: var(--warp-color-text-faint);
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M10 7l5 5-5 5'/%3E%3C/svg%3E") center / contain no-repeat;
 }
-:where([data-scope="breadcrumbs"] a, [data-scope="breadcrumbs"] [data-part="ellipsis"]) {
+:where([data-scope="breadcrumbs"] a),
+:where([data-scope="breadcrumbs"] [data-part="ellipsis"]) {
   display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min); padding-inline: 4px; border-radius: var(--warp-radius-mark);
   color: var(--warp-color-text-subtle); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-inline-size: 18ch;
   transition: color var(--warp-duration-fast);
@@ -984,7 +1054,8 @@
 :where([data-scope="steps"] [data-state="complete"] [data-part="indicator"])::before { content: none; }
 :where([data-scope="steps"] [data-state="complete"] [data-part="indicator"] svg[data-icon]) { display: block; }
 :where([data-scope="steps"] [data-state="current"] [data-part="indicator"]) { border-color: var(--warp-color-accent-solid); color: var(--warp-color-accent-text); box-shadow: 0 0 0 calc(var(--warp-border-emphasis) - 1px) var(--warp-color-accent-solid); }
-:where([data-scope="steps"] [data-state="current"] [data-part="title"], [data-scope="steps"] [data-state="complete"] [data-part="title"]) { color: var(--warp-color-text); }
+:where([data-scope="steps"] [data-state="current"] [data-part="title"]),
+:where([data-scope="steps"] [data-state="complete"] [data-part="title"]) { color: var(--warp-color-text); }
 :where([data-scope="steps"] [data-state="error"] [data-part="indicator"]) { border-color: var(--warp-color-critical-text); color: var(--warp-color-critical-text); }
 :where([data-scope="steps"] [data-part="compact"]) { display: none; }
 @container steps (max-width: 520px) {
@@ -1001,7 +1072,8 @@
   background: linear-gradient(currentColor, currentColor) no-repeat right 0 bottom 0 / 0% var(--warp-border-emphasis);
   transition: background-size var(--warp-sweep-duration) var(--warp-sweep-ease), text-decoration-color var(--warp-duration-fast);
 }
-:where(a[data-scope="link"]:hover, a[data-scope="link"]:focus-visible) { background-size: 100% var(--warp-border-emphasis); background-position: left 0 bottom 0; text-decoration-color: transparent; }
+:where(a[data-scope="link"]:hover),
+:where(a[data-scope="link"]:focus-visible) { background-size: 100% var(--warp-border-emphasis); background-position: left 0 bottom 0; text-decoration-color: transparent; }
 :where(a[data-scope="link"][data-variant="subtle"]) { color: inherit; text-decoration-color: transparent; }
 :where(a[data-scope="link"] svg[data-icon]) { inline-size: 0.85em; block-size: 0.85em; vertical-align: -0.05em; margin-inline-start: 2px; }
 
@@ -1167,7 +1239,8 @@
 }
 :where([data-expression="vivid"] [data-scope="empty-state"] [data-part="title"] em) { font-family: var(--warp-text-display-font); font-weight: 400; font-size: 1.2em; }
 :where([data-scope="empty-state"] [data-part="title"] em) { font-style: italic; }
-:where([data-expression="quiet"] [data-scope="empty-state"] [data-part="title"] em, [data-expression="balanced"] [data-scope="empty-state"] [data-part="title"] em) { font-style: normal; }
+:where([data-expression="quiet"] [data-scope="empty-state"] [data-part="title"] em),
+:where([data-expression="balanced"] [data-scope="empty-state"] [data-part="title"] em) { font-style: normal; }
 :where([data-scope="empty-state"] [data-part="description"]) { margin: 0; color: var(--warp-color-text-subtle); }
 :where([data-scope="empty-state"] [data-part="actions"]) { display: flex; gap: var(--warp-space-related); flex-wrap: wrap; justify-content: center; margin-block-start: var(--warp-space-related); }
 
@@ -1298,7 +1371,9 @@
   transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast), border-color var(--warp-duration-fast);
 }
 :where([data-scope="pill"]:hover) { color: var(--warp-color-text); }
-:where([data-scope="pill"][aria-current], [data-scope="pill"][aria-selected="true"], [data-scope="pill"][aria-pressed="true"]) {
+:where([data-scope="pill"][aria-current]),
+:where([data-scope="pill"][aria-selected="true"]),
+:where([data-scope="pill"][aria-pressed="true"]) {
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
 }
 :where([data-scope="pill"] [data-part="count"]) { font: 500 11px/1 var(--warp-font-mono); }   /* full ink: 0.75 opacity fell to 3.6:1 (review 03 m12) */
@@ -1319,7 +1394,8 @@
   margin-inline-start: 6px; color: var(--warp-color-text-faint); text-decoration: none; opacity: 0;
   transition: opacity var(--warp-duration-fast), color var(--warp-duration-fast);
 }
-:where([data-scope="anchor-heading"]:hover > a[data-part="anchor"], [data-scope="anchor-heading"] > a[data-part="anchor"]:focus-visible) { opacity: 1; }
+:where([data-scope="anchor-heading"]:hover > a[data-part="anchor"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]:focus-visible) { opacity: 1; }
 :where([data-scope="anchor-heading"] > a[data-part="anchor"]:hover) { color: var(--warp-color-accent-text); }
 @media (pointer: coarse) { :where([data-scope="anchor-heading"] > a[data-part="anchor"]) { opacity: 1; } }
 :where(:target[data-scope="anchor-heading"]) { animation: warp-target calc(1600ms * var(--warp-motion-scale) + 1ms) var(--warp-ease-out); }
@@ -1374,7 +1450,9 @@
 :where([data-scope="truncate"][data-mode="middle"] > [data-part="tail"]) { flex: none; }
 
 /* -- Number / relative time: tabular, never jumps width when live --------------- */
-:where([data-scope="number"], [data-scope="relative-time"], [data-scope="countdown"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="number"]),
+:where([data-scope="relative-time"]),
+:where([data-scope="countdown"]) { font-variant-numeric: tabular-nums; }
 :where([data-scope="number"][data-tone="positive"]) { color: var(--warp-color-positive-text); }
 :where([data-scope="number"][data-tone="critical"]) { color: var(--warp-color-critical-text); }
 :where([data-scope="relative-time"]) { text-decoration: underline dotted color-mix(in oklab, currentColor 40%, transparent); text-underline-offset: 3px; cursor: help; }
@@ -1508,7 +1586,8 @@
 :where([data-scope="section-message"] [data-part="actions"]) { grid-column: 2; display: flex; gap: 8px; margin-block-start: 6px; }
 
 /* -- Highlight / mark */
-:where(mark[data-scope="mark"], [data-scope="palette"] mark) {
+:where(mark[data-scope="mark"]),
+:where([data-scope="palette"] mark) {
   background: var(--warp-color-highlight-soft); color: inherit; border-radius: 2px; padding-inline: 1px;
   box-shadow: inset 0 calc(var(--warp-border-emphasis) * -1) 0 var(--warp-color-highlight-border);
 }
@@ -1536,7 +1615,8 @@
   border: 0; border-radius: var(--warp-radius-round); background: transparent; color: var(--warp-color-text-subtle); cursor: pointer;
 }
 :where([data-scope="toggletip"][data-part="trigger"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="toggletip"][data-part="trigger"]:hover, [data-scope="toggletip"][data-part="trigger"][aria-expanded="true"]) { color: var(--warp-color-accent-text); }
+:where([data-scope="toggletip"][data-part="trigger"]:hover),
+:where([data-scope="toggletip"][data-part="trigger"][aria-expanded="true"]) { color: var(--warp-color-accent-text); }
 :where([data-scope="toggletip"][data-part="trigger"] svg) { inline-size: 16px; block-size: 16px; }
 
 /* -- Menubar: a row of menu buttons; once one is open, hover moves between them */
@@ -1548,7 +1628,8 @@
   block-size: calc(var(--warp-control-md) - 6px); padding-inline: 10px; border: 0; border-radius: var(--warp-radius-control); background: transparent;
   color: var(--warp-color-text); font: 500 var(--warp-text-body-size)/1 var(--warp-text-body-font); cursor: default;
 }
-:where([data-scope="menubar"] > [role="menuitem"]:hover, [data-scope="menubar"] > [role="menuitem"][aria-expanded="true"]) { background: color-mix(in oklab, currentColor 7%, transparent); }
+:where([data-scope="menubar"] > [role="menuitem"]:hover),
+:where([data-scope="menubar"] > [role="menuitem"][aria-expanded="true"]) { background: color-mix(in oklab, currentColor 7%, transparent); }
 
 /* -- Speed dial: the FAB fans out its actions (phone); labels sit beside them */
 :where([data-scope="speed-dial"]) { position: absolute; inset: auto 16px 16px auto; display: grid; justify-items: end; gap: 10px; }
@@ -1641,7 +1722,9 @@
 :where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-space-tight); }
 :where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--warp-space-tight); }
 :where([data-scope="nav"] a) { color: var(--warp-color-text-subtle); text-decoration: none; transition: color var(--warp-duration-fast) var(--warp-ease-out); }
-:where([data-scope="nav"] a:hover, [data-scope="nav"] a:focus-visible, [data-scope="nav"] a[aria-current]) { color: var(--warp-color-text); }
+:where([data-scope="nav"] a:hover),
+:where([data-scope="nav"] a:focus-visible),
+:where([data-scope="nav"] a[aria-current]) { color: var(--warp-color-text); }
 :where([data-scope="nav"] > [data-part="indicator"]) {
   position: absolute; inset-block-start: 0; inset-inline-start: 0; pointer-events: none;
   background: var(--warp-color-accent-solid); transform-origin: 0 0; transform: scaleX(0); opacity: 0;
@@ -1669,7 +1752,9 @@
    colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
 @media (forced-colors: active) {
   /* pressed toggles, chips, the segmented face and its sliding indicator: Highlight fill, HighlightText ink */
-  :where([data-scope="toggle"]:is([aria-pressed="true"], [aria-checked="true"]), [data-scope="chip"][aria-pressed="true"]) {
+  :where([data-scope="toggle"]:is([aria-pressed="true"])),
+  :where([data-scope="toggle"]:is([aria-checked="true"])),
+  :where([data-scope="chip"][aria-pressed="true"]) {
     forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; box-shadow: none;
   }
   :where([data-scope="toggle-group"]:has(> [data-part="indicator"]) [data-scope="toggle"][aria-checked="true"]) { background: transparent; border-color: transparent; }
@@ -1680,8 +1765,11 @@
   :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { color: HighlightText; }
   :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { background: Canvas; border-color: CanvasText; box-shadow: none; }
   /* list items: the active option or item reads as the system selection */
-  :where([data-scope="menu"] [data-part="item"]:is(:focus, [data-state="open"]), [data-scope="select"] [data-part="item"][data-highlighted],
-         [data-scope="palette"] [data-part="item"][aria-selected="true"], [role="listbox"] [role="option"][data-highlighted]) {
+  :where([data-scope="menu"] [data-part="item"]:is(:focus)),
+  :where([data-scope="menu"] [data-part="item"]:is([data-state="open"])),
+  :where([data-scope="select"] [data-part="item"][data-highlighted]),
+  :where([data-scope="palette"] [data-part="item"][aria-selected="true"]),
+  :where([role="listbox"] [role="option"][data-highlighted]) {
     forced-color-adjust: none; background: Highlight; color: HighlightText; box-shadow: none;
   }
   :where([data-scope="menu"], [data-scope="select"], [role="listbox"]) :where([data-part="indicator"]) { color: inherit; }
@@ -1700,19 +1788,28 @@
    pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
    never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
    ------------------------------------------------------------------------ */
-:where(a[data-scope="link"], [data-scope="logo"], [data-scope="anchor-heading"] > a[data-part="anchor"],
-       [data-scope="relative-time"], [data-scope="truncate"] > [data-part="toggle"], [data-scope="menubar"] > [role="menuitem"],
-       [data-scope="ai-label"]) { position: relative; }
+:where(a[data-scope="link"]),
+:where([data-scope="logo"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]),
+:where([data-scope="relative-time"]),
+:where([data-scope="truncate"] > [data-part="toggle"]),
+:where([data-scope="menubar"] > [role="menuitem"]),
+:where([data-scope="ai-label"]) { position: relative; }
 /* links (standalone and in running text: the expander reaches into the lines above and below, with no
    layout change), the logo, the heading anchor, relative time (a tooltip trigger), Show more, the AI label */
 @media screen {
-  :where(a[data-scope="link"], [data-scope="logo"], [data-scope="anchor-heading"] > a[data-part="anchor"],
-         [data-scope="relative-time"], [data-scope="truncate"] > [data-part="toggle"], [data-scope="ai-label"])::after {
+  :where(a[data-scope="link"])::after,
+  :where([data-scope="logo"])::after,
+  :where([data-scope="anchor-heading"] > a[data-part="anchor"])::after,
+  :where([data-scope="relative-time"])::after,
+  :where([data-scope="truncate"] > [data-part="toggle"])::after,
+  :where([data-scope="ai-label"])::after {
     content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));
   }
 }
 /* pills and menubar items sit in a row with room above and below: block axis only */
-:where([data-scope="pill"], [data-scope="menubar"] > [role="menuitem"])::after {
+:where([data-scope="pill"])::after,
+:where([data-scope="menubar"] > [role="menuitem"])::after {
   content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
 }
 /* an avatar stack overlaps by design (30% of the size): each face takes the block axis only. Its exposed

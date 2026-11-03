@@ -11,17 +11,19 @@
 /* solid sweep buttons (sweep-fill): warp-components wipes the fill with clip-path inside the box, so nothing here
    clips the button; its ::after hit area (hit-min, 44px on coarse) and focus ring stay whole. */
 /* small visuals keep their size; an invisible ::after reaches the hit area (neighbours may overlap) */
-:where([data-scope="reactions"] button, [data-scope="cite"]) { position: relative; }
-:where([data-scope="reactions"] button, [data-scope="cite"])::after {
+:where([data-scope="reactions"] button),
+:where([data-scope="cite"]) { position: relative; }
+:where([data-scope="reactions"] button)::after,
+:where([data-scope="cite"])::after {
   content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
   inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2));
 }
 @media (forced-colors: active) {
-:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range],
-         [data-scope="reactions"] button[aria-pressed="true"],
-         [data-scope="call-controls"] [data-part="control"][aria-pressed="true"],
-         [data-scope="question"] label:has(:checked),
-         [data-scope="versions"] li[aria-current="true"],
-         [data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
+  :where([data-scope="reactions"] button[aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="question"] label:has(:checked)),
+  :where([data-scope="versions"] li[aria-current="true"]),
+  :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
 }
 }

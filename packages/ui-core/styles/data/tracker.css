@@ -9,7 +9,9 @@
 :where([data-scope="tracker"] [data-part="bars"] > [data-state="down"]) { --_dc: var(--warp-color-critical-solid); block-size: 100%; }
 :where([data-scope="tracker"] [data-part="bars"] > [data-state="none"]) { --_dc: var(--warp-color-surface-sunken); }
 :where([data-scope="tracker"] [data-part="bars"] > [data-state="degraded"]) { background: repeating-linear-gradient(135deg, var(--_dc) 0 3px, color-mix(in oklab, var(--_dc) 55%, var(--warp-color-surface)) 3px 5px); }
-:where([data-scope="tracker"] [data-part="bars"] > :is(:hover, :focus-visible, [data-active])) { outline: 2px solid var(--warp-color-text); outline-offset: 1px; }
+:where([data-scope="tracker"] [data-part="bars"] > :is(:hover)),
+:where([data-scope="tracker"] [data-part="bars"] > :is(:focus-visible)),
+:where([data-scope="tracker"] [data-part="bars"] > :is([data-active])) { outline: 2px solid var(--warp-color-text); outline-offset: 1px; }
 /* touch: 90 bars are ~3px wide on a phone, so the bars stop taking touches and the strip is one
    44px scrubber (drag → nearest day, the tooltip follows). Keyboard keeps its roving bar. */
 @media (pointer: coarse) {

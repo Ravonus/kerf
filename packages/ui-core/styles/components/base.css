@@ -6,11 +6,15 @@
    --warp-sweep-radius (match the host's corners), --warp-color-sweep (tone) and
    --_on (the signature's gate; static surfaces use the dial's surface reach).
    ------------------------------------------------------------------------ */
-:where([data-scope="chip"], [data-scope="pill"]) { --warp-sweep-radius: var(--warp-radius-round); }
-:where([data-scope="surface"], [data-scope="menu"][data-part="content"], [data-scope="select"][data-part="content"],
-       [data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
+:where([data-scope="chip"]),
+:where([data-scope="pill"]) { --warp-sweep-radius: var(--warp-radius-round); }
+:where([data-scope="surface"]),
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
 :where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--warp-sweep-surfaces); }
-:where([data-part="content"][hidden], [data-part="content"][popover]:not(:popover-open)) { display: none; }
+:where([data-part="content"][hidden]),
+:where([data-part="content"][popover]:not(:popover-open)) { display: none; }
 /* bracket corners: [data-part="frame-corners"] + [data-part="sweep-corners"] (warp.signature §1b) */
 
 /* ---------------------------------------------------------------------------
@@ -54,7 +58,8 @@
   stroke-linecap: round; stroke-linejoin: round;
 }
 :where([data-expression="vivid"] svg[data-icon]) { stroke-linecap: square; stroke-linejoin: miter; }
-:where([data-expression="quiet"] svg[data-icon], [data-expression="balanced"] svg[data-icon]) { stroke-linecap: round; stroke-linejoin: round; }
+:where([data-expression="quiet"] svg[data-icon]),
+:where([data-expression="balanced"] svg[data-icon]) { stroke-linecap: round; stroke-linejoin: round; }
 
 /* kbd */
 :where(kbd[data-scope="kbd"]) {
@@ -65,13 +70,16 @@
 }
 
 /* visually hidden (live regions, labels) */
-:where([data-part="sr-only"], [data-scope="announcer"]) {
+:where([data-part="sr-only"]),
+:where([data-scope="announcer"]) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 
 /* shared floating panel (menu, popover, select, hover card, context menu) */
-:where([data-scope="menu"][data-part="content"], [data-scope="popover"][data-part="content"],
-       [data-scope="select"][data-part="content"], [data-scope="hover-card"][data-part="content"]) {
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="popover"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="hover-card"][data-part="content"]) {
   --_side-x: 0; --_side-y: -1;   /* the anchor is above → enter downward, leave upward */
   position: fixed; inset: auto; margin: 0; box-sizing: border-box;
   min-inline-size: 180px; max-inline-size: min(360px, calc(100vw - 16px));
@@ -93,8 +101,14 @@
     overlay calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete,
     display calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete;
 }
-:where([data-scope="menu"][data-part="content"], [data-scope="popover"][data-part="content"],
-       [data-scope="select"][data-part="content"], [data-scope="hover-card"][data-part="content"]):where(:popover-open, [data-state="open"]) {
+:where([data-scope="menu"][data-part="content"]):where(:popover-open),
+:where([data-scope="menu"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="popover"][data-part="content"]):where(:popover-open),
+:where([data-scope="popover"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="select"][data-part="content"]):where(:popover-open),
+:where([data-scope="select"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="hover-card"][data-part="content"]):where(:popover-open),
+:where([data-scope="hover-card"][data-part="content"]):where([data-state="open"]) {
   opacity: 1; translate: 0 0; scale: 1;
   transition:
     opacity var(--warp-duration-fast) var(--warp-ease-out),
@@ -103,8 +117,10 @@
     overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete;
 }
 @starting-style {
-  :where([data-scope="menu"][data-part="content"], [data-scope="popover"][data-part="content"],
-         [data-scope="select"][data-part="content"], [data-scope="hover-card"][data-part="content"]):popover-open {
+  :where([data-scope="menu"][data-part="content"]):popover-open,
+  :where([data-scope="popover"][data-part="content"]):popover-open,
+  :where([data-scope="select"][data-part="content"]):popover-open,
+  :where([data-scope="hover-card"][data-part="content"]):popover-open {
     opacity: 0; scale: var(--warp-motion-scale-from);
     translate: calc(var(--_side-x) * var(--warp-motion-distance)) calc(var(--_side-y) * var(--warp-motion-distance));
   }

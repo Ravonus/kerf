@@ -1,11 +1,19 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
 /* shared: numerals, eyebrow, sweep host gates -------------------------------- */
-:where([data-scope="table"], [data-scope="chart"], [data-scope="stat"], [data-scope="kanban"],
-       [data-scope="meter"], [data-scope="ring"], [data-scope="delta"], [data-scope="list"],
-       [data-scope="desc"], [data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="table"]),
+:where([data-scope="chart"]),
+:where([data-scope="stat"]),
+:where([data-scope="kanban"]),
+:where([data-scope="meter"]),
+:where([data-scope="ring"]),
+:where([data-scope="delta"]),
+:where([data-scope="list"]),
+:where([data-scope="desc"]),
+:where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
 /* data surfaces (panels, stat rows, KPI tiles, interactive or not): gated like surfaces (vivid / flair) */
-:where([data-scope="panel"][data-sweep], [data-scope="stat"][data-sweep]) {
+:where([data-scope="panel"][data-sweep]),
+:where([data-scope="stat"][data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
 /* data surfaces rest on the decorative hairline, not the field's ink border */
@@ -33,7 +41,8 @@
 :where([data-scope="stat"] [data-part="spark"]) { display: block; inline-size: 100%; block-size: 36px; margin-block-start: 4px; overflow: visible; }
 /* the display serif (vivid) has no tnum: a value that updates live uses the heading sans,
    so digits never jitter (00 §4: tabular numerals at every stop). Static values keep the serif. */
-:where([data-scope="stat"][data-live] [data-part="number"], [data-scope="stat"] [data-part="number"][data-live]) { font-family: var(--warp-text-heading-font); }
+:where([data-scope="stat"][data-live] [data-part="number"]),
+:where([data-scope="stat"] [data-part="number"][data-live]) { font-family: var(--warp-text-heading-font); }
 /* deltas inside a tile are read, not admired: body sans at caption size, never the serif */
 :where([data-scope="stat"] [data-scope="delta"]) {
   font-family: var(--warp-text-body-font); font-size: max(12px, var(--warp-text-caption-size)); font-weight: 600; letter-spacing: 0;

@@ -9,7 +9,8 @@
   background: linear-gradient(currentColor, currentColor) no-repeat right 0 bottom 0 / 0% var(--warp-border-emphasis);
   transition: background-size var(--warp-sweep-duration) var(--warp-sweep-ease), text-decoration-color var(--warp-duration-fast);
 }
-:where(a[data-scope="link"]:hover, a[data-scope="link"]:focus-visible) { background-size: 100% var(--warp-border-emphasis); background-position: left 0 bottom 0; text-decoration-color: transparent; }
+:where(a[data-scope="link"]:hover),
+:where(a[data-scope="link"]:focus-visible) { background-size: 100% var(--warp-border-emphasis); background-position: left 0 bottom 0; text-decoration-color: transparent; }
 :where(a[data-scope="link"][data-variant="subtle"]) { color: inherit; text-decoration-color: transparent; }
 :where(a[data-scope="link"] svg[data-icon]) { inline-size: 0.85em; block-size: 0.85em; vertical-align: -0.05em; margin-inline-start: 2px; }
 
@@ -25,15 +26,23 @@
    pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
    never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
    ------------------------------------------------------------------------ */
-:where(a[data-scope="link"], [data-scope="logo"], [data-scope="anchor-heading"] > a[data-part="anchor"],
-       [data-scope="relative-time"], [data-scope="truncate"] > [data-part="toggle"], [data-scope="menubar"] > [role="menuitem"],
-       [data-scope="ai-label"]) { position: relative; }
+:where(a[data-scope="link"]),
+:where([data-scope="logo"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]),
+:where([data-scope="relative-time"]),
+:where([data-scope="truncate"] > [data-part="toggle"]),
+:where([data-scope="menubar"] > [role="menuitem"]),
+:where([data-scope="ai-label"]) { position: relative; }
 
 /* links (standalone and in running text: the expander reaches into the lines above and below, with no
    layout change), the logo, the heading anchor, relative time (a tooltip trigger), Show more, the AI label */
 @media screen {
-:where(a[data-scope="link"], [data-scope="logo"], [data-scope="anchor-heading"] > a[data-part="anchor"],
-         [data-scope="relative-time"], [data-scope="truncate"] > [data-part="toggle"], [data-scope="ai-label"])::after {
+:where(a[data-scope="link"])::after,
+  :where([data-scope="logo"])::after,
+  :where([data-scope="anchor-heading"] > a[data-part="anchor"])::after,
+  :where([data-scope="relative-time"])::after,
+  :where([data-scope="truncate"] > [data-part="toggle"])::after,
+  :where([data-scope="ai-label"])::after {
     content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));
   }
 }

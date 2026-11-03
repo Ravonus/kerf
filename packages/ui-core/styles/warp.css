@@ -745,7 +745,8 @@
     accent-color: var(--warp-color-accent-solid);
   }
   /* a scope that changes theme or expression repaints its own ink and font */
-  :where([data-theme], [data-expression]) {
+  :where([data-theme]),
+  :where([data-expression]) {
     color: var(--warp-color-text);
     font-family: var(--warp-text-body-font);
   }
@@ -761,15 +762,28 @@
     background: var(--warp-color-accent-soft);
     color: var(--warp-color-text);
   }
-  :where(code, kbd, samp, pre) { font-family: var(--warp-text-code-font); font-size: var(--warp-text-code-size); }
+  :where(code),
+  :where(kbd),
+  :where(samp),
+  :where(pre) { font-family: var(--warp-text-code-font); font-size: var(--warp-text-code-size); }
   :where(pre) { line-height: var(--warp-text-code-leading); }
 
   /* -- type roles (01 §2 Type; research 11 §3) ------------------------------------------
      wrap: headings balance at every stop; prose is pretty from balanced; vivid keeps editable text stable
      (text-wrap-style only, so a component's white-space: nowrap still wins). */
-  :where(h1, h2, h3, h4, h5, h6) { text-wrap-style: var(--warp-text-heading-wrap); }
-  :where(p, li, dd, blockquote, figcaption) { text-wrap-style: var(--warp-text-prose-wrap); }
-  :where(textarea, [contenteditable]:not([contenteditable="false"])) { text-wrap-style: var(--warp-text-editable-wrap); }
+  :where(h1),
+  :where(h2),
+  :where(h3),
+  :where(h4),
+  :where(h5),
+  :where(h6) { text-wrap-style: var(--warp-text-heading-wrap); }
+  :where(p),
+  :where(li),
+  :where(dd),
+  :where(blockquote),
+  :where(figcaption) { text-wrap-style: var(--warp-text-prose-wrap); }
+  :where(textarea),
+  :where([contenteditable]:not([contenteditable="false"])) { text-wrap-style: var(--warp-text-editable-wrap); }
   /* prose: reading size, leading and the dial's measure (72 · 66 · 60ch) */
   :where([data-prose]) {
     font-size: var(--warp-text-prose-size); line-height: var(--warp-text-prose-leading);
@@ -780,11 +794,21 @@
      A flex host's own text-box doesn't reach its text (it isn't a block container), so its direct
      label spans are trimmed too; heights stay fixed (block-size), only the glyphs centre on the cap. */
   @supports (text-box: trim-both cap alphabetic) {
-    :where([data-scope="button"], [data-scope="badge"], [data-scope="chip"], [data-scope="pill"], [data-scope="tag"], [data-part="eyebrow"]),
+    :where([data-scope="button"]),
+    :where([data-scope="badge"]),
+    :where([data-scope="chip"]),
+    :where([data-scope="pill"]),
+    :where([data-scope="tag"]),
+    :where([data-part="eyebrow"]),
     :where([data-scope="button"], [data-scope="badge"], [data-scope="chip"], [data-scope="pill"], [data-scope="tag"]) > :where(span:not([data-part])) {
       text-box: var(--warp-text-box-trim);
     }
-    :where(h1, h2, h3, h4, h5, h6) { text-box: var(--warp-text-heading-trim); }
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6) { text-box: var(--warp-text-heading-trim); }
     /* trimmed block text keeps the brand's box through the font swap: a fixed-height part (control, badge)
        can't move, but a heading's height is its cap, which differs between the fallback and the web font.
        --warp-trim-k says whether the element is trimmed (it mirrors the text-box token it uses); the fix is
@@ -792,11 +816,29 @@
        vivid only: the hero title, and any element marked data-trim="display", reads the display switch.
        An element that sets text-box: var(--warp-text-display-trim) itself sets data-trim="display" too, and a
        heading laid out as flex or grid (text-box only trims block containers) sets --warp-trim-k: 0. */
-    :where(h1, h2, h3, h4, h5, h6) { --warp-trim-k: var(--warp-text-heading-trim-k); }
-    :where([data-scope="hero"] [data-part="title"], [data-trim="display"]) { --warp-trim-k: var(--warp-text-display-trim-k); }
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6) { --warp-trim-k: var(--warp-text-heading-trim-k); }
+    :where([data-scope="hero"] [data-part="title"]),
+    :where([data-trim="display"]) { --warp-trim-k: var(--warp-text-display-trim-k); }
     /* an accordion / disclosure heading holds a block button, not lines of its own: nothing to trim */
-    :where(h1, h2, h3, h4, h5, h6):where(:has(> button[aria-expanded])) { --warp-trim-k: 0; }
-    :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+    :where(h1):where(:has(> button[aria-expanded])),
+    :where(h2):where(:has(> button[aria-expanded])),
+    :where(h3):where(:has(> button[aria-expanded])),
+    :where(h4):where(:has(> button[aria-expanded])),
+    :where(h5):where(:has(> button[aria-expanded])),
+    :where(h6):where(:has(> button[aria-expanded])) { --warp-trim-k: 0; }
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6),
+    :where([data-scope="hero"] [data-part="title"]),
+    :where([data-trim]) {
       --warp-trim-fix: calc(var(--warp-trim-k, 0) * var(--warp-ref-trim-swap));
     }
     /* where the fix goes. Above the first line it keeps the baseline where the web font will put it, so
@@ -809,17 +851,38 @@
        (no other engine ships it). With the web font
        loaded every term is 0: padding 0, calc-size(auto, size + 0px), which lays out as auto, stretch included. */
     @supports not ((hanging-punctuation: first) and (not (block-size: calc-size(auto, size)))) {
-      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+      :where(h1),
+      :where(h2),
+      :where(h3),
+      :where(h4),
+      :where(h5),
+      :where(h6),
+      :where([data-scope="hero"] [data-part="title"]),
+      :where([data-trim]) {
         padding-block-start: max(0px, var(--warp-trim-fix));
       }
     }
     @supports (block-size: calc-size(auto, size)) {
-      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+      :where(h1),
+      :where(h2),
+      :where(h3),
+      :where(h4),
+      :where(h5),
+      :where(h6),
+      :where([data-scope="hero"] [data-part="title"]),
+      :where([data-trim]) {
         block-size: calc-size(auto, size + min(0px, var(--warp-trim-fix)));
       }
     }
     @supports (hanging-punctuation: first) and (not (block-size: calc-size(auto, size))) {
-      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim])::before {
+      :where(h1)::before,
+      :where(h2)::before,
+      :where(h3)::before,
+      :where(h4)::before,
+      :where(h5)::before,
+      :where(h6)::before,
+      :where([data-scope="hero"] [data-part="title"])::before,
+      :where([data-trim])::before {
         /* the box exists only while the fix is non-zero: after the swap it is gone, so it never becomes a
            flex item (with gap) in a flex heading. An engine without if() drops the pseudo (no fix). */
         content: if(style(--warp-trim-fix: 0px): none; else: "");
@@ -830,12 +893,50 @@
   /* fallback (iOS < 18.2, Firefox < 154): Capsize-style negative margins from the face's metrics,
      using the line's own height (lh). Without lh (iOS 15) the declarations are dropped: untrimmed, harmless. */
   @supports not (text-box: trim-both cap alphabetic) {
-    :where(h1, h2, h3, h4, h5, h6)::before, :where(h1, h2, h3, h4, h5, h6)::after,
-    :where([data-part="eyebrow"])::before, :where([data-part="eyebrow"])::after { content: ""; display: table; }
-    :where(h1, h2, h3, h4, h5, h6) { --_t: 1; }
-    :where([data-expression="quiet"] :is(h1, h2, h3, h4, h5, h6), [data-expression="quiet"]:is(h1, h2, h3, h4, h5, h6)) { --_t: 0; }
-    :where(h1, h2, h3, h4, h5, h6)::before { margin-block-end: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k2) * 1em)); }
-    :where(h1, h2, h3, h4, h5, h6)::after { margin-block-start: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k3) * 1em)); }
+    :where(h1)::before,
+    :where(h2)::before,
+    :where(h3)::before,
+    :where(h4)::before,
+    :where(h5)::before,
+    :where(h6)::before,
+    :where(h1)::after,
+    :where(h2)::after,
+    :where(h3)::after,
+    :where(h4)::after,
+    :where(h5)::after,
+    :where(h6)::after,
+    :where([data-part="eyebrow"])::before,
+    :where([data-part="eyebrow"])::after { content: ""; display: table; }
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6) { --_t: 1; }
+    :where([data-expression="quiet"] :is(h1)),
+    :where([data-expression="quiet"] :is(h2)),
+    :where([data-expression="quiet"] :is(h3)),
+    :where([data-expression="quiet"] :is(h4)),
+    :where([data-expression="quiet"] :is(h5)),
+    :where([data-expression="quiet"] :is(h6)),
+    :where([data-expression="quiet"]:is(h1)),
+    :where([data-expression="quiet"]:is(h2)),
+    :where([data-expression="quiet"]:is(h3)),
+    :where([data-expression="quiet"]:is(h4)),
+    :where([data-expression="quiet"]:is(h5)),
+    :where([data-expression="quiet"]:is(h6)) { --_t: 0; }
+    :where(h1)::before,
+    :where(h2)::before,
+    :where(h3)::before,
+    :where(h4)::before,
+    :where(h5)::before,
+    :where(h6)::before { margin-block-end: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k2) * 1em)); }
+    :where(h1)::after,
+    :where(h2)::after,
+    :where(h3)::after,
+    :where(h4)::after,
+    :where(h5)::after,
+    :where(h6)::after { margin-block-start: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k3) * 1em)); }
     :where([data-part="eyebrow"])::before { margin-block-end: calc(-1 * ((1lh - var(--warp-ref-em-k1) * 1em) / 2 + var(--warp-ref-em-k2) * 1em)); }
     :where([data-part="eyebrow"])::after { margin-block-start: calc(-1 * ((1lh - var(--warp-ref-em-k1) * 1em) / 2 + var(--warp-ref-em-k3) * 1em)); }
   }
@@ -846,17 +947,30 @@
 
   /* no faux italics in headlines: Space Grotesk and Inter-as-display ship no italic, so the browser
      would slant the roman. Emphasis there is upright + accent; vivid's serif uses its real italic. */
-  :where(h1, h2, h3, h4, h5, h6) { font-synthesis-style: none; }
+  :where(h1),
+  :where(h2),
+  :where(h3),
+  :where(h4),
+  :where(h5),
+  :where(h6) { font-synthesis-style: none; }
   :where(h1, h2, h3, h4, h5, h6) :where(em) { font-style: var(--warp-text-emphasis-style); color: var(--warp-text-emphasis-color); }
   /* figures that update or align: a face with tnum at every stop (vivid's serif has none) */
   :where([data-numeric]) { font-family: var(--warp-text-numeric-font); font-variant-numeric: var(--warp-text-numeric-variant); }
-  :where(table, time) { font-variant-numeric: var(--warp-text-numeric-variant); }
+  :where(table),
+  :where(time) { font-variant-numeric: var(--warp-text-numeric-variant); }
 
   /* touch: every target reaches hit-min (24px fine, 44px coarse) from tokens alone (00 §1.5).
      The floor is a min-size, so a component's own block-size still sets the visual size on a mouse. */
-  :where([data-scope="button"]:not([data-emphasis="link"]), [data-scope="toggle"], [data-part="close"],
-         [data-scope="status-bar"] > button, [role="tab"], [data-hit]:not([data-hit="area"])) { min-block-size: var(--warp-hit-min); }
-  :where([data-scope="button"][data-icon-only], [data-part="close"], [data-scope="toggle"], [data-hit]:not([data-hit="area"])) { min-inline-size: var(--warp-hit-min); }
+  :where([data-scope="button"]:not([data-emphasis="link"])),
+  :where([data-scope="toggle"]),
+  :where([data-part="close"]),
+  :where([data-scope="status-bar"] > button),
+  :where([role="tab"]),
+  :where([data-hit]:not([data-hit="area"])) { min-block-size: var(--warp-hit-min); }
+  :where([data-scope="button"][data-icon-only]),
+  :where([data-part="close"]),
+  :where([data-scope="toggle"]),
+  :where([data-hit]:not([data-hit="area"])) { min-inline-size: var(--warp-hit-min); }
   /* expander: a target that must keep a smaller visual box (a chart toggle, a pin, a drag handle) gets a
      centred hit-min area from ::after; it never shrinks the box. Components use the same formula on their
      own parts; where two expanders would overlap, the part takes its share of the gap instead (24px
@@ -864,7 +978,8 @@
   :where([data-hit="area"]) { position: relative; }
   :where([data-hit="area"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
   /* a standalone text link (not inside running text) gets the same row height */
-  :where([data-scope="button"][data-emphasis="link"]:not(:is(p, li, dd, td, figcaption, blockquote, label) *), [data-hit="text"]) {
+  :where([data-scope="button"][data-emphasis="link"]:not(:is(p, li, dd, td, figcaption, blockquote, label) *)),
+  :where([data-hit="text"]) {
     display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min);
   }
 
@@ -897,18 +1012,60 @@
        3. spinners and indeterminate bars keep a status signal: an opacity pulse, no rotation or travel. */
   @media (prefers-reduced-motion: reduce) {
     :where(:root:not([data-motion="full"]) *) { scroll-behavior: auto !important; }
-    :where(:root:not([data-motion="full"]) *, :root:not([data-motion="full"]) *::before, :root:not([data-motion="full"]) *::after) { animation-iteration-count: 1 !important; }
-    :where(:root:not([data-motion="full"])) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], .edge[data-live], [data-loop]) { animation: none !important; }
-    :where(:root:not([data-motion="full"])) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::before,
-    :where(:root:not([data-motion="full"])) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::after { animation: none !important; }
+    :where(:root:not([data-motion="full"]) *),
+    :where(:root:not([data-motion="full"]) *::before),
+    :where(:root:not([data-motion="full"]) *::after) { animation-iteration-count: 1 !important; }
+    :where(:root:not([data-motion="full"])) :where([data-shimmer]),
+    :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"]),
+    :where(:root:not([data-motion="full"])) :where([data-part="skeleton"]),
+    :where(:root:not([data-motion="full"])) :where([data-skeleton]),
+    :where(:root:not([data-motion="full"])) :where([data-scope="shimmer"]),
+    :where(:root:not([data-motion="full"])) :where([data-part="shimmer"]),
+    :where(:root:not([data-motion="full"])) :where(.edge[data-live]),
+    :where(:root:not([data-motion="full"])) :where([data-loop]) { animation: none !important; }
+    :where(:root:not([data-motion="full"])) :where([data-shimmer])::before,
+    :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-part="skeleton"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-skeleton])::before,
+    :where(:root:not([data-motion="full"])) :where([data-scope="shimmer"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-part="shimmer"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-loop])::before,
+    :where(:root:not([data-motion="full"])) :where([data-shimmer])::after,
+    :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-part="skeleton"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-skeleton])::after,
+    :where(:root:not([data-motion="full"])) :where([data-scope="shimmer"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-part="shimmer"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-loop])::after { animation: none !important; }
     :where(:root:not([data-motion="full"])) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
       animation: warp-pulse 1.2s ease-in-out infinite alternate !important;
     }
   }
-  :where([data-motion="reduce"] *, [data-motion="reduce"] *::before, [data-motion="reduce"] *::after) { animation-iteration-count: 1 !important; }
-  :where([data-motion="reduce"]) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], .edge[data-live], [data-loop]) { animation: none !important; }
-  :where([data-motion="reduce"]) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::before,
-  :where([data-motion="reduce"]) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::after { animation: none !important; }
+  :where([data-motion="reduce"] *),
+  :where([data-motion="reduce"] *::before),
+  :where([data-motion="reduce"] *::after) { animation-iteration-count: 1 !important; }
+  :where([data-motion="reduce"]) :where([data-shimmer]),
+  :where([data-motion="reduce"]) :where([data-scope="skeleton"]),
+  :where([data-motion="reduce"]) :where([data-part="skeleton"]),
+  :where([data-motion="reduce"]) :where([data-skeleton]),
+  :where([data-motion="reduce"]) :where([data-scope="shimmer"]),
+  :where([data-motion="reduce"]) :where([data-part="shimmer"]),
+  :where([data-motion="reduce"]) :where(.edge[data-live]),
+  :where([data-motion="reduce"]) :where([data-loop]) { animation: none !important; }
+  :where([data-motion="reduce"]) :where([data-shimmer])::before,
+  :where([data-motion="reduce"]) :where([data-scope="skeleton"])::before,
+  :where([data-motion="reduce"]) :where([data-part="skeleton"])::before,
+  :where([data-motion="reduce"]) :where([data-skeleton])::before,
+  :where([data-motion="reduce"]) :where([data-scope="shimmer"])::before,
+  :where([data-motion="reduce"]) :where([data-part="shimmer"])::before,
+  :where([data-motion="reduce"]) :where([data-loop])::before,
+  :where([data-motion="reduce"]) :where([data-shimmer])::after,
+  :where([data-motion="reduce"]) :where([data-scope="skeleton"])::after,
+  :where([data-motion="reduce"]) :where([data-part="skeleton"])::after,
+  :where([data-motion="reduce"]) :where([data-skeleton])::after,
+  :where([data-motion="reduce"]) :where([data-scope="shimmer"])::after,
+  :where([data-motion="reduce"]) :where([data-part="shimmer"])::after,
+  :where([data-motion="reduce"]) :where([data-loop])::after { animation: none !important; }
   :where([data-motion="reduce"]) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
     animation: warp-pulse 1.2s ease-in-out infinite alternate !important;
   }
@@ -927,8 +1084,12 @@
 
   /* -- the switch: --_a is 1 while a host is active. Hover (not touch), focus, a held state, a pass. The only state.
      Hover and focus are the browser's, so the sweep runs with no script and no write to the DOM. */
-  @media (hover: hover) { :where([data-sweep]:hover, [data-sweep-trigger]:hover [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):hover [data-sweep]) { --_a: 1; } }
-  @media (hover: none) { :where([data-sweep]:active, [data-sweep-trigger]:active [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):active [data-sweep]) { --_a: 1; } }
+  @media (hover: hover) { :where([data-sweep]:hover),
+ :where([data-sweep-trigger]:hover [data-sweep]),
+ :where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):hover [data-sweep]) { --_a: 1; } }
+  @media (hover: none) { :where([data-sweep]:active),
+ :where([data-sweep-trigger]:active [data-sweep]),
+ :where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):active [data-sweep]) { --_a: 1; } }
   :where([data-sweep]:is(:focus-visible, :has(:focus-visible), [data-pin], [data-hold], [data-confirm], [data-invalid], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"], :popover-open),
          [data-sweep]:has(> [aria-expanded="true"], > [data-part="heading"] [aria-expanded="true"]),
          :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
@@ -938,7 +1099,13 @@
   /* -- 1 · two edges. Each has one job, so a part needs no states. Active: the right edge draws across on the "in" curve
      while the left stands at 0. Inactive: the left edge follows it out on the out curve, and the right edge waits that long,
      then resets out of sight. It never reverses, and leaving part way only means the left edge catches up sooner. */
-  :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-label"], [data-part="sweep-content"], [data-part="rail-hover"]) {
+  :where([data-part="sweep"]),
+  :where([data-part="sweep-base"]),
+  :where([data-part="sweep-fill"]),
+  :where([data-part="sweep-corners"]),
+  :where([data-part="sweep-label"]),
+  :where([data-part="sweep-content"]),
+  :where([data-part="rail-hover"]) {
     --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
     --_edges: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
               --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
@@ -947,12 +1114,19 @@
   }
   /* A tap's :active is over in a blink. Each part keeps its --_a for one sweep past it, so a tap draws in whole, then exits. */
   @media (hover: none) {
-    :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-outline"], [data-part="sweep-label"], [data-part="sweep-content"]) {
+    :where([data-part="sweep"]),
+    :where([data-part="sweep-base"]),
+    :where([data-part="sweep-fill"]),
+    :where([data-part="sweep-corners"]),
+    :where([data-part="sweep-outline"]),
+    :where([data-part="sweep-label"]),
+    :where([data-part="sweep-content"]) {
       --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--warp-sweep-duration));
     }
   }
   /* two stacked 1px borders (or any content, e.g. an icon) */
-  :where([data-part="sweep"], [data-part="sweep-base"]) {
+  :where([data-part="sweep"]),
+  :where([data-part="sweep-base"]) {
     position: absolute; inset: 0; box-sizing: border-box; pointer-events: none;
     border-radius: inherit;
   }
@@ -968,19 +1142,23 @@
     clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
   }
   /* error: pinned in by the switch, painted critical */
-  :where([data-invalid] > [data-part="sweep"], [data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--warp-color-sweep-critical); opacity: 1; }
+  :where([data-invalid] > [data-part="sweep"]),
+  :where([data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--warp-color-sweep-critical); opacity: 1; }
 
   /* -- the shuttle (redesign §3): one highlight per group that travels. Two registered numbers, one per edge, on their
      own timings: the leading edge goes first, the trailing edge follows, so it draws out like a thread and snaps
      back to width. ui-core writes --warp-a, --warp-b and data-dir. */
-  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]) {
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]),
+  :where([data-scope="segmented"] > [data-part="indicator"]),
+  :where([data-part="shuttle"]) {
     transition: --warp-a var(--warp-shuttle-tail) var(--warp-ease-spring), --warp-b var(--warp-shuttle-head) var(--warp-ease-spring);
   }
   :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-dir="back"]) {
     transition: --warp-a var(--warp-shuttle-head) var(--warp-ease-spring), --warp-b var(--warp-shuttle-tail) var(--warp-ease-spring);
   }
   :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-instant]) { transition: none; }
-  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"]) {
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]),
+  :where([data-scope="segmented"] > [data-part="indicator"]) {
     translate: var(--warp-a) 0; inline-size: calc(var(--warp-b) - var(--warp-a));
   }
   /* the shuttle in a list: frequent, so short and without overshoot */
@@ -990,7 +1168,8 @@
     border-radius: max(2px, calc(var(--warp-radius-control) - 2px)); background: var(--warp-color-accent-soft); opacity: 0;
     --warp-shuttle-head: calc(70ms * var(--warp-motion-scale)); --warp-shuttle-tail: calc(120ms * var(--warp-motion-scale)); --warp-ease-spring: var(--warp-ease-out);
   }
-  :where([data-part="shuttle"][data-on], [data-part="list"]:has([aria-selected="true"]) > [data-part="shuttle"]) { opacity: 1; }
+  :where([data-part="shuttle"][data-on]),
+  :where([data-part="list"]:has([aria-selected="true"]) > [data-part="shuttle"]) { opacity: 1; }
 
   /* -- sweep fill: solid buttons; slides in L→R, leaves to the right ----- */
   :where([data-part="sweep-fill"]) {
@@ -1019,7 +1198,8 @@
      <span data-part="sweep-label">…</span><span data-part="sweep-content" aria-hidden="true">…</span>  */
   /* the frame host runs on the frame's duration, so every part (and sweep()) reads 760ms */
   :where([data-sweep]:has(> [data-part="sweep-outline"])) { --warp-sweep-duration: var(--warp-frame-duration); }
-  :where([data-part="frame-corners"], [data-part="sweep-corners"]) {
+  :where([data-part="frame-corners"]),
+  :where([data-part="sweep-corners"]) {
     position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--warp-frame-track);
   }
   :where([data-part="frame-corners"], [data-part="sweep-corners"]) > i {
@@ -1030,7 +1210,8 @@
   :where([data-part$="corners"]) > i:nth-child(2) { inset-block-start: 0; inset-inline-end: 0;   border-block-start-width: var(--warp-frame-weight); border-inline-end-width: var(--warp-frame-weight); }
   :where([data-part$="corners"]) > i:nth-child(3) { inset-block-end: 0;   inset-inline-start: 0; border-block-end-width: var(--warp-frame-weight);   border-inline-start-width: var(--warp-frame-weight); }
   :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--warp-frame-weight);   border-inline-end-width: var(--warp-frame-weight); }
-  :where([data-part="sweep-corners"], [data-part="sweep-content"]) {
+  :where([data-part="sweep-corners"]),
+  :where([data-part="sweep-content"]) {
     color: var(--_tone, var(--warp-color-sweep)); opacity: var(--_on);
     clip-path: inset(0 var(--_sr) 0 var(--_sl));
   }
@@ -1051,14 +1232,20 @@
     position: absolute; background: var(--_tone, var(--warp-color-sweep));
   }
   :where([data-part="sweep-outline"]) > i:nth-child(-n+3) { --_o: 0px; --_n: 50cqh; }
-  :where([data-part="sweep-outline"]) > i:is(:nth-child(2), :nth-child(5)) { --_o: 50cqh; --_n: 100cqw; }
-  :where([data-part="sweep-outline"]) > i:is(:nth-child(3), :nth-child(6)) { --_o: calc(50cqh + 100cqw); --_n: 50cqh; }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(2)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(5)) { --_o: 50cqh; --_n: 100cqw; }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(3)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(6)) { --_o: calc(50cqh + 100cqw); --_n: 50cqh; }
   :where([data-part="sweep-outline"]) > i:nth-child(4) { --_o: 0px; --_n: 50cqh; }
   /* vertical: left half-edges from the middle; right half-edges toward the middle */
-  :where([data-part="sweep-outline"]) > i:is(:nth-child(1), :nth-child(3), :nth-child(4), :nth-child(6)) {
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(1)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(3)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(4)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(6)) {
     inline-size: var(--_s); block-size: calc(var(--_u1) - var(--_u0));
   }
-  :where([data-part="sweep-outline"]) > i:is(:nth-child(2), :nth-child(5)) {
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(2)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(5)) {
     block-size: var(--_s); inline-size: calc(var(--_u1) - var(--_u0)); inset-inline-start: var(--_u0);
   }
   :where([data-part="sweep-outline"]) > i:nth-child(1) { inset-inline-start: 0; inset-block-end: calc(50cqh + var(--_u0)); }
@@ -1086,14 +1273,16 @@
      Hover/focus while on: [data-part="rail-hover"] (accent-hover) sweeps
      through the inside of the rail. While off: the ring (sweep/sweep-base)
      sweeps around it. Same parts on slider fills, progress, segmented. */
-  :where([data-part="rail-fill"], [data-part="rail-hover"]) {
+  :where([data-part="rail-fill"]),
+  :where([data-part="rail-hover"]) {
     position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
   }
   :where([data-part="rail-fill"]) {
     background: var(--warp-color-accent-solid); clip-path: inset(0 100% 0 0 round var(--warp-sweep-radius));
     transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
   }
-  :where([data-on] > [data-part="rail-fill"], :checked + [data-part="track"] > [data-part="rail-fill"]) { clip-path: inset(0 round var(--warp-sweep-radius)); }
+  :where([data-on] > [data-part="rail-fill"]),
+  :where(:checked + [data-part="track"] > [data-part="rail-fill"]) { clip-path: inset(0 round var(--warp-sweep-radius)); }
   :where([data-part="rail-hover"]) {
     background: var(--warp-color-accent-solid-hover);
     clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
@@ -1119,7 +1308,9 @@
   }
   :where([data-scope="field"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: calc(var(--warp-pad-control) + 28px); }
   /* the accent tint arrives with the sweep: hover, focus, or an open picker */
-  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within), [data-scope="field"][data-open] > [data-part="control"]) { background: var(--warp-color-field-active); }
+  :where([data-scope="field"] > [data-part="control"]:is(:hover)),
+  :where([data-scope="field"] > [data-part="control"]:is(:focus-within)),
+  :where([data-scope="field"][data-open] > [data-part="control"]) { background: var(--warp-color-field-active); }
   :where([data-scope="field"][data-invalid] > [data-part="control"]) { background: var(--warp-color-field-invalid); }
   :where([data-scope="field"] [data-part="input"]) {
     all: unset; box-sizing: border-box; position: relative; z-index: 3;
@@ -1149,8 +1340,8 @@
     animation: warp-label-a var(--warp-label-fade) linear;
   }
   /* floated: on hover, focus or value — or always, in fixed mode */
-  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="label"],
-         [data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]) {
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="label"]),
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]) {
     inset-block-start: var(--warp-label-float-offset); inset-inline-start: calc(var(--warp-pad-control) - 4px);
     transform: none; padding-inline: 4px;
     font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight);
@@ -1173,11 +1364,13 @@
      The letters are generated content (::before from data-c), so the accessible name AND textContent are
      the plain "Alt text": not spelled out, and not the floated uppercase "ALT TEXT" (Chrome applies
      text-transform to names). The older form (bare inline <span data-char>A</span>) still works. */
-  :where([data-scope="field"] [data-part="label"] [data-part="label-text"], [data-part="label-text"]:has(+ [data-part="label-chars"])) {
+  :where([data-scope="field"] [data-part="label"] [data-part="label-text"]),
+  :where([data-part="label-text"]:has(+ [data-part="label-chars"])) {
     position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%);
     white-space: nowrap; text-transform: none; letter-spacing: normal;
   }
-  :where([data-scope="field"] [data-part="label"] [data-char][data-c], [data-part="label-chars"] > [data-char][data-c])::before { content: attr(data-c); }
+  :where([data-scope="field"] [data-part="label"] [data-char][data-c])::before,
+  :where([data-part="label-chars"] > [data-char][data-c])::before { content: attr(data-c); }
   /* the same anatomy names any caps-styled name source outside a field (a range head, a pane head, a knob caption):
      warpSweep.label(el) on it keeps the visible caps and gives AT the sentence-case words. No tint outside fields. */
   :where([data-part="label-chars"] > [data-char]) { white-space: pre; }
@@ -1189,8 +1382,8 @@
     transition: color var(--warp-label-char-duration) linear;
     transition-delay: calc(var(--d, 0ms) * var(--warp-label-stagger));
   }
-  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-char],
-         [data-scope="field"] > [data-part="control"]:is([data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-char]) {
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-char]),
+  :where([data-scope="field"] > [data-part="control"]:is([data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-char]) {
     color: var(--warp-color-label-rest);
   }
   :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-char]) { color: var(--warp-color-label-active); }
@@ -1199,8 +1392,8 @@
      or data-variant="classic" on the field. Label above the box as plain text:
      no float, no notch, no overlap. The sweep border and icon sweep stay;
      the label still tints with the sweep. Same markup as floating. */
-  :where([data-scope="field"][data-variant="classic"],
-         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) { padding-block-start: calc(var(--warp-text-label-size) * 1.25 + var(--warp-space-tight)); }
+  :where([data-scope="field"][data-variant="classic"]),
+  :where([data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) { padding-block-start: calc(var(--warp-text-label-size) * 1.25 + var(--warp-space-tight)); }
   :where([data-scope="field"][data-variant="classic"],
          [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"] {
     inset-block-start: auto; inset-block-end: calc(100% + var(--warp-space-tight));
@@ -1252,7 +1445,8 @@
   :where([data-scope="surface"][data-sweep]) { --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); }
 
   /* focus: the sweep is the indicator for fields; everything else keeps the ring */
-  :where([data-scope="field"] [data-part="input"]:focus-visible, [data-scope="palette"] [data-part="input"]:focus-visible) { outline: none; }
+  :where([data-scope="field"] [data-part="input"]:focus-visible),
+  :where([data-scope="palette"] [data-part="input"]:focus-visible) { outline: none; }
 
   /* -- 5 · forced colours (Windows High Contrast and friends) ------------
      The UA repaints every colour with a few system colours, so "accent over ink" collapses to
@@ -1264,9 +1458,16 @@
        frame  corners CanvasText, outline + active corners Highlight
        rails  fill Highlight, thumb CanvasText → HighlightText when on; hover rings in Highlight */
   @media (forced-colors: active) {
-    :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-corners"], [data-part="frame-corners"],
-           [data-part="sweep-outline"], [data-part="sweep-fill"], [data-part="rail-fill"], [data-part="rail-hover"],
-           [data-part="thumb"], [data-part="indicator"]) { forced-color-adjust: none; }
+    :where([data-part="sweep"]),
+    :where([data-part="sweep-base"]),
+    :where([data-part="sweep-corners"]),
+    :where([data-part="frame-corners"]),
+    :where([data-part="sweep-outline"]),
+    :where([data-part="sweep-fill"]),
+    :where([data-part="rail-fill"]),
+    :where([data-part="rail-hover"]),
+    :where([data-part="thumb"]),
+    :where([data-part="indicator"]) { forced-color-adjust: none; }
     :where([data-part="sweep-base"]) { color: CanvasText; }
     :where([data-part="sweep"]) { color: Highlight; opacity: 1; }
     :where([data-part="sweep"]:empty) { border-width: 2px; }
@@ -1275,8 +1476,9 @@
     :where([data-sweep]) { --_on: 1; }
     /* fields: the sweep alone is a 1→2px change, so focus also gets the system ring */
     :where([data-scope="field"] > [data-part="control"]:focus-within) { outline: 2px solid Highlight; outline-offset: 2px; }
-    :where([data-scope="field"][data-invalid] > [data-part="control"] > [data-part="sweep"],
-           [data-invalid] > [data-part="sweep"], [data-invalid] > [data-sweep] > [data-part="sweep"]) { color: CanvasText; border-style: double; border-width: 3px; }
+    :where([data-scope="field"][data-invalid] > [data-part="control"] > [data-part="sweep"]),
+    :where([data-invalid] > [data-part="sweep"]),
+    :where([data-invalid] > [data-sweep] > [data-part="sweep"]) { color: CanvasText; border-style: double; border-width: 3px; }
     :where([data-scope="field"] [data-part="label"]) { forced-color-adjust: none; color: CanvasText; background-color: Canvas; background-image: none; }
     :where([data-scope="field"] [data-part="label"] [data-char]) { color: inherit; }
     /* the UA would force the transparent resting placeholder to GrayText, under the resting label */
@@ -1297,9 +1499,12 @@
     :where([data-part="rail-fill"]) { background: Highlight; }
     :where([data-part="rail-hover"]) { display: none; }
     :where([data-part="thumb"]) { background: CanvasText; box-shadow: none; }
-    :where(:checked + [data-part="track"] [data-part="thumb"], [data-on] > [data-part="thumb"]) { background: HighlightText; }
+    :where(:checked + [data-part="track"] [data-part="thumb"]),
+    :where([data-on] > [data-part="thumb"]) { background: HighlightText; }
     :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: visible; color: CanvasText; }
-    :where([data-part="indicator"]) ~ :where([aria-checked="true"], [aria-selected="true"], [aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
+    :where([data-part="indicator"]) ~ :where([aria-checked="true"]),
+    :where([data-part="indicator"]) ~ :where([aria-selected="true"]),
+    :where([data-part="indicator"]) ~ :where([aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
     /* checkbox mark */
     :where([data-scope="checkbox"][data-part="control"] svg) { forced-color-adjust: none; stroke: CanvasText; }
   }
@@ -1321,17 +1526,18 @@
 
   /* Route changes: same-document (start's router) and cross-document alike. The page's chrome stays put. */
   @view-transition { navigation: auto; }
-  ::view-transition-group(*) { animation-duration: var(--warp-duration-slow); animation-timing-function: var(--warp-ease-out); }
-  ::view-transition-old(root) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
-  ::view-transition-new(root) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+  :where(:root)::view-transition-group(*) { animation-duration: var(--warp-duration-slow); animation-timing-function: var(--warp-ease-out); }
+  :where(:root)::view-transition-old(root) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
+  :where(:root)::view-transition-new(root) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
   @keyframes warp-page-out { to { opacity: 0; } }
   @keyframes warp-page-in { from { opacity: 0; transform: translateY(var(--warp-motion-distance)); } }
   [data-vt="bar"] { view-transition-name: warp-bar; }
   [data-vt="side"] { view-transition-name: warp-side; }
   [data-vt="main"] { view-transition-name: warp-main; }
-  ::view-transition-old(warp-main) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
-  ::view-transition-new(warp-main) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
-  ::view-transition-group(warp-bar), ::view-transition-group(warp-side) { z-index: 2; }
+  :where(:root)::view-transition-old(warp-main) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
+  :where(:root)::view-transition-new(warp-main) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+  :where(:root)::view-transition-group(warp-bar),
+  :where(:root)::view-transition-group(warp-side) { z-index: 2; }
 
   /* A block arriving: fade and rise as it enters the view, off the main thread. `--_d` staggers within a group. */
   @supports (animation-timeline: view()) {
@@ -1352,5 +1558,7 @@
   [data-scope="skeleton"] + *, [data-scope="skeleton"] ~ * { transition: opacity var(--warp-duration-slow) var(--warp-ease-out); @starting-style { opacity: 0; } }
 
   /* Press feels instant at every stop. */
-  :where(a, button, [role="button"]):active { transition-duration: var(--warp-duration-instant); }
+  :where(a):active,
+  :where(button):active,
+  :where([role="button"]):active { transition-duration: var(--warp-duration-instant); }
 }

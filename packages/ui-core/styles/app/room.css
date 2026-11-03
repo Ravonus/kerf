@@ -13,7 +13,8 @@
 }
 :where([data-scope="room"] [data-part="stage"][data-layout="speaker"]) { grid-template-rows: minmax(0, 1fr) 96px; gap: var(--warp-tile-gap); }
 :where([data-scope="room"] [data-part="stage"][data-layout="speaker"] > [data-part="strip"]) { display: grid; grid-auto-flow: column; grid-auto-columns: 148px; gap: var(--warp-tile-gap); overflow-x: auto; scrollbar-width: none; }
-:where([data-scope="room"] [data-part="stage"][data-layout="presentation"], [data-scope="room"] [data-part="stage"][data-layout="board"]) {
+:where([data-scope="room"] [data-part="stage"][data-layout="presentation"]),
+:where([data-scope="room"] [data-part="stage"][data-layout="board"]) {
   grid-template-columns: minmax(0, 1fr) 168px; gap: var(--warp-tile-gap);
 }
 :where([data-scope="room"] [data-part="stage"][data-layout="board"]) { grid-template-columns: minmax(0, 1fr) 112px; }

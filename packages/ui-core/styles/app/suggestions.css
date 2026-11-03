@@ -10,6 +10,7 @@
 :where([data-scope="suggestions"] button:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
 :where([data-scope="suggestions"][data-variant="chips"]) { display: flex; flex-wrap: wrap; }
 :where([data-scope="suggestions"][data-variant="chips"] button) { padding: 6px 12px; border-radius: var(--warp-radius-round); }
-:where([data-scope="suggestions"] button, [data-scope="thread-replies"]) { min-block-size: var(--warp-hit-min); }
+:where([data-scope="suggestions"] button),
+:where([data-scope="thread-replies"]) { min-block-size: var(--warp-hit-min); }
 :where([data-scope="suggestions"][data-variant="chips"] button) { display: inline-flex; align-items: center; }
 }

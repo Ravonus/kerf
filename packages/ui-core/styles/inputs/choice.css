@@ -3,7 +3,9 @@
 /* ===========================================================================
    3 · CHOICE FAMILY
    ======================================================================== */
-:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) {
+:where([data-scope="checkbox"]),
+:where([data-scope="radio"]),
+:where([data-scope="switch"]) {
   position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--warp-space-related);
   align-items: center; min-block-size: var(--warp-hit-min); cursor: pointer; font-size: var(--warp-text-body-size);
   -webkit-tap-highlight-color: transparent; justify-self: start;
@@ -16,9 +18,12 @@
 :where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > [data-part="hint"] {
   grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); line-height: var(--warp-text-caption-leading); margin-block-start: -2px;
 }
-:where([data-scope="checkbox"], [data-scope="radio"]):has([data-part="hint"]) { align-items: start; }
+:where([data-scope="checkbox"]):has([data-part="hint"]),
+:where([data-scope="radio"]):has([data-part="hint"]) { align-items: start; }
 :where([data-scope="checkbox"], [data-scope="radio"]):has([data-part="hint"]) > [data-part="control"] { margin-block-start: 1px; }
-:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):has(input:disabled) { cursor: not-allowed; opacity: var(--warp-opacity-disabled); }
+:where([data-scope="checkbox"]):has(input:disabled),
+:where([data-scope="radio"]):has(input:disabled),
+:where([data-scope="switch"]):has(input:disabled) { cursor: not-allowed; opacity: var(--warp-opacity-disabled); }
 
 /* checkbox / radio box: two stacked borders (base = ink, sweep = accent), never filled;
    the accent check draws itself (stroke 2.6, 420ms); radio: an accent dot grows */
@@ -176,7 +181,8 @@
 :where([data-scope="chip"][data-sweep]) > :not([data-part^="sweep"]) { position: relative; z-index: 3; }
 :where([data-scope="chip"][data-sweep]) > svg { inline-size: 13px; block-size: 13px; fill: none; stroke: currentColor; stroke-width: 2; }
 :where([data-scope="chip"][data-sweep]) > svg[data-part="check"] { display: none; margin-inline-start: -2px; }
-:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"])),
+:where([data-scope="chip"][data-sweep]:is([aria-checked="true"])) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
 :where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > svg[data-part="check"] { display: block; }
 :where([data-scope="chip"][data-sweep][aria-checked="true"]) { --_a: 1; }
 :where([data-scope="chip"][data-sweep]:focus-visible) { outline: none; }
@@ -250,7 +256,8 @@
     display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: max(32px, var(--warp-target-min)); padding-inline: var(--warp-space-related);
     border: 0; border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); color: var(--warp-color-text); background: none; cursor: default; font-size: var(--warp-text-body-size); font-weight: 400; letter-spacing: 0; text-transform: none;
   }
-  :where([data-scope="field"] select[data-part="input"] option:is(:hover, :focus)) { outline: 0; background: var(--warp-color-accent-soft); }
+  :where([data-scope="field"] select[data-part="input"] option:is(:hover)),
+  :where([data-scope="field"] select[data-part="input"] option:is(:focus)) { outline: 0; background: var(--warp-color-accent-soft); }
   :where([data-scope="field"] select[data-part="input"] option:checked) { font-weight: 500; }
   :where([data-scope="field"] select[data-part="input"] option:disabled) { opacity: var(--warp-opacity-disabled); }
   :where([data-scope="field"] select[data-part="input"] option)::checkmark { order: 1; margin-inline-start: auto; color: var(--warp-color-accent-text); }

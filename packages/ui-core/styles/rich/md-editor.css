@@ -11,6 +11,7 @@
   @container (max-width: 639.98px) {
     :where([data-scope="md-editor"] > *) { grid-column: 1 / -1; }
     :where([data-scope="md-editor"] [data-part="tabs"]) { display: flex; }
-    :where([data-scope="md-editor"][data-tab="write"] > [data-scope="markdown"], [data-scope="md-editor"][data-tab="preview"] > [data-part="source"]) { display: none; }
+    :where([data-scope="md-editor"][data-tab="write"] > [data-scope="markdown"]),
+    :where([data-scope="md-editor"][data-tab="preview"] > [data-part="source"]) { display: none; }
   }
 }

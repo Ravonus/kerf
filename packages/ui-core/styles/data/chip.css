@@ -10,6 +10,7 @@
   all: unset; position: relative; display: grid; place-items: center; inline-size: 20px; block-size: 20px; border-radius: 50%; cursor: pointer;
 }
 :where([data-scope="chip"] button)::after { content: ""; position: absolute; inset: min(0px, calc((20px - var(--warp-hit-min)) / 2)); }
-:where([data-scope="chip"] button:is(:hover, :focus-visible)) { background: color-mix(in oklab, currentColor 14%, transparent); }
+:where([data-scope="chip"] button:is(:hover)),
+:where([data-scope="chip"] button:is(:focus-visible)) { background: color-mix(in oklab, currentColor 14%, transparent); }
 :where([data-scope="chip"] button:focus-visible) { outline: 2px solid var(--warp-color-focus); }
 }

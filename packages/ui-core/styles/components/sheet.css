@@ -30,7 +30,8 @@
   }
 }
 :where(dialog[data-scope="sheet"][data-dragging]) { transition: none; user-select: none; }
-:where(dialog[data-scope="sheet"][data-side="right"], dialog[data-scope="sheet"]:not([data-side])) {
+:where(dialog[data-scope="sheet"][data-side="right"]),
+:where(dialog[data-scope="sheet"]:not([data-side])) {
   inset: 0 0 0 auto; inline-size: min(420px, calc(100vw - 48px)); block-size: 100dvh;
   border-block: 0; border-inline-end: 0;
   border-start-start-radius: var(--warp-radius-surface); border-end-start-radius: var(--warp-radius-surface);
@@ -76,7 +77,8 @@
 :where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
 /* initial focus lands on the title (tabindex="-1"), never the grabber; a programmatic
    landing spot needs no ring of its own */
-:where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus, [data-scope="dialog"] [data-part="title"][tabindex="-1"]:focus) { outline: none; }
+:where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus),
+:where([data-scope="dialog"] [data-part="title"][tabindex="-1"]:focus) { outline: none; }
 /* snap points: the sheet is one 92% panel translated down by --_drag. The footer is lifted by
    --_lift (the resting snap's offset, set on snap, not per drag frame), so the primary action sits
    at the bottom of the visible part at every snap point, above the safe area. It moves on the

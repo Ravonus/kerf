@@ -28,11 +28,11 @@
 :where([data-scope="call-controls"] [data-part="group"]) { background: transparent; box-shadow: none; padding: 0; }
 }
 @media (forced-colors: active) {
-:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range],
-         [data-scope="reactions"] button[aria-pressed="true"],
-         [data-scope="call-controls"] [data-part="control"][aria-pressed="true"],
-         [data-scope="question"] label:has(:checked),
-         [data-scope="versions"] li[aria-current="true"],
-         [data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
+  :where([data-scope="reactions"] button[aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="question"] label:has(:checked)),
+  :where([data-scope="versions"] li[aria-current="true"]),
+  :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
 }
 }

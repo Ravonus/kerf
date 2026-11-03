@@ -6,7 +6,8 @@
   :where([data-scope="kv"] table) { inline-size: 100%; border-collapse: collapse; font-size: var(--warp-text-control-size); }
   :where([data-scope="kv"] th) { padding: 0 8px 4px 0; text-align: start; font: 500 var(--warp-text-caption-size)/1.3 var(--warp-text-body-font); color: var(--warp-color-text-subtle); }
   :where([data-scope="kv"] td) { padding: 2px 8px 2px 0; }
-  :where([data-scope="kv"] td:last-child, [data-scope="kv"] th:last-child) { inline-size: 1px; padding-inline-end: 0; }
+  :where([data-scope="kv"] td:last-child),
+  :where([data-scope="kv"] th:last-child) { inline-size: 1px; padding-inline-end: 0; }
   :where([data-scope="kv"] input) { all: unset; box-sizing: border-box; inline-size: 100%; block-size: max(var(--warp-control-sm), var(--warp-target-min)); padding-inline: 8px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font: 400 max(var(--warp-text-code-size), var(--warp-input-font-min)) var(--warp-font-mono); color: var(--warp-color-text); }
   :where([data-scope="kv"] input:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
   :where([data-scope="kv"] input[data-duplicate]) { box-shadow: inset 0 -2px 0 var(--warp-color-caution-solid); }

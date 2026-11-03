@@ -1,13 +1,21 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
 /* shared: numerals, eyebrow, sweep host gates -------------------------------- */
-:where([data-scope="table"], [data-scope="chart"], [data-scope="stat"], [data-scope="kanban"],
-       [data-scope="meter"], [data-scope="ring"], [data-scope="delta"], [data-scope="list"],
-       [data-scope="desc"], [data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="table"]),
+:where([data-scope="chart"]),
+:where([data-scope="stat"]),
+:where([data-scope="kanban"]),
+:where([data-scope="meter"]),
+:where([data-scope="ring"]),
+:where([data-scope="delta"]),
+:where([data-scope="list"]),
+:where([data-scope="desc"]),
+:where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
 /* cards are surfaces too (SIGNATURE §3: cards, panels and stat rows sweep by default only
    at vivid, or with data-flair="sweep"), even when they are links or draggable. Their
    hover/focus feedback at quiet and balanced is the fill change and the focus ring. */
-:where([data-scope="card"][data-sweep], [data-scope="kanban"] [data-part="card"][data-sweep]) {
+:where([data-scope="card"][data-sweep]),
+:where([data-scope="kanban"] [data-part="card"][data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
 :where([data-scope="kanban"] [data-part="card"][data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); }
@@ -26,7 +34,8 @@
 }
 :where([data-scope="kanban"] [data-part="column"][data-drop]) { border-color: var(--warp-color-accent-border); background: color-mix(in oklab, var(--warp-color-accent-soft) 70%, var(--warp-color-surface-sunken)); }
 :where([data-scope="kanban"] [data-part="column-head"]) { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
-:where([data-scope="kanban"] [data-part="column-head"] :is(h3, h4)) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 600; }
+:where([data-scope="kanban"] [data-part="column-head"] :is(h3)),
+:where([data-scope="kanban"] [data-part="column-head"] :is(h4)) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 600; }
 :where([data-scope="kanban"] [data-part="column-head"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
 :where([data-scope="kanban"] [data-part="column-head"] i) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_dc); }
 /* a column's cards are a window: the column scrolls them, and a row mounting on scroll isn't an arrival */
@@ -41,7 +50,8 @@
 :where([data-scope="kanban"] [data-part="card"][data-virtual]) { animation: none; }
 :where([data-scope="kanban"] [data-part="card"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
 :where([data-scope="kanban"] [data-part="card"][data-dragging]) { opacity: 0.4; cursor: grabbing; }
-:where([data-scope="kanban"] [data-part="card"] :is(h4, h5)) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 500; line-height: 1.35; padding-inline-end: 36px; }
+:where([data-scope="kanban"] [data-part="card"] :is(h4)),
+:where([data-scope="kanban"] [data-part="card"] :is(h5)) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 500; line-height: 1.35; padding-inline-end: 36px; }
 :where([data-scope="kanban"] [data-part="card"] footer) { display: flex; align-items: center; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="kanban"] [data-part="move"]) {
   all: unset; box-sizing: border-box; position: absolute; z-index: 4; inset-block-start: 4px; inset-inline-end: 4px; display: grid; place-items: center; cursor: pointer;
@@ -60,7 +70,8 @@
   all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 10px; cursor: pointer;
   min-block-size: max(32px, var(--warp-hit-min)); border-radius: calc(var(--warp-radius-control) - 2px); font-size: var(--warp-text-caption-size);
 }
-:where([data-scope="kanban"] [data-part="menu"] button:is(:hover, :focus-visible)) { background: var(--warp-color-surface-hover); }
+:where([data-scope="kanban"] [data-part="menu"] button:is(:hover)),
+:where([data-scope="kanban"] [data-part="menu"] button:is(:focus-visible)) { background: var(--warp-color-surface-hover); }
 :where([data-scope="kanban"] [data-part="menu"] button[aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); cursor: default; }
 :where([data-scope="kanban"] [data-part="placeholder"]) { block-size: 4px; border-radius: 2px; background: var(--warp-color-accent-solid); }
 :where([data-scope="kanban"] [data-part="label-chip"]) { display: inline-flex; align-items: center; gap: 5px; font: 500 11px/1 var(--warp-text-body-font); color: var(--warp-color-text-subtle); }

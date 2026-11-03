@@ -14,7 +14,8 @@
   background: var(--warp-color-surface-sunken); line-height: 1.5; overflow-wrap: anywhere;
 }
 :where([data-scope="message"][data-mine]) { grid-template-columns: minmax(0, 1fr); }
-:where([data-scope="message"][data-mine] > [data-scope="avatar"], [data-scope="message"][data-mine] [data-part="by"]) { display: none; }
+:where([data-scope="message"][data-mine] > [data-scope="avatar"]),
+:where([data-scope="message"][data-mine] [data-part="by"]) { display: none; }
 :where([data-scope="message"][data-mine] [data-part="body"]) { justify-items: end; }
 :where([data-scope="message"][data-mine] [data-part="bubble"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
 /* review 01 M4: the bubble is the sweep host (hairline base, surface reach; confirm() always shows) */
@@ -42,14 +43,16 @@
 :where([data-scope="message"] [data-part="bubble"][data-variant="prompt"]) > :where([data-part="sweep"]) { color: var(--warp-color-sweep); }
 :where([data-scope="message"] [data-part="status"] [data-scope="button"][data-emphasis="link"])::after { inset-inline: min(-6px, calc((100% - var(--warp-hit-min)) / 2)); }
 @media (forced-colors: active) {
-:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"], [aria-selected="true"]),
-         [data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b,
-         [data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b,
-         [data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"], [aria-checked="true"]),
-         [data-scope="run"] > li[data-state="done"] [data-part="dot"],
-         [data-scope="plan"] li[data-state="done"] [data-part="box"],
-         [data-scope="message"][data-mine] [data-part="bubble"],
-         [data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"])),
+  :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-selected="true"])),
+  :where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b),
+  :where([data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"])),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"])),
+  :where([data-scope="run"] > li[data-state="done"] [data-part="dot"]),
+  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]),
+  :where([data-scope="message"][data-mine] [data-part="bubble"]),
+  :where([data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 }
 /* -- Quote reply (07 §5.5) -------------------------------------------------- */
 :where([data-scope="message"]) { border-radius: var(--warp-radius-control); }
@@ -71,6 +74,7 @@
 :where([data-scope="message"] [data-part="bubble"] > :not([data-part^="sweep"])) { position: relative; z-index: 3; }
 :where([data-scope="message"] [data-part="quote-jump"]) { font-size: var(--warp-text-caption-size); }
 @media (forced-colors: active) {
-:where([data-scope="message"] [data-part="quote"], [data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
+:where([data-scope="message"] [data-part="quote"]),
+  :where([data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
 }
 }

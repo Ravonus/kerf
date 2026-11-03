@@ -16,7 +16,8 @@
 :where([data-scope="form"] [data-part="section"]:first-child) { border-block-start: 0; padding-block-start: 0; }
 /* floated so the legend is an ordinary grid item (a rendered legend cannot take a grid column) */
 :where([data-scope="form"] [data-part="section-head"]) { display: grid; gap: 2px; padding: 0; float: inline-start; inline-size: 100%; }
-:where([data-scope="form"] [data-part="section-head"] :is(h3, b)) {
+:where([data-scope="form"] [data-part="section-head"] :is(h3)),
+:where([data-scope="form"] [data-part="section-head"] :is(b)) {
   margin: 0; font-family: var(--warp-text-heading-font); font-size: calc(var(--warp-text-heading-size) - 3px); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking);
 }
 :where([data-scope="form"] [data-part="section-head"] p) { margin: 0; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
@@ -36,7 +37,8 @@
     background: color-mix(in oklab, var(--warp-color-surface) 92%, transparent);
     backdrop-filter: blur(var(--warp-blur-overlay)); -webkit-backdrop-filter: blur(var(--warp-blur-overlay));
   }
-  :where([data-scope="form"] [data-part="actions"][data-sticky] > :is(button, a)) { flex: 1; }
+  :where([data-scope="form"] [data-part="actions"][data-sticky] > :is(button)),
+  :where([data-scope="form"] [data-part="actions"][data-sticky] > :is(a)) { flex: 1; }
   :where([data-scope="form"] [data-part="actions"][data-sticky] [data-part="status"]) { flex-basis: 100%; }
 }
 /* error summary */
@@ -67,7 +69,8 @@
 :where([data-scope="steps"] li) { position: relative; flex: 1; display: grid; gap: 6px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); counter-increment: step; min-inline-size: 0; padding-block-start: 8px; }
 :where([data-scope="steps"] li)::before { content: ""; position: absolute; inset: 0 0 auto; block-size: 2px; border-radius: 2px; background: var(--warp-color-border-strong); }
 :where([data-scope="steps"] li)::after { content: ""; position: absolute; inset: 0 0 auto; block-size: 2px; border-radius: 2px; background: var(--warp-color-accent-solid); clip-path: inset(0 100% 0 0); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease); }
-:where([data-scope="steps"] li:is([data-state="complete"], [aria-current="step"]))::after { clip-path: inset(0); }
+:where([data-scope="steps"] li:is([data-state="complete"]))::after,
+:where([data-scope="steps"] li:is([aria-current="step"]))::after { clip-path: inset(0); }
 :where([data-scope="steps"] li span)::before { content: counter(step) " · "; font-variant-numeric: tabular-nums; }
 :where([data-scope="steps"] li[aria-current="step"]) { color: var(--warp-color-text); font-weight: 500; }
 :where([data-scope="steps"] li span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

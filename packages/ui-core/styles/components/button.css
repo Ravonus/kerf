@@ -26,7 +26,10 @@
   transform: scaleX(0); transform-origin: right center;
   transition: transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out);
 }
-:where([data-scope="button"]:hover, [data-scope="button"]:focus-visible, [data-scope="button"][data-state="open"], [data-scope="button"][aria-expanded="true"])::before {
+:where([data-scope="button"]:hover)::before,
+:where([data-scope="button"]:focus-visible)::before,
+:where([data-scope="button"][data-state="open"])::before,
+:where([data-scope="button"][aria-expanded="true"])::before {
   transform: scaleX(1); transform-origin: left center; transition-duration: var(--warp-duration-base);
 }
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
@@ -48,7 +51,8 @@
 }
 :where([data-scope="button"][data-emphasis="frame"][data-tone]:not([data-tone="accent"])) { --_tone: var(--_text); }
 :where([data-scope="button"][data-emphasis="frame"][data-tone="neutral"]) { --_tone: var(--warp-color-text); }
-:where([data-scope="button"][data-emphasis="frame"]:hover, [data-scope="button"][data-emphasis="frame"]:focus-visible) { color: var(--_ink); }
+:where([data-scope="button"][data-emphasis="frame"]:hover),
+:where([data-scope="button"][data-emphasis="frame"]:focus-visible) { color: var(--_ink); }
 /* solid sweep fill, clipped to the button. warp.css slides the fill in with a translate, which paints it outside a
    button with overflow: visible (the hit area's ::after needs visible). Here the fill stays put and wipes through
    clip-path instead: the same L→R edge on the same curve, never outside the box, and the 44px hit area and the
@@ -65,7 +69,8 @@
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
 /* vivid: no soft shadow to lift with, so a solid rests on a hard ink offset and presses into it */
 :where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) { box-shadow: var(--warp-offset) var(--warp-offset) 0 var(--warp-color-text); }
-:where([data-expression="vivid"] [data-scope="button"]:not([data-emphasis]):active, [data-expression="vivid"][data-scope="button"]:not([data-emphasis]):active) {
+:where([data-expression="vivid"] [data-scope="button"]:not([data-emphasis]):active),
+:where([data-expression="vivid"][data-scope="button"]:not([data-emphasis]):active) {
   scale: 1; translate: var(--warp-offset) var(--warp-offset); box-shadow: 0 0 0 var(--warp-color-text);
 }
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--_layer-a) * 1.55); }
@@ -80,7 +85,8 @@
 :where([data-scope="button"][data-emphasis="ghost"]) {
   --_fill: transparent; --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--warp-state-hover);
 }
-:where([data-scope="button"][data-emphasis="ghost"][data-tone="neutral"], [data-scope="button"][data-emphasis="outline"][data-tone="neutral"]) {
+:where([data-scope="button"][data-emphasis="ghost"][data-tone="neutral"]),
+:where([data-scope="button"][data-emphasis="outline"][data-tone="neutral"]) {
   --_ink: var(--warp-color-text);
 }
 :where([data-scope="button"][data-emphasis="link"]) {
@@ -100,11 +106,13 @@
 :where([data-scope="button"][data-icon-only][data-size="sm"]) { inline-size: var(--warp-control-sm); }
 :where([data-scope="button"][data-icon-only][data-size="lg"]) { inline-size: var(--warp-control-lg); }
 :where([data-scope="button"][data-icon-only])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="button"]:disabled, [data-scope="button"][aria-disabled="true"]:not([data-loading])) {
+:where([data-scope="button"]:disabled),
+:where([data-scope="button"][aria-disabled="true"]:not([data-loading])) {
   opacity: var(--warp-opacity-disabled); cursor: not-allowed;
 }
 :where([data-scope="button"]:disabled)::before, :where([data-scope="button"][aria-disabled="true"])::before { opacity: 0; }
-:where([data-scope="button"]:disabled:active, [data-scope="button"][aria-disabled="true"]:active) { scale: 1; translate: 0 0; }
+:where([data-scope="button"]:disabled:active),
+:where([data-scope="button"][aria-disabled="true"]:active) { scale: 1; translate: 0 0; }
 :where([data-scope="button"][data-full]) { inline-size: 100%; }
 /* loading: width is kept, the label hides visually, a spinner sits on top */
 :where([data-scope="button"][data-loading]) { cursor: progress; }

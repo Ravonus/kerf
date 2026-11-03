@@ -48,7 +48,8 @@
 :where([data-scope="transport"] [data-part="log"] b) { font-weight: 500; color: var(--warp-color-text); }
 @container transport (max-width: 559.98px) {
 :where([data-scope="transport"] [data-part="lane"]) { grid-template-columns: minmax(0, 1fr) auto; }
-:where([data-scope="transport"] [data-part="figures"], [data-scope="transport"] [data-part="bars"]) { grid-column: 1 / -1; }
+:where([data-scope="transport"] [data-part="figures"]),
+  :where([data-scope="transport"] [data-part="bars"]) { grid-column: 1 / -1; }
 :where([data-scope="transport"] [data-part="log"] li) { grid-template-columns: 56px minmax(0, 1fr); }
 :where([data-scope="transport"] [data-part="log"] li > span:last-child) { grid-column: 1 / -1; }
 }
@@ -58,6 +59,7 @@
 }
 @media (forced-colors: active) {
 :where([data-scope="transport"] [data-part="bars"] i) { forced-color-adjust: none; background: CanvasText; }
-:where([data-scope="transport"] [data-part="bars"] i:is([data-tone="caution"], [data-tone="critical"])) { background: Highlight; }
+:where([data-scope="transport"] [data-part="bars"] i:is([data-tone="caution"])),
+  :where([data-scope="transport"] [data-part="bars"] i:is([data-tone="critical"])) { background: Highlight; }
 }
 }

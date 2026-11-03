@@ -3,7 +3,8 @@
 /* cards are surfaces too (SIGNATURE §3: cards, panels and stat rows sweep by default only
    at vivid, or with data-flair="sweep"), even when they are links or draggable. Their
    hover/focus feedback at quiet and balanced is the fill change and the focus ring. */
-:where([data-scope="card"][data-sweep], [data-scope="kanban"] [data-part="card"][data-sweep]) {
+:where([data-scope="card"][data-sweep]),
+:where([data-scope="kanban"] [data-part="card"][data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
 /* data surfaces rest on the decorative hairline, not the field's ink border */
@@ -16,7 +17,8 @@
   color: inherit; text-decoration: none;
 }
 :where([data-scope="card"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
-:where([data-scope="card"] :is(h3, h4)) { margin: 0; font-size: calc(var(--warp-text-body-size) + 1px); font-weight: 600; }
+:where([data-scope="card"] :is(h3)),
+:where([data-scope="card"] :is(h4)) { margin: 0; font-size: calc(var(--warp-text-body-size) + 1px); font-weight: 600; }
 :where([data-scope="card"] p) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
 /* interactive surfaces always answer hover with a fill step (the sweep adds to it at vivid).
    Last in the layer so it beats each surface's own background. */
