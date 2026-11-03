@@ -60,3 +60,25 @@ describe('S012', () => {
     expect(s(await check(project({ ...server, [file]: text })))).toEqual([])
   })
 })
+
+describe('X037', () => {
+  const page = (name, body) => [`src/routes/x037-${name}.tsx`, `import { Boundary, resource as load } from '@weft-js/core'\nimport { listNotes } from '../server/notes'\n${body}\n`]
+  const flagged = {
+    query: page('query', 'export default function A() {\n  const notes = listNotes()\n  return <Boundary pending={<p>…</p>}><ul>{(notes.value ?? []).map(n => <li key={n}>{n}</li>)}</ul></Boundary>\n}'),
+    live: page('live', 'export default function A() {\n  const notes = listNotes.live()\n  return <main><Boundary pending={<p>…</p>}><Count n={notes} /></Boundary></main>\n}\nfunction Count(props: { n: unknown }) { return <p>{String(props.n)}</p> }'),
+    resource: page('resource', 'export const A = () => {\n  const r = load(() => Promise.resolve(1))\n  return <Boundary pending={<p>…</p>}><p>{r.value}</p></Boundary>\n}'),
+  }
+  const quiet = {
+    inside: page('inside', 'function List() {\n  const notes = listNotes()\n  return <ul>{(notes.value ?? []).map(n => <li key={n}>{n}</li>)}</ul>\n}\nexport default function A() { return <Boundary pending={<p>…</p>}><List /></Boundary> }'),
+    outside: page('outside', 'export default function A() {\n  const notes = listNotes()\n  return <div><p>{notes.value?.length}</p><Boundary pending={<p>…</p>}><b /></Boundary></div>\n}'),
+    fallback: page('fallback', 'export default function A() {\n  const notes = listNotes()\n  return <Boundary pending={<p>{notes.pending}</p>}><b /></Boundary>\n}'),
+    other: page('other', 'export default function A() {\n  const notes = [1]\n  return <Boundary pending={<p>…</p>}><p>{notes.length}</p></Boundary>\n}'),
+  }
+
+  it('flags a resource or query made beside the Boundary that shows it, and nothing else', async () => {
+    const r = await check(project({ ...server, ...Object.fromEntries([...Object.values(flagged), ...Object.values(quiet)]) }))
+    const x = r.diagnostics.filter(d => d.code === 'X037').map(d => [d.file, d.span[0]]).toSorted((a, b) => a[0].localeCompare(b[0]))
+    expect(x).toEqual(Object.values(flagged).map(([f]) => [f, 4]).toSorted((a, b) => a[0].localeCompare(b[0])))
+    expect(r.diagnostics.find(d => d.code === 'X037').severity).toBe('warning')
+  })
+})

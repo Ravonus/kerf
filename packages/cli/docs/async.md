@@ -26,7 +26,7 @@ export function Profile({ id }: { id: string }) {
   read before the first `await` changes, and aborts the superseded fetch through `signal`. `derived(async …)` is
   **W012**.
 - **`<Boundary pending error>`** covers every resource created while its children are built, and every error they
-  throw. A resource made above the `<Boundary>` in the same component isn't below it, and the fallback never shows. The fallback shows after 150 ms and
+  throw. A resource made above the `<Boundary>` in the same component isn't below it, and the fallback never shows (X037). The fallback shows after 150 ms and
   stays at least 400 ms; refetches keep the current content (no flash). `error(e, retry)` gets failed resources and
   children that throw during render.
 - **`@weft-js/core/ssr`**: `renderToString(() => <App />)` renders what it can now; `await renderToStringAsync(() => <App />)`

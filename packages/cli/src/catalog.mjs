@@ -386,6 +386,7 @@ export const catalog = [
   // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft-js/plugin-media's check hook.
   { code: 'X035', severity: 'warning', by: 'cli', catches: 'Streamed text written straight into a scroll container: a reflowing tail moves the lines above it', fix: 'Render it with `<Text stream>` from @weft-js/core/text: the height only grows' },
   { code: 'X036', severity: 'warning', by: 'runtime', catches: 'A skeleton shows a string from `output` with no length hint, so its bar is a guess', fix: 'Add `.max()`, `.length()` or `.meta({ example })` to the schema, or an example in the query\'s `shape`' },
+  { code: 'X037', severity: 'warning', by: 'cli', catches: 'A `resource` or query made in the component that renders the `<Boundary>` meant to wait for it, and read inside it: the Boundary only waits for what its children make, so no fallback shows', fix: 'Make it in a small component rendered inside the Boundary' },
 
   { code: 'M001', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'Raw `<img>`/`<video>` without `width`/`height` or `aspect-ratio`, outside a `<Boundary>` (inside it is X030)', fix: 'Insert the intrinsic `width`/`height` (autofix for an imported file), or use `<Media>`' },
   { code: 'M002', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'An image rendered through a `?url` import or a string path, bypassing the optimizer', fix: '`import x from \'./x.jpg?media\'` and `<Media src={x} alt="…" />`' },

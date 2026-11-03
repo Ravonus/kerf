@@ -413,8 +413,24 @@ ${c.imports}import { addTodo, deleteTodo, listTodos, toggleTodo } from '#/server
 
 export const meta: Meta = { title: 'Todos' }
 
-export default function Todos() {
+// The query is made in here, inside the Boundary, so the Boundary sees it: it shows \`pending\` until the list arrives.
+function TodoList() {
   const todos = listTodos()
+  return (
+    <ul class="todos">
+      {(todos.value ?? []).map(t => (
+        <li key={t.id} class={t.done ? 'done' : 'open'}>
+          <label>
+            <input type="checkbox" checked={t.done} onChange={() => toggleTodo({ id: t.id })} /> {t.title}
+          </label>
+          <button type="button" aria-label={\`Delete \${t.title}\`} onClick={() => deleteTodo({ id: t.id })}>×</button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export default function Todos() {
   const title = state('')
   const problem = state('')
   const add = async (e: SubmitEvent) => {
@@ -433,16 +449,7 @@ export default function Todos() {
       </form>
       ${c.error('problem')}
       <Boundary pending={<p>Loading…</p>}>
-        <ul class="todos">
-          {(todos.value ?? []).map(t => (
-            <li key={t.id} class={t.done ? 'done' : 'open'}>
-              <label>
-                <input type="checkbox" checked={t.done} onChange={() => toggleTodo({ id: t.id })} /> {t.title}
-              </label>
-              <button type="button" aria-label={\`Delete \${t.title}\`} onClick={() => deleteTodo({ id: t.id })}>×</button>
-            </li>
-          ))}
-        </ul>
+        <TodoList />
       </Boundary>
     `)}
   )

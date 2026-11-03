@@ -154,6 +154,16 @@ describe('--db, --auth, --runtime', () => {
     expect(a['.gitignore']).toMatch(/^\.data/m)
   })
 
+  // A Boundary waits only for what its children make: the todos query belongs in a component inside it (X037).
+  it.each(['warp', 'headless', 'tailwind', 'none'])('--ui %s: the todos query is made inside its Boundary', async ui => {
+    const dir = app(ui, { db: 'sqlite', auth: true })
+    const page = readFileSync(join(dir, 'src/routes/todos/index.tsx'), 'utf8')
+    const owner = page.slice(page.indexOf('export default function Todos'))
+    expect(owner).toContain('<Boundary')
+    expect(owner).not.toContain('listTodos(')
+    expect((await check(dir)).diagnostics.filter(d => d.code === 'X037')).toEqual([])
+  })
+
   it.each(['bun', 'deno'])('--runtime %s lands in the config', runtime => {
     expect(template({ ui: 'none', runtime })['weft.config.ts']).toContain(`runtime: '${runtime}'`)
   })
