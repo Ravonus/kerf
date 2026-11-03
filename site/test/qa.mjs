@@ -967,6 +967,20 @@ for (const [who, saved, want] of [['fresh', null, 'vivid'], ['returning', 'quiet
   })
 }
 
+// Card's sweep is opt-in, so its page shows a card with the hover line beside one without it, and hovering draws it.
+await check('card page shows sweep on and off', '/components/card', async page => {
+  const sec = page.locator('section#CardSweep')
+  await sec.scrollIntoViewIfNeeded()
+  const cards = sec.locator('[data-scope="surface"]')
+  await cards.first().waitFor()
+  same(await cards.count(), 2, 'cards')
+  // `sweep` is data-sweep=""; a plain card's "surface" draws only under data-flair="sweep"
+  same(`${await cards.nth(0).getAttribute('data-sweep')}|${await cards.nth(1).getAttribute('data-sweep')}`, '|surface', 'data-sweep on, then off')
+  await cards.nth(0).hover()
+  await page.waitForTimeout(900)
+  const sr = await cards.nth(0).locator(':scope > [data-part="sweep"]').evaluate(n => getComputedStyle(n).getPropertyValue('--_sr').trim())
+  same(sr, '0%', 'the hovered card\'s line drawn all the way')
+})
 // The month fills each day before "+N more", across a month with something in every week.
 await check('month days show what fits, across the month', '/components/calendar', async page => {
   const sec = page.locator('section#CalendarMonth')

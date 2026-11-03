@@ -28,6 +28,7 @@ export const showing: DocGroup = {
           { id: 'CardStatic', title: 'Static', stage: 'narrow' },
           { id: 'CardAsLink', title: 'A link', note: '`href` makes the whole card a link.', stage: 'narrow' },
           { id: 'CardPress', title: 'A button', note: '`onClick` makes the whole card a button.', stage: 'narrow' },
+          { id: 'CardSweep', title: 'The hover line', note: '`sweep` opts a card in to the line that runs around its edge on hover. Without it, as on the right, a card has none.', stage: 'fill', height: 200 },
           { id: 'CardBare', title: 'Bare', note: 'Every part is optional, and `sweep={false}` leaves the hover line out even under `data-flair="sweep"`.', stage: 'narrow' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
