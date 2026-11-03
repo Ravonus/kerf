@@ -1,8 +1,12 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.layout {
-/* SideNav — a docs sidebar: one left panel made of a NavList whose sections fold. From 900px it is docked, sticky and
-   scrolling on its own; below, the same panel waits off the left edge and opens over the page, full height, from a
-   button elsewhere (aria-controls). --warp-sidenav-top is the height of whatever sticks above it (the page's header). */
+/* SideNav — a docs sidebar: one left panel made of a NavList whose sections fold, and a collapse bar at its edge
+   (data-part="bar"), Shell's edge tab grown to the panel's height. From 900px the panel is docked, sticky and
+   scrolling on its own, var(--warp-sidenav-width) wide; the bar folds it to the bar's own width, giving the page the
+   room. Below 900px the panel waits off the left edge with only its bar showing, a slim full-height strip, and the bar
+   slides it over the page, full height, riding at its edge. Without the bar (collapsible={false}) a button elsewhere
+   (aria-controls) opens it instead. --warp-sidenav-top is the height of whatever sticks above it (the page's header);
+   --warp-sidenav-bar is the bar's width, for a page that leaves it room on a phone. */
 :where([data-scope="sidenav"]) { display: contents; font-size: var(--warp-text-caption-size); }
 :where([data-scope="sidenav"] > [data-part="panel"]) { font-size: var(--warp-text-caption-size); }
 :where([data-scope="sidenav"] > [data-part="panel"]) {
@@ -61,6 +65,29 @@
 }
 :where([data-scope="sidenav"] [data-part="filter"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
 :where([data-scope="sidenav"] [data-part="empty"]) { margin: 0; padding-inline: 10px; color: var(--warp-color-text-subtle); }
+/* The bar, on a phone: outside the panel's box at its trailing edge, so it shows while the panel waits off screen (a
+   strip down the left, under whatever sticks above) and rides out with it. It stays visible when the panel is not. */
+:where([data-scope="sidenav"] [data-part="bar"]) {
+  position: absolute; inset-block: var(--warp-sidenav-top, 0px) 0; inset-inline-start: 100%; z-index: 1; visibility: visible;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--warp-space-tight);
+  inline-size: var(--warp-sidenav-bar, 28px); box-sizing: border-box; margin: 0; padding: var(--warp-space-related) 0;
+  border: 0; border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: 0;
+  background: var(--warp-color-surface-overlay); color: var(--warp-color-text-subtle); box-shadow: var(--warp-elevation-1);
+  font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast);
+}
+:where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+:where([data-scope="sidenav"] [data-part="bar"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); color: var(--warp-color-text); }
+:where([data-scope="sidenav"] [data-part="bar"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); flex: none; transition: transform var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="sidenav"] [data-part="bar-label"]) {
+  writing-mode: vertical-rl; max-block-size: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 600; letter-spacing: 0.02em;
+}
+/* Open, the bar is the panel's edge: the chevron points back, and the title is the panel's head, so the label goes
+   (from sight only: it stays the button's name). */
+:where([data-scope="sidenav"][data-open] [data-part="bar"] svg) { transform: scaleX(-1); }
+:where([data-scope="sidenav"][data-open] [data-part="bar"]) { box-shadow: none; }
+:where([data-scope="sidenav"][data-open] [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
 @media (min-width: 900px) {
 :where([data-scope="sidenav"]) { display: block; min-inline-size: 0; position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); align-self: start; }
 :where([data-scope="sidenav"] > [data-part="panel"]) {
@@ -70,9 +97,27 @@
 :where([data-scope="sidenav"] > [data-part="backdrop"], [data-scope="sidenav"] [data-part="head"], [data-scope="sidenav"] [data-part="lead"]) { display: none; }
 :where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
 :where([data-scope="sidenav"] [data-part="scroll"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
+:where([data-scope="sidenav"][data-collapsible]) {
+    inline-size: var(--warp-sidenav-width, 240px); transition: inline-size var(--warp-duration-base) var(--warp-ease-out);
+  }
+:where([data-scope="sidenav"][data-collapsible][data-collapsed]) { inline-size: var(--warp-sidenav-bar, 28px); }
+:where([data-scope="sidenav"][data-collapsible] > [data-part="panel"]) { position: relative; overflow: clip; }
+:where([data-scope="sidenav"][data-collapsible] [data-part="scroll"]) {
+    inline-size: calc(var(--warp-sidenav-width, 240px) - var(--warp-sidenav-bar, 28px)); box-sizing: border-box;
+    transition: opacity var(--warp-duration-base) var(--warp-ease-out), visibility 0s;
+  }
+:where([data-scope="sidenav"][data-collapsed] [data-part="scroll"]) {
+    opacity: 0; visibility: hidden; transition: opacity var(--warp-duration-base) var(--warp-ease-out), visibility 0s linear var(--warp-duration-base);
+  }
+:where([data-scope="sidenav"] [data-part="bar"]) { inset-block: 0; inset-inline: auto 0; background: none; box-shadow: none; }
+:where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); }
+:where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { transform: scaleX(-1); }
+:where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
 }
+/* Arriving with the sidebar folded (a remembered choice) shows it folded, not folding. */
+:where([data-scope="sidenav"][data-settling], [data-scope="sidenav"][data-settling] *) { transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
-:where([data-scope="sidenav"] > [data-part="panel"], [data-scope="sidenav"] > [data-part="backdrop"]) { transition: none; }
+:where([data-scope="sidenav"], [data-scope="sidenav"] > [data-part="panel"], [data-scope="sidenav"] > [data-part="backdrop"], [data-scope="sidenav"] [data-part="scroll"], [data-scope="sidenav"] [data-part="bar"], [data-scope="sidenav"] [data-part="bar"] svg) { transition: none; }
 }
 @media print {
 :where([data-scope="sidenav"]) { display: none !important; }
