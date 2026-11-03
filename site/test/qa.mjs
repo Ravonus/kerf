@@ -985,6 +985,21 @@ await check('month days show what fits, across the month', '/components/calendar
   same(weeks.filter(Boolean).length, weeks.length, 'weeks with events')
   if (Math.max(...days.filter(d => d.more).map(d => d.chips)) < 2) throw new Error('a full day shows one chip and "+N more"')
 })
+// Every month chip reads whole on a desk, and an event reads the same on every day: "Sam on …" on a weekday and "Sam on
+// call" over two lines on the weekend was the same event.
+await check('month chips read whole and alike on every day', '/components/calendar', async page => {
+  const sec = page.locator('section#CalendarMonth')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="day-cell"] [data-part="chip"]').first().waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  await page.waitForTimeout(400)
+  const chips = await sec.evaluate(s => [...s.querySelectorAll('[data-part="day-cell"] [data-part="chip"]')].map(c => ({ day: c.closest('[data-part="day-cell"]').dataset.date, text: c.textContent, cut: c.scrollWidth > c.clientWidth + 1 || c.scrollHeight > c.clientHeight + 1, h: Math.round(c.getBoundingClientRect().height) })))
+  if (chips.length < 40) throw new Error(`only ${chips.length} chips`)
+  same(chips.filter(c => c.cut).map(c => `${c.day} ${c.text}`).join(', '), '', 'cut names')
+  const heights = {}
+  for (const c of chips) (heights[c.text] ??= new Set()).add(c.h)
+  same(Object.entries(heights).filter(([, h]) => h.size > 1).map(([t, h]) => `${t} ${[...h].join('/')}px`).join(', '), '', 'one name, different heights')
+})
 // The now line runs under events: where they cover its minute it is not drawn at all, so it never peeks out beside them.
 // It is drawn, though: on the day marked as today, in that day's free lanes, in the week and in the day the example opens
 // on (the week once marked Monday as today while its line was on Wednesday, inside two meetings, so it showed nowhere).

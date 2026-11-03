@@ -335,19 +335,21 @@
 :where([data-scope="calendar"] [data-part="chip"]) {
   /* a block, not a flex row: the title is its own text, so a long one ends in an ellipsis rather than a hard cut */
   --_c: var(--warp-color-data-1);
-  display: block; min-inline-size: 0; block-size: 18px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
+  display: block; min-inline-size: 0; block-size: 18px; padding-inline: 4px; border-radius: var(--warp-radius-mark);
   font-size: 11.5px; line-height: 18px; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent);
   white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
-:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; display: inline-block; vertical-align: 1px; margin-inline-end: 6px; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
-/* a day with room to spare lets its first names take a second line, then an ellipsis: 34px at most, 18px if it's short */
+/* the dot and padding are 4px apart so a 91px day (a desk's month) gives a name 66px */
+:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; display: inline-block; vertical-align: 1px; margin-inline-end: 4px; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* a month whose every day has room for all its events at two lines (Calendar decides, for all days alike) lets long
+   names take a second line, then an ellipsis: 34px at most, 18px if it's short */
 :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap]) {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
   block-size: auto; max-block-size: 34px; padding-block: 1px; line-height: 16px; white-space: normal; overflow-wrap: anywhere;
 }
 /* its dot hangs in the padding, so a long first word starts beside it rather than leaving the dot alone on line one */
-:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap]) { position: relative; padding-inline-start: 18px; }
-:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap])::before { position: absolute; inset-inline-start: 6px; inset-block-start: 6px; margin: 0; }
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap]) { position: relative; padding-inline-start: 14px; }
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap])::before { position: absolute; inset-inline-start: 4px; inset-block-start: 6px; margin: 0; }
 /* an all-day event in Week and Day keeps its whole name too: it breaks between words and the row grows */
 :where([data-scope="calendar"] [data-part="allday"] [data-part="chip"]) { block-size: auto; min-block-size: 20px; padding-block: 2px; line-height: 16px; white-space: normal; text-overflow: clip; }
 /* a phone's month day is too narrow for a title: its events become dots, and each keeps its name for assistive tech.
@@ -358,7 +360,7 @@
   :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"]) { display: flex; inline-size: 8px; block-size: 8px; padding: 0; background: none; font-size: 0; line-height: 0; }
   :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"])::before { margin: 0; inline-size: 8px; block-size: 8px; }
 }
-:where([data-scope="calendar"] [data-part="more"]) { block-size: 18px; font: 500 11px/18px var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 6px; background: none; border: 0; text-align: start; }
+:where([data-scope="calendar"] [data-part="more"]) { block-size: 18px; font: 500 11px/18px var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 4px; background: none; border: 0; text-align: start; }
 
 /* resource / timeline view: rows are people or rooms, time runs across */
 /* an hour never gets narrower than --warp-cal-hour-w: past that the hours scroll sideways under the names, which stay

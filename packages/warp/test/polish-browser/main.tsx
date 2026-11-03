@@ -33,6 +33,11 @@ const EVENTS = [
   { id: 'oncall', title: 'Jun on call', start: '2026-11-02', end: '2026-11-04', allDay: true, cal: 2 },
   { id: 'rel', title: 'Release 2026.11 to every region', start: '2026-11-06', end: '2026-11-06', allDay: true, cal: 1 },
 ]
+// a quiet month: every day has room for its events at two lines, and one long name runs from a weekend into a Monday
+const ROOMY = [
+  ev('late', 'Quarter close', 27, '10:00', '11:00'), ev('last', 'Retro', 30, '15:00', '16:00'), ev('mon', 'Hiring sync', 9, '13:00', '14:00'),
+  { id: 'rel', title: 'Release 2026.11 to every region', start: '2026-11-07', end: '2026-11-09', allDay: true, cal: 1 },
+]
 const cal = (props: Partial<CalendarProps>) => <Calendar events={EVENTS} resources={ROOMS} today="2026-11-02" now="2026-11-04T10:40" defaultDate="2026-11-04" locale="en-US" firstDayOfWeek={1} readOnly {...props} />
 const HOOKS = [
   { id: 'h1', url: 'https://hooks.example-commerce.com/integrations/deploys/production-receiver?team=storefront&format=json', events: ['deploy.succeeded', 'deploy.failed'], healthy: true, lastDelivery: '2 minutes ago' },
@@ -65,6 +70,7 @@ render(() => (
     {box('tl-phone', 326, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}
     {box('tl-desk', 598, cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }))}
     <div id="month" style="inline-size:598px;block-size:616px">{cal({ views: ['month', 'agenda'], defaultView: 'month' })}</div>
+    <div id="month-roomy" style="inline-size:598px;block-size:820px">{cal({ events: ROOMY, views: ['month', 'agenda'], defaultView: 'month' })}</div>
     <div id="bells" style="display:flex;gap:24px;padding:16px">
       {['compact', 'cozy', 'comfortable'].map(d => <div data-density={d} style="display:flex;gap:16px"><Bell count={3} /><Bell count={12} /></div>)}
     </div>

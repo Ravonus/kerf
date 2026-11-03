@@ -507,15 +507,22 @@ function MonthGrid({ c }: { c: Ctx }) {
     onCleanup(() => ro.disconnect())
   })
   /**
-   * The chips a day shows, how many go behind "+N more" (which takes a chip's room), and how many of the first may take
-   * a second line for a long name: as many as the room left over holds. A short name stays one line either way.
+   * Long names take a second line on every day or on none, so one event reads the same on a quiet weekend as on a full
+   * Tuesday: they do when every day in view has room for all its events at two lines each. Otherwise each name keeps
+   * to one line, ending in an ellipsis if it must. A short name stays one line either way.
    */
+  const twoLines = derived(() => {
+    const r = room.value
+    if (r === null) return false
+    const most = Math.max(0, ...weeks.value.flatMap(w => w.cells.map(x => onDay(x.iso).length)))
+    return most * (CHIP_2H + CHIP_GAP) - CHIP_GAP <= r
+  })
+  /** The chips a day shows, and how many go behind "+N more" (which takes a chip's room). */
   const shownOn = (list: CalEvent[]) => {
     const r = room.value
     const fit = r === null ? 4 : Math.max(1, Math.floor((r + CHIP_GAP) / (CHIP_H + CHIP_GAP)))
     const n = list.length <= fit ? list.length : Math.max(0, fit - 1)
-    const wrap = r === null || n < list.length ? 0 : Math.max(0, Math.min(n, Math.floor((r + CHIP_GAP - n * (CHIP_H + CHIP_GAP)) / (CHIP_2H - CHIP_H))))
-    return { chips: list.slice(0, n).map((e, i) => ({ e, wrap: i < wrap })), more: list.length - n }
+    return { chips: list.slice(0, n).map(e => ({ e, wrap: twoLines.value })), more: list.length - n }
   }
   const openDay = (iso: string) => { c.date.set(iso); c.view.set('day'); c.say(`Day view, ${fmt(iso, { dateStyle: 'full' }, c.env.locale.value)}`) }
   const onKey = (e: KeyboardEvent) => {

@@ -277,14 +277,26 @@ test('a phone day shows its all-day event by name, and a short event\'s name bef
   expect(m.title.w).toBeGreaterThanOrEqual(m.title.need - 1) // "Standup" whole; the times give way first
 })
 
-test('month chips end a long name in an ellipsis, not a hard cut, or take a second line where the day has room', async () => {
-  const chips = await page.$$eval('#month [data-part="day-cell"] [data-part="chip"]', cs => cs.map(c => ({ text: c.textContent, over: c.scrollWidth > c.clientWidth + 1, ellipsis: getComputedStyle(c).textOverflow, display: getComputedStyle(c).display, wrap: c.hasAttribute('data-wrap'), clamp: getComputedStyle(c).webkitLineClamp, h: c.getBoundingClientRect().height })))
-  const long = chips.filter(c => c.over && !c.wrap)
+const monthChips = sel => page.$$eval(`${sel} [data-part="day-cell"] [data-part="chip"]`, cs => cs.map(c => ({ day: c.closest('[data-part="day-cell"]').dataset.date, text: c.textContent, over: c.scrollWidth > c.clientWidth + 1, ellipsis: getComputedStyle(c).textOverflow, display: getComputedStyle(c).display, wrap: c.hasAttribute('data-wrap'), clamp: getComputedStyle(c).webkitLineClamp, h: Math.round(c.getBoundingClientRect().height) })))
+
+test('a month with full days keeps every name to one line, ending a long one in an ellipsis, on every day alike', async () => {
+  const chips = await monthChips('#month')
+  expect(chips.filter(c => c.wrap).map(c => `${c.day} ${c.text}`)).toEqual([]) // "Quarter close" and "Retro" sit alone, and stay one line like the rest
+  expect(new Set(chips.map(c => c.h))).toEqual(new Set([18]))
+  const long = chips.filter(c => c.over)
   expect(long.map(c => c.text)).toContain('Release 2026.11 to every region')
   for (const c of long) { expect(c.ellipsis, c.text).toBe('ellipsis'); expect(c.display).toBe('block') }
-  const wrapped = chips.filter(c => c.wrap)
-  expect(wrapped.length).toBeGreaterThan(0) // "Quarter close" and "Retro" sit alone in a tall day
-  for (const c of wrapped) { expect(c.clamp, c.text).toBe('2'); expect(c.h, c.text).toBeLessThanOrEqual(34.5) }
+})
+
+test('a month whose every day has room lets long names take a second line on every day, weekend or not', async () => {
+  const chips = await monthChips('#month-roomy')
+  expect(chips.length).toBeGreaterThan(0)
+  for (const c of chips) { expect(c.wrap, c.text).toBe(true); expect(c.clamp, c.text).toBe('2'); expect(c.h, c.text).toBeLessThanOrEqual(34.5) }
+  const release = chips.filter(c => c.text === 'Release 2026.11 to every region') // Saturday, Sunday and Monday
+  expect(release.length).toBe(3)
+  expect(new Set(release.map(c => c.h)).size).toBe(1)
+  expect(release[0].h).toBeGreaterThan(18)
+  expect(chips.find(c => c.text === 'Retro').h).toBe(18) // a short name stays one line
 })
 
 test('a month day fills its room before it says "+N more", and shows everything when it can', async () => {
