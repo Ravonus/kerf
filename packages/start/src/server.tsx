@@ -478,9 +478,9 @@ export function createHandler(options: HandlerOptions) {
     const cold = `${status} ${saveData(request) ? 1 : 0} ${r.levels.map(l => l.id).join()}`
     // A browser that has the page's sheets gets links: its head is remembered apart, as it has no rules in it. A table's
     // head has no rules either way, so it has no such head.
-    const have = assets.pieces ? undefined : keptSheets(request.headers.get('cookie'))
-    const warm = have && heads.get(cold + ' w')
-    const shape = warm && warm.sheets.every(c => have.has(sheetId(c.href))) ? cold + ' w' : cold
+    const kept = assets.pieces ? undefined : keptSheets(request.headers.get('cookie'))
+    const warm = kept && heads.get(cold + ' w')
+    const shape = warm && warm.sheets.every(c => kept.has(sheetId(c.href))) ? cold + ' w' : cold
     const known = heads.get(shape)
     // A level left its title or description to the page's own words (`complete`): those are only known once it renders.
     const worded = !!r.metas && r.status === 200 && (leftToPage(r.source!.title) || leftToPage(r.source!.description))
@@ -490,7 +490,7 @@ export function createHandler(options: HandlerOptions) {
       // A session read can set cookies, which have to be in the headers: read it before they go.
       if (request.headers.has('cookie')) await scope.ctx().catch(() => {})
       const set = [...scope.headers].length
-      const styles = assets.pieces ? undefined : pageStyles(assets, known.sheets, '', site.head, known, have, request.headers.has('cookie'))
+      const styles = assets.pieces ? undefined : pageStyles(assets, known.sheets, '', site.head, known, kept, request.headers.has('cookie'))
       // With a table, the rules come with the shell they're for: here there's only the order of the layers.
       const head = top() + known.preloads + (assets.entry ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') + (styles ? styles.head : `<style>${assets.pieces!.layers}</style>\n`) +
         (known.capture ? `<script>${capture(known.now)}</script>\n` : '') + dev + '</head>\n<body>\n'
@@ -538,7 +538,7 @@ export function createHandler(options: HandlerOptions) {
     complete(r, s.shell)
     const p = shaped()
     const t = table(p)
-    const styles = t ? undefined : pageStyles(assets, p.sheets, s.shell, site.head, undefined, have, request.headers.has('cookie'))
+    const styles = t ? undefined : pageStyles(assets, p.sheets, s.shell, site.head, undefined, kept, request.headers.has('cookie'))
     const capturing = !!options.lazy || p.streaming
     if (known !== null && !options.dev) remember(styles?.links ? cold + ' w' : cold, { ...p, ms, split: styles?.split ?? false, found: styles?.found() ?? new Set(), capture: capturing, fold: !!p.parts.fold.length })
     const head =

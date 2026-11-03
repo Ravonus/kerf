@@ -188,7 +188,7 @@ function read(sources, known, found) {
 
 /** The rules `found` reaches in these sheets. Kept by the page's shape, not its text, so rows don't miss it. */
 function criticalCss(sheets, found, { parse, purge }) {
-  const key = `${sheets.map(s => s.href).join()}|${[...found].sort().join()}`
+  const key = `${sheets.map(s => s.href).join()}|${[...found].sort((a, b) => (a < b ? -1 : 1)).join()}`
   let css = critical.get(key)
   if (css === undefined) {
     // Keeps a value the shell's words can't vouch for, as firstPaint does.
@@ -202,8 +202,8 @@ function criticalCss(sheets, found, { parse, purge }) {
 
 /** A stylesheet's short id. The browser runs this same function (`LATE_SHEETS`), so both sides agree. */
 export function sheetId(href) {
-  var x = 2166136261
-  for (var i = 0; i < href.length; i++) x = Math.imul(x ^ href.charCodeAt(i), 16777619)
+  let x = 2166136261
+  for (let i = 0; i < href.length; i++) x = Math.imul(x ^ href.charCodeAt(i), 16777619)
   return (x >>> 0).toString(36)
 }
 
@@ -212,9 +212,9 @@ export function sheetId(href) {
  * are all there is sent links, not rules to paint with first (`pageStyles`). Sent as its source, so it reads nothing else.
  */
 function keepSheets(id) {
-  var c = document.cookie.match(/(?:^|; )weft-css=([^;]*)/), s = c ? c[1].split('.') : []
+  const c = document.cookie.match(/(?:^|; )weft-css=([^;]*)/), s = c ? c[1].split('.') : []
   document.querySelectorAll('link[rel=stylesheet]').forEach(function (l) {
-    var x = l.sheet && id(l.getAttribute('href'))
+    const x = l.sheet && id(l.getAttribute('href'))
     if (x && s.indexOf(x) < 0) s.push(x)
   })
   document.cookie = 'weft-css=' + s.slice(-32).join('.') + ';path=/;max-age=31536000;samesite=lax'
@@ -231,7 +231,7 @@ export function keptSheets(cookie) {
  * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script. `keep`: then
  * lists them in `weft-css` (`keepSheets`), for a visitor who already has the site's cookies: one without gets none.
  */
-const lateSheets = keep => `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all')${keep ? `;(${keepSheets})(${sheetId})` : ''}}))([...document.querySelectorAll('link[data-late]')])`
+const lateSheets = keep => `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all')${keep ? `;(${keepSheets.toString()})(${sheetId.toString()})` : ''}}))([...document.querySelectorAll('link[data-late]')])`
 export const LATE_SHEETS = lateSheets(false)
 export const LATE_SHEETS_KEPT = lateSheets(true)
 /** The client entry's second chance: a `<style>` a CSP refused has no sheet, so the disabled link beside it is all that's left. */

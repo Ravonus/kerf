@@ -17,6 +17,9 @@ import { applyMatches, client, createRouteState, peers, type Component, type Mat
 import { App } from './view'
 import { ErrorPage, NotFoundPage } from './builtin'
 
+/** What the stream's scripts leave on `globalThis`: each chunk's data as it lands, and what a held Boundary builds with. */
+const streamed = globalThis as typeof globalThis & { $wc?: { r?: object; b?: object; s?: object }[]; $wh?: Record<string, () => void> | 0 }
+
 type Hot = ImportMeta & { hot?: { on(event: string, on: (data: { queries: boolean }) => unknown): void } }
 
 /** The client half of `virtual:weft/routes`: the page routes in match order, and a chunk loader per route id. */
@@ -46,13 +49,13 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const islands: Record<string, Component> = {}
   const island = (id: string) => islands[id] ? undefined : routes.islands![id]!().then(m => { islands[id] = m.default })
   await Promise.all([...page.m.filter(m => !m.s).map(m => chunk(m.id)), ...(page.i ?? []).map(island)])
-  page.m.forEach((m, i) => { for (const k of m.d ?? []) if (!m.s) (m.data as any)[k] = deferred(page.p, i, k) })
+  page.m.forEach((m, i) => { for (const k of m.d ?? []) if (!m.s) (m.data as Record<string, unknown>)[k] = deferred(page.p, i, k) })
   const route = createRouteState(page, comps)
   let bag: RoutePayload['b']
   route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id]! as never, bag ?? undefined, id => Promise.resolve(island(id)))
   route.around = (_d, _id, body) => enter(body)
   // What landed while the chunks loaded: from here on, a Boundary that's still out is held, and its chunk builds it.
-  if (data) for (const l of (globalThis as any).$wc ?? []) {
+  if (data) for (const l of streamed.$wc ?? []) {
     Object.assign(data.r, l.r)
     Object.assign(data.b, l.b)
     if (l.s) Object.assign((data.s ??= {}), l.s)
@@ -73,9 +76,9 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   // The stream broke or failed before its last script: what's held takes its default, not a skeleton for good.
   if (data?.w) {
     const over = () => {
-      const h = (globalThis as any).$wh
-      ;(globalThis as any).$wh = 0
-      for (const k in h || {}) h[k]()
+      const h = streamed.$wh || {}
+      streamed.$wh = 0
+      for (const k in h) h[k]!()
     }
     document.readyState === 'complete' ? over() : addEventListener('load', over, { once: true })
   }
@@ -100,9 +103,9 @@ export async function start(routes: ClientRoutes, options: { container?: Element
 
   /** The page moved on: a chunk still out is the old URL's, so it's dropped when it lands and what's held builds from this data. */
   function release() {
-    const h = (globalThis as any).$wh
-    for (const k of Object.keys(h || {})) {
-      const build = h[k]
+    const h = streamed.$wh || {}
+    for (const k of Object.keys(h)) {
+      const build = h[k]!
       h[k] = () => {}
       build()
     }
@@ -319,9 +322,10 @@ function deferred(path: string, level: number, key: string): PromiseLike<unknown
     return got
   }
   return {
+    // oxlint-disable-next-line unicorn/no-thenable -- it is a promise, one that asks the server only once something awaits it
     then: (ok, no) => value().then(ok, no),
-    catch: (no: any) => value().catch(no),
-    finally: (fn: any) => value().finally(fn),
+    catch: (no?: (e: unknown) => unknown) => value().catch(no),
+    finally: (fn?: () => void) => value().finally(fn),
   } as PromiseLike<unknown>
 }
 

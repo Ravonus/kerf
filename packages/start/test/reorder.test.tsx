@@ -5,11 +5,15 @@
 import { Boundary } from '@weft-js/core'
 import { flush, render, screen } from '@weft-js/core/test'
 import { cache, mutation, query, type StandardSchemaV1 } from '@weft-js/start'
-import { FnError, runtime, seed, type Answer } from '@weft-js/start/data'
+import { FnError, runtime, seed, type Answer, type Wire } from '@weft-js/start/data'
 import { client as router } from '../src/router'
 
 type Row = { id: string; done: boolean }
-const toggleInput: StandardSchemaV1<{ id: string; done: boolean }> = { '~standard': { version: 1, vendor: 't', validate: (v: any) => ({ value: v }) } }
+const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const typed = <T,>() => any as StandardSchemaV1<T>
+const toggleInput = typed<{ id: string; done: boolean }>()
+/** What a streamed page's scripts push its chunks onto. */
+const landed = () => (globalThis as typeof globalThis & { $wc: { c: Wire[]; b?: object }[] }).$wc
 
 const list = query({ $id: 'rows', tags: ['rows'], run: () => [] as Row[] })
 const other = query({ $id: 'other', tags: ['other'], run: () => 0 })
@@ -28,13 +32,13 @@ const push = mutation({
 })
 const plain = mutation({ $id: 'plain', invalidates: ['rows'], run: () => {} })
 const bad = mutation({ $id: 'bad', invalidates: ['rows'], optimistic: () => { throw new Error('bad prediction') }, run: () => {} })
-const row = query({ $id: 'row', input: toggleInput as StandardSchemaV1<any>, tags: ['rows'], run: () => 0 as any })
+const row = query({ $id: 'row', input: typed<{ i: number }>(), tags: ['rows'], run: (): unknown => 0 })
 
 interface Call { kind: string; id: string; input: unknown; ok(a: Answer): void; no(e: unknown): void }
 let calls: Call[]
 beforeEach(() => {
   calls = []
-  const call = (kind: string) => (id: string, input: unknown) => new Promise<Answer>((ok, no) => calls.push({ kind, id, input, ok, no }))
+  const call = (kind: string) => (id: string, input: unknown) => new Promise<Answer>((ok, no) => { calls.push({ kind, id, input, ok, no }) })
   runtime.transport = { query: call('query'), mutate: call('mutate') }
 })
 afterEach(() => { runtime.transport = undefined })
@@ -50,7 +54,7 @@ function List() {
 }
 const shown = () => screen.getAllByRole('listitem').map(li => li.textContent)
 function Guarded() {
-  return <Boundary pending={<p>loading</p>} error={e => <p>failed</p>}><List /></Boundary>
+  return <Boundary pending={<p>loading</p>} error={() => <p>failed</p>}><List /></Boundary>
 }
 const lost = () => new TypeError('Failed to fetch')
 /** A tab left this long ago comes back. */
@@ -62,7 +66,7 @@ function returns(...events: (() => void)[]) {
 }
 const focus = () => window.dispatchEvent(new Event('focus'))
 const showing = () => document.dispatchEvent(new Event('visibilitychange'))
-const tick = async () => { await new Promise(ok => setTimeout(ok)); await flush() }
+const tick = async () => { await new Promise(ok => { setTimeout(ok) }); await flush() }
 
 async function ready(done = false) {
   seed([['rows', undefined, rows(done), ['rows']]])
@@ -176,7 +180,7 @@ test('calls on different entries do not hold each other up', async () => {
 
 test('a late read does not revert what a mutation brought', async () => {
   await ready()
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   await tick()
   expect(reads().length).toBe(1)
   const p = plain()
@@ -192,9 +196,9 @@ test('a late read does not revert what a mutation brought', async () => {
 
 test('a read that left before an invalidation does not land, and the rerun does not join it', async () => {
   await ready()
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   await tick()
-  cache.invalidate('rows') // what the first read saw is out of date now
+  void cache.invalidate('rows') // what the first read saw is out of date now
   await tick()
   const [old] = reads()
   old.ok(read(false))
@@ -210,7 +214,7 @@ test('a first load in flight, whose tags nothing knows yet, is still invalidated
   render(List)
   await tick()
   expect(reads().length).toBe(1)
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   reads()[0].ok(read(false))
   await tick()
   expect(reads().length).toBe(2)
@@ -222,7 +226,7 @@ test('a first load in flight, whose tags nothing knows yet, is still invalidated
 test('a first load with tags that did not change lands: an invalidation elsewhere reads nothing again', async () => {
   render(List)
   await tick()
-  cache.invalidate('elsewhere')
+  void cache.invalidate('elsewhere')
   reads()[0].ok(read(true))
   await tick()
   expect(reads().length).toBe(1)
@@ -231,7 +235,7 @@ test('a first load with tags that did not change lands: an invalidation elsewher
 
 test('a read that lands under a prediction waits: the layer does not apply twice', async () => {
   await ready()
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   await tick()
   const p = push()
   await flush()
@@ -249,9 +253,9 @@ test('a read that lands under a prediction waits: the layer does not apply twice
 
 test('a call whose reply was lost may have committed, so its entry reads again; a refused one has not', async () => {
   await ready()
-  const lost = set({ id: 'a', done: true })
+  const gone = set({ id: 'a', done: true })
   calls[0].no(new TypeError('Failed to fetch'))
-  await expect(lost).rejects.toThrow('Failed')
+  await expect(gone).rejects.toThrow('Failed')
   await tick()
   expect(reads().length).toBe(1)
   reads()[0].ok(read(true))
@@ -280,7 +284,7 @@ test('a navigation\'s entries older than a write do not land', async () => {
 })
 
 test('a streaming page\'s chunks land in the cache as they arrive, under anything written here since', async () => {
-  const chunk = (done: boolean) => (globalThis as any).$wc.push({ c: [['rows', undefined, rows(done), ['rows']]], b: {} })
+  const chunk = (done: boolean) => landed().push({ c: [['rows', undefined, rows(done), ['rows']]], b: {} })
   chunk(true)
   expect(cache.get(list)).toEqual(rows(true))
   await ready(false)
@@ -336,7 +340,7 @@ test('a tab back after 30 s with the network down keeps its list, and recovers b
   reads()[0].no(lost())
   await tick()
   expect(shown()).toEqual(['open'])
-  await new Promise(ok => setTimeout(ok, 1100)) // no `online` event: the server was what went away
+  await new Promise(ok => { setTimeout(ok, 1100) }) // no `online` event: the server was what went away
   expect(reads().length).toBe(2)
   reads()[1].ok(read(true))
   await tick()
@@ -347,12 +351,12 @@ test('a server that refuses a background read leaves the list, unless it refused
   seed([['rows', undefined, rows(false), ['rows']]])
   render(Guarded)
   await flush()
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   await tick()
   reads()[0].no(new FnError({ message: 'down' }, 500))
   await tick()
   expect(shown()).toEqual(['open'])
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   await tick()
   reads().at(-1)!.no(new FnError({ code: 'A002', message: 'signed out' }, 401))
   await tick()
@@ -394,15 +398,15 @@ test('past the limit no live reader is evicted, and idle entries still go', asyn
   for (const c of reads()) c.ok({ v: 1, t: ['rows'] })
   await tick()
   calls.length = 0
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   await tick()
   expect(reads().length).toBe(live)
   for (const c of reads()) c.ok({ v: 2, t: ['rows'] })
   await tick()
 })
 
-test('past the limit what nothing reads goes, oldest first', async () => {
-  seed(Array.from({ length: 2000 }, (_, i) => ['row', { i }, i, []] as any))
+test('past the limit what nothing reads goes, oldest first', () => {
+  seed(Array.from({ length: 2000 }, (_, i): Wire => ['row', { i }, i, []]))
   expect(cache.get(row, { i: 0 })).toBeUndefined()
   expect(cache.get(row, { i: 1999 })).toBe(1999)
 })
@@ -443,9 +447,9 @@ test('a value read before a write is out of date even for a key the cache did no
   await p
   await tick()
   router.seed!([['row', { i: 1 }, 'old', ['rows']], ['row', { i: 2 }, 'kept', ['else']]], since)
-  expect(await Promise.race([row.fetch({ i: 2 } as any), 'waits'])).toBe('kept')
+  expect(await Promise.race([row.fetch({ i: 2 }), Promise.resolve('waits')])).toBe('kept')
   const n = reads().length
-  const late = row.fetch({ i: 1 } as any)
+  const late = row.fetch({ i: 1 })
   expect(reads().length).toBe(n + 1)
   reads().at(-1)!.ok({ v: 'new', t: ['rows'] })
   expect(await late).toBe('new')
@@ -457,9 +461,9 @@ test('a stream chunk read before a write is out of date even for a key the cache
   calls[0].ok({ t: ['rows'], c: [] })
   await p
   await tick()
-  ;(globalThis as any).$wc.push({ c: [['row', { i: 3 }, 'old', ['rows']]] })
+  landed().push({ c: [['row', { i: 3 }, 'old', ['rows']]] })
   const n = reads().length
-  const late = row.fetch({ i: 3 } as any)
+  const late = row.fetch({ i: 3 })
   expect(reads().length).toBe(n + 1)
   reads().at(-1)!.ok({ v: 'new', t: ['rows'] })
   expect(await late).toBe('new')
@@ -467,7 +471,7 @@ test('a stream chunk read before a write is out of date even for a key the cache
 
 test('a fetch under a prediction reads only after the call behind it answers', async () => {
   seed([['rows', undefined, rows(false), ['rows']]])
-  cache.invalidate('rows')
+  void cache.invalidate('rows')
   const p = set({ id: 'a', done: true })
   expect(await list.fetch()).toEqual(rows(true))
   expect(reads()).toEqual([])

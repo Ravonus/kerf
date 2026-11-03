@@ -3,21 +3,24 @@ import { setFlagsFromString } from 'node:v8'
 import { runInNewContext } from 'node:vm'
 import { Boundary, defineState, derived, resource, state, untrack } from '@weft-js/core'
 import { renderToStringAsync } from '@weft-js/core/ssr'
-import { FnError, query } from '../src/data'
-import { createHandler, type Manifest } from '../src/server'
+import { FnError, query, type StandardSchemaV1 } from '../src/data'
+import { createHandler, type HandlerOptions, type Manifest } from '../src/server'
+
+const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const typed = <T,>() => any as StandardSchemaV1<T>
 
 const page = (id: string, file: string) => ({ id, file, layouts: [], pattern: id, params: [], kind: 'page' as const })
 // `hold: 0`: these are of what streams, and their reads land within the default hold.
-const serve = (routes: Record<string, () => unknown>, options: object = {}) => {
+const serve = (routes: Record<string, () => unknown>, options: Partial<HandlerOptions> = {}) => {
   const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: Object.keys(routes).map(p => page(p, p)) }
-  const handler = createHandler({ manifest, modules: Object.fromEntries(Object.entries(routes).map(([p, c]) => [p, { default: c }])) as any, hold: 0, ...options })
+  const handler = createHandler({ manifest, modules: Object.fromEntries(Object.entries(routes).map(([p, c]) => [p, { default: c }])), hold: 0, ...options })
   return (path: string) => handler(new Request(`http://localhost${path}`))
 }
 
 // What every render reads and outlives it, as a mutation's `.pending` is.
 const calls = state(0)
 const pending = derived(() => calls.value > 0)
-const held = () => (pending as any).node.o.length as number
+const held = () => (pending as unknown as { node: { o: unknown[] } }).node.o.length
 
 const Row = (props: { name: string }) => {
   const busy = derived(() => pending.value)
@@ -54,7 +57,7 @@ test('repeated streamed requests do not grow the retained heap', async () => {
 test('a request that goes away mid-stream leaves nothing subscribed either', async () => {
   let land = (_: string[]) => {}
   const Late = () => {
-    const r = resource(() => new Promise<string[]>(ok => (land = ok)))
+    const r = resource(() => new Promise<string[]>(ok => { land = ok }))
     const busy = derived(() => pending.value)
     return <p title={String(busy.value)}>{r.value?.length}</p>
   }
@@ -64,7 +67,7 @@ test('a request that goes away mid-stream leaves nothing subscribed either', asy
   await reader.read()
   await reader.cancel()
   land(['a'])
-  await new Promise(ok => setTimeout(ok, 20))
+  await new Promise(ok => { setTimeout(ok, 20) })
   expect(held()).toBe(0)
 })
 
@@ -76,7 +79,7 @@ test('a Boundary that fails replaces its fallback with its error, and the page k
     const r = resource(() => Promise.reject(new Error('relation "todos" does not exist')))
     return <p>{r.value}</p>
   }
-  const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>} error={() => <b>That didn't load</b>}><Broken /></Boundary></main> }, { onDiagnostic: (d: any) => diagnostics.push(d.message) })
+  const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>} error={() => <b>That didn't load</b>}><Broken /></Boundary></main> }, { onDiagnostic: d => diagnostics.push(d.message) })
   const html = await body(await get('/'))
   expect(html).toContain("<template><b")
   expect(html).toContain('load</b></template>')
@@ -94,12 +97,12 @@ test('a Boundary with no `error` still gives up its fallback', async () => {
 
 test('a failed query in production says only that it failed, on the page and in its diagnostics it says why', async () => {
   const diagnostics: string[] = []
-  const reads = query({ $id: 'stream.reads', run: () => { throw new Error('relation "todos" does not exist') } } as any) as any
+  const reads = query({ $id: 'stream.reads', run: (): string => { throw new Error('relation "todos" does not exist') } })
   const Broken = () => {
     const r = reads()
     return <p>{r.value}</p>
   }
-  const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>} error={(e: any) => <b>{e.message}</b>}><Broken /></Boundary></main> }, { onDiagnostic: (d: any) => diagnostics.push(d.message) })
+  const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>} error={e => <b>{(e as Error).message}</b>}><Broken /></Boundary></main> }, { onDiagnostic: d => diagnostics.push(d.message) })
   const html = await body(await get('/'))
   expect(html).not.toContain('relation')
   expect(html).toContain('Server function failed.')
@@ -110,14 +113,14 @@ test('a Boundary of reads landing one at a time renders once for them, not once 
   // Replies a timer tick apart, each far enough from the last for a pass to run between. The window a slow read would
   // close never closes here, so this doesn't depend on how fast the machine is: the last reply is what lands them.
   const timer = globalThis.setTimeout
-  const spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((fn: () => void, ms?: number, ...a: unknown[]) => (ms === 4 ? 0 : timer(fn, ms, ...(a as [])))) as any)
+  const spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((fn: () => void, ms?: number, ...a: unknown[]) => (ms === 4 ? 0 : timer(fn, ms, ...(a as [])))) as typeof setTimeout)
   try {
     let renders = 0
     let sent = 0
-    const one = query({ $id: 'stream.one', run: async ({ input }: any) => {
-      await new Promise(ok => timer(ok, ++sent))
+    const one = query({ $id: 'stream.one', input: typed<number>(), run: async ({ input }) => {
+      await new Promise(ok => { timer(ok, ++sent) })
       return input
-    } } as any) as any
+    } })
     const Cell = (props: { n: number }) => {
       const r = one(() => props.n)
       return <li>{r.value}</li>
@@ -138,8 +141,8 @@ test('a Boundary of reads landing one at a time renders once for them, not once 
 
 test('a read slower than the others doesn\'t hold them back', async () => {
   let fast = 0, slow = 0
-  const fastRead = query({ $id: 'stream.fast', run: async () => { fast = performance.now(); return 'fast' } } as any) as any
-  const slowRead = query({ $id: 'stream.slow', run: async () => { await new Promise(ok => setTimeout(ok, 120)); slow = performance.now(); return 'slow' } } as any) as any
+  const fastRead = query({ $id: 'stream.fast', run: () => { fast = performance.now(); return Promise.resolve('fast') } })
+  const slowRead = query({ $id: 'stream.slow', run: async () => { await new Promise(ok => { setTimeout(ok, 120) }); slow = performance.now(); return 'slow' } })
   const Fast = () => <p>{fastRead().value}</p>
   const Slow = () => <p>{slowRead().value}</p>
   const get = serve({ '/': () => <main><Boundary pending={<i>a</i>}><Fast /></Boundary><Boundary pending={<i>b</i>}><Slow /></Boundary></main> })
@@ -156,7 +159,7 @@ test('a read slower than the others doesn\'t hold them back', async () => {
 describe('a read that never settles down', () => {
   let ran = 0
   let tick = 0
-  const stamped = query({ $id: 'stream.stamped', run: async ({ input }: any) => { ran++; return input } } as any) as any
+  const stamped = query({ $id: 'stream.stamped', input: typed<number>(), run: ({ input }) => { ran++; return Promise.resolve(input) } })
   const Now = () => {
     const r = stamped(++tick)
     return <p>{r.value}</p>
@@ -166,7 +169,7 @@ describe('a read that never settles down', () => {
     ran = 0
     const diagnostics: string[] = []
     const started = Date.now()
-    const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Now /></Boundary></main> }, { onDiagnostic: (d: any) => diagnostics.push(d.message) })
+    const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Now /></Boundary></main> }, { onDiagnostic: d => diagnostics.push(d.message) })
     const html = await body(await get('/'))
     expect(ran).toBeLessThan(8)
     expect(Date.now() - started).toBeLessThan(1000)
@@ -176,7 +179,7 @@ describe('a read that never settles down', () => {
 
   test('doesn\'t cost a slow read beside it its chunk', async () => {
     ran = 0
-    const slow = query({ $id: 'stream.beside', run: async () => { await new Promise(ok => setTimeout(ok, 150)); return 'arrived' } } as any) as any
+    const slow = query({ $id: 'stream.beside', run: async () => { await new Promise(ok => { setTimeout(ok, 150) }); return 'arrived' } })
     const Slow = () => {
       const r = slow()
       return <p>{r.value}</p>
@@ -204,7 +207,7 @@ describe('a read that never settles down', () => {
 
   test('reads that each need the last are headway, however many there are', async () => {
     ran = 0
-    const step = query({ $id: 'stream.step', run: async ({ input }: any) => { ran++; return input } } as any) as any
+    const step = query({ $id: 'stream.step', input: typed<number>(), run: ({ input }) => { ran++; return Promise.resolve(input) } })
     const Chain = (props: { n: number }) => {
       const r = step(() => props.n)
       return <div>{r.value === undefined ? null : props.n === 79 ? <p>end</p> : <Chain n={props.n + 1} />}</div>
@@ -224,13 +227,13 @@ describe('what a failure may say in production', () => {
       const r = resource(() => props.data.list)
       return <p>{r.value}</p>
     }
-    return <main><Boundary pending={<i>wait</i>} error={(e: any) => <b>{e.message}</b>}><Read /></Boundary></main>
+    return <main><Boundary pending={<i>wait</i>} error={e => <b>{(e as Error).message}</b>}><Read /></Boundary></main>
   }
   const deferred = async (e: unknown, hold = 0) => {
     const diagnostics: string[] = []
     const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [page('/', '/')] }
-    const load = async () => ({ list: new Promise((_, no) => setTimeout(no, 5, e)) })
-    const handler = createHandler({ manifest, modules: { '/': { default: View, load } } as any, onDiagnostic: (d: any) => diagnostics.push(d.message), hold })
+    const load = () => Promise.resolve({ list: new Promise((_, no) => { setTimeout(no, 5, e) }) })
+    const handler = createHandler({ manifest, modules: { '/': { default: View, load } }, onDiagnostic: d => diagnostics.push(d.message), hold })
     return { html: await body(await handler(new Request('http://localhost/'))), diagnostics }
   }
   const failure = (html: string) => Object.values(script(html, 'weft-data').r as Record<string, { e?: string }>).map(r => r.e)
@@ -265,7 +268,7 @@ describe('what a failure may say in production', () => {
     const Throws = () => <p>{resource((): string => { throw secret() }).value}</p>
     const Dies = (): unknown => { throw secret() }
     for (const Kid of [Rejects, Throws, Dies]) {
-      const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>} error={(e: any) => <b>{e.message}</b>}><Kid /></Boundary></main> })
+      const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>} error={e => <b>{(e as Error).message}</b>}><Kid /></Boundary></main> })
       const html = await body(await get('/'))
       expect(html).not.toContain('password')
       expect(html).toContain('Server function failed.')
@@ -285,11 +288,11 @@ describe('what a failure may say in production', () => {
 test('a chunk says what its render changed of the page\'s state, once', async () => {
   const seen = defineState('chunk.seen', () => ({ n: state(0) }))
   const Late = () => {
-    const r = resource(() => new Promise<number>(ok => setTimeout(ok, 5, 7)))
+    const r = resource(() => new Promise<number>(ok => { setTimeout(ok, 5, 7) }))
     seen.n.value = untrack(() => r.value) ?? 0
     return <p>{r.value}</p>
   }
-  const Later = () => <p>{resource(() => new Promise<string>(ok => setTimeout(ok, 30, 'x'))).value}</p>
+  const Later = () => <p>{resource(() => new Promise<string>(ok => { setTimeout(ok, 30, 'x') })).value}</p>
   const get = serve({ '/': () => <main><Boundary pending={<i>a</i>}><Late /></Boundary><Boundary pending={<i>b</i>}><Later /></Boundary></main> })
   const html = await body(await get('/'))
   const pushes = [...html.matchAll(/\|\|\[\]\)\.push\((.*?)\);\$wb/g)].map(m => JSON.parse(m[1]))
@@ -297,7 +300,7 @@ test('a chunk says what its render changed of the page\'s state, once', async ()
 })
 
 test('a streamed page\'s entry is preloaded above its styles, with its script after what it reads', async () => {
-  const Late = () => <p>{resource(() => new Promise<string>(ok => setTimeout(ok, 5, 'late'))).value}</p>
+  const Late = () => <p>{resource(() => new Promise<string>(ok => { setTimeout(ok, 5, 'late') })).value}</p>
   const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Late /></Boundary></main> }, { assets: { entry: '/e.js', js: [{ href: '/a.js' }], css: [{ href: '/s.css' }], inline: { '/s.css': 'h1{color:red}' } } })
   const html = await body(await get('/'))
   const preload = html.indexOf('<link rel="modulepreload" href="/e.js">')

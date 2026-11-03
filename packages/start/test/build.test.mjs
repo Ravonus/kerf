@@ -238,18 +238,18 @@ describe('node preset, end to end', () => {
     const { chromium } = createRequire(import.meta.url)('playwright-core')
     const browser = await chromium.launch()
     try {
-      const page = await browser.newPage()
+      const tab = await browser.newPage()
       // The sheet is slow and the swap is not: whatever the page first shows has to be styled.
-      await page.route('**/*.css', async route => { await new Promise(ok => setTimeout(ok, 200)); await route.continue() })
-      await page.addInitScript(() => {
+      await tab.route('**/*.css', async route => { await new Promise(ok => { setTimeout(ok, 200) }); await route.continue() })
+      await tab.addInitScript(() => {
         new MutationObserver((_, o) => {
           const el = document.querySelector('[data-scope="late-card"]')
           if (el?.closest('#app')) { window.seen = getComputedStyle(el).color; o.disconnect() }
         }).observe(document, { subtree: true, childList: true })
       })
-      await page.goto(server.url + '/stream-sheet')
-      await page.waitForSelector('#app [data-scope="late-card"]')
-      expect(await page.evaluate(() => window.seen)).toBe('rgb(1, 2, 3)')
+      await tab.goto(server.url + '/stream-sheet')
+      await tab.waitForSelector('#app [data-scope="late-card"]')
+      expect(await tab.evaluate(() => window.seen)).toBe('rgb(1, 2, 3)')
     } finally {
       await browser.close()
     }
@@ -269,19 +269,19 @@ describe('node preset, end to end', () => {
     const { chromium } = createRequire(import.meta.url)('playwright-core')
     const browser = await chromium.launch()
     try {
-      const page = await browser.newPage()
-      await page.route('**/*.css', async route => { await new Promise(ok => setTimeout(ok, 300)); await route.continue() })
-      await page.addInitScript(() => {
+      const tab = await browser.newPage()
+      await tab.route('**/*.css', async route => { await new Promise(ok => { setTimeout(ok, 300) }); await route.continue() })
+      await tab.addInitScript(() => {
         new MutationObserver((_, o) => {
           const el = document.querySelector('[data-scope="extra-card"]')
           if (el) { window.seen = getComputedStyle(el).color; o.disconnect() }
         }).observe(document, { subtree: true, childList: true })
       })
-      await page.goto(server.url + '/stream-sheet?x')
-      await page.waitForSelector('#app [data-scope="late-card"]')
-      expect(await page.evaluate(() => window.seen)).toBe('rgb(7, 8, 9)') // styled from the first frame, with the sheet still out
-      await page.waitForFunction(() => window.__weft?.hydrated)
-      expect(await page.evaluate(() => window.__weft)).toMatchObject({ misses: 0, hydrated: true })
+      await tab.goto(server.url + '/stream-sheet?x')
+      await tab.waitForSelector('#app [data-scope="late-card"]')
+      expect(await tab.evaluate(() => window.seen)).toBe('rgb(7, 8, 9)') // styled from the first frame, with the sheet still out
+      await tab.waitForFunction(() => window.__weft?.hydrated)
+      expect(await tab.evaluate(() => window.__weft)).toMatchObject({ misses: 0, hydrated: true })
     } finally {
       await browser.close()
     }
@@ -291,34 +291,34 @@ describe('node preset, end to end', () => {
   async function under(policy, path) {
     const { chromium } = createRequire(import.meta.url)('playwright-core')
     const browser = await chromium.launch()
-    const page = await browser.newPage()
-    await page.route(url => url.pathname === path, async route => {
+    const tab = await browser.newPage()
+    await tab.route(url => url.pathname === path, async route => {
       const res = await route.fetch()
       await route.fulfill({ response: res, headers: { ...res.headers(), 'content-security-policy': policy } })
     })
-    return { page, browser }
+    return { tab, browser }
   }
 
   test('a CSP that refuses inline scripts still gets every deferred sheet', async () => {
     // Deferred (`media="print"`) sheets are `criticalCss: false`'s; with the first-paint table they're plain links past the shell.
-    const { page, browser } = await under("script-src 'self'", '/late-css')
+    const { tab, browser } = await under("script-src 'self'", '/late-css')
     try {
-      await page.goto(server.url + '/late-css')
-      await page.waitForFunction(() => !document.querySelector('link[media="print"]'), undefined, { timeout: 5000 })
-      await page.hover('#late')
-      expect(await page.$eval('#late', n => getComputedStyle(n).color)).toBe('rgb(4, 5, 6)')
+      await tab.goto(server.url + '/late-css')
+      await tab.waitForFunction(() => !document.querySelector('link[media="print"]'), undefined, { timeout: 5000 })
+      await tab.hover('#late')
+      expect(await tab.$eval('#late', n => getComputedStyle(n).color)).toBe('rgb(4, 5, 6)')
     } finally {
       await browser.close()
     }
   }, 30_000)
 
   test('a CSP that refuses inline styles still gets the sheets of a page that inlined them whole', async () => {
-    const { page, browser } = await under("style-src 'self'", '/styled')
+    const { tab, browser } = await under("style-src 'self'", '/styled')
     try {
-      await page.goto(server.url + '/styled')
-      await page.waitForFunction(() => !document.querySelector('style+link[disabled]'), undefined, { timeout: 5000 })
-      await page.waitForFunction(() => [...document.querySelectorAll('link[rel=stylesheet]:not([disabled])')].every(l => l.sheet), undefined, { timeout: 5000 })
-      expect(await page.$eval('.styled', n => getComputedStyle(n).color)).toBe('rgb(1, 2, 3)')
+      await tab.goto(server.url + '/styled')
+      await tab.waitForFunction(() => !document.querySelector('style+link[disabled]'), undefined, { timeout: 5000 })
+      await tab.waitForFunction(() => [...document.querySelectorAll('link[rel=stylesheet]:not([disabled])')].every(l => l.sheet), undefined, { timeout: 5000 })
+      expect(await tab.$eval('.styled', n => getComputedStyle(n).color)).toBe('rgb(1, 2, 3)')
     } finally {
       await browser.close()
     }
@@ -329,12 +329,12 @@ describe('node preset, end to end', () => {
     const browser = await chromium.launch()
     try {
       for (const path of ['/held-island', '/held-island?boot']) {
-        const page = await browser.newPage()
-        await page.goto(server.url + path, { waitUntil: 'commit' })
-        await page.waitForSelector('.wait-awake', { state: 'attached' }) // what the observers have, once the entry's run
-        await page.waitForSelector('.awake')
-        await page.waitForFunction(() => !document.querySelector('.awake').hasAttribute('wk'), null, { timeout: 5000 }) // claimed
-        await page.close()
+        const tab = await browser.newPage()
+        await tab.goto(server.url + path, { waitUntil: 'commit' })
+        await tab.waitForSelector('.wait-awake', { state: 'attached' }) // what the observers have, once the entry's run
+        await tab.waitForSelector('.awake')
+        await tab.waitForFunction(() => !document.querySelector('.awake').hasAttribute('wk'), null, { timeout: 5000 }) // claimed
+        await tab.close()
       }
     } finally {
       await browser.close()

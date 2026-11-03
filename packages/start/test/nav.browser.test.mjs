@@ -22,14 +22,14 @@ async function open(path, ctx = browser) {
 
 /** Replies to matching requests wait until the returned function is called. */
 async function hold(page, match) {
-  let open
-  const gate = new Promise(ok => (open = ok))
+  let release
+  const gate = new Promise(ok => { release = ok })
   await page.route(match, async r => {
     const reply = await r.fetch()
     await gate
     await r.fulfill({ response: reply }).catch(() => {})
   })
-  return open
+  return release
 }
 
 const link = (page, href) => page.evaluate(h => { const a = Object.assign(document.createElement('a'), { href: h }); document.body.append(a); a.click() }, href)
@@ -94,7 +94,7 @@ test('a navigation\'s cache entries older than a write in this tab do not land',
   const { page } = await open('/todos?from=1')
   const was = await page.$$eval('ul.todos li', l => l.length)
   let first = true, open_
-  const gate = new Promise(ok => (open_ = ok))
+  const gate = new Promise(ok => { open_ = ok })
   await page.route('**/_weft/data/todos*', async r => {
     if (!first) return // what the write owes: left unanswered, so only the older reply is left to land
     first = false
@@ -136,7 +136,7 @@ test('a pressed link whose preloaded reply comes after the user moved on does no
 test('a click captured before hydration goes through the router, not a page load', async () => {
   const page = await browser.newPage()
   let release
-  const gate = new Promise(ok => (release = ok))
+  const gate = new Promise(ok => { release = ok })
   await page.route('**/*', async r => {
     if (r.request().resourceType() === 'script') await gate
     await r.continue()

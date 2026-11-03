@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { readFileSync } from 'node:fs'
 // The first-paint budget, on rules weft's own purge reads.
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { parse, purge } from '../../weft/node/purge.mjs'
@@ -66,12 +65,14 @@ test('a request with cookies has the browser list the sheets it loaded, by the i
     cookie: `weft-css=${sheetId('/a.css')}`,
     querySelectorAll: q => (q === 'link[data-late]' ? links.slice(2) : links),
   }
-  Object.defineProperty(globalThis.document, 'cookie', { get: () => cookies.at(-1)?.split(';')[0] ?? `weft-css=${sheetId('/a.css')}`, set: v => cookies.push(v) })
+  Object.defineProperty(globalThis.document, 'cookie', { get: () => cookies.at(-1)?.split(';')[0] ?? `weft-css=${sheetId('/a.css')}`, set: v => { cookies.push(v) } })
+  // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- running the script as the page would is the test, and it's our own constant
   new Function(LATE_SHEETS)()
-  await new Promise(r => setTimeout(r, 0))
+  await new Promise(r => { setTimeout(r, 0) })
   expect(cookies).toEqual([]) // a visitor without the site's cookies gets none
+  // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- as above
   new Function(LATE_SHEETS_KEPT)()
-  await new Promise(r => setTimeout(r, 0))
+  await new Promise(r => { setTimeout(r, 0) })
   delete globalThis.document
   expect(cookies).toHaveLength(1)
   expect(cookies[0]).toMatch(/;path=\/;max-age=31536000;samesite=lax$/)
@@ -148,7 +149,7 @@ test('a static route from an install keeps the stylesheets of the kit components
   write('index.ts', `export { Badge } from './Badge'\nexport { Modal } from './Modal'\n`)
   write('Badge.tsx', `import './badge.css'\nexport const Badge = () => null\n`)
   write('Modal.tsx', `import './modal.css'\nexport const Modal = () => null\n`)
-  const ctx = { resolve: async (spec, from) => ({ id: spec === '@weft-js/kit' ? join(kit, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
+  const ctx = { resolve: (spec, from) => Promise.resolve({ id: spec === '@weft-js/kit' ? join(kit, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
   const page = await assetsOnly(ctx, `import { Badge } from '@weft-js/kit'\n`, join(root, 'src/routes/a.tsx'), root)
   expect(page).toContain(JSON.stringify(join(kit, 'badge.css')))
   expect(page).not.toContain('modal')
@@ -158,7 +159,7 @@ describe('a static route through a kit barrel', () => {
   const kit = async (files, page) => {
     const root = mkdtempSync(join(tmpdir(), 'weft-kit-')), dir = join(root, 'node_modules/@weft-js/kit/src')
     for (const [f, text] of Object.entries(files)) { mkdirSync(dirname(join(dir, f)), { recursive: true }); writeFileSync(join(dir, f), text) }
-    const ctx = { resolve: async (spec, from) => ({ id: spec === '@weft-js/kit' ? join(dir, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
+    const ctx = { resolve: (spec, from) => Promise.resolve({ id: spec === '@weft-js/kit' ? join(dir, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
     return assetsOnly(ctx, page, join(root, 'src/routes/a.tsx'), root)
   }
   const Modal = { 'Modal.tsx': `import './modal.css'\nexport const Modal = () => null\n` }
@@ -201,9 +202,9 @@ test('the first paint leaves out rules for classes, attributes and values the sh
 
 describe('the first paint keeps a rule whenever the shell might match it', () => {
   let sheets = 0
-  const first = (rule, html) => {
+  const first = (rule, shell) => {
     const href = `/c${sheets++}.css` // hashed in a build, so one name is one sheet
-    const page = pageStyles({ inline: { [href]: `${rule}${filler(4000)}` }, critical }, [{ href }], html).head
+    const page = pageStyles({ inline: { [href]: `${rule}${filler(4000)}` }, critical }, [{ href }], shell).head
     return /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)[1]
   }
   const keeps = [
@@ -231,7 +232,7 @@ describe('the first paint keeps a rule whenever the shell might match it', () =>
     ['forced-colors off', `@media (forced-colors:none){.a{top:1px}}`, '<i class="a"></i>'],
     ['a bracket inside a value', `[data-k="a)"],.a{top:1px}`, '<i class="a"></i>'],
   ]
-  test.each(keeps)('%s', (_, rule, html) => { expect(first(rule, html)).toContain('top:1px') })
+  test.each(keeps)('%s', (_, rule, shell) => { expect(first(rule, shell)).toContain('top:1px') })
 
   const drops = [
     ['a plain value the shell lacks', `[data-k="abc"]{top:1px}`, '<i data-k="abd"></i>'],
@@ -241,7 +242,7 @@ describe('the first paint keeps a rule whenever the shell might match it', () =>
     ['print alone', `@media print{.a{top:1px}}`, '<i class="a"></i>'],
     ['forced colours', `@media (forced-colors:active){.a{top:1px}}`, '<i class="a"></i>'],
   ]
-  test.each(drops)('but not %s', (_, rule, html) => { expect(first(rule, html)).not.toContain('top:1px') })
+  test.each(drops)('but not %s', (_, rule, shell) => { expect(first(rule, shell)).not.toContain('top:1px') })
 })
 
 test('text in a page that names a custom property nothing reads does not split the cache', () => {

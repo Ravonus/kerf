@@ -183,11 +183,12 @@ const FAILED = 'Server function failed.'
 export function shown(e: unknown, scope: Scope): unknown {
   const { dev, onDiagnostic } = scope.options
   const fault = !(e instanceof FnError || isRedirect(e) || (e instanceof StartError && Number(e.extra.status ?? 500) < 500))
+  const { message, code } = (e ?? {}) as { message?: string; code?: string }
   if (dev || !fault) {
-    scope.said.add((e as any)?.message)
+    if (message !== undefined) scope.said.add(message)
     return e
   }
-  onDiagnostic?.({ code: (e as any)?.code ?? 'E_FN', severity: 'error', message: `a render read a failed query: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
+  onDiagnostic?.({ code: code ?? 'E_FN', severity: 'error', message: `a render read a failed query: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
   return new Error(FAILED)
 }
 

@@ -609,11 +609,11 @@ function entry(fn: Fn, input: unknown): Entry {
 const ENTRIES = 1000
 /** When to look again: a quarter past what's left, so a page with thousands of readers doesn't walk them all per entry. */
 let ceiling = ENTRIES
-/** A search box writes an entry per keystroke for the tab's life. What nothing reads goes, least recently used first. `made` is about to get its reader. */
-function evict(made: Entry) {
+/** A search box writes an entry per keystroke for the tab's life. What nothing reads goes, least recently used first. `fresh` is about to get its reader. */
+function evict(fresh: Entry) {
   for (const e of entries.values()) {
     if (entries.size <= ENTRIES) break
-    if (e !== made && !e.readers && !e.p && !untrack(() => e.layers.value.length) && lastSeen.get(e.id) !== e) entries.delete(e.key)
+    if (e !== fresh && !e.readers && !e.p && !untrack(() => e.layers.value.length) && lastSeen.get(e.id) !== e) entries.delete(e.key)
   }
   ceiling = Math.max(ENTRIES, entries.size + (entries.size >> 2))
 }
@@ -680,7 +680,8 @@ function retry() {
 function owed() {
   clearTimeout(again)
   again = undefined
-  if (globalThis.document?.hidden || navigator.onLine === false) return // `back` or `online` comes here
+  // Off a browser `onLine` isn't there, and that isn't offline.
+  if (globalThis.document?.hidden || (navigator as { onLine?: boolean }).onLine === false) return // `back` or `online` comes here
   untrack(() => {
     for (const e of entries.values()) if (e.readers && e.has.value && e.stale.value && !e.p && !e.held && !predicted(e)) load(e).catch(() => {})
   })
@@ -1084,7 +1085,7 @@ if (typeof document !== 'undefined' && !runtime.scope) {
     for (const x of l) seed(x.c, since)
     return Array.prototype.push.apply(landed, l)
   }
-  let later: string[] = []
+  const later: string[] = []
   const back = () => {
     if (document.hidden) return
     const old = performance.now() - FOCUS
