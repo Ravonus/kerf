@@ -65,10 +65,10 @@
 }
 :where([data-scope="sidenav"] [data-part="filter"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
 :where([data-scope="sidenav"] [data-part="empty"]) { margin: 0; padding-inline: 10px; color: var(--warp-color-text-subtle); }
-/* The bar, on a phone: outside the panel's box at its trailing edge, so it shows while the panel waits off screen (a
+/* The bar, on a phone: outside the panel's box, past its border, so it shows while the panel waits off screen (a
    strip down the left, under whatever sticks above) and rides out with it. It stays visible when the panel is not. */
 :where([data-scope="sidenav"] [data-part="bar"]) {
-  position: absolute; inset-block: var(--warp-sidenav-top, 0px) 0; inset-inline-start: 100%; z-index: 1; visibility: visible;
+  position: absolute; inset-block: var(--warp-sidenav-top, 0px) 0; inset-inline-start: calc(100% + var(--warp-border-hairline)); z-index: 1; visibility: visible;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--warp-space-tight);
   inline-size: var(--warp-sidenav-bar, 28px); box-sizing: border-box; margin: 0; padding: var(--warp-space-related) 0;
   border: 0; border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: 0;
