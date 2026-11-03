@@ -444,9 +444,15 @@ export const TEAMS_BY_STATE = 'AK,ME,VT,NH,WA,ID,MT,ND,MN,IL,WI,MI,NY,RI,MA,OR,N
   value: ({ CA: 188, NY: 142, TX: 121, WA: 96, MA: 74, IL: 68, CO: 57, GA: 44, FL: 52 } as Record<string, number>)[id] ?? 4 + (i * 37) % 31,
 }))
 
-/** One Monday in Tessel's week. Fixed, so server and client agree. */
+/** One Monday in Tessel's week, and its morning: the day tinted as today is the day the now line is on. Fixed, so server and client agree. */
 export const CAL_TODAY = '2026-11-02'
-export const CAL_NOW = '2026-11-04T10:40'
+export const CAL_NOW = '2026-11-02T10:40'
+/**
+ * The examples about Wednesday's crowded morning are seen on that Wednesday: it is their today, they open on it, and
+ * their now line is late in the morning, when one meeting has ended and the next still runs beside its free lane.
+ */
+export const BUSY_TODAY = '2026-11-04'
+export const BUSY_NOW = '2026-11-04T11:40'
 export const CALENDARS = ['Releases', 'On-call', 'Team', 'Customers'].map((name, i) => ({ id: i + 1, name }))
 export const ROOMS = [{ id: 'atlas', name: 'Atlas', meta: '8 seats' }, { id: 'birch', name: 'Birch', meta: '6 seats' }, { id: 'cedar', name: 'Cedar', meta: '12 seats' }]
 export const EVENTS: CalEvent[] = [

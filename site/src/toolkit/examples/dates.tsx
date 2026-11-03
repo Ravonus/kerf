@@ -1,7 +1,7 @@
 import { state } from '@weft-js/core'
 import { Badge, Button, Calendar, Card, DateField, DateRangeField, DateTimeField, DurationField, InlineCalendar, MonthPicker, PeriodPicker, RecurrenceField, Row, Stack, Text, TimeField, WeekPicker, Tag, Grid, compareRange } from '@weft-js/warp'
 import type { DateRange, IsoDate, IsoDateTime, IsoDuration, IsoMonth, IsoTime, IsoWeek } from '@weft-js/warp'
-import { CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, INVOICES, MONTH_EVENTS, ROOMS } from '../world'
+import { BUSY_NOW, BUSY_TODAY, CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, INVOICES, MONTH_EVENTS, ROOMS } from '../world'
 
 type Event = (typeof EVENTS)[number]
 
@@ -45,7 +45,7 @@ const DAY_VIEWS = ['day', 'week'] as const
 /** Wednesday's morning runs five meetings into each other: they share the column side by side, in lanes. */
 export function CalendarBusyDay() {
   const s = useEvents()
-  return <Calendar events={s.events.value} calendars={CALENDARS} views={[...DAY_VIEWS]} defaultView="day" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} workingHours={[540, 1080]} onMove={s.change} onResize={s.change} />
+  return <Calendar events={s.events.value} calendars={CALENDARS} views={[...DAY_VIEWS]} defaultView="day" defaultDate={BUSY_TODAY} today={BUSY_TODAY} now={BUSY_NOW} locale="en-US" firstDayOfWeek={1} workingHours={[540, 1080]} onMove={s.change} onResize={s.change} />
 }
 
 const AGENDA_VIEWS = ['agenda', 'week'] as const
@@ -58,7 +58,7 @@ const ROOM_HOURS: [number, number] = [540, 1020]
 
 export function CalendarRooms() {
   const s = useEvents()
-  return <Calendar events={s.events.value} calendars={CALENDARS} resources={ROOMS} views={[...ROOM_VIEWS]} timeline={ROOM_HOURS} defaultView="timeline" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" onMove={s.change} onResize={s.change} />
+  return <Calendar events={s.events.value} calendars={CALENDARS} resources={ROOMS} views={[...ROOM_VIEWS]} timeline={ROOM_HOURS} defaultView="timeline" defaultDate={BUSY_TODAY} today={BUSY_TODAY} now={BUSY_NOW} locale="en-US" onMove={s.change} onResize={s.change} />
 }
 
 // -- DateField

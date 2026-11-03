@@ -961,15 +961,27 @@ await check('month days show what fits, across the month', '/components/calendar
   if (Math.max(...days.filter(d => d.more).map(d => d.chips)) < 2) throw new Error('a full day shows one chip and "+N more"')
 })
 // The now line runs under events: where they cover its minute it is not drawn at all, so it never peeks out beside them.
-await check('now line leaves no marks beside the events over it', '/components/calendar', async page => {
-  const sec = await calendarIn(page, 'CalendarBusyDay', 'Week')
-  const m = await sec.evaluate(s => [...s.querySelectorAll('[data-part="col"]')].flatMap(col => [...col.querySelectorAll(':scope > [data-part="now"]')].map(now => {
-    const r = now.getBoundingClientRect()
-    const hit = [...col.querySelectorAll('[data-part="event"]')].filter(e => { const b = e.getBoundingClientRect(); return b.top <= r.top && b.bottom >= r.top && b.left < r.right - 1 && b.right > r.left + 1 }).map(e => e.textContent.slice(0, 20))
-    return { day: col.dataset.date, w: Math.round(r.width), hit: hit.join(), dot: getComputedStyle(now, '::before').content, edge: Math.abs(r.left - col.getBoundingClientRect().left) < 1 }
-  })))
-  same(m.filter(n => n.hit || n.w <= 12 || (!n.edge && n.dot !== 'none')).map(n => `${n.day} ${n.w}px ${n.hit}`).join(), '', 'now line fragments')
-})
+// It is drawn, though: on the day marked as today, in that day's free lanes, in the week and in the day the example opens
+// on (the week once marked Monday as today while its line was on Wednesday, inside two meetings, so it showed nowhere).
+for (const [id, view] of [['preview', 'Week'], ['CalendarBusyDay', 'Week'], ['CalendarBusyDay', 'Day']]) {
+  await check(`now line on today, beside the events ${id} ${view}`, '/components/calendar', async page => {
+    const sec = await calendarIn(page, id, view)
+    const m = await sec.evaluate(s => ({
+      today: s.querySelector('[data-part="col"][aria-current="date"]')?.dataset.date ?? null,
+      label: !!s.querySelector('[data-part="now-label"]'),
+      lines: [...s.querySelectorAll('[data-part="col"]')].flatMap(col => [...col.querySelectorAll(':scope > [data-part="now"]')].map(now => {
+        const r = now.getBoundingClientRect()
+        const hit = [...col.querySelectorAll('[data-part="event"]')].filter(e => { const b = e.getBoundingClientRect(); return b.top <= r.top && b.bottom >= r.top && b.left < r.right - 1 && b.right > r.left + 1 }).map(e => e.textContent.slice(0, 20))
+        return { day: col.dataset.date, w: Math.round(r.width), hit: hit.join(), dot: getComputedStyle(now, '::before').content, edge: Math.abs(r.left - col.getBoundingClientRect().left - col.clientLeft) < 1 }
+      })),
+    }))
+    if (!m.today) throw new Error('no day is marked as today')
+    same(m.label, true, 'the gutter says the time')
+    if (!m.lines.length) throw new Error(`no now line on ${m.today}`)
+    same(m.lines.filter(n => n.day !== m.today).map(n => n.day).join(), '', 'now line on a day that is not today')
+    same(m.lines.filter(n => n.hit || n.w <= 12 || (!n.edge && n.dot !== 'none')).map(n => `${n.day} ${n.w}px ${n.hit}`).join(), '', 'now line fragments')
+  })
+}
 
 // The playground is one object near the top of the page: the component large on a stage, the controls beside it on a
 // desk and under it on a phone, the live code under both. Nothing in it runs past the page's edge.
