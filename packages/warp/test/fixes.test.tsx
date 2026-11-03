@@ -2,9 +2,9 @@
 import { flush, render } from '@weft-js/core/test'
 import type { Address, IsoDate } from '@weft-js/warp-core'
 import type { Place } from '../src/PlaceField'
-import { state } from '@weft-js/core'
+import { Boundary, resource, state } from '@weft-js/core'
 import type { SignatureValue } from '../src/SignaturePad'
-import { AddressField, CodeInput, DateField, DateRangeField, DateTimeField, DurationField, Input, JsonEditor, KeyValueEditor, MarkdownEditor, MentionsInput, Menu, MonthPicker, PhoneField, PlaceLookupInput, RecurrenceField, SignaturePad, Slider, TimeField, TimeZoneSelect } from '../src/index'
+import { AddressField, Card, CodeInput, DateField, DateRangeField, DateTimeField, DurationField, Input, JsonEditor, KeyValueEditor, MarkdownEditor, MentionsInput, Menu, MonthPicker, PhoneField, PlaceLookupInput, RecurrenceField, SignaturePad, Slider, TimeField, TimeZoneSelect } from '../src/index'
 import { ComboField } from '../src/Combobox'
 
 const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
@@ -400,5 +400,27 @@ describe('Slider in a form', () => {
     expect(v.value).toBe(30)
     expect(new FormData(form).get('s')).toBe('30')
     form.parentElement!.remove()
+  })
+})
+
+describe('Card', () => {
+  test('a direct child that switches to a Boundary shows the new branch', async () => {
+    const day = state(0)
+    function Today(props: { day: number }) {
+      const w = resource(() => new Promise<string>(ok => { setTimeout(() => ok(`Day ${props.day}`), 20) }))
+      return <p id="today">{w.value}</p>
+    }
+    const { container: c } = render(() => (
+      <Card title="Forecast">
+        {day.value === 0 ? <p id="zero">Press</p> : <Boundary pending={<span>Loading</span>}><Today day={day.value} /></Boundary>}
+        <button type="button">Next</button>
+      </Card>
+    ))
+    day.value = 1
+    await flush()
+    await tick(40)
+    await settle()
+    expect(c.querySelector('#zero')).toBeNull()
+    expect(c.querySelector('#today')?.textContent).toBe('Day 1')
   })
 })

@@ -179,6 +179,10 @@ test('SSR, data not awaited: the fallback hydrates, then the content swaps in af
   expect(container.querySelector('.profile')!.textContent).toBe('Ada')
 })
 
+function Wrap(props: { children?: unknown }) {
+  return <section>{props.children}</section>
+}
+
 describe('a Boundary directly in a conditional hole', () => {
   function setup(view: (open: { value: boolean }, boundary: () => unknown) => () => unknown) {
     const open = state(false), mounts: number[] = []
@@ -198,6 +202,8 @@ describe('a Boundary directly in a conditional hole', () => {
   test.each([
     ['bare', (open: { value: boolean }, B: () => unknown) => () => <section>{open.value ? <B /> : null}</section>],
     ['in a fragment', (open: { value: boolean }, B: () => unknown) => () => <section>{open.value ? <><b>head</b><B /></> : null}</section>],
+    // A component's children with a sibling are one list: the conditional in it must not be rebuilt when the Boundary it made swaps.
+    ['beside a sibling in a component\'s children', (open: { value: boolean }, B: () => unknown) => () => <Wrap>{open.value ? <B /> : null}<b>tail</b></Wrap>],
   ])('%s: the fallback shows and the Boundary is built once', async (_, view) => {
     const { open, load, mounts } = setup(view)
     open.value = true

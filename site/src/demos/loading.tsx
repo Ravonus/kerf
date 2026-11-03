@@ -35,8 +35,6 @@ export default function Forecast() {
   const day = state(0)
   return (
     <Card title="Forecast">
-      {/* In a div of its own: a Card's direct child that swaps branches doesn't show its new branch (a warp bug). */}
-      <div>
       {day.value === 0
         ? <p>Press Next day for a forecast.</p>
         : (
@@ -45,7 +43,6 @@ export default function Forecast() {
             <Today day={day.value} />
           </Boundary>
         )}
-      </div>
       <Row gap="tight">
         <Button onClick={() => day.value++}>Next day</Button>
         <Text role="caption" subtle>{cancelled.value === 0 ? 'No request cancelled yet' : `${cancelled.value} earlier ${cancelled.value === 1 ? 'request' : 'requests'} cancelled`}</Text>

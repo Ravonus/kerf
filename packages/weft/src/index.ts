@@ -239,7 +239,8 @@ function run(node: Computation) {
     if (node.effect === 2 && live(v)) {
       // its reads are its own, or a change here would rebuild what `fn` made; a function gets a level of its own, as it
       // may build the very component whose fragment holds the live part
-      settle(typeof v === 'function' ? computation(v as () => unknown, 2, node.a, node.h) : computation(() => unwrap(v), 1, node.a, node.h))
+      if (typeof v === 'function') settle(computation(v as () => unknown, 2, node.a, node.h))
+      else parts(v as unknown[], node)
     } else if (node.a) {
       listener = null
       node.a(v, node.v, node.h)
@@ -280,12 +281,21 @@ function update(node: Computation) {
 }
 
 /**
- * A child hole's value: functions are called (tracked), through nested arrays too: a fragment's parts can hold a
- * component's `children`, itself an array with live parts (`<>{icon}{children}</>` with children `Added {n}`).
+ * A live list (`<Card>{cond ? <A /> : <B />}<Row /></Card>` gives Card's children as one, and a fragment's parts can hold
+ * a component's `children`, itself a list with live parts): each live part gets a level of its own, as a lone function
+ * does, and writes its slot; the hole gets the whole list. One level reading every part would call them all again when
+ * any changed, and rebuild what they made: a Boundary swapping its content in would make itself anew, pending again.
  */
-function unwrap(v: unknown): unknown {
-  while (typeof v === 'function') v = v()
-  return Array.isArray(v) ? v.map(unwrap) : v
+function parts(v: unknown[], node: Computation) {
+  const out = v.slice()
+  let ready = false
+  const put = () => node.a!(out.slice(), undefined, node.h)
+  for (let i = 0; i < v.length; i++) {
+    const x = v[i]
+    if (live(x)) settle(computation(typeof x === 'function' ? x as () => unknown : () => x, 2, y => { out[i] = y; if (ready) put() }))
+  }
+  ready = true
+  untrack(put)
 }
 
 const live = (v: unknown): boolean => typeof v === 'function' || (Array.isArray(v) && v !== flat && v.some(live))
