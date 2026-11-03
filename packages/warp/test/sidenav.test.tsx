@@ -35,10 +35,11 @@ test('the links carry warp\'s sliding bar: it takes over at the next frame and m
   expect(bar).not.toBeNull()
   await new Promise(r => requestAnimationFrame(r))
   expect(rail(c).hasAttribute('data-ready')).toBe(true)
-  const before = bar!.style.transform
   const other = [...rail(c).querySelectorAll<HTMLAnchorElement>('a[href]')].find(a => !a.hasAttribute('aria-current') && !a.closest('[hidden]'))!
+  // jsdom lays nothing out: give the hovered link a place, as a browser would.
+  other.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 96, width: 200, height: 32 })
   other.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }))
-  expect(bar!.style.transform).not.toBe(before)
+  expect(bar!.style.transform).toBe('translate(0px, 96px) scaleY(32)')
 })
 
 test('a fold toggles and is remembered under the key; the current section reopens on arrival', async () => {
