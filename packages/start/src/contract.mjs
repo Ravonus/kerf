@@ -254,19 +254,27 @@ export function shapeTable(fns) {
   return table
 }
 
-/** `fn(fns, server)` with every server module loaded through a private Vite server. */
+/**
+ * `fn(fns, server)` with every server module loaded through a private Vite server. A dev server sets `NODE_ENV` to
+ * development when nothing had: that's put back after, or `weft build`, which reads the live plan first, would build
+ * with `import.meta.env.DEV` on and ship every dev-only diagnostic.
+ */
 async function withFns({ root, site = {} }, fn) {
-  const server = await createServer({
-    root, configFile: false, logLevel: 'silent', appType: 'custom',
-    server: { middlewareMode: true, hmr: false, ws: false },
-    plugins: [weft({ hydratable: true }), weftStart({ root, site })],
-  })
+  const env = process.env.NODE_ENV
+  let server
   try {
+    server = await createServer({
+      root, configFile: false, logLevel: 'silent', appType: 'custom',
+      server: { middlewareMode: true, hmr: false, ws: false },
+      plugins: [weft({ hydratable: true }), weftStart({ root, site })],
+    })
     await server.ssrLoadModule('virtual:weft/fns')
     const { fns } = await server.ssrLoadModule(join(startDir, 'data.ts'))
     return await fn(fns, server)
   } finally {
-    await server.close()
+    await server?.close()
+    if (env === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = env
   }
 }
 
