@@ -323,7 +323,7 @@ const catalog = [
   ['GaugeChart', 'Banded gauge with a needle'],
   ['Sparkline', 'Inline trend, aria-hidden inside a labelled parent'],
   ['Shell', 'App shell: bottom bar, rail or sidebar by its own width; header, account menu, More sheet, focus variant'],
-  ['SideNav', 'Docs sidebar: a left panel of folding sections, remembered; docked on wide screens, opened over the page on phones by any aria-controls button; filter'],
+  ['SideNav', 'Docs sidebar: a left panel of folding sections, remembered; a collapse bar at its edge folds it when docked and opens it over the page on phones; filter'],
 ].map(([name, summary]) => ({ name, import: '@weft-js/warp', summary }))
 
 export const warp = definePlugin({

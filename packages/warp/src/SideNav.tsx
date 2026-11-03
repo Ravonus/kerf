@@ -1,9 +1,9 @@
 import { RightIcon, XIcon } from '@weft-js/warp-icons'
-import { navIndicator, readFolds, sideNav, uid, writeFolds, type Folds } from '@weft-js/warp-core'
+import { navIndicator, readCollapsed, readFolds, sideNav, uid, writeCollapsed, writeFolds, type Folds } from '@weft-js/warp-core'
 import { derived, onMount, state, untrack, watch } from '@weft-js/core'
 import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft-js/warp-core/styles/components/button.css' // the close button
+import '@weft-js/warp-core/styles/components/button.css' // the close button, without a bar
 import '@weft-js/warp-core/styles/layout/navlist.css'
 import '@weft-js/warp-core/styles/layout/sidenav.css'
 
@@ -29,26 +29,33 @@ export interface SideNavProps {
   current?: string | undefined
   /** A filter box at the top, for a long list. A string is its placeholder. */
   filter?: boolean | string | undefined
-  /** The localStorage key for what a viewer folded; `false` keeps nothing. Default `warp:sidenav:<label>`. */
+  /** The localStorage key for what a viewer folded, and `<key>:collapsed` for the docked panel's fold; `false` keeps
+   * nothing. Default `warp:sidenav:<label>`. */
   remember?: string | false | undefined
-  /** The panel's id. Any button with `aria-controls` naming it opens the panel on a phone, such as a header's menu button. */
+  /** A collapse bar at the panel's edge: on a phone it is all that shows until pressed, and it opens the panel over the
+   * page; docked, it folds the sidebar to its own width. Default true. `false` leaves the panel to an outside button. */
+  collapsible?: boolean | undefined
+  /** The panel's id. Any button with `aria-controls` naming it also opens the panel on a phone. */
   id?: string | undefined
   /** Links shown above the sections only while the panel is laid over the page, such as a site's top links. */
   lead?: SideNavLink[] | undefined
 }
 
 /**
- * A docs sidebar: one left panel whose sections fold. The section holding the current page starts open, the rest
- * closed, and a viewer's own choices are remembered. From 900px the panel is docked: sticky, scrolling on its own.
- * Below that the same panel waits off the left edge, and a button elsewhere whose `aria-controls` names its `id` opens
- * it over the page, full height, with a close button, focus kept inside, and Escape, the backdrop or a link closing it.
- * Links are plain anchors, so a router that handles `<a>` clicks navigates as usual.
+ * A docs sidebar: one left panel whose sections fold, with a collapse bar at its edge. The section holding the current
+ * page starts open, the rest closed, and a viewer's own choices are remembered. From 900px the panel is docked: sticky,
+ * scrolling on its own, and its bar folds it to a slim strip and back, remembered too. Below that only the bar shows, a
+ * slim strip down the left edge; pressing it brings the panel over the page, full height, with focus kept inside, and
+ * the bar, Escape, the backdrop or a link closing it. Links are plain anchors, so a router that handles `<a>` clicks
+ * navigates as usual.
  */
 export function SideNav(props: SideNavProps) {
   const id = untrack(() => props.id) ?? uid('sidenav')
   const chosen = state<Folds>({})
   const query = state('')
   const open = state(false)
+  const collapsible = untrack(() => props.collapsible) !== false
+  const collapsed = state(false)
   let root: HTMLElement | undefined
   let list: HTMLElement | undefined
 
@@ -69,24 +76,30 @@ export function SideNav(props: SideNavProps) {
     const s = props.sections.find(holds)
     if (s && chosen.value[s.title] === false) chosen.value = { ...chosen.value, [s.title]: true }
   }
+  const fold = (v: boolean) => {
+    collapsed.value = v
+    const k = key()
+    if (k) writeCollapsed(`${k}:collapsed`, v)
+  }
   onMount(() => {
     const k = key()
     if (k) chosen.value = readFolds(k)
+    if (k && collapsible) collapsed.value = readCollapsed(`${k}:collapsed`)
     reveal()
   })
   watch(() => props.current, () => { reveal(); open.value = false })
-  use(sideNav, () => root, () => ({ current: props.current, open: open.value, onOpenChange: (v: boolean) => (open.value = v) }))
+  use(sideNav, () => root, () => ({ current: props.current, open: open.value, onOpenChange: (v: boolean) => (open.value = v), collapsed: collapsed.value, onCollapsedChange: fold }))
   // warp's sliding bar, as Nav and the on-page rail have it: it follows the pointer and keyboard, and slides to a new page.
   use(navIndicator, () => list, () => ({ axis: 'y' as const }))
 
   const filterText = () => (typeof props.filter === 'string' ? props.filter : `Filter ${props.label.toLowerCase()}`)
   return (
-    <div ref={n => (root = n)} data-scope="sidenav" data-open={open.value ? '' : undefined}>
+    <div ref={n => (root = n)} data-scope="sidenav" data-open={open.value ? '' : undefined} data-collapsible={collapsible ? '' : undefined} data-collapsed={collapsible && collapsed.value ? '' : undefined}>
       <div data-part="backdrop" aria-hidden="true"></div>
       <div data-part="panel" id={id} tabindex="-1">
         <div data-part="head">
           <p data-part="title" id={`${id}-t`}>{props.label}</p>
-          <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-size="sm" aria-label="Close" data-part="close"><XIcon /></button>
+          {!collapsible && <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-size="sm" aria-label="Close" data-part="close"><XIcon /></button>}
         </div>
         <div data-part="scroll">
           {props.lead && props.lead.length > 0 && (
@@ -121,6 +134,13 @@ export function SideNav(props: SideNavProps) {
           </nav>
           {words.value !== '' && shown.value.length === 0 && <p data-part="empty">No pages match “{query.value.trim()}”.</p>}
         </div>
+        {/* Last, as Shell's toggle is at its nav's foot. Its name is the label; aria-expanded, kept by sideNav, says the rest. */}
+        {collapsible && (
+          <button type="button" data-part="bar" aria-controls={id} aria-expanded="false">
+            <RightIcon />
+            <span data-part="bar-label">{props.label}</span>
+          </button>
+        )}
       </div>
     </div>
   )
