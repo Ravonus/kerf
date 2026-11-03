@@ -1410,6 +1410,10 @@
   @media print { :root { --warp-flow-gate: none; } }
   @media (prefers-reduced-motion: reduce) { :root:not([data-motion]) { --warp-flow-gate: none; } }
   [data-motion="reduce"], [data-flow="off"] { --warp-flow-gate: none; }
+  /* flow waits for a person (warp-core's flow(), on the first scroll): until then the page holds still and whole, so
+     nothing below the fold sits at opacity 0 for a crawler, an audit or a contrast check. What was on screen when it
+     armed is seen and stays put; a part-faded jump would be the first thing anyone saw move. */
+  :root:not([data-flow-armed]), [data-flow-seen] { --warp-flow-gate: none; }
   [data-motion="full"] { --warp-flow-gate: initial; }
   :where(dialog, [popover], [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"], [role="alert"], [role="status"],
     [data-scope="sheet"], [data-scope="drawer"], [data-scope="toast"], [data-scope="tour"], [data-scope="palette"], [data-scope="shell"] > [data-part="nav"],

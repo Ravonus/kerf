@@ -46,6 +46,14 @@ function hook() {
           return { url: configModule, shortCircuit: true }
         }
       }
+      // the app's own imports are bundler-style (`./src/expression`): try what Vite would before failing
+      if (/^\.{1,2}\//.test(specifier) && !/\.[cm]?[jt]sx?$|\.json$/.test(specifier)) {
+        for (const end of ['', '.ts', '.tsx', '.mts', '.js', '/index.ts', '/index.tsx', '/index.js']) {
+          try {
+            return next(specifier + end, context)
+          } catch {}
+        }
+      }
       return next(specifier, context)
     },
     load(url, context, next) {
@@ -133,6 +141,10 @@ export const configSchema = z.strictObject({
       gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional(), maxMutants: z.number().int().positive().optional() }).optional(),
     })
     .optional(),
+  build: z.strictObject({
+    audit: z.union([z.boolean(), z.strictObject({ routes: z.array(z.string()).optional(), all: z.boolean().optional(), max: z.number().int().positive().optional() })]).optional(),
+    unsafeAllow: z.record(z.string().regex(/^(all|[A-Z]|[A-Z]+\d{3})$/, 'a code (R002), a family (L) or all'), z.string().min(1, 'say why')).optional(),
+  }).optional(),
   check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional(), routes: z.boolean().optional(), props: z.union([z.boolean(), z.literal('manual')]).optional() }).optional(),
   plugins: z.array(pluginEntry).optional(),
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),

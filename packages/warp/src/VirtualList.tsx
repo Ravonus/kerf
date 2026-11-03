@@ -39,11 +39,11 @@ export interface VirtualListProps<T> {
   stick?: number | undefined
   /** `end` opens at the last row and grows upward, as a chat does. */
   from?: 'start' | 'end' | undefined
-  /** `list` by default; `feed`, `log` and the rest bring their own row role. */
+  /** `list` by default (rows are `listitem`s; `group` with `bareRows`); `feed`, `log` and the rest bring their own row role. */
   role?: string | undefined
   /** The role each row takes, such as `option` or `article`. */
   rowRole?: string | undefined
-  /** Rows take no list semantics: what's inside them says what it is. */
+  /** Rows take no list semantics: what's inside them says what it is, and the scroller is a labelled group. */
   bareRows?: boolean | undefined
   /** Keep this role off the scroller and put it on the list inside. */
   inner?: boolean | undefined
@@ -332,7 +332,7 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     const attrs = () => ({
       ref: (n: HTMLElement) => (node = n),
       'data-part': 'row',
-      role: props.rowRole,
+      role: rowRole(),
       'aria-posinset': props.bareRows ? undefined : pos() + 1,
       'aria-setsize': props.bareRows ? undefined : props.open ? -1 : keys.value.length,
       'data-index': props.bareRows ? pos() + 1 : undefined,
@@ -345,11 +345,14 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
   }
 
   const inner = untrack(() => props.inner)
+  const listRole = () => props.role ?? (props.bareRows ? 'group' : 'list')
+  /** A list's rows are its items (axe aria-required-children); `feed`, `log` and bare rows bring or need none. */
+  const rowRole = () => props.rowRole ?? (props.tag !== 'ol' && listRole() === 'list' ? 'listitem' : undefined)
   const listAttrs = () => ({
     ref: (n: HTMLElement) => (list = n),
     'data-part': 'spacer',
     'data-scope': props.listScope,
-    role: inner ? props.role : props.tag === 'ol' ? undefined : props.rowRole ? 'presentation' : undefined,
+    role: inner ? listRole() : props.tag === 'ol' ? undefined : rowRole() ? 'presentation' : undefined,
     'aria-label': inner ? props.label : undefined,
     'aria-busy': inner && props.busy ? 'true' : undefined,
     style: 'position:relative;flex:none',
@@ -367,7 +370,7 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       data-scope={props.scope ?? (props.part ? undefined : 'virtual')}
       data-part={props.part}
       data-variable={props.scope || props.part ? undefined : ''}
-      role={inner ? undefined : props.role ?? 'list'}
+      role={inner ? undefined : listRole()}
       aria-label={inner ? undefined : props.label}
       aria-live={props.role === 'log' ? 'off' : undefined}
       aria-busy={!inner && props.busy ? 'true' : undefined}

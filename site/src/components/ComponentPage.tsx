@@ -70,7 +70,7 @@ export function ComponentPage(props: { data: Page }) {
           <p data-part="lede">{d.summary}</p>
           <p data-part="links"><Link href={d.source} rel="external">Source</Link><span>Package <code data-scope="code">@weft-js/warp</code></span>{d.playground && <a href="#playground">Playground</a>}</p>
         </header>
-        {d.hero && <section id="preview" data-site="tk-default"><ExampleFrame file={d.file} example={d.hero} hero /></section>}
+        {d.hero && <section id="preview" data-site="tk-default" aria-labelledby="preview-t"><h2 id="preview-t" data-part="sr-only">Preview</h2><ExampleFrame file={d.file} example={d.hero} hero /></section>}
         <section id="installation" data-site="tk-section"><h2>Installation</h2><Install /></section>
         <section id="usage" data-site="tk-section"><h2>Usage</h2><div
           // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs

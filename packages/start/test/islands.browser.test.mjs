@@ -563,7 +563,7 @@ test('a route change on a phone-sized CPU does not ask for a fade at all', async
     document.startViewTransition = fn => {
       window.__fades++
       const done = Promise.resolve().then(fn)
-      return { ready: done, updateCallbackDone: done }
+      return { ready: done, updateCallbackDone: done, finished: done }
     }
   })
   const page = await context.newPage()
@@ -582,7 +582,7 @@ test('a route fade that was slow to start is not asked for again', async () => {
     document.startViewTransition = fn => {
       window.__fades++
       const done = Promise.resolve().then(fn)
-      return { ready: done.then(() => new Promise(r => { setTimeout(r, 150) })), updateCallbackDone: done }
+      return { ready: done.then(() => new Promise(r => { setTimeout(r, 150) })), updateCallbackDone: done, finished: done }
     }
   })
   const go = async href => {

@@ -12,6 +12,8 @@ import '@weft-js/warp-core/styles/data/tooltip.css'
 /** What every chart shares around its plot: the caption, the toolbar and the loading, empty and error states. */
 export type ChartFrame = {
   title: string
+  /** The title's heading level: one below the heading the chart sits under. Default 3, a chart in a page section. */
+  level?: 2 | 3 | 4 | 5 | 6
   description?: unknown
   /** Beside the view toggle: a layout switch, a range picker. */
   toolbar?: unknown
@@ -27,7 +29,7 @@ export type ChartFrame = {
 type Props<C> = ChartFrame & C & { form: Form<C> }
 
 // props that are the frame's, not a form's: a JSX prop builds its element each time it's read, so these are read once
-const FRAME = new Set(['form', 'description', 'toolbar', 'action', 'empty', 'error', 'loading'])
+const FRAME = new Set(['form', 'level', 'description', 'toolbar', 'action', 'empty', 'error', 'loading'])
 
 const Drawn = ({ stroke }: { stroke: string }) => (
   <svg width="72" height="40" viewBox="0 0 72 40" aria-hidden="true">
@@ -110,7 +112,7 @@ export function Chart<C extends { data: unknown; title: string }>(props: Props<C
     <figure ref={n => (figure = n)} data-scope="chart" data-view="chart" data-enter="wait">
       <div data-part="head">
         <div>
-          <h3 id={`${id}-t`} style="margin:0;font-family:var(--warp-text-heading-font);font-size:calc(var(--warp-text-heading-size) - 3px);font-weight:var(--warp-text-heading-weight);letter-spacing:var(--warp-text-heading-tracking)">{props.title}</h3>
+          <h3 id={`${id}-t`} aria-level={props.level === 3 ? undefined : props.level} style="margin:0;font-family:var(--warp-text-heading-font);font-size:calc(var(--warp-text-heading-size) - 3px);font-weight:var(--warp-text-heading-weight);letter-spacing:var(--warp-text-heading-tracking)">{props.title}</h3>
           {props.description !== undefined && <p style="margin:2px 0 0;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">{props.description}</p>}
         </div>
         <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">

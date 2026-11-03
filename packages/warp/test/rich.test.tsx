@@ -354,7 +354,8 @@ test('PaymentCardInput follows provider events and renders no card input', async
   host.fire('change', { error: 'Your card number is incomplete.' })
   await flush()
   expect(container.textContent).toContain('Your card number is incomplete.')
-  expect(container.querySelector('[data-card-text]')!.textContent).toBe('Visa •••• 4242 · 09/28')
+  expect(container.querySelector('[data-card-text] > [aria-hidden]')!.textContent).toBe('Visa •••• 4242 · 09/28')
+  expect(container.querySelector('[data-card-text] > [data-part="sr-only"]')!.textContent).toBe('Visa ending 4242, expires 09/28')
 })
 
 test('SignaturePad can be signed from the keyboard', async () => {

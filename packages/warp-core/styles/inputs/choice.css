@@ -131,6 +131,12 @@
   position: absolute; z-index: 2; inset-block: 3px; inset-inline-start: 0;
   border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid); overflow: clip;
 }
+/* until the shuttle places the indicator (it writes the inline style), the selection paints its own fill: before the
+   island loads, without JS, or in a reader that skips the indicator, the light ink never sits on the bare track */
+:where([data-scope="segmented"] > [data-part="indicator"]:not([style]) ~ label input:checked + [data-part="item"]) { background: var(--warp-color-accent-solid); }
+/* while the indicator is placed instantly (first placement, hydration, resize), the ink snaps with it: a fade would
+   leave the old ink over the new fill for 420ms */
+:where([data-scope="segmented"] > [data-part="indicator"][data-instant] ~ label [data-part="item"]) { transition: none; }
 :where([data-scope="segmented"][data-size="sm"] [data-part="item"]) { block-size: calc(var(--warp-control-sm) - 8px); font-size: var(--warp-text-caption-size); }
 
 /* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */

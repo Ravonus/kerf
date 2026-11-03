@@ -15,7 +15,7 @@ export interface AccordionProps {
   /** What starts open. */
   defaultOpen?: string[]
   onChange?: ((open: string[]) => void) | undefined
-  /** The heading level of each title. */
+  /** The heading level of each title: one below the heading the accordion sits under. Default 3, in a page section. */
   level?: 2 | 3 | 4 | 5 | 6
 }
 

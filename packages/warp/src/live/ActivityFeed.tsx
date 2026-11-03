@@ -16,7 +16,7 @@ export interface ActivityItem { id: string; actor: string; verb: string; object?
  * Activity feed (07 §4.2): actor, verb, object, time, grouped per day on a hairline spine, the quiet sibling of the inbox
  * row. The header shows a "Live" check while `live` is live; new ids arrive.
  */
-export function ActivityFeed({ items, live, title = 'Activity' }: { items: ActivityItem[] | { value: ActivityItem[] } | (() => ActivityItem[]); live?: LiveState | { value: LiveState } | (() => LiveState) | undefined; title?: string }) {
+export function ActivityFeed({ items, live, title = 'Activity', level = 3 }: { items: ActivityItem[] | { value: ActivityItem[] } | (() => ActivityItem[]); live?: LiveState | { value: LiveState } | (() => LiveState) | undefined; title?: string; /** The title's heading level: one below the heading the feed sits under. */ level?: 2 | 3 | 4 | 5 | 6 }) {
   const id = uid('activity')
   const data = derived(() => (val<ActivityItem[]>(items) ?? []))
   const days = derived(() => groupByDay(data.value))
@@ -27,7 +27,7 @@ export function ActivityFeed({ items, live, title = 'Activity' }: { items: Activ
   return (
     <section ref={n => (root = n)} data-scope="activity-feed" aria-labelledby={`${id}-t`}>
       <header>
-        <h3 id={`${id}-t`}>{title}</h3>
+        <h3 id={`${id}-t`} aria-level={level === 3 ? undefined : level}>{title}</h3>
         {on.value && <span data-scope="sync" data-state="saved"><G name="check" /> Live</span>}
       </header>
       {days.value.map(g => (

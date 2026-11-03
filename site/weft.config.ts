@@ -2,6 +2,7 @@ import { defineConfig } from '@weft-js/core/config'
 import { dialScript, warp } from '@weft-js/warp/plugin'
 import { icons } from '@weft-js/warp-icons/plugin'
 import { text } from '@weft-js/text'
+import { EXPRESSION } from './src/expression'
 
 const FILES = 'node_modules/@fontsource'
 // Cross-origin isolation gives the arena's frames a finer clock, and a frame only has it when the page around it does too.
@@ -20,7 +21,7 @@ export default defineConfig({
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',
-    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml"><script>document.documentElement.dataset.expression='vivid'</script>${dialScript}`,
+    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml"><script>document.documentElement.dataset.expression='${EXPRESSION}'</script>${dialScript}`,
   },
   plugins: [
     warp(),

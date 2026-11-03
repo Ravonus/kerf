@@ -460,7 +460,8 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
           <Button emphasis="outline" tone="neutral" size="sm" aria-label="Toggle sort direction" disabled={!order.value} onClick={() => { const c = cols.value.find(x => x.id === order.value?.id); if (c) askSort(c, order.value!.dir === 'ascending' ? 'descending' : 'ascending') }}>{order.value?.dir === 'ascending' ? '↑' : '↓'}</Button>
         </div>
       )}
-      <div data-part="viewport" style={maxHeight ? `--warp-table-max-h:${maxHeight}` : undefined}>
+      {/* a scroller (wide on a phone, or `maxHeight`) a keyboard can reach: focus it and the arrows scroll, named by the caption */}
+      <div data-part="viewport" tabindex="0" role="region" aria-labelledby={`${id}-cap`} style={maxHeight ? `--warp-table-max-h:${maxHeight}` : undefined}>
         <table role="table" aria-labelledby={`${id}-cap`} aria-rowcount={shown.value.length + 1}>
           <caption id={`${id}-cap`} data-part={captionHidden ? 'sr-only' : undefined}>{caption}</caption>
           <thead>

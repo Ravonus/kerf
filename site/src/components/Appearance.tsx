@@ -1,5 +1,6 @@
 import { getDial, Icon, setDial, Popover, Segmented } from '@weft-js/warp'
 import { onMount, state } from '@weft-js/core'
+import { EXPRESSION } from '../expression'
 
 type Theme = 'auto' | 'light' | 'dark'
 type Stop = 'quiet' | 'balanced' | 'vivid'
@@ -8,7 +9,7 @@ type Motion = 'auto' | 'full' | 'reduce'
 /** warp's dials as a menu: every control in it writes one attribute on the root, and the page follows from tokens. */
 export function Appearance() {
   const theme = state<Theme>('auto')
-  const expression = state<Stop>('balanced')
+  const expression = state<Stop>(EXPRESSION)
   const motion = state<Motion>('auto')
   onMount(() => {
     theme.value = getDial('theme')

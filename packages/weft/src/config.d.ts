@@ -82,12 +82,22 @@ export interface WeftConfig {
   check?: {
     include?: readonly string[]
     exclude?: readonly string[]
-    /** `false` turns the design D-codes (D001–D007, D011, D030–D039) off. Default on. */
+    /** `false` turns the design D-codes (D001–D007, D011, D030–D041) off. Default on. */
     design?: boolean
     /** `false` turns the route pass off: H001–H007 and H011–H016 per route, which runs the app's loaders once. Default on. */
     routes?: boolean
     /** Prop inference (research 44). `false` turns it off; `'manual'` leaves written types to `weft fix` instead of `weft dev`. Default on. */
     props?: boolean | 'manual'
+  }
+  /** `weft build`. */
+  build?: {
+    /**
+     * The built pages in a clean Chrome at a phone's and a desktop's width, last (L-codes): an error fails the build.
+     * `routes` audits those paths, `all` every prerendered page, `max` caps the sample (one page of each kind, 30). Default on.
+     */
+    audit?: boolean | { routes?: readonly string[]; all?: boolean; max?: number }
+    /** Codes (`R002`), a family (`L`) or `all` the build goes past instead of failing, each with why. Every build lists them. */
+    unsafeAllow?: Record<string, string>
   }
   plugins?: readonly PluginEntry[]
   site?: SiteConfig

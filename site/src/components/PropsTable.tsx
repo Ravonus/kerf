@@ -22,7 +22,7 @@ export function PropsTable(props: { title: string; rows: Row[] }) {
         <tbody>
           {props.rows.map(p => (
             <tr key={p.name}>
-              <th scope="row"><code>{p.name}</code>{p.required && <span data-part="req" title="Required" aria-label="required"></span>}</th>
+              <th scope="row"><code>{p.name}</code>{p.required && <span data-part="req" role="img" aria-label="required"></span>}</th>
               <td data-label="Type">
                 <code>{p.type.length > LONG && !open.value.includes(p.name) ? `${p.type.slice(0, LONG)}…` : p.type}</code>
                 {p.type.length > LONG && <Button emphasis="link" tone="neutral" size="sm" onClick={() => flip(p.name)}>{open.value.includes(p.name) ? 'Less' : 'More'}</Button>}

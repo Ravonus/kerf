@@ -83,7 +83,7 @@ export async function launch(root, route = '/', { url, headed = false } = {}) {
   const base = await devUrl(root, url)
   const profile = join(root, '.weft', 'browser', 'profile')
   mkdirSync(profile, { recursive: true })
-  const args = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--no-first-run', '--no-default-browser-check', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', ...(headed ? [] : ['--headless=new']), `${base}${route.startsWith('/') ? route : `/${route}`}`]
+  const args = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--no-first-run', '--no-default-browser-check', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', ...(headed ? [] : ['--headless=new']), ...(process.getuid?.() === 0 ? ['--no-sandbox'] : []) /* Chrome won't start as root with its sandbox: a container, CI */, `${base}${route.startsWith('/') ? route : `/${route}`}`]
   const child = spawn(exe, args, { detached: true, stdio: 'ignore' })
   child.unref()
   writeFileSync(stateFile(root), JSON.stringify({ pid: child.pid, profile, exe }))

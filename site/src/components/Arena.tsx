@@ -103,7 +103,7 @@ export function Arena() {
       </>}
       <h3>Speed, measured in Chromium</h3>
       <p data-part="intro">weft is faster than Solid in {speed.wins} of these {speed.rows.length} rows and slower in {speed.losses}, marked in red. In the rest the rounds overlap. Times are milliseconds, the median of three rounds on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
-      <div data-part="table">
+      <div data-part="table" tabindex="0" role="region" aria-label="Speed, measured in Chromium">
         <table>
           <thead><tr><th scope="col">Operation</th><th scope="col">weft</th><th scope="col">Solid</th><th scope="col">React</th><th scope="col">Fastest</th></tr></thead>
           <tbody>

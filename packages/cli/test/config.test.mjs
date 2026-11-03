@@ -102,6 +102,17 @@ describe('site (research 20 §2, §6)', () => {
     expect(r.config.site.url).toBe('https://acme.dev')
   })
 
+  it('imports the app\'s own modules the way the app does: no extension, or a folder\'s index', async () => {
+    const dir = project({
+      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\nimport { NAME } from './src/name'\nimport { LOCALE } from './src/i18n'\nexport default defineConfig({ site: { name: NAME, locale: LOCALE, description: 'x' } })\n`,
+      'src/name.ts': "export const NAME: string = 'acme'\n",
+      'src/i18n/index.ts': "export const LOCALE = 'en_US'\n",
+    })
+    const r = await loadConfig(dir)
+    expect(r.diagnostics).toEqual([])
+    expect(r.config.site).toEqual({ name: 'acme', locale: 'en_US', description: 'x' })
+  })
+
   it('P007: a relative url, a template without %s, a bad locale, an unknown key', async () => {
     const r = await loadConfig(withConfig("export default defineConfig({ site: { url: '/acme', title: 'Acme', locale: 'english', descripton: 'x' } } as any)\n"))
     expect(r.diagnostics.map(d => d.code)).toEqual(['P007', 'P007', 'P007', 'P007'])

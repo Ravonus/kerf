@@ -147,6 +147,13 @@ const CARD = { width: 1200, height: 630 }
 const stores = () => ({ createMutableStore: createNonReactiveMutableStore, createReadonlyStore: createNonReactiveReadonlyStore, batch: (f: () => void) => f() })
 const json = (v: unknown) => JSON.stringify(v ?? null).replace(/</g, '\\u003c')
 const esc = (s: string) => s.replace(/[&<"]/g, c => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
+/**
+ * A redirect's body. A server's 3xx is followed by its `location`; a prerendered one is a file on a static host, and this
+ * is what that file says: go now, and the address to index. No stylesheet, so no view transition starts on a page
+ * that never paints (Chrome aborts it, and logs an InvalidStateError).
+ */
+const moved = (href: string) =>
+  `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Moved</title><meta name="robots" content="noindex"><link rel="canonical" href="${esc(href)}"><meta http-equiv="refresh" content="0; url=${esc(href)}"><a href="${esc(href)}">Moved here</a>`
 const thenable = (v: unknown): v is PromiseLike<unknown> => typeof (v as Partial<PromiseLike<unknown>> | null | undefined)?.then === 'function'
 
 /** The origin a head's URLs are built on, or none: then canonical and og:url stay out. */
@@ -365,7 +372,7 @@ export function createHandler(options: HandlerOptions) {
   async function page(url: URL, request: Request, scope: Scope): Promise<Response> {
     const path = url.pathname + url.search
     const r = await resolve(path, request)
-    if (r.redirect) return withHeaders(new Response(null, { status: r.redirect.status, headers: { location: r.redirect.href, 'cache-control': 'no-cache' } }), scope)
+    if (r.redirect) return withHeaders(new Response(moved(r.redirect.href), { status: r.redirect.status, headers: { location: r.redirect.href, 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }), scope)
     scope.started = true // from here a redirect can't change the status (Q007)
     // The server renders from the raw data (deferred fields are still promises, for Boundaries to stream); the page
     // carries the settled part.

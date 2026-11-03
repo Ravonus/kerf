@@ -170,8 +170,6 @@
     [data-site="menu"] { display: inline-flex; }
     /* A section's pages have its SideNav's bar, and the top links at the head of its panel: no menu button. */
     :root:has([data-site="docs"] > [data-scope="sidenav"][data-collapsible]) [data-site="menu"] { display: none; }
-    [data-site="search"] { inline-size: auto; }
-    [data-site="search"] :is([data-part="text"], [data-part="keys"]) { display: none; }
     [data-site="repo"] { display: none; }
   }
 

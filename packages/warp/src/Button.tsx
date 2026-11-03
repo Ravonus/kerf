@@ -25,6 +25,8 @@ export interface ButtonProps {
   full?: boolean
   /** Icon only: `label` is then required (it is the accessible name). */
   icon?: IconRef | undefined
+  /** With `icon` and text: on a phone (or a tablet and a phone) only the icon shows, and the text stays the accessible name. */
+  collapse?: 'phone' | 'tablet' | undefined
   ref?: ((el: HTMLButtonElement) => unknown) | undefined
   onClick?: ((e: MouseEvent) => unknown) | undefined
   label?: string | undefined
@@ -42,7 +44,7 @@ const swept = (e: Emphasis) => e !== 'link'
  * A native button (05 §2): all but link and frame append one [data-part="sweep"], and ::before paints the fill (the wipe,
  * or with `follow` at vivid the two blobs that close on where the hand arrived); frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
-export function Button({ emphasis = 'solid', tone, size, fill, follow, full, icon, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
+export function Button({ emphasis = 'solid', tone, size, fill, follow, full, icon, collapse, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
   pressOrigin()   // one listener for the page; it only moves buttons that ask to follow
   let host: HTMLButtonElement | undefined
   useUi(() => ui, () => host)
@@ -54,7 +56,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, follow, full, ico
     if (el.hasAttribute('data-loading') || el.getAttribute('aria-disabled') === 'true') return e.preventDefault()
     onClick?.(e)
   }
-  const content = () => <>{glyph.value && <Icon name={glyph.value} />}{children}</>
+  const content = () => <>{glyph.value && <Icon name={glyph.value} />}{collapse && glyph.value && children ? <span data-part="collapse">{children}</span> : children}</>
   return (
     <button
       type={type}
@@ -66,6 +68,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, follow, full, ico
       data-follow={follow && emphasis !== 'frame' && emphasis !== 'link' ? '' : undefined}
       data-full={full ? '' : undefined}
       data-icon-only={glyph.value && !children ? '' : undefined}
+      data-collapse={glyph.value && children ? collapse : undefined}
       aria-label={label}
       data-sweep={swept(emphasis) ? '' : undefined}
      

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@weft-js/create": "file:../create-weft",
+    "axe-core": "4.14.0",
     "typescript": "6.0.3",
     "yaml": "2.9.1",
     "zod": "4.6.7"
@@ -27,8 +28,8 @@
     "@weft-js/core": "*"
   },
   "devDependencies": {
-    "vitest": "5.0.5",
-    "@weft-js/core": "file:../weft"
+    "@weft-js/core": "file:../weft",
+    "vitest": "5.0.5"
   },
   "publishConfig": {
     "access": "public"

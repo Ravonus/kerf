@@ -1,6 +1,7 @@
 // `weft dev`, `weft build` and `weft routes` for an app with src/routes: they run @weft-js/start (research 25 §6–7).
 // @weft-js/start resolves from the app first (its own version), then from this workspace.
 
+import { audit, builtPublic } from './audit.mjs'
 import { writeMap } from './map.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -35,7 +36,7 @@ async function site(root) {
   if (!loaded.diagnostics.some(d => d.code === 'P007') && loaded.config?.plugins?.length) sync(root, loaded)
   // A build on a config that doesn't load would quietly drop every plugin: fonts, tokens and slots.
   const bad = loaded.diagnostics.find(d => d.code === 'P007')
-  if (bad) throw Object.assign(new Error(`P007: ${bad.message ?? bad.why}`), { code: 'E_USAGE' })
+  if (bad) throw Object.assign(new Error(`P007: ${bad.message ?? bad.why}`), { code: 'E_REFUSED' }) // the config's fault, not the command's
   return { site: siteOf(loaded), hydration: loaded.config?.hydration, diagnostics: loaded.diagnostics }
 }
 
@@ -80,8 +81,22 @@ export async function devCommand(root, { port } = {}) {
   return server
 }
 
-export async function buildCommand(root, { preset, runtime } = {}) {
+/**
+ * `--unsafe-allow` and `build.unsafeAllow`: codes (or a family, `L`, or `all`) a build reports and goes on past instead
+ * of failing on. For forcing a deploy you have looked at; each one it lets through is listed, as a warning, every build.
+ */
+export function unsafeAllowed(flag, config) {
+  const reasons = config?.build?.unsafeAllow ?? {}
+  const codes = [...String(flag ?? '').split(','), ...Object.keys(reasons)].map(c => c.trim()).filter(Boolean)
+  const allows = d => codes.some(c => c === 'all' || c === d.code || (/^[A-Z]$/.test(c) && d.code.startsWith(c)))
+  const reason = d => reasons[d.code] ?? reasons[d.code[0]] ?? reasons.all ?? (flag ? '--unsafe-allow' : '')
+  return { allows, let: d => ({ ...d, severity: 'warning', why: `UNSAFE, let through (${reason(d)}): ${d.why}` }) }
+}
+
+export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) {
   requireTrust(root, await loadConfig(root))
+  const unsafe = unsafeAllowed(unsafeAllow, (await loadConfig(root)).config)
+  const forced = []
   const { build } = await start(root, 'app')
   const { writeContract } = await start(root, 'contract')
   const t = performance.now()
@@ -94,7 +109,11 @@ export async function buildCommand(root, { preset, runtime } = {}) {
   process.env.WEFT_BUILD = '1'
   try {
     const rust = (await loadConfig(root)).config?.rust
-    const refuse = d => { throw Object.assign(new Error(`${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}`), { code: /^R0[12]\d$/.test(d.code) ? 'E_LIVE' : 'E_USAGE' }) }
+    const refuse = d => {
+      if (unsafe.allows(d)) return void forced.push(unsafe.let(d))
+      // a finding, not a misuse: exit 1 with the fix and the way past it, never the usage text
+      throw Object.assign(new Error(`${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}\nTo build anyway: --unsafe-allow ${d.code}, or build.unsafeAllow in weft.config.ts with why.`), { code: 'E_REFUSED' })
+    }
     // What the preset can't do fails now, not after a build: a verify runs at the end, against a target that's up.
     const { readLivePlan } = await start(root, 'contract')
     const plan = await readLivePlan({ root, site: config.site, preset, live: (await loadConfig(root)).config?.live, verify: false })
@@ -123,11 +142,18 @@ export async function buildCommand(root, { preset, runtime } = {}) {
       for (const k of Object.keys(running?.env ?? {})) before[k] === undefined ? delete process.env[k] : (process.env[k] = before[k])
     }
     const contract = await writeContract({ root, site: config.site, preset, rust, live: (await loadConfig(root)).config?.live, verify: true })
-    const refused = contract.diagnostics.find(d => d.severity === 'error')
-    if (refused) refuse(refused)
+    for (const refused of contract.diagnostics.filter(d => d.severity === 'error')) refuse(refused)
     if (running) shipSidecars(root)
     await writeMap(root)
-    return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: [...contract.diagnostics, ...warned].map(d => diagnostic({ file: '.weft/contract.json', ...d })), ms: Math.round(performance.now() - t) }
+    // Last, the pages as built, in a clean Chrome at a phone's width and a desktop's (audit.mjs): an error fails the build.
+    const settings = (await loadConfig(root)).config?.build?.audit ?? true
+    const audited = settings === false
+      ? { diagnostics: [diagnostic({ code: 'L000', severity: 'warning', file: 'weft.config.ts', why: '`build.audit` is false: the built pages were not audited.' })] }
+      : await audit(root, { dir: builtPublic(root), ...(typeof settings === 'object' && settings) })
+    const pages = audited.diagnostics.map(d => (d.severity === 'error' && unsafe.allows(d) ? unsafe.let(d) : d))
+    const kept = [...contract.diagnostics.filter(d => !(d.severity === 'error' && unsafe.allows(d))), ...warned].map(d => diagnostic({ file: '.weft/contract.json', ...d }))
+    const diagnostics = [...kept, ...pages, ...forced.map(d => diagnostic({ file: '.weft/contract.json', ...d }))]
+    return { ok: !diagnostics.some(d => d.severity === 'error'), preset, output, contract: contract.path, functions: contract.functions, audited: audited.pages?.length ?? 0, diagnostics, ms: Math.round(performance.now() - t) }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held

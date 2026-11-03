@@ -1,5 +1,5 @@
 // Argument parsing and output for `weft`. JSON on stdout with --json, human text on stderr.
-// Exit codes: 0 ok, 1 diagnostics with errors (or a stale AGENTS.md under --check), 2 usage or internal error.
+// Exit codes: 0 ok, 1 diagnostics with errors (a build refused on one, or a stale AGENTS.md under --check), 2 usage or internal error.
 
 import { fix } from './fix.mjs'
 import { writeTokens } from './tokens.mjs'
@@ -23,6 +23,7 @@ import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand } from './browser/cli.mjs'
 import { metaTable } from './meta-table.mjs'
+import { audit } from './audit.mjs'
 import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand } from './start.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
@@ -38,7 +39,11 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   lsp                 a language server for editors on TypeScript 7: tsc --lsp with inferred props
   tsc                 type-check the whole project with inferred props (tsc or tsgo; for CI)
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
-  build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json
+  build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json; then the
+                      built pages are audited (L-codes) and an error fails the build
+                      [--unsafe-allow <codes>]  go past these codes (R002, L003, a family like L, or all): forces a deploy
+  audit [routes…] [--url <u>] [--all] [--max <n>]  the built pages, or a running site, in a clean Chrome at a phone's
+                      and a desktop's width: axe-core's WCAG rules, console, deprecations, head, sideways scroll, shift
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
   db generate [name]  a migration for the schema's changes (it applies on the next request)
   db live             a migration with change triggers for the tables in \`changes\`
@@ -62,7 +67,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
-const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
+const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime', 'unsafe-allow', 'max'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
 const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all', 'verbose'])
@@ -150,11 +155,19 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         return 0
       }
       case 'build': {
-        const result = await buildCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime })
+        const result = await buildCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime, unsafeAllow: args.flags['unsafe-allow'] })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
-        say(`weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract (${result.ms} ms)`)
-        return 0
+        say(`weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract, ${result.audited} pages audited (${result.ms} ms)`)
+        if (!result.ok) say('weft build: failed. The output is written, but fix the errors above before it ships, or `--unsafe-allow <code>` to force it.')
+        return result.ok ? 0 : 1
+      }
+      case 'audit': {
+        const result = await audit(args.root, { url: args.flags.url, routes: args.positional.length ? args.positional : undefined, all: !!args.flags.all, max: args.flags.max && Number(args.flags.max) })
+        if (args.json) print(result)
+        say(formatHuman(result.diagnostics))
+        say(`weft audit: ${result.skipped ?? `${result.pages.length} pages at a phone's and a desktop's width, ${result.diagnostics.length} findings (${result.ms} ms)`}`)
+        return result.ok ? 0 : 1
       }
       case 'start':
         return await startCommand(args.root, { runtime: args.flags.runtime })
@@ -314,6 +327,6 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     const code = error.code ?? 'E_INTERNAL'
     if (args?.json || argv.includes('--json')) print({ ok: false, error: { code, message: error.message } })
     say(`weft: ${error.message}${code === 'E_USAGE' ? `\n\n${usage}` : ''}`)
-    return code === 'E_LIVE' ? 1 : 2
+    return code === 'E_REFUSED' ? 1 : 2
   }
 }

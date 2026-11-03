@@ -52,10 +52,17 @@ function config({ root, site, hydration, preset, port, logLevel, command, nitro:
   }
 }
 
+/** Where the last build's Nitro wrote, known once it prerenders: a preset may move it (netlify serves `dist`). */
+let wrote
+
 function immutableCards() {
   let built
   return {
-    'prerender:generate'(_route, instance) { built = instance },
+    'prerender:generate'(_route, instance) {
+      built = instance
+      const { dir, publicDir } = instance.options.output
+      wrote = publicDir.startsWith(dir) ? dir : publicDir
+    },
     'prerender:done'({ prerenderedRoutes }) {
       if (!built) return
       for (const r of prerenderedRoutes) {
@@ -73,10 +80,11 @@ export async function dev(options) {
   return server
 }
 
-/** Build client and server into `.output/` for `preset` (node by default; bun, deno_server…). */
+/** Build client and server for `preset` (node by default; bun, deno_server…), into `.output/` unless the preset moves it. */
 export async function build(options) {
   process.env.WEFT_START_DIR ??= startDir // for the share cards a build draws (og/native.mjs)
   const builder = await createBuilder(config({ ...options, command: 'build' }))
+  wrote = undefined
   await builder.buildApp()
-  return { output: join(resolve(options.root), '.output') }
+  return { output: wrote ?? join(resolve(options.root), '.output') }
 }

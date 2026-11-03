@@ -275,7 +275,7 @@ const catalog = [
   ['PaymentCardInput', "Field shell around the provider's hosted card field"],
   ['CardNumberText', 'Saved card display'],
   ['SignaturePad', 'Draw or type a signature'],
-  ['Button', 'Native button: tone, emphasis (solid soft outline ghost frame link), size, loading, icon-only'],
+  ['Button', 'Native button: tone, emphasis (solid soft outline ghost frame link), size, loading, icon-only; `collapse` shows only the icon on a phone or tablet and keeps the text as its name'],
   ['Toggle', 'Button with aria-pressed'],
   ['Input', 'Text field: floating border label (or classic), hint, error, prefix, suffix, clear'],
   ['Search', 'Search field with icon and clear'],

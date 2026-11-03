@@ -145,6 +145,9 @@ const INTERACTIVE = new Set(['a', 'button', 'input', 'select', 'textarea', 'summ
 const STATIC = new Set(['div', 'span', 'p', 'li', 'section', 'article', 'td', 'tr', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'label'])
 
 const NAMED = ['aria-label', 'aria-labelledby', 'title']
+/** Elements whose implicit role (generic, paragraph, emphasis…) may not be named, and the explicit roles that can't be either. */
+const GENERIC = new Set(['div', 'span', 'p', 'b', 'i', 'em', 'strong', 'small', 'code', 's', 'u', 'sub', 'sup', 'mark', 'del', 'ins', 'kbd', 'samp', 'var'])
+const UNNAMED = new Set(['generic', 'presentation', 'none', 'paragraph', 'caption', 'code', 'deletion', 'emphasis', 'insertion', 'strong', 'subscript', 'superscript', 'mark', 'time'])
 const named = el => NAMED.some(n => el.attr(n)) || el.attrs.some(a => a.kind === 'spread')
 /** Children with something a screen reader can read: text, an expression, a component, an image with alt. */
 const hasName = children => {
@@ -317,6 +320,9 @@ export function designChecks(root, { files: all, exclude = [], tokens }) {
         if (!skip && !unseen && !named(el) && !(id?.value && labelled.has(id.value)) && !el.ancestors.includes('label')) report('D030', el.start, el.tagEnd, `<${el.name}> has no label: a screen reader announces only "edit" (WCAG 1.3.1, 4.1.2).${el.attr('placeholder') ? ' A placeholder is not a label.' : ''}`)
       }
       if (['button', 'a', 'Button', 'Link'].includes(el.name) && !el.attr('label') && !named(el) && !(el.name === 'a' && !el.attr('href')) && !hasName(el.children)) report('D031', el.start, el.tagEnd, `<${el.name}> has no name a screen reader can read: only an icon, or nothing (WCAG 4.1.2).`)
+      const label = el.attr('aria-label') ?? el.attr('aria-labelledby')
+      const role = el.attr('role')
+      if (label && GENERIC.has(el.name) && (!role || (role.kind === 'string' && UNNAMED.has(role.value)))) report('D041', label.start, label.end, `\`${label.name}\` on a <${el.name}>${role ? ` with role "${role.value}"` : ''}: ARIA forbids naming it, so screen readers skip the name (axe aria-prohibited-attr, Lighthouse).`)
       if (el.name === 'img' && !el.attr('alt') && !el.attrs.some(a => a.kind === 'spread')) report('D032', el.start, el.tagEnd, '<img> has no `alt`: a screen reader reads out the file name (WCAG 1.1.1).')
 
       // -- behaviour on the wrong element --

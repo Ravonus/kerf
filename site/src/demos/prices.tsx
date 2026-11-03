@@ -19,7 +19,7 @@ export default function Market() {
       <Button onClick={() => (live.value = !live.value)}>
         {live.value ? 'Pause' : 'Go live'}
       </Button>
-      <ol data-part="prices">
+      <ol data-part="prices" tabindex="0" aria-label="Prices">
         {rows.map(r => <li key={r.id}>{r.price.value}</li>)}
       </ol>
     </Card>

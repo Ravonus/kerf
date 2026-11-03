@@ -131,5 +131,6 @@ describe('live data on a deploy target', () => {
     expect(r.code).toBe(1)
     expect(r.stderr).toMatch(/R013.*myNotes/)
     expect(r.stderr).not.toMatch(/usage:|Building/)
+    expect(r.stderr).toContain('--unsafe-allow R013')
   }, 180_000)
 })

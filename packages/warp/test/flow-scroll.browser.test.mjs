@@ -2,7 +2,7 @@
 // warp.flow in Chrome, from warp's real stylesheets. view() binds to the nearest scroll container and overflow: hidden is
 // one, so a single clipped ancestor silently stops an element's fade. This holds the timeline to the page.
 import { readdirSync, readFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
+import { createRequire, stripTypeScriptTypes } from 'node:module'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -10,6 +10,8 @@ const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
+// warp-core's flow(), the script that arms flow on the first scroll, as the page runs it. These pages are armed unless a test says not.
+const armScript = stripTypeScriptTypes(readFileSync(fileURLToPath(new URL('../../warp-core/src/flow.ts', import.meta.url)), 'utf8')).replace(/^export /gm, '')
 const read = file => readFileSync(join(styles, file), 'utf8')
 const css = ['warp.css', 'components/base.css', 'components/surface.css', 'data/table.css'].filter(f => { try { return read(f) } catch { return false } }).map(read).join('\n')
 
@@ -40,7 +42,7 @@ afterAll(async () => { await browser?.close() })
 async function open(options, expression = 'balanced') {
   const context = await browser.newContext({ viewport: { width: 800, height: 700 }, ...options })
   const page = await context.newPage()
-  await page.setContent(`<!doctype html><html data-expression="${expression}"><style>body{margin:0}</style><style>${css}</style><body>${PAGE}`)
+  await page.setContent(`<!doctype html><html data-expression="${expression}" data-flow-armed><style>body{margin:0}</style><style>${css}</style><body>${PAGE}`)
   return { page, close: () => context.close() }
 }
 
@@ -143,7 +145,7 @@ const BELOW = `<div style="block-size:3000px"></div>`
 async function stage(body, { expression = 'balanced', head = '' } = {}) {
   const context = await browser.newContext({ viewport: { width: 800, height: 700 } })
   const page = await context.newPage()
-  await page.setContent(`<!doctype html><html data-expression="${expression}"><style>body{margin:0}${head}</style><style>${css}</style><body>${body}`)
+  await page.setContent(`<!doctype html><html data-expression="${expression}" data-flow-armed><style>body{margin:0}${head}</style><style>${css}</style><body>${body}`)
   await page.waitForTimeout(50)
   return { page, close: () => context.close() }
 }
@@ -243,5 +245,42 @@ test('a heading leaves with its section: it fades as it goes under the header, w
   await scroll(page, 100) // its bottom edge has passed under the bar
   expect(+(await style(page, 'h', 'opacity'))).toBeLessThan(0.75)
   expect(await style(page, 'h', 'translate')).toBe('none')
+  await close()
+})
+
+const FIRST = `<div data-scope="surface" id="first" style="block-size:200px">First</div><div style="block-size:1500px"></div>
+  <div data-scope="surface" id="later" style="block-size:200px">Later</div><p data-flow="item" id="words">Words</p><div style="block-size:1500px"></div>`
+async function unarmed() {
+  const context = await browser.newContext({ viewport: { width: 800, height: 700 } })
+  const page = await context.newPage()
+  await page.setContent(`<!doctype html><html data-expression="vivid"><style>body{margin:0}</style><style>${css}</style><body>${FIRST}<script>${armScript};flow(document)</script>`)
+  await page.waitForTimeout(50)
+  return { page, close: () => context.close() }
+}
+const moving = (page, id) => page.evaluate(i => document.getElementById(i).getAnimations().filter(a => a.animationName?.startsWith('warp-')).length, id)
+const opacityOf = (page, id) => page.evaluate(i => +getComputedStyle(document.getElementById(i)).opacity, id)
+
+test('flow waits for a person: before the first scroll nothing moves, and text below the fold is whole for a crawler or an audit', async () => {
+  const { page, close } = await unarmed()
+  expect(await page.evaluate(() => document.documentElement.hasAttribute('data-flow-armed'))).toBe(false)
+  for (const id of ['first', 'later', 'words']) {
+    expect(await moving(page, id), id).toBe(0)
+    expect(await opacityOf(page, id), id).toBe(1)
+  }
+  await close()
+})
+
+test('the first scroll arms it: what was on screen stays put, what is below rises in as it arrives', async () => {
+  const { page, close } = await unarmed()
+  await page.mouse.wheel(0, 1)
+  await page.waitForTimeout(100)
+  expect(await page.evaluate(() => document.documentElement.hasAttribute('data-flow-armed'))).toBe(true)
+  expect(await page.evaluate(() => document.getElementById('first').hasAttribute('data-flow-seen'))).toBe(true)
+  expect(await moving(page, 'first')).toBe(0) // no part-faded jump on the first screen
+  expect(await moving(page, 'later')).toBeGreaterThan(0)
+  expect(await opacityOf(page, 'later')).toBe(0) // waiting below the fold, now that someone is scrolling
+  await page.evaluate(() => document.getElementById('later').scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await page.waitForTimeout(100)
+  expect(await opacityOf(page, 'later')).toBe(1)
   await close()
 })

@@ -200,6 +200,9 @@ describe('contrast and accessibility (every app)', () => {
     ['D036', `<input aria-label="x" class="outline-none" />`],
     ['D037', `<p tabindex="3">x</p>`],
     ['D035', `<><h1>a</h1><h3>b</h3></>`],
+    ['D041', `<span data-part="req" title="Required" aria-label="required"></span>`],
+    ['D041', `<div aria-labelledby="t">x</div>`],
+    ['D041', `<p role="presentation" aria-label="x">y</p>`],
   ])('%s %s', async (code, jsx) => {
     const { result } = await run(`export const P = () => ${jsx}`, bare)
     expect(codes(result)).toContain(code)
@@ -225,6 +228,9 @@ describe('contrast and accessibility (every app)', () => {
     `<input aria-label="x" class="outline-none focus-visible:ring-2" />`,
     `<><h1>a</h1><h2>b</h2><h3>c</h3><h2>d</h2></>`,
     `<label>Pick <button>one</button></label>`,
+    `<span role="img" aria-label="required"></span>`,
+    `<div role="region" aria-label="Prices" tabindex="0">x</div>`,
+    `<nav aria-label="Main">x</nav>`,
   ])('quiet: %s', async jsx => {
     const { result } = await run(`const attrs = {}, label = 'x'\nexport const P = () => ${jsx}`, bare)
     expect(codes(result)).toEqual([])

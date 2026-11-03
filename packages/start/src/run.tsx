@@ -62,6 +62,10 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   let warm: { path: string; at: number; res: Promise<Response> } | undefined
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   let fades = !(navigator.hardwareConcurrency <= 4)
+  // A navigation before the first frame (a moved page's onMount) has no old picture to hold: Chrome aborts that
+  // transition and logs an InvalidStateError. Two frames in, the page has painted.
+  let painted = false
+  requestAnimationFrame(() => requestAnimationFrame(() => (painted = true)))
   async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}): Promise<void> {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
@@ -100,10 +104,12 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       }
     }
     // The old page stays on screen, as a picture, until the new one is ready to fade in. `hidden`: nothing would show it.
-    if (fades && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (fades && painted && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const started = performance.now()
       const fade = document.startViewTransition(swap)
       void fade.ready.then(() => { if (performance.now() - started > SLOW_FADE) fades = false }, () => {})
+      // a transition the browser aborts (a second navigation, a hidden tab) rejects `finished`: the page already swapped
+      void fade.finished.catch(() => {})
       await fade.updateCallbackDone
     }
     else swap()

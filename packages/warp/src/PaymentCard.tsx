@@ -53,5 +53,11 @@ export type CardNumberTextProps = { last4: string; bin?: string; brand?: string;
 export function CardNumberText({ last4, bin, brand, expiry }: CardNumberTextProps) {
   const name = derived(() => brand ?? cardBrand(bin ?? ''))
   const exp = derived(() => (expiry ? `${String(expiry.month).padStart(2, '0')}/${String(expiry.year % 100).padStart(2, '0')}` : ''))
-  return <span data-card-text="" aria-label={`${name.value || 'Card'} ending ${last4}`}>{name.value ? `${name.value} ` : ''}{cardMask(last4, name.value)}{exp.value ? ` · ${exp.value}` : ''}</span>
+  // a span can't be named (aria-prohibited-attr): the mask is hidden from screen readers and the words are said instead
+  return (
+    <span data-card-text="">
+      <span aria-hidden="true">{name.value ? `${name.value} ` : ''}{cardMask(last4, name.value)}{exp.value ? ` · ${exp.value}` : ''}</span>
+      <span data-part="sr-only">{`${name.value || 'Card'} ending ${last4}`}{exp.value ? `, expires ${exp.value}` : ''}</span>
+    </span>
+  )
 }

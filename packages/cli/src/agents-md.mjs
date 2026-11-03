@@ -93,7 +93,7 @@ export async function agentsMd(root) {
     '',
     tcodes.length ? `Test checks (\`weft check\` on test files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. To allow one: \`// weft-allow T00x: <reason>\`.` : '',
     '',
-    'Before a change is done, see it work (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). More: `weft docs verify`.',
+    'Before a change is done, see it work (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `weft build` ends by auditing the pages it built at a phone\'s and a desktop\'s width (L-codes: names, contrast, console, the head, sideways scroll, layout shift) and fails on an error; `weft audit --url <deploy>` checks a live site. More: `weft docs verify`.',
     '',
     ...(startApp
       ? ['## Full stack', '', fullStack(root), '']

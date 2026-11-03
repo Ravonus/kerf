@@ -2,6 +2,7 @@
 // `style_find`, `style_explain`, `test_gate` and the `browser_*` tools.
 // Every tool returns the same JSON as the CLI's `--json`, as text and as structuredContent.
 
+import { audit } from './audit.mjs'
 import { agentMap } from './map.mjs'
 import { once } from 'node:events'
 import { createInterface } from 'node:readline'
@@ -67,6 +68,11 @@ export const tools = [
     name: 'routes_meta',
     description: "Every route's metadata as a crawler gets it (`weft routes --meta --json`): title, description, image, every tag, where each came from (`route`, `layout`, `config`, `auto`, `card`), real samples of param routes, and H-diagnostics with text to apply. Every page sets `meta` from its own context as part of building it: call this after adding or changing a route.",
     inputSchema: { type: 'object', properties: { preset: { type: 'string', description: "`static`: no server at runtime, so a param route's card needs `prerender`" } } },
+  },
+  {
+    name: 'audit',
+    description: "The pages as a browser renders them (`weft audit`): a clean Chrome at a phone's and a desktop's width, axe-core's WCAG rules (what Lighthouse grades), console errors, deprecations, the head a crawler reads, sideways scroll and layout shift, as L-diagnostics with fixes. Static checks read source; this catches what CSS and a breakpoint do to it. Default: the last build's pages.",
+    inputSchema: { type: 'object', properties: { url: { type: 'string', description: 'A running site to audit instead (a deploy, `weft start`, the dev server)' }, routes: { type: 'array', items: { type: 'string' }, description: 'Paths; default one page of each kind' } } },
   },
   {
     name: 'map',
@@ -149,6 +155,7 @@ export async function handle(root, msg) {
         if (name === 'check') data = await check(root, { files: args.files })
         else if (name === 'tasks') data = await tasks(root)
         else if (name === 'routes_meta') data = await routesCommand(root, { meta: true, preset: args.preset })
+        else if (name === 'audit') data = await audit(root, { url: args.url, routes: args.routes })
         else if (name === 'map') data = await agentMap(root)
         else if (name === 'style_find') data = findGroups((await styleMatrix(root)).matrix, args.query)
         else if (name === 'style_explain') data = explainTarget(await styleMatrix(root), args.target, { axes: args.axes, states: args.states, accent: args.accent, part: args.part })
