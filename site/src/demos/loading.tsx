@@ -6,8 +6,15 @@ const cancelled = state(0)
 // Stands in for a request: answers after 700 ms, or stops when `signal` says the answer isn't wanted any more.
 const fetchWeather = (day: number, signal: AbortSignal) =>
   new Promise<{ day: number; text: string }>((done, fail) => {
-    const t = setTimeout(() => done({ day, text: WEATHER[day % WEATHER.length]! }), 700)
-    signal.addEventListener('abort', () => { clearTimeout(t); cancelled.value++; fail(new Error('superseded')) })
+    let answered = false
+    const t = setTimeout(() => { answered = true; done({ day, text: WEATHER[day % WEATHER.length]! }) }, 700)
+    // The next fetch aborts this one's signal even after it answered; only a request still waiting is cancelled.
+    signal.addEventListener('abort', () => {
+      if (answered) return
+      clearTimeout(t)
+      cancelled.value++
+      fail(new Error('superseded'))
+    })
   })
 
 function Today(props: { day: number }) {
