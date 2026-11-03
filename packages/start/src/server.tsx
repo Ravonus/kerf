@@ -351,7 +351,7 @@ export function createHandler(options: HandlerOptions) {
       // A session read can set cookies, which have to be in the headers: read it before they go.
       if (request.headers.has('cookie')) await scope.ctx().catch(() => {})
       const set = [...scope.headers].length
-      const styles = pageStyles(assets, known.sheets, '', site.head, known, have)
+      const styles = pageStyles(assets, known.sheets, '', site.head, known, have, request.headers.has('cookie'))
       const head = top + known.preloads + (assets.entry ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') + styles.head +
         (known.capture ? `<script>${capture(known.now)}</script>\n` : '') + dev + '</head>\n<body>\n'
       const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(known.fold && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
@@ -394,7 +394,7 @@ export function createHandler(options: HandlerOptions) {
     await s.hold(options.hold ?? HOLD)
     const ms = performance.now() - t0
     const p = shaped()
-    const styles = pageStyles(assets, p.sheets, s.shell, site.head, undefined, have)
+    const styles = pageStyles(assets, p.sheets, s.shell, site.head, undefined, have, request.headers.has('cookie'))
     const capturing = !!options.lazy || p.streaming
     if (known !== null && !options.dev) remember(styles.links ? cold + ' w' : cold, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length })
     const head =

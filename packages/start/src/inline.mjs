@@ -226,9 +226,12 @@ export function keptSheets(cookie) {
 
 /**
  * Switches on the head's deferred sheets once they're all here, or after 3s without the one that failed. One at a time,
- * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script.
+ * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script. `keep`: then
+ * lists them in `weft-css` (`keepSheets`), for a visitor who already has the site's cookies: one without gets none.
  */
-export const LATE_SHEETS = `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all');(${keepSheets})(${sheetId})}))([...document.querySelectorAll('link[data-late]')])`
+const lateSheets = keep => `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all')${keep ? `;(${keepSheets})(${sheetId})` : ''}}))([...document.querySelectorAll('link[data-late]')])`
+export const LATE_SHEETS = lateSheets(false)
+export const LATE_SHEETS_KEPT = lateSheets(true)
 /** The client entry's second chance: a `<style>` a CSP refused has no sheet, so the disabled link beside it is all that's left. */
 export const REFUSED_SHEETS = `document.querySelectorAll('style+link[disabled]').forEach(l=>{l.previousElementSibling.sheet||(l.disabled=false)})`
 // Put the `<style>` before this script in front of the head's first link.
@@ -243,8 +246,9 @@ const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
  * lacks can only be a link, and its Boundary swaps once it's here. `seen`: an earlier render's `{ split, found }`, for a head
  * sent before this page's HTML exists; its `late` then brings what the HTML has beyond that. `have`: the sheet ids the
  * browser says it has (`keptSheets`). With all of the page's, it gets links (`links`): nothing to inline, or to look for.
+ * `keep`: the request has cookies, so the page may list the sheets it loads in one more.
  */
-export function pageStyles(assets, css = [], html = '', head, seen, have) {
+export function pageStyles(assets, css = [], html = '', head, seen, have, keep = false) {
   const first = `<style>${LAYER_ORDER}</style>\n`
   if (have && css.length && css.every(c => have.has(sheetId(c.href)))) {
     const carried = new Set(css.map(c => c.href))
@@ -268,7 +272,7 @@ export function pageStyles(assets, css = [], html = '', head, seen, have) {
   let sent = split && (seen ? new Set(seen.found) : read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? known.dials : [])))
   const tags = split
     ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` + css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<link rel="stylesheet" href="${esc(c.href)}" media="print" data-late>`).join('') +
-      `<noscript>${inline.map(s => blocking(s.href).trim()).join('')}</noscript>\n<script>${LATE_SHEETS}</script>\n`
+      `<noscript>${inline.map(s => blocking(s.href).trim()).join('')}</noscript>\n<script>${keep ? LATE_SHEETS_KEPT : LATE_SHEETS}</script>\n`
     : css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<style>${assets.inline[c.href]}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`).join('')
   return {
     head: first + tags,

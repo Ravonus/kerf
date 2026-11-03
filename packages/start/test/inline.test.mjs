@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { parse, purge } from '../../weft/node/purge.mjs'
 import { assetsOnly } from '../src/vite.mjs'
-import { FIRST_PAINT_BYTES, LATE_SHEETS, LAYER_ORDER, keptSheets, pageStyles, sheetId } from '../src/inline.mjs'
+import { FIRST_PAINT_BYTES, LATE_SHEETS, LATE_SHEETS_KEPT, LAYER_ORDER, keptSheets, pageStyles, sheetId } from '../src/inline.mjs'
 
 const critical = { parse, purge }
 const filler = n => Array.from({ length: n }, (_, i) => `:where([data-scope="unused${i}"]){color:red}`).join('')
@@ -57,7 +57,9 @@ test('one sheet the browser lacks, and the page paints from its own rules as bef
   expect(s.head).toContain('data-late')
 })
 
-test('the browser lists the sheets it loaded by the ids the server reads', async () => {
+test('a request with cookies has the browser list the sheets it loaded, by the ids the server reads', async () => {
+  expect(pageStyles(assets, css, html, undefined, undefined, undefined, true).head).toContain(LATE_SHEETS_KEPT)
+  expect(pageStyles(assets, css, html).head).toContain(LATE_SHEETS)
   const cookies = []
   const links = [{ sheet: {}, getAttribute: () => '/a.css' }, { sheet: null, getAttribute: () => '/failed.css' }, { sheet: {}, getAttribute: () => '/b.css', media: 'print' }]
   globalThis.document = {
@@ -66,6 +68,9 @@ test('the browser lists the sheets it loaded by the ids the server reads', async
   }
   Object.defineProperty(globalThis.document, 'cookie', { get: () => cookies.at(-1)?.split(';')[0] ?? `weft-css=${sheetId('/a.css')}`, set: v => cookies.push(v) })
   new Function(LATE_SHEETS)()
+  await new Promise(r => setTimeout(r, 0))
+  expect(cookies).toEqual([]) // a visitor without the site's cookies gets none
+  new Function(LATE_SHEETS_KEPT)()
   await new Promise(r => setTimeout(r, 0))
   delete globalThis.document
   expect(cookies).toHaveLength(1)
