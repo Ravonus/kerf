@@ -164,7 +164,6 @@
 :where([data-scope="table"]) {
   --_row: var(--warp-table-row); --_px: var(--warp-table-pad-x);
   position: relative; display: grid; gap: var(--warp-space-related); min-inline-size: 0;
-  container: table / inline-size;
 }
 :where([data-scope="table"] [data-part="toolbar"]) {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related); padding-block-start: 8px;
@@ -355,13 +354,13 @@
 /* -- responsive: priority columns (all modes) --------------------------------
    data-priority="2" hides under 1000px of table width, "3" under 760px.
    Hidden fields stay reachable: the row's expand/detail sheet lists them. */
-@container table (max-width: 999.98px) { :where([data-scope="table"] [data-priority="3"]) { display: none; } }
-@container table (max-width: 759.98px) { :where([data-scope="table"] [data-priority="2"]) { display: none; } }
+@container (max-width: 999.98px) { :where([data-scope="table"] [data-priority="3"]) { display: none; } }
+@container (max-width: 759.98px) { :where([data-scope="table"] [data-priority="2"]) { display: none; } }
 
 /* -- phone: stacked cards (entity lists) ------------------------------------
    Same <table>, explicit ARIA roles keep the semantics when display changes.
    Each cell labels itself from data-label. */
-@container table (max-width: 599.98px) {
+@container (max-width: 599.98px) {
   :where([data-scope="table"][data-phone="cards"] [data-part="viewport"]) { border: 0; background: none; overflow: visible; max-block-size: none; }
   :where([data-scope="table"][data-phone="cards"] :is(table, tbody)) { display: block; }
   :where([data-scope="table"][data-phone="cards"] thead) { display: none; }
@@ -396,7 +395,7 @@
   :where([data-scope="table"][data-phone="cards"] [data-part="resize"]) { display: none; }
 }
 :where([data-scope="table"] [data-part="sortbar"]) { display: none; align-items: center; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
-@container table (max-width: 599.98px) { :where([data-scope="table"] [data-part="sortbar"]) { display: flex; } }
+@container (max-width: 599.98px) { :where([data-scope="table"] [data-part="sortbar"]) { display: flex; } }
 
 /* -- tablet: detail sheet (fewer columns; the row opens every field) ------- */
 :where([data-scope="table"] [data-part="sheet"]) {
@@ -1202,7 +1201,7 @@
    the window drags too, so they stop at the 24px floor + spacing */
 /* phone cards: the cells stack 2px apart (a 30px pitch), so on a coarse pointer the card row is the target
    (a tap opens the row's sheet, as on any other cell); editable cells stay keyboard targets (Enter / F2) */
-@container table (max-width: 599.98px) {
+@container (max-width: 599.98px) {
   @media (pointer: coarse) { :where(:root:not([data-pointer="fine"]) [data-scope="table"][data-phone="cards"] tbody tr > [data-editable]) { pointer-events: none; } }
   :where([data-pointer="coarse"] [data-scope="table"][data-phone="cards"] tbody tr > [data-editable]) { pointer-events: none; }
 }

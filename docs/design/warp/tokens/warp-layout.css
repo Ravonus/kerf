@@ -278,7 +278,9 @@
 /* the shell owns the viewport, so nothing may inset it */
 :where(body:has([data-scope="shell"])) { margin: 0; overflow-x: clip; }
 :where([data-scope="shell"]) {
-  container: warp-shell / inline-size;
+  /* also the page's container: main and the table are not containers, since each nested one costs the whole page
+     another style pass inside layout (about 50ms at 4x CPU on a 50-row admin table) */
+  container: warp-shell warp-page / inline-size;
   --_navw: 0px;
   --_barh: calc(var(--warp-layout-bar) + var(--warp-safe-top));
   --_gut: max(calc(var(--warp-space-page) - 4px), var(--warp-safe-left));
@@ -407,7 +409,7 @@
 /* the shell's own main only (root > layout > main): a data-part="main" inside a page (a calendar's grid, an auth
    card) is not the shell's and must not pick up its grid area, container or viewport height */
 :where([data-scope="shell"] > [data-part="layout"] > [data-part="main"]) {
-  grid-area: main; container: warp-main warp-page / inline-size; min-inline-size: 0; outline: none;
+  grid-area: main; min-inline-size: 0; outline: none;
   /* fill the viewport under the header so a short page still puts its dock at the bottom edge */
   display: flex; flex-direction: column;
   min-block-size: calc(var(--warp-viewport-block) - var(--warp-layout-bar) - var(--warp-safe-top) - var(--_dock, 0px));
