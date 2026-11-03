@@ -236,6 +236,8 @@ export function createHandler(options: HandlerOptions) {
     const scope = als.getStore() ?? exec.createScope(request, scopeOptions)
     const hold: LoadContext = { request, scope, tags: new Map(), out: {} }
     const router = new RouterCore({ routeTree: tree, history: createMemoryHistory({ initialEntries: [path] }), isServer: true, context: hold } as RouterOptions, stores)
+    // The page's `[...name]`, so its layouts see the catch-all under that name too (the loaders copy `hold` as they start).
+    hold.splat = (router.getMatchedRoutes(router.latestLocation.pathname)[2] as { options: { weft?: RouteEntry } } | undefined)?.options.weft?.splat
     await router.load()
     const moved = hold.out.redirect
     if (moved) return { status: moved.status, path, levels: [], head: mergeMeta(site), redirect: moved }
@@ -250,7 +252,7 @@ export function createHandler(options: HandlerOptions) {
     const levelOf = (x: (typeof matches)[number]): Level => {
       const raw = x.m.loaderData
       const t = hold.tags.get(x.weft!.file)
-      return { id: x.weft!.id, params: params(x.m, (x.weft as RouteEntry).splat), mod: mod(x.weft!.file), raw, ...split(raw), ...(t?.size && { t: [...t] }) }
+      return { id: x.weft!.id, params: params(x.m, hold.splat), mod: mod(x.weft!.file), raw, ...split(raw), ...(t?.size && { t: [...t] }) }
     }
     const special = (id: '404' | 'error', status: number, error?: unknown): Promise<Resolved> => {
       const entry = byId.get(id)
@@ -758,10 +760,10 @@ function sheets(assets: NonNullable<HandlerOptions['assets']>) {
 }
 
 /**
- * What each router-core loader gets as `context`: the request scope, and where it leaves tags and redirects (router-core
- * copies the context object, so those go in shared containers).
+ * What each router-core loader gets as `context`: the request scope, where it leaves tags and redirects (router-core
+ * copies the context object, so those go in shared containers), and the matched page's catch-all name.
  */
-interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<string>>; out: { redirect?: Redirect; chain?: Promise<unknown> } }
+interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<string>>; out: { redirect?: Redirect; chain?: Promise<unknown> }; splat?: string | undefined }
 
 interface TreeNode { route: AnyRoute; children: AnyRoute[]; dir: string }
 
@@ -783,7 +785,7 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
     context.tags.set(file, f.tags!)
     try {
       const ctx = await f.ctx()
-      const v = await als.run(f, () => load({ params: cleanParams(params, splat), request: context.request, signal: abortController.signal, ctx }))
+      const v = await als.run(f, () => load({ params: cleanParams(params, splat ?? context.splat), request: context.request, signal: abortController.signal, ctx }))
       // oxlint-disable-next-line typescript/only-throw-error -- router-core's own not-found signal, passed on as it came
       if (isNotFound(v)) throw v
       return v

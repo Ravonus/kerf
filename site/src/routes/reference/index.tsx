@@ -1,6 +1,4 @@
 import { Link, type Meta } from '@weft-js/start'
-import { SideNav } from '@weft-js/warp'
-import { referenceSections, SITE_LINKS, SITE_NAV_ID } from '../../lib/sections'
 import nav from '../../generated/reference-nav.json'
 import { ArtStage } from '../../toolkit/art/stage'
 import '../../styles/art.css'
@@ -12,8 +10,6 @@ export const meta: Meta = { title: 'Reference', description: 'The exact API: the
 
 export default function ReferenceHome() {
   return (
-    <>
-    <SideNav id={SITE_NAV_ID} lead={SITE_LINKS} label="Reference" sections={referenceSections} current="/reference" filter remember="weft:site:reference" />
     <article data-site="doc" data-home="">
       <header><h1>Reference</h1><p data-part="lede">Exact APIs, commands, config keys and diagnostic codes. The same pages <code data-scope="code">weft docs</code> prints in a terminal. New to weft? Start with <Link href="/learn">Learn</Link>.</p></header>
       <div data-part="cards">
@@ -26,6 +22,5 @@ export default function ReferenceHome() {
         ))}
       </div>
     </article>
-    </>
   )
 }
