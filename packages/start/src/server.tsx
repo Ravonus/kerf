@@ -867,13 +867,17 @@ function depth(html: string) {
 /** What a page's HTML says about its islands: those that load with it, those that wait, and the waiting ones in view. */
 function islandsOf(html: string) {
   const parts = { now: [] as string[], lazy: [] as string[], fold: [] as string[] }
-  let past = false
+  let past = false, down = 0, at = 0
   for (const m of html.matchAll(/<!--wi:(\[.*?\])-->/g)) {
     const [id, , , when] = JSON.parse(m[1]) as [string, string, unknown[], string?]
     const list = when ? parts.lazy : parts.now
     if (!list.includes(id)) list.push(id)
-    // Only a waiting island asks how far down it is, and once one is past the fold, all after it are.
-    if (when && !past) past = depth(html.slice(0, m.index)) >= FOLD
+    // Only a waiting island asks how far down it is, from the last one asked, and once one is past the fold all after it are.
+    if (when && !past) {
+      down += depth(html.slice(at, m.index))
+      at = m.index
+      past = down >= FOLD
+    }
     if (when && !past && !parts.fold.includes(id)) parts.fold.push(id)
   }
   return parts
