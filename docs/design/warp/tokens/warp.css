@@ -311,7 +311,17 @@
 @supports (width: 1cqi) { :root { --warp-ref-fluid-unit: 1cqi; } }   /* the nearest inline-size container */
 /* the shell's main isn't a container (each one costs the page a style pass), so its unit is the shell's less the nav */
 @supports (width: 1cqi) {
-  :where([data-scope="shell"]:not([data-form] *, [data-form]) > [data-part="layout"] > [data-part="main"]) { --warp-ref-fluid-unit: calc((100cqi - var(--_navw)) / 100); }
+  :where([data-scope="shell"]:not([data-form] *, [data-form]) > [data-part="layout"] > [data-part="main"]) {
+    /* the two fluid sizes again (as in SYS TOKENS): a custom property resolves where it's declared */
+    --warp-ref-fluid-unit: calc((100cqi - var(--_navw)) / 100);   /* for scope roots inside it */
+    --_fu: var(--warp-ref-fluid-unit);
+    --warp-text-display-size: clamp(calc(var(--warp-ref-display-min) * var(--warp-rem)),
+      calc(var(--warp-ref-display-b) * var(--warp-rem) + var(--warp-ref-display-m) * var(--_fu)),
+      calc(var(--warp-ref-display-max) * var(--warp-rem)));
+    --warp-text-title-size: clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
+      calc(var(--warp-ref-title-b) * var(--warp-rem) + var(--warp-ref-title-m) * var(--_fu)),
+      calc(var(--warp-ref-title-max) * var(--warp-rem)));
+  }
 }
 @media (max-width: 1023.98px) { :root:not([data-form]) { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; } }
 @media (max-width: 599.98px)  { :root:not([data-form]) { --warp-ref-rem-k: 1; --warp-ref-root-size: 1rem; } }
@@ -379,7 +389,7 @@
    ------------------------------------------------------------------------ */
 
 :root, [data-expression], [data-density], [data-form], [data-pointer],
-[data-motion], [data-flair], [data-warp], [data-scope="shell"] > [data-part="layout"] > [data-part="main"] {
+[data-motion], [data-flair], [data-warp] {
   /* private shorthands */
   --_h: var(--warp-ref-neutral-h);
   --_c: var(--warp-ref-neutral-c);
