@@ -1,5 +1,5 @@
 import { RightIcon, XIcon } from '@weft-js/warp-icons'
-import { readFolds, sideNav, uid, writeFolds, type Folds } from '@weft-js/warp-core'
+import { navIndicator, readFolds, sideNav, uid, writeFolds, type Folds } from '@weft-js/warp-core'
 import { derived, onMount, state, untrack, watch } from '@weft-js/core'
 import { use } from '@weft-js/warp-core/weft'
 import './styles'
@@ -50,6 +50,7 @@ export function SideNav(props: SideNavProps) {
   const query = state('')
   const open = state(false)
   let root: HTMLElement | undefined
+  let list: HTMLElement | undefined
 
   const key = () => (props.remember === false ? undefined : props.remember ?? `warp:sidenav:${props.label}`)
   const holds = (s: SideNavSection) => s.items.some(i => i.href === props.current)
@@ -75,6 +76,8 @@ export function SideNav(props: SideNavProps) {
   })
   watch(() => props.current, () => { reveal(); open.value = false })
   use(sideNav, () => root, () => ({ current: props.current, open: open.value, onOpenChange: (v: boolean) => (open.value = v) }))
+  // warp's sliding bar, as Nav and the on-page rail have it: it follows the pointer and keyboard, and slides to a new page.
+  use(navIndicator, () => list, () => ({ axis: 'y' as const }))
 
   const filterText = () => (typeof props.filter === 'string' ? props.filter : `Filter ${props.label.toLowerCase()}`)
   return (
@@ -96,7 +99,7 @@ export function SideNav(props: SideNavProps) {
           {props.filter && (
             <input type="search" data-part="filter" placeholder={filterText()} aria-label={filterText()} value={query.value} onInput={(e: Event) => (query.value = (e.currentTarget as HTMLInputElement).value)} />
           )}
-          <nav data-scope="navlist" aria-label={props.label}>
+          <nav ref={n => (list = n)} data-scope="navlist" data-bar="" aria-label={props.label}>
             <ul data-part="sections">
               {shown.value.map(x => (
                 <li key={x.section.title} data-current={holds(x.section) ? '' : undefined}>
@@ -114,6 +117,7 @@ export function SideNav(props: SideNavProps) {
                 </li>
               ))}
             </ul>
+            <span data-part="indicator" aria-hidden="true"></span>
           </nav>
           {words.value !== '' && shown.value.length === 0 && <p data-part="empty">No pages match “{query.value.trim()}”.</p>}
         </div>

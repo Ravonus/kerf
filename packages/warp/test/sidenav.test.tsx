@@ -28,6 +28,20 @@ test('the current section starts open, the others folded; the current link is ma
   expect(rail(c).getAttribute('aria-label')).toBe('Docs')
 })
 
+test('the links carry warp\'s sliding bar: it takes over at the next frame and moves when the pointer does', async () => {
+  const { container: c } = render(() => <SideNav label="Docs" current="/docs/props" sections={SECTIONS} />)
+  await flush()
+  const bar = rail(c).querySelector<HTMLElement>(':scope > [data-part="indicator"]')
+  expect(bar).not.toBeNull()
+  await new Promise<void>(done => { requestAnimationFrame(() => done()) })
+  expect(rail(c).hasAttribute('data-ready')).toBe(true)
+  const other = [...rail(c).querySelectorAll<HTMLAnchorElement>('a[href]')].find(a => !a.hasAttribute('aria-current') && !a.closest('[hidden]'))!
+  // jsdom lays nothing out: give the hovered link a place, as a browser would.
+  other.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 96, width: 200, height: 32 })
+  other.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }))
+  expect(bar!.style.transform).toBe('translate(0px, 96px) scaleY(32)')
+})
+
 test('a fold toggles and is remembered under the key; the current section reopens on arrival', async () => {
   const one = render(() => <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" />)
   await flush()
