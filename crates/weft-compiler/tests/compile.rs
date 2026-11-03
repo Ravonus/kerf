@@ -88,8 +88,13 @@ fn element_spreads_read_their_attributes_in_order() {
 #[test]
 fn jsx_fields_of_an_object_prop_are_getters() {
     // reading `b.name` must not build a <Logo>: one built where it isn't rendered takes another node's hydration key
-    let (code, _) = run("function Logo() { return <svg /> }\nexport function A(props: any) { return <Shell brand={{ name: 'x', ...props.b, mark: <Logo /> }} /> }");
-    assert!(code.contains("get brand() { return { name: \"x\", ...props.b, get mark() { return _$component(Logo"), "{code}");
+    let (code, _) = run(
+        "function Logo() { return <svg /> }\nexport function A(props: any) { return <Shell brand={{ name: 'x', ...props.b, mark: <Logo /> }} /> }",
+    );
+    assert!(
+        code.contains("get brand() { return { name: \"x\", ...props.b, get mark() { return _$component(Logo"),
+        "{code}"
+    );
     // without JSX fields the object is passed as written
     let (code, _) = run("export function A(props: any) { return <Shell brand={{ name: props.n }} /> }");
     assert!(code.contains("get brand() { return { name: props.n }; }"), "{code}");

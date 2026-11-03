@@ -496,7 +496,6 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: ((it
             nodes[i] = r.nodes
             continue
           }
-__EMPTY__
         }
         if (!ROWBOX) row.box.value = item
         else if (row.v !== item) row.value = item

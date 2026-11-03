@@ -215,7 +215,7 @@ const DEFAULT_FILES = ['src', 'plugin.mjs', 'plugin.d.mts', 'README.md', 'LICENS
 const FILES = {
   weft: ['src', 'node', 'native/weft-compiler.wasm', 'scripts/native-stamp.cjs', 'assets.mjs', 'client.d.ts', 'compiler.cjs', 'compiler-wasm.cjs', 'media-probe.mjs', 'platforms.cjs', 'vite.mjs', 'README.md', 'LICENSE'],
   cli: ['bin', 'src', 'docs', 'ts-plugin', 'README.md', 'LICENSE'],
-  'create-weft': ['bin', 'src', 'scripts/tarballs.mjs', 'README.md', 'LICENSE'],
+  'create-weft': ['bin', 'src', 'templates', 'scripts/tarballs.mjs', 'README.md', 'LICENSE'],
   icons: ['src', 'plugin.mjs', 'compile.mjs', 'README.md', 'LICENSE'],
   start: ['src', 'crate', 'README.md', 'LICENSE'],
   warp: ['src', 'plugin.mjs', 'plugin.d.mts', 'tailwind.css', 'tokens', 'README.md', 'LICENSE'],

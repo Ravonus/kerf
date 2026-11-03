@@ -29,6 +29,7 @@
   "files": [
     "bin",
     "src",
+    "templates",
     "scripts/tarballs.mjs",
     "README.md",
     "LICENSE"

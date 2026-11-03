@@ -37,8 +37,8 @@ use oxc_ast::ast::{
     Expression, FormalParameters, Function, IdentifierReference, ImportDeclarationSpecifier, ImportExpression,
     JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXClosingElement, JSXElement,
     JSXElementName, JSXFragment, JSXMemberExpressionObject, JSXSpreadAttribute, NewExpression, ObjectPropertyKind,
-    Program, SimpleAssignmentTarget, SpreadElement, Statement, StaticMemberExpression, TSType, TaggedTemplateExpression,
-    ThisExpression, VariableDeclarator,
+    Program, SimpleAssignmentTarget, SpreadElement, Statement, StaticMemberExpression, TSType,
+    TaggedTemplateExpression, ThisExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
@@ -361,7 +361,8 @@ struct Escapes<'s> {
 
 impl Escapes<'_> {
     fn read(&self, e: &Expression<'_>) -> bool {
-        self.writing == 0 && matches!(e.get_inner_expression(), Expression::Identifier(id) if id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_some_and(|s| self.objects.contains(&s)))
+        self.writing == 0
+            && matches!(e.get_inner_expression(), Expression::Identifier(id) if id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_some_and(|s| self.objects.contains(&s)))
     }
 }
 
@@ -421,7 +422,7 @@ impl Collect<'_> {
     }
 
     /// Before entering a function: at the top of a component, what its parameter can be seen to hold. `scan` walks it.
-    fn props<'a>(&mut self, params: &FormalParameters<'a>, scan: impl FnOnce(&mut Escapes<'_>)) {
+    fn props(&mut self, params: &FormalParameters<'_>, scan: impl FnOnce(&mut Escapes<'_>)) {
         if self.depth > 0 {
             return;
         }
@@ -435,7 +436,8 @@ impl Collect<'_> {
             Some(BindingPattern::BindingIdentifier(id)) => self.objects.push(id.symbol_id()),
             Some(BindingPattern::ObjectPattern(o)) => {
                 for p in &o.properties {
-                    if let (false, Some(key), BindingPattern::BindingIdentifier(id)) = (p.computed, p.key.static_name(), &p.value)
+                    if let (false, Some(key), BindingPattern::BindingIdentifier(id)) =
+                        (p.computed, p.key.static_name(), &p.value)
                         && is_handler(&key)
                     {
                         self.handlers.push(id.symbol_id());
@@ -465,7 +467,9 @@ impl Collect<'_> {
         let Some(JSXAttributeValue::ExpressionContainer(c)) = &a.value else { return false };
         let Some(e) = c.expression.as_expression() else { return false };
         match e.get_inner_expression() {
-            Expression::StaticMemberExpression(m) => is_handler(&m.property.name) && self.holds(&m.object, &self.objects),
+            Expression::StaticMemberExpression(m) => {
+                is_handler(&m.property.name) && self.holds(&m.object, &self.objects)
+            }
             e => self.holds(e, &self.handlers),
         }
     }
@@ -620,7 +624,11 @@ impl<'a> Visit<'a> for Collect<'_> {
                     JSXAttributeItem::Attribute(a) => a,
                     JSXAttributeItem::SpreadAttribute(s) => {
                         let why = format!("a spread on an element (line {})", line_col(self.source, s.span.start).0);
-                        if self.spreads_props(&s.argument) { self.passes(why) } else { self.own(why) }
+                        if self.spreads_props(&s.argument) {
+                            self.passes(why)
+                        } else {
+                            self.own(why)
+                        }
                         continue;
                     }
                 };
@@ -653,7 +661,11 @@ impl<'a> Visit<'a> for Collect<'_> {
             match item {
                 JSXAttributeItem::SpreadAttribute(s) => {
                     if self.spreads_props(&s.argument) {
-                        self.passes(format!("a spread on <{}> (line {})", member.as_ref().unwrap_or(&tag), line_col(self.source, s.span.start).0));
+                        self.passes(format!(
+                            "a spread on <{}> (line {})",
+                            member.as_ref().unwrap_or(&tag),
+                            line_col(self.source, s.span.start).0
+                        ));
                     } else {
                         handler = true;
                     }
@@ -735,7 +747,7 @@ struct Loose<'s> {
 }
 
 impl Loose<'_> {
-    fn free<'a>(&mut self, f: impl FnOnce(&mut Self)) {
+    fn free(&mut self, f: impl FnOnce(&mut Self)) {
         let held = std::mem::replace(&mut self.held, false);
         f(self);
         self.held = held;
@@ -743,7 +755,9 @@ impl Loose<'_> {
 
     fn holder(&self, id: &BindingIdentifier<'_>) -> bool {
         let sym = id.symbol_id();
-        self.scoping.symbol_scope_id(sym) == self.scoping.root_scope_id() || (!self.scoping.symbol_is_mutated(sym) && self.scoping.get_resolved_reference_ids(sym).iter().all(|r| self.tags.contains(r)))
+        self.scoping.symbol_scope_id(sym) == self.scoping.root_scope_id()
+            || (!self.scoping.symbol_is_mutated(sym)
+                && self.scoping.get_resolved_reference_ids(sym).iter().all(|r| self.tags.contains(r)))
     }
 }
 
@@ -810,7 +824,7 @@ impl<'a> Visit<'a> for Loose<'_> {
 fn reads_this(e: &Expression<'_>) -> bool {
     #[derive(Default)]
     struct This(bool);
-    impl<'a> Visit<'a> for This {
+    impl Visit<'_> for This {
         fn visit_this_expression(&mut self, _: &ThisExpression) {
             self.0 = true;
         }
@@ -845,7 +859,18 @@ const NOT_CODE: &[&str] = &[".css", ".scss", ".sass", ".less", ".styl", ".pcss"]
 
 pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> HydrationFacts {
     let mut out = HydrationFacts::default();
-    let mut c = Collect { scoping, source, frames: Vec::new(), sites: Vec::new(), count: 0, handler: 0, component: false, depth: 0, handlers: Vec::new(), objects: Vec::new() };
+    let mut c = Collect {
+        scoping,
+        source,
+        frames: Vec::new(),
+        sites: Vec::new(),
+        count: 0,
+        handler: 0,
+        component: false,
+        depth: 0,
+        handlers: Vec::new(),
+        objects: Vec::new(),
+    };
     let mut gap = 0u32;
     for stmt in &program.body {
         let span = stmt.span();
