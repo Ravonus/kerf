@@ -866,18 +866,17 @@ function depth(html: string) {
 
 /** What a page's HTML says about its islands: those that load with it, those that wait, and the waiting ones in view. */
 function islandsOf(html: string) {
-  const known = renderedOf(html)
-  if (known.p) return known.p
   const parts = { now: [] as string[], lazy: [] as string[], fold: [] as string[] }
   let past = false
   for (const m of html.matchAll(/<!--wi:(\[.*?\])-->/g)) {
     const [id, , , when] = JSON.parse(m[1]) as [string, string, unknown[], string?]
     const list = when ? parts.lazy : parts.now
     if (!list.includes(id)) list.push(id)
-    past ||= depth(html.slice(0, m.index)) >= FOLD
+    // Only a waiting island asks how far down it is, and once one is past the fold, all after it are.
+    if (when && !past) past = depth(html.slice(0, m.index)) >= FOLD
     if (when && !past && !parts.fold.includes(id)) parts.fold.push(id)
   }
-  return (known.p = parts)
+  return parts
 }
 
 function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerOptions['assets']>) {
@@ -886,23 +885,21 @@ function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerO
   return [...hrefs].map(href => `<link rel="modulepreload" href="${esc(href)}">`).join('')
 }
 
-/** What a render's HTML says about its levels, worked out as asked and kept by the exact text. */
-interface Rendered { h: Record<number, string>; x: Record<number, string>; p?: { now: string[]; lazy: string[]; fold: string[] } }
-const RENDERED_MAX = 64
-const rendered = new Map<string, Rendered>()
+const HASHES_MAX = 64
+const hashes = new Map<string, string>()
 
-function renderedOf(html: string) {
-  let r = rendered.get(html)
-  if (!r) {
-    if (rendered.size >= RENDERED_MAX) rendered.clear()
-    rendered.set(html, (r = { h: {}, x: {} }))
+/** A level's hash, kept by its HTML: a static level renders the same text each time, and it's short beside the page. */
+function levelHash(h: string) {
+  let x = hashes.get(h)
+  if (x === undefined) {
+    if (hashes.size >= HASHES_MAX) hashes.clear()
+    hashes.set(h, (x = hash(h.replaceAll(' aria-current="page"', ''))))
   }
-  return r
+  return x
 }
 
 function withLevels(payload: RoutePayload, html: string, statics: Set<string>, sendHtml: boolean): RoutePayload {
   if (!payload.m.some(m => statics.has(m.id))) return payload
-  const known = renderedOf(html)
   const slice = (d: number) => {
     const open = html.indexOf(`<!--wl:${d}:`)
     const end = `<!--/wl:${d}-->`
@@ -916,8 +913,8 @@ function withLevels(payload: RoutePayload, html: string, statics: Set<string>, s
   const m = payload.m.map((lv, d) => {
     if (!statics.has(lv.id)) return lv
     const { data: _, ...rest } = lv
-    const h = (known.h[d] ??= slice(d))
-    return { ...rest, s: 1 as const, x: (known.x[d] ??= hash(h.replaceAll(' aria-current="page"', ''))), ...(sendHtml && { h }) }
+    const h = slice(d)
+    return { ...rest, s: 1 as const, x: levelHash(h), ...(sendHtml && { h }) }
   })
   const i = islandsOf(html).now
   return { ...payload, m, ...(i.length && { i }) }
