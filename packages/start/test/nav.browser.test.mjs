@@ -200,6 +200,8 @@ async function fading(html) {
     a.style.cssText = 'position:fixed;top:0;left:0;width:200px;height:200px;z-index:9'
     document.body.append(a)
   }, html)
+  // A navigation in the page's first two frames doesn't fade (run.tsx): those have passed once two more have.
+  await page.evaluate(() => new Promise(ok => { requestAnimationFrame(() => requestAnimationFrame(ok)) }))
   await page.evaluate(() => history.back())
   await page.waitForFunction(() => location.pathname === '/' && document.activeViewTransition)
   return { page, errors }
