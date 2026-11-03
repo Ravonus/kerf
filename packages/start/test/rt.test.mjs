@@ -6,8 +6,8 @@ import { connect, frameId, pageCursor, rpc } from './rt-client.mjs'
 const url = inject('url')
 
 test('a mutation pokes a live query\'s tags over SSE', async () => {
-  const counter = await frameId(url, 'counter')
-  const bump = await frameId(url, 'bump')
+  const counter = frameId(url, 'counter')
+  const bump = frameId(url, 'bump')
   const c = await connect(url, { s: [[1, 'q', counter]] })
   await c.until('a')
   await rpc(url, bump)
@@ -17,11 +17,11 @@ test('a mutation pokes a live query\'s tags over SSE', async () => {
 })
 
 test('a topic message reaches a stream, and a resume replays what the client missed', async () => {
-  const feed = await frameId(url, 'noteFeed')
-  const post = await frameId(url, 'postNote')
+  const feed = frameId(url, 'noteFeed')
+  const post = frameId(url, 'postNote')
   const a = await connect(url, { s: [[1, 's', feed]] })
   await a.until('h')
-  await new Promise(ok => setTimeout(ok, 50))
+  await new Promise(ok => { setTimeout(ok, 50) })
   await rpc(url, post, { text: 'one' })
   const [, cursor, first] = await a.until('m')
   expect(first).toEqual({ text: 'one' })
@@ -34,7 +34,7 @@ test('a topic message reaches a stream, and a resume replays what the client mis
 })
 
 test('adding to a connection in place answers 204; an unknown id 404', async () => {
-  const counter = await frameId(url, 'counter')
+  const counter = frameId(url, 'counter')
   const c = await connect(url, {})
   const { k } = await c.until('h')
   const res = await fetch(`${url}/_weft/rt`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-weft': '1' }, body: JSON.stringify({ k, s: [[9, 'q', counter]] }) })
@@ -51,7 +51,7 @@ test('a page that reads `.live` carries the cursor; one that doesn\'t, doesn\'t'
 })
 
 test('a client that goes away closes its connection on the server', async () => {
-  const stats = await frameId(url, 'rtStats')
+  const stats = frameId(url, 'rtStats')
   const read = async () => (await fetch(`${url}/_weft/fn/${stats}`).then(r => r.json())).v.connections
   const before = await read()
   const c = await connect(url, {})
@@ -62,6 +62,6 @@ test('a client that goes away closes its connection on the server', async () => 
 })
 
 test('Q009: a stream can\'t be called as a server function', async () => {
-  const feed = await frameId(url, 'noteFeed')
+  const feed = frameId(url, 'noteFeed')
   expect((await fetch(`${url}/_weft/fn/${feed}`)).status).toBe(405)
 })

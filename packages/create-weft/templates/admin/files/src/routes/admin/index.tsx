@@ -1,6 +1,6 @@
-import type { Meta } from '@weft/start'
-import { Heading, Stack, Text } from '@weft/warp'
-import { Boundary } from 'weft'
+import type { Meta } from '@weft-js/start'
+import { Heading, Stack, Text } from '@weft-js/warp'
+import { Boundary } from '@weft-js/core'
 import { Failed } from '#/components/Failed'
 import { LatestOrders, LatestOrdersLoading, RevenueChart, RevenueChartLoading, Stats, StatsLoading } from '#/components/Overview'
 

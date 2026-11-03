@@ -1,33 +1,40 @@
-// SQLite for `@weft/start` (research 28 §1): Node's and Deno's `node:sqlite` or Bun's `bun:sqlite` behind Drizzle's
+// SQLite for `@weft-js/start` (research 28 §1): Node's and Deno's `node:sqlite` or Bun's `bun:sqlite` behind Drizzle's
 // proxy driver, so no native binary and the same async API as Postgres. One connection, opened on the first statement
 // (`weft build` loads this module and must not touch a file). A transaction's body is async, so it holds a gate:
 // statements outside it wait, or a rollback would take another request's writes with it.
 
+// oxlint-disable-next-line typescript/triple-slash-reference -- an installed app's tsc doesn't include this file by itself, and it declares a module, so nothing can import it
+/// <reference path="./bun-sqlite.d.ts" />
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
+import type { SQLInputValue } from 'node:sqlite'
 import { drizzle, type SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy'
 import { StartError } from '../data'
 import { gate, register, statements, touch, type DbHandle, type Migration } from './core'
 
+/** How Drizzle's proxy driver asks for rows. */
 export type Method = 'run' | 'all' | 'values' | 'get'
 
 interface Conn {
   /** Array rows, as the proxy driver wants them. */
   query(sql: string, params: unknown[], method: Method): unknown
   exec(sql: string): void
+  close?(): void
 }
 
-async function open(path: string): Promise<Conn> {
+/** The file open on this runtime's driver: Bun's, or `node:sqlite`. */
+export async function open(path: string): Promise<Conn> {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
   const pick = (rows: unknown[][], method: Method) => (method === 'get' ? rows[0] : rows)
   let conn: Conn
-  if ((globalThis as any).Bun) {
-    const { Database } = await import('bun:sqlite' as string)
+  if ('Bun' in globalThis) {
+    const { Database } = await import('bun:sqlite')
     const db = new Database(path, { create: true })
     conn = {
       query: (sql, params, method) => (method === 'run' ? void db.prepare(sql).run(...params) : pick(db.prepare(sql).values(...params), method)),
       exec: sql => void db.run(sql),
+      close: () => db.close(),
     }
   } else {
     const { DatabaseSync } = await import('node:sqlite')
@@ -35,11 +42,12 @@ async function open(path: string): Promise<Conn> {
     conn = {
       query: (sql, params, method) => {
         const s = db.prepare(sql)
-        if (method === 'run') return void s.run(...(params as any[]))
+        if (method === 'run') return void s.run(...(params as SQLInputValue[]))
         s.setReturnArrays(true)
-        return pick(s.all(...(params as any[])) as unknown as unknown[][], method)
+        return pick(s.all(...(params as SQLInputValue[])) as unknown as unknown[][], method)
       },
       exec: sql => db.exec(sql),
+      close: () => db.close(),
     }
   }
   if (path !== ':memory:') conn.exec('pragma journal_mode = wal')
@@ -47,6 +55,7 @@ async function open(path: string): Promise<Conn> {
   return conn
 }
 
+/** `createDb` on SQLite: the schema, the file, and whether to migrate on first use. */
 export interface SqliteOptions<S extends Record<string, unknown>> {
   schema: S
   /** `file:.data/app.db` (the default), a path, or `:memory:`. */
@@ -55,11 +64,13 @@ export interface SqliteOptions<S extends Record<string, unknown>> {
   migrate?: boolean
 }
 
+/** Drizzle over a local file, with `$weft` for the framework's own needs. */
 export type SqliteDb<S extends Record<string, unknown>> = SqliteRemoteDatabase<S> & { $weft: DbHandle }
 
+/** A Drizzle client on a SQLite file, with this app's migrations and write tracking. */
 export function createDb<S extends Record<string, unknown>>({ schema, url = 'file:.data/app.db', migrate = true }: SqliteOptions<S>): SqliteDb<S> {
   if (/^[a-z][a-z0-9+.-]+:\/\//i.test(url) && !url.startsWith('file:'))
-    throw new StartError('Q013', `\`@weft/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``, 'use `file:<path>`, or `createDb` from `@weft/start/db/postgres` for a Postgres URL')
+    throw new StartError('Q013', `\`@weft-js/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``, 'use `file:<path>`, or `createDb` from `@weft-js/start/db/postgres` for a Postgres URL')
   const path = url.replace(/^file:/, '')
   let conn: Promise<Conn> | undefined
   const connect = () => (conn ??= open(path).catch(e => { conn = undefined; throw e }))
@@ -85,6 +96,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
         }
       }
     },
+    changes: (tables, o) => import('./changes-sqlite').then(m => m.sqliteChanges({ ...o, path, open, tables })),
   }
   const ready = gate(handle, migrate)
   const run = async (sql: string, params: unknown[], method: Method) => {
@@ -92,7 +104,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
     await ready()
     const c = await connect()
     if (!inside.getStore()) await held
-    return { rows: c.query(sql, params, method) as any }
+    return { rows: c.query(sql, params, method) as unknown[] }
   }
   const batch = async (list: { sql: string; params: unknown[]; method: Method }[]) => {
     await ready()
@@ -100,7 +112,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
     await held
     c.exec('begin')
     try {
-      const out = list.map(q => (touch(handle, q.sql), { rows: c.query(q.sql, q.params, q.method) as any }))
+      const out = list.map(q => (touch(handle, q.sql), { rows: c.query(q.sql, q.params, q.method) as unknown[] }))
       c.exec('commit')
       return out
     } catch (e) {
@@ -110,17 +122,17 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
   }
   const db = drizzle(run, batch, { schema })
   const transaction = db.transaction.bind(db)
-  db.transaction = (async (fn: any, config: any) => {
-    if (inside.getStore()) return transaction(fn, config)
+  db.transaction = (async (...args: Parameters<typeof transaction>) => {
+    if (inside.getStore()) return transaction(...args)
     await ready()
     const before = held
-    let open!: () => void
-    held = new Promise<void>(ok => (open = ok))
+    let release!: () => void
+    held = new Promise<void>(ok => { release = ok })
     await before
     try {
-      return await inside.run(true, () => transaction(fn, config))
+      return await inside.run(true, () => transaction(...args))
     } finally {
-      open()
+      release()
     }
   }) as typeof db.transaction
   return register(db, handle)

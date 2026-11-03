@@ -1,5 +1,5 @@
-// The native compiler's source stamp: a hash of everything in crates/weft-compiler that changes the binary. The build
-// writes it next to the .node file; compiler.cjs compares it at load, so a binary older than its crate (a checkout
+// The native compiler's source stamp: a hash of everything in crates/weft-compiler that changes the binary. The builds
+// write it next to the .node and .wasm files; compiler.cjs compares it at load, so a binary older than its crate (a checkout
 // that pulled compiler changes without `npm run build:native`) fails at once instead of emitting stale code.
 const { createHash } = require('node:crypto')
 const { existsSync, readdirSync, readFileSync } = require('node:fs')

@@ -1,22 +1,23 @@
-import { announce } from '@weft/ui-core'
-import { derived, onMount } from 'weft'
+import { announce } from '@weft-js/warp-core'
+import { derived, onMount } from '@weft-js/core'
 import { Button } from '../Button'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/flows/meter.css'
-import '@weft/ui-core/styles/flows/confirmation.css'
-import '@weft/ui-core/styles/flows/tracker.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/meter.css'
+import '@weft-js/warp-core/styles/flows/confirmation.css'
+import '@weft-js/warp-core/styles/flows/tracker.css'
 
+/** How far an order has got. */
 export type OrderStage = 'placed' | 'packed' | 'shipped' | 'delivered'
 const STAGES: { id: OrderStage; title: string }[] = [{ id: 'placed', title: 'Placed' }, { id: 'packed', title: 'Packed' }, { id: 'shipped', title: 'Shipped' }, { id: 'delivered', title: 'Delivered' }]
 
 /** The order tracker (09 §6.3): ordered → packed → shipped → delivered, the current stop filled. */
-export function OrderTracker({ stage = 'placed' }: { stage?: OrderStage }) {
+export function OrderTracker({ stage = 'placed' }: { stage?: OrderStage | undefined }) {
   const at = derived(() => STAGES.findIndex(s => s.id === stage))
   return (
     <ol data-scope="tracker" aria-label="Order status">
@@ -28,15 +29,16 @@ export function OrderTracker({ stage = 'placed' }: { stage?: OrderStage }) {
   )
 }
 
+/** Props for OrderConfirmation. */
 export interface OrderConfirmationProps {
   orderId: string
   email?: string
   note?: string
-  stage?: OrderStage
-  summary?: any
+  stage?: OrderStage | undefined
+  summary?: unknown
   titleId?: string
   onTrack?: () => void
-  onContinue?: () => void
+  onContinue?: (() => void) | undefined
 }
 
 /** The confirmation (09 §6.3): the mark strokes in, the order number, where the receipt went, the tracker. Announced politely. */
@@ -44,7 +46,7 @@ export function OrderConfirmation({ orderId, email, note, stage, summary, titleI
   let root: HTMLElement | undefined
   onMount(() => { queueMicrotask(() => { if (root) announce(root.ownerDocument, `Order ${orderId} confirmed`) }) })
   return (
-    <div ref={(n: any) => (root = n)} data-scope="confirmation">
+    <div ref={n => (root = n)} data-scope="confirmation">
       <span data-part="mark" data-tone="positive"><svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" data-draw="" d="m5 12.5 4.5 4.5L19 7.5" /></svg></span>
       <div>
         <h2 data-part="step-title" id={titleId} tabindex="-1">Order #{orderId} confirmed</h2>

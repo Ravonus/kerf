@@ -2,7 +2,7 @@
 // a plugin gives weft is in this one pure manifest: the server part as a slot provider, and its checks, docs, codes and
 // `weft add` steps as data. Heavy code stays behind `import()` and the slot's lazy `load()`, so a config load costs little
 // and a page costs nothing. A payment provider is a separate plugin: this one defines the ledger, and `pay.rail` is the seam.
-import { definePlugin, defineSlot, provide } from 'weft/plugin'
+import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
 import { setup } from './src/setup.mjs'
 
 const extension = defineSlot({ id: 'server.extension', version: 1, cardinality: 'keyed', sides: ['server'] })
@@ -19,29 +19,29 @@ const diagnostics = [
   ['PAY014', 'error', 'The plugin with no `src/pay.server.ts`: no webhook is mounted, so payments grant nothing', 'Default-export `definePay({ … })` from `src/pay.server.ts`'],
   ['PAY015', 'error', '`ctx.entitlements.has()` tested without `await`: a promise is truthy, so everyone passes', 'Await it (`weft fix` does, in an `async` function)'],
   ['PAY016', 'warning', '`memoryPayStore()` in `src/pay.server.ts`: a production server refuses to start with it', '`drizzlePayStore(db, { purchases, payEvents })`, or your own `PayStore`'],
-  ['PAY017', 'error', '`@weft/pay/server` or `/drizzle` imported in client code', 'Import them in a server module; the client gets `@weft/pay`'],
+  ['PAY017', 'error', '`@weft-js/pay/server` or `/drizzle` imported in client code', 'Import them in a server module; the client gets `@weft-js/pay`'],
   ['PAY018', 'error', '`src/pay.server.ts` with no `pay.rail` provider', 'Add a rail to `plugins`: `weft add pay-stripe`'],
-  ['PAY031', 'error', 'A live key in a test', '`fakePay` from `@weft/pay/test`'],
+  ['PAY031', 'error', 'A live key in a test', '`fakePay` from `@weft-js/pay/test`'],
 ].map(([code, severity, catches, fix]) => ({ code, severity, catches, fix }))
 
 export const pay = definePlugin({
-  name: '@weft/pay',
-  version: '0.0.0',
+  name: '@weft-js/pay',
+  version: '0.1.0',
   weft: '*',
   namespace: 'PAY',
   permissions: {},
   contribute: () => ({
-    provides: [provide(extension, { key: 'pay', sides: { server: { module: '@weft/pay/server', export: 'extension' } } })],
+    provides: [provide(extension, { key: 'pay', sides: { server: { module: '@weft-js/pay/server', export: 'extension' } } })],
     diagnostics,
     check: { include: ['src/**/*.{ts,tsx,js,jsx,mts,mjs}', 'test/**/*.{ts,tsx,js,mjs}', 'weft.config.*'], run: ctx => import('./src/checks.mjs').then(c => c.run(ctx)) },
     docs: { topic: 'pay', summary: 'Payments: products, checkout, entitlements, webhooks, fakePay, another provider; PAY-codes', file: new URL('./docs/pay.md', import.meta.url).pathname },
     setup,
-    agents: { title: 'Payments', text: 'Products are in `src/pay/catalog.ts`, in minor units. `checkout` and `entitlements` are in `src/server/pay.ts`. App code never names a rail or a price id, and `checkout` grants nothing: a verified webhook does. Enforce on the server, with `requires: [...]` or `await ctx.entitlements.has(...)`: a check only on the client protects nothing. Test with `fakePay` from `@weft/pay/test`. `weft docs pay`.' },
+    agents: { title: 'Payments', text: 'Products are in `src/pay/catalog.ts`, in minor units. `checkout` and `entitlements` are in `src/server/pay.ts`. App code never names a rail or a price id, and `checkout` grants nothing: a verified webhook does. Enforce on the server, with `requires: [...]` or `await ctx.entitlements.has(...)`: a check only on the client protects nothing. Test with `fakePay` from `@weft-js/pay/test`. `weft docs pay`.' },
     catalog: [
-      { name: 'product', import: '@weft/pay', summary: 'One thing you sell, in integer minor units' },
-      { name: 'price', import: '@weft/pay', summary: "A product's price, formatted for the reader" },
-      { name: 'definePay', import: '@weft/pay/server', summary: 'The ledger: src/pay.server.ts default-exports it' },
-      { name: 'fakePay', import: '@weft/pay/test', summary: 'A rail for tests: renewals, refunds and disputes on the clock' },
+      { name: 'product', import: '@weft-js/pay', summary: 'One thing you sell, in integer minor units' },
+      { name: 'price', import: '@weft-js/pay', summary: "A product's price, formatted for the reader" },
+      { name: 'definePay', import: '@weft-js/pay/server', summary: 'The ledger: src/pay.server.ts default-exports it' },
+      { name: 'fakePay', import: '@weft-js/pay/test', summary: 'A rail for tests: renewals, refunds and disputes on the clock' },
     ],
     map: [{ want: 'Sell something', call: 'add it to `src/pay/catalog.ts`, then `checkout({ product, plan })`', have: '`weft docs pay`' }],
   }),

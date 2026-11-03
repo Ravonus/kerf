@@ -1,4 +1,4 @@
-import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context, getOwner } from 'weft'
+import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context, getOwner } from '@weft-js/core'
 
 test('reads are consistent straight after a write', () => {
   const a = state(1)
@@ -13,7 +13,7 @@ test('derived is lazy and cached', () => {
   const a = state(1)
   const b = derived(() => (runs++, a.value + 1))
   expect(runs).toBe(0)
-  b.value; b.value
+  void b.value; void b.value
   expect(runs).toBe(1)
 })
 
@@ -57,7 +57,7 @@ test('watch tracks its source only and cleans up on re-run and dispose', () => {
   const log: string[] = []
   const dispose = createRoot(d => {
     watch(() => a.value, v => {
-      other.value // untracked
+      void other.value // untracked
       log.push(`run ${v}`)
       return () => log.push(`cleanup ${v}`)
     })
@@ -151,15 +151,15 @@ test('context.provide: the provided subtree is disposed with its parent', () => 
 
 test('graph memory: per-key sources go with their last reader; effects that read nothing are not kept', () => {
   const selected = state<Record<string, boolean>>({})
-  let owner: any
+  let owner!: { tail: unknown; owned: { sib: unknown } }
   const dispose = createRoot(d => {
-    owner = getOwner()
+    owner = getOwner() as never
     for (const k of ['a', 'b']) effect(() => selected.get(k), () => {})
     effect(() => 1, () => {}) // reads nothing: can never re-run
     return d
   })
-  expect((selected as any).k.size).toBe(2)
-  expect(owner.owned).toHaveLength(2)
+  expect((selected as object as { k: Map<unknown, unknown> }).k.size).toBe(2)
+  expect(owner.tail).toBe(owner.owned.sib) // two kept, the one that reads nothing dropped
   dispose()
-  expect((selected as any).k.size).toBe(0)
+  expect((selected as object as { k: Map<unknown, unknown> }).k.size).toBe(0)
 })

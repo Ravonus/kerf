@@ -1,5 +1,5 @@
 // The sidecar supervisor (research 36 §5): what `weft dev`, `weft build`, `weft start` and `weft check` do for the Rust
-// behind `remote()`, and for `native()`'s libraries (research 37). It runs in the CLI, never in the server bundle:
+// behind `remote()`, and for `native()`'s libraries (research 39). It runs in the CLI, never in the server bundle:
 // `remote()` is only `fetch`, so a built server runs anywhere, and a sidecar deployed on its own is one environment
 // variable away.
 //
@@ -28,13 +28,14 @@ import { isServerModule } from './vite.mjs'
 export function usesRemote(root) {
   const src = join(root, 'src')
   if (!existsSync(src)) return false
-  return readdirSync(src, { recursive: true, withFileTypes: true }).some(f => f.isFile() && /\.[cm]?[jt]sx?$/.test(f.name) && /['"]@weft\/start\/rust['"]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')))
+  return readdirSync(src, { recursive: true, withFileTypes: true }).some(f => f.isFile() && /\.[cm]?[jt]sx?$/.test(f.name) && /['"]@weft-js\/start\/rust['"]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')))
 }
 
 /** Same spelling as `urlVariable` in rust.ts, which can't share a module with this one: it ships in the server bundle. */
 export const urlVariable = service => `WEFT_RUST_${service.toUpperCase().replaceAll('-', '_')}_URL`
 
 const external = (rust, service) => rust?.services?.[service]?.external === true
+/** The crate folder of a service. */
 export const crateDir = (root, rust, service) => resolve(root, rust?.services?.[service]?.crate ?? `crates/${service}`)
 
 /** The services in a contract that have a crate here. */
@@ -50,7 +51,8 @@ function run(cmd, args, { cwd, env, onLine }) {
     try {
       child = spawn(cmd, args, { cwd, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] })
     } catch (e) {
-      return ok({ code: 127, stdout: '', stderr: e.message, missing: true })
+      ok({ code: 127, stdout: '', stderr: e.message, missing: true })
+      return
     }
     let stdout = '', stderr = ''
     child.stdout.on('data', d => { stdout += d })
@@ -102,7 +104,7 @@ export async function cargo(verb, { root, dir, service, contract, release, targe
   const args = [verb, '--message-format=json', ...(release ? ['--release'] : []), ...(target ? ['--target', target] : [])]
   const env = { WEFT_CONTRACT: join(root, '.weft', 'contract.json'), ...(target === WASM && { CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: '-C target-feature=+simd128' }) }
   const r = await run('cargo', args, { cwd: dir, env, onLine })
-  if (r.missing) return { ok: false, diagnostics: [{ code: 'R109', severity: 'error', file: 'package.json', span: [1, 1, 1, 1], why: `\`${service}\` needs Rust: \`cargo\` isn't on PATH. Install it from rustup.rs, or set \`external: true\` for a sidecar built elsewhere.` }] }
+  if (r.missing) return { ok: false, diagnostics: [{ code: 'R109', severity: 'error', file: 'package.json', span: [1, 1, 1, 1], why: `\`${service}\` is Rust you opted into, so it needs \`cargo\`, and it isn't on PATH. Install it from rustup.rs, or set \`external: true\` for a sidecar built elsewhere. The rest of weft doesn't need Rust.` }] }
   const read = readCargo(r.stdout, { contract, service, root, dir })
   if (r.code === 0) return read
   if (!read.diagnostics.length) {
@@ -149,7 +151,8 @@ function launch({ exe, service, hash, listen, secret, onExit, log }) {
       if (!ready) return failed(`\`${service}\` exited before it listened (${signal ?? code})`)
       onExit?.(code, signal)
     })
-    child.stdout.on('data', async d => {
+    child.stdout.on('data', d => void heard(d))
+    const heard = async d => {
       if (ready) return void process.stdout.write(d)
       out += d
       const addr = /weft-listening (\S+)/.exec(out)?.[1]
@@ -169,7 +172,7 @@ function launch({ exe, service, hash, listen, secret, onExit, log }) {
         ready = false
         failed(`\`${service}\`'s health check failed: ${e.message}`)
       }
-    })
+    }
   })
 }
 
@@ -204,7 +207,7 @@ function proxy(state) {
     up.on('error', () => res.destroy())
     req.pipe(up)
   })
-  return new Promise(ok => server.listen(0, '127.0.0.1', () => ok({ server, agent, port: server.address().port })))
+  return new Promise(ok => { server.listen(0, '127.0.0.1', () => ok({ server, agent, port: server.address().port })) })
 }
 
 /**
@@ -223,7 +226,7 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
     process.env.WEFT_BUILD = '1' // the same as a build: server modules load, and nothing connects
     try {
       const { contract, diagnostics } = await writeContract({ root, site, rust })
-      diagnostics.filter(d => /^R1/.test(d.code)).forEach(say)
+      diagnostics.filter(d => d.code.startsWith('R1')).forEach(say)
       return { contract, blocked: diagnostics.find(d => /^R10[12]$/.test(d.code) && d.severity === 'error') }
     } finally {
       if (held === undefined) delete process.env.WEFT_BUILD
@@ -255,6 +258,7 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
       do {
         s.again = false
         await once(service, s)
+        // oxlint-disable-next-line no-unmodified-loop-condition -- `again` and `closed` are set by what arrives during the await
       } while (s.again && !closed)
     } finally {
       s.building = false
@@ -316,7 +320,7 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
   const watchers = []
   const debounce = (fn, ms = 200) => {
     let t
-    return () => { clearTimeout(t); t = setTimeout(fn, ms) }
+    return () => { clearTimeout(t); t = setTimeout(() => fn(), ms) }
   }
 
   for (const service of buildable(contract, rust)) {
@@ -375,7 +379,7 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
       for (const s of states.values()) {
         s.proxy?.agent.destroy()
         s.proxy?.server.closeAllConnections()
-        await new Promise(ok => (s.proxy ? s.proxy.server.close(ok) : ok()))
+        await new Promise(ok => { if (s.proxy) s.proxy.server.close(ok); else ok() })
       }
     },
   }

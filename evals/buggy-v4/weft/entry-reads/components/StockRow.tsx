@@ -1,4 +1,4 @@
-import type { State } from 'weft'
+import type { State } from '@weft-js/core'
 import type { Stock } from '../api'
 import type { Live } from '../App'
 import { money, pct, sparkline } from '../lib/format'

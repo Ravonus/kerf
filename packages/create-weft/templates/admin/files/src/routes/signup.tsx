@@ -1,5 +1,5 @@
-import { Form, Link, redirect, type FormApi, type LoadArgs, type Meta } from '@weft/start'
-import { Alert, Button, Input, Stack, Text } from '@weft/warp'
+import { Form, Link, redirect, type FormApi, type LoadArgs, type Meta } from '@weft-js/start'
+import { Alert, Button, Input, Stack, Text } from '@weft-js/warp'
 import { AuthPage } from '#/components/AuthPage'
 import { signUp } from '#/server/session'
 

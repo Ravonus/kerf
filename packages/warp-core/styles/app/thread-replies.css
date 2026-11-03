@@ -1,0 +1,8 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="thread-replies"]) { all: unset; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--warp-color-accent-text); cursor: pointer; font-weight: 500; }
+:where([data-scope="thread-replies"] [data-scope="avatar"]) { --_s: 18px; font-size: 8px; }
+:where([data-scope="thread-replies"]:hover) { text-decoration: underline; }
+:where([data-scope="suggestions"] button),
+:where([data-scope="thread-replies"]) { min-block-size: var(--warp-hit-min); }
+}

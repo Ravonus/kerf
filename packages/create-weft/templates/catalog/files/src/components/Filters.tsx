@@ -1,5 +1,5 @@
-import { navigate } from '@weft/start'
-import { Button, Checkbox, Input, Stack } from '@weft/warp'
+import { navigate } from '@weft-js/start'
+import { Button, Checkbox, Input, Stack } from '@weft-js/warp'
 import { amount, viewHref, type View } from '#/lib/catalog'
 
 /** A real GET form, so filters work before the page has hydrated. */

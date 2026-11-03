@@ -1,0 +1,36 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Logo: the mark follows the scheme; the weft line takes the accent */
+:where([data-scope="logo"]) { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: -0.01em; color: var(--warp-color-text); text-decoration: none; }
+:where([data-scope="logo"] svg) { inline-size: 22px; block-size: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+:where([data-scope="logo"] svg [data-part="weft"]) { stroke: var(--warp-color-accent-solid); stroke-width: 2; }
+
+
+
+
+/* ---------------------------------------------------------------------------
+   TOUCH TARGETS (00 §1.5; 01 §2 "Touch floor"). Every target reaches hit-min (44px on a coarse
+   pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
+   never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
+   ------------------------------------------------------------------------ */
+:where(a[data-scope="link"]),
+:where([data-scope="logo"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]),
+:where([data-scope="relative-time"]),
+:where([data-scope="truncate"] > [data-part="toggle"]),
+:where([data-scope="menubar"] > [role="menuitem"]),
+:where([data-scope="ai-label"]) { position: relative; }
+
+/* links (standalone and in running text: the expander reaches into the lines above and below, with no
+   layout change), the logo, the heading anchor, relative time (a tooltip trigger), Show more, the AI label */
+@media screen {
+:where(a[data-scope="link"])::after,
+  :where([data-scope="logo"])::after,
+  :where([data-scope="anchor-heading"] > a[data-part="anchor"])::after,
+  :where([data-scope="relative-time"])::after,
+  :where([data-scope="truncate"] > [data-part="toggle"])::after,
+  :where([data-scope="ai-label"])::after {
+    content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+  }
+}
+}

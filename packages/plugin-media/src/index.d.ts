@@ -1,5 +1,6 @@
-import type { PluginInstance } from 'weft/plugin'
+import type { PluginInstance } from '@weft-js/core/plugin'
 
+/** Options of `media()`: what to encode, how far to search, and when the encoding happens. */
 export interface MediaOptions {
   /** Efficient formats in front of the source-format fallback. Default `['avif']`. */
   formats?: ('avif' | 'webp')[]
@@ -23,4 +24,5 @@ export interface MediaOptions {
   server?: { dir?: string; maxBytes?: number }
 }
 
+/** The plugin for `weft.config.ts`: `?media` imports become optimised, responsive assets. */
 export declare function media(options?: MediaOptions): PluginInstance<MediaOptions>

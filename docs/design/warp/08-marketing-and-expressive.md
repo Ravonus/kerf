@@ -152,7 +152,7 @@ The catalogue in §6 adds the P2 effects with the same columns.
 ### 1.6 API
 
 ```ts
-import { defineEffect, fx, Effects } from "@weft/warp/expressive";
+import { defineEffect, fx, Effects } from "@weft-js/warp/expressive";
 // any element: <h1><em use:fx="gradient-text">trust</em></h1>; fx() returns the live state for custom work
 const state: State<FxState> = fx(el, "spotlight");
 defineEffect({ name: "rain", min: "vivid", reduced: "off", class: "S", budget: { ms: 1600, count: 120 } });
@@ -668,9 +668,9 @@ by more than 2px. Quiet and reduced motion: shadow and colour only.
 
 ### 6.7 Canvas and dither
 
-The site's hero loom and the icons' shaded depth, as a family. `@weft/ui-core/canvas` is a surface (`surface(canvas, { draw })`):
+The site's hero loom and the icons' shaded depth, as a family. `@weft-js/warp-core/canvas` is a surface (`surface(canvas, { draw })`):
 pixel ratio, resize, a pause off screen and in a hidden tab, one still frame under reduced motion, and one shared
-`requestAnimationFrame`. With nothing to paint no frame is scheduled. `@weft/ui-core/dither` is the engine: tiles (Bayer 2/4/8,
+`requestAnimationFrame`. With nothing to paint no frame is scheduled. `@weft-js/warp-core/dither` is the engine: tiles (Bayer 2/4/8,
 blue noise, halftone), error diffusion (Floyd-Steinberg, Atkinson) for stills, fields, masks and a spring lattice for the pointer.
 
 ```tsx

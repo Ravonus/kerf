@@ -1,4 +1,4 @@
-import { defineConfig } from 'weft/config'
+import { defineConfig } from '@weft-js/core/config'
 
 export default defineConfig({
   site: {

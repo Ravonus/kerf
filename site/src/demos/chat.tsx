@@ -1,6 +1,6 @@
-import { skip } from '@weft/start'
-import { state } from 'weft'
-import { Badge, Button, Card, Input } from '@weft/warp'
+import { skip } from '@weft-js/start'
+import { state } from '@weft-js/core'
+import { Badge, Button, Card, Input } from '@weft-js/warp'
 import { wire } from '../lib/wire'
 import { room } from '../server/chat'
 
@@ -8,7 +8,8 @@ export default function Chat() {
   const joined = state(false)
   const up = state(true)
   const draft = state('')
-  const id = crypto.randomUUID()
+  // getRandomValues, not randomUUID: a page on plain http (a LAN address) has no randomUUID.
+  const id = crypto.getRandomValues(new Uint32Array(4)).join('-')
   const chat = room.connect(() => (joined.value ? { roomId: id } : skip))
   const said = chat.collect('said', { max: 50, key: m => m.id })
   const send = (e: Event) => {
@@ -28,7 +29,8 @@ export default function Chat() {
     <Card title="Chat">
       <Badge>{chat.status.value}</Badge>
       {!joined.value && <Button onClick={join}>Join</Button>}
-      {joined.value && (
+      {chat.status.value === 'unavailable' && <p>This site runs on functions, which can't hold the chat's socket. Run it with <code>weft dev</code> to try it.</p>}
+      {joined.value && chat.status.value !== 'unavailable' && (
         <form onSubmit={send}>
           <ol data-part="said">
             {said.value.map(m => (
@@ -38,7 +40,7 @@ export default function Chat() {
           <Input
             label="Message"
             value={draft.value}
-            onInput={(e: any) => (draft.value = e.currentTarget.value)}
+            onInput={e => (draft.value = e.currentTarget.value)}
           />
           <Button type="submit" disabled={!up.value}>Send</Button>
           <Button

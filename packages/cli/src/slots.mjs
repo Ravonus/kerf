@@ -1,5 +1,9 @@
 // Slot table (research 13 §2.2) and the binding rules, resolved from config data alone. Phase 1 executes no plugin.
 
+/**
+ * Every slot a plugin can fill: how many providers it takes, where it runs, and what's used when none does.
+ * @type {{ id: string, version: number, cardinality: string, sides: string[], default: string | string[] | null, phase: string }[]}
+ */
 export const slotTable = [
   { id: 'font.build', version: 1, cardinality: 'one', sides: ['build'], default: null, phase: '2' },
   { id: 'media.build', version: 1, cardinality: 'one', sides: ['build'], default: null, phase: '2' },
@@ -58,7 +62,9 @@ export function bindSlots(config, report) {
     }
   }
 
-  const ids = [...new Set([...slotTable.map(s => s.id), ...offers.keys()])].sort()
+  /** @type {Set<string>} */
+  const known = new Set([...slotTable.map(s => s.id), ...offers.keys()])
+  const ids = [...known].sort()
   const out = {}
   for (const id of ids) {
     const def = slotDef(id) ?? { cardinality: 'one', default: null }
@@ -77,9 +83,10 @@ export function bindSlots(config, report) {
       return fallback
     }
     if (def.cardinality === 'one') {
-      out[id] = resolve('', def.default ? `weft:default:${def.default}` : null)
+      out[id] = resolve('', typeof def.default === 'string' ? `weft:default:${def.default}` : null)
     } else {
-      const keys = new Set([...(def.default ?? []), ...[...byKey.keys()].filter(Boolean)])
+      /** @type {Set<string>} */
+      const keys = new Set([...(Array.isArray(def.default) ? def.default : []), ...[...byKey.keys()].filter(Boolean)])
       const block = {}
       for (const key of [...keys].sort()) block[key] = resolve(key, def.default?.includes(key) ? 'weft:default' : null)
       out[id] = block

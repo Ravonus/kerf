@@ -1,22 +1,25 @@
-import { CodeIcon, CodeBlockIcon, LinkIcon, ListIcon, ListOrderedIcon, QuoteIcon, UndoIcon } from '@weft/icons'
-import { comboPopup, htmlToMarkdown, keyboardDock, markdownToHtml, nextIndex, richText, sanitizeHtml, uid, type MentionItem, type RichTextHandle } from '@weft/ui-core'
-import { derived, flush, onCleanup, state, untrack, watch } from 'weft'
+import { CodeIcon, CodeBlockIcon, LinkIcon, ListIcon, ListOrderedIcon, QuoteIcon, UndoIcon } from '@weft-js/warp-icons'
+import { comboPopup, htmlToMarkdown, keyboardDock, markdownToHtml, nextIndex, richText, sanitizeHtml, uid, type MentionItem, type RichTextHandle, type RichTextOptions } from '@weft-js/warp-core'
+import { derived, flush, onCleanup, state, untrack, watch } from '@weft-js/core'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldShell } from './Field'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/body.css'
-import '@weft/ui-core/styles/rich/rich-text.css'
-import '@weft/ui-core/styles/rich/listbox.css'
-import '@weft/ui-core/styles/rich/popover.css'
-import '@weft/ui-core/styles/rich/helpers.css'
+import { Tooltip } from './Tooltip'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/body.css'
+import '@weft-js/warp-core/styles/rich/rich-text.css'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/popover.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
 
+/** An entry in the editor's slash menu. */
 export type SlashCommand = { id: string; label: string; hint?: string; shortcut?: string; run: (editor: RichTextHandle) => void }
 type Mark = 'bold' | 'italic' | 'strike' | 'code' | 'link'
 type Block = 'h2' | 'h3' | 'ul' | 'ol' | 'quote' | 'codeblock'
 
+/** Props for RichTextEditor. */
 export type RichTextEditorProps = FieldShell & Bindable<string> & {
-  format?: 'html' | 'markdown'
+  format?: 'html' | 'markdown' | undefined
   /** fixed (default) in the frame, bubble over a selection, or none. A phone docks either above the keyboard. */
   toolbar?: 'fixed' | 'bubble' | 'none'
   marks?: Mark[]
@@ -26,10 +29,10 @@ export type RichTextEditorProps = FieldShell & Bindable<string> & {
   placeholder?: string
   minRows?: number
   maxRows?: number
-  name?: string
+  name?: string | undefined
 }
 
-type Tool = { cmd: string; label: string; tip: string; glyph: () => any; style?: string; toggles?: boolean }
+type Tool = { cmd: string; label: string; tip: string; glyph: () => unknown; style?: string; toggles?: boolean }
 const TOOLS: Record<Mark | Block, Tool> = {
   h2: { cmd: 'h2', label: 'H2 heading', tip: 'Heading · # ', glyph: () => 'H2', toggles: true },
   h3: { cmd: 'h3', label: 'H3 subheading', tip: 'Subheading · ### ', glyph: () => 'H3', toggles: true },
@@ -52,12 +55,12 @@ const SLASH: SlashCommand[] = [
   { id: 'code', label: 'Code block', hint: '```', run: e => e.run('pre') },
   { id: 'divider', label: 'Divider', hint: '---', run: e => e.run('insertHorizontalRule') },
 ]
-type MenuRow = { id: string; main: string; meta?: string; run: () => void }
+type MenuRow = { id: string; main: string; meta?: string | undefined; run: () => void }
 
 /**
  * A rich text field (04 RichTextEditor; inputs-rich.html:1522): the editor frame is the field. The toolbar is an APG
  * Toolbar, one tab stop with ←/→ inside. Markdown shortcuts open a block at the start of a line; `/` on an empty line and
- * `@` open a list at the caret. Everything that enters the editor, a value or a paste, goes through ui-core's allow-list.
+ * `@` open a list at the caret. Everything that enters the editor, a value or a paste, goes through warp-core's allow-list.
  */
 export function RichTextEditor({ value, defaultValue, onValueChange, format = 'html', toolbar = 'fixed', marks = ['bold', 'italic', 'strike', 'code', 'link'], blocks = ['h2', 'ul', 'ol', 'quote'], commands = SLASH, mentions, placeholder = 'Write, or type / for blocks…', minRows, maxRows, name, hint, ...rest }: RichTextEditorProps) {
   const id = uid('rte')
@@ -74,10 +77,10 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
   const active = state(0)
   const menuOpen = state(false)
   const said = state('')
-  const tools = derived(() => [[...blocks.filter(b => b === 'h2' || b === 'h3').map(b => TOOLS[b])], marks.map(m => TOOLS[m]), blocks.filter(b => b !== 'h2' && b !== 'h3').map(b => TOOLS[b])].filter(g => g.length))
+  const tools = derived(() => [blocks.filter(b => b === 'h2' || b === 'h3').map(b => TOOLS[b]), marks.map(m => TOOLS[m]), blocks.filter(b => b !== 'h2' && b !== 'h3').map(b => TOOLS[b])].filter(g => g.length))
   const flat = derived(() => tools.value.flat())
   let ed: HTMLDivElement | undefined
-  let handle: (RichTextHandle & { update(o: any): void; destroy(): void }) | undefined
+  let handle: RichTextHandle | undefined
   let bar: HTMLDivElement | undefined
   let pop: HTMLDivElement | undefined
   let mark: HTMLSpanElement | undefined
@@ -120,7 +123,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
     else { ed!.focus(); handle!.restore() }
   }
   use(
-    (el: HTMLDivElement, o: any) => (handle = richText(el, o) as any) as any,
+    (el: HTMLDivElement, o: RichTextOptions) => (handle = richText(el, o)),
     () => ed,
     () => ({
       onChange: (html: string) => { written = fromEditor(html); held.set(written, 'keyboard') },
@@ -134,6 +137,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
   watch(() => held.value, v => {
     if (v === written) return
     written = v
+    // oxlint-disable-next-line weft/no-html-sink -- toHtml sanitizes
     if (ed) ed.innerHTML = toHtml(v)
   })
   const onToolKey = (e: KeyboardEvent) => {
@@ -153,7 +157,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
     else if (e.key === 'Escape') { e.preventDefault(); close() }
   }
   const Tool = ({ tool: t }: { tool: Tool }) => (
-    <button type="button" data-part="tool" tabindex={flat.value[stop.value] === t ? '0' : '-1'} aria-label={t.label} aria-pressed={pressed.get(t.cmd) ? 'true' : 'false'} title={t.tip} style={t.style} onClick={() => (t.cmd === 'link' ? (handle!.save(), startLink()) : handle!.run(t.cmd))}>{t.glyph()}</button>
+    <Tooltip content={t.tip}><button type="button" data-part="tool" tabindex={flat.value[stop.value] === t ? '0' : '-1'} aria-label={t.label} aria-pressed={pressed.get(t.cmd) ? 'true' : 'false'} style={t.style} onClick={() => (t.cmd === 'link' ? (handle!.save(), startLink()) : handle!.run(t.cmd))}>{t.glyph()}</button></Tooltip>
   )
   const rows = () => [minRows && `min-block-size:${minRows * 1.6}em`, maxRows && `max-block-size:${maxRows * 1.6}em`].filter(Boolean).join(';') || undefined
   return (
@@ -162,30 +166,33 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
       hint={hint ?? 'Markdown shortcuts work at the start of a line. Esc closes menus.'}
       group
       filled
+      reset={held.reset}
       hold={menuOpen.value}
       attrs={{ 'data-multiline': '' }}
-      control={({ id: field, describedby, invalid }) => (
+      control={p => (
         <div data-scope="rte">
           <div data-part="frame">
             {toolbar !== 'none' && (
-              <div ref={(n: any) => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest('[data-part="tool"]')) e.preventDefault() }}>
-                {tools.value.map((g, i) => <span key={g[0].cmd} style="display:contents">{i > 0 && <span data-part="sep"></span>}{g.map(t => <Tool key={t.cmd} tool={t} />)}</span>)}
+              <div ref={n => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest?.('[data-part="tool"]')) e.preventDefault() }}>
+                {tools.value.map((g, i) => <span key={g[0]!.cmd} style="display:contents">{i > 0 && <span data-part="sep"></span>}{g.map(t => <Tool key={t.cmd} tool={t} />)}</span>)}
                 <span data-part="sep"></span>
-                <button type="button" data-part="tool" tabindex="-1" aria-label="Undo" title="Undo · ⌘Z" onClick={() => handle!.run('undo')}><UndoIcon /></button>
+                <Tooltip content="Undo" kbd="⌘Z"><button type="button" data-part="tool" tabindex="-1" aria-label="Undo" onClick={() => handle!.run('undo')}><UndoIcon /></button></Tooltip>
               </div>
             )}
             {linking.value && (
               <div data-part="linkbar">
                 <label data-part="sr-only" for={`${id}-url`}>Link address</label>
-                <input ref={(n: any) => (link = n)} type="url" id={`${id}-url`} placeholder="https://" value={url.value} onInput={(e: any) => (url.value = e.currentTarget.value)} onKeyDown={(e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); endLink(true) } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); endLink(false) } }} />
+                <input ref={n => (link = n)} type="url" id={`${id}-url`} placeholder="https://" value={url.value} onInput={(e: Event) => (url.value = (e.currentTarget as HTMLInputElement).value)} onKeyDown={(e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); endLink(true) } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); endLink(false) } }} />
                 <Button size="sm" onClick={() => endLink(true)}>Apply</Button>
                 <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => endLink(false)}>Cancel</Button>
               </div>
             )}
-            <div ref={(n: any) => (ed = n)} data-part="content" id={`${id}-c`} contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" aria-labelledby={`${field}-l`} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={`${id}-menu`} aria-activedescendant={menuOpen.value ? `${id}-${active.value}` : undefined} data-placeholder={placeholder} spellcheck style={rows()} onKeyDown={onMenuKey} innerHTML={start}></div>
+            <div ref={n => (ed = n)} data-part="content" id={`${id}-c`} contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" aria-labelledby={`${p.id}-l`} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={`${id}-menu`} aria-activedescendant={menuOpen.value ? `${id}-${active.value}` : undefined} data-placeholder={placeholder} spellcheck style={rows()} onKeyDown={onMenuKey}
+          // oxlint-disable-next-line weft/no-html-sink -- `start` went through toHtml, which sanitizes
+          innerHTML={start}></div>
           </div>
-          <span ref={(n: any) => (mark = n)} data-part="caret-anchor" style="position:fixed" aria-hidden="true"></span>
-          <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
+          <span ref={n => (mark = n)} data-part="caret-anchor" style="position:fixed" aria-hidden="true"></span>
+          <div ref={n => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
             <span data-part="sweep" aria-hidden="true"></span>
             <ul data-part="listbox" role="listbox" id={`${id}-menu`} aria-label="Insert">
               {items.value.map((r, n) => <li key={r.id} role="option" id={`${id}-${n}`} aria-selected={n === active.value ? 'true' : 'false'} data-active={n === active.value ? '' : undefined} onClick={() => choose(n)}><span>{r.main}</span>{r.meta && <span data-part="opt-meta">{r.meta}</span>}</li>)}

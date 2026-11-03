@@ -1,7 +1,7 @@
 // A hand-written provider: the exit check for research 34 §5. Scrypt passwords and random session tokens on Native's
 // SQL, with nothing from Better Auth. It meets weft only through `defineAuth`.
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
-import { defineAuth } from '@weft/start/auth'
+import { defineAuth } from '@weft-js/start/auth'
 import { db } from '#/db/index.server'
 
 interface User { id: string; name: string; email: string }

@@ -1,19 +1,22 @@
-import { MoreIcon } from '@weft/icons'
-import { announce, findCard, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/ui-core'
-import { Box, derived, flush, state, untrack, watch, type State } from 'weft'
+import { MoreIcon } from '@weft-js/warp-icons'
+import { announce, edges, findCard, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft-js/warp-core'
+import { Box, derived, flush, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { Input } from '../Field'
-import { use } from '../use'
+import { use } from '@weft-js/warp-core/weft'
 import { VirtualList, type VirtualControl } from '../VirtualList'
 import { SWEEP } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/data/base.css'
-import '@weft/ui-core/styles/data/kanban.css'
-import '@weft/ui-core/styles/app/kanban.css'
+import '@weft-js/warp-core/styles/data/base.css'
+import '@weft-js/warp-core/styles/data/kanban.css'
+import '@weft-js/warp-core/styles/app/kanban.css'
+import '@weft-js/warp-core/styles/layout/edges.css'
 
 
-export type KanbanCardData = BoardCard & { label?: string; color?: number; assignee?: string; /** Footer text: a due date, a count. */ meta?: string }
+/** A card on the board, with what warp draws on it. */
+export type KanbanCardData = BoardCard & { label?: string | undefined; color?: number | undefined; assignee?: string | undefined; /** Footer text: a due date, a count. */ meta?: string | undefined }
+/** A board column of warp cards. */
 export type KanbanColumn = BoardColumn<KanbanCardData>
 
 type Ctx = {
@@ -46,7 +49,7 @@ function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
   }
   const at = () => findCard(ctx.board(), card.id)
   return (
-    <div ref={(n: any) => (el = n)} data-part="card" data-virtual="" data-focus="" data-sweep="" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
+    <div ref={n => (el = n)} data-part="card" data-virtual="" data-focus="" data-sweep="" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
       <SWEEP />
       <h4 data-measure="">{card.title}</h4>
       {hasFooter(card) && (
@@ -56,8 +59,8 @@ function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
           {card.assignee !== undefined && <span data-scope="avatar" data-size="sm" aria-hidden="true">{card.assignee}</span>}
         </footer>
       )}
-      <button ref={(n: any) => (btn = n)} type="button" data-part="move" aria-haspopup="true" aria-expanded={open.value ? 'true' : 'false'} aria-label={`Move ${card.title}`} onClick={(e: MouseEvent) => { if (ctx.coarse(e.currentTarget as Element)) ctx.sheet(card); else open.value = !open.value }}><MoreIcon /></button>
-      <div ref={(n: any) => (panel = n)} data-part="menu" hidden={!open.value} role="menu" aria-label="Move to">
+      <button ref={n => (btn = n)} type="button" data-part="move" aria-haspopup="true" aria-expanded={open.value ? 'true' : 'false'} aria-label={`Move ${card.title}`} onClick={(e: MouseEvent) => { if (ctx.coarse(e.currentTarget as Element)) ctx.sheet(card); else open.value = !open.value }}><MoreIcon /></button>
+      <div ref={n => (panel = n)} data-part="menu" hidden={!open.value} role="menu" aria-label="Move to">
         {open.value && ctx.board().map(c => <button key={c.id} type="button" role="menuitem" tabindex="-1" aria-disabled={at()?.col === ctx.board().indexOf(c) ? 'true' : undefined} onClick={() => { const n = ctx.board().indexOf(c); if (at()?.col !== n) to(n, c.cards.length) }}>Move to {c.title}</button>)}
         {open.value && <button type="button" role="menuitem" tabindex="-1" onClick={() => { const a = at()!; to(a.col, a.index - 1) }}>Move up</button>}
         {open.value && <button type="button" role="menuitem" tabindex="-1" onClick={() => { const a = at()!; to(a.col, a.index + 1) }}>Move down</button>}
@@ -118,7 +121,7 @@ function Column({ col, ctx, hint }: { col: () => KanbanColumn; ctx: Ctx; hint: s
  * (Alt + arrows, or Space, arrows, Space); the Move button, a menu at a fine pointer and a Sheet on a phone. Each move is
  * announced. `columns` is a box, or a list the board follows and `onMove` reports to. `height` defaults to 560px.
  */
-export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board' }: { columns: State<KanbanColumn[]> | KanbanColumn[]; onMove?: (id: string, column: string, index: number) => void; onAdd?: (column: string, title: string) => void; onDrift?: (index: number, predicted: number, actual: number) => void; height?: string; label?: string }) {
+export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board' }: { columns: State<KanbanColumn[]> | KanbanColumn[]; onMove?: (id: string, column: string, index: number) => void; onAdd?: (column: string, title: string) => void; onDrift?: ((index: number, predicted: number, actual: number) => void) | undefined; height?: string; label?: string | undefined }) {
   const hint = uid('kanban')
   const own = state(untrack(() => (columns instanceof Box ? [] : columns)))
   const board = derived<KanbanColumn[]>(() => (columns instanceof Box ? columns.value : own.value))
@@ -130,7 +133,7 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
   let host: HTMLDivElement | undefined
   const focus = (id: string) => {
     const at = findCard(board.value, id)
-    if (at) queueMicrotask(() => windows.get(board.value[at.col].id)?.focus(id)) // focus follows the card
+    if (at) queueMicrotask(() => windows.get(board.value[at.col]!.id)?.focus(id)) // focus follows the card
   }
   const move = (id: string, col: number, index: number) => {
     const next = moveCard(board.value, id, col, index)
@@ -139,9 +142,10 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
     flush()
     const at = findCard(next, id)!
     announce(host!.ownerDocument, moveLine(next, id))
-    onMove?.(id, next[at.col].id, at.index)
+    onMove?.(id, next[at.col]!.id, at.index)
   }
   use(kanban, () => host, () => ({ columns: () => untrack(() => board.value), onMove: move, focus }))
+  use(edges, () => host) // a column cut at the stage's edge gets a shadow there, as a wide table's does
   const ctx: Ctx = {
     board: () => board.value,
     move,
@@ -163,8 +167,10 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
   const place = derived(() => (moving.value ? findCard(board.value, moving.value.id) : null))
   return (
     <>
-      <div ref={(n: any) => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
-        {board.value.map(c => <Column key={c.id} col={() => board.value.find(x => x.id === c.id) ?? c} ctx={ctx} hint={hint} />)}
+      <div data-scope="edges">
+        <div ref={n => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
+          {board.value.map(c => <Column key={c.id} col={() => board.value.find(x => x.id === c.id) ?? c} ctx={ctx} hint={hint} />)}
+        </div>
       </div>
       <p data-part="sr-only" id={hint}>Alt plus arrow keys move this card. Space picks it up. The move button lists every destination.</p>
       <Drawer open={sheetOpen} title={`Move ${moving.value?.title ?? ''}`} side="bottom">

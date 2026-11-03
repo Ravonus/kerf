@@ -1,4 +1,4 @@
-import { mutation, query } from '@weft/start'
+import { mutation, query } from '@weft-js/start'
 import { and, asc, count, desc, eq, ilike, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { customers, orderItems, orders, products } from '#/db/schema'

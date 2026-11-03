@@ -22,17 +22,17 @@ function app(name, options = {}) {
   const dir = join(tmp, `${name}-${options.config ?? 'ts'}`)
   rmSync(dir, { recursive: true, force: true })
   scaffold(dir, { template: name, ...options })
-  const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft/cli': 1 })
-  for (const dep of deps.filter(d => /^(weft$|@weft\/)/.test(d))) {
-    mkdirSync(join(dir, 'node_modules', '@weft'), { recursive: true })
-    symlinkSync(join(pkgs, dep.replace('@weft/', '')), join(dir, 'node_modules', dep), 'dir')
+  const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft-js/cli': 1 })
+  for (const dep of deps.filter(d => /^(weft$|@weft-js\/)/.test(d))) {
+    mkdirSync(join(dir, 'node_modules', '@weft-js'), { recursive: true })
+    symlinkSync(join(pkgs, dep.replace('@weft-js/', '')), join(dir, 'node_modules', dep), 'dir')
   }
   // A link resolves from where it points, and a package with no install of its own can't reach its `weft` peer from there.
   for (const dep of deps.filter(d => d.startsWith('@weft/plugin-'))) {
-    const home = join(pkgs, dep.replace('@weft/', ''), 'node_modules')
+    const home = join(pkgs, dep.replace('@weft-js/', ''), 'node_modules')
     if (existsSync(home)) continue
     rmSync(join(dir, 'node_modules', dep))
-    cpSync(join(pkgs, dep.replace('@weft/', '')), join(dir, 'node_modules', dep), { recursive: true })
+    cpSync(join(pkgs, dep.replace('@weft-js/', '')), join(dir, 'node_modules', dep), { recursive: true })
   }
   return dir
 }
@@ -72,9 +72,9 @@ describe('the overlay', () => {
 
   it('implies what the template requires, with postgres as the database', () => {
     expect(pkg.dependencies.postgres).toBeDefined()
-    expect(pkg.dependencies['@weft/warp']).toBeDefined()
+    expect(pkg.dependencies['@weft-js/warp']).toBeDefined()
     expect(pkg.dependencies['better-auth']).toBeUndefined()
-    expect(files['src/db/index.server.ts']).toContain("from '@weft/start/db/postgres'")
+    expect(files['src/db/index.server.ts']).toContain("from '@weft-js/start/db/postgres'")
     expect(files['.env']).toContain('DATABASE_URL=postgres://localhost:5432/launch')
   })
 

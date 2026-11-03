@@ -85,9 +85,9 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
         report('X021', at, at + display[1].length, `\`font-display: ${display[1]}\` hides text for up to 3 s while the font loads; with a matched fallback face, \`swap\` shifts nothing.`, { description: 'Use swap', safe: true, text: 'swap' })
       }
       const local = /url\(\s*['"]?(?!https?:|data:)/.test(f.body)
-      if (!local || !f.family || /Fallback$/.test(f.family)) continue
+      if (!local || !f.family || f.family.endsWith('Fallback')) continue
       if (!families.has(`${f.family} Fallback`)) {
-        const how = fontBuild ? 'declare it in `text({ fonts })`, which generates the fallback' : 'add `@weft/plugin-text` and declare it in `text({ fonts })`'
+        const how = fontBuild ? 'declare it in `text({ fonts })`, which generates the fallback' : 'add `@weft-js/text` and declare it in `text({ fonts })`'
         report('X020', f.start, f.start + '@font-face'.length, `\`@font-face\` for "${f.family}" has no "${f.family} Fallback" face: the swap from the system font shifts layout. Fix: ${how}.`)
       }
       if (!/unicode-range\s*:/.test(f.body)) report('X022', f.start, f.start + '@font-face'.length, `"${f.family}" ships the whole font file: no \`unicode-range\`, so it isn't subset.`)

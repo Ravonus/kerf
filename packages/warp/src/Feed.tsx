@@ -1,29 +1,33 @@
-import { untrack } from 'weft'
+import { untrack } from '@weft-js/core'
 import { VirtualList, type VirtualControl } from './VirtualList'
 import './styles'
-import '@weft/ui-core/styles/data/timeline.css'
+import '@weft-js/warp-core/styles/data/timeline.css'
 
+/** One row of a Feed. */
 export interface FeedItem {
   id: string | number
   /** Actor, verb and object: the bold line. */
-  what: any
+  what: unknown
   when?: string
   /** The body, measured. */
   detail?: string
-  tone?: string
+  tone?: string | undefined
 }
 
+/** Props for Feed. */
 export interface FeedProps<T extends FeedItem> {
   items: readonly T[]
   label: string
   height?: string
-  busy?: boolean
+  busy?: boolean | undefined
   /** Near the end: load more. */
   onEnd?: () => void
+  /** Called when an item's measured height differs from the estimate, with both heights. For tuning. */
   onDrift?: (index: number, predicted: number, actual: number) => void
+  /** Hands over a control to scroll to, focus or move between items from outside. */
   control?: (c: VirtualControl) => void
   /** An item's whole content. Default: knot, what, when, detail. */
-  children?: (item: () => T) => any
+  children?: (item: () => T) => unknown
 }
 
 /** A long activity feed (07 §4): the APG feed pattern on a window. Page Down and Up move between articles. */

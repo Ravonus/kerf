@@ -9,19 +9,22 @@
 // the cache). Redirects from loaders and server functions navigate (at most 5 in a row); a
 // mutation that invalidates a tag the current route's loaders read refetches the route data in place.
 
-import { drain, enter, hydrate, hydration, level as staticLevel, wake } from 'weft/dom'
-import { flush, rt } from 'weft'
-import { setHead } from 'weft/head'
+import { drain, enter, hydrate, hydration, level as staticLevel, wake } from '@weft-js/core/dom'
+import { flush, rt } from '@weft-js/core'
+import { setHead } from '@weft-js/core/head'
+import type { Held } from './boot'
 import { applyMatches, client, createRouteState, peers, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
 import { App } from './view'
 import { ErrorPage, NotFoundPage } from './builtin'
+
+type Hot = ImportMeta & { hot?: { on(event: string, on: (data: { queries: boolean }) => unknown): void } }
 
 /** The client half of `virtual:weft/routes`: the page routes in match order, and a chunk loader per route id. */
 export interface ClientRoutes {
   table: { id: string; pattern: string; layouts: string[] }[]
   load: Record<string, () => Promise<{ default?: Component }>>
   /** Each island's code, by id: all a static level loads (PLAN §11). */
-  islands?: Record<string, () => Promise<{ default: (props: any) => unknown }>>
+  islands?: Record<string, () => Promise<{ default: Component }>>
 }
 
 /** Hydrate the page in `#app` and take over its links. Resolves once hydrated. */
@@ -30,7 +33,7 @@ const RETRY = 1000, RETRIES = 30_000 // ms before a failed refresh goes again, d
 
 export async function start(routes: ClientRoutes, options: { container?: Element } = {}) {
   const container = options.container ?? document.getElementById('app')!
-  const page: RoutePayload = JSON.parse(document.getElementById('weft-route')!.textContent!)
+  const page: RoutePayload = JSON.parse(document.getElementById('weft-route')!.textContent)
   const data = JSON.parse(document.getElementById('weft-data')?.textContent ?? 'null')
   let tags = page.m.map(m => m.t ?? [])
   const comps: Record<string, Component> = {}
@@ -40,13 +43,13 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     comps[id] ? Promise.resolve()
     : routes.load[id] ? routes.load[id]().then(m => { if (m.default) comps[id] = m.default })
     : Promise.resolve(builtin[id] && (comps[id] = builtin[id]))
-  const islands: Record<string, (props: any) => unknown> = {}
-  const island = (id: string) => islands[id] ? undefined : routes.islands![id]().then(m => { islands[id] = m.default })
+  const islands: Record<string, Component> = {}
+  const island = (id: string) => islands[id] ? undefined : routes.islands![id]!().then(m => { islands[id] = m.default })
   await Promise.all([...page.m.filter(m => !m.s).map(m => chunk(m.id)), ...(page.i ?? []).map(island)])
   page.m.forEach((m, i) => { for (const k of m.d ?? []) if (!m.s) (m.data as any)[k] = deferred(page.p, i, k) })
   const route = createRouteState(page, comps)
   let bag: RoutePayload['b']
-  route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined, id => Promise.resolve(island(id)))
+  route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id]! as never, bag ?? undefined, id => Promise.resolve(island(id)))
   route.around = (_d, _id, body) => enter(body)
   // What landed while the chunks loaded: from here on, a Boundary that's still out is held, and its chunk builds it.
   if (data) for (const l of (globalThis as any).$wc ?? []) {
@@ -87,6 +90,10 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   let fades = !(navigator.hardwareConcurrency <= 4)
   let fading: ViewTransition | undefined
+  // A navigation before the first frame (a moved page's onMount) has no old picture to hold: Chrome aborts that
+  // transition and logs an InvalidStateError. Two frames in, the page has painted.
+  let painted = false
+  requestAnimationFrame(() => requestAnimationFrame(() => (painted = true)))
   const now = () => client.now?.() ?? 0
   const needs = (next: RoutePayload) => Promise.all([...next.m.map(m => chunk(m.id)), ...(next.i ?? []).map(island)])
   const reads = (t: string[]) => tags.some(l => l.some(x => t.includes(x)))
@@ -146,7 +153,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
 
   async function travel(url: URL, ctrl: AbortController, opts: NavigateOptions & { pop?: boolean; hops?: number }) {
     const path = url.pathname + url.search
-    guess(routes, url.pathname).forEach(id => void chunk(id).catch(() => {})) // chunk loads start with the data fetch, not after it
+    for (const id of guess(routes, url.pathname)) void chunk(id).catch(() => {}) // chunk loads start with the data fetch, not after it
     let next: RoutePayload
     let since = now()
     try {
@@ -173,13 +180,15 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
     const swap = apply(next, url, path, since, opts.scroll !== false && !opts.pop)
     // The old page stays on screen, as a picture, until the new one is ready to fade in. `hidden`: nothing would show it.
-    if (fades && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (fades && painted && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const started = performance.now()
       const fade = fading = document.startViewTransition(swap)
       void fade.ready.then(() => {
         if (performance.now() - started > SLOW_FADE) fades = false
         return fade.finished
       }).catch(() => {}).then(() => { if (fading === fade) fading = undefined })
+      // a transition the browser aborts (a second navigation, a hidden tab) rejects `finished`: the page already swapped
+      void fade.finished.catch(() => {})
       await fade.updateCallbackDone
     }
     else swap()
@@ -214,8 +223,19 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const owing = () => { if (!current && !refreshing) settle() }
   addEventListener('online', owing)
   addEventListener('focus', owing)
+  // Dev: server code changed under the page (vite.mjs). The route's data comes again, in place.
+  const reloaded = async ({ queries }: { queries: boolean }) => {
+    const url = new URL(location.href), since = now()
+    const res = await ask(url)
+    // It doesn't load yet, and the error page would replace what's here: the next save asks again.
+    if (!res.ok || (await res.clone().json()).s >= 500) return
+    if (queries) client.refreshed?.()
+    warm = { path: url.pathname + url.search, at: performance.now(), since, res: Promise.resolve(res) }
+    await go(url.href, { pop: true })
+  }
+  if ((import.meta as Hot).hot) (import.meta as Hot).hot!.on('weft:refresh', changed => void reloaded(changed))
 
-  // A mutation invalidated tags: when the route's loaders read one, refetch the route data.
+  // A mutation invalidated tags: when the route's loaders read one, refetch the route data (no history entry, no scroll).
   client.invalidated = t => {
     warm = undefined
     if (current) owed.push(...t)
@@ -227,7 +247,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     const url = ours(e.target)
     if (!url) return
     e.preventDefault()
-    go(url.href)
+    void go(url.href)
   })
   // While a fade runs, the browser hit-tests its picture: a press lands on <html> and the click is lost. It ends the fade instead,
   // and the click goes to what's there once the picture has gone.
@@ -253,9 +273,9 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     clearTimeout(pending)
     const url = ours(e.target)
     const path = url && url.pathname + url.search
-    if (!url || warm?.path === path || (e.target as Element).closest('[data-preload="off"]') || (navigator as any).connection?.saveData) return
+    if (!url || warm?.path === path || (e.target as Element).closest('[data-preload="off"]') || (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return
     pending = setTimeout(() => {
-      guess(routes, url.pathname).forEach(id => void chunk(id).catch(() => {}))
+      for (const id of guess(routes, url.pathname)) void chunk(id).catch(() => {})
       warm = { path: path!, at: performance.now(), since: now(), res: ask(url) }
       warm.res.catch(() => { warm = undefined })
     }, e.type === 'focusin' ? 0 : 80)
@@ -275,7 +295,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   // Another tab signed out or in: nothing here belongs to who's signed in now. Hidden too, so it's gone before anyone looks.
   peers?.addEventListener('message', m => { if (!m.data) location.reload() })
   // Last: a replayed click on a link needs the listener above, or it's a full page load.
-  const q = (window as any).__wq
+  const q = (window as Window & { __wq?: Held }).__wq
   if (q) {
     q.w = wake
     if (q.l) wake(q.l)
@@ -293,7 +313,7 @@ function deferred(path: string, level: number, key: string): PromiseLike<unknown
   const value = () => {
     if (rt.probe) return new Promise(() => {}) // a hydrate run only tracks its reads, and nothing waits on what it gets
     if (!got) {
-      got = ask(new URL(path, location.href)).then(r => (r.ok ? r.json() : Promise.reject(new Error('Server function failed.')))).then((next: RoutePayload) => (next.m[level].data as any)[key])
+      got = ask(new URL(path, location.href)).then(r => (r.ok ? r.json() : Promise.reject(new Error('Server function failed.')))).then((next: RoutePayload) => (next.m[level]!.data as Record<string, unknown>)[key])
       got.catch(() => (got = undefined))
     }
     return got
@@ -305,7 +325,7 @@ function deferred(path: string, level: number, key: string): PromiseLike<unknown
   } as PromiseLike<unknown>
 }
 
-const ask = (url: URL, signal?: AbortSignal) => fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, { signal, headers: { accept: 'application/json' } })
+const ask = (url: URL, signal?: AbortSignal) => fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, { signal: signal ?? null, headers: { accept: 'application/json' } })
 
 /** The URL a client navigation would take from this event's link, or nothing for a link the browser should follow. */
 function ours(target: EventTarget | null) {
@@ -326,7 +346,7 @@ function current_(path: string) {
 /** Deferred fields arrive resolved on navigation: they become settled promises again, so resources read them alike. */
 function revive(m: Match): Match {
   if (!m.d?.length) return m
-  const data: any = { ...(m.data as object) }
+  const data = { ...(m.data as Record<string, unknown>) }
   for (const k of m.d) data[k] = Promise.resolve(data[k])
   return { ...m, data }
 }

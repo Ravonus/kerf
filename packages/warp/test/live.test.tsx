@@ -1,10 +1,11 @@
 // The live pack driven as a user: keyboard paths, states, error paths, focus moves, announcements.
 import { fireEvent } from '@testing-library/dom'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { ActivityFeed } from '../src/live/ActivityFeed'
 import { Bell } from '../src/live/Bell'
 import { ConnectionBanner, ConnectionPill } from '../src/live/Connection'
+import type { LiveState } from '../src/parts'
 import { Inbox, type Note } from '../src/live/Inbox'
 import { ControlBar, MeetingRoom, type Participant } from '../src/live/MeetingRoom'
 import { notify } from '../src/live/notify'
@@ -15,7 +16,7 @@ import { TransportPicker } from '../src/live/TransportPicker'
 import { toast, Toaster } from '../src/Toast'
 import { CHANNELS, GROUPS, LOCKED, NOTES, OFFERED, PEOPLE, PREFS } from './fixtures/pack-live'
 
-beforeAll(() => { (HTMLElement.prototype as any).showPopover ??= function () { this.toggleAttribute('data-shown', true) }; (HTMLElement.prototype as any).hidePopover ??= function () {} })
+beforeAll(() => { (HTMLElement.prototype as { showPopover: (this: HTMLElement) => void }).showPopover ??= function () { this.toggleAttribute('data-shown', true) }; (HTMLElement.prototype as { hidePopover: () => void }).hidePopover ??= function () {} })
 const key = (el: Element, k: string, o: object = {}) => fireEvent.keyDown(el, { key: k, ...o })
 const press = (c: ParentNode, name: string | RegExp) => {
   const b = [...c.querySelectorAll<HTMLElement>('button')].find(x => { const n = x.getAttribute('aria-label') ?? x.textContent ?? ''; return typeof name === 'string' ? n.trim() === name : name.test(n) })
@@ -24,14 +25,14 @@ const press = (c: ParentNode, name: string | RegExp) => {
   return b
 }
 const said = async (assertive = false) => {
-  await new Promise(r => setTimeout(r, 70))
+  await new Promise(r => { setTimeout(r, 70) })
   return document.querySelector(`[data-scope="announcer"][aria-live="${assertive ? 'assertive' : 'polite'}"]`)!.textContent
 }
-const mount = (fn: () => any) => render(fn)
+const mount = (fn: () => unknown) => render(fn)
 beforeEach(() => { render(() => <Toaster />) })
-const tick = () => new Promise(r => setTimeout(r, 0))
+const tick = () => new Promise(r => { setTimeout(r, 0) })
 
-function inbox(extra: any = {}) {
+function inbox(extra: Record<string, unknown> = {}) {
   const items = state<Note[]>(NOTES)
   const r = mount(() => <Inbox items={items} open={false} onRead={id => (items.value = items.value.map(n => (n.id === id ? { ...n, read: true } : n)))} onReadAll={() => (items.value = items.value.map(n => ({ ...n, read: true })))} onDismiss={id => (items.value = items.value.filter(n => n.id !== id))} onRestore={n => (items.value = [n, ...items.value])} {...extra} />)
   return { items, c: r.container, rows: () => [...r.container.querySelectorAll<HTMLElement>('[data-scope="notification"]')] }
@@ -42,8 +43,8 @@ describe('Inbox', () => {
     const { c, rows } = inbox()
     const f = c.querySelector('[role="feed"]')!
     expect(rows().length).toBe(5)
-    expect(rows()[0].tagName).toBe('ARTICLE')
-    expect(rows()[0].getAttribute('aria-label')).toBe('Mei Tanaka mentioned you in Overlap layout, unread, 9 min')
+    expect(rows()[0]!.tagName).toBe('ARTICLE')
+    expect(rows()[0]!.getAttribute('aria-label')).toBe('Mei Tanaka mentioned you in Overlap layout, unread, 9 min')
     expect([...f.querySelectorAll('[data-part="group"]')].map(g => g.textContent)).toEqual(['Today', 'Yesterday'])
     expect(c.querySelector('[role="tabpanel"]')!.getAttribute('aria-labelledby')).toBe(c.querySelector('[role="tab"][aria-selected="true"]')!.id)
     expect(rows().filter(r => r.tabIndex === 0).length).toBe(1)
@@ -61,11 +62,11 @@ describe('Inbox', () => {
   test('PageDown and PageUp move between articles; a read patches the same node', async () => {
     const { rows } = inbox()
     await tick()
-    const first = rows()[0]
+    const first = rows()[0]!
     first.focus()
     key(first, 'PageDown')
     expect(document.activeElement).toBe(rows()[1])
-    key(rows()[1], 'PageUp')
+    key(rows()[1]!, 'PageUp')
     expect(document.activeElement).toBe(first)
     key(first, 'Enter'); await flush()
     expect(rows()[0]).toBe(first)
@@ -82,12 +83,12 @@ describe('Inbox', () => {
   })
   test('dismiss slides out, moves focus, offers Undo in a toast, Undo restores', async () => {
     const { c, rows, items } = inbox()
-    const first = rows()[0]
+    const first = rows()[0]!
     first.focus()
     key(first, 'Delete'); await flush()
     expect(first.getAttribute('data-state')).toBe('dismissed')
     expect(document.activeElement).toBe(rows()[1])
-    await new Promise(r => setTimeout(r, 260)); await flush()
+    await new Promise(r => { setTimeout(r, 260) }); await flush()
     expect(items.value.length).toBe(4)
     expect(await said()).toContain('Notification dismissed')
     press(document.body, 'Undo'); await flush()
@@ -101,7 +102,7 @@ describe('Inbox', () => {
     expect(c.querySelector('[data-arrive]')).toBeNull()
     const feed = c.querySelector<HTMLElement>('[role="feed"]')!
     feed.scrollTop = 50
-    items.value = [{ ...NOTES[0], id: 'n9' }, ...items.value]; await flush(); await tick(); await flush()
+    items.value = [{ ...NOTES[0]!, id: 'n9' }, ...items.value]; await flush(); await tick(); await flush()
     expect(c.querySelector('[data-id="n9"]')!.hasAttribute('data-arrive')).toBe(true)
     const pill = c.querySelector<HTMLElement>('[data-part="new-pill"]')!
     expect(pill.textContent).toBe('1 new')
@@ -109,11 +110,11 @@ describe('Inbox', () => {
     expect(c.querySelector('[data-part="new-pill"]')).toBeNull()
     expect(feed.scrollTop).toBe(0)
   })
-  test('actions call back and leave the row alone; empty and loading states', async () => {
+  test('actions call back and leave the row alone; empty and loading states', () => {
     const onAction = vi.fn()
     const { c } = inbox({ onAction })
     press(c, 'Approve')
-    expect(onAction.mock.calls[0][1]).toBe('approve')
+    expect(onAction.mock.calls[0]![1]).toBe('approve')
     const empty = mount(() => <Inbox items={[]} />)
     expect(empty.container.querySelector('[data-scope="empty-state"]')!.textContent).toContain('caught up')
     const load = mount(() => <Inbox items={undefined} />)
@@ -122,20 +123,20 @@ describe('Inbox', () => {
   })
   test('2 s visible in an open inbox reads a row', async () => {
     const seen: IntersectionObserverCallback[] = []
-    const was = (window as any).IntersectionObserver
-    ;(window as any).IntersectionObserver = class { constructor(cb: IntersectionObserverCallback) { seen.push(cb) } observe() {} disconnect() {} unobserve() {} }
+    const was = (window as unknown as Record<string, unknown>).IntersectionObserver
+    ;(window as unknown as Record<string, unknown>).IntersectionObserver = class { constructor(cb: IntersectionObserverCallback) { seen.push(cb) } observe() {} disconnect() {} unobserve() {} }
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     const onRead = vi.fn()
     const { container: c } = mount(() => <Inbox items={NOTES} open onRead={onRead} />)
     await Promise.resolve()
     const row = c.querySelector('[data-id="n1"]')!
-    seen.forEach(cb => cb([{ target: row, isIntersecting: true } as any], null as any))
+    seen.forEach(cb => cb([{ target: row, isIntersecting: true } as unknown as IntersectionObserverEntry], null as unknown as IntersectionObserver))
     vi.advanceTimersByTime(1999)
     expect(onRead).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
     expect(onRead).toHaveBeenCalledWith('n1')
     vi.useRealTimers()
-    ;(window as any).IntersectionObserver = was
+    ;(window as unknown as Record<string, unknown>).IntersectionObserver = was
   })
 })
 
@@ -171,7 +172,7 @@ describe('Bell', () => {
     c.querySelector('button')!.click(); await flush()
     expect(route).toHaveBeenCalled()
     expect(c.querySelector('button')!.getAttribute('aria-expanded')).toBe('false')
-    if (was) Object.defineProperty(window, 'matchMedia', was); else delete (window as any).matchMedia
+    if (was) Object.defineProperty(window, 'matchMedia', was); else delete (window as unknown as Record<string, unknown>).matchMedia
   })
 })
 
@@ -190,7 +191,7 @@ test('notify: inbox closed toasts through the Toaster, open does not', async () 
 })
 
 test('ActivityFeed: rows, per-day groups, a Live check only while live', async () => {
-  const live = state<any>('live')
+  const live = state<LiveState>('live')
   const { container: c } = render(() => <ActivityFeed items={[{ id: 'a', actor: 'Ana', verb: 'moved', object: 'Crit', time: '10:31', day: 'Today' }, { id: 'b', actor: 'Mei', verb: 'closed', time: '09:00', day: 'Yesterday' }]} live={live} />)
   expect(c.querySelectorAll('[data-scope="activity"] > li').length).toBe(2)
   expect([...c.querySelectorAll('[data-part="eyebrow"]')].map(e => e.textContent)).toEqual(['Today', 'Yesterday'])
@@ -242,7 +243,7 @@ describe('connection', () => {
 })
 
 describe('NotificationPreferences', () => {
-  const setup = (onChange: any = () => {}, extra: any = {}) => {
+  const setup = (onChange: Parameters<typeof NotificationPreferences>[0]['onChange'] = () => {}, extra: Record<string, unknown> = {}) => {
     const r = mount(() => <NotificationPreferences groups={GROUPS} channels={CHANNELS} value={PREFS} offered={OFFERED} locked={LOCKED} onChange={onChange} defaults={{ value: PREFS }} {...extra} />)
     const c = r.container
     const named = (n: string) => [...c.querySelectorAll<HTMLInputElement>('input')].find(i => i.closest('label')!.querySelector('[data-part="sr-only"]')?.textContent === n)!
@@ -283,7 +284,7 @@ describe('NotificationPreferences', () => {
     parent.focus()
     parent.click(); await flush()
     expect(document.activeElement).toBe(parent)
-    expect(onChange.mock.calls[0][0]).toEqual(['mention', 'reply', 'assign'].map(event => ({ event, channel: 'email', on: true })))
+    expect(onChange.mock.calls[0]![0]).toEqual(['mention', 'reply', 'assign'].map(event => ({ event, channel: 'email', on: true })))
     await flush(); await tick()
     expect(parent.indeterminate).toBe(false)
     expect(parent.checked).toBe(true)
@@ -305,11 +306,11 @@ describe('NotificationPreferences', () => {
     expect(await said()).toBe('Not offered for this event')
   })
   test('a rejected save flips the cell back and says why, assertively', async () => {
-    const { c, named } = setup(() => new Promise((_, no) => setTimeout(() => no(new Error('no')), 5)))
+    const { c, named } = setup(() => new Promise((_, no) => { setTimeout(() => no(new Error('no')), 5) }))
     const box = named('Mentions, SMS')
     box.click(); await flush()
     expect(c.querySelector('[data-part="status"]')!.textContent).toBe('Saving…')
-    await new Promise(r => setTimeout(r, 10)); await flush()
+    await new Promise(r => { setTimeout(r, 10) }); await flush()
     expect(named('Mentions, SMS').checked).toBe(false)
     expect(c.querySelector('[data-part="status"]')!.textContent).toContain("Couldn't save")
     expect(await said(true)).toContain("Couldn't save: Mentions, SMS on")
@@ -344,7 +345,7 @@ describe('TransportPicker', () => {
     expect(c.querySelector('[data-part="lane"]')!.getAttribute('data-state')).toBe('offline')
     expect(seen.mock.lastCall![0].bus).toBe('memory')
     radio('tabs').click(); await flush()
-    expect(c.querySelectorAll('fieldset')[1].disabled).toBe(true)
+    expect(c.querySelectorAll('fieldset')[1]!.disabled).toBe(true)
     expect(c.textContent).toContain('No server: tabs only stays in this browser.')
     expect(c.querySelector('[data-part="build-error"]')).toBeNull()
     press(c, 'Reset'); await flush()
@@ -354,7 +355,7 @@ describe('TransportPicker', () => {
   test('a real status wins over the sandbox', async () => {
     const { container: c } = mount(() => <TransportPicker lanes={{ channel: 'unauthorized' }} />)
     await flush()
-    expect(c.querySelectorAll('[data-part="lane"]')[2].getAttribute('data-state')).toBe('offline')
+    expect(c.querySelectorAll('[data-part="lane"]')[2]!.getAttribute('data-state')).toBe('offline')
   })
   test('the log is a quiet role=log', async () => {
     const { container: c } = mount(() => <TransportPicker />)
@@ -368,7 +369,7 @@ describe('TransportPicker', () => {
 
 describe('meetings', () => {
   const me: Participant = { id: 'you', name: 'Jo Diaz' }
-  const room = (extra: any = {}) => mount(() => <MeetingRoom title="Crit" participants={PEOPLE} self={me} {...extra} />).container
+  const room = (extra: Record<string, unknown> = {}) => mount(() => <MeetingRoom title="Crit" participants={PEOPLE} self={me} {...extra} />).container
   const stage = (c: Element) => c.querySelector('[data-part="stage"]')!
 
   test('a dark island; tiles are a list with real names, flags in words', () => {
@@ -376,11 +377,11 @@ describe('meetings', () => {
     expect(c.querySelector('[data-scope="room"]')!.getAttribute('data-theme')).toBe('dark')
     const tiles = [...c.querySelectorAll('[role="list"] [data-scope="tile"]')]
     expect(tiles.length).toBe(PEOPLE.length)
-    expect(tiles[0].getAttribute('role')).toBe('listitem')
-    expect(tiles[0].getAttribute('aria-label')).toBe('Kofi Mensah, host, speaking')
-    expect(tiles[0].hasAttribute('data-speaking')).toBe(true)
-    expect(tiles[1].getAttribute('aria-label')).toBe('Ana Ruiz, muted')
-    expect(tiles[4].getAttribute('data-network')).toBe('poor')
+    expect(tiles[0]!.getAttribute('role')).toBe('listitem')
+    expect(tiles[0]!.getAttribute('aria-label')).toBe('Kofi Mensah, host, speaking')
+    expect(tiles[0]!.hasAttribute('data-speaking')).toBe(true)
+    expect(tiles[1]!.getAttribute('aria-label')).toBe('Ana Ruiz, muted')
+    expect(tiles[4]!.getAttribute('data-network')).toBe('poor')
   })
   test('four layouts through a radio group', async () => {
     const seen = vi.fn()
@@ -434,12 +435,12 @@ describe('meetings', () => {
     const bar = c.querySelector('[role="toolbar"]')!
     const items = [...bar.querySelectorAll<HTMLElement>('button')]
     expect(items.filter(b => b.tabIndex === 0).length).toBe(1)
-    items[0].focus()
-    key(items[0], 'ArrowRight')
+    items[0]!.focus()
+    key(items[0]!, 'ArrowRight')
     expect(document.activeElement).toBe(items[1])
-    expect(items[1].tabIndex).toBe(0)
-    expect(items[0].tabIndex).toBe(-1)
-    key(items[1], 'End')
+    expect(items[1]!.tabIndex).toBe(0)
+    expect(items[0]!.tabIndex).toBe(-1)
+    key(items[1]!, 'End')
     expect(document.activeElement!.getAttribute('aria-label')).toBe('Leave meeting')
     key(document.activeElement!, 'ArrowRight')
     expect(document.activeElement).toBe(items[0])

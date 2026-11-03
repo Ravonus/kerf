@@ -2,25 +2,25 @@
   "warp": {
     "probe": {
       "add-one": {
-        "domMutations": 2,
+        "domMutations": 1,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 39.06
+        "wallMs": 62.18
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.28
+        "wallMs": 0.5
       },
       "type-3-chars": {
-        "domMutations": 158,
+        "domMutations": 154,
         "commits": 33,
         "renderMs": 0,
-        "wallMs": 19.95
+        "wallMs": 21.46
       }
     },
-    "bundleGzBytes": 13967,
+    "bundleGzBytes": 12626,
     "srcFiles": 9,
     "srcLines": 216,
     "effects": 1,
@@ -32,22 +32,22 @@
         "domMutations": 1,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 36.02
+        "wallMs": 57.09
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.29
+        "wallMs": 0.58
       },
       "type-3-chars": {
         "domMutations": 152,
         "commits": 21,
         "renderMs": 0,
-        "wallMs": 13.62
+        "wallMs": 18.79
       }
     },
-    "bundleGzBytes": 5444,
+    "bundleGzBytes": 5455,
     "srcFiles": 8,
     "srcLines": 190,
     "effects": 1,

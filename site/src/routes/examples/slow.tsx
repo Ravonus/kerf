@@ -1,10 +1,12 @@
-import { Boundary, resource } from 'weft'
-import { Card, Skeleton } from '@weft/warp'
-import type { LoadArgs, RouteProps } from '@weft/start'
+import { Boundary, resource } from '@weft-js/core'
+import { Card, Skeleton } from '@weft-js/warp'
+import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
 import './slow.css'
 
 const later = <T,>(ms: number, value: T) =>
-  new Promise<T>(done => setTimeout(done, ms, value))
+  new Promise<T>(done => { setTimeout(done, ms, value) })
+
+export const meta: Meta = { title: 'Streaming a slow page', description: 'A product card whose stock and reviews stream in as they load: the page answers at once and each slow part fills itself in.' }
 
 export const load = ({ request }: LoadArgs) => {
   const asked = new URL(request.url).searchParams.get('ms')
@@ -27,7 +29,7 @@ function Reviews(props: { list: Promise<string[]> }) {
 
 export default function Slow(props: RouteProps<typeof load>) {
   return (
-    <Card title="House blend, 250 g">
+    <Card data-site="framed" title="House blend, 250 g">
       <Boundary pending={<Skeleton />}>
         <Stock n={props.data.stock} />
       </Boundary>

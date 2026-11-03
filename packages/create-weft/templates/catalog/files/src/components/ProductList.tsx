@@ -1,5 +1,5 @@
-import { Grid, Heading, Link, Stack, Text } from '@weft/warp'
-import { derived } from 'weft'
+import { Grid, Heading, Link, Stack, Text } from '@weft-js/warp'
+import { derived } from '@weft-js/core'
 import { ProductCard } from '#/components/ProductCard'
 import { PAGE_SIZE, viewHref, type View } from '#/lib/catalog'
 import { listProducts } from '#/server/catalog'

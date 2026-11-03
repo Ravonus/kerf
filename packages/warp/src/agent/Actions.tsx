@@ -1,13 +1,13 @@
-import { BranchIcon, CopyIcon, LeftIcon, RefreshIcon, RightIcon, ThumbsDownIcon, ThumbsUpIcon } from '@weft/icons'
-import { announce, popover } from '@weft/ui-core'
-import { derived, state } from 'weft'
+import { BranchIcon, CopyIcon, LeftIcon, RefreshIcon, RightIcon, ThumbsDownIcon, ThumbsUpIcon } from '@weft-js/warp-icons'
+import { announce, popover } from '@weft-js/warp-core'
+import { derived, state } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
-import { use } from '../use'
+import { use } from '@weft-js/warp-core/weft'
 import { IconButton } from './bits'
 import '../styles'
-import '@weft/ui-core/styles/components/popover.css'
-import '@weft/ui-core/styles/app/branch.css'
+import '@weft-js/warp-core/styles/components/popover.css'
+import '@weft-js/warp-core/styles/app/branch.css'
 
 const say = (e: Event, text: string) => announce((e.currentTarget as Element).ownerDocument, text)
 
@@ -27,16 +27,23 @@ export function BranchSwitcher({ index, count, onChange }: { index: number; coun
   )
 }
 
+/** A reader's verdict on an answer; null until they give one. */
 export type Feedback = 'up' | 'down' | null
 
+/** Props for MessageActions. */
 export interface MessageActionsProps {
-  onCopy?: (el: HTMLElement) => void
-  onFeedback?: (value: Feedback, reason?: string) => void
-  reasons?: string[]
-  onRegenerate?: () => void
-  onBranch?: () => void
-  stopped?: boolean
-  branch?: { index: number; count: number; onChange: (index: number) => void }
+  /** Adds Copy, and is called with the pressed button. Copy the message text here. */
+  onCopy?: ((el: HTMLElement) => void) | undefined
+  /** Called with `up`, `down` or null when thumbs change, and the reason picked for a thumbs down. */
+  onFeedback?: ((value: Feedback, reason?: string) => void) | undefined
+  reasons?: string[] | undefined
+  /** Adds Regenerate: ask for a new answer. */
+  onRegenerate?: (() => void) | undefined
+  /** Adds Branch: start a new conversation from this message. */
+  onBranch?: (() => void) | undefined
+  stopped?: boolean | undefined
+  /** Which of several answers is shown, with arrows between them. */
+  branch?: ({ index: number; count: number; onChange: (index: number) => void }) | undefined
 }
 
 /**
@@ -63,9 +70,9 @@ export function MessageActions({ onCopy, onFeedback, reasons = ['Wrong', 'Too lo
       {stopped && <Badge tone="neutral">Stopped · kept what arrived</Badge>}
       {onCopy && <IconButton icon={CopyIcon} label="Copy" onClick={(e: Event) => onCopy(e.currentTarget as HTMLElement)} />}
       {onFeedback && <IconButton icon={ThumbsUpIcon} label="Good answer" aria-pressed={value.value === 'up' ? 'true' : 'false'} onClick={(e: Event) => rate(e, 'up')} />}
-      {onFeedback && <IconButton icon={ThumbsDownIcon} label="Bad answer" aria-pressed={value.value === 'down' ? 'true' : 'false'} aria-haspopup="dialog" ref={(n: any) => (bad = n)} onClick={(e: Event) => rate(e, 'down')} />}
+      {onFeedback && <IconButton icon={ThumbsDownIcon} label="Bad answer" aria-pressed={value.value === 'down' ? 'true' : 'false'} aria-haspopup="dialog" ref={(n: HTMLElement) => (bad = n)} onClick={(e: Event) => rate(e, 'down')} />}
       {onFeedback && (
-        <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" aria-label="What went wrong?">
+        <div ref={n => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" aria-label="What went wrong?">
           <p data-part="title">What went wrong?</p>
           <div>{reasons.map(r => <Button key={r} emphasis="ghost" tone="neutral" size="sm" data-close-popover="" onClick={(e: Event) => because(e, r)}>{r}</Button>)}</div>
         </div>

@@ -1,8 +1,8 @@
 // weft-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { createRoot, onCleanup, onMount, state } from 'weft'
-import { flush, render, touches } from 'weft/test'
+import { createRoot, onCleanup, onMount, state, untrack } from '@weft-js/core'
+import { flush, render, touches } from '@weft-js/core/test'
 
 function Counter({ step = 1 }: { step?: number }) {
   const n = state(0)
@@ -40,7 +40,7 @@ test('keyed list: a new object under the same key updates the row in place', asy
   const t = await touches(() => { items.value = items.value.map(i => (i.id === 'a' ? { ...i, n: 9 } : i)) })
   expect(t.mutations).toBe(1)
   expect(screen.getAllByRole('listitem')[0]).toBe(first)
-  expect(first.textContent).toBe('9')
+  expect(first!.textContent).toBe('9')
 })
 
 test('keyed list: reorder moves rows instead of rebuilding them', async () => {
@@ -75,6 +75,61 @@ test('keyed list: rows keep their nodes through removal at any place, insertion,
   expect(shown()[0]).not.toBe(c)
 })
 
+test('keyed list: a row that stops being one element keeps every later pass in order', async () => {
+  const items = state(['a', 'b', 'c'])
+  render(() => <ul>{items.value.map(x => (x === 'f' ? <><li>{x}1</li><li>{x}2</li></> : <li>{x}</li>))}</ul>)
+  const shown = () => screen.getAllByRole('listitem').map(n => n.textContent)
+  items.value = ['c', 'b', 'a', 'f']
+  await flush()
+  expect(shown()).toEqual(['c', 'b', 'a', 'f1', 'f2'])
+  items.value = ['f', 'a', 'b', 'c']
+  await flush()
+  expect(shown()).toEqual(['f1', 'f2', 'a', 'b', 'c'])
+  items.value = []
+  await flush()
+  expect(screen.queryAllByRole('listitem')).toEqual([])
+  items.value = ['z', 'y']
+  await flush()
+  expect(shown()).toEqual(['z', 'y'])
+})
+
+test('keyed list: rows are found by key in a short middle and a long one, NaN keys included', async () => {
+  const items = state([{ k: 1 }, { k: NaN }, { k: 3 }])
+  render(() => <ul>{items.value.map(x => <li key={x.k}>{String(x.k)}</li>)}</ul>)
+  const [a, b, c] = screen.getAllByRole('listitem')
+  const [x, y, z] = untrack(() => items.value)
+  items.value = [y!, z!, x!]
+  await flush()
+  expect(screen.getAllByRole('listitem')).toEqual([b, c, a])
+  const long = Array.from({ length: 12 }, (_, k) => ({ k: k + 10 }))
+  items.value = [...long, y!]
+  await flush()
+  expect(screen.getAllByRole('listitem').at(-1)).toBe(b)
+  const lis = screen.getAllByRole('listitem')
+  items.value = [y!, ...long.toReversed()]
+  await flush()
+  expect(screen.getAllByRole('listitem')).toEqual([lis[12], ...lis.slice(0, 12).reverse()])
+})
+
+test('a text hole that is its parent\'s only child: empty, then text, then a node, then text', async () => {
+  const v = state<unknown>('')
+  render(() => <p data-testid="p">{v.value}</p>)
+  const p = screen.getByTestId('p')
+  expect(p.childNodes.length).toBe(1)
+  v.value = 'hi'
+  await flush()
+  expect(p.textContent).toBe('hi')
+  v.value = 0
+  await flush()
+  expect(p.textContent).toBe('0')
+  v.value = <b>x</b>
+  await flush()
+  expect(p.innerHTML).toBe('<b>x</b>')
+  v.value = 'back'
+  await flush()
+  expect(p.innerHTML).toBe('back')
+})
+
 test('keyed list: keys that repeat stay shown, and rows that went run their cleanups once', async () => {
   const items = state([1, 1, 2, 1])
   const gone: number[] = []
@@ -92,6 +147,44 @@ test('keyed list: keys that repeat stay shown, and rows that went run their clea
   await flush()
   expect(shown()).toEqual(['3'])
   expect(gone).toHaveLength(5)
+})
+
+test('keyed list: a repeated key is rebuilt on every pass, and the first row of it is kept', async () => {
+  const items = state([1, 1, 2])
+  const mounts: number[] = []
+  function Row(props: { n: number }) {
+    const shown = untrack(() => props.n) // read when the row mounts, so a kept row would show it stale
+    mounts.push(shown)
+    return <li>{shown}</li>
+  }
+  render(() => <ul>{items.value.map(n => <Row n={n} />)}</ul>)
+  const [first] = screen.getAllByRole('listitem')
+  mounts.length = 0
+  items.value = [...items.value]
+  await flush()
+  expect(mounts).toEqual([1])
+  expect(screen.getAllByRole('listitem')[0]).toBe(first)
+  expect(screen.getAllByRole('listitem').map(n => n.textContent)).toEqual(['1', '1', '2'])
+})
+
+test('keyed list: one removal adds nothing to the list of keys and keeps every other row', async () => {
+  const items = state([1, 2, 3, 4, 5])
+  render(() => <ul>{items.value.map(n => <li key={n}>{n}</li>)}</ul>)
+  const [a, b, , d, e] = screen.getAllByRole('listitem')
+  const set = vi.spyOn(Map.prototype, 'set')
+  items.value = [1, 2, 4, 5]
+  await flush()
+  const sets = set.mock.calls.length
+  set.mockRestore()
+  expect(sets).toBeLessThan(2) // the row search's own, for the one node between
+  expect(screen.getAllByRole('listitem')).toEqual([a, b, d, e])
+})
+
+test('a plain object with a nodeType field is a value, not a node', async () => {
+  const v = state<unknown>({ nodeType: 1 })
+  render(() => <p>a{v.value}b</p>)
+  await flush()
+  expect(document.querySelector('p')!.textContent).toBe('a[object Object]b')
 })
 
 test('keyed list: nothing is re-placed when a new array has the same rows', async () => {
@@ -116,7 +209,7 @@ test('conditional branches are built once per switch', async () => {
 test('toTouchAtMost fails with a breakdown when the budget is exceeded', async () => {
   const items = state([1, 2, 3])
   render(() => <ul>{items.value.map(x => <li>{x}</li>)}</ul>)
-  await expect(expect(() => { items.value = [4, 5, 6] }).toTouchAtMost(1)).rejects.toThrow(/expected ≤ 1 DOM mutations, got 6 mutations \(3 added, 3 removed/)
+  await expect(expect(() => { items.value = [4, 5, 6] }).toTouchAtMost(1)).rejects.toThrow(/expected ≤ 1 DOM mutations, got 4 mutations \(3 added, 3 removed/)
 })
 
 test('a keyed row with an index reads it live; its key is written once', async () => {
@@ -124,14 +217,15 @@ test('a keyed row with an index reads it live; its key is written once', async (
   const { container } = render(() => <ul>{items.value.map((x, i) => <li key={x.id} data-id={x.id}>{i}:{x.id}:{x.n}</li>)}</ul>)
   const text = () => [...container.querySelectorAll('li')].map(li => `${li.dataset.id} ${li.textContent}`)
   expect(text()).toEqual(['a 0:a:1', 'b 1:b:2'])
-  items.value = [{ id: 'b', n: 3 }, items.value[0]]
+  items.value = [{ id: 'b', n: 3 }, items.value[0]!]
   await flush()
   expect(text()).toEqual(['b 0:b:3', 'a 1:a:1'])
 })
 
 test('a fragment holding children with live parts updates them; a spread of an undefined prop is empty', async () => {
   const n = state(0)
-  function Wrap({ children, attrs }: { children?: any; attrs?: Record<string, any> }) {
+  function Wrap({ children, attrs }: { children?: unknown; attrs?: Record<string, unknown> }) {
+    // oxlint-disable-next-line no-constant-binary-expression -- a constant false in a fragment is the case under test
     return <b {...attrs}><>{false && <i />}{children}</></b>
   }
   const { container } = render(() => <Wrap>Added {n.value}</Wrap>)
@@ -142,7 +236,7 @@ test('a fragment holding children with live parts updates them; a spread of an u
 
 test('children with a live part: one text write when the part changes (the list reuses its text nodes)', async () => {
   const n = state(0)
-  function Label({ children }: { children?: any }) {
+  function Label({ children }: { children?: unknown }) {
     return <b>{children}</b>
   }
   const { container } = render(() => <Label>Cart ({n.value})</Label>)
@@ -163,6 +257,7 @@ test('ARIA booleans are written as true/false; other booleans add or remove the 
 test('onMount runs once the nodes are placed: refs assigned, the element in the document', async () => {
   const seen: string[] = []
   function Field({ name }: { name: string }) {
+    // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
     let input!: HTMLInputElement
     onMount(() => {
       seen.push(`${name}:${input?.isConnected}`)

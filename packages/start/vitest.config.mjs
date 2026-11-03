@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitest/config'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 export default defineConfig({
-  // .tsx tests (the server-function cache under weft/test, jsdom) compile with weft's plugin.
+  // .tsx tests (the server-function cache under @weft-js/core/test, jsdom) compile with weft's plugin.
   plugins: [weft()],
   test: {
     environment: 'node',

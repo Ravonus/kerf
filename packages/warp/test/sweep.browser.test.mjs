@@ -10,7 +10,7 @@ const { chromium } = createRequire(import.meta.url)('playwright-core')
 // a real browser on a busy machine: vitest's 5 s suits jsdom, not this
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
-const css = readFileSync(new URL('../../ui-core/styles/warp.css', import.meta.url), 'utf8')
+const css = readFileSync(new URL('../../warp-core/styles/warp.css', import.meta.url), 'utf8')
 
 const HOSTS = `
   <button id="soft" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><i id="soft-in">Soft</i></button>

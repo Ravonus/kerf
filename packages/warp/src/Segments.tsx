@@ -1,5 +1,6 @@
-import { dayPeriods, fieldName, hour12, isComplete, isEmpty, isSegment, ymd, parseDate, parseTime, press, segmentParts, segmentText, segmentValueText, settle, writeParts, type SegmentKind, type SegmentOptions, type SegmentPart, type IsoDate } from '@weft/ui-core'
-import { derived, flush, state, untrack, watch } from 'weft'
+import { dayPeriods, fieldName, hour12, isComplete, isEmpty, isSegment, ymd, parseDate, parseTime, press, segmentParts, segmentText, segmentValueText, settle, writeParts, type SegmentKind, type SegmentOptions, type SegmentPart, type IsoDate,formReset } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, watch } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 
 const keyOf = (p: SegmentPart) => (isSegment(p) ? p.type : `l${p.at}`)
 
@@ -9,7 +10,7 @@ export type SegmentState = 'empty' | 'partial' | 'complete'
  * A segment group (04 §1.3): each part a role=spinbutton, ordered by the locale. `onChange` hears every edit with the
  * group's state; the group only takes `value` when that value differs from what it holds, so a half-typed date stays.
  */
-export function Segments({ kind, locale, value, options, label, today, clears, disabled, readonly, onEdit, onBlurPartial }: { kind: SegmentKind; locale: string; value: string | null; options?: SegmentOptions; label?: string; today: string; clears?: number; disabled?: boolean; readonly?: boolean; onEdit: (state: SegmentState, parts: SegmentPart[]) => void; onBlurPartial?: () => void }) {
+export function Segments({ kind, locale, value, options, label, today, clears, required, disabled, readonly, onEdit, onBlurPartial }: { kind: SegmentKind; locale: string; value: string | null; options?: SegmentOptions | undefined; label?: string | undefined; today: string; clears?: number | undefined; required?: boolean | undefined; disabled?: boolean | undefined; readonly?: boolean | undefined; onEdit: (state: SegmentState, parts: SegmentPart[]) => void; onBlurPartial?: (() => unknown) | undefined }) {
   const make = () => writeParts(segmentParts(untrack(() => kind), untrack(() => locale), untrack(() => options)), untrack(() => kind), untrack(() => value))
   const parts = state(make())
   const shape = derived(() => { const l = locale; return { periods: dayPeriods(l), h12: hour12(l, options?.hourCycle), l } })
@@ -30,6 +31,8 @@ export function Segments({ kind, locale, value, options, label, today, clears, d
   watch(() => locale, (l, prev) => { if (prev !== undefined && l !== prev) parts.value = make() })
   watch(() => value, v => { if (!edited) parts.value = writeParts(parts.value, untrack(() => kind), v) })
   watch(() => clears, (n, prev) => { if (prev !== undefined && n !== prev) parts.value = writeParts(parts.value, untrack(() => kind), null) })
+  // a half-typed date has no value to go back through
+  use(formReset, () => group, () => () => { parts.value = writeParts(parts.value, untrack(() => kind), untrack(() => value)) })
   const onKey = (e: KeyboardEvent) => {
     if (readonly || disabled) return
     const at = spins().indexOf(e.target as HTMLElement)
@@ -56,9 +59,9 @@ export function Segments({ kind, locale, value, options, label, today, clears, d
     if (v) update(writeParts(parts.value, k, v))
   }
   return (
-    <div ref={(n: any) => (group = n)} data-part="segments" role={label ? 'group' : undefined} aria-label={label} onKeyDown={onKey} onFocusOut={onLeave} onPaste={onPaste}>
+    <div ref={n => (group = n)} data-part="segments" role={label ? 'group' : undefined} aria-label={label} onKeyDown={onKey} onFocusOut={onLeave} onPaste={onPaste}>
       {parts.value.map(p => (isSegment(p)
-        ? <span key={keyOf(p)} data-part="segment" data-type={p.type} role={readonly ? undefined : 'spinbutton'} tabindex={disabled ? undefined : '0'} inputmode="numeric" aria-label={fieldName(p.type, shape.value.l)} aria-valuemin={readonly ? undefined : p.min} aria-valuemax={readonly ? undefined : p.max} aria-valuenow={readonly || p.value === null ? undefined : p.value} aria-valuetext={readonly ? undefined : segmentValueText(p, shape.value.periods, shape.value.l, shape.value.h12)} aria-disabled={disabled ? 'true' : undefined} data-placeholder={p.value === null && !p.buf ? '' : undefined}>{segmentText(p, shape.value.periods, shape.value.h12)}</span>
+        ? <span key={keyOf(p)} data-part="segment" data-type={p.type} role={readonly ? undefined : 'spinbutton'} tabindex={disabled ? undefined : '0'} inputmode="numeric" aria-label={fieldName(p.type, shape.value.l)} aria-valuemin={readonly ? undefined : p.min} aria-valuemax={readonly ? undefined : p.max} aria-valuenow={readonly || p.value === null ? undefined : p.value} aria-valuetext={readonly ? undefined : segmentValueText(p, shape.value.periods, shape.value.l, shape.value.h12)} aria-required={required && !readonly ? 'true' : undefined} aria-disabled={disabled ? 'true' : undefined} data-placeholder={p.value === null && !p.buf ? '' : undefined}>{segmentText(p, shape.value.periods, shape.value.h12)}</span>
         : <span key={keyOf(p)} data-part="literal" aria-hidden="true">{p.literal}</span>))}
     </div>
   )

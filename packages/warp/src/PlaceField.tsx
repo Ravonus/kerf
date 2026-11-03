@@ -1,16 +1,20 @@
-import { PinIcon } from '@weft/icons'
-import { addressFormat, addressPart, withAddressPart, type Address, type AddressPart, type TimeZoneId } from '@weft/ui-core'
-import { derived, state, untrack } from 'weft'
+import { PinIcon } from '@weft-js/warp-icons'
+import { addressFormat, addressPart, formReset, withAddressPart, type Address, type AddressPart, type TimeZoneId } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
 import { Chip } from './Chip'
 import { ComboField } from './Combobox'
 import { Input } from './Field'
 import { bindable, type Bindable, type RichFieldProps } from './Picker'
 import { CountrySelect } from './RichSelect'
-import '@weft/ui-core/styles/rich/address.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/address.css'
 
+/** A place a lookup returned. */
 export type Place = { displayName: string; lat: number; lng: number; timezone?: TimeZoneId; category?: string; id?: string }
+/** A filter chip that nudges a place lookup. */
 export type PlaceBias = { id: string; label: string; default?: boolean }
 
+/** Props for PlaceLookupInput. */
 export type PlaceLookupInputProps = RichFieldProps & Bindable<Place | null> & {
   search: (q: string, o: { bias: Record<string, boolean>; signal: AbortSignal }) => Promise<Place[]>
   biases?: PlaceBias[]
@@ -24,11 +28,18 @@ export function PlaceLookupInput({ value, defaultValue, onValueChange, search, b
   const bias = state<Record<string, boolean>>(untrack(() => Object.fromEntries((biases ?? []).map(b => [b.id, !!b.default]))))
   const list = derived(() => biases ?? [])
   const chosen = derived(() => { const p = v.value; return p ? `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}${p.timezone ? ` · ${p.timezone}` : ''}` : undefined })
+  let box: HTMLDivElement | undefined
+  const reset = () => {
+    v.reset()
+    text.value = v.value?.displayName ?? ''
+    box!.querySelector('input')!.value = text.value // the native reset emptied it, and the text may not have changed
+  }
   return (
-    <div class="stack">
+    <div ref={n => (box = n)} class="stack">
       <ComboField
         icon={PinIcon}
         {...rest}
+        reset={reset}
         label={label}
         hint={hint}
         minChars={minChars}
@@ -41,18 +52,20 @@ export function PlaceLookupInput({ value, defaultValue, onValueChange, search, b
       />
       {list.value.length > 0 && (
         <div class="chips" role="group" aria-label="Prefer">
-          {list.value.map(b => <Chip key={b.id} pressed={!!bias.get(b.id)} onClick={() => (bias.value = { ...bias.value, [b.id]: !bias.value[b.id] })}>{b.label}</Chip>)}
+          {list.value.map(b => <Chip key={b.id} pressed={!!(bias.get(b.id) as boolean | undefined)} onClick={() => (bias.value = { ...bias.value, [b.id]: !bias.value[b.id] })}>{b.label}</Chip>)}
         </div>
       )}
     </div>
   )
 }
 
+/** What an address lookup needs from a provider. */
 export interface AddressProvider {
   suggest(q: string, o: { country?: string; signal: AbortSignal }): Promise<Array<{ id: string; label: string; secondary?: string }>>
   resolve(id: string): Promise<Address>
 }
-export type AddressFieldProps = Bindable<Address | null> & { label?: string; provider?: AddressProvider; countries?: string[]; defaultCountry?: string; locale?: string; name?: string; errors?: Partial<Record<AddressPart, string>> }
+/** Props for AddressField. */
+export type AddressFieldProps = Bindable<Address | null> & { label?: string | undefined; provider?: AddressProvider | undefined; countries?: string[] | undefined; defaultCountry?: string; locale?: string | undefined; name?: string | undefined; errors?: Partial<Record<AddressPart, string>> | undefined }
 
 /**
  * AddressField (04 §3): the country comes first and decides the fields. Line 1 is a combobox when there is a `provider`;
@@ -80,8 +93,16 @@ export function AddressField({ value, defaultValue, onValueChange, label = 'Addr
     const f = format.value, t = addressPart(v.value, 'postalCode').trim()
     return f.postal && t && touched.value.postal && !f.postal.test(t) ? f.postalMessage : undefined
   })
+  let root: HTMLDivElement | undefined
+  use(formReset, () => root, () => () => {
+    v.reset()
+    country.value = v.value?.country ?? defaultCountry
+    manual.value = false
+    note.value = ''
+    touched.value = {}
+  })
   return (
-    <div role="group" aria-label={label} class="stack">
+    <div ref={n => (root = n)} role="group" aria-label={label} class="stack">
       {name && <input type="hidden" name={name} value={v.value ? JSON.stringify(v.value) : ''} />}
       <div class="addr-grid">
         <CountrySelect label="Country or region" value={country} options={countries} locale={locale} onValueChange={c => { if (v.value) v.set({ ...v.value, country: c! }, 'pointer') }} />

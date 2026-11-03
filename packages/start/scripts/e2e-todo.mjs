@@ -112,14 +112,24 @@ export async function base(t, { url, browser }) {
         const ul = document.querySelector('ul.todos')
         if (!ul) return
         window.__h = []
-        new MutationObserver(r => window.__h.push(...r.map(x => x.type))).observe(ul, { subtree: true, childList: true, characterData: true, attributes: true })
+        // The server's list, as a reader sees it. The claim writes nothing; a macrotask later `sweep` drops the keys and
+        // hole markers only the claim needed, on purpose (hydrate.ts, islands.browser.test.mjs). Only that may be seen.
+        window.__plain = root => { const c = root.cloneNode(true); c.querySelectorAll('[wk]').forEach(e => e.removeAttribute('wk')); c.removeAttribute('wk'); for (const w = document.createTreeWalker(c, NodeFilter.SHOW_COMMENT); w.nextNode();) w.currentNode.data = ''; return c.outerHTML.replaceAll('<!---->', '') }
+        window.__server = window.__plain(ul)
+        const marker = n => n.nodeType === 8 && (n.data === '[' || n.data === ']')
+        const swept = x => x.type === 'attributes' ? x.attributeName === 'wk' && !x.target.hasAttribute('wk') : x.type === 'childList' && !x.addedNodes.length && [...x.removedNodes].every(marker)
+        const say = x => `${x.type} ${x.attributeName ?? ''} on ${x.target.nodeName}: ${x.target.nodeType === 1 ? x.target.outerHTML.slice(0, 120) : x.target.data}`
+        new MutationObserver(r => window.__h.push(...r.filter(x => !swept(x)).map(say))).observe(ul, { subtree: true, childList: true, characterData: true, attributes: true })
       })
     })
     await a.page.reload()
     await a.page.waitForLoadState('networkidle')
     a.page.off('request', listen)
     eq(calls, [], 'fetches during hydration')
-    eq(await a.page.evaluate(() => window.__h), [], 'writes during hydration')
+    eq(await a.page.evaluate(() => window.__h), [], 'writes during hydration, past the keys and markers')
+    await a.page.waitForTimeout(50) // the sweep
+    eq(await a.page.evaluate(() => window.__plain(document.querySelector('ul.todos')) === window.__server), true, 'the list hydrated as the server wrote it')
+    eq(await a.page.evaluate(() => document.querySelectorAll('ul.todos, ul.todos [wk]').length), 1, 'the list after the sweep: no keys left')
     const html = await (await a.context.request.get('/todos')).text()
     if (!html.includes('Run the matrix')) fail('the server-rendered page lacks the list')
     eq(await titles(a.page), ['done:Write the note', 'open:Run the matrix'], 'after reload')

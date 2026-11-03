@@ -3,8 +3,8 @@
 // weft-allow T005: framework test of compiled output; it checks the exact DOM and classes the compiler writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { state } from 'weft'
-import { flush, render, touches } from 'weft/test'
+import { state } from '@weft-js/core'
+import { flush, render, touches } from '@weft-js/core/test'
 import { seen, seenRef } from './fixtures/refs'
 
 test('children are built once, however often and wherever the component reads them', async () => {
@@ -14,7 +14,7 @@ test('children are built once, however often and wherever the component reads th
     return <i>child</i>
   }
   const open = state(true)
-  function Box({ children }: { children?: any }) {
+  function Box({ children }: { children?: unknown }) {
     return <div>{open.value ? <p>{children}</p> : <span>{children}</span>}</div>
   }
   render(() => <Box><Child /></Box>)
@@ -28,12 +28,12 @@ test('children are built once, however often and wherever the component reads th
 })
 
 test('a default that reads another prop stays live', async () => {
-  const a = state('x')
+  const live = state('x')
   function A({ a, b = a }: { a: string; b?: string }) {
     return <p>{b}</p>
   }
-  render(() => <A a={a.value} />)
-  a.value = 'y'
+  render(() => <A a={live.value} />)
+  live.value = 'y'
   await flush()
   expect(screen.getByText('y')).toBeTruthy()
 })
@@ -41,7 +41,7 @@ test('a default that reads another prop stays live', async () => {
 test('rest props spread on a native element stay live', async () => {
   const title = state('one')
   let clicks = 0
-  function Button({ label, ...rest }: { label: string; [k: string]: any }) {
+  function Button({ label, ...rest }: { label: string; [k: string]: unknown }) {
     return <button {...rest}>{label}</button>
   }
   render(() => <Button label="go" title={title.value} class="b" onClick={() => clicks++} />)
@@ -57,7 +57,7 @@ test('rest props spread on a native element stay live', async () => {
 
 test('a rest parameter held in a variable is the same live view as the parameter', async () => {
   const title = state('one')
-  function Box({ label, ...rest }: { label: string; [k: string]: any }) {
+  function Box({ label, ...rest }: { label: string; [k: string]: unknown }) {
     const attrs = rest // not a setup-time read (W001 no longer fires here)
     return <p {...attrs} data-n={Object.keys(rest).length}>{label}{rest.label === undefined ? '' : '!'}</p>
   }
@@ -69,9 +69,10 @@ test('a rest parameter held in a variable is the same live view as the parameter
   expect(p.title).toBe('two')
 })
 
-test('ref to an imported or const function calls it; ref to a let beside a spread assigns it', async () => {
+test('ref to an imported or const function calls it; ref to a let beside a spread assigns it', () => {
   const local: Element[] = []
   const keep = (el: Element) => local.push(el)
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let mine: HTMLElement | undefined
   function A(props: { title: string }) {
     return <div><p ref={seenRef}>a</p><i ref={keep}>b</i><b ref={mine} {...props}>c</b></div>
@@ -97,7 +98,7 @@ test('fragment rows are keyed: a reorder moves them', async () => {
   const items = state([{ id: 'a', v: 1 }, { id: 'b', v: 2 }])
   render(() => <dl>{items.value.map(x => <><dt key={x.id}>{x.id}</dt><dd>{x.v}</dd></>)}</dl>)
   const before = screen.getByText('a')
-  const t = await touches(() => { items.value = [items.value[1], { id: 'a', v: 9 }] })
+  const t = await touches(() => { items.value = [items.value[1]!, { id: 'a', v: 9 }] })
   expect(screen.getByText('a')).toBe(before)
   expect(screen.getByText('9')).toBeTruthy()
   expect(t.added).toBeLessThanOrEqual(2) // one row moved (dt + dd), none rebuilt
@@ -107,7 +108,7 @@ test('conditional rows are keyed by the key on either branch', async () => {
   const items = state([{ id: 'a', on: true }, { id: 'b', on: false }])
   render(() => <ul>{items.value.map(x => (x.on ? <li key={x.id}>on {x.id}</li> : <li key={x.id}>off {x.id}</li>))}</ul>)
   const b = screen.getByText('off b')
-  items.value = [items.value[1], items.value[0]]
+  items.value = [items.value[1]!, items.value[0]!]
   await flush()
   expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['off b', 'on a'])
   expect(screen.getByText('off b')).toBe(b)

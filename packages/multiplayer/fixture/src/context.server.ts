@@ -4,6 +4,6 @@ export default ({ request }: { request: Request }) => {
   return { who: who ?? 'guest' }
 }
 
-declare module '@weft/start' {
+declare module '@weft-js/start' {
   interface Context { who: string }
 }

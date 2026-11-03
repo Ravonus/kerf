@@ -1,7 +1,7 @@
 // The table and shell driven as a user would: the cases budget.test.tsx doesn't reach.
 import { fireEvent } from '@testing-library/dom'
-import { resource, state } from 'weft'
-import { flush, render } from 'weft/test'
+import { resource, state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Shell } from '../src/Shell'
 import { Table, type Column } from '../src/Table'
 
@@ -39,8 +39,8 @@ test('Shift-click selects a range, the header goes mixed then all, Clear empties
   const seen: string[][] = []
   const { container: c } = render(() => <Table caption="P" rows={rows} columns={columns} selection onSelectionChange={k => seen.push(k)} picker={false} />)
   const boxes = () => [...c.querySelectorAll<HTMLInputElement>('tbody input')]
-  boxes()[0].click(); await flush()
-  fireEvent.click(boxes()[1], { shiftKey: true }); await flush()
+  boxes()[0]!.click(); await flush()
+  fireEvent.click(boxes()[1]!, { shiftKey: true }); await flush()
   expect(seen.at(-1)).toEqual(['a', 'b'])
   const all = c.querySelector<HTMLInputElement>('thead input')!
   expect(all.indeterminate).toBe(true)
@@ -53,8 +53,8 @@ test('Shift-click selects a range, the header goes mixed then all, Clear empties
 })
 
 test('inline edit: Enter opens, invalid stays, Enter commits, Escape cancels, focus returns', async () => {
-  const edits: any[] = []
-  const cols: Column<P>[] = [columns[0], { id: 'budget', header: 'Budget', edit: t => Number(t), validate: v => v > 0 || 'Above zero' }]
+  const edits: unknown[] = []
+  const cols: Column<P>[] = [columns[0]!, { id: 'budget', header: 'Budget', edit: t => Number(t), validate: v => (v as number) > 0 || 'Above zero' }]
   const { container: c } = render(() => <Table caption="P" rows={rows} columns={cols} onEdit={(r, col, v) => edits.push([r.id, col, v])} picker={false} />)
   const td = c.querySelector<HTMLElement>('tr[data-id="a"] td[data-col="budget"]')!
   td.focus()
@@ -87,7 +87,7 @@ test('details slide open in place at any width, and leave once closed', async ()
   expand.click(); await flush(); await Promise.resolve()
   expect(expand.getAttribute('aria-expanded')).toBe('false')
   expect(c.querySelector('[data-part="slide"]')!.hasAttribute('data-closing')).toBe(true) // still sliding shut
-  await new Promise(done => setTimeout(done, 60)) // transitionend never fires here, as when a transition is skipped
+  await new Promise(done => { setTimeout(done, 60) }) // transitionend never fires here, as when a transition is skipped
   sheet.remove()
   expect(c.querySelector('tr[data-part="detail"]')).toBeNull()
 })
@@ -126,11 +126,11 @@ test('states keep the frame: loading, empty and error with Retry', async () => {
 test('a Resource of a list page: loading, then its rows and cursors, untouched by the client', async () => {
   const pages: unknown[] = []
   const { container: c } = render(() => {
-    const list = resource(async () => ({ items: rows, total: 30, next: 'c2' }))
+    const list = resource(() => Promise.resolve({ items: rows, total: 30, next: 'c2' }))
     return <Table caption="P" rows={list} columns={columns} onPageChange={to => pages.push(to)} picker={false} />
   })
   expect(box(c).dataset.state).toBe('loading')
-  await new Promise(r => setTimeout(r)); await flush()
+  await new Promise(r => { setTimeout(r) }); await flush()
   expect(names(c)).toEqual(['Apollo', 'Borealis', 'Cirrus'])
   expect(c.querySelector('[data-part="footer"] span')!.textContent).toBe('3 of 30')
   ;[...c.querySelectorAll('button')].find(b => b.textContent === 'Next')!.click()
@@ -156,7 +156,7 @@ test('Columns: a disclosure of checkboxes hides a column by stylesheet, without 
   expect(open.getAttribute('aria-haspopup')).toBeNull()
   open.click(); await flush()
   expect(open.getAttribute('aria-expanded')).toBe('true')
-  c.querySelectorAll<HTMLElement>('[role="group"] input')[1].click(); await flush()
+  c.querySelectorAll<HTMLElement>('[role="group"] input')[1]!.click(); await flush()
   expect(c.querySelector('style')!.textContent).toContain('[data-col="budget"]{display:none}')
   // a mouse press on a label sends focus to the nearest focusable ancestor, such as the shell's <main tabindex="-1">
   fireEvent.focusOut(c.querySelector('[role="group"] input')!, { relatedTarget: c })

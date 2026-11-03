@@ -1,4 +1,4 @@
-import { mutation, redirect } from '@weft/start'
+import { mutation, redirect } from '@weft-js/start'
 import { z } from 'zod'
 import { waitlist } from '#/db/schema'
 

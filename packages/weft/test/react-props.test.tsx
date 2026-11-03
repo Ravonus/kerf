@@ -5,9 +5,9 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fireEvent } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { renderToString } from 'weft/ssr'
-import { flush } from 'weft/test'
-import { attrName, hydrate, render } from 'weft/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush } from '@weft-js/core/test'
+import { attrName, hydrate, render } from '@weft-js/core/dom'
 import { hydration } from '../src/hydrate'
 import * as Dom from './fixtures/react-props/Props.tsx'
 import * as Server from './fixtures/react-props/Props.tsx?weft-ssr'
@@ -15,16 +15,17 @@ import * as Client from './fixtures/react-props/Props.tsx?weft-hydrate'
 import { Control, Defaults, Direct, Focused, InClosedDialog, Spread as SpreadEvents, Swapped } from './fixtures/react-props/Events.tsx'
 
 type Name = keyof typeof Dom
+const table = (mod: object) => mod as Record<Name, (props: object) => unknown>
 
 const mount = () => document.body.appendChild(document.createElement('div'))
 afterEach(() => { document.body.textContent = '' })
 
 function client(name: Name) {
   const root = mount()
-  render(() => Dom[name]({} as never), root)
+  render(() => table(Dom)[name]({}), root)
   return root
 }
-const html = (name: Name) => renderToString(() => Server[name]({} as never))
+const html = (name: Name) => renderToString(() => table(Server)[name]({}))
 function server(name: Name) {
   const root = mount()
   root.innerHTML = html(name)
@@ -33,7 +34,7 @@ function server(name: Name) {
 function hydrated(name: Name) {
   const root = server(name)
   const before = root.innerHTML
-  hydrate(() => Client[name]({} as never), root)
+  hydrate(() => table(Client)[name]({}), root)
   expect(hydration.misses).toBe(0)
   expect(root.innerHTML).toBe(before) // hydration adopts what the server wrote and wipes nothing
   return root
@@ -191,7 +192,7 @@ test('a spread onChange that changes replaces the old handler', async () => {
 
 test('defaultValue never overwrites what the user typed', async () => {
   const root = mount()
-  render(() => Defaults({}), root)
+  render(() => Defaults(), root)
   for (const t of ['dflt', 'area', 'spread']) fireEvent.input(q(root, `[data-t=${t}]`), { target: { value: 'typed' } })
   q(root, 'button').click()
   await flush()
@@ -243,7 +244,7 @@ describe('negative control', () => {
 
 describe('the runtime table agrees with the compiler table', () => {
   const rust = readFileSync(join(import.meta.dirname, '../../../crates/weft-compiler/src/react.rs'), 'utf8')
-  const list = (name: string) => [...new RegExp(`const ${name}: &\\[&str\\] = &\\[([^\\]]*)\\]`).exec(rust)![1].matchAll(/"(\w+)"/g)].map(m => m[1])
+  const list = (name: string) => [...new RegExp(`const ${name}: &\\[&str\\] = &\\[([^\\]]*)\\]`).exec(rust)![1]!.matchAll(/"(\w+)"/g)].map(m => m[1]!)
 
   test('dashed names', () => {
     const dashed = list('DASHED')

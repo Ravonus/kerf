@@ -5,7 +5,7 @@
 // through `derived` and further JSX props, until a JSX `.map` renders it as a keyed list. Found: the warning becomes
 // an error with the list's location in `related`. The parse is syntax only (TypeScript's parser, no type checker).
 
-import { dirname, join, relative } from 'node:path'
+import { relative } from 'node:path'
 import ts from 'typescript'
 import { local } from './alias.mjs'
 
@@ -121,8 +121,8 @@ export function projectView(files, pos) {
   }
 
   const lookup = (file, tag) => {
-    const local = file.comps.find(c => c.name === tag)
-    if (local) return { file, comp: local }
+    const own = file.comps.find(c => c.name === tag)
+    if (own) return { file, comp: own }
     const imp = file.imports.get(tag)
     const target = imp && byAbs.get(imp.file)
     const comp = target?.comps.find(c => c.name === imp.name)

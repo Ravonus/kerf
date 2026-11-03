@@ -1,5 +1,5 @@
 // The scopes of test/ssr-state.test.tsx, shared by the `?weft-ssr` and `?weft-hydrate` builds of Prefs.tsx.
-import { defineState, state } from 'weft'
+import { defineState, state } from '@weft-js/core'
 
 const object = {
   '~standard': { validate: (v: any) => (v && typeof v === 'object' && typeof v.n === 'number' ? { value: v } : { issues: [{ message: 'expected { n }' }] }) },

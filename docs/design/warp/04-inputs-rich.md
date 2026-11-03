@@ -19,7 +19,7 @@ label · body`, then `root > message`. The label is a `<label id>` whose text is
 `<span data-char>` (one per character), so its text is still the name. Nothing below adds a second shell.
 - **Sweep border.** `data-phase` runs idle → in → out → idle. It enters left to right on hover or focus and exits
   left to right, never reversing. The stroke is `--warp-color-sweep` (full accent, ≥ 3:1 against base and surface at
-  every stop) over `--warp-color-sweep-base`, timed by `--warp-sweep-duration` (`--warp-ref-sweep` 480/620/700ms
+  every stop) over `--warp-color-sweep-base`, timed by `--warp-sweep-duration` (`--warp-ref-sweep` 400/520/580ms
   quiet/balanced/vivid). The icon sweeps with the border. **An error pins the sweep in, painted
   `--warp-color-sweep-critical`**, and the message slides in over 180ms with `role="alert"`.
 - **Popovers stay attached.** A picker's popover is a child of `control`, so the label stays up and the sweep
@@ -59,7 +59,7 @@ polyfill; and it's Temporal's own format, so `Temporal.PlainDate.from(v)` is one
 predecessor's ranges off by one at DST boundaries.
 
 ```ts
-import type { State } from "weft";
+import type { State } from "@weft-js/core";
 type IsoDate      = `${number}-${number}-${number}`;                 // Temporal.PlainDate      2026-10-28
 type IsoTime      = `${number}:${number}` | `${number}:${number}:${number}`; // PlainTime   14:30
 type IsoDateTime  = `${IsoDate}T${IsoTime}`;                          // PlainDateTime (wall time, no zone)
@@ -93,7 +93,7 @@ in the segments, and the field's `error` explains it on blur.
 
 The rule: **use native when the OS control is strictly better and the value fits it. Use a custom sheet when the
 input needs things native can't do** (ranges, presets, unavailable dates, a locale that differs from the device,
-search). `presentation?: "auto" | "popover" | "sheet" | "native"` overrides it. `auto` picks a sheet when the
+search). `presentation?: "auto" | "popover" | "sheet"` overrides it, and Select has no native option (03 §4). `auto` picks a sheet when the
 field's container is under 600px **or** the pointer is coarse and the viewport is under 600px.
 
 | Input | Phone | Why |
@@ -559,7 +559,7 @@ continue the entry direction, and leave toward the anchor.
 | **Popover enter / exit** | fade + 4px from the anchor, scale 0.985, `base` | fade + 8px, scale 0.97 | fade + 12px, scale 0.95, spring on scale | fade only, `base × 0.6` |
 | **Sheet enter / exit** | 100% from the bottom, `slow`, in-out; scrim fades | same, ease-out | same, spring (3.5% overshoot) on the last 10% | sheet fades in place; scrim fades |
 | **Range band** | colour only | the band fills from start to end, `fast` | same plus an emphasis edge on the ends | colour only |
-| **Field sweep** | L→R, 480ms | L→R, 620ms | L→R, 700ms; popovers sweep too | phase still runs, 0ms; colour change only |
+| **Field sweep** | L→R, 400ms | L→R, 520ms | L→R, 580ms; popovers sweep too | phase still runs, 0ms; colour change only |
 | **Validation** | sweep pinned critical; message fades in, 180ms | same; message slides 8px, 180ms | same | colour, icon and message; no travel |
 | **Sortable drop** | FLIP `base` | FLIP `base`, ease-out | FLIP with `ease-pop` | instant reorder, 120ms highlight |
 
@@ -588,9 +588,9 @@ continue the entry direction, and leave toward the anchor.
 | Set `aria-checked` on every chip radio, with one tab stop and arrows that move and select. | Leave the unchecked radios without `aria-checked`. |
 | Set non-vivid hero `em` upright in the accent colour (`font-synthesis-style: none`). | Let the browser slant Space Grotesk into a fake italic. |
 
-**As built, the editors and code inputs** (`packages/ui-core/src/{editor,code,mention}.ts`, `packages/warp/src/{RichTextEditor,Markdown,CodeInput,MentionsInput,KeyValueEditor}.tsx`). Where the build differs from this spec:
+**As built, the editors and code inputs** (`packages/warp-core/src/{editor,code,mention}.ts`, `packages/warp/src/{RichTextEditor,Markdown,CodeInput,MentionsInput,KeyValueEditor}.tsx`). Where the build differs from this spec:
 
-- RichTextEditor is contenteditable with `execCommand`, like the specimen, not a ProseMirror `@weft/editor`: the app pays about 16 KB br of JS rather than a full editor engine. Everything that enters it goes through ui-core's allow-list `sanitizeHtml`. `format` is `html` or `markdown`; `json` and the `renderer` prop aren't built.
+- RichTextEditor is contenteditable with `execCommand`, like the specimen, not a ProseMirror `@weft/editor`: the app pays about 16 KB br of JS rather than a full editor engine. Everything that enters it goes through warp-core's allow-list `sanitizeHtml`. `format` is `html` or `markdown`; `json` and the `renderer` prop aren't built.
 - Undo stops at a mention and at a list made by a Markdown shortcut: Chromium needs a direct DOM change for both (it drops or nests the element otherwise), and that ends its undo history there.
 - CodeInput paints with the CSS Custom Highlight API over a mirrored `<pre>`, since ranges can't reach inside a textarea. Without the API the textarea shows plain text.
 - `aria-expanded` is left off MentionsInput and RichTextEditor: axe rejects it on textbox roles. `aria-activedescendant` and `aria-controls` carry the list.

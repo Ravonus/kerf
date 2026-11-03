@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Alert, Button, Card } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Alert, Button, Card } from '@weft-js/warp'
 import show from '../generated/showcase.json'
 
 export default function Habit() {
@@ -10,7 +10,7 @@ export default function Habit() {
         {open.value ? 'Hide the error' : 'Build the React habit'}
       </Button>
       {open.value && (
-        <Alert tone="danger" title={show.habit.code}>
+        <Alert tone="critical" title={show.habit.code}>
           {show.habit.message}
         </Alert>
       )}

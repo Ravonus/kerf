@@ -1,4 +1,4 @@
-// W043 in `weft check`: a React habit that compiles and renders something else. `data-x={true}` is a literal, so it can
+// W043 and W044 in `weft check`. W043: a React habit that compiles and renders something else. `data-x={true}` is a literal, so it can
 // be told from weft's own `data-open={open}`, whose presence form `[data-open]` selectors depend on (docs/react-props.md).
 
 import { diagnostic, positions } from './diag.mjs'
@@ -6,14 +6,18 @@ import { scanJsx } from './jsx-scan.mjs'
 
 const NATIVE = /^[a-z][\w-]*$/
 const LITERAL = /\bdata-[\w-]+\s*=\s*\{\s*(?:true|false)\s*\}/
+const RANDOM = /\b(?:crypto\.randomUUID|Date\.now|Math\.random|performance\.now)\s*\(/
 
 /** @param {{ files: { rel: string, text: string }[] }} options the checked .tsx/.jsx files */
 export function reactChecks({ files }) {
   const out = []
   for (const { rel, text } of files) {
-    if (!LITERAL.test(text)) continue
+    if (!LITERAL.test(text) && !RANDOM.test(text)) continue
     const pos = positions(text)
     for (const el of scanJsx(text, rel).elements) {
+      for (const a of el.attrs) {
+        if (a.name === 'key' && a.kind === 'expr' && RANDOM.test(a.expr)) out.push(diagnostic({ code: 'W044', file: rel, span: pos.span(a.start, a.end), offset: [a.start, a.end], why: `\`key={${a.expr}}\` differs between the server and the client, so this row can't hydrate and is built again, and it differs on every render.` }))
+      }
       if (!NATIVE.test(el.name)) continue
       for (const a of el.attrs) {
         if (!a.name.startsWith('data-') || a.kind !== 'expr' || (a.expr !== 'true' && a.expr !== 'false')) continue

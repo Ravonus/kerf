@@ -1,0 +1,6 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* comments: margin rail of anchored threads */
+:where([data-scope="comment-anchor"]) { background: color-mix(in oklab, var(--warp-color-highlight-solid) 32%, transparent); border-block-end: 2px solid var(--warp-color-highlight-solid); cursor: pointer; }
+:where([data-scope="comment-anchor"][data-active]) { background: color-mix(in oklab, var(--warp-color-highlight-solid) 60%, transparent); }
+}

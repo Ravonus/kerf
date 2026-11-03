@@ -1,4 +1,4 @@
-// weft/style: named style groups (research 23). A group is data: intent keys and token names (./style/vocab.ts),
+// @weft-js/core/style: named style groups (research 23). A group is data: intent keys and token names (./style/vocab.ts),
 // typed here and evaluated at build by the compiler, which also lowers every call site to plain attributes:
 //
 //   <li {...productRow({ stock: s })}>      →  <li data-g="product-row" data-stock={s}>   (one attribute binding)
@@ -21,6 +21,7 @@ type AxesOf<A> = { [K in keyof A]: A[K] extends 'inherit' ? 'inherit' : { [V in 
 type Plain<A> = { [K in keyof A as A[K] extends 'inherit' ? never : K]: A[K] }
 type AxisArgs<A> = { [K in keyof Plain<A>]?: Extract<keyof Plain<A>[K], string> }
 
+/** A rule for a combination of axis values, on the group or one part. */
 export type Compound<A, P> = {
   when: AxisArgs<A>
   /** Style one part when the axes match; the root when omitted. */
@@ -28,6 +29,7 @@ export type Compound<A, P> = {
   set: Intent
 }
 
+/** What `group` takes: a base, its parts, axes, states and compounds. */
 export type GroupDef<A, P, S> = {
   base?: Intent
   axes?: A & AxesOf<A>
@@ -42,11 +44,13 @@ type Pseudo = 'hover' | 'focus' | 'active' | 'disabled'
 
 /** Attributes a group writes: spread them on the element (`{...card(…)}`). */
 export type GroupAttrs = { 'data-g': string } & Record<`data-${string}` | `aria-${string}`, string | boolean | undefined>
+/** What a part puts on its element. */
 export type PartAttrs = { readonly 'data-part': string }
 
 /** A one-off variation at a call site: tokens only, no `css` (research 23 §2.2). Three of the same suggest an axis value (D022). */
 export type Accent = Omit<Intent, 'css'>
 
+/** What `group` returns: called with its axes it gives the element's attributes. */
 export type Group<N extends string, A, P, S> = {
   (axes?: AxisArgs<A> & { [K in Exclude<keyof S, Pseudo>]?: boolean } & { accent?: Accent }): GroupAttrs
   readonly group: N

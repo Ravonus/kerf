@@ -1,6 +1,6 @@
-import { onCleanup, onMount, watch } from 'weft'
-import { copyButtons } from '@weft/ui-core'
-import { render } from 'weft/dom'
+import { onCleanup, onMount, watch } from '@weft-js/core'
+import { copyButtons } from '@weft-js/warp-core'
+import { render } from '@weft-js/core/dom'
 import { spotlightOpen } from '../lib/spotlight'
 
 /** The ⌘K launcher fetched on first use. Everything in it stays out of a page nobody searches from. */
@@ -12,7 +12,7 @@ export function SpotlightGate() {
   const load = () => {
     if (asked) return
     asked = true
-    void import('./Spotlight').then(({ Spotlight }) => { stop = render(() => <Spotlight />, box!) as () => void })
+    void import('./Spotlight').then(({ Spotlight }) => { stop = render(() => <Spotlight />, box!) })
   }
   watch(() => spotlightOpen.value, open => { if (open) load() })
   onMount(() => {
@@ -29,5 +29,5 @@ export function SpotlightGate() {
       stop?.()
     })
   })
-  return <div ref={(n: any) => (box = n)}></div>
+  return <div ref={el => (box = el)}></div>
 }

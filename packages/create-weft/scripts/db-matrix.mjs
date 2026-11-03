@@ -12,10 +12,9 @@
 // whose accounts can create databases. An engine with no URL is skipped and reported. Exit 1 on any failure.
 
 import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
+import { parseArgs, promisify } from 'node:util'
 import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { parseArgs } from 'node:util'
 import { scaffold } from '../src/index.mjs'
 import { packAll, pin, pkgs } from './tarballs.mjs'
 import { jobs, pool } from '../../../scripts/jobs.mjs'

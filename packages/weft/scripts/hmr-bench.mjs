@@ -28,7 +28,7 @@ const { chromium } = pw.default ?? pw
 
 const root = join(tmpdir(), `weft-hmr-bench-${process.pid}`)
 mkdirSync(join(root, 'src'), { recursive: true })
-const comp = (i, label) => `import { state } from 'weft'
+const comp = (i, label) => `import { state } from '@weft-js/core'
 export function C${i}(props: { label: string }) {
   const count = state(${i})
   return <li onClick={() => count.value++}><b>${label}</b> {props.label} {count.value}</li>
@@ -38,7 +38,7 @@ for (let i = 0; i < N; i++) writeFileSync(join(root, 'src', `C${i}.tsx`), comp(i
 writeFileSync(join(root, 'src', 'App.tsx'),
   Array.from({ length: N }, (_, i) => `import { C${i} } from './C${i}.tsx'`).join('\n') +
   `\nexport function App() { return <ul>${Array.from({ length: N }, (_, i) => `<C${i} label="x" />`).join('')}</ul> }\n`)
-writeFileSync(join(root, 'src', 'main.tsx'), `import { render } from 'weft/dom'\nimport { App } from './App.tsx'\nrender(() => <App />, document.getElementById('root')!)\n`)
+writeFileSync(join(root, 'src', 'main.tsx'), `import { render } from '@weft-js/core/dom'\nimport { App } from './App.tsx'\nrender(() => <App />, document.getElementById('root')!)\n`)
 writeFileSync(join(root, 'index.html'), `<!doctype html><div id="root"></div><script type="module" src="/src/main.tsx"></script>`)
 
 const server = await createServer({
@@ -46,7 +46,7 @@ const server = await createServer({
   configFile: false,
   logLevel: 'error',
   plugins: [weft()],
-  resolve: { alias: [{ find: /^weft\/(dom|hmr|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
+  resolve: { alias: [{ find: /^@weft-js\/core\/(dom|hmr|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }] },
   server: { port: 0, fs: { allow: [root, pkg] } },
 })
 await server.listen()
@@ -66,14 +66,14 @@ try {
   for (let r = 0; r < EDITS + 5; r++) {
     const i = (r * 397 + 11) % N
     const text = `edit${r}`
-    await page.evaluate(([i, text]) => {
+    await page.evaluate(([at, want]) => {
       const ul = document.querySelector('ul')
       const mo = new MutationObserver(() => {
-        if (ul.children[i]?.firstChild?.textContent === text) { mo.disconnect(); window.__seen() }
+        if (ul.children[at]?.firstChild?.textContent === want) { mo.disconnect(); window.__seen() }
       })
       mo.observe(ul, { childList: true, subtree: true, characterData: true })
     }, [i, text])
-    const seen = new Promise(r => (resolveSeen = r))
+    const seen = new Promise(ok => { resolveSeen = ok })
     changed = 0
     const start = performance.now()
     writeFileSync(join(root, 'src', `C${i}.tsx`), comp(i, text))
@@ -83,7 +83,7 @@ try {
       total.push(end - start)
       afterWatcher.push(end - changed)
     }
-    const kept = await page.evaluate(i => document.querySelector('ul').children[i].textContent, i)
+    const kept = await page.evaluate(at => document.querySelector('ul').children[at].textContent, i)
     if (!kept.endsWith(` x ${i}`)) throw new Error(`state lost on edit ${r}: ${kept}`)
   }
   const reloads = await page.evaluate(() => performance.getEntriesByType('navigation').length)

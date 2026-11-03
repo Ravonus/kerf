@@ -1,5 +1,5 @@
-import { Link } from '@weft/start'
-import { Boundary } from 'weft'
+import { Link } from '@weft-js/start'
+import { Boundary } from '@weft-js/core'
 import { cartCount } from '#/server/cart'
 
 function CartCount() {

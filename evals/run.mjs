@@ -25,8 +25,8 @@ const workRoot = join(tmpdir(), 'weft-evals', name)
 const taskDir = (suite, task) => join(root, suite, task)
 
 const HEADERS = {
-  react: c => `Implement this in **React 19 + TypeScript** (function components and hooks).`,
-  solid: c => `Implement this in **SolidJS 1.9 + TypeScript** (\`solid-js\`, function components and signals).`,
+  react: () => `Implement this in **React 19 + TypeScript** (function components and hooks).`,
+  solid: () => `Implement this in **SolidJS 1.9 + TypeScript** (\`solid-js\`, function components and signals).`,
 }
 
 function prompt(framework, suite, task) {
@@ -87,14 +87,14 @@ async function agent() {
   if (process.env.ANTHROPIC_API_KEY) env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
   await pool(jobs, Number(opt.concurrency ?? 4), job => new Promise(done => {
     const metaPath = join(job.dir, 'agent.json')
-    if (existsSync(metaPath)) return done()
+    if (existsSync(metaPath)) { done(); return }
     const args = ['-p', readFileSync(join(job.dir, 'PROMPT.md'), 'utf8'), '--model', model, '--output-format', 'json',
       '--permission-mode', 'bypassPermissions', '--disallowedTools', 'WebSearch', 'WebFetch', 'Agent',
       '--max-budget-usd', String(opt.budget ?? 2)]
     const started = Date.now()
     execFile('claude', args, { cwd: job.dir, env, timeout: 15 * 60_000, maxBuffer: 1 << 26 }, (err, stdout) => {
-      let out = {}
-      try { out = JSON.parse(stdout) } catch { out = { is_error: true, result: String(err ?? stdout).slice(0, 500) } }
+      let out
+      try { out = JSON.parse(stdout) } catch { out = { is_error: true, result: (err?.message ?? stdout).slice(0, 500) } }
       const meta = { model, ms: Date.now() - started, cost: out.total_cost_usd, turns: out.num_turns, error: out.is_error ? out.result : undefined }
       if (!out.is_error) writeFileSync(metaPath, JSON.stringify(meta, null, 2))
       console.log(`${out.is_error ? 'ERR ' : 'done'} ${job.id}${out.is_error ? ' ' + out.result : ''}`)
@@ -123,7 +123,7 @@ async function gradeAll() {
 
 function summary(results) {
   const frameworks = [...new Set(results.map(r => r.framework))]
-  const tasks = [...new Set(results.map(r => r.task))].sort()
+  const tasks = [...new Set(results.map(r => r.task))].sort((a, b) => (a < b ? -1 : 1))
   const cell = (fw, t) => {
     const rs = results.filter(r => r.framework === fw && r.task === t)
     const tests = rs.reduce((s, r) => s + r.passed, 0) + '/' + rs.reduce((s, r) => s + r.total, 0)
@@ -133,9 +133,9 @@ function summary(results) {
   for (const t of tasks) lines.push(`| ${t} | ${frameworks.map(fw => cell(fw, t)).join(' | ')} |`)
   const tot = fw => { const rs = results.filter(r => r.framework === fw); return `**${rs.filter(r => r.pass).length}/${rs.length}**` }
   lines.push(`| **pass@1** | ${frameworks.map(tot).join(' | ')} |`, '', '## Failures', '')
-  for (const r of results.filter(r => !r.pass)) {
+  for (const r of results.filter(x => !x.pass)) {
     lines.push(`- **${r.id}** ${r.passed}/${r.total}${r.error ? ` — ${r.error}` : ''}`)
-    for (const t of r.tests.filter(t => !t.ok)) lines.push(`  - ${t.name}: \`${(t.message ?? '').slice(0, 160)}\``)
+    for (const t of r.tests.filter(x => !x.ok)) lines.push(`  - ${t.name}: \`${(t.message ?? '').slice(0, 160)}\``)
   }
   return lines.join('\n') + '\n'
 }

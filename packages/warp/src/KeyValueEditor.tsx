@@ -1,15 +1,19 @@
-import { XIcon } from '@weft/icons'
-import { flush, onCleanup, state, untrack } from 'weft'
+import { XIcon } from '@weft-js/warp-icons'
+import { flush, onCleanup, state, untrack } from '@weft-js/core'
+import { formReset } from '@weft-js/warp-core'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Segmented } from './Choice'
 import { JsonEditor } from './CodeInput'
 import { Field, type FieldShell } from './Field'
-import '@weft/ui-core/styles/rich/body.css'
-import '@weft/ui-core/styles/rich/key-value.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/body.css'
+import '@weft-js/warp-core/styles/rich/key-value.css'
 
+/** One row of a KeyValueEditor. */
 export type KeyValue = { key: string; value: string }
 
+/** Props for KeyValueEditor. */
 export type KeyValueEditorProps = FieldShell & Bindable<KeyValue[]> & {
   keyLabel?: string
   valueLabel?: string
@@ -33,7 +37,7 @@ export function KeyValueEditor({ value, defaultValue, onValueChange, keyLabel = 
   let body: HTMLElement | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   onCleanup(() => clearTimeout(timer))
-  const dup = (rows: KeyValue[], at: number) => !!rows[at].key && rows.findIndex(r => r.key === rows[at].key) !== at
+  const dup = (rows: KeyValue[], at: number) => !!rows[at]!.key && rows.findIndex(r => r.key === rows[at]!.key) !== at
   const hasDup = () => held.value.some((_, at) => dup(held.value, at))
   const edit = (at: number, part: 'key' | 'value', v: string) => held.set(held.value.map((r, n) => (n === at ? { ...r, [part]: v } : r)), 'keyboard')
   const add = () => {
@@ -66,9 +70,16 @@ export function KeyValueEditor({ value, defaultValue, onValueChange, keyLabel = 
       } catch { /* the editor shows the error; the last good value stands */ }
     }, 250)
   }
-  const switcher = untrack(() => json) ? <Segmented label={`${rest.label} format`} size="sm" value={mode.value} options={[{ value: 'form', label: 'Form' }, { value: 'json', label: 'JSON' }]} onChange={(m: any) => flipMode(m)} /> : undefined
+  const switcher = untrack(() => json) ? <Segmented label={`${rest.label} format`} size="sm" value={mode.value} options={[{ value: 'form', label: 'Form' }, { value: 'json', label: 'JSON' }]} onChange={m => flipMode(m)} /> : undefined
+  let root: HTMLDivElement | undefined
+  use(formReset, () => root, () => () => {
+    clearTimeout(timer)
+    held.reset()
+    ids.value = held.value.map(() => ++serial)
+    text.value = toJson(held.value)
+  })
   return (
-    <div data-scope="kv">
+    <div ref={n => (root = n)} data-scope="kv">
       {switcher}
       {mode.value === 'json'
         ? <JsonEditor {...rest} value={text.value} onValueChange={fromJson} />
@@ -80,14 +91,14 @@ export function KeyValueEditor({ value, defaultValue, onValueChange, keyLabel = 
             hint={hasDup() ? 'That key is already here: the last one wins.' : hint}
             attrs={{ 'data-multiline': '' }}
             control={() => (
-              <div ref={(n: any) => (body = n)}>
+              <div ref={n => (body = n)}>
                 <table>
                   <thead><tr><th scope="col">{keyLabel}</th><th scope="col">{valueLabel}</th><th scope="col"><span data-part="sr-only">Remove</span></th></tr></thead>
                   <tbody>
                     {ids.value.map((rowId, at) => (
                       <tr key={rowId}>
-                        <td><input aria-label={`${keyLabel}, row ${at + 1}`} value={held.value[at]?.key ?? ''} data-duplicate={held.value[at] && dup(held.value, at) ? '' : undefined} onInput={(e: any) => edit(at, 'key', e.currentTarget.value)} /></td>
-                        <td><input aria-label={`${valueLabel}, row ${at + 1}`} value={held.value[at]?.value ?? ''} onInput={(e: any) => edit(at, 'value', e.currentTarget.value)} /></td>
+                        <td><input aria-label={`${keyLabel}, row ${at + 1}`} value={held.value[at]?.key ?? ''} data-duplicate={held.value[at] && dup(held.value, at) ? '' : undefined} onInput={(e: Event) => edit(at, 'key', (e.currentTarget as HTMLInputElement).value)} /></td>
+                        <td><input aria-label={`${valueLabel}, row ${at + 1}`} value={held.value[at]?.value ?? ''} onInput={(e: Event) => edit(at, 'value', (e.currentTarget as HTMLInputElement).value)} /></td>
                         <td><button type="button" data-part="remove" aria-label={`Remove row ${at + 1}`} onClick={() => remove(at)}><XIcon /></button></td>
                       </tr>
                     ))}

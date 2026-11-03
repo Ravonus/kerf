@@ -1,18 +1,18 @@
-import { comboPopup, uid } from '@weft/ui-core'
-import { derived, flush, onCleanup, state, untrack } from 'weft'
+import { comboPopup, uid } from '@weft-js/warp-core'
+import { derived, flush, onCleanup, state, untrack } from '@weft-js/core'
 import { Field, type FieldProps } from './Field'
 import { Icon, type IconRef } from './Icon'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/listbox.css'
-import '@weft/ui-core/styles/rich/popover.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/popover.css'
 
-export type ComboRow = { main: string; sub?: string; meta?: string; icon?: IconRef }
+export type ComboRow = { main: string; sub?: string | undefined; meta?: string | undefined; icon?: IconRef | undefined }
 
 export type ComboFieldProps<T> = FieldProps & {
   /** The app's search. Superseded calls are aborted. */
   find: (q: string, signal: AbortSignal) => Promise<T[]>
   row: (hit: T) => ComboRow
-  onPick: (hit: T) => void
+  onPick: (hit: T) => unknown
   /** The text changed: by typing, or cleared by a second Esc. */
   onText?: (text: string) => void
   /** The search failed or took longer than `timeout` ms. */
@@ -47,6 +47,7 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
   const run = (q: string) => {
     cancel()
     if (q.trim().length < minChars) { open.value = false; hits.value = []; return }
+    // oxlint-disable-next-line typescript/no-misused-promises -- the body catches its own failure, and a sync wrapper would add a closure to a hot field
     timer = setTimeout(async () => {
       const me = (stop = new AbortController())
       busy.value = true
@@ -65,13 +66,13 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
       }
     }, 120)
   }
-  const pick = (at: number) => { open.value = false; onPick(hits.value[at]) }
+  const pick = (at: number) => { open.value = false; onPick(hits.value[at]!) }
   const onKey = (e: KeyboardEvent) => {
     const el = e.currentTarget as HTMLInputElement
     if (e.key === 'Escape') {
+      if (e.defaultPrevented) return // an overlay took it: this popup, or the dialog around a closed one
       e.preventDefault()
-      if (open.value) open.value = false
-      else if (el.value) { cancel(); onText?.('') }
+      if (el.value) { cancel(); onText?.('') }
     } else if (e.key === 'ArrowDown' && !open.value) { e.preventDefault(); run(el.value) }
     else if (open.value && hits.value.length) {
       const d = ({ ArrowDown: 1, ArrowUp: -1 } as Record<string, number>)[e.key]
@@ -90,11 +91,11 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
       hint={shownHint.value}
       filled={text().length > 0}
       hold={open.value}
-      control={({ id: field, describedby, invalid, rest: live }) => (
-        <input ref={(n: any) => (input = n)} {...live} data-part="input" id={field} placeholder=" " role="combobox" aria-autocomplete="list" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} aria-busy={busy.value ? 'true' : undefined} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} autocomplete={live.autocomplete ?? 'off'} value={text()} onInput={e => { const v = (e.currentTarget as HTMLInputElement).value; onText?.(v); run(v) }} onKeyDown={onKey} />
+      control={p => (
+        <input ref={n => (input = n)} {...p.rest} data-part="input" id={p.id} placeholder=" " role="combobox" aria-autocomplete="list" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} aria-busy={busy.value ? 'true' : undefined} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} autocomplete={p.rest.autocomplete ?? 'off'} value={text()} onInput={e => { const v = (e.currentTarget).value; onText?.(v); run(v) }} onKeyDown={onKey} />
       )}
       end={
-        <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
+        <div ref={n => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
           <span data-part="sweep" aria-hidden="true"></span>
           <ul data-part="listbox" role="listbox" id={id} aria-label={rest.label}>
             {rows.value.map(({ at, r }) => (

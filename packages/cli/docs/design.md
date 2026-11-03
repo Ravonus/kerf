@@ -1,10 +1,10 @@
 # Design: tokens, primitives, D-codes
 
-An app with warp has one design language: `@weft/warp`'s primitives and components, on warp's tokens. Name what a thing
+An app with warp has one design language: `@weft-js/warp`'s primitives and components, on warp's tokens. Name what a thing
 is, and the look follows the theme, the dials and the density.
 
 ```tsx
-import { Button, Card, Heading, Input, Row, Stack, Text } from '@weft/warp'
+import { Button, Card, Heading, Input, Row, Stack, Text } from '@weft-js/warp'
 
 export function Billing() {
   return (
@@ -30,7 +30,7 @@ export function Billing() {
 | Thing | Use |
 |---|---|
 | Vertical flow | `Stack gap align divided` |
-| Horizontal cluster | `Row gap justify align wrap reflow` (`reflow` stacks it below a step; PLAN's `Switch`) |
+| Horizontal cluster | `Row gap justify align wrap reflow` (`reflow` stacks it below a width step) |
 | Columns | `Grid min cols gap` |
 | Side + main | `Split side width at gap` |
 | Measured column | `Center max gutter intrinsic` |
@@ -45,7 +45,7 @@ export function Billing() {
 
 `gap`: `none hair tight related group section page`, a relationship and not a size: `related` inside a thing, `group`
 between things, `section` between sections. `as` picks the element: `div section article main header footer nav aside
-form ul ol`. There are no breakpoint props, since boxes answer to their container. `weft/ds` exports these names as
+form ul ol`. There are no breakpoint props, since boxes answer to their container. `@weft-js/core/ds` exports these names as
 constants and types.
 
 `style={{ … }}` and `class` still work; the D-codes below tell you when they leave the system. For a named look of your
@@ -56,7 +56,7 @@ own, use a style group (`weft docs style`), not a class list.
 `weft check` reports them. `weft fix` applies the safe autofixes. A fix that changes an element is a suggested edit in
 `fix.edits`; a raw colour has none, since a token follows the theme and the raw value didn't.
 
-Where the app has warp's tokens (`@weft/warp` in package.json; headless `@weft/ui-core` ships none):
+Where the app has warp's tokens (`@weft-js/warp` in package.json; headless `@weft-js/warp-core` ships none):
 
 | Code | Catches | Fix |
 |---|---|---|
@@ -64,7 +64,8 @@ Where the app has warp's tokens (`@weft/warp` in package.json; headless `@weft/u
 | D002 | Spacing off the scale, or a step by hand | Autofix when exactly a step |
 | D003 | Raw type, radius, shadow | `Heading`, `Text`, radius and elevation tokens; autofix for an exact radius |
 | D004 | Layout spelled out on an element | `Stack`, `Row` (suggested edit) |
-| D005 | Native `<button>`, `<select>`, `<textarea>` | The warp component (suggested edit for a button) |
+| D040 | The style gate (`data-weft="styled"`) on main content or an h1 | A secondary part, or no marker |
+| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, an input type such as `date`, `number` or `range`, or a `title` tooltip | The warp component (suggested edit for a button) |
 | D006 | One heading level at two roles across the app, or a bare `<hN>` beside `<Heading>` | Match the level's main role (suggested edit at each site) |
 | D007 | A bare `<a href>` | `<Link>`, or `Shell`'s `nav` (suggested edit) |
 

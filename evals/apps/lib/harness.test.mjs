@@ -38,7 +38,7 @@ test('a gap under the metric floor is a tie even with no spread', () => {
 test('spread drops holes', () => assert.deepEqual(spread([3, null, 1, 2]), { med: 2, min: 1, max: 3, n: 3 }))
 
 test('the most specific stack wins', () => {
-  assert.equal(detect({ dependencies: { weft: '1', '@weft/warp': '1' } }).id, 'weft+warp')
+  assert.equal(detect({ dependencies: { '@weft-js/core': '1', '@weft-js/warp': '1' } }).id, 'weft+warp')
   assert.equal(detect({ dependencies: { react: '1', next: '1' } }).id, 'next')
   assert.equal(detect({ dependencies: { 'solid-js': '1', '@solidjs/start': '1' } }).id, 'solidstart')
 })

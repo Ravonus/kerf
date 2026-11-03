@@ -1,4 +1,4 @@
-import { Badge, Button } from '@weft/warp'
+import { Badge, Button } from '@weft-js/warp'
 import type { Product } from '../api'
 import { money } from '../format'
 

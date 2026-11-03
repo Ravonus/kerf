@@ -1,5 +1,5 @@
-import { BarChart, Card, Grid, Heading, Link, Skeleton, Stack, Table, Text, type Column } from '@weft/warp'
-import { derived } from 'weft'
+import { BarChart, Card, Grid, Heading, Link, Skeleton, Stack, Table, Text, type Column } from '@weft-js/warp'
+import { derived } from '@weft-js/core'
 import { StatusBadge } from '#/components/StatusBadge'
 import { count, date, money, roundMoney } from '#/lib/orders'
 import { latestOrders, revenueByMonth, storeStats, type OrderRow } from '#/server/orders'

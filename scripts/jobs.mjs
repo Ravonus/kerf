@@ -27,7 +27,7 @@ export function jobs(argv = process.argv, env = process.env) {
 
 /** `run` over `items`, at most `limit` at a time. Results keep the items' order; the first failure rejects. */
 export async function pool(items, limit, run) {
-  const out = new Array(items.length)
+  const out = Array.from({ length: items.length })
   let next = 0
   const worker = async () => {
     while (next < items.length) {

@@ -1,4 +1,4 @@
-// Build-side slots in weft/vite (research 26 §2–3): `?media` imports (`media.build@1`) and `weft:fonts`
+// Build-side slots in @weft-js/core/vite (research 26 §2–3): `?media` imports (`media.build@1`) and `weft:fonts`
 // (`font.build@1`). `weft plugins sync` writes `.weft/slots/<id>.build.json` for each bound build-side provider; this
 // imports the provider module in Node and serves or emits the files it returns. With no provider, `?media` still
 // gives dimensions (a header probe) and the fonts modules are empty. With a font build the client imports `weft:fonts`
@@ -123,10 +123,10 @@ export function assets() {
     const out = await (fonts ??= (async () => {
       const p = await provider('font.build')
       if (!p) return { css: '', preloads: [], files: [] }
-      const out = await p.impl.build({ root, cacheDir: join(root, '.weft', 'cache', 'fonts'), url: name => store.url(name), dev, source: dev ? '' : readSources(root) })
+      const built = await p.impl.build({ root, cacheDir: join(root, '.weft', 'cache', 'fonts'), url: name => store.url(name), dev, source: dev ? '' : readSources(root) })
       mkdirSync(join(root, '.weft'), { recursive: true })
-      writeFileSync(join(root, '.weft', 'fonts.json'), `${JSON.stringify({ plugin: p.plugin, metrics: out.metrics ?? {}, report: out.report ?? {} }, null, 2)}\n`)
-      return out
+      writeFileSync(join(root, '.weft', 'fonts.json'), `${JSON.stringify({ plugin: p.plugin, metrics: built.metrics ?? {}, report: built.report ?? {} }, null, 2)}\n`)
+      return built
     })())
     // Each environment writes its own output: the server's asking first mustn't leave the client's without the files.
     const env = ctx.environment?.name

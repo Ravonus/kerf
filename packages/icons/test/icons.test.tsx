@@ -1,10 +1,10 @@
 // The markup warp's CSS expects, and the component API.
-import { render } from 'weft/test'
-import { CheckIcon, XIcon, iconSet } from '@weft/icons'
+import { render } from '@weft-js/core/test'
+import { CheckIcon, XIcon, iconSet } from '@weft-js/warp-icons'
 
 test('decorative by default; label names it', () => {
   const { container } = render(() => <div><CheckIcon /><XIcon label="Close" /></div>)
-  const [plain, named] = container.querySelectorAll('svg')
+  const [plain, named] = [...container.querySelectorAll('svg')] as [SVGSVGElement, SVGSVGElement]
   expect(plain.getAttribute('aria-hidden')).toBe('true')
   expect(plain.getAttribute('focusable')).toBe('false')
   expect(plain.hasAttribute('role')).toBe(false)

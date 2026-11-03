@@ -1,22 +1,29 @@
-import { defineConfig } from 'weft/config'
-import { dialScript, warp } from '@weft/warp/plugin'
-import { icons } from '@weft/icons/plugin'
-import { text } from '@weft/plugin-text'
+import { defineConfig } from '@weft-js/core/config'
+import { dialScript, warp } from '@weft-js/warp/plugin'
+import { icons } from '@weft-js/warp-icons/plugin'
+import { text } from '@weft-js/text'
+import { EXPRESSION } from './src/expression'
 
 const FILES = 'node_modules/@fontsource'
+// Cross-origin isolation gives the arena's frames a finer clock, and a frame only has it when the page around it does too.
+const ISOLATED = { 'cross-origin-opener-policy': 'same-origin', 'cross-origin-embedder-policy': 'credentialless' }
 
 export default defineConfig({
   // arena/ is its own project: the same page in React, Solid and weft, none of which may load warp or the sizes it compares change.
   check: { exclude: ['arena/**'] },
+  // The chat demo's channel can't connect on Netlify's functions: it says so on the page, and works under `weft dev`.
+  build: { unsafeAllow: { R024: 'the chat demo shows unavailable on Netlify' } },
   tasks: {
     content: { run: 'node --disable-warning=ExperimentalWarning scripts/content.mjs', description: 'Generate docs, search indexes, llms.txt and numbers from the repo', sideEffects: ['fs'] },
   },
   site: {
     name: 'weft',
+    headers: { '/': ISOLATED, '/arena/**': ISOLATED },
+    ...(process.env.WEFT_SITE_URL === undefined ? {} : { url: process.env.WEFT_SITE_URL }),
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',
-    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml"><script>document.documentElement.dataset.expression='vivid'</script>${dialScript}`,
+    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml"><script>document.documentElement.dataset.expression='${EXPRESSION}'</script>${dialScript}`,
   },
   plugins: [
     warp(),

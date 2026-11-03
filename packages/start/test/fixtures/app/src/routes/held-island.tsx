@@ -1,4 +1,4 @@
-import { Boundary, resource } from 'weft'
+import { Boundary, resource } from '@weft-js/core'
 import { later } from '../db'
 
 function Read() {

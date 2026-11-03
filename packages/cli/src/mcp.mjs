@@ -1,12 +1,15 @@
-// `weft mcp`: an MCP server over stdio (newline-delimited JSON-RPC 2.0) with the tools `docs`, `check`, `tasks`,
+// `weft mcp`: an MCP server over stdio (newline-delimited JSON-RPC 2.0) with the tools `docs`, `check`, `routes_meta`, `tasks`,
 // `style_find`, `style_explain`, `test_gate` and the `browser_*` tools.
 // Every tool returns the same JSON as the CLI's `--json`, as text and as structuredContent.
 
+import { audit } from './audit.mjs'
 import { agentMap } from './map.mjs'
+import { once } from 'node:events'
 import { createInterface } from 'node:readline'
 import { check } from './check.mjs'
 import { docs, topics } from './docs.mjs'
 import { listSurfaces } from './surface-checks.mjs'
+import { routesCommand } from './start.mjs'
 import { tasks } from './tasks.mjs'
 import { browser, expectations, actions as browserActions } from './browser/commands.mjs'
 import { gate } from './gate.mjs'
@@ -36,12 +39,12 @@ function browserTools() {
       interactive: { type: 'boolean', description: 'Only interactive elements' }, delta: { type: 'boolean', description: 'Only what changed since the last snapshot' },
       scope: target, graph: { description: "false: no graph; 'only': only the graph; a string filters it by name", anyOf: [{ type: 'boolean' }, { type: 'string' }] },
     }),
-    t('browser_act', `Act like a user (user-event, as in weft/test) and get back what changed on the page. Actions: ${browserActions.join(', ')}`, { target, action: { type: 'string', enum: browserActions }, value: { type: 'string', description: 'fill/type text, press key (`{Enter}`), select option' } }, ['target', 'action']),
+    t('browser_act', `Act like a user (user-event, as in @weft-js/core/test) and get back what changed on the page. Actions: ${browserActions.join(', ')}`, { target, action: { type: 'string', enum: browserActions }, value: { type: 'string', description: 'fill/type text, press key (`{Enter}`), select option' } }, ['target', 'action']),
     t('browser_assert', `Check what the user sees (retries up to timeout ms). Expectations: ${expectations.join(', ')}. Recorded for browser_record.`, { target, expect: { type: 'object', description: '{ text: "Total $4" } | { value: "SAVE10" } | { disabled: true } | { count: 3 } | { absent: true } | …' }, timeout: { type: 'number' } }, ['target', 'expect']),
     t('browser_state', "Read the named reactive graph, or write a box by its graph name to reach a state fast (dev only)", { filter: { type: 'string', description: 'Name prefix (`Cart`, `cart.`)' }, set: { type: 'string', description: 'Graph name to write, e.g. Cart.coupon' }, value: { description: 'JSON value to write' } }),
     t('browser_time', "The page's clock: pause (reload: from page load, so startup timers are faked too), advance ms (runs due timers in order), resume, status", { op: { type: 'string', enum: ['pause', 'advance', 'resume', 'status'] }, ms: { type: 'number' }, reload: { type: 'boolean' } }, ['op']),
     t('browser_net', 'The network as the app sees it: offline (navigator.onLine false, offline event, fetch fails, sockets dropped), online, latency ms (fetch), drop (close open WebSockets/EventSources: a server restart), reset, status', { op: { type: 'string', enum: ['offline', 'online', 'latency', 'drop', 'reset', 'status'] }, ms: { type: 'number' } }, ['op']),
-    t('browser_record', 'Record what happens in the tab (your acts and asserts, and clicks/typing from any browser tool) and turn it into a weft/test test, which then has to pass the gate', {
+    t('browser_record', 'Record what happens in the tab (your acts and asserts, and clicks/typing from any browser tool) and turn it into a @weft-js/core/test test, which then has to pass the gate', {
       op: { type: 'string', enum: ['start', 'stop', 'steps', 'note', 'code'] }, text: { type: 'string' }, component: { type: 'string' }, from: { type: 'string' }, props: { type: 'string' }, name: { type: 'string' }, out: { type: 'string', description: 'Write the test to this file (relative to the project)' },
     }, ['op']),
     t('browser_logs', 'Console errors and warnings, and uncaught errors with the weft binding they came from, since the last call'),
@@ -49,6 +52,7 @@ function browserTools() {
   ]
 }
 
+/** What `weft mcp` offers an agent: each tool's name, its description and the arguments it takes. */
 export const tools = [
   {
     name: 'docs',
@@ -59,6 +63,16 @@ export const tools = [
     name: 'check',
     description: 'Run `weft check`: every W- and P-diagnostic with code, file, span, why and fix (edits when an autofix exists), plus slot bindings.',
     inputSchema: { type: 'object', properties: { files: { type: 'array', items: { type: 'string' }, description: 'Files relative to the project root; default: all' } } },
+  },
+  {
+    name: 'routes_meta',
+    description: "Every route's metadata as a crawler gets it (`weft routes --meta --json`): title, description, image, every tag, where each came from (`route`, `layout`, `config`, `auto`, `card`), real samples of param routes, and H-diagnostics with text to apply. Every page sets `meta` from its own context as part of building it: call this after adding or changing a route.",
+    inputSchema: { type: 'object', properties: { preset: { type: 'string', description: "`static`: no server at runtime, so a param route's card needs `prerender`" } } },
+  },
+  {
+    name: 'audit',
+    description: "The pages as a browser renders them (`weft audit`): a clean Chrome at a phone's and a desktop's width, axe-core's WCAG rules (what Lighthouse grades), console errors, deprecations, the head a crawler reads, sideways scroll and layout shift, as L-diagnostics with fixes. Static checks read source; this catches what CSS and a breakpoint do to it. Default: the last build's pages.",
+    inputSchema: { type: 'object', properties: { url: { type: 'string', description: 'A running site to audit instead (a deploy, `weft start`, the dev server)' }, routes: { type: 'array', items: { type: 'string' }, description: 'Paths; default one page of each kind' } } },
   },
   {
     name: 'map',
@@ -122,8 +136,8 @@ export async function handle(root, msg) {
       return reply({
         protocolVersion: versions.includes(asked) ? asked : versions[0],
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'weft', version: '0.0.0' },
-        instructions: 'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Style with groups from weft/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
+        serverInfo: { name: 'weft', version: '0.1.0' },
+        instructions: 'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Every page sets `meta` from its own context as part of building it (`docs` topic `meta`). Style with groups from @weft-js/core/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
       })
     }
     case 'ping':
@@ -140,6 +154,8 @@ export async function handle(root, msg) {
         }
         if (name === 'check') data = await check(root, { files: args.files })
         else if (name === 'tasks') data = await tasks(root)
+        else if (name === 'routes_meta') data = await routesCommand(root, { meta: true, preset: args.preset })
+        else if (name === 'audit') data = await audit(root, { url: args.url, routes: args.routes })
         else if (name === 'map') data = await agentMap(root)
         else if (name === 'style_find') data = findGroups((await styleMatrix(root)).matrix, args.query)
         else if (name === 'style_explain') data = explainTarget(await styleMatrix(root), args.target, { axes: args.axes, states: args.states, accent: args.accent, part: args.part })
@@ -157,6 +173,7 @@ export async function handle(root, msg) {
   }
 }
 
+/** Answer newline-delimited JSON-RPC from `input`, one message at a time; resolves once `input` has closed and the last answer is out. */
 export function serve(root, input = process.stdin, output = process.stdout) {
   const rl = createInterface({ input, crlfDelay: Infinity })
   const write = obj => output.write(`${JSON.stringify(obj)}\n`)
@@ -174,5 +191,5 @@ export function serve(root, input = process.stdin, output = process.stdout) {
       if (res) write(res)
     })
   })
-  return new Promise(done => rl.on('close', () => queue.then(done)))
+  return once(rl, 'close').then(() => queue)
 }

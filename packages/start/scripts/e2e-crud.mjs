@@ -44,7 +44,7 @@ export default async function run({ url, log }) {
       await page.reload()
       await hydrated(page)
       eq(await page.getByRole('checkbox').first().isChecked(), true, 'checked')
-      eq((await titles(page)).some(t => t.includes('Bread')), false, 'deleted')
+      eq((await titles(page)).some(title => title.includes('Bread')), false, 'deleted')
     })
     eq(errors, [], 'page errors')
   } finally {

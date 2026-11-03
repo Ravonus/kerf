@@ -12,11 +12,11 @@ stays real text, and an app with no surface pays nothing.
 
 | Plan | Now | Why |
 |---|---|---|
-| A `surface` package and a `text` package (§8) | **`weft/surface`, a subpath of `weft`** | `weft/text`, `weft/media` and `weft/shape` all ended up as subpaths. A subpath no app imports costs 0, which is all a package would buy |
+| A `surface` package and a `text` package (§8) | **`@weft-js/core/surface`, a subpath of `weft`** | `@weft-js/core/text`, `@weft-js/core/media` and `@weft-js/core/shape` all ended up as subpaths. A subpath no app imports costs 0, which is all a package would buy |
 | `s.frame(fn)` only | **`s.draw(fn)` and `s.frame(fn)`** | A chart or a HUD has no reason to run at 60 Hz. `s.draw` paints when something it read changes. `s.frame` also paints every clock tick. Both are tracked, so a paused or reduced-motion `s.frame` still redraws on a box change |
-| `weft/surface/keel` in core | **`@weft/plugin-surface-keel`** | [13](13-plugins.md) §2.9 moved it, and a third `surface.renderer` provider tests the slot. The licence question in §5 is answered: keel-engine is MIT, by the same author, and the plugin keeps the notice |
+| `weft/surface/keel` in core | **`@weft-js/plugin-surface-keel`** | [13](13-plugins.md) §2.9 moved it, and a third `surface.renderer` provider tests the slot. The licence question in §5 is answered: keel-engine is MIT, by the same author, and the plugin keeps the notice |
 | `measure()`, `lines()`, `fit()` in this phase | **Not built** | Nothing here needs them: `s.text()` talks to the slot, and `<Text reserve>` needs no measuring ([31](31-query-shapes.md)). Their first users are the virtualised lists in 3c, which is where they belong |
-| X003/X004 owned by `@weft/plugin-text` | **Reported by `s.text()`** | The consumer holds the mirror's computed style, and both engines share one prediction model, so a per-plugin list has nothing to vary |
+| X003/X004 owned by `@weft-js/text` | **Reported by `s.text()`** | The consumer holds the mirror's computed style, and both engines share one prediction model, so a per-plugin list has nothing to vary |
 | X010 needs a `s.decorative()` escape | **Kept:** `s.decorative(fn)` just calls `fn`, and `weft check` skips its body | A runtime no-op whose only job is to state intent to the checker |
 | X012 "opts out of the fallback" | **There's no opt-out to take.** X012 catches the CSS that would defeat it: `forced-color-adjust: none`, or a print rule hiding the mirror | An option that exists only to be flagged is a design bug |
 | X009 | **Never defined, so it's defined here:** a `<Surface>` with neither `label` nor `decorative` | That's the gap between X008 and X010: canvas content with no accessible name at all. X007 stays undefined ([26](26-phase-2-completion.md) §7) |
@@ -24,7 +24,7 @@ stays real text, and an app with no surface pays nothing.
 ## 2. The API
 
 ```tsx
-import { defineSurface, Surface } from 'weft/surface'
+import { defineSurface, Surface } from '@weft-js/core/surface'
 
 export const Bars = defineSurface({
   name: 'bars',
@@ -99,16 +99,16 @@ and `style` are single bindings, and everything else is `setup`'s.
 interface SurfaceRenderer { context(canvas, def): { ctx?, gl?, [provider field]?, resize?(w, h, dpr), begin?(), dispose?() } }
 ```
 
-`canvas2d` and `webgl2` are inline in `weft/surface`: each is a few lines, and lazy chunks would cost more. Any other
+`canvas2d` and `webgl2` are inline in `@weft-js/core/surface`: each is a few lines, and lazy chunks would cost more. Any other
 kind goes through `load(key)` from `weft:slot/surface.renderer`, so it's only a dynamic import edge until used.
 
-`weft/vite` now resolves `weft:slot/text.measure` and `weft:slot/surface.renderer` to a throwing stub when
-`.weft/slots/` has no file, because `weft/surface` must build in an app that never ran `weft plugins sync` and never
+`@weft-js/core/vite` now resolves `weft:slot/text.measure` and `weft:slot/surface.renderer` to a throwing stub when
+`.weft/slots/` has no file, because `@weft-js/core/surface` must build in an app that never ran `weft plugins sync` and never
 calls `s.text()`. Slots no consumer in core imports keep the hard P101 error.
 
 ## 6. `text.measure@1`
 
-`@weft/plugin-text` now provides it unless `measure: 'off'`. `engine: 'slim'` (default) is `@weft/text-engine`, and
+`@weft-js/text` now provides it unless `measure: 'off'`. `engine: 'slim'` (default) is `@weft-js/text/engine`, and
 `engine: 'pretext'` is pinned upstream. Both are behind `import()`, so installing the plugin stays free (P114).
 
 The contract is `prepare`, `layout`, `lines`, `lineText`, `clear`. `lineText` joins the four calls of research 12
@@ -119,10 +119,10 @@ because painting needs strings.
 and each segment's start when asked, so `lineText` is a `slice`. Line breaks are unchanged, and the accuracy run is
 what proves it (§10).
 
-**Conformance** lives in `weft/test/plugins`, with the slot, as research 13 §2.11 says. `textMeasureSuite(provider,
+**Conformance** lives in `@weft-js/core/test/plugins`, with the slot, as research 13 §2.11 says. `textMeasureSuite(provider,
 { corpora })` runs in the page: accuracy against the DOM (0 mismatches on Latin, emoji, Arabic; ≤ 0.5% on CJK), purity
 (no layout-forcing DOM reads in `layout`), speed (`layout` over 1k ≤ 0.5 ms, `prepare` over 1k ≤ 15 ms) and fonts
-(results after `clear()` match). `packages/plugin-text/test/conformance.mjs` runs it for both engines in Chrome and
+(results after `clear()` match). `packages/text/test/conformance.mjs` runs it for both engines in Chrome and
 WebKit, and against deliberately bad providers, so the suite is shown to fail.
 
 ## 7. `s.text()` and the mirror
@@ -143,7 +143,7 @@ WebKit, and against deliberately bad providers, so the suite is shown to fail.
   canvas, at the same coordinates. A GL text path can come later and this contract won't change.
 - **`exact: false`** turns off X001 and X004 for a node you know is approximate.
 
-**Testing:** `render(<App />, {}, { slots: { 'text.measure': fakeMeasure() } })`, and `weft/test` gives jsdom a recording
+**Testing:** `render(<App />, {}, { slots: { 'text.measure': fakeMeasure() } })`, and `@weft-js/core/test` gives jsdom a recording
 canvas (`canvasCalls(canvas)`), since jsdom has no 2D context.
 
 ## 8. Diagnostics
@@ -177,7 +177,7 @@ so it needs no build.
 **Fine-grained updates.** Three box writes in one frame gave 1 paint, 0 DOM mutations and 0 re-renders, in Chrome and
 WebKit (`packages/plugin-surface-keel/test/e2e.mjs`).
 
-**Keel.** `@weft/plugin-surface-keel` wraps keel-engine's renderer, vendored with its MIT notice. The ported demo's
+**Keel.** `@weft-js/plugin-surface-keel` wraps keel-engine's renderer, vendored with its MIT notice. The ported demo's
 canvas hashes equal to the same renderer driven directly. The same frame gives the same pixels, a 256×144 target
 scales to 512×288 at integer scale, and the clock starts paused under reduced motion.
 

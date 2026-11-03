@@ -1,17 +1,17 @@
 // `server.extension` (extension.ts): the seam a plugin reaches the server through. This names no plugin on purpose.
 import { describe, expect, test, vi } from 'vitest'
-import { createHandler } from '../src/server'
+import { createHandler, type Manifest } from '../src/server'
 import { createScope, fetchQuery } from '../src/exec'
-import { fns, query } from '../src/data'
+import { fns, query, type Context } from '../src/data'
 import type { ServerExtension } from '../src/extension'
 
-const manifest = { routes: [], layouts: [] } as any
+const manifest: Manifest = { dir: 'src/routes', routes: [], layouts: [] }
 
 describe('a plugin on the server', () => {
   test('its routes are `/_weft/x/<key>/...`, loaded on first use, and it reports through the API', async () => {
     const report = vi.fn()
-    const load = vi.fn(async (): Promise<ServerExtension> => ({ handle: (request, path, api) => { api.report({ code: 'X001', severity: 'warning', message: 'seen' }); return new Response(`${request.method} ${path}`) } }))
-    const handler = createHandler({ manifest, modules: {}, dev: true, extensions: [{ key: 'kit', load }], onDiagnostic: report } as any)
+    const load = vi.fn((): Promise<ServerExtension> => Promise.resolve({ handle: (request, path, api) => { api.report({ code: 'X001', severity: 'warning', message: 'seen' }); return new Response(`${request.method} ${path}`) } }))
+    const handler = createHandler({ manifest, modules: {}, dev: true, extensions: [{ key: 'kit', load }], onDiagnostic: report })
     expect(load).not.toHaveBeenCalled()
     const res = await handler(new Request('http://x/_weft/x/kit/a/b', { method: 'POST' }))
     expect(await res.text()).toBe('POST a/b')
@@ -20,8 +20,8 @@ describe('a plugin on the server', () => {
   })
 
   test('it adds to `ctx`, after the app, and guards a call', async () => {
-    query({ $id: 'x.q', run: ({ ctx }: any) => ctx.seen })
-    const extensions: ServerExtension[] = [{ context: ctx => ({ seen: `by ${(ctx as any).user}` }), guard: f => { if (f.id === 'x.no') throw new Error('refused') } }]
+    query({ $id: 'x.q', run: ({ ctx }) => (ctx as Context & { seen: string }).seen })
+    const extensions: ServerExtension[] = [{ context: ctx => ({ seen: `by ${(ctx as Context & { user: string }).user}` }), guard: f => { if (f.id === 'x.no') throw new Error('refused') } }]
     const scope = createScope(new Request('http://x/'), { context: () => ({ user: 'u1' }), extensions })
     expect((await fetchQuery(scope, fns.get('x.q')!, undefined)).v).toBe('by u1')
     query({ $id: 'x.no', run: () => 1 })
@@ -29,7 +29,7 @@ describe('a plugin on the server', () => {
   })
 
   test('`personal` keeps a key out of a shared cache', async () => {
-    query({ $id: 'x.cached', cache: { life: '1m' }, run: ({ ctx }: any) => ctx.mine })
+    query({ $id: 'x.cached', cache: { life: 'minutes' }, run: ({ ctx }) => (ctx as Context & { mine: string }).mine })
     const extensions: ServerExtension[] = [{ context: () => ({ mine: 1 }), personal: ['mine'] }]
     await expect(fetchQuery(createScope(new Request('http://x/'), { extensions }), fns.get('x.cached')!, undefined)).rejects.toMatchObject({ code: 'Q006' })
   })
@@ -46,13 +46,13 @@ describe('a plugin on the server', () => {
   })
 
   test('an option nothing enforces refuses the call, and an extension claims it', async () => {
-    query({ $id: 'x.gated', requires: ['pro'], run: () => 1 } as any)
+    query({ $id: 'x.gated', requires: ['pro'], run: () => 1 } as never)
     await expect(fetchQuery(createScope(new Request('http://x/'), {}), fns.get('x.gated')!, undefined)).rejects.toMatchObject({ code: 'P101' })
     expect((await fetchQuery(createScope(new Request('http://x/'), { extensions: [{ options: ['requires'] }] }), fns.get('x.gated')!, undefined)).v).toBe(1)
   })
 
   test('`check` can refuse a boot', async () => {
-    const handler = createHandler({ manifest, modules: {}, dev: false, extensions: [{ key: 'kit', load: async () => ({ check: () => { throw new Error('not configured') } }) }] } as any)
+    const handler = createHandler({ manifest, modules: {}, dev: false, extensions: [{ key: 'kit', load: () => Promise.resolve({ check: () => { throw new Error('not configured') } }) }] })
     await expect(handler(new Request('http://x/_weft/x/kit/a'))).rejects.toThrow('not configured')
   })
 })

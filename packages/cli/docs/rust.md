@@ -1,5 +1,10 @@
 # Rust: `native()` and `remote()`
 
+Rust is optional. weft needs no Rust toolchain to create, run, build or check an app, on any platform: the compiler ships as
+WASM, and a prebuilt native addon installs by itself where one fits, which makes builds faster and changes no output.
+`weft doctor` says which one is running. Rust is for this page: the code you choose to write in it, which is the only thing
+that calls `cargo`.
+
 A server function can have a Rust body. The client doesn't change: the same import, call, cache, tags and errors. Zod
 stays the only schema. Reach for this at about 1 ms of CPU per call or on byte payloads (search, parsing, images), not for
 IO-bound CRUD.
@@ -20,12 +25,17 @@ glue at the bottom of the crate.
 
 ```ts
 // src/server/rust.ts: the only place Rust targets are named
-import { remote } from '@weft/start/rust'
+import { remote } from '@weft-js/start/rust'
 export const search = remote('rust://search')
 ```
 
+<!-- example: skip imports src/server/rust.ts from the block above -->
 ```ts
 // src/server/docs.ts
+import { query } from '@weft-js/start'
+import { z } from 'zod'
+import { search } from './rust'
+
 export const searchDocs = query({
   input: z.object({ q: z.string().trim().min(1).max(200), limit: z.int().min(1).max(50).default(10) }),
   output: z.array(z.object({ id: z.string(), title: z.string(), score: z.number() })),
@@ -35,17 +45,17 @@ export const searchDocs = query({
 ```
 
 `output` is required on an `impl`. `crates/search` is the crate, unless config says otherwise. `weft add rust` writes all of
-this; the `weft` path is inside `@weft/start`, because the crate isn't on crates.io yet:
+this; the `weft` path is inside `@weft-js/start`, because the crate isn't on crates.io yet:
 
 ```toml
 # crates/search/Cargo.toml
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-weft = { path = "../../node_modules/@weft/start/crate" }
+weft = { path = "../../node_modules/@weft-js/start/crate" }
 
 [build-dependencies]
-weft = { path = "../../node_modules/@weft/start/crate", default-features = false, features = ["build"] }
+weft = { path = "../../node_modules/@weft-js/start/crate", default-features = false, features = ["build"] }
 ```
 
 ```rust
@@ -95,7 +105,7 @@ weft::native!(contract::functions(Media));
 
 ```ts
 // src/server/rust.ts
-import { native } from '@weft/start/rust'
+import { native } from '@weft-js/start/rust'
 export const media = native('media')          // options: timeout, claims, validate, as for remote()
 ```
 
@@ -135,6 +145,7 @@ All three have `ctx.touch(table)`, `ctx.tag(tag)`, `ctx.remaining()`, `ctx.cance
 
 ## Typed errors
 
+<!-- example: skip a fragment of src/server/docs.ts -->
 ```ts
 export const getDoc = query({ input, output, errors: { NotFound: z.object({ id: z.string() }) }, impl: search })
 // a TS body raises the same thing: run: () => raise('NotFound', { id })

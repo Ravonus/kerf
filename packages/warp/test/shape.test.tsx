@@ -3,13 +3,13 @@
 // weft-allow T004: fake timers drive the Boundary's 150 ms / 400 ms timing
 import { screen } from '@testing-library/dom'
 import axe from 'axe-core'
-import { Boundary, resource } from 'weft'
-import { flush, render } from 'weft/test'
+import { Boundary, resource } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Shape } from '../src/Shape'
 import '../src/skeleton-css'
 
 function Feed() {
-  const posts = resource(() => new Promise<{ id: number; title: string }[]>(ok => setTimeout(() => ok([{ id: 1, title: 'One' }, { id: 2, title: 'Two' }]), 300)))
+  const posts = resource(() => new Promise<{ id: number; title: string }[]>(ok => { setTimeout(() => ok([{ id: 1, title: 'One' }, { id: 2, title: 'Two' }]), 300) }))
   return <ul>{(posts.value ?? []).map(post => <li key={post.id}>{post.title}</li>)}</ul>
 }
 

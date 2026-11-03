@@ -1,4 +1,4 @@
-import { Alert, Button } from '@weft/warp'
+import { Alert, Button } from '@weft-js/warp'
 
 /** What a Boundary shows when its data didn't arrive. */
 export function Failed({ what, retry }: { what: string; retry: () => void }) {

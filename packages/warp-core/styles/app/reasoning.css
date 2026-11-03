@@ -1,0 +1,19 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="reasoning"]) { border-radius: var(--warp-radius-control); font-size: var(--warp-text-caption-size); }
+:where([data-scope="reasoning"] summary) {
+  display: inline-flex; align-items: center; gap: 8px; block-size: 28px; padding-inline: 2px 8px; border-radius: var(--warp-radius-control);
+  color: var(--warp-color-text-subtle); cursor: pointer; list-style: none; font-weight: 500;
+}
+:where([data-scope="reasoning"] summary::-webkit-details-marker) { display: none; }
+:where([data-scope="reasoning"] summary:hover) { color: var(--warp-color-text); }
+:where([data-scope="reasoning"] [data-part="chev"]) { transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="reasoning"][open] [data-part="chev"]) { rotate: 90deg; }
+:where([data-scope="reasoning"] [data-part="body"]) {
+  margin: 4px 0 2px 7px; padding: 2px 0 2px 14px; border-inline-start: var(--warp-border-emphasis) solid var(--warp-color-border-strong);
+  color: var(--warp-color-text-subtle); line-height: 1.6; font-size: 13px; max-block-size: 180px; overflow: auto;
+}
+:where([data-scope="reasoning"][data-state="streaming"] [data-part="body"]) { border-inline-start-color: var(--warp-color-sweep); }
+:where([data-scope="prompt"] [data-part="model"]),
+:where([data-scope="reasoning"] summary) { block-size: max(28px, var(--warp-hit-min)); }
+}

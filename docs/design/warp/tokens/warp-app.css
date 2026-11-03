@@ -25,6 +25,9 @@
   [data-motion], [data-flair], [data-warp] {
     --warp-cal-hour: calc(48px * var(--warp-density-k));          /* 36 · 48 · 60 px per hour */
     --warp-cal-gutter: 52px;
+    --warp-cal-hour-w: 64px;                                       /* a timeline hour's least width: past it the rows scroll sideways */
+    --warp-cal-day-min: 128px;                                     /* a week day's least width (more for a day of overlaps): past it the week scrolls sideways */
+    --warp-cal-max-h: 100dvh;                                      /* the calendar's own bound when no parent gives it a height */
     --warp-cal-bar: calc(var(--warp-border-emphasis) + 1px);      /* event colour edge 2 · 2.5 · 3 */
     --warp-cal-tint: 15%;                                          /* event fill = category over surface */
     --warp-arrive-duration: var(--warp-duration-slow);
@@ -80,7 +83,6 @@
   background: var(--warp-color-sweep); clip-path: inset(0 100% 0 0);
   animation: warp-arrive-sweep calc(var(--warp-arrive-sweep) * 2) var(--warp-sweep-ease) var(--warp-duration-fast) both;
 }
-:where([data-expression="vivid"] [data-arrive])::after,
 :where([data-flair="sweep"] [data-arrive])::after {
   inset: 0; block-size: auto; background: none; border: var(--warp-sweep-width) solid var(--warp-color-sweep); border-radius: inherit;
 }
@@ -123,9 +125,13 @@
    ------------------------------------------------------------------------ */
 :where([data-scope="calendar"][data-part="root"]) {
   container: calendar / inline-size;
-  display: grid; grid-template-rows: auto minmax(0, 1fr); min-block-size: 0; block-size: 100%;
+  /* 100% of a parent that has a height; without one it would grow to all 24 hours and open on midnight, so it stops at
+     --warp-cal-max-h and scrolls its hours inside, opening at the working day either way */
+  display: grid; grid-template-rows: auto minmax(0, 1fr); min-block-size: 0; block-size: 100%; max-block-size: var(--warp-cal-max-h);
   background: var(--warp-color-surface); color: var(--warp-color-text);
 }
+/* the month in a picker's popover sizes the panel, and inline-size containment would make its intrinsic width zero */
+:where([data-scope="calendar"][data-part="root"]:is(dialog[data-scope="popover"] *)) { container-type: normal; block-size: auto; max-block-size: none; }
 :where([data-scope="calendar"] [data-part="range-label"] small) { color: var(--warp-color-text-subtle); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size); font-weight: 400; letter-spacing: 0; }
 :where([data-scope="calendar"] [data-part="tz"]) {
   display: inline-flex; align-items: center; gap: 6px; block-size: 26px; padding-inline: 8px;
@@ -163,8 +169,19 @@
 :where([data-scope="calendar"] [data-part="head"]),
 :where([data-scope="calendar"] [data-part="allday"]),
 :where([data-scope="calendar"] [data-part="cols"]) {
-  display: grid; grid-template-columns: var(--warp-cal-gutter) repeat(var(--_days), minmax(0, 1fr));
+  display: grid; grid-template-columns: var(--_tracks, var(--warp-cal-gutter) repeat(var(--_days), minmax(0, 1fr)));
 }
+/* Week and Day: one scroller for both axes. A day never gets narrower than --warp-cal-day-min (wider for a day whose events
+   overlap; Calendar writes --_tracks and --_week-w), so a narrow box scrolls the week sideways under its hours, which stay
+   put, and the day heads and all-day row stay on top as the hours scroll */
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]) { grid-template-rows: minmax(0, 1fr); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="top"])),
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="cols"])) { min-inline-size: var(--_week-w, 0px); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="top"]) { position: sticky; inset-block-start: 0; z-index: 9; background: var(--warp-color-surface); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] :is([data-part="head"] > [data-part="corner"], [data-part="allday"] > [data-part="gutter-label"])) {
+  position: sticky; inset-inline-start: 0; z-index: 8; background: var(--warp-color-surface);
+}
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: stretch; justify-self: stretch; display: flex; align-items: center; justify-content: end; }
 :where([data-scope="calendar"] [data-part="head"]) { border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
 :where([data-scope="calendar"] [data-part="dayhead"]) {
   display: flex; align-items: baseline; justify-content: center; gap: 6px; padding-block: 10px 8px;
@@ -181,11 +198,11 @@
 :where([data-scope="calendar"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: center; justify-self: end; padding-inline-end: 8px; font: 500 10px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em; }
 :where([data-scope="calendar"] [data-part="allday-cell"]) { display: grid; gap: 2px; align-content: start; padding: 3px; border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); min-inline-size: 0; }
 :where([data-scope="calendar"] [data-part="scroller"]) {
-  position: relative; overflow: auto; overscroll-behavior: contain; min-block-size: 0; scrollbar-width: thin;
-  scrollbar-color: var(--warp-color-border-strong) transparent;
+  position: relative; overflow: auto; overscroll-behavior: contain; min-block-size: 0;
 }
 :where([data-scope="calendar"] [data-part="cols"]) { position: relative; block-size: calc(var(--warp-cal-hour) * var(--_hours, 24)); }
-:where([data-scope="calendar"] [data-part="gutter"]) { position: relative; }
+/* the hours stay put as a wide week scrolls sideways under them */
+:where([data-scope="calendar"] [data-part="gutter"]) { position: sticky; inset-inline-start: 0; z-index: 8; background: var(--warp-color-surface); }
 :where([data-scope="calendar"] [data-part="hour"]) {
   position: absolute; inset-inline-end: 8px; translate: 0 -50%; font: 500 10.5px/1 var(--warp-font-mono);
   color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap;
@@ -214,7 +231,7 @@
   inset-block-start: var(--_top); block-size: max(var(--_h), 20px);
   inset-inline-start: calc((100% - 6px) * var(--_col, 0) / var(--_cols, 1) + 2px);
   inline-size: calc((100% - 6px) * var(--_span, 1) / var(--_cols, 1) - 2px);
-  display: flex; flex-direction: column; gap: 1px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 1px; overflow: clip;
   padding: 4px 6px 4px calc(6px + var(--warp-cal-bar));
   border-radius: calc(var(--warp-radius-control) - 1px);
   background: color-mix(in oklab, var(--_c) var(--warp-cal-tint), var(--warp-color-surface-raised));
@@ -224,9 +241,12 @@
   transition: box-shadow var(--warp-duration-fast) var(--warp-ease-out), opacity var(--warp-duration-fast);
 }
 :where([data-scope="calendar"] [data-part="event"][data-short]) { flex-direction: row; align-items: baseline; gap: 6px; padding-block: 2px; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; flex: 0 1 auto; }   /* a flex item: without min 0 it never shrinks to its ellipsis */
+/* a short event on one line: the times give way before the name does */
+:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-time"]) { flex-shrink: 1000; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; overflow: clip; text-overflow: ellipsis; min-inline-size: 0; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-start"]) { display: none; font: 500 10.5px/1.2 var(--warp-font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: clip; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="calendar"] [data-part="event"] svg[data-icon]) { inline-size: 12px; block-size: 12px; vertical-align: -1px; }
 :where([data-scope="calendar"] [data-part="event"][data-tentative]) {
   background:
@@ -275,7 +295,8 @@
 }
 /* the now line: accent, a dot on the gutter edge, the time in the gutter. It sweeps in once. */
 :where([data-scope="calendar"] [data-part="now"]) {
-  position: absolute; z-index: 4; inset-inline: 0; inset-block-start: var(--_top); block-size: 0; pointer-events: none;
+  /* under the events: over them it struck through a title ("ncident review") */
+  position: absolute; z-index: 0; inset-inline: 0; inset-block-start: var(--_top); block-size: 0; pointer-events: none;
   border-block-start: var(--warp-border-emphasis) solid var(--warp-color-sweep);
   animation: warp-now-in var(--warp-sweep-duration) var(--warp-sweep-ease) both;
 }
@@ -291,29 +312,75 @@
 @keyframes warp-now-in { from { clip-path: inset(-6px 100% -6px 0); } to { clip-path: inset(-6px 0 -6px 0); } }
 
 /* month view */
-:where([data-scope="calendar"] [data-part="month"]) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(96px, 1fr); }
+/* the weeks share the height the calendar has, so the whole month is in view: a day shows the chips its row has room for
+   and "+N more" (Calendar measures it). Below 72px a week the month scrolls. */
+:where([data-scope="calendar"] [data-part="month"][role="grid"]) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(72px, 1fr); block-size: 100%; }
 :where([data-scope="calendar"] [data-part="day-cell"]) {
-  display: grid; align-content: start; gap: 2px; padding: 4px; min-inline-size: 0;
+  display: grid; align-content: start; gap: 2px; padding: 4px; min-inline-size: 0; min-block-size: 0; overflow: clip;
   border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
 }
 :where([data-scope="calendar"] [data-part="day-cell"][data-outside]) { background: var(--warp-color-surface-sunken); color: var(--warp-color-text-subtle); }
 :where([data-scope="calendar"] [data-part="chip"]) {
+  /* a block, not a flex row: the title is its own text, so a long one ends in an ellipsis rather than a hard cut */
   --_c: var(--warp-color-data-1);
-  display: flex; align-items: center; gap: 6px; min-inline-size: 0; block-size: 20px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
-  font-size: 11.5px; line-height: 1; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent); white-space: nowrap; overflow: hidden;
+  display: block; min-inline-size: 0; block-size: 20px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
+  font-size: 11.5px; line-height: 20px; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent);
+  white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
-:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; flex: none; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; display: inline-block; vertical-align: 1px; margin-inline-end: 6px; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* a phone's month day is too narrow for a title: its events become dots, and each keeps its name for assistive tech.
+   Only the month's: an all-day event in Week and Day keeps its name */
+@container calendar (max-width: 479.98px) {
+  :where([data-scope="calendar"] [data-part="day-cell"]) { grid-template-columns: repeat(auto-fill, 8px); justify-content: start; }
+  :where([data-scope="calendar"] [data-part="day-cell"]) > :where(:not([data-part="chip"])) { grid-column: 1 / -1; }
+  :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"]) { display: flex; inline-size: 8px; block-size: 8px; padding: 0; background: none; font-size: 0; line-height: 0; }
+  :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"])::before { margin: 0; inline-size: 8px; block-size: 8px; }
+}
 :where([data-scope="calendar"] [data-part="more"]) { font: 500 11px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 6px; background: none; border: 0; text-align: start; }
 
 /* resource / timeline view: rows are people or rooms, time runs across */
-:where([data-scope="calendar"] [data-part="timeline"]) { display: grid; grid-template-columns: 148px minmax(0, 1fr); font-size: var(--warp-text-caption-size); }
-:where([data-scope="calendar"] [data-part="lane-label"]) { display: flex; align-items: center; gap: 8px; padding: 8px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+/* an hour never gets narrower than --warp-cal-hour-w: past that the hours scroll sideways under the names, which stay
+   put, and the edges box (layout) shades the side with more */
+:where([data-scope="calendar"] [data-part="timeline-edges"]) { --_label: 148px; --warp-edges-start: var(--_label); }
+@container calendar (max-width: 719.98px) {
+:where([data-scope="calendar"] [data-part="timeline-edges"]) { --_label: 84px; }
+:where([data-scope="calendar"] [data-part="lane-label"]) { flex-direction: column; align-items: start; justify-content: center; gap: 0; }
+}
+:where([data-scope="calendar"] [data-part="timeline"]) {
+  display: grid; grid-template-columns: var(--_label) minmax(0, 1fr); font-size: var(--warp-text-caption-size);
+  min-inline-size: calc(var(--_label) + var(--_slots, 10) * max(var(--warp-cal-hour-w), var(--_fit, 0px)));
+}
+:where([data-scope="calendar"] [data-part="timeline"] > [data-part="corner"]),
+:where([data-scope="calendar"] [data-part="lane-label"]) {
+  position: sticky; inset-inline-start: 0; z-index: 5; background: var(--warp-color-surface);
+}
+:where([data-scope="calendar"] [data-part="lane-label"]) { display: flex; align-items: center; gap: 8px; padding: 8px; min-inline-size: 0; overflow: clip; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="calendar"] [data-part="lane-label"] > *) { white-space: nowrap; overflow: clip; text-overflow: ellipsis; max-inline-size: 100%; }
 :where([data-scope="calendar"] [data-part="lane"]) {
-  position: relative; min-block-size: 44px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
+  /* five-minute columns (--_cols): a booking spans its minutes, and the row grows to the tallest name in it; bookings
+     that overlap in one row stack */
+  position: relative; display: grid; grid-template-columns: repeat(var(--_cols, 120), minmax(0, 1fr)); grid-auto-flow: row dense;
+  align-content: center; row-gap: 4px; box-sizing: border-box; min-block-size: 52px; padding-block: 6px;
+  border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
   background-image: repeating-linear-gradient(to right, var(--warp-color-border) 0 1px, transparent 1px calc(100% / var(--_slots, 10)));
 }
 :where([data-scope="calendar"] [data-part="lane"] [data-part="event"]) {
-  inset-block: 6px; block-size: auto; inset-inline-start: calc(100% * var(--_x)); inline-size: calc(100% * var(--_w) - 2px);
+  position: relative; inset: auto; block-size: auto; min-block-size: 40px; inline-size: auto; min-inline-size: 0; margin-inline-end: 2px;
+  /* a booking reads its own width: its whole name, broken only between words (Calendar widens the hours when a word
+     needs it), with its times under it when there's room; or only its start when it is too narrow for a word */
+  container: cal-event / inline-size; flex-direction: column; align-items: stretch; justify-content: center; gap: 1px;
+  padding-block: 4px; padding-inline: calc(4px + var(--warp-cal-bar)) 3px;
+}
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) {
+  display: block; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: normal; line-height: 1.25;
+}
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: none; }
+@container cal-event (min-width: 100px) {
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: block; }
+}
+@container cal-event (max-width: 33.98px) {
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) { display: none; }
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-start"]) { display: block; }
 }
 :where([data-scope="calendar"] [data-part="lane"][data-busy]) { background-color: color-mix(in oklab, var(--warp-color-text) 3%, transparent); }
 
@@ -353,7 +420,7 @@
 :where([data-scope="agenda"] [data-part="strip"] button i) { display: flex; gap: 2px; block-size: 4px; }
 :where([data-scope="agenda"] [data-part="strip"] button i::before) { content: none; }
 :where([data-scope="agenda"] [data-part="strip"] button i em) { inline-size: 4px; block-size: 4px; border-radius: 9px; background: var(--_c); }
-:where([data-scope="agenda"] [data-part="viewport"]) { position: relative; overflow: hidden; min-block-size: 0; touch-action: pan-y; }
+:where([data-scope="agenda"] [data-part="viewport"]) { position: relative; overflow: clip; min-block-size: 0; touch-action: pan-y; }
 :where([data-scope="agenda"] [data-part="track"]) {
   display: grid; grid-template-columns: repeat(3, 100%); block-size: 100%;
   translate: calc(-100% + var(--_dx, 0px)) 0;
@@ -425,7 +492,7 @@
 :where([data-scope="room"] [data-part="stage"] > [data-part="rail"]) { display: grid; grid-auto-rows: 96px; gap: var(--warp-tile-gap); align-content: start; overflow: auto; scrollbar-width: none; }
 :where([data-scope="room"] [data-part="stage"][data-layout="board"] > [data-part="rail"]) { grid-auto-rows: 72px; }
 :where([data-scope="room"] [data-part="share"]) {
-  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--warp-radius-surface); overflow: hidden;
+  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--warp-radius-surface); overflow: clip;
   background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border);
 }
 :where([data-scope="room"] [data-part="share"] header) { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); border-block-end: 1px solid var(--warp-color-border); }
@@ -433,7 +500,7 @@
 /* tile: video or avatar; state lives on attributes; nothing loops */
 :where([data-scope="tile"]) {
   --_ring: transparent;
-  position: relative; isolation: isolate; overflow: hidden; min-block-size: 0; min-inline-size: 0;
+  position: relative; isolation: isolate; overflow: clip; min-block-size: 0; min-inline-size: 0;
   display: grid; place-items: center; border-radius: var(--warp-radius-surface);
   background: radial-gradient(120% 90% at 30% 20%, color-mix(in oklab, var(--_hue, var(--warp-color-data-1)) 30%, var(--warp-color-surface-raised)), var(--warp-color-surface-sunken));
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 8%, transparent);
@@ -445,7 +512,7 @@
   position: absolute; inset-inline-start: 8px; inset-block-end: 8px; z-index: 2; max-inline-size: calc(100% - 16px);
   display: inline-flex; align-items: center; gap: 6px; block-size: 24px; padding-inline: 8px; border-radius: var(--warp-radius-control);
   background: color-mix(in oklab, var(--warp-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--warp-blur-overlay));
-  font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
 :where([data-scope="tile"] [data-part="name"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
 :where([data-scope="tile"] [data-part="video"]) { position: absolute; inset: 0; z-index: 1; }
@@ -482,7 +549,7 @@
 /* PiP self-view: draggable, snaps to the nearest corner */
 :where([data-scope="pip"]) {
   position: absolute; z-index: var(--warp-z-dock); inline-size: clamp(120px, 22cqi, 200px); aspect-ratio: 16 / 10;
-  inset-inline-end: 16px; inset-block-end: 80px; border-radius: var(--warp-radius-surface); overflow: hidden;
+  inset-inline-end: 16px; inset-block-end: 80px; border-radius: var(--warp-radius-surface); overflow: clip;
   box-shadow: var(--warp-elevation-3), 0 0 0 1px var(--warp-color-border-strong); cursor: grab; touch-action: none;
   translate: var(--_px, 0) var(--_py, 0); transition: translate var(--warp-duration-slow) var(--warp-ease-out);
 }
@@ -491,10 +558,10 @@
 
 /* control bar: grouped, the destructive action set apart, labels collapse by container width */
 :where([data-scope="call-controls"]) {
-  grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--warp-space-related);
   padding: var(--warp-space-related) var(--warp-space-group) calc(var(--warp-space-related) + env(safe-area-inset-bottom, 0px));
 }
-:where([data-scope="call-controls"] [data-part="group"]) { display: flex; gap: 4px; padding: 4px; border-radius: calc(var(--warp-radius-control) + 4px); background: var(--warp-color-surface-raised); box-shadow: 0 0 0 1px var(--warp-color-border); }
+:where([data-scope="call-controls"] [data-part="group"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; border-radius: calc(var(--warp-radius-control) + 4px); background: var(--warp-color-surface-raised); box-shadow: 0 0 0 1px var(--warp-color-border); }
 :where([data-scope="call-controls"] [data-part="control"]) {
   position: relative; display: inline-grid; grid-auto-flow: column; place-items: center; gap: 6px;
   min-inline-size: max(40px, var(--warp-target-min)); block-size: max(40px, var(--warp-target-min)); padding-inline: 10px;
@@ -519,7 +586,7 @@
 :where([data-scope="room"] [data-part="sidebar"]) {
   grid-column: 2; grid-row: 2; inline-size: 300px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-block-size: 0;
   margin: 0 var(--warp-space-related) var(--warp-space-related) 0; border-radius: var(--warp-radius-surface);
-  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border); overflow: hidden;
+  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border); overflow: clip;
   animation: warp-side-in var(--warp-duration-slow) var(--warp-ease-out);
 }
 :where([data-scope="room"] [data-part="sidebar"][hidden]) { display: none; }
@@ -536,7 +603,7 @@
 :where([data-scope="prejoin"] > [data-part="layout"]) { display: grid; gap: var(--warp-space-group); }
 @container prejoin (min-width: 600px) { :where([data-scope="prejoin"] > [data-part="layout"]) { grid-template-columns: 1.3fr 1fr; align-items: center; } }
 :where([data-scope="prejoin"] [data-part="stack"]) { display: grid; gap: var(--warp-space-group); align-content: start; min-inline-size: 0; }
-:where([data-scope="prejoin"] [data-part="preview"]) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--warp-radius-surface); overflow: hidden; }
+:where([data-scope="prejoin"] [data-part="preview"]) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--warp-radius-surface); overflow: clip; }
 :where([data-scope="prejoin"] [data-part="preview"] [data-scope="tile"]) { block-size: 100%; }
 :where([data-scope="prejoin"] [data-part="preview-controls"]) { position: absolute; inset-inline: 0; inset-block-end: 10px; z-index: 4; display: flex; justify-content: center; gap: 8px; }
 :where([data-scope="prejoin"] [data-part="meter"]) { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; block-size: 6px; }
@@ -549,10 +616,15 @@
 /* ---------------------------------------------------------------------------
    3 · NOTIFICATIONS (bell, center, item, push prompt, activity feed)
    ------------------------------------------------------------------------ */
-:where([data-scope="bell"]) { position: relative; }
-:where([data-scope="bell"] [data-part="content"]:popover-open) { display: grid; inline-size: min(400px, calc(100vw - 16px)); max-inline-size: none; max-block-size: min(520px, calc(100dvh - 88px)); padding: 0; overflow: hidden; }
+/* the bell is its button's box, never stretched by a row or a column, so the badge measures from the button */
+:where([data-scope="bell"]) { position: relative; display: inline-flex; vertical-align: middle; inline-size: fit-content; block-size: fit-content; }
+:where([data-scope="bell"] [data-part="content"]:popover-open) { display: grid; inline-size: min(400px, calc(100vw - 16px)); max-inline-size: none; max-block-size: min(520px, calc(100dvh - 88px)); padding: 0; overflow: clip; }
+/* the count sits off the glyph's top-end corner, as a notification badge does: placed from the button's centre, it
+   reaches 2px into the glyph's box each way (the box's empty corner, beside the bell's dome), whatever the control size,
+   grows away from it, and a 2px ring of the surface cuts it clear of the bell's outline */
 :where([data-scope="bell"] > [data-scope="badge"][data-count]) {
-  position: absolute; inset-block-start: 2px; inset-inline-end: 0; translate: 30% -20%; block-size: 17px; min-inline-size: 17px; padding-inline: 4px; font-size: 10.5px;
+  position: absolute; inset-inline-start: calc(50% + var(--warp-icon-md) / 2 - 2px); inset-block-end: calc(50% + var(--warp-icon-md) / 2 - 2px);
+  box-sizing: border-box; block-size: 15px; min-inline-size: 15px; padding-inline: 3px; border: 0; font-size: 9.5px; line-height: 1;
   box-shadow: 0 0 0 2px var(--warp-color-surface); pointer-events: none;
 }
 :where([data-scope="inbox"][data-part="root"]) {
@@ -562,7 +634,7 @@
 }
 :where([data-scope="inbox"][data-variant="popover"]) {
   inline-size: min(400px, 100%); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3), 0 0 0 1px var(--warp-color-border);
-  overflow: hidden;
+  overflow: clip;
 }
 :where([data-scope="inbox"] [data-part="header"]) { display: flex; align-items: center; gap: var(--warp-space-related); padding: 14px var(--warp-space-group) 6px; }
 :where([data-scope="inbox"] [data-part="header"] h3) { flex: 1; margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.2 var(--warp-text-heading-font); }
@@ -701,7 +773,7 @@
 
 /* composer: one field, the signature sweep on its border, grows to 8 lines, stays above the keyboard */
 :where([data-scope="composer"]) {
-  position: relative; display: grid; gap: 6px; margin: 0 var(--warp-space-group) var(--warp-space-group);
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0 var(--warp-space-group) var(--warp-space-group);
   padding: 8px; border-radius: calc(var(--warp-radius-surface) + 2px); background: var(--warp-color-surface-raised);
 }
 /* the composer is a field: it keeps the ink base (sweep vs base >= 3:1), no override */
@@ -789,7 +861,7 @@
   border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); color: inherit; text-decoration: none;
   font-size: 12.5px; line-height: 1.35;
 }
-:where([data-scope="sources"] a b) { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="sources"] a b) { display: block; font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="sources"] a small) { color: var(--warp-color-text-subtle); font: 500 10.5px/1.4 var(--warp-font-mono); }
 :where([data-scope="sources"] a > i) { grid-row: span 2; font: 600 10px/18px var(--warp-font-mono); font-style: normal; inline-size: 18px; text-align: center; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); color: var(--warp-color-text-subtle); }
 /* tool call card: running → done | failed | needs approval. The sweep host is the frame around the
@@ -800,15 +872,15 @@
 :where([data-part="tool-frame"]) > :where([data-part="sweep-base"]) { color: var(--warp-color-border); }
 /* tool call card */
 :where([data-scope="tool-call"]) {
-  position: relative; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
-  box-shadow: 0 0 0 1px var(--warp-color-border); font-size: var(--warp-text-caption-size); overflow: hidden;
+  position: relative; min-inline-size: 0; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
+  box-shadow: 0 0 0 1px var(--warp-color-border); font-size: var(--warp-text-caption-size); overflow: clip;
 }
 :where([data-scope="tool-call"]) > :where([data-part="sweep"]),
 :where([data-scope="tool-call"]) > :where([data-part="sweep-base"]) { inset: 0; }
-:where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto 1fr auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
+:where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
 :where([data-scope="tool-call"] summary::-webkit-details-marker) { display: none; }
 :where([data-scope="tool-call"] [data-part="name"]) { font: 500 12.5px/1 var(--warp-font-mono); color: var(--warp-color-text); }
-:where([data-scope="tool-call"] [data-part="arg"]) { color: var(--warp-color-text-subtle); font: 400 12px/1 var(--warp-font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="tool-call"] [data-part="arg"]) { color: var(--warp-color-text-subtle); font: 400 12px/1 var(--warp-font-mono); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="tool-call"] [data-part="dur"]) { font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="tool-call"] [data-part="chev"]) { transition: rotate var(--warp-duration-base) var(--warp-ease-out); color: var(--warp-color-text-subtle); }
 :where([data-scope="tool-call"][open] [data-part="chev"]) { rotate: 90deg; }
@@ -862,7 +934,7 @@
 /* ---------------------------------------------------------------------------
    6 · COLLABORATION (cursors, presence, locks, conflicts, synced selection)
    ------------------------------------------------------------------------ */
-:where([data-scope="cursors"]) { position: absolute; inset: 0; pointer-events: none; z-index: var(--warp-z-overlay); overflow: hidden; }
+:where([data-scope="cursors"]) { position: absolute; inset: 0; pointer-events: none; z-index: var(--warp-z-overlay); overflow: clip; }
 :where([data-scope="cursor"]) {
   position: absolute; inset: 0 auto auto 0; translate: var(--_x) var(--_y);
   transition: translate calc(120ms * var(--warp-motion-scale)) linear;
@@ -983,7 +1055,7 @@
 /* trace spans: nested bars on a shared time axis */
 :where([data-scope="trace"]) { display: grid; gap: 3px; font: 500 11.5px/1 var(--warp-font-mono); }
 :where([data-scope="trace"] div) { display: grid; grid-template-columns: 120px 1fr 48px; align-items: center; gap: 8px; }
-:where([data-scope="trace"] span:first-child) { padding-inline-start: calc(var(--_d, 0) * 10px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--warp-color-text); }
+:where([data-scope="trace"] span:first-child) { padding-inline-start: calc(var(--_d, 0) * 10px); overflow: clip; text-overflow: ellipsis; white-space: nowrap; color: var(--warp-color-text); }
 :where([data-scope="trace"] i) { position: relative; block-size: 10px; }
 :where([data-scope="trace"] i)::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: calc(var(--_x) * 100%); inline-size: max(2px, calc(var(--_w) * 100%)); border-radius: 2px; background: var(--_c, var(--warp-color-data-1)); }
 :where([data-scope="trace"] em) { font-style: normal; color: var(--warp-color-text-subtle); text-align: end; }
@@ -991,9 +1063,8 @@
 :where([data-scope="question"]) { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); box-shadow: inset 0 0 0 1px var(--warp-color-info-border); }
 :where([data-scope="question"] legend) { font-weight: 500; padding: 0; margin-block-end: 8px; }
 :where([data-scope="question"] fieldset) { border: 0; margin: 0; padding: 0; display: grid; gap: 4px; }
-:where([data-scope="question"] label) { display: flex; align-items: center; gap: 10px; min-block-size: max(32px, var(--warp-target-min)); padding-inline: 8px; border-radius: var(--warp-radius-control); cursor: pointer; font-size: 13.5px; }
+:where([data-scope="question"] label) { min-block-size: max(32px, var(--warp-target-min)); padding-inline: 8px; border-radius: var(--warp-radius-control); cursor: pointer; font-size: 13.5px; }
 :where([data-scope="question"] label:has(:checked)) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
-:where([data-scope="question"] input) { accent-color: var(--warp-color-accent-solid); margin: 0; }
 /* checkpoint: a hairline across the conversation with a restore action */
 :where([data-scope="checkpoint"]) { display: flex; align-items: center; gap: 10px; margin-block: 6px; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em; }
 :where([data-scope="checkpoint"])::before, :where([data-scope="checkpoint"])::after { content: ""; flex: 1; border-block-start: 1px dashed var(--warp-color-border-strong); }
@@ -1023,8 +1094,8 @@
 }
 :where([data-scope="conversations"] a:hover) { background: var(--warp-color-surface-hover); }
 :where([data-scope="conversations"] a[aria-current="page"]) { background: var(--warp-color-surface-raised); box-shadow: 0 0 0 1px var(--warp-color-border); }
-:where([data-scope="conversations"] a b) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="conversations"] a small) { grid-column: 2; color: var(--warp-color-text-subtle); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a b) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a small) { grid-column: 2; color: var(--warp-color-text-subtle); font-size: 12px; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="conversations"] a[data-unread] b) { font-weight: 600; }
 :where([data-scope="conversations"] a[data-unread] small) { color: var(--warp-color-text); }
 :where([data-scope="conversations"] a[data-muted]) { color: var(--warp-color-text-subtle); }
@@ -1050,10 +1121,6 @@
 /* share dialog rows */
 :where([data-scope="share"] [data-part="person"]) { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding-block: 6px; }
 :where([data-scope="share"] [data-part="person"] small) { display: block; color: var(--warp-color-text-subtle); font-size: 12px; }
-:where([data-scope="share"] select) {
-  block-size: 32px; padding-inline: 8px 24px; border: 0; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); color: inherit; font: inherit; font-size: 13px;
-  box-shadow: inset 0 0 0 1px var(--warp-color-border-control);
-}
 :where([data-scope="share"] [data-part="link"]) { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-size: 13px; }
 /* following: the followed peer's colour frames the whole viewport */
 :where([data-following]) { box-shadow: inset 0 0 0 calc(var(--warp-border-emphasis) + 1px) var(--_pc); }
@@ -1158,7 +1225,7 @@
   min-block-size: var(--warp-control-md); padding: 6px 8px 6px 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
 }
 :where([data-scope="speech"] [data-part="strip"]) { --warp-sweep-radius: var(--warp-radius-control); }
-:where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: hidden; color: var(--warp-color-text-subtle); }
+:where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: clip; color: var(--warp-color-text-subtle); }
 :where([data-scope="speech"][data-state="listening"] [data-part="wave"]) { color: var(--warp-color-accent-text); }
 :where([data-scope="speech"] [data-part="wave"] i) { flex: none; inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 19px * var(--a, 0)); transition: block-size 90ms linear; }
 :where([data-motion="reduce"] [data-scope="speech"] [data-part="wave"] i) { transition: none; block-size: 12px; opacity: calc(0.25 + 0.75 * var(--a, 0)); }
@@ -1171,11 +1238,11 @@
 
 /* ArtifactPanel: preview / code / versions beside the conversation (sheet on phones) */
 :where([data-scope="artifact"] [data-part="head"]) { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
-:where([data-scope="artifact"] [data-part="head"] b) { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/1.2 var(--warp-text-heading-font); }
+:where([data-scope="artifact"] [data-part="head"] b) { flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/1.2 var(--warp-text-heading-font); }
 :where([data-scope="artifact"] [data-part="panel"]) { min-block-size: 220px; overflow: auto; padding: 12px; }
 :where([data-scope="artifact"] [data-part="preview"]) { display: grid; gap: 6px; padding: 14px; border-radius: var(--warp-radius-control); background: var(--warp-color-page); box-shadow: inset 0 0 0 1px var(--warp-color-border); font-size: 13px; }
 :where([data-scope="artifact"] pre) { margin: 0; padding: 10px 12px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font: 400 12px/1.6 var(--warp-font-mono); overflow: auto; }
-:where([data-scope="artifact"]) { border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 1px var(--warp-color-border); border-inline-start: 0; overflow: hidden; }
+:where([data-scope="artifact"]) { border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 1px var(--warp-color-border); border-inline-start: 0; overflow: clip; }
 
 /* AvailabilityEditor: weekly hours (a switch per day + time ranges) and date overrides */
 :where([data-scope="availability"]) { container: availability / inline-size; display: grid; gap: var(--warp-space-group); }
@@ -1381,7 +1448,7 @@
 :where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { font: 500 var(--warp-text-caption-size)/1.2 var(--warp-text-body-font); color: var(--warp-color-text); }
 :where([data-scope="prefs-matrix"] [data-scope="checkbox"]) { grid-template-columns: auto; justify-items: center; justify-self: center; row-gap: 3px; column-gap: 0; }
 /* the channel name under each box: hidden on wide grids (the column header names it), shown when the grid restacks */
-:where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 :where([data-scope="prefs-matrix"] [data-part="na"]) { color: var(--warp-color-text-faint); font: 500 13px/1 var(--warp-font-mono); }
 :where([data-scope="prefs-matrix"] [data-part="na"]:focus-visible),
 :where([data-scope="prefs-matrix"] [data-part="na"]:focus) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -4px; border-radius: var(--warp-radius-control); }
@@ -1402,7 +1469,7 @@
   :where([data-scope="prefs-matrix"] :is([role="gridcell"])),
   :where([data-scope="prefs-matrix"] :is([role="columnheader"]:not([data-part="corner"]))) { min-block-size: 0; padding-block: 2px; }
   :where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: static; inline-size: auto; block-size: auto; overflow: visible; clip-path: none; font-size: 11.5px; color: var(--warp-color-text-subtle); }
-  :where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  :where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
   :where([data-scope="prefs-matrix"] [data-part="na"]) { display: grid; justify-items: center; gap: 3px; }
   :where([data-scope="prefs-matrix"] [data-part="status"]) { margin-inline-start: 0; flex-basis: 100%; }
 }
@@ -1439,7 +1506,7 @@
 :where([data-scope="transport"] [data-part="figures"] dd) { margin: 0; font: 500 13px/1.3 var(--warp-text-numeric-font, var(--warp-font-mono)); font-variant-numeric: tabular-nums; }
 :where([data-scope="transport"] [data-part="figures"] dd[data-tone="caution"]) { color: var(--warp-color-caution-text); }
 :where([data-scope="transport"] [data-part="figures"] dd[data-tone="critical"]) { color: var(--warp-color-critical-text); }
-:where([data-scope="transport"] [data-part="bars"]) { display: flex; align-items: end; gap: 2px; block-size: 26px; min-inline-size: 0; max-inline-size: 240px; overflow: hidden; }
+:where([data-scope="transport"] [data-part="bars"]) { display: flex; align-items: end; gap: 2px; block-size: 26px; min-inline-size: 0; max-inline-size: 240px; overflow: clip; }
 :where([data-scope="transport"] [data-part="bars"] i) {
   flex: 1 1 0; max-inline-size: 6px; min-inline-size: 2px; block-size: calc(2px + 24px * var(--h, 0)); border-radius: 1px;
   background: color-mix(in oklab, var(--warp-color-sweep) 75%, transparent); transition: block-size var(--warp-duration-base) var(--warp-ease-out);
@@ -1480,7 +1547,7 @@
   border-inline-start: 2px solid var(--warp-color-sweep); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle);
 }
 :where([data-scope="message"] [data-part="quote"] [data-part="quote-by"]) { font-weight: 600; color: var(--warp-color-text); }
-:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: clip; }
 :where([data-scope="message"][data-mine] [data-part="bubble"] [data-part="quote"]) { border-inline-start-color: var(--warp-color-accent-on-solid); color: color-mix(in oklab, var(--warp-color-accent-on-solid) 85%, transparent); }
 :where([data-scope="message"][data-mine] [data-part="quote"] [data-part="quote-by"]) { color: var(--warp-color-accent-on-solid); }
 :where([data-scope="message"] [data-part="bubble"] > :not([data-part^="sweep"])) { position: relative; z-index: 3; }
@@ -1492,7 +1559,7 @@
 }
 :where([dir="rtl"] [data-scope="composer"] [data-part="quote-draft"]) { box-shadow: inset -2px 0 0 var(--warp-color-sweep); }
 :where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-by"]) { font-size: var(--warp-text-caption-size); font-weight: 600; }
-:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: clip; }
 :where([data-scope="composer"] [data-part="quote-draft"] > [data-scope="button"]) { grid-column: 2; grid-row: 1 / span 2; }
 :where([data-scope="composer"] [data-part="hint"][data-state="error"]) { color: var(--warp-color-critical-text); }
 

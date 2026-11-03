@@ -1,7 +1,7 @@
 {
   "version": 1,
   "plugins": {
-    "@weft/plugin-media": {
+    "@weft-js/plugin-media": {
       "version": null,
       "integrity": null,
       "permissions": [
@@ -16,7 +16,7 @@
       ],
       "undeclared": []
     },
-    "@weft/plugin-text": {
+    "@weft-js/text": {
       "version": null,
       "integrity": null,
       "permissions": [
@@ -27,11 +27,11 @@
       ],
       "undeclared": []
     },
-    "@weft/warp": {
+    "@weft-js/warp": {
       "version": null,
       "integrity": null,
       "permissions": [
-        "fs.read:node_modules/@weft/ui-core/**",
+        "fs.read:node_modules/@weft-js/warp-core/**",
         "fs.write:$TMPDIR/warp-seed-*",
         "spawn:node"
       ],

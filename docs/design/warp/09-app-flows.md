@@ -352,7 +352,7 @@ Four steps on 05 Steps: **Upload → Map → Review → Import**. Each step's he
 
 1. **Upload:** a 03 Dropzone (`accept=".csv"`, first row is the header, row limit in the hint) plus "Use the sample".
    A non-CSV file is refused with a Toast before upload; nothing is sent until Map.
-2. **Map:** a table of CSV column · sample value · "Imports as" (native Select, labelled "Name imports as"). Columns are
+2. **Map:** a table of CSV column · sample value · "Imports as" (CompactSelect, labelled "Name imports as"). Columns are
    pre-mapped by header name; every target can be "Don't import". Email is required: with no column on it, Review
    reports it once, not per row.
 3. **Review:** an Alert says how many rows need a fix (caution) or that all pass (positive); the preview table marks a
@@ -388,7 +388,7 @@ After the first item exists, the empty state never returns for that user (it bec
 
 ### 5.3 Offline and reconnect
 
-Reads `online()` from `weft/browser` and the `.live` state (07 §4.4).
+Reads `online()` from `@weft-js/core/browser` and the `.live` state (07 §4.4).
 - **Offline:** caution Banner under the shell header: "You're offline. Changes are saved on this device and sync when
   you reconnect." plus "Retrying in 4s" and Retry now. Items edited offline show "Waiting to sync" chips. Server-only
   actions disable with a reason. Full offline page only for routes with no cached data.
@@ -404,7 +404,7 @@ reload, so nothing typed is lost. If a mutation fails because the contract chang
 failed action's Toast says "Reload to finish saving".
 
 ```ts
-import { online } from 'weft/browser'
+import { online } from '@weft-js/core/browser'
 const conn = connection()            // { state: LiveState, stale: Signal<boolean> }
 <ConnBanner online={online} state={conn.state} stale={conn.stale} onReload={saveDraftsAndReload} />
 ```

@@ -1,6 +1,6 @@
-import { CheckIcon, TrashIcon, UsersIcon } from '@weft/icons'
-import { isLastOwner, plural, uid } from '@weft/ui-core'
-import { derived, state, type State } from 'weft'
+import { CheckIcon, TrashIcon, UsersIcon } from '@weft-js/warp-icons'
+import { isLastOwner, plural, uid } from '@weft-js/warp-core'
+import { derived, state, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
@@ -12,17 +12,20 @@ import { InviteDialog } from './InviteDialog'
 import { PlainTable } from './PlainTable'
 import { InlineSelect, read } from './atoms'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/flows/meter.css'
-import '@weft/ui-core/styles/flows/roles-matrix.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/meter.css'
+import '@weft-js/warp-core/styles/flows/roles-matrix.css'
 
+/** A role a member can hold. */
 export type Role = { value: string; label: string; /** Can reach this page; demoting yourself below it warns. */ manages?: boolean }
-export type Member = { id: string; name: string; email: string; role: string; lastActive?: string }
+/** One member of the team. */
+export type Member = { id: string; name: string; email: string; role: string; lastActive?: string | undefined }
+/** An invite still waiting for an answer. */
 export type Invite = { id: string; email: string; role: string; sent: string }
 
 /** "7 of 10 seats used" over a rail that fills with the count; pending invites count (09 §4.2). */
@@ -36,19 +39,24 @@ export function SeatsMeter({ used, total }: { used: number; total: number }) {
   )
 }
 
+/** Props for MembersTable. */
 export interface MembersTableProps {
+  /** Everyone in the workspace, one row each. */
   members: readonly Member[] | State<readonly Member[]>
+  /** Pending invitations, listed under the members. */
   invites?: readonly Invite[] | State<readonly Invite[]>
   /** The signed-in member's id. */
   me: string
   roles: Role[]
   owner?: string
   seats: number
+  /** Called with the member and the role picked for them. */
   onRoleChange: (member: Member, role: string) => void
   onRemove: (members: Member[]) => Promise<void> | void
   /** Undo for a removal. */
   onRestore?: (members: Member[]) => void
   onInvite: (emails: string[], role: string) => Promise<void> | void
+  /** Called with the invite when Resend is pressed. */
   onResend?: (invite: Invite) => void
   onRevoke?: (invite: Invite) => void
 }
@@ -64,9 +72,9 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
   const demoting = state(false)
   const leaving = state<Member[]>([])
   const selected = state<Record<string, boolean>>({})
-  let demote: { m: Member; role: string; el: HTMLSelectElement } | undefined
-  const people = derived(() => read(members) as readonly Member[])
-  const pending = derived(() => (read(invites ?? []) as readonly Invite[]))
+  let demote: { m: Member; role: string } | undefined
+  const people = derived(() => read(members))
+  const pending = derived(() => read(invites ?? []))
   const used = derived(() => people.value.length + pending.value.length)
   const label = (v: string) => roles.find(r => r.value === v)?.label ?? v
   const locked = (m: Member) => isLastOwner(people.value as Member[], m, owner)
@@ -75,15 +83,12 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
     onRoleChange(m, role)
     toast.show({ title: `${m.name} is now ${label(role)}`, action: { label: 'Undo', onClick: () => onRoleChange({ ...m, role }, prev) } })
   }
-  const change = (m: Member, e: Event & { currentTarget: HTMLSelectElement }) => {
-    const el = e.currentTarget
-    const role = el.value
+  const change = (m: Member, role: string) => {
     if (locked(m)) {
-      el.value = m.role
       return void toast.show({ title: m.id === me ? 'You’re the only owner' : `${m.name} is the only owner`, description: 'Make someone else owner first, then change this role.', tone: 'critical' })
     }
     if (m.id === me && roles.find(r => r.value === m.role)?.manages && !roles.find(r => r.value === role)?.manages) {
-      demote = { m, role, el }
+      demote = { m, role }
       demoting.value = true
       return
     }
@@ -94,7 +99,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
     const gone = leaving.value
     await onRemove(gone)
     selected.value = {}
-    toast.show({ title: gone.length > 1 ? `${gone.length} members removed` : `${gone[0].name} removed`, action: onRestore && { label: 'Undo', onClick: () => onRestore(gone) } })
+    toast.show({ title: gone.length > 1 ? `${gone.length} members removed` : `${gone[0]!.name} removed`, action: onRestore && { label: 'Undo', onClick: () => onRestore(gone) } })
   }
   const removable = (keys: string[]) => people.value.filter(m => keys.includes(m.id) && m.id !== me && !locked(m))
   const count = derived(() => leaving.value.length)
@@ -103,7 +108,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
       id: 'name', header: 'Name', rowHeader: true, card: 'title', sort: true,
       cell: m => <span data-scope="row" data-wrap="none"><Avatar name={m.name} size="sm" /><span><b>{m.name}</b>{m.id === me && <>{' '}<Badge>You</Badge></>}<br /><span class="muted">{m.email}</span></span></span>,
     },
-    { id: 'role', header: 'Role', cell: m => { const held = derived(() => locked(m)); return <RoleCell member={m} label={`Role for ${m.name}`} roles={roles} locked={held.value} onChange={e => change(m, e)} /> } },
+    { id: 'role', header: 'Role', cell: m => { const held = derived(() => locked(m)); return <RoleCell member={m} label={`Role for ${m.name}`} roles={roles} locked={held.value} onChange={r => change(m, r)} /> } },
     { id: 'lastActive', header: 'Last active', card: 'hide' },
     {
       id: 'menu', header: 'Actions', value: () => '',
@@ -127,7 +132,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
       <Table
         caption="Workspace members"
         captionHidden
-        rows={people as any}
+        rows={people}
         columns={columns}
         picker={false}
         heading={3}
@@ -137,24 +142,25 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
           return <Button emphasis="soft" tone="critical" size="sm" disabled={!list.length} onClick={() => ask(list)}>{list.length ? `Remove ${plural(list.length, 'member')}` : 'Can’t remove these'}</Button>
         }}
       />
-      {pending.value.length > 0 && <Table caption="Pending invites" rows={pending as any} columns={inviteColumns} picker={false} heading={3} />}
+      {pending.value.length > 0 && <Table caption="Pending invites" rows={pending} columns={inviteColumns} picker={false} heading={3} />}
       <InviteDialog open={inviting} roles={roles.filter(r => r.value !== owner)} seatsLeft={seats - used.value} onSend={onInvite} defaultRole="member" />
       <ConfirmDialog open={confirming} glyph={UsersIcon} tone="critical" title={count.value > 1 ? `Remove ${count.value} members?` : `Remove ${leaving.value[0]?.name}?`} description={`${leaving.value.map(m => m.name).join(', ')} ${count.value > 1 ? 'lose' : 'loses'} access right away. Their work stays.`} action={count.value > 1 ? `Remove ${count.value} members` : 'Remove member'} onConfirm={remove} />
-      <ConfirmDialog open={demoting} tone="critical" title="Change your own role?" description="You’ll lose access to this page, and someone else will have to give it back." action="Change my role" onConfirm={() => { const d = demote!; assign(d.m, d.role) }} onCancel={() => { if (demote) demote.el.value = demote.m.role }} />
+      <ConfirmDialog open={demoting} tone="critical" title="Change your own role?" description="You’ll lose access to this page, and someone else will have to give it back." action="Change my role" onConfirm={() => { const d = demote!; assign(d.m, d.role) }} />
     </div>
   )
 }
 
-function RoleCell({ member, label, roles, locked, onChange }: { member: Member; label: string; roles: Role[]; locked: boolean; onChange: (e: Event & { currentTarget: HTMLSelectElement }) => void }) {
+function RoleCell({ member, label, roles, locked, onChange }: { member: Member; label: string; roles: Role[]; locked: boolean; onChange: (role: string) => void }) {
   const id = uid('role')
   return (
     <>
-      <InlineSelect id={id} label={label} value={member.role} options={roles} describedby={locked ? `${id}-why` : undefined} onChange={onChange} />
+      <InlineSelect label={label} value={member.role} options={roles} describedby={locked ? `${id}-why` : undefined} onValueChange={onChange} />
       {locked && <span data-part="sr-only" id={`${id}-why`}>This is the only owner. Make someone else owner first.</span>}
     </>
   )
 }
 
+/** One row of the permissions matrix, with the roles that have it. */
 export type Permission = { id: string; label: string; roles: string[] }
 
 /** What each role can do (09 §4.2): rows are permissions, columns are roles. Read-only unless `onToggle` is given. */
@@ -167,7 +173,7 @@ export function RolesMatrix({ roles, permissions, onToggle }: { roles: Role[]; p
           {roles.map(r => (
             <td key={r.value}>
               {onToggle
-                ? <Checkbox checked={p.roles.includes(r.value)} aria-label={`${r.label}: ${p.label}`} onChange={(e: any) => onToggle(p, r.value, e.currentTarget.checked)} />
+                ? <Checkbox checked={p.roles.includes(r.value)} aria-label={`${r.label}: ${p.label}`} onChange={(e: Event) => onToggle(p, r.value, (e.currentTarget as HTMLInputElement).checked)} />
                 : p.roles.includes(r.value)
                   ? <span data-part="yes"><CheckIcon /><span data-part="sr-only">Yes</span></span>
                   : <><span data-part="no" aria-hidden="true">–</span><span data-part="sr-only">No</span></>}

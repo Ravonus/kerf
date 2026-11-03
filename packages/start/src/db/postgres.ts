@@ -1,4 +1,4 @@
-// Postgres for `@weft/start` (research 28 §2): Drizzle on postgres.js, pure JS on Node, Bun and Deno. The client
+// Postgres for `@weft-js/start` (research 28 §2): Drizzle on postgres.js, pure JS on Node, Bun and Deno. The client
 // connects on the first statement, so `weft build` and a page with no queries need no database. Migrations hold an
 // advisory lock, so instances starting together apply each file once.
 
@@ -7,6 +7,7 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { StartError } from '../data'
 import { gate, register, statements, touch, type DbHandle, type Migration } from './core'
 
+/** `createDb` on Postgres: the schema, the URL, and whether to migrate on first use. */
 export interface PostgresOptions<S extends Record<string, unknown>> {
   schema: S
   /** `postgres://user:pass@host:5432/db`. */
@@ -23,16 +24,18 @@ export interface PostgresOptions<S extends Record<string, unknown>> {
   prepare?: boolean
 }
 
+/** Drizzle on postgres.js, with `$weft` for the framework's own needs. */
 export type PostgresDb<S extends Record<string, unknown>> = PostgresJsDatabase<S> & { $weft: DbHandle }
 
 const LOCK = 7_301_986
 /** The most parameters a statement that's kept takes. Past it, `inArray` over a growing list is what's asking. */
 const KEPT = 32
 
+/** A pooled Drizzle client on Postgres, with this app's migrations and write tracking. */
 export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10, prepare = true }: PostgresOptions<S>): PostgresDb<S> {
   if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`@weft/start/db/postgres\` needs a \`postgres://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft/start/db/sqlite` for a file')
+    throw new StartError('Q013', `\`@weft-js/start/db/postgres\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite` for a file')
   // Idle connections close, so a stopped server can exit.
   const client = postgres(url, { max, idle_timeout: 20, onnotice: () => {} })
   const handle: DbHandle = {
@@ -50,6 +53,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
         }
       })
     },
+    changes: (tables, o) => import('./changes-postgres').then(m => m.postgresChanges({ ...o, url, client, tables })),
   }
   const ready = gate(handle, migrate)
   // All Drizzle sends goes through `unsafe` and `begin`, so holding those holds it; `handle.migrate` keeps the plain client.
@@ -57,10 +61,11 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
     get(t, key) {
       if (key === 'begin') return async (...a: Parameters<typeof t.begin>) => (await ready(), t.begin(...a))
       if (key !== 'unsafe') return Reflect.get(t, key)
-      return (text: string, params?: any[], options?: object) => {
+      return (text: string, params?: Parameters<typeof t.unsafe>[1], options?: Parameters<typeof t.unsafe>[2]) => {
         const send = () => t.unsafe(text, params, { ...options, prepare: prepare && (params?.length ?? 0) <= KEPT })
         const after = <T>(go: () => PromiseLike<T>) => Promise.resolve(ready()).then(go)
-        return { values: () => after(() => send().values()), then: (ok: any, no: any) => after(send).then(ok, no) }
+        // oxlint-disable-next-line unicorn/no-thenable -- postgres.js's query is a lazy thenable, and Drizzle awaits it as one
+        return { values: () => after(() => send().values()), then: <A, B>(ok: (rows: unknown) => A, no: (e: unknown) => B) => after(send).then(ok, no) }
       }
     },
   })

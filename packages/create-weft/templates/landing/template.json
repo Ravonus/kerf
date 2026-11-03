@@ -1,7 +1,7 @@
 {
   "requires": { "db": "postgres", "auth": false },
   "pages": ["/", "/pricing", "/privacy", "/joined"],
-  "dependencies": { "@weft/icons": "0.0.0", "@weft/plugin-media": "0.0.0", "@weft/plugin-text": "0.0.0" },
+  "dependencies": { "@weft-js/warp-icons": "0.0.0", "@weft-js/plugin-media": "0.0.0", "@weft-js/text": "0.0.0" },
   "warp": {
     "seed": { "accent": "#c2410c" },
     "dials": { "expression": "vivid" },

@@ -230,7 +230,7 @@ z: `base 0 · raised 1 · sticky 100 · dock 200 · overlay 300 · menu 400 · m
 |---|---|---|
 | `duration.instant` · `fast` · `base` · `slow` | 80 · 120 · 200 · 320ms | × `motion-k` (0.85 / 1 / 1.2), × 0.6 when reduced |
 | `duration.exit-k` | 0.7 | exit = enter × 0.7 |
-| `sweep.duration` | 480 / 620 / 700ms by stop | × `motion-scale`; 0 when reduced (instant colour change) |
+| `sweep.duration` | 400 / 520 / 580ms by stop | × `motion-scale`; 0 when reduced (instant colour change) |
 | `ease.out` | quiet `(0.2,0,0,1)`, else `(0.16,1,0.3,1)` | enters (`old:motion/presets.ts:41`) |
 | `ease.in` | `(0.4,0,1,1)` | exits |
 | `ease.in-out` | `(0.65,0,0.35,1)` | moves, sweep (`old:motion/presets.ts:42`) |
@@ -258,11 +258,13 @@ duration by `max(motion-scale, 0.001)`: that keeps a compositor animation alive.
 
 | Token | quiet · balanced · vivid | Notes |
 |---|---|---|
-| `sweep.duration` · `sweep.ease` | 480 · 620 · 700ms · `(0.65,0,0.35,1)` | `old:components/overlays/primitives/SweepBorderOverlay.tsx:31-61` |
+| `sweep.duration` · `sweep.ease` | 400 · 520 · 580ms · `(0.65,0,0.35,1)` | `old:components/overlays/primitives/SweepBorderOverlay.tsx:31-61` |
 | `sweep.width` · `sweep.base-width` | 1 · 1.5 · 1.5px · 1px | stroke thickens with the dial, the resting border never does |
 | `color.sweep` | full accent: light L 0.515, dark L 0.60 | never low-chroma; ≥ 3:1 vs base and surfaces (§6) |
 | `color.sweep-base` | `text` at every stop | ink-strength resting border (`FloatingBorderInput.tsx:20-33`) |
 | `color.sweep-critical` | `critical-solid` | invalid fields pin the sweep "in" |
+| `color.primary.{solid,solid-hover,on-solid}` | neutral · accent · accent | the unadorned solid button; an explicit `tone` still wins |
+| `color.surface-line` | transparent · `color.border` · `color.border` | a surface's resting line: quiet lifts on shadow alone |
 | `sweep.buttons` · `sweep.surfaces` | 1 · 1 · 1 / 0 · 0 · 1 | the dial never removes a sweep; surfaces are opt-in reach below vivid. `data-flair="sweep"` sets both 1, `"none"` is an author opt-out |
 | `frame.track` · `frame.corner` · `frame.weight` · `frame.stroke` | ink (light), ink 62% (dark) · 10px · 2px · 2.6 | frame button, `old:theme/tokens.css:317-493` |
 | `frame.head` · `frame.tail` | registered `<number>`, 0 → 1 on `sweep.ease` | outline drawn in CSS (six segments sized in `cq` units), so no SVG dash gaps past ~200px |
@@ -411,7 +413,7 @@ same pairs live in the browser.
 
 ```ts
 // weft.config.ts
-import { defineConfig } from "weft";
+import { defineConfig } from "@weft-js/core";
 
 export default defineConfig({
   ui: {
@@ -476,7 +478,7 @@ wrapped in `:where()` (specificity 0). Rules of the road:
 - **Tailwind v4:** put warp first so utilities win, and alias tokens into the theme:
   ```css
   @layer warp, theme, base, components, utilities;
-  @import "@weft/warp/warp.css";
+  @import "@weft-js/warp/warp.css";
   @import "tailwindcss";
   @theme inline { --color-accent: var(--warp-color-accent-solid); --radius-control: var(--warp-radius-control); }
   ```

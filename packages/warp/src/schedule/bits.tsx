@@ -1,11 +1,11 @@
 // What the schedule pack's components share: sweep parts, glyphs, the clock.
-import { RepeatIcon } from '@weft/icons'
-import { installSweep, nowIn } from '@weft/ui-core'
-import { onCleanup, onMount, state, untrack, watch } from 'weft'
+import { RepeatIcon } from '@weft-js/warp-icons'
+import { installSweep, nowIn } from '@weft-js/warp-core'
+import { onCleanup, onMount, state, untrack, watch } from '@weft-js/core'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
 
 export const SweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
 
@@ -41,7 +41,7 @@ export function useWidth(el: () => Element | undefined) {
   onMount(() => {
     const node = el()
     if (!node || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(r => { width.value = r[0].contentRect.width })
+    const ro = new ResizeObserver(r => { width.value = r[0]!.contentRect.width })
     ro.observe(node)
     onCleanup(() => ro.disconnect())
   })

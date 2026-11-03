@@ -6,10 +6,10 @@ import { check } from '../src/check.mjs'
 import { project } from './helpers.mjs'
 
 const server = {
-  'src/server/notes.ts': "import { mutation, query } from '@weft/start'\nexport const listNotes = query({ run: () => [] })\nexport const getNote = query({ run: () => ({ id: 1 }) })\nexport const addNote = mutation({ run: () => 1 })\nexport const plain = () => []\n",
+  'src/server/notes.ts': "import { mutation, query } from '@weft-js/start'\nexport const listNotes = query({ run: () => [] })\nexport const getNote = query({ run: () => ({ id: 1 }) })\nexport const addNote = mutation({ run: () => 1 })\nexport const plain = () => []\n",
 }
 const s = r => r.diagnostics.filter(d => ['S001', 'S012'].includes(d.code)).map(d => [d.code, d.file, d.span[0]])
-const line = (name, body) => [`src/state/${name}.ts`, `import { listNotes, getNote, plain } from '../server/notes'\nimport { defineState, state, watch, derived } from 'weft'\n${body}\n`]
+const line = (name, body) => [`src/state/${name}.ts`, `import { listNotes, getNote, plain } from '../server/notes'\nimport { defineState, state, watch, derived } from '@weft-js/core'\n${body}\n`]
 
 describe('S001', () => {
   it.each([
@@ -58,5 +58,27 @@ describe('S012', () => {
   it('leaves `state.linked` over local state alone', async () => {
     const [file, text] = line('a', 'export const a = defineState(() => { const n = state(1); return { b: state.linked(() => n.value) } })')
     expect(s(await check(project({ ...server, [file]: text })))).toEqual([])
+  })
+})
+
+describe('X037', () => {
+  const page = (name, body) => [`src/routes/x037-${name}.tsx`, `import { Boundary, resource as load } from '@weft-js/core'\nimport { listNotes } from '../server/notes'\n${body}\n`]
+  const flagged = {
+    query: page('query', 'export default function A() {\n  const notes = listNotes()\n  return <Boundary pending={<p>…</p>}><ul>{(notes.value ?? []).map(n => <li key={n}>{n}</li>)}</ul></Boundary>\n}'),
+    live: page('live', 'export default function A() {\n  const notes = listNotes.live()\n  return <main><Boundary pending={<p>…</p>}><Count n={notes} /></Boundary></main>\n}\nfunction Count(props: { n: unknown }) { return <p>{String(props.n)}</p> }'),
+    resource: page('resource', 'export const A = () => {\n  const r = load(() => Promise.resolve(1))\n  return <Boundary pending={<p>…</p>}><p>{r.value}</p></Boundary>\n}'),
+  }
+  const quiet = {
+    inside: page('inside', 'function List() {\n  const notes = listNotes()\n  return <ul>{(notes.value ?? []).map(n => <li key={n}>{n}</li>)}</ul>\n}\nexport default function A() { return <Boundary pending={<p>…</p>}><List /></Boundary> }'),
+    outside: page('outside', 'export default function A() {\n  const notes = listNotes()\n  return <div><p>{notes.value?.length}</p><Boundary pending={<p>…</p>}><b /></Boundary></div>\n}'),
+    fallback: page('fallback', 'export default function A() {\n  const notes = listNotes()\n  return <Boundary pending={<p>{notes.pending}</p>}><b /></Boundary>\n}'),
+    other: page('other', 'export default function A() {\n  const notes = [1]\n  return <Boundary pending={<p>…</p>}><p>{notes.length}</p></Boundary>\n}'),
+  }
+
+  it('flags a resource or query made beside the Boundary that shows it, and nothing else', async () => {
+    const r = await check(project({ ...server, ...Object.fromEntries([...Object.values(flagged), ...Object.values(quiet)]) }))
+    const x = r.diagnostics.filter(d => d.code === 'X037').map(d => [d.file, d.span[0]]).toSorted((a, b) => a[0].localeCompare(b[0]))
+    expect(x).toEqual(Object.values(flagged).map(([f]) => [f, 4]).toSorted((a, b) => a[0].localeCompare(b[0])))
+    expect(r.diagnostics.find(d => d.code === 'X037').severity).toBe('warning')
   })
 })

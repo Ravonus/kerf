@@ -1,4 +1,4 @@
-import type { JSX } from 'weft'
+import type { JSX } from '@weft-js/core'
 
 type Kids = { children?: JSX.Element | JSX.Element[] | string }
 

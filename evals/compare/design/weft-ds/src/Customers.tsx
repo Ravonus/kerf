@@ -1,5 +1,5 @@
-import { state, derived } from 'weft'
-import { Badge, Button, Heading, Modal, Search, Stack, Table, Text } from '@weft/warp'
+import { state, derived } from '@weft-js/core'
+import { Badge, Button, Heading, Modal, Search, Stack, Table, Text } from '@weft-js/warp'
 
 type Status = 'Active' | 'Trial' | 'Past due'
 type Customer = { id: number; name: string; email: string; plan: string; status: Status }

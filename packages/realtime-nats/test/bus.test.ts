@@ -1,20 +1,21 @@
 // nats against a real server, through the `realtime.bus` suite. `WEFT_TEST_NATS` is the path to a binary.
 import { spawn, type ChildProcess } from 'node:child_process'
-import { createServer } from 'node:net'
-import { busSuite } from 'weft/test/plugins'
+import { createServer, type AddressInfo } from 'node:net'
+import { busSuite } from '@weft-js/core/test/plugins'
 import { bus, natsBus } from '../src/index'
 
-const freePort = () => new Promise<number>(ok => { const s = createServer().listen(0, () => { const { port } = s.address() as any; s.close(() => ok(port)) }) })
+const freePort = () => new Promise<number>(ok => { const s = createServer().listen(0, () => { const { port } = s.address() as AddressInfo; s.close(() => ok(port)) }) })
 const stop = (c: ChildProcess) => new Promise(ok => { c.once('close', ok); c.kill('SIGKILL') })
 
 const binary = process.env.WEFT_TEST_NATS
 
+// Needs a `nats-server` binary, named by `WEFT_TEST_NATS`: the suite restarts a real server.
 test.skipIf(!binary)('natsBus passes realtime.bus@1 on a real server, a restart included', async () => {
   const port = await freePort()
   let proc: ChildProcess
   const boot = async () => {
     proc = spawn(binary!, ['-p', String(port), '-a', '127.0.0.1'], { stdio: 'ignore' })
-    await new Promise(ok => setTimeout(ok, 300))
+    await new Promise(ok => { setTimeout(ok, 300) })
   }
   await boot()
   try {

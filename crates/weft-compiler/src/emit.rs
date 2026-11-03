@@ -23,9 +23,13 @@
 //! Not yet (steps 3–4): SSR output, hydration by path key, dev names, source maps.
 
 use std::collections::{BTreeSet, HashMap};
+use std::fmt::Write as _;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    BindingPattern, Expression, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
+    JSXElement, JSXElementName, JSXFragment, ObjectExpression, ObjectPropertyKind, Program, PropertyKind, Statement,
+};
 use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
@@ -35,24 +39,88 @@ use crate::{react, srcmap};
 
 /// Bubbling events the runtime delegates to one document listener.
 const DELEGATED: &[&str] = &[
-    "beforeinput", "click", "contextmenu", "dblclick", "focusin", "focusout", "input", "keydown", "keyup",
-    "mousedown", "mousemove", "mouseout", "mouseover", "mouseup", "pointerdown", "pointermove", "pointerout",
-    "pointerover", "pointerup", "touchend", "touchmove", "touchstart",
+    "beforeinput",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "focusin",
+    "focusout",
+    "input",
+    "keydown",
+    "keyup",
+    "mousedown",
+    "mousemove",
+    "mouseout",
+    "mouseover",
+    "mouseup",
+    "pointerdown",
+    "pointermove",
+    "pointerout",
+    "pointerover",
+    "pointerup",
+    "touchend",
+    "touchmove",
+    "touchstart",
 ];
 /// Attributes written as DOM properties, because the attribute is only the initial value.
-const PROPERTIES: &[&str] = &["value", "checked", "selected", "muted", "indeterminate", "textContent", "innerHTML", "defaultValue", "defaultChecked"];
+const PROPERTIES: &[&str] = &[
+    "value",
+    "checked",
+    "selected",
+    "muted",
+    "indeterminate",
+    "textContent",
+    "innerHTML",
+    "defaultValue",
+    "defaultChecked",
+];
 /// SVG elements that need an <svg> around them to parse as SVG (`a`, `script`, `style` and `title` are left out:
 /// HTML has them too).
 const SVG: &[&str] = &[
-    "animate", "animateMotion", "animateTransform", "circle", "clipPath", "defs", "desc", "ellipse", "feBlend",
-    "feColorMatrix", "feComposite", "feFlood", "feGaussianBlur", "feMerge", "feMergeNode", "feOffset", "filter",
-    "foreignObject", "g", "image", "line", "linearGradient", "marker", "mask", "metadata", "path", "pattern",
-    "polygon", "polyline", "radialGradient", "rect", "stop", "switch", "symbol", "text", "textPath", "tspan", "use",
+    "animate",
+    "animateMotion",
+    "animateTransform",
+    "circle",
+    "clipPath",
+    "defs",
+    "desc",
+    "ellipse",
+    "feBlend",
+    "feColorMatrix",
+    "feComposite",
+    "feFlood",
+    "feGaussianBlur",
+    "feMerge",
+    "feMergeNode",
+    "feOffset",
+    "filter",
+    "foreignObject",
+    "g",
+    "image",
+    "line",
+    "linearGradient",
+    "marker",
+    "mask",
+    "metadata",
+    "path",
+    "pattern",
+    "polygon",
+    "polyline",
+    "radialGradient",
+    "rect",
+    "stop",
+    "switch",
+    "symbol",
+    "text",
+    "textPath",
+    "tspan",
+    "use",
     "view",
 ];
 /// The attribute the pre-pass adds to a component tag it can't rewrite in place: its value is the live read of the tag.
 pub const TAG: &str = "_$tag";
-const VOID: &[&str] = &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"];
+const VOID: &[&str] =
+    &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"];
 
 #[derive(Clone, Copy)]
 enum Jsx<'a> {
@@ -78,11 +146,11 @@ struct Outermost<'a> {
 impl<'a> Visit<'a> for Outermost<'a> {
     fn visit_jsx_element(&mut self, it: &JSXElement<'a>) {
         // SAFETY: every node lives in the arena for the whole `dom` call; the visitor only hands out shorter borrows.
-        self.found.push(Jsx::El(unsafe { &*(it as *const JSXElement<'a>) }));
+        self.found.push(Jsx::El(unsafe { &*std::ptr::from_ref::<JSXElement<'a>>(it) }));
     }
     fn visit_jsx_fragment(&mut self, it: &JSXFragment<'a>) {
         // SAFETY: as above.
-        self.found.push(Jsx::Frag(unsafe { &*(it as *const JSXFragment<'a>) }));
+        self.found.push(Jsx::Frag(unsafe { &*std::ptr::from_ref::<JSXFragment<'a>>(it) }));
     }
 }
 
@@ -141,17 +209,26 @@ pub struct Emitted {
     pub explain: Vec<Explained>,
 }
 
+/// A string as a JS literal.
+fn js_string(s: &str) -> String {
+    serde_json::to_string(s).expect("a string always serializes")
+}
+
 /// Compile the pre-pass's printed program to DOM code (or server code, `ssr`) importing from `module`.
-pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
+pub fn emit(code: &str, o: &EmitOptions) -> Result<Emitted, Error> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(o.filename).unwrap_or_else(|_| SourceType::tsx());
     let parsed = Parser::new(&allocator, code, source_type).parse();
     if let Some(d) = parsed.diagnostics.first() {
-        return Err(Error { message: format!("weft back end: the printed pre-pass output didn't parse: {d}"), offset: 0 });
+        return Err(Error {
+            message: format!("weft back end: the printed pre-pass output didn't parse: {d}"),
+            offset: 0,
+        });
     }
     let program = parsed.program;
     // Resolves `ref={x}`: a `let` is assigned the element, a const or an import is called with it.
-    let scoping = code.contains("ref").then(|| oxc_semantic::SemanticBuilder::new().build(&program).semantic.into_scoping());
+    let scoping =
+        code.contains("ref").then(|| oxc_semantic::SemanticBuilder::new().build(&program).semantic.into_scoping());
     let module = o.module;
     let mut order = JsxOrder::default();
     order.visit_program(&program);
@@ -163,8 +240,20 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
         HashMap::new()
     };
     let mut e = Emitter {
-        text: code, templates: Vec::new(), helpers: BTreeSet::new(), delegated: BTreeSet::new(), uses_for: false, n: 0, error: None,
-        ssr: o.ssr, hydratable: o.hydratable && !o.ssr, dev: o.dev, display: o.display.to_string(), origin, explained: Vec::new(), keys: Vec::new(),
+        text: code,
+        templates: Vec::new(),
+        helpers: BTreeSet::new(),
+        delegated: BTreeSet::new(),
+        uses_for: false,
+        n: 0,
+        error: None,
+        ssr: o.ssr,
+        hydratable: o.hydratable && !o.ssr,
+        dev: o.dev,
+        display: o.display.to_string(),
+        origin,
+        explained: Vec::new(),
+        keys: Vec::new(),
         scoping,
     };
     let mut top = Outermost::default();
@@ -180,10 +269,10 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     let mut head = String::new();
     if !e.helpers.is_empty() {
         let names: Vec<String> = e.helpers.iter().map(|h| format!("{h} as _${h}")).collect();
-        head.push_str(&format!("import {{ {} }} from {:?};\n", names.join(", "), module));
+        let _ = writeln!(head, "import {{ {} }} from {:?};", names.join(", "), module);
     }
     if e.uses_for && !imports_binding(&program, "For") {
-        head.push_str(&format!("import {{ For }} from {module:?};\n"));
+        let _ = writeln!(head, "import {{ For }} from {module:?};");
     }
     // Templates go after the module's imports, so a reader meets the imports first.
     let mut out = head + &imports;
@@ -197,16 +286,18 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     out.push_str(&trim_marked_newlines(&body));
     if !e.delegated.is_empty() {
         let names: Vec<String> = e.delegated.iter().map(|n| format!("{n:?}")).collect();
-        out.push_str(&format!("\n_$delegate([{}]);\n", names.join(", ")));
+        let _ = writeln!(out, "\n_$delegate([{}]);", names.join(", "));
     }
     e.explained.sort_by_key(|x| (x.line, x.column));
-    let (out, map) = srcmap::decode(&out, o.map.map(|(points, source)| srcmap::Mapping { points, file: o.filename, source }));
+    let (out, map) =
+        srcmap::decode(&out, o.map.map(|(points, source)| srcmap::Mapping { points, file: o.filename, source }));
     Ok(Emitted { code: out, map, explain: e.explained })
 }
 
 /// `body` without its leading newlines (they follow the imports), keeping its first marker in place.
 fn trim_marked_newlines(body: &str) -> String {
-    let marker_end = if body.starts_with('\u{E000}') { body.find('\u{E003}').map_or(0, |i| i + '\u{E003}'.len_utf8()) } else { 0 };
+    let marker_end =
+        if body.starts_with('\u{E000}') { body.find('\u{E003}').map_or(0, |i| i + '\u{E003}'.len_utf8()) } else { 0 };
     let (marker, rest) = body.split_at(marker_end);
     let trimmed = rest.trim_start_matches('\n');
     if marker.is_empty() || trimmed.len() == rest.len() {
@@ -220,10 +311,15 @@ fn trim_marked_newlines(body: &str) -> String {
 /// Byte offset just past the module's leading imports (0 if none). An import after other code stays where it is in
 /// the body (imports are hoisted anyway), so JSX before it is still lowered.
 fn imports_end(program: &Program) -> usize {
-    program.body.iter().map_while(|s| match s {
-        Statement::ImportDeclaration(i) => Some(i.span.end as usize),
-        _ => None,
-    }).last().unwrap_or(0)
+    program
+        .body
+        .iter()
+        .map_while(|s| match s {
+            Statement::ImportDeclaration(i) => Some(i.span.end as usize),
+            _ => None,
+        })
+        .last()
+        .unwrap_or(0)
 }
 
 fn imports_binding(program: &Program, name: &str) -> bool {
@@ -282,7 +378,7 @@ enum Kid<'a> {
     Expr(&'a Expression<'a>),
 }
 
-impl<'t> Emitter<'t> {
+impl Emitter<'_> {
     fn helper(&mut self, name: &'static str) -> String {
         self.helpers.insert(name);
         format!("_${name}")
@@ -345,19 +441,18 @@ impl<'t> Emitter<'t> {
     }
 
     fn element(&mut self, el: &JSXElement<'_>) -> String {
-        let (label, code) = match component_name(&el.opening_element.name, self.text) {
-            Some(name) => (format!("<{name}>"), self.component(el, name)),
-            None => {
-                let before = self.templates.len();
-                let code = self.template(el);
-                // The template it clones, then the code.
-                let shown = match self.templates.get(before) {
-                    Some(t) if self.templates.len() > before => format!("{}\n  {code}", t.lines().last().unwrap_or(t)),
-                    _ => code.clone(),
-                };
-                self.explain(el.span, format!("<{}>", tag_name(&el.opening_element.name)), &shown);
-                return code;
-            }
+        let (label, code) = if let Some(name) = component_name(&el.opening_element.name, self.text) {
+            (format!("<{name}>"), self.component(el, &name))
+        } else {
+            let before = self.templates.len();
+            let code = self.template(el);
+            // The template it clones, then the code.
+            let shown = match self.templates.get(before) {
+                Some(t) if self.templates.len() > before => format!("{}\n  {code}", t.lines().last().unwrap_or(t)),
+                _ => code.clone(),
+            };
+            self.explain(el.span, format!("<{}>", tag_name(&el.opening_element.name)), &shown);
+            return code;
         };
         self.explain(el.span, label, &code);
         code
@@ -377,14 +472,21 @@ impl<'t> Emitter<'t> {
     // ---- intrinsic elements: templates ---------------------------------------------------------------------
 
     fn template(&mut self, el: &JSXElement<'_>) -> String {
-        let mut b = Build { html: String::new(), ssr: Vec::new(), vars: vec![(vec![], self.var())], decls: Vec::new(), ops: Vec::new(), slots: 0 };
-        self.walk(el, &mut b, vec![]);
+        let mut b = Build {
+            html: String::new(),
+            ssr: Vec::new(),
+            vars: vec![(vec![], self.var())],
+            decls: Vec::new(),
+            ops: Vec::new(),
+            slots: 0,
+        };
+        self.walk(el, &mut b, &[]);
         if self.ssr {
             // `ssr(_k => "<li" + key(_k) + … )`: static parts and holes, in document order.
             let mut parts: Vec<String> = Vec::new();
             for p in &b.ssr {
                 parts.push(match p {
-                    Piece::Static(s) => serde_json::to_string(s).unwrap(),
+                    Piece::Static(s) => js_string(s),
                     Piece::Code(c) => c.clone(),
                 });
             }
@@ -399,9 +501,9 @@ impl<'t> Emitter<'t> {
             return format!("{note}{ssr}((_k) => {})", parts.join(" + "));
         }
         let t = format!("_t{}", self.templates.len() + 1);
-        // Hydratable output claims the server's elements (`htpl`, weft/dom's claim.ts); client-only output doesn't ship that.
+        // Hydratable output claims the server's elements (`htpl`, @weft-js/core/dom's claim.ts); client-only output doesn't ship that.
         let tpl = self.helper(if self.hydratable { "htpl" } else { "tpl" });
-        let html = serde_json::to_string(&b.html).unwrap();
+        let html = js_string(&b.html);
         // An SVG element outside an <svg> (a component returning <path/>) is parsed inside one, then lifted out.
         let svg = matches!(&el.opening_element.name, JSXElementName::Identifier(id) if SVG.contains(&id.name.as_str()));
         let place = if self.dev { self.place(el.span, &tag_name(&el.opening_element.name)) } else { None };
@@ -426,7 +528,7 @@ impl<'t> Emitter<'t> {
             out.push(' ');
             out.push_str(o);
         }
-        out.push_str(&format!(" return {root}; }})()"));
+        let _ = write!(out, " return {root}; }})()");
         out
     }
 
@@ -454,17 +556,25 @@ impl<'t> Emitter<'t> {
         if let Some((_, v)) = b.vars.iter().find(|(p, _)| p == path) {
             return v.clone();
         }
-        let (parent, last) = (&path[..path.len() - 1], *path.last().unwrap());
-        let sibling = b.vars.iter().filter(|(p, _)| p.len() == path.len() && &p[..p.len() - 1] == parent && p[p.len() - 1] < last).max_by_key(|(p, _)| p[p.len() - 1]).map(|(p, v)| (p[p.len() - 1], v.clone()));
-        let (mut from, steps) = match sibling {
-            Some((at, v)) => (v, last - at),
-            None => {
-                let p = self.node(b, parent);
-                (if self.hydratable { format!("{}({p})", self.helper("first")) } else { format!("{p}.firstChild") }, last)
-            }
+        let (&last, parent) = path.split_last().expect("`vars` starts with the root, the one empty path");
+        let sibling = b
+            .vars
+            .iter()
+            .filter(|(p, _)| p.len() == path.len() && &p[..p.len() - 1] == parent && p[p.len() - 1] < last)
+            .max_by_key(|(p, _)| p[p.len() - 1])
+            .map(|(p, v)| (p[p.len() - 1], v.clone()));
+        let (mut from, steps) = if let Some((at, v)) = sibling {
+            (v, last - at)
+        } else {
+            let p = self.node(b, parent);
+            (if self.hydratable { format!("{}({p})", self.helper("first")) } else { format!("{p}.firstChild") }, last)
         };
         for _ in 0..steps {
-            from = if self.hydratable { format!("{}({from})", self.helper("next")) } else { format!("{from}.nextSibling") };
+            from = if self.hydratable {
+                format!("{}({from})", self.helper("next"))
+            } else {
+                format!("{from}.nextSibling")
+            };
         }
         let v = self.var();
         b.decls.push(format!("const {v} = {from};"));
@@ -472,7 +582,7 @@ impl<'t> Emitter<'t> {
         v
     }
 
-    fn walk(&mut self, el: &JSXElement<'_>, b: &mut Build, path: Vec<usize>) {
+    fn walk(&mut self, el: &JSXElement<'_>, b: &mut Build, path: &[usize]) {
         let tag = match &el.opening_element.name {
             JSXElementName::Identifier(id) => id.name.to_string(),
             JSXElementName::NamespacedName(n) => format!("{}:{}", n.namespace.name, n.name.name),
@@ -498,12 +608,12 @@ impl<'t> Emitter<'t> {
                 && (has_kids || void)
                 && let Some(object) = self.spread_object(&el.opening_element.attributes)
             {
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let spread = self.helper("spread");
                 b.ops.push(format!("{spread}({el_var}, () => ({object}));"));
                 Self::put(b, ">");
                 if !void {
-                    self.kids(el, b, &path);
+                    self.kids(el, b, path);
                     Self::put(b, &format!("</{tag}>"));
                 }
                 return;
@@ -532,15 +642,19 @@ impl<'t> Emitter<'t> {
                     shared = Some(p);
                 }
             } else {
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 self.n += 1;
                 let p = format!("_p{}", self.n);
                 b.ops.push(format!("const {p} = {props}; {spread}({el_var}, () => ({{ ...{p} }}));"));
                 if !has_kids && !void {
                     Self::put(b, ">");
                     // Hydrating, content the props wrote stays: the server rendered it into this hole.
-                    let kids = if self.hydratable { format!("{}({p}, {el_var})", self.helper("kids")) } else { format!("{p}.children") };
-                    self.hole_code(b, &path, format!("() => {kids}"), false, None);
+                    let kids = if self.hydratable {
+                        format!("{}({p}, {el_var})", self.helper("kids"))
+                    } else {
+                        format!("{p}.children")
+                    };
+                    self.hole_code(b, path, format!("() => {kids}"), false, None);
                     Self::put(b, &format!("</{tag}>"));
                     return;
                 }
@@ -550,11 +664,11 @@ impl<'t> Emitter<'t> {
                 return;
             }
             if has_kids {
-                self.kids(el, b, &path);
+                self.kids(el, b, path);
             } else {
                 let inner = self.helper("inner");
                 let p = shared.unwrap_or(props);
-                self.hole_code(b, &path, format!("() => {inner}({p}, {tag:?})"), false, None);
+                self.hole_code(b, path, format!("() => {inner}({p}, {tag:?})"), false, None);
             }
             Self::put(b, &format!("</{tag}>"));
             return;
@@ -581,7 +695,7 @@ impl<'t> Emitter<'t> {
                 if self.ssr {
                     continue;
                 }
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let h = self.expr(expr);
                 if capture {
                     b.ops.push(format!("{el_var}.addEventListener({event:?}, {h}, true);"));
@@ -597,6 +711,17 @@ impl<'t> Emitter<'t> {
                     self.delegated.insert(event.clone());
                     self.helpers.insert("delegate");
                 }
+                // A delegated function needs no call: `addEvent` would only store it here. An array might be `[fn, data]`.
+                let function = attr_expression(attr).is_some_and(|e| {
+                    matches!(
+                        e.get_inner_expression(),
+                        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
+                    )
+                });
+                if delegated && function && !flag_off("EVENT") {
+                    b.ops.push(format!("{el_var}._$${event} = {h};"));
+                    continue;
+                }
                 let on = self.helper("on");
                 b.ops.push(format!("{on}({el_var}, {event:?}, {h}, {delegated});"));
                 continue;
@@ -607,7 +732,7 @@ impl<'t> Emitter<'t> {
                 if self.ssr {
                     continue;
                 }
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let r = self.expr(expr);
                 let call = self.helper("ref");
                 b.ops.push(if self.assignable(expr) {
@@ -620,14 +745,14 @@ impl<'t> Emitter<'t> {
             // React focuses on mount; the attribute alone only works during page load.
             if name == "autofocus" && !self.ssr {
                 let v = attr_expression(attr).map_or("true".to_string(), |e| self.expr(e));
-                let el_var = self.node(b, &path);
+                let el_var = self.node(b, path);
                 let focus = self.helper("focus");
                 b.ops.push(format!("{focus}({el_var}, {v});"));
             }
             // A <textarea> or <select> has no value attribute: the value is its content or its selected option.
             if (tag == "textarea" || tag == "select") && (name == "value" || name == "defaultValue") {
                 let v = match &attr.value {
-                    Some(JSXAttributeValue::StringLiteral(s)) => serde_json::to_string(&decode_entities(s.value.as_str())).unwrap(),
+                    Some(JSXAttributeValue::StringLiteral(s)) => js_string(&decode_entities(s.value.as_str())),
                     Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                         Some(e) => self.expr(e),
                         None => continue,
@@ -662,7 +787,9 @@ impl<'t> Emitter<'t> {
                     let Some(expr) = c.expression.as_expression() else { continue };
                     // Some states are the words `true`/`false` (`aria-pressed={false}` is not a missing attribute).
                     let known = match expr.get_inner_expression() {
-                        Expression::BooleanLiteral(v) if react::takes_words(&name) => Some(Static::Text(v.value.to_string())),
+                        Expression::BooleanLiteral(v) if react::takes_words(&name) => {
+                            Some(Static::Text(v.value.to_string()))
+                        }
                         _ => static_value(expr),
                     };
                     match known {
@@ -701,7 +828,7 @@ impl<'t> Emitter<'t> {
                                 }
                             } else if !self.hydratable && self.is_key(&e) {
                                 // Hydrating, the server wrote it and a write would be a mutation: bind skips it.
-                                let el_var = self.node(b, &path);
+                                let el_var = self.node(b, path);
                                 let w = self.write(&el_var, kind, &name, &e, "undefined");
                                 b.ops.push(format!("{w};"));
                             } else {
@@ -710,13 +837,15 @@ impl<'t> Emitter<'t> {
                         }
                     }
                 }
-                Some(other) => self.fail("weft back end: a JSX element as an attribute value needs `{…}`", other.span()),
+                Some(other) => {
+                    self.fail("weft back end: a JSX element as an attribute value needs `{…}`", other.span());
+                }
             }
         }
         // A <select>'s value is set after its children, so the matching <option> exists by then.
         let late = tag == "select" && !dynamic.is_empty();
         if !dynamic.is_empty() && !late {
-            let el_var = self.node(b, &path);
+            let el_var = self.node(b, path);
             b.ops.push(self.bind(&el_var, &dynamic));
         }
         Self::put(b, ">");
@@ -726,9 +855,9 @@ impl<'t> Emitter<'t> {
         if let Some(c) = content {
             Self::server(b, Piece::Code(c));
         }
-        self.kids(el, b, &path);
+        self.kids(el, b, path);
         if late {
-            let el_var = self.node(b, &path);
+            let el_var = self.node(b, path);
             b.ops.push(self.bind(&el_var, &dynamic));
         }
         Self::put(b, &format!("</{tag}>"));
@@ -763,7 +892,7 @@ impl<'t> Emitter<'t> {
                 Kid::El(e) if !is_component(e, self.text) => {
                     let mut p = path.clone();
                     p.push(index);
-                    self.walk(e, b, p);
+                    self.walk(e, b, &p);
                     index += 1;
                     in_text = false;
                 }
@@ -830,11 +959,7 @@ impl<'t> Emitter<'t> {
             Kid::Expr(e) => matches!(e.get_inner_expression(), Expression::JSXElement(_) | Expression::JSXFragment(_)),
             Kid::Text(_) => false,
         };
-        if structure && (self.hydratable || self.ssr) {
-            (format!("() => {v}"), true)
-        } else {
-            (v, false)
-        }
+        if structure && (self.hydratable || self.ssr) { (format!("() => {v}"), true) } else { (v, false) }
     }
 
     /// Code that writes one attribute of `el` (`kind`: class, style, prop or attr): value `v`, previous `p`.
@@ -868,7 +993,7 @@ impl<'t> Emitter<'t> {
         let mut body = String::new();
         for (i, (kind, name, _)) in dynamic.iter().enumerate() {
             let a = self.write(el, kind, name, &format!("v[{i}]"), &format!("p[{i}]"));
-            body.push_str(&format!(" v[{i}] !== p[{i}] && {a};"));
+            let _ = write!(body, " v[{i}] !== p[{i}] && {a};");
         }
         format!("{bind}(() => [{}], (v, p = []) => {{{body} }});", values.join(", "))
     }
@@ -878,7 +1003,7 @@ impl<'t> Emitter<'t> {
     /// A child as a value for `_$child` or a children array: text as a string, JSX lowered, expressions deferred.
     fn kid_value(&mut self, k: &Kid<'_>) -> String {
         match k {
-            Kid::Text(t) => serde_json::to_string(&decode_entities(t)).unwrap(),
+            Kid::Text(t) => js_string(&decode_entities(t)),
             Kid::El(e) => self.element(e),
             Kid::Frag(f) => self.fragment(f),
             Kid::Expr(e) => match e.get_inner_expression() {
@@ -950,7 +1075,7 @@ impl<'t> Emitter<'t> {
         }
     }
 
-    fn component(&mut self, el: &JSXElement<'_>, name: String) -> String {
+    fn component(&mut self, el: &JSXElement<'_>, name: &str) -> String {
         let key = if name == "For" {
             self.uses_for = true;
             list_key(el)
@@ -970,9 +1095,13 @@ impl<'t> Emitter<'t> {
                 let slot = self.helper("slot");
                 fields.push(format!("get children() {{ return {slot}(() => [{}]); }}", vs.join(", ")));
             }
-            [Kid::Text(t)] => fields.push(format!("children: {}", serde_json::to_string(&decode_entities(t)).unwrap())),
+            [Kid::Text(t)] => fields.push(format!("children: {}", js_string(&decode_entities(t)))),
             [Kid::Expr(e)] if passes_as_value(e) => {
                 let v = self.expr(e);
+                let v = match self.keys.last().filter(|_| keyed && !self.ssr) {
+                    Some(read) => hoist_key(v, read),
+                    None => v,
+                };
                 fields.push(format!("children: {v}"));
             }
             [k] => {
@@ -991,11 +1120,11 @@ impl<'t> Emitter<'t> {
         let component = self.helper("component");
         let callee = match tag_read(el) {
             Some(read) => self.expr(read),
-            None => name.clone(),
+            None => name.to_string(),
         };
         if let Some((id, values, slotted, when)) = island {
             let call = self.helper("island");
-            let names = serde_json::to_string(&values).unwrap();
+            let names = serde_json::to_string(&values).expect("a list of strings always serializes");
             let slotted = slotted && !kids.is_empty();
             let tail = match (slotted, when.is_empty()) {
                 (true, true) => ", 1".to_string(),
@@ -1035,7 +1164,9 @@ impl<'t> Emitter<'t> {
                     let k = prop_key(&key);
                     fields.push(match &a.value {
                         None => format!("{k}: true"),
-                        Some(JSXAttributeValue::StringLiteral(s)) => format!("{k}: {}", serde_json::to_string(&decode_entities(s.value.as_str())).unwrap()),
+                        Some(JSXAttributeValue::StringLiteral(s)) => {
+                            format!("{k}: {}", js_string(&decode_entities(s.value.as_str())))
+                        }
                         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                             None => continue,
                             Some(e) if key == "ref" && self.assignable(e) => format!("{k}: {}", self.assigner(e)),
@@ -1052,7 +1183,9 @@ impl<'t> Emitter<'t> {
     /// `ref={el}` beside a spread: a function that calls `el` with the element, or assigns it to `el`.
     fn assigner(&mut self, e: &Expression<'_>) -> String {
         let (r, call) = (self.expr(e), self.helper("ref"));
-        format!("(_e) => {{ const _r = {r}; typeof _r === \"function\" || Array.isArray(_r) ? {call}(() => _r, _e) : ({r} = _e); }}")
+        format!(
+            "(_e) => {{ const _r = {r}; typeof _r === \"function\" || Array.isArray(_r) ? {call}(() => _r, _e) : ({r} = _e); }}"
+        )
     }
 
     /// Props from JSX attributes, in order: literals and plain values as fields, the rest as getters, spreads as
@@ -1087,7 +1220,12 @@ impl<'t> Emitter<'t> {
         Some(format!("{{ {} }}", fields.join(", ")))
     }
 
-    fn props(&mut self, attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>, extra: Vec<String>, element: bool) -> String {
+    fn props(
+        &mut self,
+        attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>,
+        extra: Vec<String>,
+        element: bool,
+    ) -> String {
         let mut sources: Vec<String> = Vec::new();
         let mut fields: Vec<String> = Vec::new();
         for item in attrs {
@@ -1099,23 +1237,49 @@ impl<'t> Emitter<'t> {
                     }
                     // `{...props.rest}` is read live: anything but a plain name is passed as a function.
                     let e = self.expr(&s.argument);
-                    sources.push(if matches!(s.argument.get_inner_expression(), Expression::Identifier(_)) { e } else { format!("() => ({e})") });
+                    sources.push(if matches!(s.argument.get_inner_expression(), Expression::Identifier(_)) {
+                        e
+                    } else {
+                        format!("() => ({e})")
+                    });
                 }
                 JSXAttributeItem::Attribute(a) => {
                     let key = match &a.name {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
                         JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
                     };
+                    // `bind:count={box}`: the child reads the box, and its writes reach it.
+                    if let (false, JSXAttributeName::NamespacedName(ns), Some(e)) =
+                        (element, &a.name, attr_expression(a))
+                        && ns.namespace.name == "bind"
+                    {
+                        let (k, target) = (prop_key(ns.name.name.as_str()), self.expr(e));
+                        fields.push(format!(
+                            "get {k}() {{ return {target}.value; }}, set {k}(_v) {{ {target}.value = _v; }}"
+                        ));
+                        continue;
+                    }
                     if key == "key" || key == TAG || key == ISLAND {
                         continue;
                     }
                     let k = prop_key(&key);
                     let field = match &a.value {
                         None => format!("{k}: true"),
-                        Some(JSXAttributeValue::StringLiteral(s)) => format!("{k}: {}", serde_json::to_string(&decode_entities(s.value.as_str())).unwrap()),
+                        Some(JSXAttributeValue::StringLiteral(s)) => {
+                            format!("{k}: {}", js_string(&decode_entities(s.value.as_str())))
+                        }
                         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                             None => continue,
-                            Some(e) if element && key == "ref" && self.assignable(e) => format!("{k}: {}", self.assigner(e)),
+                            Some(e) if element && key == "ref" && self.assignable(e) => {
+                                format!("{k}: {}", self.assigner(e))
+                            }
+                            Some(Expression::CallExpression(b)) if matches!(&b.callee, Expression::Identifier(id) if id.name == "_$bound") =>
+                            {
+                                let target = b.arguments[0].as_expression().map(|e| self.expr(e)).unwrap_or_default();
+                                format!(
+                                    "get {k}() {{ return {target}.value; }}, set {k}(_v) {{ {target}.value = _v; }}"
+                                )
+                            }
                             Some(e) if passes_as_value(e) => format!("{k}: {}", self.expr(e)),
                             // A server element reads each attribute once, right away: a value costs less than a getter.
                             // What renders (children, JSX) stays a getter, so it renders in its place.
@@ -1200,7 +1364,9 @@ fn component_name(name: &JSXElementName<'_>, text: &str) -> Option<String> {
 /// accessor). Other `by` shapes give none.
 fn list_key(el: &JSXElement<'_>) -> Option<String> {
     let by = el.opening_element.attributes.iter().find_map(|a| match a {
-        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == "by") => attr_expression(a),
+        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == "by") => {
+            attr_expression(a)
+        }
         _ => None,
     })?;
     let Expression::ArrowFunctionExpression(f) = by.get_inner_expression() else { return None };
@@ -1221,13 +1387,51 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
     Some(format!("{}().{}", p.name, path.join(".")))
 }
 
+/// A compiled speed path turned off for this run (`WEFT_OFF`, packages/weft/src/flags.ts).
+fn flag_off(name: &str) -> bool {
+    let off = OFF.with(|off| off.borrow().clone()).or_else(|| std::env::var("WEFT_OFF").ok());
+    off.is_some_and(|v| v.split(',').any(|f| f == name || f == "all"))
+}
+
+thread_local! {
+    static OFF: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
+}
+
+/// `Options::off`, for this compile.
+pub(crate) fn set_off(off: Option<String>) {
+    OFF.with(|slot| *slot.borrow_mut() = off);
+}
+
+/// Reads of a row's key, moved to one read as the row is made. A row's key never changes (a new key is a new row), so
+/// the read needs no link to the item: that's a dependency each row doesn't allocate. `WEFT_OFF=KEYREAD` leaves it.
+fn hoist_key(row: String, read: &str) -> String {
+    let off = flag_off("KEYREAD");
+    let item = read.split('(').next().unwrap_or(read);
+    // The body has to be the emitted element, and nothing inside may rebind the item.
+    let shadowed = row.matches(&format!("{item} =>")).count() + row.matches(&format!("({item})")).count() > 1;
+    let body = "(() => {";
+    let Some(at) = row
+        .find(body)
+        .map(|at| at + body.len())
+        .filter(|at| srcmap::strip(&row[..*at]) == format!("({item}) => {body}"))
+    else {
+        return row;
+    };
+    if off || shadowed || row.contains("_key$") || !row[at..].contains(read) {
+        return row;
+    }
+    format!("{} const _key$ = {read};{}", &row[..at], row[at..].replace(read, "_key$"))
+}
+
 /// The island mark on a component's tag (`hydration::mark`).
 fn island_mark(el: &JSXElement<'_>) -> Option<(String, Vec<String>, bool, String)> {
     el.opening_element.attributes.iter().find_map(|a| match a {
-        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == ISLAND) => match &a.value {
-            Some(JSXAttributeValue::StringLiteral(s)) => marked(s.value.as_str()),
-            _ => None,
-        },
+        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == ISLAND) => {
+            match &a.value {
+                Some(JSXAttributeValue::StringLiteral(s)) => marked(s.value.as_str()),
+                _ => None,
+            }
+        }
         _ => None,
     })
 }
@@ -1235,7 +1439,9 @@ fn island_mark(el: &JSXElement<'_>) -> Option<(String, Vec<String>, bool, String
 /// The live read the pre-pass put beside a component's tag (`TAG`).
 fn tag_read<'a>(el: &'a JSXElement<'a>) -> Option<&'a Expression<'a>> {
     el.opening_element.attributes.iter().find_map(|a| match a {
-        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == TAG) => attr_expression(a),
+        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == TAG) => {
+            attr_expression(a)
+        }
         _ => None,
     })
 }
@@ -1264,9 +1470,13 @@ fn static_value(e: &Expression<'_>) -> Option<Static> {
         Expression::NumericLiteral(n) => Some(Static::Text(n.value.to_string())),
         Expression::BooleanLiteral(b) => Some(if b.value { Static::True } else { Static::Absent }),
         Expression::NullLiteral(_) => Some(Static::Absent),
-        Expression::TemplateLiteral(t) if t.expressions.is_empty() => {
-            Some(Static::Text(t.quasis.first().and_then(|q| q.value.cooked.as_ref()).map(|c| c.to_string()).unwrap_or_default()))
-        }
+        Expression::TemplateLiteral(t) if t.expressions.is_empty() => Some(Static::Text(
+            t.quasis
+                .first()
+                .and_then(|q| q.value.cooked.as_ref())
+                .map(std::string::ToString::to_string)
+                .unwrap_or_default(),
+        )),
         _ => None,
     }
 }
@@ -1287,14 +1497,17 @@ fn passes_as_value(e: &Expression<'_>) -> bool {
 }
 
 fn prop_key(k: &str) -> String {
-    let ident = k.chars().enumerate().all(|(i, c)| c == '_' || c == '$' || c.is_ascii_alphabetic() || (i > 0 && c.is_ascii_digit()));
+    let ident = k
+        .chars()
+        .enumerate()
+        .all(|(i, c)| c == '_' || c == '$' || c.is_ascii_alphabetic() || (i > 0 && c.is_ascii_digit()));
     if ident { k.to_string() } else { format!("{k:?}") }
 }
 
 /// JSX children after JSX's whitespace rules (React's: lines trimmed, whitespace-only lines with newlines dropped).
 fn children<'a>(kids: &'a oxc_allocator::Vec<'a, JSXChild<'a>>, _text: &str) -> Vec<Kid<'a>> {
     let mut out = Vec::new();
-    for k in kids.iter() {
+    for k in kids {
         match k {
             JSXChild::Text(t) => {
                 if let Some(s) = clean_text(t.value.as_str()) {
@@ -1362,15 +1575,12 @@ fn decode_entities(s: &str) -> String {
             }?;
             Some((c, e))
         });
-        match decoded {
-            Some((c, e)) => {
-                out.push(c);
-                rest = &tail[e + 1..];
-            }
-            None => {
-                out.push('&');
-                rest = &tail[1..];
-            }
+        if let Some((c, e)) = decoded {
+            out.push(c);
+            rest = &tail[e + 1..];
+        } else {
+            out.push('&');
+            rest = &tail[1..];
         }
     }
     out.push_str(rest);

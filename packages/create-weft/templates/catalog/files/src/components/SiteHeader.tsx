@@ -1,4 +1,4 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 import { CartLink } from '#/components/CartLink'
 import { Logo } from '#/components/Logo'
 

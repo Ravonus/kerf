@@ -1,5 +1,10 @@
 // The router as TS meets it: a signed POST, and each way a call can end.
 #![cfg(feature = "server")]
+#![allow(
+    clippy::unwrap_used,
+    clippy::needless_pass_by_value,
+    reason = "test helpers: a panic is the failure report, and fixtures take `json!` literals"
+)]
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -43,21 +48,19 @@ fn app() -> Router {
             ctx.tag(format!("doc:{}", q.q));
             Ok::<_, weft::Error>(vec![Hit { id: q.q }])
         })
-        .add("who.a", |ctx: Ctx, _: ()| async move { Ok::<_, weft::Error>(ctx.user().map(|u| u.id.clone())) })
-        .add("mine.a", |ctx: UserCtx, _: ()| async move { Ok::<_, weft::Error>(ctx.user().roles.clone()) })
+        .add("who.a", |ctx: Ctx, (): ()| async move { Ok::<_, weft::Error>(ctx.user().map(|u| u.id.clone())) })
+        .add("mine.a", |ctx: UserCtx, (): ()| async move { Ok::<_, weft::Error>(ctx.user().roles.clone()) })
         .add("missing.a", |_: Ctx, q: Q| async move { Err::<(), E>(E::NotFound { id: q.q }) })
-        .add("boom.a", |_: Ctx, _: ()| async move {
-            if true {
-                panic!("the secret detail");
-            }
+        .add("boom.a", |_: Ctx, (): ()| async move {
+            assert!(!std::hint::black_box(true), "the secret detail");
             Ok::<(), weft::Error>(())
         })
-        .add("fails.a", |_: Ctx, _: ()| async move { Err::<(), _>(weft::Error::msg("the secret detail")) })
-        .add("slow.a", |_: Ctx, _: ()| async move {
+        .add("fails.a", |_: Ctx, (): ()| async move { Err::<(), _>(weft::Error::msg("the secret detail")) })
+        .add("slow.a", |_: Ctx, (): ()| async move {
             tokio::time::sleep(Duration::from_secs(5)).await;
             Ok::<(), weft::Error>(())
         })
-        .add("late.a", |ctx: Ctx, _: ()| async move {
+        .add("late.a", |ctx: Ctx, (): ()| async move {
             let before = ctx.remaining();
             tokio::time::sleep(Duration::from_millis(30)).await;
             Ok::<_, weft::Error>(before > ctx.remaining() && !ctx.cancelled())
@@ -74,7 +77,11 @@ fn envelope(user: Value, deadline: u64, iat: u64) -> String {
 }
 
 async fn send(id: &str, ctx: &str, sig: &str, body: &str) -> (StatusCode, Value) {
-    let req = Request::post(format!("/_weft/fn/{id}")).header("weft-ctx", ctx).header("weft-sig", sig).body(Body::from(body.to_string())).unwrap();
+    let req = Request::post(format!("/_weft/fn/{id}"))
+        .header("weft-ctx", ctx)
+        .header("weft-sig", sig)
+        .body(Body::from(body.to_string()))
+        .unwrap();
     let res = app().oneshot(req).await.unwrap();
     let status = res.status();
     let bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
@@ -145,7 +152,7 @@ async fn the_deadline_ends_the_wait() {
 async fn what_serde_refuses_is_drift() {
     let (status, body) = call("find.a", json!({ "query": "x" })).await;
     assert_eq!((status, &body["error"]["code"]), (StatusCode::UNPROCESSABLE_ENTITY, &json!("Drift")));
-    assert!(body["error"]["message"].as_str().unwrap().contains("q"), "{body}");
+    assert!(body["error"]["message"].as_str().unwrap().contains('q'), "{body}");
 }
 
 #[tokio::test]

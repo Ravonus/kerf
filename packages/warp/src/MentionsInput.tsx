@@ -1,17 +1,18 @@
-import { caretPoint, comboPopup, findTrigger, mentionToken, parseMentions, serializeMentions, shiftMarks, uid, type MentionItem, type MentionMark } from '@weft/ui-core'
-import { derived, flush, onCleanup, state, untrack, watch } from 'weft'
+import { caretPoint, comboPopup, findTrigger, mentionToken, parseMentions, serializeMentions, shiftMarks, uid, type MentionItem, type MentionMark } from '@weft-js/warp-core'
+import { derived, flush, onCleanup, state, untrack, watch } from '@weft-js/core'
 import { bindable, type Bindable } from './bind'
 import { Field, type FieldShell } from './Field'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/listbox.css'
-import '@weft/ui-core/styles/rich/popover.css'
-import '@weft/ui-core/styles/rich/helpers.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/popover.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
 
+/** Props for MentionsInput. */
 export type MentionsInputProps = FieldShell & Bindable<string> & {
   /** Trigger character → its search. Superseded calls are aborted. */
   triggers: Record<string, (q: string, signal: AbortSignal) => Promise<MentionItem[]>>
   rows?: number
-  name?: string
+  name?: string | undefined
 }
 
 const initials = (s: string) => s.split(/\s+/).map(w => w[0]).join('').slice(0, 2)
@@ -64,10 +65,11 @@ export function MentionsInput({ triggers, rows = 3, value, defaultValue, onValue
     cancel()
     if (!at) { open.value = false; return }
     const found = at
+    // oxlint-disable-next-line typescript/no-misused-promises -- the body catches its own failure, and a sync wrapper would add a closure to a hot field
     timer = setTimeout(async () => {
       const me = (stop = new AbortController())
       try {
-        const r = await triggers[found.trigger](found.query, me.signal)
+        const r = await triggers[found.trigger]!(found.query, me.signal)
         if (me !== stop) return
         hits.value = r
         active.value = 0
@@ -118,18 +120,19 @@ export function MentionsInput({ triggers, rows = 3, value, defaultValue, onValue
       hint={hint}
       attrs={{ 'data-multiline': '' }}
       filled={text.value.length > 0}
+      reset={held.reset}
       hold={open.value}
-      control={({ id: field, describedby, invalid, rest: live }) => (
-        <textarea ref={(n: any) => (area = n)} {...live} data-part="input" id={field} rows={rows} placeholder=" " aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} value={text.value} onInput={onInput} onKeyDown={onKey} onClick={scan}>{start.text}</textarea>
+      control={p => (
+        <textarea ref={n => (area = n)} {...p.rest} data-part="input" id={p.id} rows={rows} placeholder=" " aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} value={text.value} onInput={onInput} onKeyDown={onKey} onClick={scan}>{start.text}</textarea>
       )}
       end={
         <>
-          <span ref={(n: any) => (mark = n)} data-part="caret-anchor" aria-hidden="true"></span>
-          <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
+          <span ref={n => (mark = n)} data-part="caret-anchor" aria-hidden="true"></span>
+          <div ref={n => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
             <span data-part="sweep" aria-hidden="true"></span>
             <ul data-part="listbox" role="listbox" id={id} aria-label="Suggestions">
               {hits.value.map((it, n) => (
-                <li key={`${it.id}`} role="option" id={`${id}-${n}`} aria-selected={n === active.value ? 'true' : 'false'} data-active={n === active.value ? '' : undefined} onClick={() => pick(n, 'pointer')}>
+                <li key={it.id} role="option" id={`${id}-${n}`} aria-selected={n === active.value ? 'true' : 'false'} data-active={n === active.value ? '' : undefined} onClick={() => pick(n, 'pointer')}>
                   {person.value && <span class="av" aria-hidden="true">{initials(it.label)}</span>}
                   <span>{it.label}</span>
                   {it.meta && <span data-part="opt-meta">{it.meta}</span>}

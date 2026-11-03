@@ -1,0 +1,38 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* shared: numerals, eyebrow, sweep host gates -------------------------------- */
+:where([data-scope="table"]),
+:where([data-scope="chart"]),
+:where([data-scope="stat"]),
+:where([data-scope="kanban"]),
+:where([data-scope="meter"]),
+:where([data-scope="ring"]),
+:where([data-scope="delta"]),
+:where([data-scope="list"]),
+:where([data-scope="desc"]),
+:where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+/* after the generic .ar: same specificity */
+:where([data-scope="meter"]),
+:where([data-scope="ring"]) { display: grid; justify-items: center; gap: 4px; position: relative; }
+:where([data-scope="meter"] svg),
+:where([data-scope="ring"] svg) { display: block; overflow: visible; }
+:where([data-scope="meter"] .trk),
+:where([data-scope="ring"] .trk) { fill: none; stroke: var(--warp-color-surface-sunken); stroke-linecap: var(--_cap, round); }
+:where([data-scope="meter"] .val),
+:where([data-scope="ring"] .val) {
+  fill: none; stroke: var(--_dc, var(--warp-color-accent-solid)); stroke-linecap: var(--_cap, round);
+  transition: stroke-dashoffset var(--warp-data-tween) var(--warp-ease-out);
+}
+:where([data-expression="vivid"] :is([data-scope="meter"])),
+:where([data-expression="vivid"] :is([data-scope="ring"])) { --_cap: butt; }
+:where([data-scope="meter"] .tick) { stroke: var(--warp-color-text-subtle); stroke-width: 1.5; }
+:where([data-scope="meter"][data-level="caution"]) { --_dc: var(--warp-color-caution-solid); }
+:where([data-scope="meter"][data-level="critical"]) { --_dc: var(--warp-color-critical-solid); }
+:where([data-scope="meter"] [data-part="readout"]),
+:where([data-scope="ring"] [data-part="readout"]) {
+  position: absolute; inset-inline: 0; text-align: center; line-height: 1;
+  font-family: var(--warp-data-num-font); font-size: calc(var(--warp-text-title-size) * 0.85); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="meter"] [data-part="readout"]) { position: static; margin-block-start: -18px; }
+:where([data-scope="meter"] [data-part="readout"] small) { display: block; margin-block-start: 6px; font: 500 10px/1 var(--warp-font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+}

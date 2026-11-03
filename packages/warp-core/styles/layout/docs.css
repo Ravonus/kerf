@@ -1,0 +1,37 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Docs layout — TopNav over NavList | article | AnchorNav. (Not "content": warp.signature claims that part name.) It names itself
+   warp-page so page-level parts (AnchorNav) decide by the page, not their pane.
+   < 1000: the NavList moves into the TopNav menu; AnchorNav becomes a disclosure. */
+:where([data-scope="docs"]) { container: warp-page / inline-size; min-block-size: var(--warp-viewport-block); }
+:where([data-scope="docs"] > [data-part="body"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-group) var(--warp-space-section);
+  max-inline-size: var(--warp-layout-wide); margin-inline: auto; box-sizing: border-box;
+  padding: var(--warp-space-group) max(var(--warp-space-page), var(--warp-safe-right)) var(--warp-space-section) max(var(--warp-space-page), var(--warp-safe-left));
+}
+:where([data-scope="docs"] [data-part="sidenav"]) { display: none; }
+:where([data-scope="docs"] [data-part="article"]) { min-inline-size: 0; max-inline-size: var(--warp-layout-measure); }
+@container warp-page (min-width: 1000px) {
+:where([data-scope="docs"] > [data-part="body"]) { grid-template-columns: 220px minmax(0, 1fr) 200px; padding-block-start: var(--warp-space-section); }
+:where([data-scope="docs"] [data-part="sidenav"]) {
+    display: block; position: sticky; inset-block-start: calc(var(--warp-layout-bar) + 8px + var(--warp-space-section));
+    align-self: start; max-block-size: calc(var(--warp-viewport-block) - var(--warp-layout-bar) - 8px - 2 * var(--warp-space-section)); overflow-y: auto; overscroll-behavior: contain;
+  }
+:where([data-scope="docs"] [data-part="toc"]) { grid-column: 3; grid-row: 1; position: sticky; inset-block-start: calc(var(--warp-layout-bar) + 8px + var(--warp-space-section)); align-self: start; }
+:where([data-scope="docs"] [data-part="article"]) { grid-column: 2; grid-row: 1; }
+}
+@media print {
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]),
+  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
+}
+}

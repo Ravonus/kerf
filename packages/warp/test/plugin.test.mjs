@@ -146,3 +146,20 @@ test('every config in `weft docs theme` passes D010', () => {
   expect(looks).toHaveLength(3)
   for (const look of looks) expect(code(() => run(look)), JSON.stringify(look)).toBeUndefined()
 }, 60_000)
+
+test('share cards get warp`s colours, in both schemes, readable, and the theme dial picks one', () => {
+  const { card } = run()
+  expect(card.scheme).toBe('dark')
+  expect(run({ dials: { theme: 'light' } }).card.scheme).toBe('light')
+  expect(run({ seed: { hue: 20, chroma: 0.1 } }).card.dark.accent).not.toBe(card.dark.accent)
+  const lum = hex => {
+    const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05)
+  for (const c of [card.dark, card.light]) {
+    expect(contrast(c.text, c.background)).toBeGreaterThan(7)
+    expect(contrast(c.subtle, c.background)).toBeGreaterThan(4.5)
+    expect(contrast(c.accent, c.background)).toBeGreaterThan(3)
+  }
+})

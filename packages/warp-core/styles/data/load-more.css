@@ -1,0 +1,4 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+:where([data-scope="load-more"]) { display: grid; justify-items: center; gap: 6px; padding-block: 14px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+}

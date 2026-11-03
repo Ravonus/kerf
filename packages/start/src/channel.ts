@@ -1,21 +1,27 @@
-// `channel` and `sharedState` (research 32): definitions on both sides, and the browser's half. One socket per tab
-// (`/_weft/ws`), one join per id + params, shared by every reader and held by this module, so a remount within `keep`
+// `channel` and `sharedState` (research 32): definitions on both sides, and the browser's half. One line per tab on the
+// browser's one socket (link.ts), one join per id + params, shared by every reader and held by this module, so a remount within `keep`
 // finds its messages. The socket server is socket.ts, and `room.in(params).publish` reaches it through
 // `runtime.channels`, so nothing of the server ships here.
 
-import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
+import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
+import { HANDOVER, SOCKETS, openLine, socketDown } from './link'
 import { currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track, type Context, type Fn, type Skip, type StandardSchemaV1 } from './data'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
 
-type In<S> = S extends StandardSchemaV1<infer I, any> ? I : void
-type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
+type In<S> = S extends StandardSchemaV1<infer I, unknown> ? I : void
+type Out<S> = S extends StandardSchemaV1<unknown, infer O> ? O : undefined
 type Schemas = Record<string, StandardSchemaV1>
 type Inputs<T extends Schemas> = { [K in keyof T]: In<T[K]> }
 type Outputs<T extends Schemas> = { [K in keyof T]: Out<T[K]> }
 
-export type ChannelStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
+/**
+ * Where a connection stands; `unauthorized` waits for `rejoin`. `unavailable`: this deploy can't hold a socket (a
+ * function host, R024), so nothing connects and nothing is retried.
+ */
+export type ChannelStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized' | 'unavailable'
 
+/** `room.publish`: who a message goes to, and whether it can be replayed. */
 export interface PublishOptions {
   /** Not back to the sender. */
   exceptSelf?: boolean
@@ -25,12 +31,14 @@ export interface PublishOptions {
   volatile?: boolean
 }
 
+/** A channel instance as a server handler has it. */
 export interface Room<P, M> {
   params: P
   /** To everyone in the room, on every instance. */
   publish<K extends keyof M & string>(name: K, message: M[K], options?: PublishOptions): Promise<void>
 }
 
+/** `channel()`: the params, the messages each side may send, and who may join. */
 export interface ChannelDef<P extends StandardSchemaV1 | undefined, C extends Schemas, S extends Schemas> {
   params?: P
   /** Required (R001). Runs on every join and at each session re-check. `() => true` must be written out. */
@@ -47,6 +55,7 @@ export interface ChannelDef<P extends StandardSchemaV1 | undefined, C extends Sc
   $id?: string
 }
 
+/** A live join of a channel, from `.connect()`. */
 export interface Connection<C, S> {
   readonly status: Derived<ChannelStatus>
   /** Which room this is. Changes when a function argument moves to another, even one already open. */
@@ -67,8 +76,10 @@ export interface Connection<C, S> {
 }
 
 type Arg<P> = P | (() => P | Skip)
+/** How long a join outlives the last component using it. */
 export interface ConnectOptions { keep?: string | number }
 
+/** What `channel()` returns: connect from a page, publish from the server. */
 export interface Channel<P, C, S> {
   /** In a component or scope. A function argument re-joins when what it reads changes; `skip` leaves. */
   connect(...args: [P] extends [void] ? [params?: undefined | (() => undefined | Skip), options?: ConnectOptions] : [params: Arg<P>, options?: ConnectOptions]): Connection<C, S>
@@ -81,18 +92,20 @@ export interface Channel<P, C, S> {
 const FN = Symbol.for('weft.fn')
 let auto = 0
 
+/** A named room of schema-checked messages over the shared socket. */
 export function channel<P extends StandardSchemaV1 | undefined = undefined, C extends Schemas = {}, S extends Schemas = {}>(def: ChannelDef<P, C, S>): Channel<In<P>, Inputs<C>, Outputs<S>> {
   const id = def.$id ?? `c${++auto}`
-  if (!(def as any).$stub && !def.authorize) throw new StartError('R001', `\`${id}\` has no \`authorize\`: anyone could join it`, 'add `authorize` (`() => true` must be written out)')
+  if (!(def as { $stub?: boolean }).$stub && !def.authorize) throw new StartError('R001', `\`${id}\` has no \`authorize\`: anyone could join it`, 'add `authorize` (`() => true` must be written out)')
   const fn: Fn = { kind: 'channel', $id: id, def: def as Fn['def'] }
   fns.set(id, fn)
   return {
     kind: 'channel', $id: id, [FN]: fn,
-    connect: (params?: unknown, options?: ConnectOptions) => connect(fn, params, options) as any,
+    connect: (params?: unknown, options?: ConnectOptions) => connect(fn, params, options),
     in: (params?: unknown) => ({ publish: (name: string, message: unknown) => runtime.channels!.publish(fn, params, name, message) }),
-  } as any
+  } as never
 }
 
+/** `sharedState()`: the key and value schemas, the first value, and who reads and writes. */
 export interface SharedDef<K extends StandardSchemaV1, V extends StandardSchemaV1> {
   key: K
   value: V
@@ -106,6 +119,7 @@ export interface SharedDef<K extends StandardSchemaV1, V extends StandardSchemaV
 /** A box in a scope: reads as a value, and a write is optimistic, sent, and last writer wins on the server. */
 export type SharedBox<T> = State<T> & { readonly status: Derived<ChannelStatus>; readonly error: unknown }
 
+/** What `sharedState()` returns: read a value on a page, set it from the server. */
 export interface SharedState<K, V> {
   connect(key: K | (() => K | Skip), options?: ConnectOptions): SharedBox<V>
   /** On the server: write it from a mutation or a job. */
@@ -114,30 +128,32 @@ export interface SharedState<K, V> {
   readonly $id: string
 }
 
+/** One value per key that every client holding that key sees change. */
 export function sharedState<K extends StandardSchemaV1, V extends StandardSchemaV1>(name: string, def: SharedDef<K, V>): SharedState<In<K>, Out<V>> {
   const id = def.$id ?? `shared:${name}`
-  if (!(def as any).$stub && (!def.authorize?.read || !def.authorize?.write)) throw new StartError('R001', `\`${id}\` needs \`authorize: { read, write }\`: anyone could read or write it`, '`() => true` must be written out')
-  const fn: Fn = { kind: 'shared', $id: id, def: def as Fn['def'] }
+  if (!(def as { $stub?: boolean }).$stub && (!def.authorize?.read || !def.authorize?.write)) throw new StartError('R001', `\`${id}\` needs \`authorize: { read, write }\`: anyone could read or write it`, '`() => true` must be written out')
+  const fn: Fn = { kind: 'shared', $id: id, def }
   fns.set(id, fn)
   return {
     kind: 'shared', $id: id, [FN]: fn,
-    connect: (key: unknown, options?: ConnectOptions) => shared(fn, key, options) as any,
+    connect: (key: unknown, options?: ConnectOptions) => shared(fn, key, options),
     in: (key: unknown) => ({ set: (value: unknown) => runtime.channels!.set(fn, key, value) }),
-  } as any
+  } as never
 }
 
 // ---- joins ----------------------------------------------------------------------------------------------------------
 
-interface List { name: string; max: number; key?: (m: any) => unknown; box: State<any[]> }
-interface Handle { on: Map<string, Set<(m: any) => void>>; resets: Set<() => void>; value?(v: { v: unknown; at: number }): void }
+interface ListSpec { name: string; max: number; key?: ((m: never) => unknown) | undefined }
+interface List extends ListSpec { box: State<unknown[]> }
+interface Handle { on: Map<string, Set<(m: never) => void>>; resets: Set<() => void>; value?(v: { v: unknown; at: number }): void }
 interface Join {
   n: number
   key: string
   fn: Fn
   params: unknown
   refs: number
-  timer?: ReturnType<typeof setTimeout>
-  cursor?: string
+  timer?: ReturnType<typeof setTimeout> | undefined
+  cursor?: string | undefined
   joined: boolean
   refused: boolean
   status: State<ChannelStatus>
@@ -157,7 +173,7 @@ const KEEP = 30_000
 const ms = (keep: string | number = KEEP): number => {
   if (typeof keep === 'number') return keep
   const m = /^(\d+)(ms|s|m)$/.exec(keep)
-  return m ? +m[1] * { ms: 1, s: 1000, m: 60_000 }[m[2] as 'ms' | 's' | 'm'] : Infinity
+  return m ? +m[1]! * { ms: 1, s: 1000, m: 60_000 }[m[2] as 'ms' | 's' | 'm'] : Infinity
 }
 
 function acquire(fn: Fn, params: unknown): Join {
@@ -190,7 +206,7 @@ function drop(j: Join) {
   byN.delete(j.n)
   j.status.value = 'closed'
   if (live) send(['l', j.n])
-  for (const w of j.waiting) w()
+  for (const w of Array.from(j.waiting)) w()
   if (!joins.size) live?.close()
 }
 
@@ -204,10 +220,10 @@ function hold(j: Join, keep?: string | number): () => void {
   return stop
 }
 
-function listOf(j: Join, spec: { name: string; max: number; key?: (m: any) => unknown }): List {
+function listOf(j: Join, spec: ListSpec): List {
   const id = `${spec.name}:${spec.max}:${spec.key ? String(spec.key) : ''}`
   let l = j.lists.get(id)
-  if (!l) j.lists.set(id, (l = createRoot(() => ({ ...spec, box: state<any[]>([]) }), null)))
+  if (!l) j.lists.set(id, (l = createRoot(() => ({ ...spec, box: state<unknown[]>([]) }), null)))
   return l
 }
 
@@ -239,14 +255,17 @@ function owned(fn: Fn) {
   if (!getOwner()) throw new StartError('W051', DEV ? `\`${fn.$id}.connect()\` was called outside a component or scope: nothing would close it` : fn.$id, DEV ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`' : undefined)
 }
 
-function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<any, any> {
+/** `@weft-js/start/share`'s way in: a join that nothing on the page declared, so a tab shares this socket and its lifecycle. */
+export const connectBuiltIn = ($id: string) => connect({ kind: 'channel', $id, def: {} }, undefined, { keep: 0 })
+
+function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<Record<string, never>, Record<string, never>> {
   owned(fn)
   if (currentScope()) {
     const closed = { value: 'connecting' as ChannelStatus }
     return { status: closed, room: { value: undefined }, error: undefined, resets: { value: 0 }, collect: () => ({ value: NONE }), on: () => () => {}, onReset: () => () => {}, send: () => Promise.reject(new FnError({ message: 'a channel has no socket on the server' }, 500)), retry() {} }
   }
   const handle: Handle = { on: new Map(), resets: new Set() }
-  const wanted: { name: string; max: number; key?: (m: any) => unknown }[] = []
+  const wanted: ListSpec[] = []
   const view = follow(fn, arg, options, handle, j => { for (const w of wanted) listOf(j, w) })
   return {
     status: derived(() => view.value?.status.value ?? 'closed'),
@@ -254,26 +273,26 @@ function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<any
     get error() { return view.value?.error.value },
     resets: derived(() => view.value?.resets.value ?? 0),
     collect(name, { max = 200, key } = {}) {
-      const spec = { name, max, key }
+      const spec: ListSpec = { name, max, key }
       wanted.push(spec)
       const had = untrack(() => view.value)
       if (had) listOf(had, spec)
       return derived(() => {
         const j = view.value
-        return j ? listOf(j, spec).box.value : NONE
+        return (j ? listOf(j, spec).box.value : NONE) as never[]
       })
     },
-    on(name, fn) {
+    on(name, listener) {
       const set = handle.on.get(name) ?? new Set()
       handle.on.set(name, set)
-      set.add(fn)
-      const stop = () => void set.delete(fn)
+      set.add(listener)
+      const stop = () => void set.delete(listener)
       onCleanup(stop)
       return stop
     },
-    onReset(fn) {
-      handle.resets.add(fn)
-      const stop = () => void handle.resets.delete(fn)
+    onReset(listener) {
+      handle.resets.add(listener)
+      const stop = () => void handle.resets.delete(listener)
       onCleanup(stop)
       return stop
     },
@@ -308,36 +327,36 @@ class Shared<T> extends Box<T> {
     this.w(v)
     this.remote = false
   }
-  w(v: T) {
+  override w(v: T) {
     if (this.remote) return super.w(v)
     const j = untrack(() => this.view.value)
     if (!j) return super.w(v)
     super.w(v)
     this.pending++
     this.problem.value = undefined
-    track(post(j, '$set', v).then(() => { this.pending-- }, e => {
+    void track(post(j, '$set', v).then(() => { this.pending-- }, e => {
       this.pending--
       this.problem.value = e
     }).finally(() => { if (!this.pending) this.quiet(this.base.v) }))
   }
 }
 
-function shared(fn: Fn, arg: unknown, options?: ConnectOptions): SharedBox<any> {
+function shared(fn: Fn, arg: unknown, options?: ConnectOptions): SharedBox<unknown> {
   owned(fn)
   const initial = fn.def.initial
-  const [b] = boxes(() => new Shared<any>(initial))
+  const [b] = boxes(() => new Shared<unknown>(initial))
   b.pending = 0
   b.base = { v: initial, at: 0 }
   b.problem = state<unknown>(undefined)
   if (currentScope()) {
     b.statusOf = { value: 'connecting' }
     b.view = state<View>(undefined)
-    return b as unknown as SharedBox<any>
+    return b
   }
   const handle: Handle = { on: new Map(), resets: new Set(), value: v => b.apply(v) }
   b.view = follow(fn, arg, options, handle, () => { b.base = { v: initial, at: 0 } })
   b.statusOf = derived(() => b.view.value?.status.value ?? 'closed')
-  return b as unknown as SharedBox<any>
+  return b
 }
 
 // ---- sends ----------------------------------------------------------------------------------------------------------
@@ -347,6 +366,7 @@ const acks = new Map<number, { ok: () => void; no: (e: unknown) => void; n: numb
 let ackId = 0
 
 async function post(j: Join, name: string, message: unknown): Promise<void> {
+  if (!SOCKETS && !(DEV && net())) throw new FnError({ code: 'R024', message: "this deploy can't hold a socket: not sent" }, 503)
   if (!j.joined && !j.refused) {
     await new Promise<void>(ok => {
       const done = () => {
@@ -358,35 +378,42 @@ async function post(j: Join, name: string, message: unknown): Promise<void> {
       j.waiting.add(done)
     })
   }
-  if (!j.joined) throw new FnError({ code: j.refused ? 'R011' : undefined, message: j.refused ? 'not allowed in this channel' : 'no connection: not sent' }, j.refused ? 403 : 503)
+  if (!j.joined) throw new FnError({ ...(j.refused && { code: 'R011' }), message: j.refused ? 'not allowed in this channel' : 'no connection: not sent' }, j.refused ? 403 : 503)
   const ack = ++ackId
-  const p = new Promise<void>((ok, no) => acks.set(ack, { ok, no, n: j.n }))
+  const p = new Promise<void>((ok, no) => { acks.set(ack, { ok, no, n: j.n }) })
   send(['m', j.n, ack, name, message])
   return track(p)
 }
 
 // ---- the socket ------------------------------------------------------------------------------------------------------
 
+/** What the server sends a channel's client: the first element says which. */
+export type Frame =
+  | ['h', { b?: string }]
+  | ['j', number, string | undefined]
+  | ['m', number, string | undefined, string, never]
+  | ['r', number, string | undefined]
+  | ['e', number, { code?: string; message?: string }]
+  | ['a', number, number, { code?: string; message?: string } | undefined]
+
+/** One end of a socket, as a channel holds it. */
 export interface SocketLink {
   send(text: string): void
   close(): void
 }
 
-/** The browser's WebSocket. `done` gets the close code. */
-function browser(frame: (d: any[]) => void, done: (code: number) => void): SocketLink {
-  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_weft/ws`)
-  ws.onmessage = e => frame(JSON.parse(e.data))
-  ws.onclose = e => done(e.code)
-  return { send: t => { if (ws.readyState === 1) ws.send(t) }, close: () => ws.close() }
+/** This tab's line on the browser's one socket (link.ts). `done` gets the close code. */
+function browser(onFrame: (d: Frame) => void, closed: (code: number) => void): SocketLink {
+  return openLine('c', '', text => onFrame(JSON.parse(text)), closed)
 }
 
-/** weft/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
+/** @weft-js/core/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
 const FAKE = './channel-fake.ts' // with its extension: nothing resolves this one for a linked package
-function fake(frame: (d: any[]) => void, done: (code: number) => void): SocketLink {
+function fake(onFrame: (d: Frame) => void, closed: (code: number) => void): SocketLink {
   let link: SocketLink | undefined
   let up!: () => void
-  track(new Promise<void>(ok => (up = ok)))
-  const loading = import(/* @vite-ignore */ FAKE).then(m => m.open(frame, done, up)).then(l => (link = l), e => (up(), done(1006), Promise.reject(e))).catch(() => {})
+  void track(new Promise<void>(ok => { up = ok }))
+  const loading = import(/* @vite-ignore */ FAKE).then(m => m.open(onFrame, closed, up)).then(l => (link = l), e => (up(), closed(1006), Promise.reject(e))).catch(() => {})
   return { send: t => void track(loading.then(() => link?.send(t))), close: () => { void loading.then(() => link?.close()) } }
 }
 
@@ -400,6 +427,9 @@ let build: string | undefined
 let nudge: (() => void) | undefined
 let parked = false
 let hiddenAt: ReturnType<typeof setTimeout> | undefined
+
+/** A leader tab can be hidden while a sibling is looking: `@weft-js/start/share` says when this socket must stay. */
+export const keepOpen: { stay?: (() => boolean) | undefined } = {}
 
 const send = (f: unknown[]) => live?.send(JSON.stringify(f))
 const statusAll = (s: ChannelStatus) => { for (const j of joins.values()) if (!j.refused) j.status.value = s }
@@ -418,11 +448,13 @@ function rejoin(j: Join) {
 
 function start() {
   if (running) return
+  // a function host: no socket to dial, so say so once instead of retrying forever
+  if (!SOCKETS && !(DEV && net())) return statusAll('unavailable')
   running = true
   queueMicrotask(() => void run())
 }
 
-function dispatch(j: Join, name: string, msg: any) {
+function dispatch(j: Join, name: string, msg: never) {
   if (name === '$v') {
     for (const h of j.handles) h.value?.(msg)
     return
@@ -431,14 +463,14 @@ function dispatch(j: Join, name: string, msg: any) {
     if (l.name !== name) continue
     const was = untrack(() => l.box.value)
     const key = l.key?.(msg)
-    const at = l.key ? was.findIndex(m => l.key!(m) === key) : -1
+    const at = l.key ? was.findIndex(m => l.key!(m as never) === key) : -1
     const next = at >= 0 ? was.map((m, i) => (i === at ? msg : m)) : [...was, msg]
     l.box.value = next.length > l.max ? next.slice(-l.max) : next
   }
   for (const h of j.handles) for (const f of h.on.get(name) ?? []) f(msg)
 }
 
-function frame(d: any[]) {
+function frame(d: Frame) {
   batch(() => {
     const j = typeof d[1] === 'number' ? byN.get(d[1]) : undefined
     if (d[0] === 'h') {
@@ -452,7 +484,7 @@ function frame(d: any[]) {
       j.joined = true
       j.error.value = undefined
       j.status.value = 'open'
-      for (const w of [...j.waiting]) w()
+      for (const w of Array.from(j.waiting)) w()
     } else if (d[0] === 'm' && j) {
       j.cursor = d[2]
       dispatch(j, d[3], d[4])
@@ -466,7 +498,7 @@ function frame(d: any[]) {
       j.refused = true
       j.error.value = new FnError(d[2], d[2].code === 'R011' ? 403 : 400)
       j.status.value = d[2].code === 'R011' ? 'unauthorized' : 'closed'
-      for (const w of [...j.waiting]) w()
+      for (const w of Array.from(j.waiting)) w()
     } else if (d[0] === 'a') {
       const p = acks.get(d[2])
       acks.delete(d[2])
@@ -489,7 +521,7 @@ async function run() {
   listen(true)
   const fakeNet = () => (DEV ? net() : undefined)
   while (joins.size) {
-    if (parked || navigator.onLine === false) {
+    if (parked || ! navigator.onLine) {
       statusAll('reconnecting')
       await sleep(CAP)
       continue
@@ -502,7 +534,7 @@ async function run() {
       if (!fakeNet()) dead = setTimeout(() => live?.close(), DEAD)
     }
     await new Promise<void>(done => {
-      const take = (d: any[]) => {
+      const take = (d: Frame) => {
         alive()
         frame(d)
       }
@@ -527,7 +559,7 @@ async function run() {
     if (n) n.reconnects++
     if (code === 4401) for (const j of joins.values()) j.status.value = 'unauthorized'
     else statusAll('reconnecting')
-    if (!n) await sleep(backoff())
+    if (!n) await sleep(code === HANDOVER ? 0 : backoff())
   }
   running = false
   attempt = 0
@@ -547,12 +579,21 @@ function park() {
   parked = true
   live?.close()
 }
+const parkHidden = () => {
+  if (keepOpen.stay?.()) hiddenAt = setTimeout(parkHidden, HIDDEN)
+  else park()
+}
 function onVisibility() {
   clearTimeout(hiddenAt)
-  if (document.visibilityState === 'hidden') hiddenAt = setTimeout(park, HIDDEN)
+  if (document.visibilityState === 'hidden') hiddenAt = setTimeout(parkHidden, HIDDEN)
   else wake()
 }
-const onOffline = () => live?.close()
+/** A sibling came back while this tab's socket was parked. */
+export const wakeSocket = () => wake()
+const onOffline = () => {
+  socketDown()
+  live?.close()
+}
 
 function listen(on: boolean) {
   if (typeof window === 'undefined') return
@@ -565,7 +606,7 @@ function listen(on: boolean) {
   if (!on) clearTimeout(hiddenAt)
 }
 
-/** weft/test, after each test. */
+/** @weft-js/core/test, after each test. */
 function reset() {
   for (const j of joins.values()) clearTimeout(j.timer)
   joins.clear()

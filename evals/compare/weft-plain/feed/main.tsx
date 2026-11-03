@@ -1,6 +1,6 @@
-import { onMount, state } from 'weft'
-import { For, render } from 'weft/dom'
-import { virtualizer, type Virtualizer } from '@weft/ui-core'
+import { onMount, state } from '@weft-js/core'
+import { For, render } from '@weft-js/core/dom'
+import { virtualizer, type Virtualizer } from '@weft-js/warp-core'
 import { feed } from '../../shared/feed'
 import '../../shared/feed.css'
 

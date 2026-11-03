@@ -57,6 +57,7 @@ export async function runTask(root, name) {
   })
 }
 
+/** Everything `weft` can run here: the built-ins and the project's own tasks, with the config's diagnostics. */
 export async function tasks(root) {
   root = resolve(root)
   const { file, config, diagnostics } = await loadConfig(root)

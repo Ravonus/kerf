@@ -1,5 +1,5 @@
-import { createAuth } from '@weft/start/auth/better-auth'
-import { drizzleAuth } from '@weft/start/auth/drizzle'
+import { createAuth } from '@weft-js/start/auth/better-auth'
+import { drizzleAuth } from '@weft-js/start/auth/drizzle'
 import { APIError } from 'better-auth/api'
 import { db } from '#/db/index.server'
 import * as schema from './db/schema'

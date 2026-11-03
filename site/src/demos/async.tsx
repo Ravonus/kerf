@@ -1,7 +1,7 @@
-import { state } from 'weft'
-import { Badge, Button, Card, Spinner } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Badge, Button, Card, Spinner } from '@weft-js/warp'
 
-const save = () => new Promise(done => setTimeout(done, 800))
+const save = () => new Promise(done => { setTimeout(done, 800) })
 
 export default function Profile() {
   const saving = state(false)
@@ -14,7 +14,7 @@ export default function Profile() {
   }
   return (
     <Card title="Profile">
-      <Badge tone="success">Saved {saves.value} times</Badge>
+      <Badge tone="positive">Saves: {saves.value}</Badge>
       <Button disabled={saving.value} onClick={go}>
         {saving.value ? <Spinner /> : 'Save changes'}
       </Button>

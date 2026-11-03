@@ -1,9 +1,9 @@
-import { DownIcon } from '@weft/icons'
 // Small pieces the admin pack shares. Internal: not exported from the barrel.
-import { flush, type State, state, untrack, watch } from 'weft'
+import { flush, type State, state, untrack, watch } from '@weft-js/core'
+import { CompactSelect } from '../Select'
 import '../fields'
-import '@weft/ui-core/styles/inputs/choice.css'
-import '@weft/ui-core/styles/inputs/text.css'
+import '@weft-js/warp-core/styles/inputs/choice.css'
+import '@weft-js/warp-core/styles/inputs/text.css'
 
 /** A value given plainly or as a State box. */
 export const read = <T,>(v: T | State<T>): T => (v !== null && typeof v === 'object' && !Array.isArray(v) && 'value' in (v as object) ? (v as State<T>).value : v as T)
@@ -27,20 +27,7 @@ export const guarded = (open: State<boolean>, may: () => boolean) => ({
   set value(v: boolean) { if (v || may()) open.value = v },
 }) as State<boolean>
 
-/** The compact select in a table cell (specimen `roleSel`): native, its label hidden beside it. */
-export function InlineSelect({ id, label, value, options, describedby, onChange }: { id: string; label: string; value: string; options: { value: string; label: string }[]; describedby?: string; onChange: (e: Event & { currentTarget: HTMLSelectElement }) => void }) {
-  return (
-    <>
-      <label data-part="sr-only" for={id}>{label}</label>
-      <div data-scope="field" data-size="sm" data-variant="classic">
-        <div data-part="control" data-filled="" data-sweep="">
-          <Sweep />
-          <select data-part="input" id={id} value={value} aria-describedby={describedby} onChange={onChange}>
-            {options.map(o => <option key={o.value} value={o.value} selected={o.value === value}>{o.label}</option>)}
-          </select>
-          <span data-part="indicator" aria-hidden="true"><DownIcon /></span>
-        </div>
-      </div>
-    </>
-  )
-}
+/** The compact select in a table cell (specimen `roleSel`). */
+export const InlineSelect = ({ label, value, options, describedby, onValueChange }: { label: string; value: string; options: { value: string; label: string }[]; describedby?: string | undefined; onValueChange: (value: string) => void }) => (
+  <CompactSelect label={label} value={value} options={options} describedby={describedby} onValueChange={onValueChange} />
+)

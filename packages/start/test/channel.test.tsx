@@ -1,33 +1,37 @@
 // @vitest-environment jsdom
-// `channel` and `sharedState` over weft/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
+// `channel` and `sharedState` over @weft-js/core/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
 // a memory bus, no sockets. `test/channel-ws.test.mjs` runs the protocol over a real WebSocket.
-import { createRoot, defineState, state } from 'weft'
-import { clock, flush, net, render, screen } from 'weft/test'
-import { channel, sharedState, skip, StartError, type StandardSchemaV1 } from '@weft/start'
-import { hub } from '@weft/start/hub'
+import { createRoot, defineState, state } from '@weft-js/core'
+import { clock, flush, net, render, screen } from '@weft-js/core/test'
+import { channel, sharedState, skip, StartError, type Context, type StandardSchemaV1 } from '@weft-js/start'
+import { hub } from '@weft-js/start/hub'
+import { keepOpen } from '../src/channel'
 
-const any: StandardSchemaV1<any> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
-const text: StandardSchemaV1<any, { text: string }> = { '~standard': { version: 1, vendor: 't', validate: (v: any) => (typeof v?.text === 'string' && v.text.length <= 8 ? { value: v } : { issues: [{ message: 'bad text' }] }) } }
-const Msg: StandardSchemaV1<any, { id: number; text: string }> = { '~standard': { version: 1, vendor: 't', validate: (v: any) => (typeof v?.id === 'number' ? { value: v } : { issues: [{ message: 'no id' }] }) } }
+const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const text: StandardSchemaV1<unknown, { text: string }> = { '~standard': { version: 1, vendor: 't', validate: v => { const t = (v as { text?: unknown } | null)?.text; return typeof t === 'string' && t.length <= 8 ? { value: v as { text: string } } : { issues: [{ message: 'bad text' }] } } } }
+const Msg: StandardSchemaV1<unknown, { id: number; text: string }> = { '~standard': { version: 1, vendor: 't', validate: v => (typeof (v as { id?: unknown } | null)?.id === 'number' ? { value: v as { id: number; text: string } } : { issues: [{ message: 'no id' }] }) } }
 
-let id = 0
+type Visitor = Context & { user?: { id: string } | null }
+
+let nextId = 0
 let members: Record<string, string[]>
 beforeEach(() => {
-  id = 0
+  nextId = 0
   members = { a: ['ann', 'bob'], b: ['bob'] }
 })
 
 const room = channel({
   $id: 'chat.room',
-  params: any as StandardSchemaV1<any, { roomId: string }>,
-  authorize: ({ ctx, params }) => !!members[params.roomId]?.includes((ctx as any).user?.id),
+  params: any as StandardSchemaV1<unknown, { roomId: string }>,
+  authorize: ({ ctx, params }) => !!members[params.roomId]?.includes((ctx as Visitor).user?.id ?? ''),
   client: { say: text, boom: any },
   server: { said: Msg, typing: any },
   on: {
-    say: async ({ msg, room }) => { await room.publish('said', { id: ++id, text: msg.text }) },
+    say: async ({ msg, room: here }) => { await here.publish('said', { id: ++nextId, text: msg.text }) },
     boom: () => { throw new Error('secret detail') },
   },
 })
+type RoomConnection = ReturnType<typeof room.connect>
 
 function Chat(props: { roomId: string }) {
   const chat = room.connect(() => ({ roomId: props.roomId }))
@@ -36,7 +40,7 @@ function Chat(props: { roomId: string }) {
     <>
       <p aria-label="status">{chat.status.value}</p>
       <ul>{said.value.map(m => <li key={m.id}>{m.text}</li>)}</ul>
-      <button onClick={() => chat.send('say', { text: 'hi' }).catch(() => {})}>say</button>
+      <button onClick={() => void chat.send('say', { text: 'hi' }).catch(() => {})}>say</button>
     </>
   )
 }
@@ -46,10 +50,10 @@ const say = () => screen.getByRole('button', { name: 'say' }).click()
 
 describe('channel', () => {
   test('a client without `authorize` is R001, a stub is not', () => {
-    expect(() => channel({ $id: 'no.auth', client: {} } as any)).toThrow(StartError)
-    expect(() => channel({ $id: 'no.auth' } as any)).toThrow('R001')
-    expect(() => channel({ $id: 'stub', $stub: 1 } as any)).not.toThrow()
-    expect(() => sharedState('x', { key: any, value: any, initial: 0, authorize: { read: () => true } } as any)).toThrow('R001')
+    expect(() => channel({ $id: 'no.auth', client: {} } as never)).toThrow(StartError)
+    expect(() => channel({ $id: 'no.auth' } as never)).toThrow('R001')
+    expect(() => channel({ $id: 'stub', $stub: 1 } as never)).not.toThrow()
+    expect(() => sharedState('x', { key: any, value: any, initial: 0, authorize: { read: () => true } } as never)).toThrow('R001')
   })
 
   test('join, send, and the room\'s message comes back through the bus', async () => {
@@ -68,7 +72,7 @@ describe('channel', () => {
     const seen: unknown[] = []
     function Probe() {
       const chat = room.connect({ roomId: 'a' })
-      return <button onClick={() => chat.send('say', { text: 'x' }).catch(e => seen.push(e.code))}>{chat.status.value}</button>
+      return <button onClick={() => void chat.send('say', { text: 'x' }).catch(e => seen.push(e.code))}>{chat.status.value}</button>
     }
     render(Probe)
     await net.settle()
@@ -81,33 +85,33 @@ describe('channel', () => {
 
   test('a bad message is refused with its issues, and nothing is published', async () => {
     net.context({ user: { id: 'ann' } })
-    let error: any
+    let error!: StartError & { issues: { message: string }[] }
     function Probe() {
       const chat = room.connect({ roomId: 'a' })
       const said = chat.collect('said')
-      return <button onClick={() => chat.send('say', { text: 'much too long' }).catch(e => (error = e))}>{said.value.length}</button>
+      return <button onClick={() => void chat.send('say', { text: 'much too long' }).catch(e => (error = e))}>{said.value.length}</button>
     }
     render(Probe)
     await net.settle()
     screen.getByRole('button').click()
     await net.settle()
     expect(error.code).toBe('Q002')
-    expect(error.issues[0].message).toBe('bad text')
+    expect(error.issues[0]!.message).toBe('bad text')
     expect(screen.getByRole('button').textContent).toBe('0')
   })
 
   test('a handler that throws answers plainly in production terms, and a name like `constructor` finds nothing', async () => {
     net.context({ user: { id: 'ann' } })
-    const out: any[] = []
-    let conn: any
+    const out: string[] = []
+    let conn!: RoomConnection
     function Probe() {
       conn = room.connect({ roomId: 'a' })
       return <p />
     }
     render(Probe)
     await net.settle()
-    await conn.send('constructor' as any, {}).catch((e: any) => out.push(e.code))
-    await conn.send('toString' as any, {}).catch((e: any) => out.push(e.code))
+    await conn.send('constructor' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
+    await conn.send('toString' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
     expect(out).toEqual(['Q002', 'Q002'])
   })
 
@@ -169,7 +173,7 @@ describe('channel', () => {
   test('out of the window: `collect` empties, `resets` ticks, onReset fires', async () => {
     net.context({ user: { id: 'ann' } })
     const fired = vi.fn()
-    let conn: any
+    let conn!: RoomConnection
     function Probe() {
       conn = room.connect({ roomId: 'a' })
       conn.onReset(fired)
@@ -191,12 +195,12 @@ describe('channel', () => {
 
   test('a send in flight when the socket dies rejects; one sent while down waits for the rejoin', async () => {
     net.context({ user: { id: 'ann' } })
-    let conn: any
     const slow = channel({
       $id: 'chat.slow', authorize: () => true,
       client: { hold: any, go: any }, server: {},
       on: { hold: () => new Promise(() => {}), go: () => {} },
     })
+    let conn!: ReturnType<typeof slow.connect>
     function Probe() {
       conn = slow.connect()
       return <p />
@@ -239,7 +243,7 @@ describe('channel', () => {
     await net.settle()
     members.a = []
     await hub().poke(['session:ann'])
-    await new Promise(ok => setTimeout(ok))
+    await new Promise(ok => { setTimeout(ok) })
     await net.settle()
     expect(status()).toBe('unauthorized')
   })
@@ -260,7 +264,7 @@ describe('channel', () => {
   test('`skip` leaves, a new param moves the reader', async () => {
     net.context({ user: { id: 'bob' } })
     const id = state<string | null>(null)
-    let chat: any
+    let chat!: RoomConnection
     function Probe() {
       chat = room.connect(() => (id.value ? { roomId: id.value } : skip))
       return <p aria-label="status">{chat.status.value}</p>
@@ -285,7 +289,7 @@ describe('channel', () => {
       room.connect({ roomId: 'a' })
     })
     await net.settle()
-    const { leaks } = await import('weft/test')
+    const { leaks } = await import('@weft-js/core/test')
     expect(leaks().join()).toContain('chat.room')
     close()
   })
@@ -293,7 +297,7 @@ describe('channel', () => {
   test('over the rate limit closes the socket, and the client reconnects', async () => {
     net.context({ user: { id: 'ann' } })
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    let conn: any
+    let conn!: RoomConnection
     function Probe() {
       conn = room.connect({ roomId: 'a' })
       return <p />
@@ -321,8 +325,8 @@ describe('sharedState', () => {
   let writers: string[]
   beforeEach(() => { writers = ['ann'] })
   const slide = sharedState('deck', {
-    $id: 'deck.slide', key: any as StandardSchemaV1<any, string>, value: any as StandardSchemaV1<any, number>, initial: 0,
-    authorize: { read: ({ ctx }) => !!(ctx as any).user, write: ({ ctx }) => writers.includes((ctx as any).user?.id) },
+    $id: 'deck.slide', key: any as StandardSchemaV1<unknown, string>, value: any as StandardSchemaV1<unknown, number>, initial: 0,
+    authorize: { read: ({ ctx }) => !!(ctx as Visitor).user, write: ({ ctx }) => writers.includes((ctx as Visitor).user?.id ?? '') },
   })
   const meeting = defineState('meeting', () => {
     const value = slide.connect('d1')
@@ -360,7 +364,7 @@ describe('sharedState', () => {
     await flush()
     await net.settle()
     expect(shown()).toBe('0')
-    expect((meeting.value.error as any).code).toBe('R011')
+    expect((meeting.value.error as StartError).code).toBe('R011')
   })
 
   test('a later reader gets the value, and a server write reaches it', async () => {
@@ -389,14 +393,14 @@ describe('what multiplayer needs of a room', () => {
   const log: unknown[] = []
   const lively = channel({
     $id: 'chat.lively',
-    params: any as StandardSchemaV1<any, { roomId: string }>,
-    authorize: ({ ctx }) => (ctx as any).user?.id !== 'out',
+    params: any as StandardSchemaV1<unknown, { roomId: string }>,
+    authorize: ({ ctx }) => (ctx as Visitor).user?.id !== 'out',
     client: { me: any, only: any, gone: any },
-    server: { hi: any, tick: any },
+    server: { hi: any as StandardSchemaV1<unknown, { id: string }>, tick: any },
     on: {
-      me: async ({ id, room }) => { await room.publish('hi', { id }, { to: id }) },
-      only: async ({ msg, room }) => { await room.publish('hi', { id: 'nobody' }, { to: msg }) },
-      gone: async ({ room }) => { await room.publish('tick', { n: 1 }, { volatile: true }) },
+      me: async ({ id, room: here }) => { await here.publish('hi', { id }, { to: id }) },
+      only: async ({ msg, room: here }) => { await here.publish('hi', { id: 'nobody' }, { to: msg as string }) },
+      gone: async ({ room: here }) => { await here.publish('tick', { n: 1 }, { volatile: true }) },
     },
     left: ({ id, params }) => void log.push({ id, params }),
   })
@@ -408,9 +412,9 @@ describe('what multiplayer needs of a room', () => {
         <p aria-label="status">{chat.status.value}</p>
         <p aria-label="room">{chat.room.value ?? 'none'}</p>
         <ul>{hi.value.map(m => <li key={m.id}>{m.id}</li>)}</ul>
-        <button onClick={() => chat.send('me', {})}>me</button>
-        <button onClick={() => chat.send('only', 'someone-else')}>only</button>
-        <button onClick={() => chat.send('gone', {})}>tick</button>
+        <button onClick={() => void chat.send('me', {})}>me</button>
+        <button onClick={() => void chat.send('only', 'someone-else')}>only</button>
+        <button onClick={() => void chat.send('gone', {})}>tick</button>
       </>
     )
   }
@@ -448,7 +452,7 @@ describe('what multiplayer needs of a room', () => {
     function Ticks() {
       const chat = lively.connect({ roomId: 'a' })
       chat.on('tick', m => seen.push(m))
-      return <button onClick={() => chat.send('gone', {})}>tick</button>
+      return <button onClick={() => void chat.send('gone', {})}>tick</button>
     }
     render(Ticks, {})
     await net.settle()
@@ -457,4 +461,38 @@ describe('what multiplayer needs of a room', () => {
     const ch = hub().channel('weft:c:chat.lively:{"roomId":"a"}')
     expect(ch.ring).toHaveLength(0)
   })
+})
+
+test('a hidden tab parks its socket, unless a sibling is looking (`share`)', async () => {
+  clock.install()
+  const open = channel({ $id: 'park.room', authorize: () => true })
+  let conn!: ReturnType<typeof open.connect>
+  const stop = createRoot(dispose => {
+    conn = open.connect(undefined, { keep: 0 })
+    return dispose
+  })
+  await net.settle()
+  const hide = (hidden: boolean) => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: hidden ? 'hidden' : 'visible' })
+    document.dispatchEvent(new Event('visibilitychange'))
+  }
+  let looking = true
+  keepOpen.stay = () => looking
+  hide(true)
+  await clock.advance(300_000)
+  await net.settle()
+  void flush()
+  expect(conn.status.value).toBe('open')
+  looking = false
+  await clock.advance(300_000)
+  await net.settle()
+  void flush()
+  expect(conn.status.value).toBe('reconnecting')       // parked
+  hide(false)
+  await net.settle()
+  keepOpen.stay = undefined
+  delete (document as { visibilityState?: string }).visibilityState
+  stop()
+  await clock.advance(30_000)
+  clock.uninstall()
 })

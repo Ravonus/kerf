@@ -11,7 +11,7 @@ import { cells, outline } from './draw.mjs'
 import { interior, rasterize } from './raster.mjs'
 import { auto, block, crescent, fromHand, hollow, litCells, master, open, solid } from './style.mjs'
 
-const path = (grid, attr) => { const d = cells(grid).ink; return d ? `<path ${attr} d="${d}"/>` : '' }
+const path = (g, attr) => { const d = cells(g).ink; return d ? `<path ${attr} d="${d}"/>` : '' }
 const only = (g, ...want) => g.map(r => r.map(c => (want.includes(c) ? '#' : '.')))
 const stroke = (d, a) => (d ? `<path ${a} d="${d}"/>` : '')
 const pixels = (g, t = 'data-t="v" ') => path(only(g, '#'), `${t}data-p=""`) + path(only(g, 'w'), `${t}data-p="" data-w=""`) + path(only(g, '+'), `${t}data-p="" data-d=""`)
@@ -31,7 +31,7 @@ function parts(spec) {
 /** The grid an icon is shaded from: a drawn master, its hand bitmap, or its spec landed on the grid. */
 export function grid(name, [spec, art]) {
   const [body, weft] = parts(spec), normal = `${body} / ${weft}`
-  return MASTERS[name] ? master(MASTERS[name]) : art ? fromHand(art, name, normal) : auto(normal)
+  return MASTERS[name] ? master(MASTERS[name]) : art ? fromHand(art, name) : auto(normal)
 }
 
 /** Pixels of the default form: what the art tests read. */

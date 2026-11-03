@@ -81,9 +81,9 @@ the table is a compile error with a W-code. It doesn't silently fall back.
 
 ## 4. Runtime changes
 
-- `weft/dom` gets the helpers in §3. The current names (`insert`, `effect`, `template`, `getNextElement`,
+- `@weft-js/core/dom` gets the helpers in §3. The current names (`insert`, `effect`, `template`, `getNextElement`,
   `getNextMarker`…) are dropped at the switch, along with `ssr-contract.test.ts`.
-- `weft/ssr` gets the same helpers in string form. `renderToString`, `renderToStringAsync`, the page-data script,
+- `@weft-js/core/ssr` gets the same helpers in string form. `renderToString`, `renderToStringAsync`, the page-data script,
   `resource` and `Boundary` keep their research 18 behaviour.
 - Hydration claims by path key (§2.4). Boundary's two reserved ids become two fixed slots: content and fallback.
 - The reactive core loses its id hooks (`rt.ids`, `childKey`, `hk`/`hc`, transparent flags). That gives back about
@@ -295,7 +295,7 @@ Two to three weeks of focused work.
   gone.
 - `Options::source_names` is gone. Dev builds pass each component's name and `file:line` to `component()`, which is
   what `<Boundary>`'s "caught an error in <Comp> (file:line)" reads.
-- `weft/dom` no longer exports Solid's helper set (`template`, `setProperty`, `setStatefulProperty`, `readShallow`,
+- `@weft-js/core/dom` no longer exports Solid's helper set (`template`, `setProperty`, `setStatefulProperty`, `readShallow`,
   `setStyleProperty`, `addEventListener`, and the `effect`/`untrack` re-exports). `insert` lost its dev-names option.
 - `test/next.test.tsx` became `test/back-end.test.tsx`. Its side-by-side comparisons with Solid became direct
   assertions; for example, the benchmark test now checks each operation's effect (1,000 rows, the selected row, every
@@ -542,16 +542,16 @@ Once Solid's crate is gone, weft can update Oxc on its own schedule instead of f
   weft's own lowering.
 - **`tests/helper_contract.rs`** stops compiling Solid's fixtures. Its import-versus-export check stays, pointed at
   weft's own output.
-- **The `weft/dom` helpers added to match Solid's output** go at the switch. `spread` is weft's only implementation
+- **The `@weft-js/core/dom` helpers added to match Solid's output** go at the switch. `spread` is weft's only implementation
   of `<div {...rest}>` on a native element, so `Spread` moves into step 2 of §5, not step 4.
 
 **Merged (2026-10-29).** PR #2 landed on `main`, and `main` was merged into this branch after step 5:
 - `analyze.rs`, `project.rs`, `transform.rs` and `compiler-items.test.tsx` came over unchanged and pass on weft's back
   end. The pre-pass still hands over JSX, not the §3 IR; that rework is still open.
 - `helper_contract.rs` now compiles the repo's own components in four modes: DOM, DOM dev, hydratable DOM and SSR. It
-  checks every helper they import from `weft`, `weft/dom` or `weft/ssr` against the runtime's exports, ignoring type
+  checks every helper they import from `@weft-js/core`, `@weft-js/core/dom` or `@weft-js/core/ssr` against the runtime's exports, ignoring type
   imports.
-- Five helpers PR #2 added to `weft/dom` were only needed by Solid's output, and are dropped: `claimElement`,
+- Five helpers PR #2 added to `@weft-js/core/dom` were only needed by Solid's output, and are dropped: `claimElement`,
   `applyRef`, `setAttributeNS`, `setStyleProperty`, and a Solid-shaped `spread`. Its `ref` fix (untracked, nested
   arrays flattened) is kept.
 - W016's test now checks that the two reads differ, not which comes first: weft reads attributes before text.

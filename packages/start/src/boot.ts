@@ -2,9 +2,12 @@
 // wants to be running, or that isn't in the first view and so wasn't preloaded, comes into view. A visitor who asked for
 // less data gets it on interaction only. `#weft-route` and the islands' comments are read by `start()` once it's here.
 
+/** What the inline script left on `window`: the queue, and how to play or wake it. */
+export interface Held { q: unknown[]; p: (held: unknown) => void; w?: (k: Element, lead?: 1) => void; r?: 1; n?: unknown; l?: Element; d?: unknown }
+
 export function boot(full: () => Promise<unknown>) {
-  const q = (window as any).__wq
-  let io: IntersectionObserver | undefined
+  const q = (window as Window & { __wq?: Held }).__wq
+  let io: IntersectionObserver | undefined // oxlint-disable-line prefer-const -- `go` reads it, and can run before it's set
   const go = () => {
     if (q) q.w = () => {}
     io?.disconnect()
@@ -29,7 +32,7 @@ export function boot(full: () => Promise<unknown>) {
       first.add(e.target)
       if (e.isIntersecting && (was || needs.has(e.target))) return go()
     }
-  }, { rootMargin: '200px' })
+  }, { rootMargin: '600px' })
   const w = document.createTreeWalker(document.body, 128)
   while (w.nextNode()) {
     const c = w.currentNode as Comment

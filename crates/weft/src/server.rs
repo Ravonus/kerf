@@ -33,7 +33,10 @@ struct Shared {
 /// With no `WEFT_RUST_SECRET`: a sidecar that took unsigned calls would trust any process that could reach it.
 pub fn router(functions: Functions) -> Router {
     let secret = std::env::var("WEFT_RUST_SECRET").unwrap_or_default();
-    assert!(!secret.is_empty(), "R106: WEFT_RUST_SECRET is not set. `weft dev` and `weft start` set it; a sidecar deployed on its own needs the same value as the server");
+    assert!(
+        !secret.is_empty(),
+        "R106: WEFT_RUST_SECRET is not set. `weft dev` and `weft start` set it; a sidecar deployed on its own needs the same value as the server"
+    );
     router_with(functions, secret.into_bytes())
 }
 
@@ -46,7 +49,10 @@ pub fn router_with(functions: Functions, secret: Vec<u8>) -> Router {
 }
 
 async fn health(State(s): State<Arc<Shared>>) -> Response {
-    json_response(StatusCode::OK, &json!({ "ok": true, "service": s.functions.service(), "contract": s.functions.hash(), "functions": s.functions.ids(), "pid": std::process::id() }))
+    json_response(
+        StatusCode::OK,
+        &json!({ "ok": true, "service": s.functions.service(), "contract": s.functions.hash(), "functions": s.functions.ids(), "pid": std::process::id() }),
+    )
 }
 
 fn json_response(status: StatusCode, body: &Value) -> Response {
@@ -92,12 +98,23 @@ async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: Hea
         Err(e) => return refused(StatusCode::UNAUTHORIZED, "Refused", e),
     };
     let Some(handler) = s.functions.handler(&id) else {
-        return refused(StatusCode::NOT_FOUND, "Drift", format!("this sidecar has no function `{id}`: rebuild it from the current contract"));
+        return refused(
+            StatusCode::NOT_FOUND,
+            "Drift",
+            format!("this sidecar has no function `{id}`: rebuild it from the current contract"),
+        );
     };
     let budget = Duration::from_millis(envelope.deadline_ms);
     let base = Base::new(&id, envelope);
     let (trace_id, parent_id) = trace_ids(base.traceparent());
-    let span = tracing::info_span!("weft.fn", otel.name = id.as_str(), function = id.as_str(), request_id = base.request_id(), trace_id, parent_id);
+    let span = tracing::info_span!(
+        "weft.fn",
+        otel.name = id.as_str(),
+        function = id.as_str(),
+        request_id = base.request_id(),
+        trace_id,
+        parent_id
+    );
     #[cfg(feature = "otel")]
     crate::otel::link(&span, base.traceparent());
 
@@ -108,7 +125,9 @@ async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: Hea
     let _enter = span.enter();
     let answer = match outcome {
         Ok(Ok(answer)) => answer,
-        Ok(Err(e)) if e.is_panic() => Answer::Failed(Failed::Internal(format!("panicked: {}", crate::functions::panic_text(e.into_panic())))),
+        Ok(Err(e)) if e.is_panic() => {
+            Answer::Failed(Failed::Internal(format!("panicked: {}", crate::functions::panic_text(&*e.into_panic()))))
+        }
         Ok(Err(e)) => Answer::Failed(Failed::Internal(e.to_string())),
         Err(_) => {
             tracing::warn!(budget_ms = budget.as_millis() as u64, "deadline passed");

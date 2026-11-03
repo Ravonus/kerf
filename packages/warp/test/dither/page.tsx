@@ -1,6 +1,6 @@
 // The dither family on one page, for scripts/dither.mjs and for looking at. ?only=<id> renders one section by itself, so a
 // measurement sees that surface alone.
-import { render } from 'weft/dom'
+import { render } from '@weft-js/core/dom'
 import { Canvas, Dither, DitherField, DitherGlyph } from '../../src/index'
 import './page.css'
 
@@ -29,7 +29,7 @@ function photo() {
 }
 const picture = photo()
 
-function spiral({ ctx, width, height, time }: any) {
+function spiral({ ctx, width, height, time }: { ctx: CanvasRenderingContext2D; width: number; height: number; time: number }) {
   ctx.clearRect(0, 0, width, height)
   ctx.strokeStyle = getComputedStyle(ctx.canvas).color
   ctx.lineWidth = 1.5
@@ -38,7 +38,7 @@ function spiral({ ctx, width, height, time }: any) {
   ctx.stroke()
 }
 
-const SECTIONS: Record<string, () => any> = {
+const SECTIONS: Record<string, () => unknown> = {
   hero: () => (
     <section data-demo="hero">
       <DitherField fill pointer={['pull', 'ripple', 'shockwave']} spark="caution" cell={7} fade="left" />
@@ -79,7 +79,7 @@ const Tier = ({ name }: { name: string }) => <div data-demo="tier" data-expressi
 
 render(() => (
   <main>
-    {only ? SECTIONS[only]() : Object.values(SECTIONS).map(s => s())}
+    {only ? SECTIONS[only]!() : Object.values(SECTIONS).map(s => s())}
     {!only && <div data-demo="grid">{['quiet', 'balanced', 'vivid'].map(n => <Tier name={n} />)}</div>}
   </main>
 ), document.getElementById('app')!)

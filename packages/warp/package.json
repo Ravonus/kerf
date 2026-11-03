@@ -1,18 +1,19 @@
 {
-  "name": "@weft/warp",
-  "version": "0.0.0",
-  "private": true,
-  "description": "warp for weft: the spec components as weft TSX over @weft/ui-core (the CSS split per component, and the behaviour)",
+  "name": "@weft-js/warp",
+  "version": "0.1.0",
+  "description": "warp, the UI toolkit for weft: components over @weft-js/warp-core",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
     "*.css",
     "./src/styles.ts",
-    "./src/fields.ts"
+    "./src/fields.ts",
+    "./src/ui.ts"
   ],
   "exports": {
     ".": "./src/index.ts",
     "./skeleton": "./src/skeleton-css.ts",
+    "./ui": "./src/ui.ts",
     "./plugin": "./plugin.mjs",
     "./tailwind.css": "./tailwind.css"
   },
@@ -24,11 +25,11 @@
     "dither": "node scripts/dither.mjs"
   },
   "dependencies": {
-    "@weft/ui-core": "file:../ui-core",
-    "@weft/icons": "file:../icons"
+    "@weft-js/warp-icons": "file:../icons",
+    "@weft-js/warp-core": "file:../warp-core"
   },
   "peerDependencies": {
-    "weft": "*"
+    "@weft-js/core": "*"
   },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",
@@ -38,6 +39,24 @@
     "playwright-core": "^1.64.1",
     "vite": "8.3.5",
     "vitest": "5.0.5",
-    "weft": "file:../weft"
-  }
+    "@weft-js/core": "file:../weft"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "tailwind.css",
+    "tokens",
+    "README.md",
+    "LICENSE"
+  ]
 }

@@ -1,0 +1,29 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="reactions"]) { display: flex; flex-wrap: wrap; gap: 4px; }
+:where([data-scope="reactions"] button) {
+  all: unset; display: inline-flex; align-items: center; gap: 4px; block-size: 24px; padding-inline: 7px; border-radius: var(--warp-radius-round);
+  background: var(--warp-color-surface-raised); box-shadow: inset 0 0 0 1px var(--warp-color-border); font-size: 12.5px; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+:where([data-scope="reactions"] button[aria-pressed="true"]) { background: var(--warp-color-accent-soft); box-shadow: inset 0 0 0 1px var(--warp-color-accent-border); color: var(--warp-color-accent-text); }
+:where([data-scope="reactions"] button:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
+/* solid sweep buttons (sweep-fill): warp-components wipes the fill with clip-path inside the box, so nothing here
+   clips the button; its ::after hit area (hit-min, 44px on coarse) and focus ring stay whole. */
+/* small visuals keep their size; an invisible ::after reaches the hit area (neighbours may overlap) */
+:where([data-scope="reactions"] button),
+:where([data-scope="cite"]) { position: relative; }
+:where([data-scope="reactions"] button)::after,
+:where([data-scope="cite"])::after {
+  content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+  inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+}
+@media (forced-colors: active) {
+:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
+  :where([data-scope="reactions"] button[aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="question"] label:has(:checked)),
+  :where([data-scope="versions"] li[aria-current="true"]),
+  :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
+}
+}

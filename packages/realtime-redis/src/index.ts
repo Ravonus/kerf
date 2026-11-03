@@ -2,9 +2,10 @@
 // reconnect, and whatever was published meanwhile is gone: every `ready` after the first is the `gap`.
 
 import { Redis } from 'ioredis'
-import type { Bus } from '@weft/start/bus'
-import { StartError } from '@weft/start/data'
+import type { Bus } from '@weft-js/start/bus'
+import { StartError } from '@weft-js/start/data'
 
+/** Options of `redisBus()`. */
 export interface RedisBusOptions {
   /** `redis://…` or `rediss://…`. */
   url: string
@@ -12,10 +13,11 @@ export interface RedisBusOptions {
   prefix?: string
 }
 
+/** A `Bus` over Redis pub/sub, connecting on first use. Throws Q013 without a `redis://` URL, except during a build. */
 export function redisBus({ url, prefix = 'weft:' }: RedisBusOptions): Bus {
   if (!url && process.env.WEFT_BUILD) url = 'redis://localhost' // a build loads this module and never connects
   if (!/^rediss?:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`redisBus\` needs a \`redis://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set the URL, or leave `bus` out for the memory bus on one instance')
+    throw new StartError('Q013', `\`redisBus\` needs a \`redis://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``, 'set the URL, or leave `bus` out for the memory bus on one instance')
   let pub: Redis | undefined, sub: Redis | undefined
   const listeners = new Map<string, Set<(message: string) => void>>()
   const gaps = new Set<() => void>()
@@ -61,10 +63,11 @@ export function redisBus({ url, prefix = 'weft:' }: RedisBusOptions): Bus {
         void sub?.unsubscribe(name).catch(() => {})
       }
     },
-    async close() {
+    close() {
       sub?.disconnect()
       pub?.disconnect()
       sub = pub = undefined
+      return Promise.resolve()
     },
   }
 }

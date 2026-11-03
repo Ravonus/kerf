@@ -2,7 +2,7 @@
 // ffmpeg you installed, or the one `binary` names (with `sha256`, refused unless the file matches). weft ships no ffmpeg:
 // builds with x264/x265 are GPL, and H.264, HEVC and AAC fall under patent pools, so that choice stays with the app.
 import { fileURLToPath } from 'node:url'
-import { definePlugin, defineSlot, provide } from 'weft/plugin'
+import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
 
 const mediaEncode = defineSlot({ id: 'media.encode', version: 1, cardinality: 'keyed', sides: ['build', 'server'] })
 export const KEYS = ['video/av1', 'video/vp9', 'video/hevc', 'video/h264', 'audio/opus', 'audio/aac']
@@ -23,23 +23,23 @@ function options(input) {
 }
 
 export const mediaFfmpeg = definePlugin({
-  name: '@weft/plugin-media-ffmpeg',
-  version: '0.0.0',
+  name: '@weft-js/plugin-media-ffmpeg',
+  version: '0.1.0',
   weft: '*',
   namespace: 'M',
   options,
   permissions: { fs: { read: ['**/*.{gif,mp4,m4v,mov,webm,mkv,ogv,mp3,wav,flac,ogg,oga,opus,m4a,aac}'], write: ['$TMPDIR/weft-ffmpeg-*'] }, spawn: ['ffmpeg', 'ffprobe'] },
   contribute: o => ({
-    provides: KEYS.map(key => provide(mediaEncode, { key, sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaEncode', options: { ...o, key } }, server: { module: '@weft/plugin-media-ffmpeg/build', export: 'createMediaEncode', options: { ...o, key } } } })),
+    provides: KEYS.map(key => provide(mediaEncode, { key, sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaEncode', options: { ...o, key } }, server: { module: '@weft-js/plugin-media-ffmpeg/build', export: 'createMediaEncode', options: { ...o, key } } } })),
     agents: {
-      title: 'Video and audio (@weft/plugin-media-ffmpeg)',
+      title: 'Video and audio (@weft-js/plugin-media-ffmpeg)',
       text: [
         '- GIFs, videos and audio files are `?media` imports rendered with `<Media>`. Never hand-write `<video>` or `<source>`.',
-        "- Sync code to them with `timeline(asset, { cues })` from `weft/media` and `<Media timeline={t}>`, not `timeupdate` listeners.",
+        "- Sync code to them with `timeline(asset, { cues })` from `@weft-js/core/media` and `<Media timeline={t}>`, not `timeupdate` listeners.",
         '- `./loop.gif?media&audio=./beat.opus` muxes the audio into the video at build.',
       ].join('\n'),
     },
-    catalog: [{ name: 'timeline', import: 'weft/media', summary: 'timeline(asset, { cues }): currentTime and playing as boxes, cues on presented frames' }],
+    catalog: [{ name: 'timeline', import: '@weft-js/core/media', summary: 'timeline(asset, { cues }): currentTime and playing as boxes, cues on presented frames' }],
     notes: [
       'ffmpeg is not installed by weft. Builds with x264/x265 are GPL; distributing one can bind what you ship with it.',
       'H.264, HEVC and AAC encoders fall under patent pools (Via LA, Access Advance). AV1, VP9 and Opus are royalty-free.',

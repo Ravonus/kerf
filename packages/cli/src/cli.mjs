@@ -1,16 +1,18 @@
 // Argument parsing and output for `weft`. JSON on stdout with --json, human text on stderr.
-// Exit codes: 0 ok, 1 diagnostics with errors (or a stale AGENTS.md under --check), 2 usage or internal error.
+// Exit codes: 0 ok, 1 diagnostics with errors (a build refused on one, or a stale AGENTS.md under --check), 2 usage or internal error.
 
 import { fix } from './fix.mjs'
 import { writeTokens } from './tokens.mjs'
 import { createRequire } from 'node:module'
+import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { addCommand } from './add.mjs'
 import { writeAgentsMd } from './agents-md.mjs'
 import { check } from './check.mjs'
-import { formatHuman } from './diag.mjs'
+import { formatHuman, sortDiagnostics } from './diag.mjs'
 import { docs } from './docs.mjs'
+import { compilerLine, doctor, formatDoctor } from './doctor.mjs'
 import { formatMap, writeMap } from './map.mjs'
 import { serve } from './mcp.mjs'
 import { explain, list, sync } from './plugins.mjs'
@@ -19,22 +21,39 @@ import { loadConfig } from './load-config.mjs'
 import { listSurfaces } from './surface-checks.mjs'
 import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
-import { browserCommand, browserUsage } from './browser/cli.mjs'
-import { buildCommand, dbCommand, devCommand, routesCommand, startCommand } from './start.mjs'
+import { browserCommand } from './browser/cli.mjs'
+import { metaTable } from './meta-table.mjs'
+import { audit } from './audit.mjs'
+import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand, unsafeAllowed } from './start.mjs'
+import { deployCommand, formatHosts, hostsCommand, initCommand } from './deploy/index.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
-  check [files…]      compile in check mode; W-, P- and D-diagnostics with fixes
+  check [files…] [--preset <p>]  compile in check mode; W-, P- and D-diagnostics with fixes (--verbose: which compiler ran)
+  doctor [--preset <p>]  which compiler this install uses, whether Rust is around (it's optional), and what live data does on the target
   fix [files…]        apply the safe autofixes
   tokens              warp's resolved tokens as DTCG, in .weft/tokens/
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
                       [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
   browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
+  lsp                 a language server for editors on TypeScript 7: tsc --lsp with inferred props
+  tsc                 type-check the whole project with inferred props (tsc or tsgo; for CI)
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
-  build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json
+  build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json; then the
+                      built pages are audited (L-codes) and an error fails the build
+                      [--unsafe-allow <codes>]  go past these codes (R002, L003, a family like L, or all): forces a deploy
+  audit [routes…] [--url <u>] [--all] [--max <n>]  the built pages, or a running site, in a clean Chrome at a phone's
+                      and a desktop's width: axe-core's WCAG rules, console, deprecations, head, sideways scroll, shift
+  deploy [--prod] [--yes] [--target t]  fit check, build for the target, then the host's own CLI; without --yes a dry
+                      run that prints what would run. Netlify, Vercel, Cloudflare, Fly, Render; the live URL at the end
+  deploy hosts        which hosts can run this app, why not, what each costs, and the one weft suggests
+  deploy init [target] [--dry-run] [--force]  the host's files (netlify.toml, fly.toml + Dockerfile…), a GitHub
+                      workflow that checks and deploys on push, and \`deploy\` in the config
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
   db generate [name]  a migration for the schema's changes (it applies on the next request)
+  db live             a migration with change triggers for the tables in \`changes\`
+  db listen           the change feed as its own process, for an app on functions
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   tasks               commands and project tasks
   run <task>          run a project task from weft.config.ts
@@ -54,10 +73,10 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
-const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
+const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime', 'unsafe-allow', 'max', 'target'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
-const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all'])
+const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all', 'verbose', 'prod', 'yes', 'force'])
 
 export function parse(argv) {
   const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
@@ -87,12 +106,38 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
   try {
     args = parse(argv)
     switch (args.command) {
+      case 'lsp': {
+        const { lsp } = await import('./infer/lsp.mjs')
+        const out = lsp(args.root)
+        return await new Promise(ok => { out.server.on('exit', () => ok(0)) })
+      }
+      case 'tsc': {
+        const { propTsc } = await import('./props-checks.mjs')
+        const diagnostics = sortDiagnostics(await propTsc(args.root))
+        if (args.json) print({ ok: !diagnostics.some(d => d.severity === 'error'), diagnostics })
+        say(formatHuman(diagnostics))
+        say(`weft tsc: ${diagnostics.filter(d => d.severity === 'error').length} errors`)
+        return diagnostics.some(d => d.severity === 'error') ? 1 : 0
+      }
       case 'check': {
-        const result = await check(args.root, { files: args.positional })
+        const result = await check(args.root, { files: args.positional, preset: args.flags.preset })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
+        if (args.flags.verbose) say(compilerLine(doctor(args.root).compiler))
         say(`weft check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`)
         return result.ok ? 0 : 1
+      }
+      case 'doctor': {
+        // What this install compiles with, always; what live data does on the target, for an app that has any.
+        const result = doctor(args.root)
+        const plan = args.flags.preset || existsSync(join(args.root, 'src/realtime.server.ts')) ? await doctorCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime }) : undefined
+        const hosts = hostsCommand(args.root, (await loadConfig(args.root)).config)
+        if (args.json) print({ ...result, live: plan, deploy: hosts })
+        else say(`${formatDoctor(result)}\n\nweft doctor: deploy${hosts.target ? ` (target ${hosts.target})` : ''}\n${formatHosts(hosts).replace(/^/gm, '  ')}`)
+        if (!plan) return 0
+        say(`weft doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map(o => `    - ${o}`).join('\n')}` : ''}`)
+        say(formatHuman(plan.diagnostics))
+        return plan.diagnostics.some(d => d.severity === 'error') ? 1 : 0
       }
       case 'test': {
         if (!args.flags.gate) throw Object.assign(new Error('`weft test` runs the gate with --gate; run the suite itself with vitest'), { code: 'E_USAGE' })
@@ -112,16 +157,49 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'dev': {
         const server = await devCommand(args.root, { port: args.flags.port && Number(args.flags.port) })
         say(`weft dev: ${server.resolvedUrls.local[0]}`)
-        await new Promise(ok => process.once('SIGINT', ok))
+        await new Promise(ok => { process.once('SIGINT', ok) })
         await server.close()
         return 0
       }
       case 'build': {
-        const result = await buildCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime })
+        const result = await buildCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime, unsafeAllow: args.flags['unsafe-allow'] })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
-        say(`weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract (${result.ms} ms)`)
-        for (const note of result.notes) say(note)
+        say(`weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract, ${result.audited} pages audited (${result.ms} ms)`)
+        for (const note of result.notes ?? []) say(note)
+        if (!result.ok) say('weft build: failed. The output is written, but fix the errors above before it ships, or `--unsafe-allow <code>` to force it.')
+        return result.ok ? 0 : 1
+      }
+      case 'audit': {
+        const result = await audit(args.root, { url: args.flags.url, routes: args.positional.length ? args.positional : undefined, all: !!args.flags.all, max: args.flags.max && Number(args.flags.max) })
+        if (args.json) print(result)
+        say(formatHuman(result.diagnostics))
+        say(`weft audit: ${result.skipped ?? `${result.pages.length} pages at a phone's and a desktop's width, ${result.diagnostics.length} findings (${result.ms} ms)`}`)
+        return result.ok ? 0 : 1
+      }
+      case 'deploy': {
+        const loaded = await loadConfig(args.root)
+        const sub = args.positional[0]
+        if (sub === 'hosts') {
+          const result = hostsCommand(args.root, loaded.config)
+          if (args.json) print(result)
+          else say(formatHosts(result))
+          return 0
+        }
+        const unsafe = unsafeAllowed(args.flags['unsafe-allow'], loaded.config)
+        if (sub === 'init') {
+          const result = initCommand(args.root, loaded.config, { target: args.positional[1] ?? args.flags.target, dryRun: !!args.flags['dry-run'], force: !!args.flags.force, unsafe })
+          if (args.json) print(result)
+          say(formatHuman(result.findings))
+          say([`weft deploy init ${result.target}${result.dryRun ? ' (dry run: nothing written)' : ''}:`, ...result.actions.map(a => `  ${a}`), '', 'then, once:', ...result.next.map(n => `  ${n}`)].join('\n'))
+          return 0
+        }
+        if (sub !== undefined) throw Object.assign(new Error(`weft deploy ${sub}: use \`weft deploy\`, \`weft deploy hosts\` or \`weft deploy init [target]\``), { code: 'E_USAGE' })
+        const result = await deployCommand(args.root, loaded.config, { target: args.flags.target, prod: !!args.flags.prod, yes: !!args.flags.yes, unsafe, build: (root, o) => buildCommand(root, { ...o, unsafeAllow: args.flags['unsafe-allow'] }) })
+        if (args.json) print(result)
+        say(formatHuman(result.diagnostics))
+        if (result.dryRun) say([`weft deploy: a dry run for ${result.target}${result.prod ? ' (production)' : ' (a preview)'}. With --yes it runs:`, ...result.steps.map(s => `  ${s.what}${s.reads.length ? `\n      reads ${s.reads.join(', ')} from the environment` : ''}`)].join('\n'))
+        else say(`weft deploy: ${result.target}${result.prod ? ' (production)' : ''} → ${result.url ?? 'deployed; the host printed no URL'}`)
         return 0
       }
       case 'start':
@@ -135,7 +213,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'routes': {
         const result = await routesCommand(args.root, { meta: !!args.flags.meta, preset: args.flags.preset })
         if (args.json) print(result)
-        else say(result.routes.map(r => `${r.path.padEnd(24)} ${r.file}${r.meta ? `  ${r.meta.title}${r.image ? `  [card: ${r.image}]` : ''}` : ''}`).join('\n'))
+        else say(args.flags.meta ? metaTable(result) : result.routes.map(r => `${r.path.padEnd(24)} ${r.file}`).join('\n'))
         say(formatHuman(result.diagnostics))
         return result.ok ? 0 : 1
       }
@@ -178,7 +256,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       }
       case 'icons': {
         if (args.positional[0] !== 'publish' || !args.positional[1]) { say('usage: weft icons publish <dir>'); return 1 }
-        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft/icons/compile')).href)
+        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft-js/warp-icons/compile')).href)
         const out = await publish(resolve(args.root, args.positional[1]))
         if (args.json) print(out)
         else say(`${out.files} files for ${out.icons} icons in ${out.dir}. Nothing was uploaded: host that folder, then set icons({ source }).`)
@@ -228,7 +306,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           else say([...(result.written ? result.approved : result.pending).map(formatTrust), result.written ? `${result.lock}: ${result.approved.length} approved` : result.pending.length ? 'nothing written: name a plugin, or pass --all' : 'nothing waiting', ...result.written ? result.pending.map(p => `still waiting: ${p.name}`) : [], ...(result.gitignore ? ['.gitignore: the lock is no longer ignored, so commit it'] : [])].join('\n'))
           return result.ok ? 0 : 1
         }
-        throw Object.assign(new Error(`unknown plugins subcommand ${sub}`), { code: 'E_USAGE' })
+        throw Object.assign(new Error(`unknown plugins subcommand ${String(sub)}`), { code: 'E_USAGE' })
       }
       case 'fix': {
         const result = await fix(args.root, { files: args.positional })
@@ -282,6 +360,6 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     const code = error.code ?? 'E_INTERNAL'
     if (args?.json || argv.includes('--json')) print({ ok: false, error: { code, message: error.message } })
     say(`weft: ${error.message}${code === 'E_USAGE' ? `\n\n${usage}` : ''}`)
-    return 2
+    return code === 'E_REFUSED' ? 1 : 2
   }
 }

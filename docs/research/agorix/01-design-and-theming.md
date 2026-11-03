@@ -1,4 +1,4 @@
-# Agorix 01 — Design language, tokens and theming → weft/ds
+# Agorix 01 — Design language, tokens and theming → @weft-js/core/ds
 
 Research date: 2026-10-28. Read-only review of `@agorix/ui` 0.2.0 and four consumer apps. Counts come from scripted
 greps over the working tree on that date. Contrast ratios are WCAG 2.x, computed from the literal token values
@@ -56,8 +56,8 @@ Sibling docs: [02 components/a11y](02-components-a11y.md), [03 server/realtime](
      uses boolean shape flags, and names describe effects instead of intent (`FloatingBorderInput`, `borderSweep`,
      `gold` — which is green by default).
    - The README documents a Button `variant` prop that the code doesn't have.
-5. **Recommendation: weft/ds keeps its own architecture and adopts Agorix as its default *skin*.**
-   - Keep from weft/ds: seed → ref → sys → component, DTCG 2025.10, OKLCH, `light-dark()`, computed `on-*`, and
+5. **Recommendation: @weft-js/core/ds keeps its own architecture and adopts Agorix as its default *skin*.**
+   - Keep from @weft-js/core/ds: seed → ref → sys → component, DTCG 2025.10, OKLCH, `light-dark()`, computed `on-*`, and
      `@layer`.
    - Adopt from Agorix: its surface ladder, `-soft` emphasis, motion presets, native-form styling, and the sweep
      signature, which becomes a component token, not a hard-wired effect.
@@ -135,9 +135,9 @@ Sibling docs: [02 components/a11y](02-components-a11y.md), [03 server/realtime](
 - **`--accent-foreground` / `--danger-foreground` / `--gold-foreground` are defined (`tokens.css:66-68`) but read by
   0 components.** rr-store sets them carefully (`rr/theme-ansem.css:17,25,30`) and they change nothing.
 
-### 1.4 Against weft/ds (03 §4)
+### 1.4 Against @weft-js/core/ds (03 §4)
 
-| Concern | weft/ds plan | Agorix | Verdict |
+| Concern | @weft-js/core/ds plan | Agorix | Verdict |
 |---|---|---|---|
 | Tiers | seed → ref → sys → component | sys only (hand-written ×2 schemes) | **weft wins**. Agorix becomes a seed plus pins. |
 | Format | DTCG 2025.10 + resolver | none | weft |
@@ -323,7 +323,7 @@ in prose. weft should generate this table from the catalog, not hand-write it.
 
 ## 6. Recommendation
 
-### 6.1 The merged token model (weft/ds tiers, Agorix values)
+### 6.1 The merged token model (@weft-js/core/ds tiers, Agorix values)
 
 Keep 03 §4.3's tiers and output exactly. Changes to the **sys** tier, informed by Agorix and its consumers:
 
@@ -367,7 +367,7 @@ export const agorix = defineSkin({
 
 ```ts
 // weft.config.ts
-import { defineConfig } from "weft";
+import { defineConfig } from "@weft-js/core";
 import { agorix } from "weft/ds/presets";
 
 export default defineConfig({
@@ -405,10 +405,10 @@ const t = tokens(el); t.color("accent.solid"); t.motion("spring.snappy");
 | **1. Re-theme** | colors, type, radius, density, motion, flair | none | `theme.seed` / `pins` / `components`, or edit `weft.tokens.json` (DTCG) directly. Every adapter reads the same vars. |
 | **2. Restyle parts** | any part's CSS, in any styling system | none | Every component emits `data-scope`/`data-part` plus `data-tone`, `data-emphasis`, `data-size`, `data-state` (Zag-compatible). Skin CSS lives in `@layer weft.components` behind `:where()`, so unlayered app CSS, Tailwind `utilities`, CSS modules, Panda and vanilla-extract all win without `!important`. `class` merges onto the root; `partClass={{ label, icon }}` targets parts. Tailwind users write `data-[part=label]:…`. |
 | **3. Headless** | all visual CSS | none | `skin: "headless"`: identical components, behavior, a11y and data attributes, and zero skin CSS. Bring shadcn-style CSS, a kit's CSS, or your own. Layout primitives and tokens remain. |
-| **4. None** | weft/ds not installed | n/a | `create-weft --ui none` (sibling 04). `weft check` D-codes are off unless tokens exist. |
+| **4. None** | @weft-js/core/ds not installed | n/a | `create-weft --ui none` (sibling 04). `weft check` D-codes are off unless tokens exist. |
 
 **Rule for agents:** levels 1–2 are the only way to change looks. Forking a component is diagnostic `D040`
-("component shadows `weft/ds` export; use part styling"), which directly targets the Velatis `Segmented` pattern.
+("component shadows `@weft-js/core/ds` export; use part styling"), which directly targets the Velatis `Segmented` pattern.
 
 ### 6.4 Prioritized fix list
 

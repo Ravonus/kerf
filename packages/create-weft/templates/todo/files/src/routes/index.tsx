@@ -1,4 +1,4 @@
-import { redirect } from '@weft/start'
+import { redirect } from '@weft-js/start'
 
 export const load = () => redirect('/todos')
 

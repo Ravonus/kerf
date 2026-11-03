@@ -18,7 +18,7 @@ other §11 question, "`.value` in JSX: required everywhere or auto-read"?
 | Path | What |
 |---|---|
 | [`crates/weft-compiler`](../../crates/weft-compiler) | `analyze` (scopes, props, boxes, lists, diagnostics) → `transform` (props → live reads, `.map` → keyed list) → Solid 2's DOM back end through `compile_program`. One Oxc parse. `weftc` CLI and a napi binding. 30 tests. |
-| [`packages/weft`](../../packages/weft) | Client runtime (`weft`, `weft/dom`), `weft/test` with `toTouchAtMost`, the `weft()` Vite plugin, size and bench scripts. 19 tests. |
+| [`packages/weft`](../../packages/weft) | Client runtime (`weft`, `@weft-js/core/dom`), `@weft-js/core/test` with `toTouchAtMost`, the `weft()` Vite plugin, size and bench scripts. 19 tests. |
 | [`evals/reference-v3/weft`](../../evals/reference-v3/weft) | The v3 shop app ported to weft TSX. |
 | [`evals/frameworks/weft`](../../evals/frameworks/weft) | Eval adapter, so the hidden v3 tests run on weft unchanged. `run-app.mjs reference` grades and measures any framework's reference app. |
 
@@ -79,7 +79,7 @@ source ─ Oxc parse ─ SemanticBuilder ─ analyze ─────────
                          ({ a, b = 1, ...rest }) → (props), a → props.a, b → (props.b === undefined ? 1 : props.b)
                          {xs.map(x => <Row key={x.id} x={x}/>)} → <For each={xs} by={(x) => x.id}>{x => <Row x={x()}/>}</For>
                                         ▼
-                       solidjs_compiler::compile_program (moduleName "weft/dom", builtIns ["For"])
+                       solidjs_compiler::compile_program (moduleName "@weft-js/core/dom", builtIns ["For"])
                                         ▼
                        code + source map (TypeScript kept; Vite's Oxc pass strips it)
 ```
@@ -137,7 +137,7 @@ HMR cache, and a minimal `context`. The final runtime will be larger. The budget
 Sonnet's v3 Solid session merged live prices with `products().map(p => ({ ...p, price }))`. In Solid, new identities
 make `<For>` tear down and rebuild every row: 300 DOM mutations per price push. I wrote the same habit into a weft
 variant of the app (`packages/weft/test/fixtures/v3-spread`: separate `prices` box, merged with a spread inside a
-`derived`) and ran the probe's three interactions with `touches()` from `weft/test` **(measured)**:
+`derived`) and ran the probe's three interactions with `touches()` from `@weft-js/core/test` **(measured)**:
 
 | | price push | add one | type 3 chars |
 |---|---|---|---|
@@ -209,7 +209,7 @@ column in v3), and W015 plus W008 (type-level, box/value at props) should catch 
    - Schedule it monthly, with the fixture suite and weft's tests as the gate.
 3. **Keep a helper-contract conformance test.** The back end's import surface is unversioned and differs by mode:
    `dev: true` emits `setStatefulProperty`, which the first test run tripped on. Compile upstream's fixture corpus
-   with `moduleName: "weft/dom"` and assert that every imported helper exists in `weft/dom` (and later `weft/ssr`).
+   with `moduleName: "@weft-js/core/dom"` and assert that every imported helper exists in `@weft-js/core/dom` (and later `@weft-js/core/ssr`).
    This is the one place a Solid bump can break weft silently.
 4. **Finish §3.3:** `children` memoisation, and props with call-expression values.
    - `<App api={createFakeApi()} />` compiles to a getter that calls `createFakeApi()` on every read. This is Solid's
@@ -234,7 +234,7 @@ column in v3), and W015 plus W008 (type-level, box/value at props) should catch 
    - deep tracking in `.set(draft)`.
 
    The v3 app is the benchmark.
-9. **Remaining Phase 1 runtime work:** SSR string renderer and hydration (weft/ssr), `<Boundary>`, `resource`, dev
+9. **Remaining Phase 1 runtime work:** SSR string renderer and hydration (@weft-js/core/ssr), `<Boundary>`, `resource`, dev
    names via the back end's `sourceNames`, and js-framework-benchmark in the same run as Solid.
 
 **Evals**
@@ -251,7 +251,7 @@ column in v3), and W015 plus W008 (type-level, box/value at props) should catch 
   `compile_program` on weft's own Oxc AST. Fork into `crates/` only for a back-end change upstream won't take. Keep
   NOTICE and track upstream; weft's Oxc version follows the pinned rev."
 - **§3.6**, "weft adds one crate": add "and a helper-contract conformance test (every helper the back end can import
-  exists in `weft/dom`)".
+  exists in `@weft-js/core/dom`)".
 - **§3.5 catalog:** add
   - **W014** "identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list (error in-file, warning across files)";
   - **W015** "box rendered without `.value` in JSX (autofix)".
@@ -307,16 +307,16 @@ All on `crates/weft-compiler` unless noted. Solid's crate is still the pinned re
 3. **Helper-contract test** (`tests/helper_contract.rs`).
    - It finds the pinned checkout through `cargo metadata`. It compiles every non-hydratable `__dom*` fixture in
      babel-plugin's corpus (34 files) through `weft_compiler::compile`, in dev and prod, with weft's own options.
-     Then it checks every name imported from `weft` or `weft/dom` against the exports of `packages/weft/src`, both
+     Then it checks every name imported from `@weft-js/core` or `@weft-js/core/dom` against the exports of `packages/weft/src`, both
      parsed with Oxc.
    - Its first run found **6 missing helpers**: `spread`, `addEvent`, `applyRef`, `claimElement`, `getOwner`,
      `setAttributeNS`. `spread` was a live bug: `<div {...rest}>`, which §3.3 promises stays live, compiled to an
-     import that `weft/dom` didn't have.
+     import that `@weft-js/core/dom` didn't have.
    - All six are now in `packages/weft/src/dom.ts`, tree-shaken when unused: the v3 bundle didn't grow.
    - `spread` uses one effect for attributes, properties, class, style, events and `ref`, and a separate `insert`
      for children.
    - `claimElement` is the identity, because weft has no claim consumers yet.
-   - Hydratable fixtures are left out until `weft/ssr` exists. One fixture (`namespaceElements`) fails weft's Oxc
+   - Hydratable fixtures are left out until `@weft-js/core/ssr` exists. One fixture (`namespaceElements`) fails weft's Oxc
      parse, so it can't reach the back end; the test allows at most 2 such fixtures. It also checks that the corpus
      still imports `template`, `insert`, `effect` and dev-only `setStatefulProperty`, so a moved corpus can't pass
      vacuously.

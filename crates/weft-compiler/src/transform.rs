@@ -14,7 +14,15 @@
 use std::collections::{HashMap, HashSet};
 
 use oxc_allocator::{Allocator, CloneIn, TakeIn, Vec as ArenaVec};
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrayExpressionElement, ArrowFunctionBody, ArrowFunctionExpression, AssignmentOperator, AssignmentTarget,
+    BindingIdentifier, BindingPattern, ChainElement, Expression, FormalParameter, FormalParameterKind,
+    FormalParameters, Function, FunctionBody, IdentifierName, IdentifierReference, ImportDeclarationSpecifier,
+    ImportOrExportKind, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXClosingElement, JSXElement,
+    JSXElementName, JSXExpression, JSXMemberExpression, JSXMemberExpressionObject, JSXOpeningElement, ModuleExportName,
+    NumberBase, ObjectProperty, Program, SimpleAssignmentTarget, Statement, StringLiteral, VariableDeclarationKind,
+    VariableDeclarator,
+};
 use oxc_ast::builder::AstBuilder;
 use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::{Scoping, SymbolId};
@@ -33,6 +41,8 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
         plan,
         raw: HashSet::new(),
         defaults: HashMap::new(),
+        local: plan.local_props.values().flat_map(|(_, keys)| keys.iter().map(|(_, s)| *s)).collect(),
+        needs_local: false,
         children_used: HashSet::new(),
         rest_used: HashSet::new(),
         needs_memo: false,
@@ -46,11 +56,14 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
     if t.needs_rest_of {
         imports.push(("restOf", "_$restOf"));
     }
+    if t.needs_local {
+        imports.push(("localProps", "_$localProps"));
+    }
     if t.needs_memo {
         imports.push(("memo", "_$weftMemo"));
     }
     if !imports.is_empty() {
-        program.body.insert(0, t.import("weft", &imports));
+        program.body.insert(0, t.import("@weft-js/core", &imports));
     }
 }
 
@@ -59,6 +72,9 @@ struct Transformer<'a, 'p> {
     ast: AstBuilder<'a>,
     scoping: &'p Scoping,
     plan: &'p Plan,
+    /// Prop locals that are written: their default is applied by `localProps`, once.
+    local: HashSet<SymbolId>,
+    needs_local: bool,
     /// Item symbols kept as raw values (inside a list's `by` function).
     raw: HashSet<SymbolId>,
     /// Prop defaults moved out of the destructuring pattern, already rewritten; cloned into every read.
@@ -72,7 +88,7 @@ struct Transformer<'a, 'p> {
 }
 
 /// Node constructors.
-impl<'a, 'p> Transformer<'a, 'p> {
+impl<'a> Transformer<'a, '_> {
     fn str(&self, s: &str) -> &'a str {
         self.allocator.alloc_str(s)
     }
@@ -101,7 +117,18 @@ impl<'a, 'p> Transformer<'a, 'p> {
 
     fn arrow(&self, params: impl IntoIterator<Item = BindingPattern<'a>>, body: Expression<'a>) -> Expression<'a> {
         let items = params.into_iter().map(|pattern| {
-            FormalParameter::new(SPAN, ArenaVec::new_in(&self.ast), pattern, None, None, false, None, false, false, &self.ast)
+            FormalParameter::new(
+                SPAN,
+                ArenaVec::new_in(&self.ast),
+                pattern,
+                None,
+                None,
+                false,
+                None,
+                false,
+                false,
+                &self.ast,
+            )
         });
         let params = FormalParameters::boxed(
             SPAN,
@@ -110,7 +137,15 @@ impl<'a, 'p> Transformer<'a, 'p> {
             None,
             &self.ast,
         );
-        Expression::new_arrow_function_expression(SPAN, false, None, params, None, ArrowFunctionBody::from(body), &self.ast)
+        Expression::new_arrow_function_expression(
+            SPAN,
+            false,
+            None,
+            params,
+            None,
+            ArrowFunctionBody::from(body),
+            &self.ast,
+        )
     }
 
     fn binding(&self, name: &str) -> BindingPattern<'a> {
@@ -119,7 +154,12 @@ impl<'a, 'p> Transformer<'a, 'p> {
 
     fn jsx_attr(&self, name: &str, value: Expression<'a>) -> JSXAttributeItem<'a> {
         let value = JSXAttributeValue::new_expression_container(SPAN, JSXExpression::from(value), &self.ast);
-        JSXAttributeItem::new_attribute(SPAN, JSXAttributeName::new_identifier(SPAN, self.str(name), &self.ast), Some(value), &self.ast)
+        JSXAttributeItem::new_attribute(
+            SPAN,
+            JSXAttributeName::new_identifier(SPAN, self.str(name), &self.ast),
+            Some(value),
+            &self.ast,
+        )
     }
 
     fn const_decl(&self, name: &str, init: Expression<'a>) -> Statement<'a> {
@@ -158,16 +198,28 @@ impl<'a, 'p> Transformer<'a, 'p> {
         match rewrite {
             Rewrite::Prop { props, path } => {
                 let read = || path.iter().fold(self.ident(props), |object, p| self.member(object, p));
-                match self.defaults.get(&sym) {
+                match self.defaults.get(&sym).filter(|_| !self.local.contains(&sym)) {
                     Some(fallback) => {
                         let fallback = fallback.clone_in(self.allocator);
                         let undefined = self.ident("undefined");
-                        let test = Expression::new_binary_expression(SPAN, read(), BinaryOperator::StrictEquality, undefined, &self.ast);
+                        let test = Expression::new_binary_expression(
+                            SPAN,
+                            read(),
+                            BinaryOperator::StrictEquality,
+                            undefined,
+                            &self.ast,
+                        );
                         let pick = Expression::new_conditional_expression(SPAN, test, fallback, read(), &self.ast);
                         Expression::new_parenthesized_expression(SPAN, pick, &self.ast)
                     }
                     None => read(),
                 }
+            }
+            Rewrite::Via { of, path } => {
+                let plan = self.plan;
+                let (undefined, target) = (self.ident("undefined"), &plan.rewrites[of]);
+                let base = self.rewritten(*of, target, undefined);
+                path.iter().fold(base, |object, p| self.member(object, p))
             }
             Rewrite::Children { local, component } => {
                 self.children_used.insert(*component);
@@ -179,11 +231,15 @@ impl<'a, 'p> Transformer<'a, 'p> {
             }
             // The identifier itself becomes the callee, so it keeps its span and reference.
             Rewrite::Accessor => self.call(original, []),
-            Rewrite::AccessorPath { path } => path.iter().fold(self.call(self.ident("_item"), []), |at, step| match step {
-                RowStep::Key(key) => self.member(at, key),
-                RowStep::Index(index) => Expression::new_computed_member_expression(SPAN, at, self.number(*index), false, &self.ast),
-                RowStep::From(index) => self.call(self.member(at, "slice"), [self.number(*index)]),
-            }),
+            Rewrite::AccessorPath { path } => {
+                path.iter().fold(self.call(self.ident("_item"), []), |at, step| match step {
+                    RowStep::Key(key) => self.member(at, key),
+                    RowStep::Index(index) => {
+                        Expression::new_computed_member_expression(SPAN, at, self.number(*index), false, &self.ast)
+                    }
+                    RowStep::From(index) => self.call(self.member(at, "slice"), [self.number(*index)]),
+                })
+            }
         }
     }
 
@@ -311,7 +367,7 @@ impl<'a, 'p> Transformer<'a, 'p> {
 
     fn take_defaults(&mut self, pattern: &mut BindingPattern<'a>) {
         let BindingPattern::ObjectPattern(obj) = pattern else { return };
-        for prop in obj.properties.iter_mut() {
+        for prop in &mut obj.properties {
             match &mut prop.value {
                 BindingPattern::AssignmentPattern(ap) => {
                     let BindingPattern::BindingIdentifier(id) = &ap.left else { continue };
@@ -329,14 +385,18 @@ impl<'a, 'p> Transformer<'a, 'p> {
 
     /// Whether the component declares anything at the top of its body.
     fn declares(&self, span: SpanKey) -> bool {
-        self.children_used.contains(&span) || self.rest_used.contains(&span)
+        self.children_used.contains(&span)
+            || self.rest_used.contains(&span)
+            || self.plan.local_props.contains_key(&span)
     }
 
     /// After walking a component: declare its memoised children and its rest view at the top of the body, if used.
     fn exit_component(&mut self, span: SpanKey, body: &mut FunctionBody<'a>) {
         if self.rest_used.contains(&span) {
             let rest = self.plan.rewrites.values().find_map(|r| match r {
-                Rewrite::Rest { props, exclude, local, component } if *component == span => Some((props, exclude, local)),
+                Rewrite::Rest { props, exclude, local, component } if *component == span => {
+                    Some((props, exclude, local))
+                }
                 _ => None,
             });
             if let Some((props, exclude, local)) = rest {
@@ -351,6 +411,25 @@ impl<'a, 'p> Transformer<'a, 'p> {
             let memo = self.call(self.ident("_$weftMemo"), [read]);
             body.statements.insert(0, self.const_decl(&children.local, memo));
             self.needs_memo = true;
+        }
+        // First: everything above reads the props through it.
+        if let Some((props, keys)) = self.plan.local_props.get(&span) {
+            let mut fields = Vec::new();
+            for (k, sym) in keys {
+                fields.push(self.string(k));
+                fields.push(match self.defaults.get(sym) {
+                    Some(f) => self.arrow([], f.clone_in(self.allocator)),
+                    None => self.number(0),
+                });
+            }
+            let items = ArenaVec::from_iter_in(fields.into_iter().map(ArrayExpressionElement::from), &self.ast);
+            let fallbacks = Expression::new_array_expression(SPAN, items, &self.ast);
+            let view = self.call(self.ident("_$localProps"), [self.ident(props), fallbacks]);
+            let target = AssignmentTarget::new_assignment_target_identifier(SPAN, self.str(props), &self.ast);
+            let assign =
+                Expression::new_assignment_expression(SPAN, AssignmentOperator::Assign, target, view, &self.ast);
+            body.statements.insert(0, Statement::new_expression_statement(SPAN, assign, &self.ast));
+            self.needs_local = true;
         }
     }
 }
@@ -390,16 +469,22 @@ fn take_keys<'a>(t: &Transformer<'a, '_>, row: &mut Expression<'a>, spans: &[Spa
     by
 }
 
-fn strip_keys<'a>(t: &Transformer<'a, '_>, e: &mut Expression<'a>, spans: &[SpanKey], first: SpanKey, by: &mut Option<Expression<'a>>) {
+fn strip_keys<'a>(
+    t: &Transformer<'a, '_>,
+    e: &mut Expression<'a>,
+    spans: &[SpanKey],
+    first: SpanKey,
+    by: &mut Option<Expression<'a>>,
+) {
     match e.without_parentheses_mut() {
         Expression::JSXElement(el) => strip_element(t, el, spans, first, by),
         Expression::JSXFragment(f) => {
-            for child in f.children.iter_mut() {
+            for child in &mut f.children {
                 match child {
                     JSXChild::Element(el) => strip_element(t, el, spans, first, by),
                     JSXChild::ExpressionContainer(c) => {
                         if let Some(e) = c.expression.as_expression_mut() {
-                            strip_keys(t, e, spans, first, by)
+                            strip_keys(t, e, spans, first, by);
                         }
                     }
                     _ => {}
@@ -415,7 +500,13 @@ fn strip_keys<'a>(t: &Transformer<'a, '_>, e: &mut Expression<'a>, spans: &[Span
     }
 }
 
-fn strip_element<'a>(t: &Transformer<'a, '_>, el: &mut JSXElement<'a>, spans: &[SpanKey], first: SpanKey, by: &mut Option<Expression<'a>>) {
+fn strip_element<'a>(
+    t: &Transformer<'a, '_>,
+    el: &mut JSXElement<'a>,
+    spans: &[SpanKey],
+    first: SpanKey,
+    by: &mut Option<Expression<'a>>,
+) {
     let attrs = &mut el.opening_element.attributes;
     while let Some(index) = attrs.iter().position(|a| is_key_attr(a) && spans.contains(&key(a.span()))) {
         let JSXAttributeItem::Attribute(mut attr) = attrs.remove(index) else { continue };
@@ -423,7 +514,9 @@ fn strip_element<'a>(t: &Transformer<'a, '_>, el: &mut JSXElement<'a>, spans: &[
             continue;
         }
         *by = match attr.value.as_mut() {
-            Some(JSXAttributeValue::ExpressionContainer(c)) => c.expression.as_expression_mut().map(|e| e.take_in(&t.ast)),
+            Some(JSXAttributeValue::ExpressionContainer(c)) => {
+                c.expression.as_expression_mut().map(|e| e.take_in(&t.ast))
+            }
             Some(JSXAttributeValue::StringLiteral(s)) => Some(t.string(s.value.as_str())),
             _ => None,
         };
@@ -439,13 +532,29 @@ fn last_return<'b, 'a>(statements: &'b mut ArenaVec<'a, Statement<'a>>) -> Optio
 
 struct Unspan;
 
-impl<'a> VisitMut<'a> for Unspan {
+impl VisitMut<'_> for Unspan {
     fn visit_span(&mut self, span: &mut Span) {
         *span = SPAN;
     }
 }
 
-impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
+impl<'a> VisitMut<'a> for Transformer<'a, '_> {
+    /// Aliases go first, so a closure above one already reads it live, defaults included.
+    fn visit_statements(&mut self, it: &mut ArenaVec<'a, Statement<'a>>) {
+        let aliases = &self.plan.aliases;
+        if !aliases.is_empty() {
+            for statement in it.iter_mut() {
+                let Statement::VariableDeclaration(d) = statement else { continue };
+                for declarator in d.declarations.iter_mut().filter(|x| aliases.contains(&key(x.span))) {
+                    self.take_defaults(&mut declarator.id);
+                }
+                d.declarations.retain(|x| !aliases.contains(&key(x.span)));
+            }
+            it.retain(|s| !matches!(s, Statement::VariableDeclaration(d) if d.declarations.is_empty()));
+        }
+        walk_mut::walk_statements(self, it);
+    }
+
     fn visit_expression(&mut self, it: &mut Expression<'a>) {
         if let Expression::Identifier(id) = it
             && let Some((sym, rewrite)) = self.rewrite_of(id)
@@ -454,12 +563,22 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             *it = self.rewritten(sym, rewrite, original);
             return;
         }
+        // `bind(box)` as a component prop: the back end reads this name and gives the prop a setter.
+        if let Expression::CallExpression(c) = it
+            && self.plan.bound.contains(&key(c.span))
+        {
+            c.callee = self.ident("_$bound");
+        }
         // `rest.x` is `props.x` (or nothing, for a key the pattern took).
         if let Expression::StaticMemberExpression(m) = it
             && let Some(Rewrite::Rest { props, exclude, .. }) = self.rest_of(&m.object)
         {
             let name = m.property.name.as_str();
-            *it = if exclude.iter().any(|k| k == name) { self.ident("undefined") } else { self.member(self.ident(props), name) };
+            *it = if exclude.iter().any(|k| k == name) {
+                self.ident("undefined")
+            } else {
+                self.member(self.ident(props), name)
+            };
             return;
         }
         if let Expression::StaticMemberExpression(m) = it
@@ -479,7 +598,7 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
     fn visit_jsx_opening_element(&mut self, it: &mut JSXOpeningElement<'a>) {
         // `<div {...rest}>`: the element's spread reads every attribute anyway, so it gets a plain copy, not a view.
         if matches!(it.name, JSXElementName::Identifier(_) | JSXElementName::NamespacedName(_)) {
-            for attr in it.attributes.iter_mut() {
+            for attr in &mut it.attributes {
                 if let JSXAttributeItem::SpreadAttribute(s) = attr
                     && let Some(Rewrite::Rest { props, exclude, .. }) = self.rest_of(&s.argument)
                 {
@@ -507,6 +626,19 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             return;
         }
         walk_mut::walk_jsx_child(self, it);
+    }
+
+    /// `amount = 5` writes the prop, and `localProps` keeps it in the component.
+    fn visit_simple_assignment_target(&mut self, it: &mut SimpleAssignmentTarget<'a>) {
+        if let SimpleAssignmentTarget::AssignmentTargetIdentifier(id) = it
+            && let Some((_, Rewrite::Prop { props, path })) = self.rewrite_of(id)
+            && let Expression::StaticMemberExpression(m) =
+                path.iter().fold(self.ident(props), |object, p| self.member(object, p))
+        {
+            *it = SimpleAssignmentTarget::StaticMemberExpression(m);
+            return;
+        }
+        walk_mut::walk_simple_assignment_target(self, it);
     }
 
     fn visit_object_property(&mut self, it: &mut ObjectProperty<'a>) {
@@ -538,7 +670,12 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
                 let e = e.take_in(&self.ast);
                 let ret = Statement::new_return_statement(SPAN, Some(e), &self.ast);
                 let statements = ArenaVec::from_iter_in([ret], &self.ast);
-                it.body = ArrowFunctionBody::FunctionBody(FunctionBody::boxed(SPAN, ArenaVec::new_in(&self.ast), statements, &self.ast));
+                it.body = ArrowFunctionBody::FunctionBody(FunctionBody::boxed(
+                    SPAN,
+                    ArenaVec::new_in(&self.ast),
+                    statements,
+                    &self.ast,
+                ));
             }
             if let ArrowFunctionBody::FunctionBody(body) = &mut it.body {
                 self.exit_component(span, body);

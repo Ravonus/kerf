@@ -1,6 +1,6 @@
-import { BarChartIcon, ClipboardListIcon, HomeIcon, ListIcon, LogOutIcon, StoreIcon } from '@weft/icons'
-import { redirect, type LoadArgs, type RouteProps } from '@weft/start'
-import { Shell, Toaster, toast } from '@weft/warp'
+import { BarChartIcon, ClipboardListIcon, HomeIcon, ListIcon, LogOutIcon, StoreIcon } from '@weft-js/warp-icons'
+import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import { Shell, Toaster, toast } from '@weft-js/warp'
 import { Logo } from '#/components/Logo'
 import { signOut } from '#/server/session'
 

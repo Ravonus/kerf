@@ -1,16 +1,16 @@
-import { announce, formatMs, installSweep, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft/ui-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
+import { announce, formatMs, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { LiveStatus } from '../parts'
 import { Button } from '../Button'
 import { Select } from '../Select'
-import { use } from '../use'
+import { use } from '@weft-js/warp-core/weft'
 import { G, val } from './shared'
 import '../fields'
-import '@weft/ui-core/styles/inputs/choice.css'
-import '@weft/ui-core/styles/components/alert.css'
-import '@weft/ui-core/styles/app/transport.css'
+import '@weft-js/warp-core/styles/inputs/choice.css'
+import '@weft-js/warp-core/styles/components/alert.css'
+import '@weft-js/warp-core/styles/app/transport.css'
 
-const WIRES: [TransportWire, string, string, string][] = [['default', 'weft default', 'SSE + WebSocket', 'One SSE (.live, stream) and one WebSocket (channel) per tab'], ['tabs', 'Tabs only', 'BroadcastChannel', "tabs.channel: this browser's tabs, no server"], ['fake', 'Fake', 'weft/test', 'In-memory pair with a network model']]
+const WIRES: [TransportWire, string, string, string][] = [['default', 'weft default', 'SSE + WebSocket', 'One SSE (.live, stream) and one WebSocket (channel) per tab'], ['tabs', 'Tabs only', 'BroadcastChannel', "tabs.channel: this browser's tabs, no server"], ['fake', 'Fake', '@weft-js/core/test', 'In-memory pair with a network model']]
 const BUSES: [TransportBus, string, string][] = [['memory', '+0 ms', 'One process. The default'], ['postgres', '+4 ms', 'LISTEN / NOTIFY'], ['redis', '+2 ms', 'Pub/sub'], ['nats', '+1 ms', 'Subjects'], ['durable-object', '+8 ms', 'Cloudflare preset only']]
 const PRESETS = [{ value: 'single', label: 'Single instance' }, { value: 'multi', label: 'Multi-instance' }, { value: 'cf', label: 'Cloudflare' }]
 const NETS = [{ value: 'good', label: 'Good' }, { value: 'slow', label: 'Slow (×6)' }, { value: 'lossy', label: 'Lossy (spikes, drops)' }, { value: 'wsblock', label: 'WebSocket blocked' }, { value: 'offline', label: 'Offline' }]
@@ -18,6 +18,7 @@ const LANES: [LaneId, string][] = [['live', '.live'], ['stream', 'stream'], ['ch
 const BARS = Array.from({ length: 20 }, (_, i) => i)
 
 type Status = string | { value: string } | (() => string)
+/** Props for TransportPicker. */
 export interface TransportPickerProps {
   /** The real statuses to show (`.live`, `stream().status`, `channel.status`); the lanes' figures stay the sandbox's. */
   lanes?: Partial<Record<LaneId, Status>>
@@ -46,7 +47,7 @@ export function TransportPicker({ lanes, bus = 'postgres', wire = 'default', pre
   const fallback = derived(() => untrack(() => lanes))
   const stateOf = (k: LaneId): LiveState => {
     const given = fallback.value?.[k]
-    return given !== undefined ? liveState(val(given as any)) : data.value[k].state
+    return given !== undefined ? liveState(val<string>(given)) : data.value[k].state
   }
   const worst = derived(() => worstLive(LANES.map(([k]) => stateOf(k))))
   const error = derived(() => transportError(cfg.value))
@@ -82,7 +83,7 @@ export function TransportPicker({ lanes, bus = 'postgres', wire = 'default', pre
   const drop = () => { if (!sim.drop()) announce(root!.ownerDocument, 'Tabs only has no server connection to drop') }
 
   return (
-    <div ref={(n: any) => (root = n)} data-scope="transport">
+    <div ref={n => (root = n)} data-scope="transport">
       <div data-part="head">
         <h4>{title}</h4>
         <LiveStatus state={worst.value} label="Realtime sandbox">{worst.value === 'live' ? 'All lanes live' : undefined}</LiveStatus>
@@ -151,8 +152,8 @@ function Lane({ name, lane, status }: { name: string; lane: { samples: number[];
       <div data-part="lane-name"><b>{name}</b><small>{lane.wire}</small></div>
       <LiveStatus state={status} />
       <dl data-part="figures">
-        <div><dt>p50</dt><dd data-numeric="" data-tone={latencyTone(p50.value)}>{formatMs(p50.value)}</dd></div>
-        <div><dt>p95</dt><dd data-numeric="" data-tone={latencyTone(p95.value)}>{formatMs(p95.value)}</dd></div>
+        <div><dt>p50</dt><dd data-numeric="" data-tone={latencyTone(p50.value!)}>{formatMs(p50.value!)}</dd></div>
+        <div><dt>p95</dt><dd data-numeric="" data-tone={latencyTone(p95.value!)}>{formatMs(p95.value!)}</dd></div>
         <div><dt>cursor</dt><dd data-numeric="">{lane.cursor}</dd></div>
       </dl>
       <div data-part="bars" aria-hidden="true">{bars.value.map(b => <i key={b.i} data-tone={b.tone} style={`--h:${b.h.toFixed(3)}`}></i>)}</div>

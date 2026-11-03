@@ -1,22 +1,24 @@
 // Find, load and validate weft.config (TypeScript, JSON or YAML, one schema: research 34 §2). Plugins run only their pure
 // `contribute()` (plugins.mjs); `slots` is data.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { createRequire, registerHooks } from 'node:module'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import nodeModule, { createRequire } from 'node:module'
 import { join, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { z } from 'zod'
 import { diagnostic, locate } from './diag.mjs'
 import { checkSite } from './site.mjs'
-import { contributions } from './plugins.mjs'
+import { contributions } from './contributions.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
-export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'fix', 'tokens', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
+export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'doctor', 'fix', 'tokens', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins', 'deploy']
 
 const configModule = pathToFileURL(join(fileURLToPath(new URL('.', import.meta.url)), 'config.mjs')).href
 const nativeRequire = createRequire(import.meta.url)
+/** Node's sync module hooks. Bun has none, and Deno's break `.node` requires, like Rolldown's; both read TypeScript without help (`importConfig`). */
+const registerHooks = process.versions.bun || process.versions.deno ? null : nodeModule.registerHooks
 /** `weft.config.ts.weft-load-<n>`: a fresh module id per load, so a long-lived `weft mcp` sees edits. */
 const tag = /\.weft-load-\d+$/
 let hooked = false
@@ -29,7 +31,7 @@ const transpile = path =>
 
 /**
  * Sync module hooks, so loading is Node's own `require(esm)` and works inside test runners' vm contexts too.
- * `weft/config` resolves to the project's weft when it ships one, else to ours; `.ts` is transpiled, not stripped.
+ * `@weft-js/core/config` resolves to the project's weft when it ships one, else to ours; `.ts` is transpiled, not stripped.
  */
 function hook() {
   if (hooked) return
@@ -37,11 +39,19 @@ function hook() {
   registerHooks({
     resolve(specifier, context, next) {
       if (tag.test(specifier)) return { url: pathToFileURL(specifier).href, format: 'module', shortCircuit: true }
-      if (specifier === 'weft/config' || specifier === '@weft/cli/config') {
+      if (specifier === '@weft-js/core/config' || specifier === '@weft-js/cli/config') {
         try {
           return next(specifier, context)
         } catch {
           return { url: configModule, shortCircuit: true }
+        }
+      }
+      // the app's own imports are bundler-style (`./src/expression`): try what Vite would before failing
+      if (/^\.{1,2}\//.test(specifier) && !/\.[cm]?[jt]sx?$|\.json$/.test(specifier)) {
+        for (const end of ['', '.ts', '.tsx', '.mts', '.js', '/index.ts', '/index.tsx', '/index.js']) {
+          try {
+            return next(specifier + end, context)
+          } catch {}
         }
       }
       return next(specifier, context)
@@ -57,6 +67,25 @@ function hook() {
       return next(url, context)
     },
   })
+}
+
+/**
+ * The config on Bun and Deno: their own TypeScript, with a query for a fresh module per load. When the project has no
+ * `@weft-js/core/config` of its own, a copy next to the config, so its relative imports still resolve, imports ours instead.
+ */
+async function importConfig(file) {
+  try {
+    return (await import(`${pathToFileURL(file).href}?weft-load=${generation++}`)).default ?? {}
+  } catch (error) {
+    if (!/weft\/config|@weft-js\/cli\/config/.test(error.message)) throw error
+  }
+  const copy = `${file}.weft-load-${generation++}.mjs`
+  writeFileSync(copy, transpile(file).replace(/(['"])(?:weft\/config|@weft-js\/cli\/config)\1/g, JSON.stringify(configModule)))
+  try {
+    return (await import(pathToFileURL(copy).href)).default ?? {}
+  } finally {
+    rmSync(copy, { force: true })
+  }
 }
 
 const zodSchema = z.custom(v => v != null && typeof v === 'object' && ('_zod' in v || '~standard' in v))
@@ -78,13 +107,23 @@ const pluginEntry = z.looseObject({
 
 const image = z.strictObject({ url: z.string().min(1), width: z.int().positive().optional(), height: z.int().positive().optional(), alt: z.string().optional() })
 
+const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: 'must be #rrggbb' })
+const colors = { background: hex.optional(), text: hex.optional(), subtle: hex.optional(), accent: hex.optional() }
+const cardFont = z.strictObject({ family: z.string().regex(/^[\w -]+$/, { error: 'must be a font family name' }), src: z.string().min(1), weight: z.number().optional() })
+const card = z.strictObject({ ...colors, scheme: z.enum(['dark', 'light']).optional(), dark: z.strictObject(colors).optional(), light: z.strictObject(colors).optional(), fonts: z.strictObject({ display: cardFont.optional(), body: cardFont.optional() }).optional() })
+
 const site = z.strictObject({
+  headers: z.record(z.string(), z.record(z.string(), z.string())).optional(),
   name: z.string().min(1).optional(),
   url: z.url({ protocol: /^https?$/, error: 'must be an absolute http(s) URL' }).optional(),
   title: z.string().includes('%s', { error: 'must contain `%s` (the page title)' }).optional(),
   description: z.string().optional(),
   locale: z.string().regex(/^[a-z]{2,3}(_[A-Z]{2})?$/, { error: 'must look like `en_US`' }).optional(),
-  image: z.union([z.literal('auto'), z.string().min(1), image]).optional(),
+  inlineCss: z.boolean().optional(),
+  criticalCss: z.boolean().optional(),
+  criticalKeep: z.array(z.string()).optional(),
+  image: z.union([z.literal('auto'), z.literal(false), z.string().min(1), image]).optional(),
+  card: card.optional(),
   head: z.string().optional(),
   twitter: z
     .strictObject({ card: z.enum(['summary', 'summary_large_image', 'app', 'player']).optional(), site: z.string().optional(), creator: z.string().optional() })
@@ -102,14 +141,44 @@ export const configSchema = z.strictObject({
       gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional(), maxMutants: z.number().int().positive().optional() }).optional(),
     })
     .optional(),
-  check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional() }).optional(),
+  build: z.strictObject({
+    audit: z.union([z.boolean(), z.strictObject({ routes: z.array(z.string()).optional(), all: z.boolean().optional(), max: z.number().int().positive().optional() })]).optional(),
+    unsafeAllow: z.record(z.string().regex(/^(all|[A-Z]|[A-Z]+\d{3})$/, 'a code (R002), a family (L) or all'), z.string().min(1, 'say why')).optional(),
+  }).optional(),
+  check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional(), routes: z.boolean().optional(), props: z.union([z.boolean(), z.literal('manual')]).optional() }).optional(),
   plugins: z.array(pluginEntry).optional(),
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
   site: site.optional(),
   runtime: z.enum(['node', 'bun', 'deno']).optional(),
+  hydration: z.enum(['lazy', 'partial', 'full']).optional(),
   rust: z.strictObject({
     unions: z.literal('allow').optional(),
     services: z.record(z.string(), z.strictObject({ crate: z.string().optional(), external: z.boolean().optional(), wasm: z.literal(false).optional() })).optional(),
+  }).optional(),
+  /** `weft deploy` (research 46): names, regions and sizes. Credentials come from the environment, never here (E008). */
+  deploy: z.strictObject({
+    target: z.enum(['netlify', 'vercel', 'cloudflare', 'fly', 'render']).optional(),
+    netlify: z.strictObject({ site: z.string().min(1).optional() }).optional(),
+    vercel: z.strictObject({ project: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional() }).optional(),
+    cloudflare: z.strictObject({ name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional() }).optional(),
+    fly: z.strictObject({
+      app: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional(), region: z.string().regex(/^[a-z]{3}$/, 'a Fly region code, like `iad`').optional(), memory: z.string().regex(/^\d+(mb|gb)$/, 'like `512mb`').optional(),
+      volume: z.strictObject({ name: z.string().regex(/^[a-z0-9_]+$/, 'lowercase letters, digits and underscores').optional(), path: z.string().startsWith('/').optional(), sizeGb: z.number().int().positive().optional() }).optional(),
+    }).optional(),
+    render: z.strictObject({
+      service: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional(), plan: z.string().optional(), region: z.string().optional(),
+      disk: z.strictObject({ path: z.string().startsWith('/').optional(), sizeGb: z.number().int().positive().optional() }).optional(),
+    }).optional(),
+    ci: z.union([z.literal('github'), z.literal(false)]).optional(),
+    branch: z.string().min(1).optional(),
+    cdn: z.strictObject({
+      proxy: z.literal('cloudflare').optional(),
+      images: z.strictObject({ provider: z.literal('cloudinary'), cloud: z.string().regex(/^[\w-]+$/, "the cloud's name, not its URL").optional() }).optional(),
+    }).optional(),
+  }).optional(),
+  /** Named targets for a query's `live: { verify: 'staging' }`. `db` is an env var's name. */
+  live: z.strictObject({
+    targets: z.record(z.string(), z.strictObject({ url: z.string().optional(), db: z.string().optional(), production: z.boolean().optional() })).optional(),
   }).optional(),
   trust: z.enum(['enforce', 'warn']).optional(),
 })
@@ -134,8 +203,8 @@ export function writeConfigSchema(root) {
   writeFileSync(join(root, '.weft', 'config.schema.json'), `${JSON.stringify(z.toJSONSchema(dataSchema, { unrepresentable: 'any' }), null, 2)}\n`)
 }
 
-/** `@weft/plugin-text` → `text`, the name a plugin's named export goes by. */
-export const pluginName = pkg => pkg.replace(/^@[^/]+\//, '').replace(/^plugin-/, '').replace(/[^a-zA-Z0-9]+(.)?/g, (_, c = '') => c.toUpperCase())
+/** `@weft-js/text` → `text`, `@weft-js/db/plugin-native` → `native`: the name a plugin's named export goes by. */
+export const pluginName = pkg => pkg.replace(/^@[^/]+\/(?:[^/]+\/)?/, '').replace(/^plugin-/, '').replace(/[^a-zA-Z0-9]+(.)?/g, (_, c = '') => c.toUpperCase())
 
 /** A plugin module's factory, and its import name: the default, or a named export (`surface-keel` may export `keel`). */
 export function pluginFactory(mod, pkg) {
@@ -166,7 +235,7 @@ function loadPlugin(root, entry) {
 /** A JSON or YAML config as what a `.ts` one evaluates to. */
 function readDataConfig(root, file, text) {
   const data = file.endsWith('.json') ? JSON.parse(text) : nativeRequire('yaml').parse(text)
-  const { $schema, ...config } = data ?? {}
+  const { $schema: _schema, ...config } = data ?? {}
   if (Array.isArray(config.plugins)) config.plugins = config.plugins.map(p => loadPlugin(root, p))
   return config
 }
@@ -188,11 +257,11 @@ export async function loadConfig(root) {
 
   let config = {}
   if (file) {
-    hook()
+    if (registerHooks) hook()
     try {
-      config = isDataConfig(file) ? readDataConfig(root, file, text) : (nativeRequire(`${file}.weft-load-${generation++}`).default ?? {})
+      config = isDataConfig(file) ? readDataConfig(root, file, text) : registerHooks ? (nativeRequire(`${file}.weft-load-${generation++}`).default ?? {}) : await importConfig(file)
     } catch (error) {
-      // A plugin factory rejecting its options throws while the config module evaluates (weft/plugin).
+      // A plugin factory rejecting its options throws while the config module evaluates (@weft-js/core/plugin).
       if (error?.code === 'P115') report('P115', error.message.split('\n')[0], error.message.match(/^`([^`]+)`/)?.[1] ?? null)
       else report('P007', `weft.config could not be loaded: ${error.message.split('\n')[0]}`, null)
       return { file, config: {}, diagnostics, slots: bindSlots({}, () => {}), contributions: [] }

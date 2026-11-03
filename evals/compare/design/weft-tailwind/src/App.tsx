@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { on } from 'weft/browser'
+import { state } from '@weft-js/core'
+import { on } from '@weft-js/core/browser'
 import { Settings } from './Settings'
 import { Customers } from './Customers'
 import { Pricing } from './Pricing'

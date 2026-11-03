@@ -1,4 +1,4 @@
-// @weft/start: what route files import (research 25) and server modules define (research 27). A route module exports
+// @weft-js/start: what route files import (research 25) and server modules define (research 27). A route module exports
 // its component (`default`) and, when it needs them, `load` (async data, often `await q.fetch()`), `meta` (research
 // 20 §3: static, awaited before the first byte, never reactive) and `prerender` (the params `weft build` writes as
 // static pages, with their share cards; `true` on a route without params).
@@ -8,7 +8,7 @@
 //   export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name, description: data.bio })
 //   export default function User(props: RouteProps<typeof load, '/users/[id]'>) { return <h1>{props.data.name}</h1> }
 
-import type { Merged, Meta as MetaObject, Site } from 'weft/ssr'
+import type { Merged, Meta as MetaObject, Site } from '@weft-js/core/ssr'
 import type { Context } from './data'
 
 export { Link } from './view'
@@ -16,19 +16,21 @@ export { Form, type FormApi, type FormProps } from './form'
 export { navigate, type NavigateOptions } from './router'
 export {
   query, mutation, redirect, raise, invalid, invalidate, cache, skip, isRedirect, stale, StartError, FnError,
-  type Query, type Mutation, type QueryDef, type MutationDef, type AuthScope, type Context, type Errors, type FnOptions, type Life, type LiveOptions, type LiveQuery, type LiveStatus, type OptimisticCache, type Redirect, type Skip, type StandardSchemaV1,
+  type Query, type Mutation, type QueryDef, type MutationDef, type AuthScope, type Context, type Errors, type FnOptions, type Life, type LiveMode, type LiveOptions, type LiveQuery, type LiveStatus, type OptimisticCache, type Redirect, type Skip, type StandardSchemaV1,
 } from './data'
 export { stream, type Stream, type StreamDef, type StreamOptions, type StreamStatus } from './stream'
 export { channel, sharedState, type Channel, type ChannelDef, type ChannelStatus, type Connection, type PublishOptions, type SharedBox, type SharedState } from './channel'
-export { realtime, realtimeStats, topic, tracked, type Limits, type RealtimeOptions, type Topic, type Tracked } from './hub'
+export { liveHealth, realtime, realtimeStats, topic, tracked, type Limits, type LiveState, type RealtimeOptions, type Topic, type Tracked } from './hub'
+export { dbChanges, type Change, type ChangeOptions, type Probe, type Sink, type Source } from './changes'
 export { memoryBus, type Bus } from './bus'
 export { listInput, type DbAdapter, type ListPage, type ListParams, type ListRequest, type ListSource, type ListSpec, type SourceSpec } from './list'
-export type { Merged, Site } from 'weft/ssr'
+export type { Merged, Site } from '@weft-js/core/ssr'
 
 /** Filled by the generated `.weft/routes.d.ts` with every route file's path (`'/users/[id]': true`). */
 export interface RouteFiles {}
 
 /** Route paths as files name them (`/users/[id]`); any string until `.weft/routes.d.ts` is generated. */
+// oxlint-disable-next-line typescript/no-redundant-type-constituents -- `RouteFiles` is empty here and filled by a generated file
 export type RoutePath = keyof RouteFiles extends never ? string : keyof RouteFiles & string
 
 /** `'/users/[id]/posts/[...rest]'` → `{ id: string; rest: string }`. */
@@ -60,16 +62,16 @@ export interface NotFound {
 
 /** The not-found result, in the shape router-core's loaders recognise (`isNotFound`). */
 export function notFound(): NotFound {
-  return { isNotFound: true } as NotFound
+  return { isNotFound: true }
 }
 
-type AnyLoad = (args: LoadArgs<any>) => unknown
+type AnyLoad = (args: never) => unknown
 
 /** A loader's data: what it resolves to, without `notFound()`. Top-level promise fields are deferred (streamed). */
 export type DataOf<L> = L extends AnyLoad ? Exclude<Awaited<ReturnType<L>>, NotFound> : undefined
 
 /** The data `meta` and cards see: deferred (promise) fields left out, since they're still streaming (H007). */
-export type Settled<D> = D extends object ? { [K in keyof D as D[K] extends PromiseLike<any> ? never : K]: D[K] } : D
+export type Settled<D> = D extends object ? { [K in keyof D as D[K] extends PromiseLike<unknown> ? never : K]: D[K] } : D
 
 /** A route or layout component's props. `children` is the next level (layouts render it where the page goes). */
 export interface RouteProps<L = undefined, P extends string = string> {
@@ -94,6 +96,10 @@ export interface OgProps<L = undefined, P extends string = string> {
   data: Settled<DataOf<L>>
   meta: Merged
   site: Site
+  /** The page's path, and the title and description the built-in card would show. */
+  path: string
+  title: string
+  description: string
 }
 
 /** The params of a param route whose cards `weft build` renders (static routes always are). */

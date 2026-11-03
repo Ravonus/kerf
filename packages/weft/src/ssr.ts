@@ -1,4 +1,4 @@
-// weft/ssr: the string renderer, and the helpers weft's back end emits for `generate: 'ssr'` (research 19 §3). It
+// @weft-js/core/ssr: the string renderer, and the helpers weft's back end emits for `generate: 'ssr'` (research 19 §3). It
 // runs on weft's own reactive core with effects off. Each template renders as `ssr(k => "<li" + key(k) + … )`: `k`
 // is the instance's hydration key (research 19 §2.4), written as ` wk="…"` on the root when the output is
 // hydratable, and each hole renders in its own scope (`hole(k, slot, value)`), wrapped in `<!--[-->…<!--]-->` when
@@ -15,10 +15,10 @@ import { keys, nextKey, under } from './keys'
 import { createApp, dehydrate, useApp, type AppOptions } from './scope'
 import { withHead, type HeadOptions } from './head'
 import { attrName, cssName, cssValue, WORDS } from './dom'
+import { component } from './dom-next'
 
 export { memo }
 export { For, mergeProps } from './dom'
-import { component } from './dom-next'
 export { component }
 export { mergeMeta, metaTags, headTags } from './head'
 export type { HeadOptions, Merged, Meta, Og, Site, Tag, Twitter, Extra, Image } from './head'
@@ -50,6 +50,7 @@ function headway(first: number) {
   }
 }
 
+/** How a server render runs: its deadline, its head, whether it's hydratable. */
 export interface RenderOptions {
   /** Emit hydration keys for `hydrate()` (default true). */
   hydratable?: boolean
@@ -87,6 +88,7 @@ export async function renderToStringAsync(code: () => unknown, options: RenderOp
   }
 }
 
+/** A render as it streams: the shell now, then what each Boundary resolves to. */
 export interface Stream {
   /** The first pass: what renders now, with each pending Boundary's fallback between `<!--wb:key-->` markers. */
   shell: string
@@ -143,7 +145,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
   const pending = () => Object.keys(last?.b ?? {}).filter(k => last!.b[k] === 'p')
   async function* chunks() {
     const deadline = Date.now() + (options.timeout ?? 10_000)
-    let open = new Set(pending())
+    const open = new Set(pending())
     let defined = false
     const way = headway(got)
     for (let n = 1; open.size && wait.length && n < (options.passes ?? 50); n++) {
@@ -153,16 +155,16 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
       const late = await Promise.race([
         // Past a pass that got nowhere: what's left has to land too, so a runaway read isn't why a slow one is given up on.
         (way.idle ? Promise.all(wait) : Promise.race(wait)).then(() => false),
-        new Promise<boolean>(ok => (timer = setTimeout(ok, left, true))),
+        new Promise<boolean>(ok => { timer = setTimeout(ok, left, true) }),
       ])
       clearTimeout(timer)
       if (late) break
-      await new Promise(ok => setTimeout(ok, 0)) // fetches that settle together go out together
+      await new Promise(ok => { setTimeout(ok, 0) }) // fetches that settle together go out together
       run()
       const going = way.pass(got)
       let out = ''
       let first = true
-      for (const k of [...open]) {
+      for (const k of Array.from(open)) {
         const content = html.get(k)
         if (content === undefined) continue
         open.delete(k)
@@ -191,7 +193,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         let timer: ReturnType<typeof setTimeout> | undefined
         const late = await Promise.race([
           Promise.all(top).then(() => false),
-          new Promise<boolean>(ok => (timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true))),
+          new Promise<boolean>(ok => { timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true) }),
         ])
         clearTimeout(timer)
         if (late) return
@@ -221,7 +223,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
 
 function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>): string
 function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream: Map<string, string>, top: Promise<unknown>[]): { html: string; data: SsrData }
-function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream?: Map<string, string>, top?: Promise<unknown>[]): any {
+function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream?: Map<string, string>, top?: Promise<unknown>[]): string | { html: string; data: SsrData } {
   const prev = { ...rt }
   const prevKeys = { ...keys }
   const prevWrite = writeKeys
@@ -232,7 +234,7 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false
-  ;(globalThis as any)[Symbol.for('weft.render')]?.() // ui-core's ids (store.ts)
+  ;(globalThis as unknown as Record<symbol, (() => void) | undefined>)[Symbol.for('weft.render')]?.() // warp-core's ids (store.ts)
   let html = ''
   const app = createApp(options.app)
   const prevApp = useApp(app) // a swap, not an owner: the render is synchronous
@@ -272,12 +274,12 @@ export function key(k: string): string {
  * parent, so it needs a range: `1` always, `2` unless static structure came out as one element, which the client's walk
  * takes for the hole itself.
  */
-export function hole(k: string, slot: number, value: unknown, mixed?: 1 | 2): string {
-  return under(`${k}.${slot}/`, () => {
+export function hole(k: string, at: number, value: unknown, mixed?: 1 | 2): string {
+  return under(`${k}.${at}/`, () => {
     if (!mixed || quiet) return text(value)
     if (mixed === 2) {
-      const v: any = (value as () => unknown)()
-      if (v && typeof v.t === 'string' && /^<[a-z]/i.test(v.t)) return v.t as string
+      const v = (value as () => unknown)() as { t?: unknown } | null | undefined
+      if (v && typeof v.t === 'string' && /^<[a-z]/i.test(v.t)) return v.t
       value = v
     }
     const h = text(value)
@@ -288,7 +290,7 @@ export function hole(k: string, slot: number, value: unknown, mixed?: 1 | 2): st
 let open: { read: boolean } | undefined
 let plain = false
 
-const notWire = (v: any): string | undefined => {
+const notWire = (v: unknown): string | undefined => {
   if (v == null || typeof v === 'string' || typeof v === 'boolean') return undefined
   if (typeof v === 'number') return Number.isFinite(v) ? undefined : String(v)
   if (Array.isArray(v)) return v.map(notWire).find(Boolean)
@@ -301,8 +303,8 @@ const notWire = (v: any): string | undefined => {
  * `names`: the props that go as JSON, `when`: `v` or `i` when it can wait for the page to need it. Anywhere else it's
  * the component.
  */
-export function island(id: string, names: string[], Comp: (props: any) => unknown, props: Record<string, unknown>, slotted?: 1, when?: string): unknown {
-  if (!quiet) return component(Comp, slotted ? authored(props) : props)
+export function island(id: string, names: string[], Comp: (props: never) => unknown, props: Record<string, unknown>, slotted?: 1, when?: string): unknown {
+  if (!quiet) return component(Comp, (slotted ? authored(props) : props) as never)
   const k = nextKey()
   const v = names.map(n => {
     const bad = notWire(props[n])
@@ -315,7 +317,7 @@ export function island(id: string, names: string[], Comp: (props: any) => unknow
   quiet = false
   let html: string
   try {
-    html = under(k + '/', () => text(component(Comp, props)))
+    html = under(k + '/', () => text(component(Comp, props as never)))
   } finally {
     quiet = true
     open = outer
@@ -327,13 +329,13 @@ export function island(id: string, names: string[], Comp: (props: any) => unknow
 
 /** Props whose children are the page's own after all: the compiler wrote a slot, but this island sits in client code. */
 function authored(props: Record<string, unknown>) {
-  const read = Object.getOwnPropertyDescriptor(props, 'children')?.get
+  const own = Object.getOwnPropertyDescriptor(props, 'children')
   return Object.defineProperty(props, 'children', {
     enumerable: true,
     get() {
       plain = true
       try {
-        return read?.call(props)
+        return own?.get?.call(props)
       } finally {
         plain = false
       }
@@ -390,19 +392,21 @@ function text(v: unknown): string {
     append(v, out)
     return out.html
   }
-  return typeof (v as any).t === 'string' ? (v as any).t : escape(String(v))
+  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
+  return typeof (v as { t?: unknown }).t === 'string' ? (v as { t: string }).t : escape(String(v))
 }
 
 /** `+=`, not an array's `join`: that copies the whole subtree at every level, and this leaves one flatten at the end. */
 function append(list: unknown[], out: { html: string; lastText: boolean }) {
-  for (let v of list as any[]) {
+  for (let v of list) {
     while (typeof v === 'function') v = v()
     if (v == null || typeof v === 'boolean' || v === '') continue
     if (Array.isArray(v)) append(v, out)
-    else if (typeof v.t === 'string') {
-      out.html += v.t
+    else if (typeof (v as { t?: unknown }).t === 'string') {
+      out.html += (v as { t: string }).t
       out.lastText = false
     } else {
+      // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
       out.html += (out.lastText && !quiet ? '<!--,-->' : '') + escape(String(v))
       out.lastText = true
     }
@@ -416,25 +420,26 @@ const ATTR = /[&"<]/g
 const ENTITY: Record<string, string> = { '&': '&amp;', '<': '&lt;', '"': '&quot;' }
 
 /** Escape text (`&`, `<`) or an attribute value (`&`, `"`, `<`). */
-export function escape(s: string, attr?: boolean): string {
-  const re = attr ? ATTR : CONTENT
+export function escape(s: string, quoted?: boolean): string {
+  const re = quoted ? ATTR : CONTENT
   re.lastIndex = 0
-  return re.test(s) ? s.replace(re, c => ENTITY[c]) : s
+  return re.test(s) ? s.replace(re, c => ENTITY[c]!) : s
 }
 
 // ---- attributes -----------------------------------------------------------------------------------------------
 
 /**
  * ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. `WORDS`
- * attributes write booleans as the words (`aria-pressed="false"`), as weft/dom does.
+ * attributes write booleans as the words (`aria-pressed="false"`), as @weft-js/core/dom does.
  */
-export function attr(name: string, value: any): string {
+export function attr(name: string, value: unknown): string {
   name = attribute(name)
   if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
   if (name === 'class') value = classes(value)
   else if (name === 'style') value = styles(value)
   if (value == null || value === false || value === '' && (name === 'class' || name === 'style')) return ''
   if (value === true) return ` ${name}`
+  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
   return ` ${name}="${escape(String(value), true)}"`
 }
 
@@ -451,25 +456,29 @@ function attribute(k: string) {
   return name
 }
 
-function classes(v: any): string {
+function classes(v: unknown): string {
   if (v == null || v === false) return ''
+  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
   if (typeof v !== 'object') return String(v)
-  return Object.keys(v).filter(k => v[k]).join(' ')
+  return Object.keys(v).filter(k => (v as Record<string, unknown>)[k]).join(' ')
 }
 
-function styles(v: any): string {
-  if (v == null || typeof v !== 'object') return v ?? ''
+function styles(v: unknown): string {
+  if (v == null || typeof v !== 'object') return (v ?? '') as string
   let out = ''
   for (const k of Object.keys(v)) {
     const name = cssName(k)
-    const value = cssValue(name, v[k])
-    if (value != null) out += `${out ? ';' : ''}${name}:${value}`
+    const value = cssValue(name, (v as Record<string, unknown>)[k])
+    if (value != null) out += `${out ? ';' : ''}${name}:${value as string}`
   }
   return out
 }
 
+/** `ref` beside a spread compiles the same for both targets; there is no element to hand over on the server. */
+export function ref(): void {}
+
 /** A `<select>`'s value: the render then marks the matching `<option selected>`. */
-export function select(value: any): string {
+export function select(value: unknown): string {
   selects = true
   return attr('value', value)
 }
@@ -478,7 +487,7 @@ export function select(value: any): string {
 const skipped = (k: string) => k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || (k[0] === 'o' && /^on[A-Z]/.test(k))
 
 /** `<div {...props}>`: the merged props' attributes (handlers, refs and children aren't attributes). */
-export function spread(props: Record<string, any>): string {
+export function spread(props: Record<string, unknown>): string {
   let out = ''
   for (const k of Reflect.ownKeys(props) as string[]) {
     if (skipped(k)) continue
@@ -531,8 +540,9 @@ export function merged(...sources: any[]): Record<string, any> {
 }
 
 /** What a spread element without JSX children holds: content its props set, or `children`. */
-export function inner(props: Record<string, any>, tag: string): unknown {
-  const raw = props.dangerouslySetInnerHTML?.__html ?? props.innerHTML
+export function inner(props: Record<string, unknown>, tag: string): unknown {
+  const raw = (props.dangerouslySetInnerHTML as { __html?: unknown } | null | undefined)?.__html ?? props.innerHTML
+  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
   if (raw != null) return { t: String(raw) }
   return props.textContent ?? (tag === 'textarea' ? props.value ?? props.defaultValue : undefined) ?? props.children
 }
@@ -545,10 +555,10 @@ const decode = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').re
 function resolveSelects(html: string): string {
   return html.replace(/<select\b([^>]*?)\svalue="([^"]*)"([^>]*)>([\s\S]*?)<\/select>/g, (_, pre, value, post, body) => {
     const want = decode(value)
-    const options = body.replace(/<option\b([^>]*)>([^<]*)/g, (m: string, attrs: string, text: string) => {
+    const options = body.replace(/<option\b([^>]*)>([^<]*)/g, (m: string, attrs: string, label: string) => {
       if (/\sselected\b/.test(attrs)) return m
       const v = /\svalue="([^"]*)"/.exec(attrs)
-      return (v ? decode(v[1]) : decode(text).trim()) === want ? `<option${attrs} selected>${text}` : m
+      return (v ? decode(v[1]!) : decode(label).trim()) === want ? `<option${attrs} selected>${label}` : m
     })
     return `<select${pre}${post}>${options}</select>`
   })

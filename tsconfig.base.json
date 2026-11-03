@@ -1,0 +1,31 @@
+{
+  // What every package's tsconfig extends. For the framework's own code; `weft check` is what apps get.
+  "compilerOptions": {
+    "target": "esnext",
+    // Assignment, not defineProperty: the runtime's classes are hot, and the bundler reads this file. Arena: 3,251 B with it, 3,327 without.
+    "useDefineForClassFields": false,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "jsx": "preserve",
+    "jsxImportSource": "@weft-js/core",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    // JS files are read so type-aware lint rules see them, not type-checked: most of the CLI is plain .mjs.
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "files": ["./scripts/quality/ambient.d.ts"]
+}

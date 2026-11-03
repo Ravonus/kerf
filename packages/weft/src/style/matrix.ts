@@ -94,7 +94,7 @@ export function buildMatrix(groups: GroupSource[], uses: GroupUse[]): Matrix {
           const props = Object.keys(v as object)
           escapes.push({ at, props })
           report('D023', 'warning', `group ${g.name} ${at} uses the \`css\` escape for ${props.join(', ')}`, nearestToken(v as Record<string, unknown>))
-        } else tokens.add(`${k}.${v}`)
+        } else tokens.add(`${k}.${v as string}`)
       }
     }
 
@@ -119,7 +119,7 @@ export function buildMatrix(groups: GroupSource[], uses: GroupUse[]): Matrix {
     // D022: the same accent at 3+ sites.
     const byAccent = new Map<string, typeof accents>()
     for (const a of accents) {
-      const key = Object.entries(a.set).sort().map(([k, v]) => `${k}: '${v}'`).join(', ')
+      const key = Object.entries(a.set).sort((x, y) => (String(x) < String(y) ? -1 : 1)).map(([k, v]) => `${k}: '${v}'`).join(', ')
       byAccent.set(key, [...(byAccent.get(key) ?? []), a])
     }
     for (const [key, sites] of byAccent)
@@ -131,7 +131,7 @@ export function buildMatrix(groups: GroupSource[], uses: GroupUse[]): Matrix {
       const compounds = def.compounds ?? []
       for (let i = 0; i < compounds.length; i++)
         for (let j = i + 1; j < compounds.length; j++) {
-          const [a, b] = [compounds[i], compounds[j]]
+          const [a, b] = [compounds[i]!, compounds[j]!]
           if ((a.part ?? null) !== (b.part ?? null)) continue
           if (Object.entries(a.when).some(([axis, v]) => axis in b.when && b.when[axis] !== v)) continue
           const [da, db] = [resolved[`compound ${i}`] ?? {}, resolved[`compound ${j}`] ?? {}]
@@ -194,15 +194,15 @@ export function buildMatrix(groups: GroupSource[], uses: GroupUse[]): Matrix {
   const names = [...shapes.keys()]
   for (let i = 0; i < names.length; i++)
     for (let j = i + 1; j < names.length; j++) {
-      const [a, b] = [shapes.get(names[i])!, shapes.get(names[j])!]
+      const [a, b] = [shapes.get(names[i]!)!, shapes.get(names[j]!)!]
       if (a.size < 3 || b.size < 3) continue
       const s = Math.round(jaccard(a, b) * 100) / 100
       if (s < 0.9) continue
-      similar.push([names[i], names[j], s])
-      const [ga, gb] = [out[names[i]], out[names[j]]]
+      similar.push([names[i]!, names[j]!, s])
+      const [ga, gb] = [out[names[i]!]!, out[names[j]!]!]
       const [file, line] = gb.file.split(/:(?=\d+$)/)
       diagnostics.push({
-        code: 'D021', severity: 'warning', group: names[j], file, line: Number(line),
+        code: 'D021', severity: 'warning', group: names[j]!, file: file!, line: Number(line),
         message: `groups ${names[i]} (${ga.file}) and ${names[j]} resolve to ${Math.round(s * 100)}% the same CSS`,
         help: `Merge them into one group, with an axis for what differs (\`weft style explain ${names[i]}\` and \`${names[j]}\` side by side).`,
       })
@@ -261,7 +261,7 @@ export type Explained = {
 export function explainGroup(g: GroupSource, selection: { axes?: Record<string, string>; states?: string[]; accent?: Record<string, string>; part?: string } = {}): Explained {
   const def = g.def ?? {}
   const axisDefs = Object.entries(def.axes ?? {}).filter((e): e is [string, Record<string, Record<string, unknown>>] => e[1] !== 'inherit')
-  const axes: Record<string, string> = { ...(def.defaults ?? {}) }
+  const axes: Record<string, string> = { ...def.defaults }
   for (const [a, v] of Object.entries(selection.axes ?? {})) {
     const vals = def.axes?.[a]
     if (!vals || vals === 'inherit') throw new GroupError(`group ${g.name} has no axis \`${a}\` (${didYouMean(a, axisDefs.map(([x]) => x))}axes: ${axisDefs.map(([x]) => x).join(', ') || 'none'})`)
@@ -275,14 +275,14 @@ export function explainGroup(g: GroupSource, selection: { axes?: Record<string, 
   const accent = selection.accent ?? {}
 
   const where = (at: string) => `group ${g.name} (${g.file}:${g.line}) ${at}`
-  type Layer = { at: string; part?: string; intent: Record<string, unknown> }
+  type Layer = { at: string; part?: string | undefined; intent: Record<string, unknown> }
   const layers: Layer[] = [{ at: 'base', intent: def.base ?? {} }]
-  for (const p of parts) layers.push({ at: `part ${p}`, part: p, intent: def.parts![p] })
+  for (const p of parts) layers.push({ at: `part ${p}`, part: p, intent: def.parts![p]! })
   for (const [a, v] of Object.entries(axes)) {
     const vals = def.axes?.[a]
     if (vals && vals !== 'inherit' && vals[v]) layers.push({ at: `${a}=${v}`, intent: vals[v] })
   }
-  for (const s of states) layers.push({ at: `state ${s}`, intent: def.states![s] })
+  for (const s of states) layers.push({ at: `state ${s}`, intent: def.states![s]! })
   for (const [n, c] of (def.compounds ?? []).entries())
     if (Object.entries(c.when).every(([a, v]) => axes[a] === v) && (!c.part || parts.includes(c.part))) layers.push({ at: `compound ${n}`, part: c.part, intent: c.set })
   for (const [word, intent] of accentWords([{ group: g.name, axes: {}, states: [], part: null, dynamic: false, accent }])) layers.push({ at: `accent ${word}`, intent })
@@ -290,7 +290,7 @@ export function explainGroup(g: GroupSource, selection: { axes?: Record<string, 
   const elements: Explained['elements'] = []
   for (const element of [undefined, ...parts]) {
     const decls: Explained['elements'][number]['decls'] = []
-    for (const l of layers.filter(l => l.part === element)) {
+    for (const l of layers.filter(x => x.part === element)) {
       for (const [prop, d] of Object.entries(resolveTraced(l.intent, where(l.at)))) {
         for (const prev of decls) if (prev.prop === prop && !prev.overridden) prev.overridden = true
         decls.push({ prop, value: d.value, from: d.from, at: l.at })
@@ -324,14 +324,14 @@ export function resolveImport(from: string, spec: string): string | undefined {
 export function importedGroups(file: string, code: string, defsOf: (file: string) => GroupSource[]) {
   const out: Record<string, { name: string; def: Def }> = {}
   for (const [, names, spec] of code.matchAll(IMPORTS)) {
-    const target = resolveImport(file, spec)
+    const target = resolveImport(file, spec!)
     if (!target) continue
     const found = defsOf(target).filter(g => g.exported)
     if (!found.length) continue
-    const key = resolvePath(dirname(file), spec).replace(EXT, '')
-    for (const n of names.split(',')) {
+    const key = resolvePath(dirname(file), spec!).replace(EXT, '')
+    for (const n of names!.split(',')) {
       const imported = n.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0]
-      const g = found.find(g => g.binding === imported)
+      const g = found.find(x => x.binding === imported)
       if (g) out[`${key}#${imported}`] = { name: g.name, def: g.def }
     }
   }
@@ -349,7 +349,7 @@ export function scanProject(root: string, files: string[], transform: Transform)
     const abs = resolvePath(file)
     if (!defs.has(abs)) {
       const code = existsSync(abs) ? readFileSync(abs, 'utf8') : ''
-      defs.set(abs, code.includes('weft/style') ? (transform(code, { filename: abs, checkOnly: true }).facts.groups ?? []).map(g => ({ ...g, file: relative(root, abs).split('\\').join('/') })) : [])
+      defs.set(abs, code.includes('@weft-js/core/style') ? (transform(code, { filename: abs, checkOnly: true }).facts.groups ?? []).map(g => ({ ...g, file: relative(root, abs).split('\\').join('/') })) : [])
     }
     return defs.get(abs)!
   }
@@ -357,7 +357,7 @@ export function scanProject(root: string, files: string[], transform: Transform)
   for (const f of abs) defsOf(f)
   const uses: GroupUse[] = []
   const diagnostics: { file: string; code: string; severity: string; message: string; help: string; line: number; column: number }[] = []
-  for (const f of abs.filter(f => /\.[jt]sx$/.test(f))) {
+  for (const f of abs.filter(x => /\.[jt]sx$/.test(x))) {
     const code = readFileSync(f, 'utf8')
     if (!code.includes('{...')) continue
     const groups = importedGroups(f, code, defsOf)

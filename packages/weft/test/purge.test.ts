@@ -2,7 +2,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { parse, purge, reachable, unnest, words } from '../node/purge.mjs'
+import { layerOrder, markup, parse, pieces, purge, reachable, unnest, words } from '../node/purge.mjs'
 
 const has = (...w: string[]) => words([w.join(' ')])
 const out = (css: string, ...w: string[]) => purge([css], has(...w))[0]
@@ -63,6 +63,7 @@ test('keyframes stay only while something runs them', () => {
 
 test('keep and template stems save names built at run time', () => {
   expect(purge(['[data-scope=knob]{color:red}'], words([], ['knob']))[0]).toContain('knob')
+  // oxlint-disable-next-line no-template-curly-in-string -- source text: a template literal is what's being scanned
   expect(purge(['[data-part=icon-tile]{color:red}'], words(['`icon-${x}`']))[0]).toContain('icon-tile')
 })
 
@@ -99,11 +100,55 @@ test("with `base: './'`, a lazy chunk's preload list names the purged stylesheet
   writeFileSync(join(root, 'lazy.js'), `import './lazy.css'\nexport const lazy = 'used'\n`)
   writeFileSync(join(root, 'main.css'), '.used{color:red}.gone-rule{color:blue}')
   writeFileSync(join(root, 'lazy.css'), '.used{color:green}')
-  const out: any = await build({ root, base: './', configFile: false, logLevel: 'silent', plugins: [weft()], build: { write: false, cssCodeSplit: true } })
-  const files = (Array.isArray(out) ? out : [out]).flatMap((o: any) => o.output)
-  const sheets = files.filter((f: any) => f.fileName.endsWith('.css')).map((f: any) => f.fileName.split('/').pop())
-  const named = files.filter((f: any) => f.type === 'chunk').flatMap((f: any) => [...f.code.matchAll(/[\w-]+\.css/g)].map(m => m[0]))
+  const built = await build({ root, base: './', configFile: false, logLevel: 'silent', plugins: [weft()], build: { write: false, cssCodeSplit: true } })
+  const files = ([built].flat() as unknown as { output: { fileName: string; type: string; code: string }[] }[]).flatMap(o => o.output)
+  const sheets = files.filter(f => f.fileName.endsWith('.css')).map(f => f.fileName.split('/').pop())
+  const named = files.filter(f => f.type === 'chunk').flatMap(f => [...f.code.matchAll(/[\w-]+\.css/g)].map(m => m[0]))
   expect(named.length).toBeGreaterThan(0)
   for (const name of named) expect(sheets).toContain(name)
   rmSync(root, { recursive: true, force: true })
 }, 30000)
+
+describe('pieces', () => {
+  const css = `@layer warp.tokens,warp.base;@layer warp.tokens{:root{--warp-a:1px;--warp-b:var(--warp-c);--warp-c:2px;--warp-unused:3px}}@layer warp.base{[data-scope=knob]{width:var(--warp-b);animation:spin 1s}[data-scope=knob]:hover{color:red}[data-scope=dial]{height:1px}[data-theme=dark] b{color:blue}p{margin:0}}@keyframes spin{to{rotate:1turn}}@media print{p{color:#000}}`
+  const lookup = (html: string) => {
+    const t = pieces([['a', css]])
+    const present = markup(html), ids = new Set<number>(), take = (i: number) => { if (!ids.has(i)) { ids.add(i); t.deps[i]!.forEach(take) } }
+    t.always.forEach(take)
+    for (const word of present) (t.index as Record<string, number[]>)[word]?.forEach((i: number) => { const n = t.alts[i]; if (!n || n.some(([all]: string[][]) => all!.every((k: string) => present.has(k)))) take(i) })
+    return [...ids].map(i => t.pieces[i][2] + '{' + t.pieces[i][3]).join('\n')
+  }
+
+  test('a rendered component brings its rules, the tokens they read through others, and their keyframes', () => {
+    const got = lookup('<div data-scope="knob"></div>')
+    expect(got).toContain('[data-scope=knob]{width')
+    expect(got).toContain('--warp-b:')
+    expect(got).toContain('--warp-c:2px')
+    expect(got).toContain('@keyframes spin')
+    expect(got).not.toContain('--warp-unused')
+    expect(got).not.toContain('[data-scope=dial]')
+  })
+
+  test('hover states and print wait for the sheet; a theme on the root stays, since no HTML shows it', () => {
+    const got = lookup('<div data-scope="knob"><b>x</b><p>y</p></div>')
+    expect(got).not.toContain(':hover')
+    expect(got).not.toContain('#000')
+    expect(got).toContain('[data-theme=dark] b')
+  })
+
+  test('a rule needs every word of its selector, not just the rarest', () => {
+    const t = pieces([['a', '[data-scope=k][data-x=y]{color:red}']])
+    const id = (Object.values(t.index)[0]! as number[])[0]!
+    expect(t.alts[id][0][0].sort()).toEqual(['[data-scope=k]', '[data-x=y]'])
+  })
+
+  test('layer order is the whole sheet\'s, whatever a page uses', () => {
+    expect(layerOrder(css)).toEqual(['warp.tokens', 'warp.base'])
+    expect(pieces([['a', css]]).layers).toBe('@layer warp.tokens,warp.base;')
+  })
+
+  test('`keep` holds a selector whatever the HTML has', () => {
+    expect(pieces([['a', '.late{color:red}']], ['late']).always.length).toBe(1)
+    expect(pieces([['a', '.late{color:red}']]).always.length).toBe(0)
+  })
+})

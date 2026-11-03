@@ -38,7 +38,7 @@ organised. And it has to work for agents first. Payments are covered separately 
    (`Checkout.ios.tsx`) → route layout. Variants must keep the base's props type (N020). `weft split` creates them,
    `weft splits --json` lists them with their drift, and `weft check` on a diff flags a base change that its variant
    didn't follow (N022).
-6. **Capabilities are typed, reactive values in `weft/device`**, the native sibling of `weft/browser`. Each has a
+6. **Capabilities are typed, reactive values in `weft/device`**, the native sibling of `@weft-js/core/browser`. Each has a
    per-target support entry. Using one that a target lacks from shared code is a type error with a fix (guard with
    `device.has()` or split). Declared permissions generate `Info.plist` and `AndroidManifest.xml`; an undeclared one
    is N030.
@@ -48,7 +48,7 @@ organised. And it has to work for agents first. Payments are covered separately 
    TSX subset compiled to SwiftUI and Glance.
 8. **Agents drive the device like the browser.** `weft device` mirrors `weft browser`: `snapshot` returns the
    accessibility tree, laid-out frames **and** the live reactive graph from the running app; `act` works by role and
-   label; `screenshot`, `time` and `set` work the same. The same `weft/test` files run in a fast lane (recording host
+   label; `screenshot`, `time` and `set` work the same. The same `@weft-js/core/test` files run in a fast lane (recording host
    + Node layout), and on a simulator or emulator.
 9. **No hand-edited Xcode or Gradle projects.** `weft.config.ts` has an `app` block. `ios/` and `android/` are
    generated into `.weft/native/` and never committed (Expo's Continuous Native Generation idea). Typed overlays in
@@ -105,7 +105,7 @@ shape with weft's compiler and graph on top.
 
 The UI thread must never block on app logic, and some interactions can't take a JS round trip.
 
-- **Animations and gestures:** `ui-core/motion` presets are declarative (spring, duration, curve), so they lower to
+- **Animations and gestures:** `warp-core/motion` presets are declarative (spring, duration, curve), so they lower to
   Core Animation and Android animators running on the UI thread. JS only starts them and hears when they end.
   Drag-to-dismiss, swipe actions and pull-to-refresh are host behaviours with declarative props, not JS-driven
   frames. No worklets in v0.
@@ -176,7 +176,7 @@ The UI thread must never block on app logic, and some interactions can't take a 
 
 - Layout primitives: `Stack Row Split Switch Grid Center Surface Frame`, plus `Scroll`, `List` and `Screen`.
 - Text through `Text role=…`, `Image`, `Icon`.
-- warp components and `ui-core` behaviours.
+- warp components and `warp-core` behaviours.
 - HTML intrinsics (`div`, `span`, `input`…) only in files that resolve to web. Elsewhere they are **N001**: "`<div>`
   has no native equivalent. Use `<Stack>`," with an autofix for the common cases.
 - CSS files and Tailwind classes are web-only. On native, styling comes from tokens and intent props, which is what
@@ -301,7 +301,7 @@ listing.
 
 ### 6.1 `weft/device`
 
-Reactive values and async calls, owned and cleaned up like `weft/browser` (PLAN §4.2). Each entry has a support row,
+Reactive values and async calls, owned and cleaned up like `@weft-js/core/browser` (PLAN §4.2). Each entry has a support row,
 and `device.has(x)` narrows the type.
 
 | Capability | web | iOS | Android |

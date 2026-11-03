@@ -1,4 +1,4 @@
-import { interval, media, on, online } from 'weft/browser'
+import { interval, media, on, online } from '@weft-js/core/browser'
 
 /** Server-rendered with declared values: online (default true) and a dark query (`ssr: false`). */
 export function Status() {

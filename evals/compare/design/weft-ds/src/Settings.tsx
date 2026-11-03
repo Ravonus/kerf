@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Button, Card, Heading, Input, Row, Select, Stack, Switch, Text, Textarea } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Button, Card, Heading, Input, Row, Select, Stack, Switch, Text, Textarea } from '@weft-js/warp'
 
 const roles = ['Admin', 'Editor', 'Viewer'].map(r => ({ value: r, label: r }))
 

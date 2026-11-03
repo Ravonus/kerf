@@ -1,7 +1,7 @@
-// weft/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
-// no IO here: weft/vite builds the record (with @weft/plugin-media's `media.build` provider, or a header probe
+// @weft-js/core/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
+// no IO here: @weft-js/core/vite builds the record (with @weft-js/plugin-media's `media.build` provider, or a header probe
 // without one), and this renders it with dimensions, a placeholder, `srcset` and `sizes`, so nothing shifts. Video and
-// audio records come from @weft/plugin-media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
+// audio records come from @weft-js/plugin-media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
 
 import { onMount, untrack } from './index'
 import type { Timeline } from './media-timeline'
@@ -44,6 +44,7 @@ export interface MediaAsset {
   swap?: 'intent' | 'idle' | 'never'
 }
 
+/** `<Media>`'s props: the asset, how it's described and framed, and anything else for the element. */
 export interface MediaProps {
   src: MediaAsset
   /** Required. Describe what the image shows; for purely visual media pass `alt=""` with `decorative` (M007). */
@@ -59,10 +60,10 @@ export interface MediaProps {
   focus?: [number, number]
   fit?: 'cover' | 'contain'
   /** Video and audio: sync code to it with `timeline()`. */
-  timeline?: Timeline<any>
+  timeline?: Timeline
   /** Video: 'always' keeps a GIF moving under `prefers-reduced-motion`. */
   motion?: 'auto' | 'always'
-  [attr: string]: any
+  [attr: string]: unknown
 }
 
 /** warp's phone breakpoint: under 600 px a fractional width is the full viewport. */
@@ -77,6 +78,7 @@ export function mediaSizes(width: string | undefined, sizes: string | undefined,
   if (width) {
     const frac = /^(\d+)\s*\/\s*(\d+)$/.exec(width)
     if (frac) return `${PHONE} 100vw, ${Math.round((Number(frac[1]) / Number(frac[2])) * 10000) / 100}vw`
+    // oxlint-disable-next-line unicorn/prefer-string-starts-ends-with -- the regex is the shorter bytes in every page with a <Media>
     return /vw$/.test(width) ? `${PHONE} 100vw, ${width}` : width
   }
   return lazy ? 'auto, 100vw' : '100vw'
@@ -98,15 +100,15 @@ const fallbackSrcset = (a: MediaAsset) => a.sources.at(-1)?.srcset
  * `<source>` has no `srcset` on `<video>`: one per codec and width, efficient codecs first, each width behind a `media`
  * query at half its pixels (a 2× screen), the largest with none. The browser plays the first it can and that matches.
  */
-export function timedSources(a: MediaAsset): { src: string; type: string; media?: string }[] {
+export function timedSources(a: MediaAsset): { src: string; type: string; media?: string | undefined }[] {
   return a.sources.flatMap(s => {
     const rungs = s.srcset.split(', ').map(r => r.split(' '))
-    return rungs.map(([src, w], i) => (i < rungs.length - 1 ? { src, type: s.type, media: `(max-width: ${Math.round(parseInt(w) / 2)}px)` } : { src, type: s.type }))
+    return rungs.map(([src, w], i) => (i < rungs.length - 1 ? { src: src!, type: s.type, media: `(max-width: ${Math.round(parseInt(w!) / 2)}px)` } : { src: src!, type: s.type }))
   })
 }
 
 function timed({ src, alt, decorative, priority, focus, fit, timeline, motion, controls, ...rest }: MediaProps) {
-  let el: any
+  let el!: HTMLVideoElement
   onMount(() => {
     if (timeline) timeline.bind(el)
     if (src.animated && motion !== 'always' && matchMedia('(prefers-reduced-motion: reduce)').matches) el.pause()
@@ -117,11 +119,11 @@ function timed({ src, alt, decorative, priority, focus, fit, timeline, motion, c
     if (src.copy) void import('./media-swap').then(m => m.attach(el, src))
   })
   const sources = timedSources(src).map(s => <source key={s.src} src={s.src} type={s.type} media={s.media} />)
-  if (src.kind === 'audio') return <audio ref={(n: any) => (el = n)} controls preload={priority ? 'auto' : 'metadata'} aria-label={decorative ? undefined : alt} {...rest}>{sources}</audio>
+  if (src.kind === 'audio') return <audio ref={(n: HTMLElement) => (el = n as HTMLVideoElement)} controls preload={priority ? 'auto' : 'metadata'} aria-label={decorative ? undefined : alt} {...rest}>{sources}</audio>
   const moving = !!src.animated
   const video = (
     <video
-      ref={(n: any) => (el = n)}
+      ref={(n: HTMLVideoElement) => (el = n)}
       poster={src.poster}
       width={src.width}
       height={src.height}
@@ -153,11 +155,11 @@ export function Media(props: MediaProps) {
 }
 
 function still({ src, alt, decorative, priority, width, sizes, focus, fit, ...rest }: MediaProps) {
-  let el: any
+  let el!: HTMLImageElement
   if (src.copy) onMount(() => void import('./media-swap').then(m => m.attach(el, src)))
   const img = () => (
     <img
-      ref={(n: any) => (el = n)}
+      ref={(n: HTMLImageElement) => (el = n)}
       src={src.src}
       srcset={fallbackSrcset(src)}
       sizes={src.sources.length ? mediaSizes(width, sizes, !priority) : undefined}

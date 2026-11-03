@@ -1,6 +1,6 @@
 // The flow pack on the a11y gallery (?part=flow, rendered by test/a11y/gallery.tsx) and in the hydration test (the `Case`
 // exports). Per-file imports: the ?weft-ssr query doesn't follow a .ts barrel. `?flow=` opens one overlay or state.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Button } from '../../src/Button'
 import { Toaster } from '../../src/Toast'
 import { AuthScreen } from '../../src/flow/AuthScreen'

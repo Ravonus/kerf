@@ -1,4 +1,4 @@
-import { query } from '@weft/start'
+import { query } from '@weft-js/start'
 import { and, asc, count, eq, gt, gte, lte, ne } from 'drizzle-orm'
 import { z } from 'zod'
 import { categories, products } from '#/db/schema'

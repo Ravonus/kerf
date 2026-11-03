@@ -1,5 +1,0 @@
-/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
-@layer warp.inputs {
-:root, [data-expression="balanced"], [data-expression="quiet"] { --warp-field-shake: 0; }
-[data-expression="vivid"] { --warp-field-shake: 1; }
-}

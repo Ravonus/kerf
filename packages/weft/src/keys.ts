@@ -16,6 +16,8 @@ export const keys = {
   on: false,
   /** Client: claiming server nodes (`hydrate()`'s synchronous pass). */
   hydrating: false,
+  /** The current template missed and was built fresh: its bindings make the first writes a server's element doesn't need. */
+  miss: false,
   /** The current scope's path and its counter. */
   p: '',
   n: 0,

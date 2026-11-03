@@ -1,4 +1,4 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 
 // Plain elements, not warp's Center and Row: nothing here runs, so nothing here has to ship.
 export function SiteHeader() {

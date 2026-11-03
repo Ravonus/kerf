@@ -1,27 +1,37 @@
-import { menu, moveShuttle, place, uid, type Align, type Side } from '@weft/ui-core'
-import { onCleanup, onMount, state } from 'weft'
+import { menu, moveShuttle, uid, type Align, type Side } from '@weft-js/warp-core'
+import { onCleanup, onMount, state } from '@weft-js/core'
 import { Button, type ButtonProps } from './Button'
 import { Icon, type IconRef } from './Icon'
-import { use } from './use'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/components/menu.css'
+import '@weft-js/warp-core/styles/components/menu.css'
 
+/** One line of a Menu: an item, a group label or a separator. */
 export type MenuEntry =
-  | { label: string; onSelect?: () => void; icon?: IconRef; shortcut?: string; tone?: 'critical'; disabled?: boolean; href?: string }
+  | { label: string; onSelect?: () => void; icon?: IconRef | undefined; shortcut?: string; tone?: 'critical' | undefined; disabled?: boolean | undefined; href?: string }
   | { separator: true }
   | { group: string }
 
+const Row = ({ e }: { e: Extract<MenuEntry, { label: string }> }) => (
+  <>
+    {e.icon && <Icon name={e.icon} />}
+    <span data-part="item-label">{e.label}</span>
+    {e.shortcut && <span data-part="shortcut">{e.shortcut}</span>}
+  </>
+)
+
+/** Props for Menu. */
 export interface MenuProps {
   /** The trigger's text. */
-  label: any
+  label: unknown
   items: MenuEntry[]
-  trigger?: ButtonProps
-  side?: Side
+  trigger?: ButtonProps | undefined
+  side?: Side | undefined
   align?: Align
 }
 
 /**
- * A menu button (05 §3, APG): the trigger holds its sweep while open and the panel opens from it. ui-core's menu() owns
+ * A menu button (05 §3, APG): the trigger holds its sweep while open and the panel opens from it. warp-core's menu() owns
  * focus, ↑/↓, Home/End, typeahead, Escape and Tab; the highlight is one shuttle that follows focus and the pointer.
  */
 export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }: MenuProps) {
@@ -37,11 +47,9 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
     face!.setAttribute('data-on', '')
   }
   onMount(() => {
-    const onToggle = (e: any) => {
-      if (e.newState === 'open') {
-        place(panel!, button!, side, align, 6)
-        face!.setAttribute('data-instant', '')
-      } else {
+    const onToggle = (e: ToggleEvent) => {
+      if (e.newState === 'open') face!.setAttribute('data-instant', '')
+      else {
         face!.removeAttribute('data-on')
         face!.style.removeProperty('--warp-a')
       }
@@ -51,7 +59,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
   })
   // the panel is shown before menu() moves focus in, so the first move lands without travelling
   const syncOpen = (el: HTMLElement, o: { open: boolean; at: 'first' | 'last' }) => {
-    const opts = () => ({ open: o.open, at: o.at, trigger: () => button, onClose: close })
+    const opts = () => ({ open: o.open, at: o.at, trigger: () => button, side, align, onClose: close })
     if (o.open) el.showPopover?.()
     const m = menu(el, opts())
     return {
@@ -79,28 +87,24 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         {label}
       </Button>
       <div
-        ref={(n: any) => (panel = n)}
+        ref={n => (panel = n)}
         data-scope="menu"
         data-part="content"
         role="menu"
         popover="manual"
         id={id}
         aria-labelledby={`${id}-b`}
-        onFocusIn={(e: FocusEvent) => { const t = (e.target as HTMLElement).closest<HTMLElement>('[role="menuitem"]'); if (t) follow(t) }}
-        onPointerMove={(e: PointerEvent) => { const t = (e.target as HTMLElement).closest<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])'); if (t && t !== document.activeElement) t.focus({ preventScroll: true }) }}
+        onFocusIn={(e: FocusEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]'); if (t) follow(t) }}
+        onPointerMove={(e: PointerEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])'); if (t && t !== document.activeElement) t.focus({ preventScroll: true }) }}
       >
-        <span ref={(n: any) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
+        <span ref={n => (face = n)} data-part="shuttle" aria-hidden="true"></span>
         {items.map((e, i) => 'separator' in e
           ? <div key={i} data-part="separator" role="separator"></div>
           : 'group' in e
             ? <div key={i} data-part="group-label">{e.group}</div>
-            : (
-              <div key={i} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} aria-disabled={e.disabled ? 'true' : undefined} onClick={() => { if (!e.disabled) pick(e) }}>
-                {e.icon && <Icon name={e.icon} />}
-                <span data-part="item-label">{e.label}</span>
-                {e.shortcut && <span data-part="shortcut">{e.shortcut}</span>}
-              </div>
-            ))}
+            : e.href && !e.disabled
+              ? <a key={i} href={e.href} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} onClick={() => pick(e)}><Row e={e} /></a>
+              : <div key={i} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} aria-disabled={e.disabled ? 'true' : undefined} onClick={() => { if (!e.disabled) pick(e) }}><Row e={e} /></div>)}
       </div>
     </>
   )

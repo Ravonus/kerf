@@ -1,6 +1,6 @@
-import { KeyIcon, LeftIcon, MailIcon } from '@weft/icons'
-import { clockLabel, emailError, passwordRules, uid } from '@weft/ui-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
+import { KeyIcon, LeftIcon, MailIcon } from '@weft-js/warp-icons'
+import { clockLabel, emailError, passwordRules, uid } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -8,13 +8,13 @@ import { Input } from '../Field'
 import { FormError, Mark, Rail, StepFrame, Submit, TextLink, Title, useCooldown, useStepForm, type FlowForm, type Heading } from './kit'
 import { PasswordMeter } from './SignUp'
 import '../styles'
-import '@weft/ui-core/styles/flows/auth.css'
-import '@weft/ui-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/flows/auth.css'
+import '@weft-js/warp-core/styles/layout/row.css'
 
 const Back = ({ onBack }: { onBack: () => void }) => <div><Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} onClick={onBack}>Back</Button></div>
 
 /** "Check your inbox" (09 §2.1): waiting, so no solid; the address, Open mail app, resend on a countdown, change email. */
-export function MagicLinkSent({ email, title, lede, heading, resendIn = 30, mailHref, onResend, onChangeEmail, onBack }: { email: any; title?: any; lede?: any; heading?: Heading; resendIn?: number; /** Shows Open email app (phones). */ mailHref?: string; onResend?: () => void; onChangeEmail?: () => void; onBack?: () => void }) {
+export function MagicLinkSent({ email, title, lede, heading, resendIn = 30, mailHref, onResend, onChangeEmail, onBack }: { email: string; title?: unknown; lede?: unknown; heading?: Heading; resendIn?: number; /** Shows Open email app (phones). */ mailHref?: string; onResend?: () => void; onChangeEmail?: () => void; onBack?: () => void }) {
   const round = state(0)
   const left = useCooldown(() => (round.value, resendIn))
   return (
@@ -22,23 +22,25 @@ export function MagicLinkSent({ email, title, lede, heading, resendIn = 30, mail
       {onBack && <Back onBack={onBack} />}
       <Mark><MailIcon /></Mark>
       <div><Title as={heading}>{title ?? 'Check your inbox'}</Title><p data-part="lede">{lede ?? <>We sent a sign-in link to <b>{email}</b>. It works once and expires in 15 minutes.</>}</p></div>
-      {mailHref && <Button emphasis="frame" full role="link" onClick={() => location.assign(mailHref!)}>Open email app</Button>}
+      {mailHref && <Button emphasis="frame" full role="link" onClick={() => location.assign(mailHref)}>Open email app</Button>}
       <div data-part="row">
-        {onResend && <TextLink disabled={left.value > 0} onClick={() => { onResend!(); round.value++ }}>{left.value > 0 ? `Resend in ${clockLabel(left.value)}` : 'Resend link'}</TextLink>}
+        {onResend && <TextLink disabled={left.value > 0} onClick={() => { onResend(); round.value++ }}>{left.value > 0 ? `Resend in ${clockLabel(left.value)}` : 'Resend link'}</TextLink>}
         {onChangeEmail && <TextLink onClick={onChangeEmail}>Use a different email</TextLink>}
       </div>
     </div>
   )
 }
 
+/** What the reset form collects, across its two steps. */
 export interface ResetValues { email?: string; password?: string; confirm?: string }
 
+/** Props for ResetPassword. */
 export interface ResetPasswordProps extends FlowForm<ResetValues> {
   /** `request` asks for the email; `password` sets the new one (after the link or the code). */
-  stage?: 'request' | 'password'
+  stage?: 'request' | 'password' | undefined
   onBack?: () => void
-  title?: any
-  lede?: any
+  title?: unknown
+  lede?: unknown
 }
 
 /** Reset (09 §2.1): email → link or code → new password and confirm. Never says whether the email has an account (§2.3). */
@@ -78,7 +80,7 @@ export function ResetPassword(p: ResetPasswordProps) {
 }
 
 /** Invite accept (09 §2.1): who invited you, the org and role, "You'll join as…", Join and Decline; `children` holds an inline sign-in or sign-up. */
-export function InviteAccept({ inviter, org, role, email, description, heading, pending, onAccept, onDecline, onOtherAccount, onBack, children }: { inviter: string; org: string; role?: string; email?: any; description?: any; heading?: Heading; pending?: boolean; onAccept?: () => void; onDecline?: () => void; onOtherAccount?: () => void; onBack?: () => void; children?: any }) {
+export function InviteAccept({ inviter, org, role, email, description, heading, pending, onAccept, onDecline, onOtherAccount, onBack, children }: { inviter: string; org: string; role?: string; email?: unknown; description?: unknown; heading?: Heading; pending?: boolean | undefined; onAccept?: () => void; onDecline?: () => void; onOtherAccount?: () => void; onBack?: () => void; children?: unknown }) {
   const body = derived(() => children)
   return (
     <div data-scope="stack">
@@ -101,7 +103,7 @@ export function InviteAccept({ inviter, org, role, email, description, heading, 
 }
 
 /** Done (09 §2.1): the mark strokes in, then the flow continues after `delay` (at once under reduced motion). */
-export function AuthDone({ title, lede, heading, delay = 1200, onContinue }: { title?: any; lede?: any; heading?: Heading; delay?: number; onContinue?: () => void }) {
+export function AuthDone({ title, lede, heading, delay = 1200, onContinue }: { title?: unknown; lede?: unknown; heading?: Heading; delay?: number; onContinue?: (() => void) | undefined }) {
   onMount(() => {
     const reduced = matchMedia?.('(prefers-reduced-motion: reduce)')?.matches || document.documentElement.dataset.motion === 'reduce'
     const t = setTimeout(() => onContinue?.(), reduced ? 0 : untrack(() => delay))

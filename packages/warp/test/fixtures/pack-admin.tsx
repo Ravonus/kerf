@@ -1,6 +1,6 @@
 // The admin pack on the a11y gallery (?part=admin): rendered by test/a11y/gallery.tsx. Fixtures import per file.
-import type { CartLine } from '@weft/ui-core'
-import { state, type State } from 'weft'
+import type { CartLine } from '@weft-js/warp-core'
+import { state, type State } from '@weft-js/core'
 import { ApiKeys, type ApiKey } from '../../src/admin/ApiKeys'
 import { AuditLog, type AuditEvent } from '../../src/admin/Audit'
 import { Invoices, PayFrame, PaymentMethods, type Invoice, type PaymentMethod } from '../../src/admin/Billing'

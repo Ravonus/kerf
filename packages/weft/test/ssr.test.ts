@@ -1,22 +1,28 @@
 // Server render → hydrate round trips of the v3 reference app (evals/reference-v3/weft). The same sources load
-// twice: `?weft-ssr` compiles them for weft/ssr, `?weft-hydrate` for hydratable weft/dom (vite.mjs), both with
+// twice: `?weft-ssr` compiles them for @weft-js/core/ssr, `?weft-hydrate` for hydratable @weft-js/core/dom (vite.mjs), both with
 // weft's own back end (research 19 §2.4: keys are source paths, ` wk="0.1/0"`).
 // weft-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { attr, renderToString } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
-import { flush } from 'weft/test'
+import { attr, renderToString } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
+import { flush } from '@weft-js/core/test'
 import { hydration } from '../src/hydrate'
-// @ts-expect-error: query imports (vite.mjs)
 import { App as ServerApp } from '../../../evals/reference-v3/weft/src/App.tsx?weft-ssr'
-// @ts-expect-error
 import { App as ClientApp } from '../../../evals/reference-v3/weft/src/App.tsx?weft-hydrate'
-// @ts-expect-error
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { Shop as ServerShop } from './fixtures/ssr/Shop.tsx?weft-ssr'
-// @ts-expect-error
 import { Shop as ClientShop } from './fixtures/ssr/Shop.tsx?weft-hydrate'
 import type { Product } from '../../../evals/reference-v3/weft/src/api'
+import { App as ServerScopeApp } from './fixtures/v3-scope/App.tsx?weft-ssr'
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
+import * as basicsS from './fixtures/next/Basics.tsx?weft-ssr'
+import * as basicsC from './fixtures/next/Basics.tsx?weft-hydrate'
+import * as twoS from './fixtures/next/Step2.tsx?weft-ssr'
+import * as twoC from './fixtures/next/Step2.tsx?weft-hydrate'
+import { Watched as WatchedS } from './fixtures/ssr/Watched.tsx?weft-ssr'
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
+import { Watched as WatchedC } from './fixtures/ssr/Watched.tsx?weft-hydrate'
 
 const products: Product[] = [
   { id: 'apple', name: 'Apple', category: 'fruit', price: 0.5, stock: 20 },
@@ -122,8 +128,6 @@ test('renderToString without hydration: no keys, same markup', () => {
   expect(plain).toBe(renderToString(() => ServerShop(data())).replace(/ wk="[^"]*"/g, ''))
 })
 
-// @ts-expect-error
-import { App as ServerScopeApp } from './fixtures/v3-scope/App.tsx?weft-ssr'
 
 test('defineState on the server: one app per render, seeded per request, never shared', () => {
   const api = { listProducts: () => new Promise<never>(() => {}), subscribePrices: () => () => {} }
@@ -135,14 +139,6 @@ test('defineState on the server: one app per render, seeded per request, never s
 
 // Round trips over the constructs research 19 steps 1–2 lowered: adjacent texts, fragments, conditionals over
 // JSX, class/style objects, element spreads, refs, <select value> over a list, SVG and namespaced attributes.
-// @ts-expect-error
-import * as basicsS from './fixtures/next/Basics.tsx?weft-ssr'
-// @ts-expect-error
-import * as basicsC from './fixtures/next/Basics.tsx?weft-hydrate'
-// @ts-expect-error
-import * as twoS from './fixtures/next/Step2.tsx?weft-ssr'
-// @ts-expect-error
-import * as twoC from './fixtures/next/Step2.tsx?weft-hydrate'
 
 describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then live', () => {
   const clean = (r: ReturnType<typeof roundTrip>) => {
@@ -231,10 +227,6 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
 })
 
 // The point of source-path keys (research 19 §2.4): bindings that exist on one side only don't shift any key.
-// @ts-expect-error
-import { Watched as WatchedS } from './fixtures/ssr/Watched.tsx?weft-ssr'
-// @ts-expect-error
-import { Watched as WatchedC } from './fixtures/ssr/Watched.tsx?weft-hydrate'
 
 test('client-only watchers and extra memos shift no key', () => {
   const r = roundTrip(() => WatchedS({ client: false }), () => WatchedC({ client: true }))
@@ -250,7 +242,7 @@ test('dev hydration warnings name the source line of the template that missed', 
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   hydrate(() => basicsC.Counter({}), container)
   expect(hydration.misses).toBe(1)
-  expect(warn.mock.calls[0][0]).toBe(
+  expect(warn.mock.calls[0]![0]).toBe(
     'weft: hydration mismatch at test/fixtures/next/Basics.tsx:12 <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh',
   )
   warn.mockRestore()

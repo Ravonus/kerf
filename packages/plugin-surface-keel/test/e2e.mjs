@@ -1,5 +1,5 @@
 // Surfaces in a real browser (research 33 §10): pixels, not recordings. Builds demo/, serves it, and checks the Keel port
-// and both built-in backends.   node test/e2e.mjs <chrome|webkit>     (build ../text-engine first)
+// and both built-in backends.   node test/e2e.mjs <chrome|webkit>     (build ../text first)
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { createServer } from 'node:http'
@@ -8,7 +8,7 @@ import { dirname, extname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium, webkit } from 'playwright-core'
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const demo = join(pkg, 'demo')
@@ -26,7 +26,7 @@ const server = createServer((req, res) => {
   res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' })
   res.end(readFileSync(file))
 })
-await new Promise(r => server.listen(0, '127.0.0.1', r))
+await new Promise(r => { server.listen(0, '127.0.0.1', r) })
 const base = `http://127.0.0.1:${server.address().port}`
 
 const webkitPath = () => {
@@ -43,6 +43,7 @@ const ok = (name, pass, detail = '') => {
 const open = async (path, options = {}) => {
   const ctx = await browser.newContext({ viewport: { width: 800, height: 900 }, deviceScaleFactor: 2, ...options })
   const page = await ctx.newPage()
+  await page.addInitScript(hashScript)
   page.problems = []
   page.on('pageerror', e => page.problems.push(e.message))
   page.on('console', m => { if (['error', 'warning'].includes(m.type()) && !/GL Driver Message|status of 404/.test(m.text())) page.problems.push(m.text()) })
@@ -50,10 +51,10 @@ const open = async (path, options = {}) => {
   await page.waitForFunction(() => window.lab)
   return page
 }
-const frames = (page, n = 3) => page.evaluate(n => new Promise(done => { const go = i => (i ? requestAnimationFrame(() => go(i - 1)) : done()); go(n) }), n)
+const frames = (page, n = 3) => page.evaluate(count => new Promise(done => { const go = i => (i ? requestAnimationFrame(() => go(i - 1)) : done()); go(count) }), n)
 
 /** Copied out of the canvas in the same task as `paint`, so a cleared drawing buffer can't fool it. */
-const hashOf = `(canvas, w = canvas.width, h = canvas.height, top = 0) => {
+const hashScript = `globalThis.hashOf = (canvas, w = canvas.width, h = canvas.height, top = 0) => {
   const c = new OffscreenCanvas(w, h), x = c.getContext('2d', { willReadFrequently: true })
   x.drawImage(canvas, 0, top, w, h, 0, 0, w, h)
   const d = x.getImageData(0, 0, w, h).data
@@ -72,29 +73,28 @@ console.log('Keel port')
   const shape = await page.evaluate(() => { const c = document.querySelector('canvas'), r = c.getBoundingClientRect(); return { w: c.width, h: c.height, css: [r.width, r.height], pixelated: getComputedStyle(c).imageRendering, label: c.getAttribute('aria-label') } })
   ok('integer scale and nearest sampling', shape.w === 256 && shape.css[0] % 256 === 0 && shape.css[0] / 256 === shape.css[1] / 144 && /pixelated|crisp/.test(shape.pixelated), JSON.stringify(shape))
   ok('the canvas is named', shape.label === 'KEEL scene')
-  const atFrame = seconds => page.evaluate(([src, s]) => { const hash = eval(src); clock.seek(s); return hash(document.querySelector('canvas')) }, [hashOf, seconds])
+  const atFrame = seconds => page.evaluate(s => { clock.seek(s); return hashOf(document.querySelector('canvas')) }, seconds)
   const a = await atFrame(2), other = await atFrame(1), b = await atFrame(2)
   ok('the scene renders', a.inked > 0)
   ok('same frame, same pixels', a.hash === b.hash, `${a.hash}`)
   ok('another frame, other pixels', a.hash !== other.hash)
-  const direct = await page.evaluate(async ([src, seconds]) => {
-    const hash = eval(src)
+  const direct = await page.evaluate(async seconds => {
     const { colours, ramps, world, view, runtime } = keelScene
     const { renderer } = await runtime()
     const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 144
     const { fields: { px } } = renderer.context(canvas, { name: 'direct', pixel: { width: 256, height: 144 } })
     px.setPalette(colours, ramps); px.setMaterials([{ ramp: 'surface' }, { ramp: 'accent' }]); px.setWorld(world); px.setStyle({ screen: 4 })
     px.render(view(seconds))
-    return hash(canvas)
-  }, [hashOf, 2]).catch(e => ({ error: e.message }))
+    return hashOf(canvas)
+  }, 2).catch(e => ({ error: e.message }))
   ok('the same pixels as KEEL\'s renderer driven directly', direct.hash === a.hash, JSON.stringify({ direct, surface: a }))
-  const before = await page.evaluate(src => eval(src)(document.querySelector('canvas')), hashOf)
+  const before = await page.evaluate(() => hashOf(document.querySelector('canvas')))
   const label = () => page.getByRole('button').textContent()
   ok('it starts paused, like the original', (await label()) === 'PLAY')
   await page.getByRole('button').click()
   await page.waitForFunction(() => document.querySelector('button').textContent === 'PAUSE')
   await frames(page, 12)
-  const after = await page.evaluate(src => { const hash = eval(src); clock.seek(clock.seconds); return hash(document.querySelector('canvas')) }, hashOf)
+  const after = await page.evaluate(() => { clock.seek(clock.seconds); return hashOf(document.querySelector('canvas')) })
   ok('PLAY animates', before.hash !== after.hash)
   ok('no errors or warnings', page.problems.length === 0, page.problems.join(' | '))
   await page.context().close()
@@ -104,7 +104,7 @@ console.log('canvas2d')
 {
   const page = await open('?page=lab')
   await page.waitForFunction(() => document.querySelector('[data-surface-text]'))
-  await page.waitForFunction(src => { const c = document.querySelector('[data-surface="bars"] canvas'); return eval(src)(c, c.width, 100).inked > 40 }, hashOf, { timeout: 5000 }).catch(e => { console.log(page.problems); throw e })
+  await page.waitForFunction(() => { const c = document.querySelector('[data-surface="bars"] canvas'); return hashOf(c, c.width, 100).inked > 40 }, undefined, { timeout: 5000 }).catch(e => { console.log(page.problems); throw e })
   const box = await page.evaluate(() => { const c = document.querySelector('[data-surface="bars"] canvas'), r = c.getBoundingClientRect(); return { w: c.width, h: c.height, css: [r.width, r.height] } })
   ok('backing store is CSS size × dpr', box.w === box.css[0] * 2 && box.h === box.css[1] * 2, JSON.stringify(box))
 
@@ -114,7 +114,7 @@ console.log('canvas2d')
     seen.observe(document, { subtree: true, childList: true, characterData: true, attributes: true })
     const paints = lab.paints, bodies = lab.body
     lab.level.value = 60; lab.level.value = 90; lab.level.value = 120
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+    await new Promise(r => { requestAnimationFrame(() => requestAnimationFrame(r)) })
     seen.disconnect()
     return { mutations: records.length, paints: lab.paints - paints, bodies: lab.body - bodies, tints: 0 }
   })
@@ -129,11 +129,11 @@ console.log('canvas2d')
   const name = await page.getByRole('paragraph').first().textContent()
   ok('assistive tech can read it', name?.startsWith('A surface title'))
 
-  const region = src => page.evaluate(src => { const c = document.querySelector('[data-surface="bars"] canvas'); return eval(src)(c, c.width, 120) }, src)
-  const english = await region(hashOf)
+  const region = () => page.evaluate(() => { const c = document.querySelector('[data-surface="bars"] canvas'); return hashOf(c, c.width, 120) })
+  const english = await region()
   await page.evaluate(() => { document.querySelector('[data-surface-text]').firstChild.nodeValue = 'Ein Titel' })
   await frames(page, 4)
-  const german = await region(hashOf)
+  const german = await region()
   ok('a translator\'s edit of the mirror repaints the canvas', english.hash !== german.hash && german.inked < english.inked, `${english.inked} → ${german.inked} inked`)
   await page.evaluate(() => { lab.title.value = 'Back' })
   await frames(page, 4)
@@ -149,11 +149,11 @@ console.log('canvas2d')
 
 for (const [name, media] of [['forced colours', { forcedColors: 'active' }], ['print', { media: 'print' }]]) {
   const page = await open('?page=lab')
-  await page.waitForFunction(src => { const c = document.querySelector('[data-surface="bars"] canvas'); return eval(src)(c, c.width, 100).inked > 40 }, hashOf)
+  await page.waitForFunction(() => { const c = document.querySelector('[data-surface="bars"] canvas'); return hashOf(c, c.width, 100).inked > 40 })
   if (name === 'forced colours' && browserName === 'webkit') { await page.context().close(); continue }
   await page.emulateMedia(media)
   await frames(page, 3)
-  const r = await page.evaluate(src => { const c = document.querySelector('[data-surface="bars"] canvas'), p = document.querySelector('[data-surface-text]'); const hash = eval(src); return { text: hash(c, c.width, 350).inked, bar: hash(c, c.width, 60, c.height - 60).inked, color: getComputedStyle(p).color } }, hashOf)
+  const r = await page.evaluate(() => { const c = document.querySelector('[data-surface="bars"] canvas'), p = document.querySelector('[data-surface-text]'); return { text: hashOf(c, c.width, 350).inked, bar: hashOf(c, c.width, 60, c.height - 60).inked, color: getComputedStyle(p).color } })
   console.log(name)
   ok('the canvas drops its text, keeps its drawing, and the mirror shows', r.text === 0 && r.bar > 0 && !/rgba\(.*, 0\)$|transparent/.test(r.color), JSON.stringify(r))
   await page.context().close()
@@ -167,21 +167,21 @@ console.log('webgl2')
   await page.evaluate(() => { lab.level.value = 100; clock.pause() })
   await frames(page, 3)
   const px = await read()
-  ok('s.tokens.accent.linear reaches the shader', Math.abs(px[0] - 147) < 12 && px[1] < 30, `${px} (accent rgb(200,40,40) in linear)`)
-  const held = await page.evaluate(async () => { const n = lab.frames; await new Promise(r => setTimeout(r, 200)); return lab.frames - n })
+  ok('s.tokens.accent.linear reaches the shader', Math.abs(px[0] - 147) < 12 && px[1] < 30, `${px.join()} (accent rgb(200,40,40) in linear)`)
+  const held = await page.evaluate(async () => { const n = lab.frames; await new Promise(r => { setTimeout(r, 200) }); return lab.frames - n })
   ok('pause stops the loop', held === 0, `${held} frames`)
   await page.evaluate(() => { lab.level.value = 0 })
   await frames(page, 3)
-  ok('a box change repaints while paused', (await read())[2] < px[2] || px[2] === 0, `${await read()}`)
+  ok('a box change repaints while paused', (await read())[2] < px[2] || px[2] === 0, (await read()).join())
   await page.evaluate(() => clock.play())
   ok('the mirror is the visible text', (await page.evaluate(() => getComputedStyle(document.getElementById('gl-label')).color)) === 'rgb(255, 255, 255)')
   const lost = await page.evaluate(async () => {
     const ext = lab.gl.getExtension('WEBGL_lose_context')
     const before = lab.setups
     ext.loseContext()
-    await new Promise(r => setTimeout(r, 100))
+    await new Promise(r => { setTimeout(r, 100) })
     ext.restoreContext()
-    await new Promise(r => setTimeout(r, 200))
+    await new Promise(r => { setTimeout(r, 200) })
     return lab.setups - before
   })
   ok('a lost context comes back and setup runs again', lost === 1, `${lost}`)

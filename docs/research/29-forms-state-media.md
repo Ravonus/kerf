@@ -1,4 +1,4 @@
-# 29. `<Form>`, the state payload, `cookie` persist and the media route: `@weft/start` (Phase 3, fourth slice)
+# 29. `<Form>`, the state payload, `cookie` persist and the media route: `@weft-js/start` (Phase 3, fourth slice)
 
 Status: **built, 2026-10-30; §8 records what changed and what was measured.** Inputs: PLAN §4, §4.5,
 §6.3, §9 row "3. Start"; research 14 §2.7, §2.9, §3.1, §3.4, §4.2; research 15 §4.4, §5.4, §6.1, §7.2, §7.5; research 27
@@ -8,7 +8,7 @@ Status: **built, 2026-10-30; §8 records what changed and what was measured.** I
 
 Four facts from the code shaped every decision below.
 
-- **`weft/ssr` makes a new app per render pass** and a stream renders several passes. Setups that read a query keep
+- **`@weft-js/core/ssr` makes a new app per render pass** and a stream renders several passes. Setups that read a query keep
   working only because each pass re-runs them. So the payload is taken from the last pass, and passes stay separate.
 - **`rt.data` already carries the page's data** from `#weft-data` into `hydrate()`, whether or not the app uses state.
   Putting the state payload in it costs a client without scopes one short assignment.
@@ -41,7 +41,7 @@ render pass → dehydrate(app) → data.s  (in #weft-data) → hydrate: rt.state
 
 - **Name:** `weft.<app>.<scope>.<box>`, because `:` isn't a cookie-name character. **Value:** the same envelope as
   every backend, URI-encoded.
-- **Server:** `RenderOptions.app.cookies` is a read-only jar (`get(name)`); `@weft/start` parses the request's `Cookie`
+- **Server:** `RenderOptions.app.cookies` is a read-only jar (`get(name)`); `@weft-js/start` parses the request's `Cookie`
   header into it. The load path is the shared one: version, migrations, schema. A cookie is user input, so a value the
   schema rejects falls back to `init`; `:corrupt` isn't written on the server or as a cookie.
 - **Client:** `document.cookie`, `Path=/; Max-Age=<maxAge or 1 year>; SameSite=Lax`, plus `Secure` on https.
@@ -56,7 +56,7 @@ render pass → dehydrate(app) → data.s  (in #weft-data) → hydrate: rt.state
 | Code | Where | Rule |
 |---|---|---|
 | S001 | `weft check` | A server value (object, array, or a map/filter/spread of one) reaches `state(…)`, `box.value =` or `box.set`. Server values: `q()`, `q().value`, `await q.fetch()`, and a `watch`/`then` parameter fed by them, where `q` is imported from a server module and defined with `query`. Not S001: primitives picked from a value, `state.linked`, `optimistic`, `untrack(…)`. |
-| S002 | runtime | `@weft/start`'s server module sets `rt.isolated`. A handle that resolves to the tab's root app there throws. It fires in production too, because it stops one user's state reaching another: module scope, `load`, a `run`, a timer. |
+| S002 | runtime | `@weft-js/start`'s server module sets `rt.isolated`. A handle that resolves to the tab's root app there throws. It fires in production too, because it stops one user's state reaching another: module scope, `load`, a `run`, a timer. |
 | S012 | `weft check` | `state.linked(() => …)` with no `key`, whose source reads a server value. |
 | S013 | runtime, dev | On the server, a dev-only accessor on each `local`/`session` box reports the first read during a render. |
 
@@ -70,7 +70,7 @@ and the compiler sees one file at a time.
 ## 5. `<Form>`
 
 ```tsx
-import { Form } from '@weft/start'
+import { Form } from '@weft-js/start'
 
 <Form of={addTodo} class="add">
   {form => (
@@ -127,12 +127,12 @@ built since then and takes `{src, width, height, kind, type, sources, dominant, 
 thing would need a converter at every use, so `z.media()` validates `MediaAsset` and `<Media src={post.cover}>` just
 works. ThumbHash isn't built anywhere yet.
 
-**`z` is a wrapper.** Zod's `z` is an ES namespace, which can't be extended, so `@weft/start/media` exports a `z` with
+**`z` is a wrapper.** Zod's `z` is an ES namespace, which can't be extended, so `@weft-js/start/media` exports a `z` with
 Zod's API plus `media()`, and `import { z } from 'zod'` keeps working for everything else. `z.media()` is a plain
 `z.object`, so C001 stays quiet and the contract shows the record.
 
 **One new slot, `media.server@1`,** side `server`, following research 26's decision to keep one slot per side until a
-second encoder exists. The provider lives in `@weft/plugin-media/server` and loads lazily, so `sharp` never reaches an
+second encoder exists. The provider lives in `@weft-js/plugin-media/server` and loads lazily, so `sharp` never reaches an
 app that doesn't call it, and Nitro traces it only when bound.
 
 **`ctx.media.ingest(file)`** stores the original under its SHA-256 and returns the record: dimensions after EXIF
@@ -191,7 +191,7 @@ external and Nitro traces `sharp*` and `css-tree*`, only when `media.server` is 
 
 That brought one requirement the design didn't have: **an app using the media route needs `sharp` as a direct
 dependency.** Nitro resolves it from the app root. With strict `node_modules` it isn't reachable through the plugin, so
-the build warns M017. `@weft/start` has it as a dev dependency for this reason.
+the build warns M017. `@weft-js/start` has it as a dev dependency for this reason.
 
 **Measured** (brotli, `packages/weft/scripts/size.mjs`, before → after)
 

@@ -1,4 +1,4 @@
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Button, Card, Field, PageHeader, control } from './ui'
 
 const initial = { name: 'Avery Morgan', email: 'avery@northwind.example', role: 'Admin', bio: 'Runs operations and billing for the Northwind workspace.' }

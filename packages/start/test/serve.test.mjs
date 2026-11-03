@@ -1,4 +1,5 @@
 import { inject } from 'vitest'
+import { pathPages } from '../src/derive.mjs'
 // The fixture app under `weft dev` (Vite + weftStart + Nitro), fetched the way a link-preview crawler fetches it:
 // one GET, no JavaScript (research 20 §1). Routing, metadata, status codes, streaming order, the navigation data
 // endpoint and share cards.
@@ -35,6 +36,7 @@ describe('a crawler fetching a param route sees every tag in the first response'
       image,
       'meta property=og:image:width content=1200',
       'meta property=og:image:height content=630',
+      'meta property=og:image:alt content=Alan Turing · Acme',
       'meta name=twitter:card content=summary_large_image',
       'meta name=twitter:site content=@acme',
       'meta name=theme-color content=#0b0b0f',
@@ -160,7 +162,7 @@ describe('share cards', () => {
     expect(res.headers.get('content-type')).toBe('image/png')
     expect(res.headers.get('cache-control')).toBe('no-store') // dev: edits show on reload
     const png = new Uint8Array(await res.arrayBuffer())
-    expect([...png.slice(1, 4)].map(c => String.fromCharCode(c)).join('')).toBe('PNG')
+    expect(Array.from(png.slice(1, 4), c => String.fromCharCode(c)).join('')).toBe('PNG')
     const view = new DataView(png.buffer)
     expect([view.getUint32(16), view.getUint32(20)]).toEqual([1200, 630])
   })
@@ -199,4 +201,13 @@ describe('fonts', () => {
     expect(res.status).toBe(200)
     expect(await res.text()).toBe('wOF2 fixture')
   })
+})
+
+test('the prerender list fits in a header, however big the site', () => {
+  const paths = Array.from({ length: 2000 }, (_, i) => `/_weft/og/docs/some-page-${i}.png`)
+  const pages = pathPages(paths)
+  expect(pages.length).toBeGreaterThan(1)
+  expect(pages.flat()).toEqual(paths)
+  for (const p of pages) expect(p.join(',').length).toBeLessThan(6100)
+  expect(pathPages([])).toEqual([[]])
 })

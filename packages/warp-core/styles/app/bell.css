@@ -1,0 +1,14 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* the bell is its button's box, never stretched by a row or a column, so the badge measures from the button */
+:where([data-scope="bell"]) { position: relative; display: inline-flex; vertical-align: middle; inline-size: fit-content; block-size: fit-content; }
+:where([data-scope="bell"] [data-part="content"]:popover-open) { display: grid; inline-size: min(400px, calc(100vw - 16px)); max-inline-size: none; max-block-size: min(520px, calc(100dvh - 88px)); padding: 0; overflow: clip; }
+/* the count sits off the glyph's top-end corner, as a notification badge does: placed from the button's centre, it
+   reaches 2px into the glyph's box each way (the box's empty corner, beside the bell's dome), whatever the control size,
+   grows away from it, and a 2px ring of the surface cuts it clear of the bell's outline */
+:where([data-scope="bell"] > [data-scope="badge"][data-count]) {
+  position: absolute; inset-inline-start: calc(50% + var(--warp-icon-md) / 2 - 2px); inset-block-end: calc(50% + var(--warp-icon-md) / 2 - 2px);
+  box-sizing: border-box; block-size: 15px; min-inline-size: 15px; padding-inline: 3px; border: 0; font-size: 9.5px; line-height: 1;
+  box-shadow: 0 0 0 2px var(--warp-color-surface); pointer-events: none;
+}
+}

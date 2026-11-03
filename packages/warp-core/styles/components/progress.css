@@ -1,0 +1,50 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Progress: linear, circular, indeterminate ------------------------------------- */
+:where([data-scope="progress"][data-part="root"]) { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
+:where([data-scope="progress"] [data-part="label-row"]) { display: flex; justify-content: space-between; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="progress"] [data-part="label-row"] > :first-child) { color: var(--warp-color-text); font-weight: 500; }
+:where([data-scope="progress"] [data-part="value-text"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="progress"] [data-part="track"]) {
+  position: relative; overflow: clip; block-size: calc(4px - 1px * var(--warp-x)); border-radius: var(--warp-radius-round);
+  background: var(--warp-color-surface-active);
+}
+:where([data-scope="progress"] [data-part="range"]) {
+  position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: 100%; border-radius: inherit;
+  background: var(--_solid);
+  /* the fill moves through the rail: clip, not scale, so the leading edge keeps its radius */
+  clip-path: inset(0 calc(100% - var(--_v, 0) * 100%) 0 0 round var(--warp-radius-round));
+  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+:where([data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
+  inline-size: 38%; clip-path: none;
+  animation: warp-indeterminate calc(1400ms * (2 - var(--warp-motion-scale))) var(--warp-ease-in-out) infinite;
+}
+@keyframes warp-indeterminate {
+  from { translate: -100% 0; opacity: calc(0.35 + 0.65 * var(--warp-motion-scale)); }
+  50% { opacity: 1; }
+  to { translate: calc(100% / 0.38 * var(--warp-motion-scale) + 0% ) 0; opacity: calc(0.35 + 0.65 * var(--warp-motion-scale)); }
+}
+:where([data-scope="progress"][data-shape="circle"]) { display: inline-grid; place-items: center; inline-size: var(--_size, 48px); block-size: var(--_size, 48px); }
+:where([data-scope="progress"][data-shape="circle"] svg) { grid-area: 1 / 1; inline-size: 100%; block-size: 100%; rotate: -90deg; overflow: visible; }
+:where([data-scope="progress"][data-shape="circle"] circle) { fill: none; stroke-width: calc(3px - 0.5px * var(--warp-x)); }
+:where([data-scope="progress"][data-shape="circle"] [data-part="track"]) { stroke: var(--warp-color-surface-active); block-size: auto; background: none; }
+:where([data-scope="progress"][data-shape="circle"] [data-part="range"]) {
+  stroke: var(--_solid); stroke-linecap: round; position: static; scale: 1;
+  stroke-dasharray: 100 100; stroke-dashoffset: calc(100 - var(--_v, 0) * 100);
+  transition: stroke-dashoffset var(--warp-duration-slow) var(--warp-ease-out);
+}
+:where([data-expression="vivid"] [data-scope="progress"][data-shape="circle"] [data-part="range"]) { stroke-linecap: butt; }
+:where([data-scope="progress"][data-shape="circle"] [data-part="value-text"]) { grid-area: 1 / 1; font: 500 11px/1 var(--warp-font-mono); }
+
+
+/* -- Reduced motion (review 02 M6, review 03 M11). warp.base stops every loop under reduce
+   (skeletons go still, spinners and indeterminate bars pulse in opacity only). Components add
+   one thing: the indeterminate bar fills its track, so the still, pulsing state reads as
+   "working", not as a stuck 38% value. -------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"])) :where([data-scope="progress"][data-state="indeterminate"] [data-part="range"]) { inline-size: 100%; translate: none; }
+}
+
+:where([data-motion="reduce"]) :where([data-scope="progress"][data-state="indeterminate"] [data-part="range"]) { inline-size: 100%; translate: none; }
+}

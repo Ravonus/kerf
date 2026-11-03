@@ -1,4 +1,4 @@
-// Video, audio and GIF-to-video on real encodes through @weft/plugin-media-ffmpeg: the ladder, what's kept, GIF delays,
+// Video, audio and GIF-to-video on real encodes through @weft-js/plugin-media-ffmpeg: the ladder, what's kept, GIF delays,
 // the keep-the-GIF rule, audio muxing and the compatible copy. Skipped where ffmpeg isn't installed.
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createMediaEncode } from '@weft/plugin-media-ffmpeg/build'
-import { KEYS } from '@weft/plugin-media-ffmpeg'
+import { createMediaEncode } from '@weft-js/plugin-media-ffmpeg/build'
+import { KEYS } from '@weft-js/plugin-media-ffmpeg'
 import { createMediaBuild, findScorer } from '../src/build.mjs'
 import { createMediaServer } from '../src/server.mjs'
 
@@ -48,6 +48,7 @@ beforeAll(async () => {
 }, 60000)
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
+// Needs a real `ffmpeg` on PATH: it encodes real clips, and CI without one still runs everything else.
 describe.skipIf(!hasFfmpeg)('video', () => {
   it('encodes a ladder, efficient first, H.264 last, with a poster, and keeps the audio', async () => {
     const { asset, files } = await build('clip.mov')
@@ -85,6 +86,7 @@ describe.skipIf(!hasFfmpeg)('video', () => {
   })
 })
 
+// Needs a real `ffmpeg` on PATH: a GIF only becomes video through it.
 describe.skipIf(!hasFfmpeg)('GIF', () => {
   it('turns into video when that saves 15%, looping, with its running time', async () => {
     const { asset, files } = await build('flat.gif')
@@ -106,6 +108,7 @@ describe.skipIf(!hasFfmpeg)('GIF', () => {
     expect(files.find(f => f.name === asset.copy.src).bytes).toEqual(read('flat.gif'))
   })
 
+  // The "15% smaller at the target" comparison needs the `ssimulacra2` scorer to find the target.
   it.skipIf(!findScorer('ssimulacra2'))('stays a GIF when nothing is 15% smaller at the target', async () => {
     ff('-f', 'lavfi', '-i', 'nullsrc=s=160x90:r=10:d=1,geq=random(1)*255:random(2)*255:random(3)*255', '-vf', 'split[a][b];[a]palettegen=stats_mode=full[p];[b][p]paletteuse=dither=none', join(dir, 'noise.gif'))
     const { asset } = await build('noise.gif', { ...options, quality: { scorer: 'ssimulacra2' }, gif: { keepUnder: 0 } })
@@ -140,6 +143,7 @@ describe.skipIf(!hasFfmpeg)('GIF', () => {
   })
 })
 
+// Needs a real `ffmpeg` on PATH: the audio is really encoded.
 describe.skipIf(!hasFfmpeg)('audio', () => {
   it('gives Opus and AAC', async () => {
     const { asset, files } = await build('tone.wav')
@@ -157,6 +161,7 @@ describe.skipIf(!hasFfmpeg)('audio', () => {
   })
 })
 
+// Needs a real `ffmpeg` on PATH: uploads go through the real media.encode@1 provider.
 describe.skipIf(!hasFfmpeg)('uploads', () => {
   const upload = opts => createMediaServer({ ...options, ...opts, server: { dir: mkdtempSync(join(dir, 's-')) } }).at('/unused', encode)
   const want = (m, u) => {

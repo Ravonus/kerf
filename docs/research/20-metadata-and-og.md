@@ -1,6 +1,6 @@
 # 20 — Page metadata and OG images (design)
 
-Research date: 2026-10-29. Status: **design; §7.1 built** (note under §7), **§7.3 spike done** (§9). Depends on Phase 3 routing (PLAN §4, §9); §2's
+Research date: 2026-10-29. Status: **built** (§7, §10), **§7.3 spike done** (§9). Depends on Phase 3 routing (PLAN §4, §9); §2's
 defaults and the `<head>` writer can land before it. Statements about other frameworks are from their docs as I
 know them and marked **(unverified)** where a version or detail matters.
 
@@ -160,7 +160,7 @@ compiler reports anything else in a `.og.tsx` file (a new diagnostic, §6) inste
 
 ### 4.2 Rendering pipeline
 
-TSX → HTML string (weft/ssr) → rasterizer → PNG.
+TSX → HTML string (@weft-js/core/ssr) → rasterizer → PNG.
 
 Two rasterizers are worth measuring:
 
@@ -243,13 +243,13 @@ each one is reported now is in research 25 §8.
    and an HTML-only fetch (no JS) of a rendered page that sees every tag.
    **Built (2026-10-29).** `site` in weft.config.ts (`packages/cli/src/config.d.ts`, Zod schema in `load-config.mjs`:
    absolute http(s) `url`, `title` must contain `%s`, `en_US`-style `locale`; P007 otherwise). `packages/weft/src/head.ts`,
-   exported from `weft/ssr`: `mergeMeta(site, ...metas)` (later wins, `og`/`twitter` by key, undefined keys don't erase,
+   exported from `@weft-js/core/ssr`: `mergeMeta(site, ...metas)` (later wins, `og`/`twitter` by key, undefined keys don't erase,
    `title: { absolute }`, no title → `site.name`), `headTags(merged, path)` (the §2 set as data) and `metaTags` (HTML,
    every tag `data-wm`, values escaped). Canonical and `og:url` are written only with `site.url`; `image: 'auto'`
    writes no image until §4 lands; an image's width/height are written when given (`{ url, width, height, alt }`);
    `twitter:title/description` only when they differ from og. `renderToString`/`renderToStringAsync` take
    `head: { site, meta, path }`: tags go at the top of the app's `<head>` (after a leading `<meta charset>`), or the
-   output is wrapped in a minimal document when the app renders no `<head>`. `weft/head` exports `setHead(merged, path)`
+   output is wrapped in a minimal document when the app renders no `<head>`. `@weft-js/core/head` exports `setHead(merged, path)`
    for the router: 0.64 KB br on its own (`size.mjs` row "setHead"), nothing calls it, existing bundle sizes unchanged.
    `weft check` reports H001 (relative or `auto` image, no `site.url`), H003 (no `site.description`) and H004 (default
    title over 60, template's fixed part over 40, description over 160) from `site` alone; H002/H005–H007 are in the
@@ -257,7 +257,7 @@ each one is reported now is in research 25 §8.
    rendered page read as plain text) and `packages/cli/test/config.test.mjs`. Not covered: hydrating a TSX-rendered
    `<head>` with the inserted tags in it (Phase 3 renders the shell).
 2. **With Phase 3 routing:** route `meta`, layout merge, loader data, 404/error metadata, client navigation updates.
-   **Built (2026-10-29)** in `@weft/start`; see research 25.
+   **Built (2026-10-29)** in `@weft-js/start`; see research 25.
 3. **OG spike:** Takumi (native and wasm) against Satori + resvg, in all three modes on Node, Vercel and Netlify.
    Measure cold start, function size and render time for the default card and a card with an avatar. Pass: under
    300 ms warm render, inside each platform's function size limit. Pick the renderer from the numbers.
@@ -334,7 +334,7 @@ What a function ships, measured with `wrangler deploy --dry-run` (minified; it i
 
 | | Raw | gzip | Of which |
 |---|---|---|---|
-| Takumi wasm Worker | 4,046 KiB | 1,817 KiB | `takumi_wasm_bg.wasm` 3.98 MB / 1.71 MB gz; JS (Takumi's HTML parser, weft/ssr, cards) 45 KB / 17 KB gz; fonts 71 KB; avatar 46 KB |
+| Takumi wasm Worker | 4,046 KiB | 1,817 KiB | `takumi_wasm_bg.wasm` 3.98 MB / 1.71 MB gz; JS (Takumi's HTML parser, @weft-js/core/ssr, cards) 45 KB / 17 KB gz; fonts 71 KB; avatar 46 KB |
 | Satori 0.32 + resvg-wasm Worker | 3,076 KiB | 1,241 KiB | resvg wasm 2.48 MB / 947 KB gz; yoga 72 KB / 29 KB gz; JS 464 KB / 152 KB gz; fonts 90 KB; avatar 46 KB |
 | `@vercel/og` 1.0.3 edge build (not run, for reference) | 2.44 MB | 807 KB | ships a trimmed `resvg.wasm` (1.38 MB / 527 KB gz) and the Geist font |
 | Takumi native (Node functions) | 8.2 MB (linux-x64-gnu), 6.9 MB (linux-arm64-gnu) | | `.node` binary, plus `@takumi-rs/core` 0.1 MB and `helpers` 0.2 MB |
@@ -452,6 +452,16 @@ The Worker is 4,070 KiB raw and 1,831 KiB gzipped, 14 KiB more than plain Takumi
 
 H008 is new: **warning**, a card image failed to load (timeout, HTTP error, not an image, too large, or host not
 allowed), and the card rendered without it.
+
+## 10. Automatic metadata, enforced (2026-11-01)
+
+What §1–§9 left to chance: `image` defaulted to nothing, so no app without `image: 'auto'` got a card; canonical and `og:url` needed `site.url`, which most apps didn't set; a page with no `meta` had the site's title; and H011–H016 didn't exist, so nothing said so.
+
+- **Order:** `site` → what the page rendered → layouts → the route. `derive.mjs` reads the rendered shell for the `h1` and the first paragraph of prose. This doesn't break §1: the shell is rendered and settled before the first byte, so the head still comes first, and it's the same pass that a page, its navigation and its card read, so all three agree. A Boundary's streamed content isn't in the shell, so it can't change a page's tags from one request to the next. A request that doesn't otherwise render (a card, a navigation) only renders when a level left words to the page.
+- **`site.image` defaults to `'auto'`.** The hash covers the head and `site.card`, plus `data` only for an `.og.tsx`, so a loader's timestamp can't change a built-in card's URL. A request with a cookie never gets `immutable`.
+- **The origin** comes from config, then deploy env (a server reads it at runtime), then the request. The request's is `Host`, which an attacker can set, so production warns once. It's never used for a prerender, which would write `localhost` into a file.
+- **`weft check` runs the routes** (`inspect.mjs`). Loaders run once with no boot step, so a page that needs a database answers 500 and reports H016 info. Set `check: { routes: false }` to skip it. Param routes are sampled from `prerender` and links on rendered pages, 50 at most.
+- **Open:** a card is drawn with the first file of each face, so a variable font draws at its default instance unless Takumi is told otherwise; `meta.canonical` for a page whose query matters isn't built; `.og.tsx` still has no static check of its source, only a render.
 
 ## Sources
 

@@ -32,7 +32,7 @@ export type Def = {
 type Decls = Record<string, string>
 
 /** Where a rule applies: the root or a part, under some axis values, a state or an accent word (`radius:round`). */
-export type Rule = { part?: string; axes: [string, string][]; state?: string; accent?: string; tier: number; decls: Decls; at: string }
+export type Rule = { part?: string | undefined; axes: [string, string][]; state?: string; accent?: string; tier: number; decls: Decls; at: string }
 
 export class GroupError extends Error {}
 
@@ -45,13 +45,13 @@ const table = VOCAB as unknown as Record<string, Record<string, Decls>>
 export function didYouMean(word: string, names: string[]): string {
   const dist = (a: string, b: string) => {
     // edit distance with adjacent swaps as one edit (`titel` → `title`)
-    const d = Array.from({ length: a.length + 1 }, (_, i) => Array.from({ length: b.length + 1 }, (_, j) => (i ? (j ? 0 : i) : j)))
+    const d = Array.from({ length: a.length + 1 }, (_row, i) => Array.from({ length: b.length + 1 }, (_cell, j) => (i ? (j ? 0 : i) : j)))
     for (let i = 1; i <= a.length; i++)
       for (let j = 1; j <= b.length; j++) {
-        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
-        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1)
+        d[i]![j] = Math.min(d[i - 1]![j]! + 1, d[i]![j - 1]! + 1, d[i - 1]![j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1))
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i]![j] = Math.min(d[i]![j]!, d[i - 2]![j - 2]! + 1)
       }
-    return d[a.length][b.length]
+    return d[a.length]![b.length]!
   }
   const w = word.toLowerCase()
   const limit = Math.max(1, Math.floor(w.length / 3))
@@ -76,7 +76,7 @@ export function resolveTraced(intent: Intent, where: string): Record<string, { v
     if (!values) throw new GroupError(`${where}: \`${key}\` isn't an intent (${didYouMean(key, Object.keys(table))}one of ${Object.keys(table).join(', ')}; raw CSS goes in \`css: { … }\`)`)
     const decls = values[String(value)]
     if (!decls) throw new GroupError(`${where}: \`${key}: ${JSON.stringify(value)}\` isn't a token (${didYouMean(String(value), Object.keys(values))}${key} is one of ${Object.keys(values).join(', ')})`)
-    for (const [p, v] of Object.entries(decls)) out[p] = { value: v, from: `${key}: ${value}` }
+    for (const [p, v] of Object.entries(decls)) out[p] = { value: v, from: `${key}: ${value as string}` }
   }
   return out
 }
@@ -182,10 +182,10 @@ function foldTones(rules: Rule[]) {
     // Channels read by rules on other elements (a part reading its root's tone) must stay.
     if (rules.some(r => r.part !== t && Object.entries(r.decls).some(([p, v]) => !isChannel(p) && reads(v)))) continue
     const drop = (r: Rule) => (r.decls = Object.fromEntries(Object.entries(r.decls).filter(([p]) => !isChannel(p))))
-    if (setters.length === 1 && setters[0].tier === 0) {
-      const channels = { ...setters[0].decls }
+    if (setters.length === 1 && setters[0]!.tier === 0) {
+      const channels = { ...setters[0]!.decls }
       for (const r of readers) for (const [p, v] of Object.entries(r.decls)) if (!isChannel(p)) r.decls[p] = substitute(v, channels)
-      drop(setters[0])
+      drop(setters[0]!)
     } else if (setters.every(s => s.tier > 0) && readers.every(r => r.tier === 0 && !r.state)) {
       const read = readers.flatMap(r => Object.entries(r.decls).filter(([p, v]) => !isChannel(p) && reads(v)))
       for (const s of setters) {
@@ -218,10 +218,10 @@ function bySimilarity<T extends { g: GroupSource; rules: Rule[] }>(xs: T[]): T[]
   const left = [...xs].sort((a, b) => a.g.name.localeCompare(b.g.name))
   const out = left.length ? [left.shift()!] : []
   while (left.length) {
-    const last = out[out.length - 1]
+    const last = out[out.length - 1]!
     let best = 0
-    for (let i = 1; i < left.length; i++) if (sim(last, left[i]) > sim(last, left[best])) best = i
-    out.push(left.splice(best, 1)[0])
+    for (let i = 1; i < left.length; i++) if (sim(last, left[i]!) > sim(last, left[best]!)) best = i
+    out.push(left.splice(best, 1)[0]!)
   }
   return out
 }
@@ -320,7 +320,7 @@ export function emitGroups(groups: GroupSource[], uses: GroupUse[], { dev = fals
       if (!ok) continue
       for (const e of es) moved.add(e.r)
       const comment = dev ? `  /* shared by ${names.join(', ')} */\n` : ''
-      scopedShares.push(`${comment}  @scope (${names.map(n => `[data-g="${n}"]`).join(dev ? ', ' : ',')}) to ([data-g]) {\n${block(sels, es[0].r.decls, '    ')}\n  }`)
+      scopedShares.push(`${comment}  @scope (${names.map(n => `[data-g="${n}"]`).join(dev ? ', ' : ',')}) to ([data-g]) {\n${block(sels, es[0]!.r.decls, '    ')}\n  }`)
     }
   }
   const blocks: string[] = [...scopedShares]

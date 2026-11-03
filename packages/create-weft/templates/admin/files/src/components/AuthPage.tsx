@@ -1,4 +1,4 @@
-import { AuthScreen, Heading, Stack, Text } from '@weft/warp'
+import { AuthScreen, Heading, Stack, Text } from '@weft-js/warp'
 import { Logo } from '#/components/Logo'
 
 export function AuthPage({ title, lede, children }: { title: string; lede: string; children?: unknown }) {

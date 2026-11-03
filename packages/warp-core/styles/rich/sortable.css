@@ -1,0 +1,36 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- sortable -------------------------------------------------------- */
+  :where([data-scope="sortable"]) { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  :where([data-scope="sortable"] [data-part="item"]) {
+    position: relative; display: flex; align-items: center; gap: var(--warp-space-related); padding: 6px 6px 6px 4px;
+    background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control);
+    transition: box-shadow var(--warp-duration-base) var(--warp-ease-out), border-color var(--warp-duration-fast), background-color var(--warp-duration-fast);
+  }
+  :where([data-scope="sortable"] [data-part="item"][data-lifted]) { z-index: 2; background: var(--warp-color-surface-overlay); border-color: var(--warp-color-accent-border); box-shadow: var(--warp-elevation-2); }
+  :where([data-scope="sortable"] [data-part="item"][data-dragging]) { transition: box-shadow var(--warp-duration-base), border-color var(--warp-duration-fast); }
+  :where([data-scope="sortable"] [data-part="handle"]) {
+    all: unset; display: grid; place-items: center; flex: none; inline-size: max(28px, var(--warp-target-min)); block-size: max(32px, var(--warp-target-min));
+    border-radius: var(--warp-radius-mark); color: var(--warp-color-text-faint); cursor: grab; touch-action: none;
+  }
+  :where([data-scope="sortable"] [data-part="handle"]:hover) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
+  :where([data-scope="sortable"] [data-part="handle"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; color: var(--warp-color-text); }
+  :where([data-scope="sortable"] [data-lifted] [data-part="handle"]) { cursor: grabbing; color: var(--warp-color-accent-text); }
+  :where([data-scope="sortable"] [data-part="handle"] svg) { inline-size: 16px; block-size: 16px; }
+  :where([data-scope="sortable"] [data-part="text"]) { flex: 1; min-inline-size: 0; display: grid; }
+  :where([data-scope="sortable"] [data-part="text"] b) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+  :where([data-scope="sortable"] [data-part="text"] small) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+  :where([data-scope="sortable"] [data-part="moves"]) { display: flex; gap: 2px; opacity: 0; transition: opacity var(--warp-duration-fast); }
+  :where([data-scope="sortable"] [data-part="item"]:hover [data-part="moves"]),
+  :where([data-scope="sortable"] [data-part="item"]:focus-within [data-part="moves"]) { opacity: 1; }
+  :where([data-pointer="coarse"] [data-scope="sortable"] [data-part="moves"]) { opacity: 1; }
+  @media (pointer: coarse) { :where([data-scope="sortable"] [data-part="moves"]) { opacity: 1; } }
+  /* touch: Move up / Move down sit side by side, so each is a full hit-min square rather than two overlapping expanders */
+  :where([data-scope="sortable"] [data-part="moves"] [data-scope="button"]) { inline-size: max(var(--warp-control-sm), var(--warp-hit-min)); block-size: max(var(--warp-control-sm), var(--warp-hit-min)); }
+  :where([data-scope="sortable"] [data-part="pos"]) { font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); inline-size: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+  /* review still: the sweep frozen half-way, base and stroke meeting mid-field */
+  :where([data-still="mid"] > [data-part="sweep"]),
+  :where([data-still="mid"] > [data-part="icon"] > [data-part="sweep"]) { transition: none; clip-path: inset(0 50% 0 0 round var(--warp-sweep-radius)); }
+  :where([data-still="mid"] > [data-part="sweep-base"]),
+  :where([data-still="mid"] > [data-part="icon"] > [data-part="sweep-base"]) { transition: none; clip-path: inset(0 0 0 50% round var(--warp-sweep-radius)); }
+}

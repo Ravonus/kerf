@@ -23,22 +23,28 @@
 // CSS. Each route and layout's own CSS comes from Nitro's assets manifest (build) or the client module graph (dev);
 // the server links the entry's and those of the levels it matched, so nothing paints before its styles and other
 // routes' CSS stays out of the page. In dev the links stand in for Vite's injected `<style>`s and HMR updates them.
-// In a build they go in the HTML as well (`inlineSheets`, inline.mjs): whole while the document fits the first flight,
-// else the rules the page's HTML reaches, with the sheets behind them as links that don't hold the paint. `site:
-// { inlineCss: false }` keeps plain links.
+// A build keeps each chunk's sheet for client navigation and writes a shared sheet (what every route has) and one sheet
+// per route for the rest, hashed and cached for good. Each page carries the part of those its first paint needs
+// (`firstPaint`) and links them at the end of its shell, where they block nothing above and hold whatever streams after.
+// `site: { criticalCss: false }` splits by chunk and puts them in the HTML (`inlineSheets`, inline.mjs): whole while the
+// document fits the first flight, else the rules the page's HTML reaches, with the sheets behind them as links that
+// don't hold the paint. `site: { inlineCss: false }` keeps plain links.
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from 'node:fs'
-import { LATE_SHEETS, REFUSED_SHEETS } from './inline.mjs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync, realpathSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { isCSSRequest, parseSync, searchForWorkspaceRoot } from 'vite'
-import { realpathSync } from 'node:fs'
 import { scanRoutes, routeTypes } from './routes.mjs'
-import { solve } from 'weft/hydration'
+import { solve } from '@weft-js/core/hydration'
 import { readMigrations } from './migrations.mjs'
+import { scanRequired } from './live-target.mjs'
+import { pieces } from '@weft-js/core/node-purge'
+import { planSheets, reach } from './sheets.mjs'
+import { INLINE_CSS_MAX, LATE_SHEETS, REFUSED_SHEETS } from './inline.mjs'
 
+/** This folder, wherever the package is installed. */
 const here = dirname(fileURLToPath(import.meta.url))
 const V = {
   routes: 'virtual:weft/routes',
@@ -61,26 +67,74 @@ const ISLAND = 'virtual:weft/island/'
 const PRELOAD = 'Per page, from the HTML: an island that loads with the page, or a lazy one in about the first 900px, is modulepreloaded (fetched, not run). The rest load when needed. Save-Data: lazy ones are not preloaded, and wait for interaction.'
 const NOT_ASSET = /\.[cm]?[jt]sx?$/
 const INLINE_SHEETS = '__WEFT_INLINE_SHEETS__'
-// Beside the export weft does name, so a page's critical CSS uses the build's own reachability rules.
-const purgeFile = join(dirname(createRequire(join(here, 'vite.mjs')).resolve('weft/hydration')), 'purge.mjs').split('\\').join('/')
+// A page's critical CSS with `criticalCss: false` uses the build's own reachability rules.
+const purgeFile = createRequire(join(here, 'vite.mjs')).resolve('@weft-js/core/node-purge').split('\\').join('/')
+const SHEET_PIECES = '__WEFT_SHEET_PIECES__'
 
 /**
  * The client build's stylesheets a page can carry, `{ href: css }`, read by the server build so every preset has them
  * with no file system. Left out: one a relative `url()` would break, and one that could close its `<style>`.
  */
-export function inlineSheets(outDir, base) {
+export function inlineSheets(outDir, base, limit = INLINE_CSS_MAX) {
   const dir = join(outDir, 'assets')
   if (!existsSync(dir)) return {}
   const sheets = {}
   for (const name of readdirSync(dir).filter(f => f.endsWith('.css'))) {
     const css = readFileSync(join(dir, name), 'utf8')
-    if (!/<\/style|<!--/i.test(css) && !/url\(\s*(?!["']?(?:\/|data:|https?:|#|%23))/.test(css)) sheets[`${base}assets/${name}`] = css
+    if (css.length <= limit && !/<\/style|<!--/i.test(css) && !/url\(\s*(?!["']?(?:\/|data:|https?:|#|%23))/.test(css)) sheets[`${base}assets/${name}`] = css
   }
   return sheets
 }
 
+/** How long a replaced sheet stays in the build, for pages cached before the deploy that replaced it: a CDN's longest day. */
+const KEEP_SHEETS_MS = 30 * 864e5
+
 /**
- * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, hold?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
+ * Writes the build's combined stylesheets beside the chunks' own. A route's list is what its chunks import, the entry's
+ * included, plus the sheets of the islands in the files it imports.
+ */
+function combineSheets(dir, bundle, manifest, abs, islands) {
+  const chunks = Object.values(bundle).filter(f => f.type === 'chunk')
+  const holding = id => chunks.filter(c => c.moduleIds.some(m => m.split('?')[0] === id))
+  const sheetsOf = (start, seen = new Set()) => start.flatMap(c => {
+    if (seen.has(c)) return []
+    seen.add(c)
+    return [...(c.viteMetadata?.importedCss ?? []), ...sheetsOf(c.imports.map(i => bundle[i]).filter(Boolean), seen)]
+  })
+  const entry = sheetsOf(chunks.filter(c => c.isEntry))
+  const routes = manifest.routes.map(r => {
+    const levels = [...manifest.layouts.filter(l => r.layouts.includes(l.id)).map(l => abs(l.file)), abs(r.file)]
+    const files = reach(levels)
+    const held = islands.filter(i => files.has(i.file)).map(i => i.file)
+    return [...new Set([...entry, ...sheetsOf([...levels, ...held].flatMap(holding))])]
+  }).filter(list => list.length)
+  const plan = planSheets(routes, name => readFileSync(join(dir, name), 'utf8'))
+  for (const [name, css] of Object.entries(plan.files)) writeFileSync(join(dir, name), css)
+  return plan
+}
+
+/**
+ * The first-paint table of the build's sheets (node/purge.mjs), and the last builds' combined sheets kept beside them: a
+ * page cached across a deploy links the ones it was built with. `.weft/sheets` carries them, so CI has to keep that folder.
+ */
+export function sheetPieces(outDir, base, plan, keep, root) {
+  const dir = join(outDir, 'assets')
+  const href = name => `${base}${name}`
+  const names = [...new Set([plan.shared, ...plan.routes].filter(Boolean).flatMap(s => s.has))]
+  const sheets = names.map(n => [href(n), readFileSync(join(outDir, n), 'utf8')]).filter(([, css]) => !/<\/style|<!--/i.test(css))
+  const old = join(root, '.weft/sheets')
+  mkdirSync(old, { recursive: true })
+  for (const f of Object.keys(plan.files)) writeFileSync(join(old, f.replace('assets/', '')), plan.files[f])
+  for (const f of readdirSync(old)) {
+    if (Date.now() - statSync(join(old, f)).mtimeMs > KEEP_SHEETS_MS) rmSync(join(old, f))
+    else if (!existsSync(join(dir, f))) writeFileSync(join(dir, f), readFileSync(join(old, f)))
+  }
+  const shape = s => s && { href: href(s.file), has: s.has.map(href) }
+  return { ...pieces(sheets, keep), shared: shape(plan.shared), routes: plan.routes.map(shape) }
+}
+
+/**
+ * @param {{ root?: string, site?: import('@weft-js/core/ssr').Site, routesDir?: string, timeout?: number, hold?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
  */
 export default function weftStart(options = {}) {
   let root = options.root ?? process.cwd()
@@ -89,8 +143,12 @@ export default function weftStart(options = {}) {
   let build = ''
   let serverModules = []
   let vite
+  // To see what an edit changed: a route or layout file's server exports, and a server module's client stubs.
+  const loaders = new Map()
+  const stubs = new Map()
   let compile
   let plan
+  let sheetPlan
   let planned = 0
   const facts = new Map()
   /** Partial hydration's view of the project (PLAN §11), redone in dev when a file it read changed. */
@@ -148,14 +206,21 @@ export default function weftStart(options = {}) {
           ssr: { build: { rollupOptions: { input: V.server } } },
         },
         // The router-core server bundle and Takumi's addon stay external to the SSR graph; Nitro traces them.
-        ssr: { noExternal: ['@weft/start', '@weft/warp', '@weft/icons', 'weft'], external: ['@takumi-rs/core'] },
-        optimizeDeps: { exclude: ['@weft/start', '@weft/warp', '@weft/icons', 'weft'] }, // they ship TSX for the weft plugin
-        // The runtime files of @weft/start, weft and Nitro are served from wherever they're installed (a linked package
+        ssr: { noExternal: ['@weft-js/start', '@weft-js/warp', '@weft-js/warp-icons', '@weft-js/core'], external: ['@takumi-rs/core'] },
+        optimizeDeps: { exclude: ['@weft-js/start', '@weft-js/warp', '@weft-js/warp-icons', '@weft-js/core'] }, // they ship TSX for the weft plugin
+        // The runtime files of @weft-js/start, weft and Nitro are served from wherever they're installed (a linked package
         // sits outside the app's root).
         server: { fs: { allow: [searchForWorkspaceRoot(root), join(here, '..'), ...packageDirs(root)] } },
         // One copy of the router: the app's route files and the generated entries import the same module.
-        resolve: { alias: [{ find: /^@weft\/start$/, replacement: join(here, 'index.ts') }, { find: /^@weft\/start\/(client|server)$/, replacement: join(here, '$1.tsx') }, { find: /^@weft\/start\/media$/, replacement: join(here, 'media.ts') }] },
+        resolve: { alias: [{ find: /^@weft-js\/start$/, replacement: join(here, 'index.ts') }, { find: /^@weft-js\/start\/(client|server)$/, replacement: join(here, '$1.tsx') }, { find: /^@weft-js\/start\/media$/, replacement: join(here, 'media.ts') }] },
       }
+    },
+    writeBundle: {
+      order: 'post',
+      async handler(out, bundle) {
+        if (dev || this.environment?.config.consumer !== 'client' || options.site?.criticalCss === false || options.site?.inlineCss === false) return
+        sheetPlan = combineSheets(out.dir, bundle, manifest ?? scan(), abs, (await hydration(this))?.islands ?? [], options.site?.base ?? '/')
+      },
     },
     renderChunk: {
       order: 'post',
@@ -164,7 +229,9 @@ export default function weftStart(options = {}) {
         if (!token.test(code)) return null
         const top = this.environment.getTopLevelConfig()
         const client = resolve(root, top.environments.client.build.outDir)
-        const sheets = options.site?.inlineCss === false ? {} : inlineSheets(client, top.base ?? '/')
+        code = code.replace(new RegExp(`["'\`]${SHEET_PIECES}["'\`]`), () => JSON.stringify(sheetPlan && sheetPieces(client, top.base ?? '/', sheetPlan, options.site?.criticalKeep, root)))
+        // With a first-paint table the server reads none of these; without, a page too big to carry whole is split (`pageStyles`).
+        const sheets = options.site?.inlineCss === false ? {} : inlineSheets(client, top.base ?? '/', options.site?.criticalCss === false ? Infinity : INLINE_CSS_MAX)
         return { code: code.replace(token, () => JSON.stringify(sheets)), map: null }
       },
     },
@@ -174,51 +241,85 @@ export default function weftStart(options = {}) {
       root = config.root
       const main = config.plugins.find(p => p.name === 'weft')
       words = config.plugins.find(p => p.name === 'weft:purge')?.api
+      words?.add('data-weft styled') // gate.css reveals a mark a static page's HTML may hold alone
       if (main?.api) {
-        compile = createRequire(join(here, 'vite.mjs'))('weft/compiler').transform
-        main.api.islands = async (ctx, id) => (await hydration(ctx))?.files.get(id.replace(/\?.*$/, ''))
+        compile = createRequire(join(here, 'vite.mjs'))('@weft-js/core/compiler').transform
+        main.api.islands = async (ctx, file) => (await hydration(ctx))?.files.get(file.replace(/\?.*$/, ''))
       }
     },
     configureServer(server) {
       vite = server
       // A `<link>` to a virtual sheet (`weft:fonts`): Vite only serves those as modules.
-      server.middlewares.use(SHEET, async (req, res, next) => {
+      const sheet = async (req, res, next) => {
         const css = await server.environments.client.pluginContainer.load(decodeURIComponent(req.url.slice(1))).catch(() => undefined)
         if (css == null) return next()
         res.setHeader('content-type', 'text/css')
         res.end(typeof css === 'string' ? css : css.code)
-      })
+      }
+      server.middlewares.use(SHEET, (req, res, next) => void sheet(req, res, next))
+      server.middlewares.use(waitingForAFix)
       // A route file added or removed changes the virtual modules; edits to existing ones are ordinary HMR/reloads.
       const dir = join(root, 'src')
       if (!existsSync(dir)) return
       const routesDir = relative(dir, join(root, manifest.dir)).split('\\').join('/')
-      const w = watch(dir, { recursive: true }, (event, file) => {
-        if (event !== 'rename' || !file) return
+      const shape = () => JSON.stringify([manifest.routes.map(r => r.file), manifest.layouts.map(l => l.file), serverModules])
+      const changed = file => {
         const rel = file.split('\\').join('/')
         if (!rel.startsWith(routesDir + '/') && !isServerModule('src/' + rel)) return
+        // Saving a file can count as a rename, depending on the platform and the editor.
+        const before = shape()
         scan()
+        if (shape() === before) return
         for (const env of Object.values(server.environments)) {
           for (const v of [V.routes, V.fns, V.context]) {
             const m = env.moduleGraph.getModuleById('\0' + v)
             if (m) env.moduleGraph.invalidateModule(m)
           }
         }
+        server.config.logger.info(`weft: full reload: ${rel} was added or removed, so the routes changed`, { timestamp: true })
         server.ws.send({ type: 'full-reload' })
-      })
+      }
+      const w = watch(dir, { recursive: true }, (event, file) => { if (event === 'rename' && file) changed(file) })
+      // Not every runtime's recursive watch reports a new file, and Vite's watcher does.
+      for (const event of ['add', 'unlink']) server.watcher.on(event, file => { if (file.startsWith(dir)) changed(relative(dir, file)) })
       // Close with the server (middleware mode, as `weft routes --meta` runs it, has no httpServer to listen on).
       const close = server.close.bind(server)
       server.close = () => (w.close(), close())
     },
-    /** An edit can add or drop a stylesheet import: the next server load of the routes walks the graph again. */
-    hotUpdate({ file }) {
-      if (this.environment.config.consumer !== 'server') return
-      const m = this.environment.moduleGraph.getModuleById('\0' + V.routes)
-      if (m) this.environment.moduleGraph.invalidateModule(m)
-      // A static component is in no browser's module graph, so nothing else would tell the tab it changed.
-      if (!vite?.environments.client.moduleGraph.getModulesByFile(file)?.size && this.environment.moduleGraph.getModulesByFile(file)?.size) vite?.ws.send({ type: 'full-reload' })
+    /**
+     * What an edit means for an open page, which keeps its state wherever it can. Components update themselves
+     * (@weft-js/core/hmr). Code that only runs on the server has nothing to swap: the page gets the server's new answer in place.
+     * Anything else that nothing above it can take is a full reload, and the terminal says why.
+     */
+    async hotUpdate({ file, modules }) {
+      const rel = relative(root, file).split('\\').join('/')
+      if (this.environment.config.consumer === 'server') {
+        // An edit can add or drop a stylesheet import: the next server load of the routes walks the graph again.
+        const m = this.environment.moduleGraph.getModuleById('\0' + V.routes)
+        if (m) this.environment.moduleGraph.invalidateModule(m)
+        // A static component or a server helper is in no browser's module graph, so nothing else would tell the tab.
+        if (!vite?.environments.client.moduleGraph.getModulesByFile(file)?.size && this.environment.moduleGraph.getModulesByFile(file)?.size) refresh(vite, rel)
+        return
+      }
+      const route = manifest.routes.some(r => r.file === rel) || manifest.layouts.some(l => l.file === rel)
+      if (route) {
+        const part = serverExports(readFileSync(file, 'utf8'), file)
+        // A level the server renders has no module in the page, and its `load` and `meta` are on the server too.
+        refresh(vite, rel, loaders.get(file) !== part, false)
+        loaders.set(file, part)
+      }
+      if (isServerModule(rel) && stubs.has(file) && modules.length) {
+        const before = stubs.get(file)
+        await Promise.all(modules.map(m => this.environment.transformRequest(m.url).catch(() => undefined)))
+        if (stubs.get(file) === before) return refresh(vite, rel), []
+      }
+      // A static route's stylesheet list: nothing runs it, so nothing has to take the update.
+      const live = modules.filter(m => !m.url.endsWith(ASSETS))
+      if (live.some(m => !reaches(m))) this.environment.logger.info(`weft: full reload: ${rel} exports more than components and nothing that imports it can take the update`, { timestamp: true })
+      if (live.length < modules.length) return live
     },
     resolveId: {
-      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
+      filter: { id: /^(virtual:weft\/|@weft-js\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@weft-js\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
       handler(source, importer) {
         // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
         if (source === 'sharp') {
@@ -229,7 +330,7 @@ export default function weftStart(options = {}) {
           }
           return { id: 'sharp', external: true }
         }
-        if (source.startsWith('@weft/')) {
+        if (source.startsWith('@weft-js/')) {
           if (this.environment?.config.consumer === 'client') this.error(`Q012: \`${source}\` reached the client graph${importer ? ` from ${relative(root, importer)}` : ''}: the database, auth and buses run on the server only.\n  fix: import it from a server module (src/server/**, *.server.ts) or a route's \`load\``)
           return
         }
@@ -253,8 +354,8 @@ export default function weftStart(options = {}) {
           const p = await hydration(this)
           return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p)
         }
-        if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout, hold: options.hold })
-        if (which === V.server) return serverEntry(clientEntry(), dev)
+        if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root, options.site?.card?.fonts), timeout: options.timeout, hold: options.hold })
+        if (which === V.server) return serverEntry(clientEntry(), dev, root)
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
         if (which === V.context || which === V.auth || which === V.realtime) {
           const name = which.slice('virtual:weft/'.length)
@@ -280,6 +381,7 @@ export default function weftStart(options = {}) {
         const rel = relative(root, path).split('\\').join('/')
         if (isServerModule(rel)) {
           const out = client ? clientStubs(code, path, rel, await shapeTable(this)) : withIds(code, path, rel)
+          if (client && dev) stubs.set(path, out)
           return out === code ? undefined : { code: out, map: null }
         }
         if (client && !rel.startsWith('..')) {
@@ -288,7 +390,10 @@ export default function weftStart(options = {}) {
         }
         if (!client) return
         if (!manifest.routes.some(r => r.file === rel) && !manifest.layouts.some(l => l.file === rel)) return
+        if (dev) loaders.set(file, serverExports(code, file))
         const out = stripServerExports(code, file)
+        // @weft-js/core/hmr saw the server exports and left this to Vite, but they're gone and the rest is components.
+        if (dev && out !== code && !/^export (?!default\b|\{ \S+\$shape as default\$shape \})/m.test(out) && !out.includes('import.meta.hot.accept(')) return { code: `${out}\nif (import.meta.hot) import.meta.hot.accept();\n`, map: null }
         return out === code ? undefined : { code: out, map: null }
       },
     },
@@ -297,11 +402,61 @@ export default function weftStart(options = {}) {
   }
 }
 
+/** Dev, in place of the bare JSON a page gets when its code won't load: this tab can't take an update, so it reloads. */
+const NOT_LOADING = `<!doctype html><meta charset="utf-8"><title>This page failed to load</title>
+<body style="font:16px system-ui;padding:2rem"><h1>This page failed to load</h1><p>The error is in the terminal. This tab reloads when you save a fix.</p>
+<script type="module">
+import { createHotContext } from '/@vite/client'
+const hot = createHotContext('/@weft/not-loading')
+for (const event of ['vite:afterUpdate', 'weft:refresh']) hot.on(event, () => location.reload())
+</script>`
+
+function waitingForAFix(req, res, next) {
+  if (!req.headers.accept?.includes('text/html')) return next()
+  const { writeHead, end } = res
+  const json = headers => /json/.test(String(Array.isArray(headers) ? headers.flat().join(' ') : headers && Object.entries(headers).flat().join(' ')) + res.getHeader('content-type'))
+  let failed = false
+  res.writeHead = function (status, ...rest) {
+    failed = status >= 500 && json(rest.at(-1))
+    if (!failed) return writeHead.call(this, status, ...rest)
+    res.statusCode = status
+    return this
+  }
+  const write = res.write
+  res.write = function (...args) { return failed ? true : write.apply(this, args) }
+  res.end = function (...args) {
+    if (!failed && !(res.statusCode >= 500 && !res.headersSent && json())) return end.apply(this, args)
+    res.setHeader('content-type', 'text/html')
+    res.removeHeader('content-length')
+    return end.call(this, NOT_LOADING)
+  }
+  next()
+}
+
+/** Whether an update to `mod` stops at a module that accepts it. */
+function reaches(mod, seen = new Set()) {
+  if (mod.isSelfAccepting || mod.acceptedHmrDeps?.size) return true
+  if (seen.has(mod)) return true
+  seen.add(mod)
+  return mod.importers.size > 0 && [...mod.importers].every(m => m.acceptedHmrDeps?.has(mod) || reaches(m, seen))
+}
+
+/** Ask open pages for the server's new answer, once the server's own reload has been told. A burst of saves is one ask. */
+const asking = new WeakMap()
+function refresh(vite, rel, say = true, queries = true) {
+  if (!vite) return
+  clearTimeout(asking.get(vite))
+  asking.set(vite, setTimeout(() => {
+    if (say) vite.config.logger.info(`weft: ${rel} runs on the server: refreshing the page's data, state kept`, { timestamp: true })
+    vite.ws.send({ type: 'custom', event: 'weft:refresh', data: { queries } })
+  }, 50))
+}
+
 function packageDirs(root) {
   const req = createRequire(join(root, 'package.json'))
   const own = createRequire(import.meta.url)
   const out = []
-  for (const name of ['weft/vite', 'nitro/package.json']) { // each at its package root
+  for (const name of ['@weft-js/core/vite', 'nitro/package.json']) { // each at its package root
     for (const r of [req, own]) {
       try { out.push(dirname(realpathSync(r.resolve(name)))); break } catch {}
     }
@@ -356,7 +511,7 @@ export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? []
  * URL gets the compiled sheet (Tailwind's output too). A module that doesn't transform fails again when it's imported.
  */
 async function devStyles(env, manifest, abs, entry) {
-  const reach = async url => {
+  const reachFrom = async start => {
     const seen = new Set(), css = new Map()
     const walk = async url => {
       const mod = await env.moduleGraph.getModuleByUrl(url).catch(() => undefined) ?? await env.moduleGraph.ensureEntryFromUrl(url).catch(() => undefined)
@@ -369,12 +524,12 @@ async function devStyles(env, manifest, abs, entry) {
         else if (!/[?&](url|inline|raw)\b/.test(next.id)) css.set(next.url, { href: next.url[0] === '/' ? next.url : SHEET + encodeURIComponent(next.id) })
       }
     }
-    await walk(url)
+    await walk(start)
     return [...css.values()]
   }
   const files = {}
-  for (const { file } of [...manifest.layouts, ...manifest.routes]) files[file] = await reach(abs(file))
-  return { entry: await reach(entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry), files }
+  for (const { file } of [...manifest.layouts, ...manifest.routes]) files[file] = await reachFrom(abs(file))
+  return { entry: await reachFrom(entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry), files }
 }
 
 /**
@@ -413,12 +568,12 @@ const ENTRY_SHEETS = `${LATE_SHEETS}\n${REFUSED_SHEETS}\n`
  * compression, and 53 KB against 46. An app's own code splits as it likes.
  */
 const KIT_CHUNKS = [
-  { name: 'icons', test: /[\\/]node_modules[\\/]@weft[\\/]icons[\\/]/, priority: 2 },
-  { name: 'kit', test: /[\\/]node_modules[\\/](?:@weft[\\/]|weft[\\/])/, minShareCount: 2, priority: 1 },
+  { name: 'icons', test: /[\\/]node_modules[\\/]@weft-js[\\/]warp-icons[\\/]/, priority: 2 },
+  { name: 'kit', test: /[\\/]node_modules[\\/]@weft-js[\\/]/, minShareCount: 2, priority: 1 },
 ]
 
 /** weft's own packages from an install: a static component's stylesheets are in them, and they ship source. */
-const KIT = /\/node_modules\/@weft\/.*\.[jt]sx?$/
+const KIT = /\/node_modules\/@weft-js\/.*\.[jt]sx?$/
 
 /**
  * The stylesheets a kit import reaches, in import order, written straight into the static module: chained `?weft-assets`
@@ -446,7 +601,7 @@ async function kitAssets(ctx, file, names, seen, words) {
     const passed = n.type === 'ExportNamedDeclaration' && n.specifiers.filter(s => s.exportKind !== 'type' && wanted(s.exported.name ?? s.exported.value)).map(s => s.local.name ?? s.local.value)
     // A bare import runs whatever the importer wants from the file.
     if (n.type === 'ImportDeclaration' ? !own && n.specifiers.length : passed ? !passed.length : !all || (space && !wanted(space))) continue
-    if (/^(weft|@weft\/start)($|\/)/.test(n.source.value)) continue
+    if (/^@weft-js\/(?:core|start)($|\/)/.test(n.source.value)) continue
     const target = (await ctx.resolve(n.source.value, file, { skipSelf: true }))?.id
     if (!target) continue
     const bare = target.replace(/\?.*$/, '')
@@ -474,7 +629,7 @@ export async function assetsOnly(ctx, code, path, root, words) {
   for (const n of ast.program.body) {
     if (!/^(ImportDeclaration|ExportNamedDeclaration|ExportAllDeclaration)$/.test(n.type) || !n.source || n.importKind === 'type' || n.exportKind === 'type') continue
     const spec = n.source.value
-    if (/^(weft|@weft\/start)($|\/)/.test(spec)) continue
+    if (/^@weft-js\/(?:core|start)($|\/)/.test(spec)) continue
     const file = (await ctx.resolve(spec, path, { skipSelf: true }))?.id
     if (!file) continue
     const bare = file.replace(/\?.*$/, '')
@@ -482,12 +637,12 @@ export async function assetsOnly(ctx, code, path, root, words) {
     else if (KIT.test(bare)) out.push(...await kitAssets(ctx, bare, importedNames(n), seen, words))
     else if (!bare.includes('/node_modules/') && !isServerModule(relative(root, bare).split('\\').join('/'))) out.push(`import ${JSON.stringify(bare + ASSETS)}`)
   }
-  if (code.includes('weft/style')) out.push(`import 'virtual:weft/groups.css'`)
+  if (code.includes('@weft-js/core/style')) out.push(`import 'virtual:weft/groups.css'`)
   out.push('export default null') // a chunk of only CSS is dropped, and the server looks this one up
   return out.join('\n') + '\n'
 }
 
-function serverEntry(clientEntry, dev) {
+function serverEntry(clientEntry, dev, root) {
   return `import { createHandler } from ${JSON.stringify(join(here, 'server.tsx'))}
 import { chunks, lazy, manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
@@ -500,7 +655,7 @@ import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
+${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, liveRequired: ${JSON.stringify(scanRequired(root).map(r => r.name))}, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[A-Z]{1,3}\\d{3}:? /, '')}\`) })
 export default { fetch }
@@ -541,8 +696,8 @@ const busBound = root => {
 }
 
 /** A bus in `src/realtime.server.ts` wins over the plugin's, like any explicit choice. */
-const busModule = (file, here) => `import { load, provider } from 'weft:slot/realtime.bus'
-import { slotBus } from ${JSON.stringify(join(here, 'bus.ts'))}
+const busModule = (file, from) => `import { load, provider } from 'weft:slot/realtime.bus'
+import { slotBus } from ${JSON.stringify(join(from, 'bus.ts'))}
 ${file ? `import own from ${JSON.stringify(file)}` : 'const own = undefined'}
 export default { ...own, bus: own?.bus ?? slotBus(provider.plugin, load) }
 `
@@ -563,9 +718,9 @@ export function fonts() {
 
 /**
  * The fonts every card can use, resolved at build and shipped inside the server bundle (research 20 §4.2: a render
- * never fetches fonts). `Inter:400,700` → `@fontsource/inter`'s latin WOFF2 files, from the app or from @weft/start.
+ * never fetches fonts). `Inter:400,700` → `@fontsource/inter`'s latin WOFF2 files, from the app or from @weft-js/start.
  */
-function cardFonts(manifest, abs, defaults, root) {
+function cardFonts(manifest, abs, defaults, root, own = {}) {
   const specs = new Set(defaults)
   for (const f of [...manifest.routes.map(r => r.card), manifest.defaultCard].filter(Boolean)) {
     const m = /export\s+const\s+fonts\s*=\s*\[([^\]]*)\]/.exec(readFileSync(abs(f), 'utf8'))
@@ -573,6 +728,11 @@ function cardFonts(manifest, abs, defaults, root) {
   }
   const requires = [createRequire(join(root, 'package.json')), createRequire(import.meta.url)]
   const out = []
+  // The app's own faces (`site.card.fonts`, filled in by the text plugin): the card's title and text look like the app.
+  for (const f of [own.display, own.body].filter(Boolean)) {
+    const path = join(root, f.src)
+    if (existsSync(path) && !out.some(x => x.name === f.family)) out.push({ name: f.family, weight: f.weight ?? 400, style: 'normal', data: readFileSync(path).toString('base64') })
+  }
   for (const spec of specs) {
     const [family, weights = '400'] = spec.split(':')
     const pkg = family.toLowerCase().replace(/\s+/g, '-')
@@ -591,8 +751,8 @@ function cardFonts(manifest, abs, defaults, root) {
  * The client build of a route module: `load`, `meta` and `prerender` removed (they run on the server; loaders can
  * hold database code and secrets), then imports nothing else uses. Exported for tests.
  */
-export function stripServerExports(code, file = 'route.tsx') {
-  const ast = parseSync(file, code, { lang: /\.tsx$/.test(file) ? 'tsx' : /\.ts$/.test(file) ? 'ts' : 'jsx', sourceType: 'module' })
+function serverCuts(code, file) {
+  const ast = parseSync(file, code, { lang: file.endsWith('.tsx') ? 'tsx' : file.endsWith('.ts') ? 'ts' : 'jsx', sourceType: 'module' })
   const cuts = []
   for (const node of ast.program.body) {
     if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue
@@ -600,6 +760,14 @@ export function stripServerExports(code, file = 'route.tsx') {
     const names = d.type === 'VariableDeclaration' ? d.declarations.map(x => x.id?.name) : [d.id?.name]
     if (names.length && names.every(n => SERVER_EXPORTS.has(n))) cuts.push([node.start, node.end])
   }
+  return cuts
+}
+
+const serverExports = (code, file) => serverCuts(code, file).map(([a, b]) => code.slice(a, b)).join('\n')
+
+/** The server-only exports of a route file, cut out of the client's copy. */
+export function stripServerExports(code, file = 'route.tsx') {
+  const cuts = serverCuts(code, file)
   if (!cuts.length) return code
   let out = code
   for (const [a, b] of cuts.sort((x, y) => y[0] - x[0])) out = out.slice(0, a) + out.slice(b)
@@ -607,7 +775,7 @@ export function stripServerExports(code, file = 'route.tsx') {
   return pruneImports(out, file)
 }
 
-const parse = (file, code) => parseSync(file, code, { lang: /\.tsx$/.test(file) ? 'tsx' : /\.[cm]?ts$/.test(file) ? 'ts' : 'jsx', sourceType: 'module' })
+const parse = (file, code) => parseSync(file, code, { lang: file.endsWith('.tsx') ? 'tsx' : /\.[cm]?ts$/.test(file) ? 'ts' : 'jsx', sourceType: 'module' })
 
 /** The TS nodes that hold code; every other `TS*` node is a type, gone once TypeScript is stripped. */
 const TS_VALUE = /^TS((As|Satisfies|NonNull|Instantiation)Expression|TypeAssertion|Enum\w+|Module\w+|ImportEqualsDeclaration|ExternalModuleReference|ParameterProperty|ExportAssignment)$/
@@ -663,7 +831,7 @@ function rewriteImport(imp, keep, code) {
 // ---- server modules (research 27 §2) ------------------------------------------------------------------------------
 
 /** `src/server/**` and `*.server.ts(x)`: files whose `query`/`mutation` exports become client stubs. */
-export const isServerModule = rel => /^src\/server\//.test(rel) || /\.server\.[cm]?[jt]sx?$/.test(rel)
+export const isServerModule = rel => rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
 
 function scanServerModules(root) {
   const out = []
@@ -673,20 +841,20 @@ function scanServerModules(root) {
     for (const d of list) {
       const rel = `${dir}/${d.name}`
       if (d.isDirectory()) { if (d.name !== 'node_modules' && !d.name.startsWith('.')) walk(rel) }
-      else if (/\.[cm]?[jt]sx?$/.test(d.name) && !/\.(test|spec)\./.test(d.name) && !/\.d\.ts$/.test(d.name) && isServerModule(rel)) out.push(rel)
+      else if (/\.[cm]?[jt]sx?$/.test(d.name) && !/\.(test|spec)\./.test(d.name) && !d.name.endsWith('.d.ts') && isServerModule(rel)) out.push(rel)
     }
   }
   walk('src')
-  return out.sort()
+  return out.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 }
 
 const FN_KINDS = new Set(['query', 'mutation', 'stream', 'topic', 'channel', 'sharedState'])
 
-/** Local names bound to the `FN_KINDS` from @weft/start. */
+/** Local names bound to the `FN_KINDS` from @weft-js/start. */
 function fnLocals(ast) {
   const locals = new Map()
   for (const n of ast.program.body) {
-    if (n.type !== 'ImportDeclaration' || n.importKind === 'type' || !/^@weft\/start(\/data)?$/.test(n.source.value)) continue
+    if (n.type !== 'ImportDeclaration' || n.importKind === 'type' || !/^@weft-js\/start(\/data)?$/.test(n.source.value)) continue
     for (const s of n.specifiers) if (s.type === 'ImportSpecifier' && s.importKind !== 'type' && FN_KINDS.has(s.imported.name ?? s.imported.value)) locals.set(s.local.name, s.imported.name ?? s.imported.value)
   }
   return locals
@@ -709,6 +877,7 @@ function fnExports(ast, locals) {
 }
 
 const prop = (obj, key) => obj.properties.find(p => p.type === 'Property' && !p.computed && (p.key.name ?? p.key.value) === key)
+/** A function's id: its name and a hash of its file, stable across builds. */
 export const fnId = (name, rel) => `${name}.${createHash('sha256').update(rel).digest('hex').slice(0, 6)}`
 
 /** The server build of a server module: each definition gets its `$id`. Exported for tests. */
@@ -769,8 +938,8 @@ export function clientStubs(code, file, rel, shapes) {
       candidates.push({ n, declares: [decl.id.name] })
       continue
     }
-    const declares = decl.type === 'VariableDeclaration' ? decl.declarations.flatMap(d => [...names(code.slice(d.id.start, d.id.end))]) : decl.id ? [decl.id.name] : []
-    if (declares.length) candidates.push({ n, declares })
+    const bound = decl.type === 'VariableDeclaration' ? decl.declarations.flatMap(d => [...names(code.slice(d.id.start, d.id.end))]) : decl.id ? [decl.id.name] : []
+    if (bound.length) candidates.push({ n, declares: bound })
   }
   // Helpers a kept `optimistic` reads (and what they read), in source order.
   for (let grew = true; grew; ) {
@@ -787,7 +956,7 @@ export function clientStubs(code, file, rel, shapes) {
 
 /** Q003: a `query`/`mutation` defined in a file that isn't a server module (its name and kind), or undefined. */
 function definesFns(code, file) {
-  if (!/@weft\/start/.test(code) || !/\b(query|mutation|stream|topic|channel|sharedState)\b/.test(code)) return
+  if (!/@weft-js\/start/.test(code) || !/\b(query|mutation|stream|topic|channel|sharedState)\b/.test(code)) return
   const ast = parse(file, code)
   const locals = fnLocals(ast)
   if (!locals.size) return

@@ -1,0 +1,39 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* ConsentBanner (cookie) — non-modal, never covers primary nav. Reject and
+   accept are equal weight. Desktop: a card at the bottom-start; phone: a sheet. */
+:where([data-scope="consent"]) {
+  position: fixed; z-index: var(--warp-z-toast); inset-inline-start: max(var(--warp-space-group), var(--warp-safe-left));
+  inset-block-end: max(var(--warp-space-group), var(--warp-safe-bottom)); inline-size: min(420px, calc(100% - 2 * var(--warp-space-group)));
+  display: grid; gap: var(--warp-space-group); padding: var(--warp-pad-surface);
+  background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
+  border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3);
+  animation: warp-enter var(--warp-duration-slow) var(--warp-ease-out) both;
+}
+:where([data-scope="consent"] [data-part="actions"]) { display: grid; grid-template-columns: 1fr 1fr; gap: var(--warp-space-related); }
+:where([data-scope="consent"] [data-part="actions"] > :last-child:nth-child(3)) { grid-column: 1 / -1; }
+@container (max-width: 599.98px) {
+:where([data-scope="consent"]) {
+    inset-inline: 0; inset-block-end: var(--_dock, 0px); inline-size: auto; border-radius: calc(var(--warp-radius-surface) + 6px) calc(var(--warp-radius-surface) + 6px) 0 0;
+    padding-block-end: calc(var(--warp-pad-surface) + var(--warp-safe-bottom) * var(--_safe, 1));
+    animation: warp-sheet-in var(--warp-duration-sheet) var(--warp-ease-out) both;
+  }
+}
+@media print {
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]),
+  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
+}
+@keyframes warp-sheet-in {
+  from { transform: translateY(calc(100% * var(--warp-motion-scale))); opacity: calc(1 - var(--warp-motion-scale)); }
+}
+}

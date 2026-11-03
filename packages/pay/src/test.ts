@@ -1,10 +1,10 @@
 // fakePay (research 10 §8): a second `pay.rail` provider, which keeps a rail's state machine in memory. Every event goes the
 // way a real one does, signed, through the app's own `webhook`, ledger and tag pokes, so a test asserts what the user sees
-// and what the server grants. It holds no key and opens no connection, and it reaches weft/test only through `net` and
+// and what the server grants. It holds no key and opens no connection, and it reaches @weft-js/core/test only through `net` and
 // `clock`, which any plugin can use. `payRailSuite` is what a rail, this one included, is held to.
 
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { clock, net } from 'weft/test'
+import { clock, net } from '@weft-js/core/test'
 import { definePay, memoryPayStore, type Pay, type PayOptions, type Purchase } from './server'
 import { PayError, type CheckoutRequest, type Interval, type PayRail, type Product, type PurchaseState, type RailEvent } from './index'
 
@@ -12,12 +12,14 @@ const DAY = 86_400_000
 const PERIOD: Record<Interval, number> = { day: DAY, week: 7 * DAY, month: 30 * DAY, year: 365 * DAY }
 const TERMS = { 'renewal-failed': 'grace', 'grace-expired': 'expired', recovered: 'active', cancel: 'expired', pause: 'paused', resume: 'active', refund: 'refunded', revoke: 'revoked' } as const
 
+/** What `simulate` can make the rail do next. */
 export type PayScenario = 'renewal' | keyof typeof TERMS
 
 interface Bought { id: string; user: string; product: string; plan?: string; interval?: Interval; state: PurchaseState; expires?: number; customer: string }
 
+/** A rail in memory and the handles a test drives it by, as `fakePay` returns them. */
 export interface FakePay {
-  readonly pay: Pay<any>
+  readonly pay: Pay
   readonly rail: PayRail
   /** Every checkout opened, newest last. */
   readonly sessions: CheckoutRequest[]
@@ -46,7 +48,7 @@ const sign = (secret: string, t: number, body: string) => createHmac('sha256', s
 const SECRET = 'fake-pay-signing-key'
 
 /** `fakePay(pay)` with the app's own `definePay`, or `fakePay({ catalog })`. It backs `ctx.entitlements` for this test. */
-export function fakePay(app: Pay<any> | (Pick<PayOptions<Product>, 'catalog'> & Partial<PayOptions<Product>>)): FakePay {
+export function fakePay(app: Pay | (Pick<PayOptions<Product>, 'catalog'> & Partial<PayOptions<Product>>)): FakePay {
   const sessions: CheckoutRequest[] = [], deliveries: FakePay['deliveries'] = []
   const purchases = new Map<string, Bought>()
   let seq = 0, last: RailEvent | undefined
@@ -54,11 +56,11 @@ export function fakePay(app: Pay<any> | (Pick<PayOptions<Product>, 'catalog'> & 
 
   const rail: PayRail = {
     id: 'fake',
-    async checkout(request) {
+    checkout(request) {
       sessions.push(request)
-      return { url: `https://fake-pay.test/checkout/${next('cs')}` }
+      return Promise.resolve({ url: `https://fake-pay.test/checkout/${next('cs')}` })
     },
-    portal: async ({ customer }) => ({ url: `https://fake-pay.test/portal/${customer}` }),
+    portal: ({ customer }) => Promise.resolve({ url: `https://fake-pay.test/portal/${customer}` }),
     verify({ body, headers }) {
       const [t, v1] = (headers.get('x-fake-signature') ?? '').split(',')
       const want = Buffer.from(sign(SECRET, Number(t), body)), got = Buffer.from(v1 ?? '')
@@ -70,7 +72,7 @@ export function fakePay(app: Pay<any> | (Pick<PayOptions<Product>, 'catalog'> & 
     },
   }
 
-  const pay: Pay<any> = 'webhook' in app ? (app as Pay<any>) : definePay({ store: memoryPayStore(), urls: { success: '/', cancel: '/' }, ...(app as PayOptions<Product>) })
+  const pay: Pay = 'webhook' in app ? app : definePay({ store: memoryPayStore(), urls: { success: '/', cancel: '/' }, ...app })
   pay.use(rail)
   net.extension(pay)
 
@@ -98,7 +100,7 @@ export function fakePay(app: Pay<any> | (Pick<PayOptions<Product>, 'catalog'> & 
   const take = (user?: string) => {
     const i = user ? sessions.findLastIndex(s => s.user === user) : sessions.length - 1
     if (i < 0) throw new Error(`fakePay: no open checkout${user ? ` for ${user}` : ''}: call \`checkout\` first`)
-    return sessions.splice(i, 1)[0]
+    return sessions.splice(i, 1)[0]!
   }
 
   async function simulate(what: PayScenario, id?: string) {
@@ -130,12 +132,14 @@ export function fakePay(app: Pay<any> | (Pick<PayOptions<Product>, 'catalog'> & 
   }
 }
 
+/** One requirement of a suite, and how the rail did. */
 export interface Check { name: string; ok: boolean; detail: string }
 
+/** What `payRailSuite` needs: the rail, and a way to make a delivery it would accept. */
 export interface PayRailSuiteOptions {
   rail: PayRail
   /** A delivery the rail would accept, `age` ms old, for a purchase event. Omit `age` for one just sent. */
-  delivery(age?: number): { body: string; headers: Headers }
+  delivery: (age?: number) => { body: string; headers: Headers }
   /** How old a delivery may be before a rail refuses it as a replay. Without it the replay check isn't run. */
   tolerance?: number
 }
@@ -145,7 +149,7 @@ export async function payRailSuite({ rail, delivery, tolerance }: PayRailSuiteOp
   const out: Check[] = []
   const check = (name: string, ok: boolean, detail = '') => void out.push({ name, ok, detail })
   const refused = async (d: { body: string; headers: Headers }) => {
-    try { await rail.verify(d); return false } catch (e: any) { return e?.code === 'PAY011' }
+    try { await rail.verify(d); return false } catch (e) { return (e as { code?: string } | null)?.code === 'PAY011' }
   }
   const good = delivery()
   const events = await rail.verify(good)

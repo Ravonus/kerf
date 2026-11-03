@@ -1,8 +1,7 @@
 {
-  "name": "@weft/start",
-  "version": "0.0.0",
-  "private": true,
-  "description": "weft/start (Phase 3): file routes on @tanstack/router-core, route load and meta, streaming SSR, OG cards (Takumi), Nitro integration",
+  "name": "@weft-js/start",
+  "version": "0.1.0",
+  "description": "weft Start: file routes, server functions, streaming SSR, a database and auth",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -14,6 +13,7 @@
     "@fontsource/inter": "5.3.0",
     "@takumi-rs/core": "2.18.2",
     "@takumi-rs/helpers": "2.18.2",
+    "@takumi-rs/wasm": "2.18.2",
     "@tanstack/history": "1.162.5",
     "@tanstack/router-core": "1.171.39",
     "nitro": "3.0.260903-beta",
@@ -25,7 +25,7 @@
     "drizzle-zod": "^0.8.0",
     "mysql2": "^3.24.0",
     "postgres": ">=3",
-    "weft": "*",
+    "@weft-js/core": "*",
     "zod": "^4.0.0"
   },
   "devDependencies": {
@@ -41,20 +41,27 @@
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vitest": "5.0.5",
-    "weft": "file:../weft",
+    "@weft-js/core": "file:../weft",
     "zod": "4.6.7"
   },
   "exports": {
     ".": "./src/index.ts",
     "./data": "./src/data.ts",
+    "./derive": "./src/derive.mjs",
     "./media": "./src/media.ts",
     "./hub": "./src/hub.ts",
     "./live": "./src/stream.ts",
     "./bus": "./src/bus.ts",
+    "./changes": "./src/changes.ts",
+    "./changes-sql": "./src/changes-sql.mjs",
+    "./live-target": "./src/live-target.mjs",
+    "./listen": "./src/listen.ts",
+    "./verify": "./src/verify.ts",
     "./bus/postgres": "./src/bus/postgres.ts",
     "./list": "./src/list.ts",
     "./list/drizzle": "./src/list-drizzle.ts",
     "./channel": "./src/channel.ts",
+    "./share": "./src/share.ts",
     "./db": "./src/db/index.ts",
     "./db/core": "./src/db/core.ts",
     "./db/sqlite": "./src/db/sqlite.ts",
@@ -75,7 +82,10 @@
     "./rust": "./src/rust.ts",
     "./sidecar": "./src/sidecar.mjs"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css",
+    "./src/share.ts"
+  ],
   "peerDependenciesMeta": {
     "better-auth": {
       "optional": true
@@ -101,5 +111,20 @@
     "zod": {
       "optional": true
     }
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "src",
+    "crate",
+    "README.md",
+    "LICENSE"
+  ]
 }

@@ -1,5 +1,5 @@
-// weft/test: render, user-level queries and actions, flush, a deterministic clock, the work-budget assertion
-// (§7b, §10b), the page fakes for weft/browser (`net`, `page`, `tabs`) and the leak check (T012).
+// @weft-js/core/test: render, user-level queries and actions, flush, a deterministic clock, the work-budget assertion
+// (§7b, §10b), the page fakes for @weft-js/core/browser (`net`, `page`, `tabs`) and the leak check (T012).
 //
 //   render(Counter)
 //   await user.click(screen.getByRole('button', { name: 'Add' }))             // ends in flush()
@@ -20,6 +20,7 @@ import { open } from './browser'
 export { scope } from './scope'
 export { memoryStorage } from './memory'
 
+/** Waits for writes to reach the DOM, and for what they started to settle. */
 export async function flush() {
   for (let i = 0; i < 3; i++) {
     await Promise.resolve()
@@ -34,7 +35,7 @@ const mounted = new Set<() => void>()
  * `options.state` seeds scopes (`{ cart: { note: 'hi' } }`); pass one `storage` to several renders to test reloads.
  * Unmounted automatically after each test.
  */
-export function render<P extends object>(Comp: (props: P) => any, props: P = {} as P, options: AppOptions & { /** Slot overrides: `{ 'text.measure': fakeMeasure() }`. */ slots?: Record<string, unknown> } = {}) {
+export function render<P extends object>(Comp: (props: P) => unknown, props: P = {} as P, options: AppOptions & { /** Slot overrides: `{ 'text.measure': fakeMeasure() }`. */ slots?: Record<string, unknown> } = {}) {
   const app = createApp(options)
   useApp(app)
   if (options.slots) rt.slots = options.slots
@@ -50,8 +51,9 @@ export function render<P extends object>(Comp: (props: P) => any, props: P = {} 
   return { container, unmount }
 }
 
+/** Unmounts everything `render` mounted, and clears what a test set up. */
 export function cleanup() {
-  for (const unmount of [...mounted]) unmount()
+  for (const unmount of Array.from(mounted)) unmount()
   rt.slots = undefined
 }
 
@@ -64,7 +66,7 @@ function recording(canvas: HTMLCanvasElement) {
   const log: { name: string; args: unknown[] }[] = []
   calls.set(canvas, log)
   const values: Record<string, unknown> = {}
-  const ctx: any = new Proxy({}, {
+  const ctx: unknown = new Proxy({}, {
     get(_, key: string) {
       if (key in values) return values[key]
       if (key === 'measureText') return (text: string) => ({ width: text.length * 8, fontBoundingBoxAscent: 12, fontBoundingBoxDescent: 4 })
@@ -86,7 +88,7 @@ if (typeof HTMLCanvasElement !== 'undefined') {
   HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement) {
     if (!contexts.has(this)) contexts.set(this, recording(this))
     return contexts.get(this)
-  } as any
+  } as unknown as typeof HTMLCanvasElement.prototype.getContext
 }
 
 /** A deterministic `text.measure` for jsdom: every character is 8 px wide and lines break at spaces. */
@@ -117,8 +119,11 @@ export function fakeMeasure() {
  * There is no container, selector or test-id query (T005).
  */
 export const screen = {
+  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByRole: dom.getByRole, getAllByRole: dom.getAllByRole, queryByRole: dom.queryByRole, queryAllByRole: dom.queryAllByRole, findByRole: dom.findByRole, findAllByRole: dom.findAllByRole,
+  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByLabelText: dom.getByLabelText, getAllByLabelText: dom.getAllByLabelText, queryByLabelText: dom.queryByLabelText, queryAllByLabelText: dom.queryAllByLabelText, findByLabelText: dom.findByLabelText, findAllByLabelText: dom.findAllByLabelText,
+  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByText: dom.getByText, getAllByText: dom.getAllByText, queryByText: dom.queryByText, queryAllByText: dom.queryAllByText, findByText: dom.findByText, findAllByText: dom.findAllByText,
 }
 
@@ -127,11 +132,11 @@ type Actions = Pick<UserEvent, 'click' | 'dblClick' | 'type' | 'clear' | 'keyboa
 
 let session: UserEvent | undefined
 const act = <K extends keyof Actions>(name: K) =>
-  (async (...args: any[]) => {
+  (async (...args: unknown[]) => {
     session ??= userEvent.setup({ advanceTimers: ms => (clock.installed ? vi.advanceTimersByTimeAsync(ms).then(() => {}) : undefined) })
-    await (session[name] as (...a: any[]) => Promise<void>)(...args)
+    await (session[name] as (...a: unknown[]) => Promise<void>)(...args)
     await flush()
-  }) as Actions[K]
+  }) as unknown as Actions[K]
 
 /** User actions (`@testing-library/user-event`); each one ends in `flush()`, so there is nothing to wait for (T004). */
 export const user: Actions = {
@@ -181,9 +186,9 @@ afterEach(context => {
     throw new Error(`T001: "${context.task.name}" made no assertion, so it passes as long as nothing throws.\n  fix: assert what the user sees, e.g. expect(screen.getByRole('button').textContent).toBe('Count 1'). Docs: weft docs T001`)
 })
 
-// ---- weft/browser: the leak check (T012) and the page fakes -----------------------------------------------------
+// ---- @weft-js/core/browser: the leak check (T012) and the page fakes -----------------------------------------------------
 
-/** What weft/browser has open right now: listeners, intervals and subscribed values, with where they were made. */
+/** What @weft-js/core/browser has open right now: listeners, intervals and subscribed values, with where they were made. */
 export const leaks = (): string[] => [...open.values()].map(([what]) => what)
 
 /**
@@ -193,7 +198,7 @@ export const leaks = (): string[] => [...open.values()].map(([what]) => what)
 export function assertNoLeaks() {
   if (!open.size) return
   const list = leaks()
-  for (const [, close] of [...open.values()]) close()
+  for (const [, close] of Array.from(open.values())) close()
   throw new Error(
     `T012: the test ended with ${list.length} open subscription${list.length > 1 ? 's' : ''}, listener${list.length > 1 ? 's' : ''} or interval${list.length > 1 ? 's' : ''}:\n${list.map(w => `  - ${w}`).join('\n')}\n` +
       '  fix: unmount what the test created (`render` unmounts itself; call the `dispose` of any `createRoot`), or fix the leak: create them in setup, where their owner removes them',
@@ -204,18 +209,18 @@ const fake = { online: true, visibility: 'visible' as DocumentVisibilityState, f
 const lists = new Map<string, EventTarget & { media: string; matches: boolean }>()
 
 function installPage() {
-  if (typeof document == 'undefined') return
+  if (typeof document === 'undefined') return
   const define = (o: object, key: string, get: () => unknown) => Object.defineProperty(o, key, { configurable: true, get })
   define(navigator, 'onLine', () => fake.online)
   define(document, 'visibilityState', () => fake.visibility)
-  define(document, 'hidden', () => fake.visibility == 'hidden')
+  define(document, 'hidden', () => fake.visibility === 'hidden')
   Object.defineProperty(document, 'hasFocus', { configurable: true, value: () => fake.focus })
   // jsdom has no matchMedia: one MediaQueryList per query, matching what `page.media` set (default false).
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: (media: string) => {
       let list = lists.get(media)
-      if (!list) lists.set(media, (list = Object.defineProperty(Object.assign(new EventTarget(), { media }), 'matches', { get: () => fake.media.get(media) ?? false }) as any))
+      if (!list) lists.set(media, (list = Object.defineProperty(Object.assign(new EventTarget(), { media }), 'matches', { get: () => fake.media.get(media) ?? false }) as unknown as NonNullable<typeof list>))
       return list
     },
   })
@@ -232,9 +237,9 @@ installPage()
 const fire = (target: EventTarget, type: string, init?: object) => target.dispatchEvent(Object.assign(new Event(type), init))
 
 /**
- * The fake transport for @weft/start's server functions (research 27 §7). With weft/test loaded, `query`/`mutation`
+ * The fake transport for @weft-js/start's server functions (research 27 §7). With @weft-js/core/test loaded, `query`/`mutation`
  * calls run in process through the server's executor (validation, request cache, tags, single-flight, a JSON round
- * trip) instead of HTTP. @weft/start finds these controls under a global symbol, so weft doesn't depend on it.
+ * trip) instead of HTTP. @weft-js/start finds these controls under a global symbol, so weft doesn't depend on it.
  */
 type FnRef = { $id: string } | string
 const fnId = (f: FnRef) => (typeof f === 'string' ? f : f.$id)
@@ -243,28 +248,28 @@ const transport = {
   ctx: undefined as object | undefined,
   online: () => fake.online,
   fails: new Map<string, unknown[]>(),
-  handlers: new Map<string, (input: any, ctx: any) => unknown>(),
+  handlers: new Map<string, (input: never, ctx: never) => unknown>(),
   log: [] as { id: string; kind: string; input: unknown }[],
   /** Calls in flight (`net.settle()` waits for them). */
   inflight: new Set<Promise<unknown>>(),
   /** Inside a call, the fake request's scope: nested calls in a `run` are server calls, as on a real server. */
   als: new AsyncLocalStorage<unknown>(),
-  /** @weft/start registers its client cache reset here. */
+  /** @weft-js/start registers its client cache reset here. */
   resets: [] as (() => void)[],
-  /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as weft/browser's. */
+  /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as @weft-js/core/browser's. */
   open,
-  /** The channel fake while a socket is open (@weft/start's channel.ts). */
+  /** The channel fake while a socket is open (@weft-js/start's channel.ts). */
   ws: undefined as undefined | { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> },
   /** What this client's sockets sent. */
   sent: [] as { id: string; name: string; msg: unknown }[],
-  /** The realtime fake while one is connected (@weft/start's live.ts). */
+  /** The realtime fake while one is connected (@weft-js/start's live.ts). */
   rt: undefined as undefined | { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] },
   /** Times the realtime connection was lost. */
   reconnects: 0,
   /** Server extensions for this test (`net.extension`): a plugin's fake runs through the real scope. */
   extensions: [] as { reset?(): void }[],
 }
-;(globalThis as any)[Symbol.for('weft.net')] = transport
+;(globalThis as unknown as Record<symbol, unknown>)[Symbol.for('weft.net')] = transport
 
 function resetTransport() {
   for (const e of transport.extensions) e.reset?.()
@@ -278,7 +283,7 @@ function resetTransport() {
   for (const r of transport.resets) r()
 }
 
-/** The network as weft/browser's `online()` and @weft/start's server functions see it. */
+/** The network as @weft-js/core/browser's `online()` and @weft-js/start's server functions see it. */
 export const net = {
   /** Offline: `online()` turns false, and server function calls reject with an `OfflineError`. */
   offline() { fake.online = false; fire(window, 'offline'); return flush() },
@@ -295,7 +300,7 @@ export const net = {
     transport.fails.set(id, [...(transport.fails.get(id) ?? []), error])
   },
   /** Replace `fn`'s `run`: `net.handle(listTodos, () => [{ id: '1', title: 'Milk', done: false }])`. */
-  handle<I = any, O = unknown>(fn: FnRef, run: (input: I, ctx: any) => O | Promise<O>) { transport.handlers.set(fnId(fn), run) },
+  handle<I = never, O = unknown>(fn: FnRef, run: (input: I, ctx: never) => O | Promise<O>) { transport.handlers.set(fnId(fn), run) },
   /** The calls so far, in order: `{ id, kind, input }`. */
   calls() { return transport.log.slice() },
   /** A message straight to every reader of `stream`, as the server would send it. Returns how many got it. */
@@ -338,7 +343,7 @@ export const net = {
     for (let i = 0; i < 100; i++) {
       await flush()
       if (!transport.inflight.size) return
-      await Promise.allSettled([...transport.inflight])
+      await Promise.allSettled(transport.inflight)
     }
     throw new Error('net.settle(): calls kept starting (a refetch loop?)')
   },
@@ -369,10 +374,10 @@ class FakeLine {
 }
 
 function deliver(name: string, data: unknown, from?: FakeLine) {
-  queueMicrotask(() => { for (const line of [...(lines.get(name) ?? [])]) if (line !== from) line.onmessage?.({ data }) })
+  queueMicrotask(() => { for (const line of Array.from(lines.get(name) ?? [])) if (line !== from) line.onmessage?.({ data }) })
 }
 
-if (typeof document != 'undefined') (globalThis as any).BroadcastChannel = FakeLine
+if (typeof document !== 'undefined') (globalThis as Record<string, unknown>).BroadcastChannel = FakeLine
 
 /**
  * Other tabs. Two `render()`s are two tabs: each gets its own channels, and a shared `storage` is the shared
@@ -411,6 +416,7 @@ export const page = {
   },
 }
 
+/** What `toTouchAtMost` counts a write's cost by. */
 export type Touches = {
   mutations: number
   /** Reactive computations re-run (derived values and bindings). */

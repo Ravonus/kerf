@@ -1,0 +1,23 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Countdown timer: segments; the last minute turns caution, zero turns critical, digits roll */
+:where([data-scope="countdown"]) { display: inline-flex; align-items: baseline; gap: 6px; }
+:where([data-scope="countdown"] [data-part="segment"]) { display: grid; justify-items: center; gap: 4px; }
+:where([data-scope="countdown"] [data-part="value"]) {
+  display: inline-block; min-inline-size: 2ch; text-align: center; font: 500 calc(var(--warp-text-title-size) * 0.9)/1 var(--warp-font-mono);
+  padding: 8px 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border);
+}
+:where([data-scope="countdown"] [data-part="value"][data-tick]) { animation: warp-tick calc(var(--warp-duration-base) * var(--warp-motion-scale) + 1ms) var(--warp-ease-out); }
+@keyframes warp-tick { from { translate: 0 calc(-6px * var(--warp-motion-scale)); opacity: 0.4; } }
+:where([data-scope="countdown"] [data-part="unit"]) { font: 500 10px/1 var(--warp-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+:where([data-scope="countdown"] [data-part="colon"]) { font: 500 var(--warp-text-title-size)/1 var(--warp-font-mono); color: var(--warp-color-text-faint); }
+:where([data-scope="countdown"][data-state="soon"] [data-part="value"]) { color: var(--warp-color-caution-text); border-color: var(--warp-color-caution-border); }
+:where([data-scope="countdown"][data-state="done"] [data-part="value"]) { color: var(--warp-color-critical-text); border-color: var(--warp-color-critical-border); }
+:where([data-scope="countdown"][data-variant="inline"] [data-part="value"]) { padding: 0; border: 0; background: none; font-size: inherit; min-inline-size: 0; }
+
+/* -- Stopwatch / elapsed timer: same atoms as the countdown, counting up */
+:where([data-scope="stopwatch"]) { display: inline-flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+:where([data-scope="stopwatch"] [data-part="value"]) { font: 500 calc(var(--warp-text-title-size) * 0.9)/1 var(--warp-font-mono); min-inline-size: 7ch; }
+:where([data-scope="stopwatch"][data-state="running"] [data-scope="status-dot"]) { animation: warp-blink 1s steps(2, jump-none) infinite; }
+@keyframes warp-blink { 50% { opacity: calc(1 - 0.7 * var(--warp-motion-scale)); } }
+}

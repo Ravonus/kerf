@@ -13,7 +13,7 @@ export function master(text) {
 }
 
 /** A hand bitmap as a master: its biggest connected ink is the edge, ink walled inside it is the mark, its shade is a cluster. */
-export function fromHand(art, name, spec) {
+export function fromHand(art, name) {
   const src = pixel(art, name).grid, seen = src.map(r => r.map(() => 0))
   let id = 0, best = 0, bestId = 0
   for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
@@ -118,5 +118,5 @@ export function crescent(g) {
 
 /** Cells to knock out of a balanced solid, breaking up the lit side. A badge takes a fixed corner. */
 export const litCells = g => (g === 0
-  ? Array.from({ length: 16 }, (_, y) => Array.from({ length: 16 }, (_, x) => (x + y < 7 && x > 1 && y > 1 && checker(x, y) ? '#' : '.')))
+  ? Array.from({ length: 16 }, (_, y) => Array.from({ length: 16 }, (__, x) => (x + y < 7 && x > 1 && y > 1 && checker(x, y) ? '#' : '.')))
   : each(g, (c, x, y) => { if (!INSIDE.includes(c) || halo(g, x, y)) return '.'; const t = tone(g, x, y, c); return t < .16 || (t < .36 && checker(x, y)) ? '#' : '.' }))

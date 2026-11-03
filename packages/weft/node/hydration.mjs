@@ -23,14 +23,14 @@
 
 import { readFileSync, statSync } from 'node:fs'
 
-const PURE = { weft: new Set(['For', 'mergeProps', 'untrack']), '@weft/start': new Set(['Link']) }
-const OPAQUE = /^(weft|@weft\/start)(\/|$)/
+const PURE = { '@weft-js/core': new Set(['For', 'mergeProps', 'untrack']), '@weft-js/start': new Set(['Link']) }
+const OPAQUE = /^@weft-js\/(?:core|start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
 /** weft API that needs nothing from the page and starts nothing by itself. */
 const QUIET = {
-  weft: new Set(['state', 'derived', 'memo', 'untrack', 'batch', 'flush', 'onCleanup', 'For', 'mergeProps', 'name', 'getOwner', 'view', 'omit', 'restOf']),
-  'weft/style': { has: () => true },
-  '@weft/start': new Set(['Link', 'Form']),
+  '@weft-js/core': new Set(['state', 'derived', 'memo', 'untrack', 'batch', 'flush', 'onCleanup', 'For', 'mergeProps', 'name', 'getOwner', 'view', 'omit', 'restOf']),
+  '@weft-js/core/style': { has: () => true },
+  '@weft-js/start': new Set(['Link', 'Form']),
 }
 const STARTS = new Set(['onMount', 'watch', 'effect'])
 const DATA = new Set(['resource', 'Boundary'])
@@ -115,7 +115,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     return i ? across(mod, i.source, i.imported, seen) : false
   }
   const across = (mod, spec, name, seen) => {
-    if (spec === 'weft/style') return false
+    if (spec === '@weft-js/core/style') return false
     if (OPAQUE.test(spec)) return !PURE[spec]?.has(name)
     const file = mod.resolved.get(spec)
     if (!file) return true
@@ -211,11 +211,11 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       for (const u of names) {
         const i = owner.mod.imports.get(u)
         if (i && OPAQUE.test(i.source)) {
-          if (i.source === 'weft' && STARTS.has(i.imported)) start ??= `\`${i.imported}\` in ${at(owner)}`
-          else if (i.source === 'weft' && DATA.has(i.imported)) data ??= `\`${i.imported}\` in ${at(owner)}`
-          else if (i.source === 'weft' && BOXES.has(i.imported)) {
+          if (i.source === '@weft-js/core' && STARTS.has(i.imported)) start ??= `\`${i.imported}\` in ${at(owner)}`
+          else if (i.source === '@weft-js/core' && DATA.has(i.imported)) data ??= `\`${i.imported}\` in ${at(owner)}`
+          else if (i.source === '@weft-js/core' && BOXES.has(i.imported)) {
             if (owner.value) halt(`\`${owner.name}\` is a box at module level (${at(owner)}): a write from outside couldn't reach an island that isn't running`, `make the box inside the component, or pass it down from one that runs: nothing else keeps this island from waiting`)
-          } else if (i.source === 'weft/media' && i.imported === 'Media') start ??= `\`Media\` in ${at(owner)}` // a video's motion, a swap for a better copy
+          } else if (i.source === '@weft-js/core/media' && i.imported === 'Media') start ??= `\`Media\` in ${at(owner)}` // a video's motion, a swap for a better copy
           else if (!QUIET[i.source]?.has(i.imported)) halt(`\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
           continue
         }
@@ -287,7 +287,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
   // A closure can't reach an island, so all of its caller runs in the browser, and nothing but the report says so.
   for (const n of all) {
     const w = client.get(n)
-    if (w?.includes('is a function over local names') && !n.mod.file.includes('/node_modules/')) diagnostics.push({ code: 'H011', file: rel(n.mod.file), line: n.line, why: `${n.name} has to hydrate whole: ${w}`, fix: `nothing, when ${n.name} is mostly controls; otherwise move each control and what its function reads into a small component of its own, which becomes the island and leaves the rest static` })
+    if (w?.includes('is a function over local names') && !n.mod.file.includes('/node_modules/')) diagnostics.push({ code: 'H017', file: rel(n.mod.file), line: n.line, why: `${n.name} has to hydrate whole: ${w}`, fix: `nothing, when ${n.name} is mostly controls; otherwise move each control and what its function reads into a small component of its own, which becomes the island and leaves the rest static` })
   }
   const defaultOf = file => {
     const m = mods.get(file)
@@ -302,7 +302,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
 }
 
 function external(spec, file) {
-  return file.includes('/node_modules/') && !/\/node_modules\/@weft\//.test(file) && !spec.startsWith('.')
+  return file.includes('/node_modules/') && !/\/node_modules\/@weft-js\//.test(file) && !spec.startsWith('.')
 }
 
 function read(file, transform, cache) {
@@ -312,10 +312,12 @@ function read(file, transform, cache) {
   if (hit?.mtime === mtime) return structuredClone(hit.facts)
   let facts
   try {
-    facts = transform(readFileSync(file, 'utf8'), { filename: file, checkOnly: true }).facts.hydration
-  } catch {
-    return undefined
-  }
+    const code = readFileSync(file, 'utf8')
+    const out = transform(code, { filename: file, checkOnly: true })
+    if (code && !out.diagnostics?.some(d => d.code === 'W000')) facts = out.facts.hydration
+  } catch {}
+  // Mid-edit a file may not parse: what it was is a better guess than nothing, which would look static.
+  if (!facts) return hit && structuredClone(hit.facts)
   cache.set(file, { mtime, facts })
   return structuredClone(facts)
 }

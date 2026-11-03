@@ -22,14 +22,14 @@ async function project(files: Record<string, string>, entries = ['route.tsx']) {
     entries: entries.map(e => join(root, e)),
     transform,
     rel: f => relative(root, f),
-    resolve: async (spec, from) => {
-      if (!spec.startsWith('.')) return undefined
+    resolve: (spec, from) => {
+      if (!spec.startsWith('.')) return Promise.resolve(undefined)
       const base = resolve(dirname(from), spec)
-      return Object.keys(files).map(f => join(root, f)).find(f => f === base || f.startsWith(`${base}.`) || f === join(base, 'index.tsx'))
+      return Promise.resolve(Object.keys(files).map(f => join(root, f)).find(f => f === base || f.startsWith(`${base}.`) || f === join(base, 'index.tsx')))
     },
   })
   const why = (name: string) => plan.report.flatMap(f => f.nodes).find(n => n.name === name)?.client
-  return { root, plan, why, routeStatic: plan.statics.has(join(root, entries[0])) }
+  return { root, plan, why, routeStatic: plan.statics.has(join(root, entries[0]!)) }
 }
 
 const button = `export function Button(props) { return <button onClick={() => {}}>{props.label}</button> }`
@@ -62,7 +62,7 @@ test('it follows re-exports and barrels', async () => {
 
 test('reactivity reaches callers through what they read', async () => {
   const { why } = await project({
-    'route.tsx': `import { state } from 'weft'\nconst n = state(0)\nfunction Show() { return <p>{n.value}</p> }\nexport default function R() { return <Show /> }`,
+    'route.tsx': `import { state } from '@weft-js/core'\nconst n = state(0)\nfunction Show() { return <p>{n.value}</p> }\nexport default function R() { return <Show /> }`,
   })
   expect(why('Show')).toBeTruthy()
 })
@@ -103,7 +103,7 @@ test('the hatches: `@weft client` keeps code on the client, `@weft static` stops
   const forced = await project({ 'route.tsx': `/* @weft client */\nexport default function R() { return <p>x</p> }` })
   expect(forced.routeStatic).toBe(false)
   const held = await project({
-    'route.tsx': `import { state } from 'weft'\nconst n = state(0)\n/* @weft static */\nexport default function R() { return <p>{n.value}</p> }`,
+    'route.tsx': `import { state } from '@weft-js/core'\nconst n = state(0)\n/* @weft static */\nexport default function R() { return <p>{n.value}</p> }`,
   })
   expect(held.routeStatic).toBe(true)
 })
@@ -142,65 +142,65 @@ const at = async (body: string, extra: Record<string, string> = {}) => {
 }
 
 test('handlers alone wait for an event', async () => {
-  const { load, diagnostics } = await at(`import { state } from 'weft'\nexport function C() { const n = state(0); return <button onClick={() => { document.title = 'x'; n.value++ }}>{n.value}</button> }`)
+  const { load, diagnostics } = await at(`import { state } from '@weft-js/core'\nexport function C() { const n = state(0); return <button onClick={() => { document.title = 'x'; n.value++ }}>{n.value}</button> }`)
   expect(load).toMatchObject({ when: 'interaction', tag: 'C' })
   expect(diagnostics).toEqual([])
 })
 
 test('work that stays inside waits for the viewport, and work that reaches out doesn\'t wait, with a fix', async () => {
-  const inside = await at(`import { onMount, state } from 'weft'\nexport function C() { const n = state(0); onMount(() => { window.setTimeout(() => { n.value = 1 }, 10) }); return <p>{n.value}</p> }`)
-  expect(inside.load.when).toBe('visible')
-  const out = await at(`import { onMount } from 'weft'\nexport function C() { onMount(() => { document.title = 'x' }); return <p onClick={() => {}}>c</p> }`)
+  const inside = await at(`import { onMount, state } from '@weft-js/core'\nexport function C() { const n = state(0); onMount(() => { window.setTimeout(() => { n.value = 1 }, 10) }); return <p>{n.value}</p> }`)
+  expect(inside.load!.when).toBe('visible')
+  const out = await at(`import { onMount } from '@weft-js/core'\nexport function C() { onMount(() => { document.title = 'x' }); return <p onClick={() => {}}>c</p> }`)
   expect(out.load).toMatchObject({ when: 'load', why: expect.stringMatching(/document/) })
   expect(out.diagnostics).toMatchObject([{ code: 'H010', file: 'route.tsx', fix: expect.stringMatching(/@weft visible/) }])
 })
 
 test('moving focus can\'t wait, and neither can autofocus or a ref that works', async () => {
-  expect((await at(`import { onMount } from 'weft'\nexport function C() { let e; onMount(() => e.focus()); return <input ref={e} /> }`)).load.when).toBe('load')
+  expect((await at(`import { onMount } from '@weft-js/core'\nexport function C() { let e; onMount(() => e.focus()); return <input ref={e} /> }`)).load!.when).toBe('load')
   const auto = await at(`export function C() { return <input autofocus onInput={() => {}} /> }`)
-  expect(auto.load.when).toBe('load')
+  expect(auto.load!.when).toBe('load')
   expect(auto.diagnostics).toEqual([]) // nothing to fix: it's what was asked for
-  expect((await at(`export function C() { return <div ref={el => el.scrollTo(0, 0)} /> }`)).load.when).toBe('load')
+  expect((await at(`export function C() { return <div ref={el => el.scrollTo(0, 0)} /> }`)).load!.when).toBe('load')
 })
 
 test('what a child does counts, through the props the island keeps', async () => {
-  const load = (await at(`import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`, { 'd.tsx': `import { onMount } from 'weft'\nexport function D() { onMount(() => { navigator.vibrate(1) }); return <p /> }` })).load
-  expect(load.when).toBe('load')
+  const load = (await at(`import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`, { 'd.tsx': `import { onMount } from '@weft-js/core'\nexport function D() { onMount(() => { navigator.vibrate(1) }); return <p /> }` })).load
+  expect(load!.when).toBe('load')
   const { plan } = await project({
     'c.tsx': `export function C(props) { return <div onClick={() => {}}>{props.make()}</div> }`,
-    'd.tsx': `import { onMount } from 'weft'\nexport function D() { onMount(() => {}); return <p /> }`,
+    'd.tsx': `import { onMount } from '@weft-js/core'\nexport function D() { onMount(() => {}); return <p /> }`,
     'route.tsx': `import { C } from './c'\nimport { D } from './d'\nconst make = () => <D />\nexport default function R() { return <C make={make} /> }`,
   })
-  expect(plan.loads[0].when).toBe('visible')
+  expect(plan.loads[0]!.when).toBe('visible')
 })
 
 test('a box at module level or a module that runs can\'t wait: nothing else would reach the island', async () => {
-  const box = await at(`import { state } from 'weft'\nconst n = state(0)\nexport function C() { return <p onClick={() => { n.value++ }}>{n.value}</p> }`)
+  const box = await at(`import { state } from '@weft-js/core'\nconst n = state(0)\nexport function C() { return <p onClick={() => { n.value++ }}>{n.value}</p> }`)
   expect(box.load).toMatchObject({ when: 'load', why: expect.stringMatching(/module level/) })
-  expect(box.diagnostics[0].code).toBe('H010')
-  expect((await at(`import './setup'\nexport function C() { return <p onClick={() => {}} /> }`, { 'setup.ts': `globalThis.x = 1` })).load.when).toBe('load')
+  expect(box.diagnostics[0]!.code).toBe('H010')
+  expect((await at(`import './setup'\nexport function C() { return <p onClick={() => {}} /> }`, { 'setup.ts': `globalThis.x = 1` })).load!.when).toBe('load')
 })
 
 test('server data wants to be running once seen, a mutation passed along doesn\'t', async () => {
   const server = { 'x.server.ts': `export const list = () => 1; export const add = () => 1` }
-  expect((await at(`import { list } from './x.server'\nexport function C() { const l = list(); return <p onClick={() => {}}>{l.value}</p> }`, server)).load.when).toBe('visible')
-  expect((await at(`import { add } from './x.server'\nimport { F } from './f'\nexport function C() { return <F of={add} /> }`, { ...server, 'f.tsx': `export function F(props) { return <form onSubmit={() => props.of()} /> }` })).load.when).toBe('interaction')
-  expect((await at(`import { Boundary } from 'weft'\nexport function C() { return <Boundary><p onClick={() => {}} /></Boundary> }`)).load.when).toBe('visible')
+  expect((await at(`import { list } from './x.server'\nexport function C() { const l = list(); return <p onClick={() => {}}>{l.value}</p> }`, server)).load!.when).toBe('visible')
+  expect((await at(`import { add } from './x.server'\nimport { F } from './f'\nexport function C() { return <F of={add} /> }`, { ...server, 'f.tsx': `export function F(props) { return <form onSubmit={() => props.of()} /> }` })).load!.when).toBe('interaction')
+  expect((await at(`import { Boundary } from '@weft-js/core'\nexport function C() { return <Boundary><p onClick={() => {}} /></Boundary> }`)).load!.when).toBe('visible')
 })
 
 test('the hatches: `@weft client` keeps its meaning, `@weft visible` overrules the proof', async () => {
   expect((await at(`/* @weft client */\nexport function C() { return <p onClick={() => {}} /> }`)).load).toMatchObject({ when: 'load', why: expect.stringMatching(/@weft client/) })
-  const seen = await at(`import { onMount } from 'weft'\n/* @weft visible */\nexport function C() { onMount(() => { document.title = 'x' }); return <p /> }`)
-  expect(seen.load.when).toBe('visible')
+  const seen = await at(`import { onMount } from '@weft-js/core'\n/* @weft visible */\nexport function C() { onMount(() => { document.title = 'x' }); return <p /> }`)
+  expect(seen.load!.when).toBe('visible')
   expect(seen.diagnostics).toEqual([])
 })
 
 test('`@weft interaction` stops the search at what it marks, and nothing else', async () => {
-  const child = (hatch: string) => ({ 'd.tsx': `import { onMount } from 'weft'\n${hatch}\nexport function D() { onMount(() => { document.title = 'x' }); return <p /> }` })
+  const child = (hatch: string) => ({ 'd.tsx': `import { onMount } from '@weft-js/core'\n${hatch}\nexport function D() { onMount(() => { document.title = 'x' }); return <p /> }` })
   const route = `import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`
   expect((await at(route, child(''))).load.when).toBe('load')
   expect((await at(route, child('/* @weft interaction */'))).load).toMatchObject({ when: 'interaction', why: expect.stringMatching(/handlers only/) })
-  const beside = { ...child('/* @weft interaction */'), 'e.tsx': `import { onMount } from 'weft'\nexport function E() { onMount(() => {}); return <p /> }` }
+  const beside = { ...child('/* @weft interaction */'), 'e.tsx': `import { onMount } from '@weft-js/core'\nexport function E() { onMount(() => {}); return <p /> }` }
   expect((await at(`import { D } from './d'\nimport { E } from './e'\nexport function C() { return <div onClick={() => {}}><D /><E /></div> }`, beside)).load.when).toBe('visible')
 })
 
@@ -209,22 +209,22 @@ test('`lazy: false`: every island loads with the page, as an opt-out', async () 
   dirs.push(root)
   writeFileSync(join(root, 'c.tsx'), button.replace('Button', 'C'))
   writeFileSync(join(root, 'route.tsx'), `import { C } from './c'\nexport default function R() { return <main><C /></main> }`)
-  const plan = await solve({ entries: [join(root, 'route.tsx')], transform, lazy: false, rel: f => relative(root, f), resolve: async (spec, from) => spec.startsWith('.') ? `${resolve(dirname(from), spec)}.tsx` : undefined })
-  expect(plan.loads[0].when).toBe('load')
+  const plan = await solve({ entries: [join(root, 'route.tsx')], transform, lazy: false, rel: f => relative(root, f), resolve: (spec, from) => Promise.resolve(spec.startsWith('.') ? `${resolve(dirname(from), spec)}.tsx` : undefined) })
+  expect(plan.loads[0]!.when).toBe('load')
   expect([...plan.files.values()][0].sites[0].when).toBe('')
 })
 
 test('an import that only brings CSS keeps an island waiting; one that runs code does not', async () => {
   const route = `import { Tap } from './tap'\nexport default function R() { return <Tap /> }\n`
   const tap = `export function Tap() { return <button onClick={() => {}}>x</button> }\n`
-  const when = (plan: any) => plan.loads.find((l: any) => l.tag === 'Tap')?.when
+  const when = (plan: Awaited<ReturnType<typeof solve>>) => plan.loads.find(l => l.tag === 'Tap')?.when
   const css = await project({ 'route.tsx': route, 'tap.tsx': `import './styles'\n${tap}`, 'styles.ts': `import './a.css'\n`, 'a.css': '' })
   const code = await project({ 'route.tsx': route, 'tap.tsx': `import './styles'\n${tap}`, 'styles.ts': `globalThis.x = 1\n` })
   expect(when(css.plan)).toBe('interaction')
   expect(when(code.plan)).toBe('load')
 })
 
-const layout = `import { untrack } from 'weft'
+const layout = `import { untrack } from '@weft-js/core'
 function Div({ children, ...rest }) { return <div {...rest}>{children}</div> }
 const TAGS = { div: Div }
 function Element({ as, ...rest }) { const Tag = TAGS[untrack(() => as) ?? 'div']; return <Tag {...rest} /> }
@@ -267,7 +267,7 @@ test('a handler under another name, or a spread of anything but the props, could
 
 test('an island waits by what its hoisted children read, not only its own tag', async () => {
   const { plan } = await project({
-    'route.tsx': `import { Boundary, state } from 'weft'
+    'route.tsx': `import { Boundary, state } from '@weft-js/core'
 function Box({ children }) { const s = state(0); return <div onClick={() => s.value++}>{children}</div> }
 function Inner() { const n = state(1); return <Boundary fallback="…">{n.value}</Boundary> }
 export default function R() { return <main><Box><Inner /></Box></main> }`,
@@ -277,7 +277,7 @@ export default function R() { return <main><Box><Inner /></Box></main> }`,
 
 test('@weft visible on a hoisted child is reached', async () => {
   const { plan } = await project({
-    'route.tsx': `import { onMount, state } from 'weft'
+    'route.tsx': `import { onMount, state } from '@weft-js/core'
 function Box({ children }) { const s = state(0); return <div onClick={() => s.value++}>{children}</div> }
 /* @weft visible */
 function Inner() { onMount(() => document.title); return <span>t</span> }
@@ -286,17 +286,17 @@ export default function R() { return <main><Box><Inner /></Box></main> }`,
   expect(plan.loads).toMatchObject([{ tag: 'Box', when: 'visible', why: expect.stringMatching(/@weft visible/) }])
 })
 
-test('H011: a closure on a handler is why a route hydrates whole', async () => {
+test('H017: a closure on a handler is why a route hydrates whole', async () => {
   const { plan, routeStatic } = await project({
     'button.tsx': button,
     'route.tsx': `import { Button } from './button'\nexport default function R() { const n = read(); const save = () => n + 1; return <main><Button onClick={save} /></main> }`,
   })
   expect(routeStatic).toBe(false)
-  expect(plan.diagnostics).toMatchObject([{ code: 'H011', file: 'route.tsx', why: expect.stringMatching(/onClick/), fix: expect.any(String) }])
+  expect(plan.diagnostics).toMatchObject([{ code: 'H017', file: 'route.tsx', why: expect.stringMatching(/onClick/), fix: expect.any(String) }])
 })
 
 test('Media waits to be seen, whatever else is on the page', async () => {
-  const { plan } = await project({ 'route.tsx': `import { Media } from 'weft/media'\nconst hero = { src: 'a.jpg' }\nexport default function R() { return <main><Media src={hero} alt="" /></main> }` })
+  const { plan } = await project({ 'route.tsx': `import { Media } from '@weft-js/core/media'\nconst hero = { src: 'a.jpg' }\nexport default function R() { return <main><Media src={hero} alt="" /></main> }` })
   expect(plan.loads).toMatchObject([{ tag: 'Media', when: 'visible' }])
 })
 

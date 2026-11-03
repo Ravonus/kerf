@@ -1,0 +1,52 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>arena</title>
+<style>body{margin:0;background:#111}iframe{width:300px;height:260px;border:0}</style><body><script type="module">
+// The site's beat (site/src/components/Arena.tsx): each frame ticks in turn at 60 Hz, the order rotates, and the meter is
+// read every sixth beat. `mode=tight` is the same with no gap between beats.
+const q = new URLSearchParams(location.search)
+const names = q.get('frames').split(','), ticks = +q.get('ticks'), skip = +q.get('skip'), tight = q.get('mode') === 'tight'
+const suffix = `?obs=${q.get('obs') ?? 1}`
+const rows = await Promise.all(names.map(name => new Promise(ok => {
+  const frame = document.createElement('iframe')
+  const heard = e => { if (e.data?.arena === 'ready' && e.source === frame.contentWindow) { removeEventListener('message', heard); ok({ name, frame }) } }
+  addEventListener('message', heard)
+  frame.src = `/${name}/index.html${suffix}`
+  document.body.append(frame)
+})))
+for (const r of rows) { r.arena = r.frame.contentWindow.arena; r.was = r.arena.read(); r.spans = [] }
+if (q.get('write') === '0') for (const r of rows) r.frame.contentWindow.__mute()
+let turn = 0, k = 0, paints = 0
+const paint = () => { paints++; requestAnimationFrame(paint) }
+requestAnimationFrame(paint)
+const beat = () => {
+  k++
+  const order = rows.map((_, i) => rows[(i + turn) % rows.length])
+  turn++
+  for (const r of order) r.arena.tick(k)
+  if (k === skip) { paints = 0; for (const r of rows) r.was = r.arena.read(); window.begun = performance.now() }
+  if (k % 6 === 0) for (const r of rows) {
+    const now = r.arena.read()
+    if (k > skip && r.mark) r.spans.push((now.ms - r.mark.ms) / (now.updates - r.mark.updates))
+    r.mark = now
+  }
+}
+const done = () => {
+  const seconds = (performance.now() - window.begun) / 1000
+  window.result = { isolated: crossOriginIsolated, seconds, paints, stacks: rows.map(r => {
+    const now = r.arena.read(), spans = r.spans.sort((a, b) => a - b)
+    return { name: r.name, mean: (now.ms - r.was.ms) / (now.updates - r.was.updates), median: spans[spans.length >> 1], p95: spans[spans.length * .95 | 0], writes: (now.writes - r.was.writes) / (now.updates - r.was.updates), updates: now.updates - r.was.updates }
+  }) }
+}
+if (tight) {
+  const go = () => { for (let i = 0; i < 200 && k < ticks; i++) beat(); k < ticks ? setTimeout(go) : done() }
+  go()
+} else {
+  // `mode=hot`: the same beat, but the thread spins for most of the gap, so the core never idles between beats.
+  const hot = q.get('mode') === 'hot'
+  const id = setInterval(() => {
+    const from = performance.now()
+    beat()
+    if (k >= ticks) { clearInterval(id); done() }
+    else if (hot) while (performance.now() - from < 13);
+  }, 1000 / 60)
+}
+</script></body></html>

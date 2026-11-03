@@ -1,57 +1,75 @@
-import { CommandIcon, FileIcon, GlobeIcon, MicIcon, PaperclipIcon, SendIcon, StopIcon, XIcon } from '@weft/icons'
-import { announce, applySuggest, autosize, installSweep, suggestQuery, uid } from '@weft/ui-core'
-import { derived, onMount, state, type State } from 'weft'
+import { CommandIcon, FileIcon, GlobeIcon, MicIcon, PaperclipIcon, SendIcon, StopIcon, XIcon } from '@weft-js/warp-icons'
+import { announce, applySuggest, autosize, installSweep, suggestQuery, uid } from '@weft-js/warp-core'
+import { derived, onMount, state, type State } from '@weft-js/core'
 import { Button } from '../Button'
-import { use } from '../use'
+import { use } from '@weft-js/warp-core/weft'
 import { Bar, held, IconButton, Sweep } from './bits'
 import { ContextMeter, type ContextUse } from './ContextMeter'
 import { ModelPicker, type ModelOption } from './ModelPicker'
 import '../styles'
-import '@weft/ui-core/styles/app/prompt.css'
-import '@weft/ui-core/styles/app/composer.css'
-import '@weft/ui-core/styles/app/suggest.css'
+import '@weft-js/warp-core/styles/app/prompt.css'
+import '@weft-js/warp-core/styles/app/composer.css'
+import '@weft-js/warp-core/styles/app/suggest.css'
 
+/** A tool the composer's row can offer. */
 export type PromptTool = 'attach' | 'slash' | 'mic' | 'web'
+/** A file attached to the prompt. */
 export type PromptFile = { id: string; name: string; progress?: number }
-export type PromptSuggestion = { value: string; description?: string }
+/** A completion shown under the prompt. */
+export type PromptSuggestion = { value: string; description?: string | undefined }
+/** What the prompt hands out through `control`. */
 export interface PromptControl { insert(text: string): void; focus(): void }
 
+/** Props for Prompt. */
 export interface PromptProps {
   value?: State<string> | string
+  /** Called with the draft on every keystroke. */
   onValueChange?: (v: string) => void
   onSubmit?: (text: string) => void
   /** Pressing Stop or Escape while busy. Stop keeps what arrived. */
   onStop?: () => void
   /** A message sent while busy goes to the queue. */
   onQueue?: (text: string) => void
-  busy?: boolean
+  busy?: boolean | undefined
   /** Why Send is off ("You're offline"): the button stays focusable and says why. */
   blocked?: string
-  label?: string
+  label?: string | undefined
   placeholder?: string
   tools?: PromptTool[]
+  /** The picked model's id: a state, or a plain value with `onModelChange`. */
   model?: State<string> | string
   models?: ModelOption[]
+  /** Called with the id of the model picked. */
   onModelChange?: (id: string) => void
   context?: ContextUse
+  /** Called from the context meter's Compact: summarise the conversation to free room. */
   onCompact?: () => void
+  /** Attached files shown as chips above the input, with upload progress. */
   files?: PromptFile[]
   /** Your own attachment row, in place of `files`. */
-  attachments?: any
+  attachments?: unknown
+  /** Called with the files picked or dropped. */
   onAttach?: (files: File[]) => void
+  /** Called with a file's id when its chip is removed. */
   onRemoveFile?: (id: string) => void
+  /** What `/` offers: one suggestion each, with a description. */
   commands?: PromptSuggestion[]
+  /** What `@` offers: one suggestion each, with a description. */
   mentions?: PromptSuggestion[]
+  /** Whether the Web toggle is on. */
   web?: boolean
+  /** Called with the Web toggle's new state. */
   onWebChange?: (on: boolean) => void
+  /** Whether dictation is on: the mic button turns critical. */
   mic?: boolean
+  /** Called when the mic button is pressed. */
   onMic?: () => void
   /** Phone: fewer tools, the model's short name. */
-  compact?: boolean
+  compact?: boolean | undefined
   /** Hands over insert() and focus(), for SpeechInput's Insert. */
-  control?: (c: PromptControl) => void
+  control?: ((c: PromptControl) => void) | undefined
   /** Above the composer: Suggestions. */
-  children?: any
+  children?: unknown
 }
 
 /**
@@ -124,7 +142,7 @@ export function Prompt(p: PromptProps) {
       const n = options.value.length
       if (e.key === 'Escape') { e.preventDefault(); open.value = null; return }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); active.value = (active.value + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; return }
-      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(current.value.value); return }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(current.value!.value); return }
     }
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send() }
     else if (e.key === 'Escape' && p.busy) { e.preventDefault(); p.onStop?.() }
@@ -135,7 +153,7 @@ export function Prompt(p: PromptProps) {
   return (
     <div data-scope="prompt" style="position:relative;padding:0 var(--warp-space-group) var(--warp-space-group)">
       {p.children}
-      <div ref={(n: any) => (host = n)} data-scope="composer" data-sweep="" data-pin={drag.value ? '' : undefined} style="margin:0" onDragOver={over} onDragLeave={() => (drag.value = false)} onDrop={onDrop}>
+      <div ref={n => (host = n)} data-scope="composer" data-sweep="" data-pin={drag.value ? '' : undefined} style="margin:0" onDragOver={over} onDragLeave={() => (drag.value = false)} onDrop={onDrop}>
         <Sweep />
         {hasFiles.value && (
           <div data-part="files">
@@ -149,11 +167,11 @@ export function Prompt(p: PromptProps) {
           </div>
         )}
         <label data-part="sr-only" for={`${id}-in`}>{p.label ?? 'Message the assistant'}</label>
-        <textarea ref={(n: any) => (box = n)} id={`${id}-in`} rows="1" enterkeyhint="send" placeholder={p.placeholder ?? 'Ask, or type / for commands'} aria-describedby={p.blocked ? `${id}-hint ${id}-why` : `${id}-hint`} aria-controls={listed.value ? `${id}-list` : undefined} aria-activedescendant={activeId.value} value={draft.value} onInput={e => { draft.set((e.currentTarget as HTMLTextAreaElement).value); look() }} onKeyDown={onKey} onClick={look} onBlur={() => (open.value = null)}></textarea>
+        <textarea ref={n => (box = n)} id={`${id}-in`} rows="1" enterkeyhint="send" placeholder={p.placeholder ?? 'Ask, or type / for commands'} aria-describedby={p.blocked ? `${id}-hint ${id}-why` : `${id}-hint`} aria-controls={listed.value ? `${id}-list` : undefined} aria-activedescendant={activeId.value} value={draft.value} onInput={e => { draft.set((e.currentTarget).value); look() }} onKeyDown={onKey} onClick={look} onBlur={() => (open.value = null)}></textarea>
         {p.blocked && <span data-part="hint" data-state="error" id={`${id}-why`}>{p.blocked}</span>}
         <div data-part="row">
           {shown('attach') && <IconButton icon={PaperclipIcon} label="Attach file" onClick={() => picker?.click()} />}
-          {shown('attach') && <input ref={(n: any) => (picker = n)} type="file" multiple hidden onChange={e => { add((e.currentTarget as HTMLInputElement).files); (e.currentTarget as HTMLInputElement).value = '' }} />}
+          {shown('attach') && <input ref={n => (picker = n)} type="file" multiple hidden onChange={e => { add((e.currentTarget).files); (e.currentTarget).value = '' }} />}
           {shown('slash') && !!p.commands?.length && <IconButton icon={CommandIcon} label="Commands" onClick={() => { draft.set('/'); box!.value = '/'; box!.focus(); box!.setSelectionRange(1, 1); look() }} />}
           {shown('mic') && <IconButton icon={MicIcon} label="Dictate" tone={p.mic ? 'critical' : 'neutral'} aria-pressed={p.mic ? 'true' : 'false'} onClick={p.onMic} />}
           {shown('web') && !p.compact && <Button emphasis="ghost" tone="neutral" size="sm" aria-pressed={p.web ? 'true' : 'false'} onClick={() => p.onWebChange?.(!p.web)}><GlobeIcon /><span data-part="label">Web</span></Button>}

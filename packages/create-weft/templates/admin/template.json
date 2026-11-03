@@ -1,7 +1,7 @@
 {
   "requires": { "db": "postgres", "auth": true },
   "pages": ["/", "/login", "/signup", "/admin", "/admin/orders", "/admin/orders/[id]", "/admin/nested", "/admin/per-row", "/admin/slow"],
-  "dependencies": { "@weft/icons": "0.0.0" },
+  "dependencies": { "@weft-js/warp-icons": "0.0.0" },
   "warp": {
     "seed": { "accent": "#4f46e5" },
     "dials": { "expression": "balanced", "density": "compact" },

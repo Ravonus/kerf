@@ -1,8 +1,8 @@
 // A streamed page on the server: what it keeps, what it sends and when.
 import { setFlagsFromString } from 'node:v8'
 import { runInNewContext } from 'node:vm'
-import { Boundary, defineState, derived, resource, state, untrack } from 'weft'
-import { renderToStringAsync } from 'weft/ssr'
+import { Boundary, defineState, derived, resource, state, untrack } from '@weft-js/core'
+import { renderToStringAsync } from '@weft-js/core/ssr'
 import { FnError, query } from '../src/data'
 import { createHandler, type Manifest } from '../src/server'
 

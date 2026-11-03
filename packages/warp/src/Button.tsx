@@ -1,36 +1,53 @@
-import { derived } from 'weft'
+import { derived } from '@weft-js/core'
+import type { Interaction } from '@weft-js/core/interaction'
+import { pressOrigin } from '@weft-js/warp-core'
 import { Icon, type IconRef } from './Icon'
+import { useUi } from './use-ui'
 import './styles'
-import '@weft/ui-core/styles/components/button.css'
-import '@weft/ui-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/components/button.css'
+import '@weft-js/warp-core/styles/components/spinner.css'
 
+/** The colour role a control speaks in. */
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+/** How much weight a control carries, from solid down to a plain link. */
 export type Emphasis = 'solid' | 'soft' | 'outline' | 'ghost' | 'frame' | 'link'
 
+/** Props for Button; anything else lands on the <button>. */
 export interface ButtonProps {
   /** solid (default) · soft · outline · ghost · frame (the signature) · link. Fixed at creation: it picks the anatomy. */
-  emphasis?: Emphasis
-  tone?: Tone
-  size?: 'sm' | 'md' | 'lg'
+  emphasis?: Emphasis | undefined
+  tone?: Tone | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
   /** A frame button with the solid fill sweeping in. */
   fill?: boolean
+  /** At vivid the fill spreads from where the pointer arrives and parts back out, instead of wiping in from the left. Not on frame or link. */
+  follow?: boolean
   full?: boolean
   /** Icon only: `label` is then required (it is the accessible name). */
-  icon?: IconRef
-  label?: string
+  icon?: IconRef | undefined
+  /** With `icon` and text: on a phone (or a tablet and a phone) only the icon shows, and the text stays the accessible name. */
+  collapse?: 'phone' | 'tablet' | undefined
+  ref?: ((el: HTMLButtonElement) => unknown) | undefined
+  onClick?: ((e: MouseEvent) => unknown) | undefined
+  label?: string | undefined
   /** Busy: the label stays the accessible name (hidden by opacity), presses are swallowed, focus stays. */
-  loading?: boolean
-  children?: any
-  [attr: string]: any
+  loading?: boolean | undefined
+  /** `interaction()`'s row: real events fill it, and it draws whoever set it. */
+  ui?: Interaction
+  children?: unknown
+  [attr: string]: unknown
 }
 
-const swept = (e: Emphasis) => e === 'soft' || e === 'outline' || e === 'frame'
+const swept = (e: Emphasis) => e !== 'link'
 
 /**
- * A native button (05 §2), the specimen markup exactly: solid, ghost and link draw their sweep in CSS (the ::before
- * wipe); soft and outline append one [data-part="sweep"]; frame carries the six-part signature anatomy (SIGNATURE §1b).
+ * A native button (05 §2): all but link and frame append one [data-part="sweep"], and ::before paints the fill (the wipe,
+ * or with `follow` at vivid the two blobs that close on where the hand arrived); frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
-export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, children, ...rest }: ButtonProps) {
+export function Button({ emphasis = 'solid', tone, size, fill, follow, full, icon, collapse, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
+  pressOrigin()   // one listener for the page; it only moves buttons that ask to follow
+  let host: HTMLButtonElement | undefined
+  useUi(() => ui, () => host)
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
   // a loading or aria-disabled button swallows presses (components.html guard())
@@ -39,7 +56,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
     if (el.hasAttribute('data-loading') || el.getAttribute('aria-disabled') === 'true') return e.preventDefault()
     onClick?.(e)
   }
-  const content = () => <>{glyph.value && <Icon name={glyph.value} />}{children}</>
+  const content = () => <>{glyph.value && <Icon name={glyph.value} />}{collapse && glyph.value && children ? <span data-part="collapse">{children}</span> : children}</>
   return (
     <button
       type={type}
@@ -48,8 +65,10 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       data-tone={tone}
       data-size={size === 'md' ? undefined : size}
       data-fill={emphasis === 'frame' && fill ? '' : undefined}
+      data-follow={follow && emphasis !== 'frame' && emphasis !== 'link' ? '' : undefined}
       data-full={full ? '' : undefined}
       data-icon-only={glyph.value && !children ? '' : undefined}
+      data-collapse={glyph.value && children ? collapse : undefined}
       aria-label={label}
       data-sweep={swept(emphasis) ? '' : undefined}
      
@@ -58,6 +77,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       aria-disabled={loading ? 'true' : undefined}
       onClick={press}
       {...rest}
+      ref={n => { host = n; ref?.(n) }}
     >
       {emphasis === 'frame' ? (
         <>
@@ -74,7 +94,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
         content()
       )}
       {loading && <span data-scope="spinner" data-part="spinner" aria-hidden="true"></span>}
-      {(emphasis === 'soft' || emphasis === 'outline') && <span data-part="sweep" aria-hidden="true"></span>}
+      {emphasis !== 'frame' && emphasis !== 'link' && <span data-part="sweep" aria-hidden="true"></span>}
     </button>
   )
 }

@@ -1,4 +1,4 @@
-import { announce, notifyPolicy, type NotifyItem } from '@weft/ui-core'
+import { announce, notifyPolicy, type NotifyItem } from '@weft-js/warp-core'
 import { toast } from '../Toast'
 
 /**
@@ -6,7 +6,7 @@ import { toast } from '../Toast'
  * `n.push({ title, description, tone, urgent, action })` per arrival. Inbox open: no toast, one announcement after a
  * second of quiet. Closed: a toast each, three at most; a burst collapses to "3 new notifications".
  */
-export function notify(opts: { open: () => boolean; burst?: number; quiet?: number; max?: number; summary?: (n: number) => string }) {
+export function notify(opts: { open: () => boolean; burst?: number; quiet?: number | undefined; max?: number | undefined; summary?: (n: number) => string }) {
   return notifyPolicy({
     ...opts,
     show: (t: NotifyItem) => toast.show(t),

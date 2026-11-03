@@ -1,6 +1,6 @@
 # warp redesign: the loom
 
-Status: 2026-10-31. Audit and evidence: [../../research/39-warp-audit.md](../../research/39-warp-audit.md). Keeps
+Status: 2026-10-31. Audit and evidence: [../../research/41-warp-audit.md](../../research/41-warp-audit.md). Keeps
 [SIGNATURE.md](SIGNATURE.md); where this changes it, it says so.
 
 ## 1. What warp is
@@ -25,7 +25,7 @@ The audit's main finding is that the first 150 ms is empty. So warp runs two clo
 
 - **The touch clock answers the hand.** 0–120 ms, front-loaded. Hover colour is instant in and fades out over 160 ms.
   Press is instant. This is what makes it feel wired to the pointer.
-- **The thread clock is the grace note.** The sweep and the frame, 480–760 ms. Decorative, never awaited, never blocks.
+- **The thread clock is the grace note.** The sweep and the frame, 400–640 ms. Decorative, never awaited, never blocks.
 
 No hover ever waits on the thread clock again.
 
@@ -109,18 +109,22 @@ case, but that is a loading decision for the framework, not this pass.
 
 ## 5. Select, by construction
 
-`Select` stays a real `<select>`. It is the form control, the accessible name and the `change` event, so no consumer
-changes, forms and tests keep working, and without JavaScript it still works. On fine pointers `appearance: base-select` gives
-it warp's list in CSS, and the browser owns open, keyboard, typeahead, the top layer and flipping. Touch keeps the OS sheet, as
-03 §4 says, and so does any browser without base-select.
+`Select` is warp's on every device: a `button[role=combobox]` and warp-core's `listbox()`, a popover or, on a phone, a sheet.
+A hidden real `<select>` stays the form control and the `change` event, so no consumer changes, and with scripting off it is
+what shows. `appearance: base-select` was tried first and dropped: it left Safari, Firefox and every touch device on the OS
+popup, and the owner wants no browser-drawn control anywhere. `CompactSelect` is the same list for table rows and pagers,
+with no `<option>` until it opens.
 
 ## 6. Size
 
-warp's kit was 7.57 KB against the 7.00 KB allowance before this pass, and 9.22 KB once it added the custom Select. It is
-6.36 KB now. Two changes of construction did that, and CSS (the kit counts JS only) carries both:
+warp's kit was 7.57 KB against the 7.00 KB allowance before this pass, and 9.22 KB once it added the custom Select. It was
+6.36 KB after two changes of construction, then the scripted Select came back on purpose, and the allowance is now 11 KB
+(`evals/warp-exit.mjs`). Measured with brotli 11, whole page with one component, runtime included: Select 15.04 KB against
+10.63 KB for the base-select version, so **4.42 KB** more; Input 10.27 KB; CompactSelect 10.21 KB; NumberField 11.29 KB, 1.02 KB
+over Input. The owner's rule is speed over bytes inside the 50 KB ceiling, and the shop stays well inside it. The panel is built
+on first open and kept, so the bytes buy no mount work: a closed Select is a button and its hidden select.
 
-- **Select** uses `appearance: base-select`, so warp's list needs no script: 1.61 KB. Chromium only for now: desktop Safari and
-  Firefox keep the OS popup, as touch does. `selectMenu()` stays in ui-core for an app that wants warp's list everywhere.
+- **The Select** is the 4.42 KB above. It replaced base-select, which saved 1.61 KB only by leaving most devices native.
 - **The sweep** is one switch and two registered edges (SIGNATURE §1.4): 1.26 KB, the document `MutationObserver` and the
   hover tracking gone. An animation can't hand over to a transition in Blink (no transition starts on a property an animation
   was driving, even if the declared value changes too), so each edge has one job and its own transition instead.

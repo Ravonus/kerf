@@ -1,4 +1,4 @@
-import { Boundary, state } from 'weft'
+import { Boundary, state } from '@weft-js/core'
 import { listPosts } from '../server/feed'
 
 export function Feed(props: { limit: number; seed: number; v: number }) {

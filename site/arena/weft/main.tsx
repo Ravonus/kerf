@@ -1,5 +1,5 @@
-import { flush, state, stats } from 'weft'
-import { render } from 'weft/dom'
+import { flush, state, stats } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import { CELLS, count, glyph, harness } from '../shared/harness.js'
 
 const n = state(0)

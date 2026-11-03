@@ -1,8 +1,9 @@
-import type { PluginInstance } from 'weft/plugin'
+import type { PluginInstance } from '@weft-js/core/plugin'
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
 export const dialScript: string
 
+/** What `warp()` takes in weft.config: the seed, the default dials, radius, fonts and any token. */
 export interface WarpOptions {
   /**
    * The brand's hue family: `{ accent: '#rrggbb' }`, or a hue and chroma. Each theme solves its own lightness, and the build
@@ -26,5 +27,7 @@ export interface WarpOptions {
   tokens?: Record<`--warp-${string}`, string>
 }
 
+/** The Vite plugin that serves warp's tokens for an app. */
 export const warp: (options?: WarpOptions) => PluginInstance<unknown>
+/** The plugin, for `import warp from`. */
 export default warp

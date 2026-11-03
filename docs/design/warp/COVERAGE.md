@@ -102,7 +102,7 @@ CalendarView's week view or Drawer's snap points, the row names only the missing
 | Component or pattern | Use case | Kits | P | Owner | Status |
 |---|---|---|---|---|---|
 | Field / Fieldset primitives (label, description, error, required mark, group legend) | every form; one way to wire `aria-describedby` | shadcn, Chakra, Ark, Fluent, Primer, Spectrum | P0 | inputs | ✓ [03 §6](03-inputs.md#6-forms) · [inputs#more](specimens/inputs.html#more) |
-| Native select | mobile-first forms; long OS-native lists | shadcn, Chakra, Tremor | P1 | inputs | ✓ [03 §4](03-inputs.md#4-choice-family) · [inputs#choice](specimens/inputs.html#choice) |
+| Select on touch | mobile-first forms; long lists (warp's sheet, not the OS's) | shadcn, Chakra, Tremor | P1 | inputs | ✓ [03 §4](03-inputs.md#4-choice-family) · [inputs#choice](specimens/inputs.html#choice) |
 | Checkbox card / radio card | plan and shipping choices, onboarding options | Chakra, Tremor, Mantine, coss | P0 | inputs | ✓ [03 §4](03-inputs.md#4-choice-family) · [inputs#choice](specimens/inputs.html#choice) |
 | Toggle and ToggleGroup (pressed state, single or multi) | toolbar formatting, view switches | shadcn, Radix, Ark, Chakra, Tremor | P0 | comp | ✓ [05 §2](05-components.md#2-actions) · [components#fmt](specimens/components.html#fmt) |
 | Autocomplete (free text with suggestions, not constrained to options) | search fields, tags, addresses | Antd, Primer, MUI, Hero | P1 | inputs | ✓ [03 §3](03-inputs.md#3-text-family) · [inputs#more](specimens/inputs.html#more) |

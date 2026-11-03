@@ -1,0 +1,316 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs {
+/* ===========================================================================
+   3 · CHOICE FAMILY
+   ======================================================================== */
+:where([data-scope="checkbox"]),
+:where([data-scope="radio"]),
+:where([data-scope="switch"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--warp-space-related);
+  align-items: center; min-block-size: var(--warp-hit-min); cursor: pointer; font-size: var(--warp-text-body-size);
+  -webkit-tap-highlight-color: transparent; justify-self: start;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > input {
+  /* over the control's grid cell and no further: the real input is what a click, a screen reader's touch and a test all
+     reach, and a link in the label or hint stays clickable */
+  position: absolute; grid-area: 1 / 1 / 2 / 2; inset: 0; z-index: 5; opacity: 0; inline-size: 100%; block-size: 100%; margin: 0; cursor: inherit;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > [data-part="hint"] {
+  grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); line-height: var(--warp-text-caption-leading); margin-block-start: -2px;
+}
+:where([data-scope="checkbox"]):has([data-part="hint"]),
+:where([data-scope="radio"]):has([data-part="hint"]) { align-items: start; }
+:where([data-scope="checkbox"], [data-scope="radio"]):has([data-part="hint"]) > [data-part="control"] { margin-block-start: 1px; }
+:where([data-scope="checkbox"]):has(input:disabled),
+:where([data-scope="radio"]):has(input:disabled),
+:where([data-scope="switch"]):has(input:disabled) { cursor: not-allowed; opacity: var(--warp-opacity-disabled); }
+
+/* checkbox / radio box: two stacked borders (base = ink, sweep = accent), never filled;
+   the accent check draws itself (stroke 2.6, 420ms); radio: an accent dot grows */
+:where([data-scope="checkbox"], [data-scope="radio"]) > [data-part="control"] {
+  display: grid; place-items: center; inline-size: 20px; block-size: 20px; flex: none;
+  border-radius: var(--warp-radius-mark); --warp-sweep-radius: var(--warp-radius-mark);
+}
+:where([data-scope="radio"]) > [data-part="control"] { border-radius: 50%; --warp-sweep-radius: 50%; }
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before,
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
+  /* the sweep's two parts (warp.signature §1), as the control's own: a list of 200 boxes is 400 elements fewer */
+  content: ""; position: absolute; inset: 0; box-sizing: border-box; pointer-events: none; border-radius: inherit;
+  --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
+  transition: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
+              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+              --_a 0s linear var(--_latch, 0s);
+}
+@media (hover: none) {
+  :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before,
+  :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after { --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--warp-sweep-duration)); }
+}
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before {
+  z-index: 1; color: var(--warp-color-sweep-base); border: var(--warp-sweep-base-width) solid currentColor;
+  clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
+}
+:where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
+  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--warp-sweep-width) solid currentColor;
+  clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+}
+:where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--warp-color-sweep-critical); opacity: 1; }
+/* the mark: the check's stroke runs left to right, so a wipe that way draws it */
+:where([data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) {
+  --_check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 L9.5 17 L19 7'/%3E%3C/svg%3E");
+  --_dash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+  position: relative; z-index: 3; inline-size: 70%; block-size: 70%; background: var(--warp-color-accent-solid);
+  mask: var(--_check) center / 100% 100% no-repeat; clip-path: inset(-20% 120% -20% -20%);
+  transition: clip-path calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-expression="vivid"] [data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) {
+  --_check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpath d='M5 12.5 L9.5 17 L19 7'/%3E%3C/svg%3E");
+  --_dash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='square'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+}
+:where([data-scope="checkbox"]) > input:checked + [data-part="control"] > [data-part="mark"],
+:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] > [data-part="mark"] { clip-path: inset(-20%); }
+:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] > [data-part="mark"] { mask-image: var(--_dash); }
+@media (forced-colors: active) {
+  :where([data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]) { forced-color-adjust: none; background: CanvasText; }
+}
+:where([data-scope="radio"]) > [data-part="control"]::after {
+  content: ""; position: relative; z-index: 3; inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--warp-color-accent-solid);
+  transform: scale(0); transition: transform calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-scope="radio"]) > input:checked + [data-part="control"]::after { transform: scale(1); }
+:where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] { --_a: 1; }
+:where([data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] > [data-part="sweep"] { color: var(--warp-color-sweep-critical); }
+
+/* switch (SIGNATURE §1c): the accent fill moves THROUGH the rail as the knob slides.
+   Off + hover/focus: the ring sweeps. On + hover/focus: accent-hover sweeps inside the rail. */
+:where([data-scope="switch"]) > [data-part="track"] {
+  position: relative; flex: none; inline-size: 44px; block-size: 24px; border-radius: var(--warp-radius-round);
+  --warp-sweep-radius: var(--warp-radius-round); --_base: var(--warp-color-border) /* the knob carries off; the ring stays quieter than ink, sweep-vs-base ≥ 3:1 (review 01 M7) */; background: var(--warp-color-surface-active);
+}
+:where([data-scope="switch"]) > [data-part="track"] > [data-part="rail-fill"] { overflow: clip; }
+:where([data-scope="switch"]) > input:checked + [data-part="track"] { --_base: var(--warp-color-accent-solid); }
+:where([data-scope="switch"] [data-part="thumb"]) {
+  position: absolute; z-index: 3; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 18px; block-size: 18px;
+  border-radius: var(--warp-radius-round); background: var(--warp-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);   /* the knob's corners follow the track's */
+}
+:where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(20px); background: var(--warp-color-accent-on-solid); }
+:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--warp-sweep-width) + 1px); }
+:where([data-scope="switch"][data-size="sm"]) > [data-part="track"] { inline-size: 36px; block-size: 20px; }
+:where([data-scope="switch"][data-size="sm"] [data-part="thumb"]) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(16px); }
+:where([data-scope="switch"][data-placement="end"]) { grid-template-columns: minmax(0, 1fr) auto; justify-self: stretch; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="track"] { grid-column: 2; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > input { grid-area: 1 / 2 / 2 / 3; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="label"] { grid-column: 1; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="hint"] { grid-column: 1; }
+
+/* group (fieldset): radio group, checkbox group, chips. The legend follows the field switch:
+   floating = the 10px caps label colour; classic = the plain label above. */
+:where([data-scope="group"]) { border: 0; margin: 0; padding: 0; min-inline-size: 0; display: grid; gap: var(--warp-space-tight); }
+:where([data-scope="group"] > legend) {
+  padding: 0; margin-block-end: var(--warp-space-tight);
+  font-family: var(--warp-label-font); font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight);
+  letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-rest);
+}
+:where([data-fields="classic"] [data-scope="group"]:not([data-variant="floating"]), [data-scope="group"][data-variant="classic"]) > legend {
+  font-family: var(--warp-text-label-font); font-size: var(--warp-text-label-size); font-weight: var(--warp-text-label-weight); letter-spacing: 0; text-transform: none; color: var(--warp-color-text);
+}
+:where([data-scope="group"] [data-part="items"]) { display: grid; gap: 0; }
+:where([data-scope="group"][data-orientation="horizontal"] [data-part="items"]) { display: flex; flex-wrap: wrap; column-gap: var(--warp-space-group); }
+:where([data-scope="group"] > [data-part="message"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="group"][data-invalid] > [data-part="message"]) { color: var(--warp-color-critical-text); }
+
+/* choice cards (radio/checkbox as a card): swept border; selected pins the sweep */
+:where([data-scope="choice-card"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--warp-space-related);
+  padding: calc(var(--warp-pad-control) + 2px); cursor: pointer;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  background: var(--warp-color-surface-raised); transition: background-color var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="choice-card"]) > input { position: absolute; opacity: 0; pointer-events: none; }
+:where([data-scope="choice-card"]) > :not([data-part^="sweep"], input) { position: relative; z-index: 3; }
+:where([data-scope="choice-card"] [data-part="label"]) { font-weight: 500; }
+:where([data-scope="choice-card"] [data-part="hint"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="choice-card"] [data-part="meta"]) { grid-row: 1; grid-column: 2; font-variant-numeric: tabular-nums; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="choice-card"]:has(input:checked)) { background: var(--warp-color-accent-soft); }
+:where([data-scope="choice-card"]:has(input:checked)) { --_a: 1; }
+:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--warp-sweep-width) + 0.5px); }
+:where([data-scope="choice-card"]:has(input:checked) [data-part="meta"]) { color: var(--warp-color-accent-text); }
+
+/* segmented (original Segmented.tsx; review 01 M8): the group rests as a filled track on the hairline, takes ink
+   only for focus, and does not sweep; hovering or focusing an UNSELECTED option sweeps a ring around that option only.
+   The indicator is a rail (§1c): an accent fill that slides to the selection. */
+:where([data-scope="segmented"]) {
+  position: relative;   /* the indicator's containing block: the group is no longer a [data-sweep] host */
+  display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 3px;
+  border-radius: calc(var(--warp-radius-control) + 2px);
+  box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-border);
+  background: var(--warp-color-surface-sunken); isolation: isolate; max-inline-size: 100%;
+  align-self: start; justify-self: start;   /* a control keeps its height in a grid */
+}
+:where([data-scope="segmented"]:has(input:focus-visible)) { box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base); }
+:where([data-scope="segmented"] > label[data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); border-radius: var(--warp-radius-control); }
+:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--warp-sweep-width); }
+:where([data-scope="segmented"] > label:has(input:checked)) > :where([data-part="sweep"]) { visibility: hidden; }
+:where([data-scope="segmented"] label) { position: relative; z-index: 3; display: flex; }
+:where([data-scope="segmented"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+:where([data-scope="segmented"] [data-part="item"]) {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  block-size: calc(var(--warp-control-md) - 8px); padding-inline: var(--warp-pad-control);
+  font-weight: 500; font-size: var(--warp-text-body-size); color: var(--warp-color-text-subtle); white-space: nowrap;
+  border-radius: var(--warp-radius-control); transition: color calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-scope="segmented"] [data-part="item"] svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="segmented"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); }   /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
+:where([data-scope="segmented"] label:hover [data-part="item"]) { color: var(--warp-color-text); }
+:where([data-scope="segmented"] input:checked + [data-part="item"]) { color: var(--warp-color-accent-on-solid); }
+:where([data-scope="segmented"] input:focus-visible + [data-part="item"]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
+:where([data-scope="segmented"] [data-part="indicator"]) {
+  position: absolute; z-index: 2; inset-block: 3px; inset-inline-start: 0;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid); overflow: clip;
+}
+/* until the shuttle places the indicator (it writes the inline style), the selection paints its own fill: before the
+   island loads, without JS, or in a reader that skips the indicator, the light ink never sits on the bare track */
+:where([data-scope="segmented"] > [data-part="indicator"]:not([style]) ~ label input:checked + [data-part="item"]) { background: var(--warp-color-accent-solid); }
+/* while the indicator is placed instantly (first placement, hydration, resize), the ink snaps with it: a fade would
+   leave the old ink over the new fill for 420ms */
+:where([data-scope="segmented"] > [data-part="indicator"][data-instant] ~ label [data-part="item"]) { transition: none; }
+:where([data-scope="segmented"][data-size="sm"] [data-part="item"]) { block-size: calc(var(--warp-control-sm) - 8px); font-size: var(--warp-text-caption-size); }
+
+/* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */
+:where([data-scope="chip"][data-sweep]) {
+  isolation: isolate; display: inline-flex; align-items: center; gap: 6px;
+  block-size: var(--warp-control-sm); padding-inline: calc(var(--warp-pad-control) - 1px);
+  border: 0; border-radius: var(--warp-radius-round); --warp-sweep-radius: var(--warp-radius-round); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  background: var(--warp-color-surface-raised); color: var(--warp-color-text);
+  font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); cursor: pointer;
+  transition: background-color var(--warp-duration-base) var(--warp-ease-out), color var(--warp-duration-base);
+}
+:where([data-scope="chip"][data-sweep]) > :not([data-part^="sweep"]) { position: relative; z-index: 3; }
+:where([data-scope="chip"][data-sweep]) > svg { inline-size: 13px; block-size: 13px; fill: none; stroke: currentColor; stroke-width: 2; }
+:where([data-scope="chip"][data-sweep]) > svg[data-part="check"] { display: none; margin-inline-start: -2px; }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"])),
+:where([data-scope="chip"][data-sweep]:is([aria-checked="true"])) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > svg[data-part="check"] { display: block; }
+:where([data-scope="chip"][data-sweep][aria-checked="true"]) { --_a: 1; }
+:where([data-scope="chip"][data-sweep]:focus-visible) { outline: none; }
+:where([data-scope="chip"][data-sweep]:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="chip"] [data-part="count"]) { font-variant-numeric: tabular-nums; }   /* full ink: 0.7 opacity fell to 3.2:1 (review 03 m12) */
+
+/* tag (inside tags input / multi-combobox) */
+:where([data-scope="tag"]) {
+  display: inline-flex; align-items: center; gap: 2px; max-inline-size: 100%;
+  block-size: 24px; padding-inline: 8px 2px; margin-block: 2px;
+  border-radius: max(2px, calc(var(--warp-radius-control) - 2px));
+  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
+  font-size: var(--warp-text-caption-size); font-weight: 500; white-space: nowrap;
+  animation: warp-field-pop var(--warp-duration-base) var(--warp-ease-pop);
+}
+:where([data-scope="tag"] > span) { overflow: clip; text-overflow: ellipsis; }
+:where([data-scope="tag"] button) {
+  position: relative; display: grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; border: 0; border-radius: 2px;
+  background: transparent; color: inherit; opacity: 0.75; cursor: pointer;
+}
+:where([data-scope="tag"] button)::before { content: ""; position: absolute; inset: min(0px, calc((18px - var(--warp-hit-min)) / 2)); }
+:where([data-scope="tag"] button:hover) { opacity: 1; background: color-mix(in oklab, currentColor 14%, transparent); }
+:where([data-scope="tag"] svg) { inline-size: 12px; block-size: 12px; }
+:where([data-scope="tag"][data-highlighted]) { box-shadow: inset 0 0 0 1.5px var(--warp-color-sweep); }
+:where([data-scope="field"] > [data-part="control"][data-wrap]) { flex-wrap: wrap; row-gap: 2px; column-gap: 4px; padding-block: 7px; }
+:where([data-scope="field"] > [data-part="control"][data-wrap] [data-part="input"]) { min-inline-size: 8ch; min-block-size: 28px; align-self: center; }
+
+/* select trigger + value + chevron (Select, Combobox, MultiCombobox) */
+:where([data-scope="field"] [data-part="trigger"]) {
+  all: unset; box-sizing: border-box; flex: 1; min-inline-size: 0; align-self: stretch; display: flex; align-items: center; gap: var(--warp-space-related);
+  min-block-size: calc(var(--warp-field-height) - 2px); cursor: pointer; font-size: var(--warp-text-control-size); color: var(--warp-color-text); position: relative; z-index: 3;
+}
+:where([data-scope="field"] > [data-part="control"]:has([data-part="trigger"])) { cursor: pointer; }
+:where([data-scope="field"] [data-part="value"]) { flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="field"] [data-part="value"]:empty)::before { content: attr(data-placeholder); color: transparent; transition: color var(--warp-duration-fast); }
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="value"]:empty)::before,
+:where([data-scope="field"]:is([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
+:where([data-scope="field"] [data-part="indicator"]) { flex: none; display: inline-flex; color: var(--warp-color-text-subtle); transition: rotate calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease), color var(--warp-duration-fast); }
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="indicator"]) { color: var(--warp-color-sweep); }
+:where([data-scope="field"] > [data-part="control"]:has([aria-expanded="true"]) [data-part="indicator"]:not([data-part="item"] > *)) { rotate: 180deg; }
+:where([data-scope="field"] > [data-part="control"][data-wrap] > [data-part="indicator"]) { align-self: center; margin-inline-start: auto; }
+/* Select (redesign §5): a button trigger, and a real <select> behind it as the form's value. The trigger fills the control
+   under the chevron, so the whole box is one press. */
+:where([data-scope="field"] > [data-part="control"]:has(> button[data-part="input"])) { cursor: pointer; }
+:where([data-scope="field"] button[data-part="input"]) {
+  appearance: none; display: flex; align-items: center; border: 0; background: none; color: inherit; font: inherit; font-size: var(--warp-text-control-size); text-align: start;
+  cursor: inherit; outline: none; margin-inline-end: -24px; min-block-size: calc(var(--warp-field-height) - 2px); box-shadow: none;
+}
+/* the room the trigger reaches under the chevron (its gap and glyph) is the value's own end padding, so the value's text
+   never runs under the chevron. It can't be the button's padding: field.css's [data-part="input"] { padding-inline: 0 }
+   may load after this file and win, which left a narrow select (a sort bar, a pager's size) 24px short. */
+:where([data-scope="field"] button[data-part="input"] > [data-part="value"]) { padding-inline-end: 24px; }
+:where([data-scope="field"] button[data-part="input"]:disabled) { cursor: not-allowed; }
+:where([data-scope="field"] button[data-part="input"] ~ [data-part="indicator"]) { pointer-events: none; }
+:where([data-scope="field"] button[data-part="input"] > [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
+:where([data-part="carrier"]) { position: absolute; inset-block-end: 0; inset-inline-start: var(--_lead, 0); inline-size: 1px; block-size: 1px; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+/* a table row, a pager, a toolbar: as wide as its value */
+:where([data-scope="field"][data-compact]) { --warp-field-height: max(var(--warp-control-sm), var(--warp-target-min)); display: inline-grid; min-inline-size: 0; margin: 0; padding: 0; gap: 0; vertical-align: middle; }
+:where([data-scope="field"][data-compact] > [data-part="control"]) { padding-inline: var(--warp-space-related); }
+/* with scripting off the real select is the control */
+@media (scripting: none) {
+  :where([data-scope="field"] button[data-part="input"]) { display: none; }
+  :where([data-part="carrier"]) {
+    position: relative; inset: auto; flex: 1; min-inline-size: 0; inline-size: auto; opacity: 1; pointer-events: auto; appearance: none; background: none; color: inherit; font: inherit; cursor: pointer;
+    align-self: stretch; block-size: auto; min-block-size: 0; line-height: 1.5; padding-inline-end: 24px; margin-inline-end: -24px; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
+  }
+}
+/* NumberField's steppers: two half-height buttons at the end of the control */
+:where([data-scope="field"] [data-part="steps"]) { flex: none; display: grid; grid-template-rows: 1fr 1fr; align-self: stretch; margin-block: 2px; margin-inline-end: calc(var(--warp-space-tight) * -1); }
+:where([data-scope="field"] [data-part="step"]) {
+  appearance: none; display: grid; place-items: center; inline-size: 24px; min-block-size: 0; padding: 0; border: 0; border-radius: var(--warp-radius-mark); background: none; color: var(--warp-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="field"] [data-part="step"] svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="field"] [data-part="step"]:first-child svg) { rotate: 180deg; }
+:where([data-scope="field"] [data-part="step"]:hover:not(:disabled)) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+:where([data-scope="field"] [data-part="step"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
+@media (pointer: coarse) { :where([data-scope="field"] [data-part="steps"]) { grid-template-rows: none; grid-template-columns: 1fr 1fr; } :where([data-scope="field"] [data-part="step"]) { inline-size: var(--warp-hit-min); } }
+/* its panel, a <dialog>: a popover by the control, or the sheet on a phone. The list scrolls and carries the shuttle, so the
+   search stays put above it. */
+:where([data-scope="select"][data-part="content"]) { font-size: var(--warp-text-body-size); max-block-size: min(var(--_avail, 320px), calc(100dvh - 16px)); overflow: clip; }
+:where([data-scope="select"][data-part="content"]:is(:popover-open)),
+:where([data-scope="select"][data-part="content"]:is(:modal)) { display: flex; flex-direction: column; }
+:where([data-scope="select"][data-part="content"])::backdrop { background: transparent; }
+:where([data-scope="select"] [data-part="handle"]),
+:where([data-scope="select"] [data-part="sheet-head"]) { display: none; }
+:where([data-scope="select"] [data-part="list"]) { position: relative; isolation: isolate; flex: 1; min-block-size: 0; overflow: auto; overscroll-behavior: contain; outline: none; }
+:where([data-scope="select"] [data-part="list"] > [data-part="shuttle"]) { background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 130%), transparent); }
+:where([data-scope="select"] [data-part="list"]:has(> [data-part="shuttle"]) [data-part="item"][data-highlighted]:not([data-keyboard])) { background: none; }
+:where([data-scope="select"] [data-part="item"]) { outline: none; }
+:where([data-scope="select"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="select"] [data-part="item"][hidden]),
+:where([data-scope="select"] [role="group"][hidden]) { display: none; }
+:where([data-scope="select"] [data-part="item-hint"]) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); font-weight: 400; }
+:where([data-scope="select"] [data-part="empty"]) { margin: 0; padding: var(--warp-space-related); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="select"] label[data-part="search"]) {
+  flex: none; display: flex; align-items: center; gap: var(--warp-space-related); block-size: var(--warp-control-md); padding-inline: var(--warp-space-related); margin-block-end: var(--warp-space-tight);
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border-control);
+}
+:where([data-scope="select"] label[data-part="search"]:focus-within) { box-shadow: inset 0 0 0 2px var(--warp-color-focus); }
+:where([data-scope="select"] label[data-part="search"] svg) { flex: none; inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); color: var(--warp-color-text-subtle); }
+/* 16px at least: iOS zooms the page on focus below that */
+:where([data-scope="select"] label[data-part="search"] input) {
+  appearance: none; flex: 1; min-inline-size: 0; border: 0; padding: 0; outline: none; background: none; color: inherit; font: inherit; font-size: max(16px, var(--warp-text-control-size));
+}
+:where([data-scope="select"] label[data-part="search"] input)::-webkit-search-cancel-button { display: none; }
+:where([data-scope="select"][data-presentation="sheet"]) {
+  inset: auto 0 0 0; inline-size: 100%; min-inline-size: 0; max-inline-size: none; max-block-size: 86dvh; padding: var(--warp-space-related) var(--warp-space-group) calc(var(--warp-space-group) + env(safe-area-inset-bottom));
+  border-radius: var(--warp-radius-surface) var(--warp-radius-surface) 0 0; border-block-end: 0; box-shadow: var(--warp-elevation-3); transform-origin: bottom center; translate: 0 100%; scale: 1;
+}
+:where([data-scope="select"][data-presentation="sheet"]:modal) { opacity: 1; translate: 0 0; transition: translate var(--warp-duration-slow) var(--warp-ease-out), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; }
+@starting-style { :where([data-scope="select"][data-presentation="sheet"]:modal) { translate: 0 100%; } }
+:where([data-scope="select"][data-presentation="sheet"])::backdrop { background: var(--warp-color-scrim); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="handle"]) { flex: none; display: block; inline-size: 36px; block-size: 4px; margin: 2px auto 10px; border-radius: 999px; background: var(--warp-color-border-strong); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="sheet-head"]) { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-related); margin-block-end: var(--warp-space-related); font-size: var(--warp-text-heading-size); font-weight: 600; }
+:where([data-scope="select"] [data-part="done"]) {
+  appearance: none; min-block-size: max(var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-pad-control); border: 0; border-radius: var(--warp-radius-control);
+  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font: inherit; font-size: var(--warp-text-control-size); font-weight: 500; cursor: pointer;
+}
+:where([data-scope="select"] [data-part="done"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="item"]) { min-block-size: max(44px, var(--warp-target-min)); }
+@media (forced-colors: active) {
+  :where([data-scope="select"] [data-part="item"][data-highlighted]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+}

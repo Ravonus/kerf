@@ -1,0 +1,42 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Board — a dashboard grid of draggable, resizable widgets. 12 columns ≥ 1000,
+   6 at tablet, 1 on phone (spans clamp). Move: drag the handle, or focus it
+   and Alt+arrows; resize: the corner grip or Alt+Shift+arrows. */
+:where([data-scope="board"]) {
+  --_cols: 1; display: grid; grid-template-columns: repeat(var(--_cols), minmax(0, 1fr)); grid-auto-rows: var(--_row, 72px);
+  grid-auto-flow: dense; gap: var(--warp-space-group);
+}
+@container (min-width: 600px) {
+:where([data-scope="board"]) { --_cols: 6; }
+}
+@container (min-width: 1000px) {
+:where([data-scope="board"]) { --_cols: 12; }
+}
+:where([data-scope="board"] > [data-part="widget"]) {
+  --w: 4; --h: 2; grid-column: span min(var(--w), var(--_cols)); grid-row: span var(--h);
+  position: relative; display: flex; flex-direction: column; min-inline-size: 0;
+  background: var(--warp-color-surface); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
+  transition: box-shadow var(--warp-duration-fast), outline-color var(--warp-duration-fast);
+}
+:where([data-scope="board"] > [data-part="widget"][data-dragging]) { box-shadow: var(--warp-elevation-3); z-index: 2; outline: 2px dashed var(--warp-color-accent-border); outline-offset: 2px; }
+:where([data-scope="board"] [data-part="body"]) { flex: 1; min-block-size: 0; overflow: clip; padding: 0 var(--warp-space-group) var(--warp-space-group); }
+:where([data-scope="board"] [data-part="handle"]) {
+  display: flex; align-items: center; gap: 8px; min-block-size: 40px; padding-inline: var(--warp-space-group) var(--warp-space-tight);
+  font-weight: 600; font-size: var(--warp-text-caption-size); cursor: grab; touch-action: none; border-radius: inherit;
+}
+/* touch: the handle bar is 40px; a block-axis expander (2px into the gap above, 2px over the body's top
+   edge) makes it hit-min without moving the body */
+:where([data-scope="board"] [data-part="handle"]) { position: relative; }
+:where([data-scope="board"] [data-part="handle"])::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-scope="board"] [data-part="handle"])::before {
+  content: ""; inline-size: 8px; block-size: 14px; flex: none; opacity: 0.6; background: radial-gradient(circle, var(--warp-color-text-subtle) 1.1px, transparent 1.5px) 0 0 / 4px 4px;
+}
+:where([data-scope="board"] [data-part="resize"]) {
+  position: absolute; inset-inline-end: 2px; inset-block-end: 2px; inline-size: 16px; block-size: 16px; cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 50%, var(--warp-color-border-control) 50% 58%, transparent 58% 70%, var(--warp-color-border-control) 70% 78%, transparent 78%);
+}
+@container (max-width: 599.98px) {
+:where([data-scope="board"] [data-part="resize"]) { display: none; }
+}
+}

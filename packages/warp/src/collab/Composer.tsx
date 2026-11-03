@@ -1,23 +1,28 @@
-import { AtIcon, CheckIcon, PaperclipIcon, SendIcon, SmileIcon, XIcon } from '@weft/icons'
-import { announce, insertMention, mentionQuery, nextIndex, uid, type Peer } from '@weft/ui-core'
-import { derived, state, untrack, type State } from 'weft'
+import { AtIcon, CheckIcon, PaperclipIcon, SendIcon, SmileIcon, XIcon } from '@weft-js/warp-icons'
+import { announce, insertMention, mentionQuery, nextIndex, uid, type Peer } from '@weft-js/warp-core'
+import { derived, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { PeerAvatar, SWEEP } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/components/button.css'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/app/composer.css'
-import '@weft/ui-core/styles/app/suggest.css'
-import '@weft/ui-core/styles/app/typing.css'
+import '@weft-js/warp-core/styles/components/button.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/composer.css'
+import '@weft-js/warp-core/styles/app/suggest.css'
+import '@weft-js/warp-core/styles/app/typing.css'
 
 const HINT = 'Enter sends, Shift+Enter adds a line'
 
+/** The message being quoted in a reply. */
 export interface QuoteDraftValue { ref: string; author: string; time: string; text: string }
+/** A file attached to a draft. */
 export interface ComposerFile { id: string; name: string }
-export type Mentionable = Peer & { status?: string }
+/** Someone an `@` can name. */
+export type Mentionable = Peer & { status?: string | undefined }
+/** What the composer sends. */
 export interface ComposerSend { text: string; quote?: QuoteDraftValue }
 
+/** Props for Composer. */
 export interface ComposerProps {
   /** The textarea's name: "Message #calendar-engine". */
   label: string
@@ -33,7 +38,7 @@ export interface ComposerProps {
   onEmoji?: (insert: (text: string) => void) => void
   onTyping?: () => void
   /** Hide the keyboard hint (phone). */
-  compact?: boolean
+  compact?: boolean | undefined
   /** Reaches the textarea, for focus. */
   input?: (el: HTMLTextAreaElement) => void
 }
@@ -69,7 +74,7 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
     active.value = 0
   }
   const pick = (p: Mentionable) => {
-    const next = insertMention(ta!.value, ta!.selectionStart, p.name.split(/\s+/)[0])
+    const next = insertMention(ta!.value, ta!.selectionStart, p.name.split(/\s+/)[0]!)
     ta!.value = next.value
     ta!.setSelectionRange(next.caret, next.caret)
     closeList()
@@ -94,7 +99,7 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
       const to = nextIndex(e.key, active.value, shown.value.length, { orientation: 'vertical' })
       if (to >= 0 && e.key !== 'Home' && e.key !== 'End') { e.preventDefault(); active.value = to; return }
       if (e.key === 'Escape') { e.preventDefault(); return closeList() }
-      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); return pick(shown.value[active.value]) }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); return pick(shown.value[active.value]!) }
     }
     if (e.key === 'Escape' && draft.value) { e.preventDefault(); removeQuote(); return announce(ta!.ownerDocument, 'Quote removed') }
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send() }
@@ -125,7 +130,7 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
       )}
       <label data-part="sr-only" for={id}>{label}</label>
       <textarea
-        ref={(n: any) => { ta = n; if (n) untrack(() => giveInput)?.(n) }}
+        ref={n => { ta = n; if (n) untrack(() => giveInput)?.(n) }}
         id={id}
         rows={1}
         placeholder={placeholder ?? label}

@@ -1,8 +1,11 @@
-// weft/plugin: the whole plugin authoring surface (research 13 §2.3, minimal Phase 2 slice).
+// @weft-js/core/plugin: the whole plugin authoring surface (research 13 §2.3, minimal Phase 2 slice).
+import type { CardTheme } from './head'
 
+/** Where a plugin's code runs. */
 export type Side = 'build' | 'client' | 'worker' | 'server' | 'native'
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
 
+/** A place in the framework a plugin can fill: its id, version, and which sides it runs on. */
 export interface SlotDef<Id extends string = string, Impl = unknown, V extends number = number> {
   readonly id: Id
   readonly version: V
@@ -21,6 +24,7 @@ export interface ModuleRef {
   options?: Json
 }
 
+/** A plugin's answer to a slot: the versions it speaks, and the module for each side. */
 export interface ProviderRef<Impl = unknown> {
   readonly slot: SlotDef<string, Impl>
   readonly versions: readonly number[]
@@ -28,6 +32,7 @@ export interface ProviderRef<Impl = unknown> {
   readonly sides: Partial<Record<Side, ModuleRef>>
 }
 
+/** What a plugin may touch. */
 export interface Permissions {
   fs?: { read?: string[]; write?: string[] }
   net?: string[]
@@ -36,12 +41,14 @@ export interface Permissions {
   native?: boolean
 }
 
+/** Where a plugin is being asked to contribute: the command, the mode and the project root. */
 export interface PluginEnv {
   command: 'check' | 'dev' | 'build' | 'test'
   mode: string
   root: string
 }
 
+/** What a plugin adds to the app. */
 export interface Contributions {
   provides?: ProviderRef[]
   requires?: SlotDef[]
@@ -55,6 +62,8 @@ export interface Contributions {
   }
   /** One AGENTS.md section, at most 1 KB (P112). */
   agents?: { title: string; text: string }
+  /** The generated share card's defaults (`site.card`): colours and faces, under whatever the config sets. */
+  card?: CardTheme
   /** Components/APIs for the MCP catalog. Names collide across plugins as P113. */
   catalog?: { name: string; import: string; summary: string }[]
   /** Codes in the plugin's namespace (P111 otherwise). */
@@ -69,6 +78,7 @@ export interface Contributions {
   notes?: string[]
 }
 
+/** What a plugin's `weft check` rule is given. */
 export interface CheckContext {
   root: string
   /** The files that match `include`, relative to the root. */
@@ -82,6 +92,7 @@ export interface CheckContext {
   slots: Readonly<Record<string, unknown>>
 }
 
+/** One problem a plugin's check reports. */
 export interface Finding {
   code: string
   file: string
@@ -115,6 +126,7 @@ export type OptionsSchema<I, O> =
   | { readonly '~standard': { validate(value: unknown): { value: O; issues?: undefined } | { issues: readonly { message: string; path?: readonly unknown[] }[] } }; readonly '~types'?: { input: I; output: O } }
   | ((input: I) => O)
 
+/** A plugin: its name, its options, what it may touch and what it adds. */
 export interface PluginDef<I, O> {
   /** Package name (P116). */
   name: string
@@ -144,9 +156,11 @@ export interface PluginInstance<O = unknown> {
   contribute(env: PluginEnv): Readonly<Contributions>
 }
 
+/** Declares a slot. */
 export declare function defineSlot<const Id extends string, const V extends number, Impl = unknown>(
   slot: Omit<SlotDef<Id, Impl, V>, '__impl' | 'default'> & { default?: SlotDef['default'] },
 ): SlotDef<Id, Impl, V>
+/** A provider for `slot`, for a plugin's `contribute` to return. */
 export declare function provide<Impl>(slot: SlotDef<string, Impl>, provider: Omit<ProviderRef<Impl>, 'slot' | 'versions'> & { versions?: readonly number[] }): ProviderRef<Impl>
 /** Invalid options throw an error with `code: 'P115'` and `path`. */
 export declare function definePlugin<I = void, O = I>(def: PluginDef<I, O>): (options?: I) => PluginInstance<O>

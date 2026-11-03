@@ -1,6 +1,6 @@
-// The design D-codes in `weft check` (PLAN §6, research 36). Two families:
+// The design D-codes in `weft check` (PLAN §6, research 37). Two families:
 //
-//   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has warp's tokens to use instead (`@weft/warp`
+//   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has warp's tokens to use instead (`@weft-js/warp`
 //              in package.json), so an app that chose raw Tailwind or its own CSS is left alone.
 //   D011, D030–D039  contrast and accessibility, in every app.
 //
@@ -20,7 +20,7 @@ const SPACE = new Map([[2, 'hair'], [4, 'tight'], [8, 'related'], [16, 'group']]
 const SPACE_NAMES = 'hair tight related group section page'.split(' ')
 /** warp's radii at the quiet stop, where a raw radius is most likely to have been copied from. */
 const RADIUS = new Map([[4, 'mark'], [8, 'control'], [12, 'surface']])
-const WARP = '@weft/warp'
+const WARP = '@weft-js/warp'
 /** The role each heading level takes by default: the same table as warp's `Heading` (packages/warp/src/Type.tsx). */
 const HEADING_ROLE = { 1: 'title', 2: 'heading', 3: 'heading', 4: 'label', 5: 'label', 6: 'label' }
 
@@ -125,9 +125,9 @@ function layoutOf(el) {
     if (!c.includes('flex') && !c.includes('grid')) return null
     const dir = c.includes('flex-col') ? 'Stack' : c.includes('flex') ? 'Row' : null
     if (!dir) return null
-    const gap = c.find(x => /^gap-/.test(x))?.slice(4)
+    const gap = c.find(x => x.startsWith('gap-'))?.slice(4)
     const name = SPACE_NAMES.includes(gap) ? gap : TW_SPACE.get(gap)
-    return { primitive: dir, gap: name, attr: cls, exact: c.every(x => ['flex', 'flex-col', 'flex-row', 'flex-wrap'].includes(x) || /^gap-/.test(x)) && (!gap || !!name) }
+    return { primitive: dir, gap: name, attr: cls, exact: c.every(x => ['flex', 'flex-col', 'flex-row', 'flex-wrap'].includes(x) || x.startsWith('gap-')) && (!gap || !!name) }
   }
   const style = el.attr('style')
   if (!style) return null
@@ -142,10 +142,15 @@ function layoutOf(el) {
 }
 
 const NATIVE = { button: 'Button', select: 'Select', textarea: 'Textarea' }
+// the input types a browser paints, and the warp control for each; `Input` passes `type` through, so it counts too
+const NATIVE_TYPES = { date: 'DateField', 'datetime-local': 'DateTimeField', time: 'TimeField', month: 'MonthPicker', week: 'DateField', number: 'NumberField', range: 'Slider', color: 'ColorField', checkbox: 'Checkbox', radio: 'Radio', file: 'a dropzone' }
 const INTERACTIVE = new Set(['a', 'button', 'input', 'select', 'textarea', 'summary', 'Button', 'Toggle', 'Input', 'Search', 'Textarea', 'Select', 'Checkbox', 'Switch', 'Chip', 'Link'])
 const STATIC = new Set(['div', 'span', 'p', 'li', 'section', 'article', 'td', 'tr', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'label'])
 
 const NAMED = ['aria-label', 'aria-labelledby', 'title']
+/** Elements whose implicit role (generic, paragraph, emphasis…) may not be named, and the explicit roles that can't be either. */
+const GENERIC = new Set(['div', 'span', 'p', 'b', 'i', 'em', 'strong', 'small', 'code', 's', 'u', 'sub', 'sup', 'mark', 'del', 'ins', 'kbd', 'samp', 'var'])
+const UNNAMED = new Set(['generic', 'presentation', 'none', 'paragraph', 'caption', 'code', 'deletion', 'emphasis', 'insertion', 'strong', 'subscript', 'superscript', 'mark', 'time'])
 const named = el => NAMED.some(n => el.attr(n)) || el.attrs.some(a => a.kind === 'spread')
 /** Children with something a screen reader can read: text, an expression, a component, an image with alt. */
 const hasName = children => {
@@ -160,7 +165,7 @@ function literalColor(v) {
   if (s === 'white') return [255, 255, 255]
   if (s === 'black') return [0, 0, 0]
   const h = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(s)?.[1]
-  if (h) return (h.length === 3 ? [...h].map(c => c + c) : h.match(/../g)).map(x => parseInt(x, 16))
+  if (h) return (h.length === 3 ? Array.from(h, c => c + c) : h.match(/../g)).map(x => parseInt(x, 16))
   const m = /^rgb\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\)$/.exec(s)
   return m ? m.slice(1).map(Number) : null
 }
@@ -222,7 +227,7 @@ export function hasTokens(root) {
   if (!existsSync(file)) return false
   try {
     const { dependencies, devDependencies } = JSON.parse(readFileSync(file, 'utf8'))
-    return '@weft/warp' in { ...dependencies, ...devDependencies }
+    return '@weft-js/warp' in { ...dependencies, ...devDependencies }
   } catch {
     return false
   }
@@ -232,7 +237,8 @@ export function hasTokens(root) {
  * @param {string} root
  * @param {{ files: { rel: string, text: string }[], exclude?: string[], tokens: boolean }} options
  */
-export function designChecks(root, { files, exclude = [], tokens }) {
+export function designChecks(root, { files: all, exclude = [], tokens }) {
+  const files = all.filter(f => !/\.og\.[jt]sx$/.test(f.rel)) // a share card is drawn to a PNG: no theme, no tokens, no reader
   const out = []
   const looks = new Map() // heading level → every site that renders it, across the app, for D006
   const reporter = file => {
@@ -261,7 +267,6 @@ export function designChecks(root, { files, exclude = [], tokens }) {
     const solids = new Map()
 
     for (const el of scan.elements) {
-      const tagName = [el.start + 1, el.tagEnd]
       // -- values --
       if (tokens) {
         const style = el.attr('style')
@@ -297,6 +302,9 @@ export function designChecks(root, { files, exclude = [], tokens }) {
           const site = headingSite(el, bare)
           if (site && !allowed(f.text).has(`D006:${positions(f.text).lineCol(el.start)[0]}`)) looks.set(site.level, [...(looks.get(site.level) ?? []), { ...site, el, text: f.text, report }])
         }
+        if (el.attr('data-weft')?.value === 'styled' && (/^(?:main|h1|article)$/.test(el.name) || el.attr('role')?.value === 'main' || el.attr('data-vt')?.value === 'main')) {
+          report('D040', el.start, el.tagEnd, `The style gate on <${el.name}>: this is the page's main content, and the first paint would leave it hidden until the stylesheet lands.`, 'Mark a secondary part, or remove `data-weft="styled"`')
+        }
         if (el.name === 'a' && el.attr('href') && !el.attr('class') && !el.attr('className') && !el.attr('style') && !el.attr('data-scope') && !el.attr('data-part') && !el.attrs.some(a => a.kind === 'spread')) {
           const taken = localComponents.has('Link') || scan.imports.some(i => i.local === 'Link' && i.source !== WARP)
           const close = f.text.lastIndexOf('</', el.end - 1)
@@ -305,6 +313,9 @@ export function designChecks(root, { files, exclude = [], tokens }) {
             edits: [{ start: el.start + 1, end: el.tagEnd, text: 'Link' }, { start: close + 2, end: el.end - 1, text: 'Link' }, ...addImport(f.text, ['Link'])].sort((a, b) => b.start - a.start),
           } : undefined)
         }
+        const typed = (el.name === 'input' || el.name === 'Input') && NATIVE_TYPES[el.attr('type')?.value]
+        if (typed && !el.attr('hidden') && !el.attr('data-part')) report('D005', el.start, el.tagEnd, `\`type="${el.attr('type').value}"\` is painted by the browser: <${typed}> is warp's.`)
+        if (/^[a-z]/.test(el.name) && el.name !== 'iframe' && el.attr('title')) report('D005', el.start, el.tagEnd, 'A `title` tooltip: the browser paints it, late, and never on touch or keyboard. Use <Tooltip>, or `aria-label` for a name.')
         if (NATIVE[el.name] && !localComponents.has(NATIVE[el.name])) {
           const swap = el.name === 'button' && !el.attr('class') && !el.attr('className') && !el.attr('style') && f.text.slice(el.start, el.end).includes('</button')
           report('D005', el.start, el.tagEnd, `Native <${el.name}> in a warp app: <${NATIVE[el.name]}> brings the focus ring, the sweep, the tones and the touch target.`, swap ? {
@@ -339,6 +350,9 @@ export function designChecks(root, { files, exclude = [], tokens }) {
         if (!skip && !unseen && !named(el) && !(id?.value && labelled.has(id.value)) && !el.ancestors.includes('label')) report('D030', el.start, el.tagEnd, `<${el.name}> has no label: a screen reader announces only "edit" (WCAG 1.3.1, 4.1.2).${el.attr('placeholder') ? ' A placeholder is not a label.' : ''}`)
       }
       if (['button', 'a', 'Button', 'Link'].includes(el.name) && !el.attr('label') && !named(el) && !(el.name === 'a' && !el.attr('href')) && !hasName(el.children)) report('D031', el.start, el.tagEnd, `<${el.name}> has no name a screen reader can read: only an icon, or nothing (WCAG 4.1.2).`)
+      const label = el.attr('aria-label') ?? el.attr('aria-labelledby')
+      const role = el.attr('role')
+      if (label && GENERIC.has(el.name) && (!role || (role.kind === 'string' && UNNAMED.has(role.value)))) report('D041', label.start, label.end, `\`${label.name}\` on a <${el.name}>${role ? ` with role "${role.value}"` : ''}: ARIA forbids naming it, so screen readers skip the name (axe aria-prohibited-attr, Lighthouse).`)
       if (el.name === 'img' && !el.attr('alt') && !el.attrs.some(a => a.kind === 'spread')) report('D032', el.start, el.tagEnd, '<img> has no `alt`: a screen reader reads out the file name (WCAG 1.1.1).')
 
       // -- behaviour on the wrong element --

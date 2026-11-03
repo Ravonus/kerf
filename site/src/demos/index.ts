@@ -1,5 +1,6 @@
 
-export type Demo = { title: string; look: string; tryIt: string; why: string; page?: string }
+/** `learn`: shown only in Learn (src/components/LearnDemo.tsx), not on the examples page. */
+export type Demo = { title: string; look: string; tryIt: string; why: string; page?: string; learn?: true }
 
 /** Every live example, with the words that say what it is. The landing, the examples page and the docs read this. */
 export const demos: Record<string, Demo> = {
@@ -12,7 +13,7 @@ export const demos: Record<string, Demo> = {
   'shop-2': {
     title: 'The shop, step 2',
     look: 'The total and shipping are new, marked in the code. Neither is set by hand: derived works each one out from count.',
-    tryIt: 'Add three coffees and watch shipping drop to $0 as the total passes $36.',
+    tryIt: 'Add three coffees. Shipping appears at $4, then drops to $0 when the total reaches $36.',
     why: 'You state a rule once and it can never go stale. Carts and forms get most of their bugs from keeping values like these in sync by hand.',
   },
   'shop-3': {
@@ -23,14 +24,14 @@ export const demos: Record<string, Demo> = {
   },
   'shop-4': {
     title: 'The shop, step 4',
-    look: 'A search box. shown is derived from what you type, in one line of ordinary JavaScript.',
+    look: 'A search box. shown is derived from what you type, and the filter is one line of ordinary JavaScript.',
     tryIt: 'Add a coffee, type gr, then clear the box. Your count is still there.',
-    why: 'There is nothing to wire up: no effect, no event bus. Rows keep their state when they leave the list and come back.',
+    why: 'There is nothing to wire up: no effect, no event bus. Each count lives with its product, so it is still there when the row comes back.',
   },
   'shop-5': {
     title: 'The shop, step 5',
     look: 'A checkout form from warp, so the shop now has a labelled field, a switch and a submit button.',
-    tryIt: 'Press Tab to move through the controls, then place the order.',
+    tryIt: 'Add something, press Tab to move through the controls, then place the order. The button stays off while the cart is empty.',
     why: 'Forms, dialogs, tables and menus are in the box with keyboard support, so you do not pick and wire up a component library.',
   },
   'getting-started': {
@@ -42,7 +43,7 @@ export const demos: Record<string, Demo> = {
   rules: {
     page: 'rules', title: 'A basket that adds itself up',
     look: 'A quantity, plus shipping and a total that are worked out from it. Shipping turns free at three items.',
-    tryIt: 'Press Add one three times and watch shipping and the total change together.',
+    tryIt: 'Press Add one twice. At three items shipping drops to $0 and the total changes with it.',
     why: 'You say what the total is once, and it can never go stale. Most bugs in forms and carts come from keeping such values in sync by hand.',
   },
   props: {
@@ -55,7 +56,7 @@ export const demos: Record<string, Demo> = {
     page: 'lists', title: 'A list that keeps its rows',
     look: 'A to-do list where each row has a key, so weft knows which row is which.',
     tryIt: 'Tick Grind, then press Do the first one later a few times. The tick stays with its row.',
-    why: 'Rows are moved, not rebuilt. Anything inside a row, such as a tick, typed text or a playing video, survives a reorder.',
+    why: 'Rows are moved, not rebuilt, so what is inside a row, such as a tick or typed text, survives a reorder.',
   },
   async: {
     page: 'async', title: 'Saving to a server',
@@ -75,11 +76,17 @@ export const demos: Record<string, Demo> = {
     tryIt: 'Press Go live, then scroll the table or use the rest of this page.',
     why: 'A live dashboard usually forces a framework to compare the whole table on each tick. Here each number has its own update, so one change costs one text write.',
   },
+  'ui-state': {
+    page: 'ui-state', title: 'Hover and ticks shared across tabs',
+    look: 'Two panes showing one list. Two kinds of state cross between them: what is ticked is data, a box synced to every tab, and hover, focus and press are UI state, one interaction per row, drawn by warp.',
+    tryIt: 'Tick a row: both panes tick. Hover a row: both panes light. Open this page in a second tab and do the same there: this tab follows, and says how many are elsewhere.',
+    why: 'Hover stops being a pile of handlers and becomes a value you can read, draw and share. Your own hover never fires for someone else, so logic on it cannot echo.',
+  },
   shared: {
     title: 'Two views of one list',
-    look: 'Ana and Ben see the same list. Here both panes are in your browser and share one piece of state, so nothing crosses a network.',
-    tryIt: 'Add a task in either pane, and tick a box.',
-    why: 'New tasks appear in both panes with no sync code. With @weft/start the list comes from a server query, and `.live()` keeps other visitors in step the same way.',
+    look: 'Ana and Ben see the same list. Here both panes are in your browser and share the same state, so nothing crosses a network.',
+    tryIt: 'Add a task in either pane, then tick a box. It ticks in the other pane too.',
+    why: 'Tasks and ticks show in both panes with no sync code. With @weft-js/start the list comes from a server query, and .live() keeps other visitors in step the same way.',
   },
   habit: {
     title: 'A React habit, caught by the compiler',
@@ -107,14 +114,77 @@ export const demos: Record<string, Demo> = {
   },
   receipt: {
     title: 'The shop, itemised',
-    look: 'What the phase 2 shop app sends to the browser, in compressed JavaScript. Measured by evals/warp-exit.mjs with brotli; the app and the results are in the repo.',
+    look: 'What the shop app in the repo evals sends to the browser, in compressed JavaScript. Measured by evals/warp-exit.mjs with brotli; the app and the results are in the repo.',
     tryIt: 'Compare it with the download sizes on the home page, which measure a larger dashboard.',
     why: 'You pay for the components you use. A page that imports a button doesn\'t bring the rest of warp with it.',
   },
   ask: {
     title: 'Ask the app',
-    look: 'A small todo app above its reactive graph. The JSON is what graph() from weft/devtools returns. Development builds only: this frame is one.',
+    look: 'A small todo app above its reactive graph. The JSON is what graph() from @weft-js/core/devtools returns. Development builds only: this frame is one.',
     tryIt: 'Press Add a task, then Finish one. Only the lines that changed light up.',
     why: 'An agent sees the same JSON through weft mcp, with your real names, so it can check what depends on what instead of guessing.',
+  },
+  hello: {
+    learn: true,
+    title: 'Two greetings',
+    look: 'One component, Greeting, used twice with different props.',
+    tryIt: 'Nothing to press: read the code. Greeting runs once for each place it is used.',
+    why: 'A component is a function that returns TSX. It runs once, so it is cheap to split a page into many.',
+  },
+  alias: {
+    learn: true,
+    title: 'A prop under another name',
+    look: 'Line names its item prop with const and its qty prop with let. The parent owns qty.',
+    tryIt: 'Press +1 here twice, then +1 in the parent. The parent\'s value wins again.',
+    why: 'const is a live, read-only name for a prop. let is a local you can change, and the parent\'s next change replaces it.',
+  },
+  bind: {
+    learn: true,
+    title: 'A child that writes back',
+    look: 'Stepper changes its own value. The parent passes its box with bind:, so the change reaches the parent.',
+    tryIt: 'Press + and −. The line under the stepper, which reads the parent\'s box, follows.',
+    why: 'Only bind: at the call site lets a write leave a component, so you can always see from the parent who may change its state.',
+  },
+  events: {
+    learn: true,
+    title: 'Typing and pressing',
+    look: 'An input that keeps a draft in state, counts its characters and adds a note on Enter or on the button.',
+    tryIt: 'Type a few words, press Enter, then add another with the button.',
+    why: 'Handlers are plain functions on onInput, onKeyDown and onClick. They change state, and the page follows.',
+  },
+  scope: {
+    learn: true,
+    title: 'Two components, one basket',
+    look: 'Header and Shelf are separate components. Both read the same basket, made once with defineState.',
+    tryIt: 'Add tea and cake. The badge in Header counts what Shelf added.',
+    why: 'State any component can reach, without passing it down through every component between.',
+  },
+  entries: {
+    learn: true,
+    title: 'One entry per row',
+    look: 'Stock is one box holding an object. Each row reads its own entry with stock.get(f).',
+    tryIt: 'Press +1 on a row. Only that row\'s number changes.',
+    why: 'With get, a row re-runs only when its own entry changes, so a long list stays fast as one entry moves.',
+  },
+  loading: {
+    learn: true,
+    title: 'Waiting for data',
+    look: 'resource loads the forecast for the day in state. Boundary shows Loading… until the first one arrives; after that, pending dims the old forecast and shows a spinner while the next one loads.',
+    tryIt: 'Press Next day a few times quickly. The old forecast stays, dimmed, and the count shows each earlier request being cancelled.',
+    why: 'You write the request once. resource fetches again when what it read changes, and drops answers nobody wants.',
+  },
+  styled: {
+    learn: true,
+    title: 'Class and style from state',
+    look: 'A banner whose class and inline style both depend on a switch.',
+    tryIt: 'Turn Urgent on and off.',
+    why: 'class and style are ordinary attributes. Like any other attribute, they update when what they read changes.',
+  },
+  effects: {
+    learn: true,
+    title: 'A stopwatch',
+    look: 'watch starts a timer when running turns on and stops it when it turns off. The input is reached through ref.',
+    tryIt: 'Start it, stop it, then press Select the lap.',
+    why: 'Effects are for talking to things outside weft, like timers and the DOM. Their cleanup runs for you.',
   },
 }

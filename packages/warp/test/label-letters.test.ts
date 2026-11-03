@@ -1,5 +1,5 @@
 // A label's letters come out the same with and without Intl.Segmenter, which is slow enough to skip for ASCII.
-import { labelChars } from '@weft/ui-core'
+import { labelChars } from '@weft-js/warp-core'
 import { letters } from '../src/Field'
 
 test.each(['Email', 'New  todo ', ' A~b ', ''])('%j is what labelChars gives, without making a Segmenter', s => {

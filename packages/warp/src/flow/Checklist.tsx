@@ -1,38 +1,40 @@
-import { XIcon } from '@weft/icons'
-import { announce, uid } from '@weft/ui-core'
-import { derived, state, untrack, watch } from 'weft'
+import { XIcon } from '@weft-js/warp-icons'
+import { announce, uid } from '@weft-js/warp-core'
+import { derived, state, watch } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { toast } from '../Toast'
 import { Mark, Rail } from './kit'
-import '@weft/ui-core/styles/flows/checklist.css'
-import '@weft/ui-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/flows/checklist.css'
+import '@weft-js/warp-core/styles/layout/row.css'
 
+/** One onboarding task. */
 export interface ChecklistItem {
   id: string
-  title: any
-  description?: any
+  title: unknown
+  description?: unknown
   done?: boolean
   /** The frame button on the row's end. */
-  action?: { label: string; onClick: () => void }
+  action?: { label: string; onClick: () => void } | undefined
 }
 
+/** Props for Checklist. */
 export interface ChecklistProps {
-  title?: any
-  subtitle?: any
+  title?: unknown
+  subtitle?: unknown
   /** Derived from server state, never from clicks here: doing the task anywhere checks it. */
   items: ChecklistItem[]
   /** A user-checkable list instead; omit it and the boxes only report. */
   onToggle?: (id: string, done: boolean) => void
-  doneTitle?: any
-  doneDescription?: any
+  doneTitle?: unknown
+  doneDescription?: unknown
   /** Shows Hide; a Toast offers Undo for 10s. */
   onHide?: () => void
   onUndoHide?: () => void
   /** A disclosure on the title (phones: "3 of 5"). */
   collapsible?: boolean
   /** A row under the list: "Take the tour". */
-  footer?: any
+  footer?: unknown
 }
 
 /** The onboarding checklist (09 §3.1): a counter in the head, a rail that fills per item, rows, then "You're set up". */

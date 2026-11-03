@@ -1,23 +1,26 @@
-import { CopyIcon, CheckIcon } from '@weft/icons'
-import { highlight } from '@weft/ui-core'
+import { CopyIcon, CheckIcon } from '@weft-js/warp-icons'
+import { highlight } from '@weft-js/warp-core'
 import './styles'
-import '@weft/ui-core/styles/components/button.css'
-import '@weft/ui-core/styles/components/copy.css'
-import '@weft/ui-core/styles/rich/codeblock.css'
-import '@weft/ui-core/styles/rich/code-tabs.css'
+import '@weft-js/warp-core/styles/components/button.css'
+import '@weft-js/warp-core/styles/components/copy.css'
+import '@weft-js/warp-core/styles/rich/codeblock.css'
+import '@weft-js/warp-core/styles/rich/code-tabs.css'
 
+/** Props for CodeBlock. */
 export interface CodeBlockProps {
+  /** The source to show, colour and copy. */
   code: string
   /** tsx by default; ts, js, json and sh are coloured too, anything else stays plain. */
-  language?: string
-  filename?: string
+  language?: string | undefined
+  /** A file name shown in the bar above the code. */
+  filename?: string | undefined
   /** Line numbers. */
-  lines?: boolean
+  lines?: boolean | undefined
   /** Wrap long lines instead of scrolling. */
-  wrap?: boolean
+  wrap?: boolean | undefined
 }
 
-function CopyButton({ text }: { text?: string }) {
+function CopyButton({ text }: { text?: string | undefined }) {
   return (
     <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-act="copy" data-copy="" data-copy-text={text} aria-label="Copy code">
       <span data-part="indicator"><CopyIcon /><CheckIcon /></span>
@@ -27,7 +30,7 @@ function CopyButton({ text }: { text?: string }) {
 
 /**
  * Code, coloured on the server (04 CodeBlock). It has no state, so it hydrates to nothing: `copyButtons()` from
- * `@weft/ui-core`, called once anywhere in the app, runs every copy button in the document.
+ * `@weft-js/warp-core`, called once anywhere in the app, runs every copy button in the document.
  */
 export function CodeBlock({ code, language = 'tsx', filename, lines, wrap }: CodeBlockProps) {
   return (
@@ -38,13 +41,15 @@ export function CodeBlock({ code, language = 'tsx', filename, lines, wrap }: Cod
         <span data-part="lang">{language}</span>
         <CopyButton />
       </div>
-      <pre tabindex="0" data-lines={lines ? '' : undefined}><code innerHTML={highlight(code, language)}></code></pre>
+      <pre tabindex="0" data-lines={lines ? '' : undefined}><code
+      // oxlint-disable-next-line weft/no-html-sink -- highlight escapes the source before it wraps tokens in spans
+      innerHTML={highlight(code, language)}></code></pre>
     </figure>
   )
 }
 
 /** Inline code in running text. */
-export function Code({ children }: { children: any }) {
+export function Code({ children }: { children: unknown }) {
   return <code data-scope="code">{children}</code>
 }
 

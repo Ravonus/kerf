@@ -3,15 +3,14 @@
 // 0 DOM writes. The server and client compile the same fixture (`?weft-ssr` / `?weft-hydrate`, vite.mjs).
 // weft-allow T005: framework test of streaming SSR; server markup, chunk order and node identity are the subject
 // weft-allow T004: the stream interleaves resolves with its own macrotask ticks and timeout, so resolve order needs real timers
-import { renderToStream, SWAP } from 'weft/ssr'
-import { hydrate } from 'weft/dom'
+import { renderToStream, SWAP } from '@weft-js/core/ssr'
+import { hydrate } from '@weft-js/core/dom'
 import { hydration } from '../src/hydrate'
-// @ts-expect-error: query imports (vite.mjs)
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { Bare as ServerBare, Page as ServerPage } from './fixtures/ssr/Streamed.tsx?weft-ssr'
-// @ts-expect-error
 import { Page as ClientPage } from './fixtures/ssr/Streamed.tsx?weft-hydrate'
 
-const later = <T,>(ms: number, v: T) => new Promise<T>(ok => setTimeout(ok, ms, v))
+const later = <T,>(ms: number, v: T) => new Promise<T>(ok => { setTimeout(ok, ms, v) })
 
 async function stream(load: (what: string) => Promise<string>) {
   const s = renderToStream(() => <ServerPage load={load} />)
@@ -24,14 +23,15 @@ async function stream(load: (what: string) => Promise<string>) {
 function apply(shell: string, chunks: string[]) {
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = shell
-  const $wb = new Function(`${SWAP};return $wb`)()
+  // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- running the swap script as the page would is the test, and it's our own constant
+const $wb = new Function(`${SWAP};return $wb`)()
   for (const c of chunks) {
     const holder = document.createElement('div')
     holder.innerHTML = c
     for (const script of holder.querySelectorAll('script')) {
       const t = script.previousElementSibling as HTMLTemplateElement | null
       if (t) document.body.appendChild(t)
-      const call = /\$wb\(("[^"]*")?\)$/.exec(script.textContent!)!
+      const call = /\$wb\(("[^"]*")?\)$/.exec(script.textContent)!
       $wb(call[1] ? JSON.parse(call[1]) : undefined, t ?? undefined)
     }
   }
@@ -55,7 +55,7 @@ test('the shell has every fallback; content streams in the order resources resol
 })
 
 test('settle(): a resource outside every Boundary lands in the shell, and its value in the data', async () => {
-  const s = renderToStream(() => <ServerBare load={what => later(5, `${what} data`)} />)
+  const s = renderToStream(() => <ServerBare load={(what: string) => later(5, `${what} data`)} />)
   expect(s.shell).not.toContain('bare data')
   await s.settle()
   expect(s.shell).toContain('bare data')

@@ -1,6 +1,6 @@
 // The shapes fixture's client entry: the same hydration probe as test/fixtures/app.
-import { start } from '@weft/start/client'
-import { hydration } from 'weft/dom'
+import { start } from '@weft-js/start/client'
+import { hydration } from '@weft-js/core/dom'
 import * as routes from 'virtual:weft/routes'
 
 const writes: MutationRecord[] = []

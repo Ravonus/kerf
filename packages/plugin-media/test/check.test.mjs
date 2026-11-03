@@ -17,8 +17,8 @@ beforeAll(async () => {
   root = mkdtempSync(join(tmp, 'm-'))
   const files = {
     'package.json': '{ "name": "m", "private": true }',
-    'weft.config.ts': `import { defineConfig } from 'weft/config'\nimport { media } from '${plugin}'\nexport default defineConfig({ plugins: [media()] })\n`,
-    'src/routes/index.tsx': `import { Media } from 'weft/media'
+    'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\nimport { media } from '${plugin}'\nexport default defineConfig({ plugins: [media()] })\n`,
+    'src/routes/index.tsx': `import { Media } from '@weft-js/core/media'
 import hero from './hero.png?media'
 import raw from './big.png?url'
 import evil from './evil.svg'
@@ -39,7 +39,7 @@ export default function Home() {
   )
 }
 `,
-    'src/Card.tsx': `import { Media } from 'weft/media'\nimport pic from './hero.png?media'\nexport function Card() { return <figure><Media src={pic} alt="hero" /><Media src={pic} alt="" decorative /></figure> }\n`,
+    'src/Card.tsx': `import { Media } from '@weft-js/core/media'\nimport pic from './hero.png?media'\nexport function Card() { return <figure><Media src={pic} alt="hero" /><Media src={pic} alt="" decorative /></figure> }\n`,
     'src/routes/evil.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><foreignObject/></svg>',
   }
   for (const [rel, text] of Object.entries(files)) {
@@ -80,7 +80,7 @@ it('reports each M-code once where it applies, owned by the plugin, with fixes',
     'src/routes/index.tsx:9 M003', // 1600 px file in a 100 px slot
     'src/routes/index.tsx:9 M007', // alt="big" is the import's name
   ])
-  for (const d of m) expect(d.owner).toBe('@weft/plugin-media')
+  for (const d of m) expect(d.owner).toBe('@weft-js/plugin-media')
 
   const text = readFileSync(join(root, 'src/routes/index.tsx'), 'utf8')
   const apply = d => text.slice(0, d.fix.edits[0].offset[0]) + d.fix.edits[0].text + text.slice(d.fix.edits[0].offset[1])

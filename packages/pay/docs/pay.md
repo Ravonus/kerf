@@ -1,6 +1,6 @@
 # Payments
 
-This is a plugin, `@weft/pay`, and nothing in weft names it. `weft docs plugins` walks through how it is built.
+This is a plugin, `@weft-js/pay`, and nothing in weft names it. `weft docs plugins` walks through how it is built.
 
 `weft add pay` needs a database and auth. It adds the Stripe rail to `plugins` and writes `src/pay/catalog.ts`,
 `src/pay.server.ts` and `src/server/pay.ts`, plus `src/db/pay.schema.ts` and placeholder keys. The keys go in `.env`
@@ -8,20 +8,31 @@ with real test values before you run it. Nothing is called until a user checks o
 
 App code names products, never a rail:
 
-```tsx
+```ts
 // src/pay/catalog.ts: reaches the client, so names and amounts only
+import { product } from '@weft-js/pay'
+
 export const pro = product({ id: 'pro', kind: 'subscription', use: 'digital',
   plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } }, grants: ['pro'] })
+```
 
+<!-- example: skip needs what `weft add pay` writes -->
+```tsx
 // a page
-import { price } from '@weft/pay'
+import { price } from '@weft-js/pay'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements, portal } from '#/server/pay'
 
-const mine = entitlements.live()
-<button onClick={() => checkout({ product: 'pro', plan: 'year' })}>Go Pro · {price(pro, 'year').display}</button>
-<button onClick={() => portal()}>Manage</button>
-{mine.value?.includes('pro') && <Dashboard />}
+export default function Pricing() {
+  const mine = entitlements.live()
+  return (
+    <section>
+      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>Go Pro · {price(pro, 'year').display}</button>
+      <button type="button" onClick={() => portal()}>Manage</button>
+      {mine.value?.includes('pro') && <p>You have Pro.</p>}
+    </section>
+  )
+}
 ```
 
 `kind` is `subscription` (with `plans`), `one-time` or `consumable` (with `price`). Amounts are whole minor units with a
@@ -35,9 +46,10 @@ A bad signature answers 400; a failure answers 500, so the rail delivers it agai
 
 **Enforce on the server.** What the client shows is decoration (PAY013):
 
+<!-- example: skip fragments of a server module -->
 ```ts
-export const report = query({ auth: 'user', requires: ['pro'], run: … })     // a typed 403: ENTITLEMENT_REQUIRED
-if (!(await ctx.entitlements.has('pro'))) redirect('/pricing')               // await it (PAY015)
+export const report = query({ auth: 'user', requires: ['pro'], run: ({ ctx }) => buildReport(ctx) })  // a typed 403: ENTITLEMENT_REQUIRED
+if (!(await ctx.entitlements.has('pro'))) redirect('/pricing')                                          // await it (PAY015)
 ```
 
 `ctx.entitlements` has `has(id)` and `list()`, and works in any `query`, `mutation` or `load`. A query with `cache: { life }`
@@ -49,23 +61,24 @@ States are the same on every rail: `active`, `trial` and `grace` give access; `p
 `definePay({ catalog, store, urls, user?, rail?, origin?, leeway? })`. `urls` are where a buyer returns, never from the
 client. `pay.checkout(ctx, input)`, `pay.portal(ctx)`, `pay.entitlements(userId)`, `pay.purchases(userId)` and
 `pay.refund(purchaseId)` are server calls. `store` is `drizzlePayStore(db, { purchases, payEvents })` from
-`@weft/start/pay/drizzle`, or five methods of your own (`PayStore`). `memoryPayStore()` is for tests: a production server
+`@weft-js/pay/drizzle`, or five methods of your own (`PayStore`: `seen`, `mark`, `purchase`, `save`, `byUser`). `memoryPayStore()` is for tests: a production server
 refuses it (PAY016).
 
 **Another provider is one setting.** Replace `stripe()` in `plugins` with any plugin for the `pay.rail` slot; nothing else
-changes. A rail implements `PayRail` from `@weft/pay`: `checkout`, `portal`, `verify`, optionally `refund`, declared for the
-`server` side, and passes `payRailSuite` from `@weft/pay/test`. `verify` gets the exact body and throws
+changes. A rail implements `PayRail` from `@weft-js/pay`: `checkout`, `portal`, `verify`, optionally `refund`, declared for the
+`server` side, and passes `payRailSuite` from `@weft-js/pay/test`. `verify` gets the exact body and throws
 `PayError('PAY011', …)` for anything it can't prove. An app with no `src/pay.server.ts` has no route and no code from any
 of this.
 
-`stripe({ prices?, api?, apiVersion?, tolerance?, shippingCountries? })`. It reads `STRIPE_SECRET_KEY` and
-`STRIPE_WEBHOOK_SECRET` from the server env, and never takes a key in options, which land in a generated file (PAY003).
+`stripe({ prices?, api?, apiVersion?, tolerance?, shippingCountries? })` from `@weft-js/pay/stripe/plugin`. It reads
+`STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` from the server env. Don't put a key in its options: they land in a
+generated file (PAY003).
 `prices` maps `'pro.month'` to a Stripe Price id; without it, amounts come from the catalog. Subscribe the webhook to
 `customer.subscription.*`, `checkout.session.*`, `charge.refunded` and `charge.dispute.*`. No page loads Stripe.js.
 
 ## Testing
 
-`fakePay` from `@weft/pay/test` is a rail with no key and no network. Its events are signed and go through your own webhook and
+`fakePay` from `@weft-js/pay/test` is a rail with no key and no network. Its events are signed and go through your own webhook and
 ledger, so a test sees what a user would:
 
 ```tsx
@@ -97,7 +110,7 @@ installed. `fake.redeliver()`, `fake.deliver(event, { forged: true })`, `fake.de
 | PAY014 | A rail bound with no `src/pay.server.ts` |
 | PAY015 | `ctx.entitlements.has()` tested without `await` |
 | PAY016 | `memoryPayStore()` in `src/pay.server.ts` (warning) |
-| PAY017 | `@weft/pay/server` or `/drizzle` imported in client code |
+| PAY017 | `@weft-js/pay/server` or `/drizzle` imported in client code |
 | PAY018 | `src/pay.server.ts` with no `pay.rail` provider |
 | PAY031 | A live key in a test |
 

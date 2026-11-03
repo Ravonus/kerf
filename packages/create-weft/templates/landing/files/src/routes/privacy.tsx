@@ -1,5 +1,5 @@
-import type { Meta } from '@weft/start'
-import { Center, Heading, Stack, Text } from '@weft/warp'
+import type { Meta } from '@weft-js/start'
+import { Center, Heading, Stack, Text } from '@weft-js/warp'
 
 export const meta: Meta = { title: 'Privacy', description: 'What Emberline collects, why, and how to have it removed.' }
 export const prerender = true

@@ -1,7 +1,7 @@
 // Every markup branch a component has (emphasis, icon, loading, open, sides, tones…), for test/markup.test.tsx: the
 // server HTML and the client DOM after mount are pinned, so a size change can't move a part, an attribute or an
 // ARIA wire without the snapshot saying so.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Alert } from '../../src/Alert'
 import { Badge } from '../../src/Badge'
 import { Center, Cover, Frame, Grid, Inset, Row, Spacer, Split, Stack } from '../../src/Layout'

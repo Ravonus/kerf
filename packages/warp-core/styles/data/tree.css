@@ -1,0 +1,22 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* tree view (APG tree) */
+:where([data-scope="tree"]) { list-style: none; margin: 0; padding: 4px; font-size: var(--warp-text-body-size); }
+:where([data-scope="tree"] ul) { list-style: none; margin: 0; padding: 0 0 0 14px; border-inline-start: 1px solid var(--warp-color-border); margin-inline-start: 10px; }
+:where([data-scope="tree"] [role="treeitem"]) { outline: none; }
+:where([data-scope="tree"] [data-part="row"]) {
+  display: flex; align-items: center; gap: 6px; min-block-size: max(28px, var(--warp-hit-min)); padding-inline: 6px; border-radius: var(--warp-radius-mark); cursor: pointer;
+}
+:where([data-scope="tree"] [data-part="row"]:hover) { background: color-mix(in oklab, var(--warp-color-text) 6%, transparent); }
+:where([data-scope="tree"] [role="treeitem"]:focus-visible > [data-part="row"]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="tree"] [role="treeitem"][aria-selected="true"] > [data-part="row"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
+:where([data-scope="tree"] [data-part="twisty"]) { inline-size: 14px; block-size: 14px; flex: none; color: var(--warp-color-text-subtle); transition: transform var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="tree"] [aria-expanded="true"] > [data-part="row"] [data-part="twisty"]) { transform: rotate(90deg); }
+:where([data-scope="tree"] [aria-expanded="false"] > ul) { display: none; }
+:where([data-scope="tree"] [data-part="row"] small) { margin-inline-start: auto; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="tree"] [data-git]) { margin-inline-start: auto; font: 600 10px/1.25 var(--warp-font-mono); }
+:where([data-scope="tree"] [data-git="M"]) { color: var(--warp-color-caution-text); }
+:where([data-scope="tree"] [data-git="A"]) { color: var(--warp-color-positive-text); }
+:where([data-scope="tree"] [data-git="D"]) { color: var(--warp-color-critical-text); }
+:where([data-scope="tree"] [data-part="file-icon"]) { inline-size: 14px; block-size: 14px; flex: none; }
+}

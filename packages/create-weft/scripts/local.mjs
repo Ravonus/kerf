@@ -7,30 +7,32 @@
 //   node packages/create-weft/scripts/local.mjs refresh [dir] [--packed]   that, then put the new tarballs in an app
 //                                                                          (--packed: the store's as they are, no pack)
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { packAll, pin, pkgs } from './tarballs.mjs'
+import { packWithAddon } from './pack-all.mjs'
+import { pin, pkgs } from './tarballs.mjs'
 
 const store = resolve(process.env.WEFT_LOCAL_DIR ?? join(homedir(), '.weft/local'))
 const tgz = join(store, 'tgz')
 const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' && cmd === 'npm' }) // npm is npm.cmd there
 const OTHER_LOCKS = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock']
 
-/** The compiler, when its stamp no longer matches the crate. */
+/** The compiler's addon and WASM builds, when a stamp no longer matches the crate. */
 function buildNative() {
   const { sourceStamp, stampFile } = createRequire(import.meta.url)(join(pkgs, 'weft/scripts/native-stamp.cjs'))
-  const native = join(pkgs, 'weft/native', `weft-compiler.${process.platform}-${process.arch}.node`)
-  if (existsSync(stampFile(native)) && readFileSync(stampFile(native), 'utf8').trim() === sourceStamp()) return
-  console.log('[local] building the native compiler')
+  const stamped = file => existsSync(stampFile(file)) && readFileSync(stampFile(file), 'utf8').trim() === sourceStamp()
+  const built = [`weft-compiler.${process.platform}-${process.arch}.node`, 'weft-compiler.wasm'].map(f => join(pkgs, 'weft/native', f))
+  if (built.every(stamped)) return
+  console.log('[local] building the compiler')
   run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'weft'))
 }
 
-/** dist/ is gitignored and it's all @weft/text-engine exports, so it's built every time rather than trusted. */
+/** dist/ is gitignored and it's all @weft-js/text/engine exports, so it's built every time rather than trusted. */
 function buildTextEngine() {
-  const dir = join(pkgs, 'text-engine')
+  const dir = join(pkgs, 'text')
   if (!existsSync(join(dir, 'node_modules'))) run('npm', ['ci', '--silent'], dir)
   run('npm', ['run', '--silent', 'build'], dir)
 }
@@ -41,7 +43,7 @@ function pack() {
   buildTextEngine()
   const next = `${tgz}.next`
   rmSync(next, { recursive: true, force: true })
-  const packed = packAll(next)
+  const packed = packWithAddon(next)
   rmSync(tgz, { recursive: true, force: true })
   renameSync(next, tgz)
   const tarballs = Object.fromEntries(Object.entries(packed).map(([name, spec]) => [name, spec.replace(next, tgz)]))
@@ -71,7 +73,7 @@ function refresh(dir, packed) {
   const other = OTHER_LOCKS.find(lock => existsSync(join(app, lock)))
   if (other) throw new Error(`${app} has ${other}; this works with npm only`)
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  if (!pkg.dependencies?.weft && !pkg.devDependencies?.weft) throw new Error(`${app} doesn't depend on weft; start one with \`local.mjs new\``)
+  if (!pkg.dependencies?.['@weft-js/core'] && !pkg.devDependencies?.['@weft-js/core']) throw new Error(`${app} doesn't depend on @weft-js/core; start one with \`local.mjs new\``)
   const tarballs = packed ? JSON.parse(readFileSync(join(store, 'tarballs.json'), 'utf8')) : pack()
   forget(app, tarballs)
   writeFileSync(file, JSON.stringify(pin(pkg, tarballs), null, 2))

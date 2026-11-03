@@ -1,8 +1,7 @@
 {
-  "name": "@weft/realtime-redis",
-  "version": "0.0.0",
-  "private": true,
-  "description": "@weft/realtime-redis: the realtime.bus provider for Redis pub/sub",
+  "name": "@weft-js/realtime-redis",
+  "version": "0.1.0",
+  "description": "@weft-js/realtime-redis: the realtime.bus provider for Redis pub/sub",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -16,12 +15,28 @@
     "ioredis": "6.0.0"
   },
   "peerDependencies": {
-    "@weft/start": "*",
-    "weft": "*"
+    "@weft-js/start": "*",
+    "@weft-js/core": "*"
   },
   "devDependencies": {
-    "@weft/start": "file:../start",
+    "@weft-js/start": "file:../start",
     "vitest": "5.0.5",
-    "weft": "file:../weft"
+    "@weft-js/core": "file:../weft"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }

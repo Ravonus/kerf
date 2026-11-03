@@ -1,6 +1,6 @@
-import { CheckCircleIcon, InboxIcon, XIcon } from '@weft/icons'
-import { Button, Checkbox, Heading, Progress, Skeleton, Stack, Text, toast } from '@weft/warp'
-import { derived } from 'weft'
+import { CheckCircleIcon, InboxIcon, XIcon } from '@weft-js/warp-icons'
+import { Button, Checkbox, Heading, Progress, Skeleton, Stack, Text, toast } from '@weft-js/warp'
+import { derived } from '@weft-js/core'
 import type { View } from '#/lib/views'
 import { deleteTodo, listTodos, toggleTodo } from '#/server/todos'
 

@@ -1,6 +1,6 @@
-import { BagIcon, DownIcon, LeftIcon, LockIcon } from '@weft/icons'
-import { addressProblems, announce, cartCount, cartTotals, errorStep, money, newOrderKey, openWhenWide, uid, type Address, type AddressPart, type CartLine, type CheckoutError } from '@weft/ui-core'
-import { derived, state, type State, untrack } from 'weft'
+import { BagIcon, DownIcon, LeftIcon, LockIcon } from '@weft-js/warp-icons'
+import { addressProblems, announce, cartCount, cartTotals, errorStep, money, newOrderKey, openWhenWide, uid, type Address, type AddressPart, type CartLine, type CheckoutError } from '@weft-js/warp-core'
+import { derived, state, type State, untrack } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
@@ -8,52 +8,59 @@ import { Input } from '../Field'
 import { AddressField, type AddressProvider } from '../PlaceField'
 import { Tag } from '../Tag'
 import { toast } from '../Toast'
-import { use } from '../use'
+import { use } from '@weft-js/warp-core/weft'
 import { LineItem } from './Cart'
 import { OrderConfirmation, type OrderStage } from './Order'
 import { StepBar } from './StepBar'
 import { Sweep, afterFlush } from './atoms'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/flows/flow.css'
-import '@weft/ui-core/styles/flows/checkout.css'
-import '@weft/ui-core/styles/flows/choice.css'
-import '@weft/ui-core/styles/flows/plan-card.css'
-import '@weft/ui-core/styles/flows/line-item.css'
-import '@weft/ui-core/styles/flows/lines.css'
-import '@weft/ui-core/styles/flows/auth.css' // the "or with a card" divider
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/flow.css'
+import '@weft-js/warp-core/styles/flows/checkout.css'
+import '@weft-js/warp-core/styles/flows/choice.css'
+import '@weft-js/warp-core/styles/flows/plan-card.css'
+import '@weft-js/warp-core/styles/flows/line-item.css'
+import '@weft-js/warp-core/styles/flows/lines.css'
+import '@weft-js/warp-core/styles/flows/auth.css' // the "or with a card" divider
 
+/** A way to ship an order. */
 export type ShippingOption = { id: string; name: string; /** "Arrives Thu 6 Nov" */ eta: string; price: number }
+/** A valid coupon and what it takes off. */
 export type Coupon = { code: string; percentOff: number }
+/** Where a checkout stands. */
 export type CheckoutStep = 'cart' | 'address' | 'shipping' | 'payment' | 'review' | 'done'
-export type OrderDraft = { lines: CartLine[]; name: string; email: string; phone: string; address: Address; billing: Address; shipping: string; coupon?: string; total: number; idempotencyKey: string }
-export type PlaceOrderResult = { order: { id: string; stage?: OrderStage } } | { error: CheckoutError }
+/** Everything the buyer entered, handed over to place the order. */
+export type OrderDraft = { lines: CartLine[]; name: string; email: string; phone: string; address: Address; billing: Address; shipping: string; coupon?: string | undefined; total: number; idempotencyKey: string }
+/** What placing an order came back with: the order, or why not. */
+export type PlaceOrderResult = { order: { id: string; stage?: OrderStage | undefined } } | { error: CheckoutError }
 
+/** Props for Checkout. */
 export interface CheckoutProps {
   cart: State<CartLine[]>
   shipping: ShippingOption[]
-  countries?: string[]
+  countries?: string[] | undefined
   defaultCountry?: string
   addressProvider?: AddressProvider
   taxRate?: number
+  /** The ISO 4217 code prices are shown in, such as `EUR`. */
   currency?: string
   locale?: string
   /** The Payment step's body: a PayFrame, in a provider's slot. warp never renders card fields. */
-  payment: any
+  payment: unknown
   /** The saved wallet's frame button, above the divider. */
   wallet?: { label: string; onClick: () => void }
   /** Checks a code; resolve undefined when it isn't valid. */
   coupon?: (code: string) => Promise<Coupon | undefined> | Coupon | undefined
   /** The client's key for this attempt. Without one a key is made; a retry after a timeout resends it. */
-  idempotencyKey?: string
+  idempotencyKey?: string | undefined
   /** Throw on a transport failure: values stay, a Toast offers Retry with the same key. */
   onPlaceOrder: (order: OrderDraft) => Promise<PlaceOrderResult>
-  onStepChange?: (step: CheckoutStep) => void
+  onStepChange?: ((step: CheckoutStep) => void) | undefined
   onContinueShopping?: () => void
   signInHref?: string
 }
@@ -90,7 +97,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
   const declined = state('')
   const outOfStock = state('')
   const newTotal = state<number | undefined>(undefined)
-  const placed = state<{ id: string; stage?: OrderStage } | undefined>(undefined)
+  const placed = state<{ id: string; stage?: OrderStage | undefined } | undefined>(undefined)
   const paySlot = derived(() => payment)
   let root: HTMLElement | undefined
   let summary: HTMLDetailsElement | undefined
@@ -103,10 +110,10 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
   const total = derived(() => newTotal.value ?? totals.value.total)
   const cost = (n: number) => money(n, currency, locale)
   const at = derived(() => STEPS.findIndex(s => s.id === step.value))
-  const stepTitle = (id: CheckoutStep) => (id === 'done' ? 'Order confirmed' : STEPS.find(s => s.id === id)!.title)
-  const section = (id: CheckoutStep) => root?.querySelector<HTMLElement>(`[data-step="${id}"]`)
+  const stepTitle = (to: CheckoutStep) => (to === 'done' ? 'Order confirmed' : STEPS.find(s => s.id === to)!.title)
+  const section = (to: CheckoutStep) => root?.querySelector<HTMLElement>(`[data-step="${to}"]`)
 
-  const go = (to: CheckoutStep, focus?: 'field', back?: boolean) => {
+  const go = (to: CheckoutStep, focus?: 'field'  , back?: boolean) => {
     dir.value = back ? 'back' : undefined
     step.value = to
     onStepChange?.(to)
@@ -165,22 +172,22 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
         if (root) announce(root.ownerDocument, `The total changed to ${cost(err.total)}`, true)
         return
       }
-      go(errorStep(err) as CheckoutStep, undefined, true)
+      go(errorStep(err), undefined, true)
     } catch {
       toast.show({ title: 'We couldn’t reach the store', description: 'You weren’t charged twice. Try again.', tone: 'critical', action: { label: 'Retry', onClick: pay } })
     } finally { placing.value = false }
   }
   const edits = derived(() => [
-    { step: 'address' as CheckoutStep, label: 'Ship to', text: `${name.value}, ${[address.value?.lines[0], address.value?.locality, address.value?.postalCode].filter(Boolean).join(', ')}` },
-    { step: 'shipping' as CheckoutStep, label: 'Delivery', text: `${option.value?.name ?? ''} · ${option.value?.eta ?? ''}` },
-    { step: 'payment' as CheckoutStep, label: 'Payment', text: 'Card from your provider' },
+    { step: 'address', label: 'Ship to', text: `${name.value}, ${[address.value?.lines[0], address.value?.locality, address.value?.postalCode].filter(Boolean).join(', ')}` },
+    { step: 'shipping', label: 'Delivery', text: `${option.value?.name ?? ''} · ${option.value?.eta ?? ''}` },
+    { step: 'payment', label: 'Payment', text: 'Card from your provider' },
   ])
   const count = derived(() => cartCount(lines.value))
-  const Nav = ({ back, children }: { back: CheckoutStep; children: any }) => (
+  const Nav = ({ back, children }: { back: CheckoutStep; children: unknown }) => (
     <div data-part="nav"><Button emphasis="ghost" tone="neutral" icon={LeftIcon} onClick={() => prev(back)}>Back</Button>{children}</div>
   )
   return (
-    <div ref={(n: any) => (root = n)} data-scope="checkout">
+    <div ref={n => (root = n)} data-scope="checkout">
       <div data-part="layout">
         <div data-scope="stack">
           {step.value !== 'done' && <StepBar label="Checkout steps" steps={STEPS} current={at.value} />}
@@ -209,7 +216,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
                 </div>
                 <AddressField label="Shipping address" value={address} countries={countries} defaultCountry={defaultCountry} provider={addressProvider} locale={locale} errors={addressErrors.value} />
                 <Input label="Phone (optional)" type="tel" autocomplete="tel" inputmode="tel" hint="Only for the courier, if they can’t find you." value={phone.value} onInput={e => (phone.value = e.currentTarget.value)} />
-                <Checkbox checked={sameBilling.value} onChange={(e: any) => (sameBilling.value = e.currentTarget.checked)}>Use as billing address</Checkbox>
+                <Checkbox checked={sameBilling.value} onChange={(e: Event) => (sameBilling.value = (e.currentTarget as HTMLInputElement).checked)}>Use as billing address</Checkbox>
                 {!sameBilling.value && <AddressField label="Billing address" value={billing} countries={countries} defaultCountry={defaultCountry} locale={locale} errors={billingErrors.value} />}
                 <Nav back="cart"><Button type="submit">Continue to shipping</Button></Nav>
               </form>
@@ -250,7 +257,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
                   {edits.value.map(r => (
                     <div key={r.step}>
                       <dt>{r.label}<br /><span>{r.text}</span></dt>
-                      <dd><Button emphasis="link" aria-label={`Edit ${r.label.toLowerCase()}`} onClick={() => go(r.step, 'field', true)}>Edit</Button></dd>
+                      <dd><Button emphasis="link" aria-label={`Edit ${r.label.toLowerCase()}`} onClick={() => go(r.step as CheckoutStep, 'field', true)}>Edit</Button></dd>
                     </div>
                   ))}
                 </dl>
@@ -263,7 +270,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
             </section>
           </div>
         </div>
-        <details ref={(n: any) => (summary = n)} data-part="summary">
+        <details ref={n => (summary = n)} data-part="summary">
           <summary><span class="row"><BagIcon />Order summary</span><span class="row"><b>{cost(total.value)}</b><DownIcon /></span></summary>
           {lines.value.map(l => (
             <div key={l.id} data-scope="line-item">
@@ -273,7 +280,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
             </div>
           ))}
           {coupon && (
-            <form data-scope="row" data-wrap="none" data-align="start" novalidate onSubmit={apply}>
+            <form data-scope="row" data-wrap="none" data-align="start" novalidate onSubmit={(e: Event) => void apply(e)}>
               <div data-grow=""><Input label="Discount code" value={code.value} error={codeError.value} onInput={e => { code.value = e.currentTarget.value; codeError.value = '' }} /></div>
               <Button emphasis="frame" type="submit" loading={checking.value}>Apply</Button>
             </form>

@@ -1,4 +1,4 @@
-import { onMount, resource, state } from 'weft'
+import { onMount, resource, state } from '@weft-js/core'
 import type { Api, Stock } from '../api'
 import { money } from '../lib/format'
 

@@ -1,4 +1,4 @@
-// Type tests for weft/style (`npx tsc --noEmit -p test/style-types.tsconfig.json`): each @ts-expect-error is a raw
+// Type tests for @weft-js/core/style (`npx tsc --noEmit -p test/style-types.tsconfig.json`): each @ts-expect-error is a raw
 // value, an unknown key or an unknown axis value that must not compile.
 import { group } from '../src/style'
 
@@ -18,7 +18,8 @@ card({ status: 'late', selected: true })
 card()
 const title: { 'data-part': string } = card.title
 const name: { 'data-part': string } = card.name // a part may be called `name`
-void title, name
+void title
+void name
 
 // @ts-expect-error raw value
 group('a', { base: { pad: '13px' } })

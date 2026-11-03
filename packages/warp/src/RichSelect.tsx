@@ -1,15 +1,15 @@
-import { DownIcon, GlobeIcon, SearchIcon } from '@weft/icons'
-import { caretAfter, currencyCodes, currencySymbol, digitsOf, displayName, formatPhone, inferCountry, languageCodes, listKey, localZone, matchZone, nationalLength, PHONE_COUNTRIES, regionCodes, regionOf, uid, zoneCity, zoneRows, type ChangeReason, type CountryCode, type E164, type IsoDate, type PhoneCountry, type TimeZoneId } from '@weft/ui-core'
-import { derived, flush, onMount, state, untrack } from 'weft'
+import { DownIcon, GlobeIcon, SearchIcon } from '@weft-js/warp-icons'
+import { caretAfter, currencyCodes, currencySymbol, digitsOf, displayName, formatPhone, inferCountry, languageCodes, listKey, localZone, matchZone, nationalLength, PHONE_COUNTRIES, regionCodes, regionOf, uid, zoneCity, zoneRows, type ChangeReason, type CountryCode, type E164, type IsoDate, type PhoneCountry, type TimeZoneId } from '@weft-js/warp-core'
+import { derived, flush, onMount, state, untrack } from '@weft-js/core'
 import { Field } from './Field'
 import type { IconRef } from './Icon'
 import { bindable, Composite, Hidden, Panel, useOpen, usePickerEnv, type Bindable, type Openable, type RichFieldProps } from './Picker'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/listbox.css'
-import '@weft/ui-core/styles/rich/timezone.css'
-import '@weft/ui-core/styles/rich/phone.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/timezone.css'
+import '@weft-js/warp-core/styles/rich/phone.css'
 
-export type Row = { key: string; main: string; sub?: string; meta?: string; code?: string; pin?: string; search: string }
+export type Row = { key: string; main: string; sub?: string | undefined; meta?: string | undefined; code?: string; pin?: string | undefined; search: string }
 
 const SHOWN = 80
 
@@ -17,7 +17,7 @@ const SHOWN = 80
  * The search list in a picker's panel (APG Combobox with a listbox popup): focus stays in the input, ↑/↓ move the
  * active option, Enter picks. Long lists render their first rows; typing narrows them.
  */
-function SearchList({ label, placeholder, rows, value, match, onPick, count }: { label: string; placeholder: string; rows: () => Row[]; value: string | null; match?: (r: Row, q: string) => boolean; onPick: (key: string, r: ChangeReason) => void; count?: (n: number, q: string) => string }) {
+function SearchList({ label, placeholder, rows, value, match, onPick, count }: { label: string; placeholder: string; rows: () => Row[]; value: string | null; match?: ((r: Row, q: string) => boolean) | undefined; onPick: (key: string, r: ChangeReason) => void; count?: ((n: number, q: string) => string) | undefined }) {
   const id = uid('list')
   const q = state('')
   const all = derived(() => rows())
@@ -35,7 +35,7 @@ function SearchList({ label, placeholder, rows, value, match, onPick, count }: {
     const m = listKey(e.key, active.value, n, { page: 8, wrap: true, typing: true })
     if (!m.handled) return
     e.preventDefault()
-    if (m.pick) return onPick(shown.value[active.value].key, 'keyboard')
+    if (m.pick) return onPick(shown.value[active.value]!.key, 'keyboard')
     active.value = m.to
     flush()
     show()
@@ -46,9 +46,9 @@ function SearchList({ label, placeholder, rows, value, match, onPick, count }: {
       <label data-part="search">
         <SearchIcon />
         <span class="sr">{label}</span>
-        <input type="search" role="combobox" data-initial="" aria-expanded="true" aria-controls={id} aria-autocomplete="list" aria-activedescendant={shown.value.length ? `${id}-${active.value}` : undefined} placeholder={placeholder} onInput={e => { q.value = (e.currentTarget as HTMLInputElement).value; active.value = 0 }} onKeyDown={onKey} />
+        <input type="search" role="combobox" data-initial="" aria-expanded="true" aria-controls={id} aria-autocomplete="list" aria-activedescendant={shown.value.length ? `${id}-${active.value}` : undefined} placeholder={placeholder} onInput={e => { q.value = (e.currentTarget).value; active.value = 0 }} onKeyDown={onKey} />
       </label>
-      <ul ref={(n: any) => (list = n)} data-part="listbox" role="listbox" id={id} aria-label={label}>
+      <ul ref={n => (list = n)} data-part="listbox" role="listbox" id={id} aria-label={label}>
         {shown.value.map((r, n) => <Option key={r.key} id={`${id}-${n}`} row={r} selected={r.key === value} active={n === active.value} onPick={onPick} />)}
       </ul>
       {!shown.value.length && <p class="tz-empty">No match for “{q.value}”.</p>}
@@ -67,7 +67,7 @@ const Option = ({ id, row, selected, active, onPick }: { id: string; row: Row; s
 )
 
 /** A field whose control is one value button over a search list: the frame of TimeZoneSelect and the Intl selects. */
-function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, icon, text, title, search, rows, match, count, hint, label, name, presentation, disabled, locale, today, ...rest }: RichFieldProps & Bindable<string | null> & Openable & { icon?: IconRef; text: (v: string, locale: string) => string; title: string; search: string; rows: (locale: string, today: string) => Row[]; match?: (r: Row, q: string) => boolean; count?: (n: number, q: string) => string; hint?: any }) {
+function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, icon, text, title, search, rows, match, count, hint, label, name, presentation, disabled, readonly, locale, today, ...rest }: RichFieldProps & Bindable<string | null> & Openable & { icon?: IconRef | undefined; text: (v: string, locale: string) => string; title: string; search: string; rows: (locale: string, today: string) => Row[]; match?: ((r: Row, q: string) => boolean) | undefined; count?: ((n: number, q: string) => string) | undefined; hint?: unknown }) {
   const env = usePickerEnv(() => locale, () => today)
   const v = bindable<string | null>(() => value, () => defaultValue, null, () => onValueChange)
   const pop = useOpen(() => open, () => defaultOpen, () => onOpenChange)
@@ -80,11 +80,13 @@ function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOp
       label={label}
       hint={hint}
       disabled={disabled}
+      readonly={readonly}
+      bound={v}
       filled={!!v.value}
       hold={pop.value}
       control={() => (
         <>
-          <button ref={(n: any) => (trigger = n)} type="button" data-part="pick" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-label={`${label}, ${shown.value || 'none'}`} disabled={disabled} onClick={() => pop.set(!pop.value)}>
+          <button ref={n => (trigger = n)} type="button" data-part="pick" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-label={`${label}, ${shown.value || 'none'}`} aria-disabled={readonly ? 'true' : undefined} disabled={disabled} onClick={() => { if (!readonly) pop.set(!pop.value) }}>
             <span>{shown.value}</span><DownIcon />
           </button>
           <Hidden name={name} value={() => v.value ?? ''} />
@@ -99,7 +101,8 @@ function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOp
   )
 }
 
-export type TimeZoneSelectProps = RichFieldProps & Bindable<TimeZoneId | null> & Openable & { referenceDate?: string; zones?: TimeZoneId[]; showOffset?: boolean }
+/** Props for TimeZoneSelect. */
+export type TimeZoneSelectProps = RichFieldProps & Bindable<TimeZoneId | null> & Openable & { referenceDate?: string | undefined; zones?: TimeZoneId[]; showOffset?: boolean }
 
 /** TimeZoneSelect (04 §2): every IANA zone with its offset at `referenceDate`; Local is pinned first. */
 export function TimeZoneSelect({ referenceDate, zones, showOffset = true, ...props }: TimeZoneSelectProps) {
@@ -114,7 +117,7 @@ export function TimeZoneSelect({ referenceDate, zones, showOffset = true, ...pro
   return <ListField icon={GlobeIcon} title="Choose a time zone" search="City, zone or +5:30" text={v => zoneCity(v)} rows={rows} match={(r, q) => matchZone(matches.get(r.key)!, q)} count={(n, q) => (q ? `${n} zone${n === 1 ? '' : 's'}` : `${n} zones · offsets for today`)} {...props} />
 }
 
-export type CodeSelectProps = RichFieldProps & Bindable<string | null> & Openable & { options?: string[]; preferred?: string[] }
+export type CodeSelectProps = RichFieldProps & Bindable<string | null> & Openable & { options?: string[] | undefined; preferred?: string[] }
 const pinned = (list: string[], first?: string[]) => (first ? [...first, ...list.filter(c => !first.includes(c))] : list)
 
 /** CountrySelect (04 §3): names from Intl.DisplayNames in the UI locale; `preferred` pins items. */
@@ -148,10 +151,11 @@ function restOnInput(el: HTMLInputElement) {
   return { update() {}, destroy() { size?.disconnect() } }
 }
 
+/** Props for PhoneField. */
 export type PhoneFieldProps = RichFieldProps & Bindable<E164 | null> & {
   country?: CountryCode
   defaultCountry?: CountryCode
-  countries?: CountryCode[]
+  countries?: CountryCode[] | undefined
   onCountryChange?: (c: CountryCode) => void
 }
 
@@ -160,12 +164,12 @@ export type PhoneFieldProps = RichFieldProps & Bindable<E164 | null> & {
  * Digits format as you type and the caret stays behind the same digit; a pasted `+…` infers the country. The value is
  * E.164, and only once the number is the country's length. The country list is a search list.
  */
-export function PhoneField({ value, defaultValue, onValueChange, country, defaultCountry, countries, onCountryChange, locale, today, name, presentation, label, hint, error, disabled, ...rest }: PhoneFieldProps) {
+export function PhoneField({ value, defaultValue, onValueChange, country, defaultCountry, countries, onCountryChange, locale, today, name, presentation, label, hint, error, disabled, readonly, ...rest }: PhoneFieldProps) {
   const env = usePickerEnv(() => locale, () => today)
   const v = bindable<E164 | null>(() => value, () => defaultValue, null, () => onValueChange)
   const list = untrack(() => (countries ? PHONE_COUNTRIES.filter(c => countries.includes(c.code)) : PHONE_COUNTRIES))
   const find = (code?: string) => list.find(c => c.code === code)
-  const code = state<PhoneCountry>(untrack(() => find(country) ?? find(defaultCountry) ?? find(regionOf(env.locale.value)) ?? list[0]))
+  const code = state<PhoneCountry>(untrack(() => find(country) ?? find(defaultCountry) ?? find(regionOf(env.locale.value)) ?? list[0]!))
   const text = state(untrack(() => {
     const e = v.value
     if (!e) return ''
@@ -198,6 +202,7 @@ export function PhoneField({ value, defaultValue, onValueChange, country, defaul
   }
   use(restOnInput, () => input)
   const onPaste = (e: ClipboardEvent) => {
+    if (readonly) return
     const t = e.clipboardData?.getData('text').trim() ?? ''
     if (!t.startsWith('+')) return
     const m = inferCountry(t, code.value, list)
@@ -213,15 +218,17 @@ export function PhoneField({ value, defaultValue, onValueChange, country, defaul
       hint={hint}
       error={error ?? own.value}
       disabled={disabled}
+      readonly={readonly}
       filled={text.value.length > 0}
       hold={pop.value}
       attrs={{ 'data-phone': '' }}
-      control={({ id, describedby }) => (
+      reset={() => { v.reset(); own.value = undefined; code.value = inferCountry(v.value ?? '', code.value, list) ?? code.value; text.value = v.value ? formatPhone(v.value.slice(code.value.dial.length + 1), code.value).shown : ''; if (input) input.value = text.value }}
+      control={p => (
         <div data-part="body">
-          <button ref={(n: any) => (button = n)} type="button" data-part="country" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} disabled={disabled} onClick={() => pop.set(!pop.value)}>
+          <button ref={n => (button = n)} type="button" data-part="country" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-disabled={readonly ? 'true' : undefined} disabled={disabled} onClick={() => { if (!readonly) pop.set(!pop.value) }}>
             <span aria-hidden="true"><b>{code.value.code}</b>+{code.value.dial}</span><span class="sr">Country: {name_.value}, +{code.value.dial}</span><DownIcon />
           </button>
-          <input ref={(n: any) => (input = n)} data-part="input" id={id} type="tel" inputmode="tel" autocomplete="tel-national" placeholder={placeholder.value} aria-describedby={describedby} value={text.value} disabled={disabled} onInput={e => { const el = e.currentTarget as HTMLInputElement; sync(el.value, el.selectionStart) }} onBlur={onBlur} onPaste={onPaste} />
+          <input ref={n => (input = n)} data-part="input" id={p.id} type="tel" inputmode="tel" autocomplete="tel-national" placeholder={placeholder.value} aria-describedby={p.describedby} value={text.value} required={p.rest.required} disabled={disabled} readonly={readonly} onInput={e => { const el = e.currentTarget; sync(el.value, el.selectionStart) }} onBlur={onBlur} onPaste={onPaste} />
           <Hidden name={name} value={() => v.value ?? ''} />
         </div>
       )}

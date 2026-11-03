@@ -1,5 +1,5 @@
-import { Link } from '@weft/start'
-import { Badge, Grid, Skeleton } from '@weft/warp'
+import { Link } from '@weft-js/start'
+import { Badge, Grid, Skeleton } from '@weft-js/warp'
 import { ProductArt } from '#/components/ProductArt'
 import { money } from '#/lib/catalog'
 import type { ProductCardRow } from '#/server/catalog'

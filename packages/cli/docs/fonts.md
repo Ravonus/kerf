@@ -1,10 +1,10 @@
 # Fonts
 
-`@weft/plugin-text` is the one place an app's fonts are declared. `weft add text` installs it; then:
+`@weft-js/text` is the one place an app's fonts are declared. `weft add text` installs it; then:
 
 ```ts
-import { defineConfig } from 'weft/config'
-import { text } from '@weft/plugin-text'
+import { defineConfig } from '@weft-js/core/config'
+import { text } from '@weft-js/text'
 
 export default defineConfig({
   plugins: [
@@ -44,7 +44,7 @@ Keep one axis by naming it in `axes`, such as `axes: { SOFT: [0, 100] }`, for va
 (only your own source is read). `trim: false` turns all of it off. `weft dev` always serves whole faces, so an axis you are
 editing responds.
 
-**There is nothing to import.** `weft/vite` loads the generated CSS in the client entry (Start) or the page (an HTML app).
+**There is nothing to import.** `@weft-js/core/vite` loads the generated CSS in the client entry (Start) or the page (an HTML app).
 `import 'weft:fonts'` still works and changes nothing. `import { preloads } from 'weft:fonts/preloads'` gives the preload
 list to a custom server.
 
@@ -61,9 +61,9 @@ h1 { font-family: "Fraunces", "Fraunces Fallback", Georgia, serif; }
 
 | Code | Catches |
 |---|---|
-| X020 | A hand-written `@font-face`: declare it in `text({ fonts })` |
+| X020 | A hand-written `@font-face` with no `"<Family> Fallback"` face, so the swap shifts layout: declare it in `text({ fonts })` |
 | X021 | `font-display: block` or `auto`, which hide text while the font loads |
-| X022 | Over budget: 100 KB of preloads or 1.5 KB of font CSS (brotli). Preload fewer faces or use fewer weights |
+| X022 | A hand-written `@font-face` with no `unicode-range`, or the font build over budget: 100 KB of preloads or 1.5 KB of font CSS (brotli). Preload fewer faces or use fewer weights |
 | X023 | A preload no `@font-face` uses |
 
 The plugin also provides `text.measure`, line breaking for canvas text and exact row heights. It loads only when something

@@ -1,5 +1,5 @@
-import { navigate } from '@weft/start'
-import { Input, Select } from '@weft/warp'
+import { navigate } from '@weft-js/start'
+import { Input, Select } from '@weft-js/warp'
 import { defaultView, statuses, viewHref, type OrderView } from '#/lib/orders'
 
 const options = [{ value: '', label: 'all' }, ...statuses.map(status => ({ value: status, label: status }))]

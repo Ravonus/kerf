@@ -11,6 +11,12 @@ use std::{fs, path::PathBuf, time::Instant};
 
 use weft_compiler::{Options, compile};
 
+/// A command line that can't run. Exit 1 is taken: it means the code has errors.
+fn die(message: &str) -> ! {
+    eprintln!("weftc: {message}");
+    std::process::exit(2)
+}
+
 fn main() {
     let mut args = std::env::args().skip(1).peekable();
     let (mut json, mut check, mut bench) = (false, false, None);
@@ -23,8 +29,10 @@ fn main() {
             "--dev" => dev = true,
             "--explain" => {
                 let at = args.next().unwrap_or_default();
-                let (file, line) = at.rsplit_once(':').expect("--explain file.tsx:LINE");
-                explain = Some(line.parse().expect("--explain file.tsx:LINE"));
+                let Some((file, Ok(line))) = at.rsplit_once(':').map(|(f, l)| (f, l.parse())) else {
+                    die("--explain takes file.tsx:LINE")
+                };
+                explain = Some(line);
                 paths.push(PathBuf::from(file));
             }
             "--bench" => bench = args.next().and_then(|n| n.parse::<usize>().ok()),
@@ -36,15 +44,22 @@ fn main() {
     let mut files = Vec::new();
     for p in paths {
         if p.is_dir() {
-            let mut entries: Vec<_> = fs::read_dir(&p).unwrap().flatten().map(|e| e.path()).collect();
+            let dir = fs::read_dir(&p).unwrap_or_else(|e| die(&format!("{}: {e}", p.display())));
+            let mut entries: Vec<_> = dir.flatten().map(|e| e.path()).collect();
             entries.sort();
             files.extend(entries.into_iter().filter(|f| f.extension().is_some_and(|x| x == "tsx")));
         } else {
             files.push(p);
         }
     }
-    let sources: Vec<(String, String)> =
-        files.iter().map(|f| (f.display().to_string(), fs::read_to_string(f).unwrap())).collect();
+    let sources: Vec<(String, String)> = files
+        .iter()
+        .map(|f| {
+            let name = f.display().to_string();
+            let source = fs::read_to_string(f).unwrap_or_else(|e| die(&format!("{name}: {e}")));
+            (name, source)
+        })
+        .collect();
 
     if let Some(n) = bench {
         let mut runs = Vec::new();
@@ -52,22 +67,27 @@ fn main() {
         for _ in 0..n {
             let t = Instant::now();
             for (filename, source) in &sources {
-                let out = compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
+                let out =
+                    compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
                 diagnostics += out.diagnostics.len();
                 std::hint::black_box(out);
             }
             runs.push(t.elapsed().as_secs_f64() * 1000.0);
         }
-        runs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        runs.sort_by(f64::total_cmp);
+        let (min, median, max) = match runs.as_slice() {
+            [] => (0.0, 0.0, 0.0),
+            r => (r[0], r[r.len() / 2], r[r.len() - 1]),
+        };
         let bytes: usize = sources.iter().map(|(_, s)| s.len()).sum();
         println!(
             "{{\"files\":{},\"bytes\":{},\"runs\":{},\"minMs\":{:.2},\"medianMs\":{:.2},\"maxMs\":{:.2},\"diagnostics\":{}}}",
             sources.len(),
             bytes,
             n,
-            runs[0],
-            runs[runs.len() / 2],
-            runs[runs.len() - 1],
+            min,
+            median,
+            max,
             diagnostics / n.max(1)
         );
         return;
@@ -75,11 +95,20 @@ fn main() {
 
     let mut failed = false;
     for (filename, source) in &sources {
-        let out = compile(source, &Options { filename: filename.clone(), check_only: check, dev, explain: explain.is_some(), ..Default::default() });
+        let out = compile(
+            source,
+            &Options {
+                filename: filename.clone(),
+                check_only: check,
+                dev,
+                explain: explain.is_some(),
+                ..Default::default()
+            },
+        );
         if let Some(line) = explain {
             let found: Vec<_> = out.explain.iter().flatten().filter(|x| x.line == line).collect();
             if json {
-                println!("{}", serde_json::to_string(&found).unwrap());
+                println!("{}", serde_json::to_string(&found).expect("serializable output"));
             } else if found.is_empty() {
                 eprintln!("{filename}:{line}: no JSX starts on this line");
                 failed = true;
@@ -90,11 +119,14 @@ fn main() {
             continue;
         }
         if json {
-            println!("{}", serde_json::to_string(&out).unwrap());
+            println!("{}", serde_json::to_string(&out).expect("serializable output"));
             continue;
         }
         for d in &out.diagnostics {
-            eprintln!("{filename}:{}:{} {} {:?}: {}\n  help: {}", d.line, d.column, d.code, d.severity, d.message, d.help);
+            eprintln!(
+                "{filename}:{}:{} {} {:?}: {}\n  help: {}",
+                d.line, d.column, d.code, d.severity, d.message, d.help
+            );
             failed |= d.severity == weft_compiler::Severity::Error;
         }
         if let Some(code) = out.code {

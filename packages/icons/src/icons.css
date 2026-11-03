@@ -1,4 +1,6 @@
-/* Every @weft/icons svg, with or without warp. warp's own base rule says the same; this one lets the set stand alone. */
+/* Every @weft-js/warp-icons svg, with or without warp. warp's own base rule says the same; this one lets the set stand alone. */
+/* warp's layer order, first: a layer ranks by when the page first names it, and this file can load before warp.css. */
+@layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components, warp.inputs, warp.inputs-rich, warp.data, warp.app, warp.flows, warp.marketing, warp.canvas, warp.flow;
 @layer warp.components {
   :where(svg[data-icon]) { inline-size: var(--warp-icon-md, 1em); block-size: var(--warp-icon-md, 1em); flex: none; fill: none; stroke: currentColor; stroke-width: var(--warp-icon-stroke, 1.5); stroke-linecap: round; stroke-linejoin: round; }
     /* weights: each tier has its own, on the path, so they hold when a build compiles the tier switch out */

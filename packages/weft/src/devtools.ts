@@ -1,4 +1,4 @@
-// weft/devtools: the live reactive graph in dev builds, for agents (`weft browser snapshot`/`set`) and people (the
+// @weft-js/core/devtools: the live reactive graph in dev builds, for agents (`weft browser snapshot`/`set`) and people (the
 // overlay, Alt+Shift+G). The weft() Vite plugin loads it when serving; production builds never do.
 //
 //   Cart.total = 42.5 ← Cart.subtotal, Cart.coupon → 1 binding in <Cart>
@@ -8,6 +8,7 @@
 
 import { Box, DEV, Memo, flush, named, type Computation } from './index'
 
+/** One named box or derived value in the graph: its value, what it reads and what it feeds. */
 export interface GraphNode {
   /** `Cart.total`, or `Cart#2.total` when more than one instance of the component is alive. */
   name: string
@@ -24,7 +25,7 @@ export interface GraphNode {
   in?: string
 }
 
-type Node = Box<any> | Computation
+type Node = Box<unknown> | Computation
 const ids = new WeakMap<Node, string>()
 
 function label(nodes: Node[]) {
@@ -37,7 +38,7 @@ function label(nodes: Node[]) {
     const byInst = seen.get(n.n!) ?? new Map<string, number>()
     seen.set(n.n!, byInst)
     // Instances are told apart by the component run that made them (dev `createComponent`), in creation order.
-    const key = String((n as any).i ?? objectId(n))
+    const key = String((n as { i?: number }).i ?? objectId(n))
     if (!byInst.has(key)) byInst.set(key, byInst.size + 1)
     const [comp, ...rest] = n.n!.split('.')
     ids.set(n, `${comp}#${byInst.get(key)}.${rest.join('.')}`)
@@ -57,7 +58,7 @@ export function preview(v: unknown, depth = 0, seen = new Set<unknown>()): unkno
   if (typeof v === 'string') return v.length > 200 ? `${v.slice(0, 200)}…` : v
   if (!v || typeof v !== 'object') return v
   if (seen.has(v)) return { $: 'cycle' }
-  if (typeof Node !== 'undefined' && v instanceof (globalThis as any).Node) return { $: 'node', v: (v as any).nodeName }
+  if (typeof Node !== 'undefined' && v instanceof globalThis.Node) return { $: 'node', v: v.nodeName }
   if (depth > 3) return { $: Array.isArray(v) ? `array(${v.length})` : 'object' }
   seen.add(v)
   if (Array.isArray(v)) {
@@ -70,12 +71,12 @@ export function preview(v: unknown, depth = 0, seen = new Set<unknown>()): unkno
   if (v instanceof Date) return { $: 'Date', v: v.toISOString() }
   const out: Record<string, unknown> = {}
   const keys = Object.keys(v)
-  for (const k of keys.slice(0, 30)) out[k] = preview((v as any)[k], depth + 1, seen)
+  for (const k of keys.slice(0, 30)) out[k] = preview((v as Record<string, unknown>)[k], depth + 1, seen)
   if (keys.length > 30) out.$more = keys.length - 30
   return out
 }
 
-const isBox = (n: Node): n is Box<any> => n instanceof Box
+const isBox = (n: Node): n is Box<unknown> => n instanceof Box
 
 /** Every named node alive now. `filter` keeps names starting with it (`Cart`, `Cart.total`, `cart.`). */
 export function graph(filter?: string): GraphNode[] {
@@ -85,8 +86,8 @@ export function graph(filter?: string): GraphNode[] {
   for (const n of nodes) {
     const id = ids.get(n)!
     if (filter && !id.startsWith(filter) && !n.n!.startsWith(filter)) continue
-    const readers = new Set<Computation>(n.o)
-    if (isBox(n) && n.k) for (const s of n.k.values()) for (const o of s.o) readers.add(o)
+    const readers = new Set<Computation>(n.f ? [n.f, ...n.o] : n.o)
+    if (isBox(n) && n.k) for (const s of n.k.values()) for (const o of s.f ? [s.f, ...s.o] : s.o) readers.add(o)
     const feeds: string[] = []
     const bindings = new Map<string, number>()
     const derivs = new Map<string, number>()
@@ -98,16 +99,16 @@ export function graph(filter?: string): GraphNode[] {
     for (const [where, count] of derivs) feeds.push(`${count} derived${where ? ` in ${where}` : ' (unnamed)'}`)
     for (const [where, count] of bindings) feeds.push(`${count} binding${count > 1 ? 's' : ''} in ${where}`)
     const reads: string[] = []
-    if (!isBox(n)) for (const s of n.s) {
-      const src = (s as any).b ?? s // a `get(key)` source stands for its box
-      const name = named.has(src) ? ids.get(src) : (src as any).n
-      const key = (s as any).b ? `.get(${JSON.stringify((s as any).key)})` : ''
+    if (!isBox(n)) for (const s of n.p ? [n.p, ...n.s] : n.s) {
+      const src = (s.b ?? s) as Node // a `get(key)` source stands for its box
+      const name = named.has(src) ? ids.get(src) : src.n
+      const key = s.b ? `.get(${JSON.stringify(s.key)})` : ''
       reads.push(name ? `${name}${key}` : 'an unnamed value')
     }
     out.push({
       name: id, kind: isBox(n) ? 'state' : 'derived', value: preview(n.v),
       ...(!isBox(n) && n.state !== 0 ? { stale: true } : {}),
-      reads: [...new Set(reads)], feeds, ...((n as any).c ? { in: (n as any).c } : {}),
+      reads: [...new Set(reads)], feeds, ...((n as { c?: unknown }).c ? { in: (n as { c?: unknown }).c as string } : {}),
     })
   }
   return out.sort((a, b) => a.name.localeCompare(b.name))
@@ -125,15 +126,16 @@ export function set(target: string, value: unknown) {
   const hit = nodes.filter(n => ids.get(n) === target || n.n === target)
   if (!hit.length) throw new Error(`no state named ${target}; names: ${nodes.map(n => ids.get(n)).slice(0, 20).join(', ')}`)
   if (hit.length > 1) throw new Error(`${target} is ambiguous: ${hit.map(n => ids.get(n)).join(', ')}`)
-  const [n] = hit
+  const [n] = hit as [Node]
   if (!isBox(n)) throw new Error(`${target} is derived; set what it reads instead (${graph(target)[0]?.reads.join(', ') || 'nothing named'})`)
   n.w(value)
   flush()
   return graph(ids.get(n))[0]
 }
 
-/** Uncaught errors since the last call, with the binding or component they came from (`weft` on the error). */
+/** Uncaught errors since the last call, with the binding or component they came from (`@weft-js/core` on the error). */
 const caught: { message: string; at?: string; stack?: string }[] = []
+/** The errors the page has thrown since it loaded, newest last. */
 export function errors() {
   return caught.splice(0)
 }
@@ -179,9 +181,9 @@ export function overlay(show?: boolean) {
 }
 
 if (DEV && typeof window !== 'undefined') {
-  ;(window as any).__weft__ = { graph, format, set, flush, errors, overlay, version: 1 }
-  addEventListener('error', e => caught.push({ message: e.message, at: (e.error as any)?.weft, stack: (e.error as any)?.stack?.split('\n').slice(0, 4).join('\n') }))
-  addEventListener('unhandledrejection', e => caught.push({ message: String((e.reason as any)?.message ?? e.reason), at: (e.reason as any)?.weft }))
+  ;(window as Window & { __weft__?: object }).__weft__ = { graph, format, set, flush, errors, overlay, version: 1 }
+  addEventListener('error', e => caught.push({ message: e.message, at: e.error?.weft, stack: e.error?.stack?.split('\n').slice(0, 4).join('\n') }))
+  addEventListener('unhandledrejection', e => caught.push({ message: String(e.reason?.message ?? e.reason), at: e.reason?.weft }))
   addEventListener('keydown', e => { if (e.altKey && e.shiftKey && e.code === 'KeyG') overlay() })
 }
 

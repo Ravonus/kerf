@@ -24,7 +24,7 @@ export default async function ({ url, log }) {
     const box = page.getByLabel('Message')
     await box.fill(text)
     await page.getByRole('button', { name: 'Send' }).click()
-    await box.evaluate(el => new Promise(ok => { const t = setInterval(() => { if (!el.value) { clearInterval(t); ok() } }, 20); setTimeout(() => { clearInterval(t); ok() }, 12_000) })) // the brief empties it on success
+    await box.evaluate(el => new Promise(ok => { const poll = setInterval(() => { if (!el.value) { clearInterval(poll); ok() } }, 20); setTimeout(() => { clearInterval(poll); ok() }, 12_000) })) // the brief empties it on success
   }
   const enter = async (s, where = id) => {
     await s.page.addInitScript(track)
@@ -87,7 +87,7 @@ export default async function ({ url, log }) {
       await kill(b.page)
       for (let i = 0; i < 3; i++) await say(a.page, `missed ${i}`)
       await see(a.page, 'missed 2')
-      await new Promise(ok => setTimeout(ok, 1500))
+      await new Promise(ok => { setTimeout(ok, 1500) })
       await b.context.setOffline(false)
       await see(b.page, 'missed 2')
       await status(b.page, 'open')
@@ -96,6 +96,7 @@ export default async function ({ url, log }) {
     await check('a reset (a cursor the server cannot replay) still ends up right, from the database', async () => {
       // The page's own resume cursor is rewritten to one from a dead server, then the socket is cut.
       await a.page.evaluate(() => {
+        // oxlint-disable-next-line typescript/unbound-method -- wrapped below, and called with the socket as `this`
         const send = WebSocket.prototype.send
         WebSocket.prototype.send = function (d) {
           let f
@@ -163,7 +164,7 @@ export default async function ({ url, log }) {
       const page = await a.page.request.get(`/chat/${team}`).then(r => r.text())
       if (page.includes('team secret')) throw new Error('the page leaked a team room')
     })
-    await check('no page errors', async () => { eq([...a.errors, ...b.errors, ...guest.errors], [], 'page errors') })
+    await check('no page errors', () => { eq([...a.errors, ...b.errors, ...guest.errors], [], 'page errors') })
     return { checks: t.checks }
   } finally {
     await browser.close()

@@ -1,4 +1,4 @@
-// weft/sync: `state(init, { persist, sync: 'tabs' })` in a defineState scope (research 14 §2.8, research 32 §1). One
+// @weft-js/core/sync: `state(init, { persist, sync: 'tabs' })` in a defineState scope (research 14 §2.8, research 32 §1). One
 // BroadcastChannel per app; the weft() Vite plugin imports this where the option is used.
 //
 // A write goes out as the top-level keys that changed, for a plain object, else as the whole value, coalesced per
@@ -12,11 +12,11 @@ import { StateError, features, report, type Instance } from './scope'
 
 /** `s`: scope.box. `a`: stamps. `p`: key → value, `d`: keys gone; or `v`: the whole value. */
 type Patch = { s: string; at: number; t: string; p?: Record<string, unknown>; d?: string[]; v?: unknown; w?: 1 }
-interface Slot { inst: Instance; box: Box<any>; id: string; sent: unknown; stamps: Map<string, [number, string]>; schema?: StandardSchema<any> }
+interface Slot { inst: Instance; box: Box<unknown>; id: string; sent: unknown; stamps: Map<string, [number, string]>; schema?: StandardSchema<unknown> | undefined }
 interface Line { bc: BroadcastChannel; slots: Map<string, Slot>; refs: number; tab: string; dirty: Set<Slot> }
 
 const lines = new WeakMap<object, Line>()
-const slots = new WeakMap<Box<any>, Slot>()
+const slots = new WeakMap<Box<unknown>, Slot>()
 
 const plain = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype
 const newer = (a: [number, string], b?: [number, string]) => !b || a[0] > b[0] || (a[0] === b[0] && a[1] > b[1])
@@ -24,8 +24,8 @@ const WHOLE = ''
 
 function line(inst: Instance): Line | undefined {
   let l = lines.get(inst.app)
-  if (l || typeof BroadcastChannel == 'undefined') return l
-  const made: Line = { bc: new BroadcastChannel(`weft:state:${inst.app.name}`), slots: new Map(), refs: 0, tab: crypto.randomUUID(), dirty: new Set() }
+  if (l || typeof BroadcastChannel === 'undefined') return l
+  const made: Line = { bc: new BroadcastChannel(`weft:state:${inst.app.name}`), slots: new Map(), refs: 0, tab: crypto.getRandomValues(new Uint32Array(2)).join('.'), /* randomUUID is missing on plain http */ dirty: new Set() }
   made.bc.onmessage = e => receive(made, e.data)
   lines.set(inst.app, (l = made))
   return l
@@ -33,7 +33,7 @@ function line(inst: Instance): Line | undefined {
 
 function accepted(s: Slot, v: unknown): { value: unknown } | undefined {
   if (!s.schema) return typeof v === typeof s.box.v ? { value: v } : undefined
-  const r: any = s.schema['~standard'].validate(v)
+  const r = s.schema['~standard'].validate(v)
   return r instanceof Promise || r.issues ? undefined : { value: r.value }
 }
 

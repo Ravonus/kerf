@@ -10,7 +10,7 @@
 // `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` enables `--via livekit`.
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
 import { dirname, join, resolve } from 'node:path'
@@ -25,7 +25,7 @@ const { values, positionals } = parseArgs({ allowPositionals: true, options: {
 } })
 const [command, target] = positionals
 const app = resolve(target)
-const LINKED = ['weft', '@weft/start', '@weft/cli', '@weft/multiplayer', '@weft/realtime-redis', '@weft/realtime-nats', '@weft/realtime-webrtc', '@weft/realtime-socketio', '@weft/realtime-livekit']
+const LINKED = ['@weft-js/core', '@weft-js/start', '@weft-js/cli', '@weft-js/multiplayer', '@weft-js/realtime-redis', '@weft-js/realtime-nats', '@weft-js/realtime-webrtc', '@weft-js/realtime-socketio', '@weft-js/realtime-livekit']
 
 function must(cmd, args, cwd = app, env = process.env) {
   const r = spawnSync(cmd, args, { cwd, encoding: 'utf8', env })
@@ -36,8 +36,8 @@ function must(cmd, args, cwd = app, env = process.env) {
 /** Which plugins the app lists, as `weft add` would leave them. A bus is one line here, so that is the line tested. */
 function configure(bus) {
   const list = { redis: 'redis()', nats: 'nats()' }[bus]
-  const imports = { redis: "import redis from '@weft/realtime-redis/plugin'\n", nats: "import nats from '@weft/realtime-nats/plugin'\n" }[bus] ?? ''
-  writeFileSync(join(app, 'weft.config.ts'), `import { defineConfig } from 'weft/config'\n${imports}\nexport default defineConfig({\n  site: { name: 'Room', title: '%s · Room', description: 'Two browsers.' },\n  plugins: [${list ?? ''}],\n})\n`)
+  const imports = { redis: "import redis from '@weft-js/realtime-redis/plugin'\n", nats: "import nats from '@weft-js/realtime-nats/plugin'\n" }[bus] ?? ''
+  writeFileSync(join(app, 'weft.config.ts'), `import { defineConfig } from '@weft-js/core/config'\n${imports}\nexport default defineConfig({\n  site: { name: 'Room', title: '%s · Room', description: 'Two browsers.' },\n  plugins: [${list ?? ''}],\n})\n`)
   must(join(app, 'node_modules/.bin/weft'), ['plugins', 'sync'])
   must(join(app, 'node_modules/.bin/weft'), ['plugins', 'approve', '--all'])
 }
@@ -46,8 +46,8 @@ if (command === 'prepare') {
   must('node', [join(repo, 'packages/create-weft/bin/create-weft.mjs'), app, '--db', 'none', '--ui', 'none', '--name', 'room'], repo)
   const file = join(app, 'package.json')
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  delete pkg.devDependencies?.['@weft/cli']
-  const where = name => `file:${join(repo, 'packages', name === 'weft' ? 'weft' : name.replace('@weft/', ''))}`
+  delete pkg.devDependencies?.['@weft-js/cli']
+  const where = name => `file:${join(repo, 'packages', name === '@weft-js/core' ? 'weft' : name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
   const tarballs = values.tarballs && JSON.parse(readFileSync(join(values.tarballs, 'tarballs.json'), 'utf8'))
   for (const name of LINKED) pkg.dependencies[name] = tarballs?.[name] ?? where(name)
   if (tarballs) pkg.overrides = tarballs
@@ -67,10 +67,10 @@ const SERVERS = {
   deno: ['deno', ['run', '-A', '.output/server/index.mjs']],
 }
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
-const sleep = ms => new Promise(ok => setTimeout(ok, ms))
+const sleep = ms => new Promise(ok => { setTimeout(ok, ms) })
 const kids = new Set()
 const start = (cmd, args, opts) => { const c = spawn(cmd, args, { stdio: process.env.DEBUG_E2E ? 'inherit' : 'ignore', ...opts }); kids.add(c); return c }
-const stopAll = (from = new Set()) => { for (const k of kids) if (!from.has(k)) (k.kill('SIGKILL'), kids.delete(k)) }
+const stopAll = (from = new Set()) => { for (const k of kids) if (!from.has(k)) { k.kill('SIGKILL'); kids.delete(k) } }
 
 async function instance(runtime, env) {
   const port = await freePort()
@@ -135,7 +135,8 @@ async function scenario(browser, urlA, urlB, via, log) {
     await a.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     await b.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     check(`cursors are going over ${via}`, true)
-    await a.page.evaluate(() => { window.__sent = 0; const s = WebSocket.prototype.send; WebSocket.prototype.send = function (t) { if (String(t).includes('mp.cursor')) window.__sent++; return s.call(this, t) } })
+    // oxlint-disable-next-line typescript/unbound-method -- wrapping a prototype method: `s.call(this, t)` gives it its `this` back
+    await a.page.evaluate(() => { window.__sent = 0; const s = WebSocket.prototype.send; WebSocket.prototype.send = function (t) { if (typeof t === 'string' && t.includes('mp.cursor')) window.__sent++; return s.call(this, t) } })
   }
 
   // Three quarters across and halfway down the board, on two boards of different sizes.
@@ -177,10 +178,9 @@ const env = { redis: { REDIS_URL: process.env.REDIS_URL ?? `redis://127.0.0.1:${
 if (buses.includes('redis') && !process.env.REDIS_URL) start(values.redis, ['--port', String(redisPort), '--save', '', '--appendonly', 'no'])
 if (buses.includes('nats') && !process.env.NATS_URL) start(values.nats, ['-p', String(natsPort)])
 
-let extra = {}, relay
+let extra = {}
 if (routes.includes('socketio')) {
-  const require = createRequire(join(repo, 'packages/realtime-socketio/package.json'))
-  relay = start('node', ['--input-type=module', '-e', `
+  start('node', ['--input-type=module', '-e', `
     import { createServer } from 'node:http'
     import { createRequire } from 'node:module'
     const require = createRequire(${JSON.stringify(join(repo, 'packages/realtime-socketio/package.json'))})

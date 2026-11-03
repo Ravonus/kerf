@@ -1,19 +1,21 @@
-import { DownIcon } from '@weft/icons'
-import { nextIndex, uid } from '@weft/ui-core'
-import { state, untrack } from 'weft'
+import { DownIcon } from '@weft-js/warp-icons'
+import { nextIndex, uid } from '@weft-js/warp-core'
+import { state, untrack } from '@weft-js/core'
 import './styles'
-import '@weft/ui-core/styles/components/accordion.css'
+import '@weft-js/warp-core/styles/components/accordion.css'
 
-export type AccordionItem = { value: string; title: any; content: any; disabled?: boolean }
+/** One disclosure: its header, its panel and the value that names it. */
+export type AccordionItem = { value: string; title: unknown; content: unknown; disabled?: boolean | undefined }
+/** Props for Accordion. */
 export interface AccordionProps {
   items: AccordionItem[]
-  variant?: 'boxed' | 'line'
+  variant?: 'boxed' | 'line' | undefined
   /** More than one open at once. */
   multiple?: boolean
   /** What starts open. */
   defaultOpen?: string[]
-  onChange?: (open: string[]) => void
-  /** The heading level of each title. */
+  onChange?: ((open: string[]) => void) | undefined
+  /** The heading level of each title: one below the heading the accordion sits under. Default 3, in a page section. */
   level?: 2 | 3 | 4 | 5 | 6
 }
 
@@ -33,10 +35,10 @@ export function Accordion({ items, variant = 'boxed', multiple, defaultOpen = []
     const list = [...(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[data-part="trigger"]:not(:disabled)')]
     const at = list.indexOf(e.target as HTMLElement)
     if (at < 0) return
-    const to = nextIndex(e.key, at, list.length, { orientation: 'vertical' } as any)
+    const to = nextIndex(e.key, at, list.length, { orientation: 'vertical' })
     if (to < 0) return
     e.preventDefault()
-    list[to].focus()
+    list[to]!.focus()
   }
   return (
     <div data-scope="accordion" data-part="root" data-variant={variant === 'line' ? 'line' : undefined} onKeyDown={onKey}>

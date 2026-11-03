@@ -1,24 +1,25 @@
-import { untrack } from 'weft'
-import { uid } from '@weft/ui-core'
+import { untrack } from '@weft-js/core'
+import { uid } from '@weft-js/warp-core'
 import { Glyph } from '../parts'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/flows/settings.css'
-import '@weft/ui-core/styles/flows/settings-section.css'
-import '@weft/ui-core/styles/flows/setting-row.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/settings.css'
+import '@weft-js/warp-core/styles/flows/settings-section.css'
+import '@weft-js/warp-core/styles/flows/setting-row.css'
 
-export type SettingsNavItem = { id: string; label: string; glyph?: string; tone?: 'critical' }
+/** One link of the settings nav. */
+export type SettingsNavItem = { id: string; label: string; glyph?: string; tone?: 'critical' | undefined }
 
 /**
  * The settings frame (09 §4.1): a TabNav-like strip that becomes a sticky column at 760px of its own width, and a form
  * holding the sections. A nav press scrolls to the section and moves focus to its heading.
  */
-export function SettingsLayout({ label = 'Settings sections', sections, current, onNavigate, children }: { label?: string; sections: SettingsNavItem[]; current: string; onNavigate?: (id: string) => void; children: any }) {
+export function SettingsLayout({ label = 'Settings sections', sections, current, onNavigate, children }: { label?: string | undefined; sections: SettingsNavItem[]; current: string; onNavigate?: (id: string) => void; children: unknown }) {
   const go = (e: MouseEvent, id: string) => {
     e.preventDefault()
     onNavigate?.(id)
@@ -45,7 +46,7 @@ export function SettingsLayout({ label = 'Settings sections', sections, current,
 }
 
 /** A heading, one line, then one bordered group of rows (09 §4.1). `tone="critical"` is the danger zone's border. */
-export function SettingsSection({ id, title, description, tone, as: heading = 'h3', children }: { id: string; title: any; description?: any; tone?: 'critical'; as?: 'h3' | 'h4'; children: any }) {
+export function SettingsSection({ id, title, description, tone, as: heading = 'h3', children }: { id: string; title: unknown; description?: unknown; tone?: 'critical' | undefined; as?: 'h3' | 'h4' | undefined; children: unknown }) {
   return (
     <section data-scope="settings-section" id={id} data-tone={tone} aria-labelledby={`${id}-h`}>
       <header>
@@ -61,7 +62,7 @@ export function SettingsSection({ id, title, description, tone, as: heading = 'h
  * Label and help at the inline-start, the control at the inline-end, stacking under 520px (09 §4.1). `children` may be
  * a function of the label's and help's ids, so a Switch can be labelled by them instead of repeating the words.
  */
-export function SettingRow({ title, description, layout, children }: { title?: any; description?: any; layout?: 'stack'; children: any }) {
+export function SettingRow({ title, description, layout, children }: { title?: unknown; description?: unknown; layout?: 'stack'; children: unknown }) {
   const id = uid('row')
   const body = () => (typeof children === 'function' ? children({ label: `${id}-l`, description: `${id}-d` }) : children)
   const stacked = untrack(() => title === undefined)

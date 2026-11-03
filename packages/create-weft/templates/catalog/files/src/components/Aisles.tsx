@@ -1,5 +1,5 @@
-import { Link } from '@weft/start'
-import { Skeleton, Text } from '@weft/warp'
+import { Link } from '@weft-js/start'
+import { Skeleton, Text } from '@weft-js/warp'
 import { listCategories } from '#/server/catalog'
 
 export function Aisles({ current }: { current?: string }) {

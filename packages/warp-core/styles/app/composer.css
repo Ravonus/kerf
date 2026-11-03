@@ -1,0 +1,43 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* composer: one field, the signature sweep on its border, grows to 8 lines, stays above the keyboard */
+:where([data-scope="composer"]) {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0 var(--warp-space-group) var(--warp-space-group);
+  padding: 8px; border-radius: calc(var(--warp-radius-surface) + 2px); background: var(--warp-color-surface-raised);
+}
+/* the composer is a field: it keeps the ink base (sweep vs base >= 3:1), no override */
+:where([data-scope="composer"] textarea) {
+  all: unset; box-sizing: border-box; display: block; inline-size: 100%; min-block-size: 24px; max-block-size: calc(1.5em * 8);
+  padding: 4px 6px; overflow-y: auto; font: 400 max(var(--warp-text-body-size), var(--warp-input-font-min))/1.5 var(--warp-text-body-font);
+  field-sizing: content; position: relative; z-index: 3; white-space: pre-wrap;
+}
+:where([data-scope="composer"] textarea)::placeholder { color: var(--warp-color-text-subtle); }
+:where([data-scope="composer"] [data-part="row"]) { display: flex; align-items: center; gap: 2px; position: relative; z-index: 3; }
+:where([data-scope="composer"] [data-part="row"] [data-part="spacer"]) { flex: 1; }
+:where([data-scope="composer"] [data-part="hint"]) { font-size: 11.5px; color: var(--warp-color-text-subtle); padding-inline: 6px; }
+:where([data-scope="composer"] [data-part="files"]) { display: flex; gap: 6px; flex-wrap: wrap; position: relative; z-index: 3; }
+:where([data-scope="composer"] [data-part="file"]) {
+  display: inline-grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; block-size: 36px; padding: 0 4px 0 8px;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-size: 12.5px; max-inline-size: 240px;
+}
+:where([data-scope="composer"] [data-part="file"] [data-scope="progress"]) { grid-column: 1 / -1; margin-block-start: -6px; }
+:where([data-scope="composer"] [data-part="send"]) { border-radius: var(--warp-radius-round); }
+:where([data-scope="composer"] textarea) {
+  min-block-size: var(--warp-hit-min);
+  padding-block: max(4px, calc((var(--warp-hit-min) - 1.5em) / 2));   /* 44px tall on touch, text centred */
+}
+:where([data-scope="composer"] [data-part="quote-draft"]) {
+  position: relative; z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px;
+  padding: 6px 4px 6px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken);
+  box-shadow: inset 2px 0 0 var(--warp-color-sweep);
+}
+:where([dir="rtl"] [data-scope="composer"] [data-part="quote-draft"]) { box-shadow: inset -2px 0 0 var(--warp-color-sweep); }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-by"]) { font-size: var(--warp-text-caption-size); font-weight: 600; }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: clip; }
+:where([data-scope="composer"] [data-part="quote-draft"] > [data-scope="button"]) { grid-column: 2; grid-row: 1 / span 2; }
+:where([data-scope="composer"] [data-part="hint"][data-state="error"]) { color: var(--warp-color-critical-text); }
+@media (forced-colors: active) {
+:where([data-scope="message"] [data-part="quote"]),
+  :where([data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
+}
+}

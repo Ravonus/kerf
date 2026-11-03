@@ -1,7 +1,8 @@
-`@weft/start` app: file routes in `src/routes` (`_layout.tsx`, `[id].tsx`, `load`, `meta`), server functions in `src/server/**` or `*.server.ts`. Import your own code as `#/server/todos` (`src/server/todos`); generated files are `weft:slot/<id>` and `weft:tokens/<name>`.
+`@weft-js/start` app: file routes in `src/routes` (`_layout.tsx`, `[id].tsx`, `load`, `meta`), server functions in `src/server/**` or `*.server.ts`. Import your own code as `#/server/todos` (`src/server/todos`); generated files are `weft:slot/<id>` and `weft:tokens/<name>`.
 
 - **Reads:** `query({ tags: ['todos'], auth: 'user', run: ({ ctx }) => ctx.db.select().from(todos) })`. In a component `todos().value ?? []`; in `load` and handlers `await todos.fetch()`.
 - **Writes:** `mutation({ input, auth: 'user', invalidates: ['todos'], optimistic, run })`.
 - **Database:** Drizzle; `await` every statement. Schema change: `weft db generate` (Q015). Inputs: `schemas.todos.insert.pick({ title: true })`.
 - **Auth:** `ctx.user` is the user or `null`; `auth: 'user'` refuses anyone else (A002). A guard is `redirect('/login')` in a layout's `load`. `run` must still check who owns a row. Login is a database session: a signed cookie caches it for pages for 5 minutes, and mutations read the database (`session.cookieCache` in `createAuth`). JWTs are API-only (`api: { functions }`).
 - **Never** copy query results into `state`, import `db` from a component (Q012), `fetch` `/_weft/*`, or poll (`todos.live()`; rooms: `channel`).
+- **Every page sets `meta` as you build it**, from `data` and `params`: `weft docs meta`.

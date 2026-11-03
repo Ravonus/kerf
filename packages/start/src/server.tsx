@@ -21,14 +21,17 @@
 // outside a render S002: this process serves many users, so it has no "the tab's app".
 
 import { AsyncLocalStorage } from 'node:async_hooks'
+import type * as NodeZlib from 'node:zlib'
+import type { AnyRoute } from '@tanstack/router-core'
 import { BaseRootRoute, BaseRoute, RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, isNotFound } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
-import { rt } from 'weft'
-import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site, type Stream } from 'weft/ssr'
+import { rt } from '@weft-js/core'
+import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site, type Stream } from '@weft-js/core/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
 import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
-import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, keyOf, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
+import { deployUrl, pageText, pathPages } from './derive.mjs'
+import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, keyOf, runtime, StartError, type Context, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
 import { configure, hub, rtRoute, type RealtimeOptions } from './hub'
@@ -36,33 +39,46 @@ import { socketRoute } from './socket'
 import { App } from './view'
 import { DefaultCard } from './og/DefaultCard'
 import { ErrorPage, NotFoundPage } from './builtin'
-// @ts-expect-error: plain JS module
 import { renderCard } from './og/index.mjs'
-// @ts-expect-error: plain JS module
 import { keptSheets, pageStyles, sheetId } from './inline.mjs'
+import { firstPaint, type Pieces } from './first-paint'
+import { pick } from './sheets.mjs'
 import { capture } from './capture.mjs'
 
+/** A page route from the file tree. */
 export interface RouteEntry { id: string; file: string; layouts: string[]; pattern: string; params: string[]; splat?: string; card?: string; kind: 'page' | '404' | 'error' }
+/** A layout from the file tree. */
 export interface LayoutEntry { id: string; file: string; dir: string; parent?: string }
+/** The routes and layouts `weft build` found. */
 export interface Manifest { dir: string; routes: RouteEntry[]; layouts: LayoutEntry[]; defaultCard?: string }
 
+/** What a route file exports. */
 export interface RouteModule {
   default?: Component
-  load?: (args: { params: Record<string, string>; request: Request; signal: AbortSignal; ctx: any }) => unknown
-  meta?: MetaObject | ((args: { params: Record<string, string>; data: any }) => MetaObject | Promise<MetaObject>)
-  prerender?: Record<string, string>[] | (() => Record<string, string>[] | Promise<Record<string, string>[]>)
+  load?: (args: { params: Record<string, string>; request: Request; signal: AbortSignal; ctx: Context }) => unknown
+  meta?: MetaObject | ((args: { params: Record<string, string>; data: unknown }) => MetaObject | Promise<MetaObject>)
+  prerender?: true | Record<string, string>[] | (() => Record<string, string>[] | Promise<Record<string, string>[]>)
   size?: { width: number; height: number }
 }
 
+/** A font for generated cards. */
 export interface Font { name: string; data: Uint8Array; weight?: number; style?: 'normal' | 'italic' }
 
+/** `createHandler`: the app as the build describes it, and how to serve it. */
 export interface HandlerOptions {
   manifest: Manifest
   /** Route, layout and card modules by manifest file. */
   modules: Record<string, RouteModule>
   site?: Site
-  /** The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`). */
-  assets?: { entry?: string; js?: { href: string }[]; css?: { href: string }[]; fonts?: { href: string; type: string }[]; inline?: Record<string, string> }
+  /**
+   * The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`).
+   * `pieces`: the build's first-paint table. Without it, `inline` and weft's purge (`critical`) are what `pageStyles` uses.
+   */
+  assets?: {
+    entry?: string; js?: { href: string }[]; css?: { href: string }[]; fonts?: { href: string; type: string }[]
+    pieces?: Pieces & { shared?: { href: string; has: string[] }; routes: { href: string; has: string[] }[] }; inline?: Record<string, string>
+    critical?: { parse: (css: string) => unknown[]; purge: (sheets: string[], found: { has: (word: string) => boolean }) => string[] }
+  }
   /** Changes with every build: part of each card's `?v=` hash. */
   build?: string
   dev?: boolean
@@ -91,27 +107,47 @@ export interface HandlerOptions {
   media?: () => Promise<MediaServer>
   /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
   realtime?: RealtimeOptions
+  /** `false`: never build URLs on the request's origin (`weft routes --meta`, whose requests aren't real). */
+  requestOrigin?: false
+  /** Queries marked `live: { required: true }` (`scanRequired`, at build). */
+  liveRequired?: string[]
   /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
   onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
 }
 
-export interface Level extends Match { mod?: RouteModule; raw: unknown }
+/** One matched route level, with its module and the data before serialising. */
+export interface Level extends Match { mod?: RouteModule | undefined; raw: unknown }
 
+/** Where the words on a page came from, and its image: what `weft routes --meta` and `weft check` report. */
+export interface MetaSource {
+  title: 'route' | 'layout' | 'auto' | 'config' | 'none'
+  description: 'route' | 'layout' | 'auto' | 'config' | 'none'
+  image: 'explicit' | 'card' | 'auto' | 'none'
+}
+
+/** What a path comes to: the status, the route and its levels. */
 export interface Resolved {
   status: number
   path: string
   levels: Level[]
   head: Merged
   /** The page route, when one matched. */
-  route?: RouteEntry
+  route?: RouteEntry | undefined
   error?: unknown
   /** A loader called `redirect()`: nothing renders. */
   redirect?: Redirect
+  /** The metas the head is merged from, until `complete` has finished it. */
+  metas?: MetaObject[] | undefined
+  source?: MetaSource
+  /** The origin URLs are built on, when one is known. */
+  origin?: string | undefined
 }
+
+type RouterOptions = ConstructorParameters<typeof RouterCore>[0]
 
 const als = new AsyncLocalStorage<Scope>()
 runtime.scope = () => als.getStore()
-runtime.enter = (scope, fn) => als.run(scope, fn)
+runtime.enter = (scope, fn) => als.run(scope as Scope, fn)
 runtime.exec = exec
 rt.isolated = true
 runtime.poke = (tags, origin) => hub().poke(tags, origin)
@@ -120,7 +156,20 @@ const CARD = { width: 1200, height: 630 }
 const stores = () => ({ createMutableStore: createNonReactiveMutableStore, createReadonlyStore: createNonReactiveReadonlyStore, batch: (f: () => void) => f() })
 const json = (v: unknown) => JSON.stringify(v ?? null).replace(/</g, '\\u003c')
 const esc = (s: string) => s.replace(/[&<"]/g, c => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
-const thenable = (v: any): v is PromiseLike<unknown> => v != null && typeof v.then === 'function'
+/**
+ * A redirect's body. A server's 3xx is followed by its `location`; a prerendered one is a file on a static host, and this
+ * is what that file says: go now, and the address to index. No stylesheet, so no view transition starts on a page
+ * that never paints (Chrome aborts it, and logs an InvalidStateError).
+ */
+const moved = (href: string) =>
+  `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Moved</title><meta name="robots" content="noindex"><link rel="canonical" href="${esc(href)}"><meta http-equiv="refresh" content="0; url=${esc(href)}"><a href="${esc(href)}">Moved here</a>`
+const thenable = (v: unknown): v is PromiseLike<unknown> => typeof (v as Partial<PromiseLike<unknown>> | null | undefined)?.then === 'function'
+
+/** The origin a head's URLs are built on, or none: then canonical and og:url stay out. */
+function pointAt(head: Merged, origin: string | undefined) {
+  if (origin) head.url = origin
+  else delete head.url
+}
 
 /** Render passes a page may take. Only a backstop: a render stops when its passes stop reading anything new, and `timeout` ends a stream. */
 const PASSES = 1024
@@ -139,10 +188,10 @@ export function hash(s: string): string {
   return ((a >>> 0).toString(36) + (b >>> 0).toString(36)).slice(0, 10)
 }
 
+/** The app as a `(Request) => Response`: pages, data, functions and cards. */
 export function createHandler(options: HandlerOptions) {
   const { manifest, modules, site = {} } = options
   const byId = new Map(manifest.routes.map(r => [r.id, r]))
-  const layouts = new Map(manifest.layouts.map(l => [l.id, l]))
   const mod = (file?: string) => (file ? modules[file] : undefined)
   const comps: Record<string, Component> = { 404: NotFoundPage, error: ErrorPage }
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
@@ -157,10 +206,26 @@ export function createHandler(options: HandlerOptions) {
     if (heads.size >= HEADS_MAX && !heads.has(shape)) heads.clear()
     heads.set(shape, head)
   }
+  const publicUrl = deployUrl(site, (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env)
+  let warned = false
+  /**
+   * The origin canonical, og:url and og:image are built on. Without a configured one, the request's: right for what
+   * a browser asked, but it's whatever `Host` said, so a production server says so once. A prerender has no public
+   * request at all (it would write `localhost` into a file), so its pages stay relative and H001 reports them.
+   */
+  const originOf = (request: Request) => {
+    if (publicUrl) return publicUrl
+    if (request.headers.has('x-nitro-prerender') || options.requestOrigin === false) return undefined
+    if (!options.dev && !warned) {
+      warned = true
+      options.onDiagnostic?.({ code: 'H001', severity: 'warning', message: 'H001 `site.url` is not set, so canonical, og:url and og:image use the request\'s Host header. Set `site.url`, or `WEFT_SITE_URL` in the deploy environment.' })
+    }
+    return new URL(request.url).origin
+  }
   /** The route state of a server render: where a static level is in it, it marks where each level starts (`region`). */
   const stateOf = (r: Resolved, payload: RoutePayload) => {
     const route = createRouteState({ ...payload, m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
-    if (r.levels.some(l => statics.has(l.id))) route.around = (d, id, body) => region(statics.has(id), d, statics.has(r.levels[d - 1]?.id), body)
+    if (r.levels.some(l => statics.has(l.id))) route.around = (d, id, body) => region(statics.has(id), d, statics.has(r.levels[d - 1]?.id ?? ''), body)
     return route
   }
   const tree = routeTree(manifest, modules)
@@ -172,11 +237,11 @@ export function createHandler(options: HandlerOptions) {
   const extensions = new Map<string, ServerExtension>()
   let loading: Promise<void> | undefined
   const loadExtensions = () => (loading ??= (async () => {
-    for (const { key, load } of options.extensions ?? []) extensions.set(key, await load())
+    for (const e of options.extensions ?? []) extensions.set(e.key, await e.load())
     scopeOptions.extensions = [...extensions.values()]
   })())
   let applied = -1
-  configure({ ...options.realtime, build: options.build, dev: options.dev })
+  configure({ ...options.realtime, build: options.build, dev: options.dev, store: options.store, required: options.liveRequired, onDiagnostic: options.onDiagnostic })
 
   /**
    * Before the first request (and in dev, when `drizzle/` grows): the auth secret, and the list each database applies
@@ -189,21 +254,23 @@ export function createHandler(options: HandlerOptions) {
       options.auth?.$weft?.check()
       for (const e of extensions.values()) e.check?.(options.dev)
       applied = list.length
-      const report = (e: unknown) => options.onDiagnostic?.({ code: 'Q016', severity: 'error', message: `Q016: ${(e as any)?.message ?? e}` })
+      const report = (e: unknown) => options.onDiagnostic?.({ code: 'Q016', severity: 'error', message: `Q016: ${String((e as Error | null)?.message ?? e)}` })
       runtime.migrations = { list, report }
     }
-    if (runtime.dbs?.size) await Promise.all([...runtime.dbs].map(ready => ready()?.catch(() => {})))
+    if (runtime.dbs?.size) await Promise.all([...runtime.dbs].map(ready => Promise.resolve(ready()).catch(() => {})))
   }
 
   async function resolve(path: string, request: Request): Promise<Resolved> {
     const scope = als.getStore() ?? exec.createScope(request, scopeOptions)
     const hold: LoadContext = { request, scope, tags: new Map(), out: {} }
-    const router = new RouterCore({ routeTree: tree, history: createMemoryHistory({ initialEntries: [path] }), isServer: true, context: hold } as any, stores as any)
+    const router = new RouterCore({ routeTree: tree, history: createMemoryHistory({ initialEntries: [path] }), isServer: true, context: hold } as RouterOptions, stores)
+    // The page's `[...name]`, so its layouts see the catch-all under that name too (the loaders copy `hold` as they start).
+    hold.splat = (router.getMatchedRoutes(router.latestLocation.pathname)[2] as { options: { weft?: RouteEntry } } | undefined)?.options.weft?.splat
     await router.load()
     const moved = hold.out.redirect
     if (moved) return { status: moved.status, path, levels: [], head: mergeMeta(site), redirect: moved }
-    const matches = router.state.matches.map(m => ({ m, weft: (router.routesById as any)[m.routeId]?.options.weft as RouteEntry | LayoutEntry | undefined }))
-    const params = (m: any, splat?: string) => cleanParams(m.params, splat)
+    const matches = router.state.matches.map(m => ({ m, weft: (router.routesById as Record<string, { options: { weft?: RouteEntry | LayoutEntry } }>)[m.routeId]?.options.weft }))
+    const params = (m: { params: Record<string, unknown> }, splat?: string) => cleanParams(m.params, splat)
     const leaf = matches.at(-1)?.weft
     const route = leaf && 'kind' in leaf ? leaf : undefined
     const failed = matches.find(x => x.m.status === 'error')
@@ -213,31 +280,36 @@ export function createHandler(options: HandlerOptions) {
     const levelOf = (x: (typeof matches)[number]): Level => {
       const raw = x.m.loaderData
       const t = hold.tags.get(x.weft!.file)
-      return { id: x.weft!.id, params: params(x.m, (x.weft as RouteEntry).splat), mod: mod(x.weft!.file), raw, ...split(raw), ...(t?.size && { t: [...t] }) }
+      return { id: x.weft!.id, params: params(x.m, hold.splat), mod: mod(x.weft!.file), raw, ...split(raw), ...(t?.size && { t: [...t] }) }
     }
     const special = (id: '404' | 'error', status: number, error?: unknown): Promise<Resolved> => {
       const entry = byId.get(id)
-      if ((error as any)?.code && error instanceof StartError) options.onDiagnostic?.({ code: error.code, severity: 'error', message: error.message })
-      const data = id === 'error' ? { status, message: options.dev && error instanceof Error ? error.message : 'Something went wrong.' } : { path }
-      const levels: Level[] = [...(rootOk && !(failed && failed === rootOk) ? [levelOf(rootOk)] : []), { id, params: {}, data, raw: data, mod: mod(entry?.file) }]
+      if (error instanceof StartError && error.code) options.onDiagnostic?.({ code: error.code, severity: 'error', message: error.message })
+      const shown = id === 'error' ? { status, message: options.dev && error instanceof Error ? error.message : 'Something went wrong.' } : { path }
+      const levels: Level[] = [...(rootOk && !(failed && failed === rootOk) ? [levelOf(rootOk)] : []), { id, params: {}, data: shown, raw: shown, mod: mod(entry?.file) }]
       if (entry && mod(entry.file)?.default) comps[id] = mod(entry.file)!.default!
       return finish(levels, status, undefined, error)
     }
-    const finish = async (levels: Level[], status: number, route?: RouteEntry, error?: unknown): Promise<Resolved> => {
+    const finish = async (shown: Level[], status: number, matched?: RouteEntry, error?: unknown): Promise<Resolved> => {
       const metas: MetaObject[] = []
-      for (const lv of levels) {
+      const source: MetaSource = { title: site.name ? 'config' : 'none', description: site.description ? 'config' : 'none', image: 'none' }
+      for (const lv of shown) {
         const m = lv.mod?.meta ?? (lv.id === '404' ? { title: 'Not found' } : lv.id === 'error' ? { title: 'Error' } : undefined)
         if (!m) continue
-        metas.push(typeof m === 'function' ? await m({ params: lv.params, data: settledView(lv.raw, lv.d, lv.id, options) }) : m)
+        const value = typeof m === 'function' ? await m({ params: lv.params, data: settledView(lv.raw, lv.d, lv.id, options) }) : m
+        metas.push(value)
+        const who = lv === shown.at(-1) ? 'route' : 'layout'
+        if (value?.title != null) source.title = who
+        if (value?.description != null) source.description = who
       }
-      const head = mergeMeta(site, ...metas)
-      if (head.og.image === 'auto') head.og.image = status === 200 && route ? { url: cardUrl(route, levels, head, path), ...CARD } : undefined
-      return { status, path, levels, head, route, error }
+      const resolved: Resolved = { status, path, levels: shown, head: mergeMeta(site, ...metas), route: matched, error, metas, source, origin: originOf(request) }
+      pointAt(resolved.head, resolved.origin)
+      return resolved
     }
 
     if (failed) {
       const e = exec.dbError(failed.m.error)
-      return special('error', (e as any)?.code === 'Q016' ? 503 : 500, e)
+      return special('error', (e as { code?: string } | null)?.code === 'Q016' ? 503 : 500, e)
     }
     if (missing) return special('404', 404)
     const levels = matches.filter(x => x.weft).map(levelOf)
@@ -249,19 +321,79 @@ export function createHandler(options: HandlerOptions) {
     }
   }
 
+  const timing = options.timeout === undefined ? {} : { timeout: options.timeout }
+  const leftToPage = (s: MetaSource['title']) => s === 'config' || s === 'none'
+
+  /**
+   * The content hash of a generated card: what it draws. The built-in card reads the head and the site's look and
+   * nothing else, so a loader's timestamp can't change its URL; an `.og.tsx` also gets the page's data.
+   */
   function cardUrl(route: RouteEntry, levels: Level[], head: Merged, path: string) {
-    const card = route.card ?? manifest.defaultCard ?? 'builtin'
-    const size = mod(route.card)?.size ?? CARD
+    const card = route.card ?? manifest.defaultCard
+    const size = mod(card)?.size ?? CARD
+    const { image: _, ...graph } = head.og
     const leaf = levels.at(-1)!
-    const { image: _, ...og } = head.og
-    const v = hash([options.build ?? '', card, JSON.stringify(size), JSON.stringify({ ...head, og }), JSON.stringify(leaf.data ?? null)].join('\0'))
+    const v = hash([options.build ?? '', card ?? 'builtin', JSON.stringify(size), JSON.stringify({ ...head, og: graph }), JSON.stringify(site.card ?? null), card ? JSON.stringify(leaf.data ?? null) : ''].join('\0'))
     return `/_weft/og/${cardPath(path)}.png?v=${v}`
   }
+
+  /**
+   * The rest of the head, once the page's HTML can speak for it (research 20 §10): a level that set no title or
+   * description gets the page's own, under anything a layout or the route wrote, and `image: 'auto'` becomes the
+   * card, whose URL hashes the text it shows. Called once per request, before anything is written.
+   */
+  function complete(r: Resolved, html?: string) {
+    if (!r.metas || !r.source) return r.head
+    const { metas, source } = r
+    r.metas = undefined
+    const left = leftToPage(source.title) || leftToPage(source.description)
+    const words = left && r.status === 200 && html ? pageText(html) : {}
+    const title = leftToPage(source.title) ? words.title : undefined
+    const description = leftToPage(source.description) ? words.description : undefined
+    if (title) source.title = 'auto'
+    if (description) source.description = 'auto'
+    const head = (r.head = mergeMeta(site, { ...(title !== undefined && { title }), ...(description !== undefined && { description }) }, ...metas))
+    pointAt(head, r.origin)
+    if (head.jsonLd === undefined && r.route?.pattern === '/' && r.status === 200 && r.origin && site.name) head.jsonLd = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url: r.origin, ...(site.description && { description: site.description }) }
+    if (head.og.image === 'auto') {
+      const showing = r.status === 200 && r.route
+      if (showing) head.og.image = { url: cardUrl(r.route!, r.levels, head, r.path), ...CARD, alt: head.og.title ?? head.title }
+      else delete head.og.image
+      if (showing) source.image = r.route!.card || manifest.defaultCard ? 'card' : 'auto'
+    } else if (head.og.image) source.image = 'explicit'
+    return head
+  }
+
+  /** What `page` shows a reader, without the streaming: the same pass, so a page, its navigation and its card agree. */
+  async function shell(r: Resolved, request: Request) {
+    const route = stateOf(r, payloadOf(r, false))
+    const s = renderToStream(() => <App route={route} />, { ...timing, passes: PASSES, app: { cookies: cookieJar(request) } })
+    await s.settle()
+    return s.shell
+  }
+
+  /**
+   * The finished head of a request that doesn't otherwise render: it renders only when a level left words to the page.
+   * A render that fails here (a build with no database) leaves the words to the config; the page still shows its own.
+   */
+  const finished = async (r: Resolved, request: Request) => {
+    if (!r.metas || r.status !== 200 || !(leftToPage(r.source!.title) || leftToPage(r.source!.description))) return complete(r)
+    return complete(r, await shell(r, request).catch(() => undefined))
+  }
+
+  /** `weft routes --meta`: one page's finished head, its HTML and where its words came from, in a request scope. */
+  const inspect = (path: string, request: Request) => als.run(exec.createScope(request, scopeOptions), async () => {
+    const r = await resolve(path, request)
+    if (r.redirect) return { ...r, html: '' }
+    const html = await shell(r, request).catch(() => '')
+    complete(r, html)
+    return { ...r, html }
+  })
 
   async function page(url: URL, request: Request, scope: Scope): Promise<Response> {
     const path = url.pathname + url.search
     const r = await resolve(path, request)
-    if (r.redirect) return withHeaders(new Response(null, { status: r.redirect.status, headers: { location: r.redirect.href, 'cache-control': 'no-cache' } }), scope)
+    if (r.redirect) return withHeaders(new Response(moved(r.redirect.href), { status: r.redirect.status, headers: { location: r.redirect.href, 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }), scope)
     scope.started = true // from here a redirect can't change the status (Q007)
     // The server renders from the raw data (deferred fields are still promises, for Boundaries to stream); the page
     // carries the settled part.
@@ -289,11 +421,12 @@ export function createHandler(options: HandlerOptions) {
     }
     const shown = (e: unknown) => exec.shown(e, scope)
     const stalled = () => options.onDiagnostic?.({ code: 'E_STREAM', severity: 'warning', message: `${path}: a render stopped reading anything new, so what's still out is left to the client. Is a query's input different on every render, a \`Date.now()\` say?` })
-    const render = () => renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, shown, stalled, app: { cookies: cookieJar(request) }, landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(), ...since() })});` })
+    const render = () => renderToStream(() => <App route={route} />, { ...timing, passes: PASSES, shown, stalled, app: { cookies: cookieJar(request) }, landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(), ...since() })});` })
     let s!: Stream
     const assets = options.assets ?? {}
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
-    const top =
+    /** The head down to the fonts. Written once `complete` has finished it. */
+    const top = () =>
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
       metaTags(r.head, url.pathname) + '\n' +
       (site.head ? site.head + '\n' : '') +
@@ -311,9 +444,11 @@ export function createHandler(options: HandlerOptions) {
       const preloads = modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets)
       return { payload, parts, streaming, now, preloads, sheets: pageSheets(assets.css, parts, options.chunks) }
     }
-    /** From `<div id="app">` to what's left to stream. */
-    const page_ = (p: ReturnType<typeof shaped>) =>
-      `<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(p.payload)}</script>\n` +
+    /** The build's first-paint table (`site.criticalCss`, on by default) for this render's sheets. Without it, `pageStyles`. */
+    const table = (p: ReturnType<typeof shaped>) => assets.pieces && tableStyles(assets.pieces, p.sheets, site.head, lang)
+    /** From `<div id="app">` to what's left to stream. `after`: what goes right past the shell, a table's sheets. */
+    const page_ = (p: ReturnType<typeof shaped>, after = '') =>
+      `<div id="app">${s.shell}</div>\n` + after + `<script type="application/json" id="weft-route">${json(p.payload)}</script>\n` +
       (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '') +
       // Async, and after all it reads, so it can run while the stream goes on.
       (p.streaming ? (since(), dataTags({ ...pageData(s.data(), scope)!, w: 1 }, news())) : '') +
@@ -322,14 +457,14 @@ export function createHandler(options: HandlerOptions) {
       const cached = wire(scope)
       // Read after the queries ran: what's published from here on, the first connect replays (research 30 §1).
       if (scope.live) await hub().ready()
-      const rt = scope.live ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: options.build })}</script>\n` : ''
+      const liveScript = scope.live ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: options.build })}</script>\n` : ''
       // A client that starts after this finds the whole page, as if it had never streamed.
       const stale = streaming ? '<script>["weft-data","weft-cache"].forEach(function(i){(i=document.getElementById(i))&&i.remove()})</script>\n' : ''
-      return stale + dataTags(pageData(s.data(), scope), cached) + rt + '</body>\n</html>\n'
+      return stale + dataTags(pageData(s.data(), scope), cached) + liveScript + '</body>\n</html>\n'
     }
     const status = r.status === 200 && scope.form ? scope.form.status : r.status
     const enc = new TextEncoder()
-    const rest = async (controller: ReadableStreamDefaultController<Uint8Array>, styles: ReturnType<typeof pageStyles>, streaming: boolean) => {
+    const rest = async (controller: ReadableStreamDefaultController<Uint8Array>, styles: Pick<ReturnType<typeof pageStyles>, 'late'>, streaming: boolean) => {
       try {
         for await (const chunk of s.chunks) controller.enqueue(enc.encode(styles.late(pageSheets([], islandsOf(chunk), options.chunks), chunk) + chunk + '\n'))
       } catch (e) {
@@ -341,18 +476,23 @@ export function createHandler(options: HandlerOptions) {
 
     // The route rendered before: its head goes out now, from what that render needed, and the page follows it.
     const cold = `${status} ${saveData(request) ? 1 : 0} ${r.levels.map(l => l.id).join()}`
-    // A browser that has the page's sheets gets links: its head is remembered apart, as it has no rules in it.
-    const have = keptSheets(request.headers.get('cookie'))
+    // A browser that has the page's sheets gets links: its head is remembered apart, as it has no rules in it. A table's
+    // head has no rules either way, so it has no such head.
+    const have = assets.pieces ? undefined : keptSheets(request.headers.get('cookie'))
     const warm = have && heads.get(cold + ' w')
     const shape = warm && warm.sheets.every(c => have.has(sheetId(c.href))) ? cold + ' w' : cold
     const known = heads.get(shape)
+    // A level left its title or description to the page's own words (`complete`): those are only known once it renders.
+    const worded = !!r.metas && r.status === 200 && (leftToPage(r.source!.title) || leftToPage(r.source!.description))
     // Only for a render slow enough to wait on: a fast page goes out whole, compressed once and kept.
-    if (known && known.ms >= EARLY_MS) {
+    if (known && known.ms >= EARLY_MS && !worded) {
+      complete(r)
       // A session read can set cookies, which have to be in the headers: read it before they go.
       if (request.headers.has('cookie')) await scope.ctx().catch(() => {})
       const set = [...scope.headers].length
-      const styles = pageStyles(assets, known.sheets, '', site.head, known, have, request.headers.has('cookie'))
-      const head = top + known.preloads + (assets.entry ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') + styles.head +
+      const styles = assets.pieces ? undefined : pageStyles(assets, known.sheets, '', site.head, known, have, request.headers.has('cookie'))
+      // With a table, the rules come with the shell they're for: here there's only the order of the layers.
+      const head = top() + known.preloads + (assets.entry ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') + (styles ? styles.head : `<style>${assets.pieces!.layers}</style>\n`) +
         (known.capture ? `<script>${capture(known.now)}</script>\n` : '') + dev + '</head>\n<body>\n'
       const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(known.fold && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
       const body = new ReadableStream<Uint8Array>({
@@ -365,18 +505,20 @@ export function createHandler(options: HandlerOptions) {
             await s.hold(options.hold ?? HOLD)
             const ms = performance.now() - t0
             const p = shaped()
+            const t = table(p)
             const capturing = !!options.lazy || p.streaming
             // What this page has beyond the head: sheets, rules, and chunks that render didn't reach.
             const have = new Set(known.preloads.split(/(?=<link )/))
             const more = p.preloads.split(/(?=<link )/).filter(l => l && !have.has(l)).join('')
-            const lead = styles.late(p.sheets, s.shell) + more + (capturing && !known.capture ? `<script>${capture(p.now)}</script>\n` : '')
-            controller.enqueue(enc.encode(lead + page_(p) + (assets.entry && !p.streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '')))
+            const rules = t && t.rules(s.shell)
+            const lead = (t ? (rules ? `<style>${rules}</style>\n` : '') : styles!.late(p.sheets, s.shell)) + more + (capturing && !known.capture ? `<script>${capture(p.now)}</script>\n` : '')
+            controller.enqueue(enc.encode(lead + page_(p, t ? t.links : '') + (assets.entry && !p.streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '')))
             // A render that set a header after they went can't use this: the route goes back to rendering first.
             if ([...scope.headers].length !== set) {
               heads.set(cold, null).set(cold + ' w', null)
               options.onDiagnostic?.({ code: 'E_HEAD', severity: 'warning', message: `${path}: a render set a response header after the head was sent, so this route now renders before sending anything.` })
-            } else remember(styles.links ? cold + ' w' : cold, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length, preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join('') })
-            await rest(controller, styles, p.streaming)
+            } else remember(styles?.links ? cold + ' w' : cold, { ...p, ms, split: styles?.split ?? false, found: styles?.found() ?? new Set(), capture: capturing, fold: !!p.parts.fold.length, preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join('') })
+            await rest(controller, t || styles!, p.streaming)
           } catch (e) {
             heads.set(cold, null).set(cold + ' w', null)
             options.onDiagnostic?.({ code: 'E_HEAD', severity: 'error', message: `${path}: ${String(e)}` })
@@ -393,19 +535,21 @@ export function createHandler(options: HandlerOptions) {
     await s.settle() // queries read outside a Boundary have nowhere to stream to
     await s.hold(options.hold ?? HOLD)
     const ms = performance.now() - t0
+    complete(r, s.shell)
     const p = shaped()
-    const styles = pageStyles(assets, p.sheets, s.shell, site.head, undefined, have, request.headers.has('cookie'))
+    const t = table(p)
+    const styles = t ? undefined : pageStyles(assets, p.sheets, s.shell, site.head, undefined, have, request.headers.has('cookie'))
     const capturing = !!options.lazy || p.streaming
-    if (known !== null && !options.dev) remember(styles.links ? cold + ' w' : cold, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length })
+    if (known !== null && !options.dev) remember(styles?.links ? cold + ' w' : cold, { ...p, ms, split: styles?.split ?? false, found: styles?.found() ?? new Set(), capture: capturing, fold: !!p.parts.fold.length })
     const head =
-      top + p.preloads +
+      top() + p.preloads +
       // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
       (assets.entry && p.streaming ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') +
-      styles.head +
+      (t ? `<style>${assets.pieces!.layers}${t.rules(s.shell)}</style>\n` : styles!.head) +
       (capturing ? `<script>${capture(p.now)}</script>\n` : '') +
       dev +
       (assets.entry && !p.streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
-      '</head>\n<body>\n' + page_(p)
+      '</head>\n<body>\n' + page_(p, t ? t.links : '')
     const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(p.parts.fold.length && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
     // No Boundary is waiting, so there's nothing to stream: the page goes out in one piece.
     if (!p.streaming) {
@@ -416,7 +560,7 @@ export function createHandler(options: HandlerOptions) {
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         controller.enqueue(enc.encode(head))
-        await rest(controller, styles, true)
+        await rest(controller, t || styles!, true)
       },
     })
     return withHeaders(new Response(body, init), scope)
@@ -428,34 +572,36 @@ export function createHandler(options: HandlerOptions) {
    */
   async function form(url: URL, request: Request, scope: Scope): Promise<Response> {
     const origin = request.headers.get('origin')
-    const site = request.headers.get('sec-fetch-site')
-    if (!(origin ? origin === url.origin && (!site || site === 'same-origin') : site === 'same-origin')) {
+    const from = request.headers.get('sec-fetch-site')
+    if (!(origin ? origin === url.origin && (!from || from === 'same-origin') : from === 'same-origin')) {
       options.onDiagnostic?.({ code: 'F002', severity: 'error', message: `F002: a form POST to ${url.pathname} without the same-origin proof (\`Origin\` or \`Sec-Fetch-Site\`)` })
       return new Response('Forbidden', { status: 403 })
     }
-    const data = await request.formData()
-    const id = String(data.get('$fn'))
+    const fields = await request.formData()
+    const named = fields.get('$fn')
+    const id = typeof named === 'string' ? named : ''
     const f = fns.get(id)
     if (f?.kind !== 'mutation') {
       options.onDiagnostic?.({ code: 'F003', severity: 'error', message: `F003: a form POST names \`${id}\`, which is no mutation (the page is older than the server)` })
       return new Response('Not found', { status: 404 })
     }
     const see = (href: string) => withHeaders(new Response(null, { status: 303, headers: { location: href, 'cache-control': 'no-cache' } }), scope)
-    const input = decodeForm(data)
+    const input = decodeForm(fields)
     try {
       await exec.runMutation(scope, f, input, [], true)
       return see(url.pathname + url.search)
-    } catch (e: any) {
+    } catch (e) {
       if (isRedirect(e)) return see(e.href)
       const known = e instanceof StartError || e instanceof FnError
       if (!known) options.onDiagnostic?.({ code: 'E_FN', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
-      const issues = e?.issues as SchemaIssue[] | undefined
+      const failure = e as { issues?: SchemaIssue[]; status?: number; message?: string } | null
+      const issues = failure?.issues
       const { errors, message } = fieldsOf(issues)
-      const key = data.get('$form')
+      const key = fields.get('$form')
       scope.form = {
         id, ...(typeof key === 'string' && { key }), values: echoed(input), errors,
         message: issues ? message : (exec.shown(e, scope) as Error).message,
-        status: issues ? 422 : (e?.status as number) ?? 500,
+        status: issues ? 422 : failure?.status ?? 500,
       }
       return page(url, request, scope)
     }
@@ -465,10 +611,10 @@ export function createHandler(options: HandlerOptions) {
   async function media(url: URL, request: Request): Promise<Response> {
     const m = /^\/_weft\/m\/([0-9a-f]{32})\/(\d+)\.([a-z0-9]+)$/.exec(url.pathname)
     const server = await mediaServer()
-    if (!server) options.onDiagnostic?.({ code: 'M017', severity: 'error', message: 'M017: a media URL was requested, but nothing provides `media.server`. Add `media()` from `@weft/plugin-media` to `plugins`' })
-    const out = m && (await server?.serve({ hash: m[1], width: Number(m[2]), format: m[3], accept: request.headers.get('accept') ?? '' }))
+    if (!server) options.onDiagnostic?.({ code: 'M017', severity: 'error', message: 'M017: a media URL was requested, but nothing provides `media.server`. Add `media()` from `@weft-js/plugin-media` to `plugins`' })
+    const out = m && (await server?.serve({ hash: m[1]!, width: Number(m[2]), format: m[3]!, accept: request.headers.get('accept') ?? '' }))
     if (!out) return new Response('Not found', { status: 404 })
-    const headers = new Headers({ 'content-type': out.type, 'cache-control': 'public, max-age=31536000, immutable', etag: `"${m![1]}-${out.width}-${out.format}"`, 'x-content-type-options': 'nosniff' })
+    const headers = new Headers({ 'content-type': out.type, 'cache-control': 'public, max-age=31536000, immutable', etag: `"${m[1]}-${out.width}-${out.format}"`, 'x-content-type-options': 'nosniff' })
     if (out.negotiated) headers.set('vary', 'Accept')
     if (out.type === 'image/svg+xml') headers.set('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox")
     if (out.temporary) { // The original, standing in for a rung still encoding.
@@ -489,7 +635,8 @@ export function createHandler(options: HandlerOptions) {
   async function data(path: string, request: Request, scope: Scope): Promise<Response> {
     const r = await resolve(path, request)
     if (r.redirect) return withHeaders(Response.json({ m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload, { headers: { 'cache-control': 'no-cache' } }), scope)
-    for (const lv of r.levels) if (lv.d?.length) lv.data = { ...(lv.data as object), ...Object.fromEntries(await Promise.all(lv.d.map(async k => [k, await (lv.raw as any)[k]]))) }
+    for (const lv of r.levels) if (lv.d?.length) lv.data = { ...(lv.data as object), ...Object.fromEntries(await Promise.all(lv.d.map(async k => [k, await (lv.raw as Record<string, unknown>)[k]]))) }
+    await finished(r, request)
     const c = wire(scope)
     let payload = payloadOf(r, true)
     if (r.levels.some(lv => statics.has(lv.id))) {
@@ -522,8 +669,8 @@ export function createHandler(options: HandlerOptions) {
       }
       if (request.method !== 'POST') return fail('Q010', `Q010: mutation \`${id}\` needs POST`, 405)
       const origin = request.headers.get('origin')
-      const site = request.headers.get('sec-fetch-site')
-      const cross = (origin && origin !== url.origin) || (site && site !== 'same-origin' && site !== 'none')
+      const from = request.headers.get('sec-fetch-site')
+      const cross = (origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none')
       const type = request.headers.get('content-type') ?? ''
       const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-weft` still forces a preflight
       if (cross || request.headers.get('x-weft') !== '1' || !(multipart || type.startsWith('application/json')))
@@ -551,24 +698,27 @@ export function createHandler(options: HandlerOptions) {
     const path = '/' + url.pathname.slice('/_weft/og/'.length).replace(/\.png$/, '').replace(/^index$/, '')
     const r = await resolve(path, request)
     if (r.status !== 200 || !r.route) return new Response('Not found', { status: 404 }) // only params the route's own load accepts
-    const image = r.head.og.image
-    const want = typeof image === 'object' ? new URL(image.url, url).searchParams.get('v') : null
+    const head = await finished(r, request)
+    const image = head.og.image
+    if (typeof image !== 'object' || !image.url.startsWith('/_weft/og/')) return new Response('Not found', { status: 404 }) // this page has no generated card
+    const want = new URL(image.url, url).searchParams.get('v')
     const cardMod = mod(r.route.card ?? manifest.defaultCard)
-    const Card = (cardMod?.default ?? DefaultCard) as Component
     const leaf = r.levels.at(-1)!
-    const props = { params: leaf.params, data: settledView(leaf.raw, leaf.d, leaf.id, options), meta: r.head, site, title: r.head.og.title ?? r.head.title, description: r.head.og.description ?? r.head.description ?? '' }
-    const html = renderToString(() => <Card {...props} />, { hydratable: false })
+    const cardProps = { params: leaf.params, data: settledView(leaf.raw, leaf.d, leaf.id, options), meta: head, site: { ...site, url: r.origin }, path: r.path, title: head.og.title ?? head.title, description: head.og.description ?? head.description ?? '' }
+    const Card = (cardMod?.default ?? DefaultCard) as (props: typeof cardProps) => unknown
+    const html = renderToString(() => <Card {...cardProps} />, { hydratable: false })
     const png = await renderCard(html, cardMod?.size ?? CARD, options.fonts ?? [], {
       strict: false,
-      onDiagnostic: (d: any) => options.onDiagnostic?.({ ...d, route: r.route!.id }),
+      onDiagnostic: (d: { code: string; severity: string; message: string }) => options.onDiagnostic?.({ ...d, route: r.route!.id }),
     })
-    const fresh = want !== null && url.searchParams.get('v') === want
+    // A signed-in request can see what a public cache must not keep.
+    const fresh = url.searchParams.get('v') === want && !request.headers.has('cookie')
     const cache = options.dev ? 'no-store' : fresh ? 'public, max-age=31536000, immutable' : 'no-cache'
     return new Response(png, { headers: { 'content-type': 'image/png', 'cache-control': cache } })
   }
 
-  /** Build mode (research 20 §4.3): the card URLs `weft build` prerenders, queued through Nitro's `x-nitro-prerender`. */
-  async function prerenderList(request: Request): Promise<Response> {
+  /** Every path `weft build` prerenders: pages from `prerender`, and the card of each page that has a generated one. */
+  async function prerenderPaths(request: Request): Promise<string[]> {
     const paths: string[] = []
     for (const route of manifest.routes) {
       if (route.kind !== 'page') continue
@@ -579,10 +729,23 @@ export function createHandler(options: HandlerOptions) {
         const path = fill(route.pattern, params, route.splat)
         const r = await resolve(path, request)
         if (given && r.status === 200) paths.push(path)
-        const image = r.head.og.image
-        if (r.status === 200 && typeof image === 'object' && image.url.startsWith('/_weft/og/')) paths.push(image.url.replace(/\?.*/, ''))
+        const image = (await finished(r, request)).og.image
+        if (r.status === 200 && typeof image === 'object' && image && image.url.startsWith('/_weft/og/')) paths.push(image.url.replace(/\?.*/, ''))
       }
     }
+    return paths
+  }
+
+  /**
+   * Build mode (research 20 §4.3): the card URLs `weft build` prerenders, queued through Nitro's `x-nitro-prerender`.
+   * It's a header, so a big site's list comes a page at a time: too long a header is an error that Nitro's client
+   * logs and carries on from, and the build ends with no cards.
+   */
+  let listing: Promise<string[][]> | undefined
+  async function prerenderList(request: Request, url: URL): Promise<Response> {
+    const pages = await (listing ??= prerenderPaths(request).then(p => pathPages(p)))
+    const n = Number(url.searchParams.get('page') ?? 0)
+    const paths = [...(pages[n] ?? []), ...(n + 1 < pages.length ? [`/_weft/og-routes?page=${n + 1}`] : [])]
     // HTML, because Nitro's prerenderer only follows links (and this header) from HTML responses.
     const list = paths.map(p => `<a href="${esc(p)}">${esc(p)}</a>`).join('\n')
     return new Response(`<!doctype html>\n<meta name="robots" content="noindex">\n${list}\n`, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-nitro-prerender': paths.join(',') } })
@@ -598,7 +761,7 @@ export function createHandler(options: HandlerOptions) {
 
   const route = (request: Request, scope: Scope): Promise<Response> => {
     const url = new URL(request.url)
-    if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return options.auth.handler(request)
+    if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return Promise.resolve(options.auth.handler(request))
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
     if (url.pathname.startsWith(EXTENSION)) return extensionRoute(url, request, scope)
     if (request.method === 'POST' && !url.pathname.startsWith('/_weft/') && /^(application\/x-www-form-urlencoded|multipart\/form-data)/.test(request.headers.get('content-type') ?? '')) return form(url, request, scope)
@@ -608,7 +771,7 @@ export function createHandler(options: HandlerOptions) {
     if (url.pathname.startsWith('/_weft/m/')) return media(url, request)
     if (url.pathname.startsWith('/_weft/og/') && url.pathname.endsWith('.png')) return og(url, request)
     if (url.pathname.startsWith('/_weft/data/') || url.pathname === '/_weft/data') return data((url.pathname.slice('/_weft/data'.length) || '/') + url.search, request, scope)
-    if (url.pathname === '/_weft/og-routes') return prerenderList(request)
+    if (url.pathname === '/_weft/og-routes') return prerenderList(request, url)
     return page(url, request, scope)
   }
   const handler = async (incoming: Request): Promise<Response> => {
@@ -622,9 +785,11 @@ export function createHandler(options: HandlerOptions) {
     // The build's prerender only lists cards: it holds no secrets and may have no database.
     if (new URL(request.url).pathname === '/_weft/og-routes') return als.run(scope, () => route(request, scope))
     await boot()
+    if (options.liveRequired?.length) await hub().probed
+    if (hub().refused) return Response.json({ e: { code: 'R015', message: options.dev ? hub().refused!.message : 'Live data is unavailable.' } }, { status: 503, headers: { 'cache-control': 'no-store' } })
     return compressed(request, await als.run(scope, () => route(request, scope)))
   }
-  return Object.assign(handler, { resolve })
+  return Object.assign(handler, { resolve, inspect })
 }
 
 const HEADS_MAX = 512
@@ -638,7 +803,7 @@ interface Head { ms: number; sheets: { href: string }[]; preloads: string; now: 
 const whole = new WeakMap<Response, string>()
 
 type Encoding = 'br' | 'gzip'
-type Zlib = typeof import('node:zlib')
+type Zlib = typeof NodeZlib
 
 let loaded: Promise<Zlib | undefined> | undefined
 const loadZlib = () => (loaded ??= import('node:zlib').catch(() => undefined))
@@ -691,7 +856,7 @@ function compressStream(zlib: Zlib, encoding: Encoding, source: ReadableStream<U
           const { done, value } = await reader.read()
           if (done) return void z.end()
           z.write(value)
-          await new Promise(ok => z.flush(ok as () => void))
+          await new Promise(ok => { z.flush(ok as () => void) })
         }
       })().catch(e => out.error(e))
     },
@@ -727,14 +892,41 @@ async function compressed(request: Request, response: Response): Promise<Respons
 }
 
 /**
- * What each router-core loader gets as `context`: the request scope, and where it leaves tags and redirects (router-core
- * copies the context object, so those go in shared containers).
+ * A page's styles from the build's first-paint table (`firstPaint`): the rules its HTML reaches, inline, and its sheets as
+ * links past the shell, where they hold nothing above it. `late` gives a streamed chunk the rules it adds, and a link for
+ * a sheet none of the page's has: an island in a Boundary the shell didn't show.
  */
-interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<string>>; out: { redirect?: Redirect; chain?: Promise<unknown> } }
+function tableStyles(pieces: NonNullable<NonNullable<HandlerOptions['assets']>['pieces']>, css: { href: string }[], siteHead: string | undefined, lang: string) {
+  const hrefs = css.map(c => c.href)
+  const late = pick(pieces, hrefs)
+  const paint = firstPaint(pieces, hrefs, siteHead)
+  const held: string[] = late.sheets.flatMap((c: { has: string[] }) => c.has)
+  const carried = new Set([...hrefs, ...held])
+  const link = (href: string) => `<link rel="stylesheet" href="${esc(href)}">\n`
+  return {
+    rules: (shell: string) => paint(`<html${lang}><body><div id="app">${shell}`),
+    // A combined sheet's parts as disabled links: Vite's preload helper finds them there and doesn't fetch them again.
+    links: [...late.sheets.map((c: { href: string }) => c.href), ...late.rest].map(link).join('') + held.map(href => `<link rel="stylesheet" href="${esc(href)}" disabled>\n`).join(''),
+    late(sheets: { href: string }[] = [], chunk = '') {
+      const more = sheets.map(c => c.href).filter(h => !carried.has(h))
+      for (const h of more) carried.add(h)
+      const rules = paint(chunk)
+      return more.map(link).join('') + (rules ? `<style>${rules}</style>\n` : '')
+    },
+  }
+}
+
+/**
+ * What each router-core loader gets as `context`: the request scope, where it leaves tags and redirects (router-core
+ * copies the context object, so those go in shared containers), and the matched page's catch-all name.
+ */
+interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<string>>; out: { redirect?: Redirect; chain?: Promise<unknown> }; splat?: string | undefined }
+
+interface TreeNode { route: AnyRoute; children: AnyRoute[]; dir: string }
 
 /** The router-core tree for the manifest: layouts are path prefixes, routes hang under their innermost layout. */
 function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
-  const loader = (file: string, splat?: string) => async ({ params, context, abortController }: { params: any; context: LoadContext; abortController: AbortController }) => {
+  const loader = (file: string, splat?: string) => async ({ params, context, abortController }: { params: Record<string, unknown>; context: LoadContext; abortController: AbortController }) => {
     const load = modules[file]?.load
     if (!load) return undefined
     // Parent first (router-core starts them together): a layout's `load` is a guard, so a child never runs for a
@@ -742,7 +934,7 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
     const out = context.out
     const before = out.chain
     let done!: () => void
-    out.chain = new Promise<void>(ok => (done = ok))
+    out.chain = new Promise<void>(ok => { done = ok })
     await before
     if (out.redirect) return done(), undefined
     // Each loader runs in its own frame of the request scope, which records the tags of the queries it read.
@@ -750,7 +942,8 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
     context.tags.set(file, f.tags!)
     try {
       const ctx = await f.ctx()
-      const v = await als.run(f, () => load({ params: cleanParams(params, splat), request: context.request, signal: abortController.signal, ctx }))
+      const v = await als.run(f, () => load({ params: cleanParams(params, splat ?? context.splat), request: context.request, signal: abortController.signal, ctx }))
+      // oxlint-disable-next-line typescript/only-throw-error -- router-core's own not-found signal, passed on as it came
       if (isNotFound(v)) throw v
       return v
     } catch (e) {
@@ -762,14 +955,14 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
     }
   }
   const rootLayout = manifest.layouts.find(l => l.dir === '')
-  const root = new BaseRootRoute({ ...(rootLayout && { loader: loader(rootLayout.file), weft: rootLayout }) } as any)
-  const top = { route: root, children: [] as any[], dir: '' }
-  const nodes = new Map<string, typeof top>()
+  const root = new BaseRootRoute({ ...(rootLayout && { loader: loader(rootLayout.file), weft: rootLayout }) } as never)
+  const top: TreeNode = { route: root, children: [], dir: '' }
+  const nodes = new Map<string, TreeNode>()
   const at = (id: string | undefined) => (id ? nodes.get(id) ?? top : top)
   for (const l of manifest.layouts) {
     if (l.dir === '') { nodes.set(l.id, top); continue }
     const parent = at(l.parent)
-    const route = new BaseRoute({ getParentRoute: () => parent.route, path: toPath(l.dir, parent.dir), loader: loader(l.file), weft: l } as any)
+    const route = new BaseRoute({ getParentRoute: () => parent.route, path: toPath(l.dir, parent.dir), loader: loader(l.file), weft: l } as never)
     parent.children.push(route)
     nodes.set(l.id, { route, children: [], dir: l.dir })
   }
@@ -777,10 +970,10 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
     if (r.kind !== 'page') continue
     const parent = at(r.layouts.at(-1))
     const rel = r.pattern.slice(1).split('/').slice(parent.dir ? parent.dir.split('/').length : 0).join('/')
-    parent.children.push(new BaseRoute({ getParentRoute: () => parent.route, path: rel || '/', loader: loader(r.file, r.splat), weft: r } as any))
+    parent.children.push(new BaseRoute({ getParentRoute: () => parent.route, path: rel || '/', loader: loader(r.file, r.splat), weft: r } as never))
   }
   // Innermost layouts first, so each route's children are attached before its parent takes it.
-  for (const n of [...new Set(nodes.values())].filter(n => n !== top).sort((a, b) => b.dir.length - a.dir.length)) if (n.children.length) n.route.addChildren(n.children)
+  for (const n of [...new Set(nodes.values())].filter(x => x !== top).sort((a, b) => b.dir.length - a.dir.length)) if (n.children.length) n.route.addChildren(n.children)
   return root.addChildren(top.children)
 }
 
@@ -794,20 +987,21 @@ function toPath(dir: string, parentDir: string) {
 function cleanParams(p: Record<string, unknown> = {}, splat?: string): Record<string, string> {
   const out: Record<string, string> = {}
   for (const k in p) if (k !== '*' && k !== '_splat') out[k] = String(p[k])
-  if (splat && p._splat !== undefined) out[splat] = String(p._splat)
+  if (splat && p._splat !== undefined) out[splat] = p._splat as string
   return out
 }
 
 function fill(pattern: string, params: Record<string, string>, splat?: string) {
-  return pattern.replace(/\$([\w$]*)/g, (_, n) => (n ? encodeURIComponent(params[n]) : String(params[splat!] ?? '')))
+  return pattern.replace(/\$([\w$]*)/g, (_, n) => (n ? encodeURIComponent(params[n]!) : params[splat!] ?? ''))
 }
 
 /** The data without its deferred (promise) fields, and their names. */
 function split(raw: unknown): { data: unknown; d?: string[] } {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { data: raw }
-  const d = Object.keys(raw).filter(k => thenable((raw as any)[k]))
+  const fields = raw as Record<string, unknown>
+  const d = Object.keys(raw).filter(k => thenable(fields[k]))
   if (!d.length) return { data: raw }
-  for (const k of d) Promise.resolve((raw as any)[k]).catch(() => {}) // a deferred failure surfaces in its Boundary
+  for (const k of d) Promise.resolve(fields[k]).catch(() => {}) // a deferred failure surfaces in its Boundary
   return { data: Object.fromEntries(Object.entries(raw).filter(([k]) => !d.includes(k))), d }
 }
 
@@ -827,7 +1021,8 @@ function settledView(raw: unknown, deferred: string[] | undefined, id: string, o
 }
 
 function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
-  return { m: r.levels.map(({ id, params, data, d, t }) => ({ id, params, data, ...(d && { d }), ...(t && { t }) })), p: r.path, s: r.status, ...(withHead && { h: r.head }) }
+  const { jsonLd: _, ...head } = r.head // only a first response carries it (`metaTags`)
+  return { m: r.levels.map(({ id, params, data, d, t }) => ({ id, params, data, ...(d && { d }), ...(t && { t }) })), p: r.path, s: r.status, ...(withHead && { h: head }) }
 }
 
 /**
@@ -875,7 +1070,7 @@ function islandsOf(html: string) {
   const parts = { now: [] as string[], lazy: [] as string[], fold: [] as string[] }
   let past = false
   for (const m of html.matchAll(/<!--wi:(\[.*?\])-->/g)) {
-    const [id, , , when] = JSON.parse(m[1]) as [string, string, unknown[], string?]
+    const [id, , , when] = JSON.parse(m[1]!) as [string, string, unknown[], string?]
     const list = when ? parts.lazy : parts.now
     if (!list.includes(id)) list.push(id)
     past ||= depth(html.slice(0, m.index)) >= FOLD
@@ -944,11 +1139,11 @@ function wire(scope: Scope): Wire[] {
 /** The request with the socket's address in CLIENT_IP, replacing any the client sent. Nitro's server sets `.ip`. */
 function stamped(request: Request): Request {
   const headers = new Headers(request.headers)
-  const ip = (request as any).ip as string | undefined
+  const { ip } = request as Request & { ip?: string }
   headers.delete(CLIENT_IP)
   if (ip) headers.set(CLIENT_IP, ip)
   // `new Request(request, …)` refuses the server's request wrapper; the parts are enough.
-  return new Request(request.url, { method: request.method, headers, ...(request.body && { body: request.body, duplex: 'half' }) } as RequestInit)
+  return new Request(request.url, { method: request.method, headers, ...(request.body && { body: request.body, duplex: 'half' }) })
 }
 
 /** The request's cookies for `persist: 'cookie'`, parsed on first read: a page with none pays nothing. */
@@ -962,10 +1157,12 @@ function cookieJar(request: Request) {
   }
 }
 
+const refresh = (v: FormDataEntryValue | null) => (typeof v === 'string' ? v : '[]')
+
 /** The multipart body `<Form>` sends when a form holds a file: the fields, and the refresh list in `$r`. */
 async function multipartBody(request: Request) {
   const data = await request.formData()
-  return { i: decodeForm(data), f: JSON.parse(String(data.get('$r') ?? '[]')) as [string, unknown][], c: 1 as const }
+  return { i: decodeForm(data), f: JSON.parse(refresh(data.get('$r'))) as [string, unknown][], c: 1 as const }
 }
 
 /** What a failed form's page gives back: no secrets (the HTML outlives the request) and no files. */

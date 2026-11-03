@@ -1,4 +1,4 @@
-import { Boundary, derived } from 'weft'
+import { Boundary, derived } from '@weft-js/core'
 
 export function Lines({ lines }: { lines: string[] }) {
   const n = derived(() => lines)

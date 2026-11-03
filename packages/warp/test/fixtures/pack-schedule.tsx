@@ -1,7 +1,7 @@
 // The schedule pack on the a11y gallery (?part=schedule): rendered by test/a11y/gallery.tsx. Everything on one page with
 // real data; `?open=…` opens an overlay. Named `XCase` exports are the hydration suite's.
-import { countByDay, type Attendee, type CalEvent, type IsoDate, type WeekDay } from '@weft/ui-core'
-import { state } from 'weft'
+import { countByDay, type Attendee, type CalEvent, type IsoDate, type WeekDay } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
 import { Toaster } from '../../src/Toast'
 import { Agenda } from '../../src/schedule/Agenda'
 import { AvailabilityEditor } from '../../src/schedule/AvailabilityEditor'
@@ -57,7 +57,7 @@ const COUNTS = countByDay(SAMPLE)
 
 export function useEvents() {
   const events = state(makeEvents())
-  const move = (e: CalEvent, to: { start: string; end: string; resource?: string }) => { events.value = events.value.map(x => (x.id === e.id ? { ...x, ...to } : x)) }
+  const move = (e: CalEvent, to: { start: string; end: string; resource?: string | undefined }) => { events.value = events.value.map(x => (x.id === e.id ? { ...x, ...to } : x)) }
   return {
     events,
     move,

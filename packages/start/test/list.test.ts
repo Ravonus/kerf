@@ -2,13 +2,14 @@
 import { DatabaseSync } from 'node:sqlite'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { drizzle } from 'drizzle-orm/sqlite-proxy'
-import { LIST_ROWS, listSuite } from 'weft/test/plugins'
-import { decodeCursor, encodeCursor, listInput } from '@weft/start/list'
-import { drizzleSource } from '@weft/start/list/drizzle'
+import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
+import type { SchemaIssue } from '@weft-js/start/data'
+import { decodeCursor, encodeCursor, listInput, type ListParams } from '@weft-js/start/list'
+import { drizzleSource } from '@weft-js/start/list/drizzle'
 
 const input = listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 10, max: 50 } })
-const parse = (v: unknown): any => input['~standard'].validate(v)
-const bad = (v: unknown) => parse(v).issues?.map((i: any) => i.message)
+const parse = (v: unknown) => input['~standard'].validate(v) as { value?: ListParams; issues?: readonly SchemaIssue[] }
+const bad = (v: unknown) => parse(v).issues?.map(i => i.message)
 
 test('a request becomes params', () => {
   expect(parse(undefined).value).toMatchObject({ mode: 'page', limit: 10, offset: 0, after: null, sort: null })
@@ -42,12 +43,12 @@ function database() {
   raw.exec('create table tasks (id text primary key, title text, status text, rank_no integer, secret text)')
   const add = raw.prepare('insert into tasks values (?, ?, ?, ?, ?)')
   for (const r of LIST_ROWS) add.run(r.id, r.title, r.status, r.rank, r.secret)
-  return drizzle(async (text, params, method) => {
-    const s = raw.prepare(text)
+  return drizzle((statement, params, method) => {
+    const s = raw.prepare(statement)
     s.setReturnArrays(true)
-    if (method === 'run' && !/returning/i.test(text)) return (s.run(...(params as any[])), { rows: [] })
-    const rows = s.all(...(params as any[])) as unknown as unknown[][]
-    return { rows: method === 'get' ? rows[0] ?? [] : rows } as any
+    if (method === 'run' && !/returning/i.test(statement)) return (s.run(...(params)), Promise.resolve({ rows: [] }))
+    const rows = s.all(...(params)) as unknown as unknown[][]
+    return Promise.resolve({ rows: method === 'get' ? rows[0] ?? [] : rows })
   })
 }
 
@@ -55,4 +56,9 @@ test('drizzleSource passes db.adapter@1', async () => {
   const checks = await listSuite({ make: () => drizzleSource({ db: database(), table: tasks }, { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }), decode: decodeCursor })
   expect(checks.filter(c => !c.ok)).toEqual([])
   expect(checks.length).toBeGreaterThan(20)
+})
+
+test('an update with nothing to write reads the row: Drizzle refuses an empty `set`', async () => {
+  const source = drizzleSource({ db: database(), table: tasks }, { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] })
+  expect(await source.update(LIST_ROWS[0]!.id, {})).toMatchObject({ id: LIST_ROWS[0]!.id, title: LIST_ROWS[0]!.title })
 })

@@ -1,0 +1,300 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.canvas {
+/* Stage (08 §6.8): the DOM lays out and the paint layer under it draws every [data-skin] element, in whatever look its
+     painters have. Before the stage is live, and in forced colours, the skins keep plain borders, so the page still reads
+     without the canvas.
+
+     Every skin's box is set here at zero specificity, from properties a page can set on any ancestor (none is declared on
+     the stage itself, so an app's own value always reaches it). The looks read the colour ones, so one set of values
+     restyles every look, in light and dark alike:
+       --stage-ink  --stage-paper  --stage-accent  --stage-soft  --stage-on-fill       colours
+       --stage-radius  --stage-radius-surface                                          corners
+       --stage-pad-button  --stage-pad-field  --stage-pad-chip  --stage-pad-card       padding
+       --stage-pad-bar  --stage-pad-clear  --stage-pad-menu  --stage-pad-option  --stage-gap  --stage-gap-card
+       --stage-menu-block                                                              menu height
+       --stage-check-size  --stage-switch-inline  --stage-switch-block                 control sizes
+       --stage-range-block  --stage-meter-block  --stage-rule-block  --stage-art-ratio
+       --stage-type-font  --stage-type-weight  --stage-type-spacing  --stage-label-size  type
+       (each stage resolves the type's to --stage-type-face, -heft and -track) */
+[data-scope="stage"] {
+    position: relative;
+    isolation: isolate;
+  }
+[data-scope="stage"] > [data-part="paint"] {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: clip;
+    pointer-events: none;
+  }
+[data-scope="stage"] > [data-part="paint"] > canvas {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+[data-scope="stage"][data-layout="scroll"] {
+    overflow: auto;
+    overscroll-behavior: contain;
+    container-type: size;
+  }
+[data-scope="stage"][data-layout="scroll"] > [data-part="paint"] {
+    position: sticky;
+    inset-block-start: 0;
+    inline-size: 100%;
+    block-size: 100cqb;
+    margin-block-end: -100cqb;
+  }
+[data-scope="stage"][data-layout="page"] > [data-part="paint"] { position: fixed; }
+[data-scope="stage"][data-rail] { scrollbar-width: none; }
+[data-scope="stage"][data-rail]::-webkit-scrollbar { display: none; }
+[data-scope="stage"][data-paint="dither"] { --stage-on-fill: var(--warp-color-surface); }
+/* A dither paints type a cell at a time, so its default face is a sans with open spacing: hairlines and serifs fall
+     between cells, and a heavy weight fills the counters. */
+[data-scope="stage"][data-paint="dither"] {
+    --stage-type-face: var(--stage-type-font, var(--warp-font-sans, system-ui));
+    --stage-type-heft: var(--stage-type-weight, 700);
+    --stage-type-track: var(--stage-type-spacing, 0.04em);
+  }
+/* -- the skins' boxes: all :where(), so any selector of an app's own wins */
+[data-scope="stage"] :where([data-skin]) {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+[data-scope="stage"] :where([data-skin]:not([data-skin="type"]):not([data-skin="clear"]):not([data-skin="rule"]):not([data-skin="bar"]):not([data-skin="art"])) {
+    border: 1px solid var(--warp-color-border-strong);
+  }
+[data-scope="stage"] :where(input[data-skin]) { appearance: none; margin: 0; background: none; color: inherit; font: inherit; }
+[data-scope="stage"] :where(select[data-skin]) { appearance: none; margin: 0; background: none; color: inherit; font: inherit; }
+[data-scope="stage"] :where(textarea[data-skin]) { appearance: none; margin: 0; background: none; color: inherit; font: inherit; resize: vertical; }
+[data-scope="stage"] :where(button[data-skin]) { appearance: none; margin: 0; background: none; color: inherit; font: inherit; }
+[data-scope="stage"] :where([data-skin="button"]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: start;
+    gap: var(--stage-gap, 0.5rem);
+    padding: var(--stage-pad-button, 0.625rem 1.125rem);
+    border-radius: var(--stage-radius, var(--warp-radius-control));
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: translate calc(var(--warp-duration-fast, 120ms) * var(--warp-motion-scale, 1)) linear;
+  }
+[data-scope="stage"] :where([data-skin="button"]:active:not(:disabled)) { translate: 0.125rem 0.125rem; }
+/* Text on a filled piece: each look sets --stage-on-fill to its fill's partner. */
+[data-scope="stage"] :where([data-skin="button"]:not([data-look="outline"])) { color: var(--stage-on-fill, var(--warp-color-accent-on-solid)); }
+[data-scope="stage"] :where([data-skin="button"][data-look="outline"]) { color: inherit; }
+[data-scope="stage"] :where([data-skin="button"]:disabled) { cursor: default; }
+[data-scope="stage"] :where([data-skin="card"]) {
+    display: grid;
+    align-content: start;
+    gap: var(--stage-gap-card, 0.75rem);
+    padding: var(--stage-pad-card, 1.25rem);
+    border-radius: var(--stage-radius-surface, var(--warp-radius-surface));
+    color: inherit;
+    text-align: start;
+    text-decoration: none;
+  }
+[data-scope="stage"] :where(details[data-skin="card"]) { display: block; }
+[data-scope="stage"] :where(details[data-skin="card"]) > :where(summary) { cursor: pointer; font-weight: 700; }
+[data-scope="stage"] :where(details[data-skin="card"]) > :where(:not(summary)) { margin-block: var(--stage-gap-card, 0.75rem) 0; }
+[data-scope="stage"] :where(a[href][data-skin="card"]),
+  [data-scope="stage"] :where(button[data-skin="card"]) {
+    cursor: pointer;
+    transition: translate calc(var(--warp-duration-fast, 120ms) * var(--warp-motion-scale, 1)) linear;
+  }
+[data-scope="stage"] :where(a[href][data-skin="card"]):hover,
+  [data-scope="stage"] :where(button[data-skin="card"]):hover { translate: -0.125rem -0.125rem; }
+[data-scope="stage"] :where([data-skin="panel"]) {
+    display: grid;
+    inline-size: min(28rem, 100%);
+    border-radius: var(--stage-radius-surface, var(--warp-radius-surface));
+  }
+[data-scope="stage"] :where([data-skin="panel"]) > :where(:not([data-skin="bar"])) { padding: var(--stage-pad-card, 1.25rem); }
+[data-scope="stage"] :where([data-skin="bar"]) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--stage-pad-bar, 0.375rem 0.75rem);
+    font-weight: 700;
+  }
+[data-scope="stage"] :where([data-skin="bar"]) > * {
+    padding-inline: 0.5rem;
+    background: var(--stage-paper, var(--warp-color-surface));
+  }
+[data-scope="stage"] :where([data-skin="field"]) {
+    inline-size: 100%;
+    min-inline-size: 0;
+    padding: var(--stage-pad-field, 0.625rem 0.75rem);
+    border-radius: var(--stage-radius, var(--warp-radius-control));
+  }
+[data-scope="stage"] :where(select[data-skin="field"]) { padding-inline-end: 2.25rem; }
+/* A StageSelect: its trigger is a field that reads as one, and its list floats in the top layer as a stage of its own,
+     with room past its edges for the look's shadow. */
+[data-scope="stage"] :where([data-part="select"]) { display: block; min-inline-size: 0; }
+[data-scope="stage"] :where(button[data-skin="field"]) { padding-inline-end: 2.25rem; text-align: start; cursor: pointer; }
+[data-scope="stage"][popover] {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 0 0.5rem 0.5rem 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    overflow: visible;
+  }
+[data-scope="stage"] :where([data-skin="menu"]) {
+    display: grid;
+    max-block-size: var(--stage-menu-block, 18rem);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: var(--stage-pad-menu, 0.375rem);
+    border: 1px solid var(--stage-ink, var(--warp-color-text));
+    border-radius: var(--stage-radius-surface, var(--warp-radius-surface));
+    background: var(--stage-paper, var(--warp-color-surface));
+    scrollbar-width: thin;
+  }
+[data-scope="stage"] :where([data-skin="option"]) {
+    padding: var(--stage-pad-option, 0.5rem 0.75rem);
+    border-radius: var(--stage-radius, var(--warp-radius-control));
+    cursor: pointer;
+    user-select: none;
+  }
+[data-scope="stage"] :where([data-skin="option"][aria-selected="true"]) { font-weight: 600; }
+[data-scope="stage"] :where([data-skin="option"][data-highlighted]) { color: var(--stage-on-fill, var(--warp-color-accent-on-solid)); background: var(--stage-accent, var(--warp-color-accent-solid)); }
+[data-scope="stage"] :where([data-skin="option"][aria-disabled="true"]) { opacity: 0.5; cursor: default; }
+/* The words in a field are the DOM's own, over the paint: a caret and a selection in the stage's colours, solid, so they read on any look. */
+[data-scope="stage"] :where([data-skin="field"]) { caret-color: var(--stage-accent, var(--warp-color-accent-solid)); }
+[data-scope="stage"] [data-skin="field"]::selection {
+    background: var(--stage-accent, var(--warp-color-accent-solid));
+    color: var(--stage-on-fill, var(--warp-color-accent-on-solid));
+    -webkit-text-fill-color: var(--stage-on-fill, var(--warp-color-accent-on-solid));
+  }
+[data-scope="stage"] :where(input[data-skin="check"]) {
+    inline-size: var(--stage-check-size, 1.375rem);
+    block-size: var(--stage-check-size, 1.375rem);
+    border-radius: var(--warp-radius-mark);
+    flex: none;
+  }
+[data-scope="stage"] :where(input[type="radio"][data-skin="check"]) { border-radius: 50%; }
+[data-scope="stage"] :where(input[data-skin="switch"]) {
+    inline-size: var(--stage-switch-inline, 2.75rem);
+    block-size: var(--stage-switch-block, 1.5rem);
+    border-radius: 999px;
+    flex: none;
+  }
+[data-scope="stage"] :where(input[data-skin="range"]) { inline-size: 100%; block-size: var(--stage-range-block, 1.75rem); border: 0; }
+[data-scope="stage"] input[data-skin="range"]::-webkit-slider-thumb { appearance: none; inline-size: 1rem; block-size: var(--stage-range-block, 1.75rem); background: none; }
+[data-scope="stage"] input[data-skin="range"]::-moz-range-thumb { inline-size: 1rem; block-size: var(--stage-range-block, 1.75rem); border: 0; background: none; }
+[data-scope="stage"] :where(progress[data-skin]),
+  [data-scope="stage"] :where(meter[data-skin]) {
+    appearance: none;
+    inline-size: 100%;
+    block-size: var(--stage-meter-block, 0.875rem);
+    border-radius: var(--stage-radius, var(--warp-radius-control));
+  }
+[data-scope="stage"] :where([data-skin="chip"]) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: var(--stage-pad-chip, 0.375rem 0.75rem);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+[data-scope="stage"] :where(button[data-skin="chip"]) { cursor: pointer; }
+[data-scope="stage"] :where(a[href][data-skin="chip"]) { cursor: pointer; }
+[data-scope="stage"] :where([data-skin="chip"][aria-pressed="true"]) { color: var(--stage-on-fill, var(--warp-color-accent-on-solid)); }
+[data-scope="stage"] :where([data-skin="rule"]) { display: block; block-size: var(--stage-rule-block, 0.375rem); border: 0; margin: 0; }
+/* The face, weight and tracking type resolves to, for a heading under an app's own unlayered h1-h6 rule to name. */
+[data-scope="stage"] {
+    --stage-type-face: var(--stage-type-font, var(--warp-font-display, inherit));
+    --stage-type-heft: var(--stage-type-weight, 700);
+    --stage-type-track: var(--stage-type-spacing, -0.02em);
+  }
+[data-scope="stage"] :where([data-skin="type"]) {
+    margin: 0;
+    font-family: var(--stage-type-face);
+    font-weight: var(--stage-type-heft);
+    letter-spacing: var(--stage-type-track);
+    line-height: 1;
+    text-decoration: none;
+  }
+[data-scope="stage"] :where([data-skin="art"]) {
+    display: block;
+    aspect-ratio: var(--stage-art-ratio, 16 / 9);
+    border-radius: var(--stage-radius-surface, var(--warp-radius-surface));
+  }
+[data-scope="stage"] :where([data-skin="clear"]) {
+    padding: var(--stage-pad-clear, 0.5rem 0.75rem);
+    border-radius: var(--stage-radius, var(--warp-radius-control));
+  }
+/* Two parts for the words around controls: a label over its field, and an option beside its check or switch. */
+[data-scope="stage"] :where([data-part="label"]) {
+    display: grid;
+    gap: 0.375rem;
+    font-size: var(--stage-label-size, 0.875rem);
+    font-weight: 600;
+  }
+[data-scope="stage"] :where([data-part="option"]) {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+  }
+/* live: the DOM gives up its paint and keeps its text, its caret and its focus; the stage draws the rest */
+[data-scope="stage"][data-state="live"] [data-skin] {
+    border-color: transparent;
+    background: none;
+    box-shadow: none;
+    outline: none;
+  }
+[data-scope="stage"][data-state="live"] progress[data-skin],
+  [data-scope="stage"][data-state="live"] meter[data-skin] { opacity: 0; }
+/* the text stays for selection and readers; the fill, not the colour, so an app's own heading colours can't show it */
+[data-scope="stage"][data-state="live"] [data-skin="type"] { -webkit-text-fill-color: transparent; }
+[data-scope="stage"] [data-skin="type"]::selection { -webkit-text-fill-color: var(--warp-color-text); }
+/* A veiled stage is a modal's whole view: the dialog spans the viewport, clear, and the stage centres its panel. */
+[data-scope="stage"][data-veil] {
+    display: grid;
+    place-items: center;
+    min-block-size: 100%;
+    padding: var(--warp-space-group, 1rem);
+  }
+dialog:has(> [data-scope="stage"][data-veil]) {
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+  }
+dialog:has(> [data-scope="stage"][data-veil])::backdrop { background: none; }
+/* The panel rises and settles as the dialog opens, in every look: painters follow its box, so the paint moves with it. */
+@media (prefers-reduced-motion: no-preference) {
+[data-scope="stage"][data-veil] > [data-skin="panel"] {
+      animation: stage-panel-in calc(var(--warp-duration-base, 220ms) * var(--warp-motion-scale, 1)) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+}
+@media (forced-colors: active) {
+[data-scope="stage"] > [data-part="paint"] { display: none; }
+[data-scope="stage"][data-state="live"] [data-skin] { border-color: CanvasText; }
+[data-scope="stage"][data-state="live"] [data-skin]:focus-visible { outline: 2px solid Highlight; }
+[data-scope="stage"][data-state="live"] [data-skin="type"] { -webkit-text-fill-color: CanvasText; }
+[data-scope="stage"] [data-skin="button"] { color: ButtonText; }
+}
+@keyframes stage-panel-in {
+    from { translate: 0 0.75rem; scale: 0.97; }
+  }
+}

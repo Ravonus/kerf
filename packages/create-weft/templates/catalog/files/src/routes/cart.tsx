@@ -1,6 +1,6 @@
-import type { Meta } from '@weft/start'
-import { Center, Heading, Stack, Toaster } from '@weft/warp'
-import { Boundary } from 'weft'
+import type { Meta } from '@weft-js/start'
+import { Center, Heading, Stack, Toaster } from '@weft-js/warp'
+import { Boundary } from '@weft-js/core'
 import { CartLines, CartLoading } from '#/components/CartLines'
 import { Failed } from '#/components/Failed'
 

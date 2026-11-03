@@ -1,5 +1,5 @@
 import '../theme.css'
-import type { RouteProps } from '@weft/start'
+import type { RouteProps } from '@weft-js/start'
 import { SiteFooter } from '#/components/SiteFooter'
 import { SiteHeader } from '#/components/SiteHeader'
 

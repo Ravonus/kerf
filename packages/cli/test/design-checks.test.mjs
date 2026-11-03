@@ -5,7 +5,7 @@ import { check } from '../src/check.mjs'
 import { fix } from '../src/fix.mjs'
 import { project } from './helpers.mjs'
 
-const warpPkg = { 'package.json': JSON.stringify({ name: 'a', dependencies: { weft: '*', '@weft/warp': '*' } }) }
+const warpPkg = { 'package.json': JSON.stringify({ name: 'a', dependencies: { '@weft-js/core': '*', '@weft-js/warp': '*' } }) }
 const codes = r => r.diagnostics.filter(d => d.code.startsWith('D0')).map(d => d.code).sort()
 const run = async (src, files = warpPkg) => {
   const root = project({ ...files, 'src/Page.tsx': src })
@@ -25,7 +25,7 @@ const app = async pages => {
   const root = project({ ...warpPkg, ...pages })
   return { root, result: await check(root, { files: Object.keys(pages) }) }
 }
-const IMPORT = `import { Heading } from '@weft/warp'\n`
+const IMPORT = `import { Heading } from '@weft-js/warp'\n`
 
 describe('what isn\'t off-system', () => {
   const sheet = (css, path = 'src/app.css') => app({ [path]: css, 'src/Page.tsx': 'export const P = () => <p>x</p>' })
@@ -116,7 +116,7 @@ describe('role drift', () => {
       'src/A.tsx': `${IMPORT}export const A = () => <><Heading level={1} role="display">A</Heading><Heading level={1} role="display">B</Heading></>`,
       'src/B.tsx': `${IMPORT}export const B = () => <Heading level={1}>C</Heading>`,
     })
-    const [d, ...rest] = result.diagnostics.filter(d => d.code === 'D006')
+    const [d, ...rest] = result.diagnostics.filter(x => x.code === 'D006')
     expect(rest).toEqual([])
     expect(apply(root, d)).toContain('<Heading role="display" level={1}>C</Heading>')
   })
@@ -127,10 +127,10 @@ describe('role drift', () => {
       'src/C.tsx': `${IMPORT}export const C = () => <Heading level={3}>D</Heading>`,
     })
     const ds = result.diagnostics.filter(d => d.code === 'D006')
-    expect(ds.map(d => d.file).sort()).toEqual(['src/A.tsx', 'src/B.tsx'])
+    expect(ds.map(d => d.file).sort((a, b) => a.localeCompare(b))).toEqual(['src/A.tsx', 'src/B.tsx'])
     const fixed = apply(root, ds.find(d => d.file === 'src/B.tsx'))
     expect(fixed).toContain('<Heading level={3}>C</Heading>')
-    expect(fixed).toContain(`import { Heading } from '@weft/warp'`)
+    expect(fixed).toContain(`import { Heading } from '@weft-js/warp'`)
   })
   test('D006 leaves one role per level, a hidden role, and an allowed exception alone', async () => {
     const { result } = await app({
@@ -145,13 +145,18 @@ describe('role drift', () => {
     const root = project({ 'package.json': JSON.stringify({ name: 'a' }), 'src/A.tsx': `export const A = ({ Heading }) => <><Heading level={1}>A</Heading><Heading level={1} role="display">B</Heading></>` })
     expect(codes(await check(root, { files: ['src/A.tsx'] }))).toEqual([])
   })
+  test('D040 the style gate on main content, and not on a side part', async () => {
+    const { result } = await run(`export const P = () => <main data-weft="styled"><aside data-weft="styled">x</aside></main>`)
+    expect(result.diagnostics.filter(d => d.code === 'D040').length).toBe(1)
+  })
+
   test('D007 a bare link is swapped for Link, and the import follows', async () => {
-    const { root, result } = await run(`import { Row } from '@weft/warp'\nexport const P = () => <Row as="nav"><a href="/a">Home</a></Row>`)
-    const d = result.diagnostics.find(d => d.code === 'D007')
+    const { root, result } = await run(`import { Row } from '@weft-js/warp'\nexport const P = () => <Row as="nav"><a href="/a">Home</a></Row>`)
+    const d = result.diagnostics.find(x => x.code === 'D007')
     expect(d.fix.safe).toBe(false)
     const fixed = apply(root, d)
     expect(fixed).toContain('<Link href="/a">Home</Link>')
-    expect(fixed).toContain(`import { Row, Link } from '@weft/warp'`)
+    expect(fixed).toContain(`import { Row, Link } from '@weft-js/warp'`)
     expect(codes(await check(root, { files: ['src/Page.tsx'] }))).toEqual([])
   })
   test('D007 leaves a styled link, an anchor with no href, and a name that is taken', async () => {
@@ -169,13 +174,13 @@ describe('role drift', () => {
 describe('values (an app with warp)', () => {
   test('D001 a raw colour, with no autofix', async () => {
     const { result } = await run(`export const P = () => <p style={{ color: '#7c3aed' }}>x</p>`)
-    const d = result.diagnostics.find(d => d.code === 'D001')
+    const d = result.diagnostics.find(x => x.code === 'D001')
     expect(d.why).toContain('#7c3aed')
     expect(d.fix.edits).toBeUndefined()
   })
   test('D002 a scale step by hand has a safe fix that keeps the type', async () => {
     const { root, result } = await run(`export const P = () => <p style={{ padding: '16px' }}>x</p>`)
-    const d = result.diagnostics.find(d => d.code === 'D002')
+    const d = result.diagnostics.find(x => x.code === 'D002')
     expect(d.fix.safe).toBe(true)
     expect(apply(root, d)).toContain(`padding: 'var(--warp-space-group)'`)
     expect(codes(await check(root, { files: ['src/Page.tsx'] }))).toEqual([])
@@ -205,18 +210,23 @@ describe('values (an app with warp)', () => {
   })
   test('D004 a hand-rolled stack becomes <Stack> with its import', async () => {
     const { root, result } = await run(`export function P() {\n  return <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}><p>x</p></div>\n}\n`)
-    const d = result.diagnostics.find(d => d.code === 'D004')
+    const d = result.diagnostics.find(x => x.code === 'D004')
     const text = apply(root, d)
     expect(text).toContain(`<Stack gap="group"><p>x</p></Stack>`)
-    expect(text.startsWith(`import { Stack } from '@weft/warp'\n`)).toBe(true)
-    expect((await check(root, { files: ['src/Page.tsx'] })).diagnostics.filter(d => d.code === 'D004')).toEqual([])
+    expect(text.startsWith(`import { Stack } from '@weft-js/warp'\n`)).toBe(true)
+    expect((await check(root, { files: ['src/Page.tsx'] })).diagnostics.filter(x => x.code === 'D004')).toEqual([])
   })
   test('D004 Tailwind classes, into an existing import', async () => {
-    const { root, result } = await run(`import { Card } from '@weft/warp'\nexport const P = () => <section class="flex gap-2"><Card /></section>\n`)
+    const { root, result } = await run(`import { Card } from '@weft-js/warp'\nexport const P = () => <section class="flex gap-2"><Card /></section>\n`)
     const text = apply(root, result.diagnostics.find(d => d.code === 'D004'))
-    expect(text).toContain(`import { Card, Row } from '@weft/warp'`)
+    expect(text).toContain(`import { Card, Row } from '@weft-js/warp'`)
     expect(text).toContain(`<Row as="section" gap="related"><Card /></Row>`)
   })
+  test('D005 an input type or title the browser paints', async () => {
+    const { result } = await run(`import { Input } from '@weft-js/warp'\nexport const A = () => <><Input label="N" type="number" /><input type="date" aria-label="D" /><span title="x">y</span><input data-part="sr-only" type="range" aria-label="R" /><iframe title="f" /></>`)
+    expect(result.diagnostics.filter(d => d.code === 'D005')).toHaveLength(3)
+  })
+
   test('D005 a native button becomes Button', async () => {
     const { root, result } = await run(`export const P = () => <button onClick={() => {}}>Save</button>\n`)
     expect(apply(root, result.diagnostics.find(d => d.code === 'D005'))).toContain(`<Button onClick={() => {}}>Save</Button>`)
@@ -260,6 +270,9 @@ describe('contrast and accessibility (every app)', () => {
     ['D036', `<input aria-label="x" class="outline-none" />`],
     ['D037', `<p tabindex="3">x</p>`],
     ['D035', `<><h1>a</h1><h3>b</h3></>`],
+    ['D041', `<span data-part="req" title="Required" aria-label="required"></span>`],
+    ['D041', `<div aria-labelledby="t">x</div>`],
+    ['D041', `<p role="presentation" aria-label="x">y</p>`],
   ])('%s %s', async (code, jsx) => {
     const { result } = await run(`export const P = () => ${jsx}`, bare)
     expect(codes(result)).toContain(code)
@@ -270,7 +283,7 @@ describe('contrast and accessibility (every app)', () => {
     `<input aria-label="Name" />`,
     `<input type="hidden" />`,
     `<input {...attrs} />`,
-    '<><label for={`${id}-a`}>Name</label><input id={`${id}-a`} /></>',
+    `<><label for={\`\${id}-a\`}>Name</label><input id={\`\${id}-a\`} /></>`,
     `<input aria-hidden="true" tabindex={-1} name="website" />`,
     `<Field label="Name" for="a"><input id="a" /></Field>`,
     `<Field label="Name"><input /></Field>`,
@@ -285,6 +298,9 @@ describe('contrast and accessibility (every app)', () => {
     `<input aria-label="x" class="outline-none focus-visible:ring-2" />`,
     `<><h1>a</h1><h2>b</h2><h3>c</h3><h2>d</h2></>`,
     `<label>Pick <button>one</button></label>`,
+    `<span role="img" aria-label="required"></span>`,
+    `<div role="region" aria-label="Prices" tabindex="0">x</div>`,
+    `<nav aria-label="Main">x</nav>`,
   ])('quiet: %s', async jsx => {
     const { result } = await run(`const attrs = {}, label = 'x'\nexport const P = () => ${jsx}`, bare)
     expect(codes(result)).toEqual([])
@@ -293,12 +309,12 @@ describe('contrast and accessibility (every app)', () => {
     const { root, result } = await run(`export const P = () => <div onClick={() => {}}>x</div>\n`, bare)
     expect(apply(root, result.diagnostics.find(d => d.code === 'D033'))).toContain(`<button type="button" onClick={() => {}}>x</button>`)
     const two = await run(`export const P = () => <p tabindex="3">x</p>\n`, bare)
-    const d = two.result.diagnostics.find(d => d.code === 'D037')
+    const d = two.result.diagnostics.find(x => x.code === 'D037')
     expect(d.fix.safe).toBe(true)
     expect(apply(two.root, d)).toContain(`tabindex="0"`)
   })
   test('warp: Heading level drives D035, two solids are D038, a name goes in `label`', async () => {
-    const { result } = await run(`import { Button, Heading } from '@weft/warp'\nexport const P = () => <form><Heading level={1}>a</Heading><Heading level={4}>b</Heading><Button>Save</Button><Button>Send</Button><Button emphasis="ghost">No</Button><Button label="Close"><svg /></Button></form>\n`)
+    const { result } = await run(`import { Button, Heading } from '@weft-js/warp'\nexport const P = () => <form><Heading level={1}>a</Heading><Heading level={4}>b</Heading><Button>Save</Button><Button>Send</Button><Button emphasis="ghost">No</Button><Button label="Close"><svg /></Button></form>\n`)
     expect(codes(result).filter(c => c !== 'D038')).toEqual(['D035'])
     expect(result.diagnostics.filter(d => d.code === 'D038')).toHaveLength(2)
   })
@@ -309,8 +325,8 @@ describe('contrast and accessibility (every app)', () => {
 })
 
 describe('which apps get the token codes', () => {
-  test('headless @weft/ui-core has no tokens, so a fix would point at variables that do not exist', async () => {
-    const { result } = await run(`export const P = () => <p style={{ padding: '16px' }}>x</p>`, { 'package.json': JSON.stringify({ name: 'a', dependencies: { weft: '*', '@weft/ui-core': '*' } }) })
+  test('headless @weft-js/warp-core has no tokens, so a fix would point at variables that do not exist', async () => {
+    const { result } = await run(`export const P = () => <p style={{ padding: '16px' }}>x</p>`, { 'package.json': JSON.stringify({ name: 'a', dependencies: { '@weft-js/core': '*', '@weft-js/warp-core': '*' } }) })
     expect(codes(result)).toEqual([])
   })
 })
@@ -334,15 +350,20 @@ describe('weft fix', () => {
   test('applies the safe fixes and leaves the suggestions', async () => {
     const root = project({ ...warpPkg, 'src/Page.tsx': `export const P = () => <section style={{ padding: '16px', gap: 8 }} tabindex="2"><div onClick={() => {}}>x</div></section>\n` })
     const { applied } = await fix(root, { files: ['src/Page.tsx'] })
-    expect(applied.map(a => a.code).sort()).toEqual(['D002', 'D002', 'D037'])
+    expect(applied.map(a => a.code).sort((a, b) => a.localeCompare(b))).toEqual(['D002', 'D002', 'D037'])
     const text = readFileSync(join(root, 'src/Page.tsx'), 'utf8')
     expect(text).toContain(`padding: 'var(--warp-space-group)', gap: 'var(--warp-space-related)'`)
     expect(text).toContain('tabindex="0"')
     expect(text).toContain('<div onClick') // D033 changes the element: the agent's call
   })
   test('compiler autofixes go through it too', async () => {
-    const root = project({ 'src/Page.tsx': `import { state } from 'weft'\nexport function P() { const n = state(0); return <p>{n}</p> }\n` })
+    const root = project({ 'src/Page.tsx': `import { state } from '@weft-js/core'\nexport function P() { const n = state(0); return <p>{n}</p> }\n` })
     expect((await fix(root, { files: ['src/Page.tsx'] })).applied.map(a => a.code)).toEqual(['W015'])
     expect(readFileSync(join(root, 'src/Page.tsx'), 'utf8')).toContain('{n.value}')
   })
+})
+
+test('a share card is an image: its raw colours and sizes are fine', async () => {
+  const root = project({ ...warpPkg, 'src/routes/_default.og.tsx': 'export default function Card() { return <div style="color:#123456;padding:13px"><img src="/a.png" /></div> }' })
+  expect((await check(root)).diagnostics.filter(d => d.code.startsWith('D0') && d.file.endsWith('.og.tsx'))).toEqual([])
 })

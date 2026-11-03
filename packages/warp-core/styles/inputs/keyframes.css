@@ -1,0 +1,14 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs {
+/* -- keyframes ---------------------------------------------------------- */
+@keyframes warp-field-spin { to { rotate: 1turn; } }
+@keyframes warp-caret { 50% { opacity: 0; } }
+/* scale only: a fade would leave the text under 4.5:1 while it lands, and tags already on the page play it at load */
+@keyframes warp-field-pop { from { scale: calc(1 - 0.18 * var(--warp-motion-scale)); } }
+@keyframes warp-field-shake {
+  15% { translate: calc(var(--_shk) * -6) 0; }
+  35% { translate: calc(var(--_shk) * 5) 0; }
+  55% { translate: calc(var(--_shk) * -3) 0; }
+  75% { translate: calc(var(--_shk) * 2) 0; }
+}
+}

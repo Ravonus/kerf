@@ -1,0 +1,140 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* ---------------------------------------------------------------------------
+   S · THE SWEEP. Parts, colour, weight and phases come from @layer warp.signature
+   (tokens/warp.css) unchanged. Components only set tokens on their OWN hosts:
+   --warp-sweep-radius (match the host's corners), --warp-color-sweep (tone) and
+   --_on (the signature's gate; static surfaces use the dial's surface reach).
+   ------------------------------------------------------------------------ */
+:where([data-scope="chip"]),
+:where([data-scope="pill"]) { --warp-sweep-radius: var(--warp-radius-round); }
+:where([data-scope="surface"]),
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
+:where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--warp-sweep-surfaces); }
+:where([data-part="content"][hidden]),
+:where([data-part="content"][popover]:not(:popover-open)) { display: none; }
+/* bracket corners: [data-part="frame-corners"] + [data-part="sweep-corners"] (warp.signature §1b) */
+
+/* ---------------------------------------------------------------------------
+   0 · Plumbing: tone channels, icon strokes, shared state layer, panels
+   ------------------------------------------------------------------------ */
+:where([data-scope]) {
+  --_solid: var(--warp-color-accent-solid); --_solid-hover: var(--warp-color-accent-solid-hover);
+  --_ink-on: var(--warp-color-accent-on-solid); --_soft: var(--warp-color-accent-soft);
+  --_text: var(--warp-color-accent-text);   --_border: var(--warp-color-accent-border);
+}
+:where([data-tone="neutral"]) {
+  --_solid: var(--warp-color-neutral-solid); --_solid-hover: var(--warp-color-neutral-solid-hover);
+  --_ink-on: var(--warp-color-neutral-on-solid); --_soft: var(--warp-color-neutral-soft);
+  --_text: var(--warp-color-neutral-text);   --_border: var(--warp-color-neutral-border);
+}
+:where([data-tone="positive"]) {
+  --_solid: var(--warp-color-positive-solid); --_solid-hover: var(--warp-color-positive-solid-hover);
+  --_ink-on: var(--warp-color-positive-on-solid); --_soft: var(--warp-color-positive-soft);
+  --_text: var(--warp-color-positive-text);   --_border: var(--warp-color-positive-border);
+}
+:where([data-tone="caution"]) {
+  --_solid: var(--warp-color-caution-solid); --_solid-hover: var(--warp-color-caution-solid-hover);
+  --_ink-on: var(--warp-color-caution-on-solid); --_soft: var(--warp-color-caution-soft);
+  --_text: var(--warp-color-caution-text);   --_border: var(--warp-color-caution-border);
+}
+:where([data-tone="critical"]) {
+  --_solid: var(--warp-color-critical-solid); --_solid-hover: var(--warp-color-critical-solid-hover);
+  --_ink-on: var(--warp-color-critical-on-solid); --_soft: var(--warp-color-critical-soft);
+  --_text: var(--warp-color-critical-text);   --_border: var(--warp-color-critical-border);
+}
+:where([data-tone="info"]) {
+  --_solid: var(--warp-color-info-solid); --_solid-hover: var(--warp-color-info-solid-hover);
+  --_ink-on: var(--warp-color-info-on-solid); --_soft: var(--warp-color-info-soft);
+  --_text: var(--warp-color-info-text);   --_border: var(--warp-color-info-border);
+}
+
+/* icons: 24 grid, 1.5 stroke (→ 1px at 16), round caps; square at vivid */
+:where(svg[data-icon]) {
+  inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); flex: none;
+  fill: none; stroke: currentColor; stroke-width: var(--warp-icon-stroke);
+  stroke-linecap: round; stroke-linejoin: round;
+}
+:where([data-expression="vivid"] svg[data-icon]) { stroke-linecap: square; stroke-linejoin: miter; }
+:where([data-expression="quiet"] svg[data-icon]),
+:where([data-expression="balanced"] svg[data-icon]) { stroke-linecap: round; stroke-linejoin: round; }
+
+/* kbd */
+:where(kbd[data-scope="kbd"]) {
+  display: inline-grid; place-items: center; min-inline-size: 20px; block-size: 20px; padding-inline: 5px;
+  border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-block-end-width: 2px;
+  border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-raised);
+  font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle);
+}
+
+/* a modal open: the page behind holds still. data-scrollbar (dialog()) keeps a classic scrollbar's room, so nothing shifts */
+html:has(dialog:modal) { overflow: hidden; }
+html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
+
+/* visually hidden (live regions, labels) */
+:where([data-part="sr-only"]),
+:where([data-scope="announcer"]) {
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
+}
+
+/* shared floating panel (menu, popover, select, hover card, context menu) */
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="popover"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="hover-card"][data-part="content"]) {
+  --_side-x: 0; --_side-y: -1;   /* the anchor is above → enter downward, leave upward */
+  position: fixed; inset: auto; margin: 0; box-sizing: border-box;
+  min-inline-size: 180px; max-inline-size: min(360px, calc(100vw - 16px));
+  max-block-size: min(var(--_avail, 480px), calc(100dvh - 16px)); overflow: auto; overscroll-behavior: contain;
+  padding: var(--warp-space-tight);
+  background: var(--warp-color-surface-overlay); color: var(--warp-color-text);
+  border: var(--warp-border-hairline) solid var(--warp-color-border);
+  border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-2);
+  font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading);
+  transform-origin: var(--warp-origin, var(--_origin, top left));
+  /* exit state (also the base): toward the anchor by half the distance */
+  opacity: 0;
+  translate: calc(var(--_side-x) * var(--warp-motion-distance) * 0.5) calc(var(--_side-y) * var(--warp-motion-distance) * 0.5);
+  scale: var(--warp-motion-scale-from);
+  transition:
+    opacity calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+    translate calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+    scale calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+    overlay calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete,
+    display calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete;
+}
+:where([data-scope="menu"][data-part="content"]):where(:popover-open),
+:where([data-scope="menu"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="popover"][data-part="content"]):where(:popover-open),
+:where([data-scope="popover"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="select"][data-part="content"]):where(:popover-open),
+:where([data-scope="select"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="hover-card"][data-part="content"]):where(:popover-open),
+:where([data-scope="hover-card"][data-part="content"]):where([data-state="open"]) {
+  opacity: 1; translate: 0 0; scale: 1;
+  transition:
+    opacity var(--warp-duration-fast) var(--warp-ease-out),
+    translate var(--warp-spring-duration) var(--warp-ease-spring),
+    scale var(--warp-spring-duration) var(--warp-ease-spring),
+    overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete;
+}
+@starting-style {
+  :where([data-scope="menu"][data-part="content"]):popover-open,
+  :where([data-scope="popover"][data-part="content"]):popover-open,
+  :where([data-scope="select"][data-part="content"]):popover-open,
+  :where([data-scope="hover-card"][data-part="content"]):popover-open {
+    opacity: 0; scale: var(--warp-motion-scale-from);
+    translate: calc(var(--_side-x) * var(--warp-motion-distance)) calc(var(--_side-y) * var(--warp-motion-distance));
+  }
+}
+:where([data-side="top"])    { --_side-x: 0;  --_side-y: 1;  --_origin: bottom left; }
+:where([data-side="bottom"]) { --_side-x: 0;  --_side-y: -1; --_origin: top left; }
+:where([data-side="right"])  { --_side-x: -1; --_side-y: 0;  --_origin: top left; }
+:where([data-side="left"])   { --_side-x: 1;  --_side-y: 0;  --_origin: top right; }
+
+/* ---------------------------------------------------------------------------
+   1 · ACTIONS
+   ------------------------------------------------------------------------ */
+}

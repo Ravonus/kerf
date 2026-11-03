@@ -6,6 +6,7 @@ const CSS = `[data-scope=cursors]{position:fixed;inset:0;pointer-events:none;ove
 [data-scope=cursors] [data-part=name]{margin-left:10px;padding:1px 6px;border-radius:6px;font:12px/1.4 system-ui;color:#fff}
 @media (prefers-reduced-motion:reduce){[data-scope=cursors] [data-part=cursor]{transition:none}}`
 
+/** Draws everyone else's cursors from `cursors(room)`, each with its peer's name and colour. */
 export function Cursors<S>(props: { of: Tracker<S> }) {
   return (
     <div aria-hidden="true" data-scope="cursors">

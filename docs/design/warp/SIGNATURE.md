@@ -1,7 +1,7 @@
 # warp signature: the sweep (non-negotiable)
 
 The user's words: the original inputs, and the sweep above all, are **the part of the old design to keep**. Every warp
-designer builds on this. It isn't an option, and it isn't vivid-only. The dial changes speed and which surfaces sweep by default,
+designer builds on this. It isn't an option, and it isn't vivid-only. The dial changes speed and how much a click target answers,
 never whether inputs and controls sweep, and never makes the stroke faint.
 
 The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
@@ -66,8 +66,8 @@ Source: `buttons/core/Button.frame.tsx` and `theme/tokens.css:228-480`.
      copy of the label in the **text** colour wipes in over it, left to right, with `clip-path`.
 3. **On leave:** the outline **keeps travelling** (its tail follows its head, the original's `dashoffset: 0 → -1`),
    so it exits through the right side. The corners and content clip out to the right.
-4. **Timing: 760 ms**, `cubic-bezier(0.65,0,0.35,1)`: the original's `--btn-sweep-duration`, longer than the 620 ms
-   field sweep. Token `--warp-frame-duration` (quiet 590 ms, balanced 760 ms, vivid 760 ms; 0 under reduced motion).
+4. **Timing: 640 ms**, `cubic-bezier(0.65,0,0.35,1)`: the original's `--btn-sweep-duration`, longer than the 520 ms
+   field sweep. Token `--warp-frame-duration` (quiet 490 ms, balanced 640 ms, vivid 640 ms; 0 under reduced motion).
    The frame host runs every part on it.
 5. **Filled variant** (`btn-border-sweep-filled`): a tone fill slides in from the left (`translateX(-101%) → 0`) and
    leaves to the right (`→ 101%`).
@@ -121,7 +121,8 @@ Source: `inputs/choice/Switch.tsx`.
 7. **Messages:** hint and error text slide in (180 ms) under the field.
 
 **Surfaces exception (decided 2026-10-28).** Cards, panels, stat tiles and kanban cards rest on the thin hairline
-border, which keeps the streamlined look. Inputs and controls rest on the ink border. Over a hairline, the full-accent
+border (`--warp-color-surface-line`), which keeps the streamlined look; at quiet they rest on shadow alone, with no
+line. Inputs and controls rest on the ink border; segmented groups and switches rest on the hairline, ink for focus. Over a hairline, the full-accent
 sweep stands out by hue even where the luminance ratio is 1.5–3:1, so surfaces only need sweep-vs-surface ≥ 3:1.
 Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it was invisible.
 
@@ -131,11 +132,11 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 |---|---|---|---|
 | Sweep | present everywhere it's used | present, the original | present, the original |
 | Sweep colour | full accent (only faster) | full accent | full accent, richer contrast |
-| Sweep speed | about 480 ms | 620 ms | 620–760 ms |
+| Sweep speed | about 400 ms | 520 ms | 520–640 ms |
 | Floating label + notch | yes | yes | yes |
 | Per-character label tint | yes (subtle by colour) | yes | yes |
 | Icon sweep | yes | yes | yes |
-| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | plus cards, panels, stat rows |
+| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | the same, plus the two-colour button fill. Static cards and panels never sweep; a card you can press does, at every stop |
 
 **Reduced motion:**
 - The sweep becomes an instant border-colour change.

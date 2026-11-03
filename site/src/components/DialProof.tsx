@@ -1,5 +1,5 @@
-import { Badge, Button, Input, Segmented, Switch } from '@weft/warp'
-import { state } from 'weft'
+import { Badge, Button, Input, Segmented, Switch } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 
 type Stop = 'quiet' | 'balanced' | 'vivid'
 

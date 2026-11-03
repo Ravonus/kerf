@@ -1,11 +1,11 @@
 # Styling: style groups
 
-Style with **groups** from `weft/style`, not class lists. A group is a named thing (`order-card`), its variations
+Style with **groups** from `@weft-js/core/style`, not class lists. A group is a named thing (`order-card`), its variations
 (axes), its pieces (parts) and its states, all written in tokens. The markup says what an element is and which
 variation it's in: `<article data-g="order-card" data-status="late">`.
 
 ```tsx
-import { group } from 'weft/style'
+import { group } from '@weft-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
@@ -15,6 +15,8 @@ export const orderCard = group('order-card', {
   states: { selected: { ring: 'accent' } },
   defaults: { status: 'open' },
 })
+
+type Order = { name: string; date: string; status: 'open' | 'shipped' | 'late' }
 
 export function OrderCard(props: { order: Order; selected: boolean }) {
   return (

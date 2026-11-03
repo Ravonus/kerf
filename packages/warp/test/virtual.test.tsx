@@ -1,17 +1,17 @@
 // The collections driven as a user would, on a deterministic `text.measure`. Real scrolling and real line breaks are in
 // scripts/virtual.mjs: jsdom has no layout.
 import { fireEvent } from '@testing-library/dom'
-import { state } from 'weft'
-import { fakeMeasure, flush, render } from 'weft/test'
+import { state } from '@weft-js/core'
+import { fakeMeasure, flush, render } from '@weft-js/core/test'
 import { Feed } from '../src/Feed'
-import type { ChatMessage } from '@weft/ui-core'
+import type { ChatMessage } from '@weft-js/warp-core'
 import { Kanban, type KanbanCardData, type KanbanColumn } from '../src/collab/Kanban'
 import { ScrollGrid } from '../src/ScrollGrid'
 import { Thread } from '../src/collab/Thread'
 import { Toaster } from '../src/Toast'
 import { VirtualList, type VirtualControl } from '../src/VirtualList'
 
-const settle = async () => { for (let i = 0; i < 4; i++) { await flush(); await new Promise(r => setTimeout(r)) } }
+const settle = async () => { for (let i = 0; i < 4; i++) { await flush(); await new Promise(r => { setTimeout(r) }) } }
 const slots = { slots: { 'text.measure': fakeMeasure() } }
 const rows = (c: Element) => [...c.querySelectorAll<HTMLElement>('[data-part="row"]:not([data-probe])')]
 
@@ -22,8 +22,8 @@ test('VirtualList: 10,000 items, a window of rows, each saying where it is in th
   const out = rows(c)
   expect(out.length).toBeGreaterThan(0)
   expect(out.length).toBeLessThan(40)
-  expect(out[0].getAttribute('aria-posinset')).toBe('1')
-  expect(out[0].getAttribute('aria-setsize')).toBe('10000')
+  expect(out[0]!.getAttribute('aria-posinset')).toBe('1')
+  expect(out[0]!.getAttribute('aria-setsize')).toBe('10000')
   expect(c.querySelector('[role="list"]')!.getAttribute('aria-label')).toBe('Rows')
 })
 
@@ -38,7 +38,7 @@ test('VirtualList: a row with the same key keeps its node when its data changes 
   const items = state(Array.from({ length: 50 }, (_, i) => ({ id: i, text: `row ${i}` })))
   const { container: c } = render(() => <VirtualList items={items.value} rowKey={r => r.id}>{r => <span>{r().text}</span>}</VirtualList>)
   await settle()
-  const first = rows(c)[0]
+  const first = rows(c)[0]!
   items.value = [{ id: -1, text: 'new' }, ...items.value.map(r => (r.id === 0 ? { ...r, text: 'changed' } : r))]
   await settle()
   expect(first.isConnected).toBe(true)
@@ -64,6 +64,17 @@ test('VirtualList: the focused row stays rendered, and keys move a single tab st
   expect(document.activeElement!.getAttribute('aria-posinset')).toBe('1')
 })
 
+test('VirtualList: the same window over new keys renders the new rows, not just the keys both share', async () => {
+  const items = state(Array.from({ length: 100 }, (_, i) => ({ id: i * 6 })))
+  const { container: c } = render(() => <VirtualList items={items.value} rowKey={r => r.id}>{r => <span>{r().id}</span>}</VirtualList>)
+  await settle()
+  const before = rows(c).length
+  items.value = Array.from({ length: 100 }, (_, i) => ({ id: i * 5 }))
+  await settle()
+  expect(rows(c).length).toBe(before)
+  expect(rows(c)[1]!.textContent).toBe('5')
+})
+
 const mei = { id: 'mei', name: 'Mei' }, me = { id: 'me', name: 'Me' }, ana = { id: 'ana', name: 'Ana' }
 const chat = (n: number): ChatMessage[] => Array.from({ length: n }, (_, i) => ({ id: `m${i}`, author: i % 4 === 3 ? me : mei, mine: i % 4 === 3, text: `hello ${i}`, time: '09:41', at: i * 1000, day: 'Today', state: i % 4 === 3 ? 'sent' as const : undefined }))
 
@@ -76,7 +87,7 @@ test('Thread: a window of 5,000 messages; its live region is off, so scrolling a
   expect(rows(c).at(-1)!.textContent).toContain('hello 4999')
   messages.value = [...messages.value, { id: 'n', author: ana, text: 'hi', time: '09:42', at: 1e9 }]
   await settle()
-  await new Promise(r => setTimeout(r, 1100)) // the summary waits for quiet
+  await new Promise(r => { setTimeout(r, 1100) }) // the summary waits for quiet
   expect(document.querySelector('[aria-live="polite"][role="status"], [aria-live="polite"]')!.closest('body')!.textContent).toContain('New message from Ana')
 })
 
@@ -96,12 +107,12 @@ test('Thread: arrow keys reach a message outside the window, and it holds focus 
 
 test('Thread: Jump to original brings a quoted message back into the window', async () => {
   const all = chat(2000)
-  all[1999] = { ...all[1999], quote: { ref: 'm0', text: 'hello 0' } }
+  all[1999] = { ...all[1999]!, quote: { ref: 'm0', text: 'hello 0' } }
   const { container: c } = render(() => <Thread label="Team" messages={all} />, {}, slots)
   await settle()
   c.querySelector<HTMLElement>('[data-jump="m0"]')!.click()
   await settle()
-  await new Promise(r => requestAnimationFrame(r))
+  await new Promise(r => { requestAnimationFrame(r) })
   await settle()
   expect((document.activeElement as HTMLElement).dataset.mid).toBe('m0')
 })
@@ -152,7 +163,7 @@ test('Feed: role=feed over articles, Page Down moves between them', async () => 
   const { container: c } = render(() => <Feed label="Activity" items={items} />, {}, slots)
   await settle()
   expect(c.querySelector('[role="feed"]')!.getAttribute('aria-label')).toBe('Activity')
-  const first = rows(c)[0]
+  const first = rows(c)[0]!
   expect(first.getAttribute('role')).toBe('article')
   first.focus()
   fireEvent.keyDown(first, { key: 'PageDown' })
@@ -181,8 +192,8 @@ test('Kanban: each column is a window', async () => {
   await settle()
   expect(rows(c).length).toBeLessThan(80)
   expect(c.querySelector('[data-part="count"]')!.textContent).toBe('5000')
-  expect(rows(c)[0].tagName).toBe('LI')
-  expect(rows(c)[0].getAttribute('aria-setsize')).toBe('5000')
+  expect(rows(c)[0]!.tagName).toBe('LI')
+  expect(rows(c)[0]!.getAttribute('aria-setsize')).toBe('5000')
 })
 
 test('Kanban: a plain list follows the app, and Alt+→ moves a card across with focus going with it', async () => {
@@ -211,7 +222,7 @@ test('Kanban: the Move menu lists every column; a count past its limit is marked
   await settle()
   const items = [...c.querySelectorAll<HTMLElement>('[data-part="row"]:not([data-probe]) [role="menuitem"]')]
   expect(items.map(i => i.textContent)).toEqual(['Move to Todo', 'Move to Doing', 'Move up', 'Move down'])
-  items[1].click()
+  items[1]!.click()
   await settle()
   expect(b.moves).toEqual([['Todo0', 'Doing', 3]])
 })

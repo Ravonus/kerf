@@ -1,0 +1,33 @@
+import { Boundary, resource, state } from '@weft-js/core'
+import { Button, Card } from '@weft-js/warp'
+
+// Stands in for the network: a value that arrives after `ms`.
+function later<T>(ms: number, value: T): Promise<T> {
+  return new Promise(done => { setTimeout(() => done(value), ms) })
+}
+
+// Stands in for a route's `load`: the name is ready at once, the reviews are a promise that streams in later.
+function load() {
+  return { name: 'Pour-over kettle', reviews: later(1500, ['Pours slowly and evenly.', 'Heats fast.', 'Handle stays cool.']) }
+}
+
+function Reviews(props: { list: Promise<string[]> }) {
+  const reviews = resource(() => props.list)
+  return (
+    <ul style={reviews.pending ? 'opacity: 0.5' : ''}>
+      {(reviews.value ?? []).map(r => <li key={r}>{r}</li>)}
+    </ul>
+  )
+}
+
+export default function Product() {
+  const data = state(load())
+  return (
+    <Card title={data.value.name}>
+      <Boundary pending={<p>Loading reviews…</p>}>
+        <Reviews list={data.value.reviews} />
+      </Boundary>
+      <Button onClick={() => (data.value = load())}>Load again</Button>
+    </Card>
+  )
+}

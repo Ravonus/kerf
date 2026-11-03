@@ -4,7 +4,7 @@ const wave = (n: number, f: (i: number) => number) => Array.from({ length: n }, 
 export const money = (v: number) => `$${Math.round(v / 1000)}k`
 export const revenue = months.map((month, i) => ({ month, subs: 40000 + i * 3200, usage: 12000 + i * i * 300, services: 18000 + (i % 3) * 1500 }))
 export const seats = ['Q1', 'Q2', 'Q3', 'Q4'].map((quarter, i) => ({ quarter, free: 40 + i * 6, team: 30 + i * 4, business: 12 + i * 3, enterprise: 5 + i }))
-export const combo = months.map((month, i) => ({ month, revenue: [42, 48, 45, 61, 58, 66, 71, 64, 80, 77, 92, 98][i] * 1000 }))
+export const combo = months.map((month, i) => ({ month, revenue: [42, 48, 45, 61, 58, 66, 71, 64, 80, 77, 92, 98][i]! * 1000 }))
 export const slices = [{ name: 'Free', value: 1240 }, { name: 'Team', value: 610 }, { name: 'Business', value: 240 }, { name: 'Enterprise', value: 82 }]
 export const goals = [{ name: 'Activation', value: 0.82 }, { name: 'Retention', value: 0.64 }, { name: 'Expansion', value: 0.41 }, { name: 'Referral', value: 0.23 }]
 export const steps = [{ name: 'Visited', value: 12400 }, { name: 'Signed up', value: 2232 }, { name: 'Created project', value: 1410 }, { name: 'Invited', value: 760 }, { name: 'Paid', value: 508 }]

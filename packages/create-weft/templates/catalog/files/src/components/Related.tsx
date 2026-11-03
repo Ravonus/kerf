@@ -1,4 +1,4 @@
-import { Grid, Text } from '@weft/warp'
+import { Grid, Text } from '@weft-js/warp'
 import { ProductCard } from '#/components/ProductCard'
 import { relatedProducts } from '#/server/catalog'
 

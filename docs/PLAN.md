@@ -23,7 +23,7 @@ Nobody owns "the framework built for agents" yet, and no one has measured agent 
 
 ## 2. Design rules (the filter for every later decision)
 
-1. **Meet agents where their training is.** Files are plain **TSX** (`.tsx`, `jsxImportSource: "weft"`). There's no new
+1. **Meet agents where their training is.** Files are plain **TSX** (`.tsx`, `jsxImportSource: "@weft-js/core"`). There's no new
    syntax and no new editor tooling: the TS language service, Prettier, ESLint and model priors all work on day one.
    We keep React's *shape* and change the *semantics*.
 2. **Because it looks like React, diagnostics are the product.** Looking like React makes React-shaped bugs *more*
@@ -66,7 +66,7 @@ microtask, and `flush()` is how you force them. Core graph algorithm: adapted fr
 ### 3.2 What an agent needs to know (one screen of AGENTS.md)
 
 ```tsx
-import { state, derived } from 'weft'
+import { state, derived } from '@weft-js/core'
 
 export function Cart({ items, taxRate }: { items: Item[]; taxRate: number }) {
   const coupon = state<string | null>(null)
@@ -105,7 +105,7 @@ agents will write anyway) is correct.
 | `({ a, ...rest }) =>` | `rest` is a live object; `<div {...rest}>` stays live. `rest.x` compiles to `props.x`; `rest` held or passed on is one view per component; an element's `{...rest}` is copied where its spread binding reads it (no Proxy). |
 | `({ user: { name } }) =>` | **W006** nested destructuring can't stay live. Fix: `user.name` at the use site. |
 | `children` | Resolved once and memoized by the compiler; reading it twice returns the same nodes. |
-| Props built outside JSX (`Cart({...})`, tests) | Plain values = constants. `render()` in `weft/test` wraps them correctly. |
+| Props built outside JSX (`Cart({...})`, tests) | Plain values = constants. `render()` in `@weft-js/core/test` wraps them correctly. |
 
 Box vs value is checked by types: passing a `State<T>` where `T` is expected, or a `T` where `State<T>` is
 expected, is a type error mapped to **W008** with the fix ("pass `count.value`" / "pass `count`").
@@ -125,7 +125,7 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 
 | Code | Catches | Fix |
 |---|---|---|
-| W001 | Any read of a prop or `.value` in the component body outside `derived`/`watch`/JSX/handlers, including passing it to a helper (`makeChart(items)`) and `.map` in setup | Wrap in `derived`, move into `watch`, or `untrack()` if a snapshot is intended |
+| W001 | A prop or `.value` used to compute something in the component body outside `derived`/`watch`/JSX/handlers, including passing it to a helper (`makeChart(items)`) and `.map` in setup. Only naming a prop isn't one: `const x = props.y` and destructuring compile to live reads (research 43) | Wrap in `derived`, move into `watch`, or `untrack()` if a snapshot is intended |
 | W002 | Writing state inside `derived` | Move to a handler or make the target `derived` |
 | W003 | `watch` writes state that its own source reads (cycle) | Use `derived` |
 | W004 | `watch` that only copies one value into another | Replace with `derived` (autofix) |
@@ -145,16 +145,16 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 | W015 | A box rendered without `.value` in JSX (a child, or a native element's attribute) | `.value` (autofix) |
 | W017 | A keyed-list row reads one entry of a whole object (`cart[p.id]`, `cart.value[p.id]`, also passed to a child as a prop), or a component's JSX/`derived` reads `box.value[prop]` (a row component), so every write re-runs every row (v3 eval: 452 re-runs on add-one; v4: 601 formats per quote) | `cart.get(p.id)` (autofix for the box form; a suggestion when the box arrived as a prop); for a plain prop, pass the box |
 | W018 (warning) | `const x = untrack(() => …reactive…)` in a component body, read only by its JSX: renders the setup value forever (v4 eval: what an agent gets by taking W001's "use `untrack()`" hint in a row) | `derived(() => …)` and `x.value` (suggested edit) |
-| W050 | Raw `addEventListener` / `setInterval` / `new WebSocket` / `new EventSource` in a component with no cleanup (§4.2) | `on` / `interval` from `weft/browser` (suggested edit), or clean up in `onCleanup` |
-| W051 | A `weft/browser` value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await` | Create it in setup, or inside `createRoot` |
+| W050 | Raw `addEventListener` / `setInterval` / `new WebSocket` / `new EventSource` in a component with no cleanup (§4.2) | `on` / `interval` from `@weft-js/core/browser` (suggested edit), or clean up in `onCleanup` |
+| W051 | A `@weft-js/core/browser` value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await` | Create it in setup, or inside `createRoot` |
 | W054 | `media(q)` without `ssr` in a server-rendered file (error; a warning when `weft check` can't tell, off in client-only builds) | `media(q, { ssr: false })` (suggested edit) |
-| W056 | `watch` that copies a live value (a `weft/browser` value, `.live()`) into `state` | Read `.value` directly, or `derived` |
+| W056 | `watch` that copies a live value (a `@weft-js/core/browser` value, `.live()`) into `state` | Read `.value` directly, or `derived` |
 
 React's prop names work on native elements, in literals, dynamic values and spreads, on the client, on the server and in
-hydration: a compile-time table in `crates/weft-compiler/src/react.rs`, and `attrName` in `weft/dom` for spreads. `onChange`
+hydration: a compile-time table in `crates/weft-compiler/src/react.rs`, and `attrName` in `@weft-js/core/dom` for spreads. `onChange`
 fires per edit as React's does, so W042 is retired (it never reached the compiler). Details: [react-props.md](react-props.md).
 
-Design rules are D-codes in the same form: D001–D007 (off-system values, only in apps with `@weft/warp`), D010 (warp contrast), D011 and D030–D039 (contrast and accessibility, every app), D020–D025 (style groups). `weft fix` applies safe fixes; a raw colour never gets one ([36](research/36-ds.md)).
+Design rules are D-codes in the same form: D001–D007 (off-system values, only in apps with `@weft-js/warp`), D010 (warp contrast), D011 and D030–D039 (contrast and accessibility, every app), D020–D025 (style groups). `weft fix` applies safe fixes; a raw colour never gets one ([37](research/37-ds.md)).
 
 ### 3.6 Compiler, runtime, tooling
 
@@ -190,7 +190,7 @@ Design rules are D-codes in the same form: D001–D007 (off-system values, only 
   2026-10-29 ([21](research/21-hmr.md)): dev output registers each top-level component under `file#Name` and keys
   body-level `state()` by name + initializer hash; a new module version re-renders only the edited components, and
   children keep their state by position. Dev only, 0 bytes in production. Hydratable dev builds reload instead.
-- **Testing:** `weft/test` gives `render()`, `flush()`, and DOM queries for vitest.
+- **Testing:** `@weft-js/core/test` gives `render()`, `flush()`, and DOM queries for vitest.
 - **Vite plugin:** one `weft()` plugin, filtered to `.[jt]sx` so Rolldown never calls into JS for other files.
   It runs the compiler and, when present, the server-function and token transforms. Vite 8 is used everywhere;
   Bun's and Deno's bundlers are not build paths.
@@ -268,7 +268,7 @@ whether or not a query is cached on the server.)
   config, and canonical, `og:*` and `twitter:*` are derived. Share cards are `.og.tsx` files rendered server-side to
   PNG at `/_weft/og/<path>.png?v=<hash>`: at build for static routes, on demand (immutable cache) for param routes,
   locally in dev, as a function on Vercel/Netlify. Renderer: Takumi (Rust, takes HTML) vs Satori, decided by a spike.
-- **Status (2026-10-29): routing, `meta`, streaming SSR and cards are built** in `@weft/start`
+- **Status (2026-10-29): routing, `meta`, streaming SSR and cards are built** in `@weft-js/start`
   ([25](research/25-routing.md)). File routes with layouts, typed params, `load`, 404/error routes and `notFound()`.
   RouterCore matches on the server only. The client router asks `/_weft/data/<path>` and updates levels of boxes in
   place (`/users/1 → /users/2` writes 5 DOM nodes and keeps both layouts). Streaming sends the head and shell first,
@@ -283,11 +283,11 @@ whether or not a query is cached on the server.)
   (single-flight); a shared cache for `cache: { life }` goes by tag versions. Client entries are boxes updated in
   place with structural sharing: an optimistic toggle is 1 DOM write in Chrome. Overlays roll back per call.
   `redirect()` works in `load` (307) and in a `run` (the client router follows). `ctx` comes from
-  `src/context.server.ts`, the plug for Drizzle and Better Auth. Q001–Q010 and S011; `weft/test`'s `net` is the fake
+  `src/context.server.ts`, the plug for Drizzle and Better Auth. Q001–Q010 and S011; `@weft-js/core/test`'s `net` is the fake
   transport. The data runtime adds 3.93 KB brotli, only to apps that use a query.
 - **Status (2026-10-30): Drizzle, Better Auth, the contract and three runtimes are built**
-  ([28](research/28-db-auth-runtimes.md)). `@weft/start/db/sqlite` runs on `node:sqlite` or `bun:sqlite` behind Drizzle's
-  proxy driver, with no native binary and the same async API as `@weft/start/db/postgres`. `weft db generate` writes
+  ([28](research/28-db-auth-runtimes.md)). `@weft-js/start/db/sqlite` runs on `node:sqlite` or `bun:sqlite` behind Drizzle's
+  proxy driver, with no native binary and the same async API as `@weft-js/start/db/postgres`. `weft db generate` writes
   migrations, embedded in the build and applied on first request. The dev touched-tables check is Q011, at run time.
   Better Auth gives `ctx.user`, `auth: 'user'`, guards through `redirect()` (loaders now run parent first), and
   sign-in as a mutation, so nothing of it reaches the client. `cache: { scope: 'user' }` is in. Q011–Q015, A001–A004,
@@ -343,7 +343,7 @@ export const room = channel({
 const chat = room.connect({ roomId: props.roomId }); const messages = chat.collect('said', { max: 200 })
 
 // browser values: one shared listener per document, removed with the owner, explicit SSR value
-import { online, visible, lifecycle, media, tabs, on, interval } from 'weft/browser'
+import { online, visible, lifecycle, media, tabs, on, interval } from '@weft-js/core/browser'
 const density = state<'compact' | 'cozy'>('cozy', { persist: { in: 'local', schema: z.enum(['compact', 'cozy']), version: 1 } })   // §4.5
 ```
 
@@ -381,23 +381,23 @@ const density = state<'compact' | 'cozy'>('cozy', { persist: { in: 'local', sche
 - R008–R011: an over-limit message, body or rate; too many subscriptions or connections; a refused Origin; a refused
   `authorize`.
 
-**Phase 1 status (2026-10-29):** `weft/browser` ships `online`, `visible`, `lifecycle`, `media`, `on` and `interval`
+**Phase 1 status (2026-10-29):** `@weft-js/core/browser` ships `online`, `visible`, `lifecycle`, `media`, `on` and `interval`
 (≈1 KB br with every export, paid only where imported), with W050, W051, W054, W056 and T012. Each value subscribes on
 first read, shares one listener per (target, type), goes with its owner, and throws W051 in dev outside one. Server
 values: `online`/`visible` `true`, `lifecycle` `'active'`; `media` has none, so W054 covers only `media`. `tabs` came
-in Phase 3b (`tabs.channel`), and research 07's `storage` is `state(…, { persist })` in `defineState` (§4.5). `weft/test`
+in Phase 3b (`tabs.channel`), and research 07's `storage` is `state(…, { persist })` in `defineState` (§4.5). `@weft-js/core/test`
 fakes the page (`net.offline()`, `page.hide()`, `page.freeze()`, `page.media(q, true)` …) and runs T012 after each test.
 `interval` uses the platform timer (vi fake timers in tests) until the test clock owns it.
 
 ### 4.3 Rust, opt-in and as far as you want
 
-Status: both are built: `remote()` ([36](research/36-rust-remote.md)) and `native()` ([37](research/37-rust-native.md)).
+Status: both are built: `remote()` ([36](research/36-rust-remote.md)) and `native()` ([39](research/39-rust-native.md)).
 
 Zod stays the single source of truth. `.weft/contract.json` → typify generates Rust types in `build.rs`. Rust never
 defines the schema, and drift stops `cargo` at the function it broke. A server function swaps `run` for `impl`:
 
 ```ts
-// server/rust.ts: the only place Rust targets are named (`@weft/start/rust`)
+// server/rust.ts: the only place Rust targets are named (`@weft-js/start/rust`)
 export const media = native('media')            // napi-rs addon (+ WASM fallback): one hot function, in-process
 export const search = remote('rust://search')   // a Rust sidecar implementing many functions
 export const core = remote('rust://core')       // "mostly Rust": every function points at core
@@ -427,7 +427,7 @@ R101–R105: unrepresentable schemas (add a codec), plain unions, impl/contract 
 WASM, and a cached Rust query that reports no touched tables. R106–R109 are a sidecar's runtime and build failures: no
 address or secret, unreachable, panicked, and a compile error unrelated to the contract.
 
-### 4.4 Payments: `@weft/pay`
+### 4.4 Payments: `@weft-js/pay`
 
 Products are declared once, `checkout()` is called once, and entitlements are read everywhere
 ([10](research/10-payments.md)). App code never names a rail.
@@ -443,10 +443,10 @@ Products are declared once, `checkout()` is called once, and entitlements are re
   - `checkout()` never grants anything itself.
 - **PAY-codes:** Stripe for digital goods in a store build, client-side grants, secret keys in the client graph,
   hardcoded store prices, missing Restore Purchases, float money.
-- **Testing:** `fakePay` from `@weft/pay/test` plays renewals, failures, refunds and revocations on the deterministic clock.
-- **Status (2026-10-31):** the web half is built ([37](research/37-pay-web.md)), as a plugin on the public API and the
-  worked example for building one (`weft docs plugins`): `@weft/pay`, `@weft/plugin-pay-stripe` on the `pay.rail` slot,
-  `/_weft/x/pay/<rail>` through `server.extension`, `ctx.entitlements`, `requires`, `fakePay` (from `@weft/pay/test`),
+- **Testing:** `fakePay` from `@weft-js/pay/test` plays renewals, failures, refunds and revocations on the deterministic clock.
+- **Status (2026-10-31):** the web half is built ([38](research/38-pay-web.md)), as a plugin on the public API and the
+  worked example for building one (`weft docs plugins`): `@weft-js/pay`, `@weft-js/pay/stripe` on the `pay.rail` slot,
+  `/_weft/x/pay/<rail>` through `server.extension`, `ctx.entitlements`, `requires`, `fakePay` (from `@weft-js/pay/test`),
   `weft add pay` and the PAY-codes. `entitlements` is a query the app owns (`src/server/pay.ts`), so a client reads
   `.live().value?.includes('pro')`, and `checkout` is a mutation that redirects. Not built: every native rail, the policy
   table, `weft pay explain` and `weft pay sync`. No purchase has reached a real Stripe account.
@@ -526,7 +526,7 @@ export const Starfield = defineSurface({
 - One schema: props types come from the Zod object; validation runs in dev only.
 - SSR renders an aspect-ratio placeholder; the canvas mounts on the client.
 - Surfaces are listed by the MCP catalog, so an agent can find and drop one into any layout by name.
-- `@weft/plugin-surface-keel` registers `keel-pixel` and accepts Keel theme recipes. keel-engine is MIT, and the plugin
+- `@weft-js/plugin-surface-keel` registers `keel-pixel` and accepts Keel theme recipes. keel-engine is MIT, and the plugin
   keeps the notice. It moved out of core with [13](research/13-plugins.md) §2.9.
 
 ## 5b. Native: iOS and Android from the same TSX
@@ -563,7 +563,7 @@ codebase and one pipeline produce three outputs.
 - **Spike status (2026-10-28):** the iOS half of 6a runs ([`spikes/native/`](../spikes/native/README.md)). A price
   push is 1 host op on the phone, and Node's layout matches the phone's to 0pt over 769 nodes. Android is next.
 
-## 6. Design language: `weft/ds`
+## 6. Design language: `@weft-js/core/ds`
 
 Details: [03](research/03-design-language.md). Works *with* any styling system; ships its own vocabulary that an
 agent can't drift outside of.
@@ -571,9 +571,9 @@ agent can't drift outside of.
 - **Tokens:** a ~6-value seed, Zod-validated, expands to DTCG 2025.10 tokens, then plain CSS variables in cascade
   layers. Text colors are computed to pass contrast; the build fails if they can't. A Keel theme recipe
   (`{seed, culture, pins}`) is accepted as a seed.
-- **Built (Phase 4, [36](research/36-ds.md)):** the primitives are `Stack Row Grid Split Center Cover Frame Spacer Inset`,
-  `Heading`, `Text` and `Link` in `@weft/warp`, since weft can't depend on ui-core. `Switch` below is `Row reflow` and `Surface` is
-  `Card`. `weft/ds` is names and types only. `weft tokens` writes DTCG 2025.10. Not built: a Keel recipe as a seed, a
+- **Built (Phase 4, [37](research/37-ds.md)):** the primitives are `Stack Row Grid Split Center Cover Frame Spacer Inset`,
+  `Heading`, `Text` and `Link` in `@weft-js/warp`, since weft can't depend on warp-core. `Switch` below is `Row reflow` and `Surface` is
+  `Card`. `@weft-js/core/ds` is names and types only. `weft tokens` writes DTCG 2025.10. Not built: a Keel recipe as a seed, a
   `tokens(el)` reader, the Zod seed rework.
 - **Vocabulary:** 8 layout primitives (`Stack Row Split Switch Grid Center Surface Frame`), a small component set,
   intent props with closed values (`tone`, `emphasis`, `size`, `density`, `gap`/`pad` like `related`/`section`, text
@@ -609,14 +609,14 @@ warp is the rebuild of the Agorix kit for weft. It keeps the base idea and rebui
 - **Three ways to use it** (agorix 04 §3). Every skin sits on three public contracts: CSS variables, `data-state`
   attributes and `data-part` names. Styles live in `@layer warp.*` behind `:where()`, so any app CSS wins without
   `!important`.
-  - **Default:** `@weft/warp` (the weft binding) on `@weft/ui-core` (the spec CSS and the behaviour, framework-agnostic).
-  - **Other kit or styling:** `ui-core` getters with your markup, or `weft add <name> --style plain|tailwind`, which
+  - **Default:** `@weft-js/warp` (the weft binding) on `@weft-js/warp-core` (the spec CSS and the behaviour, framework-agnostic).
+  - **Other kit or styling:** `warp-core` getters with your markup, or `weft add <name> --style plain|tailwind`, which
     copies the skin only and upgrades with `--diff`.
   - **Fully custom:** install nothing above `weft`. Data and real-time still work.
   - `create-weft --ui warp|headless|none`.
 - **Layering: one core, thin bindings.** Most of warp is framework-agnostic, so a React (or other) binding can be
   added later without rewriting it.
-  1. **`@weft/ui-core`, the core.** It holds most of the code and imports no framework (no weft, React or JSX; a test
+  1. **`@weft-js/warp-core`, the core.** It holds most of the code and imports no framework (no weft, React or JSX; a test
      enforces it).
      - **Styles:** the spec CSS verbatim. `styles/warp.css` holds tokens, base and signature. The component and input
        files from `docs/design/warp/tokens` are split per component into `styles/{components,inputs}/<name>.css` by
@@ -626,7 +626,7 @@ warp is the rebuild of the Agorix kit for weft. It keeps the base idea and rebui
      - **Stateful widgets** (tabs, select, popover, dialog, toast) get small transition functions and stores that take
        events and emit state. Zag is used only where §6 calls for it.
      - **Contracts:** typed anatomy (part names, data attributes, ARIA wiring).
-  2. **`@weft/warp`, the weft binding (thin).** TSX components that render the specimen markup exactly, with weft's
+  2. **`@weft-js/warp`, the weft binding (thin).** TSX components that render the specimen markup exactly, with weft's
      compiled templates.
      - They wire core state into boxes and fine-grained bindings, so one prop change touches only what it affects.
        There is no re-render and no wrapper component without a reason.
@@ -645,11 +645,11 @@ warp is the rebuild of the Agorix kit for weft. It keeps the base idea and rebui
          `spread` (~0.38 KB) and the shared props view (~0.14 KB).
        - The shop is 10.99 KB, ~1 KB over its 10 KB target. What's left to cut is sweep or field behaviour.
   3. **Portability proof.** A test drives core widgets with plain DOM and no framework. A React binding would be a
-     sibling of `@weft/warp` over the same core.
+     sibling of `@weft-js/warp` over the same core.
 - **Server pieces:** Agorix's data and real-time breadth merges into `weft/start` on weft's protocol (§4.2;
   agorix 03 §7). warp components bind to `query`/`.live`/`channel` boxes and never own transport.
 
-### 6.2 Text, type and smart skeletons: `weft/text`, `weft/skeleton`
+### 6.2 Text, type and smart skeletons: `@weft-js/core/text`, `weft/skeleton`
 
 Details: [11](research/11-text-and-type.md) (measured in Chrome and WebKit).
 
@@ -658,13 +658,13 @@ Details: [11](research/11-text-and-type.md) (measured in Chrome and WebKit).
     most 2.5 so 200% zoom still works. Body text stays in `rem`.
   - `text-wrap: balance` for headings and `pretty` for prose, plus `text-box` trims and a `--warp-measure` of 45–75ch.
   - The dial picks optical sizing and axes.
-- **Fonts are a build step,** provided by `@weft/plugin-text` (§7c) through the `font.build` slot. It subsets each
+- **Fonts are a build step,** provided by `@weft-js/text` (§7c) through the `font.build` slot. It subsets each
   face by `unicode-range` and generates a metric-matched fallback face (`size-adjust`) and preloads. Fonts are declared
   once, in `text({ fonts })`; without the plugin they are plain `@font-face`.
   - Every role has an explicit unitless `line-height`, so the font swap has CLS 0 even in Safari, which lacks
     `ascent-override`.
-- **`weft/text`** reads the `text.measure` slot. `@weft/plugin-text` fills it with a slim Pretext fork
-  (`packages/text-engine`, [12](research/12-text-engine-slim.md)) or pinned upstream Pretext (33.9 KB br), always as a
+- **`@weft-js/core/text`** reads the `text.measure` slot. `@weft-js/text` fills it with a slim Pretext fork
+  (`packages/text`, [12](research/12-text-engine-slim.md)) or pinned upstream Pretext (33.9 KB br), always as a
   **lazy chunk**.
   - **The slim engine is tiered.** A base "lite" chunk handles Latin, symbols and emoji with the browser's own line
     breaking: 8.2 KB br on Chrome and 9.3 KB br on Safari. An exact tier (8.9–10.5 KB) and per-script packs load
@@ -701,7 +701,7 @@ Details: [11](research/11-text-and-type.md) (measured in Chrome and WebKit).
   undimensioned media, skeleton size drift, lists with no count hint, skeleton flash on refetch, and streamed text
   without `<Text stream>`.
 
-### 6.3 Media: `<Media>` and `@weft/plugin-media`
+### 6.3 Media: `<Media>` and `@weft-js/plugin-media`
 
 Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real KEEL assets).
 
@@ -737,7 +737,7 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
   - **Where encoding happens:** at build by default; a content-hashed server route (plus the Rust sidecar) for
     uploads; the client only as an escape hatch.
 - **Plugin slots:** `media.analyze@1`, `media.encode@1` (keyed by codec), `media.quality@1` and `media.cdn@1`.
-  sharp, SVGO and SSIMULACRA2 are bundled. ffmpeg is an opt-in provider (`@weft/plugin-media-ffmpeg`), with licence
+  sharp, SVGO and SSIMULACRA2 are bundled. ffmpeg is an opt-in provider (`@weft-js/plugin-media-ffmpeg`), with licence
   and patent notes for LGPL/GPL, x264/x265 and the H.264/HEVC/AAC pools.
 - **Diagnostics M001–M016 with autofixes,** plus a 7-line AGENTS block.
 - **Phase 2 status ([26](research/26-phase-2-completion.md) §2):** stills only. One `media.build@1` slot carries
@@ -759,7 +759,7 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
 Details: [13](research/13-plugins.md).
 
 - **A plugin with a server part** provides `server.extension@1`: routes under `/_weft/x/<key>/`, `ctx`, guards and enforced
-  options, gated by the app's `src/<key>.server.ts` (P118). `@weft/pay` is the worked example (`weft docs plugins`).
+  options, gated by the app's `src/<key>.server.ts` (P118). `@weft-js/pay` is the worked example (`weft docs plugins`).
 - **Model.** Core defines typed, versioned **slots**: `text.measure@1`, `font.build@1`, `surface.renderer`,
   `realtime.bus`, `db.adapter`, `auth.provider`, `pay.rail`, `device.*`. A plugin *provides* an implementation, and core, warp and app
   code *consume* the slot.
@@ -786,7 +786,7 @@ Details: [13](research/13-plugins.md).
   - Each plugin's diagnostics live in its own namespace.
 - **Trust:** each plugin declares the permissions it needs, and `.weft/plugins.lock.json` records them. This makes any
   change visible; it is not a sandbox.
-- **Testing:** every slot ships a conformance suite in `weft/test/plugins`, and any provider must pass it. For
+- **Testing:** every slot ships a conformance suite in `@weft-js/core/test/plugins`, and any provider must pass it. For
   example, every `text.measure` engine must pass the accuracy corpus.
 - **Which packages become plugins:**
   - **Plugins:** realtime buses, db adapters, pay rails, surface kinds, device modules and the Tailwind adapter.
@@ -807,7 +807,7 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
 
 **`weft test`: tests that can't be junk.**
 
-- **Authoring:** `weft/test` gives `render`, user-level queries only (`getByRole/Label/Text`), and `user.click/type`.
+- **Authoring:** `@weft-js/core/test` gives `render`, user-level queries only (`getByRole/Label/Text`), and `user.click/type`.
   Every action ends in `flush()`, so there's no `waitFor` guessing. A deterministic `clock` drives timers, `resource`
   and rAF. Snapshots are off; opt-in aria snapshots are allowed. `test.prop` comes from fast-check for property tests.
 - **Work budgets:** `await expect(interaction).toTouchAtMost(n, { runs })` bounds the DOM mutations and the reactive
@@ -828,7 +828,7 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
   - **Status (2026-10-29):** T001–T009 are in `weft check` (`packages/cli/src/tests.mjs`, TypeScript parser, syntax
     only), on the test files named by `test.include` (default `**/*.{test,spec}.*`). The rules are weft's own, not
     re-emitted ESLint rules, so the CLI needs no ESLint. T005 is a warning, the rest are errors. T009 autofixes
-    `.only` (safe) and `.skip` (suggested); T004 suggests `flush()` for a zero-delay sleep. `weft/test` also fails a
+    `.only` (safe) and `.skip` (suggested); T004 suggests `flush()` for a zero-delay sleep. `@weft-js/core/test` also fails a
     test that ends with no assertion (runtime T001), and ships `screen` (role/label/text only), `user` (each action
     ends in `flush()`) and `clock`. A test that needs a finding on purpose keeps it with
     `// weft-allow T00x: <reason>`; the framework's own DOM-level tests do. Not built yet: `test.prop`, opt-in aria
@@ -851,15 +851,15 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
 **`weft browser` (CLI) = `weft mcp` browser tools = `__weft__.agent` in the page: full programmatic control of the
 running app, from whatever browser the agent already has.**
 
-- **Changed (2026-10-29), no automation library:** the control surface lives in the page (weft/agent, loaded by the
-  weft() Vite plugin in dev), on the same Testing Library queries and user-event as `weft/test`. An agent whose
+- **Changed (2026-10-29), no automation library:** the control surface lives in the page (@weft-js/core/agent, loaded by the
+  weft() Vite plugin in dev), on the same Testing Library queries and user-event as `@weft-js/core/test`. An agent whose
   browser runs JS (Claude's browser pane, Claude in Chrome, Codex's browser) calls it directly; the CLI and MCP tools
   reach the open tab through the dev server, which relays over Vite's own socket. With no browser at all,
   `weft browser launch` starts a plain headless Chrome as the host page. Details: [22](research/22-verify-loop.md).
 - Commands:
   - `open <route>`
   - `act <role> <name> click|fill|press|select`
-  - `assert …`, with the same matchers as `weft/test`
+  - `assert …`, with the same matchers as `@weft-js/core/test`
   - `screenshot` (to a file, returns the path)
   - `console`, `network`, `errors` (source-mapped to component names)
   - `time pause|advance|resume` (the same clock as tests)
@@ -869,7 +869,7 @@ running app, from whatever browser the agent already has.**
 - `record` turns an exploration session into a role-query test, which then has to pass the gate.
 - Every command supports `--json`. Chrome DevTools MCP stays the recommendation for performance traces.
 - **Status (2026-10-29):** built: snapshot (roles, names, refs, deltas, the named graph), act, assert, graph/set,
-  time, net (offline, latency, socket drop), record → `weft/test`, logs, overlay (Alt+Shift+G), launch/screenshot.
+  time, net (offline, latency, socket drop), record → `@weft-js/core/test`, logs, overlay (Alt+Shift+G), launch/screenshot.
   Dev builds name component and module `state`/`derived` (`Cart.total`); `defineState` boxes keep their scope names.
   Not yet: `console`/`network` request logs beyond errors, source-mapped stacks, e2e-file recording.
 
@@ -904,26 +904,26 @@ running app, from whatever browser the agent already has.**
 ```
 packages/
   weft        runtime + compiler binding + vite plugin + test utils + CLI (check, test, browser, tasks, mcp, create)
-              subpaths: weft, weft/compiler, weft/vite, weft/test, weft/config, weft/browser
+              subpaths: weft, @weft-js/core/compiler, @weft-js/core/vite, @weft-js/core/test, @weft-js/core/config, @weft-js/core/browser
   start       routing, server functions, cache, Nitro integration, real-time   (weft/server, weft/db, weft/realtime)
   rust        weft/rust (native, remote) + the `weft` crate (codegen, Ctx, axum router), opt-in
 crates/
   weft-compiler   pre + diag + weft's own back end (Solid's crate until it's replaced); napi + WASI builds
-  (ds)        no package: `weft/ds` is a weft subpath (names and types); primitives and tokens are in warp (36)
-  ui-core     headless behaviours + prop getters, /motion (Presence, presets → WAAPI), @weft/zag binding
+  (ds)        no package: `@weft-js/core/ds` is a weft subpath (names and types); primitives and tokens are in warp (36)
+  warp-core     headless behaviours + prop getters, /motion (Presence, presets → WAAPI), @weft/zag binding
   warp        the default skin: tokens, sweep()/floatingLabel(), components, styles.css, tailwind.css, registry
   multiplayer presence, cursors, interaction relay (from Agorix)
-  surface     defineSurface, canvas2d, webgl2 (a `weft` subpath, 33); Keel is @weft/plugin-surface-keel
-  text        weft/text + weft/skeleton consumer APIs (measure, lines, fit, <Text>, s.text() + mirror); no engine
+  surface     defineSurface, canvas2d, webgl2 (a `weft` subpath, 33); Keel is @weft-js/plugin-surface-keel
+  text        @weft-js/core/text + weft/skeleton consumer APIs (measure, lines, fit, <Text>, s.text() + mirror); no engine
   text-engine slim Pretext fork (MIT, credited), no weft dependency
-  media       weft/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
-  plugin-*    @weft/plugin-text (text.measure + font.build), @weft/plugin-media (media.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
-              (weft itself adds weft/plugin, weft/slots, weft/test/plugins and the `weft plugins` CLI)
+  media       @weft-js/core/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
+  plugin-*    @weft-js/text (text.measure + font.build), @weft-js/plugin-media (media.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
+              (weft itself adds @weft-js/core/plugin, weft/slots, @weft-js/core/test/plugins and the `weft plugins` CLI)
   create-weft a wizard, or flags: `create-weft <dir> --ui warp|headless|tailwind|none --db sqlite|postgres|mysql|none --layer drizzle|prisma|native --auth --auth-provider better-auth|custom --runtime node|bun|deno`; more choices in 3x (34), deploy flags later
 crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
 crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
-  pay         @weft/pay (catalog, entitlements, ledger; the reference plugin) and @weft/plugin-pay-stripe, built (37); resolver + policy table and the StoreKit/Play adapters to come
+  pay         @weft-js/pay (catalog, entitlements, ledger; the reference plugin) and @weft-js/pay/stripe, built (37); resolver + policy table and the StoreKit/Play adapters to come
 crates/weft-layout  Taffy-based layout shared by the iOS host, the Android host and Node
 evals/        agent eval harness
 ```
@@ -933,30 +933,30 @@ evals/        agent eval harness
 | Phase | Ships | Exit check |
 |---|---|---|
 | **0. Eval** | 6 tasks, one per root cause (stale snapshot, effect-as-derivation, invisible tracking, context-dependent magic, scheduling, silent failure). PROMPT.md + hidden vitest. Baselines in React 19 and Solid, 5 samples each. | Baseline pass@1 and failures tagged by cause. |
-| **1. Core + agent layer** | 2-week compiler spike, then the Rust compiler with weft's own back end (replacing the spike's Solid crate). Client-only runtime, `weft/browser` values + W050/W051/W054/W056 + T012, §3.5 diagnostics, §3.7 gates (size, DOM work, compiler speed), `weft/test` + T001–T009, HMR, `defineState` (client instance, `persist` local/session, `history`, names, `$reset`) + S003–S010, `weft.config.ts` (with reserved `plugins`/`slots` keys and P100–P120) + `weft tasks --json` + P-codes, generated AGENTS.md, `weft check --json`, MCP `docs`/`check`/`tasks`. | Agent pass@1 on weft ≥ both baselines, efficiency (bundle, DOM and formatter work) ≥ both, and every eval failure maps to a W-code or becomes a new one. (Restated 2026-10-29 from "pass@1 beats both baselines", which can't be shown when every framework scores 100%.) **Passed 2026-10-29 on v3 + v4** (n=1 per cell, Haiku and Sonnet). History: **2026-10-29 ([v3-weft](../evals/results/v3-weft-FINDINGS.md)):** failure mapping met (the one uncaught miss became W017); "beats" not met: 23/23 everywhere, so correctness ties at the ceiling. weft leads on size (5.0–5.1 KB gz vs 8.8–10.5 Solid, 68 React) and price-push DOM work (1 in both sessions). Needs a harder eval or a restated criterion. **2026-10-29, v4 ([v4](../evals/results/v4-FINDINGS.md)):** a harder 6-ticket app with 7 work-budget tests, and a second ticket set that doesn't state the budgets. weft 4/4 sessions 47/47, React 4/4, Solid 3/4 (Haiku missed the burst budget once on the quiet set). "Beats" still not met (ties React). Failure mapping met: W017 fired and was autofixed in-session; planted-bug gaps became an extended W017 and the new W018. weft leads on size (6.8–6.9 KB gz vs 10.4–11.8 Solid, about 70 React) and ties Solid on DOM work. Restated criterion accepted; weft meets it, so Phase 1's exit check passes. |
+| **1. Core + agent layer** | 2-week compiler spike, then the Rust compiler with weft's own back end (replacing the spike's Solid crate). Client-only runtime, `@weft-js/core/browser` values + W050/W051/W054/W056 + T012, §3.5 diagnostics, §3.7 gates (size, DOM work, compiler speed), `@weft-js/core/test` + T001–T009, HMR, `defineState` (client instance, `persist` local/session, `history`, names, `$reset`) + S003–S010, `weft.config.ts` (with reserved `plugins`/`slots` keys and P100–P120) + `weft tasks --json` + P-codes, generated AGENTS.md, `weft check --json`, MCP `docs`/`check`/`tasks`. | Agent pass@1 on weft ≥ both baselines, efficiency (bundle, DOM and formatter work) ≥ both, and every eval failure maps to a W-code or becomes a new one. (Restated 2026-10-29 from "pass@1 beats both baselines", which can't be shown when every framework scores 100%.) **Passed 2026-10-29 on v3 + v4** (n=1 per cell, Haiku and Sonnet). History: **2026-10-29 ([v3-weft](../evals/results/v3-weft-FINDINGS.md)):** failure mapping met (the one uncaught miss became W017); "beats" not met: 23/23 everywhere, so correctness ties at the ceiling. weft leads on size (5.0–5.1 KB gz vs 8.8–10.5 Solid, 68 React) and price-push DOM work (1 in both sessions). Needs a harder eval or a restated criterion. **2026-10-29, v4 ([v4](../evals/results/v4-FINDINGS.md)):** a harder 6-ticket app with 7 work-budget tests, and a second ticket set that doesn't state the budgets. weft 4/4 sessions 47/47, React 4/4, Solid 3/4 (Haiku missed the burst budget once on the quiet set). "Beats" still not met (ties React). Failure mapping met: W017 fired and was autofixed in-session; planted-bug gaps became an extended W017 and the new W018. weft leads on size (6.8–6.9 KB gz vs 10.4–11.8 Solid, about 70 React) and ties Solid on DOM work. Restated criterion accepted; weft meets it, so Phase 1's exit check passes. |
 | **1b. Verify loop** | Name-keyed state-preserving HMR (flagged), 1k-component perf gates, `weft browser` daemon + graph overlay + recorder + network/time control for reconnects, test gate (fail-before, diff-scoped mutation, T020). | The gate accepts every eval reference test and catches planted junk tests (tautologies, implementation-detail, no-fail-before). |
-| **2. UI (warp tier 1)** | The minimal plugin API (§7c: `definePlugin`, slots, generated slot modules, `weft plugins`), with `@weft/plugin-text`'s `font.build` as the first provider. `<Media>` for stills and `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013. `ui-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`, the font build step (subsets, matched fallbacks, preloads), fluid `cqi` type tokens, skeleton shapes for `<Boundary pending>` (the timing landed in Phase 1), X005, X006, X008, X020–X023, X030, X031, X034 (X007 and X024–X029 were never defined; [26](research/26-phase-2-completion.md) §7). | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
+| **2. UI (warp tier 1)** | The minimal plugin API (§7c: `definePlugin`, slots, generated slot modules, `weft plugins`), with `@weft-js/text`'s `font.build` as the first provider. `<Media>` for stills and `@weft-js/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013. `warp-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`, the font build step (subsets, matched fallbacks, preloads), fluid `cqi` type tokens, skeleton shapes for `<Boundary pending>` (the timing landed in Phase 1), X005, X006, X008, X020–X023, X030, X031, X034 (X007 and X024–X029 were never defined; [26](research/26-phase-2-completion.md) §7). | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
 | **2. Surfaces** | `defineSurface`, canvas2d, webgl2, Keel port. the `text.measure` slot (slim engine and pretext) with conformance, `s.text()` with the DOM mirror, X001–X012, X040/X041. | A Keel demo ported; an agent adds a surface to a page from a one-line request. |
-| **3. Start** | Streaming SSR (the string renderer and hydration landed in Phase 1), routing, route `meta` and OG images ([20](research/20-metadata-and-og.md)), `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `weft/test`. `z.media()`, the media server route with `Accept` negotiation (`encoder: 'server'`). The `defineState` SSR state payload (per-request instances landed in Phase 1), `cookie` persist, `mutation({ optimistic })` overlays, S001/S002/S011–S013. `query.shape`, last-seen shapes in the cache, compiler shape variants, `<Text reserve>`, X032–X036. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
+| **3. Start** | Streaming SSR (the string renderer and hydration landed in Phase 1), routing, route `meta` and OG images ([20](research/20-metadata-and-og.md)), `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `@weft-js/core/test`. `z.media()`, the media server route with `Accept` negotiation (`encoder: 'server'`). The `defineState` SSR state payload (per-request instances landed in Phase 1), `cookie` persist, `mutation({ optimistic })` overlays, S001/S002/S011–S013. `query.shape`, last-seen shapes in the cache, compiler shape variants, `<Text reserve>`, X032–X036. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
 | **3b. Channels** | `sync: 'tabs'` and `sharedState.connect()` as a box. `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
 | **3x. Configuration** | A default stack that's one setting away from anything else ([34](research/34-configuration.md)). A: `weft.config.json` and `.yaml`, the config schema, the `create-weft` wizard, `weft add`, `weft map` (a generated matrix of what to call in this app). B: warp config options, the Tailwind adapter. C: `db.adapter@1`, Drizzle, Prisma and Native (no ORM) providers, MySQL. D: `auth.provider@1`. | The todo + auth app passes its hidden checks on every tested engine, data layer and runtime; a hand-written auth provider works with no change to weft. |
-| **3c. warp tier 2 + Agorix packs** | Plugin trust tooling first (permissions audit, lockfile, `approve`), then `@weft/plugin-media-ffmpeg` (GIF → video, ladders, audio, `timeline()`) and `encoder: 'compatible'` behind a headful save test, Virtualised chat, feed, kanban and grid on exact text heights, `<Text stream>`. Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft/multiplayer`, `@weft/realtime-*` and `@weft/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
-| **4. Design** | `weft/ds` tokens, primitives, D-checks (the Tailwind adapter moved to 3x). | weft/ds vs raw Tailwind on consistency and a11y. **Not met 2026-10-31** ([36](research/36-ds.md), 36 sessions, n=6 per stack): a11y met (0 vs 5.3 axe nodes), brief met (10.8 vs 10.8), consistency missed (79 vs 62 distinct values, 17 vs 13 role drift). |
+| **3c. warp tier 2 + Agorix packs** | Plugin trust tooling first (permissions audit, lockfile, `approve`), then `@weft-js/plugin-media-ffmpeg` (GIF → video, ladders, audio, `timeline()`) and `encoder: 'compatible'` behind a headful save test, Virtualised chat, feed, kanban and grid on exact text heights, `<Text stream>`. Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft-js/multiplayer`, `@weft/realtime-*` and `@weft-js/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
+| **4. Design** | `@weft-js/core/ds` tokens, primitives, D-checks (the Tailwind adapter moved to 3x). | @weft-js/core/ds vs raw Tailwind on consistency and a11y. **Not met 2026-10-31** ([37](research/37-ds.md), 36 sessions, n=6 per stack): a11y met (0 vs 5.3 axe nodes), brief met (10.8 vs 10.8), consistency missed (79 vs 62 distinct values, 17 vs 13 role drift). |
 | **5a. Rust: remote** | `remote()`, the `weft` crate (typify codegen, `Ctx`, envelope, `touch`, tracing, `weft::router()`), sidecar supervisor + dev reload, R101–R103. | A search sidecar replaces a TS `query` with no client change. |
 | **5b. Rust: native** | `native()` via napi-rs + WASM fallback, R104/R105. | A CPU-bound demo beats its TS `run` by ≥ 5× on Node and Bun. |
 | **6a. Native spike (3 weeks)** | Hermes + op buffer + `weft-layout` + Swift/Kotlin hosts for `Stack Row Text Button Input Scroll`, `weft dev --ios/--android`, HMR. | The v3 list screen runs on both platforms; price push ≤ 1 host op; Node layout matches device within 1pt for non-text boxes. Stop and revisit if a mid-range Android can't hold 60 Hz. |
 | **6b. warp native + device** | Tier-1 resolution table, `idiom`, `weft/device` core, generated projects, `weft device`, N-codes, split tooling. | An agent takes a shared web app to TestFlight and the Play internal track with ≤ 3 variant files. |
-| **6c. Payments** | `@weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
+| **6c. Payments** | `@weft-js/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
 | **6d. Native extensions** | Native-module codegen, widget TSX subset → WidgetKit + Glance. | One TSX widget ships on both platforms. |
 
-**5b status (2026-10-31):** built. `native()` in `@weft/start/rust`, `weft::native!`, a WASM fallback with its own small ABI,
-R104 and R105, and `weft add rust`, which closes 5a's gap: the crate ships inside `@weft/start`. Exit check: passed, 51 of 51
+**5b status (2026-10-31):** built. `native()` in `@weft-js/start/rust`, `weft::native!`, a WASM fallback with its own small ABI,
+R104 and R105, and `weft add rust`, which closes 5a's gap: the crate ships inside `@weft-js/start`. Exit check: passed, 51 of 51
 on Node, Bun and Deno on Linux x64, with byte-identical answers and client: the addon beats its TS `run` by 7.2× on Node and
 5.1× on Bun at p50 (15.1× and 13.4× in calls/s), and WASM gives 6.4× and 5.1×; on macOS arm64, also 51 of 51, 14.3× and 7.7×. The body was chosen to vectorize, and Bun's
 margin is thin. Dev reload needs no restart: a new path per build loads beside the old one, which §11 had wrong. Not done:
-WASM on an edge isolate, bytes without JSON, Windows itself. What was built and left out: [37](research/37-rust-native.md).
+WASM on an edge isolate, bytes without JSON, Windows itself. What was built and left out: [39](research/39-rust-native.md).
 
-**5a status (2026-10-31):** built. `remote()` in `@weft/start/rust`, the `weft` crate, the supervisor in `weft dev`,
+**5a status (2026-10-31):** built. `remote()` in `@weft-js/start/rust`, the `weft` crate, the supervisor in `weft dev`,
 `build` and `start`, typed errors with `raise()` for TS bodies too, and R101–R103 and R106–R109. Exit check:
 passed, 28 of 28 on Node, Bun and Deno with 20,000 documents: 29 client files byte-identical, the same HTML, answers and
 Chromium e2e, and a crate edit reloads with no failed request. The swap in the eval is scripted, not done by an agent. Not done: the crate isn't published, and `remote()` on
@@ -968,11 +968,11 @@ dev-server relay, `weft browser` and the MCP browser tools; and the test gate (T
 `node evals/gate.mjs` ([22](research/22-verify-loop.md)).
 
 **2 status (2026-10-29):** the remaining Phase 2 pieces are built ([26](research/26-phase-2-completion.md)):
-`<Media>` (`weft/media`) and `@weft/plugin-media` (one `media.build@1` slot, M001–M013 through a plugin `check`
-hook); the font build step in `@weft/plugin-text` (`font.build@1`: subsets, matched fallback faces, preloads that
-`@weft/start` writes into the head); warp's `<Shape>` for `<Boundary pending>`, with X031 measured in dev; fluid
-type tokens mirrored and checked in `ui-core` (`fluid()`, `TYPE_SCALE`); `create-weft --ui warp|headless|none`;
-and the Phase 2 X-codes. Build-side slots (`.weft/slots/<id>.build.json`) let `weft/vite` run a provider in Node.
+`<Media>` (`@weft-js/core/media`) and `@weft-js/plugin-media` (one `media.build@1` slot, M001–M013 through a plugin `check`
+hook); the font build step in `@weft-js/text` (`font.build@1`: subsets, matched fallback faces, preloads that
+`@weft-js/start` writes into the head); warp's `<Shape>` for `<Boundary pending>`, with X031 measured in dev; fluid
+type tokens mirrored and checked in `warp-core` (`fluid()`, `TYPE_SCALE`); `create-weft --ui warp|headless|none`;
+and the Phase 2 X-codes. Build-side slots (`.weft/slots/<id>.build.json`) let `@weft-js/core/vite` run a provider in Node.
 Still open: layout-solved `sizes` (needs warp's layout primitives and `weft-layout`) and a bundled SSIMULACRA2.
 
 **2 exit check (2026-10-29): met** ([v3-warp findings](../evals/results/v3-warp-FINDINGS.md); rerun with
@@ -989,7 +989,7 @@ the spec on 2026-10-30 with the review's fix (reviews/03 m12: drop the opacity),
 Nitro `weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The second:
 `query`/`mutation` typed end to end, the tagged cache (client, request and shared), `mutation({ optimistic })`
 overlays with per-call rollback, `redirect()` on the server and in the client router, SSR-dehydrated query results
-(0/0 hydration), Q001–Q010 and S011, and the fake transport in `weft/test` ([27](research/27-server-functions.md)).
+(0/0 hydration), Q001–Q010 and S011, and the fake transport in `@weft-js/core/test` ([27](research/27-server-functions.md)).
 The third (2026-10-30): Drizzle, Better Auth, `create-weft --db/--auth/--runtime`, `.weft/contract.json`, the
 Node/Bun/Deno presets and a local runtime matrix ([28](research/28-db-auth-runtimes.md)). The fourth (2026-10-30):
 `.live`, `topic`, `stream`, the `memory` and `postgres` buses, reconnect and resume, the realtime fake transport,
@@ -1002,7 +1002,7 @@ built.
 at the upgrade, a required `authorize` (R001 at definition, build and `weft check`), a re-check every 5 minutes and on
 `invalidate('session:<id>')`, per-socket limits and R011; `sharedState` as a box, last writer wins, with a refused
 write rolling back; `sync: 'tabs'` by top-level key and `tabs.channel`, both behind one `BroadcastChannel`; `redisBus`,
-`natsBus` and `durableObjectBus`; the `channel` fake in `weft/test` (`net.publish`, `net.sent`, `net.session`, `tabs`).
+`natsBus` and `durableObjectBus`; the `channel` fake in `@weft-js/core/test` (`net.publish`, `net.sent`, `net.session`, `tabs`).
 Verified in Chrome (real socket and `BroadcastChannel`), on Node, Bun and Deno (20 socket checks each), and with Redis
 and NATS across two real instances on each runtime, including a server restart for the gap. `durableObjectBus` ran on
 workerd through Miniflare, locally only: no deploy. A plain scaffold's client bundle is byte-identical to the commit
@@ -1020,7 +1020,7 @@ offline and a reset all end up right, and Origin, `authorize` and the bounds hol
 
 **3 shapes (2026-10-30):** built ([31](research/31-query-shapes.md)): `query.shape` and `q(input).shape`, last-seen
 shapes in the client cache, compiler shape variants (`pending="shape"`, a tree-shaken `Name$shape` beside each
-component), `<Text reserve>` in `weft/text`, and X032, X033, X035 and X036. Measured in Chrome at phone size: CLS 0 at
+component), `<Text reserve>` in `@weft-js/core/text`, and X032, X033, X035 and X036. Measured in Chrome at phone size: CLS 0 at
 the reveal and the swap for every shape source, and 0 px moved with a last-seen shape of the same payload, against
 2986 px for naive bars. A `pending="shape"` page costs 350 B br over a hand-written fallback, and a component no
 `pending="shape"` reaches costs 0. `<Text>` holds its place with placeholder text in the real element, so
@@ -1028,7 +1028,7 @@ it doesn't use `text.measure`. Not built: variants through barrels, `sessionStor
 
 **3x status (2026-10-30):** slices A, B, C and D are built. D: an auth provider is `defineAuth` in `src/auth.server.ts`, and a hand-written one passes the same checks as Better Auth with no change to weft; Better Auth runs on all three layers, Native included; `--auth-provider custom` and `weft add auth`. C: Drizzle, Prisma and Native on SQLite, Postgres and MySQL, `create-weft --layer`, `weft add db`, and a database matrix (`packages/create-weft/scripts/db-matrix.mjs`). B: `warp()` takes `dials`, `radius`, `fonts` and `tokens`, all contrast-checked; `create-weft --ui tailwind` and `weft add tailwind` share their files; warp apps skip Tailwind's reset. Every warp seed hue passes D010: `warp()` fits the two tightest tokens to the hue. Slice A is built ([34](research/34-configuration.md)): `weft.config.json` and `.yaml` with one schema (P010 for two files), the `create-weft` wizard with `--yes`, `weft add` for plugins, and `weft map` with its MCP tool. Enter-through gives the todo + auth app. Plugin options aren't in the config schema yet.
 
-**2 Surfaces (2026-10-30):** built ([33](research/33-surfaces.md)): `defineSurface` and `<Surface>` in `weft/surface`,
+**2 Surfaces (2026-10-30):** built ([33](research/33-surfaces.md)): `defineSurface` and `<Surface>` in `@weft-js/core/surface`,
 `canvas2d`, `webgl2`, the `surface.renderer` and `text.measure` slots, both `text.measure` engines passing conformance
 in Chrome and WebKit, `s.text()` with its mirror, and X001–X004, X009–X012, X040 and X041. X009 was undefined and now
 means a `<Surface>` with neither `label` nor `decorative`; X007 stays undefined. Three writes in a frame give 1 paint,
@@ -1036,18 +1036,18 @@ means a `<Surface>` with neither `label` nor `decorative`; X007 stays undefined.
 renderer (25.9 KB br) are lazy. `measure()`, `lines()` and `fit()` moved to 3c, their first users.
 
 **2 Surfaces exit check (2026-10-30): met** ([result](../evals/results/surfaces-exit.md); rerun with
-`node evals/surfaces-exit.mjs`). `@weft/plugin-surface-keel`'s demo hashes equal to Keel's renderer driven directly, and
+`node evals/surfaces-exit.mjs`). `@weft-js/plugin-surface-keel`'s demo hashes equal to Keel's renderer driven directly, and
 a fresh agent added an animated surface with a live slider from a one-line request, passing 8 hidden checks.
 
 **3c status (2026-10-30):** plugin trust tooling is built ([13](research/13-plugins.md) §2.9). `.weft/plugins.lock.json` records each plugin's permissions, slots, undeclared use and a hash of its package files. P109 (a new permission, or use the audit finds undeclared) and P110 (changed code, or an unreadable lock) stop `weft check`, `weft dev` and `weft build`. A plugin asking for permissions is blocked with no lock too; one asking for nothing that passes the audit isn't. `weft plugins audit` scans the plugin's own files from its entry and its build and server modules, and `approve <name…>` or `--all` writes the lock (no arguments only shows what's waiting). `weft add` reports and never approves, `create-weft` approves what it picks, and `trust: 'warn'` turns the block into warnings. The first audit found undeclared use in warp, Prisma, Native and media, all now declared. Not built: `weft build --sandbox`, `plugins verify` and the provenance report. The lock hashes installed files, not the tarball, and transitive dependencies stay with the package manager's lockfile. `.weft/` in a repository-root `.gitignore` above an app still hides the lock.
 
-**3c virtual collections (2026-10-30):** built. `@weft/ui-core` has `Sizes` (a height index with O(log n) offsets) and `virtualizer()` (one window on one scroller, either axis), and warp has `VirtualList`, `Thread`, `Feed`, `Kanban` and `ScrollGrid` on them. `Thread` and `Kanban` are the collab pack's components, with their rich rows and move paths, windowed: there are no separate virtual ones. Give a list `text` and rows have exact heights before they render, from the lazy `text.measure` slot; without an engine rows are measured as they render. Either way what's on screen doesn't move: a size change above the viewport moves `scrollTop` by the same amount before paint. Margins, padding and wrap width come from a hidden real row per row kind, so nothing in JS restates warp's CSS. `measure()`, `lines()` and `fit()` are in `weft/text`. `<Text stream>` lands tokens once a frame, grows in whole lines and never rewrites a complete block; its height comes from the DOM, since the frame lays out after the write anyway. At 10,000 items in Chromium, and 2,000 in WebKit, every on-screen row moved exactly the scroll distance in all five views ([result](../evals/results/virtual.md); rerun with `node packages/warp/scripts/virtual.mjs`). In the long-list comparison warp's total height moves 0 px where the other stacks move about 6,600, jumps are 0 everywhere, and warp costs more load CPU: 740 ms at 4× throttle against 110–260. Not built: Ctrl+F across unrendered rows, Thread's quote, reactions and attachments, Kanban swimlanes and the 4px drop placeholder.
+**3c virtual collections (2026-10-30):** built. `@weft-js/warp-core` has `Sizes` (a height index with O(log n) offsets) and `virtualizer()` (one window on one scroller, either axis), and warp has `VirtualList`, `Thread`, `Feed`, `Kanban` and `ScrollGrid` on them. `Thread` and `Kanban` are the collab pack's components, with their rich rows and move paths, windowed: there are no separate virtual ones. Give a list `text` and rows have exact heights before they render, from the lazy `text.measure` slot; without an engine rows are measured as they render. Either way what's on screen doesn't move: a size change above the viewport moves `scrollTop` by the same amount before paint. Margins, padding and wrap width come from a hidden real row per row kind, so nothing in JS restates warp's CSS. `measure()`, `lines()` and `fit()` are in `@weft-js/core/text`. `<Text stream>` lands tokens once a frame, grows in whole lines and never rewrites a complete block; its height comes from the DOM, since the frame lays out after the write anyway. At 10,000 items in Chromium, and 2,000 in WebKit, every on-screen row moved exactly the scroll distance in all five views ([result](../evals/results/virtual.md); rerun with `node packages/warp/scripts/virtual.mjs`). In the long-list comparison warp's total height moves 0 px where the other stacks move about 6,600, jumps are 0 everywhere, and warp costs more load CPU: 740 ms at 4× throttle against 110–260. Not built: Ctrl+F across unrendered rows, Thread's quote, reactions and attachments, Kanban swimlanes and the 4px drop placeholder.
 
-**6c web half (2026-10-31):** payments ahead of the native half, as the table allows ([37](research/37-pay-web.md)). Stripe Checkout, one ledger with verified, idempotent and ordered webhooks, entitlements from a `query` and on the server, `fakePay`, `weft add pay` and PAY-codes in `weft check`, all as `@weft/pay`, a plugin that uses only public API: what it needed went into the API for everyone (`server.extension`, `FnOptions`, `net.extension`, manifest `setup` and `docs`), and `weft docs plugins` walks through it. A wasm verifier was measured against WebCrypto on Node, Bun and Deno and not adopted (37 §8). Checked with fakes and mocks only; a real test-mode purchase is still to do.
+**6c web half (2026-10-31):** payments ahead of the native half, as the table allows ([38](research/38-pay-web.md)). Stripe Checkout, one ledger with verified, idempotent and ordered webhooks, entitlements from a `query` and on the server, `fakePay`, `weft add pay` and PAY-codes in `weft check`, all as `@weft-js/pay`, a plugin that uses only public API: what it needed went into the API for everyone (`server.extension`, `FnOptions`, `net.extension`, manifest `setup` and `docs`), and `weft docs plugins` walks through it. A wasm verifier was measured against WebCrypto on Node, Bun and Deno and not adopted (37 §8). Checked with fakes and mocks only; a real test-mode purchase is still to do.
 
-**3c multiplayer and packs (2026-10-30):** `@weft/multiplayer` (presence, cursors across screen sizes, typed relay, synced scroll), three bus packs moved out of `@weft/start` (`@weft/realtime-redis`, `-nats`, `-durable-object`), three peer transports (`-webrtc`, `-socketio`, `-livekit`) and six list sources (`@weft/db-sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb`), with bus, transport and list conformance suites. Every pack declares its permissions and passes the audit. What was built and left out: [35](research/35-multiplayer-and-packs.md).
+**3c multiplayer and packs (2026-10-30):** `@weft-js/multiplayer` (presence, cursors across screen sizes, typed relay, synced scroll), three bus packs moved out of `@weft-js/start` (`@weft-js/realtime-redis`, `-nats`, `-durable-object`), three peer transports (`-webrtc`, `-socketio`, `-livekit`) and six list sources (`@weft-js/db/sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb`), with bus, transport and list conformance suites. Every pack declares its permissions and passes the audit. What was built and left out: [35](research/35-multiplayer-and-packs.md).
 
-**3c media (2026-10-30):** `@weft/plugin-media-ffmpeg` provides `media.encode@1` (keyed: AV1, VP9, HEVC, H.264, Opus, AAC) through an ffmpeg the app installs, optionally pinned by SHA-256, and declares `spawn: ffmpeg, ffprobe`. `media.build@1` stays one slot: the analyze, quality and CDN slots are not split out, since nothing provides a second one yet. `?media` now takes video and audio and GIFs become video under the 15% rule with their delays kept; `?media&audio=` muxes at build. `<Media>` renders `<video>` and `<audio>`, `timeline()` is in `weft/media`, and built video and audio answer byte ranges (a Nitro plugin; its static handler has none). `encoder: 'compatible'` (research 15's `'background'`, renamed because nothing encodes in the background: the copies are built, and only the swap is live) swaps a compatible copy in: stills drop their `<source>`s (0 extra bytes), a GIF-turned-video gets a near-transparent `<img>` of the GIF on top, and video up to 2 MB uses the dual `<video>` flip. A copy already in the HTTP cache swaps in at mount (`only-if-cached`, no network). `packages/plugin-media/test/save.headful.mjs` is the gate, on Linux under Xvfb: stills and GIFs save the right file in Chromium and Firefox and video in Chromium; Firefox writes no file for "Save Video As" under Playwright, so its video case checks the `currentSrc` its menu reads. Uploads take video, audio and animated GIFs when `mediaFfmpeg()` is bound and ffmpeg is on the server: `ctx.media.ingest` answers with the record at once, a one-at-a-time queue encodes the rungs at fixed CRFs, the route stands in the original (`no-store`) when browsers can play it and otherwise waits for that rung, and a restart resumes on the next request. Not built: Safari in that gate, a fast right-click with no hover in Firefox still saves the AVIF, `weft media plan`, ffmpeg-static pinning by version, VMAF.
+**3c media (2026-10-30):** `@weft-js/plugin-media-ffmpeg` provides `media.encode@1` (keyed: AV1, VP9, HEVC, H.264, Opus, AAC) through an ffmpeg the app installs, optionally pinned by SHA-256, and declares `spawn: ffmpeg, ffprobe`. `media.build@1` stays one slot: the analyze, quality and CDN slots are not split out, since nothing provides a second one yet. `?media` now takes video and audio and GIFs become video under the 15% rule with their delays kept; `?media&audio=` muxes at build. `<Media>` renders `<video>` and `<audio>`, `timeline()` is in `@weft-js/core/media`, and built video and audio answer byte ranges (a Nitro plugin; its static handler has none). `encoder: 'compatible'` (research 15's `'background'`, renamed because nothing encodes in the background: the copies are built, and only the swap is live) swaps a compatible copy in: stills drop their `<source>`s (0 extra bytes), a GIF-turned-video gets a near-transparent `<img>` of the GIF on top, and video up to 2 MB uses the dual `<video>` flip. A copy already in the HTTP cache swaps in at mount (`only-if-cached`, no network). `packages/plugin-media/test/save.headful.mjs` is the gate, on Linux under Xvfb: stills and GIFs save the right file in Chromium and Firefox and video in Chromium; Firefox writes no file for "Save Video As" under Playwright, so its video case checks the `currentSrc` its menu reads. Uploads take video, audio and animated GIFs when `mediaFfmpeg()` is bound and ffmpeg is on the server: `ctx.media.ingest` answers with the record at once, a one-at-a-time queue encodes the rungs at fixed CRFs, the route stands in the original (`no-store`) when browsers can play it and otherwise waits for that rung, and a restart resumes on the next request. Not built: Safari in that gate, a fast right-click with no hover in Firefox still saves the AVIF, `weft media plan`, ffmpeg-static pinning by version, VMAF.
 
 **3 exit check (2026-10-30): met** ([result](../evals/results/phase3-exit.md),
 [findings](../evals/results/phase3-exit-FINDINGS.md); rerun with `node evals/phase3-exit.mjs`). The check covers the
@@ -1110,7 +1110,7 @@ Also out of v0:
     includes weft's own reference. It is now **W017** (compiler warning with an autofix to `box.get(key)`), and the
     reference is W017-clean (5 re-runs).
   - The setup also found that weft shipped no JSX types (typecheck failed on every app). Fixed with
-    `weft/jsx-runtime`.
+    `@weft-js/core/jsx-runtime`.
   - Open:
     - restate the exit criterion, or build a harder eval;
     - P002 noise while `weft run` doesn't exist;
@@ -1193,7 +1193,7 @@ Also out of v0:
   when a keyed list's row reads `box.value[expr]` is a proposed follow-up.
 - **Native addons on Bun and Deno: settled for now.** napi-rs doesn't test addons on Deno, and Bun support is
   best-effort, but both pass the 5b exit check, which is what holds it. Dev reload needs no restart: an addon can't be
-  unloaded, and a new path per build loads beside the old one ([37 §1](research/37-rust-native.md)).
+  unloaded, and a new path per build loads beside the old one ([39 §1](research/39-rust-native.md)).
 - **Nitro v3 is beta.** Pin it; h3 v2 is the fallback.
 - **Native host on Android:** Views for the core (finer recycling control), Compose for system components through
   interop? And Hermes everywhere, or JSC on iOS for binary size? Both are settled by the 6a spike.
@@ -1202,6 +1202,7 @@ Also out of v0:
 - **Default `idiom`:** `blend` for every app, or should `create-weft` ask?
 - **Store payment rules** change with US litigation. Who owns refreshing the policy table, and how often?
 - **Names (settled 2026-10-28):** weft is the framework and warp is its default UI toolkit (the rebuild of Agorix).
+- **warp-core (2026-11-01):** `@weft-js/warp-core` is warp's behaviour and CSS with no components. It's usable directly (its README), and `use` is public at `@weft-js/warp-core/weft`, the only entry that imports weft.
 
 ## 12. Decision log
 
@@ -1272,7 +1273,7 @@ Also out of v0:
 - **Rust is opt-in per server function, with Zod as the contract** (2026-10-28). TS keeps the edge, sessions and
   cache; Rust can implement anything behind them. One crossing per function, and never a mandatory binary.
 - **warp moves ahead of Surfaces** (2026-10-28). The apps that would prove weft all need a kit, none needs a surface
-  first, and the token work overlaps `weft/ds` (agorix 04 §5). The sweep signature is mandatory at every dial stop,
+  first, and the token work overlaps `@weft-js/core/ds` (agorix 04 §5). The sweep signature is mandatory at every dial stop,
   and fields toggle between floating and classic.
 - **Native means real platform views, with layout shared in Rust** (2026-10-28). Drawn-pixel toolkits (Flutter,
   Compose Multiplatform on iOS) fail the requirement because they re-implement accessibility, IME and the system
@@ -1298,7 +1299,7 @@ Also out of v0:
   opt-in encoder mode, because it costs bytes and one behaviour (`contextmenu` save) is still unverified
   ([15](research/15-assets.md)).
 - **Agents drive the app from their own browser** (2026-10-29). `weft browser` is not a Playwright daemon: the
-  control surface is in the page (weft/agent), built on `weft/test`'s queries and user-event, and the dev server
+  control surface is in the page (@weft-js/core/agent), built on `@weft-js/core/test`'s queries and user-event, and the dev server
   relays CLI and MCP commands to whatever tab is open. Every agent already has a browser tool; weft adds what none
   of them can see (the named reactive graph) and the controls tests need (clock, network, recording), without a
   second browser or an automation dependency ([22](research/22-verify-loop.md)).
@@ -1335,16 +1336,16 @@ Also out of v0:
   `tsconfig.json` `paths`, with `#/` only the scaffold's default ([34](research/34-configuration.md)).
 - **Sidecars: `fetch` on loopback TCP, a signed envelope, generated types** (2026-10-31). The spike found 37–71 µs a call
   and no gain from a Unix socket worth a per-runtime path, so `remote()` is plain `fetch`, which also keeps it edge-safe.
-  It lives in `@weft/start/rust`, and its address in env. Schemars drift detection is dropped: with generated types it
+  It lives in `@weft-js/start/rust`, and its address in env. Schemars drift detection is dropped: with generated types it
   would only compare typify with itself, so `cargo`, a contract hash and TS's output validation catch drift instead.
   `SharedCtx` has no `user()`, so a shared cache can't hold a user's data by accident. The supervisor stays in the CLI, out
   of the server bundle. `weft dev` waits for the first build, as a queue would outlive signatures and timeouts. Typed errors
   apply to TS bodies through `raise()` too, so a swap can't change what a client catches ([36](research/36-rust-remote.md)).
-- **Primitives in `@weft/warp`, `weft/ds` as names only; Phase 4's bar stands unmet** (2026-10-31). weft can't depend on
-  ui-core, so primitives sit with the tokens they use. Token D-codes need `@weft/warp`; a11y codes run in every app. The exit
+- **Primitives in `@weft-js/warp`, `@weft-js/core/ds` as names only; Phase 4's bar stands unmet** (2026-10-31). weft can't depend on
+  warp-core, so primitives sit with the tokens they use. Token D-codes need `@weft-js/warp`; a11y codes run in every app. The exit
   check missed consistency: most extra values come from warp's own spec (fluid line-heights, tone channels, three families),
   which Phase 4 doesn't redesign, and the bar isn't moved after the result. Role drift is a real miss, so `Heading` roles
-  and a link style come next ([36](research/36-ds.md)). Those landed: `Heading` picks its role from `level`, warp has `Link`
+  and a link style come next ([37](research/37-ds.md)). Those landed: `Heading` picks its role from `level`, warp has `Link`
   and a base `a` colour, and D006 and D007 catch what's left.
 - **warp's CSS is spent on what the app's components can do** (2026-10-31). The dashboard's sheet went from 20.1 to 19.0 KB br:
   purging now drops dead alternatives inside `:where()` and `:is()`, and closed values and dial tiers no build file names.
@@ -1354,4 +1355,4 @@ Also out of v0:
 - **A rebuilt addon loads beside the old one** (2026-10-31). §11 expected dev reload to restart the server worker, because
   an addon can't be unloaded. It needn't be: `dlopen` of a new path gives a second copy on macOS and Linux, on Node, Bun
   and Deno, and calls in flight finish on the first. So `weft dev` writes each build to its own file, and `native()` has
-  no worker pool of its own to strand ([37](research/37-rust-native.md)).
+  no worker pool of its own to strand ([39](research/39-rust-native.md)).

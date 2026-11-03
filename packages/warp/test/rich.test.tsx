@@ -1,14 +1,14 @@
 // The rich inputs: keyboard behaviour against 04 §1.3–1.4, ARIA wiring, and SSR + hydration with the locale pinned.
-import { resetIds } from '@weft/ui-core'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { flush, render } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import * as C from './fixtures/Rich'
-// @ts-expect-error: query imports (weft/vite)
-import * as server from './fixtures/Rich.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/Rich.tsx?weft-hydrate'
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const server = await import('./fixtures/Rich.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/Rich.tsx?weft-hydrate')
 
 // jsdom has no popover top layer: a closed <dialog> stays display:none and refuses focus
 beforeAll(() => { document.head.append(Object.assign(document.createElement('style'), { textContent: 'dialog { display: block !important }' })) })
@@ -37,7 +37,7 @@ test.each(Object.keys(server).filter(n => !n.endsWith('$shape')))('%s: SSR + hyd
 })
 
 test('segments render in the locale order with spinbutton names', async () => {
-  const { container } = render(C.DateFieldCase as any)
+  const { container } = render(C.DateFieldCase)
   await flush()
   const spins = [...container.querySelectorAll('[role="spinbutton"]')]
   expect(spins.map(s => s.getAttribute('data-type'))).toEqual(['month', 'day', 'year'])
@@ -49,7 +49,7 @@ test('segments render in the locale order with spinbutton names', async () => {
 })
 
 test('typing a segment moves on when no further digit fits, and only a whole date is a value', async () => {
-  const { container } = render(C.DateFieldCase as any)
+  const { container } = render(C.DateFieldCase)
   await flush()
   key(seg(container, 'day'), 'Backspace')
   key(seg(container, 'day'), 'Backspace')
@@ -67,7 +67,7 @@ test('typing a segment moves on when no further digit fits, and only a whole dat
 })
 
 test('31 Feb is explained, not a value', async () => {
-  const { container } = render(C.DateFieldCase as any)
+  const { container } = render(C.DateFieldCase)
   await flush()
   key(seg(container, 'day'), '3')
   key(seg(container, 'day'), '1')
@@ -85,7 +85,7 @@ const grid = async (c: HTMLElement) => {
 }
 
 test('the grid has one tab stop, full day names, and APG keys', async () => {
-  const { container } = render(C.CalendarCase as any)
+  const { container } = render(C.CalendarCase)
   let day = await grid(container)
   expect(container.querySelectorAll('[data-part="day"][tabindex="0"]').length).toBe(1)
   expect(day.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026')
@@ -113,7 +113,7 @@ test('the grid has one tab stop, full day names, and APG keys', async () => {
 })
 
 test('PageUp keeps the day where the month has it, Shift+Page moves a year', async () => {
-  const { container } = render(C.CalendarCase as any)
+  const { container } = render(C.CalendarCase)
   let day = await grid(container)
   key(day, 'PageUp', { shiftKey: true })
   day = await grid(container)
@@ -122,7 +122,7 @@ test('PageUp keeps the day where the month has it, Shift+Page moves a year', asy
 })
 
 test('the trigger opens the panel onto the selected day, Escape closes it', async () => {
-  const { container } = render(C.DateFieldOpenCase as any)
+  const { container } = render(C.DateFieldOpenCase)
   await flush()
   const t = container.querySelector<HTMLElement>('[data-part="trigger"]')!
   expect(t.getAttribute('aria-expanded')).toBe('false')
@@ -138,7 +138,7 @@ test('the trigger opens the panel onto the selected day, Escape closes it', asyn
 })
 
 test('range picks start then end, swapped if earlier, and says so in the day names', async () => {
-  const { container } = render(C.RangeFieldCase as any)
+  const { container } = render(C.RangeFieldCase)
   await flush()
   container.querySelector<HTMLElement>('[data-part="trigger"]')!.click()
   await flush()
@@ -154,7 +154,7 @@ test('range picks start then end, swapped if earlier, and says so in the day nam
 })
 
 test('a preset fills the range and keeps its id', async () => {
-  const { container } = render(C.RangeFieldCase as any)
+  const { container } = render(C.RangeFieldCase)
   await flush()
   container.querySelector<HTMLElement>('[data-part="trigger"]')!.click()
   await flush()
@@ -165,7 +165,7 @@ test('a preset fills the range and keeps its id', async () => {
 })
 
 test('a 12-hour time splits into hour, minute and period, and the slot list picks', async () => {
-  const { container } = render(C.TimeFieldCase as any)
+  const { container } = render(C.TimeFieldCase)
   await flush()
   expect([...container.querySelectorAll('[role="spinbutton"]')].map(s => s.getAttribute('data-type'))).toEqual(['hour', 'minute', 'dayPeriod'])
   key(seg(container, 'dayPeriod'), 'p')
@@ -183,7 +183,7 @@ test('a 12-hour time splits into hour, minute and period, and the slot list pick
 })
 
 test('a date-time holds one wall-clock value', async () => {
-  const { container } = render(C.DateTimeFieldCase as any)
+  const { container } = render(C.DateTimeFieldCase)
   await flush()
   expect(container.querySelector('[data-part="hint"]')!.textContent).toContain('wall clock, no zone')
   key(seg(container, 'day'), 'ArrowUp')
@@ -192,7 +192,7 @@ test('a date-time holds one wall-clock value', async () => {
 })
 
 test('MonthPicker: named cells, arrows by row, picks', async () => {
-  const { container } = render(C.MonthCase as any)
+  const { container } = render(C.MonthCase)
   await flush()
   container.querySelector<HTMLElement>('[data-part="pick"]')!.click()
   await flush()
@@ -207,7 +207,7 @@ test('MonthPicker: named cells, arrows by row, picks', async () => {
 })
 
 test('WeekPicker selects the whole row and shows week numbers', async () => {
-  const { container } = render(C.WeekCase as any)
+  const { container } = render(C.WeekCase)
   await flush()
   container.querySelector<HTMLElement>('[data-part="pick"]')!.click()
   await flush()
@@ -219,7 +219,7 @@ test('WeekPicker selects the whole row and shows week numbers', async () => {
 })
 
 test('PeriodPicker keeps the granularity of its value', async () => {
-  const { container } = render(C.PeriodCase as any)
+  const { container } = render(C.PeriodCase)
   await flush()
   container.querySelector<HTMLElement>('[data-part="pick"]')!.click()
   await flush()
@@ -230,7 +230,7 @@ test('PeriodPicker keeps the granularity of its value', async () => {
 })
 
 test('TimeZoneSelect searches names and offsets', async () => {
-  const { container } = render(C.ZoneCase as any)
+  const { container } = render(C.ZoneCase)
   await flush()
   container.querySelector<HTMLElement>('[data-part="pick"]')!.click()
   await flush()
@@ -246,16 +246,16 @@ test('TimeZoneSelect searches names and offsets', async () => {
 })
 
 test('Intl selects name their options in the UI locale', async () => {
-  const lang = render(C.LanguageCase as any).container
+  const lang = render(C.LanguageCase).container
   await flush()
   expect(lang.querySelector('[data-part="pick"] span')!.textContent).toBe('German')
-  const cur = render(C.CurrencyCase as any).container
+  const cur = render(C.CurrencyCase).container
   await flush()
   expect(cur.querySelector('[data-part="pick"] span')!.textContent).toBe('Euro · EUR')
 })
 
 test('PhoneField formats as you type and is a value only when whole', async () => {
-  const { container } = render(C.PhoneCase as any)
+  const { container } = render(C.PhoneCase)
   await flush()
   const i = container.querySelector<HTMLInputElement>('input[type="tel"]')!
   i.value = '4155550'
@@ -271,7 +271,7 @@ test('PhoneField formats as you type and is a value only when whole', async () =
 })
 
 test('DurationField steps with carry and balances', async () => {
-  const { container } = render(C.DurationCase as any)
+  const { container } = render(C.DurationCase)
   await flush()
   const m = container.querySelector<HTMLElement>('[data-u="m"]')!
   expect(m.getAttribute('aria-valuetext')).toBe('30 minutes')
@@ -280,7 +280,7 @@ test('DurationField steps with carry and balances', async () => {
 })
 
 test('RecurrenceField leads with the sentence and writes an RRULE', async () => {
-  const { container } = render(C.RecurrenceCase as any)
+  const { container } = render(C.RecurrenceCase)
   await flush()
   expect(container.querySelector('.rr-sentence')!.textContent).toBe('Every 2 weeks on Tuesday and Thursday.')
   const li = [...container.querySelectorAll('.rr-next li')].map(x => x.textContent)
@@ -292,17 +292,17 @@ test('RecurrenceField leads with the sentence and writes an RRULE', async () => 
 })
 
 test('a rule with parts the field cannot edit stays read-only and whole', async () => {
-  const { container } = render(C.CustomRuleCase as any)
+  const { container } = render(C.CustomRuleCase)
   await flush()
   expect(container.querySelector('.rr-sentence')!.textContent).toBe('Custom rule')
   expect(container.querySelector('.readout b')!.textContent).toBe('FREQ=WEEKLY;BYSETPOS=2')
 })
 
-const settle = () => new Promise(r => setTimeout(r, 160))
+const settle = () => new Promise(r => { setTimeout(r, 160) })
 const type = (i: HTMLInputElement, t: string) => { i.value = t; i.dispatchEvent(new Event('input', { bubbles: true })) }
 
 test('PlaceLookupInput keeps focus in the input and picks with Enter', async () => {
-  const { container } = render(C.PlaceCase as any)
+  const { container } = render(C.PlaceCase)
   await flush()
   const i = container.querySelector<HTMLInputElement>('[role="combobox"]')!
   i.focus()
@@ -323,7 +323,7 @@ test('PlaceLookupInput keeps focus in the input and picks with Enter', async () 
 })
 
 test('AddressField lets the country decide the fields', async () => {
-  const { container } = render(C.AddressCase as any)
+  const { container } = render(C.AddressCase)
   await flush()
   const labels = () => [...container.querySelectorAll('.addr-grid [autocomplete]')].map(i => i.getAttribute('autocomplete'))
   expect(labels()).toEqual(['address-line1', 'address-line2', 'address-level2', 'address-level1', 'postal-code'])
@@ -335,7 +335,7 @@ test('AddressField lets the country decide the fields', async () => {
 })
 
 test('AddressField falls back to manual entry when the provider fails', async () => {
-  const { container } = render(C.AddressFailCase as any)
+  const { container } = render(C.AddressFailCase)
   await flush()
   const i = container.querySelector<HTMLInputElement>('[role="combobox"]')!
   type(i, '16')
@@ -346,22 +346,23 @@ test('AddressField falls back to manual entry when the provider fails', async ()
 })
 
 test('PaymentCardInput follows provider events and renders no card input', async () => {
-  const { container } = render(C.CardCase as any)
+  const { container } = render(C.CardCase)
   await flush()
   await flush()
-  const host = container.querySelector<any>('[data-part="provider"]')!
+  const host = container.querySelector<HTMLElement & { fire(event: string, detail: unknown): void }>('[data-part="provider"]')!
   expect(container.querySelector('input')).toBeNull()
   host.fire('change', { error: 'Your card number is incomplete.' })
   await flush()
   expect(container.textContent).toContain('Your card number is incomplete.')
-  expect(container.querySelector('[data-card-text]')!.textContent).toBe('Visa •••• 4242 · 09/28')
+  expect(container.querySelector('[data-card-text] > [aria-hidden]')!.textContent).toBe('Visa •••• 4242 · 09/28')
+  expect(container.querySelector('[data-card-text] > [data-part="sr-only"]')!.textContent).toBe('Visa ending 4242, expires 09/28')
 })
 
 test('SignaturePad can be signed from the keyboard', async () => {
-  const { container } = render(C.SignatureCase as any)
+  const { container } = render(C.SignatureCase)
   await flush()
   expect(container.querySelector('canvas')!.getAttribute('aria-label')).toBe('Signature, empty')
-  container.querySelectorAll<HTMLInputElement>('input[type="radio"]')[1].click()
+  container.querySelectorAll<HTMLInputElement>('input[type="radio"]')[1]!.click()
   await flush()
   const t = container.querySelector<HTMLInputElement>('[data-part="typed"]')!
   type(t, 'Ada Lovelace')
@@ -371,15 +372,15 @@ test('SignaturePad can be signed from the keyboard', async () => {
 
 test('a field re-reads the page background when the theme changes after mount', async () => {
   document.body.style.backgroundColor = 'rgb(255, 255, 255)'
-  const { container } = render(C.DateFieldCase as any)
+  const { container } = render(C.DateFieldCase)
   await flush()
-  await new Promise(r => requestAnimationFrame(r))
-  await new Promise(r => setTimeout(r, 40))
+  await new Promise(r => { requestAnimationFrame(r) })
+  await new Promise(r => { setTimeout(r, 40) })
   const label = container.querySelector<HTMLElement>('[data-part="label"]')!
   expect(label.style.getPropertyValue('--_notch-color')).toBe('rgb(255, 255, 255)')
   document.body.style.backgroundColor = 'rgb(15, 12, 7)'
   document.documentElement.dataset.theme = 'dark'
-  await new Promise(r => setTimeout(r, 450))
+  await new Promise(r => { setTimeout(r, 450) })
   expect(label.style.getPropertyValue('--_notch-color')).toBe('rgb(15, 12, 7)')
   delete document.documentElement.dataset.theme
   document.body.style.backgroundColor = ''

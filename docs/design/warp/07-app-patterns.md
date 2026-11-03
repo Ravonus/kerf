@@ -62,7 +62,7 @@ const answer = stream(run.events, { fold: foldAnswer, keep: 'all' })   // Signal
 // Two-way, named messages with auth; presence and cursors use delivery: 'latest'.
 const room = channel('room/:id', { authorize, client: { cursor, react, hand }, server: { joined, left, speaking } })
 room.status   // 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
-const peers = presence(room)          // @weft/multiplayer: Signal<Peer[]>, cursors anchored to [data-anchor]
+const peers = presence(room)          // @weft-js/multiplayer: Signal<Peer[]>, cursors anchored to [data-anchor]
 online(); visible()                   // browser values: pause animation and polling when hidden
 ```
 
@@ -150,7 +150,7 @@ Rail (desktop ≥ 1000): Tabs Plan · Trace · Changes   Plan = TaskList + Queue
 |---|---|---|---|---|
 | token arrival | 120 ms opacity per token | same | same | no fade, text still streams |
 | tool running | light travels bottom edge | same | same, slower | static 50% accent line |
-| tool done / approved | border sweep in → out, 480 ms | 620 ms | 700 ms | instant colour flash |
+| tool done / approved | border sweep in → out, 400 ms | 520 ms | 580 ms | instant colour flash |
 | reasoning fold | height 200 ms | 270 ms | 320 ms | instant |
 | new turn | fade + 4px | 8px + top-edge sweep | 12px + spring + full-border sweep | fade only |
 
@@ -487,12 +487,12 @@ production apps show only LiveStatus (§4.4).
 ride one multiplexed, fetch-based SSE connection per tab (`POST /_weft/rt`), and `channel` rides one multiplexed
 WebSocket per tab (crossws). A developer chooses the server **bus** (`realtime.bus`: `memory`, `postgres`
 LISTEN/NOTIFY, `redis`, `nats`, `durable-object`) and, in a sandbox or test, the **wire under test**: weft's default
-wires, tabs only (BroadcastChannel, `tabs.channel`, no server) or the fake in-memory pair from `weft/test`.
+wires, tabs only (BroadcastChannel, `tabs.channel`, no server) or the fake in-memory pair from `@weft-js/core/test`.
 
 ```
 TransportPicker[data-scope="transport"] (container: transport)
 ├─ Header    title · LiveStatus (worst lane) · Reset
-├─ Wire      radiogroup (choice cards): weft default (SSE + WebSocket) · Tabs only · Fake (weft/test)
+├─ Wire      radiogroup (choice cards): weft default (SSE + WebSocket) · Tabs only · Fake (@weft-js/core/test)
 ├─ Bus       radiogroup (choice cards): memory · postgres · redis · nats · durable-object · Preset Select
 │            (Single instance · Multi-instance · Cloudflare); an invalid pair shows the build error inline
 ├─ Network   Select: Good · Slow · Lossy · WebSocket blocked · Offline (a Select, not a segmented: five
@@ -529,7 +529,7 @@ TransportPicker[data-scope="transport"] (container: transport)
 ```ts
 // weft.config.ts: the only production knob
 export default defineConfig({ realtime: { bus: 'postgres', origins: ['https://app.example'] } })
-// sandbox / tests: the fake pair from weft/test, with a network model (proposed)
+// sandbox / tests: the fake pair from @weft-js/core/test, with a network model (proposed)
 const net = server.network({ latency: [40, 120], loss: 0.02, blockUpgrade: false })
 <TransportPicker lanes={{ live: todos.live, stream: board.status, channel: chat.status }} bus="postgres" />
 ```
@@ -664,7 +664,7 @@ Demo: `#collab-demo` (shared brief: cursors, peer selections, lock, conflict, co
 
 ```ts
 const doc = channel(`doc/${id}`, { authorize, client: { cursor, select, relay }, server: { op, presence } })
-const peers = presence(doc, { delivery: 'latest' })        // @weft/multiplayer
+const peers = presence(doc, { delivery: 'latest' })        // @weft-js/multiplayer
 <PresenceStack peers={peers} onFollow />
 <Cursors peers={peers} anchor="[data-anchor]" idle={5000} />
 <ShareDialog object={doc} members={query(listMembers)} onInvite onRoleChange onLinkAccess />
@@ -865,7 +865,7 @@ page theme.
   collide), so `warp-app.css` §13 mirrors the `system-page` anatomy with the same values; where both load, flows wins.
 - **realtime (PLAN §4.2, research 07 §9.5):** the transport picker shows no polling fallback because weft v0 has none.
   If a long-poll fallback or a `transport` option lands, add it as a Network outcome and a wire card, not before.
-  `server.network({ latency, loss, blockUpgrade })` in §4.7 is a proposed `weft/test` addition.
+  `server.network({ latency, loss, blockUpgrade })` in §4.7 is a proposed `@weft-js/core/test` addition.
 - **Signature:** Kanban cards and comment threads still sweep at every stop; gate them with
   `--_on: var(--warp-sweep-surfaces)` if review 01 asks again. Calendar events stay ungated on purpose: they are
   controls.

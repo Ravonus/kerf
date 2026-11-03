@@ -1,0 +1,22 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* SignGate (the original's flow / blocker / badge, rebuilt) */
+:where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--warp-radius-surface); overflow: clip; }
+:where([data-scope="gate"]:not([data-state="signed"]) > [data-part="content"]) { filter: blur(calc(2px + 4px * (1 - var(--warp-x)))); opacity: 0.5; pointer-events: none; user-select: none; }
+:where([data-scope="gate"] > [data-part="blocker"]) {
+  position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: var(--warp-space-group);
+  background: color-mix(in oklab, var(--warp-color-surface) 78%, transparent);
+  backdrop-filter: blur(var(--warp-blur-overlay)); -webkit-backdrop-filter: blur(var(--warp-blur-overlay));
+}
+:where([data-scope="gate"][data-state="signed"] > [data-part="blocker"]) { display: none; }
+/* the gate's page stays visible but inert under the blocker (09 §2.4); give it room for the card */
+:where([data-scope="gate"] > [data-part="content"]) { min-block-size: 200px; }
+:where([data-scope="gate"] [data-part="blocker"] :is(h4)),
+:where([data-scope="gate"] [data-part="blocker"] :is(h5)) { margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.25 var(--warp-text-heading-font); }
+@media (prefers-reduced-transparency: reduce) {
+:where([data-scope="gate"] > [data-part="blocker"]) { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--warp-color-surface); }
+}
+@media (forced-colors: active) {
+:where([data-scope="gate"] > [data-part="blocker"]) { background: Canvas; forced-color-adjust: none; color: CanvasText; }
+}
+}

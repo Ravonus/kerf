@@ -1,7 +1,7 @@
 // The virtual collections at a realistic length, for the a11y gallery.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Feed } from '../../src/Feed'
-import type { ChatMessage } from '@weft/ui-core'
+import type { ChatMessage } from '@weft-js/warp-core'
 import { Kanban, type KanbanCardData, type KanbanColumn } from '../../src/collab/Kanban'
 import { ScrollGrid } from '../../src/ScrollGrid'
 import { Thread } from '../../src/collab/Thread'

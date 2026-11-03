@@ -1,0 +1,21 @@
+# Secret scanning: `npm run check`, the pre-commit hook and CI read this. The default rules plus the paths below.
+# A path here is a fixture that only looks like a secret. Say why, one line each. A real secret never goes here: rotate it.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated output and third-party bundles, not this repo's secrets"
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)target/''',
+  '''(^|/)dist/''',
+  '''(^|/)\.output/''',
+  '''(^|/)\.weft/''',
+  '''(^|/)package-lock\.json$''',
+  '''(^|/)Cargo\.lock$''',
+  '''(^|/)\.gitleaks-report\.json$''',
+]
+
+[[allowlists]]
+description = "The placeholders the pay plugin writes and its tests look for, and a WebSocket header name"
+regexes = ['''sk_test_placeholder''', '''whsec_placeholder''', '''sec-websocket-(?:version|key)''', '''dGhlIHNhbXBsZSBub25jZQ==''']

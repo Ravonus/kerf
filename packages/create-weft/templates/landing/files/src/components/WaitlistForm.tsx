@@ -1,5 +1,5 @@
-import { Form, type FormApi } from '@weft/start'
-import { Alert, Button, Input, Stack, Text } from '@weft/warp'
+import { Form, type FormApi } from '@weft-js/start'
+import { Alert, Button, Input, Stack, Text } from '@weft-js/warp'
 import { joinWaitlist } from '#/server/waitlist'
 
 export function WaitlistForm() {

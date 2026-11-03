@@ -1,0 +1,17 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="thread"][data-part="root"]) {
+  container: thread / inline-size;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; block-size: 100%; min-block-size: 0; background: var(--warp-color-surface);
+}
+:where([data-scope="thread"] [data-part="log"]) { overflow: auto; overscroll-behavior: contain; padding: var(--warp-space-group); display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin; }
+:where([data-scope="thread"] [data-part="divider"]) {
+  display: flex; align-items: center; gap: 12px; margin-block: 14px 8px; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em;
+}
+:where([data-scope="thread"] [data-part="divider"])::before, :where([data-scope="thread"] [data-part="divider"])::after { content: ""; flex: 1; border-block-start: 1px solid var(--warp-color-border); }
+/* "Jump to latest": over the log, on the log's own grid row (07 §5.2) */
+:where([data-scope="thread"] [data-part="log"]) { grid-area: 2 / 1; }
+:where([data-scope="thread"] [data-part="jump"]) { grid-area: 2 / 1; align-self: end; justify-self: center; z-index: 5; margin-block-end: 8px; }
+:where([data-scope="thread"] [data-part="divider"][data-unread]) { color: var(--warp-color-accent-text); }
+:where([data-scope="thread"] [data-part="divider"][data-unread])::before, :where([data-scope="thread"] [data-part="divider"][data-unread])::after { border-color: var(--warp-color-sweep); }
+}

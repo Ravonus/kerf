@@ -1,5 +1,5 @@
-import { Card, Grid, Heading, Select, Skeleton, Stack, Table, Text, toast, type Column } from '@weft/warp'
-import { derived } from 'weft'
+import { Card, Grid, Heading, Select, Skeleton, Stack, Table, Text, toast, type Column } from '@weft-js/warp'
+import { derived } from '@weft-js/core'
 import { StatusBadge } from '#/components/StatusBadge'
 import { date, money, statuses, type Status } from '#/lib/orders'
 import { getOrder, setOrderStatus } from '#/server/orders'

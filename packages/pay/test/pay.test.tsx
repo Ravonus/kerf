@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 // weft/pay end to end over `fakePay` (research 10 §8): a real mutation opens the checkout, a signed webhook goes through
 // the real ledger, and a `.live` query shows the grant. Nothing here reaches a network.
-import { derived } from 'weft'
-import { clock, net, render, screen, user } from 'weft/test'
-import { entitlementTag, price, product } from '@weft/pay'
-import { definePay, memoryPayStore } from '@weft/pay/server'
-import { fakePay } from '@weft/pay/test'
-import { mutation, query, redirect } from '@weft/start'
+import { derived } from '@weft-js/core'
+import { clock, net, render, screen, user } from '@weft-js/core/test'
+import { entitlementTag, price, product } from '@weft-js/pay'
+import type { RailEvent } from '@weft-js/pay'
+import { definePay, memoryPayStore } from '@weft-js/pay/server'
+import { fakePay } from '@weft-js/pay/test'
+import { mutation, query, redirect } from '@weft-js/start'
 
 const DAY = 86_400_000
 const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } }, grants: ['pro'] })
@@ -20,7 +21,7 @@ const report = query({ $id: 'pay.report', auth: 'user', requires: ['pro'], run: 
 const export_ = mutation({ $id: 'pay.export', auth: 'user', requires: ['pro'], run: () => 'done' })
 const has = query({ $id: 'pay.has', auth: 'user', run: async ({ ctx }) => ctx.entitlements.has('pro') })
 
-declare module '@weft/start' { interface Context { user: { id: string } | null } }
+declare module '@weft-js/start' { interface Context { user: { id: string } | null } }
 
 function Paywall() {
   const mine = entitlements.live()
@@ -28,7 +29,7 @@ function Paywall() {
   return (
     <>
       <p aria-label="plan">{isPro.value ? 'Pro' : 'Free'}</p>
-      <button onClick={() => checkout({ product: 'pro', plan: 'month' })}>Go Pro · {price(pro, 'month').display}</button>
+      <button onClick={() => void checkout({ product: 'pro', plan: 'month' })}>Go Pro · {price(pro, 'month').display}</button>
     </>
   )
 }
@@ -45,7 +46,7 @@ describe('a purchase, as a user sees it', () => {
     await user.click(screen.getByRole('button', { name: /Go Pro · \$9\.99/ }))
     await net.settle()
     expect(fake.sessions[0]).toMatchObject({ user: 'u1', line: { product: 'pro', amount: 999, interval: 'month' } })
-    expect(fake.sessions[0].successUrl).toBe('http://localhost/thanks')
+    expect(fake.sessions[0]!.successUrl).toBe('http://localhost/thanks')
     expect(plan()).toBe('Free')
 
     await fake.complete()
@@ -92,7 +93,7 @@ describe('the life of a subscription, on the clock', () => {
     expect(await fake.entitlements('u1')).toEqual(['pro'])
 
     await fake.simulate('renewal-failed')
-    expect((await fake.purchases('u1'))[0].state).toBe('grace')
+    expect((await fake.purchases('u1'))[0]!.state).toBe('grace')
     expect(await fake.entitlements('u1')).toEqual(['pro'])
 
     await fake.simulate('recovered')
@@ -133,7 +134,7 @@ describe('the life of a subscription, on the clock', () => {
 })
 
 describe('webhooks', () => {
-  const event = (over: object) => ({ id: 'e1', at: 1000, purchase: 'p1', state: 'active', user: 'u1', product: 'pro', ...over }) as any
+  const event = (over: object) => ({ id: 'e1', at: 1000, purchase: 'p1', state: 'active', user: 'u1', product: 'pro', ...over }) as RailEvent
 
   test('a forged delivery is refused and changes nothing', async () => {
     const fake = fakePay({ catalog: [pro] })
@@ -152,10 +153,10 @@ describe('webhooks', () => {
   })
 
   test('a repeat pokes no one', async () => {
-    const pay = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' } })
+    const ledger = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' } })
     const events = [event({})]
-    expect(await pay.ingest('fake', events)).toEqual(['entitlements:u1'])
-    expect(await pay.ingest('fake', events)).toEqual([])
+    expect(await ledger.ingest('fake', events)).toEqual(['entitlements:u1'])
+    expect(await ledger.ingest('fake', events)).toEqual([])
   })
 
   test('events out of order land where the rail\'s clock puts them', async () => {
@@ -181,7 +182,7 @@ describe('webhooks', () => {
 
   test('a store failure answers 500, so the rail redelivers, and the event isn\'t marked seen', async () => {
     const store = memoryPayStore()
-    const save = store.save
+    const save = store.save.bind(store)
     let down = true
     store.save = async p => { if (down) throw new Error('database down'); return save(p) }
     const fake = fakePay({ catalog: [pro], store })
@@ -214,7 +215,7 @@ describe('on the server', () => {
 
   test('a signed-out buyer and a second subscription are refused, by code', async () => {
     const fake = fakePay({ catalog: [pro] })
-    await expect(fake.pay.checkout({ user: null }, { product: 'pro' })).rejects.toMatchObject({ code: 'PAY010', status: 401 })
+    await expect(fake.pay.checkout({ user: null, request: { url: 'http://x/' } }, { product: 'pro' })).rejects.toMatchObject({ code: 'PAY010', status: 401 })
     await fake.buy('u1', 'pro', 'month')
     await expect(fake.buy('u1', 'pro', 'month')).rejects.toMatchObject({ code: 'PAY023', status: 409 })
   })
@@ -226,11 +227,12 @@ describe('on the server', () => {
     await fake.buy('u1', 'pro', 'month')
     expect(await fake.pay.portal(ctx)).toMatch(/^https:\/\/fake-pay\.test\/portal\//)
     await fake.pay.checkout(ctx, { product: 'credits' })
-    expect(fake.sessions.at(-1)!.customer).toBe((await fake.purchases('u1'))[0].customer)
+    expect(fake.sessions.at(-1)!.customer).toBe((await fake.purchases('u1'))[0]!.customer)
   })
 
-  test('the input takes names; an unknown product or plan fails validation, and an amount is dropped', async () => {
-    const { validate } = pay.input['~standard']
+  test('the input takes names; an unknown product or plan fails validation, and an amount is dropped', () => {
+    const standard = pay.input['~standard']
+    const validate = (v: unknown) => standard.validate(v)
     expect(validate({ product: 'pro', plan: 'month', amount: 1 })).toEqual({ value: { product: 'pro', plan: 'month' } })
     expect(validate({ product: 'free' })).toMatchObject({ issues: [{ message: 'no product `free`' }] })
     expect(validate({ product: 'pro', plan: 'week' })).toMatchObject({ issues: [{ message: '`pro` has no plan `week`' }] })
@@ -238,7 +240,7 @@ describe('on the server', () => {
   })
 
   test('a memory ledger is refused outside dev, and two rails need a choice', async () => {
-    const memory = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' }, slot: async () => ({ load: async () => ({}), providers: { stripe: '@a', paddle: '@b' } }) })
+    const memory = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' }, slot: () => Promise.resolve({ load: () => Promise.resolve({}), providers: { stripe: '@a', paddle: '@b' } }) })
     expect(() => memory.check!(false)).toThrow(expect.objectContaining({ code: 'PAY016' }))
     memory.check!(true)
     await expect(Promise.resolve().then(() => memory.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }))).rejects.toMatchObject({ code: 'PAY022' })

@@ -1,8 +1,8 @@
 // What claiming leaves behind and what it does when it can't claim: markers, keys, and a key that isn't there.
 // weft-allow T004, T005: framework test of hydration; server markup and node identity are the subject
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { createRoot, derived, effect, flush, rt, state, view } from 'weft'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { createRoot, derived, effect, flush, rt, state, view } from '@weft-js/core'
 import { hydration } from '../src/hydrate'
 // @ts-expect-error: query imports (vite.mjs)
 import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'

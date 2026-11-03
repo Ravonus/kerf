@@ -3,7 +3,7 @@
 The v3 shop styled two ways, for [research 23](../../docs/research/23-style-groups.md) §6:
 
 - `shop-css/`: BEM classes plus one hand-written stylesheet (`src/shop.css`) on warp's tokens.
-- `shop-groups/`: the same design as `weft/style` groups.
+- `shop-groups/`: the same design as `@weft-js/core/style` groups.
 
 `node spikes/style-groups/run.mjs` grades both against the hidden v3 tests plus `spike.test.tsx` (in
 `evals/frameworks/weft`), builds both with Vite, and writes `results.json`: CSS bytes, styling tokens per element,

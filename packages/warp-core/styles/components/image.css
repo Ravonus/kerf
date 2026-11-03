@@ -1,0 +1,19 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Image: reserves its box (aspect-ratio), fades in, falls back to a weave ----- */
+:where([data-scope="image"]) {
+  position: relative; display: block; overflow: clip; border-radius: var(--warp-radius-surface);
+  aspect-ratio: var(--_ratio, 16 / 9); background: var(--warp-color-surface-sunken);
+}
+:where([data-scope="image"] > img) {
+  inline-size: 100%; block-size: 100%; object-fit: cover; display: block; opacity: 0;
+  transition: opacity var(--warp-duration-slow) var(--warp-ease-out);
+}
+:where([data-scope="image"][data-state="loaded"] > img) { opacity: 1; }
+:where([data-scope="image"][data-state="error"])::after {
+  content: attr(data-alt); position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center;
+  font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle);
+  background: repeating-linear-gradient(90deg, transparent 0 11px, var(--warp-color-border) 11px 12px);
+}
+:where([data-scope="image"] > figcaption) { position: absolute; inset: auto 0 0; padding: 8px 12px; font-size: var(--warp-text-caption-size); color: #fff; background: linear-gradient(transparent, rgb(0 0 0 / 0.55)); }
+}

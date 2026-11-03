@@ -71,7 +71,7 @@ are that, applied to app code and not just to warp.
 
 ```tsx
 // order-card.tsx: the group lives next to the component that uses it
-import { group } from 'weft/style'
+import { group } from '@weft-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
@@ -289,7 +289,7 @@ none of these collide.
 
 ## 6. Spike results
 
-Step 1 of §4, run 2026-10-29, then a second pass the same day on CSS size (6.4). Code: `weft/style`
+Step 1 of §4, run 2026-10-29, then a second pass the same day on CSS size (6.4). Code: `@weft-js/core/style`
 (`packages/weft/src/style.ts`, `src/style/vocab.ts`, `src/style/css.ts`), the compiler's
 `crates/weft-compiler/src/style.rs`, and the `weft:style` part of `vite.mjs`. The measurements are in
 `spikes/style-groups/` (`run.mjs` for the shop, `scale.mjs` for 6.5, `results.json`, sample output in `out/`).
@@ -538,7 +538,7 @@ Things to carry into step 2:
 
 - **weft wrote boolean `true` as an empty attribute** (`aria-pressed=""` on the client; a bare `aria-pressed` from
   SSR). `aria-pressed=""` isn't valid ARIA, and `[aria-pressed="true"]` never matches it, which is the hand shop's one
-  computed-style difference in 6.2. The v4 eval branch (PR #17) fixed it in weft/dom and the SSR back end: `aria-*`
+  computed-style difference in 6.2. The v4 eval branch (PR #17) fixed it in @weft-js/core/dom and the SSR back end: `aria-*`
   booleans are now the words. Groups still lower an ARIA state to `"true"`/`"false"`, since a state's value may be any
   truthy expression and a static one becomes plain template text.
 - **With tagged parts, `@scope` needs `:not([data-part])` in its prelude and its bound**, or a part becomes its own
@@ -548,20 +548,20 @@ Things to carry into step 2:
 
 ## 7. Step 2: the matrix, `weft style`, MCP tools, D020–D025
 
-Built 2026-10-29 on the spike's code. Nothing in `packages/warp` or `packages/ui-core` changed.
+Built 2026-10-29 on the spike's code. Nothing in `packages/warp` or `packages/warp-core` changed.
 
 ### 7.1 What shipped
 
 | Piece | Where | What it does |
 |---|---|---|
-| The matrix | `packages/weft/src/style/matrix.ts` (`weft/style/matrix`) | `buildMatrix(groups, uses)` → `{ version, groups, vocab, similar, diagnostics }`; `scanProject(root, files, transform)` (definitions, then each component compiled with the groups its relative imports bring in); `explainGroup(group, selection)` |
+| The matrix | `packages/weft/src/style/matrix.ts` (`@weft-js/core/style/matrix`) | `buildMatrix(groups, uses)` → `{ version, groups, vocab, similar, diagnostics }`; `scanProject(root, files, transform)` (definitions, then each component compiled with the groups its relative imports bring in); `explainGroup(group, selection)` |
 | `.weft/styles.json` | `vite.mjs` (`weft:style`) | Written after a build's project scan (errors among the project-wide codes stop the build, the rest are warnings) and in dev, debounced, whenever a compile changes it. `style.matrix: false` turns it off; off under vitest |
 | | `weft check` | Also writes it when the project has groups, so an agent that never ran `weft dev` has it |
 | `weft style find <query>` | `packages/cli/src/style.mjs` | Every query word must hit the group's name, doc, parts, axes, values, states or tokens (one typo allowed in a name word); best first, results under a quarter of the best score dropped. Gives how to import the group, its axes, parts, states, use count and similar groups |
 | `weft style explain <target>` | same | Target: `order-card`, `order-card.title`, `order-card[status=late][selected]`, or a selector copied from devtools (`[data-g="order-card"][data-status="late"] [data-part="meta"]`, `aria-*`, `data-accent~=`). Axes as flags (`--status late`), `--states`, `--accent`, `--part`. Prints each element's declarations in cascade order with the token and the place it came from, marks overridden ones, then the CSS that selection emits (tones folded) and the sites that can produce it |
 | `weft style matrix` | same | Writes the file; `--stdout` prints it |
 | MCP `style_find`, `style_explain` | `packages/cli/src/mcp.mjs` | The same JSON as `--json`. The server's instructions now say to `style_find` before writing a group |
-| AGENTS.md "Styling" section | `packages/cli/src/agents-md.mjs` | Only when the installed weft exports `weft/style`'s `group`. One paragraph: find first, the shape of a group, tokens only, the codes, `weft docs style`. The style codes left the general diagnostics table and `weft style` the commands table, since the section covers both |
+| AGENTS.md "Styling" section | `packages/cli/src/agents-md.mjs` | Only when the installed weft exports `@weft-js/core/style`'s `group`. One paragraph: find first, the shape of a group, tokens only, the codes, `weft docs style`. The style codes left the general diagnostics table and `weft style` the commands table, since the section covers both |
 | `weft docs style` | `packages/cli/docs/style.md` | The rules (find first, tokens, axes, accents, one group per element, states, no class soup) and the tools |
 | Accents | compiler, `style.ts`, `css.ts` | `card({ accent: { radius: 'round' } })` lowers to a static `data-accent="radius:round"`; the CSS gets `:scope[data-accent~="radius:round"]` after the group's own rules. Typed (`Accent` = intents without `css`); a non-literal accent is W060 |
 | Doc comments | compiler | The `/** … */` right above a definition is `facts.groups[].doc`, for the matrix and `find` |
@@ -590,7 +590,7 @@ D025 from their catalog examples.
 ### 7.3 Numbers and checks
 
 - **Tests:** weft 239 (new: `test/style-matrix.test.ts`, 9; `test/style.test.tsx` +4; 2 new type cases), CLI 101
-  (new: `test/style.test.mjs`, 11), warp 74, ui-core 21, compiler (Rust) 93. All pass.
+  (new: `test/style.test.mjs`, 11), warp 74, warp-core 21, compiler (Rust) 93. All pass.
 - **The spike's shop through the CLI:** `weft style find row` → `product-row` first (doc and name), then `action`
   (its doc says "row"); groups that only use `layout: row` drop under the score cut. The matrix lists 10 groups and
   one diagnostic, D023 on `cart-line`'s `qty` part (`minInlineSize`, `textAlign`: no intent sets them).
@@ -602,7 +602,7 @@ D025 from their catalog examples.
 
 ### 7.4 Open
 
-- **`.ts` in `node_modules`.** The CLI imports `weft/style/matrix` (TypeScript) with Node's type stripping, as
+- **`.ts` in `node_modules`.** The CLI imports `@weft-js/core/style/matrix` (TypeScript) with Node's type stripping, as
   `vite.mjs` already imports `css.ts`. That works in this repo (packages are linked, so the real path isn't under
   `node_modules`) but Node refuses to strip types under `node_modules`. A published weft needs these compiled to JS.
 - **The dev matrix is what's been compiled.** In dev the Vite plugin writes only the files it has compiled so far

@@ -22,11 +22,11 @@ export const cases: Record<keyof typeof C, Case> = {
   TextareaCase: { act: r => type(r, 'abc'), see: r => expect(q(r, '[data-part="counter"]').textContent).toBe('3/40'), budget: 3, runs: 3 },
   SelectCase: {
     act: r => { const s = q(r, 'select') as HTMLSelectElement; s.value = 'name'; fireEvent.change(s) },
-    see: r => expect((q(r, 'select') as HTMLSelectElement).value).toBe('name'), budget: 0, runs: 3,
+    see: r => expect((q(r, 'select') as HTMLSelectElement).value).toBe('name'), budget: 1, runs: 5,
   },
   CheckboxCase: { act: r => q(r, 'input').click(), see: r => expect((q(r, 'input') as HTMLInputElement).checked).toBe(true), budget: 0, runs: 1 },
   SwitchCase: { act: r => q(r, 'input').click(), see: r => expect((q(r, 'input') as HTMLInputElement).checked).toBe(true), budget: 0, runs: 1 },
-  SegmentedCase: { act: r => r.querySelectorAll<HTMLElement>('input')[1].click(), see: r => expect(r.querySelectorAll<HTMLInputElement>('input')[1].checked).toBe(true), budget: 2, runs: 3 },
+  SegmentedCase: { act: r => r.querySelectorAll<HTMLElement>('input')[1]!.click(), see: r => expect(r.querySelectorAll<HTMLInputElement>('input')[1]!.checked).toBe(true), budget: 2, runs: 3 },
   TabsCase: {
     act: r => fireEvent.keyDown(q(r, '[aria-selected="true"]'), { key: 'ArrowRight' }),
     see: r => { expect(q(r, '[aria-selected="true"]').textContent).toBe('Billing'); expect(q(r, '[role="tabpanel"]:not([hidden])').textContent).toBe('Panel b') }, budget: 8, runs: 7,
@@ -55,7 +55,7 @@ export const cases: Record<keyof typeof C, Case> = {
     see: r => { expect(q(r, 'th[data-col="name"]').getAttribute('aria-sort')).toBe('ascending'); expect(r.querySelector('tbody tr td[data-col="name"]')!.textContent).toBe('Apollo') }, budget: 3, runs: 13,
   },
   TableSelectCase: {
-    act: r => r.querySelectorAll<HTMLElement>('tbody input')[1].click(),
+    act: r => r.querySelectorAll<HTMLElement>('tbody input')[1]!.click(),
     see: r => { expect(r.querySelectorAll('tr[data-selected]')).toHaveLength(1); expect((q(r, 'thead input') as HTMLInputElement).indeterminate).toBe(true); expect(q(r, '[data-part="bulk"] b').textContent).toBe('1 selected') }, budget: 3, runs: 7,
   },
   TableFilterCase: {

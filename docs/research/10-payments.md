@@ -1,12 +1,12 @@
 # 10 — Payments: one catalog, every rail, web + iOS + Android
 
-> Built differently from this note in one way: pay is the plugin `@weft/pay`, not `weft/pay`, and `fakePay` comes from `@weft/pay/test`. T030 is PAY031. See research 37.
+> Built differently from this note in one way: pay is the plugin `@weft-js/pay`, not `weft/pay`, and `fakePay` comes from `@weft-js/pay/test`. T030 is PAY031. See research 38.
 
 Research date: 2026-10-28. Store payment rules in the US are mid-litigation on that date. Every policy statement here
 carries its source and date, and the design treats the rules as **versioned data**, not code. Statements marked
 **(unverified)** could not be confirmed from a primary source.
 
-**Built:** the web half, with what changed from this design: [37](37-pay-web.md).
+**Built:** the web half, with what changed from this design: [38](38-pay-web.md).
 
 **Question:** how does a weft app take money the same way on web, iOS and Android, from one declaration, when the
 platforms process payments completely differently and the stores dictate which rail is allowed for what? Native
@@ -39,7 +39,7 @@ targets are in [09](09-native-targets.md).
 5. **The mistakes that get apps rejected or robbed are compile/build errors** (PAY-codes): Stripe for digital goods
    in a store build, client-side entitlement grants, secret keys in the client graph, hardcoded prices, a missing
    Restore Purchases on iOS, float money.
-6. **Testable without real money or a phone.** A fake provider in `weft/test` plays renewals, failures, grace
+6. **Testable without real money or a phone.** A fake provider in `@weft-js/core/test` plays renewals, failures, grace
    periods, refunds and revocations on the deterministic clock. Stripe test mode, StoreKit configuration files and
    Play license testers cover the device lanes. Agents only ever use test keys.
 
@@ -120,7 +120,7 @@ Google RTDN (Pub/Sub) ─────┘   (signature / JWS / Play Developer API
   own timestamps.
 - **Reading it:** `ctx.entitlements.has('pro')` in any `query`/`mutation`, and an `entitlements` live query on the
   client. A mutation can declare `requires: ['pro']` and gets a typed `403` otherwise.
-- **Drizzle schema ships** in `@weft/db-pay`, so the tables are inspectable and joinable like any other data.
+- **Drizzle schema ships** in `@weft-js/db-pay`, so the tables are inspectable and joinable like any other data.
 - **Optional backends:** RevenueCat can stand in for the IAP verification and notification side **(adapter,
   later)**.
 
@@ -157,7 +157,7 @@ others plug in:
 | AU | Apple, Google | Store IAP | External links under the 2026 remedies and ACCC authorisation **(unverified details)** | — | Lexology 2026-10 |
 | everywhere | both | — | Physical goods/services must **not** use IAP | — | store guidelines; Stripe RN SDK README |
 
-- The table ships as a JSON file in `@weft/pay` with an `asOf` date and a source URL per row.
+- The table ships as a JSON file in `@weft-js/pay` with an `asOf` date and a source URL per row.
 - `weft check` warns (PAY020) when the installed table is older than 90 days, and `weft pay explain` always prints
   the date.
 - weft doesn't give legal advice. The table is a default that makes the common case pass review; the opt-ins make an
@@ -176,12 +176,12 @@ others plug in:
 | PAY007 | Subscription sold without a reachable manage/cancel path | `<ManageSubscription>` |
 | PAY008 | Money as a float, or a currency-less amount | Integer minor units with currency (`money` Zod type) |
 | PAY010 | `checkout()` on a store product where no signed-in user is guaranteed | Require auth on the route, or sign in first |
-| PAY020 | Policy table older than 90 days (warning) | Update `@weft/pay` |
+| PAY020 | Policy table older than 90 days (warning) | Update `@weft-js/pay` |
 | T030 | A payment test that uses a live key or the real network | Fake provider or test mode |
 
 ## 8. Testing
 
-- **Fast lane:** `weft/test` gives `fakePay`, which runs every rail's state machine on the deterministic clock:
+- **Fast lane:** `@weft-js/core/test` gives `fakePay`, which runs every rail's state machine on the deterministic clock:
   `pay.simulate('renewal-failed' | 'grace-expired' | 'refund' | 'revoke' | 'family-share' | 'ask-to-buy')`. A test
   asserts what the user sees and what the server grants, end to end, in milliseconds.
 - **Device lanes:** StoreKit configuration file in the simulator (StoreKit Test), Play license testers on an

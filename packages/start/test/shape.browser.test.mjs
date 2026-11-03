@@ -26,7 +26,7 @@ async function open(path) {
   const logs = []
   page.on('pageerror', e => logs.push(e.message))
   page.on('console', m => (['error', 'warning'].includes(m.type()) ? logs.push(m.text()) : undefined))
-  await page.route('**/_weft/fn/**', async r => { await new Promise(ok => setTimeout(ok, 400)); await r.continue() })
+  await page.route('**/_weft/fn/**', async r => { await new Promise(ok => { setTimeout(ok, 400) }); await r.continue() })
   await page.goto(url + path)
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 30_000 })
   await page.evaluate(() => {
@@ -128,10 +128,10 @@ test('a production build: the schema stays on the server, the stub carries its s
   expect(js).toContain('$of')
   expect(js).not.toContain('ZodError')
 
-  const port = await new Promise(ok => { const s = listen().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
+  const port = await new Promise(ok => { const s = listen().listen(0, () => { const free = s.address().port; s.close(() => ok(free)) }) })
   const child = spawn(process.execPath, [join(output, 'server/index.mjs')], { env: { ...process.env, NODE_ENV: 'production', PORT: String(port) }, stdio: 'ignore' })
   try {
-    for (const t0 = Date.now(); !(await fetch(`http://localhost:${port}/`).then(() => true, () => false)); await new Promise(ok => setTimeout(ok, 100)))
+    for (const t0 = Date.now(); !(await fetch(`http://localhost:${port}/`).then(() => true, () => false)); await new Promise(ok => { setTimeout(ok, 100) }))
       if (Date.now() - t0 > 20_000) throw new Error('the server did not listen')
     const was = url
     url = `http://localhost:${port}`

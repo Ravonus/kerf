@@ -1,4 +1,4 @@
-import { mutation, query, type OptimisticCache } from '@weft/start'
+import { mutation, query, type OptimisticCache } from '@weft-js/start'
 import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'

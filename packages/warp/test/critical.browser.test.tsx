@@ -4,11 +4,11 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resetIds } from '@weft/ui-core'
-import { renderToString } from 'weft/ssr'
+import { resetIds } from '@weft-js/warp-core'
+import { renderToString } from '@weft-js/core/ssr'
 import { LAYER_ORDER, pageStyles } from '../../start/src/inline.mjs'
 import { parse, purge } from '../../weft/node/purge.mjs'
-// @ts-expect-error: query imports (weft/vite)
+// @ts-expect-error: query imports (@weft-js/core/vite)
 import { Ordinary } from './fixtures/Ordinary.tsx?weft-ssr'
 
 const { chromium } = createRequire(import.meta.url)('playwright-core')

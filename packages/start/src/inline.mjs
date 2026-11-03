@@ -12,6 +12,8 @@ export const FIRST_PAINT_BYTES = 12 * 1024
 const CSS_RATIO = 6
 const HTML_RATIO = 4
 const CRITICAL_MAX = 64
+/** The most stylesheet text one page carries inline with `criticalCss: false`, in characters. Past it a sheet stays a link. */
+export const INLINE_CSS_MAX = 48 * 1024
 
 // What the shell has, however its markup is quoted.
 const ATTR = /\b(data-[\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+)))?/gi

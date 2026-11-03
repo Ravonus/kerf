@@ -14,19 +14,22 @@ import { findConfig, loadConfig, pluginFactory, pluginName } from './load-config
 import { sync } from './plugins.mjs'
 import { cssEntry, packages, viteConfig } from './tailwind.mjs'
 import { database } from './map.mjs'
-import { dbLayer } from './start.mjs'
-import { trustStatus } from './trust.mjs'
+import { dbLayer } from './db-layer.mjs'
+import { packageOf, trustStatus } from './trust.mjs'
 
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
-const ALIASES = { warp: '@weft/warp', icons: '@weft/icons', text: '@weft/plugin-text', media: '@weft/plugin-media', 'media-ffmpeg': '@weft/plugin-media-ffmpeg', 'surface-keel': '@weft/plugin-surface-keel', redis: '@weft/realtime-redis', nats: '@weft/realtime-nats', pay: '@weft/pay', 'pay-stripe': '@weft/plugin-pay-stripe' }
+const ALIASES = { warp: '@weft-js/warp', icons: '@weft-js/warp-icons', text: '@weft-js/text', media: '@weft-js/plugin-media', 'media-ffmpeg': '@weft-js/plugin-media-ffmpeg', 'surface-keel': '@weft-js/plugin-surface-keel', redis: '@weft-js/realtime-redis', nats: '@weft-js/realtime-nats', pay: '@weft-js/pay', 'pay-stripe': '@weft-js/pay/stripe' }
 
-const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'package-lock.json': ['npm', 'install'] }
+/** Add-ons `weft add` knows by the name after the scope, as `weft add realtime-redis`. */
+const ADDONS = new Set(['@weft-js/text', '@weft-js/pay', '@weft-js/plugin-media', '@weft-js/plugin-media-ffmpeg', '@weft-js/plugin-surface-keel', '@weft-js/multiplayer', '@weft-js/realtime-durable-object', '@weft-js/realtime-livekit', '@weft-js/realtime-nats', '@weft-js/realtime-redis', '@weft-js/realtime-socketio', '@weft-js/realtime-webrtc'])
+
+const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'deno.lock': ['deno', 'add'], 'package-lock.json': ['npm', 'install'] }
 
 function installer(root) {
   const lock = Object.keys(INSTALL).find(f => existsSync(join(root, f)))
-  return INSTALL[lock] ?? INSTALL['package-lock.json']
+  return INSTALL[lock] ?? (process.versions.deno ? INSTALL['deno.lock'] : process.versions.bun ? INSTALL['bun.lock'] : INSTALL['package-lock.json'])
 }
 
 /** What to install: for an app on local tarballs (`local.mjs`) those go straight in `package.json`, since npm refuses any
@@ -47,7 +50,8 @@ export function pinned(root, specs) {
 }
 
 function installSpecs(root, manager, verb, specs) {
-  execFileSync(manager, [verb, ...pinned(root, specs)], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
+  const rest = pinned(root, specs)
+  execFileSync(manager, [verb, ...(manager === 'deno' ? rest.map(spec => `npm:${spec}`) : rest)], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
 }
 
 /** The import to write: `<pkg>/plugin` when the package has one, and however it exports its factory. */
@@ -128,7 +132,7 @@ function viteWithTailwind(file, text) {
 }
 
 /** Tailwind's packages, the Vite plugin, and the top of src/app.css, imported first by the root layout. */
-async function addTailwind(root, { dryRun, install }) {
+function addTailwind(root, { dryRun, install }) {
   if (!existsSync(join(root, 'package.json'))) throw refused('`weft add tailwind` needs a package.json. Nothing was changed.')
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const cssFile = join(root, 'src/app.css')
@@ -147,7 +151,7 @@ async function addTailwind(root, { dryRun, install }) {
     actions.push(`install ${specs.join(' ')} with ${manager}`)
     if (!dryRun) installSpecs(root, manager, verb, specs)
   }
-  const warp = '@weft/warp' in { ...pkg.dependencies, ...pkg.devDependencies }
+  const warp = '@weft-js/warp' in { ...pkg.dependencies, ...pkg.devDependencies }
   const edits = [[join(root, viteName ?? 'vite.config.ts'), vite], ...(has ? [] : [[cssFile, `${cssEntry(warp)}${css && '\n'}${css}`]])]
   actions.push(`add Tailwind to ${viteName ?? 'vite.config.ts'}`, ...(has ? [] : [`add Tailwind to src/app.css${warp ? ' (without its reset, which would override warp)' : ''}`]))
   if (layout === null) actions.push('import src/app.css from your root layout: there is no src/routes/_layout.tsx')
@@ -162,14 +166,14 @@ async function addTailwind(root, { dryRun, install }) {
 }
 
 const ENGINES = ['sqlite', 'postgres', 'mysql']
-const LAYER_PLUGIN = { prisma: '@weft/plugin-db-prisma', native: '@weft/plugin-db-native' }
+const LAYER_PLUGIN = { prisma: '@weft-js/db/plugin-prisma', native: '@weft-js/db/plugin-native' }
 
 /** A database on an app that has none: the wiring a scaffold writes, with no todo app. Never touches what's there. */
 async function addDb(root, engine = 'sqlite', { layer = 'drizzle', dryRun, install }) {
   if (!ENGINES.includes(engine)) throw usageError(`weft add db takes ${ENGINES.join(', ')}, not \`${engine}\``)
   if (!['drizzle', ...Object.keys(LAYER_PLUGIN)].includes(layer)) throw usageError(`--layer takes drizzle, prisma or native, not \`${layer}\``)
   if (await dbLayer(root)) throw refused('This app already has a database. Changing engine or layer changes your queries, so it\'s yours to do. Nothing was changed.')
-  const { stackDeps, stackFiles } = await import('create-weft/stack')
+  const { stackDeps, stackFiles } = await import('@weft-js/create/stack')
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const name = String(pkg.name ?? 'app').replace(/^@.*\//, '')
   const files = stackFiles({ db: engine, layer, auth: false, name, secret: '' })
@@ -206,11 +210,11 @@ async function addAuth(root, { dryRun, install }) {
   if (existsSync(join(root, 'src/auth.server.ts'))) throw refused('src/auth.server.ts already exists, so this app has an auth provider. Nothing was changed.')
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const db = database(root, layer).engine
-  const ui = '@weft/warp' in { ...pkg.dependencies, ...pkg.devDependencies } ? 'warp' : 'none'
-  const { authFiles, stackDeps } = await import('create-weft/stack')
+  const ui = '@weft-js/warp' in { ...pkg.dependencies, ...pkg.devDependencies } ? 'warp' : 'none'
+  const { authFiles, stackDeps } = await import('@weft-js/create/stack')
   const { files, context, tables } = authFiles({ db, layer: layer.layer, ui })
   const contextFile = join(root, 'src/context.server.ts')
-  if (existsSync(contextFile) && !/export default \(\) => \(\{ db \}\)/.test(readFileSync(contextFile, 'utf8'))) throw refused('src/context.server.ts has been changed. Spread `session(auth, request)` from @weft/start/auth into it, then run this again. Nothing was changed.')
+  if (existsSync(contextFile) && !/export default \(\) => \(\{ db \}\)/.test(readFileSync(contextFile, 'utf8'))) throw refused('src/context.server.ts has been changed. Spread `session(auth, request)` from @weft-js/start/auth into it, then run this again. Nothing was changed.')
   const taken = Object.keys(files).filter(f => existsSync(join(root, f)))
   if (taken.length) throw refused(`${taken.join(', ')} already exist. Nothing was changed.`)
   const envModule = join(root, 'src/env.server.ts')
@@ -245,7 +249,7 @@ async function addAuth(root, { dryRun, install }) {
     const env = join(root, '.env')
     if (!(existsSync(env) && readFileSync(env, 'utf8').includes('BETTER_AUTH_SECRET'))) writeFileSync(env, `${existsSync(env) ? `${readFileSync(env, 'utf8').trimEnd()}\n` : ''}BETTER_AUTH_SECRET=${randomBytes(32).toString('base64')}\nBETTER_AUTH_URL=http://localhost:5173\n`)
   }
-  actions.push('add BETTER_AUTH_SECRET to .env', ...(layer.schema ? ['next: `weft db generate`'] : []), 'next: `weft db migrate`', "next: add `auth: 'user'` to what needs a user, and link to /login")
+  actions.push('add BETTER_AUTH_SECRET to .env', ...(layer.schema ? ['next: `weft db generate`'] : []), 'next: reload the app: the migration applies on the next request', "next: add `auth: 'user'` to what needs a user, and link to /login")
   return { ok: true, package: `Better Auth on ${layer.layer}`, actions, ...(dryRun && { dryRun: true }) }
 }
 
@@ -304,21 +308,23 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })
-  const pkg = ALIASES[feature] ?? feature
+  const pkg = ALIASES[feature] ?? (ADDONS.has(`@weft-js/${feature}`) ? `@weft-js/${feature}` : feature)
   const file = findConfig(root) ?? join(root, 'weft.config.ts')
   const config = relative(root, file)
-  const text = existsSync(file) ? readFileSync(file, 'utf8') : "import { defineConfig } from 'weft/config'\n\nexport default defineConfig({})\n"
+  const text = existsSync(file) ? readFileSync(file, 'utf8') : "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({})\n"
   const named = names(text, pkg)
   // A config can name a package that isn't installed yet, and importing it then would leave this process's module
   // resolver sure the package has no `exports`, so the load after the install would fail too. Load it once it's there.
-  const present = existsSync(join(root, 'node_modules', pkg, 'package.json'))
+  const present = existsSync(join(root, 'node_modules', packageOf(pkg), 'package.json'))
   if (present && (named || listed((await loadConfig(root)).config, pkg))) return { ok: true, already: true, package: pkg, config, actions: [] }
+
+  const home = packageOf(pkg)
 
   const actions = []
   const [manager, verb] = installer(root)
   if (install) {
-    actions.push(`install ${pkg} with ${manager}`)
-    if (!dryRun) installSpecs(root, manager, verb, [pkg])
+    actions.push(`install ${home} with ${manager}`)
+    if (!dryRun) installSpecs(root, manager, verb, [home])
   }
   const setup = await setupOf(root, pkg)
   const plan = setup && await planSetup(root, setup)

@@ -1,0 +1,61 @@
+/* Learn: the tutorial's own parts, on the docs shell. Tokens only, so it follows the dials like the rest of warp. */
+[data-site="you-will-learn"], [data-site="challenge"], [data-site="note"], [data-site="pitfall"], [data-site="deepdive"] {
+  box-sizing: border-box; max-inline-size: 68ch; margin-block: 0 var(--warp-space-group); padding: var(--warp-space-group) calc(var(--warp-space-group) * 1.25);
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface); color: var(--warp-color-text-subtle);
+}
+[data-site="you-will-learn"] { border-inline-start: 3px solid var(--warp-color-accent-text); background: var(--warp-color-accent-soft); }
+:is([data-site="you-will-learn"], [data-site="challenge"], [data-site="pitfall"], [data-site="deepdive"]) [data-part="label"] { margin: 0 0 var(--warp-space-tight); font: 400 calc(0.75 * var(--warp-rem))/1.4 var(--warp-font-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--warp-color-accent-text); }
+[data-site="you-will-learn"] ul { display: grid; gap: var(--warp-space-tight); margin: 0; padding-inline-start: 1.2em; line-height: 1.55; color: var(--warp-color-text); }
+[data-site="you-will-learn"] p { margin: 0; }
+
+[data-site="doc"] [data-scope="prose"] [data-site="challenge"] { margin-block: var(--warp-space-group); }
+[data-site="challenge"] h3 { margin: 0 0 var(--warp-space-related) !important; }
+[data-site="challenge"] > p { margin-block: 0 var(--warp-space-related); }
+[data-site="challenge"] details { margin-block-start: var(--warp-space-related); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-block-start: var(--warp-space-related); }
+[data-site="challenge"] summary { cursor: pointer; inline-size: fit-content; font-weight: 500; color: var(--warp-color-accent-text); }
+[data-site="challenge"] summary:focus-visible { outline: 2px solid var(--warp-color-focus, var(--warp-color-accent-text)); outline-offset: 2px; border-radius: 4px; }
+[data-site="challenge"] details[open] summary { margin-block-end: var(--warp-space-related); }
+[data-site="note"] { background: var(--warp-color-surface-sunken); }
+[data-site="note"] > :last-child { margin-block-end: 0; }
+
+/* Pitfall: a mistake that's easy to make. Deep dive: depth for the curious, closed until opened. Both read like React's. */
+[data-site="pitfall"] { border-inline-start: 3px solid var(--warp-color-caution-solid, var(--warp-color-accent-text)); background: var(--warp-color-caution-soft, var(--warp-color-surface-sunken)); }
+[data-site="pitfall"] [data-part="label"] { color: var(--warp-color-caution-text, var(--warp-color-accent-text)); }
+:is([data-site="pitfall"], [data-site="note"]) [data-part="title"] { margin: 0 0 var(--warp-space-tight); font-weight: 600; color: var(--warp-color-text); }
+[data-site="pitfall"] > :last-child, [data-site="deepdive"] [data-part="body"] > :last-child { margin-block-end: 0; }
+[data-site="deepdive"] { padding-block: var(--warp-space-related); }
+[data-site="deepdive"] summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--warp-space-tight) var(--warp-space-related); cursor: pointer; list-style: none; }
+[data-site="deepdive"] summary::-webkit-details-marker { display: none; }
+[data-site="deepdive"] summary::after { content: "Show more"; margin-inline-start: auto; font-size: var(--doc-small, calc(0.875 * var(--warp-rem))); color: var(--warp-color-accent-text); }
+[data-site="deepdive"][open] summary::after { content: "Show less"; }
+[data-site="deepdive"] summary [data-part="label"] { margin: 0; }
+[data-site="deepdive"] summary [data-part="title"] { font-weight: 600; color: var(--warp-color-text); }
+[data-site="deepdive"] summary:focus-visible { outline: 2px solid var(--warp-color-focus, var(--warp-color-accent-text)); outline-offset: 4px; border-radius: 4px; }
+[data-site="deepdive"] [data-part="body"] { margin-block-start: var(--warp-space-related); padding-block-start: var(--warp-space-related); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+
+/* Learn's demos are short and sit in the reading flow: rendered up front, so anchors, the rail and a press land where they look. */
+[data-site="example"][data-learn] { content-visibility: visible; margin-block: var(--warp-space-group) calc(var(--warp-space-section) * 0.75); }
+[data-site="example"][data-learn] [data-part="run"] { min-block-size: 180px; }
+[data-site="example"][data-learn] [data-part="try"] { max-inline-size: 68ch; margin: 0; font-size: calc(0.9375 * var(--warp-rem)); line-height: 1.55; color: var(--warp-color-text-subtle); }
+[data-site="example"][data-learn] [data-part="try"] strong { color: var(--warp-color-text); font-weight: 600; }
+
+[data-site="doc"] [data-part="crumb"] span { color: var(--warp-color-text-subtle); }
+
+/* -- the landing -- */
+[data-learn-home] h2 { margin-block: var(--warp-space-section) var(--warp-space-related); font: 600 var(--doc-h2)/1.25 var(--doc-sans); letter-spacing: -0.015em; color: var(--ink); }
+[data-learn-home] section > p { max-inline-size: 68ch; margin-block: 0 var(--warp-space-related); line-height: 1.7; color: var(--dim); }
+[data-learn-home] [data-part="cmd"] { box-sizing: border-box; max-inline-size: 100%; margin: 0 0 var(--warp-space-group); padding: var(--warp-space-related) var(--warp-space-group); overflow-x: auto; border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font: 400 calc(0.875 * var(--warp-rem))/1.5 var(--warp-font-mono); color: var(--warp-color-text); }
+[data-learn-home] [data-part="path"] { display: grid; gap: var(--warp-space-related); margin: 0 0 var(--warp-space-group); padding: 0; list-style: none; counter-reset: none; }
+[data-learn-home] [data-part="path"] > li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: var(--warp-space-group); padding: var(--warp-space-group); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface); }
+[data-learn-home] [data-part="n"] { display: grid; place-items: center; inline-size: 28px; block-size: 28px; border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: 50%; font: 400 calc(0.8125 * var(--warp-rem))/1 var(--warp-font-mono); color: var(--glow); }
+[data-learn-home] [data-part="path"] h3 { margin: 0 0 var(--warp-space-tight); font: 600 var(--doc-h3)/1.35 var(--doc-sans); }
+[data-learn-home] [data-part="path"] h3 a { color: var(--ink); text-decoration: none; }
+[data-learn-home] [data-part="path"] h3 a:hover { color: var(--glow); }
+[data-learn-home] [data-part="path"] p { margin: 0 0 var(--warp-space-related); line-height: 1.55; color: var(--dim); }
+[data-learn-home] [data-part="path"] ul { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight) var(--warp-space-group); margin: 0; padding: 0; list-style: none; font-size: var(--doc-small); }
+[data-learn-home] [data-part="path"] ul a { color: var(--dim); }
+[data-learn-home] [data-part="path"] ul a:hover { color: var(--ink); }
+@media (max-width: 599.98px) {
+  [data-learn-home] [data-part="path"] > li { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-related); }
+  [data-site="you-will-learn"], [data-site="challenge"], [data-site="note"], [data-site="pitfall"], [data-site="deepdive"] { padding: var(--warp-space-related) var(--warp-space-group); }
+}

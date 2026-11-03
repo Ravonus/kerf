@@ -1,0 +1,18 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.tokens {
+:root, [data-expression], [data-density], [data-form], [data-pointer],
+  [data-motion], [data-flair], [data-warp] {
+    --warp-cal-hour: calc(48px * var(--warp-density-k));          /* 36 · 48 · 60 px per hour */
+    --warp-cal-gutter: 52px;
+    --warp-cal-hour-w: 64px;                                       /* a timeline hour's least width: past it the rows scroll sideways */
+    --warp-cal-day-min: 128px;                                     /* a week day's least width (more for a day of overlaps): past it the week scrolls sideways */
+    --warp-cal-max-h: 100dvh;                                      /* the calendar's own bound when no parent gives it a height */
+    --warp-cal-bar: calc(var(--warp-border-emphasis) + 1px);      /* event colour edge 2 · 2.5 · 3 */
+    --warp-cal-tint: 15%;                                          /* event fill = category over surface */
+    --warp-arrive-duration: var(--warp-duration-slow);
+    --warp-arrive-sweep: calc(var(--warp-sweep-duration) * 0.9);
+    --warp-tile-gap: calc(6px * var(--warp-density-k));
+    --warp-bubble-radius: max(var(--warp-radius-surface), calc(14px - 12px * var(--warp-x)));
+    --warp-avatar-sm: 24px; --warp-avatar-md: 32px; --warp-avatar-lg: 40px;
+  }
+}

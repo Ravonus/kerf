@@ -1,0 +1,106 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Sheet: side on wide screens, bottom on phones -------------------------- */
+:where(dialog[data-scope="sheet"]) {
+  --_tx: 1; --_ty: 0; --_drag: 0px;
+  position: fixed; margin: 0; max-inline-size: none; max-block-size: none;
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
+  opacity: calc(1 - var(--warp-motion-scale));
+  translate: calc(var(--_tx) * 100% * var(--warp-motion-scale)) calc(var(--_ty) * 100% * var(--warp-motion-scale));
+  transition:
+    translate calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+    opacity calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+    overlay calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) allow-discrete,
+    display calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) allow-discrete;
+}
+:where(dialog[data-scope="sheet"]:not([open])) { display: none; }
+/* named rows: the handle is hidden on a side sheet, and the footer stays on the bottom edge whatever the body holds */
+:where(dialog[data-scope="sheet"] > [data-part="header"]) { grid-row: 2; }
+:where(dialog[data-scope="sheet"] > [data-part="body"]) { grid-row: 3; }
+:where(dialog[data-scope="sheet"] > [data-part="footer"]) { grid-row: 4; }
+:where(dialog[data-scope="sheet"][open]) {
+  opacity: 1; translate: 0 var(--_drag);
+  transition: translate calc(var(--warp-duration-slow) * 1.5) var(--warp-ease-sheet), opacity var(--warp-duration-slow) var(--warp-ease-out),
+              overlay var(--warp-duration-slow) allow-discrete, display var(--warp-duration-slow) allow-discrete;
+}
+@starting-style {
+  :where(dialog[data-scope="sheet"][open]) {
+    opacity: calc(1 - var(--warp-motion-scale));
+    translate: calc(var(--_tx) * 100% * var(--warp-motion-scale)) calc(var(--_ty) * 100% * var(--warp-motion-scale));
+  }
+}
+:where(dialog[data-scope="sheet"][data-dragging]) { transition: none; user-select: none; }
+:where(dialog[data-scope="sheet"][data-side="right"]),
+:where(dialog[data-scope="sheet"]:not([data-side])) {
+  inset: 0 0 0 auto; inline-size: min(420px, calc(100vw - 48px)); block-size: 100dvh;
+  border-block: 0; border-inline-end: 0;
+  border-start-start-radius: var(--warp-radius-surface); border-end-start-radius: var(--warp-radius-surface);
+}
+:where(dialog[data-scope="sheet"][data-side="left"]) {
+  --_tx: -1; inset: 0 auto 0 0; inline-size: min(360px, calc(100vw - 48px)); block-size: 100dvh;
+  border-block: 0; border-inline-start: 0;
+  border-start-end-radius: var(--warp-radius-surface); border-end-end-radius: var(--warp-radius-surface);
+}
+:where(dialog[data-scope="sheet"][data-side="top"]) {
+  --_tx: 0; --_ty: -1;
+  inset: 0 0 auto 0; margin-inline: auto; inline-size: min(100%, 640px); block-size: auto;
+  max-block-size: 92dvh; border-block-start: 0;
+  border-end-start-radius: max(var(--warp-radius-surface), 10px); border-end-end-radius: max(var(--warp-radius-surface), 10px);
+}
+:where(dialog[data-scope="sheet"][data-side="bottom"]) {
+  --_tx: 0; --_ty: 1;
+  inset: auto 0 0 0; margin-inline: auto; inline-size: min(100%, 640px); block-size: var(--_sheet-h, auto);
+  max-block-size: 92dvh; border-block-end: 0;
+  border-start-start-radius: max(var(--warp-radius-surface), 10px); border-start-end-radius: max(var(--warp-radius-surface), 10px);
+}
+/* the footer owns the safe area: it reaches the screen's bottom edge at every snap, so nothing
+   from the body shows under the home indicator */
+:where(dialog[data-scope="sheet"][data-side="bottom"] > [data-part="footer"]) { padding-block-end: calc(var(--warp-space-group) + env(safe-area-inset-bottom, 0px)); }
+@media (max-width: 599.98px) {
+  :where(dialog[data-scope="sheet"][data-side="bottom"]) { inline-size: 100%; border-inline: 0; }
+}
+/* the grabber: a 24px strip holding a 36×4 bar; its hit area reaches hit-min (44px on touch)
+   by overlapping the header, which is a drag area anyway. Focus rings the bar, not the strip
+   (review 02 M4: the strip's own ring drew a full-width box across the sheet's top edge). */
+:where([data-scope="sheet"] [data-part="handle"]) {
+  display: none; position: relative; justify-self: stretch; block-size: 24px; margin: 0; padding: 0; border: 0;
+  background: transparent; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; outline: none;
+}
+:where([data-scope="sheet"] [data-part="handle"])::before {
+  content: ""; position: absolute; inset-block-start: 10px; inset-inline-start: 50%; translate: -50% 0;
+  inline-size: 36px; block-size: 4px; border-radius: 999px; background: var(--warp-color-border-strong);
+  transition: background-color var(--warp-duration-fast), inline-size var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="sheet"] [data-part="handle"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: 0 min(0px, calc(24px - var(--warp-hit-min)));
+}
+:where([data-scope="sheet"] [data-part="handle"]:hover)::before, :where([data-scope="sheet"][data-dragging] [data-part="handle"])::before { background: var(--warp-color-text-faint); inline-size: 44px; }
+:where([data-scope="sheet"] [data-part="handle"]:focus-visible)::before {
+  background: var(--warp-color-text-subtle); inline-size: 44px;
+  outline: var(--warp-focus-width, 2px) solid var(--warp-color-focus); outline-offset: 3px;
+}
+:where([data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
+:where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
+/* initial focus lands on the title (tabindex="-1"), never the grabber; a programmatic
+   landing spot needs no ring of its own */
+:where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus),
+:where([data-scope="dialog"] [data-part="title"][tabindex="-1"]:focus) { outline: none; }
+/* snap points: the sheet is one 92% panel translated down by --_drag. The footer is lifted by
+   --_lift (the resting snap's offset, set on snap, not per drag frame), so the primary action sits
+   at the bottom of the visible part at every snap point, above the safe area. It moves on the
+   sheet's own curve, so at rest it never appears to move; the body gets the same room at its end. */
+:where([data-scope="sheet"] > [data-part="footer"]) {
+  position: relative; z-index: 1;
+  translate: 0 calc(-1 * var(--_lift, 0px));
+  transition: translate var(--warp-duration-slow) var(--warp-ease-in-out);
+}
+:where([data-scope="sheet"][data-dragging] > [data-part="footer"]) { transition: none; }
+:where([data-scope="sheet"] > [data-part="body"]) { padding-block-end: calc(var(--warp-pad-surface) + var(--_lift, 0px)); }
+
+/* presentation="inline": the sheet drawn open in the page's flow at its side's shape (docs, previews): no top layer,
+   scrim or drag. Its height is its content's; a box that wants it at an edge puts it there */
+:where(dialog[data-scope="sheet"])[data-presentation="inline"] {
+  position: relative; inset: auto; margin: 0; max-inline-size: 100%; block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; transition: none;
+}
+}

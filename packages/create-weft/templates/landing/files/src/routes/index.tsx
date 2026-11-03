@@ -1,6 +1,6 @@
-import { Link, type Meta } from '@weft/start'
-import { Card, Center, Grid, Heading, Split, Stack, Text } from '@weft/warp'
-import { Media } from 'weft/media'
+import { Link, type Meta } from '@weft-js/start'
+import { Card, Center, Grid, Heading, Split, Stack, Text } from '@weft-js/warp'
+import { Media } from '@weft-js/core/media'
 import hero from '../../assets/hero.webp?media'
 import { WaitlistForm } from '#/components/WaitlistForm'
 

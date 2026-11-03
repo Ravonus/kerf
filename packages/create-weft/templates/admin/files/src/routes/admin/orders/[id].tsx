@@ -1,5 +1,5 @@
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft/start'
-import { Boundary } from 'weft'
+import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import { Boundary } from '@weft-js/core'
 import { Failed } from '#/components/Failed'
 import { OrderDetail, OrderLoading } from '#/components/OrderDetail'
 import { getOrder } from '#/server/orders'

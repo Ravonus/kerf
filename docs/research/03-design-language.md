@@ -24,7 +24,7 @@ Where a claim comes from only a secondary source (blog, mirror, aggregator), it 
 - **Headless layer: bind Zag.js.** It is the only mature headless library designed to be framework-agnostic, and it
   documents how to write an adapter for a new framework. Base UI (1.0 in Dec 2025, the shadcn default since July 2026)
   and Radix are React-only, so use them as API and behavior references, not as dependencies.
-- **Proposal: "weft/ds".** Every value an agent touches is either a semantic name or an intent prop. Concretely:
+- **Proposal: "@weft-js/core/ds".** Every value an agent touches is either a semantic name or an intent prop. Concretely:
   - about 8 layout primitives and about 6 intent props, all closed enums;
   - a Zod-validated theme *seed* that expands into a full DTCG token set;
   - compiled output: plain CSS custom properties in `@layer`s, plus optional adapters for Tailwind, Uno, Panda, StyleX
@@ -240,7 +240,7 @@ truth means runtime theming, scoped themes and dark mode work in every system at
 
 ---
 
-## 4. Proposal: `weft/ds`, an agent-driven design language
+## 4. Proposal: `@weft-js/core/ds`, an agent-driven design language
 
 Goals: a **small closed vocabulary**, **no raw values in the happy path**, a **single source of truth (CSS vars)**,
 **machine-readable diagnostics**, and **coexistence** with whatever styling system the user already has.
@@ -440,7 +440,7 @@ Design notes:
 Problem: canvas 2D and WebGL can't use `var(--x)`, and WebGL needs linear-sRGB (or P3) floats, not OKLCH strings.
 
 ```ts
-import { tokens } from "weft/ds";
+import { tokens } from "@weft-js/core/ds";
 const t = tokens(el);             // reactive signal; re-resolves on scheme/theme/density change
 t.color("accent.solid")           // → "oklch(0.55 0.2 275)" (CSS string, for canvas 2D fillStyle)
 t.rgba("accent.solid")            // → Float32Array [r,g,b,a] linear sRGB (WebGL/WebGPU uniforms)
@@ -477,7 +477,7 @@ t.motion("base")                  // → { ms: 180, ease: [0.2,0,0,1] }
 
 ### 4.8 Eval to validate the design
 
-- 50 prompts covering dashboards, forms, marketing, settings and data-dense tables. Run each through agent + weft/ds
+- 50 prompts covering dashboards, forms, marketing, settings and data-dense tables. Run each through agent + @weft-js/core/ds
   and through agent + raw Tailwind/shadcn as a baseline.
 - Metrics:
   - `weft check` errors per screen;

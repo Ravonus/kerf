@@ -93,10 +93,14 @@
   font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle);
 }
 
+/* a modal open: the page behind holds still. data-scrollbar (dialog()) keeps a classic scrollbar's room, so nothing shifts */
+html:has(dialog:modal) { overflow: hidden; }
+html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
+
 /* visually hidden (live regions, labels) */
 :where([data-part="sr-only"]),
 :where([data-scope="announcer"]) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 
 /* shared floating panel (menu, popover, select, hover card, context menu) */
@@ -172,24 +176,111 @@
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
-  transition: scale var(--warp-spring-duration) var(--warp-ease-spring), translate var(--warp-spring-duration) var(--warp-ease-spring),
-              box-shadow var(--warp-spring-duration) var(--warp-ease-spring),
+  --_settle: calc(var(--warp-spring-duration) - var(--warp-btn-fill) * 300ms * var(--warp-motion-scale));   /* vivid's offset is a key going back up: it never lingers */
+  transition: scale var(--_settle) var(--warp-ease-spring), translate var(--_settle) var(--warp-ease-spring),
+              box-shadow var(--_settle) var(--warp-ease-spring),
               border-color var(--warp-touch-out) var(--warp-ease-out), color var(--warp-touch-out) var(--warp-ease-out);
 }
 :where([data-scope="button"]:hover) { transition-property: scale, translate, box-shadow; }
-/* the touch clock's fill: the hover layer wipes in L→R at once and leaves through the right, so it never reverses */
+/* the touch clock's fill: the hover layer wipes in L→R and leaves through the right, so it never reverses; at vivid
+   (--warp-btn-fill) the wipe carries the tone's fill. A button that asks to follow (data-follow, --_ptr) swaps the wipe at
+   vivid for two blobs of the tone that close on where the hand arrived, then part at the seam and leave by their own edges:
+   the ground is revealed, never repainted. --_a is the sweep's switch, so hover,
+   focus, hold, open and touch all arrive free, and the ink edge fades in as the fill lands. */
+:where([data-scope="button"]) {
+  --_x: var(--warp-mx, 50%); --_y: var(--warp-my, 50%); --_ptr: 0;
+  --_pa: var(--_solid-hover);
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 9%, var(--_solid-hover));
+  /* the hard offset: the page's opposite (--warp-offset-color), so the pull-out reads on any ground */
+  --_off: var(--warp-offset-color);
+}
+:where([data-scope="button"][data-follow]) { --_ptr: 1; }
+:where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 5%, var(--_solid-hover)); }
+/* a solid's fill is lighter, brighter ink than its rest, spreading from the hand: the hover shade (darker in light) next to
+   the rest read as nothing happening. The fill leans to the highlight, and on light its lightness stops at 0.53, where the
+   on-solid ink still has 4.5:1 (on dark the lift only adds contrast). Without relative colour, a smaller safe mix. Only
+   vivid draws it (--warp-btn-fill). */
+:where([data-scope="button"]:not([data-emphasis])) {
+  --_pa: color-mix(in oklab, var(--warp-color-highlight-solid) 8%, var(--_solid));
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 11%, var(--_solid));
+}
+@supports (color: oklch(from red l c h)) {
+  :where([data-scope="button"]:not([data-emphasis])) {
+    --_pa: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)) min(l, 0.53) c h), color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)));
+    --_pb: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)) min(l, 0.53) calc(c * 1.1) h), color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)));
+  }
+}
+:where([data-scope="button"][data-tone="neutral"]:not([data-emphasis])) {
+  --_pa: color-mix(in oklab, white 10%, var(--_solid));
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 6%, color-mix(in oklab, white 16%, var(--_solid)));
+}
+/* the primary action reads the stop's primary, which is ink at quiet */
+:where([data-scope="button"]:not([data-emphasis], [data-tone])) {
+  --_solid: var(--warp-color-primary-solid); --_solid-hover: var(--warp-color-primary-solid-hover); --_ink-on: var(--warp-color-primary-on-solid);
+}
+/* a held or keyboard state has no hand: it closes on the middle */
+:where([data-scope="button"]:is(:focus-visible):not(:hover)),
+:where([data-scope="button"]:is([data-hold]):not(:hover)),
+:where([data-scope="button"]:is([data-state="open"]):not(:hover)),
+:where([data-scope="button"]:is([aria-expanded="true"]):not(:hover)) { --_x: 50%; --_y: 50%; }
+/* tints: the ink stays --_text on every frame, so nothing has to be timed */
+:where([data-scope="button"]:is([data-emphasis="soft"])),
+:where([data-scope="button"]:is([data-emphasis="outline"])),
+:where([data-scope="button"]:is([data-emphasis="ghost"])) {
+  --_pa: color-mix(in oklab, var(--_solid) 22%, var(--warp-color-surface));
+  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 10%, var(--_pa));
+}
+:where([data-scope="button"]:is([data-emphasis="frame"])),
+:where([data-scope="button"]:is([data-emphasis="link"])),
+:where([data-scope="button"]:is(:disabled)),
+:where([data-scope="button"]:is([aria-disabled="true"])) { --warp-btn-fill: 0; }
+/* the sweep on solid and ghost is vivid's ink edge, so it is off below vivid */
+:where([data-scope="button"]:not([data-emphasis])),
+:where([data-scope="button"][data-emphasis="ghost"]) { --_on: 0; --warp-color-sweep: var(--_off); }
+/* a solid draws no edge: the pull-out and its offset already answer the hand, and a rim round the fill read as a border */
+:where([data-scope="button"]:not([data-emphasis])) > :where([data-part="sweep"]) { display: none; }
+/* it fades in whole with the fill: drawn along the edge, it read as a broken line halfway round */
+:where([data-scope="button"][data-emphasis="ghost"]) > :where([data-part="sweep"]) {
+  clip-path: none; opacity: calc(var(--_a, 0) * var(--warp-btn-fill));
+  transition: var(--_edges), opacity var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="button"]:is(:disabled)),
+:where([data-scope="button"]:is([aria-disabled="true"])) { --_on: 0; }
 :where([data-scope="button"])::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
-  background: var(--warp-tone-layer, var(--_layer)); opacity: var(--_layer-a);
-  transform: scaleX(0); transform-origin: right center;
-  transition: transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out);
+  --_D: calc(var(--warp-fill-duration) * var(--warp-motion-scale));
+  --_fo: calc(1 - var(--_a, 0));
+  --_fr: calc(var(--_a, 0) * 1.3 * var(--warp-btn-fill) * var(--_ptr));
+  --_fa: calc(var(--_fr) * (var(--_x) + 7%) * var(--warp-lead-a, 1));
+  --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--warp-lead-b, 1));
+  --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
+  /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
+  background-color: color-mix(in oklab, var(--warp-tone-layer, var(--_layer)) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
+  opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a));
+  transform: scaleX(calc(var(--warp-btn-fill) * var(--_ptr))); transform-origin: right center;
+  background-origin: border-box;
+  background-image:
+    radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),
+      var(--_pb) 0 58%, color-mix(in oklab, var(--_pb) 50%, transparent) 80%, transparent 100%),
+    radial-gradient(ellipse calc(var(--_fb) * 0.5) 185% at calc(var(--_x) + var(--_fb) * 0.5 + var(--_fo) * var(--_fb)) var(--_y),
+      var(--_pb) 0 62%, color-mix(in oklab, var(--_pb) 50%, transparent) 82%, transparent 100%),
+    radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
+      var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%);
+  transition:
+    transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out),
+    --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
+    --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D));     /* snaps in; collapses unseen after the exit */
 }
 :where([data-scope="button"]:hover)::before,
 :where([data-scope="button"]:focus-visible)::before,
+:where([data-scope="button"][data-hold])::before,
 :where([data-scope="button"][data-state="open"])::before,
 :where([data-scope="button"][aria-expanded="true"])::before {
-  transform: scaleX(1); transform-origin: left center; transition-duration: var(--warp-duration-base);
+  transform: scaleX(1); transform-origin: left center;
+  transition-duration: var(--warp-duration-base), var(--_D), 1ms;
 }
+/* a tap is shorter than the fill, so a finger gets it at once and watches it part */
+@media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
 :where([data-scope="button"][data-tone]:not([data-tone="accent"]):not([data-tone="neutral"])) { --warp-color-sweep: var(--_text); }
 
@@ -205,7 +296,7 @@
   --_layer-a: calc(var(--warp-state-hover) * (1 - var(--_on, 0)));
   --_tone-ink: var(--_ink-on); --warp-sweep-fill: var(--_solid); --warp-sweep-radius: 0px;
   /* the original is square-capped and mitred: never rounder than 2px */
-  border-color: transparent; border-radius: min(var(--warp-radius-mark), 2px); overflow: hidden;
+  border-color: transparent; border-radius: min(var(--warp-radius-mark), 2px); overflow: clip;
 }
 :where([data-scope="button"][data-emphasis="frame"][data-tone]:not([data-tone="accent"])) { --_tone: var(--_text); }
 :where([data-scope="button"][data-emphasis="frame"][data-tone="neutral"]) { --_tone: var(--warp-color-text); }
@@ -223,15 +314,27 @@
   content: ""; position: absolute; pointer-events: auto;
   inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
 }
-:where([data-scope="button"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="button"]:is(:active)),
+:where([data-scope="button"]:is([data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
-/* vivid: no soft shadow to lift with, so a solid rests on a hard ink offset and presses into it */
-:where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) { box-shadow: var(--warp-offset) var(--warp-offset) 0 var(--warp-color-text); }
-:where([data-expression="vivid"] [data-scope="button"]:not([data-emphasis]):active),
-:where([data-expression="vivid"][data-scope="button"]:not([data-emphasis]):active) {
-  scale: 1; translate: var(--warp-offset) var(--warp-offset); box-shadow: 0 0 0 var(--warp-color-text);
+/* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
+   it back down: it never sinks into the page */
+:where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) {
+  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--warp-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--warp-btn-fill) * 7%), transparent));
 }
-:where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--_layer-a) * 1.55); }
+:where([data-scope="button"]:not([data-emphasis]):active) {
+  translate: 0 0; box-shadow: 0 0 0 var(--_off);
+}
+:where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a) * 1.55); }
+/* Keel's pull-out: the button rests flat and, under the hand, comes up and left off a hard offset that grows in behind
+   it. It sits after the rest so its offset wins; the press sets it back down, and focus never lifts */
+@media (hover: hover) {
+  :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
+    translate: calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale)) calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale));
+    box-shadow: calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  }
+}
 :where([data-scope="button"][data-emphasis="soft"]) {
   --_fill: var(--_soft); --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--warp-state-hover);
 }
@@ -257,6 +360,8 @@
 :where([data-scope="button"][data-emphasis="link"]:hover) { text-decoration-color: currentColor; text-decoration-thickness: var(--warp-border-emphasis); }
 :where([data-scope="button"][data-emphasis="link"]:active) { scale: 1; }
 :where([data-scope="button"][data-size="sm"]) { block-size: var(--warp-control-sm); padding-inline: var(--warp-pad-control); gap: calc(var(--warp-space-related) * 0.75); }
+/* vivid's hard offset in scale with a small button: the full one under a 24px icon (a code block's copy) read as a bar */
+:where([data-scope="button"][data-size="sm"]) { --warp-offset: calc(var(--warp-ref-offset) / 3); }
 :where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.5); }
 :where([data-scope="button"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 :where([data-scope="button"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
@@ -264,6 +369,28 @@
 :where([data-scope="button"][data-icon-only][data-size="sm"]) { inline-size: var(--warp-control-sm); }
 :where([data-scope="button"][data-icon-only][data-size="lg"]) { inline-size: var(--warp-control-lg); }
 :where([data-scope="button"][data-icon-only])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+/* collapse: under its form factor (`collapse="phone"`, or "tablet", which includes phones) a button with an icon shows only
+   the icon. Its text leaves the eye, not the accessibility tree: display: none would take the button's name with it. The
+   square is !important inside warp's layer so an app's own width for the wide look (unlayered) can't stretch it. */
+:where([data-scope="button"][data-collapse]) { --_square: var(--warp-control-md); }
+:where([data-scope="button"][data-collapse][data-size="sm"]) { --_square: var(--warp-control-sm); }
+:where([data-scope="button"][data-collapse][data-size="lg"]) { --_square: var(--warp-control-lg); }
+@media (max-width: 599.98px) {
+  :root:not([data-form]) :where([data-scope="button"][data-collapse]) { inline-size: var(--_square) !important; padding-inline: 0 !important; justify-content: center !important; }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse] [data-part="collapse"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+}
+@media (max-width: 1023.98px) {
+  :root:not([data-form]) :where([data-scope="button"][data-collapse="tablet"]) { inline-size: var(--_square) !important; padding-inline: 0 !important; justify-content: center !important; }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse="tablet"])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse="tablet"] [data-part="collapse"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+}
+:where([data-form="phone"] [data-scope="button"][data-collapse]),
+:where([data-form="tablet"] [data-scope="button"][data-collapse="tablet"]) { inline-size: var(--_square) !important; padding-inline: 0 !important; justify-content: center !important; }
+:where([data-form="phone"] [data-scope="button"][data-collapse])::after,
+:where([data-form="tablet"] [data-scope="button"][data-collapse="tablet"])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-form="phone"] [data-scope="button"][data-collapse] [data-part="collapse"]),
+:where([data-form="tablet"] [data-scope="button"][data-collapse="tablet"] [data-part="collapse"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 :where([data-scope="button"]:disabled),
 :where([data-scope="button"][aria-disabled="true"]:not([data-loading])) {
   opacity: var(--warp-opacity-disabled); cursor: not-allowed;
@@ -304,17 +431,30 @@
   cursor: pointer; -webkit-tap-highlight-color: transparent;
   transition: color var(--warp-touch-out) var(--warp-ease-out), background-color var(--warp-touch-out) var(--warp-ease-out), border-color var(--warp-touch-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
-:where([data-scope="toggle"]:active),
-:where([data-scope="chip"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="toggle"]:is(:active)),
+:where([data-scope="toggle"]:is([data-press])),
+:where([data-scope="chip"]:is(:active)),
+:where([data-scope="chip"]:is([data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
+/* A choice's box presses in, here or (data-press, from `ui`) in another pane, tab or client. */
+:where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):is(:active, [data-press]) [data-part="control"]) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="toggle"]:hover),
 :where([data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
 :where([data-scope="toggle"])::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity var(--warp-duration-fast); }
-:where([data-scope="toggle"]:hover) { color: var(--warp-color-text); }
-:where([data-scope="toggle"]:hover)::before { opacity: var(--warp-state-hover); }
+/* hover tints only where hover is real: a touch screen's tap leaves :hover stuck on the toggle */
+@media (hover: hover) { :where([data-scope="toggle"]:hover) { color: var(--warp-color-text); } :where([data-scope="toggle"]:hover)::before { opacity: var(--warp-state-hover); } }
+/* released from pressed (Toggle sets data-released): the stroke leaves with the fill, at once, once nothing holds it */
+:where([data-scope="toggle"][data-released]:not([aria-pressed="true"], :hover, :focus-visible)) > :where([data-part="sweep"]),
+:where([data-scope="toggle"][data-released]:not([aria-pressed="true"], :hover, :focus-visible)) > :where([data-part="sweep-base"]) { transition: none; }
+@media (hover: none) { :where([data-scope="toggle"][data-released]:not([aria-pressed="true"], :focus-visible)) > :where([data-part="sweep"]),
+ :where([data-scope="toggle"][data-released]:not([aria-pressed="true"], :focus-visible)) > :where([data-part="sweep-base"]) { transition: none; } }
 :where([data-scope="toggle"][aria-pressed="true"]),
 :where([data-scope="toggle"][aria-checked="true"]) {
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
 }
+:where([data-scope="toggle"][data-size="sm"]) { block-size: var(--warp-control-sm); min-inline-size: var(--warp-control-sm); padding-inline: calc(var(--warp-space-related) * 0.75); font-size: var(--warp-text-caption-size); }
+:where([data-scope="toggle"][data-size="lg"]) { block-size: var(--warp-control-lg); min-inline-size: var(--warp-control-lg); padding-inline: var(--warp-pad-control); }
+:where([data-scope="toggle"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
+:where([data-scope="toggle"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
 :where([data-scope="toggle-group"]) {
   display: inline-flex; flex-wrap: wrap; max-inline-size: 100%; gap: 2px; padding: 2px;
   border: var(--warp-border-hairline) solid var(--warp-color-border);
@@ -360,7 +500,7 @@
 /* -- Surface (card / panel / stat): interactive ones always sweep; static ones at vivid */
 :where([data-scope="surface"]) {
   position: relative; display: grid; gap: var(--warp-space-related); padding: var(--warp-pad-surface);
-  background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-border);
+  background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-surface-line);
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1); color: var(--warp-color-text);
   transition: box-shadow var(--warp-touch-out) var(--warp-ease-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
@@ -416,6 +556,18 @@
 :where([data-copy][data-state="copied"] [data-part="indicator"] > svg:last-child) { opacity: 1; scale: 1; color: var(--warp-color-positive-text); }
 :where([data-copy][data-state="copied"]:not([data-emphasis])) { --_ink: var(--_ink-on); }
 :where([data-copy][data-state="copied"]:not([data-emphasis]) [data-part="indicator"] > svg:last-child) { color: inherit; }
+:where([data-copy][data-state="failed"]),
+:where([data-act="copy"][data-failed]) { color: var(--warp-color-critical-text); }
+/* a refusal says so in words too (copyButtons adds the note for a moment): beside the button, inline-start, so a code
+   block's head (which clips) keeps it, and the reader learns it didn't copy before they paste nothing */
+:where([data-act="copy"] > [data-part="copy-note"]) {
+  position: absolute; z-index: 2; inset-inline-end: calc(100% + 6px); inset-block-start: 50%; translate: 0 -50%;
+  padding: 4px 8px; border-radius: var(--warp-radius-mark); pointer-events: none; white-space: nowrap;
+  border: var(--warp-border-hairline) solid var(--warp-color-critical-border);
+  background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text);
+  font: 500 var(--warp-text-caption-size)/1.2 var(--warp-text-body-font); letter-spacing: 0; text-transform: none;
+  animation: warp-enter var(--warp-duration-base) var(--warp-ease-out);
+}
 
 /* ---------------------------------------------------------------------------
    2 · OVERLAYS
@@ -483,6 +635,19 @@
 @keyframes warp-rise { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.75); } }
 :where(dialog[data-size="sm"]) { --_w: 420px; }
 :where(dialog[data-size="lg"]) { --_w: 800px; }
+/* placement: where it sits, and it arrives from that edge. Centre is the default and has no attribute */
+:where(dialog[data-scope="dialog"][data-placement="top"]) { margin-block: var(--warp-space-page) auto; --_off: 0 calc(var(--warp-motion-distance) * -1); }
+:where(dialog[data-scope="dialog"][data-placement="bottom"]) { margin-block: auto var(--warp-space-page); --_off: 0 var(--warp-motion-distance); }
+:where(dialog[data-scope="dialog"][data-placement="left"]) { margin-inline: var(--warp-space-page) auto; --_off: calc(var(--warp-motion-distance) * -1) 0; }
+:where(dialog[data-scope="dialog"][data-placement="right"]) { margin-inline: auto var(--warp-space-page); --_off: var(--warp-motion-distance) 0; }
+:where(dialog[data-scope="dialog"][data-placement="full"]) {
+  --_off: 0 var(--warp-motion-distance);
+  inline-size: 100%; block-size: 100dvh; max-block-size: none; margin: 0; border: 0; border-radius: 0;
+}
+:where(dialog[data-scope="dialog"][data-placement]:not([open])) { translate: var(--_off); }
+@starting-style {
+  :where(dialog[data-scope="dialog"][data-placement][open]) { translate: var(--_off); }
+}
 /* backdrop: scrim + the dial's blur (12 · 6 · 0) */
 :where(dialog[data-scope="dialog"])::backdrop,
 :where(dialog[data-scope="sheet"])::backdrop,
@@ -567,6 +732,15 @@
   }
 }
 
+/* presentation="inline": the dialog drawn open in the page's flow, for docs and previews. A non-modal <dialog open>:
+   no top layer, scrim, focus trap or scroll lock. It takes its size's width, up to its box's, and never moves.
+   The four inline rules (dialog, sheet, popover, tooltip) weigh one attribute, outside :where(): a site that splits CSS
+   per component can load the shared floating-panel and placement rules after them, and order must not undo them */
+:where(dialog[data-scope="dialog"])[data-presentation="inline"] {
+  position: relative; inset: auto; z-index: auto; margin: 0; inline-size: min(var(--_w), 100%); block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
+
 /* -- Sheet: side on wide screens, bottom on phones -------------------------- */
 :where(dialog[data-scope="sheet"]) {
   --_tx: 1; --_ty: 0; --_drag: 0px;
@@ -607,6 +781,12 @@
   --_tx: -1; inset: 0 auto 0 0; inline-size: min(360px, calc(100vw - 48px)); block-size: 100dvh;
   border-block: 0; border-inline-start: 0;
   border-start-end-radius: var(--warp-radius-surface); border-end-end-radius: var(--warp-radius-surface);
+}
+:where(dialog[data-scope="sheet"][data-side="top"]) {
+  --_tx: 0; --_ty: -1;
+  inset: 0 0 auto 0; margin-inline: auto; inline-size: min(100%, 640px); block-size: auto;
+  max-block-size: 92dvh; border-block-start: 0;
+  border-end-start-radius: max(var(--warp-radius-surface), 10px); border-end-end-radius: max(var(--warp-radius-surface), 10px);
 }
 :where(dialog[data-scope="sheet"][data-side="bottom"]) {
   --_tx: 0; --_ty: 1;
@@ -658,11 +838,25 @@
 :where([data-scope="sheet"][data-dragging] > [data-part="footer"]) { transition: none; }
 :where([data-scope="sheet"] > [data-part="body"]) { padding-block-end: calc(var(--warp-pad-surface) + var(--_lift, 0px)); }
 
+/* presentation="inline": the sheet drawn open in the page's flow at its side's shape (docs, previews): no top layer,
+   scrim or drag. Its height is its content's; a box that wants it at an edge puts it there */
+:where(dialog[data-scope="sheet"])[data-presentation="inline"] {
+  position: relative; inset: auto; margin: 0; max-inline-size: 100%; block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; transition: none;
+}
+
 /* -- Popover --------------------------------------------------------------- */
 :where([data-scope="popover"][data-part="content"]:focus) { outline: none; }   /* focus lands on a text-only toggletip itself */
 :where([data-scope="popover"][data-part="content"]) { inline-size: max-content; max-inline-size: min(340px, calc(100vw - 16px)); padding: var(--warp-space-group); }
 :where([data-scope="popover"] [data-part="title"]) { margin: 0 0 var(--warp-space-tight); font-weight: 600; font-size: var(--warp-text-body-size); }
 :where([data-scope="popover"] [data-part="description"]) { margin: 0 0 var(--warp-space-group); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); line-height: var(--warp-text-caption-leading); }
+
+/* presentation="inline": the panel drawn open under its trigger, in the page's flow (docs, previews). fit-content, not
+   max-content: in flow its width gives way to its box, and a grid or flex parent sizes from its words, not one long line */
+:where([data-scope="popover"][data-part="content"])[data-presentation="inline"] {
+  position: relative; inset: auto; display: block; margin-block-start: var(--warp-space-tight);
+  inline-size: fit-content; max-inline-size: min(340px, 100%); max-block-size: none; opacity: 1; translate: none; scale: none; transition: none;
+}
 
 /* -- Tooltip (hint: never essential) ------------------------------------------ */
 :where([data-scope="tooltip"][data-part="content"]) {
@@ -692,11 +886,17 @@
 }
 :where([data-scope="tooltip"] kbd) { margin-inline-start: 6px; font: 500 10.5px/1.25 var(--warp-font-mono); opacity: 0.75; }
 
+/* presentation="inline": the tip shown under its trigger, in the page's flow (docs, previews) */
+:where([data-scope="tooltip"][data-part="content"])[data-presentation="inline"] {
+  position: relative; inset: auto; display: block; inline-size: fit-content; max-inline-size: min(240px, 100%); margin-block-start: 6px;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
+
 /* -- Hover card --------------------------------------------------------------- */
 :where([data-scope="hover-card"][data-part="content"]) { inline-size: 300px; padding: var(--warp-space-group); display: grid; gap: var(--warp-space-related); }
 
 /* -- Menu (dropdown, context, submenu; also the action sheet on phones) ----- */
-:where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; overflow: visible; }
+:where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; }
 /* the panel's border draws in L→R as it opens and holds while open (sweep child, inset over the hairline) */
 :where([data-scope="menu"] [data-part="item"]),
 :where([data-scope="select"] [data-part="item"]),
@@ -704,7 +904,7 @@
   position: relative; display: flex; align-items: center; gap: var(--warp-space-related);
   min-block-size: max(32px, var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-space-related) var(--warp-pad-control);
   border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); outline: none;
-  color: var(--warp-color-text); cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
+  color: var(--warp-color-text); text-decoration: none; cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
   transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
 }
 :where([data-scope="menu"] [data-part="item"]:focus),
@@ -726,7 +926,7 @@
 :where([data-scope="menu"] [data-part="item"] > svg[data-icon]),
 :where([data-scope="palette"] [data-part="item"] > svg[data-icon]) { color: var(--warp-color-text-subtle); }
 :where([data-scope="menu"] [data-part="item"][data-tone="critical"] > svg[data-icon]) { color: inherit; }
-:where([data-scope="menu"] [data-part="item-label"]) { flex: 1; min-inline-size: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="menu"] [data-part="item-label"]) { flex: 1; min-inline-size: 0; white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="menu"] [data-part="shortcut"]),
 :where([data-scope="palette"] [data-part="shortcut"]) {
   margin-inline-start: auto; padding-inline-start: var(--warp-space-group);
@@ -769,7 +969,7 @@
 :where([data-scope="select"][data-part="trigger"][aria-expanded="true"]) { border-color: var(--warp-color-focus); box-shadow: 0 0 0 1px var(--warp-color-focus); }
 :where([data-scope="select"][data-part="trigger"] > svg[data-icon]) { color: var(--warp-color-text-subtle); transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="select"][data-part="trigger"][aria-expanded="true"] > svg[data-icon]) { rotate: 180deg; }
-:where([data-scope="select"] [data-part="value"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="select"] [data-part="value"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="select"][data-part="content"]) {
   --_side-x: 0; --_side-y: -1;
   position: fixed; inset: auto; margin: 0; box-sizing: border-box; isolation: isolate; font-family: var(--warp-text-body-font);
@@ -809,7 +1009,7 @@
 :where(dialog[data-scope="palette"]) {
   inline-size: min(640px, calc(100vw - var(--warp-space-page) * 2)); max-inline-size: none;
   margin: 12dvh auto auto; max-block-size: min(520px, 76dvh);
-  border-radius: var(--warp-radius-surface); overflow: hidden;
+  border-radius: var(--warp-radius-surface); overflow: clip;
   grid-template-rows: auto minmax(0, 1fr) auto;
   opacity: 0; translate: 0 calc(var(--warp-motion-distance) * -0.5); scale: var(--warp-motion-scale-from);
   transition:
@@ -846,8 +1046,8 @@
 :where([data-scope="palette"] [data-part="input"])::placeholder { color: var(--warp-color-text-subtle); }
 :where([data-scope="palette"] [data-part="list"]) { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; padding: var(--warp-space-tight) var(--warp-space-related) var(--warp-space-related); --_inset: var(--warp-space-related); }
 :where([data-scope="palette"] [data-part="item"]) { min-block-size: max(40px, var(--warp-target-min)); }
-:where([data-scope="palette"] [data-part="item"] [data-part="hint"]) { flex: 1 1 0; min-inline-size: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: end; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
-:where([data-scope="palette"] [data-part="item"] [data-part="text"]) { flex: 0 1 auto; min-inline-size: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+:where([data-scope="palette"] [data-part="item"] [data-part="hint"]) { flex: 1 1 0; min-inline-size: 0; overflow: clip; white-space: nowrap; text-overflow: ellipsis; text-align: end; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="palette"] [data-part="item"] [data-part="text"]) { flex: 0 1 auto; min-inline-size: 0; overflow: clip; white-space: nowrap; text-overflow: ellipsis; }
 :where([data-scope="palette"] [data-part="item"][aria-selected="true"]) { background: none; color: var(--warp-color-text); }
 :where([data-scope="palette"] [data-part="item"][aria-selected="true"] > svg[data-icon]) { color: var(--warp-color-accent-text); }
 :where([data-scope="palette"] [data-part][hidden]) { display: none; }
@@ -977,7 +1177,7 @@
   transition: grid-template-rows var(--warp-duration-base) var(--warp-ease-in-out), opacity var(--warp-duration-base) var(--warp-ease-out), visibility 0s;
 }
 :where([data-scope="accordion"] [data-part="content"] > div),
-:where([data-scope="disclosure"][data-part="content"] > div) { overflow: hidden; min-block-size: 0; }
+:where([data-scope="disclosure"][data-part="content"] > div) { overflow: clip; min-block-size: 0; }
 :where([data-scope="accordion"] [data-part="content"] > div > div) { padding-block-end: var(--warp-space-group); color: var(--warp-color-text-subtle); }
 :where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="trigger"]),
 :where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="content"] > div > div) { padding-inline: var(--warp-space-tight); }
@@ -992,11 +1192,11 @@
 :where([data-scope="breadcrumbs"] a),
 :where([data-scope="breadcrumbs"] [data-part="ellipsis"]) {
   display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min); padding-inline: 4px; border-radius: var(--warp-radius-mark);
-  color: var(--warp-color-text-subtle); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-inline-size: 18ch;
+  color: var(--warp-color-text-subtle); text-decoration: none; white-space: nowrap; overflow: clip; text-overflow: ellipsis; max-inline-size: 18ch;
   transition: color var(--warp-duration-fast);
 }
 :where([data-scope="breadcrumbs"] a:hover) { color: var(--warp-color-text); text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
-:where([data-scope="breadcrumbs"] [aria-current="page"]) { color: var(--warp-color-text); font-weight: 500; padding-inline: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="breadcrumbs"] [aria-current="page"]) { color: var(--warp-color-text); font-weight: 500; padding-inline: 4px; white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="breadcrumbs"] [data-part="ellipsis"]) { border: 0; background: transparent; cursor: pointer; font: inherit; letter-spacing: 0.1em; }
 :where([data-scope="breadcrumbs"] [data-part="back"]) { display: none; }
 :where([data-scope="breadcrumbs"]) { container: crumbs / inline-size; min-inline-size: 0; }
@@ -1041,8 +1241,8 @@
 }
 :where([data-scope="steps"] [data-part="indicator"])::before { content: counter(step); }
 :where([data-scope="steps"] [data-part="indicator"] svg[data-icon]) { display: none; inline-size: 14px; block-size: 14px; stroke-width: 2; }
-:where([data-scope="steps"] [data-part="title"]) { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--warp-color-text-subtle); }
-:where([data-scope="steps"] [data-part="description"]) { grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="steps"] [data-part="title"]) { font-weight: 500; white-space: nowrap; overflow: clip; text-overflow: ellipsis; color: var(--warp-color-text-subtle); }
+:where([data-scope="steps"] [data-part="description"]) { grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="steps"] [data-part="item"])::after {
   content: ""; grid-column: 1 / -1; grid-row: 3; block-size: var(--warp-border-emphasis); margin-block-start: var(--warp-space-related);
   background: linear-gradient(to right, var(--warp-color-accent-solid) var(--_fill, 0%), var(--warp-color-border) 0);
@@ -1087,6 +1287,14 @@
   inset-inline-end: var(--warp-space-page); inline-size: min(380px, calc(100vw - 16px)); margin: 0; padding: 0; list-style: none;
   outline: none; pointer-events: none;
 }
+/* inside an open modal it is a popover (toaster()): undo the UA's popover box */
+:where([data-scope="toast"][data-part="region"]:popover-open) { inset-block-start: auto; inset-inline-start: auto; overflow: visible; border: 0; background: none; color: inherit; }
+:where([data-scope="toast"][data-part="region"][data-moving] [data-part="root"]) { transition: none; }
+/* position: bottom-right is the default and has no attribute. Top corners stack downward (toaster() flips the offset) */
+:where([data-scope="toast"][data-part="region"][data-position^="top"]) { inset-block: calc(var(--warp-space-page) + env(safe-area-inset-top, 0px)) auto; }
+:where([data-scope="toast"][data-part="region"][data-position$="left"]) { inset-inline: var(--warp-space-page) auto; }
+:where([data-scope="toast"][data-part="region"][data-position$="center"]) { inset-inline: 0; margin-inline: auto; }
+:where([data-scope="toast"][data-part="region"][data-position^="top"] [data-part="root"]) { inset-block: 0 auto; transform-origin: 50% 0%; }
 @media (max-width: 599.98px) {
   :where([data-scope="toast"][data-part="region"]) { inset-inline: 8px; inline-size: auto; inset-block-end: calc(8px + env(safe-area-inset-bottom, 0px)); }
 }
@@ -1105,6 +1313,9 @@
 }
 @starting-style {
   :where([data-scope="toast"][data-part="root"]) { translate: 0 calc(100% + var(--warp-space-page)); opacity: 0; scale: 1; }
+}
+@starting-style {
+  :where([data-scope="toast"][data-part="region"][data-position^="top"] [data-part="root"]) { translate: 0 calc(-100% - var(--warp-space-page)); }
 }
 :where([data-scope="toast"][data-part="root"][data-swiping]) { transition: none; }
 :where([data-scope="toast"][data-part="root"][data-state="closed"]) {
@@ -1166,7 +1377,7 @@
 :where([data-scope="progress"] [data-part="label-row"] > :first-child) { color: var(--warp-color-text); font-weight: 500; }
 :where([data-scope="progress"] [data-part="value-text"]) { font-variant-numeric: tabular-nums; }
 :where([data-scope="progress"] [data-part="track"]) {
-  position: relative; overflow: hidden; block-size: calc(4px - 1px * var(--warp-x)); border-radius: var(--warp-radius-round);
+  position: relative; overflow: clip; block-size: calc(4px - 1px * var(--warp-x)); border-radius: var(--warp-radius-round);
   background: var(--warp-color-surface-active);
 }
 :where([data-scope="progress"] [data-part="range"]) {
@@ -1212,7 +1423,7 @@
    quiet 0.35 · balanced 0.7 · vivid 1 · reduced motion: still (×0) ------------------- */
 :where([data-scope="skeleton"]) {
   --_shim: calc((0.35 + 0.65 * var(--warp-x)) * var(--warp-motion-scale));
-  position: relative; overflow: hidden; display: block; block-size: 12px; border-radius: var(--warp-radius-mark);
+  position: relative; overflow: clip; display: block; block-size: 12px; border-radius: var(--warp-radius-mark);
   background: var(--warp-color-surface-active); color: transparent;
 }
 :where([data-scope="skeleton"])::after {
@@ -1403,7 +1614,7 @@
 
 /* -- Image: reserves its box (aspect-ratio), fades in, falls back to a weave ----- */
 :where([data-scope="image"]) {
-  position: relative; display: block; overflow: hidden; border-radius: var(--warp-radius-surface);
+  position: relative; display: block; overflow: clip; border-radius: var(--warp-radius-surface);
   aspect-ratio: var(--_ratio, 16 / 9); background: var(--warp-color-surface-sunken);
 }
 :where([data-scope="image"] > img) {
@@ -1440,13 +1651,13 @@
 
 /* -- Truncate: line clamp with an inline Show more; middle truncation for ids/paths */
 :where([data-scope="truncate"] > [data-part="text"]) {
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--_lines, 2); line-clamp: var(--_lines, 2); overflow: hidden;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--_lines, 2); line-clamp: var(--_lines, 2); overflow: clip;
 }
 :where([data-scope="truncate"][data-state="open"] > [data-part="text"]) { -webkit-line-clamp: unset; line-clamp: none; }
 :where([data-scope="truncate"] > [data-part="toggle"]) { all: unset; cursor: pointer; color: var(--warp-color-accent-text); font-size: var(--warp-text-caption-size); font-weight: 500; }
 :where([data-scope="truncate"] > [data-part="toggle"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; border-radius: 2px; }
 :where([data-scope="truncate"][data-mode="middle"]) { display: inline-flex; min-inline-size: 0; max-inline-size: 100%; white-space: nowrap; font-family: var(--warp-font-mono); font-size: var(--warp-text-code-size); }
-:where([data-scope="truncate"][data-mode="middle"] > [data-part="head"]) { overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="truncate"][data-mode="middle"] > [data-part="head"]) { overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="truncate"][data-mode="middle"] > [data-part="tail"]) { flex: none; }
 
 /* -- Number / relative time: tabular, never jumps width when live --------------- */
@@ -1463,7 +1674,7 @@
   display: inline-flex; overflow: clip; line-height: 1.15; block-size: 1.15em;
   mask-image: linear-gradient(transparent, #000 0.12em, #000 calc(100% - 0.12em), transparent);
 }
-:where([data-scope="ticker"] > [data-part="sr"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="ticker"] > [data-part="sr"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 :where([data-scope="ticker"] [data-part="digit"]) { inline-size: 1ch; block-size: 1.15em; overflow: visible; }
 :where([data-scope="ticker"] [data-part="digit"])::before {
   content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9"; display: block; white-space: pre; text-align: center;
@@ -1488,7 +1699,7 @@
 
 /* -- Skeleton scope: while aria-busy, real children become shimmer blocks of their own shape */
 :where([data-scope="skeleton-scope"][aria-busy="true"] [data-skeleton]) {
-  position: relative; overflow: hidden; color: transparent !important; border-color: transparent !important;
+  position: relative; overflow: clip; color: transparent !important; border-color: transparent !important;
   background: var(--warp-color-surface-active) !important; border-radius: var(--warp-radius-mark); user-select: none; pointer-events: none;
 }
 :where([data-scope="skeleton-scope"][aria-busy="true"] [data-skeleton] > *) { visibility: hidden; }
@@ -1537,7 +1748,7 @@
   padding: 10px var(--warp-pad-control); border-radius: var(--warp-radius-control);
 }
 :where([data-scope="item"] > [data-part="media"]) { grid-row: span 2; }
-:where([data-scope="item"] > [data-part="title"]) { font-weight: 500; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="item"] > [data-part="title"]) { font-weight: 500; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="item"] > [data-part="description"]) { grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); min-inline-size: 0; }
 :where([data-scope="item"] > [data-part="actions"]) { grid-column: 3; grid-row: 1 / span 2; display: flex; gap: 4px; align-items: center; position: relative; z-index: 1; }
 :where([data-scope="item"]:has([data-overlay]):hover) { background: color-mix(in oklab, currentColor 7%, transparent); }
@@ -1563,7 +1774,7 @@
 :where([data-scope="meter"]) { display: grid; gap: 6px; }
 :where([data-scope="meter"] [data-part="label-row"]) { display: flex; justify-content: space-between; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="meter"] [data-part="label-row"] > :first-child) { color: var(--warp-color-text); font-weight: 500; }
-:where([data-scope="meter"] [data-part="track"]) { position: relative; block-size: 8px; border-radius: var(--warp-radius-round); background: var(--warp-color-surface-active); overflow: hidden; }
+:where([data-scope="meter"] [data-part="track"]) { position: relative; block-size: 8px; border-radius: var(--warp-radius-round); background: var(--warp-color-surface-active); overflow: clip; }
 :where([data-scope="meter"] [data-part="range"]) {
   position: absolute; inset: 0; border-radius: inherit; background: var(--_solid);
   clip-path: inset(0 calc(100% - var(--_v, 0) * 100%) 0 0 round var(--warp-radius-round));
@@ -1593,7 +1804,7 @@
 }
 
 /* -- Watermark: a repeated, rotated text tile behind content; never selectable, never announced */
-:where([data-scope="watermark"]) { position: relative; isolation: isolate; overflow: hidden; }
+:where([data-scope="watermark"]) { position: relative; isolation: isolate; overflow: clip; }
 :where([data-scope="watermark"])::before {
   content: ""; position: absolute; inset: -50%; z-index: -1; pointer-events: none; rotate: -22deg;
   background-image: var(--_wm); background-size: 220px 96px; opacity: calc(0.07 + 0.03 * var(--warp-x));
@@ -1716,7 +1927,7 @@
 :where(dialog[data-scope="palette"]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-pop), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; opacity: 0; scale: var(--warp-motion-scale-from); }
 :where(dialog[data-scope="palette"][open]) { opacity: 1; scale: 1; @starting-style { opacity: 0; scale: var(--warp-motion-scale-from); } }
 
-/* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (ui-core nav.ts) grows it in
+/* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (warp-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */
 :where([data-scope="nav"]) { position: relative; --_bar: var(--warp-sweep-width); display: flex; gap: var(--warp-space-group); align-self: start; inline-size: fit-content; }
 :where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-space-tight); }

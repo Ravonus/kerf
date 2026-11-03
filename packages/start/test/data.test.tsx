@@ -1,27 +1,27 @@
 // @vitest-environment jsdom
-// The client data cache over weft/test's fake transport (research 27 §7): queries, dedupe, in-place updates,
+// The client data cache over @weft-js/core/test's fake transport (research 27 §7): queries, dedupe, in-place updates,
 // optimistic overlays and rollbacks, single-flight refreshes, the shared tagged cache and the Q/S diagnostics. No
 // server and no Vite plugin: the definitions keep their `run`, and calls go to the executor in process.
-import { state } from 'weft'
-import { flush, net, render, screen } from 'weft/test'
-import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@weft/start'
-import { produce, runtime, share } from '@weft/start/data'
+import { state } from '@weft-js/core'
+import { flush, net, render, screen } from '@weft-js/core/test'
+import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@weft-js/start'
+import { decodeForm, produce, runtime, share } from '@weft-js/start/data'
 import { checkTags } from '../src/exec'
 
 type Todo = { id: string; title: string; done: boolean }
 const id: StandardSchemaV1<{ id: string }> = {
-  '~standard': { version: 1, vendor: 't', validate: (v: any) => (typeof v?.id === 'string' ? { value: v } : { issues: [{ message: 'expected a string', path: ['id'] }] }) },
+  '~standard': { version: 1, vendor: 't', validate: v => (typeof (v as { id?: unknown } | null)?.id === 'string' ? { value: v as { id: string } } : { issues: [{ message: 'expected a string', path: ['id'] }] }) },
 }
 
 let db: Todo[]
-let runs: Record<string, number>
+let runs: { list: number; get: number; stats: number }
 beforeEach(() => {
   db = [{ id: '1', title: 'One', done: false }, { id: '2', title: 'Two', done: false }, { id: '3', title: 'Three', done: false }]
   runs = { list: 0, get: 0, stats: 0 }
 })
 
 const listTodos = query({ $id: 'listTodos', tags: ['todos'], run: () => (runs.list++, db) })
-const getTodo = query({ $id: 'getTodo', input: id, tags: ({ id }) => [`todo:${id}`], run: ({ input }) => (runs.get++, db.find(t => t.id === input.id) ?? null) })
+const getTodo = query({ $id: 'getTodo', input: id, tags: t => [`todo:${t.id}`], run: ({ input }) => (runs.get++, db.find(t => t.id === input.id) ?? null) })
 const toggle = mutation({
   $id: 'toggle',
   input: id,
@@ -95,7 +95,7 @@ test('three quick toggles stack their layers and end where the server ends', asy
   await Promise.all([toggle({ id: '2' }), toggle({ id: '2' }), toggle({ id: '2' })])
   await net.settle()
   expect(classes()).toEqual(['open', 'done', 'open'])
-  expect(db[1].done).toBe(true)
+  expect(db[1]!.done).toBe(true)
 })
 
 test('a pushed row is optimistic until the server answers; untouched rows keep their nodes', async () => {
@@ -154,7 +154,7 @@ test('S011: an optimistic update its invalidated tags miss warns, and holds unti
   render(One)
   await net.settle()
   const seen: string[] = []
-  const mo = new MutationObserver(() => seen.push(document.querySelector('p')!.textContent!))
+  const mo = new MutationObserver(() => seen.push(document.querySelector('p')!.textContent))
   mo.observe(document.body, { subtree: true, characterData: true, childList: true })
   await rename({ id: '1' })
   for (let i = 0; i < 5; i++) await net.settle()
@@ -201,7 +201,7 @@ describe('diagnostics', () => {
   })
 
   test('Q002: input the schema rejects', async () => {
-    await expect(getTodo.fetch({ id: 4 as any })).rejects.toMatchObject({ code: 'Q002', status: 400, issues: [{ message: 'expected a string', path: ['id'] }] })
+    await expect(getTodo.fetch({ id: 4 as unknown as string })).rejects.toMatchObject({ code: 'Q002', status: 400, issues: [{ message: 'expected a string', path: ['id'] }] })
   })
 
   test('Q004: a mutation inside a query (a GET)', async () => {
@@ -248,11 +248,21 @@ test('share keeps equal subtrees; produce copies only what it writes', () => {
   expect(b.list[1]).not.toBe(a.list[1])
   expect(share(a, JSON.parse(JSON.stringify(a)))).toBe(a)
 
-  const c = produce(a, d => { d.list[1].tags.push('w') })
+  const c = produce(a, d => { d.list[1]!.tags.push('w') })
   expect(c.list[0]).toBe(a.list[0])
-  expect(c.list[1].tags).toEqual(['y', 'w'])
-  expect(a.list[1].tags).toEqual(['y']) // the base is untouched
+  expect(c.list[1]!.tags).toEqual(['y', 'w'])
+  expect(a.list[1]!.tags).toEqual(['y']) // the base is untouched
   expect(produce(a, d => { d.list.find(x => x.id === 1) })).toBe(a) // reads copy nothing
   expect(produce(a, d => ({ ...d, n: 2 })).list).toBe(a.list)
   expect(produce([1, 2, 3], d => { d.splice(1, 1) })).toEqual([1, 3])
+})
+
+test("a form field named like an inherited method is a field: `toString` can't reach Object.prototype", () => {
+  const form = new FormData()
+  form.append('toString', 'a')
+  form.append('valueOf[]', 'b')
+  form.append('valueOf[]', 'c')
+  const fields = decodeForm(form)
+  expect(Object.keys(fields).sort((a, b) => a.localeCompare(b))).toEqual(['toString', 'valueOf'])
+  expect(Object.values(fields)[1]).toEqual(['b', 'c'])
 })

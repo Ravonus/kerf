@@ -8,6 +8,8 @@
 //! The signature covers the function and the body as well as the claims, so a signed call can't be replayed against
 //! another function or with another input, and `iat` bounds how long it can be replayed at all.
 
+use std::fmt::Write as _;
+
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use hmac::{Hmac, KeyInit, Mac};
@@ -51,7 +53,7 @@ fn keyed(secret: &[u8], id: &str, ctx: &str, body: &[u8]) -> Hmac<Sha256> {
 }
 
 fn hex_decode(s: &str) -> Option<Vec<u8>> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return None;
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(s.get(i..i + 2)?, 16).ok()).collect()
@@ -59,7 +61,11 @@ fn hex_decode(s: &str) -> Option<Vec<u8>> {
 
 /// The `weft-sig` for a call. TS is the signer; this is here for tests and hand-written callers.
 pub fn sign(secret: &[u8], id: &str, ctx: &str, body: &[u8]) -> String {
-    keyed(secret, id, ctx, body).finalize().into_bytes().iter().map(|b| format!("{b:02x}")).collect()
+    let mut hex = String::with_capacity(64);
+    for b in keyed(secret, id, ctx, body).finalize().into_bytes() {
+        let _ = write!(hex, "{b:02x}");
+    }
+    hex
 }
 
 /// Check the signature (in constant time), then decode the envelope and check its age against `now_ms`.
@@ -109,6 +115,9 @@ mod tests {
     /// The same vector `packages/start/test/rust.test.mjs` signs in JS: the two sides agree byte for byte.
     #[test]
     fn matches_the_typescript_signer() {
-        assert_eq!(sign(b"s3cret", "f.abc", CTX, b"{\"input\":{\"q\":\"x\"}}"), "1a4c89d125bdeda4db5f2dd02045bc1044ff4ecfacff00c7f42f602ceef3ad08");
+        assert_eq!(
+            sign(b"s3cret", "f.abc", CTX, b"{\"input\":{\"q\":\"x\"}}"),
+            "1a4c89d125bdeda4db5f2dd02045bc1044ff4ecfacff00c7f42f602ceef3ad08"
+        );
     }
 }

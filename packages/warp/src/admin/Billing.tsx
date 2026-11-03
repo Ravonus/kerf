@@ -1,31 +1,33 @@
-import { FileTextIcon, LockIcon, TrashIcon } from '@weft/icons'
-import { money } from '@weft/ui-core'
-import { derived, state, type State } from 'weft'
+import { FileTextIcon, LockIcon, TrashIcon } from '@weft-js/warp-icons'
+import { money } from '@weft-js/warp-core'
+import { derived, state, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Button, type Tone } from '../Button'
 import { Banner } from '../parts'
 import { Table, type Column } from '../Table'
 import { toast } from '../Toast'
-import { use } from '../use'
+import { use } from '@weft-js/warp-core/weft'
 import { read } from './atoms'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/data/list.css'
-import '@weft/ui-core/styles/flows/pay-frame.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/data/list.css'
+import '@weft-js/warp-core/styles/flows/pay-frame.css'
 import type { ProviderAppearance } from '../PaymentCard'
 
+/** Where an invoice stands. */
 export type InvoiceStatus = 'paid' | 'retrying' | 'failed' | 'open'
+/** One invoice in the billing history. */
 export type Invoice = { id: string; date: string; number: string; status: InvoiceStatus; amount: number; pdf?: string }
 const STATUS: Record<InvoiceStatus, [string, Tone]> = { paid: ['Paid', 'positive'], retrying: ['Retrying', 'caution'], failed: ['Failed', 'critical'], open: ['Open', 'neutral'] }
 
 /** Invoices (09 §4.3): a DataTable; a failed payment pins a Banner above it with "Update payment method". */
-export function Invoices({ invoices, currency, locale, onUpdatePayment, onExport }: { invoices: readonly Invoice[] | State<readonly Invoice[]>; currency?: string; locale?: string; onUpdatePayment?: () => void; onExport?: () => void }) {
-  const list = derived(() => read(invoices) as readonly Invoice[])
+export function Invoices({ invoices, currency, locale, onUpdatePayment, onExport }: { invoices: readonly Invoice[] | State<readonly Invoice[]>; currency?: string | undefined; locale?: string | undefined; onUpdatePayment?: () => void; onExport?: () => void }) {
+  const list = derived(() => read(invoices))
   const failed = derived(() => list.value.some(i => i.status === 'failed'))
   const columns: Column<Invoice>[] = [
     { id: 'date', header: 'Date', rowHeader: true, card: 'title' },
@@ -39,16 +41,17 @@ export function Invoices({ invoices, currency, locale, onUpdatePayment, onExport
   return (
     <div data-scope="stack">
       {failed.value && <Banner tone="critical" live="polite" actions={fix.value}>Your last payment failed. Update your card to keep this plan.</Banner>}
-      <Table caption="Invoices" captionHidden rows={list as any} columns={columns} picker={false} heading={3} actions={tools.value} empty={{ title: 'No invoices yet', text: 'Your first one comes at the end of this period.' }} />
+      <Table caption="Invoices" captionHidden rows={list} columns={columns} picker={false} heading={3} actions={tools.value} empty={{ title: 'No invoices yet', text: 'Your first one comes at the end of this period.' }} />
     </div>
   )
 }
 
+/** A card on file. */
 export type PaymentMethod = { id: string; brand: string; last4: string; expires: string; default?: boolean }
 
 /** Saved cards (09 §4.3): the last four only. Make default applies at once; remove gives Undo. Details live with the provider. */
 export function PaymentMethods({ methods, onAdd, onDefault, onRemove, onRestore }: { methods: readonly PaymentMethod[] | State<readonly PaymentMethod[]>; onAdd?: () => void; onDefault: (m: PaymentMethod) => void; onRemove: (m: PaymentMethod) => void; onRestore?: (m: PaymentMethod) => void }) {
-  const list = derived(() => read(methods) as readonly PaymentMethod[])
+  const list = derived(() => read(methods))
   const name = (m: PaymentMethod) => `${m.brand} ending ${m.last4}`
   return (
     <div data-scope="stack">
@@ -76,6 +79,7 @@ export function PaymentMethods({ methods, onAdd, onDefault, onRemove, onRestore 
   )
 }
 
+/** Props for PayFrame. */
 export interface PayFrameProps {
   /** The iframe's title: what's inside it, for a screen reader (09 §1.5). */
   title: string
@@ -110,7 +114,7 @@ export function PayFrame({ title, src, mount, testMode, ready }: PayFrameProps) 
         <span class="row"><LockIcon />Card fields are hosted by your payment provider</span>
         {testMode && <Badge tone="caution">Test mode</Badge>}
       </div>
-      <div ref={(n: any) => (host = n)} data-part="slot" role="group" aria-label={title}>
+      <div ref={n => (host = n)} data-part="slot" role="group" aria-label={title}>
         {!done.value && <><i data-loop=""></i><div><i data-loop=""></i><i data-loop=""></i></div></>}
         {hosted.value && <iframe src={src} title={title} width="100%" height="148" frameborder="0" onLoad={() => (loaded.value = true)}></iframe>}
       </div>

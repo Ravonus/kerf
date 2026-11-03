@@ -3,7 +3,7 @@
 use napi_derive::napi;
 
 #[napi]
+#[allow(clippy::needless_pass_by_value, reason = "Node-API hands over owned strings")]
 pub fn transform(source: String, options_json: String) -> String {
-    let options: crate::Options = serde_json::from_str(&options_json).unwrap_or_default();
-    serde_json::to_string(&crate::compile(&source, &options)).expect("serializable output")
+    crate::transform_json(&source, &options_json)
 }

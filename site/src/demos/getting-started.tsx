@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Badge, Button, Card } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Badge, Button, Card } from '@weft-js/warp'
 
 export default function Product() {
   const inCart = state(0)

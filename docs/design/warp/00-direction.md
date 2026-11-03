@@ -50,9 +50,9 @@ predecessor research notes under `docs/research/`.
 | Whitespace | `related` 8 · `group` 16 · `section` 32–48 · `page` gutter 16–32 | about 1.5× the content's own line gap between groups |
 | Dividers | `color.border` (≈1.2–1.5:1), decorative only | boundaries that matter use `border.control` (≥ 3:1) |
 
-**Shipping it.** This CSS and the specimens' behaviour ship as the framework-agnostic `@weft/ui-core`. The CSS is
+**Shipping it.** This CSS and the specimens' behaviour ship as the framework-agnostic `@weft-js/warp-core`. The CSS is
 split per component, unchanged. The behaviour (sweep, floating label, dials, widget machines) is plain TS over the
-DOM. `@weft/warp` is a thin weft binding that renders the specimen markup exactly. A binding for another framework
+DOM. `@weft-js/warp` is a thin weft binding that renders the specimen markup exactly. A binding for another framework
 sits beside it on the same core (PLAN §6.1).
 
 ## 3. The expression dial
@@ -68,8 +68,9 @@ Discrete choices (font pairing, caps, the spring) snap to the nearest stop.
 | Source | the clean look, `old@main:theme/tokens.css:34-40` | a deliberate blend | the field look, `old:theme/tokens.css:29-33` |
 | Body / display | Inter / Inter 600 | Inter / Space Grotesk 500 | Space Grotesk / Instrument Serif 400 |
 | Eyebrow, badge | Inter 500, sentence case | IBM Plex Mono caps, +0.08em | Plex Mono caps, +0.14em |
-| Buttons | Inter 500, sentence case | Inter 500, sentence case | Plex Mono 600 caps, +0.1em (`old:theme/tokens.css:240-243`) |
-| Radius control / surface | 8 / 12px | 5 / 7px | 2 / 2px; chips and switches go square too |
+| Buttons | Inter 500, sentence case; primary in neutral ink | Inter 500, sentence case; primary in accent | Plex Mono 600 caps, +0.1em (`old:theme/tokens.css:240-243`); primary in accent, two-colour fill, hard offset |
+| Surfaces | shadow only, no hairline | hairline | hairline |
+| Radius control / surface | 10 / 14px | 4 / 5px | 2 / 2px; chips and switches go square too |
 | Emphasis line | 1px | 1.5px | 2px |
 | Neutral temperature | slate, hue 255, C 0.011 | graphite, hue 80, C 0.005 | paper and ink, hue 85, C 0.012 |
 | Accent / status chroma | × 0.8 / × 0.85 | × 1 / × 1 | × 1.2 / × 1.1 (capped at sRGB) |
@@ -77,7 +78,7 @@ Discrete choices (font pairing, caps, the spring) snap to the nearest stop.
 | Overlay backdrop blur | 12px | 6px | 0 (flat, opaque) |
 | Motion | × 0.85, 4px travel, standard curve | × 1, 8px, expo-out | × 1.2, 12px, expo-out + spring pop |
 | Stagger | 16ms | 32ms | 48ms |
-| Sweep (signature, every stop) | 480ms; fields, controls, rails, buttons | 620ms; same | 700ms; + cards, panels, stat rows |
+| Sweep (signature, every stop) | 400ms; fields, controls, rails, buttons | 520ms; same | 580ms; + cards, panels, stat rows |
 | Sweep stroke | full accent, 1px | full accent, 1.5px | full accent, 1.5px |
 
 **Why balanced is the default.** Inter body text sits on any site; Space Grotesk headings and mono eyebrows keep
@@ -110,7 +111,7 @@ segmented indicator) and buttons at all stops; cards, panels and stat rows join 
   any width), and a tone copy of the label wipes in. On leave it all
   keeps going right (`→ -1`). The filled variant slides a tone fill in from the left and out to the right.
 - **Rails** (`old:components/inputs/choice/Switch.tsx`): the accent fill sweeps *through* the rail as the knob
-  slides (620 / 420ms). Hover while on: an `accent-hover` layer sweeps through the inside. Hover while off: the ring
+  slides (520 / 420ms). Hover while on: an `accent-hover` layer sweeps through the inside. Hover while off: the ring
   sweeps around the rail. Slider fills and the segmented indicator use the same parts.
 
 **The floating border field.** The label rests inside the field at its text size; on hover, focus or value it
@@ -193,7 +194,7 @@ become a slow opacity pulse. Loops that should hold their frame read `--warp-loo
 | Menu, popover, toast | `base` 200ms | ease-out `(0.16,1,0.3,1)` (`old:motion/presets.ts:41`) | `motion.distance` 8px |
 | Dialog, sheet, page | `slow` 320ms | ease-out; sheets in-out (`old:motion/presets.ts:155`) | sheets 100% of their edge |
 | Scale accents (switch thumb, badge pop) | `base` | `ease-pop` (spring at vivid) | — |
-| Sweep (all stops) | `sweep-duration` 480 / 620 / 700ms | in-out `(0.65,0,0.35,1)` (`old:theme/tokens.css:250`) | full width |
+| Sweep (all stops) | `sweep-duration` 400 / 520 / 580ms | in-out `(0.65,0,0.35,1)` (`old:theme/tokens.css:250`) | full width |
 | Label float | 520ms | `(0.16,1,0.3,1)` | border to notch |
 
 Durations scale by stop: × 0.85 / × 1 / × 1.2.

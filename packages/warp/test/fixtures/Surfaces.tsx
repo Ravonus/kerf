@@ -1,5 +1,5 @@
 // The last warp components, with fixed data so a server render and a hydration agree.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Button } from '../../src/Button'
 import { CodeInput, JsonEditor } from '../../src/CodeInput'
 import { CommandPalette } from '../../src/CommandPalette'
@@ -62,6 +62,13 @@ export function PaletteCase() {
   const open = state(false)
   const ran = state('')
   return <><Button onClick={() => (open.value = true)}>Open</Button><CommandPalette open={open} commands={[{ id: 'new', label: 'New project', group: 'Create', run: () => (ran.value = 'new') }, { id: 'inv', label: 'Invite member', group: 'Create', keywords: ['teammate'], run: () => (ran.value = 'inv') }, { id: 'set', label: 'Settings', group: 'Go to', run: () => (ran.value = 'set') }]} /><output data-out="">{ran.value}</output></>
+}
+/** A row with children: "Move to…" opens a level of places. */
+export function PaletteNested() {
+  const open = state(false)
+  const ran = state('')
+  const places = () => ['Inbox', 'Archive', 'us-east', 'us-west'].map(p => ({ id: p, label: p, run: () => (ran.value = p) }))
+  return <><Button onClick={() => (open.value = true)}>Open</Button><CommandPalette open={open} commands={[{ id: 'move', label: 'Move to…', group: 'Actions', children: places }, { id: 'set', label: 'Settings', group: 'Go to', run: () => (ran.value = 'set') }]} /><output data-out="">{ran.value}</output></>
 }
 export function MentionsCase() {
   const v = state('Ask @[Ada Lovelace](user:ada) ')

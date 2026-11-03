@@ -3,7 +3,7 @@
 exports[`Alerts: client DOM after mount 1`] = `
 "<div>
 <div data-scope="alert" data-tone="info">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -23,7 +23,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="neutral">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -43,7 +43,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="accent">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -63,7 +63,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="positive">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
@@ -83,7 +83,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="caution">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
@@ -105,7 +105,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="critical">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -125,7 +125,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="critical" role="alert">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -144,10 +144,12 @@ exports[`Alerts: client DOM after mount 1`] = `
 <div data-part="title">Failed</div>
 <div data-part="description">Try again.</div>
 <div data-part="actions">
-<button data-scope="button" data-size="sm" type="button">Retry</button>
+<button data-scope="button" data-size="sm" data-sweep="" type="button">Retry<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 <button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -160,7 +162,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 </button>
 </div>
 <div data-scope="alert" data-tone="info">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -184,7 +186,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 exports[`Alerts: server HTML 1`] = `
 "<div>
 <div data-scope="alert" data-tone="info">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -204,7 +206,7 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="neutral">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -224,7 +226,7 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="accent">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -244,7 +246,7 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="positive">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
@@ -264,7 +266,7 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="caution">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
@@ -286,7 +288,7 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="critical">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -306,7 +308,7 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="description">Body</div>
 </div>
 <div data-scope="alert" data-tone="critical" role="alert">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -325,10 +327,12 @@ exports[`Alerts: server HTML 1`] = `
 <div data-part="title">Failed</div>
 <div data-part="description">Try again.</div>
 <div data-part="actions">
-<button data-scope="button" data-size="sm" type="button">Retry</button>
+<button data-scope="button" data-size="sm" data-sweep="" type="button">Retry<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 <button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -341,7 +345,7 @@ exports[`Alerts: server HTML 1`] = `
 </button>
 </div>
 <div data-scope="alert" data-tone="info">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -364,14 +368,18 @@ exports[`Alerts: server HTML 1`] = `
 
 exports[`Buttons: client DOM after mount 1`] = `
 "<div>
-<button data-scope="button" type="button">Solid</button>
+<button data-scope="button" data-sweep="" type="button">Solid<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="soft" data-scope="button" data-sweep="" data-tone="accent" type="button">Soft<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
 <button data-emphasis="outline" data-scope="button" data-size="sm" data-sweep="" type="button">Outline<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" type="button">Ghost</button>
+<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" data-sweep="" type="button">Ghost<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="link" data-scope="button" type="button">Link</button>
 <button data-emphasis="frame" data-scope="button" data-sweep="" type="button">
 <span aria-hidden="true" data-part="frame-corners">
@@ -449,7 +457,7 @@ exports[`Buttons: client DOM after mount 1`] = `
 </i>
 </span>
 <span data-part="sweep-label">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -460,7 +468,7 @@ exports[`Buttons: client DOM after mount 1`] = `
 </path>
 </svg>Frame fill</span>
 <span aria-hidden="true" data-part="sweep-content">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -471,8 +479,8 @@ exports[`Buttons: client DOM after mount 1`] = `
 </path>
 </svg>Frame fill</span>
 </button>
-<button data-scope="button" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<button data-scope="button" data-sweep="" type="button">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -487,9 +495,11 @@ exports[`Buttons: client DOM after mount 1`] = `
 </path>
 <path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
-</svg>With icon</button>
-<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+</svg>With icon<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-sweep="" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -499,13 +509,17 @@ exports[`Buttons: client DOM after mount 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button data-scope="button" type="button">
+<button data-scope="button" data-sweep="" type="button">
 <span data-part="label">Can load</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" type="button">
+<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -517,6 +531,8 @@ exports[`Buttons: client DOM after mount 1`] = `
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
 <button aria-busy="true" aria-disabled="true" data-emphasis="outline" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">Outline loading</span>
@@ -525,20 +541,26 @@ exports[`Buttons: client DOM after mount 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button aria-controls="x" data-scope="button" id="b1" type="submit">Submit</button>
+<button aria-controls="x" data-scope="button" data-sweep="" id="b1" type="submit">Submit<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>"
 `;
 
 exports[`Buttons: server HTML 1`] = `
 "<div>
-<button data-scope="button" type="button">Solid</button>
+<button data-scope="button" data-sweep="" type="button">Solid<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="soft" data-scope="button" data-sweep="" data-tone="accent" type="button">Soft<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
 <button data-emphasis="outline" data-scope="button" data-size="sm" data-sweep="" type="button">Outline<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" type="button">Ghost</button>
+<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" data-sweep="" type="button">Ghost<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 <button data-emphasis="link" data-scope="button" type="button">Link</button>
 <button data-emphasis="frame" data-scope="button" data-sweep="" type="button">
 <span aria-hidden="true" data-part="frame-corners">
@@ -616,7 +638,7 @@ exports[`Buttons: server HTML 1`] = `
 </i>
 </span>
 <span data-part="sweep-label">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -627,7 +649,7 @@ exports[`Buttons: server HTML 1`] = `
 </path>
 </svg>Frame fill</span>
 <span aria-hidden="true" data-part="sweep-content">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -638,8 +660,8 @@ exports[`Buttons: server HTML 1`] = `
 </path>
 </svg>Frame fill</span>
 </button>
-<button data-scope="button" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<button data-scope="button" data-sweep="" type="button">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -654,9 +676,11 @@ exports[`Buttons: server HTML 1`] = `
 </path>
 <path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
-</svg>With icon</button>
-<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+</svg>With icon<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-sweep="" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -666,13 +690,17 @@ exports[`Buttons: server HTML 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button data-scope="button" type="button">
+<button data-scope="button" data-sweep="" type="button">
 <span data-part="label">Can load</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
-<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" type="button">
+<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -684,6 +712,8 @@ exports[`Buttons: server HTML 1`] = `
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
 </button>
 <button aria-busy="true" aria-disabled="true" data-emphasis="outline" data-loading="" data-scope="button" data-sweep="" type="button">
 <span data-part="label">Outline loading</span>
@@ -692,7 +722,9 @@ exports[`Buttons: server HTML 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 </button>
-<button aria-controls="x" data-scope="button" id="b1" type="submit">Submit</button>
+<button aria-controls="x" data-scope="button" data-sweep="" id="b1" type="submit">Submit<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>"
 `;
 
@@ -701,16 +733,32 @@ exports[`Choices: client DOM after mount 1`] = `
 <label data-scope="checkbox">
 <input type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="mark">
+<span aria-hidden="true" data-part="sweep-base">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" viewBox="0 0 24 24">
+<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
+</path>
+<path d="M6 12h12" data-part="dash" pathLength="1">
+</path>
+</svg>
 </span>
 <span data-part="label">Agree</span>
 </label>
 <label data-invalid="" data-scope="checkbox">
 <input aria-invalid="true" type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="mark">
+<span aria-hidden="true" data-part="sweep-base">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" viewBox="0 0 24 24">
+<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
+</path>
+<path d="M6 12h12" data-part="dash" pathLength="1">
+</path>
+</svg>
 </span>
 <span data-part="label">Mixed</span>
 <span data-part="hint">Pick one</span>
@@ -740,7 +788,7 @@ exports[`Choices: client DOM after mount 1`] = `
 </span>
 <input name="view" type="radio" value="a">
 <span data-part="item">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -769,7 +817,7 @@ exports[`Choices: client DOM after mount 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -785,7 +833,7 @@ exports[`Choices: client DOM after mount 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -809,16 +857,32 @@ exports[`Choices: server HTML 1`] = `
 <label data-scope="checkbox">
 <input type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="mark">
+<span aria-hidden="true" data-part="sweep-base">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" viewBox="0 0 24 24">
+<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
+</path>
+<path d="M6 12h12" data-part="dash" pathLength="1">
+</path>
+</svg>
 </span>
 <span data-part="label">Agree</span>
 </label>
 <label data-invalid="" data-scope="checkbox">
 <input aria-invalid="true" type="checkbox">
 <span data-part="control" data-sweep="">
-<span aria-hidden="true" data-part="mark">
+<span aria-hidden="true" data-part="sweep-base">
 </span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" viewBox="0 0 24 24">
+<path d="M5 12.5 L9.5 17 L19 7" data-part="check" pathLength="1">
+</path>
+<path d="M6 12h12" data-part="dash" pathLength="1">
+</path>
+</svg>
 </span>
 <span data-part="label">Mixed</span>
 <span data-part="hint">Pick one</span>
@@ -848,7 +912,7 @@ exports[`Choices: server HTML 1`] = `
 </span>
 <input name="view" type="radio" value="a">
 <span data-part="item">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -877,7 +941,7 @@ exports[`Choices: server HTML 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -893,7 +957,7 @@ exports[`Choices: server HTML 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -944,7 +1008,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -962,7 +1026,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </svg>
 </span>
 <span data-part="sweep">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1015,7 +1079,7 @@ exports[`Fields: client DOM after mount 1`] = `
 <input aria-describedby="field-1-msg" data-part="input" id="field-1" placeholder=" ">
 <span data-part="suffix">.com</span>
 <button aria-label="Clear Email address" data-part="clear" tabindex="-1" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1054,7 +1118,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </div>
 <div data-part="message" id="field-2-msg">
 <span data-part="error" role="alert">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
@@ -1084,7 +1148,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1102,7 +1166,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </svg>
 </span>
 <span data-part="sweep">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1139,7 +1203,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </label>
 <input autocomplete="off" data-part="input" enterkeyhint="search" id="field-3" placeholder=" " type="search">
 <button aria-label="Clear Search" data-part="clear" tabindex="-1" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1171,7 +1235,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 </span>
 </label>
-<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4">
+<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4" style="--_rows: 4;">
 </textarea>
 </div>
 <div data-part="message" id="field-4-msg">
@@ -1184,7 +1248,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<label data-part="label" for="field-5">
+<label data-part="label" id="field-5-l">
 <span data-part="label-text">Sort</span>
 <span aria-hidden="true" data-part="label-chars">
 <span data-c="S" data-char="">
@@ -1197,7 +1261,11 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 </span>
 </label>
-<select data-part="input" id="field-5">
+<button aria-expanded="false" aria-haspopup="listbox" aria-labelledby="field-5-l" data-part="input" id="field-5" role="combobox" type="button">
+<span data-part="value" data-placeholder="Pick">
+</span>
+</button>
+<select aria-hidden="true" data-part="carrier" tabindex="-1">
 <option value="">Pick</option>
 <option value="a">A</option>
 <optgroup label="More">
@@ -1205,7 +1273,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </optgroup>
 </select>
 <span aria-hidden="true" data-part="indicator">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-bw="" data-t="b" data-w="">
@@ -1253,7 +1321,7 @@ exports[`Fields: server HTML 1`] = `
 </span>
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1271,7 +1339,7 @@ exports[`Fields: server HTML 1`] = `
 </svg>
 </span>
 <span data-part="sweep">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1324,7 +1392,7 @@ exports[`Fields: server HTML 1`] = `
 <input aria-describedby="field-1-msg" data-part="input" id="field-1" placeholder=" " value="a">
 <span data-part="suffix">.com</span>
 <button aria-label="Clear Email address" data-part="clear" tabindex="-1" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1363,7 +1431,7 @@ exports[`Fields: server HTML 1`] = `
 </div>
 <div data-part="message" id="field-2-msg">
 <span data-part="error" role="alert">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
@@ -1393,7 +1461,7 @@ exports[`Fields: server HTML 1`] = `
 </span>
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1411,7 +1479,7 @@ exports[`Fields: server HTML 1`] = `
 </svg>
 </span>
 <span data-part="sweep">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1448,7 +1516,7 @@ exports[`Fields: server HTML 1`] = `
 </label>
 <input autocomplete="off" data-part="input" enterkeyhint="search" id="field-3" placeholder=" " type="search">
 <button aria-label="Clear Search" data-part="clear" tabindex="-1" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1480,7 +1548,7 @@ exports[`Fields: server HTML 1`] = `
 </span>
 </span>
 </label>
-<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4">
+<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4" style="--_rows:4">
 </textarea>
 </div>
 <div data-part="message" id="field-4-msg">
@@ -1494,7 +1562,7 @@ exports[`Fields: server HTML 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<label data-part="label" for="field-5">
+<label data-part="label" id="field-5-l">
 <span data-part="label-text">Sort</span>
 <span aria-hidden="true" data-part="label-chars">
 <span data-c="S" data-char="">
@@ -1507,15 +1575,19 @@ exports[`Fields: server HTML 1`] = `
 </span>
 </span>
 </label>
-<select data-part="input" id="field-5">
-<option value="">Pick</option>
+<button aria-expanded="false" aria-haspopup="listbox" aria-labelledby="field-5-l" data-part="input" id="field-5" role="combobox" type="button">
+<span data-part="value" data-placeholder="Pick">
+</span>
+</button>
+<select aria-hidden="true" data-part="carrier" tabindex="-1">
+<option selected="" value="">Pick</option>
 <option value="a">A</option>
 <optgroup label="More">
 <option disabled="" value="b">B</option>
 </optgroup>
 </select>
 <span aria-hidden="true" data-part="indicator">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-bw="" data-t="b" data-w="">
@@ -1533,7 +1605,7 @@ exports[`Fields: server HTML 1`] = `
 
 exports[`Icons: client DOM after mount 1`] = `
 "<div>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1543,7 +1615,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -1553,7 +1625,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M13 3h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM11 5h1v1h-1zM13 5h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM6 12h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1569,7 +1641,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-bw="" data-t="b" data-w="">
@@ -1579,7 +1651,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M11 5h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
@@ -1597,7 +1669,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -1613,7 +1685,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -1629,7 +1701,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
@@ -1645,7 +1717,7 @@ exports[`Icons: client DOM after mount 1`] = `
 <path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1660,7 +1732,7 @@ exports[`Icons: client DOM after mount 1`] = `
 
 exports[`Icons: server HTML 1`] = `
 "<div>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1670,7 +1742,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -1680,7 +1752,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M13 3h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM11 5h1v1h-1zM13 5h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM6 12h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1696,7 +1768,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-bw="" data-t="b" data-w="">
@@ -1706,7 +1778,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M11 5h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
@@ -1724,7 +1796,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -1740,7 +1812,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -1756,7 +1828,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
@@ -1772,7 +1844,7 @@ exports[`Icons: server HTML 1`] = `
 <path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1842,7 +1914,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 </button>
 <div aria-labelledby="pop-0-b" data-part="content" data-scope="popover" id="pop-0" popover="manual" role="dialog">body</div>
 <button aria-controls="pop-1" aria-expanded="false" aria-haspopup="dialog" data-emphasis="soft" data-scope="button" data-size="sm" data-sweep="" data-tone="neutral" id="pop-1-b" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -1868,7 +1940,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <h2 data-part="title" id="dlg-2-t" tabindex="-1">Open</h2>
 <p data-part="description" id="dlg-2-d">Desc</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1882,14 +1954,16 @@ exports[`Overlays: client DOM after mount 1`] = `
 </div>
 <div data-part="body">x</div>
 <div data-part="footer">
-<button data-close="" data-scope="button" type="button">OK</button>
+<button data-close="" data-scope="button" data-sweep="" type="button">OK<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="dlg-3-t" data-scope="dialog" data-size="lg" role="alertdialog">
 <div data-part="header">
 <h2 data-part="title" id="dlg-3-t">Alert</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1910,7 +1984,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <h2 data-part="title" id="sheet-4-t" tabindex="-1">Side</h2>
 <p data-part="description" id="sheet-4-d">D</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1924,7 +1998,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 </div>
 <div data-part="body">z</div>
 <div data-part="footer">
-<button data-scope="button" type="button">Go</button>
+<button data-scope="button" data-sweep="" type="button">Go<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="sheet-5-t" data-scope="sheet" data-side="right">
@@ -1933,7 +2009,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <div data-part="header">
 <h2 data-part="title" id="sheet-5-t">Auto</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1953,7 +2029,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <div data-part="header">
 <h2 data-part="title" id="sheet-6-t">Bottom</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1977,7 +2053,7 @@ exports[`Overlays: server HTML 1`] = `
 </button>
 <div aria-labelledby="pop-0-b" data-part="content" data-scope="popover" id="pop-0" popover="manual" role="dialog">body</div>
 <button aria-controls="pop-1" aria-expanded="false" aria-haspopup="dialog" data-emphasis="soft" data-scope="button" data-size="sm" data-sweep="" data-tone="neutral" id="pop-1-b" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -2003,7 +2079,7 @@ exports[`Overlays: server HTML 1`] = `
 <h2 data-part="title" id="dlg-2-t">Open</h2>
 <p data-part="description" id="dlg-2-d">Desc</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2017,14 +2093,16 @@ exports[`Overlays: server HTML 1`] = `
 </div>
 <div data-part="body">x</div>
 <div data-part="footer">
-<button data-close="" data-scope="button" type="button">OK</button>
+<button data-close="" data-scope="button" data-sweep="" type="button">OK<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="dlg-3-t" data-scope="dialog" data-size="lg" role="alertdialog">
 <div data-part="header">
 <h2 data-part="title" id="dlg-3-t">Alert</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2045,7 +2123,7 @@ exports[`Overlays: server HTML 1`] = `
 <h2 data-part="title" id="sheet-4-t">Side</h2>
 <p data-part="description" id="sheet-4-d">D</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2059,7 +2137,9 @@ exports[`Overlays: server HTML 1`] = `
 </div>
 <div data-part="body">z</div>
 <div data-part="footer">
-<button data-scope="button" type="button">Go</button>
+<button data-scope="button" data-sweep="" type="button">Go<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
 </div>
 </dialog>
 <dialog aria-labelledby="sheet-5-t" data-scope="sheet" data-side="right">
@@ -2068,7 +2148,7 @@ exports[`Overlays: server HTML 1`] = `
 <div data-part="header">
 <h2 data-part="title" id="sheet-5-t">Auto</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2088,7 +2168,7 @@ exports[`Overlays: server HTML 1`] = `
 <div data-part="header">
 <h2 data-part="title" id="sheet-6-t">Bottom</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2131,7 +2211,7 @@ exports[`Surfaces: client DOM after mount 1`] = `
 <span data-scope="tag" data-tone="accent">
 <span data-part="swatch">
 </span>fruit<button aria-label="Remove fruit" data-part="remove" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2243,7 +2323,7 @@ exports[`Surfaces: server HTML 1`] = `
 <span data-scope="tag" data-tone="accent">
 <span data-part="swatch">
 </span>fruit<button aria-label="Remove fruit" data-part="remove" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2392,7 +2472,7 @@ exports[`Tabbed: server HTML 1`] = `
 exports[`Toasts: client DOM after mount 1`] = `
 "<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" style="block-size: 0px;" tabindex="-1">
 <div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group" style="z-index: 100; --_y: 0px; --_s: 1; --_o: 1;">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -2411,7 +2491,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 <div data-part="title">Plain</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2425,7 +2505,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 </div>
 </div>
 <div aria-label="Failed" data-behind="" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group" style="z-index: 99; max-block-size: 0px; overflow: hidden; --_y: -12px; --_s: 0.95; --_o: 1;">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -2446,7 +2526,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 <div data-part="actions">
 <button data-act="" data-emphasis="ghost" data-scope="button" data-size="sm" type="button">Retry</button>
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2460,7 +2540,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 </div>
 </div>
 <div aria-label="Saved" data-behind="" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group" style="z-index: 98; max-block-size: 0px; overflow: hidden; --_y: -24px; --_s: 0.9; --_o: 1;">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
@@ -2479,7 +2559,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 <div data-part="title">Saved</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2502,7 +2582,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 exports[`Toasts: server HTML 1`] = `
 "<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" tabindex="-1">
 <div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
@@ -2521,7 +2601,7 @@ exports[`Toasts: server HTML 1`] = `
 <div data-part="title">Plain</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2535,7 +2615,7 @@ exports[`Toasts: server HTML 1`] = `
 </div>
 </div>
 <div aria-label="Failed" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
@@ -2556,7 +2636,7 @@ exports[`Toasts: server HTML 1`] = `
 <div data-part="actions">
 <button data-act="" data-emphasis="ghost" data-scope="button" data-size="sm" type="button">Retry</button>
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2570,7 +2650,7 @@ exports[`Toasts: server HTML 1`] = `
 </div>
 </div>
 <div aria-label="Saved" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group">
-<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
@@ -2589,7 +2669,7 @@ exports[`Toasts: server HTML 1`] = `
 <div data-part="title">Saved</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2617,7 +2697,7 @@ exports[`Toggles: client DOM after mount 1`] = `
 </span>
 </button>
 <button aria-pressed="true" data-scope="toggle" data-size="sm" data-sweep="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -2630,7 +2710,7 @@ exports[`Toggles: client DOM after mount 1`] = `
 </span>
 </button>
 <button aria-label="Search" aria-pressed="false" data-scope="toggle" data-sweep="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
@@ -2658,7 +2738,7 @@ exports[`Toggles: server HTML 1`] = `
 </span>
 </button>
 <button aria-pressed="true" data-scope="toggle" data-size="sm" data-sweep="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-bw="" data-t="b" data-w="">
@@ -2671,7 +2751,7 @@ exports[`Toggles: server HTML 1`] = `
 </span>
 </button>
 <button aria-label="Search" aria-pressed="false" data-scope="toggle" data-sweep="" type="button">
-<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-qs="" data-t="q">
 </path>
 <path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">

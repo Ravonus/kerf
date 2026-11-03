@@ -1,5 +1,5 @@
-import { mutation, query, redirect } from '@weft/start'
-import { forward } from '@weft/start/auth'
+import { mutation, query, redirect } from '@weft-js/start'
+import { forward } from '@weft-js/start/auth'
 import { z } from 'zod'
 import auth from '#/auth.server'
 

@@ -1,0 +1,123 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs {
+/* ===========================================================================
+   2 · TEXT FAMILY EXTRAS
+   ======================================================================== */
+/* password strength: 4 segments + a caps word; segments fill L→R like the sweep */
+:where([data-scope="strength"]) { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 4px; align-items: center; font-size: var(--warp-text-caption-size); padding-inline: 2px; }
+:where([data-scope="strength"] i) { position: relative; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: clip; }
+:where([data-scope="strength"] i)::after { content: ""; position: absolute; inset: 0; background: var(--_t, var(--warp-color-sweep)); clip-path: inset(0 100% 0 0); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease); }
+:where([data-scope="strength"] b) { font: 600 10px/1 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; min-inline-size: 7ch; text-align: end; color: var(--warp-color-text-subtle); }
+:where([data-scope="strength"][data-score="1"]) { --_t: var(--warp-color-critical-solid); }
+:where([data-scope="strength"][data-score="2"]) { --_t: var(--warp-color-caution-solid); }
+:where([data-scope="strength"]:is([data-score="3"])),
+:where([data-scope="strength"]:is([data-score="4"])) { --_t: var(--warp-color-positive-solid); }
+:where([data-scope="strength"][data-score="1"] i:nth-child(-n+1))::after,
+:where([data-scope="strength"][data-score="2"] i:nth-child(-n+2))::after,
+:where([data-scope="strength"][data-score="3"] i:nth-child(-n+3))::after,
+:where([data-scope="strength"][data-score="4"] i)::after { clip-path: inset(0); }
+:where([data-scope="strength"][data-score="1"] b) { color: var(--warp-color-critical-text); }
+:where([data-scope="strength"][data-score="2"] b) { color: var(--warp-color-caution-text); }
+:where([data-scope="strength"]:is([data-score="3"], [data-score="4"]) b) { color: var(--warp-color-positive-text); }
+
+/* number stepper: boxed −/+ at the end (the original look); bigger on coarse pointers */
+:where([data-scope="field"] [data-part="stepper"]) { display: flex; gap: 4px; flex: none; margin-inline-end: -6px; }
+:where([data-scope="field"] [data-part="stepper"] button) {
+  position: relative; inline-size: 26px; block-size: 26px; padding: 0; border: var(--warp-border-hairline) solid var(--warp-color-border-control);
+  border-radius: var(--warp-radius-mark); background: transparent; color: var(--warp-color-text); cursor: pointer;
+  display: grid; place-items: center; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast), border-color var(--warp-duration-fast);
+}
+:where([data-scope="field"] [data-part="stepper"] button)::before { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)) -2px; }
+:where([data-scope="field"] [data-part="stepper"] button:hover) { border-color: var(--warp-color-sweep); color: var(--warp-color-sweep); }
+:where([data-scope="field"] [data-part="stepper"] button:active) { background: var(--warp-color-accent-soft); }
+:where([data-scope="field"] [data-part="stepper"] button:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="field"] [data-part="stepper"] svg) { inline-size: 12px; block-size: 12px; }
+/* coarse (review 02 M7): 40px boxes, so each one's expander (−2px) reaches 44 × 44 without covering its neighbour */
+:where([data-pointer="coarse"]) :where([data-scope="field"] [data-part="stepper"] button) { inline-size: 40px; block-size: 40px; }
+@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] [data-part="stepper"] button) { inline-size: 40px; block-size: 40px; } }
+/* in-field icon buttons on coarse: a 40px box with no negative margin, so two side by side (reveal + generate)
+   each keep a full 44px area instead of one expander covering the other */
+:where([data-pointer="coarse"]) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; }
+@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; } }
+:where([data-scope="field"][data-kind="number"]) { --_num: tabular-nums; }
+:where([data-scope="field"] [data-part="scrub"]) { cursor: ew-resize; user-select: none; touch-action: pan-y; }
+:where([data-pointer="coarse"]) :where([data-scope="field"] [data-part="scrub"]) { cursor: default; }
+
+/* masked input: the mask's literal template shows faintly behind the typed value */
+:where([data-scope="field"] [data-part="mask"]) {
+  position: absolute; z-index: 2; inset-inline-start: var(--_lead); inset-block: 0; display: flex; align-items: center; pointer-events: none;
+  font-size: var(--warp-text-control-size); font-variant-numeric: tabular-nums; white-space: pre; color: transparent; opacity: 0; transition: opacity var(--warp-duration-fast);
+}
+:where([data-scope="field"] [data-part="mask"] em) { font-style: normal; color: var(--warp-color-text-subtle); opacity: 0.7; }
+:where([data-scope="field"] > [data-part="control"]:is(:focus-within, [data-filled])) > :where([data-part="mask"]) { opacity: 1; }
+:where([data-scope="field"][data-kind="mask"] [data-part="input"]) { font-variant-numeric: tabular-nums; }
+
+/* quantity: [−] 3 [+] as one swept box */
+:where([data-scope="quantity"]) {
+  display: inline-flex; align-items: stretch; block-size: var(--warp-control-md);
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-field);
+}
+:where([data-scope="quantity"] button) {
+  position: relative; z-index: 3; inline-size: max(var(--warp-control-md), var(--warp-hit-min)); border: 0; padding: 0; background: transparent;
+  color: var(--warp-color-text); display: grid; place-items: center; cursor: pointer; border-radius: inherit;
+  transition: color var(--warp-duration-fast);
+}
+:where([data-scope="quantity"] button:hover) { color: var(--warp-color-sweep); }
+:where([data-scope="quantity"] button:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; color: var(--warp-color-text); }
+:where([data-scope="quantity"] button svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="quantity"] input) {
+  position: relative; z-index: 3; inline-size: 4ch; border: 0; outline: none; background: transparent; text-align: center; color: var(--warp-color-text);
+  font: 500 var(--warp-text-control-size)/var(--warp-text-control-leading) var(--warp-text-body-font); font-variant-numeric: tabular-nums;
+}
+
+/* OTP / PIN: ONE real input over N painted, swept cells; the active cell holds its sweep */
+:where([data-scope="otp"]) { position: relative; display: flex; min-inline-size: 0; gap: var(--warp-space-related); align-items: center; max-inline-size: 100%; }
+:where([data-scope="otp"] > input) {
+  position: absolute; inset: 0; z-index: 4; opacity: 0.001; border: 0; padding: 0; margin: 0; color: transparent; background: transparent;
+  caret-color: transparent; font-size: 16px; letter-spacing: 2em; outline: none;
+}
+:where([data-scope="otp"] [data-part="cell"]) {
+  max-inline-size: calc(var(--warp-control-lg) - 2px); block-size: calc(var(--warp-field-height) + 6px);
+  display: grid; place-items: center; flex: 1 1 0; min-inline-size: 28px;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-field);
+}
+:where([data-scope="otp"] [data-part="char"]) { position: relative; z-index: 3; font: 500 20px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums; color: var(--warp-color-text); }
+:where([data-scope="otp"] [data-part="char"]:not(:empty)) { animation: warp-field-pop var(--warp-duration-base) var(--warp-ease-pop); }
+:where([data-scope="otp"] [data-part="cell"][data-pin] [data-part="char"]:empty)::after {
+  content: ""; display: block; inline-size: 1.5px; block-size: 22px; background: var(--warp-color-sweep); animation: warp-caret 1s steps(2, jump-none) infinite;
+}
+:where([data-scope="otp"] [data-part="sep"]) { inline-size: 8px; block-size: 1px; background: var(--warp-color-border-strong); flex: none; }
+:where([data-scope="otp"][data-masked] [data-part="char"]:not(:empty)) { font-size: 0; }
+:where([data-scope="otp"][data-masked] [data-part="char"]:not(:empty))::before { content: ""; display: block; inline-size: 9px; block-size: 9px; border-radius: 50%; background: currentColor; }
+
+/* inline edit (InlineEdit): the preview sweeps on hover like a field (no resting edge), then swaps to a field */
+:where([data-scope="editable"]) { display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: var(--warp-field-height); min-inline-size: 0; }
+:where([data-scope="editable"] [data-part="preview"]) {
+  all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; gap: 6px; min-block-size: var(--warp-control-md); padding-inline: 8px; margin-inline: -8px;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); --_base: transparent; cursor: text; max-inline-size: 100%;
+}
+:where([data-scope="editable"] [data-part="preview"] > svg) { position: relative; z-index: 3; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); opacity: 0; transition: opacity var(--warp-duration-fast); }
+:where([data-scope="editable"] [data-part="preview"]:is(:hover, :focus-visible) > svg) { opacity: 1; color: var(--warp-color-sweep); }
+:where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="editable"] [data-part="editor"]) { display: flex; gap: 4px; flex: 1; align-items: center; min-inline-size: 0; }
+:where([data-scope="editable"][data-editing] [data-part="preview"]),
+:where([data-scope="editable"]:not([data-editing]) [data-part="editor"]) { display: none; }
+:where([data-scope="editable"] [data-part="editor"] > [data-scope="field"]) { flex: 1; }
+
+/* input group (InputGroup): fields, add-ons and buttons joined edge to edge */
+:where([data-scope="input-group"]) { display: flex; align-items: flex-end; min-inline-size: 0; }
+:where([data-scope="input-group"] > *) { min-inline-size: 0; }
+:where([data-scope="input-group"] > [data-scope="field"]) { flex: 1; }
+:where([data-scope="input-group"] > :not(:first-child)) { margin-inline-start: -1px; }
+:where([data-scope="input-group"] > [data-scope="field"]:not(:last-child) > [data-part="control"]),
+:where([data-scope="input-group"] > :not([data-scope="field"]):not(:last-child)) { border-start-end-radius: 0; border-end-end-radius: 0; --warp-sweep-radius: 0px; }
+:where([data-scope="input-group"] > [data-scope="field"]:not(:first-child) > [data-part="control"]),
+:where([data-scope="input-group"] > :not([data-scope="field"]):not(:first-child)) { border-start-start-radius: 0; border-end-start-radius: 0; --warp-sweep-radius: 0px; }
+:where([data-scope="input-group"] > [data-scope="button"]) { block-size: var(--warp-field-height); }
+:where([data-scope="input-group"] > [data-part="addon"]) {
+  display: inline-flex; align-items: center; padding-inline: var(--warp-pad-control); block-size: var(--warp-field-height); box-sizing: border-box;
+  border: var(--warp-sweep-base-width) solid var(--warp-color-sweep-base); border-radius: var(--warp-radius-control); color: var(--warp-color-text-subtle);
+  background: var(--warp-color-surface-sunken); font-size: var(--warp-text-control-size); white-space: nowrap;
+}
+:where([data-scope="input-group"]:has([data-scope="field"] > [data-part="message"]:not(:empty))) { align-items: flex-start; }
+}

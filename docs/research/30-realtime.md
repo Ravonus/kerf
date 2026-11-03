@@ -1,4 +1,4 @@
-# 30. Realtime in `@weft/start`: `.live`, `topic`, `stream`, buses (Phase 3)
+# 30. Realtime in `@weft-js/start`: `.live`, `topic`, `stream`, buses (Phase 3)
 
 Status: **design written before the code, 2026-10-30; §10 records what was built and measured.** Inputs: PLAN §4.2,
 [07](07-realtime-and-events.md) (the research; this note doesn't repeat it), [27](27-server-functions.md) (the cache
@@ -78,7 +78,7 @@ export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), origins: 
 ```
 
 `LiveStatus` is `'connecting' | 'live' | 'reconnecting' | 'offline'`. `stream` adds `'done'`. `stale` from
-`@weft/start` is a box: the server's build isn't the one this tab loaded.
+`@weft-js/start` is a box: the server's build isn't the one this tab loaded.
 
 ## 3. The bus
 
@@ -97,7 +97,7 @@ topics, rings or cursors. Those stay in the hub, per research 07 §3 ("replay li
 
 - **`memoryBus()`** is a map of listener sets, delivered in a microtask (so a test can't depend on synchronous fan-out
   that no other bus has).
-- **`postgresBus({ url })`** (`@weft/start/bus/postgres`) has one dedicated LISTEN connection, on one Postgres channel
+- **`postgresBus({ url })`** (`@weft-js/start/bus/postgres`) has one dedicated LISTEN connection, on one Postgres channel
   (`weft_bus`), with the logical channel inside the payload: Postgres identifiers stop at 63 bytes and tags don't.
   `NOTIFY` stops at 8,000 bytes, so a longer message goes base64 in numbered chunks inside one transaction, which
   Postgres delivers together and in order; no table, nothing to clean up. postgres.js calls `onlisten` on every
@@ -160,7 +160,7 @@ keyed list writes only what changed. Readers stay in place: no Boundary fallback
 
 Dev-only: an ack with no tags is W053.
 
-## 7. Fake transport (`weft/test`)
+## 7. Fake transport (`@weft-js/core/test`)
 
 `transport.rt` under `net`: the real hub, a memory bus, the real client, and frames through JSON. Debounces and jitter
 are zero under the fake, so `await net.settle()` is enough. New controls: `net.push(stream, msg)`, `net.poke(...tags)`,

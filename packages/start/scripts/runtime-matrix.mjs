@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The runtime matrix (PLAN §4.1, research 28 §5): build one app per runtime, serve each build on its own runtime with
-// its own empty database, and run one e2e file against it. Dev only ever runs on Node, so this is the check that a
-// Bun or Deno break doesn't ship.
+// its own empty database, and run one e2e file against it. This builds on Node for all three, so it's the check that
+// a Bun or Deno break doesn't ship. `create-weft/scripts/alt-runtimes.mjs` is the one with no Node on the machine.
 //
 //   node packages/start/scripts/runtime-matrix.mjs <app> [--e2e <file>] [--runtimes node,bun,deno] [--json <out>]
 //
@@ -36,7 +36,7 @@ function stop(child) {
   if (child.exitCode !== null) return
   child.kill()
   const timer = setTimeout(() => child.kill('SIGKILL'), 3000)
-  return new Promise(ok => child.on('close', () => (clearTimeout(timer), ok())))
+  return new Promise(ok => { child.on('close', () => { clearTimeout(timer); ok() }) })
 }
 
 async function serve(runtime, env) {
@@ -49,7 +49,7 @@ async function serve(runtime, env) {
   for (let i = 0; i < 300; i++) {
     if (child.exitCode !== null) throw new Error(`${runtime} server exited ${child.exitCode}:\n${output.join('')}`)
     try { await fetch(url + '/', { redirect: 'manual' }); return { url, output, stop: () => stop(child) } } catch {}
-    await new Promise(ok => setTimeout(ok, 100))
+    await new Promise(ok => { setTimeout(ok, 100) })
   }
   child.kill()
   throw new Error(`${runtime} server didn't answer:\n${output.join('')}`)

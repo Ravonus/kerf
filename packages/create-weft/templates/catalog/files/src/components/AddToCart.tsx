@@ -1,5 +1,5 @@
-import { Form, type FormApi } from '@weft/start'
-import { Button, Stack } from '@weft/warp'
+import { Form, type FormApi } from '@weft-js/start'
+import { Button, Stack } from '@weft-js/warp'
 import { addToCart } from '#/server/cart'
 
 export function AddToCart({ slug, soldOut }: { slug: string; soldOut: boolean }) {

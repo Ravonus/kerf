@@ -1,4 +1,4 @@
-// Compiles cards/*.tsx with weft's compiler (`generate: 'ssr'`, not hydratable) and bundles them with weft/ssr into
+// Compiles cards/*.tsx with weft's compiler (`generate: 'ssr'`, not hydratable) and bundles them with @weft-js/core/ssr into
 // build/cards.mjs, one ES module that runs on Node, Bun and workerd: `defaultCard(props)`, `avatarCard(props)` and
 // `stressCard(props)` → HTML.
 import { createRequire } from 'node:module'
@@ -14,7 +14,7 @@ const { transform } = createRequire(import.meta.url)(join(weft, 'compiler.cjs'))
 const compileTsx = {
   name: 'weft-ssr',
   setup(b) {
-    b.onResolve({ filter: /^weft\/ssr$/ }, () => ({ path: join(weft, 'src/ssr.ts') }))
+    b.onResolve({ filter: /^@weft-js\/core\/ssr$/ }, () => ({ path: join(weft, 'src/ssr.ts') }))
     b.onLoad({ filter: /cards[\\/].*\.tsx$/ }, args => {
       const out = transform(readFileSync(args.path, 'utf8'), { filename: args.path, generate: 'ssr', hydratable: false })
       const errors = out.diagnostics.filter(d => d.severity === 'error')
@@ -25,7 +25,7 @@ const compileTsx = {
 }
 
 const entry = `
-import { renderToString } from 'weft/ssr'
+import { renderToString } from '@weft-js/core/ssr'
 import { DefaultCard } from './cards/Default.tsx'
 import { AvatarCard } from './cards/Avatar.tsx'
 import { StressCard } from './cards/Stress.tsx'
@@ -41,4 +41,4 @@ const r = await build({
 })
 const bytes = Object.values(r.metafile.outputs)[0].bytes
 writeFileSync(join(here, 'build/cards.size.json'), JSON.stringify({ bytes }))
-console.log(`build/cards.mjs ${bytes} B (weft/ssr + 3 cards, minified)`)
+console.log(`build/cards.mjs ${bytes} B (@weft-js/core/ssr + 3 cards, minified)`)

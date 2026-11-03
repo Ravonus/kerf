@@ -1,6 +1,6 @@
 // The v3 shop's components with data already loaded, for the server render → hydrate round trip (test/ssr.test.ts).
 // Same state shape as evals/reference-v3/weft/src/App.tsx; the products arrive as a prop instead of a fetch.
-import { derived, state, untrack } from 'weft'
+import { derived, state, untrack } from '@weft-js/core'
 import type { Product } from '../../../../../evals/reference-v3/weft/src/api'
 import type { Cart } from '../../../../../evals/reference-v3/weft/src/App'
 import { CartView } from '../../../../../evals/reference-v3/weft/src/components/CartView'

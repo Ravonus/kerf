@@ -1,4 +1,4 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 
 export function SiteFooter() {
   return (

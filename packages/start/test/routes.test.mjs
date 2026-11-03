@@ -16,6 +16,10 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
   ])
   // Most specific first: static segments before params, longer before shorter, `/` last.
   expect(m.routes.map(r => [r.id, r.kind, r.params, r.layouts, r.card ?? null])).toEqual([
+    ['/meta/badcard', 'page', [], ['layout:'], 'src/routes/meta/badcard.og.tsx'],
+    ['/meta/changing', 'page', [], ['layout:'], null],
+    ['/meta/plain', 'page', [], ['layout:'], null],
+    ['/meta/$name', 'page', ['name'], ['layout:'], null],
     ['/tags/$tag', 'page', ['tag'], ['layout:'], null],
     ['/users/$id', 'page', ['id'], ['layout:', 'layout:users'], 'src/routes/users/[id].og.tsx'],
     ['/about', 'page', [], ['layout:'], null],
@@ -23,6 +27,7 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     ['/chat', 'page', [], ['layout:'], null],
     ['/cover', 'page', [], ['layout:'], null],
     ['/deferred-meta', 'page', [], ['layout:'], null],
+    ['/gate', 'page', [], ['layout:'], null],
     ['/held', 'page', [], ['layout:'], null],
     ['/held-island', 'page', [], ['layout:'], null],
     ['/island-bad', 'page', [], ['layout:'], null],
@@ -33,6 +38,7 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     ['/lazy-early', 'page', [], ['layout:'], null],
     ['/leak', 'page', [], ['layout:'], null],
     ['/live', 'page', [], ['layout:'], null],
+    ['/miss', 'page', [], ['layout:'], null],
     ['/mixed', 'page', [], ['layout:'], null],
     ['/notes', 'page', [], ['layout:'], null],
     ['/old', 'page', [], ['layout:'], null],
@@ -42,6 +48,8 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     ['/styled', 'page', [], ['layout:'], null],
     ['/tabs', 'page', [], ['layout:'], null],
     ['/todos', 'page', [], ['layout:'], null],
+    ['/together', 'page', [], ['layout:'], null],
+    ['/ui-state', 'page', [], ['layout:'], null],
     ['/users', 'page', [], ['layout:', 'layout:users'], null],
     ['/', 'page', [], ['layout:'], null],
     ['404', '404', [], ['layout:'], null],
@@ -72,5 +80,5 @@ test('the client build of a route has no load, meta or prerender, and no import 
   const out = stripServerExports(readFileSync(file, 'utf8'), file)
   expect(out).not.toMatch(/export const (load|meta|prerender)|db\.user|notFound|from '..\/..\/db'/) // `typeof load` in a type stays: types are erased
   expect(out).toContain('export default function User')
-  expect(out).toMatch(/import \{ type RouteProps \} from '@weft\/start'|import type/)
+  expect(out).toMatch(/import \{ type RouteProps \} from '@weft-js\/start'|import type/)
 })

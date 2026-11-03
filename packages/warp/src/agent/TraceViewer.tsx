@@ -1,16 +1,16 @@
-import { formatSeconds, traceKey, traceRows, traceSummary, type TraceSpan } from '@weft/ui-core'
-import { derived, state, untrack } from 'weft'
+import { formatSeconds, traceKey, traceRows, traceSummary, type TraceSpan } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/app/trace.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/trace.css'
 
 /**
  * TraceViewer (07 §1.3): nested spans on a shared time axis, an APG treegrid. One tab stop; ↑/↓, Home/End move, →/←
  * expand, collapse and step in and out, Enter toggles. The line above follows the focused span's time, tokens and cost.
  * Live: pass new `spans`, and rows patch by id.
  */
-export function TraceViewer({ spans, label = 'Spans' }: { spans: TraceSpan[]; label?: string }) {
+export function TraceViewer({ spans, label = 'Spans' }: { spans: TraceSpan[]; label?: string | undefined }) {
   const shut = state<ReadonlySet<string>>(new Set())
   const rows = derived(() => traceRows(spans, shut.value))
   const at = state<string | undefined>(undefined)
@@ -41,7 +41,7 @@ export function TraceViewer({ spans, label = 'Spans' }: { spans: TraceSpan[]; la
         <span data-part="eyebrow">{label}</span>
         <small data-numeric="">{stop.value ? traceSummary(stop.value) : ''}</small>
       </div>
-      <div ref={(n: any) => (grid = n)} data-scope="trace" role="treegrid" aria-label={label} aria-readonly="true" onKeyDown={onKey}>
+      <div ref={n => (grid = n)} data-scope="trace" role="treegrid" aria-label={label} aria-readonly="true" onKeyDown={onKey}>
         {rows.value.map(r => (
           <div key={r.id} data-id={r.id} role="row" aria-level={r.level} aria-posinset={r.pos} aria-setsize={r.size} aria-expanded={r.branch ? (r.open ? 'true' : 'false') : undefined} aria-label={`${r.name}, ${traceSummary(r)}`} tabindex={r.id === stop.value?.id ? '0' : '-1'} onFocus={() => (at.value = r.id)} onClick={() => r.branch && toggle(r.id)}>
             <span role="gridcell" style={`--_d:${r.level - 1}`}>{r.branch ? (r.open ? '▾ ' : '▸ ') : ''}{r.name}</span>

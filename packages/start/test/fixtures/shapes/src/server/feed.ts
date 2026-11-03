@@ -1,6 +1,6 @@
 // A 20-row feed at research 11 §7.6's lengths, the same for the same seed. `v` only changes the cache key: new args
 // with the same payload, which is what last-seen shapes are for.
-import { query } from '@weft/start'
+import { query } from '@weft-js/start'
 import { z } from 'zod'
 
 const WORDS = 'the quick brown fox jumps over a lazy dog while seven wizards mix strong drinks for every thin man in town'.split(' ')

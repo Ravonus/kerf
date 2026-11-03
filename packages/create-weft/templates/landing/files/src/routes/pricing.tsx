@@ -1,6 +1,6 @@
-import { CheckIcon } from '@weft/icons'
-import { Link, type Meta } from '@weft/start'
-import { Accordion, Badge, Card, Center, Grid, Heading, Stack, Text } from '@weft/warp'
+import { CheckIcon } from '@weft-js/warp-icons'
+import { Link, type Meta } from '@weft-js/start'
+import { Accordion, Badge, Card, Center, Grid, Heading, Stack, Text } from '@weft-js/warp'
 
 export const meta: Meta = { title: 'Pricing', description: 'Free for one person. Simple per-seat pricing for teams.' }
 export const prerender = true

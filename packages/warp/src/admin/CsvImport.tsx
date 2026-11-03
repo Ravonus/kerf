@@ -1,6 +1,6 @@
-import { AlertCircleIcon, UploadIcon } from '@weft/icons'
-import { announce, autoMap, badRows, checkImport, importRecords, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft/ui-core'
-import { derived, state } from 'weft'
+import { AlertCircleIcon, UploadIcon } from '@weft-js/warp-icons'
+import { announce, autoMap, badRows, checkImport, importRecords, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft-js/warp-core'
+import { derived, state } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Progress } from '../Progress'
@@ -9,17 +9,18 @@ import { PlainTable } from './PlainTable'
 import { StepBar } from './StepBar'
 import { InlineSelect, Sweep, afterFlush } from './atoms'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/inputs/field.css'
-import '@weft/ui-core/styles/inputs/file.css'
-import '@weft/ui-core/styles/flows/import-map.css'
-import '@weft/ui-core/styles/flows/import-preview.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/inputs/field.css'
+import '@weft-js/warp-core/styles/inputs/file.css'
+import '@weft-js/warp-core/styles/flows/import-map.css'
+import '@weft-js/warp-core/styles/flows/import-preview.css'
 
+/** Props for CsvImport. */
 export interface CsvImportProps {
   targets: ImportTarget[]
   noun?: [one: string, many: string]
@@ -37,7 +38,7 @@ const ORDER: Stage[] = ['upload', 'map', 'review', 'done']
 const PREVIEW_ROWS = 50
 
 /**
- * The CSV import wizard (09 §4.7), Upload → Map → Review → Import: parsing, mapping and validation are ui-core's. Each
+ * The CSV import wizard (09 §4.7), Upload → Map → Review → Import: parsing, mapping and validation are warp-core's. Each
  * step's heading takes focus. Bad cells say why inline; a required target with no column is reported once.
  */
 export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 5000, sample, onImport }: CsvImportProps) {
@@ -104,12 +105,12 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
   return (
     <div data-scope="stack">
       <StepBar label="Import progress" steps={STEPS} current={at.value} />
-      <h3 ref={(n: any) => (heading = n)} data-part="step-title" tabindex="-1">{STEPS[at.value].title} {noun[1]}</h3>
+      <h3 ref={n => (heading = n)} data-part="step-title" tabindex="-1">{STEPS[at.value]!.title} {noun[1]}</h3>
       {stage.value === 'upload' && (
         <>
-          <div data-scope="dropzone" data-sweep="" data-pin={dragging.value ? '' : undefined} onDragOver={(e: DragEvent) => { e.preventDefault(); dragging.value = true }} onDragLeave={() => (dragging.value = false)} onDrop={(e: DragEvent) => { e.preventDefault(); dragging.value = false; take(e.dataTransfer?.files[0]) }}>
+          <div data-scope="dropzone" data-sweep="" data-pin={dragging.value ? '' : undefined} onDragOver={(e: DragEvent) => { e.preventDefault(); dragging.value = true }} onDragLeave={() => (dragging.value = false)} onDrop={(e: DragEvent) => { e.preventDefault(); dragging.value = false; void take(e.dataTransfer?.files[0]) }}>
             <Sweep />
-            <input type="file" accept=".csv,text/csv" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onChange={(e: any) => { take(e.currentTarget.files?.[0]); e.currentTarget.value = '' }} />
+            <input type="file" accept=".csv,text/csv" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onChange={(e: Event) => { void take((e.currentTarget as HTMLInputElement).files?.[0]); (e.currentTarget as HTMLInputElement).value = '' }} />
             <span data-part="icon" aria-hidden="true"><UploadIcon /></span>
             <span data-part="drop-copy"><span data-part="title" id={`${id}-t`}>Drop a CSV here or <u>browse</u></span></span>
             <span data-part="hint" id={`${id}-h`}>Up to {rowLimit.toLocaleString('en-US')} rows · first row is the header</span>
@@ -126,7 +127,7 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
               <tr key={c.h}>
                 <th scope="row"><code>{c.h}</code></th>
                 <td class="muted">{table.value.rows[0]?.[c.col]}</td>
-                <td><InlineSelect id={`${id}-m-${c.col}`} label={`${c.h} imports as`} value={c.target} options={options.value} onChange={e => { const next = [...map.value]; next[c.col] = e.currentTarget.value; map.value = next }} /></td>
+                <td><InlineSelect label={`${c.h} imports as`} value={c.target!} options={options.value} onValueChange={v => { const next = [...map.value]; next[c.col] = v; map.value = next }} /></td>
               </tr>
             ))}
           </PlainTable>
@@ -139,10 +140,10 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
             : bad.value > 0
               ? <Alert tone="caution" title={`${bad.value} of ${plural(table.value.rows.length, 'row')} need a fix`}>Fix them in the file and upload again, or import the {good.value} good rows now and skip the rest.</Alert>
               : <Alert tone="positive" title={`All ${plural(table.value.rows.length, 'row')} look good`} />}
-          <PlainTable label="Import preview" scope="import-preview" caption="Preview of the first rows" head={<tr>{kept.value.map(c => <th key={c.h} scope="col">{titleOf(c.target)}</th>)}</tr>}>
+          <PlainTable label="Import preview" scope="import-preview" caption="Preview of the first rows" head={<tr>{kept.value.map(c => <th key={c.h} scope="col">{titleOf(c.target!)}</th>)}</tr>}>
             {preview.value.map(r => (
               <tr key={r.row} data-invalid={issues.value.some(x => x.row === r.row) ? '' : undefined}>
-                {kept.value.map(c => <Cell key={c.h} value={r.cells[c.col]} issue={cellIssue(r.row, c.target)} />)}
+                {kept.value.map(c => <Cell key={c.h} value={r.cells[c.col]!} issue={cellIssue(r.row, c.target!)} />)}
               </tr>
             ))}
           </PlainTable>
@@ -168,6 +169,6 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
   )
 }
 
-function Cell({ value, issue }: { value: string; issue?: ImportIssue }) {
+function Cell({ value, issue }: { value: string; issue?: ImportIssue | undefined }) {
   return <td data-invalid={issue ? '' : undefined}>{value}{issue && <span data-part="error"><AlertCircleIcon />{issue.message}</span>}</td>
 }

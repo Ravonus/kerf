@@ -1,4 +1,4 @@
-import { invalid, mutation, query, type Context } from '@weft/start'
+import { invalid, mutation, query, type Context } from '@weft-js/start'
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { cartItems, carts, products } from '#/db/schema'

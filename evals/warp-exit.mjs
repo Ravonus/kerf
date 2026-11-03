@@ -4,13 +4,13 @@
 //
 //   node warp-exit.mjs [--name v3-warp-exit] [--skip-a11y]
 //
-// Needs `npm install` in frameworks/warp, frameworks/weft, packages/warp and packages/ui-core, and a fresh native
+// Needs `npm install` in frameworks/warp, frameworks/weft, packages/warp and packages/warp-core, and a fresh native
 // compiler (packages/weft: npm run build:native). Parts, each pass/fail:
 //   hidden    run-app.mjs reference + grade + measure on reference-v3/{warp,weft}: every hidden test, and the §3.7
 //             work budgets on the probe (price-push ≤ 1 DOM and ≤ 10 re-runs, add-one ≤ 3 DOM)
 //   size      both shops built for production, brotli q11: warp's JS ≤ the §3.7 app budget + KIT_ALLOWANCE, and JS + CSS
 //             under the 50 KB ceiling. The kit is warp's JS minus the weft shop's.
-//   contrast  ui-core's copy of the spec checker on the resolved tokens: every text/UI/focus pair at light/dark ×
+//   contrast  warp-core's copy of the spec checker on the resolved tokens: every text/UI/focus pair at light/dark ×
 //             quiet/balanced/vivid (motion doesn't touch colour tokens; the a11y part covers it in the page)
 //   a11y      packages/warp/scripts/a11y.mjs on the warp gallery (every component) and the built shop: axe plus
 //             pixel-measured contrast at all 12 stops, expression × theme × motion
@@ -33,10 +33,11 @@ const log = (...a) => console.error(...a)
 const br = buf => brotliCompressSync(buf, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 
 // §3.7: the v3 shop's total JS. The kit allowance is set from the 2026-10-29 measurement (warp adds 6,280–6,426 B br of JS to
-// the weft shop: the field shell, the sweep machine, Button/Toggle/Select/Badge/Skeleton and their spread helpers),
-// rounded up to 7 KB so a byte-level change doesn't flip the gate; a bigger jump should be looked at, not absorbed.
+// the weft shop: the field shell, the sweep machine, Button/Toggle/Select/Badge/Skeleton and their spread helpers) plus the
+// 4.42 KB of a Select warp draws on every device (redesign §6), rounded up to 11 KB so a byte-level change doesn't flip the
+// gate; a bigger jump should be looked at, not absorbed.
 const APP_BUDGET = 10 * 1024
-export const KIT_ALLOWANCE = 7 * 1024
+export const KIT_ALLOWANCE = 11 * 1024
 const CEILING = 50 * 1024
 
 const results = {}
@@ -98,8 +99,8 @@ const builds = {}
 // -- token contrast
 {
   log('== contrast (resolved tokens, spec checker)')
-  const checker = join(repo, 'packages', 'ui-core', 'scripts', 'contrast-check.mjs')
-  const css = join(repo, 'packages', 'ui-core', 'styles', 'warp.css')
+  const checker = join(repo, 'packages', 'warp-core', 'scripts', 'contrast-check.mjs')
+  const css = join(repo, 'packages', 'warp-core', 'styles', 'warp.css')
   let stdout
   try { ({ stdout } = await exec('node', [checker, css, '--json'], { maxBuffer: 1 << 26 })) } catch (e) { stdout = e.stdout }
   const { results: pairs } = JSON.parse(stdout)
@@ -117,9 +118,9 @@ if (!process.argv.includes('--skip-a11y')) {
   const gallery = await buildGallery(join(results.size.work, 'gallery'))
   // The audit sets the dials from outside the build, so the shop's audited copy keeps the tiers its size build drops.
   const shop = join(results.size.work, 'warp')
-  writeFileSync(join(shop, 'vite.audit.ts'), `import weft from 'weft/vite'\nexport default { plugins: [weft({ purge: { keep: ${JSON.stringify(DIALS)} } })] }\n`)
+  writeFileSync(join(shop, 'vite.audit.ts'), `import weft from '@weft-js/core/vite'\nexport default { plugins: [weft({ purge: { keep: ${JSON.stringify(DIALS)} } })] }\n`)
   await exec('npx', ['vite', 'build', '--logLevel', 'silent', '--config', 'vite.audit.ts', '--outDir', 'dist-audit'], { cwd: shop, timeout: 300_000 })
-  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), { name: 'shop', dir: join(shop, 'dist-audit') }], { log: l => log(`   ${l}`) })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(scene => ({ name: scene, dir: gallery })), { name: 'shop', dir: join(shop, 'dist-audit') }], { log: l => log(`   ${l}`) })
   const failures = r.results.flatMap(run => [
     ...run.errors.map(e => ({ site: run.site, stop: `${run.expression}/${run.theme}/${run.motion}`, error: e })),
     ...run.states.flatMap(s => [...s.violations.map(v => ({ id: v.id, nodes: v.nodes })), ...s.moving.map(m => ({ id: 'moving at reduce', nodes: [{ target: m }] }))]

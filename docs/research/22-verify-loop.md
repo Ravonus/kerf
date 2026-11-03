@@ -14,12 +14,12 @@ weft's clock and network fakes. So weft puts exactly that into the page and lets
 
 ```
  agent's own browser ──JS──▶ window.__weft__.agent ◀──Vite socket── dev server ◀──HTTP── weft browser / weft mcp
-                             (weft/agent, dev only)                (vite.mjs relay)
+                             (@weft-js/core/agent, dev only)                (vite.mjs relay)
 ```
 
-- **`weft/agent`** (packages/weft/src/agent.ts) is loaded into every page by the weft() Vite plugin when serving
+- **`@weft-js/core/agent`** (packages/weft/src/agent.ts) is loaded into every page by the weft() Vite plugin when serving
   (a virtual entry, so Vite transforms it like app code). It is built on the same Testing Library queries and
-  user-event as `weft/test`, so a role/name an agent uses in the page is the role/name a test uses, character for
+  user-event as `@weft-js/core/test`, so a role/name an agent uses in the page is the role/name a test uses, character for
   character, and the recorder's output needs no translation.
 - **Two ways in, one implementation.** An agent whose browser runs JS calls `await __weft__.agent.run('snapshot')`
   directly. The CLI (`weft browser …`) and the MCP tools (`browser_*`) POST to the dev server's `/__weft/agent`,
@@ -70,7 +70,7 @@ name filter, repainted every 250 ms while open. People and agents read the same 
 - **Network** (`net offline|online|latency|drop|reset`): `navigator.onLine`, the `offline`/`online` events, `fetch`
   (fails offline, delayed under latency), and WebSocket/EventSource (new ones fail offline; `drop` closes the open
   ones with code 4000, a server restart without going offline). Vite's own socket is created before the patch and is
-  never touched. The same words as weft/test's `net`, so a reconnect scenario explored in the page records as a test.
+  never touched. The same words as @weft-js/core/test's `net`, so a reconnect scenario explored in the page records as a test.
 
 ### 1.3 The recorder
 
@@ -78,7 +78,7 @@ name filter, repainted every 250 ms while open. People and agents read the same 
 `click`/`input`/`change`/`keydown` events in the page, so clicks and typing from any agent's browser tool (or a
 person) are captured too; typing coalesces into one `fill`. Each element is described the way a test would find it:
 role + accessible name when that is unique on the page, else its label, else its text, else a ref with a comment
-asking for an accessible name. `record code` prints a `weft/test` test: `render(App, props)`, the first query as
+asking for an accessible name. `record code` prints a `@weft-js/core/test` test: `render(App, props)`, the first query as
 `findBy*` (the app loads), `user.*` actions, real assertions, `clock`/`net` calls where they happened. A recording
 without an assertion gets a T001 comment. The output passes `weft check`'s T-codes, and then has to pass the gate
 like any other test.
@@ -157,9 +157,9 @@ compiler and jsdom takes ~3–4 s; 40 mutants on 4 copies take 17–28 s per sce
 
 ## 4. Gaps
 
-- **Recording to e2e files:** the recorder writes `weft/test` (component) tests only. The `--e2e` lane (Playwright
+- **Recording to e2e files:** the recorder writes `@weft-js/core/test` (component) tests only. The `--e2e` lane (Playwright
   Test against `weft dev`) isn't built, and with this design may not need Playwright either.
-- **Source-mapped stacks:** `logs` gives the binding or component an error came from (`weft` on the error) and the
+- **Source-mapped stacks:** `logs` gives the binding or component an error came from (`@weft-js/core` on the error) and the
   first stack lines, not mapped positions.
 - **Network depth:** latency covers `fetch`, not XHR or WebSocket messages; there's no request log (`network`).
 - **Local `state.linked`** values aren't named (they're plain objects); DOM leaves in the graph are counted per

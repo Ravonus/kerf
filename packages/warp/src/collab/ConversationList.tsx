@@ -1,14 +1,15 @@
-import { PinIcon } from '@weft/icons'
-import { peerColor, roving, type Peer } from '@weft/ui-core'
-import { Box, derived, state, untrack, type State } from 'weft'
+import { PinIcon } from '@weft-js/warp-icons'
+import { peerColor, roving, type Peer } from '@weft-js/warp-core'
+import { Box, derived, state, untrack, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Avatar } from '../parts'
-import { use } from '../use'
+import { use } from '@weft-js/warp-core/weft'
 import { tint } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/conversations.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/conversations.css'
 
+/** One conversation in the list. */
 export type ChatConversation = Peer & {
   /** Last message. */
   preview: string
@@ -26,7 +27,7 @@ export type ChatConversation = Peer & {
  * The conversation list (07 §5.1, §5.4): a listbox with `aria-selected` on the open channel. One tab stop, ↑/↓ and
  * Home/End rove, Enter or a press opens. `value` is a box or a plain id.
  */
-export function ConversationList({ label = 'Conversations', title, actions, items, value, onSelect }: { label?: string; title?: any; actions?: any; items: ChatConversation[]; value?: State<string> | string; onSelect?: (c: ChatConversation) => void }) {
+export function ConversationList({ label = 'Conversations', title, actions, items, value, onSelect }: { label?: string | undefined; title?: unknown; actions?: unknown; items: ChatConversation[]; value?: State<string> | string; onSelect?: (c: ChatConversation) => void }) {
   const own = state(untrack(() => (value instanceof Box ? '' : value ?? '')))
   const current = derived(() => (value instanceof Box ? value.value : value ?? own.value))
   const heading = derived(() => title)
@@ -43,7 +44,7 @@ export function ConversationList({ label = 'Conversations', title, actions, item
   return (
     <nav data-scope="conversations" aria-label={label}>
       {(heading.value !== undefined || tools.value !== undefined) && <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 8px 6px">{heading.value}{tools.value}</div>}
-      <div ref={(n: any) => (box = n)} role="listbox" aria-label={label} style="display:contents">
+      <div ref={n => (box = n)} role="listbox" aria-label={label} style="display:contents">
         {items.map(c => (
           <a
             key={c.id}

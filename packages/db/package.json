@@ -1,0 +1,104 @@
+{
+  "name": "@weft-js/db",
+  "version": "0.1.0",
+  "description": "weft's data layers and list sources in one package: each driver is an optional peer, and a subpath loads only its own",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./sql": "./src/sql.ts",
+    "./sql/plugin": "./plugins/sql.mjs",
+    "./kysely": "./src/kysely.ts",
+    "./kysely/plugin": "./plugins/kysely.mjs",
+    "./prisma": "./src/prisma.ts",
+    "./prisma/plugin": "./plugins/prisma.mjs",
+    "./mongo": "./src/mongo.ts",
+    "./mongo/plugin": "./plugins/mongo.mjs",
+    "./dynamodb": "./src/dynamodb.ts",
+    "./dynamodb/plugin": "./plugins/dynamodb.mjs",
+    "./firestore": "./src/firestore.ts",
+    "./firestore/plugin": "./plugins/firestore.mjs",
+    "./plugin-native": "./src/native/index.ts",
+    "./plugin-native/sqlite": "./src/native/sqlite.ts",
+    "./plugin-native/postgres": "./src/native/postgres.ts",
+    "./plugin-native/mysql": "./src/native/mysql.ts",
+    "./plugin-native/auth": "./src/native/auth.ts",
+    "./plugin-native/plugin": "./plugins/native.mjs",
+    "./plugin-prisma": "./src/prisma-client.ts",
+    "./plugin-prisma/plugin": "./plugins/prisma-client.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@prisma/client": ">=6",
+    "@weft-js/start": "*",
+    "better-auth": "^1.7.0",
+    "firebase-admin": ">=12",
+    "kysely": "^0.29.0",
+    "mongodb": ">=6",
+    "mysql2": "^3.24.0",
+    "postgres": ">=3",
+    "@weft-js/core": "*"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/lib-dynamodb": {
+      "optional": true
+    },
+    "@prisma/client": {
+      "optional": true
+    },
+    "better-auth": {
+      "optional": true
+    },
+    "firebase-admin": {
+      "optional": true
+    },
+    "kysely": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "postgres": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.1161.0",
+    "@aws-sdk/lib-dynamodb": "3.1161.0",
+    "@prisma/adapter-libsql": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@weft-js/start": "file:../start",
+    "firebase-admin": "14.5.0",
+    "kysely": "0.29.7",
+    "mongodb": "7.8.0",
+    "mysql2": "3.24.6",
+    "postgres": "4.0.0",
+    "prisma": "7.10.1",
+    "vitest": "5.0.5",
+    "@weft-js/core": "file:../weft"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "src",
+    "plugins",
+    "README.md",
+    "LICENSE"
+  ]
+}

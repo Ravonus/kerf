@@ -36,7 +36,7 @@
  },
  {
   "l": "foundation0",
-  "what": "The worktree has no root package.json or node_modules, so create-weft's suite needs npm ci in seven packages first. An uninstalled packages/icons shows up as unrelated 'Cannot find module weft/ssr' failures.",
+  "what": "The worktree has no root package.json or node_modules, so create-weft's suite needs npm ci in seven packages first. An uninstalled packages/icons shows up as unrelated 'Cannot find module @weft-js/core/ssr' failures.",
   "where": "worktree setup",
   "severity": "papercut",
   "workaround": "npm ci in create-weft, weft, ui-core, warp, start, cli and icons."
@@ -134,14 +134,14 @@
  },
  {
   "l": "landing:weft",
-  "where": "@weft/start Form",
+  "where": "@weft-js/start Form",
   "severity": "gap",
   "what": "`form.result` is empty after a no-JS submit: the server answers 303 to the same page with no success signal, so the stub's success message can't work without JS. A mutation also can't tell the two paths apart.",
   "workaround": "The mutation always calls redirect('/joined', 303), a prerendered page. So with JS, weft shows success by navigating, while Next and Solid may show it in place; flow.mutate numbers should be read with that in mind."
  },
  {
   "l": "landing:weft",
-  "where": "@weft/start Form id prop",
+  "where": "@weft-js/start Form id prop",
   "severity": "papercut",
   "what": "`<Form id>` is a no-JS disambiguator, not a DOM id, so `/#join` silently scrolled nowhere.",
   "workaround": "Put id=\"join\" on a wrapping Stack."
@@ -190,10 +190,10 @@
  },
  {
   "l": "landing:weft",
-  "where": "weft check with @weft/icons",
+  "where": "weft check with @weft-js/warp-icons",
   "severity": "papercut",
   "what": "The icons package must be a direct dependency for a named import, but nothing flags a transitive import (it resolved through warp in the scratch app).",
-  "workaround": "Listed @weft/icons in template.json dependencies."
+  "workaround": "Listed @weft-js/warp-icons in template.json dependencies."
  },
  {
   "l": "landing:weft",
@@ -204,7 +204,7 @@
  },
  {
   "l": "landing:weft",
-  "where": "weft/media build output",
+  "where": "@weft-js/core/media build output",
   "severity": "papercut",
   "what": "plugin-media traces sharp and native binaries into the server output even when every image is encoded at build, which affects server size and boot. Not measured.",
   "workaround": "None."
@@ -499,7 +499,7 @@
   "l": "todo:parity",
   "where": "packages/warp/src/Select.tsx:22, packages/warp/src/index.ts:3,56",
   "severity": "bug",
-  "what": "tsc --noEmit in any todo scaffold fails inside node_modules/@weft/warp: TS2345 in Select.tsx and TS2300 duplicate identifier Frame in index.ts. Reproduce: run npx tsc --noEmit in the built weft variant.",
+  "what": "tsc --noEmit in any todo scaffold fails inside node_modules/@weft-js/warp: TS2345 in Select.tsx and TS2300 duplicate identifier Frame in index.ts. Reproduce: run npx tsc --noEmit in the built weft variant.",
   "workaround": "None; template files themselves type-check clean."
  },
  {
@@ -555,7 +555,7 @@
   "l": "admin:weft",
   "where": "warp Button",
   "severity": "gap",
-  "what": "Button has no href, so a link styled as a button means hand CSS. @weft/start Link also marks aria-current when a query-less href equals the path, which would flag Previous on page 2.",
+  "what": "Button has no href, so a link styled as a button means hand CSS. @weft-js/start Link also marks aria-current when a query-less href equals the path, which would flag Previous on page 2.",
   "workaround": "Used warp's Link for the pager."
  },
  {
@@ -969,7 +969,7 @@
  },
  {
   "l": "critic:weft",
-  "where": "@weft/warp package exports",
+  "where": "@weft-js/warp package exports",
   "what": "./src/styles isn't exported, so a route that imports no warp component has no tokens. A fully plain zero-JS page isn't possible from a template without a dummy import.",
   "severity": "gap",
   "workaround": "Left /privacy on warp."

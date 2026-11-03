@@ -1,0 +1,7 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+:where([data-scope="roles-matrix"] :is(td, thead th):not(:first-child)) { text-align: center; }
+:where([data-scope="roles-matrix"] [data-part="yes"]) { display: inline-grid; place-items: center; color: var(--warp-color-positive-text); }
+:where([data-scope="roles-matrix"] [data-part="yes"] svg) { inline-size: 16px; block-size: 16px; }
+:where([data-scope="roles-matrix"] [data-part="no"]) { color: var(--warp-color-text-subtle); }
+}

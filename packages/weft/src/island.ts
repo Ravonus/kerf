@@ -35,7 +35,7 @@ function comments(nodes: Node[], visit: (c: Comment) => void) {
 }
 
 /** The markers of level `d` in `nodes`. */
-function bounds(nodes: Node[], d: number): [Comment?, Comment?] {
+function bounds(nodes: Node[], d: number): [Comment | undefined, Comment | undefined] {
   let a: Comment | undefined, b: Comment | undefined
   comments(nodes, c => {
     if (c.data.startsWith(`wl:${d}:`)) a = c
@@ -84,10 +84,10 @@ function closing(open: Node) {
 /** A comment only the claim reads, which never belongs to a hole: a level's or an island's or a slot's. */
 export const marks = (n: Node) => n.nodeType === 8 && /^\/?w[lis]:?/.test((n as Comment).data)
 
-interface Later { key: string; when: string; wait(): Promise<unknown>; mount(): void; running?: Promise<void> }
+interface Later { key: string; when: string; wait: () => Promise<unknown>; mount(): void; running?: Promise<void> }
 const later = new Map<string, Later>()
 /** What `capture.mjs` left: see there for the fields. */
-const held = () => (window as any).__wq as { q: Event[]; d: boolean; r?: number; p(e: Event): void; l?: Element; w(k: Element, lead?: 1): void } | undefined
+const held = () => (window as Window & { __wq?: { q: Event[]; d: boolean; r?: number | undefined; p(e: Event): void; l?: Element; w(k: Element, lead?: 1): void } }).__wq
 
 /** The island `el` (which has `wk`) is in, if it's still waiting. Keys nest by `/`, an island's own being the prefix. */
 function waiting(el: Element | null | undefined) {
@@ -95,16 +95,45 @@ function waiting(el: Element | null | undefined) {
     const r = later.get(k)
     if (r) return r
   }
+  return undefined
 }
 
-/** Load and claim, once. Code that can't load drops the island: its events then take their defaults. */
-const run = (r: Later) => (r.running ??= r.wait().then(() => {
+/**
+ * Code that won't load, usually a page older than the deploy serving it: the fresh page once, then saying so. An island
+ * that stays quiet looks alive and does nothing.
+ */
+function stale() {
+  const key = `weft:reloaded:${location.pathname}`
+  try {
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1')
+      return location.reload()
+    }
+  } catch {}
+  if (document.querySelector('[data-weft-stale]')) return
+  const note = document.createElement('p')
+  note.setAttribute('data-weft-stale', '')
+  note.setAttribute('role', 'alert')
+  note.style.cssText = 'position:fixed;inset:auto 1rem 1rem;z-index:2147483647;margin:0;padding:.75rem 1rem;background:#111;color:#fff;font:14px/1.4 system-ui,sans-serif'
+  note.textContent = 'Part of this page could not load. Reload to try again.'
+  document.body.append(note)
+}
+
+const RETRY_MS = 800
+
+/** Load and claim, once. Code that can't load is tried again, then `stale`: its held events take their defaults. */
+// oxlint-disable-next-line no-promise-executor-return -- `setTimeout` returns nothing a promise looks at, and braces cost bytes on every page with an island
+const run = (r: Later) => (r.running ??= r.wait().catch(() => new Promise(go => setTimeout(go, RETRY_MS)).then(r.wait)).then(() => {
   if (later.get(r.key) === r) {
     later.delete(r.key)
     r.mount()
   }
-}, () => void later.delete(r.key)).catch(console.error).then(drain))
+}, () => {
+  later.delete(r.key)
+  stale()
+}).catch(console.error).then(drain))
 
+/** Claims the island `el` is in now, without waiting for what it was waiting for. */
 export function wake(el: Element) {
   const r = waiting(el)
   r ? void run(r) : drain()
@@ -118,7 +147,7 @@ export function drain() {
   draining = true
   try {
     while (c.q.length) {
-      const e = c.q[0]
+      const e = c.q[0]!
       const r = waiting((e.target as Element).closest?.('[wk]'))
       if (r) return void run(r)
       c.q.shift()
@@ -131,15 +160,17 @@ export function drain() {
   }
 }
 
+type Control = HTMLInputElement & HTMLSelectElement
+
 /** Controls that moved with no event the script saw (autofill, a restored form): the island hears about them too. */
 function typed(nodes: Node[]) {
   const c = held()
   if (!c) return
   for (const n of nodes) {
     if (n.nodeType !== 1) continue
-    for (const el of [n as any, ...(n as Element).querySelectorAll<any>('input,textarea,select')]) {
+    for (const el of [n as Control, ...(n as Element).querySelectorAll<Control>('input,textarea,select')]) {
       if (!/^(input|textarea|select)$/.test(el.localName) || c.q.some(e => e.target === el)) continue
-      const moved = el.localName === 'select' ? el.selectedIndex !== Math.max([...el.options].findIndex((o: any) => o.defaultSelected), 0)
+      const moved = el.localName === 'select' ? el.selectedIndex !== Math.max([...el.options].findIndex(o => o.defaultSelected), 0)
         : /^(checkbox|radio)$/.test(el.type) ? el.checked !== el.defaultChecked
         : el.value !== el.defaultValue
       if (!moved) continue
@@ -155,6 +186,7 @@ let near: IntersectionObserver | undefined
 const watched = new WeakMap<Element, Later>()
 function watch(r: Later, c: Comment) {
   const el = c.nextElementSibling
+  // oxlint-disable-next-line typescript/no-misused-promises -- `run` retries and then marks the island stale itself; a `void` here costs bytes on every page with an island
   if (!el) return void (r.when === 'v' && setTimeout(() => run(r)))
   near ??= new IntersectionObserver(list => {
     for (const e of list) {
@@ -163,7 +195,7 @@ function watch(r: Later, c: Comment) {
       near!.unobserve(e.target)
       void (hit.when === 'v' ? run(hit) : hit.wait().catch(() => {}))
     }
-  }, { rootMargin: '200px' })
+  }, { rootMargin: '600px' })
   watched.set(el, r)
   near.observe(el)
 }
@@ -224,7 +256,8 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
       if (top) drop(c, close!)
     })
     // No capture script (a strict CSP, say): nothing would ever wake it, so it doesn't wait.
-    if (!held()) setTimeout(() => run(r))
+    // oxlint-disable-next-line typescript/no-misused-promises -- `run` retries and then marks the island stale itself; a `void` here costs bytes on every page with an island
+  if (!held()) setTimeout(() => run(r))
     else if (!held()!.d) watch(r, c)
     // Not part of this pass: `hydrate` would call them unclaimed.
     if (DEV) for (const n of siblings(open, close)) if (n.nodeType === 1) for (const el of [n as Element, ...(n as Element).querySelectorAll('[wk]')]) hydration.registry.delete(el.getAttribute('wk')!)
@@ -240,13 +273,15 @@ function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
     for (const el of (n as Element).querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
   }
   const was = { d: rt.data, s: rt.state }
+  const missed = hydration.misses
   rt.data = data
   rt.state = data?.s
   Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })
   try {
     fn()
   } finally {
-    Object.assign(keys, { on: false, hydrating: false, p: '', n: 0 })
+    if (hydration.misses > missed) console.warn('weft: rendered fresh, a key differs between server and client (see `weft docs W044`)')
+    Object.assign(keys, { on: false, hydrating: false, miss: false, p: '', n: 0 })
     rt.data = was.d
     rt.state = was.s
     registry.clear()
@@ -280,6 +315,7 @@ export function level(html: string, d: number, next: () => unknown, load: Load, 
     own = a && b ? [a, b] : []
     return a && b ? siblings(a, b) : []
   }
+  // oxlint-disable-next-line weft/no-html-sink -- `html` is the app's own server's render, streamed to this same page
   t.innerHTML = html
   let nodes = read()
   const [a, b] = bounds(nodes, d + 1)

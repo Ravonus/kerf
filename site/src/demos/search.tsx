@@ -1,5 +1,5 @@
-import { derived, state } from 'weft'
-import { Card, Input, Tag } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { Card, Input, Tag } from '@weft-js/warp'
 
 const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima', 'Lagos', 'Porto']
 
@@ -14,7 +14,7 @@ export default function Trips() {
       <Input
         label="Search cities"
         value={query.value}
-        onInput={(e: any) => (query.value = e.currentTarget.value)}
+        onInput={e => (query.value = e.currentTarget.value)}
       />
       <p>{found.value.length} of {CITIES.length}</p>
       <div data-part="tags">

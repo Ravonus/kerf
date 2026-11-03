@@ -1,7 +1,7 @@
-import { defineConfig } from 'weft/config'
-import { warp } from '@weft/warp/plugin'
-import { text } from '@weft/plugin-text'
-import { media } from '@weft/plugin-media'
+import { defineConfig } from '@weft-js/core/config'
+import { warp } from '@weft-js/warp/plugin'
+import { text } from '@weft-js/text'
+import { media } from '@weft-js/plugin-media'
 
 export default defineConfig({
   site: {
