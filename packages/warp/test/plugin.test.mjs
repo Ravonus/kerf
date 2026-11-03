@@ -1,6 +1,7 @@
 // @vitest-environment node
 // The warp plugin: seed → tokens (gated by the spec's own contrast checker), classic fields, catalog and AGENTS text.
 import { readFileSync } from 'node:fs'
+import { parseAst } from 'vite'
 import { dtcg, warp } from '../plugin.mjs'
 
 const run = opts => warp(opts).contribute({ command: 'build', mode: 'production', root: '' })
@@ -140,9 +141,12 @@ test('a brand colour says where it landed', () => {
   expect(run({ seed: { hue: 180, chroma: 0.1 } }).notes).toBeUndefined()
 }, 30_000)
 
+// a config in the docs is an object of plain literals: read it as one, without running it
+const literal = n => (n.type === 'ObjectExpression' ? Object.fromEntries(n.properties.map(p => [p.key.name ?? p.key.value, literal(p.value)])) : n.type === 'Literal' ? n.value : n.type === 'UnaryExpression' && n.operator === '-' ? -literal(n.argument) : expect.fail(`not a literal: ${n.type}`))
+
 test('every config in `weft docs theme` passes D010', () => {
   const doc = readFileSync(new URL('../../cli/docs/theme.md', import.meta.url), 'utf8')
-  const looks = [...doc.matchAll(/```ts\nwarp\((\{[\s\S]*?\})\)\n```/g)].map(m => new Function(`return ${m[1]}`)())
+  const looks = [...doc.matchAll(/```ts\nwarp\((\{[\s\S]*?\})\)\n```/g)].map(m => literal(parseAst(`(${m[1]})`).body[0].expression))
   expect(looks).toHaveLength(3)
   for (const look of looks) expect(code(() => run(look)), JSON.stringify(look)).toBeUndefined()
 }, 60_000)

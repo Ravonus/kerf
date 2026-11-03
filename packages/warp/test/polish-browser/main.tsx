@@ -38,7 +38,8 @@ const HOOKS = [
   { id: 'h1', url: 'https://hooks.example-commerce.com/integrations/deploys/production-receiver?team=storefront&format=json', events: ['deploy.succeeded', 'deploy.failed'], healthy: true, lastDelivery: '2 minutes ago' },
   { id: 'h2', url: 'https://api.acme.dev/webhooks/weft', events: ['member.added'], healthy: false },
 ]
-const box = (id: string, w: number, ui: unknown) => <div id={id} style={`inline-size:${w}px`}>{ui}</div>
+// a box is a container, as the shell or a pane is in an app: a table's breakpoints follow the nearest one
+const box = (id: string, w: number, ui: unknown) => <div id={id} style={`inline-size:${w}px;container-type:inline-size`}>{ui}</div>
 
 function Toggles() {
   const on = [state(true), state(true), state(true)]

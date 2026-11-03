@@ -143,5 +143,5 @@ describe('DataGrid tree: the site example', () => {
     const kids = platform.map(id => num(c.querySelector(`tr[data-row="${id}"] td:last-child`)!.textContent))
     expect(kids).toEqual([...kids].sort((a, b) => b - a))
     expect(costs()[0]).toBe('$3,920')
-  })
+  }, 30_000) // the first import of the site example compiles all of warp: seconds on a busy machine, not this test's subject
 })

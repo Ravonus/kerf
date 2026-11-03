@@ -50,9 +50,11 @@ export const cases: Record<keyof typeof C, Case> = {
   PopoverCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-expanded')).toBe('true'), budget: 8, runs: 2 },
   ModalCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 2, runs: 1 },
   DrawerCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 3, runs: 1 },
+  // unmeasured, the table is cards and sends its sort bar: aria-sort, and the bar's Select shows "Project" and its toggle
+  // turns on and says ↑
   TableSortCase: {
     act: r => q(r, '[data-part="sort"]').click(),
-    see: r => { expect(q(r, 'th[data-col="name"]').getAttribute('aria-sort')).toBe('ascending'); expect(r.querySelector('tbody tr td[data-col="name"]')!.textContent).toBe('Apollo') }, budget: 3, runs: 13,
+    see: r => { expect(q(r, 'th[data-col="name"]').getAttribute('aria-sort')).toBe('ascending'); expect(r.querySelector('tbody tr td[data-col="name"]')!.textContent).toBe('Apollo') }, budget: 4, runs: 15,
   },
   TableSelectCase: {
     act: r => r.querySelectorAll<HTMLElement>('tbody input')[1]!.click(),

@@ -45,7 +45,7 @@ export type FieldShell = Omit<FieldBase, 'value' | 'defaultValue'> & { [attr: st
 export type Control = (p: { id: string; readonly describedby?: string | undefined; readonly invalid: boolean; rest: Record<string, unknown> }) => unknown
 
 /** `labelChars`, which only needs `Intl.Segmenter` past ASCII: making one is most of the work of mounting a field. */
-export const letters = (s: string) => (/^[ -~]*$/.test(s) ? [...s.trim().replace(/ +/g, ' ')] : labelChars(s))
+export const letters = (s: string) => (/^[ -~]*$/.test(s) ? s.trim().replace(/ +/g, ' ').split('') : labelChars(s))
 
 /**
  * The field shell (03 §1 anatomy, verbatim order): control (sweep-base, sweep, icon, label, prefix, input, suffix,

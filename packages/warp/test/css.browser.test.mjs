@@ -6,7 +6,7 @@ import { createRequire } from 'node:module'
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
-const read = f => readFileSync(new URL(`../../ui-core/styles/${f}`, import.meta.url), 'utf8')
+const read = f => readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8')
 const css = ['warp.css', 'layout/tokens.css', 'layout/split.css', 'inputs/field.css', 'inputs/choice.css', 'components/button.css', 'data/table.css'].map(read).join('\n')
 let browser
 beforeAll(async () => { browser = await chromium.launch() })
@@ -88,7 +88,9 @@ test('a button\'s tone channels set its fill and its hover layer', async () => {
   const p = await page(`<style>#b{--warp-tone-fill:#000000;--warp-tone-ink:#ffffff;--warp-tone-layer:#333333}</style><button id="b" data-scope="button">Go</button>`)
   expect(await p.$eval('#b', n => getComputedStyle(n).backgroundColor)).toBe('rgb(0, 0, 0)')
   expect(await p.$eval('#b', n => getComputedStyle(n).color)).toBe('rgb(255, 255, 255)')
-  expect(await p.$eval('#b', n => getComputedStyle(n, '::before').backgroundColor)).toBe('rgb(51, 51, 51)')
+  // the layer is a color-mix (warp's pointer fill), so it computes in oklab: read it back as the pixel it paints
+  const layer = await p.$eval('#b', n => { const c = document.createElement('canvas').getContext('2d'); c.fillStyle = getComputedStyle(n, '::before').backgroundColor; c.fillRect(0, 0, 1, 1); return [...c.getImageData(0, 0, 1, 1).data] })
+  expect(layer).toEqual([51, 51, 51, 255])
 })
 
 test('a closed accordion panel takes no height, whichever order the sheets come in', async () => {

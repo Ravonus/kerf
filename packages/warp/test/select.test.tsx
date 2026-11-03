@@ -466,8 +466,8 @@ describe('server and hydration', () => {
     dispose()
   })
 
-  test('what Back restored is nobody's pick: the server's value stands and nothing is heard', async () => {
-    const spy = vi.spyOn(performance, 'getEntriesByType').mockReturnValue([{ type: 'back_forward' }] as any)
+  test('what Back restored is nobody\'s pick: the server\'s value stands and nothing is heard', async () => {
+    const spy = vi.spyOn(performance, 'getEntriesByType').mockReturnValue([{ type: 'back_forward' }] as unknown as PerformanceEntryList)
     const { select, heard, dispose } = await hydrated('c', s => { s.value = 'a' })
     expect(select.value).toBe('c')
     expect(heard).toEqual([])

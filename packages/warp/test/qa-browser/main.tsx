@@ -6,7 +6,8 @@ import { Table } from '../../src/Table'
 
 const rows = [{ id: 'a', name: 'Alpha', cost: 1 }, { id: 'b', name: 'Beta', cost: 2 }]
 const columns = [{ id: 'name', header: 'Name', sort: true }, { id: 'cost', header: 'Cost', sort: true, numeric: true }]
-const box = (id: string, w: number, ui: unknown) => <div id={id} style={`inline-size:${w}px`}>{ui}</div>
+// a box is a container, as the shell or a pane is in an app: a table's breakpoints follow the nearest one
+const box = (id: string, w: number, ui: unknown) => <div id={id} style={`inline-size:${w}px;container-type:inline-size`}>{ui}</div>
 
 render(() => (
   <>
