@@ -77,10 +77,13 @@ export function table(root: HTMLElement, opts: TableOptions) {
   const viewport = () => root.querySelector<HTMLElement>('[data-part="viewport"]')
   // the binding renders it when columns start hidden, so the server's HTML is right before this runs
   const given = root.querySelector<HTMLStyleElement>(':scope > style[data-part="hide"]')
-  const sheet = given ?? doc.createElement('style')
-  if (!given) root.append(sheet)
-
-  const hide = (ids: readonly string[]) => { const rule = hideRule(root.id, ids); if (sheet.textContent !== rule) sheet.textContent = rule }
+  // made on the first hide: a style element added to the page restyles all of it
+  let sheet = given
+  const hide = (ids: readonly string[]) => {
+    const rule = hideRule(root.id, ids)
+    if (!sheet && rule) root.append((sheet = doc.createElement('style')))
+    if (sheet && sheet.textContent !== rule) sheet.textContent = rule
+  }
   // the pinned column sits after the select column, whose width only the browser knows
   const pin = () => {
     const cells = root.querySelectorAll<HTMLElement>('[data-pinned="last"]')
@@ -130,7 +133,8 @@ export function table(root: HTMLElement, opts: TableOptions) {
   const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { o.onWidth?.(root.clientWidth); sync() }) : undefined
   sizes?.observe(root)
   hide(opts.hidden)
-  sync()
+  // the observer's first call comes after layout; reading widths now would force one mid-hydration
+  if (!sizes) sync()
   return {
     update(next: TableOptions) { o = next; hide(next.hidden); sync() },
     destroy() {
@@ -138,7 +142,7 @@ export function table(root: HTMLElement, opts: TableOptions) {
       root.removeEventListener('keydown', onKey)
       root.removeEventListener('pointerdown', onDown)
       sizes?.disconnect()
-      if (!given) sheet.remove()
+      if (sheet !== given) sheet?.remove()
     },
   }
 }
