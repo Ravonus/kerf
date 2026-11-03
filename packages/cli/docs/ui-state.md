@@ -32,6 +32,8 @@ Give a warp component the row with `ui`, and it fills the row from real events a
 
 **Yours and theirs never mix.** Someone else's hover can't set your `row.hover`, so a `watch` on it can't run for them and can't echo back. To draw both by hand, read both: `row.hover.value || row.remote.value.hover`. warp does this for you: a row lit from anywhere gets `data-hold`, and `data-remote` when it's only others.
 
+**What a press leaves behind is data.** `pressed` is true only while a button is held down, so others see the press and then it's gone. The tick a press leaves on a checkbox is the app's data, not UI state: share it the way you share any data, with `state(…, { persist, sync: 'tabs' })` for tabs or live data for other clients. The demo above does both.
+
 ## How far it reaches
 
 | Where | How it travels | What you do |

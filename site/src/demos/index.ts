@@ -77,9 +77,9 @@ export const demos: Record<string, Demo> = {
     why: 'A live dashboard usually forces a framework to compare the whole table on each tick. Here each number has its own update, so one change costs one text write.',
   },
   'ui-state': {
-    page: 'ui-state', title: 'Hover shared across tabs',
-    look: 'Two panes showing one list, like Two views of one list below, but what they share here is hover. Each row is one interaction, drawn by warp. Nothing here adds a listener.',
-    tryIt: 'Hover a row: both panes light. Open this page in a second tab and hover there: this tab lights too and says who is elsewhere.',
+    page: 'ui-state', title: 'Hover and ticks shared across tabs',
+    look: 'Two panes showing one list. Two kinds of state cross between them: what is ticked is data, a box synced to every tab, and hover, focus and press are UI state, one interaction per row, drawn by warp.',
+    tryIt: 'Tick a row: both panes tick. Hover a row: both panes light. Open this page in a second tab and do the same there: this tab follows, and says how many are elsewhere.',
     why: 'Hover stops being a pile of handlers and becomes a value you can read, draw and share. Your own hover never fires for someone else, so logic on it cannot echo.',
   },
   shared: {

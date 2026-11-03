@@ -156,6 +156,7 @@
   "data/chart.css"
  ],
  "checkbox": [
+  "components/toggle-button.css",
   "inputs/field.css",
   "inputs/choice.css"
  ],
@@ -691,6 +692,7 @@
   "components/quote.css"
  ],
  "radio": [
+  "components/toggle-button.css",
   "inputs/field.css",
   "inputs/choice.css"
  ],
@@ -911,6 +913,7 @@
   "components/theme-panel.css"
  ],
  "switch": [
+  "components/toggle-button.css",
   "inputs/field.css",
   "inputs/choice.css"
  ],

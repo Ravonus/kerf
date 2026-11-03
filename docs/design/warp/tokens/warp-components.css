@@ -287,7 +287,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   content: ""; position: absolute; pointer-events: auto;
   inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
 }
-:where([data-scope="button"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="button"]:is(:active, [data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
 /* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
    it back down: it never sinks into the page */
@@ -378,7 +378,9 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   cursor: pointer; -webkit-tap-highlight-color: transparent;
   transition: color var(--warp-touch-out) var(--warp-ease-out), background-color var(--warp-touch-out) var(--warp-ease-out), border-color var(--warp-touch-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
-:where([data-scope="toggle"]:active, [data-scope="chip"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="toggle"]:is(:active, [data-press]), [data-scope="chip"]:is(:active, [data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
+/* A choice's box presses in, here or (data-press, from `ui`) in another pane, tab or client. */
+:where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):is(:active, [data-press]) [data-part="control"]) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="toggle"]:hover, [data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
 :where([data-scope="toggle"])::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity var(--warp-duration-fast); }
 /* hover tints only where hover is real: a touch screen's tap leaves :hover stuck on the toggle */

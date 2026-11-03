@@ -137,7 +137,7 @@
   content: ""; position: absolute; pointer-events: auto;
   inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
 }
-:where([data-scope="button"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="button"]:is(:active, [data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
 /* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
    it back down: it never sinks into the page */
