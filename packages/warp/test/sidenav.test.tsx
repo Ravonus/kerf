@@ -14,7 +14,7 @@ import { SECTIONS } from './fixtures/SideNavCase'
 const rail = (c: Element) => c.querySelector('[data-scope="sidenav"] nav')!
 const folds = (c: Element) => [...rail(c).querySelectorAll<HTMLButtonElement>('button[data-fold]')]
 const shown = (b: HTMLButtonElement) => !document.getElementById(b.getAttribute('aria-controls')!)!.hidden
-const bar = (c: Element) => c.querySelector<HTMLButtonElement>('[data-scope="sidenav"] [data-part="bar"]')!
+const edge = (c: Element) => c.querySelector<HTMLButtonElement>('[data-scope="sidenav"] [data-part="bar"]')!
 const frame = () => new Promise(r => { requestAnimationFrame(r) })
 /** What the CSS does under 900px; jsdom loads no stylesheets. */
 const overlay = (c: Element) => { c.querySelector<HTMLElement>('[data-scope="sidenav"] > [data-part="panel"]')!.style.position = 'fixed' }
@@ -99,7 +99,7 @@ test('laid over the page, the bar opens the panel and closes it, with focus goin
   overlay(c)
   const root = c.querySelector<HTMLElement>('[data-scope="sidenav"]')!
   const panel = root.querySelector<HTMLElement>('[data-part="panel"]')!
-  const b = bar(c)
+  const b = edge(c)
   expect(b.getAttribute('aria-controls')).toBe(panel.id)
   expect(b.querySelector('[data-part="bar-label"]')!.textContent).toBe('Docs')
   expect(root.querySelector('[data-part="close"]')).toBeNull() // the bar is the way out
@@ -121,7 +121,7 @@ test('laid over the page, Escape and the backdrop close what the bar opened, and
   await flush()
   overlay(c)
   const root = c.querySelector<HTMLElement>('[data-scope="sidenav"]')!
-  const b = bar(c)
+  const b = edge(c)
   const press = async () => { b.focus(); b.click(); await flush(); await frame(); expect(root.hasAttribute('data-open')).toBe(true) }
   await press()
   root.querySelector<HTMLAnchorElement>('a[aria-current="page"]')!.focus()
@@ -142,11 +142,11 @@ test('docked, the bar folds the sidebar to itself and back, and the fold is reme
   const root = () => one.container.querySelector<HTMLElement>('[data-scope="sidenav"]')!
   expect(root().hasAttribute('data-collapsible')).toBe(true)
   expect(root().hasAttribute('data-collapsed')).toBe(false)
-  expect(bar(one.container).getAttribute('aria-expanded')).toBe('true')
-  bar(one.container).click(); await flush()
+  expect(edge(one.container).getAttribute('aria-expanded')).toBe('true')
+  edge(one.container).click(); await flush()
   expect(root().hasAttribute('data-collapsed')).toBe(true)
   expect(root().hasAttribute('data-open')).toBe(false) // docked: folding is not opening
-  expect(bar(one.container).getAttribute('aria-expanded')).toBe('false')
+  expect(edge(one.container).getAttribute('aria-expanded')).toBe('false')
   expect(localStorage.getItem('k:collapsed')).toBe('1')
   one.unmount()
 
@@ -154,8 +154,8 @@ test('docked, the bar folds the sidebar to itself and back, and the fold is reme
   await flush()
   const r2 = two.container.querySelector<HTMLElement>('[data-scope="sidenav"]')!
   expect(r2.hasAttribute('data-collapsed')).toBe(true) // a reload keeps it
-  expect(bar(two.container).getAttribute('aria-expanded')).toBe('false')
-  bar(two.container).click(); await flush()
+  expect(edge(two.container).getAttribute('aria-expanded')).toBe('false')
+  edge(two.container).click(); await flush()
   expect(r2.hasAttribute('data-collapsed')).toBe(false)
   expect(localStorage.getItem('k:collapsed')).toBe('0')
   two.unmount()
@@ -169,9 +169,9 @@ test('docked, with storage blocked the bar still folds and unfolds the sidebar',
     const { container: c } = render(() => <SideNav label="Docs" current="/docs/props" sections={SECTIONS} />)
     await flush()
     const root = c.querySelector<HTMLElement>('[data-scope="sidenav"]')!
-    bar(c).click(); await flush()
+    edge(c).click(); await flush()
     expect(root.hasAttribute('data-collapsed')).toBe(true)
-    bar(c).click(); await flush()
+    edge(c).click(); await flush()
     expect(root.hasAttribute('data-collapsed')).toBe(false)
   } finally {
     get.mockRestore(); set.mockRestore()
@@ -247,9 +247,9 @@ test('hydrates the server markup with its folds and its bar live', async () => {
   expect(advanced.getAttribute('aria-expanded')).toBe('true')
   expect(JSON.parse(localStorage.getItem('test:sidenav')!)).toEqual({ Advanced: true })
   expect(root.querySelectorAll('[data-part="bar"]').length).toBe(1)
-  bar(root).click(); await flush()
+  edge(root).click(); await flush()
   expect(root.querySelector('[data-scope="sidenav"]')!.hasAttribute('data-collapsed')).toBe(true)
-  expect(bar(root).getAttribute('aria-expanded')).toBe('false')
+  expect(edge(root).getAttribute('aria-expanded')).toBe('false')
   expect(localStorage.getItem('test:sidenav:collapsed')).toBe('1')
   d(); root.remove()
 })

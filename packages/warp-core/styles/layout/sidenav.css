@@ -80,7 +80,7 @@
 :where([data-scope="sidenav"] [data-part="bar"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); color: var(--warp-color-text); }
 :where([data-scope="sidenav"] [data-part="bar"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); flex: none; transition: transform var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="sidenav"] [data-part="bar-label"]) {
-  writing-mode: vertical-rl; max-block-size: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  writing-mode: vertical-rl; max-block-size: 50%; overflow: clip; text-overflow: ellipsis; white-space: nowrap;
   font-weight: 600; letter-spacing: 0.02em;
 }
 /* Open, the bar is the panel's edge: the chevron points back, and the title is the panel's head, so the label goes
