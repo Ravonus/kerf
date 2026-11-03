@@ -117,7 +117,7 @@ export const moving: DocGroup = {
     },
     {
       component: 'SideNav',
-      summary: 'A docs sidebar: a left panel whose sections fold, with a collapse bar at its edge. Docked on wide screens, laid over the page on phones.',
+      summary: 'A docs sidebar of folding sections, with a collapse bar: docked on wide screens, opened over the page on phones.',
       tileWidth: 320,
       use: {
         when: ['The pages of a docs site, a guide or a component library', 'A list of pages long enough that a reader needs to see where they are in it'],
