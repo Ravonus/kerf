@@ -3,7 +3,7 @@ import '@weft-js/warp-core/styles/rich/prose.css'
 import '@weft-js/warp-core/styles/rich/codeblock.css'
 import '@weft-js/warp-core/styles/components/copy.css'
 import { SideNav } from '@weft-js/warp'
-import { learnSections, SITE_LINKS, SITE_NAV_ID } from '../../lib/sections'
+import { learnSections, SITE_LINKS } from '../../lib/sections'
 import '../../styles/docs.css'
 import '../../styles/learn.css'
 
@@ -11,7 +11,7 @@ import '../../styles/learn.css'
 export default function LearnLayout(props: RouteProps) {
   return (
     <div data-site="docs" data-learn="">
-      <SideNav id={SITE_NAV_ID} lead={SITE_LINKS} label="Learn" sections={learnSections} current={props.params.slug ? `/learn/${props.params.slug}` : '/learn'} remember="weft:site:learn" />
+      <SideNav lead={SITE_LINKS} label="Learn" sections={learnSections} current={props.params.slug ? `/learn/${props.params.slug}` : '/learn'} remember="weft:site:learn" />
       {props.children}
     </div>
   )

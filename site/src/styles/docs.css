@@ -12,13 +12,14 @@
   --bar: 56px;
   --doc-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
   font-family: var(--doc-sans);
-  display: grid; grid-template-columns: 248px minmax(0, 1fr); gap: 48px; box-sizing: border-box; padding-inline: var(--warp-space-page); background: var(--warp-color-page); color: var(--ink);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 48px; box-sizing: border-box; padding-inline: var(--warp-space-page); background: var(--warp-color-page); color: var(--ink);
 }
-[data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: 248px minmax(0, 1fr) 208px; }
+[data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr) 208px; }
 
 /* -- sidebar and contents -- */
-/* The section's SideNav (warp): docked on the left on wide screens; on a phone the header's menu button opens it from the left edge. */
-[data-site="docs"] { --warp-sidenav-top: var(--bar); }
+/* The section's SideNav (warp): docked on the left on wide screens, in an `auto` column that follows it when its bar
+   folds it; on a phone only its bar shows, down the left edge, and opens it over the page. 248px of rail, as before. */
+[data-site="docs"] { --warp-sidenav-top: var(--bar); --warp-sidenav-bar: 28px; --warp-sidenav-width: calc(248px + var(--warp-space-related)); }
 [data-site="docs"] > [data-scope="sidenav"] { margin-inline-start: calc(var(--warp-space-related) * -1); font-size: var(--doc-small); }
 [data-site="docs"] > [data-scope="sidenav"] [data-scope="navlist"] { font-size: var(--doc-small); }
 [data-site="docs"] > [data-site="page"] { max-inline-size: none; margin: 0; padding-inline: 0; min-inline-size: 0; }
@@ -94,9 +95,11 @@
 [data-part="pager"] span { font: 400 var(--doc-micro)/1.4 var(--doc-sans); color: var(--dim); }
 [data-part="pager"] .next { grid-column: 2; text-align: end; }
 
-@media (max-width: 1239.98px) { [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: 248px minmax(0, 1fr); } [data-site="toc"] { display: none; } }
+@media (max-width: 1239.98px) { [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr); } [data-site="toc"] { display: none; } }
 @media (max-width: 899.98px) {
   [data-site="docs"], [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: minmax(0, 1fr); padding-inline: var(--warp-space-page); }
+  /* The page starts past the SideNav's bar, which stays down the left edge. */
+  [data-site="docs"]:has(> [data-scope="sidenav"][data-collapsible]) { padding-inline-start: calc(var(--warp-sidenav-bar) + var(--warp-space-related)); }
   [data-site="doc"] { padding-block-start: var(--warp-space-group); }
   [data-site="doc"] [data-scope="prose"] h2[data-step] { padding-inline-start: 36px; }
   [data-site="doc"] [data-scope="prose"] h2[data-step] ~ :not(h2) { margin-inline-start: 0; }

@@ -3,7 +3,7 @@ import '@weft-js/warp-core/styles/rich/codeblock.css'
 import '@weft-js/warp-core/styles/rich/props.css'
 import '@weft-js/warp-core/styles/components/copy.css'
 import { SideNav } from '@weft-js/warp'
-import { AREA_LABEL, toolkitSections, SITE_LINKS, SITE_NAV_ID } from '../lib/sections'
+import { AREA_LABEL, toolkitSections, SITE_LINKS } from '../lib/sections'
 import type { Area } from '../lib/pages'
 import { FrameTools } from './FrameTools'
 import '../styles/docs.css'
@@ -13,7 +13,7 @@ import '../styles/toolkit.css'
 export function WarpShell(props: { area: Area; slug?: string | undefined; children?: unknown }) {
   return (
     <div data-site="docs">
-      <SideNav id={SITE_NAV_ID} lead={SITE_LINKS} label={AREA_LABEL[props.area]} sections={toolkitSections(props.area)} current={props.slug ? `/${props.area}/${props.slug}` : `/${props.area}`} filter remember="weft:site:toolkit" />
+      <SideNav lead={SITE_LINKS} label={AREA_LABEL[props.area]} sections={toolkitSections(props.area)} current={props.slug ? `/${props.area}/${props.slug}` : `/${props.area}`} filter remember="weft:site:toolkit" />
       <FrameTools />
       {props.children}
     </div>

@@ -532,26 +532,45 @@ await check('learn deep dives start closed', '/learn/components-run-once', async
   await dive.locator('summary').click()
   same(await dive.evaluate(d => d.open), true, 'open after a click')
 })
-// On a phone no list sits above the page: the header's menu button opens the same left panel over it, full height,
-// with the current section open and the site's top links at its head. The close button, Escape and the backdrop each
-// close it, a heading folds without closing it, focus stays inside while it's up, and nothing scrolls sideways.
+// On a phone no list sits above the page: the section's SideNav shows only its collapse bar, a slim strip down the left
+// edge that the page starts past, and the header has no menu button. The bar opens the same left panel over the page,
+// full height, with the current section open and the site's top links at its head. The bar again, Escape and the
+// backdrop each close it, focus goes back to the bar, a heading folds without closing it, focus stays inside while
+// it's up, and nothing scrolls sideways.
+const PANEL = '[data-scope="sidenav"] > [data-part="panel"]'
 for (const path of ['/learn/bind', '/reference/state', '/components/button', '/blocks']) {
   await check(`side nav panel on a phone ${path}`, path, async page => {
-    const menu = page.locator('[data-site="menu"]')
-    const panel = page.locator('#site-nav')
-    await menu.waitFor()
+    const bar = page.locator(`${PANEL} > [data-part="bar"]`)
+    const panel = page.locator(PANEL)
+    await bar.waitFor()
     await page.waitForTimeout(600)
+    same(await page.locator('[data-site="menu"]').isVisible(), false, 'a header menu button shows')
     const box0 = await panel.boundingBox()
     if (box0 && box0.x + box0.width > 1) throw new Error('the panel shows before it is opened')
+    const strip = await bar.boundingBox()
+    same(Math.round(strip.x), 0, 'the bar sits on the left edge')
+    if (strip.width > 40) throw new Error(`the bar is ${strip.width}px wide`)
+    same(Math.round(strip.y + strip.height), 812, 'the bar runs to the foot of the screen')
+    const start = await page.evaluate(() => Math.min(...[...document.querySelectorAll('[data-site="docs"] > :not([data-scope="sidenav"])')].filter(e => e.getClientRects().length > 0).map(e => e.getBoundingClientRect().left)))
+    if (start < strip.x + strip.width) throw new Error(`the page starts at ${start}px, under the bar`)
     same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow')
     const isOpen = () => page.evaluate(() => document.querySelector('[data-scope="sidenav"]').hasAttribute('data-open'))
-    const opened = async () => { await menu.click(); await page.waitForTimeout(400); same(await isOpen(), true, 'open after the menu button') }
-    const closed = async how => { await page.waitForTimeout(400); same(await isOpen(), false, `closed by ${how}`); same(await menu.getAttribute('aria-expanded'), 'false', `aria-expanded after ${how}`) }
+    const opened = async () => { await bar.click(); await page.waitForTimeout(400); same(await isOpen(), true, 'open after the bar') }
+    const closed = async how => {
+      await page.waitForTimeout(400)
+      same(await isOpen(), false, `closed by ${how}`)
+      same(await bar.getAttribute('aria-expanded'), 'false', `aria-expanded after ${how}`)
+      same(await page.evaluate(() => document.activeElement?.getAttribute('data-part')), 'bar', `focus back on the bar after ${how}`)
+    }
+    same(await bar.getAttribute('aria-expanded'), 'false', 'aria-expanded before')
     await opened()
-    same(await menu.getAttribute('aria-expanded'), 'true', 'aria-expanded when open')
+    same(await bar.getAttribute('aria-expanded'), 'true', 'aria-expanded when open')
+    same(await page.evaluate(p => !!document.activeElement?.closest(p), PANEL), true, 'focus moves into the panel')
     const box = await panel.boundingBox()
     same(Math.round(box.x), 0, 'the panel sits on the left edge')
     same(Math.round(box.height), 812, 'the panel is full height')
+    const edge = await bar.boundingBox()
+    if (Math.abs(edge.x - (box.x + box.width)) > 2) throw new Error(`the bar is at ${edge.x}px, not at the panel's edge (${box.x + box.width}px)`)
     same(await panel.getAttribute('role'), 'dialog', 'role')
     same(await panel.locator('nav a[aria-current="page"]').isVisible(), true, 'the current page shows in the panel')
     same(await panel.locator('[data-part="lead"] a').count(), 7, 'the site links at its head')
@@ -563,18 +582,48 @@ for (const path of ['/learn/bind', '/reference/state', '/components/button', '/b
       same(await isOpen(), true, 'the panel stays up')
     }
     for (let i = 0; i < 40; i++) await page.keyboard.press('Tab')
-    same(await page.evaluate(() => !!document.activeElement?.closest('#site-nav')), true, 'focus stays in the panel')
+    same(await page.evaluate(p => !!document.activeElement?.closest(p), PANEL), true, 'focus stays in the panel')
     same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow with the panel up')
-    await panel.locator('[data-part="close"]').click()
-    await closed('the close button')
-    same(await page.evaluate(() => document.activeElement?.getAttribute('data-site')), 'menu', 'focus back on the menu button')
+    await bar.click()
+    await closed('the bar')
     await opened()
     await page.keyboard.press('Escape')
     await closed('Escape')
     await opened()
-    await page.mouse.click(340, 400) // clear of the panel (320 px) and of a classic scrollbar
+    await page.mouse.click(356, 400) // clear of the panel (320 px) and its bar (28 px)
     await closed('a backdrop tap')
   }, { width: 375, height: 812 })
+}
+// Docked, the bar folds the rail to a slim strip and the page takes the room; a reload keeps the fold, and the bar
+// unfolds it again.
+for (const path of ['/learn/state', '/components/button']) {
+  await check(`side nav folds on a desktop ${path}`, path, async page => {
+    const nav = page.locator('[data-site="docs"] > [data-scope="sidenav"]')
+    const bar = nav.locator('[data-part="bar"]')
+    const tracks = () => page.evaluate(() => getComputedStyle(document.querySelector('[data-site="docs"]')).gridTemplateColumns.split(' ').map(parseFloat))
+    await page.waitForFunction(() => document.querySelector('[data-scope="sidenav"] [data-part="bar"]')?.getAttribute('aria-expanded') === 'true')
+    const [side0, page0] = await tracks()
+    if (side0 < 200) throw new Error(`the rail is ${side0}px before folding`)
+    same(await nav.locator('nav a[aria-current="page"]').isVisible(), true, 'the current link shows')
+    await bar.click()
+    await page.waitForTimeout(600)
+    same(await bar.getAttribute('aria-expanded'), 'false', 'aria-expanded when folded')
+    const [side1, page1] = await tracks()
+    if (side1 > 40) throw new Error(`the folded rail is ${side1}px`)
+    if (page1 - page0 < side0 - side1 - 1) throw new Error(`the page grew ${page1 - page0}px of ${side0 - side1}`)
+    same(await nav.locator('nav a[aria-current="page"]').isVisible(), false, 'the links hide')
+    same(await page.evaluate(() => document.activeElement?.getAttribute('data-part')), 'bar', 'focus stays on the bar')
+    same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow')
+    await page.reload({ waitUntil: 'load' })
+    await page.waitForTimeout(600)
+    same(await bar.getAttribute('aria-expanded'), 'false', 'folded after a reload')
+    same(Math.round((await tracks())[0]), Math.round(side1), 'the rail width after a reload')
+    await bar.click()
+    await page.waitForTimeout(600)
+    same(await bar.getAttribute('aria-expanded'), 'true', 'unfolded by the bar')
+    same(Math.round((await tracks())[0]), Math.round(side0), 'the rail width unfolded')
+    same(await nav.locator('nav a[aria-current="page"]').isVisible(), true, 'the current link shows again')
+  })
 }
 // The Forecast demo shows its wait: the Boundary's fallback on the first load, then the old forecast dimmed with a
 // spinner while the next one loads, and quick presses cancel the requests before them.

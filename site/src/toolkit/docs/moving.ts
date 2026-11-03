@@ -117,7 +117,7 @@ export const moving: DocGroup = {
     },
     {
       component: 'SideNav',
-      summary: 'A docs sidebar: a left panel whose sections fold, docked on wide screens and opened over the page on phones.',
+      summary: 'A docs sidebar: a left panel whose sections fold, with a collapse bar at its edge. Docked on wide screens, laid over the page on phones.',
       tileWidth: 320,
       use: {
         when: ['The pages of a docs site, a guide or a component library', 'A list of pages long enough that a reader needs to see where they are in it'],
@@ -125,25 +125,27 @@ export const moving: DocGroup = {
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
-          { id: 'SideNavGuide', title: 'Sections that fold', note: 'The section holding `current` starts open and the others folded. What a reader opens or closes is kept in localStorage under `remember`. Under 900px the same panel waits off the left edge, and any button whose `aria-controls` names its `id` opens it.', stage: 'fill', height: 420 },
+          { id: 'SideNavGuide', title: 'Sections that fold', note: 'The section holding `current` starts open and the others folded. What a reader opens or closes is kept in localStorage under `remember`. The bar at the panel\'s edge folds it to a slim strip and back, and that is kept too. Under 900px only the bar shows, down the left edge, and pressing it brings the panel over the page. Docked, it is `--warp-sidenav-width` wide (240px) and folds to `--warp-sidenav-bar` (28px), so give it an `auto` column; on a phone, start the page that far in.', stage: 'fill', height: 420 },
           { id: 'SideNavFilter', title: 'With a filter', note: '`filter` adds a box that keeps the matching pages and opens every section they are in. Use it for long lists.', stage: 'fill', height: 420 },
         ] },
       ],
-      keyboard: [['Tab', 'Moves between section headings and links; on a phone it stays inside the open panel'], ['Enter or Space', 'Opens or closes a section'], ['Escape', 'Closes the panel on a phone']],
+      keyboard: [['Tab', 'Moves between section headings, links and the bar; on a phone it stays inside the open panel'], ['Enter or Space', 'Opens or closes a section; on the bar, folds or unfolds the sidebar, or opens or closes the panel on a phone'], ['Escape', 'Closes the panel on a phone']],
       a11yNotes: [
         '`label` names the navigation landmark and titles the panel.',
         'Each section heading is a button with `aria-expanded` and `aria-controls`. A folded section is `hidden`, so its links leave the tab order.',
         'The current page\'s link has `aria-current="page"`.',
-        'On a phone the open panel is a modal dialog labelled by its title: focus moves to its close button, stays inside, and goes back to the button that opened it. The opening button\'s `aria-expanded` follows it.',
+        'The bar is a button named by `label`, with `aria-controls` naming the panel and `aria-expanded` saying whether the sidebar is unfolded, or on a phone whether the panel is open.',
+        'On a phone the open panel is a modal dialog labelled by its title: focus moves into it, stays inside, and goes back to the bar when it closes.',
       ],
       propDocs: {
         label: 'The name of the navigation landmark, and the panel\'s title on a phone.',
-        id: 'The panel\'s id. A button anywhere with `aria-controls` set to it opens the panel on a phone, such as a header\'s menu button.',
+        collapsible: 'The collapse bar at the panel\'s edge. Default true. `false` drops it, and the panel then opens on a phone only from a button whose `aria-controls` names its `id`, with a close button in its head.',
+        id: 'The panel\'s id. A button anywhere with `aria-controls` set to it also opens the panel on a phone.',
         lead: 'Links shown above the sections only on a phone, such as a site\'s top links.',
         sections: 'The sections, in order: `title`, `items` (`href` and `label`), and `pinned` to keep one always open with a plain heading.',
         current: 'The current page\'s `href`. Its link is marked, its section opens, and the rail scrolls to it.',
         filter: 'Adds a filter box. A string is its placeholder.',
-        remember: 'The localStorage key for a reader\'s folds. `false` keeps nothing. Default `warp:sidenav:<label>`.',
+        remember: 'The localStorage key for a reader\'s folds, and `<key>:collapsed` for whether they folded the sidebar. `false` keeps nothing. Default `warp:sidenav:<label>`.',
       },
       related: ['Nav', 'Shell', 'Drawer'],
     },
