@@ -1057,6 +1057,36 @@ impl<'t> Emitter<'t> {
 
     /// Props from JSX attributes, in order: literals and plain values as fields, the rest as getters, spreads as
     /// `mergeProps` sources (later wins). `extra` fields go last. An `element`'s `ref={el}` may assign `el`.
+    /// `{ name, mark: <Logo /> }` as a prop: its JSX fields become getters too, so reading `name` builds no `<Logo>`.
+    /// A built element takes a hydration key, and one built where it isn't rendered takes the key of what is.
+    fn lazy_fields(&mut self, o: &ObjectExpression<'_>) -> Option<String> {
+        let jsx = |e: &Expression<'_>| matches!(e.get_inner_expression(), Expression::JSXElement(_) | Expression::JSXFragment(_));
+        let mut any = false;
+        for p in &o.properties {
+            match p {
+                ObjectPropertyKind::ObjectProperty(p) if p.kind == PropertyKind::Init && !p.method => any |= jsx(&p.value),
+                ObjectPropertyKind::ObjectProperty(_) => return None,
+                ObjectPropertyKind::SpreadProperty(_) => {}
+            }
+        }
+        if !any {
+            return None;
+        }
+        let mut fields = Vec::new();
+        for p in &o.properties {
+            fields.push(match p {
+                ObjectPropertyKind::SpreadProperty(s) => format!("...{}", self.expr(&s.argument)),
+                ObjectPropertyKind::ObjectProperty(p) => {
+                    let key = srcmap::copy(self.text, p.key.span().start as usize, p.key.span().end as usize);
+                    let key = if p.computed { format!("[{key}]") } else { key };
+                    let v = self.expr(&p.value);
+                    if jsx(&p.value) { format!("get {key}() {{ return {v}; }}") } else { format!("{key}: {v}") }
+                }
+            });
+        }
+        Some(format!("{{ {} }}", fields.join(", ")))
+    }
+
     fn props(&mut self, attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>, extra: Vec<String>, element: bool) -> String {
         let mut sources: Vec<String> = Vec::new();
         let mut fields: Vec<String> = Vec::new();
@@ -1090,7 +1120,13 @@ impl<'t> Emitter<'t> {
                             // A server element reads each attribute once, right away: a value costs less than a getter.
                             // What renders (children, JSX) stays a getter, so it renders in its place.
                             Some(e) if element && self.ssr && key != "children" && !has_jsx(e) => format!("{k}: {}", self.expr(e)),
-                            Some(e) => format!("get {k}() {{ return {}; }}", self.expr(e)),
+                            Some(e) => {
+                                let v = match e.get_inner_expression() {
+                                    Expression::ObjectExpression(o) => self.lazy_fields(o).unwrap_or_else(|| self.expr(e)),
+                                    _ => self.expr(e),
+                                };
+                                format!("get {k}() {{ return {v}; }}")
+                            }
                         },
                         Some(JSXAttributeValue::Element(e)) => format!("get {k}() {{ return {}; }}", self.element(e)),
                         Some(JSXAttributeValue::Fragment(f)) => format!("get {k}() {{ return {}; }}", self.fragment(f)),
