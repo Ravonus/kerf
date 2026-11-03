@@ -82,6 +82,11 @@ const STEPS = [
     run: async () => lines(await run(process.execPath, ['scripts/quality/boundaries.mjs'])),
   },
   {
+    id: 'browser-apis', covers: 'browser code, packages and site, calls no crypto.randomUUID: plain http (a LAN address) has none',
+    fix: 'Use crypto.getRandomValues, or test `typeof crypto.randomUUID === \'function\'` before calling it. A server-only module goes in src/server/ or a *.server.ts file.',
+    run: async () => lines(await run(process.execPath, ['scripts/quality/browser-apis.mjs'])),
+  },
+  {
     id: 'rust-fmt', covers: 'cargo fmt --check on crates/',
     fix: 'Run `npm run fix`.',
     run: () => all(CRATES, async c => run('cargo', ['fmt', '--check'], c)),

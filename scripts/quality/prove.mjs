@@ -2,7 +2,7 @@
 // Proves the rules bite: plants one violation in each area, runs that `npm run check` step, and wants a failure naming it. Every
 // planted file is removed, and every edit undone, before the next one, and the tree is checked clean at the end.
 //
-//   node scripts/quality/prove.mjs
+//   node scripts/quality/prove.mjs [step…]   with steps: only their plants
 import { spawnSync } from 'node:child_process'
 import { appendFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -32,6 +32,8 @@ const PLANTS = [
   { area: 'warp-core imports no framework (graph)', step: 'boundaries', expect: 'warp-core', ...ts('warp-core/src/planted.ts', "export { signal } from 'react'\n") },
   { area: 'core imports no Node', step: 'lint', expect: 'no-restricted-imports', ...ts('weft/src/planted.ts', "import { readFileSync } from 'node:fs'\nexport { readFileSync }\n") },
   { area: 'browser reaches no Node, deep down', step: 'boundaries', expect: 'reaches node:fs', edit: { file: 'packages/weft/src/keyed.ts', append: "\nimport './planted-deep'\n" }, extra: { file: 'packages/weft/src/planted-deep.ts', code: "import './planted-deeper'\n" }, extra2: { file: 'packages/weft/src/planted-deeper.ts', code: "import 'node:fs'\n" } },
+  { area: 'browser code calls no randomUUID, deep down', step: 'browser-apis', expect: 'planted-uuid', edit: { file: 'packages/weft/src/keyed.ts', append: "\nimport './planted-uuid'\n" }, extra: { file: 'packages/weft/src/planted-uuid.ts', code: 'export const id = crypto.randomUUID()\n' } },
+  { area: 'site code calls no randomUUID', step: 'browser-apis', expect: 'chat.tsx', edit: { file: 'site/src/demos/chat.tsx', append: '\nexport const planted = () => crypto.randomUUID()\n' } },
   // Comments
   { area: 'no commented-out code', step: 'lint', expect: 'no-commented-code', ...ts('weft/test/planted.ts', '// const old = compute(1);\nexport {}\n') },
   { area: 'TODO needs an issue', step: 'lint', expect: 'todo-needs-issue', ...ts('weft/test/planted.ts', '// TODO make this fast\nexport {}\n') },
@@ -72,8 +74,10 @@ const clear = () => { while (undo.length) undo.pop()() }
 process.on('SIGINT', () => { clear(); process.exit(130) })
 
 const check = step => spawnSync(process.execPath, ['scripts/check.mjs', `--only=${step}`, '--jobs=8'], { cwd: root, encoding: 'utf8' })
+const steps = process.argv.slice(2)
+const chosen = steps.length ? PLANTS.filter(p => steps.includes(p.step)) : PLANTS
 let wrong = 0
-for (const p of PLANTS) {
+for (const p of chosen) {
   plant(p)
   let r
   try { r = check(p.step) } finally { clear() }
@@ -84,5 +88,5 @@ for (const p of PLANTS) {
 }
 const dirty = spawnSync('git', ['status', '--short'], { cwd: root, encoding: 'utf8' }).stdout.split('\n').filter(l => /planted/.test(l))
 if (dirty.length) { console.log(`left behind: ${dirty.join(', ')}`); wrong++ }
-console.log(wrong ? `${wrong} of ${PLANTS.length} not caught` : `all ${PLANTS.length} caught`)
+console.log(wrong ? `${wrong} of ${chosen.length} not caught` : `all ${chosen.length} caught`)
 process.exit(wrong ? 1 : 0)

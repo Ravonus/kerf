@@ -49,6 +49,8 @@ are imported with `import type`.
 
 **Boundaries.** warp-core doesn't import a framework: that goes in `bindings/`. Core doesn't import Node. Nothing a browser
 loads may reach Node code, however many files away. `scripts/quality/boundaries.mjs` follows the imports to check.
+Browser code doesn't call `crypto.randomUUID`, which a page on plain http (a LAN address) doesn't have: use
+`crypto.getRandomValues`. `scripts/quality/browser-apis.mjs` follows the same imports, and the site's client code.
 
 **Comments.** This repo's comments are plain sentences that say why, not what. A file that isn't obvious starts with a line or
 two on what it's for. So:

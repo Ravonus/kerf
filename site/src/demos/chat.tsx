@@ -8,7 +8,8 @@ export default function Chat() {
   const joined = state(false)
   const up = state(true)
   const draft = state('')
-  const id = crypto.randomUUID()
+  // getRandomValues, not randomUUID: a page on plain http (a LAN address) has no randomUUID.
+  const id = crypto.getRandomValues(new Uint32Array(4)).join('-')
   const chat = room.connect(() => (joined.value ? { roomId: id } : skip))
   const said = chat.collect('said', { max: 50, key: m => m.id })
   const send = (e: Event) => {

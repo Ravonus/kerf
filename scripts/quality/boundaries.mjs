@@ -27,7 +27,8 @@ const byName = new Map(readdirSync(join(root, 'packages')).filter(d => existsSyn
 const isFile = f => existsSync(f) && statSync(f).isFile()
 const target = value => (typeof value === 'string' ? value : value?.browser ?? value?.import ?? value?.default)
 
-function entry(dir, sub) {
+/** The file a package export points at, from the package's directory name and the export's key. */
+export function entry(dir, sub) {
   const value = target(manifest(dir).exports?.[sub])
   return value ? join(root, 'packages', dir, value) : undefined
 }
@@ -52,7 +53,8 @@ function imports(file) {
   return out
 }
 
-function walk(start, visit) {
+/** Every file `start` loads, however deep: `visit` sees each import; a file `skip` names isn't followed into. */
+export function walk(start, visit, skip = () => false) {
   const seen = new Map([[start, undefined]])
   const queue = [start]
   while (queue.length) {
@@ -61,12 +63,14 @@ function walk(start, visit) {
     for (const { spec, lazy } of imports(file)) {
       visit(file, spec, lazy, seen)
       const next = spec.startsWith('.') ? resolveRelative(file, spec) : resolveBare(spec)
-      if (next && !seen.has(next)) { seen.set(next, file); queue.push(next) }
+      if (next && !seen.has(next) && !skip(next)) { seen.set(next, file); queue.push(next) }
     }
   }
+  return seen
 }
 
-const trail = (seen, file) => { const chain = []; for (let f = file; f; f = seen.get(f)) chain.unshift(relative(root, f)); return chain.join(' > ') }
+/** How `file` was reached: the chain of imports from the entry. */
+export const trail = (seen, file) => { const chain = []; for (let f = file; f; f = seen.get(f)) chain.unshift(relative(root, f)); return chain.join(' > ') }
 
 /** Every broken boundary, as `{ rule, file, detail, fix }`. */
 export function findProblems() {
