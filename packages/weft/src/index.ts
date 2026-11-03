@@ -621,7 +621,7 @@ export function view(sources: any[], skip: string[] = []): any {
     },
     has: (_, k) => kept(k) && sources.some(s => k in at(s)),
     ownKeys: () => [...owners().keys()],
-    getOwnPropertyDescriptor: (_, k) => (kept(k) ? { configurable: true, enumerable: true } : undefined),
+    getOwnPropertyDescriptor: (_, k) => (kept(k) && (!rt.server || owners().has(k)) ? { configurable: true, enumerable: true } : undefined),
   })
 }
 

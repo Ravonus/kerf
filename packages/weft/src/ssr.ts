@@ -474,36 +474,46 @@ export function select(value: any): string {
   return attr('value', value)
 }
 
+/** A spread's key that isn't an attribute: handlers, refs, children and what sets the content. */
+const skipped = (k: string) => k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || (k[0] === 'o' && /^on[A-Z]/.test(k))
+
 /** `<div {...props}>`: the merged props' attributes (handlers, refs and children aren't attributes). */
 export function spread(props: Record<string, any>): string {
   let out = ''
   for (const k of Reflect.ownKeys(props) as string[]) {
-    if (k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || (k[0] === 'o' && /^on[A-Z]/.test(k))) continue
+    if (skipped(k)) continue
     out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, props[k])
   }
   return out
 }
 
 /**
+ * Each key of `sources` merged (`mergeProps`: a later source wins a key, which keeps its first place) with the source it
+ * comes from. A source is an object or a getter for one. They're few, so asking them beats building a map.
+ */
+function merge(sources: any[], each: (k: string, o: any) => void) {
+  const all = sources.map(s => Object(typeof s === 'function' ? s() : s))
+  for (let i = 0; i < all.length; i++)
+    for (const k of Reflect.ownKeys(all[i]) as string[]) {
+      let seen = false
+      for (let j = 0; j < i && !seen; j++) seen = Object.hasOwn(all[j], k)
+      if (seen) continue
+      let o = all[i]
+      for (let j = all.length - 1; j > i; j--) if (Object.hasOwn(all[j], k)) { o = all[j]; break }
+      each(k, o)
+    }
+}
+
+/**
  * `<div a={x} {...rest}>` with JSX children: `spread(mergeProps(...sources))` without the view, since the server reads
- * every key once. A source is an object or a getter for one; a later one wins a key, which keeps its first place.
+ * every key once.
  */
 export function spreads(...sources: any[]): string {
   if (sources.length === 1) return spread(Object(typeof sources[0] === 'function' ? sources[0]() : sources[0]))
-  const keys: (string | symbol)[] = []
-  const owner = new Map<string | symbol, any>()
-  for (const s of sources) {
-    const o = Object(typeof s === 'function' ? s() : s)
-    for (const k of Reflect.ownKeys(o)) {
-      if (!owner.has(k)) keys.push(k)
-      owner.set(k, o)
-    }
-  }
   let out = ''
-  for (const k of keys as string[]) {
-    if (k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || (k[0] === 'o' && /^on[A-Z]/.test(k))) continue
-    out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, owner.get(k)[k])
-  }
+  merge(sources, (k, o) => {
+    if (!skipped(k)) out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, o[k])
+  })
   return out
 }
 
@@ -512,21 +522,11 @@ export function spreads(...sources: any[]): string {
  * inside are each read once, right away, so a view's traps would only cost. `children` stays a getter, read in its place.
  */
 export function merged(...sources: any[]): Record<string, any> {
-  const keys: (string | symbol)[] = []
-  const owner = new Map<string | symbol, any>()
-  for (const s of sources) {
-    const o = Object(typeof s === 'function' ? s() : s)
-    for (const k of Reflect.ownKeys(o)) {
-      if (!owner.has(k)) keys.push(k)
-      owner.set(k, o)
-    }
-  }
-  const out: Record<string | symbol, any> = {}
-  for (const k of keys) {
-    const o = owner.get(k)
+  const out: Record<string, any> = {}
+  merge(sources, (k, o) => {
     if (k === 'children') Object.defineProperty(out, k, { get: () => o[k], enumerable: true, configurable: true })
     else out[k] = o[k]
-  }
+  })
   return out
 }
 
