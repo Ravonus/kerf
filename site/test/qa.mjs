@@ -504,7 +504,7 @@ for (const [path, section] of [['/learn/effects', '5. Escape hatches'], ['/refer
   })
 }
 // The long rails have a filter that keeps the matching pages.
-for (const [path, word, want] of [['/components/button', 'date', /Date/], ['/reference/state', 'hydrat', /hydrat/i]]) {
+for (const [path, word, want] of [['/components/button', 'date', /Date/], ['/reference/state', 'state', /state/i]]) {
   await check(`side nav filters ${path}`, path, async page => {
     const box = page.locator('[data-scope="sidenav"] [data-part="filter"]')
     await box.fill(word)
