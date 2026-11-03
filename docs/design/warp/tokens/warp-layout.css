@@ -1285,7 +1285,7 @@
 :where([data-scope="pull-refresh"][data-state="refreshing"] > [data-part="indicator"] > span) { --_p: 1; animation: warp-spin 0.8s linear infinite; }
 :where([data-scope="pull-refresh"] > [data-part="content"]) { transform: translateY(calc(var(--_pull, 0) * 1px)); transition: transform var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="pull-refresh"][data-pulling] > [data-part="content"]) { transition: none; }
-@keyframes warp-spin { to { transform: translateY(0) rotate(360deg); } }
+@keyframes warp-spin { to { rotate: 1turn; } }
 
 /* Pager — previous / next at the end of a docs page */
 :where([data-scope="pager"]) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--warp-space-related); margin-block-start: var(--warp-space-section); }

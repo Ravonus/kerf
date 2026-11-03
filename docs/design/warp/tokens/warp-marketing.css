@@ -550,7 +550,7 @@
 :where([data-scope="carousel"] [data-part="progress"])::after { content: ""; position: absolute; inset: 0; background: var(--warp-color-sweep); transform-origin: left; transform: scaleX(0); }
 :where([data-scope="carousel"][data-playing] [data-part="progress"])::after { animation: mk-progress var(--_interval, 6s) linear both; }
 :where([data-scope="carousel"][data-playing][data-hold] [data-part="progress"])::after { animation-play-state: paused; }
-@keyframes mk-progress { to { transform: scaleX(1); } }
+@keyframes mk-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* testimonial card (TestimonialCard) */
 :where([data-scope="quote"]) {
