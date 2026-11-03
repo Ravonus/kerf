@@ -5,7 +5,7 @@
  * The one order every app shares. Layers rank by first appearance, so this goes before any sheet: warp's own too, or the
  * order would follow whichever component's sheet a page lists first.
  */
-export const LAYER_ORDER = '@layer warp,app,theme,base,components,utilities;@layer warp.tokens,warp.base,warp.signature,warp.layout,warp.components,warp.inputs,warp.inputs-rich,warp.data,warp.app,warp.flows,warp.marketing,warp.canvas;'
+export const LAYER_ORDER = '@layer warp,app,theme,base,components,utilities;@layer warp.tokens,warp.base,warp.signature,warp.layout,warp.components,warp.inputs,warp.inputs-rich,warp.data,warp.app,warp.flows,warp.marketing,warp.canvas,warp.flow;'
 /** Head plus shell, in compressed bytes: about what a first flight carries, less headers and TLS. */
 export const FIRST_PAINT_BYTES = 12 * 1024
 /** Compression at the server's brotli 5, measured on built warp pages (5.9 to 6.2 for CSS, 3.7 to 4 for HTML). */

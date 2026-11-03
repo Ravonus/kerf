@@ -101,6 +101,22 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
     },
     {
       "code": "H011",
+      "file": "src/routes/held.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/held",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/held-island.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/held-island",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
       "file": "src/routes/island-bad.tsx",
       "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
       "route": "/island-bad",
@@ -120,6 +136,14 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "file": "src/routes/islands-top.tsx",
       "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
       "route": "/islands-top",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/late-css.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/late-css",
       "severity": "warning",
       "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
     },
@@ -197,6 +221,14 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
     },
     {
       "code": "H011",
+      "file": "src/routes/stream-sheet.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/stream-sheet",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
       "file": "src/routes/styled.tsx",
       "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
       "route": "/styled",
@@ -265,7 +297,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "help": "Give each page its own title in \`meta\`, from what is on it.",
       "route": "/chat",
       "severity": "warning",
-      "why": "10 routes share this title: /chat, /island-bad, /islands-top, /lazy-early, and 6 more ("Acme").",
+      "why": "14 routes share this title: /chat, /held, /held-island, /island-bad, and 10 more ("Acme").",
     },
     {
       "code": "H013",
@@ -273,7 +305,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "help": "Give each page its own description in \`meta\`, from what is on it.",
       "route": "/chat",
       "severity": "warning",
-      "why": "21 routes share this description (the site default): /chat, /cover, /gate, /island-bad, and 17 more ("Tools for builders.").",
+      "why": "25 routes share this description (the site default): /chat, /cover, /gate, /held, and 21 more ("Tools for builders.").",
     },
   ],
   "ok": false,
@@ -2111,6 +2143,320 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
     {
       "card": "built-in",
       "data": "loaded",
+      "file": "src/routes/held.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Acme",
+            "height": 630,
+            "url": "/_weft/og/held.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/held",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/held",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/held",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/held.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/held",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/held-island.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Acme",
+            "height": 630,
+            "url": "/_weft/og/held-island.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/held-island",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/held-island",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/held-island",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/held-island.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/held-island",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
       "file": "src/routes/island-bad.tsx",
       "image": "build",
       "kind": "page",
@@ -2578,6 +2924,163 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
       ],
       "url": "/islands-top",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/late-css.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Acme",
+            "height": 630,
+            "url": "/_weft/og/late-css.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/late-css",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/late-css",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/late-css",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/late-css.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/late-css",
     },
     {
       "card": "built-in",
@@ -3974,6 +4477,163 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
       ],
       "url": "/slow",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/stream-sheet.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Acme",
+            "height": 630,
+            "url": "/_weft/og/stream-sheet.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/stream-sheet",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/stream-sheet",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/stream-sheet",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/stream-sheet.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/stream-sheet",
     },
     {
       "card": "built-in",

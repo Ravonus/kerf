@@ -137,44 +137,44 @@ test('a whole-inline page has nothing deferred, so a chunk adds only what the he
 })
 
 test('the layer order names warp\'s own layers, as warp.css does, so no component sheet can rank first', () => {
-  const spec = /@layer (warp\.tokens,[^;]+);/.exec(readFileSync(new URL('../../ui-core/styles/warp.css', import.meta.url), 'utf8'))[1].replace(/\s/g, '')
+  const spec = /@layer (warp\.tokens,[^;]+);/.exec(readFileSync(new URL('../../warp-core/styles/warp.css', import.meta.url), 'utf8'))[1].replace(/\s/g, '')
   expect(LAYER_ORDER).toContain(`@layer ${spec};`)
 })
 
 test('a static route from an install keeps the stylesheets of the kit components it names, and only those', async () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-kit-'))
-  const kit = join(root, 'node_modules/@weft/kit/src')
+  const kit = join(root, 'node_modules/@weft-js/kit/src')
   const write = (f, text) => { mkdirSync(dirname(join(kit, f)), { recursive: true }); writeFileSync(join(kit, f), text) }
   write('index.ts', `export { Badge } from './Badge'\nexport { Modal } from './Modal'\n`)
   write('Badge.tsx', `import './badge.css'\nexport const Badge = () => null\n`)
   write('Modal.tsx', `import './modal.css'\nexport const Modal = () => null\n`)
-  const ctx = { resolve: async (spec, from) => ({ id: spec === '@weft/kit' ? join(kit, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
-  const page = await assetsOnly(ctx, `import { Badge } from '@weft/kit'\n`, join(root, 'src/routes/a.tsx'), root)
+  const ctx = { resolve: async (spec, from) => ({ id: spec === '@weft-js/kit' ? join(kit, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
+  const page = await assetsOnly(ctx, `import { Badge } from '@weft-js/kit'\n`, join(root, 'src/routes/a.tsx'), root)
   expect(page).toContain(JSON.stringify(join(kit, 'badge.css')))
   expect(page).not.toContain('modal')
 })
 
 describe('a static route through a kit barrel', () => {
   const kit = async (files, page) => {
-    const root = mkdtempSync(join(tmpdir(), 'weft-kit-')), dir = join(root, 'node_modules/@weft/kit/src')
+    const root = mkdtempSync(join(tmpdir(), 'weft-kit-')), dir = join(root, 'node_modules/@weft-js/kit/src')
     for (const [f, text] of Object.entries(files)) { mkdirSync(dirname(join(dir, f)), { recursive: true }); writeFileSync(join(dir, f), text) }
-    const ctx = { resolve: async (spec, from) => ({ id: spec === '@weft/kit' ? join(dir, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
+    const ctx = { resolve: async (spec, from) => ({ id: spec === '@weft-js/kit' ? join(dir, 'index.ts') : resolve(dirname(from), spec.endsWith('.css') ? spec : `${spec}.tsx`) }) }
     return assetsOnly(ctx, page, join(root, 'src/routes/a.tsx'), root)
   }
   const Modal = { 'Modal.tsx': `import './modal.css'\nexport const Modal = () => null\n` }
 
   test('finds a component in a second declarator', async () => {
-    const page = await kit({ 'index.ts': `export { Badge } from './pills'\nexport { Modal } from './Modal'\n`, ...Modal, 'pills.tsx': `import { p } from './inner'\nexport const Pill = () => p, Badge = () => p\n`, 'inner.tsx': `import './pills.css'\nexport const p = 1\n` }, `import { Badge } from '@weft/kit'\n`)
+    const page = await kit({ 'index.ts': `export { Badge } from './pills'\nexport { Modal } from './Modal'\n`, ...Modal, 'pills.tsx': `import { p } from './inner'\nexport const Pill = () => p, Badge = () => p\n`, 'inner.tsx': `import './pills.css'\nexport const p = 1\n` }, `import { Badge } from '@weft-js/kit'\n`)
     expect(page).toContain('pills.css')
     expect(page).not.toContain('modal')
   })
 
   test('finds a component in a destructured export', async () => {
-    expect(await kit({ 'index.ts': `export { Badge } from './pills'\n`, 'pills.tsx': `import { p } from './inner'\nexport const { Badge } = p\n`, 'inner.tsx': `import './pills.css'\nexport const p = 1\n` }, `import { Badge } from '@weft/kit'\n`)).toContain('pills.css')
+    expect(await kit({ 'index.ts': `export { Badge } from './pills'\n`, 'pills.tsx': `import { p } from './inner'\nexport const { Badge } = p\n`, 'inner.tsx': `import './pills.css'\nexport const p = 1\n` }, `import { Badge } from '@weft-js/kit'\n`)).toContain('pills.css')
   })
 
   test('keeps what a barrel imports for its side effects, and not what it imports for a name', async () => {
-    const page = await kit({ 'index.ts': `import './base.css'\nimport './setup'\nimport { used } from './helper'\nexport { Modal } from './Modal'\nexport const count = used\n`, ...Modal, 'setup.tsx': `import './setup.css'\n`, 'helper.tsx': `import './helper.css'\nexport const used = 1\n` }, `import { Modal } from '@weft/kit'\n`)
+    const page = await kit({ 'index.ts': `import './base.css'\nimport './setup'\nimport { used } from './helper'\nexport { Modal } from './Modal'\nexport const count = used\n`, ...Modal, 'setup.tsx': `import './setup.css'\n`, 'helper.tsx': `import './helper.css'\nexport const used = 1\n` }, `import { Modal } from '@weft-js/kit'\n`)
     expect(page).toContain('base.css')
     expect(page).toContain('setup.css')
     expect(page).toContain('modal.css')
@@ -183,8 +183,8 @@ describe('a static route through a kit barrel', () => {
 
   test('follows `export * as K` only for K, and takes all of it', async () => {
     const files = { 'index.ts': `export * as K from './k'\nexport { Modal } from './Modal'\n`, ...Modal, 'k.tsx': `import { b } from './b'\nexport const a = b\n`, 'b.tsx': `import './k.css'\nexport const b = 1\n` }
-    expect(await kit(files, `import { K } from '@weft/kit'\n`)).toContain('k.css')
-    expect(await kit(files, `import { Modal } from '@weft/kit'\n`)).not.toContain('k.css')
+    expect(await kit(files, `import { K } from '@weft-js/kit'\n`)).toContain('k.css')
+    expect(await kit(files, `import { Modal } from '@weft-js/kit'\n`)).not.toContain('k.css')
   })
 })
 
