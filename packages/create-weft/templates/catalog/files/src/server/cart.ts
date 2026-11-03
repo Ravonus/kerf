@@ -35,7 +35,7 @@ export const listCart = query({
   run: async ({ ctx }) => {
     const cart = cartOf(ctx)
     if (!cart) return []
-    return ctx.db.select({ slug: products.slug, name: products.name, priceCents: products.priceCents, stock: products.stock, quantity: cartItems.quantity })
+    return await ctx.db.select({ slug: products.slug, name: products.name, priceCents: products.priceCents, stock: products.stock, quantity: cartItems.quantity })
       .from(cartItems)
       .innerJoin(products, eq(products.id, cartItems.productId))
       .where(eq(cartItems.cartId, cart))

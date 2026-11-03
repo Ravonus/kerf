@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs'
 import { nativeAuthSql, nativeFiles, prismaAdapterPackage, prismaAuthModels, prismaFiles } from './data.mjs'
 
+/** The version a scaffold pins for each package it adds that isn't weft's own: what the matrix tested. */
 export const VERSIONS = {
   '@types/node': '26.6.5',
   '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', kysely: '0.29.7', mysql2: '3.24.6', postgres: '4.0.0', zod: '4.6.7',

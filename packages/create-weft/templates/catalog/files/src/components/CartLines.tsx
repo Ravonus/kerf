@@ -31,7 +31,7 @@ export function CartLines() {
             </div>
             <div class="stepper">
               <Button emphasis="outline" tone="neutral" size="sm" label={`One fewer ${line.name}`} onClick={() => change(line.slug, line.quantity - 1)}>−</Button>
-              <span aria-label={`Quantity of ${line.name}`}>{line.quantity}</span>
+              <span><span data-part="sr-only">Quantity of {line.name}: </span>{line.quantity}</span>
               <Button emphasis="outline" tone="neutral" size="sm" label={`One more ${line.name}`} disabled={line.quantity >= Math.min(line.stock, 99)} onClick={() => change(line.slug, line.quantity + 1)}>+</Button>
             </div>
             <span class="price">{money(line.priceCents * line.quantity)}</span>

@@ -16,6 +16,9 @@ const tmp = fileURLToPath(new URL('./.tmp-templates/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
+// The package a scoped name is, by its directory: most drop the scope, a few kept their old directory names.
+const home = dep => join(pkgs, ({ '@weft-js/core': 'weft', '@weft-js/create': 'create-weft', '@weft-js/warp-icons': 'icons' })[dep] ?? dep.replace('@weft-js/', ''))
+
 const written = TEMPLATES.filter(name => existsSync(new URL(`templates/${name}/template.json`, here)))
 
 function app(name, options = {}) {
@@ -23,16 +26,16 @@ function app(name, options = {}) {
   rmSync(dir, { recursive: true, force: true })
   scaffold(dir, { template: name, ...options })
   const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft-js/cli': 1 })
-  for (const dep of deps.filter(d => /^(weft$|@weft-js\/)/.test(d))) {
+  for (const dep of deps.filter(d => d.startsWith('@weft-js/'))) {
     mkdirSync(join(dir, 'node_modules', '@weft-js'), { recursive: true })
-    symlinkSync(join(pkgs, dep.replace('@weft-js/', '')), join(dir, 'node_modules', dep), 'dir')
+    symlinkSync(home(dep), join(dir, 'node_modules', dep), 'dir')
   }
-  // A link resolves from where it points, and a package with no install of its own can't reach its `weft` peer from there.
-  for (const dep of deps.filter(d => d.startsWith('@weft/plugin-'))) {
-    const home = join(pkgs, dep.replace('@weft-js/', ''), 'node_modules')
-    if (existsSync(home)) continue
+  // A link resolves from where it points, and a package whose own install has no `@weft-js/core` can't reach its peer from
+  // there, so it's copied in to resolve the app's.
+  for (const dep of deps.filter(d => d.startsWith('@weft-js/') && d !== '@weft-js/core')) {
+    if (existsSync(join(home(dep), 'node_modules', '@weft-js', 'core'))) continue
     rmSync(join(dir, 'node_modules', dep))
-    cpSync(join(pkgs, dep.replace('@weft-js/', '')), join(dir, 'node_modules', dep), { recursive: true })
+    cpSync(home(dep), join(dir, 'node_modules', dep), { recursive: true })
   }
   return dir
 }
@@ -56,8 +59,11 @@ describe.each(written)('--template %s', name => {
   })
 
   // tsc, a build and the served app need the template's database packages installed: scripts/packed.mjs has those.
+  // Without them the routes don't load, and H016 says their source was checked instead. weft's own packages are linked,
+  // so one of those not resolving is a fault here, not a missing install.
   it('weft check is clean', async () => {
-    expect((await check(app(name))).diagnostics).toEqual([])
+    const uninstalled = d => d.code === 'H016' && d.route === '*' && !d.why.includes('@weft-js/')
+    expect((await check(app(name))).diagnostics.filter(d => !uninstalled(d))).toEqual([])
   })
 
   it.each(['json', 'yaml'])('refuses a %s config, which has no place for its plugin options', format => {

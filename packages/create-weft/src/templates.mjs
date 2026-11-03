@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+/** What `--template` takes: the apps a scaffold can start as. */
 export const TEMPLATES = ['landing', 'todo', 'admin', 'catalog']
 
 const templates = fileURLToPath(new URL('../templates/', import.meta.url))

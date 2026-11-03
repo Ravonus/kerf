@@ -9,7 +9,8 @@ export function OrdersFilters({ view }: { view: OrderView }) {
   const show = (change: Partial<OrderView>) => navigate(viewHref({ ...view, page: 1, ...change }))
   const search = (e: SubmitEvent) => {
     e.preventDefault()
-    show({ q: new FormData(e.currentTarget as HTMLFormElement).get('q')!.toString().trim() })
+    const q = new FormData(e.currentTarget as HTMLFormElement).get('q')
+    show({ q: typeof q === 'string' ? q.trim() : '' })
   }
   return (
     <form class="filters" method="get" action="/admin/orders" onSubmit={search}>

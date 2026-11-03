@@ -53,11 +53,11 @@ export const toggleTodo = mutation({
   invalidates: ['todos'],
   optimistic: ({ input }, cache) =>
     inViews(cache, (list, view) => {
-      const at = list.rows.findIndex(t => t.id === input.id)
-      if (at < 0 || list.rows[at]!.done === input.done) return
+      const row = list.rows.find(t => t.id === input.id)
+      if (!row || row.done === input.done) return
       list.left += input.done ? -1 : 1
-      if (view === 'all') list.rows[at]!.done = input.done
-      else list.rows.splice(at, 1)
+      if (view === 'all') row.done = input.done
+      else list.rows.splice(list.rows.indexOf(row), 1)
     }),
   run: async ({ input, ctx }) => {
     await ctx.db.update(todos).set({ done: input.done }).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)))
@@ -70,10 +70,10 @@ export const deleteTodo = mutation({
   invalidates: ['todos'],
   optimistic: ({ input }, cache) =>
     inViews(cache, list => {
-      const at = list.rows.findIndex(t => t.id === input.id)
-      if (at < 0) return
-      if (!list.rows[at]!.done) list.left--
-      list.rows.splice(at, 1)
+      const row = list.rows.find(t => t.id === input.id)
+      if (!row) return
+      if (!row.done) list.left--
+      list.rows.splice(list.rows.indexOf(row), 1)
     }),
   run: async ({ input, ctx }) => {
     await ctx.db.delete(todos).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)))
