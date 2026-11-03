@@ -1,6 +1,6 @@
 # @weft-js/warp
 
-> **Early release (0.1.0).** APIs will change between minor versions. weft isn't on npm yet.
+> **Early release (0.1.0).** APIs will change between minor versions.
 
 warp is weft's UI toolkit: forms, overlays, tables, charts and more, with keyboard and screen reader support built in. The
 components and their look are here. Their behaviour is in [`@weft-js/warp-core`](../warp-core), which works without any

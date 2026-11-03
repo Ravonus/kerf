@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/realtime-socketio",
   "version": "0.1.0",
-  "private": true,
   "description": "@weft-js/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
   "license": "MIT",
   "type": "module",
@@ -46,5 +45,8 @@
     "plugin.d.mts",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

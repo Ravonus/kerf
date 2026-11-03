@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/pay",
   "version": "0.1.0",
-  "private": true,
   "description": "@weft-js/pay: products, one ledger for every rail, and entitlements. weft's reference plugin: read it to build your own",
   "license": "MIT",
   "type": "module",
@@ -55,5 +54,8 @@
   },
   "keywords": [
     "weft"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

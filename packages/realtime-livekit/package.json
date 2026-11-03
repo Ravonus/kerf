@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/realtime-livekit",
   "version": "0.1.0",
-  "private": true,
   "description": "@weft-js/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
   "license": "MIT",
   "type": "module",
@@ -39,5 +38,8 @@
     "plugin.d.mts",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

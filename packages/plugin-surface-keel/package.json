@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/plugin-surface-keel",
   "version": "0.1.0",
-  "private": true,
   "description": "@weft-js/plugin-surface-keel: the `keel-pixel` surface kind (surface.renderer@1): KEEL's WebGL2 pixel renderer and theme recipes.",
   "license": "MIT",
   "type": "module",
@@ -44,5 +43,8 @@
     "vendor",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

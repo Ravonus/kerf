@@ -22,8 +22,8 @@ const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
 const ALIASES = { warp: '@weft-js/warp', icons: '@weft-js/warp-icons', text: '@weft-js/text', media: '@weft-js/plugin-media', 'media-ffmpeg': '@weft-js/plugin-media-ffmpeg', 'surface-keel': '@weft-js/plugin-surface-keel', redis: '@weft-js/realtime-redis', nats: '@weft-js/realtime-nats', pay: '@weft-js/pay', 'pay-stripe': '@weft-js/pay/stripe' }
 
-/** Add-ons that aren't on npm yet. A checkout's tarballs still reach them: `local.mjs` pins each with an override. */
-const UNPUBLISHED = new Set(['@weft-js/text', '@weft-js/pay', '@weft-js/plugin-media', '@weft-js/plugin-media-ffmpeg', '@weft-js/plugin-surface-keel', '@weft-js/multiplayer', '@weft-js/realtime-durable-object', '@weft-js/realtime-livekit', '@weft-js/realtime-nats', '@weft-js/realtime-redis', '@weft-js/realtime-socketio', '@weft-js/realtime-webrtc'])
+/** Add-ons `weft add` knows by the name after the scope, as `weft add realtime-redis`. */
+const ADDONS = new Set(['@weft-js/text', '@weft-js/pay', '@weft-js/plugin-media', '@weft-js/plugin-media-ffmpeg', '@weft-js/plugin-surface-keel', '@weft-js/multiplayer', '@weft-js/realtime-durable-object', '@weft-js/realtime-livekit', '@weft-js/realtime-nats', '@weft-js/realtime-redis', '@weft-js/realtime-socketio', '@weft-js/realtime-webrtc'])
 
 const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'deno.lock': ['deno', 'add'], 'package-lock.json': ['npm', 'install'] }
 
@@ -47,13 +47,6 @@ export function pinned(root, specs) {
   })
   if (Object.keys(local).length) writeFileSync(file, JSON.stringify({ ...pkg, dependencies: { ...pkg.dependencies, ...local } }, null, 2))
   return rest
-}
-
-/** Is `name` pinned to a local tarball in this app (`local.mjs`, the packed gates)? */
-function localOverride(root, name) {
-  const file = join(root, 'package.json')
-  const override = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')).overrides?.[name] : undefined
-  return typeof override === 'string' && override.startsWith('file:')
 }
 
 function installSpecs(root, manager, verb, specs) {
@@ -315,7 +308,7 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })
-  const pkg = ALIASES[feature] ?? (UNPUBLISHED.has(`@weft-js/${feature}`) ? `@weft-js/${feature}` : feature)
+  const pkg = ALIASES[feature] ?? (ADDONS.has(`@weft-js/${feature}`) ? `@weft-js/${feature}` : feature)
   const file = findConfig(root) ?? join(root, 'weft.config.ts')
   const config = relative(root, file)
   const text = existsSync(file) ? readFileSync(file, 'utf8') : "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({})\n"
@@ -326,7 +319,6 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   if (present && (named || listed((await loadConfig(root)).config, pkg))) return { ok: true, already: true, package: pkg, config, actions: [] }
 
   const home = packageOf(pkg)
-  if (install && !present && UNPUBLISHED.has(home) && !localOverride(root, home)) throw refused(`${home} isn't on npm yet: this release of weft ships the core packages, and this add-on comes later. Nothing was changed.`)
 
   const actions = []
   const [manager, verb] = installer(root)

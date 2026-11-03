@@ -1,6 +1,6 @@
 # @weft-js/cli
 
-> **Early release (0.1.0).** APIs will change between minor versions. weft isn't on npm yet.
+> **Early release (0.1.0).** APIs will change between minor versions.
 
 The `weft` command. It runs an app (`dev`, `build`, `start`), checks it (`check`, `tsc`, `fix`), serves its docs to people
 and agents (`docs`, `agents-md`, `mcp`) and manages plugins (`add`, `plugins`). An app made with `npm create @weft-js`

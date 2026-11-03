@@ -1,6 +1,6 @@
 # @weft-js/create
 
-> **Early release (0.1.0).** APIs will change between minor versions. weft isn't on npm yet.
+> **Early release (0.1.0).** APIs will change between minor versions.
 
 Starts a new weft app.
 

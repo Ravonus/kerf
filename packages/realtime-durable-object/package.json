@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/realtime-durable-object",
   "version": "0.1.0",
-  "private": true,
   "description": "@weft-js/realtime-durable-object: a Cloudflare Durable Object as the realtime bus, on cloudflare_durable",
   "license": "MIT",
   "type": "module",
@@ -39,5 +38,8 @@
   "overrides": {
     "undici": "7.30.1",
     "sharp": "0.35.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,6 +1,6 @@
 # @weft-js/core
 
-> **Early release (0.1.0).** APIs will change between minor versions. weft isn't on npm yet.
+> **Early release (0.1.0).** APIs will change between minor versions.
 
 weft's runtime, compiler binding, Vite plugin, server renderer and test utilities. An app made with `npm create @weft-js`
 already has it, wired up.
