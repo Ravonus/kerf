@@ -80,7 +80,9 @@ const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></spa
 const draw = (i: NavIcon | undefined) => (typeof i === 'function' ? i({}) : i ? <Icon name={i} /> : null)
 const TABS = 4
 
-function Item({ item, current, quiet, onPick }: { item: NavItem; current?: string | undefined; quiet?: boolean | undefined; onPick: () => void }) {
+// `plain`, not `quiet`: weft's purge keeps a dial tier whose name is a word in the build, and a prop named quiet
+// shipped [data-expression=quiet]'s tokens to every app with a Shell.
+function Item({ item, current, plain, onPick }: { item: NavItem; current?: string | undefined; plain?: boolean | undefined; onPick: () => void }) {
   const it = untrack(() => item)
   const press = (e: MouseEvent) => {
     if (!it.href) e.preventDefault()
@@ -91,7 +93,7 @@ function Item({ item, current, quiet, onPick }: { item: NavItem; current?: strin
     <a href={it.href ?? '#'} data-part="nav-item" data-sweep="" aria-current={current === it.id ? 'page' : undefined} onClick={press}>
       <span data-part="icon">{draw(it.icon)}{sweepParts()}</span>
       <span data-part="nav-label">{it.label}</span>
-      {it.count !== undefined && <span data-part="nav-count" style={quiet ? 'background:none;color:var(--warp-color-text-subtle)' : undefined}>{it.count}<span data-part="nav-count-label">{it.countLabel ?? ' new'}</span></span>}
+      {it.count !== undefined && <span data-part="nav-count" style={plain ? 'background:none;color:var(--warp-color-text-subtle)' : undefined}>{it.count}<span data-part="nav-count-label">{it.countLabel ?? ' new'}</span></span>}
     </a>
   )
 }
@@ -248,7 +250,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
                 {extra.value.map(g => (
                   <div key={g.label}>
                     <p data-part="nav-group">{g.label}</p>
-                    <ul data-part="nav-list" aria-label={g.label}>{g.items.map(i => <li key={i.id}><Item item={i} current={current} quiet onPick={closeNav} /></li>)}</ul>
+                    <ul data-part="nav-list" aria-label={g.label}>{g.items.map(i => <li key={i.id}><Item item={i} current={current} plain onPick={closeNav} /></li>)}</ul>
                   </div>
                 ))}
               </div>
