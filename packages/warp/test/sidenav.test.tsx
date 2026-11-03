@@ -28,6 +28,19 @@ test('the current section starts open, the others folded; the current link is ma
   expect(rail(c).getAttribute('aria-label')).toBe('Docs')
 })
 
+test('the links carry warp\'s sliding bar: it takes over at the next frame and moves when the pointer does', async () => {
+  const { container: c } = render(() => <SideNav label="Docs" current="/docs/props" sections={SECTIONS} />)
+  await flush()
+  const bar = rail(c).querySelector<HTMLElement>(':scope > [data-part="indicator"]')
+  expect(bar).not.toBeNull()
+  await new Promise(r => requestAnimationFrame(r))
+  expect(rail(c).hasAttribute('data-ready')).toBe(true)
+  const before = bar!.style.transform
+  const other = [...rail(c).querySelectorAll<HTMLAnchorElement>('a[href]')].find(a => !a.hasAttribute('aria-current') && !a.closest('[hidden]'))!
+  other.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }))
+  expect(bar!.style.transform).not.toBe(before)
+})
+
 test('a fold toggles and is remembered under the key; the current section reopens on arrival', async () => {
   const one = render(() => <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" />)
   await flush()

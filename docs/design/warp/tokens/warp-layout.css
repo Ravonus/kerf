@@ -957,6 +957,18 @@
 :where([data-scope="sidenav"] [data-part="chevron"]) { display: inline-flex; color: var(--warp-color-text-subtle); }
 :where([data-scope="sidenav"] [data-part="chevron"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 :where([data-scope="sidenav"] [data-part="sections"] ul[hidden]) { display: none; }
+/* The sliding bar (warp-core nav.ts), as Nav draws it: one face, moved by transform. Before script the current link's
+   static edge stands in; once the bar takes over, the edge goes. */
+:where([data-scope="sidenav"] [data-scope="navlist"][data-bar]) { position: relative; --_bar: var(--warp-sweep-width); }
+:where([data-scope="sidenav"] [data-scope="navlist"][data-bar] > [data-part="indicator"]) {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0; pointer-events: none; z-index: 1;
+  inline-size: var(--_bar); block-size: 1px; background: var(--warp-color-accent-solid);
+  transform-origin: 0 0; transform: scaleY(0); opacity: 0;
+  transition: transform calc(var(--warp-sweep-duration) * 0.68) var(--warp-sweep-ease);
+}
+:where([data-scope="sidenav"] [data-scope="navlist"][data-bar][data-ready] > [data-part="indicator"]) { opacity: 1; }
+:where([data-scope="sidenav"] [data-scope="navlist"][data-bar] > [data-part="indicator"][data-instant]) { transition: none; }
+:where([data-scope="sidenav"] [data-scope="navlist"][data-bar][data-ready] [data-part="item"][aria-current]) { box-shadow: none; }
 :where([data-scope="sidenav"] [data-part="sections"] > li > ul) { margin-block: 2px var(--warp-space-tight); }
 :where([data-scope="sidenav"] [data-part="filter"]) {
   inline-size: 100%; box-sizing: border-box; min-block-size: var(--warp-control-sm); padding: 0 var(--warp-space-related);
