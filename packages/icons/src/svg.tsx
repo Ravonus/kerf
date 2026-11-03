@@ -21,5 +21,7 @@ export function Svg({ label, size, tier, html, style, ...rest }: IconProps & { h
 
 /*#__NO_SIDE_EFFECTS__*/
 export function icon(line: string, pixels = ''): IconComponent {
-  return p => <Svg {...p} html={line + pixels} />
+  // Dither shows from 20 px, which the icon learns by measuring itself (icons.css): only one that has it asks.
+  const dither = /\sdata-d=/.test(pixels) || /\sdata-d=/.test(line) || undefined
+  return p => <Svg data-dither={dither} {...p} html={line + pixels} />
 }
