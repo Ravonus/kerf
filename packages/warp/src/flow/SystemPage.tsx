@@ -120,7 +120,7 @@ export interface SystemPageProps {
   backAt?: unknown
   /** 403: what was asked for and by whom. */
   object?: { title: string; owner?: string }
-  /** 403: the signed-in account, as in "You're signed in as ana@tessel.dev". */
+  /** 403: the signed-in account, as in "You're signed in as ana@weft.dev". */
   account?: string
   /** 403: the access request: who approves it, whether it is pending, and what sending or withdrawing does. */
   request?: AccessRequest

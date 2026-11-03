@@ -213,7 +213,7 @@ export const DataGridPlay = (p: { density?: Density; groupBy?: string; exportNam
   <DataGrid caption="Projects" captionHidden rows={PROJECTS} columns={GROUPED_GRID} density={p.density} groupBy={p.groupBy === 'none' ? undefined : p.groupBy} exportName={p.exportName === 'off' ? false : p.exportName} />
 )
 
-export const DataGridBasic = () => <DataGrid caption="Projects" captionHidden rows={PROJECTS} columns={GRID} exportName="tessel-projects" />
+export const DataGridBasic = () => <DataGrid caption="Projects" captionHidden rows={PROJECTS} columns={GRID} exportName="weft-projects" />
 
 const NUMBERS: GridColumn<Project>[] = [
   { id: 'name', header: 'Project', rowHeader: true, sort: true, edit: true, validate: v => String(v).trim() !== '' || 'A project needs a name' },

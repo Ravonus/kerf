@@ -48,7 +48,7 @@ const OFFICE_ZONES = ['Europe/Stockholm', 'Europe/Berlin', 'Europe/Lisbon', 'Ame
 
 export const CountrySelectBasic = () => <CountrySelect label="Country" preferred={NEAR_COUNTRIES} defaultValue="DE" />
 
-export const CountrySelectLimited = () => <CountrySelect label="Billing country" options={NEAR_COUNTRIES} defaultValue="SE" hint="Tessel invoices in these three." />
+export const CountrySelectLimited = () => <CountrySelect label="Billing country" options={NEAR_COUNTRIES} defaultValue="SE" hint="weft invoices in these three." />
 
 export const CountrySelectStates = () => (
   <Grid cols={3} gap="group">
@@ -207,7 +207,7 @@ export function FormBilling() {
     <>
       <Stack as="form" gap="group" onSubmit={pay}>
         <Text role="heading">Billing details</Text>
-        <Input label="Company" autocomplete="organization" defaultValue="Tessel GmbH" />
+        <Input label="Company" autocomplete="organization" defaultValue="weft GmbH" />
         <AddressField label="Billing address" name="address" defaultValue={OFFICE} />
         <Grid cols={2} gap="group">
           <PhoneField label="Phone" name="phone" defaultCountry="DE" countries={TEAM_COUNTRIES} />
@@ -398,25 +398,25 @@ const CONFIG = `{
 const BAD_CONFIG = CONFIG.replace('3', '"three"')
 const checkConfig = (v: unknown) => (typeof v === 'object' && v !== null && 'copies' in v && typeof v.copies === 'number' && v.copies > 0 ? null : '"copies" must be a number above zero.')
 
-export const JsonEditorBasic = () => <JsonEditor label="tessel.json" defaultValue={CONFIG} rows={7} />
+export const JsonEditorBasic = () => <JsonEditor label="weft.json" defaultValue={CONFIG} rows={7} />
 
-export const JsonEditorSchema = () => <JsonEditor label="tessel.json" defaultValue={BAD_CONFIG} rows={7} schema={checkConfig} />
+export const JsonEditorSchema = () => <JsonEditor label="weft.json" defaultValue={BAD_CONFIG} rows={7} schema={checkConfig} />
 
-export const JsonEditorBroken = () => <JsonEditor label="tessel.json" defaultValue={'{\n  "region": "eu-west",\n  "copies": 3,\n}'} rows={5} />
+export const JsonEditorBroken = () => <JsonEditor label="weft.json" defaultValue={'{\n  "region": "eu-west",\n  "copies": 3,\n}'} rows={5} />
 
 export const JsonEditorStates = () => (
   <Grid cols={3} gap="group">
-    <Cell name="Empty"><JsonEditor label="tessel.json" rows={3} /></Cell>
-    <Cell name="Filled"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 3 }'} /></Cell>
-    <Cell name="Invalid"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 0 }'} schema={checkConfig} /></Cell>
-    <Cell name="Disabled"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 3 }'} disabled /></Cell>
-    <Cell name="Read-only"><JsonEditor label="tessel.json" rows={3} defaultValue={'{ "copies": 3 }'} readonly /></Cell>
+    <Cell name="Empty"><JsonEditor label="weft.json" rows={3} /></Cell>
+    <Cell name="Filled"><JsonEditor label="weft.json" rows={3} defaultValue={'{ "copies": 3 }'} /></Cell>
+    <Cell name="Invalid"><JsonEditor label="weft.json" rows={3} defaultValue={'{ "copies": 0 }'} schema={checkConfig} /></Cell>
+    <Cell name="Disabled"><JsonEditor label="weft.json" rows={3} defaultValue={'{ "copies": 3 }'} disabled /></Cell>
+    <Cell name="Read-only"><JsonEditor label="weft.json" rows={3} defaultValue={'{ "copies": 3 }'} readonly /></Cell>
   </Grid>
 )
 
 /* ---- KeyValueEditor ---- */
 
-const ENV = [{ key: 'NODE_ENV', value: 'production' }, { key: 'API_URL', value: 'https://api.tessel.dev' }, { key: 'LOG_LEVEL', value: 'info' }]
+const ENV = [{ key: 'NODE_ENV', value: 'production' }, { key: 'API_URL', value: 'https://api.weft.dev' }, { key: 'LOG_LEVEL', value: 'info' }]
 const HEADERS = [{ key: 'Cache-Control', value: 'max-age=30' }, { key: 'X-Frame-Options', value: 'DENY' }]
 
 export function KeyValueEditorEnv() {
@@ -521,7 +521,7 @@ The public shop, served from the **edge**.
 - \`npm install\`
 - \`npm run dev\`
 
-See [the deploy guide](https://tessel.dev/docs) for more.
+See [the deploy guide](https://weft.dev/docs) for more.
 `
 
 export const MarkdownEditorBasic = () => <MarkdownEditor label="README" defaultValue={README} />
@@ -574,7 +574,7 @@ export function FormDataAgreement() {
     <Stack as="form" gap="group" onSubmit={submit}>
       <Stack gap="hair">
         <Text role="heading">Data processing agreement</Text>
-        <Text subtle>Tessel GmbH will process logs only to run your deploys.</Text>
+        <Text subtle>weft GmbH will process logs only to run your deploys.</Text>
       </Stack>
       <SignaturePad label="Signature" value={signature} error={tried.value && !signature.value ? 'Sign before you continue.' : undefined} />
       <Button type="submit" full>{done.value ? 'Signed' : 'Sign agreement'}</Button>

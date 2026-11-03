@@ -105,7 +105,7 @@ export function MeetingPlannerReview() {
   const search = (q: string) => Promise.resolve(TEAM_MORE.filter(p => p.name.toLowerCase().includes(q.toLowerCase())))
   return (
     <>
-      <MeetingPlanner date={TODAY} attendees={TEAM_ROOM} loadAttendees={search} title="Capacity review" link="meet.tessel.dev/capacity" tags={['Internal', 'Incident', 'Planning']} timeZone={TEAM_ZONE} today={TODAY} locale="en-GB" hourCycle="h23" onSubmit={sent} onUndo={() => toast.show({ title: 'Invite withdrawn' })} />
+      <MeetingPlanner date={TODAY} attendees={TEAM_ROOM} loadAttendees={search} title="Capacity review" link="meet.weft.dev/capacity" tags={['Internal', 'Incident', 'Planning']} timeZone={TEAM_ZONE} today={TODAY} locale="en-GB" hourCycle="h23" onSubmit={sent} onUndo={() => toast.show({ title: 'Invite withdrawn' })} />
       <Toaster />
     </>
   )

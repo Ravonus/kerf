@@ -81,7 +81,7 @@ export const data: DocGroup = {
         knobs: [
           { prop: 'density', control: 'segmented', options: ['compact', 'cozy', 'comfortable'], initial: 'cozy', default: 'cozy' },
           { prop: 'groupBy', control: 'select', options: ['none', 'region', 'status', 'owner'], initial: 'region', default: 'none' },
-          { prop: 'exportName', control: 'select', options: ['export', 'tessel-projects', 'off'], initial: 'export', default: 'export' },
+          { prop: 'exportName', control: 'select', options: ['export', 'weft-projects', 'off'], initial: 'export', default: 'export' },
         ],
         stage: 'fill',
         height: 540,

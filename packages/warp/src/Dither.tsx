@@ -1,10 +1,12 @@
-import { ditherField, ditherImage, type Algorithm, type FieldOptions, type Gradient, type MaskSource, type Ramp } from '@weft-js/warp-core/dither'
+import { ditherField, ditherImage, ditherStage, type Algorithm, type FieldOptions, type Gradient, type MaskSource, type Ramp, type DitherStageOptions } from '@weft-js/warp-core/dither'
 import { derived } from '@weft-js/core'
 import { use } from '@weft-js/warp-core/weft'
 import './styles'
 import '@weft-js/warp-core/styles/canvas/dither.css'
+import '@weft-js/warp-core/styles/canvas/stage.css'
 
-export type { Algorithm, Field as FieldFn, FieldName, Gradient, MaskSource, Pattern, PointerMode, Ramp } from '@weft-js/warp-core/dither'
+export type { Algorithm, Brush, DitherPainter, DitherPiece, Field as FieldFn, FieldName, Gradient, MaskSource, Pattern, PointerMode, Ramp, Skin } from '@weft-js/warp-core/dither'
+export { LEVEL, PAINTERS } from '@weft-js/warp-core/dither'
 
 const box = (ratio: string | number | undefined, style: unknown) => [ratio === undefined ? undefined : `aspect-ratio:${ratio}`, style].filter(Boolean).join(';') || undefined
 
@@ -100,5 +102,28 @@ export function DitherGlyph({ text, path, box: viewBox, stroke, draw, label, fon
     <DitherField {...rest} kind={kind} cell={cell} mask={mask.value} ratio={ratio ?? '3 / 1'} label={text ? undefined : label}>
       {text && <span data-part="glyph-text">{text}</span>}
     </DitherField>
+  )
+}
+
+/** Props for DitherStage. */
+export interface DitherStageProps extends DitherStageOptions {
+  /** `box` paints its own block; `scroll` is a scroller whose view it paints; `page` paints the viewport, for a whole page. */
+  layout?: DitherStageOptions['layout']
+  children?: unknown
+  [attr: string]: unknown
+}
+
+/**
+ * A CanvasStage in the dither look (08 §6.8). Mark any element `data-skin="button"`, `card`, `field` and so on: it keeps
+ * its layout, focus, typing and semantics, and the stage draws it in dithered cells, states and all.
+ */
+export function DitherStage({ layout = 'box', ramp, kind, ground, pattern, cell, speed, drift, rail, veil, ripple, painters, fps, children, ...rest }: DitherStageProps) {
+  let node: HTMLCanvasElement | undefined
+  use(ditherStage, () => node, () => ({ layout, ramp, kind, ground, pattern, cell, speed, drift, rail, veil, ripple, painters, fps }))
+  return (
+    <div {...rest} data-scope="stage" data-paint="dither" data-layout={layout} data-rail={rail ? '' : undefined} data-veil={veil ? '' : undefined}>
+      <div data-part="paint" aria-hidden="true"><canvas ref={n => (node = n)}></canvas></div>
+      {children}
+    </div>
   )
 }

@@ -53,13 +53,13 @@ export const InputTypes = () => (
   <Stack gap="group">
     <Input label="Work email" type="email" autocomplete="email" icon="mail" />
     <Input label="Password" type="password" autocomplete="new-password" icon="lock" />
-    <Input label="Repository" type="url" placeholder="https://github.com/tessel/storefront" icon="link" />
+    <Input label="Repository" type="url" placeholder="https://github.com/weft/storefront" icon="link" />
   </Stack>
 )
 
 export const InputAffixes = () => (
   <Stack gap="group">
-    <Input label="Domain" prefix="https://" suffix=".tessel.dev" defaultValue="storefront" />
+    <Input label="Domain" prefix="https://" suffix=".weft.dev" defaultValue="storefront" />
     <Input label="Monthly budget" prefix="€" suffix="per month" inputmode="numeric" defaultValue="1,240" />
   </Stack>
 )
@@ -88,7 +88,7 @@ export function InputSlug() {
   return (
     <Stack gap="related">
       <Input label="Project name" value={name.value} onInput={e => (name.value = e.currentTarget.value)} error={slug.value ? undefined : 'Give it a name with at least one letter.'} />
-      <Text subtle>{slug.value ? `Lives at ${slug.value}.tessel.dev` : 'Waiting for a name'}</Text>
+      <Text subtle>{slug.value ? `Lives at ${slug.value}.weft.dev` : 'Waiting for a name'}</Text>
     </Stack>
   )
 }
@@ -272,7 +272,7 @@ export function FormInvite() {
   const email = state('')
   const role = state<string | null>('Member')
   const tried = state(false)
-  const sent = state([{ email: 'noor@tessel.dev', role: 'Viewer' }])
+  const sent = state([{ email: 'noor@weft.dev', role: 'Viewer' }])
   const problem = derived(() => (!tried.value || EMAIL.test(email.value) ? undefined : 'That doesn\'t look like an email address.'))
   const invite = (e: Event) => {
     e.preventDefault()
@@ -630,7 +630,7 @@ export const FieldPlay = (p: Knobs) => <Input {...p} hint={p.hint || undefined} 
 
 export const FieldAnatomy = () => (
   <Stack gap="group">
-    <Input label="Domain" icon="globe" prefix="https://" suffix=".tessel.dev" hint="You can add your own later." defaultValue="storefront" clearable />
+    <Input label="Domain" icon="globe" prefix="https://" suffix=".weft.dev" hint="You can add your own later." defaultValue="storefront" clearable />
     <Input label="Release name" hint="Shown in the deploy list." counter={40} defaultValue="Autumn sale" />
   </Stack>
 )
@@ -666,7 +666,7 @@ export function FieldCustomControl() {
 export const FieldForm = () => (
   <Stack gap="group">
     <Input label="Name" autocomplete="name" defaultValue="Mara Lindqvist" />
-    <Input label="Work email" type="email" autocomplete="email" defaultValue="mara@tessel.dev" />
+    <Input label="Work email" type="email" autocomplete="email" defaultValue="mara@weft.dev" />
     <Textarea label="About you" hint="Shown to your team." />
   </Stack>
 )

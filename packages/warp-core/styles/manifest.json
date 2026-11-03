@@ -868,6 +868,9 @@
   "layout/stack.css",
   "rich/log.css"
  ],
+ "stage": [
+  "canvas/stage.css"
+ ],
  "stat": [
   "data/stat.css"
  ],

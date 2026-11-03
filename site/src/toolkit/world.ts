@@ -1,17 +1,17 @@
-// One small product behind every example: Tessel, a deploy tool. The same people, projects and numbers everywhere, so a
+// One small product behind every example: weft, a deploy tool. The same people, projects and numbers everywhere, so a
 // table, a chart and a feed read as one app. Dates are fixed so server and client always agree.
 import type { ActivityItem, AgentEvent, AgentSource, ApiKey, ArtifactVersion, AuditEvent, Availability, BillingPlan, ChatConversation, ChatMessage, CommentThreadData, ContextUse, CursorPeer, Integration, IntegrityEvent, IntegrityStats, Invite, Invoice, Member, ModelOption, Note, Participant, PaymentMethod, Peer, PromptSuggestion, Role, ShareContact, ShareMember, TraceSpan, Version, ViewportPeer, Webhook } from '@weft-js/warp'
 import type { Attendee, CalEvent, PrefGroup } from '@weft-js/warp-core'
 
 export const PEOPLE = [
-  { id: 'mara', name: 'Mara Lindqvist', email: 'mara@tessel.dev', role: 'Owner', team: 'Platform', initials: 'ML' },
-  { id: 'jun', name: 'Jun Tanaka', email: 'jun@tessel.dev', role: 'Admin', team: 'Platform', initials: 'JT' },
-  { id: 'priya', name: 'Priya Raman', email: 'priya@tessel.dev', role: 'Member', team: 'Web', initials: 'PR' },
-  { id: 'tomas', name: 'Tomás Oliveira', email: 'tomas@tessel.dev', role: 'Member', team: 'Web', initials: 'TO' },
-  { id: 'lena', name: 'Lena Fischer', email: 'lena@tessel.dev', role: 'Member', team: 'Data', initials: 'LF' },
-  { id: 'noor', name: 'Noor Haddad', email: 'noor@tessel.dev', role: 'Viewer', team: 'Data', initials: 'NH' },
-  { id: 'sam', name: 'Sam Okafor', email: 'sam@tessel.dev', role: 'Member', team: 'Mobile', initials: 'SO' },
-  { id: 'ines', name: 'Inés Vidal', email: 'ines@tessel.dev', role: 'Viewer', team: 'Mobile', initials: 'IV' },
+  { id: 'mara', name: 'Mara Lindqvist', email: 'mara@weft.dev', role: 'Owner', team: 'Platform', initials: 'ML' },
+  { id: 'jun', name: 'Jun Tanaka', email: 'jun@weft.dev', role: 'Admin', team: 'Platform', initials: 'JT' },
+  { id: 'priya', name: 'Priya Raman', email: 'priya@weft.dev', role: 'Member', team: 'Web', initials: 'PR' },
+  { id: 'tomas', name: 'Tomás Oliveira', email: 'tomas@weft.dev', role: 'Member', team: 'Web', initials: 'TO' },
+  { id: 'lena', name: 'Lena Fischer', email: 'lena@weft.dev', role: 'Member', team: 'Data', initials: 'LF' },
+  { id: 'noor', name: 'Noor Haddad', email: 'noor@weft.dev', role: 'Viewer', team: 'Data', initials: 'NH' },
+  { id: 'sam', name: 'Sam Okafor', email: 'sam@weft.dev', role: 'Member', team: 'Mobile', initials: 'SO' },
+  { id: 'ines', name: 'Inés Vidal', email: 'ines@weft.dev', role: 'Viewer', team: 'Mobile', initials: 'IV' },
 ]
 
 export type Status = 'Live' | 'Building' | 'Failed' | 'Paused'
@@ -72,7 +72,7 @@ export const INVOICES = [
   { id: 'INV-2026-07', date: '2026-07-01', amount: 7620, status: 'Paid' },
 ]
 
-// -- the admin pack: Tessel's own settings, billing and shop --
+// -- the admin pack: weft's own settings, billing and shop --
 
 /** "Now" for anything that says how long ago, so the words never change. */
 export const NOW = '2026-10-31T17:00:00Z'
@@ -82,7 +82,7 @@ export const INVITE_ROLES = TEAM_ROLES.slice(1)
 
 const LAST_SEEN = ['Active now', '12 min ago', '1 h ago', 'Today', 'Yesterday', 'Oct 28', 'Oct 24', 'Oct 12']
 export const TEAM_MEMBERS: Member[] = PEOPLE.map((p, i) => ({ id: p.id, name: p.name, email: p.email, role: p.role.toLowerCase(), lastActive: LAST_SEEN[i] }))
-export const TEAM_INVITES: Invite[] = [{ id: 'dara', email: 'dara@tessel.dev', role: 'member', sent: '2 days ago' }, { id: 'kai', email: 'kai@contract.dev', role: 'viewer', sent: 'Oct 27' }]
+export const TEAM_INVITES: Invite[] = [{ id: 'dara', email: 'dara@weft.dev', role: 'member', sent: '2 days ago' }, { id: 'kai', email: 'kai@contract.dev', role: 'viewer', sent: 'Oct 27' }]
 
 export const TEAM_PERMISSIONS = [
   { id: 'view', label: 'See projects and deploys', roles: ['owner', 'admin', 'member', 'viewer'] },
@@ -125,7 +125,7 @@ export const AUDIT: AuditEvent[] = [
   { id: 'a2', at: '2026-10-31T15:27:00Z', actor: 'Sam Okafor', category: 'deploys', verb: 'rolled back', target: 'mobile-bff', ip: '10.4.0.22' },
   { id: 'a3', at: '2026-10-31T13:58:00Z', actor: 'Mara Lindqvist', category: 'keys', verb: 'created API key', target: 'CI deploys', ip: '84.12.3.2' },
   { id: 'a4', at: '2026-10-31T09:12:00Z', actor: 'Jun Tanaka', category: 'members', verb: 'changed the role of', target: 'Tomás Oliveira', ip: '10.4.0.31', diff: [{ field: 'Role', from: 'Viewer', to: 'Member' }] },
-  { id: 'a5', at: '2026-10-30T18:40:00Z', actor: 'Jun Tanaka', category: 'members', verb: 'invited', target: 'dara@tessel.dev', ip: '10.4.0.31' },
+  { id: 'a5', at: '2026-10-30T18:40:00Z', actor: 'Jun Tanaka', category: 'members', verb: 'invited', target: 'dara@weft.dev', ip: '10.4.0.31' },
   { id: 'a6', at: '2026-10-29T17:20:00Z', actor: 'Mara Lindqvist', category: 'billing', verb: 'changed the plan to', target: 'Team', ip: '84.12.3.2', diff: [{ field: 'Plan', from: 'Hobby', to: 'Team' }, { field: 'Seats', from: '3', to: '10' }] },
   { id: 'a7', at: '2026-10-28T11:03:00Z', actor: 'Mara Lindqvist', category: 'keys', verb: 'revoked API key', target: 'Old laptop', ip: '84.12.3.2' },
   { id: 'a8', at: '2026-10-22T08:15:00Z', actor: 'Lena Fischer', category: 'deploys', verb: 'paused', target: 'reports', ip: '10.4.1.7' },
@@ -133,24 +133,24 @@ export const AUDIT: AuditEvent[] = [
 export const AUDIT_CATEGORIES = [{ value: 'all', label: 'All' }, { value: 'deploys', label: 'Deploys' }, { value: 'members', label: 'Members' }, { value: 'keys', label: 'Keys' }, { value: 'billing', label: 'Billing' }]
 
 export const INTEGRATIONS: Integration[] = [
-  { id: 'github', name: 'GitHub', summary: 'Deploy on push, status checks on pull requests.', state: 'connected', detail: 'tessel-dev · 10 repositories', can: ['Read your repositories', 'Post commit statuses'] },
+  { id: 'github', name: 'GitHub', summary: 'Deploy on push, status checks on pull requests.', state: 'connected', detail: 'weft-dev · 10 repositories', can: ['Read your repositories', 'Post commit statuses'] },
   { id: 'slack', name: 'Slack', summary: 'Deploy and incident messages in a channel.', state: 'error', detail: 'Token expired Oct 26', failure: 'Messages to #deploys stopped on Oct 26.', can: ['Post to the channel you pick'] },
   { id: 'linear', name: 'Linear', summary: 'Link deploys to the issues they close.', state: 'off', can: ['Read your issues', 'Comment on issues'] },
   { id: 'datadog', name: 'Datadog', summary: 'Mark deploys on your dashboards.', state: 'off', can: ['Send events to your account'] },
   { id: 'pagerduty', name: 'PagerDuty', summary: 'Page the on-call person when a deploy fails.', state: 'off', can: ['Open incidents'] },
-  { id: 'sentry', name: 'Sentry', summary: 'Tie new errors to the deploy that caused them.', state: 'connected', detail: 'tessel · 4 projects', can: ['Read releases'] },
+  { id: 'sentry', name: 'Sentry', summary: 'Tie new errors to the deploy that caused them.', state: 'connected', detail: 'weft · 4 projects', can: ['Read releases'] },
 ]
 
 export const WEBHOOKS: Webhook[] = [
-  { id: 'h1', url: 'https://hooks.tessel.dev/deploys', events: ['deploy.succeeded', 'deploy.failed'], lastDelivery: '200 · 18 min ago', healthy: true },
-  { id: 'h2', url: 'https://ops.tessel.dev/alerts', events: ['deploy.failed'], lastDelivery: '503 · 1 h ago', healthy: false },
+  { id: 'h1', url: 'https://hooks.weft.dev/deploys', events: ['deploy.succeeded', 'deploy.failed'], lastDelivery: '200 · 18 min ago', healthy: true },
+  { id: 'h2', url: 'https://ops.weft.dev/alerts', events: ['deploy.failed'], lastDelivery: '503 · 1 h ago', healthy: false },
 ]
 export const WEBHOOK_EVENTS = ['deploy.succeeded', 'deploy.failed', 'deploy.rolled_back', 'member.added']
 
-/** Tessel's small shop: what the cart and checkout sell. */
+/** weft's small shop: what the cart and checkout sell. */
 export const SHOP_CART = [
   { id: 'key', name: 'Security key, USB-C', variant: 'Pack of 2', price: 58, quantity: 1 },
-  { id: 'hoodie', name: 'Tessel hoodie', variant: 'Graphite · M', price: 64, quantity: 1 },
+  { id: 'hoodie', name: 'weft hoodie', variant: 'Graphite · M', price: 64, quantity: 1 },
   { id: 'stickers', name: 'Sticker sheet', variant: 'Deploy on Friday', price: 6, quantity: 2 },
 ]
 export const SHOP_SHIPPING = [{ id: 'std', name: 'Standard', eta: 'Arrives Thu 6 Nov', price: 0 }, { id: 'exp', name: 'Express', eta: 'Arrives Mon 3 Nov', price: 12 }]
@@ -161,13 +161,13 @@ export const IMPORT_TARGETS = [
   { id: 'team', label: 'Team' },
   { id: 'role', label: 'Role', check: (v: string) => (/^(admin|member|viewer)$/i.test(v) ? undefined : 'Use admin, member or viewer') },
 ]
-export const IMPORT_SAMPLE = { name: 'tessel-team.csv', text: 'Name,Email,Team,Role\nDara Nowak,dara@tessel.dev,Web,member\nKai Sorensen,kai@tessel,Data,member\nAmir Saleh,amir@tessel.dev,Mobile,owner\nRosa Delgado,rosa@tessel.dev,Platform,admin\n' }
+export const IMPORT_SAMPLE = { name: 'weft-team.csv', text: 'Name,Email,Team,Role\nDara Nowak,dara@weft.dev,Web,member\nKai Sorensen,kai@weft,Data,member\nAmir Saleh,amir@weft.dev,Mobile,owner\nRosa Delgado,rosa@weft.dev,Platform,admin\n' }
 
-// ---- The assistant: Tessel's help for a deploy that went wrong ----------------------------------------------------
+// ---- The assistant: weft's help for a deploy that went wrong ----------------------------------------------------
 
 export const DEPLOY_SOURCES: AgentSource[] = [
   { title: 'd-4819 build log', path: 'mobile-bff · 15:27', snippet: 'health check failed: upstream timed out after 3000 ms in ap-south' },
-  { title: 'Health checks', path: 'Tessel docs · Deploys', snippet: 'A deploy that fails three checks in a row is held back from traffic.' },
+  { title: 'Health checks', path: 'weft docs · Deploys', snippet: 'A deploy that fails three checks in a row is held back from traffic.' },
   { title: 'c44e190', path: 'mobile-bff · retry.ts · L18', snippet: 'const attempts = 5 // was 2' },
 ]
 
@@ -209,8 +209,8 @@ export const ROLLBACK_DENIED: AgentEvent[] = [
 ]
 
 export const MODELS: ModelOption[] = [
-  { id: 'deep', name: 'Tessel Deep', short: 'Deep', provider: 'Hosted', description: 'Long investigations', capabilities: ['tools', 'logs'], context: '200k', cost: '$$$' },
-  { id: 'swift', name: 'Tessel Swift', short: 'Swift', provider: 'Hosted', description: 'Fast, good at config', capabilities: ['tools'], context: '200k', cost: '$$' },
+  { id: 'deep', name: 'weft Deep', short: 'Deep', provider: 'Hosted', description: 'Long investigations', capabilities: ['tools', 'logs'], context: '200k', cost: '$$$' },
+  { id: 'swift', name: 'weft Swift', short: 'Swift', provider: 'Hosted', description: 'Fast, good at config', capabilities: ['tools'], context: '200k', cost: '$$' },
   { id: 'local', name: 'On-prem small', short: 'Small', provider: 'Your cluster', description: 'Stays on your network', context: '32k', cost: '$' },
 ]
 
@@ -273,7 +273,7 @@ export const ON_CALL_HOURS: Availability = {
 export const NOTES: Note[] = [
   { id: 'n1', actor: 'Sam Okafor', kind: 'mention', verb: 'mentioned you in', object: 'mobile-bff', time: '9 min', day: 'Today', source: 'Deploys', quote: 'Can you look at the retry settings before we redeploy?' },
   { id: 'n2', actor: 'Jun Tanaka', kind: 'approve', verb: 'asked you to approve', object: 'Release 2026.11', time: '32 min', day: 'Today', actions: [{ id: 'approve', label: 'Approve' }, { id: 'view', label: 'View', emphasis: 'outline' }] },
-  { id: 'n3', actor: 'Tessel', kind: 'system', verb: 'failed the health check on', object: 'd-4819', detail: 'in ap-south', time: '1 h', day: 'Today' },
+  { id: 'n3', actor: 'weft', kind: 'system', verb: 'failed the health check on', object: 'd-4819', detail: 'in ap-south', time: '1 h', day: 'Today' },
   { id: 'n4', actor: 'Mara Lindqvist', kind: 'invite', verb: 'invited you to', object: 'Incident review', detail: '· 13:00', time: '2 h', day: 'Today', source: 'Calendar', read: true },
   { id: 'n5', actor: 'Priya Raman', kind: 'comment', verb: 'commented on', object: 'storefront', time: 'Yesterday', day: 'Yesterday', quote: 'The edge cache cut image load times in half.', read: true },
   { id: 'n6', actor: 'Lena Fischer', kind: 'assign', verb: 'assigned you', object: 'Ranking v2 handover', time: 'Yesterday', day: 'Yesterday', read: true },
@@ -438,13 +438,13 @@ export const SEATS_BRIDGE = [
 /** One day per row, since the start of the year's second half. */
 export const SIGNUPS_DAILY = Array.from({ length: 120 }, (_, i) => ({ day: `Day ${i + 1}`, signups: Math.round(118 + Math.sin(i / 9) * 26 + i * 0.5 + wobble(i) * 12) }))
 
-/** Teams on Tessel by US state. */
+/** Teams on weft by US state. */
 export const TEAMS_BY_STATE = 'AK,ME,VT,NH,WA,ID,MT,ND,MN,IL,WI,MI,NY,RI,MA,OR,NV,WY,SD,IA,IN,OH,PA,NJ,CT,CA,UT,CO,NE,MO,KY,WV,VA,MD,DE,AZ,NM,KS,AR,TN,NC,SC,DC,OK,LA,MS,AL,GA,HI,TX,FL'.split(',').map((id, i) => ({
   id,
   value: ({ CA: 188, NY: 142, TX: 121, WA: 96, MA: 74, IL: 68, CO: 57, GA: 44, FL: 52 } as Record<string, number>)[id] ?? 4 + (i * 37) % 31,
 }))
 
-/** One Monday in Tessel's week. Fixed, so server and client agree. */
+/** One Monday in weft's week. Fixed, so server and client agree. */
 export const CAL_TODAY = '2026-11-02'
 export const CAL_NOW = '2026-11-04T10:40'
 export const CALENDARS = ['Releases', 'On-call', 'Team', 'Customers'].map((name, i) => ({ id: i + 1, name }))
@@ -515,11 +515,11 @@ export const VERSIONS: Version[] = [
 ]
 
 export const SHARE_MEMBERS: ShareMember[] = [
-  { ...MARA, email: 'mara@tessel.dev', role: 'owner' },
-  { ...JUN, email: 'jun@tessel.dev', role: 'editor' },
-  { ...LENA, email: 'lena@tessel.dev', role: 'commenter' },
+  { ...MARA, email: 'mara@weft.dev', role: 'owner' },
+  { ...JUN, email: 'jun@weft.dev', role: 'editor' },
+  { ...LENA, email: 'lena@weft.dev', role: 'commenter' },
 ]
-export const SHARE_PEOPLE: ShareContact[] = [{ ...PRIYA, email: 'priya@tessel.dev' }, { ...TOMAS, email: 'tomas@tessel.dev' }, { ...SAM, email: 'sam@tessel.dev' }]
+export const SHARE_PEOPLE: ShareContact[] = [{ ...PRIYA, email: 'priya@weft.dev' }, { ...TOMAS, email: 'tomas@weft.dev' }, { ...SAM, email: 'sam@weft.dev' }]
 
 export const INTEGRITY_STATS: IntegrityStats = { sent: 42, received: 41, duplicate: 1, outOfOrder: 0, lagP95: 54 }
 export const INTEGRITY_EVENTS: IntegrityEvent[] = [

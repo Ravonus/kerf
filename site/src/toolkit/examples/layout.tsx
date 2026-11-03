@@ -191,7 +191,7 @@ export function StackNotifications() {
     <Stack gap="group">
       <Stack gap="hair">
         <Heading level={3}>Notifications</Heading>
-        <Text subtle>Choose what Tessel tells you about.</Text>
+        <Text subtle>Choose what weft tells you about.</Text>
       </Stack>
       <Stack divided gap="related">
         <Switch checked={deploys.value} onChange={() => (deploys.value = !deploys.value)} hint="When a deploy goes live.">Deploys</Switch>
@@ -462,7 +462,7 @@ export function CoverSignIn() {
   return (
     <Cover style={`${SCREEN};--warp-viewport-block:520px`} gap="group">
       <Row justify="between" gap="tight">
-        <Text role="heading">Tessel</Text>
+        <Text role="heading">weft</Text>
         <Button emphasis="ghost" tone="neutral" size="sm">Help</Button>
       </Row>
       <Center data-part="center" max="narrow">
@@ -477,7 +477,7 @@ export function CoverSignIn() {
           : (
             <Stack as="form" gap="group" onSubmit={send}>
               <Stack gap="hair">
-                <Heading level={3}>Sign in to Tessel</Heading>
+                <Heading level={3}>Sign in to weft</Heading>
                 <Text subtle>We'll email you a link. No password needed.</Text>
               </Stack>
               <Input label="Work email" type="email" required />
@@ -485,7 +485,7 @@ export function CoverSignIn() {
             </Stack>
           )}
       </Center>
-      <Text role="caption" subtle>© 2026 Tessel</Text>
+      <Text role="caption" subtle>© 2026 weft</Text>
     </Cover>
   )
 }
@@ -681,7 +681,7 @@ const MARK = () => <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3"
 const ME = PEOPLE[0]!
 const ACCOUNT: ShellProps['account'] = { name: ME.name, email: ME.email, initials: ME.initials, items: [{ label: 'Profile', icon: 'user' }, { label: 'Preferences', icon: 'settings' }, 'separator', { label: 'Sign out', icon: 'log-out', tone: 'critical' }] }
 
-function tesselNav(go: (id: string) => void) {
+function weftNav(go: (id: string) => void) {
   const item = (id: string, label: string, icon: IconName, count?: number) => ({ id, label, icon, count, onSelect: () => go(id) })
   return [
     { label: 'Workspace', items: [item('projects', 'Projects', 'layers'), item('deploys', 'Deploys', 'rocket', 2), item('activity', 'Activity', 'activity'), item('team', 'Team', 'users'), item('billing', 'Billing', 'folder')] },
@@ -693,13 +693,13 @@ const pageOf: Record<string, string> = { projects: 'Projects', deploys: 'Deploys
 
 export function ShellApp() {
   const page = state('projects')
-  const nav = tesselNav(id => (page.value = id))
+  const nav = weftNav(id => (page.value = id))
   return (
     <AppWindow height={600}>
       <Shell
         island
-        label="Tessel"
-        brand={{ name: 'Tessel', mark: <MARK /> }}
+        label="weft"
+        brand={{ name: 'weft', mark: <MARK /> }}
         title={pageOf[page.value]!}
         crumbs={[{ label: 'Acme', href: '#' }, { label: pageOf[page.value]! }]}
         nav={nav}
@@ -727,10 +727,10 @@ export function ShellApp() {
 export function ShellRail() {
   const page = state('deploys')
   const folded = state<boolean | 'hidden'>(true)
-  const nav = tesselNav(id => (page.value = id))
+  const nav = weftNav(id => (page.value = id))
   return (
     <AppWindow height={420}>
-      <Shell island label="Tessel" brand={{ name: 'Tessel', mark: <MARK /> }} crumbs={[{ label: pageOf[page.value]! }]} nav={nav} current={page.value} collapsed={folded} account={ACCOUNT}>
+      <Shell island label="weft" brand={{ name: 'weft', mark: <MARK /> }} crumbs={[{ label: pageOf[page.value]! }]} nav={nav} current={page.value} collapsed={folded} account={ACCOUNT}>
         <Heading level={1} role="heading">{pageOf[page.value]!}</Heading>
         <Text subtle>The rail keeps icons and short labels. Its toggle opens the full sidebar.</Text>
       </Shell>
@@ -740,10 +740,10 @@ export function ShellRail() {
 
 export function ShellPhone() {
   const page = state('projects')
-  const nav = tesselNav(id => (page.value = id))
+  const nav = weftNav(id => (page.value = id))
   return (
     <AppWindow height={560} wide={375}>
-      <Shell island label="Tessel" brand={{ name: 'Tessel', mark: <MARK /> }} title={pageOf[page.value]!} nav={nav} current={page.value} account={ACCOUNT}>
+      <Shell island label="weft" brand={{ name: 'weft', mark: <MARK /> }} title={pageOf[page.value]!} nav={nav} current={page.value} account={ACCOUNT}>
         <Heading level={1} role="heading">{pageOf[page.value]!}</Heading>
         <Stack divided gap="related">
           {PROJECTS.slice(0, 5).map(p => <Row key={p.id} justify="between" gap="tight"><Text>{p.name}</Text><Badge tone={TONE_OF[p.status]} dot>{p.status}</Badge></Row>)}
@@ -753,13 +753,13 @@ export function ShellPhone() {
   )
 }
 
-const ROOT_NAV = tesselNav(() => {})
+const ROOT_NAV = weftNav(() => {})
 
 export function ShellChildPage() {
   const left = state(false)
   return (
     <AppWindow height={420} wide={375}>
-      <Shell island label="Tessel" depth="child" title="storefront" back={{ label: 'Back to projects', onClick: () => (left.value = !left.value) }} brand={{ name: 'Tessel' }} nav={ROOT_NAV} current="projects">
+      <Shell island label="weft" depth="child" title="storefront" back={{ label: 'Back to projects', onClick: () => (left.value = !left.value) }} brand={{ name: 'weft' }} nav={ROOT_NAV} current="projects">
         <Heading level={1} role="heading">storefront</Heading>
         <Text subtle>{left.value ? 'Back pressed. A real app would route to the list here.' : 'On a phone, a child page swaps the brand for a back button.'}</Text>
       </Shell>
@@ -774,7 +774,7 @@ export function ShellFocus() {
     <AppWindow height={420}>
       <Shell island label="New project" variant="focus" title="New project" step={`Step ${step.value} of 3`} close={{ label: 'Close', onClick: () => (step.value = 1) }} dock={<Button onClick={next}>{step.value === 3 ? 'Create project' : 'Continue'}</Button>}>
         <Heading level={1} role="heading">{FOCUS_STEPS[step.value - 1]}</Heading>
-        <Input label="Repository" defaultValue="tessel/storefront" />
+        <Input label="Repository" defaultValue="weft/storefront" />
       </Shell>
     </AppWindow>
   )

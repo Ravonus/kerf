@@ -178,7 +178,7 @@ export const MeetingRoomPhone = () => (
   </div>
 )
 
-export const NotificationPreferencesTessel = () => (
+export const NotificationPreferencesWeft = () => (
   <NotificationPreferences groups={PREF_GROUPS} channels={CHANNELS} value={PREFS} offered={PREF_OFFERED} locked={PREF_LOCKED} defaults={{ value: PREFS }} onChange={() => pause(400)} onDigest={() => pause(400)} />
 )
 

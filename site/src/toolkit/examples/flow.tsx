@@ -14,7 +14,7 @@ const SSO = [...PROVIDERS, { id: 'saml', label: 'SAML', name: 'single sign-on' }
 
 // -- signing in --
 
-export function SignInTessel() {
+export function SignInWeft() {
   const pending = state(false)
   const who = state('')
   const submit = async (values: SignInValues) => {
@@ -27,30 +27,30 @@ export function SignInTessel() {
     <>
       {who.value
         ? <AuthDone heading="h3" title="You're in" lede={`Signed in as ${who.value}.`} delay={2400} onContinue={() => (who.value = '')} />
-        : <SignIn heading="h3" name="Tessel" title="Sign in to Tessel" lede="Any email and password work here." providers={PROVIDERS} pending={pending.value} onSubmit={v => void submit(v)} onProvider={() => wait(900)} onPasskey={() => wait(900)} onForgot={() => {}} onMagicLink={() => {}} onSignUp={() => {}} />}
+        : <SignIn heading="h3" name="weft" title="Sign in to weft" lede="Any email and password work here." providers={PROVIDERS} pending={pending.value} onSubmit={v => void submit(v)} onProvider={() => wait(900)} onPasskey={() => wait(900)} onForgot={() => {}} onMagicLink={() => {}} onSignUp={() => {}} />}
     </>
   )
 }
 
 export const SignInTile = () => (
   <Stack gap="related" style="inline-size:260px">
-    <Heading level={3}>Sign in to Tessel</Heading>
-    <Input label="Work email" placeholder="you@tessel.dev" />
+    <Heading level={3}>Sign in to weft</Heading>
+    <Input label="Work email" placeholder="you@weft.dev" />
     <Button full>Sign in</Button>
   </Stack>
 )
 
-export const SignInFailed = () => <SignIn heading="h3" title="Sign in to Tessel" error="That email and password don't match." onForgot={() => {}} />
+export const SignInFailed = () => <SignIn heading="h3" title="Sign in to weft" error="That email and password don't match." onForgot={() => {}} />
 
 export function AuthScreenSplit() {
   return (
-    <AuthScreen name="Tessel" quote="We moved forty services in a quarter and never missed a deploy." cite="Mara Lindqvist · Tessel">
+    <AuthScreen name="weft" quote="We moved forty services in a quarter and never missed a deploy." cite="Mara Lindqvist · weft">
       <SignIn heading="h3" title="Welcome back" lede="Sign in to your workspace." providers={PROVIDERS} onSubmit={() => void wait(900)} onForgot={() => {}} onSignUp={() => {}} />
     </AuthScreen>
   )
 }
 
-export function SignUpTessel() {
+export function SignUpWeft() {
   const pending = state(false)
   const made = state('')
   const submit = async (values: SignUpValues) => {
@@ -130,7 +130,7 @@ export function ResetPasswordSteps() {
   return (
     <>
       {stage.value === 'request' && <ResetPassword heading="h3" onSubmit={() => (stage.value = 'sent')} onBack={() => {}} />}
-      {stage.value === 'sent' && <MagicLinkSent heading="h3" title="Check your inbox" email="priya@tessel.dev" lede="Press Resend link to stand in for the email." onResend={() => (stage.value = 'password')} resendIn={0} onChangeEmail={() => (stage.value = 'request')} />}
+      {stage.value === 'sent' && <MagicLinkSent heading="h3" title="Check your inbox" email="priya@weft.dev" lede="Press Resend link to stand in for the email." onResend={() => (stage.value = 'password')} resendIn={0} onChangeEmail={() => (stage.value = 'request')} />}
       {stage.value === 'password' && <ResetPassword heading="h3" stage="password" onSubmit={() => (stage.value = 'done')} />}
       {stage.value === 'done' && <AuthDone heading="h3" title="Password changed" lede="Use the new one next time." delay={2400} onContinue={() => (stage.value = 'request')} />}
     </>
@@ -143,12 +143,12 @@ export function InviteAcceptWorkspace() {
     <>
       {answer.value
         ? <Stack gap="related" align="center"><Text>{answer.value}</Text><Button size="sm" emphasis="ghost" tone="neutral" onClick={() => (answer.value = '')}>Show it again</Button></Stack>
-        : <InviteAccept heading="h3" inviter="Mara Lindqvist" org="Tessel" role="Member" email="dara@tessel.dev" description="Members can deploy and edit projects." onAccept={() => (answer.value = 'Joined Tessel.')} onDecline={() => (answer.value = 'Invite declined.')} onOtherAccount={() => {}} />}
+        : <InviteAccept heading="h3" inviter="Mara Lindqvist" org="weft" role="Member" email="dara@weft.dev" description="Members can deploy and edit projects." onAccept={() => (answer.value = 'Joined weft.')} onDecline={() => (answer.value = 'Invite declined.')} onOtherAccount={() => {}} />}
     </>
   )
 }
 
-export const AuthDoneSignedIn = () => <AuthDone heading="h3" title="You're in" lede="Signed in as mara@tessel.dev." delay={3600000} />
+export const AuthDoneSignedIn = () => <AuthDone heading="h3" title="You're in" lede="Signed in as mara@weft.dev." delay={3600000} />
 
 export function ReauthDialogDelete() {
   const open = state(false)
@@ -341,14 +341,14 @@ export const SystemPageTile = () => (
   </Stack>
 )
 
-export const SystemPage404 = () => <SystemPage as="h3" kind="404" onSearch={() => {}} searchLabel="Search Tessel" primary={{ label: 'Go to dashboard' }} secondary={{ label: 'Report a broken link' }} meta="/projects/9921 · ref req_8f2a1c" />
+export const SystemPage404 = () => <SystemPage as="h3" kind="404" onSearch={() => {}} searchLabel="Search weft" primary={{ label: 'Go to dashboard' }} secondary={{ label: 'Report a broken link' }} meta="/projects/9921 · ref req_8f2a1c" />
 
-const ACCOUNTS = [{ id: 'mara', email: 'mara@tessel.dev', detail: 'Tessel · this workspace', current: true }, { id: 'side', email: 'mara@sample.dev', detail: 'Sample Co · has access', hasAccess: true }]
+const ACCOUNTS = [{ id: 'mara', email: 'mara@weft.dev', detail: 'weft · this workspace', current: true }, { id: 'side', email: 'mara@sample.dev', detail: 'Sample Co · has access', hasAccess: true }]
 const PROJECT = { title: PROJECTS[3]!.name, owner: PROJECTS[3]!.owner }
 
 export function SystemPage403() {
   const pending = state(false)
-  return <SystemPage as="h3" kind="403" autofocus={false} object={PROJECT} account="noor@tessel.dev" accounts={ACCOUNTS} onSwitch={() => {}} request={{ approvers: 'Mara and Jun', pending: pending.value, onSend: () => (pending.value = true), onWithdraw: () => (pending.value = false) }} requestId="req_7Q2K-91XF" />
+  return <SystemPage as="h3" kind="403" autofocus={false} object={PROJECT} account="noor@weft.dev" accounts={ACCOUNTS} onSwitch={() => {}} request={{ approvers: 'Mara and Jun', pending: pending.value, onSend: () => (pending.value = true), onWithdraw: () => (pending.value = false) }} requestId="req_7Q2K-91XF" />
 }
 
 export function SystemPage500() {
@@ -378,7 +378,7 @@ export function ConnBannerNewVersion() {
   const stale = state(true)
   return (
     <Stack gap="related">
-      <ConnBanner stale={stale.value} name="Tessel" onReload={() => (stale.value = false)} onLater={() => (stale.value = false)} />
+      <ConnBanner stale={stale.value} name="weft" onReload={() => (stale.value = false)} onLater={() => (stale.value = false)} />
       <Text subtle>{stale.value ? 'A new build went out while this tab was open.' : 'Dismissed.'}</Text>
     </Stack>
   )

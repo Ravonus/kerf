@@ -105,12 +105,12 @@ export function ModalInvite() {
     <Stack gap="related" align="center">
       <Button icon="user" onClick={() => (open.value = true)}>Invite a teammate</Button>
       <Text subtle>{sent.value}</Text>
-      <Modal open={open} size="sm" title="Invite a teammate" description="They get an email with a link to join Tessel." footer={<>
+      <Modal open={open} size="sm" title="Invite a teammate" description="They get an email with a link to join weft." footer={<>
         <Button emphasis="ghost" tone="neutral" data-close="">Cancel</Button>
         <Button disabled={!email.value.includes('@')} onClick={send}>Send invite</Button>
       </>}>
         <Stack gap="group">
-          <Input label="Work email" type="email" placeholder="noor@tessel.dev" autofocus value={email.value} onInput={(e: Event) => (email.value = (e.target as HTMLInputElement).value)} />
+          <Input label="Work email" type="email" placeholder="noor@weft.dev" autofocus value={email.value} onInput={(e: Event) => (email.value = (e.target as HTMLInputElement).value)} />
           <Select label="Role" value={role} options={ROLES} />
         </Stack>
       </Modal>
@@ -279,7 +279,7 @@ export function PopoverFilter() {
 
 export const PopoverShare = () => (
   <Popover label="Share" trigger={{ icon: 'link' }} title="Share this preview" description="Anyone with the link can look. It stops working when the branch is deleted.">
-    <Snippet prompt="" code="https://ranking-v2.search-api.tessel.app" />
+    <Snippet prompt="" code="https://ranking-v2.search-api.weft.app" />
   </Popover>
 )
 

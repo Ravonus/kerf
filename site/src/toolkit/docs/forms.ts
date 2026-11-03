@@ -334,7 +334,7 @@ export const forms: DocGroup = {
           { prop: 'hint', control: 'text', label: 'Hint', initial: 'You can add your own later.', default: '' },
           { prop: 'error', control: 'text', label: 'Error', initial: '', default: '' },
           { prop: 'prefix', control: 'text', label: 'Prefix', initial: 'https://', default: '' },
-          { prop: 'suffix', control: 'text', label: 'Suffix', initial: '.tessel.dev', default: '' },
+          { prop: 'suffix', control: 'text', label: 'Suffix', initial: '.weft.dev', default: '' },
           { prop: 'variant', control: 'segmented', options: variants, initial: 'floating', default: 'floating' },
         ],
       },

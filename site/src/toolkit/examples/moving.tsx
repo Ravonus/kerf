@@ -75,7 +75,7 @@ export function TabsDisabled() {
   const tab = state('general')
   return (
     <Tabs label="Settings" value={tab.value} onChange={v => (tab.value = v)} options={PLANNED}>
-      {v => <Text>{v === 'general' ? 'Name, region and owner.' : 'storefront.tessel.app and two more.'}</Text>}
+      {v => <Text>{v === 'general' ? 'Name, region and owner.' : 'storefront.weft.app and two more.'}</Text>}
     </Tabs>
   )
 }
@@ -144,7 +144,7 @@ export function TabsProjectPage() {
 
 const QUESTIONS = [
   { value: 'rollback', title: 'How do I roll back a deploy?', content: 'Open the deploy you want and press Promote. Traffic moves over in about ten seconds.' },
-  { value: 'domains', title: 'Can I bring my own domain?', content: 'Yes. Add it under Settings, then point a CNAME at tessel.app.' },
+  { value: 'domains', title: 'Can I bring my own domain?', content: 'Yes. Add it under Settings, then point a CNAME at weft.app.' },
   { value: 'bill', title: 'What counts towards my bill?', content: 'Requests and build minutes. Preview deploys are free.' },
 ]
 
@@ -220,7 +220,7 @@ export function NavProductHeader() {
   return (
     <Row justify="between" gap="section">
       <Row gap="section">
-        <Heading level={3}>Tessel</Heading>
+        <Heading level={3}>weft</Heading>
         <Nav label="Main">
           {PAGES.map(name => <a key={name} href={`#${name}`} aria-current={at.value === name ? 'page' : undefined} onClick={e => go(e, name)}>{name}</a>)}
         </Nav>

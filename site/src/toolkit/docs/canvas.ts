@@ -5,7 +5,7 @@ const fill = (id: string, title: string, height: number, note?: string): Example
 export const canvas: DocGroup = {
   file: 'canvas',
   title: 'Canvas and dithering',
-  intro: "Drawings that use warp's colours, follow the theme and pause off screen.",
+  intro: "Drawings that use warp's colours, follow the theme and pause off screen, up to whole pages painted on one canvas.",
   docs: [
     {
       component: 'Canvas',
@@ -41,7 +41,110 @@ export const canvas: DocGroup = {
       ],
       a11yNotes: ['With `label` it is an image with that name. Without one it is decorative and hidden from screen readers.', 'Canvas has a size of zero until its container has one, so set a height.'],
       propDocs: { draw: 'Paints one frame. Read colours from warp\'s tokens so the theme applies.', onTheme: 'Called when the theme changes. Refresh any colours you keep here.' },
-      related: ['DitherField', 'Dither'],
+      related: ['CanvasStage', 'DitherField', 'Dither'],
+    },
+    {
+      component: 'CanvasStage',
+      hero: 'StageLanding',
+      summary: 'Paints the page laid out inside it on one canvas, in any look: cards, buttons, fields, modals, type and scroll.',
+      use: {
+        when: ['A page or section should be drawn on canvas but still behave like HTML', 'Controls in a look CSS can\'t draw: pencil, glow, pixels, dithering'],
+        instead: [{ name: 'Canvas', why: 'it is a drawing, not a page' }, { name: 'DitherStage', why: 'you want the dithered look, ready made' }],
+      },
+      sections: [
+        { kind: 'variants', title: 'Looks', intro: 'The same markup under three sets of painters. A look is only painters, a background and an overlay.', examples: [
+          fill('CanvasStageFlat', 'Flat', 420, 'Clean vector: rounded shapes, soft shadows, a gradient on the type and dots that scroll with the page.'),
+          fill('CanvasStageSketch', 'Sketch', 420, 'Pencil on ruled paper: wobbly outlines seeded per element so they hold still, and hatched fills.'),
+          fill('CanvasStageNeon', 'Neon', 420, 'Glowing strokes over a floor grid that rolls with time and scroll. `animate` keeps the background moving.'),
+        ] },
+        { kind: 'composition', title: 'A whole page', intro: 'A landing page where everything you see is painted, in four looks over the same HTML. Scroll it, press things, tab through it, open the modal, and narrow the frame to watch it stack.', examples: [
+          fill('StageLanding', 'Landing page', 790, 'The page, its sticky header and its modal are three stages. Dither is `DitherStage`; the other looks are `CanvasStage` with painters from this file.'),
+        ] },
+        { kind: 'composition', title: 'From scratch', examples: [
+          fill('CanvasStagePlain', 'Two painters', 260, 'A painter gets the piece (its box, corner radius, hover, press, focus, checked, value) and the scene, whose `ctx` is a plain 2D context in CSS pixels.'),
+        ] },
+        { kind: 'prose', title: 'How a stage works', md: 'The DOM lays the page out and keeps everything it is good at: wrapping, grids that stack on a phone, focus, typing, selection, forms and the accessibility tree. Each element marked `data-skin` gives up its paint, and the stage hands it to the painter of that name every frame something moves, under the element\'s own text.\n\nThe skins the looks here share are `button` (`data-look="outline"`), `card` (a link or button card can be chosen with `aria-pressed`), `panel` and `bar` for windows, `field`, `menu` and `option` for a StageSelect\'s list, `check` (checkboxes and radios), `switch`, `range`, `meter`, `chip`, `rule`, `type`, `art` and `clear`. Any other name works too: give it a painter.\n\nThe scene carries what a look needs beyond the pieces: `scroll` to move a background with the page, `presses` to answer a click where it landed, `rail` for a drawn scrollbar you can drag, `shown` for an entrance such as a modal\'s veil, `color()` to read warp\'s tokens, and `words()` to paint an element\'s text where the DOM set it. `layout="scroll"` makes the stage a scroller and paints its view; `layout="page"` paints the viewport, for a whole site. A stage inside another, such as a sticky header\'s or a dialog\'s, paints over it.' },
+        { kind: 'prose', title: 'Styling', md: 'Skins need no styles of their own. The stage\'s CSS gives each one its padding, corners and size at zero specificity, from properties you can set on any element above it, so a page starts styled and any class of yours wins.\n\n- Colours: `--stage-ink`, `--stage-paper`, `--stage-accent`, `--stage-soft`, and `--stage-on-fill` for text on a filled button or chip. Unset, they follow warp\'s tokens, so light and dark come free.\n- Corners: `--stage-radius` for controls, `--stage-radius-surface` for cards, panels and art.\n- Padding: `--stage-pad-button`, `--stage-pad-field`, `--stage-pad-menu`, `--stage-pad-option`, `--stage-pad-chip`, `--stage-pad-card`, `--stage-pad-bar`, `--stage-pad-clear`, and `--stage-gap`, `--stage-gap-card` inside them.\n- Sizes: `--stage-check-size`, `--stage-switch-inline`, `--stage-switch-block`, `--stage-range-block`, `--stage-meter-block`, `--stage-rule-block`, `--stage-art-ratio`.\n- Type: `--stage-type-font`, `--stage-type-weight` and `--stage-type-spacing`, which each stage resolves to `--stage-type-face`, `-heft` and `-track` for a heading under your own `h1` rule to name. The dither look defaults to a sans, which holds up a cell at a time. `--stage-label-size` for `data-part="label"`, the label over a field. `data-part="option"` sets a check or switch beside its words.\n\nA look reads the colour properties too, so one set of values restyles every look on the page. A panel in a veiled stage rises in as its dialog opens, and the paint follows it.' },
+      ],
+      a11yNotes: [
+        'Every control is real HTML, so keyboard, screen readers, autofill and form validation work as they do anywhere. Draw focus in your painters: `piece.focus` follows `:focus-visible`.',
+        'Before the stage paints, and under forced colours, skins keep plain borders and the canvas is hidden.',
+        '`type` keeps its words in the page, selectable and read aloud, while the look paints them.',
+        'Set `--stage-on-fill` to the text colour for filled buttons and chips in your look, and check its contrast.',
+      ],
+      propDocs: {
+        layout: '`box` paints its own block, `scroll` is a scroller and paints its view, `page` paints the viewport.',
+        painters: 'Painters by skin name. Each gets the piece and the scene.',
+        background: 'Paints under the pieces, on a cleared canvas.',
+        overlay: 'Paints over the pieces: presses, the rail, anything on top.',
+        paint: 'Replaces the whole frame, for a look that paints its own way, as the dither look does.',
+        animate: 'Paint every frame while motion is on, for a moving background. Pieces animate without it.',
+        rail: 'Scroll when the rail is dragged. The look paints it from `scene.rail`.',
+        veil: 'A modal\'s stage: its dialog spans the viewport, and the stage centres its panel.',
+      },
+      related: ['DitherStage', 'StageSelect', 'Canvas'],
+    },
+    {
+      component: 'StageSelect',
+      hero: 'StageSelectDither',
+      summary: 'A select a stage draws, list and all, in whatever look the stage around it has.',
+      use: {
+        when: ['A select on a CanvasStage or DitherStage, where the native list would break the look'],
+        instead: [{ name: 'Select', why: 'the page isn\'t on a stage' }],
+      },
+      sections: [
+        { kind: 'variants', title: 'Looks', intro: 'The same markup on three stages. The list floats in the top layer as a stage of its own and paints with the look it opened from, so nothing clips it and nothing under it shows through.', examples: [
+          fill('StageSelectFlat', 'Flat', 300, 'Painted by the `menu` and `option` painters in this file\'s flat look.'),
+          fill('StageSelectSketch', 'Sketch', 300, 'Its paper is solid, so the page under it stays hidden.'),
+        ] },
+        { kind: 'prose', title: 'Styling', md: 'The trigger is a `field` skin and gets a chevron that turns over while the list is open. The list is a `menu` skin and its rows are `option` skins: `piece.hover` is the row under the pointer or the keys, and `piece.on` the chosen one. Size them with `--stage-pad-menu`, `--stage-pad-option` and `--stage-menu-block`, the list\'s greatest height.' },
+      ],
+      a11yNotes: [
+        'An APG select-only combobox: focus stays on the trigger, `aria-activedescendant` names the active row, and arrows, Home, End, Page keys and typeahead move through it. Enter, Space or Tab picks; Escape closes.',
+        'Wrap it in a `<label>` to name it. `name` puts the value in a form through a hidden input.',
+      ],
+      propDocs: {
+        options: 'Strings, or `{ value, label, disabled }`.',
+        value: 'The value it starts on. The first option when left out.',
+        name: 'Puts the value in a form, through a hidden input.',
+        onChange: 'Hears each value picked.',
+      },
+      related: ['CanvasStage', 'DitherStage', 'Select'],
+    },
+    {
+      component: 'DitherStage',
+      hero: 'StageSkins',
+      summary: 'A CanvasStage in the dithered look: every skin drawn in whole cells of the theme\'s inks.',
+      use: {
+        when: ['A page or section in the dithered look, ready made'],
+        instead: [{ name: 'CanvasStage', why: 'you want another look, or your own' }, { name: 'DitherField', why: 'only the background should move' }],
+      },
+      sections: [
+        { kind: 'variants', title: 'Variants', examples: [
+          fill('StageSkins', 'The skins', 420, 'Hover, press, focus, checked and disabled come from the element itself. Pieces dissolve in the first time they scroll into view.'),
+        ] },
+        { kind: 'composition', title: 'Hybrid and your own', intro: 'Anything without a skin paints itself over the stage, so warp components and canvas pieces share a page.', examples: [
+          fill('StageHybrid', 'Warp components on a stage', 420, 'The card on the left is warp\'s; the one on the right is drawn in cells, with dithered type and a live `art` field.'),
+          fill('StageOwnSkin', 'A skin of your own', 260, '`painters` maps a skin to a function that draws its piece with the brush, in tones that the stage dithers. This battery reads a `<meter>`.'),
+          fill('StageModal', 'A modal', 200, 'A native `<dialog>` with its own stage: `veil` dithers over the page, and the panel rises in each time it opens.'),
+        ] },
+      ],
+      a11yNotes: [
+        'Everything CanvasStage promises holds: real controls, plain borders before it paints and under forced colours.',
+        'Reduced motion holds the field still and drops the dissolves and rings; every state still shows.',
+      ],
+      propDocs: {
+        layout: '`box` paints its own block, `scroll` is a scroller and paints its view, `page` paints the viewport.',
+        ground: 'How strong the field under the pieces is, 0 to 1. 0 leaves only the pieces.',
+        drift: 'How far the field travels for each pixel scrolled: parallax.',
+        rail: 'A dithered scroll rail on the right, in place of the native bar. Drag it to scroll.',
+        veil: 'A dithered scrim over everything under the pieces, this dense: for a modal.',
+        painters: 'Your own skins, drawn with the brush in tones 0 to 1 that the stage turns into inks.',
+        ripple: 'The inks a press rings out in, or `false` for none.',
+        ramp: 'The field\'s inks, and the ramp of pieces that name none.',
+        cell: 'CSS pixels per cell. Default 3.',
+      },
+      related: ['CanvasStage', 'DitherField'],
     },
     {
       component: 'DitherField',
@@ -115,7 +218,7 @@ export const canvas: DocGroup = {
         example: 'DitherGlyphPlay',
         code: '<DitherGlyph{props} />',
         knobs: [
-          { prop: 'text', control: 'text', initial: 'Tessel', default: '' },
+          { prop: 'text', control: 'text', initial: 'weft', default: '' },
           { prop: 'kind', control: 'select', options: ['weave', 'flow', 'rings', 'aurora', 'drift'], initial: 'flow', default: 'flow' },
           { prop: 'ramp', control: 'select', options: ['accent', 'neutral', 'positive', 'info', 'highlight'], initial: 'accent', default: 'accent' },
           { prop: 'cell', control: 'slider', min: 2, max: 8, step: 1, initial: 4, default: 4 },

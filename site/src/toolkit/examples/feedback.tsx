@@ -134,8 +134,8 @@ export function AlertFormError() {
   const save = (e: Event) => { e.preventDefault(); failed.value = !domain.value.includes('.') }
   return (
     <Stack as="form" gap="group" onSubmit={save}>
-      {failed.value && <Alert live tone="critical" title="That domain won't work">Use a full domain, like shop.tessel.dev.</Alert>}
-      <Input label="Domain" placeholder="shop.tessel.dev" value={domain.value} onInput={(e: Event) => (domain.value = (e.target as HTMLInputElement).value)} />
+      {failed.value && <Alert live tone="critical" title="That domain won't work">Use a full domain, like shop.weft.dev.</Alert>}
+      <Input label="Domain" placeholder="shop.weft.dev" value={domain.value} onInput={(e: Event) => (domain.value = (e.target as HTMLInputElement).value)} />
       <Row justify="end"><Button type="submit">Add domain</Button></Row>
     </Stack>
   )

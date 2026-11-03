@@ -275,7 +275,7 @@ export function ShareDialogRunbook() {
         <PresenceStack peers={members.value} />
         <Button icon="share" onClick={() => (open.value = true)}>Share</Button>
       </Stack>
-      <ShareDialog open={open} title="Rollback runbook" members={members} people={SHARE_PEOPLE} link={link} url="https://tessel.dev/d/rollback-runbook" onInvite={invite} onRoleChange={change} onLinkAccess={v => (link.value = v)} />
+      <ShareDialog open={open} title="Rollback runbook" members={members} people={SHARE_PEOPLE} link={link} url="https://weft.dev/d/rollback-runbook" onInvite={invite} onRoleChange={change} onLinkAccess={v => (link.value = v)} />
       <Toaster />
     </>
   )

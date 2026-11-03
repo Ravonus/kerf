@@ -24,7 +24,7 @@ export function SettingsLayoutProject() {
   const archive = state(false)
   return (
     <SettingsLayout sections={SECTIONS} current={section.value} onNavigate={id => (section.value = id)}>
-      <SettingsSection id="general" title="General" description="How storefront appears across Tessel.">
+      <SettingsSection id="general" title="General" description="How storefront appears across weft.">
         <SettingRow layout="stack"><Input label="Project name" defaultValue="storefront" /></SettingRow>
         <SettingRow title="Region" description="Where its builds and logs live."><Select label="Region" options={REGIONS} defaultValue="eu-west" /></SettingRow>
       </SettingsSection>
@@ -233,8 +233,8 @@ export function InviteDialogTeam() {
 }
 
 export function TagsInputEmails() {
-  const emails = state(['dara@tessel.dev', 'kai@tessel'])
-  return <TagsInput label="Email addresses" hint="Press Enter or comma after each one." value={emails} valid={tag => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag)} error={emails.value.some(e => !e.includes('.')) ? 'kai@tessel is not a full address.' : undefined} />
+  const emails = state(['dara@weft.dev', 'kai@weft'])
+  return <TagsInput label="Email addresses" hint="Press Enter or comma after each one." value={emails} valid={tag => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag)} error={emails.value.some(e => !e.includes('.')) ? 'kai@weft is not a full address.' : undefined} />
 }
 
 export function TagsInputLabels() {
@@ -367,7 +367,7 @@ export function IntegrationsGridWorkspace() {
   const connect = async (item: Integration) => {
     mark(item.id, { state: 'pending' })
     await wait(1200)
-    mark(item.id, { state: 'connected', detail: 'tessel-dev', failure: undefined })
+    mark(item.id, { state: 'connected', detail: 'weft-dev', failure: undefined })
   }
   return (
     <>
@@ -463,7 +463,7 @@ export function CheckoutShop() {
   }
   return (
     <>
-      <Checkout cart={cart} shipping={SHOP_SHIPPING} countries={['US', 'GB', 'DE']} taxRate={0.08} coupon={code => (code === 'TESSEL10' ? { code, percentOff: 10 } : undefined)} payment={<PAYMENT_FRAME />} onPlaceOrder={place} onContinueShopping={() => (cart.value = SHOP_CART)} />
+      <Checkout cart={cart} shipping={SHOP_SHIPPING} countries={['US', 'GB', 'DE']} taxRate={0.08} coupon={code => (code === 'WEFT10' ? { code, percentOff: 10 } : undefined)} payment={<PAYMENT_FRAME />} onPlaceOrder={place} onContinueShopping={() => (cart.value = SHOP_CART)} />
       <Toaster />
     </>
   )

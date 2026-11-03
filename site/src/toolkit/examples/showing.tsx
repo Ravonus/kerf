@@ -378,7 +378,7 @@ export const TextDeployNote = () => (
 
 export const CodePlay = (p: { children: string }) => <Text>Run <Code>{p.children}</Code> to start.</Text>
 
-export const CodeInSentence = () => <Text>Set <Code>TESSEL_TOKEN</Code> before you run <Code>tessel deploy</Code>.</Text>
+export const CodeInSentence = () => <Text>Set <Code>WEFT_TOKEN</Code> before you run <Code>weft deploy</Code>.</Text>
 
 export const CodeNames = () => (
   <>
@@ -394,7 +394,7 @@ export const CodeOnACard = () => (
   </Card>
 )
 
-const CONFIG = `import { defineProject } from 'tessel'
+const CONFIG = `import { defineProject } from 'weft'
 
 export default defineProject({
   name: 'storefront',
@@ -406,19 +406,19 @@ export const CodeBlockPlay = (p: { filename: string; lines: boolean; wrap: boole
 
 export const CodeBlockBasic = () => <CodeBlock code={CONFIG} language="ts" />
 
-export const CodeBlockFilename = () => <CodeBlock code={CONFIG} language="ts" filename="tessel.config.ts" />
+export const CodeBlockFilename = () => <CodeBlock code={CONFIG} language="ts" filename="weft.config.ts" />
 
 export const CodeBlockLines = () => <CodeBlock code={CONFIG} language="ts" lines />
 
-export const CodeBlockWrap = () => <CodeBlock wrap language="sh" code="tessel deploy --project storefront --region eu-west --region us-east --message 'Cache product images at the edge' --wait" />
+export const CodeBlockWrap = () => <CodeBlock wrap language="sh" code="weft deploy --project storefront --region eu-west --region us-east --message 'Cache product images at the edge' --wait" />
 
 const SAMPLE = JSON.stringify(DEPLOYS[0], null, 2)
 
 export const CodeBlockJson = () => <CodeBlock language="json" filename="deploy.json" code={SAMPLE} />
 
 const STACKS = {
-  ts: `const res = await tessel.deploy({ project: 'storefront' })\nconsole.log(res.url)`,
-  sh: `tessel deploy --project storefront`,
+  ts: `const res = await weft.deploy({ project: 'storefront' })\nconsole.log(res.url)`,
+  sh: `weft deploy --project storefront`,
   json: `{ "project": "storefront" }`,
 }
 const WAYS = [{ value: 'ts', label: 'SDK' }, { value: 'sh', label: 'CLI' }, { value: 'json', label: 'API' }]
@@ -437,21 +437,21 @@ export function CodeBlockChooser() {
 
 export const SnippetPlay = (p: { code: string; prompt: string }) => <Stack><Snippet code={p.code} prompt={p.prompt} /></Stack>
 
-export const SnippetInstall = () => <Snippet code="npm install -g tessel" />
+export const SnippetInstall = () => <Snippet code="npm install -g weft" />
 
 export const SnippetPrompts = () => (
   <Stack gap="related">
-    <Snippet code="tessel deploy" />
-    <Snippet prompt="#" code="systemctl restart tessel-agent" />
-    <Snippet prompt="" code="https://storefront.tessel.app" />
+    <Snippet code="weft deploy" />
+    <Snippet prompt="#" code="systemctl restart weft-agent" />
+    <Snippet prompt="" code="https://storefront.weft.app" />
   </Stack>
 )
 
 export const SnippetGetStarted = () => (
   <Stack gap="group">
-    <Stack gap="tight"><Text role="label">1. Install the CLI</Text><Snippet code="npm install -g tessel" /></Stack>
-    <Stack gap="tight"><Text role="label">2. Sign in</Text><Snippet code="tessel login" /></Stack>
-    <Stack gap="tight"><Text role="label">3. Ship it</Text><Snippet code="tessel deploy" /></Stack>
+    <Stack gap="tight"><Text role="label">1. Install the CLI</Text><Snippet code="npm install -g weft" /></Stack>
+    <Stack gap="tight"><Text role="label">2. Sign in</Text><Snippet code="weft login" /></Stack>
+    <Stack gap="tight"><Text role="label">3. Ship it</Text><Snippet code="weft deploy" /></Stack>
   </Stack>
 )
 

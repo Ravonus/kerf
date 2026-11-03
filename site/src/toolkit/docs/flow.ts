@@ -23,7 +23,7 @@ export const flow: DocGroup = {
       tile: 'SignInTile',
       use: { when: ['The screen where people come back'], instead: [{ name: 'SignUp', why: 'they are new' }, { name: 'ReauthDialog', why: 'they are already in and doing something sensitive' }] },
       sections: [
-        { kind: 'composition', title: 'In context', examples: [{ id: 'SignInTessel', title: 'Signing in to Tessel', note: 'Nothing is sent: `onSubmit` is a stub. Sample values only, never a real password.', stage: 'narrow', height: 600 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'SignInWeft', title: 'Signing in to weft', note: 'Nothing is sent: `onSubmit` is a stub. Sample values only, never a real password.', stage: 'narrow', height: 600 }] },
         { kind: 'states', title: 'States', examples: [{ id: 'SignInFailed', title: 'Wrong details', note: 'A wrong password and an unknown email read the same.', stage: 'narrow', height: 420 }] },
       ],
       propDocs: { ...FORM_PROPS, title: 'The heading.', lede: 'One line under it.', logo: 'Your logo.', name: 'Your product\'s name, beside the logo.', submitLabel: 'The main button\'s words.', providers: 'Single sign-on providers.', onProvider: 'Called with the provider\'s id.', onForgot: 'Shows Forgot password.', onSignUp: 'Shows the link to sign up.', onInvite: 'Shows the link for people with an invite.', remember: 'Shows the "Keep me signed in" switch.' },
@@ -42,7 +42,7 @@ export const flow: DocGroup = {
       component: 'SignUp',
       summary: 'Creates an account: name, email, a checked password and the terms.',
       tile: 'SignUpTile',
-      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'SignUpTessel', title: 'A new workspace', note: 'Use sample values. `onSubmit` is a stub.', stage: 'narrow', height: 640 }] }],
+      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'SignUpWeft', title: 'A new workspace', note: 'Use sample values. `onSubmit` is a stub.', stage: 'narrow', height: 640 }] }],
       propDocs: { ...FORM_PROPS, title: 'The heading.', lede: 'One line under it.', submitLabel: 'The main button\'s words.', terms: 'The terms checkbox\'s words, links included.', providers: 'Single sign-on providers.', onProvider: 'Called with the provider\'s id.', onSignIn: 'Shows the link to sign in.' },
       related: ['SignIn', 'PasswordMeter', 'AuthDone'],
     },

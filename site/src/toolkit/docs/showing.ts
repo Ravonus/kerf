@@ -270,7 +270,7 @@ export const showing: DocGroup = {
         example: 'CodePlay',
         code: '<Code>{children}</Code>',
         stage: 'narrow',
-        knobs: [{ prop: 'children', control: 'text', label: 'Code', initial: 'tessel deploy', default: '' }],
+        knobs: [{ prop: 'children', control: 'text', label: 'Code', initial: 'weft deploy', default: '' }],
       },
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
@@ -291,7 +291,7 @@ export const showing: DocGroup = {
         stage: 'fill',
         height: 300,
         knobs: [
-          { prop: 'filename', control: 'text', initial: 'tessel.config.ts', default: '' },
+          { prop: 'filename', control: 'text', initial: 'weft.config.ts', default: '' },
           { prop: 'language', control: 'select', options: ['tsx', 'ts', 'js', 'json', 'sh'], initial: 'ts', default: 'tsx' },
           { prop: 'lines', control: 'switch', initial: true, default: false },
           { prop: 'wrap', control: 'switch', initial: false, default: false },
@@ -320,7 +320,7 @@ export const showing: DocGroup = {
         code: '<Snippet{props} />',
         stage: 'narrow',
         knobs: [
-          { prop: 'code', control: 'text', initial: 'npm install -g tessel', default: '' },
+          { prop: 'code', control: 'text', initial: 'npm install -g weft', default: '' },
           { prop: 'prompt', control: 'text', initial: '$', default: '$' },
         ],
       },

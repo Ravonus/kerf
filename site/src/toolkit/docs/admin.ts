@@ -23,7 +23,7 @@ export const admin: DocGroup = {
       summary: 'Everyone in a workspace, with roles, bulk removal and pending invites.',
       tile: 'MembersTableTile',
       sections: [
-        { kind: 'composition', title: 'In context', examples: [{ id: 'MembersTableTeam', title: 'The Tessel team', note: 'Role changes apply at once with Undo. The last owner cannot be demoted, and the select says why.', stage: 'fill', height: 620 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'MembersTableTeam', title: 'The weft team', note: 'Role changes apply at once with Undo. The last owner cannot be demoted, and the select says why.', stage: 'fill', height: 620 }] },
       ],
       propDocs: { me: 'The signed-in member, who gets a warning before demoting themselves.', roles: 'The roles to offer.', owner: 'The value of the role that must always have someone in it.', seats: 'Seats on the plan. Pending invites use one each.', onRemove: 'Called with the members to remove, after people confirm.', onRestore: 'Undo for a removal.', onInvite: 'Called with the emails and role from the invite dialog.', onRevoke: 'Takes back a pending invite.' },
       related: ['InviteDialog', 'SeatsMeter', 'RolesMatrix'],
@@ -44,7 +44,7 @@ export const admin: DocGroup = {
       tileWidth: 380,
       tile: 'CheckoutTile',
       sections: [
-        { kind: 'composition', title: 'In context', examples: [{ id: 'CheckoutShop', title: 'The Tessel shop', note: 'Nothing is charged. Try the code `TESSEL10`. Going back keeps what you typed.', stage: 'fill', height: 460 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'CheckoutShop', title: 'The weft shop', note: 'Nothing is charged. Try the code `WEFT10`. Going back keeps what you typed.', stage: 'fill', height: 460 }] },
       ],
       propDocs: { cart: 'The lines, as a state, so quantity changes flow through the totals.', shipping: 'The delivery choices.', countries: 'Country codes for the address form.', defaultCountry: 'The country selected at the start.', addressProvider: 'Address lookup, if you have one.', taxRate: 'A flat rate, such as `0.08`.', payment: 'The payment step\'s body, usually a `PayFrame`.', wallet: 'A saved wallet\'s button above the card form.', coupon: 'Checks a code. Resolve undefined when it is not valid.', idempotencyKey: 'Your key for this attempt, sent again on a retry.', onPlaceOrder: 'Places the order. Return the order, or a typed error that sends people to the right step.', onStepChange: 'Called on every step change.', onContinueShopping: 'The button on the final step.', signInHref: 'Shows a sign-in link at the start.' },
       related: ['CartDrawer', 'PayFrame', 'OrderConfirmation'],
@@ -235,7 +235,7 @@ export const admin: DocGroup = {
     {
       component: 'CartDrawer',
       summary: 'The cart in a side sheet, with quantities, the subtotal and Checkout.',
-      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'CartDrawerShop', title: 'The Tessel shop', note: 'Taking the last one away removes the line and offers Undo.' }] }],
+      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'CartDrawerShop', title: 'The weft shop', note: 'Taking the last one away removes the line and offers Undo.' }] }],
       propDocs: { open: 'Whether it shows. You own this state.', cart: 'The lines, as a state.', currency: 'A currency code.', locale: 'The locale for the amounts.', onCheckout: 'Called after the drawer closes.' },
       related: ['CartButton', 'LineItem', 'Checkout'],
     },

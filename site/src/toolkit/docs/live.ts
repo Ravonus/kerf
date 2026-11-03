@@ -69,7 +69,7 @@ export const live: DocGroup = {
     {
       component: 'NotificationPreferences',
       summary: 'A grid of what to be told about, and how.',
-      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'NotificationPreferencesTessel', title: 'Tessel notifications', note: 'Each change saves on its own. Security alerts must go to email, so that box is locked.', stage: 'fill', height: 680 }] }],
+      sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'NotificationPreferencesWeft', title: 'weft notifications', note: 'Each change saves on its own. Security alerts must go to email, so that box is locked.', stage: 'fill', height: 680 }] }],
       keyboard: [['Arrow keys', 'Move between cells'], ['Space', 'Toggles a cell']],
       a11yNotes: ['It is one grid with one tab stop. A channel an event cannot use still takes focus and says so.', 'Below 560px the same rows restack.'],
       propDocs: { groups: 'The events, grouped.', channels: 'The columns.', value: 'What is on: event, then channel.', offered: 'Which channels an event can use. Unlisted events can use all.', locked: 'Which channels an event must use.', lockReason: 'Why a box is locked.', onChange: 'A rejected promise flips the cells back and says why.', digest: 'How often the digest channel sends.', digestChannel: 'The channel the digest applies to.', defaults: 'Enables Reset to defaults.' },

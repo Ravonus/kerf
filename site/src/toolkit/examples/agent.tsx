@@ -192,7 +192,7 @@ export const CiteInline = () => (
 
 export const SourcesDeploy = () => <Sources items={DEPLOY_SOURCES} base="deploy" />
 
-const REPORT = 'Three failed checks held the deploy back [1].\n\n- `d-4801` is still live.\n- Lower `attempts` to 2 and redeploy.\n\n```Shell\ntessel deploy mobile-bff --branch main\n```\n'
+const REPORT = 'Three failed checks held the deploy back [1].\n\n- `d-4801` is still live.\n- Lower `attempts` to 2 and redeploy.\n\n```Shell\nweft deploy mobile-bff --branch main\n```\n'
 
 export const ProseAnswer = () => (
   <div data-scope="assistant">
@@ -345,7 +345,7 @@ export const TraceViewerRun = () => <TraceViewer spans={TRACE} label="Last answe
 
 export const ArtifactPanelConfig = () => (
   <div style="block-size:280px">
-    <ArtifactPanel title="tessel.yaml" versions={CONFIG_VERSIONS}>
+    <ArtifactPanel title="weft.yaml" versions={CONFIG_VERSIONS}>
       <Stack gap="related">
         <Row gap="related"><Text role="label">mobile-bff</Text><Badge tone="info">ap-south</Badge></Row>
         <Text subtle>Two attempts, three seconds each. A slow upstream now fails in six seconds, not fifteen.</Text>
