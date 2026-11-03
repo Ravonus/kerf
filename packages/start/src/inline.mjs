@@ -198,11 +198,37 @@ function criticalCss(sheets, found, { parse, purge }) {
   return css
 }
 
+/** A stylesheet's short id. The browser runs this same function (`LATE_SHEETS`), so both sides agree. */
+export function sheetId(href) {
+  var x = 2166136261
+  for (var i = 0; i < href.length; i++) x = Math.imul(x ^ href.charCodeAt(i), 16777619)
+  return (x >>> 0).toString(36)
+}
+
+/**
+ * Browser: lists the stylesheets it now has, by `sheetId`, in the `weft-css` cookie (the latest 32). A page whose sheets
+ * are all there is sent links, not rules to paint with first (`pageStyles`). Sent as its source, so it reads nothing else.
+ */
+function keepSheets(id) {
+  var c = document.cookie.match(/(?:^|; )weft-css=([^;]*)/), s = c ? c[1].split('.') : []
+  document.querySelectorAll('link[rel=stylesheet]').forEach(function (l) {
+    var x = l.sheet && id(l.getAttribute('href'))
+    if (x && s.indexOf(x) < 0) s.push(x)
+  })
+  document.cookie = 'weft-css=' + s.slice(-32).join('.') + ';path=/;max-age=31536000;samesite=lax'
+}
+
+/** The sheet ids the request's `weft-css` cookie lists. */
+export function keptSheets(cookie) {
+  const m = cookie && /(?:^|;\s*)weft-css=([^;]*)/.exec(cookie)
+  return m ? new Set(m[1].split('.')) : undefined
+}
+
 /**
  * Switches on the head's deferred sheets once they're all here, or after 3s without the one that failed. One at a time,
  * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script.
  */
-export const LATE_SHEETS = `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>a.forEach(l=>l.media='all')))([...document.querySelectorAll('link[data-late]')])`
+export const LATE_SHEETS = `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all');(${keepSheets})(${sheetId})}))([...document.querySelectorAll('link[data-late]')])`
 /** The client entry's second chance: a `<style>` a CSP refused has no sheet, so the disabled link beside it is all that's left. */
 export const REFUSED_SHEETS = `document.querySelectorAll('style+link[disabled]').forEach(l=>{l.previousElementSibling.sheet||(l.disabled=false)})`
 // Put the `<style>` before this script in front of the head's first link.
@@ -215,10 +241,25 @@ const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
  * that follows until it loads, so a sheet the head has already asked for is never one: the chunk brings the rules its own
  * HTML reaches, and they move in front of those sheets, which have to keep winning once they load. A sheet the head
  * lacks can only be a link, and its Boundary swaps once it's here. `seen`: an earlier render's `{ split, found }`, for a head
- * sent before this page's HTML exists; its `late` then brings what the HTML has beyond that.
+ * sent before this page's HTML exists; its `late` then brings what the HTML has beyond that. `have`: the sheet ids the
+ * browser says it has (`keptSheets`). With all of the page's, it gets links (`links`): nothing to inline, or to look for.
  */
-export function pageStyles(assets, css = [], html = '', head, seen) {
+export function pageStyles(assets, css = [], html = '', head, seen, have) {
   const first = `<style>${LAYER_ORDER}</style>\n`
+  if (have && css.length && css.every(c => have.has(sheetId(c.href)))) {
+    const carried = new Set(css.map(c => c.href))
+    return {
+      head: first + css.map(c => blocking(c.href)).join(''),
+      split: false,
+      links: true,
+      found: () => new Set(),
+      late(sheets = []) {
+        const hrefs = sheets.map(s => s.href).filter(h => !carried.has(h))
+        for (const h of hrefs) carried.add(h)
+        return hrefs.map(blocking).join('')
+      },
+    }
+  }
   const inline = css.filter(c => assets.inline?.[c.href] !== undefined).map(c => ({ href: c.href, css: assets.inline[c.href] }))
   const raw = inline.reduce((n, s) => n + s.css.length, 0)
   const split = seen ? seen.split : !!assets.critical && inline.length > 0 && raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
@@ -232,6 +273,7 @@ export function pageStyles(assets, css = [], html = '', head, seen) {
   return {
     head: first + tags,
     split,
+    links: false,
     /** The words the page's rules have reached so far. */
     found: () => sent || new Set(),
     late(sheets = [], chunk = '') {

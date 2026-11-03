@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { parse, purge } from '../../weft/node/purge.mjs'
 import { assetsOnly } from '../src/vite.mjs'
-import { FIRST_PAINT_BYTES, LATE_SHEETS, LAYER_ORDER, pageStyles } from '../src/inline.mjs'
+import { FIRST_PAINT_BYTES, LATE_SHEETS, LAYER_ORDER, keptSheets, pageStyles, sheetId } from '../src/inline.mjs'
 
 const critical = { parse, purge }
 const filler = n => Array.from({ length: n }, (_, i) => `:where([data-scope="unused${i}"]){color:red}`).join('')
@@ -41,6 +41,37 @@ test('interaction and forced-colours rules wait for the late sheet; a state the 
   expect(head).not.toContain(':hover')
   expect(head).not.toContain('forced-colors')
   expect(head).toContain('aria-checked')
+})
+
+test('a browser that has every sheet the page uses gets links, and a chunk links only what is new', () => {
+  const have = keptSheets(`a=1; weft-css=zz.${sheetId('/a.css')}; b=2`)
+  const s = pageStyles(assets, css, html, undefined, undefined, have)
+  expect(s.links).toBe(true)
+  expect(s.head).toBe(`<style>${LAYER_ORDER}</style>\n<link rel="stylesheet" href="/a.css">\n`)
+  expect(s.late([{ href: '/a.css' }, { href: '/b.css' }], '<div data-scope="menu"></div>')).toBe('<link rel="stylesheet" href="/b.css">\n')
+})
+
+test('one sheet the browser lacks, and the page paints from its own rules as before', () => {
+  const s = pageStyles(assets, [...css, { href: '/b.css' }], html, undefined, undefined, keptSheets(`weft-css=${sheetId('/a.css')}`))
+  expect(s.links).toBe(false)
+  expect(s.head).toContain('data-late')
+})
+
+test('the browser lists the sheets it loaded by the ids the server reads', async () => {
+  const cookies = []
+  const links = [{ sheet: {}, getAttribute: () => '/a.css' }, { sheet: null, getAttribute: () => '/failed.css' }, { sheet: {}, getAttribute: () => '/b.css', media: 'print' }]
+  globalThis.document = {
+    cookie: `weft-css=${sheetId('/a.css')}`,
+    querySelectorAll: q => (q === 'link[data-late]' ? links.slice(2) : links),
+  }
+  Object.defineProperty(globalThis.document, 'cookie', { get: () => cookies.at(-1)?.split(';')[0] ?? `weft-css=${sheetId('/a.css')}`, set: v => cookies.push(v) })
+  new Function(LATE_SHEETS)()
+  await new Promise(r => setTimeout(r, 0))
+  delete globalThis.document
+  expect(cookies).toHaveLength(1)
+  expect(cookies[0]).toMatch(/;path=\/;max-age=31536000;samesite=lax$/)
+  expect(keptSheets(cookies[0])).toEqual(new Set([sheetId('/a.css'), sheetId('/b.css')]))
+  expect(links[2].media).toBe('all')
 })
 
 test('a sheet that cannot be inlined stays a blocking link', () => {

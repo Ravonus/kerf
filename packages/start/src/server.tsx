@@ -39,7 +39,7 @@ import { ErrorPage, NotFoundPage } from './builtin'
 // @ts-expect-error: plain JS module
 import { renderCard } from './og/index.mjs'
 // @ts-expect-error: plain JS module
-import { pageStyles } from './inline.mjs'
+import { keptSheets, pageStyles, sheetId } from './inline.mjs'
 import { capture } from './capture.mjs'
 
 export interface RouteEntry { id: string; file: string; layouts: string[]; pattern: string; params: string[]; splat?: string; card?: string; kind: 'page' | '404' | 'error' }
@@ -340,14 +340,18 @@ export function createHandler(options: HandlerOptions) {
     }
 
     // The route rendered before: its head goes out now, from what that render needed, and the page follows it.
-    const shape = `${status} ${saveData(request) ? 1 : 0} ${r.levels.map(l => l.id).join()}`
+    const cold = `${status} ${saveData(request) ? 1 : 0} ${r.levels.map(l => l.id).join()}`
+    // A browser that has the page's sheets gets links: its head is remembered apart, as it has no rules in it.
+    const have = keptSheets(request.headers.get('cookie'))
+    const warm = have && heads.get(cold + ' w')
+    const shape = warm && warm.sheets.every(c => have.has(sheetId(c.href))) ? cold + ' w' : cold
     const known = heads.get(shape)
     // Only for a render slow enough to wait on: a fast page goes out whole, compressed once and kept.
     if (known && known.ms >= EARLY_MS) {
       // A session read can set cookies, which have to be in the headers: read it before they go.
       if (request.headers.has('cookie')) await scope.ctx().catch(() => {})
       const set = [...scope.headers].length
-      const styles = pageStyles(assets, known.sheets, '', site.head, known)
+      const styles = pageStyles(assets, known.sheets, '', site.head, known, have)
       const head = top + known.preloads + (assets.entry ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') + styles.head +
         (known.capture ? `<script>${capture(known.now)}</script>\n` : '') + dev + '</head>\n<body>\n'
       const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(known.fold && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
@@ -369,12 +373,12 @@ export function createHandler(options: HandlerOptions) {
             controller.enqueue(enc.encode(lead + page_(p) + (assets.entry && !p.streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '')))
             // A render that set a header after they went can't use this: the route goes back to rendering first.
             if ([...scope.headers].length !== set) {
-              heads.set(shape, null)
+              heads.set(cold, null).set(cold + ' w', null)
               options.onDiagnostic?.({ code: 'E_HEAD', severity: 'warning', message: `${path}: a render set a response header after the head was sent, so this route now renders before sending anything.` })
-            } else remember(shape, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length, preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join('') })
+            } else remember(styles.links ? cold + ' w' : cold, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length, preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join('') })
             await rest(controller, styles, p.streaming)
           } catch (e) {
-            heads.set(shape, null)
+            heads.set(cold, null).set(cold + ' w', null)
             options.onDiagnostic?.({ code: 'E_HEAD', severity: 'error', message: `${path}: ${String(e)}` })
             controller.enqueue(enc.encode('<p>Something went wrong. <a href="">Reload</a></p>\n</body>\n</html>\n'))
             controller.close()
@@ -390,9 +394,9 @@ export function createHandler(options: HandlerOptions) {
     await s.hold(options.hold ?? HOLD)
     const ms = performance.now() - t0
     const p = shaped()
-    const styles = pageStyles(assets, p.sheets, s.shell, site.head)
+    const styles = pageStyles(assets, p.sheets, s.shell, site.head, undefined, have)
     const capturing = !!options.lazy || p.streaming
-    if (known !== null && !options.dev) remember(shape, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length })
+    if (known !== null && !options.dev) remember(styles.links ? cold + ' w' : cold, { ...p, ms, split: styles.split, found: styles.found(), capture: capturing, fold: !!p.parts.fold.length })
     const head =
       top + p.preloads +
       // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
