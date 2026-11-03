@@ -121,6 +121,28 @@ export interface WeftConfig {
    * before then replayed (PLAN §11). `'partial'`: every island loads with the page. `'full'` hydrates every route whole.
    */
   hydration?: 'lazy' | 'partial' | 'full'
+  /**
+   * Where the app deploys, for `weft deploy` (research 46). Names, regions and sizes only: every credential comes from the
+   * environment, and a token-shaped value here is E008. `weft deploy init` writes this and the host's files.
+   */
+  deploy?: {
+    target?: 'netlify' | 'vercel' | 'cloudflare' | 'fly' | 'render'
+    netlify?: { /** The site's name or id. */ site?: string }
+    vercel?: { project?: string }
+    cloudflare?: { /** The Worker's name. */ name?: string }
+    fly?: { app?: string; region?: string; memory?: string; /** A disk that lasts, at `/app/.data` unless `path` says otherwise. Billed. */ volume?: { name?: string; path?: string; sizeGb?: number } }
+    render?: { service?: string; plan?: string; region?: string; /** A paid plan's disk, at `/app/.data` unless `path` says otherwise. */ disk?: { path?: string; sizeGb?: number } }
+    /** A workflow that checks and deploys on push (`github`, the default), or none. */
+    ci?: 'github' | false
+    /** The branch the workflow deploys to production. `main` by default. */
+    branch?: string
+    cdn?: {
+      /** Cloudflare proxying the domain in front of a server host. */
+      proxy?: 'cloudflare'
+      /** Where uploaded images go (checked; uploads aren't sent yet: E014). */
+      images?: { provider: 'cloudinary'; /** The cloud's name: the secret is `CLOUDINARY_URL` in the environment. */ cloud?: string }
+    }
+  }
   /** Targets for a query's `live: { verify: 'staging' }`. */
   live?: {
     targets?: Record<string, {

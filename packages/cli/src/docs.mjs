@@ -22,6 +22,7 @@ export const topics = {
   async: 'resource, <Boundary pending error>, @weft-js/core/ssr and hydrate; W012',
   start: 'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q016, A001–A004, C001–C002, F001–F003, R001–R023',
   rust: 'Rust bodies: native() addons with a WASM fallback, remote() sidecars, weft add rust, impl, the weft crate, build.rs, Ctx, touch, weft dev reload, deployment; R101–R109',
+  deploy: 'Deploy: which hosts can run the app, weft deploy hosts/init, the push workflow, Netlify, Vercel, Cloudflare, Fly, Render, CDN and Cloudinary; E001–E014',
   plugins: 'Build a plugin: slots, server extensions, check hooks, docs, `weft add`, conformance. Walks through how @weft-js/pay is built',
   testing: '@weft-js/core/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: '@weft-js/core/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',

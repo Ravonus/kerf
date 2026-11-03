@@ -13,7 +13,7 @@ import { contributions } from './contributions.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
-export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'doctor', 'fix', 'tokens', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
+export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'doctor', 'fix', 'tokens', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins', 'deploy']
 
 const configModule = pathToFileURL(join(fileURLToPath(new URL('.', import.meta.url)), 'config.mjs')).href
 const nativeRequire = createRequire(import.meta.url)
@@ -154,6 +154,27 @@ export const configSchema = z.strictObject({
   rust: z.strictObject({
     unions: z.literal('allow').optional(),
     services: z.record(z.string(), z.strictObject({ crate: z.string().optional(), external: z.boolean().optional(), wasm: z.literal(false).optional() })).optional(),
+  }).optional(),
+  /** `weft deploy` (research 46): names, regions and sizes. Credentials come from the environment, never here (E008). */
+  deploy: z.strictObject({
+    target: z.enum(['netlify', 'vercel', 'cloudflare', 'fly', 'render']).optional(),
+    netlify: z.strictObject({ site: z.string().min(1).optional() }).optional(),
+    vercel: z.strictObject({ project: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional() }).optional(),
+    cloudflare: z.strictObject({ name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional() }).optional(),
+    fly: z.strictObject({
+      app: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional(), region: z.string().regex(/^[a-z]{3}$/, 'a Fly region code, like `iad`').optional(), memory: z.string().regex(/^\d+(mb|gb)$/, 'like `512mb`').optional(),
+      volume: z.strictObject({ name: z.string().regex(/^[a-z0-9_]+$/, 'lowercase letters, digits and underscores').optional(), path: z.string().startsWith('/').optional(), sizeGb: z.number().int().positive().optional() }).optional(),
+    }).optional(),
+    render: z.strictObject({
+      service: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, 'a name: letters, digits and dashes').optional(), plan: z.string().optional(), region: z.string().optional(),
+      disk: z.strictObject({ path: z.string().startsWith('/').optional(), sizeGb: z.number().int().positive().optional() }).optional(),
+    }).optional(),
+    ci: z.union([z.literal('github'), z.literal(false)]).optional(),
+    branch: z.string().min(1).optional(),
+    cdn: z.strictObject({
+      proxy: z.literal('cloudflare').optional(),
+      images: z.strictObject({ provider: z.literal('cloudinary'), cloud: z.string().regex(/^[\w-]+$/, "the cloud's name, not its URL").optional() }).optional(),
+    }).optional(),
   }).optional(),
   /** Named targets for a query's `live: { verify: 'staging' }`. `db` is an env var's name. */
   live: z.strictObject({

@@ -16,6 +16,7 @@ import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { requireTrust } from './trust.mjs'
 import { attachProps } from './props-listener.mjs'
+import { host, presetFor } from './deploy/hosts.mjs'
 
 export async function start(root, sub) {
   let file
@@ -102,6 +103,9 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
   const t = performance.now()
   const config = await site(root)
   const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? hostRuntime()
+  // `deploy.target` picks the preset when nothing else does: a build for Fly is the runtime's server, for Netlify `netlify`
+  const target = !preset && !runtime && (await loadConfig(root)).config?.deploy?.target
+  if (target) preset = presetFor(host(target), chosen)
   if (!preset && !PRESETS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(PRESETS).join(', ')}`), { code: 'E_USAGE' })
   preset ??= PRESETS[chosen]
   // A build holds no secrets: an app's env check stands down, and server modules load without a database.

@@ -24,7 +24,8 @@ import { formatGate, gate } from './gate.mjs'
 import { browserCommand } from './browser/cli.mjs'
 import { metaTable } from './meta-table.mjs'
 import { audit } from './audit.mjs'
-import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand } from './start.mjs'
+import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand, unsafeAllowed } from './start.mjs'
+import { deployCommand, formatHosts, hostsCommand, initCommand } from './deploy/index.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
@@ -44,6 +45,11 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
                       [--unsafe-allow <codes>]  go past these codes (R002, L003, a family like L, or all): forces a deploy
   audit [routes…] [--url <u>] [--all] [--max <n>]  the built pages, or a running site, in a clean Chrome at a phone's
                       and a desktop's width: axe-core's WCAG rules, console, deprecations, head, sideways scroll, shift
+  deploy [--prod] [--yes] [--target t]  fit check, build for the target, then the host's own CLI; without --yes a dry
+                      run that prints what would run. Netlify, Vercel, Cloudflare, Fly, Render; the live URL at the end
+  deploy hosts        which hosts can run this app, why not, what each costs, and the one weft suggests
+  deploy init [target] [--dry-run] [--force]  the host's files (netlify.toml, fly.toml + Dockerfile…), a GitHub
+                      workflow that checks and deploys on push, and \`deploy\` in the config
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
   db generate [name]  a migration for the schema's changes (it applies on the next request)
   db live             a migration with change triggers for the tables in \`changes\`
@@ -67,10 +73,10 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
-const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime', 'unsafe-allow', 'max'])
+const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime', 'unsafe-allow', 'max', 'target'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
-const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all', 'verbose'])
+const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all', 'verbose', 'prod', 'yes', 'force'])
 
 export function parse(argv) {
   const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
@@ -125,8 +131,9 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         // What this install compiles with, always; what live data does on the target, for an app that has any.
         const result = doctor(args.root)
         const plan = args.flags.preset || existsSync(join(args.root, 'src/realtime.server.ts')) ? await doctorCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime }) : undefined
-        if (args.json) print({ ...result, live: plan })
-        else say(formatDoctor(result))
+        const hosts = hostsCommand(args.root, (await loadConfig(args.root)).config)
+        if (args.json) print({ ...result, live: plan, deploy: hosts })
+        else say(`${formatDoctor(result)}\n\nweft doctor: deploy${hosts.target ? ` (target ${hosts.target})` : ''}\n${formatHosts(hosts).replace(/^/gm, '  ')}`)
         if (!plan) return 0
         say(`weft doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map(o => `    - ${o}`).join('\n')}` : ''}`)
         say(formatHuman(plan.diagnostics))
@@ -168,6 +175,31 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         say(formatHuman(result.diagnostics))
         say(`weft audit: ${result.skipped ?? `${result.pages.length} pages at a phone's and a desktop's width, ${result.diagnostics.length} findings (${result.ms} ms)`}`)
         return result.ok ? 0 : 1
+      }
+      case 'deploy': {
+        const loaded = await loadConfig(args.root)
+        const sub = args.positional[0]
+        if (sub === 'hosts') {
+          const result = hostsCommand(args.root, loaded.config)
+          if (args.json) print(result)
+          else say(formatHosts(result))
+          return 0
+        }
+        const unsafe = unsafeAllowed(args.flags['unsafe-allow'], loaded.config)
+        if (sub === 'init') {
+          const result = initCommand(args.root, loaded.config, { target: args.positional[1] ?? args.flags.target, dryRun: !!args.flags['dry-run'], force: !!args.flags.force, unsafe })
+          if (args.json) print(result)
+          say(formatHuman(result.findings))
+          say([`weft deploy init ${result.target}${result.dryRun ? ' (dry run: nothing written)' : ''}:`, ...result.actions.map(a => `  ${a}`), '', 'then, once:', ...result.next.map(n => `  ${n}`)].join('\n'))
+          return 0
+        }
+        if (sub !== undefined) throw Object.assign(new Error(`weft deploy ${sub}: use \`weft deploy\`, \`weft deploy hosts\` or \`weft deploy init [target]\``), { code: 'E_USAGE' })
+        const result = await deployCommand(args.root, loaded.config, { target: args.flags.target, prod: !!args.flags.prod, yes: !!args.flags.yes, unsafe, build: (root, o) => buildCommand(root, { ...o, unsafeAllow: args.flags['unsafe-allow'] }) })
+        if (args.json) print(result)
+        say(formatHuman(result.diagnostics))
+        if (result.dryRun) say([`weft deploy: a dry run for ${result.target}${result.prod ? ' (production)' : ' (a preview)'}. With --yes it runs:`, ...result.steps.map(s => `  ${s.what}${s.reads.length ? `\n      reads ${s.reads.join(', ')} from the environment` : ''}`)].join('\n'))
+        else say(`weft deploy: ${result.target}${result.prod ? ' (production)' : ''} → ${result.url ?? 'deployed; the host printed no URL'}`)
+        return 0
       }
       case 'start':
         return await startCommand(args.root, { runtime: args.flags.runtime })

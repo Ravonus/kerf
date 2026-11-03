@@ -26,6 +26,7 @@ import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
 import { dbLayer } from './db-layer.mjs'
 import { routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
+import { deployChecks } from './deploy/index.mjs'
 
 const posix = p => p.split('\\').join('/')
 
@@ -161,6 +162,7 @@ export async function check(root, options = {}) {
     ...schemaDrift(root, await dbLayer(root, loaded)),
     ...(await rustChecks(root, loaded)),
     ...(await liveChecks(root, loaded, options.preset)),
+    ...(loaded.diagnostics.some(d => d.code === 'P007') ? [] : deployChecks(root, config, { preset: options.preset })),
   ]
   diagnostics.push(...await routeChecks(root, loaded, given, new Set(loaded.diagnostics.map(d => d.code))))
   sortDiagnostics(diagnostics)
