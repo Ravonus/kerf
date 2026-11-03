@@ -13,6 +13,7 @@ import { Dither, DitherField, DitherGlyph } from '../../src/Dither'
 import { Menu } from '../../src/Menu'
 import { MonthPicker } from '../../src/MonthPicker'
 import { Select } from '../../src/Select'
+import { SideNav } from '../../src/SideNav'
 import { Slider } from '../../src/Slider'
 import { Ticker } from '../../src/Ticker'
 import { Kbd } from '../../src/Kbd'
@@ -50,6 +51,7 @@ function Added() {
         <DitherField ratio={8} />
         <Dither label="A dithered gradient" ratio={4} />
         <DitherGlyph text="warp" />
+        <SideNav label="Guides" filter current="/guides/state" remember={false} sections={[{ title: 'Start', pinned: true, items: [{ href: '/guides', label: 'Overview' }] }, { title: 'Basics', items: [{ href: '/guides/state', label: 'State' }, { href: '/guides/props', label: 'Props' }] }, { title: 'More', items: [{ href: '/guides/effects', label: 'Effects' }] }]} />
         <Canvas label="A drawing" draw={({ ctx }) => { ctx.fillRect(0, 0, 8, 8) }} style="block-size:40px" />
       </Stack>
     </>

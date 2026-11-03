@@ -116,6 +116,35 @@ export const moving: DocGroup = {
       related: ['Tabs', 'Link', 'Shell'],
     },
     {
+      component: 'SideNav',
+      summary: 'A docs sidebar whose sections fold, with a bar that opens it as a sheet on phones.',
+      tileWidth: 320,
+      use: {
+        when: ['The pages of a docs site, a guide or a component library', 'A list of pages long enough that a reader needs to see where they are in it'],
+        instead: [{ name: 'Nav', why: 'there are a handful of links and no sections' }, { name: 'Shell', why: 'it is an app\'s own navigation, with an account menu and a bottom bar' }, { name: 'Accordion', why: 'the sections hold content, not links' }],
+      },
+      sections: [
+        { kind: 'variants', title: 'Variants', examples: [
+          { id: 'SideNavGuide', title: 'Sections that fold', note: 'The section holding `current` starts open and the others folded. What a reader opens or closes is kept in localStorage under `remember`. Narrow the window under 900px to see the bar that opens it as a sheet.', stage: 'fill', height: 420 },
+          { id: 'SideNavFilter', title: 'With a filter', note: '`filter` adds a box that keeps the matching pages and opens every section they are in. Use it for long lists.', stage: 'fill', height: 420 },
+        ] },
+      ],
+      keyboard: [['Tab', 'Moves between section headings and links'], ['Enter or Space', 'Opens or closes a section'], ['Escape', 'Closes the sheet on a phone']],
+      a11yNotes: [
+        '`label` names the navigation landmark and titles the sheet.',
+        'Each section heading is a button with `aria-expanded` and `aria-controls`. A folded section is `hidden`, so its links leave the tab order.',
+        'The current page\'s link has `aria-current="page"`. On a phone the bar names the section and the page, and opens a sheet that traps focus until it closes.',
+      ],
+      propDocs: {
+        label: 'The name of the navigation landmark, the sheet\'s title, and the first words on the phone\'s bar.',
+        sections: 'The sections, in order: `title`, `items` (`href` and `label`), and `pinned` to keep one always open with a plain heading.',
+        current: 'The current page\'s `href`. Its link is marked, its section opens, and the rail scrolls to it.',
+        filter: 'Adds a filter box. A string is its placeholder.',
+        remember: 'The localStorage key for a reader\'s folds. `false` keeps nothing. Default `warp:sidenav:<label>`.',
+      },
+      related: ['Nav', 'Shell', 'Drawer'],
+    },
+    {
       component: 'PaginationBar',
       summary: 'Moves through a long list a page at a time.',
       use: {

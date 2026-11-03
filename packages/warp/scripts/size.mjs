@@ -72,6 +72,7 @@ export const ENTRIES = {
   GaugeChart: ['GaugeChart', '<GaugeChart title="T" data={0.5} />'],
   Sparkline: ['Sparkline', '<Sparkline values={[1, 2]} />'],
   Shell: ['Shell', '<Shell brand={{ name: "Loom" }} title="Orders" nav={[{ items: [{ id: "a", label: "A", href: "/" }] }]} account={{ name: "A", initials: "A" }}>x</Shell>'],
+  SideNav: ['SideNav', '<SideNav label="Docs" current="/a" sections={[{ title: "Start", items: [{ href: "/a", label: "A" }] }]} />'],
   DateField: ['DateField', '<DateField label="Due" />'],
   DateRangeField: ['DateRangeField', '<DateRangeField label="Period" />'],
   TimeField: ['TimeField', '<TimeField label="Start" />'],

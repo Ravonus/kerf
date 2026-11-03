@@ -1,5 +1,5 @@
 import { derived, state, untrack } from '@weft-js/core'
-import { Accordion, Badge, Button, Card, Grid, Heading, Input, Link, LoadMore, Nav, PaginationBar, Row, Shape, Split, Stack, Switch, Tabs, Text } from '@weft-js/warp'
+import { Accordion, Badge, Button, Card, Grid, Heading, Input, Link, LoadMore, Nav, PaginationBar, Row, Shape, SideNav, Split, Stack, Switch, Tabs, Text } from '@weft-js/warp'
 import { DEPLOYS, PROJECTS, TONE_OF } from '../world'
 
 const SECTIONS = [
@@ -400,3 +400,28 @@ export const LinkCardAction = () => (
     <Link href="/toolkit/alert">See what went wrong</Link>
   </Card>
 )
+
+const GUIDE = [
+  { title: 'Start here', pinned: true, items: [{ href: '#guide', label: 'Overview' }] },
+  { title: 'Projects', items: [{ href: '#create', label: 'Create a project' }, { href: '#invite', label: 'Invite your team' }, { href: '#archive', label: 'Archive a project' }] },
+  { title: 'Deploys', items: [{ href: '#first-deploy', label: 'Your first deploy' }, { href: '#previews', label: 'Preview deploys' }, { href: '#rollback', label: 'Roll back' }] },
+  { title: 'Billing', items: [{ href: '#plans', label: 'Plans' }, { href: '#invoices', label: 'Invoices' }] },
+]
+
+/** Follows the links in place, so the demo never leaves the page. */
+const follow = (at: { value: string }) => (e: MouseEvent) => {
+  const a = (e.target as Element).closest?.('a')
+  if (!a) return
+  e.preventDefault()
+  at.value = a.getAttribute('href') ?? at.value
+}
+
+export function SideNavGuide() {
+  const at = state('#previews')
+  return <div onClick={follow(at)}><SideNav label="Guide" sections={GUIDE} current={at.value} remember="toolkit:sidenav-guide" /></div>
+}
+
+export function SideNavFilter() {
+  const at = state('#invoices')
+  return <div onClick={follow(at)}><SideNav label="Guide" sections={GUIDE} current={at.value} filter="Filter pages" remember={false} /></div>
+}

@@ -40,6 +40,8 @@ export { KeyValueEditor, type KeyValue, type KeyValueEditorProps } from './KeyVa
 export { RichTextEditor, type RichTextEditorProps, type SlashCommand } from './RichTextEditor'
 export { Markdown, MarkdownEditor, type MarkdownEditorProps } from './Markdown'
 export { Shell, type ShellProps, type NavItem, type NavGroup, type NavIcon, type Crumb, type MenuEntry, type Workspace } from './Shell'
+/** A docs sidebar: sections that fold and remember, a sticky rail from 900px, and a bar that opens a sheet on phones. */
+export { SideNav, type SideNavProps, type SideNavSection, type SideNavLink } from './SideNav'
 export { Icon, type IconName, type IconRef } from './Icon'
 export { Chart, type ChartFrame } from './Chart'
 export { LineChart, BarChart, ComboChart, DonutChart, RadialChart, FunnelChart, ScatterChart, BubbleChart, Histogram, HeatGrid, RadarChart, Treemap, Sunburst, SankeyChart, CandlestickChart, BoxPlot, WaterfallChart, StreamChart, BrushChart, TileMap, GaugeChart, Sparkline } from './Charts'

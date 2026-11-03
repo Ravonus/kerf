@@ -18,7 +18,9 @@ const look = (page, i) => page.evaluate(([sel, at]) => {
   const fields = [...box.querySelectorAll('input,select,textarea')].map(f => `${f.checked}|${f.value}`)
   const attrs = [...box.querySelectorAll('*')].map(e => `${e.getAttribute('aria-checked')}${e.getAttribute('aria-pressed')}${e.getAttribute('aria-expanded')}${e.getAttribute('data-state')}${e.hasAttribute('disabled')}${e.matches(':popover-open')}`)
   const focused = document.activeElement === c || document.activeElement === c.control
-  return `${box.innerText}\n${fields.join()}\n${attrs.join()}\n${box.querySelectorAll('*').length}\n${focused}`
+  // A press that moves focus somewhere else, such as a Focus button, answers too.
+  const where = document.activeElement === document.body ? '' : `${document.activeElement?.localName}#${[...document.querySelectorAll('*')].indexOf(document.activeElement)}`
+  return `${box.innerText}\n${fields.join()}\n${attrs.join()}\n${box.querySelectorAll('*').length}\n${focused}\n${where}`
 }, [sel_(), i])
 const sel_ = () => CONTROLS
 
@@ -29,8 +31,9 @@ for (const path of pages) {
   await probe.goto(base + path, { waitUntil: 'load' })
   const count = await probe.locator(CONTROLS).count()
   const names = await probe.locator(CONTROLS).evaluateAll(l => l.map(e => e.innerText?.trim() || e.getAttribute('aria-label') || e.type || e.localName))
-  // A control nobody can see yet, such as one in a closed modal, is pressed through what opens it, not on its own.
-  const shown = await probe.locator(CONTROLS).evaluateAll(l => l.map(e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden'))
+  // A control nobody can see yet, such as one in a closed modal, is pressed through what opens it, not on its own. A
+  // floating label that lets presses through (`pointer-events: none`) is pressed through its field.
+  const shown = await probe.locator(CONTROLS).evaluateAll(l => l.map(e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden' && getComputedStyle(e).pointerEvents !== 'none'))
   await probe.close()
   if (!count) { console.log(`${path}: no example controls`); continue }
   seen.pages++
