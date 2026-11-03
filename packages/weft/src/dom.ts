@@ -2,7 +2,7 @@
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
-import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, runMounts, untrack, view, within, type Owner } from './index'
+import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, rt, runMounts, untrack, view, within, type Owner } from './index'
 import { keys, under } from './keys'
 
 export { memo }
@@ -280,6 +280,24 @@ class Row extends Box<any> implements Owner {
  */
 const rowStep = (k: unknown, i: number) => (k === Object(k) ? `%i${i}` : `:${String(k).replace(/[%/.&<>"\0\r]/g, c => `%${c.charCodeAt(0).toString(16)}`)}`)
 
+/** A server's list: rendered once, so each row is its item and its scope, with no row to keep or owner to clean. */
+function rendered<T>(list: readonly T[], props: Parameters<typeof For<T>>[0], base: string) {
+  const out = new Array(list.length)
+  const paths = keys.on ? new Set<unknown>() : undefined
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i]
+    let key = props.by ? props.by(item, i) : item
+    if (paths) {
+      const id = key === Object(key) ? key : String(key)
+      if (paths.has(id)) key = { duplicate: key }
+      paths.add(id)
+    }
+    const make = () => props.children(() => item, () => i)
+    out[i] = paths ? under(base + rowStep(key, i) + '/', make) : make()
+  }
+  return out
+}
+
 const reader = (box: Box<any>) => () => box.value
 const zero = () => 0
 
@@ -297,6 +315,7 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
   })
   return memo(() => {
     const list = props.each || []
+    if (rt.server) return untrack(() => rendered(list, props, base))
     const parent = getOwner()
     // A callback that takes an index (or might: `(...args)`) gets an index box; `(row) =>` doesn't.
     const indexed = props.children.length !== 1
