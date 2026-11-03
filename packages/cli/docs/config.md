@@ -46,6 +46,7 @@ export default defineConfig({
 | `site.card` | The generated share card's colours and fonts. P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `weft docs meta` has the rest |
 | `site.headers` | Response headers by route pattern |
 | `runtime` | `node`, `bun` or `deno`: what `weft build` targets (`weft docs start`) |
+| `hydration` | `'lazy'` (default): islands load when needed; `'partial'`: every island loads with the page; `'full'`: every route hydrates whole |
 | `rust` | `unions` and `services` for Rust bodies (`weft docs rust`) |
 | `live` | `targets` for a live query's `verify` (`weft docs start`) |
 | `trust` | `'enforce'` (default) or `'warn'`: see P109 and P110 under Plugins |

@@ -111,7 +111,6 @@ export interface WeftConfig {
    * before then replayed (PLAN §11). `'partial'`: every island loads with the page. `'full'` hydrates every route whole.
    */
   hydration?: 'lazy' | 'partial' | 'full'
-  /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   /** Targets for a query's `live: { verify: 'staging' }`. */
   live?: {
     targets?: Record<string, {
@@ -123,6 +122,7 @@ export interface WeftConfig {
       production?: boolean
     }>
   }
+  /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   trust?: 'enforce' | 'warn'
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft-js/text' }`. */
   slots?: { [id: string]: string | Record<string, string> }

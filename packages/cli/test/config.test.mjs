@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs'
+import typescript from 'typescript'
 import { describe, expect, it } from 'vitest'
-import { loadConfig } from '../src/load-config.mjs'
+import { configSchema, loadConfig } from '../src/load-config.mjs'
 import { bindSlots } from '../src/slots.mjs'
 import { project } from './helpers.mjs'
 
@@ -198,5 +200,35 @@ describe('JSON and YAML config (research 34 §2)', () => {
     const r = await loadConfig(project({ 'weft.config.ts': 'export default {}\n', 'weft.config.yaml': 'site: { name: Acme }\n' }))
     expect(r.diagnostics.map(d => d.code)).toEqual(['P010'])
     expect(r.diagnostics[0].why).toContain('`weft.config.yaml`')
+  })
+})
+
+// config.d.ts is what an editor offers and the schema is what `weft check` accepts: a key in one and not the other is
+// either a P007 on valid-looking config or an option nobody can find. Every object they both describe has the same keys.
+describe('config.d.ts and the schema', () => {
+  const file = new URL('../../weft/src/config.d.ts', import.meta.url)
+  const sf = typescript.createSourceFile('config.d.ts', readFileSync(file, 'utf8'), typescript.ScriptTarget.Latest, true)
+  const named = new Map(sf.statements.filter(s => typescript.isInterfaceDeclaration(s) || typescript.isTypeAliasDeclaration(s)).map(s => [s.name.text, s]))
+  /** The member names of an object type, following a reference to an interface in the file. */
+  const members = t => {
+    if (t && typescript.isTypeReferenceNode(t)) t = named.get(t.typeName.getText(sf))
+    if (t && typescript.isTypeAliasDeclaration(t)) t = t.type
+    const list = t && (typescript.isInterfaceDeclaration(t) || typescript.isTypeLiteralNode(t)) ? t.members : undefined
+    return list && new Map(list.filter(m => typescript.isPropertySignature(m)).map(m => [m.name.getText(sf), m.type]))
+  }
+  const shape = s => { while (s && !s.shape && s.unwrap) s = s.unwrap(); return s?.shape }
+  /** Every object both sides describe, compared key for key, `path` deep. */
+  const compare = (type, schema, path, out) => {
+    const keys = members(type), fields = shape(schema)
+    if (!keys || !fields) return out
+    out.push([path, [...keys.keys()].toSorted(), Object.keys(fields).toSorted()])
+    for (const [k, t] of keys) if (fields[k]) compare(t, fields[k], `${path}.${k}`, out)
+    return out
+  }
+
+  it('name the same keys, at every level', () => {
+    const pairs = compare(named.get('WeftConfig'), configSchema, 'config', [])
+    expect(pairs.length).toBeGreaterThan(5)
+    for (const [path, types, schema] of pairs) expect({ path, keys: types }).toEqual({ path, keys: schema })
   })
 })
