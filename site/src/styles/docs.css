@@ -17,7 +17,7 @@
 [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: 248px minmax(0, 1fr) 208px; }
 
 /* -- sidebar and contents -- */
-/* The section's SideNav (warp): a sticky rail on wide screens, a slim bar under the header on phones. */
+/* The section's SideNav (warp): docked on the left on wide screens; on a phone the header's menu button opens it from the left edge. */
 [data-site="docs"] { --warp-sidenav-top: var(--bar); }
 [data-site="docs"] > [data-scope="sidenav"] { margin-inline-start: calc(var(--warp-space-related) * -1); font-size: var(--doc-small); }
 [data-site="docs"] > [data-scope="sidenav"] [data-scope="navlist"] { font-size: var(--doc-small); }
@@ -97,7 +97,6 @@
 @media (max-width: 1239.98px) { [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: 248px minmax(0, 1fr); } [data-site="toc"] { display: none; } }
 @media (max-width: 899.98px) {
   [data-site="docs"], [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: minmax(0, 1fr); padding-inline: var(--warp-space-page); }
-  [data-site="docs"] > [data-scope="sidenav"] { margin-inline: calc(var(--warp-space-page) * -1); }
   [data-site="doc"] { padding-block-start: var(--warp-space-group); }
   [data-site="doc"] [data-scope="prose"] h2[data-step] { padding-inline-start: 36px; }
   [data-site="doc"] [data-scope="prose"] h2[data-step] ~ :not(h2) { margin-inline-start: 0; }

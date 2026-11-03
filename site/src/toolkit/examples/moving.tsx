@@ -418,7 +418,13 @@ const follow = (at: { value: string }) => (e: MouseEvent) => {
 
 export function SideNavGuide() {
   const at = state('#previews')
-  return <div onClick={follow(at)}><SideNav label="Guide" sections={GUIDE} current={at.value} remember="toolkit:sidenav-guide" /></div>
+  // Under 900px the panel waits off the left edge, and this button, naming it in aria-controls, opens it.
+  return (
+    <div onClick={follow(at)}>
+      <Button emphasis="outline" tone="neutral" size="sm" icon="menu" aria-controls="guide-pages">Pages</Button>
+      <SideNav id="guide-pages" label="Guide" sections={GUIDE} current={at.value} remember="toolkit:sidenav-guide" />
+    </div>
+  )
 }
 
 export function SideNavFilter() {

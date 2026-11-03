@@ -1,6 +1,7 @@
 // SideNav: the section holding the current page starts open and the rest folded, a viewer's folds are remembered (and
-// blocked storage is fine), the filter narrows and opens every match, the phone bar opens the sheet, and a link in the
-// sheet closes it. Then the server's markup hydrates with its folds live.
+// blocked storage is fine), the filter narrows and opens every match, and where the panel is laid over the page a
+// button outside opens it and the close button, Escape, the backdrop, a link and a new page close it. Then the
+// server's markup hydrates with its folds live.
 import { flush, render } from '@weft-js/core/test'
 import { state } from '@weft-js/core'
 import { hydrate } from '@weft-js/core/dom'
@@ -8,7 +9,7 @@ import { renderToString } from '@weft-js/core/ssr'
 import { SideNav } from '../src/index'
 import { SECTIONS } from './fixtures/SideNavCase'
 
-const rail = (c: Element) => c.querySelector('[data-part="rail"]')!
+const rail = (c: Element) => c.querySelector('[data-scope="sidenav"] nav')!
 const folds = (c: Element) => [...rail(c).querySelectorAll<HTMLButtonElement>('button[data-fold]')]
 const shown = (b: HTMLButtonElement) => !document.getElementById(b.getAttribute('aria-controls')!)!.hidden
 
@@ -25,7 +26,6 @@ test('the current section starts open, the others folded; the current link is ma
   expect(shown(advanced)).toBe(false)
   expect(rail(c).querySelector('[aria-current="page"]')!.textContent).toBe('Props')
   expect(rail(c).getAttribute('aria-label')).toBe('Docs')
-  expect(c.querySelector('[data-part="bar-page"]')!.textContent).toContain('Props')
 })
 
 test('a fold toggles and is remembered under the key; the current section reopens on arrival', async () => {
@@ -73,27 +73,55 @@ test('the filter keeps matching pages, opens their sections, and says when nothi
   expect(rail(c).querySelector('[data-part="empty"]')!.textContent).toContain('zzz')
 })
 
-test('the bar opens the sheet with the same tree; a link in it closes the sheet; a new current page closes it too', async () => {
+test('laid over the page, a button outside opens it; close, Escape, the backdrop, a link and a new page close it', async () => {
   const current = state('/docs/props')
-  const { container: c } = render(() => <SideNav label="Docs" current={current.value} sections={SECTIONS} remember={false} />)
+  const { container: c } = render(() => <><button type="button" id="menu" aria-controls="docs-nav">Menu</button><SideNav id="docs-nav" label="Docs" current={current.value} sections={SECTIONS} remember={false} /></>)
   await flush()
-  const bar = c.querySelector<HTMLButtonElement>('[data-part="bar"]')!
-  const sheet = c.querySelector('dialog')!
-  expect(bar.getAttribute('aria-haspopup')).toBe('dialog')
-  expect(bar.getAttribute('aria-expanded')).toBe('false')
-  bar.click(); await flush()
-  expect(bar.getAttribute('aria-expanded')).toBe('true')
-  const nav = sheet.querySelector('[data-part="sheet-nav"]')!
-  expect(nav.querySelector('[aria-current="page"]')!.textContent).toBe('Props')
-  expect(new Set([...c.querySelectorAll('[id]')].map(e => e.id)).size).toBe(c.querySelectorAll('[id]').length)
-  const link = nav.querySelector<HTMLAnchorElement>('a[href="/docs/state"]')!
+  const panel = c.querySelector<HTMLElement>('#docs-nav')!
+  panel.style.position = 'fixed' // what the CSS does under 900px; jsdom loads no stylesheets
+  const root = c.querySelector<HTMLElement>('[data-scope="sidenav"]')!
+  const menu = c.querySelector<HTMLButtonElement>('#menu')!
+  const isOpen = () => root.hasAttribute('data-open')
+  const press = async () => { menu.focus(); menu.click(); await flush(); await new Promise(r => requestAnimationFrame(r)) }
+  await press()
+  expect(isOpen()).toBe(true)
+  expect(menu.getAttribute('aria-expanded')).toBe('true')
+  expect(panel.getAttribute('role')).toBe('dialog')
+  expect(panel.getAttribute('aria-modal')).toBe('true')
+  expect(document.getElementById(panel.getAttribute('aria-labelledby')!)!.textContent).toBe('Docs')
+  expect(document.activeElement).toBe(panel.querySelector('[data-part="close"]'))
+  panel.querySelector<HTMLButtonElement>('[data-part="close"]')!.click(); await flush()
+  expect(isOpen()).toBe(false)
+  expect(menu.getAttribute('aria-expanded')).toBe('false')
+  expect(panel.hasAttribute('role')).toBe(false)
+  expect(document.activeElement).toBe(menu)
+
+  await press()
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await flush()
+  expect(isOpen()).toBe(false)
+
+  await press()
+  root.querySelector<HTMLElement>('[data-part="backdrop"]')!.click(); await flush()
+  expect(isOpen()).toBe(false)
+
+  await press()
+  const link = panel.querySelector<HTMLAnchorElement>('a[href="/docs/state"]')!
   link.addEventListener('click', e => e.preventDefault())
   link.click(); await flush()
-  expect(bar.getAttribute('aria-expanded')).toBe('false')
-  bar.click(); await flush()
+  expect(isOpen()).toBe(false)
+
+  await press()
   current.value = '/docs/effects'; await flush()
-  expect(bar.getAttribute('aria-expanded')).toBe('false')
+  expect(isOpen()).toBe(false)
   expect(folds(c)[1]!.getAttribute('aria-expanded')).toBe('true')
+})
+
+test('docked, a button that names it does nothing and leaves no modal state', async () => {
+  const { container: c } = render(() => <><button type="button" id="menu" aria-controls="docs-nav">Menu</button><SideNav id="docs-nav" label="Docs" sections={SECTIONS} remember={false} /></>)
+  await flush()
+  c.querySelector<HTMLButtonElement>('#menu')!.click(); await flush()
+  expect(c.querySelector('[data-scope="sidenav"]')!.hasAttribute('data-open')).toBe(false)
+  expect(c.querySelector('#docs-nav')!.hasAttribute('role')).toBe(false)
 })
 
 test('hydrates the server markup with its folds live', async () => {

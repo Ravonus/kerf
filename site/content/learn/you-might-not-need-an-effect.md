@@ -295,16 +295,21 @@ import { Boundary, resource, state } from '@weft-js/core'
 
 type Hit = { id: string; title: string }
 
+function Hits(props: { query: string }) {
+  const hits = resource(signal =>
+    fetch(`/api/search?q=${encodeURIComponent(props.query)}`, { signal }).then(r => r.json() as Promise<Hit[]>),
+  )
+  return <ul>{(hits.value ?? []).map(h => <li key={h.id}>{h.title}</li>)}</ul>
+}
+
 export function Search() {
   const query = state('')
-  const hits = resource(signal =>
-    fetch(`/api/search?q=${encodeURIComponent(query.value)}`, { signal }).then(r => r.json() as Promise<Hit[]>),
-  )
   return (
     <div>
       <input value={query.value} onInput={e => (query.value = e.currentTarget.value)} aria-label="Search" />
+      {/* The resource is made in Hits, inside the Boundary, so the Boundary waits for it. */}
       <Boundary pending={<p>Searching…</p>}>
-        <ul>{(hits.value ?? []).map(h => <li key={h.id}>{h.title}</li>)}</ul>
+        <Hits query={query.value} />
       </Boundary>
     </div>
   )

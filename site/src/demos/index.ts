@@ -169,8 +169,8 @@ export const demos: Record<string, Demo> = {
   loading: {
     learn: true,
     title: 'Waiting for data',
-    look: 'resource loads the forecast for the day in state, and Boundary shows Loading… until it arrives.',
-    tryIt: 'Press Next day a few times quickly. Each press cancels the request before it.',
+    look: 'resource loads the forecast for the day in state. Boundary shows Loading… until the first one arrives; after that, pending dims the old forecast and shows a spinner while the next one loads.',
+    tryIt: 'Press Next day a few times quickly. The old forecast stays, dimmed, and the count shows each earlier request being cancelled.',
     why: 'You write the request once. resource fetches again when what it read changes, and drops answers nobody wants.',
   },
   styled: {

@@ -3,6 +3,12 @@ import learn from '../generated/learn-nav.json'
 import reference from '../generated/reference-nav.json'
 import toolkit from '../generated/toolkit-nav.json'
 import type { Area } from './pages'
+import { NAV } from '../components/Header'
+
+/** Every section's SideNav shares one panel id, so the header's menu button opens it on a phone. */
+export const SITE_NAV_ID = 'site-nav'
+/** The site's top links, at the head of the panel when it opens over a phone's page. */
+export const SITE_LINKS = NAV
 
 /** Learn's chapters in teaching order, numbered, so the rail reads as a path from the top. */
 export const learnSections: SideNavSection[] = [

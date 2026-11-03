@@ -9,7 +9,7 @@ import { NAV } from './Header'
  */
 export function NavDrawer(props: { open: State<boolean> }) {
   return (
-    <Drawer open={props.open} title="weft" side="auto">
+    <Drawer open={props.open} title="weft" side="left">
       <nav aria-label="Site" data-site="sheet-nav" onClick={e => { if ((e.target as Element).closest('a')) props.open.value = false }}>
         {NAV.map(n => <Link key={n.href} href={n.href}>{n.label}</Link>)}
       </nav>

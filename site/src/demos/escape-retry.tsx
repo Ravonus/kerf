@@ -1,5 +1,5 @@
 import { Boundary, resource } from '@weft-js/core'
-import { Button, Card, Stack } from '@weft-js/warp'
+import { Button, Card, Row, Spinner, Stack } from '@weft-js/warp'
 
 let calls = 0
 // Stands in for a request that fails every other time.
@@ -9,10 +9,24 @@ const flaky = (signal: AbortSignal) =>
     signal.addEventListener('abort', () => clearTimeout(t))
   })
 
-export default function Retry() {
+function Answer() {
   const answer = resource(flaky)
   return (
+    <>
+      {/* Asking again keeps the last answer, dimmed, until the new one lands. */}
+      <Row gap="tight">
+        <p aria-busy={answer.pending ? 'true' : 'false'} style={answer.pending ? 'opacity: 0.5' : ''}>{answer.value}</p>
+        {answer.pending && answer.value !== undefined && <Spinner label="Asking again" />}
+      </Row>
+      <Button size="sm" emphasis="outline" disabled={answer.pending} onClick={() => answer.refresh()}>Ask again</Button>
+    </>
+  )
+}
+
+export default function Retry() {
+  return (
     <Card title="Pending, failed, retried">
+      {/* The resource is made in Answer, inside the Boundary, so the Boundary sees it load and fail. */}
       <Boundary
         pending={<p>Asking the server…</p>}
         error={(e, retry) => (
@@ -22,8 +36,7 @@ export default function Retry() {
           </Stack>
         )}
       >
-        <p>{answer.value}</p>
-        <Button size="sm" emphasis="outline" onClick={() => answer.refresh()}>Ask again</Button>
+        <Answer />
       </Boundary>
     </Card>
   )

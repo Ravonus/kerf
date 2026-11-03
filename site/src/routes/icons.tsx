@@ -1,6 +1,6 @@
 import { SideNav } from '@weft-js/warp'
 import { IconBrowser } from '../components/IconBrowser'
-import { toolkitSections } from '../lib/sections'
+import { toolkitSections, SITE_LINKS, SITE_NAV_ID } from '../lib/sections'
 import '../styles/docs.css'
 import icons from '../generated/icons.json'
 
@@ -10,7 +10,7 @@ export const meta = { title: 'Icon browser', description: `${icons.names.length}
 export default function Icons() {
   return (
     <div data-site="docs">
-    <SideNav label="Icons" sections={toolkitSections('icons')} current="/icons" remember="weft:site:toolkit" />
+    <SideNav id={SITE_NAV_ID} lead={SITE_LINKS} label="Icons" sections={toolkitSections('icons')} current="/icons" remember="weft:site:toolkit" />
     <section data-site="page">
       <h1>Icons</h1>
       <p data-site="lede">{icons.names.length} names. Each has a hollow and a solid drawing in each of the three tiers, and an app ships only the ones it imports.</p>

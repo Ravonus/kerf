@@ -419,7 +419,7 @@ for (const path of ['/learn', '/learn/quick-start', '/learn/installation', '/lea
   }, { width: 375, height: 812 })
   if (path === '/learn') continue
   await check(`learn page parts ${path}`, path, async page => {
-    const parts = await page.evaluate(() => ({ box: document.querySelector('[data-site="you-will-learn"] li')?.textContent ?? '', pager: document.querySelectorAll('[data-part="pager"] a').length, nav: !!document.querySelector('[data-scope="sidenav"] [data-part="rail"] a[aria-current="page"]') }))
+    const parts = await page.evaluate(() => ({ box: document.querySelector('[data-site="you-will-learn"] li')?.textContent ?? '', pager: document.querySelectorAll('[data-part="pager"] a').length, nav: !!document.querySelector('[data-scope="sidenav"] nav a[aria-current="page"]') }))
     if (!parts.box) throw new Error('no "You will learn" box')
     same(parts.pager, 2, 'pager links')
     same(parts.nav, true, 'the rail marks this page')
@@ -440,7 +440,7 @@ await check('learn bind demo writes the parent', '/learn/bind', async page => {
   await page.waitForFunction(() => /Booked for 3 people/.test(document.querySelector('[data-site="example"] [data-part="run"]')?.textContent ?? ''), null, { timeout: 4000 })
 })
 // Learn's rail folds: only this page's chapter is open, a heading toggles its chapter, and a viewer's choice is kept.
-const RAIL = '[data-scope="sidenav"] [data-part="rail"]'
+const RAIL = '[data-scope="sidenav"] nav'
 await check('learn rail folds to this chapter', '/learn/bind', async page => {
   const folds = page.locator(`${RAIL} button[data-fold]`)
   await page.waitForFunction(r => document.querySelector(`${r} button[data-fold]`) && localStorage !== undefined, RAIL)
@@ -474,9 +474,9 @@ for (const [path, section] of [['/learn/effects', '5. Escape hatches'], ['/refer
       const rail = document.querySelector(r)
       const folds = [...rail.querySelectorAll('button[data-fold]')]
       const link = rail.querySelector('a[aria-current="page"]')
-      const box = rail.getBoundingClientRect(), at = link.getBoundingClientRect()
+      const box = rail.closest('[data-part="scroll"]').getBoundingClientRect(), at = link.getBoundingClientRect()
       return {
-        sticky: getComputedStyle(rail.parentElement).position,
+        sticky: getComputedStyle(rail.closest('[data-scope="sidenav"]')).position,
         missing: folds.filter(f => !['true', 'false'].includes(f.getAttribute('aria-expanded'))).length,
         open: folds.filter(f => f.getAttribute('aria-expanded') === 'true').map(f => f.textContent.trim()),
         holder: link.closest('[data-part="sections"] > li').querySelector('button[data-fold], [data-part="group-label"]')?.textContent.trim(),
@@ -491,14 +491,16 @@ for (const [path, section] of [['/learn/effects', '5. Escape hatches'], ['/refer
     same(got.open[0], got.holder, 'the open section holds this page')
     same(got.inView, true, 'the current link is in view in the rail')
     same(got.over, 0, 'page overflow')
-    const fold = page.locator(`${RAIL} button[data-fold][aria-expanded="false"]`).first()
-    const id = await fold.getAttribute('aria-controls')
+    // By its target, not by its state: a locator that matched "collapsed" would move on once this one opens.
+    const id = await page.locator(`${RAIL} button[data-fold]`).first().getAttribute('aria-controls')
+    const fold = page.locator(`${RAIL} button[aria-controls="${id}"]`)
+    const was = await fold.getAttribute('aria-expanded'), flip = was === 'true' ? 'false' : 'true'
     await fold.click()
-    same(await fold.getAttribute('aria-expanded'), 'true', 'expanded by a click')
-    same(await page.locator(`#${id}`).isVisible(), true, 'its list shows')
+    same(await fold.getAttribute('aria-expanded'), flip, 'toggled by a click')
+    same(await page.locator(`#${id}`).isVisible(), flip === 'true', 'its list follows')
     await fold.click()
-    same(await fold.getAttribute('aria-expanded'), 'false', 'collapsed by a click')
-    same(await page.locator(`#${id}`).isVisible(), false, 'its list hides')
+    same(await fold.getAttribute('aria-expanded'), was, 'toggled back')
+    same(await page.locator(`#${id}`).isVisible(), was === 'true', 'its list follows back')
   })
 }
 // The long rails have a filter that keeps the matching pages.
@@ -530,46 +532,67 @@ await check('learn deep dives start closed', '/learn/components-run-once', async
   await dive.locator('summary').click()
   same(await dive.evaluate(d => d.open), true, 'open after a click')
 })
-// On a phone no list sits above the page: a slim bar under the header names the section and page, and opens the same
-// folding list in a sheet with the current section open. The close button, Escape and the backdrop each close it, a
-// heading folds without closing it, focus stays inside while it's up, and nothing scrolls sideways.
-for (const [path, label, title] of [['/learn/bind', 'Learn', 'Writing to a parent with bind:'], ['/reference/state', 'Reference', null], ['/components/button', 'Components', 'Button'], ['/blocks', 'Blocks', 'All blocks']]) {
-  await check(`side nav sheet on a phone ${path}`, path, async page => {
-    const bar = page.locator('[data-scope="sidenav"] > [data-part="bar"]')
-    await bar.waitFor()
-    same(await page.locator(RAIL).isVisible(), false, 'the rail is hidden')
-    const top = await bar.evaluate(el => el.getBoundingClientRect().bottom)
-    if (top > 140) throw new Error(`the bar ends ${Math.round(top)}px down`)
-    const text = await bar.innerText()
-    if (!text.includes(label)) throw new Error(`the bar says ${text}`)
-    if (title && !text.includes(title)) throw new Error(`the bar says ${text}, not the page`)
+// On a phone no list sits above the page: the header's menu button opens the same left panel over it, full height,
+// with the current section open and the site's top links at its head. The close button, Escape and the backdrop each
+// close it, a heading folds without closing it, focus stays inside while it's up, and nothing scrolls sideways.
+for (const path of ['/learn/bind', '/reference/state', '/components/button', '/blocks']) {
+  await check(`side nav panel on a phone ${path}`, path, async page => {
+    const menu = page.locator('[data-site="menu"]')
+    const panel = page.locator('#site-nav')
+    await menu.waitFor()
+    await page.waitForTimeout(600)
+    const box0 = await panel.boundingBox()
+    if (box0 && box0.x + box0.width > 1) throw new Error('the panel shows before it is opened')
     same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow')
-    const sheet = page.locator('[data-scope="sidenav"] dialog')
-    const opened = async () => { await bar.click(); await page.waitForFunction(() => document.querySelector('[data-scope="sidenav"] dialog')?.open === true); await page.waitForTimeout(350) }
-    const closed = async how => { await page.waitForFunction(() => document.querySelector('[data-scope="sidenav"] dialog')?.open === false, null, { timeout: 3000 }).catch(() => { throw new Error(`${how} did not close the sheet`) }); same(await bar.getAttribute('aria-expanded'), 'false', `aria-expanded after ${how}`) }
+    const isOpen = () => page.evaluate(() => document.querySelector('[data-scope="sidenav"]').hasAttribute('data-open'))
+    const opened = async () => { await menu.click(); await page.waitForTimeout(400); same(await isOpen(), true, 'open after the menu button') }
+    const closed = async how => { await page.waitForTimeout(400); same(await isOpen(), false, `closed by ${how}`); same(await menu.getAttribute('aria-expanded'), 'false', `aria-expanded after ${how}`) }
     await opened()
-    same(await bar.getAttribute('aria-expanded'), 'true', 'aria-expanded when open')
-    same(await sheet.locator('a[aria-current="page"]').isVisible(), true, 'the current page shows in the sheet')
-    const fold = sheet.locator('button[data-fold][aria-expanded="false"]').first()
-    if (await fold.count()) {
+    same(await menu.getAttribute('aria-expanded'), 'true', 'aria-expanded when open')
+    const box = await panel.boundingBox()
+    same(Math.round(box.x), 0, 'the panel sits on the left edge')
+    same(Math.round(box.height), 812, 'the panel is full height')
+    same(await panel.getAttribute('role'), 'dialog', 'role')
+    same(await panel.locator('nav a[aria-current="page"]').isVisible(), true, 'the current page shows in the panel')
+    same(await panel.locator('[data-part="lead"] a').count(), 7, 'the site links at its head')
+    const id = await panel.locator('button[data-fold][aria-expanded="false"]').first().getAttribute('aria-controls').catch(() => null)
+    if (id) {
+      const fold = panel.locator(`button[aria-controls="${id}"]`)
       await fold.click()
-      same(await fold.getAttribute('aria-expanded'), 'true', 'a heading opens in the sheet')
-      same(await sheet.evaluate(d => d.open), true, 'the sheet stays up')
+      same(await fold.getAttribute('aria-expanded'), 'true', 'a heading opens in the panel')
+      same(await isOpen(), true, 'the panel stays up')
     }
-    for (let i = 0; i < 6; i++) await page.keyboard.press('Tab')
-    same(await page.evaluate(() => !!document.activeElement?.closest('[data-scope="sidenav"] dialog')), true, 'focus stays in the sheet')
-    same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow with the sheet up')
-    await sheet.locator('[data-part="close"]').click()
+    for (let i = 0; i < 40; i++) await page.keyboard.press('Tab')
+    same(await page.evaluate(() => !!document.activeElement?.closest('#site-nav')), true, 'focus stays in the panel')
+    same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow with the panel up')
+    await panel.locator('[data-part="close"]').click()
     await closed('the close button')
+    same(await page.evaluate(() => document.activeElement?.getAttribute('data-site')), 'menu', 'focus back on the menu button')
     await opened()
     await page.keyboard.press('Escape')
     await closed('Escape')
     await opened()
-    const box = await sheet.boundingBox()
-    await page.mouse.click(Math.min(370, box.x + box.width + 20), 400)
+    await page.mouse.click(360, 400)
     await closed('a backdrop tap')
   }, { width: 375, height: 812 })
 }
+// The Forecast demo shows its wait: the Boundary's fallback on the first load, then the old forecast dimmed with a
+// spinner while the next one loads, and quick presses cancel the requests before them.
+await check('learn forecast shows it is waiting', '/learn/async-and-loading', async page => {
+  await mount(page)
+  const run = page.locator('[data-site="example"] [data-part="run"]').filter({ hasText: 'Forecast' }).first()
+  const next = run.getByRole('button', { name: 'Next day' })
+  await next.click()
+  await run.getByText('Loading…').waitFor({ timeout: 2000 })
+  await run.getByText(/Day 1:/).waitFor({ timeout: 3000 })
+  await next.click()
+  await run.locator('p[aria-busy="true"]').waitFor({ timeout: 1000 })
+  same(await run.getByText(/Day 1:/).isVisible(), true, 'the old forecast stays while the next loads')
+  await next.click()
+  await next.click()
+  await run.getByText(/Day 4:/).waitFor({ timeout: 3000 })
+  await run.getByText(/2 earlier requests cancelled/).waitFor({ timeout: 1000 })
+})
 // A Learn page that was split answers its old address with a permanent redirect, `.md` twin included.
 for (const [from, to] of [['/learn/lists-and-conditions', '/learn/rendering-lists'], ['/learn/lists-and-conditions.md', '/learn/rendering-lists.md']]) {
   await check(`old ${from} redirects`, '/learn', async page => {

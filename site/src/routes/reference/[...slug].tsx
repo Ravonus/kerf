@@ -1,7 +1,8 @@
 import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
-import { Button } from '@weft-js/warp'
+import { Button, SideNav } from '@weft-js/warp'
 import { PageExample } from '../../components/PageExample'
 import { Toc } from '../../components/Toc'
+import { referenceSections, SITE_LINKS, SITE_NAV_ID } from '../../lib/sections'
 import pages from '../../generated/reference.json'
 
 const all = pages as unknown as Record<string, { slug: string; title: string; section: string; html: string; description: string; lead?: string; toc: { id: string; text: string }[]; prev?: { slug: string; title: string }; next?: { slug: string; title: string }; parent?: { slug: string; title: string } }>
@@ -25,6 +26,7 @@ export const prerender = () => Object.keys(all).map(slug => ({ slug }))
 export default function ReferencePage(props: RouteProps<typeof load, '/reference/[...slug]'>) {
   return (
     <>
+      <SideNav id={SITE_NAV_ID} lead={SITE_LINKS} label="Reference" sections={referenceSections} current={`/reference/${props.data.slug}`} filter remember="weft:site:reference" />
       <article data-site="doc" data-vt="main">
         <header data-section={props.data.section}>
           <p data-part="crumb">{props.data.parent ? <Link href={`/reference/${props.data.parent.slug}`}>{props.data.parent.title}</Link> : props.data.section}</p>

@@ -916,53 +916,67 @@
 :where([data-scope="navlist"] [data-part="item"][aria-expanded="true"] [data-part="chevron"]) { transform: rotate(90deg); }
 :where([data-scope="navlist"] [data-part="item"][aria-expanded="false"] + ul) { display: none; }
 
-/* SideNav — a docs sidebar made of a NavList whose sections fold. From 900px a sticky rail that scrolls on its own;
-   below, a slim bar that names the section and page and opens the same list in a sheet. --warp-sidenav-top is the
-   height of whatever sticks above it (the page's header). */
-:where([data-scope="sidenav"]) {
-  position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); z-index: var(--warp-z-sticky); align-self: start;
-  min-inline-size: 0; font-size: var(--warp-text-caption-size);
+/* SideNav — a docs sidebar: one left panel made of a NavList whose sections fold. From 900px it is docked, sticky and
+   scrolling on its own; below, the same panel waits off the left edge and opens over the page, full height, from a
+   button elsewhere (aria-controls). --warp-sidenav-top is the height of whatever sticks above it (the page's header). */
+:where([data-scope="sidenav"]) { display: contents; font-size: var(--warp-text-caption-size); }
+:where([data-scope="sidenav"] > [data-part="panel"]) { font-size: var(--warp-text-caption-size); }
+:where([data-scope="sidenav"] > [data-part="panel"]) {
+  position: fixed; inset: 0 auto 0 0; z-index: var(--warp-z-modal); display: flex; flex-direction: column;
+  inline-size: min(320px, calc(100vw - 48px)); box-sizing: border-box; padding-block-start: var(--warp-safe-top, 0px);
+  background: var(--warp-color-surface-raised); border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border);
+  box-shadow: var(--warp-shadow-overlay, 0 12px 40px rgb(0 0 0 / 0.25));
+  transform: translateX(-100%); visibility: hidden;
+  transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out), visibility 0s linear var(--warp-duration-sheet, 240ms);
 }
-:where([data-scope="sidenav"] > [data-part="rail"]) { display: none; }
-:where([data-scope="sidenav"] > [data-part="bar"]) {
-  display: flex; align-items: center; gap: var(--warp-space-tight); inline-size: 100%; box-sizing: border-box;
-  min-block-size: var(--warp-control-md); padding: 0 var(--warp-space-related); margin: 0;
-  border: 0; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
-  background: color-mix(in oklab, var(--warp-color-page) 88%, transparent); backdrop-filter: blur(12px);
-  color: var(--warp-color-text-subtle); font: inherit; font-weight: 500; text-align: start; cursor: pointer;
+:where([data-scope="sidenav"][data-open] > [data-part="panel"]) { transform: none; visibility: visible; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out); }
+:where([data-scope="sidenav"] > [data-part="panel"]:focus) { outline: none; }
+:where([data-scope="sidenav"] > [data-part="backdrop"]) {
+  position: fixed; inset: 0; z-index: var(--warp-z-modal); background: var(--warp-color-scrim);
+  opacity: 0; pointer-events: none; transition: opacity var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="sidenav"] > [data-part="bar"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
-:where([data-scope="sidenav"] [data-part="bar-section"]) { flex: none; color: var(--warp-color-text); }
-:where([data-scope="sidenav"] [data-part="bar-page"]) { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="sidenav"] [data-part="bar-icon"]) { display: inline-flex; margin-inline-start: auto; flex: none; }
-:where([data-scope="sidenav"] [data-part="bar-icon"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
-:where([data-scope="sidenav"] [data-scope="navlist"]) { gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); }
+:where([data-scope="sidenav"][data-open] > [data-part="backdrop"]) { opacity: 1; pointer-events: auto; }
+:where([data-scope="sidenav"] [data-part="head"]) {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-related);
+  min-block-size: var(--warp-layout-bar); padding-inline: var(--warp-space-group) var(--warp-space-tight);
+  border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
+}
+:where([data-scope="sidenav"] [data-part="title"]) { margin: 0; font-weight: 600; color: var(--warp-color-text); }
+:where([data-scope="sidenav"] [data-part="scroll"]) {
+  display: grid; align-content: start; gap: var(--warp-space-related); flex: 1; min-block-size: 0;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: var(--warp-space-related);
+  padding-block-end: max(var(--warp-space-group), var(--warp-safe-bottom, 0px));
+}
+:where([data-scope="sidenav"] [data-part="lead"]) { padding-block-end: var(--warp-space-related); border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="sidenav"] [data-scope="navlist"]) { gap: var(--warp-space-related); font-size: inherit; }
 :where([data-scope="sidenav"] [data-part="sections"]) { gap: 2px; }
 :where([data-scope="sidenav"] [data-part="sections"] > li > [data-part="group-label"]) { margin-block: var(--warp-space-tight) 2px; }
-:where([data-scope="sidenav"] [data-scope="navlist"] [data-part="item"]) { min-block-size: 30px; }
+:where([data-scope="sidenav"] [data-scope="navlist"] [data-part="item"]) { min-block-size: 32px; }
 :where([data-scope="sidenav"] [data-part="item"][data-fold]) { color: var(--warp-color-text); font-weight: 600; }
-:where([data-scope="sidenav"] [data-part="item"][data-fold]:focus-visible),
-:where([data-scope="sidenav"] a[data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
+:where([data-scope="sidenav"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
 :where([data-scope="sidenav"] [data-part="chevron"]) { display: inline-flex; color: var(--warp-color-text-subtle); }
-:where([data-scope="sidenav"] [data-part="chevron"] svg) { inline-size: var(--warp-icon-sm, 14px); block-size: var(--warp-icon-sm, 14px); }
+:where([data-scope="sidenav"] [data-part="chevron"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 :where([data-scope="sidenav"] [data-part="sections"] ul[hidden]) { display: none; }
 :where([data-scope="sidenav"] [data-part="sections"] > li > ul) { margin-block: 2px var(--warp-space-tight); }
 :where([data-scope="sidenav"] [data-part="filter"]) {
-  inline-size: 100%; box-sizing: border-box; min-block-size: var(--warp-control-sm, 32px); padding: 0 var(--warp-space-related);
+  inline-size: 100%; box-sizing: border-box; min-block-size: var(--warp-control-sm); padding: 0 var(--warp-space-related);
   border: var(--warp-border-hairline) solid var(--warp-color-border-control); border-radius: var(--warp-radius-control);
   background: var(--warp-color-field); color: var(--warp-color-text); font: inherit;
 }
 :where([data-scope="sidenav"] [data-part="filter"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
 :where([data-scope="sidenav"] [data-part="empty"]) { margin: 0; padding-inline: 10px; color: var(--warp-color-text-subtle); }
-:where([data-scope="sidenav"] [data-part="sheet-nav"]) { padding-block-end: var(--warp-space-group); }
 @media (min-width: 900px) {
-  :where([data-scope="sidenav"]) { z-index: auto; max-block-size: calc(var(--warp-viewport-block) - var(--warp-sidenav-top, 0px)); display: flex; flex-direction: column; }
-  :where([data-scope="sidenav"] > [data-part="bar"]) { display: none; }
-  :where([data-scope="sidenav"] > [data-part="rail"]) {
-    display: grid; align-content: start; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
-    padding-block: var(--warp-space-group); padding-inline-end: var(--warp-space-tight);
+  :where([data-scope="sidenav"]) { display: block; min-inline-size: 0; position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); align-self: start; }
+  :where([data-scope="sidenav"] > [data-part="panel"]) {
+    position: static; z-index: auto; inline-size: auto; max-block-size: calc(var(--warp-viewport-block) - var(--warp-sidenav-top, 0px));
+    padding: 0; background: none; border: 0; box-shadow: none; transform: none; visibility: visible; transition: none;
   }
-  :where([data-scope="sidenav"] > [data-part="rail"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
+  :where([data-scope="sidenav"] > [data-part="backdrop"], [data-scope="sidenav"] [data-part="head"], [data-scope="sidenav"] [data-part="lead"]) { display: none; }
+  :where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
+  :where([data-scope="sidenav"] [data-part="scroll"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where([data-scope="sidenav"] > [data-part="panel"], [data-scope="sidenav"] > [data-part="backdrop"]) { transition: none; }
 }
 @media print { :where([data-scope="sidenav"]) { display: none !important; } }
 

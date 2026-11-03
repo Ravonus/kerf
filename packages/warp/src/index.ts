@@ -40,7 +40,7 @@ export { KeyValueEditor, type KeyValue, type KeyValueEditorProps } from './KeyVa
 export { RichTextEditor, type RichTextEditorProps, type SlashCommand } from './RichTextEditor'
 export { Markdown, MarkdownEditor, type MarkdownEditorProps } from './Markdown'
 export { Shell, type ShellProps, type NavItem, type NavGroup, type NavIcon, type Crumb, type MenuEntry, type Workspace } from './Shell'
-/** A docs sidebar: sections that fold and remember, a sticky rail from 900px, and a bar that opens a sheet on phones. */
+/** A docs sidebar: one left panel whose sections fold and remember; docked from 900px, opened over the page on phones. */
 export { SideNav, type SideNavProps, type SideNavSection, type SideNavLink } from './SideNav'
 export { Icon, type IconName, type IconRef } from './Icon'
 export { Chart, type ChartFrame } from './Chart'

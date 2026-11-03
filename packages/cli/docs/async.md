@@ -5,12 +5,18 @@ import { resource, Boundary } from '@weft-js/core'
 
 type User = { name: string }
 
-export function Profile({ id }: { id: string }) {
+function Name({ id }: { id: string }) {
   // `id` is read before the first `await`, so a new id fetches again and aborts the old request.
   const user = resource(signal => fetch(`/api/users/${id}`, { signal }).then(r => r.json() as Promise<User>))
+  // `pending` is also true on a refetch, while the old value is still here: dim it rather than replace it (X033).
+  return <h1 aria-busy={user.pending ? 'true' : 'false'}>{user.value?.name}</h1>
+}
+
+// The resource is made inside the Boundary (in Name), so the Boundary waits for it.
+export function Profile({ id }: { id: string }) {
   return (
     <Boundary pending={<p>Loading…</p>} error={(e, retry) => <button onClick={retry}>Retry</button>}>
-      <h1>{user.value?.name}</h1>
+      <Name id={id} />
     </Boundary>
   )
 }
@@ -19,7 +25,8 @@ export function Profile({ id }: { id: string }) {
 - **`resource(fetcher)`** is async `derived`: `.value`, `.pending`, `.error`, `.refresh()`. It re-fetches when what it
   read before the first `await` changes, and aborts the superseded fetch through `signal`. `derived(async …)` is
   **W012**.
-- **`<Boundary pending error>`** covers every resource and thrown error below it. The fallback shows after 150 ms and
+- **`<Boundary pending error>`** covers every resource created while its children are built, and every error they
+  throw. A resource made above the `<Boundary>` in the same component isn't below it, and the fallback never shows. The fallback shows after 150 ms and
   stays at least 400 ms; refetches keep the current content (no flash). `error(e, retry)` gets failed resources and
   children that throw during render.
 - **`@weft-js/core/ssr`**: `renderToString(() => <App />)` renders what it can now; `await renderToStringAsync(() => <App />)`

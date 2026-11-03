@@ -2,7 +2,7 @@ import { Link, type Meta } from '@weft-js/start'
 import { CodeBlock, SideNav } from '@weft-js/warp'
 import { ROOMS } from '../../toolkit/art'
 import { ArtDial, ArtStage } from '../../toolkit/art/stage'
-import { toolkitSections } from '../../lib/sections'
+import { toolkitSections, SITE_LINKS, SITE_NAV_ID } from '../../lib/sections'
 import '../../styles/art.css'
 import '../../styles/docs.css'
 
@@ -23,7 +23,7 @@ const sections = [...toolkitSections('art'), { title: 'Rooms', pinned: true, ite
 export default function ArtGallery() {
   return (
     <div data-site="docs" data-expression="balanced">
-    <SideNav label="Art" sections={sections} current="/art" remember="weft:site:toolkit" />
+    <SideNav id={SITE_NAV_ID} lead={SITE_LINKS} label="Art" sections={sections} current="/art" remember="weft:site:toolkit" />
     <article data-site="doc" data-art="gallery">
       <header>
         <h1>Art</h1>

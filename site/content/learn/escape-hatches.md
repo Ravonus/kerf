@@ -132,18 +132,29 @@ and how warp-core's behaviours attach with `use`.
 ## Async and loading states
 
 `resource` is `derived` for data that arrives later. It refetches when what it read changes and cancels the request it
-no longer needs. `<Boundary>` says what to show while it loads, and when it fails:
+no longer needs. `<Boundary>` says what to show while the first answer loads; after that, `pending` tells you a newer
+one is on its way, so you can dim the old one instead of emptying the page:
 
 :::demo loading
 
 ```tsx
 import { Boundary, resource } from '@weft-js/core'
+import { Spinner } from '@weft-js/warp'
 
-export function Weather(props: { city: string }) {
+function Report(props: { city: string }) {
   const report = resource(signal => fetch(`/api/weather/${props.city}`, { signal }).then(r => r.text()))
   return (
+    <p aria-busy={report.pending ? 'true' : 'false'}>
+      {report.value} {report.pending && report.value !== undefined && <Spinner label="Updating" />}
+    </p>
+  )
+}
+
+// The resource is made inside the Boundary, so the Boundary knows to wait for it.
+export function Weather(props: { city: string }) {
+  return (
     <Boundary pending={<p>Loading…</p>}>
-      <p>{report.value}</p>
+      <Report city={props.city} />
     </Boundary>
   )
 }

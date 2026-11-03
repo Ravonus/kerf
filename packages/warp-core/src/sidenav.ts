@@ -1,13 +1,19 @@
-// A docs sidebar's behaviour, for any framework: which sections a viewer folded, kept in localStorage, and the current
-// page brought into view inside the sidebar's own scroll, so arriving deep in a long list doesn't start at its top.
+// A docs sidebar's behaviour, for any framework: which sections a viewer folded, kept in localStorage; the current page
+// brought into view inside the sidebar's own scroll; and, where the CSS lays the panel over the page (a phone), the
+// panel opening from any button whose aria-controls names it, with focus trapped, Escape, the backdrop and a link
+// closing it, and focus going back to the button.
 
 /** Section titles a viewer opened (`true`) or closed (`false`). A section with no entry follows the default. */
 export type Folds = Record<string, boolean>
 
-/** Options for the side navigation's scroll. */
+/** Options for the side navigation. */
 export interface SideNavOptions {
   /** The current page's href. A change brings the new current link into view. */
   current?: string | undefined
+  /** Whether the overlaid panel is open. Ignored while the panel is docked. */
+  open?: boolean | undefined
+  /** Asked to open or close: a controlling button, Escape, the backdrop, the close button or a link. */
+  onOpenChange?: ((open: boolean) => void) | undefined
 }
 
 /** The folds kept under `key`. Storage that is blocked, or holds something this didn't write, reads as none. */
@@ -30,24 +36,99 @@ export function writeFolds(key: string, folds: Folds) {
   }
 }
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 /**
- * Brings the current link (`aria-current="page"`) into view in `el`'s own scroll, a third of the way down, without
- * moving the page. Runs once on attach and again after the current page changes.
+ * `el` is the side navigation's root, holding `[data-part="panel"]` (with an id), `[data-part="scroll"]` and
+ * `[data-part="backdrop"]`. Whether the panel is overlaid is read from its computed `position` (`fixed`), so the
+ * breakpoint lives in the CSS only.
  */
-export function sideNav(el: HTMLElement, _opts: SideNavOptions = {}) {
-  const win = el.ownerDocument.defaultView
-  let frame = 0
+export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
+  const doc = el.ownerDocument, win = doc.defaultView
+  const panel = el.querySelector<HTMLElement>('[data-part="panel"]') ?? el
+  const scroller = el.querySelector<HTMLElement>('[data-part="scroll"]') ?? panel
+  let o = opts, frame = 0, opener: HTMLElement | null = null, shown = false
+  const overlaid = () => !!win && win.getComputedStyle(panel).position === 'fixed'
+  const controllers = () => (panel.id ? [...doc.querySelectorAll<HTMLElement>(`[aria-controls~="${panel.id}"]`)].filter(b => !panel.contains(b)) : [])
+  const ask = (open: boolean) => o.onOpenChange?.(open)
+
   const reveal = () => {
-    const at = el.querySelector<HTMLElement>('[aria-current="page"]')
-    if (!at || el.scrollHeight <= el.clientHeight) return
-    const box = el.getBoundingClientRect(), a = at.getBoundingClientRect()
-    if (a.top < box.top || a.bottom > box.bottom) el.scrollTop += a.top - box.top - el.clientHeight / 3
+    const at = scroller.querySelector<HTMLElement>('[aria-current="page"]')
+    if (!at || scroller.scrollHeight <= scroller.clientHeight) return
+    const box = scroller.getBoundingClientRect(), a = at.getBoundingClientRect()
+    if (a.top < box.top || a.bottom > box.bottom) scroller.scrollTop += a.top - box.top - scroller.clientHeight / 3
   }
   // After the framework's own update, so a section the new page opened has its height.
   const later = () => { if (win) { win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(reveal) } }
+
+  const onDocClick = (e: MouseEvent) => {
+    const t = e.target as Element | null
+    const button = t?.closest?.('[aria-controls]')
+    if (button && !panel.contains(button) && controllers().includes(button as HTMLElement)) {
+      if (!overlaid()) return
+      e.preventDefault()
+      opener = button as HTMLElement
+      ask(!o.open)
+      return
+    }
+    if (!o.open) return
+    if (t?.closest?.('[data-part="backdrop"]') && el.contains(t)) ask(false)
+    else if (t?.closest?.('[data-part="close"], a[href]') && panel.contains(t)) ask(false)
+  }
+  const onKey = (e: KeyboardEvent) => {
+    if (!o.open || !overlaid()) return
+    if (e.key === 'Escape') { e.preventDefault(); ask(false); return }
+    if (e.key !== 'Tab') return
+    const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(n => n.getClientRects().length > 0)
+    if (!items.length) return
+    const first = items[0]!, last = items.at(-1)!
+    const at = doc.activeElement
+    if (e.shiftKey && (at === first || !panel.contains(at))) { e.preventDefault(); last.focus() } else if (!e.shiftKey && (at === last || !panel.contains(at))) { e.preventDefault(); first.focus() }
+  }
+  doc.addEventListener('click', onDocClick)
+  doc.addEventListener('keydown', onKey)
+
+  const sync = () => {
+    const open = !!o.open && overlaid()
+    for (const b of controllers()) b.setAttribute('aria-expanded', open ? 'true' : 'false')
+    if (open === shown) return
+    shown = open
+    if (open) {
+      opener ??= doc.activeElement instanceof HTMLElement ? doc.activeElement : null
+      panel.setAttribute('role', 'dialog')
+      panel.setAttribute('aria-modal', 'true')
+      const title = panel.querySelector('[data-part="title"]')
+      if (title?.id) panel.setAttribute('aria-labelledby', title.id)
+      doc.documentElement.style.overflow = 'hidden'
+      later()
+      win?.requestAnimationFrame(() => (panel.querySelector<HTMLElement>('[data-part="close"]') ?? panel).focus())
+    } else {
+      panel.removeAttribute('role')
+      panel.removeAttribute('aria-modal')
+      panel.removeAttribute('aria-labelledby')
+      doc.documentElement.style.overflow = ''
+      if (opener?.isConnected && panel.contains(doc.activeElement)) opener.focus()
+      opener = null
+    }
+  }
+  // A phone turned wide while the panel was open: the panel docks, so the modal state goes.
+  const onResize = () => { if (o.open && !overlaid()) ask(false); sync() }
+  win?.addEventListener('resize', onResize)
+  sync()
   later()
   return {
-    update() { later() },
-    destroy() { win?.cancelAnimationFrame(frame) },
+    update(next: SideNavOptions) {
+      const moved = next.current !== o.current
+      o = next
+      sync()
+      if (moved) later()
+    },
+    destroy() {
+      win?.cancelAnimationFrame(frame)
+      doc.removeEventListener('click', onDocClick)
+      doc.removeEventListener('keydown', onKey)
+      win?.removeEventListener('resize', onResize)
+      if (shown) doc.documentElement.style.overflow = ''
+    },
   }
 }

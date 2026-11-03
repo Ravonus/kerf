@@ -15,6 +15,12 @@ that returns a promise, and it gives you a value that fills in when the promise 
 
 :::demo loading
 
+The demo shows the two kinds of wait a page has. The first press has no forecast to keep, so `<Boundary>` shows its
+fallback, a spinner and "Loading…", until the answer arrives. After that, each press keeps the last forecast on screen,
+dimmed, with a spinner beside it: `weather.pending` is `true` while the next request is in flight, and the old
+`weather.value` is still there to show. Press Next day several times quickly and the count goes up: each press aborts
+the request before it, through the `signal` the fetcher was given. Both parts are below.
+
 ## `resource`
 
 ```tsx
@@ -137,18 +143,29 @@ import { Button } from '@weft-js/warp'
 
 type User = { name: string }
 
-export function Profile(props: { id: string }) {
+function Name(props: { id: string }) {
   const user = resource(signal => fetch(`/api/users/${props.id}`, { signal }).then(r => r.json() as Promise<User>))
+  return <h1>{user.value?.name}</h1>
+}
+
+export function Profile(props: { id: string }) {
   return (
     <Boundary
       pending={<p>Loading…</p>}
       error={(e, retry) => <Button onClick={retry}>Couldn't load the profile. Retry</Button>}
     >
-      <h1>{user.value?.name}</h1>
+      <Name id={props.id} />
     </Boundary>
   )
 }
 ```
+
+:::pitfall Make the resource inside the Boundary
+A Boundary waits for the resources created *while its children are built*. A resource made in the same component as the
+`<Boundary>`, above its JSX, is created before the Boundary exists, so the Boundary never sees it: no fallback shows,
+and the content appears with `undefined` in it. Move the `resource` call into a small component rendered inside the
+Boundary, as `Name` is here.
+:::
 
 A `Boundary` watches every resource created inside it, however deep, in any component below it:
 
@@ -281,7 +298,8 @@ user's name and email. While it loads, show "Loading…"; if it fails, show the 
 should load the new user and cancel the old request.
 :::solution
 The fetcher reads `props.id` before anything waits, so a new id refetches, and it passes `signal` to `fetch`, so the old
-request is cancelled. A Boundary covers both the loading and the error view.
+request is cancelled. The resource is made in `Details`, inside the Boundary, so the Boundary covers both the loading
+and the error view.
 
 ```tsx
 import { Boundary, resource } from '@weft-js/core'
@@ -289,12 +307,16 @@ import { Button } from '@weft-js/warp'
 
 type User = { name: string; email: string }
 
-export function UserCard(props: { id: number }) {
+function Details(props: { id: number }) {
   const user = resource(async signal => {
     const res = await fetch(`https://jsonplaceholder.typicode.com/users/${props.id}`, { signal })
     if (!res.ok) throw new Error(`No user ${props.id} (${res.status})`)
     return (await res.json()) as User
   })
+  return <p>{user.value?.name}, {user.value?.email}</p>
+}
+
+export function UserCard(props: { id: number }) {
   return (
     <Boundary
       pending={<p>Loading…</p>}
@@ -304,7 +326,7 @@ export function UserCard(props: { id: number }) {
         </p>
       )}
     >
-      <p>{user.value?.name}, {user.value?.email}</p>
+      <Details id={props.id} />
     </Boundary>
   )
 }
@@ -335,20 +357,25 @@ export function Report() {
 ```
 :::solution
 The ternary hides the content whenever `pending` is true, including on refetches. Let a Boundary handle the first
-load, which it does only once, and show a hint beside the content while a refetch runs:
+load, which it does only once, and show a hint beside the content while a refetch runs. The resource moves into `Total`,
+inside the Boundary, so the Boundary can see it:
 
 ```tsx
 import { Boundary, resource, state } from '@weft-js/core'
 import { Select } from '@weft-js/warp'
 
+function Total(props: { month: string | null }) {
+  const report = resource(signal => fetch(`/api/report/${props.month}`, { signal }).then(r => r.json() as Promise<{ total: number }>))
+  return <p>Total: {report.value?.total} {report.pending && report.value !== undefined && <small>updating…</small>}</p>
+}
+
 export function Report() {
   const month = state<string | null>('2026-10')
-  const report = resource(signal => fetch(`/api/report/${month.value}`, { signal }).then(r => r.json() as Promise<{ total: number }>))
   return (
     <div>
       <Select label="Month" value={month} options={[{ value: '2026-10', label: 'October' }, { value: '2026-11', label: 'November' }]} />
       <Boundary pending={<p>Loading…</p>}>
-        <p>Total: {report.value?.total} {report.pending && report.value !== undefined && <small>updating…</small>}</p>
+        <Total month={month.value} />
       </Boundary>
     </div>
   )
