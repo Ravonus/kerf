@@ -4,7 +4,7 @@
 // `runtime.channels`, so nothing of the server ships here.
 
 import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
-import { HANDOVER, openLine, socketDown } from './link'
+import { HANDOVER, SOCKETS, openLine, socketDown } from './link'
 import { currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track, type Context, type Fn, type Skip, type StandardSchemaV1 } from './data'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
@@ -15,8 +15,11 @@ type Schemas = Record<string, StandardSchemaV1>
 type Inputs<T extends Schemas> = { [K in keyof T]: In<T[K]> }
 type Outputs<T extends Schemas> = { [K in keyof T]: Out<T[K]> }
 
-/** Where a connection stands; `unauthorized` waits for `rejoin`. */
-export type ChannelStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
+/**
+ * Where a connection stands; `unauthorized` waits for `rejoin`. `unavailable`: this deploy can't hold a socket (a
+ * function host, R024), so nothing connects and nothing is retried.
+ */
+export type ChannelStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized' | 'unavailable'
 
 /** `room.publish`: who a message goes to, and whether it can be replayed. */
 export interface PublishOptions {
@@ -363,6 +366,7 @@ const acks = new Map<number, { ok: () => void; no: (e: unknown) => void; n: numb
 let ackId = 0
 
 async function post(j: Join, name: string, message: unknown): Promise<void> {
+  if (!SOCKETS && !(DEV && net())) throw new FnError({ code: 'R024', message: "this deploy can't hold a socket: not sent" }, 503)
   if (!j.joined && !j.refused) {
     await new Promise<void>(ok => {
       const done = () => {
@@ -444,6 +448,8 @@ function rejoin(j: Join) {
 
 function start() {
   if (running) return
+  // a function host: no socket to dial, so say so once instead of retrying forever
+  if (!SOCKETS && !(DEV && net())) return statusAll('unavailable')
   running = true
   queueMicrotask(() => void run())
 }

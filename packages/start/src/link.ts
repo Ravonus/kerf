@@ -145,10 +145,15 @@ interface Mine { id: string; hello: string; frame(text: string): void; closed(co
 const lines = new Map<string, Mine>()
 let nth = 0
 
+declare const __WEFT_SOCKETS__: boolean | undefined
+/** Whether this deploy can hold a socket. `weft build` says no for a function host (Netlify, Vercel, Lambda…). */
+export const SOCKETS = typeof __WEFT_SOCKETS__ === 'undefined' || __WEFT_SOCKETS__
+
 /** Sockets that never said hello in a row: the page's way to learn this host has none. */
 export let socketFailures = 0
-/** The one who asked goes round SSE once, and the socket gets another chance after. */
+/** The one who asked goes round SSE once, and the socket gets another chance after. Where the build said none, always. */
 export const noSockets = () => {
+  if (!SOCKETS) return true
   const none = socketFailures >= 2
   if (none) socketFailures = 0
   return none
@@ -351,7 +356,7 @@ function forward(owner: string, text: string) {
 }
 
 function wantSocket() {
-  if (ws || retry !== undefined || !election?.leading() || offline()) return
+  if (!SOCKETS || ws || retry !== undefined || !election?.leading() || offline()) return
   if (!attempt) return dial()
   retry = setTimeout(() => {
     retry = undefined

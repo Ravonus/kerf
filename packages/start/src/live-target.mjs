@@ -23,6 +23,9 @@ export function liveTarget(preset = 'node') {
   return hit ? { preset, held: false, host: hit[1] } : { preset, held: true, host: 'a long-running server' }
 }
 
+/** Whether a deploy can hold a browser's socket: a long-running server, a Durable Object, or Deno's upgraded request. */
+export const holdsSockets = (preset = 'node') => liveTarget(preset).held || /^(cloudflare[-_]durable|deno[-_]deploy)/.test(preset)
+
 const SKIP = new Set(['node_modules', '.weft', '.output', 'dist'])
 
 /** `live: { required: true }` on a query, and `.live(input, { required: true })` in a component, with where. */

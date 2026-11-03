@@ -8,6 +8,7 @@ import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
 import weft from '@weft-js/core/vite'
 import { devRunner, devSockets } from './dev-runtime.mjs'
+import { holdsSockets } from './live-target.mjs'
 import weftStart, { startDir } from './vite.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
@@ -27,6 +28,8 @@ function config({ root, site, hydration, preset, port, logLevel, command, nitro:
     configFile: user ?? false,
     logLevel,
     server: { port: port ?? 5173, strictPort: port !== undefined },
+    // A function host can't hold a socket: the page goes straight to SSE, and a channel says `unavailable` (R024)
+    ...(command === 'build' && { define: { __WEFT_SOCKETS__: JSON.stringify(holdsSockets(preset)) } }),
     plugins: [
       weft({ hydratable: true }),
       weftStart({ root, site, hydration }),

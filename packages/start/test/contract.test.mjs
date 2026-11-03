@@ -2,7 +2,11 @@
 // no converter, C002 for a value its `output` rejects; Q012 when the database or auth reaches the client graph.
 import { z } from 'zod'
 import { busProblem, describe as contract } from '../src/contract.mjs'
+import { holdsSockets } from '../src/live-target.mjs'
 import { createScope, fetchQuery } from '../src/exec'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import weftStart, { clientStubs, withIds } from '../src/vite.mjs'
 
@@ -95,6 +99,21 @@ test('R002: the memory bus on a multi-instance preset, only in an app that uses 
   expect(busProblem({ preset: 'node', bus: 'memory', streams: true, root })).toBeUndefined()
   expect(busProblem({ preset: 'cloudflare_module', bus: 'memory', streams: false, root })).toContain('cloudflare') // the fixture's `.live()`
   expect(busProblem({ preset: 'vercel', bus: 'memory', streams: false, root: fileURLToPath(new URL('./fixtures/scan', import.meta.url)) })).toBeUndefined()
+})
+
+test('R024: which presets can hold a browser\'s socket', () => {
+  expect(['node_server', 'bun', 'deno_server', 'cloudflare_durable', 'deno_deploy'].filter(p => !holdsSockets(p))).toEqual([])
+  expect(['netlify', 'vercel', 'aws_lambda', 'azure_functions', 'cloudflare_module', 'firebase'].filter(holdsSockets)).toEqual([])
+})
+
+test('R002 reads a `.live(` call, not the word in prose', () => {
+  const root = mkdtempSync(join(tmpdir(), 'weft-live-'))
+  mkdirSync(join(root, 'src'))
+  writeFileSync(join(root, 'src/a.ts'), "export const why = 'and .live() keeps it in step'\n")
+  expect(busProblem({ preset: 'vercel', bus: 'memory', streams: false, root })).toBeUndefined()
+  writeFileSync(join(root, 'src/b.ts'), 'export const list = () => notes.live()\n')
+  expect(busProblem({ preset: 'vercel', bus: 'memory', streams: false, root })).toContain('many instances')
+  rmSync(root, { recursive: true, force: true })
 })
 
 test('a stream gets a client stub, and a topic stays on the server', () => {

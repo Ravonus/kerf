@@ -11,6 +11,8 @@ const ISOLATED = { 'cross-origin-opener-policy': 'same-origin', 'cross-origin-em
 export default defineConfig({
   // arena/ is its own project: the same page in React, Solid and weft, none of which may load warp or the sizes it compares change.
   check: { exclude: ['arena/**'] },
+  // The chat demo's channel can't connect on Netlify's functions: it says so on the page, and works under `weft dev`.
+  build: { unsafeAllow: { R024: 'the chat demo shows unavailable on Netlify' } },
   tasks: {
     content: { run: 'node --disable-warning=ExperimentalWarning scripts/content.mjs', description: 'Generate docs, search indexes, llms.txt and numbers from the repo', sideEffects: ['fs'] },
   },

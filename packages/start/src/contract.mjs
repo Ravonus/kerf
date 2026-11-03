@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
 import weft from '@weft-js/core/vite'
-import { literalSecrets, livePlan, refusal, resolveTarget, scanRequired } from './live-target.mjs'
+import { holdsSockets, literalSecrets, liveTarget, livePlan, refusal, resolveTarget, scanRequired } from './live-target.mjs'
 import { readMigrations } from './migrations.mjs'
 import { shapeTree, toJson } from './shape.mjs'
 import weftStart, { startDir } from './vite.mjs'
@@ -151,7 +151,7 @@ const MULTI = /^(vercel|netlify|aws[-_]|azure|cloudflare|firebase|deno[-_]deploy
 const usesLive = root => {
   const walk = dir => readdirSync(dir, { withFileTypes: true }).some(d => {
     const f = join(dir, d.name)
-    return d.isDirectory() ? walk(f) : /\.[cm]?[jt]sx?$/.test(d.name) && /\.live\(/.test(readFileSync(f, 'utf8'))
+    return d.isDirectory() ? walk(f) : /\.[cm]?[jt]sx?$/.test(d.name) && /[\w)\]]\.live\(/.test(readFileSync(f, 'utf8'))
   })
   return existsSync(join(root, 'src')) && walk(join(root, 'src'))
 }
@@ -287,7 +287,11 @@ export function writeContract({ root, site = {}, preset, rust, live, verify }) {
   return withFns({ root, site }, async (fns, server) => {
     const { diagnostics, ...contract } = describe(fns, rust)
     const mod = await server.ssrLoadModule('virtual:weft/realtime')
-    const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
+    const socket = [...fns.values()].find(f => f.kind === 'channel' || f.kind === 'shared')
+    // a channel needs the socket itself: on a function host no bus helps, so R024 says where it can run instead of R002
+    const unheld = socket && !holdsSockets(preset)
+    if (unheld) diagnostics.push({ code: 'R024', severity: 'error', why: `\`${socket.$id.replace(/\..*$/, '')}\` is a ${socket.kind === 'shared' ? 'shared state' : 'channel'}, which needs a WebSocket, and ${liveTarget(preset).host} on \`${preset}\` can't hold one: the page loads, and the channel says \`unavailable\`. \`weft deploy hosts\` lists the hosts that can (Fly, Render).` })
+    const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || (!unheld && (f.kind === 'channel' || f.kind === 'shared'))), root })
     if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft-js/realtime-redis\` or \`@weft-js/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
     diagnostics.push(...planOf({ root, preset, realtime: mod.default }).diagnostics)
     let verified = []

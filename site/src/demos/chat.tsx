@@ -29,7 +29,8 @@ export default function Chat() {
     <Card title="Chat">
       <Badge>{chat.status.value}</Badge>
       {!joined.value && <Button onClick={join}>Join</Button>}
-      {joined.value && (
+      {chat.status.value === 'unavailable' && <p>This site runs on functions, which can't hold the chat's socket. Run it with <code>weft dev</code> to try it.</p>}
+      {joined.value && chat.status.value !== 'unavailable' && (
         <form onSubmit={send}>
           <ol data-part="said">
             {said.value.map(m => (
