@@ -33,7 +33,7 @@ test('the links carry warp\'s sliding bar: it takes over at the next frame and m
   await flush()
   const bar = rail(c).querySelector<HTMLElement>(':scope > [data-part="indicator"]')
   expect(bar).not.toBeNull()
-  await new Promise(r => requestAnimationFrame(r))
+  await new Promise<void>(done => { requestAnimationFrame(() => done()) })
   expect(rail(c).hasAttribute('data-ready')).toBe(true)
   const other = [...rail(c).querySelectorAll<HTMLAnchorElement>('a[href]')].find(a => !a.hasAttribute('aria-current') && !a.closest('[hidden]'))!
   // jsdom lays nothing out: give the hovered link a place, as a browser would.
