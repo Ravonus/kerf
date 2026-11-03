@@ -10,6 +10,12 @@
 // for goes with its keyframes.
 const KEYED = /\[data-(?:scope|part|variant|tone|emphasis|size|appearance|flow|expression|fields|density|flair|form)=["']?([^\]"']+)["']?\]/g
 const OWNED_PROP = /^--(?:warp-|_)/
+// Any other data-* attribute has to be named in the build as well, as itself or as its dataset key: `[data-lift]` is
+// written in markup or set with `el.dataset.lift`, so a build with neither can't reach it. `data-` in a build (a name
+// put together at run time) keeps them all. The dials the OS or a stored choice set on the root stay.
+const ATTR = /\[data-([\w-]+)/g
+const NAMED = /^(?:scope|part|variant|tone|emphasis|size|appearance|flow|expression|fields|density|flair|form|theme|motion|pointer)$/
+const camel = name => name.replace(/-(\w)/g, (_, c) => c.toUpperCase())
 
 /** Split at top-level `sep`, skipping strings and brackets. */
 function split(text, sep) {
@@ -77,6 +83,7 @@ export function reachable(selector, has) {
     rest = rest.slice(0, m.index) + rest.slice(end + 1)
   }
   for (const m of rest.matchAll(KEYED)) if (!has(m[1])) return false
+  for (const [, name] of rest.matchAll(ATTR)) if (!NAMED.test(name) && !has(`data-${name}`) && !has(camel(name))) return false
   return true
 }
 

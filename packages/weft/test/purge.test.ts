@@ -71,6 +71,15 @@ test('a data-flow motion no build file names goes', () => {
   expect(out('[data-flow=row]{color:red}[data-flow=icon]{color:blue}', 'row')).toBe('[data-flow=row]{color:red}')
 })
 
+test('a data attribute nothing in the build names goes; markup, a dataset key or a built name keep it', () => {
+  const css = '[data-lift] p{color:red}[data-drop-before]{color:blue}'
+  expect(out(css)).toBe('')
+  expect(out(css, 'data-lift')).toBe('[data-lift] p{color:red}')
+  expect(out(css, 'dropBefore')).toBe('[data-drop-before]{color:blue}')
+  expect(out(css, 'data-')).toBe(css)
+  expect(out('[data-theme=dark] p{color:red}[data-scope=a][data-state=open]{color:blue}', 'a')).toBe('[data-theme=dark] p{color:red}')
+})
+
 test('keep and template stems save names built at run time', () => {
   expect(purge(['[data-scope=knob]{color:red}'], words([], ['knob']))[0]).toContain('knob')
   // oxlint-disable-next-line no-template-curly-in-string -- source text: a template literal is what's being scanned
