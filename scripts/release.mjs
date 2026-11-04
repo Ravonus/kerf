@@ -4,6 +4,7 @@
 //
 //   node scripts/release.mjs                         build, stage, check, then `npm publish --dry-run` each. Nothing leaves.
 //   node scripts/release.mjs --publish               the same, then really publish to npmjs.org. You approve in a browser.
+//   git tag v<version> && git push origin v<version>    .github/workflows/publish.yml does the --publish, no approval.
 //   node scripts/release.mjs --publish --registry http://localhost:4873/    publish to a local registry instead
 //
 //   --out <dir>       where tarballs go (default .release/, gitignored)
@@ -154,7 +155,7 @@ const isUp = (name, version) => spawnSync(npm, ['view', `${name}@${version}`, 'v
 /** Exits non-zero on the first refusal: everything after it depends on it. */
 function send(tgz, name, version) {
   if (isUp(name, version)) return say(`${name}@${version} is already up`)
-  const auth = local ? [] : ['--auth-type=web']
+  const auth = local || process.env.GITHUB_ACTIONS ? [] : ['--auth-type=web'] // in CI npm uses the workflow's OIDC identity
   const r = spawnSync(npm, ['publish', tgz, '--access', 'public', '--tag', 'latest', '--registry', registry, '--ignore-scripts', ...auth, ...(publish ? [] : ['--dry-run'])], { stdio: 'inherit', shell: process.platform === 'win32' })
   if (r.status !== 0) throw new Error(`${name}: npm publish failed. Fix it and run this again: what's already up is skipped.`)
 }
