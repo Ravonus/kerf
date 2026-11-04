@@ -271,7 +271,9 @@ const STEPS = [
     run: async () => {
       // Anything that ships, at any severity; dev tools from high up, since they only ever run on a contributor's machine.
       const shipped = await run('pnpm', ['audit', '--prod', '--audit-level=low'])
-      return shipped.code ? shipped : run('pnpm', ['audit', '--audit-level=high'])
+      return lines(
+        shipped.code !== 0 ? shipped : await run('pnpm', ['audit', '--audit-level=high']),
+      )
     },
   },
   {

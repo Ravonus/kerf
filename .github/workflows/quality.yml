@@ -30,6 +30,8 @@ jobs:
       - uses: pnpm/action-setup@v4
       - run: pnpm run setup
       - run: pnpm --filter @weft-js/start exec playwright-core install --with-deps chromium firefox webkit
+      - name: Guardrail regression tests
+        run: node --test scripts/quality/*.test.mjs
       - run: pnpm run check --require-tools
       - name: Every commit is signed off
         if: github.event_name == 'pull_request'
