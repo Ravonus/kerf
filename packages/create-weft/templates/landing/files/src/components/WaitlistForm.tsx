@@ -19,6 +19,7 @@ export function WaitlistForm() {
               autocomplete="email"
               required
               {...form.field('email')}
+              value={String(form.value('email') ?? '')}
             />
             <Button type="submit" size="lg" loading={form.pending.value}>
               Join
