@@ -21,11 +21,7 @@
 // outside a render S002: this process serves many users, so it has no "the tab's app".
 
 import { AsyncLocalStorage } from 'node:async_hooks'
-import type * as NodeZlib from 'node:zlib'
-import type { AnyRoute } from '@tanstack/router-core'
 import {
-  BaseRootRoute,
-  BaseRoute,
   RouterCore,
   createNonReactiveMutableStore,
   createNonReactiveReadonlyStore,
@@ -43,15 +39,12 @@ import {
   renderToStringAsync,
   type Merged,
   type Meta as MetaObject,
-  type Site,
   type Stream,
 } from '@weft-js/core/ssr'
-import { createRouteState, type Component, type Match, type RoutePayload } from './router'
-import { sessionChanged, type AuthProvider } from './auth'
-import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
+import { createRouteState, type Component, type RoutePayload } from './router'
+import { EXTENSION, type ServerExtension } from './extension'
 import { deployUrl, pageText, pathPages } from './derive.mjs'
 import {
-  CLIENT_IP,
   decodeForm,
   fieldsOf,
   FnError,
@@ -60,171 +53,54 @@ import {
   keyOf,
   runtime,
   StartError,
-  type Context,
-  type Redirect,
   type SchemaIssue,
   type Wire,
 } from './data'
 import * as exec from './exec'
-import type { MediaServer, Scope, Store } from './exec'
-import { configure, hub, rtRoute, type RealtimeOptions } from './hub'
+import type { MediaServer, Scope } from './exec'
+import { configure, hub, rtRoute } from './hub'
 import { socketRoute } from './socket'
 import { App } from './view'
 import { DefaultCard } from './og/DefaultCard'
 import { ErrorPage, NotFoundPage } from './builtin'
 import { renderCard } from './og/index.mjs'
 import { keptSheets, pageStyles, sheetId } from './inline.mjs'
-import { firstPaint, type Pieces } from './first-paint'
-import { pick } from './sheets.mjs'
 import { capture } from './capture.mjs'
+import { compressed, whole } from './server/compression'
+import { serverFunction } from './server/functions'
+import {
+  tableStyles,
+  pageChunks,
+  pageSheets,
+  saveData,
+  islandsOf,
+  modulepreloads,
+  withLevels,
+} from './server/render'
+import { json, esc, moved, thenable, cardPath, hash } from './server/text'
+import { routeTree, cleanParams, type LoadContext } from './server/routes'
+import { stamped, cookieJar, echoed, withHeaders } from './server/request'
 
-/** A page route from the file tree. */
-export interface RouteEntry {
-  id: string
-  file: string
-  layouts: string[]
-  pattern: string
-  params: string[]
-  splat?: string
-  card?: string
-  kind: 'page' | '404' | 'error'
-}
-/** A layout from the file tree. */
-export interface LayoutEntry {
-  id: string
-  file: string
-  dir: string
-  parent?: string
-}
-/** The routes and layouts `weft build` found. */
-export interface Manifest {
-  dir: string
-  routes: RouteEntry[]
-  layouts: LayoutEntry[]
-  defaultCard?: string
-}
-
-/** What a route file exports. */
-export interface RouteModule {
-  default?: Component
-  load?: (args: {
-    params: Record<string, string>
-    request: Request
-    signal: AbortSignal
-    ctx: Context
-  }) => unknown
-  meta?:
-    | MetaObject
-    | ((args: {
-        params: Record<string, string>
-        data: unknown
-      }) => MetaObject | Promise<MetaObject>)
-  prerender?:
-    | true
-    | Record<string, string>[]
-    | (() => Record<string, string>[] | Promise<Record<string, string>[]>)
-  size?: { width: number; height: number }
-}
-
-/** A font for generated cards. */
-export interface Font {
-  name: string
-  data: Uint8Array
-  weight?: number
-  style?: 'normal' | 'italic'
-}
-
-/** `createHandler`: the app as the build describes it, and how to serve it. */
-export interface HandlerOptions {
-  manifest: Manifest
-  /** Route, layout and card modules by manifest file. */
-  modules: Record<string, RouteModule>
-  site?: Site
-  /**
-   * The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`).
-   * `pieces`: the build's first-paint table. Without it, `inline` and weft's purge (`critical`) are what `pageStyles` uses.
-   */
-  assets?: {
-    entry?: string
-    js?: { href: string }[]
-    css?: { href: string }[]
-    fonts?: { href: string; type: string }[]
-    pieces?: Pieces & {
-      shared?: { href: string; has: string[] }
-      routes: { href: string; has: string[] }[]
-    }
-    inline?: Record<string, string>
-    critical?: {
-      parse: (css: string) => unknown[]
-      purge: (sheets: string[], found: { has: (word: string) => boolean }) => string[]
-    }
-  }
-  /** Changes with every build: part of each card's `?v=` hash. */
-  build?: string
-  dev?: boolean
-  fonts?: Font[]
-  /** Route and layout ids with no client code (PLAN §11): the server sends their HTML. */
-  statics?: string[]
-  /** Client chunks by level or island id: the page's own are preloaded, so they don't wait for the entry to ask. */
-  chunks?: Record<string, { js?: { href: string }[]; css?: { href: string }[] }>
-  /** Some island can wait, so every page carries the capture script: a navigation can arrive at one that does. */
-  lazy?: boolean
-  /** Stream timeout for Boundaries (ms). */
-  timeout?: number
-  /** How long (ms) a page waits for its Boundaries' data before streaming it: what lands sooner goes in the page. 0 streams at once. */
-  hold?: number
-  /** The app's context for `load` and server functions (`src/context.server.ts`'s default export). */
-  context?: (args: { request: Request }) => object | Promise<object>
-  /** The shared cache for `cache: { life }` queries (memory by default). */
-  store?: Store
-  /** `src/auth.server.ts`'s default export, any provider: mounted at its base path, checked on the first request. */
-  auth?: Pick<AuthProvider, 'handler' | 'basePath' | '$weft'>
-  /** `server.extension` providers with an app file (`virtual:weft/extensions`), loaded on the first request. */
-  extensions?: ExtensionEntry[]
-  /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
-  migrations?: () => { tag: string; sql: string }[]
-  /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
-  media?: () => Promise<MediaServer>
-  /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
-  realtime?: RealtimeOptions
-  /** `false`: never build URLs on the request's origin (`weft routes --meta`, whose requests aren't real). */
-  requestOrigin?: false
-  /** Queries marked `live: { required: true }` (`scanRequired`, at build). */
-  liveRequired?: string[]
-  /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
-  onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
-}
-
-/** One matched route level, with its module and the data before serialising. */
-export interface Level extends Match {
-  mod?: RouteModule | undefined
-  raw: unknown
-}
-
-/** Where the words on a page came from, and its image: what `weft routes --meta` and `weft check` report. */
-export interface MetaSource {
-  title: 'route' | 'layout' | 'auto' | 'config' | 'none'
-  description: 'route' | 'layout' | 'auto' | 'config' | 'none'
-  image: 'explicit' | 'card' | 'auto' | 'none'
-}
-
-/** What a path comes to: the status, the route and its levels. */
-export interface Resolved {
-  status: number
-  path: string
-  levels: Level[]
-  head: Merged
-  /** The page route, when one matched. */
-  route?: RouteEntry | undefined
-  error?: unknown
-  /** A loader called `redirect()`: nothing renders. */
-  redirect?: Redirect
-  /** The metas the head is merged from, until `complete` has finished it. */
-  metas?: MetaObject[] | undefined
-  source?: MetaSource
-  /** The origin URLs are built on, when one is known. */
-  origin?: string | undefined
-}
+import type {
+  RouteEntry,
+  LayoutEntry,
+  HandlerOptions,
+  Level,
+  MetaSource,
+  Resolved,
+} from './server/types'
+export { cardPath, hash } from './server/text'
+export type {
+  RouteEntry,
+  LayoutEntry,
+  Manifest,
+  RouteModule,
+  Font,
+  HandlerOptions,
+  Level,
+  MetaSource,
+  Resolved,
+} from './server/types'
 
 type RouterOptions = ConstructorParameters<typeof RouterCore>[0]
 
@@ -241,19 +117,6 @@ const stores = () => ({
   createReadonlyStore: createNonReactiveReadonlyStore,
   batch: (f: () => void) => f(),
 })
-const json = (v: unknown) => JSON.stringify(v ?? null).replace(/</g, '\\u003c')
-const esc = (s: string) =>
-  s.replace(/[&<"]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
-/**
- * A redirect's body. A server's 3xx is followed by its `location`; a prerendered one is a file on a static host, and this
- * is what that file says: go now, and the address to index. No stylesheet, so no view transition starts on a page
- * that never paints (Chrome aborts it, and logs an InvalidStateError).
- */
-const moved = (href: string) =>
-  `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Moved</title><meta name="robots" content="noindex"><link rel="canonical" href="${esc(href)}"><meta http-equiv="refresh" content="0; url=${esc(href)}"><a href="${esc(href)}">Moved here</a>`
-const thenable = (v: unknown): v is PromiseLike<unknown> =>
-  typeof (v as Partial<PromiseLike<unknown>> | null | undefined)?.then === 'function'
-
 /** The origin a head's URLs are built on, or none: then canonical and og:url stay out. */
 function pointAt(head: Merged, origin: string | undefined) {
   if (origin) head.url = origin
@@ -262,22 +125,6 @@ function pointAt(head: Merged, origin: string | undefined) {
 
 /** Render passes a page may take. Only a backstop: a render stops when its passes stop reading anything new, and `timeout` ends a stream. */
 const PASSES = 1024
-
-/** `/` → `index`, `/users/42` → `users/42`: the card path under `/_weft/og/`. */
-export const cardPath = (path: string) =>
-  path.replace(/[?#].*/, '').replace(/^\/+|\/+$/g, '') || 'index'
-
-/** FNV-1a, twice (different seeds), in base 36: a stable, sync content hash for `?v=`. */
-export function hash(s: string): string {
-  let a = 0x811c9dc5,
-    b = 0x01000193 ^ 0x5bd1e995
-  for (let i = 0; i < s.length; i++) {
-    const c = s.charCodeAt(i)
-    a = Math.imul(a ^ c, 0x01000193)
-    b = Math.imul(b ^ c, 0x5bd1e995)
-  }
-  return ((a >>> 0).toString(36) + (b >>> 0).toString(36)).slice(0, 10)
-}
 
 /** The app as a `(Request) => Response`: pages, data, functions and cards. */
 export function createHandler(options: HandlerOptions) {
@@ -334,7 +181,7 @@ export function createHandler(options: HandlerOptions) {
         region(statics.has(id), d, statics.has(r.levels[d - 1]?.id ?? ''), body)
     return route
   }
-  const tree = routeTree(manifest, modules)
+  const tree = routeTree(manifest, modules, als)
   let provider: Promise<MediaServer> | undefined
   const mediaServer = () => (provider ??= options.media?.())
   const scopeOptions = {
@@ -1140,107 +987,6 @@ export function createHandler(options: HandlerOptions) {
     )
   }
 
-  /** `/_weft/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
-  async function fn(url: URL, request: Request, scope: Scope): Promise<Response> {
-    const id = decodeURIComponent(url.pathname.slice('/_weft/fn/'.length))
-    const f = fns.get(id)
-    const out = (body: unknown, status = 200) =>
-      withHeaders(Response.json(body, { status, headers: { 'cache-control': 'no-store' } }), scope)
-    const fail = (
-      code: string,
-      message: string,
-      status: number,
-      extra: object = {},
-      sent?: unknown,
-    ) => {
-      options.onDiagnostic?.({ code, severity: 'error', message })
-      return out(
-        { e: { code, message: sent instanceof Error ? sent.message : message, ...extra } },
-        status,
-      )
-    }
-    if (!f)
-      return fail(
-        'Q009',
-        `Q009: no server function \`${id}\` (the page is older than the server, or the module isn't a server module): reload`,
-        404,
-      )
-    let fromForm = false
-    if (f.kind === 'stream')
-      return fail(
-        'Q009',
-        `Q009: \`${id}\` is a stream: its client reads it over \`/_weft/rt\``,
-        405,
-      )
-    try {
-      if (f.kind === 'query') {
-        if (request.method !== 'GET' && request.method !== 'HEAD')
-          return fail('Q009', `Q009: \`${id}\` is a query: GET only`, 405)
-        const raw = url.searchParams.get('i')
-        const e = await exec.fetchQuery(scope, f, raw === null ? undefined : JSON.parse(raw))
-        return out({ v: e.v, t: e.tags })
-      }
-      if (request.method !== 'POST') return fail('Q010', `Q010: mutation \`${id}\` needs POST`, 405)
-      const origin = request.headers.get('origin')
-      const from = request.headers.get('sec-fetch-site')
-      const cross =
-        (origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none')
-      const type = request.headers.get('content-type') ?? ''
-      const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-weft` still forces a preflight
-      if (
-        cross ||
-        request.headers.get('x-weft') !== '1' ||
-        !(multipart || type.startsWith('application/json'))
-      )
-        return fail(
-          'Q010',
-          `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-weft: 1\`, same origin): call it through its stub`,
-          403,
-        )
-      const body = multipart
-        ? await multipartBody(request)
-        : ((await request.json()) as { i?: unknown; f?: [string, unknown][]; c?: 1 })
-      fromForm = !!body.c
-      // A token opens only the functions listed for it, and what a mutation refreshes would run as that token too.
-      const refresh =
-        Array.isArray(body.f) && !request.headers.has('authorization') ? body.f.slice(0, 200) : []
-      const answer = await exec.runMutation(scope, f, body.i, refresh, fromForm)
-      if (options.dev && sessionChanged(scope.headers))
-        options.onDiagnostic?.({
-          code: 'A004',
-          severity: 'warning',
-          message: `\`${id}\` changed the session cookie without a redirect: the tab keeps what the last session cached. \`redirect()\` after it`,
-        })
-      return out(answer)
-    } catch (e) {
-      // The session changed: a full load, so nothing cached for the last user survives in the tab (research 28 §3).
-      if (isRedirect(e)) return out({ r: e.href, ...(sessionChanged(scope.headers) && { x: 1 }) })
-      if (e instanceof FnError) return out({ e: { code: e.code, message: e.message } }, e.status)
-      // A wrong field in a form is an answer, not a fault: nothing to log.
-      if (e instanceof StartError && fromForm && e.extra.issues)
-        return out({ e: { code: e.code, message: e.message, issues: e.extra.issues } }, 422)
-      if (e instanceof StartError)
-        return fail(
-          e.code,
-          e.message,
-          (e.extra.status as number) ?? 500,
-          e.extra.issues ? { issues: e.extra.issues } : e.extra.typed ? { data: e.extra.data } : {},
-          exec.shown(e, scope),
-        )
-      options.onDiagnostic?.({
-        code: 'E_FN',
-        severity: 'error',
-        message: `${id}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-      })
-      return out(
-        {
-          e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' },
-        },
-        500,
-      )
-    }
-  }
-
   async function og(url: URL, request: Request): Promise<Response> {
     const path =
       '/' +
@@ -1344,7 +1090,7 @@ export function createHandler(options: HandlerOptions) {
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/')))
       return Promise.resolve(options.auth.handler(request))
-    if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
+    if (url.pathname.startsWith('/_weft/fn/')) return serverFunction(options, url, request, scope)
     if (url.pathname.startsWith(EXTENSION)) return extensionRoute(url, request, scope)
     if (
       request.method === 'POST' &&
@@ -1410,282 +1156,6 @@ interface Head {
   found: Set<string>
 }
 
-/** A complete page's text. Its Response holds no body until `compressed` gives it one: compressed, it's never read. */
-const whole = new WeakMap<Response, string>()
-
-type Encoding = 'br' | 'gzip'
-type Zlib = typeof NodeZlib
-
-let loaded: Promise<Zlib | undefined> | undefined
-const loadZlib = () => (loaded ??= import('node:zlib').catch(() => undefined))
-const brotli = (zlib: Zlib, sizeHint: number) => ({
-  params: {
-    [zlib.constants.BROTLI_PARAM_QUALITY]: 5,
-    [zlib.constants.BROTLI_PARAM_SIZE_HINT]: sizeHint,
-  },
-})
-
-const PACKED_MAX = 16 * 1024 * 1024 // characters of text held, per encoding
-const PACKED_ENTRY_MAX = 1024 * 1024
-
-/**
- * Compressed bodies by their whole text, most recently used last. The text is the key, not a hash of it, so a response
- * is only ever reused for the same bytes: two users can share an entry only if each was already being sent that page.
- */
-const packed: Record<Encoding, { entries: Map<string, Promise<Uint8Array>>; held: number }> = {
-  br: { entries: new Map(), held: 0 },
-  gzip: { entries: new Map(), held: 0 },
-}
-
-function compressWhole(zlib: Zlib, encoding: Encoding, text: string): Promise<Uint8Array> {
-  const cache = packed[encoding]
-  const hit = cache.entries.get(text)
-  if (hit) {
-    cache.entries.delete(text)
-    cache.entries.set(text, hit)
-    return hit
-  }
-  const out = new Promise<Uint8Array>((ok, no) => {
-    const done = (e: Error | null, b: Buffer) => (e ? no(e) : ok(b))
-    if (encoding === 'br') zlib.brotliCompress(text, brotli(zlib, Buffer.byteLength(text)), done)
-    else zlib.gzip(text, done)
-  })
-  if (text.length > PACKED_ENTRY_MAX) return out
-  cache.entries.set(text, out)
-  cache.held += text.length
-  for (const key of cache.entries.keys()) {
-    if (cache.held <= PACKED_MAX) break
-    cache.entries.delete(key)
-    cache.held -= key.length
-  }
-  return out
-}
-
-/** A stream of chunks, each flushed as it arrives so a Boundary reaches the client when it resolves. */
-function compressStream(
-  zlib: Zlib,
-  encoding: Encoding,
-  source: ReadableStream<Uint8Array>,
-): ReadableStream<Uint8Array> {
-  const z = encoding === 'br' ? zlib.createBrotliCompress(brotli(zlib, 0)) : zlib.createGzip()
-  const reader = source.getReader()
-  return new ReadableStream<Uint8Array>({
-    start(out) {
-      z.on('data', (d: Buffer) => out.enqueue(new Uint8Array(d)))
-      z.on('end', () => out.close())
-      z.on('error', (e) => out.error(e))
-      ;(async () => {
-        for (;;) {
-          const { done, value } = await reader.read()
-          if (done) return void z.end()
-          z.write(value)
-          await new Promise((ok) => {
-            z.flush(ok as () => void)
-          })
-        }
-      })().catch((e) => out.error(e))
-    },
-    cancel(reason) {
-      z.destroy()
-      return reader.cancel(reason)
-    },
-  })
-}
-
-/**
- * HTML and data go out brotli or gzipped when the client takes it. A response that is complete is compressed once and
- * kept, since most pages come out the same for every visitor; one still streaming is flushed chunk by chunk. A runtime
- * with no node:zlib sits behind a platform that compresses.
- */
-async function compressed(request: Request, response: Response): Promise<Response> {
-  const page = whole.get(response)
-  const plain = () => (page === undefined ? response : new Response(page, response))
-  if (page === undefined && (!response.body || response.headers.has('content-encoding')))
-    return response
-  const type = response.headers.get('content-type') ?? ''
-  if (!/^(text\/html|application\/json)/.test(type)) return plain()
-  const accepts = request.headers.get('accept-encoding') ?? ''
-  const encoding = /\bbr\b/.test(accepts) ? 'br' : /\bgzip\b/.test(accepts) ? 'gzip' : undefined
-  const zlib = encoding && (await loadZlib())
-  if (!zlib) return plain()
-  const text = page ?? (type.startsWith('application/json') ? await response.text() : undefined)
-  const body =
-    text === undefined
-      ? compressStream(zlib, encoding, response.body!)
-      : await compressWhole(zlib, encoding, text)
-  const headers = new Headers(response.headers)
-  headers.set('content-encoding', encoding)
-  headers.append('vary', 'Accept-Encoding')
-  headers.delete('content-length')
-  return new Response(body as BodyInit, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  })
-}
-
-/**
- * A page's styles from the build's first-paint table (`firstPaint`): the rules its HTML reaches, inline, and its sheets as
- * links past the shell, where they hold nothing above it. `late` gives a streamed chunk the rules it adds, and a link for
- * a sheet none of the page's has: an island in a Boundary the shell didn't show.
- */
-function tableStyles(
-  pieces: NonNullable<NonNullable<HandlerOptions['assets']>['pieces']>,
-  css: { href: string }[],
-  siteHead: string | undefined,
-  lang: string,
-) {
-  const hrefs = css.map((c) => c.href)
-  const late = pick(pieces, hrefs)
-  const paint = firstPaint(pieces, hrefs, siteHead)
-  const held: string[] = late.sheets.flatMap((c: { has: string[] }) => c.has)
-  const carried = new Set([...hrefs, ...held])
-  const link = (href: string) => `<link rel="stylesheet" href="${esc(href)}">\n`
-  return {
-    rules: (shell: string) => paint(`<html${lang}><body><div id="app">${shell}`),
-    // A combined sheet's parts as disabled links: Vite's preload helper finds them there and doesn't fetch them again.
-    links:
-      [...late.sheets.map((c: { href: string }) => c.href), ...late.rest].map(link).join('') +
-      held.map((href) => `<link rel="stylesheet" href="${esc(href)}" disabled>\n`).join(''),
-    late(sheets: { href: string }[] = [], chunk = '') {
-      const more = sheets.map((c) => c.href).filter((h) => !carried.has(h))
-      for (const h of more) carried.add(h)
-      const rules = paint(chunk)
-      return more.map(link).join('') + (rules ? `<style>${rules}</style>\n` : '')
-    },
-  }
-}
-
-/**
- * What each router-core loader gets as `context`: the request scope, where it leaves tags and redirects (router-core
- * copies the context object, so those go in shared containers), and the matched page's catch-all name.
- */
-interface LoadContext {
-  request: Request
-  scope: Scope
-  tags: Map<string, Set<string>>
-  out: { redirect?: Redirect; chain?: Promise<unknown> }
-  splat?: string | undefined
-}
-
-interface TreeNode {
-  route: AnyRoute
-  children: AnyRoute[]
-  dir: string
-}
-
-/** The router-core tree for the manifest: layouts are path prefixes, routes hang under their innermost layout. */
-function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
-  const loader =
-    (file: string, splat?: string) =>
-    async ({
-      params,
-      context,
-      abortController,
-    }: {
-      params: Record<string, unknown>
-      context: LoadContext
-      abortController: AbortController
-    }) => {
-      const load = modules[file]?.load
-      if (!load) return undefined
-      // Parent first (router-core starts them together): a layout's `load` is a guard, so a child never runs for a
-      // visitor its parent redirects (research 28 §3).
-      const out = context.out
-      const before = out.chain
-      let done!: () => void
-      out.chain = new Promise<void>((ok) => {
-        done = ok
-      })
-      await before
-      if (out.redirect) return (done(), undefined)
-      // Each loader runs in its own frame of the request scope, which records the tags of the queries it read.
-      const f = exec.frame(context.scope)
-      context.tags.set(file, f.tags!)
-      try {
-        const ctx = await f.ctx()
-        const v = await als.run(f, () =>
-          load({
-            params: cleanParams(params, splat ?? context.splat),
-            request: context.request,
-            signal: abortController.signal,
-            ctx,
-          }),
-        )
-        // oxlint-disable-next-line typescript/only-throw-error -- router-core's own not-found signal, passed on as it came
-        if (isNotFound(v)) throw v
-        return v
-      } catch (e) {
-        if (!isRedirect(e)) throw e
-        out.redirect ??= e
-        return undefined
-      } finally {
-        done()
-      }
-    }
-  const rootLayout = manifest.layouts.find((l) => l.dir === '')
-  const root = new BaseRootRoute({
-    ...(rootLayout && { loader: loader(rootLayout.file), weft: rootLayout }),
-  } as never)
-  const top: TreeNode = { route: root, children: [], dir: '' }
-  const nodes = new Map<string, TreeNode>()
-  const at = (id: string | undefined) => (id ? (nodes.get(id) ?? top) : top)
-  for (const l of manifest.layouts) {
-    if (l.dir === '') {
-      nodes.set(l.id, top)
-      continue
-    }
-    const parent = at(l.parent)
-    const route = new BaseRoute({
-      getParentRoute: () => parent.route,
-      path: toPath(l.dir, parent.dir),
-      loader: loader(l.file),
-      weft: l,
-    } as never)
-    parent.children.push(route)
-    nodes.set(l.id, { route, children: [], dir: l.dir })
-  }
-  for (const r of manifest.routes) {
-    if (r.kind !== 'page') continue
-    const parent = at(r.layouts.at(-1))
-    const rel = r.pattern
-      .slice(1)
-      .split('/')
-      .slice(parent.dir ? parent.dir.split('/').length : 0)
-      .join('/')
-    parent.children.push(
-      new BaseRoute({
-        getParentRoute: () => parent.route,
-        path: rel || '/',
-        loader: loader(r.file, r.splat),
-        weft: r,
-      } as never),
-    )
-  }
-  // Innermost layouts first, so each route's children are attached before its parent takes it.
-  for (const n of [...new Set(nodes.values())]
-    .filter((x) => x !== top)
-    .sort((a, b) => b.dir.length - a.dir.length))
-    if (n.children.length) n.route.addChildren(n.children)
-  return root.addChildren(top.children)
-}
-
-/** A layout dir relative to its parent layout's, as a router-core path: `users/[id]` → `users/$id`. */
-function toPath(dir: string, parentDir: string) {
-  const rel = dir.split('/').slice(parentDir ? parentDir.split('/').length : 0)
-  return rel
-    .map((s) => s.replace(/^\[\.\.\.(\w+)\]$/, '$').replace(/^\[(\w+)\]$/, '$$$1'))
-    .join('/')
-}
-
-/** router-core's params without its splat aliases; a splat is under its file name (`[...rest]` → `rest`). */
-function cleanParams(p: Record<string, unknown> = {}, splat?: string): Record<string, string> {
-  const out: Record<string, string> = {}
-  for (const k in p) if (k !== '*' && k !== '_splat') out[k] = String(p[k])
-  if (splat && p._splat !== undefined) out[splat] = p._splat as string
-  return out
-}
-
 function fill(pattern: string, params: Record<string, string>, splat?: string) {
   return pattern.replace(/\$([\w$]*)/g, (_, n) =>
     n ? encodeURIComponent(params[n]!) : (params[splat!] ?? ''),
@@ -1738,133 +1208,6 @@ function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
   }
 }
 
-/**
- * The payload with its static levels marked: their hash, without their data (the HTML holds it), and with `html` their
- * HTML, each level's next one cut down to its markers. The `aria-current` a navigation moves doesn't count as a change.
- */
-/**
- * The chunks `payload`'s page will want: its non-static levels and the islands that load with it, and `fold`, the lazy
- * ones in the first view. Those stay preloaded, fetched but not run, so a first click on them doesn't wait; the rest
- * load when they're needed. `$client`: the router and runtime, whenever any of that will run.
- */
-const pageChunks = (
-  payload: RoutePayload,
-  chunks: HandlerOptions['chunks'] = {},
-  fold: string[] = [],
-  now = true,
-) => {
-  const ids = [...payload.m.filter((m) => !m.s).map((m) => m.id), ...(payload.i ?? []), ...fold]
-  return [...(now || ids.length ? ['$client'] : []), ...ids].flatMap((id) => chunks[id]?.js ?? [])
-}
-
-/**
- * The route's stylesheets and those of every island on the page. An island is a dynamic import, so its CSS is not in the
- * route's chunk graph; without this the server's HTML paints bare and the sheets arrive with the script.
- */
-const pageSheets = (
-  css: { href: string }[] = [],
-  parts: { now: string[]; lazy: string[]; fold: string[] },
-  chunks: HandlerOptions['chunks'] = {},
-) => {
-  const found = [...parts.now, ...parts.lazy, ...parts.fold].flatMap((id) => chunks[id]?.css ?? [])
-  return [...new Map([...css, ...found].map((c) => [c.href, c])).values()]
-}
-
-const saveData = (request: Request) =>
-  request.headers.get('save-data') === 'on' ||
-  request.headers.get('sec-ch-prefers-reduced-data') === 'reduce'
-
-/** Where the first view ends, in px: past most laptops' and phones' first screen. */
-const FOLD = 900
-
-/**
- * About how far down the page `html` runs out, in px. The server has no layout, so this counts what makes a page tall:
- * blocks, and lines of their text. A wrong guess costs one chunk's fetch, either way: it's a preload, not a decision.
- */
-function depth(html: string) {
-  const plain = html.replace(/<(svg|style|template)\b[\s\S]*?<\/\1>|<!--[\s\S]*?-->/g, '')
-  const blocks =
-    plain.match(
-      /<(?:section|article|header|footer|h[1-6]|p|li|tr|img|form|pre|blockquote|video|figure)\b/g,
-    )?.length ?? 0
-  return blocks * 32 + (plain.replace(/<[^>]*>/g, '').length / 60) * 24
-}
-
-/** What a page's HTML says about its islands: those that load with it, those that wait, and the waiting ones in view. */
-function islandsOf(html: string) {
-  const known = renderedOf(html)
-  if (known.p) return known.p
-  const parts = { now: [] as string[], lazy: [] as string[], fold: [] as string[] }
-  let past = false
-  for (const m of html.matchAll(/<!--wi:(\[.*?\])-->/g)) {
-    const [id, , , when] = JSON.parse(m[1]!) as [string, string, unknown[], string?]
-    const list = when ? parts.lazy : parts.now
-    if (!list.includes(id)) list.push(id)
-    past ||= depth(html.slice(0, m.index)) >= FOLD
-    if (when && !past && !parts.fold.includes(id)) parts.fold.push(id)
-  }
-  return (known.p = parts)
-}
-
-function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerOptions['assets']>) {
-  const hrefs = new Set(chunks.map((c) => c.href))
-  hrefs.delete(assets.entry!)
-  return [...hrefs].map((href) => `<link rel="modulepreload" href="${esc(href)}">`).join('')
-}
-
-/** What a render's HTML says about its levels, worked out as asked and kept by the exact text. */
-interface Rendered {
-  h: Record<number, string>
-  x: Record<number, string>
-  p?: { now: string[]; lazy: string[]; fold: string[] }
-}
-const RENDERED_MAX = 64
-const rendered = new Map<string, Rendered>()
-
-function renderedOf(html: string) {
-  let r = rendered.get(html)
-  if (!r) {
-    if (rendered.size >= RENDERED_MAX) rendered.clear()
-    rendered.set(html, (r = { h: {}, x: {} }))
-  }
-  return r
-}
-
-function withLevels(
-  payload: RoutePayload,
-  html: string,
-  statics: Set<string>,
-  sendHtml: boolean,
-): RoutePayload {
-  if (!payload.m.some((m) => statics.has(m.id))) return payload
-  const known = renderedOf(html)
-  const slice = (d: number) => {
-    const open = html.indexOf(`<!--wl:${d}:`)
-    const end = `<!--/wl:${d}-->`
-    const close = html.indexOf(end)
-    if (open < 0 || close < 0) return ''
-    const body = html.slice(html.indexOf('-->', open) + 3, close)
-    const kid = body.indexOf(`<!--wl:${d + 1}:`)
-    const tail = body.indexOf(`<!--/wl:${d + 1}-->`)
-    return kid < 0 || tail < 0
-      ? body
-      : body.slice(0, body.indexOf('-->', kid) + 3) + body.slice(tail)
-  }
-  const m = payload.m.map((lv, d) => {
-    if (!statics.has(lv.id)) return lv
-    const { data: _, ...rest } = lv
-    const h = (known.h[d] ??= slice(d))
-    return {
-      ...rest,
-      s: 1 as const,
-      x: (known.x[d] ??= hash(h.replaceAll(' aria-current="page"', ''))),
-      ...(sendHtml && { h }),
-    }
-  })
-  const i = islandsOf(html).now
-  return { ...payload, m, ...(i.length && { i }) }
-}
-
 const dataTags = (data: unknown, cached: Wire[]) =>
   `<script type="application/json" id="weft-data">${json(data)}</script>\n` +
   (cached.length
@@ -1886,70 +1229,6 @@ function wire(scope: Scope): Wire[] {
   return [...scope.entries.values()]
     .filter((e) => e.done && e.e === undefined)
     .map((e) => [e.id, e.input, e.v, e.tags])
-}
-
-/** The request with the socket's address in CLIENT_IP, replacing any the client sent. Nitro's server sets `.ip`. */
-function stamped(request: Request): Request {
-  const headers = new Headers(request.headers)
-  const { ip } = request as Request & { ip?: string }
-  headers.delete(CLIENT_IP)
-  if (ip) headers.set(CLIENT_IP, ip)
-  // `new Request(request, …)` refuses the server's request wrapper; the parts are enough.
-  return new Request(request.url, {
-    method: request.method,
-    headers,
-    ...(request.body && { body: request.body, duplex: 'half' }),
-  })
-}
-
-/** The request's cookies for `persist: 'cookie'`, parsed on first read: a page with none pays nothing. */
-function cookieJar(request: Request) {
-  let jar: Map<string, string> | undefined
-  return {
-    get(name: string) {
-      jar ??= new Map(
-        (request.headers.get('cookie') ?? '')
-          .split(/;\s*/)
-          .map((c) => [c.slice(0, c.indexOf('=')), c.slice(c.indexOf('=') + 1)]),
-      )
-      return jar.get(name)
-    },
-  }
-}
-
-const refresh = (v: FormDataEntryValue | null) => (typeof v === 'string' ? v : '[]')
-
-/** The multipart body `<Form>` sends when a form holds a file: the fields, and the refresh list in `$r`. */
-async function multipartBody(request: Request) {
-  const data = await request.formData()
-  return {
-    i: decodeForm(data),
-    f: JSON.parse(refresh(data.get('$r'))) as [string, unknown][],
-    c: 1 as const,
-  }
-}
-
-/** What a failed form's page gives back: no secrets (the HTML outlives the request) and no files. */
-function echoed(input: Record<string, unknown>): Record<string, unknown> {
-  const keep = (v: unknown): unknown =>
-    typeof v === 'string'
-      ? v
-      : Array.isArray(v)
-        ? v.filter((x) => typeof x === 'string')
-        : v && typeof v === 'object' && !(v instanceof Blob)
-          ? echoed(v as Record<string, unknown>)
-          : undefined
-  return Object.fromEntries(
-    Object.entries(input)
-      .filter(([k]) => !/pass|secret|token|card|cvv|cvc/i.test(k))
-      .map(([k, v]) => [k, keep(v)]),
-  )
-}
-
-/** The cookies and headers server functions set (`ctx.response.headers`), on the response. */
-function withHeaders(res: Response, scope: Scope): Response {
-  for (const [k, v] of scope.headers) res.headers.append(k, v)
-  return res
 }
 
 export { headTags }
