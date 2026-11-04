@@ -362,7 +362,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 
 ## Status
 
-- Sprint 0: not started
+- Sprint 0: blocked on the packed landing template type error; guardrails are implemented on `sprint/S0`
 - Sprint 1: not started
 - Sprint 2: not started
 - Sprint 3: not started
