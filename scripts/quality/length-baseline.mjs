@@ -18,7 +18,7 @@ export function validateBaseline(baseline) {
   }
 }
 
-// These package moves preserve each offender's original limit across Git history.
+/** Preserve each offender's original limit across the package moves in Git history. */
 export function renamedBaseline(baseline) {
   const renamed = {}
   for (const [id, value] of Object.entries(baseline)) {

@@ -67,7 +67,8 @@ await test('package folder check rejects a mismatched name', () =>
   }))
 
 await test('renamed offenders retain their trusted limit', () => {
-  const old = 'file:packages/core/src/a.ts', renamed = 'file:packages/core/src/a.ts'
+  const old = ['file:packages', 'weft', 'src/a.ts'].join('/')
+  const renamed = 'file:packages/core/src/a.ts'
   assert.deepEqual(compareLengths(entry(renamed, 500), entry(renamed, 500), entry(old, 500)), [])
   assert.match(compareLengths(entry(renamed, 501), entry(renamed, 501), entry(old, 500)).join('\n'), /baseline increases/)
 })
