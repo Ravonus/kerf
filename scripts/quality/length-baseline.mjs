@@ -22,11 +22,14 @@ export function validateBaseline(baseline) {
 export function renamedBaseline(baseline) {
   const renamed = {}
   for (const [id, value] of Object.entries(baseline)) {
-    let key = id.replace(/^(file|function):packages\/(weft|icons|create-weft)\//, (_, kind, name) =>
-      `${kind}:packages/${{ weft: 'core', icons: 'warp-icons', 'create-weft': 'create' }[name]}/`,
+    let key = id.replace(
+      /^(file|function):packages\/(weft|icons|create-weft)\//,
+      (_, kind, name) =>
+        `${kind}:packages/${{ weft: 'core', icons: 'warp-icons', 'create-weft': 'create' }[name]}/`,
     )
-    key = key.replace(/^(file|function):evals\/(apps|compare|speed)\//, (_, kind, name) =>
-      `${kind}:${name === 'apps' ? 'examples' : `benchmarks/${name}`}/`,
+    key = key.replace(
+      /^(file|function):evals\/(apps|compare|speed)\//,
+      (_, kind, name) => `${kind}:${name === 'apps' ? 'examples' : `benchmarks/${name}`}/`,
     )
     key = key.replace(/^(file|function):evals\/([\w-]+-exit(?:\.e2e)?\.mjs)/, '$1:evals/gates/$2')
     if (Object.hasOwn(renamed, key)) throw new Error(`duplicate length baseline entry: ${key}`)

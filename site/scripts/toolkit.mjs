@@ -12,10 +12,10 @@ const slugOf = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase
 const oneLine = (text) => text.replace(/\s+/g, ' ').trim()
 
 const toolkitPaths = {
-          weft: ['../core/src/index.ts'],
-          'weft/*': ['../core/src/*'],
-          '@weft-js/warp-core': ['../warp-core/src/index.ts'],
-          '@weft-js/warp-icons': ['../warp-icons/src/gen/index.tsx'],
+  weft: ['../core/src/index.ts'],
+  'weft/*': ['../core/src/*'],
+  '@weft-js/warp-core': ['../warp-core/src/index.ts'],
+  '@weft-js/warp-icons': ['../warp-icons/src/gen/index.tsx'],
 }
 
 export function readToolkit(repo) {

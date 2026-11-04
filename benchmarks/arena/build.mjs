@@ -47,7 +47,10 @@ await build({
   configFile: false,
   mode: 'development',
   plugins: [
-    (await import('../../site/node_modules/@weft-js/core/vite.mjs')).default({ dev: true, hmr: false }),
+    (await import('../../site/node_modules/@weft-js/core/vite.mjs')).default({
+      dev: true,
+      hmr: false,
+    }),
   ],
   define: { 'process.env.NODE_ENV': '"development"', 'import.meta.env.DEV': 'true' },
   build: { outDir: join(out, 'graph'), emptyOutDir: true, assetsDir: '.', minify: false },

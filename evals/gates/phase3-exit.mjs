@@ -69,9 +69,7 @@ if (step === 'prepare') {
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   for (const deps of [pkg.dependencies, pkg.devDependencies])
     for (const name of Object.keys(deps ?? {}))
-      if (name === '@weft-js/core' || name.startsWith('@weft-js/'))
-        deps[name] =
-          pkg(name)
+      if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = pkg(name)
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   must('npm', ['install', '--no-audit', '--no-fund'])
   must('npx', ['weft', 'db', 'generate'])

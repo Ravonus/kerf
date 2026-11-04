@@ -31,7 +31,9 @@ export function commands(dir, maxBuffer, mergeEnv = false) {
 export async function until(what, fn, ms = 60_000) {
   const end = Date.now() + ms
   for (;;) {
-    const v = await Promise.resolve().then(fn).catch(() => undefined)
+    const v = await Promise.resolve()
+      .then(fn)
+      .catch(() => undefined)
     if (v) return v
     if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
     await new Promise((ok) => setTimeout(ok, 50))
@@ -58,7 +60,9 @@ export function makeCheck(checks, log, limit) {
         ms: Math.round(performance.now() - t),
         ...(detail !== undefined && { detail }),
       })
-      log(`pass: ${name}${detail !== undefined ? ` (${JSON.stringify(detail).slice(0, limit)})` : ''}`)
+      log(
+        `pass: ${name}${detail !== undefined ? ` (${JSON.stringify(detail).slice(0, limit)})` : ''}`,
+      )
     } catch (e) {
       checks.push({ name, ok: false, error: e.message })
       log(`FAIL: ${name}\n${e.stack}`)
