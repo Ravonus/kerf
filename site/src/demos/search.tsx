@@ -1,20 +1,31 @@
 import { derived, state } from '@weft-js/core'
 import { Card, Input, Tag } from '@weft-js/warp'
 
-const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima', 'Lagos', 'Porto']
+const CITIES = [
+  'Lisbon',
+  'Oslo',
+  'Osaka',
+  'Lima',
+  'Lagos',
+  'Porto',
+]
 
 export default function Trips() {
   const query = state('')
   const found = derived(() => {
     const q = query.value.toLowerCase()
-    return CITIES.filter((c) => c.toLowerCase().includes(q))
+    return CITIES.filter((c) =>
+      c.toLowerCase().includes(q),
+    )
   })
   return (
     <Card title="Where to?">
       <Input
         label="Search cities"
         value={query.value}
-        onInput={(e) => (query.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (query.value = e.currentTarget.value)
+        }
       />
       <p>
         {found.value.length} of {CITIES.length}
