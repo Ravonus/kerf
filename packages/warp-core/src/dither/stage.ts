@@ -43,6 +43,7 @@ export interface DitherStageOptions {
   kind?: FieldName | Field | undefined
   /** How strong the ground is, 0–1. 0 leaves only the pieces. */
   ground?: number | undefined
+  /** The dither: an ordered Bayer matrix (`bayer2`, `bayer4`, the default, `bayer8`), blue noise, or halftone dots. */
   pattern?: Pattern | undefined
   /** CSS pixels per cell. */
   cell?: number | undefined
@@ -58,6 +59,7 @@ export interface DitherStageOptions {
   ripple?: Ramp | false | undefined
   /** Painters for your own skins, or to replace a built-in one. */
   painters?: Record<string, DitherPainter> | undefined
+  /** Caps the frame rate while it animates. Uncapped by default, at the display's rate. */
   fps?: number | undefined
 }
 

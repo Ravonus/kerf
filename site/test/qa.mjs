@@ -19,8 +19,15 @@ const check = async (name, path, test, viewport = { width: 1280, height: 900 }, 
   await page.close()
 }
 const same = (got, want, what) => { if (String(got) !== String(want)) throw new Error(`${what}: got ${got}, want ${want}`) }
+/** warp.flow waits for a person: nothing moves until the first scroll. A pixel arms it, as a reader would. */
+const arm = async page => {
+  await page.mouse.move(640, 300)
+  await page.mouse.wheel(0, 1)
+  await page.waitForFunction(() => document.documentElement.hasAttribute('data-flow-armed'), undefined, { timeout: 5000 })
+}
 /** Examples mount as they scroll in, so walk the page until none is waiting. */
 const mount = async page => {
+  await arm(page)
   for (let i = 0; i < 80; i++) {
     const more = await page.evaluate(() => { const m = document.querySelector('[data-part="mount"]:not([data-ready])'); m?.scrollIntoView(); return !!m })
     if (!more) break
@@ -1045,6 +1052,7 @@ for (const [path, theme] of [['/examples', 'light'], ['/components/button', 'dar
 }
 // …and a block that comes in from below does scan: on screen, part way, a moment after it arrives.
 await check('code scans in when it arrives', '/examples', async page => {
+  await arm(page)
   const n = await page.evaluate(() => { const c = [...document.querySelectorAll('[data-scope="codeblock"]')].find(x => x.getBoundingClientRect().top > innerHeight + 200); c.dataset.qa = ''; return getComputedStyle(c, '::after').scale })
   same(parseFloat(n), 1, 'waiting below the fold')
   const top = await page.evaluate(() => document.querySelector('[data-qa]').getBoundingClientRect().top)
@@ -1078,7 +1086,7 @@ await check('examples code has copy buttons', '/examples', async page => {
 // Component pages flow like the hubs: their headings and notes are in warp.flow, and one left at the top edge fades.
 for (const path of ['/components/button', '/components/table', '/blocks/checkout', '/charts/line-chart']) {
   await check(`component page headings flow ${path}`, path, async page => {
-    const off = await page.evaluate(() => [...document.querySelectorAll('[data-site="doc"] :is(section > h2, section h3, p[data-part="note"])')].filter(e => getComputedStyle(e).animationName === 'none').map(e => e.textContent.slice(0, 30)))
+    const off = await page.evaluate(() => [...document.querySelectorAll('[data-site="doc"] :is(section > h2:not([data-part="sr-only"]), section h3, p[data-part="note"])')].filter(e => getComputedStyle(e).animationName === 'none').map(e => e.textContent.slice(0, 30)))
     same(off.join(' | '), '', 'not in the flow')
     const h = page.locator('[data-site="tk-section"] > h2').nth(2)
     const top = await h.evaluate(e => e.getBoundingClientRect().top)
@@ -1129,12 +1137,14 @@ await check('flow: components, blocks and charts each move their own way', '/com
   const pairs = {}
   for (const path of ['/components/select', '/blocks/checkout', '/charts/line-chart', '/components', '/blocks', '/charts']) {
     await page.goto(base + path, { waitUntil: 'load' })
+    await arm(page)
     pairs[path] = await page.evaluate(() => [...new Set([...document.querySelectorAll(':is([data-site="frame"], [data-site="tile"])')].map(e => e.getAnimations().map(a => a.animationName).filter(n => /^warp-(in|out)-/.test(n)).join('+')))].join())
   }
   same(pairs['/components/select'], pairs['/components'], 'a component frame and card')
   same(new Set([pairs['/components/select'], pairs['/blocks/checkout'], pairs['/charts/line-chart']]).size, 3, `three areas: ${JSON.stringify(pairs)}`)
 })
 await check('flow: the icon grid fades in and out in its window', '/icons', async page => {
+  await arm(page)
   const win = page.locator('[data-site="icons"] [data-scope="virtual"]')
   await win.scrollIntoViewIfNeeded()
   await page.locator('[data-site="icons"] [data-part="cell"]').first().waitFor()
@@ -1160,7 +1170,7 @@ await check('flow: the icon grid fades in and out in its window', '/icons', asyn
 const dialFrames = `window.__dial = []; (function tick() { const v = document.querySelector('[data-dial="expression"] input:checked')?.value; if (v && window.__dial.at(-1) !== v) window.__dial.push(v); if (window.__dial.length < 9 && performance.now() < 6000) requestAnimationFrame(tick) })()`
 await check('dial: the server renders what a fresh visitor sees', '/components', async page => {
   const html = await (await page.request.get(`${base}/components`)).text()
-  const at = html.indexOf('data-dial="expression"')
+  const at = html.indexOf('data-dial="expression">')
   const seg = html.slice(at, html.indexOf('</div></div>', at))
   const served = /<input[^>]*value="(\w+)"[^>]*checked|<input[^>]*checked[^>]*value="(\w+)"/.exec(seg)
   if (!served) throw new Error('no checked stop in the server HTML')

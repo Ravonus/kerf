@@ -91,9 +91,11 @@ export interface StageOptions {
   animate?: boolean | undefined
   /** Whole-cell mode: units are cells of this many CSS pixels, scaled up without smoothing. */
   cell?: number | undefined
+  /** Caps the frame rate while it animates. Uncapped by default, at the display's rate. */
   fps?: number | undefined
   /** Scrolls when the rail is dragged. The look paints it from `scene.rail`. */
   rail?: boolean | undefined
+  /** Settings for the 2D context, such as `{ alpha: false }`. Read once, when the canvas attaches. */
   context?: CanvasRenderingContext2DSettings | undefined
   /** Called when the theme or dial changes, before the repaint. */
   onTheme?: (() => void) | undefined

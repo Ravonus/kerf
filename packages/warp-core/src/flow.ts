@@ -4,7 +4,7 @@ let installed = false
  * warp.flow waits for a person. Until the first scroll the gate is shut (`:root:not([data-flow-armed])`), so the page
  * holds still and whole: what the first screen, a crawler and an audit read is every word at full contrast, never text
  * parked at opacity 0 below the fold. On that scroll, what is on screen is marked seen and stays put (no part-faded jump),
- * and everything below rises in as it arrives. Without this script nothing is armed, so failed JS leaves a still page.
+ * and everything below rises in as it arrives. Once a seen element has left the screen it flows like the rest. Without this script nothing is armed, so failed JS leaves a still page.
  */
 export function flow(doc: Document | undefined = typeof document === 'undefined' ? undefined : document) {
   if (installed || !doc) return
@@ -13,6 +13,7 @@ export function flow(doc: Document | undefined = typeof document === 'undefined'
   const arm = () => {
     seen(doc)
     root.dataset.flowArmed = ''
+    release(doc)
     fallback(doc)
   }
   if (root.hasAttribute('data-flow-armed')) fallback(doc)
@@ -37,6 +38,16 @@ function seen(doc: Document) {
     // a box off screen can still hold one that is on it (a fixed bar, an overflow), but warp's flowed blocks sit in the flow
     more = onScreen && !el.hasAttribute('data-flow-seen') ? !!walk.firstChild() || skip() : skip()
   }
+}
+
+/** A seen element that leaves the screen (the page, or a window it scrolls in) flows again: off screen, nothing jumps. */
+function release(doc: Document) {
+  const IO = doc.defaultView?.IntersectionObserver
+  if (!IO) return
+  const io = new IO(entries => {
+    for (const e of entries) if (!e.isIntersecting) { delete (e.target as HTMLElement).dataset.flowSeen; io.unobserve(e.target) }
+  })
+  for (const el of doc.querySelectorAll('[data-flow-seen]')) io.observe(el)
 }
 
 /**

@@ -39,7 +39,7 @@ export const live: DocGroup = {
       component: 'ActivityFeed',
       summary: 'A quiet record of who did what, grouped by day.',
       sections: [{ kind: 'composition', title: 'In context', examples: [{ id: 'ActivityFeedProject', title: 'Project activity', note: 'New rows arrive on their own when `items` changes.', stage: 'narrow', height: 420 }] }],
-      propDocs: { items: 'A list, a state or a getter.', live: 'Shows Live while the connection is up.', title: 'The heading.' },
+      propDocs: { items: 'A list, a state or a getter.', live: 'Shows Live while the connection is up.', title: 'The heading.', level: "The title's heading level: one below the heading the feed sits under." },
       related: ['Inbox', 'Feed'],
     },
     {
