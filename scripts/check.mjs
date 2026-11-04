@@ -92,10 +92,11 @@ const leakPlaces = (text) =>
 const STEPS = [
   {
     id: 'package-folders',
-    covers: 'package folders match their npm names',
-    fix: 'Rename the folder to match the package name without its scope.',
-    run() {
-      const problems = []
+    covers: 'package folders match npm names; archived and generated paths stay untracked',
+    fix: 'Rename mismatched package folders and remove archived or generated files from the index.',
+    async run() {
+      const check = await run(process.execPath, ['--test', 'scripts/quality/layout-paths.test.mjs'])
+      const { problems } = lines(check)
       for (const dir of PACKAGES) {
         const { name } = JSON.parse(readFileSync(join(root, dir, 'package.json'), 'utf8'))
         const expected = typeof name === 'string' ? name.split('/').at(-1) : ''

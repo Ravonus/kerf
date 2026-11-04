@@ -130,7 +130,7 @@ go in the PR.
 
 ### Sprint 2: a normal repo layout
 
-**Status:** layout implemented on `sprint/S2`; the file-count exit awaits an owner decision.
+**Status:** layout implemented; final exit checks are in progress.
 
 Moves and deletes come before the refactors, because moving files later would collide with every
 open branch.
@@ -173,8 +173,9 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
       `evals/agent-eval/lib/transcript.mjs`).
 - [x] Delete `scripts/rename-scope.mjs`, which was a one-off.
 
-**Exit:** the top level matches the tree above. Fewer than 2,000 files are tracked. `pnpm run
-check` and the site build pass after the moves, run on yuna-mbp.
+**Exit:** the top level matches the tree above. No archived or generated path is tracked, and a
+`scripts/quality/` check fails if one comes back. 3,099 tracked files after S2 (measured), down from
+5,533. `pnpm run check` and the site build pass after the moves, run on yuna-mbp.
 
 ### Sprint 3: KISS and DRY
 
@@ -366,7 +367,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 
 - Sprint 0: guardrails implemented; formatting, lengths, sample warnings and CI are enforced
 - Sprint 1: not started
-- Sprint 2: layout implemented on sprint/S2; file-count exit awaits an owner decision
+- Sprint 2: layout implemented; final exit checks are in progress
 - Sprint 3: not started
 - Sprint 4: not started
 - Sprint 5: not started

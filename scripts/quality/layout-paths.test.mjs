@@ -1,10 +1,114 @@
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { execFileSync, spawnSync } from 'node:child_process'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 import weft from '../../packages/core/vite.mjs'
 import { BROWSER, entry } from './boundaries.mjs'
+
+const root = fileURLToPath(new URL('../../', import.meta.url))
+
+await test('archived and generated paths stay untracked', (t) => {
+  const prefixes = [
+    'evals/tasks/',
+    'evals/tasks-v2/',
+    'evals/reference/',
+    'evals/reference-v2/',
+    'evals/buggy/',
+    'evals/buggy-v2/',
+    'docs/research/',
+    'docs/design/warp/reviews/',
+    'docs/design/warp/specimens/',
+    'spikes/',
+    'site/review/',
+    'site/public/reference/',
+    'site/public/learn/',
+    'packages/warp/test/a11y/gallery/assets/',
+    'packages/cli/.vitest/',
+  ]
+  const removed = new Set([
+    'docs/PLAN.md',
+    'scripts/rename-scope.mjs',
+    'packages/warp-icons/contact-sheet.html',
+    'benchmarks/speed/lab.json',
+  ])
+  const retained = new Set([
+    'evals/results/summary.json',
+    'evals/results/compare-history.jsonl',
+    'evals/results/compare.html',
+  ])
+  const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean)
+  const blocked = files.filter(
+    (file) =>
+      prefixes.some((prefix) => file.startsWith(prefix)) ||
+      removed.has(file) ||
+      (file.startsWith('evals/results/') && !retained.has(file)),
+  )
+  assert.equal(blocked.length, 0, `archived or generated files are tracked:\n${blocked.join('\n')}`)
+  t.diagnostic(`${files.length} tracked files checked for archived and generated paths`)
+})
+
+await test('the layout check rejects a tracked file from every removed category', (t) => {
+  const files = [
+    'evals/tasks/fixture.md',
+    'evals/tasks-v2/fixture.md',
+    'evals/reference/fixture.tsx',
+    'evals/reference-v2/fixture.tsx',
+    'evals/buggy/fixture.tsx',
+    'evals/buggy-v2/fixture.tsx',
+    'docs/research/fixture.md',
+    'docs/design/warp/reviews/fixture.md',
+    'docs/design/warp/specimens/fixture.html',
+    'spikes/fixture.ts',
+    'site/review/fixture.png',
+    'site/public/reference/index.html',
+    'site/public/learn/index.html',
+    'packages/warp/test/a11y/gallery/assets/fixture.js',
+    'packages/cli/.vitest/results.json',
+    'docs/PLAN.md',
+    'scripts/rename-scope.mjs',
+    'packages/warp-icons/contact-sheet.html',
+    'benchmarks/speed/lab.json',
+    'evals/results/sites/first-run-fixture.json',
+    'evals/results/old-run.json',
+  ]
+  const dir = mkdtempSync(join(tmpdir(), 'weft-layout-test-'))
+  try {
+    const env = { ...process.env, GIT_INDEX_FILE: join(dir, 'index') }
+    // The child needs its own test harness rather than this process's context.
+    delete env.NODE_TEST_CONTEXT
+    const blob = execFileSync('git', ['hash-object', '-w', '--stdin'], {
+      cwd: root,
+      encoding: 'utf8',
+      input: '',
+    }).trim()
+    execFileSync('git', ['update-index', '--index-info'], {
+      cwd: root,
+      env,
+      input: files.map((file) => `100644 ${blob}\t${file}\n`).join(''),
+    })
+    const result = spawnSync(
+      process.execPath,
+      [
+        '--test',
+        '--test-name-pattern=^archived and generated paths stay untracked$',
+        import.meta.filename,
+      ],
+      { cwd: root, env, encoding: 'utf8' },
+    )
+    assert.equal(result.status, 1, result.stdout + result.stderr)
+    assert.match(result.stdout, /archived or generated files are tracked:/)
+    for (const file of files)
+      assert.ok(result.stdout.includes(file), `missed tracked path: ${file}`)
+    t.diagnostic(`${files.length} prohibited paths rejected with exit ${result.status}`)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
 
 await test('browser entries name tracked package folders', (t) => {
   const manifests = execFileSync('git', ['ls-files', ':(glob)packages/*/package.json'], {
