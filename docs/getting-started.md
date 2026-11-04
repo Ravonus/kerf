@@ -15,7 +15,8 @@ This page is for working on weft. For a first app, follow [Installation](../site
 An alias saves typing. Put it in your shell's startup file, with the path to your checkout:
 
 ```bash
-alias weft-local='node ~/path/to/weft/packages/create/scripts/local.mjs'
+alias weft-local='node ~/path/to/weft/packages/'\
+'create/scripts/local.mjs'
 ```
 
 If your `~/.npmrc` sets `min-release-age`, npm skips packages newer than that many days, which can leave it nothing to

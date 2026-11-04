@@ -140,10 +140,10 @@ The target top level:
 ```
 packages/        npm packages. Folder = npm name without the scope
 crates/          Rust: weft, weft-compiler, weft-layout
-site/            the docs site (weft.dev); generated pages aren't tracked
+site/            the docs site (weft.dev); generated pages untracked
 examples/        small runnable apps people copy
 benchmarks/      published size, speed and interactive comparisons
-evals/           agent evals: tasks, references and gates, latest version only
+evals/           agent evals: tasks, references and gates; latest only
 scripts/         repo tooling, plus scripts/lib for the shared helpers
 docs/            contributor docs, ARCHITECTURE.md, decisions/
 .github/         CI, templates, CODEOWNERS, dependabot

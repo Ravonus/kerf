@@ -32,11 +32,14 @@ the 0.21 KB detector shell (`dist/index.js`).
 <!-- example: skip @weft-js/text/engine ships no type declarations yet, and text, width and lineHeight are yours -->
 ```ts
 import { loadTextEngine } from '@weft-js/text/engine'
-const te = await loadTextEngine()             // loads only this browser's engine chunk
+// Load only this browser's engine chunk.
+const te = await loadTextEngine()
 const h = te.prepare(text, '16px Inter', { whiteSpace: 'normal' })
 const { height, lineCount } = te.layout(h, width, lineHeight)
-const ranges = te.lines(h, width)             // [{ width, start, end }], cursors as Pretext gives them
-te.clear()                                    // Pretext's clearCache(), plus the lite tier's caches
+// [{ width, start, end }], cursors as Pretext gives them.
+const ranges = te.lines(h, width)
+// Clear Pretext's cache and the lite tier's caches.
+te.clear()
 ```
 
 It follows weft's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `lineText`, `clear`, see `src/types.ts`). Extras:
