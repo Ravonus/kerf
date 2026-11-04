@@ -7,10 +7,10 @@ test('local dependencies resolve to packages with the requested npm name', () =>
   const packageUrl = localPackages(repo)
   for (const name of ['core', 'warp-icons', 'create']) {
     const expected = `@weft-js/${name}`
-    const manifest = JSON.parse(readFileSync(new URL(`${pkg(expected)}/package.json`), 'utf8'))
+    const manifest = JSON.parse(readFileSync(new URL(`${packageUrl(expected)}/package.json`), 'utf8'))
     assert.equal(manifest.name, expected)
   }
-  assert.throws(() => readFileSync(new URL(`${pkg('@weft-js/missing')}/package.json`)), /ENOENT/)
+  assert.throws(() => readFileSync(new URL(`${packageUrl('@weft-js/missing')}/package.json`)), /ENOENT/)
 })
 
 test('commands preserve cwd, environment, and failures', () => {
