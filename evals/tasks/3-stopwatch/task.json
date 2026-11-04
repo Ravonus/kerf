@@ -1,1 +1,0 @@
-{ "component": "Stopwatch", "cause": "stale-closure", "summary": "Interval callbacks must see the current speed; timers must not leak." }

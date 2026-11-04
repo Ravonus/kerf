@@ -1,1 +1,0 @@
-{ "component": "ProfileForm", "kind": "fresh", "causes": ["stale-snapshot", "effect-as-derivation"], "summary": "Form seeded from a prop that can change identity or be refreshed; dirty/valid are derived." }

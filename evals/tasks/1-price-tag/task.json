@@ -1,1 +1,0 @@
-{ "component": "PriceTag", "cause": "stale-snapshot", "summary": "Props must stay live; local state seeded from a prop must reset only on identity change." }

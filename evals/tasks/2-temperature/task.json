@@ -1,1 +1,0 @@
-{ "component": "TemperatureConverter", "cause": "effect-as-derivation", "summary": "Two-way conversion; syncing via effects rewrites the field being typed in." }

@@ -1,1 +1,0 @@
-{ "component": "TaskList", "cause": "identity", "summary": "Per-row local state must follow its item through reorder, remove, add and sort." }
