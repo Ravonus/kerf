@@ -18,7 +18,7 @@ Drizzle query there is, its own docs are the reference.
 ## What a new app has
 
 ```
-drizzle.config.ts           where the schema is and where migrations go (for drizzle-kit)
+drizzle.config.ts           schema and migration paths for drizzle-kit
 src/db/schema.ts            your tables
 src/db/index.server.ts      the client: createDb({ schema, url })
 src/context.server.ts       puts the client on ctx.db
@@ -51,13 +51,21 @@ Tables are declared in `src/db/schema.ts`. Here is the todo table a new app star
 <!-- example: skip an excerpt of the scaffold's schema.ts: Better Auth's tables, which `user` refers to, are left out -->
 ```ts
 // src/db/schema.ts
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import {
+  integer,
+  sqliteTable,
+  text,
+} from 'drizzle-orm/sqlite-core'
 
 export const todos = sqliteTable('todos', {
   id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
-  done: integer('done', { mode: 'boolean' }).notNull().default(false),
+  done: integer('done', { mode: 'boolean' })
+    .notNull()
+    .default(false),
   createdAt: integer('created_at').notNull(),
 })
 ```
@@ -130,7 +138,12 @@ export const latestOpen = query({
     ctx.db
       .select({ id: todos.id, title: todos.title })
       .from(todos)
-      .where(and(eq(todos.userId, ctx.user.id), eq(todos.done, false)))
+      .where(
+        and(
+          eq(todos.userId, ctx.user.id),
+          eq(todos.done, false),
+        ),
+      )
       .orderBy(desc(todos.createdAt))
       .limit(5),
 })
@@ -140,7 +153,10 @@ export const doneCount = query({
   tags: ['todos'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const [row] = await ctx.db.select({ n: count() }).from(todos).where(and(eq(todos.userId, ctx.user.id), eq(todos.done, true)))
+    const [row] = await ctx.db.select({ n: count() }).from(todos)
+      .where(
+        and(eq(todos.userId, ctx.user.id), eq(todos.done, true)),
+      )
     return row?.n ?? 0
   },
 })
@@ -185,13 +201,22 @@ import { z } from 'zod'
 import { todos } from '#/db/schema'
 
 export const addMany = mutation({
-  input: z.object({ titles: z.array(z.string().trim().min(1)).min(1).max(20) }),
+  input: z.object({
+    titles: z.array(z.string().trim().min(1)).min(1).max(20),
+  }),
   auth: 'user',
   invalidates: ['todos'],
   run: ({ input, ctx }) =>
     ctx.db
       .insert(todos)
-      .values(input.titles.map(title => ({ id: crypto.randomUUID(), userId: ctx.user.id, title, createdAt: Date.now() })))
+      .values(
+        input.titles.map((title) => ({
+          id: crypto.randomUUID(),
+          userId: ctx.user.id,
+          title,
+          createdAt: Date.now(),
+        })),
+      )
       .returning(),
 })
 
@@ -200,7 +225,13 @@ export const reopen = mutation({
   auth: 'user',
   invalidates: ['todos'],
   run: ({ input, ctx }) =>
-    ctx.db.update(todos).set({ done: false }).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))).returning(),
+    ctx.db
+      .update(todos)
+      .set({ done: false })
+      .where(
+        and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)),
+      )
+      .returning(),
 })
 ```
 
@@ -221,19 +252,42 @@ import { todos } from '#/db/schema'
 
 /** Replace one todo with two smaller ones. */
 export const splitTodo = mutation({
-  input: z.object({ id: z.string(), first: z.string().min(1), second: z.string().min(1) }),
+  input: z.object({
+    id: z.string(),
+    first: z.string().min(1),
+    second: z.string().min(1),
+  }),
   auth: 'user',
   invalidates: ['todos'],
   run: ({ input, ctx }) =>
-    ctx.db.transaction(async tx => {
-      const gone = await tx.delete(todos).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))).returning()
-      if (!gone.length) throw new FnError({ message: 'That todo is gone, or it isn\'t yours.' }, 404)
+    ctx.db.transaction(async (tx) => {
+      const gone = await tx.delete(todos).where(
+        and(
+          eq(todos.id, input.id),
+          eq(todos.userId, ctx.user.id),
+        ),
+      ).returning()
+      if (!gone.length) {
+        throw new FnError({
+          message: 'That todo is gone, or it isn\'t yours.',
+        }, 404)
+      }
       const now = Date.now()
       return tx
         .insert(todos)
         .values([
-          { id: crypto.randomUUID(), userId: ctx.user.id, title: input.first, createdAt: now },
-          { id: crypto.randomUUID(), userId: ctx.user.id, title: input.second, createdAt: now + 1 },
+          {
+            id: crypto.randomUUID(),
+            userId: ctx.user.id,
+            title: input.first,
+            createdAt: now,
+          },
+          {
+            id: crypto.randomUUID(),
+            userId: ctx.user.id,
+            title: input.second,
+            createdAt: now + 1,
+          },
         ])
         .returning()
     }),
@@ -253,7 +307,9 @@ import { schemasOf } from '@weft-js/start/db'
 import { z } from 'zod'
 import * as schema from '#/db/schema'
 
-export const schemas = schemasOf(schema, { todos: { title: (s: z.ZodString) => s.trim().min(1).max(200) } })
+export const schemas = schemasOf(schema, {
+  todos: { title: (s: z.ZodString) => s.trim().min(1).max(200) },
+})
 export const newTodo = schemas.todos.insert.pick({ title: true })
 ```
 
@@ -320,7 +376,9 @@ export const clearDone = mutation({
   auth: 'user',
   invalidates: ['todos'],
   run: async ({ ctx }) => {
-    const gone = await ctx.db.delete(todos).where(and(eq(todos.userId, ctx.user.id), eq(todos.done, true))).returning({ id: todos.id })
+    const gone = await ctx.db.delete(todos).where(
+      and(eq(todos.userId, ctx.user.id), eq(todos.done, true)),
+    ).returning({ id: todos.id })
     return { removed: gone.length }
   },
 })
@@ -343,7 +401,10 @@ export const profile = query({
   tags: ['user'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const [row] = await ctx.db.select({ name: user.name, joined: user.createdAt }).from(user).where(eq(user.id, ctx.user.id))
+    const [row] = await ctx.db.select({
+      name: user.name,
+      joined: user.createdAt,
+    }).from(user).where(eq(user.id, ctx.user.id))
     return row ?? null
   },
 })
@@ -362,8 +423,13 @@ export const profile = query({
   tags: ['user'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const [row] = await ctx.db.select({ name: user.name, joined: user.createdAt }).from(user).where(eq(user.id, ctx.user.id))
-    return row ? { name: row.name, joined: row.joined.toISOString() } : null
+    const [row] = await ctx.db.select({
+      name: user.name,
+      joined: user.createdAt,
+    }).from(user).where(eq(user.id, ctx.user.id))
+    return row
+      ? { name: row.name, joined: row.joined.toISOString() }
+      : null
   },
 })
 ```

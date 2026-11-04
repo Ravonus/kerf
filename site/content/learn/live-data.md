@@ -88,10 +88,16 @@ import { listTodos } from '#/server/todos'
 
 export function Watcher() {
   const watching = state(false)
-  const todos = listTodos.live(() => (watching.value ? undefined : skip), { keep: '30s' })
+  const todos = listTodos.live(
+    () => (watching.value ? undefined : skip),
+    { keep: '30s' },
+  )
   return (
     <section>
-      <button type="button" onClick={() => (watching.value = !watching.value)}>
+      <button
+        type="button"
+        onClick={() => (watching.value = !watching.value)}
+      >
         {watching.value ? 'Stop watching' : 'Watch'}
       </button>
       <p>{todos.value?.length ?? 0} todos, {todos.live.value}</p>
@@ -127,14 +133,22 @@ import { z } from 'zod'
 
 const Price = z.object({ symbol: z.string(), price: z.number() })
 
-export const priceTopic = topic('prices', { key: z.string().max(12), message: Price })
+export const priceTopic = topic('prices', {
+  key: z.string().max(12),
+  message: Price,
+})
 
 export const prices = stream({
-  input: z.object({ symbols: z.array(z.string().max(12)).max(50) }),
+  input: z.object({
+    symbols: z.array(z.string().max(12)).max(50),
+  }),
   message: Price,
   auth: 'user',
   async *run({ input, signal, lastEventId }) {
-    yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId })
+    yield* priceTopic.subscribe(input.symbols, {
+      signal,
+      after: lastEventId,
+    })
   },
 })
 ```
@@ -149,7 +163,13 @@ import { prices } from '#/server/prices'
 
 export function Ticker() {
   const tick = prices({ symbols: ['AAPL'] })
-  return <p>{tick.value ? `${tick.value.symbol} ${tick.value.price}` : 'Waiting…'} ({tick.status.value})</p>
+  return (
+    <p>
+      {tick.value
+        ? `${tick.value.symbol} ${tick.value.price}`
+        : 'Waiting…'} ({tick.status.value})
+    </p>
+  )
 }
 ```
 
@@ -217,7 +237,10 @@ export const buildLog = stream({
   async *run({ input, signal, lastEventId }) {
     let n = lastEventId ? Number(lastEventId) + 1 : 0
     while (!signal.aborted && n < 3) {
-      yield tracked(String(n), { n, text: `${input.build}: step ${n}` })
+      yield tracked(String(n), {
+        n,
+        text: `${input.build}: step ${n}`,
+      })
       n++
     }
   },
@@ -247,7 +270,11 @@ so a user who loses access is removed:
 import { channel } from '@weft-js/start'
 import { z } from 'zod'
 
-const Said = z.object({ id: z.string(), who: z.string(), text: z.string() })
+const Said = z.object({
+  id: z.string(),
+  who: z.string(),
+  text: z.string(),
+})
 
 export const room = channel({
   params: z.object({ roomId: z.string().max(64) }),
@@ -262,10 +289,16 @@ export const room = channel({
   },
   on: {
     say: async ({ msg, ctx, room }) => {
-      await room.publish('said', { id: crypto.randomUUID(), who: ctx.user?.name ?? 'Someone', text: msg.text })
+      await room.publish('said', {
+        id: crypto.randomUUID(),
+        who: ctx.user?.name ?? 'Someone',
+        text: msg.text,
+      })
     },
     typing: async ({ ctx, room }) => {
-      await room.publish('typing', { who: ctx.user?.name ?? 'Someone' }, { exceptSelf: true, volatile: true })
+      await room.publish('typing', {
+        who: ctx.user?.name ?? 'Someone',
+      }, { exceptSelf: true, volatile: true })
     },
   },
   limits: { perSecond: 10 },
@@ -369,7 +402,8 @@ export const deckSlide = sharedState('deck-slide', {
   initial: 0,
   authorize: {
     read: ({ ctx }) => ctx.user !== null,
-    write: ({ ctx, key }) => ctx.user !== null && key.startsWith(`${ctx.user.id}:`),
+    write: ({ ctx, key }) =>
+      ctx.user !== null && key.startsWith(`${ctx.user.id}:`),
   },
 })
 ```
@@ -382,7 +416,9 @@ export function Slides(props: { deck: string }) {
   return (
     <section>
       <p>Slide {slide.value + 1} ({slide.status.value})</p>
-      <button type="button" onClick={() => slide.value++}>Next</button>
+      <button type="button" onClick={() => slide.value++}>
+        Next
+      </button>
     </section>
   )
 }
@@ -410,7 +446,11 @@ import { multiplayer } from '@weft-js/multiplayer/server'
 import { z } from 'zod'
 
 const mp = multiplayer<{ id: string }>({
-  user: ({ ctx }) => (ctx.user ? { id: ctx.user.id, name: ctx.user.name } : { id: 'guest' }),
+  user: (
+    { ctx },
+  ) => (ctx.user
+    ? { id: ctx.user.id, name: ctx.user.name }
+    : { id: 'guest' }),
 })
 
 export const doc = channel({
@@ -435,16 +475,25 @@ import { doc } from '#/server/doc'
 export function Board(props: { id: string }) {
   const chat = doc.connect(() => ({ id: props.id }))
   const typing = state(false)
-  const room = presence(chat, { state: () => ({ typing: typing.value }) })
+  const room = presence(chat, {
+    state: () => ({ typing: typing.value }),
+  })
   const pointers = cursors(room)
   return (
     <section data-anchor="board">
       <ul>
-        {room.peers.value.map(p => (
-          <li key={p.id}>{p.user.name ?? 'Someone'}{p.state.typing ? ' is typing' : ''}</li>
+        {room.peers.value.map((p) => (
+          <li key={p.id}>
+            {p.user.name ?? 'Someone'}
+            {p.state.typing ? ' is typing' : ''}
+          </li>
         ))}
       </ul>
-      <textarea aria-label="Notes" onFocus={() => (typing.value = true)} onBlur={() => (typing.value = false)} />
+      <textarea
+        aria-label="Notes"
+        onFocus={() => (typing.value = true)}
+        onBlur={() => (typing.value = false)}
+      />
       <Cursors of={pointers} />
     </section>
   )
@@ -600,7 +649,9 @@ export function Count() {
   return (
     <p>
       {todos.value?.length ?? 0} todos
-      {todos.live.value !== 'live' && <small> ({todos.live.value})</small>}
+      {todos.live.value !== 'live' && (
+        <small>{' '}({todos.live.value})</small>
+      )}
     </p>
   )
 }
