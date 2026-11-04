@@ -12,6 +12,7 @@ import { catalog } from '../../packages/cli/src/catalog.mjs'
 import { exportsOf, loadCompiler, resolveWeft } from '../../packages/cli/src/weft.mjs'
 import { cleanText, decode, descriptionProblem, truncate } from '../../packages/start/src/derive.mjs'
 import { readExamples, readToolkit, showExample } from './toolkit.mjs'
+import { reportSampleWidths } from './sample-width.mjs'
 
 // warp-core's source imports without extensions, for bundlers; here Node reads it directly.
 registerHooks({
@@ -792,6 +793,7 @@ function buildLlms(docs, learn) {
   writeFileSync(join(pub, 'llms-full.txt'), [...learn.flat, ...docs.flat].map(p => p.md).join('\n\n---\n\n'))
 }
 
+reportSampleWidths(repo)
 const docs = await buildReference()
 const learn = buildLearn(docs)
 const toolkit = buildToolkit()
