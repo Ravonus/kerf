@@ -12,20 +12,24 @@ Three forms, and all three build to the same bytes:
 import { CheckIcon } from '@weft-js/warp-icons'
 <CheckIcon />
 
-import Icons from '@weft-js/warp-icons'           // or: import * as Icons
+// Or: import * as Icons
+import Icons from '@weft-js/warp-icons'
 <Icons.Check />
 
-import { Icon } from '@weft-js/warp'         // or: '@weft-js/warp-icons/icon'
+// Or import from '@weft-js/warp-icons/icon'.
+import { Icon } from '@weft-js/warp'
 <Icon name="check" />
 ```
 
 Props on any of them:
 
 ```tsx
-<CheckIcon />                 // decorative: aria-hidden, focusable="false"
+// Decorative: aria-hidden, focusable="false"
+<CheckIcon />
 <CheckIcon label="Saved" />   // role="img" with that name
 <CheckIcon size={24} />       // otherwise warp's icon sizes apply
-<CheckIcon tier="vivid" />    // this tier whatever the page's expression is
+// This tier regardless of the page's expression.
+<CheckIcon tier="vivid" />
 ```
 
 An icon you don't use costs nothing. One adds about 164 B of brotli with all tiers in. `sideEffects` lists only CSS, so a named import ships that icon.
@@ -69,9 +73,11 @@ A remote icon renders an empty `<svg data-icon data-loading>` of the right size 
 Five icons have a built-in animation: `trash` (the lid lifts), `bell` (it rings), `check` (it draws on), `refresh` (it spins), `copy` (the sheet stacks).
 
 ```tsx
-<Icon name="trash" action />          // hover, focus and press, on the icon or its parent
+// Hover, focus and press on the icon or its parent.
+<Icon name="trash" action />
 <Icon name="refresh" action="on" />   // now; refresh keeps spinning
-<TrashIconAction action="press" />    // 'hover' | 'focus' | 'press' | 'on'
+// 'hover' | 'focus' | 'press' | 'on'
+<TrashIconAction action="press" />
 ```
 
 It's CSS alone, and each one's stylesheet ships only if that icon is used (about 230 B of CSS and 50 B of JS, brotli). Outlines ease; pixels move in whole cells, in frames. warp's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.

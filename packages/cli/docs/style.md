@@ -9,20 +9,43 @@ import { group } from '@weft-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
-  base: { surface: 'raised', pad: 'group', radius: 'surface', layout: 'stack', gap: 'related' },
-  axes: { status: { open: { tone: 'info' }, shipped: { tone: 'positive' }, late: { tone: 'critical' } } },
-  parts: { title: { text: 'title' }, meta: { text: 'caption', ink: 'subtle' } },
+  base: {
+    surface: 'raised',
+    pad: 'group',
+    radius: 'surface',
+    layout: 'stack',
+    gap: 'related',
+  },
+  axes: {
+    status: {
+      open: { tone: 'info' },
+      shipped: { tone: 'positive' },
+      late: { tone: 'critical' },
+    },
+  },
+  parts: {
+    title: { text: 'title' },
+    meta: { text: 'caption', ink: 'subtle' },
+  },
   states: { selected: { ring: 'accent' } },
   defaults: { status: 'open' },
 })
 
-type Order = { name: string; date: string; status: 'open' | 'shipped' | 'late' }
+type Order = {
+  name: string
+  date: string
+  status: 'open' | 'shipped' | 'late'
+}
 
-export function OrderCard(props: { order: Order; selected: boolean }) {
+export function OrderCard(props: {
+  order: Order
+  selected: boolean
+}) {
+  const { order, selected } = props
   return (
-    <article {...orderCard({ status: props.order.status, selected: props.selected })}>
-      <h3 {...orderCard.title}>{props.order.name}</h3>
-      <p {...orderCard.meta}>{props.order.date}</p>
+    <article {...orderCard({ status: order.status, selected })}>
+      <h3 {...orderCard.title}>{order.name}</h3>
+      <p {...orderCard.meta}>{order.date}</p>
     </article>
   )
 }

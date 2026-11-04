@@ -6,16 +6,26 @@ import { resource, Boundary } from '@weft-js/core'
 type User = { name: string }
 
 function Name({ id }: { id: string }) {
-  // `id` is read before the first `await`, so a new id fetches again and aborts the old request.
-  const user = resource(signal => fetch(`/api/users/${id}`, { signal }).then(r => r.json() as Promise<User>))
-  // `pending` is also true on a refetch, while the old value is still here: dim it rather than replace it (X033).
-  return <h1 aria-busy={user.pending ? 'true' : 'false'}>{user.value?.name}</h1>
+  // A new id refetches and aborts the old request.
+  const user = resource(signal =>
+    fetch(`/api/users/${id}`, { signal })
+      .then(r => r.json() as Promise<User>),
+  )
+  // On a refetch, dim the old value rather than replace it (X033).
+  return (
+    <h1 aria-busy={user.pending ? 'true' : 'false'}>
+      {user.value?.name}
+    </h1>
+  )
 }
 
-// The resource is made inside the Boundary (in Name), so the Boundary waits for it.
+// Name makes the resource inside the Boundary, which waits for it.
 export function Profile({ id }: { id: string }) {
   return (
-    <Boundary pending={<p>Loading…</p>} error={(e, retry) => <button onClick={retry}>Retry</button>}>
+    <Boundary
+      pending={<p>Loading…</p>}
+      error={(e, retry) => <button onClick={retry}>Retry</button>}
+    >
       <Name id={id} />
     </Boundary>
   )
