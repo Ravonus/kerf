@@ -11,6 +11,8 @@ const root = dirname(fileURLToPath(import.meta.url))
 const run = promisify(execFile)
 
 export async function grade(framework, task, solutionPath, suite = 'tasks') {
+  if (!existsSync(join(root, suite, task)))
+    throw new Error('Phase 0 tasks are archived: https://github.com/Ravonus/weft/tree/archive/evals-2026-11/evals')
   const fwDir = join(root, 'frameworks', framework)
   const id = `${task}-${process.pid}-${Math.random().toString(36).slice(2, 8)}`
   const dir = join(fwDir, '.grade', id)

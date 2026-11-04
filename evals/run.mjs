@@ -218,6 +218,10 @@ function summary(results) {
   return lines.join('\n') + '\n'
 }
 
+if (cmd) {
+  console.error('Phase 0 tasks are archived: https://github.com/Ravonus/weft/tree/archive/evals-2026-11/evals')
+  process.exit(1)
+}
 if (cmd === 'prepare') prepare()
 else if (cmd === 'agent') await agent()
 else if (cmd === 'grade') await gradeAll()

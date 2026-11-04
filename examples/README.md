@@ -68,7 +68,7 @@ Per variant and page, on production builds, `--samples` samples (3 by default, 5
 
 ## Database-driven sites
 
-`landing`, `todo`, `admin` and `catalog` follow [the contract](../docs/research/40-site-benchmarks.md). Their weft variant is the
+`landing`, `todo`, `admin` and `catalog` follow [the contract](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/40-site-benchmarks.md). Their weft variant is the
 template; `solid` and `next` are folders here. `--all` skips a site whose folders aren't written yet, and says so.
 
     node e2e.mjs todo weft                  # build if needed, database, proxy, production server, tests, stop it all

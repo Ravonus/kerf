@@ -1,7 +1,7 @@
 # agent-eval
 
 Does an agent with no prior weft knowledge do better, and cheaper, on weft than on React? The design, metrics and pass
-criteria are pre-registered in [docs/research/42-agent-eval.md](../../docs/research/42-agent-eval.md). Read that first.
+criteria are pre-registered in [docs/research/42-agent-eval.md](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/42-agent-eval.md). Read that first.
 
 ```bash
 npm install                     # here, and `npm ci` in ../apps for Lighthouse

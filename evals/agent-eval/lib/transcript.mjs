@@ -93,7 +93,7 @@ export const FORBIDDEN = [
   'performance-over-bytes',
   'weft-wt',
   'chadkoslovsky',
-  '/Users/ravonus',
+  ...(process.env.HOME ? [process.env.HOME] : []),
 ]
 
 /** The first event of a session, checked for anything a run shouldn't have been given. */

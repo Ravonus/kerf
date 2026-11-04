@@ -1,14 +1,14 @@
-// The groups version of the v3 shop (spikes/style-groups/shop-groups) with data loaded, for the round trip in test/style.test.tsx.
+// The groups version of the v3 shop (examples/style-groups) with data loaded, for the round trip in test/style.test.tsx.
 // Same as Shop.tsx, on the components rewritten with style groups.
 import { derived, state, untrack } from '@weft-js/core'
 import type { Product } from '../../../../../evals/reference-v3/weft/src/api'
 import type { Cart } from '../../../../../evals/reference-v3/weft/src/App'
-import { CartView } from '../../../../../spikes/style-groups/shop-groups/src/components/CartView'
-import { Header } from '../../../../../spikes/style-groups/shop-groups/src/components/Header'
+import { CartView } from '../../../../../examples/style-groups/src/components/CartView'
+import { Header } from '../../../../../examples/style-groups/src/components/Header'
 import {
   ProductList,
   type Filters,
-} from '../../../../../spikes/style-groups/shop-groups/src/components/ProductList'
+} from '../../../../../examples/style-groups/src/components/ProductList'
 
 export function GroupShop(props: { products: Product[]; cart: Cart; filters: Filters }) {
   const cart = state<Cart>(untrack(() => props.cart))

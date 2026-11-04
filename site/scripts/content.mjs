@@ -1323,8 +1323,8 @@ export const products = query({
 const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
   const size = JSON.parse(
-    readFileSync(join(repo, 'evals/results/v3-warp-exit/exit.json'), 'utf8'),
-  ).size
+    readFileSync(join(repo, 'evals/results/summary.json'), 'utf8'),
+  ).warpExit.size
   const kb = (n) => +(n / 1024).toFixed(2)
   write('showcase.json', {
     receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) },

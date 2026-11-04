@@ -27,8 +27,8 @@ the reference, the code and the reference are right.
 
 | Where | What |
 |---|---|
-| [PLAN.md](PLAN.md) | The plan: design rules, the phases and a decision log. Status notes are dated. |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | The current architecture and design rules. |
 | [REVIEW.md](REVIEW.md) | An outside review of the first plan (2026-10-28). Everything in it was folded into the plan. |
-| [research/](research/) | Numbered research and design notes, 01 to 45, in the order they were written. `research/agorix/` studies the earlier toolkit warp was rebuilt from. |
+| [research/](https://github.com/Ravonus/weft/tree/archive/evals-2026-11/docs/research) | Numbered research and design notes, 01 to 45, in the order they were written. `research/agorix/` studies the earlier toolkit warp was rebuilt from. |
 | [design/warp/](design/warp/) | warp's design: direction, foundations, components, tokens and specimens. |
-| [spikes/](../spikes/) | Throwaway experiments behind some of the research: native targets, share cards, Rust sidecars and addons, style groups. |
+| [spikes/](https://github.com/Ravonus/weft/tree/archive/evals-2026-11/spikes) | Throwaway experiments behind some of the research: native targets, share cards, Rust sidecars and addons, style groups. |

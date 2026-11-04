@@ -1,6 +1,6 @@
 // Style groups (research 23, @weft-js/core/style): the compiler lowers call sites to attributes, the emitter writes CSS for
 // the values call sites can produce, a reactive axis is one attribute write, and SSR → hydrate claims the attributes
-// with no writes. The groups shop is spikes/style-groups/shop-groups.
+// with no writes. The groups shop is examples/style-groups.
 // weft-allow T005: framework test of compiled markup, SSR and hydration; attributes and node identity are the subject
 import { screen } from '@testing-library/dom'
 import { state } from '@weft-js/core'
