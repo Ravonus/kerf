@@ -1,0 +1,111 @@
+import { createHash } from 'node:crypto'
+import { createRequire } from 'node:module'
+import { join, resolve } from 'node:path'
+import { searchForWorkspaceRoot } from 'vite'
+import { INLINE_CSS_MAX } from '../inline.mjs'
+import { packageDirs } from './dev.mjs'
+import { combineSheets, sheetPieces, inlineSheets } from './sheets.mjs'
+import { here, V, KIT_CHUNKS, INLINE_SHEETS, SHEET_PIECES } from './shared.mjs'
+
+export const configHook = (s) =>
+  function (config, env) {
+    s.root = config.root ? resolve(config.root) : s.root
+    s.dev = env.command === 'serve'
+    s.scan()
+    return {
+      environments: {
+        client: {
+          build: {
+            rollupOptions: {
+              input: s.clientEntry(),
+              output: { advancedChunks: { groups: KIT_CHUNKS } },
+            },
+          },
+        },
+        ssr: { build: { rollupOptions: { input: V.server } } },
+      },
+      // The router-core server bundle and Takumi's addon stay external to the SSR graph; Nitro traces them.
+      ssr: {
+        noExternal: ['@weft-js/start', '@weft-js/warp', '@weft-js/warp-icons', '@weft-js/core'],
+        external: ['@takumi-rs/core'],
+      },
+      optimizeDeps: {
+        exclude: ['@weft-js/start', '@weft-js/warp', '@weft-js/warp-icons', '@weft-js/core'],
+      }, // they ship TSX for the weft plugin
+      // The runtime files of @weft-js/start, weft and Nitro are served from wherever they're installed (a linked package
+      // sits outside the app's root).
+      server: {
+        fs: { allow: [searchForWorkspaceRoot(s.root), join(here, '..'), ...packageDirs(s.root)] },
+      },
+      // One copy of the router: the app's route files and the generated entries import the same module.
+      resolve: {
+        alias: [
+          { find: /^@weft-js\/start$/, replacement: join(here, 'index.ts') },
+          { find: /^@weft-js\/start\/(client|server)$/, replacement: join(here, '$1.tsx') },
+          { find: /^@weft-js\/start\/media$/, replacement: join(here, 'media.ts') },
+        ],
+      },
+    }
+  }
+
+export const writeBundle = (s) => ({
+  order: 'post',
+  async handler(out, bundle) {
+    if (
+      s.dev ||
+      this.environment?.config.consumer !== 'client' ||
+      s.options.site?.criticalCss === false ||
+      s.options.site?.inlineCss === false
+    )
+      return
+    s.sheetPlan = combineSheets(
+      out.dir,
+      bundle,
+      s.manifest ?? s.scan(),
+      s.abs,
+      (await s.hydration(this))?.islands ?? [],
+      s.options.site?.base ?? '/',
+    )
+  },
+})
+
+export const renderChunk = (s) => ({
+  order: 'post',
+  handler(code) {
+    const token = new RegExp(`["'\`]${INLINE_SHEETS}["'\`]`)
+    if (!token.test(code)) return null
+    const top = this.environment.getTopLevelConfig()
+    const client = resolve(s.root, top.environments.client.build.outDir)
+    code = code.replace(new RegExp(`["'\`]${SHEET_PIECES}["'\`]`), () =>
+      JSON.stringify(
+        s.sheetPlan &&
+          sheetPieces(client, top.base ?? '/', s.sheetPlan, s.options.site?.criticalKeep, s.root),
+      ),
+    )
+    // With a first-paint table the server reads none of these; without, a page too big to carry whole is split (`pageStyles`).
+    const sheets =
+      s.options.site?.inlineCss === false
+        ? {}
+        : inlineSheets(
+            client,
+            top.base ?? '/',
+            s.options.site?.criticalCss === false ? Infinity : INLINE_CSS_MAX,
+          )
+    return { code: code.replace(token, () => JSON.stringify(sheets)), map: null }
+  },
+})
+
+export const configResolved = (s) =>
+  function (config) {
+    s.build = createHash('sha256').update(String(Date.now())).digest('hex').slice(0, 8)
+    if (s.dev) s.build = 'dev'
+    s.root = config.root
+    const main = config.plugins.find((p) => p.name === 'weft')
+    s.words = config.plugins.find((p) => p.name === 'weft:purge')?.api
+    s.words?.add('data-weft styled') // gate.css reveals a mark a static page's HTML may hold alone
+    if (main?.api) {
+      s.compile = createRequire(join(here, 'vite.mjs'))('@weft-js/core/compiler').transform
+      main.api.islands = async (ctx, file) =>
+        (await s.hydration(ctx))?.files.get(file.replace(/\?.*$/, ''))
+    }
+  }
