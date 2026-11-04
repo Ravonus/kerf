@@ -54,7 +54,8 @@ export function rustTokens(text) {
   return tokens
 }
 
-const size = (tokens) => tokens.reduce((sum, token) => sum + token.value.length, 0)
+const size = (tokens) =>
+  tokens.reduce((sum, token) => sum + (token.value === ';' ? 0 : token.value.length), 0)
 const lineAt = (text, pos) => text.slice(0, pos).split('\n').length
 
 /** Return file and named function offenders, with spans for matching Clippy diagnostics. */

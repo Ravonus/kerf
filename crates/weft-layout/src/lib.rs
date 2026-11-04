@@ -366,7 +366,7 @@ pub unsafe extern "C" fn wl_frame(t: *mut Tree, id: u32, out: *mut f32) -> u32 {
                     [f.x, f.y, f.w, f.h, f.content_w, f.content_h].as_ptr(),
                     out,
                     6,
-                )
+                );
             };
             1
         }

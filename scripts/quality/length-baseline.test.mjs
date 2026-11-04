@@ -161,13 +161,18 @@ await test('test, generated and vendored files get the 800-line limit', () => {
 
 await test('Rust function identities survive line shifts and ignore braces in comments and strings', () => {
   const body = Array.from({ length: 85 }, () => '    value += 1;').join('\n')
-  const text = `fn longer() {\n let s = r#"}"#; let c = '\\u{7b}'; // {\n /* { /* } */ } */\n${body}\n}\n`
+  const text = `fn longer() {\n let s = r#"}"#; let c = '\\u{7b}'; // {\n /* { /* } */ } */\n${body}\n finish()\n}\n`
   const first = rustFindings('src/a.rs', text).find((f) => f.kind === 'function')
   const shifted = rustFindings('src/a.rs', `\n\n${text}`).find((f) => f.kind === 'function')
   assert.equal(first.id, 'function:src/a.rs:longer')
   assert.equal(first.id, shifted.id)
   assert.equal(first.count, shifted.count)
   assert.equal(first.tokens, shifted.tokens)
+  const terminated = rustFindings('src/a.rs', text.replace('finish()', 'finish();')).find(
+    (f) => f.kind === 'function',
+  )
+  assert.equal(terminated.tokens, first.tokens)
+  assert.equal(terminated.count, first.count)
 })
 
 await test('Oxlint collector measures file limits, stable names and whitespace-independent syntax size', () =>

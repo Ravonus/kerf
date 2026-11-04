@@ -1,43 +1,43 @@
 {
   "file:crates/weft-compiler/src/analyze.rs": {
     "lines": 2258,
-    "tokens": 49541
+    "tokens": 49088
   },
   "file:crates/weft-compiler/src/browser.rs": {
     "lines": 753,
-    "tokens": 16921
+    "tokens": 16776
   },
   "file:crates/weft-compiler/src/emit.rs": {
     "lines": 1854,
-    "tokens": 36293
+    "tokens": 35872
   },
   "file:crates/weft-compiler/src/hydration.rs": {
     "lines": 1417,
-    "tokens": 29001
+    "tokens": 28726
   },
   "file:crates/weft-compiler/src/shape.rs": {
     "lines": 878,
-    "tokens": 18417
+    "tokens": 18233
   },
   "file:crates/weft-compiler/src/style.rs": {
     "lines": 808,
-    "tokens": 17196
+    "tokens": 17037
   },
   "file:crates/weft-compiler/src/transform.rs": {
     "lines": 830,
-    "tokens": 18784
+    "tokens": 18619
   },
   "file:crates/weft-compiler/tests/compile.rs": {
     "lines": 2111,
-    "tokens": 53635
+    "tokens": 53094
   },
   "file:crates/weft-layout/src/lib.rs": {
     "lines": 594,
-    "tokens": 9446
+    "tokens": 9290
   },
   "file:crates/weft/src/build.rs": {
     "lines": 433,
-    "tokens": 10774
+    "tokens": 10676
   },
   "file:docs/design/warp/scripts/contrast-check.mjs": {
     "lines": 534,
@@ -725,63 +725,63 @@
   },
   "function:crates/weft-compiler/src/analyze.rs:analyze_list": {
     "lines": 123,
-    "tokens": 3016
+    "tokens": 2979
   },
   "function:crates/weft-compiler/src/analyze.rs:destructure_props": {
     "lines": 104,
-    "tokens": 2231
+    "tokens": 2207
   },
   "function:crates/weft-compiler/src/bin/weftc.rs:main": {
     "lines": 143,
-    "tokens": 2835
+    "tokens": 2790
   },
   "function:crates/weft-compiler/src/emit.rs:emit": {
     "lines": 97,
-    "tokens": 2108
+    "tokens": 2078
   },
   "function:crates/weft-compiler/src/emit.rs:props": {
     "lines": 111,
-    "tokens": 2498
+    "tokens": 2480
   },
   "function:crates/weft-compiler/src/emit.rs:walk": {
     "lines": 337,
-    "tokens": 7090
+    "tokens": 6972
   },
   "function:crates/weft-compiler/src/hydration.rs:facts": {
     "lines": 262,
-    "tokens": 5449
+    "tokens": 5391
   },
   "function:crates/weft-compiler/src/hydration.rs:visit_jsx_element#2": {
     "lines": 130,
-    "tokens": 2613
+    "tokens": 2571
   },
   "function:crates/weft-compiler/src/lib.rs:compile_source": {
     "lines": 157,
-    "tokens": 3250
+    "tokens": 3209
   },
   "function:crates/weft-compiler/src/shape.rs:apply": {
     "lines": 122,
-    "tokens": 2557
+    "tokens": 2520
   },
   "function:crates/weft-compiler/src/shape.rs:collect": {
     "lines": 94,
-    "tokens": 1982
+    "tokens": 1964
   },
   "function:crates/weft-compiler/src/srcmap.rs:decode": {
     "lines": 82,
-    "tokens": 1653
+    "tokens": 1626
   },
   "function:crates/weft-compiler/src/style.rs:apply": {
     "lines": 122,
-    "tokens": 2649
+    "tokens": 2613
   },
   "function:crates/weft-compiler/src/style.rs:lower": {
     "lines": 187,
-    "tokens": 4147
+    "tokens": 4097
   },
   "function:crates/weft/src/build.rs:render": {
     "lines": 143,
-    "tokens": 3881
+    "tokens": 3850
   },
   "function:docs/design/warp/specimens/warp-bar.js:call(callback)": {
     "lines": 246,

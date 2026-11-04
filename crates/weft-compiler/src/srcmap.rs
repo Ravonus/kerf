@@ -116,7 +116,7 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
                 stack.pop();
                 match stack.last() {
                     Some(Seg::Lowered(to)) if src.is_some() => {
-                        builder.add_token(line, col, to.0, to.1, src, None)
+                        builder.add_token(line, col, to.0, to.1, src, None);
                     }
                     // Back in a copy (it can't hold markers, so this doesn't happen; kept exact anyway).
                     Some(Seg::Copy(p)) => next = pts.partition_point(|x| (x.0 as usize) < *p),

@@ -417,7 +417,7 @@ impl Gen<'_> {
         for k in kids {
             match k {
                 JSXChild::Text(t) => {
-                    out.push_str(&self.source[t.span.start as usize..t.span.end as usize])
+                    out.push_str(&self.source[t.span.start as usize..t.span.end as usize]);
                 }
                 JSXChild::Element(el) => out.push_str(&self.element(el, allowed)),
                 JSXChild::Fragment(f) => out.push_str(&self.kids(&f.children, allowed)),

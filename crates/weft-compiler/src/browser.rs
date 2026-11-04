@@ -690,7 +690,7 @@ impl<'a> Visit<'a> for Checker<'_> {
             .or_else(|| self.pending_name.take());
         let (role, component) = self.role_for(name);
         self.enter_fn(role, component && it.body.is_some(), |s| {
-            walk::walk_function(s, it, flags)
+            walk::walk_function(s, it, flags);
         });
     }
 
@@ -698,7 +698,7 @@ impl<'a> Visit<'a> for Checker<'_> {
         let name = self.pending_name.take();
         let (role, component) = self.role_for(name);
         self.enter_fn(role, component, |s| {
-            walk::walk_arrow_function_expression(s, it)
+            walk::walk_arrow_function_expression(s, it);
         });
     }
 

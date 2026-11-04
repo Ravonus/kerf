@@ -922,7 +922,7 @@ impl Emitter<'_> {
                     };
                     match known {
                         Some(Static::Text(t)) => {
-                            Self::put(b, &format!(" {html}=\"{}\"", escape_attr(&t)))
+                            Self::put(b, &format!(" {html}=\"{}\"", escape_attr(&t)));
                         }
                         Some(Static::True) => Self::put(b, &format!(" {html}")),
                         Some(Static::Absent) => {}

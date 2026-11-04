@@ -706,9 +706,9 @@ impl<'a> Visit<'a> for Collect<'_> {
                 if is_handler(&name) {
                     let why = format!("`{name}` on an element (line {line})");
                     if self.passes_on(a) {
-                        self.passes(why)
+                        self.passes(why);
                     } else {
-                        self.own(why)
+                        self.own(why);
                     }
                 }
                 if name.eq_ignore_ascii_case("autofocus") {
@@ -1049,7 +1049,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                     f.id.as_ref()
                         .map_or("(function)".to_string(), |i| i.name.to_string());
                 node(&mut c, name, false, &|c| {
-                    c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty())
+                    c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty());
                 });
             }
             Statement::VariableDeclaration(v) => {
@@ -1057,7 +1057,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                     let names = binding_names(&d.id);
                     let name = names.first().cloned().unwrap_or_default();
                     node(&mut c, name, holds_value(d), &|c| {
-                        c.visit_variable_declarator(d)
+                        c.visit_variable_declarator(d);
                     });
                 }
             }
@@ -1085,7 +1085,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                         ..Default::default()
                     });
                     node(&mut c, name, false, &|c| {
-                        c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty())
+                        c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty());
                     });
                 }
                 ExportDefaultDeclarationKind::ClassDeclaration(k) => {
@@ -1116,7 +1116,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                         ..Default::default()
                     });
                     node(&mut c, name, false, &|c| {
-                        c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty())
+                        c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty());
                     });
                 }
                 Declaration::VariableDeclaration(v) => {
@@ -1210,7 +1210,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                 out.effects
                     .get_or_insert(format!("a top-level statement (line {line})"));
                 node(&mut c, "(module)".into(), false, &|c| {
-                    c.visit_statement(other)
+                    c.visit_statement(other);
                 });
             }
         }

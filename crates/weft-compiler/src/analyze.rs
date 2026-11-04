@@ -1645,7 +1645,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
             && it.body.is_some()
         {
             self.enter_component(name, it.span, &it.params, |s| {
-                walk::walk_function(s, it, flags)
+                walk::walk_function(s, it, flags);
             });
         } else {
             self.nested(|s| walk::walk_function(s, it, flags));
@@ -1656,7 +1656,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
         let name = self.pending_name.take();
         if let Some(name) = name.filter(|n| is_component_name(n)) {
             self.enter_component(name, it.span, &it.params, |s| {
-                walk::walk_arrow_function_expression(s, it)
+                walk::walk_arrow_function_expression(s, it);
             });
         } else {
             self.nested(|s| walk::walk_arrow_function_expression(s, it));
