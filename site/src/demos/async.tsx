@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { Badge, Button, Card, Spinner } from '@weft-js/warp'
+import {
+  Badge,
+  Button,
+  Card,
+  Spinner,
+} from '@weft-js/warp'
 
 const save = () =>
   new Promise((done) => {

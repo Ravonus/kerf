@@ -7,7 +7,9 @@ export default function Habit() {
   return (
     <Card title="weft build">
       <Button onClick={() => (open.value = !open.value)}>
-        {open.value ? 'Hide the error' : 'Build the React habit'}
+        {open.value
+          ? 'Hide the error'
+          : 'Build the React habit'}
       </Button>
       {open.value && (
         <Alert tone="critical" title={show.habit.code}>

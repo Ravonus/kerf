@@ -8,7 +8,9 @@ export default function Product() {
       <p>
         Cart <Badge count>{inCart.value}</Badge>
       </p>
-      <Button onClick={() => inCart.value++}>Add to cart</Button>
+      <Button onClick={() => inCart.value++}>
+        Add to cart
+      </Button>
     </Card>
   )
 }
