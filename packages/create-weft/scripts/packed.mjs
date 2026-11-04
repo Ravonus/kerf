@@ -272,7 +272,10 @@ await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ na
   const log = text => console.log(`[packed] ${name}: ${text}`)
   const sh = (cmd, args, cwd) => run(cmd, args, cwd, rust ? process.env : noRust)
   scaffold(app, options)
-  writeFileSync(join(app, 'package.json'), JSON.stringify(pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs), null, 2))
+  const pkg = pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs)
+  // pnpm resolves the workspace overrides; npm's pinning path would consume every `add` argument.
+  delete pkg.overrides
+  writeFileSync(join(app, 'package.json'), JSON.stringify(pkg, null, 2))
   if (themed) {
     const file = join(app, 'weft.config.ts')
     writeFileSync(file, readFileSync(file, 'utf8').replace('warp()', `warp(${themed})`))

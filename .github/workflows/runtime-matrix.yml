@@ -30,9 +30,9 @@ jobs:
           node --input-type=module -e '
             import { readFileSync, writeFileSync } from "node:fs"
             const pkg = JSON.parse(readFileSync("package.json", "utf8"))
-            for (const p of ["start", "warp", "cli"]) pkg.dependencies[`@weft-js/${p}`] = `file:${process.env.GITHUB_WORKSPACE}/packages/${p}`
+            for (const p of ["start", "warp", "cli"]) pkg.dependencies[`@weft-js/${p}`] = `link:${process.env.GITHUB_WORKSPACE}/packages/${p}`
             delete pkg.devDependencies["@weft-js/cli"]
-            pkg.dependencies["@weft-js/core"] = `file:${process.env.GITHUB_WORKSPACE}/packages/weft`
+            pkg.dependencies["@weft-js/core"] = `link:${process.env.GITHUB_WORKSPACE}/packages/weft`
             writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")
           '
           cp "$GITHUB_WORKSPACE/pnpm-workspace.yaml" pnpm-workspace.yaml
