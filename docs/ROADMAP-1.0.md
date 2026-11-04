@@ -72,14 +72,18 @@ Steps marked ∥ can each run in their own session or worktree at the same time.
 
 Make `main` trustworthy, and make the rules above automatic before anyone starts moving code.
 
+**Status:** blocked. The guardrails are implemented on `sprint/S0`; the packed landing
+template's `Input`/`FormValue` type mismatch needs an M3 source fix or an ownership exception.
+The sprint has not merged to `main`, and its two-green-main-run exit remains unmet.
+
 - [ ] Get CI green. Install Firefox and WebKit in `quality.yml`, allowlist the deploy fixture in
       `.gitleaks.toml`, and fix `runtime-matrix.yml`. Its header still says there's no CI.
-- [ ] Add `oxfmt` with `printWidth: 100`, set `rustfmt` to `max_width = 100`, and format the whole
+- [x] Add `oxfmt` with `printWidth: 100`, set `rustfmt` to `max_width = 100`, and format the whole
       repo in one commit. Add that commit's hash to `.git-blame-ignore-revs`.
-- [ ] Turn on `max-lines` and `max-lines-per-function` in `.oxlintrc.json`, and
+- [x] Turn on `max-lines` and `max-lines-per-function` in `.oxlintrc.json`, and
       `clippy::too_many_lines` for Rust. Every current offender goes on an allowlist (the
       `evals/results/` baseline pattern). The allowlist can only shrink, and check fails if it grows.
-- [ ] Add the sample-width check to `site/scripts/content.mjs` as a warning that prints a count.
+- [x] Add the sample-width check to `site/scripts/content.mjs` as a warning that prints a count.
       Sprint 1 turns it into an error.
 
 **Exit:** two green CI runs in a row on `main`. `pnpm run check` reports formatting, length and
