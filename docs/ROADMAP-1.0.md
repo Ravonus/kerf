@@ -130,6 +130,8 @@ go in the PR.
 
 ### Sprint 2: a normal repo layout
 
+**Status:** layout implemented on `sprint/S2`; the file-count exit awaits an owner decision.
+
 Moves and deletes come before the refactors, because moving files later would collide with every
 open branch.
 
@@ -147,29 +149,29 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
 .github/         CI, templates, CODEOWNERS, dependabot
 ```
 
-- [ ] Rename folders to match npm names: `weft` becomes `core`, `icons` becomes
+- [x] Rename folders to match npm names: `weft` becomes `core`, `icons` becomes
       `warp-icons`, and `create-weft` becomes `create`. Fix every link and path.
-- [ ] Move `evals/results/`, the 1,561 run snapshots, out of the tree. Tag the current tree as
+- [x] Move `evals/results/`, the 1,561 run snapshots, out of the tree. Tag the current tree as
       `archive/evals-2026-11`, then publish the snapshots as a release asset or in a
       `weft-js/eval-results` repo. Keep one summary file, plus `compare-history.jsonl`.
-- [ ] Remove the frozen Phase 0 eval baselines (`tasks`, `tasks-v2`, `reference`, `reference-v2`,
+- [x] Remove the frozen Phase 0 eval baselines (`tasks`, `tasks-v2`, `reference`, `reference-v2`,
       `buggy`, `buggy-v2`) and keep the latest version of each. The archive tag keeps the history.
-- [ ] Move the nine exit scripts and e2e companions to `evals/gates/`, sharing one `evals/lib/gate.mjs`
+- [x] Move the nine exit scripts and e2e companions to `evals/gates/`, sharing one `evals/lib/gate.mjs`
       for `run`, `must`, `until`, `eq` and `check`.
-- [ ] Put the dashboard, speed and arena benchmarks in `benchmarks/`, with one README that
+- [x] Put the dashboard, speed and arena benchmarks in `benchmarks/`, with one README that
       explains the method (see Sprint 5).
-- [ ] Remove `site/review/` (21 screenshots). Stop tracking the generated `site/public/reference`
+- [x] Remove `site/review/` (21 screenshots). Stop tracking the generated `site/public/reference`
       and `site/public/learn`, and generate them in `build`.
-- [ ] Stop tracking other build output: `packages/warp/test/a11y/gallery/assets/*`,
+- [x] Stop tracking other build output: `packages/warp/test/a11y/gallery/assets/*`,
       `packages/warp-icons/contact-sheet.html`, `packages/cli/.vitest/`,
       `evals/results/sites/first-run-*.json` and `benchmarks/speed/lab.json`. Add them to `.gitignore`.
-- [ ] Archive `docs/research/` (58 notes), `docs/design/warp/reviews/` (215 files),
+- [x] Archive `docs/research/` (58 notes), `docs/design/warp/reviews/` (215 files),
       `docs/design/warp/specimens/` and `spikes/` under the archive tag. In their place, write
       `docs/decisions/`: one short file per decision that still holds, linking to the archived
       note. Cut `docs/PLAN.md` down to `docs/ARCHITECTURE.md` plus this roadmap.
-- [ ] Remove absolute home-directory paths from tracked files (`docs/research/04`, `40`, and
+- [x] Remove absolute home-directory paths from tracked files (`docs/research/04`, `40`, and
       `evals/agent-eval/lib/transcript.mjs`).
-- [ ] Delete `scripts/rename-scope.mjs`, which was a one-off.
+- [x] Delete `scripts/rename-scope.mjs`, which was a one-off.
 
 **Exit:** the top level matches the tree above. Fewer than 2,000 files are tracked. `pnpm run
 check` and the site build pass after the moves, run on yuna-mbp.
@@ -364,7 +366,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 
 - Sprint 0: guardrails implemented; formatting, lengths, sample warnings and CI are enforced
 - Sprint 1: not started
-- Sprint 2: not started
+- Sprint 2: layout implemented on sprint/S2; file-count exit awaits an owner decision
 - Sprint 3: not started
 - Sprint 4: not started
 - Sprint 5: not started
