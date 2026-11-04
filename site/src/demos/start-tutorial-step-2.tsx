@@ -11,7 +11,13 @@ const PRODUCTS = [
 type Product = (typeof PRODUCTS)[number]
 type Cart = Record<string, number>
 
-function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) {
+function ProductRow({
+  product,
+  cart,
+}: {
+  product: Product
+  cart: State<Cart>
+}) {
   const add = () =>
     cart.set((d) => {
       d[product.id] = (d[product.id] ?? 0) + 1
@@ -32,7 +38,11 @@ export default function Shop() {
   return (
     <Card title="The shop">
       {PRODUCTS.map((p) => (
-        <ProductRow key={p.id} product={p} cart={cart} />
+        <ProductRow
+          key={p.id}
+          product={p}
+          cart={cart}
+        />
       ))}
     </Card>
   )

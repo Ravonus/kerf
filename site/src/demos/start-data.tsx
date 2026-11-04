@@ -27,7 +27,9 @@ export default function Profile() {
         {barista.name.charAt(0)}
       </div>
       <p>Pulling shots since {barista.since}.</p>
-      <p>Favourite drink: {barista.favourite.toLowerCase()}</p>
+      <p>
+        Favourite drink: {barista.favourite.toLowerCase()}
+      </p>
     </Card>
   )
 }

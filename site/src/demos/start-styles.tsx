@@ -6,7 +6,8 @@ export default function Special() {
       <Text role="title">$5.50</Text>
       <p
         style={{
-          borderLeft: '4px solid var(--warp-color-accent-solid)',
+          borderLeft:
+            '4px solid var(--warp-color-accent-solid)',
           paddingLeft: 'var(--warp-space-related)',
           fontStyle: 'italic',
         }}
