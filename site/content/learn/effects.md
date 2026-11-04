@@ -25,14 +25,19 @@ import { state, watch } from '@weft-js/core'
 
 export function ChatRoom() {
   const room = state('general')
-  watch(() => room.value, name => {
-    const connection = connect(name)
-    return () => connection.close()
-  })
+  watch(
+    () => room.value,
+    name => {
+      const connection = connect(name)
+      return () => connection.close()
+    },
+  )
   return <p>Welcome to #{room.value}</p>
 }
 
-const connect = (name: string) => ({ close: () => console.log(`closed #${name}`) })
+const connect = (name: string) => ({
+  close: () => console.log(`closed #${name}`),
+})
 ```
 
 - The **source**, `() => room.value`, says what to follow. weft notes every box it reads.
@@ -108,10 +113,19 @@ export function Chart() {
     const chart = drawChart(canvas)
     onCleanup(() => chart.destroy())
   })
-  return <canvas ref={el => (canvas = el)} width="400" height="200" aria-label="Sales by month" />
+  return (
+    <canvas
+      ref={el => (canvas = el)}
+      width="400"
+      height="200"
+      aria-label="Sales by month"
+    />
+  )
 }
 
-const drawChart = (el: HTMLCanvasElement | undefined) => ({ destroy: () => el?.remove() })
+const drawChart = (el: HTMLCanvasElement | undefined) => ({
+  destroy: () => el?.remove(),
+})
 ```
 
 `onCleanup` inside `onMount` belongs to the component, like one in the body: `onMount` runs your function under the
@@ -156,7 +170,10 @@ import { effect, state } from '@weft-js/core'
 
 export function Title() {
   const unread = state(3)
-  effect(() => unread.value, n => (document.title = n ? `(${n}) Inbox` : 'Inbox'))
+  effect(
+    () => unread.value,
+    n => (document.title = n ? `(${n}) Inbox` : 'Inbox'),
+  )
   return <p>{unread.value} unread</p>
 }
 ```
@@ -173,7 +190,13 @@ user prefer dark mode, which key was pressed. `@weft-js/core/browser` turns thos
 
 ```tsx
 import { state } from '@weft-js/core'
-import { interval, media, on, online, visible } from '@weft-js/core/browser'
+import {
+  interval,
+  media,
+  on,
+  online,
+  visible,
+} from '@weft-js/core/browser'
 
 export function Toolbar() {
   const isOnline = online()
@@ -181,11 +204,16 @@ export function Toolbar() {
   const dark = media('(prefers-color-scheme: dark)', { ssr: false })
   const now = state(Date.now())
   const open = state(true)
-  if (typeof window !== 'undefined') on(window, 'keydown', e => { if (e.key === 'Escape') open.value = false })
+  if (typeof window !== 'undefined')
+    on(window, 'keydown', e => {
+      if (e.key === 'Escape') open.value = false
+    })
   interval('1s', () => (now.value = Date.now()))
   return (
     <p hidden={!open.value}>
-      {isOnline.value ? 'Online' : 'Offline'}, {dark.value ? 'dark' : 'light'}, {shown.value ? 'visible' : 'hidden'},
+      {isOnline.value ? 'Online' : 'Offline'},{' '}
+      {dark.value ? 'dark' : 'light'},{' '}
+      {shown.value ? 'visible' : 'hidden'},
       {new Date(now.value).toLocaleTimeString()}
     </p>
   )
@@ -267,11 +295,16 @@ import { visible } from '@weft-js/core/browser'
 export function Countdown() {
   const left = state(60)
   const shown = visible()
-  watch(() => shown.value, on => {
-    if (!on) return
-    const id = setInterval(() => { if (left.value > 0) left.value-- }, 1000)
-    return () => clearInterval(id)
-  })
+  watch(
+    () => shown.value,
+    on => {
+      if (!on) return
+      const id = setInterval(() => {
+        if (left.value > 0) left.value--
+      }, 1000)
+      return () => clearInterval(id)
+    },
+  )
   return <p>{left.value} s left</p>
 }
 ```
@@ -294,11 +327,18 @@ import { Button } from '@weft-js/warp'
 export function Inbox() {
   const unread = state(3)
   const before = typeof document === 'undefined' ? '' : document.title
-  watch(() => unread.value, n => {
-    document.title = n ? `(${n}) Inbox` : 'Inbox'
-  })
+  watch(
+    () => unread.value,
+    n => {
+      document.title = n ? `(${n}) Inbox` : 'Inbox'
+    },
+  )
   onCleanup(() => (document.title = before))
-  return <Button onClick={() => unread.value++}>New message ({unread.value})</Button>
+  return (
+    <Button onClick={() => unread.value++}>
+      New message ({unread.value})
+    </Button>
+  )
 }
 ```
 

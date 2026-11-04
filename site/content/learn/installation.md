@@ -101,10 +101,12 @@ stops and says so. A few combinations, to give you the idea:
 
 ```bash
 # a static-looking site with Tailwind and no server data
-node weft/packages/create/scripts/local.mjs new site --yes --ui tailwind --db none
+node weft/packages/create/scripts/local.mjs new site --yes \
+  --ui tailwind --db none
 
 # Postgres through Prisma, no sign-in, built for Bun
-node weft/packages/create/scripts/local.mjs new shop --yes --db postgres --layer prisma --no-auth --runtime bun
+node weft/packages/create/scripts/local.mjs new shop --yes \
+  --db postgres --layer prisma --no-auth --runtime bun
 ```
 
 `local.mjs new` always installs with npm, because that's what the tarballs are wired up for: `--pm` and `--install` are
@@ -122,16 +124,16 @@ Here is the app `--yes` makes, with every default: warp, SQLite through Drizzle,
 
 ```text
 my-app/
-├── AGENTS.md                 what an AI agent needs to know about this app (generated)
+├── AGENTS.md                 generated guidance for an AI agent
 ├── package.json              scripts that call `weft`
-├── weft.config.ts            the app's settings: site metadata, plugins
-├── tsconfig.json             strict TypeScript, TSX for weft, the editor plugin
+├── weft.config.ts            site metadata and plugins
+├── tsconfig.json             strict TS, weft TSX and editor plugin
 ├── drizzle.config.ts         where Drizzle finds the schema
-├── .env                      DATABASE_URL and the auth secret (not committed)
+├── .env                  DATABASE_URL and auth secret (not committed)
 ├── .env.example              the same keys, without the secret
 ├── .gitignore
 ├── .vscode/settings.json     tells VS Code where the editor plugin is
-├── .weft/plugins.lock.json   the plugins you approved, and what they may do
+├── .weft/plugins.lock.json   approved plugins and their permissions
 └── src/
     ├── routes/
     │   ├── _layout.tsx       wraps every page: the nav and <main>
@@ -142,14 +144,14 @@ my-app/
     │       ├── _layout.tsx   sends you to /login when signed out
     │       └── index.tsx     the todo list, at /todos
     ├── server/
-    │   ├── todos.ts          the queries and mutations the todo page calls
+    │   ├── todos.ts          queries and mutations for todos
     │   └── session.ts        me, signUp, signIn, signOut
     ├── db/
     │   ├── schema.ts         the tables
     │   └── index.server.ts   the database connection
     ├── auth.server.ts        Better Auth, on the same database
     ├── context.server.ts     what every server function gets as `ctx`
-    └── env.server.ts         checks the environment when the server starts
+    └── env.server.ts         checks the environment on server start
 ```
 
 With `--db none` there's no `.env`, `drizzle.config.ts`, `src/server`, `src/db` or `.server.ts` file: only the config
