@@ -18,7 +18,7 @@ const ROWS = [20, 100, 200]
 const require = createRequire(join(here, '../../packages/warp/package.json'))
 const { chromium } = require('playwright-core')
 
-const build = dir => execFileSync('npx', ['vite', 'build', '--logLevel', 'error'], { cwd: dir, stdio: ['ignore', 'ignore', 'ignore'] })
+const build = dir => execFileSync('pnpm', ['exec', 'vite', 'build', '--logLevel', 'error'], { cwd: dir, stdio: ['ignore', 'ignore', 'ignore'] })
 const br = b => brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 function sizes(dir) {
   const a = join(dir, 'dist/assets'), out = { js: { raw: 0, gz: 0, br: 0 }, css: { raw: 0, gz: 0, br: 0 } }
@@ -224,7 +224,7 @@ const results = {}
 if (process.argv.includes('--long-list')) { // just this scenario, nothing written
   for (const stack of STACKS) {
     const dir = join(here, stack)
-    execFileSync('npx', ['vite', 'build', '--logLevel', 'error'], { cwd: join(dir, 'feed'), stdio: ['ignore', 'ignore', 'inherit'] })
+    execFileSync('pnpm', ['exec', 'vite', 'build', '--logLevel', 'error'], { cwd: join(dir, 'feed'), stdio: ['ignore', 'ignore', 'inherit'] })
     const f = await serve(join(dir, 'feed/dist'))
     console.log(stack, JSON.stringify(listResult(dir, await longList(browser, `http://127.0.0.1:${f.address().port}/`))))
     f.close()
@@ -240,7 +240,7 @@ for (const stack of STACKS) {
   const s = await serve(join(dir, 'dist')), url = `http://127.0.0.1:${s.address().port}/`
   r.load = await load(browser, url); r.parity = await parity(browser, url, stack); r.scale = await scale(browser, url, stack)
   s.close()
-  execFileSync('npx', ['vite', 'build', '--logLevel', 'error'], { cwd: join(dir, 'feed'), stdio: ['ignore', 'ignore', 'ignore'] })
+  execFileSync('pnpm', ['exec', 'vite', 'build', '--logLevel', 'error'], { cwd: join(dir, 'feed'), stdio: ['ignore', 'ignore', 'ignore'] })
   const f = await serve(join(dir, 'feed/dist')); r.longList = listResult(dir, await longList(browser, `http://127.0.0.1:${f.address().port}/`)); f.close()
   r.sweep = {}
   for (const n of SWEEP) r.sweep[n] = sweep(stack, dir, n)
