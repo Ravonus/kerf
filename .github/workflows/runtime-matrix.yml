@@ -2,7 +2,7 @@
 name: runtime-matrix
 on:
   pull_request:
-    paths: ['packages/start/**', 'packages/create-weft/**', 'packages/cli/**', 'packages/weft/**', '.github/workflows/runtime-matrix.yml']
+    paths: ['packages/start/**', 'packages/create/**', 'packages/cli/**', 'packages/core/**', '.github/workflows/runtime-matrix.yml']
   push:
     branches: [main]
   workflow_dispatch:
@@ -21,18 +21,18 @@ jobs:
       - name: Install the packages
         run: |
           pnpm install --frozen-lockfile
-          (cd packages/weft && pnpm run build:native)
+          (cd packages/core && pnpm run build:native)
           (cd packages/start && pnpm exec playwright-core install --with-deps chromium)
       - name: Scaffold the todo + auth app
         run: |
-          node packages/create-weft/bin/create-weft.mjs "$RUNNER_TEMP/app" --db sqlite --auth --ui warp
+          node packages/create/bin/create-weft.mjs "$RUNNER_TEMP/app" --db sqlite --auth --ui warp
           cd "$RUNNER_TEMP/app"
           node --input-type=module -e '
             import { readFileSync, writeFileSync } from "node:fs"
             const pkg = JSON.parse(readFileSync("package.json", "utf8"))
             for (const p of ["start", "warp", "cli"]) pkg.dependencies[`@weft-js/${p}`] = `link:${process.env.GITHUB_WORKSPACE}/packages/${p}`
             delete pkg.devDependencies["@weft-js/cli"]
-            pkg.dependencies["@weft-js/core"] = `link:${process.env.GITHUB_WORKSPACE}/packages/weft`
+            pkg.dependencies["@weft-js/core"] = `link:${process.env.GITHUB_WORKSPACE}/packages/core`
             writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")
           '
           cp "$GITHUB_WORKSPACE/pnpm-workspace.yaml" pnpm-workspace.yaml
@@ -43,4 +43,4 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-          node packages/create-weft/scripts/packed.mjs "$RUNNER_TEMP/packed"
+          node packages/create/scripts/packed.mjs "$RUNNER_TEMP/packed"

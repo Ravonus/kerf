@@ -20,7 +20,7 @@ const run = (cwd, cmd, ...args) => {
 }
 
 run('.', 'pnpm', 'install', '--frozen-lockfile')
-run('packages/weft', 'pnpm', 'run', 'build:native')
+run('packages/core', 'pnpm', 'run', 'build:native')
 run('packages/text', 'node', 'scripts/specialize.mjs')
 process.env.DATABASE_URL ??= 'file:./setup.db' // prisma wants one to generate, and never opens it
 run('packages/db', 'pnpm', 'exec', 'prisma', 'generate') // tests and their types read the client

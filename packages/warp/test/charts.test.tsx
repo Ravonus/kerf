@@ -5,7 +5,7 @@ import { state } from '@weft-js/core'
 import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { flush, render } from '@weft-js/core/test'
-import { hydration } from '../../weft/src/hydrate'
+import { hydration } from '../../core/src/hydrate'
 import { BarChart, LineChart, Sparkline, StreamChart } from '../src/Charts'
 import { revenue, seats } from './fixtures/ChartData'
 // @ts-expect-error: query imports (@weft-js/core/vite)

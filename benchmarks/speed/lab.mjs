@@ -1,10 +1,10 @@
-// The speed lab: what each path in packages/weft/src/flags.ts buys and costs. It builds one app per combination of
+// The speed lab: what each path in packages/core/src/flags.ts buys and costs. It builds one app per combination of
 // paths, sizes the four bundles, runs them through measure.mjs against Solid, and writes lab.json and lab.html.
 //   node lab.mjs                     all on, all off, and each path off alone
 //   node lab.mjs --off SWAP,TEXT     that combination against all on
 //   node lab.mjs --flags SWAP,TEXT   each of those off alone
 //   options: --sizes (no timing)  --report (lab.json to lab.html only)  --rounds 2  --no-reactive
-//            --base <copy of packages/weft>  the "before" column  --host <ssh host>  time it on another machine
+//            --base <copy of packages/core>  the "before" column  --host <ssh host>  time it on another machine
 import { execFileSync, execSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url'
 import { render } from './lab-page.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const pkg = join(here, '../../packages/weft')
+const pkg = join(here, '../../packages/core')
 const argv = process.argv.slice(2)
 const has = (name) => argv.includes(`--${name}`)
 const arg = (name, fallback) => {

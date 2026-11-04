@@ -3,7 +3,7 @@ import { resetIds } from '@weft-js/warp-core'
 import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { flush, render } from '@weft-js/core/test'
-import { hydration } from '../../weft/src/hydrate'
+import { hydration } from '../../core/src/hydrate'
 import * as C from './fixtures/Rich'
 // @ts-expect-error: query imports (@weft-js/core/vite)
 const server = await import('./fixtures/Rich.tsx?weft-ssr')

@@ -89,6 +89,21 @@ const leakPlaces = (text) =>
 
 const STEPS = [
   {
+    id: 'package-folders',
+    covers: 'package folders match their npm names',
+    fix: 'Rename the folder to match the package name without its scope.',
+    run() {
+      const problems = []
+      for (const dir of PACKAGES) {
+        const { name } = JSON.parse(readFileSync(join(root, dir, 'package.json'), 'utf8'))
+        const expected = typeof name === 'string' ? name.split('/').at(-1) : ''
+        if (!expected || dir !== `packages/${expected}`)
+          problems.push(`${dir}: package name ${name} requires packages/${expected}`)
+      }
+      return { problems, detail: `${PACKAGES.length} packages checked` }
+    },
+  },
+  {
     id: 'format',
     covers: 'oxfmt source formatting at 100 columns, with a checked-file count',
     fix: 'Run `node scripts/quality/format.mjs --write`.',

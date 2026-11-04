@@ -39,7 +39,7 @@ function app(files = {}, { version = 7, plugin } = {}) {
   symlinkSync(cli, join(dir, 'node_modules/@weft-js/cli'))
   symlinkSync(join(cli, '../start'), join(dir, 'node_modules/@weft-js/start'))
   if (version === 7)
-    symlinkSync(join(cli, '../weft/node_modules/typescript'), join(dir, 'node_modules/typescript'))
+    symlinkSync(join(cli, '../core/node_modules/typescript'), join(dir, 'node_modules/typescript'))
   if (plugin) {
     const config = JSON.parse(readFileSync(join(dir, 'tsconfig.json'), 'utf8'))
     config.compilerOptions.plugins = [{ name: '@weft-js/cli/ts-plugin' }]

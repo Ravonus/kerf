@@ -2,7 +2,7 @@
 // consumer installs. The other suites link the workspace, where undeclared dependencies and TypeScript loaded by Node
 // both work; under node_modules neither does.
 //
-//   node packages/create-weft/scripts/packed.mjs <empty-dir> [app[,app…]]
+//   node packages/create/scripts/packed.mjs <empty-dir> [app[,app…]]
 import { execFile, execFileSync, spawn } from 'node:child_process'
 import { createHmac } from 'node:crypto'
 import { createServer } from 'node:http'
@@ -12,7 +12,7 @@ import { join, resolve } from 'node:path'
 
 import { scaffold } from '../src/index.mjs'
 import { fnId } from '../../start/src/vite.mjs'
-import { hostPlatform } from '../../weft/scripts/platform-package.mjs'
+import { hostPlatform } from '../../core/scripts/platform-package.mjs'
 import { hotChecks, prepare } from './hot-checks.mjs'
 import { packWithAddon } from './pack-all.mjs'
 import { pin, pkgs, writePackedPolicy } from './tarballs.mjs'

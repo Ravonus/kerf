@@ -78,7 +78,7 @@ is using.
 
 ## Working on it
 
-Run these in `packages/weft`. Building the compiler needs Rust.
+Run these in `packages/core`. Building the compiler needs Rust.
 
 ```bash
 npm ci

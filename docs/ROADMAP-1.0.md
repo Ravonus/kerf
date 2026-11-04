@@ -147,9 +147,8 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
 .github/         CI, templates, CODEOWNERS, dependabot
 ```
 
-- [ ] Rename folders to match npm names: `packages/weft` becomes `packages/core`, `packages/icons`
-      becomes `packages/warp-icons`, `packages/create-weft` becomes `packages/create`. Fix every
-      link and path, and grep for `packages/weft/` afterwards.
+- [ ] Rename folders to match npm names: `weft` becomes `core`, `icons` becomes
+      `warp-icons`, and `create-weft` becomes `create`. Fix every link and path.
 - [ ] Move `evals/results/`, the 1,561 run snapshots, out of the tree. Tag the current tree as
       `archive/evals-2026-11`, then publish the snapshots as a release asset or in a
       `weft-js/eval-results` repo. Keep one summary file, plus `compare-history.jsonl`.
@@ -162,7 +161,7 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
 - [ ] Remove `site/review/` (21 screenshots). Stop tracking the generated `site/public/reference`
       and `site/public/learn`, and generate them in `build`.
 - [ ] Stop tracking other build output: `packages/warp/test/a11y/gallery/assets/*`,
-      `packages/icons/contact-sheet.html`, `packages/cli/.vitest/`,
+      `packages/warp-icons/contact-sheet.html`, `packages/cli/.vitest/`,
       `evals/results/sites/first-run-*.json` and `evals/speed/lab.json`. Add them to `.gitignore`.
 - [ ] Archive `docs/research/` (58 notes), `docs/design/warp/reviews/` (215 files),
       `docs/design/warp/specimens/` and `spikes/` under the archive tag. In their place, write

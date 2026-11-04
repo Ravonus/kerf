@@ -4,7 +4,7 @@ import { statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
 // Vitest's module cache keys on the lockfile only; compiled .tsx also depends on the compiler, so key the
-// cache on it (packages/weft/vitest.config.ts does the same).
+// cache on it (packages/core/vitest.config.ts does the same).
 const native = createRequire(import.meta.url)('@weft-js/core/compiler').backend.file
 const cacheKey = `${Math.round(statSync(native).mtimeMs)}`
 

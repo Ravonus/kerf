@@ -62,7 +62,7 @@ function generate(app, name, options) {
     name,
   )
   const { scaffold } = createRequire(import.meta.url)(
-    join(here, '../packages/create-weft/src/index.mjs'),
+    join(here, '../packages/create/src/index.mjs'),
   )
   rmSync(dir, { recursive: true, force: true })
   // A fixed secret: the default is random, and would change the build key every load.

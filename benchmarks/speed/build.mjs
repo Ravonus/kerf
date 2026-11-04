@@ -1,5 +1,5 @@
 // Production builds of each stack, plus each reactive core alone for reactive.mjs. `WEFT=<path>` builds a stack named
-// `weft-base` from another copy of packages/weft: that's how the before and after share one bench. `NAME=<stack>`
+// `weft-base` from another copy of packages/core: that's how the before and after share one bench. `NAME=<stack>`
 // builds this weft alone under that name, for lab.mjs (with `WEFT_OFF`, one combination of speed paths).
 import { dirname, join, resolve } from 'node:path'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
@@ -8,7 +8,7 @@ import { build } from 'vite'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const base = process.env.WEFT && resolve(process.env.WEFT)
-const pkg = base ?? join(here, '../../packages/weft')
+const pkg = base ?? join(here, '../../packages/core')
 const name = process.env.NAME ?? (base ? 'weft-base' : 'weft')
 const alone = base || process.env.NAME
 const weft = (await import(join(pkg, 'vite.mjs'))).default

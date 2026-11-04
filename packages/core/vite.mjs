@@ -447,7 +447,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
  */
 /**
  * @weft-js/warp-icons' build pass, when the build has the package: only the icons, names and tiers the app uses ship
- * (packages/icons/compile.mjs). Two hooks, because a rewrite has to see the source before weft compiles it and a resolve
+ * (packages/warp-icons/compile.mjs). Two hooks, because a rewrite has to see the source before weft compiles it and a resolve
  * has to run after weft's own, so a server build's importers keep their mode.
  */
 function icons() {

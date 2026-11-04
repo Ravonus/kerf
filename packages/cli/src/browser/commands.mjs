@@ -1,5 +1,5 @@
 // `weft browser` commands, shared by the CLI and the `weft mcp` browser tools. Each takes structured params and
-// returns JSON; the page side is @weft-js/core/agent (packages/weft/src/agent.ts).
+// returns JSON; the page side is @weft-js/core/agent (packages/core/src/agent.ts).
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join } from 'node:path'

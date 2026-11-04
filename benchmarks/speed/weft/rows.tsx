@@ -1,4 +1,4 @@
-// The js-framework-benchmark entry, as packages/weft/test/fixtures/next/Bench.tsx has it, without its buttons.
+// The js-framework-benchmark entry, as packages/core/test/fixtures/next/Bench.tsx has it, without its buttons.
 import { flush, state, type State } from '@weft-js/core'
 import { adjectives, colors, nouns, random } from '../shared/words.js'
 

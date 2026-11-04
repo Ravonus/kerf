@@ -2,7 +2,7 @@
 // A template's `drizzle/`, from its schema: drizzle-kit's own output, so `weft db generate` carries on from it, with the
 // SQL made safe to run over existing tables. Run it after changing a template's schema; a test fails until you do.
 //
-//   node packages/create-weft/scripts/template-migrations.mjs <template>...
+//   node packages/create/scripts/template-migrations.mjs <template>...
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'

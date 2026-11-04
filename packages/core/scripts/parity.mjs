@@ -74,7 +74,7 @@ export function parity({ also = [], limit } = {}) {
   const addon = join(pkg, 'native', `weft-compiler.${process.platform}-${process.arch}.node`)
   const wasmFile = join(pkg, 'native', 'weft-compiler.wasm')
   for (const f of [addon, wasmFile])
-    if (!existsSync(f)) throw new Error(`no ${f}; run \`npm run build:native\` in packages/weft`)
+    if (!existsSync(f)) throw new Error(`no ${f}; run \`npm run build:native\` in packages/core`)
   const native = require(addon)
   const wasm = loadWasm(wasmFile)
   const cwd = process.cwd()

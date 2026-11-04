@@ -73,7 +73,7 @@ const load = () =>
 async function withRegistry(fn) {
   const server = spawn(
     process.execPath,
-    [join(repo, 'packages/create-weft/scripts/registry.mjs'), tgz, String(registryPort)],
+    [join(repo, 'packages/create/scripts/registry.mjs'), tgz, String(registryPort)],
     { stdio: ['ignore', 'pipe', 'inherit'] },
   )
   await new Promise((ok) => server.stdout.once('data', ok))
@@ -163,11 +163,11 @@ const packagesCommit = () =>
 
 async function pack() {
   rmSync(tgz, { recursive: true, force: true })
-  const { packWithAddon } = await import(join(repo, 'packages/create-weft/scripts/pack-all.mjs'))
+  const { packWithAddon } = await import(join(repo, 'packages/create/scripts/pack-all.mjs'))
   const packed = packWithAddon(tgz)
   if (!Object.keys(packed).some((n) => n.startsWith('@weft/compiler-')))
     throw new Error(
-      'no native addon packed: run build:native in packages/weft, a real install gets one',
+      'no native addon packed: run build:native in packages/core, a real install gets one',
     )
   say(`${Object.keys(packed).length} tarballs from ${packagesCommit().slice(0, 10)}`)
 }

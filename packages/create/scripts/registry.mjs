@@ -1,7 +1,7 @@
 // A registry for the packed gates: these tarballs as if they were published, and everything else from npm. It's how an
 // install that can't take a `file:` tarball (Deno's) gets tested, and how optionalDependencies get picked the real way.
 // Runs on Node, Bun and Deno. Standalone it serves until killed and prints its port:
-//   <runtime> packages/create-weft/scripts/registry.mjs <dir of .tgz> [port]
+//   <runtime> packages/create/scripts/registry.mjs <dir of .tgz> [port]
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'

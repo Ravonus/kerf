@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest'
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
-import { parse, purge } from '../../weft/node/purge.mjs'
+import { parse, purge } from '../../core/node/purge.mjs'
 import { assetsOnly } from '../src/vite.mjs'
 import {
   FIRST_PAINT_BYTES,

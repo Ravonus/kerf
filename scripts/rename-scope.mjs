@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Moves every weft package to the @weft-js scope and readies the manifests for 0.1.0. Repeatable and idempotent: run it on
 // a fresh tree, or again on a tree already renamed, and the second run changes nothing. Package directories keep their
-// names (packages/weft stays packages/weft); only what npm and module resolution see changes. The product stays "weft" in
+// names (packages/core stays packages/core); only what npm and module resolution see changes. The product stays "weft" in
 // prose and so do the `weft` and `create-weft` bins, `weft.config.ts`, `.weft/`, `/_weft/`, `weft:` virtual ids and the
 // `weft` Rust crate.
 //
@@ -37,7 +37,7 @@ const SKIP_DIRS = new Set([
   '.vite',
 ])
 const SKIP_PATHS = [
-  /^packages\/weft\/native\//,
+  /^packages\/core\/native\//,
   /^evals\/results\//,
   /^scripts\/rename-scope\.mjs$/,
   /^scripts\/release\.mjs$/,
@@ -61,7 +61,7 @@ const relOf = (file) => relative(root, file).split(sep).join('/')
 
 /** weft's subpaths, read from its manifest so a merge that adds one is picked up. Longest first: `test/plugins` before `test`. */
 const subpaths = Object.keys(
-  JSON.parse(readFileSync(join(root, 'packages/weft/package.json'), 'utf8')).exports,
+  JSON.parse(readFileSync(join(root, 'packages/core/package.json'), 'utf8')).exports,
 )
   .filter((k) => k !== '.')
   .map((k) => k.slice(2))
@@ -78,7 +78,7 @@ const scoped = [
 const Q = String.raw`\\?['"\x60]` // a quote, escaped or not: Rust and template fixtures carry \"weft\"
 const SUB = subpaths.map((s) => s.replace(/\//g, '/')).join('|')
 const SUB_RE = subpaths.map((s) => s.replace(/\//g, String.raw`\\/`)).join('|')
-const NOT_PATH = String.raw`(?<![\w@./:\\-])` // `packages/weft/test`, `.weft/`, `virtual:weft/` aren't specifiers
+const NOT_PATH = String.raw`(?<![\w@./:\\-])` // `packages/core/test`, `.weft/`, `virtual:weft/` aren't specifiers
 const NOT_DEEPER = String.raw`(?![\w-]|\.\w|/\w)` // `weft/test/fixtures` and `weft/src.ts` are paths
 
 /** Names that aren't just the new scope. Old spellings stay here so a branch merged later still lands right. */
@@ -200,24 +200,24 @@ const patches = [
     'all',
   ],
   [
-    'packages/weft/vite.mjs',
+    'packages/core/vite.mjs',
     R`[\\/]node_modules[\\/]weft[\\/]/`,
     R`[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/`,
   ],
   [
-    'packages/weft/vite.mjs',
+    'packages/core/vite.mjs',
     R`filter: { id: /[\\/]weft[\\/]src[\\/]flags\.ts$/ }`,
     R`filter: { id: /[\\/](?:weft|@weft-js[\\/]core)[\\/]src[\\/]flags\.ts$/ }`,
   ],
   [
-    'packages/weft/node/hydration.mjs',
+    'packages/core/node/hydration.mjs',
     'const PURE = { weft: new Set',
     `const PURE = { '${CORE}': new Set`,
   ],
-  ['packages/weft/node/hydration.mjs', "  weft: new Set(['state'", `  '${CORE}': new Set(['state'`],
-  ['packages/weft/test/hmr.test.ts', '  weft: { ...core,', `  '${CORE}': { ...core,`],
+  ['packages/core/node/hydration.mjs', "  weft: new Set(['state'", `  '${CORE}': new Set(['state'`],
+  ['packages/core/test/hmr.test.ts', '  weft: { ...core,', `  '${CORE}': { ...core,`],
   [
-    'packages/weft/test/style-matrix.test.ts',
+    'packages/core/test/style-matrix.test.ts',
     'external: [/^weft/]',
     R`external: [/^@weft-js\/core/]`,
   ],
@@ -231,9 +231,9 @@ const patches = [
     `out[sub === '.' ? '${CORE}' : \`${CORE}/\${sub.slice(2)}\`]`,
   ],
   ['packages/cli/src/tests.mjs', "spec.startsWith('weft/')", `spec.startsWith('${CORE}/')`],
-  ['packages/icons/compile.mjs', R`@weft-js\/(icons|warp)`, R`@weft-js\/(warp-icons|warp)`],
+  ['packages/warp-icons/compile.mjs', R`@weft-js\/(icons|warp)`, R`@weft-js\/(warp-icons|warp)`],
   [
-    'packages/weft/vite.mjs',
+    'packages/core/vite.mjs',
     "exclude: ['weft'], include: can ? ['weft > @testing-library/dom', 'weft > @testing-library/user-event', 'weft > dom-accessibility-a",
     `exclude: ['${CORE}'], include: can ? ['${CORE} > @testing-library/dom', '${CORE} > @testing-library/user-event', '${CORE} > dom-accessibility-a`,
   ],
@@ -265,7 +265,7 @@ const patches = [
     `"dependencies.${CORE}=file:`,
   ],
   ['.github/workflows/runtime-matrix.yml', '"dependencies.@weft/$p=', `"dependencies.${SCOPE}/$p=`],
-  ['packages/create-weft/test/scaffold.test.mjs', R`/^(weft$|@weft-js\/)/`, R`/^@weft-js\//`],
+  ['packages/create/test/scaffold.test.mjs', R`/^(weft$|@weft-js\/)/`, R`/^@weft-js\//`],
   ['packages/multiplayer/scripts/e2e-browsers.mjs', "LINKED = ['weft',", `LINKED = ['${CORE}',`],
   // Packages and the directory they live in differ now.
   [
@@ -276,17 +276,17 @@ const patches = [
   ],
   // A scaffold pins the version it shipped with, not a literal.
   [
-    'packages/create-weft/src/index.mjs',
+    'packages/create/src/index.mjs',
     "version = '0.0.0', db = 'none'",
     "version = VERSION, db = 'none'",
   ],
   [
-    'packages/create-weft/src/stack.mjs',
+    'packages/create/src/stack.mjs',
     "layer = 'drizzle', version = '0.0.0' }",
     "layer = 'drizzle', version = VERSION }",
   ],
   [
-    'packages/create-weft/src/stack.mjs',
+    'packages/create/src/stack.mjs',
     'export function stackDeps(',
     "/** Every scaffold pins what it shipped with: this package and weft's others go out at one version. */\nexport const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version\n\nexport function stackDeps(",
     'once:export const VERSION',
@@ -304,30 +304,30 @@ const patches = [
   ['packages/cli/test/docs.test.mjs', "toContain('weft@0.0.0')", `toContain('weft@${VERSION}')`],
   // Commands.
   [
-    'packages/create-weft/bin/create-weft.mjs',
+    'packages/create/bin/create-weft.mjs',
     'const usage = `Usage: create-weft [dir]',
     `const usage = \`Usage: npm create ${SCOPE} -- [dir]`,
   ],
   // The registry for the packed gates answers for the new scope.
   [
-    'packages/create-weft/scripts/registry.mjs',
+    'packages/create/scripts/registry.mjs',
     "name.startsWith('@weft-js/compiler-') || name.startsWith('@weft-js/')",
     "name.startsWith('@weft-js/')",
     'any',
   ],
   // The private repo isn't a link a published package should carry.
   [
-    'packages/weft/scripts/platform-package.mjs',
+    'packages/core/scripts/platform-package.mjs',
     "    repository: { type: 'git', url: 'git+https://github.com/Ravonus/weft.git' },\n",
     "    publishConfig: { access: 'public' },\n",
   ],
   [
-    'packages/weft/scripts/platform-package.mjs',
+    'packages/core/scripts/platform-package.mjs',
     'weft installs it by itself',
     '@weft-js/core installs it by itself',
   ],
   [
-    'packages/weft/scripts/build-platform.mjs',
+    'packages/core/scripts/build-platform.mjs',
     `is pinned to \${version}, weft is \${pkg.version}`,
     `is pinned to \${version}, @weft-js/core is \${pkg.version}`,
     'any',
@@ -336,8 +336,8 @@ const patches = [
 
 /** `import` lines a patch's new code needs. */
 const imports = [
-  ['packages/create-weft/src/stack.mjs', "import { readFileSync } from 'node:fs'\n"],
-  ['packages/create-weft/src/index.mjs', 'VERSION'],
+  ['packages/create/src/stack.mjs', "import { readFileSync } from 'node:fs'\n"],
+  ['packages/create/src/index.mjs', 'VERSION'],
 ]
 
 const LICENSE = `MIT License\n\nCopyright (c) 2026 weft contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated\ndocumentation files (the "Software"), to deal in the Software without restriction, including without limitation the\nrights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit\npersons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the\nSoftware.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE\nWARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR\nOTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n`
@@ -572,7 +572,7 @@ if (audit) {
   report(
     'create-weft, not a path or the bin',
     /create-weft/,
-    (rel) => !HISTORY.test(rel) && !/packages\/create-weft|github\/workflows/.test(rel),
+    (rel) => !HISTORY.test(rel) && !/packages\/create|github\/workflows/.test(rel),
   )
 }
 

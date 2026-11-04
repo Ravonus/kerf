@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
 
-const { transform } = createRequire(import.meta.url)('../../weft/compiler.cjs')
+const { transform } = createRequire(import.meta.url)('../../core/compiler.cjs')
 const src = fileURLToPath(new URL('../src', import.meta.url))
 const sources = readdirSync(src, { recursive: true })
   .filter((f) => f.endsWith('.tsx'))

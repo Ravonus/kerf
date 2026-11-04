@@ -14,7 +14,7 @@
 //   node evals/gates/phase5b-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--no-browser] [--results phase5b-exit]
 //
 // Writes evals/results/<results>.md and .json; exit 1 if any check fails. Needs cargo with Rust 1.99, bun and deno for those
-// runtimes, packages/weft's native compiler built, and each package's dependencies installed.
+// runtimes, packages/core's native compiler built, and each package's dependencies installed.
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
@@ -253,7 +253,7 @@ log(`scaffold in ${dir}`)
 must(
   'node',
   [
-    join(repo, 'packages/create-weft/bin/create-weft.mjs'),
+    join(repo, 'packages/create/bin/create-weft.mjs'),
     dir,
     '--db',
     'none',

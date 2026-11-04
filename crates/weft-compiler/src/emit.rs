@@ -1627,7 +1627,7 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
     Some(format!("{}().{}", p.name, path.join(".")))
 }
 
-/// A compiled speed path turned off for this run (`WEFT_OFF`, packages/weft/src/flags.ts).
+/// A compiled speed path turned off for this run (`WEFT_OFF`, packages/core/src/flags.ts).
 fn flag_off(name: &str) -> bool {
     let off = OFF
         .with(|off| off.borrow().clone())

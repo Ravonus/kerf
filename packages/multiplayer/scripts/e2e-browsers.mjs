@@ -16,7 +16,7 @@ import { createServer } from 'node:net'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
-import { pin, writePackedPolicy } from '../../create-weft/scripts/tarballs.mjs'
+import { pin, writePackedPolicy } from '../../create/scripts/tarballs.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = resolve(here, '../../..')
@@ -71,7 +71,7 @@ if (command === 'prepare') {
   must(
     'node',
     [
-      join(repo, 'packages/create-weft/bin/create-weft.mjs'),
+      join(repo, 'packages/create/bin/create-weft.mjs'),
       app,
       '--db',
       'none',

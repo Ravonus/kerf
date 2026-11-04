@@ -6,7 +6,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@weft-js/core": "file:../../../../packages/weft",
+    "@weft-js/core": "file:../../../../packages/core",
     "@weft-js/warp": "file:../../../../packages/warp",
     "@weft-js/warp-core": "file:../../../../packages/warp-core",
     "@weft-js/cli": "file:../../../../packages/cli"

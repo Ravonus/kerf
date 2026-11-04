@@ -271,7 +271,7 @@ describe('Q015', () => {
 })
 
 describe('what a build reports to weft check', () => {
-  const solver = readFileSync(new URL('../../weft/node/hydration.mjs', import.meta.url), 'utf8')
+  const solver = readFileSync(new URL('../../core/node/hydration.mjs', import.meta.url), 'utf8')
   const codes = [...new Set([...solver.matchAll(/code: '(\w+)'/g)].map((m) => m[1]))]
 
   it('every code the solver writes has a catalog entry and leaves a build passing', async () => {

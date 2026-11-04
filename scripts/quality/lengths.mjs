@@ -4,7 +4,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { compareLengths, validateBaseline } from './length-baseline.mjs'
+import { compareLengths, renamedBaseline, validateBaseline } from './length-baseline.mjs'
 import { rustFindings } from './length-rust.mjs'
 
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -30,7 +30,7 @@ export function gitBaseline(cwd = root, baseRef = 'origin/main') {
     )
   let baseline
   for (const ref of history) {
-    const snapshot = readBaseline(git(['show', `${ref}:${baselinePath}`], cwd))
+    const snapshot = renamedBaseline(readBaseline(git(['show', `${ref}:${baselinePath}`], cwd)))
     if (!baseline) {
       baseline = snapshot
       continue

@@ -5,7 +5,7 @@ criteria are pre-registered in [docs/research/42-agent-eval.md](../../docs/resea
 
 ```bash
 npm install                     # here, and `npm ci` in ../apps for Lighthouse
-node run.mjs pack               # weft's tarballs (build:native in packages/weft first)
+node run.mjs pack               # weft's tarballs (build:native in packages/core first)
 node run.mjs golden             # one scaffold per stack
 node run.mjs probe              # no model: what the box blocks and allows
 node run.mjs canary             # about $0.01: nothing of the owner's reaches a request

@@ -1,6 +1,6 @@
 // The higher file limit applies to tests and checked-in generated or third-party code.
 export const fileLimit = (path) =>
-  /(?:^|\/)evals\/results\/|^packages\/weft\/node\/(?:css|matrix|vocab)\.mjs$|(?:^|\/)(?:tests?|__tests__|fixtures?|generated|gen|vendor|vendored)(?:\/|$)|(?:[._-](?:test|spec|generated|gen)|(?:^|\/)test[_-][^/]*)\.[cm]?[jt]sx?$|(?:^|\/)test[_-][^/]*\.rs$|_test\.rs$/.test(
+  /(?:^|\/)evals\/results\/|^packages\/core\/node\/(?:css|matrix|vocab)\.mjs$|(?:^|\/)(?:tests?|__tests__|fixtures?|generated|gen|vendor|vendored)(?:\/|$)|(?:[._-](?:test|spec|generated|gen)|(?:^|\/)test[_-][^/]*)\.[cm]?[jt]sx?$|(?:^|\/)test[_-][^/]*\.rs$|_test\.rs$/.test(
     path,
   )
     ? 800

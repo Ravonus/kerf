@@ -15,7 +15,7 @@
 //   node evals/gates/phase5a-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--docs 20000]
 //
 // Writes evals/results/phase5a-exit.md and .json; exit 1 if any check fails. Needs cargo, and bun and deno for those
-// runtimes, packages/weft's native compiler built, and each package's dependencies installed.
+// runtimes, packages/core's native compiler built, and each package's dependencies installed.
 import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import {
@@ -349,7 +349,7 @@ log(`scaffold in ${dir}`)
 must(
   'node',
   [
-    join(repo, 'packages/create-weft/bin/create-weft.mjs'),
+    join(repo, 'packages/create/bin/create-weft.mjs'),
     dir,
     '--db',
     'none',
@@ -409,7 +409,7 @@ function types() {
       2,
     ),
   )
-  const out = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), [
+  const out = run(join(repo, 'packages/core/node_modules/.bin/tsc'), [
     '--noEmit',
     '-p',
     'tsconfig.check.json',

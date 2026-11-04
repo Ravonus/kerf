@@ -1,8 +1,8 @@
 // `packAll` plus this machine's addon as the prebuilt package a consumer would install, for the repo's own packed gates.
-// Apart from tarballs.mjs, which create-weft's bin imports and which ships without packages/weft beside it.
+// Apart from tarballs.mjs, which create-weft's bin imports and which ships without packages/core beside it.
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { hostPlatform, writePlatformPackage } from '../../weft/scripts/platform-package.mjs'
+import { hostPlatform, writePlatformPackage } from '../../core/scripts/platform-package.mjs'
 import { pack, packAll, pkgs } from './tarballs.mjs'
 
 export function packWithAddon(dest) {

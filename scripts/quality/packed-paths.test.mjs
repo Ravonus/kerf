@@ -6,7 +6,7 @@ import { test } from 'node:test'
 import {
   checkPackedCrate,
   forceWasmCompiler,
-} from '../../packages/create-weft/scripts/packed-paths.mjs'
+} from '../../packages/create/scripts/packed-paths.mjs'
 
 function fixture(run) {
   const root = mkdtempSync(join(tmpdir(), 'weft-packed-paths-'))

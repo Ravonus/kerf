@@ -20,7 +20,7 @@ const checkStamp = (file) => {
   const have = existsSync(stampFile(file)) ? readFileSync(stampFile(file), 'utf8').trim() : null
   if (have !== want) {
     throw new Error(
-      `weft: ${file} is ${have ? 'older than' : 'unstamped against'} crates/weft-compiler (pulled or edited since it was built); run \`npm run build:native\` in packages/weft`,
+      `weft: ${file} is ${have ? 'older than' : 'unstamped against'} crates/weft-compiler (pulled or edited since it was built); run \`npm run build:native\` in packages/core`,
     )
   }
 }
@@ -71,7 +71,7 @@ function load() {
   }
   if (!existsSync(wasm)) {
     throw new Error(
-      `weft: no compiler at ${wasm}${want === null ? '' : '; run `npm run build:native` in packages/weft'}`,
+      `weft: no compiler at ${wasm}${want === null ? '' : '; run `npm run build:native` in packages/core'}`,
     )
   }
   checkStamp(wasm)

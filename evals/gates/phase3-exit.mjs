@@ -7,7 +7,7 @@
 //   node evals/gates/phase3-exit.mjs verify <dir>      weft check, tsc, then the hidden e2e on all three runtimes
 //
 // verify writes evals/results/phase3-exit.md and .json; exit 1 if any part fails. Needs bun and deno on PATH and
-// packages/weft's native compiler built.
+// packages/core's native compiler built.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -54,7 +54,7 @@ if (step === 'prepare') {
   must(
     'node',
     [
-      join(repo, 'packages/create-weft/bin/create-weft.mjs'),
+      join(repo, 'packages/create/bin/create-weft.mjs'),
       dir,
       '--db',
       'sqlite',
@@ -109,7 +109,7 @@ writeFileSync(
     2,
   ),
 )
-const tsc = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), [
+const tsc = run(join(repo, 'packages/core/node_modules/.bin/tsc'), [
   '--noEmit',
   '-p',
   'tsconfig.check.json',

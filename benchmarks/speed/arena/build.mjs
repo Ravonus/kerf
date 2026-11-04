@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const pkg = join(here, '../../../packages/weft')
+const pkg = join(here, '../../../packages/core')
 const from = join(here, '../../arena')
 const site = join(here, '../dist/.arena') // a copy, so these resolve against this bench's packages
 const out = join(here, '..', process.env.OUT ?? 'dist/arena')

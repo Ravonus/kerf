@@ -120,7 +120,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   must(
     'node',
     [
-      join(repo, 'packages/create-weft/bin/create-weft.mjs'),
+      join(repo, 'packages/create/bin/create-weft.mjs'),
       dir,
       '--db',
       'none',

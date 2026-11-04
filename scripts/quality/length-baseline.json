@@ -159,39 +159,39 @@
     "lines": 488,
     "tokens": 11203
   },
-  "file:packages/create-weft/scripts/packed.mjs": {
+  "file:packages/create/scripts/packed.mjs": {
     "lines": 615,
     "tokens": 17022
   },
-  "file:packages/create-weft/src/stack.mjs": {
+  "file:packages/create/src/stack.mjs": {
     "lines": 623,
     "tokens": 19510
   },
-  "file:packages/icons/art/a-marks.mjs": {
+  "file:packages/warp-icons/art/a-marks.mjs": {
     "lines": 548,
     "tokens": 5359
   },
-  "file:packages/icons/art/c-people.mjs": {
+  "file:packages/warp-icons/art/c-people.mjs": {
     "lines": 604,
     "tokens": 7569
   },
-  "file:packages/icons/art/d-files.mjs": {
+  "file:packages/warp-icons/art/d-files.mjs": {
     "lines": 595,
     "tokens": 6869
   },
-  "file:packages/icons/art/e-things.mjs": {
+  "file:packages/warp-icons/art/e-things.mjs": {
     "lines": 609,
     "tokens": 7292
   },
-  "file:packages/icons/art/style/masters.mjs": {
+  "file:packages/warp-icons/art/style/masters.mjs": {
     "lines": 476,
     "tokens": 7196
   },
-  "file:packages/icons/compile.mjs": {
+  "file:packages/warp-icons/compile.mjs": {
     "lines": 875,
     "tokens": 20719
   },
-  "file:packages/icons/src/gen/all.tsx": {
+  "file:packages/warp-icons/src/gen/all.tsx": {
     "lines": 1966,
     "tokens": 1589931
   },
@@ -499,71 +499,71 @@
     "lines": 832,
     "tokens": 22953
   },
-  "file:packages/weft/node/css.mjs": {
+  "file:packages/core/node/css.mjs": {
     "lines": 564,
     "tokens": 10256
   },
-  "file:packages/weft/node/hydration.mjs": {
+  "file:packages/core/node/hydration.mjs": {
     "lines": 442,
     "tokens": 9940
   },
-  "file:packages/weft/node/matrix.mjs": {
+  "file:packages/core/node/matrix.mjs": {
     "lines": 589,
     "tokens": 10780
   },
-  "file:packages/weft/node/purge.mjs": {
+  "file:packages/core/node/purge.mjs": {
     "lines": 493,
     "tokens": 9296
   },
-  "file:packages/weft/src/agent.ts": {
+  "file:packages/core/src/agent.ts": {
     "lines": 1036,
     "tokens": 22357
   },
-  "file:packages/weft/src/async.ts": {
+  "file:packages/core/src/async.ts": {
     "lines": 510,
     "tokens": 9518
   },
-  "file:packages/weft/src/browser.ts": {
+  "file:packages/core/src/browser.ts": {
     "lines": 404,
     "tokens": 6723
   },
-  "file:packages/weft/src/dom.ts": {
+  "file:packages/core/src/dom.ts": {
     "lines": 665,
     "tokens": 12371
   },
-  "file:packages/weft/src/index.ts": {
+  "file:packages/core/src/index.ts": {
     "lines": 848,
     "tokens": 12354
   },
-  "file:packages/weft/src/island.ts": {
+  "file:packages/core/src/island.ts": {
     "lines": 423,
     "tokens": 7185
   },
-  "file:packages/weft/src/scope.ts": {
+  "file:packages/core/src/scope.ts": {
     "lines": 478,
     "tokens": 8624
   },
-  "file:packages/weft/src/ssr.ts": {
+  "file:packages/core/src/ssr.ts": {
     "lines": 695,
     "tokens": 12640
   },
-  "file:packages/weft/src/style/css.ts": {
+  "file:packages/core/src/style/css.ts": {
     "lines": 564,
     "tokens": 12079
   },
-  "file:packages/weft/src/style/matrix.ts": {
+  "file:packages/core/src/style/matrix.ts": {
     "lines": 589,
     "tokens": 13282
   },
-  "file:packages/weft/src/surface.tsx": {
+  "file:packages/core/src/surface.tsx": {
     "lines": 588,
     "tokens": 9820
   },
-  "file:packages/weft/src/test.ts": {
+  "file:packages/core/src/test.ts": {
     "lines": 674,
     "tokens": 12427
   },
-  "file:packages/weft/vite.mjs": {
+  "file:packages/core/vite.mjs": {
     "lines": 867,
     "tokens": 17394
   },
@@ -1635,39 +1635,39 @@
     "lines": 216,
     "tokens": 4557
   },
-  "function:packages/create-weft/scripts/alt-runtimes.mjs:flow": {
+  "function:packages/create/scripts/alt-runtimes.mjs:flow": {
     "lines": 82,
     "tokens": 2366
   },
-  "function:packages/create-weft/scripts/cdp.mjs:launch": {
+  "function:packages/create/scripts/cdp.mjs:launch": {
     "lines": 114,
     "tokens": 2132
   },
-  "function:packages/create-weft/scripts/hot-checks.mjs:hotChecks": {
+  "function:packages/create/scripts/hot-checks.mjs:hotChecks": {
     "lines": 117,
     "tokens": 3763
   },
-  "function:packages/create-weft/scripts/packed.mjs:mediaApp": {
+  "function:packages/create/scripts/packed.mjs:mediaApp": {
     "lines": 89,
     "tokens": 2469
   },
-  "function:packages/create-weft/scripts/packed.mjs:pool(callback)": {
+  "function:packages/create/scripts/packed.mjs:pool(callback)": {
     "lines": 104,
     "tokens": 2901
   },
-  "function:packages/create-weft/scripts/registry.mjs:serveRegistry": {
+  "function:packages/create/scripts/registry.mjs:serveRegistry": {
     "lines": 90,
     "tokens": 2381
   },
-  "function:packages/create-weft/src/index.mjs:template": {
+  "function:packages/create/src/index.mjs:template": {
     "lines": 103,
     "tokens": 3241
   },
-  "function:packages/create-weft/templates/admin/files/src/components/OrdersTable.tsx:OrdersTable": {
+  "function:packages/create/templates/admin/files/src/components/OrdersTable.tsx:OrdersTable": {
     "lines": 86,
     "tokens": 1658
   },
-  "function:packages/create-weft/templates/landing/files/src/routes/index.tsx:Home": {
+  "function:packages/create/templates/landing/files/src/routes/index.tsx:Home": {
     "lines": 82,
     "tokens": 2454
   },
@@ -1691,23 +1691,23 @@
     "lines": 115,
     "tokens": 2872
   },
-  "function:packages/icons/compile.mjs:analyze": {
+  "function:packages/warp-icons/compile.mjs:analyze": {
     "lines": 296,
     "tokens": 6762
   },
-  "function:packages/icons/compile.mjs:read": {
+  "function:packages/warp-icons/compile.mjs:read": {
     "lines": 172,
     "tokens": 3877
   },
-  "function:packages/icons/compile.mjs:read/visit": {
+  "function:packages/warp-icons/compile.mjs:read/visit": {
     "lines": 121,
     "tokens": 2654
   },
-  "function:packages/icons/compile.mjs:rewrite": {
+  "function:packages/warp-icons/compile.mjs:rewrite": {
     "lines": 97,
     "tokens": 2619
   },
-  "function:packages/icons/scripts/raster.mjs:raw": {
+  "function:packages/warp-icons/scripts/raster.mjs:raw": {
     "lines": 83,
     "tokens": 1129
   },
@@ -2915,187 +2915,187 @@
     "lines": 156,
     "tokens": 4178
   },
-  "function:packages/weft/assets.mjs:assets": {
+  "function:packages/core/assets.mjs:assets": {
     "lines": 126,
     "tokens": 2614
   },
-  "function:packages/weft/node/css.mjs:emitGroups": {
+  "function:packages/core/node/css.mjs:emitGroups": {
     "lines": 121,
     "tokens": 3037
   },
-  "function:packages/weft/node/hydration.mjs:solve": {
+  "function:packages/core/node/hydration.mjs:solve": {
     "lines": 343,
     "tokens": 8248
   },
-  "function:packages/weft/node/hydration.mjs:solve/timing": {
+  "function:packages/core/node/hydration.mjs:solve/timing": {
     "lines": 98,
     "tokens": 2609
   },
-  "function:packages/weft/node/matrix.mjs:buildMatrix": {
+  "function:packages/core/node/matrix.mjs:buildMatrix": {
     "lines": 240,
     "tokens": 5199
   },
-  "function:packages/weft/node/matrix.mjs:explainGroup": {
+  "function:packages/core/node/matrix.mjs:explainGroup": {
     "lines": 89,
     "tokens": 2337
   },
-  "function:packages/weft/node/purge.mjs:pieces": {
+  "function:packages/core/node/purge.mjs:pieces": {
     "lines": 112,
     "tokens": 2602
   },
-  "function:packages/weft/src/agent.ts:code": {
+  "function:packages/core/src/agent.ts:code": {
     "lines": 83,
     "tokens": 2966
   },
-  "function:packages/weft/src/async.ts:Boundary": {
+  "function:packages/core/src/async.ts:Boundary": {
     "lines": 199,
     "tokens": 4233
   },
-  "function:packages/weft/src/async.ts:resource": {
+  "function:packages/core/src/async.ts:resource": {
     "lines": 129,
     "tokens": 2296
   },
-  "function:packages/weft/src/dom.ts:For": {
+  "function:packages/core/src/dom.ts:For": {
     "lines": 129,
     "tokens": 2476
   },
-  "function:packages/weft/src/dom.ts:For/memo(callback)": {
+  "function:packages/core/src/dom.ts:For/memo(callback)": {
     "lines": 92,
     "tokens": 1801
   },
-  "function:packages/weft/src/dom.ts:For/memo(callback)/untrack(callback)#2": {
+  "function:packages/core/src/dom.ts:For/memo(callback)/untrack(callback)#2": {
     "lines": 85,
     "tokens": 1655
   },
-  "function:packages/weft/src/media-timeline.ts:timeline": {
+  "function:packages/core/src/media-timeline.ts:timeline": {
     "lines": 128,
     "tokens": 1895
   },
-  "function:packages/weft/src/scope.ts:Instance.constructor": {
+  "function:packages/core/src/scope.ts:Instance.constructor": {
     "lines": 102,
     "tokens": 2318
   },
-  "function:packages/weft/src/ssr.ts:renderToStream": {
+  "function:packages/core/src/ssr.ts:renderToStream": {
     "lines": 112,
     "tokens": 2326
   },
-  "function:packages/weft/src/style/css.ts:emitGroups": {
+  "function:packages/core/src/style/css.ts:emitGroups": {
     "lines": 121,
     "tokens": 3251
   },
-  "function:packages/weft/src/style/matrix.ts:buildMatrix": {
+  "function:packages/core/src/style/matrix.ts:buildMatrix": {
     "lines": 240,
     "tokens": 5572
   },
-  "function:packages/weft/src/style/matrix.ts:explainGroup": {
+  "function:packages/core/src/style/matrix.ts:explainGroup": {
     "lines": 89,
     "tokens": 2672
   },
-  "function:packages/weft/src/surface-text.ts:surfaceText": {
+  "function:packages/core/src/surface-text.ts:surfaceText": {
     "lines": 136,
     "tokens": 2698
   },
-  "function:packages/weft/src/surface.tsx:mountSurface": {
+  "function:packages/core/src/surface.tsx:mountSurface": {
     "lines": 254,
     "tokens": 4695
   },
-  "function:packages/weft/src/surface.tsx:mountSurface/start": {
+  "function:packages/core/src/surface.tsx:mountSurface/start": {
     "lines": 188,
     "tokens": 3378
   },
-  "function:packages/weft/src/surface.tsx:mountSurface/start/boot": {
+  "function:packages/core/src/surface.tsx:mountSurface/start/boot": {
     "lines": 114,
     "tokens": 1652
   },
-  "function:packages/weft/src/surface.tsx:mountSurface/start/boot/createRoot(callback)": {
+  "function:packages/core/src/surface.tsx:mountSurface/start/boot/createRoot(callback)": {
     "lines": 111,
     "tokens": 1620
   },
-  "function:packages/weft/src/test-plugins.ts:busSuite": {
+  "function:packages/core/src/test-plugins.ts:busSuite": {
     "lines": 88,
     "tokens": 1894
   },
-  "function:packages/weft/src/test-plugins.ts:listSuite": {
+  "function:packages/core/src/test-plugins.ts:listSuite": {
     "lines": 162,
     "tokens": 4353
   },
-  "function:packages/weft/src/test-plugins.ts:textMeasureSuite": {
+  "function:packages/core/src/test-plugins.ts:textMeasureSuite": {
     "lines": 135,
     "tokens": 3493
   },
-  "function:packages/weft/test/async.test.tsx:describe(a Boundary directly in a conditional hole)": {
+  "function:packages/core/test/async.test.tsx:describe(a Boundary directly in a conditional hole)": {
     "lines": 82,
     "tokens": 1391
   },
-  "function:packages/weft/test/back-end.test.tsx:describe(weft back end, step 2)": {
+  "function:packages/core/test/back-end.test.tsx:describe(weft back end, step 2)": {
     "lines": 112,
     "tokens": 2951
   },
-  "function:packages/weft/test/back-end.test.tsx:describe(weft back end: basics)": {
+  "function:packages/core/test/back-end.test.tsx:describe(weft back end: basics)": {
     "lines": 100,
     "tokens": 2094
   },
-  "function:packages/weft/test/deps.test.ts:describe(per-key reads between plain objects)": {
+  "function:packages/core/test/deps.test.ts:describe(per-key reads between plain objects)": {
     "lines": 98,
     "tokens": 1707
   },
-  "function:packages/weft/test/hmr.test.ts:describe(updates)": {
+  "function:packages/core/test/hmr.test.ts:describe(updates)": {
     "lines": 178,
     "tokens": 4950
   },
-  "function:packages/weft/test/media.test.tsx:describe(@weft-js/core/vite assets)": {
+  "function:packages/core/test/media.test.tsx:describe(@weft-js/core/vite assets)": {
     "lines": 165,
     "tokens": 5369
   },
-  "function:packages/weft/test/ssr.test.ts:describe(round trips of every lowered construct: 0 misses, 0 DOM writes, then live)": {
+  "function:packages/core/test/ssr.test.ts:describe(round trips of every lowered construct: 0 misses, 0 DOM writes, then live)": {
     "lines": 97,
     "tokens": 2658
   },
-  "function:packages/weft/test/state.test.tsx:describe(defineState)": {
+  "function:packages/core/test/state.test.tsx:describe(defineState)": {
     "lines": 138,
     "tokens": 2668
   },
-  "function:packages/weft/test/state.test.tsx:describe(persist)": {
+  "function:packages/core/test/state.test.tsx:describe(persist)": {
     "lines": 123,
     "tokens": 3115
   },
-  "function:packages/weft/test/style-matrix.test.ts:describe(buildMatrix)": {
+  "function:packages/core/test/style-matrix.test.ts:describe(buildMatrix)": {
     "lines": 121,
     "tokens": 3285
   },
-  "function:packages/weft/test/style.test.tsx:describe(CSS: only what call sites can produce)": {
+  "function:packages/core/test/style.test.tsx:describe(CSS: only what call sites can produce)": {
     "lines": 85,
     "tokens": 2143
   },
-  "function:packages/weft/test/style.test.tsx:describe(compiler: call sites lower to attributes)": {
+  "function:packages/core/test/style.test.tsx:describe(compiler: call sites lower to attributes)": {
     "lines": 118,
     "tokens": 4349
   },
-  "function:packages/weft/test/surface.test.tsx:describe(dev checks on the live mirror)": {
+  "function:packages/core/test/surface.test.tsx:describe(dev checks on the live mirror)": {
     "lines": 94,
     "tokens": 2585
   },
-  "function:packages/weft/test/tabs.test.tsx:describe(sync: 'tabs')": {
+  "function:packages/core/test/tabs.test.tsx:describe(sync: 'tabs')": {
     "lines": 120,
     "tokens": 2874
   },
-  "function:packages/weft/vite.mjs:agent": {
+  "function:packages/core/vite.mjs:agent": {
     "lines": 133,
     "tokens": 2619
   },
-  "function:packages/weft/vite.mjs:agent/configureServer": {
+  "function:packages/core/vite.mjs:agent/configureServer": {
     "lines": 85,
     "tokens": 1754
   },
-  "function:packages/weft/vite.mjs:icons": {
+  "function:packages/core/vite.mjs:icons": {
     "lines": 113,
     "tokens": 2598
   },
-  "function:packages/weft/vite.mjs:styleGroups": {
+  "function:packages/core/vite.mjs:styleGroups": {
     "lines": 181,
     "tokens": 3882
   },
-  "function:packages/weft/vite.mjs:weft": {
+  "function:packages/core/vite.mjs:weft": {
     "lines": 98,
     "tokens": 1930
   },

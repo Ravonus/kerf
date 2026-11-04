@@ -13,9 +13,9 @@ spikes/native/android/.gradle/
 spikes/native/android/build/
 spikes/native/android/app/build/
 spikes/native/android/app/.cxx/
-packages/weft/native/
-packages/weft/bench/corpus/
-packages/weft/test/corpus-gen/
+packages/core/native/
+packages/core/bench/corpus/
+packages/core/test/corpus-gen/
 **/.weft/*
 !**/.weft/plugins.lock.json
 .release/
@@ -34,8 +34,8 @@ netlify.env
 # cli tests check a copy of start's fixture here (packages/cli/test/helpers.mjs startApp).
 packages/start/test/.tmp/
 
-# Template test apps are regenerated from packages/create-weft/templates.
-packages/create-weft/test/.tmp-templates/
+# Template test apps are regenerated from packages/create/templates.
+packages/create/test/.tmp-templates/
 
 # Generated site content.
 /site/public/reference/

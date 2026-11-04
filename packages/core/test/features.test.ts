@@ -26,5 +26,5 @@ test('adds the module for each option a file uses, and nothing otherwise', () =>
 
 test("leaves node_modules and weft's own source alone", () => {
   expect(run(`x = { persist: 1 }`, '/app/node_modules/lib/index.js')).toBe(`x = { persist: 1 }`)
-  expect(run(`x = { persist: 1 }`, '/repo/packages/weft/src/scope.ts')).toBe(`x = { persist: 1 }`)
+  expect(run(`x = { persist: 1 }`, '/repo/packages/core/src/scope.ts')).toBe(`x = { persist: 1 }`)
 })

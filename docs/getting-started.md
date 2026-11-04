@@ -1,6 +1,6 @@
 # Using a weft checkout in your apps
 
-weft isn't on npm yet. Until it is, `packages/create-weft/scripts/local.mjs` lets any app on your machine use a checkout of
+weft isn't on npm yet. Until it is, `packages/create/scripts/local.mjs` lets any app on your machine use a checkout of
 this repo. It builds what's stale, packs every package as a tarball and points the app at those tarballs, so the app gets
 what a consumer would get, not workspace links.
 
@@ -15,7 +15,7 @@ This page is for working on weft. For a first app, follow [Installation](../site
 An alias saves typing. Put it in your shell's startup file, with the path to your checkout:
 
 ```bash
-alias weft-local='node ~/path/to/weft/packages/create-weft/scripts/local.mjs'
+alias weft-local='node ~/path/to/weft/packages/create/scripts/local.mjs'
 ```
 
 If your `~/.npmrc` sets `min-release-age`, npm skips packages newer than that many days, which can leave it nothing to

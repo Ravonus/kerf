@@ -317,7 +317,7 @@ describe('JSON and YAML config (research 34 §2)', () => {
 // config.d.ts is what an editor offers and the schema is what `weft check` accepts: a key in one and not the other is
 // either a P007 on valid-looking config or an option nobody can find. Every object they both describe has the same keys.
 describe('config.d.ts and the schema', () => {
-  const file = new URL('../../weft/src/config.d.ts', import.meta.url)
+  const file = new URL('../../core/src/config.d.ts', import.meta.url)
   const sf = typescript.createSourceFile(
     'config.d.ts',
     readFileSync(file, 'utf8'),

@@ -43,21 +43,21 @@ export default function Counter() {
 
 | Package | Folder | What it is |
 |---|---|---|
-| `@weft-js/core` | [packages/weft](packages/weft) | The runtime, the compiler binding, the Vite plugin, SSR and test utilities |
+| `@weft-js/core` | [packages/core](packages/core) | The runtime, the compiler binding, the Vite plugin, SSR and test utilities |
 | `@weft-js/cli` | [packages/cli](packages/cli) | The `weft` command: `dev`, `build`, `check`, `docs` and the MCP server |
-| `@weft-js/create` | [packages/create-weft](packages/create-weft) | `npm create @weft-js` |
+| `@weft-js/create` | [packages/create](packages/create) | `npm create @weft-js` |
 | `@weft-js/start` | [packages/start](packages/start) | The full stack: file routes, server functions, SSR, a database, auth and realtime |
 | `@weft-js/db` | [packages/db](packages/db) | Database layers and list sources for `@weft-js/start` |
 | `@weft-js/warp` | [packages/warp](packages/warp) | warp's components |
 | `@weft-js/warp-core` | [packages/warp-core](packages/warp-core) | warp's behaviour, tokens and CSS, with no framework |
-| `@weft-js/warp-icons` | [packages/icons](packages/icons) | weft's icon set |
+| `@weft-js/warp-icons` | [packages/warp-icons](packages/warp-icons) | weft's icon set |
 
 The other folders in `packages/` (payments, multiplayer, media, realtime transports, fonts and text) are add-ons that
 aren't released yet.
 
 ## Size
 
-Brotli, as `node packages/weft/scripts/size.mjs` reports it:
+Brotli, as `node packages/core/scripts/size.mjs` reports it:
 
 - The whole runtime, every export: 13.37 KB.
 - The `@weft-js/core` entry alone: 4.76 KB.

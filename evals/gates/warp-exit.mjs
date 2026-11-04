@@ -5,7 +5,7 @@
 //   node warp-exit.mjs [--name v3-warp-exit] [--skip-a11y]
 //
 // Needs `npm install` in frameworks/warp, frameworks/weft, packages/warp and packages/warp-core, and a fresh native
-// compiler (packages/weft: npm run build:native). Parts, each pass/fail:
+// compiler (packages/core: npm run build:native). Parts, each pass/fail:
 //   hidden    run-app.mjs reference + grade + measure on reference-v3/{warp,weft}: every hidden test, and the §3.7
 //             work budgets on the probe (price-push ≤ 1 DOM and ≤ 10 re-runs, add-one ≤ 3 DOM)
 //   size      both shops built for production, brotli q11: warp's JS ≤ the §3.7 app budget + KIT_ALLOWANCE, and JS + CSS

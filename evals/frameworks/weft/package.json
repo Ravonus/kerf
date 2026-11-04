@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@weft-js/core": "file:../../../packages/weft",
+    "@weft-js/core": "file:../../../packages/core",
     "@weft-js/cli": "file:../../../packages/cli"
   },
   "devDependencies": {

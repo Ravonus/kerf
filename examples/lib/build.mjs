@@ -22,7 +22,7 @@ import { quote } from './serve.mjs'
 import { spread } from './stats.mjs'
 
 const repo = join(here, '..')
-export const localMjs = join(repo, 'packages/create-weft/scripts/local.mjs')
+export const localMjs = join(repo, 'packages/create/scripts/local.mjs')
 
 // Never copied: a real env file or anything else that can hold a credential, and any build or dependency folder.
 const SECRET = /(^|\/)(\.env(\.(?!example$)[^/]*)?|netlify\.env|\.neon|\.mcp\.json|[^/]*\.pem)$/

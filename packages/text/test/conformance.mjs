@@ -20,7 +20,7 @@ if (!existsSync(join(dist, 'index.js'))) {
 const inter = join(pkg, 'node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2')
 const entry = `
 import * as P from '@chenglou/pretext'
-import { textMeasureSuite } from ${JSON.stringify(resolve(pkg, '../weft/src/test-plugins.ts'))}
+import { textMeasureSuite } from ${JSON.stringify(resolve(pkg, '../core/src/test-plugins.ts'))}
 import { makeCorpus } from ${JSON.stringify(join(engine, 'test/accuracy/corpus.js'))}
 window.P = P; window.suite = textMeasureSuite; window.makeCorpus = makeCorpus
 `

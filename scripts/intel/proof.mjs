@@ -21,7 +21,7 @@ if (process.platform !== 'darwin' || process.arch !== 'arm64')
   )
 if (!readdirSync(tarballs).some((f) => /compiler-darwin-x64/.test(f)))
   throw new Error(
-    `no darwin-x64 compiler package in ${tarballs}: build it with packages/weft/scripts/build-platform.mjs`,
+    `no darwin-x64 compiler package in ${tarballs}: build it with packages/core/scripts/build-platform.mjs`,
   )
 
 async function intelNode() {

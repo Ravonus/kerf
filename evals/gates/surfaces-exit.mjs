@@ -6,7 +6,7 @@
 //   (a fresh agent works in <dir>, from the request and what the app ships, and sees no e2e)
 //   node evals/gates/surfaces-exit.mjs verify <dir>      weft check, tsc, build, then the hidden checks in Chrome
 //
-// verify writes evals/results/surfaces-exit.md and .json; exit 1 if any part fails. Needs packages/weft's native compiler.
+// verify writes evals/results/surfaces-exit.md and .json; exit 1 if any part fails. Needs packages/core's native compiler.
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -31,7 +31,7 @@ if (step === 'prepare') {
   must(
     'node',
     [
-      join(repo, 'packages/create-weft/bin/create-weft.mjs'),
+      join(repo, 'packages/create/bin/create-weft.mjs'),
       dir,
       '--ui',
       'warp',
@@ -72,7 +72,7 @@ writeFileSync(
     2,
   ),
 )
-const tsc = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), [
+const tsc = run(join(repo, 'packages/core/node_modules/.bin/tsc'), [
   '--noEmit',
   '-p',
   'tsconfig.check.json',

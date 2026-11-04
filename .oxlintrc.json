@@ -7,8 +7,8 @@
   "ignorePatterns": [
     "**/node_modules/**", "**/dist/**", "**/.weft/**", "**/.output/**", "**/target/**",
     "**/fixture/**", "**/fixtures/**", "**/vendor/**", "**/gallery/assets/**",
-    "packages/icons/src/gen/**", "packages/icons/art/**", "packages/text/gen/**", "packages/weft/node/*.mjs", "packages/weft/native/**",
-    "packages/weft/bench/corpus/**", "packages/warp-core/scripts/contrast-check.mjs", "packages/weft/test/corpus-gen/**", "packages/db/test/generated/**",
+    "packages/warp-icons/src/gen/**", "packages/warp-icons/art/**", "packages/text/gen/**", "packages/core/node/*.mjs", "packages/core/native/**",
+    "packages/core/bench/corpus/**", "packages/warp-core/scripts/contrast-check.mjs", "packages/core/test/corpus-gen/**", "packages/db/test/generated/**",
     "docs/**", "spikes/**", "evals/*/**", "site/public/**", "site/content/**", "site/review/**"
   ],
   "env": { "browser": true, "node": true, "es2024": true, "vitest": true },
@@ -152,16 +152,16 @@
     },
     {
       // Core runs in the browser. The Node side of it is named below and in scripts/quality/boundaries.mjs.
-      "files": ["packages/weft/src/**"],
+      "files": ["packages/core/src/**"],
       "rules": { "no-restricted-imports": ["error", { "patterns": [{ "group": ["node:*", "fs", "path", "os", "crypto", "child_process", "url", "module"], "message": "Core must not import Node: it ships to browsers." }] }] }
     },
     {
-      "files": ["packages/weft/src/style/matrix.ts", "packages/weft/src/test.ts", "packages/weft/src/plugin.mjs", "packages/weft/src/config.mjs"],
+      "files": ["packages/core/src/style/matrix.ts", "packages/core/src/test.ts", "packages/core/src/plugin.mjs", "packages/core/src/config.mjs"],
       "rules": { "no-restricted-imports": "off" }
     },
     {
       // The entry and dom.ts are the public doors over modules that build on them. The cycle is the design, and order is tested.
-      "files": ["packages/weft/src/**"],
+      "files": ["packages/core/src/**"],
       "rules": { "import/no-cycle": "off" }
     },
     {

@@ -637,7 +637,7 @@ const GROUP = { learn: 'Guides', reference: 'API' }
 
 /** Every name `weft` exports, pointing at the section that first uses it, so "state" finds `state` before prose about it. */
 function symbols(docs) {
-  const dir = join(repo, 'packages/weft')
+  const dir = join(repo, 'packages/core')
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
   const rows = []
   for (const [from, names] of Object.entries(exportsOf({ dir, pkg }))) {
@@ -1154,10 +1154,10 @@ const inline = (md) => markdownToHtml(md).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, '')
 
 /** Every drawing, from the set's generated source: `{ name: [hollow, solid] }`, content-addressed in `public/`. */
 function buildIcons() {
-  const source = readFileSync(join(repo, 'packages/icons/src/gen/all.tsx'), 'utf8')
+  const source = readFileSync(join(repo, 'packages/warp-icons/src/gen/all.tsx'), 'utf8')
   const names = JSON.parse(
     /names = (\[[^\]]*\])/.exec(
-      readFileSync(join(repo, 'packages/icons/src/gen/names.ts'), 'utf8'),
+      readFileSync(join(repo, 'packages/warp-icons/src/gen/names.ts'), 'utf8'),
     )[1],
   )
   const title = (n) => n.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())

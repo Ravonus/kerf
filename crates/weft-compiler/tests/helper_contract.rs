@@ -1,5 +1,5 @@
 //! Helper contract (research 16 §6.3, research 19): every helper weft's back end imports from `@weft-js/core`, `@weft-js/core/dom` or
-//! `@weft-js/core/ssr` must be exported by `packages/weft/src`. Compiles the repo's own components (test fixtures, the v3
+//! `@weft-js/core/ssr` must be exported by `packages/core/src`. Compiles the repo's own components (test fixtures, the v3
 //! reference app, the size fixtures) in each output mode: DOM, DOM dev, hydratable DOM, and SSR.
 
 #![allow(
@@ -21,8 +21,8 @@ fn components() -> Vec<(String, String)> {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut out = Vec::new();
     let mut stack: Vec<_> = [
-        "packages/weft/test/fixtures",
-        "packages/weft/bench/fixtures",
+        "packages/core/test/fixtures",
+        "packages/core/bench/fixtures",
         "evals/reference-v3/weft/src",
     ]
     .iter()
@@ -130,7 +130,7 @@ fn imports_of(code: &str) -> BTreeMap<String, BTreeSet<String>> {
 
 #[test]
 fn every_helper_the_back_end_imports_exists_in_the_runtime() {
-    let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/weft/src");
+    let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/core/src");
     let modules: BTreeMap<&str, BTreeSet<String>> = [
         ("@weft-js/core", exports_of(&runtime.join("index.ts"))),
         ("@weft-js/core/dom", exports_of(&runtime.join("dom.ts"))),

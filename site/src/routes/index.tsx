@@ -53,7 +53,7 @@ export default function Home() {
             </Link>
           </div>
           <p data-part="install">
-            <code>node packages/create-weft/scripts/local.mjs new my-app</code>
+            <code>node packages/create/scripts/local.mjs new my-app</code>
             <span>weft is not on npm yet, so run this from a checkout of the repo.</span>
           </p>
         </div>

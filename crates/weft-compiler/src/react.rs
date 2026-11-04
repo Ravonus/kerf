@@ -1,6 +1,6 @@
 //! React prop names on native elements. The tables run at compile time, so the output carries plain attribute names
 //! and the runtime pays nothing for them. A `{...spread}` isn't known here: `attrName` in @weft-js/core/dom covers the same
-//! names at run time (`packages/weft/test/react-props.test.tsx` checks the two agree).
+//! names at run time (`packages/core/test/react-props.test.tsx` checks the two agree).
 //!
 //! Names not listed pass through. SVG's other camelCase attributes (`viewBox`, `gradientUnits`) are spelled that way.
 

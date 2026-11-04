@@ -8,7 +8,7 @@ import type { Browser, Route } from 'playwright-core'
 import { resetIds } from '@weft-js/warp-core'
 import { renderToString } from '@weft-js/core/ssr'
 import { LAYER_ORDER, pageStyles } from '../../start/src/inline.mjs'
-import { parse, purge } from '../../weft/node/purge.mjs'
+import { parse, purge } from '../../core/node/purge.mjs'
 // @ts-expect-error: query imports (@weft-js/core/vite)
 import { Ordinary } from './fixtures/Ordinary.tsx?weft-ssr'
 

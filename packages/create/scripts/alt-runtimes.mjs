@@ -2,7 +2,7 @@
 // served, and `weft dev` works with its HMR and sockets. Tarballs reach the app through a local registry, as if
 // published. The driver itself runs on any of the three, so it can run where Node isn't installed at all:
 //
-//   node packages/create-weft/scripts/alt-runtimes.mjs <empty-dir> [bun,deno,node] [--tarballs <dir>]
+//   node packages/create/scripts/alt-runtimes.mjs <empty-dir> [bun,deno,node] [--tarballs <dir>]
 //
 // Without `--tarballs` it packs them, which takes Node. A runtime that isn't installed is reported and skipped.
 import { execFile, spawn, spawnSync } from 'node:child_process'

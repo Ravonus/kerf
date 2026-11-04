@@ -5,8 +5,8 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { pack, pin, writePackedPolicy } from '../../packages/create-weft/scripts/tarballs.mjs'
-import { writeToolShim } from '../../packages/create-weft/scripts/tool-shim.mjs'
+import { pack, pin, writePackedPolicy } from '../../packages/create/scripts/tarballs.mjs'
+import { writeToolShim } from '../../packages/create/scripts/tool-shim.mjs'
 
 await test('packed policy merges tarballs into its inherited security overrides', () => {
   const dir = mkdtempSync(join(tmpdir(), 'weft-policy-merge-'))

@@ -2,7 +2,7 @@
 // The database matrix (research 34 §9): every data layer on every engine, from tarballs, through `weft db generate`,
 // tsc and `weft check`, then a build served on each runtime against its own empty database and driven by an e2e.
 //
-//   node packages/create-weft/scripts/db-matrix.mjs <empty-dir> [--layers a,b] [--dbs a,b] [--runtimes a,b] [--json <out>]
+//   node packages/create/scripts/db-matrix.mjs <empty-dir> [--layers a,b] [--dbs a,b] [--runtimes a,b] [--json <out>]
 //
 // `--auth-seam` adds four apps on SQLite: Native with the hand-written provider in scripts/custom-auth, which has to pass
 // the same e2e as Better Auth with no change to weft (research 34 §9); `--auth-provider custom`'s stub; and `weft add auth`

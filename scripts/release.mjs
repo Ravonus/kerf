@@ -11,7 +11,7 @@
 //   --out <dir>       where tarballs go (default .release/, gitignored)
 //   --no-build        use the wasm, text and platform builds already on disk
 //
-// Platform packages come from packages/weft/dist/platform/<name>/ (scripts/build-platform.mjs). A platform that isn't
+// Platform packages come from packages/core/dist/platform/<name>/ (scripts/build-platform.mjs). A platform that isn't
 // there is left out of the core's optionalDependencies, and that platform runs the WASM build.
 //
 // A publish that stops part way is safe to run again: versions already on the registry are skipped.
@@ -55,8 +55,8 @@ const run = (cmd, args, cwd, stdio = 'pipe') =>
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'))
 const say = (line) => console.log(`[release] ${line}`)
 
-const { platforms } = createRequire(import.meta.url)(join(root, 'packages/weft/platforms.cjs'))
-const platformDir = (name) => join(root, 'packages/weft/dist/platform', name)
+const { platforms } = createRequire(import.meta.url)(join(root, 'packages/core/platforms.cjs'))
+const platformDir = (name) => join(root, 'packages/core/dist/platform', name)
 
 /** Every package that goes out, with its directory. Platform packages are the ones built. */
 function discover() {
@@ -98,7 +98,7 @@ function order(list) {
 
 function build() {
   say('building the WASM compiler')
-  run('node', ['scripts/build-wasm.mjs', '--if-stale'], join(root, 'packages/weft'), 'inherit')
+  run('node', ['scripts/build-wasm.mjs', '--if-stale'], join(root, 'packages/core'), 'inherit')
 }
 
 /** The manifest a registry should have. */

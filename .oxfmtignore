@@ -15,6 +15,6 @@ packages/warp/test/a11y/gallery/assets/
 **/archives/
 **/__snapshots__/
 **/snapshots/
-packages/weft/node/css.mjs
-packages/weft/node/matrix.mjs
-packages/weft/node/vocab.mjs
+packages/core/node/css.mjs
+packages/core/node/matrix.mjs
+packages/core/node/vocab.mjs

@@ -18,11 +18,25 @@ export function validateBaseline(baseline) {
   }
 }
 
+// These package moves preserve each offender's original limit across Git history.
+export function renamedBaseline(baseline) {
+  const renamed = {}
+  for (const [id, value] of Object.entries(baseline)) {
+    const key = id.replace(/^(file|function):packages\/(weft|icons|create-weft)\//, (_, kind, name) =>
+      `${kind}:packages/${{ weft: 'core', icons: 'warp-icons', 'create-weft': 'create' }[name]}/`,
+    )
+    if (Object.hasOwn(renamed, key)) throw new Error(`duplicate length baseline entry: ${key}`)
+    renamed[key] = value
+  }
+  return renamed
+}
+
 /** Return growth against the Git base and unapproved current findings. */
 export function compareLengths(findings, baseline, base) {
   validateBaseline(findings)
   validateBaseline(baseline)
   validateBaseline(base)
+  base = renamedBaseline(base)
   const problems = []
   for (const [id, value] of Object.entries(baseline)) {
     if (!Object.hasOwn(base, id)) problems.push(`baseline adds ${id}`)

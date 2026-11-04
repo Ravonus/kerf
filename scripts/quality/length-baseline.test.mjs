@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
 import {
   copyFileSync,
+  cpSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -46,6 +47,29 @@ await test('new and worsened findings fail, while removal and shrinkage pass', (
   assert.deepEqual(compareLengths(entry(file, 450), entry(file, 480), base), [])
   assert.deepEqual(compareLengths({}, {}, base), [])
   assert.match(compareLengths(entry(file, 450), {}, base).join('\n'), /new length offender/)
+})
+
+await test('package folder check rejects a mismatched name', () =>
+  temp((dir) => {
+    cpSync(join(root, 'scripts'), join(dir, 'scripts'), { recursive: true })
+    mkdirSync(join(dir, 'packages/core'), { recursive: true })
+    mkdirSync(join(dir, 'evals'))
+    const manifest = join(dir, 'packages/core/package.json')
+    const check = () => spawnSync(process.execPath, ['scripts/check.mjs', '--only=package-folders'], {
+      cwd: dir, encoding: 'utf8',
+    })
+    writeFileSync(manifest, JSON.stringify({ name: '@weft-js/core' }))
+    assert.equal(check().status, 0)
+    writeFileSync(manifest, JSON.stringify({ name: '@weft-js/wrong' }))
+    const result = check()
+    assert.equal(result.status, 1)
+    assert.match(result.stdout, /packages\/core: package name @weft-js\/wrong requires packages\/wrong/)
+  }))
+
+await test('renamed offenders retain their trusted limit', () => {
+  const old = 'file:packages/core/src/a.ts', renamed = 'file:packages/core/src/a.ts'
+  assert.deepEqual(compareLengths(entry(renamed, 500), entry(renamed, 500), entry(old, 500)), [])
+  assert.match(compareLengths(entry(renamed, 501), entry(renamed, 501), entry(old, 500)).join('\n'), /baseline increases/)
 })
 
 await test('enlarged or added baseline entries cannot authorize growth', () => {
@@ -146,7 +170,7 @@ await test('test, generated and vendored files get the 800-line limit', () => {
     'src/gen/a.ts',
     'vendor/a.js',
     'src/a.generated.ts',
-    'packages/weft/node/css.mjs',
+    'packages/core/node/css.mjs',
     'evals/results/snapshot.js',
   ])
     assert.equal(fileLimit(path), 800)

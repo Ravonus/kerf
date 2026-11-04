@@ -5,7 +5,7 @@
   "dependencies": {
     "@weft-js/warp": "file:../../../packages/warp",
     "@weft-js/warp-core": "file:../../../packages/warp-core",
-    "@weft-js/core": "file:../../../packages/weft"
+    "@weft-js/core": "file:../../../packages/core"
   },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",

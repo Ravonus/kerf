@@ -276,7 +276,7 @@ test.todo('later')`
 })
 
 describe('T-codes stay quiet on the repo’s own tests', () => {
-  for (const dir of ['packages/weft/test', 'evals/tasks-v3/shop/hidden']) {
+  for (const dir of ['packages/core/test', 'evals/tasks-v3/shop/hidden']) {
     it(dir, () => {
       const root = join(repo, dir)
       const rels = discover(root, { include: ['**/*.test.{ts,tsx}'] })

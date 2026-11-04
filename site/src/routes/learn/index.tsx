@@ -41,7 +41,7 @@ export default function LearnHome(props: RouteProps<typeof load>) {
           <Link href="/learn/quick-start">Quick start</Link> tours the main ideas in a few minutes.
         </p>
         <pre data-part="cmd">
-          <code>node packages/create-weft/scripts/local.mjs new my-app</code>
+          <code>node packages/create/scripts/local.mjs new my-app</code>
         </pre>
         <p>
           A component is a function that returns TSX. This one keeps a count in{' '}

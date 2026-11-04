@@ -13,7 +13,7 @@ const at = (path) => fileURLToPath(new URL(path, import.meta.url))
 const read = (path) => readFileSync(at(path), 'utf8')
 const icons = ['icons.css', 'tiers.css']
 const sheets = [
-  read('../../icons/src/icons.css'),
+  read('../../warp-icons/src/icons.css'),
   read('../../warp-core/styles/warp.css'),
   read('../../warp-core/styles/components/base.css'),
   read('../../warp-core/styles/components/button.css'),
@@ -58,6 +58,6 @@ test.each(
 test("every CSS file that can load first declares warp's layer order first", () => {
   const order = read('../../warp-core/styles/warp.css').match(/^@layer [^{;]+;/m)[0]
   for (const file of icons)
-    expect(read(`../../icons/src/${file}`).match(/^@layer [^{;]*[;{]/m)[0]).toBe(order)
-  expect(readdirSync(at('../../icons/src'))).toEqual(expect.arrayContaining(icons))
+    expect(read(`../../warp-icons/src/${file}`).match(/^@layer [^{;]*[;{]/m)[0]).toBe(order)
+  expect(readdirSync(at('../../warp-icons/src'))).toEqual(expect.arrayContaining(icons))
 })

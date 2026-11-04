@@ -2,9 +2,9 @@
 // Use this checkout from any app on this machine, without publishing: the packages go in as tarballs from one directory
 // (`~/.weft/local`, or WEFT_LOCAL_DIR), so an app sees what a consumer would (docs/getting-started.md).
 //
-//   node packages/create-weft/scripts/local.mjs pack                       build what's stale and pack
-//   node packages/create-weft/scripts/local.mjs new <dir> [create-weft flags]    that, then an app wired to the tarballs
-//   node packages/create-weft/scripts/local.mjs refresh [dir] [--packed]   that, then put the new tarballs in an app
+//   node packages/create/scripts/local.mjs pack                       build what's stale and pack
+//   node packages/create/scripts/local.mjs new <dir> [create-weft flags]    that, then an app wired to the tarballs
+//   node packages/create/scripts/local.mjs refresh [dir] [--packed]   that, then put the new tarballs in an app
 //                                                                          (--packed: the store's as they are, no pack)
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'

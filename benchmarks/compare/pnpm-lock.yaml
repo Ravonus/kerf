@@ -6,9 +6,9 @@ settings:
 
 overrides:
   '@weft-js/cli': link:../../packages/cli
-  '@weft-js/create': link:../../packages/create-weft
+  '@weft-js/create': link:../../packages/create
   '@weft-js/db': link:../../packages/db
-  '@weft-js/warp-icons': link:../../packages/icons
+  '@weft-js/warp-icons': link:../../packages/warp-icons
   '@weft-js/multiplayer': link:../../packages/multiplayer
   '@weft-js/pay': link:../../packages/pay
   '@weft-js/plugin-media-ffmpeg': link:../../packages/plugin-media-ffmpeg
@@ -24,7 +24,7 @@ overrides:
   '@weft-js/text': link:../../packages/text
   '@weft-js/warp-core': link:../../packages/warp-core
   '@weft-js/warp': link:../../packages/warp
-  '@weft-js/core': link:../../packages/weft
+  '@weft-js/core': link:../../packages/core
 
 importers:
 
@@ -146,8 +146,8 @@ importers:
         specifier: link:../../../../packages/cli
         version: link:../../../../packages/cli
       '@weft-js/core':
-        specifier: link:../../../../packages/weft
-        version: link:../../../../packages/weft
+        specifier: link:../../../../packages/core
+        version: link:../../../../packages/core
       '@weft-js/warp':
         specifier: link:../../../../packages/warp
         version: link:../../../../packages/warp
@@ -165,8 +165,8 @@ importers:
         specifier: link:../../../../packages/cli
         version: link:../../../../packages/cli
       '@weft-js/core':
-        specifier: link:../../../../packages/weft
-        version: link:../../../../packages/weft
+        specifier: link:../../../../packages/core
+        version: link:../../../../packages/core
     devDependencies:
       '@tailwindcss/vite':
         specifier: 4.3.3
@@ -299,8 +299,8 @@ importers:
   weft-plain:
     dependencies:
       '@weft-js/core':
-        specifier: link:../../../packages/weft
-        version: link:../../../packages/weft
+        specifier: link:../../../packages/core
+        version: link:../../../packages/core
       '@weft-js/warp-core':
         specifier: link:../../../packages/warp-core
         version: link:../../../packages/warp-core
@@ -312,8 +312,8 @@ importers:
   weft-warp:
     dependencies:
       '@weft-js/core':
-        specifier: link:../../../packages/weft
-        version: link:../../../packages/weft
+        specifier: link:../../../packages/core
+        version: link:../../../packages/core
       '@weft-js/warp':
         specifier: link:../../../packages/warp
         version: link:../../../packages/warp

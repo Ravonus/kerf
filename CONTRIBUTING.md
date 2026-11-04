@@ -71,7 +71,7 @@ licences checked against an allowlist.
 `No-Regression-Test: <reason>` line at the end of the commit message. No `.only`. A skipped test has a comment saying why.
 
 **Disabling a rule** is for when the rule is wrong here, not when it's in the way. The one standing exception is measured
-speed: in the hot paths of `packages/weft/src` and the compiler, a narrow disable with a stated reason is fine.
+speed: in the hot paths of `packages/core/src` and the compiler, a narrow disable with a stated reason is fine.
 
 **Formatting.** Run `pnpm run fix` to format tracked JavaScript and TypeScript with oxfmt and Rust with rustfmt.
 Both use a 100-column width. The source formatter skips generated and vendor files, archived evaluation results, snapshots,
@@ -83,7 +83,7 @@ Run `node scripts/quality/rust-format.mjs` to check, or add `--write` to format 
 
 Speed comes first, then bytes. If you change the compiler, the runtime, warp or warp-core:
 
-- `node packages/weft/scripts/size.mjs` and the tests in each package hold the size budgets.
+- `node packages/core/scripts/size.mjs` and the tests in each package hold the size budgets.
 - `node evals/compare/measure.mjs` measures every stack in `evals/compare`, not only weft, and you commit the new line in
   `evals/results/compare-history.jsonl` and the regenerated `compare.html`. [evals/compare/README.md](evals/compare/README.md)
   has the rules.
@@ -100,7 +100,7 @@ A diagnostic is a stable code, one line of why, a fix, and an autofix when the c
    `packages/cli/test/`.
 4. If the rule is new to users, document it in `packages/cli/docs/rules.md`.
 
-After a compiler change, rebuild with `pnpm run build:native` in `packages/weft`.
+After a compiler change, rebuild with `pnpm run build:native` in `packages/core`.
 
 ## Adding a warp component
 
