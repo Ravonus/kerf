@@ -64,6 +64,8 @@ export function suite({ url, log }) {
     await page.getByLabel('New todo').fill(title)
     await page.getByRole('button', { name: 'Add' }).click()
     await page.locator('ul.todos li', { hasText: title }).first().waitFor()
+    // Creation must settle before another action can use the row's real id.
+    await page.getByRole('button', { name: 'Add' }).click({ trial: true })
   }
   const titles = (page) =>
     page.$$eval('ul.todos li', (l) =>
