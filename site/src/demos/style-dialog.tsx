@@ -33,13 +33,20 @@ export default function Project() {
         title="Rename project"
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" data-close="">Cancel</Button>
+            <Button emphasis="ghost" tone="neutral" data-close="">
+              Cancel
+            </Button>
             <Button onClick={save}>Save</Button>
           </>
         }
       >
         <Stack gap="related">
-          <Input label="Project name" autofocus value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} />
+          <Input
+            label="Project name"
+            autofocus
+            value={draft.value}
+            onInput={(e) => (draft.value = e.currentTarget.value)}
+          />
         </Stack>
       </Modal>
     </Card>

@@ -18,17 +18,32 @@ if (!names.length) throw new Error('usage: template-migrations.mjs <template>...
 
 const work = mkdtempSync(join(tmpdir(), 'weft-template-'))
 try {
-  const dependencies = Object.fromEntries(['drizzle-kit', 'drizzle-orm'].map(name => [name, VERSIONS[name]]))
+  const dependencies = Object.fromEntries(
+    ['drizzle-kit', 'drizzle-orm'].map((name) => [name, VERSIONS[name]]),
+  )
   writeFileSync(join(work, 'package.json'), JSON.stringify({ private: true, dependencies }))
-  execFileSync('npm', ['install', '--silent', '--no-audit', '--no-fund'], { cwd: work, stdio: 'inherit' })
+  execFileSync('npm', ['install', '--silent', '--no-audit', '--no-fund'], {
+    cwd: work,
+    stdio: 'inherit',
+  })
   for (const name of names) {
     if (loadTemplate(name).requires.db === 'none') continue
     const app = join(work, name)
     scaffold(app, { template: name })
     rmSync(join(app, 'drizzle'), { recursive: true })
-    execFileSync(join(work, 'node_modules/.bin/drizzle-kit'), ['generate', `--name=${name}`], { cwd: app, stdio: ['ignore', 'ignore', 'inherit'] })
-    for (const file of readdirSync(join(app, 'drizzle')).filter(f => f.endsWith('.sql'))) writeFileSync(join(app, 'drizzle', file), idempotent(readFileSync(join(app, 'drizzle', file), 'utf8')))
-    const hash = createHash('sha256').update(readFileSync(join(app, 'src/db/schema.ts'))).digest('hex').slice(0, 16)
+    execFileSync(join(work, 'node_modules/.bin/drizzle-kit'), ['generate', `--name=${name}`], {
+      cwd: app,
+      stdio: ['ignore', 'ignore', 'inherit'],
+    })
+    for (const file of readdirSync(join(app, 'drizzle')).filter((f) => f.endsWith('.sql')))
+      writeFileSync(
+        join(app, 'drizzle', file),
+        idempotent(readFileSync(join(app, 'drizzle', file), 'utf8')),
+      )
+    const hash = createHash('sha256')
+      .update(readFileSync(join(app, 'src/db/schema.ts')))
+      .digest('hex')
+      .slice(0, 16)
     writeFileSync(join(app, 'drizzle/.schema-hash'), `${hash}\n`)
     const out = fileURLToPath(new URL(`../templates/${name}/files/drizzle`, import.meta.url))
     rmSync(out, { recursive: true, force: true })

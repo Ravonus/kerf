@@ -7,7 +7,10 @@ export const livekit = definePlugin({
   weft: '*',
   permissions: { net: ['browser:livekit'], env: ['LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET'] },
   contribute: () => ({
-    agents: { title: 'Peer transport (LiveKit)', text: '`presence(conn, { transport: livekit({ url }) })` sends cursors through LiveKit, and `link.room` is the room for audio and video. Pass `ticket: livekitTicket({ media })` from `@weft-js/realtime-livekit/server` to `multiplayer()`, with `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` on the server.' },
+    agents: {
+      title: 'Peer transport (LiveKit)',
+      text: '`presence(conn, { transport: livekit({ url }) })` sends cursors through LiveKit, and `link.room` is the room for audio and video. Pass `ticket: livekitTicket({ media })` from `@weft-js/realtime-livekit/server` to `multiplayer()`, with `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` on the server.',
+    },
   }),
 })
 

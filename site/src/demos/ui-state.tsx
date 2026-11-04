@@ -18,7 +18,14 @@ function Row(props: { id: string; text: string; done: State<boolean> }) {
     return hover ? `${hover} elsewhere` : ''
   })
   return (
-    <Checkbox ui={row} hint={note.value} checked={props.done.value} onChange={() => { props.done.value = !props.done.value }}>
+    <Checkbox
+      ui={row}
+      hint={note.value}
+      checked={props.done.value}
+      onChange={() => {
+        props.done.value = !props.done.value
+      }}
+    >
       {props.text}
     </Checkbox>
   )
@@ -27,7 +34,7 @@ function Row(props: { id: string; text: string; done: State<boolean> }) {
 export default function UiState() {
   return (
     <div data-part="panes">
-      {['Ana', 'Ben'].map(who => (
+      {['Ana', 'Ben'].map((who) => (
         <Card key={who} title={who}>
           <Row id="flights" text="Book flights" done={trip.flights} />
           <Row id="pack" text="Pack" done={trip.pack} />

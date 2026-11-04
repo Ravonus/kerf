@@ -15,9 +15,22 @@ export const routes = [
 export function Layout({ current, children }: { current: string; children: ReactNode }) {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary' }}>
-      <AppBar position="sticky" color="inherit" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
+      <AppBar
+        position="sticky"
+        color="inherit"
+        elevation={0}
+        sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}
+      >
         <Toolbar sx={{ gap: { xs: 1, sm: 3 }, flexWrap: 'wrap', py: { xs: 0.5, sm: 0 } }}>
-          <Typography component="div" sx={{ fontWeight: 800, fontSize: '1.2rem', color: 'primary.main', letterSpacing: '-0.02em' }}>
+          <Typography
+            component="div"
+            sx={{
+              fontWeight: 800,
+              fontSize: '1.2rem',
+              color: 'primary.main',
+              letterSpacing: '-0.02em',
+            }}
+          >
             Northwind
           </Typography>
           <Box component="nav" aria-label="Main" sx={{ display: 'flex', gap: 0.5 }}>

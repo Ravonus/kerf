@@ -8,7 +8,15 @@ import '@weft-js/warp-core/styles/canvas/canvas.css'
 import '@weft-js/warp-core/styles/canvas/stage.css'
 
 export type { Frame, Pointer } from '@weft-js/warp-core/canvas'
-export type { Piece as StagePiece, Press, Scene, Scroll, StageLayout, StagePainter, Word } from '@weft-js/warp-core/stage'
+export type {
+  Piece as StagePiece,
+  Press,
+  Scene,
+  Scroll,
+  StageLayout,
+  StagePainter,
+  Word,
+} from '@weft-js/warp-core/stage'
 
 /** Props for Canvas. */
 export interface CanvasProps {
@@ -32,10 +40,33 @@ export interface CanvasProps {
 }
 
 /** A canvas that handles pixel ratio, resize, off-screen and reduced motion, for anything warp doesn't draw itself (08 §6.7). */
-export function Canvas({ draw, animate, fps, cell, context, onTheme, pointer, label, ...rest }: CanvasProps) {
+export function Canvas({
+  draw,
+  animate,
+  fps,
+  cell,
+  context,
+  onTheme,
+  pointer,
+  label,
+  ...rest
+}: CanvasProps) {
   let node: HTMLCanvasElement | undefined
-  use(surface, () => node, () => ({ draw, animate, fps, cell, context, onTheme, pointer }))
-  return <div {...rest} data-scope="canvas"><canvas ref={n => (node = n)} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}></canvas></div>
+  use(
+    surface,
+    () => node,
+    () => ({ draw, animate, fps, cell, context, onTheme, pointer }),
+  )
+  return (
+    <div {...rest} data-scope="canvas">
+      <canvas
+        ref={(n) => (node = n)}
+        role={label ? 'img' : undefined}
+        aria-label={label}
+        aria-hidden={label ? undefined : 'true'}
+      ></canvas>
+    </div>
+  )
 }
 
 /** Props for CanvasStage. */
@@ -52,12 +83,51 @@ export interface CanvasStageProps extends StageOptions {
  * A canvas that paints the page laid out inside it (08 §6.8). Mark any element `data-skin="button"`, `card`, or a name of
  * your own: it keeps its layout, focus, typing and semantics, and your painters draw it with a 2D context, states and all.
  */
-export function CanvasStage({ layout = 'box', painters, background, overlay, paint, animate, cell, fps, rail, context, onTheme, veil, children, ...rest }: CanvasStageProps) {
+export function CanvasStage({
+  layout = 'box',
+  painters,
+  background,
+  overlay,
+  paint,
+  animate,
+  cell,
+  fps,
+  rail,
+  context,
+  onTheme,
+  veil,
+  children,
+  ...rest
+}: CanvasStageProps) {
   let node: HTMLCanvasElement | undefined
-  use(stage, () => node, () => ({ layout, painters, background, overlay, paint, animate, cell, fps, rail, context, onTheme }))
+  use(
+    stage,
+    () => node,
+    () => ({
+      layout,
+      painters,
+      background,
+      overlay,
+      paint,
+      animate,
+      cell,
+      fps,
+      rail,
+      context,
+      onTheme,
+    }),
+  )
   return (
-    <div {...rest} data-scope="stage" data-layout={layout} data-rail={rail ? '' : undefined} data-veil={veil ? '' : undefined}>
-      <div data-part="paint" aria-hidden="true"><canvas ref={n => (node = n)}></canvas></div>
+    <div
+      {...rest}
+      data-scope="stage"
+      data-layout={layout}
+      data-rail={rail ? '' : undefined}
+      data-veil={veil ? '' : undefined}
+    >
+      <div data-part="paint" aria-hidden="true">
+        <canvas ref={(n) => (node = n)}></canvas>
+      </div>
       {children}
     </div>
   )
@@ -84,23 +154,64 @@ export interface StageSelectProps {
  * top layer as a stage of its own, in the look of the one around it, with `menu` and `option` skins. Wrap it in a
  * `<label>` to name it.
  */
-export function StageSelect({ options, value, name, disabled, onChange, ...rest }: StageSelectProps) {
-  const items = untrack(() => options).map(o => (typeof o === 'string' ? { value: o, label: o } : o))
+export function StageSelect({
+  options,
+  value,
+  name,
+  disabled,
+  onChange,
+  ...rest
+}: StageSelectProps) {
+  const items = untrack(() => options).map((o) =>
+    typeof o === 'string' ? { value: o, label: o } : o,
+  )
   const current = state(untrack(() => value) ?? items[0]?.value ?? '')
   const id = uid('stage-sel')
   let trigger: HTMLButtonElement | undefined, paint: HTMLCanvasElement | undefined
-  use(stageSelect, () => trigger, () => ({ value: current.value, onPick: (v: string) => { current.value = v; onChange?.(v) } }))
+  use(
+    stageSelect,
+    () => trigger,
+    () => ({
+      value: current.value,
+      onPick: (v: string) => {
+        current.value = v
+        onChange?.(v)
+      },
+    }),
+  )
   use(floatStage, () => paint)
   return (
     <span data-part="select">
-      <button {...rest} ref={n => (trigger = n)} type="button" data-skin="field" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls={id} disabled={disabled}>
-        {items.find(i => i.value === current.value)?.label ?? ''}
+      <button
+        {...rest}
+        ref={(n) => (trigger = n)}
+        type="button"
+        data-skin="field"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-controls={id}
+        disabled={disabled}
+      >
+        {items.find((i) => i.value === current.value)?.label ?? ''}
       </button>
       <div popover="manual" data-scope="stage" data-layout="box" data-part="float">
-        <div data-part="paint" aria-hidden="true"><canvas ref={n => (paint = n)}></canvas></div>
+        <div data-part="paint" aria-hidden="true">
+          <canvas ref={(n) => (paint = n)}></canvas>
+        </div>
         <div role="listbox" id={id} data-skin="menu">
           {items.map((o, i) => (
-            <div key={o.value} role="option" id={`${id}-${i}`} data-skin="option" data-value={o.value} aria-selected={current.value === o.value ? 'true' : 'false'} aria-disabled={o.disabled ? 'true' : undefined}>{o.label}</div>
+            <div
+              key={o.value}
+              role="option"
+              id={`${id}-${i}`}
+              data-skin="option"
+              data-value={o.value}
+              aria-selected={current.value === o.value ? 'true' : 'false'}
+              aria-disabled={o.disabled ? 'true' : undefined}
+            >
+              {o.label}
+            </div>
           ))}
         </div>
       </div>

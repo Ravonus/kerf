@@ -55,10 +55,21 @@ export function Customers() {
   return (
     <Stack spacing={3}>
       <div>
-        <Typography variant="h1" component="h1">Customers</Typography>
-        <Typography color="text.secondary" sx={{ mt: 1 }}>Everyone on a Northwind plan, and how their account is doing.</Typography>
+        <Typography variant="h1" component="h1">
+          Customers
+        </Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          Everyone on a Northwind plan, and how their account is doing.
+        </Typography>
       </div>
-      <TextField id="search" label="Search" value={query} onChange={(e) => setQuery(e.target.value)} sx={{ maxWidth: 400 }} fullWidth />
+      <TextField
+        id="search"
+        label="Search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        sx={{ maxWidth: 400 }}
+        fullWidth
+      />
       <Paper variant="outlined">
         <TableContainer>
           <Table sx={{ minWidth: 640 }}>
@@ -77,15 +88,31 @@ export function Customers() {
                   <TableCell sx={{ fontWeight: 600 }}>{c.name}</TableCell>
                   <TableCell>{c.email}</TableCell>
                   <TableCell>{c.plan}</TableCell>
-                  <TableCell><Chip size="small" label={c.status} color={statusColor[c.status]} variant="outlined" /></TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={c.status}
+                      color={statusColor[c.status]}
+                      variant="outlined"
+                    />
+                  </TableCell>
                   <TableCell align="right">
-                    <Button size="small" color="error" aria-label={`Delete ${c.name}`} onClick={() => setTarget(c)}>Delete</Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      aria-label={`Delete ${c.name}`}
+                      onClick={() => setTarget(c)}
+                    >
+                      Delete
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: 'text.secondary' }}>No customers found</TableCell>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No customers found
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -100,8 +127,12 @@ export function Customers() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setTarget(null)} color="inherit">Keep</Button>
-          <Button onClick={confirm} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => setTarget(null)} color="inherit">
+            Keep
+          </Button>
+          <Button onClick={confirm} color="error" variant="contained">
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Stack>

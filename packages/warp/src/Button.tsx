@@ -44,19 +44,49 @@ const swept = (e: Emphasis) => e !== 'link'
  * A native button (05 §2): all but link and frame append one [data-part="sweep"], and ::before paints the fill (the wipe,
  * or with `follow` at vivid the two blobs that close on where the hand arrived); frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
-export function Button({ emphasis = 'solid', tone, size, fill, follow, full, icon, collapse, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
-  pressOrigin()   // one listener for the page; it only moves buttons that ask to follow
+export function Button({
+  emphasis = 'solid',
+  tone,
+  size,
+  fill,
+  follow,
+  full,
+  icon,
+  collapse,
+  label,
+  loading,
+  type = 'button',
+  onClick,
+  ui,
+  ref,
+  children,
+  ...rest
+}: ButtonProps) {
+  pressOrigin() // one listener for the page; it only moves buttons that ask to follow
   let host: HTMLButtonElement | undefined
-  useUi(() => ui, () => host)
+  useUi(
+    () => ui,
+    () => host,
+  )
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
   // a loading or aria-disabled button swallows presses (components.html guard())
   const press = (e: MouseEvent) => {
     const el = e.currentTarget as HTMLElement
-    if (el.hasAttribute('data-loading') || el.getAttribute('aria-disabled') === 'true') return e.preventDefault()
+    if (el.hasAttribute('data-loading') || el.getAttribute('aria-disabled') === 'true')
+      return e.preventDefault()
     onClick?.(e)
   }
-  const content = () => <>{glyph.value && <Icon name={glyph.value} />}{collapse && glyph.value && children ? <span data-part="collapse">{children}</span> : children}</>
+  const content = () => (
+    <>
+      {glyph.value && <Icon name={glyph.value} />}
+      {collapse && glyph.value && children ? (
+        <span data-part="collapse">{children}</span>
+      ) : (
+        children
+      )}
+    </>
+  )
   return (
     <button
       type={type}
@@ -71,22 +101,44 @@ export function Button({ emphasis = 'solid', tone, size, fill, follow, full, ico
       data-collapse={glyph.value && children ? collapse : undefined}
       aria-label={label}
       data-sweep={swept(emphasis) ? '' : undefined}
-     
+
       data-loading={loading ? '' : undefined}
       aria-busy={loading ? 'true' : undefined}
       aria-disabled={loading ? 'true' : undefined}
       onClick={press}
       {...rest}
-      ref={n => { host = n; ref?.(n) }}
+      ref={(n) => {
+        host = n
+        ref?.(n)
+      }}
     >
       {emphasis === 'frame' ? (
         <>
           {fill && <span data-part="sweep-fill" aria-hidden="true"></span>}
-          <span data-part="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-          <span data-part="sweep-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-          <span data-part="sweep-outline" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <span data-part="frame-corners" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </span>
+          <span data-part="sweep-corners" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </span>
+          <span data-part="sweep-outline" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </span>
           <span data-part="sweep-label">{content()}</span>
-          <span data-part="sweep-content" aria-hidden="true">{content()}</span>
+          <span data-part="sweep-content" aria-hidden="true">
+            {content()}
+          </span>
         </>
       ) : canLoad.value ? (
         <span data-part="label">{content()}</span>
@@ -94,7 +146,9 @@ export function Button({ emphasis = 'solid', tone, size, fill, follow, full, ico
         content()
       )}
       {loading && <span data-scope="spinner" data-part="spinner" aria-hidden="true"></span>}
-      {emphasis !== 'frame' && emphasis !== 'link' && <span data-part="sweep" aria-hidden="true"></span>}
+      {emphasis !== 'frame' && emphasis !== 'link' && (
+        <span data-part="sweep" aria-hidden="true"></span>
+      )}
     </button>
   )
 }

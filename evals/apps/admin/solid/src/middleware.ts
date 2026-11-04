@@ -1,10 +1,11 @@
-import { createMiddleware } from "@solidjs/start/middleware";
-import { getSessionCookie } from "better-auth/cookies";
-import { redirect } from "h3";
+import { createMiddleware } from '@solidjs/start/middleware'
+import { getSessionCookie } from 'better-auth/cookies'
+import { redirect } from 'h3'
 
 // A quick answer for the signed-out, before any shell is sent. currentSession() does the real check.
 export default createMiddleware([
   (event) => {
-    if (/^\/admin(\/|$)/.test(event.url.pathname) && !getSessionCookie(event.req.headers)) return redirect("/login");
+    if (/^\/admin(\/|$)/.test(event.url.pathname) && !getSessionCookie(event.req.headers))
+      return redirect('/login')
   },
-]);
+])

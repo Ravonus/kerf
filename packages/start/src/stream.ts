@@ -10,4 +10,13 @@ export const stream = ((def: never) => {
   return define(def)
 }) as typeof define
 
-export { backoff, hold, type Link, type Stream, type StreamDef, type StreamFn, type StreamOptions, type StreamStatus } from './live'
+export {
+  backoff,
+  hold,
+  type Link,
+  type Stream,
+  type StreamDef,
+  type StreamFn,
+  type StreamOptions,
+  type StreamStatus,
+} from './live'

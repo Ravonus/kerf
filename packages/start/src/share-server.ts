@@ -23,25 +23,55 @@ const SHARDS = 64
 /** One key at a time, or `{ keys }` to answer a whole join at once: a rule that reads a database runs once for it. */
 export type ShareRule =
   | ((args: { ctx: Context; key: string }) => boolean | Promise<boolean>)
-  | { keys: (args: { ctx: Context; keys: string[] }) => Iterable<string> | Promise<Iterable<string>> }
+  | {
+      keys: (args: { ctx: Context; keys: string[] }) => Iterable<string> | Promise<Iterable<string>>
+    }
 
 type Issue = { issues: { message: string }[] }
 type Sent = { add?: unknown; drop?: unknown; e?: unknown } | null | undefined
 const isIssue = (r: unknown): r is Issue => !!(r as Partial<Issue> | null | undefined)?.issues
-const schema = <T,>(validate: (v: Sent) => T | Issue): StandardSchemaV1<T, T> => ({ '~standard': { version: 1, vendor: 'weft', validate: (v: unknown) => { const r = validate(v as Sent); return isIssue(r) ? r : { value: r } } } })
+const schema = <T>(validate: (v: Sent) => T | Issue): StandardSchemaV1<T, T> => ({
+  '~standard': {
+    version: 1,
+    vendor: 'weft',
+    validate: (v: unknown) => {
+      const r = validate(v as Sent)
+      return isIssue(r) ? r : { value: r }
+    },
+  },
+})
 
 /** What a handler of the share channel is given. */
-interface Said<M = unknown> { msg: M; id: string; ctx: Context; reply: Client['reply'] }
+interface Said<M = unknown> {
+  msg: M
+  id: string
+  ctx: Context
+  reply: Client['reply']
+}
 const no = (message: string): Issue => ({ issues: [{ message }] })
-const isKey = (k: unknown): k is string => typeof k === 'string' && k.length > 0 && k.length <= MAX_KEY
+const isKey = (k: unknown): k is string =>
+  typeof k === 'string' && k.length > 0 && k.length <= MAX_KEY
 const isBits = (b: unknown) => Number.isInteger(b) && (b as number) >= 0 && (b as number) <= 7
-const anything = schema(v => v)
+const anything = schema((v) => v)
 
 /** Who has `k` in `s`: `[id, key, bits]`. */
 type Triple = [id: string, key: string, bits: number]
-interface Client { id: string; keys: Map<string, number>; reply(name: string, msg: unknown): void }
-interface Shard { name: string; refs: number; ch: ReturnType<Hub['channel']>; on: (ev: Ev | null) => void }
-interface Sharing { clients: Map<string, Client>; holders: Map<string, Set<Client>>; shards: Map<number, Shard> }
+interface Client {
+  id: string
+  keys: Map<string, number>
+  reply(name: string, msg: unknown): void
+}
+interface Shard {
+  name: string
+  refs: number
+  ch: ReturnType<Hub['channel']>
+  on: (ev: Ev | null) => void
+}
+interface Sharing {
+  clients: Map<string, Client>
+  holders: Map<string, Set<Client>>
+  shards: Map<number, Shard>
+}
 
 const states = new WeakMap<Hub, Sharing>()
 const stateOf = (h: Hub) => {
@@ -57,7 +87,7 @@ function shardOf(key: string) {
   return (x >>> 0) % SHARDS
 }
 
-const byShard = <T,>(items: T[], key: (item: T) => string) => {
+const byShard = <T>(items: T[], key: (item: T) => string) => {
   const out = new Map<number, T[]>()
   for (const item of items) {
     const s = shardOf(key(item))
@@ -68,29 +98,39 @@ const byShard = <T,>(items: T[], key: (item: T) => string) => {
   return out
 }
 
-const publish = (h: Hub, shard: number, body: object) => h.bus.publish(`weft:s:${shard}`, `{"v":1,${JSON.stringify(body).slice(1)}`)
+const publish = (h: Hub, shard: number, body: object) =>
+  h.bus.publish(`weft:s:${shard}`, `{"v":1,${JSON.stringify(body).slice(1)}`)
 
 function heard(h: Hub, st: Sharing, shard: number, ev: Ev | null) {
   if (!ev) return // the bus lost something: bits are re-said on a beat, and peers age out
-  const m = (ev.p ??= JSON.parse(ev.raw)) as { f?: string; e?: [string, number][]; a?: string; k?: string[]; t?: string; s?: Triple[] }
-  if (m.t) return  (m.s && st.clients.get(m.t)?.reply('b', { s: m.s }))
+  const m = (ev.p ??= JSON.parse(ev.raw)) as {
+    f?: string
+    e?: [string, number][]
+    a?: string
+    k?: string[]
+    t?: string
+    s?: Triple[]
+  }
+  if (m.t) return m.s && st.clients.get(m.t)?.reply('b', { s: m.s })
   if (m.a) {
     const s: Triple[] = []
-    for (const key of m.k ?? []) for (const c of st.holders.get(key) ?? []) {
-      const bits = c.keys.get(key)
-      if (bits && c.id !== m.a) s.push([c.id, key, bits])
-    }
+    for (const key of m.k ?? [])
+      for (const c of st.holders.get(key) ?? []) {
+        const bits = c.keys.get(key)
+        if (bits && c.id !== m.a) s.push([c.id, key, bits])
+      }
     if (s.length) void publish(h, shard, { t: m.a, s })
     return
   }
   // One frame per client per event, whatever it names.
   const each = new Map<Client, Triple[]>()
-  for (const [key, bits] of m.e ?? []) for (const c of st.holders.get(key) ?? []) {
-    if (c.id === m.f) continue
-    const list = each.get(c)
-    if (list) list.push([m.f!, key, bits])
-    else each.set(c, [[m.f!, key, bits]])
-  }
+  for (const [key, bits] of m.e ?? [])
+    for (const c of st.holders.get(key) ?? []) {
+      if (c.id === m.f) continue
+      const list = each.get(c)
+      if (list) list.push([m.f!, key, bits])
+      else each.set(c, [[m.f!, key, bits]])
+    }
   for (const [c, s] of each) c.reply('b', { s })
 }
 
@@ -103,7 +143,9 @@ function hold(h: Hub, st: Sharing, c: Client, key: string) {
   const n = shardOf(key)
   let shard = st.shards.get(n)
   if (!shard) {
-    const name = `weft:s:${n}`, ch = h.channel(name), on = (ev: Ev | null) => heard(h, st, n, ev)
+    const name = `weft:s:${n}`,
+      ch = h.channel(name),
+      on = (ev: Ev | null) => heard(h, st, n, ev)
     ch.listeners.add(on)
     st.shards.set(n, (shard = { name, refs: 0, ch, on }))
   }
@@ -116,7 +158,8 @@ function unhold(h: Hub, st: Sharing, c: Client, key: string) {
   const set = st.holders.get(key)!
   set.delete(c)
   if (!set.size) st.holders.delete(key)
-  const n = shardOf(key), shard = st.shards.get(n)!
+  const n = shardOf(key),
+    shard = st.shards.get(n)!
   if (--shard.refs) return
   st.shards.delete(n)
   h.unlisten(shard.ch, shard.on)
@@ -124,19 +167,31 @@ function unhold(h: Hub, st: Sharing, c: Client, key: string) {
 
 /** Say zero for what these keys held, then let go of them. */
 function release(h: Hub, st: Sharing, c: Client, keys: string[]) {
-  const held = keys.filter(k => c.keys.get(k))
+  const held = keys.filter((k) => c.keys.get(k))
   for (const k of keys) unhold(h, st, c, k)
-  return Promise.all([...byShard(held, k => k)].map(([n, list]) => publish(h, n, { f: c.id, e: list.map(k => [k, 0]) })))
+  return Promise.all(
+    [...byShard(held, (k) => k)].map(([n, list]) =>
+      publish(h, n, { f: c.id, e: list.map((k) => [k, 0]) }),
+    ),
+  )
 }
 
 async function allowedKeys(rule: ShareRule, ctx: Context, keys: string[]) {
   if (!keys.length) return keys
   if (typeof rule !== 'function') {
-    const yes = await Promise.resolve().then(() => rule.keys({ ctx, keys })).catch(() => [])
+    const yes = await Promise.resolve()
+      .then(() => rule.keys({ ctx, keys }))
+      .catch(() => [])
     const passed = new Set(yes)
-    return keys.filter(k => passed.has(k))
+    return keys.filter((k) => passed.has(k))
   }
-  const answers = await Promise.all(keys.map(key => Promise.resolve().then(() => rule({ ctx, key })).catch(() => false)))
+  const answers = await Promise.all(
+    keys.map((key) =>
+      Promise.resolve()
+        .then(() => rule({ ctx, key }))
+        .catch(() => false),
+    ),
+  )
   return keys.filter((_, i) => answers[i])
 }
 
@@ -150,18 +205,36 @@ export function shareChannel(h: Hub): Fn {
     return c
   }
   return {
-    kind: 'channel', $id: SHARE,
+    kind: 'channel',
+    $id: SHARE,
     def: {
       authorize() {
         if (rule) return true
-        throw new StartError('R011', '`interaction({ share })` crossed to the socket, and nothing allows it', 'add `share: ({ ctx, key }) => …` to `realtime()`; `() => true` must be written out')
+        throw new StartError(
+          'R011',
+          '`interaction({ share })` crossed to the socket, and nothing allows it',
+          'add `share: ({ ctx, key }) => …` to `realtime()`; `() => true` must be written out',
+        )
       },
       client: {
-        u: schema<{ add: string[]; drop: string[] }>(v => {
-          const add = v?.add ?? [], drop = v?.drop ?? []
-          return Array.isArray(add) && Array.isArray(drop) && add.length + drop.length <= MAX_BATCH && add.every(isKey) && drop.every(isKey) ? { add, drop } : no(`\`u\` takes up to ${MAX_BATCH} keys of 1 to ${MAX_KEY} characters`)
+        u: schema<{ add: string[]; drop: string[] }>((v) => {
+          const add = v?.add ?? [],
+            drop = v?.drop ?? []
+          return Array.isArray(add) &&
+            Array.isArray(drop) &&
+            add.length + drop.length <= MAX_BATCH &&
+            add.every(isKey) &&
+            drop.every(isKey)
+            ? { add, drop }
+            : no(`\`u\` takes up to ${MAX_BATCH} keys of 1 to ${MAX_KEY} characters`)
         }),
-        set: schema<{ e: [string, number][] }>(v => (Array.isArray(v?.e) && v.e.length <= MAX_BATCH && v.e.every(x => Array.isArray(x) && isKey(x[0]) && isBits(x[1])) ? { e: v.e } : no('`set` takes `[key, bits]` pairs, bits 0 to 7'))),
+        set: schema<{ e: [string, number][] }>((v) =>
+          Array.isArray(v?.e) &&
+          v.e.length <= MAX_BATCH &&
+          v.e.every((x) => Array.isArray(x) && isKey(x[0]) && isBits(x[1]))
+            ? { e: v.e }
+            : no('`set` takes `[key, bits]` pairs, bits 0 to 7'),
+        ),
       },
       server: { ok: anything, b: anything },
       on: {
@@ -169,21 +242,29 @@ export function shareChannel(h: Hub): Fn {
           const c = client(id, reply)
           await release(h, st, c, msg.drop)
           const room = Math.max(0, h.limits.shareKeys - c.keys.size)
-          const fresh = msg.add.filter(k => !c.keys.has(k))
+          const fresh = msg.add.filter((k) => !c.keys.has(k))
           const asked = fresh.slice(0, room)
           const ok = await allowedKeys(rule!, ctx, asked)
           if (!st.clients.has(id)) return // it left while the rule ran
           const passed = new Set(ok)
           for (const k of ok) hold(h, st, c, k)
-          await Promise.all(ok.length ? [...byShard<string>(ok, k => k)].map(([n, k]) => st.shards.get(n)!.ch.ready.then(() => publish(h, n, { a: id, k }))) : [])
-          reply('ok', { id, no: fresh.filter(k => !passed.has(k)) })
+          await Promise.all(
+            ok.length
+              ? [...byShard<string>(ok, (k) => k)].map(([n, k]) =>
+                  st.shards.get(n)!.ch.ready.then(() => publish(h, n, { a: id, k })),
+                )
+              : [],
+          )
+          reply('ok', { id, no: fresh.filter((k) => !passed.has(k)) })
         },
         set({ msg, id }: Said<{ e: [string, number][] }>) {
           const c = st.clients.get(id)
           if (!c) return
           const known = msg.e.filter(([k]) => c.keys.has(k))
           for (const [k, bits] of known) c.keys.set(k, bits)
-          return Promise.all([...byShard(known, e => e[0])].map(([n, e]) => publish(h, n, { f: id, e })))
+          return Promise.all(
+            [...byShard(known, (e) => e[0])].map(([n, e]) => publish(h, n, { f: id, e })),
+          )
         },
       },
       left({ id }: Pick<Said, 'id'>) {
@@ -198,7 +279,7 @@ export function shareChannel(h: Hub): Fn {
         if (!c || !rule) return
         const keys = [...c.keys.keys()]
         const passed = new Set(await allowedKeys(rule, ctx, keys))
-        const gone = keys.filter(k => !passed.has(k))
+        const gone = keys.filter((k) => !passed.has(k))
         if (!gone.length) return
         await release(h, st, c, gone)
         reply('ok', { id, no: gone })

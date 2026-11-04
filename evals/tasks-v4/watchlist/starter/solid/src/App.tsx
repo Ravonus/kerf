@@ -7,13 +7,16 @@ export function App(props: { api: Api }) {
   const [data] = createResource(() =>
     Promise.all([props.api.listStocks(), props.api.listHoldings()]).then(([list, holdings]) => ({
       stocks: list,
-      portfolio: holdings.reduce((sum, h) => sum + h.qty * (list.find(s => s.id === h.id)?.price ?? 0), 0),
+      portfolio: holdings.reduce(
+        (sum, h) => sum + h.qty * (list.find((s) => s.id === h.id)?.price ?? 0),
+        0,
+      ),
     })),
   )
 
   return (
     <Show when={data()} fallback={<p>Loading…</p>}>
-      {loaded => (
+      {(loaded) => (
         <div>
           <Header count={loaded().stocks.length} portfolio={loaded().portfolio} />
           <StockList stocks={loaded().stocks} />

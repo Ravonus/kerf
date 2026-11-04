@@ -1,10 +1,10 @@
-import { MetaProvider } from "@solidjs/meta";
-import { Router } from "@solidjs/router";
-import { FileRoutes } from "@solidjs/start/router";
-import { Suspense } from "solid-js";
+import { MetaProvider } from '@solidjs/meta'
+import { Router } from '@solidjs/router'
+import { FileRoutes } from '@solidjs/start/router'
+import { Suspense } from 'solid-js'
 
-import "./styles/fonts.css";
-import "./styles/globals.css";
+import './styles/fonts.css'
+import './styles/globals.css'
 
 export default function App() {
   return (
@@ -17,5 +17,5 @@ export default function App() {
     >
       <FileRoutes />
     </Router>
-  );
+  )
 }

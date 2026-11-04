@@ -17,7 +17,11 @@ test('children are built once, however often and wherever the component reads th
   function Box({ children }: { children?: unknown }) {
     return <div>{open.value ? <p>{children}</p> : <span>{children}</span>}</div>
   }
-  render(() => <Box><Child /></Box>)
+  render(() => (
+    <Box>
+      <Child />
+    </Box>
+  ))
   const child = screen.getByText('child')
   open.value = false
   await flush()
@@ -49,7 +53,9 @@ test('rest props spread on a native element stay live', async () => {
   expect(button.getAttribute('title')).toBe('one')
   expect(button.className).toBe('b')
   expect(button.textContent).toBe('go')
-  await expect(() => { title.value = 'two' }).toTouchAtMost(1)
+  await expect(() => {
+    title.value = 'two'
+  }).toTouchAtMost(1)
   expect(button.getAttribute('title')).toBe('two')
   await userEvent.setup().click(button)
   expect(clicks).toBe(1)
@@ -59,13 +65,20 @@ test('a rest parameter held in a variable is the same live view as the parameter
   const title = state('one')
   function Box({ label, ...rest }: { label: string; [k: string]: unknown }) {
     const attrs = rest // not a setup-time read (W001 no longer fires here)
-    return <p {...attrs} data-n={Object.keys(rest).length}>{label}{rest.label === undefined ? '' : '!'}</p>
+    return (
+      <p {...attrs} data-n={Object.keys(rest).length}>
+        {label}
+        {rest.label === undefined ? '' : '!'}
+      </p>
+    )
   }
   render(() => <Box label="x" title={title.value} />)
   const p = screen.getByText('x')
   expect(p.title).toBe('one')
   expect(p.dataset.n).toBe('1')
-  await expect(() => { title.value = 'two' }).toTouchAtMost(1)
+  await expect(() => {
+    title.value = 'two'
+  }).toTouchAtMost(1)
   expect(p.title).toBe('two')
 })
 
@@ -75,7 +88,15 @@ test('ref to an imported or const function calls it; ref to a let beside a sprea
   // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let mine: HTMLElement | undefined
   function A(props: { title: string }) {
-    return <div><p ref={seenRef}>a</p><i ref={keep}>b</i><b ref={mine} {...props}>c</b></div>
+    return (
+      <div>
+        <p ref={seenRef}>a</p>
+        <i ref={keep}>b</i>
+        <b ref={mine} {...props}>
+          c
+        </b>
+      </div>
+    )
   }
   render(() => <A title="t" />)
   expect(seen).toEqual([screen.getByText('a')])
@@ -86,31 +107,60 @@ test('ref to an imported or const function calls it; ref to a let beside a sprea
 
 test('key={index} keys rows by position', async () => {
   const items = state(['a', 'b'])
-  render(() => <ul>{items.value.map((x, i) => <li key={i}>{x}</li>)}</ul>)
+  render(() => (
+    <ul>
+      {items.value.map((x, i) => (
+        <li key={i}>{x}</li>
+      ))}
+    </ul>
+  ))
   const first = screen.getByText('a')
   items.value = ['c', 'b', 'd']
   await flush()
-  expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['c', 'b', 'd'])
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['c', 'b', 'd'])
   expect(screen.getByText('c')).toBe(first) // the row at position 0 stayed and took the new item
 })
 
 test('fragment rows are keyed: a reorder moves them', async () => {
-  const items = state([{ id: 'a', v: 1 }, { id: 'b', v: 2 }])
-  render(() => <dl>{items.value.map(x => <><dt key={x.id}>{x.id}</dt><dd>{x.v}</dd></>)}</dl>)
+  const items = state([
+    { id: 'a', v: 1 },
+    { id: 'b', v: 2 },
+  ])
+  render(() => (
+    <dl>
+      {items.value.map((x) => (
+        <>
+          <dt key={x.id}>{x.id}</dt>
+          <dd>{x.v}</dd>
+        </>
+      ))}
+    </dl>
+  ))
   const before = screen.getByText('a')
-  const t = await touches(() => { items.value = [items.value[1]!, { id: 'a', v: 9 }] })
+  const t = await touches(() => {
+    items.value = [items.value[1]!, { id: 'a', v: 9 }]
+  })
   expect(screen.getByText('a')).toBe(before)
   expect(screen.getByText('9')).toBeTruthy()
   expect(t.added).toBeLessThanOrEqual(2) // one row moved (dt + dd), none rebuilt
 })
 
 test('conditional rows are keyed by the key on either branch', async () => {
-  const items = state([{ id: 'a', on: true }, { id: 'b', on: false }])
-  render(() => <ul>{items.value.map(x => (x.on ? <li key={x.id}>on {x.id}</li> : <li key={x.id}>off {x.id}</li>))}</ul>)
+  const items = state([
+    { id: 'a', on: true },
+    { id: 'b', on: false },
+  ])
+  render(() => (
+    <ul>
+      {items.value.map((x) =>
+        x.on ? <li key={x.id}>on {x.id}</li> : <li key={x.id}>off {x.id}</li>,
+      )}
+    </ul>
+  ))
   const b = screen.getByText('off b')
   items.value = [items.value[1]!, items.value[0]!]
   await flush()
-  expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['off b', 'on a'])
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['off b', 'on a'])
   expect(screen.getByText('off b')).toBe(b)
 })
 

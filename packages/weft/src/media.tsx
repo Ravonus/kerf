@@ -73,11 +73,16 @@ const PHONE = '(max-width: 599px)'
  * The `sizes` attribute: an explicit one, else from `width`, else `auto` for lazy images (the browser uses the
  * laid-out width; `100vw` where `auto` isn't supported) and `100vw` for eager ones (M010 flags that case).
  */
-export function mediaSizes(width: string | undefined, sizes: string | undefined, lazy: boolean): string {
+export function mediaSizes(
+  width: string | undefined,
+  sizes: string | undefined,
+  lazy: boolean,
+): string {
   if (sizes) return sizes
   if (width) {
     const frac = /^(\d+)\s*\/\s*(\d+)$/.exec(width)
-    if (frac) return `${PHONE} 100vw, ${Math.round((Number(frac[1]) / Number(frac[2])) * 10000) / 100}vw`
+    if (frac)
+      return `${PHONE} 100vw, ${Math.round((Number(frac[1]) / Number(frac[2])) * 10000) / 100}vw`
     // oxlint-disable-next-line unicorn/prefer-string-starts-ends-with -- the regex is the shorter bytes in every page with a <Media>
     return /vw$/.test(width) ? `${PHONE} 100vw, ${width}` : width
   }
@@ -85,10 +90,15 @@ export function mediaSizes(width: string | undefined, sizes: string | undefined,
 }
 
 /** Inline style: the box (aspect ratio), the placeholder behind a photo, the focal point. */
-export function mediaStyle(a: MediaAsset, focus?: [number, number], fit?: 'cover' | 'contain'): string {
+export function mediaStyle(
+  a: MediaAsset,
+  focus?: [number, number],
+  fit?: 'cover' | 'contain',
+): string {
   let s = `aspect-ratio:${a.width}/${a.height};max-inline-size:100%;block-size:auto`
   // Only photos: a placeholder would show through a transparent graphic once it loads.
-  if (a.kind === 'photo' && (a.placeholder || a.dominant)) s += `;background:${a.dominant ?? ''}${a.placeholder ? ` url(${a.placeholder})` : ''} center/cover no-repeat`
+  if (a.kind === 'photo' && (a.placeholder || a.dominant))
+    s += `;background:${a.dominant ?? ''}${a.placeholder ? ` url(${a.placeholder})` : ''} center/cover no-repeat`
   if (fit) s += `;object-fit:${fit}`
   if (focus) s += `;object-position:${Math.round(focus[0] * 100)}% ${Math.round(focus[1] * 100)}%`
   return s
@@ -100,26 +110,63 @@ const fallbackSrcset = (a: MediaAsset) => a.sources.at(-1)?.srcset
  * `<source>` has no `srcset` on `<video>`: one per codec and width, efficient codecs first, each width behind a `media`
  * query at half its pixels (a 2× screen), the largest with none. The browser plays the first it can and that matches.
  */
-export function timedSources(a: MediaAsset): { src: string; type: string; media?: string | undefined }[] {
-  return a.sources.flatMap(s => {
-    const rungs = s.srcset.split(', ').map(r => r.split(' '))
-    return rungs.map(([src, w], i) => (i < rungs.length - 1 ? { src: src!, type: s.type, media: `(max-width: ${Math.round(parseInt(w!) / 2)}px)` } : { src: src!, type: s.type }))
+export function timedSources(
+  a: MediaAsset,
+): { src: string; type: string; media?: string | undefined }[] {
+  return a.sources.flatMap((s) => {
+    const rungs = s.srcset.split(', ').map((r) => r.split(' '))
+    return rungs.map(([src, w], i) =>
+      i < rungs.length - 1
+        ? { src: src!, type: s.type, media: `(max-width: ${Math.round(parseInt(w!) / 2)}px)` }
+        : { src: src!, type: s.type },
+    )
   })
 }
 
-function timed({ src, alt, decorative, priority, focus, fit, timeline, motion, controls, ...rest }: MediaProps) {
+function timed({
+  src,
+  alt,
+  decorative,
+  priority,
+  focus,
+  fit,
+  timeline,
+  motion,
+  controls,
+  ...rest
+}: MediaProps) {
   let el!: HTMLVideoElement
   onMount(() => {
     if (timeline) timeline.bind(el)
-    if (src.animated && motion !== 'always' && matchMedia('(prefers-reduced-motion: reduce)').matches) el.pause()
+    if (
+      src.animated &&
+      motion !== 'always' &&
+      matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+      el.pause()
     if (src.loop && src.loop > 1) {
       let left = src.loop - 1
-      el.addEventListener('ended', () => { if (left-- > 0) void el.play() })
+      el.addEventListener('ended', () => {
+        if (left-- > 0) void el.play()
+      })
     }
-    if (src.copy) void import('./media-swap').then(m => m.attach(el, src))
+    if (src.copy) void import('./media-swap').then((m) => m.attach(el, src))
   })
-  const sources = timedSources(src).map(s => <source key={s.src} src={s.src} type={s.type} media={s.media} />)
-  if (src.kind === 'audio') return <audio ref={(n: HTMLElement) => (el = n as HTMLVideoElement)} controls preload={priority ? 'auto' : 'metadata'} aria-label={decorative ? undefined : alt} {...rest}>{sources}</audio>
+  const sources = timedSources(src).map((s) => (
+    <source key={s.src} src={s.src} type={s.type} media={s.media} />
+  ))
+  if (src.kind === 'audio')
+    return (
+      <audio
+        ref={(n: HTMLElement) => (el = n as HTMLVideoElement)}
+        controls
+        preload={priority ? 'auto' : 'metadata'}
+        aria-label={decorative ? undefined : alt}
+        {...rest}
+      >
+        {sources}
+      </audio>
+    )
   const moving = !!src.animated
   const video = (
     <video
@@ -143,7 +190,11 @@ function timed({ src, alt, decorative, priority, focus, fit, timeline, motion, c
       {sources}
     </video>
   )
-  return src.copy ? <span style="position:relative;display:inline-block;max-inline-size:100%">{video}</span> : video
+  return src.copy ? (
+    <span style="position:relative;display:inline-block;max-inline-size:100%">{video}</span>
+  ) : (
+    video
+  )
 }
 
 /**
@@ -151,12 +202,14 @@ function timed({ src, alt, decorative, priority, focus, fit, timeline, motion, c
  * when the asset has them (AVIF isn't in every engine weft targets: iOS 15), else one `<img>`.
  */
 export function Media(props: MediaProps) {
-  return untrack(() => (props.src.kind === 'video' || props.src.kind === 'audio' ? timed(props) : still(props)))
+  return untrack(() =>
+    props.src.kind === 'video' || props.src.kind === 'audio' ? timed(props) : still(props),
+  )
 }
 
 function still({ src, alt, decorative, priority, width, sizes, focus, fit, ...rest }: MediaProps) {
   let el!: HTMLImageElement
-  if (src.copy) onMount(() => void import('./media-swap').then(m => m.attach(el, src)))
+  if (src.copy) onMount(() => void import('./media-swap').then((m) => m.attach(el, src)))
   const img = () => (
     <img
       ref={(n: HTMLImageElement) => (el = n)}
@@ -177,7 +230,14 @@ function still({ src, alt, decorative, priority, width, sizes, focus, fit, ...re
     <>
       {src.sources.length > 1 ? (
         <picture>
-          {src.sources.slice(0, -1).map(s => <source key={s.type} type={s.type} srcset={s.srcset} sizes={mediaSizes(width, sizes, !priority)} />)}
+          {src.sources.slice(0, -1).map((s) => (
+            <source
+              key={s.type}
+              type={s.type}
+              srcset={s.srcset}
+              sizes={mediaSizes(width, sizes, !priority)}
+            />
+          ))}
           {img()}
         </picture>
       ) : (

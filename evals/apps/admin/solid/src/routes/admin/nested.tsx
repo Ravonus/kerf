@@ -1,10 +1,10 @@
-import { Title } from "@solidjs/meta";
-import { createAsync, type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
+import { Title } from '@solidjs/meta'
+import { createAsync, type RouteDefinition, type RouteSectionProps } from '@solidjs/router'
 
-import { Loads } from "~/components/states";
-import { getReach } from "~/lib/data";
+import { Loads } from '~/components/states'
+import { getReach } from '~/lib/data'
 
-export const route = { preload: () => void getReach() } satisfies RouteDefinition;
+export const route = { preload: () => void getReach() } satisfies RouteDefinition
 
 export default function NestedSection(props: RouteSectionProps) {
   return (
@@ -16,14 +16,15 @@ export default function NestedSection(props: RouteSectionProps) {
       </Loads>
       <div class="mt-6">{props.children}</div>
     </>
-  );
+  )
 }
 
 function Reach() {
-  const reach = createAsync(() => getReach());
+  const reach = createAsync(() => getReach())
   return (
     <p class="mt-1 text-sm text-muted">
-      {reach()?.customers.toLocaleString("en-US")} customers across {reach()?.cities.toLocaleString("en-US")} cities.
+      {reach()?.customers.toLocaleString('en-US')} customers across{' '}
+      {reach()?.cities.toLocaleString('en-US')} cities.
     </p>
-  );
+  )
 }

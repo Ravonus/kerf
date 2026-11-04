@@ -5,7 +5,11 @@
 import type { MeasureProvider } from './surface'
 
 /** One result of a suite: its name, whether it held, and what it saw. */
-export interface Check { name: string; ok: boolean; detail: string }
+export interface Check {
+  name: string
+  ok: boolean
+  detail: string
+}
 
 /** Texts a measure suite lays out and compares with the DOM. */
 export interface Corpus {
@@ -29,29 +33,51 @@ export interface MeasureSuiteOptions {
   budgets?: { layout?: number; prepare?: number }
 }
 
-
 /** Run `fn` with layout-forcing DOM reads throwing. */
 function pure<T>(fn: () => T): T {
   const undo: (() => void)[] = []
-  const forbid = (name: string) => () => { throw new Error(`layout-forcing read: ${name}`) }
-  for (const [proto, key] of [[HTMLElement.prototype, 'offsetHeight'], [HTMLElement.prototype, 'offsetWidth'], [Element.prototype, 'clientHeight'], [Element.prototype, 'scrollHeight']] as [object, string][]) {
+  const forbid = (name: string) => () => {
+    throw new Error(`layout-forcing read: ${name}`)
+  }
+  for (const [proto, key] of [
+    [HTMLElement.prototype, 'offsetHeight'],
+    [HTMLElement.prototype, 'offsetWidth'],
+    [Element.prototype, 'clientHeight'],
+    [Element.prototype, 'scrollHeight'],
+  ] as [object, string][]) {
     const d = Object.getOwnPropertyDescriptor(proto, key)!
     Object.defineProperty(proto, key, { ...d, get: forbid(key) })
     undo.push(() => Object.defineProperty(proto, key, d))
   }
-  for (const [host, key] of [[Element.prototype, 'getBoundingClientRect'], [Element.prototype, 'getClientRects'], [window, 'getComputedStyle']] as unknown as [Record<string, unknown>, string][]) {
+  for (const [host, key] of [
+    [Element.prototype, 'getBoundingClientRect'],
+    [Element.prototype, 'getClientRects'],
+    [window, 'getComputedStyle'],
+  ] as unknown as [Record<string, unknown>, string][]) {
     const f = host[key]
     host[key] = forbid(key)
-    undo.push(() => { host[key] = f })
+    undo.push(() => {
+      host[key] = f
+    })
   }
-  try { return fn() } finally { for (const u of undo) u() }
+  try {
+    return fn()
+  } finally {
+    for (const u of undo) u()
+  }
 }
 
 const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[xs.length >> 1]!
 
 /** One Check per requirement of `text.measure@1`. Any `ok: false` is P119. */
-export async function textMeasureSuite(p: MeasureProvider, o: MeasureSuiteOptions): Promise<Check[]> {
-  const family = o.family ?? 'Arial', size = o.size ?? 16, lineHeight = o.lineHeight ?? 24, widths = o.widths ?? [320, 480]
+export async function textMeasureSuite(
+  p: MeasureProvider,
+  o: MeasureSuiteOptions,
+): Promise<Check[]> {
+  const family = o.family ?? 'Arial',
+    size = o.size ?? 16,
+    lineHeight = o.lineHeight ?? 24,
+    widths = o.widths ?? [320, 480]
   const font = `${size}px ${family}`
   const out: Check[] = []
 
@@ -61,28 +87,39 @@ export async function textMeasureSuite(p: MeasureProvider, o: MeasureSuiteOption
     box.style.width = `${width}px`
     box.style.font = face
     box.style.lineHeight = `${lineHeight}px`
-    box.replaceChildren(...texts.map(t => Object.assign(document.createElement('div'), { textContent: t })))
-    return [...box.children].map(c => c.getBoundingClientRect().height)
+    box.replaceChildren(
+      ...texts.map((t) => Object.assign(document.createElement('div'), { textContent: t })),
+    )
+    return [...box.children].map((c) => c.getBoundingClientRect().height)
   }
   const prepared = async (texts: string[], face = font, opts?: { segments?: boolean }) => {
-    const hs = texts.map(t => p.prepare(t, face, opts))
+    const hs = texts.map((t) => p.prepare(t, face, opts))
     for (const h of hs) await h.ready
     return hs
   }
 
   for (const corpus of o.corpora) {
     const hs = await prepared(corpus.texts)
-    let wrong = 0, total = 0, example = ''
+    let wrong = 0,
+      total = 0,
+      example = ''
     for (const w of widths) {
       const real = dom(corpus.texts, w)
       for (let i = 0; i < hs.length; i++) {
         total++
         const got = p.layout(hs[i]!, w, lineHeight).height
-        if (Math.abs(got - real[i]!) > 0.5) { wrong++; example ||= `#${i} at ${w}px: ${got} vs DOM ${real[i]}` }
+        if (Math.abs(got - real[i]!) > 0.5) {
+          wrong++
+          example ||= `#${i} at ${w}px: ${got} vs DOM ${real[i]}`
+        }
       }
     }
     const allow = corpus.allow ?? 0
-    out.push({ name: `accuracy: ${corpus.name}`, ok: wrong / total <= allow, detail: `${wrong}/${total} heights differ from the DOM (allowed ${(allow * 100).toFixed(1)}%)${example ? `; ${example}` : ''}` })
+    out.push({
+      name: `accuracy: ${corpus.name}`,
+      ok: wrong / total <= allow,
+      detail: `${wrong}/${total} heights differ from the DOM (allowed ${(allow * 100).toFixed(1)}%)${example ? `; ${example}` : ''}`,
+    })
   }
 
   const first = o.corpora[0]!.texts
@@ -92,19 +129,38 @@ export async function textMeasureSuite(p: MeasureProvider, o: MeasureSuiteOption
     const w = widths[0]!
     const lines = p.lines(lined[i]!, w)
     const count = p.layout(lined[i]!, w, lineHeight).lineCount
-    const text = lines.map(l => p.lineText(lined[i]!, l)).join(' ').replace(/\s+/g, '')
+    const text = lines
+      .map((l) => p.lineText(lined[i]!, l))
+      .join(' ')
+      .replace(/\s+/g, '')
     if (lines.length !== count) broken = `#${i}: ${lines.length} lines, layout says ${count}`
-    else if (text !== first[i]!.replace(/\s+/g, '')) broken = `#${i}: the lines' text isn't the paragraph's`
+    else if (text !== first[i]!.replace(/\s+/g, ''))
+      broken = `#${i}: the lines' text isn't the paragraph's`
   }
-  out.push({ name: 'lines: agree with layout, and lineText returns the text', ok: !broken, detail: broken || `${lined.length} paragraphs` })
+  out.push({
+    name: 'lines: agree with layout, and lineText returns the text',
+    ok: !broken,
+    detail: broken || `${lined.length} paragraphs`,
+  })
 
   const hs = await prepared(first)
   let impure = ''
-  try { pure(() => { for (const h of hs) p.layout(h, widths[0]!, lineHeight) }) } catch (e) { impure = (e as Error).message }
-  out.push({ name: 'purity: layout reads no DOM', ok: !impure, detail: impure || 'no layout-forcing read' })
+  try {
+    pure(() => {
+      for (const h of hs) p.layout(h, widths[0]!, lineHeight)
+    })
+  } catch (e) {
+    impure = (e as Error).message
+  }
+  out.push({
+    name: 'purity: layout reads no DOM',
+    ok: !impure,
+    detail: impure || 'no layout-forcing read',
+  })
 
   const per1k = (n: number, ms: number) => (ms * 1000) / n
-  const layoutMs: number[] = [], prepareMs: number[] = []
+  const layoutMs: number[] = [],
+    prepareMs: number[] = []
   for (let r = 0; r < 9; r++) {
     const t0 = performance.now()
     for (const h of hs) p.layout(h, widths[1] ?? widths[0]!, lineHeight)
@@ -113,23 +169,38 @@ export async function textMeasureSuite(p: MeasureProvider, o: MeasureSuiteOption
     for (const t of first) p.prepare(t, font)
     prepareMs.push(per1k(first.length, performance.now() - t1))
   }
-  const layoutBudget = o.budgets?.layout ?? 0.5, prepareBudget = o.budgets?.prepare ?? 15
-  out.push({ name: 'speed: layout', ok: median(layoutMs) <= layoutBudget, detail: `${median(layoutMs).toFixed(3)} ms per 1k (≤ ${layoutBudget})` })
-  out.push({ name: 'speed: prepare', ok: median(prepareMs) <= prepareBudget, detail: `${median(prepareMs).toFixed(2)} ms per 1k, widths cached (≤ ${prepareBudget})` })
+  const layoutBudget = o.budgets?.layout ?? 0.5,
+    prepareBudget = o.budgets?.prepare ?? 15
+  out.push({
+    name: 'speed: layout',
+    ok: median(layoutMs) <= layoutBudget,
+    detail: `${median(layoutMs).toFixed(3)} ms per 1k (≤ ${layoutBudget})`,
+  })
+  out.push({
+    name: 'speed: prepare',
+    ok: median(prepareMs) <= prepareBudget,
+    detail: `${median(prepareMs).toFixed(2)} ms per 1k, widths cached (≤ ${prepareBudget})`,
+  })
 
   if (o.webFont) {
     const face = `${size}px "${o.webFont.family}"`
     const stale = await prepared(first, face)
-    const before = stale.map(h => p.layout(h, widths[0]!, lineHeight).height)
+    const before = stale.map((h) => p.layout(h, widths[0]!, lineHeight).height)
     const f = new FontFace(o.webFont.family, `url(${o.webFont.url})`)
     document.fonts.add(await f.load())
     p.clear()
     const fresh = await prepared(first, face)
     const real = dom(first, widths[0]!, face)
     let wrong = 0
-    fresh.forEach((h, i) => { if (Math.abs(p.layout(h, widths[0]!, lineHeight).height - real[i]!) > 0.5) wrong++ })
+    fresh.forEach((h, i) => {
+      if (Math.abs(p.layout(h, widths[0]!, lineHeight).height - real[i]!) > 0.5) wrong++
+    })
     const moved = before.filter((h, i) => h !== real[i]).length
-    out.push({ name: 'fonts: after clear(), results match the real face', ok: wrong === 0 && moved > 0, detail: `${wrong}/${fresh.length} differ from the DOM; the font changed ${moved} heights, so this run could fail` })
+    out.push({
+      name: 'fonts: after clear(), results match the real face',
+      ok: wrong === 0 && moved > 0,
+      detail: `${wrong}/${fresh.length} differ from the DOM; the font changed ${moved} heights, so this run could fail`,
+    })
   }
   box.remove()
   return out
@@ -137,7 +208,10 @@ export async function textMeasureSuite(p: MeasureProvider, o: MeasureSuiteOption
 
 // ---- realtime.bus@1 and db.adapter@1: plain Node, against a real server where the provider has one ----
 
-const pause = (ms: number) => new Promise(ok => { setTimeout(ok, ms) })
+const pause = (ms: number) =>
+  new Promise((ok) => {
+    setTimeout(ok, ms)
+  })
 const settle = async (done: () => boolean, ms = 5000) => {
   for (const end = Date.now() + ms; !done() && Date.now() < end;) await pause(5)
   return done()
@@ -163,50 +237,83 @@ export interface BusSuiteOptions {
 export async function busSuite({ make, restart }: BusSuiteOptions): Promise<Check[]> {
   const out: Check[] = []
   const check = (name: string, ok: boolean, detail = '') => void out.push({ name, ok, detail })
-  const a = await make(), b = await make()
+  const a = await make(),
+    b = await make()
   const room = (s: string) => `weft:c:conform-${Date.now()}-${s}:{"room":"a*b> c é"}`
   try {
     {
       const got: string[] = []
       let gaps = 0
       const c = room('cross')
-      const off = await a.subscribe(c, m => got.push(m), () => gaps++)
+      const off = await a.subscribe(
+        c,
+        (m) => got.push(m),
+        () => gaps++,
+      )
       await b.publish(c, 'one') // straight after `subscribe` resolves: it means listening
-      check('a publish after `subscribe` resolves arrives on the other instance', await settle(() => got.length === 1), `${got.length} messages`)
+      check(
+        'a publish after `subscribe` resolves arrives on the other instance',
+        await settle(() => got.length === 1),
+        `${got.length} messages`,
+      )
       check('a first connect is not a gap', gaps === 0, `${gaps} gaps`)
       await pause(100)
       check('a message arrives once', got.length === 1, `${got.length} deliveries`)
       for (let i = 0; i < 200; i++) await b.publish(c, `m${i}`)
       await settle(() => got.length === 201)
-      check('messages from one publisher stay in order', got.slice(1).every((m, i) => m === `m${i}`) && got.length === 201, `${got.length} of 201`)
+      check(
+        'messages from one publisher stay in order',
+        got.slice(1).every((m, i) => m === `m${i}`) && got.length === 201,
+        `${got.length} of 201`,
+      )
       off()
       await b.publish(c, 'late')
       await pause(100)
       check('nothing arrives after the stop', got.at(-1) !== 'late', got.at(-1) ?? '')
     }
     {
-      const got: string[] = [], c = room('apart'), big = `é${'x'.repeat(200_000)}"\n`
-      await a.subscribe(c, m => got.push(m))
+      const got: string[] = [],
+        c = room('apart'),
+        big = `é${'x'.repeat(200_000)}"\n`
+      await a.subscribe(c, (m) => got.push(m))
       await b.publish(room('other'), 'not here')
       await b.publish(c, big)
       await settle(() => got.length > 0)
-      check('channels are separate, and a large message survives byte for byte', got.length === 1 && got[0] === big, `${got.length} messages`)
+      check(
+        'channels are separate, and a large message survives byte for byte',
+        got.length === 1 && got[0] === big,
+        `${got.length} messages`,
+      )
     }
     {
-      const c = room('both'), first: string[] = [], second: string[] = []
-      const off = await a.subscribe(c, m => first.push(m))
-      await a.subscribe(c, m => second.push(m))
+      const c = room('both'),
+        first: string[] = [],
+        second: string[] = []
+      const off = await a.subscribe(c, (m) => first.push(m))
+      await a.subscribe(c, (m) => second.push(m))
       off()
       await b.publish(c, 'x')
-      check('stopping one listener leaves the other on the channel', await settle(() => second.length === 1) && !first.length, `${second.length} / ${first.length}`)
+      check(
+        'stopping one listener leaves the other on the channel',
+        (await settle(() => second.length === 1)) && !first.length,
+        `${second.length} / ${first.length}`,
+      )
     }
     if (restart) {
-      const c = room('gap'), got: string[] = []
+      const c = room('gap'),
+        got: string[] = []
       let gaps = 0
-      await a.subscribe(c, m => got.push(m), () => gaps++)
+      await a.subscribe(
+        c,
+        (m) => got.push(m),
+        () => gaps++,
+      )
       await restart()
       check('a dropped connection is a gap', await settle(() => gaps > 0, 15_000), `${gaps} gaps`)
-      const ok = await settle(() => { void b.publish(c, 'after').catch(() => {}); return got.length > 0 }, 15_000)
+      const ok = await settle(() => {
+        void b.publish(c, 'after').catch(() => {})
+        return got.length > 0
+      }, 15_000)
       check('delivery resumes after a gap', ok, `${got.length} messages`)
     }
   } finally {
@@ -218,7 +325,9 @@ export async function busSuite({ make, restart }: BusSuiteOptions): Promise<Chec
 
 /** The list source under test: what a data source has to do. */
 export interface SourceLike<R = unknown> {
-  list(params: unknown): Promise<{ items: R[]; total?: number; next?: string | number; prev?: string | number }>
+  list(
+    params: unknown,
+  ): Promise<{ items: R[]; total?: number; next?: string | number; prev?: string | number }>
   get(id: unknown): Promise<R | null | undefined>
   create(data: Record<string, unknown>): Promise<R>
   update(id: unknown, patch: Record<string, unknown>): Promise<R>
@@ -227,7 +336,12 @@ export interface SourceLike<R = unknown> {
 }
 
 /** A row of `LIST_ROWS`, in its public names. */
-export interface ListRow { id: string; title: string; status: string; rank: number }
+export interface ListRow {
+  id: string
+  title: string
+  status: string
+  rank: number
+}
 
 /** The rows a source under test starts with. `secret` exists in storage and is left out of its `columns`. */
 export const LIST_ROWS: (ListRow & { secret: string })[] = Array.from({ length: 25 }, (_, i) => ({
@@ -245,7 +359,15 @@ export interface ListSuiteOptions {
   decode: (cursor: string) => [unknown, unknown] | null
 }
 
-const listParams = (p: Record<string, unknown>) => ({ mode: 'page', limit: 10, offset: 0, after: null, sort: null, filter: {}, ...p })
+const listParams = (p: Record<string, unknown>) => ({
+  mode: 'page',
+  limit: 10,
+  offset: 0,
+  after: null,
+  sort: null,
+  filter: {},
+  ...p,
+})
 
 /** One Check per requirement of `db.adapter@1`. Runs over `limits`, so a source says what it can't do. Any `ok: false` is P119. */
 export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Check[]> {
@@ -260,10 +382,11 @@ export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Che
       check(name, err?.code === 'Q002' || err?.name === 'StartError', String(err?.message ?? e))
     }
   }
-  const s = await make() as SourceLike<ListRow>
-  const ask = (p: Record<string, unknown>) => listParams({ mode: s.limits?.page === false ? 'cursor' : 'page', ...p }) // or a refusal proves nothing
+  const s = (await make()) as SourceLike<ListRow>
+  const ask = (p: Record<string, unknown>) =>
+    listParams({ mode: s.limits?.page === false ? 'cursor' : 'page', ...p }) // or a refusal proves nothing
   const sortable = (f: string) => !s.limits?.sort || s.limits.sort.includes(f)
-  const ids = (r: { items: ListRow[] }) => r.items.map(i => i.id)
+  const ids = (r: { items: ListRow[] }) => r.items.map((i) => i.id)
   const count = (f: (r: ListRow) => boolean) => LIST_ROWS.filter(f).length
   const walk = async (sort: { field: string; dir: string } | null, filter = {}) => {
     const seen: ListRow[] = []
@@ -279,55 +402,133 @@ export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Che
 
   if (s.limits?.page !== false) {
     const first = await s.list(ask({ limit: 10 }))
-    check('page: a page, its total and a next', first.items.length === 10 && first.total === 25 && first.next === 2 && first.prev === undefined, JSON.stringify({ n: first.items.length, t: first.total, next: first.next }))
+    check(
+      'page: a page, its total and a next',
+      first.items.length === 10 &&
+        first.total === 25 &&
+        first.next === 2 &&
+        first.prev === undefined,
+      JSON.stringify({ n: first.items.length, t: first.total, next: first.next }),
+    )
     const last = await s.list(ask({ limit: 10, offset: 20 }))
-    check('page: the last page has no next', last.items.length === 5 && last.next === undefined && last.prev === 2, JSON.stringify({ n: last.items.length, next: last.next, prev: last.prev }))
-    const a = await s.list(ask({ limit: 25, sort: { field: 'title', dir: 'asc' } })), d = await s.list(ask({ limit: 25, sort: { field: 'title', dir: 'desc' } }))
-    if (sortable('title')) check('page: desc is asc reversed', ids(a).join() === ids(d).reverse().join(), ids(a).slice(0, 3).join())
+    check(
+      'page: the last page has no next',
+      last.items.length === 5 && last.next === undefined && last.prev === 2,
+      JSON.stringify({ n: last.items.length, next: last.next, prev: last.prev }),
+    )
+    const a = await s.list(ask({ limit: 25, sort: { field: 'title', dir: 'asc' } })),
+      d = await s.list(ask({ limit: 25, sort: { field: 'title', dir: 'desc' } }))
+    if (sortable('title'))
+      check(
+        'page: desc is asc reversed',
+        ids(a).join() === ids(d).reverse().join(),
+        ids(a).slice(0, 3).join(),
+      )
   }
   if (sortable('rank')) {
     for (const dir of ['asc', 'desc']) {
       const seen = await walk({ field: 'rank', dir })
-      check(`cursor: ${dir} over ties sees every row once`, new Set(seen.map(r => r.id)).size === 25 && seen.length === 25, `${seen.length} rows, ${new Set(seen.map(r => r.id)).size} distinct`)
-      check(`cursor: ${dir} stays sorted`, seen.every((r, i) => !i || (dir === 'asc' ? seen[i - 1]!.rank <= r.rank : seen[i - 1]!.rank >= r.rank)), seen.slice(0, 6).map(r => r.rank).join())
+      check(
+        `cursor: ${dir} over ties sees every row once`,
+        new Set(seen.map((r) => r.id)).size === 25 && seen.length === 25,
+        `${seen.length} rows, ${new Set(seen.map((r) => r.id)).size} distinct`,
+      )
+      check(
+        `cursor: ${dir} stays sorted`,
+        seen.every(
+          (r, i) =>
+            !i || (dir === 'asc' ? seen[i - 1]!.rank <= r.rank : seen[i - 1]!.rank >= r.rank),
+        ),
+        seen
+          .slice(0, 6)
+          .map((r) => r.rank)
+          .join(),
+      )
     }
   }
   const unsorted = await walk(null)
-  check('cursor: no sort still walks every row by id', unsorted.length === 25 && new Set(unsorted.map(r => r.id)).size === 25, `${unsorted.length} rows`)
+  check(
+    'cursor: no sort still walks every row by id',
+    unsorted.length === 25 && new Set(unsorted.map((r) => r.id)).size === 25,
+    `${unsorted.length} rows`,
+  )
 
   const open = await walk(null, { status: 'open' })
-  check('filter: equals', open.length === count(r => r.status === 'open') && open.every(r => r.status === 'open'), `${open.length}`)
+  check(
+    'filter: equals',
+    open.length === count((r) => r.status === 'open') && open.every((r) => r.status === 'open'),
+    `${open.length}`,
+  )
   const two = await walk(null, { status: ['open', 'held'] })
-  check('filter: a list means any of them', two.length === count(r => r.status !== 'done'), `${two.length}`)
+  check(
+    'filter: a list means any of them',
+    two.length === count((r) => r.status !== 'done'),
+    `${two.length}`,
+  )
   const none = await walk(null, { status: "x' OR '1'='1" })
   check('filter: a value is only ever a value', none.length === 0, `${none.length}`)
-  check('filter: a filtered cursor keeps its filter across pages', (await walk(null, { status: 'open' })).every(r => r.status === 'open'))
+  check(
+    'filter: a filtered cursor keeps its filter across pages',
+    (await walk(null, { status: 'open' })).every((r) => r.status === 'open'),
+  )
 
   if (s.limits?.search !== false) {
     const prefix = !!s.limits?.search
     const hit = await s.list(ask({ limit: 25, search: prefix ? 'Alpha' : 'alpha' }))
-    check('search: finds, whatever the case', hit.items.length === count(r => /alpha/i.test(r.title)), `${hit.items.length}`)
+    check(
+      'search: finds, whatever the case',
+      hit.items.length === count((r) => /alpha/i.test(r.title)),
+      `${hit.items.length}`,
+    )
     if (!prefix) {
       const percent = await s.list(ask({ limit: 25, search: '100%_d' }))
-      check('search: `%` and `_` are literal', percent.items.length === 1 && percent.items[0]!.id === 't07', `${percent.items.length}`)
-      check('search: a regex is text', (await s.list(ask({ limit: 25, search: '.*' }))).items.length === 0)
+      check(
+        'search: `%` and `_` are literal',
+        percent.items.length === 1 && percent.items[0]!.id === 't07',
+        `${percent.items.length}`,
+      )
+      check(
+        'search: a regex is text',
+        (await s.list(ask({ limit: 25, search: '.*' }))).items.length === 0,
+      )
     }
   }
 
-  await refused('an unknown sort is refused', () => s.list(ask({ sort: { field: 'secret', dir: 'asc' } })))
+  await refused('an unknown sort is refused', () =>
+    s.list(ask({ sort: { field: 'secret', dir: 'asc' } })),
+  )
   await refused('an unknown filter is refused', () => s.list(ask({ filter: { secret: 'x' } })))
-  await refused('an object as a filter value is refused', () => s.list(ask({ filter: { status: { $ne: null } } })))
-  await refused('a write to a column outside `columns` is refused', () => s.create({ id: 'x1', title: 'x', status: 'open', rank: 0, secret: 'y' }))
+  await refused('an object as a filter value is refused', () =>
+    s.list(ask({ filter: { status: { $ne: null } } })),
+  )
+  await refused('a write to a column outside `columns` is refused', () =>
+    s.create({ id: 'x1', title: 'x', status: 'open', rank: 0, secret: 'y' }),
+  )
   await refused('moving an id is refused', () => s.update('t00', { id: 't99' }))
 
   const row = await s.get('t03')
-  check('get: a row, in public names, without what `columns` leaves out', row?.id === 't03' && row.title === LIST_ROWS[3]!.title && !('secret' in row), JSON.stringify(row))
+  check(
+    'get: a row, in public names, without what `columns` leaves out',
+    row?.id === 't03' && row.title === LIST_ROWS[3]!.title && !('secret' in row),
+    JSON.stringify(row),
+  )
   check('get: nothing is null', (await s.get('nope')) === null)
   const made = await s.create({ id: 'n1', title: 'New', status: 'open', rank: 9 })
-  check('create: returns the row', made?.id === 'n1' && made.rank === 9 && (await s.get('n1'))?.title === 'New', JSON.stringify(made))
+  check(
+    'create: returns the row',
+    made?.id === 'n1' && made.rank === 9 && (await s.get('n1'))?.title === 'New',
+    JSON.stringify(made),
+  )
   const moved = await s.update('n1', { title: 'Newer' })
-  check('update: returns the row, and leaves the rest', moved?.title === 'Newer' && moved.rank === 9, JSON.stringify(moved))
+  check(
+    'update: returns the row, and leaves the rest',
+    moved?.title === 'Newer' && moved.rank === 9,
+    JSON.stringify(moved),
+  )
   check('update: nothing is null', (await s.update('nope', { title: 'x' })) === null)
-  check('remove: true, then gone, then false',  (await s.remove('n1')) && (await s.get('n1')) === null && ! (await s.remove('n1')))
+  check(
+    'remove: true, then gone, then false',
+    (await s.remove('n1')) && (await s.get('n1')) === null && !(await s.remove('n1')),
+  )
   return out
 }

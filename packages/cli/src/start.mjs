@@ -24,7 +24,10 @@ export async function start(root, sub) {
     file = createRequire(join(root, 'package.json')).resolve(`@weft-js/start/${sub}`)
   } catch {
     const sibling = new URL(`../../start/src/${sub}.mjs`, import.meta.url)
-    if (!existsSync(sibling)) throw Object.assign(new Error('@weft-js/start is not installed in this project'), { code: 'E_USAGE' })
+    if (!existsSync(sibling))
+      throw Object.assign(new Error('@weft-js/start is not installed in this project'), {
+        code: 'E_USAGE',
+      })
     file = sibling
   }
   return import(typeof file === 'string' ? pathToFileURL(file).href : file.href)
@@ -34,17 +37,22 @@ export async function start(root, sub) {
  * finds the build-side providers (`.weft/slots/<id>.build.json`, research 26 §3.1). */
 async function site(root) {
   const loaded = await loadConfig(root)
-  if (!loaded.diagnostics.some(d => d.code === 'P007') && loaded.config?.plugins?.length) sync(root, loaded)
+  if (!loaded.diagnostics.some((d) => d.code === 'P007') && loaded.config?.plugins?.length)
+    sync(root, loaded)
   // A build on a config that doesn't load would quietly drop every plugin: fonts, tokens and slots.
-  const bad = loaded.diagnostics.find(d => d.code === 'P007')
+  const bad = loaded.diagnostics.find((d) => d.code === 'P007')
   if (bad) throw Object.assign(new Error(`P007: ${bad.message ?? bad.why}`), { code: 'E_REFUSED' }) // the config's fault, not the command's
-  return { site: siteOf(loaded), hydration: loaded.config?.hydration, diagnostics: loaded.diagnostics }
+  return {
+    site: siteOf(loaded),
+    hydration: loaded.config?.hydration,
+    diagnostics: loaded.diagnostics,
+  }
 }
 
 /** `site` with what plugins know about the app's look (`card` in a manifest): warp's colours, the text plugin's faces. */
 export function siteOf(loaded) {
   const base = loaded.config?.site ?? {}
-  const given = (loaded.contributions ?? []).map(c => c.manifest.card).filter(Boolean)
+  const given = (loaded.contributions ?? []).map((c) => c.manifest.card).filter(Boolean)
   if (!given.length) return base
   const card = Object.assign({}, ...given)
   return { ...base, card: { ...card, ...base.card, fonts: { ...card.fonts, ...base.card?.fonts } } }
@@ -53,12 +61,15 @@ export function siteOf(loaded) {
 /** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
 export const PRESETS = { node: 'node', bun: 'bun', deno: 'deno_server' }
 /** With no `runtime` in the config, the one running this: a machine may have only that one. */
-export const hostRuntime = () => (process.versions.deno ? 'deno' : process.versions.bun ? 'bun' : 'node')
+export const hostRuntime = () =>
+  process.versions.deno ? 'deno' : process.versions.bun ? 'bun' : 'node'
 
 /** `.env` under what's already set. Not `process.loadEnvFile`: on Deno the file wins. */
 function loadEnv(root) {
   const file = join(root, '.env')
-  if (existsSync(file)) for (const [key, value] of Object.entries(parseEnv(readFileSync(file, 'utf8')))) process.env[key] ??= value
+  if (existsSync(file))
+    for (const [key, value] of Object.entries(parseEnv(readFileSync(file, 'utf8'))))
+      process.env[key] ??= value
 }
 
 export async function devCommand(root, { port } = {}) {
@@ -71,7 +82,9 @@ export async function devCommand(root, { port } = {}) {
   const rust = (await loadConfig(root)).config?.rust
   const { devSidecars, usesRemote } = await start(root, 'sidecar')
   // Before the dev server: its worker inherits the addresses, and a request can't reach a sidecar that's still building.
-  const sidecars = usesRemote(root) ? await devSidecars({ root, site: config.site, rust }) : undefined
+  const sidecars = usesRemote(root)
+    ? await devSidecars({ root, site: config.site, rust })
+    : undefined
   const server = await dev({ root, ...config, port })
   if (server.watcher) server.weftProps = attachProps(server, root, (await loadConfig(root)).config)
   if (sidecars) {
@@ -88,18 +101,30 @@ export async function devCommand(root, { port } = {}) {
  */
 export function unsafeAllowed(flag, config) {
   const reasons = config?.build?.unsafeAllow ?? {}
-  const codes = [...String(flag ?? '').split(','), ...Object.keys(reasons)].map(c => c.trim()).filter(Boolean)
-  const allows = d => codes.some(c => c === 'all' || c === d.code || (/^[A-Z]$/.test(c) && d.code.startsWith(c)))
-  const reason = d => reasons[d.code] ?? reasons[d.code[0]] ?? reasons.all ?? (flag ? '--unsafe-allow' : '')
-  return { allows, let: d => ({ ...d, severity: 'warning', why: `UNSAFE, let through (${reason(d)}): ${d.why}` }) }
+  const codes = [...String(flag ?? '').split(','), ...Object.keys(reasons)]
+    .map((c) => c.trim())
+    .filter(Boolean)
+  const allows = (d) =>
+    codes.some((c) => c === 'all' || c === d.code || (/^[A-Z]$/.test(c) && d.code.startsWith(c)))
+  const reason = (d) =>
+    reasons[d.code] ?? reasons[d.code[0]] ?? reasons.all ?? (flag ? '--unsafe-allow' : '')
+  return {
+    allows,
+    let: (d) => ({
+      ...d,
+      severity: 'warning',
+      why: `UNSAFE, let through (${reason(d)}): ${d.why}`,
+    }),
+  }
 }
 
 export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) {
   const loaded = await loadConfig(root)
   requireTrust(root, loaded)
   // A plugin that refused its options contributed nothing: its look or data would go missing from a build that succeeds.
-  const declined = loaded.diagnostics.find(d => d.severity === 'error' && d.owner !== 'core')
-  if (declined) throw Object.assign(new Error(`${declined.code}: ${declined.why}`), { code: 'E_USAGE' })
+  const declined = loaded.diagnostics.find((d) => d.severity === 'error' && d.owner !== 'core')
+  if (declined)
+    throw Object.assign(new Error(`${declined.code}: ${declined.why}`), { code: 'E_USAGE' })
   const unsafe = unsafeAllowed(unsafeAllow, loaded.config)
   const forced = []
   const { build } = await start(root, 'app')
@@ -110,58 +135,116 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
   // `deploy.target` picks the preset when nothing else does: a build for Fly is the runtime's server, for Netlify `netlify`
   const target = !preset && !runtime && (await loadConfig(root)).config?.deploy?.target
   if (target) preset = presetFor(host(target), chosen)
-  if (!preset && !PRESETS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(PRESETS).join(', ')}`), { code: 'E_USAGE' })
+  if (!preset && !PRESETS[chosen])
+    throw Object.assign(
+      new Error(`unknown runtime "${chosen}": use ${Object.keys(PRESETS).join(', ')}`),
+      { code: 'E_USAGE' },
+    )
   preset ??= PRESETS[chosen]
   // A build holds no secrets: an app's env check stands down, and server modules load without a database.
   const held = process.env.WEFT_BUILD
   process.env.WEFT_BUILD = '1'
   try {
     const rust = (await loadConfig(root)).config?.rust
-    const refuse = d => {
+    const refuse = (d) => {
       if (unsafe.allows(d)) return void forced.push(unsafe.let(d))
       // a finding, not a misuse: exit 1 with the fix and the way past it, never the usage text
-      throw Object.assign(new Error(`${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}\nTo build anyway: --unsafe-allow ${d.code}, or build.unsafeAllow in weft.config.ts with why.`), { code: 'E_REFUSED' })
+      throw Object.assign(
+        new Error(
+          `${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}\nTo build anyway: --unsafe-allow ${d.code}, or build.unsafeAllow in weft.config.ts with why.`,
+        ),
+        { code: 'E_REFUSED' },
+      )
     }
     // What the preset can't do fails now, not after a build: a verify runs at the end, against a target that's up.
     const { readLivePlan } = await start(root, 'contract')
-    const plan = await readLivePlan({ root, site: config.site, preset, live: (await loadConfig(root)).config?.live, verify: false })
-    const unlive = plan.diagnostics.find(d => d.severity === 'error')
+    const plan = await readLivePlan({
+      root,
+      site: config.site,
+      preset,
+      live: (await loadConfig(root)).config?.live,
+      verify: false,
+    })
+    const unlive = plan.diagnostics.find((d) => d.severity === 'error')
     if (unlive) refuse(unlive)
     const { buildSidecars, shipSidecars, startSidecars, usesRemote } = await start(root, 'sidecar')
     const contracted = () => writeContract({ root, site: config.site, preset, rust })
     let warned = []
     // Sidecars first: prerendering a share card runs its route's `load`, which may read one.
-    const running = usesRemote(root) ? await contracted().then(async c => {
-      const stop = c.diagnostics.find(d => d.severity === 'error')
-      if (stop) refuse(stop)
-      const built = await buildSidecars({ root, contract: c.contract, rust, preset })
-      const failed = built.diagnostics.find(d => d.severity === 'error')
-      if (failed) refuse(failed)
-      warned = built.diagnostics
-      return startSidecars({ root, built: true, log: () => {} })
-    }) : undefined
+    const running = usesRemote(root)
+      ? await contracted().then(async (c) => {
+          const stop = c.diagnostics.find((d) => d.severity === 'error')
+          if (stop) refuse(stop)
+          const built = await buildSidecars({ root, contract: c.contract, rust, preset })
+          const failed = built.diagnostics.find((d) => d.severity === 'error')
+          if (failed) refuse(failed)
+          warned = built.diagnostics
+          return startSidecars({ root, built: true, log: () => {} })
+        })
+      : undefined
     const before = { ...process.env }
     Object.assign(process.env, running?.env)
     let output
     try {
-      ({ output } = await build({ root, ...config, preset, logLevel: 'warn' }))
+      ;({ output } = await build({ root, ...config, preset, logLevel: 'warn' }))
     } finally {
       running?.close()
-      for (const k of Object.keys(running?.env ?? {})) before[k] === undefined ? delete process.env[k] : (process.env[k] = before[k])
+      for (const k of Object.keys(running?.env ?? {}))
+        before[k] === undefined ? delete process.env[k] : (process.env[k] = before[k])
     }
-    const contract = await writeContract({ root, site: config.site, preset, rust, live: (await loadConfig(root)).config?.live, verify: true })
-    for (const refused of contract.diagnostics.filter(d => d.severity === 'error')) refuse(refused)
+    const contract = await writeContract({
+      root,
+      site: config.site,
+      preset,
+      rust,
+      live: (await loadConfig(root)).config?.live,
+      verify: true,
+    })
+    for (const refused of contract.diagnostics.filter((d) => d.severity === 'error'))
+      refuse(refused)
     if (running) shipSidecars(root)
     await writeMap(root)
     // Last, the pages as built, in a clean Chrome at a phone's width and a desktop's (audit.mjs): an error fails the build.
     const settings = (await loadConfig(root)).config?.build?.audit ?? true
-    const audited = settings === false
-      ? { diagnostics: [diagnostic({ code: 'L000', severity: 'warning', file: 'weft.config.ts', why: '`build.audit` is false: the built pages were not audited.' })] }
-      : await audit(root, { dir: builtPublic(root), ...(typeof settings === 'object' && settings) })
-    const pages = audited.diagnostics.map(d => (d.severity === 'error' && unsafe.allows(d) ? unsafe.let(d) : d))
-    const kept = [...contract.diagnostics.filter(d => !(d.severity === 'error' && unsafe.allows(d))), ...warned].map(d => diagnostic({ file: '.weft/contract.json', ...d }))
-    const diagnostics = [...kept, ...pages, ...forced.map(d => diagnostic({ file: '.weft/contract.json', ...d }))]
-    return { ok: !diagnostics.some(d => d.severity === 'error'), preset, output, contract: contract.path, functions: contract.functions, notes: loaded.contributions.flatMap(c => c.manifest.notes ?? []), audited: audited.pages?.length ?? 0, diagnostics, ms: Math.round(performance.now() - t) }
+    const audited =
+      settings === false
+        ? {
+            diagnostics: [
+              diagnostic({
+                code: 'L000',
+                severity: 'warning',
+                file: 'weft.config.ts',
+                why: '`build.audit` is false: the built pages were not audited.',
+              }),
+            ],
+          }
+        : await audit(root, {
+            dir: builtPublic(root),
+            ...(typeof settings === 'object' && settings),
+          })
+    const pages = audited.diagnostics.map((d) =>
+      d.severity === 'error' && unsafe.allows(d) ? unsafe.let(d) : d,
+    )
+    const kept = [
+      ...contract.diagnostics.filter((d) => !(d.severity === 'error' && unsafe.allows(d))),
+      ...warned,
+    ].map((d) => diagnostic({ file: '.weft/contract.json', ...d }))
+    const diagnostics = [
+      ...kept,
+      ...pages,
+      ...forced.map((d) => diagnostic({ file: '.weft/contract.json', ...d })),
+    ]
+    return {
+      ok: !diagnostics.some((d) => d.severity === 'error'),
+      preset,
+      output,
+      contract: contract.path,
+      functions: contract.functions,
+      notes: loaded.contributions.flatMap((c) => c.manifest.notes ?? []),
+      audited: audited.pages?.length ?? 0,
+      diagnostics,
+      ms: Math.round(performance.now() - t),
+    }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held
@@ -169,40 +252,70 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
 }
 
 /** The built server's command for each runtime: `.env` for a local run, the host's environment otherwise. */
-const SERVERS = { node: ['node', ['--disable-warning=ExperimentalWarning']], bun: ['bun', ['run']], deno: ['deno', ['run', '-A']] }
+const SERVERS = {
+  node: ['node', ['--disable-warning=ExperimentalWarning']],
+  bun: ['bun', ['run']],
+  deno: ['deno', ['run', '-A']],
+}
 
 /** `weft start`: run `.output/` on the runtime it was built for. Resolves with the exit code. */
 export async function startCommand(root, { runtime } = {}) {
   const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? hostRuntime()
-  if (!SERVERS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(SERVERS).join(', ')}`), { code: 'E_USAGE' })
+  if (!SERVERS[chosen])
+    throw Object.assign(
+      new Error(`unknown runtime "${chosen}": use ${Object.keys(SERVERS).join(', ')}`),
+      { code: 'E_USAGE' },
+    )
   loadEnv(root)
   const [cmd, flags] = SERVERS[chosen]
   // Sidecars first: the server's environment has their addresses, and they outlive a crash of either side.
   const { startSidecars } = await start(root, 'sidecar')
   const sidecars = await startSidecars({ root })
   // The running binary when it can be: Deno on Windows doesn't find itself on PATH.
-  const child = spawn(chosen === hostRuntime() ? process.execPath : cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } })
+  const child = spawn(
+    chosen === hostRuntime() ? process.execPath : cmd,
+    [...flags, join('.output', 'server', 'index.mjs')],
+    { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } },
+  )
   process.once('SIGINT', () => child.kill('SIGINT'))
   process.once('SIGTERM', () => child.kill('SIGTERM'))
-  return new Promise(ok => { child.on('close', code => { sidecars.close(); ok(code ?? 0) }) })
+  return new Promise((ok) => {
+    child.on('close', (code) => {
+      sidecars.close()
+      ok(code ?? 0)
+    })
+  })
 }
 
 /** The hash `weft db generate` records and Q015 compares. */
-export const schemaHash = text => createHash('sha256').update(text).digest('hex').slice(0, 16)
+export const schemaHash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16)
 
 /** What `weft db` takes. There's no `migrate`: new migrations apply on the next request. */
 export const DB_COMMANDS = ['generate', 'live', 'listen']
 
 /** `weft db generate [name]`: the data layer's migration, on Node like all of dev (research 28 §2, 34 §4). */
 export async function dbCommand(root, sub, name) {
-  if (!DB_COMMANDS.includes(sub)) throw Object.assign(new Error(`weft db ${sub ?? ''}: use generate (new migrations apply on the next request), live or listen`), { code: 'E_USAGE' })
+  if (!DB_COMMANDS.includes(sub))
+    throw Object.assign(
+      new Error(
+        `weft db ${sub ?? ''}: use generate (new migrations apply on the next request), live or listen`,
+      ),
+      { code: 'E_USAGE' },
+    )
   if (sub === 'live') return dbLive(root)
   if (sub === 'listen') return dbListen(root)
   const layer = await dbLayer(root)
-  if (!layer) throw Object.assign(new Error('this app has no database: `weft add db` adds one'), { code: 'E_USAGE' })
+  if (!layer)
+    throw Object.assign(new Error('this app has no database: `weft add db` adds one'), {
+      code: 'E_USAGE',
+    })
   const output = layer.generate(root, name)
   const schema = layer.schema && join(root, layer.schema)
-  if (schema && existsSync(schema)) writeFileSync(join(root, layer.migrations, '.schema-hash'), schemaHash(readFileSync(schema)) + '\n')
+  if (schema && existsSync(schema))
+    writeFileSync(
+      join(root, layer.migrations, '.schema-hash'),
+      schemaHash(readFileSync(schema)) + '\n',
+    )
   return { ok: true, output }
 }
 
@@ -211,13 +324,33 @@ export async function dbCommand(root, sub, name) {
  * edit an agent can apply: not safe, since the words are a start and not the page's best.
  */
 export function routeDiagnostics(root, found) {
-  const text = f => { try { return readFileSync(join(root, f), 'utf8') } catch { return '' } }
+  const text = (f) => {
+    try {
+      return readFileSync(join(root, f), 'utf8')
+    } catch {
+      return ''
+    }
+  }
   return found.map(({ code, severity, file, route, why, help }) => {
     const source = text(file)
-    const at = code === 'H011' && help?.startsWith('export const') && !/\bexport\s+(?:const|function|async function)\s+meta\b/.test(source) ? source.indexOf('export default') : -1
+    const at =
+      code === 'H011' &&
+      help?.startsWith('export const') &&
+      !/\bexport\s+(?:const|function|async function)\s+meta\b/.test(source)
+        ? source.indexOf('export default')
+        : -1
     const place = positions(source)
-    const fix = at >= 0 && { fix: { safe: false, description: 'Add `meta`', edits: [{ file, span: place.span(at, at), offset: [at, at], text: `${help}\n\n` }] } }
-    return { ...diagnostic({ code, severity, file, why, help, ...locate(source, 'meta'), ...fix }), route }
+    const fix = at >= 0 && {
+      fix: {
+        safe: false,
+        description: 'Add `meta`',
+        edits: [{ file, span: place.span(at, at), offset: [at, at], text: `${help}\n\n` }],
+      },
+    }
+    return {
+      ...diagnostic({ code, severity, file, why, help, ...locate(source, 'meta'), ...fix }),
+      route,
+    }
   })
 }
 
@@ -230,25 +363,41 @@ async function dbLive(root) {
   const { changeSql } = await start(root, 'changes-sql')
   let sql, tables
   try {
-    ({ sql, tables } = await withRealtime({ root, site: config.site }, async ({ changes }) => {
-      if (!changes?.defs) throw Object.assign(new Error('`src/realtime.server.ts` has no `changes: dbChanges(db, [tables])`'), { code: 'E_USAGE' })
+    ;({ sql, tables } = await withRealtime({ root, site: config.site }, async ({ changes }) => {
+      if (!changes?.defs)
+        throw Object.assign(
+          new Error('`src/realtime.server.ts` has no `changes: dbChanges(db, [tables])`'),
+          { code: 'E_USAGE' },
+        )
       const defs = await changes.defs()
-      return { sql: changeSql(changes.dialect, defs), tables: defs.map(t => t.name) }
+      return { sql: changeSql(changes.dialect, defs), tables: defs.map((t) => t.name) }
     }))
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held
   }
   const layer = await dbLayer(root)
-  if (layer?.layer !== 'drizzle') return { ok: true, output: `${sql}\n-- add this to a migration of your data layer` }
+  if (layer?.layer !== 'drizzle')
+    return { ok: true, output: `${sql}\n-- add this to a migration of your data layer` }
   const req = createRequire(join(root, 'package.json'))
   const bin = join(dirname(req.resolve('drizzle-kit')), 'bin.cjs')
-  const r = spawnSync(process.execPath, [bin, 'generate', '--custom', '--name=weft_live'], { cwd: root, encoding: 'utf8' })
-  if (r.status !== 0) throw Object.assign(new Error(`drizzle-kit generate failed:\n${r.stdout}${r.stderr}`), { code: 'E_INTERNAL' })
-  const { entries } = JSON.parse(readFileSync(join(root, layer.migrations, 'meta', '_journal.json'), 'utf8'))
+  const r = spawnSync(process.execPath, [bin, 'generate', '--custom', '--name=weft_live'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+  if (r.status !== 0)
+    throw Object.assign(new Error(`drizzle-kit generate failed:\n${r.stdout}${r.stderr}`), {
+      code: 'E_INTERNAL',
+    })
+  const { entries } = JSON.parse(
+    readFileSync(join(root, layer.migrations, 'meta', '_journal.json'), 'utf8'),
+  )
   const file = join(layer.migrations, `${entries.at(-1).tag}.sql`)
   writeFileSync(join(root, file), sql)
-  return { ok: true, output: `${file}: change triggers for ${tables.join(', ')}. They apply on the next request.` }
+  return {
+    ok: true,
+    output: `${file}: change triggers for ${tables.join(', ')}. They apply on the next request.`,
+  }
 }
 
 /** `weft db listen`: the change feed as its own process, for an app on functions. Runs until SIGINT or SIGTERM. */
@@ -257,10 +406,16 @@ async function dbListen(root) {
   const config = await site(root)
   const { withRealtime } = await start(root, 'contract')
   await withRealtime({ root, site: config.site }, async ({ changes, bus }, server) => {
-    if (!changes) throw Object.assign(new Error('`src/realtime.server.ts` has no `changes`'), { code: 'E_USAGE' })
+    if (!changes)
+      throw Object.assign(new Error('`src/realtime.server.ts` has no `changes`'), {
+        code: 'E_USAGE',
+      })
     const { listen } = await server.ssrLoadModule('@weft-js/start/listen')
     const stop = await listen({ changes, bus: bus ?? { name: 'memory' } })
-    await new Promise(ok => { process.once('SIGINT', ok); process.once('SIGTERM', ok) })
+    await new Promise((ok) => {
+      process.once('SIGINT', ok)
+      process.once('SIGTERM', ok)
+    })
     await stop()
   })
   return { ok: true, output: 'weft db listen: stopped' }
@@ -274,8 +429,19 @@ export async function doctorCommand(root, { preset, runtime } = {}) {
   process.env.WEFT_BUILD = '1'
   try {
     const { readLivePlan } = await start(root, 'contract')
-    const plan = await readLivePlan({ root, site: config.site, preset: preset ?? PRESETS[chosen], live: (await loadConfig(root)).config?.live, verify: false })
-    return { ...plan, diagnostics: plan.diagnostics.map(d => diagnostic({ file: 'src/realtime.server.ts', ...d })) }
+    const plan = await readLivePlan({
+      root,
+      site: config.site,
+      preset: preset ?? PRESETS[chosen],
+      live: (await loadConfig(root)).config?.live,
+      verify: false,
+    })
+    return {
+      ...plan,
+      diagnostics: plan.diagnostics.map((d) =>
+        diagnostic({ file: 'src/realtime.server.ts', ...d }),
+      ),
+    }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held
@@ -288,13 +454,25 @@ export async function routesCommand(root, { meta, preset } = {}) {
   if (meta) {
     const { routesMeta } = await start(root, 'inspect')
     const result = await routesMeta({ root, site: config.site, preset })
-    return { ...result, diagnostics: [...config.diagnostics, ...routeDiagnostics(root, result.diagnostics)] }
+    return {
+      ...result,
+      diagnostics: [...config.diagnostics, ...routeDiagnostics(root, result.diagnostics)],
+    }
   }
   const { scanRoutes, filePath } = await start(root, 'routes')
   const manifest = scanRoutes(root)
   return {
-    version: 1, ok: true, problems: manifest.problems,
-    routes: manifest.routes.map(r => ({ path: r.kind === 'page' ? filePath(manifest, r) : r.kind, kind: r.kind, file: r.file, layouts: r.layouts, params: r.params, card: r.card ?? null })),
+    version: 1,
+    ok: true,
+    problems: manifest.problems,
+    routes: manifest.routes.map((r) => ({
+      path: r.kind === 'page' ? filePath(manifest, r) : r.kind,
+      kind: r.kind,
+      file: r.file,
+      layouts: r.layouts,
+      params: r.params,
+      card: r.card ?? null,
+    })),
     diagnostics: config.diagnostics,
   }
 }

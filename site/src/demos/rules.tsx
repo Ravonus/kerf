@@ -8,14 +8,14 @@ export default function Basket() {
   const total = derived(() => price * qty.value + shipping.value)
   return (
     <Card title="Your basket">
-      <p>{qty.value} × $12 · shipping ${shipping.value}</p>
-      <p><strong>Total ${total.value}</strong></p>
+      <p>
+        {qty.value} × $12 · shipping ${shipping.value}
+      </p>
+      <p>
+        <strong>Total ${total.value}</strong>
+      </p>
       <Button onClick={() => qty.value++}>Add one</Button>
-      <Button
-        emphasis="ghost"
-        tone="neutral"
-        onClick={() => (qty.value = 1)}
-      >
+      <Button emphasis="ghost" tone="neutral" onClick={() => (qty.value = 1)}>
         Reset
       </Button>
     </Card>

@@ -6,7 +6,11 @@ export default function Pointer() {
   // No `share`: this row is private to this one button.
   const row = interaction()
   const words = derived(() => {
-    const on = [row.hover.value && 'hovered', row.focus.value && 'focused', row.pressed.value && 'pressed']
+    const on = [
+      row.hover.value && 'hovered',
+      row.focus.value && 'focused',
+      row.pressed.value && 'pressed',
+    ]
     return on.filter(Boolean).join(', ') || 'idle'
   })
   return (

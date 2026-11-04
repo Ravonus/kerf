@@ -5,8 +5,12 @@ import { Button, Card } from '@weft-js/warp'
 function Toolbar(props: { onPlay: () => void; onUpload: () => void }) {
   return (
     <p>
-      <Button size="sm" onClick={props.onPlay}>Play movie</Button>
-      <Button size="sm" emphasis="outline" onClick={props.onUpload}>Upload image</Button>
+      <Button size="sm" onClick={props.onPlay}>
+        Play movie
+      </Button>
+      <Button size="sm" emphasis="outline" onClick={props.onUpload}>
+        Upload image
+      </Button>
     </p>
   )
 }

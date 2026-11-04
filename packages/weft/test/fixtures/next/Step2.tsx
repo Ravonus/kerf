@@ -7,8 +7,12 @@ export function Toggle() {
   const on = state(true)
   return (
     <div>
-      <button class="inc" onClick={() => n.value++}>+</button>
-      <button class="flip" onClick={() => (on.value = !on.value)}>flip</button>
+      <button class="inc" onClick={() => n.value++}>
+        +
+      </button>
+      <button class="flip" onClick={() => (on.value = !on.value)}>
+        flip
+      </button>
       {on.value ? <b>on {n.value}</b> : <i>off</i>}
       {n.value > 1 && <u>many</u>}
     </div>
@@ -39,8 +43,12 @@ export function Picker() {
   const options = state(['a', 'b', 'c'])
   const picked = state('b')
   return (
-    <select value={picked.value} onChange={e => (picked.value = e.currentTarget.value)}>
-      {options.value.map(o => <option key={o} value={o}>{o}</option>)}
+    <select value={picked.value} onChange={(e) => (picked.value = e.currentTarget.value)}>
+      {options.value.map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
     </select>
   )
 }

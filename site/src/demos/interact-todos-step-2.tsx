@@ -15,16 +15,24 @@ export default function Todos() {
     todos.value = [...todos.value, { id: nextId++, title: draft.value, done: false }]
     draft.value = ''
   }
-  const remove = (id: number) => (todos.value = todos.value.filter(t => t.id !== id))
+  const remove = (id: number) => (todos.value = todos.value.filter((t) => t.id !== id))
   return (
     <Card title="Todos">
-      <Input label="New todo" value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} />
-      <Button size="sm" disabled={!draft.value.trim()} onClick={add}>Add</Button>
+      <Input
+        label="New todo"
+        value={draft.value}
+        onInput={(e) => (draft.value = e.currentTarget.value)}
+      />
+      <Button size="sm" disabled={!draft.value.trim()} onClick={add}>
+        Add
+      </Button>
       <ul>
-        {todos.value.map(t => (
+        {todos.value.map((t) => (
           <li key={t.id}>
             {t.title}{' '}
-            <Button size="sm" emphasis="ghost" onClick={() => remove(t.id)}>Delete</Button>
+            <Button size="sm" emphasis="ghost" onClick={() => remove(t.id)}>
+              Delete
+            </Button>
           </li>
         ))}
       </ul>

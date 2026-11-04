@@ -1,18 +1,29 @@
 // lab.json as one page with no dependencies: before and after against Solid, then what each speed path costs and buys.
-const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 const NOISE = 3 // percent: closer than this is not called a difference (quick rounds)
 const BUNDLES = ['hello', 'counter', 'shop', 'benchmark app']
-const num = v => (v == null ? '–' : v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(2) : v.toPrecision(2))
+const num = (v) =>
+  v == null
+    ? '–'
+    : v >= 100
+      ? v.toFixed(0)
+      : v >= 10
+        ? v.toFixed(1)
+        : v >= 1
+          ? v.toFixed(2)
+          : v.toPrecision(2)
 
 /** Every timed number as `group / name`, so a variant's and the baseline's line up; lower is better for all. */
 function metrics(stack, reactive) {
   const out = {}
   for (const [g, names] of Object.entries(stack ?? {})) {
     if (g === 'rows total') continue
-    for (const [k, v] of Object.entries(names)) out[g === 'rows script' ? `rows: ${k}` : `${g}: ${k.replace(', ms per tick', '')}`] = v
+    for (const [k, v] of Object.entries(names))
+      out[g === 'rows script' ? `rows: ${k}` : `${g}: ${k.replace(', ms per tick', '')}`] = v
   }
   for (const [k, v] of Object.entries(reactive?.ms ?? {})) out[`core: ${k}`] = v
-  for (const [k, v] of Object.entries(reactive?.creation ?? {})) out[`core: ${k}, ns each`] = v.nsEach
+  for (const [k, v] of Object.entries(reactive?.creation ?? {}))
+    out[`core: ${k}, ns each`] = v.nsEach
   return out
 }
 
@@ -32,32 +43,69 @@ const held_ = (compared, key) => {
 }
 
 function compare(lab) {
-  const g = lab.timed.grid, r = lab.timed.reactive ?? {}
-  const m = Object.fromEntries(Object.keys(g).map(s => [s, metrics(g[s], r[s.replace('-batch', '')])]))
-  const on = m.weft, solid = m['solid-batch'], base = m['weft-base'], off = m['off-all']
-  const keys = Object.keys(on).filter(k => !k.startsWith('core:') || solid?.[k] != null)
-  return `<table><thead><tr><th>Lower is better</th>${base ? '<th>before (original)</th>' : ''}${off ? '<th>every path off</th>' : ''}<th>weft now</th><th>Solid 1.9</th><th>weft vs Solid</th></tr></thead><tbody>${keys.map(k => {
-    const pct = solid?.[k] ? ((on[k] - solid[k]) / solid[k]) * 100 : null
-    const held = lab.timed.compared?.weft && held_(lab.timed.compared.weft, k)
-    // With an interval, a win or a loss is one that held across runs; without one, the noise line decides.
-    const verdict = held ? (held.hi < 1 ? 'win' : held.lo > 1 ? 'loss' : 'tie') : pct == null ? '' : pct <= -NOISE ? 'win' : pct >= NOISE ? 'loss' : 'tie'
-    const text = held ? `${((held.ratio - 1) * 100).toFixed(1)}% <small>${((held.lo - 1) * 100).toFixed(1)} to ${((held.hi - 1) * 100).toFixed(1)}</small>` : pct == null ? '–' : `${pct > 0 ? '+' : ''}${pct.toFixed(0)}%`
-    return `<tr><th>${esc(k)}</th>${base ? `<td class=n>${num(base[k])}</td>` : ''}${off ? `<td class=n>${num(off[k])}</td>` : ''}${cell(on[k], solid?.[k])}<td class=n>${num(solid?.[k])}</td><td class="n ${verdict}">${text}</td></tr>`
-  }).join('')}</tbody></table>`
+  const g = lab.timed.grid,
+    r = lab.timed.reactive ?? {}
+  const m = Object.fromEntries(
+    Object.keys(g).map((s) => [s, metrics(g[s], r[s.replace('-batch', '')])]),
+  )
+  const on = m.weft,
+    solid = m['solid-batch'],
+    base = m['weft-base'],
+    off = m['off-all']
+  const keys = Object.keys(on).filter((k) => !k.startsWith('core:') || solid?.[k] != null)
+  return `<table><thead><tr><th>Lower is better</th>${base ? '<th>before (original)</th>' : ''}${off ? '<th>every path off</th>' : ''}<th>weft now</th><th>Solid 1.9</th><th>weft vs Solid</th></tr></thead><tbody>${keys
+    .map((k) => {
+      const pct = solid?.[k] ? ((on[k] - solid[k]) / solid[k]) * 100 : null
+      const held = lab.timed.compared?.weft && held_(lab.timed.compared.weft, k)
+      // With an interval, a win or a loss is one that held across runs; without one, the noise line decides.
+      const verdict = held
+        ? held.hi < 1
+          ? 'win'
+          : held.lo > 1
+            ? 'loss'
+            : 'tie'
+        : pct == null
+          ? ''
+          : pct <= -NOISE
+            ? 'win'
+            : pct >= NOISE
+              ? 'loss'
+              : 'tie'
+      const text = held
+        ? `${((held.ratio - 1) * 100).toFixed(1)}% <small>${((held.lo - 1) * 100).toFixed(1)} to ${((held.hi - 1) * 100).toFixed(1)}</small>`
+        : pct == null
+          ? '–'
+          : `${pct > 0 ? '+' : ''}${pct.toFixed(0)}%`
+      return `<tr><th>${esc(k)}</th>${base ? `<td class=n>${num(base[k])}</td>` : ''}${off ? `<td class=n>${num(off[k])}</td>` : ''}${cell(on[k], solid?.[k])}<td class=n>${num(solid?.[k])}</td><td class="n ${verdict}">${text}</td></tr>`
+    })
+    .join('')}</tbody></table>`
 }
 
 function ablation(lab) {
-  const sizes = lab.sizes, on = sizes.on
-  const list = lab.variants.filter(v => v.id !== 'on')
-  const g = lab.timed?.grid, r = lab.timed?.reactive ?? {}
-  const m = g && Object.fromEntries(Object.keys(g).map(s => [s, metrics(g[s], r[s])]))
-  const row = v => {
-    const cost = BUNDLES.map(b => on[b] - (sizes[v.id]?.[b] ?? on[b]))
-    const gains = m?.[v.id] ? Object.entries(m[v.id]).map(([k, off]) => [k, ((off - m.weft[k]) / m.weft[k]) * 100]).filter(([k, p]) => isFinite(p) && Math.abs(p) >= NOISE).sort((a, b) => b[1] - a[1]) : []
-    const show = list => list.map(([k, p]) => `<span class="${p > 0 ? 'win' : 'loss'}">${esc(k)} ${p > 0 ? '+' : ''}${p.toFixed(0)}%</span>`).join(' ')
-    return `<tr><th>${esc(v.off.join(', '))}<small>${esc(v.says ?? '')}</small></th>${cost.map(c => `<td class=n>${c > 0 ? '+' : ''}${c}</td>`).join('')}<td>${gains.length ? show(gains) : m ? '<span class=tie>nothing past the noise</span>' : '–'}</td></tr>`
+  const sizes = lab.sizes,
+    on = sizes.on
+  const list = lab.variants.filter((v) => v.id !== 'on')
+  const g = lab.timed?.grid,
+    r = lab.timed?.reactive ?? {}
+  const m = g && Object.fromEntries(Object.keys(g).map((s) => [s, metrics(g[s], r[s])]))
+  const row = (v) => {
+    const cost = BUNDLES.map((b) => on[b] - (sizes[v.id]?.[b] ?? on[b]))
+    const gains = m?.[v.id]
+      ? Object.entries(m[v.id])
+          .map(([k, off]) => [k, ((off - m.weft[k]) / m.weft[k]) * 100])
+          .filter(([k, p]) => isFinite(p) && Math.abs(p) >= NOISE)
+          .sort((a, b) => b[1] - a[1])
+      : []
+    const show = (list) =>
+      list
+        .map(
+          ([k, p]) =>
+            `<span class="${p > 0 ? 'win' : 'loss'}">${esc(k)} ${p > 0 ? '+' : ''}${p.toFixed(0)}%</span>`,
+        )
+        .join(' ')
+    return `<tr><th>${esc(v.off.join(', '))}<small>${esc(v.says ?? '')}</small></th>${cost.map((c) => `<td class=n>${c > 0 ? '+' : ''}${c}</td>`).join('')}<td>${gains.length ? show(gains) : m ? '<span class=tie>nothing past the noise</span>' : '–'}</td></tr>`
   }
-  return `<table class=flags><thead><tr><th>Path</th>${BUNDLES.map(b => `<th>${b}<small>bytes br</small></th>`).join('')}<th>What it buys: how much slower with it off (benchmark +%). Red: faster off.</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table>`
+  return `<table class=flags><thead><tr><th>Path</th>${BUNDLES.map((b) => `<th>${b}<small>bytes br</small></th>`).join('')}<th>What it buys: how much slower with it off (benchmark +%). Red: faster off.</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table>`
 }
 
 export function render(lab) {

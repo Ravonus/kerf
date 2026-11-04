@@ -16,15 +16,21 @@ export function App({ api }: { api: Api }) {
 
   useEffect(() => {
     let cancelled = false
-    api.listProducts().then(list => { if (!cancelled) setProducts(list) })
+    api.listProducts().then((list) => {
+      if (!cancelled) setProducts(list)
+    })
     const unsubscribe = api.subscribePrices(({ id, price }) =>
-      setProducts(list => list && list.map(p => (p.id === id ? { ...p, price } : p))))
-    return () => { cancelled = true; unsubscribe() }
+      setProducts((list) => list && list.map((p) => (p.id === id ? { ...p, price } : p))),
+    )
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
   }, [api])
 
-  const byId = (id: string) => products?.find(p => p.id === id)
+  const byId = (id: string) => products?.find((p) => p.id === id)
   const change = (id: string, delta: number) =>
-    setCart(c => {
+    setCart((c) => {
       const product = byId(id)
       if (!product) return c
       const qty = (c[id]?.qty ?? 0) + delta
@@ -42,7 +48,13 @@ export function App({ api }: { api: Api }) {
       {!products ? (
         <p>Loading…</p>
       ) : tab === 'products' ? (
-        <ProductList products={products} cart={cart} filters={filters} onFilters={setFilters} onAdd={id => change(id, 1)} />
+        <ProductList
+          products={products}
+          cart={cart}
+          filters={filters}
+          onFilters={setFilters}
+          onAdd={(id) => change(id, 1)}
+        />
       ) : (
         <CartView products={products} cart={cart} onChange={change} />
       )}

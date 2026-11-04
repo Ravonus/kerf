@@ -5,12 +5,33 @@ export function createMediaBuild(options) {
       const name = file.split('/').pop()
       return {
         asset: {
-          kind: 'photo', src: 'hero-640.jpg', width: 640, height: 480, type: 'image/jpeg', name, quality: 'ssimulacra2',
-          sources: [{ type: 'image/avif', srcset: 'hero-320.avif 320w, hero-640.avif 640w' }, { type: 'image/jpeg', srcset: 'hero-320.jpg 320w, hero-640.jpg 640w' }],
-          dominant: '#336699', placeholder: 'data:image/webp;base64,AAAA',
+          kind: 'photo',
+          src: 'hero-640.jpg',
+          width: 640,
+          height: 480,
+          type: 'image/jpeg',
+          name,
+          quality: 'ssimulacra2',
+          sources: [
+            { type: 'image/avif', srcset: 'hero-320.avif 320w, hero-640.avif 640w' },
+            { type: 'image/jpeg', srcset: 'hero-320.jpg 320w, hero-640.jpg 640w' },
+          ],
+          dominant: '#336699',
+          placeholder: 'data:image/webp;base64,AAAA',
         },
-        files: ['hero-320.avif', 'hero-640.avif', 'hero-320.jpg', 'hero-640.jpg'].map(n => ({ name: n, bytes: new Uint8Array([bytes.length]) })),
-        diagnostics: options.warn ? [{ code: 'M004', severity: 'warning', message: `${name} is large (${ctx.dev ? 'dev' : 'build'})` }] : [],
+        files: ['hero-320.avif', 'hero-640.avif', 'hero-320.jpg', 'hero-640.jpg'].map((n) => ({
+          name: n,
+          bytes: new Uint8Array([bytes.length]),
+        })),
+        diagnostics: options.warn
+          ? [
+              {
+                code: 'M004',
+                severity: 'warning',
+                message: `${name} is large (${ctx.dev ? 'dev' : 'build'})`,
+              },
+            ]
+          : [],
       }
     },
   }

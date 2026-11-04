@@ -4,11 +4,21 @@
 // imports this where the option is used.
 
 import { Box, DEV, derived } from './index'
-import { features, owners, type History, type HistoryEntry, type Instance, type Timeline } from './scope'
+import {
+  features,
+  owners,
+  type History,
+  type HistoryEntry,
+  type Instance,
+  type Timeline,
+} from './scope'
 
 type Change = { box: Box<unknown>; before: unknown }
 type Tx = { name: string; changes: Map<Box<unknown>, Change> }
-type Step = { entry: HistoryEntry; changes: { box: Box<unknown>; before: unknown; after: unknown }[] }
+type Step = {
+  entry: HistoryEntry
+  changes: { box: Box<unknown>; before: unknown; after: unknown }[]
+}
 
 let tx: Tx | null = null
 let loose: Tx | null = null
@@ -22,26 +32,37 @@ class Log implements Timeline, History {
   version = new Box(0)
   canUndo = derived(() => (this.version.value, this.past.length > 0))
   canRedo = derived(() => (this.version.value, this.future.length > 0))
-  entries = derived(() => (this.version.value, this.past.map(p => p.entry)))
+  entries = derived(() => (this.version.value, this.past.map((p) => p.entry)))
   constructor(private limit: number) {}
 
   push(action: string, changes: Change[]) {
-    this.past.push({ entry: { action, at: Date.now() }, changes: changes.map(c => ({ box: c.box, before: c.before, after: c.box.v })) })
+    this.past.push({
+      entry: { action, at: Date.now() },
+      changes: changes.map((c) => ({ box: c.box, before: c.before, after: c.box.v })),
+    })
     if (this.past.length > this.limit) this.past.shift()
     this.future = []
     this.version.value++
   }
   private apply(step: Step, key: 'before' | 'after') {
-    replay(() => { for (const c of step.changes) c.box.w(c[key]) })
+    replay(() => {
+      for (const c of step.changes) c.box.w(c[key])
+    })
     this.version.value++
   }
   undo() {
     const step = this.past.pop()
-    if (step) { this.future.push(step); this.apply(step, 'before') }
+    if (step) {
+      this.future.push(step)
+      this.apply(step, 'before')
+    }
   }
   redo() {
     const step = this.future.pop()
-    if (step) { this.past.push(step); this.apply(step, 'after') }
+    if (step) {
+      this.past.push(step)
+      this.apply(step, 'after')
+    }
   }
   clear() {
     this.past = []
@@ -52,7 +73,11 @@ class Log implements Timeline, History {
 
 function replay(fn: () => void) {
   replaying = true
-  try { fn() } finally { replaying = false }
+  try {
+    fn()
+  } finally {
+    replaying = false
+  }
 }
 
 function commit(t: Tx) {
@@ -95,7 +120,11 @@ features.history = {
     if (!t) {
       if (!loose) {
         loose = { name: `${inst.name}.write`, changes: new Map() }
-        queueMicrotask(() => { const l = loose!; loose = null; commit(l) })
+        queueMicrotask(() => {
+          const l = loose!
+          loose = null
+          commit(l)
+        })
       }
       t = loose
     }

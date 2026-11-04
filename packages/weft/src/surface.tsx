@@ -4,16 +4,48 @@
 // oxlint-disable-next-line typescript/triple-slash-reference -- slots.d.ts declares a wildcard module, so it has no exports for an `import` to name
 /// <reference path="./slots.d.ts" />
 
-import { createRoot, DEV, effect, flush, getOwner, onCleanup, onMount, state, untrack, within, type StandardSchema, type State } from '@weft-js/core'
-import { surfaceText, type PaintedText, type SurfaceText, type TextHost, type TextOptions } from './surface-text'
+import {
+  createRoot,
+  DEV,
+  effect,
+  flush,
+  getOwner,
+  onCleanup,
+  onMount,
+  state,
+  untrack,
+  within,
+  type StandardSchema,
+  type State,
+} from '@weft-js/core'
+import {
+  surfaceText,
+  type PaintedText,
+  type SurfaceText,
+  type TextHost,
+  type TextOptions,
+} from './surface-text'
 
-export type { MeasureHandle, MeasureLine, MeasureProvider, SurfaceText, TextOptions } from './surface-text'
+export type {
+  MeasureHandle,
+  MeasureLine,
+  MeasureProvider,
+  SurfaceText,
+  TextOptions,
+} from './surface-text'
 
 /** Where a frame sits: its number, the seconds since the start, and the seconds since the last one. */
-export interface FrameTime { frame: number; seconds: number; delta: number }
+export interface FrameTime {
+  frame: number
+  seconds: number
+  delta: number
+}
 
 /** A token's live value: `css` for canvas2d, `linear` (0–1, linear sRGB, then alpha) for shaders. */
-export interface Token { css: string; linear: [number, number, number, number] }
+export interface Token {
+  css: string
+  linear: [number, number, number, number]
+}
 
 /** What every surface's `setup` gets, whatever its kind. */
 export interface SurfaceBase {
@@ -47,7 +79,8 @@ export interface SurfaceKinds {
 }
 
 /** `SurfaceBase` and what the kind `K` adds to it. */
-export type SurfaceContext<K extends string> = SurfaceBase & (K extends keyof SurfaceKinds ? SurfaceKinds[K] : Record<string, unknown>)
+export type SurfaceContext<K extends string> = SurfaceBase &
+  (K extends keyof SurfaceKinds ? SurfaceKinds[K] : Record<string, unknown>)
 
 /** A surface: its kind, its props' schema, and what it draws. */
 export interface SurfaceDef<P = {}, K extends string = string> {
@@ -83,14 +116,26 @@ export interface SurfaceBackend {
 }
 
 /** Declares a surface, for `<Surface use={…}>`. */
-export function defineSurface<P = {}, const K extends string = string>(def: SurfaceDef<P, K>): SurfaceDef<P, K> {
+export function defineSurface<P = {}, const K extends string = string>(
+  def: SurfaceDef<P, K>,
+): SurfaceDef<P, K> {
   return def
 }
 
 /** Keel's integerFit: the largest whole scale of `width`×`height` that fits, never under 1. */
-export function integerFit(width: number, height: number, availableWidth: number, availableHeight: number) {
+export function integerFit(
+  width: number,
+  height: number,
+  availableWidth: number,
+  availableHeight: number,
+) {
   const scale = Math.max(1, Math.floor(Math.min(availableWidth / width, availableHeight / height)))
-  return { scale, width: width * scale, height: height * scale, overflow: width > availableWidth || height > availableHeight }
+  return {
+    scale,
+    width: width * scale,
+    height: height * scale,
+    overflow: width > availableWidth || height > availableHeight,
+  }
 }
 
 // ---- backends ------------------------------------------------------------------------------------------------------
@@ -99,11 +144,18 @@ const canvas2d: SurfaceRenderer = {
   context(canvas, def) {
     const ctx = canvas.getContext('2d', def.context) as CanvasRenderingContext2D | null
     if (!ctx) return null
-    let w = 0, h = 0
+    let w = 0,
+      h = 0
     return {
       fields: { ctx },
-      resize(width, height, dpr) { w = width; h = height; ctx.setTransform(dpr, 0, 0, dpr, 0, 0) },
-      begin() { if (def.clear !== false) ctx.clearRect(0, 0, w, h) },
+      resize(width, height, dpr) {
+        w = width
+        h = height
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      },
+      begin() {
+        if (def.clear !== false) ctx.clearRect(0, 0, w, h)
+      },
     }
   },
 }
@@ -114,8 +166,12 @@ const webgl2: SurfaceRenderer = {
     if (!gl) return null
     return {
       fields: { gl },
-      resize() { gl.viewport(0, 0, canvas.width, canvas.height) },
-      dispose() { gl.getExtension('WEBGL_lose_context')?.loseContext() },
+      resize() {
+        gl.viewport(0, 0, canvas.width, canvas.height)
+      },
+      dispose() {
+        gl.getExtension('WEBGL_lose_context')?.loseContext()
+      },
     }
   },
 }
@@ -124,28 +180,44 @@ const builtin: Record<string, SurfaceRenderer> = { canvas2d, webgl2 }
 
 // ---- the clock -----------------------------------------------------------------------------------------------------
 
-let seconds = 0, last = 0, raf = 0
+let seconds = 0,
+  last = 0,
+  raf = 0
 const tickers = new Set<(force?: boolean) => void>()
-const playing = state(typeof matchMedia !== 'function' || !matchMedia('(prefers-reduced-motion: reduce)').matches)
+const playing = state(
+  typeof matchMedia !== 'function' || !matchMedia('(prefers-reduced-motion: reduce)').matches,
+)
 
 function loop(now: number) {
   raf = 0
-  if (!tickers.size || !playing.value) { last = 0; return }
+  if (!tickers.size || !playing.value) {
+    last = 0
+    return
+  }
   if (last) seconds += Math.min(now - last, 100) / 1000 // capped: a background tab resumes without a jump
   last = now
   // a snapshot: a ticker can remove itself while this runs
   for (const t of [...tickers]) t()
   raf = requestAnimationFrame(loop)
 }
-const run = () => { raf ||= requestAnimationFrame(loop) }
+const run = () => {
+  raf ||= requestAnimationFrame(loop)
+}
 
 /** The one clock all surfaces share. Seek for deterministic capture: same seed and frame, same pixels. */
 export const clock = {
   /** False from the start under `prefers-reduced-motion: reduce`. */
   playing: playing as { readonly value: boolean },
-  get seconds() { return seconds },
-  play() { playing.value = true; run() },
-  pause() { playing.value = false },
+  get seconds() {
+    return seconds
+  },
+  play() {
+    playing.value = true
+    run()
+  },
+  pause() {
+    playing.value = false
+  },
   /** Jump, and paint every animated surface now. */
   seek(to: number) {
     seconds = to
@@ -158,7 +230,12 @@ export const clock = {
 
 const scratch = (() => {
   let ctx: CanvasRenderingContext2D | null | undefined
-  return () => (ctx ??= (() => { const c = document.createElement('canvas'); c.width = c.height = 1; return c.getContext('2d', { willReadFrequently: true }) })())
+  return () =>
+    (ctx ??= (() => {
+      const c = document.createElement('canvas')
+      c.width = c.height = 1
+      return c.getContext('2d', { willReadFrequently: true })
+    })())
 })()
 
 const linear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
@@ -180,58 +257,91 @@ function tokensOf(host: HTMLElement): Record<string, Token> {
   const known = new Map<string, Token>()
   let probe: HTMLElement | undefined
   let watching = false
-  const bump = () => { known.clear(); theme.value++ }
-  return new Proxy({}, {
-    get(_, name): Token | undefined {
-      if (typeof name !== 'string') return undefined
-      void theme.value
-      if (!watching) {
-        watching = true
-        const seen = new MutationObserver(bump)
-        for (const el of [document.documentElement, document.body]) seen.observe(el, { attributes: true })
-        const dark = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : undefined
-        dark?.addEventListener('change', bump)
-        onCleanup(() => { seen.disconnect(); dark?.removeEventListener('change', bump) })
-      }
-      let token = known.get(name)
-      if (!token) {
-        const kebab = name.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)
-        probe ??= host.appendChild(Object.assign(document.createElement('i'), { hidden: true }))
-        probe.style.color = `var(--${kebab}, var(--warp-${kebab}))`
-        const css = getComputedStyle(probe).color
-        const [r, g, b, a] = rgba(css)
-        token = { css, linear: [linear(r), linear(g), linear(b), a] }
-        known.set(name, token)
-      }
-      return token
+  const bump = () => {
+    known.clear()
+    theme.value++
+  }
+  return new Proxy(
+    {},
+    {
+      get(_, name): Token | undefined {
+        if (typeof name !== 'string') return undefined
+        void theme.value
+        if (!watching) {
+          watching = true
+          const seen = new MutationObserver(bump)
+          for (const el of [document.documentElement, document.body])
+            seen.observe(el, { attributes: true })
+          const dark =
+            typeof matchMedia === 'function'
+              ? matchMedia('(prefers-color-scheme: dark)')
+              : undefined
+          dark?.addEventListener('change', bump)
+          onCleanup(() => {
+            seen.disconnect()
+            dark?.removeEventListener('change', bump)
+          })
+        }
+        let token = known.get(name)
+        if (!token) {
+          const kebab = name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+          probe ??= host.appendChild(Object.assign(document.createElement('i'), { hidden: true }))
+          probe.style.color = `var(--${kebab}, var(--warp-${kebab}))`
+          const css = getComputedStyle(probe).color
+          const [r, g, b, a] = rgba(css)
+          token = { css, linear: [linear(r), linear(g), linear(b), a] }
+          known.set(name, token)
+        }
+        return token
+      },
     },
-  })
+  )
 }
 
 // ---- mounting ------------------------------------------------------------------------------------------------------
 
 type Mounting = SurfaceDef<Record<string, unknown>, string>
 
-function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: string; decorative?: boolean }, host: HTMLElement) {
+function mountSurface(
+  def: Mounting,
+  props: Record<string, unknown> & { label?: string; decorative?: boolean },
+  host: HTMLElement,
+) {
   const fps = def.fps ?? 60
   const canvas = document.createElement('canvas')
-  canvas.style.cssText = def.pixel ? 'position:absolute;inset:0;margin:auto;image-rendering:pixelated' : 'position:absolute;inset:0;width:100%;height:100%'
-  effect(() => [props.label, props.decorative] as const, ([label, decorative]) => {
-    if (decorative) canvas.setAttribute('aria-hidden', 'true')
-    else {
-      canvas.removeAttribute('aria-hidden')
-      canvas.setAttribute('role', 'img')
-      canvas.setAttribute('aria-label', label ?? def.name)
-    }
-  })
+  canvas.style.cssText = def.pixel
+    ? 'position:absolute;inset:0;margin:auto;image-rendering:pixelated'
+    : 'position:absolute;inset:0;width:100%;height:100%'
+  effect(
+    () => [props.label, props.decorative] as const,
+    ([label, decorative]) => {
+      if (decorative) canvas.setAttribute('aria-hidden', 'true')
+      else {
+        canvas.removeAttribute('aria-hidden')
+        canvas.setAttribute('role', 'img')
+        canvas.setAttribute('aria-label', label ?? def.name)
+      }
+    },
+  )
   host.prepend(canvas)
   onCleanup(() => canvas.remove())
 
   if (DEV && def.props) {
-    effect(() => ({ ...props }), value => {
-      const result = def.props!['~standard'].validate(value) as { issues?: readonly { message: string; path?: readonly (PropertyKey | { key: PropertyKey })[] }[] }
-      for (const i of result.issues ?? []) console.warn(`weft: <Surface use={${def.name}}> prop \`${(i.path ?? []).map(p => String(((p as { key?: PropertyKey })?.key ?? p) as PropertyKey)).join('.')}\`: ${i.message}`)
-    })
+    effect(
+      () => ({ ...props }),
+      (value) => {
+        const result = def.props!['~standard'].validate(value) as {
+          issues?: readonly {
+            message: string
+            path?: readonly (PropertyKey | { key: PropertyKey })[]
+          }[]
+        }
+        for (const i of result.issues ?? [])
+          console.warn(
+            `weft: <Surface use={${def.name}}> prop \`${(i.path ?? []).map((p) => String(((p as { key?: PropertyKey })?.key ?? p) as PropertyKey)).join('.')}\`: ${i.message}`,
+          )
+      },
+    )
   }
 
   const size = state({ width: 0, height: 0 })
@@ -239,13 +349,17 @@ function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: 
   const scale = state(1)
   const owner = getOwner()!
   let live = true
-  onCleanup(() => { live = false })
+  onCleanup(() => {
+    live = false
+  })
 
   const start = (renderer: SurfaceRenderer) => {
     if (!live) return
     const backend = renderer.context(canvas, def)
     if (!backend) {
-      console.error(`weft: <Surface use={${def.name}}>: this browser has no \`${def.kind}\` context.`)
+      console.error(
+        `weft: <Surface use={${def.name}}>: this browser has no \`${def.kind}\` context.`,
+      )
       host.setAttribute('data-surface-error', def.kind)
       return
     }
@@ -262,12 +376,14 @@ function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: 
         canvas.style.height = `${f.height}px`
         scale.value = f.scale
         backend.resize?.(def.pixel.width, def.pixel.height, 1)
-        if (size.value.width !== def.pixel.width) size.value = { width: def.pixel.width, height: def.pixel.height }
+        if (size.value.width !== def.pixel.width)
+          size.value = { width: def.pixel.width, height: def.pixel.height }
       } else {
         canvas.width = Math.round((deviceWidth ?? width * device) * (d / device))
         canvas.height = Math.round((deviceHeight ?? height * device) * (d / device))
         backend.resize?.(width, height, d)
-        if (size.value.width !== width || size.value.height !== height) size.value = { width, height }
+        if (size.value.width !== width || size.value.height !== height)
+          size.value = { width, height }
       }
       dpr.value = d
     }
@@ -277,20 +393,28 @@ function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: 
 
     const boot = () => {
       if (!live) return
-      createRoot(dispose => {
+      createRoot((dispose) => {
         stop = dispose
         const draws: (() => void)[] = []
         const frames: ((t: FrameTime) => void)[] = []
         const texts: PaintedText[] = []
         const tick = state(0)
-        let painting = false, started = false, booked = 0, seen = true, stale = false
+        let painting = false,
+          started = false,
+          booked = 0,
+          seen = true,
+          stale = false
         const first = Math.floor(seconds * fps) // a surface mounted after a seek starts at that frame
         let time: FrameTime = { frame: first, seconds: first / fps, delta: 0 }
 
         const paint = () => {
           painting = true
           tick.value = untrack(() => tick.value) + 1
-          try { flush() } finally { painting = false }
+          try {
+            flush()
+          } finally {
+            painting = false
+          }
         }
         repaint = paint
         const invalidate = () => {
@@ -310,17 +434,42 @@ function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: 
           else stale = true
         }
 
-        const textHost: TextHost = { el: host, ctx: backend.fields.ctx as TextHost['ctx'], invalidate, paint }
+        const textHost: TextHost = {
+          el: host,
+          ctx: backend.fields.ctx as TextHost['ctx'],
+          invalidate,
+          paint,
+        }
         const s = {
           ...backend.fields,
-          canvas, el: host, size, dpr, scale, clock, tokens: tokensOf(host),
-          draw(fn: () => void) { draws.push(fn); if (started) invalidate() },
+          canvas,
+          el: host,
+          size,
+          dpr,
+          scale,
+          clock,
+          tokens: tokensOf(host),
+          draw(fn: () => void) {
+            draws.push(fn)
+            if (started) invalidate()
+          },
           frame(fn: (t: FrameTime) => void) {
             frames.push(fn)
-            if (!tickers.has(ticker)) { tickers.add(ticker); onCleanup(() => tickers.delete(ticker)); if (playing.value) run() }
+            if (!tickers.has(ticker)) {
+              tickers.add(ticker)
+              onCleanup(() => tickers.delete(ticker))
+              if (playing.value) run()
+            }
           },
           invalidate,
-          text(text: Parameters<typeof surfaceText>[1], options: Parameters<typeof surfaceText>[2]) { const t = surfaceText(textHost, text, options); texts.push(t); return t },
+          text(
+            text: Parameters<typeof surfaceText>[1],
+            options: Parameters<typeof surfaceText>[2],
+          ) {
+            const t = surfaceText(textHost, text, options)
+            texts.push(t)
+            return t
+          },
           decorative: <T,>(fn: () => T) => fn(),
         }
 
@@ -329,21 +478,27 @@ function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: 
 
         // Paint and tracking are one effect: `tick` starts a paint, and a run with `painting` false means a source changed.
         painting = true
-        effect(() => {
-          void tick.value
-          if (!painting) return invalidate()
-          backend.begin?.()
-          for (const d of draws) d()
-          for (const f of frames) f(time)
-          for (const t of texts) t.paint()
-        }, () => {})
+        effect(
+          () => {
+            void tick.value
+            if (!painting) return invalidate()
+            backend.begin?.()
+            for (const d of draws) d()
+            for (const f of frames) f(time)
+            for (const t of texts) t.paint()
+          },
+          () => {},
+        )
         painting = false
         started = true
 
         if (typeof IntersectionObserver === 'function') {
-          const io = new IntersectionObserver(entries => {
+          const io = new IntersectionObserver((entries) => {
             seen = entries[entries.length - 1]!.isIntersecting
-            if (seen && stale) { stale = false; paint() }
+            if (seen && stale) {
+              stale = false
+              paint()
+            }
           })
           io.observe(host)
           onCleanup(() => io.disconnect())
@@ -354,19 +509,35 @@ function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: 
     const box = host.getBoundingClientRect()
     fit(box.width, box.height)
     if (typeof ResizeObserver === 'function') {
-      const ro = new ResizeObserver(entries => {
+      const ro = new ResizeObserver((entries) => {
         const e = entries[entries.length - 1]!
         const dp = e.devicePixelContentBoxSize?.[0]
         const exact = dp && Math.abs(dp.inlineSize - e.contentRect.width * devicePixelRatio) < 2 // emulated dpr: the box is in other units
-        fit(e.contentRect.width, e.contentRect.height, exact ? dp.inlineSize : undefined, exact ? dp.blockSize : undefined)
+        fit(
+          e.contentRect.width,
+          e.contentRect.height,
+          exact ? dp.inlineSize : undefined,
+          exact ? dp.blockSize : undefined,
+        )
         repaint() // now, not on a frame: setting the size cleared the canvas, and this callback runs before the browser paints
       })
-      try { ro.observe(host, { box: 'device-pixel-content-box' }) } catch { ro.observe(host) } // Safari has no such box
+      try {
+        ro.observe(host, { box: 'device-pixel-content-box' })
+      } catch {
+        ro.observe(host)
+      } // Safari has no such box
       onCleanup(() => ro.disconnect())
     }
 
-    canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); stop?.() })
-    canvas.addEventListener('webglcontextrestored', () => { const b = host.getBoundingClientRect(); fit(b.width, b.height); boot() })
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault()
+      stop?.()
+    })
+    canvas.addEventListener('webglcontextrestored', () => {
+      const b = host.getBoundingClientRect()
+      fit(b.width, b.height)
+      boot()
+    })
     onCleanup(() => stop?.())
     boot()
   }
@@ -374,10 +545,15 @@ function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: 
   const known = builtin[def.kind]
   if (known) start(known)
   else {
-    import('weft:slot/surface.renderer').then(m => m.load(def.kind) as Promise<SurfaceRenderer>).then(r => within(owner, () => start(r)), (error: unknown) => {
-      console.error(error)
-      host.setAttribute('data-surface-error', def.kind)
-    })
+    import('weft:slot/surface.renderer')
+      .then((m) => m.load(def.kind) as Promise<SurfaceRenderer>)
+      .then(
+        (r) => within(owner, () => start(r)),
+        (error: unknown) => {
+          console.error(error)
+          host.setAttribute('data-surface-error', def.kind)
+        },
+      )
   }
 }
 
@@ -401,5 +577,12 @@ export function Surface<P>(props: SurfaceProps<P>) {
   const def = untrack(() => props.use)
   onMount(() => mountSurface(def as unknown as Mounting, props, host))
   const ratio = () => props.aspect ?? (def.pixel ? `${def.pixel.width}/${def.pixel.height}` : '2/1')
-  return <div ref={(e: HTMLElement) => (host = e)} data-surface={def.name} class={props.class} style={`position:relative;aspect-ratio:${ratio()};${props.style ?? ''}`}></div>
+  return (
+    <div
+      ref={(e: HTMLElement) => (host = e)}
+      data-surface={def.name}
+      class={props.class}
+      style={`position:relative;aspect-ratio:${ratio()};${props.style ?? ''}`}
+    ></div>
+  )
 }

@@ -3,7 +3,10 @@ import { mutation, query, raise } from '@weft-js/start'
 import { z } from 'zod'
 import { all, index, rank } from './rank'
 
-export const Search = z.object({ q: z.string().trim().min(1).max(200), limit: z.int().min(1).max(50).default(10) })
+export const Search = z.object({
+  q: z.string().trim().min(1).max(200),
+  limit: z.int().min(1).max(50).default(10),
+})
 export const Hit = z.object({ id: z.string(), title: z.string(), score: z.number() })
 
 export const searchDocs = query({
@@ -18,7 +21,10 @@ export const popular = query({
   output: z.array(z.object({ id: z.string(), title: z.string() })),
   tags: ['docs'],
   cache: { life: 'minutes' },
-  run: ({ input }) => all().slice(0, input.limit).map(({ id, title }) => ({ id, title })),
+  run: ({ input }) =>
+    all()
+      .slice(0, input.limit)
+      .map(({ id, title }) => ({ id, title })),
 })
 
 export const getDoc = query({
@@ -26,7 +32,7 @@ export const getDoc = query({
   output: z.object({ id: z.string(), title: z.string(), body: z.string() }),
   errors: { NotFound: z.object({ id: z.string() }) },
   tags: ['docs'],
-  run: ({ input }) => all().find(d => d.id === input.id) ?? raise('NotFound', { id: input.id }),
+  run: ({ input }) => all().find((d) => d.id === input.id) ?? raise('NotFound', { id: input.id }),
 })
 
 export const addDoc = mutation({

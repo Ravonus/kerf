@@ -34,29 +34,43 @@ export interface NativeDb<D = unknown> {
   $weft: DbHandle
 }
 
-const placeholder = (dialect: DbHandle['dialect'], i: number) => (dialect === 'postgresql' ? `$${i + 1}` : '?')
+const placeholder = (dialect: DbHandle['dialect'], i: number) =>
+  dialect === 'postgresql' ? `$${i + 1}` : '?'
 
-const tag = (handle: DbHandle, query: Driver['query']): Sql => (strings, ...values) => {
-  const text = strings.reduce((out, part, i) => out + placeholder(handle.dialect, i - 1) + part)
-  touch(handle, text)
-  return query(text, values)
-}
+const tag =
+  (handle: DbHandle, query: Driver['query']): Sql =>
+  (strings, ...values) => {
+    const text = strings.reduce((out, part, i) => out + placeholder(handle.dialect, i - 1) + part)
+    touch(handle, text)
+    return query(text, values)
+  }
 
 /** A client over any `Driver`, with its migrations behind the same gate as every statement. */
-export function createNative<D>(driver: Driver<D>, { migrate = true }: { migrate?: boolean | undefined } = {}): NativeDb<D> {
+export function createNative<D>(
+  driver: Driver<D>,
+  { migrate = true }: { migrate?: boolean | undefined } = {},
+): NativeDb<D> {
   const handle: DbHandle = {
     dialect: driver.dialect,
     exempt: new Set(),
-    migrate: (list: Migration[]) => driver.locked(async () => {
-      await driver.exec('create table if not exists __weft_migrations (tag varchar(255) primary key)')
-      const done = new Set((await driver.query('select tag from __weft_migrations', [])).map(r => r.tag))
-      for (const m of list) {
-        if (done.has(m.tag)) continue
-        // A file with only comments is a migration still being written; some engines refuse an empty query.
-        if (m.sql.replace(/--.*$/gm, '').trim()) await driver.exec(m.sql)
-        await driver.query(`insert into __weft_migrations (tag) values (${placeholder(driver.dialect, 0)})`, [m.tag])
-      }
-    }),
+    migrate: (list: Migration[]) =>
+      driver.locked(async () => {
+        await driver.exec(
+          'create table if not exists __weft_migrations (tag varchar(255) primary key)',
+        )
+        const done = new Set(
+          (await driver.query('select tag from __weft_migrations', [])).map((r) => r.tag),
+        )
+        for (const m of list) {
+          if (done.has(m.tag)) continue
+          // A file with only comments is a migration still being written; some engines refuse an empty query.
+          if (m.sql.replace(/--.*$/gm, '').trim()) await driver.exec(m.sql)
+          await driver.query(
+            `insert into __weft_migrations (tag) values (${placeholder(driver.dialect, 0)})`,
+            [m.tag],
+          )
+        }
+      }),
   }
   const ready = gate(handle, migrate)
   const query: Driver['query'] = async (text, params) => (await ready(), driver.query(text, params))
@@ -64,8 +78,10 @@ export function createNative<D>(driver: Driver<D>, { migrate = true }: { migrate
     sql: tag(handle, query),
     query,
     driver: driver.raw,
-    transaction: async <T>(fn: (tx: { sql: Sql }) => Promise<T>) => (await ready(), driver.transaction(tx => fn({ sql: tag(handle, tx.query) }))),
+    transaction: async <T>(fn: (tx: { sql: Sql }) => Promise<T>) => (
+      await ready(),
+      driver.transaction((tx) => fn({ sql: tag(handle, tx.query) }))
+    ),
   }
   return register(db, handle)
 }
-

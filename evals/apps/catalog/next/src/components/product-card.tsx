@@ -10,12 +10,16 @@ export function ProductArt({ name, className = '' }: { name: string; className?:
   const { material, path } = artOf(name)
   return (
     <span className={`art ${className}`} data-material={material}>
-      <svg viewBox="0 0 120 120" aria-hidden="true"><path fillRule="evenodd" d={path} /></svg>
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <path fillRule="evenodd" d={path} />
+      </svg>
     </span>
   )
 }
 
-export const SoldOut = () => <span className="rounded-full bg-tint px-2 py-0.5 text-xs font-medium text-muted">Sold out</span>
+export const SoldOut = () => (
+  <span className="rounded-full bg-tint px-2 py-0.5 text-xs font-medium text-muted">Sold out</span>
+)
 
 export function ProductCard({ product }: { product: Product }) {
   return (

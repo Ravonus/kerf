@@ -25,9 +25,9 @@ use std::path::{Component, Path, PathBuf};
 
 use oxc_allocator::{Allocator, TakeIn, Vec as ArenaVec};
 use oxc_ast::ast::{
-    Argument, BindingPattern, CallExpression, Declaration, Expression, ImportDeclarationSpecifier, JSXAttributeItem,
-    JSXAttributeName, JSXAttributeValue, JSXExpression, JSXOpeningElement, ObjectPropertyKind, Program, PropertyKey,
-    PropertyKind, Statement,
+    Argument, BindingPattern, CallExpression, Declaration, Expression, ImportDeclarationSpecifier,
+    JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXExpression, JSXOpeningElement,
+    ObjectPropertyKind, Program, PropertyKey, PropertyKind, Statement,
 };
 use oxc_ast::builder::AstBuilder;
 use oxc_ast_visit::{VisitMut, walk_mut};
@@ -75,7 +75,9 @@ pub struct Imported {
 }
 
 /// ARIA states a group writes as `aria-*`. Other states are `data-*`; pseudo states are read, never written.
-const ARIA: &[&str] = &["selected", "pressed", "checked", "expanded", "current", "invalid", "busy"];
+const ARIA: &[&str] = &[
+    "selected", "pressed", "checked", "expanded", "current", "invalid", "busy",
+];
 const PSEUDO: &[&str] = &["hover", "focus", "active", "disabled"];
 
 struct Meta {
@@ -88,13 +90,20 @@ struct Meta {
 }
 
 fn keys(v: Option<&Value>) -> Vec<String> {
-    v.and_then(Value::as_object).map(|o| o.keys().cloned().collect()).unwrap_or_default()
+    v.and_then(Value::as_object)
+        .map(|o| o.keys().cloned().collect())
+        .unwrap_or_default()
 }
 
 fn meta(name: &str, def: &Value) -> Meta {
     let mut axes = Vec::new();
     let mut inherit = Vec::new();
-    for (axis, values) in def.get("axes").and_then(Value::as_object).into_iter().flatten() {
+    for (axis, values) in def
+        .get("axes")
+        .and_then(Value::as_object)
+        .into_iter()
+        .flatten()
+    {
         match values {
             Value::String(s) if s == "inherit" => inherit.push(axis.clone()),
             _ => axes.push((axis.clone(), keys(Some(values)))),
@@ -106,7 +115,12 @@ fn meta(name: &str, def: &Value) -> Meta {
         .into_iter()
         .flatten()
         .filter_map(|(k, v)| {
-            Some((k.clone(), v.as_str().map(str::to_string).or_else(|| v.as_bool().map(|b| b.to_string()))?))
+            Some((
+                k.clone(),
+                v.as_str()
+                    .map(str::to_string)
+                    .or_else(|| v.as_bool().map(|b| b.to_string()))?,
+            ))
         })
         .collect();
     Meta {
@@ -120,7 +134,11 @@ fn meta(name: &str, def: &Value) -> Meta {
 }
 
 fn state_attr(state: &str) -> String {
-    if ARIA.contains(&state) { format!("aria-{state}") } else { format!("data-{state}") }
+    if ARIA.contains(&state) {
+        format!("aria-{state}")
+    } else {
+        format!("data-{state}")
+    }
 }
 
 pub fn apply<'a>(
@@ -131,15 +149,25 @@ pub fn apply<'a>(
     options: &crate::Options,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> (Vec<GroupDef>, Vec<GroupUse>) {
-    let (filename, imported, tagged_parts) = (options.filename.as_str(), &options.groups, options.tagged_parts);
+    let (filename, imported, tagged_parts) = (
+        options.filename.as_str(),
+        &options.groups,
+        options.tagged_parts,
+    );
     let mut group_fn = None;
     let mut metas: HashMap<SymbolId, Meta> = HashMap::new();
     for stmt in &program.body {
-        let Statement::ImportDeclaration(d) = stmt else { continue };
+        let Statement::ImportDeclaration(d) = stmt else {
+            continue;
+        };
         let from = d.source.value.as_str();
         for spec in d.specifiers.iter().flatten() {
-            let ImportDeclarationSpecifier::ImportSpecifier(s) = spec else { continue };
-            let Some(sym) = s.local.symbol_id.get() else { continue };
+            let ImportDeclarationSpecifier::ImportSpecifier(s) = spec else {
+                continue;
+            };
+            let Some(sym) = s.local.symbol_id.get() else {
+                continue;
+            };
             if from == "@weft-js/core/style" && s.imported.name() == "group" {
                 group_fn = Some(sym);
             } else if from.starts_with('.') {
@@ -168,7 +196,8 @@ pub fn apply<'a>(
             _ => continue,
         };
         for d in &mut decl.declarations {
-            let (BindingPattern::BindingIdentifier(id), Some(Expression::CallExpression(call))) = (&d.id, &mut d.init)
+            let (BindingPattern::BindingIdentifier(id), Some(Expression::CallExpression(call))) =
+                (&d.id, &mut d.init)
             else {
                 continue;
             };
@@ -195,7 +224,10 @@ pub fn apply<'a>(
                 Some(e) => match eval(e) {
                     Ok(v) => v,
                     Err((span, path)) => {
-                        let what = format!("`{}` at {name}.{path}", &source[span.start as usize..span.end as usize]);
+                        let what = format!(
+                            "`{}` at {name}.{path}",
+                            &source[span.start as usize..span.end as usize]
+                        );
                         diagnostics.push(not_static(source, span, &what, "Group values are token names and literals, evaluated at build. Inline the value, or use `css: { … }` for a raw one."));
                         continue;
                     }
@@ -258,13 +290,20 @@ fn not_static(source: &str, span: Span, what: &str, help: &str) -> Diagnostic {
 }
 
 fn resolves(scoping: &Scoping, e: &Expression) -> Option<SymbolId> {
-    let Expression::Identifier(id) = e else { return None };
-    id.reference_id.get().and_then(|r| scoping.get_reference(r).symbol_id())
+    let Expression::Identifier(id) = e else {
+        return None;
+    };
+    id.reference_id
+        .get()
+        .and_then(|r| scoping.get_reference(r).symbol_id())
 }
 
 /// `./order-card` from `/app/src/x.tsx` → `/app/src/order-card` (extension stripped, as the plugin keys groups).
 pub(crate) fn resolve(filename: &str, spec: &str) -> String {
-    let base = Path::new(filename).parent().unwrap_or(Path::new("")).join(spec);
+    let base = Path::new(filename)
+        .parent()
+        .unwrap_or(Path::new(""))
+        .join(spec);
     let mut out = PathBuf::new();
     for c in base.components() {
         match c {
@@ -289,19 +328,23 @@ pub(crate) fn resolve(filename: &str, spec: &str) -> String {
 fn eval(e: &Expression) -> Result<Value, (Span, String)> {
     match e {
         Expression::StringLiteral(s) => Ok(Value::String(s.value.to_string())),
-        Expression::NumericLiteral(n) => Ok(serde_json::Number::from_f64(n.value).map_or(Value::Null, Value::Number)),
+        Expression::NumericLiteral(n) => {
+            Ok(serde_json::Number::from_f64(n.value).map_or(Value::Null, Value::Number))
+        }
         Expression::BooleanLiteral(b) => Ok(Value::Bool(b.value)),
         Expression::NullLiteral(_) => Ok(Value::Null),
         Expression::TemplateLiteral(t) if t.expressions.is_empty() => Ok(Value::String(
-            t.quasis.iter().map(|q| q.value.cooked.map_or(q.value.raw.as_str(), |c| c.as_str())).collect(),
+            t.quasis
+                .iter()
+                .map(|q| q.value.cooked.map_or(q.value.raw.as_str(), |c| c.as_str()))
+                .collect(),
         )),
         Expression::ParenthesizedExpression(p) => eval(&p.expression),
         Expression::TSAsExpression(a) => eval(&a.expression),
         Expression::TSSatisfiesExpression(a) => eval(&a.expression),
         Expression::UnaryExpression(u) if u.operator.as_str() == "-" => match eval(&u.argument)? {
-            Value::Number(n) => {
-                Ok(serde_json::Number::from_f64(-n.as_f64().unwrap_or(0.0)).map_or(Value::Null, Value::Number))
-            }
+            Value::Number(n) => Ok(serde_json::Number::from_f64(-n.as_f64().unwrap_or(0.0))
+                .map_or(Value::Null, Value::Number)),
             _ => Err((u.span, String::new())),
         },
         Expression::ArrayExpression(a) => a
@@ -317,7 +360,9 @@ fn eval(e: &Expression) -> Result<Value, (Span, String)> {
         Expression::ObjectExpression(o) => {
             let mut map = Map::new();
             for p in &o.properties {
-                let ObjectPropertyKind::ObjectProperty(p) = p else { return Err((p.span(), String::new())) };
+                let ObjectPropertyKind::ObjectProperty(p) = p else {
+                    return Err((p.span(), String::new()));
+                };
                 let key = match &p.key {
                     PropertyKey::StaticIdentifier(id) => id.name.to_string(),
                     PropertyKey::StringLiteral(s) => s.value.to_string(),
@@ -337,14 +382,20 @@ fn eval(e: &Expression) -> Result<Value, (Span, String)> {
 }
 
 fn join(head: &str, tail: &str) -> String {
-    if tail.is_empty() { head.to_string() } else { format!("{head}.{tail}") }
+    if tail.is_empty() {
+        head.to_string()
+    } else {
+        format!("{head}.{tail}")
+    }
 }
 
 /// The values an axis expression can produce, when every leaf is a string literal (`a ? 'x' : 'y'`).
 fn literals(e: &Expression) -> Option<Vec<String>> {
     match e {
         Expression::StringLiteral(s) => Some(vec![s.value.to_string()]),
-        Expression::TemplateLiteral(t) if t.expressions.is_empty() => Some(vec![t.quasis[0].value.raw.to_string()]),
+        Expression::TemplateLiteral(t) if t.expressions.is_empty() => {
+            Some(vec![t.quasis[0].value.raw.to_string()])
+        }
         Expression::ParenthesizedExpression(p) => literals(&p.expression),
         Expression::TSAsExpression(a) => literals(&a.expression),
         Expression::ConditionalExpression(c) => {
@@ -373,16 +424,28 @@ struct Lower<'a, 'p> {
 
 impl<'a> Lower<'a, '_> {
     fn attr(&self, name: &str, value: JSXAttributeValue<'a>) -> JSXAttributeItem<'a> {
-        let name = JSXAttributeName::new_identifier(SPAN, self.allocator.alloc_str(name), &self.ast);
+        let name =
+            JSXAttributeName::new_identifier(SPAN, self.allocator.alloc_str(name), &self.ast);
         JSXAttributeItem::new_attribute(SPAN, name, Some(value), &self.ast)
     }
 
     fn text(&self, name: &str, value: &str) -> JSXAttributeItem<'a> {
-        self.attr(name, JSXAttributeValue::new_string_literal(SPAN, self.allocator.alloc_str(value), None, &self.ast))
+        self.attr(
+            name,
+            JSXAttributeValue::new_string_literal(
+                SPAN,
+                self.allocator.alloc_str(value),
+                None,
+                &self.ast,
+            ),
+        )
     }
 
     fn expr(&self, name: &str, e: Expression<'a>) -> JSXAttributeItem<'a> {
-        self.attr(name, JSXAttributeValue::new_expression_container(SPAN, JSXExpression::from(e), &self.ast))
+        self.attr(
+            name,
+            JSXAttributeValue::new_expression_container(SPAN, JSXExpression::from(e), &self.ast),
+        )
     }
 
     fn string(&self, value: &str) -> Expression<'a> {
@@ -410,8 +473,16 @@ impl<'a> Lower<'a, '_> {
             let meta = self.meta_of(&m.object)?;
             let (name, part) = (meta.name.clone(), m.property.name.to_string());
             if !meta.parts.contains(&part) {
-                let help = format!("{}Parts of {name}: {}.", did_you_mean(&part, &meta.parts), list(&meta.parts));
-                self.error(m.property.span, format!("group {name} has no part `{part}`"), help);
+                let help = format!(
+                    "{}Parts of {name}: {}.",
+                    did_you_mean(&part, &meta.parts),
+                    list(&meta.parts)
+                );
+                self.error(
+                    m.property.span,
+                    format!("group {name} has no part `{part}`"),
+                    help,
+                );
                 return None;
             }
             self.uses.push(GroupUse {
@@ -424,13 +495,23 @@ impl<'a> Lower<'a, '_> {
                 line,
             });
             let part_attr = self.text("data-part", &part);
-            return Some(if self.tagged_parts { vec![self.text("data-g", &name), part_attr] } else { vec![part_attr] });
+            return Some(if self.tagged_parts {
+                vec![self.text("data-g", &name), part_attr]
+            } else {
+                vec![part_attr]
+            });
         }
-        let Expression::CallExpression(call) = arg else { return None };
+        let Expression::CallExpression(call) = arg else {
+            return None;
+        };
         let meta = self.meta_of(&call.callee)?;
         let name = meta.name.clone();
         let axes = meta.axes.clone();
-        let (inherit, states, defaults) = (meta.inherit.clone(), meta.states.clone(), meta.defaults.clone());
+        let (inherit, states, defaults) = (
+            meta.inherit.clone(),
+            meta.states.clone(),
+            meta.defaults.clone(),
+        );
         let mut use_ = GroupUse {
             group: name.clone(),
             axes: BTreeMap::new(),
@@ -443,7 +524,9 @@ impl<'a> Lower<'a, '_> {
         let props = match call.arguments.first_mut() {
             None => None,
             Some(Argument::ObjectExpression(o))
-                if o.properties.iter().all(|p| matches!(p, ObjectPropertyKind::ObjectProperty(p) if !p.computed)) =>
+                if o.properties
+                    .iter()
+                    .all(|p| matches!(p, ObjectPropertyKind::ObjectProperty(p) if !p.computed)) =>
             {
                 Some(o)
             }
@@ -455,19 +538,27 @@ impl<'a> Lower<'a, '_> {
         };
         let mut out = vec![self.text("data-g", &name)];
         for p in props.into_iter().flat_map(|o| o.properties.iter_mut()) {
-            let ObjectPropertyKind::ObjectProperty(p) = p else { continue };
-            let Some(key) = p.key.static_name().map(|k| k.to_string()) else { continue };
-            if key == "accent" && !axes.iter().any(|(a, _)| a == "accent") && !states.contains(&key) {
+            let ObjectPropertyKind::ObjectProperty(p) = p else {
+                continue;
+            };
+            let Some(key) = p.key.static_name().map(|k| k.to_string()) else {
+                continue;
+            };
+            if key == "accent" && !axes.iter().any(|(a, _)| a == "accent") && !states.contains(&key)
+            {
                 match accent(&p.value) {
                     Ok(set) if set.is_empty() => {}
                     Ok(set) => {
-                        let words: Vec<String> = set.iter().map(|(k, v)| format!("{k}:{v}")).collect();
+                        let words: Vec<String> =
+                            set.iter().map(|(k, v)| format!("{k}:{v}")).collect();
                         out.push(self.text("data-accent", &words.join(" ")));
                         use_.accent = Some(set);
                     }
                     Err(span) => {
-                        let what =
-                            format!("`{}` in {name}'s accent", &self.source[span.start as usize..span.end as usize]);
+                        let what = format!(
+                            "`{}` in {name}'s accent",
+                            &self.source[span.start as usize..span.end as usize]
+                        );
                         self.diagnostics.push(not_static(
                             self.source,
                             span,
@@ -482,8 +573,16 @@ impl<'a> Lower<'a, '_> {
                 let produced = literals(&p.value);
                 for v in produced.iter().flatten() {
                     if !values.contains(v) {
-                        let help = format!("{}Values of {name}.{key}: {}.", did_you_mean(v, values), list(values));
-                        self.error(p.value.span(), format!("`{v}` isn't a value of {name}'s `{key}` axis"), help);
+                        let help = format!(
+                            "{}Values of {name}.{key}: {}.",
+                            did_you_mean(v, values),
+                            list(values)
+                        );
+                        self.error(
+                            p.value.span(),
+                            format!("`{v}` isn't a value of {name}'s `{key}` axis"),
+                            help,
+                        );
                     }
                 }
                 let attr = format!("data-{key}");
@@ -508,11 +607,15 @@ impl<'a> Lower<'a, '_> {
                         let (yes, no) = if aria {
                             (self.string("true"), self.string("false"))
                         } else {
-                            (self.string(""), Expression::new_null_literal(SPAN, &self.ast))
+                            (
+                                self.string(""),
+                                Expression::new_null_literal(SPAN, &self.ast),
+                            )
                         };
-                        out.push(
-                            self.expr(&attr, Expression::new_conditional_expression(SPAN, test, yes, no, &self.ast)),
-                        );
+                        out.push(self.expr(
+                            &attr,
+                            Expression::new_conditional_expression(SPAN, test, yes, no, &self.ast),
+                        ));
                     }
                 }
                 use_.states.push(key);
@@ -532,7 +635,12 @@ impl<'a> Lower<'a, '_> {
                     let all: Vec<String> = ax.iter().chain(states.iter()).cloned().collect();
                     (
                         format!("group {name} has no axis or state `{key}`"),
-                        format!("{}Axes: {}. States: {}.", did_you_mean(&key, &all), list(&ax), list(&states)),
+                        format!(
+                            "{}Axes: {}. States: {}.",
+                            did_you_mean(&key, &all),
+                            list(&ax),
+                            list(&states)
+                        ),
                     )
                 };
                 self.error(p.key.span(), message, help);
@@ -550,16 +658,26 @@ impl<'a> Lower<'a, '_> {
 }
 
 fn list(xs: &[String]) -> String {
-    if xs.is_empty() { "none".into() } else { xs.join(", ") }
+    if xs.is_empty() {
+        "none".into()
+    } else {
+        xs.join(", ")
+    }
 }
 
 /// `accent: { radius: 'round' }` → intent → token (sorted by intent); `Err` is the first part that isn't literal.
 fn accent(e: &Expression) -> Result<BTreeMap<String, String>, Span> {
-    let Expression::ObjectExpression(o) = e.without_parentheses() else { return Err(e.span()) };
+    let Expression::ObjectExpression(o) = e.without_parentheses() else {
+        return Err(e.span());
+    };
     let mut out = BTreeMap::new();
     for p in &o.properties {
-        let ObjectPropertyKind::ObjectProperty(p) = p else { return Err(p.span()) };
-        let Some(key) = p.key.static_name().filter(|_| !p.computed) else { return Err(p.key.span()) };
+        let ObjectPropertyKind::ObjectProperty(p) = p else {
+            return Err(p.span());
+        };
+        let Some(key) = p.key.static_name().filter(|_| !p.computed) else {
+            return Err(p.key.span());
+        };
         match literals(&p.value).as_deref() {
             Some([v]) => out.insert(key.to_string(), v.clone()),
             _ => return Err(p.value.span()),
@@ -581,7 +699,9 @@ fn distance(a: &str, b: &str) -> usize {
     for i in 1..=a.len() {
         for j in 1..=b.len() {
             let cost = usize::from(a[i - 1] != b[j - 1]);
-            d[i][j] = (d[i - 1][j] + 1).min(d[i][j - 1] + 1).min(d[i - 1][j - 1] + cost);
+            d[i][j] = (d[i - 1][j] + 1)
+                .min(d[i][j - 1] + 1)
+                .min(d[i - 1][j - 1] + cost);
             if i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] {
                 d[i][j] = d[i][j].min(d[i - 2][j - 2] + 1);
             }
@@ -597,7 +717,9 @@ fn did_you_mean(word: &str, names: &[String]) -> String {
     let mut close: Vec<(usize, &String)> = names
         .iter()
         .map(|n| (distance(&w, &n.to_lowercase()), n))
-        .filter(|(d, n)| *d <= limit || n.to_lowercase().contains(&w) || w.contains(&n.to_lowercase()))
+        .filter(|(d, n)| {
+            *d <= limit || n.to_lowercase().contains(&w) || w.contains(&n.to_lowercase())
+        })
         .collect();
     close.sort_by_key(|(d, _)| *d);
     match close.as_slice() {
@@ -605,7 +727,11 @@ fn did_you_mean(word: &str, names: &[String]) -> String {
         [(_, n)] => format!("Did you mean `{n}`? "),
         many => format!(
             "Did you mean {}? ",
-            many.iter().take(3).map(|(_, n)| format!("`{n}`")).collect::<Vec<_>>().join(" or ")
+            many.iter()
+                .take(3)
+                .map(|(_, n)| format!("`{n}`"))
+                .collect::<Vec<_>>()
+                .join(" or ")
         ),
     }
 }
@@ -625,14 +751,18 @@ impl<'a> VisitMut<'a> for Lower<'a, '_> {
             .iter()
             .filter_map(|a| match a {
                 JSXAttributeItem::SpreadAttribute(s) => match &s.argument {
-                    Expression::CallExpression(c) => self.meta_of(&c.callee).map(|m| (s.span, m.name.clone())),
+                    Expression::CallExpression(c) => {
+                        self.meta_of(&c.callee).map(|m| (s.span, m.name.clone()))
+                    }
                     _ => None,
                 },
                 JSXAttributeItem::Attribute(_) => None,
             })
             .collect();
         if let [(_, first), .., (span, last)] = roots.as_slice() {
-            let message = format!("two group roots on one element: {first} and {last} (the last `data-g` would win)");
+            let message = format!(
+                "two group roots on one element: {first} and {last} (the last `data-g` would win)"
+            );
             let help = "One group per element: nest an element for the second group, or make the variation an axis of one group.";
             self.diagnostics.push(Diagnostic::new(
                 self.source,

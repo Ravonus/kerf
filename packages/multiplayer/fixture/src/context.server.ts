@@ -5,5 +5,7 @@ export default ({ request }: { request: Request }) => {
 }
 
 declare module '@weft-js/start' {
-  interface Context { who: string }
+  interface Context {
+    who: string
+  }
 }

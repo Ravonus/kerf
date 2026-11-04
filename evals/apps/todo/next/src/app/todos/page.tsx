@@ -16,7 +16,9 @@ export default function Todos({ searchParams }: { searchParams: Search }) {
     <>
       <header className="sticky top-0 z-10 border-b border-line/70 bg-paper/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4 sm:px-6">
-          <Link href="/todos"><Logo /></Link>
+          <Link href="/todos">
+            <Logo />
+          </Link>
           <Suspense fallback={<span className="size-9 rounded-full bg-tint" />}>
             <Account />
           </Suspense>

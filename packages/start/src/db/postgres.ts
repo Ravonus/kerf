@@ -25,27 +25,43 @@ export interface PostgresOptions<S extends Record<string, unknown>> {
 }
 
 /** Drizzle on postgres.js, with `$weft` for the framework's own needs. */
-export type PostgresDb<S extends Record<string, unknown>> = PostgresJsDatabase<S> & { $weft: DbHandle }
+export type PostgresDb<S extends Record<string, unknown>> = PostgresJsDatabase<S> & {
+  $weft: DbHandle
+}
 
 const LOCK = 7_301_986
 /** The most parameters a statement that's kept takes. Past it, `inArray` over a growing list is what's asking. */
 const KEPT = 32
 
 /** A pooled Drizzle client on Postgres, with this app's migrations and write tracking. */
-export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10, prepare = true }: PostgresOptions<S>): PostgresDb<S> {
+export function createDb<S extends Record<string, unknown>>({
+  schema,
+  url,
+  migrate = true,
+  max = 10,
+  prepare = true,
+}: PostgresOptions<S>): PostgresDb<S> {
   if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`@weft-js/start/db/postgres\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite` for a file')
+    throw new StartError(
+      'Q013',
+      `\`@weft-js/start/db/postgres\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``,
+      'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite` for a file',
+    )
   // Idle connections close, so a stopped server can exit.
   const client = postgres(url, { max, idle_timeout: 20, onnotice: () => {} })
   const handle: DbHandle = {
     dialect: 'postgresql',
     exempt: new Set(),
     async migrate(list: Migration[]) {
-      await client.begin(async tx => {
+      await client.begin(async (tx) => {
         await tx.unsafe(`select pg_advisory_xact_lock(${LOCK})`)
-        await tx.unsafe('create table if not exists __weft_migrations (tag text primary key, at timestamptz not null default now())')
-        const done = new Set((await tx.unsafe('select tag from __weft_migrations')).map(r => r.tag))
+        await tx.unsafe(
+          'create table if not exists __weft_migrations (tag text primary key, at timestamptz not null default now())',
+        )
+        const done = new Set(
+          (await tx.unsafe('select tag from __weft_migrations')).map((r) => r.tag),
+        )
         for (const m of list) {
           if (done.has(m.tag)) continue
           for (const s of statements(m.sql)) await tx.unsafe(s)
@@ -53,22 +69,32 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
         }
       })
     },
-    changes: (tables, o) => import('./changes-postgres').then(m => m.postgresChanges({ ...o, url, client, tables })),
+    changes: (tables, o) =>
+      import('./changes-postgres').then((m) => m.postgresChanges({ ...o, url, client, tables })),
   }
   const ready = gate(handle, migrate)
   // All Drizzle sends goes through `unsafe` and `begin`, so holding those holds it; `handle.migrate` keeps the plain client.
   const held = new Proxy(client, {
     get(t, key) {
-      if (key === 'begin') return async (...a: Parameters<typeof t.begin>) => (await ready(), t.begin(...a))
+      if (key === 'begin')
+        return async (...a: Parameters<typeof t.begin>) => (await ready(), t.begin(...a))
       if (key !== 'unsafe') return Reflect.get(t, key)
-      return (text: string, params?: postgres.ParameterOrJSON<never>[], options?: postgres.UnsafeQueryOptions) => {
-        const send = () => t.unsafe(text, params, { ...options, prepare: prepare && (params?.length ?? 0) <= KEPT })
+      return (
+        text: string,
+        params?: postgres.ParameterOrJSON<never>[],
+        options?: postgres.UnsafeQueryOptions,
+      ) => {
+        const send = () =>
+          t.unsafe(text, params, { ...options, prepare: prepare && (params?.length ?? 0) <= KEPT })
         const after = <T>(go: () => PromiseLike<T>) => Promise.resolve(ready()).then(go)
         // oxlint-disable-next-line unicorn/no-thenable -- postgres.js's query is a lazy thenable, and Drizzle awaits it as one
-        return { values: () => after(() => send().values()), then: <A, B>(ok: (rows: unknown) => A, no: (e: unknown) => B) => after(send).then(ok, no) }
+        return {
+          values: () => after(() => send().values()),
+          then: <A, B>(ok: (rows: unknown) => A, no: (e: unknown) => B) => after(send).then(ok, no),
+        }
       }
     },
   })
-  const db = drizzle(held, { schema, logger: { logQuery: sql => touch(handle, sql) } })
+  const db = drizzle(held, { schema, logger: { logQuery: (sql) => touch(handle, sql) } })
   return register(db, handle)
 }

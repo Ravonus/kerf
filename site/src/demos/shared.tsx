@@ -16,22 +16,20 @@ const add = (who: string) => {
 export default function Shared() {
   return (
     <div data-part="panes">
-      {['Ana', 'Ben'].map(who => (
+      {['Ana', 'Ben'].map((who) => (
         <Card key={who} title={who}>
-          {todos.value.map(t => (
+          {todos.value.map((t) => (
             <Checkbox
               key={t.id}
               checked={t.done.value}
-              onChange={(e: Event & { currentTarget: HTMLInputElement }) => (t.done.value = e.currentTarget.checked)}
+              onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+                (t.done.value = e.currentTarget.checked)
+              }
             >
               {t.text}
             </Checkbox>
           ))}
-          <Button
-            emphasis="ghost"
-            tone="neutral"
-            onClick={() => add(who)}
-          >
+          <Button emphasis="ghost" tone="neutral" onClick={() => add(who)}>
             Add a task
           </Button>
         </Card>

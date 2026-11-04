@@ -28,10 +28,10 @@ export function negotiate(accept, formats, fallback) {
   const q = new Map()
   for (const part of accept.split(',')) {
     const [type, ...params] = part.trim().toLowerCase().split(';')
-    const v = params.map(p => /^\s*q=([\d.]+)/.exec(p)?.[1]).find(Boolean)
+    const v = params.map((p) => /^\s*q=([\d.]+)/.exec(p)?.[1]).find(Boolean)
     q.set(type.trim(), v === undefined ? 1 : Number(v))
   }
-  return formats.find(f => q.get(MIME[f]) > 0) ?? fallback
+  return formats.find((f) => q.get(MIME[f]) > 0) ?? fallback
 }
 
 /** The media.server@1 provider: `at(root, encode)` is the store for one app, its `ingest` and its `serve`. */
@@ -41,11 +41,13 @@ export function createMediaServer(input = {}) {
 }
 
 function storage(o, root, encode) {
-  const dir = process.env.WEFT_MEDIA_DIR ? resolve(process.env.WEFT_MEDIA_DIR) : resolve(root ?? process.cwd(), o.server?.dir ?? '.weft/media')
+  const dir = process.env.WEFT_MEDIA_DIR
+    ? resolve(process.env.WEFT_MEDIA_DIR)
+    : resolve(root ?? process.cwd(), o.server?.dir ?? '.weft/media')
   const limit = o.server?.maxBytes ?? MAX_BYTES
   const flight = new Map()
   const url = (hash, width, format = 'auto') => `${ROUTE}/${hash}/${width}.${format}`
-  const metaOf = hash => {
+  const metaOf = (hash) => {
     const file = join(dir, hash, 'meta.json')
     return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null
   }
@@ -63,13 +65,21 @@ function storage(o, root, encode) {
   const timed = uploads({ o, dir, encode, url, store, refuse })
 
   async function ingest(bytes, { name = 'upload' } = {}) {
-    if (bytes.length > limit) refuse('M018', `${name} is ${Math.round(bytes.length / 1048576)} MB, over the ${Math.round(limit / 1048576)} MB limit.`)
+    if (bytes.length > limit)
+      refuse(
+        'M018',
+        `${name} is ${Math.round(bytes.length / 1048576)} MB, over the ${Math.round(limit / 1048576)} MB limit.`,
+      )
     const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 32)
     const known = metaOf(hash)
     if (known) return { ...known.asset, name }
     const kind = sniff(bytes)
     if (kind) {
-      if (!encode['video/h264']) refuse('M018', `${name} is ${kind}, and nothing here encodes it: add \`mediaFfmpeg()\` from @weft-js/plugin-media-ffmpeg to \`plugins\`, with ffmpeg on the server.`)
+      if (!encode['video/h264'])
+        refuse(
+          'M018',
+          `${name} is ${kind}, and nothing here encodes it: add \`mediaFfmpeg()\` from @weft-js/plugin-media-ffmpeg to \`plugins\`, with ffmpeg on the server.`,
+        )
       mkdirSync(join(dir, hash), { recursive: true })
       return timed.ingest(hash, bytes, name, kind)
     }
@@ -77,29 +87,74 @@ function storage(o, root, encode) {
     if (size?.type === 'image/svg+xml') {
       const text = new TextDecoder().decode(bytes)
       const unsafe = unsafeSvg(text)
-      if (unsafe.length) refuse('M012', `${name} has ${unsafe.join(', ')}: an image with active content or external references is not stored.`)
+      if (unsafe.length)
+        refuse(
+          'M012',
+          `${name} has ${unsafe.join(', ')}: an image with active content or external references is not stored.`,
+        )
       const svg = new TextEncoder().encode(optimize(text, { multipass: true }).data)
-      return store(hash, svg, { kind: 'vector', src: url(hash, size.width), width: size.width, height: size.height, type: MIME.svg, sources: [], name, quality: 'original' }, { ladder: [size.width], type: MIME.svg })
+      return store(
+        hash,
+        svg,
+        {
+          kind: 'vector',
+          src: url(hash, size.width),
+          width: size.width,
+          height: size.height,
+          type: MIME.svg,
+          sources: [],
+          name,
+          quality: 'original',
+        },
+        { ladder: [size.width], type: MIME.svg },
+      )
     }
     let meta
-    try { meta = await sharp(bytes, { animated: true }).metadata() } catch { refuse('M018', `${name} isn't an image weft can read (PNG, JPEG, GIF, WebP, AVIF, SVG).`) }
+    try {
+      meta = await sharp(bytes, { animated: true }).metadata()
+    } catch {
+      refuse('M018', `${name} isn't an image weft can read (PNG, JPEG, GIF, WebP, AVIF, SVG).`)
+    }
     const turned = (meta.orientation ?? 1) >= 5
     const tall = meta.pageHeight ?? meta.height
     const width = turned ? tall : meta.width
     const height = turned ? meta.width : tall
-    if (meta.format === 'gif' && (meta.pages ?? 1) > 1) { // Animated: video when that's a saving, else as it is.
+    if (meta.format === 'gif' && (meta.pages ?? 1) > 1) {
+      // Animated: video when that's a saving, else as it is.
       mkdirSync(join(dir, hash), { recursive: true })
       const video = await timed.gif(hash, bytes, name, meta)
       if (video) return video
-      return store(hash, bytes, { kind: 'graphic', src: url(hash, width), width, height, type: MIME.gif, sources: [], name, quality: 'original' }, { ladder: [width], type: MIME.gif })
+      return store(
+        hash,
+        bytes,
+        {
+          kind: 'graphic',
+          src: url(hash, width),
+          width,
+          height,
+          type: MIME.gif,
+          sources: [],
+          name,
+          quality: 'original',
+        },
+        { ladder: [width], type: MIME.gif },
+      )
     }
     const photo = isPhoto(meta)
     const fallback = photo ? 'jpeg' : 'png'
     const largest = Math.min(width, o.widths.at(-1))
-    const ladder = [...new Set([...o.widths.filter(w => w < largest), largest])]
+    const ladder = [...new Set([...o.widths.filter((w) => w < largest), largest])]
     const asset = {
-      kind: photo ? 'photo' : 'graphic', src: url(hash, largest), width, height, type: MIME[fallback],
-      sources: [{ type: MIME[fallback], srcset: ladder.map(w => `${url(hash, w)} ${w}w`).join(', ') }], name, quality: 'fixed',
+      kind: photo ? 'photo' : 'graphic',
+      src: url(hash, largest),
+      width,
+      height,
+      type: MIME[fallback],
+      sources: [
+        { type: MIME[fallback], srcset: ladder.map((w) => `${url(hash, w)} ${w}w`).join(', ') },
+      ],
+      name,
+      quality: 'fixed',
     }
     if (o.placeholder) {
       const base = () => sharp(bytes).rotate()
@@ -116,7 +171,9 @@ function storage(o, root, encode) {
     const key = `${hash}/${width}.${format}`
     if (!flight.has(key)) {
       const work = (async () => {
-        const img = sharp(readFileSync(join(dir, hash, 'source'))).rotate().resize({ width })
+        const img = sharp(readFileSync(join(dir, hash, 'source')))
+          .rotate()
+          .resize({ width })
         const bytes = await encoders[format](img, FIXED[format]).toBuffer()
         const tmp = `${file}.${process.pid}.tmp`
         writeFileSync(tmp, bytes)
@@ -130,13 +187,29 @@ function storage(o, root, encode) {
 
   async function serve({ hash, width, format, accept }) {
     const meta = /^[0-9a-f]{32}$/.test(hash) ? metaOf(hash) : null
-    if (meta?.timed) return FORMATS_TIMED.has(format) ? timed.serve(hash, meta, width, format) : null
+    if (meta?.timed)
+      return FORMATS_TIMED.has(format) ? timed.serve(hash, meta, width, format) : null
     if (!meta?.ladder.includes(width)) return null
     const negotiated = format === 'auto'
-    if (meta.type) return negotiated ? { bytes: readFileSync(join(dir, hash, 'source')), type: meta.type, width, format: 'source', negotiated: false } : null
+    if (meta.type)
+      return negotiated
+        ? {
+            bytes: readFileSync(join(dir, hash, 'source')),
+            type: meta.type,
+            width,
+            format: 'source',
+            negotiated: false,
+          }
+        : null
     const fmt = negotiated ? negotiate(accept, o.formats, meta.fallback) : FORMAT[format]
     if (!fmt || !(fmt === meta.fallback || o.formats.includes(fmt))) return null
-    return { bytes: new Uint8Array(await variant(hash, width, fmt)), type: MIME[fmt], width, format: fmt, negotiated }
+    return {
+      bytes: new Uint8Array(await variant(hash, width, fmt)),
+      type: MIME[fmt],
+      width,
+      format: fmt,
+      negotiated,
+    }
   }
 
   return { ingest, serve, settled: timed.settled }

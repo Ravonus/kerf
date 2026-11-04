@@ -5,4 +5,6 @@ import { EXPRESSION } from '../expression'
 export { EXPRESSION }
 type Stop = 'quiet' | 'balanced' | 'vivid'
 /** The stop the page is painted at: the root's, which the head wrote before paint; the default on the server. */
-export const shownExpression = (): Stop => ((typeof document !== 'undefined' && document.documentElement?.dataset?.expression) || EXPRESSION) as Stop
+export const shownExpression = (): Stop =>
+  ((typeof document !== 'undefined' && document.documentElement?.dataset?.expression) ||
+    EXPRESSION) as Stop

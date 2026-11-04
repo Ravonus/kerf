@@ -1,5 +1,21 @@
 // The chart math, the scene, and the behaviour on plain DOM: nothing here needs a framework.
-import { type BarConfig, type Form, type Scene, bar, chart, labelWindow, line, monotone, niceTicks, patch, quantile, s, sparkScene, squarify, toHTML } from '../src/charts'
+import {
+  type BarConfig,
+  type Form,
+  type Scene,
+  bar,
+  chart,
+  labelWindow,
+  line,
+  monotone,
+  niceTicks,
+  patch,
+  quantile,
+  s,
+  sparkScene,
+  squarify,
+  toHTML,
+} from '../src/charts'
 
 test('niceTicks lands on round steps around the data', () => {
   expect(niceTicks(0, 98, 4)).toEqual([0, 20, 40, 60, 80, 100])
@@ -15,8 +31,14 @@ test('labelWindow keeps both ends and never crowds the last', () => {
 })
 
 test('a monotone line never overshoots the data', () => {
-  const pts = [[0, 10], [10, 10], [20, 40], [30, 40], [40, 5]]
-  const ys = [...monotone(pts).matchAll(/,(-?[\d.]+)/g)].map(m => Number(m[1]))
+  const pts = [
+    [0, 10],
+    [10, 10],
+    [20, 40],
+    [30, 40],
+    [40, 5],
+  ]
+  const ys = [...monotone(pts).matchAll(/,(-?[\d.]+)/g)].map((m) => Number(m[1]))
   expect(Math.max(...ys)).toBeLessThanOrEqual(40)
   expect(Math.min(...ys)).toBeGreaterThanOrEqual(5)
 })
@@ -24,13 +46,20 @@ test('a monotone line never overshoots the data', () => {
 test('squarify fills the box exactly', () => {
   const cells = squarify([{ a: 500 }, { a: 300 }, { a: 150 }, { a: 50 }], 0, 0, 50, 20)
   expect(cells.reduce((n, c) => n + c.w * c.h, 0)).toBeCloseTo(1000)
-  for (const c of cells) { expect(c.x + c.w).toBeLessThanOrEqual(50.001); expect(c.y + c.h).toBeLessThanOrEqual(20.001) }
+  for (const c of cells) {
+    expect(c.x + c.w).toBeLessThanOrEqual(50.001)
+    expect(c.y + c.h).toBeLessThanOrEqual(20.001)
+  }
 })
 
 test('quantile', () => expect(quantile([1, 2, 3, 4, 5], 0.5)).toBe(3))
 
 test('toHTML escapes and drops what is off', () => {
-  expect(toHTML([s('text', { x: 1.256, hidden: false, 'data-mark': true, 'aria-label': 'a"<b' }, 'x & y')])).toBe('<text x="1.26" data-mark="" aria-label="a&quot;&lt;b">x &amp; y</text>')
+  expect(
+    toHTML([
+      s('text', { x: 1.256, hidden: false, 'data-mark': true, 'aria-label': 'a"<b' }, 'x & y'),
+    ]),
+  ).toBe('<text x="1.26" data-mark="" aria-label="a&quot;&lt;b">x &amp; y</text>')
 })
 
 function host(body: Scene[]) {
@@ -40,13 +69,30 @@ function host(body: Scene[]) {
 }
 
 test('patch keeps nodes, writes only what changed and removes what left', () => {
-  const svg = host([s('g', { 'data-series': 0 }, s('path', { class: 'a', d: 'M0,0' }), s('path', { class: 'b', d: 'M1,1' })), s('text', { x: 1 }, 'old')])
-  const [a, b] = svg.querySelectorAll('path'), g = svg.querySelector('g')
+  const svg = host([
+    s(
+      'g',
+      { 'data-series': 0 },
+      s('path', { class: 'a', d: 'M0,0' }),
+      s('path', { class: 'b', d: 'M1,1' }),
+    ),
+    s('text', { x: 1 }, 'old'),
+  ])
+  const [a, b] = svg.querySelectorAll('path'),
+    g = svg.querySelector('g')
   const seen: MutationObserver = new MutationObserver(() => {})
   seen.observe(svg, { subtree: true, attributes: true, childList: true, characterData: true })
-  patch(svg, [s('g', { 'data-series': 0 }, s('path', { class: 'a', d: 'M2,2' }), s('path', { class: 'b', d: 'M1,1' })), s('text', { x: 1 }, 'new')])
+  patch(svg, [
+    s(
+      'g',
+      { 'data-series': 0 },
+      s('path', { class: 'a', d: 'M2,2' }),
+      s('path', { class: 'b', d: 'M1,1' }),
+    ),
+    s('text', { x: 1 }, 'new'),
+  ])
   const log = seen.takeRecords()
-  expect(log.filter(r => r.type === 'attributes')).toHaveLength(1)
+  expect(log.filter((r) => r.type === 'attributes')).toHaveLength(1)
   expect(svg.querySelector('g')).toBe(g)
   expect(svg.querySelectorAll('path')[0]).toBe(a)
   expect(svg.querySelectorAll('path')[1]).toBe(b)
@@ -66,9 +112,14 @@ test('patch leaves what the running chart wrote', () => {
 const data = ['Jan', 'Feb', 'Mar'].map((m, i) => ({ m, a: i + 1, b: 3 - i }))
 const cfg = { title: 'T', data, x: 'm', series: ['a', 'b'] }
 function mount<C>(form: Form<C>, c: C) {
-  const ctx = { id: 'c', hidden: new Set<number>(), r: 3 }, p = form.plot(c, 640, ctx)
+  const ctx = { id: 'c', hidden: new Set<number>(), r: 3 },
+    p = form.plot(c, 640, ctx)
   const fig = document.body.appendChild(document.createElement('figure'))
-  fig.innerHTML = `<ul data-scope="legend">${form.legend!(c).map((_: unknown, i: number) => `<li><button aria-pressed="true" data-si="${i}"></button></li>`).join('')}</ul><div data-part="plot"><div data-part="chart-tip"></div><svg data-part="svg" width="640" height="${p.h}"></svg></div>`
+  fig.innerHTML = `<ul data-scope="legend">${form.legend!(c)
+    .map((_: unknown, i: number) => `<li><button aria-pressed="true" data-si="${i}"></button></li>`)
+    .join(
+      '',
+    )}</ul><div data-part="plot"><div data-part="chart-tip"></div><svg data-part="svg" width="640" height="${p.h}"></svg></div>`
   fig.querySelector('svg')!.innerHTML = toHTML(p.body)
   return { fig, action: chart(fig, { form, cfg: c, id: 'c' }) }
 }
@@ -76,7 +127,7 @@ function mount<C>(form: Form<C>, c: C) {
 test('the action runs on plain DOM: one tab stop, walk, tooltip, legend', () => {
   const { fig, action } = mount(line, cfg)
   const marks = () => [...fig.querySelectorAll<SVGElement>('[data-mark]')]
-  expect(marks().filter(m => m.getAttribute('tabindex') === '0')).toHaveLength(1)
+  expect(marks().filter((m) => m.getAttribute('tabindex') === '0')).toHaveLength(1)
   marks()[0]!.focus()
   expect(fig.querySelector('[data-part="chart-tip"]')!.textContent).toContain('Jan')
   marks()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))

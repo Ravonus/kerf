@@ -1,21 +1,39 @@
-import { For } from "solid-js";
+import { For } from 'solid-js'
 
-import { primary } from "~/components/button";
-import { HeroImage } from "~/components/hero-image";
-import { Seo } from "~/components/seo";
-import { WaitlistForm } from "~/components/waitlist-form";
+import { primary } from '~/components/button'
+import { HeroImage } from '~/components/hero-image'
+import { Seo } from '~/components/seo'
+import { WaitlistForm } from '~/components/waitlist-form'
 
 const features = [
-  { title: "Every call, heard", body: "Emberline reads your sales and support calls and pulls out each request, in the customer's own words." },
-  { title: "Ranked, not guessed", body: "Requests are grouped and weighted by how often they come up and which accounts asked." },
-  { title: "Proof beside every card", body: "Each item links back to the quotes behind it, so the roadmap argument ends quickly." },
-];
+  {
+    title: 'Every call, heard',
+    body: "Emberline reads your sales and support calls and pulls out each request, in the customer's own words.",
+  },
+  {
+    title: 'Ranked, not guessed',
+    body: 'Requests are grouped and weighted by how often they come up and which accounts asked.',
+  },
+  {
+    title: 'Proof beside every card',
+    body: 'Each item links back to the quotes behind it, so the roadmap argument ends quickly.',
+  },
+]
 
 const steps = [
-  { title: "Connect your calls", body: "Point Emberline at your call recorder and help desk. Setup takes a few minutes." },
-  { title: "Read the signals", body: "Requests arrive grouped into Now, Next and Later, with a count beside each one." },
-  { title: "Close the loop", body: "When a feature ships, tell every customer who asked for it, with one digest." },
-];
+  {
+    title: 'Connect your calls',
+    body: 'Point Emberline at your call recorder and help desk. Setup takes a few minutes.',
+  },
+  {
+    title: 'Read the signals',
+    body: 'Requests arrive grouped into Now, Next and Later, with a count beside each one.',
+  },
+  {
+    title: 'Close the loop',
+    body: 'When a feature ships, tell every customer who asked for it, with one digest.',
+  },
+]
 
 export default function Home() {
   return (
@@ -33,7 +51,8 @@ export default function Home() {
             Hear what customers keep asking for
           </h1>
           <p class="mt-5 mb-8 max-w-xl text-lg leading-relaxed text-muted">
-            Emberline listens to your customer calls and turns them into a ranked list of what to build next.
+            Emberline listens to your customer calls and turns them into a ranked list of what to
+            build next.
           </p>
           <WaitlistForm />
         </div>
@@ -42,7 +61,10 @@ export default function Home() {
 
       <section aria-labelledby="features" class="border-y border-line bg-surface">
         <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-          <h2 id="features" class="max-w-2xl text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+          <h2
+            id="features"
+            class="max-w-2xl text-3xl font-bold tracking-tight text-balance sm:text-4xl"
+          >
             Stop losing what customers tell you
           </h2>
           <ul class="mt-12 grid gap-x-10 gap-y-9 md:grid-cols-3">
@@ -86,5 +108,5 @@ export default function Home() {
         </div>
       </section>
     </>
-  );
+  )
 }

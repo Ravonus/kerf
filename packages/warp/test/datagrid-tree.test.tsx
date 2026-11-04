@@ -3,8 +3,16 @@ import { fireEvent } from '@testing-library/dom'
 import { flush, render } from '@weft-js/core/test'
 import { DataGrid, type GridColumn, type GridTree } from '../src/DataGrid'
 
-const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
-const settle = async () => { await tick(); await flush(); await tick(); await flush() }
+const tick = (ms = 0) =>
+  new Promise((r) => {
+    setTimeout(r, ms)
+  })
+const settle = async () => {
+  await tick()
+  await flush()
+  await tick()
+  await flush()
+}
 
 type Node_ = { id: string; deploys: number; cost: number; kids?: Node_[]; hasChildren?: boolean }
 const leaf = (id: string, deploys: number, cost: number): Node_ => ({ id, deploys, cost })
@@ -13,17 +21,33 @@ const COLUMNS: GridColumn<Node_>[] = [
   { id: 'deploys', header: 'Deploys', numeric: true, aggregate: 'sum', sort: true },
   { id: 'cost', header: 'Cost', numeric: true, aggregate: 'sum', sort: true },
 ]
-const shown = (c: Element) => [...c.querySelectorAll('tbody tr[data-row]')].map(r => (r as HTMLElement).dataset.row)
-const header = (c: Element, id: string) => c.querySelector<HTMLElement>(`thead th[data-col="${id}"]`)!
+const shown = (c: Element) =>
+  [...c.querySelectorAll('tbody tr[data-row]')].map((r) => (r as HTMLElement).dataset.row)
+const header = (c: Element, id: string) =>
+  c.querySelector<HTMLElement>(`thead th[data-col="${id}"]`)!
 const press = (el: Element) => fireEvent.click(el)
-const button = (c: Element, name: string) => [...c.querySelectorAll('button')].find(b => b.textContent === name)!
+const button = (c: Element, name: string) =>
+  [...c.querySelectorAll('button')].find((b) => b.textContent === name)!
 
 describe('DataGrid tree', () => {
-  const small: Node_ = { id: 'small', deploys: 0, cost: 0, kids: [leaf('s1', 2, 10), leaf('s2', 1, 20)] }
+  const small: Node_ = {
+    id: 'small',
+    deploys: 0,
+    cost: 0,
+    kids: [leaf('s1', 2, 10), leaf('s2', 1, 20)],
+  }
   const big: Node_ = { id: 'big', deploys: 0, cost: 0, kids: [leaf('b1', 5, 1), leaf('b2', 9, 2)] }
 
-  test('a header sorts branches by what they roll up, and each branch\'s children', async () => {
-    const { container: c } = render(() => <DataGrid caption="Spend" rows={[small, big]} columns={COLUMNS} tree={{}} exportName={false} />)
+  test("a header sorts branches by what they roll up, and each branch's children", async () => {
+    const { container: c } = render(() => (
+      <DataGrid
+        caption="Spend"
+        rows={[small, big]}
+        columns={COLUMNS}
+        tree={{}}
+        exportName={false}
+      />
+    ))
     await settle()
     press(button(c, 'Expand all'))
     await settle()
@@ -40,9 +64,17 @@ describe('DataGrid tree', () => {
   })
 
   test('a lazy tree sorts what it loaded, and a branch not loaded yet by its own number', async () => {
-    const rows: Node_[] = [{ id: 'a', deploys: 1, cost: 0, hasChildren: true }, { id: 'b', deploys: 7, cost: 0, hasChildren: true }]
-    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: r => Promise.resolve([leaf(`${r.id}1`, 1, 0), leaf(`${r.id}2`, 2, 0)]) }
-    const { container: c } = render(() => <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />)
+    const rows: Node_[] = [
+      { id: 'a', deploys: 1, cost: 0, hasChildren: true },
+      { id: 'b', deploys: 7, cost: 0, hasChildren: true },
+    ]
+    const tree: GridTree<Node_> = {
+      branch: (r) => !!r.hasChildren,
+      load: (r) => Promise.resolve([leaf(`${r.id}1`, 1, 0), leaf(`${r.id}2`, 2, 0)]),
+    }
+    const { container: c } = render(() => (
+      <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />
+    ))
     await settle()
     press(header(c, 'deploys').querySelector('button')!)
     press(header(c, 'deploys').querySelector('button')!)
@@ -53,14 +85,39 @@ describe('DataGrid tree', () => {
   const lazy = () => {
     const calls: string[] = []
     const held: (() => void)[] = []
-    const deep: Record<string, Node_[]> = { a: [{ id: 'a1', deploys: 1, cost: 0, hasChildren: true }, leaf('a2', 1, 0)], b: [leaf('b1', 1, 0)], a1: [leaf('a11', 1, 0)] }
-    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: r => new Promise(done => { calls.push(r.id); held.push(() => done(deep[r.id]!)) }) }
-    return { calls, held, tree, rows: [{ id: 'a', deploys: 1, cost: 0, hasChildren: true }, { id: 'b', deploys: 1, cost: 0, hasChildren: true }] as Node_[], release: async () => { for (const f of held.splice(0)) f(); await settle() } }
+    const deep: Record<string, Node_[]> = {
+      a: [{ id: 'a1', deploys: 1, cost: 0, hasChildren: true }, leaf('a2', 1, 0)],
+      b: [leaf('b1', 1, 0)],
+      a1: [leaf('a11', 1, 0)],
+    }
+    const tree: GridTree<Node_> = {
+      branch: (r) => !!r.hasChildren,
+      load: (r) =>
+        new Promise((done) => {
+          calls.push(r.id)
+          held.push(() => done(deep[r.id]!))
+        }),
+    }
+    return {
+      calls,
+      held,
+      tree,
+      rows: [
+        { id: 'a', deploys: 1, cost: 0, hasChildren: true },
+        { id: 'b', deploys: 1, cost: 0, hasChildren: true },
+      ] as Node_[],
+      release: async () => {
+        for (const f of held.splice(0)) f()
+        await settle()
+      },
+    }
   }
 
   test('Expand all loads every branch that has not loaded, however deep, and opens it', async () => {
     const t = lazy()
-    const { container: c } = render(() => <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />)
+    const { container: c } = render(() => (
+      <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />
+    ))
     await settle()
     press(button(c, 'Expand all'))
     await settle()
@@ -81,7 +138,9 @@ describe('DataGrid tree', () => {
 
   test('Collapse all during Expand all stops it going deeper', async () => {
     const t = lazy()
-    const { container: c } = render(() => <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />)
+    const { container: c } = render(() => (
+      <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />
+    ))
     await settle()
     press(button(c, 'Expand all'))
     await settle()
@@ -93,7 +152,9 @@ describe('DataGrid tree', () => {
 
   test('a second Expand all during the first joins its loads and still goes deeper', async () => {
     const t = lazy()
-    const { container: c } = render(() => <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />)
+    const { container: c } = render(() => (
+      <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />
+    ))
     await settle()
     press(button(c, 'Expand all'))
     await settle()
@@ -106,9 +167,18 @@ describe('DataGrid tree', () => {
   })
 
   test('a branch that fails to load during Expand all stays closed, and the rest open', async () => {
-    const rows: Node_[] = [{ id: 'bad', deploys: 1, cost: 0, hasChildren: true }, { id: 'ok', deploys: 1, cost: 0, hasChildren: true }]
-    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: r => (r.id === 'bad' ? Promise.reject(new Error('no')) : Promise.resolve([leaf('k', 1, 0)])) }
-    const { container: c } = render(() => <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />)
+    const rows: Node_[] = [
+      { id: 'bad', deploys: 1, cost: 0, hasChildren: true },
+      { id: 'ok', deploys: 1, cost: 0, hasChildren: true },
+    ]
+    const tree: GridTree<Node_> = {
+      branch: (r) => !!r.hasChildren,
+      load: (r) =>
+        r.id === 'bad' ? Promise.reject(new Error('no')) : Promise.resolve([leaf('k', 1, 0)]),
+    }
+    const { container: c } = render(() => (
+      <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />
+    ))
     await settle()
     press(button(c, 'Expand all'))
     await settle()
@@ -124,8 +194,14 @@ describe('DataGrid tree: the site example', () => {
     const { DataGridTree } = await import('../../../site/src/toolkit/examples/data')
     const { container: c } = render(() => <DataGridTree />)
     await settle()
-    const costs = () => [...c.querySelectorAll('tbody tr[data-row]')].map(r => r.querySelector('td:last-child')!.textContent)
-    const tops = () => [...c.querySelectorAll('tbody tr[data-row][aria-level="1"]')].map(r => (r as HTMLElement).dataset.row)
+    const costs = () =>
+      [...c.querySelectorAll('tbody tr[data-row]')].map(
+        (r) => r.querySelector('td:last-child')!.textContent,
+      )
+    const tops = () =>
+      [...c.querySelectorAll('tbody tr[data-row][aria-level="1"]')].map(
+        (r) => (r as HTMLElement).dataset.row,
+      )
     const sort = header(c, 'cost').querySelector('button')!
     expect(tops()).toEqual(['Platform', 'Web', 'Data', 'Mobile'])
     press(sort)
@@ -140,7 +216,9 @@ describe('DataGrid tree: the site example', () => {
     await settle()
     const num = (s: string | null) => Number(s!.replace(/[$,]/g, ''))
     const platform = shown(c).slice(shown(c).indexOf('Platform') + 1, shown(c).indexOf('Web'))
-    const kids = platform.map(id => num(c.querySelector(`tr[data-row="${id}"] td:last-child`)!.textContent))
+    const kids = platform.map((id) =>
+      num(c.querySelector(`tr[data-row="${id}"] td:last-child`)!.textContent),
+    )
     expect(kids).toEqual([...kids].sort((a, b) => b - a))
     expect(costs()[0]).toBe('$3,920')
   }, 30_000) // the first import of the site example compiles all of warp: seconds on a busy machine, not this test's subject

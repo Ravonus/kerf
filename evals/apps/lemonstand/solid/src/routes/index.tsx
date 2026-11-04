@@ -1,4 +1,4 @@
-import { Hero } from "~/components/site/hero";
+import { Hero } from '~/components/site/hero'
 import {
   Audiences,
   Contact,
@@ -9,9 +9,9 @@ import {
   Programs,
   Safety,
   Sponsor,
-} from "~/components/site/sections";
-import { Seo } from "~/components/site/seo";
-import { SiteFooter, SiteHeader, SkipLink } from "~/components/site/site-chrome";
+} from '~/components/site/sections'
+import { Seo } from '~/components/site/seo'
+import { SiteFooter, SiteHeader, SkipLink } from '~/components/site/site-chrome'
 
 export default function Home() {
   return (
@@ -33,5 +33,5 @@ export default function Home() {
       </main>
       <SiteFooter />
     </>
-  );
+  )
 }

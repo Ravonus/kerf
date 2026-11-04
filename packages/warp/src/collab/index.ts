@@ -1,14 +1,35 @@
 // The collab pack: see docs/design/warp. One file per component family; each imports only its own CSS.
 export { AutoTrack } from './AutoTrack'
-export { CommentAnchor, CommentRail, CommentThread, type Comment, type CommentThreadData } from './Comments'
-export { Composer, TypingIndicator, type ComposerFile, type ComposerProps, type ComposerSend, type Mentionable, type QuoteDraftValue } from './Composer'
+export {
+  CommentAnchor,
+  CommentRail,
+  CommentThread,
+  type Comment,
+  type CommentThreadData,
+} from './Comments'
+export {
+  Composer,
+  TypingIndicator,
+  type ComposerFile,
+  type ComposerProps,
+  type ComposerSend,
+  type Mentionable,
+  type QuoteDraftValue,
+} from './Composer'
 export { ConversationList, type ChatConversation } from './ConversationList'
 export { Cursors, PeerMark, PeerSelection } from './Cursors'
 export { DataIntegrity, type IntegrityEvent } from './DataIntegrity'
 export { Kanban, type KanbanCardData, type KanbanColumn } from './Kanban'
 export { LockedField, LockIndicator } from './Lock'
 export { Following, PresenceStack } from './PresenceStack'
-export { ShareDialog, type ShareContact, type ShareDialogProps, type ShareLink, type ShareMember, type ShareRole } from './ShareDialog'
+export {
+  ShareDialog,
+  type ShareContact,
+  type ShareDialogProps,
+  type ShareLink,
+  type ShareMember,
+  type ShareRole,
+} from './ShareDialog'
 export { ConflictAlert, SyncIndicator, type SyncState } from './Status'
 export { SyncedForm } from './SyncedForm'
 export { Message, Thread, type MessageProps, type ThreadProps } from './Thread'

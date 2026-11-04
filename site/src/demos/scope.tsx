@@ -9,14 +9,22 @@ const basket = defineState('learn-basket', () => {
 })
 
 function Header() {
-  return <p>Basket <Badge count>{basket.count.value}</Badge></p>
+  return (
+    <p>
+      Basket <Badge count>{basket.count.value}</Badge>
+    </p>
+  )
 }
 
 function Shelf() {
   return (
     <p>
-      <Button size="sm" onClick={() => basket.add('Tea')}>Add tea</Button>
-      <Button size="sm" emphasis="outline" onClick={() => basket.add('Cake')}>Add cake</Button>
+      <Button size="sm" onClick={() => basket.add('Tea')}>
+        Add tea
+      </Button>
+      <Button size="sm" emphasis="outline" onClick={() => basket.add('Cake')}>
+        Add cake
+      </Button>
     </p>
   )
 }

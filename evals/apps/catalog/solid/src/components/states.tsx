@@ -1,7 +1,7 @@
-import { HttpStatusCode } from "@solidjs/start";
-import { ErrorBoundary, type JSX } from "solid-js";
+import { HttpStatusCode } from '@solidjs/start'
+import { ErrorBoundary, type JSX } from 'solid-js'
 
-import { heading, textLink } from "./button";
+import { heading, textLink } from './button'
 
 export function Failed(props: { reset: () => void }) {
   return (
@@ -13,12 +13,12 @@ export function Failed(props: { reset: () => void }) {
         Try again
       </button>
     </div>
-  );
+  )
 }
 
 export const Guarded = (props: { children: JSX.Element }) => (
   <ErrorBoundary fallback={(_, reset) => <Failed reset={reset} />}>{props.children}</ErrorBoundary>
-);
+)
 
 export function NotFound() {
   return (
@@ -30,5 +30,5 @@ export function NotFound() {
         Back to the aisles
       </a>
     </div>
-  );
+  )
 }

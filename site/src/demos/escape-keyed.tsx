@@ -2,7 +2,11 @@ import { state } from '@weft-js/core'
 import { Button, Card, Row, Textarea } from '@weft-js/warp'
 
 type Person = { id: number; name: string }
-const PEOPLE: Person[] = [{ id: 1, name: 'Ana' }, { id: 2, name: 'Ben' }, { id: 3, name: 'Chloé' }]
+const PEOPLE: Person[] = [
+  { id: 1, name: 'Ana' },
+  { id: 2, name: 'Ben' },
+  { id: 3, name: 'Chloé' },
+]
 
 function Profile(props: { person: Person }) {
   // Two boxes, made fresh each time this component is made.
@@ -10,10 +14,18 @@ function Profile(props: { person: Person }) {
   const starred = state(false)
   return (
     <>
-      <Button size="sm" emphasis={starred.value ? 'solid' : 'outline'} onClick={() => (starred.value = !starred.value)}>
+      <Button
+        size="sm"
+        emphasis={starred.value ? 'solid' : 'outline'}
+        onClick={() => (starred.value = !starred.value)}
+      >
         {starred.value ? 'Starred' : 'Star'} {props.person.name}
       </Button>
-      <Textarea label={`A note about ${props.person.name}`} value={note.value} onInput={e => (note.value = e.currentTarget.value)} />
+      <Textarea
+        label={`A note about ${props.person.name}`}
+        value={note.value}
+        onInput={(e) => (note.value = e.currentTarget.value)}
+      />
     </>
   )
 }
@@ -23,12 +35,21 @@ export default function People() {
   return (
     <Card title="A new person, a new profile">
       <Row gap="tight">
-        {PEOPLE.map(p => (
-          <Button key={p.id} size="sm" emphasis={shown.value.id === p.id ? 'solid' : 'ghost'} onClick={() => (shown.value = p)}>{p.name}</Button>
+        {PEOPLE.map((p) => (
+          <Button
+            key={p.id}
+            size="sm"
+            emphasis={shown.value.id === p.id ? 'solid' : 'ghost'}
+            onClick={() => (shown.value = p)}
+          >
+            {p.name}
+          </Button>
         ))}
       </Row>
       {/* A list of one, keyed by the person: a new key throws the old row away and makes a new one. */}
-      {[shown.value].map(p => <Profile key={p.id} person={p} />)}
+      {[shown.value].map((p) => (
+        <Profile key={p.id} person={p} />
+      ))}
     </Card>
   )
 }

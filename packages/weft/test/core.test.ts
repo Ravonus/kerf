@@ -1,4 +1,15 @@
-import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context, getOwner } from '@weft-js/core'
+import {
+  derived,
+  effect,
+  flush,
+  onCleanup,
+  state,
+  untrack,
+  watch,
+  createRoot,
+  context,
+  getOwner,
+} from '@weft-js/core'
 
 test('reads are consistent straight after a write', () => {
   const a = state(1)
@@ -13,14 +24,20 @@ test('derived is lazy and cached', () => {
   const a = state(1)
   const b = derived(() => (runs++, a.value + 1))
   expect(runs).toBe(0)
-  void b.value; void b.value
+  void b.value
+  void b.value
   expect(runs).toBe(1)
 })
 
 test('effects batch to a microtask and flush() applies them now', async () => {
   const a = state(0)
   const seen: number[] = []
-  createRoot(() => effect(() => a.value, v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => a.value,
+      (v) => seen.push(v),
+    ),
+  )
   a.value = 1
   a.value = 2
   expect(seen).toEqual([0])
@@ -36,7 +53,12 @@ test('no glitches: a diamond settles once with consistent values', () => {
   const b = derived(() => a.value + 1)
   const c = derived(() => a.value * 10)
   const seen: string[] = []
-  createRoot(() => effect(() => `${b.value}/${c.value}`, v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => `${b.value}/${c.value}`,
+      (v) => seen.push(v),
+    ),
+  )
   a.value = 2
   flush()
   expect(seen).toEqual(['2/10', '3/20'])
@@ -45,7 +67,12 @@ test('no glitches: a diamond settles once with consistent values', () => {
 test('equal writes notify nobody', () => {
   const a = state('x')
   let runs = 0
-  createRoot(() => effect(() => a.value, () => runs++))
+  createRoot(() =>
+    effect(
+      () => a.value,
+      () => runs++,
+    ),
+  )
   a.value = 'x'
   flush()
   expect(runs).toBe(1)
@@ -55,12 +82,15 @@ test('watch tracks its source only and cleans up on re-run and dispose', () => {
   const a = state(1)
   const other = state(0)
   const log: string[] = []
-  const dispose = createRoot(d => {
-    watch(() => a.value, v => {
-      void other.value // untracked
-      log.push(`run ${v}`)
-      return () => log.push(`cleanup ${v}`)
-    })
+  const dispose = createRoot((d) => {
+    watch(
+      () => a.value,
+      (v) => {
+        void other.value // untracked
+        log.push(`run ${v}`)
+        return () => log.push(`cleanup ${v}`)
+      },
+    )
     return d
   })
   other.value = 1
@@ -74,7 +104,12 @@ test('watch tracks its source only and cleans up on re-run and dispose', () => {
 test('untrack reads without subscribing', () => {
   const a = state(1)
   let runs = 0
-  createRoot(() => effect(() => untrack(() => a.value), () => runs++))
+  createRoot(() =>
+    effect(
+      () => untrack(() => a.value),
+      () => runs++,
+    ),
+  )
   a.value = 2
   flush()
   expect(runs).toBe(1)
@@ -83,7 +118,16 @@ test('untrack reads without subscribing', () => {
 test('disposing a root stops its effects', () => {
   const a = state(1)
   let runs = 0
-  const dispose = createRoot(d => (effect(() => a.value, () => runs++), onCleanup(() => {}), d))
+  const dispose = createRoot(
+    (d) => (
+      effect(
+        () => a.value,
+        () => runs++,
+      ),
+      onCleanup(() => {}),
+      d
+    ),
+  )
   dispose()
   a.value = 2
   flush()
@@ -93,7 +137,9 @@ test('disposing a root stops its effects', () => {
 test('set() updates a copy so identity changes', () => {
   const xs = state([1, 2])
   const before = xs.value
-  xs.set(d => { d.push(3) })
+  xs.set((d) => {
+    d.push(3)
+  })
   expect(xs.value).toEqual([1, 2, 3])
   expect(xs.value).not.toBe(before)
 })
@@ -142,7 +188,7 @@ test('state.linked resets when the source changes back to the value it was writt
 test('context.provide: the provided subtree is disposed with its parent', () => {
   const ctx = context(0)
   let cleaned = 0
-  createRoot(dispose => {
+  createRoot((dispose) => {
     ctx.provide(1, () => onCleanup(() => cleaned++))
     dispose()
   })
@@ -152,10 +198,17 @@ test('context.provide: the provided subtree is disposed with its parent', () => 
 test('graph memory: per-key sources go with their last reader; effects that read nothing are not kept', () => {
   const selected = state<Record<string, boolean>>({})
   let owner!: { tail: unknown; owned: { sib: unknown } }
-  const dispose = createRoot(d => {
+  const dispose = createRoot((d) => {
     owner = getOwner() as never
-    for (const k of ['a', 'b']) effect(() => selected.get(k), () => {})
-    effect(() => 1, () => {}) // reads nothing: can never re-run
+    for (const k of ['a', 'b'])
+      effect(
+        () => selected.get(k),
+        () => {},
+      )
+    effect(
+      () => 1,
+      () => {},
+    ) // reads nothing: can never re-run
     return d
   })
   expect((selected as object as { k: Map<unknown, unknown> }).k.size).toBe(2)

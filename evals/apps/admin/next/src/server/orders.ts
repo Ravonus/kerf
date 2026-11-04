@@ -25,6 +25,9 @@ export async function markShipped(rawIds: number[]) {
 
 export async function setStatus(rawId: number, rawStatus: string) {
   await currentUser()
-  await db.update(orders).set({ status: z.enum(statuses).parse(rawStatus) }).where(eq(orders.id, id.parse(rawId)))
+  await db
+    .update(orders)
+    .set({ status: z.enum(statuses).parse(rawStatus) })
+    .where(eq(orders.id, id.parse(rawId)))
   written()
 }

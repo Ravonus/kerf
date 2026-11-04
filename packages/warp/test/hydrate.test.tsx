@@ -12,33 +12,46 @@ const server = await import('./fixtures/Cases.tsx?weft-ssr')
 // @ts-expect-error: query imports (@weft-js/core/vite)
 const client = await import('./fixtures/Cases.tsx?weft-hydrate')
 
-test.each(Object.keys(cases).filter(n => !n.endsWith('$shape')))('%s: SSR + hydrate, 0 misses, 0 writes, then it works', async name => {
-  resetIds()
-  const html = renderToString(() => server[name]())
-  const root = document.body.appendChild(document.createElement('div'))
-  root.innerHTML = html
-  const writes: MutationRecord[] = []
-  const observer = new MutationObserver(r => writes.push(...r))
-  observer.observe(root, { subtree: true, childList: true, attributes: true, characterData: true })
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-  resetIds()
-  const dispose = hydrate(() => client[name](), root)
-  writes.push(...observer.takeRecords())
-  observer.disconnect()
-  expect(warn).not.toHaveBeenCalled()
-  warn.mockRestore()
-  expect(hydration.misses).toBe(0)
-  expect(writes.map(w => `${w.type} ${w.attributeName ?? ""} +${[...w.addedNodes].map(n => n.nodeName + ":" + n.textContent).join(",")} -${[...w.removedNodes].map(n => n.nodeName + ":" + n.textContent).join(",")} on ${(w.target as Element).outerHTML?.slice(0, 60) ?? w.target.nodeName}`)).toEqual([])
-  root.querySelector('script[data-weft]')?.remove()
-  await flush()
-  await cases[name as keyof typeof cases].act(root)
-  await flush()
-  cases[name as keyof typeof cases].see(root)
-  dispose()
-  root.remove()
-})
+test.each(Object.keys(cases).filter((n) => !n.endsWith('$shape')))(
+  '%s: SSR + hydrate, 0 misses, 0 writes, then it works',
+  async (name) => {
+    resetIds()
+    const html = renderToString(() => server[name]())
+    const root = document.body.appendChild(document.createElement('div'))
+    root.innerHTML = html
+    const writes: MutationRecord[] = []
+    const observer = new MutationObserver((r) => writes.push(...r))
+    observer.observe(root, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    resetIds()
+    const dispose = hydrate(() => client[name](), root)
+    writes.push(...observer.takeRecords())
+    observer.disconnect()
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
+    expect(hydration.misses).toBe(0)
+    expect(
+      writes.map(
+        (w) =>
+          `${w.type} ${w.attributeName ?? ''} +${[...w.addedNodes].map((n) => n.nodeName + ':' + n.textContent).join(',')} -${[...w.removedNodes].map((n) => n.nodeName + ':' + n.textContent).join(',')} on ${(w.target as Element).outerHTML?.slice(0, 60) ?? w.target.nodeName}`,
+      ),
+    ).toEqual([])
+    root.querySelector('script[data-weft]')?.remove()
+    await flush()
+    await cases[name as keyof typeof cases].act(root)
+    await flush()
+    cases[name as keyof typeof cases].see(root)
+    dispose()
+    root.remove()
+  },
+)
 
-test('focus never leans on an id: a real server counts on, so its ids differ from the client\'s', async () => {
+test("focus never leans on an id: a real server counts on, so its ids differ from the client's", async () => {
   resetIds()
   const root = document.body.appendChild(document.createElement('div'))
   root.innerHTML = renderToString(() => server.TabsCase())

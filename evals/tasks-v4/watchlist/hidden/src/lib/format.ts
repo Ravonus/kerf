@@ -23,5 +23,10 @@ export function sparkline(values: number[], width = 60, height = 16): string {
   const min = Math.min(...values)
   const span = Math.max(...values) - min || 1
   const step = values.length > 1 ? width / (values.length - 1) : 0
-  return values.map((v, i) => `${i ? 'L' : 'M'}${(i * step).toFixed(1)},${(height - ((v - min) / span) * height).toFixed(1)}`).join(' ')
+  return values
+    .map(
+      (v, i) =>
+        `${i ? 'L' : 'M'}${(i * step).toFixed(1)},${(height - ((v - min) / span) * height).toFixed(1)}`,
+    )
+    .join(' ')
 }

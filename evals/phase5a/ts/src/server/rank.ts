@@ -2,11 +2,19 @@
 // answers can be compared byte for byte.
 import corpus from './corpus.json'
 
-export interface Doc { id: string; title: string; body: string }
+export interface Doc {
+  id: string
+  title: string
+  body: string
+}
 
 const docs: Doc[] = []
 const postings = new Map<string, [doc: number, count: number][]>()
-const words = (text: string) => text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+const words = (text: string) =>
+  text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
 
 export function index(doc: Doc) {
   const at = docs.push(doc) - 1

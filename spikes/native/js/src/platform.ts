@@ -16,7 +16,9 @@ export const platform: { os: OS; idiom: Idiom } = {
 }
 
 /** Tests and the device entry set these before mounting. */
-export function configure(p: Partial<typeof platform>) { Object.assign(platform, p) }
+export function configure(p: Partial<typeof platform>) {
+  Object.assign(platform, p)
+}
 
 // ---- window ----
 
@@ -33,7 +35,8 @@ export const viewport = state<WindowInfo>({ w: 390, h: 844 })
 /** The host calls this on start and whenever the window changes. */
 export function setViewport(w: WindowInfo) {
   const cur = viewport.value
-  if (cur.w === w.w && cur.h === w.h && JSON.stringify(cur.hinge) === JSON.stringify(w.hinge)) return
+  if (cur.w === w.w && cur.h === w.h && JSON.stringify(cur.hinge) === JSON.stringify(w.hinge))
+    return
   viewport.value = w
 }
 
@@ -42,8 +45,14 @@ export const panes = derived<Pane[]>(() => {
   const { w, h, hinge } = viewport.value
   if (!hinge) return [{ x: 0, y: 0, w, h }]
   return hinge.h >= h
-    ? [{ x: 0, y: 0, w: hinge.x, h }, { x: hinge.x + hinge.w, y: 0, w: w - hinge.x - hinge.w, h }]
-    : [{ x: 0, y: 0, w, h: hinge.y }, { x: 0, y: hinge.y + hinge.h, w, h: h - hinge.y - hinge.h }]
+    ? [
+        { x: 0, y: 0, w: hinge.x, h },
+        { x: hinge.x + hinge.w, y: 0, w: w - hinge.x - hinge.w, h },
+      ]
+    : [
+        { x: 0, y: 0, w, h: hinge.y },
+        { x: 0, y: hinge.y + hinge.h, w, h: h - hinge.y - hinge.h },
+      ]
 })
 
 export function classOf(w: WindowInfo): WindowClass {
@@ -62,14 +71,20 @@ type Entry = string | Record<WindowClass, string>
  * then (for components that adapt to the window) the window class. Called inside a binding or `match`, it re-runs
  * when the window class changes. The chain says which step decided, so an agent can predict a result before building.
  */
-export function resolve(component: Component, override?: Idiom, os: OS = platform.os, cls?: WindowClass): Resolution {
+export function resolve(
+  component: Component,
+  override?: Idiom,
+  os: OS = platform.os,
+  cls?: WindowClass,
+): Resolution {
   const c = table.components[component]
   const idiom = override ?? platform.idiom
   const entry = (c.render as Record<OS, Record<Idiom, Entry>>)[os][idiom]
   const k = typeof entry === 'string' ? undefined : (cls ?? windowClass.value)
   const render = typeof entry === 'string' ? entry : entry[k!]
   const supported = table.hosts[os] as string[]
-  if (!supported.includes(render)) throw new Error(`${component} resolves to "${render}" on ${os}, which that host can't draw`)
+  if (!supported.includes(render))
+    throw new Error(`${component} resolves to "${render}" on ${os}, which that host can't draw`)
   return {
     render,
     chain: [
@@ -87,14 +102,22 @@ export function explain(component: Component): string {
   const lines = [`${component} (${c.class}): ${c.intent}`]
   for (const [os, byIdiom] of Object.entries(c.render) as [OS, Record<Idiom, Entry>][]) {
     const idioms = Object.keys(table.idioms) as Idiom[]
-    if (idioms.every(i => typeof byIdiom[i] === 'string')) {
-      lines.push(`  ${os.padEnd(8)} ${idioms.map(i => `${i}: ${byIdiom[i]}`).join('  ·  ')}`)
+    if (idioms.every((i) => typeof byIdiom[i] === 'string')) {
+      lines.push(`  ${os.padEnd(8)} ${idioms.map((i) => `${i}: ${byIdiom[i]}`).join('  ·  ')}`)
       continue
     }
     lines.push(`  ${os}`) // adapts to the window: one line per idiom, one entry per window class
     for (const i of idioms) {
       const e = byIdiom[i]
-      lines.push(`    ${i.padEnd(7)} ${typeof e === 'string' ? e : Object.entries(e).map(([k, v]) => `${k} ${v}`).join(' · ')}`)
+      lines.push(
+        `    ${i.padEnd(7)} ${
+          typeof e === 'string'
+            ? e
+            : Object.entries(e)
+                .map(([k, v]) => `${k} ${v}`)
+                .join(' · ')
+        }`,
+      )
     }
   }
   for (const [render, why] of Object.entries(c.why)) lines.push(`  ${render}: ${why}`)

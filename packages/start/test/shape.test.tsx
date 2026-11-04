@@ -11,20 +11,36 @@ import { schemaTree, shapeTree } from '../src/shape.mjs'
 const list = query({
   input: z.object({ limit: z.number(), page: z.number().optional() }),
   output: z.array(z.object({ id: z.number(), title: z.string().max(20) })),
-  run: ({ input }) => Array.from({ length: input.limit }, (_, i) => ({ id: i, title: `Post ${i}` })),
+  run: ({ input }) =>
+    Array.from({ length: input.limit }, (_, i) => ({ id: i, title: `Post ${i}` })),
 })
-const declared = query({ shape: [{ title: 'Release notes for 0.4' }, { title: 'Two' }], run: () => [{ title: 'x' }] })
+const declared = query({
+  shape: [{ title: 'Release notes for 0.4' }, { title: 'Two' }],
+  run: () => [{ title: 'x' }],
+})
 
 function Feed(props: { page: number; limit: number }) {
   const posts = list(() => ({ limit: props.limit, page: props.page }))
-  return <ul>{(posts.value ?? []).map(p => <li key={p.id}>{p.title}</li>)}</ul>
+  return (
+    <ul>
+      {(posts.value ?? []).map((p) => (
+        <li key={p.id}>{p.title}</li>
+      ))}
+    </ul>
+  )
 }
 
-const Page = (props: { page: number; limit: number }) => <Boundary pending="shape"><Feed page={props.page} limit={props.limit} /></Boundary>
-const bars = () => [...document.querySelectorAll('li [data-skeleton]')].map(b => b.textContent)
+const Page = (props: { page: number; limit: number }) => (
+  <Boundary pending="shape">
+    <Feed page={props.page} limit={props.limit} />
+  </Boundary>
+)
+const bars = () => [...document.querySelectorAll('li [data-skeleton]')].map((b) => b.textContent)
 
 // The fake transport loads the executor on its first call; a skeleton needs it first, as the server has it.
-beforeAll(async () => { runtime.exec = await import('../src/exec') })
+beforeAll(async () => {
+  runtime.exec = await import('../src/exec')
+})
 beforeEach(() => {
   vi.useFakeTimers()
   net.latency(300)
@@ -79,8 +95,13 @@ test('schemaTree', () => {
   expect(s(z.string().min(10).max(20))).toEqual({ $s: 15 })
   expect(s(z.email())).toEqual({ $s: 22 })
   expect(s(z.string().meta({ example: 'Hi there' }))).toBe('Hi there')
-  expect(s(z.object({ title: z.string(), note: z.string() }))).toEqual({ title: { $s: 40 }, note: { $u: 16 } })
-  expect(s(z.object({ a: z.number().optional(), b: z.string().nullable(), c: z.boolean() }))).toEqual({ b: null, c: false })
+  expect(s(z.object({ title: z.string(), note: z.string() }))).toEqual({
+    title: { $s: 40 },
+    note: { $u: 16 },
+  })
+  expect(
+    s(z.object({ a: z.number().optional(), b: z.string().nullable(), c: z.boolean() })),
+  ).toEqual({ b: null, c: false })
   expect(s(z.array(z.number()).max(4))).toEqual({ $a: 4, $of: 0 })
   expect(s(z.array(z.number()))).toEqual({ $of: 0 })
   expect(s(z.enum(['a', 'b']))).toBe('a')
@@ -88,7 +109,9 @@ test('schemaTree', () => {
 
 test('a declared shape goes over the schema', () => {
   const output = z.array(z.object({ title: z.string(), body: z.string().max(8) }))
-  expect(shapeTree({ output, shape: [{ title: 'Example' }] })).toEqual({ $of: { title: 'Example', body: { $s: 4 } } })
+  expect(shapeTree({ output, shape: [{ title: 'Example' }] })).toEqual({
+    $of: { title: 'Example', body: { $s: 4 } },
+  })
   expect(shapeTree({ shape: [1] })).toEqual([1])
   expect(shapeTree({})).toBeUndefined()
 })

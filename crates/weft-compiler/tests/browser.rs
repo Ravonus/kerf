@@ -3,11 +3,24 @@
 use weft_compiler::{Diagnostic, Options, Severity, compile};
 
 fn check(source: &str) -> Vec<Diagnostic> {
-    compile(source, &Options { filename: "App.tsx".into(), check_only: true, ..Default::default() }).diagnostics
+    compile(
+        source,
+        &Options {
+            filename: "App.tsx".into(),
+            check_only: true,
+            ..Default::default()
+        },
+    )
+    .diagnostics
 }
 
 fn with(source: &str, generate: &str, hydratable: bool) -> Vec<Diagnostic> {
-    let o = Options { filename: "App.tsx".into(), generate: generate.into(), hydratable, ..Default::default() };
+    let o = Options {
+        filename: "App.tsx".into(),
+        generate: generate.into(),
+        hydratable,
+        ..Default::default()
+    };
     compile(source, &o).diagnostics
 }
 
@@ -51,10 +64,16 @@ fn w050_listener_without_cleanup_is_fixed_to_on() {
     assert!(w.message.contains("never removed"), "{}", w.message);
     let fixed = apply_fix(src, w);
     assert!(
-        fixed.contains("import { state } from '@weft-js/core'\nimport { on } from '@weft-js/core/browser'\n"),
+        fixed.contains(
+            "import { state } from '@weft-js/core'\nimport { on } from '@weft-js/core/browser'\n"
+        ),
         "{fixed}"
     );
-    assert!(fixed.contains("on(window, 'keydown', e => { if (e.key === 'Escape') open.value = false })"), "{fixed}");
+    assert!(
+        fixed
+            .contains("on(window, 'keydown', e => { if (e.key === 'Escape') open.value = false })"),
+        "{fixed}"
+    );
     assert!(!has(&check(&fixed), "W050"), "{:?}", check(&fixed));
     assert!(!has(&check(&fixed), "W051"));
 }
@@ -63,7 +82,10 @@ fn w050_listener_without_cleanup_is_fixed_to_on() {
 fn w050_fix_keeps_options_and_reuses_the_import() {
     let src = "import { online as isUp, on as listen } from '@weft-js/core/browser'\nexport function A() {\n  document.addEventListener('scroll', onScroll, { passive: true })\n  return <p />\n}\nfunction onScroll() {}";
     let fixed = apply_fix(src, one(&check(src), "W050"));
-    assert!(fixed.contains("listen(document, 'scroll', onScroll, { passive: true })"), "{fixed}");
+    assert!(
+        fixed.contains("listen(document, 'scroll', onScroll, { passive: true })"),
+        "{fixed}"
+    );
     assert_eq!(fixed.matches("@weft-js/core/browser").count(), 1, "{fixed}");
 }
 
@@ -71,7 +93,10 @@ fn w050_fix_keeps_options_and_reuses_the_import() {
 fn w050_fix_extends_an_existing_weft_browser_import() {
     let src = "import { online } from '@weft-js/core/browser'\nexport function A() {\n  const o = online()\n  addEventListener('resize', () => {})\n  return <p>{o.value}</p>\n}";
     let fixed = apply_fix(src, one(&check(src), "W050"));
-    assert!(fixed.starts_with("import { online, on } from '@weft-js/core/browser'"), "{fixed}");
+    assert!(
+        fixed.starts_with("import { online, on } from '@weft-js/core/browser'"),
+        "{fixed}"
+    );
     assert!(fixed.contains("on(window, 'resize', () => {})"), "{fixed}");
 }
 
@@ -81,9 +106,21 @@ fn w050_interval_is_fixed_to_interval() {
     let d = check(src);
     let w = one(&d, "W050");
     let fixed = apply_fix(src, w);
-    assert!(fixed.contains("interval(1000, () => { now.value = Date.now() })"), "{fixed}");
-    assert!(fixed.contains("import { interval } from '@weft-js/core/browser'"), "{fixed}");
-    assert!(check(&fixed).iter().all(|d| d.code != "W050" && d.code != "W051"), "{:?}", check(&fixed));
+    assert!(
+        fixed.contains("interval(1000, () => { now.value = Date.now() })"),
+        "{fixed}"
+    );
+    assert!(
+        fixed.contains("import { interval } from '@weft-js/core/browser'"),
+        "{fixed}"
+    );
+    assert!(
+        check(&fixed)
+            .iter()
+            .all(|d| d.code != "W050" && d.code != "W051"),
+        "{:?}",
+        check(&fixed)
+    );
 }
 
 #[test]
@@ -105,7 +142,11 @@ fn w050_sockets_have_no_fix() {
     let w = only(&d, "W050");
     assert_eq!(w.len(), 2, "{d:?}");
     assert!(w.iter().all(|d| d.fix.is_none()));
-    assert!(w[0].message.contains("`new WebSocket(…)`"), "{}", w[0].message);
+    assert!(
+        w[0].message.contains("`new WebSocket(…)`"),
+        "{}",
+        w[0].message
+    );
 }
 
 #[test]
@@ -137,7 +178,12 @@ fn w051_at_module_scope() {
     let d = check(src);
     let w = only(&d, "W051");
     assert_eq!(w.len(), 2, "{d:?}");
-    assert!(w[0].message.contains("`online(…)` is created at module scope"), "{}", w[0].message);
+    assert!(
+        w[0].message
+            .contains("`online(…)` is created at module scope"),
+        "{}",
+        w[0].message
+    );
     assert_eq!(flagged(src, w[0]), "online()");
     assert!(w[0].fix.is_none());
 }
@@ -146,7 +192,10 @@ fn w051_at_module_scope() {
 fn w051_in_timers_promises_handlers_and_after_await() {
     let src = "import { onMount } from '@weft-js/core'\nimport { on, media, online, interval } from '@weft-js/core/browser'\nexport function A() {\n  setTimeout(() => online(), 10)\n  fetch('/x').then(() => interval(10, () => {}))\n  onMount(async () => { await fetch('/y'); on(window, 'keydown', () => {}) })\n  return <button onClick={() => media('(x)', { ssr: false })}>x</button>\n}";
     let d = check(src);
-    let msgs: Vec<&str> = only(&d, "W051").iter().map(|d| d.message.as_str()).collect();
+    let msgs: Vec<&str> = only(&d, "W051")
+        .iter()
+        .map(|d| d.message.as_str())
+        .collect();
     assert_eq!(msgs.len(), 4, "{d:#?}");
     assert!(msgs[0].contains("in a timer callback"), "{}", msgs[0]);
     assert!(msgs[1].contains("in a promise callback"), "{}", msgs[1]);
@@ -178,15 +227,24 @@ fn w054_media_without_ssr_in_check_mode_is_a_warning_with_an_edit() {
     assert_eq!(flagged(src, w), "media('(prefers-color-scheme: dark)')");
     assert!(!w.fix.as_ref().unwrap().safe);
     let fixed = apply_fix(src, w);
-    assert!(fixed.contains("media('(prefers-color-scheme: dark)', { ssr: false })"), "{fixed}");
+    assert!(
+        fixed.contains("media('(prefers-color-scheme: dark)', { ssr: false })"),
+        "{fixed}"
+    );
     assert!(!has(&check(&fixed), "W054"));
 }
 
 #[test]
 fn w054_is_an_error_in_server_rendered_output_and_off_for_client_only() {
     let src = "import { media } from '@weft-js/core/browser'\nexport function A() {\n  const wide = media('(min-width: 800px)')\n  return <p>{wide.value ? 'wide' : 'narrow'}</p>\n}";
-    assert_eq!(one(&with(src, "ssr", false), "W054").severity, Severity::Error);
-    assert_eq!(one(&with(src, "dom", true), "W054").severity, Severity::Error);
+    assert_eq!(
+        one(&with(src, "ssr", false), "W054").severity,
+        Severity::Error
+    );
+    assert_eq!(
+        one(&with(src, "dom", true), "W054").severity,
+        Severity::Error
+    );
     assert!(!has(&with(src, "dom", false), "W054"));
 }
 
@@ -200,7 +258,10 @@ fn w054_options_objects() {
     let src = base.replace("OPTS", "{}");
     assert!(apply_fix(&src, one(&check(&src), "W054")).contains("media('(x)', { ssr: false })"));
     let src = base.replace("OPTS", "{ other: 1 }");
-    assert!(apply_fix(&src, one(&check(&src), "W054")).contains("media('(x)', { ssr: false, other: 1 })"));
+    assert!(
+        apply_fix(&src, one(&check(&src), "W054"))
+            .contains("media('(x)', { ssr: false, other: 1 })")
+    );
 }
 
 #[test]
@@ -213,15 +274,28 @@ fn w054_not_for_values_with_a_server_default() {
 
 #[test]
 fn w056_watch_copies_a_live_value() {
-    for run in ["v => { up.value = v }", "v => up.value = v", "() => { up.value = isOnline.value }"] {
+    for run in [
+        "v => { up.value = v }",
+        "v => up.value = v",
+        "() => { up.value = isOnline.value }",
+    ] {
         let src = format!(
             "import {{ state, watch }} from '@weft-js/core'\nimport {{ online }} from '@weft-js/core/browser'\nexport function A() {{\n  const isOnline = online()\n  const up = state(true)\n  watch(() => isOnline.value, {run})\n  return <p>{{up.value}}</p>\n}}"
         );
         let d = check(&src);
         let w = one(&d, "W056");
         assert_eq!(w.severity, Severity::Warning);
-        assert!(w.message.contains("copies the live value `isOnline` into `up`"), "{}", w.message);
-        assert!(w.help.contains("derived(() => isOnline.value)"), "{}", w.help);
+        assert!(
+            w.message
+                .contains("copies the live value `isOnline` into `up`"),
+            "{}",
+            w.message
+        );
+        assert!(
+            w.help.contains("derived(() => isOnline.value)"),
+            "{}",
+            w.help
+        );
     }
 }
 
@@ -241,14 +315,21 @@ fn w056_not_for_state_sources_or_transforms() {
 
 #[test]
 fn w052_a_watch_that_accumulates_a_stream() {
-    for run in ["m => { list.value = [...list.value, m] }", "m => list.value = list.value.concat(m)"] {
+    for run in [
+        "m => { list.value = [...list.value, m] }",
+        "m => list.value = list.value.concat(m)",
+    ] {
         let src = format!(
             "import {{ state, watch }} from '@weft-js/core'\nimport {{ prices }} from '../server/prices'\nexport function A() {{\n  const tick = prices({{ symbols: ['A'] }})\n  const list = state([])\n  watch(() => tick.value, {run})\n  return <p>{{list.value.length}}</p>\n}}"
         );
         let d = check(&src);
         let w = one(&d, "W052");
         assert_eq!(w.severity, Severity::Error);
-        assert!(w.message.contains("folds `tick` into `list`"), "{}", w.message);
+        assert!(
+            w.message.contains("folds `tick` into `list`"),
+            "{}",
+            w.message
+        );
         assert!(!has(&d, "W056"), "{d:?}");
     }
 }
@@ -258,7 +339,11 @@ fn w052_not_for_local_sources_or_plain_copies() {
     let src = "import { state, watch } from '@weft-js/core'\nimport { format } from './format'\nexport function A() {\n  const a = format(1)\n  const list = state([])\n  watch(() => a.value, m => { list.value = [...list.value, m] })\n  return <p>{list.value.length}</p>\n}";
     assert!(!has(&check(src), "W052"), "{:?}", check(src));
     let copy = "import { state, watch } from '@weft-js/core'\nimport { prices } from '../server/prices'\nexport function A() {\n  const tick = prices({})\n  const last = state(null)\n  watch(() => tick.value, m => { last.value = m })\n  return <p>{last.value}</p>\n}";
-    assert!(has(&check(copy), "W056") && !has(&check(copy), "W052"), "{:?}", check(copy));
+    assert!(
+        has(&check(copy), "W056") && !has(&check(copy), "W052"),
+        "{:?}",
+        check(copy)
+    );
 }
 
 // ---- browser values are boxes for the other checks ---------------------------------------------------------------

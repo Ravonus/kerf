@@ -15,7 +15,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <div className="mx-auto flex min-h-dvh max-w-7xl flex-col lg:flex-row">
       <aside className="sticky top-0 z-10 flex flex-col gap-3 border-b border-line bg-paper/90 p-4 backdrop-blur lg:h-dvh lg:w-56 lg:shrink-0 lg:gap-6 lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between">
-          <Link href="/admin"><Logo /></Link>
+          <Link href="/admin">
+            <Logo />
+          </Link>
           <Suspense fallback={<span className="size-9 rounded-full bg-tint" />}>
             <Account />
           </Suspense>

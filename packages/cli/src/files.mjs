@@ -3,7 +3,16 @@
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
-const skipDirs = new Set(['public', 'node_modules', '.git', '.weft', '.output', 'dist', 'coverage', 'target'])
+const skipDirs = new Set([
+  'public',
+  'node_modules',
+  '.git',
+  '.weft',
+  '.output',
+  'dist',
+  'coverage',
+  'target',
+])
 
 export function globToRegExp(glob) {
   let re = ''
@@ -16,16 +25,20 @@ export function globToRegExp(glob) {
     else if (c === '?') re += '[^/]'
     else if (c === '{') {
       const end = glob.indexOf('}', i)
-      re += `(?:${glob.slice(i + 1, end).split(',').map(s => s.replace(/[.+^$()|[\]\\]/g, '\\$&')).join('|')})`
+      re += `(?:${glob
+        .slice(i + 1, end)
+        .split(',')
+        .map((s) => s.replace(/[.+^$()|[\]\\]/g, '\\$&'))
+        .join('|')})`
       i = end
     } else re += c.replace(/[.+^$()|[\]\\]/g, '\\$&')
   }
   return new RegExp(`^${re}$`)
 }
 
-export const matcher = globs => {
+export const matcher = (globs) => {
   const res = (globs ?? []).map(globToRegExp)
-  return path => res.some(re => re.test(path))
+  return (path) => res.some((re) => re.test(path))
 }
 
 /** Relative posix paths under `root` matching `include` and none of `exclude`. Sorted, so output is stable. */
@@ -34,7 +47,7 @@ export function discover(root, { include = ['**/*.{tsx,jsx}'], exclude = [] } = 
   const exc = matcher(exclude)
   /** @type {string[]} */
   const out = []
-  const walk = rel => {
+  const walk = (rel) => {
     for (const ent of readdirSync(join(root, rel), { withFileTypes: true })) {
       const path = rel ? `${rel}/${ent.name}` : ent.name
       if (ent.isDirectory()) {

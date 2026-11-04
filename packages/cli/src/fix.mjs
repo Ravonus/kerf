@@ -24,14 +24,22 @@ export async function fix(root, options = {}) {
     for (const [file, list] of byFile) {
       const edits = []
       for (const d of list) {
-        if (d.fix.edits.some(e => e.file !== file || edits.some(x => e.offset[0] < x.offset[1] && x.offset[0] < e.offset[1]))) continue
+        if (
+          d.fix.edits.some(
+            (e) =>
+              e.file !== file ||
+              edits.some((x) => e.offset[0] < x.offset[1] && x.offset[0] < e.offset[1]),
+          )
+        )
+          continue
         edits.push(...d.fix.edits)
         applied.push({ code: d.code, file, span: d.span })
         changed++
       }
       const abs = join(root, file)
       let text = readFileSync(abs, 'utf8')
-      for (const e of edits.sort((a, b) => b.offset[0] - a.offset[0])) text = text.slice(0, e.offset[0]) + e.text + text.slice(e.offset[1])
+      for (const e of edits.sort((a, b) => b.offset[0] - a.offset[0]))
+        text = text.slice(0, e.offset[0]) + e.text + text.slice(e.offset[1])
       writeFileSync(abs, text)
     }
     if (!changed) break

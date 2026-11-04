@@ -49,7 +49,8 @@ export const hmrStats = { reruns: 0 }
  */
 export function hot(file: string, comps: Record<string, [Comp, string]>) {
   scopes.on = true
-  const mine: Entry[] = [], changed: Entry[] = []
+  const mine: Entry[] = [],
+    changed: Entry[] = []
   let reran = false
   for (const name in comps) {
     const [fn, hash] = comps[name]!
@@ -65,7 +66,8 @@ export function hot(file: string, comps: Record<string, [Comp, string]>) {
     mine.push(e)
     // Old and new function objects both route to the entry, so importers holding either mount the latest.
     const entry = e
-    ;(fn as Comp & { $$h?: unknown }).$$h = (props: unknown, n?: string, loc?: string) => mount(entry, props, n, loc)
+    ;(fn as Comp & { $$h?: unknown }).$$h = (props: unknown, n?: string, loc?: string) =>
+      mount(entry, props, n, loc)
   }
   if (!reran) return
   const restore = capture()
@@ -79,7 +81,11 @@ function path(el: Element): string {
   const steps: string[] = []
   for (let at: Element | null = el; at && at !== document.documentElement; at = at.parentElement) {
     if (at.id) return `#${CSS.escape(at.id)} ${steps.join(' ')}`.trim()
-    steps.unshift(at === document.body ? 'body' : `> :nth-child(${[...at.parentElement!.children].indexOf(at) + 1})`)
+    steps.unshift(
+      at === document.body
+        ? 'body'
+        : `> :nth-child(${[...at.parentElement!.children].indexOf(at) + 1})`,
+    )
   }
   return steps.join(' ')
 }
@@ -90,11 +96,19 @@ function path(el: Element): string {
  */
 function capture() {
   if (typeof document === 'undefined') return () => {}
-  const fields = [...document.querySelectorAll<HTMLInputElement>('input,textarea,select')].map(el => ({ el, at: path(el), value: el.value, checked: el.checked }))
-  const scrolled = [...document.querySelectorAll('*')].filter(el => el.scrollTop || el.scrollLeft).map(el => ({ el, at: path(el), top: el.scrollTop, left: el.scrollLeft }))
+  const fields = [...document.querySelectorAll<HTMLInputElement>('input,textarea,select')].map(
+    (el) => ({ el, at: path(el), value: el.value, checked: el.checked }),
+  )
+  const scrolled = [...document.querySelectorAll('*')]
+    .filter((el) => el.scrollTop || el.scrollLeft)
+    .map((el) => ({ el, at: path(el), top: el.scrollTop, left: el.scrollLeft }))
   const active = document.activeElement as HTMLInputElement | null
-  const focus = active && active !== document.body ? { el: active, at: path(active), start: active.selectionStart, end: active.selectionEnd } : undefined
-  const find = <T extends Element>(was: { el: T; at: string }) => (was.el.isConnected ? was.el : document.querySelector<T>(was.at))
+  const focus =
+    active && active !== document.body
+      ? { el: active, at: path(active), start: active.selectionStart, end: active.selectionEnd }
+      : undefined
+  const find = <T extends Element>(was: { el: T; at: string }) =>
+    was.el.isConnected ? was.el : document.querySelector<T>(was.at)
   return () => {
     for (const f of fields) {
       const el = find(f)
@@ -105,7 +119,10 @@ function capture() {
     const scroll = () => {
       for (const s of scrolled) {
         const el = find(s)
-        if (el) { el.scrollTop = s.top; el.scrollLeft = s.left }
+        if (el) {
+          el.scrollTop = s.top
+          el.scrollLeft = s.left
+        }
       }
     }
     scroll()
@@ -149,7 +166,10 @@ function mount(e: Entry, props: unknown, name?: string, loc?: string) {
       return (last = createComponent(e.fn, props as never, name, loc))
     } catch (err) {
       if (runs === 1) throw err
-      console.error(`weft hmr: <${e.name}> threw while updating; keeping its last output until the next edit\n`, err)
+      console.error(
+        `weft hmr: <${e.name}> threw while updating; keeping its last output until the next edit\n`,
+        err,
+      )
       return last
     } finally {
       frame = outer

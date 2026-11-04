@@ -15,8 +15,15 @@ use protocol::{align, key};
 
 /// `out` receives `[width, height]`. Unknown dimensions are NaN; available space is a number,
 /// `-1` for min-content or `+inf` for max-content.
-pub type MeasureFn =
-    extern "C" fn(user: *mut c_void, id: u32, known_w: f32, known_h: f32, avail_w: f32, avail_h: f32, out: *mut f32);
+pub type MeasureFn = extern "C" fn(
+    user: *mut c_void,
+    id: u32,
+    known_w: f32,
+    known_h: f32,
+    avail_w: f32,
+    avail_h: f32,
+    out: *mut f32,
+);
 
 pub struct Tree {
     taffy: TaffyTree<u32>,
@@ -80,14 +87,27 @@ fn justify(v: u32) -> JustifyContent {
 
 impl Tree {
     pub fn new(measure: MeasureFn, user: *mut c_void) -> Self {
-        Tree { taffy: TaffyTree::new(), nodes: HashMap::new(), measure, user }
+        Tree {
+            taffy: TaffyTree::new(),
+            nodes: HashMap::new(),
+            measure,
+            user,
+        }
     }
 
     /// `measured` leaves get their size from the host callback (text, buttons, inputs).
     pub fn node(&mut self, id: u32, measured: bool) {
-        let style = Style { display: Display::Flex, flex_direction: FlexDirection::Column, ..Style::default() };
-        let node = if measured { self.taffy.new_leaf_with_context(style, id) } else { self.taffy.new_leaf(style) }
-            .expect("taffy node");
+        let style = Style {
+            display: Display::Flex,
+            flex_direction: FlexDirection::Column,
+            ..Style::default()
+        };
+        let node = if measured {
+            self.taffy.new_leaf_with_context(style, id)
+        } else {
+            self.taffy.new_leaf(style)
+        }
+        .expect("taffy node");
         if let Some(old) = self.nodes.insert(id, node) {
             let _ = self.taffy.remove(old);
         }
@@ -95,7 +115,9 @@ impl Tree {
 
     /// Removes the node and its whole subtree.
     pub fn remove(&mut self, id: u32) {
-        let Some(node) = self.nodes.remove(&id) else { return };
+        let Some(node) = self.nodes.remove(&id) else {
+            return;
+        };
         let mut stack = self.taffy.children(node).unwrap_or_default();
         let _ = self.taffy.remove(node);
         while let Some(child) = stack.pop() {
@@ -107,11 +129,16 @@ impl Tree {
 
     /// Moves `id` under `parent`, before `before` (0 appends). Re-inserting an attached node moves it.
     pub fn insert(&mut self, parent: u32, id: u32, before: u32) {
-        let (Some(&p), Some(&c)) = (self.nodes.get(&parent), self.nodes.get(&id)) else { return };
+        let (Some(&p), Some(&c)) = (self.nodes.get(&parent), self.nodes.get(&id)) else {
+            return;
+        };
         if let Some(old) = self.taffy.parent(c) {
             let _ = self.taffy.remove_child(old, c);
         }
-        let index = self.nodes.get(&before).and_then(|b| self.taffy.children(p).ok()?.iter().position(|n| n == b));
+        let index = self
+            .nodes
+            .get(&before)
+            .and_then(|b| self.taffy.children(p).ok()?.iter().position(|n| n == b));
         match index {
             Some(i) => self.taffy.insert_child_at_index(p, i, c),
             None => self.taffy.add_child(p, c),
@@ -120,18 +147,38 @@ impl Tree {
     }
 
     pub fn set(&mut self, id: u32, k: u32, v: f32) {
-        let Some(&node) = self.nodes.get(&id) else { return };
+        let Some(&node) = self.nodes.get(&id) else {
+            return;
+        };
         let mut s = self.taffy.style(node).expect("style").clone();
         match k {
-            key::DIRECTION => s.flex_direction = if v as u32 == 1 { FlexDirection::Row } else { FlexDirection::Column },
-            key::GAP => s.gap = Size { width: LengthPercentage::length(v), height: LengthPercentage::length(v) },
+            key::DIRECTION => {
+                s.flex_direction = if v as u32 == 1 {
+                    FlexDirection::Row
+                } else {
+                    FlexDirection::Column
+                }
+            }
+            key::GAP => {
+                s.gap = Size {
+                    width: LengthPercentage::length(v),
+                    height: LengthPercentage::length(v),
+                }
+            }
             key::PAD => s.padding = Rect::length(v),
             // A growing item fills the space it is given, so it may also shrink below its content (CSS's
             // automatic min size would let a long list push its scroll view off screen).
             key::GROW => {
                 s.flex_grow = v;
-                let min = if v > 0.0 { LengthPercentageAuto::length(0.0) } else { LengthPercentageAuto::auto() };
-                s.min_size = Size { width: min, height: min };
+                let min = if v > 0.0 {
+                    LengthPercentageAuto::length(0.0)
+                } else {
+                    LengthPercentageAuto::auto()
+                };
+                s.min_size = Size {
+                    width: min,
+                    height: min,
+                };
             }
             key::ALIGN => s.align_items = align_items(v as u32),
             key::JUSTIFY => s.justify_content = justify(v as u32),
@@ -148,14 +195,23 @@ impl Tree {
                 s.max_size.height = bound(v);
             }
             key::MIN_HEIGHT => {
-                s.min_size.height =
-                    if v.is_nan() { LengthPercentageAuto::auto() } else { LengthPercentageAuto::length(v) }
+                s.min_size.height = if v.is_nan() {
+                    LengthPercentageAuto::auto()
+                } else {
+                    LengthPercentageAuto::length(v)
+                }
             }
             key::SCROLL => {
                 s.overflow = if v == 0.0 {
-                    Point { x: Overflow::Visible, y: Overflow::Visible }
+                    Point {
+                        x: Overflow::Visible,
+                        y: Overflow::Visible,
+                    }
                 } else {
-                    Point { x: Overflow::Visible, y: Overflow::Scroll }
+                    Point {
+                        x: Overflow::Visible,
+                        y: Overflow::Scroll,
+                    }
                 };
                 s.scrollbar_width = 0.0;
             }
@@ -174,17 +230,25 @@ impl Tree {
     /// Lays out `root` as the screen: it fills exactly `w` × `h` (a flex root with an auto size would shrink
     /// to fit its content instead).
     pub fn compute(&mut self, root: u32, w: f32, h: f32) {
-        let Some(&node) = self.nodes.get(&root) else { return };
+        let Some(&node) = self.nodes.get(&root) else {
+            return;
+        };
         let mut s = self.taffy.style(node).expect("style").clone();
         if s.size.width != Dimension::length(w) || s.size.height != Dimension::length(h) {
-            s.size = Size { width: Dimension::length(w), height: Dimension::length(h) };
+            s.size = Size {
+                width: Dimension::length(w),
+                height: Dimension::length(h),
+            };
             self.taffy.set_style(node, s).expect("set style");
         }
         let (measure, user) = (self.measure, self.user);
         self.taffy
             .compute_layout_with_measure(
                 node,
-                Size { width: AvailableSpace::Definite(w), height: AvailableSpace::Definite(h) },
+                Size {
+                    width: AvailableSpace::Definite(w),
+                    height: AvailableSpace::Definite(h),
+                },
                 |inputs, _, ctx, style| -> LayoutOutput {
                     let id = ctx.map(|c| *c);
                     compute_leaf_layout(
@@ -203,7 +267,10 @@ impl Tree {
                                 space(avail.height),
                                 out.as_mut_ptr(),
                             );
-                            Size { width: out[0], height: out[1] }
+                            Size {
+                                width: out[0],
+                                height: out[1],
+                            }
                         },
                     )
                 },
@@ -294,7 +361,13 @@ pub unsafe extern "C" fn wl_frame(t: *mut Tree, id: u32, out: *mut f32) -> u32 {
     match tree!(t).frame(id) {
         Some(f) => {
             // SAFETY: the source is this 6-float array, and the caller guarantees `out` has room for 6.
-            unsafe { std::ptr::copy_nonoverlapping([f.x, f.y, f.w, f.h, f.content_w, f.content_h].as_ptr(), out, 6) };
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    [f.x, f.y, f.w, f.h, f.content_w, f.content_h].as_ptr(),
+                    out,
+                    6,
+                )
+            };
             1
         }
         None => 0,
@@ -309,10 +382,25 @@ mod wasm {
 
     #[link(wasm_import_module = "env")]
     extern "C" {
-        fn weft_measure(id: u32, known_w: f32, known_h: f32, avail_w: f32, avail_h: f32, out: *mut f32);
+        fn weft_measure(
+            id: u32,
+            known_w: f32,
+            known_h: f32,
+            avail_w: f32,
+            avail_h: f32,
+            out: *mut f32,
+        );
     }
 
-    extern "C" fn trampoline(_: *mut c_void, id: u32, kw: f32, kh: f32, aw: f32, ah: f32, out: *mut f32) {
+    extern "C" fn trampoline(
+        _: *mut c_void,
+        id: u32,
+        kw: f32,
+        kh: f32,
+        aw: f32,
+        ah: f32,
+        out: *mut f32,
+    ) {
         // SAFETY: the import writes two floats into `out`, which points into this module's memory.
         unsafe { weft_measure(id, kw, kh, aw, ah, out) }
     }
@@ -332,13 +420,28 @@ mod wasm {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp, reason = "layout is whole points here: an inexact result is the failure")]
+#[allow(
+    clippy::float_cmp,
+    reason = "layout is whole points here: an inexact result is the failure"
+)]
 mod tests {
     use super::*;
 
     /// Text stand-in: 10pt per character on one line, 20pt tall.
-    extern "C" fn fixed(_: *mut c_void, id: u32, kw: f32, kh: f32, _aw: f32, _ah: f32, out: *mut f32) {
-        let w = if kw.is_nan() { (id % 100) as f32 * 10.0 } else { kw };
+    extern "C" fn fixed(
+        _: *mut c_void,
+        id: u32,
+        kw: f32,
+        kh: f32,
+        _aw: f32,
+        _ah: f32,
+        out: *mut f32,
+    ) {
+        let w = if kw.is_nan() {
+            (id % 100) as f32 * 10.0
+        } else {
+            kw
+        };
         let h = if kh.is_nan() { 20.0 } else { kh };
         // SAFETY: the `MeasureFn` contract: `out` has room for `[width, height]`.
         unsafe {
@@ -364,7 +467,11 @@ mod tests {
         t.compute(1, 390.0, 844.0);
         let a = t.frame(104).unwrap();
         let b = t.frame(105).unwrap();
-        assert_eq!((a.x, a.y, a.w, a.h), (16.0, 16.0, 358.0, 20.0), "stretched to the padded width");
+        assert_eq!(
+            (a.x, a.y, a.w, a.h),
+            (16.0, 16.0, 358.0, 20.0),
+            "stretched to the padded width"
+        );
         assert_eq!(b.y, 16.0 + 20.0 + 8.0);
     }
 
@@ -399,7 +506,10 @@ mod tests {
         t.insert(1, 103, 0);
         t.insert(1, 102, 103);
         t.compute(1, 100.0, 100.0);
-        let ys: Vec<f32> = [101, 102, 103].iter().map(|id| t.frame(*id).unwrap().y).collect();
+        let ys: Vec<f32> = [101, 102, 103]
+            .iter()
+            .map(|id| t.frame(*id).unwrap().y)
+            .collect();
         assert_eq!(ys, vec![0.0, 20.0, 40.0]);
         t.insert(1, 101, 0); // move to the end
         t.compute(1, 100.0, 100.0);
@@ -476,6 +586,9 @@ mod tests {
             let f = t.frame(id).unwrap();
             (f.x, f.w)
         };
-        assert_eq!([xw(2), xw(3), xw(4)], [(0.0, 150.0), (150.0, 20.0), (170.0, 230.0)]);
+        assert_eq!(
+            [xw(2), xw(3), xw(4)],
+            [(0.0, 150.0), (150.0, 20.0), (170.0, 230.0)]
+        );
     }
 }

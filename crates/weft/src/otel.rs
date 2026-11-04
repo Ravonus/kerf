@@ -7,14 +7,25 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub(crate) fn parent(traceparent: &str) -> Option<SpanContext> {
     let mut parts = traceparent.split('-');
-    let (version, trace, span, flags) = (parts.next()?, parts.next()?, parts.next()?, parts.next()?);
+    let (version, trace, span, flags) =
+        (parts.next()?, parts.next()?, parts.next()?, parts.next()?);
     if version != "00" {
         return None;
     }
-    let trace = TraceId::from_hex(trace).ok().filter(|t| *t != TraceId::INVALID)?;
-    let span = SpanId::from_hex(span).ok().filter(|s| *s != SpanId::INVALID)?;
+    let trace = TraceId::from_hex(trace)
+        .ok()
+        .filter(|t| *t != TraceId::INVALID)?;
+    let span = SpanId::from_hex(span)
+        .ok()
+        .filter(|s| *s != SpanId::INVALID)?;
     let flags = TraceFlags::new(u8::from_str_radix(flags, 16).ok()?);
-    Some(SpanContext::new(trace, span, flags, true, TraceState::default()))
+    Some(SpanContext::new(
+        trace,
+        span,
+        flags,
+        true,
+        TraceState::default(),
+    ))
 }
 
 pub(crate) fn link(span: &tracing::Span, traceparent: Option<&str>) {

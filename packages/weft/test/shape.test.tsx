@@ -86,7 +86,13 @@ test('X036 fires when a hintless string is shown, not when it is only filled', (
 
 test('mask: same widths and word breaks, none of the text', () => {
   expect(mask('Hello, Wim 42')).toBe('Xniini mim 00')
-  expect(mask({ a: 'ok', n: 7, t: true, z: null, l: ['hi'] })).toEqual({ a: 'nn', n: 7, t: true, z: null, l: ['ni'] })
+  expect(mask({ a: 'ok', n: 7, t: true, z: null, l: ['hi'] })).toEqual({
+    a: 'nn',
+    n: 7,
+    t: true,
+    z: null,
+    l: ['ni'],
+  })
   expect(mask(['a', 'b', 'c'], 2)).toHaveLength(2)
   expect(mask(Array(80).fill(1))).toHaveLength(50)
 })
@@ -95,7 +101,11 @@ test('shapeAny reads as anything; shapeText survives what throws', () => {
   expect(String(shapeAny.a.b())).toBe('nnnnn nnnnn')
   expect(shapeAny.length).toBe(3)
   expect(shapeText()).toBe('nnnnn nnnnn')
-  expect(shapeText(() => { throw new Error('x') })).toBe('nnnnn nnnnn')
+  expect(
+    shapeText(() => {
+      throw new Error('x')
+    }),
+  ).toBe('nnnnn nnnnn')
   expect(shapeText(() => null)).toBe('')
   expect(placeholder(13)).toBe('nnnnn nnnnn n')
 })
@@ -104,7 +114,11 @@ test('<Text reserve>: a placeholder in the real element, then one swap', async (
   vi.useRealTimers()
   const { state } = await import('@weft-js/core')
   const text = state<string | undefined>(undefined)
-  render(() => <Text as="h2" class="t" reserve={11}>{text.value}</Text>)
+  render(() => (
+    <Text as="h2" class="t" reserve={11}>
+      {text.value}
+    </Text>
+  ))
   await flush()
   const el = document.querySelector('h2.t')!
   expect(el.getAttribute('data-scope')).toBe('skeleton-scope')
@@ -122,7 +136,9 @@ test('<Text stream>: the height only grows', async () => {
   const { state } = await import('@weft-js/core')
   const text = state('Hello')
   let height = 40
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({ height }) as DOMRect)
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+    () => ({ height }) as DOMRect,
+  )
   render(() => <Text stream>{text.value}</Text>)
   const frame = () => new Promise(requestAnimationFrame)
   await flush()
@@ -141,8 +157,14 @@ test('<Text stream>: tokens land once a frame, in whole lines, and complete bloc
   const { state } = await import('@weft-js/core')
   const text = state('# One')
   let height = 25
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({ height, width: 300 }) as DOMRect)
-  const { container } = render(() => <Text stream style="line-height:20px">{text.value}</Text>)
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+    () => ({ height, width: 300 }) as DOMRect,
+  )
+  const { container } = render(() => (
+    <Text stream style="line-height:20px">
+      {text.value}
+    </Text>
+  ))
   const frame = () => new Promise(requestAnimationFrame)
   await flush()
   await frame()
@@ -163,7 +185,9 @@ test('<Text stream>: tokens land once a frame, in whole lines, and complete bloc
   expect(el.querySelector('[data-block="tail"]')!.textContent).toBe('Three')
   height = 50
   // oxlint-disable-next-line typescript/unbound-method -- a spy, handed to vi.mocked and never called from here
-  vi.mocked(Element.prototype.getBoundingClientRect).mockImplementation(() => ({ height, width: 200 }) as DOMRect)
+  vi.mocked(Element.prototype.getBoundingClientRect).mockImplementation(
+    () => ({ height, width: 200 }) as DOMRect,
+  )
   text.value += '!'
   await flush()
   await frame()
@@ -178,17 +202,19 @@ test('streamBlocks: a blank line inside a code fence does not end a block', () =
 test('measure, lines and fit: exact boxes from the slot, null with none bound', async () => {
   const { measure, lines, fit } = await import('@weft-js/core/text')
   const spec = { font: '16px Inter', lineHeight: 20, width: 80 }
-  let box!: ReturnType<typeof measure>, rows!: ReturnType<typeof lines>, size!: ReturnType<typeof fit>
+  let box!: ReturnType<typeof measure>,
+    rows!: ReturnType<typeof lines>,
+    size!: ReturnType<typeof fit>
   function Probe() {
     box = measure('one two three four', spec)
     rows = lines('one two three four', spec)
-    size = fit('one two', { font: s => `${s}px Inter`, width: 400 })
+    size = fit('one two', { font: (s) => `${s}px Inter`, width: 400 })
     return null
   }
   render(Probe, {}, { slots: { 'text.measure': fakeMeasure() } })
   await flush()
   await flush()
   expect(box.value).toEqual({ height: 40, lineCount: 2 })
-  expect(rows.value!.map(l => l.text)).toEqual(['one two', 'three four'])
+  expect(rows.value!.map((l) => l.text)).toEqual(['one two', 'three four'])
   expect(size.value).toBe(200) // the fake's width doesn't depend on size
 })

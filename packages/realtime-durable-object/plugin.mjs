@@ -8,7 +8,10 @@ export const durableObject = definePlugin({
   weft: '*',
   permissions: { net: ['binding:WEFT_BUS'] },
   contribute: () => ({
-    agents: { title: 'Realtime bus (Durable Object)', text: 'Set `bus: durableObjectBus({ namespace: env.WEFT_BUS })` in `src/realtime.server.ts`, and export `WeftBusObject` from the worker with a `new_sqlite_classes` migration. It needs the `cloudflare_durable` preset (R002): a stateless Worker can\'t hold the socket.' },
+    agents: {
+      title: 'Realtime bus (Durable Object)',
+      text: "Set `bus: durableObjectBus({ namespace: env.WEFT_BUS })` in `src/realtime.server.ts`, and export `WeftBusObject` from the worker with a `new_sqlite_classes` migration. It needs the `cloudflare_durable` preset (R002): a stateless Worker can't hold the socket.",
+    },
   }),
 })
 

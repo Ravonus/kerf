@@ -10,34 +10,69 @@ import { native, wasmBackend } from '../src/og/native.mjs'
 import { cardTitleSize } from '../src/derive.mjs'
 
 const require = createRequire(import.meta.url)
-const inter = (w: number) => ({ name: 'Inter', weight: w, style: 'normal' as const, data: readFileSync(require.resolve(`@fontsource/inter/files/inter-latin-${w}-normal.woff2`)) })
+const inter = (w: number) => ({
+  name: 'Inter',
+  weight: w,
+  style: 'normal' as const,
+  data: readFileSync(require.resolve(`@fontsource/inter/files/inter-latin-${w}-normal.woff2`)),
+})
 const fonts = [inter(400), inter(700)]
 const site = { name: 'Lemonstand', url: 'https://lemonstand.example', title: '%s · Lemonstand' }
-const LONG = 'Entrepreneurship for young people, with an AI coach who has read every page and asks what you would do next, then what you would do after that, and keeps on going past where any card can show it.'
+const LONG =
+  'Entrepreneurship for young people, with an AI coach who has read every page and asks what you would do next, then what you would do after that, and keeps on going past where any card can show it.'
 const cases = {
-  short: { title: 'Pricing · Lemonstand', description: 'Three plans, billed monthly.', path: '/pricing' },
-  long: { title: 'A title that goes on and on about what the page holds, far longer than any title should, until it just has to stop · Lemonstand', description: LONG, path: '/guides/a/very/long/path' },
-  word: { title: 'Supercalifragilisticexpialidocious-and-a-half-again-unbroken-word-that-will-not-wrap · Lemonstand', description: '', path: '/w' },
-  escaped: { title: '<b>Tags</b> & "quotes"', description: '</div><img src=x> stays text.', path: '/' },
+  short: {
+    title: 'Pricing · Lemonstand',
+    description: 'Three plans, billed monthly.',
+    path: '/pricing',
+  },
+  long: {
+    title:
+      'A title that goes on and on about what the page holds, far longer than any title should, until it just has to stop · Lemonstand',
+    description: LONG,
+    path: '/guides/a/very/long/path',
+  },
+  word: {
+    title:
+      'Supercalifragilisticexpialidocious-and-a-half-again-unbroken-word-that-will-not-wrap · Lemonstand',
+    description: '',
+    path: '/w',
+  },
+  escaped: {
+    title: '<b>Tags</b> & "quotes"',
+    description: '</div><img src=x> stays text.',
+    path: '/',
+  },
 }
 const out = process.env.CARD_OUT
 
 async function draw(name: string, props: Parameters<typeof DefaultCard>[0]) {
   const found: unknown[] = []
   const html = renderToString(() => <DefaultCard {...props} />, { hydratable: false })
-  const png = await renderCard(html, undefined, fonts, { onDiagnostic: (d: unknown) => found.push(d) })
-  if (out) { mkdirSync(out, { recursive: true }); writeFileSync(join(out, `${name}.png`), png) }
+  const png = await renderCard(html, undefined, fonts, {
+    onDiagnostic: (d: unknown) => found.push(d),
+  })
+  if (out) {
+    mkdirSync(out, { recursive: true })
+    writeFileSync(join(out, `${name}.png`), png)
+  }
   return { png, html, found }
 }
 
-describe.each(['dark', 'light'] as const)('%s', scheme => {
-  test.each(Object.keys(cases))('%s: a 1200×630 PNG, nothing the renderer refused', async name => {
-    const { png, found } = await draw(`${scheme}-${name}`, { ...cases[name as keyof typeof cases], site: { ...site, card: { scheme } } })
-    expect([...png.subarray(1, 4)]).toEqual([0x50, 0x4e, 0x47])
-    expect(found).toEqual([])
-    const view = new DataView(png.buffer, png.byteOffset)
-    expect([view.getUint32(16), view.getUint32(20)]).toEqual([1200, 630])
-  })
+describe.each(['dark', 'light'] as const)('%s', (scheme) => {
+  test.each(Object.keys(cases))(
+    '%s: a 1200×630 PNG, nothing the renderer refused',
+    async (name) => {
+      const { png, found } = await draw(`${scheme}-${name}`, {
+        ...cases[name as keyof typeof cases],
+        site: { ...site, card: { scheme } },
+      })
+      expect([...png.subarray(1, 4)]).toEqual([0x50, 0x4e, 0x47])
+      expect(found).toEqual([])
+      const view = new DataView(png.buffer, png.byteOffset)
+      expect([view.getUint32(16), view.getUint32(20)]).toEqual([1200, 630])
+    },
+  )
 })
 
 test('the same input draws the same bytes', async () => {
@@ -49,7 +84,12 @@ test('the same input draws the same bytes', async () => {
 test('the wasm renderer, which a Windows build uses, draws the same bytes as the addon', async () => {
   const html = renderToString(() => <DefaultCard title="Same bytes" description="" site={site} />)
   const [addon, wasm] = await Promise.all([native(), wasmBackend(join(import.meta.dirname, '..'))])
-  const paint = async (backend: unknown) => (await (await createCardRenderer({ backend: backend as never, fonts: fonts as never })).render(html, { width: 1200, height: 630 })).body
+  const paint = async (backend: unknown) =>
+    (
+      await (
+        await createCardRenderer({ backend: backend as never, fonts: fonts as never })
+      ).render(html, { width: 1200, height: 630 })
+    ).body
   expect(Buffer.from(await paint(wasm)).equals(Buffer.from(await paint(addon)))).toBe(true)
 })
 
@@ -66,7 +106,10 @@ test('text is text in the card too', async () => {
 })
 
 test('a site`s own colours win over the scheme`s', async () => {
-  const { html } = await draw('accent', { ...cases.short, site: { ...site, card: { accent: '#ff3300', dark: { background: '#000011' } } } })
+  const { html } = await draw('accent', {
+    ...cases.short,
+    site: { ...site, card: { accent: '#ff3300', dark: { background: '#000011' } } },
+  })
   expect(html).toContain('#ff3300')
   expect(html).toContain('#000011')
 })

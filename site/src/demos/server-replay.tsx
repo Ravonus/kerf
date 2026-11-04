@@ -30,15 +30,25 @@ export default function Replay() {
   return (
     <Card title="A click before the code arrives">
       <p>
-        Island code: <Badge tone={loaded.value ? 'positive' : 'caution'}>{loaded.value ? 'running' : 'still loading'}</Badge>
+        Island code:{' '}
+        <Badge tone={loaded.value ? 'positive' : 'caution'}>
+          {loaded.value ? 'running' : 'still loading'}
+        </Badge>
       </p>
       <Button onClick={click}>Add to cart ({count.value})</Button>
       <p>
         {held.value > 0 && `Held for replay: ${held.value}. `}
         {lost.value > 0 && `Lost: ${lost.value}.`}
       </p>
-      <Button size="sm" tone="neutral" disabled={!loaded.value} onClick={reload}>Load the page again</Button>{' '}
-      <Button size="sm" emphasis="ghost" tone="neutral" onClick={() => (replay.value = !replay.value)}>
+      <Button size="sm" tone="neutral" disabled={!loaded.value} onClick={reload}>
+        Load the page again
+      </Button>{' '}
+      <Button
+        size="sm"
+        emphasis="ghost"
+        tone="neutral"
+        onClick={() => (replay.value = !replay.value)}
+      >
         {replay.value ? 'Turn replay off' : 'Turn replay on'}
       </Button>
     </Card>

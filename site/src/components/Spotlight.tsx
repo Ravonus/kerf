@@ -1,14 +1,52 @@
 import { navigate } from '@weft-js/start'
 import type { SearchHit } from '@weft-js/warp-core'
-import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft-js/warp-icons'
-import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource, type IconRef } from '@weft-js/warp'
+import {
+  BookIcon,
+  BoxIcon,
+  ClipboardIcon,
+  FileTextIcon,
+  GridIcon,
+  HashIcon,
+  MoonIcon,
+  PlayIcon,
+  SlidersIcon,
+  StarIcon,
+  SunIcon,
+} from '@weft-js/warp-icons'
+import {
+  CommandPalette,
+  setDial,
+  type Command,
+  type CommandMode,
+  type CommandSource,
+  type IconRef,
+} from '@weft-js/warp'
 import { onMount } from '@weft-js/core'
 import { body, loadTitles, titles } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 
 const go = (href: string) => () => void navigate(href)
-const ORDER = ['Recent', 'Go to', 'API', 'Guides', 'Components', 'Diagnostics', 'Examples', 'Icons', 'In the text', 'Commands']
-const ICON: Record<string, IconRef> = { API: BoxIcon, Guides: BookIcon, Components: GridIcon, Diagnostics: HashIcon, Examples: PlayIcon, Icons: StarIcon, 'In the text': FileTextIcon }
+const ORDER = [
+  'Recent',
+  'Go to',
+  'API',
+  'Guides',
+  'Components',
+  'Diagnostics',
+  'Examples',
+  'Icons',
+  'In the text',
+  'Commands',
+]
+const ICON: Record<string, IconRef> = {
+  API: BoxIcon,
+  Guides: BookIcon,
+  Components: GridIcon,
+  Diagnostics: HashIcon,
+  Examples: PlayIcon,
+  Icons: StarIcon,
+  'In the text': FileTextIcon,
+}
 const PER_GROUP = 4
 const RECENT = 'weft:recent'
 
@@ -16,26 +54,71 @@ const PAGES: Command[] = [
   { label: 'Learn', group: 'Go to', icon: BookIcon, href: '/learn', run: go('/learn') },
   { label: 'Reference', group: 'Go to', icon: BoxIcon, href: '/reference', run: go('/reference') },
   { label: 'Examples', group: 'Go to', icon: PlayIcon, href: '/examples', run: go('/examples') },
-  { label: 'Components', group: 'Go to', icon: GridIcon, href: '/components', run: go('/components') },
+  {
+    label: 'Components',
+    group: 'Go to',
+    icon: GridIcon,
+    href: '/components',
+    run: go('/components'),
+  },
   { label: 'Icons', group: 'Go to', icon: StarIcon, href: '/icons', run: go('/icons') },
 ]
 const COMMANDS: Command[] = [
-  { label: 'Theme: light', group: 'Commands', icon: SunIcon, run: () => setDial('theme', 'light', { persist: true }) },
-  { label: 'Theme: dark', group: 'Commands', icon: MoonIcon, run: () => setDial('theme', 'dark', { persist: true }) },
-  { label: 'Theme: follow the system', group: 'Commands', icon: SlidersIcon, run: () => setDial('theme', 'auto', { persist: true }) },
-  { label: 'Expression: quiet', group: 'Commands', icon: SlidersIcon, run: () => setDial('expression', 'quiet', { persist: true }) },
-  { label: 'Expression: balanced', group: 'Commands', icon: SlidersIcon, run: () => setDial('expression', 'balanced', { persist: true }) },
-  { label: 'Expression: vivid', group: 'Commands', icon: SlidersIcon, run: () => setDial('expression', 'vivid', { persist: true }) },
   {
-    label: 'Copy this page as Markdown', group: 'Commands', icon: ClipboardIcon,
-    run: () => { if (/^\/(learn|reference)\/./.test(location.pathname)) void fetch(`${location.pathname}.md`).then(r => r.text()).then(t => navigator.clipboard?.writeText(t)) },
+    label: 'Theme: light',
+    group: 'Commands',
+    icon: SunIcon,
+    run: () => setDial('theme', 'light', { persist: true }),
   },
-  ...PAGES.map(p => ({ ...p, label: `Go to ${p.label}`, group: 'Commands' })),
+  {
+    label: 'Theme: dark',
+    group: 'Commands',
+    icon: MoonIcon,
+    run: () => setDial('theme', 'dark', { persist: true }),
+  },
+  {
+    label: 'Theme: follow the system',
+    group: 'Commands',
+    icon: SlidersIcon,
+    run: () => setDial('theme', 'auto', { persist: true }),
+  },
+  {
+    label: 'Expression: quiet',
+    group: 'Commands',
+    icon: SlidersIcon,
+    run: () => setDial('expression', 'quiet', { persist: true }),
+  },
+  {
+    label: 'Expression: balanced',
+    group: 'Commands',
+    icon: SlidersIcon,
+    run: () => setDial('expression', 'balanced', { persist: true }),
+  },
+  {
+    label: 'Expression: vivid',
+    group: 'Commands',
+    icon: SlidersIcon,
+    run: () => setDial('expression', 'vivid', { persist: true }),
+  },
+  {
+    label: 'Copy this page as Markdown',
+    group: 'Commands',
+    icon: ClipboardIcon,
+    run: () => {
+      if (/^\/(learn|reference)\/./.test(location.pathname))
+        void fetch(`${location.pathname}.md`)
+          .then((r) => r.text())
+          .then((t) => navigator.clipboard?.writeText(t))
+    },
+  },
+  ...PAGES.map((p) => ({ ...p, label: `Go to ${p.label}`, group: 'Commands' })),
 ]
 
 function recent(): Command[] {
   try {
-    return (JSON.parse(localStorage.getItem(RECENT) ?? '[]') as { label: string; href: string }[]).map(r => ({ ...r, group: 'Recent', icon: FileTextIcon, run: go(r.href) }))
+    return (
+      JSON.parse(localStorage.getItem(RECENT) ?? '[]') as { label: string; href: string }[]
+    ).map((r) => ({ ...r, group: 'Recent', icon: FileTextIcon, run: go(r.href) }))
   } catch {
     return []
   }
@@ -44,29 +127,47 @@ function recent(): Command[] {
 function remember(c: Command) {
   if (!c.href) return
   try {
-    const list = [{ label: c.label, href: c.href }, ...(JSON.parse(localStorage.getItem(RECENT) ?? '[]') as { href: string }[]).filter(r => r.href !== c.href)]
+    const list = [
+      { label: c.label, href: c.href },
+      ...(JSON.parse(localStorage.getItem(RECENT) ?? '[]') as { href: string }[]).filter(
+        (r) => r.href !== c.href,
+      ),
+    ]
     localStorage.setItem(RECENT, JSON.stringify(list.slice(0, 5)))
   } catch {}
 }
 
 const row = (h: SearchHit): Command => {
   const icon = ICON[h.group]
-  const hint = h.fuzzy ? `Closest match${h.parent ? `, ${h.parent}` : ''}` : h.parent ?? h.text
-  return { label: h.title, group: h.group, ...(icon && { icon }), ...(hint !== undefined && { hint }), href: h.url, run: go(h.url), id: h.url }
+  const hint = h.fuzzy ? `Closest match${h.parent ? `, ${h.parent}` : ''}` : (h.parent ?? h.text)
+  return {
+    label: h.title,
+    group: h.group,
+    ...(icon && { icon }),
+    ...(hint !== undefined && { hint }),
+    href: h.url,
+    run: go(h.url),
+    id: h.url,
+  }
 }
 
 /** At most four to a group, and a row that opens the rest in place. */
 function capped(hits: SearchHit[]) {
   const by = new Map<string, SearchHit[]>()
   for (const h of hits) by.has(h.group) ? by.get(h.group)!.push(h) : by.set(h.group, [h])
-  return [...by.values()].flatMap(list => {
+  return [...by.values()].flatMap((list) => {
     const rows = list.slice(0, PER_GROUP).map(row)
-    if (list.length > PER_GROUP) rows.push({ label: `Show all ${list.length} in ${list[0]!.group}`, group: list[0]!.group, children: () => list.map(row) })
+    if (list.length > PER_GROUP)
+      rows.push({
+        label: `Show all ${list.length} in ${list[0]!.group}`,
+        group: list[0]!.group,
+        children: () => list.map(row),
+      })
     return rows
   })
 }
 
-const titlesSource: CommandSource = q => {
+const titlesSource: CommandSource = (q) => {
   if (!q.trim()) return [...recent(), ...PAGES]
   const hits = titles(q)
   // A key press before T0 lands is answered when it does: the input never waits.
@@ -75,14 +176,27 @@ const titlesSource: CommandSource = q => {
 
 const bodySource: CommandSource = (q, signal) => {
   if (q.trim().length < 3) return []
-  return body(q, signal).then(hits => hits.slice(0, 6).map(h => ({ ...row(h), group: 'In the text' })))
+  return body(q, signal).then((hits) =>
+    hits.slice(0, 6).map((h) => ({ ...row(h), group: 'In the text' })),
+  )
 }
 
-const only = (group: string): CommandSource => q => (titles(q || ' ') ?? []).filter(h => h.group === group).slice(0, 20).map(row)
+const only =
+  (group: string): CommandSource =>
+  (q) =>
+    (titles(q || ' ') ?? [])
+      .filter((h) => h.group === group)
+      .slice(0, 20)
+      .map(row)
 
 const MODES: CommandMode[] = [
   { prefix: '>', label: 'Commands', placeholder: 'Run a command…', commands: COMMANDS },
-  { prefix: '@', label: 'Components', placeholder: 'Search components…', sources: [only('Components')] },
+  {
+    prefix: '@',
+    label: 'Components',
+    placeholder: 'Search components…',
+    sources: [only('Components')],
+  },
   { prefix: '#', label: 'Examples', placeholder: 'Search examples…', sources: [only('Examples')] },
 ]
 
@@ -91,5 +205,17 @@ export function Spotlight() {
   onMount(() => {
     void loadTitles()
   })
-  return <CommandPalette open={spotlightOpen} onOpenChange={v => (spotlightOpen.value = v)} slash sources={[titlesSource, bodySource]} modes={MODES} groupOrder={ORDER} onRun={remember} label="Search weft" placeholder="Search docs, components, codes…   > for commands" />
+  return (
+    <CommandPalette
+      open={spotlightOpen}
+      onOpenChange={(v) => (spotlightOpen.value = v)}
+      slash
+      sources={[titlesSource, bodySource]}
+      modes={MODES}
+      groupOrder={ORDER}
+      onRun={remember}
+      label="Search weft"
+      placeholder="Search docs, components, codes…   > for commands"
+    />
+  )
 }

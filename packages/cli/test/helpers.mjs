@@ -41,9 +41,12 @@ export function startApp() {
   mkdirSync(startTmp, { recursive: true })
   const dir = mkdtempSync(join(startTmp, 'app-'))
   made.push(dir)
-  cpSync(startFixture, dir, { recursive: true, filter: src => basename(src) !== '.weft' })
+  cpSync(startFixture, dir, { recursive: true, filter: (src) => basename(src) !== '.weft' })
   return dir
 }
 
 /** The v3 spread habit: every price push gives every product a new identity. */
-export const spreadBug = ['products.value.map(p => (p.id === id ? { ...p, price } : p))', 'products.value.map(p => ({ ...p, price: p.id === id ? price : p.price }))']
+export const spreadBug = [
+  'products.value.map(p => (p.id === id ? { ...p, price } : p))',
+  'products.value.map(p => ({ ...p, price: p.id === id ? price : p.price }))',
+]

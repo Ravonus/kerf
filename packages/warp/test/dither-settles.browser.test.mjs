@@ -11,11 +11,15 @@ vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 let browser, bundle
 beforeAll(async () => {
-  const build = await rolldown({ input: fileURLToPath(new URL('../../warp-core/src/dither/index.ts', import.meta.url)) })
+  const build = await rolldown({
+    input: fileURLToPath(new URL('../../warp-core/src/dither/index.ts', import.meta.url)),
+  })
   bundle = (await build.generate({ format: 'iife', name: 'dither' })).output[0].code
   browser = await chromium.launch()
 })
-afterAll(async () => { await browser?.close() })
+afterAll(async () => {
+  await browser?.close()
+})
 
 const PAGE = `<!doctype html><html data-expression="balanced"><body><main><div id="stage"><div id="host" style="inline-size:200px;block-size:100px"><canvas id="c"></canvas></div></div></main>`
 
@@ -26,9 +30,10 @@ async function open() {
   await page.evaluate(() => {
     window.probes = 0
     const stage = document.getElementById('stage')
-    new MutationObserver(list => {
+    new MutationObserver((list) => {
       window.probes += list.length
-      if (window.probes < 20_000) stage.setAttribute('data-expression', stage.getAttribute('data-expression') ?? 'balanced')
+      if (window.probes < 20_000)
+        stage.setAttribute('data-expression', stage.getAttribute('data-expression') ?? 'balanced')
     }).observe(document.querySelector('main'), { childList: true, subtree: true })
     window.field = dither.ditherField(document.getElementById('c'), { ramp: ['#000', '#fff'] })
     stage.setAttribute('data-expression', 'balanced')
@@ -47,7 +52,9 @@ test('a stamp of the value already there repaints nothing, so the page keeps ans
 test('a real change still repaints', async () => {
   const page = await open()
   const before = await page.evaluate(() => window.probes)
-  await page.evaluate(() => document.getElementById('stage').setAttribute('data-expression', 'vivid'))
+  await page.evaluate(() =>
+    document.getElementById('stage').setAttribute('data-expression', 'vivid'),
+  )
   await page.waitForTimeout(100)
   expect(await page.evaluate(() => window.probes)).toBeGreaterThan(before)
   await page.close()

@@ -6,7 +6,9 @@ export function SiteFooter() {
       <div class="wrap">
         <div class="site-bar">
           <div class="site-foot-brand">
-            <Link href="/" class="brand">Emberline</Link>
+            <Link href="/" class="brand">
+              Emberline
+            </Link>
             <p>Hear what customers keep asking for.</p>
           </div>
           <nav aria-label="Footer">

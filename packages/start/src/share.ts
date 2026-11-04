@@ -43,12 +43,26 @@ type Msg =
   | { t: 'shown'; tab: string; shown: boolean }
   | { t: 'net'; s: Triple[] }
   | { t: 'link'; up: boolean }
-  | { t: 'roll' } | { t: 'bye'; tab: string }
+  | { t: 'roll' }
+  | { t: 'bye'; tab: string }
 
-interface Client { bits: number; at: number; stale?: boolean }
+interface Client {
+  bits: number
+  at: number
+  stale?: boolean
+}
 
 /** What a test reads: `role`, and how much went where. */
-export const shareStats = { role: 'none' as 'none' | 'leader' | 'follower', tab, conn: undefined as string | undefined, handed: 0, steals: 0, frames: 0, keysSent: 0, bc: 0 }
+export const shareStats = {
+  role: 'none' as 'none' | 'leader' | 'follower',
+  tab,
+  conn: undefined as string | undefined,
+  handed: 0,
+  steals: 0,
+  frames: 0,
+  keysSent: 0,
+  bc: 0,
+}
 
 const noLocks = () => typeof navigator === 'undefined' || !navigator.locks
 
@@ -86,7 +100,9 @@ function post(m: Msg) {
 function render(key: string) {
   const heard = lines.get(key)
   if (!heard) return
-  let hover = 0, focus = 0, pressed = 0
+  let hover = 0,
+    focus = 0,
+    pressed = 0
   const add = (bits: number) => {
     if (bits & 1) hover++
     if (bits & 2) focus++
@@ -100,7 +116,9 @@ function render(key: string) {
   shown.set(key, now)
   heard(now)
 }
-const renderAll = () => { for (const k of lines.keys()) render(k) }
+const renderAll = () => {
+  for (const k of lines.keys()) render(k)
+}
 
 function dropTab(t: string) {
   visible.delete(t)
@@ -119,7 +137,8 @@ function watch(t: string) {
 }
 
 function hear(s: Triple[]) {
-  const at = Date.now(), touched = new Set<string>()
+  const at = Date.now(),
+    touched = new Set<string>()
   for (const [id, key, bits] of s) {
     if (siblings.has(id) || (!leading() && !lines.has(key))) continue
     let held = clients.get(key)
@@ -146,7 +165,7 @@ let settling: ReturnType<typeof setTimeout> | undefined
 function link(on: boolean) {
   clearTimeout(settling)
   if (on) for (const held of clients.values()) for (const e of held.values()) e.stale = true
-  settling = setTimeout(() => dropClients(e => !on || !!e.stale), GRACE)
+  settling = setTimeout(() => dropClients((e) => !on || !!e.stale), GRACE)
 }
 
 function receive(m: Msg) {
@@ -165,7 +184,8 @@ function receive(m: Msg) {
     // A tab that arrived late has what the socket already heard.
     if (leading()) {
       const s: Triple[] = []
-      for (const [key] of m.keys) for (const [id, e] of clients.get(key) ?? []) s.push([id, key, e.bits])
+      for (const [key] of m.keys)
+        for (const [id, e] of clients.get(key) ?? []) s.push([id, key, e.bits])
       if (s.length) post({ t: 'net', s })
     }
   } else if (m.t === 'bits') {
@@ -185,9 +205,19 @@ function receive(m: Msg) {
   else if (m.t === 'link') link(m.up)
 }
 
-const wakeIfLeading = () => { if (leading()) wakeSocket() }
+const wakeIfLeading = () => {
+  if (leading()) wakeSocket()
+}
 
-function announce() { post({ t: 'tab', tab, keys: [...mine], shown: looking(), ...(locks() ? {} : { k: shareStats.conn }) }) }
+function announce() {
+  post({
+    t: 'tab',
+    tab,
+    keys: [...mine],
+    shown: looking(),
+    ...(locks() ? {} : { k: shareStats.conn }),
+  })
+}
 
 /** 200 rows mounting are one post and one frame. */
 let queued = false
@@ -210,7 +240,8 @@ let tabTimer: ReturnType<typeof setTimeout> | undefined
 function flushTab() {
   tabTimer = undefined
   tabLast = performance.now()
-  if (dirtyTab.size) post({ t: 'bits', tab, e: [...dirtyTab].map(key => [key, mine.get(key) ?? 0]) })
+  if (dirtyTab.size)
+    post({ t: 'bits', tab, e: [...dirtyTab].map((key) => [key, mine.get(key) ?? 0]) })
   dirtyTab.clear()
 }
 function queueTab(key: string) {
@@ -255,9 +286,12 @@ function wanted() {
 function netTick() {
   netTimer = undefined
   if (!conn || !open) return
-  let name: 'u' | 'set' | undefined, msg: unknown, size = 0
+  let name: 'u' | 'set' | undefined,
+    msg: unknown,
+    size = 0
   if (toAdd.size || toDrop.size) {
-    const add = [...toAdd].slice(0, BATCH), drop = [...toDrop].slice(0, BATCH - add.length)
+    const add = [...toAdd].slice(0, BATCH),
+      drop = [...toDrop].slice(0, BATCH - add.length)
     for (const k of add) toAdd.delete(k)
     for (const k of drop) toDrop.delete(k)
     name = 'u'
@@ -309,10 +343,11 @@ function reconcile() {
     clearTimeout(idle)
     idle = undefined
     dial()
-  } else idle ??= setTimeout(() => {
-    idle = undefined
-    if (leading() && !wanted().size) hangUp()
-  }, IDLE)
+  } else
+    idle ??= setTimeout(() => {
+      idle = undefined
+      if (leading() && !wanted().size) hangUp()
+    }, IDLE)
   if (!open) return
   for (const key of want) {
     if (sent.has(key)) {
@@ -353,7 +388,7 @@ function linked(live: boolean) {
 
 function dial() {
   if (conn) return
-  stopConn = createRoot(dispose => {
+  stopConn = createRoot((dispose) => {
     conn = connectBuiltIn('$share')
     conn.on('b', ({ s }: { s: Triple[] }) => {
       hear(s)
@@ -373,7 +408,10 @@ function dial() {
       }
       if (!locks()) announce()
     })
-    effect(() => conn!.status.value, s => linked(s === 'open'))
+    effect(
+      () => conn!.status.value,
+      (s) => linked(s === 'open'),
+    )
     return dispose
   }, null)
 }
@@ -400,17 +438,22 @@ function up() {
   if (running) return
   running = true
   bc = new BroadcastChannel(CHANNEL)
-  bc.onmessage = e => receive(e.data)
+  bc.onmessage = (e) => receive(e.data)
   tabs.set(tab, mine)
   holdTab(() => {
     lockReady = true
     for (const m of early.splice(0)) post(m)
   })
   shareStats.role = 'follower'
-  election = campaign(CHANNEL, lead, () => {
-    hangUp()
-    shareStats.role = 'follower'
-  }, () => void shareStats.steals++)
+  election = campaign(
+    CHANNEL,
+    lead,
+    () => {
+      hangUp()
+      shareStats.role = 'follower'
+    },
+    () => void shareStats.steals++,
+  )
   election.pinged = sayHeld // a hidden leader's own beat is throttled; a sibling's ping isn't
   announce()
   post({ t: 'roll' })
@@ -419,7 +462,7 @@ function up() {
 
 function beat() {
   const now = Date.now()
-  dropClients(e => now - e.at > TTL)
+  dropClients((e) => now - e.at > TTL)
   if (!locks()) {
     announce()
     for (const [t, at] of tabAt) if (now - at > TTL) dropTab(t)
@@ -432,10 +475,11 @@ let saidAt = 0
 function sayHeld() {
   if (Date.now() - saidAt < BEAT - 1000) return
   saidAt = Date.now()
-  for (const [key, bits] of sent) if (bits) {
-    sent.set(key, -1)
-    dirtyNet.add(key)
-  }
+  for (const [key, bits] of sent)
+    if (bits) {
+      sent.set(key, -1)
+      dirtyNet.add(key)
+    }
   if (dirtyNet.size) netSoon()
 }
 
@@ -464,12 +508,14 @@ function halt() {
 
 if (typeof window !== 'undefined') {
   addEventListener('pagehide', halt)
-  addEventListener('pageshow', e => {
-    if (!(e).persisted || !lines.size) return
+  addEventListener('pageshow', (e) => {
+    if (!e.persisted || !lines.size) return
     up()
     renderAll()
   })
-  document.addEventListener('visibilitychange', () => { if (running) post({ t: 'shown', tab, shown: looking() }) })
+  document.addEventListener('visibilitychange', () => {
+    if (running) post({ t: 'shown', tab, shown: looking() })
+  })
   keepOpen.stay = () => [...visible.values()].some(Boolean)
 }
 

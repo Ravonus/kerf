@@ -2,7 +2,12 @@
 
 import { createContext, type ReactNode, use, useOptimistic, useState } from 'react'
 
-type Cart = { latest: number | null; setLatest: (count: number) => void; moved: number; move: (by: number) => void }
+type Cart = {
+  latest: number | null
+  setLatest: (count: number) => void
+  moved: number
+  move: (by: number) => void
+}
 
 const CartContext = createContext<Cart | null>(null)
 

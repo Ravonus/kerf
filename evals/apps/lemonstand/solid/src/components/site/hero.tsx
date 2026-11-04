@@ -1,27 +1,28 @@
-import { For, type JSX } from "solid-js";
+import { For, type JSX } from 'solid-js'
 
-import { Lemon } from "~/components/lemon";
-import { Badge, ButtonLink, CoachBubble, Container } from "~/components/ui";
-import { ArrowRight, Check } from "~/components/ui/icons";
-import { AudienceSwitch, type Audience } from "./audience-switch";
-import { WaitlistForm } from "./waitlist-form";
+import { Lemon } from '~/components/lemon'
+import { Badge, ButtonLink, CoachBubble, Container } from '~/components/ui'
+import { ArrowRight, Check } from '~/components/ui/icons'
+import { AudienceSwitch, type Audience } from './audience-switch'
+import { WaitlistForm } from './waitlist-form'
 
-const FACTS = ["Ages 8–18", "No ads. We never sell student data", "Designed around COPPA and FERPA"];
+const FACTS = ['Ages 8–18', 'No ads. We never sell student data', 'Designed around COPPA and FERPA']
 
 function Lead(props: { children?: JSX.Element }) {
-  return <p class="max-w-xl text-lead text-pretty text-muted">{props.children}</p>;
+  return <p class="max-w-xl text-lead text-pretty text-muted">{props.children}</p>
 }
 
 const audiences: Audience[] = [
   {
-    id: "families",
-    label: "Families",
-    short: "Families",
+    id: 'families',
+    label: 'Families',
+    short: 'Families',
     panel: () => (
       <>
         <Lead>
-          Your kid picks the idea, talks to real customers, sets a price and pitches it. Lemon, our AI coach, asks the
-          questions that keep them moving. The thinking stays theirs, and you approve anything public.
+          Your kid picks the idea, talks to real customers, sets a price and pitches it. Lemon, our
+          AI coach, asks the questions that keep them moving. The thinking stays theirs, and you
+          approve anything public.
         </Lead>
         <div class="mt-7 max-w-xl">
           <WaitlistForm source="hero-families" defaultRole="parent" />
@@ -30,14 +31,15 @@ const audiences: Audience[] = [
     ),
   },
   {
-    id: "educators",
-    label: "Educators & Libraries",
-    short: "Educators",
+    id: 'educators',
+    label: 'Educators & Libraries',
+    short: 'Educators',
     panel: () => (
       <>
         <Lead>
-          A ready-to-run entrepreneurship program for library clubs, camps and classrooms. Run it as a 4-week club or
-          2-day camp, or as a 12-week course or 1-month sprint. You don&apos;t need a business background to lead it.
+          A ready-to-run entrepreneurship program for library clubs, camps and classrooms. Run it as
+          a 4-week club or 2-day camp, or as a 12-week course or 1-month sprint. You don&apos;t need
+          a business background to lead it.
         </Lead>
         <div class="mt-7 flex flex-wrap gap-3">
           <ButtonLink href="#contact" size="lg">
@@ -51,14 +53,15 @@ const audiences: Audience[] = [
     ),
   },
   {
-    id: "partners",
-    label: "Districts & Sponsors",
-    short: "Partners",
+    id: 'partners',
+    label: 'Districts & Sponsors',
+    short: 'Partners',
     panel: () => (
       <>
         <Lead>
-          Bring Lemonstand to every school and library in your community. Sponsored seats keep cost from being the
-          barrier, and our privacy and AI-safety documentation is ready for your review.
+          Bring Lemonstand to every school and library in your community. Sponsored seats keep cost
+          from being the barrier, and our privacy and AI-safety documentation is ready for your
+          review.
         </Lead>
         <div class="mt-7 flex flex-wrap gap-3">
           <ButtonLink href="#contact" size="lg">
@@ -71,7 +74,7 @@ const audiences: Audience[] = [
       </>
     ),
   },
-];
+]
 
 export function Hero() {
   return (
@@ -89,26 +92,31 @@ export function Hero() {
             <AudienceSwitch audiences={audiences} />
           </div>
           <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2.5 text-sm font-medium text-ink/80">
-            <For each={FACTS}>{(f) => (
-              <li class="inline-flex items-center gap-2">
-                <Check class="size-4 text-leaf-ink" strokeWidth={2.75} />
-                {f}
-              </li>
-            )}</For>
+            <For each={FACTS}>
+              {(f) => (
+                <li class="inline-flex items-center gap-2">
+                  <Check class="size-4 text-leaf-ink" strokeWidth={2.75} />
+                  {f}
+                </li>
+              )}
+            </For>
           </ul>
         </div>
 
         <HeroStage />
       </Container>
     </section>
-  );
+  )
 }
 
 function HeroStage() {
   return (
     <div class="relative mx-auto w-full max-w-[30rem] animate-fade-up [animation-delay:120ms]">
       {/* Stage: warm disc + dotted ground. Keeps Lemon's navy line legible in dark mode too. */}
-      <div aria-hidden="true" class="absolute inset-x-[2%] top-[8%] aspect-square rounded-full bg-lemon-soft ring-1 ring-lemon/60" />
+      <div
+        aria-hidden="true"
+        class="absolute inset-x-[2%] top-[8%] aspect-square rounded-full bg-lemon-soft ring-1 ring-lemon/60"
+      />
       <div
         aria-hidden="true"
         class="dots absolute inset-x-[2%] top-[8%] aspect-square rounded-full opacity-70 [mask-image:radial-gradient(circle_at_50%_70%,black_25%,transparent_68%)]"
@@ -131,26 +139,30 @@ function HeroStage() {
 
       <StepCard />
     </div>
-  );
+  )
 }
 
 /** Illustrative product moment: a learner's current step (not real data). */
 function StepCard() {
-  const steps = ["Spark", "Test", "Build", "Launch"];
+  const steps = ['Spark', 'Test', 'Build', 'Launch']
   return (
     <div class="relative z-10 mx-auto -mt-8 w-[92%] animate-pop-in rounded-card bg-surface p-4 shadow-pop ring-1 ring-line [animation-delay:700ms] sm:absolute sm:-right-2 sm:-bottom-4 sm:mt-0 sm:w-[16rem] lg:-right-6">
       <p class="text-xs font-semibold text-muted">Maya&apos;s stand · Dog-walking</p>
       <p class="mt-1 font-display text-lg leading-snug font-medium">Interview 5 neighbors</p>
       <ol class="mt-3 grid grid-cols-4 gap-1.5" aria-label="Progress: step 2 of 4">
-        <For each={steps}>{(s, i) => (
-          <li class="grid gap-1.5">
-            <span
-              class={`h-1.5 rounded-pill ${i() < 1 ? "bg-leaf" : i() === 1 ? "bg-lemon ring-1 ring-lemon-shade" : "bg-sunken ring-1 ring-line"}`}
-            />
-            <span class={`text-[0.7rem] font-semibold ${i() <= 1 ? "text-ink" : "text-muted"}`}>{s}</span>
-          </li>
-        )}</For>
+        <For each={steps}>
+          {(s, i) => (
+            <li class="grid gap-1.5">
+              <span
+                class={`h-1.5 rounded-pill ${i() < 1 ? 'bg-leaf' : i() === 1 ? 'bg-lemon ring-1 ring-lemon-shade' : 'bg-sunken ring-1 ring-line'}`}
+              />
+              <span class={`text-[0.7rem] font-semibold ${i() <= 1 ? 'text-ink' : 'text-muted'}`}>
+                {s}
+              </span>
+            </li>
+          )}
+        </For>
       </ol>
     </div>
-  );
+  )
 }

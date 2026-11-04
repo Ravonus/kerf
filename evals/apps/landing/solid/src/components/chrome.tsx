@@ -1,15 +1,23 @@
-import { A } from "@solidjs/router";
+import { A } from '@solidjs/router'
 
-import { primary } from "./button";
+import { primary } from './button'
 
 export const Logo = () => (
-  <A href="/" end class="flex items-center gap-2 text-lg font-bold tracking-tight" aria-label="Emberline home">
-    <span aria-hidden="true" class="size-5 rounded-full bg-linear-to-br from-orange-300 to-accent" />
+  <A
+    href="/"
+    end
+    class="flex items-center gap-2 text-lg font-bold tracking-tight"
+    aria-label="Emberline home"
+  >
+    <span
+      aria-hidden="true"
+      class="size-5 rounded-full bg-linear-to-br from-orange-300 to-accent"
+    />
     Emberline
   </A>
-);
+)
 
-const link = "rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink";
+const link = 'rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink'
 
 export function SiteHeader() {
   return (
@@ -23,13 +31,18 @@ export function SiteHeader() {
           <A href="/privacy" class={link} activeClass="text-ink" inactiveClass="">
             Privacy
           </A>
-          <A href="/#join" class={`${primary} ml-2 min-h-10 max-sm:hidden`} activeClass="" inactiveClass="">
+          <A
+            href="/#join"
+            class={`${primary} ml-2 min-h-10 max-sm:hidden`}
+            activeClass=""
+            inactiveClass=""
+          >
             Get early access
           </A>
         </nav>
       </div>
     </header>
-  );
+  )
 }
 
 export function SiteFooter() {
@@ -56,5 +69,5 @@ export function SiteFooter() {
         </nav>
       </div>
     </footer>
-  );
+  )
 }

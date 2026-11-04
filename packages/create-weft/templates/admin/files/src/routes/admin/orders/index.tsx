@@ -13,9 +13,14 @@ export const meta: Meta = { title: 'Orders' }
 export default function Orders(props: RouteProps<typeof load>) {
   return (
     <Stack gap="group">
-      <Heading level={1} role="title">Orders</Heading>
+      <Heading level={1} role="title">
+        Orders
+      </Heading>
       <OrdersFilters view={props.data.view} />
-      <Boundary pending={<OrdersLoading />} error={(_, retry) => <Failed what="The orders" retry={retry} />}>
+      <Boundary
+        pending={<OrdersLoading />}
+        error={(_, retry) => <Failed what="The orders" retry={retry} />}
+      >
         <OrdersTable view={props.data.view} />
       </Boundary>
     </Stack>

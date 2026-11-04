@@ -143,13 +143,21 @@ const DASHED: &[&str] = &[
     "xHeight",
 ];
 
-const RENAMED: &[(&str, &str)] =
-    &[("acceptCharset", "accept-charset"), ("className", "class"), ("htmlFor", "for"), ("httpEquiv", "http-equiv")];
+const RENAMED: &[(&str, &str)] = &[
+    ("acceptCharset", "accept-charset"),
+    ("className", "class"),
+    ("htmlFor", "for"),
+    ("httpEquiv", "http-equiv"),
+];
 
 /// The attribute a JSX prop on a native element writes.
 pub fn attribute(name: &str) -> String {
     if !name.bytes().any(|c| c.is_ascii_uppercase()) {
-        return if name == "panose1" { "panose-1".into() } else { name.into() };
+        return if name == "panose1" {
+            "panose-1".into()
+        } else {
+            name.into()
+        };
     }
     if let Some((_, to)) = RENAMED.iter().find(|(from, _)| *from == name) {
         return (*to).into();
@@ -168,7 +176,10 @@ pub fn attribute(name: &str) -> String {
     }
     // `xlinkHref`, `xmlLang`, `xmlnsXlink`
     for prefix in ["xlink", "xmlns", "xml"] {
-        if let Some(rest) = name.strip_prefix(prefix).filter(|r| r.starts_with(|c: char| c.is_ascii_uppercase())) {
+        if let Some(rest) = name
+            .strip_prefix(prefix)
+            .filter(|r| r.starts_with(|c: char| c.is_ascii_uppercase()))
+        {
             return format!("{prefix}:{}", rest.to_ascii_lowercase());
         }
     }
@@ -178,7 +189,11 @@ pub fn attribute(name: &str) -> String {
 /// Attributes whose states are the words `true`/`false`, so `false` can't mean a missing attribute. `data-*` isn't
 /// one: weft's `data-x={flag}` is a presence flag, which `[data-x]` selectors depend on (docs/react-props.md).
 pub fn takes_words(name: &str) -> bool {
-    name.starts_with("aria-") || matches!(name, "contenteditable" | "draggable" | "focusable" | "spellcheck")
+    name.starts_with("aria-")
+        || matches!(
+            name,
+            "contenteditable" | "draggable" | "focusable" | "spellcheck"
+        )
 }
 
 /// `onClick` → (`click`, false); `onClickCapture` → (`click`, true); lowercase `onkeydown` is an attribute, not an
@@ -186,7 +201,9 @@ pub fn takes_words(name: &str) -> bool {
 pub fn event(name: &str) -> Option<(String, bool)> {
     let rest = name.strip_prefix("on")?;
     rest.chars().next().filter(char::is_ascii_uppercase)?;
-    let bare = rest.strip_suffix("Capture").filter(|r| !r.ends_with("Pointer"));
+    let bare = rest
+        .strip_suffix("Capture")
+        .filter(|r| !r.ends_with("Pointer"));
     let event = bare.unwrap_or(rest).to_ascii_lowercase();
     let capture = bare.is_some();
     Some(match event.as_str() {
@@ -227,8 +244,14 @@ mod tests {
     fn events() {
         assert_eq!(event("onClick"), Some(("click".into(), false)));
         assert_eq!(event("onDoubleClick"), Some(("dblclick".into(), false)));
-        assert_eq!(event("onDoubleClickCapture"), Some(("dblclick".into(), true)));
-        assert_eq!(event("onGotPointerCapture"), Some(("gotpointercapture".into(), false)));
+        assert_eq!(
+            event("onDoubleClickCapture"),
+            Some(("dblclick".into(), true))
+        );
+        assert_eq!(
+            event("onGotPointerCapture"),
+            Some(("gotpointercapture".into(), false))
+        );
         assert_eq!(event("onchange"), None);
     }
 }

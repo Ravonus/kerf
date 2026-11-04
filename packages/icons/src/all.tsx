@@ -6,4 +6,7 @@ import { lookup } from './lookup'
 export { actions, lookup, names, type IconActionName, type IconName, type IconVariant }
 export { Icon, type IconByNameProps } from './icon'
 /** Every icon, by its name. */
-export const icons = Object.fromEntries(names.map(n => [n, lookup(n)])) as Record<IconName, IconComponent>
+export const icons = Object.fromEntries(names.map((n) => [n, lookup(n)])) as Record<
+  IconName,
+  IconComponent
+>

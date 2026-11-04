@@ -14,8 +14,32 @@ export interface LivekitTicketOptions {
 }
 
 /** For `multiplayer({ ticket })`: a LiveKit token that names the connection and its room. Refuses to run without a key and secret. */
-export const livekitTicket = ({ key = process.env.LIVEKIT_API_KEY, secret = process.env.LIVEKIT_API_SECRET, ttl = 3600, media = false }: LivekitTicketOptions = {}) => async ({ id, user, params }: { id: string; user: { name?: string }; params: unknown }) => {
-  if (!key || !secret) throw new Error('`livekitTicket` needs `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`')
-  const now = Math.floor(Date.now() / 1000)
-  return signTicket({ iss: key, sub: id, name: user.name, nbf: now, exp: now + ttl, video: { room: await roomId(params), roomJoin: true, canPublish: media, canSubscribe: true, canPublishData: true } }, secret)
-}
+export const livekitTicket =
+  ({
+    key = process.env.LIVEKIT_API_KEY,
+    secret = process.env.LIVEKIT_API_SECRET,
+    ttl = 3600,
+    media = false,
+  }: LivekitTicketOptions = {}) =>
+  async ({ id, user, params }: { id: string; user: { name?: string }; params: unknown }) => {
+    if (!key || !secret)
+      throw new Error('`livekitTicket` needs `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`')
+    const now = Math.floor(Date.now() / 1000)
+    return signTicket(
+      {
+        iss: key,
+        sub: id,
+        name: user.name,
+        nbf: now,
+        exp: now + ttl,
+        video: {
+          room: await roomId(params),
+          roomJoin: true,
+          canPublish: media,
+          canSubscribe: true,
+          canPublishData: true,
+        },
+      },
+      secret,
+    )
+  }

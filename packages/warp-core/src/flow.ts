@@ -6,7 +6,9 @@ let installed = false
  * parked at opacity 0 below the fold. On that scroll, what is on screen is marked seen and stays put (no part-faded jump),
  * and everything below rises in as it arrives. Once a seen element has left the screen it flows like the rest. Without this script nothing is armed, so failed JS leaves a still page.
  */
-export function flow(doc: Document | undefined = typeof document === 'undefined' ? undefined : document) {
+export function flow(
+  doc: Document | undefined = typeof document === 'undefined' ? undefined : document,
+) {
   if (installed || !doc) return
   installed = true
   const root = doc.documentElement
@@ -17,8 +19,10 @@ export function flow(doc: Document | undefined = typeof document === 'undefined'
     scans(doc)
     fallback(doc)
   }
-  if (root.hasAttribute('data-flow-armed')) { scans(doc); fallback(doc) }
-  else doc.addEventListener('scroll', arm, { capture: true, once: true, passive: true })
+  if (root.hasAttribute('data-flow-armed')) {
+    scans(doc)
+    fallback(doc)
+  } else doc.addEventListener('scroll', arm, { capture: true, once: true, passive: true })
 }
 
 /**
@@ -29,13 +33,17 @@ export function flow(doc: Document | undefined = typeof document === 'undefined'
 function seen(doc: Document) {
   const h = doc.defaultView?.innerHeight ?? 0
   const walk = doc.createTreeWalker(doc.body ?? doc.documentElement, NodeFilter.SHOW_ELEMENT)
-  const skip = () => { while (!walk.nextSibling()) if (!walk.parentNode()) return false; return true }
+  const skip = () => {
+    while (!walk.nextSibling()) if (!walk.parentNode()) return false
+    return true
+  }
   let more = !!walk.firstChild()
   while (more) {
     const el = walk.currentNode as HTMLElement
     const r = el.getBoundingClientRect()
     const onScreen = r.top < h && r.bottom > 0
-    if (onScreen && getComputedStyle(el).getPropertyValue('--_flow-in').trim()) el.dataset.flowSeen = ''
+    if (onScreen && getComputedStyle(el).getPropertyValue('--_flow-in').trim())
+      el.dataset.flowSeen = ''
     // a box off screen can still hold one that is on it (a fixed bar, an overflow), but warp's flowed blocks sit in the flow
     more = onScreen && !el.hasAttribute('data-flow-seen') ? !!walk.firstChild() || skip() : skip()
   }
@@ -45,8 +53,12 @@ function seen(doc: Document) {
 function release(doc: Document) {
   const IO = doc.defaultView?.IntersectionObserver
   if (!IO) return
-  const io = new IO(entries => {
-    for (const e of entries) if (!e.isIntersecting) { delete (e.target as HTMLElement).dataset.flowSeen; io.unobserve(e.target) }
+  const io = new IO((entries) => {
+    for (const e of entries)
+      if (!e.isIntersecting) {
+        delete (e.target as HTMLElement).dataset.flowSeen
+        io.unobserve(e.target)
+      }
   })
   for (const el of doc.querySelectorAll('[data-flow-seen]')) io.observe(el)
 }
@@ -62,7 +74,8 @@ function families(doc: Document, prop = '--_flow-r') {
   const walk = (rules: CSSRuleList) => {
     for (const rule of rules) {
       if ('cssRules' in rule) walk((rule as CSSGroupingRule).cssRules)
-      if ('selectorText' in rule && (rule as CSSStyleRule).style.getPropertyValue(prop)) found.push((rule as CSSStyleRule).selectorText)
+      if ('selectorText' in rule && (rule as CSSStyleRule).style.getPropertyValue(prop))
+        found.push((rule as CSSStyleRule).selectorText)
     }
   }
   for (const sheet of doc.styleSheets) {
@@ -80,20 +93,33 @@ function families(doc: Document, prop = '--_flow-r') {
  */
 function scans(doc: Document) {
   const sel = families(doc, '--_flow-scans')
-  if (!sel || typeof IntersectionObserver === 'undefined' || typeof ResizeObserver === 'undefined') return
-  const below = (el: HTMLElement) => { const r = el.getBoundingClientRect(); if (r.height && r.top >= innerHeight) el.dataset.flowScan = '' }
+  if (!sel || typeof IntersectionObserver === 'undefined' || typeof ResizeObserver === 'undefined')
+    return
+  const below = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect()
+    if (r.height && r.top >= innerHeight) el.dataset.flowScan = ''
+  }
   // The root reaches up without end, so "not intersecting" is "below the fold", and a jump from above to below says so
   // too: with the plain viewport, a block that never crosses the screen on its way down is never reported.
-  const io = new IntersectionObserver(entries => {
-    for (const { target, isIntersecting, boundingClientRect: r } of entries) {
-      const el = target as HTMLElement
-      if (isIntersecting) delete el.dataset.flowScan
-      else if (r.height) el.dataset.flowScan = ''
-    }
-  }, { rootMargin: '1000000px 0px 0px 0px' })
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const { target, isIntersecting, boundingClientRect: r } of entries) {
+        const el = target as HTMLElement
+        if (isIntersecting) delete el.dataset.flowScan
+        else if (r.height) el.dataset.flowScan = ''
+      }
+    },
+    { rootMargin: '1000000px 0px 0px 0px' },
+  )
   // A block shown below the fold (a tab opened, a panel unfolded) never crosses the edge, so its box changing says so.
-  const ro = new ResizeObserver(entries => { for (const e of entries) below(e.target as HTMLElement) })
-  const take = (el: Element) => { below(el as HTMLElement); io.observe(el); ro.observe(el) }
+  const ro = new ResizeObserver((entries) => {
+    for (const e of entries) below(e.target as HTMLElement)
+  })
+  const take = (el: Element) => {
+    below(el as HTMLElement)
+    io.observe(el)
+    ro.observe(el)
+  }
   const watch = (node: Node) => {
     if (node.nodeType !== 1) return
     const el = node as Element
@@ -101,32 +127,49 @@ function scans(doc: Document) {
     for (const f of el.querySelectorAll(sel)) take(f)
   }
   watch(doc.documentElement)
-  new MutationObserver(list => { for (const m of list) m.addedNodes.forEach(watch) }).observe(doc.documentElement, { childList: true, subtree: true })
+  new MutationObserver((list) => {
+    for (const m of list) m.addedNodes.forEach(watch)
+  }).observe(doc.documentElement, { childList: true, subtree: true })
 }
 
 /** Only where view() is missing. It hides nothing until it has seen an element below the fold, so failed JS can't trap content. */
 function fallback(doc: Document) {
-  if (typeof IntersectionObserver === 'undefined' || CSS.supports('animation-timeline: view()')) return
-  let sel = '', sheets = -1
+  if (typeof IntersectionObserver === 'undefined' || CSS.supports('animation-timeline: view()'))
+    return
+  let sel = '',
+    sheets = -1
   const current = () => {
-    if (!sel && doc.styleSheets.length !== sheets) { sheets = doc.styleSheets.length; sel = families(doc) } // read again only when a sheet arrives
+    if (!sel && doc.styleSheets.length !== sheets) {
+      sheets = doc.styleSheets.length
+      sel = families(doc)
+    } // read again only when a sheet arrives
     return sel
   }
-  const gated = (el: Element) => !el.isConnected || getComputedStyle(el).getPropertyValue('--warp-flow-gate').trim() === 'none'
-  const io = new IntersectionObserver(entries => {
-    for (const { target, isIntersecting, boundingClientRect: r } of entries) {
-      const el = target as HTMLElement
-      if (isIntersecting) { if (el.dataset.flowState === 'wait') el.dataset.flowState = 'in' }
-      else if (r.top > 0 && !gated(el)) el.dataset.flowState = 'wait'
-    }
-  }, { rootMargin: '0px 0px -8% 0px' })
+  const gated = (el: Element) =>
+    !el.isConnected || getComputedStyle(el).getPropertyValue('--warp-flow-gate').trim() === 'none'
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const { target, isIntersecting, boundingClientRect: r } of entries) {
+        const el = target as HTMLElement
+        if (isIntersecting) {
+          if (el.dataset.flowState === 'wait') el.dataset.flowState = 'in'
+        } else if (r.top > 0 && !gated(el)) el.dataset.flowState = 'wait'
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px' },
+  )
   const watch = (node: Node) => {
     if (node.nodeType !== 1) return
-    if (!sel) { if (!current()) return; node = doc.documentElement } // the sheet came late: take in what was already there
+    if (!sel) {
+      if (!current()) return
+      node = doc.documentElement
+    } // the sheet came late: take in what was already there
     const el = node as Element
     if (el.matches(sel)) io.observe(el)
     for (const f of el.querySelectorAll(sel)) io.observe(f)
   }
   watch(doc.documentElement)
-  new MutationObserver(list => { for (const m of list) m.addedNodes.forEach(watch) }).observe(doc.documentElement, { childList: true, subtree: true })
+  new MutationObserver((list) => {
+    for (const m of list) m.addedNodes.forEach(watch)
+  }).observe(doc.documentElement, { childList: true, subtree: true })
 }

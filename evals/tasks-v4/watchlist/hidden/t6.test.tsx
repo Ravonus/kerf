@@ -3,7 +3,7 @@ import { screen } from '@testing-library/dom'
 import { cost, count, fakeApi, seed, start, symbols, tab, type User } from './helpers'
 
 const stocks = seed()
-const of = (sector: string) => stocks.filter(s => s.sector === sector)
+const of = (sector: string) => stocks.filter((s) => s.sector === sector)
 const box = () => screen.getByLabelText('Search') as HTMLInputElement
 const favOnly = () => screen.getByLabelText('Favorites only') as HTMLInputElement
 const go = (user: User, name: string) => user.click(tab(name))
@@ -14,7 +14,7 @@ test('tabs show their sector, All by default', async () => {
   await go(user, 'energy')
   expect(tab('energy').getAttribute('aria-pressed')).toBe('true')
   expect(tab('All').getAttribute('aria-pressed')).toBe('false')
-  expect(symbols()).toEqual(of('energy').map(s => s.symbol))
+  expect(symbols()).toEqual(of('energy').map((s) => s.symbol))
   expect(count()).toBe(`${of('energy').length} stocks`)
   await go(user, 'All')
   expect(symbols()).toHaveLength(50)
@@ -30,7 +30,12 @@ test('each tab keeps its own search, Favorites only and Sort', async () => {
   expect(box().value).toBe('')
   await user.click(favOnly())
   await user.selectOptions(screen.getByLabelText('Sort'), 'change')
-  expect(symbols()).toEqual(of('health').filter(s => s.favorite).sort((a, b) => (b.price - b.prevClose) / b.prevClose - (a.price - a.prevClose) / a.prevClose).map(s => s.symbol))
+  expect(symbols()).toEqual(
+    of('health')
+      .filter((s) => s.favorite)
+      .sort((a, b) => (b.price - b.prevClose) / b.prevClose - (a.price - a.prevClose) / a.prevClose)
+      .map((s) => s.symbol),
+  )
   await go(user, 'tech')
   expect(box().value).toBe('z')
   expect(favOnly().checked).toBe(false)
@@ -48,7 +53,7 @@ test("a tab's search keeps going in the background and shows when you come back"
   expect(fake.searches[0].signal.aborted).toBe(false)
   expect(screen.queryByText('Searching…')).toBeNull()
   await fake.searches[0].resolve(['s3', 's7', 's1'])
-  expect(symbols()).toEqual(of('energy').map(s => s.symbol))
+  expect(symbols()).toEqual(of('energy').map((s) => s.symbol))
   await go(user, 'finance')
   expect(symbols()).toEqual([stocks[3].symbol, stocks[7].symbol])
   expect(fake.searches).toHaveLength(1)
@@ -60,7 +65,7 @@ test('only a newer query in the same tab aborts, and failures stay with their ta
   await user.type(box(), 'm')
   await go(user, 'energy')
   await user.type(box(), 'n')
-  expect(fake.searches.map(s => s.signal.aborted)).toEqual([false, false])
+  expect(fake.searches.map((s) => s.signal.aborted)).toEqual([false, false])
   await fake.searches[0].reject()
   expect(screen.queryByText('Search failed')).toBeNull()
   await user.type(box(), 'o')
@@ -92,10 +97,10 @@ test('the tab and every tab’s settings survive a reload; a restored search run
   expect(tab('energy').getAttribute('aria-pressed')).toBe('true')
   expect(box().value).toBe('q')
   expect(favOnly().checked).toBe(true)
-  expect(fake.searches.map(s => s.query)).toEqual(['q'])
+  expect(fake.searches.map((s) => s.query)).toEqual(['q'])
   await go(user, 'tech')
   expect(box().value).toBe('p')
-  expect(fake.searches.map(s => s.query)).toEqual(['q', 'p'])
+  expect(fake.searches.map((s) => s.query)).toEqual(['q', 'p'])
   await go(user, 'energy')
   expect(fake.searches).toHaveLength(2)
 })

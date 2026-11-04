@@ -20,11 +20,15 @@ const seed: Product[] = [
 
 export function createFakeApi(): Api {
   return {
-    listProducts: () => new Promise(resolve => setTimeout(() => resolve(structuredClone(seed)), 300)),
+    listProducts: () =>
+      new Promise((resolve) => setTimeout(() => resolve(structuredClone(seed)), 300)),
     subscribePrices(onUpdate) {
       const id = setInterval(() => {
         const p = seed[Math.floor(Math.random() * seed.length)]
-        onUpdate({ id: p!.id, price: Math.round(p!.price * (0.8 + Math.random() * 0.4) * 100) / 100 })
+        onUpdate({
+          id: p!.id,
+          price: Math.round(p!.price * (0.8 + Math.random() * 0.4) * 100) / 100,
+        })
       }, 3000)
       return () => clearInterval(id)
     },

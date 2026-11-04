@@ -15,8 +15,12 @@ export default function Flush() {
   }
   return (
     <Card title="When the page catches up">
-      <p>Count: <strong ref={(el: HTMLElement) => (shown = el)}>{count.value}</strong></p>
-      <Button size="sm" onClick={add}>Add one</Button>
+      <p>
+        Count: <strong ref={(el: HTMLElement) => (shown = el)}>{count.value}</strong>
+      </p>
+      <Button size="sm" onClick={add}>
+        Add one
+      </Button>
       <p>{report.value}</p>
     </Card>
   )

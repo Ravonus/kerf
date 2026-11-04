@@ -3,7 +3,9 @@
 /** A highlighted block's lines are spans with no newline between them, so textContent would run them together. */
 const source = (code: Element | null | undefined) => {
   const lines = code?.querySelectorAll('[data-part="line"]')
-  return lines?.length ? Array.from(lines, l => l.textContent).join('\n') : code?.textContent ?? ''
+  return lines?.length
+    ? Array.from(lines, (l) => l.textContent).join('\n')
+    : (code?.textContent ?? '')
 }
 
 // The polite announcer (toast.ts's announce, without pulling the toast store into a static page). A page of static code
@@ -16,7 +18,8 @@ const say = (doc: Document, text: string) => {
     el.setAttribute('role', 'status')
     el.setAttribute('aria-live', 'polite')
     el.setAttribute('aria-atomic', 'true')
-    el.style.cssText = 'position:absolute;inline-size:1px;block-size:1px;overflow:clip;clip-path:inset(50%);white-space:nowrap'
+    el.style.cssText =
+      'position:absolute;inline-size:1px;block-size:1px;overflow:clip;clip-path:inset(50%);white-space:nowrap'
     doc.body.append(el)
   }
   const live = el
@@ -40,7 +43,9 @@ export function copyButtons(doc: Document = document) {
     if (!button) return
     const code = button.closest('[data-scope="codeblock"]')?.querySelector('code')
     const url = button.dataset.copyUrl
-    const text = url ? fetch(url).then(r => r.text()) : Promise.resolve(button.dataset.copyText ?? source(code))
+    const text = url
+      ? fetch(url).then((r) => r.text())
+      : Promise.resolve(button.dataset.copyText ?? source(code))
     const show = (ok: boolean) => {
       clearTimeout(timers.get(button))
       delete button.dataset.done
@@ -58,19 +63,30 @@ export function copyButtons(doc: Document = document) {
         button.append(note)
       }
       say(doc, ok ? 'Copied' : `${FAILED}. Select the text and copy it yourself.`)
-      timers.set(button, setTimeout(() => {
-        delete button.dataset.done; delete button.dataset.failed; if ('copy' in button.dataset) delete button.dataset.state
-        button.querySelector(':scope > [data-part="copy-note"]')?.remove()
-      }, ok ? 1600 : 2400))
+      timers.set(
+        button,
+        setTimeout(
+          () => {
+            delete button.dataset.done
+            delete button.dataset.failed
+            if ('copy' in button.dataset) delete button.dataset.state
+            button.querySelector(':scope > [data-part="copy-note"]')?.remove()
+          },
+          ok ? 1600 : 2400,
+        ),
+      )
     }
     // a refused write (no permission, no focus, no clipboard at all) is a state of the button, not an uncaught error
     text
-      .then(t => {
+      .then((t) => {
         const clip = doc.defaultView?.navigator.clipboard ?? navigator.clipboard
         if (!clip) throw new Error('no clipboard')
         return clip.writeText(t)
       })
-      .then(() => show(true), () => show(false))
+      .then(
+        () => show(true),
+        () => show(false),
+      )
   }
   doc.addEventListener('click', onClick)
   return () => doc.removeEventListener('click', onClick)

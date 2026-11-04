@@ -73,8 +73,9 @@ licences checked against an allowlist.
 **Disabling a rule** is for when the rule is wrong here, not when it's in the way. The one standing exception is measured
 speed: in the hot paths of `packages/weft/src` and the compiler, a narrow disable with a stated reason is fine.
 
-**Formatting.** Rust uses rustfmt. TypeScript has no formatter: match the file you're in. Long lines are normal here, there
-are no semicolons, and short things stay on one line.
+**Formatting.** Run `pnpm run fix` to format tracked JavaScript and TypeScript with oxfmt and Rust with rustfmt.
+Both use a 100-column width. The source formatter skips generated and vendor files, archived evaluation results, snapshots,
+and documentation content. Run `node scripts/quality/format.mjs` to check its tracked source files without writing them.
 
 ## Speed and size
 

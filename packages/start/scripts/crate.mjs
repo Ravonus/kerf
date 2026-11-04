@@ -6,4 +6,8 @@ import { fileURLToPath } from 'node:url'
 const out = fileURLToPath(new URL('../crate', import.meta.url))
 const from = fileURLToPath(new URL('../../../crates/weft/', import.meta.url))
 rmSync(out, { recursive: true, force: true })
-if (!process.argv.includes('--clean')) cpSync(from, out, { recursive: true, filter: f => !/[\\/](target|tests)([\\/]|$)/.test(f.slice(from.length - 1)) })
+if (!process.argv.includes('--clean'))
+  cpSync(from, out, {
+    recursive: true,
+    filter: (f) => !/[\\/](target|tests)([\\/]|$)/.test(f.slice(from.length - 1)),
+  })

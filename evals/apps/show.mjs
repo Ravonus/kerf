@@ -16,18 +16,32 @@ const kids = []
 await ensureSeed()
 for (const app of ['admin', 'catalog', 'landing', 'todo', 'lemonstand']) {
   const root = join(work, app, 'weft')
-  if (!existsSync(join(root, '.output/server/index.mjs'))) { console.log(`${app.padEnd(11)} not built: node bench.mjs ${app}`); continue }
+  if (!existsSync(join(root, '.output/server/index.mjs'))) {
+    console.log(`${app.padEnd(11)} not built: node bench.mjs ${app}`)
+    continue
+  }
   const spec = JSON.parse(readFileSync(new URL(`./${app}/app.json`, import.meta.url), 'utf8'))
   const env = { ...process.env, NODE_ENV: 'production', PORT: String(port), HOST: '127.0.0.1' }
   const url = `http://localhost:${port}`
   if (spec.db) {
     const name = dbName(app, 'show')
     await clone(name)
-    Object.assign(env, { DATABASE_URL: `postgres://${process.env.BENCH_PG_USER ?? userInfo().username}@127.0.0.1:5432/${name}`, BETTER_AUTH_SECRET: benchUser.authSecret, BETTER_AUTH_URL: url })
+    Object.assign(env, {
+      DATABASE_URL: `postgres://${process.env.BENCH_PG_USER ?? userInfo().username}@127.0.0.1:5432/${name}`,
+      BETTER_AUTH_SECRET: benchUser.authSecret,
+      BETTER_AUTH_URL: url,
+    })
   }
-  const kid = spawn(process.execPath, ['--env-file-if-exists=.env', '.output/server/index.mjs'], { cwd: root, env, stdio: ['ignore', 'ignore', 'inherit'] })
+  const kid = spawn(process.execPath, ['--env-file-if-exists=.env', '.output/server/index.mjs'], {
+    cwd: root,
+    env,
+    stdio: ['ignore', 'ignore', 'inherit'],
+  })
   kids.push(kid)
   console.log(`${app.padEnd(11)} ${url}/${spec.login ? '   sign in: ' + benchUser.email : ''}`)
   port++
 }
-process.on('SIGINT', () => { for (const k of kids) k.kill(); process.exit(0) })
+process.on('SIGINT', () => {
+  for (const k of kids) k.kill()
+  process.exit(0)
+})

@@ -10,16 +10,33 @@ import { diagnostic, positions } from './diag.mjs'
 const require = createRequire(import.meta.url)
 const { Session } = require('./infer/session.cjs')
 
-const posix = p => p.split('\\').join('/')
+const posix = (p) => p.split('\\').join('/')
 
 export function toDiagnostics(root, list, file) {
   const rel = posix(relative(root, file))
   const text = readFileSync(file, 'utf8')
   const pos = positions(text)
-  return list.map(f => diagnostic({
-    code: f.code, severity: f.severity, file: rel, span: pos.span(f.start, f.end), offset: [f.start, f.end], why: f.why, help: f.help,
-    fix: f.edits && { description: f.help, safe: f.safe, edits: f.edits.map(e => ({ file: rel, span: pos.span(e.start, e.end), offset: [e.start, e.end], text: e.text })) },
-  }))
+  return list.map((f) =>
+    diagnostic({
+      code: f.code,
+      severity: f.severity,
+      file: rel,
+      span: pos.span(f.start, f.end),
+      offset: [f.start, f.end],
+      why: f.why,
+      help: f.help,
+      fix: f.edits && {
+        description: f.help,
+        safe: f.safe,
+        edits: f.edits.map((e) => ({
+          file: rel,
+          span: pos.span(e.start, e.end),
+          offset: [e.start, e.end],
+          text: e.text,
+        })),
+      },
+    }),
+  )
 }
 
 /** The checks `weft check` adds. A project with nothing to infer parses its `.tsx` files once and starts nothing. */

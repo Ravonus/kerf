@@ -8,7 +8,12 @@ export function Checkpoint({ label, onRestore }: { label: unknown; onRestore?: (
   return (
     <div data-scope="checkpoint">
       <span>{label}</span>
-      {onRestore && <Button emphasis="ghost" tone="neutral" size="sm" onClick={onRestore}><UndoIcon />Restore</Button>}
+      {onRestore && (
+        <Button emphasis="ghost" tone="neutral" size="sm" onClick={onRestore}>
+          <UndoIcon />
+          Restore
+        </Button>
+      )}
     </div>
   )
 }

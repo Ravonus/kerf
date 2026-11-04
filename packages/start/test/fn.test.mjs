@@ -5,23 +5,36 @@ import { inject } from 'vitest'
 import { fnId } from '../src/vite.mjs'
 
 const url = inject('url')
-const id = name => fnId(name, 'src/server/todos.ts')
+const id = (name) => fnId(name, 'src/server/todos.ts')
 const get = (path, init) => fetch(url + path, { redirect: 'manual', ...init })
-const call = (name, input) => get(`/_weft/fn/${id(name)}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`)
-const post = (name, body, headers = { 'content-type': 'application/json', 'x-weft': '1' }) => get(`/_weft/fn/${id(name)}`, { method: 'POST', headers, body: JSON.stringify(body) })
-const cacheOf = text => JSON.parse(/<script type="application\/json" id="weft-cache">(.*?)<\/script>/.exec(text)?.[1] ?? 'null')
+const call = (name, input) =>
+  get(
+    `/_weft/fn/${id(name)}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
+  )
+const post = (name, body, headers = { 'content-type': 'application/json', 'x-weft': '1' }) =>
+  get(`/_weft/fn/${id(name)}`, { method: 'POST', headers, body: JSON.stringify(body) })
+const cacheOf = (text) =>
+  JSON.parse(
+    /<script type="application\/json" id="weft-cache">(.*?)<\/script>/.exec(text)?.[1] ?? 'null',
+  )
 
 test('a query answers { v, t }', async () => {
   const res = await call('getTodo', { id: '2' })
   expect(res.status).toBe(200)
   expect(res.headers.get('cache-control')).toBe('no-store')
-  expect(await res.json()).toEqual({ v: { id: '2', title: 'Build the cache', done: expect.any(Boolean) }, t: ['todos', 'todo:2'] })
+  expect(await res.json()).toEqual({
+    v: { id: '2', title: 'Build the cache', done: expect.any(Boolean) },
+    t: ['todos', 'todo:2'],
+  })
 })
 
 test('Q002: input the schema rejects is a 400 with the issues', async () => {
   const res = await call('getTodo', { id: 2 })
   expect(res.status).toBe(400)
-  expect((await res.json()).e).toMatchObject({ code: 'Q002', issues: [{ message: 'expected a string', path: ['id'] }] })
+  expect((await res.json()).e).toMatchObject({
+    code: 'Q002',
+    issues: [{ message: 'expected a string', path: ['id'] }],
+  })
 })
 
 test('Q009: an unknown id is a 404', async () => {
@@ -34,18 +47,32 @@ test('Q010: a mutation without the CSRF proof is refused', async () => {
   const plain = await post('addTodo', { i: { title: 'x' } }, { 'content-type': 'application/json' })
   expect(plain.status).toBe(403)
   expect((await plain.json()).e.code).toBe('Q010')
-  const cross = await post('addTodo', { i: { title: 'x' } }, { 'content-type': 'application/json', 'x-weft': '1', origin: 'https://evil.example' })
+  const cross = await post(
+    'addTodo',
+    { i: { title: 'x' } },
+    { 'content-type': 'application/json', 'x-weft': '1', origin: 'https://evil.example' },
+  )
   expect(cross.status).toBe(403)
   expect((await get(`/_weft/fn/${id('addTodo')}`)).status).toBe(405) // GET a mutation
 })
 
 test('a mutation refreshes the queries it invalidated in the same response (single-flight)', async () => {
-  const res = await post('addTodo', { i: { title: 'From the test' }, f: [[id('listTodos'), null], [id('getTodo'), { id: '1' }], [id('nope'), null]] })
+  const res = await post('addTodo', {
+    i: { title: 'From the test' },
+    f: [
+      [id('listTodos'), null],
+      [id('getTodo'), { id: '1' }],
+      [id('nope'), null],
+    ],
+  })
   expect(res.status).toBe(200)
   const a = await res.json()
   expect(a.v).toMatchObject({ title: 'From the test', done: false })
   expect(a.t).toEqual(['todos'])
-  expect(a.c.map(w => [w[0], w[1]])).toEqual([[id('listTodos'), null], [id('getTodo'), { id: '1' }]])
+  expect(a.c.map((w) => [w[0], w[1]])).toEqual([
+    [id('listTodos'), null],
+    [id('getTodo'), { id: '1' }],
+  ])
   expect(a.c[0][2].at(-1)).toMatchObject({ title: 'From the test' })
 })
 
@@ -68,7 +95,12 @@ test('redirect() in load: 307 for the page, { r } for client navigation', async 
   const page = await get('/old')
   expect(page.status).toBe(307)
   expect(page.headers.get('location')).toBe('/todos')
-  expect(await (await get('/_weft/data/old')).json()).toEqual({ m: [], p: '/old', s: 307, r: '/todos' })
+  expect(await (await get('/_weft/data/old')).json()).toEqual({
+    m: [],
+    p: '/old',
+    s: 307,
+    r: '/todos',
+  })
 })
 
 test('redirect() in a run answers { r }, with the cookies the run set', async () => {
@@ -84,20 +116,22 @@ test('load and the render share one run per request; the page carries it in #wef
   expect(r.status).toBe(200)
   expect(text).toMatch(/<title data-wm>Todos \(\d+\) · Acme<\/title>/)
   const cached = cacheOf(text)
-  expect(cached.map(w => w[0])).toEqual([id('listTodos')])
+  expect(cached.map((w) => w[0])).toEqual([id('listTodos')])
   const [, input, list, tags] = cached[0]
   expect(input).toBe(null)
   expect(tags).toEqual(['todos'])
   expect(text).toContain(`>${list[0].title}</button>`)
   // The route payload records the tags its load read.
-  const route = JSON.parse(/<script type="application\/json" id="weft-route">(.*?)<\/script>/.exec(text)[1])
+  const route = JSON.parse(
+    /<script type="application\/json" id="weft-route">(.*?)<\/script>/.exec(text)[1],
+  )
   expect(route.m.at(-1)).toMatchObject({ id: '/todos', t: ['todos'] })
   expect(before).toBeTruthy()
 })
 
 test('client navigation data carries the queries its loaders resolved', async () => {
   const a = await (await get('/_weft/data/todos')).json()
-  expect(a.c.map(w => w[0])).toEqual([id('listTodos')])
+  expect(a.c.map((w) => w[0])).toEqual([id('listTodos')])
   expect(a.m.at(-1).t).toEqual(['todos'])
 })
 

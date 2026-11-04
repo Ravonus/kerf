@@ -10,7 +10,11 @@ import '@weft-js/warp-core/styles/flows/auth.css'
 import '@weft-js/warp-core/styles/flows/sso.css'
 
 /** What the sign-in form submits. */
-export interface SignInValues { email: string; password: string; remember?: string }
+export interface SignInValues {
+  email: string
+  password: string
+  remember?: string
+}
 
 /** Props for SignIn. */
 export interface SignInProps extends FlowForm<SignInValues> {
@@ -39,7 +43,13 @@ export interface SignInProps extends FlowForm<SignInValues> {
  */
 export function SignIn(p: SignInProps) {
   const id = uid('signin')
-  const ctl = useStepForm<SignInValues>(untrack(() => p), v => ({ email: v.email ? emailError(v.email) : 'Enter your work email.', password: v.password ? undefined : 'Enter your password.' }))
+  const ctl = useStepForm<SignInValues>(
+    untrack(() => p),
+    (v) => ({
+      email: v.email ? emailError(v.email) : 'Enter your work email.',
+      password: v.password ? undefined : 'Enter your password.',
+    }),
+  )
   const hasSso = derived(() => !!(p.onPasskey || p.providers?.length))
   const ask = (e: MouseEvent) => {
     const scope = (e.currentTarget as HTMLElement).closest('form, [role="group"]')
@@ -50,8 +60,17 @@ export function SignIn(p: SignInProps) {
   }
   return (
     <StepFrame ctl={ctl} embedded={!!p.form} labelledby={`${id}-t`}>
-      {(p.logo !== undefined || p.name !== undefined) && <div><AuthLogo logo={p.logo} name={p.name} /></div>}
-      <div><Title as={p.heading} id={`${id}-t`}>{p.title ?? 'Sign in'}</Title>{p.lede !== undefined && <p data-part="lede">{p.lede}</p>}</div>
+      {(p.logo !== undefined || p.name !== undefined) && (
+        <div>
+          <AuthLogo logo={p.logo} name={p.name} />
+        </div>
+      )}
+      <div>
+        <Title as={p.heading} id={`${id}-t`}>
+          {p.title ?? 'Sign in'}
+        </Title>
+        {p.lede !== undefined && <p data-part="lede">{p.lede}</p>}
+      </div>
       {hasSso.value && (
         <div data-scope="sso">
           {p.onPasskey && <PasskeyButton onPasskey={p.onPasskey} />}
@@ -59,15 +78,43 @@ export function SignIn(p: SignInProps) {
         </div>
       )}
       {hasSso.value && <div data-part="divider">or with email</div>}
-      <FormError ctl={ctl} actions={p.onForgot && <TextLink onClick={p.onForgot}>Reset your password</TextLink>} />
-      <Input label="Work email" name="email" type="email" autocomplete="username webauthn" inputmode="email" value={p.form?.value?.('email') as string | undefined} hint="" error={ctl.errors.value.email} onBlur={(e: FocusEvent) => ctl.flag('email', emailError((e.target as HTMLInputElement).value))} />
-      <Input label="Password" name="password" type="password" autocomplete="current-password" hint="" error={ctl.errors.value.password} />
+      <FormError
+        ctl={ctl}
+        actions={p.onForgot && <TextLink onClick={p.onForgot}>Reset your password</TextLink>}
+      />
+      <Input
+        label="Work email"
+        name="email"
+        type="email"
+        autocomplete="username webauthn"
+        inputmode="email"
+        value={p.form?.value?.('email') as string | undefined}
+        hint=""
+        error={ctl.errors.value.email}
+        onBlur={(e: FocusEvent) =>
+          ctl.flag('email', emailError((e.target as HTMLInputElement).value))
+        }
+      />
+      <Input
+        label="Password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        hint=""
+        error={ctl.errors.value.password}
+      />
       <div data-part="row">
-        <Switch size="sm" name="remember" checked={p.remember ?? true}>Keep me signed in</Switch>
+        <Switch size="sm" name="remember" checked={p.remember ?? true}>
+          Keep me signed in
+        </Switch>
         {p.onForgot && <TextLink onClick={p.onForgot}>Forgot password?</TextLink>}
       </div>
       <Submit ctl={ctl}>{p.submitLabel ?? 'Sign in'}</Submit>
-      {p.onMagicLink && <p data-part="fine"><TextLink onClick={ask}>Email me a sign-in link instead</TextLink></p>}
+      {p.onMagicLink && (
+        <p data-part="fine">
+          <TextLink onClick={ask}>Email me a sign-in link instead</TextLink>
+        </p>
+      )}
       {(p.onSignUp || p.onInvite) && (
         <p data-part="fine">
           {p.onSignUp && <TextLink onClick={p.onSignUp}>Create an account</TextLink>}

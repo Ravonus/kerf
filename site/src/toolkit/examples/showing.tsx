@@ -1,6 +1,25 @@
 import { onCleanup, state } from '@weft-js/core'
 import type { IconName } from '@weft-js/warp'
-import { Badge, Button, Card, Code, CodeBlock, Grid, Heading, Icon, Input, Kbd, Markdown, Row, Segmented, Snippet, Stack, Tag, Text, Ticker } from '@weft-js/warp'
+import {
+  Badge,
+  Button,
+  Card,
+  Code,
+  CodeBlock,
+  Grid,
+  Heading,
+  Icon,
+  Input,
+  Kbd,
+  Markdown,
+  Row,
+  Segmented,
+  Snippet,
+  Stack,
+  Tag,
+  Text,
+  Ticker,
+} from '@weft-js/warp'
 import { DEPLOYS, PROJECTS, TONE_OF } from '../world'
 
 export const CardPlay = (p: { eyebrow: string; title: string; sweep: boolean }) => (
@@ -29,8 +48,14 @@ export function CardPress() {
   const picked = state('Team')
   return (
     <Grid cols={2} gap="related">
-      {PLANS.map(plan => (
-        <Card key={plan} eyebrow={picked.value === plan ? 'Selected' : 'Plan'} title={plan} aria-pressed={picked.value === plan ? 'true' : 'false'} onClick={() => (picked.value = plan)}>
+      {PLANS.map((plan) => (
+        <Card
+          key={plan}
+          eyebrow={picked.value === plan ? 'Selected' : 'Plan'}
+          title={plan}
+          aria-pressed={picked.value === plan ? 'true' : 'false'}
+          onClick={() => (picked.value = plan)}
+        >
           <Text subtle>{plan === 'Team' ? '$40 a month' : '$120 a month'}</Text>
         </Card>
       ))}
@@ -58,76 +83,148 @@ export const CardSweep = () => (
 
 export const CardStats = () => (
   <Grid min="xs" gap="related">
-    <Card eyebrow="Requests" title="86.1M"><Text role="caption" tone="positive">Up 8.6% on September</Text></Card>
-    <Card eyebrow="Errors" title="0.22%"><Text role="caption" tone="positive">Down from 0.36%</Text></Card>
-    <Card eyebrow="Deploys" title="167"><Text role="caption" subtle>About 5 a day</Text></Card>
-    <Card eyebrow="Spend" title="$8,930"><Text role="caption" subtle>Up $370</Text></Card>
+    <Card eyebrow="Requests" title="86.1M">
+      <Text role="caption" tone="positive">
+        Up 8.6% on September
+      </Text>
+    </Card>
+    <Card eyebrow="Errors" title="0.22%">
+      <Text role="caption" tone="positive">
+        Down from 0.36%
+      </Text>
+    </Card>
+    <Card eyebrow="Deploys" title="167">
+      <Text role="caption" subtle>
+        About 5 a day
+      </Text>
+    </Card>
+    <Card eyebrow="Spend" title="$8,930">
+      <Text role="caption" subtle>
+        Up $370
+      </Text>
+    </Card>
   </Grid>
 )
 
 export const CardProjectGrid = () => (
   <Grid min="md" gap="related">
-    {PROJECTS.slice(0, 6).map(p => (
+    {PROJECTS.slice(0, 6).map((p) => (
       <Card key={p.id} href="/toolkit/card" eyebrow={p.region} title={p.name}>
         <Row justify="between">
-          <Text role="caption" subtle>{p.deploys} deploys</Text>
-          <Badge tone={TONE_OF[p.status]} dot>{p.status}</Badge>
+          <Text role="caption" subtle>
+            {p.deploys} deploys
+          </Text>
+          <Badge tone={TONE_OF[p.status]} dot>
+            {p.status}
+          </Badge>
         </Row>
       </Card>
     ))}
   </Grid>
 )
 
-export const BadgePlay = (p: { children: string; tone: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'; emphasis: 'soft' | 'solid' | 'outline'; dot: boolean; count: boolean }) => (
-  <Badge tone={p.tone} emphasis={p.emphasis} dot={p.dot} count={p.count}>{p.children}</Badge>
+export const BadgePlay = (p: {
+  children: string
+  tone: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+  emphasis: 'soft' | 'solid' | 'outline'
+  dot: boolean
+  count: boolean
+}) => (
+  <Badge tone={p.tone} emphasis={p.emphasis} dot={p.dot} count={p.count}>
+    {p.children}
+  </Badge>
 )
 
 const TONES = ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'] as const
 
-export const BadgeTones = () => <>{TONES.map(tone => <Badge key={tone} tone={tone}>Status</Badge>)}</>
+export const BadgeTones = () => (
+  <>
+    {TONES.map((tone) => (
+      <Badge key={tone} tone={tone}>
+        Status
+      </Badge>
+    ))}
+  </>
+)
 
 export const BadgeEmphasis = () => (
   <>
     <Badge tone="positive">Status</Badge>
-    <Badge tone="positive" emphasis="solid">Status</Badge>
-    <Badge tone="positive" emphasis="outline">Status</Badge>
+    <Badge tone="positive" emphasis="solid">
+      Status
+    </Badge>
+    <Badge tone="positive" emphasis="outline">
+      Status
+    </Badge>
   </>
 )
 
 export const BadgeDot = () => (
   <>
-    <Badge tone="positive" dot>Live</Badge>
-    <Badge tone="info" dot>Building</Badge>
-    <Badge tone="critical" dot>Failed</Badge>
-    <Badge tone="neutral" dot>Paused</Badge>
+    <Badge tone="positive" dot>
+      Live
+    </Badge>
+    <Badge tone="info" dot>
+      Building
+    </Badge>
+    <Badge tone="critical" dot>
+      Failed
+    </Badge>
+    <Badge tone="neutral" dot>
+      Paused
+    </Badge>
   </>
 )
 
 export const BadgeCount = () => (
   <>
-    <Badge count tone="accent" srText="unread comments">3</Badge>
-    <Badge count tone="critical" emphasis="solid" srText="failed deploys">12</Badge>
-    <Badge count emphasis="outline" srText="open reviews">99+</Badge>
+    <Badge count tone="accent" srText="unread comments">
+      3
+    </Badge>
+    <Badge count tone="critical" emphasis="solid" srText="failed deploys">
+      12
+    </Badge>
+    <Badge count emphasis="outline" srText="open reviews">
+      99+
+    </Badge>
   </>
 )
 
 export const BadgeProjectList = () => (
   <Stack gap="related" divided>
-    {PROJECTS.slice(2, 7).map(p => (
+    {PROJECTS.slice(2, 7).map((p) => (
       <Row key={p.id} justify="between" gap="group">
-        <Stack gap="hair"><Text>{p.name}</Text><Text role="caption" subtle>{p.owner}</Text></Stack>
-        <Badge tone={TONE_OF[p.status]} dot>{p.status}</Badge>
+        <Stack gap="hair">
+          <Text>{p.name}</Text>
+          <Text role="caption" subtle>
+            {p.owner}
+          </Text>
+        </Stack>
+        <Badge tone={TONE_OF[p.status]} dot>
+          {p.status}
+        </Badge>
       </Row>
     ))}
   </Stack>
 )
 
 export const BadgeOnAButton = () => (
-  <Button emphasis="outline" tone="neutral" icon="bell">Alerts <Badge count tone="critical" emphasis="solid" srText="new">2</Badge></Button>
+  <Button emphasis="outline" tone="neutral" icon="bell">
+    Alerts{' '}
+    <Badge count tone="critical" emphasis="solid" srText="new">
+      2
+    </Badge>
+  </Button>
 )
 
-export const TagPlay = (p: { children: string; tone: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'; swatch: boolean }) => (
-  <Tag tone={p.tone} swatch={p.swatch}>{p.children}</Tag>
+export const TagPlay = (p: {
+  children: string
+  tone: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+  swatch: boolean
+}) => (
+  <Tag tone={p.tone} swatch={p.swatch}>
+    {p.children}
+  </Tag>
 )
 
 export const TagPlain = () => (
@@ -138,14 +235,30 @@ export const TagPlain = () => (
   </>
 )
 
-export const TagTones = () => <>{TONES.map(tone => <Tag key={tone} tone={tone}>Label</Tag>)}</>
+export const TagTones = () => (
+  <>
+    {TONES.map((tone) => (
+      <Tag key={tone} tone={tone}>
+        Label
+      </Tag>
+    ))}
+  </>
+)
 
 export const TagSwatches = () => (
   <>
-    <Tag tone="accent" swatch>Web</Tag>
-    <Tag tone="positive" swatch>Platform</Tag>
-    <Tag tone="caution" swatch>Data</Tag>
-    <Tag tone="info" swatch>Mobile</Tag>
+    <Tag tone="accent" swatch>
+      Web
+    </Tag>
+    <Tag tone="positive" swatch>
+      Platform
+    </Tag>
+    <Tag tone="caution" swatch>
+      Data
+    </Tag>
+    <Tag tone="info" swatch>
+      Mobile
+    </Tag>
   </>
 )
 
@@ -153,8 +266,21 @@ export function TagRemovable() {
   const tags = state(['frontend', 'eu-west', 'needs review'])
   return (
     <>
-      {tags.value.map(t => <Tag key={t} label={t} onRemove={() => (tags.value = tags.value.filter(x => x !== t))}>{t}</Tag>)}
-      {!tags.value.length && <Button size="sm" emphasis="ghost" tone="neutral" onClick={() => (tags.value = ['frontend', 'eu-west', 'needs review'])}>Put them back</Button>}
+      {tags.value.map((t) => (
+        <Tag key={t} label={t} onRemove={() => (tags.value = tags.value.filter((x) => x !== t))}>
+          {t}
+        </Tag>
+      ))}
+      {!tags.value.length && (
+        <Button
+          size="sm"
+          emphasis="ghost"
+          tone="neutral"
+          onClick={() => (tags.value = ['frontend', 'eu-west', 'needs review'])}
+        >
+          Put them back
+        </Button>
+      )}
     </>
   )
 }
@@ -170,9 +296,18 @@ export function TagAddToProject() {
   }
   return (
     <Stack as="form" gap="related" onSubmit={add}>
-      <Input label="Add a label" placeholder="Type and press Enter" value={draft.value} onInput={(e: Event) => (draft.value = (e.target as HTMLInputElement).value)} />
+      <Input
+        label="Add a label"
+        placeholder="Type and press Enter"
+        value={draft.value}
+        onInput={(e: Event) => (draft.value = (e.target as HTMLInputElement).value)}
+      />
       <Row gap="tight">
-        {tags.value.map(t => <Tag key={t} label={t} onRemove={() => (tags.value = tags.value.filter(x => x !== t))}>{t}</Tag>)}
+        {tags.value.map((t) => (
+          <Tag key={t} label={t} onRemove={() => (tags.value = tags.value.filter((x) => x !== t))}>
+            {t}
+          </Tag>
+        ))}
       </Row>
     </Stack>
   )
@@ -190,9 +325,19 @@ export const KbdKeys = () => (
   </>
 )
 
-export const KbdCombo = () => <Row gap="hair"><Kbd>⌘</Kbd><Kbd>Shift</Kbd><Kbd>P</Kbd></Row>
+export const KbdCombo = () => (
+  <Row gap="hair">
+    <Kbd>⌘</Kbd>
+    <Kbd>Shift</Kbd>
+    <Kbd>P</Kbd>
+  </Row>
+)
 
-export const KbdInSentence = () => <Text>Press <Kbd>⌘</Kbd> <Kbd>K</Kbd> to search, or <Kbd>Esc</Kbd> to close.</Text>
+export const KbdInSentence = () => (
+  <Text>
+    Press <Kbd>⌘</Kbd> <Kbd>K</Kbd> to search, or <Kbd>Esc</Kbd> to close.
+  </Text>
+)
 
 const SHORTCUTS = [
   { keys: ['⌘', 'K'], does: 'Search commands' },
@@ -203,24 +348,38 @@ const SHORTCUTS = [
 
 export const KbdShortcutList = () => (
   <Stack gap="related" divided>
-    {SHORTCUTS.map(s => (
+    {SHORTCUTS.map((s) => (
       <Row key={s.does} justify="between" gap="group">
         <Text>{s.does}</Text>
-        <Row gap="hair">{s.keys.map(k => <Kbd key={k}>{k}</Kbd>)}</Row>
+        <Row gap="hair">
+          {s.keys.map((k) => (
+            <Kbd key={k}>{k}</Kbd>
+          ))}
+        </Row>
       </Row>
     ))}
   </Stack>
 )
 
-export const TickerPlay = (p: { value: number; locale: string }) => <Text role="title"><Ticker value={p.value} locale={p.locale} /></Text>
+export const TickerPlay = (p: { value: number; locale: string }) => (
+  <Text role="title">
+    <Ticker value={p.value} locale={p.locale} />
+  </Text>
+)
 
 export function TickerStep() {
   const n = state(412)
   return (
     <Row gap="related">
-      <Text role="title"><Ticker value={n.value} locale="en-US" /></Text>
-      <Button size="sm" emphasis="outline" tone="neutral" onClick={() => (n.value += 1)}>Deploy</Button>
-      <Button size="sm" emphasis="outline" tone="neutral" onClick={() => (n.value += 88)}>Add 88</Button>
+      <Text role="title">
+        <Ticker value={n.value} locale="en-US" />
+      </Text>
+      <Button size="sm" emphasis="outline" tone="neutral" onClick={() => (n.value += 1)}>
+        Deploy
+      </Button>
+      <Button size="sm" emphasis="outline" tone="neutral" onClick={() => (n.value += 88)}>
+        Add 88
+      </Button>
     </Row>
   )
 }
@@ -231,11 +390,31 @@ export function TickerFormats() {
   return (
     <Stack gap="related" align="center">
       <Row gap="section">
-        <Text role="heading"><Ticker value={k.value ? 8930 : 8560} locale="en-US" format={{ style: 'currency', currency: 'USD' }} /></Text>
-        <Text role="heading"><Ticker value={k.value ? 0.9998 : 0.9942} locale="en-US" format={{ style: 'percent', maximumFractionDigits: 2 }} /></Text>
-        <Text role="heading"><Ticker value={k.value ? 86100000 : 79300000} locale="en-US" format={{ notation: 'compact' }} /></Text>
+        <Text role="heading">
+          <Ticker
+            value={k.value ? 8930 : 8560}
+            locale="en-US"
+            format={{ style: 'currency', currency: 'USD' }}
+          />
+        </Text>
+        <Text role="heading">
+          <Ticker
+            value={k.value ? 0.9998 : 0.9942}
+            locale="en-US"
+            format={{ style: 'percent', maximumFractionDigits: 2 }}
+          />
+        </Text>
+        <Text role="heading">
+          <Ticker
+            value={k.value ? 86100000 : 79300000}
+            locale="en-US"
+            format={{ notation: 'compact' }}
+          />
+        </Text>
       </Row>
-      <Button size="sm" emphasis="ghost" tone="neutral" onClick={roll}>Change the numbers</Button>
+      <Button size="sm" emphasis="ghost" tone="neutral" onClick={roll}>
+        Change the numbers
+      </Button>
     </Stack>
   )
 }
@@ -250,17 +429,63 @@ export function TickerLiveTraffic() {
   onCleanup(() => clearInterval(timer))
   return (
     <Grid cols={2} gap="related">
-      <Card eyebrow="Requests a minute"><Text role="title"><Ticker value={rate.value} locale="en-US" /></Text></Card>
-      <Card eyebrow="Errors a minute"><Text role="title"><Ticker value={errors.value} locale="en-US" /></Text></Card>
+      <Card eyebrow="Requests a minute">
+        <Text role="title">
+          <Ticker value={rate.value} locale="en-US" />
+        </Text>
+      </Card>
+      <Card eyebrow="Errors a minute">
+        <Text role="title">
+          <Ticker value={errors.value} locale="en-US" />
+        </Text>
+      </Card>
     </Grid>
   )
 }
 
-const LOOK = ['rocket', 'clock', 'server', 'globe', 'activity', 'bell', 'user', 'users', 'settings', 'database', 'cloud', 'terminal', 'shield', 'key', 'lock', 'search', 'filter', 'download', 'upload', 'external', 'copy', 'trash', 'pencil', 'star'] as const
+const LOOK = [
+  'rocket',
+  'clock',
+  'server',
+  'globe',
+  'activity',
+  'bell',
+  'user',
+  'users',
+  'settings',
+  'database',
+  'cloud',
+  'terminal',
+  'shield',
+  'key',
+  'lock',
+  'search',
+  'filter',
+  'download',
+  'upload',
+  'external',
+  'copy',
+  'trash',
+  'pencil',
+  'star',
+] as const
 
-export const IconPlay = (p: { name: IconName; size: number; solid: boolean }) => <Icon name={p.name} size={p.size} solid={p.solid} />
+export const IconPlay = (p: { name: IconName; size: number; solid: boolean }) => (
+  <Icon name={p.name} size={p.size} solid={p.solid} />
+)
 
-export const IconSet = () => <Grid min="xs" gap="group">{LOOK.map(name => <Stack key={name} gap="tight" align="center"><Icon name={name} size={24} /><Text role="caption" subtle>{name}</Text></Stack>)}</Grid>
+export const IconSet = () => (
+  <Grid min="xs" gap="group">
+    {LOOK.map((name) => (
+      <Stack key={name} gap="tight" align="center">
+        <Icon name={name} size={24} />
+        <Text role="caption" subtle>
+          {name}
+        </Text>
+      </Stack>
+    ))}
+  </Grid>
+)
 
 export const IconSizes = () => (
   <>
@@ -289,7 +514,12 @@ export const IconAction = () => (
   </>
 )
 
-export const IconLabelled = () => <Row gap="related"><Icon name="alert-circle" size={24} label="Failed" /><Text>mobile-bff</Text></Row>
+export const IconLabelled = () => (
+  <Row gap="related">
+    <Icon name="alert-circle" size={24} label="Failed" />
+    <Text>mobile-bff</Text>
+  </Row>
+)
 
 const FACTS = [
   { icon: 'globe', says: 'Served from 5 regions' },
@@ -300,12 +530,23 @@ const FACTS = [
 
 export const IconFeatureList = () => (
   <Stack gap="related">
-    {FACTS.map(f => <Row key={f.says} gap="related"><Icon name={f.icon} size={20} /><Text>{f.says}</Text></Row>)}
+    {FACTS.map((f) => (
+      <Row key={f.says} gap="related">
+        <Icon name={f.icon} size={20} />
+        <Text>{f.says}</Text>
+      </Row>
+    ))}
   </Stack>
 )
 
-export const HeadingPlay = (p: { children: string; level: 1 | 2 | 3 | 4 | 5 | 6; role: 'auto' | 'display' | 'title' | 'heading' | 'label' }) => (
-  <Heading level={p.level} role={p.role === 'auto' ? undefined : p.role}>{p.children}</Heading>
+export const HeadingPlay = (p: {
+  children: string
+  level: 1 | 2 | 3 | 4 | 5 | 6
+  role: 'auto' | 'display' | 'title' | 'heading' | 'label'
+}) => (
+  <Heading level={p.level} role={p.role === 'auto' ? undefined : p.role}>
+    {p.children}
+  </Heading>
 )
 
 export const HeadingLevels = () => (
@@ -319,10 +560,18 @@ export const HeadingLevels = () => (
 
 export const HeadingRoles = () => (
   <Stack gap="related">
-    <Heading level={2} role="display">Ship it</Heading>
-    <Heading level={2} role="title">Ship it</Heading>
-    <Heading level={2} role="heading">Ship it</Heading>
-    <Heading level={2} role="label">Ship it</Heading>
+    <Heading level={2} role="display">
+      Ship it
+    </Heading>
+    <Heading level={2} role="title">
+      Ship it
+    </Heading>
+    <Heading level={2} role="heading">
+      Ship it
+    </Heading>
+    <Heading level={2} role="label">
+      Ship it
+    </Heading>
   </Stack>
 )
 
@@ -343,8 +592,21 @@ export const HeadingPageTop = () => (
   </Stack>
 )
 
-export const TextPlay = (p: { children: string; role: 'body' | 'display' | 'title' | 'heading' | 'label' | 'caption' | 'eyebrow' | 'code'; subtle: boolean; faint: boolean; tone: 'none' | 'accent' | 'positive' | 'caution' | 'critical' | 'info' }) => (
-  <Text role={p.role} subtle={p.subtle} faint={p.faint} tone={p.tone === 'none' ? undefined : p.tone}>{p.children}</Text>
+export const TextPlay = (p: {
+  children: string
+  role: 'body' | 'display' | 'title' | 'heading' | 'label' | 'caption' | 'eyebrow' | 'code'
+  subtle: boolean
+  faint: boolean
+  tone: 'none' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+}) => (
+  <Text
+    role={p.role}
+    subtle={p.subtle}
+    faint={p.faint}
+    tone={p.tone === 'none' ? undefined : p.tone}
+  >
+    {p.children}
+  </Text>
 )
 
 export const TextRoles = () => (
@@ -377,20 +639,46 @@ export const TextTones = () => (
   </Stack>
 )
 
-export const TextInline = () => <Text>Uptime is <Text inline tone="positive">99.98%</Text> this month, <Text inline subtle>up from 99.91%</Text>.</Text>
+export const TextInline = () => (
+  <Text>
+    Uptime is{' '}
+    <Text inline tone="positive">
+      99.98%
+    </Text>{' '}
+    this month,{' '}
+    <Text inline subtle>
+      up from 99.91%
+    </Text>
+    .
+  </Text>
+)
 
 export const TextDeployNote = () => (
   <Stack gap="tight">
-    <Text role="eyebrow" subtle>Deploy d-4819</Text>
+    <Text role="eyebrow" subtle>
+      Deploy d-4819
+    </Text>
     <Text role="heading">Retry timed out upstream calls</Text>
-    <Text subtle>Sam Okafor pushed this to main. It stopped at the health check after four minutes.</Text>
-    <Text role="caption" tone="critical">Failed, 31 October at 15:27</Text>
+    <Text subtle>
+      Sam Okafor pushed this to main. It stopped at the health check after four minutes.
+    </Text>
+    <Text role="caption" tone="critical">
+      Failed, 31 October at 15:27
+    </Text>
   </Stack>
 )
 
-export const CodePlay = (p: { children: string }) => <Text>Run <Code>{p.children}</Code> to start.</Text>
+export const CodePlay = (p: { children: string }) => (
+  <Text>
+    Run <Code>{p.children}</Code> to start.
+  </Text>
+)
 
-export const CodeInSentence = () => <Text>Set <Code>WEFT_TOKEN</Code> before you run <Code>weft deploy</Code>.</Text>
+export const CodeInSentence = () => (
+  <Text>
+    Set <Code>WEFT_TOKEN</Code> before you run <Code>weft deploy</Code>.
+  </Text>
+)
 
 export const CodeNames = () => (
   <>
@@ -402,7 +690,9 @@ export const CodeNames = () => (
 
 export const CodeOnACard = () => (
   <Card eyebrow="Latest" title="Cache product images at the edge">
-    <Text subtle>Deployed <Code>9f3ac21</Code> from <Code>main</Code> to <Code>eu-west</Code>.</Text>
+    <Text subtle>
+      Deployed <Code>9f3ac21</Code> from <Code>main</Code> to <Code>eu-west</Code>.
+    </Text>
   </Card>
 )
 
@@ -414,32 +704,65 @@ export default defineProject({
   build: 'npm run build',
 })`
 
-export const CodeBlockPlay = (p: { filename: string; lines: boolean; wrap: boolean; language: string }) => <CodeBlock code={CONFIG} filename={p.filename || undefined} lines={p.lines} wrap={p.wrap} language={p.language} />
+export const CodeBlockPlay = (p: {
+  filename: string
+  lines: boolean
+  wrap: boolean
+  language: string
+}) => (
+  <CodeBlock
+    code={CONFIG}
+    filename={p.filename || undefined}
+    lines={p.lines}
+    wrap={p.wrap}
+    language={p.language}
+  />
+)
 
 export const CodeBlockBasic = () => <CodeBlock code={CONFIG} language="ts" />
 
-export const CodeBlockFilename = () => <CodeBlock code={CONFIG} language="ts" filename="weft.config.ts" />
+export const CodeBlockFilename = () => (
+  <CodeBlock code={CONFIG} language="ts" filename="weft.config.ts" />
+)
 
 export const CodeBlockLines = () => <CodeBlock code={CONFIG} language="ts" lines />
 
-export const CodeBlockWrap = () => <CodeBlock wrap language="sh" code="weft deploy --project storefront --region eu-west --region us-east --message 'Cache product images at the edge' --wait" />
+export const CodeBlockWrap = () => (
+  <CodeBlock
+    wrap
+    language="sh"
+    code="weft deploy --project storefront --region eu-west --region us-east --message 'Cache product images at the edge' --wait"
+  />
+)
 
 const SAMPLE = JSON.stringify(DEPLOYS[0], null, 2)
 
-export const CodeBlockJson = () => <CodeBlock language="json" filename="deploy.json" code={SAMPLE} />
+export const CodeBlockJson = () => (
+  <CodeBlock language="json" filename="deploy.json" code={SAMPLE} />
+)
 
 const STACKS = {
   ts: `const res = await weft.deploy({ project: 'storefront' })\nconsole.log(res.url)`,
   sh: `weft deploy --project storefront`,
   json: `{ "project": "storefront" }`,
 }
-const WAYS = [{ value: 'ts', label: 'SDK' }, { value: 'sh', label: 'CLI' }, { value: 'json', label: 'API' }]
+const WAYS = [
+  { value: 'ts', label: 'SDK' },
+  { value: 'sh', label: 'CLI' },
+  { value: 'json', label: 'API' },
+]
 
 export function CodeBlockChooser() {
   const way = state('ts')
   return (
     <Stack gap="related">
-      <Segmented label="How to deploy" size="sm" value={way.value} onChange={v => (way.value = v)} options={WAYS} />
+      <Segmented
+        label="How to deploy"
+        size="sm"
+        value={way.value}
+        onChange={(v) => (way.value = v)}
+        options={WAYS}
+      />
       {way.value === 'ts' && <CodeBlock code={STACKS.ts} language="ts" />}
       {way.value === 'sh' && <CodeBlock code={STACKS.sh} language="sh" />}
       {way.value === 'json' && <CodeBlock code={STACKS.json} language="json" />}
@@ -447,7 +770,11 @@ export function CodeBlockChooser() {
   )
 }
 
-export const SnippetPlay = (p: { code: string; prompt: string }) => <Stack><Snippet code={p.code} prompt={p.prompt} /></Stack>
+export const SnippetPlay = (p: { code: string; prompt: string }) => (
+  <Stack>
+    <Snippet code={p.code} prompt={p.prompt} />
+  </Stack>
+)
 
 export const SnippetInstall = () => <Snippet code="npm install -g weft" />
 
@@ -461,9 +788,18 @@ export const SnippetPrompts = () => (
 
 export const SnippetGetStarted = () => (
   <Stack gap="group">
-    <Stack gap="tight"><Text role="label">1. Install the CLI</Text><Snippet code="npm install -g weft" /></Stack>
-    <Stack gap="tight"><Text role="label">2. Sign in</Text><Snippet code="weft login" /></Stack>
-    <Stack gap="tight"><Text role="label">3. Ship it</Text><Snippet code="weft deploy" /></Stack>
+    <Stack gap="tight">
+      <Text role="label">1. Install the CLI</Text>
+      <Snippet code="npm install -g weft" />
+    </Stack>
+    <Stack gap="tight">
+      <Text role="label">2. Sign in</Text>
+      <Snippet code="weft login" />
+    </Stack>
+    <Stack gap="tight">
+      <Text role="label">3. Ship it</Text>
+      <Snippet code="weft deploy" />
+    </Stack>
   </Stack>
 )
 
@@ -497,9 +833,16 @@ export default { name: 'storefront' }
 
 export const MarkdownCode = () => <Markdown source={SNIPPET} />
 
-export const MarkdownNewTab = () => <Markdown linkTarget="_blank" source="Read the [status page](https://example.com) before you deploy." />
+export const MarkdownNewTab = () => (
+  <Markdown
+    linkTarget="_blank"
+    source="Read the [status page](https://example.com) before you deploy."
+  />
+)
 
-export const MarkdownSafe = () => <Markdown source={'Raw HTML shows as text: <script>alert("no")</script>'} />
+export const MarkdownSafe = () => (
+  <Markdown source={'Raw HTML shows as text: <script>alert("no")</script>'} />
+)
 
 const COMMENT = `Looks good. Two things before we ship:
 

@@ -5,9 +5,10 @@ export function Cart({ items }: { items: Item[] }) {
   return (
     <div>
       <ul aria-label="Cart">
-        {items.map(item => (
+        {items.map((item) => (
           <li key={item.id}>
-            <span data-testid="name">{item.name}</span> <span data-testid="line">${item.price.toFixed(2)}</span>
+            <span data-testid="name">{item.name}</span>{' '}
+            <span data-testid="line">${item.price.toFixed(2)}</span>
           </li>
         ))}
       </ul>

@@ -1,8 +1,8 @@
 // @refresh reload
-import { createHandler, StartServer } from "@solidjs/start/server";
+import { createHandler, StartServer } from '@solidjs/start/server'
 
-import figtree from "~/assets/fonts/figtree-latin-wght.woff2?url";
-import fraunces from "~/assets/fonts/fraunces-latin-full.woff2?url";
+import figtree from '~/assets/fonts/figtree-latin-wght.woff2?url'
+import fraunces from '~/assets/fonts/fraunces-latin-full.woff2?url'
 
 export default createHandler(() => (
   <StartServer
@@ -22,4 +22,4 @@ export default createHandler(() => (
       </html>
     )}
   />
-));
+))

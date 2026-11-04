@@ -5,13 +5,25 @@ import { flush, render } from '@weft-js/core/test'
 import { AccountMenu } from './fixtures/direct-menu'
 import { Settings } from './fixtures/direct-tabs'
 
-const tick = () => new Promise(r => { setTimeout(r) })
-const settle = async () => { await tick(); await flush(); await tick(); await flush() }
-const key = (el: Element, k: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+const tick = () =>
+  new Promise((r) => {
+    setTimeout(r)
+  })
+const settle = async () => {
+  await tick()
+  await flush()
+  await tick()
+  await flush()
+}
+const key = (el: Element, k: string) =>
+  el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
 
 test('the fixtures are what the README shows', () => {
   const readme = readFileSync(join(process.cwd(), '../warp-core/README.md'), 'utf8')
-  for (const name of ['tabs', 'menu']) expect(readme).toContain(readFileSync(join(process.cwd(), `test/fixtures/direct-${name}.tsx`), 'utf8'))
+  for (const name of ['tabs', 'menu'])
+    expect(readme).toContain(
+      readFileSync(join(process.cwd(), `test/fixtures/direct-${name}.tsx`), 'utf8'),
+    )
 })
 
 test('tabs: nextIndex wraps and moves focus, the indicator follows, one tab stop', async () => {
@@ -27,7 +39,11 @@ test('tabs: nextIndex wraps and moves focus, the indicator follows, one tab stop
   expect(tabs[0]!.getAttribute('tabindex')).toBe('-1')
   expect(tabs[2]!.hasAttribute('tabindex')).toBe(false)
   expect(container.querySelector('[role="tabpanel"]')!.textContent).toBe('Team')
-  expect(container.querySelector<HTMLElement>('[data-part="indicator"]')!.style.getPropertyValue('--warp-b')).not.toBe('')
+  expect(
+    container
+      .querySelector<HTMLElement>('[data-part="indicator"]')!
+      .style.getPropertyValue('--warp-b'),
+  ).not.toBe('')
   container.remove()
 })
 

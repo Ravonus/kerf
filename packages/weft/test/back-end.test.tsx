@@ -24,7 +24,15 @@ const html = (el: Element) => {
 let disposers: (() => void)[] = []
 function SpreadPicker(props: { rest: Record<string, unknown> }) {
   const options = ['a', 'b', 'c']
-  return <select value="b" {...props.rest}>{options.map(o => <option key={o} value={o}>{o}</option>)}</select>
+  return (
+    <select value="b" {...props.rest}>
+      {options.map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
+    </select>
+  )
 }
 
 const mount = (Comp: () => unknown) => {
@@ -43,11 +51,26 @@ const click = (sel: string) => (root: Element) => (root.querySelector(sel) as HT
 
 describe('weft back end: basics', () => {
   it('compiles without Solid-shaped helpers', () => {
-    const out = transform(readFileSync(resolve(__dirname, 'fixtures/next/Basics.tsx'), 'utf8'), { filename: 'Basics.tsx' })
+    const out = transform(readFileSync(resolve(__dirname, 'fixtures/next/Basics.tsx'), 'utf8'), {
+      filename: 'Basics.tsx',
+    })
     expect(out.diagnostics).toEqual([])
     const imported = /import \{([^}]*)\} from "@weft-js\/core\/dom"/.exec(out.code!)![1]
-    const helpers = ['attr', 'bind', 'child', 'cls', 'component', 'css', 'delegate', 'memo', 'mergeProps', 'on', 'tpl']
-    for (const name of imported!.split(',').map(s => s.trim().split(' ')[0])) expect(helpers).toContain(name)
+    const helpers = [
+      'attr',
+      'bind',
+      'child',
+      'cls',
+      'component',
+      'css',
+      'delegate',
+      'memo',
+      'mergeProps',
+      'on',
+      'tpl',
+    ]
+    for (const name of imported!.split(',').map((s) => s.trim().split(' ')[0]))
+      expect(helpers).toContain(name)
     expect(out.code).not.toMatch(/insert|createComponent|template\(|delegateEvents/)
   })
 
@@ -71,7 +94,13 @@ describe('weft back end: basics', () => {
       input.dispatchEvent(new Event('input', { bubbles: true }))
     }
     const root = mount(basics.Panel)
-    for (const step of [type('Grace'), click('.tone'), click('.wider'), click('button'), click('button')]) {
+    for (const step of [
+      type('Grace'),
+      click('.tone'),
+      click('.wider'),
+      click('button'),
+      click('button'),
+    ]) {
       step(root)
       flush()
     }
@@ -84,7 +113,9 @@ describe('weft back end: basics', () => {
     let seed = 0
     beforeEach(() => {
       seed = 0
-      vi.spyOn(Math, 'random').mockImplementation(() => ((seed = (seed * 9301 + 49297) % 233280) / 233280))
+      vi.spyOn(Math, 'random').mockImplementation(
+        () => (seed = (seed * 9301 + 49297) % 233280) / 233280,
+      )
     })
     afterEach(() => vi.restoreAllMocks())
 
@@ -101,7 +132,9 @@ describe('weft back end: basics', () => {
       go('tbody tr:nth-child(5) td:nth-child(2) a')
       expect(rows()[4]!.className).toBe('danger')
       go('#update')
-      expect(label(0).endsWith(' !!!') && label(10).endsWith(' !!!') && !label(1).endsWith(' !!!')).toBe(true)
+      expect(
+        label(0).endsWith(' !!!') && label(10).endsWith(' !!!') && !label(1).endsWith(' !!!'),
+      ).toBe(true)
       const [second, last] = [rows()[1], rows()[998]]
       go('#swaprows')
       expect([rows()[1], rows()[998]]).toEqual([last, second])
@@ -130,15 +163,32 @@ describe('weft back end, step 2', () => {
     expect(root.querySelector('u')?.textContent).toBe('many')
     ;(root.querySelector('.flip') as HTMLElement).click()
     flush()
-    expect(html(root)).toBe('<div><button class="inc">+</button><button class="flip">flip</button><i>off</i><u>many</u></div>')
+    expect(html(root)).toBe(
+      '<div><button class="inc">+</button><button class="flip">flip</button><i>off</i><u>many</u></div>',
+    )
   })
 
   it('element spreads: later attributes win, values stay live, handlers are listeners', async () => {
     const { state } = await import('@weft-js/core')
     const tone = state('info')
     const clicks: string[] = []
-    const rest = state<Record<string, unknown>>({ id: 'spread', href: '/a', title: 'spread title', class: 'x', onClick: () => clicks.push('a') })
-    const root = mount(() => two.Spread({ get rest() { return rest.value }, get tone() { return tone.value } }))
+    const rest = state<Record<string, unknown>>({
+      id: 'spread',
+      href: '/a',
+      title: 'spread title',
+      class: 'x',
+      onClick: () => clicks.push('a'),
+    })
+    const root = mount(() =>
+      two.Spread({
+        get rest() {
+          return rest.value
+        },
+        get tone() {
+          return tone.value
+        },
+      }),
+    )
     const a = root.querySelector('a')!
     expect(a.id).toBe('spread')
     expect(a.getAttribute('href')).toBe('/a')
@@ -158,10 +208,16 @@ describe('weft back end, step 2', () => {
     expect(a.getAttribute('data-tone')).toBe('warn')
   })
 
-  it('a spread\'s children fill an element that has none, and stay live', async () => {
+  it("a spread's children fill an element that has none, and stay live", async () => {
     const { state } = await import('@weft-js/core')
     const rest = state<Record<string, unknown>>({ title: 't', children: 'first' })
-    const root = mount(() => two.Content({ get rest() { return rest.value } }))
+    const root = mount(() =>
+      two.Content({
+        get rest() {
+          return rest.value
+        },
+      }),
+    )
     const kids = root.querySelector('.kids')!
     expect([kids.textContent, kids.getAttribute('title')]).toEqual(['first', 't'])
     rest.value = { children: 'second' }
@@ -171,7 +227,7 @@ describe('weft back end, step 2', () => {
 
   it('refs: a variable is assigned, a function is called', () => {
     const seen: Element[] = []
-    const root = mount(() => two.Refs({ seen: el => seen.push(el) }))
+    const root = mount(() => two.Refs({ seen: (el) => seen.push(el) }))
     expect(root.querySelector('output')!.textContent).toBe('box')
     expect(seen).toEqual([root.querySelector('span')])
   })
@@ -198,7 +254,9 @@ describe('weft back end, step 2', () => {
     expect(circle.namespaceURI).toBe('http://www.w3.org/2000/svg')
     expect(circle.getAttribute('r')).toBe('2')
     expect(root.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 10 10')
-    expect(root.querySelector('use')!.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('#dot')
+    expect(root.querySelector('use')!.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
+      '#dot',
+    )
     root.querySelector('svg')!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     flush()
     expect(circle.getAttribute('r')).toBe('3')

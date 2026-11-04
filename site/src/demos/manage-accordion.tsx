@@ -7,7 +7,9 @@ function Panel(props: { title: string; active: boolean; onShow: () => void; chil
       {props.active ? (
         <p>{props.children}</p>
       ) : (
-        <Button size="sm" emphasis="ghost" onClick={props.onShow}>Show</Button>
+        <Button size="sm" emphasis="ghost" onClick={props.onShow}>
+          Show
+        </Button>
       )}
     </Card>
   )

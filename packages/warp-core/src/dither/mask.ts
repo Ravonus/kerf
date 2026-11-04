@@ -2,15 +2,30 @@
 // shape blurred, the light a letter throws on the cloth around it.
 /** What a mask is cut from: text, a path, or a draw callback. */
 export type MaskSource =
-  | { text: string; font?: string | undefined; weight?: number | string | undefined; fit?: number | undefined }
-  | { path: string; box: [width: number, height: number]; fit?: number | undefined; stroke?: number | undefined }
+  | {
+      text: string
+      font?: string | undefined
+      weight?: number | string | undefined
+      fit?: number | undefined
+    }
+  | {
+      path: string
+      box: [width: number, height: number]
+      fit?: number | undefined
+      stroke?: number | undefined
+    }
   | ((ctx: CanvasRenderingContext2D, cols: number, rows: number) => void)
 
 /** A cut-out's coverage per cell, and the soft halo around it. */
-export interface Mask { shape: Float32Array; halo: Float32Array }
+export interface Mask {
+  shape: Float32Array
+  halo: Float32Array
+}
 
 function blur(v: Float32Array, cols: number, rows: number, r: number) {
-  const out = new Float32Array(v), tmp = new Float32Array(v.length), div = r * 2 + 1
+  const out = new Float32Array(v),
+    tmp = new Float32Array(v.length),
+    div = r * 2 + 1
   for (let pass = 0; pass < 2; pass++) {
     for (let y = 0; y < rows; y++) {
       let sum = 0
@@ -33,25 +48,41 @@ function blur(v: Float32Array, cols: number, rows: number, r: number) {
   return out
 }
 
-function draw(g: CanvasRenderingContext2D, source: MaskSource, cols: number, rows: number, family: string) {
+function draw(
+  g: CanvasRenderingContext2D,
+  source: MaskSource,
+  cols: number,
+  rows: number,
+  family: string,
+) {
   if (typeof source === 'function') return source(g, cols, rows)
   const fit = source.fit ?? 0.86
   if ('text' in source) {
     const font = (px: number) => `${source.weight ?? 700} ${px}px ${source.font ?? family}`
     g.font = font(100)
-    const m = g.measureText(source.text), width = m.actualBoundingBoxRight + m.actualBoundingBoxLeft, height = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
+    const m = g.measureText(source.text),
+      width = m.actualBoundingBoxRight + m.actualBoundingBoxLeft,
+      height = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
     if (!width || !height) return
-    const px = 100 * Math.min(cols * fit / width, rows * fit / height)
+    const px = 100 * Math.min((cols * fit) / width, (rows * fit) / height)
     g.font = font(px)
     const k = px / 100
-    g.fillText(source.text, (cols - width * k) / 2 + m.actualBoundingBoxLeft * k, (rows - height * k) / 2 + m.actualBoundingBoxAscent * k)
+    g.fillText(
+      source.text,
+      (cols - width * k) / 2 + m.actualBoundingBoxLeft * k,
+      (rows - height * k) / 2 + m.actualBoundingBoxAscent * k,
+    )
   } else {
-    const [w, h] = source.box, k = Math.min(cols * fit / w, rows * fit / h)
+    const [w, h] = source.box,
+      k = Math.min((cols * fit) / w, (rows * fit) / h)
     g.translate((cols - w * k) / 2, (rows - h * k) / 2)
     g.scale(k, k)
     const shape = new Path2D(source.path)
     // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type -- a canvas fill, not an array's
-    if (source.stroke) { g.lineWidth = source.stroke; g.stroke(shape) } else g.fill(shape)
+    if (source.stroke) {
+      g.lineWidth = source.stroke
+      g.stroke(shape)
+    } else g.fill(shape)
   }
 }
 
@@ -59,7 +90,12 @@ function draw(g: CanvasRenderingContext2D, source: MaskSource, cols: number, row
 const SS = 4
 
 /** Rasterises a mask to the grid. `family` is the font used when the source names none. */
-export function rasterMask(source: MaskSource, cols: number, rows: number, family = 'sans-serif'): Mask | undefined {
+export function rasterMask(
+  source: MaskSource,
+  cols: number,
+  rows: number,
+  family = 'sans-serif',
+): Mask | undefined {
   const c = document.createElement('canvas')
   c.width = cols * SS
   c.height = rows * SS
@@ -68,7 +104,9 @@ export function rasterMask(source: MaskSource, cols: number, rows: number, famil
   g.scale(SS, SS)
   g.fillStyle = g.strokeStyle = '#fff'
   draw(g, source, cols, rows, family)
-  const px = g.getImageData(0, 0, c.width, c.height).data, shape = new Float32Array(cols * rows)
-  for (let i = 3, p = 0; i < px.length; i += 4, p++) shape[((p / c.width | 0) >> 2) * cols + ((p % c.width) >> 2)]! += px[i]! / (255 * SS * SS)
+  const px = g.getImageData(0, 0, c.width, c.height).data,
+    shape = new Float32Array(cols * rows)
+  for (let i = 3, p = 0; i < px.length; i += 4, p++)
+    shape[(((p / c.width) | 0) >> 2) * cols + ((p % c.width) >> 2)]! += px[i]! / (255 * SS * SS)
   return { shape, halo: blur(shape, cols, rows, Math.max(2, Math.round(rows / 18))) }
 }

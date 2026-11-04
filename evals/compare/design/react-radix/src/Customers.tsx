@@ -19,7 +19,13 @@ const seed: [string, string, string, Status][] = [
   ['Oliver Baker', 'oliver@copperfox.example', 'Starter', 'Active'],
   ['Zara Ahmed', 'zara@meridian.example', 'Enterprise', 'Past due'],
 ]
-const initial: Customer[] = seed.map(([name, email, plan, status], id) => ({ id, name, email, plan, status }))
+const initial: Customer[] = seed.map(([name, email, plan, status], id) => ({
+  id,
+  name,
+  email,
+  plan,
+  status,
+}))
 
 const badge: Record<Status, string> = {
   Active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
@@ -36,9 +42,13 @@ export function Customers() {
   return (
     <>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Customers</h1>
-      <p className="mt-1 text-slate-600 dark:text-slate-400">Everyone on a Northwind plan, in one place.</p>
+      <p className="mt-1 text-slate-600 dark:text-slate-400">
+        Everyone on a Northwind plan, in one place.
+      </p>
       <div className="mt-6 max-w-sm">
-        <label htmlFor="search" className="mb-1.5 block text-sm font-medium">Search</label>
+        <label htmlFor="search" className="mb-1.5 block text-sm font-medium">
+          Search
+        </label>
         <input
           id="search"
           type="search"
@@ -58,11 +68,21 @@ export function Customers() {
           <table className="w-full min-w-170 text-left text-sm">
             <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400">
               <tr>
-                <th scope="col" className="px-4 py-3 font-semibold">Name</th>
-                <th scope="col" className="px-4 py-3 font-semibold">Email</th>
-                <th scope="col" className="px-4 py-3 font-semibold">Plan</th>
-                <th scope="col" className="px-4 py-3 font-semibold">Status</th>
-                <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
+                <th scope="col" className="px-4 py-3 font-semibold">
+                  Name
+                </th>
+                <th scope="col" className="px-4 py-3 font-semibold">
+                  Email
+                </th>
+                <th scope="col" className="px-4 py-3 font-semibold">
+                  Plan
+                </th>
+                <th scope="col" className="px-4 py-3 font-semibold">
+                  Status
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -72,10 +92,18 @@ export function Customers() {
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{c.email}</td>
                   <td className="px-4 py-3">{c.plan}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge[c.status]}`}>{c.status}</span>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge[c.status]}`}
+                    >
+                      {c.status}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button variant="secondary" className="min-h-8 px-3 text-red-700 dark:text-red-400" onClick={() => setTarget(c)}>
+                    <Button
+                      variant="secondary"
+                      className="min-h-8 px-3 text-red-700 dark:text-red-400"
+                      onClick={() => setTarget(c)}
+                    >
                       Delete {c.name}
                     </Button>
                   </td>

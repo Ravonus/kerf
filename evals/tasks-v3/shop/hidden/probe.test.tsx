@@ -7,7 +7,11 @@ import { start, type Product } from './helpers'
 
 const cats = ['fruit', 'bakery', 'dairy'] as const
 const many: Product[] = Array.from({ length: 150 }, (_, i) => ({
-  id: `p${i}`, name: `Item ${String(i).padStart(3, '0')}`, category: cats[i % 3], price: 1 + (i % 17) / 4, stock: 50,
+  id: `p${i}`,
+  name: `Item ${String(i).padStart(3, '0')}`,
+  category: cats[i % 3],
+  price: 1 + (i % 17) / 4,
+  stock: 50,
 }))
 
 test('probe', async () => {
@@ -15,8 +19,15 @@ test('probe', async () => {
   const out: Record<string, unknown> = {}
   const measure = async (label: string, fn: () => Promise<void>) => {
     let delivered = 0
-    const obs = new MutationObserver(records => { delivered += records.length })
-    obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true })
+    const obs = new MutationObserver((records) => {
+      delivered += records.length
+    })
+    obs.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+    })
     const before = { commits: stats.commits, ms: stats.ms }
     const t0 = performance.now()
     await fn()

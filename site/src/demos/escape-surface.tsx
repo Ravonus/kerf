@@ -26,8 +26,19 @@ export default function Waves() {
   const height = state(20)
   return (
     <Card title="A surface">
-      <Slider label="Wave height" min={0} max={60} value={height.value} onChange={v => (height.value = v)} />
-      <Surface use={Wave} height={height.value} aspect="4/1" label="A sine wave that moves to the right" />
+      <Slider
+        label="Wave height"
+        min={0}
+        max={60}
+        value={height.value}
+        onChange={(v) => (height.value = v)}
+      />
+      <Surface
+        use={Wave}
+        height={height.value}
+        aspect="4/1"
+        label="A sine wave that moves to the right"
+      />
     </Card>
   )
 }

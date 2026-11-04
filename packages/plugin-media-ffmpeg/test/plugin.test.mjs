@@ -11,14 +11,18 @@ const ffmpeg = spawnSync('sh', ['-c', 'command -v ffmpeg'], { encoding: 'utf8' }
 describe('mediaFfmpeg()', () => {
   it('provides every codec key and asks to spawn ffmpeg and nothing else', () => {
     const p = mediaFfmpeg()
-    expect(p.provides).toEqual(KEYS.map(key => ({ slot: 'media.encode', key })))
+    expect(p.provides).toEqual(KEYS.map((key) => ({ slot: 'media.encode', key })))
     expect(p.permissions.spawn).toEqual(['ffmpeg', 'ffprobe'])
     expect(p.permissions.native).toBeUndefined()
     expect(p.permissions.net).toBeUndefined()
   })
 
   it('states the licence and patent position where `weft add` prints it', () => {
-    const notes = mediaFfmpeg().contribute({ command: 'check', mode: 'development', root: '' }).notes
+    const notes = mediaFfmpeg().contribute({
+      command: 'check',
+      mode: 'development',
+      root: '',
+    }).notes
     expect(notes.join(' ')).toMatch(/GPL/)
     expect(notes.join(' ')).toMatch(/patent/)
   })
@@ -39,10 +43,14 @@ describe.skipIf(!ffmpeg)('the binary', () => {
 
   it('runs the pinned file', async () => {
     const sha256 = createHash('sha256').update(readFileSync(ffmpeg)).digest('hex')
-    expect((await createMediaEncode({ key: 'video/h264', binary: ffmpeg, sha256 }).versions()).encoder).toBe('libx264')
+    expect(
+      (await createMediaEncode({ key: 'video/h264', binary: ffmpeg, sha256 }).versions()).encoder,
+    ).toBe('libx264')
   })
 
   it('says what to do when ffmpeg is missing', async () => {
-    await expect(createMediaEncode({ key: 'audio/aac', binary: '/nowhere/ffmpeg' }).encoderName()).rejects.toMatchObject({ code: 'M019' })
+    await expect(
+      createMediaEncode({ key: 'audio/aac', binary: '/nowhere/ffmpeg' }).encoderName(),
+    ).rejects.toMatchObject({ code: 'M019' })
   })
 })

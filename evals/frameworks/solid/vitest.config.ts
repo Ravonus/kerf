@@ -7,5 +7,10 @@ export default defineConfig({
     conditions: ['development', 'browser'],
     alias: { '#adapter': new URL('./adapter.tsx', import.meta.url).pathname },
   },
-  test: { environment: 'jsdom', globals: true, include: ['.grade/**/*.test.tsx'], testTimeout: 10_000 },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    include: ['.grade/**/*.test.tsx'],
+    testTimeout: 10_000,
+  },
 })

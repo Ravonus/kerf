@@ -25,29 +25,59 @@ const HOSTS = `
   <div id="heading" data-sweep><div data-part="heading"><button id="acc" aria-expanded="false">Q</button></div><span data-part="sweep"></span></div>
   <div id="far" style="block-size:40px">away</div>`
 
-const ids = ['soft', 'frame', 'pressed', 'menu', 'cb-host', 'sw-host', 'field-host', 'card', 'inner', 'pop', 'heading']
-const active = page => page.evaluate(list => list.filter(id => {
-  const n = document.getElementById(id)
-  return n && getComputedStyle(n).getPropertyValue('--_a').trim() === '1'
-}), ids)
-const set = (page, id, name, value) => page.evaluate(([i, n, v]) => {
-  const e = document.getElementById(i)
-  v === null ? e.removeAttribute(n) : e.setAttribute(n, v)
-}, [id, name, value])
-const away = page => page.hover('#far')
+const ids = [
+  'soft',
+  'frame',
+  'pressed',
+  'menu',
+  'cb-host',
+  'sw-host',
+  'field-host',
+  'card',
+  'inner',
+  'pop',
+  'heading',
+]
+const active = (page) =>
+  page.evaluate(
+    (list) =>
+      list.filter((id) => {
+        const n = document.getElementById(id)
+        return n && getComputedStyle(n).getPropertyValue('--_a').trim() === '1'
+      }),
+    ids,
+  )
+const set = (page, id, name, value) =>
+  page.evaluate(
+    ([i, n, v]) => {
+      const e = document.getElementById(i)
+      v === null ? e.removeAttribute(n) : e.setAttribute(n, v)
+    },
+    [id, name, value],
+  )
+const away = (page) => page.hover('#far')
 const part = (id, name) => `#${id} > [data-part="${name}"]`
-const running = (page, selector) => page.locator(selector).evaluate(n => n.getAnimations().length)
-const clip = (page, selector) => page.locator(selector).evaluate(n => getComputedStyle(n).clipPath)
-const finished = (page, selector) => page.locator(selector).evaluate(n => Promise.all(n.getAnimations().map(a => a.finished)))
+const running = (page, selector) => page.locator(selector).evaluate((n) => n.getAnimations().length)
+const clip = (page, selector) =>
+  page.locator(selector).evaluate((n) => getComputedStyle(n).clipPath)
+const finished = (page, selector) =>
+  page.locator(selector).evaluate((n) => Promise.all(n.getAnimations().map((a) => a.finished)))
 // a virtual clock on one part: pause its transitions and move them all on by ms, then read its edges. Real time can't
 // stall it, so a 50 ms hover is 50 ms, however busy the machine.
-const step = (page, selector, ms) => page.locator(selector).evaluate((n, by) => {
-  for (const a of n.getAnimations()) { a.pause(); a.currentTime = (a.currentTime ?? 0) + by }
-  const g = getComputedStyle(n)
-  return { sl: parseFloat(g.getPropertyValue('--_sl')), sr: parseFloat(g.getPropertyValue('--_sr')) }
-}, ms)
+const step = (page, selector, ms) =>
+  page.locator(selector).evaluate((n, by) => {
+    for (const a of n.getAnimations()) {
+      a.pause()
+      a.currentTime = (a.currentTime ?? 0) + by
+    }
+    const g = getComputedStyle(n)
+    return {
+      sl: parseFloat(g.getPropertyValue('--_sl')),
+      sr: parseFloat(g.getPropertyValue('--_sr')),
+    }
+  }, ms)
 // how much of the stroke shows, in %: what lies between the left edge and the right
-const cover = e => Math.max(0, 100 - e.sl - e.sr)
+const cover = (e) => Math.max(0, 100 - e.sl - e.sr)
 const run = async (page, selector, ms, every = 8) => {
   const out = []
   for (let t = 0; t < ms; t += every) out.push(await step(page, selector, every))
@@ -56,13 +86,19 @@ const run = async (page, selector, ms, every = 8) => {
 const SWEEP = 620 // balanced
 
 let browser
-beforeAll(async () => { browser = await chromium.launch() })
-afterAll(async () => { await browser?.close() })
+beforeAll(async () => {
+  browser = await chromium.launch()
+})
+afterAll(async () => {
+  await browser?.close()
+})
 
 async function open(options) {
   const context = await browser.newContext({ viewport: { width: 800, height: 700 }, ...options })
   const page = await context.newPage()
-  await page.setContent(`<!doctype html><html data-expression="balanced"><style>${css}</style><body>${HOSTS}`)
+  await page.setContent(
+    `<!doctype html><html data-expression="balanced"><style>${css}</style><body>${HOSTS}`,
+  )
   await away(page).catch(() => {})
   return { page, close: () => context.close() }
 }
@@ -70,7 +106,10 @@ async function open(options) {
 test('every host kind goes active and lets go', async () => {
   const { page, close } = await open()
   const trace = []
-  const at = async (label, act) => { await act(); trace.push(`${label}: ${(await active(page)).join(' ')}`) }
+  const at = async (label, act) => {
+    await act()
+    trace.push(`${label}: ${(await active(page)).join(' ')}`)
+  }
 
   await at('install', () => {})
   await at('hover soft', () => page.hover('#soft'))
@@ -101,9 +140,14 @@ test('every host kind goes active and lets go', async () => {
   await at('confirm over', () => set(page, 'soft', 'data-confirm', null))
   await at('invalid', () => set(page, 'soft', 'data-invalid', ''))
   await at('valid', () => set(page, 'soft', 'data-invalid', null))
-  await at('host added later', () => page.evaluate(() => {
-    document.body.insertAdjacentHTML('beforeend', '<button id="late" data-sweep aria-pressed="true"><span data-part="sweep"></span>L</button>')
-  }))
+  await at('host added later', () =>
+    page.evaluate(() => {
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<button id="late" data-sweep aria-pressed="true"><span data-part="sweep"></span>L</button>',
+      )
+    }),
+  )
   ids.push('late')
   await at('late host seen', () => {})
   await at('late host removed', () => page.evaluate(() => document.getElementById('late').remove()))
@@ -114,10 +158,10 @@ test('every host kind goes active and lets go', async () => {
 
 test('nothing above a host is written: no phase, no inline state', async () => {
   const { page, close } = await open()
-  const before = await page.locator('#soft').evaluate(n => n.outerHTML)
+  const before = await page.locator('#soft').evaluate((n) => n.outerHTML)
   await page.hover('#soft')
   await away(page)
-  expect(await page.locator('#soft').evaluate(n => n.outerHTML)).toBe(before)
+  expect(await page.locator('#soft').evaluate((n) => n.outerHTML)).toBe(before)
   await close()
 })
 
@@ -158,12 +202,12 @@ test('a 50 ms hover draws the stroke all the way round, then it leaves L→R (SI
   await step(page, stroke, 50)
   await away(page)
   const trace = await run(page, stroke, 3 * SWEEP)
-  const top = trace.findIndex(e => cover(e) > 99.5)
-  expect(top).toBeGreaterThan(0)                                     // it got all the way round...
-  expect(Math.max(...trace.slice(0, top).map(e => e.sl))).toBeLessThan(0.5) // ...before the tail moved
+  const top = trace.findIndex((e) => cover(e) > 99.5)
+  expect(top).toBeGreaterThan(0) // it got all the way round...
+  expect(Math.max(...trace.slice(0, top).map((e) => e.sl))).toBeLessThan(0.5) // ...before the tail moved
   for (let i = 1; i < trace.length; i++) {
     if (cover(trace[i]) === 0) continue // gone: at rest both edges go back to the right
-    expect(trace[i].sr).toBeLessThanOrEqual(trace[i - 1].sr + 0.01)  // the head never goes back
+    expect(trace[i].sr).toBeLessThanOrEqual(trace[i - 1].sr + 0.01) // the head never goes back
     expect(trace[i].sl).toBeGreaterThanOrEqual(trace[i - 1].sl - 0.01) // nor the tail: it leaves L→R
   }
   expect(trace.at(-1)).toEqual({ sl: 100, sr: 100 })
@@ -179,14 +223,15 @@ test('a long hover leaves at once; re-entering mid-exit draws the tail back with
   expect(cover(await step(page, stroke, 0))).toBeGreaterThan(99.5)
   await away(page)
   const out = await run(page, stroke, SWEEP / 2)
-  expect(out[2].sl).toBeGreaterThan(0)                               // the exit starts at once
+  expect(out[2].sl).toBeGreaterThan(0) // the exit starts at once
   const mid = cover(out.at(-1))
   expect(mid).toBeGreaterThan(5)
   expect(mid).toBeLessThan(95)
   await page.hover('#soft')
-  const back = [out.at(-1), ...await run(page, stroke, SWEEP)]
+  const back = [out.at(-1), ...(await run(page, stroke, SWEEP))]
   // a draw moves at most ~2.5% of the stroke per 8 ms; a jump would be the whole gap in one step
-  for (let i = 1; i < back.length; i++) expect(Math.abs(cover(back[i]) - cover(back[i - 1]))).toBeLessThan(6)
+  for (let i = 1; i < back.length; i++)
+    expect(Math.abs(cover(back[i]) - cover(back[i - 1]))).toBeLessThan(6)
   expect(cover(back.at(-1))).toBeGreaterThan(99.5)
   await close()
 })
@@ -194,14 +239,16 @@ test('a long hover leaves at once; re-entering mid-exit draws the tail back with
 test('the frame outline also draws all the way round after a brief hover', async () => {
   const { page, close } = await open()
   const outline = part('frame', 'sweep-outline')
-  const read = () => page.locator(outline).evaluate(n => {
-    const g = getComputedStyle(n)
-    return [+g.getPropertyValue('--warp-frame-head'), +g.getPropertyValue('--warp-frame-tail')]
-  })
+  const read = () =>
+    page.locator(outline).evaluate((n) => {
+      const g = getComputedStyle(n)
+      return [+g.getPropertyValue('--warp-frame-head'), +g.getPropertyValue('--warp-frame-tail')]
+    })
   await page.hover('#frame')
   await step(page, outline, 50)
   await away(page)
-  let peak = 0, tailBeforePeak = 0
+  let peak = 0,
+    tailBeforePeak = 0
   for (let t = 0; t < 3 * 760; t += 16) {
     await step(page, outline, 16)
     const [head, tail] = await read()
@@ -246,7 +293,8 @@ test('touch: hover never counts, and a tap draws one whole sweep, then exits', a
   const { page, close } = await open({ hasTouch: true, isMobile: true })
   expect(await page.evaluate(() => matchMedia('(hover: none)').matches)).toBe(true)
   const stroke = part('soft', 'sweep')
-  const on = () => page.locator('#soft').evaluate(n => getComputedStyle(n).getPropertyValue('--_a').trim())
+  const on = () =>
+    page.locator('#soft').evaluate((n) => getComputedStyle(n).getPropertyValue('--_a').trim())
   const box = await page.locator('#soft').boundingBox()
   await page.mouse.move(box.x + 4, box.y + 4)
   expect(await on()).toBe('0')
@@ -270,11 +318,17 @@ test('forced colours drop the copy, so the label stays whole', async () => {
 
 test('an open palette holds its sweep and shows its shuttle, with nothing written', async () => {
   const { page, close } = await open()
-  await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', `<dialog id="pal" data-scope="palette">
+  await page.evaluate(() =>
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<dialog id="pal" data-scope="palette">
     <div id="pal-row" data-part="input-row" data-sweep=""><span data-part="sweep"></span></div>
-    <div data-part="list"><span id="face" data-part="shuttle"></span><div id="opt" aria-selected="false">One</div></div></dialog>`))
-  const held = () => page.locator('#pal-row').evaluate(n => getComputedStyle(n).getPropertyValue('--_a').trim())
-  const seen = () => page.locator('#face').evaluate(n => getComputedStyle(n).opacity)
+    <div data-part="list"><span id="face" data-part="shuttle"></span><div id="opt" aria-selected="false">One</div></div></dialog>`,
+    ),
+  )
+  const held = () =>
+    page.locator('#pal-row').evaluate((n) => getComputedStyle(n).getPropertyValue('--_a').trim())
+  const seen = () => page.locator('#face').evaluate((n) => getComputedStyle(n).opacity)
   expect(await held()).toBe('0')
   await page.evaluate(() => document.getElementById('pal').showModal())
   expect(await held()).toBe('1')
@@ -297,7 +351,8 @@ test('the contrast measurer skips text clipped out of sight, and only that', asy
 })
 
 // when a mask goes in, between the box being read and the screenshot being taken: the race a timed banner ran
-const whenMasked = move => `new MutationObserver(() => (${move})()).observe(document.head, { childList: true })`
+const whenMasked = (move) =>
+  `new MutationObserver(() => (${move})()).observe(document.head, { childList: true })`
 const banner = `<!doctype html><body style="background:#fff;margin:0;height:100vh;display:flex;flex-direction:column">
   <div id="banner" style="height:57px;background:#fff"></div>
   <button data-a11y-px="0" style="all:unset;align-self:start;padding:8px 16px;background:#176;color:#fff">Create project</button>`
@@ -313,7 +368,11 @@ test('the contrast measurer reads text where it is, not where it was', async () 
 test('the contrast measurer fails text that never holds still', async () => {
   const page = await browser.newPage()
   await page.setContent(banner)
-  await page.evaluate(whenMasked("() => { document.getElementById('banner').style.height = Math.random() * 300 + 'px' }"))
+  await page.evaluate(
+    whenMasked(
+      "() => { document.getElementById('banner').style.height = Math.random() * 300 + 'px' }",
+    ),
+  )
   await expect(pixelContrast(page, 0)).rejects.toThrow('kept moving')
   await page.close()
 })

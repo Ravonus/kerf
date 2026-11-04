@@ -14,13 +14,19 @@ type Cart = Record<string, number>
 function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) {
   const qty = derived(() => cart.get(product.id) ?? 0)
   const change = (by: number) =>
-    cart.set(d => { d[product.id] = Math.max(0, (d[product.id] ?? 0) + by) })
+    cart.set((d) => {
+      d[product.id] = Math.max(0, (d[product.id] ?? 0) + by)
+    })
   return (
     <p>
       {product.name} <strong>${product.price}</strong>
-      <Button size="sm" emphasis="outline" disabled={qty.value === 0} onClick={() => change(-1)}>−</Button>
+      <Button size="sm" emphasis="outline" disabled={qty.value === 0} onClick={() => change(-1)}>
+        −
+      </Button>
       <strong> {qty.value} </strong>
-      <Button size="sm" emphasis="outline" onClick={() => change(1)}>+</Button>
+      <Button size="sm" emphasis="outline" onClick={() => change(1)}>
+        +
+      </Button>
     </p>
   )
 }
@@ -35,11 +41,15 @@ export default function Shop() {
   const total = derived(() => subtotal.value + shipping.value)
   return (
     <Card title="The shop">
-      {PRODUCTS.map(p => (
+      {PRODUCTS.map((p) => (
         <ProductRow key={p.id} product={p} cart={cart} />
       ))}
-      <p>{items.value} items · subtotal ${subtotal.value} · shipping ${shipping.value}</p>
-      <p><strong>Total ${total.value}</strong></p>
+      <p>
+        {items.value} items · subtotal ${subtotal.value} · shipping ${shipping.value}
+      </p>
+      <p>
+        <strong>Total ${total.value}</strong>
+      </p>
     </Card>
   )
 }

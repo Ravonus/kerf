@@ -4,7 +4,17 @@
 // comes before its own bindings, so they write (`keys.miss`, which each claim and the end of each hole put back).
 
 import { DEV, effect } from './index'
-import { addEvent, attrName, className, createComponent, delegateEvents, insert, ref, setAttribute, style } from './dom'
+import {
+  addEvent,
+  attrName,
+  className,
+  createComponent,
+  delegateEvents,
+  insert,
+  ref,
+  setAttribute,
+  style,
+} from './dom'
 import { keys } from './keys'
 
 /** A module-level template: `tpl(html)()` clones it. `svg`: the root is an SVG element outside an <svg>. */
@@ -36,7 +46,10 @@ export function bind<T>(compute: () => T, apply: (value: T, prev: T | undefined)
   })
 }
 
-const NS: Record<string, string> = { xlink: 'http://www.w3.org/1999/xlink', xml: 'http://www.w3.org/XML/1998/namespace' }
+const NS: Record<string, string> = {
+  xlink: 'http://www.w3.org/1999/xlink',
+  xml: 'http://www.w3.org/XML/1998/namespace',
+}
 
 /** An attribute: `null`/`false` remove it, `true` writes it empty. `xlink:` and `xml:` names get their namespace. */
 export function attr(el: Element, name: string, value: unknown) {
@@ -66,7 +79,10 @@ export const delegate = delegateEvents
  * blur; a checkbox or select fires both at once. The `change` after an `input` is the same edit, so it's dropped;
  * a `change` alone (a script's, a test's `fireEvent.change`) still counts.
  */
-export function change(el: Element, handler: EventListener | [(data: unknown, e: Event) => void, unknown]) {
+export function change(
+  el: Element,
+  handler: EventListener | [(data: unknown, e: Event) => void, unknown],
+) {
   let edited = false
   const fire = (e: Event) => {
     if (e.type === 'input') edited = true
@@ -82,12 +98,20 @@ export function change(el: Element, handler: EventListener | [(data: unknown, e:
  * closed `<dialog>` it's for `showModal()`, and `focus()` here would only force a layout of the page and do nothing.
  */
 export function focus(el: HTMLElement, wanted: unknown) {
-  if (wanted && !keys.hydrating) queueMicrotask(() => el.closest('dialog:not([open]),[hidden]') || el.focus())
+  if (wanted && !keys.hydrating)
+    queueMicrotask(() => el.closest('dialog:not([open]),[hidden]') || el.focus())
 }
 
 /** A spread element's hole, hydrating: content the server rendered from its props stays. */
 export function kids(props: Record<string, unknown>, el: Element) {
-  return keys.hydrating && !keys.miss && (props.dangerouslySetInnerHTML || props.innerHTML != null || props.textContent != null || el.localName === 'textarea') ? [...el.childNodes] : props.children
+  return keys.hydrating &&
+    !keys.miss &&
+    (props.dangerouslySetInnerHTML ||
+      props.innerHTML != null ||
+      props.textContent != null ||
+      el.localName === 'textarea')
+    ? [...el.childNodes]
+    : props.children
 }
 
 /**
@@ -95,11 +119,22 @@ export function kids(props: Record<string, unknown>, el: Element) {
  * registered (`$$h`) mounts through it, so a new module version can swap it in place.
  */
 export function component<P>(Comp: (props: P) => unknown, props: P, name?: string, loc?: string) {
-  const hot = DEV && (Comp as typeof Comp & { $$h?: (props: P, name?: string, loc?: string) => unknown }).$$h
+  const hot =
+    DEV && (Comp as typeof Comp & { $$h?: (props: P, name?: string, loc?: string) => unknown }).$$h
   return hot ? hot(props, name, loc) : createComponent(Comp, props, name, loc)
 }
 
-const PROPERTIES = new Set(['value', 'checked', 'selected', 'muted', 'indeterminate', 'textContent', 'innerHTML', 'defaultValue', 'defaultChecked'])
+const PROPERTIES = new Set([
+  'value',
+  'checked',
+  'selected',
+  'muted',
+  'indeterminate',
+  'textContent',
+  'innerHTML',
+  'defaultValue',
+  'defaultChecked',
+])
 const ON = /^on[A-Z]/
 const CAPTURE = /(?<!Pointer)Capture$/
 
@@ -118,7 +153,8 @@ export function spread(el: Element, props: () => Record<string, unknown>) {
     delete v.children
     delete v.key
     for (const k in p) if (!(k in v)) write(k, undefined, p[k])
-    for (const k in v) if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k))) write(k, v[k], p[k])
+    for (const k in v)
+      if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k))) write(k, v[k], p[k])
     hydrating = false
   })
 
@@ -141,13 +177,14 @@ export function spread(el: Element, props: () => Record<string, unknown>) {
       if (listeners[key]) el.removeEventListener(name, listeners[key]!, capture)
       if (fn) el.addEventListener(name, (listeners[key] = fn as EventListener), capture)
       else delete listeners[key]
-    // oxlint-disable-next-line weft/no-html-sink -- `dangerouslySetInnerHTML` is the app saying this markup is safe; the name is the warning
-    } else if (key === 'dangerouslySetInnerHTML') el.innerHTML = (value as { __html?: string } | null | undefined)?.__html ?? ''
+      // oxlint-disable-next-line weft/no-html-sink -- `dangerouslySetInnerHTML` is the app saying this markup is safe; the name is the warning
+    } else if (key === 'dangerouslySetInnerHTML')
+      el.innerHTML = (value as { __html?: string } | null | undefined)?.__html ?? ''
     else if (key === 'autoFocus') focus(el as HTMLElement, value)
     else if (key === 'class' || key === 'className') className(el, value, prev)
     else if (key === 'style') style(el as HTMLElement, value, prev)
     else if (PROPERTIES.has(key)) {
-      const v = key === 'value' || key === 'defaultValue' ? value ?? '' : value
+      const v = key === 'value' || key === 'defaultValue' ? (value ?? '') : value
       ;(el as Element & Record<string, unknown>)[key] = v
       // A spread runs before the children are inserted, and a <select> can only pick an option that exists: set the
       // value again once they are (the latest one wins).

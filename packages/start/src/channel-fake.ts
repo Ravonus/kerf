@@ -6,9 +6,17 @@ import type { Frame, SocketLink } from './channel'
 /** A socket to the real server code in this process. */
 const exec_ = async () => (runtime.exec ??= await import('./exec'))
 
-export async function open(frame: (d: Frame) => void, done: (code: number) => void, up: () => void): Promise<SocketLink> {
+export async function open(
+  frame: (d: Frame) => void,
+  done: (code: number) => void,
+  up: () => void,
+): Promise<SocketLink> {
   const n = net()!
-  const [{ hub, resetHub }, { attach, publish }, exec] = await Promise.all([import('./hub'), import('./socket'), exec_()])
+  const [{ hub, resetHub }, { attach, publish }, exec] = await Promise.all([
+    import('./hub'),
+    import('./socket'),
+    exec_(),
+  ])
   if (!n.online()) throw new Error('offline')
   if (!n.resets.includes(resetHub)) n.resets.push(resetHub)
   const h = hub()
@@ -36,7 +44,10 @@ export async function open(frame: (d: Frame) => void, done: (code: number) => vo
   const socket = await attach(peer, request, fakeScope(exec, n, request), h)
   n.ws = {
     publish: (id, params, name, msg) => publish(fns.get(id)!, params, name, msg),
-    drop: () => { peer.close(1006); socket.close() }, // both ends, as a real cut: the server runs `left`
+    drop: () => {
+      peer.close(1006)
+      socket.close()
+    }, // both ends, as a real cut: the server runs `left`
     recheck: () => socket.recheck(),
   }
   up()
@@ -46,7 +57,11 @@ export async function open(frame: (d: Frame) => void, done: (code: number) => vo
       if (f[0] === 'm') n.sent.push({ id: rooms.get(f[1]) ?? '', name: f[3], msg: f[4] })
       if (f[0] === 'j') {
         rooms.set(f[1], f[2])
-        void track(new Promise<void>(ok => { joining.set(f[1], ok) })) // `net.settle()` waits for the join's answer
+        void track(
+          new Promise<void>((ok) => {
+            joining.set(f[1], ok)
+          }),
+        ) // `net.settle()` waits for the join's answer
       }
       socket.message(text)
     },

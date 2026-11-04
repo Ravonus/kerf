@@ -21,7 +21,7 @@ test('user.type ends in flush()', async () => {
     const text = state('')
     return (
       <label>
-        Name <input onInput={e => (text.value = e.currentTarget.value)} />
+        Name <input onInput={(e) => (text.value = e.currentTarget.value)} />
         <output>{text.value}</output>
       </label>
     )
@@ -32,12 +32,15 @@ test('user.type ends in flush()', async () => {
 })
 
 test('screen has role, label and text queries only', () => {
-  expect(Object.keys(screen).filter(k => !/By(Role|LabelText|Text)$/.test(k))).toEqual([])
+  expect(Object.keys(screen).filter((k) => !/By(Role|LabelText|Text)$/.test(k))).toEqual([])
 })
 
 test('clock drives timers and the resources that wait on them', async () => {
   clock.install()
-  const load = () => new Promise<string>(ok => { setTimeout(() => ok('Ada'), 500) })
+  const load = () =>
+    new Promise<string>((ok) => {
+      setTimeout(() => ok('Ada'), 500)
+    })
   function Profile() {
     const person = resource(load)
     return <p>{person.pending ? 'loading' : person.value}</p>
@@ -73,7 +76,21 @@ test('a test that never asserts fails with T001; asserting and test.fails tests 
   const cwd = resolve(__dirname, '..')
   let out = ''
   try {
-    execFileSync(process.execPath, ['node_modules/vitest/vitest.mjs', 'run', '--config', 'test/fixtures/runtime/vitest.config.ts'], { cwd, encoding: 'utf8', stdio: 'pipe', env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' } })
+    execFileSync(
+      process.execPath,
+      [
+        'node_modules/vitest/vitest.mjs',
+        'run',
+        '--config',
+        'test/fixtures/runtime/vitest.config.ts',
+      ],
+      {
+        cwd,
+        encoding: 'utf8',
+        stdio: 'pipe',
+        env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' },
+      },
+    )
   } catch (e) {
     const failed = e as { stdout: string; stderr: string }
     out = `${failed.stdout}${failed.stderr}`

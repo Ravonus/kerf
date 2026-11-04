@@ -43,7 +43,7 @@ export function findScorer(name) {
 async function search(format, base, width, scorer, target, dir) {
   const ref = join(dir, 'ref.png')
   if (!existsSync(ref)) writeFileSync(ref, await base().resize({ width }).png().toBuffer())
-  const score = async q => {
+  const score = async (q) => {
     const encoded = await encoders[format](base().resize({ width }), q).toBuffer()
     const out = join(dir, `${format}-${q}.png`)
     writeFileSync(out, await sharp(encoded).png().toBuffer())
@@ -59,11 +59,16 @@ async function search(format, base, width, scorer, target, dir) {
   return hi
 }
 
-const short = bytes => createHash('sha256').update(bytes).digest('hex').slice(0, 8)
+const short = (bytes) => createHash('sha256').update(bytes).digest('hex').slice(0, 8)
 
 /** The media.build@1 provider: `build` takes one source file and gives back its asset and encoded files, cached by content. */
 export function createMediaBuild(input = {}) {
-  const o = { ...DEFAULTS, ...input, quality: { ...DEFAULTS.quality, ...input.quality }, video: { ...DEFAULTS.video, ...input.video } }
+  const o = {
+    ...DEFAULTS,
+    ...input,
+    quality: { ...DEFAULTS.quality, ...input.quality },
+    video: { ...DEFAULTS.video, ...input.video },
+  }
   return {
     /**
      * @param {{ file: string, bytes: Uint8Array }} source
@@ -74,27 +79,53 @@ export function createMediaBuild(input = {}) {
       const timed = VIDEO.test(file) || AUDIO.test(file)
       if (o.encoder === 'server' && !timed) {
         try {
-          return { asset: await createMediaServer(o).at(root, encode).ingest(bytes, { name }), files: [] }
+          return {
+            asset: await createMediaServer(o).at(root, encode).ingest(bytes, { name }),
+            files: [],
+          }
         } catch (e) {
           if (!e.code) throw e
-          return { asset: null, files: [], diagnostics: [{ code: e.code, severity: 'error', message: e.message }] }
+          return {
+            asset: null,
+            files: [],
+            diagnostics: [{ code: e.code, severity: 'error', message: e.message }],
+          }
         }
       }
       const stem = basename(file, extname(file)).replace(/[^\w-]+/g, '-')
-      const key = createHash('sha256').update(bytes).update(JSON.stringify(o)).update(String(VERSION)).update(audio ? readFileSync(audio) : '').update(JSON.stringify(await versions(encode))).digest('hex').slice(0, 20)
+      const key = createHash('sha256')
+        .update(bytes)
+        .update(JSON.stringify(o))
+        .update(String(VERSION))
+        .update(audio ? readFileSync(audio) : '')
+        .update(JSON.stringify(await versions(encode)))
+        .digest('hex')
+        .slice(0, 20)
       const cached = join(cacheDir, `${key}.json`)
       if (existsSync(cached)) {
         const hit = JSON.parse(readFileSync(cached, 'utf8'))
-        return { ...hit, files: hit.files.map(n => ({ name: n, bytes: new Uint8Array(readFileSync(join(cacheDir, key, n))) })) }
+        return {
+          ...hit,
+          files: hit.files.map((n) => ({
+            name: n,
+            bytes: new Uint8Array(readFileSync(join(cacheDir, key, n))),
+          })),
+        }
       }
 
       const source = { bytes, name, stem, audio }
       const scorer = findScorer(o.quality.scorer)
-      const out = await (/\.svg$/i.test(file) ? vector(name, stem, bytes) : VIDEO.test(file) ? video(source, o, encode, scorer) : AUDIO.test(file) ? audioFile(source, o, encode) : raster(source, o, encode))
-      if (out.diagnostics?.some(d => d.severity === 'error')) return out
+      const out = await (/\.svg$/i.test(file)
+        ? vector(name, stem, bytes)
+        : VIDEO.test(file)
+          ? video(source, o, encode, scorer)
+          : AUDIO.test(file)
+            ? audioFile(source, o, encode)
+            : raster(source, o, encode))
+      if (out.diagnostics?.some((d) => d.severity === 'error')) return out
       mkdirSync(join(cacheDir, key), { recursive: true })
       for (const f of out.files) writeFileSync(join(cacheDir, key, f.name), f.bytes)
-      writeFileSync(cached, JSON.stringify({ ...out, files: out.files.map(f => f.name) }))
+      writeFileSync(cached, JSON.stringify({ ...out, files: out.files.map((f) => f.name) }))
       return out
     },
   }
@@ -103,7 +134,8 @@ export function createMediaBuild(input = {}) {
 /** What the encoders are: a new ffmpeg means new bytes. */
 async function versions(encode) {
   const found = {}
-  for (const [key, enc] of Object.entries(encode)) found[key] = await enc.versions().catch(() => null)
+  for (const [key, enc] of Object.entries(encode))
+    found[key] = await enc.versions().catch(() => null)
   return found
 }
 
@@ -111,12 +143,46 @@ async function versions(encode) {
 function vector(name, stem, bytes) {
   const text = new TextDecoder().decode(bytes)
   const unsafe = unsafeSvg(text)
-  if (unsafe.length) return { asset: null, files: [], diagnostics: [{ code: 'M012', severity: 'error', message: `${name} has ${unsafe.join(', ')}: an image with active content or external references is not optimised or served. Sanitise the file.` }] }
+  if (unsafe.length)
+    return {
+      asset: null,
+      files: [],
+      diagnostics: [
+        {
+          code: 'M012',
+          severity: 'error',
+          message: `${name} has ${unsafe.join(', ')}: an image with active content or external references is not optimised or served. Sanitise the file.`,
+        },
+      ],
+    }
   const size = probe(bytes, name)
-  if (!size) return { asset: null, files: [], diagnostics: [{ code: 'M001', severity: 'error', message: `${name} has no width/height or viewBox, so its size is unknown.` }] }
+  if (!size)
+    return {
+      asset: null,
+      files: [],
+      diagnostics: [
+        {
+          code: 'M001',
+          severity: 'error',
+          message: `${name} has no width/height or viewBox, so its size is unknown.`,
+        },
+      ],
+    }
   const svg = new TextEncoder().encode(optimize(text, { multipass: true }).data)
   const fileName = `${stem}-${short(svg)}.svg`
-  return { asset: { kind: 'vector', src: fileName, width: size.width, height: size.height, type: MIME.svg, sources: [], name, quality: 'original' }, files: [{ name: fileName, bytes: svg }] }
+  return {
+    asset: {
+      kind: 'vector',
+      src: fileName,
+      width: size.width,
+      height: size.height,
+      type: MIME.svg,
+      sources: [],
+      name,
+      quality: 'original',
+    },
+    files: [{ name: fileName, bytes: svg }],
+  }
 }
 
 async function raster({ bytes, name, stem, audio }, o, encode) {
@@ -127,18 +193,41 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   const diagnostics = []
 
   if (meta.format === 'gif' && (meta.pages ?? 1) > 1) {
-    const converted = await gif({ bytes, name, stem, audio, meta, width, height }, o, encode, findScorer(o.quality.scorer))
+    const converted = await gif(
+      { bytes, name, stem, audio, meta, width, height },
+      o,
+      encode,
+      findScorer(o.quality.scorer),
+    )
     if (converted) return converted
-    if (bytes.length > o.gifLimit) diagnostics.push({ code: 'M004', severity: 'warning', message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF, and it ships as is${encode['video/h264'] ? ': nothing beat it by 15%' : '. Add `mediaFfmpeg()` from @weft-js/plugin-media-ffmpeg to turn it into video'}.` })
+    if (bytes.length > o.gifLimit)
+      diagnostics.push({
+        code: 'M004',
+        severity: 'warning',
+        message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF, and it ships as is${encode['video/h264'] ? ': nothing beat it by 15%' : '. Add `mediaFfmpeg()` from @weft-js/plugin-media-ffmpeg to turn it into video'}.`,
+      })
     const fileName = `${stem}-${short(bytes)}.gif`
-    return { asset: { kind: 'graphic', src: fileName, width, height, type: MIME.gif, sources: [], name, quality: 'original' }, files: [{ name: fileName, bytes }], diagnostics }
+    return {
+      asset: {
+        kind: 'graphic',
+        src: fileName,
+        width,
+        height,
+        type: MIME.gif,
+        sources: [],
+        name,
+        quality: 'original',
+      },
+      files: [{ name: fileName, bytes }],
+      diagnostics,
+    }
   }
 
   const photo = isPhoto(meta)
   const fallback = photo ? 'jpeg' : 'png'
-  const formats = [...new Set(o.formats.filter(f => f !== fallback)), fallback]
+  const formats = [...new Set(o.formats.filter((f) => f !== fallback)), fallback]
   const largest = Math.min(width, o.widths.at(-1))
-  const ladder = [...new Set([...o.widths.filter(w => w < largest), largest])]
+  const ladder = [...new Set([...o.widths.filter((w) => w < largest), largest])]
   const base = () => sharp(bytes).rotate()
 
   const scorer = findScorer(o.quality.scorer)
@@ -147,7 +236,9 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   try {
     for (const f of formats) {
       if (f === 'png') continue
-      qualities[f] = scorer ? await search(f, base, largest, scorer, o.quality.target, dir) : FIXED[f]
+      qualities[f] = scorer
+        ? await search(f, base, largest, scorer, o.quality.target, dir)
+        : FIXED[f]
     }
   } finally {
     if (dir) rmSync(dir, { recursive: true, force: true })
@@ -167,11 +258,26 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   }
   const src = sources.at(-1).srcset.split(', ').at(-1).split(' ')[0]
 
-  const asset = { kind: photo ? 'photo' : 'graphic', src, width, height, type: MIME[fallback], sources, name, quality: scorer ? 'ssimulacra2' : 'fixed', qualities }
-  if (o.encoder === 'compatible') { // The fallback ladder is already built: a swap costs no extra files.
+  const asset = {
+    kind: photo ? 'photo' : 'graphic',
+    src,
+    width,
+    height,
+    type: MIME[fallback],
+    sources,
+    name,
+    quality: scorer ? 'ssimulacra2' : 'fixed',
+    qualities,
+  }
+  if (o.encoder === 'compatible') {
+    // The fallback ladder is already built: a swap costs no extra files.
     asset.copy = { src, type: MIME[fallback] }
     asset.swap = o.swap ?? 'intent'
-    diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'compatible'\` adds 0 KB: the compatible copy is the fallback ladder.` })
+    diagnostics.push({
+      code: 'M014',
+      severity: 'info',
+      message: `${name}: \`encoder: 'compatible'\` adds 0 KB: the compatible copy is the fallback ladder.`,
+    })
   }
   if (o.placeholder) {
     asset.dominant = hex((await base().stats()).dominant)

@@ -16,15 +16,20 @@ export function App(props: { api: Api }) {
   const [filters, setFilters] = createSignal<Filters>({ search: '', category: 'all', sort: 'name' })
 
   let cancelled = false
-  props.api.listProducts().then(list => { if (!cancelled) setState('products', reconcile(list)) })
-  const unsubscribe = props.api.subscribePrices(({ id, price }) => {
-    if (state.products) setState('products', p => p.id === id, 'price', price)
+  props.api.listProducts().then((list) => {
+    if (!cancelled) setState('products', reconcile(list))
   })
-  onCleanup(() => { cancelled = true; unsubscribe() })
+  const unsubscribe = props.api.subscribePrices(({ id, price }) => {
+    if (state.products) setState('products', (p) => p.id === id, 'price', price)
+  })
+  onCleanup(() => {
+    cancelled = true
+    unsubscribe()
+  })
 
   const change = (id: string, delta: number) =>
-    setCart(c => {
-      const product = state.products?.find(p => p.id === id)
+    setCart((c) => {
+      const product = state.products?.find((p) => p.id === id)
       if (!product) return c
       const qty = (c[id]?.qty ?? 0) + delta
       const { [id]: _, ...rest } = c
@@ -39,11 +44,21 @@ export function App(props: { api: Api }) {
     <div>
       <Header tab={tab()} count={count()} onTab={setTab} />
       <Switch>
-        <Match when={!state.products}><p>Loading…</p></Match>
-        <Match when={tab() === 'products'}>
-          <ProductList products={state.products!} cart={cart()} filters={filters()} onFilters={setFilters} onAdd={id => change(id, 1)} />
+        <Match when={!state.products}>
+          <p>Loading…</p>
         </Match>
-        <Match when={tab() === 'cart'}><CartView products={state.products!} cart={cart()} onChange={change} /></Match>
+        <Match when={tab() === 'products'}>
+          <ProductList
+            products={state.products!}
+            cart={cart()}
+            filters={filters()}
+            onFilters={setFilters}
+            onAdd={(id) => change(id, 1)}
+          />
+        </Match>
+        <Match when={tab() === 'cart'}>
+          <CartView products={state.products!} cart={cart()} onChange={change} />
+        </Match>
       </Switch>
     </div>
   )

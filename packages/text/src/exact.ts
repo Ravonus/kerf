@@ -32,11 +32,21 @@ const done = new Set<ExactPack>()
 const inflight = new Map<ExactPack, Promise<unknown>>()
 
 function load(packs: readonly ExactPack[]): Promise<void> {
-  return Promise.all(packs.filter(p => !done.has(p)).map(p => {
-    let f = inflight.get(p)
-    if (!f) inflight.set(p, f = importers[p]().then(() => { done.add(p) }))
-    return f
-  })).then(() => {})
+  return Promise.all(
+    packs
+      .filter((p) => !done.has(p))
+      .map((p) => {
+        let f = inflight.get(p)
+        if (!f)
+          inflight.set(
+            p,
+            (f = importers[p]().then(() => {
+              done.add(p)
+            })),
+          )
+        return f
+      }),
+  ).then(() => {})
 }
 
 const genericRe = /(?:^|[\s,])(?:serif|sans-serif|cursive|fantasy|monospace)\s*(?:,|$)/i
@@ -55,14 +65,20 @@ class TextHandle implements Handle {
   exact = false
   ready: Promise<void> | null = null
   p: PreparedText | null = null
-  constructor(readonly text: string, readonly font: string, readonly opts: PrepareOptions | undefined) {}
+  constructor(
+    readonly text: string,
+    readonly font: string,
+    readonly opts: PrepareOptions | undefined,
+  ) {}
 }
 
 function build(h: TextHandle, attempt = 0): void {
-  const missing = needs(h.text, h.font, h.opts).filter(p => !done.has(p))
+  const missing = needs(h.text, h.font, h.opts).filter((p) => !done.has(p))
   if (missing.length === 0) {
     try {
-      h.p = h.opts?.segments ? prepareWithSegments(h.text, h.font, h.opts) : pretextPrepare(h.text, h.font, h.opts)
+      h.p = h.opts?.segments
+        ? prepareWithSegments(h.text, h.font, h.opts)
+        : pretextPrepare(h.text, h.font, h.opts)
     } catch (e) {
       if (!(e instanceof PackMissing)) throw e
       missing.push(e.pack as ExactPack) // safety net: a guard the pre-check did not foresee
@@ -74,15 +90,27 @@ function build(h: TextHandle, attempt = 0): void {
       if (!done.has('spacing') && !missing.includes('spacing')) missing.push('spacing') // the complex walker asks it for a line's trailing gap, at any letter-spacing
     }
   }
-  if (missing.length === 0) { h.exact = true; h.ready = null; return }
+  if (missing.length === 0) {
+    h.exact = true
+    h.ready = null
+    return
+  }
   if (attempt > 4) throw new Error('text-engine: packs did not settle')
-  h.ready = load(missing).then(() => { if (missing.includes('complex') && h.p && missing.length === 1) { h.exact = true; h.ready = null } else build(h, attempt + 1) })
+  h.ready = load(missing).then(() => {
+    if (missing.includes('complex') && h.p && missing.length === 1) {
+      h.exact = true
+      h.ready = null
+    } else build(h, attempt + 1)
+  })
 }
 
 // While a pack loads: about half an em per character, at least one line. Marked inexact.
 function estimate(h: TextHandle, width: number, lineHeight: number): LayoutResult {
   const size = +(/(\d+(?:\.\d+)?)px/.exec(h.font)?.[1] ?? 16)
-  const lineCount = h.text.length === 0 ? 0 : Math.max(1, Math.ceil(h.text.length * size * 0.5 / Math.max(1, width)))
+  const lineCount =
+    h.text.length === 0
+      ? 0
+      : Math.max(1, Math.ceil((h.text.length * size * 0.5) / Math.max(1, width)))
   return { height: lineCount * lineHeight, lineCount }
 }
 
@@ -100,17 +128,26 @@ export const exact = {
     const h = handle as TextHandle
     if (!h.exact) return []
     const out: LineRange[] = []
-    walkLineRanges(h.p!, width, l => { out.push({ width: l.width, start: l.start, end: l.end }) })
+    walkLineRanges(h.p!, width, (l) => {
+      out.push({ width: l.width, start: l.start, end: l.end })
+    })
     return out
   },
   lineText: (handle: Handle, line: LineRange): string => {
     const h = handle as TextHandle
-    if (!h.exact || !h.opts?.segments) throw new Error('text-engine: lineText needs an exact handle prepared with { segments: true }')
+    if (!h.exact || !h.opts?.segments)
+      throw new Error(
+        'text-engine: lineText needs an exact handle prepared with { segments: true }',
+      )
     return materializeLineRange(h.p as PreparedTextWithSegments, line).text
   },
-  clear: () => { clearCache() },
+  clear: () => {
+    clearCache()
+  },
   needs,
   load,
   loaded: (): ExactPack[] => [...done],
-  setLocale: (locale?: string) => { pretextSetLocale(locale) },
+  setLocale: (locale?: string) => {
+    pretextSetLocale(locale)
+  },
 }

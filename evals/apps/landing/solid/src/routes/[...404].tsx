@@ -1,8 +1,8 @@
-import { A } from "@solidjs/router";
-import { HttpStatusCode } from "@solidjs/start";
+import { A } from '@solidjs/router'
+import { HttpStatusCode } from '@solidjs/start'
 
-import { secondary } from "~/components/button";
-import { Seo } from "~/components/seo";
+import { secondary } from '~/components/button'
+import { Seo } from '~/components/seo'
 
 export default function NotFound() {
   return (
@@ -15,5 +15,5 @@ export default function NotFound() {
         Back to the home page
       </A>
     </section>
-  );
+  )
 }

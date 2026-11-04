@@ -7,7 +7,17 @@
 // during hydration) a value is its declared `ssr` value and touches no browser global; hydrated readers switch to
 // the real value in the first flush after hydration. Outside an owner these throw in dev (W051).
 
-import { Box, DEV, collect, devComponent, getOwner, onCleanup, rt, type Derived, type StandardSchema } from './index'
+import {
+  Box,
+  DEV,
+  collect,
+  devComponent,
+  getOwner,
+  onCleanup,
+  rt,
+  type Derived,
+  type StandardSchema,
+} from './index'
 import { keys } from './keys'
 
 type Handler = (e: Event) => void
@@ -28,11 +38,13 @@ function listen(target: EventTarget, type: string, fn: Handler, what?: string): 
   if (!fns) {
     const set: Handlers = (fns = new Set())
     // a snapshot: a handler can remove itself while this runs
-    set.h = e => { for (const f of [...set]) f(e) }
+    set.h = (e) => {
+      for (const f of [...set]) f(e)
+    }
     types.set(type, set)
     target.addEventListener(type, set.h)
   }
-  const f: Handler = e => fn(e)
+  const f: Handler = (e) => fn(e)
   fns.add(f)
   const stop = () => {
     if (!fns.delete(f)) return
@@ -50,7 +62,9 @@ const server = () => rt.server || typeof window === 'undefined'
 
 function owned(what: string) {
   if (DEV && !getOwner())
-    throw new Error(`W051: \`${what}\` was created outside an owner (module scope, after \`await\`, or in a timer or handler), so nothing removes it.\n  fix: create it in a component's setup, or inside \`createRoot(dispose => …)\` and call \`dispose\``)
+    throw new Error(
+      `W051: \`${what}\` was created outside an owner (module scope, after \`await\`, or in a timer or handler), so nothing removes it.\n  fix: create it in a component's setup, or inside \`createRoot(dispose => …)\` and call \`dispose\``,
+    )
 }
 
 /** A box no defineState setup collects (a setup can create browser values). */
@@ -66,7 +80,11 @@ interface Shared<T> {
   off?: (() => void) | undefined
 }
 
-const shared = <T>(get: () => T, sub: (update: () => void) => () => void): Shared<T> => ({ refs: 0, get, on: sub })
+const shared = <T>(get: () => T, sub: (update: () => void) => () => void): Shared<T> => ({
+  refs: 0,
+  get,
+  on: sub,
+})
 
 function acquire<T>(s: Shared<T>) {
   if (s.refs++) return
@@ -84,8 +102,10 @@ function release<T>(s: Shared<T>) {
 function reader<T>(name: string, src: () => Shared<T>, ssr: T): Derived<T> {
   if (server()) return { value: ssr }
   owned(`${name}()`)
-  const token = {}, what = DEV ? `${name}()${where()}` : ''
-  let s: Shared<T> | undefined, held = false
+  const token = {},
+    what = DEV ? `${name}()${where()}` : ''
+  let s: Shared<T> | undefined,
+    held = false
   // Hydrating: render what the server rendered, then the real value in the next flush.
   const h = keys.hydrating ? box(true) : undefined
   if (h) queueMicrotask(() => (h.value = false))
@@ -109,19 +129,35 @@ function reader<T>(name: string, src: () => Shared<T>, ssr: T): Derived<T> {
   }
 }
 
-const all = (offs: (() => void)[]) => () => offs.forEach(f => f())
+const all = (offs: (() => void)[]) => () => offs.forEach((f) => f())
 
 let onlineSrc: Shared<boolean> | undefined
 /** `navigator.onLine`: `true` means "a network", not "the server". On the server: `ssr` (default `true`). */
 export function online(options: { ssr?: boolean } = {}): Derived<boolean> {
-  return reader('online', () => (onlineSrc ??= shared(() => navigator.onLine, u => all([listen(window, 'online', u), listen(window, 'offline', u)]))), options.ssr ?? true)
+  return reader(
+    'online',
+    () =>
+      (onlineSrc ??= shared(
+        () => navigator.onLine,
+        (u) => all([listen(window, 'online', u), listen(window, 'offline', u)]),
+      )),
+    options.ssr ?? true,
+  )
 }
 
 let visibleSrc: Shared<boolean> | undefined
 /** Whether the page is visible (`document.visibilityState`). On the server: `ssr` (default `true`). */
 export function visible(options: { ssr?: boolean } = {}): Derived<boolean> {
   // oxlint-disable-next-line eqeqeq -- two strings; the extra character is a byte in every page's runtime
-  return reader('visible', () => (visibleSrc ??= shared(() => document.visibilityState != 'hidden', u => listen(document, 'visibilitychange', u))), options.ssr ?? true)
+  return reader(
+    'visible',
+    () =>
+      (visibleSrc ??= shared(
+        () => document.visibilityState != 'hidden',
+        (u) => listen(document, 'visibilitychange', u),
+      )),
+    options.ssr ?? true,
+  )
 }
 
 /** The page's state in the browser's lifecycle: seen and focused, seen, hidden, frozen, or going away. */
@@ -134,23 +170,42 @@ let lifecycleSrc: Shared<Lifecycle> | undefined
  * `freeze`/`resume` and `pagehide`/`pageshow`; never `unload`. On the server: `ssr` (default `'active'`).
  */
 export function lifecycle(options: { ssr?: Lifecycle } = {}): Derived<Lifecycle> {
-  return reader('lifecycle', () => {
-    if (lifecycleSrc) return lifecycleSrc
-    let gone: Lifecycle | undefined // frozen or terminated: events say so, nothing can be asked
-    return (lifecycleSrc = shared(
-      // oxlint-disable-next-line eqeqeq -- two strings; the extra character is a byte in every page's runtime
-    () => gone ?? (document.visibilityState == 'hidden' ? 'hidden' : document.hasFocus() ? 'active' : 'passive'),
-      u => {
-        gone = undefined
-        const set = (to?: Lifecycle) => () => { gone = to; u() }
-        return all([
-          listen(document, 'visibilitychange', u), listen(window, 'focus', u), listen(window, 'blur', u),
-          listen(document, 'freeze', set('frozen')), listen(document, 'resume', set()),
-          listen(window, 'pagehide', e => set((e as PageTransitionEvent).persisted ? 'frozen' : 'terminated')()), listen(window, 'pageshow', set()),
-        ])
-      },
-    ))
-  }, options.ssr ?? 'active')
+  return reader(
+    'lifecycle',
+    () => {
+      if (lifecycleSrc) return lifecycleSrc
+      let gone: Lifecycle | undefined // frozen or terminated: events say so, nothing can be asked
+      return (lifecycleSrc = shared(
+        // oxlint-disable-next-line eqeqeq -- two strings; the extra character is a byte in every page's runtime
+        () =>
+          gone ??
+          (document.visibilityState == 'hidden'
+            ? 'hidden'
+            : document.hasFocus()
+              ? 'active'
+              : 'passive'),
+        (u) => {
+          gone = undefined
+          const set = (to?: Lifecycle) => () => {
+            gone = to
+            u()
+          }
+          return all([
+            listen(document, 'visibilitychange', u),
+            listen(window, 'focus', u),
+            listen(window, 'blur', u),
+            listen(document, 'freeze', set('frozen')),
+            listen(document, 'resume', set()),
+            listen(window, 'pagehide', (e) =>
+              set((e as PageTransitionEvent).persisted ? 'frozen' : 'terminated')(),
+            ),
+            listen(window, 'pageshow', set()),
+          ])
+        },
+      ))
+    },
+    options.ssr ?? 'active',
+  )
 }
 
 const queries = new Map<string, Shared<boolean>>()
@@ -160,23 +215,40 @@ const queries = new Map<string, Shared<boolean>>()
  */
 export function media(query: string, options: { ssr?: boolean } = {}): Derived<boolean> {
   if (DEV && options.ssr === undefined && server())
-    console.warn(`W054: media('${query}') is read on the server without \`ssr\`; rendering false, which may not match the client.\n  fix: media('${query}', { ssr: false })`)
-  return reader('media', () => {
-    let s = queries.get(query)
-    if (!s) {
-      let list: MediaQueryList
-      queries.set(query, (s = shared(() => list.matches, u => listen((list = matchMedia(query)), 'change', u))))
-    }
-    return s
-  }, options.ssr ?? false)
+    console.warn(
+      `W054: media('${query}') is read on the server without \`ssr\`; rendering false, which may not match the client.\n  fix: media('${query}', { ssr: false })`,
+    )
+  return reader(
+    'media',
+    () => {
+      let s = queries.get(query)
+      if (!s) {
+        let list: MediaQueryList
+        queries.set(
+          query,
+          (s = shared(
+            () => list.matches,
+            (u) => listen((list = matchMedia(query)), 'change', u),
+          )),
+        )
+      }
+      return s
+    },
+    options.ssr ?? false,
+  )
 }
 
-type EventsOf<T> = T extends Window ? WindowEventMap
-  : T extends Document ? DocumentEventMap
-  : T extends HTMLElement ? HTMLElementEventMap
-  : T extends SVGElement ? SVGElementEventMap
-  : T extends MediaQueryList ? MediaQueryListEventMap
-  : Record<string, Event>
+type EventsOf<T> = T extends Window
+  ? WindowEventMap
+  : T extends Document
+    ? DocumentEventMap
+    : T extends HTMLElement
+      ? HTMLElementEventMap
+      : T extends SVGElement
+        ? SVGElementEventMap
+        : T extends MediaQueryList
+          ? MediaQueryListEventMap
+          : Record<string, Event>
 
 /**
  * Listen to `type` on `target` until the owner is disposed (`e` is typed from the target's event map). Handlers on
@@ -194,7 +266,10 @@ export function on<T extends EventTarget, K extends keyof EventsOf<T> & string>(
   if (options) {
     const f = (e: Event) => fn(e as Parameters<typeof fn>[0])
     target.addEventListener(type, f, options)
-    stop = () => { target.removeEventListener(type, f, options); if (DEV) open.delete(f) }
+    stop = () => {
+      target.removeEventListener(type, f, options)
+      if (DEV) open.delete(f)
+    }
     if (DEV) open.set(f, [`\`${type}\` listener${where()}`, stop])
   } else stop = listen(target, type, fn as Handler, `\`${type}\` listener${where()}`)
   onCleanup(stop)
@@ -204,16 +279,26 @@ export function on<T extends EventTarget, K extends keyof EventsOf<T> & string>(
 const units: Record<string, number> = { ms: 1, s: 1e3, m: 6e4, h: 36e5 }
 
 /** `fn` every `every` (ms, or `'500ms'`, `'1s'`, `'5m'`, `'1h'`) until the owner is disposed. Returns a stop function. */
-export function interval(every: number | `${number}${'ms' | 's' | 'm' | 'h'}`, fn: () => void): () => void {
+export function interval(
+  every: number | `${number}${'ms' | 's' | 'm' | 'h'}`,
+  fn: () => void,
+): () => void {
   if (server()) return () => {}
   owned('interval()')
   const m = typeof every === 'number' ? null : /^([\d.]+)(ms|s|m|h)$/.exec(every)
   const ms = m ? +m[1]! * units[m[2]!]! : +every
-  if (DEV && !(ms > 0)) throw new Error(`interval: '${every}' isn't a duration\n  fix: a number of ms, or '500ms', '1s', '5m', '1h'`)
+  if (DEV && !(ms > 0))
+    throw new Error(
+      `interval: '${every}' isn't a duration\n  fix: a number of ms, or '500ms', '1s', '5m', '1h'`,
+    )
   const id = setInterval(fn, ms)
   const key = {}
-  const stop = () => { clearInterval(id); if (DEV) open.delete(key) }
-  if (DEV) open.set(key, [`interval(${typeof every === 'number' ? every : `'${every}'`})${where()}`, stop])
+  const stop = () => {
+    clearInterval(id)
+    if (DEV) open.delete(key)
+  }
+  if (DEV)
+    open.set(key, [`interval(${typeof every === 'number' ? every : `'${every}'`})${where()}`, stop])
   onCleanup(stop)
   return stop
 }
@@ -230,7 +315,11 @@ export interface TabChannel<T> {
   readonly value: T | undefined
 }
 
-interface TabLine { bc: BroadcastChannel; refs: number; fns: Set<(data: unknown) => void> }
+interface TabLine {
+  bc: BroadcastChannel
+  refs: number
+  fns: Set<(data: unknown) => void>
+}
 const lines = new Map<string, TabLine>()
 
 const valid = <T>(schema: StandardSchema<T>, v: unknown): { value: T } | undefined => {
@@ -243,15 +332,27 @@ const valid = <T>(schema: StandardSchema<T>, v: unknown): { value: T } | undefin
  * received message the schema refuses is dropped, because the other tab may be an older deploy. Inert on the server.
  */
 function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
-  if (DEV && !schema?.['~standard']) throw new Error(`tabs.channel('${name}') needs a schema: another tab can be another deploy.\n  fix: tabs.channel('${name}', z.object({ … }))`)
+  if (DEV && !schema?.['~standard'])
+    throw new Error(
+      `tabs.channel('${name}') needs a schema: another tab can be another deploy.\n  fix: tabs.channel('${name}', z.object({ … }))`,
+    )
   const last = box<T | undefined>(undefined)
-  if (server() || typeof BroadcastChannel === 'undefined') return { post() {}, on: () => () => {}, get value() { return last.value } }
+  if (server() || typeof BroadcastChannel === 'undefined')
+    return {
+      post() {},
+      on: () => () => {},
+      get value() {
+        return last.value
+      },
+    }
   owned(`tabs.channel('${name}')`)
   let line = lines.get(name)
   if (!line) {
     const made: TabLine = { bc: new BroadcastChannel(`weft:tab:${name}`), refs: 0, fns: new Set() }
     // a snapshot: a handler can remove itself while this runs
-  made.bc.onmessage = e => { for (const f of [...made.fns]) f(e.data) }
+    made.bc.onmessage = (e) => {
+      for (const f of [...made.fns]) f(e.data)
+    }
     lines.set(name, (line = made))
   }
   const held = line
@@ -261,7 +362,10 @@ function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
   const receive = (data: unknown) => {
     const ok = valid(schema, data)
     if (!ok) {
-      if (DEV) console.warn(`weft: tabs.channel('${name}') dropped a message its schema refuses (another deploy's tab?)`)
+      if (DEV)
+        console.warn(
+          `weft: tabs.channel('${name}') dropped a message its schema refuses (another deploy's tab?)`,
+        )
       return
     }
     last.value = ok.value
@@ -290,7 +394,9 @@ function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
       onCleanup(stop)
       return stop
     },
-    get value() { return last.value },
+    get value() {
+      return last.value
+    },
   }
 }
 

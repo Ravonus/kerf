@@ -15,10 +15,20 @@ const compileTsx = {
   name: 'weft-ssr',
   setup(b) {
     b.onResolve({ filter: /^@weft-js\/core\/ssr$/ }, () => ({ path: join(weft, 'src/ssr.ts') }))
-    b.onLoad({ filter: /cards[\\/].*\.tsx$/ }, args => {
-      const out = transform(readFileSync(args.path, 'utf8'), { filename: args.path, generate: 'ssr', hydratable: false })
-      const errors = out.diagnostics.filter(d => d.severity === 'error')
-      if (errors.length) return { errors: errors.map(d => ({ text: `${d.code} ${d.message}`, location: { file: args.path, line: d.line, column: d.column - 1 } })) }
+    b.onLoad({ filter: /cards[\\/].*\.tsx$/ }, (args) => {
+      const out = transform(readFileSync(args.path, 'utf8'), {
+        filename: args.path,
+        generate: 'ssr',
+        hydratable: false,
+      })
+      const errors = out.diagnostics.filter((d) => d.severity === 'error')
+      if (errors.length)
+        return {
+          errors: errors.map((d) => ({
+            text: `${d.code} ${d.message}`,
+            location: { file: args.path, line: d.line, column: d.column - 1 },
+          })),
+        }
       return { contents: out.code, loader: 'ts' }
     })
   },
@@ -36,8 +46,14 @@ export const stressCard = props => renderToString(() => StressCard(props), { hyd
 mkdirSync(join(here, 'build'), { recursive: true })
 const r = await build({
   stdin: { contents: entry, resolveDir: here, loader: 'js' },
-  bundle: true, format: 'esm', platform: 'neutral', minify: true, metafile: true,
-  outfile: join(here, 'build/cards.mjs'), plugins: [compileTsx], logLevel: 'warning',
+  bundle: true,
+  format: 'esm',
+  platform: 'neutral',
+  minify: true,
+  metafile: true,
+  outfile: join(here, 'build/cards.mjs'),
+  plugins: [compileTsx],
+  logLevel: 'warning',
 })
 const bytes = Object.values(r.metafile.outputs)[0].bytes
 writeFileSync(join(here, 'build/cards.size.json'), JSON.stringify({ bytes }))

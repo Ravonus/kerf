@@ -13,26 +13,84 @@ import '@weft-js/warp-core/styles/components/dialog.css' // the backdrop and the
  * bottom. Initial focus goes to [autofocus], else the title, never the handle. `inline` draws it open in the page's flow,
  * for docs and previews: a non-modal <dialog open> at its side's shape, with no top layer, scrim or focus trap.
  */
-export function Drawer({ open, title, description, footer, side = 'auto', inline, children }: { open: State<boolean>; title: unknown; description?: unknown; footer?: unknown; side?: 'auto' | 'right' | 'left' | 'bottom' | 'top'; /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean; children?: unknown }) {
+export function Drawer({
+  open,
+  title,
+  description,
+  footer,
+  side = 'auto',
+  inline,
+  children,
+}: {
+  open: State<boolean>
+  title: unknown
+  description?: unknown
+  footer?: unknown
+  side?: 'auto' | 'right' | 'left' | 'bottom' | 'top'
+  /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean
+  children?: unknown
+}) {
   const id = uid('sheet')
   const hasDescription = derived(() => description !== undefined)
   const foot = derived(() => footer) // one build of the footer, however often it is read
   let el: HTMLDialogElement | undefined
-  const placed = () => (side === 'auto' ? (typeof innerWidth === 'number' && innerWidth < 600 ? 'bottom' : 'right') : side)
+  const placed = () =>
+    side === 'auto'
+      ? typeof innerWidth === 'number' && innerWidth < 600
+        ? 'bottom'
+        : 'right'
+      : side
   const flat = untrack(() => !!inline)
-  if (!flat) use(dialog, () => el, () => {
-    const on = open.value
-    if (on && el) el.dataset.side = placed()
-    return { open: on, onClose: () => (open.value = false) }
-  })
-  const closer = (e: Event) => { if (flat && (e.target as Element).closest?.('[data-close]')) open.value = false }
+  if (!flat)
+    use(
+      dialog,
+      () => el,
+      () => {
+        const on = open.value
+        if (on && el) el.dataset.side = placed()
+        return { open: on, onClose: () => (open.value = false) }
+      },
+    )
+  const closer = (e: Event) => {
+    if (flat && (e.target as Element).closest?.('[data-close]')) open.value = false
+  }
   return (
-    <dialog ref={n => (el = n)} open={flat ? open.value : undefined} data-presentation={flat ? 'inline' : undefined} onClick={closer} data-scope="sheet" aria-labelledby={`${id}-t`} aria-describedby={hasDescription.value ? `${id}-d` : undefined} data-side={untrack(() => (side === 'auto' ? 'right' : side))}>
-      <button type="button" data-part="handle" aria-label="Sheet height: tall. Press to shrink."></button>
+    <dialog
+      ref={(n) => (el = n)}
+      open={flat ? open.value : undefined}
+      data-presentation={flat ? 'inline' : undefined}
+      onClick={closer}
+      data-scope="sheet"
+      aria-labelledby={`${id}-t`}
+      aria-describedby={hasDescription.value ? `${id}-d` : undefined}
+      data-side={untrack(() => (side === 'auto' ? 'right' : side))}
+    >
+      <button
+        type="button"
+        data-part="handle"
+        aria-label="Sheet height: tall. Press to shrink."
+      ></button>
       <div data-part="header">
-        <h2 data-part="title" id={`${id}-t`}>{title}</h2>
-        {hasDescription.value && <p data-part="description" id={`${id}-d`}>{description}</p>}
-        <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-part="close" data-close=""><XIcon /></button>
+        <h2 data-part="title" id={`${id}-t`}>
+          {title}
+        </h2>
+        {hasDescription.value && (
+          <p data-part="description" id={`${id}-d`}>
+            {description}
+          </p>
+        )}
+        <button
+          type="button"
+          data-scope="button"
+          data-emphasis="ghost"
+          data-tone="neutral"
+          data-icon-only=""
+          aria-label="Close"
+          data-part="close"
+          data-close=""
+        >
+          <XIcon />
+        </button>
       </div>
       <div data-part="body">{children}</div>
       {foot.value !== undefined && <div data-part="footer">{foot.value}</div>}

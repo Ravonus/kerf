@@ -11,41 +11,61 @@ const server = await import('./fixtures/Rich.tsx?weft-ssr')
 const client = await import('./fixtures/Rich.tsx?weft-hydrate')
 
 // jsdom has no popover top layer: a closed <dialog> stays display:none and refuses focus
-beforeAll(() => { document.head.append(Object.assign(document.createElement('style'), { textContent: 'dialog { display: block !important }' })) })
+beforeAll(() => {
+  document.head.append(
+    Object.assign(document.createElement('style'), {
+      textContent: 'dialog { display: block !important }',
+    }),
+  )
+})
 
-const key = (el: Element, k: string, init: KeyboardEventInit = {}) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }))
-const seg = (c: Element, type: string) => c.querySelector<HTMLElement>(`[data-part="segment"][data-type="${type}"]`)!
+const key = (el: Element, k: string, init: KeyboardEventInit = {}) =>
+  el.dispatchEvent(
+    new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }),
+  )
+const seg = (c: Element, type: string) =>
+  c.querySelector<HTMLElement>(`[data-part="segment"][data-type="${type}"]`)!
 const out = (c: Element) => c.querySelector('[data-out]')!.textContent
 
-test.each(Object.keys(server).filter(n => !n.endsWith('$shape')))('%s: SSR + hydrate, 0 misses, 0 writes', async name => {
-  resetIds()
-  const html = renderToString(() => server[name]())
-  const root = document.body.appendChild(document.createElement('div'))
-  root.innerHTML = html
-  const writes: MutationRecord[] = []
-  const observer = new MutationObserver(r => writes.push(...r))
-  observer.observe(root, { subtree: true, childList: true, attributes: true, characterData: true })
-  resetIds()
-  const dispose = hydrate(() => client[name](), root)
-  writes.push(...observer.takeRecords())
-  observer.disconnect()
-  expect(hydration.misses).toBe(0)
-  expect(writes.length).toBe(0)
-  await flush()
-  dispose()
-  root.remove()
-})
+test.each(Object.keys(server).filter((n) => !n.endsWith('$shape')))(
+  '%s: SSR + hydrate, 0 misses, 0 writes',
+  async (name) => {
+    resetIds()
+    const html = renderToString(() => server[name]())
+    const root = document.body.appendChild(document.createElement('div'))
+    root.innerHTML = html
+    const writes: MutationRecord[] = []
+    const observer = new MutationObserver((r) => writes.push(...r))
+    observer.observe(root, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    })
+    resetIds()
+    const dispose = hydrate(() => client[name](), root)
+    writes.push(...observer.takeRecords())
+    observer.disconnect()
+    expect(hydration.misses).toBe(0)
+    expect(writes.length).toBe(0)
+    await flush()
+    dispose()
+    root.remove()
+  },
+)
 
 test('segments render in the locale order with spinbutton names', async () => {
   const { container } = render(C.DateFieldCase)
   await flush()
   const spins = [...container.querySelectorAll('[role="spinbutton"]')]
-  expect(spins.map(s => s.getAttribute('data-type'))).toEqual(['month', 'day', 'year'])
+  expect(spins.map((s) => s.getAttribute('data-type'))).toEqual(['month', 'day', 'year'])
   expect(seg(container, 'month').getAttribute('aria-valuetext')).toBe('October')
   expect(seg(container, 'month').getAttribute('aria-valuenow')).toBe('10')
   const body = container.querySelector('[data-part="body"]')!
   expect(body.getAttribute('role')).toBe('group')
-  expect(document.getElementById(body.getAttribute('aria-labelledby')!)!.textContent).toContain('Due date')
+  expect(document.getElementById(body.getAttribute('aria-labelledby')!)!.textContent).toContain(
+    'Due date',
+  )
 })
 
 test('typing a segment moves on when no further digit fits, and only a whole date is a value', async () => {
@@ -75,7 +95,9 @@ test('31 Feb is explained, not a value', async () => {
   key(seg(container, 'month'), '0')
   key(seg(container, 'month'), '2')
   await flush()
-  expect(container.querySelector('[role="alert"]')?.textContent).toContain('February 2026 has 28 days')
+  expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+    'February 2026 has 28 days',
+  )
   expect(container.querySelector('[data-part="body"]')!.getAttribute('aria-invalid')).toBe('true')
 })
 
@@ -89,7 +111,9 @@ test('the grid has one tab stop, full day names, and APG keys', async () => {
   let day = await grid(container)
   expect(container.querySelectorAll('[data-part="day"][tabindex="0"]').length).toBe(1)
   expect(day.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026')
-  expect(container.querySelector('[aria-current="date"]')!.getAttribute('aria-label')).toBe('Wednesday, October 28, 2026, today')
+  expect(container.querySelector('[aria-current="date"]')!.getAttribute('aria-label')).toBe(
+    'Wednesday, October 28, 2026, today',
+  )
   key(day, 'ArrowRight')
   day = await grid(container)
   expect(day.dataset.date).toBe('2026-10-15')
@@ -109,7 +133,11 @@ test('the grid has one tab stop, full day names, and APG keys', async () => {
   key(day, 'Enter')
   await flush()
   expect(out(container)).toBe('2026-11-28')
-  expect(container.querySelector('td[aria-selected="true"] [data-part="day"]')!.getAttribute('data-date')).toBe('2026-11-28')
+  expect(
+    container
+      .querySelector('td[aria-selected="true"] [data-part="day"]')!
+      .getAttribute('data-date'),
+  ).toBe('2026-11-28')
 })
 
 test('PageUp keeps the day where the month has it, Shift+Page moves a year', async () => {
@@ -142,9 +170,15 @@ test('range picks start then end, swapped if earlier, and says so in the day nam
   await flush()
   container.querySelector<HTMLElement>('[data-part="trigger"]')!.click()
   await flush()
-  expect(container.querySelector('[data-date="2026-10-12"]')!.getAttribute('aria-label')).toContain('start of range')
-  expect(container.querySelector('[data-date="2026-10-13"]')!.getAttribute('aria-label')).toContain('in range')
-  expect(container.querySelector('[data-date="2026-10-16"]')!.getAttribute('aria-label')).toContain('end of range')
+  expect(container.querySelector('[data-date="2026-10-12"]')!.getAttribute('aria-label')).toContain(
+    'start of range',
+  )
+  expect(container.querySelector('[data-date="2026-10-13"]')!.getAttribute('aria-label')).toContain(
+    'in range',
+  )
+  expect(container.querySelector('[data-date="2026-10-16"]')!.getAttribute('aria-label')).toContain(
+    'end of range',
+  )
   container.querySelector<HTMLElement>('[data-date="2026-10-20"]')!.click()
   await flush()
   container.querySelector<HTMLElement>('[data-date="2026-10-09"]')!.click()
@@ -167,7 +201,9 @@ test('a preset fills the range and keeps its id', async () => {
 test('a 12-hour time splits into hour, minute and period, and the slot list picks', async () => {
   const { container } = render(C.TimeFieldCase)
   await flush()
-  expect([...container.querySelectorAll('[role="spinbutton"]')].map(s => s.getAttribute('data-type'))).toEqual(['hour', 'minute', 'dayPeriod'])
+  expect(
+    [...container.querySelectorAll('[role="spinbutton"]')].map((s) => s.getAttribute('data-type')),
+  ).toEqual(['hour', 'minute', 'dayPeriod'])
   key(seg(container, 'dayPeriod'), 'p')
   await flush()
   expect(out(container)).toBe('21:30')
@@ -185,7 +221,9 @@ test('a 12-hour time splits into hour, minute and period, and the slot list pick
 test('a date-time holds one wall-clock value', async () => {
   const { container } = render(C.DateTimeFieldCase)
   await flush()
-  expect(container.querySelector('[data-part="hint"]')!.textContent).toContain('wall clock, no zone')
+  expect(container.querySelector('[data-part="hint"]')!.textContent).toContain(
+    'wall clock, no zone',
+  )
   key(seg(container, 'day'), 'ArrowUp')
   await flush()
   expect(out(container)).toBe('2026-11-05T10:00')
@@ -275,15 +313,20 @@ test('DurationField steps with carry and balances', async () => {
   await flush()
   const m = container.querySelector<HTMLElement>('[data-u="m"]')!
   expect(m.getAttribute('aria-valuetext')).toBe('30 minutes')
-  for (let n = 0; n < 7; n++) { key(m, 'ArrowUp'); await flush() }
+  for (let n = 0; n < 7; n++) {
+    key(m, 'ArrowUp')
+    await flush()
+  }
   expect(out(container)).toBe('PT2H5M')
 })
 
 test('RecurrenceField leads with the sentence and writes an RRULE', async () => {
   const { container } = render(C.RecurrenceCase)
   await flush()
-  expect(container.querySelector('.rr-sentence')!.textContent).toBe('Every 2 weeks on Tuesday and Thursday.')
-  const li = [...container.querySelectorAll('.rr-next li')].map(x => x.textContent)
+  expect(container.querySelector('.rr-sentence')!.textContent).toBe(
+    'Every 2 weeks on Tuesday and Thursday.',
+  )
+  const li = [...container.querySelectorAll('.rr-next li')].map((x) => x.textContent)
   expect(li.length).toBe(5)
   expect(li[0]).toContain('Oct 29, 2026')
   container.querySelector<HTMLElement>('[data-day="FR"]')!.click()
@@ -298,8 +341,14 @@ test('a rule with parts the field cannot edit stays read-only and whole', async 
   expect(container.querySelector('.readout b')!.textContent).toBe('FREQ=WEEKLY;BYSETPOS=2')
 })
 
-const settle = () => new Promise(r => { setTimeout(r, 160) })
-const type = (i: HTMLInputElement, t: string) => { i.value = t; i.dispatchEvent(new Event('input', { bubbles: true })) }
+const settle = () =>
+  new Promise((r) => {
+    setTimeout(r, 160)
+  })
+const type = (i: HTMLInputElement, t: string) => {
+  i.value = t
+  i.dispatchEvent(new Event('input', { bubbles: true }))
+}
 
 test('PlaceLookupInput keeps focus in the input and picks with Enter', async () => {
   const { container } = render(C.PlaceCase)
@@ -325,8 +374,17 @@ test('PlaceLookupInput keeps focus in the input and picks with Enter', async () 
 test('AddressField lets the country decide the fields', async () => {
   const { container } = render(C.AddressCase)
   await flush()
-  const labels = () => [...container.querySelectorAll('.addr-grid [autocomplete]')].map(i => i.getAttribute('autocomplete'))
-  expect(labels()).toEqual(['address-line1', 'address-line2', 'address-level2', 'address-level1', 'postal-code'])
+  const labels = () =>
+    [...container.querySelectorAll('.addr-grid [autocomplete]')].map((i) =>
+      i.getAttribute('autocomplete'),
+    )
+  expect(labels()).toEqual([
+    'address-line1',
+    'address-line2',
+    'address-level2',
+    'address-level1',
+    'postal-code',
+  ])
   const zip = container.querySelector<HTMLInputElement>('[autocomplete="postal-code"]')!
   type(zip, '12')
   zip.dispatchEvent(new FocusEvent('focusout', { bubbles: true }))
@@ -349,13 +407,19 @@ test('PaymentCardInput follows provider events and renders no card input', async
   const { container } = render(C.CardCase)
   await flush()
   await flush()
-  const host = container.querySelector<HTMLElement & { fire(event: string, detail: unknown): void }>('[data-part="provider"]')!
+  const host = container.querySelector<
+    HTMLElement & { fire(event: string, detail: unknown): void }
+  >('[data-part="provider"]')!
   expect(container.querySelector('input')).toBeNull()
   host.fire('change', { error: 'Your card number is incomplete.' })
   await flush()
   expect(container.textContent).toContain('Your card number is incomplete.')
-  expect(container.querySelector('[data-card-text] > [aria-hidden]')!.textContent).toBe('Visa •••• 4242 · 09/28')
-  expect(container.querySelector('[data-card-text] > [data-part="sr-only"]')!.textContent).toBe('Visa ending 4242, expires 09/28')
+  expect(container.querySelector('[data-card-text] > [aria-hidden]')!.textContent).toBe(
+    'Visa •••• 4242 · 09/28',
+  )
+  expect(container.querySelector('[data-card-text] > [data-part="sr-only"]')!.textContent).toBe(
+    'Visa ending 4242, expires 09/28',
+  )
 })
 
 test('SignaturePad can be signed from the keyboard', async () => {
@@ -374,13 +438,19 @@ test('a field re-reads the page background when the theme changes after mount', 
   document.body.style.backgroundColor = 'rgb(255, 255, 255)'
   const { container } = render(C.DateFieldCase)
   await flush()
-  await new Promise(r => { requestAnimationFrame(r) })
-  await new Promise(r => { setTimeout(r, 40) })
+  await new Promise((r) => {
+    requestAnimationFrame(r)
+  })
+  await new Promise((r) => {
+    setTimeout(r, 40)
+  })
   const label = container.querySelector<HTMLElement>('[data-part="label"]')!
   expect(label.style.getPropertyValue('--_notch-color')).toBe('rgb(255, 255, 255)')
   document.body.style.backgroundColor = 'rgb(15, 12, 7)'
   document.documentElement.dataset.theme = 'dark'
-  await new Promise(r => { setTimeout(r, 450) })
+  await new Promise((r) => {
+    setTimeout(r, 450)
+  })
   expect(label.style.getPropertyValue('--_notch-color')).toBe('rgb(15, 12, 7)')
   delete document.documentElement.dataset.theme
   document.body.style.backgroundColor = ''

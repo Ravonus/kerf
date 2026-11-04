@@ -3,7 +3,9 @@ import { untrack } from '@weft-js/core'
 import { prefs } from './Prefs.state'
 
 export function Prefs(props: { label?: string }) {
-  untrack(() => { if (props.label) prefs.label.value = props.label })
+  untrack(() => {
+    if (props.label) prefs.label.value = props.label
+  })
   return (
     <p class="prefs" data-theme={prefs.theme.value}>
       <b>{prefs.cart.value.n}</b> <i>{prefs.label.value}</i>

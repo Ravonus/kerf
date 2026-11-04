@@ -4,7 +4,11 @@ import { shownExpression } from '../lib/dial'
 
 type Tier = 'quiet' | 'balanced' | 'vivid'
 
-const STOPS: SegmentedOption<Tier>[] = [{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]
+const STOPS: SegmentedOption<Tier>[] = [
+  { value: 'quiet', label: 'Quiet' },
+  { value: 'balanced', label: 'Balanced' },
+  { value: 'vivid', label: 'Vivid' },
+]
 
 /**
  * The dial, where its effect shows: it writes the same root attribute as the header's Appearance menu. The server
@@ -12,10 +16,21 @@ const STOPS: SegmentedOption<Tier>[] = [{ value: 'quiet', label: 'Quiet' }, { va
  */
 export function DialSwitch() {
   const stop = state<Tier>(shownExpression())
-  onMount(() => { stop.value = getDial('expression') })
+  onMount(() => {
+    stop.value = getDial('expression')
+  })
   return (
     <div data-site="dial" data-dial="expression">
-      <Segmented size="sm" label="Expression" value={stop.value} options={STOPS} onChange={v => { stop.value = v; setDial('expression', v, { persist: true }) }} />
+      <Segmented
+        size="sm"
+        label="Expression"
+        value={stop.value}
+        options={STOPS}
+        onChange={(v) => {
+          stop.value = v
+          setDial('expression', v, { persist: true })
+        }}
+      />
     </div>
   )
 }

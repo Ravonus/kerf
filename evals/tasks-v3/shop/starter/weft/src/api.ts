@@ -17,6 +17,7 @@ const seed: Product[] = [
 
 export function createFakeApi(): Api {
   return {
-    listProducts: () => new Promise(resolve => setTimeout(() => resolve(structuredClone(seed)), 300)),
+    listProducts: () =>
+      new Promise((resolve) => setTimeout(() => resolve(structuredClone(seed)), 300)),
   }
 }

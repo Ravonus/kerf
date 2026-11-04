@@ -17,14 +17,26 @@ export function StockRow({ stock, live, favorites, onToggle, onDetails }: Props)
   const favorite = derived(() => !!favorites.get(stock.id))
   return (
     <li>
-      <button data-testid="symbol" aria-label={`Details ${stock.symbol}`} onClick={e => onDetails(stock.id, e.currentTarget)}>
+      <button
+        data-testid="symbol"
+        aria-label={`Details ${stock.symbol}`}
+        onClick={(e) => onDetails(stock.id, e.currentTarget)}
+      >
         {stock.symbol}
       </button>
       <span data-testid="name">{stock.name}</span>
       <span data-testid="price">{money(quote.value.price)}</span>
-      <span data-testid="change">{pct(((quote.value.price - stock.prevClose) / stock.prevClose) * 100)}</span>
-      <svg data-testid="spark" width="60" height="16"><path d={sparkline(quote.value.history)} /></svg>
-      <button aria-label={`Favorite ${stock.symbol}`} aria-pressed={favorite.value} onClick={() => onToggle(stock)}>
+      <span data-testid="change">
+        {pct(((quote.value.price - stock.prevClose) / stock.prevClose) * 100)}
+      </span>
+      <svg data-testid="spark" width="60" height="16">
+        <path d={sparkline(quote.value.history)} />
+      </svg>
+      <button
+        aria-label={`Favorite ${stock.symbol}`}
+        aria-pressed={favorite.value}
+        onClick={() => onToggle(stock)}
+      >
         {favorite.value ? '★' : '☆'}
       </button>
     </li>

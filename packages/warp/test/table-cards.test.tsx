@@ -2,8 +2,16 @@
 import { flush, render } from '@weft-js/core/test'
 import { Table, type Column } from '../src/Table'
 
-const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
-const settle = async () => { await tick(); await flush(); await tick(); await flush() }
+const tick = (ms = 0) =>
+  new Promise((r) => {
+    setTimeout(r, ms)
+  })
+const settle = async () => {
+  await tick()
+  await flush()
+  await tick()
+  await flush()
+}
 
 describe('Table phone cards', () => {
   type P = { id: string; name: string }
@@ -13,8 +21,17 @@ describe('Table phone cards', () => {
   function sized() {
     const seen: ResizeObserverCallback[] = []
     const was = window.ResizeObserver
-    window.ResizeObserver = class { constructor(fn: ResizeObserverCallback) { seen.push(fn) } observe() {} unobserve() {} disconnect() {} }
-    onTestFinished(() => { window.ResizeObserver = was })
+    window.ResizeObserver = class {
+      constructor(fn: ResizeObserverCallback) {
+        seen.push(fn)
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    onTestFinished(() => {
+      window.ResizeObserver = was
+    })
     return async (root: HTMLElement, w: number) => {
       Object.defineProperty(root, 'clientWidth', { configurable: true, value: w })
       for (const fn of seen) fn([], {} as ResizeObserver)
@@ -40,7 +57,9 @@ describe('Table phone cards', () => {
 
   test('phone="columns" stays columns however narrow', async () => {
     const width = sized()
-    const { container: c } = render(() => <Table caption="T" rows={rows} columns={cols} phone="columns" />)
+    const { container: c } = render(() => (
+      <Table caption="T" rows={rows} columns={cols} phone="columns" />
+    ))
     await settle()
     const root = c.querySelector<HTMLElement>('[data-scope="table"]')!
     await width(root, 300)

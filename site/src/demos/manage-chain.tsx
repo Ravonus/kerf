@@ -12,13 +12,27 @@ export default function Tea() {
   const total = derived(() => subtotal.value * (1 - discount.value))
   return (
     <Card title="Loose-leaf tea">
-      <p>{qty.value} × ${PRICE} = ${subtotal.value}</p>
+      <p>
+        {qty.value} × ${PRICE} = ${subtotal.value}
+      </p>
       <Row gap="tight">
-        <Button size="sm" onClick={() => qty.value++}>Add one</Button>
-        <Button size="sm" emphasis="ghost" disabled={qty.value <= 1} onClick={() => qty.value--}>Remove one</Button>
+        <Button size="sm" onClick={() => qty.value++}>
+          Add one
+        </Button>
+        <Button size="sm" emphasis="ghost" disabled={qty.value <= 1} onClick={() => qty.value--}>
+          Remove one
+        </Button>
       </Row>
-      <Input label="Discount code" hint="Try TEA10" value={code.value} onInput={e => (code.value = e.currentTarget.value)} />
-      <p><strong>Total ${total.value.toFixed(2)}</strong>{discount.value > 0 && ' with 10% off'}</p>
+      <Input
+        label="Discount code"
+        hint="Try TEA10"
+        value={code.value}
+        onInput={(e) => (code.value = e.currentTarget.value)}
+      />
+      <p>
+        <strong>Total ${total.value.toFixed(2)}</strong>
+        {discount.value > 0 && ' with 10% off'}
+      </p>
     </Card>
   )
 }

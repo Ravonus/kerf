@@ -15,7 +15,7 @@ function Chat(props: { contact: Contact }) {
     <Textarea
       label={`Message to ${props.contact.name}`}
       value={draft.value}
-      onInput={e => (draft.value = e.currentTarget.value)}
+      onInput={(e) => (draft.value = e.currentTarget.value)}
     />
   )
 }
@@ -25,8 +25,13 @@ export default function Messenger() {
   return (
     <Card title="Messenger">
       <Row gap="tight">
-        {CONTACTS.map(c => (
-          <Button key={c.id} size="sm" emphasis={to.value.id === c.id ? 'solid' : 'outline'} onClick={() => (to.value = c)}>
+        {CONTACTS.map((c) => (
+          <Button
+            key={c.id}
+            size="sm"
+            emphasis={to.value.id === c.id ? 'solid' : 'outline'}
+            onClick={() => (to.value = c)}
+          >
             {c.name}
           </Button>
         ))}

@@ -18,12 +18,21 @@ async function open(path: string): Promise<Conn> {
   if ('Bun' in globalThis) {
     const { Database } = await import('bun:sqlite')
     const db = new Database(path, { create: true })
-    conn = { all: (text, params) => db.prepare(text).all(...params), exec: text => void db.run(text) }
+    conn = {
+      all: (text, params) => db.prepare(text).all(...params),
+      exec: (text) => void db.run(text),
+    }
   } else {
     const { DatabaseSync } = await import('node:sqlite')
     const db = new DatabaseSync(path)
     // `node:sqlite` on Deno refuses a boolean, which SQLite stores as 0 or 1 anyway.
-    conn = { all: (text, params) => db.prepare(text).all(...(params.map(v => (typeof v === 'boolean' ? Number(v) : v)) as SQLInputValue[])), exec: text => db.exec(text) }
+    conn = {
+      all: (text, params) =>
+        db
+          .prepare(text)
+          .all(...(params.map((v) => (typeof v === 'boolean' ? Number(v) : v)) as SQLInputValue[])),
+      exec: (text) => db.exec(text),
+    }
   }
   if (path !== ':memory:') conn.exec('pragma journal_mode = wal')
   conn.exec('pragma foreign_keys = on; pragma busy_timeout = 5000')
@@ -31,7 +40,10 @@ async function open(path: string): Promise<Conn> {
 }
 
 /** A client on one SQLite file, or `:memory:`. */
-export function createDb({ url = 'file:.data/app.db', migrate }: { url?: string; migrate?: boolean } = {}) {
+export function createDb({
+  url = 'file:.data/app.db',
+  migrate,
+}: { url?: string; migrate?: boolean } = {}) {
   const path = url.replace(/^file:/, '')
   let conn: Promise<Conn> | undefined
   const connect = () => (conn ??= open(path))
@@ -46,13 +58,15 @@ export function createDb({ url = 'file:.data/app.db', migrate }: { url?: string;
     dialect: 'sqlite',
     raw: connect,
     query,
-    exec: async text => (await connect()).exec(text),
+    exec: async (text) => (await connect()).exec(text),
     async transaction(fn) {
       if (inside.getStore()) return fn({ query })
       const c = await connect()
       const before = gate
       let release!: () => void
-      gate = new Promise<void>(ok => { release = ok })
+      gate = new Promise<void>((ok) => {
+        release = ok
+      })
       await before
       try {
         c.exec('begin')
@@ -68,7 +82,7 @@ export function createDb({ url = 'file:.data/app.db', migrate }: { url?: string;
         release()
       }
     },
-    locked: fn => fn(),
+    locked: (fn) => fn(),
   }
   return createNative(driver, { migrate })
 }

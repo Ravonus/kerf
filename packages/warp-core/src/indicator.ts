@@ -23,9 +23,13 @@ export function indicator(container: HTMLElement, opts: IndicatorOptions) {
     if (!el || !item) return
     if (instant) el.setAttribute('data-instant', '')
     moveShuttle(el, item.offsetLeft, item.offsetLeft + item.offsetWidth)
-    if (instant) win.requestAnimationFrame(() => win.requestAnimationFrame(() => el.removeAttribute('data-instant')))
+    if (instant)
+      win.requestAnimationFrame(() =>
+        win.requestAnimationFrame(() => el.removeAttribute('data-instant')),
+      )
   }
-  const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => measure(true)) : null
+  const resize =
+    typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => measure(true)) : null
   resize?.observe(container)
   const first = win.requestAnimationFrame(() => measure(true))
   // a dial change resizes faces without resizing the container
@@ -33,7 +37,10 @@ export function indicator(container: HTMLElement, opts: IndicatorOptions) {
   container.ownerDocument.addEventListener('warp:dial', onDial)
   return {
     /** Move to the (new) selected item, on the sweep curve. */
-    update(next?: IndicatorOptions) { if (next) o = next; measure(false) },
+    update(next?: IndicatorOptions) {
+      if (next) o = next
+      measure(false)
+    },
     destroy() {
       win.cancelAnimationFrame(first)
       resize?.disconnect()
@@ -62,9 +69,21 @@ export function overflow(list: HTMLElement) {
     /** Bring `tab` into view (smooth unless reduced motion) and refresh the fades. */
     update(tab?: HTMLElement | null) {
       if (tab && list.scrollWidth > list.clientWidth) {
-        const left = tab.offsetLeft - 24, right = tab.offsetLeft + tab.offsetWidth + 24
-        const to = left < list.scrollLeft ? left : right > list.scrollLeft + list.clientWidth ? right - list.clientWidth : null
-        if (to !== null) list.scrollTo?.({ left: to, behavior: win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+        const left = tab.offsetLeft - 24,
+          right = tab.offsetLeft + tab.offsetWidth + 24
+        const to =
+          left < list.scrollLeft
+            ? left
+            : right > list.scrollLeft + list.clientWidth
+              ? right - list.clientWidth
+              : null
+        if (to !== null)
+          list.scrollTo?.({
+            left: to,
+            behavior: win.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+              ? 'auto'
+              : 'smooth',
+          })
       }
       write()
     },
@@ -81,7 +100,10 @@ export function overflow(list: HTMLElement) {
  * more, and the host draws an edge shadow there, as a wide table does. It follows the scroll, the box's size and its
  * content growing (a column added) while the box stays put.
  */
-export function edges(scroller: HTMLElement, host: HTMLElement | undefined = scroller.parentElement ?? scroller) {
+export function edges(
+  scroller: HTMLElement,
+  host: HTMLElement | undefined = scroller.parentElement ?? scroller,
+) {
   const at = host ?? scroller
   const write = () => {
     const x = Math.abs(scroller.scrollLeft) // negative in rtl
@@ -89,18 +111,29 @@ export function edges(scroller: HTMLElement, host: HTMLElement | undefined = scr
     if (x > 1) parts.push('start')
     if (x + scroller.clientWidth < scroller.scrollWidth - 1) parts.push('end')
     const next = parts.join(' ')
-    if ((at.dataset.overflow ?? '') !== next) { if (next) at.dataset.overflow = next; else delete at.dataset.overflow }
+    if ((at.dataset.overflow ?? '') !== next) {
+      if (next) at.dataset.overflow = next
+      else delete at.dataset.overflow
+    }
   }
   const win = scroller.ownerDocument.defaultView!
   const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(write) : null
-  const watchKids = () => { if (!sizes) return; sizes.disconnect(); sizes.observe(scroller); for (const c of scroller.children) sizes.observe(c) }
-  const kids = sizes && typeof win.MutationObserver === 'function' ? new win.MutationObserver(watchKids) : null
+  const watchKids = () => {
+    if (!sizes) return
+    sizes.disconnect()
+    sizes.observe(scroller)
+    for (const c of scroller.children) sizes.observe(c)
+  }
+  const kids =
+    sizes && typeof win.MutationObserver === 'function' ? new win.MutationObserver(watchKids) : null
   kids?.observe(scroller, { childList: true })
   watchKids()
   scroller.addEventListener('scroll', write, { passive: true })
   write()
   return {
-    update() { write() },
+    update() {
+      write()
+    },
     destroy() {
       sizes?.disconnect()
       kids?.disconnect()

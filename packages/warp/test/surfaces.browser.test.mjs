@@ -8,10 +8,29 @@ import { createRequire } from 'node:module'
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
-const styles = f => readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8')
-const css = ['warp.css', 'components/base.css', 'components/surface.css', 'data/tokens.css', 'data/base.css', 'data/card.css', 'data/panel.css',
-  'data/stat.css', 'data/stat-row.css', 'data/kanban.css', 'app/tokens.css', 'app/base.css', 'app/notification.css'].map(styles).join('\n')
-  + readFileSync(new URL('../../../docs/design/warp/tokens/warp-marketing.css', import.meta.url), 'utf8')
+const styles = (f) => readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8')
+const css =
+  [
+    'warp.css',
+    'components/base.css',
+    'components/surface.css',
+    'data/tokens.css',
+    'data/base.css',
+    'data/card.css',
+    'data/panel.css',
+    'data/stat.css',
+    'data/stat-row.css',
+    'data/kanban.css',
+    'app/tokens.css',
+    'app/base.css',
+    'app/notification.css',
+  ]
+    .map(styles)
+    .join('\n') +
+  readFileSync(
+    new URL('../../../docs/design/warp/tokens/warp-marketing.css', import.meta.url),
+    'utf8',
+  )
 
 const part = '<span data-part="sweep"></span>'
 // [id, markup with SWEEP where the data-sweep attribute goes]
@@ -27,22 +46,43 @@ const SURFACES = [
   ['row', '<article data-scope="notification" SWEEP>Row</article>'],
   ['tile', '<div data-scope="tile" SWEEP>Tile</div>'],
 ]
-const host = (id, value) => SURFACES.find(s => s[0] === id)[1].replace('SWEEP', `id="${id}-${value || 'on'}" data-sweep="${value}"`).replace(/<\/(\w+)>$/, `${part}</$1>`)
+const host = (id, value) =>
+  SURFACES.find((s) => s[0] === id)[1]
+    .replace('SWEEP', `id="${id}-${value || 'on'}" data-sweep="${value}"`)
+    .replace(/<\/(\w+)>$/, `${part}</$1>`)
 const PAGE = SURFACES.map(([id]) => host(id, 'surface') + host(id, '')).join('\n')
 
 let browser, page
 beforeAll(async () => {
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 900, height: 900 } })
-  await page.setContent(`<!doctype html><html data-expression="balanced"><style>${css}</style><body>${PAGE}<button id="btn" data-scope="button" data-emphasis="outline" data-sweep>${part}Go</button>`)
+  await page.setContent(
+    `<!doctype html><html data-expression="balanced"><style>${css}</style><body>${PAGE}<button id="btn" data-scope="button" data-emphasis="outline" data-sweep>${part}Go</button>`,
+  )
 })
-afterAll(async () => { await browser?.close() })
+afterAll(async () => {
+  await browser?.close()
+})
 
-const gates = () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-sweep]')].map(n => [n.id, getComputedStyle(n).getPropertyValue('--_on').trim()])))
-const dial = (expression, flair) => page.evaluate(([e, f]) => {
-  document.documentElement.dataset.expression = e
-  f ? document.documentElement.dataset.flair = f : delete document.documentElement.dataset.flair
-}, [expression, flair])
+const gates = () =>
+  page.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll('[data-sweep]')].map((n) => [
+        n.id,
+        getComputedStyle(n).getPropertyValue('--_on').trim(),
+      ]),
+    ),
+  )
+const dial = (expression, flair) =>
+  page.evaluate(
+    ([e, f]) => {
+      document.documentElement.dataset.expression = e
+      f
+        ? (document.documentElement.dataset.flair = f)
+        : delete document.documentElement.dataset.flair
+    },
+    [expression, flair],
+  )
 
 for (const expression of ['quiet', 'balanced', 'vivid']) {
   test(`${expression}: no surface sweeps by default, clickable or not; one that opts in does`, async () => {
@@ -68,11 +108,18 @@ test('data-flair="sweep" still lights the surfaces the kit marks', async () => {
 
 test('a hovered clickable card draws no stroke unless it opted in', async () => {
   await dial('vivid')
-  const shows = async id => {
+  const shows = async (id) => {
     await page.hover(`#${id}`)
     const s = page.locator(`#${id} > [data-part="sweep"]`)
-    await s.evaluate(n => Promise.all(n.getAnimations().map(a => { a.finish(); return a.finished })))
-    return s.evaluate(n => getComputedStyle(n).opacity)
+    await s.evaluate((n) =>
+      Promise.all(
+        n.getAnimations().map((a) => {
+          a.finish()
+          return a.finished
+        }),
+      ),
+    )
+    return s.evaluate((n) => getComputedStyle(n).opacity)
   }
   expect(await shows('link-card-surface')).toBe('0')
   expect(await shows('link-card-on')).toBe('1')

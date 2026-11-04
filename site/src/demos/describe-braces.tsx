@@ -17,11 +17,25 @@ export default function TodoList() {
     <Card title={`${person.name}'s todos`}>
       <p>To do on {formatDate(today)}:</p>
       {/* Double braces: an object inside the braces. Reading size.value makes this style live. */}
-      <ul style={{ ...person.theme, padding: 'var(--warp-space-group)', borderRadius: 'var(--warp-radius-control)', fontSize: size.value }}>
+      <ul
+        style={{
+          ...person.theme,
+          padding: 'var(--warp-space-group)',
+          borderRadius: 'var(--warp-radius-control)',
+          fontSize: size.value,
+        }}
+      >
         <li>Improve the videophone</li>
         <li>Prepare aeronautics lectures</li>
       </ul>
-      <Slider label="Text size" min={12} max={28} value={size.value} format={v => `${v}px`} onChange={v => (size.value = v)} />
+      <Slider
+        label="Text size"
+        min={12}
+        max={28}
+        value={size.value}
+        format={(v) => `${v}px`}
+        onChange={(v) => (size.value = v)}
+      />
     </Card>
   )
 }

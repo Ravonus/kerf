@@ -29,7 +29,8 @@ fn main() {
             "--dev" => dev = true,
             "--explain" => {
                 let at = args.next().unwrap_or_default();
-                let Some((file, Ok(line))) = at.rsplit_once(':').map(|(f, l)| (f, l.parse())) else {
+                let Some((file, Ok(line))) = at.rsplit_once(':').map(|(f, l)| (f, l.parse()))
+                else {
                     die("--explain takes file.tsx:LINE")
                 };
                 explain = Some(line);
@@ -47,7 +48,11 @@ fn main() {
             let dir = fs::read_dir(&p).unwrap_or_else(|e| die(&format!("{}: {e}", p.display())));
             let mut entries: Vec<_> = dir.flatten().map(|e| e.path()).collect();
             entries.sort();
-            files.extend(entries.into_iter().filter(|f| f.extension().is_some_and(|x| x == "tsx")));
+            files.extend(
+                entries
+                    .into_iter()
+                    .filter(|f| f.extension().is_some_and(|x| x == "tsx")),
+            );
         } else {
             files.push(p);
         }
@@ -67,8 +72,14 @@ fn main() {
         for _ in 0..n {
             let t = Instant::now();
             for (filename, source) in &sources {
-                let out =
-                    compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
+                let out = compile(
+                    source,
+                    &Options {
+                        filename: filename.clone(),
+                        check_only: check,
+                        ..Default::default()
+                    },
+                );
                 diagnostics += out.diagnostics.len();
                 std::hint::black_box(out);
             }
@@ -106,20 +117,34 @@ fn main() {
             },
         );
         if let Some(line) = explain {
-            let found: Vec<_> = out.explain.iter().flatten().filter(|x| x.line == line).collect();
+            let found: Vec<_> = out
+                .explain
+                .iter()
+                .flatten()
+                .filter(|x| x.line == line)
+                .collect();
             if json {
-                println!("{}", serde_json::to_string(&found).expect("serializable output"));
+                println!(
+                    "{}",
+                    serde_json::to_string(&found).expect("serializable output")
+                );
             } else if found.is_empty() {
                 eprintln!("{filename}:{line}: no JSX starts on this line");
                 failed = true;
             }
             for x in found.iter().filter(|_| !json) {
-                println!("{filename}:{}:{} {} becomes:\n  {}\n", x.line, x.column, x.node, x.code);
+                println!(
+                    "{filename}:{}:{} {} becomes:\n  {}\n",
+                    x.line, x.column, x.node, x.code
+                );
             }
             continue;
         }
         if json {
-            println!("{}", serde_json::to_string(&out).expect("serializable output"));
+            println!(
+                "{}",
+                serde_json::to_string(&out).expect("serializable output")
+            );
             continue;
         }
         for d in &out.diagnostics {

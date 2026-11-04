@@ -1,6 +1,6 @@
-import { LegalPage } from "~/components/site/legal-page";
-import { Seo } from "~/components/site/seo";
-import { privacy } from "~/content/legal";
+import { LegalPage } from '~/components/site/legal-page'
+import { Seo } from '~/components/site/seo'
+import { privacy } from '~/content/legal'
 
 export default function Page() {
   return (
@@ -8,5 +8,5 @@ export default function Page() {
       <Seo title={privacy.title} description={privacy.intro} />
       <LegalPage doc={privacy} />
     </>
-  );
+  )
 }

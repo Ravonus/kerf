@@ -5,7 +5,11 @@ import './styles'
 import '@weft-js/warp-core/styles/components/tabs.css'
 
 /** One tab. */
-export type TabOption<V extends string> = { value: V; label: unknown; disabled?: boolean | undefined }
+export type TabOption<V extends string> = {
+  value: V
+  label: unknown
+  disabled?: boolean | undefined
+}
 
 /**
  * Tabs (05 §4; components.html:660-706, 1821-1849): line (default) · pill · enclosed. APG automatic activation:
@@ -13,28 +17,58 @@ export type TabOption<V extends string> = { value: V; label: unknown; disabled?:
  * through the rail on the sweep curve; a list wider than its box scrolls with edge fades and keeps the selected tab
  * in view. `children(value)` renders a panel; a pill strip filters one shared panel.
  */
-export function Tabs<V extends string>({ label, value, onChange, options, variant, children }: { label: string; value: V; onChange: (v: V) => void; options: TabOption<V>[]; variant?: 'line' | 'pill' | 'enclosed' | undefined; children?: (value: V) => unknown }) {
+export function Tabs<V extends string>({
+  label,
+  value,
+  onChange,
+  options,
+  variant,
+  children,
+}: {
+  label: string
+  value: V
+  onChange: (v: V) => void
+  options: TabOption<V>[]
+  variant?: 'line' | 'pill' | 'enclosed' | undefined
+  children?: (value: V) => unknown
+}) {
   const base = uid('tabs')
   const kind = untrack(() => variant)
   const tab = (i: number) => `${base}-t${i}`
   const panel = (i: number) => (kind === 'pill' ? `${base}-p0` : `${base}-p${i}`)
   let list: HTMLDivElement | undefined
-  use(indicator, () => list, () => ({ selected: '[aria-selected="true"]', at: value }))
-  use(overflow, () => list, () => list?.querySelector<HTMLElement>('[aria-selected="true"]') ?? null)
+  use(
+    indicator,
+    () => list,
+    () => ({ selected: '[aria-selected="true"]', at: value }),
+  )
+  use(
+    overflow,
+    () => list,
+    () => list?.querySelector<HTMLElement>('[aria-selected="true"]') ?? null,
+  )
   const onKey = (e: KeyboardEvent) => {
-    const tabs = options.filter(o => !o.disabled)
-    const at = tabs.findIndex(o => o.value === value)
+    const tabs = options.filter((o) => !o.disabled)
+    const at = tabs.findIndex((o) => o.value === value)
     const rtl = getComputedStyle(e.currentTarget as Element).direction === 'rtl'
     const to = nextIndex(e.key, at, tabs.length, { rtl })
     if (to < 0) return
     e.preventDefault()
     onChange(tabs[to]!.value)
-    ;(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')[options.findIndex(o => o.value === tabs[to]!.value)]?.focus() // by position: a hydrated server id isn't this side's
+    ;(e.currentTarget as HTMLElement)
+      .querySelectorAll<HTMLElement>('[role="tab"]')
+      [options.findIndex((o) => o.value === tabs[to]!.value)]?.focus() // by position: a hydrated server id isn't this side's
   }
-  const selected = () => options.findIndex(o => o.value === value)
+  const selected = () => options.findIndex((o) => o.value === value)
   return (
     <div data-scope="tabs" data-part="root" data-variant={kind === 'line' ? undefined : kind}>
-      <div ref={n => (list = n)} data-part="list" role="tablist" aria-label={label} onKeyDown={onKey}>
+      <div
+        ref={(n) => (list = n)}
+        data-part="list"
+        role="tablist"
+        aria-label={label}
+        onKeyDown={onKey}
+      >
         {options.map((o, i) => (
           <button
             key={o.value}
@@ -54,10 +88,27 @@ export function Tabs<V extends string>({ label, value, onChange, options, varian
         <span data-part="indicator" aria-hidden="true" data-instant=""></span>
       </div>
       {kind === 'pill' ? (
-        <div data-part="content" role="tabpanel" id={panel(0)} aria-labelledby={tab(selected())} tabindex="0" hidden={!children}>{children?.(value)}</div>
+        <div
+          data-part="content"
+          role="tabpanel"
+          id={panel(0)}
+          aria-labelledby={tab(selected())}
+          tabindex="0"
+          hidden={!children}
+        >
+          {children?.(value)}
+        </div>
       ) : (
         options.map((o, i) => (
-          <div key={o.value} data-part="content" role="tabpanel" id={panel(i)} aria-labelledby={tab(i)} tabindex="0" hidden={o.value !== value}>
+          <div
+            key={o.value}
+            data-part="content"
+            role="tabpanel"
+            id={panel(i)}
+            aria-labelledby={tab(i)}
+            tabindex="0"
+            hidden={o.value !== value}
+          >
             {children?.(o.value)}
           </div>
         ))

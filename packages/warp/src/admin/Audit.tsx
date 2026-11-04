@@ -16,7 +16,17 @@ import '@weft-js/warp-core/styles/layout/row.css'
 import '@weft-js/warp-core/styles/layout/stack.css'
 
 /** One line of the audit log. */
-export type AuditEvent = { id: string; at: string; actor: string; category: string; verb: string; target: string; href?: string; ip: string; diff?: { field: string; from: string; to: string }[] }
+export type AuditEvent = {
+  id: string
+  at: string
+  actor: string
+  category: string
+  verb: string
+  target: string
+  href?: string
+  ip: string
+  diff?: { field: string; from: string; to: string }[]
+}
 
 /** Props for AuditLog. */
 export interface AuditLogProps {
@@ -29,7 +39,12 @@ export interface AuditLogProps {
   onExport?: () => Promise<{ retryAfter?: number } | void>
 }
 
-const RANGES = [{ value: 'all', label: 'Any time', hours: Infinity }, { value: '24h', label: 'Last 24 hours', hours: 24 }, { value: '7d', label: 'Last 7 days', hours: 168 }, { value: '30d', label: 'Last 30 days', hours: 720 }]
+const RANGES = [
+  { value: 'all', label: 'Any time', hours: Infinity },
+  { value: '24h', label: 'Last 24 hours', hours: 24 },
+  { value: '7d', label: 'Last 7 days', hours: 168 },
+  { value: '30d', label: 'Last 30 days', hours: 720 },
+]
 
 /**
  * The audit log (09 §4.5): a read-only DataTable. Time is relative, exact on hover and focus; each event opens its diff.
@@ -38,20 +53,36 @@ const RANGES = [{ value: 'all', label: 'Any time', hours: Infinity }, { value: '
 const stamp = (at: string) => at.replace('T', ' ').replace(/:\d\dZ$/, ' UTC')
 
 /** The audit log: who did what and when, filtered by category and actor, with an export. */
-export function AuditLog({ events, now, categories = [{ value: 'all', label: 'All' }], live, onExport }: AuditLogProps) {
+export function AuditLog({
+  events,
+  now,
+  categories = [{ value: 'all', label: 'All' }],
+  live,
+  onExport,
+}: AuditLogProps) {
   const category = state('all')
   const actor = state('all')
   const range = state('all')
   const wait = state(0)
   const list = derived(() => read(events))
-  const actors = derived(() => [{ value: 'all', label: 'Everyone' }, ...[...new Set(list.value.map(e => e.actor))].map(a => ({ value: a, label: a }))])
+  const actors = derived(() => [
+    { value: 'all', label: 'Everyone' },
+    ...[...new Set(list.value.map((e) => e.actor))].map((a) => ({ value: a, label: a })),
+  ])
   const shown = derived(() => {
-    const hours = RANGES.find(r => r.value === range.value)!.hours
-    return list.value.filter(e => (category.value === 'all' || e.category === category.value) && (actor.value === 'all' || e.actor === actor.value) && Date.parse(now) - Date.parse(e.at) <= hours * 36e5)
+    const hours = RANGES.find((r) => r.value === range.value)!.hours
+    return list.value.filter(
+      (e) =>
+        (category.value === 'all' || e.category === category.value) &&
+        (actor.value === 'all' || e.actor === actor.value) &&
+        Date.parse(now) - Date.parse(e.at) <= hours * 36e5,
+    )
   })
   let tick: ReturnType<typeof setInterval> | undefined
   let root: HTMLElement | undefined
-  const say = (t: string) => { if (root) announce(root.ownerDocument, t) }
+  const say = (t: string) => {
+    if (root) announce(root.ownerDocument, t)
+  }
   onCleanup(() => clearInterval(tick))
   const refilter = () => queueMicrotask(() => say(`${plural(shown.value.length, 'event')} shown`))
   const exportIt = async () => {
@@ -67,27 +98,111 @@ export function AuditLog({ events, now, categories = [{ value: 'all', label: 'Al
     }, 1000)
   }
   const columns: Column<AuditEvent>[] = [
-    { id: 'at', header: 'When', sort: r => r.at, cell: e => { const at = stamp(e.at); return <Tooltip content={at}><time datetime={e.at} tabindex="0">{agoText(e.at, now)}</time></Tooltip> } },
+    {
+      id: 'at',
+      header: 'When',
+      sort: (r) => r.at,
+      cell: (e) => {
+        const at = stamp(e.at)
+        return (
+          <Tooltip content={at}>
+            <time datetime={e.at} tabindex="0">
+              {agoText(e.at, now)}
+            </time>
+          </Tooltip>
+        )
+      },
+    },
     { id: 'actor', header: 'Who', rowHeader: true, card: 'title' },
-    { id: 'what', header: 'What', value: e => `${e.verb} ${e.target}`, cell: e => <>{e.verb} {e.href ? <a href={e.href}>{e.target}</a> : e.target}</> },
-    { id: 'ip', header: 'IP', priority: 2, cell: e => <code>{e.ip}</code> },
+    {
+      id: 'what',
+      header: 'What',
+      value: (e) => `${e.verb} ${e.target}`,
+      cell: (e) => (
+        <>
+          {e.verb} {e.href ? <a href={e.href}>{e.target}</a> : e.target}
+        </>
+      ),
+    },
+    { id: 'ip', header: 'IP', priority: 2, cell: (e) => <code>{e.ip}</code> },
   ]
-  const diff = (e: AuditEvent) => (e.diff?.length
-    ? <dl data-scope="desc">{e.diff.map(d => <div key={d.field}><dt>{d.field}</dt><dd>{d.from} → {d.to}</dd></div>)}</dl>
-    : <span class="muted">No field changes were recorded.</span>)
+  const diff = (e: AuditEvent) =>
+    e.diff?.length ? (
+      <dl data-scope="desc">
+        {e.diff.map((d) => (
+          <div key={d.field}>
+            <dt>{d.field}</dt>
+            <dd>
+              {d.from} → {d.to}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    ) : (
+      <span class="muted">No field changes were recorded.</span>
+    )
   const hasLive = derived(() => live !== undefined)
   return (
-    <div ref={n => (root = n)} data-scope="stack">
+    <div ref={(n) => (root = n)} data-scope="stack">
       <div data-scope="row" data-justify="between">
-        <Segmented label="Filter events" size="sm" value={category.value} options={categories} onChange={v => { category.value = v; refilter() }} />
+        <Segmented
+          label="Filter events"
+          size="sm"
+          value={category.value}
+          options={categories}
+          onChange={(v) => {
+            category.value = v
+            refilter()
+          }}
+        />
         {hasLive.value && <LiveStatus state={live!} label="Audit log" />}
       </div>
       <div data-scope="row">
-        <div data-grow=""><Select label="Actor" size="sm" options={actors.value} value={actor.value} onChange={(e: Event) => { actor.value = (e.currentTarget as HTMLInputElement).value; refilter() }} /></div>
-        <div data-grow=""><Select label="Date range" size="sm" options={RANGES} value={range.value} onChange={(e: Event) => { range.value = (e.currentTarget as HTMLInputElement).value; refilter() }} /></div>
-        {onExport && <Button emphasis="frame" aria-disabled={wait.value > 0 ? 'true' : undefined} onClick={exportIt}>{wait.value > 0 ? `Try again in ${wait.value}s` : 'Export CSV'}</Button>}
+        <div data-grow="">
+          <Select
+            label="Actor"
+            size="sm"
+            options={actors.value}
+            value={actor.value}
+            onChange={(e: Event) => {
+              actor.value = (e.currentTarget as HTMLInputElement).value
+              refilter()
+            }}
+          />
+        </div>
+        <div data-grow="">
+          <Select
+            label="Date range"
+            size="sm"
+            options={RANGES}
+            value={range.value}
+            onChange={(e: Event) => {
+              range.value = (e.currentTarget as HTMLInputElement).value
+              refilter()
+            }}
+          />
+        </div>
+        {onExport && (
+          <Button
+            emphasis="frame"
+            aria-disabled={wait.value > 0 ? 'true' : undefined}
+            onClick={exportIt}
+          >
+            {wait.value > 0 ? `Try again in ${wait.value}s` : 'Export CSV'}
+          </Button>
+        )}
       </div>
-      <Table caption="Recent events" captionHidden rows={shown} columns={columns} picker={false} heading={3} details="sheet" expand={diff} empty={{ title: 'Nothing matches', text: 'Try a wider filter.' }} />
+      <Table
+        caption="Recent events"
+        captionHidden
+        rows={shown}
+        columns={columns}
+        picker={false}
+        heading={3}
+        details="sheet"
+        expand={diff}
+        empty={{ title: 'Nothing matches', text: 'Try a wider filter.' }}
+      />
     </div>
   )
 }

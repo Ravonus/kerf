@@ -10,46 +10,91 @@ import { checkTags } from '../src/exec'
 
 type Todo = { id: string; title: string; done: boolean }
 const id: StandardSchemaV1<{ id: string }> = {
-  '~standard': { version: 1, vendor: 't', validate: v => (typeof (v as { id?: unknown } | null)?.id === 'string' ? { value: v as { id: string } } : { issues: [{ message: 'expected a string', path: ['id'] }] }) },
+  '~standard': {
+    version: 1,
+    vendor: 't',
+    validate: (v) =>
+      typeof (v as { id?: unknown } | null)?.id === 'string'
+        ? { value: v as { id: string } }
+        : { issues: [{ message: 'expected a string', path: ['id'] }] },
+  },
 }
 
 let db: Todo[]
 let runs: { list: number; get: number; stats: number }
 beforeEach(() => {
-  db = [{ id: '1', title: 'One', done: false }, { id: '2', title: 'Two', done: false }, { id: '3', title: 'Three', done: false }]
+  db = [
+    { id: '1', title: 'One', done: false },
+    { id: '2', title: 'Two', done: false },
+    { id: '3', title: 'Three', done: false },
+  ]
   runs = { list: 0, get: 0, stats: 0 }
 })
 
 const listTodos = query({ $id: 'listTodos', tags: ['todos'], run: () => (runs.list++, db) })
-const getTodo = query({ $id: 'getTodo', input: id, tags: t => [`todo:${t.id}`], run: ({ input }) => (runs.get++, db.find(t => t.id === input.id) ?? null) })
+const getTodo = query({
+  $id: 'getTodo',
+  input: id,
+  tags: (t) => [`todo:${t.id}`],
+  run: ({ input }) => (runs.get++, db.find((t) => t.id === input.id) ?? null),
+})
 const toggle = mutation({
   $id: 'toggle',
   input: id,
   invalidates: ['todos'],
-  optimistic: ({ input }, c) => c.update(listTodos, undefined, l => { const t = l.find(x => x.id === input.id); if (t) t.done = !t.done }),
-  run: ({ input }) => { const t = db.find(x => x.id === input.id)!; t.done = !t.done; return t },
+  optimistic: ({ input }, c) =>
+    c.update(listTodos, undefined, (l) => {
+      const t = l.find((x) => x.id === input.id)
+      if (t) t.done = !t.done
+    }),
+  run: ({ input }) => {
+    const t = db.find((x) => x.id === input.id)!
+    t.done = !t.done
+    return t
+  },
 })
 const add = mutation({
   $id: 'add',
   invalidates: ['todos'],
-  optimistic: (_, c) => c.update(listTodos, undefined, l => void l.push({ id: 'tmp', title: 'New', done: false })),
-  run: () => { const t = { id: String(db.length + 1), title: 'New', done: false }; db.push(t); return t },
+  optimistic: (_, c) =>
+    c.update(listTodos, undefined, (l) => void l.push({ id: 'tmp', title: 'New', done: false })),
+  run: () => {
+    const t = { id: String(db.length + 1), title: 'New', done: false }
+    db.push(t)
+    return t
+  },
 })
 
 function List() {
   const todos = listTodos()
   return (
     <ul>
-      {(todos.value ?? []).map(t => <li key={t.id} class={t.done ? 'done' : 'open'}>{t.title}</li>)}
+      {(todos.value ?? []).map((t) => (
+        <li key={t.id} class={t.done ? 'done' : 'open'}>
+          {t.title}
+        </li>
+      ))}
     </ul>
   )
 }
-const classes = () => screen.getAllByRole('listitem').map(li => li.className)
+const classes = () => screen.getAllByRole('listitem').map((li) => li.className)
 
 test('a query renders, and two readers of one key share one call', async () => {
-  render(() => <><List /><List /></>)
+  render(() => (
+    <>
+      <List />
+      <List />
+    </>
+  ))
   await net.settle()
-  expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['One', 'Two', 'Three', 'One', 'Two', 'Three'])
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+    'One',
+    'Two',
+    'Three',
+    'One',
+    'Two',
+    'Three',
+  ])
   expect(net.calls()).toEqual([{ id: 'listTodos', kind: 'query', input: undefined }])
   expect(runs.list).toBe(1)
 })
@@ -68,7 +113,7 @@ test('an optimistic toggle shows at once, settles with the refreshed list in the
   }).toTouchAtMost(1)
   expect(classes()).toEqual(['open', 'done', 'open'])
   // One mutation, and the list came back with it: no second query call.
-  expect(net.calls().map(c => c.id)).toEqual(['listTodos', 'toggle'])
+  expect(net.calls().map((c) => c.id)).toEqual(['listTodos', 'toggle'])
   expect(toggle.pending.value).toBe(false)
 })
 
@@ -105,14 +150,19 @@ test('a pushed row is optimistic until the server answers; untouched rows keep t
   net.latency(20)
   const p = add()
   await flush()
-  expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['One', 'Two', 'Three', 'New'])
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+    'One',
+    'Two',
+    'Three',
+    'New',
+  ])
   const optimistic = cache.get(listTodos)!
   expect(cache.isOptimistic(optimistic[3])).toBe(true)
   expect(cache.isOptimistic(optimistic[0])).toBe(false)
   await p
   await net.settle()
   const after = screen.getAllByRole('listitem')
-  expect(after.map(li => li.textContent)).toEqual(['One', 'Two', 'Three', 'New'])
+  expect(after.map((li) => li.textContent)).toEqual(['One', 'Two', 'Three', 'New'])
   expect(after.slice(0, 3)).toEqual(before) // same elements
   expect(cache.isOptimistic(cache.get(listTodos)![3])).toBe(false)
 })
@@ -135,7 +185,7 @@ test('tracked input and skip: no call until there is an id, a new id fetches onc
   sel.value = '2' // cached
   await net.settle()
   expect(screen.getByText('Two')).toBeTruthy()
-  expect(net.calls().map(c => c.input)).toEqual([{ id: '2' }, { id: '3' }])
+  expect(net.calls().map((c) => c.input)).toEqual([{ id: '2' }, { id: '3' }])
 })
 
 test('S011: an optimistic update its invalidated tags miss warns, and holds until the refetch instead of flashing back', async () => {
@@ -143,8 +193,14 @@ test('S011: an optimistic update its invalidated tags miss warns, and holds unti
     $id: 'rename',
     input: id,
     invalidates: ['nothing'],
-    optimistic: ({ input }, c) => c.update(getTodo, input, t => { t!.title = 'Renamed' }),
-    run: ({ input }) => { db.find(t => t.id === input.id)!.title = 'Renamed'; return null },
+    optimistic: ({ input }, c) =>
+      c.update(getTodo, input, (t) => {
+        t!.title = 'Renamed'
+      }),
+    run: ({ input }) => {
+      db.find((t) => t.id === input.id)!.title = 'Renamed'
+      return null
+    },
   })
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   function One() {
@@ -161,7 +217,9 @@ test('S011: an optimistic update its invalidated tags miss warns, and holds unti
   mo.disconnect()
   expect(screen.getByText('Renamed')).toBeTruthy()
   expect(seen).not.toContain('One') // no flash back
-  expect(warn.mock.calls.map(c => String(c[0])).join('\n')).toMatch(/S011 `rename`'s optimistic updated `getTodo:\{"id":"1"\}`/)
+  expect(warn.mock.calls.map((c) => String(c[0])).join('\n')).toMatch(
+    /S011 `rename`'s optimistic updated `getTodo:\{"id":"1"\}`/,
+  )
   warn.mockRestore()
 })
 
@@ -186,7 +244,12 @@ test('a query fetched outside a component goes through the cache; a mutation ref
 })
 
 test('the shared cache (cache: { life }) serves every caller until a mutation invalidates its tag', async () => {
-  const stats = query({ $id: 'stats', tags: ['todos'], cache: { life: 'minutes' }, run: () => ({ n: db.length, runs: ++runs.stats }) })
+  const stats = query({
+    $id: 'stats',
+    tags: ['todos'],
+    cache: { life: 'minutes' },
+    run: () => ({ n: db.length, runs: ++runs.stats }),
+  })
   expect(await stats.fetch()).toEqual({ n: 3, runs: 1 })
   cache.clear() // a fresh client: the server's shared cache still has it
   expect(await stats.fetch()).toEqual({ n: 3, runs: 1 })
@@ -197,11 +260,17 @@ test('the shared cache (cache: { life }) serves every caller until a mutation in
 
 describe('diagnostics', () => {
   test('Q001: the live form outside a component', () => {
-    expect(() => listTodos()).toThrow(/^Q001: `listTodos\(\)` \(a live query\) was called outside a component or scope\n {2}fix: `await listTodos.fetch\(input\)`/)
+    expect(() => listTodos()).toThrow(
+      /^Q001: `listTodos\(\)` \(a live query\) was called outside a component or scope\n {2}fix: `await listTodos.fetch\(input\)`/,
+    )
   })
 
   test('Q002: input the schema rejects', async () => {
-    await expect(getTodo.fetch({ id: 4 as unknown as string })).rejects.toMatchObject({ code: 'Q002', status: 400, issues: [{ message: 'expected a string', path: ['id'] }] })
+    await expect(getTodo.fetch({ id: 4 as unknown as string })).rejects.toMatchObject({
+      code: 'Q002',
+      status: 400,
+      issues: [{ message: 'expected a string', path: ['id'] }],
+    })
   })
 
   test('Q004: a mutation inside a query (a GET)', async () => {
@@ -210,7 +279,11 @@ describe('diagnostics', () => {
   })
 
   test('Q006: a cached query reading the request', async () => {
-    const leaky = query({ $id: 'leaky', cache: { life: 60 }, run: ({ ctx }) => ctx.request.headers.get('cookie') })
+    const leaky = query({
+      $id: 'leaky',
+      cache: { life: 60 },
+      run: ({ ctx }) => ctx.request.headers.get('cookie'),
+    })
     await expect(leaky.fetch()).rejects.toMatchObject({ code: 'Q006' })
   })
 
@@ -226,8 +299,10 @@ describe('diagnostics', () => {
     mutation({ $id: 'typo', invalidates: ['todoz'], run: () => null })
     mutation({ $id: 'one', invalidates: ['todo:7'], run: () => null }) // getTodo declares `todo:${id}`
     const found: string[] = []
-    checkTags(d => found.push(`${d.code} ${d.message}`))
-    expect(found.filter(f => /`(typo|one)`/.test(f))).toEqual(['Q008 `typo` invalidates `todoz`, a tag no query declares: nothing refreshes. Fix the tag, or add it to the query\'s `tags`'])
+    checkTags((d) => found.push(`${d.code} ${d.message}`))
+    expect(found.filter((f) => /`(typo|one)`/.test(f))).toEqual([
+      "Q008 `typo` invalidates `todoz`, a tag no query declares: nothing refreshes. Fix the tag, or add it to the query's `tags`",
+    ])
   })
 
   test('redirect() in a run navigates the client router', async () => {
@@ -241,20 +316,39 @@ describe('diagnostics', () => {
 })
 
 test('share keeps equal subtrees; produce copies only what it writes', () => {
-  const a = { list: [{ id: 1, tags: ['x'] }, { id: 2, tags: ['y'] }], n: 1 }
-  const b = share(a, JSON.parse(JSON.stringify({ ...a, list: [a.list[0], { id: 2, tags: ['z'] }] })))
+  const a = {
+    list: [
+      { id: 1, tags: ['x'] },
+      { id: 2, tags: ['y'] },
+    ],
+    n: 1,
+  }
+  const b = share(
+    a,
+    JSON.parse(JSON.stringify({ ...a, list: [a.list[0], { id: 2, tags: ['z'] }] })),
+  )
   expect(b).not.toBe(a)
   expect(b.list[0]).toBe(a.list[0])
   expect(b.list[1]).not.toBe(a.list[1])
   expect(share(a, JSON.parse(JSON.stringify(a)))).toBe(a)
 
-  const c = produce(a, d => { d.list[1]!.tags.push('w') })
+  const c = produce(a, (d) => {
+    d.list[1]!.tags.push('w')
+  })
   expect(c.list[0]).toBe(a.list[0])
   expect(c.list[1]!.tags).toEqual(['y', 'w'])
   expect(a.list[1]!.tags).toEqual(['y']) // the base is untouched
-  expect(produce(a, d => { d.list.find(x => x.id === 1) })).toBe(a) // reads copy nothing
-  expect(produce(a, d => ({ ...d, n: 2 })).list).toBe(a.list)
-  expect(produce([1, 2, 3], d => { d.splice(1, 1) })).toEqual([1, 3])
+  expect(
+    produce(a, (d) => {
+      d.list.find((x) => x.id === 1)
+    }),
+  ).toBe(a) // reads copy nothing
+  expect(produce(a, (d) => ({ ...d, n: 2 })).list).toBe(a.list)
+  expect(
+    produce([1, 2, 3], (d) => {
+      d.splice(1, 1)
+    }),
+  ).toEqual([1, 3])
 })
 
 test("a form field named like an inherited method is a field: `toString` can't reach Object.prototype", () => {

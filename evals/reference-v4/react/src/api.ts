@@ -46,8 +46,14 @@ export function seedStocks(n = 200): Stock[] {
 export function createFakeApi(): Api {
   const stocks = seedStocks()
   return {
-    listStocks: () => new Promise(resolve => setTimeout(() => resolve(structuredClone(stocks)), 300)),
-    listHoldings: () => Promise.resolve([{ id: 's0', qty: 10 }, { id: 's3', qty: 5 }, { id: 's42', qty: 2 }]),
+    listStocks: () =>
+      new Promise((resolve) => setTimeout(() => resolve(structuredClone(stocks)), 300)),
+    listHoldings: () =>
+      Promise.resolve([
+        { id: 's0', qty: 10 },
+        { id: 's3', qty: 5 },
+        { id: 's42', qty: 2 },
+      ]),
     subscribeQuotes(onQuote) {
       const timer = setInterval(() => {
         const s = stocks[Math.floor(Math.random() * stocks.length)]
@@ -58,12 +64,33 @@ export function createFakeApi(): Api {
     search: (query, signal) =>
       new Promise((resolve, reject) => {
         const q = query.toLowerCase()
-        const timer = setTimeout(() => resolve(stocks.filter(s => `${s.symbol} ${s.name}`.toLowerCase().includes(q)).map(s => s.id)), 100 + Math.random() * 400)
-        signal.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('aborted', 'AbortError')) })
+        const timer = setTimeout(
+          () =>
+            resolve(
+              stocks
+                .filter((s) => `${s.symbol} ${s.name}`.toLowerCase().includes(q))
+                .map((s) => s.id),
+            ),
+          100 + Math.random() * 400,
+        )
+        signal.addEventListener('abort', () => {
+          clearTimeout(timer)
+          reject(new DOMException('aborted', 'AbortError'))
+        })
       }),
-    setFavorite: () => new Promise((resolve, reject) => setTimeout(() => (Math.random() < 0.2 ? reject(new Error('refused')) : resolve()), 300)),
-    details: id =>
+    setFavorite: () =>
       new Promise((resolve, reject) =>
-        setTimeout(() => (Math.random() < 0.2 ? reject(new Error('unavailable')) : resolve({ description: `About ${id}.` })), 300)),
+        setTimeout(() => (Math.random() < 0.2 ? reject(new Error('refused')) : resolve()), 300),
+      ),
+    details: (id) =>
+      new Promise((resolve, reject) =>
+        setTimeout(
+          () =>
+            Math.random() < 0.2
+              ? reject(new Error('unavailable'))
+              : resolve({ description: `About ${id}.` }),
+          300,
+        ),
+      ),
   }
 }

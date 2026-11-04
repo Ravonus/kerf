@@ -19,7 +19,9 @@ function api(ms: number, fail = false) {
   const calls: { id: string; signal: AbortSignal }[] = []
   const load: Load = (id, signal) => {
     calls.push({ id, signal })
-    return new Promise((ok, no) => { setTimeout(() => (fail ? no(new Error('offline')) : ok({ name: names[id]! })), ms) })
+    return new Promise((ok, no) => {
+      setTimeout(() => (fail ? no(new Error('offline')) : ok({ name: names[id]! })), ms)
+    })
   }
   return { load, calls }
 }
@@ -67,7 +69,7 @@ test('a refetch keeps the content (no flash) and aborts the fetch it replaces', 
   await flush()
   screen.getByRole('button', { name: 'Next' }).click()
   await flush()
-  expect(calls.map(c => c.id)).toEqual(['u1', 'u2'])
+  expect(calls.map((c) => c.id)).toEqual(['u1', 'u2'])
   await vi.advanceTimersByTimeAsync(300)
   expect(has('.skeleton')).toBe(false) // never back
   await flush()
@@ -79,10 +81,12 @@ test('resource: reads before the await are tracked; a superseded fetch is aborte
   const seen: AbortSignal[] = []
   let r!: ReturnType<typeof resource<number>>
   render(() => {
-    r = resource(signal => {
+    r = resource((signal) => {
       const n = id.value
       seen.push(signal)
-      return new Promise<number>(ok => { setTimeout(() => ok(n * 10), 50) })
+      return new Promise<number>((ok) => {
+        setTimeout(() => ok(n * 10), 50)
+      })
     })
     return null
   }, {})
@@ -102,7 +106,8 @@ test('resource: reads before the await are tracked; a superseded fetch is aborte
 test('error: the error view, then retry refetches into the content', async () => {
   const fails = api(10, true)
   let failing = true
-  const load: Load = (id, signal) => (failing ? fails.load(id, signal) : Promise.resolve({ name: names[id]! }))
+  const load: Load = (id, signal) =>
+    failing ? fails.load(id, signal) : Promise.resolve({ name: names[id]! })
   render(Users, { load })
   await vi.advanceTimersByTimeAsync(10)
   await flush()
@@ -129,22 +134,32 @@ test('SSR, data awaited: the content is in the HTML and hydrates without refetch
   const client = api(0)
   hydrate(() => ClientUsers({ load: client.load }), container)
   expect(hydration.misses).toBe(0)
-  expect(before.every(el => el.isConnected)).toBe(true)
-  expect(client.calls.every(c => c.signal.aborted)).toBe(true) // tracked, not fetched
+  expect(before.every((el) => el.isConnected)).toBe(true)
+  expect(client.calls.every((c) => c.signal.aborted)).toBe(true) // tracked, not fetched
   expect(container.querySelector('.profile')!.textContent).toBe('Ada')
   screen.getByRole('button', { name: 'Next' }).click() // the hydrated resource still tracks its reads
   await flush()
-  await new Promise(r => { setTimeout(r, 5) })
+  await new Promise((r) => {
+    setTimeout(r, 5)
+  })
   expect(container.querySelector('.profile')!.textContent).toBe('Grace')
 })
 
 test('SSR with `data: false`: a synchronous throw reaches the page only as `shown` puts it', async () => {
   vi.useRealTimers()
   let seen: unknown
-  await renderToStringAsync(() => {
-    seen = resource(() => { throw new Error('secret') }, { data: false }).error
-    return ''
-  }, { shown: () => new Error('Server function failed.') })
+  await renderToStringAsync(
+    () => {
+      seen = resource(
+        () => {
+          throw new Error('secret')
+        },
+        { data: false },
+      ).error
+      return ''
+    },
+    { shown: () => new Error('Server function failed.') },
+  )
   expect((seen as Error).message).toBe('Server function failed.')
 })
 
@@ -152,14 +167,21 @@ test('SSR with `data: false`: the value stays out of the page data, and a synchr
   vi.useRealTimers()
   // A toy cache, as @weft-js/start's request cache behaves: a promise first, the value itself once it's known.
   const known = new Map<string, { name: string }>()
-  const read = (id: string) => known.get(id) ?? new Promise<{ name: string }>(ok => { setTimeout(() => { known.set(id, { name: names[id]! }); ok(known.get(id)!) }, 1) })
+  const read = (id: string) =>
+    known.get(id) ??
+    new Promise<{ name: string }>((ok) => {
+      setTimeout(() => {
+        known.set(id, { name: names[id]! })
+        ok(known.get(id)!)
+      }, 1)
+    })
   const html = await renderToStringAsync(() => ServerCached({ read }))
   expect(html).toMatch(/^<p wk="[^"]+" class="cached">Ada<\/p>$/) // no data-weft script: nothing recorded
 
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
   const writes: MutationRecord[] = []
-  const mo = new MutationObserver(r => writes.push(...r))
+  const mo = new MutationObserver((r) => writes.push(...r))
   mo.observe(container, { subtree: true, childList: true, characterData: true, attributes: true })
   const calls: string[] = []
   hydrate(() => ClientCached({ read: (id: string) => (calls.push(id), known.get(id)!) }), container)
@@ -195,8 +217,14 @@ function Wrap(props: { children?: unknown }) {
 
 describe('a Boundary directly in a conditional hole', () => {
   function setup(view: (open: { value: boolean }, boundary: () => unknown) => () => unknown) {
-    const open = state(false), mounts: number[] = []
-    const load = vi.fn(() => new Promise<string>(ok => { setTimeout(() => ok('loaded'), 300) }))
+    const open = state(false),
+      mounts: number[] = []
+    const load = vi.fn(
+      () =>
+        new Promise<string>((ok) => {
+          setTimeout(() => ok('loaded'), 300)
+        }),
+    )
     function Spy() {
       mounts.push(1)
       return <i class="wait">wait</i>
@@ -205,15 +233,46 @@ describe('a Boundary directly in a conditional hole', () => {
       const r = resource(() => load())
       return <p class="done">{r.value}</p>
     }
-    render(view(open, () => <Boundary pending={<Spy />}><Inner /></Boundary>))
+    render(
+      view(open, () => (
+        <Boundary pending={<Spy />}>
+          <Inner />
+        </Boundary>
+      )),
+    )
     return { open, load, mounts }
   }
 
   test.each([
-    ['bare', (open: { value: boolean }, B: () => unknown) => () => <section>{open.value ? <B /> : null}</section>],
-    ['in a fragment', (open: { value: boolean }, B: () => unknown) => () => <section>{open.value ? <><b>head</b><B /></> : null}</section>],
+    [
+      'bare',
+      (open: { value: boolean }, B: () => unknown) => () => (
+        <section>{open.value ? <B /> : null}</section>
+      ),
+    ],
+    [
+      'in a fragment',
+      (open: { value: boolean }, B: () => unknown) => () => (
+        <section>
+          {open.value ? (
+            <>
+              <b>head</b>
+              <B />
+            </>
+          ) : null}
+        </section>
+      ),
+    ],
     // A component's children with a sibling are one list: the conditional in it must not be rebuilt when the Boundary it made swaps.
-    ['beside a sibling in a component\'s children', (open: { value: boolean }, B: () => unknown) => () => <Wrap>{open.value ? <B /> : null}<b>tail</b></Wrap>],
+    [
+      "beside a sibling in a component's children",
+      (open: { value: boolean }, B: () => unknown) => () => (
+        <Wrap>
+          {open.value ? <B /> : null}
+          <b>tail</b>
+        </Wrap>
+      ),
+    ],
   ])('%s: the fallback shows and the Boundary is built once', async (_, view) => {
     const { open, load, mounts } = setup(view)
     open.value = true
@@ -246,7 +305,15 @@ test('a Boundary that goes away takes its content with it; one that stays keeps 
     onCleanup(gone)
     return <p>here</p>
   }
-  render(() => <section>{open.value ? <Boundary pending={<i>wait</i>}><Inner /></Boundary> : null}</section>)
+  render(() => (
+    <section>
+      {open.value ? (
+        <Boundary pending={<i>wait</i>}>
+          <Inner />
+        </Boundary>
+      ) : null}
+    </section>
+  ))
   await flush()
   expect(gone).not.toHaveBeenCalled()
   open.value = false
@@ -259,11 +326,19 @@ test('a held Boundary the server gave up on fetches behind its fallback, and sho
   const key = /<p wk="([^"]+)f\/0" class="skeleton">/.exec(html)![1]!
   const id = encodeURIComponent(key)
   const container = document.body.appendChild(document.createElement('div'))
-  container.innerHTML = html.replace(/<p wk="[^"]+" class="skeleton">.*?<\/p>/, m => `<!--wb:${id}-->${m}<!--/wb:${id}-->`)
+  container.innerHTML = html.replace(
+    /<p wk="[^"]+" class="skeleton">.*?<\/p>/,
+    (m) => `<!--wb:${id}-->${m}<!--/wb:${id}-->`,
+  )
   const skeleton = container.querySelector('.skeleton')!
-  const page = globalThis as typeof globalThis & { $wh?: Record<string, () => void>; $wc?: unknown[] }
+  const page = globalThis as typeof globalThis & {
+    $wh?: Record<string, () => void>
+    $wc?: unknown[]
+  }
   try {
-    hydrate(() => ClientUsers({ load: api(50).load }), container, { data: { r: {}, b: { [key]: 'p' }, w: 1 } })
+    hydrate(() => ClientUsers({ load: api(50).load }), container, {
+      data: { r: {}, b: { [key]: 'p' }, w: 1 },
+    })
     expect(hydration.misses).toBe(0)
     expect(skeleton.isConnected).toBe(true)
     page.$wh![id]!()
@@ -287,7 +362,10 @@ test('a Boundary that first runs after its chunk landed claims the content, and 
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
   const profile = container.querySelector('.profile')!
-  const page = globalThis as typeof globalThis & { $wh?: Record<string, () => void>; $wc?: unknown[] }
+  const page = globalThis as typeof globalThis & {
+    $wh?: Record<string, () => void>
+    $wc?: unknown[]
+  }
   page.$wc = [{ r: data.r, b: data.b }]
   try {
     hydrate(() => ClientUsers({ load }), container, { data: { r: {}, b: { [key]: 'p' }, w: 1 } })

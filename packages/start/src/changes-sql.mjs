@@ -14,10 +14,10 @@ export const MAX_IDS = 32
 export const LOG_ROWS = 4096
 export const BREAK = '\n--> statement-breakpoint\n'
 
-const pgName = n => `"${n.replaceAll('"', '""')}"`
-const myName = n => `\`${n.replaceAll('`', '``')}\``
-const literal = s => `'${s.replaceAll("'", "''")}'`
-const safe = t => t.replace(/\W/g, '_')
+const pgName = (n) => `"${n.replaceAll('"', '""')}"`
+const myName = (n) => `\`${n.replaceAll('`', '``')}\``
+const literal = (s) => `'${s.replaceAll("'", "''")}'`
+const safe = (t) => t.replace(/\W/g, '_')
 
 function postgres(tables) {
   const fn = `CREATE OR REPLACE FUNCTION weft_changes_notify() RETURNS trigger AS $weft$
@@ -48,7 +48,12 @@ $weft$ LANGUAGE plpgsql`
       `DROP TRIGGER IF EXISTS weft_changes_${suffix} ON ${on}`,
       `CREATE TRIGGER weft_changes_${suffix} AFTER ${event} ON ${on} ${rows ? `REFERENCING ${rows} TABLE AS weft_rows ` : ''}FOR EACH STATEMENT EXECUTE FUNCTION weft_changes_notify(${args})`,
     ]
-    return [...trigger('ins', 'INSERT', 'NEW'), ...trigger('upd', 'UPDATE', 'NEW'), ...trigger('del', 'DELETE', 'OLD'), ...trigger('trn', 'TRUNCATE')]
+    return [
+      ...trigger('ins', 'INSERT', 'NEW'),
+      ...trigger('upd', 'UPDATE', 'NEW'),
+      ...trigger('del', 'DELETE', 'OLD'),
+      ...trigger('trn', 'TRUNCATE'),
+    ]
   })
   return [fn, ...list]
 }
@@ -56,7 +61,8 @@ $weft$ LANGUAGE plpgsql`
 function sqlite(tables) {
   const log = `CREATE TABLE IF NOT EXISTS ${LOG} (seq INTEGER PRIMARY KEY AUTOINCREMENT, tbl TEXT NOT NULL, pk TEXT)`
   const list = tables.flatMap(({ name, pk }) => {
-    const id = row => (pk.length ? pk.map(c => `${row}.${pgName(c)}`).join(` || ':' || `) : 'NULL')
+    const id = (row) =>
+      pk.length ? pk.map((c) => `${row}.${pgName(c)}`).join(` || ':' || `) : 'NULL'
     const trigger = (suffix, event, row) => [
       `DROP TRIGGER IF EXISTS weft_changes_${safe(name)}_${suffix}`,
       `CREATE TRIGGER weft_changes_${safe(name)}_${suffix} AFTER ${event} ON ${pgName(name)} BEGIN
@@ -64,7 +70,11 @@ function sqlite(tables) {
   DELETE FROM ${LOG} WHERE seq <= last_insert_rowid() - ${LOG_ROWS};
 END`,
     ]
-    return [...trigger('ins', 'INSERT', 'NEW'), ...trigger('upd', 'UPDATE', 'NEW'), ...trigger('del', 'DELETE', 'OLD')]
+    return [
+      ...trigger('ins', 'INSERT', 'NEW'),
+      ...trigger('upd', 'UPDATE', 'NEW'),
+      ...trigger('del', 'DELETE', 'OLD'),
+    ]
   })
   return [log, ...list]
 }
@@ -72,12 +82,17 @@ END`,
 function mysql(tables) {
   const log = `CREATE TABLE IF NOT EXISTS ${LOG} (seq BIGINT AUTO_INCREMENT PRIMARY KEY, tbl VARCHAR(64) NOT NULL, pk VARCHAR(255), at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, KEY at_idx (at))`
   const list = tables.flatMap(({ name, pk }) => {
-    const id = row => (pk.length ? `CONCAT_WS(':', ${pk.map(c => `${row}.${myName(c)}`).join(', ')})` : 'NULL')
+    const id = (row) =>
+      pk.length ? `CONCAT_WS(':', ${pk.map((c) => `${row}.${myName(c)}`).join(', ')})` : 'NULL'
     const trigger = (suffix, event, row) => [
       `DROP TRIGGER IF EXISTS weft_changes_${safe(name)}_${suffix}`,
       `CREATE TRIGGER weft_changes_${safe(name)}_${suffix} AFTER ${event} ON ${myName(name)} FOR EACH ROW INSERT INTO ${LOG} (tbl, pk) VALUES (${literal(name)}, ${id(row)})`,
     ]
-    return [...trigger('ins', 'INSERT', 'NEW'), ...trigger('upd', 'UPDATE', 'NEW'), ...trigger('del', 'DELETE', 'OLD')]
+    return [
+      ...trigger('ins', 'INSERT', 'NEW'),
+      ...trigger('upd', 'UPDATE', 'NEW'),
+      ...trigger('del', 'DELETE', 'OLD'),
+    ]
   })
   return [log, ...list]
 }
@@ -96,4 +111,5 @@ export function changeStatements(dialect, tables) {
 }
 
 /** A migration file, in drizzle-kit's format. */
-export const changeSql = (dialect, tables) => `-- weft: report changes to ${tables.map(t => t.name).join(', ')} (\`weft db live\`). Ids only, never a row.\n${changeStatements(dialect, tables).join(`;${BREAK}`)};\n`
+export const changeSql = (dialect, tables) =>
+  `-- weft: report changes to ${tables.map((t) => t.name).join(', ')} (\`weft db live\`). Ids only, never a row.\n${changeStatements(dialect, tables).join(`;${BREAK}`)};\n`

@@ -1,3 +1,3 @@
-import { Navigate } from "@solidjs/router";
+import { Navigate } from '@solidjs/router'
 
-export default () => <Navigate href="/todos" />;
+export default () => <Navigate href="/todos" />

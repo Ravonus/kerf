@@ -20,14 +20,18 @@ export const session = pgTable('session', {
   updatedAt: at('updatedAt').notNull(),
   ipAddress: text('ipAddress'),
   userAgent: text('userAgent'),
-  userId: varchar('userId', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: varchar('userId', { length: 255 })
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
 })
 
 export const account = pgTable('account', {
   id: varchar('id', { length: 255 }).primaryKey(),
   accountId: text('accountId').notNull(),
   providerId: text('providerId').notNull(),
-  userId: varchar('userId', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: varchar('userId', { length: 255 })
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   accessToken: text('accessToken'),
   refreshToken: text('refreshToken'),
   idToken: text('idToken'),
@@ -50,7 +54,9 @@ export const verification = pgTable('verification', {
 
 export const todos = pgTable('todos', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id', { length: 255 })
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   done: boolean('done').notNull().default(false),
   createdAt: at('created_at').notNull().defaultNow(),

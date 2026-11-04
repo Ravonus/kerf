@@ -5,7 +5,7 @@
 // renders its new route, and everything inside it goes. One state per request on the server (passed down as a
 // prop), one per tab on the client.
 
-import { state, untrack, type State,type SsrData } from '@weft-js/core'
+import { state, untrack, type State, type SsrData } from '@weft-js/core'
 import type { Merged } from '@weft-js/core/ssr'
 import type { Wire } from './data'
 
@@ -69,14 +69,17 @@ export interface RoutePayload {
 /** The route state of the render in progress: a server pass sets it as it starts (passes are synchronous). */
 export const active: { route?: RouteState } = {}
 
-export function createRouteState(payload: RoutePayload, comps: Record<string, Component>): RouteState {
+export function createRouteState(
+  payload: RoutePayload,
+  comps: Record<string, Component>,
+): RouteState {
   const r: RouteState = { levels: [], path: state(payload.p), status: state(payload.s), comps }
   payload.m.forEach((m, d) => {
     const lv = level(r, d)
     lv.id.value = m.id
     lv.params.value = m.params
     lv.data.value = m.data
-    lv.html.value = m.s ? m.h ?? '' : undefined
+    lv.html.value = m.s ? (m.h ?? '') : undefined
     lv.x = m.x
   })
   return r
@@ -84,7 +87,12 @@ export function createRouteState(payload: RoutePayload, comps: Record<string, Co
 
 /** Level `d`, made on first use (an empty level renders nothing). */
 export function level(r: RouteState, d: number): Level {
-  return (r.levels[d] ??= { id: state<string | undefined>(undefined), params: state({}), data: state<unknown>(undefined), html: state<string | undefined>(undefined) })
+  return (r.levels[d] ??= {
+    id: state<string | undefined>(undefined),
+    params: state({}),
+    data: state<unknown>(undefined),
+    html: state<string | undefined>(undefined),
+  })
 }
 
 const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b)
@@ -125,7 +133,10 @@ export function applyMatches(r: RouteState, matches: Match[], path: string, stat
  */
 export const client: {
   route?: RouteState
-  navigate?: (href: string, options?: NavigateOptions & { replace?: boolean | undefined }) => Promise<void>
+  navigate?: (
+    href: string,
+    options?: NavigateOptions & { replace?: boolean | undefined },
+  ) => Promise<void>
   /** `since`: what `now` said when the navigation left, so entries a write has passed don't land. */
   seed?: (list: Wire[], since?: number) => void
   seeds?: Wire[] | undefined
@@ -144,7 +155,10 @@ export interface NavigateOptions {
 }
 
 /** This tab's line to the app's other tabs: a list of tags a write invalidated, or `0` when the session changed. */
-export const peers = typeof document !== 'undefined' && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('weft:tags') : undefined
+export const peers =
+  typeof document !== 'undefined' && typeof BroadcastChannel !== 'undefined'
+    ? new BroadcastChannel('weft:tags')
+    : undefined
 
 /** Go to `href` without a page load (a full load before `start()` ran, or for another origin). */
 export function navigate(href: string, options?: NavigateOptions): Promise<void> {

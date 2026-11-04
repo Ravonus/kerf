@@ -6,14 +6,22 @@ import { join } from 'node:path'
 
 const DIRS = ['drizzle', 'migrations', 'prisma/migrations']
 
-export function readMigrations(root, dir = DIRS.find(d => existsSync(join(root, d)))) {
+export function readMigrations(root, dir = DIRS.find((d) => existsSync(join(root, d)))) {
   if (!dir) return []
   const base = join(root, dir)
   const journal = join(base, 'meta', '_journal.json')
-  if (existsSync(journal)) return JSON.parse(readFileSync(journal, 'utf8')).entries.map(e => ({ tag: e.tag, sql: readFileSync(join(base, `${e.tag}.sql`), 'utf8') }))
+  if (existsSync(journal))
+    return JSON.parse(readFileSync(journal, 'utf8')).entries.map((e) => ({
+      tag: e.tag,
+      sql: readFileSync(join(base, `${e.tag}.sql`), 'utf8'),
+    }))
   if (!existsSync(base)) return []
-  return readdirSync(base).sort().flatMap(name => {
-    const file = name.endsWith('.sql') ? join(base, name) : join(base, name, 'migration.sql')
-    return existsSync(file) ? [{ tag: name.replace(/\.sql$/, ''), sql: readFileSync(file, 'utf8') }] : []
-  })
+  return readdirSync(base)
+    .sort()
+    .flatMap((name) => {
+      const file = name.endsWith('.sql') ? join(base, name) : join(base, name, 'migration.sql')
+      return existsSync(file)
+        ? [{ tag: name.replace(/\.sql$/, ''), sql: readFileSync(file, 'utf8') }]
+        : []
+    })
 }

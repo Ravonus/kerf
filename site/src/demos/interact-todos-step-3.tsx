@@ -15,22 +15,35 @@ export default function Todos() {
     todos.value = [...todos.value, { id: nextId++, title: draft.value, done: false }]
     draft.value = ''
   }
-  const remove = (id: number) => (todos.value = todos.value.filter(t => t.id !== id))
+  const remove = (id: number) => (todos.value = todos.value.filter((t) => t.id !== id))
   // A new object for the one that changed; every other item keeps its identity.
-  const toggle = (id: number) => (todos.value = todos.value.map(t => (t.id === id ? { ...t, done: !t.done } : t)))
+  const toggle = (id: number) =>
+    (todos.value = todos.value.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
   return (
     <Card title="Todos">
-      <Input label="New todo" value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} />
-      <Button size="sm" disabled={!draft.value.trim()} onClick={add}>Add</Button>
+      <Input
+        label="New todo"
+        value={draft.value}
+        onInput={(e) => (draft.value = e.currentTarget.value)}
+      />
+      <Button size="sm" disabled={!draft.value.trim()} onClick={add}>
+        Add
+      </Button>
       <ul>
-        {todos.value.map(t => (
+        {todos.value.map((t) => (
           <li key={t.id}>
-            <Checkbox checked={t.done} onChange={() => toggle(t.id)}>{t.title}</Checkbox>
-            <Button size="sm" emphasis="ghost" onClick={() => remove(t.id)}>Delete</Button>
+            <Checkbox checked={t.done} onChange={() => toggle(t.id)}>
+              {t.title}
+            </Checkbox>
+            <Button size="sm" emphasis="ghost" onClick={() => remove(t.id)}>
+              Delete
+            </Button>
           </li>
         ))}
       </ul>
-      <p>{todos.value.filter(t => t.done).length} of {todos.value.length} done</p>
+      <p>
+        {todos.value.filter((t) => t.done).length} of {todos.value.length} done
+      </p>
     </Card>
   )
 }

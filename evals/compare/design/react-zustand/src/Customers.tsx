@@ -20,10 +20,21 @@ export function Customers() {
 
   return (
     <>
-      <PageHeader title="Customers">Everyone on a Northwind plan, and where their account stands.</PageHeader>
+      <PageHeader title="Customers">
+        Everyone on a Northwind plan, and where their account stands.
+      </PageHeader>
       <div className="mb-4 max-w-sm">
-        <label htmlFor="search" className="mb-1.5 block text-sm font-medium">Search</label>
-        <input id="search" type="search" className={inputClass} placeholder="Search by name" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <label htmlFor="search" className="mb-1.5 block text-sm font-medium">
+          Search
+        </label>
+        <input
+          id="search"
+          type="search"
+          className={inputClass}
+          placeholder="Search by name"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </div>
 
       <div className={`${card} overflow-hidden`}>
@@ -31,11 +42,21 @@ export function Customers() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
               <tr>
-                <th scope="col" className="px-4 py-3 font-medium">Name</th>
-                <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">Email</th>
-                <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">Plan</th>
-                <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium"><span className="sr-only">Actions</span></th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  Name
+                </th>
+                <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">
+                  Email
+                </th>
+                <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">
+                  Plan
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  Status
+                </th>
+                <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -45,20 +66,37 @@ export function Customers() {
                     <div className="font-medium">{c.name}</div>
                     <div className="text-slate-600 sm:hidden dark:text-slate-400">{c.plan}</div>
                   </td>
-                  <td className="hidden px-4 py-3 text-slate-600 md:table-cell dark:text-slate-400">{c.email}</td>
+                  <td className="hidden px-4 py-3 text-slate-600 md:table-cell dark:text-slate-400">
+                    {c.email}
+                  </td>
                   <td className="hidden px-4 py-3 sm:table-cell">{c.plan}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}>{c.status}</span>
+                    <span
+                      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}
+                    >
+                      {c.status}
+                    </span>
                   </td>
                   <td className="px-4 py-2 text-right">
-                    <Button variant="ghost" className="min-h-9 px-3" aria-label={`Delete ${c.name}`} onClick={() => setTarget(c)}>Delete</Button>
+                    <Button
+                      variant="ghost"
+                      className="min-h-9 px-3"
+                      aria-label={`Delete ${c.name}`}
+                      onClick={() => setTarget(c)}
+                    >
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {rows.length === 0 && <p className="px-4 py-12 text-center text-slate-600 dark:text-slate-400">No customers found</p>}
+        {rows.length === 0 && (
+          <p className="px-4 py-12 text-center text-slate-600 dark:text-slate-400">
+            No customers found
+          </p>
+        )}
       </div>
 
       <Dialog.Root open={target !== null} onOpenChange={(o) => !o && setTarget(null)}>
@@ -70,8 +108,18 @@ export function Customers() {
               {target?.name} will be removed from your customer list. This can’t be undone.
             </Dialog.Description>
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <Dialog.Close asChild><Button variant="secondary">Keep</Button></Dialog.Close>
-              <Button variant="danger" onClick={() => { if (target) remove(target.id); setTarget(null) }}>Delete</Button>
+              <Dialog.Close asChild>
+                <Button variant="secondary">Keep</Button>
+              </Dialog.Close>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  if (target) remove(target.id)
+                  setTarget(null)
+                }}
+              >
+                Delete
+              </Button>
             </div>
           </Dialog.Content>
         </Dialog.Portal>

@@ -22,9 +22,10 @@ pub fn generate(service: &str) {
     println!("cargo:rerun-if-env-changed=WEFT_CONTRACT");
     let path = contract_path().unwrap_or_else(|| panic!("R103: no .weft/contract.json above this crate. Run `weft dev` or `weft check` in the app, or set WEFT_CONTRACT"));
     println!("cargo:rerun-if-changed={}", path.display());
-    let text = fs::read_to_string(&path).unwrap_or_else(|e| panic!("R103: can't read {}: {e}", path.display()));
-    let contract: Value =
-        serde_json::from_str(&text).unwrap_or_else(|e| panic!("R103: {} isn't JSON: {e}", path.display()));
+    let text = fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("R103: can't read {}: {e}", path.display()));
+    let contract: Value = serde_json::from_str(&text)
+        .unwrap_or_else(|e| panic!("R103: {} isn't JSON: {e}", path.display()));
     let code = render(&contract, service).unwrap_or_else(|e| panic!("R103: {e}"));
     // An addon's undefined `napi_*` symbols are the host's, which macOS's linker has to be told.
     if contract["services"][service]["kind"] == "native"
@@ -32,7 +33,8 @@ pub fn generate(service: &str) {
     {
         napi_build::setup();
     }
-    let out = PathBuf::from(env::var("OUT_DIR").expect("cargo sets OUT_DIR")).join("weft_contract.rs");
+    let out =
+        PathBuf::from(env::var("OUT_DIR").expect("cargo sets OUT_DIR")).join("weft_contract.rs");
     fs::write(&out, &code).expect("OUT_DIR is writable");
     if let Some(dir) = path.parent().map(|p| p.join("rust")) {
         let _ = fs::create_dir_all(&dir);
@@ -46,7 +48,9 @@ fn contract_path() -> Option<PathBuf> {
         return Some(PathBuf::from(p));
     }
     let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").ok()?);
-    dir.ancestors().map(|d: &Path| d.join(".weft/contract.json")).find(|p| p.exists())
+    dir.ancestors()
+        .map(|d: &Path| d.join(".weft/contract.json"))
+        .find(|p| p.exists())
 }
 
 /// `searchDocs` → `search_docs`, kept clear of what a method can't be called.
@@ -62,14 +66,23 @@ fn snake(name: &str) -> String {
             out.push(c);
         }
     }
-    if syn::parse_str::<syn::Ident>(&out).is_err() { format!("{out}_") } else { out }
+    if syn::parse_str::<syn::Ident>(&out).is_err() {
+        format!("{out}_")
+    } else {
+        out
+    }
 }
 
 /// `searchDocs` → `SearchDocs`.
 fn pascal(name: &str) -> String {
-    let clean: String = name.chars().filter(|c| c.is_alphanumeric() || *c == '_').collect();
+    let clean: String = name
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '_')
+        .collect();
     let mut chars = clean.chars();
-    chars.next().map_or(String::new(), |c| c.to_uppercase().chain(chars).collect())
+    chars
+        .next()
+        .map_or(String::new(), |c| c.to_uppercase().chain(chars).collect())
 }
 
 /// typify reads schemars 0.8 schemas, which spell a tuple `items: […]`. Zod's `$defs` are collected by the caller.
@@ -90,7 +103,14 @@ fn normal(v: &Value, defs: &mut BTreeMap<String, Value>) -> Value {
                         out.insert("items".into(), normal(x, defs));
                     }
                     "$ref" => {
-                        out.insert(k.clone(), json!(x.as_str().unwrap_or("").replace("#/$defs/", "#/definitions/")));
+                        out.insert(
+                            k.clone(),
+                            json!(
+                                x.as_str()
+                                    .unwrap_or("")
+                                    .replace("#/$defs/", "#/definitions/")
+                            ),
+                        );
                     }
                     _ => {
                         out.insert(k.clone(), normal(x, defs));
@@ -117,7 +137,9 @@ struct Spec<'a> {
 fn specs<'a>(functions: &[&'a Value], defs: &mut BTreeMap<String, Value>) -> Vec<Spec<'a>> {
     let mut seen = BTreeMap::<String, usize>::new();
     for f in functions {
-        *seen.entry(f["name"].as_str().unwrap_or("").to_string()).or_default() += 1;
+        *seen
+            .entry(f["name"].as_str().unwrap_or("").to_string())
+            .or_default() += 1;
     }
     functions
         .iter()
@@ -125,7 +147,11 @@ fn specs<'a>(functions: &[&'a Value], defs: &mut BTreeMap<String, Value>) -> Vec
             let id = f["id"].as_str().unwrap_or("");
             let name = f["name"].as_str().unwrap_or(id);
             // Two files can export one name: the id's hash keeps them apart.
-            let unique = if seen[name] > 1 { id.replace('.', "_") } else { name.to_string() };
+            let unique = if seen[name] > 1 {
+                id.replace('.', "_")
+            } else {
+                name.to_string()
+            };
             let imp = &f["impl"];
             Spec {
                 id,
@@ -150,23 +176,36 @@ fn specs<'a>(functions: &[&'a Value], defs: &mut BTreeMap<String, Value>) -> Vec
 }
 
 fn add(space: &mut TypeSpace, schema: &Value, name: &str) -> Result<String, String> {
-    let root: RootSchema =
-        serde_json::from_value(schema.clone()).map_err(|e| format!("`{name}` isn't a schema typify reads: {e}"))?;
+    let root: RootSchema = serde_json::from_value(schema.clone())
+        .map_err(|e| format!("`{name}` isn't a schema typify reads: {e}"))?;
     let id = space
         .add_type_with_name(&Schema::Object(root.schema), Some(name.to_string()))
         .map_err(|e| format!("`{name}`: {e}"))?;
-    Ok(space.get_type(&id).map_err(|e| e.to_string())?.ident().to_string())
+    Ok(space
+        .get_type(&id)
+        .map_err(|e| e.to_string())?
+        .ident()
+        .to_string())
 }
 
 /// `pub type X = …` unless typify already named the type `X`.
 fn alias(name: &str, ident: &str) -> String {
-    if ident.replace(' ', "") == name { String::new() } else { format!("pub type {name} = {ident};\n") }
+    if ident.replace(' ', "") == name {
+        String::new()
+    } else {
+        format!("pub type {name} = {ident};\n")
+    }
 }
 
 /// The Rust for `service`'s functions.
 pub(crate) fn render(contract: &Value, service: &str) -> Result<String, String> {
-    let all = contract["functions"].as_array().ok_or("the contract has no `functions`")?;
-    let functions: Vec<&Value> = all.iter().filter(|f| f["impl"]["service"] == service).collect();
+    let all = contract["functions"]
+        .as_array()
+        .ok_or("the contract has no `functions`")?;
+    let functions: Vec<&Value> = all
+        .iter()
+        .filter(|f| f["impl"]["service"] == service)
+        .collect();
     if functions.is_empty() {
         return Err(format!(
             "no function in the contract has `impl: remote('rust://{service}')` or `impl: native('{service}')`. Point one at it, or rename the service in build.rs"
@@ -185,10 +224,14 @@ pub(crate) fn render(contract: &Value, service: &str) -> Result<String, String> 
     let refs = defs
         .into_iter()
         .map(|(k, v)| {
-            serde_json::from_value::<Schema>(v).map(|s| (k.clone(), s)).map_err(|e| format!("`$defs/{k}`: {e}"))
+            serde_json::from_value::<Schema>(v)
+                .map(|s| (k.clone(), s))
+                .map_err(|e| format!("`$defs/{k}`: {e}"))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    space.add_ref_types(refs).map_err(|e| format!("named schemas: {e}"))?;
+    space
+        .add_ref_types(refs)
+        .map_err(|e| format!("named schemas: {e}"))?;
 
     let mut methods = String::new();
     let mut table = String::new();
@@ -196,12 +239,18 @@ pub(crate) fn render(contract: &Value, service: &str) -> Result<String, String> 
         let name = &s.type_name;
         let input = match &s.input {
             Some(schema) => {
-                extra += &alias(&format!("{name}Input"), &add(&mut space, schema, &format!("{name}Input"))?);
+                extra += &alias(
+                    &format!("{name}Input"),
+                    &add(&mut space, schema, &format!("{name}Input"))?,
+                );
                 format!(", input: {name}Input")
             }
             None => String::new(),
         };
-        extra += &alias(&format!("{name}Output"), &add(&mut space, &s.output, &format!("{name}Output"))?);
+        extra += &alias(
+            &format!("{name}Output"),
+            &add(&mut space, &s.output, &format!("{name}Output"))?,
+        );
 
         let error = if s.errors.is_empty() {
             "::weft::Error".to_string()
@@ -294,7 +343,10 @@ pub fn functions<S: Service>(service: S) -> ::weft::Functions {{
 }
 
 #[cfg(test)]
-#[allow(clippy::needless_pass_by_value, reason = "fixtures take `json!` literals")]
+#[allow(
+    clippy::needless_pass_by_value,
+    reason = "fixtures take `json!` literals"
+)]
 mod tests {
     use super::*;
 
@@ -345,18 +397,36 @@ mod tests {
     fn a_tuple_and_a_named_schema_from_zod() {
         let output = json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "array", "items": { "$ref": "#/$defs/Hit" }, "$defs": { "Hit": { "type": "object", "properties": { "id": { "type": "string" } }, "required": ["id"] } } });
         let tuple = json!({ "type": "array", "prefixItems": [{ "type": "string" }, { "type": "number" }], "minItems": 2, "maxItems": 2 });
-        let code = render(&contract(json!([function("hits", tuple, output, "ctx", json!({}))])), "search").unwrap();
+        let code = render(
+            &contract(json!([function("hits", tuple, output, "ctx", json!({}))])),
+            "search",
+        )
+        .unwrap();
         assert!(code.contains("pub struct Hit"), "{code}");
-        assert!(code.contains("pub type HitsOutput = ::std::vec::Vec<Hit>"), "{code}");
-        assert!(code.contains("pub type HitsInput = (::std::string::String, f64)"), "{code}");
+        assert!(
+            code.contains("pub type HitsOutput = ::std::vec::Vec<Hit>"),
+            "{code}"
+        );
+        assert!(
+            code.contains("pub type HitsInput = (::std::string::String, f64)"),
+            "{code}"
+        );
     }
 
     #[test]
     fn dates_and_uuids_need_no_dependency_of_the_app() {
         let input = json!({ "type": "object", "properties": { "at": { "type": "string", "format": "date-time" }, "id": { "type": "string", "format": "uuid" } }, "required": ["at", "id"] });
-        let code =
-            render(&contract(json!([function("f", input, json!({ "type": "null" }), "ctx", json!({}))])), "search")
-                .unwrap();
+        let code = render(
+            &contract(json!([function(
+                "f",
+                input,
+                json!({ "type": "null" }),
+                "ctx",
+                json!({})
+            )])),
+            "search",
+        )
+        .unwrap();
         assert!(code.contains("::weft::__rt::chrono::"), "{code}");
         assert!(code.contains("::weft::__rt::uuid::"), "{code}");
     }

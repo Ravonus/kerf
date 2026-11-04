@@ -12,7 +12,12 @@ const { chromium } = createRequire(import.meta.url)('playwright-core')
 const root = fileURLToPath(new URL('./fixtures/shapes', import.meta.url))
 let browser, server, url
 beforeAll(async () => {
-  server = await dev({ root, site: { name: 'Shapes', url: 'https://shapes.dev' }, port: 0, logLevel: 'error' })
+  server = await dev({
+    root,
+    site: { name: 'Shapes', url: 'https://shapes.dev' },
+    port: 0,
+    logLevel: 'error',
+  })
   url = server.resolvedUrls.local[0].replace(/\/$/, '')
   browser = await chromium.launch()
 })
@@ -24,14 +29,23 @@ afterAll(async () => {
 async function open(path) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   const logs = []
-  page.on('pageerror', e => logs.push(e.message))
-  page.on('console', m => (['error', 'warning'].includes(m.type()) ? logs.push(m.text()) : undefined))
-  await page.route('**/_weft/fn/**', async r => { await new Promise(ok => { setTimeout(ok, 400) }); await r.continue() })
+  page.on('pageerror', (e) => logs.push(e.message))
+  page.on('console', (m) =>
+    ['error', 'warning'].includes(m.type()) ? logs.push(m.text()) : undefined,
+  )
+  await page.route('**/_weft/fn/**', async (r) => {
+    await new Promise((ok) => {
+      setTimeout(ok, 400)
+    })
+    await r.continue()
+  })
   await page.goto(url + path)
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 30_000 })
   await page.evaluate(() => {
     window.__cls = 0
-    new PerformanceObserver(l => { for (const e of l.getEntries()) window.__cls += e.value }).observe({ type: 'layout-shift' })
+    new PerformanceObserver((l) => {
+      for (const e of l.getEntries()) window.__cls += e.value
+    }).observe({ type: 'layout-shift' })
   })
   return { page, logs }
 }
@@ -40,26 +54,52 @@ async function open(path) {
 async function swap(page, button, pendingSelector) {
   await page.click(button)
   await page.waitForTimeout(60) // the click's own mount: not a shift, and the browser doesn't count it as one
-  await page.evaluate(() => { window.__cls = 0 })
-  await page.waitForFunction(s => { const e = document.querySelector(s); return e && getComputedStyle(e).visibility === 'visible' }, pendingSelector)
+  await page.evaluate(() => {
+    window.__cls = 0
+  })
+  await page.waitForFunction((s) => {
+    const e = document.querySelector(s)
+    return e && getComputedStyle(e).visibility === 'visible'
+  }, pendingSelector)
   await page.waitForTimeout(50) // layout-shift entries arrive a frame late
   const before = await page.evaluate(() => {
     const shown = window.__cls
     window.__cls = 0
     window.__rec = []
     window.__mo?.disconnect()
-    window.__mo = new MutationObserver(r => window.__rec.push(...r))
-    window.__mo.observe(document.querySelector('main'), { subtree: true, childList: true, characterData: true, attributes: true })
+    window.__mo = new MutationObserver((r) => window.__rec.push(...r))
+    window.__mo.observe(document.querySelector('main'), {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+    })
     return { shown, top: document.getElementById('after').getBoundingClientRect().top }
   })
-  await page.waitForFunction(() => document.querySelector('.post') && !document.querySelector('[data-skeleton], .bars'), null, { timeout: 15_000 })
+  await page.waitForFunction(
+    () => document.querySelector('.post') && !document.querySelector('[data-skeleton], .bars'),
+    null,
+    { timeout: 15_000 },
+  )
   await page.waitForTimeout(100)
-  const after = await page.evaluate(() => ({ cls: window.__cls, top: document.getElementById('after').getBoundingClientRect().top, writes: window.__rec.length + window.__mo.takeRecords().length }))
-  return { cls: after.cls, moved: Math.abs(after.top - before.top), writes: after.writes, shownCls: before.shown }
+  const after = await page.evaluate(() => ({
+    cls: window.__cls,
+    top: document.getElementById('after').getBoundingClientRect().top,
+    writes: window.__rec.length + window.__mo.takeRecords().length,
+  }))
+  return {
+    cls: after.cls,
+    moved: Math.abs(after.top - before.top),
+    writes: after.writes,
+    shownCls: before.shown,
+  }
 }
 
 const pendingShape = '[data-scope="skeleton-scope"] [data-skeleton]'
-const clear = async page => { await page.click('#off'); await page.waitForFunction(() => !document.querySelector('.feed')) }
+const clear = async (page) => {
+  await page.click('#off')
+  await page.waitForFunction(() => !document.querySelector('.feed'))
+}
 
 test('naive bars shift the page: the baseline', async () => {
   const { page } = await open('/naive')
@@ -76,8 +116,8 @@ test('nothing seen: the schema skeleton swaps with no layout shift in the viewpo
   process.stdout.write(`shape: schema ${JSON.stringify(r)}\n`)
   expect(r.cls).toBe(0)
   expect(r.shownCls).toBe(0)
-  expect(await page.$$eval('.post', l => l.length)).toBe(20)
-  expect(logs.filter(l => /X03[26]/.test(l))).toEqual([])
+  expect(await page.$$eval('.post', (l) => l.length)).toBe(20)
+  expect(logs.filter((l) => /X03[26]/.test(l))).toEqual([])
   await page.close()
 })
 
@@ -91,7 +131,7 @@ test('last seen, same payload: nothing moves, and the swap is one replacement', 
   expect(r.shownCls).toBe(0)
   expect(r.moved).toBe(0)
   expect(r.writes).toBe(2) // the skeleton out, the feed in
-  expect(logs.filter(l => /X031/.test(l)).length).toBeLessThanOrEqual(1) // the schema's first pass, not the last-seen one
+  expect(logs.filter((l) => /X031/.test(l)).length).toBeLessThanOrEqual(1) // the schema's first pass, not the last-seen one
   await page.close()
 })
 
@@ -110,28 +150,63 @@ test('a streamed fallback is the variant, and it hydrates with no misses or writ
   expect(html).toContain('data-skeleton') // the fallback went first…
   expect(html).toContain('skeleton-scope')
   const { page, logs } = await open('/streamed')
-  expect(await page.evaluate(() => window.__weft)).toMatchObject({ misses: 0, writes: 0, hydrated: true })
-  await page.waitForFunction(() => document.querySelector('.post') && !document.querySelector('[data-skeleton]')) // …and the content replaced it
-  expect(await page.$$eval('[data-skeleton]', l => l.length)).toBe(0)
-  expect(await page.$$eval('.post', l => l.length)).toBe(3)
+  expect(await page.evaluate(() => window.__weft)).toMatchObject({
+    misses: 0,
+    writes: 0,
+    hydrated: true,
+  })
+  await page.waitForFunction(
+    () => document.querySelector('.post') && !document.querySelector('[data-skeleton]'),
+  ) // …and the content replaced it
+  expect(await page.$$eval('[data-skeleton]', (l) => l.length)).toBe(0)
+  expect(await page.$$eval('.post', (l) => l.length)).toBe(3)
   expect(logs).toEqual([])
   await page.close()
 })
 
 test('a production build: the schema stays on the server, the stub carries its shape, and nothing moves', async () => {
   const output = join(root, '.output-test')
-  const opts = JSON.stringify({ root, site: { name: 'Shapes', url: 'https://shapes.dev' }, preset: 'node', nitro: { output: { dir: output } }, logLevel: 'error' })
-  const r = spawnSync(process.execPath, [join(import.meta.dirname, 'build-app.mjs'), opts], { encoding: 'utf8', env: { ...process.env, NODE_ENV: 'production', WEFT_BUILD: '1' } })
+  const opts = JSON.stringify({
+    root,
+    site: { name: 'Shapes', url: 'https://shapes.dev' },
+    preset: 'node',
+    nitro: { output: { dir: output } },
+    logLevel: 'error',
+  })
+  const r = spawnSync(process.execPath, [join(import.meta.dirname, 'build-app.mjs'), opts], {
+    encoding: 'utf8',
+    env: { ...process.env, NODE_ENV: 'production', WEFT_BUILD: '1' },
+  })
   expect(r.status, r.stderr).toBe(0)
   const public_ = join(output, 'public')
-  const js = readdirSync(public_, { recursive: true }).filter(f => f.endsWith('.js')).map(f => readFileSync(join(public_, f), 'utf8')).join('\n')
+  const js = readdirSync(public_, { recursive: true })
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => readFileSync(join(public_, f), 'utf8'))
+    .join('\n')
   expect(js).toContain('$of')
   expect(js).not.toContain('ZodError')
 
-  const port = await new Promise(ok => { const s = listen().listen(0, () => { const free = s.address().port; s.close(() => ok(free)) }) })
-  const child = spawn(process.execPath, [join(output, 'server/index.mjs')], { env: { ...process.env, NODE_ENV: 'production', PORT: String(port) }, stdio: 'ignore' })
+  const port = await new Promise((ok) => {
+    const s = listen().listen(0, () => {
+      const free = s.address().port
+      s.close(() => ok(free))
+    })
+  })
+  const child = spawn(process.execPath, [join(output, 'server/index.mjs')], {
+    env: { ...process.env, NODE_ENV: 'production', PORT: String(port) },
+    stdio: 'ignore',
+  })
   try {
-    for (const t0 = Date.now(); !(await fetch(`http://localhost:${port}/`).then(() => true, () => false)); await new Promise(ok => { setTimeout(ok, 100) }))
+    for (
+      const t0 = Date.now();
+      !(await fetch(`http://localhost:${port}/`).then(
+        () => true,
+        () => false,
+      ));
+      await new Promise((ok) => {
+        setTimeout(ok, 100)
+      })
+    )
       if (Date.now() - t0 > 20_000) throw new Error('the server did not listen')
     const was = url
     url = `http://localhost:${port}`
@@ -141,7 +216,9 @@ test('a production build: the schema stays on the server, the stub carries its s
     await clear(page)
     const again = await swap(page, '#same', pendingShape)
     process.stdout.write(`shape: production ${JSON.stringify({ first, again })}\n`)
-    expect([first.cls, first.shownCls, again.cls, again.shownCls, again.moved]).toEqual([0, 0, 0, 0, 0])
+    expect([first.cls, first.shownCls, again.cls, again.shownCls, again.moved]).toEqual([
+      0, 0, 0, 0, 0,
+    ])
     expect(logs).toEqual([])
     await page.close()
   } finally {

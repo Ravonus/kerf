@@ -11,11 +11,21 @@ export default function Runs() {
   const pearLine = derived(() => ({ text: `${pears.value} pears`, runs: ++pearRuns }))
   return (
     <Card title="Who runs on a write">
-      <p>{appleLine.value.text}, computed {appleLine.value.runs} times</p>
-      <p>{pearLine.value.text}, computed {pearLine.value.runs} times</p>
-      <Button size="sm" onClick={() => apples.value++}>Add an apple</Button>
-      <Button size="sm" emphasis="outline" onClick={() => pears.value++}>Add a pear</Button>
-      <Button size="sm" emphasis="ghost" onClick={() => (apples.value = 5)}>Set apples to 5</Button>
+      <p>
+        {appleLine.value.text}, computed {appleLine.value.runs} times
+      </p>
+      <p>
+        {pearLine.value.text}, computed {pearLine.value.runs} times
+      </p>
+      <Button size="sm" onClick={() => apples.value++}>
+        Add an apple
+      </Button>
+      <Button size="sm" emphasis="outline" onClick={() => pears.value++}>
+        Add a pear
+      </Button>
+      <Button size="sm" emphasis="ghost" onClick={() => (apples.value = 5)}>
+        Set apples to 5
+      </Button>
     </Card>
   )
 }

@@ -26,22 +26,30 @@ function stackOf(doc: Document) {
   let stack = stacks.get(doc)
   if (stack) return stack
   stacks.set(doc, (stack = []))
-  doc.addEventListener('keydown', e => {
-    if (e.key !== 'Escape' || !stack.length) return
-    const top = stack.at(-1)!
-    e.preventDefault()
-    escapedAt = performance.now()
-    if (!top.escape?.()) top.close('escape')
-  }, true)
-  doc.addEventListener('pointerdown', e => {
-    const t = e.target as Node
-    for (let i = stack.length - 1; i >= 0; i--) {
-      const l = stack[i]!
-      if (l.passive) continue
-      if (l.modal || l.el.contains(t) || l.trigger?.contains(t)) break
-      l.close('outside')
-    }
-  }, true)
+  doc.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key !== 'Escape' || !stack.length) return
+      const top = stack.at(-1)!
+      e.preventDefault()
+      escapedAt = performance.now()
+      if (!top.escape?.()) top.close('escape')
+    },
+    true,
+  )
+  doc.addEventListener(
+    'pointerdown',
+    (e) => {
+      const t = e.target as Node
+      for (let i = stack.length - 1; i >= 0; i--) {
+        const l = stack[i]!
+        if (l.passive) continue
+        if (l.modal || l.el.contains(t) || l.trigger?.contains(t)) break
+        l.close('outside')
+      }
+    },
+    true,
+  )
   return stack
 }
 
@@ -52,7 +60,7 @@ export function onTopModal(doc: Document, fn: (top: HTMLElement | null) => void)
   let set = modalWatchers.get(doc)
   if (!set) modalWatchers.set(doc, (set = new Set()))
   set.add(fn)
-  const top = stackOf(doc).findLast(l => l.modal)?.el
+  const top = stackOf(doc).findLast((l) => l.modal)?.el
   if (top) fn(top)
   return () => void set.delete(fn)
 }
@@ -61,7 +69,10 @@ export function onTopModal(doc: Document, fn: (top: HTMLElement | null) => void)
 export function pushLayer(layer: Layer) {
   const doc = layer.el.ownerDocument
   const stack = stackOf(doc)
-  const told = () => { if (layer.modal) for (const fn of modalWatchers.get(doc) ?? []) fn(stack.findLast(l => l.modal)?.el ?? null) }
+  const told = () => {
+    if (layer.modal)
+      for (const fn of modalWatchers.get(doc) ?? []) fn(stack.findLast((l) => l.modal)?.el ?? null)
+  }
   stack.push(layer)
   told()
   return () => {
@@ -82,13 +93,21 @@ export type Align = 'start' | 'center' | 'end'
  * flip to the opposite side when there is no room, clamp 8px inside the viewport, write data-side. `side` is physical;
  * along the inline axis `align` is logical, so start is the trigger's right edge in RTL.
  */
-export function place(el: HTMLElement, trigger: Element, side: Side = 'bottom', align: Align = 'start', gap = 8) {
+export function place(
+  el: HTMLElement,
+  trigger: Element,
+  side: Side = 'bottom',
+  align: Align = 'start',
+  gap = 8,
+) {
   const win = el.ownerDocument.defaultView!
   const t = trigger.getBoundingClientRect()
   // the laid-out size: a panel opening is still scaled down, and a rect would measure that
   const r = el.getBoundingClientRect()
-  const w = el.offsetWidth || r.width, h = el.offsetHeight || r.height
-  const vw = win.innerWidth, vh = win.innerHeight
+  const w = el.offsetWidth || r.width,
+    h = el.offsetHeight || r.height
+  const vw = win.innerWidth,
+    vh = win.innerHeight
   const room = { top: t.top, bottom: vh - t.bottom, left: t.left, right: vw - t.right }
   const size = side === 'top' || side === 'bottom' ? h : w
   const flip = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' } as const
@@ -97,7 +116,12 @@ export function place(el: HTMLElement, trigger: Element, side: Side = 'bottom', 
   if (side === 'top' || side === 'bottom') {
     y = side === 'top' ? t.top - gap - h : t.bottom + gap
     const rtl = win.getComputedStyle(trigger).direction === 'rtl'
-    x = align === 'center' ? t.left + (t.width - w) / 2 : (align === 'start') !== rtl ? t.left : t.right - w
+    x =
+      align === 'center'
+        ? t.left + (t.width - w) / 2
+        : (align === 'start') !== rtl
+          ? t.left
+          : t.right - w
   } else {
     x = side === 'left' ? t.left - gap - w : t.right + gap
     y = align === 'start' ? t.top : align === 'end' ? t.bottom - h : t.top + (t.height - h) / 2
@@ -107,8 +131,18 @@ export function place(el: HTMLElement, trigger: Element, side: Side = 'bottom', 
   el.style.left = `${left}px`
   el.style.top = `${top}px`
   // it scales about the trigger, so it visibly comes from what opened it
-  const ox = side === 'left' ? w : side === 'right' ? 0 : Math.max(0, Math.min(w, t.left + t.width / 2 - left))
-  const oy = side === 'top' ? h : side === 'bottom' ? 0 : Math.max(0, Math.min(h, t.top + t.height / 2 - top))
+  const ox =
+    side === 'left'
+      ? w
+      : side === 'right'
+        ? 0
+        : Math.max(0, Math.min(w, t.left + t.width / 2 - left))
+  const oy =
+    side === 'top'
+      ? h
+      : side === 'bottom'
+        ? 0
+        : Math.max(0, Math.min(h, t.top + t.height / 2 - top))
   el.style.setProperty('--warp-origin', `${Math.round(ox)}px ${Math.round(oy)}px`)
   el.dataset.side = side
 }

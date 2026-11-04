@@ -5,16 +5,20 @@ import { z } from 'zod'
 import auth from '#/auth.server'
 
 const credentials = z.object({ email: z.email(), password: z.string().min(8) })
-const call = (request: Request, path: string, body: unknown = {}) => auth.handler(new Request(new URL(`/api/auth${path}`, request.url), {
-  method: 'POST',
-  headers: { 'content-type': 'application/json', cookie: request.headers.get('cookie') ?? '' },
-  body: JSON.stringify(body),
-}))
+const call = (request: Request, path: string, body: unknown = {}) =>
+  auth.handler(
+    new Request(new URL(`/api/auth${path}`, request.url), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: request.headers.get('cookie') ?? '' },
+      body: JSON.stringify(body),
+    }),
+  )
 
 /** Who is signed in, or null. */
 export const me = query({
   tags: ['session'],
-  run: ({ ctx }) => (ctx.user ? { id: ctx.user.id, name: ctx.user.name, email: ctx.user.email } : null),
+  run: ({ ctx }) =>
+    ctx.user ? { id: ctx.user.id, name: ctx.user.name, email: ctx.user.email } : null,
 })
 
 export const signUp = mutation({

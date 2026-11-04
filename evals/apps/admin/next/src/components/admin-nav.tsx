@@ -14,7 +14,7 @@ const links = [
 export function NavLinks({ active }: { active?: string | null }) {
   return (
     <nav aria-label="Admin" className="flex gap-1 overflow-x-auto text-sm font-medium lg:flex-col">
-      {links.map(link => (
+      {links.map((link) => (
         <Link
           key={link.href}
           href={link.href}

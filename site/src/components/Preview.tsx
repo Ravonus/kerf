@@ -23,14 +23,18 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
   const css = getComputedStyle(host)
   const hug = parseFloat(css.getPropertyValue('--tile-hug')) || 0
   if (!hug) stage.style.removeProperty('block-size')
-  const W = stage.clientWidth, H = hug || stage.clientHeight
+  const W = stage.clientWidth,
+    H = hug || stage.clientHeight
   if (!W || !H) return
   const zoom = parseFloat(css.getPropertyValue('--tile-zoom')) || 0.8
   const readable = parseFloat(css.getPropertyValue('--tile-readable')) || READABLE
   let vw = width ?? Math.max(W / zoom, LEAST[host.dataset.stage ?? 'center'] ?? 0)
   host.style.setProperty('--tile-w', `${vw}px`)
   // An example with a least width of its own past that one is laid out at it, so the picture holds all of it.
-  if (host.scrollWidth > vw + 1) { vw = host.scrollWidth; host.style.setProperty('--tile-w', `${vw}px`) }
+  if (host.scrollWidth > vw + 1) {
+    vw = host.scrollWidth
+    host.style.setProperty('--tile-w', `${vw}px`)
+  }
   const ch = host.offsetHeight
   let s = W / vw
   let crop = false
@@ -42,11 +46,14 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
   // A hugging stage takes the picture's height, so the picture sits at its top with no band above or below.
   const h = hug ? Math.min(Math.ceil(ch * s), H) : H
   if (hug) stage.style.blockSize = `${h}px`
-  const x = (W - vw * s) / 2, y = crop ? 0 : (h - ch * s) / 2
+  const x = (W - vw * s) / 2,
+    y = crop ? 0 : (h - ch * s) / 2
   host.style.transform = `translate(${x}px, ${y}px) scale(${s})`
   host.toggleAttribute('data-crop', crop)
   // The fade stops short of the stage's bottom rule, so the card keeps its line under the picture.
-  stage.style.maskImage = crop ? 'linear-gradient(#000 calc(100% - 44px), transparent calc(100% - 1px), #000 calc(100% - 1px))' : ''
+  stage.style.maskImage = crop
+    ? 'linear-gradient(#000 calc(100% - 44px), transparent calc(100% - 1px), #000 calc(100% - 1px))'
+    : ''
   host.style.opacity = '1'
 }
 
@@ -55,7 +62,21 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
  * One example, running. Its group's file loads as it nears the view, and until then the box holds its height with a
  * skeleton, so nothing below it moves. `Replay` on the frame sends `stage:replay` here.
  */
-export function Preview({ file, id, stage = 'center', tile, fit, width }: { file: string; id: string; stage?: string | undefined; tile?: boolean; fit?: string | undefined; width?: number | undefined }) {
+export function Preview({
+  file,
+  id,
+  stage = 'center',
+  tile,
+  fit,
+  width,
+}: {
+  file: string
+  id: string
+  stage?: string | undefined
+  tile?: boolean
+  fit?: string | undefined
+  width?: number | undefined
+}) {
   // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
   let stop: (() => void) | undefined
@@ -69,7 +90,9 @@ export function Preview({ file, id, stage = 'center', tile, fit, width }: { file
     if (tile) fitTile(host, fit, width)
   }
   let loaded: (() => unknown) | undefined
-  const replay = () => { if (loaded) show(loaded) }
+  const replay = () => {
+    if (loaded) show(loaded)
+  }
   onMount(() => {
     host.addEventListener('stage:replay', replay)
     if (tile) {
@@ -78,24 +101,34 @@ export function Preview({ file, id, stage = 'center', tile, fit, width }: { file
       watch = new ResizeObserver(() => {
         if (queued) return
         queued = true
-        requestAnimationFrame(() => { queued = false; if (!gone && host.hasAttribute('data-ready')) fitTile(host, fit, width) })
+        requestAnimationFrame(() => {
+          queued = false
+          if (!gone && host.hasAttribute('data-ready')) fitTile(host, fit, width)
+        })
       })
       watch.observe(host)
       if (host.parentElement) watch.observe(host.parentElement)
     }
-    previews[file]!().then(m => {
-      if (gone) return
-      const shown = m[id] as () => unknown
-      loaded = shown
-      show(shown)
-    }).catch(e => {
-      console.error(e)
-      host.textContent = 'This example failed to load.'
-      host.toggleAttribute('data-ready', true)
-      if (tile) fitTile(host, fit, width)
-    })
+    previews[file]!()
+      .then((m) => {
+        if (gone) return
+        const shown = m[id] as () => unknown
+        loaded = shown
+        show(shown)
+      })
+      .catch((e) => {
+        console.error(e)
+        host.textContent = 'This example failed to load.'
+        host.toggleAttribute('data-ready', true)
+        if (tile) fitTile(host, fit, width)
+      })
   })
-  onCleanup(() => { gone = true; host?.removeEventListener('stage:replay', replay); watch?.disconnect(); stop?.() })
+  onCleanup(() => {
+    gone = true
+    host?.removeEventListener('stage:replay', replay)
+    watch?.disconnect()
+    stop?.()
+  })
   return (
     <div data-part="mount" data-stage={stage} inert={tile ? true : undefined} ref={host}>
       <span data-part="wait" aria-hidden="true"></span>

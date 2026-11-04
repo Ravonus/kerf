@@ -4,7 +4,10 @@
 import { dialog, indicator, nextIndex, overflow, toastStore, toaster } from '../src'
 
 afterEach(() => document.body.replaceChildren())
-const frames = () => new Promise(r => { setTimeout(r, 100) }) // three animation frames: place, then drop data-instant two frames later
+const frames = () =>
+  new Promise((r) => {
+    setTimeout(r, 100)
+  }) // three animation frames: place, then drop data-instant two frames later
 
 test('tabs: arrow keys select and focus with one tab stop, panels follow, the indicator moves', async () => {
   document.body.innerHTML = `
@@ -33,9 +36,16 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
     face.update()
     scroll.update(tabs[i])
   }
-  list.addEventListener('keydown', e => {
-    const to = nextIndex(e.key, tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'), tabs.length)
-    if (to >= 0) { e.preventDefault(); select(to) }
+  list.addEventListener('keydown', (e) => {
+    const to = nextIndex(
+      e.key,
+      tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true'),
+      tabs.length,
+    )
+    if (to >= 0) {
+      e.preventDefault()
+      select(to)
+    }
   })
   await frames()
   const bar = list.querySelector<HTMLElement>('[data-part="indicator"]')!
@@ -60,9 +70,15 @@ test('dialog: opens modal with focus on the title, [data-close] asks to close, f
   const opener = document.getElementById('open')!
   const el = document.querySelector('dialog')!
   let open = false
-  const d = dialog(el, { open, onClose: () => d.update({ open: (open = false), onClose: () => {} }) })
+  const d = dialog(el, {
+    open,
+    onClose: () => d.update({ open: (open = false), onClose: () => {} }),
+  })
   opener.focus()
-  d.update({ open: (open = true), onClose: () => d.update({ open: (open = false), onClose: () => {} }) })
+  d.update({
+    open: (open = true),
+    onClose: () => d.update({ open: (open = false), onClose: () => {} }),
+  })
   expect(el.open).toBe(true)
   expect(document.activeElement).toBe(el.querySelector('[data-part="title"]'))
   el.querySelector<HTMLElement>('[data-close]')!.click()
@@ -73,28 +89,42 @@ test('dialog: opens modal with focus on the title, [data-close] asks to close, f
 })
 
 test('toasts: a store, a hand-written render, and the toaster action (stacking, dismissal)', async () => {
-  document.body.innerHTML = '<section data-scope="toast" data-part="region" aria-label="Notifications (F8)" tabindex="-1"></section>'
+  document.body.innerHTML =
+    '<section data-scope="toast" data-part="region" aria-label="Notifications (F8)" tabindex="-1"></section>'
   const region = document.querySelector<HTMLElement>('section')!
   const toasts = toastStore()
   const render = () => {
-    region.replaceChildren(...toasts.get().map(t => {
-      const el = document.createElement('div')
-      Object.assign(el.dataset, { scope: 'toast', part: 'root', id: t.id, tone: t.tone ?? 'neutral', ...(t.state && { state: t.state }) })
-      el.setAttribute('role', 'group')
-      el.innerHTML = `<div data-part="title"></div><div data-part="actions"><button data-x aria-label="Dismiss">x</button></div>`
-      el.firstElementChild!.textContent = t.title
-      el.querySelector('button')!.onclick = () => toasts.dismiss(t.id)
-      return el
-    }))
+    region.replaceChildren(
+      ...toasts.get().map((t) => {
+        const el = document.createElement('div')
+        Object.assign(el.dataset, {
+          scope: 'toast',
+          part: 'root',
+          id: t.id,
+          tone: t.tone ?? 'neutral',
+          ...(t.state && { state: t.state }),
+        })
+        el.setAttribute('role', 'group')
+        el.innerHTML = `<div data-part="title"></div><div data-part="actions"><button data-x aria-label="Dismiss">x</button></div>`
+        el.firstElementChild!.textContent = t.title
+        el.querySelector('button')!.onclick = () => toasts.dismiss(t.id)
+        return el
+      }),
+    )
   }
   const unsubscribe = toasts.subscribe(render)
   const action = toaster(region, toasts)
   toasts.show({ title: 'Saved' })
   toasts.show({ title: 'Copied', tone: 'positive' })
-  expect([...region.querySelectorAll('[data-part="title"]')].map(t => t.textContent)).toEqual(['Copied', 'Saved'])
+  expect([...region.querySelectorAll('[data-part="title"]')].map((t) => t.textContent)).toEqual([
+    'Copied',
+    'Saved',
+  ])
   region.querySelector<HTMLElement>('[data-x]')!.click()
   expect(region.querySelector('[data-part="root"]')!.getAttribute('data-state')).toBe('closed')
-  await new Promise(r => { setTimeout(r, 450) })
+  await new Promise((r) => {
+    setTimeout(r, 450)
+  })
   expect(region.querySelectorAll('[data-part="root"]')).toHaveLength(1)
   action.destroy()
   unsubscribe()

@@ -7,8 +7,16 @@ function Cell(props: { i: number }) {
   return <i>{cells[props.i].value}</i>
 }
 
-export const write = (i: number, v: number) => { cells[i].value = v }
+export const write = (i: number, v: number) => {
+  cells[i].value = v
+}
 
 export function Grid() {
-  return <div>{cells.map((_, i) => <Cell i={i} />)}</div>
+  return (
+    <div>
+      {cells.map((_, i) => (
+        <Cell i={i} />
+      ))}
+    </div>
+  )
 }

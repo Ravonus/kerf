@@ -17,7 +17,15 @@ export function ProductCard({ product }: { product: ProductCardRow }) {
   )
 }
 
-export function ProductGridLoading({ count, cols, label }: { count: number; cols: 3 | 4; label: string }) {
+export function ProductGridLoading({
+  count,
+  cols,
+  label,
+}: {
+  count: number
+  cols: 3 | 4
+  label: string
+}) {
   return (
     <div role="status" aria-label={label}>
       <Grid min="xs" cols={cols} gap="group">

@@ -10,7 +10,10 @@ const check = process.argv.includes('--check')
 mkdirSync(out, { recursive: true })
 let stale = 0
 for (const name of ['css', 'matrix', 'vocab']) {
-  const code = stripTypeScriptTypes(readFileSync(new URL(`${name}.ts`, src), 'utf8')).replace(/(from '\.\/\w+)\.ts'/g, "$1.mjs'")
+  const code = stripTypeScriptTypes(readFileSync(new URL(`${name}.ts`, src), 'utf8')).replace(
+    /(from '\.\/\w+)\.ts'/g,
+    "$1.mjs'",
+  )
   const file = new URL(`${name}.mjs`, out)
   if (!check) writeFileSync(file, code)
   else if (readFileSync(file, 'utf8') !== code) {

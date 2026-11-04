@@ -13,7 +13,11 @@ const peer = { id: 'p', name: 'Kofi Mensah' } as Peer
 describe('warp props changed after mount', () => {
   test('Modal: placement sits on the dialog, and centre has no attribute', async () => {
     const placement = state<'center' | 'top' | 'full'>('center')
-    const { container: c } = render(() => <Modal open={state(false)} title="Hi" placement={placement.value}>Body</Modal>)
+    const { container: c } = render(() => (
+      <Modal open={state(false)} title="Hi" placement={placement.value}>
+        Body
+      </Modal>
+    ))
     const dialog = () => c.querySelector('dialog')!
     expect(dialog().hasAttribute('data-placement')).toBe(false)
     placement.value = 'top'
@@ -22,7 +26,11 @@ describe('warp props changed after mount', () => {
   })
   test('Button: emphasis moves its attribute, its sweep and its frame', async () => {
     const emphasis = state<'solid' | 'outline' | 'frame'>('solid')
-    const { container: c } = render(() => <Button emphasis={emphasis.value} fill>Go</Button>)
+    const { container: c } = render(() => (
+      <Button emphasis={emphasis.value} fill>
+        Go
+      </Button>
+    ))
     const button = () => c.querySelector('button')!
     expect(button().hasAttribute('data-emphasis')).toBe(false)
     expect(c.querySelector('[data-part="sweep"]')).not.toBeNull()
@@ -40,7 +48,9 @@ describe('warp props changed after mount', () => {
 
   test('Accordion: variant', async () => {
     const variant = state<'line' | undefined>(undefined)
-    const { container: c } = render(() => <Accordion items={[{ value: 'a', title: 'One', content: 'first' }]} variant={variant.value} />)
+    const { container: c } = render(() => (
+      <Accordion items={[{ value: 'a', title: 'One', content: 'first' }]} variant={variant.value} />
+    ))
     const root = c.querySelector('[data-scope="accordion"]')!
     expect(root.hasAttribute('data-variant')).toBe(false)
     variant.value = 'line'
@@ -50,7 +60,11 @@ describe('warp props changed after mount', () => {
 
   test('SettingsSection: its heading level', async () => {
     const as = state<'h3' | 'h4'>('h3')
-    const { container: c } = render(() => <SettingsSection id="s" title="Team" as={as.value}><SettingRow title="Name">x</SettingRow></SettingsSection>)
+    const { container: c } = render(() => (
+      <SettingsSection id="s" title="Team" as={as.value}>
+        <SettingRow title="Name">x</SettingRow>
+      </SettingsSection>
+    ))
     expect(c.querySelector('h3')?.textContent).toBe('Team')
     as.value = 'h4'
     await flush()
@@ -60,13 +74,17 @@ describe('warp props changed after mount', () => {
 
   test('SettingRow: a control that reads state from its children', async () => {
     const text = state('one')
-    const { container: c } = render(() => <SettingRow title="Name"><i>{text.value}</i></SettingRow>)
+    const { container: c } = render(() => (
+      <SettingRow title="Name">
+        <i>{text.value}</i>
+      </SettingRow>
+    ))
     text.value = 'two'
     await flush()
     expect(c.querySelector('i')?.textContent).toBe('two')
   })
 
-  test('LockedField: the field\'s own props', async () => {
+  test("LockedField: the field's own props", async () => {
     const label = state('Title')
     const holder = state<Peer | null>(null)
     const { container: c } = render(() => <LockedField label={label.value} peer={holder.value} />)
@@ -96,14 +114,18 @@ describe('warp props changed after mount', () => {
     let played = 0
     sound.value = () => played++
     await flush()
-    const button = [...c.querySelectorAll('button')].find(b => b.textContent.includes('Play test sound'))!
+    const button = [...c.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('Play test sound'),
+    )!
     button.click()
     expect(played).toBe(1)
   })
 
   test('ScheduledLobby: add to calendar appears when the handler does', async () => {
     const add = state<(() => void) | undefined>(undefined)
-    const { container: c } = render(() => <ScheduledLobby title="Standup" to={Date.now() + 60_000} onAddToCalendar={add.value} />)
+    const { container: c } = render(() => (
+      <ScheduledLobby title="Standup" to={Date.now() + 60_000} onAddToCalendar={add.value} />
+    ))
     expect(c.textContent).not.toContain('Add to calendar')
     add.value = () => {}
     await flush()

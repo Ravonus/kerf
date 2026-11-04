@@ -38,10 +38,18 @@ export interface Piece {
 }
 
 /** A press, where it landed, and how far through its moment it is, 0–1. */
-export interface Press { x: number; y: number; age: number }
+export interface Press {
+  x: number
+  y: number
+  age: number
+}
 
 /** The scroll position a stage paints at, when it scrolls. */
-export interface Scroll { top: number; height: number; view: number }
+export interface Scroll {
+  top: number
+  height: number
+  view: number
+}
 
 /** What a stage's painters get each frame. */
 export interface Scene {
@@ -71,7 +79,14 @@ export interface Scene {
 }
 
 /** One word of a piece's text, ready for `fillText`. */
-export interface Word { text: string; x: number; y: number; w: number; font: string; spacing: number }
+export interface Word {
+  text: string
+  x: number
+  y: number
+  w: number
+  font: string
+  spacing: number
+}
 
 /** Paints one piece. It runs every frame the stage paints, so it should only draw. */
 export type StagePainter = (piece: Piece, scene: Scene) => void
@@ -122,27 +137,58 @@ export function floatStage(canvas: HTMLCanvasElement): Action<void> {
   }
   if (own?.hasAttribute('popover')) own.addEventListener('beforetoggle', start)
   else start()
-  return { update() {}, destroy() { own?.removeEventListener('beforetoggle', start); inner?.destroy() } }
+  return {
+    update() {},
+    destroy() {
+      own?.removeEventListener('beforetoggle', start)
+      inner?.destroy()
+    },
+  }
 }
 const clamp = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 
 /** Paints every `[data-skin]` element inside the canvas's stage. The canvas sits in a paint layer that is the stage's first child. */
 export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Action<StageOptions> {
   let o = options
-  const box = canvas.parentElement ?? canvas, host = box.parentElement ?? box
-  let time = 0, appeared = 0, hidden = false, stale = true, busy = 0, painted = false, drag = false, unit = 1, rows = 0, cols = 0
-  let pieces: HTMLElement[] = [], states = new WeakMap<HTMLElement, Piece>(), inks = new Map<string, string>()
-  const marks: { x: number; y: number; at: number }[] = [], pointer = { x: -1e4, y: -1e4 }
+  const box = canvas.parentElement ?? canvas,
+    host = box.parentElement ?? box
+  let time = 0,
+    appeared = 0,
+    hidden = false,
+    stale = true,
+    busy = 0,
+    painted = false,
+    drag = false,
+    unit = 1,
+    rows = 0,
+    cols = 0
+  let pieces: HTMLElement[] = [],
+    states = new WeakMap<HTMLElement, Piece>(),
+    inks = new Map<string, string>()
+  const marks: { x: number; y: number; at: number }[] = [],
+    pointer = { x: -1e4, y: -1e4 }
 
   const lively = () => !reducedMotion(host) && !!dials && dials.speed > 0
   let dials: Frame['tier'] | undefined
-  const settings = () => ({ draw, animate: o.animate, fps: o.fps, cell: o.cell, context: o.context, onTheme: retheme })
+  const settings = () => ({
+    draw,
+    animate: o.animate,
+    fps: o.fps,
+    cell: o.cell,
+    context: o.context,
+    onTheme: retheme,
+  })
   function retheme() {
     inks = new Map()
     o.onTheme?.()
   }
 
-  const scroller = () => (o.layout === 'page' ? document.scrollingElement ?? document.documentElement : o.layout === 'scroll' ? host : undefined)
+  const scroller = () =>
+    o.layout === 'page'
+      ? (document.scrollingElement ?? document.documentElement)
+      : o.layout === 'scroll'
+        ? host
+        : undefined
 
   function color(css: string) {
     let c = inks.get(css)
@@ -158,27 +204,45 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
   }
 
   function words(el: HTMLElement) {
-    const origin = box.getBoundingClientRect(), range = document.createRange(), walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), out: Word[] = []
+    const origin = box.getBoundingClientRect(),
+      range = document.createRange(),
+      walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT),
+      out: Word[] = []
     const measure = document.createElement('canvas').getContext('2d')
     for (let n = walk.nextNode() as Text | null; n; n = walk.nextNode() as Text | null) {
-      const st = getComputedStyle(n.parentElement!), upper = st.textTransform === 'uppercase', size = parseFloat(st.fontSize) / unit
-      const font = `${st.fontStyle} ${st.fontWeight} ${size}px ${st.fontFamily}`, spacing = (parseFloat(st.letterSpacing) || 0) / unit
+      const st = getComputedStyle(n.parentElement!),
+        upper = st.textTransform === 'uppercase',
+        size = parseFloat(st.fontSize) / unit
+      const font = `${st.fontStyle} ${st.fontWeight} ${size}px ${st.fontFamily}`,
+        spacing = (parseFloat(st.letterSpacing) || 0) / unit
       if (measure) measure.font = font
-      const m = measure?.measureText('Hg'), asc = m?.fontBoundingBoxAscent ?? size * 0.8, desc = m?.fontBoundingBoxDescent ?? size * 0.2
+      const m = measure?.measureText('Hg'),
+        asc = m?.fontBoundingBoxAscent ?? size * 0.8,
+        desc = m?.fontBoundingBoxDescent ?? size * 0.2
       for (const word of n.data.matchAll(/\S+/g)) {
         range.setStart(n, word.index)
         range.setEnd(n, word.index + word[0].length)
         const at = range.getClientRects()[0]
         if (!at) continue
-        const top = (at.top - origin.top) / unit, h = at.height / unit
-        out.push({ text: upper ? word[0].toUpperCase() : word[0], x: (at.left - origin.left) / unit, y: top + (h - asc - desc) / 2 + asc, w: at.width / unit, font, spacing })
+        const top = (at.top - origin.top) / unit,
+          h = at.height / unit
+        out.push({
+          text: upper ? word[0].toUpperCase() : word[0],
+          x: (at.left - origin.left) / unit,
+          y: top + (h - asc - desc) / 2 + asc,
+          w: at.width / unit,
+          font,
+          spacing,
+        })
       }
     }
     return out
   }
 
   function gather() {
-    pieces = [...host.querySelectorAll<HTMLElement>('[data-skin]')].filter(el => el.closest('[data-scope="stage"]') === host)
+    pieces = [...host.querySelectorAll<HTMLElement>('[data-skin]')].filter(
+      (el) => el.closest('[data-scope="stage"]') === host,
+    )
     sizes?.disconnect()
     sizes?.observe(box)
     for (const el of pieces) sizes?.observe(el)
@@ -187,11 +251,36 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
 
   // States come from the DOM itself (:hover, :focus-visible, checked, aria-pressed), so a look can't disagree with it.
   function read(el: HTMLElement, base: DOMRect, ease: number, snap: boolean): Piece {
-    const b = el.getBoundingClientRect(), cut = (v: number) => (snap ? Math.round(v) : v)
+    const b = el.getBoundingClientRect(),
+      cut = (v: number) => (snap ? Math.round(v) : v)
     let p = states.get(el)
-    if (!p) states.set(el, (p = { el, skin: '', x: 0, y: 0, w: -1, h: -1, r: 0, hover: 0, press: 0, focus: 0, on: 0, value: 0, seen: lively() && !host.matches('[data-veil], [popover]') ? 0 : 1, disabled: false, invalid: false, px: 0, py: 0 }))
-    const w = cut(b.width / unit), h = cut(b.height / unit)
-    if (w !== p.w || h !== p.h) p.r = Math.min(cut(parseFloat(getComputedStyle(el).borderTopLeftRadius) / unit) || 0, h / 2)
+    if (!p)
+      states.set(
+        el,
+        (p = {
+          el,
+          skin: '',
+          x: 0,
+          y: 0,
+          w: -1,
+          h: -1,
+          r: 0,
+          hover: 0,
+          press: 0,
+          focus: 0,
+          on: 0,
+          value: 0,
+          seen: lively() && !host.matches('[data-veil], [popover]') ? 0 : 1,
+          disabled: false,
+          invalid: false,
+          px: 0,
+          py: 0,
+        }),
+      )
+    const w = cut(b.width / unit),
+      h = cut(b.height / unit)
+    if (w !== p.w || h !== p.h)
+      p.r = Math.min(cut(parseFloat(getComputedStyle(el).borderTopLeftRadius) / unit) || 0, h / 2)
     p.skin = el.dataset.skin ?? ''
     p.x = cut((b.left - base.left) / unit)
     p.y = cut((b.top - base.top) / unit)
@@ -201,37 +290,69 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
     p.py = (pointer.y - b.top) / unit
     p.disabled = el.matches(':disabled, [aria-disabled="true"]')
     let invalid = false
-    try { invalid = el.matches(':user-invalid') } catch { /* an older engine: no invalid state */ }
+    try {
+      invalid = el.matches(':user-invalid')
+    } catch {
+      /* an older engine: no invalid state */
+    }
     p.invalid = invalid
-    const input = el as HTMLInputElement, aria = (name: string) => el.getAttribute(name) === 'true'
-    const on = input.checked || aria('aria-pressed') || aria('aria-selected') || aria('aria-checked') || aria('aria-expanded') || el.hasAttribute('open') || (el.hasAttribute('aria-current') && el.getAttribute('aria-current') !== 'false')
-    const value = input.type === 'range' ? (+input.value - +(input.min || 0)) / ((+(input.max || 100) - +(input.min || 0)) || 1) : el instanceof HTMLProgressElement || el instanceof HTMLMeterElement ? el.value / (el.max || 1) : 0
-    const toward = (now: number, goal: number) => (Math.abs(goal - now) < 0.01 ? goal : now + (goal - now) * ease)
+    const input = el as HTMLInputElement,
+      aria = (name: string) => el.getAttribute(name) === 'true'
+    const on =
+      input.checked ||
+      aria('aria-pressed') ||
+      aria('aria-selected') ||
+      aria('aria-checked') ||
+      aria('aria-expanded') ||
+      el.hasAttribute('open') ||
+      (el.hasAttribute('aria-current') && el.getAttribute('aria-current') !== 'false')
+    const value =
+      input.type === 'range'
+        ? (+input.value - +(input.min || 0)) / (+(input.max || 100) - +(input.min || 0) || 1)
+        : el instanceof HTMLProgressElement || el instanceof HTMLMeterElement
+          ? el.value / (el.max || 1)
+          : 0
+    const toward = (now: number, goal: number) =>
+      Math.abs(goal - now) < 0.01 ? goal : now + (goal - now) * ease
     p.hover = toward(p.hover, !p.disabled && el.matches(':hover, [data-highlighted]') ? 1 : 0)
     p.press = toward(p.press, !p.disabled && el.matches(':active') ? 1 : 0)
-    p.focus = toward(p.focus, el.matches(':focus-visible') || (el.matches('input, select, textarea') && el.matches(':focus')) ? 1 : 0)
+    p.focus = toward(
+      p.focus,
+      el.matches(':focus-visible') ||
+        (el.matches('input, select, textarea') && el.matches(':focus'))
+        ? 1
+        : 0,
+    )
     p.on = toward(p.on, on ? 1 : 0)
     p.value = toward(p.value, clamp(value))
     return p
   }
-  const settled = (p: Piece) => p.seen >= 1 && [p.hover, p.press, p.focus, p.on].every(v => v === 0 || v === 1)
+  const settled = (p: Piece) =>
+    p.seen >= 1 && [p.hover, p.press, p.focus, p.on].every((v) => v === 0 || v === 1)
 
   function draw(frame: Frame) {
     const { ctx, width, height, dpr, dt, time: now } = frame
     dials = frame.tier
-    if (hidden) { states = new WeakMap(); appeared = now; hidden = false }
+    if (hidden) {
+      states = new WeakMap()
+      appeared = now
+      hidden = false
+    }
     if (stale) gather()
     time = now
     cols = width
     rows = height
     unit = o.cell ? Math.max(1, Math.round(o.cell * dpr)) / dpr : 1
-    const live = lively(), ease = live ? 1 - Math.exp(-dt * 16) : 1, base = box.getBoundingClientRect()
+    const live = lively(),
+      ease = live ? 1 - Math.exp(-dt * 16) : 1,
+      base = box.getBoundingClientRect()
 
     let moving = marks.length > 0 || drag || now < busy
     const shown: Piece[] = []
     for (const el of pieces) {
       const p = read(el, base, ease, !!o.cell)
-      if (p.y >= height || p.y + p.h < -8 || p.x >= width || p.x + p.w < -8 || !p.w || !p.h) continue
+      if (p.y >= height || p.y + p.h < -8 || p.x >= width || p.x + p.w < -8 || !p.w || !p.h)
+        continue
       p.seen = live ? Math.min(1, p.seen + dt / 0.45) : 1
       if (!settled(p) || (live && p.focus > 0.5)) moving = true
       shown.push(p)
@@ -242,13 +363,43 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
       if (age >= 1) marks.splice(k, 1)
       else presses.unshift({ x: marks[k]!.x, y: marks[k]!.y, age })
     }
-    const sc = scroller(), scroll = sc ? { top: sc.scrollTop, height: sc.scrollHeight, view: sc.clientHeight } : undefined
+    const sc = scroller(),
+      scroll = sc
+        ? { top: sc.scrollTop, height: sc.scrollHeight, view: sc.clientHeight }
+        : undefined
     let rail: Scene['rail']
     if (o.rail && scroll && scroll.height > scroll.view + 1) {
-      const len = Math.max(height * 0.06, height * (scroll.view / scroll.height)), w = Math.max(2, 6 / unit)
-      rail = { x: width - w - 2 / unit, w, top: (height - len) * (scroll.top / (scroll.height - scroll.view)), len, drag }
+      const len = Math.max(height * 0.06, height * (scroll.view / scroll.height)),
+        w = Math.max(2, 6 / unit)
+      rail = {
+        x: width - w - 2 / unit,
+        w,
+        top: (height - len) * (scroll.top / (scroll.height - scroll.view)),
+        len,
+        drag,
+      }
     }
-    const scene: Scene = { ctx, width, height, unit, time: now, dt, live, pieces: shown, pointer: { x: (pointer.x - base.left) / unit, y: (pointer.y - base.top) / unit, in: pointer.x > -1e4 }, presses, scroll, rail, shown: now - appeared, color, words }
+    const scene: Scene = {
+      ctx,
+      width,
+      height,
+      unit,
+      time: now,
+      dt,
+      live,
+      pieces: shown,
+      pointer: {
+        x: (pointer.x - base.left) / unit,
+        y: (pointer.y - base.top) / unit,
+        in: pointer.x > -1e4,
+      },
+      presses,
+      scroll,
+      rail,
+      shown: now - appeared,
+      color,
+      words,
+    }
 
     if (o.paint) moving = o.paint(scene) === true || moving
     else {
@@ -263,34 +414,113 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
       }
       o.overlay?.(scene)
     }
-    if (!painted) { painted = true; host.setAttribute('data-state', 'live') }
+    if (!painted) {
+      painted = true
+      host.setAttribute('data-state', 'live')
+    }
     return moving
   }
 
   // Its float: a box with no ground of its own, which the float's own painters fill.
-  LOOKS.set(host, c => { const f = stage(c, { ...o, layout: 'box', rail: false, background: undefined }); return { update() {}, destroy: () => f.destroy() } })
+  LOOKS.set(host, (c) => {
+    const f = stage(c, { ...o, layout: 'box', rail: false, background: undefined })
+    return { update() {}, destroy: () => f.destroy() }
+  })
   const s = surface(canvas, settings())
   const invalidate = () => s.invalidate()
   // A CSS transition can move a piece after the event that started it, so paint on for a moment after any of them.
-  const stir = (e?: Event) => { busy = time + (e?.type === 'animationstart' ? 0.6 : 0.4); s.update(settings()) }
-  const sizes = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => { if (!box.clientWidth) hidden = true; invalidate() })
+  const stir = (e?: Event) => {
+    busy = time + (e?.type === 'animationstart' ? 0.6 : 0.4)
+    s.update(settings())
+  }
+  const sizes =
+    typeof ResizeObserver === 'undefined'
+      ? undefined
+      : new ResizeObserver(() => {
+          if (!box.clientWidth) hidden = true
+          invalidate()
+        })
   sizes?.observe(box)
-  const watch = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(() => { stale = true; stir() })
-  watch?.observe(host, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-skin', 'data-ramp', 'data-look', 'aria-pressed', 'aria-checked', 'aria-selected', 'aria-expanded', 'data-highlighted', 'aria-current', 'disabled', 'open', 'hidden', 'class', 'value'] })
+  const watch =
+    typeof MutationObserver === 'undefined'
+      ? undefined
+      : new MutationObserver(() => {
+          stale = true
+          stir()
+        })
+  watch?.observe(host, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: [
+      'data-skin',
+      'data-ramp',
+      'data-look',
+      'aria-pressed',
+      'aria-checked',
+      'aria-selected',
+      'aria-expanded',
+      'data-highlighted',
+      'aria-current',
+      'disabled',
+      'open',
+      'hidden',
+      'class',
+      'value',
+    ],
+  })
 
-  const at = (e: PointerEvent) => { const b = box.getBoundingClientRect(); return { x: (e.clientX - b.left) / unit, y: (e.clientY - b.top) / unit } }
-  const scrubTo = (e: PointerEvent) => { const sc = scroller(); if (sc) sc.scrollTop = (at(e).y / rows) * sc.scrollHeight - sc.clientHeight / 2 }
+  const at = (e: PointerEvent) => {
+    const b = box.getBoundingClientRect()
+    return { x: (e.clientX - b.left) / unit, y: (e.clientY - b.top) / unit }
+  }
+  const scrubTo = (e: PointerEvent) => {
+    const sc = scroller()
+    if (sc) sc.scrollTop = (at(e).y / rows) * sc.scrollHeight - sc.clientHeight / 2
+  }
   const onRail = (e: PointerEvent) => !!o.rail && !!scroller() && at(e).x >= cols - 12 / unit
-  const move = (e: PointerEvent) => { pointer.x = e.clientX; pointer.y = e.clientY; if (drag) scrubTo(e); invalidate() }
+  const move = (e: PointerEvent) => {
+    pointer.x = e.clientX
+    pointer.y = e.clientY
+    if (drag) scrubTo(e)
+    invalidate()
+  }
   const down = (e: PointerEvent) => {
-    if (onRail(e)) { drag = true; e.preventDefault(); scrubTo(e); document.addEventListener('pointermove', move); stir(); return }
+    if (onRail(e)) {
+      drag = true
+      e.preventDefault()
+      scrubTo(e)
+      document.addEventListener('pointermove', move)
+      stir()
+      return
+    }
     if (lively()) marks.push({ ...at(e), at: time })
     stir()
   }
-  const up = () => { if (drag) { drag = false; document.removeEventListener('pointermove', move) } stir() }
-  const leave = () => { pointer.x = pointer.y = -1e4; invalidate() }
+  const up = () => {
+    if (drag) {
+      drag = false
+      document.removeEventListener('pointermove', move)
+    }
+    stir()
+  }
+  const leave = () => {
+    pointer.x = pointer.y = -1e4
+    invalidate()
+  }
   const fonts = () => invalidate()
-  const EVENTS = ['focusin', 'focusout', 'input', 'change', 'toggle', 'transitionrun', 'animationstart', 'keydown', 'keyup'] as const
+  const EVENTS = [
+    'focusin',
+    'focusout',
+    'input',
+    'change',
+    'toggle',
+    'transitionrun',
+    'animationstart',
+    'keydown',
+    'keyup',
+  ] as const
   host.addEventListener('pointermove', move, { passive: true })
   host.addEventListener('pointerdown', down)
   host.addEventListener('pointerleave', leave)

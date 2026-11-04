@@ -7,7 +7,15 @@
 // spike's comparison only.
 import { VOCAB } from './vocab.mjs'
 
-                                                                                                                                           
+                           
+              
+          
+              
+              
+                  
+                    
+                     
+ 
                         
                
                                        
@@ -32,31 +40,52 @@ import { VOCAB } from './vocab.mjs'
                                    
 
 /** Where a rule applies: the root or a part, under some axis values, a state or an accent word (`radius:round`). */
-                                                                                                                                                   
+                    
+                           
+                          
+                
+                 
+              
+              
+            
+ 
 
 export class GroupError extends Error {}
 
 const ARIA = new Set(['selected', 'pressed', 'checked', 'expanded', 'current', 'invalid', 'busy'])
-const PSEUDO                         = { hover: ':hover', focus: ':focus-visible', active: ':active', disabled: ':disabled' }
-const kebab = (k        ) => (k.startsWith('--') ? k : k.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`))
+const PSEUDO                         = {
+  hover: ':hover',
+  focus: ':focus-visible',
+  active: ':active',
+  disabled: ':disabled',
+}
+const kebab = (k        ) =>
+  k.startsWith('--') ? k : k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
 const table = VOCAB                                                    
 
 /** `Did you mean `x`? ` for names within a third of the word's length (or containing it), else ''. */
 export function didYouMean(word        , names          )         {
   const dist = (a        , b        ) => {
     // edit distance with adjacent swaps as one edit (`titel` → `title`)
-    const d = Array.from({ length: a.length + 1 }, (_row, i) => Array.from({ length: b.length + 1 }, (_cell, j) => (i ? (j ? 0 : i) : j)))
+    const d = Array.from({ length: a.length + 1 }, (_row, i) =>
+      Array.from({ length: b.length + 1 }, (_cell, j) => (i ? (j ? 0 : i) : j)),
+    )
     for (let i = 1; i <= a.length; i++)
       for (let j = 1; j <= b.length; j++) {
-        d[i] [j] = Math.min(d[i - 1] [j]  + 1, d[i] [j - 1]  + 1, d[i - 1] [j - 1]  + (a[i - 1] === b[j - 1] ? 0 : 1))
-        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i] [j] = Math.min(d[i] [j] , d[i - 2] [j - 2]  + 1)
+        d[i] [j] = Math.min(
+          d[i - 1] [j]  + 1,
+          d[i] [j - 1]  + 1,
+          d[i - 1] [j - 1]  + (a[i - 1] === b[j - 1] ? 0 : 1),
+        )
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1])
+          d[i] [j] = Math.min(d[i] [j] , d[i - 2] [j - 2]  + 1)
       }
     return d[a.length] [b.length] 
   }
   const w = word.toLowerCase()
   const limit = Math.max(1, Math.floor(w.length / 3))
   const close = names
-    .map(n => [dist(w, n.toLowerCase()), n]         )
+    .map((n) => [dist(w, n.toLowerCase()), n]         )
     .filter(([d, n]) => d <= limit || n.toLowerCase().includes(w) || w.includes(n.toLowerCase()))
     .sort((a, b) => a[0] - b[0])
     .slice(0, 3)
@@ -65,40 +94,56 @@ export function didYouMean(word        , names          )         {
 }
 
 /** An intent object → declarations, each with the intent and token it came from (`pad: group`, or `css`). */
-export function resolveTraced(intent        , where        )                                                  {
+export function resolveTraced(
+  intent        ,
+  where        ,
+)                                                  {
   const out                                                  = {}
   for (const [key, value] of Object.entries(intent ?? {})) {
     if (key === 'css') {
-      for (const [p, v] of Object.entries(value                           )) out[kebab(p)] = { value: String(v), from: 'css' }
+      for (const [p, v] of Object.entries(value                           ))
+        out[kebab(p)] = { value: String(v), from: 'css' }
       continue
     }
     const values = table[key]
-    if (!values) throw new GroupError(`${where}: \`${key}\` isn't an intent (${didYouMean(key, Object.keys(table))}one of ${Object.keys(table).join(', ')}; raw CSS goes in \`css: { … }\`)`)
+    if (!values)
+      throw new GroupError(
+        `${where}: \`${key}\` isn't an intent (${didYouMean(key, Object.keys(table))}one of ${Object.keys(table).join(', ')}; raw CSS goes in \`css: { … }\`)`,
+      )
     const decls = values[String(value)]
-    if (!decls) throw new GroupError(`${where}: \`${key}: ${JSON.stringify(value)}\` isn't a token (${didYouMean(String(value), Object.keys(values))}${key} is one of ${Object.keys(values).join(', ')})`)
-    for (const [p, v] of Object.entries(decls)) out[p] = { value: v, from: `${key}: ${value          }` }
+    if (!decls)
+      throw new GroupError(
+        `${where}: \`${key}: ${JSON.stringify(value)}\` isn't a token (${didYouMean(String(value), Object.keys(values))}${key} is one of ${Object.keys(values).join(', ')})`,
+      )
+    for (const [p, v] of Object.entries(decls))
+      out[p] = { value: v, from: `${key}: ${value          }` }
   }
   return out
 }
 
 /** An intent object → declarations, later keys winning. Throws a GroupError naming the bad key or value. */
 export function resolve(intent        , where        )        {
-  return Object.fromEntries(Object.entries(resolveTraced(intent, where)).map(([p, d]) => [p, d.value]))
+  return Object.fromEntries(
+    Object.entries(resolveTraced(intent, where)).map(([p, d]) => [p, d.value]),
+  )
 }
 
 /** Every accent word (`radius:round`) the given root sites write, each with its one-intent object. */
 export function accentWords(uses            )                     {
   const words = new Map                ()
-  for (const u of uses) for (const [k, v] of Object.entries(u.accent ?? {})) words.set(`${k}:${v}`, { [k]: v })
+  for (const u of uses)
+    for (const [k, v] of Object.entries(u.accent ?? {})) words.set(`${k}:${v}`, { [k]: v })
   return [...words]
 }
 
 /** The rules of one group that its call sites can reach, in cascade order (tier, then definition order). */
 export function reachable(g             , uses            )         {
   const { def, name } = g
-  const roots = uses.filter(u => !u.part)
-  const any = roots.some(u => u.dynamic)
-  const axes = Object.entries(def.axes ?? {}).filter((e)                                        => e[1] !== 'inherit')
+  const roots = uses.filter((u) => !u.part)
+  const any = roots.some((u) => u.dynamic)
+  const axes = Object.entries(def.axes ?? {}).filter(
+    (e)                                        => e[1] !== 'inherit',
+  )
   const values = new Map                     ()
   for (const [axis, vals] of axes) {
     const set = new Set        ()
@@ -109,37 +154,78 @@ export function reachable(g             , uses            )         {
     }
     values.set(axis, set)
   }
-  const states = new Set([...roots.flatMap(u => (any ? Object.keys(def.states ?? {}) : u.states)), ...Object.keys(PSEUDO)])
-  const parts = new Set(uses.flatMap(u => (u.part ? [u.part] : [])))
+  const states = new Set([
+    ...roots.flatMap((u) => (any ? Object.keys(def.states ?? {}) : u.states)),
+    ...Object.keys(PSEUDO),
+  ])
+  const parts = new Set(uses.flatMap((u) => (u.part ? [u.part] : [])))
   const at = (what        ) => `group ${name} (${g.file}:${g.line}) ${what}`
   const rules         = []
-  if (roots.length) rules.push({ axes: [], tier: 0, decls: resolve(def.base ?? {}, at('base')), at: 'base' })
+  if (roots.length)
+    rules.push({ axes: [], tier: 0, decls: resolve(def.base ?? {}, at('base')), at: 'base' })
   for (const [part, intent] of Object.entries(def.parts ?? {}))
-    if (parts.has(part)) rules.push({ part, axes: [], tier: 0, decls: resolve(intent, at(`part ${part}`)), at: `part ${part}` })
+    if (parts.has(part))
+      rules.push({
+        part,
+        axes: [],
+        tier: 0,
+        decls: resolve(intent, at(`part ${part}`)),
+        at: `part ${part}`,
+      })
   for (const [axis, vals] of axes)
     for (const [value, intent] of Object.entries(vals))
-      if (values.get(axis) .has(value)) rules.push({ axes: [[axis, value]], tier: 1, decls: resolve(intent, at(`${axis}=${value}`)), at: `${axis}=${value}` })
+      if (values.get(axis) .has(value))
+        rules.push({
+          axes: [[axis, value]],
+          tier: 1,
+          decls: resolve(intent, at(`${axis}=${value}`)),
+          at: `${axis}=${value}`,
+        })
   if (roots.length)
     for (const [state, intent] of Object.entries(def.states ?? {}))
-      if (states.has(state)) rules.push({ axes: [], state, tier: 2, decls: resolve(intent, at(`state ${state}`)), at: `state ${state}` })
+      if (states.has(state))
+        rules.push({
+          axes: [],
+          state,
+          tier: 2,
+          decls: resolve(intent, at(`state ${state}`)),
+          at: `state ${state}`,
+        })
   for (const [i, c] of (def.compounds ?? []).entries()) {
     const when = Object.entries(c.when)
     if (when.every(([a, v]) => values.get(a)?.has(v)) && (!c.part || parts.has(c.part)))
-      rules.push({ part: c.part, axes: when, tier: 3, decls: resolve(c.set, at(`compound ${i}`)), at: `compound ${i}` })
+      rules.push({
+        part: c.part,
+        axes: when,
+        tier: 3,
+        decls: resolve(c.set, at(`compound ${i}`)),
+        at: `compound ${i}`,
+      })
   }
   // Accents last: a one-off at a call site wins over the group's own values (research 23 §2.2).
-  for (const [word, intent] of accentWords(any ? [] : roots)) rules.push({ axes: [], accent: word, tier: 4, decls: resolve(intent, at(`accent ${word}`)), at: `accent ${word}` })
-  return rules.filter(r => Object.keys(r.decls).length)
+  for (const [word, intent] of accentWords(any ? [] : roots))
+    rules.push({
+      axes: [],
+      accent: word,
+      tier: 4,
+      decls: resolve(intent, at(`accent ${word}`)),
+      at: `accent ${word}`,
+    })
+  return rules.filter((r) => Object.keys(r.decls).length)
 }
 
 const cond = (r      ) =>
   r.axes.map(([a, v]) => `[data-${a}="${v}"]`).join('') +
   (r.accent ? `[data-accent~="${r.accent}"]` : '') +
-  (r.state ? PSEUDO[r.state] ?? (ARIA.has(r.state) ? `[aria-${r.state}="true"]` : `[data-${r.state}]`) : '')
+  (r.state
+    ? (PSEUDO[r.state] ?? (ARIA.has(r.state) ? `[aria-${r.state}="true"]` : `[data-${r.state}]`))
+    : '')
 
 /** The rule's selector, flat (`[data-g="x"]…`) or inside the group's @scope (`:scope…`). */
 function selector(name        , r      , scoped         , bare = false) {
-  const root = scoped ? `:scope${cond(r)}` : `[data-g="${name}"]${cond(r)}${bare ? '' : ':not([data-part])'}`
+  const root = scoped
+    ? `:scope${cond(r)}`
+    : `[data-g="${name}"]${cond(r)}${bare ? '' : ':not([data-part])'}`
   if (!r.part) return root
   const part = scoped ? `[data-part="${r.part}"]` : `[data-g="${name}"][data-part="${r.part}"]`
   return r.axes.length || r.state ? `${root} ${part}` : part
@@ -147,10 +233,17 @@ function selector(name        , r      , scoped         , bare = false) {
 
 const isChannel = (p        ) => p.startsWith('--_')
 const channelReads = (rules        ) =>
-  new Set(rules.flatMap(r => Object.entries(r.decls).filter(([p]) => !isChannel(p)).flatMap(([, v]) => [...v.matchAll(/var\((--_[\w-]+)/g)].map(m => m[1]))))
+  new Set(
+    rules.flatMap((r) =>
+      Object.entries(r.decls)
+        .filter(([p]) => !isChannel(p))
+        .flatMap(([, v]) => [...v.matchAll(/var\((--_[\w-]+)/g)].map((m) => m[1])),
+    ),
+  )
 
 const CHANNEL_READ = /var\((--_[\w-]+)(?:,\s*([^()]*(?:\([^()]*\))?[^()]*))?\)/g
-const substitute = (v        , channels       ) => v.replace(CHANNEL_READ, (m, name) => channels[name] ?? m)
+const substitute = (v        , channels       ) =>
+  v.replace(CHANNEL_READ, (m, name) => channels[name] ?? m)
 const reads = (v        ) => v.includes('var(--_')
 
 /**
@@ -167,27 +260,42 @@ const reads = (v        ) => v.includes('var(--_')
  */
 function foldTones(rules        ) {
   // A group with no tone anywhere reads its fallbacks: `var(--_text, var(--warp-color-text))` → the text token.
-  if (!rules.some(r => Object.keys(r.decls).some(isChannel))) {
+  if (!rules.some((r) => Object.keys(r.decls).some(isChannel))) {
     for (const r of rules)
       for (const [p, v] of Object.entries(r.decls))
-        if (reads(v)) r.decls[p] = v.replace(CHANNEL_READ, (m, _n, fallback) => (fallback === undefined ? m : fallback.trim()))
+        if (reads(v))
+          r.decls[p] = v.replace(CHANNEL_READ, (m, _n, fallback) =>
+            fallback === undefined ? m : fallback.trim(),
+          )
     return
   }
-  const targets = new Set(rules.map(r => r.part))
+  const targets = new Set(rules.map((r) => r.part))
   for (const t of targets) {
-    const on = rules.filter(r => r.part === t)
-    const setters = on.filter(r => Object.keys(r.decls).some(isChannel))
+    const on = rules.filter((r) => r.part === t)
+    const setters = on.filter((r) => Object.keys(r.decls).some(isChannel))
     if (!setters.length) continue
-    const readers = on.filter(r => Object.entries(r.decls).some(([p, v]) => !isChannel(p) && reads(v)))
+    const readers = on.filter((r) =>
+      Object.entries(r.decls).some(([p, v]) => !isChannel(p) && reads(v)),
+    )
     // Channels read by rules on other elements (a part reading its root's tone) must stay.
-    if (rules.some(r => r.part !== t && Object.entries(r.decls).some(([p, v]) => !isChannel(p) && reads(v)))) continue
-    const drop = (r      ) => (r.decls = Object.fromEntries(Object.entries(r.decls).filter(([p]) => !isChannel(p))))
+    if (
+      rules.some(
+        (r) => r.part !== t && Object.entries(r.decls).some(([p, v]) => !isChannel(p) && reads(v)),
+      )
+    )
+      continue
+    const drop = (r      ) =>
+      (r.decls = Object.fromEntries(Object.entries(r.decls).filter(([p]) => !isChannel(p))))
     if (setters.length === 1 && setters[0] .tier === 0) {
       const channels = { ...setters[0] .decls }
-      for (const r of readers) for (const [p, v] of Object.entries(r.decls)) if (!isChannel(p)) r.decls[p] = substitute(v, channels)
+      for (const r of readers)
+        for (const [p, v] of Object.entries(r.decls))
+          if (!isChannel(p)) r.decls[p] = substitute(v, channels)
       drop(setters[0] )
-    } else if (setters.every(s => s.tier > 0) && readers.every(r => r.tier === 0 && !r.state)) {
-      const read = readers.flatMap(r => Object.entries(r.decls).filter(([p, v]) => !isChannel(p) && reads(v)))
+    } else if (setters.every((s) => s.tier > 0) && readers.every((r) => r.tier === 0 && !r.state)) {
+      const read = readers.flatMap((r) =>
+        Object.entries(r.decls).filter(([p, v]) => !isChannel(p) && reads(v)),
+      )
       for (const s of setters) {
         const channels = { ...s.decls }
         drop(s)
@@ -198,7 +306,9 @@ function foldTones(rules        ) {
         r.decls = Object.fromEntries(
           Object.entries(r.decls).flatMap(([p, v])                     => {
             if (isChannel(p) || !reads(v)) return [[p, v]]
-            const bare = v.replace(CHANNEL_READ, (m, _n, fallback) => (fallback === undefined ? '\0' : fallback.trim()))
+            const bare = v.replace(CHANNEL_READ, (m, _n, fallback) =>
+              fallback === undefined ? '\0' : fallback.trim(),
+            )
             return bare.includes('\0') ? [] : [[p, bare]]
           }),
         )
@@ -208,7 +318,12 @@ function foldTones(rules        ) {
 
 /** Greedy nearest neighbour on shared declarations (Jaccard), from the first group by name. */
 function bySimilarity                                             (xs     )      {
-  const sets = new Map(xs.map(x => [x, new Set(x.rules.flatMap(r => Object.entries(r.decls).map(([p, v]) => `${p}:${v}`)))]))
+  const sets = new Map(
+    xs.map((x) => [
+      x,
+      new Set(x.rules.flatMap((r) => Object.entries(r.decls).map(([p, v]) => `${p}:${v}`))),
+    ]),
+  )
   const sim = (a   , b   ) => {
     const [A, B] = [sets.get(a) , sets.get(b) ]
     let n = 0
@@ -277,29 +392,61 @@ function merge(rules                                               ) {
  
 
 /** Readable group CSS for the call sites given. Groups no site uses emit nothing. */
-export function emitGroups(groups               , uses            , { dev = false, scope = true, where = false, share = false, taggedParts = false, fold = true, order = 'similar' }              = {})         {
+export function emitGroups(
+  groups               ,
+  uses            ,
+  {
+    dev = false,
+    scope = true,
+    where = false,
+    share = false,
+    taggedParts = false,
+    fold = true,
+    order = 'similar',
+  }              = {},
+)         {
   if (!taggedParts) scope = true
   const block = (sels          , decls       , indent        ) => {
     const list = sels.join(dev ? ', ' : ',')
     const body = Object.entries(decls).map(([p, v]) => `${indent}  ${p}: ${v};`)
     return `${indent}${where ? `:where(${list})` : list} {\n${body.join('\n')}\n${indent}}`
   }
-  let used = groups.map(g => ({ g, rules: reachable(g, uses.filter(u => u.group === g.name)) })).filter(x => x.rules.length)
+  let used = groups
+    .map((g) => ({
+      g,
+      rules: reachable(
+        g,
+        uses.filter((u) => u.group === g.name),
+      ),
+    }))
+    .filter((x) => x.rules.length)
   if (fold) for (const x of used) foldTones(x.rules)
   if (order === 'similar') used = bySimilarity(used)
   else if (order === 'name') used.sort((a, b) => a.g.name.localeCompare(b.g.name))
   // Tone channels a group sets are kept when it reads them, or when a group with no tone of its own reads them (it
   // takes them from whatever it's nested in). The rest are dropped: a tone on a soft badge needs `--_soft` and `--_text`.
-  const inherited = used.filter(x => !x.rules.some(r => Object.keys(r.decls).some(isChannel))).flatMap(x => [...channelReads(x.rules)])
+  const inherited = used
+    .filter((x) => !x.rules.some((r) => Object.keys(r.decls).some(isChannel)))
+    .flatMap((x) => [...channelReads(x.rules)])
   for (const x of used) {
     const keep = new Set([...channelReads(x.rules), ...inherited])
-    for (const r of x.rules) r.decls = Object.fromEntries(Object.entries(r.decls).filter(([p]) => !isChannel(p) || keep.has(p)))
-    x.rules = x.rules.filter(r => Object.keys(r.decls).length)
+    for (const r of x.rules)
+      r.decls = Object.fromEntries(
+        Object.entries(r.decls).filter(([p]) => !isChannel(p) || keep.has(p)),
+      )
+    x.rules = x.rules.filter((r) => Object.keys(r.decls).length)
   }
   // Shared blocks: tier 0 only. A base or part selector matches one group's elements, and every group's own rules
   // come after the shared ones, so moving them up can't change what wins.
   const owners = new Map                     ()
-  if (share && taggedParts) for (const x of used) for (const r of x.rules) if (r.tier === 0) owners.set(JSON.stringify(r.decls), (owners.get(JSON.stringify(r.decls)) ?? new Set()).add(x.g.name))
+  if (share && taggedParts)
+    for (const x of used)
+      for (const r of x.rules)
+        if (r.tier === 0)
+          owners.set(
+            JSON.stringify(r.decls),
+            (owners.get(JSON.stringify(r.decls)) ?? new Set()).add(x.g.name),
+          )
   const shared = new Map                                          ()
   // With bare parts, a block several groups share goes in one @scope over all of them. It's only written that way
   // when no group in the list has a root or part the list names but doesn't own (that element would pick it up).
@@ -307,20 +454,33 @@ export function emitGroups(groups               , uses            , { dev = fals
   const moved = new Set      ()
   if (share && !taggedParts) {
     const byKey = new Map                                       ()
-    for (const { g, rules } of used) for (const r of rules) if (r.tier === 0) byKey.set(JSON.stringify(r.decls), [...(byKey.get(JSON.stringify(r.decls)) ?? []), { g, r }])
+    for (const { g, rules } of used)
+      for (const r of rules)
+        if (r.tier === 0)
+          byKey.set(JSON.stringify(r.decls), [
+            ...(byKey.get(JSON.stringify(r.decls)) ?? []),
+            { g, r },
+          ])
     for (const es of byKey.values()) {
-      const names = [...new Set(es.map(e => e.g.name))]
+      const names = [...new Set(es.map((e) => e.g.name))]
       if (names.length < 2) continue
-      const sels = [...new Set(es.map(e => (e.r.part ? `[data-part="${e.r.part}"]` : ':scope')))]
-      const ok = names.every(n => {
-        const mine = es.filter(e => e.g.name === n)
-        const def = es.find(e => e.g.name === n) .g.def
-        return sels.every(sel => (sel === ':scope' ? mine.some(e => !e.r.part) : mine.some(e => sel === `[data-part="${e.r.part}"]`) || !(sel.slice(12, -2) in (def.parts ?? {}))))
+      const sels = [...new Set(es.map((e) => (e.r.part ? `[data-part="${e.r.part}"]` : ':scope')))]
+      const ok = names.every((n) => {
+        const mine = es.filter((e) => e.g.name === n)
+        const def = es.find((e) => e.g.name === n) .g.def
+        return sels.every((sel) =>
+          sel === ':scope'
+            ? mine.some((e) => !e.r.part)
+            : mine.some((e) => sel === `[data-part="${e.r.part}"]`) ||
+              !(sel.slice(12, -2) in (def.parts ?? {})),
+        )
       })
       if (!ok) continue
       for (const e of es) moved.add(e.r)
       const comment = dev ? `  /* shared by ${names.join(', ')} */\n` : ''
-      scopedShares.push(`${comment}  @scope (${names.map(n => `[data-g="${n}"]`).join(dev ? ', ' : ',')}) to ([data-g]) {\n${block(sels, es[0] .r.decls, '    ')}\n  }`)
+      scopedShares.push(
+        `${comment}  @scope (${names.map((n) => `[data-g="${n}"]`).join(dev ? ', ' : ',')}) to ([data-g]) {\n${block(sels, es[0] .r.decls, '    ')}\n  }`,
+      )
     }
   }
   const blocks           = [...scopedShares]
@@ -338,15 +498,18 @@ export function emitGroups(groups               , uses            , { dev = fals
     const comment = dev ? `  /* ${g.name} · ${g.file}:${g.line} */\n` : ''
     const merged = merge(own)
     if (scope) {
-      const inner = merged.map(m => block(m.sels, m.decls, '    ')).join('\n')
-      const prelude = !taggedParts ? `([data-g="${g.name}"]) to ([data-g])` : `([data-g="${g.name}"]:not([data-part])) to ([data-g]:not([data-part]))`
+      const inner = merged.map((m) => block(m.sels, m.decls, '    ')).join('\n')
+      const prelude = !taggedParts
+        ? `([data-g="${g.name}"]) to ([data-g])`
+        : `([data-g="${g.name}"]:not([data-part])) to ([data-g]:not([data-part]))`
       blocks.push(`${comment}  @scope ${prelude} {\n${inner}\n  }`)
     } else {
-      blocks.push(comment + merged.map(m => block(m.sels, m.decls, '  ')).join('\n'))
+      blocks.push(comment + merged.map((m) => block(m.sels, m.decls, '  ')).join('\n'))
     }
   }
-  const head = dev && shared.size ? '  /* the same base or part in several groups, written once */\n' : ''
-  const sharedBlocks = [...shared.values()].map(m => block(m.sels, m.decls, '  '))
+  const head =
+    dev && shared.size ? '  /* the same base or part in several groups, written once */\n' : ''
+  const sharedBlocks = [...shared.values()].map((m) => block(m.sels, m.decls, '  '))
   if (!blocks.length && !sharedBlocks.length) return ''
   return `@layer warp, app, theme, base, components, utilities;\n@layer app.groups {\n${head}${[...sharedBlocks, ...blocks].join('\n')}\n}\n`
 }
@@ -370,21 +533,30 @@ export function emitAtomic(groups               , uses            ) {
     return id
   }
   for (const g of groups) {
-    const rules = reachable(g, uses.filter(u => u.group === g.name))
+    const rules = reachable(
+      g,
+      uses.filter((u) => u.group === g.name),
+    )
     byGroup.set(g.name, rules)
-    for (const r of rules) for (const [p, v] of Object.entries(r.decls)) atom(r.state ? cond({ ...r, axes: [] }) : '', p, v)
+    for (const r of rules)
+      for (const [p, v] of Object.entries(r.decls))
+        atom(r.state ? cond({ ...r, axes: [] }) : '', p, v)
   }
   /** Classes for an element with these group attributes (axis and state conditions evaluated, as cva does at runtime). */
   const atoms = (el         , root                 ) => {
     const part = el.getAttribute('data-part') ?? undefined
-    const host = part ? root ?? (el.hasAttribute('data-g') ? el.parentElement : el)?.closest('[data-g]:not([data-part])') : el
+    const host = part
+      ? (root ??
+        (el.hasAttribute('data-g') ? el.parentElement : el)?.closest('[data-g]:not([data-part])'))
+      : el
     const name = host?.getAttribute('data-g')
     const rules = (name && byGroup.get(name)) || []
     const seen = new Set        ()
     for (const r of rules) {
       if (r.part !== part) continue
       if (!r.axes.every(([a, v]) => host?.getAttribute(`data-${a}`) === v)) continue
-      for (const [p, v] of Object.entries(r.decls)) seen.add(atom(r.state ? cond({ ...r, axes: [] }) : '', p, v))
+      for (const [p, v] of Object.entries(r.decls))
+        seen.add(atom(r.state ? cond({ ...r, axes: [] }) : '', p, v))
     }
     return seen
   }

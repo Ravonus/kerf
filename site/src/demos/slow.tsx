@@ -13,7 +13,7 @@ export default function SlowPage() {
   return (
     <div data-part="slow">
       <p>
-        {times.map(t => (
+        {times.map((t) => (
           <Button key={t} size="sm" tone="neutral" onClick={() => go(t)}>
             {t / 1000} s
           </Button>

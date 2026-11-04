@@ -5,7 +5,12 @@ export default function TwoWays() {
   const open = state(true)
   return (
     <Card title="Hide or remove">
-      <Switch checked={open.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (open.value = e.currentTarget.checked)}>
+      <Switch
+        checked={open.value}
+        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+          (open.value = e.currentTarget.checked)
+        }
+      >
         Show both notes
       </Switch>
       {/* Removed: when `open` turns false these nodes are thrown away, and made new when it turns true. */}

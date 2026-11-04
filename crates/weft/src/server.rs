@@ -64,18 +64,25 @@ fn text_response(status: StatusCode, body: String) -> Response {
 }
 
 fn refused(status: StatusCode, code: &str, message: impl std::fmt::Display) -> Response {
-    json_response(status, &json!({ "ok": false, "error": { "code": code, "message": message.to_string() } }))
+    json_response(
+        status,
+        &json!({ "ok": false, "error": { "code": code, "message": message.to_string() } }),
+    )
 }
 
 fn now_ms() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis() as u64)
 }
 
 /// `00-<trace>-<span>-<flags>` split, or nothing if it isn't one.
 fn trace_ids(traceparent: Option<&str>) -> (&str, &str) {
     let mut parts = traceparent.unwrap_or("").split('-');
     match (parts.next(), parts.next(), parts.next()) {
-        (Some("00"), Some(trace), Some(span)) if trace.len() == 32 && span.len() == 16 => (trace, span),
+        (Some("00"), Some(trace), Some(span)) if trace.len() == 32 && span.len() == 16 => {
+            (trace, span)
+        }
         _ => ("", ""),
     }
 }
@@ -88,10 +95,19 @@ impl Drop for AbortOnDrop {
     }
 }
 
-async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: HeaderMap, body: Bytes) -> Response {
+async fn call(
+    State(s): State<Arc<Shared>>,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
     let text = |name: &str| headers.get(name).and_then(|v| v.to_str().ok());
     let (Some(ctx), Some(sig)) = (text("weft-ctx"), text("weft-sig")) else {
-        return refused(StatusCode::UNAUTHORIZED, "Refused", crate::envelope::Refused::Malformed);
+        return refused(
+            StatusCode::UNAUTHORIZED,
+            "Refused",
+            crate::envelope::Refused::Malformed,
+        );
     };
     let envelope: Envelope = match verify(&s.secret, &id, ctx, sig, &body, now_ms()) {
         Ok(e) => e,
@@ -125,21 +141,31 @@ async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: Hea
     let _enter = span.enter();
     let answer = match outcome {
         Ok(Ok(answer)) => answer,
-        Ok(Err(e)) if e.is_panic() => {
-            Answer::Failed(Failed::Internal(format!("panicked: {}", crate::functions::panic_text(&*e.into_panic()))))
-        }
+        Ok(Err(e)) if e.is_panic() => Answer::Failed(Failed::Internal(format!(
+            "panicked: {}",
+            crate::functions::panic_text(&*e.into_panic())
+        ))),
         Ok(Err(e)) => Answer::Failed(Failed::Internal(e.to_string())),
         Err(_) => {
             tracing::warn!(budget_ms = budget.as_millis() as u64, "deadline passed");
-            return refused(StatusCode::GATEWAY_TIMEOUT, "Deadline", format!("`{id}` ran past its deadline"));
+            return refused(
+                StatusCode::GATEWAY_TIMEOUT,
+                "Deadline",
+                format!("`{id}` ran past its deadline"),
+            );
         }
     };
     match answer {
         Answer::Value(value) => text_response(StatusCode::OK, ok_body(&value, &base)),
-        Answer::Failed(Failed::Typed(error)) => json_response(StatusCode::OK, &json!({ "ok": false, "error": error })),
+        Answer::Failed(Failed::Typed(error)) => {
+            json_response(StatusCode::OK, &json!({ "ok": false, "error": error }))
+        }
         Answer::Failed(Failed::Internal(detail)) => {
             tracing::error!(detail, "failed");
-            json_response(StatusCode::INTERNAL_SERVER_ERROR, &internal_body(&base, None))
+            json_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                &internal_body(&base, None),
+            )
         }
         Answer::Drift(detail) => {
             tracing::error!(detail, "drift");
@@ -153,11 +179,16 @@ async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: Hea
 pub async fn serve(router: Router) -> std::io::Result<()> {
     use tracing_subscriber::EnvFilter;
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let _ = tracing_subscriber::fmt().with_env_filter(filter).with_writer(std::io::stderr).try_init();
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(std::io::stderr)
+        .try_init();
     let addr = std::env::var("WEFT_LISTEN").unwrap_or_else(|_| "127.0.0.1:0".into());
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     println!("weft-listening {}", listener.local_addr()?);
-    axum::serve(listener, router).with_graceful_shutdown(stopped()).await
+    axum::serve(listener, router)
+        .with_graceful_shutdown(stopped())
+        .await
 }
 
 async fn stopped() {

@@ -7,18 +7,37 @@ const open = async (page, base) => {
     const box = page.getByLabel('New todo')
     await box.fill('probe')
     await box.press('Enter')
-    const n = await page.getByRole('list', { name: 'Todos' }).getByRole('listitem').count().catch(() => 0)
+    const n = await page
+      .getByRole('list', { name: 'Todos' })
+      .getByRole('listitem')
+      .count()
+      .catch(() => 0)
     if (n) await page.getByRole('button', { name: 'Delete probe' }).click()
     return n > 0
   })
 }
-const add = async (page, ...titles) => { for (const t of titles) { const b = page.getByLabel('New todo'); await b.fill(t); await b.press('Enter'); await page.getByRole('checkbox', { name: t, exact: true }).waitFor() } }
-const list = page => page.getByRole('list', { name: 'Todos' })
-const titles = async page => (await list(page).count()) ? (await list(page).getByRole('checkbox').evaluateAll(xs => xs.map(x => x.labels?.[0]?.textContent?.trim() || x.getAttribute('aria-label') || ''))) : []
+const add = async (page, ...titles) => {
+  for (const t of titles) {
+    const b = page.getByLabel('New todo')
+    await b.fill(t)
+    await b.press('Enter')
+    await page.getByRole('checkbox', { name: t, exact: true }).waitFor()
+  }
+}
+const list = (page) => page.getByRole('list', { name: 'Todos' })
+const titles = async (page) =>
+  (await list(page).count())
+    ? await list(page)
+        .getByRole('checkbox')
+        .evaluateAll((xs) =>
+          xs.map((x) => x.labels?.[0]?.textContent?.trim() || x.getAttribute('aria-label') || ''),
+        )
+    : []
 const left = (page, text) => page.getByText(text, { exact: true }).first().waitFor()
 const check = (page, name) => page.getByRole('checkbox', { name, exact: true }).click()
 const filter = (page, name) => page.getByRole('button', { name, exact: true }).click()
-const shown = (page, want) => until(`shows ${want}`, async () => JSON.stringify(await titles(page)) === JSON.stringify(want))
+const shown = (page, want) =>
+  until(`shows ${want}`, async () => JSON.stringify(await titles(page)) === JSON.stringify(want))
 
 const t = (title, run) => ({ title, run })
 export const tests = [
@@ -65,7 +84,12 @@ export const tests = [
     await open(page, base)
     await add(page, 'a', 'b')
     await check(page, 'a')
-    const pressed = async () => Promise.all(['All', 'Active', 'Completed'].map(n => page.getByRole('button', { name: n, exact: true }).getAttribute('aria-pressed')))
+    const pressed = async () =>
+      Promise.all(
+        ['All', 'Active', 'Completed'].map((n) =>
+          page.getByRole('button', { name: n, exact: true }).getAttribute('aria-pressed'),
+        ),
+      )
     same(await pressed(), ['true', 'false', 'false'], 'default')
     await filter(page, 'Active')
     await shown(page, ['b'])
@@ -94,7 +118,11 @@ export const tests = [
   }),
   t('Mark all as complete follows the rules and is hidden when empty', async ({ page, base }) => {
     await open(page, base)
-    same(await page.getByRole('checkbox', { name: 'Mark all as complete' }).count(), 0, 'shown when empty')
+    same(
+      await page.getByRole('checkbox', { name: 'Mark all as complete' }).count(),
+      0,
+      'shown when empty',
+    )
     await add(page, 'a', 'b')
     const all = page.getByRole('checkbox', { name: 'Mark all as complete' })
     same(await all.isChecked(), false, 'starts unchecked')
@@ -103,7 +131,8 @@ export const tests = [
     await until('checked', () => all.isChecked())
     await all.click()
     await left(page, '2 items left')
-    await check(page, 'a'); await check(page, 'b')
+    await check(page, 'a')
+    await check(page, 'b')
     await until('checked once all are done by hand', () => all.isChecked())
     await check(page, 'a')
     await until('unchecked again', async () => !(await all.isChecked()))
@@ -124,7 +153,7 @@ export const tests = [
     await page.getByRole('button', { name: 'Edit a', exact: true }).click()
     const box = page.getByLabel('Edit todo')
     same(await box.inputValue(), 'a', 'value')
-    await until('focused', () => box.evaluate(x => x === document.activeElement))
+    await until('focused', () => box.evaluate((x) => x === document.activeElement))
     await box.fill('  b ')
     await box.press('Enter')
     await shown(page, ['b'])
@@ -154,10 +183,18 @@ export const tests = [
     await page.reload()
     await shown(page, ['b'])
     await left(page, '1 item left')
-    await until('filter kept', async () => (await page.getByRole('button', { name: 'Active', exact: true }).getAttribute('aria-pressed')) === 'true')
+    await until(
+      'filter kept',
+      async () =>
+        (await page
+          .getByRole('button', { name: 'Active', exact: true })
+          .getAttribute('aria-pressed')) === 'true',
+    )
     await filter(page, 'All')
     await shown(page, ['a', 'b'])
-    await until('completion kept', () => page.getByRole('checkbox', { name: 'a', exact: true }).isChecked())
+    await until('completion kept', () =>
+      page.getByRole('checkbox', { name: 'a', exact: true }).isChecked(),
+    )
   }),
   t('no console errors through load, use and reload', async ({ page, base, problems }) => {
     await open(page, base)
@@ -166,22 +203,34 @@ export const tests = [
     await page.reload()
     await shown(page, ['a'])
     await page.waitForTimeout(300)
-    same(problems.filter(p => !/favicon/.test(p)), [], 'console errors')
+    same(
+      problems.filter((p) => !/favicon/.test(p)),
+      [],
+      'console errors',
+    )
   }),
 ]
 
 /** Median ms from clicking a filter to the next paint, at 200 todos. Seeded through the UI so storage shape stays the app's. */
 export async function interaction(page, base) {
   await open(page, base)
-  for (let i = 0; i < 200; i++) { const b = page.getByLabel('New todo'); await b.fill(`t${i}`); await b.press('Enter') }
-  await shown(page, Array.from({ length: 200 }, (_, i) => `t${i}`))
+  for (let i = 0; i < 200; i++) {
+    const b = page.getByLabel('New todo')
+    await b.fill(`t${i}`)
+    await b.press('Enter')
+  }
+  await shown(
+    page,
+    Array.from({ length: 200 }, (_, i) => `t${i}`),
+  )
   const samples = await page.evaluate(async () => {
-    const button = n => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === n)
+    const button = (n) =>
+      [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === n)
     const out = []
     for (let i = 0; i < 12; i++) {
       const at = performance.now()
       button(i % 2 ? 'All' : 'Completed').click()
-      await new Promise(r => requestAnimationFrame(() => setTimeout(r)))
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r)))
       out.push(performance.now() - at)
     }
     return out.sort((a, b) => a - b)

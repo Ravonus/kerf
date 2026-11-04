@@ -6,7 +6,10 @@ import { currentScope, runtime, StartError } from '../data'
 import type { Probe, Sink } from '../changes'
 
 /** One migration file: its name and the SQL. */
-export interface Migration { tag: string; sql: string }
+export interface Migration {
+  tag: string
+  sql: string
+}
 
 /** What every Weft database carries on `$weft`, whichever driver is under it. */
 export interface DbHandle {
@@ -16,15 +19,28 @@ export interface DbHandle {
   /** Tables Q011 doesn't report (Better Auth's). */
   exempt: Set<string>
   /** `dbChanges`'s source: loaded on the first use, so a database with no live tables loads none of it. */
-  changes?(tables: string[], options: { listenUrl?: string; interval?: number }): Promise<{ probe(): Promise<Probe>; start(sink: Sink, how: Probe): Promise<() => unknown>; settle?(tags: string[]): Promise<void> }>
+  changes?(
+    tables: string[],
+    options: { listenUrl?: string; interval?: number },
+  ): Promise<{
+    probe(): Promise<Probe>
+    start(sink: Sink, how: Probe): Promise<() => unknown>
+    settle?(tags: string[]): Promise<void>
+  }>
 }
 
 /** Attach weft's handle to a client. */
-export const register = <D extends object>(db: D, handle: DbHandle): D & { $weft: DbHandle } => Object.assign(db, { $weft: handle })
+export const register = <D extends object>(db: D, handle: DbHandle): D & { $weft: DbHandle } =>
+  Object.assign(db, { $weft: handle })
 
 /** The database can't be used: its connection, or a migration it needs. The client sees this; the server log gets the cause. */
 export const unavailable = (cause: unknown) =>
-  new StartError('Q016', 'the database is unavailable, or a migration failed', 'start it and check `DATABASE_URL`; the server log has the driver\'s error', { status: 503, cause })
+  new StartError(
+    'Q016',
+    'the database is unavailable, or a migration failed',
+    "start it and check `DATABASE_URL`; the server log has the driver's error",
+    { status: 503, cause },
+  )
 
 /**
  * What a provider awaits before each statement, or its connection call: resolved once the list the server's first request
@@ -40,11 +56,14 @@ export function gate(handle: DbHandle, migrate: boolean) {
     if (!migrate || !m) return undefined
     if (m !== applied) {
       applied = m
-      run = run.catch(() => {}).then(() => handle.migrate(m.list)).catch(e => {
-        if (applied === m) applied = undefined
-        m.report(e)
-        throw unavailable(e)
-      })
+      run = run
+        .catch(() => {})
+        .then(() => handle.migrate(m.list))
+        .catch((e) => {
+          if (applied === m) applied = undefined
+          m.report(e)
+          throw unavailable(e)
+        })
     }
     return run
   }
@@ -54,10 +73,16 @@ export function gate(handle: DbHandle, migrate: boolean) {
 export function touch(handle: DbHandle, sql: string) {
   const t = currentScope()?.touched
   if (!t) return
-  const target = /^\s*(?:insert\s+into|update|delete\s+from)\s+(?:["`]?\w+["`]?\.)?["`]?([\w$]+)/i.exec(sql)?.[1]
+  const target =
+    /^\s*(?:insert\s+into|update|delete\s+from)\s+(?:["`]?\w+["`]?\.)?["`]?([\w$]+)/i.exec(sql)?.[1]
   if (target && !handle.exempt.has(target)) t.write.add(target)
-  for (const m of sql.matchAll(/\b(?:from|join)\s+(?:["`]?\w+["`]?\.)?["`]?([\w$]+)/gi)) if (m[1] !== target && !handle.exempt.has(m[1]!)) t.read.add(m[1]!)
+  for (const m of sql.matchAll(/\b(?:from|join)\s+(?:["`]?\w+["`]?\.)?["`]?([\w$]+)/gi))
+    if (m[1] !== target && !handle.exempt.has(m[1]!)) t.read.add(m[1]!)
 }
 
 /** A migration file's statements (drizzle-kit separates them with this marker). */
-export const statements = (sql: string) => sql.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)
+export const statements = (sql: string) =>
+  sql
+    .split('--> statement-breakpoint')
+    .map((s) => s.trim())
+    .filter(Boolean)

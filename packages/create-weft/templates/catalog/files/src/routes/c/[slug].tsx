@@ -21,16 +21,30 @@ export default function Category(props: RouteProps<typeof load, '/c/[slug]'>) {
     <Center max="wide" gutter>
       <Stack gap="group" class="page">
         <Stack gap="tight">
-          <Link href="/" class="crumb">All aisles</Link>
-          <Heading level={1} role="title">{props.data.category.name}</Heading>
+          <Link href="/" class="crumb">
+            All aisles
+          </Link>
+          <Heading level={1} role="title">
+            {props.data.category.name}
+          </Heading>
         </Stack>
-        <Boundary pending={<AislesLoading />} error={(_, retry) => <Failed what="The aisles" retry={retry} />}>
+        <Boundary
+          pending={<AislesLoading />}
+          error={(_, retry) => <Failed what="The aisles" retry={retry} />}
+        >
           <Aisles current={props.data.category.slug} />
         </Boundary>
         <Split side="start" width="nav" gap="section">
           <Filters slug={props.data.category.slug} view={props.data.view} />
-          <Boundary pending={<ProductGridLoading count={24} cols={3} label="Loading goods" />} error={(_, retry) => <Failed what="This aisle" retry={retry} />}>
-            <ProductList categoryId={props.data.category.id} slug={props.data.category.slug} view={props.data.view} />
+          <Boundary
+            pending={<ProductGridLoading count={24} cols={3} label="Loading goods" />}
+            error={(_, retry) => <Failed what="This aisle" retry={retry} />}
+          >
+            <ProductList
+              categoryId={props.data.category.id}
+              slug={props.data.category.slug}
+              view={props.data.view}
+            />
           </Boundary>
         </Split>
       </Stack>

@@ -13,9 +13,15 @@ export default function Three() {
   }
   return (
     <Card title="Three writes in a row">
-      <p><strong>Score {score.value}</strong></p>
-      <Button size="sm" onClick={addThree}>+3</Button>
-      <Button size="sm" emphasis="ghost" onClick={() => (score.value = 0)}>Reset</Button>
+      <p>
+        <strong>Score {score.value}</strong>
+      </p>
+      <Button size="sm" onClick={addThree}>
+        +3
+      </Button>
+      <Button size="sm" emphasis="ghost" onClick={() => (score.value = 0)}>
+        Reset
+      </Button>
       <p>{note.value}</p>
     </Card>
   )

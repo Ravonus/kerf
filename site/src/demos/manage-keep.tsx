@@ -11,7 +11,7 @@ function GuestRow(props: { guest: Guest }) {
     <Input
       label={`${props.guest.name}: dietary note`}
       value={note.value}
-      onInput={e => (note.value = e.currentTarget.value)}
+      onInput={(e) => (note.value = e.currentTarget.value)}
     />
   )
 }
@@ -30,11 +30,19 @@ export default function Guests() {
   }
   return (
     <Card title="Dinner guests">
-      {guests.value.map(g => <GuestRow key={g.id} guest={g} />)}
+      {guests.value.map((g) => (
+        <GuestRow key={g.id} guest={g} />
+      ))}
       <Row gap="tight">
-        <Button size="sm" onClick={reverse}>Reverse</Button>
-        <Button size="sm" emphasis="outline" onClick={removeFirst}>Remove first</Button>
-        <Button size="sm" emphasis="ghost" onClick={add}>Add a guest</Button>
+        <Button size="sm" onClick={reverse}>
+          Reverse
+        </Button>
+        <Button size="sm" emphasis="outline" onClick={removeFirst}>
+          Remove first
+        </Button>
+        <Button size="sm" emphasis="ghost" onClick={add}>
+          Add a guest
+        </Button>
       </Row>
     </Card>
   )

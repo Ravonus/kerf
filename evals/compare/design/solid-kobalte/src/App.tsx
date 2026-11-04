@@ -20,7 +20,9 @@ export function App() {
     <div class="min-h-screen">
       <header class="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
         <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-8 sm:px-6">
-          <span class="text-lg font-bold tracking-tight text-indigo-700 dark:text-indigo-300">Northwind</span>
+          <span class="text-lg font-bold tracking-tight text-indigo-700 dark:text-indigo-300">
+            Northwind
+          </span>
           <nav aria-label="Main">
             <ul class="-mx-2 flex gap-1">
               {links.map(([label, href]) => (
@@ -40,8 +42,12 @@ export function App() {
       </header>
       <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <Switch fallback={<Settings />}>
-          <Match when={route() === '#/customers'}><Customers /></Match>
-          <Match when={route() === '#/pricing'}><Pricing /></Match>
+          <Match when={route() === '#/customers'}>
+            <Customers />
+          </Match>
+          <Match when={route() === '#/pricing'}>
+            <Pricing />
+          </Match>
         </Switch>
       </main>
     </div>

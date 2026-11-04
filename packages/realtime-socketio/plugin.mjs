@@ -7,7 +7,10 @@ export const socketio = definePlugin({
   weft: '*',
   permissions: { net: ['browser:socketio-relay'] },
   contribute: () => ({
-    agents: { title: 'Peer transport (Socket.IO)', text: '`presence(conn, { transport: socketio({ url }) })` sends cursors through your relay. Run `relay(io, { secret })` from `@weft-js/realtime-socketio/relay` there, and pass `ticket: socketioTicket({ secret })`, from the same file, to `multiplayer()`. For migrations: with no relay already running, leave it out.' },
+    agents: {
+      title: 'Peer transport (Socket.IO)',
+      text: '`presence(conn, { transport: socketio({ url }) })` sends cursors through your relay. Run `relay(io, { secret })` from `@weft-js/realtime-socketio/relay` there, and pass `ticket: socketioTicket({ secret })`, from the same file, to `multiplayer()`. For migrations: with no relay already running, leave it out.',
+    },
   }),
 })
 

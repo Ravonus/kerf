@@ -8,16 +8,23 @@ import { hydration } from '../src/hydrate'
 import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'
 import * as Client from './fixtures/ssr/Claims.tsx?weft-hydrate'
 
-afterEach(() => { document.body.textContent = ''; vi.restoreAllMocks() })
+afterEach(() => {
+  document.body.textContent = ''
+  vi.restoreAllMocks()
+})
 
 const put = (html: string) => {
   const c = document.body.appendChild(document.createElement('div'))
   c.innerHTML = html
   return c
 }
-const settle = () => new Promise(ok => { setTimeout(ok) })
+const settle = () =>
+  new Promise((ok) => {
+    setTimeout(ok)
+  })
 const comments = (c: Element) => {
-  const w = document.createTreeWalker(c, 128), out: string[] = []
+  const w = document.createTreeWalker(c, 128),
+    out: string[] = []
   while (w.nextNode()) out.push((w.currentNode as Comment).data)
   return out
 }
@@ -91,7 +98,8 @@ test('a derived that read nothing is a constant: its readers have nothing to fol
 })
 
 const row = (id: unknown, t = String(id)) => ({ id, href: `/${t}`, t })
-const links = (c: Element) => [...c.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')])
+const links = (c: Element) =>
+  [...c.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')])
 
 test('two keys are two rows, whatever their hash: `Aa` and `BB` at one index share nothing', () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -105,45 +113,52 @@ test('two keys are two rows, whatever their hash: `Aa` and `BB` at one index sha
 
 test('a row put in before hydration builds that row alone: those after it keep their nodes', () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {})
-  const c = put(renderToString(() => <Server.Keyed rows={['a', 'b', 'c'].map(k => row(k))} />))
+  const c = put(renderToString(() => <Server.Keyed rows={['a', 'b', 'c'].map((k) => row(k))} />))
   const [a, b, last] = c.querySelectorAll('a')
   ;(last as Element & { typed?: string }).typed = 'still here'
-  hydrate(() => <Client.Keyed rows={['a', 'b', 'n', 'c'].map(k => row(k))} />, c)
+  hydrate(() => <Client.Keyed rows={['a', 'b', 'n', 'c'].map((k) => row(k))} />, c)
   expect(hydration.misses).toBe(1)
-  expect(links(c).map(l => l[0])).toEqual(['a', 'b', 'n', 'c'])
+  expect(links(c).map((l) => l[0])).toEqual(['a', 'b', 'n', 'c'])
   expect([...c.querySelectorAll('a')].filter((_, i) => i !== 2)).toEqual([a, b, last])
   expect((last as Element & { typed?: string }).typed).toBe('still here')
 })
 
 test('a row that moved keeps its node, wherever it went', () => {
-  const c = put(renderToString(() => <Server.Keyed rows={['a', 'b', 'c'].map(k => row(k))} />))
+  const c = put(renderToString(() => <Server.Keyed rows={['a', 'b', 'c'].map((k) => row(k))} />))
   const [a, b, last] = c.querySelectorAll('a')
-  hydrate(() => <Client.Keyed rows={['c', 'a', 'b'].map(k => row(k))} />, c)
+  hydrate(() => <Client.Keyed rows={['c', 'a', 'b'].map((k) => row(k))} />, c)
   expect(hydration.misses).toBe(0)
   expect([...c.querySelectorAll('a')]).toEqual([last, a, b])
 })
 
 test('a key can hold anything: nothing in it ends the attribute, a step, or another row', () => {
   const ids = ['a"><img src=x onerror=1>', 'a/b', 'a.b', 'a%2Fb', 'a&amp;b', 'a&b', '0c', '<b>']
-  const c = put(renderToString(() => <Server.Keyed rows={ids.map(k => row(k))} />))
+  const c = put(renderToString(() => <Server.Keyed rows={ids.map((k) => row(k))} />))
   expect(c.querySelector('img')).toBeNull()
   const nodes = [...c.querySelectorAll('a')]
-  expect(new Set(nodes.map(n => n.getAttribute('wk'))).size).toBe(ids.length)
-  hydrate(() => <Client.Keyed rows={ids.map(k => row(k))} />, c)
+  expect(new Set(nodes.map((n) => n.getAttribute('wk'))).size).toBe(ids.length)
+  hydrate(() => <Client.Keyed rows={ids.map((k) => row(k))} />, c)
   expect(hydration.misses).toBe(0)
   expect([...c.querySelectorAll('a')]).toEqual(nodes)
 })
 
 test('keys that read the same, and objects with no key to speak of, claim by place and never share a scope', () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {})
-  const rows = () => [{ id: 1, href: '/n', t: 'n' }, { id: '1', href: '/s', t: 's' }, { id: 'x', href: '/x', t: 'x' }, { id: 'x', href: '/y', t: 'y' }, { id: {}, href: '/o', t: 'o' }, { id: {}, href: '/p', t: 'p' }]
+  const rows = () => [
+    { id: 1, href: '/n', t: 'n' },
+    { id: '1', href: '/s', t: 's' },
+    { id: 'x', href: '/x', t: 'x' },
+    { id: 'x', href: '/y', t: 'y' },
+    { id: {}, href: '/o', t: 'o' },
+    { id: {}, href: '/p', t: 'p' },
+  ]
   const c = put(renderToString(() => <Server.Keyed rows={rows()} />))
   const nodes = [...c.querySelectorAll('a')]
-  expect(new Set(nodes.map(n => n.getAttribute('wk'))).size).toBe(rows().length)
+  expect(new Set(nodes.map((n) => n.getAttribute('wk'))).size).toBe(rows().length)
   hydrate(() => <Client.Keyed rows={rows()} />, c)
   expect(hydration.misses).toBe(0)
   expect([...c.querySelectorAll('a')]).toEqual(nodes)
-  expect(links(c)).toEqual(rows().map(r => [r.t, r.href]))
+  expect(links(c)).toEqual(rows().map((r) => [r.t, r.href]))
 })
 
 test('an empty hole in a range takes nothing from what is before it', () => {
@@ -164,7 +179,10 @@ test('a list that moved on since the server rendered puts its rows in order, wit
   const c = put(renderToString(() => <Server.Lines lines={['a', 'b']} />))
   hydrate(() => <Client.Lines lines={['b', 'a']} />, c)
   expect(hydration.misses).toBe(0)
-  expect([...c.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')])).toEqual([['b', '/b'], ['a', '/a']])
+  expect([...c.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
+    ['b', '/b'],
+    ['a', '/a'],
+  ])
   warn.mockRestore()
 })
 
@@ -182,7 +200,7 @@ test('a key miss writes what the server would have: attributes and handlers, and
   b.click()
   expect(on).toHaveBeenCalledOnce()
   expect(c.querySelector('span')).toBe(after) // what's after the miss still claims
-  expect(warn.mock.calls.some(a => /1 hydration miss\(es\), first wk=/.test(a[0]))).toBe(true)
+  expect(warn.mock.calls.some((a) => /1 hydration miss\(es\), first wk=/.test(a[0]))).toBe(true)
 })
 
 test('a miss in one hole ends with it: the next hole still claims', () => {
@@ -207,7 +225,12 @@ describe('a view of a getter', () => {
     expect([v.a, v.b]).toEqual([1, 2])
     expect(get.mock.calls.length).toBeGreaterThanOrEqual(2)
     const seen: unknown[] = []
-    createRoot(() => effect(() => v.a, x => void seen.push(x)))
+    createRoot(() =>
+      effect(
+        () => v.a,
+        (x) => void seen.push(x),
+      ),
+    )
     n.value = 5
     flush()
     expect(v.a).toBe(5)
@@ -222,13 +245,33 @@ describe('a view of a getter', () => {
   })
 
   test('on the server, a source that throws is asked again', () => {
-    const v = (() => { rt.server = true; try { let n = 0; return view([() => { if (!n++) throw new Error('late'); return { a: 1 } }]) } finally { rt.server = false } })()
+    const v = (() => {
+      rt.server = true
+      try {
+        let n = 0
+        return view([
+          () => {
+            if (!n++) throw new Error('late')
+            return { a: 1 }
+          },
+        ])
+      } finally {
+        rt.server = false
+      }
+    })()
     expect(() => v.a).toThrow('late')
     expect(v.a).toBe(1)
   })
 
   test('on the server the source runs once, however many reads', () => {
-    const { get, v } = (() => { rt.server = true; try { return sourced() } finally { rt.server = false } })()
+    const { get, v } = (() => {
+      rt.server = true
+      try {
+        return sourced()
+      } finally {
+        rt.server = false
+      }
+    })()
     expect([v.a, v.b, 'a' in v, Object.keys(v)]).toEqual([1, 2, true, ['a', 'b']])
     expect(get).toHaveBeenCalledOnce()
   })
@@ -238,7 +281,7 @@ test('a key that only differs in what the parser rewrites is still its own row',
   const rows = () => ['a\rb', 'a\nb', 'a\0b', 'a�b'].map((k, i) => row(k, `r${i}`))
   const c = put(renderToString(() => <Server.Keyed rows={rows()} />))
   const nodes = [...c.querySelectorAll('a')]
-  expect(new Set(nodes.map(n => n.getAttribute('wk'))).size).toBe(4)
+  expect(new Set(nodes.map((n) => n.getAttribute('wk'))).size).toBe(4)
   hydrate(() => <Client.Keyed rows={rows()} />, c)
   expect(hydration.misses).toBe(0)
   expect([...c.querySelectorAll('a')]).toEqual(nodes)

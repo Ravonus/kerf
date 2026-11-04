@@ -15,7 +15,6 @@ export interface MenuOptions {
   onClose(): void
 }
 
-
 const ITEMS = '[role^="menuitem"]:not([aria-disabled="true"])'
 
 /**
@@ -32,14 +31,22 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
   const win = el.ownerDocument.defaultView!
   const reposition = (e?: Event) => {
     const t = o.trigger()
-    if (o.side && t && e?.target !== el && el.matches(':popover-open')) place(el, t, o.side, o.align, 6)
+    if (o.side && t && e?.target !== el && el.matches(':popover-open'))
+      place(el, t, o.side, o.align, 6)
   }
   const show = () => {
     if (remove) return
     reposition()
     win.addEventListener('resize', reposition)
     win.addEventListener('scroll', reposition, true)
-    remove = pushLayer({ el, trigger: o.trigger(), close: reason => { if (reason === 'escape') o.trigger()?.focus(); o.onClose() } })
+    remove = pushLayer({
+      el,
+      trigger: o.trigger(),
+      close: (reason) => {
+        if (reason === 'escape') o.trigger()?.focus()
+        o.onClose()
+      },
+    })
     const all = items()
     ;(o.at === 'last' ? all.at(-1) : all[0])?.focus({ preventScroll: true })
   }
@@ -53,16 +60,28 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
   const onKey = (e: KeyboardEvent) => {
     const all = items()
     const at = all.indexOf(el.ownerDocument.activeElement as HTMLElement)
-    const go = (i: number) => { e.preventDefault(); all[(i + all.length) % all.length]?.focus() }
+    const go = (i: number) => {
+      e.preventDefault()
+      all[(i + all.length) % all.length]?.focus()
+    }
     if (e.key === 'ArrowDown') return go(at + 1)
     if (e.key === 'ArrowUp') return go(at - 1)
     if (e.key === 'Home' || e.key === 'PageUp') return go(0)
     if (e.key === 'End' || e.key === 'PageDown') return go(all.length - 1)
-    if (e.key === 'Tab') { o.trigger()?.focus(); return o.onClose() } // no preventDefault: Tab moves on from the trigger
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); return all[at]?.click() }
+    if (e.key === 'Tab') {
+      o.trigger()?.focus()
+      return o.onClose()
+    } // no preventDefault: Tab moves on from the trigger
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      return all[at]?.click()
+    }
     if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
-    const hit = typed.next(e.key, all, at, i => i.textContent)
-    if (hit) { e.preventDefault(); hit.focus() }
+    const hit = typed.next(e.key, all, at, (i) => i.textContent)
+    if (hit) {
+      e.preventDefault()
+      hit.focus()
+    }
   }
   el.addEventListener('keydown', onKey)
   if (o.open) show()
@@ -72,6 +91,9 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
       if (o.open) show()
       else hide()
     },
-    destroy() { el.removeEventListener('keydown', onKey); hide() },
+    destroy() {
+      el.removeEventListener('keydown', onKey)
+      hide()
+    },
   }
 }

@@ -20,7 +20,7 @@ export function createTabSearch(api: Api, query: () => string) {
     const controller = new AbortController()
     setSearch('state', 'pending')
     api.search(text, controller.signal).then(
-      ids => setSearch({ state: 'idle', results: new Set(ids) }),
+      (ids) => setSearch({ state: 'idle', results: new Set(ids) }),
       () => setSearch('state', 'failed'),
     )
   })

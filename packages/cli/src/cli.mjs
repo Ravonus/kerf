@@ -24,9 +24,24 @@ import { formatGate, gate } from './gate.mjs'
 import { browserCommand } from './browser/cli.mjs'
 import { metaTable } from './meta-table.mjs'
 import { audit } from './audit.mjs'
-import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand, unsafeAllowed } from './start.mjs'
+import {
+  buildCommand,
+  dbCommand,
+  devCommand,
+  doctorCommand,
+  routesCommand,
+  startCommand,
+  unsafeAllowed,
+} from './start.mjs'
 import { deployCommand, formatHosts, hostsCommand, initCommand } from './deploy/index.mjs'
-import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
+import {
+  explainTarget,
+  findGroups,
+  formatExplain,
+  formatFind,
+  styleMatrix,
+  writeMatrixFile,
+} from './style.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
@@ -73,13 +88,62 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
-const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime', 'unsafe-allow', 'max', 'target'])
+const valued = new Set([
+  'layer',
+  'base',
+  'budget',
+  'max-mutants',
+  'concurrency',
+  'url',
+  'tab',
+  'out',
+  'component',
+  'from',
+  'props',
+  'name',
+  'scope',
+  'timeout',
+  'preset',
+  'port',
+  'runtime',
+  'unsafe-allow',
+  'max',
+  'target',
+])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
-const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all', 'verbose', 'prod', 'yes', 'force'])
+const booleans = new Set([
+  'dry-run',
+  'no-install',
+  'remote',
+  'gate',
+  'refactor',
+  'no-mutation',
+  'interactive',
+  'delta',
+  'graph-only',
+  'no-graph',
+  'headed',
+  'full',
+  'reload',
+  'meta',
+  'all',
+  'verbose',
+  'prod',
+  'yes',
+  'force',
+])
 
 export function parse(argv) {
-  const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
+  const out = {
+    command: argv[0],
+    positional: [],
+    json: false,
+    root: process.cwd(),
+    check: false,
+    stdout: false,
+    flags: {},
+  }
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--json') out.json = true
@@ -91,8 +155,14 @@ export function parse(argv) {
       const [name, inline] = a.slice(2).split(/=(.*)/s)
       if (valued.has(name)) out.flags[name] = inline ?? argv[++i]
       else if (booleans.has(name) && inline === undefined) out.flags[name] = true
-      else if (out.command === 'style' && styleFlags.has(name)) out.flags[name] = inline ?? argv[++i]
-      else if (out.command === 'style' && /^[a-z][\w-]*$/i.test(name) && (inline ?? argv[i + 1]) !== undefined) (out.flags.axes ??= {})[name] = inline ?? argv[++i]
+      else if (out.command === 'style' && styleFlags.has(name))
+        out.flags[name] = inline ?? argv[++i]
+      else if (
+        out.command === 'style' &&
+        /^[a-z][\w-]*$/i.test(name) &&
+        (inline ?? argv[i + 1]) !== undefined
+      )
+        (out.flags.axes ??= {})[name] = inline ?? argv[++i]
       else throw Object.assign(new Error(`unknown flag ${a}`), { code: 'E_USAGE' })
     } else out.positional.push(a)
   }
@@ -100,8 +170,8 @@ export function parse(argv) {
 }
 
 export async function main(argv, io = { stdout: process.stdout, stderr: process.stderr }) {
-  const print = data => io.stdout.write(`${JSON.stringify(data, null, 2)}\n`)
-  const say = text => text && io.stderr.write(`${text}\n`)
+  const print = (data) => io.stdout.write(`${JSON.stringify(data, null, 2)}\n`)
+  const say = (text) => text && io.stderr.write(`${text}\n`)
   let args
   try {
     args = parse(argv)
@@ -109,72 +179,119 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'lsp': {
         const { lsp } = await import('./infer/lsp.mjs')
         const out = lsp(args.root)
-        return await new Promise(ok => { out.server.on('exit', () => ok(0)) })
+        return await new Promise((ok) => {
+          out.server.on('exit', () => ok(0))
+        })
       }
       case 'tsc': {
         const { propTsc } = await import('./props-checks.mjs')
         const diagnostics = sortDiagnostics(await propTsc(args.root))
-        if (args.json) print({ ok: !diagnostics.some(d => d.severity === 'error'), diagnostics })
+        if (args.json) print({ ok: !diagnostics.some((d) => d.severity === 'error'), diagnostics })
         say(formatHuman(diagnostics))
-        say(`weft tsc: ${diagnostics.filter(d => d.severity === 'error').length} errors`)
-        return diagnostics.some(d => d.severity === 'error') ? 1 : 0
+        say(`weft tsc: ${diagnostics.filter((d) => d.severity === 'error').length} errors`)
+        return diagnostics.some((d) => d.severity === 'error') ? 1 : 0
       }
       case 'check': {
         const result = await check(args.root, { files: args.positional, preset: args.flags.preset })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
         if (args.flags.verbose) say(compilerLine(doctor(args.root).compiler))
-        say(`weft check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`)
+        say(
+          `weft check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`,
+        )
         return result.ok ? 0 : 1
       }
       case 'doctor': {
         // What this install compiles with, always; what live data does on the target, for an app that has any.
         const result = doctor(args.root)
-        const plan = args.flags.preset || existsSync(join(args.root, 'src/realtime.server.ts')) ? await doctorCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime }) : undefined
+        const plan =
+          args.flags.preset || existsSync(join(args.root, 'src/realtime.server.ts'))
+            ? await doctorCommand(args.root, {
+                preset: args.flags.preset,
+                runtime: args.flags.runtime,
+              })
+            : undefined
         const hosts = hostsCommand(args.root, (await loadConfig(args.root)).config)
         if (args.json) print({ ...result, live: plan, deploy: hosts })
-        else say(`${formatDoctor(result)}\n\nweft doctor: deploy${hosts.target ? ` (target ${hosts.target})` : ''}\n${formatHosts(hosts).replace(/^/gm, '  ')}`)
+        else
+          say(
+            `${formatDoctor(result)}\n\nweft doctor: deploy${hosts.target ? ` (target ${hosts.target})` : ''}\n${formatHosts(hosts).replace(/^/gm, '  ')}`,
+          )
         if (!plan) return 0
-        say(`weft doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map(o => `    - ${o}`).join('\n')}` : ''}`)
+        say(
+          `weft doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map((o) => `    - ${o}`).join('\n')}` : ''}`,
+        )
         say(formatHuman(plan.diagnostics))
-        return plan.diagnostics.some(d => d.severity === 'error') ? 1 : 0
+        return plan.diagnostics.some((d) => d.severity === 'error') ? 1 : 0
       }
       case 'test': {
-        if (!args.flags.gate) throw Object.assign(new Error('`weft test` runs the gate with --gate; run the suite itself with vitest'), { code: 'E_USAGE' })
-        const num = name => (args.flags[name] === undefined ? undefined : Number(args.flags[name]))
+        if (!args.flags.gate)
+          throw Object.assign(
+            new Error('`weft test` runs the gate with --gate; run the suite itself with vitest'),
+            { code: 'E_USAGE' },
+          )
+        const num = (name) =>
+          args.flags[name] === undefined ? undefined : Number(args.flags[name])
         const result = await gate(args.root, {
-          base: args.flags.base, budgetSec: num('budget'), maxMutants: num('max-mutants'), concurrency: num('concurrency'),
-          refactor: !!args.flags.refactor, mutation: !args.flags['no-mutation'], log: line => say(line),
+          base: args.flags.base,
+          budgetSec: num('budget'),
+          maxMutants: num('max-mutants'),
+          concurrency: num('concurrency'),
+          refactor: !!args.flags.refactor,
+          mutation: !args.flags['no-mutation'],
+          log: (line) => say(line),
         })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
         say(formatGate(result))
-        say(`weft test --gate: ${result.ok ? 'pass' : 'fail'}, ${result.summary.changedTests} changed tests, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`)
+        say(
+          `weft test --gate: ${result.ok ? 'pass' : 'fail'}, ${result.summary.changedTests} changed tests, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`,
+        )
         return result.ok ? 0 : 1
       }
       case 'browser':
         return await browserCommand(args, { print, say, io })
       case 'dev': {
-        const server = await devCommand(args.root, { port: args.flags.port && Number(args.flags.port) })
+        const server = await devCommand(args.root, {
+          port: args.flags.port && Number(args.flags.port),
+        })
         say(`weft dev: ${server.resolvedUrls.local[0]}`)
-        await new Promise(ok => { process.once('SIGINT', ok) })
+        await new Promise((ok) => {
+          process.once('SIGINT', ok)
+        })
         await server.close()
         return 0
       }
       case 'build': {
-        const result = await buildCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime, unsafeAllow: args.flags['unsafe-allow'] })
+        const result = await buildCommand(args.root, {
+          preset: args.flags.preset,
+          runtime: args.flags.runtime,
+          unsafeAllow: args.flags['unsafe-allow'],
+        })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
-        say(`weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract, ${result.audited} pages audited (${result.ms} ms)`)
+        say(
+          `weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract, ${result.audited} pages audited (${result.ms} ms)`,
+        )
         for (const note of result.notes ?? []) say(note)
-        if (!result.ok) say('weft build: failed. The output is written, but fix the errors above before it ships, or `--unsafe-allow <code>` to force it.')
+        if (!result.ok)
+          say(
+            'weft build: failed. The output is written, but fix the errors above before it ships, or `--unsafe-allow <code>` to force it.',
+          )
         return result.ok ? 0 : 1
       }
       case 'audit': {
-        const result = await audit(args.root, { url: args.flags.url, routes: args.positional.length ? args.positional : undefined, all: !!args.flags.all, max: args.flags.max && Number(args.flags.max) })
+        const result = await audit(args.root, {
+          url: args.flags.url,
+          routes: args.positional.length ? args.positional : undefined,
+          all: !!args.flags.all,
+          max: args.flags.max && Number(args.flags.max),
+        })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
-        say(`weft audit: ${result.skipped ?? `${result.pages.length} pages at a phone's and a desktop's width, ${result.diagnostics.length} findings (${result.ms} ms)`}`)
+        say(
+          `weft audit: ${result.skipped ?? `${result.pages.length} pages at a phone's and a desktop's width, ${result.diagnostics.length} findings (${result.ms} ms)`}`,
+        )
         return result.ok ? 0 : 1
       }
       case 'deploy': {
@@ -188,18 +305,55 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         }
         const unsafe = unsafeAllowed(args.flags['unsafe-allow'], loaded.config)
         if (sub === 'init') {
-          const result = initCommand(args.root, loaded.config, { target: args.positional[1] ?? args.flags.target, dryRun: !!args.flags['dry-run'], force: !!args.flags.force, unsafe })
+          const result = initCommand(args.root, loaded.config, {
+            target: args.positional[1] ?? args.flags.target,
+            dryRun: !!args.flags['dry-run'],
+            force: !!args.flags.force,
+            unsafe,
+          })
           if (args.json) print(result)
           say(formatHuman(result.findings))
-          say([`weft deploy init ${result.target}${result.dryRun ? ' (dry run: nothing written)' : ''}:`, ...result.actions.map(a => `  ${a}`), '', 'then, once:', ...result.next.map(n => `  ${n}`)].join('\n'))
+          say(
+            [
+              `weft deploy init ${result.target}${result.dryRun ? ' (dry run: nothing written)' : ''}:`,
+              ...result.actions.map((a) => `  ${a}`),
+              '',
+              'then, once:',
+              ...result.next.map((n) => `  ${n}`),
+            ].join('\n'),
+          )
           return 0
         }
-        if (sub !== undefined) throw Object.assign(new Error(`weft deploy ${String(sub)}: use \`weft deploy\`, \`weft deploy hosts\` or \`weft deploy init [target]\``), { code: 'E_USAGE' })
-        const result = await deployCommand(args.root, loaded.config, { target: args.flags.target, prod: !!args.flags.prod, yes: !!args.flags.yes, unsafe, build: (root, o) => buildCommand(root, { ...o, unsafeAllow: args.flags['unsafe-allow'] }) })
+        if (sub !== undefined)
+          throw Object.assign(
+            new Error(
+              `weft deploy ${String(sub)}: use \`weft deploy\`, \`weft deploy hosts\` or \`weft deploy init [target]\``,
+            ),
+            { code: 'E_USAGE' },
+          )
+        const result = await deployCommand(args.root, loaded.config, {
+          target: args.flags.target,
+          prod: !!args.flags.prod,
+          yes: !!args.flags.yes,
+          unsafe,
+          build: (root, o) => buildCommand(root, { ...o, unsafeAllow: args.flags['unsafe-allow'] }),
+        })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
-        if (result.dryRun) say([`weft deploy: a dry run for ${result.target}${result.prod ? ' (production)' : ' (a preview)'}. With --yes it runs:`, ...result.steps.map(s => `  ${s.what}${s.reads.length ? `\n      reads ${s.reads.join(', ')} from the environment` : ''}`)].join('\n'))
-        else say(`weft deploy: ${result.target}${result.prod ? ' (production)' : ''} → ${result.url ?? 'deployed; the host printed no URL'}`)
+        if (result.dryRun)
+          say(
+            [
+              `weft deploy: a dry run for ${result.target}${result.prod ? ' (production)' : ' (a preview)'}. With --yes it runs:`,
+              ...result.steps.map(
+                (s) =>
+                  `  ${s.what}${s.reads.length ? `\n      reads ${s.reads.join(', ')} from the environment` : ''}`,
+              ),
+            ].join('\n'),
+          )
+        else
+          say(
+            `weft deploy: ${result.target}${result.prod ? ' (production)' : ''} → ${result.url ?? 'deployed; the host printed no URL'}`,
+          )
         return 0
       }
       case 'start':
@@ -211,27 +365,51 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         return 0
       }
       case 'routes': {
-        const result = await routesCommand(args.root, { meta: !!args.flags.meta, preset: args.flags.preset })
+        const result = await routesCommand(args.root, {
+          meta: !!args.flags.meta,
+          preset: args.flags.preset,
+        })
         if (args.json) print(result)
-        else say(args.flags.meta ? metaTable(result) : result.routes.map(r => `${r.path.padEnd(24)} ${r.file}`).join('\n'))
+        else
+          say(
+            args.flags.meta
+              ? metaTable(result)
+              : result.routes.map((r) => `${r.path.padEnd(24)} ${r.file}`).join('\n'),
+          )
         say(formatHuman(result.diagnostics))
         return result.ok ? 0 : 1
       }
       case 'surfaces': {
         const surfaces = listSurfaces(args.root)
         if (args.json) print({ surfaces })
-        else say(surfaces.length ? surfaces.map(x => `${String(x.name).padEnd(20)} ${String(x.kind).padEnd(10)} ${x.file}:${x.line}  props: ${x.props.join(', ') || '(none)'}`).join('\n') : 'No surfaces yet: `weft docs surface`.')
+        else
+          say(
+            surfaces.length
+              ? surfaces
+                  .map(
+                    (x) =>
+                      `${String(x.name).padEnd(20)} ${String(x.kind).padEnd(10)} ${x.file}:${x.line}  props: ${x.props.join(', ') || '(none)'}`,
+                  )
+                  .join('\n')
+              : 'No surfaces yet: `weft docs surface`.',
+          )
         return 0
       }
       case 'tasks': {
         const result = await tasks(args.root)
         if (args.json) print(result)
-        else say(result.tasks.map(t => `${t.available ? ' ' : '·'} ${t.name.padEnd(10)} ${t.description ?? ''}`).join('\n'))
+        else
+          say(
+            result.tasks
+              .map((t) => `${t.available ? ' ' : '·'} ${t.name.padEnd(10)} ${t.description ?? ''}`)
+              .join('\n'),
+          )
         say(formatHuman(result.diagnostics))
         return result.ok ? 0 : 1
       }
       case 'run': {
-        if (!args.positional[0]) throw Object.assign(new Error('weft run <task>'), { code: 'E_USAGE' })
+        if (!args.positional[0])
+          throw Object.assign(new Error('weft run <task>'), { code: 'E_USAGE' })
         return await runTask(args.root, args.positional[0])
       }
       case 'docs': {
@@ -243,8 +421,18 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'agents-md': {
         const out = await writeAgentsMd(args.root, { check: args.check || args.stdout })
         if (args.stdout) io.stdout.write(out.text)
-        if (args.json) print({ path: out.path, bytes: out.bytes, limit: 8192, overLimit: out.overLimit, current: out.current, written: out.written })
-        say(`AGENTS.md: ${out.bytes} bytes${out.overLimit ? ' (over the 8 KB limit)' : ''}, ${out.written ? 'written' : out.current ? 'current' : 'stale'}`)
+        if (args.json)
+          print({
+            path: out.path,
+            bytes: out.bytes,
+            limit: 8192,
+            overLimit: out.overLimit,
+            current: out.current,
+            written: out.written,
+          })
+        say(
+          `AGENTS.md: ${out.bytes} bytes${out.overLimit ? ' (over the 8 KB limit)' : ''}, ${out.written ? 'written' : out.current ? 'current' : 'stale'}`,
+        )
         return (args.check && !out.current) || out.overLimit ? 1 : 0
       }
       case 'map': {
@@ -255,17 +443,40 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         return 0
       }
       case 'icons': {
-        if (args.positional[0] !== 'publish' || !args.positional[1]) { say('usage: weft icons publish <dir>'); return 1 }
-        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft-js/warp-icons/compile')).href)
+        if (args.positional[0] !== 'publish' || !args.positional[1]) {
+          say('usage: weft icons publish <dir>')
+          return 1
+        }
+        const { publish } = await import(
+          pathToFileURL(
+            createRequire(join(args.root, 'package.json')).resolve('@weft-js/warp-icons/compile'),
+          ).href
+        )
         const out = await publish(resolve(args.root, args.positional[1]))
         if (args.json) print(out)
-        else say(`${out.files} files for ${out.icons} icons in ${out.dir}. Nothing was uploaded: host that folder, then set icons({ source }).`)
+        else
+          say(
+            `${out.files} files for ${out.icons} icons in ${out.dir}. Nothing was uploaded: host that folder, then set icons({ source }).`,
+          )
         return 0
       }
       case 'add': {
-        const result = await addCommand(args.root, args.positional[0], { dryRun: args.flags['dry-run'], install: !args.flags['no-install'], engine: args.positional[1], layer: args.flags.layer, remote: args.flags.remote })
+        const result = await addCommand(args.root, args.positional[0], {
+          dryRun: args.flags['dry-run'],
+          install: !args.flags['no-install'],
+          engine: args.positional[1],
+          layer: args.flags.layer,
+          remote: args.flags.remote,
+        })
         if (args.json) print(result)
-        else say(result.already ? `${result.package} is already in ${result.config}` : result.actions.map(a => `${args.flags['dry-run'] ? 'would ' : ''}${a}`).join('\n'))
+        else
+          say(
+            result.already
+              ? `${result.package} is already in ${result.config}`
+              : result.actions
+                  .map((a) => `${args.flags['dry-run'] ? 'would ' : ''}${a}`)
+                  .join('\n'),
+          )
         return 0
       }
       case 'plugins': {
@@ -273,7 +484,15 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         if (sub === 'list') {
           const result = await list(args.root)
           if (args.json) print(result)
-          else say(result.plugins.map(p => `${p.name}@${p.version ?? '?'}  ${p.provides.map(s => `${s.slot}${s.key ? `[${s.key}]` : ''}${s.bound ? '' : ' (not bound)'}`).join(', ') || 'no slots'}${p.tokens ? `  tokens --${p.tokens}-*` : ''}`).join('\n') || 'no plugins')
+          else
+            say(
+              result.plugins
+                .map(
+                  (p) =>
+                    `${p.name}@${p.version ?? '?'}  ${p.provides.map((s) => `${s.slot}${s.key ? `[${s.key}]` : ''}${s.bound ? '' : ' (not bound)'}`).join(', ') || 'no slots'}${p.tokens ? `  tokens --${p.tokens}-*` : ''}`,
+                )
+                .join('\n') || 'no plugins',
+            )
           say(formatHuman(result.diagnostics))
           return result.ok ? 0 : 1
         }
@@ -285,9 +504,12 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         }
         if (sub === 'sync') {
           const loaded = await loadConfig(args.root)
-          const errors = loaded.diagnostics.filter(d => d.severity === 'error')
-          const written = loaded.diagnostics.some(d => d.code === 'P007') ? [] : sync(args.root, loaded)
-          if (args.json) print({ ok: errors.length === 0, written, diagnostics: loaded.diagnostics })
+          const errors = loaded.diagnostics.filter((d) => d.severity === 'error')
+          const written = loaded.diagnostics.some((d) => d.code === 'P007')
+            ? []
+            : sync(args.root, loaded)
+          if (args.json)
+            print({ ok: errors.length === 0, written, diagnostics: loaded.diagnostics })
           say(formatHuman(loaded.diagnostics))
           say(`weft plugins sync: ${written.length} files written`)
           return errors.length ? 1 : 0
@@ -301,17 +523,43 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           return result.ok ? 0 : 1
         }
         if (sub === 'approve') {
-          const result = approveCommand(args.root, await loadConfig(args.root), { names: args.positional.slice(1), all: !!args.flags.all })
+          const result = approveCommand(args.root, await loadConfig(args.root), {
+            names: args.positional.slice(1),
+            all: !!args.flags.all,
+          })
           if (args.json) print(result)
-          else say([...(result.written ? result.approved : result.pending).map(formatTrust), result.written ? `${result.lock}: ${result.approved.length} approved` : result.pending.length ? 'nothing written: name a plugin, or pass --all' : 'nothing waiting', ...result.written ? result.pending.map(p => `still waiting: ${p.name}`) : [], ...(result.gitignore ? ['.gitignore: the lock is no longer ignored, so commit it'] : [])].join('\n'))
+          else
+            say(
+              [
+                ...(result.written ? result.approved : result.pending).map(formatTrust),
+                result.written
+                  ? `${result.lock}: ${result.approved.length} approved`
+                  : result.pending.length
+                    ? 'nothing written: name a plugin, or pass --all'
+                    : 'nothing waiting',
+                ...(result.written ? result.pending.map((p) => `still waiting: ${p.name}`) : []),
+                ...(result.gitignore
+                  ? ['.gitignore: the lock is no longer ignored, so commit it']
+                  : []),
+              ].join('\n'),
+            )
           return result.ok ? 0 : 1
         }
-        throw Object.assign(new Error(`unknown plugins subcommand ${String(sub)}`), { code: 'E_USAGE' })
+        throw Object.assign(new Error(`unknown plugins subcommand ${String(sub)}`), {
+          code: 'E_USAGE',
+        })
       }
       case 'fix': {
         const result = await fix(args.root, { files: args.positional })
         if (args.json) print(result)
-        else say(result.applied.length ? result.applied.map(a => `${a.file}:${a.span[0]}:${a.span[1]}  ${a.code}`).join('\n') : 'nothing to fix')
+        else
+          say(
+            result.applied.length
+              ? result.applied
+                  .map((a) => `${a.file}:${a.span[0]}:${a.span[1]}  ${a.code}`)
+                  .join('\n')
+              : 'nothing to fix',
+          )
         return 0
       }
       case 'tokens': {
@@ -323,15 +571,32 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'style': {
         const sub = args.positional[0]
         if (sub === 'find') {
-          const result = findGroups((await styleMatrix(args.root)).matrix, args.positional.slice(1).join(' '))
+          const result = findGroups(
+            (await styleMatrix(args.root)).matrix,
+            args.positional.slice(1).join(' '),
+          )
           if (args.json) print(result)
           else say(formatFind(result))
           return 0
         }
         if (sub === 'explain') {
-          const accent = args.flags.accent ? Object.fromEntries(args.flags.accent.split(/[\s,]+/).filter(Boolean).map(w => w.split(':'))) : undefined
-          const states = args.flags.states?.split(',').map(s => s.trim()).filter(Boolean)
-          const result = explainTarget(await styleMatrix(args.root), args.positional.slice(1).join(' '), { axes: args.flags.axes, states, accent, part: args.flags.part })
+          const accent = args.flags.accent
+            ? Object.fromEntries(
+                args.flags.accent
+                  .split(/[\s,]+/)
+                  .filter(Boolean)
+                  .map((w) => w.split(':')),
+              )
+            : undefined
+          const states = args.flags.states
+            ?.split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+          const result = explainTarget(
+            await styleMatrix(args.root),
+            args.positional.slice(1).join(' '),
+            { axes: args.flags.axes, states, accent, part: args.flags.part },
+          )
           if (args.json) print(result)
           else say(formatExplain(result))
           return 0
@@ -340,10 +605,17 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           const { matrix } = await styleMatrix(args.root)
           const written = args.stdout ? false : writeMatrixFile(args.root, matrix)
           if (args.stdout || args.json) print(matrix)
-          say(`.weft/styles.json: ${Object.keys(matrix.groups).length} groups, ${matrix.diagnostics.length} diagnostics, ${args.stdout ? 'not written' : written ? 'written' : 'current'}`)
+          say(
+            `.weft/styles.json: ${Object.keys(matrix.groups).length} groups, ${matrix.diagnostics.length} diagnostics, ${args.stdout ? 'not written' : written ? 'written' : 'current'}`,
+          )
           return 0
         }
-        throw Object.assign(new Error(`weft style ${sub ?? ''}: use find <query>, explain <group|selector> or matrix`), { code: 'E_USAGE' })
+        throw Object.assign(
+          new Error(
+            `weft style ${sub ?? ''}: use find <query>, explain <group|selector> or matrix`,
+          ),
+          { code: 'E_USAGE' },
+        )
       }
       case 'mcp':
         await serve(args.root)
@@ -358,7 +630,8 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     }
   } catch (error) {
     const code = error.code ?? 'E_INTERNAL'
-    if (args?.json || argv.includes('--json')) print({ ok: false, error: { code, message: error.message } })
+    if (args?.json || argv.includes('--json'))
+      print({ ok: false, error: { code, message: error.message } })
     say(`weft: ${error.message}${code === 'E_USAGE' ? `\n\n${usage}` : ''}`)
     return code === 'E_REFUSED' ? 1 : 2
   }

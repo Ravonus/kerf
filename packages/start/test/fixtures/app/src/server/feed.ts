@@ -6,17 +6,26 @@ export const notes = topic('notes', { message: object({ text: 'string' }) })
 
 export const noteFeed = stream({
   message: object({ text: 'string' }),
-  async *run({ signal, lastEventId }) { yield* notes.subscribe('all', { signal, after: lastEventId }) },
+  async *run({ signal, lastEventId }) {
+    yield* notes.subscribe('all', { signal, after: lastEventId })
+  },
 })
 
 export const postNote = mutation({
   input: object({ text: 'string' }),
-  run: async ({ input }) => { await notes.publish('all', { text: input.text }) },
+  run: async ({ input }) => {
+    await notes.publish('all', { text: input.text })
+  },
 })
 
 let hits = 0
 export const counter = query({ tags: ['counter'], run: () => ({ hits }) })
-export const bump = mutation({ invalidates: ['counter'], run: () => { hits++ } })
+export const bump = mutation({
+  invalidates: ['counter'],
+  run: () => {
+    hits++
+  },
+})
 
 /** The hub's counts, so a test can see a closed tab reach the server. */
 export const rtStats = query({ run: () => realtimeStats() })

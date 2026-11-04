@@ -3,7 +3,10 @@ import { mutation, query } from '@weft-js/start'
 import { z } from 'zod'
 import { search } from './rust'
 
-export const Search = z.object({ q: z.string().trim().min(1).max(200), limit: z.int().min(1).max(50).default(10) })
+export const Search = z.object({
+  q: z.string().trim().min(1).max(200),
+  limit: z.int().min(1).max(50).default(10),
+})
 export const Hit = z.object({ id: z.string(), title: z.string(), score: z.number() })
 
 export const searchDocs = query({

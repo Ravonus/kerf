@@ -8,7 +8,11 @@ const cells = Array.from({ length: CELLS }, () => createSignal(0))
 
 function Counter() {
   count.renders++
-  return <button type="button" onClick={() => window.arena.press()}>{ran(n())}</button>
+  return (
+    <button type="button" onClick={() => window.arena.press()}>
+      {ran(n())}
+    </button>
+  )
 }
 
 function Cell(props: { i: number }) {
@@ -18,16 +22,30 @@ function Cell(props: { i: number }) {
 
 function Grid() {
   count.renders++
-  return <div data-grid><For each={cells}>{(_, i) => {
-    const index = untrack(i)
-    return <Cell i={index} />
-  }}</For></div>
+  return (
+    <div data-grid>
+      <For each={cells}>
+        {(_, i) => {
+          const index = untrack(i)
+          return <Cell i={index} />
+        }}
+      </For>
+    </div>
+  )
 }
 
 const tick = (k: number) => {
-  for (let i = k % 10; i < CELLS; i += 10) cells[i][1](v => v + 1)
+  for (let i = k % 10; i < CELLS; i += 10) cells[i][1]((v) => v + 1)
 }
 
 const root = document.getElementById('root')!
-render(() => <main><Counter /><Grid /></main>, root)
-harness(root, { click: () => setN(v => v + 1), tick, runs: () => count.runs })
+render(
+  () => (
+    <main>
+      <Counter />
+      <Grid />
+    </main>
+  ),
+  root,
+)
+harness(root, { click: () => setN((v) => v + 1), tick, runs: () => count.runs })

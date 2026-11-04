@@ -9,11 +9,17 @@ import { expect, test } from 'vitest'
 
 const { transform } = createRequire(import.meta.url)('../../weft/compiler.cjs')
 const src = fileURLToPath(new URL('../src', import.meta.url))
-const sources = readdirSync(src, { recursive: true }).filter(f => f.endsWith('.tsx')).map(f => join(src, f))
+const sources = readdirSync(src, { recursive: true })
+  .filter((f) => f.endsWith('.tsx'))
+  .map((f) => join(src, f))
 
 test('the kit compiles without a diagnostic', () => {
   expect(sources.length).toBeGreaterThan(50)
-  const said = sources.flatMap(filename =>
-    (transform(readFileSync(filename, 'utf8'), { filename, generate: 'dom', dev: true }).diagnostics ?? []).map(d => `${filename}:${d.line} ${d.code} ${d.message}`))
+  const said = sources.flatMap((filename) =>
+    (
+      transform(readFileSync(filename, 'utf8'), { filename, generate: 'dom', dev: true })
+        .diagnostics ?? []
+    ).map((d) => `${filename}:${d.line} ${d.code} ${d.message}`),
+  )
   expect(said).toEqual([])
 })

@@ -5,11 +5,38 @@ import { fixture, project } from './helpers.mjs'
 describe('weft tasks', () => {
   it('lists the built-ins on the reference app, marking what is not shipped yet', async () => {
     const r = await tasks(fixture)
-    expect(r).toMatchObject({ version: 1, ok: true, config: null, environments: [], diagnostics: [] })
-    const available = r.tasks.filter(t => t.available).map(t => t.name)
-    expect(available).toEqual(['check', 'tasks', 'docs', 'agents-md', 'mcp', 'style', 'map', 'add', 'test', 'fix', 'tokens', 'browser', 'run', 'surfaces', 'plugins'])
+    expect(r).toMatchObject({
+      version: 1,
+      ok: true,
+      config: null,
+      environments: [],
+      diagnostics: [],
+    })
+    const available = r.tasks.filter((t) => t.available).map((t) => t.name)
+    expect(available).toEqual([
+      'check',
+      'tasks',
+      'docs',
+      'agents-md',
+      'mcp',
+      'style',
+      'map',
+      'add',
+      'test',
+      'fix',
+      'tokens',
+      'browser',
+      'run',
+      'surfaces',
+      'plugins',
+    ])
     for (const t of r.tasks) {
-      expect(t).toMatchObject({ kind: 'builtin', command: expect.stringMatching(/^weft /), description: expect.any(String), sideEffects: expect.any(Array) })
+      expect(t).toMatchObject({
+        kind: 'builtin',
+        command: expect.stringMatching(/^weft /),
+        description: expect.any(String),
+        sideEffects: expect.any(Array),
+      })
       expect(t.args.type).toBe('object')
     }
   })
@@ -45,17 +72,36 @@ export default defineConfig({
     expect(r.ok).toBe(true)
     expect(r.scope).toEqual({ write: ['src/**'], read: null, forbid: ['.env*'] })
     expect(r.environments).toEqual(['dev', 'ci'])
-    const seed = r.tasks.find(t => t.name === 'seed')
-    expect(seed).toMatchObject({ kind: 'project', command: 'weft run seed', sideEffects: ['db'], env: ['dev'], available: true })
-    expect(seed.args).toMatchObject({ type: 'object', properties: { count: { type: 'integer' } }, required: ['count'] })
-    expect(r.tasks.find(t => t.name === 'lint')).toMatchObject({ env: ['dev', 'ci'], args: { properties: { fix: { type: 'boolean' } } } })
+    const seed = r.tasks.find((t) => t.name === 'seed')
+    expect(seed).toMatchObject({
+      kind: 'project',
+      command: 'weft run seed',
+      sideEffects: ['db'],
+      env: ['dev'],
+      available: true,
+    })
+    expect(seed.args).toMatchObject({
+      type: 'object',
+      properties: { count: { type: 'integer' } },
+      required: ['count'],
+    })
+    expect(r.tasks.find((t) => t.name === 'lint')).toMatchObject({
+      env: ['dev', 'ci'],
+      args: { properties: { fix: { type: 'boolean' } } },
+    })
   })
 
   it('carries P003/P004 so an agent sees broken tasks where it reads them', async () => {
-    const dir = project({ 'weft.config.ts': "export default { tasks: { build: { run: 'vite build' } } }\n" })
+    const dir = project({
+      'weft.config.ts': "export default { tasks: { build: { run: 'vite build' } } }\n",
+    })
     const r = await tasks(dir)
     expect(r.ok).toBe(false)
-    expect(r.diagnostics.map(d => d.code)).toEqual(['P003', 'P004'])
-    expect(r.tasks.find(t => t.kind === 'project')).toMatchObject({ name: 'build', description: null, sideEffects: null })
+    expect(r.diagnostics.map((d) => d.code)).toEqual(['P003', 'P004'])
+    expect(r.tasks.find((t) => t.kind === 'project')).toMatchObject({
+      name: 'build',
+      description: null,
+      sideEffects: null,
+    })
   })
 })

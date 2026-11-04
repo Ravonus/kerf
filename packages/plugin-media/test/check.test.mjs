@@ -10,7 +10,10 @@ const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
 const plugin = fileURLToPath(new URL('../src/index.mjs', import.meta.url))
 let root
 
-const png = (w, h) => sharp({ create: { width: w, height: h, channels: 3, background: '#468' } }).png().toBuffer()
+const png = (w, h) =>
+  sharp({ create: { width: w, height: h, channels: 3, background: '#468' } })
+    .png()
+    .toBuffer()
 
 beforeAll(async () => {
   mkdirSync(tmp, { recursive: true })
@@ -40,7 +43,8 @@ export default function Home() {
 }
 `,
     'src/Card.tsx': `import { Media } from '@weft-js/core/media'\nimport pic from './hero.png?media'\nexport function Card() { return <figure><Media src={pic} alt="hero" /><Media src={pic} alt="" decorative /></figure> }\n`,
-    'src/routes/evil.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><foreignObject/></svg>',
+    'src/routes/evil.svg':
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><foreignObject/></svg>',
   }
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(join(root, rel, '..'), { recursive: true })
@@ -48,7 +52,12 @@ export default function Home() {
   }
   writeFileSync(join(root, 'src/routes/big.png'), await png(1600, 900))
   writeFileSync(join(root, 'src/routes/hero.png'), await png(800, 600))
-  writeFileSync(join(root, 'src/routes/spin.gif'), await sharp({ create: { width: 4, height: 4, channels: 3, background: '#000' } }).gif().toBuffer())
+  writeFileSync(
+    join(root, 'src/routes/spin.gif'),
+    await sharp({ create: { width: 4, height: 4, channels: 3, background: '#000' } })
+      .gif()
+      .toBuffer(),
+  )
   cpSync(join(root, 'src/routes/hero.png'), join(root, 'src/hero.png'))
   mkdirSync(join(root, 'public'))
   writeFileSync(join(root, 'public/logo.png'), await png(10, 10))
@@ -57,8 +66,8 @@ afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
 it('reports each M-code once where it applies, owned by the plugin, with fixes', async () => {
   const r = await check(root)
-  const m = r.diagnostics.filter(d => d.code.startsWith('M'))
-  const lines = m.map(d => `${d.file}:${d.span[0]} ${d.code}`).sort()
+  const m = r.diagnostics.filter((d) => d.code.startsWith('M'))
+  const lines = m.map((d) => `${d.file}:${d.span[0]} ${d.code}`).sort()
   expect(lines).toEqual([
     'src/Card.tsx:3 M007', // alt equals the file name
     'src/routes/index.tsx:10 M007', // alt="" without decorative
@@ -83,12 +92,19 @@ it('reports each M-code once where it applies, owned by the plugin, with fixes',
   for (const d of m) expect(d.owner).toBe('@weft-js/plugin-media')
 
   const text = readFileSync(join(root, 'src/routes/index.tsx'), 'utf8')
-  const apply = d => text.slice(0, d.fix.edits[0].offset[0]) + d.fix.edits[0].text + text.slice(d.fix.edits[0].offset[1])
-  const m001 = m.find(d => d.code === 'M001')
+  const apply = (d) =>
+    text.slice(0, d.fix.edits[0].offset[0]) +
+    d.fix.edits[0].text +
+    text.slice(d.fix.edits[0].offset[1])
+  const m001 = m.find((d) => d.code === 'M001')
   expect(m001.fix.safe).toBe(true)
-  expect(apply(m001)).toContain('<img width={1600} height={900} src={raw} alt="Wide shot" loading="lazy" />')
-  expect(apply(m.find(d => d.code === 'M005'))).toContain('<video muted src="/clip.mp4"')
-  expect(apply(m.find(d => d.code === 'M009'))).toContain('<Media src={hero} alt="Studio at night" width="1/2" loading="lazy" />')
-  expect(apply(m.find(d => d.code === 'M002'))).toContain("import raw from './big.png?media'")
-  expect(m.find(d => d.code === 'M010').fix.text).toContain('`width="1/2"`') // the catalog's fix text
+  expect(apply(m001)).toContain(
+    '<img width={1600} height={900} src={raw} alt="Wide shot" loading="lazy" />',
+  )
+  expect(apply(m.find((d) => d.code === 'M005'))).toContain('<video muted src="/clip.mp4"')
+  expect(apply(m.find((d) => d.code === 'M009'))).toContain(
+    '<Media src={hero} alt="Studio at night" width="1/2" loading="lazy" />',
+  )
+  expect(apply(m.find((d) => d.code === 'M002'))).toContain("import raw from './big.png?media'")
+  expect(m.find((d) => d.code === 'M010').fix.text).toContain('`width="1/2"`') // the catalog's fix text
 })

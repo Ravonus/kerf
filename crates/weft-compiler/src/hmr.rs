@@ -14,16 +14,26 @@ use std::fmt::Write as _;
 
 use oxc_allocator::{Allocator, TakeIn, Vec as ArenaVec};
 use oxc_ast::ast::{
-    Argument, ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Function,
-    FunctionBody, Program, Statement, VariableDeclaration,
+    Argument, ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind,
+    Expression, Function, FunctionBody, Program, Statement, VariableDeclaration,
 };
 use oxc_ast::builder::AstBuilder;
 use oxc_span::{GetSpan, SPAN, Span};
 
 /// Wraps component state in `_$keep` and returns the footer to append to the emitted module, if any.
-pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &str, file: &str) -> Option<String> {
+pub fn apply<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+    source: &str,
+    file: &str,
+) -> Option<String> {
     let ast = AstBuilder::new(allocator);
-    let text = |s: Span| source.get(s.start as usize..s.end as usize).filter(|_| s.end > 0).unwrap_or("");
+    let text = |s: Span| {
+        source
+            .get(s.start as usize..s.end as usize)
+            .filter(|_| s.end > 0)
+            .unwrap_or("")
+    };
     let mut comps: Vec<(String, u64)> = Vec::new();
     let mut rest = Fnv::new();
     let mut accept = true;
@@ -62,12 +72,19 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &s
         return None;
     }
     let rest = rest.0;
-    let list: Vec<String> = comps.iter().map(|(n, h)| format!("{n}: [{n}, \"{:x}\"]", h ^ rest)).collect();
+    let list: Vec<String> = comps
+        .iter()
+        .map(|(n, h)| format!("{n}: [{n}, \"{:x}\"]", h ^ rest))
+        .collect();
     let mut out = format!(
         "\nimport {{ hot as _$hot{} }} from \"@weft-js/core/hmr\";\n",
         if keeps { ", keep as _$keep" } else { "" }
     );
-    let _ = writeln!(out, "if (import.meta.hot) {{\n\t_$hot({file:?}, {{ {} }});", list.join(", "));
+    let _ = writeln!(
+        out,
+        "if (import.meta.hot) {{\n\t_$hot({file:?}, {{ {} }});",
+        list.join(", ")
+    );
     if accept {
         out.push_str("\timport.meta.hot.accept();\n");
     }
@@ -76,7 +93,9 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &s
 }
 
 /// The components a top-level statement declares, with their bodies (none for an expression-bodied arrow).
-fn components<'s, 'a>(stmt: &'s mut Statement<'a>) -> Vec<(String, Option<&'s mut FunctionBody<'a>>)> {
+fn components<'s, 'a>(
+    stmt: &'s mut Statement<'a>,
+) -> Vec<(String, Option<&'s mut FunctionBody<'a>>)> {
     let mut out = Vec::new();
     match stmt {
         Statement::FunctionDeclaration(f) => function(f, &mut out),
@@ -100,7 +119,10 @@ fn is_component(name: &str) -> bool {
     name.starts_with(|c: char| c.is_ascii_uppercase())
 }
 
-fn function<'s, 'a>(f: &'s mut Function<'a>, out: &mut Vec<(String, Option<&'s mut FunctionBody<'a>>)>) {
+fn function<'s, 'a>(
+    f: &'s mut Function<'a>,
+    out: &mut Vec<(String, Option<&'s mut FunctionBody<'a>>)>,
+) {
     if let Some(id) = &f.id
         && is_component(&id.name)
         && let Some(body) = &mut f.body
@@ -109,14 +131,23 @@ fn function<'s, 'a>(f: &'s mut Function<'a>, out: &mut Vec<(String, Option<&'s m
     }
 }
 
-fn variables<'s, 'a>(v: &'s mut VariableDeclaration<'a>, out: &mut Vec<(String, Option<&'s mut FunctionBody<'a>>)>) {
+fn variables<'s, 'a>(
+    v: &'s mut VariableDeclaration<'a>,
+    out: &mut Vec<(String, Option<&'s mut FunctionBody<'a>>)>,
+) {
     for d in &mut v.declarations {
-        let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
+        let BindingPattern::BindingIdentifier(id) = &d.id else {
+            continue;
+        };
         if !is_component(&id.name) {
             continue;
         }
         let name = id.name.to_string();
-        match d.init.as_mut().map(oxc_ast::ast::Expression::get_inner_expression_mut) {
+        match d
+            .init
+            .as_mut()
+            .map(oxc_ast::ast::Expression::get_inner_expression_mut)
+        {
             Some(Expression::ArrowFunctionExpression(a)) => {
                 if let ArrowFunctionBody::FunctionBody(body) = &mut a.body {
                     out.push((name, Some(body)));
@@ -144,21 +175,38 @@ fn wrap_state<'a>(
 ) -> bool {
     let mut any = false;
     for stmt in &mut body.statements {
-        let Statement::VariableDeclaration(v) = stmt else { continue };
+        let Statement::VariableDeclaration(v) = stmt else {
+            continue;
+        };
         for d in &mut v.declarations {
-            let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
+            let BindingPattern::BindingIdentifier(id) = &d.id else {
+                continue;
+            };
             let Some(init) = &mut d.init else { continue };
-            let Expression::CallExpression(call) = &*init else { continue };
+            let Expression::CallExpression(call) = &*init else {
+                continue;
+            };
             if !matches!(&call.callee, Expression::Identifier(c) if c.name == "state") {
                 continue;
             }
             let s = call.span;
             let mut h = Fnv::new();
-            h.add(source.get(s.start as usize..s.end as usize).filter(|_| s.end > 0).unwrap_or(""));
+            h.add(
+                source
+                    .get(s.start as usize..s.end as usize)
+                    .filter(|_| s.end > 0)
+                    .unwrap_or(""),
+            );
             let key = format!("{}:{:x}", id.name, h.0);
             let inner = init.take_in(ast);
-            let str = |v: &str| Expression::new_string_literal(SPAN, allocator.alloc_str(v), None, ast);
-            let args = ArenaVec::from_iter_in([inner, str(comp), str(&key)].into_iter().map(Argument::from), ast);
+            let str =
+                |v: &str| Expression::new_string_literal(SPAN, allocator.alloc_str(v), None, ast);
+            let args = ArenaVec::from_iter_in(
+                [inner, str(comp), str(&key)]
+                    .into_iter()
+                    .map(Argument::from),
+                ast,
+            );
             let callee = Expression::new_identifier(SPAN, "_$keep", ast);
             *init = Expression::new_call_expression(SPAN, callee, None, args, false, ast);
             any = true;
@@ -172,13 +220,17 @@ fn wrap_state<'a>(
 fn exports_only_types(stmt: &Statement) -> bool {
     match stmt {
         Statement::ExportDeclaration(e) => match &e.declaration {
-            Declaration::FunctionDeclaration(f) => f.id.as_ref().is_some_and(|i| is_component(&i.name)),
+            Declaration::FunctionDeclaration(f) => {
+                f.id.as_ref().is_some_and(|i| is_component(&i.name))
+            }
             Declaration::ClassDeclaration(_) | Declaration::TSEnumDeclaration(_) => false,
             _ => true, // types, and variables: those are counted against the components found in them
         },
         Statement::ExportNamedDeclaration(e) => {
             e.export_kind.is_type()
-                || e.specifiers.iter().all(|s| s.export_kind.is_type() || is_component(&s.local.name()))
+                || e.specifiers
+                    .iter()
+                    .all(|s| s.export_kind.is_type() || is_component(&s.local.name()))
         }
         Statement::ExportDefaultDeclaration(e) => match &e.declaration {
             ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
@@ -188,9 +240,9 @@ fn exports_only_types(stmt: &Statement) -> bool {
             ExportDefaultDeclarationKind::Identifier(i) => is_component(&i.name),
             _ => false,
         },
-        Statement::ExportAllDeclaration(_) | Statement::ExportFromDeclaration(_) | Statement::TSExportAssignment(_) => {
-            false
-        }
+        Statement::ExportAllDeclaration(_)
+        | Statement::ExportFromDeclaration(_)
+        | Statement::TSExportAssignment(_) => false,
         _ => true,
     }
 }
@@ -206,7 +258,10 @@ fn calls_entry(stmt: &Statement) -> bool {
     };
     match stmt {
         Statement::ExpressionStatement(e) => entry(&e.expression),
-        Statement::VariableDeclaration(v) => v.declarations.iter().any(|d| d.init.as_ref().is_some_and(entry)),
+        Statement::VariableDeclaration(v) => v
+            .declarations
+            .iter()
+            .any(|d| d.init.as_ref().is_some_and(entry)),
         _ => false,
     }
 }
@@ -228,9 +283,17 @@ impl Fnv {
 /// Dev names for the reactive graph (`weft browser snapshot`, the dev overlay; research 22). Body-level
 /// `const x = state(…)`, `derived(…)` and `state.linked(…)` in a component become `_$name(…, "Card.x")`; top-level ones
 /// in any module `_$name(…, "<file stem>.x")`. Returns the import to append, if anything was named.
-pub fn names<'a>(allocator: &'a Allocator, program: &mut Program<'a>, file: &str) -> Option<String> {
+pub fn names<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+    file: &str,
+) -> Option<String> {
     let ast = AstBuilder::new(allocator);
-    let stem = std::path::Path::new(file).file_stem().and_then(|s| s.to_str()).unwrap_or("module").to_string();
+    let stem = std::path::Path::new(file)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("module")
+        .to_string();
     let mut any = false;
     for stmt in &mut program.body {
         if let Statement::VariableDeclaration(v) = &mut *stmt {
@@ -260,7 +323,9 @@ fn name_decls<'a>(
 ) -> bool {
     let mut any = false;
     for d in &mut v.declarations {
-        let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
+        let BindingPattern::BindingIdentifier(id) = &d.id else {
+            continue;
+        };
         let Some(init) = &mut d.init else { continue };
         if !reactive_init(init) {
             continue;
@@ -284,12 +349,15 @@ fn name_decls<'a>(
 
 /// `state(…)`, `derived(…)`, `state.linked(…)`, or one already wrapped by `_$keep` (HMR).
 fn reactive_init(e: &Expression) -> bool {
-    let Expression::CallExpression(call) = e else { return false };
+    let Expression::CallExpression(call) = e else {
+        return false;
+    };
     match &call.callee {
         Expression::Identifier(c) if c.name == "state" || c.name == "derived" => true,
         Expression::Identifier(c) if c.name == "_$keep" => true,
         Expression::StaticMemberExpression(m) => {
-            matches!(&m.object, Expression::Identifier(o) if o.name == "state") && m.property.name == "linked"
+            matches!(&m.object, Expression::Identifier(o) if o.name == "state")
+                && m.property.name == "linked"
         }
         _ => false,
     }

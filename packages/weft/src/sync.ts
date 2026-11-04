@@ -11,22 +11,51 @@ import { DEV, type Box, type StandardSchema } from './index'
 import { StateError, features, report, type Instance } from './scope'
 
 /** `s`: scope.box. `a`: stamps. `p`: key → value, `d`: keys gone; or `v`: the whole value. */
-type Patch = { s: string; at: number; t: string; p?: Record<string, unknown>; d?: string[]; v?: unknown; w?: 1 }
-interface Slot { inst: Instance; box: Box<unknown>; id: string; sent: unknown; stamps: Map<string, [number, string]>; schema?: StandardSchema<unknown> | undefined }
-interface Line { bc: BroadcastChannel; slots: Map<string, Slot>; refs: number; tab: string; dirty: Set<Slot> }
+type Patch = {
+  s: string
+  at: number
+  t: string
+  p?: Record<string, unknown>
+  d?: string[]
+  v?: unknown
+  w?: 1
+}
+interface Slot {
+  inst: Instance
+  box: Box<unknown>
+  id: string
+  sent: unknown
+  stamps: Map<string, [number, string]>
+  schema?: StandardSchema<unknown> | undefined
+}
+interface Line {
+  bc: BroadcastChannel
+  slots: Map<string, Slot>
+  refs: number
+  tab: string
+  dirty: Set<Slot>
+}
 
 const lines = new WeakMap<object, Line>()
 const slots = new WeakMap<Box<unknown>, Slot>()
 
-const plain = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype
-const newer = (a: [number, string], b?: [number, string]) => !b || a[0] > b[0] || (a[0] === b[0] && a[1] > b[1])
+const plain = (v: unknown): v is Record<string, unknown> =>
+  !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype
+const newer = (a: [number, string], b?: [number, string]) =>
+  !b || a[0] > b[0] || (a[0] === b[0] && a[1] > b[1])
 const WHOLE = ''
 
 function line(inst: Instance): Line | undefined {
   let l = lines.get(inst.app)
   if (l || typeof BroadcastChannel === 'undefined') return l
-  const made: Line = { bc: new BroadcastChannel(`weft:state:${inst.app.name}`), slots: new Map(), refs: 0, tab: crypto.getRandomValues(new Uint32Array(2)).join('.'), /* randomUUID is missing on plain http */ dirty: new Set() }
-  made.bc.onmessage = e => receive(made, e.data)
+  const made: Line = {
+    bc: new BroadcastChannel(`weft:state:${inst.app.name}`),
+    slots: new Map(),
+    refs: 0,
+    tab: crypto.getRandomValues(new Uint32Array(2)).join('.'),
+    /* randomUUID is missing on plain http */ dirty: new Set(),
+  }
+  made.bc.onmessage = (e) => receive(made, e.data)
   lines.set(inst.app, (l = made))
   return l
 }
@@ -59,7 +88,12 @@ function receive(l: Line, m: Patch) {
   }
   const ok = accepted(s, next)
   if (!ok) {
-    if (DEV) report('S008', `\`${s.id}\` dropped a write from another tab that its schema refuses`, 'bump `version` when the schema changes: that tab runs an older deploy')
+    if (DEV)
+      report(
+        'S008',
+        `\`${s.id}\` dropped a write from another tab that its schema refuses`,
+        'bump `version` when the schema changes: that tab runs an older deploy',
+      )
     return
   }
   const hook = s.box.h
@@ -73,13 +107,14 @@ function receive(l: Line, m: Patch) {
 function flush(l: Line) {
   const now = Date.now()
   for (const s of l.dirty) {
-    const was = s.sent, v = s.box.v
+    const was = s.sent,
+      v = s.box.v
     s.sent = v
     if (Object.is(was, v)) continue
     const m: Patch = { s: s.id, at: now, t: l.tab }
     if (plain(was) && plain(v)) {
       m.p = {}
-      m.d = Object.keys(was).filter(k => !(k in v))
+      m.d = Object.keys(was).filter((k) => !(k in v))
       for (const k of Object.keys(v)) if (!Object.is(was[k], v[k])) m.p[k] = v[k]
       for (const k of [...Object.keys(m.p), ...m.d]) s.stamps.set(k, [now, l.tab])
     } else {
@@ -98,10 +133,22 @@ features.sync = {
     const id = `${inst.name}.${name}`
     const o = box.opts!
     const where = typeof o.persist === 'string' ? o.persist : o.persist?.in
-    if (DEV && (!where || where === 'session')) throw new StateError('S008', `\`${id}\` has \`sync: 'tabs'\` ${where ? 'and persists to `session`, which is per tab' : 'without `persist`'}: a new tab would start from nothing`, "`persist: { in: 'local', … }`")
+    if (DEV && (!where || where === 'session'))
+      throw new StateError(
+        'S008',
+        `\`${id}\` has \`sync: 'tabs'\` ${where ? 'and persists to `session`, which is per tab' : 'without `persist`'}: a new tab would start from nothing`,
+        "`persist: { in: 'local', … }`",
+      )
     const l = line(inst)
     if (!l) return
-    const s: Slot = { inst, box, id, sent: box.v, stamps: new Map(), schema: typeof o.persist === 'object' ? o.persist.schema : undefined }
+    const s: Slot = {
+      inst,
+      box,
+      id,
+      sent: box.v,
+      stamps: new Map(),
+      schema: typeof o.persist === 'object' ? o.persist.schema : undefined,
+    }
     slots.set(box, s)
     l.slots.set(id, s)
     l.refs++

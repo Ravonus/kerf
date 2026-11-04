@@ -6,11 +6,24 @@ import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const windows = process.platform === 'win32'
-const run = (cmd, args, cwd = root) => spawnSync(cmd, args, { cwd, stdio: 'inherit', shell: windows })
+const run = (cmd, args, cwd = root) =>
+  spawnSync(cmd, args, { cwd, stdio: 'inherit', shell: windows })
 
-run(join(root, 'node_modules', '.bin', windows ? 'oxlint.cmd' : 'oxlint'), ['--type-aware', '--fix', '--quiet', 'packages', 'scripts', 'site'])
+run(join(root, 'node_modules', '.bin', windows ? 'oxlint.cmd' : 'oxlint'), [
+  '--type-aware',
+  '--fix',
+  '--quiet',
+  'packages',
+  'scripts',
+  'site',
+])
 for (const crate of ['crates/weft-compiler', 'crates/weft-layout', 'crates/weft']) {
-  run('cargo', ['clippy', '--fix', '--allow-dirty', '--allow-staged', '--all-targets', '--quiet'], join(root, crate))
+  run(
+    'cargo',
+    ['clippy', '--fix', '--allow-dirty', '--allow-staged', '--all-targets', '--quiet'],
+    join(root, crate),
+  )
   run('cargo', ['fmt'], join(root, crate))
 }
+run(process.execPath, ['scripts/quality/format.mjs', '--write'])
 console.log('Done. `pnpm run check` shows what is left.')

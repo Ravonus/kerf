@@ -13,8 +13,8 @@ export function positions(text) {
   const ascii = bytes.length === text.length
   const lineStarts = [0]
   for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) lineStarts.push(i + 1)
-  const fromByte = b => (ascii ? b : bytes.subarray(0, b).toString('utf8').length)
-  const lineCol = index => {
+  const fromByte = (b) => (ascii ? b : bytes.subarray(0, b).toString('utf8').length)
+  const lineCol = (index) => {
     let lo = 0
     let hi = lineStarts.length - 1
     while (lo < hi) {
@@ -28,7 +28,18 @@ export function positions(text) {
   return { fromByte, lineCol, span }
 }
 
-export function diagnostic({ code, severity, file, span = [1, 1, 1, 1], offset, why, help, fix, related, owner = 'core' }) {
+export function diagnostic({
+  code,
+  severity,
+  file,
+  span = [1, 1, 1, 1],
+  offset,
+  why,
+  help,
+  fix,
+  related,
+  owner = 'core',
+}) {
   const known = entry(code)
   const d = { code, severity: severity ?? known?.severity ?? 'error', owner, file, span }
   if (offset) d.offset = offset
@@ -43,7 +54,11 @@ export function diagnostic({ code, severity, file, span = [1, 1, 1, 1], offset, 
 export function locate(text, needle) {
   if (!needle || !text) return { span: [1, 1, 1, 1] }
   const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  for (const re of [new RegExp(`(?<![\\w$.-])${esc}(?=\\s*:)`), new RegExp(`(['"\`])${esc}\\1`), new RegExp(esc)]) {
+  for (const re of [
+    new RegExp(`(?<![\\w$.-])${esc}(?=\\s*:)`),
+    new RegExp(`(['"\`])${esc}\\1`),
+    new RegExp(esc),
+  ]) {
     const m = re.exec(text)
     if (!m) continue
     const at = m.index + (m[0].length - needle.length) / 2
@@ -56,19 +71,28 @@ export function summarize(diagnostics) {
   const byCode = {}
   for (const d of diagnostics) byCode[d.code] = (byCode[d.code] ?? 0) + 1
   return {
-    errors: diagnostics.filter(d => d.severity === 'error').length,
-    warnings: diagnostics.filter(d => d.severity === 'warning').length,
+    errors: diagnostics.filter((d) => d.severity === 'error').length,
+    warnings: diagnostics.filter((d) => d.severity === 'warning').length,
     byCode,
   }
 }
 
 export function sortDiagnostics(diagnostics) {
-  return diagnostics.sort((a, b) => a.file.localeCompare(b.file) || a.span[0] - b.span[0] || a.span[1] - b.span[1] || a.code.localeCompare(b.code))
+  return diagnostics.sort(
+    (a, b) =>
+      a.file.localeCompare(b.file) ||
+      a.span[0] - b.span[0] ||
+      a.span[1] - b.span[1] ||
+      a.code.localeCompare(b.code),
+  )
 }
 
 /** Human text for stderr: `file:line:col  CODE severity  why` then the fix. */
 export function formatHuman(diagnostics) {
   return diagnostics
-    .map(d => `${d.file}:${d.span[0]}:${d.span[1]}  ${d.code} ${d.severity}  ${d.why}\n    fix: ${d.fix.text}${d.fix.edits ? ' (autofix)' : ''}`)
+    .map(
+      (d) =>
+        `${d.file}:${d.span[0]}:${d.span[1]}  ${d.code} ${d.severity}  ${d.why}\n    fix: ${d.fix.text}${d.fix.edits ? ' (autofix)' : ''}`,
+    )
     .join('\n')
 }

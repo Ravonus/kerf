@@ -1,7 +1,17 @@
-import { addButton, addTimes, goCart, goProducts, lineField, press, rowText, start } from './helpers'
+import {
+  addButton,
+  addTimes,
+  goCart,
+  goProducts,
+  lineField,
+  press,
+  rowText,
+  start,
+} from './helpers'
 import { screen } from '@testing-library/dom'
 
-const increase = (name: string) => screen.getByRole('button', { name: `Increase ${name}` }) as HTMLButtonElement
+const increase = (name: string) =>
+  screen.getByRole('button', { name: `Increase ${name}` }) as HTMLButtonElement
 
 test('low stock shows how many more can be added', async () => {
   const { user } = await start()

@@ -5,7 +5,11 @@ let calls = 0
 // Stands in for a request that fails every other time.
 const flaky = (signal: AbortSignal) =>
   new Promise<string>((done, fail) => {
-    const t = setTimeout(() => (++calls % 2 === 1 ? fail(new Error('The server is busy.')) : done(`Answer number ${calls}`)), 600)
+    const t = setTimeout(
+      () =>
+        ++calls % 2 === 1 ? fail(new Error('The server is busy.')) : done(`Answer number ${calls}`),
+      600,
+    )
     signal.addEventListener('abort', () => clearTimeout(t))
   })
 
@@ -15,10 +19,22 @@ function Answer() {
     <>
       {/* Asking again keeps the last answer, dimmed, until the new one lands. */}
       <Row gap="tight">
-        <p aria-busy={answer.pending ? 'true' : 'false'} style={answer.pending ? 'opacity: 0.5' : ''}>{answer.value}</p>
+        <p
+          aria-busy={answer.pending ? 'true' : 'false'}
+          style={answer.pending ? 'opacity: 0.5' : ''}
+        >
+          {answer.value}
+        </p>
         {answer.pending && answer.value !== undefined && <Spinner label="Asking again" />}
       </Row>
-      <Button size="sm" emphasis="outline" disabled={answer.pending} onClick={() => answer.refresh()}>Ask again</Button>
+      <Button
+        size="sm"
+        emphasis="outline"
+        disabled={answer.pending}
+        onClick={() => answer.refresh()}
+      >
+        Ask again
+      </Button>
     </>
   )
 }
@@ -32,7 +48,9 @@ export default function Retry() {
         error={(e, retry) => (
           <Stack gap="tight">
             <p>{e instanceof Error ? e.message : 'Something went wrong.'}</p>
-            <Button size="sm" onClick={retry}>Try again</Button>
+            <Button size="sm" onClick={retry}>
+              Try again
+            </Button>
           </Stack>
         )}
       >

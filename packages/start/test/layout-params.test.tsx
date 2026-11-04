@@ -5,8 +5,23 @@ const manifest: Manifest = {
   dir: 'src/routes',
   layouts: [{ id: 'layout:docs', file: 'layout', dir: 'docs' }],
   routes: [
-    { id: '/docs/$', file: 'rest', layouts: ['layout:docs'], pattern: '/docs/$', params: ['slug'], splat: 'slug', kind: 'page' },
-    { id: '/docs/v/$id', file: 'one', layouts: ['layout:docs'], pattern: '/docs/v/$id', params: ['id'], kind: 'page' },
+    {
+      id: '/docs/$',
+      file: 'rest',
+      layouts: ['layout:docs'],
+      pattern: '/docs/$',
+      params: ['slug'],
+      splat: 'slug',
+      kind: 'page',
+    },
+    {
+      id: '/docs/v/$id',
+      file: 'one',
+      layouts: ['layout:docs'],
+      pattern: '/docs/v/$id',
+      params: ['id'],
+      kind: 'page',
+    },
   ],
 }
 const seen: Record<string, string>[] = []
@@ -18,7 +33,9 @@ const handler = createHandler({
         seen.push(params)
         return { from: 'layout' }
       },
-      default: (props: { params: Record<string, string>; children?: unknown }) => <nav data-current={props.params.slug ?? props.params.id}>{props.children}</nav>,
+      default: (props: { params: Record<string, string>; children?: unknown }) => (
+        <nav data-current={props.params.slug ?? props.params.id}>{props.children}</nav>
+      ),
     },
     rest: { default: (props: { params: Record<string, string> }) => <h1>{props.params.slug}</h1> },
     one: { default: (props: { params: Record<string, string> }) => <h1>{props.params.id}</h1> },
@@ -32,11 +49,21 @@ test('a layout over a catch-all gets the catch-all under its name, in its props 
   const html = await (await get('/docs/guide/install')).text()
   expect(html).toMatch(/<nav[^>]* data-current="guide\/install"/)
   expect(seen).toEqual([{ slug: 'guide/install' }])
-  const body = await (await get('/_weft/data/docs/guide/install')).json() as { m: { id: string; params: Record<string, string> }[] }
-  expect(body.m.map(m => [m.id, m.params])).toEqual([['layout:docs', { slug: 'guide/install' }], ['/docs/$', { slug: 'guide/install' }]])
+  const body = (await (await get('/_weft/data/docs/guide/install')).json()) as {
+    m: { id: string; params: Record<string, string> }[]
+  }
+  expect(body.m.map((m) => [m.id, m.params])).toEqual([
+    ['layout:docs', { slug: 'guide/install' }],
+    ['/docs/$', { slug: 'guide/install' }],
+  ])
 })
 
 test('a layout over a named param gets it, as before', async () => {
-  const body = await (await get('/_weft/data/docs/v/7')).json() as { m: { id: string; params: Record<string, string> }[] }
-  expect(body.m.map(m => [m.id, m.params])).toEqual([['layout:docs', { id: '7' }], ['/docs/v/$id', { id: '7' }]])
+  const body = (await (await get('/_weft/data/docs/v/7')).json()) as {
+    m: { id: string; params: Record<string, string> }[]
+  }
+  expect(body.m.map((m) => [m.id, m.params])).toEqual([
+    ['layout:docs', { id: '7' }],
+    ['/docs/v/$id', { id: '7' }],
+  ])
 })

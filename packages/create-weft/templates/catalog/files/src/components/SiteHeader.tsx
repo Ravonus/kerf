@@ -6,7 +6,10 @@ import { Logo } from '#/components/Logo'
 export function SiteHeader() {
   return (
     <header class="site-head">
-      <Link href="/" class="brand"><Logo />Mendwell</Link>
+      <Link href="/" class="brand">
+        <Logo />
+        Mendwell
+      </Link>
       <CartLink />
     </header>
   )

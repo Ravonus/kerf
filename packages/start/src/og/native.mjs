@@ -3,7 +3,8 @@
 export async function native() {
   // Takumi's addon in the same process as a later Rolldown pass kills a Windows `weft build` (0xC0000005) before the
   // server is written. WEFT_START_DIR means a build, and the cards come out the same.
-  if (globalThis.process?.platform === 'win32' && globalThis.process.env.WEFT_START_DIR) return wasmBackend(globalThis.process.env.WEFT_START_DIR)
+  if (globalThis.process?.platform === 'win32' && globalThis.process.env.WEFT_START_DIR)
+    return wasmBackend(globalThis.process.env.WEFT_START_DIR)
   const { Renderer } = await import('@takumi-rs/core').catch(linked)
   return { name: 'native', Renderer }
 }
@@ -21,9 +22,15 @@ async function linked(error) {
 
 /** The wasm renderer, found from `start` (the @weft-js/start directory) because a prerender runs from a bundle. */
 export async function wasmBackend(start) {
-  const [{ createRequire }, { readFile }, { dirname, join }, { pathToFileURL }] = await Promise.all(['node:module', 'node:fs/promises', 'node:path', 'node:url'].map(m => import(/* @vite-ignore */ m)))
+  const [{ createRequire }, { readFile }, { dirname, join }, { pathToFileURL }] = await Promise.all(
+    ['node:module', 'node:fs/promises', 'node:path', 'node:url'].map(
+      (m) => import(/* @vite-ignore */ m),
+    ),
+  )
   const root = dirname(dirname(createRequire(`${start}/package.json`).resolve('@takumi-rs/wasm')))
-  const { default: init, Renderer } = await import(/* @vite-ignore */ pathToFileURL(join(root, 'dist/export.mjs')).href)
+  const { default: init, Renderer } = await import(
+    /* @vite-ignore */ pathToFileURL(join(root, 'dist/export.mjs')).href
+  )
   await init({ module_or_path: await readFile(join(root, 'pkg/takumi_wasm_bg.wasm')) })
   return { name: 'wasm', Renderer }
 }

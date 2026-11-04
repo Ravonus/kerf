@@ -14,7 +14,7 @@ export default function Seating() {
       <Grid cols={2} gap="group">
         <div>
           <strong>{'key={g.id}'}</strong>
-          {guests.value.map(g => (
+          {guests.value.map((g) => (
             <p key={g.id}>
               {g.name} <input aria-label={`${g.name} brings`} size={8} />
             </p>
@@ -29,7 +29,9 @@ export default function Seating() {
           ))}
         </div>
       </Grid>
-      <Button onClick={() => (guests.value = [...guests.value].reverse())}>Reverse the order</Button>
+      <Button onClick={() => (guests.value = [...guests.value].reverse())}>
+        Reverse the order
+      </Button>
     </Card>
   )
 }

@@ -75,7 +75,10 @@ export interface Og {
 }
 
 /** One more tag for the head: a named or property `<meta>`, or a `<link>`. */
-export type Extra = { name: string; content: string } | { property: string; content: string } | { rel: string; href: string }
+export type Extra =
+  | { name: string; content: string }
+  | { property: string; content: string }
+  | { rel: string; href: string }
 
 /** One layout's or route's metadata. Later metas win; `og` and `twitter` merge by key. */
 export interface Meta {
@@ -108,7 +111,12 @@ export type Tag = [tag: 'title' | 'meta' | 'link', attrs: Record<string, string>
 export function mergeMeta(site: Site = {}, ...metas: readonly (Meta | null | undefined)[]): Merged {
   let title: string | { absolute: string } | undefined
   let description = site.description
-  const og: Og = { type: 'website', siteName: site.name, locale: site.locale, image: site.image ?? 'auto' }
+  const og: Og = {
+    type: 'website',
+    siteName: site.name,
+    locale: site.locale,
+    image: site.image ?? 'auto',
+  }
   const twitter: Twitter = { ...site.twitter }
   const extra: Extra[] = []
   let jsonLd: Merged['jsonLd']
@@ -122,11 +130,22 @@ export function mergeMeta(site: Site = {}, ...metas: readonly (Meta | null | und
     if (m.jsonLd != null) jsonLd = m.jsonLd
   }
   const text =
-    title == null ? site.name ?? ''
-    : typeof title === 'object' ? title.absolute
-    : site.title?.includes('%s') ? site.title.replace('%s', title)
-    : title
-  return { title: text, description, url: site.url, og, twitter, extra, ...(jsonLd != null && { jsonLd }) }
+    title == null
+      ? (site.name ?? '')
+      : typeof title === 'object'
+        ? title.absolute
+        : site.title?.includes('%s')
+          ? site.title.replace('%s', title)
+          : title
+  return {
+    title: text,
+    description,
+    url: site.url,
+    og,
+    twitter,
+    extra,
+    ...(jsonLd != null && { jsonLd }),
+  }
 }
 
 /** Defined keys only, so `{ title: undefined }` doesn't erase an outer layout's title. */
@@ -137,10 +156,12 @@ function assign<T extends object>(to: T, from: T | undefined) {
 /** The §2 tag set for `path`, in order. Canonical and og:url are written only with an absolute `site.url`. */
 export function headTags(m: Merged, path: string): Tag[] {
   const base = m.url?.replace(/\/+$/, '')
-  const abs = (u: string) => (!base || /^(https?:)?\/\//.test(u) ? u : base + (u[0] === '/' ? '' : '/') + u)
+  const abs = (u: string) =>
+    !base || /^(https?:)?\/\//.test(u) ? u : base + (u[0] === '/' ? '' : '/') + u
   const url = base && abs(path.replace(/[?#].*/, '') || '/')
   const og = m.og
-  const image = og.image === 'auto' ? undefined : typeof og.image === 'string' ? { url: og.image } : og.image
+  const image =
+    og.image === 'auto' ? undefined : typeof og.image === 'string' ? { url: og.image } : og.image
   const title = og.title ?? m.title
   const description = og.description ?? m.description
   const tags: Tag[] = [['title', {}, m.title]]
@@ -174,7 +195,8 @@ export function headTags(m: Merged, path: string): Tag[] {
   return tags
 }
 
-const esc = (s: string) => s.replace(/[&<"]/g, c => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
+const esc = (s: string) =>
+  s.replace(/[&<"]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
 
 /** The tags as HTML, one per line, each marked `data-wm` (weft-managed) for client navigation. */
 export function metaTags(m: Merged, path: string): string {
@@ -184,12 +206,17 @@ export function metaTags(m: Merged, path: string): string {
     return tag === 'title' ? `<title data-wm>${esc(text!)}</title>` : `<${tag}${a} data-wm>`
   })
   // Crawlers read this from the first response only, so it's here and not in `headTags`, which the client shares.
-  if (m.jsonLd) tags.push(`<script type="application/ld+json" data-wm>${jsonText(m.jsonLd)}</script>`)
+  if (m.jsonLd)
+    tags.push(`<script type="application/ld+json" data-wm>${jsonText(m.jsonLd)}</script>`)
   return tags.join('\n')
 }
 
 /** JSON that can't end its `<script>` or an HTML comment: everything that could is written as an escape. */
-const jsonText = (v: unknown) => JSON.stringify(v).replace(/[<>&\u2028\u2029]/g, c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)
+const jsonText = (v: unknown) =>
+  JSON.stringify(v).replace(
+    /[<>&\u2028\u2029]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  )
 
 /** What a render writes to `<head>`: the app's defaults, and how a page's tags merge into them. */
 export interface HeadOptions {

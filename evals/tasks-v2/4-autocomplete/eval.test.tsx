@@ -3,22 +3,34 @@ import userEvent from '@testing-library/user-event'
 import { flush, mount, tick } from '#adapter'
 import { CityPicker } from './solution'
 
-beforeEach(() => { vi.useFakeTimers() })
-afterEach(() => { vi.useRealTimers() })
+beforeEach(() => {
+  vi.useFakeTimers()
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 type Call = { q: string; resolve(v: string[]): void }
 function setup() {
   const calls: Call[] = []
-  const search = vi.fn((q: string, _signal: AbortSignal) =>
-    new Promise<string[]>(resolve => { calls.push({ q, resolve }) }))
+  const search = vi.fn(
+    (q: string, _signal: AbortSignal) =>
+      new Promise<string[]>((resolve) => {
+        calls.push({ q, resolve })
+      }),
+  )
   const onPick = vi.fn()
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
   const h = mount(CityPicker, { search, onPick })
   const box = () => screen.getByLabelText('City') as HTMLInputElement
   return { calls, search, onPick, user, h, box }
 }
-const options = () => screen.queryAllByRole('option').map(o => o.textContent?.trim())
-const selected = () => screen.queryAllByRole('option').filter(o => o.getAttribute('aria-selected') === 'true').map(o => o.textContent?.trim())
+const options = () => screen.queryAllByRole('option').map((o) => o.textContent?.trim())
+const selected = () =>
+  screen
+    .queryAllByRole('option')
+    .filter((o) => o.getAttribute('aria-selected') === 'true')
+    .map((o) => o.textContent?.trim())
 
 async function open(s: ReturnType<typeof setup>, text: string, results: string[]) {
   await s.user.type(s.box(), text)
@@ -93,7 +105,7 @@ test('an older response arriving last does not replace newer suggestions', async
   await tick(250)
   await s.user.type(s.box(), 'a')
   await tick(250)
-  expect(s.calls.map(c => c.q)).toEqual(['p', 'pa'])
+  expect(s.calls.map((c) => c.q)).toEqual(['p', 'pa'])
   s.calls[1].resolve(['Paris'])
   await flush()
   s.calls[0].resolve(['Prague', 'Porto'])

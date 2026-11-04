@@ -22,8 +22,21 @@ export interface CodeBlockProps {
 
 function CopyButton({ text }: { text?: string | undefined }) {
   return (
-    <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-act="copy" data-copy="" data-copy-text={text} aria-label="Copy code">
-      <span data-part="indicator"><CopyIcon /><CheckIcon /></span>
+    <button
+      type="button"
+      data-scope="button"
+      data-emphasis="ghost"
+      data-tone="neutral"
+      data-size="sm"
+      data-act="copy"
+      data-copy=""
+      data-copy-text={text}
+      aria-label="Copy code"
+    >
+      <span data-part="indicator">
+        <CopyIcon />
+        <CheckIcon />
+      </span>
     </button>
   )
 }
@@ -41,9 +54,12 @@ export function CodeBlock({ code, language = 'tsx', filename, lines, wrap }: Cod
         <span data-part="lang">{language}</span>
         <CopyButton />
       </div>
-      <pre tabindex="0" data-lines={lines ? '' : undefined}><code
-      // oxlint-disable-next-line weft/no-html-sink -- highlight escapes the source before it wraps tokens in spans
-      innerHTML={highlight(code, language)}></code></pre>
+      <pre tabindex="0" data-lines={lines ? '' : undefined}>
+        <code
+          // oxlint-disable-next-line weft/no-html-sink -- highlight escapes the source before it wraps tokens in spans
+          innerHTML={highlight(code, language)}
+        ></code>
+      </pre>
     </figure>
   )
 }

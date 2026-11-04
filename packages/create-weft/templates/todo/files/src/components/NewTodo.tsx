@@ -15,7 +15,11 @@ export function NewTodo() {
             <Button type="submit">Add</Button>
           </div>
           <form.Error name="title" class="form-error" />
-          {form.message.value && <Alert tone="critical" title="That wasn't saved" live>Your todo is still in the box. Try adding it again in a moment.</Alert>}
+          {form.message.value && (
+            <Alert tone="critical" title="That wasn't saved" live>
+              Your todo is still in the box. Try adding it again in a moment.
+            </Alert>
+          )}
         </>
       )}
     </Form>

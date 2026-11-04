@@ -25,7 +25,12 @@ export function App() {
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3 sm:px-6">
           <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
-            <span aria-hidden className="grid size-7 place-items-center rounded-lg bg-brand-600 text-sm text-white">N</span>
+            <span
+              aria-hidden
+              className="grid size-7 place-items-center rounded-lg bg-brand-600 text-sm text-white"
+            >
+              N
+            </span>
             Northwind
           </span>
           <nav aria-label="Main" className="-mx-2 flex gap-1">

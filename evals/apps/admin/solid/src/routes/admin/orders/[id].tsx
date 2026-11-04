@@ -1,22 +1,33 @@
-import { Title } from "@solidjs/meta";
-import { createAsyncStore, useAction, useParams, useSubmissions, type RouteDefinition } from "@solidjs/router";
-import { HttpStatusCode } from "@solidjs/start";
-import { createMemo, For, Show } from "solid-js";
+import { Title } from '@solidjs/meta'
+import {
+  createAsyncStore,
+  useAction,
+  useParams,
+  useSubmissions,
+  type RouteDefinition,
+} from '@solidjs/router'
+import { HttpStatusCode } from '@solidjs/start'
+import { createMemo, For, Show } from 'solid-js'
 
-import { panel, select, td, th } from "~/components/button";
-import { getOrder, setStatus } from "~/lib/data";
-import { formatMoment, money } from "~/lib/format";
-import { statuses } from "~/lib/search";
+import { panel, select, td, th } from '~/components/button'
+import { getOrder, setStatus } from '~/lib/data'
+import { formatMoment, money } from '~/lib/format'
+import { statuses } from '~/lib/search'
 
-export const route = { preload: ({ params }) => void getOrder(Number(params.id)) } satisfies RouteDefinition;
+export const route = {
+  preload: ({ params }) => void getOrder(Number(params.id)),
+} satisfies RouteDefinition
 
-type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
+type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>
 
 export default function OrderPage() {
-  const params = useParams();
+  const params = useParams()
   // Deferred because a missing order has to answer 404, and a status can't change once the first byte is out.
   // A store, so a save's reply keeps the same `Details` and the select keeps focus.
-  const order = createAsyncStore(() => getOrder(Number(params.id)), { deferStream: true, reconcile: { key: "id" } });
+  const order = createAsyncStore(() => getOrder(Number(params.id)), {
+    deferStream: true,
+    reconcile: { key: 'id' },
+  })
 
   return (
     <>
@@ -29,7 +40,7 @@ export default function OrderPage() {
         </Show>
       </Show>
     </>
-  );
+  )
 }
 
 function Missing() {
@@ -40,19 +51,19 @@ function Missing() {
       <h1 class="text-2xl font-semibold tracking-tight">Nothing on this shelf</h1>
       <p class="mt-2 text-muted">The order may be gone, or the address mistyped.</p>
     </div>
-  );
+  )
 }
 
 function Details(props: { order: Order }) {
-  const save = useAction(setStatus);
-  const saves = useSubmissions(setStatus);
+  const save = useAction(setStatus)
+  const saves = useSubmissions(setStatus)
 
-  const mine = createMemo(() => [...saves].filter((s) => s.input[0] === props.order.id));
-  const status = () => mine().findLast((s) => s.pending)?.input[1] ?? props.order.status;
+  const mine = createMemo(() => [...saves].filter((s) => s.input[0] === props.order.id))
+  const status = () => mine().findLast((s) => s.pending)?.input[1] ?? props.order.status
   const failed = () => {
-    const last = mine().at(-1);
-    return last && !last.pending && last.error;
-  };
+    const last = mine().at(-1)
+    return last && !last.pending && last.error
+  }
 
   return (
     <>
@@ -64,7 +75,10 @@ function Details(props: { order: Order }) {
         </div>
         <label class="w-44 text-sm font-medium">
           <span class="mb-1.5 block">Status</span>
-          <select class={select} onInput={(e) => save(props.order.id, e.currentTarget.value).catch(() => {})}>
+          <select
+            class={select}
+            onInput={(e) => save(props.order.id, e.currentTarget.value).catch(() => {})}
+          >
             <For each={statuses}>
               {(s) => (
                 <option value={s} selected={status() === s}>
@@ -89,10 +103,18 @@ function Details(props: { order: Order }) {
             <table class="w-full text-sm">
               <thead class="border-b border-line">
                 <tr>
-                  <th scope="col" class={th}>Product</th>
-                  <th scope="col" class={`${th} text-right`}>Qty</th>
-                  <th scope="col" class={`${th} text-right`}>Price</th>
-                  <th scope="col" class={`${th} text-right`}>Line total</th>
+                  <th scope="col" class={th}>
+                    Product
+                  </th>
+                  <th scope="col" class={`${th} text-right`}>
+                    Qty
+                  </th>
+                  <th scope="col" class={`${th} text-right`}>
+                    Price
+                  </th>
+                  <th scope="col" class={`${th} text-right`}>
+                    Line total
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-line">
@@ -102,7 +124,9 @@ function Details(props: { order: Order }) {
                       <td class={td}>{item.name}</td>
                       <td class={`${td} text-right tabular-nums`}>{item.quantity}</td>
                       <td class={`${td} text-right tabular-nums`}>{money(item.priceCents)}</td>
-                      <td class={`${td} text-right tabular-nums`}>{money(item.priceCents * item.quantity)}</td>
+                      <td class={`${td} text-right tabular-nums`}>
+                        {money(item.priceCents * item.quantity)}
+                      </td>
                     </tr>
                   )}
                 </For>
@@ -128,5 +152,5 @@ function Details(props: { order: Order }) {
         </section>
       </div>
     </>
-  );
+  )
 }

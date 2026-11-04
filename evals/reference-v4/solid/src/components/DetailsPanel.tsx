@@ -17,28 +17,48 @@ type Props = {
 export function DetailsPanel(props: Props) {
   const [details, { refetch }] = createResource(() => props.api.details(props.stock.id))
   const [draft, setDraft] = createSignal(props.note)
-  createEffect(on(() => props.note, note => setDraft(note), { defer: true }))
+  createEffect(
+    on(
+      () => props.note,
+      (note) => setDraft(note),
+      { defer: true },
+    ),
+  )
 
   let notes!: HTMLTextAreaElement
   onMount(() => notes.focus())
 
   return (
-    <section aria-label="Details" onKeyDown={e => { if (e.key === 'Escape') props.onClose() }}>
-      <h2>{props.stock.symbol} · {props.stock.name}</h2>
+    <section
+      aria-label="Details"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') props.onClose()
+      }}
+    >
+      <h2>
+        {props.stock.symbol} · {props.stock.name}
+      </h2>
       <p data-testid="detail-price">{money(props.price)}</p>
       <Switch>
-        <Match when={details.loading}><p>Loading…</p></Match>
+        <Match when={details.loading}>
+          <p>Loading…</p>
+        </Match>
         <Match when={details.error}>
           <p role="alert">Couldn't load details</p>
           <button onClick={() => refetch()}>Retry</button>
         </Match>
-        <Match when={details.state === 'ready'}><p>{details()?.description}</p></Match>
+        <Match when={details.state === 'ready'}>
+          <p>{details()?.description}</p>
+        </Match>
       </Switch>
       <label>
-        Notes <textarea ref={notes} value={draft()} onInput={e => setDraft(e.currentTarget.value)} />
+        Notes{' '}
+        <textarea ref={notes} value={draft()} onInput={(e) => setDraft(e.currentTarget.value)} />
       </label>
       <button onClick={() => props.onSave(props.stock.id, draft())}>Save</button>
-      <button disabled={!props.canUndo} onClick={() => props.onUndo()}>Undo</button>
+      <button disabled={!props.canUndo} onClick={() => props.onUndo()}>
+        Undo
+      </button>
     </section>
   )
 }

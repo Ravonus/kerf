@@ -1,5 +1,5 @@
 // @refresh reload
-import { createHandler, StartServer } from "@solidjs/start/server";
+import { createHandler, StartServer } from '@solidjs/start/server'
 
 export default createHandler(() => (
   <StartServer
@@ -8,7 +8,10 @@ export default createHandler(() => (
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <meta name="description" content="Daybook is a plain, private list of what you mean to get done." />
+          <meta
+            name="description"
+            content="Daybook is a plain, private list of what you mean to get done."
+          />
           <link rel="icon" href="/icon.svg" type="image/svg+xml" />
           {assets}
         </head>
@@ -19,4 +22,4 @@ export default createHandler(() => (
       </html>
     )}
   />
-));
+))

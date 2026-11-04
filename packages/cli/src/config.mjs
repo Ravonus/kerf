@@ -2,4 +2,4 @@
 // Apps import it from `@weft-js/core/config`; the CLI's loader falls back here when a project's weft doesn't resolve.
 
 /** @type {import('@weft-js/core/config').defineConfig} */
-export const defineConfig = config => config
+export const defineConfig = (config) => config

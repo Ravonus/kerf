@@ -13,4 +13,8 @@ export const tgz = join(state, 'tgz')
 export const realHome = process.env.HOME
 export const registryPort = 4873
 export const nodeBin = dirname(process.execPath)
-export const claudeBin = execFileSync('/usr/bin/readlink', ['-f', join(realHome, '.local/bin/claude')], { encoding: 'utf8' }).trim()
+export const claudeBin = execFileSync(
+  '/usr/bin/readlink',
+  ['-f', join(realHome, '.local/bin/claude')],
+  { encoding: 'utf8' },
+).trim()

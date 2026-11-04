@@ -24,10 +24,19 @@ export type MysqlDb<S extends Record<string, unknown>> = MySql2Database<S> & { $
 const LOCK = 'weft_migrations'
 
 /** A pooled Drizzle client on MySQL, with this app's migrations and write tracking. */
-export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10 }: MysqlOptions<S>): MysqlDb<S> {
+export function createDb<S extends Record<string, unknown>>({
+  schema,
+  url,
+  migrate = true,
+  max = 10,
+}: MysqlOptions<S>): MysqlDb<S> {
   if (!url && process.env.WEFT_BUILD) url = 'mysql://localhost/build' // a build loads this module and never connects
   if (!url?.startsWith('mysql://'))
-    throw new StartError('Q013', `\`@weft-js/start/db/mysql\` needs a \`mysql://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite`')
+    throw new StartError(
+      'Q013',
+      `\`@weft-js/start/db/mysql\` needs a \`mysql://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``,
+      'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite`',
+    )
   // No `maxIdle` below the limit: that starts mysql2's reaper, a timer that keeps a finished `weft build` alive forever.
   const pool = createPool({ uri: url, connectionLimit: max })
   const handle: DbHandle = {
@@ -37,9 +46,11 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
       const c = await pool.getConnection()
       try {
         await c.query('select get_lock(?, 60)', [LOCK])
-        await c.query('create table if not exists __weft_migrations (tag varchar(255) primary key, at timestamp not null default current_timestamp)')
+        await c.query(
+          'create table if not exists __weft_migrations (tag varchar(255) primary key, at timestamp not null default current_timestamp)',
+        )
         const [rows] = await c.query('select tag from __weft_migrations')
-        const done = new Set((rows as { tag: string }[]).map(r => r.tag))
+        const done = new Set((rows as { tag: string }[]).map((r) => r.tag))
         for (const m of list) {
           if (done.has(m.tag)) continue
           for (const s of statements(m.sql)) await c.query(s)
@@ -50,7 +61,8 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
         c.release()
       }
     },
-    changes: (tables, o) => import('./changes-mysql').then(m => m.mysqlChanges({ ...o, pool, tables })),
+    changes: (tables, o) =>
+      import('./changes-mysql').then((m) => m.mysqlChanges({ ...o, pool, tables })),
   }
   const ready = gate(handle, migrate)
   // All Drizzle sends goes through these three, so holding them holds it; `handle.migrate` keeps the plain pool.
@@ -62,6 +74,10 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
       return async (...a: unknown[]) => (await ready(), v.apply(t, a))
     },
   })
-  const db = drizzle(held, { schema, mode: 'default', logger: { logQuery: sql => touch(handle, sql) } })
+  const db = drizzle(held, {
+    schema,
+    mode: 'default',
+    logger: { logQuery: (sql) => touch(handle, sql) },
+  })
   return register(db, handle)
 }

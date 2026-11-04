@@ -1,24 +1,31 @@
-import { A, createAsync, Navigate, useIsRouting, type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
-import { For, Show, Suspense } from "solid-js";
+import {
+  A,
+  createAsync,
+  Navigate,
+  useIsRouting,
+  type RouteDefinition,
+  type RouteSectionProps,
+} from '@solidjs/router'
+import { For, Show, Suspense } from 'solid-js'
 
-import { AccountMenu } from "~/components/account-menu";
-import { Loads } from "~/components/states";
-import { Logo } from "~/components/logo";
-import { getViewer } from "~/lib/data";
+import { AccountMenu } from '~/components/account-menu'
+import { Loads } from '~/components/states'
+import { Logo } from '~/components/logo'
+import { getViewer } from '~/lib/data'
 
-export const route = { preload: () => void getViewer() } satisfies RouteDefinition;
+export const route = { preload: () => void getViewer() } satisfies RouteDefinition
 
 const links = [
-  { href: "/admin", label: "Overview", end: true },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/nested", label: "Regions" },
-  { href: "/admin/per-row", label: "Order feed" },
-  { href: "/admin/slow", label: "Year report" },
-];
+  { href: '/admin', label: 'Overview', end: true },
+  { href: '/admin/orders', label: 'Orders' },
+  { href: '/admin/nested', label: 'Regions' },
+  { href: '/admin/per-row', label: 'Order feed' },
+  { href: '/admin/slow', label: 'Year report' },
+]
 
 export default function AdminLayout(props: RouteSectionProps) {
-  const viewer = createAsync(() => getViewer());
-  const routing = useIsRouting();
+  const viewer = createAsync(() => getViewer())
+  const routing = useIsRouting()
 
   return (
     <>
@@ -67,13 +74,15 @@ export default function AdminLayout(props: RouteSectionProps) {
         </main>
       </div>
     </>
-  );
+  )
 }
 
 function Account(props: { viewer?: { name: string; email: string } | null }) {
   return (
     <Suspense fallback={<span class="block size-9 rounded-full bg-sunken" />}>
-      <Show when={props.viewer}>{(user) => <AccountMenu name={user().name} email={user().email} />}</Show>
+      <Show when={props.viewer}>
+        {(user) => <AccountMenu name={user().name} email={user().email} />}
+      </Show>
     </Suspense>
-  );
+  )
 }

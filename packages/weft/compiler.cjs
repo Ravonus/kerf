@@ -15,11 +15,13 @@ const pinned = process.env.WEFT_COMPILER
 const want = sourceStamp()
 
 // In the repo, the binary must match its crate: a stale one compiles against an older runtime contract.
-const checkStamp = file => {
+const checkStamp = (file) => {
   if (want === null) return
   const have = existsSync(stampFile(file)) ? readFileSync(stampFile(file), 'utf8').trim() : null
   if (have !== want) {
-    throw new Error(`weft: ${file} is ${have ? 'older than' : 'unstamped against'} crates/weft-compiler (pulled or edited since it was built); run \`npm run build:native\` in packages/weft`)
+    throw new Error(
+      `weft: ${file} is ${have ? 'older than' : 'unstamped against'} crates/weft-compiler (pulled or edited since it was built); run \`npm run build:native\` in packages/weft`,
+    )
   }
 }
 
@@ -62,13 +64,27 @@ function load() {
       if (found) return found
       skipped.push(...why)
     }
-    if (pinned === 'native') throw new Error(`weft: WEFT_COMPILER=native, and no addon for ${key} loads. ${skipped.join('; ')}`)
+    if (pinned === 'native')
+      throw new Error(
+        `weft: WEFT_COMPILER=native, and no addon for ${key} loads. ${skipped.join('; ')}`,
+      )
   }
   if (!existsSync(wasm)) {
-    throw new Error(`weft: no compiler at ${wasm}${want === null ? '' : '; run `npm run build:native` in packages/weft'}`)
+    throw new Error(
+      `weft: no compiler at ${wasm}${want === null ? '' : '; run `npm run build:native` in packages/weft'}`,
+    )
   }
   checkStamp(wasm)
-  return { binding: loadWasm(wasm), wasm: true, info: { kind: 'wasm', file: wasm, wanted: forHost().map(p => `@weft-js/compiler-${p.name}`), skipped } }
+  return {
+    binding: loadWasm(wasm),
+    wasm: true,
+    info: {
+      kind: 'wasm',
+      file: wasm,
+      wanted: forHost().map((p) => `@weft-js/compiler-${p.name}`),
+      skipped,
+    },
+  }
 }
 
 const { binding, wasm: isWasm, info } = load()
@@ -77,4 +93,7 @@ const { binding, wasm: isWasm, info } = load()
 exports.backend = info
 
 /** @returns {{ code: string | null, diagnostics: Array<{ code: string, severity: 'error' | 'warning', message: string, help: string, line: number, column: number, fix?: object }> }} */
-exports.transform = (source, options) => JSON.parse(binding.transform(source, JSON.stringify(isWasm ? wasmOptions(options) : options ?? {})))
+exports.transform = (source, options) =>
+  JSON.parse(
+    binding.transform(source, JSON.stringify(isWasm ? wasmOptions(options) : (options ?? {}))),
+  )

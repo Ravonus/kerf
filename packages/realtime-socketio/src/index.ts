@@ -17,15 +17,27 @@ export function socketio({ url, path }: SocketIoOptions): PeerTransport {
   return {
     name: 'socketio',
     open(room: PeerRoom): PeerLink {
-      return createRoot(dispose => {
+      return createRoot((dispose) => {
         const joined = state(false)
-        const socket: Socket = io(url, { ...(path === undefined ? {} : { path }), auth: { ticket: room.ticket }, transports: ['websocket'] })
-        socket.on('weft:ok', () => { joined.value = true })
-        socket.on('disconnect', () => { joined.value = false })
-        socket.on('weft:f', (from: unknown, text: unknown) => { if (typeof from === 'string' && typeof text === 'string') room.receive(from, text) })
+        const socket: Socket = io(url, {
+          ...(path === undefined ? {} : { path }),
+          auth: { ticket: room.ticket },
+          transports: ['websocket'],
+        })
+        socket.on('weft:ok', () => {
+          joined.value = true
+        })
+        socket.on('disconnect', () => {
+          joined.value = false
+        })
+        socket.on('weft:f', (from: unknown, text: unknown) => {
+          if (typeof from === 'string' && typeof text === 'string') room.receive(from, text)
+        })
         return {
           up: derived(() => joined.value && room.peers.value.length > 0),
-          send: text => { if (untrack(() => joined.value)) socket.volatile.emit('weft:f', text) },
+          send: (text) => {
+            if (untrack(() => joined.value)) socket.volatile.emit('weft:f', text)
+          },
           close() {
             socket.disconnect()
             dispose()

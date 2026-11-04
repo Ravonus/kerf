@@ -14,14 +14,27 @@ export function formReset(el: Element, fn: () => void) {
   if (!set) {
     entries.set(doc, (set = new Set()))
     const all = set
-    doc.addEventListener('reset', e => {
-      const form = e.target as Element
-      setTimeout(() => { if (!e.defaultPrevented) for (const x of Array.from(all)) if (form.contains(x.el)) x.fn() })
-    }, true)
+    doc.addEventListener(
+      'reset',
+      (e) => {
+        const form = e.target as Element
+        setTimeout(() => {
+          if (!e.defaultPrevented) for (const x of Array.from(all)) if (form.contains(x.el)) x.fn()
+        })
+      },
+      true,
+    )
   }
   const entry = { el, fn }
   set.add(entry)
-  return { update(next: () => void) { entry.fn = next }, destroy() { set.delete(entry) } }
+  return {
+    update(next: () => void) {
+      entry.fn = next
+    },
+    destroy() {
+      set.delete(entry)
+    },
+  }
 }
 
 type Watch = { el: Element; fn: (message: string | undefined) => void; on: boolean }
@@ -40,26 +53,43 @@ export function formInvalid(el: Element, fn: Watch['fn']) {
   if (!set) {
     watches.set(doc, (set = new Set()))
     const all = set
-    doc.addEventListener('invalid', e => {
-      const input = e.target as HTMLInputElement
-      if (input.matches('[data-part="sr-only"]')) return
-      const x = [...all].find(w => w.el.contains(input))
-      if (!x) return
-      e.preventDefault()
-      x.on = true
-      x.fn(input.validationMessage)
-      if (input.form?.querySelector(':invalid') === input) (x.el.querySelector<HTMLElement>('[data-part="input"]') ?? input).focus()
-    }, true)
+    doc.addEventListener(
+      'invalid',
+      (e) => {
+        const input = e.target as HTMLInputElement
+        if (input.matches('[data-part="sr-only"]')) return
+        const x = [...all].find((w) => w.el.contains(input))
+        if (!x) return
+        e.preventDefault()
+        x.on = true
+        x.fn(input.validationMessage)
+        if (input.form?.querySelector(':invalid') === input)
+          (x.el.querySelector<HTMLElement>('[data-part="input"]') ?? input).focus()
+      },
+      true,
+    )
     const check = (e: Event) => {
       const input = e.target as HTMLInputElement
-      if (input.validity?.valid) for (const x of all) if (x.on && x.el.contains(input)) { x.on = false; x.fn(undefined) }
+      if (input.validity?.valid)
+        for (const x of all)
+          if (x.on && x.el.contains(input)) {
+            x.on = false
+            x.fn(undefined)
+          }
     }
     doc.addEventListener('input', check, true)
     doc.addEventListener('change', check, true)
   }
   const watch: Watch = { el, fn, on: false }
   set.add(watch)
-  return { update(next: Watch['fn']) { watch.fn = next }, destroy() { set.delete(watch) } }
+  return {
+    update(next: Watch['fn']) {
+      watch.fn = next
+    },
+    destroy() {
+      set.delete(watch)
+    },
+  }
 }
 
 /**
@@ -69,6 +99,10 @@ export function formInvalid(el: Element, fn: Watch['fn']) {
 export function reportMissing(e: Event) {
   e.preventDefault()
   const input = e.target as HTMLInputElement
-  if (input.form?.querySelector(':invalid') === input) input.closest('[data-part="body"]')?.querySelector<HTMLElement>('[tabindex="0"], button:not(:disabled)')?.focus()
+  if (input.form?.querySelector(':invalid') === input)
+    input
+      .closest('[data-part="body"]')
+      ?.querySelector<HTMLElement>('[tabindex="0"], button:not(:disabled)')
+      ?.focus()
   return input.validationMessage
 }

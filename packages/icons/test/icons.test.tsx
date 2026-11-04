@@ -3,7 +3,12 @@ import { render } from '@weft-js/core/test'
 import { CheckIcon, XIcon, iconSet } from '@weft-js/warp-icons'
 
 test('decorative by default; label names it', () => {
-  const { container } = render(() => <div><CheckIcon /><XIcon label="Close" /></div>)
+  const { container } = render(() => (
+    <div>
+      <CheckIcon />
+      <XIcon label="Close" />
+    </div>
+  ))
   const [plain, named] = [...container.querySelectorAll('svg')] as [SVGSVGElement, SVGSVGElement]
   expect(plain.getAttribute('aria-hidden')).toBe('true')
   expect(plain.getAttribute('focusable')).toBe('false')
@@ -16,7 +21,7 @@ test('decorative by default; label names it', () => {
 test('three tiers in one svg, no wrapper: outline and pixel paths are direct children', () => {
   const { container } = render(() => <CheckIcon />)
   const svg = container.querySelector('svg')!
-  expect([...svg.children].every(c => c.tagName.toLowerCase() === 'path')).toBe(true)
+  expect([...svg.children].every((c) => c.tagName.toLowerCase() === 'path')).toBe(true)
   const pixels = svg.querySelector('[data-t="v"]')!
   expect(pixels.hasAttribute('data-p')).toBe(true)
   expect(svg.querySelector('[data-w]')).not.toBeNull()

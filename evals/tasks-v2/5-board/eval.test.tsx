@@ -14,11 +14,15 @@ function setup() {
   return { user }
 }
 const col = (label: string) => screen.getByRole('region', { name: label })
-const titles = (label: string) => within(col(label)).queryAllByTestId('title').map(t => t.textContent?.trim())
+const titles = (label: string) =>
+  within(col(label))
+    .queryAllByTestId('title')
+    .map((t) => t.textContent?.trim())
 const heading = (label: string) => within(col(label)).getByRole('heading').textContent?.trim()
 const note = (title: string) => screen.getByLabelText(`Note for ${title}`) as HTMLInputElement
 const filter = () => screen.getByLabelText('Filter') as HTMLInputElement
-const toggle = (user: ReturnType<typeof userEvent.setup>, title: string) => user.click(screen.getByRole('checkbox', { name: title }))
+const toggle = (user: ReturnType<typeof userEvent.setup>, title: string) =>
+  user.click(screen.getByRole('checkbox', { name: title }))
 
 test('counts in headings', () => {
   setup()

@@ -7,10 +7,11 @@ export default async function (page, audit, url, settle) {
     await page.goto(`${url}?part=admin&${query}`)
     await settle(page)
   }
-  for (const width of [1280, 390]) for (const tab of TABS) {
-    await open(`tab=${tab}`, width)
-    await audit(`admin ${tab} ${width}`)
-  }
+  for (const width of [1280, 390])
+    for (const tab of TABS) {
+      await open(`tab=${tab}`, width)
+      await audit(`admin ${tab} ${width}`)
+    }
   await open('tab=settings&delete')
   await audit('admin type to confirm')
   await open('tab=settings&archive', 390)

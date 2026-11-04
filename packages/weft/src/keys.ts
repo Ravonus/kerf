@@ -29,7 +29,8 @@ export function nextKey(): string {
 
 /** Run `fn` in the scope `path` (counting from 0), then restore the caller's. */
 export function under<T>(path: string, fn: () => T): T {
-  const p = keys.p, n = keys.n
+  const p = keys.p,
+    n = keys.n
   keys.p = path
   keys.n = 0
   try {
@@ -45,5 +46,5 @@ export function step(k: unknown, i: number) {
   const s = String(k)
   let h = 0
   for (let n = 0; n < s.length; n++) h = (h * 31 + s.charCodeAt(n)) | 0
-  return i.toString(36) + (46656 + (h >>> 0) % 46656).toString(36).slice(1)
+  return i.toString(36) + (46656 + ((h >>> 0) % 46656)).toString(36).slice(1)
 }

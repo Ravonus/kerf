@@ -6,5 +6,9 @@ export function Status() {
   const dark = media('(prefers-color-scheme: dark)', { ssr: false })
   on(window, 'keydown', () => {})
   interval('1s', () => {})
-  return <p>{isOnline.value ? 'online' : 'offline'} {dark.value ? 'dark' : 'light'}</p>
+  return (
+    <p>
+      {isOnline.value ? 'online' : 'offline'} {dark.value ? 'dark' : 'light'}
+    </p>
+  )
 }

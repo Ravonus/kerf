@@ -30,5 +30,8 @@ function onViewport(json: string) {
   __weftHost.log(`mounted ${json}`)
 }
 ;(globalThis as unknown as { __weft: unknown }).__weft = {
-  dispatch: (id: number, event: string, payload: string) => (id === 0 && event === 'viewport' ? onViewport(payload) : dispatch(id, event as EventName, payload)),
+  dispatch: (id: number, event: string, payload: string) =>
+    id === 0 && event === 'viewport'
+      ? onViewport(payload)
+      : dispatch(id, event as EventName, payload),
 }

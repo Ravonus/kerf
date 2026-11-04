@@ -26,9 +26,15 @@ export async function woffToSfnt(woff) {
   const tables = []
   for (let i = 0; i < numTables; i++) {
     const at = 44 + i * 20
-    const offset = v.getUint32(at + 4), compLength = v.getUint32(at + 8), origLength = v.getUint32(at + 12)
+    const offset = v.getUint32(at + 4),
+      compLength = v.getUint32(at + 8),
+      origLength = v.getUint32(at + 12)
     const raw = woff.subarray(offset, offset + compLength)
-    tables.push({ tag: v.getUint32(at), checksum: v.getUint32(at + 16), data: compLength < origLength ? await inflate(raw) : raw })
+    tables.push({
+      tag: v.getUint32(at),
+      checksum: v.getUint32(at + 16),
+      data: compLength < origLength ? await inflate(raw) : raw,
+    })
   }
   let size = 12 + 16 * numTables
   for (const t of tables) size += (t.data.length + 3) & ~3
@@ -55,10 +61,12 @@ export async function woffToSfnt(woff) {
 
 /** `{ name, data, weight?, style? }[]` in any format → the same with bytes every Takumi build reads. */
 export async function normalizeFonts(fonts) {
-  return Promise.all(fonts.map(async f => {
-    const data = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data)
-    const format = fontFormat(data)
-    if (!format) throw new Error(`weft/og: font "${f.name}" isn't TTF, OTF, WOFF or WOFF2`)
-    return { ...f, data: format === 'woff' ? await woffToSfnt(data) : data }
-  }))
+  return Promise.all(
+    fonts.map(async (f) => {
+      const data = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data)
+      const format = fontFormat(data)
+      if (!format) throw new Error(`weft/og: font "${f.name}" isn't TTF, OTF, WOFF or WOFF2`)
+      return { ...f, data: format === 'woff' ? await woffToSfnt(data) : data }
+    }),
+  )
 }

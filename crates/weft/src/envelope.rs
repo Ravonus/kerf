@@ -35,7 +35,9 @@ impl std::fmt::Display for Refused {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Refused::Malformed => "no readable weft-ctx and weft-sig headers",
-            Refused::BadSignature => "the signature doesn't match: is WEFT_RUST_SECRET the same on both sides?",
+            Refused::BadSignature => {
+                "the signature doesn't match: is WEFT_RUST_SECRET the same on both sides?"
+            }
             Refused::Stale => "the call was signed too long ago (or a clock is off)",
         })
     }
@@ -56,7 +58,10 @@ fn hex_decode(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
         return None;
     }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(s.get(i..i + 2)?, 16).ok()).collect()
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(s.get(i..i + 2)?, 16).ok())
+        .collect()
 }
 
 /// The `weft-sig` for a call. TS is the signer; this is here for tests and hand-written callers.
@@ -69,10 +74,21 @@ pub fn sign(secret: &[u8], id: &str, ctx: &str, body: &[u8]) -> String {
 }
 
 /// Check the signature (in constant time), then decode the envelope and check its age against `now_ms`.
-pub fn verify(secret: &[u8], id: &str, ctx: &str, sig: &str, body: &[u8], now_ms: u64) -> Result<Envelope, Refused> {
+pub fn verify(
+    secret: &[u8],
+    id: &str,
+    ctx: &str,
+    sig: &str,
+    body: &[u8],
+    now_ms: u64,
+) -> Result<Envelope, Refused> {
     let sig = hex_decode(sig).ok_or(Refused::Malformed)?;
-    keyed(secret, id, ctx, body).verify_slice(&sig).map_err(|_| Refused::BadSignature)?;
-    let json = URL_SAFE_NO_PAD.decode(ctx).map_err(|_| Refused::Malformed)?;
+    keyed(secret, id, ctx, body)
+        .verify_slice(&sig)
+        .map_err(|_| Refused::BadSignature)?;
+    let json = URL_SAFE_NO_PAD
+        .decode(ctx)
+        .map_err(|_| Refused::Malformed)?;
     let envelope: Envelope = serde_json::from_slice(&json).map_err(|_| Refused::Malformed)?;
     if envelope.iat.abs_diff(now_ms) > MAX_SKEW_MS {
         return Err(Refused::Stale);
@@ -92,24 +108,48 @@ mod tests {
         let ok = verify(b"s3cret", "f.abc", CTX, &sig, b"{}", 1_000_000).unwrap();
         assert_eq!(ok.user.unwrap().id, "u1");
         assert_eq!(ok.deadline_ms, 1000);
-        assert_eq!(verify(b"other", "f.abc", CTX, &sig, b"{}", 1_000_000).unwrap_err(), Refused::BadSignature);
-        assert_eq!(verify(b"s3cret", "g.abc", CTX, &sig, b"{}", 1_000_000).unwrap_err(), Refused::BadSignature);
-        assert_eq!(verify(b"s3cret", "f.abc", CTX, &sig, b"[]", 1_000_000).unwrap_err(), Refused::BadSignature);
-        assert_eq!(verify(b"s3cret", "f.abc", "e30", &sig, b"{}", 1_000_000).unwrap_err(), Refused::BadSignature);
+        assert_eq!(
+            verify(b"other", "f.abc", CTX, &sig, b"{}", 1_000_000).unwrap_err(),
+            Refused::BadSignature
+        );
+        assert_eq!(
+            verify(b"s3cret", "g.abc", CTX, &sig, b"{}", 1_000_000).unwrap_err(),
+            Refused::BadSignature
+        );
+        assert_eq!(
+            verify(b"s3cret", "f.abc", CTX, &sig, b"[]", 1_000_000).unwrap_err(),
+            Refused::BadSignature
+        );
+        assert_eq!(
+            verify(b"s3cret", "f.abc", "e30", &sig, b"{}", 1_000_000).unwrap_err(),
+            Refused::BadSignature
+        );
     }
 
     #[test]
     fn an_old_call_is_refused_even_with_a_good_signature() {
         let sig = sign(b"k", "f", CTX, b"{}");
         assert!(verify(b"k", "f", CTX, &sig, b"{}", 1_000_000 + MAX_SKEW_MS).is_ok());
-        assert_eq!(verify(b"k", "f", CTX, &sig, b"{}", 1_000_000 + MAX_SKEW_MS + 1).unwrap_err(), Refused::Stale);
+        assert_eq!(
+            verify(b"k", "f", CTX, &sig, b"{}", 1_000_000 + MAX_SKEW_MS + 1).unwrap_err(),
+            Refused::Stale
+        );
     }
 
     #[test]
     fn junk_headers_are_malformed_not_a_panic() {
-        assert_eq!(verify(b"k", "f", CTX, "zz", b"{}", 0).unwrap_err(), Refused::Malformed);
-        assert_eq!(verify(b"k", "f", CTX, "abc", b"{}", 0).unwrap_err(), Refused::Malformed);
-        assert_eq!(verify(b"k", "f", CTX, "é", b"{}", 0).unwrap_err(), Refused::Malformed);
+        assert_eq!(
+            verify(b"k", "f", CTX, "zz", b"{}", 0).unwrap_err(),
+            Refused::Malformed
+        );
+        assert_eq!(
+            verify(b"k", "f", CTX, "abc", b"{}", 0).unwrap_err(),
+            Refused::Malformed
+        );
+        assert_eq!(
+            verify(b"k", "f", CTX, "é", b"{}", 0).unwrap_err(),
+            Refused::Malformed
+        );
     }
 
     /// The same vector `packages/start/test/rust.test.mjs` signs in JS: the two sides agree byte for byte.

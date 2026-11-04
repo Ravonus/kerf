@@ -11,7 +11,19 @@ import { randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { customAuth } from './data.mjs'
-import { classes, context, loginPage, sharedAuthTables, stackDeps, stackFiles, TAILWIND_CSS, TAILWIND_VITE, tailwindPackages, todosPage, VERSION } from './stack.mjs'
+import {
+  classes,
+  context,
+  loginPage,
+  sharedAuthTables,
+  stackDeps,
+  stackFiles,
+  TAILWIND_CSS,
+  TAILWIND_VITE,
+  tailwindPackages,
+  todosPage,
+  VERSION,
+} from './stack.mjs'
 import { agentsFile, loadTemplate, withTemplate } from './templates.mjs'
 
 /** What `--ui` takes. */
@@ -26,52 +38,79 @@ export const RUNTIMES = ['node', 'bun', 'deno']
 export const CONFIGS = ['ts', 'json', 'yaml']
 export { TEMPLATES, withTemplate } from './templates.mjs'
 
-
-const json = v => JSON.stringify(v, null, 2) + '\n'
-const title = name => name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+const json = (v) => JSON.stringify(v, null, 2) + '\n'
+const title = (name) => name.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 
 /** `weft.config.ts`, `.json` or `.yaml`: one schema, so the same app in each (research 34 §2). */
-const LAYER_PLUGIN = { prisma: { pkg: '@weft-js/db/plugin-prisma', name: 'prisma' }, native: { pkg: '@weft-js/db/plugin-native', name: 'native' } }
+const LAYER_PLUGIN = {
+  prisma: { pkg: '@weft-js/db/plugin-prisma', name: 'prisma' },
+  native: { pkg: '@weft-js/db/plugin-native', name: 'native' },
+}
 
-const appPlugins = ({ ui, layer }) => [...(ui === 'warp' ? [{ pkg: '@weft-js/warp', name: 'warp' }] : []), ...(LAYER_PLUGIN[layer] ? [LAYER_PLUGIN[layer]] : [])]
+const appPlugins = ({ ui, layer }) => [
+  ...(ui === 'warp' ? [{ pkg: '@weft-js/warp', name: 'warp' }] : []),
+  ...(LAYER_PLUGIN[layer] ? [LAYER_PLUGIN[layer]] : []),
+]
 
 /** What each plugin a scaffold picks declares. `weft check` fails a scaffold where these fall behind the plugin. */
 const GRANTS = {
-  '@weft-js/warp': ['fs.read:node_modules/@weft-js/warp-core/**', 'fs.write:$TMPDIR/warp-seed-*', 'spawn:node'],
+  '@weft-js/warp': [
+    'fs.read:node_modules/@weft-js/warp-core/**',
+    'fs.write:$TMPDIR/warp-seed-*',
+    'spawn:node',
+  ],
   '@weft-js/db/plugin-prisma': ['fs.read:prisma/**', 'fs.write:prisma/migrations/**', 'spawn:node'],
   '@weft-js/db/plugin-native': ['fs.read:migrations/**', 'fs.write:migrations/**'],
 }
 
 /** Choosing a plugin here is approving it. There's no install yet, so `weft plugins approve --all` pins the code later. */
 function pluginLock(options) {
-  const plugins = Object.fromEntries(appPlugins(options).map(p => [p.pkg, { version: null, integrity: null, permissions: GRANTS[p.pkg], provides: [], undeclared: [] }]))
-  return Object.keys(plugins).length ? { '.weft/plugins.lock.json': json({ version: 1, plugins }) } : {}
+  const plugins = Object.fromEntries(
+    appPlugins(options).map((p) => [
+      p.pkg,
+      { version: null, integrity: null, permissions: GRANTS[p.pkg], provides: [], undeclared: [] },
+    ]),
+  )
+  return Object.keys(plugins).length
+    ? { '.weft/plugins.lock.json': json({ version: 1, plugins }) }
+    : {}
 }
 
 function configFile(format, { ui, label, runtime, layer, warp }) {
   const plugins = appPlugins({ ui, layer })
-  const entry = p => (p.pkg === '@weft-js/warp' && warp ? [p.pkg, warp] : p.pkg)
+  const entry = (p) => (p.pkg === '@weft-js/warp' && warp ? [p.pkg, warp] : p.pkg)
   const site = { name: label, title: `%s · ${label}`, description: 'Made with weft.' }
   if (format === 'json') {
-    const config = { $schema: './.weft/config.schema.json', site, ...(plugins.length && { plugins: plugins.map(entry) }), ...(runtime !== 'node' && { runtime }) }
+    const config = {
+      $schema: './.weft/config.schema.json',
+      site,
+      ...(plugins.length && { plugins: plugins.map(entry) }),
+      ...(runtime !== 'node' && { runtime }),
+    }
     return { 'weft.config.json': json(config) }
   }
   if (format === 'yaml') {
     return {
       'weft.config.yaml':
         `# yaml-language-server: $schema=./.weft/config.schema.json\nsite:\n` +
-        Object.entries(site).map(([k, v]) => `  ${k}: ${JSON.stringify(v)}\n`).join('') +
-        (plugins.length ? `plugins:\n${plugins.map(p => `  - ${JSON.stringify(entry(p))}\n`).join('')}` : '') +
+        Object.entries(site)
+          .map(([k, v]) => `  ${k}: ${JSON.stringify(v)}\n`)
+          .join('') +
+        (plugins.length
+          ? `plugins:\n${plugins.map((p) => `  - ${JSON.stringify(entry(p))}\n`).join('')}`
+          : '') +
         (runtime !== 'node' ? `runtime: ${runtime}\n` : ''),
     }
   }
   return {
     'weft.config.ts':
       `import { defineConfig } from '@weft-js/core/config'\n` +
-      plugins.map(p => `import { ${p.name} } from '${p.pkg}/plugin'\n`).join('') +
+      plugins.map((p) => `import { ${p.name} } from '${p.pkg}/plugin'\n`).join('') +
       `\nexport default defineConfig({\n` +
       `  site: { name: ${JSON.stringify(label)}, title: ${JSON.stringify(site.title)}, description: 'Made with weft.' },\n` +
-      (plugins.length ? `  plugins: [${plugins.map(p => `${p.name}(${p.pkg === '@weft-js/warp' && warp ? JSON.stringify(warp) : ''})`).join(', ')}],\n` : '') +
+      (plugins.length
+        ? `  plugins: [${plugins.map((p) => `${p.name}(${p.pkg === '@weft-js/warp' && warp ? JSON.stringify(warp) : ''})`).join(', ')}],\n`
+        : '') +
       (runtime !== 'node' ? `  runtime: '${runtime}',\n` : '') +
       `})\n`,
   }
@@ -82,13 +121,28 @@ function configFile(format, { ui, label, runtime, layer, warp }) {
  * @param {{ ui?: string, name?: string, version?: string, db?: string, layer?: string, auth?: boolean | 'custom', runtime?: string, config?: string, secret?: string, template?: string }} [options]
  */
 export function template(options = {}) {
-  const { ui = 'warp', name = 'weft-app', version = VERSION, db = 'none', layer = 'drizzle', auth = false, runtime = 'node', config = 'ts', secret = randomBytes(32).toString('base64'), template: chosen } = withTemplate(options)
+  const {
+    ui = 'warp',
+    name = 'weft-app',
+    version = VERSION,
+    db = 'none',
+    layer = 'drizzle',
+    auth = false,
+    runtime = 'node',
+    config = 'ts',
+    secret = randomBytes(32).toString('base64'),
+    template: chosen,
+  } = withTemplate(options)
   if (!UI.includes(ui)) throw new Error(`--ui must be one of ${UI.join(', ')} (got "${ui}")`)
   if (!DB.includes(db)) throw new Error(`--db must be one of ${DB.join(', ')} (got "${db}")`)
-  if (!RUNTIMES.includes(runtime)) throw new Error(`--runtime must be one of ${RUNTIMES.join(', ')} (got "${runtime}")`)
-  if (!CONFIGS.includes(config)) throw new Error(`--config must be one of ${CONFIGS.join(', ')} (got "${config}")`)
-  if (!LAYERS.includes(layer)) throw new Error(`--layer must be one of ${LAYERS.join(', ')} (got "${layer}")`)
-  if (auth && db === 'none') throw new Error('--auth keeps users in a database: add --db sqlite, postgres or mysql')
+  if (!RUNTIMES.includes(runtime))
+    throw new Error(`--runtime must be one of ${RUNTIMES.join(', ')} (got "${runtime}")`)
+  if (!CONFIGS.includes(config))
+    throw new Error(`--config must be one of ${CONFIGS.join(', ')} (got "${config}")`)
+  if (!LAYERS.includes(layer))
+    throw new Error(`--layer must be one of ${LAYERS.join(', ')} (got "${layer}")`)
+  if (auth && db === 'none')
+    throw new Error('--auth keeps users in a database: add --db sqlite, postgres or mysql')
   const overlay = chosen && loadTemplate(chosen)
   const label = title(name)
   const stack = stackDeps({ db, auth: auth === true, layer, version })
@@ -96,22 +150,47 @@ export function template(options = {}) {
   if (ui === 'warp') deps['@weft-js/warp'] = version
   if (ui === 'headless') deps['@weft-js/warp-core'] = version
   if (ui === 'tailwind') Object.assign(stack.dev, tailwindPackages)
-  for (const [dep, wanted] of Object.entries(overlay?.dependencies ?? {})) deps[dep] = dep.startsWith('@weft-js/') ? version : wanted
+  for (const [dep, wanted] of Object.entries(overlay?.dependencies ?? {}))
+    deps[dep] = dep.startsWith('@weft-js/') ? version : wanted
 
   const files = {
     'package.json': json({
       name,
       private: true,
       type: 'module',
-      scripts: { dev: 'weft dev', build: 'weft build', check: 'weft check', typecheck: 'weft tsc', start: 'weft start', ...(db !== 'none' && { 'db:generate': 'weft db generate' }), ...(db !== 'none' && layer === 'prisma' && { postinstall: 'prisma generate' }) },
+      scripts: {
+        dev: 'weft dev',
+        build: 'weft build',
+        check: 'weft check',
+        typecheck: 'weft tsc',
+        start: 'weft start',
+        ...(db !== 'none' && { 'db:generate': 'weft db generate' }),
+        ...(db !== 'none' && layer === 'prisma' && { postinstall: 'prisma generate' }),
+      },
       dependencies: { ...deps, ...stack.deps },
       devDependencies: { '@weft-js/cli': version, typescript: '7.0.2', ...stack.dev },
     }),
-    ...configFile(config, { ui, label, runtime, layer: db === 'none' ? 'drizzle' : layer, warp: overlay?.warp }),
+    ...configFile(config, {
+      ui,
+      label,
+      runtime,
+      layer: db === 'none' ? 'drizzle' : layer,
+      warp: overlay?.warp,
+    }),
     'tsconfig.json': json({
       compilerOptions: {
-        target: 'es2022', module: 'esnext', moduleResolution: 'bundler', strict: true, noEmit: true, skipLibCheck: true,
-        jsx: 'preserve', jsxImportSource: '@weft-js/core', lib: ['es2023', 'dom', 'dom.iterable'], paths: { '#/*': ['./src/*'] }, types: db === 'none' ? ['@weft-js/core/client'] : ['@weft-js/core/client', 'node'], plugins: [{ name: '@weft-js/cli/ts-plugin' }],
+        target: 'es2022',
+        module: 'esnext',
+        moduleResolution: 'bundler',
+        strict: true,
+        noEmit: true,
+        skipLibCheck: true,
+        jsx: 'preserve',
+        jsxImportSource: '@weft-js/core',
+        lib: ['es2023', 'dom', 'dom.iterable'],
+        paths: { '#/*': ['./src/*'] },
+        types: db === 'none' ? ['@weft-js/core/client'] : ['@weft-js/core/client', 'node'],
+        plugins: [{ name: '@weft-js/cli/ts-plugin' }],
       },
       include: ['src', ...(config === 'ts' ? ['weft.config.ts'] : []), '.weft/*.d.ts'],
     }),
@@ -130,10 +209,15 @@ export function template(options = {}) {
     Object.assign(files, stackFiles({ db, auth: auth === true, name, secret, layer }))
     if (!overlay) files['src/routes/todos/index.tsx'] = todosPage(ui)
     if (auth === true) files['src/routes/login.tsx'] = loginPage(ui)
-    if (auth === 'custom') Object.assign(files, { 'src/auth.server.ts': customAuth, 'src/context.server.ts': context(true) })
+    if (auth === 'custom')
+      Object.assign(files, {
+        'src/auth.server.ts': customAuth,
+        'src/context.server.ts': context(true),
+      })
   }
   if (overlay) {
-    for (const path of Object.keys(files)) if (/^src\/(routes\/(about\.tsx|todos\/)|server\/todos\.ts)/.test(path)) delete files[path]
+    for (const path of Object.keys(files))
+      if (/^src\/(routes\/(about\.tsx|todos\/)|server\/todos\.ts)/.test(path)) delete files[path]
     if (auth) files['src/db/auth.ts'] = sharedAuthTables()
     Object.assign(files, overlay.files)
   }
@@ -143,7 +227,12 @@ export function template(options = {}) {
 /** Write the app into `dir` (which must be missing or empty). */
 export function scaffold(dir, options = {}) {
   if (existsSync(dir) && readdirSync(dir).length) throw new Error(`${dir} is not empty`)
-  const files = template({ name: basename(dir).toLowerCase().replace(/[^a-z0-9-_.]/g, '-'), ...options })
+  const files = template({
+    name: basename(dir)
+      .toLowerCase()
+      .replace(/[^a-z0-9-_.]/g, '-'),
+    ...options,
+  })
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(dirname(join(dir, rel)), { recursive: true })
     writeFileSync(join(dir, rel), text)
@@ -153,12 +242,18 @@ export function scaffold(dir, options = {}) {
 
 function layout(ui, options) {
   const text = shell(ui, options)
-  return ui === 'tailwind' ? text.replace('<nav>', '<nav class="flex gap-4 p-4">').replace('<main>', '<main class="p-4">') : text
+  return ui === 'tailwind'
+    ? text.replace('<nav>', '<nav class="flex gap-4 p-4">').replace('<main>', '<main class="p-4">')
+    : text
 }
 
 function shell(ui, { db, auth: which }) {
   const auth = which === true
-  const imports = ui === 'warp' ? '' : (ui === 'headless' ? `import '@weft-js/warp-core/styles/warp.css'\n` : '') + `import '../app.css'\n`
+  const imports =
+    ui === 'warp'
+      ? ''
+      : (ui === 'headless' ? `import '@weft-js/warp-core/styles/warp.css'\n` : '') +
+        `import '../app.css'\n`
   const links = db === 'none' ? '' : `\n        <Link href="/todos">Todos</Link>`
   if (!auth) {
     return `${imports}import { Link, type RouteProps } from '@weft-js/start'
@@ -241,9 +336,22 @@ const named = (ui, part) => (classes(ui, part) ? ` class="${classes(ui, part)}"`
 function css(ui) {
   if (ui === 'tailwind') return TAILWIND_CSS
   // headless rides warp's tokens (warp-core's warp.css, the fluid title size included); none brings its own.
-  const v = ui === 'headless'
-    ? { bg: 'var(--warp-color-page)', fg: 'var(--warp-color-text)', accent: 'var(--warp-color-accent-solid)', radius: 'var(--warp-radius-surface)', title: 'var(--warp-text-title-size)' }
-    : { bg: 'Canvas', fg: 'CanvasText', accent: 'LinkText', radius: '8px', title: 'clamp(1.5rem, 1.2rem + 2cqi, 2.5rem)' }
+  const v =
+    ui === 'headless'
+      ? {
+          bg: 'var(--warp-color-page)',
+          fg: 'var(--warp-color-text)',
+          accent: 'var(--warp-color-accent-solid)',
+          radius: 'var(--warp-radius-surface)',
+          title: 'var(--warp-text-title-size)',
+        }
+      : {
+          bg: 'Canvas',
+          fg: 'CanvasText',
+          accent: 'LinkText',
+          radius: '8px',
+          title: 'clamp(1.5rem, 1.2rem + 2cqi, 2.5rem)',
+        }
   return `:root { color-scheme: light dark; }
 body { margin: 0; font-family: system-ui, sans-serif; background: ${v.bg}; color: ${v.fg}; }
 nav { display: flex; gap: 1rem; padding: 1rem; }

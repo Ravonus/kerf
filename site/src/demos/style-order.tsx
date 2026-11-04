@@ -6,8 +6,17 @@ type Status = 'open' | 'shipped' | 'late'
 
 // The look of one thing, in tokens: its variations are an axis, its pieces are parts.
 const orderCard = group('learn-order-card', {
-  base: { surface: 'raised', pad: 'group', radius: 'surface', layout: 'stack', gap: 'tight', border: 'tone' },
-  axes: { status: { open: { tone: 'info' }, shipped: { tone: 'positive' }, late: { tone: 'critical' } } },
+  base: {
+    surface: 'raised',
+    pad: 'group',
+    radius: 'surface',
+    layout: 'stack',
+    gap: 'tight',
+    border: 'tone',
+  },
+  axes: {
+    status: { open: { tone: 'info' }, shipped: { tone: 'positive' }, late: { tone: 'critical' } },
+  },
   parts: { title: { text: 'heading' }, meta: { text: 'caption', ink: 'tone' } },
   states: { selected: { ring: 'tone' } },
   defaults: { status: 'open' },
@@ -25,8 +34,18 @@ export default function Order() {
   return (
     <Card title="An order card">
       <Stack gap="related">
-        <Segmented label="Status" value={status.value} options={STATUSES} onChange={next => (status.value = next)} />
-        <Switch checked={selected.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (selected.value = e.currentTarget.checked)}>
+        <Segmented
+          label="Status"
+          value={status.value}
+          options={STATUSES}
+          onChange={(next) => (status.value = next)}
+        />
+        <Switch
+          checked={selected.value}
+          onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+            (selected.value = e.currentTarget.checked)
+          }
+        >
           Selected
         </Switch>
         <article {...orderCard({ status: status.value, selected: selected.value })}>

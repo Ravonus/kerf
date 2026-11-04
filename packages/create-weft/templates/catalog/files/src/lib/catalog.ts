@@ -13,7 +13,12 @@ export const amount = (text: unknown) => {
 export function viewOf(url: string): View {
   const q = new URL(url).searchParams
   const page = Number(q.get('page'))
-  return { min: amount(q.get('min')), max: amount(q.get('max')), stock: q.has('stock'), page: Number.isSafeInteger(page) && page > 1 && page < 1e6 ? page : 1 }
+  return {
+    min: amount(q.get('min')),
+    max: amount(q.get('max')),
+    stock: q.has('stock'),
+    page: Number.isSafeInteger(page) && page > 1 && page < 1e6 ? page : 1,
+  }
 }
 
 export function viewHref(slug: string, view: View) {

@@ -27,10 +27,14 @@ const badge: Record<Status, string> = {
 }
 
 export default function Customers() {
-  const [rows, setRows] = createSignal<Customer[]>(seed.map(([name, email, plan, status], id) => ({ id, name, email, plan, status })))
+  const [rows, setRows] = createSignal<Customer[]>(
+    seed.map(([name, email, plan, status], id) => ({ id, name, email, plan, status })),
+  )
   const [q, setQ] = createSignal('')
   const [target, setTarget] = createSignal<Customer | null>(null)
-  const shown = createMemo(() => rows().filter((r) => r.name.toLowerCase().includes(q().trim().toLowerCase())))
+  const shown = createMemo(() =>
+    rows().filter((r) => r.name.toLowerCase().includes(q().trim().toLowerCase())),
+  )
 
   const confirm = () => {
     const t = target()
@@ -42,21 +46,39 @@ export default function Customers() {
     <>
       <header class="mb-8">
         <h1 class="text-3xl font-bold tracking-tight">Customers</h1>
-        <p class="mt-2 text-slate-600 dark:text-slate-400">Everyone on a Northwind plan, in one place.</p>
+        <p class="mt-2 text-slate-600 dark:text-slate-400">
+          Everyone on a Northwind plan, in one place.
+        </p>
       </header>
       <div class="mb-4 max-w-sm">
-        <Field label="Search" type="search" value={q()} onInput={setQ} placeholder="Search by name" />
+        <Field
+          label="Search"
+          type="search"
+          value={q()}
+          onInput={setQ}
+          placeholder="Search by name"
+        />
       </div>
       <div class="card overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full min-w-[40rem] text-left text-sm">
             <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-800/50 dark:text-slate-400">
               <tr>
-                <th scope="col" class="px-4 py-3 font-semibold">Name</th>
-                <th scope="col" class="px-4 py-3 font-semibold">Email</th>
-                <th scope="col" class="px-4 py-3 font-semibold">Plan</th>
-                <th scope="col" class="px-4 py-3 font-semibold">Status</th>
-                <th scope="col" class="px-4 py-3"><span class="sr-only">Actions</span></th>
+                <th scope="col" class="px-4 py-3 font-semibold">
+                  Name
+                </th>
+                <th scope="col" class="px-4 py-3 font-semibold">
+                  Email
+                </th>
+                <th scope="col" class="px-4 py-3 font-semibold">
+                  Plan
+                </th>
+                <th scope="col" class="px-4 py-3 font-semibold">
+                  Status
+                </th>
+                <th scope="col" class="px-4 py-3">
+                  <span class="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
@@ -66,9 +88,20 @@ export default function Customers() {
                     <td class="px-4 py-3 font-medium">{c.name}</td>
                     <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{c.email}</td>
                     <td class="px-4 py-3">{c.plan}</td>
-                    <td class="px-4 py-3"><span class={`rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}>{c.status}</span></td>
+                    <td class="px-4 py-3">
+                      <span
+                        class={`rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}
+                      >
+                        {c.status}
+                      </span>
+                    </td>
                     <td class="px-4 py-3 text-right">
-                      <button type="button" aria-label={`Delete ${c.name}`} class="btn btn-secondary !px-3 !py-1.5" onClick={() => setTarget(c)}>
+                      <button
+                        type="button"
+                        aria-label={`Delete ${c.name}`}
+                        class="btn btn-secondary !px-3 !py-1.5"
+                        onClick={() => setTarget(c)}
+                      >
                         Delete
                       </button>
                     </td>
@@ -79,7 +112,9 @@ export default function Customers() {
           </table>
         </div>
         <Show when={shown().length === 0}>
-          <p class="px-4 py-12 text-center text-slate-600 dark:text-slate-400">No customers found</p>
+          <p class="px-4 py-12 text-center text-slate-600 dark:text-slate-400">
+            No customers found
+          </p>
         </Show>
       </div>
 
@@ -93,8 +128,12 @@ export default function Customers() {
                 {target()?.name} will be removed from your customer list. This can’t be undone.
               </Dialog.Description>
               <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button type="button" class="btn btn-secondary" onClick={() => setTarget(null)}>Keep</button>
-                <button type="button" class="btn btn-danger" onClick={confirm}>Delete</button>
+                <button type="button" class="btn btn-secondary" onClick={() => setTarget(null)}>
+                  Keep
+                </button>
+                <button type="button" class="btn btn-danger" onClick={confirm}>
+                  Delete
+                </button>
               </div>
             </Dialog.Content>
           </div>

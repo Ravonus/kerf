@@ -25,7 +25,10 @@ export interface ServerExtension {
   /** Merged into `ctx`, after the app's own. */
   context?(ctx: Context): object
   /** Before a function's `run`. Throw to refuse: an error with `answer: { code, message, status }` reaches the client as it is. */
-  guard?(fn: { id: string; kind: string; def: Record<string, unknown> }, ctx: Context): void | Promise<void>
+  guard?(
+    fn: { id: string; kind: string; def: Record<string, unknown> },
+    ctx: Context,
+  ): void | Promise<void>
   /** The `FnOptions` keys it enforces. One no extension claims refuses the call: a guard that isn't there mustn't pass. */
   options?: readonly string[]
   /** The `ctx` keys that differ per user, which a shared cache may not read (Q006). */
@@ -35,4 +38,7 @@ export interface ServerExtension {
 }
 
 /** One extension in the generated list, loaded when first asked for. */
-export interface ExtensionEntry { key: string; load(): Promise<ServerExtension> }
+export interface ExtensionEntry {
+  key: string
+  load(): Promise<ServerExtension>
+}

@@ -17,10 +17,18 @@ export default function Todos() {
   }
   return (
     <Card title="Todos">
-      <Input label="New todo" value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} />
-      <Button size="sm" disabled={!draft.value.trim()} onClick={add}>Add</Button>
+      <Input
+        label="New todo"
+        value={draft.value}
+        onInput={(e) => (draft.value = e.currentTarget.value)}
+      />
+      <Button size="sm" disabled={!draft.value.trim()} onClick={add}>
+        Add
+      </Button>
       <ul>
-        {todos.value.map(t => <li key={t.id}>{t.title}</li>)}
+        {todos.value.map((t) => (
+          <li key={t.id}>{t.title}</li>
+        ))}
       </ul>
     </Card>
   )

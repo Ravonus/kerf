@@ -11,11 +11,19 @@ import { attach, type Attached, type Peer } from './socket'
 const LINES = 64
 const HIGH = 64 * 1024
 
-interface Physical { send(text: string): void; close(code: number, reason?: string): void; backlog(): number }
+interface Physical {
+  send(text: string): void
+  close(code: number, reason?: string): void
+  backlog(): number
+}
 type Open = { kind: 'c'; a: Promise<Attached> } | { kind: 'r'; c: Promise<Conn | undefined> }
 
 const parsed = (text: string): unknown => {
-  try { return JSON.parse(text) } catch { return undefined }
+  try {
+    return JSON.parse(text)
+  } catch {
+    return undefined
+  }
 }
 
 const counts = new WeakMap<Hub, Map<string, number>>()
@@ -25,16 +33,28 @@ const byUser = (h: Hub) => {
   return m
 }
 
-export interface Muxed { message(text: string): void; close(): void }
+export interface Muxed {
+  message(text: string): void
+  close(): void
+}
 
-export async function muxed(peer: Physical, request: Request, scope: Scope, h: Hub = hub()): Promise<Muxed> {
+export async function muxed(
+  peer: Physical,
+  request: Request,
+  scope: Scope,
+  h: Hub = hub(),
+): Promise<Muxed> {
   const ctx = await scope.ctx()
   const user = (ctx as { user?: { id?: string } }).user?.id
   const users = byUser(h)
   if (user !== undefined) {
     if ((users.get(user) ?? 0) >= h.limits.connections) {
       peer.close(1008, 'too many sockets')
-      scope.options.onDiagnostic?.({ code: 'R009', severity: 'error', message: `R009: user \`${user}\` already has ${h.limits.connections} sockets` })
+      scope.options.onDiagnostic?.({
+        code: 'R009',
+        severity: 'error',
+        message: `R009: user \`${user}\` already has ${h.limits.connections} sockets`,
+      })
       return { message() {}, close() {} }
     }
     users.set(user, (users.get(user) ?? 0) + 1)
@@ -45,7 +65,8 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
 
   /** Every tab has the per-socket bucket; this is what stops them adding up without end. */
   const allowed = () => {
-    const now = Date.now(), rate = h.limits.perSecond * 8
+    const now = Date.now(),
+      rate = h.limits.perSecond * 8
     bucket.tokens = Math.min(h.limits.burst * 8, bucket.tokens + ((now - bucket.at) * rate) / 1000)
     bucket.at = now
     return bucket.tokens-- >= 1
@@ -56,24 +77,43 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
   }
 
   function openC(id: string) {
-    const p: Peer = { send: t => { if (lines.has(id)) peer.send(`f:${id}:${t}`) }, close: (code, reason) => end(id, code, reason), backlog: () => peer.backlog() }
-    lines.set(id, { kind: 'c', a: attach(p, request, scope, h, true).catch(() => {
-      end(id, 1011)
-      return { message() {}, close() {} } as unknown as Attached
-    }) })
+    const p: Peer = {
+      send: (t) => {
+        if (lines.has(id)) peer.send(`f:${id}:${t}`)
+      },
+      close: (code, reason) => end(id, code, reason),
+      backlog: () => peer.backlog(),
+    }
+    lines.set(id, {
+      kind: 'c',
+      a: attach(p, request, scope, h, true).catch(() => {
+        end(id, 1011)
+        return { message() {}, close() {} } as unknown as Attached
+      }),
+    })
   }
 
   function openR(id: string, hello: string) {
     const body = parsed(hello)
-    if (!validBody(body) || body.k) return peer.send(`x:${id}:4000:${JSON.stringify({ code: 'Q002', message: 'a realtime line opened with a body of the wrong shape' })}`)
+    if (!validBody(body) || body.k)
+      return peer.send(
+        `x:${id}:4000:${JSON.stringify({ code: 'Q002', message: 'a realtime line opened with a body of the wrong shape' })}`,
+      )
     const sink: Sink = {
-      write: (event, data) => { if (lines.has(id)) peer.send(`r:${id}:${event}:${data}`) },
-      ping: () => { if (lines.has(id)) peer.send(`r:${id}:ping:`) },
+      write: (event, data) => {
+        if (lines.has(id)) peer.send(`r:${id}:${event}:${data}`)
+      },
+      ping: () => {
+        if (lines.has(id)) peer.send(`r:${id}:ping:`)
+      },
       backlog: () => peer.backlog(),
       close: () => end(id, 1000),
     }
-    const c = h.connect(request, scope, body, sink, true).catch(e => {
-      const out = e instanceof StartError ? { code: e.code, message: e.message } : { message: 'Realtime failed.' }
+    const c = h.connect(request, scope, body, sink, true).catch((e) => {
+      const out =
+        e instanceof StartError
+          ? { code: e.code, message: e.message }
+          : { message: 'Realtime failed.' }
       end(id, 4000, JSON.stringify(out))
       return undefined
     })
@@ -82,13 +122,13 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
 
   function shut(id: string, line: Open) {
     lines.delete(id)
-    if (line.kind === 'c') void line.a.then(a => a.close())
-    else void line.c.then(c => c && h.close(c))
+    if (line.kind === 'c') void line.a.then((a) => a.close())
+    else void line.c.then((c) => c && h.close(c))
   }
 
   const drain = setInterval(() => {
     if (peer.backlog() >= HIGH) return
-    for (const l of lines.values()) if (l.kind === 'r') void l.c.then(c => c && h.drain(c))
+    for (const l of lines.values()) if (l.kind === 'r') void l.c.then((c) => c && h.drain(c))
   }, 100)
   ;(drain as { unref?(): void }).unref?.()
 
@@ -98,24 +138,34 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
       if (text === 'p') return peer.send('p')
       if (text.length > h.limits.body + 64) return peer.close(1009, 'too big')
       if (!allowed()) {
-        scope.options.onDiagnostic?.({ code: 'R008', severity: 'error', message: `R008: one browser sent over ${h.limits.perSecond * 8} messages a second` })
+        scope.options.onDiagnostic?.({
+          code: 'R008',
+          severity: 'error',
+          message: `R008: one browser sent over ${h.limits.perSecond * 8} messages a second`,
+        })
         return peer.close(1008, 'rate limit')
       }
       const at = text.indexOf(':', 2)
-      const id = text.slice(2, at), rest = text.slice(at + 1)
+      const id = text.slice(2, at),
+        rest = text.slice(at + 1)
       const line = lines.get(id)
       if (text[0] === 'f') {
-        if (line?.kind === 'c') void line.a.then(a => a.message(rest))
+        if (line?.kind === 'c') void line.a.then((a) => a.message(rest))
         else if (line) {
           let body: Body | undefined
-          try { body = JSON.parse(rest) } catch {}
-          if (validBody(body)) void line.c.then(c => c && h.change(c, request, scope.options, body)).catch(() => end(id, 1011))
+          try {
+            body = JSON.parse(rest)
+          } catch {}
+          if (validBody(body))
+            void line.c
+              .then((c) => c && h.change(c, request, scope.options, body))
+              .catch(() => end(id, 1011))
         }
       } else if (text[0] === 'x') {
         if (line) shut(id, line)
       } else if (text[0] === 'o') {
         if (line) return
-        if (lines.size >= LINES) return  peer.send(`x:${id}:1008:too many lines`)
+        if (lines.size >= LINES) return peer.send(`x:${id}:1008:too many lines`)
         if (rest[0] === 'c') openC(id)
         else if (rest[0] === 'r') openR(id, rest.slice(2))
       }

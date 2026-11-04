@@ -10,13 +10,24 @@ const { sourceStamp, stampFile } = createRequire(import.meta.url)('./native-stam
 const here = dirname(fileURLToPath(import.meta.url))
 const crate = join(here, '..', '..', '..', 'crates', 'weft-compiler')
 const stamp = sourceStamp() // before the build: an edit made while cargo runs leaves the binary marked stale
-execFileSync('cargo', ['build', '--release', '--lib', '--features', 'node'], { cwd: crate, stdio: 'inherit' })
-const lib = { darwin: 'libweft_compiler.dylib', linux: 'libweft_compiler.so', win32: 'weft_compiler.dll' }[process.platform]
+execFileSync('cargo', ['build', '--release', '--lib', '--features', 'node'], {
+  cwd: crate,
+  stdio: 'inherit',
+})
+const lib = {
+  darwin: 'libweft_compiler.dylib',
+  linux: 'libweft_compiler.so',
+  win32: 'weft_compiler.dll',
+}[process.platform]
 mkdirSync(join(here, '..', 'native'), { recursive: true })
 const out = join(here, '..', 'native', `weft-compiler.${process.platform}-${process.arch}.node`)
 // Copy then rename: macOS kills a process that loads a signed binary overwritten in place (a new file is fine).
-copyFileSync(join(process.env.CARGO_TARGET_DIR ?? join(crate, 'target'), 'release', lib), `${out}.tmp`)
+copyFileSync(
+  join(process.env.CARGO_TARGET_DIR ?? join(crate, 'target'), 'release', lib),
+  `${out}.tmp`,
+)
 renameSync(`${out}.tmp`, out)
 writeFileSync(stampFile(out), `${stamp}\n`)
 console.log('built native/weft-compiler.' + process.platform + '-' + process.arch + '.node')
-if (!process.argv.includes('--addon-only')) execFileSync(process.execPath, [join(here, 'build-wasm.mjs'), '--if-stale'], { stdio: 'inherit' })
+if (!process.argv.includes('--addon-only'))
+  execFileSync(process.execPath, [join(here, 'build-wasm.mjs'), '--if-stale'], { stdio: 'inherit' })

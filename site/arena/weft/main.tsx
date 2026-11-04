@@ -7,7 +7,11 @@ const cells = Array.from({ length: CELLS }, () => state(0))
 
 function Counter() {
   count.renders++
-  return <button type="button" onClick={() => window.arena.press()}>{n.value}</button>
+  return (
+    <button type="button" onClick={() => window.arena.press()}>
+      {n.value}
+    </button>
+  )
 }
 
 function Cell(props: { i: number }) {
@@ -17,7 +21,13 @@ function Cell(props: { i: number }) {
 
 function Grid() {
   count.renders++
-  return <div data-grid>{cells.map((_, i) => <Cell i={i} />)}</div>
+  return (
+    <div data-grid>
+      {cells.map((_, i) => (
+        <Cell i={i} />
+      ))}
+    </div>
+  )
 }
 
 const tick = (k: number) => {
@@ -26,5 +36,20 @@ const tick = (k: number) => {
 }
 
 const root = document.getElementById('root')!
-render(() => <main><Counter /><Grid /></main>, root)
-harness(root, { click: () => { n.value++; flush() }, tick, runs: () => stats.runs })
+render(
+  () => (
+    <main>
+      <Counter />
+      <Grid />
+    </main>
+  ),
+  root,
+)
+harness(root, {
+  click: () => {
+    n.value++
+    flush()
+  },
+  tick,
+  runs: () => stats.runs,
+})

@@ -18,7 +18,14 @@ export interface Face {
 }
 
 /** A Unicode range the fonts are cut to. */
-export type Subset = 'latin' | 'latin-ext' | 'cyrillic' | 'cyrillic-ext' | 'greek' | 'greek-ext' | 'vietnamese'
+export type Subset =
+  | 'latin'
+  | 'latin-ext'
+  | 'cyrillic'
+  | 'cyrillic-ext'
+  | 'greek'
+  | 'greek-ext'
+  | 'vietnamese'
 
 /** Options of `text()`. */
 export interface TextOptions {

@@ -14,13 +14,24 @@ export type ExampleRef = {
   height?: number | undefined
   codeOpen?: boolean | undefined
   /** Pin this example's scope, whatever the page bar says. */
-  scope?: { expression?: 'quiet' | 'balanced' | 'vivid'; theme?: 'light' | 'dark'; form?: 'phone' | 'tablet' } | undefined
+  scope?:
+    | {
+        expression?: 'quiet' | 'balanced' | 'vivid'
+        theme?: 'light' | 'dark'
+        form?: 'phone' | 'tablet'
+      }
+    | undefined
   /** Show a Replay button: for toasts and entrances. */
   replay?: boolean | undefined
 }
 
 export type Section =
-  | { kind: 'variants' | 'sizes' | 'states' | 'composition'; title: string; intro?: string; examples: ExampleRef[] }
+  | {
+      kind: 'variants' | 'sizes' | 'states' | 'composition'
+      title: string
+      intro?: string
+      examples: ExampleRef[]
+    }
   | { kind: 'prose'; title: string; md: string }
 
 export type Knob = {

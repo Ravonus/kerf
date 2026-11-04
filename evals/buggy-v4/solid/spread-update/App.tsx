@@ -1,4 +1,14 @@
-import { batch, createEffect, createMemo, createResource, createSignal, For, mapArray, onCleanup, Show } from 'solid-js'
+import {
+  batch,
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  mapArray,
+  onCleanup,
+  Show,
+} from 'solid-js'
 import { createStore } from 'solid-js/store'
 import type { Api, Quote, Sector, Stock } from './api'
 import { DetailsPanel } from './components/DetailsPanel'
@@ -18,7 +28,7 @@ const VIEW_KEY = 'watchlist:view'
 const blank: View = { query: '', favoritesOnly: false, sort: 'symbol' }
 const idle: SearchState = { state: 'idle', results: null }
 function loadSaved(): Saved {
-  const views = Object.fromEntries(TABS.map(t => [t, { ...blank }])) as Record<Tab, View>
+  const views = Object.fromEntries(TABS.map((t) => [t, { ...blank }])) as Record<Tab, View>
   try {
     const saved = JSON.parse(localStorage.getItem(VIEW_KEY) ?? '{}')
     for (const t of TABS) views[t] = { ...blank, ...saved.views?.[t] }
@@ -40,11 +50,13 @@ export function App(props: { api: Api }) {
   const [data] = createResource(() =>
     Promise.all([api.listStocks(), api.listHoldings()]).then(([stocks, holdings]) => {
       batch(() => {
-        setLive(Object.fromEntries(stocks.map(s => [s.id, { price: s.price, history: [s.price] }])))
-        setFavorites(Object.fromEntries(stocks.map(s => [s.id, s.favorite])))
+        setLive(
+          Object.fromEntries(stocks.map((s) => [s.id, { price: s.price, history: [s.price] }])),
+        )
+        setFavorites(Object.fromEntries(stocks.map((s) => [s.id, s.favorite])))
         setStocks(stocks)
       })
-      return { stocks, holdings, byId: new Map(stocks.map(s => [s.id, s])) }
+      return { stocks, holdings, byId: new Map(stocks.map((s) => [s.id, s])) }
     }),
   )
 
@@ -58,13 +70,13 @@ export function App(props: { api: Api }) {
     batch(() => {
       for (const { id, price } of quotes) {
         if (!live[id]) continue
-        setLive(id, l => ({ price, history: [...l.history, price].slice(-20) }))
-        setStocks(list => list.map(s => ({ ...s, price: s.id === id ? price : s.price })))
+        setLive(id, (l) => ({ price, history: [...l.history, price].slice(-20) }))
+        setStocks((list) => list.map((s) => ({ ...s, price: s.id === id ? price : s.price })))
       }
     })
   }
   onCleanup(
-    api.subscribeQuotes(quote => {
+    api.subscribeQuotes((quote) => {
       if (queued.push(quote) === 1) queueMicrotask(applyQuotes)
     }),
   )
@@ -77,13 +89,18 @@ export function App(props: { api: Api }) {
 
   // Each tab gets its own search the first time it is shown, and keeps it (and any request in flight) from then on.
   const [visited, setVisited] = createSignal<Tab[]>([saved.tab])
-  const searches = createMemo(mapArray(visited, t => ({ tab: t, search: createTabSearch(api, () => saved.views[t].query) })))
+  const searches = createMemo(
+    mapArray(visited, (t) => ({
+      tab: t,
+      search: createTabSearch(api, () => saved.views[t].query),
+    })),
+  )
   const selectTab = (t: Tab) =>
     batch(() => {
       setSaved('tab', t)
-      if (!visited().includes(t)) setVisited(v => [...v, t])
+      if (!visited().includes(t)) setVisited((v) => [...v, t])
     })
-  const search = (): SearchState => searches().find(s => s.tab === tab())?.search ?? idle
+  const search = (): SearchState => searches().find((s) => s.tab === tab())?.search ?? idle
 
   const [alert, setAlert] = createSignal<string | null>(null)
   const clicks = new Map<string, number>()
@@ -115,14 +132,14 @@ export function App(props: { api: Api }) {
   const [saves, setSaves] = createSignal<Save[]>([])
   const save = (id: string, text: string) =>
     batch(() => {
-      setSaves(s => [...s, { id, prev: notes[id] ?? '' }])
+      setSaves((s) => [...s, { id, prev: notes[id] ?? '' }])
       setNotes(id, text)
     })
   const undo = () => {
     const last = saves().at(-1)
     if (!last) return
     batch(() => {
-      setSaves(s => s.slice(0, -1))
+      setSaves((s) => s.slice(0, -1))
       setNotes(last.id, last.prev)
     })
   }
@@ -133,33 +150,54 @@ export function App(props: { api: Api }) {
     const t = tab()
     const ids = search().results
     const onlyFavorites = view().favoritesOnly
-    return all.filter(s => (t === 'All' || s.sector === t) && (!ids || ids.has(s.id)) && (!onlyFavorites || favorites[s.id]))
+    return all.filter(
+      (s) =>
+        (t === 'All' || s.sector === t) &&
+        (!ids || ids.has(s.id)) &&
+        (!onlyFavorites || favorites[s.id]),
+    )
   })
   // Only the Change sort reads live prices, so quotes don't re-sort a Symbol-sorted list. Array#sort is stable,
   // which keeps ties in list order.
   const shown = createMemo(() => {
     const rows = filtered()
     if (view().sort !== 'change') return rows
-    const change = new Map(rows.map(s => [s, (live[s.id].price - s.prevClose) / s.prevClose]))
+    const change = new Map(rows.map((s) => [s, (live[s.id].price - s.prevClose) / s.prevClose]))
     return [...rows].sort((a, b) => change.get(b)! - change.get(a)!)
   })
-  const portfolio = createMemo(() => (data()?.holdings ?? []).reduce((sum, h) => sum + h.qty * (live[h.id]?.price ?? 0), 0))
+  const portfolio = createMemo(() =>
+    (data()?.holdings ?? []).reduce((sum, h) => sum + h.qty * (live[h.id]?.price ?? 0), 0),
+  )
 
   return (
     <Show when={data()} fallback={<p>Loading…</p>}>
-      {loaded => (
+      {(loaded) => (
         <div>
           <Header count={shown().length} portfolio={portfolio()} />
           <nav>
-            <For each={TABS}>{t => <button aria-pressed={t === tab()} onClick={() => selectTab(t)}>{t}</button>}</For>
+            <For each={TABS}>
+              {(t) => (
+                <button aria-pressed={t === tab()} onClick={() => selectTab(t)}>
+                  {t}
+                </button>
+              )}
+            </For>
           </nav>
           <Toolbar view={view()} onView={setView} />
           <p role="status">{search().state === 'pending' ? 'Searching…' : ''}</p>
-          <Show when={search().state === 'failed'}><p role="alert">Search failed</p></Show>
-          <Show when={alert()}>{message => <p role="alert">{message()}</p>}</Show>
-          <StockList stocks={shown()} live={live} favorites={favorites} onToggle={toggle} onDetails={openDetails} />
+          <Show when={search().state === 'failed'}>
+            <p role="alert">Search failed</p>
+          </Show>
+          <Show when={alert()}>{(message) => <p role="alert">{message()}</p>}</Show>
+          <StockList
+            stocks={shown()}
+            live={live}
+            favorites={favorites}
+            onToggle={toggle}
+            onDetails={openDetails}
+          />
           <Show when={loaded().byId.get(openId() ?? '')} keyed>
-            {stock => (
+            {(stock) => (
               <DetailsPanel
                 api={api}
                 stock={stock}

@@ -4,7 +4,9 @@ import { Badge, Card, Row, Stack } from '@weft-js/warp'
 function Profile(props: { name: string; field: string }) {
   return (
     <Row gap="related">
-      <Badge emphasis="solid" tone="accent">{props.name[0]}</Badge>
+      <Badge emphasis="solid" tone="accent">
+        {props.name[0]}
+      </Badge>
       <span>
         <strong>{props.name}</strong>, {props.field}
       </span>

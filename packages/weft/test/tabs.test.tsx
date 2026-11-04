@@ -8,14 +8,28 @@ import '../src/sync'
 import { tabs as browser } from '../src/browser'
 import { flush, leaks, memoryStorage, render, screen, tabs, user } from '../src/test'
 
-const count = { '~standard': { validate: (v: unknown) => (typeof (v as { count?: unknown } | undefined)?.count === 'number' ? { value: v as { count: number } } : { issues: [{ message: 'no count' }] }) } }
-const lines = { '~standard': { validate: (v: unknown) => (v && typeof v === 'object' && Object.values(v).every(n => typeof n === 'number') ? { value: v as Record<string, number> } : { issues: [{ message: 'not lines' }] }) } }
+const count = {
+  '~standard': {
+    validate: (v: unknown) =>
+      typeof (v as { count?: unknown } | undefined)?.count === 'number'
+        ? { value: v as { count: number } }
+        : { issues: [{ message: 'no count' }] },
+  },
+}
+const lines = {
+  '~standard': {
+    validate: (v: unknown) =>
+      v && typeof v === 'object' && Object.values(v).every((n) => typeof n === 'number')
+        ? { value: v as Record<string, number> }
+        : { issues: [{ message: 'not lines' }] },
+  },
+}
 
 describe('tabs.channel', () => {
   function Cart() {
     const bus = browser.channel('cart', count)
     const seen: number[] = []
-    bus.on(m => seen.push(m.count))
+    bus.on((m) => seen.push(m.count))
     return (
       <>
         <p aria-label="last">{bus.value?.count ?? 'none'}</p>
@@ -46,12 +60,12 @@ describe('tabs.channel', () => {
     await user.click(screen.getAllByRole('button')[0]!)
     await flush()
     expect(tabs.posted('cart')).toEqual([{ count: 7 }])
-    expect(screen.getAllByLabelText('last').map(e => e.textContent)).toEqual(['none', 'none'])
+    expect(screen.getAllByLabelText('last').map((e) => e.textContent)).toEqual(['none', 'none'])
     other.unmount()
   })
 
   test('a wrong post throws in dev', () => {
-    createRoot(dispose => {
+    createRoot((dispose) => {
       const bus = browser.channel('cart', count)
       expect(() => bus.post({ count: 'x' } as never)).toThrow('schema')
       dispose()
@@ -59,7 +73,7 @@ describe('tabs.channel', () => {
   })
 
   test('the channel goes with its owner (T012 sees it before)', () => {
-    createRoot(dispose => {
+    createRoot((dispose) => {
       browser.channel('cart', count)
       expect(leaks().join()).toContain("tabs.channel('cart')")
       dispose()
@@ -74,9 +88,19 @@ describe('tabs.channel', () => {
 
 describe("sync: 'tabs'", () => {
   const cart = defineState('cart-sync', () => {
-    const lines$ = state<Record<string, number>>({}, { persist: { in: 'memory', schema: lines, version: 1 }, sync: 'tabs', name: 'lines' })
+    const lines$ = state<Record<string, number>>(
+      {},
+      { persist: { in: 'memory', schema: lines, version: 1 }, sync: 'tabs', name: 'lines' },
+    )
     const note = state('', { persist: 'memory', sync: 'tabs' })
-    return { lines: lines$, note, add: (id: string) => lines$.set(d => { d[id] = (d[id] ?? 0) + 1 }) }
+    return {
+      lines: lines$,
+      note,
+      add: (id: string) =>
+        lines$.set((d) => {
+          d[id] = (d[id] ?? 0) + 1
+        }),
+    }
   })
 
   function Tab(props: { name: string }) {
@@ -85,7 +109,13 @@ describe("sync: 'tabs'", () => {
         <p aria-label={`lines ${props.name}`}>{JSON.stringify(cart.lines.value)}</p>
         <p aria-label={`note ${props.name}`}>{cart.note.value}</p>
         <button onClick={() => cart.add(props.name)}>add {props.name}</button>
-        <button onClick={() => { cart.note.value = props.name }}>note {props.name}</button>
+        <button
+          onClick={() => {
+            cart.note.value = props.name
+          }}
+        >
+          note {props.name}
+        </button>
       </>
     )
   }
@@ -118,7 +148,10 @@ describe("sync: 'tabs'", () => {
 
   test('two tabs adding different keys merge, and storage holds both', async () => {
     const storage = two()
-    await Promise.all([user.click(screen.getByRole('button', { name: 'add a' })), user.click(screen.getByRole('button', { name: 'add b' }))])
+    await Promise.all([
+      user.click(screen.getByRole('button', { name: 'add a' })),
+      user.click(screen.getByRole('button', { name: 'add b' })),
+    ])
     await flush()
     await flush()
     expect(JSON.parse(lineText('a'))).toEqual({ a: 1, b: 1 })
@@ -138,7 +171,13 @@ describe("sync: 'tabs'", () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     two()
     const bc = new BroadcastChannel('weft:state:app')
-    bc.postMessage({ s: 'cart-sync.lines', at: Date.now() + 1000, t: 'x', p: { a: 'not a number' }, d: [] })
+    bc.postMessage({
+      s: 'cart-sync.lines',
+      at: Date.now() + 1000,
+      t: 'x',
+      p: { a: 'not a number' },
+      d: [],
+    })
     await flush()
     bc.close()
     expect(lineText('a')).toBe('{}')
@@ -157,8 +196,10 @@ describe("sync: 'tabs'", () => {
     expect(JSON.parse(lineText('a'))).toEqual({ k: 2, j: 1 })
   })
 
-  test("`session`, or no persist, is S008", () => {
-    const bad = defineState('sync-session', () => ({ n: state(0, { persist: 'session', sync: 'tabs' }) }))
+  test('`session`, or no persist, is S008', () => {
+    const bad = defineState('sync-session', () => ({
+      n: state(0, { persist: 'session', sync: 'tabs' }),
+    }))
     const none = defineState('sync-none', () => ({ n: state(0, { sync: 'tabs' }) }))
     const read = (s: { n: { value: number } }) => () => render(() => <p>{s.n.value}</p>)
     expect(read(bad)).toThrow('S008')

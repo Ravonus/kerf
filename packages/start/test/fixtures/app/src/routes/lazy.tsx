@@ -9,7 +9,9 @@ export default function Lazy() {
       <Field />
       <Named />
       <Away />
-      <Unfold><p class="late">kept</p></Unfold>
+      <Unfold>
+        <p class="late">kept</p>
+      </Unfold>
       <div style="height:3000px">spacer</div>
       <Tap id="far" />
       <Held n={3} />

@@ -31,10 +31,28 @@ export function Bell({ count, onOpen, inbox, route, side = 'bottom', align = 'en
   let button: HTMLButtonElement | undefined
   let box: HTMLDivElement | undefined
   let badge: HTMLElement | undefined
-  use(popover, () => box, () => ({ open: open.value, trigger: button!, side, align, onClose: () => (open.value = false) }))
-  onMount(() => watch(() => n.value, (v, prev) => { if (prev !== undefined && v > prev && badge) bump(badge) }))
+  use(
+    popover,
+    () => box,
+    () => ({
+      open: open.value,
+      trigger: button!,
+      side,
+      align,
+      onClose: () => (open.value = false),
+    }),
+  )
+  onMount(() =>
+    watch(
+      () => n.value,
+      (v, prev) => {
+        if (prev !== undefined && v > prev && badge) bump(badge)
+      },
+    ),
+  )
   const press = () => {
-    const toPage = route && button!.ownerDocument.defaultView!.matchMedia?.('(max-width: 599.98px)').matches
+    const toPage =
+      route && button!.ownerDocument.defaultView!.matchMedia?.('(max-width: 599.98px)').matches
     onOpen?.()
     if (toPage) route()
     else if (panel) open.value = !open.value
@@ -55,8 +73,28 @@ export function Bell({ count, onOpen, inbox, route, side = 'bottom', align = 'en
       >
         <G name="bell" />
       </Button>
-      <Badge emphasis="solid" count ref={(el: HTMLElement) => (badge = el)} hidden={n.value === 0} aria-hidden="true">{bellCount(n.value)}</Badge>
-      {panel && <div ref={el => (box = el)} data-scope="popover" data-part="content" role="dialog" popover="manual" id={id} aria-label="Notifications">{panel(open)}</div>}
+      <Badge
+        emphasis="solid"
+        count
+        ref={(el: HTMLElement) => (badge = el)}
+        hidden={n.value === 0}
+        aria-hidden="true"
+      >
+        {bellCount(n.value)}
+      </Badge>
+      {panel && (
+        <div
+          ref={(el) => (box = el)}
+          data-scope="popover"
+          data-part="content"
+          role="dialog"
+          popover="manual"
+          id={id}
+          aria-label="Notifications"
+        >
+          {panel(open)}
+        </div>
+      )}
     </span>
   )
 }

@@ -44,11 +44,20 @@ const round = (n: number, places = 4) => Math.round(n * 10 ** places) / 10 ** pl
  * A fluid size from `minPx` at `from` to `maxPx` at `to` (CSS px; 1rem = 16px), in the spec's form.
  * `fluid(34, 52)` is balanced display: { min: 2.125, b: 1.659, m: 1.989, max: 3.25 }.
  */
-export function fluid(minPx: number, maxPx: number, range: { from?: number | undefined; to?: number | undefined } = {}): Fluid {
+export function fluid(
+  minPx: number,
+  maxPx: number,
+  range: { from?: number | undefined; to?: number | undefined } = {},
+): Fluid {
   const { from = FLUID_RANGE.from, to = FLUID_RANGE.to } = range
   if (!(to > from)) throw new RangeError('fluid(): `to` must be wider than `from`')
   const slope = (maxPx - minPx) / (to - from) // px per px of width
-  return { min: round(minPx / 16), b: round((minPx - slope * from) / 16), m: round(slope * 100), max: round(maxPx / 16) }
+  return {
+    min: round(minPx / 16),
+    b: round((minPx - slope * from) / 16),
+    m: round(slope * 100),
+    max: round(maxPx / 16),
+  }
 }
 
 /** max/min of a fluid size (X006 above MAX_FLUID_RATIO). */
@@ -58,7 +67,10 @@ export const fluidRatio = (f: Fluid) => f.max / f.min
  * The CSS for a fluid size, as the spec writes it: `rem` is the length the rem terms multiply (the spec uses
  * `var(--warp-rem)`; plain `1rem` outside warp), `unit` the fluid unit (`var(--warp-ref-fluid-unit)`, or `1cqi`).
  */
-export function fluidCss(f: Fluid, { rem = '1rem', unit = '1cqi' }: { rem?: string; unit?: string } = {}): string {
+export function fluidCss(
+  f: Fluid,
+  { rem = '1rem', unit = '1cqi' }: { rem?: string; unit?: string } = {},
+): string {
   const r = (n: number) => (rem === '1rem' ? `${n}rem` : `calc(${n} * ${rem})`)
   const u = unit === '1cqi' ? `${f.m}cqi` : `${f.m} * ${unit}`
   return `clamp(${r(f.min)}, calc(${rem === '1rem' ? `${f.b}rem` : `${f.b} * ${rem}`} + ${u}), ${r(f.max)})`

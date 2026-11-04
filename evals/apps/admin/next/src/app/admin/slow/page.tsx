@@ -17,16 +17,26 @@ async function Report() {
     <table className="w-full border-collapse">
       <thead>
         <tr className="border-b border-line">
-          <th scope="col" className={headCell}>Status</th>
-          <th scope="col" className={`${headCell} text-right`}>Orders</th>
-          <th scope="col" className={`${headCell} text-right`}>Revenue</th>
+          <th scope="col" className={headCell}>
+            Status
+          </th>
+          <th scope="col" className={`${headCell} text-right`}>
+            Orders
+          </th>
+          <th scope="col" className={`${headCell} text-right`}>
+            Revenue
+          </th>
         </tr>
       </thead>
       <tbody>
-        {lines.map(line => (
+        {lines.map((line) => (
           <tr key={line.status} className={tableRow}>
-            <td className={bodyCell}><StatusBadge status={line.status} /></td>
-            <td className={`${bodyCell} text-right tabular-nums`}>{line.orders.toLocaleString('en-US')}</td>
+            <td className={bodyCell}>
+              <StatusBadge status={line.status} />
+            </td>
+            <td className={`${bodyCell} text-right tabular-nums`}>
+              {line.orders.toLocaleString('en-US')}
+            </td>
             <td className={`${bodyCell} text-right tabular-nums`}>{money(line.revenue)}</td>
           </tr>
         ))}
@@ -43,12 +53,18 @@ export default function Slow() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <PageTitle note="The books take a moment to add up. Keep working: the page is yours while they do.">Year report</PageTitle>
+        <PageTitle note="The books take a moment to add up. Keep working: the page is yours while they do.">
+          Year report
+        </PageTitle>
         <Counter />
       </header>
       <section aria-labelledby="report" className={`${panel} p-5`}>
-        <h2 id="report" className="mb-3 font-semibold">Report</h2>
-        <Suspense fallback={<ReportSkeleton />}><Report /></Suspense>
+        <h2 id="report" className="mb-3 font-semibold">
+          Report
+        </h2>
+        <Suspense fallback={<ReportSkeleton />}>
+          <Report />
+        </Suspense>
       </section>
     </div>
   )

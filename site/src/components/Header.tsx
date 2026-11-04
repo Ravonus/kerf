@@ -19,15 +19,34 @@ export const NAV = [
 export function Header() {
   return (
     <header data-site="header" data-vt="bar" data-expression="balanced">
-      <Link data-site="skip" href="#content">Skip to content</Link>
+      <Link data-site="skip" href="#content">
+        Skip to content
+      </Link>
       <div data-site="bar">
-        <Link href="/" class="brand"><Mark /><span>weft</span></Link>
+        <Link href="/" class="brand">
+          <Mark />
+          <span>weft</span>
+        </Link>
         <Nav label="Main" data-site="top-nav">
-          {NAV.map(n => <Link key={n.href} href={n.href}>{n.label}</Link>)}
+          {NAV.map((n) => (
+            <Link key={n.href} href={n.href}>
+              {n.label}
+            </Link>
+          ))}
         </Nav>
         <span data-site="grow"></span>
         <SearchTrigger />
-        <Link data-site="repo" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" href="https://github.com/Ravonus/weft" rel="external">GitHub</Link>
+        <Link
+          data-site="repo"
+          data-scope="button"
+          data-emphasis="ghost"
+          data-tone="neutral"
+          data-size="sm"
+          href="https://github.com/Ravonus/weft"
+          rel="external"
+        >
+          GitHub
+        </Link>
         <AppearanceGate />
         <NavSheet />
       </div>

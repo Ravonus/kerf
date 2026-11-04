@@ -5,15 +5,16 @@
 
                                              
 
-const scale = (prop        ) => ({
-  none: { [prop]: '0' },
-  hair: { [prop]: 'var(--warp-space-hair)' },
-  tight: { [prop]: 'var(--warp-space-tight)' },
-  related: { [prop]: 'var(--warp-space-related)' },
-  group: { [prop]: 'var(--warp-space-group)' },
-  section: { [prop]: 'var(--warp-space-section)' },
-  page: { [prop]: 'var(--warp-space-page)' },
-})         
+const scale = (prop        ) =>
+  ({
+    none: { [prop]: '0' },
+    hair: { [prop]: 'var(--warp-space-hair)' },
+    tight: { [prop]: 'var(--warp-space-tight)' },
+    related: { [prop]: 'var(--warp-space-related)' },
+    group: { [prop]: 'var(--warp-space-group)' },
+    section: { [prop]: 'var(--warp-space-section)' },
+    page: { [prop]: 'var(--warp-space-page)' },
+  })         
 
 /** warp's tone channels (warp-components.css): a tone sets them once, and every group reads them. */
 const tone = (t        )        => ({
@@ -39,10 +40,20 @@ export const VOCAB = {
     raised: { 'background-color': 'var(--warp-color-surface-raised)' },
     overlay: { 'background-color': 'var(--warp-color-surface-overlay)' },
     sunken: { 'background-color': 'var(--warp-color-surface-sunken)' },
-    inverse: { 'background-color': 'var(--warp-color-surface-inverse)', color: 'var(--warp-color-on-inverse)' },
+    inverse: {
+      'background-color': 'var(--warp-color-surface-inverse)',
+      color: 'var(--warp-color-on-inverse)',
+    },
   },
-  pad: { ...scale('padding'), control: { padding: 'var(--warp-pad-control)' }, surface: { padding: 'var(--warp-pad-surface)' } },
-  padInline: { ...scale('padding-inline'), control: { 'padding-inline': 'var(--warp-pad-control)' } },
+  pad: {
+    ...scale('padding'),
+    control: { padding: 'var(--warp-pad-control)' },
+    surface: { padding: 'var(--warp-pad-surface)' },
+  },
+  padInline: {
+    ...scale('padding-inline'),
+    control: { 'padding-inline': 'var(--warp-pad-control)' },
+  },
   padBlock: scale('padding-block'),
   gap: scale('gap'),
   radius: {
@@ -60,7 +71,9 @@ export const VOCAB = {
     tone: { border: 'var(--warp-border-hairline) solid var(--_border, var(--warp-color-border))' },
   },
   /** Row separators, for lists of rows. */
-  divide: { hairline: { 'border-block-end': 'var(--warp-border-hairline) solid var(--warp-color-border)' } },
+  divide: {
+    hairline: { 'border-block-end': 'var(--warp-border-hairline) solid var(--warp-color-border)' },
+  },
   elevation: {
     flat: { 'box-shadow': 'var(--warp-elevation-0)' },
     low: { 'box-shadow': 'var(--warp-elevation-1)' },
@@ -84,7 +97,10 @@ export const VOCAB = {
     solid: { 'background-color': 'var(--_solid)', color: 'var(--_ink-on)' },
     /** `solid`, hovered or pressed. */
     strong: { 'background-color': 'var(--_solid-hover)', color: 'var(--_ink-on)' },
-    outline: { 'box-shadow': 'inset 0 0 0 var(--warp-border-hairline) var(--_border)', color: 'var(--_text)' },
+    outline: {
+      'box-shadow': 'inset 0 0 0 var(--warp-border-hairline) var(--_border)',
+      color: 'var(--_text)',
+    },
   },
   /** Text colour role, when the group doesn't take it from a tone. */
   ink: {
@@ -141,7 +157,10 @@ export const VOCAB = {
     lg: { 'min-block-size': 'var(--warp-control-lg)' },
   },
   ring: {
-    focus: { outline: 'var(--warp-focus-width) solid var(--warp-color-focus)', 'outline-offset': 'var(--warp-focus-offset)' },
+    focus: {
+      outline: 'var(--warp-focus-width) solid var(--warp-color-focus)',
+      'outline-offset': 'var(--warp-focus-offset)',
+    },
     accent: { 'box-shadow': '0 0 0 var(--warp-focus-width) var(--warp-color-accent-solid)' },
     tone: { 'box-shadow': '0 0 0 var(--warp-focus-width) var(--_solid)' },
   },

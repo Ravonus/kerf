@@ -4,13 +4,25 @@
 import { driver } from '../driver'
 import { createNative, type Driver, type Row } from './index'
 
-const { createConnection, createPool } = await driver('@weft-js/db/plugin-native/mysql', 'mysql2', () => import('mysql2/promise'))
+const { createConnection, createPool } = await driver(
+  '@weft-js/db/plugin-native/mysql',
+  'mysql2',
+  () => import('mysql2/promise'),
+)
 
 const LOCK = 'weft_migrations'
 type ExecuteValues = Parameters<Awaited<ReturnType<typeof createConnection>>['execute']>[1]
 
 /** A client on a mysql2 pool. */
-export function createDb({ url, migrate, max = 10 }: { url: string; migrate?: boolean; max?: number }) {
+export function createDb({
+  url,
+  migrate,
+  max = 10,
+}: {
+  url: string
+  migrate?: boolean
+  max?: number
+}) {
   const uri = url || 'mysql://localhost/build'
   // No `maxIdle` below the limit: that starts mysql2's reaper, a timer that keeps a finished `weft build` alive forever.
   const pool = createPool({ uri, connectionLimit: max })
@@ -31,7 +43,9 @@ export function createDb({ url, migrate, max = 10 }: { url: string; migrate?: bo
       const c = await pool.getConnection()
       try {
         await c.beginTransaction()
-        const out = await fn({ query: (text, params) => rows(c.execute(text, params as ExecuteValues)) })
+        const out = await fn({
+          query: (text, params) => rows(c.execute(text, params as ExecuteValues)),
+        })
         await c.commit()
         return out
       } catch (e) {
@@ -44,8 +58,11 @@ export function createDb({ url, migrate, max = 10 }: { url: string; migrate?: bo
     async locked(fn) {
       const c = await pool.getConnection()
       try {
-        const [got] = await c.query('select get_lock(?, 60) as got', [LOCK]) as unknown as [{ got: unknown }[]]
-        if (Number(got[0]?.got) !== 1) throw new Error('another instance held the migration lock for 60s')
+        const [got] = (await c.query('select get_lock(?, 60) as got', [LOCK])) as unknown as [
+          { got: unknown }[],
+        ]
+        if (Number(got[0]?.got) !== 1)
+          throw new Error('another instance held the migration lock for 60s')
         return await fn()
       } finally {
         await c.query('select release_lock(?)', [LOCK]).catch(() => {})

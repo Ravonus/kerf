@@ -19,7 +19,8 @@ export function relay(io: Server, { secret }: { secret: string }) {
     await socket.join(socket.data.room)
     socket.emit('weft:ok')
     socket.on('weft:f', (text: unknown) => {
-      if (typeof text === 'string' && text.length <= FRAME) socket.to(socket.data.room).volatile.emit('weft:f', socket.data.peer, text)
+      if (typeof text === 'string' && text.length <= FRAME)
+        socket.to(socket.data.room).volatile.emit('weft:f', socket.data.peer, text)
     })
   })
 }
@@ -33,5 +34,10 @@ export interface TicketOptions {
 }
 
 /** For `multiplayer({ ticket })`: a signed claim of who this connection is and which room it may enter. */
-export const socketioTicket = ({ secret, ttl = 3600 }: TicketOptions) => async ({ id, params }: { id: string; params: unknown }) =>
-  signTicket({ sub: id, room: await roomId(params), exp: Math.floor(Date.now() / 1000) + ttl }, secret)
+export const socketioTicket =
+  ({ secret, ttl = 3600 }: TicketOptions) =>
+  async ({ id, params }: { id: string; params: unknown }) =>
+    signTicket(
+      { sub: id, room: await roomId(params), exp: Math.floor(Date.now() / 1000) + ttl },
+      secret,
+    )

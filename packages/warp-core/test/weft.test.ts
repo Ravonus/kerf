@@ -6,7 +6,14 @@ const action = () => {
   const calls: unknown[][] = []
   const make = (el: Element, o: number) => {
     calls.push(['make', el, o])
-    return { update(n: number) { calls.push(['update', n]) }, destroy() { calls.push(['destroy']) } }
+    return {
+      update(n: number) {
+        calls.push(['update', n])
+      },
+      destroy() {
+        calls.push(['destroy'])
+      },
+    }
   }
   return { calls, make }
 }
@@ -15,7 +22,14 @@ test('makes the action after mount, feeds it new options, destroys it with the o
   const { calls, make } = action()
   const el = document.createElement('div')
   const opts = state(1)
-  const dispose = createRoot(d => { use(make, () => el, () => opts.value); return d })
+  const dispose = createRoot((d) => {
+    use(
+      make,
+      () => el,
+      () => opts.value,
+    )
+    return d
+  })
   expect(calls).toEqual([])
   runMounts()
   await Promise.resolve()
@@ -29,7 +43,14 @@ test('makes the action after mount, feeds it new options, destroys it with the o
 
 test('an owner gone before the microtask never makes the action', async () => {
   const { calls, make } = action()
-  const dispose = createRoot(d => { use(make, () => document.createElement('div'), () => 1); return d })
+  const dispose = createRoot((d) => {
+    use(
+      make,
+      () => document.createElement('div'),
+      () => 1,
+    )
+    return d
+  })
   runMounts()
   dispose()
   await Promise.resolve()
@@ -38,7 +59,13 @@ test('an owner gone before the microtask never makes the action', async () => {
 
 test('no element, no action', async () => {
   const { calls, make } = action()
-  createRoot(() => use(make, () => undefined, () => 1))
+  createRoot(() =>
+    use(
+      make,
+      () => undefined,
+      () => 1,
+    ),
+  )
   runMounts()
   await Promise.resolve()
   expect(calls).toEqual([])

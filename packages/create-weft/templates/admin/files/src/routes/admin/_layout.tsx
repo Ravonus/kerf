@@ -1,4 +1,11 @@
-import { BarChartIcon, ClipboardListIcon, HomeIcon, ListIcon, LogOutIcon, StoreIcon } from '@weft-js/warp-icons'
+import {
+  BarChartIcon,
+  ClipboardListIcon,
+  HomeIcon,
+  ListIcon,
+  LogOutIcon,
+  StoreIcon,
+} from '@weft-js/warp-icons'
 import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
 import { Shell, Toaster, toast } from '@weft-js/warp'
 import { Logo } from '#/components/Logo'
@@ -18,7 +25,12 @@ export const load = ({ ctx, request }: LoadArgs) => {
   const path = new URL(request.url).pathname.replace(/\/$/, '')
   const detail = path.match(/^\/admin\/orders\/(.+)$/)
   const page = pages[(detail ? '/admin/orders' : path) as keyof typeof pages] ?? pages['/admin']
-  const crumbs = [{ label: 'Backroom', href: '/admin' }, ...(detail ? [{ label: 'Orders', href: '/admin/orders' }, { label: `#${detail[1]}` }] : [{ label: page.label }])]
+  const crumbs = [
+    { label: 'Backroom', href: '/admin' },
+    ...(detail
+      ? [{ label: 'Orders', href: '/admin/orders' }, { label: `#${detail[1]}` }]
+      : [{ label: page.label }]),
+  ]
   return { name: ctx.user.name, email: ctx.user.email, current: page.id, crumbs }
 }
 
@@ -39,8 +51,22 @@ const nav = [
   },
 ]
 
-const leave = () => signOut().catch(() => toast.show({ tone: 'critical', title: "You're still signed in", description: "That didn't go through. Try again in a moment." }))
-const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase()
+const leave = () =>
+  signOut().catch(() =>
+    toast.show({
+      tone: 'critical',
+      title: "You're still signed in",
+      description: "That didn't go through. Try again in a moment.",
+    }),
+  )
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
 
 export default function Admin(props: RouteProps<typeof load>) {
   return (
@@ -49,7 +75,12 @@ export default function Admin(props: RouteProps<typeof load>) {
       nav={nav}
       current={props.data.current}
       crumbs={props.data.crumbs}
-      account={{ name: props.data.name, email: props.data.email, initials: initials(props.data.name), items: [{ label: 'Sign out', icon: LogOutIcon, onSelect: leave }] }}
+      account={{
+        name: props.data.name,
+        email: props.data.email,
+        initials: initials(props.data.name),
+        items: [{ label: 'Sign out', icon: LogOutIcon, onSelect: leave }],
+      }}
       overlays={<Toaster />}
     >
       <div class="page">{props.children}</div>

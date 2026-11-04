@@ -40,7 +40,9 @@ export function Settings() {
   return (
     <>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Settings</h1>
-      <p className="mt-1 text-slate-600 dark:text-slate-400">Manage your profile and notification preferences.</p>
+      <p className="mt-1 text-slate-600 dark:text-slate-400">
+        Manage your profile and notification preferences.
+      </p>
       <form
         onSubmit={submit}
         noValidate
@@ -48,7 +50,12 @@ export function Settings() {
       >
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label="Full name" htmlFor="name">
-            <input id="name" className={inputCls} value={form.name} onChange={(e) => set('name', e.target.value)} />
+            <input
+              id="name"
+              className={inputCls}
+              value={form.name}
+              onChange={(e) => set('name', e.target.value)}
+            />
           </Field>
           <Field label="Email" htmlFor="email" error={error}>
             <input
@@ -64,21 +71,38 @@ export function Settings() {
           </Field>
         </div>
         <Field label="Role" htmlFor="role">
-          <RoleSelect id="role" value={form.role} onValueChange={(v) => set('role', v)} options={['Admin', 'Editor', 'Viewer']} />
+          <RoleSelect
+            id="role"
+            value={form.role}
+            onValueChange={(v) => set('role', v)}
+            options={['Admin', 'Editor', 'Viewer']}
+          />
         </Field>
         <Field label="Bio" htmlFor="bio">
-          <textarea id="bio" rows={4} className={inputCls} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
+          <textarea
+            id="bio"
+            rows={4}
+            className={inputCls}
+            value={form.bio}
+            onChange={(e) => set('bio', e.target.value)}
+          />
         </Field>
         <div className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 p-4 dark:bg-slate-950">
           <div>
-            <label htmlFor="updates" className="text-sm font-medium">Email updates</label>
-            <p className="text-sm text-slate-600 dark:text-slate-400">Product news and billing notices.</p>
+            <label htmlFor="updates" className="text-sm font-medium">
+              Email updates
+            </label>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Product news and billing notices.
+            </p>
           </div>
           <Toggle id="updates" checked={form.updates} onCheckedChange={(v) => set('updates', v)} />
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit">Save</Button>
-          <Button type="button" variant="secondary" onClick={cancel}>Cancel</Button>
+          <Button type="button" variant="secondary" onClick={cancel}>
+            Cancel
+          </Button>
           <p role="status" className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
             {done ? 'Saved' : ''}
           </p>

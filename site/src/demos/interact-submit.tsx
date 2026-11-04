@@ -2,7 +2,10 @@ import { state } from '@weft-js/core'
 import { Button, Card, Input, Spinner } from '@weft-js/warp'
 
 // Stands in for a request to a server.
-const send = (email: string) => new Promise<string>(done => { setTimeout(() => done(email), 800) })
+const send = (email: string) =>
+  new Promise<string>((done) => {
+    setTimeout(() => done(email), 800)
+  })
 
 export default function Newsletter() {
   const sending = state(false)
@@ -20,16 +23,16 @@ export default function Newsletter() {
   }
   return (
     <Card title="Newsletter">
-      {joined.value
-        ? <p>Thanks, {joined.value} is on the list.</p>
-        : (
-          <form onSubmit={submit}>
-            <Input label="Email" name="email" type="email" required disabled={sending.value} />
-            <Button type="submit" disabled={sending.value}>
-              {sending.value ? <Spinner /> : 'Join'}
-            </Button>
-          </form>
-        )}
+      {joined.value ? (
+        <p>Thanks, {joined.value} is on the list.</p>
+      ) : (
+        <form onSubmit={submit}>
+          <Input label="Email" name="email" type="email" required disabled={sending.value} />
+          <Button type="submit" disabled={sending.value}>
+            {sending.value ? <Spinner /> : 'Join'}
+          </Button>
+        </form>
+      )}
     </Card>
   )
 }

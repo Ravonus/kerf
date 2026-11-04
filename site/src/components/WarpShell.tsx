@@ -13,7 +13,14 @@ import '../styles/toolkit.css'
 export function WarpShell(props: { area: Area; slug?: string | undefined; children?: unknown }) {
   return (
     <div data-site="docs">
-      <SideNav lead={SITE_LINKS} label={AREA_LABEL[props.area]} sections={toolkitSections(props.area)} current={props.slug ? `/${props.area}/${props.slug}` : `/${props.area}`} filter remember="weft:site:toolkit" />
+      <SideNav
+        lead={SITE_LINKS}
+        label={AREA_LABEL[props.area]}
+        sections={toolkitSections(props.area)}
+        current={props.slug ? `/${props.area}/${props.slug}` : `/${props.area}`}
+        filter
+        remember="weft:site:toolkit"
+      />
       <FrameTools />
       {props.children}
     </div>

@@ -8,7 +8,11 @@ export const card = group('order-card', {
     status: { open: { tone: 'info' }, shipped: { tone: 'positive' }, late: { tone: 'critical' } },
     density: 'inherit',
   },
-  parts: { title: { text: 'title' }, meta: { text: 'caption', emphasis: 'subtle' }, name: { text: 'label' } },
+  parts: {
+    title: { text: 'title' },
+    meta: { text: 'caption', emphasis: 'subtle' },
+    name: { text: 'label' },
+  },
   states: { selected: { ring: 'accent' }, hover: { surface: 'sunken' } },
   compounds: [{ when: { status: 'late' }, part: 'meta', set: { ink: 'tone' } }],
   defaults: { status: 'open' },

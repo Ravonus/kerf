@@ -7,7 +7,9 @@ function Counter(props: { label: string }) {
   return (
     <p>
       {props.label} <Badge count>{count.value}</Badge>{' '}
-      <Button size="sm" emphasis="outline" onClick={() => count.value++}>+1</Button>
+      <Button size="sm" emphasis="outline" onClick={() => count.value++}>
+        +1
+      </Button>
     </p>
   )
 }

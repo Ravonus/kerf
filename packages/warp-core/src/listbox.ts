@@ -11,13 +11,21 @@ import { uid } from './store'
 import { typeahead } from './typeahead'
 import type { ChangeReason } from './temporal'
 
-const CHECK = '<svg data-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5 9.5 17 19 7"/></svg>'
-const SEARCH = '<svg data-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'
+const CHECK =
+  '<svg data-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5 9.5 17 19 7"/></svg>'
+const SEARCH =
+  '<svg data-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'
 const GAP = 6
 const MAX_HEIGHT = 320
 
 /** One row of a listbox. */
-export type ListItem = { value: string; label: string; disabled?: boolean | undefined; hint?: string | undefined; group?: string | undefined }
+export type ListItem = {
+  value: string
+  label: string
+  disabled?: boolean | undefined
+  hint?: string | undefined
+  group?: string | undefined
+}
 
 /** Options for `listbox`. */
 export interface ListboxOptions {
@@ -133,22 +141,36 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     empty = el('p', 'empty', box)
     empty.textContent = 'No match'
     empty.hidden = true
-    const rowAt = (e: Event) => rows.findIndex(r => r.el === (e.target as Element).closest?.('[role="option"]'))
-    list.onpointermove = e => { if (e.pointerType === 'touch') return; const i = rowAt(e); if (i >= 0 && i !== at) go(i, false) }
-    list.onmousedown = e => e.preventDefault() // focus stays where the keys are
-    list.onclick = e => { const i = rowAt(e); if (i >= 0) pick(i, e.detail ? 'pointer' : 'keyboard') }
+    const rowAt = (e: Event) =>
+      rows.findIndex((r) => r.el === (e.target as Element).closest?.('[role="option"]'))
+    list.onpointermove = (e) => {
+      if (e.pointerType === 'touch') return
+      const i = rowAt(e)
+      if (i >= 0 && i !== at) go(i, false)
+    }
+    list.onmousedown = (e) => e.preventDefault() // focus stays where the keys are
+    list.onclick = (e) => {
+      const i = rowAt(e)
+      if (i >= 0) pick(i, e.detail ? 'pointer' : 'keyboard')
+    }
     box.addEventListener('keydown', onKey)
     box.addEventListener('focusout', onLeave)
     control.append(box)
   }
 
   function measure() {
-    for (const r of rows) { r.top = r.el.offsetTop; r.height = r.el.offsetHeight }
+    for (const r of rows) {
+      r.top = r.el.offsetTop
+      r.height = r.el.offsetHeight
+    }
   }
 
   function go(i: number, keyed = true) {
     const was = rows[at]
-    if (was) { was.el.removeAttribute('data-highlighted'); was.el.removeAttribute('data-keyboard') }
+    if (was) {
+      was.el.removeAttribute('data-highlighted')
+      was.el.removeAttribute('data-keyboard')
+    }
     at = i
     const r = rows[i]
     if (!r) return host().removeAttribute('aria-activedescendant')
@@ -167,17 +189,27 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     const q = find!.value.trim().toLowerCase()
     const next: Row[] = []
     for (const r of all) {
-      const hit = !q || r.item.label.toLowerCase().includes(q) || !!r.item.hint?.toLowerCase().includes(q)
+      const hit =
+        !q || r.item.label.toLowerCase().includes(q) || !!r.item.hint?.toLowerCase().includes(q)
       r.el.hidden = !hit
       if (hit && !r.item.disabled) next.push(r)
     }
-    for (const g of list.querySelectorAll<HTMLElement>('[role="group"]')) g.hidden = !g.querySelector('[role="option"]:not([hidden])')
+    for (const g of list.querySelectorAll<HTMLElement>('[role="group"]'))
+      g.hidden = !g.querySelector('[role="option"]:not([hidden])')
     empty.hidden = next.length > 0
     rows[at]?.el.removeAttribute('data-highlighted')
     rows = next
     at = -1
     measure()
-    go(q ? 0 : Math.max(0, rows.findIndex(r => r.item.value === o.value)), false)
+    go(
+      q
+        ? 0
+        : Math.max(
+            0,
+            rows.findIndex((r) => r.item.value === o.value),
+          ),
+      false,
+    )
   }
 
   function mark() {
@@ -188,7 +220,10 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     frame = 0
     if (!box?.matches(':popover-open')) return
     const t = trigger.getBoundingClientRect()
-    box.style.setProperty('--_avail', `${Math.round(Math.min(MAX_HEIGHT, Math.max(t.top, win.innerHeight - t.bottom) - GAP - 8))}px`)
+    box.style.setProperty(
+      '--_avail',
+      `${Math.round(Math.min(MAX_HEIGHT, Math.max(t.top, win.innerHeight - t.bottom) - GAP - 8))}px`,
+    )
     place(box, control, 'bottom', 'start', GAP)
   }
   const follow = (e: Event) => {
@@ -204,9 +239,21 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     const b = box!
     mark()
     sheet = isSheet(trigger, o.presentation)
-    if (find) { find.value = ''; for (const r of all) r.el.hidden = false; empty.hidden = true }
-    rows = all.filter(r => !r.item.disabled)
-    const start = move === 'last' ? rows.length - 1 : move === 'first' ? 0 : Math.max(0, rows.findIndex(r => r.item.value === o.value))
+    if (find) {
+      find.value = ''
+      for (const r of all) r.el.hidden = false
+      empty.hidden = true
+    }
+    rows = all.filter((r) => !r.item.disabled)
+    const start =
+      move === 'last'
+        ? rows.length - 1
+        : move === 'first'
+          ? 0
+          : Math.max(
+              0,
+              rows.findIndex((r) => r.item.value === o.value),
+            )
     trigger.setAttribute('aria-expanded', 'true')
     control.setAttribute('data-hold', '')
     if (sheet) {
@@ -248,7 +295,10 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     shown = false
     const b = box!
     const r = rows[at]
-    if (r) { r.el.removeAttribute('data-highlighted'); r.el.removeAttribute('data-keyboard') }
+    if (r) {
+      r.el.removeAttribute('data-highlighted')
+      r.el.removeAttribute('data-keyboard')
+    }
     at = -1
     typed.clear()
     host().removeAttribute('aria-activedescendant')
@@ -279,7 +329,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
   }
 
   function type(key: string) {
-    const hit = typed.next(key, rows, at, r => r.item.label)
+    const hit = typed.next(key, rows, at, (r) => r.item.label)
     if (hit) go(rows.indexOf(hit))
   }
 
@@ -289,20 +339,38 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     const printable = key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey
     if (!shown) {
       if (locked()) return
-      if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') { e.preventDefault(); show() }
-      else if (key === 'Home' || key === 'End') { e.preventDefault(); show(key === 'Home' ? 'first' : 'last') }
-      else if (printable) { e.preventDefault(); show(); if (!find) type(key) }
+      if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') {
+        e.preventDefault()
+        show()
+      } else if (key === 'Home' || key === 'End') {
+        e.preventDefault()
+        show(key === 'Home' ? 'first' : 'last')
+      } else if (printable) {
+        e.preventDefault()
+        show()
+        if (!find) type(key)
+      }
       return
     }
-    if (key === 'Tab') { if (sheet) hide(true); else pick(at, 'keyboard'); return }
-    if (key === ' ' && typed.typing && !find) { e.preventDefault(); return type(key) }
+    if (key === 'Tab') {
+      if (sheet) hide(true)
+      else pick(at, 'keyboard')
+      return
+    }
+    if (key === ' ' && typed.typing && !find) {
+      e.preventDefault()
+      return type(key)
+    }
     if (!rows.length) return
     const m = listKey(key, at, rows.length, { page: 8, typing: !!find })
     if (m.handled) {
       e.preventDefault()
       return m.pick ? pick(at, 'keyboard') : go(m.to)
     }
-    if (printable && !find) { e.preventDefault(); type(key) }
+    if (printable && !find) {
+      e.preventDefault()
+      type(key)
+    }
   }
 
   // a press outside is the layer's; this is focus going elsewhere with no press, in the popover
@@ -332,7 +400,10 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
         box = undefined
       }
       if (shown) mark()
-      if (next.open !== undefined && next.open !== shown) { if (next.open) show(); else hide() }
+      if (next.open !== undefined && next.open !== shown) {
+        if (next.open) show()
+        else hide()
+      }
     },
     destroy() {
       hide()

@@ -15,7 +15,7 @@ const TABS: Tab[] = ['All', 'tech', 'energy', 'health', 'finance']
 const VIEW_KEY = 'watchlist:view'
 const blank: View = { query: '', favoritesOnly: false, sort: 'symbol' }
 function loadSaved(): Saved {
-  const views = Object.fromEntries(TABS.map(t => [t, blank])) as Record<Tab, View>
+  const views = Object.fromEntries(TABS.map((t) => [t, blank])) as Record<Tab, View>
   try {
     const saved = JSON.parse(localStorage.getItem(VIEW_KEY) ?? '{}')
     for (const t of TABS) views[t] = { ...blank, ...saved.views?.[t] }
@@ -38,29 +38,42 @@ export function App({ api }: { api: Api }) {
   const notes = state<Record<string, string>>({})
   const saves = state<Save[]>([])
 
-  watch(() => api, source => {
-    let alive = true
-    Promise.all([source.listStocks(), source.listHoldings()]).then(([list, held]) => {
-      if (!alive) return
-      live.value = Object.fromEntries(list.map(s => [s.id, { price: s.price, history: [s.price] }]))
-      favorites.value = Object.fromEntries(list.map(s => [s.id, s.favorite]))
-      holdings.value = held
-      stocks.value = list
-    })
-    const unsubscribe = source.subscribeQuotes(({ id, price }) => {
-      const now = live.value[id]
-      if (now) live.value = { ...live.value, [id]: { price, history: [...now.history, price].slice(-20) } }
-    })
-    return () => {
-      alive = false
-      unsubscribe()
-    }
-  })
+  watch(
+    () => api,
+    (source) => {
+      let alive = true
+      Promise.all([source.listStocks(), source.listHoldings()]).then(([list, held]) => {
+        if (!alive) return
+        live.value = Object.fromEntries(
+          list.map((s) => [s.id, { price: s.price, history: [s.price] }]),
+        )
+        favorites.value = Object.fromEntries(list.map((s) => [s.id, s.favorite]))
+        holdings.value = held
+        stocks.value = list
+      })
+      const unsubscribe = source.subscribeQuotes(({ id, price }) => {
+        const now = live.value[id]
+        if (now)
+          live.value = {
+            ...live.value,
+            [id]: { price, history: [...now.history, price].slice(-20) },
+          }
+      })
+      return () => {
+        alive = false
+        unsubscribe()
+      }
+    },
+  )
 
-  watch(() => ({ tab: tab.value, views: views.value }), v => localStorage.setItem(VIEW_KEY, JSON.stringify(v)))
+  watch(
+    () => ({ tab: tab.value, views: views.value }),
+    (v) => localStorage.setItem(VIEW_KEY, JSON.stringify(v)),
+  )
 
   const view = derived(() => views.value[tab.value])
-  const setView = (patch: Partial<View>) => (views.value = { ...views.value, [tab.value]: { ...view.value, ...patch } })
+  const setView = (patch: Partial<View>) =>
+    (views.value = { ...views.value, [tab.value]: { ...view.value, ...patch } })
   const favoritesOnly = derived(() => view.value.favoritesOnly)
   const sortBy = derived(() => view.value.sort)
 
@@ -68,7 +81,9 @@ export function App({ api }: { api: Api }) {
   // aborts nor hides its request. Each reads only its own tab's entries, so typing in one tab leaves the others be.
   // One search for whichever tab is shown.
   const term = derived(() => view.value.query.trim())
-  const current = resource(signal => (term.value ? api.search(term.value, signal).then(ids => new Set(ids)) : null))
+  const current = resource((signal) =>
+    term.value ? api.search(term.value, signal).then((ids) => new Set(ids)) : null,
+  )
   const search = derived(() => current)
   const selectTab = (t: Tab) => {
     tab.value = t
@@ -79,17 +94,24 @@ export function App({ api }: { api: Api }) {
     const t = tab.value
     const ids = search.value.value
     return (stocks.value ?? []).filter(
-      s => (t === 'All' || s.sector === t) && (!ids || ids.has(s.id)) && (!favoritesOnly.value || favorites.value[s.id]),
+      (s) =>
+        (t === 'All' || s.sector === t) &&
+        (!ids || ids.has(s.id)) &&
+        (!favoritesOnly.value || favorites.value[s.id]),
     )
   })
   // Only the Change sort reads prices, so quotes don't re-sort a Symbol list. Array#sort is stable: ties keep list order.
   const shown = derived(() => {
     const rows = filtered.value
     if (sortBy.value !== 'change') return rows
-    const change = new Map(rows.map(s => [s, (live.value[s.id].price - s.prevClose) / s.prevClose]))
+    const change = new Map(
+      rows.map((s) => [s, (live.value[s.id].price - s.prevClose) / s.prevClose]),
+    )
     return [...rows].sort((a, b) => change.get(b)! - change.get(a)!)
   })
-  const portfolio = derived(() => holdings.value.reduce((sum, h) => sum + h.qty * (live.get(h.id)?.price ?? 0), 0))
+  const portfolio = derived(() =>
+    holdings.value.reduce((sum, h) => sum + h.qty * (live.get(h.id)?.price ?? 0), 0),
+  )
 
   // Clicks per star, so a failed save only reverts its star if nothing clicked it since.
   const clicks: Record<string, number> = {}
@@ -113,7 +135,7 @@ export function App({ api }: { api: Api }) {
     openId.value = null
   }
   // A keyed list of at most one: opening another stock mounts a fresh panel (its own load, draft and focus).
-  const opened = derived(() => (stocks.value ?? []).filter(s => s.id === openId.value))
+  const opened = derived(() => (stocks.value ?? []).filter((s) => s.id === openId.value))
 
   const save = (id: string, text: string) => {
     saves.value = [...saves.value, { id, prev: notes.value[id] ?? '' }]
@@ -134,16 +156,26 @@ export function App({ api }: { api: Api }) {
         <div>
           <Header count={shown.value.length} portfolio={portfolio.value} />
           <nav>
-            {TABS.map(t => (
-              <button aria-pressed={t === tab.value} onClick={() => selectTab(t)}>{t}</button>
+            {TABS.map((t) => (
+              <button aria-pressed={t === tab.value} onClick={() => selectTab(t)}>
+                {t}
+              </button>
             ))}
           </nav>
           <Toolbar view={view.value} onView={setView} />
           <p role="status">{search.value.pending ? 'Searching…' : ''}</p>
-          {!search.value.pending && search.value.error !== undefined && <p role="alert">Search failed</p>}
+          {!search.value.pending && search.value.error !== undefined && (
+            <p role="alert">Search failed</p>
+          )}
           {alert.value && <p role="alert">{alert.value}</p>}
-          <StockList stocks={shown.value} live={live} favorites={favorites} onToggle={toggle} onDetails={openDetails} />
-          {opened.value.map(s => (
+          <StockList
+            stocks={shown.value}
+            live={live}
+            favorites={favorites}
+            onToggle={toggle}
+            onDetails={openDetails}
+          />
+          {opened.value.map((s) => (
             <DetailsPanel
               key={s.id}
               api={api}

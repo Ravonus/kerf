@@ -30,15 +30,27 @@ export type SkeletonBox = { style: string; children: (SkeletonPart | SkeletonBox
 
 const LINE = 'calc(var(--warp-text-body-leading, 1.55) * 1em)'
 const BAR_MARGIN = `margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)`
-const column = (gap: string, children: SkeletonBox['children'], extra = ''): SkeletonBox => ({ style: `display:flex;flex-direction:column;gap:${gap}${extra}`, children })
-const bar = (width: string): SkeletonPart => ({ shape: 'text', style: `inline-size:${width};block-size:0.7em;${BAR_MARGIN}` })
+const column = (gap: string, children: SkeletonBox['children'], extra = ''): SkeletonBox => ({
+  style: `display:flex;flex-direction:column;gap:${gap}${extra}`,
+  children,
+})
+const bar = (width: string): SkeletonPart => ({
+  shape: 'text',
+  style: `inline-size:${width};block-size:0.7em;${BAR_MARGIN}`,
+})
 
 /** n body lines; the last of several is 60%, as warp's `Skeleton lines`. */
 function lines(n: number, widths?: string[]): SkeletonBox {
-  return column('0', Array.from({ length: Math.max(1, n) }, (_, i) => bar(widths?.[i] ?? (n > 1 && i === n - 1 ? '60%' : '100%'))))
+  return column(
+    '0',
+    Array.from({ length: Math.max(1, n) }, (_, i) =>
+      bar(widths?.[i] ?? (n > 1 && i === n - 1 ? '60%' : '100%')),
+    ),
+  )
 }
 
-const ratio = (r: string | number) => (typeof r === 'number' ? String(r) : r.replace(/\s*[:/]\s*/, ' / '))
+const ratio = (r: string | number) =>
+  typeof r === 'number' ? String(r) : r.replace(/\s*[:/]\s*/, ' / ')
 
 /** The skeleton for `spec`, as data a binding renders. */
 export function skeletonShape(spec: ShapeSpec = {}): SkeletonBox {
@@ -47,10 +59,19 @@ export function skeletonShape(spec: ShapeSpec = {}): SkeletonBox {
     case 'text':
       return lines(spec.lines ?? 3)
     case 'media':
-      return column('0', [{ shape: 'block', style: `inline-size:100%;block-size:auto;aspect-ratio:${ratio(spec.media ?? '16/9')}` }])
+      return column('0', [
+        {
+          shape: 'block',
+          style: `inline-size:100%;block-size:auto;aspect-ratio:${ratio(spec.media ?? '16/9')}`,
+        },
+      ])
     case 'card': {
       const children: SkeletonBox['children'] = []
-      if (spec.media !== undefined) children.push({ shape: 'block', style: `inline-size:100%;block-size:auto;aspect-ratio:${ratio(spec.media)}` })
+      if (spec.media !== undefined)
+        children.push({
+          shape: 'block',
+          style: `inline-size:100%;block-size:auto;aspect-ratio:${ratio(spec.media)}`,
+        })
       children.push(lines(1, ['50%']), lines(spec.lines ?? 2))
       return column('12px', children)
     }
@@ -58,7 +79,14 @@ export function skeletonShape(spec: ShapeSpec = {}): SkeletonBox {
       const row = (): SkeletonBox => ({
         style: 'display:flex;align-items:center;gap:12px;padding-block:8px',
         children: [
-          ...(spec.avatar === false ? [] : [{ shape: 'circle', style: 'inline-size:36px;block-size:36px;flex:none' } as SkeletonPart]),
+          ...(spec.avatar === false
+            ? []
+            : [
+                {
+                  shape: 'circle',
+                  style: 'inline-size:36px;block-size:36px;flex:none',
+                } as SkeletonPart,
+              ]),
           { ...lines(2, ['40%', '70%']), style: `${lines(2).style};flex:1;min-inline-size:0` },
         ],
       })

@@ -12,11 +12,16 @@ type Product = (typeof PRODUCTS)[number]
 type Cart = Record<string, number>
 
 function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) {
-  const add = () => cart.set(d => { d[product.id] = (d[product.id] ?? 0) + 1 })
+  const add = () =>
+    cart.set((d) => {
+      d[product.id] = (d[product.id] ?? 0) + 1
+    })
   return (
     <p>
       {product.name} <strong>${product.price}</strong>
-      <Button size="sm" onClick={add}>Add</Button>
+      <Button size="sm" onClick={add}>
+        Add
+      </Button>
       <Badge count>{cart.get(product.id) ?? 0}</Badge>
     </p>
   )
@@ -26,7 +31,7 @@ export default function Shop() {
   const cart = state<Cart>({})
   return (
     <Card title="The shop">
-      {PRODUCTS.map(p => (
+      {PRODUCTS.map((p) => (
         <ProductRow key={p.id} product={p} cart={cart} />
       ))}
     </Card>

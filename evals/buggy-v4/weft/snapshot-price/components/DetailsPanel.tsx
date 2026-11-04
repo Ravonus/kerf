@@ -22,8 +22,10 @@ export function DetailsPanel({ api, stock, price, note, canUndo, onSave, onUndo,
   onMount(() => notes.focus())
 
   return (
-    <section aria-label="Details" onKeyDown={e => e.key === 'Escape' && onClose()}>
-      <h2>{stock.symbol} · {stock.name}</h2>
+    <section aria-label="Details" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
+      <h2>
+        {stock.symbol} · {stock.name}
+      </h2>
       <p data-testid="detail-price">{money(shownPrice.value)}</p>
       {details.pending ? (
         <p>Loading…</p>
@@ -36,10 +38,17 @@ export function DetailsPanel({ api, stock, price, note, canUndo, onSave, onUndo,
         <p>{details.value?.description}</p>
       )}
       <label>
-        Notes <textarea ref={notes} value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} />
+        Notes{' '}
+        <textarea
+          ref={notes}
+          value={draft.value}
+          onInput={(e) => (draft.value = e.currentTarget.value)}
+        />
       </label>
       <button onClick={() => onSave(stock.id, draft.value)}>Save</button>
-      <button disabled={!canUndo} onClick={onUndo}>Undo</button>
+      <button disabled={!canUndo} onClick={onUndo}>
+        Undo
+      </button>
     </section>
   )
 }

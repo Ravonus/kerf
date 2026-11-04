@@ -13,7 +13,9 @@ export async function devUrl(root, given) {
   if (given) return given.replace(/\/$/, '')
   const file = join(root, '.weft', 'dev.json')
   if (existsSync(file)) {
-    try { return JSON.parse(readFileSync(file, 'utf8')).url.replace(/\/$/, '') } catch {}
+    try {
+      return JSON.parse(readFileSync(file, 'utf8')).url.replace(/\/$/, '')
+    } catch {}
   }
   const { config } = await loadConfig(root).catch(() => ({ config: {} }))
   return (config.environments?.dev?.url ?? 'http://localhost:5173').replace(/\/$/, '')
@@ -23,8 +25,15 @@ const fail = (code, message, extra) => Object.assign(new Error(message), { code,
 
 async function request(url, init) {
   try {
-    const res = await fetch(`${url}/__weft/agent`, { ...init, headers: { 'x-weft-agent': '1', 'content-type': 'application/json' } })
-    if (res.status === 404) throw fail('E_NO_BRIDGE', `${url} is not a weft dev server (no /__weft/agent): serve the app with the weft() Vite plugin`)
+    const res = await fetch(`${url}/__weft/agent`, {
+      ...init,
+      headers: { 'x-weft-agent': '1', 'content-type': 'application/json' },
+    })
+    if (res.status === 404)
+      throw fail(
+        'E_NO_BRIDGE',
+        `${url} is not a weft dev server (no /__weft/agent): serve the app with the weft() Vite plugin`,
+      )
     return await res.json()
   } catch (e) {
     if (e.code) throw e
@@ -35,7 +44,10 @@ async function request(url, init) {
 /** Run one command in a tab (the focused one, else the most recent). */
 export async function call(root, cmd, args = {}, { url, tab, timeout } = {}) {
   const base = await devUrl(root, url)
-  const out = await request(base, { method: 'POST', body: JSON.stringify({ cmd, args, tab, timeout }) })
+  const out = await request(base, {
+    method: 'POST',
+    body: JSON.stringify({ cmd, args, tab, timeout }),
+  })
   if (!out.ok) throw fail(out.code ?? 'E_PAGE', out.error, { tabs: out.tabs })
   return out.result
 }
@@ -53,37 +65,70 @@ export async function waitForTab(root, { url, ms = 15_000 } = {}) {
     try {
       const t = await tabs(root, { url })
       if (t.tabs.length) return t
-    } catch (e) { if (Date.now() > until) throw e }
+    } catch (e) {
+      if (Date.now() > until) throw e
+    }
     if (Date.now() > until) throw fail('E_NO_TAB', 'no tab connected in time')
-    await new Promise(r => { setTimeout(r, 150) })
+    await new Promise((r) => {
+      setTimeout(r, 150)
+    })
   }
 }
 
 // ---- a host page when the agent has no browser ------------------------------------------------------------------
 
 const chromes = {
-  darwin: ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/Applications/Chromium.app/Contents/MacOS/Chromium', '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge'],
-  linux: ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium'],
-  win32: ['C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'],
+  darwin: [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  ],
+  linux: [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/snap/bin/chromium',
+  ],
+  win32: [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  ],
 }
 
 export function findChrome() {
   const env = process.env.WEFT_CHROME ?? process.env.CHROME_PATH
   if (env && existsSync(env)) return env
-  return (chromes[process.platform] ?? []).find(p => existsSync(p)) ?? null
+  return (chromes[process.platform] ?? []).find((p) => existsSync(p)) ?? null
 }
 
-const stateFile = root => join(root, '.weft', 'browser', 'chrome.json')
+const stateFile = (root) => join(root, '.weft', 'browser', 'chrome.json')
 
 /** Start a headless Chrome on `route` (a plain page; @weft-js/core/agent in it connects back to the dev server). */
 export async function launch(root, route = '/', { url, headed = false } = {}) {
   const exe = findChrome()
-  if (!exe) throw fail('E_NO_CHROME', 'no Chrome or Chromium found; open the app in your own browser instead, or set WEFT_CHROME')
+  if (!exe)
+    throw fail(
+      'E_NO_CHROME',
+      'no Chrome or Chromium found; open the app in your own browser instead, or set WEFT_CHROME',
+    )
   close(root)
   const base = await devUrl(root, url)
   const profile = join(root, '.weft', 'browser', 'profile')
   mkdirSync(profile, { recursive: true })
-  const args = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--no-first-run', '--no-default-browser-check', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', ...(headed ? [] : ['--headless=new']), ...(process.getuid?.() === 0 ? ['--no-sandbox'] : []) /* Chrome won't start as root with its sandbox: a container, CI */, `${base}${route.startsWith('/') ? route : `/${route}`}`]
+  const args = [
+    `--user-data-dir=${profile}`,
+    '--remote-debugging-port=0',
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-background-timer-throttling',
+    '--disable-renderer-backgrounding',
+    ...(headed ? [] : ['--headless=new']),
+    ...(process.getuid?.() === 0
+      ? ['--no-sandbox']
+      : []) /* Chrome won't start as root with its sandbox: a container, CI */,
+    `${base}${route.startsWith('/') ? route : `/${route}`}`,
+  ]
   const child = spawn(exe, args, { detached: true, stdio: 'ignore' })
   child.unref()
   writeFileSync(stateFile(root), JSON.stringify({ pid: child.pid, profile, exe }))
@@ -95,7 +140,9 @@ export function close(root) {
   const file = stateFile(root)
   if (!existsSync(file)) return { closed: false }
   const { pid } = JSON.parse(readFileSync(file, 'utf8'))
-  try { process.kill(pid) } catch {}
+  try {
+    process.kill(pid)
+  } catch {}
   rmSync(file, { force: true })
   return { closed: true, pid }
 }
@@ -103,16 +150,28 @@ export function close(root) {
 /** A PNG of the launched Chrome's page (DevTools protocol). An agent's own browser takes its own screenshots. */
 export async function screenshot(root, out) {
   const file = stateFile(root)
-  if (!existsSync(file)) throw fail('E_NO_CHROME', 'screenshot needs `weft browser launch`; in your own browser, use its screenshot tool')
+  if (!existsSync(file))
+    throw fail(
+      'E_NO_CHROME',
+      'screenshot needs `weft browser launch`; in your own browser, use its screenshot tool',
+    )
   const { profile } = JSON.parse(readFileSync(file, 'utf8'))
   const [port] = readFileSync(join(profile, 'DevToolsActivePort'), 'utf8').split('\n')
   const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json()
-  const page = targets.find(t => t.type === 'page')
+  const page = targets.find((t) => t.type === 'page')
   if (!page) throw fail('E_NO_TAB', 'the launched Chrome has no page')
   const ws = new WebSocket(page.webSocketDebuggerUrl)
-  await new Promise((ok, no) => { ws.onopen = ok; ws.onerror = () => no(fail('E_CDP', 'could not reach the page over the DevTools protocol')) })
+  await new Promise((ok, no) => {
+    ws.onopen = ok
+    ws.onerror = () => no(fail('E_CDP', 'could not reach the page over the DevTools protocol'))
+  })
   const data = await new Promise((ok, no) => {
-    ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id !== 1) return; if (m.error) no(fail('E_CDP', m.error.message)); else ok(m.result.data) }
+    ws.onmessage = (e) => {
+      const m = JSON.parse(e.data)
+      if (m.id !== 1) return
+      if (m.error) no(fail('E_CDP', m.error.message))
+      else ok(m.result.data)
+    }
     ws.send(JSON.stringify({ id: 1, method: 'Page.captureScreenshot', params: { format: 'png' } }))
   })
   ws.close()

@@ -16,9 +16,13 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = join(here, '..')
 const [step, dirArg] = process.argv.slice(2)
-if (!['prepare', 'verify'].includes(step) || !dirArg) { console.error('usage: phase3-exit.mjs prepare|verify <dir>'); process.exit(1) }
+if (!['prepare', 'verify'].includes(step) || !dirArg) {
+  console.error('usage: phase3-exit.mjs prepare|verify <dir>')
+  process.exit(1)
+}
 const dir = resolve(dirArg)
-const run = (cmd, args, cwd = dir) => spawnSync(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 1 << 26 })
+const run = (cmd, args, cwd = dir) =>
+  spawnSync(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 1 << 26 })
 const must = (cmd, args, cwd) => {
   const r = run(cmd, args, cwd)
   if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${r.stdout}\n${r.stderr}`)
@@ -53,10 +57,28 @@ The database is SQLite through Drizzle; add what you need to the schema and gene
 only made-up test accounts on localhost.`
 
 if (step === 'prepare') {
-  must('node', [join(repo, 'packages/create-weft/bin/create-weft.mjs'), dir, '--db', 'sqlite', '--auth', '--ui', 'warp', '--name', 'todos'], repo)
+  must(
+    'node',
+    [
+      join(repo, 'packages/create-weft/bin/create-weft.mjs'),
+      dir,
+      '--db',
+      'sqlite',
+      '--auth',
+      '--ui',
+      'warp',
+      '--name',
+      'todos',
+    ],
+    repo,
+  )
   const file = join(dir, 'package.json')
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
+  for (const deps of [pkg.dependencies, pkg.devDependencies])
+    for (const name of Object.keys(deps ?? {}))
+      if (name === '@weft-js/core' || name.startsWith('@weft-js/'))
+        deps[name] =
+          `file:${join(repo, 'packages', name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   must('npm', ['install', '--no-audit', '--no-fund'])
   must('npx', ['weft', 'db', 'generate'])
@@ -67,31 +89,74 @@ if (step === 'prepare') {
 
 const parts = {}
 const check = JSON.parse(run('npx', ['weft', 'check', '--json']).stdout || '{}')
-parts.check = { ok: check.ok === true, summary: check.summary, diagnostics: (check.diagnostics ?? []).map(d => `${d.code} ${d.file}:${d.line ?? ''}`) }
+parts.check = {
+  ok: check.ok === true,
+  summary: check.summary,
+  diagnostics: (check.diagnostics ?? []).map((d) => `${d.code} ${d.file}:${d.line ?? ''}`),
+}
 
 // Linked packages keep their own node_modules: types resolve to the app's copy, as they do once published.
 const shared = ['drizzle-orm', 'drizzle-zod', 'zod', 'better-auth']
-const paths = Object.fromEntries(shared.flatMap(p => [[p, [`./node_modules/${p}`]], [`${p}/*`, [`./node_modules/${p}/*`]]]))
-writeFileSync(join(dir, 'tsconfig.check.json'), JSON.stringify({ extends: './tsconfig.json', compilerOptions: { preserveSymlinks: true, paths }, include: ['src'] }, null, 2))
-const tsc = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), ['--noEmit', '-p', 'tsconfig.check.json'])
-const errors = tsc.stdout.split('\n').filter(l => /error TS/.test(l))
-const own = errors.filter(l => l.startsWith('src/'))
+const paths = Object.fromEntries(
+  shared.flatMap((p) => [
+    [p, [`./node_modules/${p}`]],
+    [`${p}/*`, [`./node_modules/${p}/*`]],
+  ]),
+)
+writeFileSync(
+  join(dir, 'tsconfig.check.json'),
+  JSON.stringify(
+    {
+      extends: './tsconfig.json',
+      compilerOptions: { preserveSymlinks: true, paths },
+      include: ['src'],
+    },
+    null,
+    2,
+  ),
+)
+const tsc = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), [
+  '--noEmit',
+  '-p',
+  'tsconfig.check.json',
+])
+const errors = tsc.stdout.split('\n').filter((l) => /error TS/.test(l))
+const own = errors.filter((l) => l.startsWith('src/'))
 parts.types = { ok: !own.length, app: own, packages: errors.length - own.length }
 
 const json = join(dir, '.weft-matrix.json')
-const matrix = run('node', [join(repo, 'packages/start/scripts/runtime-matrix.mjs'), dir, '--e2e', join(here, 'phase3-exit.e2e.mjs'), '--json', json], repo)
+const matrix = run(
+  'node',
+  [
+    join(repo, 'packages/start/scripts/runtime-matrix.mjs'),
+    dir,
+    '--e2e',
+    join(here, 'phase3-exit.e2e.mjs'),
+    '--json',
+    json,
+  ],
+  repo,
+)
 const runtimes = existsSync(json) ? JSON.parse(readFileSync(json, 'utf8')).results : []
 parts.matrix = { ok: matrix.status === 0, runtimes }
 if (matrix.status !== 0) console.error(matrix.stdout.slice(-4000), matrix.stderr.slice(-2000))
 
 const schema = readFileSync(join(dir, 'src/db/schema.ts'), 'utf8')
-const migrations = readdirSync(join(dir, 'drizzle')).filter(f => f.endsWith('.sql'))
-const ok = Object.values(parts).every(p => p.ok)
-const result = { date: new Date().toISOString().slice(0, 10), ok, parts, migrations, tables: [...schema.matchAll(/sqliteTable\('(\w+)'/g)].map(m => m[1]) }
+const migrations = readdirSync(join(dir, 'drizzle')).filter((f) => f.endsWith('.sql'))
+const ok = Object.values(parts).every((p) => p.ok)
+const result = {
+  date: new Date().toISOString().slice(0, 10),
+  ok,
+  parts,
+  migrations,
+  tables: [...schema.matchAll(/sqliteTable\('(\w+)'/g)].map((m) => m[1]),
+}
 mkdirSync(join(here, 'results'), { recursive: true })
 writeFileSync(join(here, 'results/phase3-exit.json'), JSON.stringify(result, null, 2) + '\n')
-const row = r => `| ${r.runtime} | ${r.ok ? 'pass' : 'FAIL'} | ${r.checks?.length ?? ''} |`
-writeFileSync(join(here, 'results/phase3-exit.md'), `# Phase 3 exit check
+const row = (r) => `| ${r.runtime} | ${r.ok ? 'pass' : 'FAIL'} | ${r.checks?.length ?? ''} |`
+writeFileSync(
+  join(here, 'results/phase3-exit.md'),
+  `# Phase 3 exit check
 
 ${result.date}: **${ok ? 'PASS' : 'FAIL'}**. \`create-weft --db sqlite --auth --ui warp\`, extended by a fresh agent with todo
 sharing from the brief in \`evals/phase3-exit.mjs\`, then the hidden e2e (\`evals/phase3-exit.e2e.mjs\`) per runtime.
@@ -103,6 +168,10 @@ ${runtimes.map(row).join('\n')}
 - \`weft check\`: ${parts.check.ok ? 'no errors' : 'errors'} (${JSON.stringify(parts.check.summary)}).
 - \`tsc\` on the app: ${own.length} error(s) in \`src/\`, ${parts.types.packages} in linked packages.
 - Tables: ${result.tables.join(', ')}. Migrations: ${migrations.join(', ')}.
-`)
-console.log(ok ? 'PASS' : 'FAIL', JSON.stringify({ check: parts.check.ok, types: parts.types.ok, matrix: parts.matrix.ok }))
+`,
+)
+console.log(
+  ok ? 'PASS' : 'FAIL',
+  JSON.stringify({ check: parts.check.ok, types: parts.types.ok, matrix: parts.matrix.ok }),
+)
 process.exit(ok ? 0 : 1)

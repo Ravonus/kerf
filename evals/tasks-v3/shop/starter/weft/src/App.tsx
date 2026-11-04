@@ -12,11 +12,18 @@ export function App({ api }: { api: Api }) {
   const cart = state<Cart>({})
   const tab = state<Tab>('products')
 
-  watch(() => api, source => {
-    let live = true
-    source.listProducts().then(list => { if (live) products.value = list })
-    return () => { live = false }
-  })
+  watch(
+    () => api,
+    (source) => {
+      let live = true
+      source.listProducts().then((list) => {
+        if (live) products.value = list
+      })
+      return () => {
+        live = false
+      }
+    },
+  )
 
   const add = (id: string) => (cart.value = { ...cart.value, [id]: (cart.value[id] ?? 0) + 1 })
   const change = (id: string, delta: number) => {
@@ -29,7 +36,7 @@ export function App({ api }: { api: Api }) {
 
   return (
     <div>
-      <Header tab={tab.value} count={count.value} onTab={t => (tab.value = t)} />
+      <Header tab={tab.value} count={count.value} onTab={(t) => (tab.value = t)} />
       {!products.value ? (
         <p>Loading…</p>
       ) : tab.value === 'products' ? (

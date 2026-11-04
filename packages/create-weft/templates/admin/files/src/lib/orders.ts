@@ -21,8 +21,8 @@ export const defaultView: OrderView = { page: 1, sort: 'created', dir: 'desc', s
 export function viewOf(url: string): OrderView {
   const asked = new URL(url).searchParams
   const page = Number(asked.get('page'))
-  const sort = sortKeys.find(key => key === asked.get('sort'))
-  const status = statuses.find(key => key === asked.get('status'))
+  const sort = sortKeys.find((key) => key === asked.get('sort'))
+  const status = statuses.find((key) => key === asked.get('status'))
   return {
     page: Number.isSafeInteger(page) && page > 0 && page < 1e6 ? page : 1,
     sort: sort ?? defaultView.sort,
@@ -36,14 +36,21 @@ export function viewHref(view: OrderView) {
   const query = new URLSearchParams()
   if (view.status) query.set('status', view.status)
   if (view.q) query.set('q', view.q)
-  if (view.sort !== defaultView.sort || view.dir !== defaultView.dir) { query.set('sort', view.sort); query.set('dir', view.dir) }
+  if (view.sort !== defaultView.sort || view.dir !== defaultView.dir) {
+    query.set('sort', view.sort)
+    query.set('dir', view.dir)
+  }
   if (view.page > 1) query.set('page', String(view.page))
   const search = query.toString()
   return search ? `/admin/orders?${search}` : '/admin/orders'
 }
 
 const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
-const wholeDollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const wholeDollars = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+})
 const day = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' })
 
 export const money = (cents: number) => dollars.format(cents / 100)

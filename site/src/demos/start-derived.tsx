@@ -8,7 +8,9 @@ export default function Order() {
   const label = derived(() => (cups.value === 1 ? '1 cup' : `${cups.value} cups`))
   return (
     <Card title="Your order">
-      <p>{label.value}, ${total.value}</p>
+      <p>
+        {label.value}, ${total.value}
+      </p>
       <Button onClick={() => cups.value++}>One more</Button>{' '}
       <Button
         emphasis="ghost"

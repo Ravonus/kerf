@@ -3,8 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { mount, tick } from '#adapter'
 import { Stopwatch } from './solution'
 
-beforeEach(() => { vi.useFakeTimers() })
-afterEach(() => { vi.useRealTimers() })
+beforeEach(() => {
+  vi.useFakeTimers()
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 const setup = (props: { hidden?: boolean } = {}) => {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
@@ -13,8 +17,9 @@ const setup = (props: { hidden?: boolean } = {}) => {
 }
 const elapsed = () => screen.getByTestId('elapsed').textContent?.trim()
 const btn = (name: string) => screen.getByRole('button', { name })
-const laps = () => screen.queryAllByRole('listitem').map(li => li.textContent?.trim())
-const speed = (user: ReturnType<typeof userEvent.setup>, v: string) => user.selectOptions(screen.getByLabelText('Speed'), v)
+const laps = () => screen.queryAllByRole('listitem').map((li) => li.textContent?.trim())
+const speed = (user: ReturnType<typeof userEvent.setup>, v: string) =>
+  user.selectOptions(screen.getByLabelText('Speed'), v)
 
 test('still counts at normal speed', async () => {
   const { user } = setup()

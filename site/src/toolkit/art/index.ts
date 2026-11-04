@@ -29,10 +29,74 @@ import { meta as filings } from './filings'
 import { meta as sandTable } from './sand-table'
 import type { Kind, Meta } from './shared'
 
-export const ROOMS: { kind: Kind; title: string; intro: string; pieces: [slug: string, meta: Meta][] }[] = [
-  { kind: 'field', title: 'Dither fields', intro: 'Tones and a few inks. The picture is whatever the threshold leaves behind.', pieces: [['warp-beam', warpBeam], ['tide-table', tideTable], ['moire-loom', moireLoom], ['turing-cloth', turingCloth], ['survey', survey], ['woven-word', wovenWord], ['darkroom', darkroom], ['ramp-wall', rampWall]] },
-  { kind: 'generative', title: 'Generative', intro: 'Rules, a seed and hairlines. Each of these could be printed and hung.', pieces: [['shuttle', shuttle], ['curl-threads', curlThreads], ['truchet-cloth', truchetCloth], ['bobbin', bobbin], ['long-thread', longThread], ['selvedge-plan', selvedgePlan], ['ridgeline', ridgeline], ['draft', draft]] },
-  { kind: 'shader', title: 'Shaders on whole cells', intro: 'Per-pixel work, at a resolution small enough to stay cheap and big enough to read as ink.', pieces: [['plasma-ink', plasmaInk], ['bobbin-sdf', bobbinSdf], ['caustics', caustics], ['bad-signal', badSignal]] },
-  { kind: 'data', title: 'Data as cloth', intro: 'Figures you could read in a table, and can: each piece carries one for screen readers.', pieces: [['commit-weave', commitWeave], ['latency-rain', latencyRain], ['bundle-tartan', bundleTartan], ['token-spectrum', tokenSpectrum], ['socket-tide', socketTide]] },
-  { kind: 'pointer', title: 'For your hand', intro: 'Nothing happens until you touch them, and they cost nothing until you do.', pieces: [['pluck', pluck], ['filings', filings], ['sand-table', sandTable]] },
+export const ROOMS: {
+  kind: Kind
+  title: string
+  intro: string
+  pieces: [slug: string, meta: Meta][]
+}[] = [
+  {
+    kind: 'field',
+    title: 'Dither fields',
+    intro: 'Tones and a few inks. The picture is whatever the threshold leaves behind.',
+    pieces: [
+      ['warp-beam', warpBeam],
+      ['tide-table', tideTable],
+      ['moire-loom', moireLoom],
+      ['turing-cloth', turingCloth],
+      ['survey', survey],
+      ['woven-word', wovenWord],
+      ['darkroom', darkroom],
+      ['ramp-wall', rampWall],
+    ],
+  },
+  {
+    kind: 'generative',
+    title: 'Generative',
+    intro: 'Rules, a seed and hairlines. Each of these could be printed and hung.',
+    pieces: [
+      ['shuttle', shuttle],
+      ['curl-threads', curlThreads],
+      ['truchet-cloth', truchetCloth],
+      ['bobbin', bobbin],
+      ['long-thread', longThread],
+      ['selvedge-plan', selvedgePlan],
+      ['ridgeline', ridgeline],
+      ['draft', draft],
+    ],
+  },
+  {
+    kind: 'shader',
+    title: 'Shaders on whole cells',
+    intro:
+      'Per-pixel work, at a resolution small enough to stay cheap and big enough to read as ink.',
+    pieces: [
+      ['plasma-ink', plasmaInk],
+      ['bobbin-sdf', bobbinSdf],
+      ['caustics', caustics],
+      ['bad-signal', badSignal],
+    ],
+  },
+  {
+    kind: 'data',
+    title: 'Data as cloth',
+    intro: 'Figures you could read in a table, and can: each piece carries one for screen readers.',
+    pieces: [
+      ['commit-weave', commitWeave],
+      ['latency-rain', latencyRain],
+      ['bundle-tartan', bundleTartan],
+      ['token-spectrum', tokenSpectrum],
+      ['socket-tide', socketTide],
+    ],
+  },
+  {
+    kind: 'pointer',
+    title: 'For your hand',
+    intro: 'Nothing happens until you touch them, and they cost nothing until you do.',
+    pieces: [
+      ['pluck', pluck],
+      ['filings', filings],
+      ['sand-table', sandTable],
+    ],
+  },
 ]

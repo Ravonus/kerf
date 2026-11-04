@@ -3,4 +3,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import weft from '@weft-js/core/vite'
 
-export default { root: join(dirname(fileURLToPath(import.meta.url)), '..'), plugins: [weft()], logLevel: 'warn' }
+export default {
+  root: join(dirname(fileURLToPath(import.meta.url)), '..'),
+  plugins: [weft()],
+  logLevel: 'warn',
+}

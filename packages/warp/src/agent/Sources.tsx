@@ -10,7 +10,7 @@ export function Sources({ items, base }: { items: AgentSource[]; base: string })
   const rows = derived(() => items.map((s, i) => ({ s, n: i + 1, id: `${base}-s${i + 1}` })))
   return (
     <div data-scope="sources" role="group" aria-label="Sources">
-      {rows.value.map(r => (
+      {rows.value.map((r) => (
         <a key={r.n} id={r.id} href={r.s.url ?? `#${r.id}`} data-sweep="">
           <Sweep />
           <i>{r.n}</i>

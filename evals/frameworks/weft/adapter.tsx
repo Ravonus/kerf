@@ -6,7 +6,12 @@ import { vi } from 'vitest'
 export const framework = 'weft'
 
 // `commits` counts weft's reactive re-runs (derived/watch/JSX holes), the closest analogue of React commits.
-export const stats = { get commits(): number | null { return graph.runs }, ms: 0 }
+export const stats = {
+  get commits(): number | null {
+    return graph.runs
+  },
+  ms: 0,
+}
 
 export function mount<P extends object>(Comp: (props: P) => any, props: P) {
   const current = state<P>({ ...props })

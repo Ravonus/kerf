@@ -3,22 +3,34 @@
 
 import { availableParallelism, cpus, loadavg } from 'node:os'
 
-const ticks = () => cpus().reduce((t, { times: c }) => ({ busy: t.busy + c.user + c.nice + c.sys, all: t.all + c.user + c.nice + c.sys + c.idle }), { busy: 0, all: 0 })
+const ticks = () =>
+  cpus().reduce(
+    (t, { times: c }) => ({
+      busy: t.busy + c.user + c.nice + c.sys,
+      all: t.all + c.user + c.nice + c.sys + c.idle,
+    }),
+    { busy: 0, all: 0 },
+  )
 let last = ticks()
 
 /** The share of the CPU in use, 0 to 1: over the next `ms`, blocking, or with none since the last call. For Windows, where loadavg is always 0. */
 export function cpuBusy(ms) {
-  if (ms) { last = ticks(); Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms) }
-  const now = ticks(), share = (now.busy - last.busy) / ((now.all - last.all) || 1)
+  if (ms) {
+    last = ticks()
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+  }
+  const now = ticks(),
+    share = (now.busy - last.busy) / (now.all - last.all || 1)
   last = now
   return share
 }
 
 export function jobs(argv = process.argv, env = process.env) {
-  const given = argv.find(a => a.startsWith('--jobs='))?.slice(7) ?? env.WEFT_JOBS
+  const given = argv.find((a) => a.startsWith('--jobs='))?.slice(7) ?? env.WEFT_JOBS
   if (given !== undefined && given !== '') {
     const n = Number(given)
-    if (!Number.isInteger(n) || n < 1) throw new Error(`--jobs and WEFT_JOBS take a whole number from 1 up, not \`${given}\``)
+    if (!Number.isInteger(n) || n < 1)
+      throw new Error(`--jobs and WEFT_JOBS take a whole number from 1 up, not \`${given}\``)
     return n
   }
   const inUse = process.platform === 'win32' ? cpuBusy(500) * availableParallelism() : loadavg()[0]

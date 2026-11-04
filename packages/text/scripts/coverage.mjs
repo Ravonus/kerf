@@ -50,24 +50,63 @@ const browser = await chromium.launch({ channel: 'chrome', headless: true })
 for (const engine of engines) {
   const dir = path.join(root, 'gen', engine)
   const plain = await esbuild.build({
-    stdin: { contents: driver, resolveDir: dir, loader: 'ts' }, bundle: true, format: 'iife', write: false,
-    minify: false, keepNames: false, target: 'es2020', logLevel: 'error',
-    plugins: [{ name: 'js-to-ts', setup(b) { b.onResolve({ filter: /^\.\.?\/.*\.js$/ }, a => { const t = path.join(a.resolveDir, a.path.replace(/\.js$/, '.ts')); return fs.existsSync(t) ? { path: t } : undefined }) } }],
+    stdin: { contents: driver, resolveDir: dir, loader: 'ts' },
+    bundle: true,
+    format: 'iife',
+    write: false,
+    minify: false,
+    keepNames: false,
+    target: 'es2020',
+    logLevel: 'error',
+    plugins: [
+      {
+        name: 'js-to-ts',
+        setup(b) {
+          b.onResolve({ filter: /^\.\.?\/.*\.js$/ }, (a) => {
+            const t = path.join(a.resolveDir, a.path.replace(/\.js$/, '.ts'))
+            return fs.existsSync(t) ? { path: t } : undefined
+          })
+        },
+      },
+    ],
   })
   const code = plain.outputFiles[0].text
-  const ctx = await browser.newContext({ userAgent: engine === 'webkit' ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Safari/605.1.15' : engine === 'gecko' ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:157.0) Gecko/20100101 Firefox/157.0' : undefined })
+  const ctx = await browser.newContext({
+    userAgent:
+      engine === 'webkit'
+        ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Safari/605.1.15'
+        : engine === 'gecko'
+          ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:157.0) Gecko/20100101 Firefox/157.0'
+          : undefined,
+  })
   const page = await ctx.newPage()
-  page.on('pageerror', e => console.error('[pageerror]', e.message))
+  page.on('pageerror', (e) => console.error('[pageerror]', e.message))
   await page.coverage.startJSCoverage({ reportAnonymousScripts: true, resetOnNavigation: false })
-  await page.setContent(`<!doctype html><html lang="en"><meta charset="utf-8"><body><script>${code}</script></body></html>`)
+  await page.setContent(
+    `<!doctype html><html lang="en"><meta charset="utf-8"><body><script>${code}</script></body></html>`,
+  )
   let missed = 0
-  try { await page.evaluate(() => window.drive()) } catch (e) { missed++; console.error(engine, 'driver threw (a pack call?):', e.message.slice(0, 200)) }
+  try {
+    await page.evaluate(() => window.drive())
+  } catch (e) {
+    missed++
+    console.error(engine, 'driver threw (a pack call?):', e.message.slice(0, 200))
+  }
   const cov = await page.coverage.stopJSCoverage()
   /** @type {Set<string>} */
   const ran = new Set()
-  for (const entry of cov) for (const fn of entry.functions) if (fn.ranges[0]?.count > 0 && fn.functionName) ran.add(fn.functionName.replace(/\d+$/, ''))
-  const out = { engine, note: 'top-level function names that ran over the coverage corpus (scripts/coverage.mjs)', ran: [...ran].sort() }
-  fs.writeFileSync(path.join(root, 'src/coverage', `${engine}.json`), JSON.stringify(out, null, 1) + '\n')
+  for (const entry of cov)
+    for (const fn of entry.functions)
+      if (fn.ranges[0]?.count > 0 && fn.functionName) ran.add(fn.functionName.replace(/\d+$/, ''))
+  const out = {
+    engine,
+    note: 'top-level function names that ran over the coverage corpus (scripts/coverage.mjs)',
+    ran: [...ran].sort(),
+  }
+  fs.writeFileSync(
+    path.join(root, 'src/coverage', `${engine}.json`),
+    JSON.stringify(out, null, 1) + '\n',
+  )
   console.log(`${engine}: ${ran.size} function names ran${missed ? ' (driver stopped early)' : ''}`)
   await ctx.close()
 }

@@ -17,7 +17,9 @@ export type Intent = { [K in keyof Vocab]?: keyof Vocab[K] } & {
 
 type Exact<T, Shape> = T & { [K in Exclude<keyof T, keyof Shape>]: never }
 type Values = Record<string, Intent>
-type AxesOf<A> = { [K in keyof A]: A[K] extends 'inherit' ? 'inherit' : { [V in keyof A[K]]: Exact<A[K][V], Intent> } }
+type AxesOf<A> = {
+  [K in keyof A]: A[K] extends 'inherit' ? 'inherit' : { [V in keyof A[K]]: Exact<A[K][V], Intent> }
+}
 type Plain<A> = { [K in keyof A as A[K] extends 'inherit' ? never : K]: A[K] }
 type AxisArgs<A> = { [K in keyof Plain<A>]?: Extract<keyof Plain<A>[K], string> }
 
@@ -43,7 +45,10 @@ export type GroupDef<A, P, S> = {
 type Pseudo = 'hover' | 'focus' | 'active' | 'disabled'
 
 /** Attributes a group writes: spread them on the element (`{...card(…)}`). */
-export type GroupAttrs = { 'data-g': string } & Record<`data-${string}` | `aria-${string}`, string | boolean | undefined>
+export type GroupAttrs = { 'data-g': string } & Record<
+  `data-${string}` | `aria-${string}`,
+  string | boolean | undefined
+>
 /** What a part puts on its element. */
 export type PartAttrs = { readonly 'data-part': string }
 
@@ -52,7 +57,9 @@ export type Accent = Omit<Intent, 'css'>
 
 /** What `group` returns: called with its axes it gives the element's attributes. */
 export type Group<N extends string, A, P, S> = {
-  (axes?: AxisArgs<A> & { [K in Exclude<keyof S, Pseudo>]?: boolean } & { accent?: Accent }): GroupAttrs
+  (
+    axes?: AxisArgs<A> & { [K in Exclude<keyof S, Pseudo>]?: boolean } & { accent?: Accent },
+  ): GroupAttrs
   readonly group: N
 } & { readonly [K in keyof P]: PartAttrs }
 
@@ -60,22 +67,41 @@ const ARIA = new Set(['selected', 'pressed', 'checked', 'expanded', 'current', '
 const PSEUDO = new Set(['hover', 'focus', 'active', 'disabled'])
 
 /** Define a style group. The definition must be literal data (W060 otherwise); call sites compile to attributes. */
-export function group<const N extends string, const A extends Record<string, Values | 'inherit'> = {}, const P extends Record<string, Intent> = {}, const S extends Record<string, Intent> = {}>(
-  name: N,
-  def: GroupDef<A, P, S>,
-): Group<N, A, P, S> {
+export function group<
+  const N extends string,
+  const A extends Record<string, Values | 'inherit'> = {},
+  const P extends Record<string, Intent> = {},
+  const S extends Record<string, Intent> = {},
+>(name: N, def: GroupDef<A, P, S>): Group<N, A, P, S> {
   const call = (axes: Record<string, unknown> = {}) => {
-    const out: Record<string, unknown> = { 'data-g': name, ...Object.fromEntries(Object.entries(def.defaults ?? {}).map(([k, v]) => [`data-${k}`, v])) }
+    const out: Record<string, unknown> = {
+      'data-g': name,
+      ...Object.fromEntries(Object.entries(def.defaults ?? {}).map(([k, v]) => [`data-${k}`, v])),
+    }
     for (const [k, v] of Object.entries(axes)) {
       if (def.axes && k in def.axes) out[`data-${k}`] = v
-      else if (k === 'accent' && v) out['data-accent'] = Object.entries(v as Record<string, string>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([i, t]) => `${i}:${t}`).join(' ') || undefined
-      else if (def.states && k in def.states && !PSEUDO.has(k)) out[ARIA.has(k) ? `aria-${k}` : `data-${k}`] = ARIA.has(k) ? String(!!v) : v ? '' : undefined
+      else if (k === 'accent' && v)
+        out['data-accent'] =
+          Object.entries(v as Record<string, string>)
+            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+            .map(([i, t]) => `${i}:${t}`)
+            .join(' ') || undefined
+      else if (def.states && k in def.states && !PSEUDO.has(k))
+        out[ARIA.has(k) ? `aria-${k}` : `data-${k}`] = ARIA.has(k)
+          ? String(!!v)
+          : v
+            ? ''
+            : undefined
     }
     return out
   }
   Object.defineProperty(call, 'group', { value: name })
   // Parts are properties of the function; defineProperty also covers parts called `name` or `length`. A part is only
   // `data-part`: the group's @scope finds it under the root.
-  for (const part of Object.keys(def.parts ?? {})) Object.defineProperty(call, part, { value: Object.freeze({ 'data-part': part }), enumerable: true })
+  for (const part of Object.keys(def.parts ?? {}))
+    Object.defineProperty(call, part, {
+      value: Object.freeze({ 'data-part': part }),
+      enumerable: true,
+    })
   return call as unknown as Group<N, A, P, S>
 }

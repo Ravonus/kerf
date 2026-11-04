@@ -13,7 +13,7 @@ type Live<T> = T | { readonly value: T } | (() => { readonly value: T } | T)
 
 const read = <T,>(v: Live<T>): T => {
   const x = typeof v === 'function' ? (v as () => { readonly value: T } | T)() : v
-  return x !== null && typeof x === 'object' && 'value' in x ? (x).value : x
+  return x !== null && typeof x === 'object' && 'value' in x ? x.value : x
 }
 /** `online` from @weft-js/core/browser, its result, or a boolean: a factory is called once. */
 function liveOf<T>(get: () => Live<T>) {
@@ -56,25 +56,53 @@ const plural = (n: number) => (n === 1 ? '1 change' : `${n} changes`)
  * reconnecting, "Back online" for 3s, a stale deploy with Reload and Later. Takes its state as props. Offline says so
  * assertively once and back online politely once; the countdown itself is never announced. Needs a mounted <Toaster />.
  */
-export function ConnBanner({ online = true, state: conn, stale, contractFailed, retryIn, onRetry, changes = 0, onReload, onLater, name = 'the app' }: ConnBannerProps) {
+export function ConnBanner({
+  online = true,
+  state: conn,
+  stale,
+  contractFailed,
+  retryIn,
+  onRetry,
+  changes = 0,
+  onReload,
+  onLater,
+  name = 'the app',
+}: ConnBannerProps) {
   const isOn = liveOf<boolean>(() => online)
   const st = liveOf<string | undefined>(() => conn)
   const old = liveOf<boolean | undefined>(() => stale)
   const later = state(false)
   const recovered = state(false)
-  const view = derived(() => connView({ online: isOn.value, state: st.value, stale: old.value && !later.value, recovered: recovered.value }))
-  const backIn = useCooldown(() => (recovered.value ? RECOVERED_S : undefined), () => (recovered.value = false))
+  const view = derived(() =>
+    connView({
+      online: isOn.value,
+      state: st.value,
+      stale: old.value && !later.value,
+      recovered: recovered.value,
+    }),
+  )
+  const backIn = useCooldown(
+    () => (recovered.value ? RECOVERED_S : undefined),
+    () => (recovered.value = false),
+  )
   const retry = useCooldown(() => retryIn)
   let hide: ReturnType<typeof setTimeout> | undefined
   onCleanup(() => clearTimeout(hide))
   onMount(() => {
-    watch(() => view.value, (v, was) => {
-      if (v === 'offline') announce(document, "You're offline. Changes are saved on this device.", true)
-      if (v === 'stale') announce(document, `A new version of ${untrack(() => name)} is ready.`)
-      if (was === 'offline' || was === 'reconnecting') {
-        if (v === undefined || v === 'stale') { recovered.value = true; announce(document, 'Back online.') }
-      }
-    })
+    watch(
+      () => view.value,
+      (v, was) => {
+        if (v === 'offline')
+          announce(document, "You're offline. Changes are saved on this device.", true)
+        if (v === 'stale') announce(document, `A new version of ${untrack(() => name)} is ready.`)
+        if (was === 'offline' || was === 'reconnecting') {
+          if (v === undefined || v === 'stale') {
+            recovered.value = true
+            announce(document, 'Back online.')
+          }
+        }
+      },
+    )
   })
   const postpone = () => {
     later.value = true
@@ -84,28 +112,66 @@ export function ConnBanner({ online = true, state: conn, stale, contractFailed, 
   return (
     <>
       {view.value && (
-        <div data-scope="conn" data-state={view.value === 'stale' && contractFailed ? 'limited' : view.value}>
-          {view.value === 'offline' && <>
-            <WifiOffIcon />
-            <span data-part="msg"><b>You're offline.</b> Changes are saved on this device and sync when you reconnect.</span>
-            {retryIn !== undefined && <span>Retrying in {retry.value}s</span>}
-            {onRetry && <Button emphasis="ghost" size="sm" tone="neutral" onClick={onRetry}>Retry now</Button>}
-          </>}
-          {view.value === 'reconnecting' && <>
-            <span data-scope="spinner" aria-hidden="true"></span>
-            <span data-part="msg"><b>Reconnecting…</b> {changes > 0 ? `Sending ${plural(changes)}.` : retryIn !== undefined ? `Trying again in ${retry.value}s.` : ''}</span>
-          </>}
-          {view.value === 'online' && <>
-            <WifiIcon />
-            <span data-part="msg"><b>Back online.</b> {changes > 0 ? `${plural(changes)} synced.` : ''}</span>
-            <span data-part="rail" data-on="" aria-hidden="true"><span data-part="rail-fill" style={`--p:${backIn.value / RECOVERED_S}`}></span></span>
-          </>}
-          {view.value === 'stale' && <>
-            <SparkleIcon />
-            <span data-part="msg"><b>A new version of {name} is ready.</b> {contractFailed ? 'Reload to finish saving.' : 'Reload to update; your draft is kept.'}</span>
-            <Button emphasis="ghost" size="sm" tone="neutral" onClick={postpone}>Later</Button>
-            <Button size="sm" tone="info" onClick={onReload}><RefreshIcon />Reload</Button>
-          </>}
+        <div
+          data-scope="conn"
+          data-state={view.value === 'stale' && contractFailed ? 'limited' : view.value}
+        >
+          {view.value === 'offline' && (
+            <>
+              <WifiOffIcon />
+              <span data-part="msg">
+                <b>You're offline.</b> Changes are saved on this device and sync when you reconnect.
+              </span>
+              {retryIn !== undefined && <span>Retrying in {retry.value}s</span>}
+              {onRetry && (
+                <Button emphasis="ghost" size="sm" tone="neutral" onClick={onRetry}>
+                  Retry now
+                </Button>
+              )}
+            </>
+          )}
+          {view.value === 'reconnecting' && (
+            <>
+              <span data-scope="spinner" aria-hidden="true"></span>
+              <span data-part="msg">
+                <b>Reconnecting…</b>{' '}
+                {changes > 0
+                  ? `Sending ${plural(changes)}.`
+                  : retryIn !== undefined
+                    ? `Trying again in ${retry.value}s.`
+                    : ''}
+              </span>
+            </>
+          )}
+          {view.value === 'online' && (
+            <>
+              <WifiIcon />
+              <span data-part="msg">
+                <b>Back online.</b> {changes > 0 ? `${plural(changes)} synced.` : ''}
+              </span>
+              <span data-part="rail" data-on="" aria-hidden="true">
+                <span data-part="rail-fill" style={`--p:${backIn.value / RECOVERED_S}`}></span>
+              </span>
+            </>
+          )}
+          {view.value === 'stale' && (
+            <>
+              <SparkleIcon />
+              <span data-part="msg">
+                <b>A new version of {name} is ready.</b>{' '}
+                {contractFailed
+                  ? 'Reload to finish saving.'
+                  : 'Reload to update; your draft is kept.'}
+              </span>
+              <Button emphasis="ghost" size="sm" tone="neutral" onClick={postpone}>
+                Later
+              </Button>
+              <Button size="sm" tone="info" onClick={onReload}>
+                <RefreshIcon />
+                Reload
+              </Button>
+            </>
+          )}
         </div>
       )}
     </>
@@ -126,22 +192,49 @@ export interface RateLimitedProps {
 }
 
 /** Rate limited (09 §5.5): a caution notice in place with a draining rail. Polite at start and end only; the numbers keep counting under reduced motion. */
-export function RateLimited({ retryAfter, title = 'Limit reached.', description, trigger, onDone }: RateLimitedProps) {
+export function RateLimited({
+  retryAfter,
+  title = 'Limit reached.',
+  description,
+  trigger,
+  onDone,
+}: RateLimitedProps) {
   const total = derived(() => retryAfter)
-  const left = useCooldown(() => total.value, () => { announce(document, 'You can try again now.'); onDone?.() })
+  const left = useCooldown(
+    () => total.value,
+    () => {
+      announce(document, 'You can try again now.')
+      onDone?.()
+    },
+  )
   const hasTrigger = derived(() => !!trigger)
   const on = derived(() => left.value > 0)
-  onMount(() => announce(document, `${untrack(() => (typeof title === 'string' ? title : 'Limit reached.'))} Try again in ${untrack(() => total.value)}s.`))
+  onMount(() =>
+    announce(
+      document,
+      `${untrack(() => (typeof title === 'string' ? title : 'Limit reached.'))} Try again in ${untrack(() => total.value)}s.`,
+    ),
+  )
   return (
     <div data-scope="stack" style="--_gap:8px">
       {on.value && (
         <div data-scope="conn" data-state="limited">
           <ClockIcon />
-          <span data-part="msg"><b>{title}</b> {description} Try again in {left.value}s.</span>
-          <span data-part="rail" data-on="" aria-hidden="true"><span data-part="rail-fill" style={`--p:${left.value / total.value}`}></span></span>
+          <span data-part="msg">
+            <b>{title}</b> {description} Try again in {left.value}s.
+          </span>
+          <span data-part="rail" data-on="" aria-hidden="true">
+            <span data-part="rail-fill" style={`--p:${left.value / total.value}`}></span>
+          </span>
         </div>
       )}
-      {hasTrigger.value && <div><Button {...trigger} disabled={on.value}>{on.value ? `Try again in ${left.value}s` : trigger!.children}</Button></div>}
+      {hasTrigger.value && (
+        <div>
+          <Button {...trigger} disabled={on.value}>
+            {on.value ? `Try again in ${left.value}s` : trigger!.children}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

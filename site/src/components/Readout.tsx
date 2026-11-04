@@ -19,33 +19,67 @@ export function Readout() {
       for (const e of list as PerformanceResourceTiming[]) {
         const size = e.encodedBodySize || 0
         if (e.entryType === 'navigation') html.value += size
-        else if (e.initiatorType === 'script' || e.initiatorType === 'link' && /\.js(\?|$)/.test(e.name) || /\.js(\?|$)/.test(e.name)) js.value += size
+        else if (
+          e.initiatorType === 'script' ||
+          (e.initiatorType === 'link' && /\.js(\?|$)/.test(e.name)) ||
+          /\.js(\?|$)/.test(e.name)
+        )
+          js.value += size
         else if (/\.css(\?|$)/.test(e.name)) css.value += size
       }
     }
     held = stats.runs // the readout's own updates are held out of the count below
     add(performance.getEntriesByType('navigation'))
-    const resources = new PerformanceObserver(l => add(l.getEntries()))
+    const resources = new PerformanceObserver((l) => add(l.getEntries()))
     resources.observe({ type: 'resource', buffered: true })
-    const dom = new MutationObserver(records => {
+    const dom = new MutationObserver((records) => {
       let n = 0
-      for (const r of records) if (!self?.contains(r.target)) n += r.type === 'childList' ? r.addedNodes.length + r.removedNodes.length : 1
+      for (const r of records)
+        if (!self?.contains(r.target))
+          n += r.type === 'childList' ? r.addedNodes.length + r.removedNodes.length : 1
       if (!n) return // its own text: reading the counter here would feed it
       writes.value += n
       runs.value = stats.runs - held
     })
     // After hydration's own cleanup, which drops the server's markers on the next task: this counts what the page does.
-    const start = setTimeout(() => dom.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true }), 50)
-    return () => { clearTimeout(start); resources.disconnect(); dom.disconnect() }
+    const start = setTimeout(
+      () =>
+        dom.observe(document.documentElement, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          characterData: true,
+        }),
+      50,
+    )
+    return () => {
+      clearTimeout(start)
+      resources.disconnect()
+      dom.disconnect()
+    }
   })
   return (
-    <p data-site="readout" ref={el => (self = el)} title="Bytes from Resource Timing, DOM writes from a MutationObserver, runs from weft's counter. Live, for this tab.">
+    <p
+      data-site="readout"
+      ref={(el) => (self = el)}
+      title="Bytes from Resource Timing, DOM writes from a MutationObserver, runs from weft's counter. Live, for this tab."
+    >
       <span>This page</span>
-      <span><b>{kb(js.value)}</b> JS</span>
-      <span><b>{kb(css.value)}</b> CSS</span>
-      <span><b>{kb(html.value)}</b> HTML</span>
-      <span><b>{writes.value}</b> DOM writes</span>
-      <span><b>{runs.value}</b> reactive runs</span>
+      <span>
+        <b>{kb(js.value)}</b> JS
+      </span>
+      <span>
+        <b>{kb(css.value)}</b> CSS
+      </span>
+      <span>
+        <b>{kb(html.value)}</b> HTML
+      </span>
+      <span>
+        <b>{writes.value}</b> DOM writes
+      </span>
+      <span>
+        <b>{runs.value}</b> reactive runs
+      </span>
     </p>
   )
 }

@@ -7,7 +7,12 @@ import '@weft-js/warp-core/styles/app/tokens.css'
 import '@weft-js/warp-core/styles/app/base.css'
 import '@weft-js/warp-core/styles/rich/helpers.css'
 
-export const SweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
+export const SweepParts = () => (
+  <>
+    <span data-part="sweep-base" aria-hidden="true"></span>
+    <span data-part="sweep" aria-hidden="true"></span>
+  </>
+)
 
 /** calendar.css and agenda.css default `--_c` on the same element as `data-cal`, so the source's colour is set inline too. */
 export const tint = (cal?: number) => `--_c:var(--warp-color-data-${cal ?? 1})`
@@ -29,8 +34,13 @@ export function useNow(now: () => string | undefined, zone: () => string | undef
     }
     queueMicrotask(tick)
     document.addEventListener('visibilitychange', tick)
-    watch(now, n => { if (n) value.value = n })
-    onCleanup(() => { clearTimeout(timer); document.removeEventListener('visibilitychange', tick) })
+    watch(now, (n) => {
+      if (n) value.value = n
+    })
+    onCleanup(() => {
+      clearTimeout(timer)
+      document.removeEventListener('visibilitychange', tick)
+    })
   })
   return value
 }
@@ -41,11 +51,15 @@ export function useWidth(el: () => Element | undefined) {
   onMount(() => {
     const node = el()
     if (!node || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(r => { width.value = r[0]!.contentRect.width })
+    const ro = new ResizeObserver((r) => {
+      width.value = r[0]!.contentRect.width
+    })
     ro.observe(node)
     onCleanup(() => ro.disconnect())
   })
   return width
 }
 
-export const confirmSweep = (el: Element | null | undefined) => { if (el) installSweep(el.ownerDocument).confirm(el) }
+export const confirmSweep = (el: Element | null | undefined) => {
+  if (el) installSweep(el.ownerDocument).confirm(el)
+}

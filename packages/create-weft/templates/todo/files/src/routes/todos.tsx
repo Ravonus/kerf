@@ -15,16 +15,32 @@ export const load = ({ ctx, request }: LoadArgs) => {
 
 export const meta: Meta<typeof load> = ({ data }) => ({ title: views[data.view].title })
 
-const nav = [{
-  items: [
-    { id: 'all', label: views.all.label, href: views.all.href, icon: ClipboardListIcon },
-    { id: 'active', label: views.active.label, href: views.active.href, icon: CircleIcon },
-    { id: 'done', label: views.done.label, href: views.done.href, icon: ChecksIcon },
-  ],
-}]
+const nav = [
+  {
+    items: [
+      { id: 'all', label: views.all.label, href: views.all.href, icon: ClipboardListIcon },
+      { id: 'active', label: views.active.label, href: views.active.href, icon: CircleIcon },
+      { id: 'done', label: views.done.label, href: views.done.href, icon: ChecksIcon },
+    ],
+  },
+]
 
-const leave = () => signOut().catch(() => toast.show({ tone: 'critical', title: "You're still signed in", description: 'That didn\'t go through. Try again in a moment.' }))
-const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase()
+const leave = () =>
+  signOut().catch(() =>
+    toast.show({
+      tone: 'critical',
+      title: "You're still signed in",
+      description: "That didn't go through. Try again in a moment.",
+    }),
+  )
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
 
 export default function Todos(props: RouteProps<typeof load>) {
   return (
@@ -33,16 +49,32 @@ export default function Todos(props: RouteProps<typeof load>) {
       nav={nav}
       navLabel="Views"
       current={props.data.view}
-      account={{ name: props.data.name, email: props.data.email, initials: initials(props.data.name), items: [{ label: 'Sign out', icon: LogOutIcon, onSelect: leave }] }}
+      account={{
+        name: props.data.name,
+        email: props.data.email,
+        initials: initials(props.data.name),
+        items: [{ label: 'Sign out', icon: LogOutIcon, onSelect: leave }],
+      }}
       overlays={<Toaster />}
     >
       <Stack gap="group" class="day">
-        <Heading level={1} role="title">{views[props.data.view].title}</Heading>
+        <Heading level={1} role="title">
+          {views[props.data.view].title}
+        </Heading>
         <NewTodo />
         <Boundary
           pending={<TodoListLoading />}
           error={(_, retry) => (
-            <Alert tone="critical" title="Your list didn't load" live actions={<Button emphasis="outline" onClick={retry}>Try again</Button>}>
+            <Alert
+              tone="critical"
+              title="Your list didn't load"
+              live
+              actions={
+                <Button emphasis="outline" onClick={retry}>
+                  Try again
+                </Button>
+              }
+            >
               Nothing's lost. It's the connection to your list that failed.
             </Alert>
           )}

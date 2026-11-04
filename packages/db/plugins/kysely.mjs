@@ -9,8 +9,16 @@ export const kyselySource = definePlugin({
   weft: '*',
   permissions: { net: ['driver:kysely'] },
   contribute: () => ({
-    provides: [provide(slot, { key: 'kysely', sides: { server: { module: '@weft-js/db/kysely', export: 'adapter' } } })],
-    agents: { title: 'Lists (kysely)', text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back.' },
+    provides: [
+      provide(slot, {
+        key: 'kysely',
+        sides: { server: { module: '@weft-js/db/kysely', export: 'adapter' } },
+      }),
+    ],
+    agents: {
+      title: 'Lists (kysely)',
+      text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back.',
+    },
   }),
 })
 

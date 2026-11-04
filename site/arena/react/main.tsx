@@ -9,8 +9,12 @@ let setAll: (fn: (cells: number[]) => number[]) => void
 function Counter() {
   count.renders++
   const [n, set] = useState(0)
-  bump = () => flushSync(() => set(v => v + 1))
-  return <button type="button" onClick={() => window.arena.press()}>{n}</button>
+  bump = () => flushSync(() => set((v) => v + 1))
+  return (
+    <button type="button" onClick={() => window.arena.press()}>
+      {n}
+    </button>
+  )
 }
 
 const Cell = memo(function Cell({ value }: { value: number }) {
@@ -22,11 +26,25 @@ function Grid() {
   count.renders++
   const [cells, set] = useState(() => Array.from({ length: CELLS }, () => 0))
   setAll = set
-  return <div data-grid>{cells.map((value, i) => <Cell key={i} value={value} />)}</div>
+  return (
+    <div data-grid>
+      {cells.map((value, i) => (
+        <Cell key={i} value={value} />
+      ))}
+    </div>
+  )
 }
 
-const tick = (k: number) => flushSync(() => setAll(cells => cells.map((v, i) => (i % 10 === k % 10 ? v + 1 : v))))
+const tick = (k: number) =>
+  flushSync(() => setAll((cells) => cells.map((v, i) => (i % 10 === k % 10 ? v + 1 : v))))
 
 const root = document.getElementById('root')!
-flushSync(() => createRoot(root).render(<main><Counter /><Grid /></main>))
+flushSync(() =>
+  createRoot(root).render(
+    <main>
+      <Counter />
+      <Grid />
+    </main>,
+  ),
+)
 harness(root, { click: () => bump(), tick, runs: () => 0 })

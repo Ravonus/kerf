@@ -17,11 +17,20 @@ export default function Owner() {
   const add = (line: string) => (log.value = [...log.value.slice(-3), line])
   return (
     <Card title="What a branch owns">
-      <Switch checked={shown.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (shown.value = e.currentTarget.checked)}>
+      <Switch
+        checked={shown.value}
+        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+          (shown.value = e.currentTarget.checked)
+        }
+      >
         Show the ticker
       </Switch>
       {shown.value && <Ticker onLog={add} />}
-      <ol>{log.value.map((line, i) => <li key={i}>{line}</li>)}</ol>
+      <ol>
+        {log.value.map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ol>
     </Card>
   )
 }

@@ -13,7 +13,16 @@ export const SIZE = ['sm', 'md', 'lg'] as const
 /** How tightly a view packs its content. */
 export const DENSITY = ['compact', 'cozy', 'comfortable'] as const
 /** What a piece of text is, which sets its size and weight. */
-export const TEXT_ROLE = ['display', 'title', 'heading', 'body', 'label', 'caption', 'eyebrow', 'code'] as const
+export const TEXT_ROLE = [
+  'display',
+  'title',
+  'heading',
+  'body',
+  'label',
+  'caption',
+  'eyebrow',
+  'code',
+] as const
 
 /** One of `SPACE`. */
 export type Space = (typeof SPACE)[number]

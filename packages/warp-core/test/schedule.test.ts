@@ -1,8 +1,68 @@
 // @vitest-environment jsdom
 import { describe, expect, test, vi } from 'vitest'
-import { type DragPreview, agendaItems, allDayBars, at, calendarDrag, conflicts, countByDay, dateOf, dayDots, daySegments, dragCreate, dragMove, dragResize, dstShift, eventKey, eventName, eventsOn, isFree, laneKey, layoutDay, mergeRanges, minuteOf, monthCells, monthSummary, moveKey, moveSlots, nextRange, nowIn, overlaps, rangeIssues, sharedFree, shownIn, slotOf, slotTimes, snapTo, spanMinutes, startOfWeek, stepDate, suggestSlots, timeOptions, toZone, viewDays, viewRange, weekDates, weekValid, withinHours, yearKey, yearLevel, yearMonths, yearTotal, zoneMinute, type Attendee, type CalEvent } from '../src/schedule'
+import {
+  type DragPreview,
+  agendaItems,
+  allDayBars,
+  at,
+  calendarDrag,
+  conflicts,
+  countByDay,
+  dateOf,
+  dayDots,
+  daySegments,
+  dragCreate,
+  dragMove,
+  dragResize,
+  dstShift,
+  eventKey,
+  eventName,
+  eventsOn,
+  isFree,
+  laneKey,
+  layoutDay,
+  mergeRanges,
+  minuteOf,
+  monthCells,
+  monthSummary,
+  moveKey,
+  moveSlots,
+  nextRange,
+  nowIn,
+  overlaps,
+  rangeIssues,
+  sharedFree,
+  shownIn,
+  slotOf,
+  slotTimes,
+  snapTo,
+  spanMinutes,
+  startOfWeek,
+  stepDate,
+  suggestSlots,
+  timeOptions,
+  toZone,
+  viewDays,
+  viewRange,
+  weekDates,
+  weekValid,
+  withinHours,
+  yearKey,
+  yearLevel,
+  yearMonths,
+  yearTotal,
+  zoneMinute,
+  type Attendee,
+  type CalEvent,
+} from '../src/schedule'
 
-const ev = (id: string, start: string, end: string, o: Partial<CalEvent> = {}): CalEvent => ({ id, title: id, start, end, ...o })
+const ev = (id: string, start: string, end: string, o: Partial<CalEvent> = {}): CalEvent => ({
+  id,
+  title: id,
+  start,
+  end,
+  ...o,
+})
 const on = (s: string, e: string) => [`2026-10-28T${s}`, `2026-10-28T${e}`] as const
 
 describe('time arithmetic', () => {
@@ -48,35 +108,81 @@ describe('layout', () => {
   })
   test('daySegments clips a multi-day event and skips a midnight end', () => {
     const e = ev('a', '2026-10-27T22:00', '2026-10-29T00:00')
-    expect(daySegments([e], '2026-10-27')[0]).toMatchObject({ s: 1320, e: 1440, head: true, tail: false })
-    expect(daySegments([e], '2026-10-28')[0]).toMatchObject({ s: 0, e: 1440, head: false, tail: true })
+    expect(daySegments([e], '2026-10-27')[0]).toMatchObject({
+      s: 1320,
+      e: 1440,
+      head: true,
+      tail: false,
+    })
+    expect(daySegments([e], '2026-10-28')[0]).toMatchObject({
+      s: 0,
+      e: 1440,
+      head: false,
+      tail: true,
+    })
     expect(daySegments([e], '2026-10-29')).toEqual([])
   })
   test('all-day bars span columns, stack in rows, and clip to the days shown', () => {
     const days = weekDates('2026-10-28', 1)
-    const bars = allDayBars([ev('a', '2026-10-26', '2026-10-27', { allDay: true }), ev('b', '2026-10-26', '2026-10-26', { allDay: true }), ev('c', '2026-10-20', '2026-10-28', { allDay: true }), ev('t', '2026-10-28T09:00', '2026-10-28T10:00')], days)
-    expect(bars.map(b => [b.id, b.col, b.span, b.row])).toEqual([['c', 0, 3, 0], ['a', 0, 2, 1], ['b', 0, 1, 2]])
+    const bars = allDayBars(
+      [
+        ev('a', '2026-10-26', '2026-10-27', { allDay: true }),
+        ev('b', '2026-10-26', '2026-10-26', { allDay: true }),
+        ev('c', '2026-10-20', '2026-10-28', { allDay: true }),
+        ev('t', '2026-10-28T09:00', '2026-10-28T10:00'),
+      ],
+      days,
+    )
+    expect(bars.map((b) => [b.id, b.col, b.span, b.row])).toEqual([
+      ['c', 0, 3, 0],
+      ['a', 0, 2, 1],
+      ['b', 0, 1, 2],
+    ])
   })
   test('eventsOn leads with all-day', () => {
-    const list = eventsOn([ev('t', ...on('09:00', '10:00')), ev('a', '2026-10-28', '2026-10-28', { allDay: true })], '2026-10-28')
-    expect(list.map(e => e.id)).toEqual(['a', 't'])
+    const list = eventsOn(
+      [ev('t', ...on('09:00', '10:00')), ev('a', '2026-10-28', '2026-10-28', { allDay: true })],
+      '2026-10-28',
+    )
+    expect(list.map((e) => e.id)).toEqual(['a', 't'])
   })
 })
 
 describe('overlap', () => {
-  const a = ev('a', ...on('10:00', '11:00')), b = ev('b', ...on('10:30', '11:30')), c = ev('c', ...on('11:00', '12:00'))
+  const a = ev('a', ...on('10:00', '11:00')),
+    b = ev('b', ...on('10:30', '11:30')),
+    c = ev('c', ...on('11:00', '12:00'))
   test('touching is not overlapping, and an event never collides with itself', () => {
     expect(overlaps(a, b)).toBe(true)
     expect(overlaps(a, c)).toBe(false)
     expect(overlaps(a, a)).toBe(false)
   })
   test('conflicts at a proposed slot, by resource on a timeline', () => {
-    expect(conflicts([a, b, c], a).map(e => e.id)).toEqual(['b'])
-    expect(conflicts([a, b, c], a, { date: '2026-10-28', s: 690, e: 750 }).map(e => e.id)).toEqual(['c'])
-    expect(conflicts([{ ...b, resource: 'x' }], a, { date: '2026-10-28', s: 630, e: 660, resource: 'y' })).toEqual([])
+    expect(conflicts([a, b, c], a).map((e) => e.id)).toEqual(['b'])
+    expect(
+      conflicts([a, b, c], a, { date: '2026-10-28', s: 690, e: 750 }).map((e) => e.id),
+    ).toEqual(['c'])
+    expect(
+      conflicts([{ ...b, resource: 'x' }], a, {
+        date: '2026-10-28',
+        s: 630,
+        e: 660,
+        resource: 'y',
+      }),
+    ).toEqual([])
   })
   test('mergeRanges joins touching ranges', () => {
-    expect(mergeRanges([[60, 90], [0, 30], [30, 45], [80, 120]])).toEqual([[0, 45], [60, 120]])
+    expect(
+      mergeRanges([
+        [60, 90],
+        [0, 30],
+        [30, 45],
+        [80, 120],
+      ]),
+    ).toEqual([
+      [0, 45],
+      [60, 120],
+    ])
   })
 })
 
@@ -92,7 +198,10 @@ describe('views', () => {
     expect(viewRange('week', '2026-10-28', 1)).toEqual({ start: '2026-10-26', end: '2026-11-01' })
     expect(viewRange('month', '2026-10-28', 1)).toEqual({ start: '2026-09-28', end: '2026-11-08' })
     expect(viewRange('year', '2026-10-28', 1)).toEqual({ start: '2026-01-01', end: '2026-12-31' })
-    expect(viewRange('timeline', '2026-10-28', 1)).toEqual({ start: '2026-10-28', end: '2026-10-28' })
+    expect(viewRange('timeline', '2026-10-28', 1)).toEqual({
+      start: '2026-10-28',
+      end: '2026-10-28',
+    })
   })
   test('stepping', () => {
     expect(stepDate('week', '2026-10-28', 1)).toBe('2026-11-04')
@@ -107,8 +216,19 @@ describe('views', () => {
     expect(w[0]!.cells[3]).toEqual({ iso: '2026-10-01', outside: false })
   })
   test('names read as the spec says', () => {
-    expect(eventName(ev('x', '2026-10-26T10:00', '2026-10-26T11:30', { title: 'Design crit', location: 'Studio', tentative: true }), 'en-US')).toBe('Design crit, Monday 10:00 to 11:30, Studio, tentative')
-    expect(eventName(ev('x', '2026-10-26', '2026-10-26', { title: 'Offsite', allDay: true }), 'en-US')).toBe('Offsite, Monday, all day')
+    expect(
+      eventName(
+        ev('x', '2026-10-26T10:00', '2026-10-26T11:30', {
+          title: 'Design crit',
+          location: 'Studio',
+          tentative: true,
+        }),
+        'en-US',
+      ),
+    ).toBe('Design crit, Monday 10:00 to 11:30, Studio, tentative')
+    expect(
+      eventName(ev('x', '2026-10-26', '2026-10-26', { title: 'Offsite', allDay: true }), 'en-US'),
+    ).toBe('Offsite, Monday, all day')
   })
 })
 
@@ -126,7 +246,9 @@ describe('zones', () => {
   test('dstShift sees the clocks go back inside an event', () => {
     expect(dstShift(ev('a', '2026-11-01T00:30', '2026-11-01T03:30'), 'America/New_York')).toBe(-60)
     expect(dstShift(ev('b', '2026-10-28T00:30', '2026-10-28T03:30'), 'America/New_York')).toBe(0)
-    expect(dstShift(ev('c', '2026-11-01', '2026-11-01', { allDay: true }), 'America/New_York')).toBe(0)
+    expect(
+      dstShift(ev('c', '2026-11-01', '2026-11-01', { allDay: true }), 'America/New_York'),
+    ).toBe(0)
   })
   test('nowIn reads a given instant in a zone', () => {
     expect(nowIn('UTC', Date.UTC(2026, 9, 28, 10, 40))).toBe('2026-10-28T10:40')
@@ -143,7 +265,12 @@ describe('snapping and drags', () => {
     expect(snapTo(603, 5)).toBe(605)
   })
   test('a move keeps its length and stays in the day', () => {
-    expect(dragMove(o, 22, '2026-10-29')).toEqual({ date: '2026-10-29', s: 615, e: 705, resource: undefined })
+    expect(dragMove(o, 22, '2026-10-29')).toEqual({
+      date: '2026-10-29',
+      s: 615,
+      e: 705,
+      resource: undefined,
+    })
     expect(dragMove(o, 2000, o.date).e).toBe(1440)
     expect(dragMove(o, -2000, o.date).s).toBe(0)
   })
@@ -169,23 +296,40 @@ describe('keyboard', () => {
     expect(moveKey('ArrowUp', true, s)).toMatchObject({ s: 600, e: 645 })
     expect(moveKey('ArrowDown', true, s)).toMatchObject({ s: 600, e: 675 })
     expect(moveKey('ArrowRight', false, s, { days })).toMatchObject({ date: '2026-10-29' })
-    expect(moveKey('ArrowLeft', false, s, { days, rtl: true })).toMatchObject({ date: '2026-10-29' })
+    expect(moveKey('ArrowLeft', false, s, { days, rtl: true })).toMatchObject({
+      date: '2026-10-29',
+    })
     expect(moveKey('Enter', false, s)).toBe('drop')
     expect(moveKey('Escape', false, s)).toBe('cancel')
     expect(moveKey('x', false, s)).toBeNull()
   })
   test('a move stops at the shown days and the day edges', () => {
-    expect(moveKey('ArrowRight', false, { ...s, date: '2026-11-01' }, { days })).toMatchObject({ date: '2026-11-01' })
+    expect(moveKey('ArrowRight', false, { ...s, date: '2026-11-01' }, { days })).toMatchObject({
+      date: '2026-11-01',
+    })
     expect(moveKey('ArrowUp', false, { date: s.date, s: 0, e: 60 })).toMatchObject({ s: 0 })
-    expect(moveKey('ArrowDown', false, { date: s.date, s: 1380, e: 1440 })).toMatchObject({ e: 1440 })
+    expect(moveKey('ArrowDown', false, { date: s.date, s: 1380, e: 1440 })).toMatchObject({
+      e: 1440,
+    })
   })
   test('on a timeline ←→ run the lane and ↑↓ change rows', () => {
     const r = { resources: ['a', 'b'] }
-    expect(moveKey('ArrowRight', false, { ...s, resource: 'a' }, r)).toMatchObject({ s: 615, resource: 'a' })
-    expect(moveKey('ArrowDown', false, { ...s, resource: 'a' }, r)).toMatchObject({ s: 600, resource: 'b' })
+    expect(moveKey('ArrowRight', false, { ...s, resource: 'a' }, r)).toMatchObject({
+      s: 615,
+      resource: 'a',
+    })
+    expect(moveKey('ArrowDown', false, { ...s, resource: 'a' }, r)).toMatchObject({
+      s: 600,
+      resource: 'b',
+    })
     expect(moveKey('ArrowDown', false, { ...s, resource: 'b' }, r)).toMatchObject({ resource: 'b' })
   })
-  const list = [ev('a', '2026-10-26T09:00', '2026-10-26T10:00'), ev('b', '2026-10-26T14:00', '2026-10-26T15:00'), ev('c', '2026-10-28T13:30', '2026-10-28T14:00'), ev('d', '2026-10-28T09:00', '2026-10-28T09:30')]
+  const list = [
+    ev('a', '2026-10-26T09:00', '2026-10-26T10:00'),
+    ev('b', '2026-10-26T14:00', '2026-10-26T15:00'),
+    ev('c', '2026-10-28T13:30', '2026-10-28T14:00'),
+    ev('d', '2026-10-28T09:00', '2026-10-28T09:30'),
+  ]
   test('roving goes through time, then to the nearest of the next day with events', () => {
     expect(eventKey('ArrowDown', 'a', list)).toBe('b')
     expect(eventKey('ArrowUp', 'a', list)).toBeNull()
@@ -197,7 +341,17 @@ describe('keyboard', () => {
     expect(eventKey('x', 'a', list)).toBeNull()
   })
   test('lane keys skip an empty row', () => {
-    const rows = [[{ id: 'a', s: 100 }, { id: 'b', s: 300 }], [], [{ id: 'c', s: 280 }, { id: 'd', s: 90 }]]
+    const rows = [
+      [
+        { id: 'a', s: 100 },
+        { id: 'b', s: 300 },
+      ],
+      [],
+      [
+        { id: 'c', s: 280 },
+        { id: 'd', s: 90 },
+      ],
+    ]
     expect(laneKey('ArrowRight', 'a', rows)).toBe('b')
     expect(laneKey('ArrowDown', 'a', rows)).toBe('d')
     expect(laneKey('ArrowUp', 'c', rows)).toBe('b')
@@ -206,10 +360,24 @@ describe('keyboard', () => {
 })
 
 describe('agenda', () => {
-  const list = [ev('o', '2026-10-28', '2026-10-28', { allDay: true }), ev('a', ...on('09:00', '09:15')), ev('b', ...on('10:00', '11:00')), ev('c', ...on('13:00', '13:30'))]
+  const list = [
+    ev('o', '2026-10-28', '2026-10-28', { allDay: true }),
+    ev('a', ...on('09:00', '09:15')),
+    ev('b', ...on('10:00', '11:00')),
+    ev('c', ...on('13:00', '13:30')),
+  ]
   test('all-day, the now marker in time order, and gaps of an hour or more', () => {
-    expect(agendaItems(list, '2026-10-28', '2026-10-28T10:40').map(i => i.kind)).toEqual(['allday', 'event', 'event', 'now', 'free', 'event'])
-    expect(agendaItems(list, '2026-10-28').find(i => i.kind === 'free')).toMatchObject({ minutes: 120 })
+    expect(agendaItems(list, '2026-10-28', '2026-10-28T10:40').map((i) => i.kind)).toEqual([
+      'allday',
+      'event',
+      'event',
+      'now',
+      'free',
+      'event',
+    ])
+    expect(agendaItems(list, '2026-10-28').find((i) => i.kind === 'free')).toMatchObject({
+      minutes: 120,
+    })
   })
   test('now lands last after the day, and not at all on another day', () => {
     expect(agendaItems(list, '2026-10-28', '2026-10-28T20:00').at(-1)!.kind).toBe('now')
@@ -222,7 +390,7 @@ describe('agenda', () => {
   test('move slots disable what is taken, ignoring the event itself', () => {
     const e = ev('a', ...on('08:00', '09:00'))
     const s = moveSlots([e, ev('b', ...on('10:00', '11:00'))], e, '2026-10-28', 60, 480, 660)
-    expect(s.map(x => x.busy)).toEqual([false, false, false, true, true, true])
+    expect(s.map((x) => x.busy)).toEqual([false, false, false, true, true, true])
   })
 })
 
@@ -231,7 +399,10 @@ describe('year', () => {
     expect([0, 1, 2, 3, 4, 5, 9].map(yearLevel)).toEqual([0, 1, 1, 2, 2, 3, 3])
   })
   test('counts spread multi-day events and a midnight end stays on its day', () => {
-    const c = countByDay([ev('a', '2026-10-26', '2026-10-27', { allDay: true }), ev('b', '2026-10-27T22:00', '2026-10-28T00:00')])
+    const c = countByDay([
+      ev('a', '2026-10-26', '2026-10-27', { allDay: true }),
+      ev('b', '2026-10-27T22:00', '2026-10-28T00:00'),
+    ])
     expect(c).toEqual({ '2026-10-26': 1, '2026-10-27': 2 })
   })
   test('a month summary finds the busiest day', () => {
@@ -249,20 +420,43 @@ describe('year', () => {
 })
 
 describe('planner', () => {
-  const people: Attendee[] = [{ id: 'you', name: 'You', busy: [[540, 555], [600, 720]] }, { id: 'ana', name: 'Ana', busy: [[480, 600], [780, 840]] }]
-  const busy = people.map(p => p.busy!)
+  const people: Attendee[] = [
+    {
+      id: 'you',
+      name: 'You',
+      busy: [
+        [540, 555],
+        [600, 720],
+      ],
+    },
+    {
+      id: 'ana',
+      name: 'Ana',
+      busy: [
+        [480, 600],
+        [780, 840],
+      ],
+    },
+  ]
+  const busy = people.map((p) => p.busy!)
   test('free time', () => {
     expect(isFree(busy, 720, 60)).toBe(true)
     expect(isFree(busy, 700, 60)).toBe(false)
-    expect(sharedFree(busy, 480, 900)).toEqual([[720, 780], [840, 900]])
+    expect(sharedFree(busy, 480, 900)).toEqual([
+      [720, 780],
+      [840, 900],
+    ])
   })
   test('suggestions are free, spaced, and capped at three', () => {
     const s = suggestSlots(people, '2026-10-28', { len: 30 })
     expect(s).toEqual([720, 840, 900])
     expect(suggestSlots(people, '2026-10-28', { len: 300 })).toEqual([])
   })
-  test('working hours count in each person\'s own zone', () => {
-    const p: Attendee[] = [{ id: 'a', name: 'A', zone: 'America/New_York' }, { id: 'b', name: 'B', zone: 'Asia/Tokyo' }]
+  test("working hours count in each person's own zone", () => {
+    const p: Attendee[] = [
+      { id: 'a', name: 'A', zone: 'America/New_York' },
+      { id: 'b', name: 'B', zone: 'Asia/Tokyo' },
+    ]
     expect(zoneMinute('2026-10-28', 600, 'America/New_York', 'Asia/Tokyo')).toBe(1380)
     expect(withinHours(p, '2026-10-28', 600, 30, 'America/New_York')).toBe(1)
   })
@@ -274,10 +468,25 @@ describe('planner', () => {
 
 describe('availability', () => {
   test('range issues', () => {
-    expect(rangeIssues([[540, 720], [780, 1020]])).toEqual(['', ''])
+    expect(
+      rangeIssues([
+        [540, 720],
+        [780, 1020],
+      ]),
+    ).toEqual(['', ''])
     expect(rangeIssues([[720, 540]])).toEqual(['Ends before it starts'])
-    expect(rangeIssues([[540, 720], [700, 800]])).toEqual(['Overlaps another range', 'Overlaps another range'])
-    expect(rangeIssues([[540, 720], [720, 800]])).toEqual(['', ''])
+    expect(
+      rangeIssues([
+        [540, 720],
+        [700, 800],
+      ]),
+    ).toEqual(['Overlaps another range', 'Overlaps another range'])
+    expect(
+      rangeIssues([
+        [540, 720],
+        [720, 800],
+      ]),
+    ).toEqual(['', ''])
   })
   test('an off day is never invalid', () => {
     expect(weekValid([{ day: 1, on: false, ranges: [[720, 540]] }])).toBe(true)
@@ -295,25 +504,57 @@ describe('calendarDrag', () => {
     const root = document.body.appendChild(document.createElement('div'))
     root.innerHTML = `<div data-part="col" data-date="2026-10-28"><div data-part="event" data-id="a"><span data-part="resize"></span></div></div><div data-part="col" data-date="2026-10-29"></div>`
     const [a, b] = [...root.querySelectorAll<HTMLElement>('[data-part="col"]')]
-    const rect = (l: number, r: number) => ({ left: l, right: r, top: 0, bottom: 1440, width: r - l, height: 1440, x: l, y: 0, toJSON() {} })
+    const rect = (l: number, r: number) => ({
+      left: l,
+      right: r,
+      top: 0,
+      bottom: 1440,
+      width: r - l,
+      height: 1440,
+      x: l,
+      y: 0,
+      toJSON() {},
+    })
     a!.getBoundingClientRect = () => rect(0, 100)
     b!.getBoundingClientRect = () => rect(100, 200)
     const log: [string, unknown?, unknown?][] = []
     const action = calendarDrag(root, {
-      slot: id => (id === 'a' ? { date: '2026-10-28', s: 600, e: 660 } : null),
-      onPreview: p => log.push(['preview', p]),
-      onDrop: p => log.push(['drop', p]),
-      onPress: id => log.push(['press', id]),
-      onLongPress: id => log.push(['long', id]),
+      slot: (id) => (id === 'a' ? { date: '2026-10-28', s: 600, e: 660 } : null),
+      onPreview: (p) => log.push(['preview', p]),
+      onDrop: (p) => log.push(['drop', p]),
+      onPress: (id) => log.push(['press', id]),
+      onLongPress: (id) => log.push(['long', id]),
       onSlot: (d, m) => log.push(['slot', d, m]),
       ...overrides,
     })
-    const fire = (t: EventTarget, type: string, x: number, y: number, extra: PointerEventInit = {}) => {
-      const e = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0, cancelable: true, ...extra })
+    const fire = (
+      t: EventTarget,
+      type: string,
+      x: number,
+      y: number,
+      extra: PointerEventInit = {},
+    ) => {
+      const e = new MouseEvent(type, {
+        bubbles: true,
+        clientX: x,
+        clientY: y,
+        button: 0,
+        cancelable: true,
+        ...extra,
+      })
       Object.assign(e, { pointerId: 1, pointerType: extra.pointerType ?? 'mouse' })
       t.dispatchEvent(e)
     }
-    return { root, a, b, log, action, fire, event: root.querySelector<HTMLElement>('[data-part="event"]')!, resize: root.querySelector<HTMLElement>('[data-part="resize"]')! }
+    return {
+      root,
+      a,
+      b,
+      log,
+      action,
+      fire,
+      event: root.querySelector<HTMLElement>('[data-part="event"]')!,
+      resize: root.querySelector<HTMLElement>('[data-part="resize"]')!,
+    }
   }
 
   test('under 4px is not a drag', () => {
@@ -329,7 +570,10 @@ describe('calendarDrag', () => {
     fire(event, 'pointerdown', 10, 610)
     fire(root, 'pointermove', 150, 642)
     fire(root, 'pointerup', 150, 642)
-    expect(log.at(-1)).toEqual(['drop', expect.objectContaining({ mode: 'move', id: 'a', date: '2026-10-29', s: 630, e: 690 })])
+    expect(log.at(-1)).toEqual([
+      'drop',
+      expect.objectContaining({ mode: 'move', id: 'a', date: '2026-10-29', s: 630, e: 690 }),
+    ])
     root.remove()
   })
   test('Alt snaps to 5', () => {
@@ -346,7 +590,7 @@ describe('calendarDrag', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     fire(root, 'pointerup', 10, 700)
     expect(log.at(-1)).toEqual(['preview', null])
-    expect(log.some(l => l[0] === 'drop')).toBe(false)
+    expect(log.some((l) => l[0] === 'drop')).toBe(false)
     root.remove()
   })
   test('the handle resizes', () => {
@@ -385,7 +629,7 @@ describe('calendarDrag', () => {
     fire(root, 'pointermove', 10, 700)
     fire(root, 'pointerup', 10, 700)
     event.click()
-    expect(log.some(l => l[0] === 'press')).toBe(false)
+    expect(log.some((l) => l[0] === 'press')).toBe(false)
     root.remove()
   })
   test('a touch long-press lifts, a touch move cancels it, and a touch never drags', () => {

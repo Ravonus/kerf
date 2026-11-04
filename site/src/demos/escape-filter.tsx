@@ -14,16 +14,32 @@ export default function Todos() {
   const showDone = state(true)
   // Worked out from the boxes it reads, when it's read. No effect copies anything into state.
   const visible = derived(() =>
-    TODOS.filter(t => (showDone.value || !t.done) && t.text.toLowerCase().includes(query.value.toLowerCase())),
+    TODOS.filter(
+      (t) =>
+        (showDone.value || !t.done) && t.text.toLowerCase().includes(query.value.toLowerCase()),
+    ),
   )
-  const left = derived(() => visible.value.filter(t => !t.done).length)
+  const left = derived(() => visible.value.filter((t) => !t.done).length)
   return (
     <Card title="Derived, not synced">
-      <Input label="Search" value={query.value} onInput={e => (query.value = e.currentTarget.value)} />
-      <Switch checked={showDone.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (showDone.value = e.currentTarget.checked)}>
+      <Input
+        label="Search"
+        value={query.value}
+        onInput={(e) => (query.value = e.currentTarget.value)}
+      />
+      <Switch
+        checked={showDone.value}
+        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+          (showDone.value = e.currentTarget.checked)
+        }
+      >
         Show done
       </Switch>
-      <ul>{visible.value.map(t => <li key={t.id}>{t.done ? <s>{t.text}</s> : t.text}</li>)}</ul>
+      <ul>
+        {visible.value.map((t) => (
+          <li key={t.id}>{t.done ? <s>{t.text}</s> : t.text}</li>
+        ))}
+      </ul>
       <p>{left.value} still to do.</p>
     </Card>
   )

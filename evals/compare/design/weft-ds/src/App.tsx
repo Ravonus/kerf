@@ -12,7 +12,7 @@ const pages = [
 
 const read = () => {
   const id = window.location.hash.replace(/^#\/?/, '')
-  return pages.some(p => p.id === id) ? id : 'settings'
+  return pages.some((p) => p.id === id) ? id : 'settings'
 }
 
 export function App() {
@@ -27,13 +27,21 @@ export function App() {
       <header>
         <Center max="wide" gutter>
           <Row gap="group" align="baseline" wrap>
-            <Heading level={2} role="heading">Northwind</Heading>
+            <Heading level={2} role="heading">
+              Northwind
+            </Heading>
             <Spacer />
             <nav aria-label="Main">
               <Row gap="group" wrap>
-                {pages.map(p => (
-                  <a key={p.id} href={`#/${p.id}`} aria-current={page.value === p.id ? 'page' : undefined}>
-                    <Text role="label" inline>{p.label}</Text>
+                {pages.map((p) => (
+                  <a
+                    key={p.id}
+                    href={`#/${p.id}`}
+                    aria-current={page.value === p.id ? 'page' : undefined}
+                  >
+                    <Text role="label" inline>
+                      {p.label}
+                    </Text>
                   </a>
                 ))}
               </Row>

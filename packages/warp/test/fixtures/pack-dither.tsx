@@ -3,9 +3,15 @@ import { Dither, DitherField, DitherGlyph } from '../../src/Dither'
 
 export const Case = () => (
   <>
-    <DitherField pointer="pull"><h2>Over the field</h2></DitherField>
+    <DitherField pointer="pull">
+      <h2>Over the field</h2>
+    </DitherField>
     <Dither src="/a.png" alt="A picture" />
     <DitherGlyph text="warp" />
-    <Canvas draw={() => { throw new Error('ran on the server') }} />
+    <Canvas
+      draw={() => {
+        throw new Error('ran on the server')
+      }}
+    />
   </>
 )

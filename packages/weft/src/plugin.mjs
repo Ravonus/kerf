@@ -1,7 +1,7 @@
 // @weft-js/core/plugin: typed slots and declared contributions (PLAN §7c, research 13 §2.2–2.3).
 // Plain JS with no dependencies: weft.config.ts loads it in Node, so nothing here may need a bundler.
 
-const freeze = value => {
+const freeze = (value) => {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
     Object.freeze(value)
     for (const v of Object.values(value)) freeze(v)
@@ -11,7 +11,8 @@ const freeze = value => {
 
 /** A slot definition. Consumers import the generated `weft:slot/<id>` module; providers reference this object. */
 export function defineSlot(slot) {
-  if (!/^[a-z@][\w./@-]*\.[\w-]+$/.test(slot.id)) throw new Error(`slot id \`${slot.id}\` must look like \`<domain>.<name>\``)
+  if (!/^[a-z@][\w./@-]*\.[\w-]+$/.test(slot.id))
+    throw new Error(`slot id \`${slot.id}\` must look like \`<domain>.<name>\``)
   return freeze({ default: null, ...slot })
 }
 
@@ -20,7 +21,7 @@ export function provide(slot, provider) {
   return freeze({ slot, versions: provider.versions ?? [slot.version], ...provider })
 }
 
-const clone = v => {
+const clone = (v) => {
   try {
     return structuredClone(v)
   } catch {
@@ -35,11 +36,17 @@ function parse(schema, input, name) {
   if (!schema) return input ?? {}
   if (typeof schema === 'object' && schema['~standard']) {
     const result = schema['~standard'].validate(input ?? {})
-    if (result instanceof Promise) throw pluginError('P115', `\`${name}\` options schema is async; plugin options are validated synchronously.`)
+    if (result instanceof Promise)
+      throw pluginError(
+        'P115',
+        `\`${name}\` options schema is async; plugin options are validated synchronously.`,
+      )
     if (result.issues?.length) {
       const issue = result.issues[0]
-      const path = (issue.path ?? []).map(p => (typeof p === 'object' ? p.key : p)).join('.')
-      throw pluginError('P115', `\`${name}\` option \`${path || '(root)'}\`: ${issue.message}`, { path })
+      const path = (issue.path ?? []).map((p) => (typeof p === 'object' ? p.key : p)).join('.')
+      throw pluginError('P115', `\`${name}\` option \`${path || '(root)'}\`: ${issue.message}`, {
+        path,
+      })
     }
     return result.value
   }
@@ -49,10 +56,17 @@ function parse(schema, input, name) {
     } catch (error) {
       if (error?.code === 'P115') throw error
       const path = error?.path ?? ''
-      throw pluginError('P115', `\`${name}\` option${path ? ` \`${path}\`` : 's'}: ${error?.message ?? error}`, { path })
+      throw pluginError(
+        'P115',
+        `\`${name}\` option${path ? ` \`${path}\`` : 's'}: ${error?.message ?? error}`,
+        { path },
+      )
     }
   }
-  throw pluginError('P115', `\`${name}\` declares \`options\` that is neither a Standard Schema nor a function.`)
+  throw pluginError(
+    'P115',
+    `\`${name}\` declares \`options\` that is neither a Standard Schema nor a function.`,
+  )
 }
 
 /**
@@ -62,18 +76,26 @@ function parse(schema, input, name) {
  */
 export function definePlugin(def) {
   const namespace = def.namespace ?? `${def.name.replace(/^@[^/]+\//, '').replace(/^plugin-/, '')}/`
-  return input => {
+  return (input) => {
     const options = parse(def.options, input, def.name)
     let manifest
-    const contribute = env => freeze(def.contribute ? def.contribute(options, Object.freeze({ ...env })) ?? {} : {})
+    const contribute = (env) =>
+      freeze(def.contribute ? (def.contribute(options, Object.freeze({ ...env })) ?? {}) : {})
     // `provides` as config data: run contribute once with a neutral env to learn the slot ids (it is pure).
     try {
       manifest = contribute({ command: 'check', mode: 'development', root: '' })
     } catch {
       manifest = {}
     }
-    const provides = (manifest.provides ?? []).map(p => (p.key ? { slot: p.slot.id, key: p.key } : p.slot.id))
-    const instance = { name: def.name, version: def.version, provides, options: freeze(clone(options)) }
+    const provides = (manifest.provides ?? []).map((p) =>
+      p.key ? { slot: p.slot.id, key: p.key } : p.slot.id,
+    )
+    const instance = {
+      name: def.name,
+      version: def.version,
+      provides,
+      options: freeze(clone(options)),
+    }
     Object.defineProperties(instance, {
       contribute: { value: contribute },
       weft: { value: def.weft ?? '*' },

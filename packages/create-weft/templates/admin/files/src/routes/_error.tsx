@@ -8,7 +8,9 @@ export default function ServerError() {
     <main class="system-page">
       <Center max="narrow" gutter>
         <Stack gap="group" align="center">
-          <Heading level={1} role="title">Something went wrong on our side</Heading>
+          <Heading level={1} role="title">
+            Something went wrong on our side
+          </Heading>
           <Text subtle>Your orders are safe. Give it a minute and try again.</Text>
           <Link href="/admin">Back to the overview</Link>
         </Stack>

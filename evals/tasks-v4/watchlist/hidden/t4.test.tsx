@@ -3,7 +3,8 @@ import { screen, within } from '@testing-library/dom'
 import { cost, fakeApi, money, seed, start, type User } from './helpers'
 
 const stocks = seed()
-const open = (user: User, i: number) => user.click(screen.getByRole('button', { name: `Details ${stocks[i].symbol}` }))
+const open = (user: User, i: number) =>
+  user.click(screen.getByRole('button', { name: `Details ${stocks[i].symbol}` }))
 const panel = () => screen.getByRole('region', { name: 'Details' })
 const notes = () => within(panel()).getByLabelText('Notes') as HTMLTextAreaElement
 const button = (name: string) => within(panel()).getByRole('button', { name }) as HTMLButtonElement
@@ -13,9 +14,11 @@ test('the panel shows the heading, the live price and the loaded description', a
   await open(user, 2)
   expect(within(panel()).getByRole('heading').textContent).toContain(stocks[2].symbol)
   expect(within(panel()).getByRole('heading').textContent).toContain(stocks[2].name)
-  expect(within(panel()).getByTestId('detail-price').textContent?.trim()).toBe(money(stocks[2].price))
+  expect(within(panel()).getByTestId('detail-price').textContent?.trim()).toBe(
+    money(stocks[2].price),
+  )
   expect(within(panel()).getByText('Loading…')).toBeTruthy()
-  expect(fake.details.map(d => d.id)).toEqual(['s2'])
+  expect(fake.details.map((d) => d.id)).toEqual(['s2'])
   await fake.details[0].resolve({ description: 'Makes cedar things.' })
   expect(within(panel()).getByText('Makes cedar things.')).toBeTruthy()
   expect(within(panel()).queryByText('Loading…')).toBeNull()
@@ -34,7 +37,7 @@ test('a failed load shows an alert, and Retry loads again', async () => {
   await fake.details[0].reject()
   expect(within(panel()).getByRole('alert').textContent).toContain("Couldn't load details")
   await user.click(button('Retry'))
-  expect(fake.details.map(d => d.id)).toEqual(['s5', 's5'])
+  expect(fake.details.map((d) => d.id)).toEqual(['s5', 's5'])
   expect(within(panel()).getByText('Loading…')).toBeTruthy()
   await fake.details[1].resolve({ description: 'Flux it is.' })
   expect(within(panel()).getByText('Flux it is.')).toBeTruthy()
@@ -60,7 +63,9 @@ test('focus moves to Notes when the panel opens, and Escape closes it and return
   expect(document.activeElement).toBe(notes())
   await user.keyboard('{Escape}')
   expect(screen.queryByRole('region', { name: 'Details' })).toBeNull()
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: `Details ${stocks[4].symbol}` }))
+  expect(document.activeElement).toBe(
+    screen.getByRole('button', { name: `Details ${stocks[4].symbol}` }),
+  )
 })
 
 test('notes are saved per stock and shown when that stock opens', async () => {

@@ -13,7 +13,10 @@ export function InlineEdit(props: Props) {
   const finish = (save: boolean) => {
     if (done) return
     done = true
-    if (save) { props.onSave(draft()); setText(draft()) }
+    if (save) {
+      props.onSave(draft())
+      setText(draft())
+    }
     setEditing(false)
     editBtn?.focus()
   }
@@ -21,19 +24,40 @@ export function InlineEdit(props: Props) {
   return (
     <Show
       when={editing()}
-      fallback={<div>
-        <span data-testid="display">{text()}</span>
-        <button ref={editBtn} onClick={() => { done = false; setDraft(text()); setEditing(true) }}>Edit</button>
-      </div>}
+      fallback={
+        <div>
+          <span data-testid="display">{text()}</span>
+          <button
+            ref={editBtn}
+            onClick={() => {
+              done = false
+              setDraft(text())
+              setEditing(true)
+            }}
+          >
+            Edit
+          </button>
+        </div>
+      }
     >
       <input
-        ref={el => queueMicrotask(() => { el.focus(); el.select() })}
+        ref={(el) =>
+          queueMicrotask(() => {
+            el.focus()
+            el.select()
+          })
+        }
         aria-label="Title"
         value={draft()}
-        onInput={e => setDraft(e.currentTarget.value)}
-        onKeyDown={e => {
-          if (e.key === 'Enter') { e.preventDefault(); finish(true) }
-          else if (e.key === 'Escape') { e.preventDefault(); finish(false) }
+        onInput={(e) => setDraft(e.currentTarget.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            finish(true)
+          } else if (e.key === 'Escape') {
+            e.preventDefault()
+            finish(false)
+          }
         }}
         onBlur={() => finish(true)}
       />

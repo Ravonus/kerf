@@ -12,7 +12,9 @@ function Stock(props: { stock: number }) {
   return (
     <div>
       <p role="status">{left.value > 0 ? `Only ${left.value} left` : 'Out of stock'}</p>
-      <button onClick={() => qty.value++} disabled={left.value <= 0}>Add</button>
+      <button onClick={() => qty.value++} disabled={left.value <= 0}>
+        Add
+      </button>
     </div>
   )
 }
@@ -30,9 +32,18 @@ let dispose: (() => void) | undefined
 const mount = (fn: () => unknown) => {
   const el = document.body.appendChild(document.createElement('div'))
   const stop = render(fn, el)
-  dispose = () => { stop(); el.remove() }
+  dispose = () => {
+    stop()
+    el.remove()
+  }
 }
-afterEach(() => { dispose?.(); dispose = undefined; record.stop(); clock.resume(); net.reset() })
+afterEach(() => {
+  dispose?.()
+  dispose = undefined
+  record.stop()
+  clock.resume()
+  net.reset()
+})
 
 test('snapshot: roles, names, refs and the named graph', async () => {
   mount(() => <Stock stock={2} />)
@@ -43,7 +54,7 @@ test('snapshot: roles, names, refs and the named graph', async () => {
   expect(s.graph).toContain('Stock.qty = 0')
   expect(s.graph).toContain('Stock.left = 2 ← Stock.qty')
   const nodes = graph('Stock')
-  expect(nodes.map(n => n.name)).toEqual(['Stock.left', 'Stock.qty'])
+  expect(nodes.map((n) => n.name)).toEqual(['Stock.left', 'Stock.qty'])
   expect(nodes[1]!.feeds).toContain('Stock.left')
 })
 
@@ -59,13 +70,25 @@ test('act clicks like a user and returns what changed; assert retries what the u
 })
 
 test('acting by a snapshot ref, and a clear error when a name is ambiguous', async () => {
-  mount(() => <><Stock stock={1} /><Stock stock={3} /></>)
+  mount(() => (
+    <>
+      <Stock stock={1} />
+      <Stock stock={3} />
+    </>
+  ))
   const s = await snapshot({ interactive: true, graph: false })
   const ref = /button "Add" \[ref=(e\d+)\]/.exec(s.tree as string)![1]
   await act(`@${ref}`, 'click')
   expect(document.body.textContent).toContain('Out of stock')
-  await expect(act({ role: 'button', name: 'Add' }, 'click')).rejects.toThrow(/2 elements match button "Add"/)
-  expect(graph('Stock').map(n => n.name)).toEqual(['Stock#1.left', 'Stock#1.qty', 'Stock#2.left', 'Stock#2.qty'])
+  await expect(act({ role: 'button', name: 'Add' }, 'click')).rejects.toThrow(
+    /2 elements match button "Add"/,
+  )
+  expect(graph('Stock').map((n) => n.name)).toEqual([
+    'Stock#1.left',
+    'Stock#1.qty',
+    'Stock#2.left',
+    'Stock#2.qty',
+  ])
 })
 
 test('set writes state by its graph name; derived values refuse', () => {
@@ -83,7 +106,11 @@ test('record turns acts and asserts into a @weft-js/core/test test', async () =>
   await assert({ role: 'status' }, { text: 'Only 1 left' })
   document.querySelector('button')!.click() // a click from the agent's own browser tool, not through `act`
   await assert({ role: 'button', name: 'Add' }, { disabled: true })
-  const { code, asserts } = record.code({ component: 'Stock', from: './Stock', props: '{ stock: 2 }' })
+  const { code, asserts } = record.code({
+    component: 'Stock',
+    from: './Stock',
+    props: '{ stock: 2 }',
+  })
   expect(asserts).toBe(2)
   expect(code).toBe(`import { expect, test } from 'vitest'
 import { render, screen, user } from '@weft-js/core/test'
@@ -134,7 +161,11 @@ test('the network: offline fails fetch, fires the events, and drops open sockets
 test('commands by name, as the dev server relays them', async () => {
   mount(() => <Stock stock={2} />)
   await run('act', { target: { role: 'button', name: 'Add' }, action: 'click' })
-  expect(await run('assert', { target: { role: 'status' }, expect: { text: 'Only 1 left' } })).toMatchObject({ ok: true })
-  expect(await run('graph', { filter: 'Stock.qty' })).toMatchObject({ graph: expect.stringContaining('Stock.qty = 1') })
+  expect(
+    await run('assert', { target: { role: 'status' }, expect: { text: 'Only 1 left' } }),
+  ).toMatchObject({ ok: true })
+  expect(await run('graph', { filter: 'Stock.qty' })).toMatchObject({
+    graph: expect.stringContaining('Stock.qty = 1'),
+  })
   await expect(run('nope')).rejects.toThrow(/unknown command nope/)
 })

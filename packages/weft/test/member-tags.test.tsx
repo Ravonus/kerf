@@ -9,15 +9,30 @@ import { groups, reverse, Rows, swap } from './fixtures/ssr/MemberTags'
 import { Rows as ServerRows } from './fixtures/ssr/MemberTags.tsx?weft-ssr'
 import { Rows as ClientRows } from './fixtures/ssr/MemberTags.tsx?weft-hydrate'
 
-const parts = (root: Element | Document) => [...root.querySelectorAll('i')].map(i => `${i.dataset.part}:${i.className}:${i.textContent}`)
+const parts = (root: Element | Document) =>
+  [...root.querySelectorAll('i')].map((i) => `${i.dataset.part}:${i.className}:${i.textContent}`)
 const FIRST_ROW = ['solid:x:a', 'line::0', 'solid::', 'solid:kids:', 'ns::', 'local::', 'box::']
 const REST = [
-  'line:x:b', 'solid::1', 'line::', 'line:kids:', 'ns::', 'local::', 'box::',
-  'line::a', 'solid::a', 'solid::b', 'line::b',
-  'solid::prop', 'line::bare', 'line::default', 'solid::rest',
+  'line:x:b',
+  'solid::1',
+  'line::',
+  'line:kids:',
+  'ns::',
+  'local::',
+  'box::',
+  'line::a',
+  'solid::a',
+  'solid::b',
+  'line::b',
+  'solid::prop',
+  'line::bare',
+  'line::default',
+  'solid::rest',
 ]
 
-afterEach(() => { document.body.innerHTML = '' })
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 
 test('client render: row, destructured row, prop, rest and plain local tags', async () => {
   const initial = groups.value
@@ -50,7 +65,7 @@ test('server render and hydration: 0 misses, 0 DOM writes', () => {
   const before = [...container.querySelectorAll('*')]
   const misses = hydration.misses
   const writes: MutationRecord[] = []
-  const mo = new MutationObserver(r => writes.push(...r))
+  const mo = new MutationObserver((r) => writes.push(...r))
   mo.observe(container, { subtree: true, childList: true, characterData: true, attributes: true })
   const dispose = hydrate(() => ClientRows({}), container)
   writes.push(...mo.takeRecords())

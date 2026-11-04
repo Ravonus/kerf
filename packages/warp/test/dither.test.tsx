@@ -11,7 +11,12 @@ const server = await import('./fixtures/pack-dither.tsx?weft-ssr')
 const client = await import('./fixtures/pack-dither.tsx?weft-hydrate')
 
 test('a field is decorative by default, and named with a label', async () => {
-  const { container } = render(() => <><DitherField /><DitherField label="Slow waves" /></>)
+  const { container } = render(() => (
+    <>
+      <DitherField />
+      <DitherField label="Slow waves" />
+    </>
+  ))
   await flush()
   const [a, b] = container.querySelectorAll<HTMLElement>('[data-scope="dither"]')
   expect(a!.getAttribute('role')).toBe(null)
@@ -22,7 +27,11 @@ test('a field is decorative by default, and named with a label', async () => {
 })
 
 test('fill drops the ratio, children stay readable over the canvas, and attributes reach the host', async () => {
-  const { container } = render(() => <DitherField fill id="bg"><h2>Hello</h2></DitherField>)
+  const { container } = render(() => (
+    <DitherField fill id="bg">
+      <h2>Hello</h2>
+    </DitherField>
+  ))
   await flush()
   const host = container.querySelector<HTMLElement>('#bg')!
   expect(host.hasAttribute('data-fill')).toBe(true)
@@ -31,7 +40,12 @@ test('fill drops the ratio, children stay readable over the canvas, and attribut
 })
 
 test('a glyph word stays in the page as text; a logo takes a label', async () => {
-  const { container } = render(() => <><DitherGlyph text="warp" /><DitherGlyph path="M0 0h24v24z" label="weft" /></>)
+  const { container } = render(() => (
+    <>
+      <DitherGlyph text="warp" />
+      <DitherGlyph path="M0 0h24v24z" label="weft" />
+    </>
+  ))
   await flush()
   const [word, logo] = container.querySelectorAll<HTMLElement>('[data-scope="dither"]')
   expect(word!.textContent).toBe('warp')
@@ -47,7 +61,12 @@ test('an image keeps its <img> and alt underneath', async () => {
 })
 
 test('Canvas names its drawing or hides it', async () => {
-  const { container } = render(() => <><Canvas draw={() => {}} /><Canvas draw={() => {}} label="Plot" /></>)
+  const { container } = render(() => (
+    <>
+      <Canvas draw={() => {}} />
+      <Canvas draw={() => {}} label="Plot" />
+    </>
+  ))
   await flush()
   const [a, b] = container.querySelectorAll('canvas')
   expect(a!.getAttribute('aria-hidden')).toBe('true')
@@ -62,7 +81,7 @@ test('every host is server-rendered and hydrates with 0 misses and 0 writes: the
   const root = document.body.appendChild(document.createElement('div'))
   root.innerHTML = html
   const writes: MutationRecord[] = []
-  const observer = new MutationObserver(r => writes.push(...r))
+  const observer = new MutationObserver((r) => writes.push(...r))
   observer.observe(root, { subtree: true, childList: true, attributes: true, characterData: true })
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   resetIds()

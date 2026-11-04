@@ -41,7 +41,13 @@ export function seedStocks(n = 200): Stock[] {
 export function createFakeApi(): Api {
   const stocks = seedStocks()
   return {
-    listStocks: () => new Promise(resolve => setTimeout(() => resolve(structuredClone(stocks)), 300)),
-    listHoldings: () => Promise.resolve([{ id: 's0', qty: 10 }, { id: 's3', qty: 5 }, { id: 's42', qty: 2 }]),
+    listStocks: () =>
+      new Promise((resolve) => setTimeout(() => resolve(structuredClone(stocks)), 300)),
+    listHoldings: () =>
+      Promise.resolve([
+        { id: 's0', qty: 10 },
+        { id: 's3', qty: 5 },
+        { id: 's42', qty: 2 },
+      ]),
   }
 }

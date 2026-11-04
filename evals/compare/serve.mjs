@@ -8,9 +8,20 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const i = process.argv.indexOf('--port')
 let port = i > 0 ? Number(process.argv[i + 1]) : 5401
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.webp': 'image/webp' }
-const apps = [...readdirSync(here).map(d => d), ...readdirSync(join(here, 'design')).map(d => `design/${d}`)]
-  .filter(d => existsSync(join(here, d, 'dist/index.html')))
+const types = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.svg': 'image/svg+xml',
+  '.json': 'application/json',
+  '.woff2': 'font/woff2',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+}
+const apps = [
+  ...readdirSync(here).map((d) => d),
+  ...readdirSync(join(here, 'design')).map((d) => `design/${d}`),
+].filter((d) => existsSync(join(here, d, 'dist/index.html')))
 
 for (const app of apps) {
   const dist = join(here, app, 'dist')

@@ -7,23 +7,32 @@ import { inject } from 'vitest'
 const url = inject('url')
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 let browser
-beforeAll(async () => { browser = await chromium.launch() })
-afterAll(async () => { await browser?.close() })
+beforeAll(async () => {
+  browser = await chromium.launch()
+})
+afterAll(async () => {
+  await browser?.close()
+})
 
 async function open(path, options) {
   const context = await browser.newContext(options)
   const page = await context.newPage()
   const errors = []
   const posts = []
-  page.on('pageerror', e => errors.push(e.message))
-  page.on('console', m => (m.type() === 'error' ? errors.push(m.text()) : undefined))
-  page.on('request', r => (r.method() === 'POST' ? posts.push(new URL(r.url()).pathname.replace(/\.[0-9a-f]{6}$/, '')) : undefined))
+  page.on('pageerror', (e) => errors.push(e.message))
+  page.on('console', (m) => (m.type() === 'error' ? errors.push(m.text()) : undefined))
+  page.on('request', (r) =>
+    r.method() === 'POST'
+      ? posts.push(new URL(r.url()).pathname.replace(/\.[0-9a-f]{6}$/, ''))
+      : undefined,
+  )
   await page.goto(url + path)
-  if (!(!options?.javaScriptEnabled) || options?.javaScriptEnabled !== false) await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  if (!!options?.javaScriptEnabled || options?.javaScriptEnabled !== false)
+    await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   return { page, errors, posts, context }
 }
 
-const unique = name => `${name} ${Math.random().toString(36).slice(2, 8)}`
+const unique = (name) => `${name} ${Math.random().toString(36).slice(2, 8)}`
 
 test('a page with a form hydrates 0/0', async () => {
   const { page, errors, context } = await open('/notes')
@@ -35,14 +44,26 @@ test('a page with a form hydrates 0/0', async () => {
 test('a submit stays in the page: pending, the refreshed list, the reset fields, no page load', async () => {
   const { page, errors, posts, context } = await open('/notes')
   await page.evaluate(() => (window.__same = true))
-  await page.route('**/_weft/fn/**', async r => { await new Promise(ok => { setTimeout(ok, 200) }); await r.continue() })
+  await page.route('**/_weft/fn/**', async (r) => {
+    await new Promise((ok) => {
+      setTimeout(ok, 200)
+    })
+    await r.continue()
+  })
   const title = unique('Typed')
   await page.fill('input[name=title]', title)
   await page.fill('input[name=qty]', '4')
   await page.click('.note-form button')
-  await page.waitForFunction(() => document.querySelector('.note-form button').disabled && document.querySelector('.note-form').getAttribute('aria-busy') === 'true')
+  await page.waitForFunction(
+    () =>
+      document.querySelector('.note-form button').disabled &&
+      document.querySelector('.note-form').getAttribute('aria-busy') === 'true',
+  )
   expect(await page.textContent('.note-form button')).toBe('Saving')
-  await page.waitForFunction(t => document.querySelector('ul.notes').textContent.includes(t), title)
+  await page.waitForFunction(
+    (t) => document.querySelector('ul.notes').textContent.includes(t),
+    title,
+  )
   expect(await page.textContent('ul.notes')).toContain(`${title} × 4`)
   await page.waitForFunction(() => !document.querySelector('.note-form button').disabled)
   expect(await page.inputValue('input[name=title]')).toBe('')
@@ -65,12 +86,16 @@ test('field errors show in place, the first invalid field takes focus, and the t
   expect(await page.inputValue('input[name=title]')).toBe('x')
   await page.fill('input[name=title]', 'taken')
   await page.click('.note-form button')
-  await page.waitForFunction(() => document.querySelector('.title-error').textContent === 'Already taken')
+  await page.waitForFunction(
+    () => document.querySelector('.title-error').textContent === 'Already taken',
+  )
   await page.fill('input[name=title]', 'Fine now')
   await page.click('.note-form button')
-  await page.waitForFunction(() => !document.querySelector('input[name=title]').hasAttribute('aria-invalid'))
+  await page.waitForFunction(
+    () => !document.querySelector('input[name=title]').hasAttribute('aria-invalid'),
+  )
   expect(await page.textContent('.title-error')).toBe('')
-  expect(errors.filter(e => !/422/.test(e))).toEqual([]) // the browser logs the failed fetch
+  expect(errors.filter((e) => !/422/.test(e))).toEqual([]) // the browser logs the failed fetch
   await context.close()
 })
 
@@ -87,8 +112,17 @@ test('a failed submit with no field keeps the form usable, with the message', as
 test('the 422 page hydrates as it was rendered, then submits in place', async () => {
   const { page, errors, posts, context } = await open('/notes')
   // Submit before the client takes over: a native POST, as a page that hasn't hydrated yet sends.
-  await page.evaluate(() => { const f = document.querySelector('.note-form'); f.querySelector('[name=title]').value = 'x'; f.querySelector('[name=qty]').value = '1'; HTMLFormElement.prototype.submit.call(f) })
-  await page.waitForFunction(() => document.querySelector('.title-error')?.textContent && window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.evaluate(() => {
+    const f = document.querySelector('.note-form')
+    f.querySelector('[name=title]').value = 'x'
+    f.querySelector('[name=qty]').value = '1'
+    HTMLFormElement.prototype.submit.call(f)
+  })
+  await page.waitForFunction(
+    () => document.querySelector('.title-error')?.textContent && window.__weft?.hydrated,
+    null,
+    { timeout: 15_000 },
+  )
   expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(await page.inputValue('input[name=title]')).toBe('x')
   expect(await page.$('#weft-form')).toBeNull()
@@ -97,7 +131,7 @@ test('the 422 page hydrates as it was rendered, then submits in place', async ()
   await page.click('.note-form button')
   await page.waitForFunction(() => document.querySelector('.title-error').textContent === '')
   expect(posts).toEqual(['/_weft/fn/addNote'])
-  expect(errors.filter(e => !/422/.test(e))).toEqual([])
+  expect(errors.filter((e) => !/422/.test(e))).toEqual([])
   await context.close()
 })
 
@@ -134,13 +168,25 @@ test('a cookie box: server-rendered, hydrated 0/0, and it survives a reload', as
 
 test('an upload with JS stays in the page, over multipart, and hydrates 0/0', async () => {
   const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))('sharp')
-  const bytes = await sharp({ create: { width: 200, height: 100, channels: 3, background: { r: 20, g: 90, b: 180 } } }).png().toBuffer()
+  const bytes = await sharp({
+    create: { width: 200, height: 100, channels: 3, background: { r: 20, g: 90, b: 180 } },
+  })
+    .png()
+    .toBuffer()
   const { page, errors, posts, context } = await open('/cover')
   expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
-  await page.evaluate(() => { window.__same = true })
-  await page.setInputFiles('.cover-form input[type=file]', { name: 'blue.png', mimeType: 'image/png', buffer: bytes })
+  await page.evaluate(() => {
+    window.__same = true
+  })
+  await page.setInputFiles('.cover-form input[type=file]', {
+    name: 'blue.png',
+    mimeType: 'image/png',
+    buffer: bytes,
+  })
   await page.click('.cover-form button')
-  await page.waitForFunction(() => document.querySelector('main img')?.getAttribute('srcset')?.includes('/_weft/m/'))
+  await page.waitForFunction(() =>
+    document.querySelector('main img')?.getAttribute('srcset')?.includes('/_weft/m/'),
+  )
   expect(await page.evaluate(() => window.__same)).toBe(true)
   expect(posts.at(-1)).toMatch(/^\/_weft\/fn\//)
   expect(errors).toEqual([])
@@ -149,8 +195,14 @@ test('an upload with JS stays in the page, over multipart, and hydrates 0/0', as
 
 test('a refused upload shows its field error, in the page', async () => {
   const { page, context } = await open('/cover')
-  await page.setInputFiles('.cover-form input[type=file]', { name: 'x.png', mimeType: 'image/png', buffer: Buffer.from('not an image') })
+  await page.setInputFiles('.cover-form input[type=file]', {
+    name: 'x.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('not an image'),
+  })
   await page.click('.cover-form button')
-  await page.waitForFunction(() => document.querySelector('.cover-form')?.textContent.includes("isn't an image"))
+  await page.waitForFunction(() =>
+    document.querySelector('.cover-form')?.textContent.includes("isn't an image"),
+  )
   await context.close()
 })

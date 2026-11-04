@@ -17,7 +17,10 @@ export type Scalar = string | number | boolean | null
 /** Which way a sort runs. */
 export type Dir = 'asc' | 'desc'
 /** One field and a direction. */
-export interface Sort { field: string; dir: Dir }
+export interface Sort {
+  field: string
+  dir: Dir
+}
 
 /** A checked request, as a source takes it. */
 export interface ListParams {
@@ -34,7 +37,12 @@ export interface ListParams {
 }
 
 /** The envelope warp's `Table` reads. `next` and `prev` go back in as `cursor` or `page`; absent means no such page. */
-export interface ListPage<T> { items: T[]; total?: number; next?: string | number; prev?: string | number }
+export interface ListPage<T> {
+  items: T[]
+  total?: number
+  next?: string | number
+  prev?: string | number
+}
 
 /** What a list lets a client ask for. */
 export interface ListSpec {
@@ -57,28 +65,42 @@ export interface ListRequest {
   filter?: Record<string, Scalar | Scalar[]>
 }
 
-const SEARCH_MAX = 200, IN_MAX = 100, CURSOR_MAX = 1024
+const SEARCH_MAX = 200,
+  IN_MAX = 100,
+  CURSOR_MAX = 1024
 
-const scalar = (v: unknown): v is Scalar => v === null || typeof v === 'boolean' || typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v))
+const scalar = (v: unknown): v is Scalar =>
+  v === null ||
+  typeof v === 'boolean' ||
+  typeof v === 'string' ||
+  (typeof v === 'number' && Number.isFinite(v))
 
 const pack = (v: unknown) => (v instanceof Date ? { $d: v.toISOString() } : v)
-const stamped = (v: unknown): v is { $d: string } => typeof (v as { $d?: unknown } | null)?.$d === 'string'
+const stamped = (v: unknown): v is { $d: string } =>
+  typeof (v as { $d?: unknown } | null)?.$d === 'string'
 const unpack = (v: unknown) => (stamped(v) ? new Date(v.$d) : v)
 
 /** Opaque to a client, and read with the same care as any other input. */
 export function encodeCursor(value: unknown, id: unknown): string {
   const bytes = new TextEncoder().encode(JSON.stringify([pack(value), pack(id)]))
-  return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replace(/=+$/, '')
 }
 
 /** The other way from `encodeCursor`: null for anything that isn't a cursor of ours. */
 export function decodeCursor(text: string): [unknown, unknown] | null {
   if (text.length > CURSOR_MAX) return null
   try {
-    const bytes = Uint8Array.from(atob(text.replaceAll('-', '+').replaceAll('_', '/')), c => c.charCodeAt(0))
+    const bytes = Uint8Array.from(atob(text.replaceAll('-', '+').replaceAll('_', '/')), (c) =>
+      c.charCodeAt(0),
+    )
     const list: unknown = JSON.parse(new TextDecoder().decode(bytes))
     const fits = (v: unknown) => scalar(v) || (stamped(v) && !Number.isNaN(Date.parse(v.$d)))
-    return Array.isArray(list) && list.length === 2 && list.every(fits) ? [unpack(list[0]), unpack(list[1])] : null
+    return Array.isArray(list) && list.length === 2 && list.every(fits)
+      ? [unpack(list[0]), unpack(list[1])]
+      : null
   } catch {
     return null
   }
@@ -86,38 +108,68 @@ export function decodeCursor(text: string): [unknown, unknown] | null {
 
 /** A `query`'s `input`. Takes a `ListRequest` from the client, and hands `run` the `ListParams` a source takes. */
 export function listInput(spec: ListSpec): StandardSchemaV1<ListRequest | undefined, ListParams> {
-  const fallback = spec.pageSize?.default ?? 25, max = spec.pageSize?.max ?? 100
-  const sorts = new Set(spec.sort), filters = new Set(spec.filter)
+  const fallback = spec.pageSize?.default ?? 25,
+    max = spec.pageSize?.max ?? 100
+  const sorts = new Set(spec.sort),
+    filters = new Set(spec.filter)
   const validate = (input: unknown) => {
     const issues: { message: string; path?: string[] }[] = []
     const no = (message: string, ...path: string[]) => void issues.push({ message, path })
     const r = (input ?? {}) as ListRequest
-    if (typeof r !== 'object' || Array.isArray(r)) return { issues: [{ message: 'a list request is an object' }] }
+    if (typeof r !== 'object' || Array.isArray(r))
+      return { issues: [{ message: 'a list request is an object' }] }
     const mode = r.mode ?? (r.cursor !== undefined ? 'cursor' : 'page')
     if (mode !== 'page' && mode !== 'cursor') no('`mode` is `page` or `cursor`', 'mode')
     const size = r.pageSize ?? fallback
-    if (!Number.isInteger(size) || size < 1 || size > max) no(`\`pageSize\` is a whole number up to ${max}`, 'pageSize')
+    if (!Number.isInteger(size) || size < 1 || size > max)
+      no(`\`pageSize\` is a whole number up to ${max}`, 'pageSize')
     const page = r.page ?? 1
-    if (!Number.isInteger(page) || page < 1 || page > 1e6) no('`page` is a whole number from 1', 'page')
+    if (!Number.isInteger(page) || page < 1 || page > 1e6)
+      no('`page` is a whole number from 1', 'page')
     let after: ListParams['after'] = null
     if (r.cursor != null) {
       after = typeof r.cursor === 'string' ? decodeCursor(r.cursor) : null
       if (!after) no('that cursor is not one of ours', 'cursor')
     }
     const sort = r.sort ?? spec.defaultSort ?? null
-    if (sort && !(typeof sort === 'object' && sorts.has(sort.field) && (sort.dir === 'asc' || sort.dir === 'desc'))) no('that sort is not allowed', 'sort')
-    if (r.search !== undefined && (typeof r.search !== 'string' || r.search.length > SEARCH_MAX)) no(`\`search\` is text up to ${SEARCH_MAX} characters`, 'search')
+    if (
+      sort &&
+      !(
+        typeof sort === 'object' &&
+        sorts.has(sort.field) &&
+        (sort.dir === 'asc' || sort.dir === 'desc')
+      )
+    )
+      no('that sort is not allowed', 'sort')
+    if (r.search !== undefined && (typeof r.search !== 'string' || r.search.length > SEARCH_MAX))
+      no(`\`search\` is text up to ${SEARCH_MAX} characters`, 'search')
     if (r.search && !spec.search?.length) no('this list has no search', 'search')
     const filter: ListParams['filter'] = Object.create(null)
-    if (r.filter !== undefined && (typeof r.filter !== 'object' || r.filter === null || Array.isArray(r.filter))) no('`filter` is an object', 'filter')
-    else for (const key of Object.keys(r.filter ?? {})) {
-      const v = r.filter![key]!
-      if (!filters.has(key)) no(`\`${key}\` can't be filtered on`, 'filter', key)
-      else if (Array.isArray(v) ? !(v.length && v.length <= IN_MAX && v.every(scalar)) : !scalar(v)) no(`\`${key}\` takes a value or a list of up to ${IN_MAX}, not an object`, 'filter', key)
-      else filter[key] = v
-    }
+    if (
+      r.filter !== undefined &&
+      (typeof r.filter !== 'object' || r.filter === null || Array.isArray(r.filter))
+    )
+      no('`filter` is an object', 'filter')
+    else
+      for (const key of Object.keys(r.filter ?? {})) {
+        const v = r.filter![key]!
+        if (!filters.has(key)) no(`\`${key}\` can't be filtered on`, 'filter', key)
+        else if (
+          Array.isArray(v) ? !(v.length && v.length <= IN_MAX && v.every(scalar)) : !scalar(v)
+        )
+          no(`\`${key}\` takes a value or a list of up to ${IN_MAX}, not an object`, 'filter', key)
+        else filter[key] = v
+      }
     if (issues.length) return { issues }
-    const params: ListParams = { mode, limit: size, offset: mode === 'page' ? (page - 1) * size : 0, after, sort, filter, ...(r.search ? { search: r.search } : {}) }
+    const params: ListParams = {
+      mode,
+      limit: size,
+      offset: mode === 'page' ? (page - 1) * size : 0,
+      after,
+      sort,
+      filter,
+      ...(r.search ? { search: r.search } : {}),
+    }
     return { value: params }
   }
   return { '~standard': { version: 1, vendor: 'weft', validate } }
@@ -155,7 +207,13 @@ export interface DbAdapter<T = unknown> {
   source<Row = Record<string, unknown>>(target: T, spec: SourceSpec): ListSource<Row>
 }
 
-const refuse = (what: string) => new StartError('Q002', `the list source refused ${what}`, 'add it to the source\'s `columns`, and to `listInput`', { status: 400 })
+const refuse = (what: string) =>
+  new StartError(
+    'Q002',
+    `the list source refused ${what}`,
+    "add it to the source's `columns`, and to `listInput`",
+    { status: 400 },
+  )
 
 /** A request checked against the source and put in stored names. Throws on any name outside `columns`. */
 export interface Plan {
@@ -175,11 +233,20 @@ export function storedId(spec: SourceSpec): string {
 
 /** Check a request against `spec`, for a source to run. */
 export function plan(spec: SourceSpec, p: ListParams): Plan {
-  const stored = (field: string) => (Object.hasOwn(spec.columns, field) ? spec.columns[field]! : (() => { throw refuse(`\`${field}\``) })())
+  const stored = (field: string) =>
+    Object.hasOwn(spec.columns, field)
+      ? spec.columns[field]!
+      : (() => {
+          throw refuse(`\`${field}\``)
+        })()
   const id = spec.id ?? 'id'
-  const where = Object.keys(p.filter).map(field => ({ column: stored(field), values: [p.filter[field]!].flat() }))
-  if (where.some(w => !w.values.every(scalar))) throw refuse('a filter value that is not a scalar')
-  const searching = p.search ? spec.search ?? [] : []
+  const where = Object.keys(p.filter).map((field) => ({
+    column: stored(field),
+    values: [p.filter[field]!].flat(),
+  }))
+  if (where.some((w) => !w.values.every(scalar)))
+    throw refuse('a filter value that is not a scalar')
+  const searching = p.search ? (spec.search ?? []) : []
   if (p.search && !searching.length) throw refuse('a search')
   return {
     sort: p.sort ? { column: stored(p.sort.field), dir: p.sort.dir, field: p.sort.field } : null,
@@ -192,32 +259,56 @@ export function plan(spec: SourceSpec, p: ListParams): Plan {
 /** A stored row in public names, with only `columns` in it. */
 export const rowOf = <Row = Record<string, unknown>>(spec: SourceSpec) => {
   const pairs = Object.entries(spec.columns)
-  return (row: object) => Object.fromEntries(pairs.filter(([, c]) => c in row).map(([f, c]) => [f, (row as Record<string, unknown>)[c]])) as Row
+  return (row: object) =>
+    Object.fromEntries(
+      pairs.filter(([, c]) => c in row).map(([f, c]) => [f, (row as Record<string, unknown>)[c]]),
+    ) as Row
 }
 
 /** A write in stored names. Refuses anything outside `write`, so a client can't set `role` or move an id. */
-export function written(spec: SourceSpec, data: Record<string, unknown>, creating = false): Record<string, unknown> {
+export function written(
+  spec: SourceSpec,
+  data: Record<string, unknown>,
+  creating = false,
+): Record<string, unknown> {
   const id = spec.id ?? 'id'
-  const allowed = new Set(spec.write ?? Object.keys(spec.columns).filter(f => f !== id))
+  const allowed = new Set(spec.write ?? Object.keys(spec.columns).filter((f) => f !== id))
   if (creating) allowed.add(id)
   const out: Record<string, unknown> = {}
   for (const field of Object.keys(data)) {
-    if (!allowed.has(field) || !Object.hasOwn(spec.columns, field)) throw refuse(`a write to \`${field}\``)
+    if (!allowed.has(field) || !Object.hasOwn(spec.columns, field))
+      throw refuse(`a write to \`${field}\``)
     out[spec.columns[field]!] = data[field]
   }
   return out
 }
 
 /** `rows` are in public names, with one more than `limit` in cursor mode when there is a next page. */
-export function pageOf<R>(rows: R[], p: ListParams, field: { sort?: string | undefined; id: string }, total?: number): ListPage<R> {
+export function pageOf<R>(
+  rows: R[],
+  p: ListParams,
+  field: { sort?: string | undefined; id: string },
+  total?: number,
+): ListPage<R> {
   if (p.mode === 'page') {
     const page = p.offset / p.limit + 1
-    return { items: rows, ...(total === undefined ? {} : { total }), ...(total !== undefined && p.offset + p.limit < total ? { next: page + 1 } : {}), ...(page > 1 ? { prev: page - 1 } : {}) }
+    return {
+      items: rows,
+      ...(total === undefined ? {} : { total }),
+      ...(total !== undefined && p.offset + p.limit < total ? { next: page + 1 } : {}),
+      ...(page > 1 ? { prev: page - 1 } : {}),
+    }
   }
   const more = rows.length > p.limit
   const items = more ? rows.slice(0, p.limit) : rows
   const last = items.at(-1) as R & Record<string, unknown>
-  return { items, ...(total === undefined ? {} : { total }), ...(more ? { next: encodeCursor(field.sort ? last[field.sort] : last[field.id], last[field.id]) } : {}) }
+  return {
+    items,
+    ...(total === undefined ? {} : { total }),
+    ...(more
+      ? { next: encodeCursor(field.sort ? last[field.sort] : last[field.id], last[field.id]) }
+      : {}),
+  }
 }
 
 /** `LIKE` with `!` as the escape: the one character that means the same on SQLite, Postgres and MySQL. */

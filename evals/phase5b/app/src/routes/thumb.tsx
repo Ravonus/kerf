@@ -11,13 +11,20 @@ function Result(props: { seed: number }) {
 export default function Thumb() {
   const seed = state(7)
   const failed = state('')
-  const open = () => guarded.fetch({ width: 100_000, height: 100_000 }).catch((e: { code?: string; data?: { pixels: number } }) => { failed.value = `${e.code}:${e.data?.pixels}` })
+  const open = () =>
+    guarded
+      .fetch({ width: 100_000, height: 100_000 })
+      .catch((e: { code?: string; data?: { pixels: number } }) => {
+        failed.value = `${e.code}:${e.data?.pixels}`
+      })
   return (
     <main>
       <h1>Thumb</h1>
       <button onClick={() => seed.value++}>Next</button>
       <button onClick={open}>Open</button>
-      <Boundary fallback={<p>…</p>}><Result seed={seed.value} /></Boundary>
+      <Boundary fallback={<p>…</p>}>
+        <Result seed={seed.value} />
+      </Boundary>
       <p class="failed">{failed.value}</p>
     </main>
   )

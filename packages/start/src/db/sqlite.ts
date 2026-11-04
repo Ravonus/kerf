@@ -32,8 +32,11 @@ export async function open(path: string): Promise<Conn> {
     const { Database } = await import('bun:sqlite')
     const db = new Database(path, { create: true })
     conn = {
-      query: (sql, params, method) => (method === 'run' ? void db.prepare(sql).run(...params) : pick(db.prepare(sql).values(...params), method)),
-      exec: sql => void db.run(sql),
+      query: (sql, params, method) =>
+        method === 'run'
+          ? void db.prepare(sql).run(...params)
+          : pick(db.prepare(sql).values(...params), method),
+      exec: (sql) => void db.run(sql),
       close: () => db.close(),
     }
   } else {
@@ -46,7 +49,7 @@ export async function open(path: string): Promise<Conn> {
         s.setReturnArrays(true)
         return pick(s.all(...(params as SQLInputValue[])) as unknown as unknown[][], method)
       },
-      exec: sql => db.exec(sql),
+      exec: (sql) => db.exec(sql),
       close: () => db.close(),
     }
   }
@@ -65,15 +68,29 @@ export interface SqliteOptions<S extends Record<string, unknown>> {
 }
 
 /** Drizzle over a local file, with `$weft` for the framework's own needs. */
-export type SqliteDb<S extends Record<string, unknown>> = SqliteRemoteDatabase<S> & { $weft: DbHandle }
+export type SqliteDb<S extends Record<string, unknown>> = SqliteRemoteDatabase<S> & {
+  $weft: DbHandle
+}
 
 /** A Drizzle client on a SQLite file, with this app's migrations and write tracking. */
-export function createDb<S extends Record<string, unknown>>({ schema, url = 'file:.data/app.db', migrate = true }: SqliteOptions<S>): SqliteDb<S> {
+export function createDb<S extends Record<string, unknown>>({
+  schema,
+  url = 'file:.data/app.db',
+  migrate = true,
+}: SqliteOptions<S>): SqliteDb<S> {
   if (/^[a-z][a-z0-9+.-]+:\/\//i.test(url) && !url.startsWith('file:'))
-    throw new StartError('Q013', `\`@weft-js/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``, 'use `file:<path>`, or `createDb` from `@weft-js/start/db/postgres` for a Postgres URL')
+    throw new StartError(
+      'Q013',
+      `\`@weft-js/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``,
+      'use `file:<path>`, or `createDb` from `@weft-js/start/db/postgres` for a Postgres URL',
+    )
   const path = url.replace(/^file:/, '')
   let conn: Promise<Conn> | undefined
-  const connect = () => (conn ??= open(path).catch(e => { conn = undefined; throw e }))
+  const connect = () =>
+    (conn ??= open(path).catch((e) => {
+      conn = undefined
+      throw e
+    }))
   const inside = new AsyncLocalStorage<boolean>()
   let held: Promise<unknown> = Promise.resolve()
   const handle: DbHandle = {
@@ -81,8 +98,12 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
     exempt: new Set(),
     async migrate(list: Migration[]) {
       const c = await connect()
-      c.exec('create table if not exists __weft_migrations (tag text primary key, at integer not null)')
-      const done = new Set((c.query('select tag from __weft_migrations', [], 'values') as string[][]).map(r => r[0]))
+      c.exec(
+        'create table if not exists __weft_migrations (tag text primary key, at integer not null)',
+      )
+      const done = new Set(
+        (c.query('select tag from __weft_migrations', [], 'values') as string[][]).map((r) => r[0]),
+      )
       for (const m of list) {
         if (done.has(m.tag)) continue
         c.exec('begin')
@@ -96,7 +117,8 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
         }
       }
     },
-    changes: (tables, o) => import('./changes-sqlite').then(m => m.sqliteChanges({ ...o, path, open, tables })),
+    changes: (tables, o) =>
+      import('./changes-sqlite').then((m) => m.sqliteChanges({ ...o, path, open, tables })),
   }
   const ready = gate(handle, migrate)
   const run = async (sql: string, params: unknown[], method: Method) => {
@@ -112,7 +134,9 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
     await held
     c.exec('begin')
     try {
-      const out = list.map(q => (touch(handle, q.sql), { rows: c.query(q.sql, q.params, q.method) as unknown[] }))
+      const out = list.map(
+        (q) => (touch(handle, q.sql), { rows: c.query(q.sql, q.params, q.method) as unknown[] }),
+      )
       c.exec('commit')
       return out
     } catch (e) {
@@ -127,7 +151,9 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
     await ready()
     const before = held
     let release!: () => void
-    held = new Promise<void>(ok => { release = ok })
+    held = new Promise<void>((ok) => {
+      release = ok
+    })
     await before
     try {
       return await inside.run(true, () => transaction(...args))

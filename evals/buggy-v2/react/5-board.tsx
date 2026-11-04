@@ -8,16 +8,19 @@ export function Board({ initialTasks }: { initialTasks: Task[] }) {
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [draft, setDraft] = useState('')
   const nextId = useRef(0)
-  const toggle = (id: string) => setTasks(ts => ts.map(t => (t.id === id ? { ...t, done: !t.done } : t)))
-  const shown = tasks.filter(t => t.title.toLowerCase().includes(filter.toLowerCase()))
+  const toggle = (id: string) =>
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+  const shown = tasks.filter((t) => t.title.toLowerCase().includes(filter.toLowerCase()))
 
   const column = (done: boolean, label: string) => {
-    const list = shown.filter(t => t.done === done)
+    const list = shown.filter((t) => t.done === done)
     return (
       <section aria-label={label}>
-        <h2>{label} ({list.length})</h2>
+        <h2>
+          {label} ({list.length})
+        </h2>
         <ul>
-          {list.map(t => (
+          {list.map((t) => (
             <li key={t.id}>
               <label>
                 <input type="checkbox" checked={t.done} onChange={() => toggle(t.id)} />{' '}
@@ -33,14 +36,21 @@ export function Board({ initialTasks }: { initialTasks: Task[] }) {
 
   return (
     <div>
-      <label>Filter <input value={filter} onChange={e => setFilter(e.target.value)} /></label>
-      <form onSubmit={e => {
-        e.preventDefault()
-        const title = draft.trim()
-        if (title) setTasks(ts => [...ts, { id: `new-${nextId.current++}`, title, done: false }])
-        setDraft('')
-      }}>
-        <label>New task <input value={draft} onChange={e => setDraft(e.target.value)} /></label>
+      <label>
+        Filter <input value={filter} onChange={(e) => setFilter(e.target.value)} />
+      </label>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          const title = draft.trim()
+          if (title)
+            setTasks((ts) => [...ts, { id: `new-${nextId.current++}`, title, done: false }])
+          setDraft('')
+        }}
+      >
+        <label>
+          New task <input value={draft} onChange={(e) => setDraft(e.target.value)} />
+        </label>
         <button type="submit">Add</button>
       </form>
       {column(false, 'Todo')}

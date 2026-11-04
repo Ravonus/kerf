@@ -11,7 +11,11 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const windows = process.platform === 'win32'
 const run = (cwd, cmd, ...args) => {
   console.log(`[setup] ${cwd}: ${cmd} ${args.join(' ')}`)
-  const r = spawnSync(cmd, args, { cwd: join(root, cwd), stdio: ['ignore', 'ignore', 'inherit'], shell: windows })
+  const r = spawnSync(cmd, args, {
+    cwd: join(root, cwd),
+    stdio: ['ignore', 'ignore', 'inherit'],
+    shell: windows,
+  })
   if (r.status !== 0) process.exit(r.status ?? 1)
 }
 

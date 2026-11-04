@@ -17,20 +17,38 @@ const bytes = {}
 for (const name of ['react', 'solid', 'weft']) {
   const dir = join(out, name)
   await build({
-    root: join(here, name), base: `/arena/${name}/`, logLevel: 'warn', configFile: false,
+    root: join(here, name),
+    base: `/arena/${name}/`,
+    logLevel: 'warn',
+    configFile: false,
     plugins: [await plugin[name]()],
-    ...(name === 'react' ? { esbuild: { jsx: 'automatic', jsxImportSource: 'react', tsconfigRaw: { compilerOptions: { jsx: 'react-jsx', jsxImportSource: 'react' } } } } : {}),
+    ...(name === 'react'
+      ? {
+          esbuild: {
+            jsx: 'automatic',
+            jsxImportSource: 'react',
+            tsconfigRaw: { compilerOptions: { jsx: 'react-jsx', jsxImportSource: 'react' } },
+          },
+        }
+      : {}),
     define: { 'process.env.NODE_ENV': '"production"' },
     build: { outDir: dir, emptyOutDir: true, assetsDir: '.', cssCodeSplit: false },
   })
-  bytes[name] = readdirSync(dir).filter(f => f.endsWith('.js'))
+  bytes[name] = readdirSync(dir)
+    .filter((f) => f.endsWith('.js'))
     .reduce((sum, f) => sum + brotliCompressSync(readFileSync(join(dir, f))).length, 0)
   copyFileSync(join(here, name, 'main.tsx'), join(dir, 'source.txt'))
 }
 // A development build, because the graph's real names are in those only.
 await build({
-  root: join(here, 'graph'), base: '/arena/graph/', logLevel: 'warn', configFile: false, mode: 'development',
-  plugins: [(await import('../node_modules/@weft-js/core/vite.mjs')).default({ dev: true, hmr: false })],
+  root: join(here, 'graph'),
+  base: '/arena/graph/',
+  logLevel: 'warn',
+  configFile: false,
+  mode: 'development',
+  plugins: [
+    (await import('../node_modules/@weft-js/core/vite.mjs')).default({ dev: true, hmr: false }),
+  ],
   define: { 'process.env.NODE_ENV': '"development"', 'import.meta.env.DEV': 'true' },
   build: { outDir: join(out, 'graph'), emptyOutDir: true, assetsDir: '.', minify: false },
 })

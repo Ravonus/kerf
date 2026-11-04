@@ -1,4 +1,13 @@
-import { boolean, integer, pgTable, primaryKey, serial, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  integer,
+  pgTable,
+  primaryKey,
+  serial,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core'
 
 export const categories = pgTable('categories', {
   id: serial().primaryKey(),
@@ -11,7 +20,9 @@ export const products = pgTable('products', {
   slug: text().notNull().unique(),
   name: text().notNull(),
   description: text().notNull(),
-  categoryId: integer('category_id').notNull().references(() => categories.id),
+  categoryId: integer('category_id')
+    .notNull()
+    .references(() => categories.id),
   priceCents: integer('price_cents').notNull(),
   stock: integer().notNull(),
   featured: boolean().notNull().default(false),
@@ -22,8 +33,16 @@ export const carts = pgTable('carts', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const cartItems = pgTable('cart_items', {
-  cartId: uuid('cart_id').notNull().references(() => carts.id, { onDelete: 'cascade' }),
-  productId: integer('product_id').notNull().references(() => products.id),
-  quantity: integer().notNull(),
-}, table => [primaryKey({ columns: [table.cartId, table.productId] })])
+export const cartItems = pgTable(
+  'cart_items',
+  {
+    cartId: uuid('cart_id')
+      .notNull()
+      .references(() => carts.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id),
+    quantity: integer().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.cartId, table.productId] })],
+)

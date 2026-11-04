@@ -24,13 +24,17 @@ export function compareValues(a: unknown, b: unknown) {
 /** A sorted copy; the input order breaks ties. */
 export function sortRows<T>(rows: readonly T[], value: (row: T) => unknown, dir: SortDir) {
   const sign = dir === 'ascending' ? 1 : -1
-  return rows.map((row, i) => ({ row, i })).sort((x, y) => {
-    const a = value(x.row), b = value(y.row)
-    const empty = (v: unknown) => v == null || v === ''
-    // empties stay last in both directions
-    if (empty(a) !== empty(b)) return empty(a) ? 1 : -1
-    return sign * compareValues(a, b) || x.i - y.i
-  }).map(e => e.row)
+  return rows
+    .map((row, i) => ({ row, i }))
+    .sort((x, y) => {
+      const a = value(x.row),
+        b = value(y.row)
+      const empty = (v: unknown) => v == null || v === ''
+      // empties stay last in both directions
+      if (empty(a) !== empty(b)) return empty(a) ? 1 : -1
+      return sign * compareValues(a, b) || x.i - y.i
+    })
+    .map((e) => e.row)
 }
 
 /** Rows where any of `texts(row)` contains the query, case-insensitively. A blank query keeps them all. */
@@ -38,19 +42,26 @@ export function filterRows<T>(rows: readonly T[], query: string, texts: (row: T)
   const q = query.trim().toLowerCase()
   if (!q) return rows as T[]
   // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
-  return rows.filter(r => texts(r).some(t => t != null && String(t).toLowerCase().includes(q)))
+  return rows.filter((r) => texts(r).some((t) => t != null && String(t).toLowerCase().includes(q)))
 }
 
 /** Page `page` of `size` (clamped to the last page), and the numbers the footer shows. */
 export function pageSlice<T>(rows: readonly T[], page: number, size: number) {
   const pages = Math.max(1, Math.ceil(rows.length / size))
   const at = Math.min(Math.max(page, 0), pages - 1)
-  return { rows: rows.slice(at * size, at * size + size), page: at, pages, from: rows.length ? at * size + 1 : 0, to: Math.min(rows.length, at * size + size) }
+  return {
+    rows: rows.slice(at * size, at * size + size),
+    page: at,
+    pages,
+    from: rows.length ? at * size + 1 : 0,
+    to: Math.min(rows.length, at * size + size),
+  }
 }
 
 /** The keys from `anchor` to `key` inclusive in `order`, for a Shift-click; just `key` if the anchor has left. */
 export function rangeOf<K>(order: readonly K[], anchor: K | undefined, key: K) {
-  const a = anchor === undefined ? -1 : order.indexOf(anchor), b = order.indexOf(key)
+  const a = anchor === undefined ? -1 : order.indexOf(anchor),
+    b = order.indexOf(key)
   return a < 0 || b < 0 ? [key] : order.slice(Math.min(a, b), Math.max(a, b) + 1)
 }
 
@@ -71,7 +82,8 @@ export interface TableOptions {
 }
 
 /** The stylesheet that hides columns: one rule, so no row re-renders. */
-export const hideRule = (id: string, ids: readonly string[]) => ids.map(c => `#${id} [data-col="${c}"]{display:none}`).join('')
+export const hideRule = (id: string, ids: readonly string[]) =>
+  ids.map((c) => `#${id} [data-col="${c}"]{display:none}`).join('')
 
 /** Attach to `[data-scope="table"]`, which needs an id: the hide rule is scoped by it. */
 export function table(root: HTMLElement, opts: TableOptions) {
@@ -95,7 +107,8 @@ export function table(root: HTMLElement, opts: TableOptions) {
     const w = root.querySelector<HTMLElement>('thead [data-part="select"]')?.offsetWidth ?? 0
     for (const c of cells) c.style.setProperty('--_pin-x', `${w}px`)
   }
-  const value = (handle: Element) => handle.setAttribute('aria-valuenow', String((handle.closest('th') as HTMLElement).offsetWidth))
+  const value = (handle: Element) =>
+    handle.setAttribute('aria-valuenow', String((handle.closest('th') as HTMLElement).offsetWidth))
   // A table wider than its box scrolls, and an overlay scrollbar shows nothing until it moves: data-overflow="start end"
   // says which sides have more, for the edge shadows, and --_vt/--_vh place them over the viewport (the root is their box).
   const edges = () => {
@@ -106,16 +119,29 @@ export function table(root: HTMLElement, opts: TableOptions) {
     if (x > 1) parts.push('start')
     if (x + v.clientWidth < v.scrollWidth - 1) parts.push('end')
     const next = parts.join(' ')
-    if ((root.dataset.overflow ?? '') !== next) { if (next) root.dataset.overflow = next; else delete root.dataset.overflow }
-    if (next) { root.style.setProperty('--_vt', `${v.offsetTop}px`); root.style.setProperty('--_vh', `${v.offsetHeight}px`) }
+    if ((root.dataset.overflow ?? '') !== next) {
+      if (next) root.dataset.overflow = next
+      else delete root.dataset.overflow
+    }
+    if (next) {
+      root.style.setProperty('--_vt', `${v.offsetTop}px`)
+      root.style.setProperty('--_vh', `${v.offsetHeight}px`)
+    }
   }
-  const sync = () => { pin(); for (const h of root.querySelectorAll('[data-part="resize"]')) value(h); edges() }
+  const sync = () => {
+    pin()
+    for (const h of root.querySelectorAll('[data-part="resize"]')) value(h)
+    edges()
+  }
   const size = (handle: Element, w: number) => {
     const clamped = Math.min(COL_MAX, Math.max(COL_MIN, w))
     ;(handle.closest('th') as HTMLElement).style.minWidth = `${clamped}px`
     handle.setAttribute('aria-valuenow', String(Math.round(clamped)))
   }
-  const onScroll = (e: Event) => { root.toggleAttribute('data-scrolled', (e.currentTarget as HTMLElement).scrollLeft !== 0); edges() }
+  const onScroll = (e: Event) => {
+    root.toggleAttribute('data-scrolled', (e.currentTarget as HTMLElement).scrollLeft !== 0)
+    edges()
+  }
   const onKey = (e: KeyboardEvent) => {
     const handle = (e.target as Element).closest?.('[data-part="resize"]')
     if (!handle || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return
@@ -147,7 +173,13 @@ export function table(root: HTMLElement, opts: TableOptions) {
   viewport()?.addEventListener('scroll', onScroll, { passive: true })
   root.addEventListener('keydown', onKey)
   root.addEventListener('pointerdown', onDown)
-  const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { o.onWidth?.(root.clientWidth); sync() }) : undefined
+  const sizes =
+    typeof win.ResizeObserver === 'function'
+      ? new win.ResizeObserver(() => {
+          o.onWidth?.(root.clientWidth)
+          sync()
+        })
+      : undefined
   sizes?.observe(root)
   // the rows can widen the table without the root changing size
   const inner = root.querySelector<HTMLElement>('[data-part="viewport"] > table')
@@ -156,7 +188,11 @@ export function table(root: HTMLElement, opts: TableOptions) {
   // the observer's first call comes after layout; reading widths now would force one mid-hydration
   if (!sizes) sync()
   return {
-    update(next: TableOptions) { o = next; hide(next.hidden); sync() },
+    update(next: TableOptions) {
+      o = next
+      hide(next.hidden)
+      sync()
+    },
     destroy() {
       viewport()?.removeEventListener('scroll', onScroll)
       root.removeEventListener('keydown', onKey)

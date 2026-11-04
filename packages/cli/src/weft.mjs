@@ -9,7 +9,10 @@ const own = createRequire(import.meta.url)
 
 /** The project's own weft wins; the CLI's weft (its dev/peer dependency) is the fallback. */
 export function resolveWeft(root) {
-  const tries = [() => createRequire(join(root, 'package.json')).resolve('@weft-js/core/compiler'), () => own.resolve('@weft-js/core/compiler')]
+  const tries = [
+    () => createRequire(join(root, 'package.json')).resolve('@weft-js/core/compiler'),
+    () => own.resolve('@weft-js/core/compiler'),
+  ]
   for (const [i, attempt] of tries.entries()) {
     let path
     try {
@@ -22,7 +25,12 @@ export function resolveWeft(root) {
     const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
     return { from: i === 0 ? 'project' : 'cli', dir, version: pkg.version, pkg, compilerPath: path }
   }
-  throw Object.assign(new Error('weft is not installed: `@weft-js/core/compiler` resolves neither from the project nor from @weft-js/cli'), { code: 'E_NO_WEFT' })
+  throw Object.assign(
+    new Error(
+      'weft is not installed: `@weft-js/core/compiler` resolves neither from the project nor from @weft-js/cli',
+    ),
+    { code: 'E_NO_WEFT' },
+  )
 }
 
 const compilers = new Map()
@@ -34,7 +42,19 @@ export function loadCompiler(weft) {
 }
 
 /** Exported names per public subpath, read from the installed package's entry files (no execution). */
-export function exportsOf(weft, subpaths = ['.', './dom', './ssr', './test', './browser', './interaction', './style', './surface']) {
+export function exportsOf(
+  weft,
+  subpaths = [
+    '.',
+    './dom',
+    './ssr',
+    './test',
+    './browser',
+    './interaction',
+    './style',
+    './surface',
+  ],
+) {
   const out = {}
   for (const sub of subpaths) {
     const target = weft.pkg.exports?.[sub]
@@ -42,20 +62,32 @@ export function exportsOf(weft, subpaths = ['.', './dom', './ssr', './test', './
     if (!file || !/\.[mc]?[jt]sx?$/.test(file) || !existsSync(file)) continue
     /** @type {Set<string>} */
     const names = new Set()
-    const read = path => {
+    const read = (path) => {
       const sf = ts.createSourceFile(path, readFileSync(path, 'utf8'), ts.ScriptTarget.Latest, true)
       for (const node of sf.statements) {
-        const exported = ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(m => m.kind === ts.SyntaxKind.ExportKeyword)
+        const exported =
+          ts.canHaveModifiers(node) &&
+          ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
         if (ts.isExportDeclaration(node) && !node.exportClause && !node.isTypeOnly) {
           // `export * from './index'`: the `weft` entry is a thin one over the runtime.
           const next = join(dirname(path), `${node.moduleSpecifier.text}.ts`)
           if (existsSync(next)) read(next)
-        } else if (ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause)) {
-          if (!node.isTypeOnly) for (const el of node.exportClause.elements) if (!el.isTypeOnly) names.add(el.name.text)
-        } else if (exported && (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name) {
+        } else if (
+          ts.isExportDeclaration(node) &&
+          node.exportClause &&
+          ts.isNamedExports(node.exportClause)
+        ) {
+          if (!node.isTypeOnly)
+            for (const el of node.exportClause.elements) if (!el.isTypeOnly) names.add(el.name.text)
+        } else if (
+          exported &&
+          (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) &&
+          node.name
+        ) {
           names.add(node.name.text)
         } else if (exported && ts.isVariableStatement(node)) {
-          for (const d of node.declarationList.declarations) if (ts.isIdentifier(d.name)) names.add(d.name.text)
+          for (const d of node.declarationList.declarations)
+            if (ts.isIdentifier(d.name)) names.add(d.name.text)
         }
       }
     }

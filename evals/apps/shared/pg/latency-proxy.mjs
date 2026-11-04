@@ -12,8 +12,9 @@ const NOT_STARTUP = new Set([80877103, 80877104, 80877102]) // SSLRequest, GSSEN
 
 /** Counts Query and Execute messages. The startup messages are the only ones with no type byte. */
 function frontend(onQuery) {
-  let held = Buffer.alloc(0), started = false
-  return chunk => {
+  let held = Buffer.alloc(0),
+    started = false
+  return (chunk) => {
     held = held.length ? Buffer.concat([held, chunk]) : chunk
     for (;;) {
       if (!started) {
@@ -42,52 +43,123 @@ function delayed(to, ms) {
   let armed = false
   const flush = () => {
     armed = false
-    while (q.length && q[0].at <= now()) { const { chunk } = q.shift(); chunk ? to.write(chunk) : to.end() }
+    while (q.length && q[0].at <= now()) {
+      const { chunk } = q.shift()
+      chunk ? to.write(chunk) : to.end()
+    }
     if (q.length) arm()
   }
   const arm = () => {
     armed = true
     const left = q[0].at - now()
-    if (left > EARLY + 0.3) setTimeout(flush, left - EARLY); else setImmediate(flush)
+    if (left > EARLY + 0.3) setTimeout(flush, left - EARLY)
+    else setImmediate(flush)
   }
-  return chunk => { q.push({ at: now() + ms() / 2, chunk }); if (!armed) arm() }
+  return (chunk) => {
+    q.push({ at: now() + ms() / 2, chunk })
+    if (!armed) arm()
+  }
 }
 
 export function createProxy({ port: target = 5432, host = '127.0.0.1', rtt = 0 } = {}) {
-  let delay = rtt, stats = empty(), open = 0, peak = 0
+  let delay = rtt,
+    stats = empty(),
+    open = 0,
+    peak = 0
   const sockets = new Set()
-  const server = net.createServer(client => {
+  const server = net.createServer((client) => {
     const upstream = net.connect(target, host)
-    client.setNoDelay(true); upstream.setNoDelay(true)
-    sockets.add(client); sockets.add(upstream)
-    stats.connections++; peak = Math.max(peak, ++open)
-    const up = delayed(upstream, () => delay), down = delayed(client, () => delay), read = frontend(() => stats.queries++)
+    client.setNoDelay(true)
+    upstream.setNoDelay(true)
+    sockets.add(client)
+    sockets.add(upstream)
+    stats.connections++
+    peak = Math.max(peak, ++open)
+    const up = delayed(upstream, () => delay),
+      down = delayed(client, () => delay),
+      read = frontend(() => stats.queries++)
     let last = 's'
-    client.on('data', c => { if (last === 's') stats.roundTrips++; last = 'c'; stats.bytesUp += c.length; read(c); up(c) })
-    upstream.on('data', c => { last = 's'; stats.bytesDown += c.length; down(c) })
-    client.on('end', () => up(null)); upstream.on('end', () => down(null))
-    const gone = () => { client.destroy(); upstream.destroy() }
-    client.on('error', gone); upstream.on('error', gone)
-    client.on('close', () => { sockets.delete(client); open--; upstream.end() }); upstream.on('close', () => { sockets.delete(upstream); client.end() })
+    client.on('data', (c) => {
+      if (last === 's') stats.roundTrips++
+      last = 'c'
+      stats.bytesUp += c.length
+      read(c)
+      up(c)
+    })
+    upstream.on('data', (c) => {
+      last = 's'
+      stats.bytesDown += c.length
+      down(c)
+    })
+    client.on('end', () => up(null))
+    upstream.on('end', () => down(null))
+    const gone = () => {
+      client.destroy()
+      upstream.destroy()
+    }
+    client.on('error', gone)
+    upstream.on('error', gone)
+    client.on('close', () => {
+      sockets.delete(client)
+      open--
+      upstream.end()
+    })
+    upstream.on('close', () => {
+      sockets.delete(upstream)
+      client.end()
+    })
   })
   return {
-    listen: (port = 0) => new Promise(ok => server.listen(port, '127.0.0.1', () => ok(server.address().port))),
-    rtt: ms => { delay = ms },
+    listen: (port = 0) =>
+      new Promise((ok) => server.listen(port, '127.0.0.1', () => ok(server.address().port))),
+    rtt: (ms) => {
+      delay = ms
+    },
     stats: () => ({ ...stats, open, peak, rtt: delay }),
-    reset: () => { stats = empty(); peak = open },
-    close: () => new Promise(ok => { for (const s of sockets) s.destroy(); server.close(ok) }),
+    reset: () => {
+      stats = empty()
+      peak = open
+    },
+    close: () =>
+      new Promise((ok) => {
+        for (const s of sockets) s.destroy()
+        server.close(ok)
+      }),
   }
 }
 
 /** The proxy in a child process, driven over IPC. */
 export async function spawnProxy(options) {
-  const child = fork(fileURLToPath(import.meta.url), [JSON.stringify(options)], { stdio: ['ignore', 'ignore', 'inherit', 'ipc'] })
+  const child = fork(fileURLToPath(import.meta.url), [JSON.stringify(options)], {
+    stdio: ['ignore', 'ignore', 'inherit', 'ipc'],
+  })
   process.on('exit', () => child.kill('SIGKILL'))
   let id = 0
-  const waiting = new Map(), port = await new Promise((ok, no) => { child.once('message', m => ok(m.port)); child.once('error', no) })
-  child.on('message', m => { waiting.get(m.id)?.(m.value); waiting.delete(m.id) })
-  const ask = (op, arg) => new Promise(ok => { waiting.set(++id, ok); child.send({ id, op, arg }) })
-  return { port, rtt: ms => ask('rtt', ms), stats: () => ask('stats'), reset: () => ask('reset'), stop: () => new Promise(ok => { child.once('exit', ok); child.kill() }) }
+  const waiting = new Map(),
+    port = await new Promise((ok, no) => {
+      child.once('message', (m) => ok(m.port))
+      child.once('error', no)
+    })
+  child.on('message', (m) => {
+    waiting.get(m.id)?.(m.value)
+    waiting.delete(m.id)
+  })
+  const ask = (op, arg) =>
+    new Promise((ok) => {
+      waiting.set(++id, ok)
+      child.send({ id, op, arg })
+    })
+  return {
+    port,
+    rtt: (ms) => ask('rtt', ms),
+    stats: () => ask('stats'),
+    reset: () => ask('reset'),
+    stop: () =>
+      new Promise((ok) => {
+        child.once('exit', ok)
+        child.kill()
+      }),
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

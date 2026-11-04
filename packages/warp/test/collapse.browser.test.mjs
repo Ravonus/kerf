@@ -10,19 +10,28 @@ const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
-const css = ['warp.css', 'components/base.css', 'components/button.css'].map(f => readFileSync(join(styles, f), 'utf8')).join('\n')
+const css = ['warp.css', 'components/base.css', 'components/button.css']
+  .map((f) => readFileSync(join(styles, f), 'utf8'))
+  .join('\n')
 // the site's own rule for its wide search field: unlayered, so it beats warp's layers unless collapse holds the square
 const app = '.search { inline-size: 240px; justify-content: flex-start }'
-const button = collapse => `<button type="button" class="search" data-scope="button" data-emphasis="outline" data-size="sm" data-collapse="${collapse}"><svg data-icon aria-hidden="true" width="16" height="16"></svg><span data-part="collapse"><span>Search</span><span aria-hidden="true">⌘K</span></span></button>`
+const button = (collapse) =>
+  `<button type="button" class="search" data-scope="button" data-emphasis="outline" data-size="sm" data-collapse="${collapse}"><svg data-icon aria-hidden="true" width="16" height="16"></svg><span data-part="collapse"><span>Search</span><span aria-hidden="true">⌘K</span></span></button>`
 
 let browser
-beforeAll(async () => { browser = await chromium.launch() })
-afterAll(async () => { await browser?.close() })
+beforeAll(async () => {
+  browser = await chromium.launch()
+})
+afterAll(async () => {
+  await browser?.close()
+})
 
 async function at(width, collapse) {
   const context = await browser.newContext({ viewport: { width, height: 700 } })
   const page = await context.newPage()
-  await page.setContent(`<!doctype html><html><style>${css}</style><style>${app}</style><body>${button(collapse)}`)
+  await page.setContent(
+    `<!doctype html><html><style>${css}</style><style>${app}</style><body>${button(collapse)}`,
+  )
   const box = await page.locator('button').boundingBox()
   const named = await page.getByRole('button', { name: 'Search', exact: true }).count()
   const shown = await page.locator('[data-part="collapse"]').boundingBox()

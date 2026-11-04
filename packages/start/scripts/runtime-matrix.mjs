@@ -18,7 +18,14 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { e2e: { type: 'string' }, runtimes: { type: 'string', default: 'node,bun,deno' }, json: { type: 'string' } } })
+const { values, positionals } = parseArgs({
+  allowPositionals: true,
+  options: {
+    e2e: { type: 'string' },
+    runtimes: { type: 'string', default: 'node,bun,deno' },
+    json: { type: 'string' },
+  },
+})
 const app = resolve(positionals[0] ?? '.')
 const e2e = resolve(values.e2e ?? new URL('./e2e-todo.mjs', import.meta.url).pathname)
 const SERVERS = {
@@ -28,28 +35,50 @@ const SERVERS = {
 }
 
 const log = (...a) => console.log('[matrix]', ...a)
-const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
-const version = cmd => spawnSync(cmd, ['--version'], { encoding: 'utf8' }).stdout.split('\n')[0].trim()
+const freePort = () =>
+  new Promise((ok) => {
+    const s = createServer().listen(0, () => {
+      const { port } = s.address()
+      s.close(() => ok(port))
+    })
+  })
+const version = (cmd) =>
+  spawnSync(cmd, ['--version'], { encoding: 'utf8' }).stdout.split('\n')[0].trim()
 
 /** SIGTERM, then SIGKILL: a server still draining mustn't hold the matrix. */
 function stop(child) {
   if (child.exitCode !== null) return
   child.kill()
   const timer = setTimeout(() => child.kill('SIGKILL'), 3000)
-  return new Promise(ok => { child.on('close', () => { clearTimeout(timer); ok() }) })
+  return new Promise((ok) => {
+    child.on('close', () => {
+      clearTimeout(timer)
+      ok()
+    })
+  })
 }
 
 async function serve(runtime, env) {
   const [cmd, args] = SERVERS[runtime]
-  const child = spawn(cmd, args, { cwd: app, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] })
+  const child = spawn(cmd, args, {
+    cwd: app,
+    env: { ...process.env, ...env },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
   const output = []
-  child.stdout.on('data', d => output.push(String(d)))
-  child.stderr.on('data', d => output.push(String(d)))
+  child.stdout.on('data', (d) => output.push(String(d)))
+  child.stderr.on('data', (d) => output.push(String(d)))
   const url = `http://localhost:${env.PORT}`
   for (let i = 0; i < 300; i++) {
-    if (child.exitCode !== null) throw new Error(`${runtime} server exited ${child.exitCode}:\n${output.join('')}`)
-    try { await fetch(url + '/', { redirect: 'manual' }); return { url, output, stop: () => stop(child) } } catch {}
-    await new Promise(ok => { setTimeout(ok, 100) })
+    if (child.exitCode !== null)
+      throw new Error(`${runtime} server exited ${child.exitCode}:\n${output.join('')}`)
+    try {
+      await fetch(url + '/', { redirect: 'manual' })
+      return { url, output, stop: () => stop(child) }
+    } catch {}
+    await new Promise((ok) => {
+      setTimeout(ok, 100)
+    })
   }
   child.kill()
   throw new Error(`${runtime} server didn't answer:\n${output.join('')}`)
@@ -64,7 +93,11 @@ for (const runtime of values.runtimes.split(',')) {
   results.push(entry)
   log(`${runtime} (${entry.version}): build`)
   const t = performance.now()
-  const built = spawnSync(weft, ['build', '--runtime', runtime], { cwd: app, encoding: 'utf8', env: { ...process.env, NODE_ENV: 'production' } })
+  const built = spawnSync(weft, ['build', '--runtime', runtime], {
+    cwd: app,
+    encoding: 'utf8',
+    env: { ...process.env, NODE_ENV: 'production' },
+  })
   entry.buildMs = Math.round(performance.now() - t)
   if (built.status !== 0 || !existsSync(join(app, '.output', 'server', 'index.mjs'))) {
     entry.error = `build failed:\n${built.stdout}${built.stderr}`
@@ -74,7 +107,8 @@ for (const runtime of values.runtimes.split(',')) {
   let server
   try {
     const env = {
-      PORT: String(await freePort()), NODE_ENV: 'production',
+      PORT: String(await freePort()),
+      NODE_ENV: 'production',
       DATABASE_URL: process.env.DATABASE_URL ?? `file:${join(scratch, `${runtime}.db`)}`,
       BETTER_AUTH_SECRET: randomBytes(32).toString('base64'),
     }
@@ -95,6 +129,13 @@ for (const runtime of values.runtimes.split(',')) {
 }
 rmSync(scratch, { recursive: true, force: true })
 if (values.json) writeFileSync(values.json, JSON.stringify({ app, e2e, results }, null, 2) + '\n')
-const ok = results.every(r => r.ok)
-log(ok ? 'all runtimes pass' : `failed: ${results.filter(r => !r.ok).map(r => r.runtime).join(', ')}`)
+const ok = results.every((r) => r.ok)
+log(
+  ok
+    ? 'all runtimes pass'
+    : `failed: ${results
+        .filter((r) => !r.ok)
+        .map((r) => r.runtime)
+        .join(', ')}`,
+)
 process.exit(ok ? 0 : 1)

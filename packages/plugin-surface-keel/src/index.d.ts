@@ -5,7 +5,11 @@ import type { Palette, PixelRenderer } from './vendor-types'
 export declare const keel: () => PluginEntry
 
 /** `{ seed, culture, pins }` → KEEL's theme: palette ramps, frame, type, spacing and motion. */
-export declare function recipeTheme(recipe?: { seed?: string; culture?: string; pins?: Record<string, unknown> }): { key: string; palette: Palette; [k: string]: unknown }
+export declare function recipeTheme(recipe?: {
+  seed?: string
+  culture?: string
+  pins?: Record<string, unknown>
+}): { key: string; palette: Palette; [k: string]: unknown }
 /** A theme as `--keel-*` CSS variables at an integer scale. */
 export declare function themeTokens(theme: unknown, scale?: number): Record<string, string>
 

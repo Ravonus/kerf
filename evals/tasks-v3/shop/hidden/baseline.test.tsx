@@ -1,9 +1,25 @@
 import { screen } from '@testing-library/dom'
-import { addTimes, goCart, goProducts, lineField, press, productNames, start, total } from './helpers'
+import {
+  addTimes,
+  goCart,
+  goProducts,
+  lineField,
+  press,
+  productNames,
+  start,
+  total,
+} from './helpers'
 
 test('lists every product', async () => {
   await start()
-  expect([...productNames()].sort()).toEqual(['Apple', 'Bagel', 'Banana', 'Brioche', 'Milk', 'Yogurt'])
+  expect([...productNames()].sort()).toEqual([
+    'Apple',
+    'Bagel',
+    'Banana',
+    'Brioche',
+    'Milk',
+    'Yogurt',
+  ])
 })
 
 test('adding updates the cart count, lines and total', async () => {

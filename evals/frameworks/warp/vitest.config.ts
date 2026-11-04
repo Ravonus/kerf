@@ -11,5 +11,11 @@ const cacheKey = `${Math.round(statSync(native).mtimeMs)}`
 export default defineConfig({
   plugins: [weft()],
   resolve: { alias: { '#adapter': new URL('./adapter.tsx', import.meta.url).pathname } },
-  test: { fsModuleCachePath: `node_modules/.vitest-cache/${cacheKey}`, environment: 'jsdom', globals: true, include: ['.grade/**/*.test.tsx'], testTimeout: 10_000 },
+  test: {
+    fsModuleCachePath: `node_modules/.vitest-cache/${cacheKey}`,
+    environment: 'jsdom',
+    globals: true,
+    include: ['.grade/**/*.test.tsx'],
+    testTimeout: 10_000,
+  },
 })

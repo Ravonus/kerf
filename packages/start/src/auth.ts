@@ -27,7 +27,10 @@ export function defineAuth<U, S>(provider: AuthProvider<U, S>): AuthProvider<U, 
 }
 
 /** `{ user, session }` for `ctx` (`src/context.server.ts`), from any provider. */
-export const session = <A extends { session(request: Request): unknown }>(auth: A, request: Request): ReturnType<A['session']> => auth.session(request) as ReturnType<A['session']>
+export const session = <A extends { session(request: Request): unknown }>(
+  auth: A,
+  request: Request,
+): ReturnType<A['session']> => auth.session(request) as ReturnType<A['session']>
 
 const changed = new WeakSet<Headers>()
 
@@ -38,13 +41,22 @@ export const sessionChanged = (headers: Headers) => changed.has(headers)
  * Finish a provider's Response (Better Auth's with `asResponse: true`): its cookies go on this response, so a redirect
  * after it is a full load, and a failure rejects with the provider's message (`e.message` on the client).
  */
-export async function forward<T = unknown>(ctx: Context, call: Response | Promise<Response>): Promise<T> {
+export async function forward<T = unknown>(
+  ctx: Context,
+  call: Response | Promise<Response>,
+): Promise<T> {
   const res = await call
   for (const c of res.headers.getSetCookie()) {
     ctx.response.headers.append('set-cookie', c)
     changed.add(ctx.response.headers)
   }
-  const body = await res.json().catch(() => null) as (T & { code?: string; message?: string }) | null
-  if (!res.ok) throw new FnError({ ...(body?.code && { code: body.code }), message: body?.message ?? 'Authentication failed' }, res.status)
+  const body = (await res.json().catch(() => null)) as
+    | (T & { code?: string; message?: string })
+    | null
+  if (!res.ok)
+    throw new FnError(
+      { ...(body?.code && { code: body.code }), message: body?.message ?? 'Authentication failed' },
+      res.status,
+    )
   return body as T
 }

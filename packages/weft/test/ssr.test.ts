@@ -44,30 +44,46 @@ function roundTrip(server: () => unknown, client: () => unknown) {
   const before = [...container.querySelectorAll('*')]
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   const mutations: MutationRecord[] = []
-  const observer = new MutationObserver(r => mutations.push(...r))
-  observer.observe(container, { subtree: true, childList: true, attributes: true, characterData: true })
+  const observer = new MutationObserver((r) => mutations.push(...r))
+  observer.observe(container, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    characterData: true,
+  })
   const dispose = hydrate(client, container)
   mutations.push(...observer.takeRecords())
   observer.disconnect()
-  const warnings = warn.mock.calls.map(c => String(c[0]))
+  const warnings = warn.mock.calls.map((c) => String(c[0]))
   warn.mockRestore()
   return { html, container, before, dispose, mutations, warnings }
 }
 
-afterEach(() => { document.body.innerHTML = '' })
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 
 /** The DOM's own serialization of `html` (jsdom quotes every attribute value). */
-const parsed = (html: string) => Object.assign(document.createElement('div'), { innerHTML: html }).innerHTML
+const parsed = (html: string) =>
+  Object.assign(document.createElement('div'), { innerHTML: html }).innerHTML
 
 test('server attributes: ARIA booleans are the words true/false, other booleans add or drop the attribute', () => {
-  expect([attr('aria-pressed', false), attr('aria-expanded', true), attr('disabled', false), attr('hidden', true)]).toEqual([' aria-pressed="false"', ' aria-expanded="true"', '', ' hidden'])
+  expect([
+    attr('aria-pressed', false),
+    attr('aria-expanded', true),
+    attr('disabled', false),
+    attr('hidden', true),
+  ]).toEqual([' aria-pressed="false"', ' aria-expanded="true"', '', ' hidden'])
 })
 
 test('loaded shop: zero mismatches, every server node kept, no DOM writes', () => {
-  const r = roundTrip(() => ServerShop(data()), () => ClientShop(data()))
+  const r = roundTrip(
+    () => ServerShop(data()),
+    () => ClientShop(data()),
+  )
   expect(r.warnings).toEqual([])
   expect(hydration.misses).toBe(0)
-  expect(r.before.every(el => el.isConnected)).toBe(true)
+  expect(r.before.every((el) => el.isConnected)).toBe(true)
   expect(r.container.innerHTML).toBe(parsed(r.html))
   expect(r.mutations).toHaveLength(0)
   // the server output is what the user would see before any script runs
@@ -78,7 +94,10 @@ test('loaded shop: zero mismatches, every server node kept, no DOM writes', () =
 })
 
 test('loaded shop: hydrated handlers and bindings work', async () => {
-  const r = roundTrip(() => ServerShop(data()), () => ClientShop(data()))
+  const r = roundTrip(
+    () => ServerShop(data()),
+    () => ClientShop(data()),
+  )
   const user = userEvent.setup()
   const appleRow = screen.getByRole('button', { name: 'Increase Apple' }).closest('li')!
   await user.click(screen.getByRole('button', { name: 'Increase Apple' }))
@@ -97,7 +116,10 @@ test('loaded shop: hydrated handlers and bindings work', async () => {
 
 test('reference App (loading state): round trip, then the client fetch takes over', async () => {
   const api = { listProducts: () => Promise.resolve(products), subscribePrices: () => () => {} }
-  const r = roundTrip(() => ServerApp({ api }), () => ClientApp({ api }))
+  const r = roundTrip(
+    () => ServerApp({ api }),
+    () => ClientApp({ api }),
+  )
   expect(r.warnings).toEqual([])
   expect(hydration.misses).toBe(0)
   expect(r.html).toContain('Loading…')
@@ -107,7 +129,9 @@ test('reference App (loading state): round trip, then the client fetch takes ove
   expect(header.isConnected).toBe(true)
   await userEvent.setup().click(screen.getByRole('button', { name: 'Add Apple' }))
   await flush()
-  expect(screen.getByRole('button', { name: 'Cart (1)' })).toBe(header.querySelectorAll('button')[1])
+  expect(screen.getByRole('button', { name: 'Cart (1)' })).toBe(
+    header.querySelectorAll('button')[1],
+  )
   r.dispose()
 })
 
@@ -118,7 +142,7 @@ test('a key miss is counted, warned and rendered fresh', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   hydrate(() => ClientShop(data()), container)
   expect(hydration.misses).toBe(1)
-  expect(warn.mock.calls.some(c => String(c[0]).includes('hydration key miss'))).toBe(true)
+  expect(warn.mock.calls.some((c) => String(c[0]).includes('hydration key miss'))).toBe(true)
   warn.mockRestore()
 })
 
@@ -128,10 +152,11 @@ test('renderToString without hydration: no keys, same markup', () => {
   expect(plain).toBe(renderToString(() => ServerShop(data())).replace(/ wk="[^"]*"/g, ''))
 })
 
-
 test('defineState on the server: one app per render, seeded per request, never shared', () => {
   const api = { listProducts: () => new Promise<never>(() => {}), subscribePrices: () => () => {} }
-  const seeded = renderToString(() => ServerScopeApp({ api }), { app: { state: { cart: { lines: { apple: { qty: 3, addedPrice: 0.5 } } } } } })
+  const seeded = renderToString(() => ServerScopeApp({ api }), {
+    app: { state: { cart: { lines: { apple: { qty: 3, addedPrice: 0.5 } } } } },
+  })
   const fresh = renderToString(() => ServerScopeApp({ api }))
   expect(seeded).toContain('Cart (<!--[-->3<!--]-->)')
   expect(fresh).toContain('Cart (<!--[-->0<!--]-->)')
@@ -144,7 +169,7 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
   const clean = (r: ReturnType<typeof roundTrip>) => {
     expect(r.warnings).toEqual([])
     expect(hydration.misses).toBe(0)
-    expect(r.before.every(el => el.isConnected)).toBe(true)
+    expect(r.before.every((el) => el.isConnected)).toBe(true)
     expect(r.mutations).toHaveLength(0)
   }
   const click = (sel: string) => (document.querySelector(sel) as HTMLElement).click()
@@ -176,8 +201,14 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
 
   test('element spreads: server attributes, then client handlers', () => {
     const clicks: string[] = []
-    const props = () => ({ rest: { id: 'spread', href: '/a', onClick: () => clicks.push('a') }, tone: 'info' })
-    const r = roundTrip(() => twoS.Spread(props()), () => twoC.Spread(props()))
+    const props = () => ({
+      rest: { id: 'spread', href: '/a', onClick: () => clicks.push('a') },
+      tone: 'info',
+    })
+    const r = roundTrip(
+      () => twoS.Spread(props()),
+      () => twoC.Spread(props()),
+    )
     clean(r)
     expect(r.html).toContain('id="spread" href="/a" data-tone="info" title="fixed"')
     click('a')
@@ -185,9 +216,12 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
     r.dispose()
   })
 
-  test('textContent and innerHTML render on the server; a spread\'s children are a hole', async () => {
+  test("textContent and innerHTML render on the server; a spread's children are a hole", async () => {
     const props = () => ({ rest: { title: 'kids', children: ['one ', 'two'] } })
-    const r = roundTrip(() => twoS.Content(props()), () => twoC.Content(props()))
+    const r = roundTrip(
+      () => twoS.Content(props()),
+      () => twoC.Content(props()),
+    )
     clean(r)
     expect(r.html).toContain('<p class="text">a &lt;b> &amp; 1</p>')
     expect(r.html).toContain('<div class="html"><i>1</i></div>')
@@ -202,10 +236,13 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
 
   test('refs, <select value> over a list, SVG', async () => {
     const seen: Element[] = []
-    const refs = roundTrip(() => twoS.Refs({ seen: () => {} }), () => twoC.Refs({ seen: (el: Element) => seen.push(el) }))
+    const refs = roundTrip(
+      () => twoS.Refs({ seen: () => {} }),
+      () => twoC.Refs({ seen: (el: Element) => seen.push(el) }),
+    )
     // The fixture reads `box.id` through its ref, which only exists on the client: that one text is written.
     expect(hydration.misses).toBe(0)
-    expect(refs.mutations.map(m => m.type)).toEqual(['childList'])
+    expect(refs.mutations.map((m) => m.type)).toEqual(['childList'])
     expect(document.querySelector('output')!.textContent).toBe('box')
     expect(seen).toEqual([document.querySelector('span')])
     refs.dispose()
@@ -229,7 +266,10 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
 // The point of source-path keys (research 19 §2.4): bindings that exist on one side only don't shift any key.
 
 test('client-only watchers and extra memos shift no key', () => {
-  const r = roundTrip(() => WatchedS({ client: false }), () => WatchedC({ client: true }))
+  const r = roundTrip(
+    () => WatchedS({ client: false }),
+    () => WatchedC({ client: true }),
+  )
   expect(r.warnings).toEqual([])
   expect(hydration.misses).toBe(0)
   expect(r.mutations).toHaveLength(0)

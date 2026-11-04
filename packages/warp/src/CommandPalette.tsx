@@ -81,7 +81,9 @@ export type CommandPaletteProps = Openable & {
   slash?: boolean | undefined
 }
 
-type Row = { head: string; item?: undefined; at?: undefined } | { head?: undefined; item: Command; at: number }
+type Row =
+  | { head: string; item?: undefined; at?: undefined }
+  | { head?: undefined; item: Command; at: number }
 
 const HIT = 'warp-palette-hit'
 
@@ -93,7 +95,10 @@ function arrange(commands: Command[], order: readonly string[] = []) {
     if (!groups.has(name)) groups.set(name, [])
     groups.get(name)!.push(c)
   }
-  const rank = (n: string) => { const i = order.indexOf(n); return i < 0 ? order.length : i }
+  const rank = (n: string) => {
+    const i = order.indexOf(n)
+    return i < 0 ? order.length : i
+  }
   const rows: Row[] = []
   let at = 0
   for (const [name, list] of [...groups].sort((a, b) => rank(a[0]) - rank(b[0]))) {
@@ -128,7 +133,11 @@ function paint(list: HTMLElement | undefined, query: string, rows: readonly Row[
       const text = node?.data.toLowerCase() ?? ''
       for (const w of words) {
         const i = text.indexOf(w)
-        if (i >= 0) mark(node, Array.from({ length: w.length }, (_, k) => i + k))
+        if (i >= 0)
+          mark(
+            node,
+            Array.from({ length: w.length }, (_, k) => i + k),
+          )
       }
     }
   })
@@ -142,31 +151,66 @@ const put = (el: HTMLElement, value: string | undefined) => {
 }
 
 /** One row of the pool. Everything but the active mark is one write pass per change of row, so a list costs little to open. */
-function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined; id: string; active: () => number; onPick: (at: number) => void; onHover: (at: number) => void }) {
+function Slot({
+  row,
+  id,
+  active,
+  onPick,
+  onHover,
+}: {
+  row: () => Row | undefined
+  id: string
+  active: () => number
+  onPick: (at: number) => void
+  onHover: (at: number) => void
+}) {
   const r = derived(() => row())
   const at = () => untrack(() => r.value?.at ?? -1)
-  let box!: HTMLElement, head!: HTMLElement, option!: HTMLElement, text!: HTMLElement, hint!: HTMLElement, keys!: HTMLElement
+  let box!: HTMLElement,
+    head!: HTMLElement,
+    option!: HTMLElement,
+    text!: HTMLElement,
+    hint!: HTMLElement,
+    keys!: HTMLElement
   const view = (
-    <div ref={n => (box = n)} data-part="row" role="presentation" hidden="">
-      <div ref={n => (head = n)} data-part="group-label" role="presentation" hidden=""></div>
-      <div ref={n => (option = n)} data-part="item" hidden="" aria-selected={r.value?.item ? (r.value.at === active() ? 'true' : 'false') : undefined} onPointerMove={() => { if (at() !== active()) onHover(at()) }} onClick={() => onPick(at())}>
+    <div ref={(n) => (box = n)} data-part="row" role="presentation" hidden="">
+      <div ref={(n) => (head = n)} data-part="group-label" role="presentation" hidden=""></div>
+      <div
+        ref={(n) => (option = n)}
+        data-part="item"
+        hidden=""
+        aria-selected={r.value?.item ? (r.value.at === active() ? 'true' : 'false') : undefined}
+        onPointerMove={() => {
+          if (at() !== active()) onHover(at())
+        }}
+        onClick={() => onPick(at())}
+      >
         {r.value?.item?.icon && <Icon name={r.value?.item?.icon} />}
-        <span ref={n => (text = n)} data-part="text"></span>
-        <span ref={n => (hint = n)} data-part="hint" hidden=""></span>
-        <span ref={n => (keys = n)} data-part="shortcut" hidden=""></span>
+        <span ref={(n) => (text = n)} data-part="text"></span>
+        <span ref={(n) => (hint = n)} data-part="hint" hidden=""></span>
+        <span ref={(n) => (keys = n)} data-part="shortcut" hidden=""></span>
       </div>
     </div>
   )
-  effect(() => r.value, v => {
-    const item = v?.item
-    box.hidden = !v
-    put(head, v?.head)
-    option.hidden = !item
-    if (item) { option.setAttribute('role', 'option'); option.id = `${id}-${v.at}` } else { option.removeAttribute('role'); option.removeAttribute('id') }
-    text.textContent = item?.label ?? ''
-    put(hint, item?.hint)
-    put(keys, item?.shortcut)
-  })
+  effect(
+    () => r.value,
+    (v) => {
+      const item = v?.item
+      box.hidden = !v
+      put(head, v?.head)
+      option.hidden = !item
+      if (item) {
+        option.setAttribute('role', 'option')
+        option.id = `${id}-${v.at}`
+      } else {
+        option.removeAttribute('role')
+        option.removeAttribute('id')
+      }
+      text.textContent = item?.label ?? ''
+      put(hint, item?.hint)
+      put(keys, item?.shortcut)
+    },
+  )
   return view
 }
 
@@ -180,9 +224,27 @@ function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined
  * and nothing shifts. Matches are painted with the Custom Highlight API. Rows appear only while it's open, so a closed
  * palette costs a page one empty dialog.
  */
-export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sources, modes, groupOrder, onRun, label = 'Command palette', placeholder = 'Search or run a command…', hotkey = 'k', slash }: CommandPaletteProps) {
+export function CommandPalette({
+  open,
+  defaultOpen,
+  onOpenChange,
+  commands,
+  sources,
+  modes,
+  groupOrder,
+  onRun,
+  label = 'Command palette',
+  placeholder = 'Search or run a command…',
+  hotkey = 'k',
+  slash,
+}: CommandPaletteProps) {
   const id = uid('pal')
-  const flag = bindable<boolean>(() => open, () => defaultOpen, false, () => o => onOpenChange?.(o))
+  const flag = bindable<boolean>(
+    () => open,
+    () => defaultOpen,
+    false,
+    () => (o) => onOpenChange?.(o),
+  )
   const typed = state('')
   const active = state(0)
   let face: HTMLElement | undefined
@@ -191,10 +253,19 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   const drill = state<Command[] | undefined>(undefined)
   // the open level's name: its row's `title`, or its label without a trailing "…"
   const crumb = state('')
-  const mode = derived(() => modes?.find(m => typed.value.startsWith(m.prefix)))
-  const items = derived(() => rows.value.flatMap(r => (r.item ? [r.item] : [])))
+  const mode = derived(() => modes?.find((m) => typed.value.startsWith(m.prefix)))
+  const items = derived(() => rows.value.flatMap((r) => (r.item ? [r.item] : [])))
   const pending = state(false)
-  const result = derived(() => { const n = items.value.length; return !flag.value ? '' : n ? `${n} ${n === 1 ? 'command' : 'commands'}` : pending.value ? '' : 'No results' })
+  const result = derived(() => {
+    const n = items.value.length
+    return !flag.value
+      ? ''
+      : n
+        ? `${n} ${n === 1 ? 'command' : 'commands'}`
+        : pending.value
+          ? ''
+          : 'No results'
+  })
   let el: HTMLDialogElement | undefined
   let input: HTMLInputElement | undefined
   let list: HTMLDivElement | undefined
@@ -203,12 +274,28 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   // Esc steps back before it closes: a query clears first, then an empty nested level goes up one, then the palette
   // closes. The dialog's layer asks this first, so the step holds whether the key reached the input or the dialog.
   const back = () => {
-    if (input?.value) { clear(); answer(''); return true }
-    if (untrack(() => drill.value)) { up(); return true }
+    if (input?.value) {
+      clear()
+      answer('')
+      return true
+    }
+    if (untrack(() => drill.value)) {
+      up()
+      return true
+    }
     return false
   }
-  use(dialog, () => el, () => ({ open: flag.value, onClose: () => flag.set(false), onEscape: back }))
-  if (untrack(() => hotkey) !== false) use(paletteHotkey, () => el, () => ({ key: String(hotkey), slash, onPress: () => flag.set(!untrack(() => flag.value)) }))
+  use(
+    dialog,
+    () => el,
+    () => ({ open: flag.value, onClose: () => flag.set(false), onEscape: back }),
+  )
+  if (untrack(() => hotkey) !== false)
+    use(
+      paletteHotkey,
+      () => el,
+      () => ({ key: String(hotkey), slash, onPress: () => flag.set(!untrack(() => flag.value)) }),
+    )
 
   const show = (next: Command[], q: string) => {
     shown = next
@@ -218,15 +305,22 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     flush()
     paint(list, q, arranged)
   }
-  const rank = (cmds: Command[], q: string) => rankCommands(cmds, q).flatMap(g => g.rows.map(r => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)))
+  const rank = (cmds: Command[], q: string) =>
+    rankCommands(cmds, q).flatMap((g) =>
+      g.rows.map((r) => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)),
+    )
   const answer = (value: string) => {
     query?.abort()
     const kids = untrack(() => drill.value)
-    if (kids) { active.value = 0; pending.value = false; return show(rank(kids, value), value) } // a nested level filters its own rows
+    if (kids) {
+      active.value = 0
+      pending.value = false
+      return show(rank(kids, value), value)
+    } // a nested level filters its own rows
     const ctrl = (query = new AbortController())
-    const m = modes?.find(x => value.startsWith(x.prefix))
+    const m = modes?.find((x) => value.startsWith(x.prefix))
     const q = m ? value.slice(m.prefix.length) : value
-    const statics = m ? m.commands ?? [] : commands ?? []
+    const statics = m ? (m.commands ?? []) : (commands ?? [])
     let now = rank(statics, q)
     const late: Promise<Command[]>[] = []
     for (const source of (m ? m.sources : sources) ?? []) {
@@ -238,21 +332,34 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     pending.value = late.length > 0
     show(now, q)
     let left = late.length
-    for (const p of late) void p.then(more => {
-      if (ctrl.signal.aborted) return
-      if (more.length) show(shown.concat(more.filter(c => !shown.some(s => s.href && s.href === c.href))), q)
-      if (!--left) pending.value = false
-    }, () => { if (!ctrl.signal.aborted && !--left) pending.value = false })
+    for (const p of late)
+      void p.then(
+        (more) => {
+          if (ctrl.signal.aborted) return
+          if (more.length)
+            show(
+              shown.concat(more.filter((c) => !shown.some((s) => s.href && s.href === c.href))),
+              q,
+            )
+          if (!--left) pending.value = false
+        },
+        () => {
+          if (!ctrl.signal.aborted && !--left) pending.value = false
+        },
+      )
   }
-  watch(() => flag.value, on => {
-    if (!on) return
-    typed.value = ''
-    drill.value = undefined
-    crumb.value = ''
-    active.value = 0
-    if (input) input.value = ''
-    answer('')
-  })
+  watch(
+    () => flag.value,
+    (on) => {
+      if (!on) return
+      typed.value = ''
+      drill.value = undefined
+      crumb.value = ''
+      active.value = 0
+      if (input) input.value = ''
+      answer('')
+    },
+  )
   // entering or leaving a level starts its search afresh: what was typed found the row, it isn't a search of its rows
   const clear = () => {
     if (input) input.value = ''
@@ -278,7 +385,10 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     flag.set(false)
     flush()
     // after the dialog has gone, so what the command opens takes focus from the opener
-    queueMicrotask(() => { c.run?.(); onRun?.(c, reason) })
+    queueMicrotask(() => {
+      c.run?.()
+      onRun?.(c, reason)
+    })
   }
   const move = (to: number) => {
     active.value = to
@@ -287,7 +397,10 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   }
   const onKey = (e: KeyboardEvent) => {
     if (e.isComposing) return
-    if (e.key === 'Escape') { if (!e.defaultPrevented && back()) e.preventDefault(); return } // the layer took it first
+    if (e.key === 'Escape') {
+      if (!e.defaultPrevented && back()) e.preventDefault()
+      return
+    } // the layer took it first
     const count = items.value.length
     if (!count) return
     const at = active.value
@@ -296,13 +409,22 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
       return move(e.key === 'Home' ? 0 : count - 1)
     }
     if (e.key === 'Tab') {
-      const heads = rows.value.flatMap((r, i) => (r.head === undefined ? [] : [(rows.value[i + 1])?.at ?? 0]))
+      const heads = rows.value.flatMap((r, i) =>
+        r.head === undefined ? [] : [rows.value[i + 1]?.at ?? 0],
+      )
       if (heads.length < 2) return e.preventDefault()
       e.preventDefault()
-      const next = e.shiftKey ? [...heads].reverse().find(h => h < at) ?? heads.at(-1)! : heads.find(h => h > at) ?? heads[0]
+      const next = e.shiftKey
+        ? ([...heads].reverse().find((h) => h < at) ?? heads.at(-1)!)
+        : (heads.find((h) => h > at) ?? heads[0])
       return move(next!)
     }
-    if (e.key === 'ArrowRight' && input && input.selectionStart === input.value.length && items.value[at]?.children) {
+    if (
+      e.key === 'ArrowRight' &&
+      input &&
+      input.selectionStart === input.value.length &&
+      items.value[at]?.children
+    ) {
       e.preventDefault()
       return down(items.value[at])
     }
@@ -312,7 +434,10 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     }
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       const href = items.value[at]?.href
-      if (href) { e.preventDefault(); window.open(href, '_blank', 'noopener') }
+      if (href) {
+        e.preventDefault()
+        window.open(href, '_blank', 'noopener')
+      }
       return
     }
     const m = listKey(e.key, at, count, { wrap: true, typing: true, page: 5 })
@@ -327,31 +452,104 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   }
   const slots = derived(() => Array.from({ length: size.value }, (_, i) => i))
   // one highlight that travels (redesign §3): it reads the row after the render that moved it
-  watch(() => [active.value, rows.value, flag.value] as const, ([, , on]) => { requestAnimationFrame(() => {
-    if (!face) return
-    if (!on) { face.setAttribute('data-instant', ''); face.style.removeProperty('--warp-a'); return }
-    // the row, not its option: while a row's entrance runs, its translate makes it the option's offsetParent
-    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]')?.parentElement
-    if (row) moveShuttle(face, row.offsetTop, row.offsetTop + row.offsetHeight)
-    requestAnimationFrame(() => face?.removeAttribute('data-instant'))
-  }) })
+  watch(
+    () => [active.value, rows.value, flag.value] as const,
+    ([, , on]) => {
+      requestAnimationFrame(() => {
+        if (!face) return
+        if (!on) {
+          face.setAttribute('data-instant', '')
+          face.style.removeProperty('--warp-a')
+          return
+        }
+        // the row, not its option: while a row's entrance runs, its translate makes it the option's offsetParent
+        const row = list?.querySelector<HTMLElement>('[aria-selected="true"]')?.parentElement
+        if (row) moveShuttle(face, row.offsetTop, row.offsetTop + row.offsetHeight)
+        requestAnimationFrame(() => face?.removeAttribute('data-instant'))
+      })
+    },
+  )
   return (
-    <dialog ref={n => (el = n)} data-scope="palette" aria-label={label}>
+    <dialog ref={(n) => (el = n)} data-scope="palette" aria-label={label}>
       <div data-part="input-row" data-sweep="">
-        <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
+        <span data-part="sweep-base" aria-hidden="true"></span>
+        <span data-part="sweep" aria-hidden="true"></span>
         <SearchIcon />
-        <label for={`${id}-in`} data-part="sr-only">{crumb.value ? `${label}, ${crumb.value}` : label}</label>
-        {crumb.value && <button type="button" data-part="crumb" tabindex="-1" aria-label={`Back from ${crumb.value}`} onClick={up}>{crumb.value}<span aria-hidden="true">›</span></button>}
-        <input ref={n => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined} placeholder={crumb.value ? `Search ${crumb.value}…` : mode.value?.placeholder ?? placeholder} autocomplete="off" spellcheck={false} onInput={onInput} onKeyDown={onKey} />
+        <label for={`${id}-in`} data-part="sr-only">
+          {crumb.value ? `${label}, ${crumb.value}` : label}
+        </label>
+        {crumb.value && (
+          <button
+            type="button"
+            data-part="crumb"
+            tabindex="-1"
+            aria-label={`Back from ${crumb.value}`}
+            onClick={up}
+          >
+            {crumb.value}
+            <span aria-hidden="true">›</span>
+          </button>
+        )}
+        <input
+          ref={(n) => (input = n)}
+          data-initial=""
+          data-part="input"
+          id={`${id}-in`}
+          role="combobox"
+          aria-expanded="true"
+          aria-controls={`${id}-list`}
+          aria-autocomplete="list"
+          aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined}
+          placeholder={
+            crumb.value ? `Search ${crumb.value}…` : (mode.value?.placeholder ?? placeholder)
+          }
+          autocomplete="off"
+          spellcheck={false}
+          onInput={onInput}
+          onKeyDown={onKey}
+        />
         {mode.value ? <span data-part="mode">{mode.value.label}</span> : <Kbd>esc</Kbd>}
       </div>
-      <div ref={n => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">
-        <span ref={n => (face = n)} data-part="shuttle" aria-hidden="true"></span>
-        {slots.value.map(i => <Slot key={i} id={id} row={() => rows.value[i]} active={() => active.value} onPick={at => run(at, 'pointer')} onHover={at => (active.value = at)} />)}
+      <div
+        ref={(n) => (list = n)}
+        data-part="list"
+        role="listbox"
+        id={`${id}-list`}
+        aria-label="Commands"
+      >
+        <span ref={(n) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
+        {slots.value.map((i) => (
+          <Slot
+            key={i}
+            id={id}
+            row={() => rows.value[i]}
+            active={() => active.value}
+            onPick={(at) => run(at, 'pointer')}
+            onHover={(at) => (active.value = at)}
+          />
+        ))}
       </div>
-      {flag.value && !items.value.length && !pending.value && <div data-part="empty">{`Nothing matches “${typed.value}”.`}</div>}
-      <span data-part="sr-only" role="status">{result.value}</span>
-      <div data-part="footer" aria-hidden="true"><span><Kbd>↑</Kbd><Kbd>↓</Kbd> move</span><span><Kbd>tab</Kbd> group</span><span><Kbd>↵</Kbd> open</span><span><Kbd>esc</Kbd> close</span></div>
+      {flag.value && !items.value.length && !pending.value && (
+        <div data-part="empty">{`Nothing matches “${typed.value}”.`}</div>
+      )}
+      <span data-part="sr-only" role="status">
+        {result.value}
+      </span>
+      <div data-part="footer" aria-hidden="true">
+        <span>
+          <Kbd>↑</Kbd>
+          <Kbd>↓</Kbd> move
+        </span>
+        <span>
+          <Kbd>tab</Kbd> group
+        </span>
+        <span>
+          <Kbd>↵</Kbd> open
+        </span>
+        <span>
+          <Kbd>esc</Kbd> close
+        </span>
+      </div>
     </dialog>
   )
 }

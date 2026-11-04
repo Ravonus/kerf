@@ -10,7 +10,10 @@ import { hydration } from '../src/hydrate'
 import { Bare as ServerBare, Page as ServerPage } from './fixtures/ssr/Streamed.tsx?weft-ssr'
 import { Page as ClientPage } from './fixtures/ssr/Streamed.tsx?weft-hydrate'
 
-const later = <T,>(ms: number, v: T) => new Promise<T>(ok => { setTimeout(ok, ms, v) })
+const later = <T,>(ms: number, v: T) =>
+  new Promise<T>((ok) => {
+    setTimeout(ok, ms, v)
+  })
 
 async function stream(load: (what: string) => Promise<string>) {
   const s = renderToStream(() => <ServerPage load={load} />)
@@ -24,7 +27,7 @@ function apply(shell: string, chunks: string[]) {
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = shell
   // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- running the swap script as the page would is the test, and it's our own constant
-const $wb = new Function(`${SWAP};return $wb`)()
+  const $wb = new Function(`${SWAP};return $wb`)()
   for (const c of chunks) {
     const holder = document.createElement('div')
     holder.innerHTML = c
@@ -38,10 +41,12 @@ const $wb = new Function(`${SWAP};return $wb`)()
   return container
 }
 
-afterEach(() => { document.body.innerHTML = '' })
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 
 test('the shell has every fallback; content streams in the order resources resolve', async () => {
-  const { shell, chunks } = await stream(what => later(what === 'fast' ? 5 : 40, `${what} data`))
+  const { shell, chunks } = await stream((what) => later(what === 'fast' ? 5 : 40, `${what} data`))
   expect(shell).toContain('<h1>Streamed</h1>')
   expect(shell.match(/<!--wb:/g)).toHaveLength(2)
   expect(shell).toContain('Loading fast')
@@ -65,32 +70,46 @@ test('settle(): a resource outside every Boundary lands in the shell, and its va
 
 test('a Boundary that resolves while another is pending sends only its own content, once', async () => {
   let calls = 0
-  const { chunks } = await stream(what => (calls++, later(what === 'fast' ? 5 : 30, what)))
+  const { chunks } = await stream((what) => (calls++, later(what === 'fast' ? 5 : 30, what)))
   expect(calls).toBe(2) // later passes wait on the in-flight fetch instead of starting another
   expect(chunks.join('').match(/<template>/g)).toHaveLength(2)
 })
 
 test('the swapped page hydrates with 0 misses and 0 DOM writes', async () => {
-  const { shell, chunks, data } = await stream(what => later(what === 'fast' ? 5 : 20, `${what} data`))
+  const { shell, chunks, data } = await stream((what) =>
+    later(what === 'fast' ? 5 : 20, `${what} data`),
+  )
   const container = apply(shell, chunks)
   expect(container.innerHTML).not.toContain('wb:')
   expect(container.textContent).toContain('fast data')
   expect(container.textContent).toContain('slow data')
   const before = [...container.querySelectorAll('*')]
   const mutations: MutationRecord[] = []
-  const observer = new MutationObserver(r => mutations.push(...r))
-  observer.observe(container, { subtree: true, childList: true, attributes: true, characterData: true })
+  const observer = new MutationObserver((r) => mutations.push(...r))
+  observer.observe(container, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    characterData: true,
+  })
   const load = vi.fn(() => new Promise<string>(() => {}))
   hydrate(() => <ClientPage load={load} />, container, { data })
   mutations.push(...observer.takeRecords())
   observer.disconnect()
   expect(hydration.misses).toBe(0)
   expect(mutations).toHaveLength(0)
-  expect(before.every(e => e.isConnected)).toBe(true)
+  expect(before.every((e) => e.isConnected)).toBe(true)
 })
 
 test('past the timeout, what is still pending keeps its fallback and the markers go', async () => {
-  const s = renderToStream(() => <ServerPage load={(what: string) => (what === 'fast' ? later(5, 'fast data') : new Promise(() => {}))} />, { timeout: 60 })
+  const s = renderToStream(
+    () => (
+      <ServerPage
+        load={(what: string) => (what === 'fast' ? later(5, 'fast data') : new Promise(() => {}))}
+      />
+    ),
+    { timeout: 60 },
+  )
   const chunks: string[] = []
   for await (const c of s.chunks) chunks.push(c)
   expect(chunks).toHaveLength(2)

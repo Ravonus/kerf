@@ -47,7 +47,11 @@ export function htpl(html: string, svg?: boolean, where?: string): () => Node {
       keys.hydrating = false
       if (DEV) {
         const at = where ?? html.slice(0, 60)
-        console.warn(el ? `weft: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh` : `weft: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`)
+        console.warn(
+          el
+            ? `weft: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh`
+            : `weft: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`,
+        )
       }
     }
     const fresh = clone() as Keyed
@@ -81,7 +85,7 @@ export const next = (n: Node) => over(n.nextSibling)
  * it. A marker that isn't a template's `<!>` (hydrate's data script) takes everything before it.
  */
 function range(parent: Node, marker: Node | undefined): Node[] {
-  if (!marker) return [...parent.childNodes].filter(n => !marks(n))
+  if (!marker) return [...parent.childNodes].filter((n) => !marks(n))
   if (marker.nodeType === 8 && !(marker as Comment).data) return [] // an empty hole (ssr.ts), or a fresh template's `<!>`
   const nodes: Node[] = []
   let depth = 0
@@ -149,7 +153,14 @@ const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
  * `slot` name the hole's scope (its template's key and its index). `once`: `value` builds static content (a
  * component, an element) and runs once, untracked (`2`: `marker` is the page's data script, not a hole); otherwise a function value is read reactively.
  */
-export function hchild(parent: Element, value: unknown, marker?: Node | null, root?: Keyed, slot?: number, once?: 1 | 2) {
+export function hchild(
+  parent: Element,
+  value: unknown,
+  marker?: Node | null,
+  root?: Keyed,
+  slot?: number,
+  once?: 1 | 2,
+) {
   const claim = () => {
     const hydrating = keys.hydrating
     let v = once ? untrack(value as () => unknown) : value
@@ -160,7 +171,7 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
       if (DEV && typeof v === 'function') {
         let current: Node[] = [marker]
         let at = marker.nextSibling
-        hole(v as () => unknown, x => {
+        hole(v as () => unknown, (x) => {
           at = current.at(-1)?.nextSibling ?? at
           current = place(parent, x, current, at)
         })
@@ -172,7 +183,10 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
     const current = range(parent, marker ?? undefined)
     const at = marker ?? null
     // a fragment's holes must stay live: read flat here, a root `<>{cond && …}</>` would never update
-    if (Array.isArray(v) && v.flat(Infinity).some(x => typeof x === 'function')) { const list = v; v = () => list }
+    if (Array.isArray(v) && v.flat(Infinity).some((x) => typeof x === 'function')) {
+      const list = v
+      v = () => list
+    }
     let claimed = false
     const h: Hold = { p: parent, m: at, c: current, t: undefined }
     const put = (x: unknown, was?: unknown) => {
@@ -188,4 +202,3 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
   else claim()
   keys.miss = miss
 }
-

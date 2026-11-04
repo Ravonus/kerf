@@ -9,7 +9,9 @@ import { FnError, runtime, seed, type Answer, type Wire } from '@weft-js/start/d
 import { client as router } from '../src/router'
 
 type Row = { id: string; done: boolean }
-const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const any: StandardSchemaV1<unknown> = {
+  '~standard': { version: 1, vendor: 't', validate: (v) => ({ value: v }) },
+}
 const typed = <T,>() => any as StandardSchemaV1<T>
 const toggleInput = typed<{ id: string; done: boolean }>()
 /** What a streamed page's scripts push its chunks onto. */
@@ -21,40 +23,79 @@ const set = mutation({
   $id: 'set',
   input: toggleInput,
   invalidates: ['rows'],
-  optimistic: ({ input }, c) => c.update(list, undefined, l => { l.find(r => r.id === input.id)!.done = input.done }),
+  optimistic: ({ input }, c) =>
+    c.update(list, undefined, (l) => {
+      l.find((r) => r.id === input.id)!.done = input.done
+    }),
   run: () => {},
 })
 const push = mutation({
   $id: 'push',
   invalidates: ['rows'],
-  optimistic: (_, c) => c.update(list, undefined, l => void l.push({ id: 'new', done: false })),
+  optimistic: (_, c) => c.update(list, undefined, (l) => void l.push({ id: 'new', done: false })),
   run: () => {},
 })
 const plain = mutation({ $id: 'plain', invalidates: ['rows'], run: () => {} })
-const bad = mutation({ $id: 'bad', invalidates: ['rows'], optimistic: () => { throw new Error('bad prediction') }, run: () => {} })
-const row = query({ $id: 'row', input: typed<{ i: number }>(), tags: ['rows'], run: (): unknown => 0 })
+const bad = mutation({
+  $id: 'bad',
+  invalidates: ['rows'],
+  optimistic: () => {
+    throw new Error('bad prediction')
+  },
+  run: () => {},
+})
+const row = query({
+  $id: 'row',
+  input: typed<{ i: number }>(),
+  tags: ['rows'],
+  run: (): unknown => 0,
+})
 
-interface Call { kind: string; id: string; input: unknown; ok(a: Answer): void; no(e: unknown): void }
+interface Call {
+  kind: string
+  id: string
+  input: unknown
+  ok(a: Answer): void
+  no(e: unknown): void
+}
 let calls: Call[]
 beforeEach(() => {
   calls = []
-  const call = (kind: string) => (id: string, input: unknown) => new Promise<Answer>((ok, no) => { calls.push({ kind, id, input, ok, no }) })
+  const call = (kind: string) => (id: string, input: unknown) =>
+    new Promise<Answer>((ok, no) => {
+      calls.push({ kind, id, input, ok, no })
+    })
   runtime.transport = { query: call('query'), mutate: call('mutate') }
 })
-afterEach(() => { delete runtime.transport })
+afterEach(() => {
+  delete runtime.transport
+})
 
 const rows = (done: boolean): Row[] => [{ id: 'a', done }]
-const reply = (done: boolean): Answer => ({ t: ['rows'], c: [['rows', undefined, rows(done), ['rows']]] })
+const reply = (done: boolean): Answer => ({
+  t: ['rows'],
+  c: [['rows', undefined, rows(done), ['rows']]],
+})
 const read = (done: boolean): Answer => ({ v: rows(done), t: ['rows'] })
-const reads = () => calls.filter(c => c.kind === 'query')
+const reads = () => calls.filter((c) => c.kind === 'query')
 
 function List() {
   const l = list()
-  return <ul>{(l.value ?? []).map(r => <li key={r.id}>{r.done ? 'done' : 'open'}</li>)}</ul>
+  return (
+    <ul>
+      {(l.value ?? []).map((r) => (
+        <li key={r.id}>{r.done ? 'done' : 'open'}</li>
+      ))}
+    </ul>
+  )
 }
-const shown = () => screen.getAllByRole('listitem').map(li => li.textContent)
+const shown = () => screen.getAllByRole('listitem').map((li) => li.textContent)
 function Guarded() {
-  return <Boundary pending={<p>loading</p>} error={() => <p>failed</p>}><List /></Boundary>
+  return (
+    <Boundary pending={<p>loading</p>} error={() => <p>failed</p>}>
+      <List />
+    </Boundary>
+  )
 }
 const lost = () => new TypeError('Failed to fetch')
 /** A tab left this long ago comes back. */
@@ -66,7 +107,12 @@ function returns(...events: (() => void)[]) {
 }
 const focus = () => window.dispatchEvent(new Event('focus'))
 const showing = () => document.dispatchEvent(new Event('visibilitychange'))
-const tick = async () => { await new Promise(ok => { setTimeout(ok) }); await flush() }
+const tick = async () => {
+  await new Promise((ok) => {
+    setTimeout(ok)
+  })
+  await flush()
+}
 
 async function ready(done = false) {
   seed([['rows', undefined, rows(done), ['rows']]])
@@ -86,7 +132,8 @@ test('one call, nothing overlapping: its reply lands and nothing is read again',
 
 test('two overlapping calls answered in reverse: no reply lands, and one read after the last says what is true', async () => {
   await ready()
-  const a = set({ id: 'a', done: true }), b = set({ id: 'a', done: false })
+  const a = set({ id: 'a', done: true }),
+    b = set({ id: 'a', done: false })
   await flush()
   expect(shown()).toEqual(['open'])
   const [first, second] = calls
@@ -107,12 +154,17 @@ test('two overlapping calls answered in reverse: no reply lands, and one read af
 })
 
 test('five overlapping toggles, any order of replies: the screen follows the clicks and ends on the server', async () => {
-  for (const order of [[4, 3, 2, 1, 0], [1, 0, 3, 2, 4], [2, 4, 0, 3, 1], [0, 1, 2, 3, 4]]) {
+  for (const order of [
+    [4, 3, 2, 1, 0],
+    [1, 0, 3, 2, 4],
+    [2, 4, 0, 3, 1],
+    [0, 1, 2, 3, 4],
+  ]) {
     calls.length = 0
     cache.clear()
     await ready()
     const want = [true, false, true, false, true]
-    const done = want.map(d => set({ id: 'a', done: d }))
+    const done = want.map((d) => set({ id: 'a', done: d }))
     await flush()
     const sent = calls.slice()
     for (const i of order) {
@@ -132,13 +184,16 @@ test('five overlapping toggles, any order of replies: the screen follows the cli
 
 test('a click after a reply keeps the order of the layers left: a dropped newer layer does not resurrect an older one', async () => {
   await ready()
-  const a = set({ id: 'a', done: true }), b = set({ id: 'a', done: false }), c = set({ id: 'a', done: true })
+  const a = set({ id: 'a', done: true }),
+    b = set({ id: 'a', done: false }),
+    c = set({ id: 'a', done: true })
   await flush()
   calls[2]!.ok(reply(true))
   await c
   await tick()
   expect(shown()).toEqual(['done']) // not b's `false`, reapplied with c's layer gone
-  calls[0]!.ok(reply(true)); calls[1]!.ok(reply(false))
+  calls[0]!.ok(reply(true))
+  calls[1]!.ok(reply(false))
   await Promise.all([a, b])
   await tick()
   reads()[0]!.ok(read(true))
@@ -151,11 +206,15 @@ test('a call with no prediction overlapping one with: replies in either order en
     calls.length = 0
     cache.clear()
     await ready()
-    const a = set({ id: 'a', done: true }), b = plain()
+    const a = set({ id: 'a', done: true }),
+      b = plain()
     await flush()
     const [first, second] = flip ? [calls[1]!, calls[0]!] : [calls[0]!, calls[1]!]
-    first.ok(reply(true)); await tick()
-    second.ok(reply(false)); await Promise.all([a, b]); await tick()
+    first.ok(reply(true))
+    await tick()
+    second.ok(reply(false))
+    await Promise.all([a, b])
+    await tick()
     expect(reads().length).toBe(1)
     reads()[0]!.ok(read(true))
     await tick()
@@ -165,9 +224,13 @@ test('a call with no prediction overlapping one with: replies in either order en
 })
 
 test('calls on different entries do not hold each other up', async () => {
-  seed([['rows', undefined, rows(false), ['rows']], ['other', undefined, 1, ['other']]])
+  seed([
+    ['rows', undefined, rows(false), ['rows']],
+    ['other', undefined, 1, ['other']],
+  ])
   const bump = mutation({ $id: 'bump', invalidates: ['other'], run: () => {} })
-  const a = set({ id: 'a', done: true }), b = bump()
+  const a = set({ id: 'a', done: true }),
+    b = bump()
   calls[1]!.ok({ t: ['other'], c: [['other', undefined, 2, ['other']]] })
   await b
   expect(cache.get(other)).toBe(2)
@@ -184,7 +247,7 @@ test('a late read does not revert what a mutation brought', async () => {
   await tick()
   expect(reads().length).toBe(1)
   const p = plain()
-  calls.find(c => c.kind === 'mutate')!.ok(reply(true))
+  calls.find((c) => c.kind === 'mutate')!.ok(reply(true))
   await p
   await tick()
   expect(shown()).toEqual(['done'])
@@ -243,10 +306,17 @@ test('a read that lands under a prediction waits: the layer does not apply twice
   reads()[0]!.ok({ v: [...rows(false), { id: 'new', done: false }], t: ['rows'] }) // already holds the row
   await tick()
   expect(shown()).toEqual(['open', 'open'])
-  calls.find(c => c.kind === 'mutate')!.ok({ t: ['rows'], c: [['rows', undefined, [...rows(false), { id: 'new', done: false }], ['rows']]] })
+  calls
+    .find((c) => c.kind === 'mutate')!
+    .ok({
+      t: ['rows'],
+      c: [['rows', undefined, [...rows(false), { id: 'new', done: false }], ['rows']]],
+    })
   await p
   await tick()
-  reads().at(-1)!.ok({ v: [...rows(false), { id: 'new', done: false }], t: ['rows'] })
+  reads()
+    .at(-1)!
+    .ok({ v: [...rows(false), { id: 'new', done: false }], t: ['rows'] })
   await tick()
   expect(shown()).toEqual(['open', 'open'])
 })
@@ -269,7 +339,7 @@ test('a call whose reply was lost may have committed, so its entry reads again; 
   expect(shown()).toEqual(['done'])
 })
 
-test('a navigation\'s entries older than a write do not land', async () => {
+test("a navigation's entries older than a write do not land", async () => {
   await ready()
   const since = router.now!()
   const p = plain()
@@ -283,8 +353,9 @@ test('a navigation\'s entries older than a write do not land', async () => {
   expect(shown()).toEqual(['open'])
 })
 
-test('a streaming page\'s chunks land in the cache as they arrive, under anything written here since', async () => {
-  const chunk = (done: boolean) => landed().push({ c: [['rows', undefined, rows(done), ['rows']]], b: {} })
+test("a streaming page's chunks land in the cache as they arrive, under anything written here since", async () => {
+  const chunk = (done: boolean) =>
+    landed().push({ c: [['rows', undefined, rows(done), ['rows']]], b: {} })
   chunk(true)
   expect(cache.get(list)).toEqual(rows(true))
   await ready(false)
@@ -294,7 +365,7 @@ test('a streaming page\'s chunks land in the cache as they arrive, under anythin
   expect(reads()).toEqual([])
 })
 
-test('a gateway\'s 5xx after a write may have committed too, so its entry reads again', async () => {
+test("a gateway's 5xx after a write may have committed too, so its entry reads again", async () => {
   await ready()
   const gone = set({ id: 'a', done: true })
   calls[0]!.no(new FnError({ message: 'server function answered 502' }, 502))
@@ -340,7 +411,9 @@ test('a tab back after 30 s with the network down keeps its list, and recovers b
   reads()[0]!.no(lost())
   await tick()
   expect(shown()).toEqual(['open'])
-  await new Promise(ok => { setTimeout(ok, 1100) }) // no `online` event: the server was what went away
+  await new Promise((ok) => {
+    setTimeout(ok, 1100)
+  }) // no `online` event: the server was what went away
   expect(reads().length).toBe(2)
   reads()[1]!.ok(read(true))
   await tick()
@@ -358,10 +431,14 @@ test('a server that refuses a background read leaves the list, unless it refused
   expect(shown()).toEqual(['open'])
   void cache.invalidate('rows')
   await tick()
-  reads().at(-1)!.no(new FnError({ code: 'A002', message: 'signed out' }, 401))
+  reads()
+    .at(-1)!
+    .no(new FnError({ code: 'A002', message: 'signed out' }, 401))
   await tick()
   expect(cache.get(list)).toBeUndefined()
-  reads().at(-1)!.no(new FnError({ code: 'A002', message: 'signed out' }, 401))
+  reads()
+    .at(-1)!
+    .no(new FnError({ code: 'A002', message: 'signed out' }, 401))
   await tick()
   expect(screen.getByText('failed')).toBeTruthy()
   expect(screen.queryAllByRole('listitem')).toEqual([])
@@ -392,8 +469,17 @@ test('showing and focus arriving apart read each entry once', async () => {
 
 test('past the limit no live reader is evicted, and idle entries still go', async () => {
   const live = 1300
-  const Row = (p: { i: number }) => { const r = row(() => ({ i: p.i })); return <i>{() => String(r.value)}</i> }
-  render(() => <div>{Array.from({ length: live }, (_, i) => <Row i={i} />)}</div>)
+  const Row = (p: { i: number }) => {
+    const r = row(() => ({ i: p.i }))
+    return <i>{() => String(r.value)}</i>
+  }
+  render(() => (
+    <div>
+      {Array.from({ length: live }, (_, i) => (
+        <Row i={i} />
+      ))}
+    </div>
+  ))
   await tick()
   for (const c of reads()) c.ok({ v: 1, t: ['rows'] })
   await tick()
@@ -413,8 +499,10 @@ test('past the limit what nothing reads goes, oldest first', () => {
 
 test('two plain calls answered in the same task: neither reply is believed, and one read says what is true', async () => {
   await ready()
-  const a = plain(), b = plain()
-  calls[0]!.ok(reply(true)); calls[1]!.ok(reply(false))
+  const a = plain(),
+    b = plain()
+  calls[0]!.ok(reply(true))
+  calls[1]!.ok(reply(false))
   await Promise.all([a, b])
   await tick()
   expect(reads().length).toBe(1)
@@ -446,12 +534,20 @@ test('a value read before a write is out of date even for a key the cache did no
   calls[0]!.ok({ t: ['rows'], c: [] })
   await p
   await tick()
-  router.seed!([['row', { i: 1 }, 'old', ['rows']], ['row', { i: 2 }, 'kept', ['else']]], since)
+  router.seed!(
+    [
+      ['row', { i: 1 }, 'old', ['rows']],
+      ['row', { i: 2 }, 'kept', ['else']],
+    ],
+    since,
+  )
   expect(await Promise.race([row.fetch({ i: 2 }), Promise.resolve('waits')])).toBe('kept')
   const n = reads().length
   const late = row.fetch({ i: 1 })
   expect(reads().length).toBe(n + 1)
-  reads().at(-1)!.ok({ v: 'new', t: ['rows'] })
+  reads()
+    .at(-1)!
+    .ok({ v: 'new', t: ['rows'] })
   expect(await late).toBe('new')
 })
 
@@ -465,7 +561,9 @@ test('a stream chunk read before a write is out of date even for a key the cache
   const n = reads().length
   const late = row.fetch({ i: 3 })
   expect(reads().length).toBe(n + 1)
-  reads().at(-1)!.ok({ v: 'new', t: ['rows'] })
+  reads()
+    .at(-1)!
+    .ok({ v: 'new', t: ['rows'] })
   expect(await late).toBe('new')
 })
 

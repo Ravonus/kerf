@@ -15,7 +15,7 @@ export const cart = defineState('cart', () => {
       const line = lines.get(product.id)
       const qty = (line?.qty ?? 0) + delta
       if (qty > product.stock) return
-      lines.set(d => {
+      lines.set((d) => {
         if (qty <= 0) delete d[product.id]
         else d[product.id] = { qty, addedPrice: line?.addedPrice ?? product.price }
       })

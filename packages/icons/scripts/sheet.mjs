@@ -9,16 +9,38 @@ import { acting, forms } from './forms.mjs'
 const dir = new URL('../art/', import.meta.url)
 const icons = await load()
 const groups = {}
-for (const f of readdirSync(dir).filter(n => n.endsWith('.mjs')).sort()) groups[f.slice(2, -4)] = Object.keys((await import(new URL(f, dir))).default).sort()
-const data = Object.fromEntries(Object.entries(icons).map(([n, e]) => {
-  const f = forms(n, e), a = ACTIONS[n] && acting(n, e, ACTIONS[n])
-  return [n, { hollow: f.hollow.line + f.hollow.pixels, solid: f.solid.line + f.solid.pixels, ...(a && { action: a.line + a.pixels }) }]
-}))
-const css = ['icons.css', 'tiers.css'].map(f => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8')).join('\n') + Object.keys(ACTIONS).map(n => readFileSync(new URL(`../src/gen/actions/${n}.css`, import.meta.url), 'utf8')).join('\n')
+for (const f of readdirSync(dir)
+  .filter((n) => n.endsWith('.mjs'))
+  .sort())
+  groups[f.slice(2, -4)] = Object.keys((await import(new URL(f, dir))).default).sort()
+const data = Object.fromEntries(
+  Object.entries(icons).map(([n, e]) => {
+    const f = forms(n, e),
+      a = ACTIONS[n] && acting(n, e, ACTIONS[n])
+    return [
+      n,
+      {
+        hollow: f.hollow.line + f.hollow.pixels,
+        solid: f.solid.line + f.solid.pixels,
+        ...(a && { action: a.line + a.pixels }),
+      },
+    ]
+  }),
+)
+const css =
+  ['icons.css', 'tiers.css']
+    .map((f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8'))
+    .join('\n') +
+  Object.keys(ACTIONS)
+    .map((n) => readFileSync(new URL(`../src/gen/actions/${n}.css`, import.meta.url), 'utf8'))
+    .join('\n')
 const out = process.argv[2] ?? new URL('../contact-sheet.html', import.meta.url).pathname
-const pick = (name, label, values, on) => `<fieldset><legend>${label}</legend>${values.map(v => `<label><input type="radio" name="${name}" value="${v}"${v === on ? ' checked' : ''}>${v}</label>`).join('')}</fieldset>`
+const pick = (name, label, values, on) =>
+  `<fieldset><legend>${label}</legend>${values.map((v) => `<label><input type="radio" name="${name}" value="${v}"${v === on ? ' checked' : ''}>${v}</label>`).join('')}</fieldset>`
 
-writeFileSync(out, `<!doctype html>
+writeFileSync(
+  out,
+  `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>weft icons</title>
 <style>
@@ -76,5 +98,6 @@ document.querySelector('header').addEventListener('input', draw)
 draw()
 </script>
 </body></html>
-`)
+`,
+)
 console.log(out)

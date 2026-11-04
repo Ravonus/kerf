@@ -10,7 +10,7 @@ export function Stopwatch() {
 
   useEffect(() => {
     if (!running) return
-    const id = setInterval(() => setTenths(t => t + speedRef.current), 100)
+    const id = setInterval(() => setTenths((t) => t + speedRef.current), 100)
     return () => clearInterval(id)
   }, [running])
 
@@ -18,13 +18,32 @@ export function Stopwatch() {
   return (
     <div>
       <span data-testid="elapsed">{fmt(tenths)}</span>
-      <label>Speed <select value={speed} onChange={e => setSpeed(Number(e.target.value))}>
-        <option value="1">1</option><option value="2">2</option><option value="5">5</option>
-      </select></label>
-      <button onClick={() => setRunning(r => !r)}>{running ? 'Stop' : 'Start'}</button>
-      <button onClick={() => setLaps(l => [...l, tenths])}>Lap</button>
-      <button onClick={() => { setRunning(false); setTenths(0); setLaps([]) }}>Reset</button>
-      <ol aria-label="Laps">{laps.map((t, i) => <li key={i}>Lap {i + 1}: {fmt(t)}</li>)}</ol>
+      <label>
+        Speed{' '}
+        <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="5">5</option>
+        </select>
+      </label>
+      <button onClick={() => setRunning((r) => !r)}>{running ? 'Stop' : 'Start'}</button>
+      <button onClick={() => setLaps((l) => [...l, tenths])}>Lap</button>
+      <button
+        onClick={() => {
+          setRunning(false)
+          setTenths(0)
+          setLaps([])
+        }}
+      >
+        Reset
+      </button>
+      <ol aria-label="Laps">
+        {laps.map((t, i) => (
+          <li key={i}>
+            Lap {i + 1}: {fmt(t)}
+          </li>
+        ))}
+      </ol>
     </div>
   )
 }

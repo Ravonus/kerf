@@ -8,7 +8,10 @@ export const webrtc = definePlugin({
   weft: '*',
   permissions: { net: ['browser:peers', 'browser:ice-servers'] },
   contribute: () => ({
-    agents: { title: 'Peer transport (WebRTC)', text: '`presence(conn, { transport: webrtc({ iceServers }) })` sends cursors directly between browsers, and the socket carries them until every peer is connected. Only cursors ride it: state and the relay stay on the server, which checks them.' },
+    agents: {
+      title: 'Peer transport (WebRTC)',
+      text: '`presence(conn, { transport: webrtc({ iceServers }) })` sends cursors directly between browsers, and the socket carries them until every peer is connected. Only cursors ride it: state and the relay stay on the server, which checks them.',
+    },
   }),
 })
 

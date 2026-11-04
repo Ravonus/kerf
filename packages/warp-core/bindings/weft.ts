@@ -10,7 +10,11 @@ import type { Action } from '../src/store'
  * variable works. The action is made a microtask after mount, so hydration itself writes nothing: what an action
  * writes (a counter, a tooltip's aria-describedby) lands just after the server HTML is adopted.
  */
-export function use<E extends Element, O>(make: (el: E, o: O) => Action<O>, el: () => E | undefined, opts: () => O = () => undefined as O) {
+export function use<E extends Element, O>(
+  make: (el: E, o: O) => Action<O>,
+  el: () => E | undefined,
+  opts: () => O = () => undefined as O,
+) {
   onMount(() => {
     let action: Action<O> | undefined
     let live = true
@@ -18,7 +22,12 @@ export function use<E extends Element, O>(make: (el: E, o: O) => Action<O>, el: 
       const node = live && el()
       if (node) action = make(node, untrack(opts))
     })
-    watch(opts, (o, prev) => { if (prev !== undefined) action?.update(o) })
-    onCleanup(() => { live = false; action?.destroy() })
+    watch(opts, (o, prev) => {
+      if (prev !== undefined) action?.update(o)
+    })
+    onCleanup(() => {
+      live = false
+      action?.destroy()
+    })
   })
 }

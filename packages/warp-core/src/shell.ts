@@ -28,7 +28,10 @@ export function shell(root: HTMLElement, opts: ShellOptions) {
   const nav = () => root.querySelector<HTMLElement>('[data-part="nav"]')
 
   const onKey = (e: KeyboardEvent) => {
-    if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey) && o.onCommand) { e.preventDefault(); return o.onCommand() }
+    if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey) && o.onCommand) {
+      e.preventDefault()
+      return o.onCommand()
+    }
     if (e.key !== '[' || e.metaKey || e.ctrlKey || e.altKey || !nav()) return
     if ((e.target as Element).closest?.('input, textarea, select, [contenteditable]')) return
     o.onToggle()
@@ -39,7 +42,8 @@ export function shell(root: HTMLElement, opts: ShellOptions) {
     const now = root.clientWidth >= 1000
     if (now !== wide) o.onWide((wide = now))
   }
-  const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(measure) : undefined
+  const sizes =
+    typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(measure) : undefined
   sizes?.observe(root) // reports before first paint, without forcing a layout of its own
   if (!sizes) measure()
 
@@ -58,12 +62,20 @@ export function shell(root: HTMLElement, opts: ShellOptions) {
     if (o.navOpen && !remove && el) {
       remove = pushLayer({
         el,
-        close: reason => {
-          if (reason === 'escape') root.querySelector<HTMLElement>('[data-collapsed="hidden"] [data-part="edge-tab"], [data-part="nav-toggle"]')?.focus()
+        close: (reason) => {
+          if (reason === 'escape')
+            root
+              .querySelector<HTMLElement>(
+                '[data-collapsed="hidden"] [data-part="edge-tab"], [data-part="nav-toggle"]',
+              )
+              ?.focus()
           o.onCloseNav()
         },
       })
-    } else if (!o.navOpen) { remove?.(); remove = undefined }
+    } else if (!o.navOpen) {
+      remove?.()
+      remove = undefined
+    }
   }
   layer()
 

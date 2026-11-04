@@ -7,20 +7,50 @@ import { useUi } from './use-ui'
 import './fields'
 import '@weft-js/warp-core/styles/inputs/choice.css'
 
-const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
+const sweepParts = () => (
+  <>
+    <span data-part="sweep-base" aria-hidden="true"></span>
+    <span data-part="sweep" aria-hidden="true"></span>
+  </>
+)
 
 /**
  * A native checkbox with role="switch" (03 §4; SIGNATURE §1c): the rail fills through the sweep as the thumb slides.
  * The whole label is the hover target. Applies at once: never inside a form with Save (03 §8).
  */
-export function Switch({ children, hint, size, placement = 'end', ui, ...rest }: { checked?: boolean; hint?: unknown; size?: 'sm' | 'md' | undefined; placement?: 'start' | 'end'; ui?: Interaction; children?: unknown; [attr: string]: unknown }) {
+export function Switch({
+  children,
+  hint,
+  size,
+  placement = 'end',
+  ui,
+  ...rest
+}: {
+  checked?: boolean
+  hint?: unknown
+  size?: 'sm' | 'md' | undefined
+  placement?: 'start' | 'end'
+  ui?: Interaction
+  children?: unknown
+  [attr: string]: unknown
+}) {
   let host: HTMLLabelElement | undefined
-  useUi(() => ui, () => host)
+  useUi(
+    () => ui,
+    () => host,
+  )
   return (
-    <label ref={n => (host = n)} data-scope="switch" data-placement={placement} data-size={size === 'sm' ? 'sm' : undefined}>
+    <label
+      ref={(n) => (host = n)}
+      data-scope="switch"
+      data-placement={placement}
+      data-size={size === 'sm' ? 'sm' : undefined}
+    >
       <input type="checkbox" role="switch" {...rest} />
       <span data-part="track" data-sweep="">
-        <span data-part="rail-fill" aria-hidden="true"><span data-part="rail-hover"></span></span>
+        <span data-part="rail-fill" aria-hidden="true">
+          <span data-part="rail-hover"></span>
+        </span>
         {sweepParts()}
         <span data-part="thumb" aria-hidden="true"></span>
       </span>
@@ -31,18 +61,47 @@ export function Switch({ children, hint, size, placement = 'end', ui, ...rest }:
 }
 
 /** A native checkbox (03 §4): the box never fills, the check wipes in, and CSS draws both, so a list of them stays small; `indeterminate` is the real property. */
-export function Checkbox({ children, hint, error, indeterminate, ui, ...rest }: { checked?: boolean; indeterminate?: boolean; hint?: unknown; error?: unknown; ui?: Interaction; children?: unknown; [attr: string]: unknown }) {
+export function Checkbox({
+  children,
+  hint,
+  error,
+  indeterminate,
+  ui,
+  ...rest
+}: {
+  checked?: boolean
+  indeterminate?: boolean
+  hint?: unknown
+  error?: unknown
+  ui?: Interaction
+  children?: unknown
+  [attr: string]: unknown
+}) {
   let input: HTMLInputElement | undefined
   let host: HTMLLabelElement | undefined
-  useUi(() => ui, () => host)
-  use((el: HTMLInputElement, on: boolean | undefined) => {
-    el.indeterminate = !!on
-    return { update: v => void (el.indeterminate = !!v), destroy() {} }
-  }, () => input, () => indeterminate)
+  useUi(
+    () => ui,
+    () => host,
+  )
+  use(
+    (el: HTMLInputElement, on: boolean | undefined) => {
+      el.indeterminate = !!on
+      return { update: (v) => void (el.indeterminate = !!v), destroy() {} }
+    },
+    () => input,
+    () => indeterminate,
+  )
   return (
-    <label ref={n => (host = n)} data-scope="checkbox" data-invalid={error ? '' : undefined}>
-      <input ref={n => (input = n)} type="checkbox" aria-invalid={error ? 'true' : undefined} {...rest} />
-      <span data-part="control" data-sweep=""><span data-part="mark" aria-hidden="true"></span></span>
+    <label ref={(n) => (host = n)} data-scope="checkbox" data-invalid={error ? '' : undefined}>
+      <input
+        ref={(n) => (input = n)}
+        type="checkbox"
+        aria-invalid={error ? 'true' : undefined}
+        {...rest}
+      />
+      <span data-part="control" data-sweep="">
+        <span data-part="mark" aria-hidden="true"></span>
+      </span>
       <span data-part="label">{children}</span>
       {(error ?? hint) !== undefined && <span data-part="hint">{error ?? hint}</span>}
     </label>
@@ -50,13 +109,28 @@ export function Checkbox({ children, hint, error, indeterminate, ui, ...rest }: 
 }
 
 /** One radio (03 §4): the native input, the sweep ring, a dot that springs in. Use RadioGroup for a set. */
-export function Radio({ children, hint, ui, ...rest }: { hint?: unknown; ui?: Interaction; children?: unknown; [attr: string]: unknown }) {
+export function Radio({
+  children,
+  hint,
+  ui,
+  ...rest
+}: {
+  hint?: unknown
+  ui?: Interaction
+  children?: unknown
+  [attr: string]: unknown
+}) {
   let host: HTMLLabelElement | undefined
-  useUi(() => ui, () => host)
+  useUi(
+    () => ui,
+    () => host,
+  )
   return (
-    <label ref={n => (host = n)} data-scope="radio">
+    <label ref={(n) => (host = n)} data-scope="radio">
       <input type="radio" {...rest} />
-      <span data-part="control" data-sweep="">{sweepParts()}</span>
+      <span data-part="control" data-sweep="">
+        {sweepParts()}
+      </span>
       <span data-part="label">{children}</span>
       {hint !== undefined && <span data-part="hint">{hint}</span>}
     </label>
@@ -64,37 +138,107 @@ export function Radio({ children, hint, ui, ...rest }: { hint?: unknown; ui?: In
 }
 
 /** One RadioGroup choice. */
-export type RadioOption<V extends string> = { value: V; label: unknown; hint?: unknown; disabled?: boolean | undefined }
+export type RadioOption<V extends string> = {
+  value: V
+  label: unknown
+  hint?: unknown
+  disabled?: boolean | undefined
+}
 
 /** A radio group: native radios, so arrow keys, form values and the group name are the platform's. */
-export function RadioGroup<V extends string>({ label, value, onChange, options, name }: { label: string; value: V; onChange: (v: V) => void; options: RadioOption<V>[]; name?: string | undefined }) {
+export function RadioGroup<V extends string>({
+  label,
+  value,
+  onChange,
+  options,
+  name,
+}: {
+  label: string
+  value: V
+  onChange: (v: V) => void
+  options: RadioOption<V>[]
+  name?: string | undefined
+}) {
   const group = untrack(() => name) ?? uid('radio')
   return (
     <div role="radiogroup" aria-label={label} style="display:grid;gap:var(--warp-space-tight)">
-      {options.map(o => <Radio key={o.value} name={group} value={o.value} hint={o.hint} checked={o.value === value} disabled={o.disabled} onChange={() => onChange(o.value)}>{o.label}</Radio>)}
+      {options.map((o) => (
+        <Radio
+          key={o.value}
+          name={group}
+          value={o.value}
+          hint={o.hint}
+          checked={o.value === value}
+          disabled={o.disabled}
+          onChange={() => onChange(o.value)}
+        >
+          {o.label}
+        </Radio>
+      ))}
     </div>
   )
 }
 
 /** One Segmented choice. */
-export type SegmentedOption<V extends string> = { value: V; label: unknown; icon?: IconRef | undefined; count?: unknown; disabled?: boolean | undefined }
+export type SegmentedOption<V extends string> = {
+  value: V
+  label: unknown
+  icon?: IconRef | undefined
+  count?: unknown
+  disabled?: boolean | undefined
+}
 
 /**
  * Segmented (03 §4, review 01 M8): native radios in a group that rests on its ink border; hovering or focusing an
  * unselected option sweeps a ring round that option only; the selected face slides to it on the sweep curve.
  */
-export function Segmented<V extends string>({ label, value, onChange, options, size, name }: { label: string; value: V; onChange: (v: V) => void; options: SegmentedOption<V>[]; size?: 'sm' | 'md' | undefined; name?: string | undefined }) {
+export function Segmented<V extends string>({
+  label,
+  value,
+  onChange,
+  options,
+  size,
+  name,
+}: {
+  label: string
+  value: V
+  onChange: (v: V) => void
+  options: SegmentedOption<V>[]
+  size?: 'sm' | 'md' | undefined
+  name?: string | undefined
+}) {
   const group = untrack(() => name) ?? uid('seg')
   let root: HTMLDivElement | undefined
-  use(indicator, () => root, () => ({ selected: ':scope > label:has(input:checked)', at: value }))
+  use(
+    indicator,
+    () => root,
+    () => ({ selected: ':scope > label:has(input:checked)', at: value }),
+  )
   return (
-    <div ref={n => (root = n)} data-scope="segmented" role="radiogroup" aria-label={label} data-size={size === 'sm' ? 'sm' : undefined}>
+    <div
+      ref={(n) => (root = n)}
+      data-scope="segmented"
+      role="radiogroup"
+      aria-label={label}
+      data-size={size === 'sm' ? 'sm' : undefined}
+    >
       <span data-part="indicator" aria-hidden="true" data-instant=""></span>
-      {options.map(o => (
+      {options.map((o) => (
         <label key={o.value} data-sweep="">
           <span data-part="sweep" aria-hidden="true"></span>
-          <input type="radio" name={group} value={o.value} checked={o.value === value} disabled={o.disabled} onChange={() => onChange(o.value)} />
-          <span data-part="item">{o.icon && <Icon name={o.icon} />}{o.label}{o.count !== undefined && <span data-part="count">{o.count}</span>}</span>
+          <input
+            type="radio"
+            name={group}
+            value={o.value}
+            checked={o.value === value}
+            disabled={o.disabled}
+            onChange={() => onChange(o.value)}
+          />
+          <span data-part="item">
+            {o.icon && <Icon name={o.icon} />}
+            {o.label}
+            {o.count !== undefined && <span data-part="count">{o.count}</span>}
+          </span>
         </label>
       ))}
     </div>

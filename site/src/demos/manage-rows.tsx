@@ -11,13 +11,25 @@ const PRODUCTS: Product[] = [
 // Gets the whole box and reads its own entry, so a change to another product never re-runs this row.
 function Line(props: { product: Product; cart: State<Record<string, number>> }) {
   const qty = derived(() => props.cart.get(props.product.id) ?? 0)
-  const add = () => props.cart.set(d => { d[props.product.id] = qty.value + 1 })
-  const remove = () => props.cart.set(d => { d[props.product.id] = Math.max(0, qty.value - 1) })
+  const add = () =>
+    props.cart.set((d) => {
+      d[props.product.id] = qty.value + 1
+    })
+  const remove = () =>
+    props.cart.set((d) => {
+      d[props.product.id] = Math.max(0, qty.value - 1)
+    })
   return (
     <Row gap="tight" align="baseline">
-      <span>{props.product.name}: {qty.value}</span>
-      <Button size="sm" onClick={add}>+1</Button>
-      <Button size="sm" emphasis="ghost" disabled={qty.value === 0} onClick={remove}>−1</Button>
+      <span>
+        {props.product.name}: {qty.value}
+      </span>
+      <Button size="sm" onClick={add}>
+        +1
+      </Button>
+      <Button size="sm" emphasis="ghost" disabled={qty.value === 0} onClick={remove}>
+        −1
+      </Button>
     </Row>
   )
 }
@@ -27,7 +39,9 @@ export default function Cart() {
   const count = derived(() => Object.values(cart.value).reduce((a, b) => a + b, 0))
   return (
     <Card title={`Cart: ${count.value} items`}>
-      {PRODUCTS.map(p => <Line key={p.id} product={p} cart={cart} />)}
+      {PRODUCTS.map((p) => (
+        <Line key={p.id} product={p} cart={cart} />
+      ))}
     </Card>
   )
 }

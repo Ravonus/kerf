@@ -48,7 +48,17 @@ impl Diagnostic {
         help: impl Into<String>,
     ) -> Self {
         let (line, column) = line_col(source, start);
-        Self { code, severity, message: message.into(), help: help.into(), start, end, line, column, fix: None }
+        Self {
+            code,
+            severity,
+            message: message.into(),
+            help: help.into(),
+            start,
+            end,
+            line,
+            column,
+            fix: None,
+        }
     }
 
     #[must_use]
@@ -59,7 +69,14 @@ impl Diagnostic {
 
     pub fn syntax(source: &str, message: String, offset: Option<usize>) -> Self {
         let at = offset.unwrap_or(0) as u32;
-        Self::new(source, "W000", Severity::Error, (at, at), message, "Fix the syntax error first.")
+        Self::new(
+            source,
+            "W000",
+            Severity::Error,
+            (at, at),
+            message,
+            "Fix the syntax error first.",
+        )
     }
 }
 

@@ -1,6 +1,12 @@
-
 /** `learn`: shown only in Learn (src/components/LearnDemo.tsx), not on the examples page. */
-export type Demo = { title: string; look: string; tryIt: string; why: string; page?: string; learn?: true }
+export type Demo = {
+  title: string
+  look: string
+  tryIt: string
+  why: string
+  page?: string
+  learn?: true
+}
 
 /** Every live example, with the words that say what it is. The landing, the examples page and the docs read this. */
 export const demos: Record<string, Demo> = {
@@ -13,7 +19,8 @@ export const demos: Record<string, Demo> = {
   'shop-2': {
     title: 'The shop, step 2',
     look: 'The total and shipping are new, marked in the code. Neither is set by hand: derived works each one out from count.',
-    tryIt: 'Add three coffees. Shipping appears at $4, then drops to $0 when the total reaches $36.',
+    tryIt:
+      'Add three coffees. Shipping appears at $4, then drops to $0 when the total reaches $36.',
     why: 'You state a rule once and it can never go stale. Carts and forms get most of their bugs from keeping values like these in sync by hand.',
   },
   'shop-3': {
@@ -31,7 +38,8 @@ export const demos: Record<string, Demo> = {
   'shop-5': {
     title: 'The shop, step 5',
     look: 'A checkout form from warp, so the shop now has a labelled field, a switch and a submit button.',
-    tryIt: 'Add something, press Tab to move through the controls, then place the order. The button stays off while the cart is empty.',
+    tryIt:
+      'Add something, press Tab to move through the controls, then place the order. The button stays off while the cart is empty.',
     why: 'Forms, dialogs, tables and menus are in the box with keyboard support, so you do not pick and wire up a component library.',
   },
   'getting-started': {
@@ -41,25 +49,31 @@ export const demos: Record<string, Demo> = {
     why: 'If you have written React, this already reads right. The difference is that Product ran once, so there are no hook rules or dependency lists to think about.',
   },
   rules: {
-    page: 'rules', title: 'A basket that adds itself up',
+    page: 'rules',
+    title: 'A basket that adds itself up',
     look: 'A quantity, plus shipping and a total that are worked out from it. Shipping turns free at three items.',
-    tryIt: 'Press Add one twice. At three items shipping drops to $0 and the total changes with it.',
+    tryIt:
+      'Press Add one twice. At three items shipping drops to $0 and the total changes with it.',
     why: 'You say what the total is once, and it can never go stale. Most bugs in forms and carts come from keeping such values in sync by hand.',
   },
   props: {
-    page: 'props', title: 'Passing data to a child',
+    page: 'props',
+    title: 'Passing data to a child',
     look: 'Tip owns the bill. Price is a separate component that only displays the number it is given.',
     tryIt: 'Press Add a $10 dish. Price updates, though neither component ran again.',
     why: 'Passing a value to a child looks the same as in React, and the child stays up to date without re-rendering.',
   },
   lists: {
-    page: 'lists', title: 'A list that keeps its rows',
+    page: 'lists',
+    title: 'A list that keeps its rows',
     look: 'A to-do list where each row has a key, so weft knows which row is which.',
-    tryIt: 'Tick Grind, then press Do the first one later a few times. The tick stays with its row.',
+    tryIt:
+      'Tick Grind, then press Do the first one later a few times. The tick stays with its row.',
     why: 'Rows are moved, not rebuilt, so what is inside a row, such as a tick or typed text, survives a reorder.',
   },
   async: {
-    page: 'async', title: 'Saving to a server',
+    page: 'async',
+    title: 'Saving to a server',
     look: 'A save button that waits 800 ms, standing in for a real request, and disables itself meanwhile.',
     tryIt: 'Press Save changes, and try pressing again while it spins.',
     why: 'Async code is plain async and await. State you change after an await updates the page like any other.',
@@ -77,9 +91,11 @@ export const demos: Record<string, Demo> = {
     why: 'A live dashboard usually forces a framework to compare the whole table on each tick. Here each number has its own update, so one change costs one text write.',
   },
   'ui-state': {
-    page: 'ui-state', title: 'Hover and ticks shared across tabs',
+    page: 'ui-state',
+    title: 'Hover and ticks shared across tabs',
     look: 'Two panes showing one list. Two kinds of state cross between them: what is ticked is data, a box synced to every tab, and hover, focus and press are UI state, one interaction per row, drawn by warp.',
-    tryIt: 'Tick a row: both panes tick. Hover a row: both panes light. Open this page in a second tab and do the same there: this tab follows, and says how many are elsewhere.',
+    tryIt:
+      'Tick a row: both panes tick. Hover a row: both panes light. Open this page in a second tab and do the same there: this tab follows, and says how many are elsewhere.',
     why: 'Hover stops being a pile of handlers and becomes a value you can read, draw and share. Your own hover never fires for someone else, so logic on it cannot echo.',
   },
   shared: {
@@ -102,21 +118,22 @@ export const demos: Record<string, Demo> = {
   },
   chat: {
     title: 'Chat that survives a cut wire',
-    look: 'A real WebSocket to this site\'s server, in a room made just for you. The code is the page; the channel and its authorize check are in src/server/chat.ts.',
-    tryIt: 'Join and send a message. While the server is replying, cut the wire, wait a few seconds, then restore it. The replies you missed arrive in order.',
+    look: "A real WebSocket to this site's server, in a room made just for you. The code is the page; the channel and its authorize check are in src/server/chat.ts.",
+    tryIt:
+      'Join and send a message. While the server is replying, cut the wire, wait a few seconds, then restore it. The replies you missed arrive in order.',
     why: 'Reconnecting and catching up take no code here: status, resume and the message list come with channel. A channel without authorize is an error, not a bug you find later.',
   },
   slow: {
     title: 'A slow page with an instant shell',
     look: 'A real page from this server, in a frame. Its data takes as long as you choose. The code is that page.',
     tryIt: 'Pick 3 s. The card appears at once, stock fills in at 1.5 s and reviews at 3 s.',
-    why: 'load returns its promises without waiting, so the server sends the page first and streams each value in as it\'s ready. Each Boundary says what to show until then.',
+    why: "load returns its promises without waiting, so the server sends the page first and streams each value in as it's ready. Each Boundary says what to show until then.",
   },
   receipt: {
     title: 'The shop, itemised',
     look: 'What the shop app in the repo evals sends to the browser, in compressed JavaScript. Measured by evals/warp-exit.mjs with brotli; the app and the results are in the repo.',
     tryIt: 'Compare it with the download sizes on the home page, which measure a larger dashboard.',
-    why: 'You pay for the components you use. A page that imports a button doesn\'t bring the rest of warp with it.',
+    why: "You pay for the components you use. A page that imports a button doesn't bring the rest of warp with it.",
   },
   ask: {
     title: 'Ask the app',
@@ -135,14 +152,14 @@ export const demos: Record<string, Demo> = {
     learn: true,
     title: 'A prop under another name',
     look: 'Line names its item prop with const and its qty prop with let. The parent owns qty.',
-    tryIt: 'Press +1 here twice, then +1 in the parent. The parent\'s value wins again.',
-    why: 'const is a live, read-only name for a prop. let is a local you can change, and the parent\'s next change replaces it.',
+    tryIt: "Press +1 here twice, then +1 in the parent. The parent's value wins again.",
+    why: "const is a live, read-only name for a prop. let is a local you can change, and the parent's next change replaces it.",
   },
   bind: {
     learn: true,
     title: 'A child that writes back',
     look: 'Stepper changes its own value. The parent passes its box with bind:, so the change reaches the parent.',
-    tryIt: 'Press + and −. The line under the stepper, which reads the parent\'s box, follows.',
+    tryIt: "Press + and −. The line under the stepper, which reads the parent's box, follows.",
     why: 'Only bind: at the call site lets a write leave a component, so you can always see from the parent who may change its state.',
   },
   events: {
@@ -163,14 +180,15 @@ export const demos: Record<string, Demo> = {
     learn: true,
     title: 'One entry per row',
     look: 'Stock is one box holding an object. Each row reads its own entry with stock.get(f).',
-    tryIt: 'Press +1 on a row. Only that row\'s number changes.',
+    tryIt: "Press +1 on a row. Only that row's number changes.",
     why: 'With get, a row re-runs only when its own entry changes, so a long list stays fast as one entry moves.',
   },
   loading: {
     learn: true,
     title: 'Waiting for data',
     look: 'resource loads the forecast for the day in state. Boundary shows Loading… until the first one arrives; after that, pending dims the old forecast and shows a spinner while the next one loads.',
-    tryIt: 'Press Next day a few times quickly. The old forecast stays, dimmed, and the count shows each earlier request being cancelled.',
+    tryIt:
+      'Press Next day a few times quickly. The old forecast stays, dimmed, and the count shows each earlier request being cancelled.',
     why: 'You write the request once. resource fetches again when what it read changes, and drops answers nobody wants.',
   },
   styled: {

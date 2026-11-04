@@ -1,7 +1,7 @@
 // The same driver in every stack's page. It knows nothing about any framework: a stack gives it `grid` and `rows`
 // functions, and it times them. Only numbers from `measure.mjs` count: it runs this cross-origin isolated, so
 // performance.now() is 5 microseconds here where the site's arena gets 100.
-export const glyph = n => (n & 15).toString(16)
+export const glyph = (n) => (n & 15).toString(16)
 export const query = new URLSearchParams(location.search)
 
 const place = () => {
@@ -11,10 +11,10 @@ const place = () => {
 }
 
 export function expose(stack) {
-  const median = list => [...list].sort((a, b) => a - b)[list.length >> 1]
+  const median = (list) => [...list].sort((a, b) => a - b)[list.length >> 1]
 
   /** One timed step: the script, then the same plus the style and layout it left to do. */
-  const timed = fn => {
+  const timed = (fn) => {
     const start = performance.now()
     fn()
     const script = performance.now() - start
@@ -44,7 +44,9 @@ export function expose(stack) {
       const [script, total] = timed(() => stack.grid.mount(n, root))
       return { script, total, dom: root.querySelectorAll('*').length }
     },
-    mount(n) { stack.grid.mount(n, place()) },
+    mount(n) {
+      stack.grid.mount(n, place())
+    },
     unmountTimed() {
       const start = performance.now()
       stack.grid.unmount()
@@ -61,7 +63,8 @@ export function expose(stack) {
       for (let s = 0; s < samples; s++) {
         gc()
         const start = performance.now()
-        let done = 0, took = 0
+        let done = 0,
+          took = 0
         do {
           for (let i = 0; i < 8; i++) stack.grid.tick(t++, step)
           done += 8
@@ -78,24 +81,41 @@ export function expose(stack) {
       if (name === 'small') return r.rotate ? small(r, warm + samples) : null
       const pick = () => [...document.querySelectorAll('tbody tr')]
       const before = {
-        create: () => r.clear(), replace: () => r.run(), update: () => r.run(), select: () => r.run(),
-        swap: () => r.run(), remove: () => r.run(), runLots: () => r.clear(), append: () => r.run(), clear: () => r.run(),
+        create: () => r.clear(),
+        replace: () => r.run(),
+        update: () => r.run(),
+        select: () => r.run(),
+        swap: () => r.run(),
+        remove: () => r.run(),
+        runLots: () => r.clear(),
+        append: () => r.run(),
+        clear: () => r.run(),
       }[name]
       const step = {
-        create: () => r.run(), replace: () => r.run(), update: () => r.update(), select: k => r.select(k % 1000),
-        swap: () => r.swap(), remove: () => r.remove(4), runLots: () => r.runLots(), append: () => r.add(), clear: () => r.clear(),
+        create: () => r.run(),
+        replace: () => r.run(),
+        update: () => r.update(),
+        select: (k) => r.select(k % 1000),
+        swap: () => r.swap(),
+        remove: () => r.remove(4),
+        runLots: () => r.runLots(),
+        append: () => r.add(),
+        clear: () => r.clear(),
       }[name]
       // Too short for the timer one at a time: the same step, several times over, per sample.
       const block = { select: 50, update: 10, swap: 20, remove: 20 }[name] ?? 1
       const again = name === 'select' || name === 'update' || name === 'swap' // these leave the page ready to repeat
-      const script = [], total = []
+      const script = [],
+        total = []
       if (again) before()
       for (let i = 0; i < warm + samples; i++) {
         if (!again) before()
         document.body.offsetHeight
         gc()
-        const [s, t] = timed(() => { for (let j = 0; j < block; j++) step(i * block + j) })
-        if (i >= warm) script.push(s / block), total.push(t / block)
+        const [s, t] = timed(() => {
+          for (let j = 0; j < block; j++) step(i * block + j)
+        })
+        if (i >= warm) (script.push(s / block), total.push(t / block))
       }
       const shown = pick().length
       r.clear()

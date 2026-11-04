@@ -1,5 +1,5 @@
-import { action } from "@solidjs/router";
+import { action } from '@solidjs/router'
 
-import { joinWaitlist } from "~/server/waitlist";
+import { joinWaitlist } from '~/server/waitlist'
 
-export const joinWaitlistAction = action(joinWaitlist, "joinWaitlist");
+export const joinWaitlistAction = action(joinWaitlist, 'joinWaitlist')

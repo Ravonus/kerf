@@ -29,18 +29,26 @@ function Demo(props: { id: string }) {
 export function PageExample(props: { examples: PageExampleData[] }) {
   return (
     <>
-      {props.examples.map(e => (
+      {props.examples.map((e) => (
         <section key={e.id} data-site="example">
           <p>{e.look}</p>
           <div data-part="pair">
             <Demo id={e.id} />
-            <div data-scope="codeblock"
+            <div
+              data-scope="codeblock"
               // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
-              innerHTML={e.code}></div>
+              innerHTML={e.code}
+            ></div>
           </div>
           <dl>
-            <div><dt>Try this</dt><dd>{e.tryIt}</dd></div>
-            <div><dt>Why it matters</dt><dd>{e.why}</dd></div>
+            <div>
+              <dt>Try this</dt>
+              <dd>{e.tryIt}</dd>
+            </div>
+            <div>
+              <dt>Why it matters</dt>
+              <dd>{e.why}</dd>
+            </div>
           </dl>
         </section>
       ))}

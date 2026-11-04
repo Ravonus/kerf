@@ -10,13 +10,13 @@ const initialTasks = [
 ]
 function setup() {
   const user = userEvent.setup()
-  mount(TaskList, { initialTasks: initialTasks.map(t => ({ ...t })) })
+  mount(TaskList, { initialTasks: initialTasks.map((t) => ({ ...t })) })
   return { user }
 }
 const titles = () =>
   within(screen.getByRole('list', { name: 'Tasks' }))
     .getAllByRole('listitem')
-    .map(li => within(li).getByTestId('title').textContent?.trim())
+    .map((li) => within(li).getByTestId('title').textContent?.trim())
 const note = (title: string) => screen.getByLabelText(`Note for ${title}`) as HTMLInputElement
 const click = (user: ReturnType<typeof userEvent.setup>, name: string) =>
   user.click(screen.getByRole('button', { name }))

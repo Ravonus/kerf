@@ -6,23 +6,27 @@ export function Cart({ items: initial }: { items: Item[] }) {
   const [items] = useState(initial)
   const [qty, setQty] = useState<Record<string, number>>({})
   const [removed, setRemoved] = useState<Set<string>>(new Set())
-  const visible = items.filter(i => !removed.has(i.id))
+  const visible = items.filter((i) => !removed.has(i.id))
   const q = (id: string) => qty[id] ?? 1
   const total = visible.reduce((sum, item) => sum + item.price * q(item.id), 0)
   const change = (id: string, d: number) => {
     const next = q(id) + d
-    if (next < 1) setRemoved(r => new Set(r).add(id))
-    else setQty(m => ({ ...m, [id]: next }))
+    if (next < 1) setRemoved((r) => new Set(r).add(id))
+    else setQty((m) => ({ ...m, [id]: next }))
   }
   return (
     <div>
       <ul aria-label="Cart">
-        {visible.map(item => (
+        {visible.map((item) => (
           <li key={item.id}>
             <span data-testid="name">{item.name}</span>
-            <button aria-label={`Decrease ${item.name}`} onClick={() => change(item.id, -1)}>-</button>
+            <button aria-label={`Decrease ${item.name}`} onClick={() => change(item.id, -1)}>
+              -
+            </button>
             <span data-testid="qty">{q(item.id)}</span>
-            <button aria-label={`Increase ${item.name}`} onClick={() => change(item.id, 1)}>+</button>
+            <button aria-label={`Increase ${item.name}`} onClick={() => change(item.id, 1)}>
+              +
+            </button>
             <span data-testid="line">${(item.price * q(item.id)).toFixed(2)}</span>
           </li>
         ))}

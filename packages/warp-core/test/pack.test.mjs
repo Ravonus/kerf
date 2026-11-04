@@ -4,13 +4,28 @@ import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 const cwd = fileURLToPath(new URL('..', import.meta.url))
-const [{ files }] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))
-const paths = files.map(f => f.path)
+const [{ files }] = JSON.parse(
+  execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+    cwd,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  }),
+)
+const paths = files.map((f) => f.path)
 
 test('every export and what the warp plugin reads ship', () => {
-  for (const p of ['README.md', 'package.json', 'src/index.ts', 'bindings/weft.ts', 'styles/warp.css', 'styles/components/menu.css', 'scripts/contrast-check.mjs']) expect(paths).toContain(p)
+  for (const p of [
+    'README.md',
+    'package.json',
+    'src/index.ts',
+    'bindings/weft.ts',
+    'styles/warp.css',
+    'styles/components/menu.css',
+    'scripts/contrast-check.mjs',
+  ])
+    expect(paths).toContain(p)
 })
 
 test('tests, build scripts and lockfiles do not', () => {
-  expect(paths.filter(p => /^test\/|\.test\.|^vitest|package-lock|split-css/.test(p))).toEqual([])
+  expect(paths.filter((p) => /^test\/|\.test\.|^vitest|package-lock|split-css/.test(p))).toEqual([])
 })

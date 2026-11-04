@@ -13,8 +13,10 @@ export default function Form() {
   let input: HTMLInputElement | undefined
   return (
     <Card title="A ref through a component">
-      <NameField label="Name" ref={el => (input = el)} />
-      <Button size="sm" onClick={() => input?.focus()}>Focus the name</Button>
+      <NameField label="Name" ref={(el) => (input = el)} />
+      <Button size="sm" onClick={() => input?.focus()}>
+        Focus the name
+      </Button>
     </Card>
   )
 }

@@ -12,9 +12,14 @@ export const room = channel({
   on: {
     say: async ({ msg, params, room: here }) => {
       await here.publish('said', { id: crypto.randomUUID(), who: 'You', text: msg.text })
-      replies.forEach((text, i) => setTimeout(() => {
-        void room.in(params).publish('said', { id: crypto.randomUUID(), who: 'Server', text })
-      }, (i + 1) * 2000))
+      replies.forEach((text, i) =>
+        setTimeout(
+          () => {
+            void room.in(params).publish('said', { id: crypto.randomUUID(), who: 'Server', text })
+          },
+          (i + 1) * 2000,
+        ),
+      )
     },
   },
   limits: { perSecond: 5 },

@@ -5,7 +5,7 @@ import avatar from '../assets/avatar.jpg'
 import { defaultCard, avatarCard } from '../build/cards.mjs'
 import { props } from '../renderers.mjs'
 
-export const u8 = b => new Uint8Array(b)
+export const u8 = (b) => new Uint8Array(b)
 export const avatarBytes = u8(avatar)
 const cards = { default: () => defaultCard(props.default), avatar: () => avatarCard(props.avatar) }
 

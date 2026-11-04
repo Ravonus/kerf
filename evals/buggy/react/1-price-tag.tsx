@@ -10,7 +10,9 @@ export function PriceTag({ productId, unitPrice, taxRate, initialQty }: Props) {
   const total = subtotal * (1 + taxRate)
   return (
     <div>
-      <label>Quantity <input type="number" value={qty} onChange={e => setQty(e.target.value)} /></label>
+      <label>
+        Quantity <input type="number" value={qty} onChange={(e) => setQty(e.target.value)} />
+      </label>
       <p data-testid="subtotal">Subtotal: ${subtotal.toFixed(2)}</p>
       <p data-testid="total">Total: ${total.toFixed(2)}</p>
     </div>

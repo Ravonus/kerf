@@ -8,4 +8,4 @@ export {
   type LemonAvatarProps,
   type LemonExpression,
   type LemonPose,
-} from "./lemon";
+} from './lemon'

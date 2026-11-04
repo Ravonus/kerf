@@ -1,17 +1,17 @@
-import { Link, Meta, Title } from "@solidjs/meta";
-import { useLocation } from "@solidjs/router";
+import { Link, Meta, Title } from '@solidjs/meta'
+import { useLocation } from '@solidjs/router'
 
-const SITE_URL = "https://lemonstand.ai";
-const SITE_TITLE = "Lemonstand: entrepreneurship for young people, with an AI coach";
+const SITE_URL = 'https://lemonstand.ai'
+const SITE_TITLE = 'Lemonstand: entrepreneurship for young people, with an AI coach'
 const SITE_DESCRIPTION =
-  "Lemonstand helps kids and teens turn an idea into a real small business. It runs as a library club, a classroom course, or a district-wide program, with an AI coach that asks good questions while kids do the work. Join early access.";
+  'Lemonstand helps kids and teens turn an idea into a real small business. It runs as a library club, a classroom course, or a district-wide program, with an AI coach that asks good questions while kids do the work. Join early access.'
 
 /** A page's head. With no `title` it's the home page; otherwise the page's title and intro, under the site's name. */
 export function Seo(props: { title?: string; description?: string }) {
-  const title = () => (props.title ? `${props.title} · Lemonstand` : SITE_TITLE);
-  const description = () => props.description ?? SITE_DESCRIPTION;
-  const location = useLocation();
-  const url = () => `${SITE_URL}${location.pathname}`;
+  const title = () => (props.title ? `${props.title} · Lemonstand` : SITE_TITLE)
+  const description = () => props.description ?? SITE_DESCRIPTION
+  const location = useLocation()
+  const url = () => `${SITE_URL}${location.pathname}`
   return (
     <>
       <Title>{title()}</Title>
@@ -35,5 +35,5 @@ export function Seo(props: { title?: string; description?: string }) {
       <Meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbf9f4" />
       <Meta name="theme-color" media="(prefers-color-scheme: dark)" content="#100e0b" />
     </>
-  );
+  )
 }

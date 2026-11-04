@@ -12,16 +12,31 @@ const BEANS: Bean[] = [
 ]
 
 const stockBadge = (b: Bean) =>
-  b.stock === 0 ? <Badge tone="critical">Sold out</Badge> : b.stock < 5 ? <Badge tone="caution">{b.stock} left</Badge> : <Badge tone="positive">{b.stock}</Badge>
+  b.stock === 0 ? (
+    <Badge tone="critical">Sold out</Badge>
+  ) : b.stock < 5 ? (
+    <Badge tone="caution">{b.stock} left</Badge>
+  ) : (
+    <Badge tone="positive">{b.stock}</Badge>
+  )
 
 const COLUMNS: Column<Bean>[] = [
   { id: 'name', header: 'Coffee', rowHeader: true, sort: true, card: 'title' },
   { id: 'origin', header: 'Origin', sort: true },
   { id: 'stock', header: 'Stock', numeric: true, sort: true, cell: stockBadge },
-  { id: 'price', header: 'Price', numeric: true, sort: true, cell: b => `$${b.price}` },
+  { id: 'price', header: 'Price', numeric: true, sort: true, cell: (b) => `$${b.price}` },
 ]
 
 export default function Beans() {
   const sort = state<TableSort | undefined>({ id: 'name', dir: 'ascending' })
-  return <Table caption="Coffee in stock" rows={BEANS} columns={COLUMNS} sort={sort} picker={false} phone="columns" />
+  return (
+    <Table
+      caption="Coffee in stock"
+      rows={BEANS}
+      columns={COLUMNS}
+      sort={sort}
+      picker={false}
+      phone="columns"
+    />
+  )
 }

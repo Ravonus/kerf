@@ -3,7 +3,15 @@
 // less data gets it on interaction only. `#weft-route` and the islands' comments are read by `start()` once it's here.
 
 /** What the inline script left on `window`: the queue, and how to play or wake it. */
-export interface Held { q: unknown[]; p: (held: unknown) => void; w?: (k: Element, lead?: 1) => void; r?: 1; n?: unknown; l?: Element; d?: unknown }
+export interface Held {
+  q: unknown[]
+  p: (held: unknown) => void
+  w?: (k: Element, lead?: 1) => void
+  r?: 1
+  n?: unknown
+  l?: Element
+  d?: unknown
+}
 
 export function boot(full: () => Promise<unknown>) {
   const q = (window as Window & { __wq?: Held }).__wq
@@ -26,13 +34,16 @@ export function boot(full: () => Promise<unknown>) {
   if (q.d) return
   const first = new WeakSet<Element>()
   const needs = new WeakSet<Element>()
-  io = new IntersectionObserver(list => {
-    for (const e of list) {
-      const was = first.has(e.target)
-      first.add(e.target)
-      if (e.isIntersecting && (was || needs.has(e.target))) return go()
-    }
-  }, { rootMargin: '600px' })
+  io = new IntersectionObserver(
+    (list) => {
+      for (const e of list) {
+        const was = first.has(e.target)
+        first.add(e.target)
+        if (e.isIntersecting && (was || needs.has(e.target))) return go()
+      }
+    },
+    { rootMargin: '600px' },
+  )
   const w = document.createTreeWalker(document.body, 128)
   while (w.nextNode()) {
     const c = w.currentNode as Comment

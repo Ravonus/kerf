@@ -18,30 +18,53 @@ const errors = []
 
 beforeAll(async () => {
   dist = mkdtempSync(join(tmpdir(), 'warp-qa-'))
-  await build({ root: fileURLToPath(new URL('./qa-browser', import.meta.url)), base: './', logLevel: 'silent', plugins: [weft()], build: { outDir: dist, emptyOutDir: true } })
+  await build({
+    root: fileURLToPath(new URL('./qa-browser', import.meta.url)),
+    base: './',
+    logLevel: 'silent',
+    plugins: [weft()],
+    build: { outDir: dist, emptyOutDir: true },
+  })
   server = createServer((q, r) => {
     let p = join(dist, q.url.split('?')[0])
     if (p.endsWith('/')) p += 'index.html'
-    if (!existsSync(p)) { r.statusCode = 404; return r.end() }
+    if (!existsSync(p)) {
+      r.statusCode = 404
+      return r.end()
+    }
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise(r => { server.once('listening', r) })
+  await new Promise((r) => {
+    server.once('listening', r)
+  })
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
-  page.on('pageerror', e => errors.push(e.message))
+  page.on('pageerror', (e) => errors.push(e.message))
   await page.goto(`http://localhost:${server.address().port}/`)
   await page.waitForSelector('#spark svg')
   await page.waitForTimeout(200)
 })
-afterAll(async () => { await browser?.close(); server?.close(); if (dist) rmSync(dist, { recursive: true, force: true }) })
-afterEach(() => { expect(errors.splice(0)).toEqual([]) })
+afterAll(async () => {
+  await browser?.close()
+  server?.close()
+  if (dist) rmSync(dist, { recursive: true, force: true })
+})
+afterEach(() => {
+  expect(errors.splice(0)).toEqual([])
+})
 
 test('a 598px table has headers to press; a 342px one is cards', async () => {
-  const look = id => page.evaluate(which => {
-    const t = document.querySelector(`#${which} [data-scope="table"]`)
-    return { phone: t.dataset.phone, head: getComputedStyle(t.querySelector('thead')).display, sort: t.querySelector('thead [data-part="sort"]').getBoundingClientRect().width, bar: !!t.querySelector('[data-part="sortbar"]') }
-  }, id)
+  const look = (id) =>
+    page.evaluate((which) => {
+      const t = document.querySelector(`#${which} [data-scope="table"]`)
+      return {
+        phone: t.dataset.phone,
+        head: getComputedStyle(t.querySelector('thead')).display,
+        sort: t.querySelector('thead [data-part="sort"]').getBoundingClientRect().width,
+        bar: !!t.querySelector('[data-part="sortbar"]'),
+      }
+    }, id)
   const wide = await look('desktop')
   expect(wide).toMatchObject({ phone: 'columns', head: 'table-header-group', bar: false })
   expect(wide.sort).toBeGreaterThan(0)
@@ -68,7 +91,11 @@ test('typing into an empty editor throws nothing', async () => {
 })
 
 test('hovering a sparkline moves its dot and says the value', async () => {
-  const dot = () => page.evaluate(() => { const d = document.querySelector('#spark .dot'); return [d.getAttribute('cx'), d.getAttribute('cy')] })
+  const dot = () =>
+    page.evaluate(() => {
+      const d = document.querySelector('#spark .dot')
+      return [d.getAttribute('cx'), d.getAttribute('cy')]
+    })
   const home = await dot()
   const r = await page.locator('#spark svg').boundingBox()
   await page.mouse.move(r.x + 70, r.y + 18)

@@ -39,7 +39,9 @@ function headway(first: number) {
   let most = first
   let idle = 0
   return {
-    get idle() { return idle },
+    get idle() {
+      return idle
+    },
     pass(got: number) {
       if (got > most) {
         most = got
@@ -74,7 +76,10 @@ export function renderToString(code: () => unknown, options: RenderOptions = {})
 }
 
 /** Render, wait for the resources it started, and render again until none is pending or that stops getting anywhere (at most `passes`). */
-export async function renderToStringAsync(code: () => unknown, options: RenderOptions & { passes?: number } = {}): Promise<string> {
+export async function renderToStringAsync(
+  code: () => unknown,
+  options: RenderOptions & { passes?: number } = {},
+): Promise<string> {
   const cache: SsrData['r'] = {}
   const flight = new Map<string, Promise<unknown>>()
   let way: ReturnType<typeof headway> | undefined
@@ -83,7 +88,8 @@ export async function renderToStringAsync(code: () => unknown, options: RenderOp
     const html = pass(code, options, cache, wait, flight)
     const going = way ? way.pass(rt.got!) : !!(way = headway(rt.got!))
     if (!going) options.stalled?.()
-    if (!wait.length || !going || n >= (options.passes ?? 10)) return options.head ? withHead(html, options.head) : html
+    if (!wait.length || !going || n >= (options.passes ?? 10))
+      return options.head ? withHead(html, options.head) : html
     await Promise.all(wait)
   }
 }
@@ -125,7 +131,14 @@ export const SWAP = `$wb=function(k,t){var d=document,h=self.$wh,w=d.createTreeW
  * settles (cached values, in-flight fetches reused, so nothing is fetched twice). Boundaries that are still pending
  * after `timeout` ms keep their fallbacks, and the client fetches them after hydrating.
  */
-export function renderToStream(code: () => unknown, options: RenderOptions & { timeout?: number; passes?: number; /** Script run just before each chunk's swaps, in the same tag. */ landing?: () => string } = {}): Stream {
+export function renderToStream(
+  code: () => unknown,
+  options: RenderOptions & {
+    timeout?: number
+    passes?: number
+    /** Script run just before each chunk's swaps, in the same tag. */ landing?: () => string
+  } = {},
+): Stream {
   const cache: SsrData['r'] = {}
   const flight = new Map<string, Promise<unknown>>()
   const html = new Map<string, string>()
@@ -142,7 +155,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
     got = rt.got!
     return out.html
   }
-  const pending = () => Object.keys(last?.b ?? {}).filter(k => last!.b[k] === 'p')
+  const pending = () => Object.keys(last?.b ?? {}).filter((k) => last!.b[k] === 'p')
   async function* chunks() {
     const deadline = Date.now() + (options.timeout ?? 10_000)
     const open = new Set(pending())
@@ -155,11 +168,15 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
       const late = await Promise.race([
         // Past a pass that got nowhere: what's left has to land too, so a runaway read isn't why a slow one is given up on.
         (way.idle ? Promise.all(wait) : Promise.race(wait)).then(() => false),
-        new Promise<boolean>(ok => { timer = setTimeout(ok, left, true) }),
+        new Promise<boolean>((ok) => {
+          timer = setTimeout(ok, left, true)
+        }),
       ])
       clearTimeout(timer)
       if (late) break
-      await new Promise(ok => { setTimeout(ok, 0) }) // fetches that settle together go out together
+      await new Promise((ok) => {
+        setTimeout(ok, 0)
+      }) // fetches that settle together go out together
       run()
       const going = way.pass(got)
       let out = ''
@@ -169,7 +186,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         if (content === undefined) continue
         open.delete(k)
         const id = encodeURIComponent(k)
-        out += `<template>${content}</template><script>${defined ? '' : SWAP + ';'}${first ? options.landing?.() ?? '' : ''}$wb(${JSON.stringify(id)})</script>`
+        out += `<template>${content}</template><script>${defined ? '' : SWAP + ';'}${first ? (options.landing?.() ?? '') : ''}$wb(${JSON.stringify(id)})</script>`
         defined = true
         first = false
       }
@@ -180,12 +197,14 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         break
       }
     }
-    if (open.size) yield `<script>${defined ? '' : SWAP + ';'}${options.landing?.() ?? ''}$wb()</script>` // what's left keeps its fallback
+    if (open.size)
+      yield `<script>${defined ? '' : SWAP + ';'}${options.landing?.() ?? ''}$wb()</script>` // what's left keeps its fallback
   }
   const stream: Stream = {
     shell: run(),
     chunks: chunks(),
-    data: () => (last && (Object.keys(last.r).length || Object.keys(last.b).length || last.s) ? last : null),
+    data: () =>
+      last && (Object.keys(last.r).length || Object.keys(last.b).length || last.s) ? last : null,
     async settle() {
       const deadline = Date.now() + (options.timeout ?? 10_000)
       const way = headway(got)
@@ -193,7 +212,9 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         let timer: ReturnType<typeof setTimeout> | undefined
         const late = await Promise.race([
           Promise.all(top).then(() => false),
-          new Promise<boolean>(ok => { timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true) }),
+          new Promise<boolean>((ok) => {
+            timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true)
+          }),
         ])
         clearTimeout(timer)
         if (late) return
@@ -209,7 +230,9 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         let timer: ReturnType<typeof setTimeout> | undefined
         const late = await Promise.race([
           Promise.all(wait).then(() => false),
-          new Promise<boolean>(ok => { timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true) }),
+          new Promise<boolean>((ok) => {
+            timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true)
+          }),
         ])
         clearTimeout(timer)
         if (late) return
@@ -221,30 +244,76 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
   return stream
 }
 
-function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>): string
-function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream: Map<string, string>, top: Promise<unknown>[]): { html: string; data: SsrData }
-function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream?: Map<string, string>, top?: Promise<unknown>[]): string | { html: string; data: SsrData } {
+function pass(
+  code: () => unknown,
+  options: RenderOptions,
+  cache: SsrData['r'],
+  wait: Promise<unknown>[],
+  flight: Map<string, Promise<unknown>>,
+): string
+function pass(
+  code: () => unknown,
+  options: RenderOptions,
+  cache: SsrData['r'],
+  wait: Promise<unknown>[],
+  flight: Map<string, Promise<unknown>>,
+  stream: Map<string, string>,
+  top: Promise<unknown>[],
+): { html: string; data: SsrData }
+function pass(
+  code: () => unknown,
+  options: RenderOptions,
+  cache: SsrData['r'],
+  wait: Promise<unknown>[],
+  flight: Map<string, Promise<unknown>>,
+  stream?: Map<string, string>,
+  top?: Promise<unknown>[],
+): string | { html: string; data: SsrData } {
   const prev = { ...rt }
   const prevKeys = { ...keys }
   const prevWrite = writeKeys
   const prevQuiet = quiet
   quiet = false
   const data: SsrData = { r: cache, b: {} }
-  Object.assign(rt, { server: true, data, wait, resolve: text, flight, stream, top, shown: options.shown, got: 0 })
+  Object.assign(rt, {
+    server: true,
+    data,
+    wait,
+    resolve: text,
+    flight,
+    stream,
+    top,
+    shown: options.shown,
+    got: 0,
+  })
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false
-  ;(globalThis as unknown as Record<symbol, (() => void) | undefined>)[Symbol.for('weft.render')]?.() // warp-core's ids (store.ts)
+  ;(globalThis as unknown as Record<symbol, (() => void) | undefined>)[
+    Symbol.for('weft.render')
+  ]?.() // warp-core's ids (store.ts)
   let html = ''
   const app = createApp(options.app)
   const prevApp = useApp(app) // a swap, not an owner: the render is synchronous
   try {
-    createRoot(dispose => {
-      try { html = text(code) } finally { dispose() }
+    createRoot((dispose) => {
+      try {
+        html = text(code)
+      } finally {
+        dispose()
+      }
     }, null)
   } finally {
     useApp(prevApp)
-    Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve, flight: prev.flight, stream: prev.stream, shown: (prev as typeof prev & { shown?: unknown }).shown })
+    Object.assign(rt, {
+      server: prev.server,
+      data: prev.data,
+      wait: prev.wait,
+      resolve: prev.resolve,
+      flight: prev.flight,
+      stream: prev.stream,
+      shown: (prev as typeof prev & { shown?: unknown }).shown,
+    })
     Object.assign(keys, prevKeys)
     writeKeys = prevWrite
     quiet = prevQuiet
@@ -252,7 +321,11 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
   if (selects) html = resolveSelects(html)
   const s = dehydrate(app) // this pass's: every pass re-runs the setups, and the last one is what the page shows
   if (stream) return { html, data: { r: data.r, b: data.b, ...(s && { s }) } }
-  if (options.hydratable === false || (!Object.keys(data.r).length && !Object.keys(data.b).length && !s)) return html
+  if (
+    options.hydratable === false ||
+    (!Object.keys(data.r).length && !Object.keys(data.b).length && !s)
+  )
+    return html
   const json = JSON.stringify({ r: data.r, b: data.b, ...(s && { s }) }).replace(/</g, '\\u003c')
   return `${html}<script type="application/json" data-weft>${json}</script>`
 }
@@ -294,7 +367,11 @@ const notWire = (v: unknown): string | undefined => {
   if (v == null || typeof v === 'string' || typeof v === 'boolean') return undefined
   if (typeof v === 'number') return Number.isFinite(v) ? undefined : String(v)
   if (Array.isArray(v)) return v.map(notWire).find(Boolean)
-  if (typeof v !== 'object' || (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null)) return typeof v === 'function' ? 'a function' : `a ${v?.constructor?.name ?? typeof v}`
+  if (
+    typeof v !== 'object' ||
+    (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null)
+  )
+    return typeof v === 'function' ? 'a function' : `a ${v?.constructor?.name ?? typeof v}`
   return Object.values(v).map(notWire).find(Boolean)
 }
 
@@ -303,12 +380,25 @@ const notWire = (v: unknown): string | undefined => {
  * `names`: the props that go as JSON, `when`: `v` or `i` when it can wait for the page to need it. Anywhere else it's
  * the component.
  */
-export function island(id: string, names: string[], Comp: (props: never) => unknown, props: Record<string, unknown>, slotted?: 1, when?: string): unknown {
+export function island(
+  id: string,
+  names: string[],
+  Comp: (props: never) => unknown,
+  props: Record<string, unknown>,
+  slotted?: 1,
+  when?: string,
+): unknown {
   if (!quiet) return component(Comp, (slotted ? authored(props) : props) as never)
   const k = nextKey()
-  const v = names.map(n => {
+  const v = names.map((n) => {
     const bad = notWire(props[n])
-    if (bad) throw Object.assign(new Error(`H009 prop \`${n}\` of an island (${id}) is ${bad}, which can't go from the server to the client. Pass plain data, or put \`/* @weft client */\` on the component that renders it.`), { code: 'H009' })
+    if (bad)
+      throw Object.assign(
+        new Error(
+          `H009 prop \`${n}\` of an island (${id}) is ${bad}, which can't go from the server to the client. Pass plain data, or put \`/* @weft client */\` on the component that renders it.`,
+        ),
+        { code: 'H009' },
+      )
     return props[n]
   })
   const frame = { read: false }
@@ -323,7 +413,8 @@ export function island(id: string, names: string[], Comp: (props: never) => unkn
     open = outer
   }
   const data = JSON.stringify(when ? [id, k, v, when] : [id, k, v]).replace(/--/g, '-\\u002d')
-  const rest = slotted && !frame.read ? `<template>${(props.children as { h: string }).h}</template>` : ''
+  const rest =
+    slotted && !frame.read ? `<template>${(props.children as { h: string }).h}</template>` : ''
   return { t: `<!--wi:${data}--><!--[-->${html}<!--]-->${rest}` }
 }
 
@@ -423,7 +514,7 @@ const ENTITY: Record<string, string> = { '&': '&amp;', '<': '&lt;', '"': '&quot;
 export function escape(s: string, quoted?: boolean): string {
   const re = quoted ? ATTR : CONTENT
   re.lastIndex = 0
-  return re.test(s) ? s.replace(re, c => ENTITY[c]!) : s
+  return re.test(s) ? s.replace(re, (c) => ENTITY[c]!) : s
 }
 
 // ---- attributes -----------------------------------------------------------------------------------------------
@@ -437,7 +528,8 @@ export function attr(name: string, value: unknown): string {
   if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
   if (name === 'class') value = classes(value)
   else if (name === 'style') value = styles(value)
-  if (value == null || value === false || value === '' && (name === 'class' || name === 'style')) return ''
+  if (value == null || value === false || (value === '' && (name === 'class' || name === 'style')))
+    return ''
   if (value === true) return ` ${name}`
   // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
   return ` ${name}="${escape(String(value), true)}"`
@@ -460,7 +552,9 @@ function classes(v: unknown): string {
   if (v == null || v === false) return ''
   // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
   if (typeof v !== 'object') return String(v)
-  return Object.keys(v).filter(k => (v as Record<string, unknown>)[k]).join(' ')
+  return Object.keys(v)
+    .filter((k) => (v as Record<string, unknown>)[k])
+    .join(' ')
 }
 
 function styles(v: unknown): string {
@@ -484,7 +578,14 @@ export function select(value: unknown): string {
 }
 
 /** A spread's key that isn't an attribute: handlers, refs, children and what sets the content. */
-const skipped = (k: string) => k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || (k[0] === 'o' && /^on[A-Z]/.test(k))
+const skipped = (k: string) =>
+  k === 'children' ||
+  k === 'ref' ||
+  k === 'key' ||
+  k === 'innerHTML' ||
+  k === 'textContent' ||
+  k === 'dangerouslySetInnerHTML' ||
+  (k[0] === 'o' && /^on[A-Z]/.test(k))
 
 /** `<div {...props}>`: the merged props' attributes (handlers, refs and children aren't attributes). */
 export function spread(props: Record<string, unknown>): string {
@@ -501,7 +602,9 @@ export function spread(props: Record<string, unknown>): string {
  * comes from. A source is an object or a getter for one. They're few, so asking them beats building a map.
  */
 function merge(sources: unknown[], each: (k: string, o: Record<string, unknown>) => void) {
-  const all = sources.map(s => Object(typeof s === 'function' ? s() : s) as Record<string, unknown>)
+  const all = sources.map(
+    (s) => Object(typeof s === 'function' ? s() : s) as Record<string, unknown>,
+  )
   for (let i = 0; i < all.length; i++) {
     const own = all[i]!
     for (const k of Reflect.ownKeys(own) as string[]) {
@@ -509,7 +612,11 @@ function merge(sources: unknown[], each: (k: string, o: Record<string, unknown>)
       for (let j = 0; j < i && !seen; j++) seen = Object.hasOwn(all[j]!, k)
       if (seen) continue
       let o = own
-      for (let j = all.length - 1; j > i; j--) if (Object.hasOwn(all[j]!, k)) { o = all[j]!; break }
+      for (let j = all.length - 1; j > i; j--)
+        if (Object.hasOwn(all[j]!, k)) {
+          o = all[j]!
+          break
+        }
       each(k, o)
     }
   }
@@ -520,10 +627,12 @@ function merge(sources: unknown[], each: (k: string, o: Record<string, unknown>)
  * every key once.
  */
 export function spreads(...sources: unknown[]): string {
-  if (sources.length === 1) return spread(Object(typeof sources[0] === 'function' ? sources[0]() : sources[0]))
+  if (sources.length === 1)
+    return spread(Object(typeof sources[0] === 'function' ? sources[0]() : sources[0]))
   let out = ''
   merge(sources, (k, o) => {
-    if (!skipped(k)) out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, o[k])
+    if (!skipped(k))
+      out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, o[k])
   })
   return out
 }
@@ -535,7 +644,8 @@ export function spreads(...sources: unknown[]): string {
 export function merged(...sources: unknown[]): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   merge(sources, (k, o) => {
-    if (k === 'children') Object.defineProperty(out, k, { get: () => o[k], enumerable: true, configurable: true })
+    if (k === 'children')
+      Object.defineProperty(out, k, { get: () => o[k], enumerable: true, configurable: true })
     else out[k] = o[k]
   })
   return out
@@ -543,25 +653,43 @@ export function merged(...sources: unknown[]): Record<string, unknown> {
 
 /** What a spread element without JSX children holds: content its props set, or `children`. */
 export function inner(props: Record<string, unknown>, tag: string): unknown {
-  const raw = (props.dangerouslySetInnerHTML as { __html?: unknown } | null | undefined)?.__html ?? props.innerHTML
+  const raw =
+    (props.dangerouslySetInnerHTML as { __html?: unknown } | null | undefined)?.__html ??
+    props.innerHTML
   // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
   if (raw != null) return { t: String(raw) }
-  return props.textContent ?? (tag === 'textarea' ? props.value ?? props.defaultValue : undefined) ?? props.children
+  return (
+    props.textContent ??
+    (tag === 'textarea' ? (props.value ?? props.defaultValue) : undefined) ??
+    props.children
+  )
 }
 
 // ---- <select value> -------------------------------------------------------------------------------------------
 
-const decode = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&amp;/g, '&')
+const decode = (s: string) =>
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&amp;/g, '&')
 
 /** `<select value="b">…<option value="b">` → the value attribute dropped and `selected` on the option. */
 function resolveSelects(html: string): string {
-  return html.replace(/<select\b([^>]*?)\svalue="([^"]*)"([^>]*)>([\s\S]*?)<\/select>/g, (_, pre, value, post, body) => {
-    const want = decode(value)
-    const options = body.replace(/<option\b([^>]*)>([^<]*)/g, (m: string, attrs: string, label: string) => {
-      if (/\sselected\b/.test(attrs)) return m
-      const v = /\svalue="([^"]*)"/.exec(attrs)
-      return (v ? decode(v[1]!) : decode(label).trim()) === want ? `<option${attrs} selected>${label}` : m
-    })
-    return `<select${pre}${post}>${options}</select>`
-  })
+  return html.replace(
+    /<select\b([^>]*?)\svalue="([^"]*)"([^>]*)>([\s\S]*?)<\/select>/g,
+    (_, pre, value, post, body) => {
+      const want = decode(value)
+      const options = body.replace(
+        /<option\b([^>]*)>([^<]*)/g,
+        (m: string, attrs: string, label: string) => {
+          if (/\sselected\b/.test(attrs)) return m
+          const v = /\svalue="([^"]*)"/.exec(attrs)
+          return (v ? decode(v[1]!) : decode(label).trim()) === want
+            ? `<option${attrs} selected>${label}`
+            : m
+        },
+      )
+      return `<select${pre}${post}>${options}</select>`
+    },
+  )
 }

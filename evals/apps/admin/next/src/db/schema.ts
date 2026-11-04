@@ -20,14 +20,18 @@ export const session = pgTable('session', {
   updatedAt: at('updatedAt').notNull(),
   ipAddress: text('ipAddress'),
   userAgent: text('userAgent'),
-  userId: varchar('userId', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: varchar('userId', { length: 255 })
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
 })
 
 export const account = pgTable('account', {
   id: varchar('id', { length: 255 }).primaryKey(),
   accountId: text('accountId').notNull(),
   providerId: text('providerId').notNull(),
-  userId: varchar('userId', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: varchar('userId', { length: 255 })
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   accessToken: text('accessToken'),
   refreshToken: text('refreshToken'),
   idToken: text('idToken'),
@@ -57,7 +61,9 @@ export const customers = pgTable('customers', {
 
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
-  customerId: integer('customer_id').notNull().references(() => customers.id),
+  customerId: integer('customer_id')
+    .notNull()
+    .references(() => customers.id),
   status: text('status').notNull(),
   totalCents: integer('total_cents').notNull(),
   createdAt: at('created_at').notNull(),
@@ -70,8 +76,12 @@ export const products = pgTable('products', {
 
 export const orderItems = pgTable('order_items', {
   id: serial('id').primaryKey(),
-  orderId: integer('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
-  productId: integer('product_id').notNull().references(() => products.id),
+  orderId: integer('order_id')
+    .notNull()
+    .references(() => orders.id, { onDelete: 'cascade' }),
+  productId: integer('product_id')
+    .notNull()
+    .references(() => products.id),
   quantity: integer('quantity').notNull(),
   priceCents: integer('price_cents').notNull(),
 })

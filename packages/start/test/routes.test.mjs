@@ -15,7 +15,7 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     { id: 'layout:users', file: 'src/routes/users/_layout.tsx', dir: 'users', parent: 'layout:' },
   ])
   // Most specific first: static segments before params, longer before shorter, `/` last.
-  expect(m.routes.map(r => [r.id, r.kind, r.params, r.layouts, r.card ?? null])).toEqual([
+  expect(m.routes.map((r) => [r.id, r.kind, r.params, r.layouts, r.card ?? null])).toEqual([
     ['/meta/badcard', 'page', [], ['layout:'], 'src/routes/meta/badcard.og.tsx'],
     ['/meta/changing', 'page', [], ['layout:'], null],
     ['/meta/plain', 'page', [], ['layout:'], null],
@@ -60,12 +60,12 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
 test('params, splats and bad names', () => {
   const dir = join(fixture, '..', 'scan')
   const m = scanRoutes(dir, join(dir, 'routes'))
-  expect(m.routes.map(r => [r.id, r.params, r.splat ?? null])).toEqual([
+  expect(m.routes.map((r) => [r.id, r.params, r.splat ?? null])).toEqual([
     ['/docs/$section/intro', ['section'], null],
     ['/docs/$section', ['section'], null],
     ['/docs/$', ['rest'], 'rest'],
   ])
-  expect(m.problems.map(p => p.file)).toEqual(['routes/bad[x].tsx'])
+  expect(m.problems.map((p) => p.file)).toEqual(['routes/bad[x].tsx'])
 })
 
 test('.weft/routes.d.ts lists every route file path', () => {

@@ -11,8 +11,11 @@ export default function Menu() {
   return (
     <Card title="Menu">
       <ul>
-        {MENU.map(item => (
-          <li key={item.id} style={{ color: item.vegan ? 'var(--warp-color-positive-text)' : undefined }}>
+        {MENU.map((item) => (
+          <li
+            key={item.id}
+            style={{ color: item.vegan ? 'var(--warp-color-positive-text)' : undefined }}
+          >
             {item.name}, ${item.price.toFixed(2)}
             {item.vegan && ' (vegan)'}
           </li>

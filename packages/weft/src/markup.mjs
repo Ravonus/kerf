@@ -3,10 +3,14 @@
 /** What an HTML string holds, for `paints`: tags, classes, ids, attribute names and `name=value` pairs. */
 export function markup(html) {
   const has = new Set(['html', 'head', 'body'])
-  const noted = html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, m => m.slice(0, m.indexOf('>') + 1)).replace(/<!--[\s\S]*?-->/g, '')
+  const noted = html
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, (m) => m.slice(0, m.indexOf('>') + 1))
+    .replace(/<!--[\s\S]*?-->/g, '')
   for (const [, tag, attrs] of noted.matchAll(/<([a-zA-Z][\w-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g)) {
     has.add(tag.toLowerCase())
-    for (const [, name, a, b, c] of attrs.matchAll(/\s([^\s=/>]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)) {
+    for (const [, name, a, b, c] of attrs.matchAll(
+      /\s([^\s=/>]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g,
+    )) {
       const value = a ?? b ?? c ?? ''
       has.add(`[${name}]`)
       has.add(`[${name}=${value}]`)

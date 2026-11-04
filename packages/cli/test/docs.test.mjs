@@ -12,8 +12,31 @@ const at = resolveWeft(fixture).pkg.version.replaceAll('.', '\\.')
 
 describe('catalog probe', () => {
   it('finds the codes the Phase 1 compiler reports, with their autofixes', () => {
-    const reported = Object.entries(status).filter(([, s]) => s.implemented).map(([c]) => c)
-    expect(reported).toEqual(['W000', 'W001', 'W005', 'W006', 'W010', 'W013', 'W014', 'W015', 'W017', 'W018', 'W019', 'W050', 'W051', 'W052', 'W054', 'W056', 'W060', 'W061', 'D024', 'D025'])
+    const reported = Object.entries(status)
+      .filter(([, s]) => s.implemented)
+      .map(([c]) => c)
+    expect(reported).toEqual([
+      'W000',
+      'W001',
+      'W005',
+      'W006',
+      'W010',
+      'W013',
+      'W014',
+      'W015',
+      'W017',
+      'W018',
+      'W019',
+      'W050',
+      'W051',
+      'W052',
+      'W054',
+      'W056',
+      'W060',
+      'W061',
+      'D024',
+      'D025',
+    ])
     expect(status.W006.autofix).toBe(true)
     expect(status.W015.autofix).toBe(true)
     expect(status.W001).toMatchObject({ autofix: false, suggestion: true })
@@ -23,7 +46,7 @@ describe('catalog probe', () => {
   })
 
   it('has one entry per code, and every P100–P120 code is reserved', () => {
-    const codes = catalog.map(e => e.code)
+    const codes = catalog.map((e) => e.code)
     expect(new Set(codes).size).toBe(codes.length)
     for (let n = 100; n <= 120; n++) expect(codes).toContain(`P${n}`)
   })
@@ -38,26 +61,59 @@ describe('docs', () => {
   })
 
   it('explains the full-stack codes, and `start` carries them', async () => {
-    for (const code of ['Q011', 'Q012', 'Q013', 'Q014', 'Q015', 'Q016', 'A001', 'A002', 'A003', 'A004', 'C001', 'C002']) expect((await docs(fixture, code)).text, code).toMatch(new RegExp(`^# ${code} \\((error|warning)\\)`))
+    for (const code of [
+      'Q011',
+      'Q012',
+      'Q013',
+      'Q014',
+      'Q015',
+      'Q016',
+      'A001',
+      'A002',
+      'A003',
+      'A004',
+      'C001',
+      'C002',
+    ])
+      expect((await docs(fixture, code)).text, code).toMatch(
+        new RegExp(`^# ${code} \\((error|warning)\\)`),
+      )
     const page = (await docs(fixture, 'start')).text
-    for (const word of ['weft db generate', 'contract.json', "auth: 'user'"]) expect(page).toContain(word)
+    for (const word of ['weft db generate', 'contract.json', "auth: 'user'"])
+      expect(page).toContain(word)
   })
 
   it('`fonts` covers the plugin and says nothing needs importing', async () => {
     const page = (await docs(fixture, 'fonts')).text
-    for (const word of ['text({', 'weft add text', 'There is nothing to import', '"Inter Fallback"', 'X021']) expect(page).toContain(word)
+    for (const word of [
+      'text({',
+      'weft add text',
+      'There is nothing to import',
+      '"Inter Fallback"',
+      'X021',
+    ])
+      expect(page).toContain(word)
   })
 
   it('explains a code with its status in the installed weft', async () => {
-    expect((await docs(fixture, 'w014')).text).toMatch(new RegExp(`^# W014 \\(error\\)[\\s\\S]*Status in weft@${at}:\\*\\* reported\\.`))
+    expect((await docs(fixture, 'w014')).text).toMatch(
+      new RegExp(`^# W014 \\(error\\)[\\s\\S]*Status in weft@${at}:\\*\\* reported\\.`),
+    )
     expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
     expect((await docs(fixture, 'P004')).text).toContain('reported by weft check')
-    expect((await docs(fixture, 'W054')).text).toMatch(new RegExp(`Status in weft@${at}:\\*\\* reported, suggested edit\\.`))
-    expect((await docs(fixture, 'diagnostics')).text).toMatch(/^\| T012 \| error \| .* \| reported by @weft-js\/core\/test after each test \|$/m)
+    expect((await docs(fixture, 'W054')).text).toMatch(
+      new RegExp(`Status in weft@${at}:\\*\\* reported, suggested edit\\.`),
+    )
+    expect((await docs(fixture, 'diagnostics')).text).toMatch(
+      /^\| T012 \| error \| .* \| reported by @weft-js\/core\/test after each test \|$/m,
+    )
   })
 
   it('rejects unknown topics with the list', async () => {
-    await expect(docs(fixture, 'hooks')).rejects.toMatchObject({ code: 'E_UNKNOWN_TOPIC', message: expect.stringContaining('rules') })
+    await expect(docs(fixture, 'hooks')).rejects.toMatchObject({
+      code: 'E_UNKNOWN_TOPIC',
+      message: expect.stringContaining('rules'),
+    })
   })
 })
 
@@ -72,7 +128,9 @@ describe('AGENTS.md', () => {
     expect(text).toContain('`weft docs <code>` explains one')
     expect(text).not.toContain('Not reported yet')
     expect(text).not.toContain('Planned, not shipped yet')
-    expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D001–D007, D011, D012, D020–D025, D030–D041, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes\.$/m)
+    expect(text).toMatch(
+      /^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D001–D007, D011, D012, D020–D025, D030–D041, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes\.$/m,
+    )
     expect(text).not.toContain('| `weft style` |') // the section covers it
     expect(text).toContain('Test checks (`weft check` on test files): T001–T009, T013.')
     // The installed weft has every planned export now, so the async rule is in and nothing is listed as missing.
@@ -81,24 +139,41 @@ describe('AGENTS.md', () => {
     expect(text).not.toContain('`setAttribute`')
     expect(text).toContain('| `weft check --json` |')
     expect(text).not.toContain('| `weft mcp` |') // `weft tasks --json` has it
-    expect(text).toContain('- `@weft-js/core/browser`: `online`, `visible`, `lifecycle`, `media`, `on`, `interval`. Create them in setup (W051)')
+    expect(text).toContain(
+      '- `@weft-js/core/browser`: `online`, `visible`, `lifecycle`, `media`, `on`, `interval`. Create them in setup (W051)',
+    )
     expect(text).toMatch(/^- `@weft-js\/core\/test`: .*`net`.*`page`/m)
   })
 
   it('lists resource, Boundary, hydrate and @weft-js/core/ssr when the installed weft exports them', async () => {
     const compiler = JSON.stringify(resolveWeft(fixture).compilerPath)
     const dir = project({
-      'node_modules/@weft-js/core/package.json': JSON.stringify({ name: '@weft-js/core', version: '0.1.0', exports: { '.': './index.ts', './dom': './dom.ts', './ssr': './ssr.ts', './test': './test.ts', './compiler': './compiler.cjs' } }),
+      'node_modules/@weft-js/core/package.json': JSON.stringify({
+        name: '@weft-js/core',
+        version: '0.1.0',
+        exports: {
+          '.': './index.ts',
+          './dom': './dom.ts',
+          './ssr': './ssr.ts',
+          './test': './test.ts',
+          './compiler': './compiler.cjs',
+        },
+      }),
       'node_modules/@weft-js/core/compiler.cjs': `module.exports = require(${compiler})\n`,
-      'node_modules/@weft-js/core/index.ts': "export function state() {}\nexport function derived() {}\nexport { Boundary, resource, type Resource } from './async'\nexport { defineState } from './scope'\n",
-      'node_modules/@weft-js/core/dom.ts': 'export function render() {}\nexport function hydrate() {}\nexport function insert() {}\n',
-      'node_modules/@weft-js/core/ssr.ts': "export function renderToString() {}\nexport async function renderToStringAsync() {}\nexport function ssrHydrationKey() {}\nexport { createComponent } from './dom'\n",
+      'node_modules/@weft-js/core/index.ts':
+        "export function state() {}\nexport function derived() {}\nexport { Boundary, resource, type Resource } from './async'\nexport { defineState } from './scope'\n",
+      'node_modules/@weft-js/core/dom.ts':
+        'export function render() {}\nexport function hydrate() {}\nexport function insert() {}\n',
+      'node_modules/@weft-js/core/ssr.ts':
+        "export function renderToString() {}\nexport async function renderToStringAsync() {}\nexport function ssrHydrationKey() {}\nexport { createComponent } from './dom'\n",
       'node_modules/@weft-js/core/test.ts': 'export function render() {}\n',
     })
     const { text, bytes } = await agentsMd(dir)
     expect(bytes).toBeLessThan(limit)
     expect(text).toContain('weft@0.1.0')
-    expect(text).toMatch(/^- `@weft-js\/core`: `Boundary`, `defineState`, `derived`, `resource`, `state`, `state\.linked`$/m)
+    expect(text).toMatch(
+      /^- `@weft-js\/core`: `Boundary`, `defineState`, `derived`, `resource`, `state`, `state\.linked`$/m,
+    )
     expect(text).toContain('- `@weft-js/core/dom`: `render`, `hydrate`.')
     expect(text).toContain('- `@weft-js/core/ssr`: `renderToString`, `renderToStringAsync`.')
     expect(text).not.toContain('ssrHydrationKey')
@@ -107,7 +182,10 @@ describe('AGENTS.md', () => {
   })
 
   it('lists project tasks in Commands, so docs cannot drift from weft tasks', async () => {
-    const dir = project({ 'weft.config.ts': "export default { tasks: { seed: { run: 'node seed.mjs', description: 'Load demo products', sideEffects: ['db'] } } }\n" })
+    const dir = project({
+      'weft.config.ts':
+        "export default { tasks: { seed: { run: 'node seed.mjs', description: 'Load demo products', sideEffects: ['db'] } } }\n",
+    })
     expect((await agentsMd(dir)).text).toContain('| `weft run seed` | Load demo products | db |')
   })
 
@@ -116,7 +194,12 @@ describe('AGENTS.md', () => {
     const { text, bytes } = await agentsMd(dir)
     expect(text).toContain('## Full stack')
     expect(text).not.toContain('Import your own code')
-    const aliased = await agentsMd(project({ 'src/routes/index.tsx': 'export default () => <h1>Hi</h1>\n', 'tsconfig.json': '{ "compilerOptions": { "paths": { "~/*": ["./src/*"] } } }' }))
+    const aliased = await agentsMd(
+      project({
+        'src/routes/index.tsx': 'export default () => <h1>Hi</h1>\n',
+        'tsconfig.json': '{ "compilerOptions": { "paths": { "~/*": ["./src/*"] } } }',
+      }),
+    )
     expect(aliased.text).toContain('`~/server/todos`')
     expect(aliased.text).not.toContain('#/')
     expect(text).toMatch(/`start`, .*`surface`, /)
@@ -128,15 +211,29 @@ describe('AGENTS.md', () => {
     const dir = project()
     expect(existsSync(join(dir, 'AGENTS.md'))).toBe(false)
     expect(await writeAgentsMd(dir)).toMatchObject({ written: true })
-    expect(await writeAgentsMd(dir, { check: true })).toMatchObject({ current: true, written: false })
-    writeFileSync(join(dir, 'AGENTS.md'), `${readFileSync(join(dir, 'AGENTS.md'), 'utf8')}\nhand edit\n`)
-    expect(await writeAgentsMd(dir, { check: true })).toMatchObject({ current: false, written: false })
+    expect(await writeAgentsMd(dir, { check: true })).toMatchObject({
+      current: true,
+      written: false,
+    })
+    writeFileSync(
+      join(dir, 'AGENTS.md'),
+      `${readFileSync(join(dir, 'AGENTS.md'), 'utf8')}\nhand edit\n`,
+    )
+    expect(await writeAgentsMd(dir, { check: true })).toMatchObject({
+      current: false,
+      written: false,
+    })
   })
 })
 
 describe('a plugin in the docs', () => {
   const app = () => {
-    const dir = project({ 'kit.mjs': "import { definePlugin } from '@weft-js/core/plugin'\nexport default definePlugin({ name: 'kit', namespace: 'KIT', contribute: () => ({ docs: { topic: 'kit', summary: 'The kit', file: new URL('./kit.md', import.meta.url).pathname }, diagnostics: [{ code: 'KIT001', severity: 'warning', catches: 'A loose kit', fix: 'Tighten it' }] }) })\n", 'kit.md': '# Kit\n\nHello.\n', 'weft.config.ts': "import kit from './kit.mjs'\nexport default { plugins: [kit()] }\n" })
+    const dir = project({
+      'kit.mjs':
+        "import { definePlugin } from '@weft-js/core/plugin'\nexport default definePlugin({ name: 'kit', namespace: 'KIT', contribute: () => ({ docs: { topic: 'kit', summary: 'The kit', file: new URL('./kit.md', import.meta.url).pathname }, diagnostics: [{ code: 'KIT001', severity: 'warning', catches: 'A loose kit', fix: 'Tighten it' }] }) })\n",
+      'kit.md': '# Kit\n\nHello.\n',
+      'weft.config.ts': "import kit from './kit.mjs'\nexport default { plugins: [kit()] }\n",
+    })
     return dir
   }
   it('its topic is listed and served, and its codes have pages', async () => {
@@ -160,7 +257,7 @@ describe('page metadata reaches every agent surface', () => {
   it('`weft docs meta` is a topic, and every H-code is real', async () => {
     expect((await docs(fixture, 'meta')).text).toMatch(/Set `meta` as you build the page/)
     expect(topics.meta).toContain('H011')
-    expect(catalog.filter(e => e.code.startsWith('H0') && e.proposed)).toEqual([])
+    expect(catalog.filter((e) => e.code.startsWith('H0') && e.proposed)).toEqual([])
     expect((await docs(fixture, 'H001')).text).toContain('reported by weft check')
   })
 })
@@ -168,11 +265,22 @@ describe('page metadata reaches every agent surface', () => {
 describe('live data', () => {
   it('`start` tells a newcomer what to set, and each code has fix text', async () => {
     const page = (await docs(fixture, 'start')).text
-    for (const word of ['dbChanges', 'weft db live', 'weft doctor', 'liveHealth', 'WEFT_STAGING_COOKIE', 'STAGING_DATABASE_URL', 'production: false']) expect(page).toContain(word)
+    for (const word of [
+      'dbChanges',
+      'weft db live',
+      'weft doctor',
+      'liveHealth',
+      'WEFT_STAGING_COOKIE',
+      'STAGING_DATABASE_URL',
+      'production: false',
+    ])
+      expect(page).toContain(word)
     for (let n = 12; n <= 23; n++) {
       const code = `R0${n}`
-      expect(catalog.find(e => e.code === code)?.fix, code).toBeTruthy()
-      expect((await docs(fixture, code)).text, code).toMatch(new RegExp(`^# ${code} \\((error|warning)\\)`))
+      expect(catalog.find((e) => e.code === code)?.fix, code).toBeTruthy()
+      expect((await docs(fixture, code)).text, code).toMatch(
+        new RegExp(`^# ${code} \\((error|warning)\\)`),
+      )
     }
   })
 })

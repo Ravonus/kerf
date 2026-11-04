@@ -3,7 +3,12 @@ export function Logo() {
   return (
     <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
       <rect width="32" height="32" fill="var(--warp-color-accent-solid)" />
-      <path d="M8 17l5.5 5.5L24 10" fill="none" stroke="var(--warp-color-accent-on-solid)" stroke-width="3.5" />
+      <path
+        d="M8 17l5.5 5.5L24 10"
+        fill="none"
+        stroke="var(--warp-color-accent-on-solid)"
+        stroke-width="3.5"
+      />
     </svg>
   )
 }

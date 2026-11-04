@@ -12,14 +12,10 @@ export default function Shop() {
   const ordered = state(false)
   const shown = derived(() => {
     const word = search.value.toLowerCase()
-    return products.filter(p => p.name.toLowerCase().includes(word))
+    return products.filter((p) => p.name.toLowerCase().includes(word))
   })
-  const total = derived(() =>
-    products.reduce((sum, p) => sum + p.count.value * p.price, 0),
-  )
-  const shipping = derived(() =>
-    total.value === 0 || total.value >= 36 ? 0 : 4,
-  )
+  const total = derived(() => products.reduce((sum, p) => sum + p.count.value * p.price, 0))
+  const shipping = derived(() => (total.value === 0 || total.value >= 36 ? 0 : 4))
   const order = (e: Event) => {
     e.preventDefault()
     ordered.value = true
@@ -29,9 +25,9 @@ export default function Shop() {
       <Input
         label="Search"
         value={search.value}
-        onInput={e => (search.value = e.currentTarget.value)}
+        onInput={(e) => (search.value = e.currentTarget.value)}
       />
-      {shown.value.map(p => (
+      {shown.value.map((p) => (
         <p key={p.id}>
           <Button size="sm" onClick={() => p.count.value++}>
             {p.name}, ${p.price}
@@ -40,7 +36,9 @@ export default function Shop() {
         </p>
       ))}
       <p>Shipping ${shipping.value}</p>
-      <p><strong>Total ${total.value + shipping.value}</strong></p>
+      <p>
+        <strong>Total ${total.value + shipping.value}</strong>
+      </p>
       <form onSubmit={order}>
         <Input label="Email for the receipt" type="email" />
         <Switch defaultChecked>Gift wrap</Switch>

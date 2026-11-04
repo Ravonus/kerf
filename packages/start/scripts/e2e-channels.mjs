@@ -12,16 +12,27 @@ export default async function run({ url, log }) {
     checks.push(name)
     log(`ok ${name}`)
   }
-  const room = fnId('room'), counter = fnId('counter')
+  const room = fnId('room'),
+    counter = fnId('counter')
   const roomId = `r${Date.now()}`
 
   check('no Upgrade header is 426', (await fetch(`${url}/_weft/ws`)).status === 426)
-  check('another Origin is refused', (await handshake(url, { origin: 'http://evil.example' })) === 403)
+  check(
+    'another Origin is refused',
+    (await handshake(url, { origin: 'http://evil.example' })) === 403,
+  )
   check('no Origin is refused', (await handshake(url)) === 403)
-  check('the same host on another port is refused', (await handshake(url, { origin: url.replace(/:\d+$/, ':1') })) === 403)
-  check('the app\'s own Origin upgrades', (await handshake(url, { origin: new URL(url).origin })) === 101)
+  check(
+    'the same host on another port is refused',
+    (await handshake(url, { origin: url.replace(/:\d+$/, ':1') })) === 403,
+  )
+  check(
+    "the app's own Origin upgrades",
+    (await handshake(url, { origin: new URL(url).origin })) === 101,
+  )
 
-  const a = await open(url), b = await open(url)
+  const a = await open(url),
+    b = await open(url)
   const hello = (await a.until('h'))[1]
   await b.until('h')
   check('hello names the connection and the build', hello.k && hello.e !== undefined, hello)
@@ -67,15 +78,18 @@ export default async function run({ url, log }) {
   const key = { id: roomId }
   c.send('j', 2, counter, key)
   d.send('j', 2, counter, key)
-  await c.until(f => f[0] === 'j' && f[1] === 2)
-  await d.until(f => f[0] === 'j' && f[1] === 2)
+  await c.until((f) => f[0] === 'j' && f[1] === 2)
+  await d.until((f) => f[0] === 'j' && f[1] === 2)
   c.send('m', 2, 9, '$set', { n: 3 })
   await c.until('a')
-  check('a shared value reaches the other client', (await d.until(f => f[3] === '$v'))[4].v.n === 3)
+  check(
+    'a shared value reaches the other client',
+    (await d.until((f) => f[3] === '$v'))[4].v.n === 3,
+  )
   const e = await open(url)
   await e.until('h')
   e.send('j', 1, counter, key)
-  check('a later join is told the value', (await e.until(f => f[3] === '$v'))[4].v.n === 3)
+  check('a later join is told the value', (await e.until((f) => f[3] === '$v'))[4].v.n === 3)
 
   await rpc(url, fnId('ban'), { roomId })
   const f = await open(url)

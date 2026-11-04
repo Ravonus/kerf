@@ -4,7 +4,7 @@ import { Boundary, resource, state } from '@weft-js/core'
 export type Load = (id: string, signal: AbortSignal) => Promise<{ name: string }>
 
 export function Profile(props: { load: Load; id: string }) {
-  const user = resource(signal => props.load(props.id, signal))
+  const user = resource((signal) => props.load(props.id, signal))
   return <p class="profile">{user.value?.name}</p>
 }
 

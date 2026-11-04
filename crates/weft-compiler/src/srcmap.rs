@@ -13,7 +13,11 @@ const NUM: char = '\u{E003}';
 
 /// `printed[a..b]`, marked as copied from offset `a`.
 pub fn copy(printed: &str, a: usize, b: usize) -> String {
-    if a == b { String::new() } else { format!("{COPY}{a}{NUM}{}{END}", &printed[a..b]) }
+    if a == b {
+        String::new()
+    } else {
+        format!("{COPY}{a}{NUM}{}{END}", &printed[a..b])
+    }
 }
 
 /// `code`, marked as the lowering of the JSX node at printed offset `at`.
@@ -30,12 +34,17 @@ pub fn strip(code: &str) -> String {
 pub type Points = Vec<(u32, u32, u32)>;
 
 pub fn points(printed: &str, map: &oxc_sourcemap::SourceMap) -> Points {
-    let starts: Vec<usize> = std::iter::once(0).chain(printed.match_indices('\n').map(|(i, _)| i + 1)).collect();
+    let starts: Vec<usize> = std::iter::once(0)
+        .chain(printed.match_indices('\n').map(|(i, _)| i + 1))
+        .collect();
     let mut out: Points = map
         .get_tokens()
         .filter_map(|t| {
             let start = *starts.get(t.get_dst_line() as usize)?;
-            let line = &printed[start..starts.get(t.get_dst_line() as usize + 1).map_or(printed.len(), |e| e - 1)];
+            let line = &printed[start
+                ..starts
+                    .get(t.get_dst_line() as usize + 1)
+                    .map_or(printed.len(), |e| e - 1)];
             // Columns count UTF-16 units.
             let (mut units, mut byte) = (0, 0);
             for c in line.chars() {
@@ -47,7 +56,8 @@ pub fn points(printed: &str, map: &oxc_sourcemap::SourceMap) -> Points {
             }
             let at = (start + byte) as u32;
             // Nodes the pre-pass made have no span and print as 0:0. Only the file's start really is there.
-            (at == 0 || t.get_src_line() > 0 || t.get_src_col() > 0).then(|| (at, t.get_src_line(), t.get_src_col()))
+            (at == 0 || t.get_src_line() > 0 || t.get_src_col() > 0)
+                .then(|| (at, t.get_src_line(), t.get_src_col()))
         })
         .collect();
     out.sort_by_key(|p| p.0);
@@ -69,9 +79,15 @@ enum Seg {
 pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>) {
     let mut out = String::with_capacity(marked.len());
     let mut builder = SourceMapBuilder::default();
-    let src = mapping.as_ref().map(|m| builder.add_source_and_content(m.file, m.source));
+    let src = mapping
+        .as_ref()
+        .map(|m| builder.add_source_and_content(m.file, m.source));
     let pts: &[(u32, u32, u32)] = mapping.as_ref().map_or(&[], |m| m.points.as_slice());
-    let at_or_before = |q: u32| pts.partition_point(|p| p.0 <= q).checked_sub(1).map(|i| (pts[i].1, pts[i].2));
+    let at_or_before = |q: u32| {
+        pts.partition_point(|p| p.0 <= q)
+            .checked_sub(1)
+            .map(|i| (pts[i].1, pts[i].2))
+    };
     let mut stack: Vec<Seg> = Vec::new();
     let (mut line, mut col, mut next) = (0u32, 0u32, 0usize);
     let mut chars = marked.chars().peekable();
@@ -99,7 +115,9 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
             END => {
                 stack.pop();
                 match stack.last() {
-                    Some(Seg::Lowered(to)) if src.is_some() => builder.add_token(line, col, to.0, to.1, src, None),
+                    Some(Seg::Lowered(to)) if src.is_some() => {
+                        builder.add_token(line, col, to.0, to.1, src, None)
+                    }
                     // Back in a copy (it can't hold markers, so this doesn't happen; kept exact anyway).
                     Some(Seg::Copy(p)) => next = pts.partition_point(|x| (x.0 as usize) < *p),
                     _ => {}

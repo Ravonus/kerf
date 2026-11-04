@@ -10,15 +10,39 @@ import { Price as ServerPrice } from './fixtures/ssr/Alias.tsx?weft-ssr'
 import { Price as ClientPrice } from './fixtures/ssr/Alias.tsx?weft-hydrate'
 import { Price } from './fixtures/ssr/Alias'
 
-const start = () => ({ amount: 1, label: undefined as string | undefined, user: { name: 'Ada' }, items: [{ id: 1, t: 'a' }], title: 't' })
+const start = () => ({
+  amount: 1,
+  label: undefined as string | undefined,
+  user: { name: 'Ada' },
+  items: [{ id: 1, t: 'a' }],
+  title: 't',
+})
 
 test('every form stays live on the client', async () => {
   const v = state(start())
-  render(() => <Price amount={v.value.amount} label={v.value.label} user={v.value.user} items={v.value.items} title={v.value.title} />)
+  render(() => (
+    <Price
+      amount={v.value.amount}
+      label={v.value.label}
+      user={v.value.user}
+      items={v.value.items}
+      title={v.value.title}
+    />
+  ))
   const text = () => document.querySelector('section')!.textContent
   const row = screen.getByRole('listitem')
   expect(text()).toBe('Total: 1Ada1a')
-  v.value = { ...v.value, amount: 2, label: 'Sum', user: { name: 'Lin' }, items: [{ id: 1, t: 'a' }, { id: 2, t: 'b' }], title: 'u' }
+  v.value = {
+    ...v.value,
+    amount: 2,
+    label: 'Sum',
+    user: { name: 'Lin' },
+    items: [
+      { id: 1, t: 'a' },
+      { id: 2, t: 'b' },
+    ],
+    title: 'u',
+  }
   await flush()
   expect(text()).toBe('Sum: 2Lin2ab')
   expect(document.querySelector('section')!.title).toBe('u')
@@ -29,7 +53,11 @@ test('a local reads the prop as it is when used, in a handler too; `untrack` kee
   function Log(props: { n: number }) {
     const n = props.n
     const first = untrack(() => props.n)
-    return <button onClick={e => ((e.currentTarget as HTMLElement).title = `${first} ${n}`)}>go</button>
+    return (
+      <button onClick={(e) => ((e.currentTarget as HTMLElement).title = `${first} ${n}`)}>
+        go
+      </button>
+    )
   }
   const v = state(1)
   render(() => <Log n={v.value} />)
@@ -42,7 +70,24 @@ test('a local reads the prop as it is when used, in a handler too; `untrack` kee
 
 test('it hydrates 0/0 and stays live', async () => {
   const v = state(start())
-  const tree = (C: (props: ReturnType<typeof start>) => unknown) => () => C({ get amount() { return v.value.amount }, get label() { return v.value.label }, get user() { return v.value.user }, get items() { return v.value.items }, get title() { return v.value.title } })
+  const tree = (C: (props: ReturnType<typeof start>) => unknown) => () =>
+    C({
+      get amount() {
+        return v.value.amount
+      },
+      get label() {
+        return v.value.label
+      },
+      get user() {
+        return v.value.user
+      },
+      get items() {
+        return v.value.items
+      },
+      get title() {
+        return v.value.title
+      },
+    })
   const html = renderToString(tree(ServerPrice))
   expect(html.replace(/<!--.*?-->/g, '')).toContain('Total: 1')
   expect(html).toContain('Ada')
@@ -50,7 +95,7 @@ test('it hydrates 0/0 and stays live', async () => {
   box.innerHTML = html
   document.body.append(box)
   const seen: MutationRecord[] = []
-  const watching = new MutationObserver(r => seen.push(...r))
+  const watching = new MutationObserver((r) => seen.push(...r))
   watching.observe(box, { subtree: true, childList: true, characterData: true, attributes: true })
   const dispose = hydrate(tree(ClientPrice), box)
   seen.push(...watching.takeRecords())
@@ -64,20 +109,38 @@ test('it hydrates 0/0 and stays live', async () => {
 // The table in the docs (props.md): where a write goes, by how the child writes and what the parent passed.
 function ByLet(props: { n: number }) {
   let n = props.n
-  return <button onClick={() => n++}>{n}|{props.n}</button>
+  return (
+    <button onClick={() => n++}>
+      {n}|{props.n}
+    </button>
+  )
 }
 function ByProps(props: { n: number }) {
   const n = props.n
-  return <button onClick={() => (props.n = props.n + 1)}>{n}|{props.n}</button>
+  return (
+    <button onClick={() => (props.n = props.n + 1)}>
+      {n}|{props.n}
+    </button>
+  )
 }
 function ByPattern(props: { n?: number | undefined }) {
   let { n = 10 } = props
-  return <button onClick={() => (n += 1)}>{n}|{n}</button>
+  return (
+    <button onClick={() => (n += 1)}>
+      {n}|{n}
+    </button>
+  )
 }
 const text = () => screen.getByRole('button').textContent
-const press = async () => { screen.getByRole('button').click(); await flush() }
+const press = async () => {
+  screen.getByRole('button').click()
+  await flush()
+}
 
-describe.each([['let', ByLet], ['props.x =', ByProps]])('a write through %s', (_, Child: typeof ByLet) => {
+describe.each([
+  ['let', ByLet],
+  ['props.x =', ByProps],
+])('a write through %s', (_, Child: typeof ByLet) => {
   test('without bind: stays in the child, until the parent changes; the parent is never written', async () => {
     const v = state(1)
     render(() => <Child n={v.value} />)
@@ -137,7 +200,7 @@ describe.each([['let', ByLet], ['props.x =', ByProps]])('a write through %s', (_
   })
 })
 
-test('bind:count on the tag: a child\'s count++ updates the parent, and the parent the child', async () => {
+test("bind:count on the tag: a child's count++ updates the parent, and the parent the child", async () => {
   function AddButton(props: { count?: number }) {
     let count = props.count!
     return <button onClick={() => count++}>{count}</button>

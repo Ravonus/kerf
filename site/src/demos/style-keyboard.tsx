@@ -21,16 +21,34 @@ export default function Keyboard() {
   return (
     <Card title="Yirgacheffe">
       <Stack gap="related">
-        <Tabs label="Product" value={tab.value} options={TABS} onChange={next => (tab.value = next)}>
-          {value => <Text>{COPY[value]}</Text>}
+        <Tabs
+          label="Product"
+          value={tab.value}
+          options={TABS}
+          onChange={(next) => (tab.value = next)}
+        >
+          {(value) => <Text>{COPY[value]}</Text>}
         </Tabs>
         <Row gap="tight">
-          <Menu label="Share" trigger={{ emphasis: 'outline', tone: 'neutral' }} items={[{ label: 'Copy link' }, { label: 'Email' }]} />
-          <Button emphasis="soft" onClick={() => (confirm.value = true)}>Subscribe</Button>
+          <Menu
+            label="Share"
+            trigger={{ emphasis: 'outline', tone: 'neutral' }}
+            items={[{ label: 'Copy link' }, { label: 'Email' }]}
+          />
+          <Button emphasis="soft" onClick={() => (confirm.value = true)}>
+            Subscribe
+          </Button>
         </Row>
       </Stack>
-      <Modal open={confirm} size="sm" title="Subscribe monthly?" footer={<Button data-close="">Done</Button>}>
-        <Text subtle>Focus moved into this dialog. Escape closes it and puts focus back on Subscribe.</Text>
+      <Modal
+        open={confirm}
+        size="sm"
+        title="Subscribe monthly?"
+        footer={<Button data-close="">Done</Button>}
+      >
+        <Text subtle>
+          Focus moved into this dialog. Escape closes it and puts focus back on Subscribe.
+        </Text>
       </Modal>
     </Card>
   )

@@ -27,8 +27,9 @@ use std::fmt::Write as _;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPattern, Expression, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
-    JSXElement, JSXElementName, JSXFragment, ObjectExpression, ObjectPropertyKind, Program, PropertyKind, Statement,
+    BindingPattern, Expression, JSXAttribute, JSXAttributeItem, JSXAttributeName,
+    JSXAttributeValue, JSXChild, JSXElement, JSXElementName, JSXFragment, ObjectExpression,
+    ObjectPropertyKind, Program, PropertyKind, Statement,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
@@ -119,8 +120,10 @@ const SVG: &[&str] = &[
 ];
 /// The attribute the pre-pass adds to a component tag it can't rewrite in place: its value is the live read of the tag.
 pub const TAG: &str = "_$tag";
-const VOID: &[&str] =
-    &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"];
+const VOID: &[&str] = &[
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
+    "wbr",
+];
 
 #[derive(Clone, Copy)]
 enum Jsx<'a> {
@@ -146,11 +149,15 @@ struct Outermost<'a> {
 impl<'a> Visit<'a> for Outermost<'a> {
     fn visit_jsx_element(&mut self, it: &JSXElement<'a>) {
         // SAFETY: every node lives in the arena for the whole `dom` call; the visitor only hands out shorter borrows.
-        self.found.push(Jsx::El(unsafe { &*std::ptr::from_ref::<JSXElement<'a>>(it) }));
+        self.found.push(Jsx::El(unsafe {
+            &*std::ptr::from_ref::<JSXElement<'a>>(it)
+        }));
     }
     fn visit_jsx_fragment(&mut self, it: &JSXFragment<'a>) {
         // SAFETY: as above.
-        self.found.push(Jsx::Frag(unsafe { &*std::ptr::from_ref::<JSXFragment<'a>>(it) }));
+        self.found.push(Jsx::Frag(unsafe {
+            &*std::ptr::from_ref::<JSXFragment<'a>>(it)
+        }));
     }
 }
 
@@ -227,15 +234,24 @@ pub fn emit(code: &str, o: &EmitOptions) -> Result<Emitted, Error> {
     }
     let program = parsed.program;
     // Resolves `ref={x}`: a `let` is assigned the element, a const or an import is called with it.
-    let scoping =
-        code.contains("ref").then(|| oxc_semantic::SemanticBuilder::new().build(&program).semantic.into_scoping());
+    let scoping = code.contains("ref").then(|| {
+        oxc_semantic::SemanticBuilder::new()
+            .build(&program)
+            .semantic
+            .into_scoping()
+    });
     let module = o.module;
     let mut order = JsxOrder::default();
     order.visit_program(&program);
     // Fewer origins than nodes: shape variants, appended after the authored code, have no line. Any other difference
     // and the mapping can't be trusted: no lines rather than wrong ones.
     let origin = if order.spans.len() >= o.origins.len() {
-        order.spans.iter().zip(&o.origins).filter_map(|(s, l)| l.map(|l| (s.start, l))).collect()
+        order
+            .spans
+            .iter()
+            .zip(&o.origins)
+            .filter_map(|(s, l)| l.map(|l| (s.start, l)))
+            .collect()
     } else {
         HashMap::new()
     };
@@ -289,23 +305,43 @@ pub fn emit(code: &str, o: &EmitOptions) -> Result<Emitted, Error> {
         let _ = writeln!(out, "\n_$delegate([{}]);", names.join(", "));
     }
     e.explained.sort_by_key(|x| (x.line, x.column));
-    let (out, map) =
-        srcmap::decode(&out, o.map.map(|(points, source)| srcmap::Mapping { points, file: o.filename, source }));
-    Ok(Emitted { code: out, map, explain: e.explained })
+    let (out, map) = srcmap::decode(
+        &out,
+        o.map.map(|(points, source)| srcmap::Mapping {
+            points,
+            file: o.filename,
+            source,
+        }),
+    );
+    Ok(Emitted {
+        code: out,
+        map,
+        explain: e.explained,
+    })
 }
 
 /// `body` without its leading newlines (they follow the imports), keeping its first marker in place.
 fn trim_marked_newlines(body: &str) -> String {
-    let marker_end =
-        if body.starts_with('\u{E000}') { body.find('\u{E003}').map_or(0, |i| i + '\u{E003}'.len_utf8()) } else { 0 };
+    let marker_end = if body.starts_with('\u{E000}') {
+        body.find('\u{E003}')
+            .map_or(0, |i| i + '\u{E003}'.len_utf8())
+    } else {
+        0
+    };
     let (marker, rest) = body.split_at(marker_end);
     let trimmed = rest.trim_start_matches('\n');
     if marker.is_empty() || trimmed.len() == rest.len() {
         return format!("{marker}{trimmed}");
     }
     // The copy now starts later in the printed text: renumber its marker.
-    let at: usize = marker.trim_matches(|c| c == '\u{E000}' || c == '\u{E003}').parse().unwrap_or(0);
-    format!("\u{E000}{}\u{E003}{trimmed}", at + rest.len() - trimmed.len())
+    let at: usize = marker
+        .trim_matches(|c| c == '\u{E000}' || c == '\u{E003}')
+        .parse()
+        .unwrap_or(0);
+    format!(
+        "\u{E000}{}\u{E003}{trimmed}",
+        at + rest.len() - trimmed.len()
+    )
 }
 
 /// Byte offset just past the module's leading imports (0 if none). An import after other code stays where it is in
@@ -324,7 +360,11 @@ fn imports_end(program: &Program) -> usize {
 
 fn imports_binding(program: &Program, name: &str) -> bool {
     program.body.iter().any(|s| match s {
-        Statement::ImportDeclaration(i) => i.specifiers.iter().flatten().any(|sp| sp.local().name == name),
+        Statement::ImportDeclaration(i) => i
+            .specifiers
+            .iter()
+            .flatten()
+            .any(|sp| sp.local().name == name),
         _ => false,
     })
 }
@@ -389,8 +429,13 @@ impl Emitter<'_> {
         match e.get_inner_expression() {
             Expression::StaticMemberExpression(_) | Expression::ComputedMemberExpression(_) => true,
             Expression::Identifier(id) => {
-                let Some(scoping) = &self.scoping else { return true };
-                let sym = id.reference_id.get().and_then(|r| scoping.get_reference(r).symbol_id());
+                let Some(scoping) = &self.scoping else {
+                    return true;
+                };
+                let sym = id
+                    .reference_id
+                    .get()
+                    .and_then(|r| scoping.get_reference(r).symbol_id());
                 sym.is_none_or(|s| {
                     let f = scoping.symbol_flags(s);
                     !(f.is_const_variable() || f.is_import() || f.is_function() || f.is_class())
@@ -402,7 +447,10 @@ impl Emitter<'_> {
 
     fn fail(&mut self, message: impl Into<String>, at: Span) {
         if self.error.is_none() {
-            self.error = Some(Error { message: message.into(), offset: at.start });
+            self.error = Some(Error {
+                message: message.into(),
+                offset: at.start,
+            });
         }
     }
 
@@ -441,17 +489,24 @@ impl Emitter<'_> {
     }
 
     fn element(&mut self, el: &JSXElement<'_>) -> String {
-        let (label, code) = if let Some(name) = component_name(&el.opening_element.name, self.text) {
+        let (label, code) = if let Some(name) = component_name(&el.opening_element.name, self.text)
+        {
             (format!("<{name}>"), self.component(el, &name))
         } else {
             let before = self.templates.len();
             let code = self.template(el);
             // The template it clones, then the code.
             let shown = match self.templates.get(before) {
-                Some(t) if self.templates.len() > before => format!("{}\n  {code}", t.lines().last().unwrap_or(t)),
+                Some(t) if self.templates.len() > before => {
+                    format!("{}\n  {code}", t.lines().last().unwrap_or(t))
+                }
                 _ => code.clone(),
             };
-            self.explain(el.span, format!("<{}>", tag_name(&el.opening_element.name)), &shown);
+            self.explain(
+                el.span,
+                format!("<{}>", tag_name(&el.opening_element.name)),
+                &shown,
+            );
             return code;
         };
         self.explain(el.span, label, &code);
@@ -460,13 +515,20 @@ impl Emitter<'_> {
 
     fn explain(&mut self, span: Span, node: String, code: &str) {
         if let Some(&(line, column)) = self.origin.get(&span.start) {
-            self.explained.push(Explained { line, column, node, code: srcmap::strip(code) });
+            self.explained.push(Explained {
+                line,
+                column,
+                node,
+                code: srcmap::strip(code),
+            });
         }
     }
 
     /// `file:line <tag>` for dev comments and warnings, when the node came from the authored file.
     fn place(&self, span: Span, tag: &str) -> Option<String> {
-        self.origin.get(&span.start).map(|(line, _)| format!("{}:{line} <{tag}>", self.display))
+        self.origin
+            .get(&span.start)
+            .map(|(line, _)| format!("{}:{line} <{tag}>", self.display))
     }
 
     // ---- intrinsic elements: templates ---------------------------------------------------------------------
@@ -496,7 +558,11 @@ impl Emitter<'_> {
                 _ => String::new(),
             };
             if !b.decls.is_empty() {
-                return format!("{note}{ssr}((_k) => {{ let {}; return {}; }})", b.decls.join(", "), parts.join(" + "));
+                return format!(
+                    "{note}{ssr}((_k) => {{ let {}; return {}; }})",
+                    b.decls.join(", "),
+                    parts.join(" + ")
+                );
             }
             return format!("{note}{ssr}((_k) => {})", parts.join(" + "));
         }
@@ -506,7 +572,11 @@ impl Emitter<'_> {
         let html = js_string(&b.html);
         // An SVG element outside an <svg> (a component returning <path/>) is parsed inside one, then lifted out.
         let svg = matches!(&el.opening_element.name, JSXElementName::Identifier(id) if SVG.contains(&id.name.as_str()));
-        let place = if self.dev { self.place(el.span, &tag_name(&el.opening_element.name)) } else { None };
+        let place = if self.dev {
+            self.place(el.span, &tag_name(&el.opening_element.name))
+        } else {
+            None
+        };
         // Dev: `// App.tsx:12 <li>` above the template; hydratable output also passes it to `htpl` for its warnings.
         let args = match (place.as_ref().filter(|_| self.hydratable), svg) {
             (Some(p), _) => format!(", {}, {p:?}", if svg { "true" } else { "false" }),
@@ -514,7 +584,9 @@ impl Emitter<'_> {
             (None, false) => String::new(),
         };
         let note = place.map(|p| format!("// {p}\n")).unwrap_or_default();
-        self.templates.push(format!("{note}const {t} = /* @__PURE__ */ {tpl}({html}{args});"));
+        self.templates.push(format!(
+            "{note}const {t} = /* @__PURE__ */ {tpl}({html}{args});"
+        ));
         let root = b.vars[0].1.clone();
         if b.decls.is_empty() && b.ops.is_empty() {
             return format!("{t}()");
@@ -556,18 +628,29 @@ impl Emitter<'_> {
         if let Some((_, v)) = b.vars.iter().find(|(p, _)| p == path) {
             return v.clone();
         }
-        let (&last, parent) = path.split_last().expect("`vars` starts with the root, the one empty path");
+        let (&last, parent) = path
+            .split_last()
+            .expect("`vars` starts with the root, the one empty path");
         let sibling = b
             .vars
             .iter()
-            .filter(|(p, _)| p.len() == path.len() && &p[..p.len() - 1] == parent && p[p.len() - 1] < last)
+            .filter(|(p, _)| {
+                p.len() == path.len() && &p[..p.len() - 1] == parent && p[p.len() - 1] < last
+            })
             .max_by_key(|(p, _)| p[p.len() - 1])
             .map(|(p, v)| (p[p.len() - 1], v.clone()));
         let (mut from, steps) = if let Some((at, v)) = sibling {
             (v, last - at)
         } else {
             let p = self.node(b, parent);
-            (if self.hydratable { format!("{}({p})", self.helper("first")) } else { format!("{p}.firstChild") }, last)
+            (
+                if self.hydratable {
+                    format!("{}({p})", self.helper("first"))
+                } else {
+                    format!("{p}.firstChild")
+                },
+                last,
+            )
         };
         for _ in 0..steps {
             from = if self.hydratable {
@@ -587,7 +670,10 @@ impl Emitter<'_> {
             JSXElementName::Identifier(id) => id.name.to_string(),
             JSXElementName::NamespacedName(n) => format!("{}:{}", n.namespace.name, n.name.name),
             other => {
-                self.fail("weft back end: this element name isn't supported", other.span());
+                self.fail(
+                    "weft back end: this element name isn't supported",
+                    other.span(),
+                );
                 return;
             }
         };
@@ -602,7 +688,12 @@ impl Emitter<'_> {
         // reads them all as one plain object, `{ a: x, ...rest }`. JSX children stay in the template. Without them,
         // the merged props' `children` is the element's one hole, so the server renders it and hydration adopts it
         // like any other.
-        if el.opening_element.attributes.iter().any(|a| matches!(a, JSXAttributeItem::SpreadAttribute(_))) {
+        if el
+            .opening_element
+            .attributes
+            .iter()
+            .any(|a| matches!(a, JSXAttributeItem::SpreadAttribute(_)))
+        {
             let void = VOID.contains(&tag.as_str());
             if !self.ssr
                 && (has_kids || void)
@@ -625,7 +716,10 @@ impl Emitter<'_> {
             if self.ssr {
                 if has_kids || void {
                     // The merged view is only read here, all at once: its sources go straight to the writer.
-                    let code = match props.strip_prefix("_$mergeProps(").and_then(|p| p.strip_suffix(')')) {
+                    let code = match props
+                        .strip_prefix("_$mergeProps(")
+                        .and_then(|p| p.strip_suffix(')'))
+                    {
                         Some(sources) => format!("{}({sources})", self.helper("spreads")),
                         None => format!("{spread}({props})"),
                     };
@@ -634,7 +728,10 @@ impl Emitter<'_> {
                     self.n += 1;
                     let p = format!("_p{}", self.n);
                     b.decls.push(p.clone());
-                    let held = match props.strip_prefix("_$mergeProps(").and_then(|q| q.strip_suffix(')')) {
+                    let held = match props
+                        .strip_prefix("_$mergeProps(")
+                        .and_then(|q| q.strip_suffix(')'))
+                    {
                         Some(sources) => format!("{}({sources})", self.helper("merged")),
                         None => props.clone(),
                     };
@@ -645,7 +742,9 @@ impl Emitter<'_> {
                 let el_var = self.node(b, path);
                 self.n += 1;
                 let p = format!("_p{}", self.n);
-                b.ops.push(format!("const {p} = {props}; {spread}({el_var}, () => ({{ ...{p} }}));"));
+                b.ops.push(format!(
+                    "const {p} = {props}; {spread}({el_var}, () => ({{ ...{p} }}));"
+                ));
                 if !has_kids && !void {
                     Self::put(b, ">");
                     // Hydrating, content the props wrote stays: the server rendered it into this hole.
@@ -679,26 +778,37 @@ impl Emitter<'_> {
         // Server: what `textContent` or `innerHTML` puts inside the element.
         let mut content: Option<String> = None;
         for item in &el.opening_element.attributes {
-            let JSXAttributeItem::Attribute(attr) = item else { continue };
+            let JSXAttributeItem::Attribute(attr) = item else {
+                continue;
+            };
             let name = match &attr.name {
                 JSXAttributeName::Identifier(id) => id.name.to_string(),
                 // `xlink:href`, `xml:lang`: written with their namespace (`attr` looks the prefix up).
-                JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
+                JSXAttributeName::NamespacedName(ns) => {
+                    format!("{}:{}", ns.namespace.name, ns.name.name)
+                }
             };
             if name == "key" {
                 continue;
             }
             let raw = name == "dangerouslySetInnerHTML";
-            let name = if raw { "innerHTML".to_string() } else { react::attribute(&name) };
+            let name = if raw {
+                "innerHTML".to_string()
+            } else {
+                react::attribute(&name)
+            };
             if let Some((event, capture)) = react::event(&name) {
-                let Some(expr) = attr_expression(attr) else { continue };
+                let Some(expr) = attr_expression(attr) else {
+                    continue;
+                };
                 if self.ssr {
                     continue;
                 }
                 let el_var = self.node(b, path);
                 let h = self.expr(expr);
                 if capture {
-                    b.ops.push(format!("{el_var}.addEventListener({event:?}, {h}, true);"));
+                    b.ops
+                        .push(format!("{el_var}.addEventListener({event:?}, {h}, true);"));
                     continue;
                 }
                 if event == "change" {
@@ -723,12 +833,15 @@ impl Emitter<'_> {
                     continue;
                 }
                 let on = self.helper("on");
-                b.ops.push(format!("{on}({el_var}, {event:?}, {h}, {delegated});"));
+                b.ops
+                    .push(format!("{on}({el_var}, {event:?}, {h}, {delegated});"));
                 continue;
             }
             if name == "ref" {
                 // `ref={fn}` or `ref={[a, b]}` calls them with the element; `ref={el}` on a variable assigns it.
-                let Some(expr) = attr_expression(attr) else { continue };
+                let Some(expr) = attr_expression(attr) else {
+                    continue;
+                };
                 if self.ssr {
                     continue;
                 }
@@ -750,17 +863,30 @@ impl Emitter<'_> {
                 b.ops.push(format!("{focus}({el_var}, {v});"));
             }
             // A <textarea> or <select> has no value attribute: the value is its content or its selected option.
-            if (tag == "textarea" || tag == "select") && (name == "value" || name == "defaultValue") {
+            if (tag == "textarea" || tag == "select") && (name == "value" || name == "defaultValue")
+            {
                 let v = match &attr.value {
-                    Some(JSXAttributeValue::StringLiteral(s)) => js_string(&decode_entities(s.value.as_str())),
-                    Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
-                        Some(e) => self.expr(e),
-                        None => continue,
-                    },
+                    Some(JSXAttributeValue::StringLiteral(s)) => {
+                        js_string(&decode_entities(s.value.as_str()))
+                    }
+                    Some(JSXAttributeValue::ExpressionContainer(c)) => {
+                        match c.expression.as_expression() {
+                            Some(e) => self.expr(e),
+                            None => continue,
+                        }
+                    }
                     _ => continue,
                 };
                 if !self.ssr {
-                    dynamic.push(("prop", if tag == "select" { "value".to_string() } else { name }, v));
+                    dynamic.push((
+                        "prop",
+                        if tag == "select" {
+                            "value".to_string()
+                        } else {
+                            name
+                        },
+                        v,
+                    ));
                 } else if tag == "select" {
                     let select = self.helper("select");
                     Self::server(b, Piece::Code(format!("{select}({v})")));
@@ -784,7 +910,9 @@ impl Emitter<'_> {
                     Self::put(b, &format!(" {html}=\"{}\"", text.replace('"', "&quot;")));
                 }
                 Some(JSXAttributeValue::ExpressionContainer(c)) => {
-                    let Some(expr) = c.expression.as_expression() else { continue };
+                    let Some(expr) = c.expression.as_expression() else {
+                        continue;
+                    };
                     // Some states are the words `true`/`false` (`aria-pressed={false}` is not a missing attribute).
                     let known = match expr.get_inner_expression() {
                         Expression::BooleanLiteral(v) if react::takes_words(&name) => {
@@ -793,7 +921,9 @@ impl Emitter<'_> {
                         _ => static_value(expr),
                     };
                     match known {
-                        Some(Static::Text(t)) => Self::put(b, &format!(" {html}=\"{}\"", escape_attr(&t))),
+                        Some(Static::Text(t)) => {
+                            Self::put(b, &format!(" {html}=\"{}\"", escape_attr(&t)))
+                        }
                         Some(Static::True) => Self::put(b, &format!(" {html}")),
                         Some(Static::Absent) => {}
                         None => {
@@ -807,7 +937,11 @@ impl Emitter<'_> {
                                 "attr"
                             };
                             let e = self.expr(expr);
-                            let e = if raw { format!("({e})?.__html ?? \"\"") } else { e };
+                            let e = if raw {
+                                format!("({e})?.__html ?? \"\"")
+                            } else {
+                                e
+                            };
                             if (name == "textContent" || name == "innerHTML") && has_kids {
                                 self.fail(format!("weft back end: an element with `{name}` can't also have children (it replaces them)"), attr.span);
                                 continue;
@@ -815,7 +949,10 @@ impl Emitter<'_> {
                             if self.ssr {
                                 // Content properties aren't attributes: the server writes them as the content.
                                 if name == "textContent" {
-                                    content = Some(format!("{}(String(({e}) ?? \"\"))", self.helper("escape")));
+                                    content = Some(format!(
+                                        "{}(String(({e}) ?? \"\"))",
+                                        self.helper("escape")
+                                    ));
                                 } else if name == "innerHTML" {
                                     content = Some(format!("String(({e}) ?? \"\")"));
                                 } else {
@@ -838,7 +975,10 @@ impl Emitter<'_> {
                     }
                 }
                 Some(other) => {
-                    self.fail("weft back end: a JSX element as an attribute value needs `{…}`", other.span());
+                    self.fail(
+                        "weft back end: a JSX element as an attribute value needs `{…}`",
+                        other.span(),
+                    );
                 }
             }
         }
@@ -917,7 +1057,14 @@ impl Emitter<'_> {
     }
 
     /// A hole whose value is the code `v` (`once`: static structure, built once).
-    fn hole_code(&mut self, b: &mut Build, parent: &[usize], v: String, once: bool, marker: Option<Vec<usize>>) {
+    fn hole_code(
+        &mut self,
+        b: &mut Build,
+        parent: &[usize],
+        v: String,
+        once: bool,
+        marker: Option<Vec<usize>>,
+    ) {
         let slot = b.slots;
         b.slots += 1;
         if self.ssr {
@@ -956,10 +1103,17 @@ impl Emitter<'_> {
         let v = self.kid_value(k);
         let structure = match k {
             Kid::El(_) | Kid::Frag(_) => true,
-            Kid::Expr(e) => matches!(e.get_inner_expression(), Expression::JSXElement(_) | Expression::JSXFragment(_)),
+            Kid::Expr(e) => matches!(
+                e.get_inner_expression(),
+                Expression::JSXElement(_) | Expression::JSXFragment(_)
+            ),
             Kid::Text(_) => false,
         };
-        if structure && (self.hydratable || self.ssr) { (format!("() => {v}"), true) } else { (v, false) }
+        if structure && (self.hydratable || self.ssr) {
+            (format!("() => {v}"), true)
+        } else {
+            (v, false)
+        }
     }
 
     /// Code that writes one attribute of `el` (`kind`: class, style, prop or attr): value `v`, previous `p`.
@@ -967,7 +1121,9 @@ impl Emitter<'_> {
         match kind {
             "class" => format!("{}({el}, {v}, {p})", self.helper("cls")),
             "style" => format!("{}({el}, {v}, {p})", self.helper("css")),
-            "prop" if name == "value" || name == "defaultValue" => format!("({el}.{name} = {v} ?? \"\")"),
+            "prop" if name == "value" || name == "defaultValue" => {
+                format!("({el}.{name} = {v} ?? \"\")")
+            }
             "prop" => format!("({el}.{name} = {v})"),
             _ => format!("{}({el}, {name:?}, {v})", self.helper("attr")),
         }
@@ -978,7 +1134,10 @@ impl Emitter<'_> {
         if self.keys.is_empty() {
             return false;
         }
-        let code: String = srcmap::strip(code).chars().filter(|c| !c.is_whitespace()).collect();
+        let code: String = srcmap::strip(code)
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .collect();
         let code = code.trim_start_matches('(').trim_end_matches(')');
         self.keys.iter().any(|k| k == code)
     }
@@ -995,7 +1154,10 @@ impl Emitter<'_> {
             let a = self.write(el, kind, name, &format!("v[{i}]"), &format!("p[{i}]"));
             let _ = write!(body, " v[{i}] !== p[{i}] && {a};");
         }
-        format!("{bind}(() => [{}], (v, p = []) => {{{body} }});", values.join(", "))
+        format!(
+            "{bind}(() => [{}], (v, p = []) => {{{body} }});",
+            values.join(", ")
+        )
     }
 
     // ---- values: children, components, fragments ------------------------------------------------------------
@@ -1015,11 +1177,18 @@ impl Emitter<'_> {
                     // that leaves it the same doesn't rebuild the branch (research 19 §3).
                     let (test, rest) = self.condition(inner);
                     let memo = self.helper("memo");
-                    format!("(() => {{ const _c = {memo}(() => {test}); return () => {}; }})()", rest("_c()"))
+                    format!(
+                        "(() => {{ const _c = {memo}(() => {test}); return () => {}; }})()",
+                        rest("_c()")
+                    )
                 }
                 _ => {
                     let code = self.expr(e);
-                    if self.is_key(&code) { code } else { format!("() => ({code})") }
+                    if self.is_key(&code) {
+                        code
+                    } else {
+                        format!("() => ({code})")
+                    }
                 }
             },
         }
@@ -1054,7 +1223,11 @@ impl Emitter<'_> {
         }
         // A fragment around one expression lowers to an arrow, which can't be the right side of `&&` bare.
         let code = self.expr(e);
-        if matches!(inner, Expression::JSXFragment(_)) { format!("({code})") } else { code }
+        if matches!(inner, Expression::JSXFragment(_)) {
+            format!("({code})")
+        } else {
+            code
+        }
     }
 
     fn fragment(&mut self, f: &JSXFragment<'_>) -> String {
@@ -1093,7 +1266,10 @@ impl Emitter<'_> {
                 // The island's children stay the server's: a slot, rendered where the island reads it.
                 let vs: Vec<String> = many.iter().map(|k| self.kid_value(k)).collect();
                 let slot = self.helper("slot");
-                fields.push(format!("get children() {{ return {slot}(() => [{}]); }}", vs.join(", ")));
+                fields.push(format!(
+                    "get children() {{ return {slot}(() => [{}]); }}",
+                    vs.join(", ")
+                ));
             }
             [Kid::Text(t)] => fields.push(format!("children: {}", js_string(&decode_entities(t)))),
             [Kid::Expr(e)] if passes_as_value(e) => {
@@ -1124,7 +1300,8 @@ impl Emitter<'_> {
         };
         if let Some((id, values, slotted, when)) = island {
             let call = self.helper("island");
-            let names = serde_json::to_string(&values).expect("a list of strings always serializes");
+            let names =
+                serde_json::to_string(&values).expect("a list of strings always serializes");
             let slotted = slotted && !kids.is_empty();
             let tail = match (slotted, when.is_empty()) {
                 (true, true) => ", 1".to_string(),
@@ -1136,7 +1313,10 @@ impl Emitter<'_> {
         // Dev builds name the component, so a <Boundary> can say where an error was thrown.
         match self.origin.get(&el.span.start) {
             Some(&(line, _)) if self.dev && !self.ssr && name != "For" => {
-                format!("{component}({callee}, {props}, {name:?}, {:?})", format!("{}:{line}", self.display))
+                format!(
+                    "{component}({callee}, {props}, {name:?}, {:?})",
+                    format!("{}:{line}", self.display)
+                )
             }
             _ => format!("{component}({callee}, {props})"),
         }
@@ -1145,7 +1325,10 @@ impl Emitter<'_> {
     /// An element's attributes as one object literal, read in order on every run of its `spread` (later wins):
     /// `{ a: x, ...rest, b: y }`. `ref={el}` on a variable is a function that assigns it. `None` when an attribute's
     /// value is JSX, which must not be rebuilt on every run.
-    fn spread_object(&mut self, attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>) -> Option<String> {
+    fn spread_object(
+        &mut self,
+        attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>,
+    ) -> Option<String> {
         let mut fields: Vec<String> = Vec::new();
         for item in attrs {
             match item {
@@ -1156,7 +1339,9 @@ impl Emitter<'_> {
                 JSXAttributeItem::Attribute(a) => {
                     let key = match &a.name {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
-                        JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
+                        JSXAttributeName::NamespacedName(ns) => {
+                            format!("{}:{}", ns.namespace.name, ns.name.name)
+                        }
                     };
                     if key == "key" {
                         continue;
@@ -1167,12 +1352,18 @@ impl Emitter<'_> {
                         Some(JSXAttributeValue::StringLiteral(s)) => {
                             format!("{k}: {}", js_string(&decode_entities(s.value.as_str())))
                         }
-                        Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
-                            None => continue,
-                            Some(e) if key == "ref" && self.assignable(e) => format!("{k}: {}", self.assigner(e)),
-                            Some(e) => format!("{k}: {}", self.expr(e)),
-                        },
-                        Some(JSXAttributeValue::Element(_) | JSXAttributeValue::Fragment(_)) => return None,
+                        Some(JSXAttributeValue::ExpressionContainer(c)) => {
+                            match c.expression.as_expression() {
+                                None => continue,
+                                Some(e) if key == "ref" && self.assignable(e) => {
+                                    format!("{k}: {}", self.assigner(e))
+                                }
+                                Some(e) => format!("{k}: {}", self.expr(e)),
+                            }
+                        }
+                        Some(JSXAttributeValue::Element(_) | JSXAttributeValue::Fragment(_)) => {
+                            return None;
+                        }
                     });
                 }
             }
@@ -1194,12 +1385,17 @@ impl Emitter<'_> {
     /// A built element takes a hydration key, and one built where it isn't rendered takes the key of what is.
     fn lazy_fields(&mut self, o: &ObjectExpression<'_>) -> Option<String> {
         let jsx = |e: &Expression<'_>| {
-            matches!(e.get_inner_expression(), Expression::JSXElement(_) | Expression::JSXFragment(_))
+            matches!(
+                e.get_inner_expression(),
+                Expression::JSXElement(_) | Expression::JSXFragment(_)
+            )
         };
         let mut any = false;
         for p in &o.properties {
             match p {
-                ObjectPropertyKind::ObjectProperty(p) if p.kind == PropertyKind::Init && !p.method => {
+                ObjectPropertyKind::ObjectProperty(p)
+                    if p.kind == PropertyKind::Init && !p.method =>
+                {
                     any |= jsx(&p.value);
                 }
                 ObjectPropertyKind::ObjectProperty(_) => return None,
@@ -1214,10 +1410,18 @@ impl Emitter<'_> {
             fields.push(match p {
                 ObjectPropertyKind::SpreadProperty(s) => format!("...{}", self.expr(&s.argument)),
                 ObjectPropertyKind::ObjectProperty(p) => {
-                    let key = srcmap::copy(self.text, p.key.span().start as usize, p.key.span().end as usize);
+                    let key = srcmap::copy(
+                        self.text,
+                        p.key.span().start as usize,
+                        p.key.span().end as usize,
+                    );
                     let key = if p.computed { format!("[{key}]") } else { key };
                     let v = self.expr(&p.value);
-                    if jsx(&p.value) { format!("get {key}() {{ return {v}; }}") } else { format!("{key}: {v}") }
+                    if jsx(&p.value) {
+                        format!("get {key}() {{ return {v}; }}")
+                    } else {
+                        format!("{key}: {v}")
+                    }
                 }
             });
         }
@@ -1241,16 +1445,20 @@ impl Emitter<'_> {
                     }
                     // `{...props.rest}` is read live: anything but a plain name is passed as a function.
                     let e = self.expr(&s.argument);
-                    sources.push(if matches!(s.argument.get_inner_expression(), Expression::Identifier(_)) {
-                        e
-                    } else {
-                        format!("() => ({e})")
-                    });
+                    sources.push(
+                        if matches!(s.argument.get_inner_expression(), Expression::Identifier(_)) {
+                            e
+                        } else {
+                            format!("() => ({e})")
+                        },
+                    );
                 }
                 JSXAttributeItem::Attribute(attr) => {
                     let key = match &attr.name {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
-                        JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
+                        JSXAttributeName::NamespacedName(ns) => {
+                            format!("{}:{}", ns.namespace.name, ns.name.name)
+                        }
                     };
                     // `bind:count={box}`: the child reads the box, and its writes reach it.
                     if let (false, JSXAttributeName::NamespacedName(ns), Some(e)) =
@@ -1272,14 +1480,20 @@ impl Emitter<'_> {
                         Some(JSXAttributeValue::StringLiteral(s)) => {
                             format!("{k}: {}", js_string(&decode_entities(s.value.as_str())))
                         }
-                        Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
+                        Some(JSXAttributeValue::ExpressionContainer(c)) => match c
+                            .expression
+                            .as_expression()
+                        {
                             None => continue,
                             Some(e) if element && key == "ref" && self.assignable(e) => {
                                 format!("{k}: {}", self.assigner(e))
                             }
                             Some(Expression::CallExpression(b)) if matches!(&b.callee, Expression::Identifier(id) if id.name == "_$bound") =>
                             {
-                                let target = b.arguments[0].as_expression().map(|e| self.expr(e)).unwrap_or_default();
+                                let target = b.arguments[0]
+                                    .as_expression()
+                                    .map(|e| self.expr(e))
+                                    .unwrap_or_default();
                                 format!(
                                     "get {k}() {{ return {target}.value; }}, set {k}(_v) {{ {target}.value = _v; }}"
                                 )
@@ -1300,8 +1514,12 @@ impl Emitter<'_> {
                                 format!("get {k}() {{ return {v}; }}")
                             }
                         },
-                        Some(JSXAttributeValue::Element(e)) => format!("get {k}() {{ return {}; }}", self.element(e)),
-                        Some(JSXAttributeValue::Fragment(f)) => format!("get {k}() {{ return {}; }}", self.fragment(f)),
+                        Some(JSXAttributeValue::Element(e)) => {
+                            format!("get {k}() {{ return {}; }}", self.element(e))
+                        }
+                        Some(JSXAttributeValue::Fragment(f)) => {
+                            format!("get {k}() {{ return {}; }}", self.fragment(f))
+                        }
                     };
                     fields.push(field);
                 }
@@ -1309,7 +1527,11 @@ impl Emitter<'_> {
         }
         fields.extend(extra);
         if sources.is_empty() {
-            if fields.is_empty() { "{}".to_string() } else { format!("{{ {} }}", fields.join(", ")) }
+            if fields.is_empty() {
+                "{}".to_string()
+            } else {
+                format!("{{ {} }}", fields.join(", "))
+            }
         } else {
             if !fields.is_empty() {
                 sources.push(format!("{{ {} }}", fields.join(", ")));
@@ -1363,7 +1585,9 @@ fn component_name(name: &JSXElementName<'_>, text: &str) -> Option<String> {
             (first.is_ascii_uppercase()).then(|| id.name.to_string())
         }
         JSXElementName::IdentifierReference(r) => Some(r.name.to_string()),
-        JSXElementName::MemberExpression(m) => Some(text[m.span.start as usize..m.span.end as usize].to_string()),
+        JSXElementName::MemberExpression(m) => {
+            Some(text[m.span.start as usize..m.span.end as usize].to_string())
+        }
         _ => None,
     }
 }
@@ -1377,9 +1601,15 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
         }
         _ => None,
     })?;
-    let Expression::ArrowFunctionExpression(f) = by.get_inner_expression() else { return None };
-    let [param] = f.params.items.as_slice() else { return None };
-    let BindingPattern::BindingIdentifier(p) = &param.pattern else { return None };
+    let Expression::ArrowFunctionExpression(f) = by.get_inner_expression() else {
+        return None;
+    };
+    let [param] = f.params.items.as_slice() else {
+        return None;
+    };
+    let BindingPattern::BindingIdentifier(p) = &param.pattern else {
+        return None;
+    };
     let body = f.get_expression()?;
     let mut path = Vec::new();
     let mut e = body.get_inner_expression();
@@ -1387,7 +1617,9 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
         path.push(m.property.name.as_str());
         e = m.object.get_inner_expression();
     }
-    let Expression::Identifier(id) = e else { return None };
+    let Expression::Identifier(id) = e else {
+        return None;
+    };
     if id.name != p.name || path.is_empty() {
         return None;
     }
@@ -1397,7 +1629,9 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
 
 /// A compiled speed path turned off for this run (`WEFT_OFF`, packages/weft/src/flags.ts).
 fn flag_off(name: &str) -> bool {
-    let off = OFF.with(|off| off.borrow().clone()).or_else(|| std::env::var("WEFT_OFF").ok());
+    let off = OFF
+        .with(|off| off.borrow().clone())
+        .or_else(|| std::env::var("WEFT_OFF").ok());
     off.is_some_and(|v| v.split(',').any(|f| f == name || f == "all"))
 }
 
@@ -1416,7 +1650,8 @@ fn hoist_key(row: String, read: &str) -> String {
     let off = flag_off("KEYREAD");
     let item = read.split('(').next().unwrap_or(read);
     // The body has to be the emitted element, and nothing inside may rebind the item.
-    let shadowed = row.matches(&format!("{item} =>")).count() + row.matches(&format!("({item})")).count() > 1;
+    let shadowed =
+        row.matches(&format!("{item} =>")).count() + row.matches(&format!("({item})")).count() > 1;
     let body = "(() => {";
     let Some(at) = row
         .find(body)
@@ -1428,7 +1663,11 @@ fn hoist_key(row: String, read: &str) -> String {
     if off || shadowed || row.contains("_key$") || !row[at..].contains(read) {
         return row;
     }
-    format!("{} const _key$ = {read};{}", &row[..at], row[at..].replace(read, "_key$"))
+    format!(
+        "{} const _key$ = {read};{}",
+        &row[..at],
+        row[at..].replace(read, "_key$")
+    )
 }
 
 /// The island mark on a component's tag (`hydration::mark`).
@@ -1476,7 +1715,11 @@ fn static_value(e: &Expression<'_>) -> Option<Static> {
     match e.get_inner_expression() {
         Expression::StringLiteral(s) => Some(Static::Text(s.value.to_string())),
         Expression::NumericLiteral(n) => Some(Static::Text(n.value.to_string())),
-        Expression::BooleanLiteral(b) => Some(if b.value { Static::True } else { Static::Absent }),
+        Expression::BooleanLiteral(b) => Some(if b.value {
+            Static::True
+        } else {
+            Static::Absent
+        }),
         Expression::NullLiteral(_) => Some(Static::Absent),
         Expression::TemplateLiteral(t) if t.expressions.is_empty() => Some(Static::Text(
             t.quasis
@@ -1505,11 +1748,14 @@ fn passes_as_value(e: &Expression<'_>) -> bool {
 }
 
 fn prop_key(k: &str) -> String {
-    let ident = k
-        .chars()
-        .enumerate()
-        .all(|(i, c)| c == '_' || c == '$' || c.is_ascii_alphabetic() || (i > 0 && c.is_ascii_digit()));
-    if ident { k.to_string() } else { format!("{k:?}") }
+    let ident = k.chars().enumerate().all(|(i, c)| {
+        c == '_' || c == '$' || c.is_ascii_alphabetic() || (i > 0 && c.is_ascii_digit())
+    });
+    if ident {
+        k.to_string()
+    } else {
+        format!("{k:?}")
+    }
 }
 
 /// JSX children after JSX's whitespace rules (React's: lines trimmed, whitespace-only lines with newlines dropped).
@@ -1577,7 +1823,9 @@ fn decode_entities(s: &str) -> String {
                 "quot" => Some('"'),
                 "apos" => Some('\''),
                 "nbsp" => Some('\u{a0}'),
-                _ if ent.starts_with("#x") => u32::from_str_radix(&ent[2..], 16).ok().and_then(char::from_u32),
+                _ if ent.starts_with("#x") => u32::from_str_radix(&ent[2..], 16)
+                    .ok()
+                    .and_then(char::from_u32),
                 _ if ent.starts_with('#') => ent[1..].parse::<u32>().ok().and_then(char::from_u32),
                 _ => None,
             }?;
@@ -1600,5 +1848,7 @@ fn escape_text(s: &str) -> String {
 }
 
 fn escape_attr(s: &str) -> String {
-    s.replace('&', "&amp;").replace('"', "&quot;").replace('<', "&lt;")
+    s.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
 }

@@ -10,7 +10,9 @@ export default async function run({ url, log }) {
   const { check, eq, open, hydrated, titles } = t
   // Rows show optimistically, so wait for the write itself before a reload.
   const add = async (page, title) => {
-    const written = page.waitForResponse(r => r.url().includes('/_weft/fn/') && r.request().method() === 'POST')
+    const written = page.waitForResponse(
+      (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+    )
     await t.add(page, title)
     await written
   }
@@ -34,17 +36,25 @@ export default async function run({ url, log }) {
       eq((await titles(page)).at(-1), `open:${title}`, 'title')
     })
     await check('toggle and delete persist', async () => {
-      const written = page.waitForResponse(r => r.url().includes('/_weft/fn/') && r.request().method() === 'POST')
+      const written = page.waitForResponse(
+        (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+      )
       await page.getByRole('checkbox').first().check()
       await written
-      const deleted = page.waitForResponse(r => r.url().includes('/_weft/fn/') && r.request().method() === 'POST')
+      const deleted = page.waitForResponse(
+        (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+      )
       await page.getByRole('button', { name: 'Delete Bread' }).click()
       await page.getByRole('button', { name: 'Delete Bread' }).waitFor({ state: 'detached' })
       await deleted
       await page.reload()
       await hydrated(page)
       eq(await page.getByRole('checkbox').first().isChecked(), true, 'checked')
-      eq((await titles(page)).some(title => title.includes('Bread')), false, 'deleted')
+      eq(
+        (await titles(page)).some((title) => title.includes('Bread')),
+        false,
+        'deleted',
+      )
     })
     eq(errors, [], 'page errors')
   } finally {

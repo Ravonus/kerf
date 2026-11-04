@@ -3,5 +3,10 @@ import { defineState, state } from '@weft-js/core'
 
 export const prefs = defineState('prefs', () => {
   const theme = state('light', { persist: 'cookie' })
-  return { theme, toggle() { theme.value = theme.value === 'light' ? 'dark' : 'light' } }
+  return {
+    theme,
+    toggle() {
+      theme.value = theme.value === 'light' ? 'dark' : 'light'
+    },
+  }
 })

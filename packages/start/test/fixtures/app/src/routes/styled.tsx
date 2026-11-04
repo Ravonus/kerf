@@ -5,5 +5,9 @@ import './styled.css'
 export const meta = { title: 'Styled' }
 
 export default function Styled() {
-  return <h1 class="styled" onClick={() => save({ title: 'x' })}><Badge /></h1>
+  return (
+    <h1 class="styled" onClick={() => save({ title: 'x' })}>
+      <Badge />
+    </h1>
+  )
 }

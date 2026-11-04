@@ -13,9 +13,23 @@ const PROBE = 1500
 const HEARTBEAT = 5_000
 const MAX_BARRIER = 7_800
 
-interface Options { url: string; listenUrl?: string; client: Sql; tables: string[]; interval?: number; heartbeat?: number }
+interface Options {
+  url: string
+  listenUrl?: string
+  client: Sql
+  tables: string[]
+  interval?: number
+  heartbeat?: number
+}
 
-export function postgresChanges({ url, listenUrl, client, tables, interval = 2000, heartbeat = HEARTBEAT }: Options) {
+export function postgresChanges({
+  url,
+  listenUrl,
+  client,
+  tables,
+  interval = 2000,
+  heartbeat = HEARTBEAT,
+}: Options) {
   const direct = listenUrl ?? url
   const late = heartbeat * 2
 
@@ -24,11 +38,20 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
     const sql = postgres(direct, { ...opts, max: 1 })
     const token = `?${crypto.randomUUID()}`
     let heard!: () => void
-    const got = new Promise<void>(ok => { heard = ok })
+    const got = new Promise<void>((ok) => {
+      heard = ok
+    })
     try {
-      await sql.listen(CHANNEL, p => { if (p === token) heard() })
+      await sql.listen(CHANNEL, (p) => {
+        if (p === token) heard()
+      })
       await client.notify(CHANNEL, token)
-      return await Promise.race([got.then(() => true), new Promise<boolean>(ok => { setTimeout(ok, PROBE, false) })])
+      return await Promise.race([
+        got.then(() => true),
+        new Promise<boolean>((ok) => {
+          setTimeout(ok, PROBE, false)
+        }),
+      ])
     } catch (e) {
       return (e as Error | null)?.message ?? String(e)
     } finally {
@@ -37,48 +60,81 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
   }
 
   async function triggers(): Promise<string[]> {
-    const rows = await client`select c.relname from pg_trigger t join pg_class c on c.oid = t.tgrelid where t.tgname = 'weft_changes_upd' and c.relname = any(${tables})`
-    return rows.map(r => r.relname as string)
+    const rows =
+      await client`select c.relname from pg_trigger t join pg_class c on c.oid = t.tgrelid where t.tgname = 'weft_changes_upd' and c.relname = any(${tables})`
+    return rows.map((r) => r.relname as string)
   }
 
   /** Whether this role may add them, for the error's fix. */
   async function mayCreate(table: string): Promise<boolean> {
-    const [r] = await client`select has_table_privilege(current_user, ${table}, 'TRIGGER') as ok`.catch(() => [{ ok: false }])
+    const [r] =
+      await client`select has_table_privilege(current_user, ${table}, 'TRIGGER') as ok`.catch(
+        () => [{ ok: false }],
+      )
     return !!r?.ok
   }
 
   async function stats(): Promise<boolean> {
-    const [r] = await client`select current_setting('track_counts') = 'on' as ok`.catch(() => [{ ok: false }])
+    const [r] = await client`select current_setting('track_counts') = 'on' as ok`.catch(() => [
+      { ok: false },
+    ])
     return !!r?.ok
   }
 
   const poll = async (why: string, fix: string): Promise<Probe> =>
     (await stats())
-      ? { mode: 'poll', via: 'postgres-stats', why: `${why}. Reading table counters every ${interval / 1000} s: writes show up late, and by table only`, fix }
-      : { mode: 'off', via: 'none', why: `${why}, and \`track_counts\` is off, so there is nothing to poll`, fix }
+      ? {
+          mode: 'poll',
+          via: 'postgres-stats',
+          why: `${why}. Reading table counters every ${interval / 1000} s: writes show up late, and by table only`,
+          fix,
+        }
+      : {
+          mode: 'off',
+          via: 'none',
+          why: `${why}, and \`track_counts\` is off, so there is nothing to poll`,
+          fix,
+        }
 
   async function probe(): Promise<Probe> {
     let have: string[]
     try {
       have = await triggers()
     } catch (e) {
-      return { mode: 'off', via: 'none', why: `the database didn't answer: ${((e as Error | null)?.message ?? String(e)).replace(SECRET, '//…@')}`, fix: 'check `DATABASE_URL`' }
+      return {
+        mode: 'off',
+        via: 'none',
+        why: `the database didn't answer: ${((e as Error | null)?.message ?? String(e)).replace(SECRET, '//…@')}`,
+        fix: 'check `DATABASE_URL`',
+      }
     }
-    const missing = tables.filter(t => !have.includes(t))
+    const missing = tables.filter((t) => !have.includes(t))
     if (missing.length) {
       const allowed = await mayCreate(missing[0]!)
-      return poll(`no trigger on ${missing.map(t => `\`${t}\``).join(', ')}`, allowed ? 'run `weft db live`, then apply the migration' : `run \`weft db live\`, and apply the migration as a role that may create triggers: this one has no TRIGGER on \`${missing[0]}\``)
+      return poll(
+        `no trigger on ${missing.map((t) => `\`${t}\``).join(', ')}`,
+        allowed
+          ? 'run `weft db live`, then apply the migration'
+          : `run \`weft db live\`, and apply the migration as a role that may create triggers: this one has no TRIGGER on \`${missing[0]}\``,
+      )
     }
     const ok = await hears()
     if (ok === true) return { mode: 'feed', via: 'postgres-notify' }
     const pooler = /:6432\b|-pooler\.|pooler\./.test(direct)
-    const why = typeof ok === 'string' ? `LISTEN failed: ${ok.replace(SECRET, '//…@')}` : `a NOTIFY never reached a LISTEN on this connection${pooler ? ', which looks like a pooler' : ''}: a pooler in transaction mode does that`
+    const why =
+      typeof ok === 'string'
+        ? `LISTEN failed: ${ok.replace(SECRET, '//…@')}`
+        : `a NOTIFY never reached a LISTEN on this connection${pooler ? ', which looks like a pooler' : ''}: a pooler in transaction mode does that`
     return poll(why, 'give `dbChanges` a direct connection: `{ listenUrl }`')
   }
 
   /** A self-addressed NOTIFY proves the listener is alive: a half-open TCP connection looks fine until then. */
   async function listen(sink: Sink) {
-    let sql: Sql | undefined, started = false, stopped = false, seen = Date.now(), timer: ReturnType<typeof setTimeout> | undefined
+    let sql: Sql | undefined,
+      started = false,
+      stopped = false,
+      seen = Date.now(),
+      timer: ReturnType<typeof setTimeout> | undefined
     const token = `?${crypto.randomUUID()}`
     const heard = (payload: string) => {
       seen = Date.now()
@@ -110,7 +166,11 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
       timer = setTimeout(() => void check(), heartbeat)
       ;(timer as { unref?(): void }).unref?.()
     }
-    await connect().catch(e => sink.down(`the database listener can't connect: ${String(e?.message ?? e).replace(SECRET, '//…@')}`))
+    await connect().catch((e) =>
+      sink.down(
+        `the database listener can't connect: ${String(e?.message ?? e).replace(SECRET, '//…@')}`,
+      ),
+    )
     timer = setTimeout(() => void check(), heartbeat)
     ;(timer as { unref?(): void }).unref?.()
     return async () => {
@@ -123,18 +183,20 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
   /** `postgres-stats`: counters that only ever grow, per table, by the second. Nothing to install. */
   function counters(sink: Sink) {
     const seen = new Map<string, string>()
-    let stopped = false, timer: ReturnType<typeof setTimeout> | undefined
+    let stopped = false,
+      timer: ReturnType<typeof setTimeout> | undefined
     const look = async () => {
       if (stopped) return
       try {
-        const rows = await client`select relname, n_tup_ins + n_tup_upd + n_tup_del + n_mod_since_analyze as n from pg_stat_user_tables where relname = any(${tables})`
+        const rows =
+          await client`select relname, n_tup_ins + n_tup_upd + n_tup_del + n_mod_since_analyze as n from pg_stat_user_tables where relname = any(${tables})`
         sink.up()
-        const changed = rows.filter(r => {
+        const changed = rows.filter((r) => {
           const was = seen.get(r.relname)
           seen.set(r.relname, String(r.n))
           return was !== undefined && was !== String(r.n)
         })
-        if (changed.length) sink.changes(changed.map(r => ({ table: r.relname as string })))
+        if (changed.length) sink.changes(changed.map((r) => ({ table: r.relname as string })))
       } catch {
         sink.down('the database is not answering')
       }
@@ -149,11 +211,21 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
 
   return {
     probe,
-    start: (sink: Sink, how: Probe) => (how.via === 'postgres-notify' ? listen(sink) : how.mode === 'poll' ? counters(sink) : Promise.resolve(() => {})),
+    start: (sink: Sink, how: Probe) =>
+      how.via === 'postgres-notify'
+        ? listen(sink)
+        : how.mode === 'poll'
+          ? counters(sink)
+          : Promise.resolve(() => {}),
     /** After the mutation committed, so it arrives after that commit's changes, and before the poke it stands for. */
     async settle(tags: string[]) {
       const text = JSON.stringify({ b: tags })
-      await client.notify(CHANNEL, text.length < MAX_BARRIER ? text : JSON.stringify({ b: [...new Set(tags.map(t => t.split(':')[0]))] }))
+      await client.notify(
+        CHANNEL,
+        text.length < MAX_BARRIER
+          ? text
+          : JSON.stringify({ b: [...new Set(tags.map((t) => t.split(':')[0]))] }),
+      )
     },
   }
 }

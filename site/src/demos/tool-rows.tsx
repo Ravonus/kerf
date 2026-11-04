@@ -13,14 +13,19 @@ const counted = (id: string, qty: number) => {
 
 export default function Rows() {
   const cart = state<Record<string, number>>({})
-  const add = (id: string) => cart.set(d => { d[id] = (d[id] ?? 0) + 1 })
+  const add = (id: string) =>
+    cart.set((d) => {
+      d[id] = (d[id] ?? 0) + 1
+    })
   return (
     <Card title="One entry per row">
       <ul>
-        {FRUIT.map(id => (
+        {FRUIT.map((id) => (
           <li key={id}>
             {id}: {counted(id, cart.get(id) ?? 0)}{' '}
-            <Button size="sm" emphasis="ghost" onClick={() => add(id)}>Add</Button>
+            <Button size="sm" emphasis="ghost" onClick={() => add(id)}>
+              Add
+            </Button>
           </li>
         ))}
       </ul>

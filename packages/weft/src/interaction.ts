@@ -3,12 +3,29 @@
 // is only ever written to `remote`, and only the three local boxes are sent. `share` makes one row per key on this page
 // (same page = same box); `@weft-js/start/share` carries it further. Neither `weft` nor a warp component pulls this in.
 
-import { DEV, createRoot, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from './index'
+import {
+  DEV,
+  createRoot,
+  effect,
+  getOwner,
+  onCleanup,
+  state,
+  untrack,
+  type Derived,
+  type State,
+} from './index'
 
 /** How many pointers hover, how many focuses sit inside, and how many presses are down. */
-export interface Counts { hover: number; focus: number; pressed: number }
+export interface Counts {
+  hover: number
+  focus: number
+  pressed: number
+}
 /** What an action directive returns: `update` after a prop change, `destroy` at the end. */
-export interface Action { update(): void; destroy(): void }
+export interface Action {
+  update(): void
+  destroy(): void
+}
 
 /** A hover, focus and press tracker, with the handlers that feed it. */
 export interface Interaction {
@@ -32,7 +49,10 @@ export interface InteractionOptions {
 }
 
 /** One tracker's line into a shared one: `set` reports its bits, `leave` takes them away. */
-export interface ShareLine { set(bits: number): void; leave(): void }
+export interface ShareLine {
+  set(bits: number): void
+  leave(): void
+}
 
 /** `@weft-js/warp/ui` and `@weft-js/start/share` plug in here, as `@weft-js/core/sync` does for `features.sync`. */
 export const seams: {
@@ -43,13 +63,18 @@ export const seams: {
 /** Nothing hovered, focused or pressed. */
 export const NONE: Counts = Object.freeze({ hover: 0, focus: 0, pressed: 0 })
 /** Hover, focus and pressed as one number, so a change costs a compare. */
-export const bitsOf = (hover: boolean, focus: boolean, pressed: boolean) => (hover ? 1 : 0) | (focus ? 2 : 0) | (pressed ? 4 : 0)
+export const bitsOf = (hover: boolean, focus: boolean, pressed: boolean) =>
+  (hover ? 1 : 0) | (focus ? 2 : 0) | (pressed ? 4 : 0)
 
 function row(): Interaction & { remote: State<Counts> } {
   const made: Interaction & { remote: State<Counts> } = {
-    hover: state(false), focus: state(false), pressed: state(false), remote: state(NONE),
+    hover: state(false),
+    focus: state(false),
+    pressed: state(false),
+    remote: state(NONE),
     attach(el) {
-      if (DEV && !seams.attach) throw new Error("interaction(): nothing draws `ui`\n  fix: import '@weft-js/warp/ui'")
+      if (DEV && !seams.attach)
+        throw new Error("interaction(): nothing draws `ui`\n  fix: import '@weft-js/warp/ui'")
       return seams.attach!(el, made)
     },
   }
@@ -65,20 +90,36 @@ export function interaction(options: InteractionOptions = {}): Interaction {
   const key = typeof share === 'function' ? untrack(share) : share
   let held = page.get(key)
   if (!held) {
-    held = createRoot(dispose => {
+    held = createRoot((dispose) => {
       const ui = row()
-      const line = seams.line?.(key, counts => { ui.remote.value = counts })
-      if (line) effect(() => bitsOf(ui.hover.value, ui.focus.value, ui.pressed.value), (bits, was) => { if (was !== undefined || bits) line.set(bits) })
-      return { ui, refs: 0, close() { line?.leave(); dispose() } }
+      const line = seams.line?.(key, (counts) => {
+        ui.remote.value = counts
+      })
+      if (line)
+        effect(
+          () => bitsOf(ui.hover.value, ui.focus.value, ui.pressed.value),
+          (bits, was) => {
+            if (was !== undefined || bits) line.set(bits)
+          },
+        )
+      return {
+        ui,
+        refs: 0,
+        close() {
+          line?.leave()
+          dispose()
+        },
+      }
     }, null)
     page.set(key, held)
   }
   const entry = held
   entry.refs++
-  if (getOwner()) onCleanup(() => {
-    if (--entry.refs) return
-    page.delete(key)
-    entry.close()
-  })
+  if (getOwner())
+    onCleanup(() => {
+      if (--entry.refs) return
+      page.delete(key)
+      entry.close()
+    })
   return entry.ui
 }

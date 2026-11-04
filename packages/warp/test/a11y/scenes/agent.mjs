@@ -4,7 +4,10 @@ export default async function (page, audit, url, settle) {
   await page.goto(`${url}?part=agent`)
   await settle(page)
   await audit('agent')
-  await page.getByRole('button', { name: /^Model:/ }).first().click()
+  await page
+    .getByRole('button', { name: /^Model:/ })
+    .first()
+    .click()
   await audit('model picker open')
   await page.keyboard.press('Escape')
   const box = page.getByRole('textbox', { name: 'Message the assistant' }).first()

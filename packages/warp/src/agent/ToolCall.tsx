@@ -1,5 +1,12 @@
 import { AlertIcon, CheckIcon, RightIcon, XIcon } from '@weft-js/warp-icons'
-import { announce, argsDiff, installSweep, toolStatus, uid, type AgentTool } from '@weft-js/warp-core'
+import {
+  announce,
+  argsDiff,
+  installSweep,
+  toolStatus,
+  uid,
+  type AgentTool,
+} from '@weft-js/warp-core'
 import { derived, onMount, state, untrack, watch } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
@@ -37,51 +44,119 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
   let head: HTMLElement | undefined
   let ok: HTMLElement | undefined
   onMount(() => {
-    const asked = () => queueMicrotask(() => {
-      ok?.focus({ preventScroll: true })
-      if (frame) announce(frame.ownerDocument, `The assistant wants to run ${untrack(() => call.name)}. Approve or deny.`, true)
-    })
-    watch(() => st.value, (s, prev) => {
-      if (s === 'approval') { args.value = untrack(() => call.args); if (prev !== undefined || !untrack(() => quiet)) asked() }
-      if (prev !== undefined && s === 'done') {
-        installSweep().confirm(frame)
-        announce(frame!.ownerDocument, `${untrack(() => call.name)} finished.`)
-      }
-    })
+    const asked = () =>
+      queueMicrotask(() => {
+        ok?.focus({ preventScroll: true })
+        if (frame)
+          announce(
+            frame.ownerDocument,
+            `The assistant wants to run ${untrack(() => call.name)}. Approve or deny.`,
+            true,
+          )
+      })
+    watch(
+      () => st.value,
+      (s, prev) => {
+        if (s === 'approval') {
+          args.value = untrack(() => call.args)
+          if (prev !== undefined || !untrack(() => quiet)) asked()
+        }
+        if (prev !== undefined && s === 'done') {
+          installSweep().confirm(frame)
+          announce(frame!.ownerDocument, `${untrack(() => call.name)} finished.`)
+        }
+      },
+    )
   })
-  const leave = (then: () => void) => { head?.focus({ preventScroll: true }); then() }
+  const leave = (then: () => void) => {
+    head?.focus({ preventScroll: true })
+    then()
+  }
   return (
-    <div ref={n => (frame = n)} data-part="tool-frame" data-sweep="">
+    <div ref={(n) => (frame = n)} data-part="tool-frame" data-sweep="">
       <Sweep />
       <details data-scope="tool-call" data-state={st.value} open={st.value === 'approval'}>
-        <summary ref={n => (head = n)}>
+        <summary ref={(n) => (head = n)}>
           <span>
-            {st.value === 'running' && <span data-scope="spinner" style="--_size:13px;color:var(--warp-color-accent-text)"></span>}
+            {st.value === 'running' && (
+              <span
+                data-scope="spinner"
+                style="--_size:13px;color:var(--warp-color-accent-text)"
+              ></span>
+            )}
             {st.value === 'done' && <CheckIcon style="color:var(--warp-color-positive-text)" />}
             {st.value === 'approval' && <AlertIcon style="color:var(--warp-color-caution-text)" />}
-            {(st.value === 'failed' || st.value === 'denied') && <XIcon style="color:var(--warp-color-critical-text)" />}
+            {(st.value === 'failed' || st.value === 'denied') && (
+              <XIcon style="color:var(--warp-color-critical-text)" />
+            )}
           </span>
           <span data-part="name">{call.name}</span>
           <span data-part="sr-only">{meta.value.word}</span>
-          <span data-part="arg" aria-hidden="true">{call.args}</span>
-          <span data-part="dur" data-numeric="">{meta.value.status}</span>
+          <span data-part="arg" aria-hidden="true">
+            {call.args}
+          </span>
+          <span data-part="dur" data-numeric="">
+            {meta.value.status}
+          </span>
           <RightIcon data-part="chev" />
         </summary>
         <div data-part="io">
           <span>Input</span>
           <pre>{call.args}</pre>
           <span>Output</span>
-          <pre>{call.output ?? (st.value === 'approval' ? 'Waiting for approval' : st.value === 'denied' ? 'Denied. Nothing was changed.' : '…')}</pre>
+          <pre>
+            {call.output ??
+              (st.value === 'approval'
+                ? 'Waiting for approval'
+                : st.value === 'denied'
+                  ? 'Denied. Nothing was changed.'
+                  : '…')}
+          </pre>
         </div>
         {st.value === 'approval' && (
           <div data-part="approve" role="group" aria-label={`Approve ${call.name}`}>
-            <span data-part="eyebrow" id={`${id}-a`}>Arguments · editable</span>
-            <textarea aria-labelledby={`${id}-a`} spellcheck="false" value={args.value} onInput={e => (args.value = (e.currentTarget).value)}></textarea>
-            {diff.value && <section data-part="io"><span>Your edit</span><pre>{diff.value}</pre></section>}
+            <span data-part="eyebrow" id={`${id}-a`}>
+              Arguments · editable
+            </span>
+            <textarea
+              aria-labelledby={`${id}-a`}
+              spellcheck="false"
+              value={args.value}
+              onInput={(e) => (args.value = e.currentTarget.value)}
+            ></textarea>
+            {diff.value && (
+              <section data-part="io">
+                <span>Your edit</span>
+                <pre>{diff.value}</pre>
+              </section>
+            )}
             <div>
-              <Button size="sm" ref={n => (ok = n)} onClick={() => leave(() => onApprove?.(args.value, always.value))}><CheckIcon />Approve</Button>
-              <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny?.())}>Deny</Button>
-              {alwaysAllow !== undefined && <Checkbox checked={always.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (always.value = e.currentTarget.checked)}>{alwaysAllow}</Checkbox>}
+              <Button
+                size="sm"
+                ref={(n) => (ok = n)}
+                onClick={() => leave(() => onApprove?.(args.value, always.value))}
+              >
+                <CheckIcon />
+                Approve
+              </Button>
+              <Button
+                emphasis="outline"
+                tone="neutral"
+                size="sm"
+                onClick={() => leave(() => onDeny?.())}
+              >
+                Deny
+              </Button>
+              {alwaysAllow !== undefined && (
+                <Checkbox
+                  checked={always.value}
+                  onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+                    (always.value = e.currentTarget.checked)
+                  }
+                >
+                  {alwaysAllow}
+                </Checkbox>
+              )}
             </div>
           </div>
         )}

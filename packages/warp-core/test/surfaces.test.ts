@@ -1,5 +1,31 @@
 // The logic under DataGrid, the palette, mentions, code and the editors.
-import { aggregate, fuzzy, matchStrength, groupRows, indented, jsonProblem, marked, markdownToHtml, mentionToken, moved, pageList, parseMentions, parseTSV, findTrigger, pivotTable, rankCommands, safeUrl, sanitizeHtml, serializeMentions, shiftMarks, toCSV, tokenize, toTSV, treeRows, hideRule } from '../src'
+import {
+  aggregate,
+  fuzzy,
+  matchStrength,
+  groupRows,
+  indented,
+  jsonProblem,
+  marked,
+  markdownToHtml,
+  mentionToken,
+  moved,
+  pageList,
+  parseMentions,
+  parseTSV,
+  findTrigger,
+  pivotTable,
+  rankCommands,
+  safeUrl,
+  sanitizeHtml,
+  serializeMentions,
+  shiftMarks,
+  toCSV,
+  tokenize,
+  toTSV,
+  treeRows,
+  hideRule,
+} from '../src'
 
 describe('pageList', () => {
   test('keeps the ends and the neighbours', () => {
@@ -10,7 +36,17 @@ describe('pageList', () => {
 
 describe('table text', () => {
   test('TSV round-trips, and a own breaks stay in the cell', () => {
-    expect(parseTSV(toTSV([['a', 'b'], ['c', 'd']]))).toEqual([['a', 'b'], ['c', 'd']])
+    expect(
+      parseTSV(
+        toTSV([
+          ['a', 'b'],
+          ['c', 'd'],
+        ]),
+      ),
+    ).toEqual([
+      ['a', 'b'],
+      ['c', 'd'],
+    ])
     expect(parseTSV(toTSV([['a\tb', 'c\nd']]))).toEqual([['a b', 'c d']])
   })
   test('CSV defuses formulas', () => {
@@ -37,19 +73,25 @@ test('hideRule scopes to one table', () => {
 })
 
 describe('palette ranking', () => {
-  const items = [{ label: 'New project', group: 'Create' }, { label: 'Open settings', group: 'Go', keywords: ['preferences'] }]
+  const items = [
+    { label: 'New project', group: 'Create' },
+    { label: 'Open settings', group: 'Go', keywords: ['preferences'] },
+  ]
   test('letters in order; word starts win', () => {
     expect(fuzzy('np', 'New project')!.hits).toEqual([0, 4])
     expect(fuzzy('zz', 'New project')).toBeNull()
     expect(fuzzy('n', 'New')!.score).toBeGreaterThan(fuzzy('e', 'New')!.score)
   })
   test('groups in order, keywords answer', () => {
-    expect(rankCommands(items, '').map(g => g.name)).toEqual(['Create', 'Go'])
+    expect(rankCommands(items, '').map((g) => g.name)).toEqual(['Create', 'Go'])
     expect(rankCommands(items, 'prefer')[0]!.rows[0]!.item.label).toBe('Open settings')
   })
   test('a match at a word start or as written beats scattered letters, which show only when nothing better does', () => {
-    const regions = ['eu-west', 'us-east', 'ap-south', 'us-west', 'eu-north'].map(label => ({ label }))
-    const labels = (q: string) => rankCommands(regions, q).flatMap(g => g.rows.map(r => r.item.label))
+    const regions = ['eu-west', 'us-east', 'ap-south', 'us-west', 'eu-north'].map((label) => ({
+      label,
+    }))
+    const labels = (q: string) =>
+      rankCommands(regions, q).flatMap((g) => g.rows.map((r) => r.item.label))
     expect(labels('us')).toEqual(['us-east', 'us-west'])
     expect(labels('west')).toEqual(['eu-west', 'us-west'])
     expect(labels('uw')).toEqual(['us-west']) // initials
@@ -62,7 +104,11 @@ describe('palette ranking', () => {
     expect(matchStrength('set', 'Open settings')!.hits).toEqual([5, 6, 7])
   })
   test('marked alternates runs', () => {
-    expect(marked('abc', [1])).toEqual([{ text: 'a', hit: false }, { text: 'b', hit: true }, { text: 'c', hit: false }])
+    expect(marked('abc', [1])).toEqual([
+      { text: 'a', hit: false },
+      { text: 'b', hit: true },
+      { text: 'c', hit: false },
+    ])
   })
 })
 
@@ -95,12 +141,18 @@ describe('code', () => {
     expect(indented('  a', 3, 3, 2, true)).toMatchObject({ insert: 'a', start: 1 })
   })
   test('tokens: JSON keys stay plain', () => {
-    expect(tokenize('{"a": "b", "c": 1}', 'json').map(s => s.kind)).toEqual(['string', 'number'])
-    expect(tokenize('const a = 1 // x').map(s => s.kind)).toEqual(['keyword', 'number', 'comment'])
+    expect(tokenize('{"a": "b", "c": 1}', 'json').map((s) => s.kind)).toEqual(['string', 'number'])
+    expect(tokenize('const a = 1 // x').map((s) => s.kind)).toEqual([
+      'keyword',
+      'number',
+      'comment',
+    ])
   })
   test('a JSON problem names its line', () => {
     expect(jsonProblem('{"a":1}')).toBeNull()
-    expect(jsonProblem(`{\n"a": 1,\n"long enough for the engine to name a position": 2,\n"b":\n}`)!.line).toBe(5)
+    expect(
+      jsonProblem(`{\n"a": 1,\n"long enough for the engine to name a position": 2,\n"b":\n}`)!.line,
+    ).toBe(5)
     expect(jsonProblem('{"a":}')).toEqual({ line: 1, message: "Unexpected token '}'" })
   })
 })
@@ -119,10 +171,14 @@ describe('sanitizeHtml', () => {
     ['<p onclick="x()">x</p>', 'onclick'],
     ['<a href="vbscript:x">x</a>', 'vbscript'],
   ])('%s', (html, word) => {
-    expect(sanitizeHtml(html).toLowerCase()).not.toContain(word.toLowerCase() === 'script' ? '<script' : word.toLowerCase())
+    expect(sanitizeHtml(html).toLowerCase()).not.toContain(
+      word.toLowerCase() === 'script' ? '<script' : word.toLowerCase(),
+    )
   })
   test('keeps the allow-list', () => {
-    expect(sanitizeHtml('<p>a <strong>b</strong> <em>c</em></p>')).toBe('<p>a <strong>b</strong> <em>c</em></p>')
+    expect(sanitizeHtml('<p>a <strong>b</strong> <em>c</em></p>')).toBe(
+      '<p>a <strong>b</strong> <em>c</em></p>',
+    )
     expect(sanitizeHtml('<a href="https://x.dev">x</a>')).toContain('href="https://x.dev"')
   })
   test('keeps entities and mentions', () => {
@@ -131,13 +187,23 @@ describe('sanitizeHtml', () => {
   })
   test('safeUrl refuses protocol tricks', () => {
     // oxlint-disable-next-line no-script-url -- the sanitizer's own test: these are the inputs it must refuse
-    for (const u of ['javascript:x', 'JaVaScRiPt:x', ' javascript:x', '//evil.dev', '/\\evil.dev', '\\\\evil.dev']) expect(safeUrl(u), u).toBeFalsy()
-    for (const u of ['https://x.dev', 'mailto:a@x.dev', '/a', '#b']) expect(safeUrl(u), u).toBeTruthy()
+    for (const u of [
+      'javascript:x',
+      'JaVaScRiPt:x',
+      ' javascript:x',
+      '//evil.dev',
+      '/\\evil.dev',
+      '\\\\evil.dev',
+    ])
+      expect(safeUrl(u), u).toBeFalsy()
+    for (const u of ['https://x.dev', 'mailto:a@x.dev', '/a', '#b'])
+      expect(safeUrl(u), u).toBeTruthy()
   })
 })
 
 describe('markdownToHtml', () => {
-  test('a stray NUL marker in the source stays text', () => expect(markdownToHtml('a \u00007\u0000 b')).not.toContain('undefined'))
+  test('a stray NUL marker in the source stays text', () =>
+    expect(markdownToHtml('a \u00007\u0000 b')).not.toContain('undefined'))
   test('headings, lists, code, links', () => {
     const h = markdownToHtml('# A\n\n- b\n- c\n\n`d` **e** [f](https://x.dev)')
     expect(h).toContain('<li>b</li>')
@@ -156,19 +222,39 @@ describe('markdownToHtml', () => {
 
 describe('tree and group rows', () => {
   type Tree = { id: string; t: string; kids?: Tree[] }
-  const rows: Tree[] = [{ id: 'a', t: 'x', kids: [{ id: 'b', t: 'x' }] }, { id: 'c', t: 'y' }]
+  const rows: Tree[] = [
+    { id: 'a', t: 'x', kids: [{ id: 'b', t: 'x' }] },
+    { id: 'c', t: 'y' },
+  ]
   test('a closed branch hides its kids; a query opens the path to a hit', () => {
-    const src = { key: (r: Tree) => r.id, kids: (r: Tree) => r.kids, branch: (r: Tree) => !!r.kids, open: () => false }
-    expect(treeRows(rows, src).map(e => e.key)).toEqual(['a', 'c'])
+    const src = {
+      key: (r: Tree) => r.id,
+      kids: (r: Tree) => r.kids,
+      branch: (r: Tree) => !!r.kids,
+      open: () => false,
+    }
+    expect(treeRows(rows, src).map((e) => e.key)).toEqual(['a', 'c'])
     const open = treeRows(rows, { ...src, open: () => true })
-    expect(open.map(e => [e.key, e.level])).toEqual([['a', 1], ['b', 2], ['c', 1]])
+    expect(open.map((e) => [e.key, e.level])).toEqual([
+      ['a', 1],
+      ['b', 2],
+      ['c', 1],
+    ])
     expect(open[0]).toMatchObject({ branch: true, size: 2, pos: 1 })
   })
   test('groupRows keeps first-seen order', () => {
-    expect([...groupRows(rows, r => r.t).keys()]).toEqual(['x', 'y'])
+    expect([...groupRows(rows, (r) => r.t).keys()]).toEqual(['x', 'y'])
   })
   test('pivotTable totals both ways', () => {
-    const p = pivotTable([{ r: 'a', c: 'x', v: 2 }, { r: 'a', c: 'y', v: 3 }], o => o.r, o => o.c, o => o.v)
+    const p = pivotTable(
+      [
+        { r: 'a', c: 'x', v: 2 },
+        { r: 'a', c: 'y', v: 3 },
+      ],
+      (o) => o.r,
+      (o) => o.c,
+      (o) => o.v,
+    )
     expect(JSON.stringify(p)).toContain('5')
   })
 })

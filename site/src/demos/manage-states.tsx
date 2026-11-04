@@ -29,7 +29,7 @@ function Form({ status }: { status: Status }) {
 export default function Styleguide() {
   return (
     <>
-      {STATUSES.map(s => (
+      {STATUSES.map((s) => (
         <Card key={s} eyebrow="status" title={s}>
           <Form status={s} />
         </Card>

@@ -4,5 +4,9 @@ import { fileURLToPath } from 'node:url'
 
 export default function setup() {
   const script = fileURLToPath(new URL('../scripts/gen-corpus.mjs', import.meta.url))
-  execFileSync(process.execPath, [script, '40', fileURLToPath(new URL('./corpus-gen', import.meta.url))], { stdio: 'ignore' })
+  execFileSync(
+    process.execPath,
+    [script, '40', fileURLToPath(new URL('./corpus-gen', import.meta.url))],
+    { stdio: 'ignore' },
+  )
 }

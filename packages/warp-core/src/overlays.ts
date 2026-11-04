@@ -3,7 +3,8 @@
 // and the layer stack.
 import { justEscaped, place, pushLayer, type Align, type Side } from './layers'
 
-const focusable = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
+const focusable =
+  'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
 
 /** Options for a dialog. */
 export interface DialogOptions {
@@ -29,14 +30,28 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
     opener = doc.activeElement as HTMLElement | null
     const root = doc.documentElement
     // a classic scrollbar, read before the lock takes it: the page keeps its room (warp's html:has(dialog:modal) rule)
-    root.toggleAttribute('data-scrollbar', doc.defaultView!.innerWidth > root.clientWidth && root.scrollHeight > root.clientHeight)
+    root.toggleAttribute(
+      'data-scrollbar',
+      doc.defaultView!.innerWidth > root.clientWidth && root.scrollHeight > root.clientHeight,
+    )
     el.showModal?.() ?? el.setAttribute('open', '')
     if (opener && opener !== doc.body && opener.getBoundingClientRect) {
-      const a = opener.getBoundingClientRect(), r = el.getBoundingClientRect()
-      el.style.setProperty('--warp-origin', `${Math.round(a.left + a.width / 2 - r.left)}px ${Math.round(a.top + a.height / 2 - r.top)}px`)
+      const a = opener.getBoundingClientRect(),
+        r = el.getBoundingClientRect()
+      el.style.setProperty(
+        '--warp-origin',
+        `${Math.round(a.left + a.width / 2 - r.left)}px ${Math.round(a.top + a.height / 2 - r.top)}px`,
+      )
     }
-    remove = pushLayer({ el, modal: true, close: () => o.onClose(), escape: () => !!o.onEscape?.() })
-    const first = el.querySelector<HTMLElement>('[autofocus], [data-initial]') ?? el.querySelector<HTMLElement>('[data-part="title"]')
+    remove = pushLayer({
+      el,
+      modal: true,
+      close: () => o.onClose(),
+      escape: () => !!o.onEscape?.(),
+    })
+    const first =
+      el.querySelector<HTMLElement>('[autofocus], [data-initial]') ??
+      el.querySelector<HTMLElement>('[data-part="title"]')
     if (first && !first.matches(focusable)) first.tabIndex = -1
     first?.focus({ preventScroll: true })
   }
@@ -48,13 +63,17 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
     opener = null
   }
   // Escape: the layer stack already asked to close; the native cancel would close it a second way
-  const onCancel = (e: Event) => { e.preventDefault(); if (!justEscaped() && !o.onEscape?.()) o.onClose() }
+  const onCancel = (e: Event) => {
+    e.preventDefault()
+    if (!justEscaped() && !o.onEscape?.()) o.onClose()
+  }
   const onClick = (e: MouseEvent) => {
     if ((e.target as Element).closest?.('[data-close]')) return o.onClose()
     // a press on the backdrop targets the dialog itself, outside its box (keyboard clicks have detail 0: not a press)
     if (e.target !== el || e.detail === 0 || el.getAttribute('role') === 'alertdialog') return
     const r = el.getBoundingClientRect()
-    const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
+    const inside =
+      e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
     if (!inside) o.onClose()
   }
   el.addEventListener('cancel', onCancel)
@@ -94,17 +113,29 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
   let remove: (() => void) | undefined
   let restore = true
   const win = el.ownerDocument.defaultView!
-  const reposition = () => el.matches(':popover-open') && place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
+  const reposition = () =>
+    el.matches(':popover-open') && place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
   const show = () => {
     if (remove) return
     restore = true
     el.dataset.state = 'open'
     el.showPopover?.()
     place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
-    remove = pushLayer({ el, trigger: o.trigger, close: reason => { restore = reason === 'escape'; o.onClose() } })
-    const first = el.querySelector<HTMLElement>('[data-initial]') ?? el.querySelector<HTMLElement>(focusable)
+    remove = pushLayer({
+      el,
+      trigger: o.trigger,
+      close: (reason) => {
+        restore = reason === 'escape'
+        o.onClose()
+      },
+    })
+    const first =
+      el.querySelector<HTMLElement>('[data-initial]') ?? el.querySelector<HTMLElement>(focusable)
     if (first) first.focus({ preventScroll: true })
-    else { el.tabIndex = -1; el.focus({ preventScroll: true }) }
+    else {
+      el.tabIndex = -1
+      el.focus({ preventScroll: true })
+    }
     win.addEventListener('resize', reposition)
     win.addEventListener('scroll', reposition, true)
   }
@@ -125,7 +156,9 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
     restore = false
     o.onClose()
   }
-  const onClick = (e: MouseEvent) => { if ((e.target as Element).closest?.('[data-close-popover]')) o.onClose() }
+  const onClick = (e: MouseEvent) => {
+    if ((e.target as Element).closest?.('[data-close-popover]')) o.onClose()
+  }
   el.addEventListener('focusout', onFocusOut)
   el.addEventListener('click', onClick)
   if (o.open) show()
@@ -154,7 +187,10 @@ let current: (() => void) | null = null
  * onto the tip, a press hides it; touch long-press (500ms) shows it for 1.5s. One open at a time; Escape closes it
  * (a passive layer: presses pass through).
  */
-export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side | undefined; align?: Align | undefined }) {
+export function tooltip(
+  tip: HTMLElement,
+  opts: { trigger: HTMLElement; side?: Side | undefined; align?: Align | undefined },
+) {
   let o = opts
   let timer: ReturnType<typeof setTimeout> | undefined
   let remove: (() => void) | undefined
@@ -173,23 +209,68 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
     clearTimeout(timer)
     remove?.()
     remove = undefined
-    if (open()) { tip.hidePopover?.(); warmUntil = performance.now() + 300 }
+    if (open()) {
+      tip.hidePopover?.()
+      warmUntil = performance.now() + 300
+    }
     if (current === hide) current = null
   }
-  const later = (fn: () => void, ms: number) => { clearTimeout(timer); timer = setTimeout(fn, ms) }
+  const later = (fn: () => void, ms: number) => {
+    clearTimeout(timer)
+    timer = setTimeout(fn, ms)
+  }
   const t = () => o.trigger
   const on: [EventTarget, string, (e: never) => void][] = [
-    [t(), 'pointerenter', (e: PointerEvent) => { if (e.pointerType === 'mouse') later(show, performance.now() < warmUntil ? 0 : 500) }],
-    [t(), 'pointerleave', () => later(() => { if (!t().matches(':hover') && !tip.matches(':hover')) hide() }, 100)],
-    [tip, 'pointerleave', () => later(() => { if (!t().matches(':hover') && !tip.matches(':hover')) hide() }, 100)],
-    [t(), 'focusin', () => { if (t().matches(':focus-visible, :has(:focus-visible)')) show() }],
+    [
+      t(),
+      'pointerenter',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'mouse') later(show, performance.now() < warmUntil ? 0 : 500)
+      },
+    ],
+    [
+      t(),
+      'pointerleave',
+      () =>
+        later(() => {
+          if (!t().matches(':hover') && !tip.matches(':hover')) hide()
+        }, 100),
+    ],
+    [
+      tip,
+      'pointerleave',
+      () =>
+        later(() => {
+          if (!t().matches(':hover') && !tip.matches(':hover')) hide()
+        }, 100),
+    ],
+    [
+      t(),
+      'focusin',
+      () => {
+        if (t().matches(':focus-visible, :has(:focus-visible)')) show()
+      },
+    ],
     [t(), 'focusout', hide],
-    [t(), 'pointerdown', (e: PointerEvent) => {
-      hide()
-      if (e.pointerType !== 'touch') return
-      later(() => { show(); later(hide, 1500) }, 500)
-    }],
-    [t(), 'pointerup', (e: PointerEvent) => { if (e.pointerType === 'touch' && !open()) clearTimeout(timer) }],
+    [
+      t(),
+      'pointerdown',
+      (e: PointerEvent) => {
+        hide()
+        if (e.pointerType !== 'touch') return
+        later(() => {
+          show()
+          later(hide, 1500)
+        }, 500)
+      },
+    ],
+    [
+      t(),
+      'pointerup',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'touch' && !open()) clearTimeout(timer)
+      },
+    ],
     [t(), 'pointercancel', () => clearTimeout(timer)],
   ]
   for (const [target, type, fn] of on) target.addEventListener(type, fn as EventListener)

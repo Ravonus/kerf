@@ -59,7 +59,11 @@ export interface SiteConfig {
   image?: false | string | { url: string; width?: number; height?: number; alt?: string }
   /** The generated card's look, over what warp and the text plugin give it. */
   card?: CardTheme
-  twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
+  twitter?: {
+    card?: 'summary' | 'summary_large_image' | 'app' | 'player'
+    site?: string
+    creator?: string
+  }
   /** `false`: no stylesheet text in the page, just links. */
   inlineCss?: boolean
   /** `false`: one sheet per chunk, inline up to 48 KB, instead of a first-paint part of the build's one sheet. */
@@ -77,7 +81,11 @@ export interface WeftConfig {
   tasks?: Record<string, TaskDef>
   environments?: Record<string, { url?: string; [key: string]: unknown }>
   /** `include`: test files for the T-codes (default `**\/*.{test,spec}.*`). */
-  test?: { include?: readonly string[]; lanes?: readonly ('fast' | 'browser' | 'e2e')[]; gate?: { mutationBudgetSec?: number; maxMutants?: number } }
+  test?: {
+    include?: readonly string[]
+    lanes?: readonly ('fast' | 'browser' | 'e2e')[]
+    gate?: { mutationBudgetSec?: number; maxMutants?: number }
+  }
   /** Files `weft check` compiles. Default `['**\/*.{tsx,jsx}']`, minus node_modules, dist, .weft and `scope.forbid`. */
   check?: {
     include?: readonly string[]
@@ -107,14 +115,17 @@ export interface WeftConfig {
   rust?: {
     /** Let plain object unions through to a sidecar (R102). */
     unions?: 'allow'
-    services?: Record<string, {
-      /** The crate, from the app's root. */
-      crate?: string
-      /** Built and run elsewhere: no cargo here, and `WEFT_RUST_<NAME>_URL` says where it is. */
-      external?: boolean
-      /** `false`: a `native()` crate that can't build for WASM, and needs no fallback on this host (R104). */
-      wasm?: false
-    }>
+    services?: Record<
+      string,
+      {
+        /** The crate, from the app's root. */
+        crate?: string
+        /** Built and run elsewhere: no cargo here, and `WEFT_RUST_<NAME>_URL` says where it is. */
+        external?: boolean
+        /** `false`: a `native()` crate that can't build for WASM, and needs no fallback on this host (R104). */
+        wasm?: false
+      }
+    >
   }
   /**
    * Default `'lazy'`: code that needs no client ships none, and islands load when they're needed, with what happens
@@ -130,8 +141,25 @@ export interface WeftConfig {
     netlify?: { /** The site's name or id. */ site?: string }
     vercel?: { project?: string }
     cloudflare?: { /** The Worker's name. */ name?: string }
-    fly?: { app?: string; region?: string; memory?: string; /** A disk that lasts, at `/app/.data` unless `path` says otherwise. Billed. */ volume?: { name?: string; path?: string; sizeGb?: number } }
-    render?: { service?: string; plan?: string; region?: string; /** A paid plan's disk, at `/app/.data` unless `path` says otherwise. */ disk?: { path?: string; sizeGb?: number } }
+    fly?: {
+      app?: string
+      region?: string
+      memory?: string
+      /** A disk that lasts, at `/app/.data` unless `path` says otherwise. Billed. */ volume?: {
+        name?: string
+        path?: string
+        sizeGb?: number
+      }
+    }
+    render?: {
+      service?: string
+      plan?: string
+      region?: string
+      /** A paid plan's disk, at `/app/.data` unless `path` says otherwise. */ disk?: {
+        path?: string
+        sizeGb?: number
+      }
+    }
     /** A workflow that checks and deploys on push (`github`, the default), or none. */
     ci?: 'github' | false
     /** The branch the workflow deploys to production. `main` by default. */
@@ -140,19 +168,25 @@ export interface WeftConfig {
       /** Cloudflare proxying the domain in front of a server host. */
       proxy?: 'cloudflare'
       /** Where uploaded images go (checked; uploads aren't sent yet: E014). */
-      images?: { provider: 'cloudinary'; /** The cloud's name: the secret is `CLOUDINARY_URL` in the environment. */ cloud?: string }
+      images?: {
+        provider: 'cloudinary'
+        /** The cloud's name: the secret is `CLOUDINARY_URL` in the environment. */ cloud?: string
+      }
     }
   }
   /** Targets for a query's `live: { verify: 'staging' }`. */
   live?: {
-    targets?: Record<string, {
-      /** A running staging app. */
-      url?: string
-      /** The name of the env var that holds its database URL. */
-      db?: string
-      /** `false` is required: `verify` writes rows, and only to what you've said isn't production. */
-      production?: boolean
-    }>
+    targets?: Record<
+      string,
+      {
+        /** A running staging app. */
+        url?: string
+        /** The name of the env var that holds its database URL. */
+        db?: string
+        /** `false` is required: `verify` writes rows, and only to what you've said isn't production. */
+        production?: boolean
+      }
+    >
   }
   /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   trust?: 'enforce' | 'warn'

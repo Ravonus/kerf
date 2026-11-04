@@ -12,13 +12,23 @@ import { hydration } from '../src/hydrate'
 import * as Dom from './fixtures/react-props/Props.tsx'
 import * as Server from './fixtures/react-props/Props.tsx?weft-ssr'
 import * as Client from './fixtures/react-props/Props.tsx?weft-hydrate'
-import { Control, Defaults, Direct, Focused, InClosedDialog, Spread as SpreadEvents, Swapped } from './fixtures/react-props/Events.tsx'
+import {
+  Control,
+  Defaults,
+  Direct,
+  Focused,
+  InClosedDialog,
+  Spread as SpreadEvents,
+  Swapped,
+} from './fixtures/react-props/Events.tsx'
 
 type Name = keyof typeof Dom
 const table = (mod: object) => mod as Record<Name, (props: object) => unknown>
 
 const mount = () => document.body.appendChild(document.createElement('div'))
-afterEach(() => { document.body.textContent = '' })
+afterEach(() => {
+  document.body.textContent = ''
+})
 
 function client(name: Name) {
   const root = mount()
@@ -41,10 +51,11 @@ function hydrated(name: Name) {
 }
 
 const modes = { client, server, hydrated }
-const q = <T extends Element = HTMLInputElement>(root: Element, css: string) => root.querySelector(css) as unknown as T
+const q = <T extends Element = HTMLInputElement>(root: Element, css: string) =>
+  root.querySelector(css) as unknown as T
 
-describe.each(['Literal', 'Dynamic', 'Spread'] as const)('HTML, %s', name => {
-  describe.each(Object.keys(modes) as (keyof typeof modes)[])('%s', mode => {
+describe.each(['Literal', 'Dynamic', 'Spread'] as const)('HTML, %s', (name) => {
+  describe.each(Object.keys(modes) as (keyof typeof modes)[])('%s', (mode) => {
     const root = () => modes[mode](name)
 
     test('camelCase names reach their attributes', () => {
@@ -57,7 +68,10 @@ describe.each(['Literal', 'Dynamic', 'Spread'] as const)('HTML, %s', name => {
       const td = q(r, 'td')
       expect([td.getAttribute('colspan'), td.getAttribute('rowspan')]).toEqual(['2', '3'])
       const img = q(r, 'img')
-      expect([img.getAttribute('crossorigin'), img.getAttribute('srcset')]).toEqual(['anonymous', 'a.png 2x'])
+      expect([img.getAttribute('crossorigin'), img.getAttribute('srcset')]).toEqual([
+        'anonymous',
+        'a.png 2x',
+      ])
       expect(q(r, 'form').getAttribute('accept-charset')).toBe('utf-8')
       expect(q(r, 'meta').getAttribute('http-equiv')).toBe('refresh')
     })
@@ -67,7 +81,11 @@ describe.each(['Literal', 'Dynamic', 'Spread'] as const)('HTML, %s', name => {
       expect(q(r, '[data-kind=text]').getAttribute('spellcheck')).toBe('false')
       expect(q(r, '[data-kind=edit]').getAttribute('contenteditable')).toBe('false')
       const b = q(r, 'button')
-      expect(['aria-pressed', 'aria-label', 'data-n'].map(a => b.getAttribute(a))).toEqual(['false', 'hi', '2'])
+      expect(['aria-pressed', 'aria-label', 'data-n'].map((a) => b.getAttribute(a))).toEqual([
+        'false',
+        'hi',
+        '2',
+      ])
       // Deliberately not React's: a data flag is present or absent (docs/react-props.md).
       expect([b.getAttribute('data-active'), b.getAttribute('data-on')]).toEqual([null, ''])
     })
@@ -101,8 +119,8 @@ describe.each(['Literal', 'Dynamic', 'Spread'] as const)('HTML, %s', name => {
   })
 })
 
-describe.each(['SvgLiteral', 'SvgDynamic', 'SvgSpread'] as const)('SVG, %s', name => {
-  test.each(Object.keys(modes) as (keyof typeof modes)[])('%s', mode => {
+describe.each(['SvgLiteral', 'SvgDynamic', 'SvgSpread'] as const)('SVG, %s', (name) => {
+  test.each(Object.keys(modes) as (keyof typeof modes)[])('%s', (mode) => {
     const r = modes[mode](name)
     const svg = q(r, 'svg')
     const path = q(r, 'path')
@@ -110,7 +128,12 @@ describe.each(['SvgLiteral', 'SvgDynamic', 'SvgSpread'] as const)('SVG, %s', nam
     expect(path.getAttribute('stroke-linecap')).toBe('round')
     expect(path.getAttribute('fill-opacity')).toBe('0.5')
     expect(path.getAttribute('clip-path')).toBe('url(#c)')
-    expect(path.getAttributeNames().sort()).toEqual(['clip-path', 'fill-opacity', 'stroke-linecap', 'stroke-width'])
+    expect(path.getAttributeNames().sort()).toEqual([
+      'clip-path',
+      'fill-opacity',
+      'stroke-linecap',
+      'stroke-width',
+    ])
     expect(q(r, 'stop').getAttribute('stop-color')).toBe('red')
     expect(q(r, 'text').getAttribute('text-anchor')).toBe('middle')
     expect(q(r, 'use').getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('#a')
@@ -121,11 +144,14 @@ describe.each(['SvgLiteral', 'SvgDynamic', 'SvgSpread'] as const)('SVG, %s', nam
   })
 })
 
-describe.each([['written', Direct], ['spread', SpreadEvents]] as const)('events, %s', (_, Comp) => {
+describe.each([
+  ['written', Direct],
+  ['spread', SpreadEvents],
+] as const)('events, %s', (_, Comp) => {
   function setup() {
     const log: string[] = []
     const root = mount()
-    render(() => Comp({ log: w => log.push(w) }), root)
+    render(() => Comp({ log: (w) => log.push(w) }), root)
     return { root, log, take: () => log.splice(0) }
   }
 
@@ -133,7 +159,7 @@ describe.each([['written', Direct], ['spread', SpreadEvents]] as const)('events,
     const { root, take } = setup()
     const input = q(root, '[data-t=text]')
     await userEvent.type(input, 'ab')
-    expect(take().filter(w => w !== 'input')).toEqual(['change:a', 'change:ab'])
+    expect(take().filter((w) => w !== 'input')).toEqual(['change:a', 'change:ab'])
     await userEvent.tab()
     expect(take()).toEqual([])
   })
@@ -182,7 +208,7 @@ describe.each([['written', Direct], ['spread', SpreadEvents]] as const)('events,
 test('a spread onChange that changes replaces the old handler', async () => {
   const log: string[] = []
   const root = mount()
-  render(() => Swapped({ log: w => log.push(w) }), root)
+  render(() => Swapped({ log: (w) => log.push(w) }), root)
   fireEvent.input(q(root, 'input'))
   q(root, 'button').click()
   await flush()
@@ -193,7 +219,8 @@ test('a spread onChange that changes replaces the old handler', async () => {
 test('defaultValue never overwrites what the user typed', async () => {
   const root = mount()
   render(() => Defaults(), root)
-  for (const t of ['dflt', 'area', 'spread']) fireEvent.input(q(root, `[data-t=${t}]`), { target: { value: 'typed' } })
+  for (const t of ['dflt', 'area', 'spread'])
+    fireEvent.input(q(root, `[data-t=${t}]`), { target: { value: 'typed' } })
   q(root, 'button').click()
   await flush()
   for (const t of ['dflt', 'area', 'spread']) expect(q(root, `[data-t=${t}]`).value).toBe('typed')
@@ -208,7 +235,7 @@ describe('autoFocus focuses on mount, as React does', () => {
     focus.mockRestore()
   })
 
-  test.each([[false], [true]])('spread: %s', async spread => {
+  test.each([[false], [true]])('spread: %s', async (spread) => {
     const root = mount()
     render(() => Focused({ show: () => true, spread }), root)
     await flush()
@@ -220,7 +247,7 @@ describe('negative control', () => {
   test('names outside the tables, kebab-case and undefined values are left alone', () => {
     const log: string[] = []
     const root = mount()
-    render(() => Control({ log: w => log.push(w) }), root)
+    render(() => Control({ log: (w) => log.push(w) }), root)
     // case-sensitive SVG attributes survive; a mixed-case unknown is what the HTML parser makes of it, not a table's
     expect(q(root, 'svg').getAttribute('viewBox')).toBe('0 0 1 1')
     expect(q(root, 'svg').getAttribute('foobar')).toBe('1')
@@ -243,15 +270,27 @@ describe('negative control', () => {
 })
 
 describe('the runtime table agrees with the compiler table', () => {
-  const rust = readFileSync(join(import.meta.dirname, '../../../crates/weft-compiler/src/react.rs'), 'utf8')
-  const list = (name: string) => [...new RegExp(`const ${name}: &\\[&str\\] = &\\[([^\\]]*)\\]`).exec(rust)![1]!.matchAll(/"(\w+)"/g)].map(m => m[1]!)
+  const rust = readFileSync(
+    join(import.meta.dirname, '../../../crates/weft-compiler/src/react.rs'),
+    'utf8',
+  )
+  const list = (name: string) =>
+    [
+      ...new RegExp(`const ${name}: &\\[&str\\] = &\\[([^\\]]*)\\]`)
+        .exec(rust)![1]!
+        .matchAll(/"(\w+)"/g),
+    ].map((m) => m[1]!)
 
   test('dashed names', () => {
     const dashed = list('DASHED')
     expect(dashed.length).toBeGreaterThan(70)
     // No browser reads these, so only the compiler spells them: a spread keeps them as written.
-    const unread = /^(?:accentHeight|arabicForm|capHeight|colorProfile|enableBackground|glyph|horiz|overline|panose1|renderingIntent|strikethrough|underline|unicodeRange|unitsPerEm|vAlphabetic|vHanging|vIdeographic|vMathematical|vert|xHeight)/
-    for (const k of dashed) expect(attrName(k)).toBe(unread.test(k) ? k : k.replace(/[A-Z]/g, c => '-' + c.toLowerCase()))
+    const unread =
+      /^(?:accentHeight|arabicForm|capHeight|colorProfile|enableBackground|glyph|horiz|overline|panose1|renderingIntent|strikethrough|underline|unicodeRange|unitsPerEm|vAlphabetic|vHanging|vIdeographic|vMathematical|vert|xHeight)/
+    for (const k of dashed)
+      expect(attrName(k)).toBe(
+        unread.test(k) ? k : k.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()),
+      )
   })
 
   test('lowered names stay valid on HTML: the element lowercases them itself', () => {
@@ -263,7 +302,18 @@ describe('the runtime table agrees with the compiler table', () => {
   })
 
   test('case-sensitive SVG attributes are not dashed', () => {
-    for (const k of ['viewBox', 'clipPathUnits', 'gradientUnits', 'markerHeight', 'markerUnits', 'markerWidth', 'textLength', 'preserveAspectRatio', 'stdDeviation', 'vAlign'])
+    for (const k of [
+      'viewBox',
+      'clipPathUnits',
+      'gradientUnits',
+      'markerHeight',
+      'markerUnits',
+      'markerWidth',
+      'textLength',
+      'preserveAspectRatio',
+      'stdDeviation',
+      'vAlign',
+    ])
       expect(attrName(k)).toBe(k)
   })
 })

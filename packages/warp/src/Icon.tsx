@@ -5,4 +5,11 @@ import { AlertIcon, AlertCircleIcon, CheckCircleIcon, InfoIcon } from '@weft-js/
 /** `<svg data-icon aria-hidden focusable=false>`: decorative, never named (03 §7); `label` names it. */
 export { Icon, type IconName, type IconRef } from '@weft-js/warp-icons/icon'
 
-export const toneIcon = { info: InfoIcon, neutral: InfoIcon, accent: InfoIcon, positive: CheckCircleIcon, caution: AlertIcon, critical: AlertCircleIcon } as const
+export const toneIcon = {
+  info: InfoIcon,
+  neutral: InfoIcon,
+  accent: InfoIcon,
+  positive: CheckCircleIcon,
+  caution: AlertIcon,
+  critical: AlertCircleIcon,
+} as const

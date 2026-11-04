@@ -19,9 +19,9 @@ export function slotBus(plugin: string, load: () => Promise<Bus>): Bus {
   const get = () => (bus ??= load())
   return {
     name: plugin.replace(/^.*realtime-/, ''),
-    publish: (channel, message) => get().then(b => b.publish(channel, message)),
-    subscribe: (channel, on, gap) => get().then(b => b.subscribe(channel, on, gap)),
-    close: () => (bus ? bus.then(b => b.close?.()) : Promise.resolve()),
+    publish: (channel, message) => get().then((b) => b.publish(channel, message)),
+    subscribe: (channel, on, gap) => get().then((b) => b.subscribe(channel, on, gap)),
+    close: () => (bus ? bus.then((b) => b.close?.()) : Promise.resolve()),
   }
 }
 
@@ -32,7 +32,10 @@ export function memoryBus(): Bus {
     name: 'memory',
     publish(channel, message) {
       const list = channels.get(channel)
-      if (list) queueMicrotask(() => { for (const on of list) on(message) })
+      if (list)
+        queueMicrotask(() => {
+          for (const on of list) on(message)
+        })
       return Promise.resolve()
     },
     subscribe(channel, on) {

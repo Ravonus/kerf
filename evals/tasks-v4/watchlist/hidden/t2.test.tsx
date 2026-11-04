@@ -3,13 +3,13 @@ import { screen } from '@testing-library/dom'
 import { cost, count, fakeApi, field, money, seed, start, symbols } from './helpers'
 
 const stocks = seed()
-const sym = (...ids: number[]) => ids.map(i => stocks[i].symbol)
+const sym = (...ids: number[]) => ids.map((i) => stocks[i].symbol)
 const box = () => screen.getByLabelText('Search') as HTMLInputElement
 
 test('typing searches and shows only the results', async () => {
   const { fake, user } = await start()
   await user.type(box(), 'acm')
-  expect(fake.searches.map(s => s.query)).toEqual(['a', 'ac', 'acm'])
+  expect(fake.searches.map((s) => s.query)).toEqual(['a', 'ac', 'acm'])
   await fake.searches[2].resolve(['s0', 's10', 's20'])
   expect(symbols()).toEqual(sym(0, 10, 20))
   expect(count()).toBe('3 stocks')
@@ -89,7 +89,7 @@ test('budget: a result that only removes rows does not format the rows that stay
   const many = seed(200)
   const { fake, user } = await start(fakeApi(many))
   await user.type(box(), 'x')
-  const keep = many.filter((_, i) => i % 10 === 0).map(s => s.id)
+  const keep = many.filter((_, i) => i % 10 === 0).map((s) => s.id)
   const narrowed = await cost(() => fake.searches[0].resolve(keep))
   expect(symbols()).toHaveLength(20)
   expect(narrowed.calls).toBeLessThanOrEqual(2)

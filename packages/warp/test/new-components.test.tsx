@@ -2,12 +2,22 @@
 import { flush, render } from '@weft-js/core/test'
 import * as F from './fixtures/NewParts'
 
-const tick = () => new Promise(r => { setTimeout(r) })
-const key = (el: Element, k: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+const tick = () =>
+  new Promise((r) => {
+    setTimeout(r)
+  })
+const key = (el: Element, k: string) =>
+  el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
 
 describe('Accordion', () => {
-  const items = [{ value: 'a', title: 'One', content: 'first' }, { value: 'b', title: 'Two', content: 'second' }, { value: 'c', title: 'Three', content: 'third', disabled: true }]
-  const heads = (c: Element) => [...c.querySelectorAll<HTMLButtonElement>('[role="heading"] button')]
+  const items = [
+    { value: 'a', title: 'One', content: 'first' },
+    { value: 'b', title: 'Two', content: 'second' },
+    { value: 'c', title: 'Three', content: 'third', disabled: true },
+  ]
+  const heads = (c: Element) => [
+    ...c.querySelectorAll<HTMLButtonElement>('[role="heading"] button'),
+  ]
 
   test('headings carry the level, and each button names its panel', async () => {
     const { container: c } = render(() => <F.Acc items={items} level={4} defaultOpen={['a']} />)
@@ -21,7 +31,9 @@ describe('Accordion', () => {
 
   test('one open at a time unless multiple', async () => {
     const seen: string[][] = []
-    const { container: c } = render(() => <F.Acc items={items} defaultOpen={['a']} onChange={o => seen.push(o)} />)
+    const { container: c } = render(() => (
+      <F.Acc items={items} defaultOpen={['a']} onChange={(o) => seen.push(o)} />
+    ))
     await tick()
     heads(c)[1]!.click()
     await flush()
@@ -31,7 +43,11 @@ describe('Accordion', () => {
     await tick()
     heads(m)[1]!.click()
     await flush()
-    expect(heads(m).slice(0, 2).map(h => h.getAttribute('aria-expanded'))).toEqual(['true', 'true'])
+    expect(
+      heads(m)
+        .slice(0, 2)
+        .map((h) => h.getAttribute('aria-expanded')),
+    ).toEqual(['true', 'true'])
   })
 
   test('arrows and Home/End move between headers', async () => {
@@ -54,7 +70,9 @@ describe('Slider', () => {
     await tick()
     const thumb = c.querySelector<HTMLElement>('[role="slider"]')!
     expect(thumb.getAttribute('aria-valuenow')).toBe('40')
-    expect(c.querySelector(`[id="${thumb.getAttribute('aria-labelledby')}"]`)!.textContent).toBe('Volume')
+    expect(c.querySelector(`[id="${thumb.getAttribute('aria-labelledby')}"]`)!.textContent).toBe(
+      'Volume',
+    )
     key(thumb, 'ArrowRight')
     await flush()
     expect(v.value).toBe(41)
@@ -125,11 +143,15 @@ test('Menu: a menu button names its panel; closed, it is not expanded', async ()
   await tick()
   const button = c.querySelector('[aria-haspopup="menu"]')!
   expect(button.getAttribute('aria-expanded')).toBe('false')
-  const panel = document.getElementById(button.getAttribute('aria-controls')!) ?? c.querySelector('[role="menu"]')!
+  const panel =
+    document.getElementById(button.getAttribute('aria-controls')!) ??
+    c.querySelector('[role="menu"]')!
   expect(panel.getAttribute('role')).toBe('menu')
   expect(panel.querySelectorAll('[role="menuitem"]')).toHaveLength(3)
   expect(panel.querySelector('[role="separator"]')).not.toBeNull()
-  expect(panel.querySelector('[role="menuitem"][aria-disabled="true"]')!.textContent).toContain('Gone')
+  expect(panel.querySelector('[role="menuitem"][aria-disabled="true"]')!.textContent).toContain(
+    'Gone',
+  )
 })
 
 describe('Select', () => {
@@ -153,9 +175,17 @@ test('toast.promise: one toast through its life', async () => {
   await tick()
   document.body.append(c)
   let finish!: (v: string) => void
-  const p = F.toast.promise(new Promise<string>(r => { finish = r }), { pending: 'Deploying', done: v => `Deployed ${v}`, error: 'Failed' })
+  const p = F.toast.promise(
+    new Promise<string>((r) => {
+      finish = r
+    }),
+    { pending: 'Deploying', done: (v) => `Deployed ${v}`, error: 'Failed' },
+  )
   await flush()
-  const items = () => [...document.querySelectorAll('[data-scope="toast"]:not([data-part="region"])')].filter(n => n.textContent.includes('Deploy'))
+  const items = () =>
+    [...document.querySelectorAll('[data-scope="toast"]:not([data-part="region"])')].filter((n) =>
+      n.textContent.includes('Deploy'),
+    )
   expect(items()).toHaveLength(1)
   expect(items()[0]!.textContent).toContain('Deploying')
   finish('v2')

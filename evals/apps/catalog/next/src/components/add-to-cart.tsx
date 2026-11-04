@@ -18,7 +18,10 @@ export function AddToCart({ productId, soldOut }: { productId: number; soldOut: 
     start(async () => {
       try {
         const { count, added } = await addToCart(productId)
-        start(() => { setNote(added ? 'added' : 'gone'); if (count !== null) setLatest(count) })
+        start(() => {
+          setNote(added ? 'added' : 'gone')
+          if (count !== null) setLatest(count)
+        })
       } catch {
         setNote('failed')
       }
@@ -28,12 +31,27 @@ export function AddToCart({ productId, soldOut }: { productId: number; soldOut: 
   return (
     <form action={addToCartFromForm} onSubmit={submit} className="flex flex-col gap-1">
       <input type="hidden" name="productId" value={productId} />
-      <button type="submit" disabled={soldOut} aria-disabled={adding} className="h-12 w-full cursor-pointer rounded-full bg-accent px-6 font-semibold text-on-accent hover:bg-accent-strong disabled:cursor-default disabled:opacity-50 aria-disabled:opacity-70">
+      <button
+        type="submit"
+        disabled={soldOut}
+        aria-disabled={adding}
+        className="h-12 w-full cursor-pointer rounded-full bg-accent px-6 font-semibold text-on-accent hover:bg-accent-strong disabled:cursor-default disabled:opacity-50 aria-disabled:opacity-70"
+      >
         Add to cart
       </button>
-      {note === 'gone' && <p role="alert" className="text-sm font-medium text-danger">That one just sold out.</p>}
-      {note === 'failed' && <p role="alert" className="text-sm font-medium text-danger">That wasn't added. Please try again.</p>}
-      <p role="status" className="text-sm font-medium text-success">{note === 'added' ? 'In your cart.' : ''}</p>
+      {note === 'gone' && (
+        <p role="alert" className="text-sm font-medium text-danger">
+          That one just sold out.
+        </p>
+      )}
+      {note === 'failed' && (
+        <p role="alert" className="text-sm font-medium text-danger">
+          That wasn't added. Please try again.
+        </p>
+      )}
+      <p role="status" className="text-sm font-medium text-success">
+        {note === 'added' ? 'In your cart.' : ''}
+      </p>
     </form>
   )
 }

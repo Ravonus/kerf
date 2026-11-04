@@ -13,7 +13,9 @@ export default function Cart() {
   return (
     <div className="mx-auto flex max-w-290 flex-col gap-5 px-8 py-12">
       <h1 className="text-3xl font-semibold tracking-tight">Your cart</h1>
-      <Suspense fallback={<div aria-hidden="true" className="h-40 animate-pulse rounded-2xl bg-tint" />}>
+      <Suspense
+        fallback={<div aria-hidden="true" className="h-40 animate-pulse rounded-2xl bg-tint" />}
+      >
         <Lines />
       </Suspense>
     </div>

@@ -7,14 +7,43 @@ import type { SchemaIssue } from '@weft-js/start/data'
 import { decodeCursor, encodeCursor, listInput, type ListParams } from '@weft-js/start/list'
 import { drizzleSource } from '@weft-js/start/list/drizzle'
 
-const input = listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 10, max: 50 } })
-const parse = (v: unknown) => input['~standard'].validate(v) as { value?: ListParams; issues?: readonly SchemaIssue[] }
-const bad = (v: unknown) => parse(v).issues?.map(i => i.message)
+const input = listInput({
+  sort: ['rank', 'title'],
+  filter: ['status'],
+  search: ['title'],
+  pageSize: { default: 10, max: 50 },
+})
+const parse = (v: unknown) =>
+  input['~standard'].validate(v) as { value?: ListParams; issues?: readonly SchemaIssue[] }
+const bad = (v: unknown) => parse(v).issues?.map((i) => i.message)
 
 test('a request becomes params', () => {
-  expect(parse(undefined).value).toMatchObject({ mode: 'page', limit: 10, offset: 0, after: null, sort: null })
-  expect(parse({ page: 3, pageSize: 20, sort: { field: 'rank', dir: 'desc' }, filter: { status: ['open', null] }, search: 'x' }).value).toMatchObject({ limit: 20, offset: 40, sort: { field: 'rank', dir: 'desc' }, filter: { status: ['open', null] }, search: 'x' })
-  expect(parse({ cursor: encodeCursor(3, 'a') }).value).toMatchObject({ mode: 'cursor', after: [3, 'a'] })
+  expect(parse(undefined).value).toMatchObject({
+    mode: 'page',
+    limit: 10,
+    offset: 0,
+    after: null,
+    sort: null,
+  })
+  expect(
+    parse({
+      page: 3,
+      pageSize: 20,
+      sort: { field: 'rank', dir: 'desc' },
+      filter: { status: ['open', null] },
+      search: 'x',
+    }).value,
+  ).toMatchObject({
+    limit: 20,
+    offset: 40,
+    sort: { field: 'rank', dir: 'desc' },
+    filter: { status: ['open', null] },
+    search: 'x',
+  })
+  expect(parse({ cursor: encodeCursor(3, 'a') }).value).toMatchObject({
+    mode: 'cursor',
+    after: [3, 'a'],
+  })
 })
 
 test('names outside the allowlist, and shapes outside scalars, are refused', () => {
@@ -36,29 +65,54 @@ test('a date survives a cursor, as a date', () => {
   expect(decodeCursor(encodeCursor(at, 'é'))).toEqual([at, 'é'])
 })
 
-const tasks = sqliteTable('tasks', { id: text('id').primaryKey(), title: text('title'), status: text('status'), rank_no: integer('rank_no'), secret: text('secret') })
+const tasks = sqliteTable('tasks', {
+  id: text('id').primaryKey(),
+  title: text('title'),
+  status: text('status'),
+  rank_no: integer('rank_no'),
+  secret: text('secret'),
+})
 
 function database() {
   const raw = new DatabaseSync(':memory:')
-  raw.exec('create table tasks (id text primary key, title text, status text, rank_no integer, secret text)')
+  raw.exec(
+    'create table tasks (id text primary key, title text, status text, rank_no integer, secret text)',
+  )
   const add = raw.prepare('insert into tasks values (?, ?, ?, ?, ?)')
   for (const r of LIST_ROWS) add.run(r.id, r.title, r.status, r.rank, r.secret)
   return drizzle((statement, params, method) => {
     const s = raw.prepare(statement)
     s.setReturnArrays(true)
-    if (method === 'run' && !/returning/i.test(statement)) return (s.run(...(params)), Promise.resolve({ rows: [] }))
-    const rows = s.all(...(params)) as unknown as unknown[][]
-    return Promise.resolve({ rows: method === 'get' ? rows[0] ?? [] : rows })
+    if (method === 'run' && !/returning/i.test(statement))
+      return (s.run(...params), Promise.resolve({ rows: [] }))
+    const rows = s.all(...params) as unknown as unknown[][]
+    return Promise.resolve({ rows: method === 'get' ? (rows[0] ?? []) : rows })
   })
 }
 
 test('drizzleSource passes db.adapter@1', async () => {
-  const checks = await listSuite({ make: () => drizzleSource({ db: database(), table: tasks }, { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] }), decode: decodeCursor })
-  expect(checks.filter(c => !c.ok)).toEqual([])
+  const checks = await listSuite({
+    make: () =>
+      drizzleSource(
+        { db: database(), table: tasks },
+        {
+          columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' },
+          search: ['title'],
+        },
+      ),
+    decode: decodeCursor,
+  })
+  expect(checks.filter((c) => !c.ok)).toEqual([])
   expect(checks.length).toBeGreaterThan(20)
 })
 
 test('an update with nothing to write reads the row: Drizzle refuses an empty `set`', async () => {
-  const source = drizzleSource({ db: database(), table: tasks }, { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] })
-  expect(await source.update(LIST_ROWS[0]!.id, {})).toMatchObject({ id: LIST_ROWS[0]!.id, title: LIST_ROWS[0]!.title })
+  const source = drizzleSource(
+    { db: database(), table: tasks },
+    { columns: { id: 'id', title: 'title', status: 'status', rank: 'rank_no' }, search: ['title'] },
+  )
+  expect(await source.update(LIST_ROWS[0]!.id, {})).toMatchObject({
+    id: LIST_ROWS[0]!.id,
+    title: LIST_ROWS[0]!.title,
+  })
 })

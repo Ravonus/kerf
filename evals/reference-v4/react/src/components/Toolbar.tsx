@@ -4,15 +4,22 @@ export function Toolbar({ view, onView }: { view: View; onView: (patch: Partial<
   return (
     <div>
       <label>
-        Search <input value={view.query} onChange={e => onView({ query: e.target.value })} />
+        Search <input value={view.query} onChange={(e) => onView({ query: e.target.value })} />
       </label>
       <label>
-        <input type="checkbox" checked={view.favoritesOnly} onChange={e => onView({ favoritesOnly: e.target.checked })} />
+        <input
+          type="checkbox"
+          checked={view.favoritesOnly}
+          onChange={(e) => onView({ favoritesOnly: e.target.checked })}
+        />
         Favorites only
       </label>
       <label>
         Sort{' '}
-        <select value={view.sort} onChange={e => onView({ sort: e.target.value as View['sort'] })}>
+        <select
+          value={view.sort}
+          onChange={(e) => onView({ sort: e.target.value as View['sort'] })}
+        >
           <option value="symbol">Symbol</option>
           <option value="change">Change</option>
         </select>

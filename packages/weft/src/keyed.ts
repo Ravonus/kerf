@@ -5,7 +5,10 @@ import { OWNKEYS } from './flags'
 import { Box, DIRTY, listener, NONE, plain, reach, read, setKeyed, state } from './index'
 import { linked } from './linked'
 
-const own = (x: unknown) => Reflect.ownKeys(x as object).flatMap((k): PropertyKey | PropertyKey[] => (typeof k === 'string' ? [k, +k] : k))
+const own = (x: unknown) =>
+  Reflect.ownKeys(x as object).flatMap((k): PropertyKey | PropertyKey[] =>
+    typeof k === 'string' ? [k, +k] : k,
+  )
 
 type Entries = Record<PropertyKey, unknown> | null | undefined
 
@@ -30,7 +33,11 @@ Box.prototype.get = function (key) {
 // those are compared instead of every reader's, unless the objects have been far larger than the readers.
 setKeyed((box, prev, v) => {
   const k = box.k!
-  const many = OWNKEYS && k.size > 8 && (box.c ?? 0) < k.size * 8 && plain(prev) && plain(v) && [...own(prev), ...own(v)]
+  const many = OWNKEYS &&
+    k.size > 8 &&
+    (box.c ?? 0) < k.size * 8 &&
+    plain(prev) &&
+    plain(v) && [...own(prev), ...own(v)]
   if (many) box.c = many.length
   for (const key of many || (k.keys() as Iterable<PropertyKey>)) {
     const s = k.get(key)

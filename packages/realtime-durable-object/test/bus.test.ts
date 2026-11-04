@@ -25,11 +25,16 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
   let mf: Miniflare
   beforeAll(async () => {
     const script = (await transformWithOxc(source, 'durable-object.ts')).code + hub
-    mf = new Miniflare({ modules: true, script, compatibilityDate: '2026-06-01', durableObjects: { WEFT_BUS: 'WeftBusObject', HUB: 'Hub' } })
+    mf = new Miniflare({
+      modules: true,
+      script,
+      compatibilityDate: '2026-06-01',
+      durableObjects: { WEFT_BUS: 'WeftBusObject', HUB: 'Hub' },
+    })
     await mf.ready
   }, 60_000)
   afterAll(() => mf.dispose())
-  const hit = (path: string) => mf.dispatchFetch(`http://x${path}`).then(r => r.text())
+  const hit = (path: string) => mf.dispatchFetch(`http://x${path}`).then((r) => r.text())
 
   test('a message crosses from one hub to another through the object', async () => {
     await hit('/sub?h=a&c=room')
@@ -39,7 +44,9 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
     let got: string[] = []
     for (let i = 0; i < 100 && got.length < 1; i++) {
       got = JSON.parse(await hit('/state?h=b')).got
-      await new Promise(ok => { setTimeout(ok, 20) })
+      await new Promise((ok) => {
+        setTimeout(ok, 20)
+      })
     }
     expect(got).toEqual(['hello'])
     expect(JSON.parse(await hit('/state?h=a')).got).toEqual(['hello'])
@@ -51,20 +58,37 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
     const sockets: { close: ReturnType<typeof vi.fn>; on: Record<string, Listener> }[] = []
     const socket = () => {
       const on: Record<string, Listener> = {}
-      const ws = { accept() {}, send() {}, close: vi.fn(), addEventListener: (t: string, f: Listener) => { on[t] = f }, on }
+      const ws = {
+        accept() {},
+        send() {},
+        close: vi.fn(),
+        addEventListener: (t: string, f: Listener) => {
+          on[t] = f
+        },
+        on,
+      }
       sockets.push(ws)
       return ws
     }
     let down = false
-    const namespace = { idFromName: (n: string) => n, get: () => ({ fetch: (_: string, init?: RequestInit) => {
-      if (init?.method === 'POST') return Promise.resolve(new Response(null, { status: 204 }))
-      if (down) return Promise.reject(new Error('object restarting'))
-      return Promise.resolve(Object.assign(new Response(null), { webSocket: socket() }))
-    } }) }
+    const namespace = {
+      idFromName: (n: string) => n,
+      get: () => ({
+        fetch: (_: string, init?: RequestInit) => {
+          if (init?.method === 'POST') return Promise.resolve(new Response(null, { status: 204 }))
+          if (down) return Promise.reject(new Error('object restarting'))
+          return Promise.resolve(Object.assign(new Response(null), { webSocket: socket() }))
+        },
+      }),
+    }
     const bus = durableObjectBus({ namespace })
     const got: string[] = []
     let gaps = 0
-    await bus.subscribe('c', m => got.push(m), () => gaps++)
+    await bus.subscribe(
+      'c',
+      (m) => got.push(m),
+      () => gaps++,
+    )
     sockets[0]!.on.message!({ data: 'one' })
     down = true
     sockets[0]!.on.close!({})
@@ -82,7 +106,10 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
   })
 
   test('a refused publish is an error the hub can see', async () => {
-    const namespace = { idFromName: (n: string) => n, get: () => ({ fetch: () => Promise.resolve(new Response(null, { status: 500 })) }) }
+    const namespace = {
+      idFromName: (n: string) => n,
+      get: () => ({ fetch: () => Promise.resolve(new Response(null, { status: 500 })) }),
+    }
     await expect(durableObjectBus({ namespace }).publish('c', 'm')).rejects.toThrow('500')
   })
 })

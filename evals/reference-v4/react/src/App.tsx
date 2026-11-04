@@ -16,7 +16,7 @@ export const TABS: Tab[] = ['All', 'tech', 'energy', 'health', 'finance']
 const VIEW_KEY = 'watchlist:view'
 const blank: View = { query: '', favoritesOnly: false, sort: 'symbol' }
 function loadSaved(): Saved {
-  const views = Object.fromEntries(TABS.map(t => [t, blank])) as Record<Tab, View>
+  const views = Object.fromEntries(TABS.map((t) => [t, blank])) as Record<Tab, View>
   try {
     const saved = JSON.parse(localStorage.getItem(VIEW_KEY) ?? '{}')
     for (const t of TABS) views[t] = { ...blank, ...saved.views?.[t] }
@@ -26,7 +26,8 @@ function loadSaved(): Saved {
   }
 }
 
-const changeOf = (s: Stock, live: Record<string, Live>) => (live[s.id].price - s.prevClose) / s.prevClose
+const changeOf = (s: Stock, live: Record<string, Live>) =>
+  (live[s.id].price - s.prevClose) / s.prevClose
 
 export function App({ api }: { api: Api }) {
   const [stocks, setStocks] = useState<Stock[] | null>(null)
@@ -47,31 +48,46 @@ export function App({ api }: { api: Api }) {
       if (!alive) return
       setStocks(list)
       setHoldings(held)
-      setLive(Object.fromEntries(list.map(s => [s.id, { price: s.price, history: [s.price] }])))
-      setFavorites(Object.fromEntries(list.map(s => [s.id, s.favorite])))
+      setLive(Object.fromEntries(list.map((s) => [s.id, { price: s.price, history: [s.price] }])))
+      setFavorites(Object.fromEntries(list.map((s) => [s.id, s.favorite])))
     })
-    return () => { alive = false }
+    return () => {
+      alive = false
+    }
   }, [api])
 
   // React batches the updates of a synchronous burst into one render.
   useEffect(
     () =>
       api.subscribeQuotes(({ id, price }) =>
-        setLive(all => (all[id] ? { ...all, [id]: { price, history: [...all[id].history, price].slice(-20) } } : all)),
+        setLive((all) =>
+          all[id]
+            ? { ...all, [id]: { price, history: [...all[id].history, price].slice(-20) } }
+            : all,
+        ),
       ),
     [api],
   )
 
-  useEffect(() => { localStorage.setItem(VIEW_KEY, JSON.stringify(saved)) }, [saved])
+  useEffect(() => {
+    localStorage.setItem(VIEW_KEY, JSON.stringify(saved))
+  }, [saved])
 
   const tab = saved.tab
   const view = saved.views[tab]
-  const setView = useCallback((patch: Partial<View>) => setSaved(s => ({ ...s, views: { ...s.views, [s.tab]: { ...s.views[s.tab], ...patch } } })), [])
+  const setView = useCallback(
+    (patch: Partial<View>) =>
+      setSaved((s) => ({ ...s, views: { ...s.views, [s.tab]: { ...s.views[s.tab], ...patch } } })),
+    [],
+  )
   const selectTab = (t: Tab) => {
-    setSaved(s => ({ ...s, tab: t }))
-    setVisited(v => (v.has(t) ? v : new Set([...v, t])))
+    setSaved((s) => ({ ...s, tab: t }))
+    setVisited((v) => (v.has(t) ? v : new Set([...v, t])))
   }
-  const onSearch = useCallback((t: Tab, state: SearchState) => setSearches(s => ({ ...s, [t]: state })), [])
+  const onSearch = useCallback(
+    (t: Tab, state: SearchState) => setSearches((s) => ({ ...s, [t]: state })),
+    [],
+  )
   const search = searches[tab]
 
   const favRef = useRef(favorites)
@@ -83,9 +99,9 @@ export function App({ api }: { api: Api }) {
       const click = (clicks.current[stock.id] ?? 0) + 1
       clicks.current[stock.id] = click
       favRef.current = { ...favRef.current, [stock.id]: !before }
-      setFavorites(f => ({ ...f, [stock.id]: !before }))
+      setFavorites((f) => ({ ...f, [stock.id]: !before }))
       api.setFavorite(stock.id, !before).catch(() => {
-        if (clicks.current[stock.id] === click) setFavorites(f => ({ ...f, [stock.id]: before }))
+        if (clicks.current[stock.id] === click) setFavorites((f) => ({ ...f, [stock.id]: before }))
         setAlert(`Couldn't update ${stock.symbol}`)
       })
     },
@@ -105,8 +121,8 @@ export function App({ api }: { api: Api }) {
   }, [openId])
 
   const save = useCallback((id: string, text: string) => {
-    setNotes(n => {
-      setSaves(s => [...s, { id, prev: n[id] ?? '' }])
+    setNotes((n) => {
+      setSaves((s) => [...s, { id, prev: n[id] ?? '' }])
       return { ...n, [id]: text }
     })
   }, [])
@@ -114,43 +130,60 @@ export function App({ api }: { api: Api }) {
     const last = saves[saves.length - 1]
     if (!last) return
     setSaves(saves.slice(0, -1))
-    setNotes(n => ({ ...n, [last.id]: last.prev }))
+    setNotes((n) => ({ ...n, [last.id]: last.prev }))
   }
 
-  const results = view.query.trim() ? search?.results ?? null : null
+  const results = view.query.trim() ? (search?.results ?? null) : null
   const filtered = useMemo(
     () =>
       (stocks ?? []).filter(
-        s => (tab === 'All' || s.sector === tab) && (!results || results.has(s.id)) && (!view.favoritesOnly || favorites[s.id]),
+        (s) =>
+          (tab === 'All' || s.sector === tab) &&
+          (!results || results.has(s.id)) &&
+          (!view.favoritesOnly || favorites[s.id]),
       ),
     [stocks, tab, results, view.favoritesOnly, favorites],
   )
   // Only the Change sort reads live prices, so quotes don't re-sort a Symbol-sorted list.
   const ordered = view.sort === 'change' ? live : null
   const shown = useMemo(
-    () => (ordered ? [...filtered].sort((a, b) => changeOf(b, ordered) - changeOf(a, ordered)) : filtered),
+    () =>
+      ordered
+        ? [...filtered].sort((a, b) => changeOf(b, ordered) - changeOf(a, ordered))
+        : filtered,
     [filtered, ordered],
   )
-  const portfolio = useMemo(() => holdings.reduce((sum, h) => sum + h.qty * (live[h.id]?.price ?? 0), 0), [holdings, live])
+  const portfolio = useMemo(
+    () => holdings.reduce((sum, h) => sum + h.qty * (live[h.id]?.price ?? 0), 0),
+    [holdings, live],
+  )
 
   if (!stocks) return <p>Loading…</p>
-  const open = openId ? stocks.find(s => s.id === openId) : undefined
+  const open = openId ? stocks.find((s) => s.id === openId) : undefined
   return (
     <div>
-      {TABS.filter(t => visited.has(t)).map(t => (
+      {TABS.filter((t) => visited.has(t)).map((t) => (
         <TabSearch key={t} api={api} tab={t} query={saved.views[t].query} onState={onSearch} />
       ))}
       <Header count={shown.length} portfolio={portfolio} />
       <nav>
-        {TABS.map(t => (
-          <button key={t} aria-pressed={t === tab} onClick={() => selectTab(t)}>{t}</button>
+        {TABS.map((t) => (
+          <button key={t} aria-pressed={t === tab} onClick={() => selectTab(t)}>
+            {t}
+          </button>
         ))}
       </nav>
       <Toolbar view={view} onView={setView} />
       <p role="status">{search?.state === 'pending' ? 'Searching…' : ''}</p>
       {search?.state === 'failed' && <p role="alert">Search failed</p>}
       {alert && <p role="alert">{alert}</p>}
-      <StockList stocks={shown} live={live} favorites={favorites} onToggle={toggle} onDetails={openDetails} />
+      <StockList
+        stocks={shown}
+        live={live}
+        favorites={favorites}
+        onToggle={toggle}
+        onDetails={openDetails}
+      />
       {open && (
         <DetailsPanel
           key={open.id}

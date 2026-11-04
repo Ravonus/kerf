@@ -10,17 +10,32 @@ import { seams } from '@weft-js/core/interaction'
 
 seams.attach = (el, ui) => {
   const real = interact(el, ui)
-  const stop = createRoot(dispose => {
-    effect(() => {
-      const r = ui.remote.value
-      const mine = ui.hover.value || ui.focus.value || ui.pressed.value
-      return mine ? 2 : r.hover || r.focus || r.pressed ? 1 : 0
-    }, lit => {
-      el.toggleAttribute('data-hold', lit > 0)
-      el.toggleAttribute('data-remote', lit === 1)
-    })
-    effect(() => ui.pressed.value || ui.remote.value.pressed > 0, on => el.toggleAttribute('data-press', on))
+  const stop = createRoot((dispose) => {
+    effect(
+      () => {
+        const r = ui.remote.value
+        const mine = ui.hover.value || ui.focus.value || ui.pressed.value
+        return mine ? 2 : r.hover || r.focus || r.pressed ? 1 : 0
+      },
+      (lit) => {
+        el.toggleAttribute('data-hold', lit > 0)
+        el.toggleAttribute('data-remote', lit === 1)
+      },
+    )
+    effect(
+      () => ui.pressed.value || ui.remote.value.pressed > 0,
+      (on) => el.toggleAttribute('data-press', on),
+    )
     return dispose
   }, null)
-  return { update() {}, destroy() { real.destroy(); stop(); el.removeAttribute('data-hold'); el.removeAttribute('data-remote'); el.removeAttribute('data-press') } }
+  return {
+    update() {},
+    destroy() {
+      real.destroy()
+      stop()
+      el.removeAttribute('data-hold')
+      el.removeAttribute('data-remote')
+      el.removeAttribute('data-press')
+    },
+  }
 }

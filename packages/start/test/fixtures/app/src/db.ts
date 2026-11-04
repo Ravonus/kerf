@@ -17,10 +17,14 @@ export const db = {
   },
 }
 
-export const later = <T,>(ms: number, v: T) => new Promise<T>(ok => setTimeout(ok, ms, v))
+export const later = <T>(ms: number, v: T) => new Promise<T>((ok) => setTimeout(ok, ms, v))
 
 // Todos for the server-function routes (research 27): mutable, shared by every request of the dev server.
-export interface Todo { id: string; title: string; done: boolean }
+export interface Todo {
+  id: string
+  title: string
+  done: boolean
+}
 export const todos = {
   list: [
     { id: '1', title: 'Write the note', done: true },

@@ -1,30 +1,69 @@
 // The `--db` and `--auth` part of a scaffold (research 28 §6): a database, a todo app on it, and with `--auth` a
 // sign-in/sign-up flow and a guarded `/todos`. Pinned versions, so a scaffold builds what the matrix tested.
 import { readFileSync } from 'node:fs'
-import { nativeAuthSql, nativeFiles, prismaAdapterPackage, prismaAuthModels, prismaFiles } from './data.mjs'
+import {
+  nativeAuthSql,
+  nativeFiles,
+  prismaAdapterPackage,
+  prismaAuthModels,
+  prismaFiles,
+} from './data.mjs'
 
 /** The version a scaffold pins for each package it adds that isn't weft's own: what the matrix tested. */
 export const VERSIONS = {
   '@types/node': '26.6.5',
-  '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', kysely: '0.29.7', mysql2: '3.24.6', postgres: '4.0.0', zod: '4.6.7',
-  prisma: '7.10.1', '@prisma/client': '7.10.1', '@prisma/adapter-libsql': '7.10.1', '@prisma/adapter-pg': '7.10.1', '@prisma/adapter-mariadb': '7.10.1',
+  '@t3-oss/env-core': '0.13.11',
+  'better-auth': '1.7.14',
+  'drizzle-kit': '0.31.11',
+  'drizzle-orm': '0.45.4',
+  'drizzle-zod': '0.8.3',
+  kysely: '0.29.7',
+  mysql2: '3.24.6',
+  postgres: '4.0.0',
+  zod: '4.6.7',
+  prisma: '7.10.1',
+  '@prisma/client': '7.10.1',
+  '@prisma/adapter-libsql': '7.10.1',
+  '@prisma/adapter-pg': '7.10.1',
+  '@prisma/adapter-mariadb': '7.10.1',
 }
 
-const pin = (...names) => Object.fromEntries(names.map(n => [n, VERSIONS[n]]))
+const pin = (...names) => Object.fromEntries(names.map((n) => [n, VERSIONS[n]]))
 
-const drivers = db => (db === 'postgres' ? ['postgres'] : db === 'mysql' ? ['mysql2'] : [])
+const drivers = (db) => (db === 'postgres' ? ['postgres'] : db === 'mysql' ? ['mysql2'] : [])
 
 /** Every scaffold pins what it shipped with: this package and weft's others go out at one version. */
-export const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
+export const VERSION = JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+).version
 
 /** The pinned dependencies of a database, data layer and auth choice. */
 export function stackDeps({ db, auth, layer = 'drizzle', version = VERSION }) {
   if (db === 'none') return { deps: {}, dev: {} }
   const base = pin('@t3-oss/env-core', 'zod', ...(auth ? ['better-auth'] : []))
-  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db), ...(auth ? ['kysely'] : [])), '@weft-js/db': version }, dev: pin('@types/node') }
-  if (layer === 'prisma') return { deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft-js/db': version }, dev: pin('prisma', '@types/node') }
+  if (layer === 'native')
+    return {
+      deps: {
+        ...base,
+        ...pin(...drivers(db), ...(auth ? ['kysely'] : [])),
+        '@weft-js/db': version,
+      },
+      dev: pin('@types/node'),
+    }
+  if (layer === 'prisma')
+    return {
+      deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft-js/db': version },
+      dev: pin('prisma', '@types/node'),
+    }
   return {
-    deps: pin('@t3-oss/env-core', 'drizzle-orm', 'drizzle-zod', 'zod', ...drivers(db), ...(auth ? ['better-auth'] : [])),
+    deps: pin(
+      '@t3-oss/env-core',
+      'drizzle-orm',
+      'drizzle-zod',
+      'zod',
+      ...drivers(db),
+      ...(auth ? ['better-auth'] : []),
+    ),
     dev: pin('drizzle-kit', '@types/node'),
   }
 }
@@ -32,21 +71,41 @@ export function stackDeps({ db, auth, layer = 'drizzle', version = VERSION }) {
 /** Sign-in on an app with a database, for `weft add auth`: new files only, and what to add to the existing ones. */
 export function authFiles({ db, layer, ui }) {
   const files = stackFiles({ db, layer, auth: true, name: 'app', secret: '' })
-  const out = { 'src/auth.server.ts': files['src/auth.server.ts'], 'src/server/session.ts': files['src/server/session.ts'], 'src/routes/login.tsx': loginPage(ui) }
-  return { files: out, context: files['src/context.server.ts'], tables: { drizzle: authTablesFile(db), prisma: prismaAuthModels(db), native: nativeAuthSql(db) }[layer] }
+  const out = {
+    'src/auth.server.ts': files['src/auth.server.ts'],
+    'src/server/session.ts': files['src/server/session.ts'],
+    'src/routes/login.tsx': loginPage(ui),
+  }
+  return {
+    files: out,
+    context: files['src/context.server.ts'],
+    tables: {
+      drizzle: authTablesFile(db),
+      prisma: prismaAuthModels(db),
+      native: nativeAuthSql(db),
+    }[layer],
+  }
 }
 
-const authTablesFile = db => ({
-  sqlite: () => `import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'\n${authTablesSqlite()}`,
-  postgres: () => `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg()}`,
-  mysql: () => `import { boolean, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core'\n${authTablesMysql()}`,
-}[db]())
+const authTablesFile = (db) =>
+  ({
+    sqlite: () =>
+      `import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'\n${authTablesSqlite()}`,
+    postgres: () =>
+      `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg()}`,
+    mysql: () =>
+      `import { boolean, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core'\n${authTablesMysql()}`,
+  })[db]()
 
-const camel = column => column.replace(/_(\w)/g, (_, c) => c.toUpperCase())
+const camel = (column) => column.replace(/_(\w)/g, (_, c) => c.toUpperCase())
 
 /** A template's `src/db/auth.ts`: Better Auth's own column names with time zones, as evals/apps/shared/pg/schema.sql has them. */
-export const sharedAuthTables = () => `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg()
-  .replace(/(text|boolean|timestamp)\('(\w+)'\)/g, (_, type, column) => `${type}('${camel(column)}'${type === 'timestamp' ? ', { withTimezone: true }' : ''})`)}`
+export const sharedAuthTables = () =>
+  `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg().replace(
+    /(text|boolean|timestamp)\('(\w+)'\)/g,
+    (_, type, column) =>
+      `${type}('${camel(column)}'${type === 'timestamp' ? ', { withTimezone: true }' : ''})`,
+  )}`
 
 /** The files of a database, data layer and auth choice, as `{ path: text }`. */
 export function stackFiles({ db, auth, name, secret, layer = 'drizzle' }) {
@@ -56,7 +115,10 @@ export function stackFiles({ db, auth, name, secret, layer = 'drizzle' }) {
     'src/env.server.ts': envModule({ db, auth }),
     'src/context.server.ts': context(auth),
     'src/routes/todos/index.tsx': '', // filled by the caller, which knows the UI kit
-    ...(auth && { 'src/server/session.ts': sessionServer(), 'src/routes/todos/_layout.tsx': guard() }),
+    ...(auth && {
+      'src/server/session.ts': sessionServer(),
+      'src/routes/todos/_layout.tsx': guard(),
+    }),
   }
   if (layer === 'native') return { ...shared, ...nativeFiles({ db, auth }) }
   if (layer === 'prisma') return { ...shared, ...prismaFiles({ db, auth }) }
@@ -75,10 +137,13 @@ function drizzleFiles({ db, auth }) {
   }
 }
 
-const database = name => name.replace(/[^a-z0-9_]/g, '_')
+const database = (name) => name.replace(/[^a-z0-9_]/g, '_')
 const envFile = ({ db, auth, name, secret }) =>
-  ({ postgres: `DATABASE_URL=postgres://localhost:5432/${database(name)}\n`, mysql: `DATABASE_URL=mysql://root@localhost:3306/${database(name)}\n`, sqlite: 'DATABASE_URL=file:.data/app.db\n' }[db]) +
-  (auth ? `BETTER_AUTH_SECRET=${secret}\nBETTER_AUTH_URL=http://localhost:5173\n` : '')
+  ({
+    postgres: `DATABASE_URL=postgres://localhost:5432/${database(name)}\n`,
+    mysql: `DATABASE_URL=mysql://root@localhost:3306/${database(name)}\n`,
+    sqlite: 'DATABASE_URL=file:.data/app.db\n',
+  })[db] + (auth ? `BETTER_AUTH_SECRET=${secret}\nBETTER_AUTH_URL=http://localhost:5173\n` : '')
 
 const envModule = ({ db, auth }) => `import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
@@ -95,7 +160,9 @@ export const env = createEnv({
 `
 
 function sqliteSchema(auth) {
-  const owner = auth ? `\n  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),` : ''
+  const owner = auth
+    ? `\n  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),`
+    : ''
   return `import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 ${auth ? authTablesSqlite() : ''}
 export const todos = sqliteTable('todos', {
@@ -108,7 +175,9 @@ export const todos = sqliteTable('todos', {
 }
 
 function pgSchema(auth) {
-  const owner = auth ? `\n  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),` : ''
+  const owner = auth
+    ? `\n  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),`
+    : ''
   return `import { bigint, boolean, pgTable, text${auth ? ', timestamp' : ''} } from 'drizzle-orm/pg-core'
 ${auth ? authTablesPg() : ''}
 export const todos = pgTable('todos', {
@@ -121,13 +190,19 @@ export const todos = pgTable('todos', {
 }
 
 // MySQL can't index a TEXT column, so ids, keys and anything unique are VARCHAR. Otherwise Postgres's tables hold.
-const authTablesMysql = () => authTablesPg()
-  .replaceAll('pgTable', 'mysqlTable')
-  .replace(/text\('(id|user_id|email|token|account_id|provider_id|identifier)'\)/g, "varchar('$1', { length: 255 })")
-  .replace(/timestamp\('(\w+)'\)/g, "timestamp('$1', { fsp: 3 })")
+const authTablesMysql = () =>
+  authTablesPg()
+    .replaceAll('pgTable', 'mysqlTable')
+    .replace(
+      /text\('(id|user_id|email|token|account_id|provider_id|identifier)'\)/g,
+      "varchar('$1', { length: 255 })",
+    )
+    .replace(/timestamp\('(\w+)'\)/g, "timestamp('$1', { fsp: 3 })")
 
 function mysqlSchema(auth) {
-  const owner = auth ? `\n  userId: varchar('user_id', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),` : ''
+  const owner = auth
+    ? `\n  userId: varchar('user_id', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),`
+    : ''
   return `import { bigint, boolean, mysqlTable, ${auth ? 'text, timestamp, ' : ''}varchar } from 'drizzle-orm/mysql-core'
 ${auth ? authTablesMysql() : ''}
 export const todos = mysqlTable('todos', {
@@ -261,8 +336,9 @@ export const jwks = pgTable('jwks', {
 `
 
 /** `src/context.server.ts`: the database on `ctx`, and the session with auth. */
-export const context = auth => auth
-  ? `import { session } from '@weft-js/start/auth'
+export const context = (auth) =>
+  auth
+    ? `import { session } from '@weft-js/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
@@ -278,7 +354,7 @@ declare module '@weft-js/start' {
   }
 }
 `
-  : `import { db } from '#/db/index.server'
+    : `import { db } from '#/db/index.server'
 
 export default () => ({ db })
 
@@ -291,7 +367,9 @@ declare module '@weft-js/start' {
 
 function todosServer(auth, db) {
   const use = auth ? `\n  auth: 'user',` : ''
-  const mine = auth ? `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` : `eq(todos.id, input.id)`
+  const mine = auth
+    ? `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))`
+    : `eq(todos.id, input.id)`
   // MySQL has no \`returning\`.
   const returning = db === 'mysql' ? '' : '.returning()'
   return `import { mutation, query } from '@weft-js/start'
@@ -315,10 +393,14 @@ export const addTodo = mutation({
   optimistic: ({ input }, cache) =>
     cache.update(listTodos, undefined, list => void list.push({ id: \`tmp:\${input.title}\`,${auth ? " userId: ''," : ''} title: input.title, done: false, createdAt: 0 })),
   run: async ({ input, ctx }) => {
-    ${db === 'mysql' ? `const row = { id: crypto.randomUUID(),${auth ? ' userId: ctx.user.id,' : ''} title: input.title, createdAt: Date.now() }
+    ${
+      db === 'mysql'
+        ? `const row = { id: crypto.randomUUID(),${auth ? ' userId: ctx.user.id,' : ''} title: input.title, createdAt: Date.now() }
     await ctx.db.insert(todos).values(row)
-    return { ...row, done: false }` : `const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(),${auth ? ' userId: ctx.user.id,' : ''} title: input.title, createdAt: Date.now() }).returning()
-    return row`}
+    return { ...row, done: false }`
+        : `const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(),${auth ? ' userId: ctx.user.id,' : ''} title: input.title, createdAt: Date.now() }).returning()
+    return row`
+    }
   },
 })
 
@@ -413,23 +495,30 @@ export const classes = (ui, part) => (ui === 'tailwind' ? tw[part] : part === 'c
 const attr = (ui, part) => (ui === 'tailwind' ? ` class="${tw[part]}"` : '')
 
 /** The page's controls in each UI kit: warp's components, or plain elements with the same roles and names. */
-export const controls = ui => ui === 'warp'
-  ? {
-      imports: `import { Alert, Button, Card, Checkbox, Input } from '@weft-js/warp'\n`,
-      card: (title, body) => `<Card title=${JSON.stringify(title)}>${body}</Card>`,
-      input: (label, box, type = 'text') => `<Input label=${JSON.stringify(label)} type="${type}" value={${box}.value} onInput={e => (${box}.value = e.currentTarget.value)} />`,
-      submit: (label, pending) => `<Button type="submit" loading={${pending}}>${label}</Button>`,
-      button: (label, onClick, extra = '') => `<Button emphasis="ghost" ${extra}onClick={${onClick}}>${label}</Button>`,
-      error: box => `{${box}.value && <Alert tone="critical" live>{${box}.value}</Alert>}`,
-    }
-  : {
-      imports: '',
-      card: (title, body) => `<section class="${classes(ui, 'card')}"><h1${attr(ui, 'title')}>${title}</h1>${body}</section>`,
-      input: (label, box, type = 'text') => `<label>${label} <input${attr(ui, 'input')} type="${type}" value={${box}.value} onInput={e => (${box}.value = e.currentTarget.value)} /></label>`,
-      submit: (label, pending) => `<button${attr(ui, 'button')} type="submit" disabled={${pending}}>${label}</button>`,
-      button: (label, onClick, extra = '') => `<button${attr(ui, 'button')} type="button" ${extra}onClick={${onClick}}>${label}</button>`,
-      error: box => `{${box}.value && <p role="alert">{${box}.value}</p>}`,
-    }
+export const controls = (ui) =>
+  ui === 'warp'
+    ? {
+        imports: `import { Alert, Button, Card, Checkbox, Input } from '@weft-js/warp'\n`,
+        card: (title, body) => `<Card title=${JSON.stringify(title)}>${body}</Card>`,
+        input: (label, box, type = 'text') =>
+          `<Input label=${JSON.stringify(label)} type="${type}" value={${box}.value} onInput={e => (${box}.value = e.currentTarget.value)} />`,
+        submit: (label, pending) => `<Button type="submit" loading={${pending}}>${label}</Button>`,
+        button: (label, onClick, extra = '') =>
+          `<Button emphasis="ghost" ${extra}onClick={${onClick}}>${label}</Button>`,
+        error: (box) => `{${box}.value && <Alert tone="critical" live>{${box}.value}</Alert>}`,
+      }
+    : {
+        imports: '',
+        card: (title, body) =>
+          `<section class="${classes(ui, 'card')}"><h1${attr(ui, 'title')}>${title}</h1>${body}</section>`,
+        input: (label, box, type = 'text') =>
+          `<label>${label} <input${attr(ui, 'input')} type="${type}" value={${box}.value} onInput={e => (${box}.value = e.currentTarget.value)} /></label>`,
+        submit: (label, pending) =>
+          `<button${attr(ui, 'button')} type="submit" disabled={${pending}}>${label}</button>`,
+        button: (label, onClick, extra = '') =>
+          `<button${attr(ui, 'button')} type="button" ${extra}onClick={${onClick}}>${label}</button>`,
+        error: (box) => `{${box}.value && <p role="alert">{${box}.value}</p>}`,
+      }
 
 /** `/todos`: the list on the server functions, written for this `--ui`. */
 export function todosPage(ui) {
@@ -469,7 +558,9 @@ export default function Todos() {
     await addTodo({ title: text }).catch((err: Error) => (problem.value = err.message))
   }
   return (
-    ${c.card('Todos', `
+    ${c.card(
+      'Todos',
+      `
       <form onSubmit={add}>
         ${c.input('New todo', 'title')}
         ${c.submit('Add', 'addTodo.pending.value')}
@@ -478,7 +569,8 @@ export default function Todos() {
       <Boundary pending={<p>Loading…</p>}>
         <TodoList />
       </Boundary>
-    `)}
+    `,
+    )}
   )
 }
 `
@@ -512,7 +604,9 @@ export default function Login() {
     await done.catch((err: Error) => (problem.value = err.message))
   }
   return (
-    ${c.card('Sign in', `
+    ${c.card(
+      'Sign in',
+      `
       <form onSubmit={submit}>
         {creating.value && ${c.input('Name', 'name')}}
         ${c.input('Email', 'email', 'email')}
@@ -521,7 +615,8 @@ export default function Login() {
       </form>
       ${c.error('problem')}
       ${c.button(`{creating.value ? 'I have an account' : 'Create an account'}`, '() => (creating.value = !creating.value)')}
-    `)}
+    `,
+    )}
   )
 }
 `

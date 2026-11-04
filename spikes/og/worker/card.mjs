@@ -22,10 +22,15 @@ export default {
   async fetch(req) {
     const url = new URL(req.url)
     if (url.pathname === '/ping') return new Response('')
-    card ??= await createCardRenderer({ backend: await wasm(wasmModule), fonts, images: { allow: () => true } })
-    const html = url.searchParams.get('card') === 'avatar'
-      ? avatarCard({ ...props.avatar, avatar: url.searchParams.get('avatar') ?? dataUri })
-      : defaultCard(props.default)
+    card ??= await createCardRenderer({
+      backend: await wasm(wasmModule),
+      fonts,
+      images: { allow: () => true },
+    })
+    const html =
+      url.searchParams.get('card') === 'avatar'
+        ? avatarCard({ ...props.avatar, avatar: url.searchParams.get('avatar') ?? dataUri })
+        : defaultCard(props.default)
     return cardResponse(await card.render(html))
   },
 }

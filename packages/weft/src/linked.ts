@@ -9,10 +9,10 @@ import { Box, derived, untrack, type Linked } from './index'
 export const linked = <T>(source: () => T, options?: { key: () => unknown }): Linked<T> => {
   const src = derived(source)
   // A fresh object per key, so a write belongs to one key even if the key later returns to it. No `key`: the source.
-  const from = derived<{ k: unknown }>(((prev?: { k: unknown }) => {
+  const from = derived<{ k: unknown }>((prev?: { k: unknown }) => {
     const k = options ? options.key() : src.value
     return prev && Object.is(prev.k, k) ? prev : { k }
-  }))
+  })
   const local = new Box<{ v: T; from: { k: unknown }; base: T } | undefined>(undefined)
   const edit = () => {
     const f = from.value
@@ -29,8 +29,14 @@ export const linked = <T>(source: () => T, options?: { key: () => unknown }): Li
       const l = local.v
       local.value = { v, from: f, base: l && l.from === f ? l.base : untrack(() => src.value) }
     },
-    set(update) { const d = this.value; update(d); this.value = d },
-    get(key) { return this.value?.[key] as T[typeof key] },
+    set(update) {
+      const d = this.value
+      update(d)
+      this.value = d
+    },
+    get(key) {
+      return this.value?.[key] as T[typeof key]
+    },
     conflict: derived(() => {
       const l = edit()
       const theirs = src.value
@@ -47,8 +53,12 @@ export const linked = <T>(source: () => T, options?: { key: () => unknown }): Li
 export function localProps(props: Record<PropertyKey, unknown>, written: unknown[]) {
   const boxes = new Map<PropertyKey, Linked<unknown>>()
   for (let i = 0; i < written.length; i += 2) {
-    const k = written[i] as string, fallback = written[i + 1] as (() => unknown) | 0
-    boxes.set(k, linked(() => (props[k] === undefined && fallback ? fallback() : props[k])))
+    const k = written[i] as string,
+      fallback = written[i + 1] as (() => unknown) | 0
+    boxes.set(
+      k,
+      linked(() => (props[k] === undefined && fallback ? fallback() : props[k])),
+    )
   }
   return new Proxy(props, {
     get: (t, k) => (boxes.has(k) ? boxes.get(k)!.value : t[k]),
@@ -59,7 +69,8 @@ export function localProps(props: Record<PropertyKey, unknown>, written: unknown
       return true
     },
     has: (t, k) => boxes.has(k) || k in t,
-    ownKeys: t => [...new Set([...Reflect.ownKeys(t), ...boxes.keys()])] as (string | symbol)[],
-    getOwnPropertyDescriptor: (t, k) => (boxes.has(k) || k in t ? { configurable: true, enumerable: true } : undefined),
+    ownKeys: (t) => [...new Set([...Reflect.ownKeys(t), ...boxes.keys()])] as (string | symbol)[],
+    getOwnPropertyDescriptor: (t, k) =>
+      boxes.has(k) || k in t ? { configurable: true, enumerable: true } : undefined,
   })
 }

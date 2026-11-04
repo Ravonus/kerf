@@ -7,17 +7,22 @@ function head(text) {
   const { document } = new JSDOM(text).window
   const el = document.head
   const meta = {}
-  for (const n of el.querySelectorAll('meta[data-wm]')) meta[n.getAttribute('property') ?? n.getAttribute('name')] = n.getAttribute('content')
+  for (const n of el.querySelectorAll('meta[data-wm]'))
+    meta[n.getAttribute('property') ?? n.getAttribute('name')] = n.getAttribute('content')
   return {
     title: el.querySelector('title').textContent,
     canonical: el.querySelector('link[rel=canonical]')?.getAttribute('href'),
     meta,
-    scripts: [...el.querySelectorAll('script')].map(n => ({ type: n.getAttribute('type'), src: n.getAttribute('src'), text: n.textContent })),
+    scripts: [...el.querySelectorAll('script')].map((n) => ({
+      type: n.getAttribute('type'),
+      src: n.getAttribute('src'),
+      text: n.textContent,
+    })),
     extra: [...el.querySelectorAll('img')], // what an injection would make
     bodyImages: [...document.body.querySelectorAll('img')],
   }
 }
-const page = async path => {
+const page = async (path) => {
   const res = await fetch(url + path)
   return { res, text: await res.text() }
 }
@@ -28,10 +33,14 @@ describe('a page with no meta', () => {
     const h = head(text)
     expect(h.title).toBe('Harvest & storage notes · Acme')
     const d = h.meta.description
-    expect(d).toBe('Harvest when 5 < 7 and the "tonnes" & crates are in: every mark here is escaped wherever it lands.')
+    expect(d).toBe(
+      'Harvest when 5 < 7 and the "tonnes" & crates are in: every mark here is escaped wherever it lands.',
+    )
     expect(text).toContain('content="Harvest when 5 &lt; 7 and the &quot;tonnes&quot; &amp; crates')
     expect(h.meta['og:title']).toBe('Harvest & storage notes · Acme')
-    expect(h.meta['og:image']).toMatch(/^https:\/\/acme\.dev\/_weft\/og\/meta\/plain\.png\?v=[a-z0-9]+$/)
+    expect(h.meta['og:image']).toMatch(
+      /^https:\/\/acme\.dev\/_weft\/og\/meta\/plain\.png\?v=[a-z0-9]+$/,
+    )
     expect(h.meta['og:image:alt']).toBe('Harvest & storage notes · Acme')
     expect(h.meta['twitter:card']).toBe('summary_large_image')
     expect(h.meta['og:url']).toBe('https://acme.dev/meta/plain')
@@ -72,8 +81,8 @@ describe('hostile data in meta', () => {
     expect(h.extra).toEqual([])
     expect(h.bodyImages).toEqual([])
     // Only weft's own scripts: nothing the data opened. The JSON-LD parses, and holds the text.
-    expect(h.scripts.filter(s => s.text.includes('alert('))).toHaveLength(1)
-    const ld = h.scripts.find(s => s.type === 'application/ld+json')
+    expect(h.scripts.filter((s) => s.text.includes('alert('))).toHaveLength(1)
+    const ld = h.scripts.find((s) => s.type === 'application/ld+json')
     expect(JSON.parse(ld.text).name).toContain('</script><script>alert(2)</script>')
     expect(ld.text).not.toContain('<')
     expect(h.meta['og:title']).toBe(h.title)
@@ -88,11 +97,19 @@ test('a deferred field stays out of a page`s tags, and reading one is H007', asy
 describe('structured data only where weft is sure', () => {
   test('the home page is a WebSite', async () => {
     const h = head((await page('/')).text)
-    const ld = JSON.parse(h.scripts.find(s => s.type === 'application/ld+json').text)
-    expect(ld).toEqual({ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Acme', url: 'https://acme.dev', description: 'Tools for builders.' })
+    const ld = JSON.parse(h.scripts.find((s) => s.type === 'application/ld+json').text)
+    expect(ld).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Acme',
+      url: 'https://acme.dev',
+      description: 'Tools for builders.',
+    })
   })
   test('no other page gets any', async () => {
-    expect(head((await page('/about')).text).scripts.some(s => s.type === 'application/ld+json')).toBe(false)
+    expect(
+      head((await page('/about')).text).scripts.some((s) => s.type === 'application/ld+json'),
+    ).toBe(false)
   })
 })
 
@@ -101,7 +118,10 @@ describe('cards are safe to cache', () => {
     const a = head((await page('/meta/changing')).text).meta['og:image']
     const b = head((await page('/meta/changing')).text).meta['og:image']
     expect(a).toBe(b)
-    const bytes = async u => Buffer.from(await (await fetch(u.replace('https://acme.dev', url))).arrayBuffer()).toString('base64')
+    const bytes = async (u) =>
+      Buffer.from(await (await fetch(u.replace('https://acme.dev', url))).arrayBuffer()).toString(
+        'base64',
+      )
     expect(await bytes(a)).toBe(await bytes(b))
   })
   test('different text is a different URL', async () => {
@@ -110,6 +130,8 @@ describe('cards are safe to cache', () => {
     expect(a.replace(/.*\?v=/, '')).not.toBe(b.replace(/.*\?v=/, ''))
   })
   test('a card for a page that does not exist is a 404, whatever the path says', async () => {
-    expect((await fetch(`${url}/_weft/og/users/${encodeURIComponent('nobody')}.png`)).status).toBe(404)
+    expect((await fetch(`${url}/_weft/og/users/${encodeURIComponent('nobody')}.png`)).status).toBe(
+      404,
+    )
   })
 })

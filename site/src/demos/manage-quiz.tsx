@@ -31,16 +31,18 @@ export default function Quiz() {
   return (
     <Card title="City quiz">
       {status.value === 'success' ? (
-        <Alert tone="positive" title="That's right!">Lima is the capital of Peru.</Alert>
+        <Alert tone="positive" title="That's right!">
+          Lima is the capital of Peru.
+        </Alert>
       ) : (
-        <form onSubmit={e => void submit(e)}>
+        <form onSubmit={(e) => void submit(e)}>
           <p>Which city is the capital of Peru?</p>
           <Textarea
             label="Your answer"
             value={answer.value}
             disabled={status.value === 'submitting'}
             error={error.value}
-            onInput={e => {
+            onInput={(e) => {
               answer.value = e.currentTarget.value
               error.value = null
             }}

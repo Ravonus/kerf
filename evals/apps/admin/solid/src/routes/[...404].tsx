@@ -1,6 +1,6 @@
-import { Title } from "@solidjs/meta";
-import { A } from "@solidjs/router";
-import { HttpStatusCode } from "@solidjs/start";
+import { Title } from '@solidjs/meta'
+import { A } from '@solidjs/router'
+import { HttpStatusCode } from '@solidjs/start'
 
 export default function NotFound() {
   return (
@@ -9,9 +9,14 @@ export default function NotFound() {
       <HttpStatusCode code={404} />
       <h1 class="text-2xl font-semibold tracking-tight">Nothing on this shelf</h1>
       <p class="text-muted">The order may be gone, or the address mistyped.</p>
-      <A href="/admin" class="font-medium text-accent-text hover:underline" activeClass="" inactiveClass="">
+      <A
+        href="/admin"
+        class="font-medium text-accent-text hover:underline"
+        activeClass=""
+        inactiveClass=""
+      >
         Back to the overview
       </A>
     </main>
-  );
+  )
 }

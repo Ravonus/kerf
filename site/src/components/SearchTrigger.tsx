@@ -6,9 +6,23 @@ import { spotlightOpen } from '../lib/spotlight'
 export function SearchTrigger() {
   return (
     <>
-      <Button data-site="search" emphasis="outline" tone="neutral" size="sm" icon="search" collapse="tablet" onClick={() => (spotlightOpen.value = true)} onPointerEnter={warmBody} onFocus={warmBody} aria-keyshortcuts="Meta+K Control+K">
+      <Button
+        data-site="search"
+        emphasis="outline"
+        tone="neutral"
+        size="sm"
+        icon="search"
+        collapse="tablet"
+        onClick={() => (spotlightOpen.value = true)}
+        onPointerEnter={warmBody}
+        onFocus={warmBody}
+        aria-keyshortcuts="Meta+K Control+K"
+      >
         <span data-part="text">Search</span>
-        <span data-part="keys" aria-hidden="true"><Kbd>⌘</Kbd><Kbd>K</Kbd></span>
+        <span data-part="keys" aria-hidden="true">
+          <Kbd>⌘</Kbd>
+          <Kbd>K</Kbd>
+        </span>
       </Button>
     </>
   )

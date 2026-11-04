@@ -10,7 +10,22 @@
 // side the server rendered. Both take a key where they're created (research 19 §2.4); a boundary's content and
 // fallback render in two fixed scopes under it (`<key>c/`, `<key>f/`), so the keys line up either way.
 
-import { DEV, context, createRoot, derived, effect, getOwner, memo, onCleanup, rt, state, untrack, watch, type SsrData, type State } from './index'
+import {
+  DEV,
+  context,
+  createRoot,
+  derived,
+  effect,
+  getOwner,
+  memo,
+  onCleanup,
+  rt,
+  state,
+  untrack,
+  watch,
+  type SsrData,
+  type State,
+} from './index'
 import { keys, nextKey, under } from './keys'
 
 export const timing = { showAfter: 150, hold: 400 }
@@ -41,7 +56,12 @@ export interface ResourceOptions<T> {
   shape?: { of: unknown; read(): T | undefined }
 }
 
-type Tracked = { first: State<boolean>; err: State<unknown>; refresh(): void; shape?: ResourceOptions<unknown>['shape'] }
+type Tracked = {
+  first: State<boolean>
+  err: State<unknown>
+  refresh(): void
+  shape?: ResourceOptions<unknown>['shape']
+}
 const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
 /** While a Boundary's `pending` renders: the resources it's waiting for (@weft-js/core/shape). */
 export const waiting = context<Tracked[] | undefined>(undefined)
@@ -49,14 +69,18 @@ export const waiting = context<Tracked[] | undefined>(undefined)
 /** A server render's: `shown` is a failure as a page may show it. */
 type Pass = typeof rt & { shown?: (e: unknown) => unknown }
 
-const thenable = (v: unknown): v is PromiseLike<unknown> => v != null && typeof (v as PromiseLike<unknown>).then === 'function'
+const thenable = (v: unknown): v is PromiseLike<unknown> =>
+  v != null && typeof (v as PromiseLike<unknown>).then === 'function'
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 /**
  * `resource(async signal => (await fetch(url(), { signal })).json())`. Reads before the first `await` are tracked:
  * when they change, the in-flight fetch is aborted and a new one starts. Reads after an `await` are not (W012).
  */
-export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, options: ResourceOptions<T> = {}): Resource<T> {
+export function resource<T>(
+  fetcher: (signal: AbortSignal) => Promise<T> | T,
+  options: ResourceOptions<T> = {},
+): Resource<T> {
   const data = options.data === false ? undefined : rt.data
   const key = keys.on ? nextKey() : undefined
   const value = state<T | undefined>(options.initial)
@@ -106,7 +130,10 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
         const out = untrack(() => fetcher(new AbortController().signal))
         if (thenable(out)) {
           pending.value = true
-          const done = Promise.resolve(out).then(v => record({ v }), e => record({ e: message(shown(e)) }))
+          const done = Promise.resolve(out).then(
+            (v) => record({ v }),
+            (e) => record({ e: message(shown(e)) }),
+          )
           rt.flight?.set(key, done)
           rt.wait?.push(done)
           if (!boundaries.use) rt.top?.push(done)
@@ -131,7 +158,11 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
         let out: Promise<T> | T
         if (rt.probe === undefined) setTimeout(() => (rt.probe = undefined))
         rt.probe = hydrated && rt.probe !== false
-        try { out = fetcher(c.signal) } catch (e) { out = Promise.reject(e) }
+        try {
+          out = fetcher(c.signal)
+        } catch (e) {
+          out = Promise.reject(e)
+        }
         return [out, c] as const
       },
       ([out, c]) => {
@@ -145,8 +176,12 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
         if (!thenable(out)) return settle(out)
         pending.value = true
         Promise.resolve(out).then(
-          v => { if (c === ctrl && !c.signal.aborted) settle(v) },
-          e => { if (c === ctrl && !c.signal.aborted) fail(e) },
+          (v) => {
+            if (c === ctrl && !c.signal.aborted) settle(v)
+          },
+          (e) => {
+            if (c === ctrl && !c.signal.aborted) fail(e)
+          },
         )
       },
     )
@@ -156,10 +191,18 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
   if (rt.server && pass.got !== undefined && !untrack(() => pending.value)) pass.got++
 
   return {
-    get value() { return value.value },
-    get pending() { return pending.value },
-    get error() { return error.value },
-    get shape() { return options.shape?.read() },
+    get value() {
+      return value.value
+    },
+    get pending() {
+      return pending.value
+    },
+    get error() {
+      return error.value
+    },
+    get shape() {
+      return options.shape?.read()
+    },
     refresh,
   }
 }
@@ -179,13 +222,25 @@ function inScope(c: unknown) {
  * `<Boundary pending={<Skeleton />} error={(e, retry) => …}>…</Boundary>`. Without `error`, a failure renders
  * nothing (dev builds log it).
  */
-export function Boundary(props: { pending?: unknown; /** What `pending="shape"` compiles to: a variant, its place reserved from the first paint. */ shape?: () => unknown; error?: (e: unknown, retry: () => void) => unknown; children?: unknown }) {
+export function Boundary(props: {
+  pending?: unknown
+  /** What `pending="shape"` compiles to: a variant, its place reserved from the first paint. */ shape?: () => unknown
+  error?: (e: unknown, retry: () => void) => unknown
+  children?: unknown
+}) {
   const parent = getOwner()
   const list: Tracked[] = []
   const added = state(0)
   const thrown = state<unknown>(undefined)
-  const track = { add(r: Tracked) { list.push(r); untrack(() => added.value++) } }
-  const loading = derived(() => (added.value, list.some(r => r.first.value && r.err.value === undefined)))
+  const track = {
+    add(r: Tracked) {
+      list.push(r)
+      untrack(() => added.value++)
+    },
+  }
+  const loading = derived(
+    () => (added.value, list.some((r) => r.first.value && r.err.value === undefined)),
+  )
   const failure = derived(() => {
     void added.value
     if (thrown.value !== undefined) return thrown.value
@@ -203,7 +258,8 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
   const failed = () => (thrown.value = new Error(data!.r[key!]?.e ?? 'server render failed'))
   if (was === 'e') failed()
   /** Run `fn` in the content (`c`) or fallback (`f`) scope while keys are on; fresh otherwise. */
-  const scoped = <T,>(side: 'c' | 'f', fn: () => T): T => (keys.on && key !== undefined ? under(key + side + '/', fn) : fn())
+  const scoped = <T>(side: 'c' | 'f', fn: () => T): T =>
+    keys.on && key !== undefined ? under(key + side + '/', fn) : fn()
 
   let content: unknown
   let disposeContent: (() => void) | undefined
@@ -211,26 +267,34 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
     disposeContent?.()
     list.length = 0
     const { on, hydrating } = keys
-    if (hydrating && was !== undefined && was !== 'c') Object.assign(keys, { on: false, hydrating: false }) // the server rendered a fallback: build the content fresh
+    if (hydrating && was !== undefined && was !== 'c')
+      Object.assign(keys, { on: false, hydrating: false }) // the server rendered a fallback: build the content fresh
     try {
-      content = createRoot(dispose => scoped('c', () => {
-        disposeContent = dispose
-        return boundaries.provide(track, () => {
-          try {
-            const c = props.children
-            if (rt.server) return { t: rt.resolve!(c) } // resolve now: lazily created resources register here
-            const v = keys.on ? inScope(c) : c
-            if (!chunk || typeof v !== 'function') return v
-            const claimed = memo(v as () => unknown) // the claim ends before anything places this: read it while it lasts
-            claimed()
-            return claimed
-          } catch (e) {
-            if (DEV && e && typeof e === 'object' && (e as { weft?: string }).weft) console.error(`weft: <Boundary> caught an error in ${(e as { weft?: string }).weft}`)
-            thrown.value = rt.server ? (rt as Pass).shown?.(e) ?? e : e
-            return null
-          }
-        })
-      }), parent)
+      content = createRoot(
+        (dispose) =>
+          scoped('c', () => {
+            disposeContent = dispose
+            return boundaries.provide(track, () => {
+              try {
+                const c = props.children
+                if (rt.server) return { t: rt.resolve!(c) } // resolve now: lazily created resources register here
+                const v = keys.on ? inScope(c) : c
+                if (!chunk || typeof v !== 'function') return v
+                const claimed = memo(v as () => unknown) // the claim ends before anything places this: read it while it lasts
+                claimed()
+                return claimed
+              } catch (e) {
+                if (DEV && e && typeof e === 'object' && (e as { weft?: string }).weft)
+                  console.error(
+                    `weft: <Boundary> caught an error in ${(e as { weft?: string }).weft}`,
+                  )
+                thrown.value = rt.server ? ((rt as Pass).shown?.(e) ?? e) : e
+                return null
+              }
+            })
+          }),
+        parent,
+      )
     } finally {
       Object.assign(keys, { on, hydrating })
     }
@@ -246,7 +310,8 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
       if (status === 'e') data.r[key] = { e: message(untrack(() => failure.value)) }
     }
     if (status === 'p') show.value = 'fallback'
-    else if (status === 'c' && key !== undefined) rt.stream?.set(key, (content as { t?: string } | null | undefined)?.t ?? '')
+    else if (status === 'c' && key !== undefined)
+      rt.stream?.set(key, (content as { t?: string } | null | undefined)?.t ?? '')
   } else {
     let timer: ReturnType<typeof setTimeout> | undefined
     let shownAt = 0
@@ -260,24 +325,28 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
         shownAt = Date.now()
       }, timing.showAfter)
     }
-    watch(() => loading.value, busy => {
-      if (busy || held || show.value === 'content') return // held: not loading only because nothing's been built
-      clearTimeout(timer)
-      const left = show.value === 'fallback' ? timing.hold - (Date.now() - shownAt) : 0
-      if (left > 0) timer = setTimeout(() => (show.value = 'content'), left)
-      else show.value = 'content'
-    })
+    watch(
+      () => loading.value,
+      (busy) => {
+        if (busy || held || show.value === 'content') return // held: not loading only because nothing's been built
+        clearTimeout(timer)
+        const left = show.value === 'fallback' ? timing.hold - (Date.now() - shownAt) : 0
+        if (left > 0) timer = setTimeout(() => (show.value = 'content'), left)
+        else show.value = 'content'
+      },
+    )
     onCleanup(() => clearTimeout(timer))
     if (held) {
       const id = encodeURIComponent(key!)
       const holds = (page.$wh ||= {})
       // Its chunk, or none when the server gave up on it. The chunk's data is what the server rendered it from, so
       // nothing's asked again. Built here, not in the memo: what it reads has to reach the memo.
-      holds[id] = t => {
+      holds[id] = (t) => {
         held = false
         was = landed(data!, page)[key!]
         if (was === 'e') failed()
-        else if (t && was === 'c' && typeof data!.w === 'function') claim(t, data!, () => build(true))
+        else if (t && was === 'c' && typeof data!.w === 'function')
+          claim(t, data!, () => build(true))
         else build()
         if (!untrack(() => loading.value)) show.value = 'content'
       }
@@ -299,15 +368,20 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
     disposeContent?.()
     side?.dispose()
   })
-  const pendingView = () => waiting.provide(list, () => {
-    const v = props.shape ? props.shape() : props.pending
-    return rt.server ? { t: rt.resolve!(v) } : v
-  })
+  const pendingView = () =>
+    waiting.provide(list, () => {
+      const v = props.shape ? props.shape() : props.pending
+      return rt.server ? { t: rt.resolve!(v) } : v
+    })
   const sideView = (kind: 'p' | 'e', make: () => unknown) => {
     if (side?.kind === kind && kind === 'p') return side.node
     side?.dispose()
-    const s: { kind: 'p' | 'e'; node: unknown; dispose: () => void } = { kind, node: null, dispose: () => {} }
-    s.node = createRoot(d => ((s.dispose = d), scoped('f', () => untrack(make))), parent)
+    const s: { kind: 'p' | 'e'; node: unknown; dispose: () => void } = {
+      kind,
+      node: null,
+      dispose: () => {},
+    }
+    s.node = createRoot((d) => ((s.dispose = d), scoped('f', () => untrack(make))), parent)
     side = s
     return s.node
   }
@@ -335,7 +409,8 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
     if (s === 'fallback' || (s === 'wait' && props.shape)) {
       // A shape holds its place unseen until the 150 ms are up, so showing it moves nothing (research 11 §7.4).
       const n = sideView('p', pendingView)
-      if (props.shape && !rt.server) (n as HTMLElement).style.visibility = s === 'wait' ? 'hidden' : ''
+      if (props.shape && !rt.server)
+        (n as HTMLElement).style.visibility = s === 'wait' ? 'hidden' : ''
       return held && marks ? [marks[0], n, marks[1]] : n
     }
     if (side) {
@@ -350,7 +425,10 @@ export function Boundary(props: { pending?: unknown; /** What `pending="shape"` 
 /** What a page that's still streaming carries once the client runs: `w` claims a chunk's nodes (@weft-js/start's client). */
 type Streamed = Omit<SsrData, 'w'> & { w?: 1 | ((root: Element, fn: () => void) => void) }
 
-type Page = { $wh?: Record<string, (t?: HTMLTemplateElement) => void> | 0; $wc?: Partial<SsrData>[] }
+type Page = {
+  $wh?: Record<string, (t?: HTMLTemplateElement) => void> | 0
+  $wc?: Partial<SsrData>[]
+}
 
 /** The page's data with what the stream's chunks have said since (their scripts push to `$wc`): the Boundaries' states. */
 function landed(data: Streamed, page: Page) {
@@ -382,7 +460,7 @@ function claim(t: HTMLTemplateElement, data: Streamed, fn: () => void) {
 function around(k: string) {
   const w = document.createTreeWalker(document.body, 128)
   let a: Comment | undefined
-  for (let n; (n = w.nextNode() as Comment | null); ) {
+  for (let n; (n = w.nextNode() as Comment | null);) {
     if (n.data === 'wb:' + k) a = n
     else if (a && n.data === '/wb:' + k) return [a, n] as const
   }
@@ -391,13 +469,19 @@ function around(k: string) {
 
 /** The border box around the elements of a rendered value (nodes, arrays of them), or undefined when it has none. */
 function boxOf(value: unknown): { w: number; h: number } | undefined {
-  let top = Infinity, left = Infinity, bottom = -Infinity, right = -Infinity
+  let top = Infinity,
+    left = Infinity,
+    bottom = -Infinity,
+    right = -Infinity
   const visit = (v: unknown) => {
     if (Array.isArray(v)) return v.forEach(visit)
     if (typeof Element === 'undefined' || !(v instanceof Element) || !v.isConnected) return
     if (getComputedStyle(v).display === 'contents') return visit([...v.children]) // a shape variant's wrapper has no box
     const r = v.getBoundingClientRect()
-    top = Math.min(top, r.top); left = Math.min(left, r.left); bottom = Math.max(bottom, r.bottom); right = Math.max(right, r.right)
+    top = Math.min(top, r.top)
+    left = Math.min(left, r.left)
+    bottom = Math.max(bottom, r.bottom)
+    right = Math.max(right, r.right)
   }
   visit(value)
   return top === Infinity ? undefined : { w: right - left, h: bottom - top }
@@ -414,10 +498,13 @@ function checkSwap(fallback: unknown, content: unknown) {
   queueMicrotask(() => {
     const after = boxOf(content)
     if (!after) return
-    const dw = after.w - before.w, dh = after.h - before.h
+    const dw = after.w - before.w,
+      dh = after.h - before.h
     if (Math.abs(dw) > 1 || Math.abs(dh) > 1) {
       const px = (n: number) => `${Math.round(n * 10) / 10}`
-      console.warn(`weft: X031 <Boundary> pending fallback was ${px(before.w)}×${px(before.h)} px, the content is ${px(after.w)}×${px(after.h)} px (Δ ${px(dw)}, ${px(dh)}): the swap shifts layout. Size the fallback like the content (warp's <Shape> with the content's counts), or fix the size.`)
+      console.warn(
+        `weft: X031 <Boundary> pending fallback was ${px(before.w)}×${px(before.h)} px, the content is ${px(after.w)}×${px(after.h)} px (Δ ${px(dw)}, ${px(dh)}): the swap shifts layout. Size the fallback like the content (warp's <Shape> with the content's counts), or fix the size.`,
+      )
     }
   })
 }

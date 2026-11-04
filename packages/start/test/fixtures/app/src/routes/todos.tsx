@@ -12,14 +12,24 @@ export default function Todos() {
     <main>
       <h1>Todos</h1>
       <ul class="todos">
-        {(todos.value ?? []).map(t => (
+        {(todos.value ?? []).map((t) => (
           <li key={t.id} class={t.done ? 'done' : 'open'}>
-            <button class="toggle" onClick={() => toggleTodo({ id: t.id })}>{t.title}</button>
+            <button class="toggle" onClick={() => toggleTodo({ id: t.id })}>
+              {t.title}
+            </button>
           </li>
         ))}
       </ul>
-      <button class="add" onClick={() => addTodo({ title: 'New' }).catch(() => {})} disabled={addTodo.pending.value}>Add</button>
-      <button class="add-fail" onClick={() => addTodo({ title: 'fail' }).catch(() => {})}>Add failing</button>
+      <button
+        class="add"
+        onClick={() => addTodo({ title: 'New' }).catch(() => {})}
+        disabled={addTodo.pending.value}
+      >
+        Add
+      </button>
+      <button class="add-fail" onClick={() => addTodo({ title: 'fail' }).catch(() => {})}>
+        Add failing
+      </button>
     </main>
   )
 }

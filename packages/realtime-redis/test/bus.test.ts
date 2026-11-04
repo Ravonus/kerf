@@ -5,28 +5,52 @@ import { createServer, type AddressInfo } from 'node:net'
 import { busSuite } from '@weft-js/core/test/plugins'
 import { bus, redisBus } from '../src/index'
 
-const freePort = () => new Promise<number>(ok => { const s = createServer().listen(0, () => { const { port } = s.address() as AddressInfo; s.close(() => ok(port)) }) })
-const stop = (c: ChildProcess) => new Promise(ok => { c.once('close', ok); c.kill('SIGKILL') })
+const freePort = () =>
+  new Promise<number>((ok) => {
+    const s = createServer().listen(0, () => {
+      const { port } = s.address() as AddressInfo
+      s.close(() => ok(port))
+    })
+  })
+const stop = (c: ChildProcess) =>
+  new Promise((ok) => {
+    c.once('close', ok)
+    c.kill('SIGKILL')
+  })
 
 const binary = process.env.WEFT_TEST_REDIS
 
 // Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`: the suite restarts a real server.
-test.skipIf(!binary)('redisBus passes realtime.bus@1 on a real server, a restart included', async () => {
-  const port = await freePort()
-  let proc: ChildProcess
-  const boot = async () => {
-    proc = spawn(binary!, ['--port', String(port), '--save', '', '--appendonly', 'no'], { stdio: 'ignore' })
-    await new Promise(ok => { setTimeout(ok, 300) })
-  }
-  await boot()
-  try {
-    const checks = await busSuite({ make: () => redisBus({ url: `redis://127.0.0.1:${port}` }), restart: async () => { await stop(proc); await boot() } })
-    expect(checks.filter(c => !c.ok)).toEqual([])
-    expect(checks.length).toBeGreaterThanOrEqual(9)
-  } finally {
-    await stop(proc!)
-  }
-}, 90_000)
+test.skipIf(!binary)(
+  'redisBus passes realtime.bus@1 on a real server, a restart included',
+  async () => {
+    const port = await freePort()
+    let proc: ChildProcess
+    const boot = async () => {
+      proc = spawn(binary!, ['--port', String(port), '--save', '', '--appendonly', 'no'], {
+        stdio: 'ignore',
+      })
+      await new Promise((ok) => {
+        setTimeout(ok, 300)
+      })
+    }
+    await boot()
+    try {
+      const checks = await busSuite({
+        make: () => redisBus({ url: `redis://127.0.0.1:${port}` }),
+        restart: async () => {
+          await stop(proc)
+          await boot()
+        },
+      })
+      expect(checks.filter((c) => !c.ok)).toEqual([])
+      expect(checks.length).toBeGreaterThanOrEqual(9)
+    } finally {
+      await stop(proc!)
+    }
+  },
+  90_000,
+)
 
 test('a bad URL names the code', () => {
   expect(() => redisBus({ url: 'http://x' })).toThrow('Q013')

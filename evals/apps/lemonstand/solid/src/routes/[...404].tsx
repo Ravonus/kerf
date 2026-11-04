@@ -1,8 +1,8 @@
-import { HttpStatusCode } from "@solidjs/start";
+import { HttpStatusCode } from '@solidjs/start'
 
-import { Container } from "~/components/ui";
-import { Seo } from "~/components/site/seo";
-import { SiteFooter, SiteHeader, SkipLink } from "~/components/site/site-chrome";
+import { Container } from '~/components/ui'
+import { Seo } from '~/components/site/seo'
+import { SiteFooter, SiteHeader, SkipLink } from '~/components/site/site-chrome'
 
 export default function NotFound() {
   return (
@@ -13,10 +13,12 @@ export default function NotFound() {
       <SiteHeader />
       <main id="main" class="py-16 sm:py-24">
         <Container size="reading">
-          <h1 class="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Page not found</h1>
+          <h1 class="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+            Page not found
+          </h1>
         </Container>
       </main>
       <SiteFooter />
     </>
-  );
+  )
 }

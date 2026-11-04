@@ -1,7 +1,22 @@
 import { TimerIcon } from '@weft-js/warp-icons'
-import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft-js/warp-core'
+import {
+  balance,
+  formatDuration,
+  pad,
+  parseDuration,
+  totalSeconds,
+  type DurationParts,
+  type IsoDuration,
+} from '@weft-js/warp-core'
 import { derived, state, untrack } from '@weft-js/core'
-import { bindable, Composite, Hidden, usePickerEnv, type Bindable, type RichFieldProps } from './Picker'
+import {
+  bindable,
+  Composite,
+  Hidden,
+  usePickerEnv,
+  type Bindable,
+  type RichFieldProps,
+} from './Picker'
 
 type Unit = 'd' | 'h' | 'm' | 's'
 const INTL = { d: 'day', h: 'hour', m: 'minute', s: 'second' } as const
@@ -11,29 +26,59 @@ const SIZE = { d: 86400, h: 3600, m: 60, s: 1 } as const
 const MAX = { d: 99, h: 99, m: 59, s: 59 } as const
 
 /** Props for DurationField. */
-export type DurationFieldProps = RichFieldProps & Bindable<IsoDuration | null> & {
-  units?: Unit[]
-  max?: IsoDuration | undefined
-  step?: Partial<Record<'h' | 'm' | 's', number>>
-  balance?: boolean
-}
+export type DurationFieldProps = RichFieldProps &
+  Bindable<IsoDuration | null> & {
+    units?: Unit[]
+    max?: IsoDuration | undefined
+    step?: Partial<Record<'h' | 'm' | 's', number>>
+    balance?: boolean
+  }
 
 /**
  * DurationField (04 §2): a spinbutton for each allowed unit; ↑/↓ step with carry into the next unit (Shift for three
  * steps), and digits fill. The value is an ISO duration, balanced (`PT90M` → `PT1H30M`) unless `balance: false`.
  */
-export function DurationField({ value, defaultValue, onValueChange, units = ['h', 'm'], max, step, balance: carry = true, locale, today, name, label, hint, error, disabled, ...rest }: DurationFieldProps) {
-  const env = usePickerEnv(() => locale, () => today)
-  const v = bindable<IsoDuration | null>(() => value, () => defaultValue, null, () => onValueChange)
+export function DurationField({
+  value,
+  defaultValue,
+  onValueChange,
+  units = ['h', 'm'],
+  max,
+  step,
+  balance: carry = true,
+  locale,
+  today,
+  name,
+  label,
+  hint,
+  error,
+  disabled,
+  ...rest
+}: DurationFieldProps) {
+  const env = usePickerEnv(
+    () => locale,
+    () => today,
+  )
+  const v = bindable<IsoDuration | null>(
+    () => value,
+    () => defaultValue,
+    null,
+    () => onValueChange,
+  )
   const parts = derived(() => parseDuration(v.value))
   const limit = untrack(() => (max ? totalSeconds(parseDuration(max)) : Infinity))
   const buf = state('')
   let group: HTMLDivElement | undefined
-  const say = (u: Unit, n: number) => new Intl.NumberFormat(env.locale.value, { style: 'unit', unit: INTL[u], unitDisplay: 'long' }).format(n)
+  const say = (u: Unit, n: number) =>
+    new Intl.NumberFormat(env.locale.value, {
+      style: 'unit',
+      unit: INTL[u],
+      unitDisplay: 'long',
+    }).format(n)
   const words = derived(() => {
     const p = parts.value
-    const on = units.filter(u => p[u])
-    return on.length ? on.map(u => say(u, p[u])).join(' ') : 'No time'
+    const on = units.filter((u) => p[u])
+    return on.length ? on.map((u) => say(u, p[u])).join(' ') : 'No time'
   })
   const write = (next: DurationParts, reason: 'keyboard' = 'keyboard') => {
     const t = Math.max(0, Math.min(limit, totalSeconds(next)))
@@ -56,14 +101,20 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
       buf.value = b
       const n = +b
       write(n > MAX[u] && !carry ? p : { ...p, [u]: n })
-      if (b.length === 2 && at < units.length - 1) { buf.value = ''; (group!.querySelector(`[data-u="${units[at + 1]}"]`) as HTMLElement).focus() }
+      if (b.length === 2 && at < units.length - 1) {
+        buf.value = ''
+        ;(group!.querySelector(`[data-u="${units[at + 1]}"]`) as HTMLElement).focus()
+      }
     } else if (e.key === 'Backspace') {
       e.preventDefault()
       buf.value = ''
       write({ ...p, [u]: 0 })
     } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       const to = units[at + (e.key === 'ArrowRight' ? 1 : -1)]
-      if (to) { e.preventDefault(); (group!.querySelector(`[data-u="${to}"]`) as HTMLElement).focus() }
+      if (to) {
+        e.preventDefault()
+        ;(group!.querySelector(`[data-u="${to}"]`) as HTMLElement).focus()
+      }
     }
   }
   return (
@@ -79,13 +130,34 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
       filled={totalSeconds(parts.value) > 0}
       control={() => (
         <>
-          <div ref={n => (group = n)} data-part="segments" onKeyDown={onKey} onFocusOut={() => (buf.value = '')}>
-            {units.map(u => {
+          <div
+            ref={(n) => (group = n)}
+            data-part="segments"
+            onKeyDown={onKey}
+            onFocusOut={() => (buf.value = '')}
+          >
+            {units.map((u) => {
               const n = derived(() => parts.value[u])
               return (
                 <>
-                  <span key={u} data-part="segment" data-u={u} role="spinbutton" tabindex={disabled ? undefined : '0'} aria-label={NAMES[u]} aria-required={rest.required ? 'true' : undefined} aria-valuemin="0" aria-valuemax={MAX[u]} aria-valuenow={n.value} aria-valuetext={say(u, n.value)}>{u === units[0] ? n.value : pad(n.value)}</span>
-                  <span data-part="literal" class="unit" aria-hidden="true">{SHORT[u]}</span>
+                  <span
+                    key={u}
+                    data-part="segment"
+                    data-u={u}
+                    role="spinbutton"
+                    tabindex={disabled ? undefined : '0'}
+                    aria-label={NAMES[u]}
+                    aria-required={rest.required ? 'true' : undefined}
+                    aria-valuemin="0"
+                    aria-valuemax={MAX[u]}
+                    aria-valuenow={n.value}
+                    aria-valuetext={say(u, n.value)}
+                  >
+                    {u === units[0] ? n.value : pad(n.value)}
+                  </span>
+                  <span data-part="literal" class="unit" aria-hidden="true">
+                    {SHORT[u]}
+                  </span>
                 </>
               )
             })}

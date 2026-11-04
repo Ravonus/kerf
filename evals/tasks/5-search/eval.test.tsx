@@ -3,21 +3,29 @@ import userEvent from '@testing-library/user-event'
 import { flush, mount, tick } from '#adapter'
 import { SearchBox } from './solution'
 
-beforeEach(() => { vi.useFakeTimers() })
-afterEach(() => { vi.useRealTimers() })
+beforeEach(() => {
+  vi.useFakeTimers()
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 type Call = { q: string; signal: AbortSignal; resolve(v: string[]): void; reject(e: unknown): void }
 function setup() {
   const calls: Call[] = []
-  const search = vi.fn((q: string, signal: AbortSignal) =>
-    new Promise<string[]>((resolve, reject) => { calls.push({ q, signal, resolve, reject }) }))
+  const search = vi.fn(
+    (q: string, signal: AbortSignal) =>
+      new Promise<string[]>((resolve, reject) => {
+        calls.push({ q, signal, resolve, reject })
+      }),
+  )
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
   const h = mount(SearchBox, { search })
   const box = () => screen.getByLabelText('Search') as HTMLInputElement
   return { calls, search, user, h, box }
 }
 const status = () => screen.queryByTestId('status')?.textContent?.trim() ?? null
-const items = () => screen.queryAllByRole('listitem').map(li => li.textContent?.trim())
+const items = () => screen.queryAllByRole('listitem').map((li) => li.textContent?.trim())
 
 test('debounces by 300 ms', async () => {
   const { user, box, search } = setup()
@@ -66,7 +74,7 @@ test('stale responses are ignored and the old request is aborted', async () => {
   await tick(300)
   await user.type(box(), 'b')
   await tick(300)
-  expect(calls.map(c => c.q)).toEqual(['a', 'ab'])
+  expect(calls.map((c) => c.q)).toEqual(['a', 'ab'])
   expect(calls[0].signal.aborted).toBe(true)
   calls[0].resolve(['stale'])
   await flush()

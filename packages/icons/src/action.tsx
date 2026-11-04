@@ -8,5 +8,11 @@ export type ActionIconProps = IconProps & { action?: IconTrigger | boolean }
 
 /*#__NO_SIDE_EFFECTS__*/
 export function acting(line: string, pixels: string) {
-  return ({ action, ...rest }: ActionIconProps) => <Svg {...rest} data-act={typeof action === 'string' ? action : 'hover focus press'} html={line + pixels} />
+  return ({ action, ...rest }: ActionIconProps) => (
+    <Svg
+      {...rest}
+      data-act={typeof action === 'string' ? action : 'hover focus press'}
+      html={line + pixels}
+    />
+  )
 }

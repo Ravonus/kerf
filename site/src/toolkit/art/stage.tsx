@@ -42,22 +42,45 @@ const PIECES: Record<string, () => Promise<Piece>> = {
 export function ArtStage({ id }: { id: string }) {
   // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
-  const live = state(false), failed = state(false)
-  let stop: (() => void) | undefined, leave: (() => void) | undefined, gone = false
+  const live = state(false),
+    failed = state(false)
+  let stop: (() => void) | undefined,
+    leave: (() => void) | undefined,
+    gone = false
   onMount(() => {
-    PIECES[id]!().then(m => {
-      if (gone) return
-      const Art = m.default
-      host.replaceChildren()
-      stop = render(() => <Art live={live.value} />, host)
-      if (!m.meta.rest) leave = enrol(host, on => { live.value = on })
-    }).catch(e => { console.error(e); failed.value = true })
+    PIECES[id]!()
+      .then((m) => {
+        if (gone) return
+        const Art = m.default
+        host.replaceChildren()
+        stop = render(() => <Art live={live.value} />, host)
+        if (!m.meta.rest)
+          leave = enrol(host, (on) => {
+            live.value = on
+          })
+      })
+      .catch((e) => {
+        console.error(e)
+        failed.value = true
+      })
   })
-  onCleanup(() => { gone = true; leave?.(); stop?.() })
-  return <div data-art="frame" ref={host}>{failed.value ? <p>This piece failed to load.</p> : null}</div>
+  onCleanup(() => {
+    gone = true
+    leave?.()
+    stop?.()
+  })
+  return (
+    <div data-art="frame" ref={host}>
+      {failed.value ? <p>This piece failed to load.</p> : null}
+    </div>
+  )
 }
 
-const STOPS = [{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]
+const STOPS = [
+  { value: 'quiet', label: 'Quiet' },
+  { value: 'balanced', label: 'Balanced' },
+  { value: 'vivid', label: 'Vivid' },
+]
 
 /* @weft visible */
 /** The gallery's own dial: an attribute on the wall, and every piece hears it. */

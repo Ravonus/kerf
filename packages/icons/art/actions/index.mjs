@@ -1,6 +1,6 @@
 // Action icons: a part of the drawing that moves, and how. Each is its own module with its own stylesheet, so an app pays
 // for the ones it uses and the set pays nothing for having them. Outlines ease; pixels move in whole cells, in frames.
-const px = n => `${n * 1.5}px` // one pixel-tier cell in the 24 box
+const px = (n) => `${n * 1.5}px` // one pixel-tier cell in the 24 box
 
 export default {
   trash: {
@@ -16,7 +16,8 @@ export default {
   bell: {
     origin: '12px 2px',
     ms: 640,
-    keyframes: 'from,to { transform: none } 20% { transform: rotate(14deg) } 45% { transform: rotate(-11deg) } 70% { transform: rotate(6deg) }',
+    keyframes:
+      'from,to { transform: none } 20% { transform: rotate(14deg) } 45% { transform: rotate(-11deg) } 70% { transform: rotate(6deg) }',
     frames: `from,to { transform: none } 20%,60% { transform: translateX(${px(1)}) } 40%,80% { transform: translateX(${px(-1)}) }`,
     steps: 'step-end',
   },

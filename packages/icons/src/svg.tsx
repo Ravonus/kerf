@@ -22,12 +22,29 @@ const length = (size: number | string) => (typeof size === 'number' ? `${size}px
 
 export function Svg({ label, size, tier, html, style, ...rest }: IconProps & { html: string }) {
   // oxlint-disable-next-line weft/no-html-sink -- `html` is this package's generated art: `icon` and `acting` set it after the props spread, so no caller reaches it
-  return <svg data-icon data-expression={tier} viewBox="0 0 24 24" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} focusable="false" style={size === undefined ? style : `width:${length(size)};height:${length(size)}${style ? `;${style}` : ''}`} innerHTML={html} {...rest} />
+  return (
+    <svg
+      data-icon
+      data-expression={tier}
+      viewBox="0 0 24 24"
+      role={label ? 'img' : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : 'true'}
+      focusable="false"
+      style={
+        size === undefined
+          ? style
+          : `width:${length(size)};height:${length(size)}${style ? `;${style}` : ''}`
+      }
+      innerHTML={html}
+      {...rest}
+    />
+  )
 }
 
 /*#__NO_SIDE_EFFECTS__*/
 export function icon(line: string, pixels = ''): IconComponent {
   // Dither shows from 20 px, which the icon learns by measuring itself (icons.css): only one that has it asks.
   const dither = /\sdata-d=/.test(pixels) || /\sdata-d=/.test(line) || undefined
-  return p => <Svg data-dither={dither} {...p} html={line + pixels} />
+  return (p) => <Svg data-dither={dither} {...p} html={line + pixels} />
 }

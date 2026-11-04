@@ -1,17 +1,17 @@
-import { Title } from "@solidjs/meta";
-import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { createSignal, For } from "solid-js";
+import { Title } from '@solidjs/meta'
+import { createAsync, type RouteDefinition } from '@solidjs/router'
+import { createSignal, For } from 'solid-js'
 
-import { panel, primary, td, th } from "~/components/button";
-import { Loads, Rows } from "~/components/states";
-import { StatusBadge } from "~/components/status-badge";
-import { getReport } from "~/lib/data";
-import { money } from "~/lib/format";
+import { panel, primary, td, th } from '~/components/button'
+import { Loads, Rows } from '~/components/states'
+import { StatusBadge } from '~/components/status-badge'
+import { getReport } from '~/lib/data'
+import { money } from '~/lib/format'
 
-export const route = { preload: () => void getReport() } satisfies RouteDefinition;
+export const route = { preload: () => void getReport() } satisfies RouteDefinition
 
 export default function Slow() {
-  const [count, setCount] = createSignal(0);
+  const [count, setCount] = createSignal(0)
   return (
     <>
       <Title>Year report · Backroom</Title>
@@ -30,19 +30,25 @@ export default function Slow() {
         </Loads>
       </section>
     </>
-  );
+  )
 }
 
 function Report() {
-  const report = createAsync(() => getReport());
+  const report = createAsync(() => getReport())
   return (
     <div class={`${panel} overflow-x-auto`}>
       <table class="w-full text-sm">
         <thead class="border-b border-line">
           <tr>
-            <th scope="col" class={th}>Status</th>
-            <th scope="col" class={`${th} text-right`}>Orders</th>
-            <th scope="col" class={`${th} text-right`}>Revenue</th>
+            <th scope="col" class={th}>
+              Status
+            </th>
+            <th scope="col" class={`${th} text-right`}>
+              Orders
+            </th>
+            <th scope="col" class={`${th} text-right`}>
+              Revenue
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-line">
@@ -52,7 +58,9 @@ function Report() {
                 <td class={td}>
                   <StatusBadge status={row.status} />
                 </td>
-                <td class={`${td} text-right tabular-nums`}>{row.orders.toLocaleString("en-US")}</td>
+                <td class={`${td} text-right tabular-nums`}>
+                  {row.orders.toLocaleString('en-US')}
+                </td>
                 <td class={`${td} text-right tabular-nums`}>{money(row.cents)}</td>
               </tr>
             )}
@@ -60,5 +68,5 @@ function Report() {
         </tbody>
       </table>
     </div>
-  );
+  )
 }

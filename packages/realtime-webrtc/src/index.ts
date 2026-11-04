@@ -15,31 +15,48 @@ export interface WebRtcOptions {
   max?: number
 }
 
-interface Conn { pc: RTCPeerConnection; dc?: RTCDataChannel; makingOffer: boolean }
-interface Signal { description?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit }
+interface Conn {
+  pc: RTCPeerConnection
+  dc?: RTCDataChannel
+  makingOffer: boolean
+}
+interface Signal {
+  description?: RTCSessionDescriptionInit
+  candidate?: RTCIceCandidateInit
+}
 
 /** A peer transport over a mesh of WebRTC data channels, for `presence(conn, { transport })`. */
 export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTransport {
   return {
     name: 'webrtc',
     open(room: PeerRoom): PeerLink {
-      return createRoot(dispose => {
+      return createRoot((dispose) => {
         const conns = new Map<string, Conn>()
         const open = state(0)
         const channel = (id: string, c: Conn, dc: RTCDataChannel) => {
           c.dc = dc
-          dc.onopen = () => { open.value++ }
-          dc.onclose = () => { open.value++ }
-          dc.onmessage = e => { if (typeof e.data === 'string' && e.data.length < 1024) room.receive(id, e.data) }
+          dc.onopen = () => {
+            open.value++
+          }
+          dc.onclose = () => {
+            open.value++
+          }
+          dc.onmessage = (e) => {
+            if (typeof e.data === 'string' && e.data.length < 1024) room.receive(id, e.data)
+          }
         }
         const connect = (id: string) => {
           const had = conns.get(id)
           if (had) return had
           const c: Conn = { pc: new RTCPeerConnection({ iceServers }), makingOffer: false }
           conns.set(id, c)
-          c.pc.onicecandidate = e => { if (e.candidate) room.signal(id, { candidate: e.candidate.toJSON() }) }
-          c.pc.onconnectionstatechange = () => { open.value++ }
-          c.pc.ondatachannel = e => channel(id, c, e.channel)
+          c.pc.onicecandidate = (e) => {
+            if (e.candidate) room.signal(id, { candidate: e.candidate.toJSON() })
+          }
+          c.pc.onconnectionstatechange = () => {
+            open.value++
+          }
+          c.pc.ondatachannel = (e) => channel(id, c, e.channel)
           c.pc.onnegotiationneeded = async () => {
             try {
               c.makingOffer = true
@@ -54,13 +71,15 @@ export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTr
           return c
         }
         const answer = async (from: string, data: unknown) => {
-          if (!untrack(() => room.peers.value).includes(from) || typeof data !== 'object' || !data) return
+          if (!untrack(() => room.peers.value).includes(from) || typeof data !== 'object' || !data)
+            return
           const { description, candidate } = data as Signal
           const c = connect(from)
           try {
             if (description) {
               // Perfect negotiation: the lower id gives way when both offer at once.
-              const collision = description.type === 'offer' && (c.makingOffer || c.pc.signalingState !== 'stable')
+              const collision =
+                description.type === 'offer' && (c.makingOffer || c.pc.signalingState !== 'stable')
               if (collision && room.self > from) return
               await c.pc.setRemoteDescription(description)
               if (description.type === 'offer') {
@@ -78,23 +97,37 @@ export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTr
           conns.delete(id)
           open.value++
         }
-        effect(() => room.peers.value, ids => {
-          if (ids.length > max) return
-          for (const id of ids) {
-            if (conns.has(id)) continue
-            const c = connect(id)
-            if (room.self < id) channel(id, c, c.pc.createDataChannel('weft', { ordered: false, maxRetransmits: 0 }))
-          }
-          for (const id of conns.keys()) if (!ids.includes(id)) close(id)
-        })
+        effect(
+          () => room.peers.value,
+          (ids) => {
+            if (ids.length > max) return
+            for (const id of ids) {
+              if (conns.has(id)) continue
+              const c = connect(id)
+              if (room.self < id)
+                channel(
+                  id,
+                  c,
+                  c.pc.createDataChannel('weft', { ordered: false, maxRetransmits: 0 }),
+                )
+            }
+            for (const id of conns.keys()) if (!ids.includes(id)) close(id)
+          },
+        )
         const up = derived(() => {
           void open.value
           const ids = room.peers.value
-          return ids.length > 0 && ids.length <= max && ids.every(id => conns.get(id)?.dc?.readyState === 'open')
+          return (
+            ids.length > 0 &&
+            ids.length <= max &&
+            ids.every((id) => conns.get(id)?.dc?.readyState === 'open')
+          )
         })
         return {
           up,
-          send(text) { for (const c of conns.values()) if (c.dc?.readyState === 'open') c.dc.send(text) },
+          send(text) {
+            for (const c of conns.values()) if (c.dc?.readyState === 'open') c.dc.send(text)
+          },
           close() {
             stop()
             for (const id of conns.keys()) close(id)

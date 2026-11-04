@@ -101,7 +101,11 @@ export interface Finding {
   why: string
   help?: string
   severity?: 'error' | 'warning' | 'info'
-  fix?: { description: string; safe?: boolean; edits: { file?: string; start: number; end: number; text: string }[] }
+  fix?: {
+    description: string
+    safe?: boolean
+    edits: { file?: string; start: number; end: number; text: string }[]
+  }
 }
 
 /** Files a plugin writes into an app, for `weft add`. Pure: it describes, and `weft add` does the writing, or a dry run. */
@@ -110,7 +114,11 @@ export interface Setup {
   with?: string[]
   /** What the app must have, each with what to run instead: `'db'` and `'auth'`. */
   needs?: ('db' | 'auth')[]
-  run(app: { engine: string | null; layer: string | null; read(rel: string): string | undefined }): {
+  run(app: {
+    engine: string | null
+    layer: string | null
+    read(rel: string): string | undefined
+  }): {
     /** New files. One that exists stops `weft add`, with nothing changed. */
     files?: Record<string, string>
     /** Existing files, whole. */
@@ -123,7 +131,16 @@ export interface Setup {
 
 /** Options: a Standard Schema (Zod 4, Valibot…) or a parse function that throws on bad input. */
 export type OptionsSchema<I, O> =
-  | { readonly '~standard': { validate(value: unknown): { value: O; issues?: undefined } | { issues: readonly { message: string; path?: readonly unknown[] }[] } }; readonly '~types'?: { input: I; output: O } }
+  | {
+      readonly '~standard': {
+        validate(
+          value: unknown,
+        ):
+          | { value: O; issues?: undefined }
+          | { issues: readonly { message: string; path?: readonly unknown[] }[] }
+      }
+      readonly '~types'?: { input: I; output: O }
+    }
   | ((input: I) => O)
 
 /** A plugin: its name, its options, what it may touch and what it adds. */
@@ -161,6 +178,11 @@ export declare function defineSlot<const Id extends string, const V extends numb
   slot: Omit<SlotDef<Id, Impl, V>, '__impl' | 'default'> & { default?: SlotDef['default'] },
 ): SlotDef<Id, Impl, V>
 /** A provider for `slot`, for a plugin's `contribute` to return. */
-export declare function provide<Impl>(slot: SlotDef<string, Impl>, provider: Omit<ProviderRef<Impl>, 'slot' | 'versions'> & { versions?: readonly number[] }): ProviderRef<Impl>
+export declare function provide<Impl>(
+  slot: SlotDef<string, Impl>,
+  provider: Omit<ProviderRef<Impl>, 'slot' | 'versions'> & { versions?: readonly number[] },
+): ProviderRef<Impl>
 /** Invalid options throw an error with `code: 'P115'` and `path`. */
-export declare function definePlugin<I = void, O = I>(def: PluginDef<I, O>): (options?: I) => PluginInstance<O>
+export declare function definePlugin<I = void, O = I>(
+  def: PluginDef<I, O>,
+): (options?: I) => PluginInstance<O>

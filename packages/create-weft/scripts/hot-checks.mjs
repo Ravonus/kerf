@@ -43,7 +43,10 @@ export function prepare(app) {
   for (const file in FILES) writeFileSync(join(app, file), FILES[file])
 }
 
-const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
+const wait = (ms) =>
+  new Promise((ok) => {
+    setTimeout(ok, ms)
+  })
 async function until(what, ms, test) {
   const end = Date.now() + ms
   let last
@@ -59,7 +62,7 @@ async function until(what, ms, test) {
   throw new Error(`${what}: gave up, last saw ${JSON.stringify(last)}`)
 }
 
-const text = id => `document.querySelector('#${id}')?.textContent`
+const text = (id) => `document.querySelector('#${id}')?.textContent`
 const STATE = `({
   page: window.__same, count: ${text('c')}.match(/\\d+$/)[0], typed: document.querySelector('#i').value, raw: document.querySelector('#raw').value,
   focus: document.activeElement.id, caret: document.querySelector('#i').selectionStart,
@@ -73,7 +76,7 @@ const STATE = `({
 export async function hotChecks(app, base, log, pass) {
   if (!findChrome()) return pass('hot reload: skipped, no Chrome here (set CHROME)')
   const chrome = await launch()
-  const read = file => readFileSync(join(app, file), 'utf8')
+  const read = (file) => readFileSync(join(app, file), 'utf8')
   const write = (file, content) => writeFileSync(join(app, file), content)
   try {
     const page = await chrome.page(`${base}/hot`)
@@ -82,22 +85,35 @@ export async function hotChecks(app, base, log, pass) {
       return /[1-9]$/.test(await page.eval(text('c')))
     })
     const loaded = await page.eval(`performance.getEntriesByType('resource').map(r => r.name)`)
-    const twice = loaded.filter(u => /\.[jt]sx?(\?|$)/.test(u)).map(u => u.replace(/\?.*$/, '')).filter((u, i, all) => all.indexOf(u) !== i)
-    if (twice.length) throw new Error(`a module loaded under two URLs: ${twice.slice(0, 3).join(', ')}`)
-    await page.eval(`document.querySelector('#c').click(); window.__same = 1; document.querySelector('#i').focus()`)
+    const twice = loaded
+      .filter((u) => /\.[jt]sx?(\?|$)/.test(u))
+      .map((u) => u.replace(/\?.*$/, ''))
+      .filter((u, i, all) => all.indexOf(u) !== i)
+    if (twice.length)
+      throw new Error(`a module loaded under two URLs: ${twice.slice(0, 3).join(', ')}`)
+    await page.eval(
+      `document.querySelector('#c').click(); window.__same = 1; document.querySelector('#i').focus()`,
+    )
     await page.type('hello')
-    await page.eval(`document.querySelector('#raw').value = 'by hand'; document.querySelector('#i').focus(); document.querySelector('#i').setSelectionRange(2, 2); document.querySelector('#box').scrollTop = 120; document.scrollingElement.scrollTop = 400`)
+    await page.eval(
+      `document.querySelector('#raw').value = 'by hand'; document.querySelector('#i').focus(); document.querySelector('#i').setSelectionRange(2, 2); document.querySelector('#box').scrollTop = 120; document.scrollingElement.scrollTop = 400`,
+    )
     const KEPT = JSON.stringify(await page.eval(STATE))
-    if (!/"typed":"hello".*"raw":"by hand"/.test(KEPT)) throw new Error(`the page wasn't set up: ${KEPT}`)
-    const kept = async what => {
+    if (!/"typed":"hello".*"raw":"by hand"/.test(KEPT))
+      throw new Error(`the page wasn't set up: ${KEPT}`)
+    const kept = async (what) => {
       await wait(250)
       const now = JSON.stringify(await page.eval(STATE))
       if (now !== KEPT) throw new Error(`${what}: lost state: ${now}, wanted ${KEPT}`)
       pass(`hot reload: ${what}, with typed input, counter, focus and scroll kept`)
     }
-    const shows = (what, id, wanted) => until(what, 15000, () => page.eval(`${text(id)}.includes(${JSON.stringify(wanted)})`))
+    const shows = (what, id, wanted) =>
+      until(what, 15000, () => page.eval(`${text(id)}.includes(${JSON.stringify(wanted)})`))
 
-    write('src/components/HotCounter.tsx', read('src/components/HotCounter.tsx').replace('one ', 'two '))
+    write(
+      'src/components/HotCounter.tsx',
+      read('src/components/HotCounter.tsx').replace('one ', 'two '),
+    )
     await shows('a component edit', 'c', 'two')
     await kept('component edit')
     const route = 'src/routes/hot.tsx'
@@ -105,7 +121,9 @@ export async function hotChecks(app, base, log, pass) {
     await shows('a route edit', 't', 'second')
     await kept('route edit')
     write('src/routes/hot.css', 'h1#t { color: rgb(9, 8, 7) }\n')
-    await until('a CSS edit', 15000, () => page.eval(`getComputedStyle(document.querySelector('#t')).color === 'rgb(9, 8, 7)'`))
+    await until('a CSS edit', 15000, () =>
+      page.eval(`getComputedStyle(document.querySelector('#t')).color === 'rgb(9, 8, 7)'`),
+    )
     await kept('CSS edit')
     write('src/server/hot.ts', read('src/server/hot.ts').replace('S1', 'S2'))
     await shows('a server function edit', 'q', 'S2')
@@ -116,7 +134,10 @@ export async function hotChecks(app, base, log, pass) {
 
     // An agent's saves: faster than the watcher takes them, and the last has to win.
     for (let i = 1; i <= 30; i++) {
-      write('src/components/HotCounter.tsx', read('src/components/HotCounter.tsx').replace(/>\w+ \{n/, `>v${i} {n`))
+      write(
+        'src/components/HotCounter.tsx',
+        read('src/components/HotCounter.tsx').replace(/>\w+ \{n/, `>v${i} {n`),
+      )
       await wait(i % 3 ? 5 : 30)
     }
     await shows('the last of 30 quick saves', 'c', 'v30')
@@ -126,18 +147,33 @@ export async function hotChecks(app, base, log, pass) {
     const good = read(route)
     for (let i = 0; i < 6; i++) {
       write(route, good.replace('<main>', '<main'))
-      await until('the error shows', 15000, async () => (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500 || i % 2)
+      await until(
+        'the error shows',
+        15000,
+        async () =>
+          (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500 ||
+          i % 2,
+      )
       write(route, good.replace('second', `fixed${i}`))
       await until(`fix ${i} recovers`, 15000, () => page.eval(`${text('t')} === 'fixed${i}'`))
-      await until(`fix ${i} on the server`, 15000, async () => (await (await fetch(`${base}/hot`)).text()).includes(`fixed${i}`))
+      await until(`fix ${i} on the server`, 15000, async () =>
+        (await (await fetch(`${base}/hot`)).text()).includes(`fixed${i}`),
+      )
     }
     await kept('6 syntax errors, each fixed at once')
 
     // A tab that opens while the code is broken has no module to update, and comes back by itself.
     write(route, good.replace('<main>', '<main'))
-    await until('the error shows', 15000, async () => (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500)
+    await until(
+      'the error shows',
+      15000,
+      async () =>
+        (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500,
+    )
     const broken = await chrome.page(`${base}/hot`)
-    await until('the failure page', 15000, () => broken.eval(`document.title === 'This page failed to load'`))
+    await until('the failure page', 15000, () =>
+      broken.eval(`document.title === 'This page failed to load'`),
+    )
     await wait(500)
     write(route, good.replace('second', 'recovered'))
     await until('the failed tab recovers', 20000, () => broken.eval(`${text('t')} === 'recovered'`))

@@ -18,13 +18,20 @@ function rulesIn(dir) {
   const tsconfig = join(dir, 'tsconfig.json')
   if (existsSync(tsconfig)) {
     const host = { ...ts.sys, readDirectory: () => [] }
-    const { options } = ts.parseJsonConfigFileContent(ts.readConfigFile(tsconfig, path => ts.sys.readFile(path)).config, host, dir)
+    const { options } = ts.parseJsonConfigFileContent(
+      ts.readConfigFile(tsconfig, (path) => ts.sys.readFile(path)).config,
+      host,
+      dir,
+    )
     const base = options.pathsBasePath ?? options.baseUrl ?? dir
-    for (const [pattern, [target]] of Object.entries(options.paths ?? {})) add(pattern, resolve(base, target))
+    for (const [pattern, [target]] of Object.entries(options.paths ?? {}))
+      add(pattern, resolve(base, target))
   }
   const pkg = join(dir, 'package.json')
   if (existsSync(pkg)) {
-    for (const [pattern, target] of Object.entries(JSON.parse(readFileSync(pkg, 'utf8')).imports ?? {})) {
+    for (const [pattern, target] of Object.entries(
+      JSON.parse(readFileSync(pkg, 'utf8')).imports ?? {},
+    )) {
       if (typeof target === 'string' && target.startsWith('.')) add(pattern, resolve(dir, target))
     }
   }
@@ -46,7 +53,9 @@ export function local(fromAbs, spec) {
   if (spec.startsWith('.')) return join(dirname(fromAbs), spec)
   for (const { prefix, suffix, exact, target } of rulesFor(dirname(fromAbs))) {
     if (exact ? spec === prefix : spec.startsWith(prefix) && spec.endsWith(suffix)) {
-      return exact ? target : target.replace('*', spec.slice(prefix.length, spec.length - suffix.length))
+      return exact
+        ? target
+        : target.replace('*', spec.slice(prefix.length, spec.length - suffix.length))
     }
   }
   return null
@@ -54,6 +63,8 @@ export function local(fromAbs, spec) {
 
 /** The prefix that maps to `<root>/src/`, like `#/`; null when the app has none. */
 export function sourceAlias(root) {
-  const rule = rulesFor(resolve(root)).find(r => r.target === join(resolve(root), 'src', '*') && !r.suffix)
+  const rule = rulesFor(resolve(root)).find(
+    (r) => r.target === join(resolve(root), 'src', '*') && !r.suffix,
+  )
   return rule?.prefix ?? null
 }

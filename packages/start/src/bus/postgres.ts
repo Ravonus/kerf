@@ -20,7 +20,11 @@ const CHUNK = 7_800
 export function postgresBus({ url }: PostgresBusOptions): Bus {
   if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`postgresBus\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or leave `bus` out for the memory bus on one instance')
+    throw new StartError(
+      'Q013',
+      `\`postgresBus\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``,
+      'set `DATABASE_URL`, or leave `bus` out for the memory bus on one instance',
+    )
   let sql: ReturnType<typeof postgres> | undefined
   const client = () => (sql ??= postgres(url, { max: 2, idle_timeout: 20, onnotice: () => {} }))
   const listeners = new Map<string, Set<(message: string) => void>>()
@@ -37,7 +41,8 @@ export function postgresBus({ url }: PostgresBusOptions): Bus {
   const received = (payload: string) => {
     if (payload[0] === '=') return deliver(payload.slice(1))
     const [id, i, n, body] = payload.slice(1).split(':')
-    if (id === undefined || i === undefined || n === undefined || body === undefined) return undefined
+    if (id === undefined || i === undefined || n === undefined || body === undefined)
+      return undefined
     const got = parts.get(id) ?? []
     got[+i] = body
     parts.set(id, got)
@@ -46,16 +51,19 @@ export function postgresBus({ url }: PostgresBusOptions): Bus {
     deliver(Buffer.from(got.join(''), 'base64').toString())
   }
   /** `onlisten` runs on every (re)connect: after the first, whatever was published meanwhile is gone. */
-  const listen = () => (listening ??= client().listen(CHANNEL, received, () => {
-    if (connected) {
-      parts.clear()
-      for (const gap of gaps) gap()
-    }
-    connected = true
-  }).catch(e => {
-    listening = undefined // the next subscribe tries again
-    throw e
-  }))
+  const listen = () =>
+    (listening ??= client()
+      .listen(CHANNEL, received, () => {
+        if (connected) {
+          parts.clear()
+          for (const gap of gaps) gap()
+        }
+        connected = true
+      })
+      .catch((e) => {
+        listening = undefined // the next subscribe tries again
+        throw e
+      }))
 
   return {
     name: 'postgres',
@@ -65,8 +73,9 @@ export function postgresBus({ url }: PostgresBusOptions): Bus {
       const b64 = Buffer.from(text).toString('base64')
       const id = crypto.randomUUID()
       const n = Math.ceil(b64.length / CHUNK)
-      await client().begin(async tx => {
-        for (let i = 0; i < n; i++) await tx`select pg_notify(${CHANNEL}, ${`+${id}:${i}:${n}:${b64.slice(i * CHUNK, (i + 1) * CHUNK)}`})`
+      await client().begin(async (tx) => {
+        for (let i = 0; i < n; i++)
+          await tx`select pg_notify(${CHANNEL}, ${`+${id}:${i}:${n}:${b64.slice(i * CHUNK, (i + 1) * CHUNK)}`})`
       })
     },
     async subscribe(channel, on, gap) {

@@ -14,8 +14,10 @@ export default function Users(props: RouteProps<typeof load>) {
   return (
     <section class="users">
       <ul>
-        {props.data.users.map(u => (
-          <li key={u.id}><Link href={`/users/${u.id}`}>{u.name}</Link></li>
+        {props.data.users.map((u) => (
+          <li key={u.id}>
+            <Link href={`/users/${u.id}`}>{u.name}</Link>
+          </li>
         ))}
       </ul>
       <div class="detail">{props.children}</div>

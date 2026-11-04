@@ -19,7 +19,10 @@ pub mod style;
 mod transform;
 
 #[cfg(feature = "node")]
-#[cfg_attr(test, allow(dead_code, reason = "Node-API registers exports outside test builds"))]
+#[cfg_attr(
+    test,
+    allow(dead_code, reason = "Node-API registers exports outside test builds")
+)]
 mod node;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
@@ -111,26 +114,46 @@ pub fn transform_json(source: &str, options_json: &str) -> String {
 
 pub fn compile(source: &str, options: &Options) -> Output {
     emit::set_off(options.off.clone());
-    let source_type = SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
+    let source_type =
+        SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
     // DOM output keeps each island's call site as an export, appended so every pass reads it as authored code.
-    let islands = options.islands.as_ref().filter(|i| !i.sites.is_empty() && !options.check_only);
-    let hoisted =
-        islands.filter(|_| options.generate != "ssr").and_then(|i| hydration::hoisted(source, source_type, i));
-    let Some(hoisted) = hoisted else { return compile_source(source, source.len(), options) };
+    let islands = options
+        .islands
+        .as_ref()
+        .filter(|i| !i.sites.is_empty() && !options.check_only);
+    let hoisted = islands
+        .filter(|_| options.generate != "ssr")
+        .and_then(|i| hydration::hoisted(source, source_type, i));
+    let Some(hoisted) = hoisted else {
+        return compile_source(source, source.len(), options);
+    };
     compile_source(&format!("{source}{hoisted}"), source.len(), options)
 }
 
 fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     let allocator = Allocator::default();
-    let source_type = SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
+    let source_type =
+        SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
     let parsed = Parser::new(&allocator, source, source_type).parse();
     if !parsed.diagnostics.is_empty() || parsed.panicked {
         let diagnostics = parsed
             .diagnostics
             .iter()
-            .map(|d| Diagnostic::syntax(source, d.to_string(), d.labels.first().map(|l| l.offset() as usize)))
+            .map(|d| {
+                Diagnostic::syntax(
+                    source,
+                    d.to_string(),
+                    d.labels.first().map(|l| l.offset() as usize),
+                )
+            })
             .collect();
-        return Output { code: None, map: None, diagnostics, facts: Facts::default(), explain: None };
+        return Output {
+            code: None,
+            map: None,
+            diagnostics,
+            facts: Facts::default(),
+            explain: None,
+        };
     }
     let mut program = parsed.program;
 
@@ -149,7 +172,14 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     };
     diagnostics.extend(browser::check(&program, &scoping, source, ssr));
     // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
-    let (groups, group_uses) = style::apply(&allocator, &mut program, &scoping, source, options, &mut diagnostics);
+    let (groups, group_uses) = style::apply(
+        &allocator,
+        &mut program,
+        &scoping,
+        source,
+        options,
+        &mut diagnostics,
+    );
     diagnostics.retain(|d| (d.start as usize) <= authored);
     diagnostics.sort_by_key(|d| d.start);
     let mut facts = plan.facts.clone();
@@ -158,11 +188,24 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     facts.group_uses = group_uses;
     if options.check_only {
         facts.shapes = shape::exports(&program);
-        return Output { code: None, map: None, diagnostics, facts, explain: None };
+        return Output {
+            code: None,
+            map: None,
+            diagnostics,
+            facts,
+            explain: None,
+        };
     }
 
     // Before the pre-pass, which rewrites the params and lists the variants copy. Appended after printing.
-    let shapes = shape::apply(&allocator, &mut program, &scoping, source, &options.filename, options.shapes.as_ref());
+    let shapes = shape::apply(
+        &allocator,
+        &mut program,
+        &scoping,
+        source,
+        &options.filename,
+        options.shapes.as_ref(),
+    );
     facts.shapes = shapes.exports;
 
     if options.generate == "ssr"
@@ -178,7 +221,9 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
         .then(|| hmr::apply(&allocator, &mut program, source, &options.filename))
         .flatten();
     // Dev DOM output names its boxes and derived values for the graph (`weft browser`, the overlay).
-    let names = (options.dev && !ssr).then(|| hmr::names(&allocator, &mut program, &options.filename)).flatten();
+    let names = (options.dev && !ssr)
+        .then(|| hmr::names(&allocator, &mut program, &options.filename))
+        .flatten();
     let footer = match (footer, names) {
         (Some(a), Some(b)) => Some(a + &b),
         (a, b) => a.or(b),
@@ -188,16 +233,25 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     // (`JsxOrder`), for dev comments and `explain`. Nodes the pre-pass made have no span.
     let mut order = emit::JsxOrder::default();
     oxc_ast_visit::Visit::visit_program(&mut order, &program);
-    let origins = order.spans.iter().map(|s| (s.end > 0).then(|| diag::line_col(source, s.start))).collect();
+    let origins = order
+        .spans
+        .iter()
+        .map(|s| (s.end > 0).then(|| diag::line_col(source, s.start)))
+        .collect();
     let opts = oxc_codegen::CodegenOptions {
         source_map_path: options.source_map.then(|| options.filename.clone().into()),
         ..Default::default()
     };
-    let built = oxc_codegen::Codegen::new().with_options(opts).build(&program);
+    let built = oxc_codegen::Codegen::new()
+        .with_options(opts)
+        .build(&program);
     let printed = built.code + &shapes.code;
     let points = built.map.as_ref().map(|m| srcmap::points(&printed, m));
-    let module =
-        if ssr && options.module_name == "@weft-js/core/dom" { "@weft-js/core/ssr" } else { &options.module_name };
+    let module = if ssr && options.module_name == "@weft-js/core/dom" {
+        "@weft-js/core/ssr"
+    } else {
+        &options.module_name
+    };
     let display = display_path(&options.filename, options.cwd.as_deref());
     let o = emit::EmitOptions {
         filename: &options.filename,
@@ -218,8 +272,18 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
             explain: options.explain.then_some(out.explain),
         },
         Err(e) => {
-            diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));
-            Output { code: None, map: None, diagnostics, facts, explain: None }
+            diagnostics.push(Diagnostic::syntax(
+                &printed,
+                e.message,
+                Some(e.offset as usize),
+            ));
+            Output {
+                code: None,
+                map: None,
+                diagnostics,
+                facts,
+                explain: None,
+            }
         }
     }
 }
@@ -227,7 +291,9 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
 /// `filename` relative to the working directory when it's inside it (dev comments, `weft explain`).
 fn display_path(filename: &str, cwd: Option<&str>) -> String {
     let path = std::path::Path::new(filename);
-    let cwd = cwd.map(std::path::PathBuf::from).or_else(|| std::env::current_dir().ok());
+    let cwd = cwd
+        .map(std::path::PathBuf::from)
+        .or_else(|| std::env::current_dir().ok());
     cwd.and_then(|cwd| path.strip_prefix(cwd).ok().map(|p| p.display().to_string()))
         .unwrap_or_else(|| filename.to_string())
 }

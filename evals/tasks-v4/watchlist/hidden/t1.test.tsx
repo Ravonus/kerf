@@ -1,5 +1,17 @@
 // weft-allow T005: the task spec names data-testid values as the contract for every framework
-import { calls, change, cost, fakeApi, field, money, path, portfolio, seed, spark, start } from './helpers'
+import {
+  calls,
+  change,
+  cost,
+  fakeApi,
+  field,
+  money,
+  path,
+  portfolio,
+  seed,
+  spark,
+  start,
+} from './helpers'
 
 const stocks = seed()
 const [s0, s1, , s3] = stocks

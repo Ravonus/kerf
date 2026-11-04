@@ -15,11 +15,14 @@ test('probe', async () => {
     try {
       const c = await cost(fn)
       out[label] = {
-        domMutations: c.dom, formatCalls: c.calls,
+        domMutations: c.dom,
+        formatCalls: c.calls,
         commits: stats.commits === null ? null : stats.commits - (before.commits ?? 0),
         wallMs: +(performance.now() - t0).toFixed(2),
       }
-    } catch (e) { out[label] = { error: String(e).slice(0, 120) } }
+    } catch (e) {
+      out[label] = { error: String(e).slice(0, 120) }
+    }
   }
   await measure('quote', () => fake.push('s120', 12))
   const star = screen.queryByRole('button', { name: `Favorite ${many[101].symbol}` })
@@ -27,7 +30,9 @@ test('probe', async () => {
   const box = screen.queryByLabelText('Search')
   if (box) {
     await user.type(box, 'x')
-    await measure('search-narrow', () => fake.searches.at(-1)!.resolve(many.filter((_, i) => i % 10 === 0).map(s => s.id)))
+    await measure('search-narrow', () =>
+      fake.searches.at(-1)!.resolve(many.filter((_, i) => i % 10 === 0).map((s) => s.id)),
+    )
     await user.clear(box)
   }
   const details = screen.queryByRole('button', { name: `Details ${many[60].symbol}` })

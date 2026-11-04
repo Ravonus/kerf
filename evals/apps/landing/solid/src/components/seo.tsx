@@ -1,4 +1,4 @@
-import { Meta, Title } from "@solidjs/meta";
+import { Meta, Title } from '@solidjs/meta'
 
 export function Seo(props: { title: string; description: string }) {
   return (
@@ -9,5 +9,5 @@ export function Seo(props: { title: string; description: string }) {
       <Meta property="og:description" content={props.description} />
       <Meta property="og:type" content="website" />
     </>
-  );
+  )
 }

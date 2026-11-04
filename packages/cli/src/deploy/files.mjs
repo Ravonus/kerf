@@ -9,22 +9,46 @@ import { host, presetFor } from './hosts.mjs'
 
 /** The lockfile's manager: how the image and the workflow install. */
 const MANAGERS = [
-  ['pnpm-lock.yaml', { name: 'pnpm', install: 'corepack enable && pnpm install --frozen-lockfile', x: 'pnpm exec', cache: 'pnpm' }],
-  ['yarn.lock', { name: 'yarn', install: 'corepack enable && yarn install --immutable', x: 'yarn', cache: 'yarn' }],
+  [
+    'pnpm-lock.yaml',
+    {
+      name: 'pnpm',
+      install: 'corepack enable && pnpm install --frozen-lockfile',
+      x: 'pnpm exec',
+      cache: 'pnpm',
+    },
+  ],
+  [
+    'yarn.lock',
+    {
+      name: 'yarn',
+      install: 'corepack enable && yarn install --immutable',
+      x: 'yarn',
+      cache: 'yarn',
+    },
+  ],
   ['bun.lock', { name: 'bun', install: 'bun install --frozen-lockfile', x: 'bunx', cache: '' }],
   ['package-lock.json', { name: 'npm', install: 'npm ci', x: 'npx', cache: 'npm' }],
 ]
-export const managerOf = root => (MANAGERS.find(([lock]) => existsSync(join(root, lock))) ?? [null, { name: 'npm', install: 'npm install', x: 'npx', cache: '' }])[1]
+export const managerOf = (root) =>
+  (MANAGERS.find(([lock]) => existsSync(join(root, lock))) ?? [
+    null,
+    { name: 'npm', install: 'npm install', x: 'npx', cache: '' },
+  ])[1]
 
 /** Where a server host keeps what must last: SQLite's default `file:.data/app.db` lands on it unchanged. */
 export const DATA = '/app/.data'
 
-const sha = body => createHash('sha256').update(body).digest('hex').slice(0, 12)
+const sha = (body) => createHash('sha256').update(body).digest('hex').slice(0, 12)
 const stamp = (target, body) => `# weft deploy init ${target}, sha ${sha(body)}\n${body}`
 const STAMP = /^# weft deploy init (\w+), sha ([0-9a-f]{12})\n/
 
 const IMAGES = { node: 'node:26-slim', bun: 'oven/bun:1-slim', deno: 'denoland/deno:latest' }
-const RUN = { node: '["node", ".output/server/index.mjs"]', bun: '["bun", "run", ".output/server/index.mjs"]', deno: '["deno", "run", "-A", ".output/server/index.mjs"]' }
+const RUN = {
+  node: '["node", ".output/server/index.mjs"]',
+  bun: '["bun", "run", ".output/server/index.mjs"]',
+  deno: '["deno", "run", "-A", ".output/server/index.mjs"]',
+}
 
 /** A two-stage image: build with the lockfile's manager, run the server. A sidecar needs cargo to build and `weft start` to run. */
 function dockerfile({ runtime, manager, needs }) {
@@ -32,21 +56,37 @@ function dockerfile({ runtime, manager, needs }) {
   const lines = [
     `FROM ${IMAGES.node} AS build`,
     'WORKDIR /app',
-    ...(rust ? ['RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates build-essential && curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal', 'ENV PATH=/root/.cargo/bin:$PATH'] : []),
+    ...(rust
+      ? [
+          'RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates build-essential && curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal',
+          'ENV PATH=/root/.cargo/bin:$PATH',
+        ]
+      : []),
     'COPY . .',
     `RUN ${manager.install}`,
     `RUN ${manager.x} weft build --preset ${presetFor({}, runtime)}`,
     '',
-    `FROM ${needs.sidecar ? IMAGES.node : IMAGES[runtime] ?? IMAGES.node}`,
+    `FROM ${needs.sidecar ? IMAGES.node : (IMAGES[runtime] ?? IMAGES.node)}`,
     'WORKDIR /app',
     'ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080',
     // `weft start` runs each sidecar next to the server; without one the server is all there is
-    ...(needs.sidecar ? ['COPY --from=build /app ./', 'EXPOSE 8080', `CMD ["${manager.x.split(' ')[0]}", ${manager.x.includes(' ') ? `"${manager.x.split(' ')[1]}", ` : ''}"weft", "start"]`] : ['COPY --from=build /app/.output ./.output', 'EXPOSE 8080', `CMD ${RUN[runtime] ?? RUN.node}`]),
+    ...(needs.sidecar
+      ? [
+          'COPY --from=build /app ./',
+          'EXPOSE 8080',
+          `CMD ["${manager.x.split(' ')[0]}", ${manager.x.includes(' ') ? `"${manager.x.split(' ')[1]}", ` : ''}"weft", "start"]`,
+        ]
+      : [
+          'COPY --from=build /app/.output ./.output',
+          'EXPOSE 8080',
+          `CMD ${RUN[runtime] ?? RUN.node}`,
+        ]),
   ]
   return `${lines.join('\n')}\n`
 }
 
-const DOCKERIGNORE = 'node_modules\n.output\n.weft/*\n!.weft/plugins.lock.json\n.env\n.env.*\n.git\n.netlify\n.vercel\ntarget\n'
+const DOCKERIGNORE =
+  'node_modules\n.output\n.weft/*\n!.weft/plugins.lock.json\n.env\n.env.*\n.git\n.netlify\n.vercel\ntarget\n'
 
 function flyToml({ deploy, needs }) {
   const fly = deploy.fly ?? {}
@@ -57,7 +97,9 @@ function flyToml({ deploy, needs }) {
     '',
     '[env]',
     '  PORT = "8080"',
-    ...(needs.uploads && fly.volume ? [`  WEFT_MEDIA_DIR = "${fly.volume.path ?? DATA}/media"`] : []),
+    ...(needs.uploads && fly.volume
+      ? [`  WEFT_MEDIA_DIR = "${fly.volume.path ?? DATA}/media"`]
+      : []),
     '',
     '[http_service]',
     '  internal_port = 8080',
@@ -66,7 +108,15 @@ function flyToml({ deploy, needs }) {
     '  auto_start_machines = true',
     // a change feed is a listener: a stopped machine hears nothing
     `  min_machines_running = ${held ? 1 : 0}`,
-    ...(fly.volume ? ['', '[[mounts]]', `  source = ${JSON.stringify(fly.volume.name ?? 'data')}`, `  destination = ${JSON.stringify(fly.volume.path ?? DATA)}`, `  initial_size = "${fly.volume.sizeGb ?? 1}gb"`] : []),
+    ...(fly.volume
+      ? [
+          '',
+          '[[mounts]]',
+          `  source = ${JSON.stringify(fly.volume.name ?? 'data')}`,
+          `  destination = ${JSON.stringify(fly.volume.path ?? DATA)}`,
+          `  initial_size = "${fly.volume.sizeGb ?? 1}gb"`,
+        ]
+      : []),
     '',
     '[[vm]]',
     `  memory = ${JSON.stringify(fly.memory ?? '512mb')}`,
@@ -89,23 +139,43 @@ function renderYaml({ deploy, needs }) {
     '    envVars:',
     '      - key: NODE_ENV',
     '        value: production',
-    ...(needs.uploads && r.disk ? ['      - key: WEFT_MEDIA_DIR', `        value: ${r.disk.path ?? DATA}/media`] : []),
-    ...(r.disk ? ['    disk:', '      name: data', `      mountPath: ${r.disk.path ?? DATA}`, `      sizeGB: ${r.disk.sizeGb ?? 1}`] : []),
+    ...(needs.uploads && r.disk
+      ? ['      - key: WEFT_MEDIA_DIR', `        value: ${r.disk.path ?? DATA}/media`]
+      : []),
+    ...(r.disk
+      ? [
+          '    disk:',
+          '      name: data',
+          `      mountPath: ${r.disk.path ?? DATA}`,
+          `      sizeGB: ${r.disk.sizeGb ?? 1}`,
+        ]
+      : []),
   ]
   return `${lines.join('\n')}\n`
 }
 
-const netlifyToml = ({ manager }) => `[build]\n  command = "${manager.x} weft build --preset netlify"\n  publish = "dist"\n\n[build.environment]\n  NODE_VERSION = "26"\n`
+const netlifyToml = ({ manager }) =>
+  `[build]\n  command = "${manager.x} weft build --preset netlify"\n  publish = "dist"\n\n[build.environment]\n  NODE_VERSION = "26"\n`
 
-const vercelJson = ({ manager }) => `${JSON.stringify({ $schema: 'https://openapi.vercel.sh/vercel.json', framework: null, installCommand: manager.install.replace(/^corepack enable && /, ''), buildCommand: `${manager.x} weft build --preset vercel` }, null, 2)}\n`
+const vercelJson = ({ manager }) =>
+  `${JSON.stringify({ $schema: 'https://openapi.vercel.sh/vercel.json', framework: null, installCommand: manager.install.replace(/^corepack enable && /, ''), buildCommand: `${manager.x} weft build --preset vercel` }, null, 2)}\n`
 
-const wranglerToml = ({ deploy }) => `name = ${JSON.stringify(deploy.cloudflare?.name ?? 'my-app')}\ncompatibility_flags = ["nodejs_compat"]\n`
+const wranglerToml = ({ deploy }) =>
+  `name = ${JSON.stringify(deploy.cloudflare?.name ?? 'my-app')}\ncompatibility_flags = ["nodejs_compat"]\n`
 
 /** The workflow: on push to the branch, check and deploy to production; on a pull request, a preview where the host has one. */
 function workflow({ target, deploy, manager }) {
   const h = host(target)
   const previews = h.kind !== 'server'
-  const node = manager.name === 'bun' ? ['      - uses: oven-sh/setup-bun@v2'] : ['      - uses: actions/setup-node@v4', '        with:', '          node-version: 26', ...(manager.cache ? [`          cache: ${manager.cache}`] : [])]
+  const node =
+    manager.name === 'bun'
+      ? ['      - uses: oven-sh/setup-bun@v2']
+      : [
+          '      - uses: actions/setup-node@v4',
+          '        with:',
+          '          node-version: 26',
+          ...(manager.cache ? [`          cache: ${manager.cache}`] : []),
+        ]
   const lines = [
     'name: weft deploy',
     'on:',
@@ -130,7 +200,7 @@ function workflow({ target, deploy, manager }) {
     // oxlint-disable-next-line no-template-curly-in-string -- a GitHub Actions expression, not a JS template
     `      - run: ${manager.x} weft deploy --yes${previews ? " ${{ github.event_name == 'push' && '--prod' || '' }}" : ' --prod'}`,
     '        env:',
-    ...h.env.map(k => `          ${k}: \${{ secrets.${k} }}`),
+    ...h.env.map((k) => `          ${k}: \${{ secrets.${k} }}`),
   ]
   return `${lines.join('\n')}\n`
 }
@@ -163,12 +233,18 @@ export function filesFor(ctx) {
  * alone), or `foreign` (no stamp: not weft's).
  */
 export function fileStates(root, files) {
-  return files.map(f => {
+  return files.map((f) => {
     const abs = join(root, f.path)
     if (!existsSync(abs)) return { ...f, state: 'missing' }
     const now = readFileSync(abs, 'utf8')
     if (now === f.text) return { ...f, state: 'current' }
-    if (f.json) return { ...f, state: JSON.parse(now || '{}').buildCommand?.includes('weft build --preset vercel') ? 'edited' : 'stale' }
+    if (f.json)
+      return {
+        ...f,
+        state: JSON.parse(now || '{}').buildCommand?.includes('weft build --preset vercel')
+          ? 'edited'
+          : 'stale',
+      }
     if (f.plain) return { ...f, state: 'edited' }
     const m = STAMP.exec(now)
     if (!m) return { ...f, state: 'foreign' }
@@ -180,7 +256,8 @@ export function fileStates(root, files) {
 export function writeFiles(root, states, { force = false } = {}) {
   const written = []
   for (const f of states) {
-    if (f.state === 'current' || (!force && (f.state === 'edited' || f.state === 'foreign'))) continue
+    if (f.state === 'current' || (!force && (f.state === 'edited' || f.state === 'foreign')))
+      continue
     mkdirSync(dirname(join(root, f.path)), { recursive: true })
     writeFileSync(join(root, f.path), f.text)
     written.push(f.path)

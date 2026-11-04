@@ -14,7 +14,10 @@ export const meta: Meta<typeof load> = ({ data }) => ({ title: `Order #${data.id
 
 export default function Order(props: RouteProps<typeof load, '/admin/orders/[id]'>) {
   return (
-    <Boundary pending={<OrderLoading />} error={(_, retry) => <Failed what="This order" retry={retry} />}>
+    <Boundary
+      pending={<OrderLoading />}
+      error={(_, retry) => <Failed what="This order" retry={retry} />}
+    >
       <OrderDetail id={props.data.id} />
     </Boundary>
   )

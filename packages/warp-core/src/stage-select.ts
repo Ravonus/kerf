@@ -13,12 +13,23 @@ export interface StageSelectOptions {
 }
 
 /** Wires a trigger to the list its `aria-controls` names; the rows are its `[role="option"]`s, each with a `data-value`. */
-export function stageSelect(trigger: HTMLButtonElement, opts: StageSelectOptions): Action<StageSelectOptions> {
-  let o = opts, at = -1, shown = false, remove: (() => void) | undefined, frame = 0
-  const doc = trigger.ownerDocument, win = doc.defaultView!, typed = typeahead()
+export function stageSelect(
+  trigger: HTMLButtonElement,
+  opts: StageSelectOptions,
+): Action<StageSelectOptions> {
+  let o = opts,
+    at = -1,
+    shown = false,
+    remove: (() => void) | undefined,
+    frame = 0
+  const doc = trigger.ownerDocument,
+    win = doc.defaultView!,
+    typed = typeahead()
   const list = () => doc.getElementById(trigger.getAttribute('aria-controls') ?? '')
   const float = () => list()?.closest<HTMLElement>('[popover]') ?? undefined
-  const rows = () => [...(list()?.querySelectorAll<HTMLElement>('[role="option"]:not([aria-disabled="true"])') ?? [])]
+  const rows = () => [
+    ...(list()?.querySelectorAll<HTMLElement>('[role="option"]:not([aria-disabled="true"])') ?? []),
+  ]
   const locked = () => trigger.disabled
 
   function go(i: number, keyed = true) {
@@ -49,7 +60,15 @@ export function stageSelect(trigger: HTMLButtonElement, opts: StageSelectOptions
     if (shown || locked() || !f) return
     shown = true
     const all = rows()
-    const start = move === 'last' ? all.length - 1 : move === 'first' ? 0 : Math.max(0, all.findIndex(r => r.dataset.value === o.value))
+    const start =
+      move === 'last'
+        ? all.length - 1
+        : move === 'first'
+          ? 0
+          : Math.max(
+              0,
+              all.findIndex((r) => r.dataset.value === o.value),
+            )
     trigger.setAttribute('aria-expanded', 'true')
     f.showPopover?.()
     reposition()
@@ -86,32 +105,60 @@ export function stageSelect(trigger: HTMLButtonElement, opts: StageSelectOptions
   }
 
   function type(key: string) {
-    const all = rows(), hit = typed.next(key, all, at, r => r.textContent ?? '')
+    const all = rows(),
+      hit = typed.next(key, all, at, (r) => r.textContent ?? '')
     if (hit) go(all.indexOf(hit))
   }
 
   function onKey(e: KeyboardEvent) {
     if (e.isComposing || e.defaultPrevented) return
-    const { key } = e, printable = key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey
+    const { key } = e,
+      printable = key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey
     if (!shown) {
       if (locked()) return
-      if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') { e.preventDefault(); show() }
-      else if (key === 'Home' || key === 'End') { e.preventDefault(); show(key === 'Home' ? 'first' : 'last') }
-      else if (printable) { e.preventDefault(); show(); type(key) }
+      if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') {
+        e.preventDefault()
+        show()
+      } else if (key === 'Home' || key === 'End') {
+        e.preventDefault()
+        show(key === 'Home' ? 'first' : 'last')
+      } else if (printable) {
+        e.preventDefault()
+        show()
+        type(key)
+      }
       return
     }
     if (key === 'Tab') return pick(at)
-    if (key === ' ' && typed.typing) { e.preventDefault(); return type(key) }
+    if (key === ' ' && typed.typing) {
+      e.preventDefault()
+      return type(key)
+    }
     const m = listKey(key, at, rows().length, { page: 8 })
-    if (m.handled) { e.preventDefault(); return m.pick ? pick(at) : go(m.to) }
-    if (printable) { e.preventDefault(); type(key) }
+    if (m.handled) {
+      e.preventDefault()
+      return m.pick ? pick(at) : go(m.to)
+    }
+    if (printable) {
+      e.preventDefault()
+      type(key)
+    }
   }
 
-  const rowAt = (e: Event) => rows().findIndex(r => r === (e.target as Element).closest?.('[role="option"]'))
-  const onMove = (e: PointerEvent) => { if (e.pointerType === 'touch') return; const i = rowAt(e); if (i >= 0 && i !== at) go(i, false) }
+  const rowAt = (e: Event) =>
+    rows().findIndex((r) => r === (e.target as Element).closest?.('[role="option"]'))
+  const onMove = (e: PointerEvent) => {
+    if (e.pointerType === 'touch') return
+    const i = rowAt(e)
+    if (i >= 0 && i !== at) go(i, false)
+  }
   const onDown = (e: MouseEvent) => e.preventDefault() // focus stays on the trigger, where the keys are
   // A row's click would also reach a <label> round the select and press the trigger again, so the list keeps it.
-  const onPress = (e: MouseEvent) => { e.preventDefault(); const i = rowAt(e); if (i >= 0) pick(i) }
+  const onPress = (e: MouseEvent) => {
+    e.preventDefault()
+    const i = rowAt(e)
+    if (i >= 0) pick(i)
+  }
   const onClick = () => (shown ? hide(true) : show())
   const onLeave = () => hide()
 
@@ -123,7 +170,9 @@ export function stageSelect(trigger: HTMLButtonElement, opts: StageSelectOptions
   wired?.addEventListener('mousedown', onDown)
   wired?.addEventListener('click', onPress)
   return {
-    update(next) { o = next },
+    update(next) {
+      o = next
+    },
     destroy() {
       hide()
       trigger.removeEventListener('click', onClick)

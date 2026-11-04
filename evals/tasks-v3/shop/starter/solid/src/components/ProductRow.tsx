@@ -6,7 +6,12 @@ export function ProductRow(props: { product: Product; onAdd: (id: string) => voi
     <li>
       <span data-testid="name">{props.product.name}</span>
       <span data-testid="price">{money(props.product.price)}</span>
-      <button aria-label={`Add ${props.product.name}`} onClick={() => props.onAdd(props.product.id)}>Add</button>
+      <button
+        aria-label={`Add ${props.product.name}`}
+        onClick={() => props.onAdd(props.product.id)}
+      >
+        Add
+      </button>
     </li>
   )
 }

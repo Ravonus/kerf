@@ -9,7 +9,9 @@ export interface WarpOptions {
    * The brand's hue family: `{ accent: '#rrggbb' }`, or a hue and chroma. Each theme solves its own lightness, and the build
    * prints where it landed. `neutral` tints pages, surfaces and text the same way. Checked at the stops `dials` leave (D010).
    */
-  seed?: ({ accent: string } | { hue: number; chroma: number } | {}) & { neutral?: string | { hue: number; chroma: number } }
+  seed?: ({ accent: string } | { hue: number; chroma: number } | {}) & {
+    neutral?: string | { hue: number; chroma: number }
+  }
   /** `'classic'` makes classic fields the default. */
   fields?: 'floating' | 'classic'
   /** The app's default dials. A `data-*` on `<html>` or any scope still wins. */

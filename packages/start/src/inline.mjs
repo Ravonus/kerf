@@ -5,7 +5,8 @@
  * The one order every app shares. Layers rank by first appearance, so this goes before any sheet: warp's own too, or the
  * order would follow whichever component's sheet a page lists first.
  */
-export const LAYER_ORDER = '@layer warp,app,theme,base,components,utilities;@layer warp.tokens,warp.base,warp.signature,warp.layout,warp.components,warp.inputs,warp.inputs-rich,warp.data,warp.app,warp.flows,warp.marketing,warp.canvas,warp.flow;'
+export const LAYER_ORDER =
+  '@layer warp,app,theme,base,components,utilities;@layer warp.tokens,warp.base,warp.signature,warp.layout,warp.components,warp.inputs,warp.inputs-rich,warp.data,warp.app,warp.flows,warp.marketing,warp.canvas,warp.flow;'
 /** Head plus shell, in compressed bytes: about what a first flight carries, less headers and TLS. */
 export const FIRST_PAINT_BYTES = 12 * 1024
 /** Compression at the server's brotli 5, measured on built warp pages (5.9 to 6.2 for CSS, 3.7 to 4 for HTML). */
@@ -20,7 +21,8 @@ const ATTR = /\b(data-[\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+)))?/gi
 const CLASS = /\bclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+))/gi
 const PROP = /--[A-Za-z_][\w-]*/g
 // What a selector asks for. An attribute selector goes first and whole, or `[href$=".pdf"]` reads as a class.
-const SELECTOR_WORD = /\[\s*([\w-]+)\s*(?:([~|^$*]?=)\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|([^\s\]]+))\s*(\w)?\s*)?\]|\.((?:[\w-]|[^\0-\x7f]|\\.)+)/g
+const SELECTOR_WORD =
+  /\[\s*([\w-]+)\s*(?:([~|^$*]?=)\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|([^\s\]]+))\s*(\w)?\s*)?\]|\.((?:[\w-]|[^\0-\x7f]|\\.)+)/g
 // A reference the shell's text can't be compared with, so nothing is ruled out on its value.
 const ENTITY = /&(?!(?:amp|quot|lt|gt);)/
 const ANY_VALUE = '=*'
@@ -30,24 +32,32 @@ const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|f
 const DIAL = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields)$/
 // Rules that can't paint until someone acts, so the late sheet is soon enough for them. A state the server can render
 // (`:checked`, `aria-checked`, `:disabled`) has to stay.
-const LATER = /:(?:hover|active|focus|focus-visible|focus-within|popover-open|modal)\b|::(?:backdrop|selection)/
+const LATER =
+  /:(?:hover|active|focus|focus-visible|focus-within|popover-open|modal)\b|::(?:backdrop|selection)/
 const PRINT = /^@media\s+print\s*(?:and\b[^,]*)?$/i
 const FORCED_COLORS = /^@media\s*\(\s*forced-colors\s*:\s*active\s*\)\s*(?:and\b[^,]*)?$/i
 const GROUPING = /^@(?:media|supports|layer|container|scope|starting-style)\b/
 
-const esc = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
-const print = nodes => nodes.map(n => (n.body === undefined ? `${n.head};` : `${n.head}{${n.body}}`)).join('')
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+const print = (nodes) =>
+  nodes.map((n) => (n.body === undefined ? `${n.head};` : `${n.head}{${n.body}}`)).join('')
 
 /** Calls `visit` at each top-level comma and bracket of `text` from `from`, skipping strings, and stops at the end of the bracket it began in. */
 function scan(text, from, visit) {
-  let depth = 0, quote = ''
+  let depth = 0,
+    quote = ''
   for (let i = from; i < text.length; i++) {
     const c = text[i]
-    if (quote) { if (c === '\\') i++; else if (c === quote) quote = ''; continue }
+    if (quote) {
+      if (c === '\\') i++
+      else if (c === quote) quote = ''
+      continue
+    }
     if (c === '"' || c === "'") quote = c
     else if (c === '(' || c === '[') depth++
-    else if (c === ')' || c === ']') { if (--depth < 0) return i }
-    else if (c === ',' && !depth) visit(i)
+    else if (c === ')' || c === ']') {
+      if (--depth < 0) return i
+    } else if (c === ',' && !depth) visit(i)
   }
   return text.length
 }
@@ -55,7 +65,10 @@ function scan(text, from, visit) {
 function selectors(head) {
   const out = []
   let from = 0
-  scan(head, 0, i => { out.push(head.slice(from, i)); from = i + 1 })
+  scan(head, 0, (i) => {
+    out.push(head.slice(from, i))
+    from = i + 1
+  })
   out.push(head.slice(from))
   return out
 }
@@ -68,8 +81,13 @@ function required(selector) {
     if (!m) return rest
     const open = m.index + m[0].length
     let comma = false
-    const end = scan(rest, open, () => { comma = true })
-    rest = rest.slice(0, m.index) + (m[1] === 'not' || comma ? '' : ` ${rest.slice(open, end)} `) + rest.slice(end + 1)
+    const end = scan(rest, open, () => {
+      comma = true
+    })
+    rest =
+      rest.slice(0, m.index) +
+      (m[1] === 'not' || comma ? '' : ` ${rest.slice(open, end)} `) +
+      rest.slice(end + 1)
   }
 }
 
@@ -114,28 +132,33 @@ function paints(selector, found) {
 
 /** A sheet without what can't show in the first paint. */
 function firstPaint(css, parse, found) {
-  const walk = source => print(parse(source).flatMap(n => {
-    if (n.body === undefined) return [n]
-    if (PRINT.test(n.head) || FORCED_COLORS.test(n.head)) return []
-    if (GROUPING.test(n.head)) {
-      const body = walk(n.body)
-      return body ? [{ head: n.head, body }] : []
-    }
-    if (n.head[0] === '@') return [n]
-    const kept = selectors(n.head).filter(s => paints(s, found))
-    return kept.length ? [{ head: kept.join(','), body: n.body }] : []
-  }))
+  const walk = (source) =>
+    print(
+      parse(source).flatMap((n) => {
+        if (n.body === undefined) return [n]
+        if (PRINT.test(n.head) || FORCED_COLORS.test(n.head)) return []
+        if (GROUPING.test(n.head)) {
+          const body = walk(n.body)
+          return body ? [{ head: n.head, body }] : []
+        }
+        if (n.head[0] === '@') return [n]
+        const kept = selectors(n.head).filter((s) => paints(s, found))
+        return kept.length ? [{ head: kept.join(','), body: n.body }] : []
+      }),
+    )
   return walk(css)
 }
 
 /** `@font-face` rules no remaining rule names: warp's metric fallbacks for families this page doesn't set. */
 function usedFaces(css, parse) {
-  const rest = print(parse(css).filter(n => !n.head.startsWith('@font-face')))
-  return print(parse(css).filter(n => {
-    if (!n.head.startsWith('@font-face')) return true
-    const family = /font-family:\s*["']?([^"';}]+)/.exec(n.body)?.[1]
-    return !family || rest.includes(family)
-  }))
+  const rest = print(parse(css).filter((n) => !n.head.startsWith('@font-face')))
+  return print(
+    parse(css).filter((n) => {
+      if (!n.head.startsWith('@font-face')) return true
+      const family = /font-family:\s*["']?([^"';}]+)/.exec(n.body)?.[1]
+      return !family || rest.includes(family)
+    }),
+  )
 }
 
 const critical = new Map()
@@ -164,9 +187,13 @@ function vocabulary(sheets, id) {
 
 /** Adds to `found` what these sources have of the sheets' words. */
 function read(sources, known, found) {
-  const see = w => { if (known.has(w)) found.add(w) }
+  const see = (w) => {
+    if (known.has(w)) found.add(w)
+  }
   const once = (seen, value) => !seen.has(value) && !!seen.add(value) // a page of rows repeats a few values thousands of times
-  const names = new Set(), values = new Set(), classes = new Set()
+  const names = new Set(),
+    values = new Set(),
+    classes = new Set()
   for (const source of sources) {
     for (const m of source.matchAll(ATTR)) {
       if (once(names, m[1])) see(m[1].toLowerCase())
@@ -188,12 +215,18 @@ function read(sources, known, found) {
 
 /** The rules `found` reaches in these sheets. Kept by the page's shape, not its text, so rows don't miss it. */
 function criticalCss(sheets, found, { parse, purge }) {
-  const key = `${sheets.map(s => s.href).join()}|${[...found].sort((a, b) => (a < b ? -1 : 1)).join()}`
+  const key = `${sheets.map((s) => s.href).join()}|${[...found].sort((a, b) => (a < b ? -1 : 1)).join()}`
   let css = critical.get(key)
   if (css === undefined) {
     // Keeps a value the shell's words can't vouch for, as firstPaint does.
-    const has = w => found.has(w) || found.has(ANY_VALUE) || !/^-{0,2}[\w-]+$/.test(w)
-    css = usedFaces(purge(sheets.map(s => firstPaint(s.css, parse, found)), { has }).join(''), parse)
+    const has = (w) => found.has(w) || found.has(ANY_VALUE) || !/^-{0,2}[\w-]+$/.test(w)
+    css = usedFaces(
+      purge(
+        sheets.map((s) => firstPaint(s.css, parse, found)),
+        { has },
+      ).join(''),
+      parse,
+    )
     if (critical.size >= CRITICAL_MAX) critical.delete(critical.keys().next().value)
     critical.set(key, css)
   }
@@ -212,7 +245,8 @@ export function sheetId(href) {
  * are all there is sent links, not rules to paint with first (`pageStyles`). Sent as its source, so it reads nothing else.
  */
 function keepSheets(id) {
-  const c = document.cookie.match(/(?:^|; )weft-css=([^;]*)/), s = c ? c[1].split('.') : []
+  const c = document.cookie.match(/(?:^|; )weft-css=([^;]*)/),
+    s = c ? c[1].split('.') : []
   document.querySelectorAll('link[rel=stylesheet]').forEach(function (l) {
     const x = l.sheet && id(l.getAttribute('href'))
     if (x && s.indexOf(x) < 0) s.push(x)
@@ -231,14 +265,15 @@ export function keptSheets(cookie) {
  * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script. `keep`: then
  * lists them in `weft-css` (`keepSheets`), for a visitor who already has the site's cookies: one without gets none.
  */
-const lateSheets = keep => `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all')${keep ? `;(${keepSheets.toString()})(${sheetId.toString()})` : ''}}))([...document.querySelectorAll('link[data-late]')])`
+const lateSheets = (keep) =>
+  `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all')${keep ? `;(${keepSheets.toString()})(${sheetId.toString()})` : ''}}))([...document.querySelectorAll('link[data-late]')])`
 export const LATE_SHEETS = lateSheets(false)
 export const LATE_SHEETS_KEPT = lateSheets(true)
 /** The client entry's second chance: a `<style>` a CSP refused has no sheet, so the disabled link beside it is all that's left. */
 export const REFUSED_SHEETS = `document.querySelectorAll('style+link[disabled]').forEach(l=>{l.previousElementSibling.sheet||(l.disabled=false)})`
 // Put the `<style>` before this script in front of the head's first link.
 const MOVE = `(s=>{var d=document,l=d.head.querySelector('link[rel=stylesheet]');l&&l.before(s)})(document.currentScript.previousElementSibling)`
-const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
+const blocking = (href) => `<link rel="stylesheet" href="${esc(href)}">\n`
 
 /**
  * `assets.inline` is `{ href: css }`, and `assets.critical` weft's `{ parse, purge }` (none in dev). Returns the head's
@@ -252,30 +287,53 @@ const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
  */
 export function pageStyles(assets, css = [], html = '', head, seen, have, keep = false) {
   const first = `<style>${LAYER_ORDER}</style>\n`
-  if (have && css.length && css.every(c => have.has(sheetId(c.href)))) {
-    const carried = new Set(css.map(c => c.href))
+  if (have && css.length && css.every((c) => have.has(sheetId(c.href)))) {
+    const carried = new Set(css.map((c) => c.href))
     return {
-      head: first + css.map(c => blocking(c.href)).join(''),
+      head: first + css.map((c) => blocking(c.href)).join(''),
       split: false,
       links: true,
       found: () => new Set(),
       late(sheets = []) {
-        const hrefs = sheets.map(s => s.href).filter(h => !carried.has(h))
+        const hrefs = sheets.map((s) => s.href).filter((h) => !carried.has(h))
         for (const h of hrefs) carried.add(h)
         return hrefs.map(blocking).join('')
       },
     }
   }
-  const inline = css.filter(c => assets.inline?.[c.href] !== undefined).map(c => ({ href: c.href, css: assets.inline[c.href] }))
+  const inline = css
+    .filter((c) => assets.inline?.[c.href] !== undefined)
+    .map((c) => ({ href: c.href, css: assets.inline[c.href] }))
   const raw = inline.reduce((n, s) => n + s.css.length, 0)
-  const split = seen ? seen.split : !!assets.critical && inline.length > 0 && raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
-  const carried = new Set(css.map(c => c.href))
-  const known = split && vocabulary(inline, inline.map(s => s.href).join())
-  let sent = split && (seen ? new Set(seen.found) : read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? known.dials : [])))
+  const split = seen
+    ? seen.split
+    : !!assets.critical &&
+      inline.length > 0 &&
+      raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
+  const carried = new Set(css.map((c) => c.href))
+  const known = split && vocabulary(inline, inline.map((s) => s.href).join())
+  let sent =
+    split &&
+    (seen
+      ? new Set(seen.found)
+      : read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? known.dials : [])))
   const tags = split
-    ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` + css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<link rel="stylesheet" href="${esc(c.href)}" media="print" data-late>`).join('') +
-      `<noscript>${inline.map(s => blocking(s.href).trim()).join('')}</noscript>\n<script>${keep ? LATE_SHEETS_KEPT : LATE_SHEETS}</script>\n`
-    : css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<style>${assets.inline[c.href]}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`).join('')
+    ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` +
+      css
+        .map((c) =>
+          assets.inline?.[c.href] === undefined
+            ? blocking(c.href)
+            : `<link rel="stylesheet" href="${esc(c.href)}" media="print" data-late>`,
+        )
+        .join('') +
+      `<noscript>${inline.map((s) => blocking(s.href).trim()).join('')}</noscript>\n<script>${keep ? LATE_SHEETS_KEPT : LATE_SHEETS}</script>\n`
+    : css
+        .map((c) =>
+          assets.inline?.[c.href] === undefined
+            ? blocking(c.href)
+            : `<style>${assets.inline[c.href]}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`,
+        )
+        .join('')
   return {
     head: first + tags,
     split,
@@ -283,7 +341,7 @@ export function pageStyles(assets, css = [], html = '', head, seen, have, keep =
     /** The words the page's rules have reached so far. */
     found: () => sent || new Set(),
     late(sheets = [], chunk = '') {
-      const hrefs = sheets.map(s => s.href).filter(h => !carried.has(h))
+      const hrefs = sheets.map((s) => s.href).filter((h) => !carried.has(h))
       for (const h of hrefs) carried.add(h)
       const links = hrefs.map(blocking).join('')
       if (!split) return links

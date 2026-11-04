@@ -13,27 +13,42 @@ const PRODUCTS: Product[] = [
 ]
 
 function ProductCategoryRow({ category }: { category: string }) {
-  return <tr><th colspan="2">{category}</th></tr>
+  return (
+    <tr>
+      <th colspan="2">{category}</th>
+    </tr>
+  )
 }
 
 function ProductRow({ product }: { product: Product }) {
   return (
     <tr>
-      <td style={{ color: product.stocked ? undefined : 'var(--warp-color-critical-text)' }}>{product.name}</td>
+      <td style={{ color: product.stocked ? undefined : 'var(--warp-color-critical-text)' }}>
+        {product.name}
+      </td>
       <td>{product.price}</td>
     </tr>
   )
 }
 
 function ProductTable({ products }: { products: Product[] }) {
-  const categories = derived(() => [...new Set(products.map(p => p.category))])
+  const categories = derived(() => [...new Set(products.map((p) => p.category))])
   return (
     <table>
-      <thead><tr><th>Name</th><th>Price</th></tr></thead>
-      {categories.value.map(c => (
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      {categories.value.map((c) => (
         <tbody key={c}>
           <ProductCategoryRow category={c} />
-          {products.filter(p => p.category === c).map(p => <ProductRow key={p.name} product={p} />)}
+          {products
+            .filter((p) => p.category === c)
+            .map((p) => (
+              <ProductRow key={p.name} product={p} />
+            ))}
         </tbody>
       ))}
     </table>

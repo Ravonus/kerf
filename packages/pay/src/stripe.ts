@@ -6,7 +6,13 @@
 // rolls. Stripe has no ordering guarantee, so each event carries the object's `created` or the event's own time, and the
 // ledger orders by that. A price is the catalog's unless `prices` maps `pro.month` to a Stripe id, on the server.
 
-import { PayError, type CheckoutRequest, type PayRail, type PurchaseState, type RailEvent } from './index'
+import {
+  PayError,
+  type CheckoutRequest,
+  type PayRail,
+  type PurchaseState,
+  type RailEvent,
+} from './index'
 
 /** Options of `stripeRail()`. The keys default to the environment, which is where they belong. */
 export interface StripeOptions {
@@ -29,22 +35,36 @@ export interface StripeOptions {
 }
 
 const STATES: Record<string, PurchaseState> = {
-  active: 'active', trialing: 'trial', past_due: 'grace', unpaid: 'billing-retry', paused: 'paused', canceled: 'expired', incomplete_expired: 'expired', incomplete: 'pending',
+  active: 'active',
+  trialing: 'trial',
+  past_due: 'grace',
+  unpaid: 'billing-retry',
+  paused: 'paused',
+  canceled: 'expired',
+  incomplete_expired: 'expired',
+  incomplete: 'pending',
 }
 
 const API = 'https://api.stripe.com'
 const encoder = new TextEncoder()
 
-const fromHex = (s: string) => (/^[0-9a-f]{64}$/.test(s) ? Uint8Array.from(s.match(/../g)!, b => parseInt(b, 16)) : undefined)
+const fromHex = (s: string) =>
+  /^[0-9a-f]{64}$/.test(s) ? Uint8Array.from(s.match(/../g)!, (b) => parseInt(b, 16)) : undefined
 
 /** The runtime's own constant-time compare, in native code. A wasm build was measured against it: see research 38. */
 async function verified(secret: string, text: string, signatures: string[]) {
-  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'])
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  )
   const message = encoder.encode(text)
   let ok = false
   for (const s of signatures) {
     const bytes = fromHex(s)
-    if (bytes && await crypto.subtle.verify('HMAC', key, bytes, message)) ok = true
+    if (bytes && (await crypto.subtle.verify('HMAC', key, bytes, message))) ok = true
   }
   return ok
 }
@@ -76,17 +96,28 @@ interface StripeObject {
   current_period_end?: number | null
   items?: { data?: { current_period_end?: number | null }[] } | null
 }
-interface StripeEvent { id?: string; type: string; created: number; data?: { object?: StripeObject } }
+interface StripeEvent {
+  id?: string
+  type: string
+  created: number
+  data?: { object?: StripeObject }
+}
 
 /** A reference that Stripe expands into its object on some API versions. */
-const id = (x: unknown): string | undefined => (typeof x === 'string' ? x : (x as { id?: string } | null | undefined)?.id)
+const id = (x: unknown): string | undefined =>
+  typeof x === 'string' ? x : (x as { id?: string } | null | undefined)?.id
 const identity = (object: StripeObject) => {
   const m = object?.metadata ?? {}
-  return { ...(m.weft_user && { user: m.weft_user }), ...(m.weft_product && { product: m.weft_product }), ...(m.weft_plan && { plan: m.weft_plan }) }
+  return {
+    ...(m.weft_user && { user: m.weft_user }),
+    ...(m.weft_product && { product: m.weft_product }),
+    ...(m.weft_plan && { plan: m.weft_plan }),
+  }
 }
 
 /** A subscription's paid-through time, which moved onto its items in 2025 API versions. */
-const periodEnd = (sub: StripeObject) => seconds(sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end)
+const periodEnd = (sub: StripeObject) =>
+  seconds(sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end)
 
 /** One Stripe event as the ledger's, or null for one that says nothing about access. */
 function normalise(event: StripeEvent): RailEvent | null {
@@ -99,19 +130,36 @@ function normalise(event: StripeEvent): RailEvent | null {
     if (!state) return null
     const customer = id(object.customer)
     const expires = periodEnd(object)
-    return { ...base, purchase: object.id, state, ...identity(object), ...(customer && { customer }), ...(expires && { expires }) }
+    return {
+      ...base,
+      purchase: object.id,
+      state,
+      ...identity(object),
+      ...(customer && { customer }),
+      ...(expires && { expires }),
+    }
   }
-  if (type === 'checkout.session.completed' || type === 'checkout.session.async_payment_succeeded' || type === 'checkout.session.async_payment_failed') {
+  if (
+    type === 'checkout.session.completed' ||
+    type === 'checkout.session.async_payment_succeeded' ||
+    type === 'checkout.session.async_payment_failed'
+  ) {
     if (object.mode !== 'payment') return null // `customer.subscription.*` says what a subscription is doing, trial included
     const purchase = id(object.payment_intent)
     if (!purchase) return null
     const customer = id(object.customer)
-    const state: PurchaseState = type.endsWith('failed') ? 'expired' : object.payment_status === 'unpaid' ? 'pending' : 'active'
+    const state: PurchaseState = type.endsWith('failed')
+      ? 'expired'
+      : object.payment_status === 'unpaid'
+        ? 'pending'
+        : 'active'
     return { ...base, purchase, state, ...identity(object), ...(customer && { customer }) }
   }
   if (type === 'charge.refunded') {
     const purchase = id(object.payment_intent)
-    return purchase && object.refunded ? { ...base, purchase, state: 'refunded', ...identity(object) } : null // `refunded` is whole: a part refund keeps what was bought
+    return purchase && object.refunded
+      ? { ...base, purchase, state: 'refunded', ...identity(object) }
+      : null // `refunded` is whole: a part refund keeps what was bought
   }
   if (type === 'charge.dispute.created' || type === 'charge.dispute.closed') {
     const purchase = id(object.payment_intent)
@@ -129,18 +177,36 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
   const secret = () => {
     const key = options.secretKey ?? process.env.STRIPE_SECRET_KEY
     if (!key) throw new PayError('PAY003', '`STRIPE_SECRET_KEY` is not set on the server', 500)
-    if (api === API && /placeholder/i.test(key)) throw new PayError('PAY003', '`STRIPE_SECRET_KEY` is still the placeholder `weft add pay` wrote: nothing was sent to Stripe', 500) // a mock may take one
+    if (api === API && /placeholder/i.test(key))
+      throw new PayError(
+        'PAY003',
+        '`STRIPE_SECRET_KEY` is still the placeholder `weft add pay` wrote: nothing was sent to Stripe',
+        500,
+      ) // a mock may take one
     return key
   }
 
   async function call(path: string, body: Record<string, unknown>, idempotencyKey?: string) {
     const res = await fetcher(`${api}${path}`, {
       method: 'POST',
-      headers: { authorization: `Bearer ${secret()}`, 'content-type': 'application/x-www-form-urlencoded', 'stripe-version': apiVersion, ...(idempotencyKey && { 'idempotency-key': idempotencyKey }) },
+      headers: {
+        authorization: `Bearer ${secret()}`,
+        'content-type': 'application/x-www-form-urlencoded',
+        'stripe-version': apiVersion,
+        ...(idempotencyKey && { 'idempotency-key': idempotencyKey }),
+      },
       body: form(body),
     })
-    const data = await res.json().catch(() => null) as { url?: string; error?: { message?: string } } | null
-    if (!res.ok) throw new PayError('PAY030', `Stripe refused ${path}: ${data?.error?.message ?? res.status}`, res.status === 429 ? 503 : 502)
+    const data = (await res.json().catch(() => null)) as {
+      url?: string
+      error?: { message?: string }
+    } | null
+    if (!res.ok)
+      throw new PayError(
+        'PAY030',
+        `Stripe refused ${path}: ${data?.error?.message ?? res.status}`,
+        res.status === 429 ? 503 : 502,
+      )
     return data
   }
 
@@ -149,7 +215,12 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
     if (known) return { price: known, quantity: line.quantity }
     return {
       quantity: line.quantity,
-      price_data: { currency: line.currency, unit_amount: line.amount, product_data: { name: line.name }, ...(line.interval && { recurring: { interval: line.interval } }) },
+      price_data: {
+        currency: line.currency,
+        unit_amount: line.amount,
+        product_data: { name: line.name },
+        ...(line.interval && { recurring: { interval: line.interval } }),
+      },
     }
   }
 
@@ -157,21 +228,38 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
     id: 'stripe',
     async checkout(request) {
       const { line, user, customer } = request
-      const metadata = { weft_user: user, weft_product: line.product, ...(line.plan && { weft_plan: line.plan }) }
-      const session = await call('/v1/checkout/sessions', {
-        mode: line.mode,
-        line_items: [lineItem(request)],
-        success_url: request.successUrl,
-        cancel_url: request.cancelUrl,
-        client_reference_id: user,
-        customer,
-        metadata,
-        // What the later events carry: a charge and a subscription don't inherit the session's metadata.
-        ...(line.mode === 'subscription'
-          ? { subscription_data: { metadata, trial_period_days: line.trialDays } }
-          : { payment_intent_data: { metadata }, customer_creation: customer ? undefined : 'always', ...(line.shipping && { shipping_address_collection: { allowed_countries: options.shippingCountries ?? ['US', 'CA'] } }) }),
-      }, request.idempotencyKey)
-      if (typeof session?.url !== 'string') throw new PayError('PAY030', 'Stripe answered a session with no url', 502)
+      const metadata = {
+        weft_user: user,
+        weft_product: line.product,
+        ...(line.plan && { weft_plan: line.plan }),
+      }
+      const session = await call(
+        '/v1/checkout/sessions',
+        {
+          mode: line.mode,
+          line_items: [lineItem(request)],
+          success_url: request.successUrl,
+          cancel_url: request.cancelUrl,
+          client_reference_id: user,
+          customer,
+          metadata,
+          // What the later events carry: a charge and a subscription don't inherit the session's metadata.
+          ...(line.mode === 'subscription'
+            ? { subscription_data: { metadata, trial_period_days: line.trialDays } }
+            : {
+                payment_intent_data: { metadata },
+                customer_creation: customer ? undefined : 'always',
+                ...(line.shipping && {
+                  shipping_address_collection: {
+                    allowed_countries: options.shippingCountries ?? ['US', 'CA'],
+                  },
+                }),
+              }),
+        },
+        request.idempotencyKey,
+      )
+      if (typeof session?.url !== 'string')
+        throw new PayError('PAY030', 'Stripe answered a session with no url', 502)
       return { url: session.url }
     },
     async portal({ customer, returnUrl }) {
@@ -180,18 +268,32 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
     },
     async verify({ body, headers }) {
       const signing = options.webhookSecret ?? process.env.STRIPE_WEBHOOK_SECRET
-      if (!signing) throw new PayError('PAY011', '`STRIPE_WEBHOOK_SECRET` is not set: refusing every webhook rather than trusting one')
-      const parts = (headers.get('stripe-signature') ?? '').split(',').map(p => p.trim().split('='))
+      if (!signing)
+        throw new PayError(
+          'PAY011',
+          '`STRIPE_WEBHOOK_SECRET` is not set: refusing every webhook rather than trusting one',
+        )
+      const parts = (headers.get('stripe-signature') ?? '')
+        .split(',')
+        .map((p) => p.trim().split('='))
       const t = Number(parts.find(([k]) => k === 't')?.[1])
       const given = parts.filter(([k]) => k === 'v1').map(([, v]) => v ?? '')
-      if (!Number.isInteger(t) || !given.length) throw new PayError('PAY011', 'no `stripe-signature` to check')
-      if (!(await verified(signing, `${t}.${body}`, given))) throw new PayError('PAY011', 'the signature does not match this body')
-      if (Math.abs(Date.now() / 1000 - t) > tolerance) throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
+      if (!Number.isInteger(t) || !given.length)
+        throw new PayError('PAY011', 'no `stripe-signature` to check')
+      if (!(await verified(signing, `${t}.${body}`, given)))
+        throw new PayError('PAY011', 'the signature does not match this body')
+      if (Math.abs(Date.now() / 1000 - t) > tolerance)
+        throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
       const event = normalise(JSON.parse(body) as StripeEvent)
       return event ? [event] : []
     },
     async refund({ purchase }) {
-      if (!purchase.startsWith('pi_')) throw new PayError('PAY022', 'Only a one-time payment refunds here: a subscription is cancelled in the portal', 400)
+      if (!purchase.startsWith('pi_'))
+        throw new PayError(
+          'PAY022',
+          'Only a one-time payment refunds here: a subscription is cancelled in the portal',
+          400,
+        )
       await call('/v1/refunds', { payment_intent: purchase }, `refund:${purchase}`)
     },
   }

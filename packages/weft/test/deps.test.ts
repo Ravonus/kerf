@@ -5,10 +5,17 @@ import { createRoot, derived, effect, flush, onCleanup, state, stats } from '@we
 const readers = (box: unknown) => ((box as Box<unknown>).f ? 1 : 0) + (box as Box<unknown>).o.length
 
 test('a conditional read follows the branch taken, in both directions', () => {
-  const on = state(true), a = state(1), b = state(2)
+  const on = state(true),
+    a = state(1),
+    b = state(2)
   let runs = 0
   const seen: number[] = []
-  createRoot(() => effect(() => (runs++, on.value ? a.value : b.value), v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => (runs++, on.value ? a.value : b.value),
+      (v) => seen.push(v),
+    ),
+  )
   expect([readers(a), readers(b)]).toEqual([1, 0])
   on.value = false
   flush()
@@ -30,7 +37,17 @@ test('sources read later than the first change are dropped, however many there w
   const n = state(4)
   const list = Array.from({ length: 12 }, (_, i) => state(i))
   let runs = 0
-  createRoot(() => effect(() => { runs++; let sum = 0; for (let i = 0; i < n.value; i++) sum += list[i]!.value; return sum }, () => {}))
+  createRoot(() =>
+    effect(
+      () => {
+        runs++
+        let sum = 0
+        for (let i = 0; i < n.value; i++) sum += list[i]!.value
+        return sum
+      },
+      () => {},
+    ),
+  )
   expect(list.map(readers).filter(Boolean)).toHaveLength(4)
   n.value = 2
   flush()
@@ -47,9 +64,17 @@ test('sources read later than the first change are dropped, however many there w
 })
 
 test('a change of read order keeps every link once and sees every write', () => {
-  const flip = state(false), a = state(1), b = state(2), c = state(3)
+  const flip = state(false),
+    a = state(1),
+    b = state(2),
+    c = state(3)
   const seen: string[] = []
-  createRoot(() => effect(() => (flip.value ? [c.value, b.value, a.value] : [a.value, b.value, c.value]).join(), v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => (flip.value ? [c.value, b.value, a.value] : [a.value, b.value, c.value]).join(),
+      (v) => seen.push(v),
+    ),
+  )
   flip.value = true
   flush()
   expect([readers(a), readers(b), readers(c), readers(flip)]).toEqual([1, 1, 1, 1])
@@ -61,9 +86,16 @@ test('a change of read order keeps every link once and sees every write', () => 
 })
 
 test('reading one box many times is one link, whatever is read between, and every shape of it still updates', () => {
-  const a = state(1), b = state(2), twice = state(true)
+  const a = state(1),
+    b = state(2),
+    twice = state(true)
   const seen: number[] = []
-  createRoot(() => effect(() => a.value + a.value + b.value + (twice.value ? a.value : 0), v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => a.value + a.value + b.value + (twice.value ? a.value : 0),
+      (v) => seen.push(v),
+    ),
+  )
   a.value = 2
   flush()
   twice.value = false
@@ -76,12 +108,18 @@ test('reading one box many times is one link, whatever is read between, and ever
 
 test('a derived whose source changes mid-graph stays glitch-free', () => {
   const pick = state(0)
-  const a = state(1), b = state(10)
+  const a = state(1),
+    b = state(10)
   const left = derived(() => a.value + 1)
   const right = derived(() => b.value + 1)
   const chosen = derived(() => (pick.value ? right.value : left.value))
   const seen: string[] = []
-  createRoot(() => effect(() => `${pick.value}:${chosen.value}`, v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => `${pick.value}:${chosen.value}`,
+      (v) => seen.push(v),
+    ),
+  )
   pick.value = 1
   a.value = 2 // `left` is on the way out: nothing may run on its old value
   flush()
@@ -91,11 +129,17 @@ test('a derived whose source changes mid-graph stays glitch-free', () => {
 })
 
 test('a derived that lost its last reader and gained a new one is recomputed from fresh sources', () => {
-  const on = state(true), a = state(1)
+  const on = state(true),
+    a = state(1)
   let inner = 0
   const d = derived(() => (inner++, a.value * 2))
   const seen: number[] = []
-  createRoot(() => effect(() => (on.value ? d.value : -1), v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => (on.value ? d.value : -1),
+      (v) => seen.push(v),
+    ),
+  )
   on.value = false
   flush()
   a.value = 2
@@ -107,24 +151,41 @@ test('a derived that lost its last reader and gained a new one is recomputed fro
 })
 
 test('a run that throws keeps the links of what it read before the throw', () => {
-  const a = state(0), b = state(1), c = state(2)
-  createRoot(() => effect(() => {
-    if (a.value === 1) throw new Error('no')
-    return b.value + c.value
-  }, () => {}))
+  const a = state(0),
+    b = state(1),
+    c = state(2)
+  createRoot(() =>
+    effect(
+      () => {
+        if (a.value === 1) throw new Error('no')
+        return b.value + c.value
+      },
+      () => {},
+    ),
+  )
   a.value = 1
   expect(() => flush()).toThrow('no')
   expect([readers(a), readers(b), readers(c)]).toEqual([1, 0, 0])
 })
 
-test('a child created during a run keeps its own links apart from its parent\'s', () => {
-  const a = state(1), b = state(2), c = state(3)
+test("a child created during a run keeps its own links apart from its parent's", () => {
+  const a = state(1),
+    b = state(2),
+    c = state(3)
   const seen: string[] = []
-  createRoot(() => effect(() => {
-    const x = a.value
-    effect(() => b.value, v => seen.push(`child ${x}/${v}`))
-    return x + c.value // read after the child ran
-  }, v => seen.push(`parent ${v}`)))
+  createRoot(() =>
+    effect(
+      () => {
+        const x = a.value
+        effect(
+          () => b.value,
+          (v) => seen.push(`child ${x}/${v}`),
+        )
+        return x + c.value // read after the child ran
+      },
+      (v) => seen.push(`parent ${v}`),
+    ),
+  )
   expect([readers(a), readers(b), readers(c)]).toEqual([1, 1, 1])
   a.value = 5
   flush()
@@ -135,9 +196,18 @@ test('a child created during a run keeps its own links apart from its parent\'s'
 })
 
 test('a write during a run is seen by the rest of it, and a source written before it is read is fresh', () => {
-  const a = state(1), b = state(1)
+  const a = state(1),
+    b = state(1)
   const seen: number[] = []
-  createRoot(() => effect(() => { b.value = a.value * 2; return b.value }, v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => {
+        b.value = a.value * 2
+        return b.value
+      },
+      (v) => seen.push(v),
+    ),
+  )
   a.value = 2
   flush()
   expect(seen).toEqual([2, 4])
@@ -147,11 +217,20 @@ test('disposing a node mid-flush: a queued binding that goes with its parent doe
   const a = state(0)
   const seen: string[] = []
   let drop!: () => void
-  createRoot(dispose => {
-    effect(() => a.value, v => { seen.push(`first ${v}`); if (v === 1) drop() })
-    createRoot(d => {
+  createRoot((dispose) => {
+    effect(
+      () => a.value,
+      (v) => {
+        seen.push(`first ${v}`)
+        if (v === 1) drop()
+      },
+    )
+    createRoot((d) => {
       drop = d
-      effect(() => a.value, v => seen.push(`second ${v}`))
+      effect(
+        () => a.value,
+        (v) => seen.push(`second ${v}`),
+      )
     })
     return dispose
   })
@@ -166,7 +245,16 @@ test('disposing a node mid-flush: a queued binding that goes with its parent doe
 test('a node disposed by its own run stays disposed', () => {
   const a = state(0)
   let runs = 0
-  createRoot(dispose => effect(() => { runs++; if (a.value === 1) dispose(); return a.value }, () => {}))
+  createRoot((dispose) =>
+    effect(
+      () => {
+        runs++
+        if (a.value === 1) dispose()
+        return a.value
+      },
+      () => {},
+    ),
+  )
   a.value = 1
   flush()
   a.value = 2
@@ -178,7 +266,7 @@ test('a disposed derived keeps its value and stops computing', () => {
   const a = state(1)
   let runs = 0
   let d!: { value: number }
-  createRoot(dispose => {
+  createRoot((dispose) => {
     d = derived(() => (runs++, a.value))
     void d.value
     dispose()
@@ -189,11 +277,18 @@ test('a disposed derived keeps its value and stops computing', () => {
 })
 
 test('parents run before children when the write that reaches them comes in the other order', () => {
-  const late = state(0), early = state(0)
+  const late = state(0),
+    early = state(0)
   const seen: string[] = []
   createRoot(() => {
-    effect(() => early.value, v => seen.push(`first ${v}`))
-    effect(() => late.value, v => seen.push(`second ${v}`))
+    effect(
+      () => early.value,
+      (v) => seen.push(`first ${v}`),
+    )
+    effect(
+      () => late.value,
+      (v) => seen.push(`second ${v}`),
+    )
   })
   late.value = 1
   early.value = 1
@@ -204,12 +299,20 @@ test('parents run before children when the write that reaches them comes in the 
 test('a child is disposed before it would re-run when its parent re-runs in the same flush', () => {
   const a = state(0)
   const seen: string[] = []
-  createRoot(() => effect(() => {
-    const x = a.value
-    effect(() => a.value, v => seen.push(`child of ${x}: ${v}`))
-    onCleanup(() => seen.push(`cleanup ${x}`))
-    return x
-  }, () => {}))
+  createRoot(() =>
+    effect(
+      () => {
+        const x = a.value
+        effect(
+          () => a.value,
+          (v) => seen.push(`child of ${x}: ${v}`),
+        )
+        onCleanup(() => seen.push(`cleanup ${x}`))
+        return x
+      },
+      () => {},
+    ),
+  )
   a.value = 1
   flush()
   expect(seen).toEqual(['child of 0: 0', 'cleanup 0', 'child of 1: 1'])
@@ -219,7 +322,12 @@ test('per-key reads: a run that stops reading a key leaves no source behind, and
   const box = state<Record<string, number>>({ a: 1, b: 2 })
   const key = state('a')
   const seen: (number | undefined)[] = []
-  createRoot(() => effect(() => box.get(key.value), v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => box.get(key.value),
+      (v) => seen.push(v),
+    ),
+  )
   key.value = 'b'
   flush()
   expect([...(box as object as { k: Map<unknown, unknown> }).k.keys()]).toEqual(['b'])
@@ -233,7 +341,12 @@ test('per-key reads: a run that stops reading a key leaves no source behind, and
 test('stats.runs counts re-runs, as it always has: not first runs, not checks that find nothing changed', () => {
   const a = state(1)
   const even = derived(() => a.value % 2 === 0)
-  createRoot(() => effect(() => even.value, () => {}))
+  createRoot(() =>
+    effect(
+      () => even.value,
+      () => {},
+    ),
+  )
   const at = stats.runs
   a.value = 3 // `even` re-runs and stays false; the effect doesn't
   flush()
@@ -246,7 +359,12 @@ test('stats.runs counts re-runs, as it always has: not first runs, not checks th
 test('a flush by hand leaves the scheduled one harmless, and later writes still flush on their own', async () => {
   const a = state(0)
   const seen: number[] = []
-  createRoot(() => effect(() => a.value, v => seen.push(v)))
+  createRoot(() =>
+    effect(
+      () => a.value,
+      (v) => seen.push(v),
+    ),
+  )
   a.value = 1
   flush()
   a.value = 2
@@ -260,7 +378,14 @@ test('a flush by hand leaves the scheduled one harmless, and later writes still 
 describe('per-key reads between plain objects', () => {
   function rows(box: { get(k: never): unknown }, keys: unknown[]) {
     const seen: unknown[] = []
-    createRoot(() => keys.forEach(k => effect(() => box.get(k as never), v => seen.push([k, v]))))
+    createRoot(() =>
+      keys.forEach((k) =>
+        effect(
+          () => box.get(k as never),
+          (v) => seen.push([k, v]),
+        ),
+      ),
+    )
     seen.length = 0
     return seen
   }
@@ -274,7 +399,10 @@ describe('per-key reads between plain objects', () => {
     const at = stats.runs
     box.value = { 7: true }
     flush()
-    expect(seen).toEqual([[5, undefined], [7, true]])
+    expect(seen).toEqual([
+      [5, undefined],
+      [7, true],
+    ])
     expect(stats.runs - at).toBe(2)
     expect(visits).not.toHaveBeenCalled()
   })
@@ -282,10 +410,22 @@ describe('per-key reads between plain objects', () => {
   test('string, number and symbol keys, and a key that went', () => {
     const s = Symbol('s')
     const box = state<unknown>({ 1: 'a', b: 'b', [s]: 'c' })
-    const seen = rows(box, [1, '1', 'b', s, 'gone', ...Array.from({ length: 20 }, (_, i) => `x${i}`)])
+    const seen = rows(box, [
+      1,
+      '1',
+      'b',
+      s,
+      'gone',
+      ...Array.from({ length: 20 }, (_, i) => `x${i}`),
+    ])
     box.value = { b: 'b2', [s]: 'c2' }
     flush()
-    expect(seen).toEqual([[1, undefined], ['1', undefined], ['b', 'b2'], [s, 'c2']])
+    expect(seen).toEqual([
+      [1, undefined],
+      ['1', undefined],
+      ['b', 'b2'],
+      [s, 'c2'],
+    ])
   })
 
   test('a non-enumerable key, and an inherited key shadowed then not', () => {
@@ -301,11 +441,19 @@ describe('per-key reads between plain objects', () => {
     flush()
     box.value = {}
     flush()
-    expect(seen.map(x => (x as unknown[])[0])).toEqual(['h', 'toString', 'toString'])
+    expect(seen.map((x) => (x as unknown[])[0])).toEqual(['h', 'toString', 'toString'])
   })
 
   test('values that are not plain objects still compare every key read', () => {
-    class Cart { constructor(public a: number, public b: number) {} get total() { return this.a + this.b } }
+    class Cart {
+      constructor(
+        public a: number,
+        public b: number,
+      ) {}
+      get total() {
+        return this.a + this.b
+      }
+    }
     const cart = state<unknown>(new Cart(1, 2))
     const seen = rows(cart, ['total', 'a'])
     cart.value = new Cart(1, 3)
@@ -318,6 +466,10 @@ describe('per-key reads between plain objects', () => {
     expect(lengths).toEqual([['length', 3]])
     list.value = null
     flush()
-    expect(lengths).toEqual([['length', 3], ['length', undefined], [0, undefined]])
+    expect(lengths).toEqual([
+      ['length', 3],
+      ['length', undefined],
+      [0, undefined],
+    ])
   })
 })

@@ -15,17 +15,37 @@ export function App(props: { route: RouteState }) {
 
 export function Level(props: { route: RouteState; depth: number }) {
   const route = untrack(() => props.route)
-  const lv = level(route, untrack(() => props.depth))
+  const lv = level(
+    route,
+    untrack(() => props.depth),
+  )
   const next = untrack(() => props.depth) + 1
   const view = () => {
     const id = lv.id.value
     if (id === undefined) return null
     const html = route.mount ? lv.html.value : undefined
-    if (html !== undefined) return route.mount!(html, untrack(() => props.depth), () => <Level route={route} depth={next} />)
-    const Route = route.comps[id] as ((props: { params: Record<string, string>; data: unknown; children: unknown }) => unknown) | undefined
+    if (html !== undefined)
+      return route.mount!(
+        html,
+        untrack(() => props.depth),
+        () => <Level route={route} depth={next} />,
+      )
+    const Route = route.comps[id] as
+      | ((props: { params: Record<string, string>; data: unknown; children: unknown }) => unknown)
+      | undefined
     if (!Route) return null
-    const body = () => <Route params={lv.params.value} data={lv.data.value}><Level route={route} depth={next} /></Route>
-    return route.around ? route.around(untrack(() => props.depth), id, body) : body()
+    const body = () => (
+      <Route params={lv.params.value} data={lv.data.value}>
+        <Level route={route} depth={next} />
+      </Route>
+    )
+    return route.around
+      ? route.around(
+          untrack(() => props.depth),
+          id,
+          body,
+        )
+      : body()
   }
   return <>{view()}</>
 }
@@ -37,10 +57,18 @@ export function Level(props: { route: RouteState; depth: number }) {
  *
  * @weft static
  */
-export function Link({ href, children, ...rest }: Record<string, unknown> & { href: string; class?: string; rel?: string; children?: unknown }) {
+export function Link({
+  href,
+  children,
+  ...rest
+}: Record<string, unknown> & { href: string; class?: string; rel?: string; children?: unknown }) {
   const route = active.route
   return (
-    <a {...rest} href={href} aria-current={route && route.path.value.replace(/[?#].*/, '') === href ? 'page' : undefined}>
+    <a
+      {...rest}
+      href={href}
+      aria-current={route && route.path.value.replace(/[?#].*/, '') === href ? 'page' : undefined}
+    >
       {children}
     </a>
   )

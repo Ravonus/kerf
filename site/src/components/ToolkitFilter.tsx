@@ -11,7 +11,10 @@ export function ToolkitFilter(props: { noun: string }) {
     for (const g of document.querySelectorAll<HTMLElement>('[data-tk="group"]')) {
       let here = 0
       for (const t of g.querySelectorAll<HTMLElement>('[data-site="tile"]')) {
-        const hit = (!q || (t.getAttribute('data-name') ?? '').includes(q) || t.textContent.toLowerCase().includes(q))
+        const hit =
+          !q ||
+          (t.getAttribute('data-name') ?? '').includes(q) ||
+          t.textContent.toLowerCase().includes(q)
         t.hidden = !hit
         t.toggleAttribute('data-show', hit)
         if (hit) here++
@@ -23,8 +26,16 @@ export function ToolkitFilter(props: { noun: string }) {
   }
   return (
     <div data-site="tk-filter">
-      <Search label={`Filter ${props.noun}s`} onInput={(e: Event) => { query = (e.target as HTMLInputElement).value; run() }} />
-      <p data-part="count" role="status">{count.value === null ? '' : `${count.value} ${props.noun}${count.value === 1 ? '' : 's'}`}</p>
+      <Search
+        label={`Filter ${props.noun}s`}
+        onInput={(e: Event) => {
+          query = (e.target as HTMLInputElement).value
+          run()
+        }}
+      />
+      <p data-part="count" role="status">
+        {count.value === null ? '' : `${count.value} ${props.noun}${count.value === 1 ? '' : 's'}`}
+      </p>
     </div>
   )
 }

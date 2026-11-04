@@ -22,20 +22,37 @@ export interface Rule {
 }
 
 /** A rule with nothing set: weekly, on the start date's day. */
-export const emptyRule = (): Rule => ({ FREQ: 'WEEKLY', INTERVAL: 1, BYDAY: [], BYMONTHDAY: null, BYMONTH: null, COUNT: null, UNTIL: null, unknown: [] })
+export const emptyRule = (): Rule => ({
+  FREQ: 'WEEKLY',
+  INTERVAL: 1,
+  BYDAY: [],
+  BYMONTHDAY: null,
+  BYMONTH: null,
+  COUNT: null,
+  UNTIL: null,
+  unknown: [],
+})
 
 /** An RRULE string as a rule. */
 export function parseRule(text: string | null | undefined): Rule {
   const r = emptyRule()
-  for (const part of (text ?? '').replace(/^RRULE:/i, '').split(';').filter(Boolean)) {
+  for (const part of (text ?? '')
+    .replace(/^RRULE:/i, '')
+    .split(';')
+    .filter(Boolean)) {
     const [k, v = ''] = part.split('=')
     if (k === 'FREQ' && /^(DAILY|WEEKLY|MONTHLY|YEARLY)$/.test(v)) r.FREQ = v as Frequency
     else if (k === 'INTERVAL' && +v >= 1) r.INTERVAL = +v
-    else if (k === 'BYDAY' && /^(-?\d?(SU|MO|TU|WE|TH|FR|SA))(,-?\d?(SU|MO|TU|WE|TH|FR|SA))*$/.test(v)) r.BYDAY = v.split(',')
+    else if (
+      k === 'BYDAY' &&
+      /^(-?\d?(SU|MO|TU|WE|TH|FR|SA))(,-?\d?(SU|MO|TU|WE|TH|FR|SA))*$/.test(v)
+    )
+      r.BYDAY = v.split(',')
     else if (k === 'BYMONTHDAY' && /^-?\d+$/.test(v)) r.BYMONTHDAY = +v
     else if (k === 'BYMONTH' && /^\d+$/.test(v)) r.BYMONTH = +v
     else if (k === 'COUNT' && +v >= 1) r.COUNT = +v
-    else if (k === 'UNTIL' && /^\d{8}/.test(v)) r.UNTIL = toIso(+v.slice(0, 4), +v.slice(4, 6), +v.slice(6, 8))
+    else if (k === 'UNTIL' && /^\d{8}/.test(v))
+      r.UNTIL = toIso(+v.slice(0, 4), +v.slice(4, 6), +v.slice(6, 8))
     else r.unknown.push(part)
   }
   return r
@@ -52,7 +69,9 @@ export function stringifyRule(r: Rule) {
     r.COUNT && `COUNT=${r.COUNT}`,
     r.UNTIL && `UNTIL=${r.UNTIL.replace(/-/g, '')}T235959Z`,
     ...r.unknown,
-  ].filter(Boolean).join(';')
+  ]
+    .filter(Boolean)
+    .join(';')
 }
 
 const weekNo = (iso: string) => Math.floor((Date.parse(iso) / 864e5 + 3) / 7) // weeks since a Monday
@@ -64,16 +83,19 @@ export const weekdayOrdinal = (iso: string) => {
 }
 
 function matchesDay(iso: string, r: Rule, dtstart: string) {
-  const [y, m, d] = ymd(iso), [, , sd] = ymd(dtstart)
+  const [y, m, d] = ymd(iso),
+    [, , sd] = ymd(dtstart)
   const total = daysIn(y, m)
   const dayHit = () => {
-    if (r.BYMONTHDAY !== null) return r.BYMONTHDAY < 0 ? d === total + 1 + r.BYMONTHDAY : d === r.BYMONTHDAY
-    if (r.BYDAY.length) return r.BYDAY.some(b => {
-      const n = parseInt(b)
-      if (b.slice(-2) !== weekday(iso)) return false
-      if (Number.isNaN(n)) return true
-      return n > 0 ? Math.ceil(d / 7) === n : d + 7 * -n > total && d + 7 * (-n - 1) <= total
-    })
+    if (r.BYMONTHDAY !== null)
+      return r.BYMONTHDAY < 0 ? d === total + 1 + r.BYMONTHDAY : d === r.BYMONTHDAY
+    if (r.BYDAY.length)
+      return r.BYDAY.some((b) => {
+        const n = parseInt(b)
+        if (b.slice(-2) !== weekday(iso)) return false
+        if (Number.isNaN(n)) return true
+        return n > 0 ? Math.ceil(d / 7) === n : d + 7 * -n > total && d + 7 * (-n - 1) <= total
+      })
     return d === sd
   }
   if (r.BYMONTH && m !== r.BYMONTH) return false
@@ -85,14 +107,26 @@ export function occurrences(r: Rule, dtstart: string, n: number): IsoDate[] {
   const out: IsoDate[] = []
   const [sy, sm] = ymd(dtstart)
   let done = 0
-  for (let iso = dtstart, guard = 0; out.length < n && guard < 12000; iso = addDays(iso, 1), guard++) {
+  for (
+    let iso = dtstart, guard = 0;
+    out.length < n && guard < 12000;
+    iso = addDays(iso, 1), guard++
+  ) {
     if (r.UNTIL && iso > r.UNTIL) break
     const [y, m] = ymd(iso)
     let hit: boolean
-    if (r.FREQ === 'DAILY') hit = guard % r.INTERVAL === 0 && (!r.BYDAY.length || r.BYDAY.includes(weekday(iso)))
-    else if (r.FREQ === 'WEEKLY') hit = (r.BYDAY.length ? r.BYDAY.includes(weekday(iso)) : weekday(iso) === weekday(dtstart)) && (weekNo(iso) - weekNo(dtstart)) % r.INTERVAL === 0
-    else if (r.FREQ === 'MONTHLY') hit = matchesDay(iso, r, dtstart) && ((y - sy) * 12 + m - sm) % r.INTERVAL === 0
-    else hit = matchesDay(iso, r.BYMONTH ? r : { ...r, BYMONTH: sm }, dtstart) && (y - sy) % r.INTERVAL === 0
+    if (r.FREQ === 'DAILY')
+      hit = guard % r.INTERVAL === 0 && (!r.BYDAY.length || r.BYDAY.includes(weekday(iso)))
+    else if (r.FREQ === 'WEEKLY')
+      hit =
+        (r.BYDAY.length ? r.BYDAY.includes(weekday(iso)) : weekday(iso) === weekday(dtstart)) &&
+        (weekNo(iso) - weekNo(dtstart)) % r.INTERVAL === 0
+    else if (r.FREQ === 'MONTHLY')
+      hit = matchesDay(iso, r, dtstart) && ((y - sy) * 12 + m - sm) % r.INTERVAL === 0
+    else
+      hit =
+        matchesDay(iso, r.BYMONTH ? r : { ...r, BYMONTH: sm }, dtstart) &&
+        (y - sy) % r.INTERVAL === 0
     if (!hit) continue
     out.push(iso as IsoDate)
     if (r.COUNT && ++done >= r.COUNT) break
@@ -101,18 +135,32 @@ export function occurrences(r: Rule, dtstart: string, n: number): IsoDate[] {
 }
 
 /** `code`'s weekday name in `locale`. */
-const dayName = (code: string, locale: string, style: 'long' | 'short' = 'long') => fmt(addDays('2024-01-07', DAYS.indexOf(code as (typeof DAYS)[number])), { weekday: style }, locale)
+const dayName = (code: string, locale: string, style: 'long' | 'short' = 'long') =>
+  fmt(
+    addDays('2024-01-07', DAYS.indexOf(code as (typeof DAYS)[number])),
+    { weekday: style },
+    locale,
+  )
 const NTH = ['', 'first', 'second', 'third', 'fourth', 'fifth']
 
 /** The weekday codes in the locale's week order. */
-export const weekOrder = (locale: string) => { const s = weekStart(locale); return Array.from({ length: 7 }, (_, i) => DAYS[(s + i) % 7]!) }
+export const weekOrder = (locale: string) => {
+  const s = weekStart(locale)
+  return Array.from({ length: 7 }, (_, i) => DAYS[(s + i) % 7]!)
+}
 
 /** "Every 2 weeks on Tuesday and Thursday, until Dec 31, 2026." */
 export function ruleSentence(r: Rule, dtstart: string, locale: string) {
-  const list = (items: string[]) => new Intl.ListFormat(locale, { type: 'conjunction' }).format(items)
+  const list = (items: string[]) =>
+    new Intl.ListFormat(locale, { type: 'conjunction' }).format(items)
   const unit = { DAILY: 'day', WEEKLY: 'week', MONTHLY: 'month', YEARLY: 'year' }[r.FREQ]
   let s = r.INTERVAL > 1 ? `Every ${r.INTERVAL} ${unit}s` : `Every ${unit}`
-  if (r.FREQ === 'WEEKLY' && r.BYDAY.length) s += ` on ${list(weekOrder(locale).filter(d => r.BYDAY.includes(d)).map(d => dayName(d, locale)))}`
+  if (r.FREQ === 'WEEKLY' && r.BYDAY.length)
+    s += ` on ${list(
+      weekOrder(locale)
+        .filter((d) => r.BYDAY.includes(d))
+        .map((d) => dayName(d, locale)),
+    )}`
   if (r.FREQ === 'MONTHLY') {
     if (r.BYMONTHDAY === -1) s += ' on the last day'
     else if (r.BYDAY.length) {

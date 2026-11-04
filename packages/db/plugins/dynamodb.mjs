@@ -9,8 +9,16 @@ export const dynamoSource = definePlugin({
   weft: '*',
   permissions: { net: ['driver:aws-sdk'] },
   contribute: () => ({
-    provides: [provide(slot, { key: 'dynamodb', sides: { server: { module: '@weft-js/db/dynamodb', export: 'adapter' } } })],
-    agents: { title: 'Lists (dynamodb)', text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back. Cursor mode only, and a sort needs a partition and an index.' },
+    provides: [
+      provide(slot, {
+        key: 'dynamodb',
+        sides: { server: { module: '@weft-js/db/dynamodb', export: 'adapter' } },
+      }),
+    ],
+    agents: {
+      title: 'Lists (dynamodb)',
+      text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back. Cursor mode only, and a sort needs a partition and an index.',
+    },
   }),
 })
 

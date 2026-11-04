@@ -7,15 +7,23 @@ export function App({ api }: { api: Api }) {
   const stocks = state<Stock[] | null>(null)
   const portfolio = state(0)
 
-  watch(() => api, source => {
-    let live = true
-    Promise.all([source.listStocks(), source.listHoldings()]).then(([list, holdings]) => {
-      if (!live) return
-      stocks.value = list
-      portfolio.value = holdings.reduce((sum, h) => sum + h.qty * (list.find(s => s.id === h.id)?.price ?? 0), 0)
-    })
-    return () => { live = false }
-  })
+  watch(
+    () => api,
+    (source) => {
+      let live = true
+      Promise.all([source.listStocks(), source.listHoldings()]).then(([list, holdings]) => {
+        if (!live) return
+        stocks.value = list
+        portfolio.value = holdings.reduce(
+          (sum, h) => sum + h.qty * (list.find((s) => s.id === h.id)?.price ?? 0),
+          0,
+        )
+      })
+      return () => {
+        live = false
+      }
+    },
+  )
 
   return (
     <>

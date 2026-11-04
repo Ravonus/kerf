@@ -1,8 +1,28 @@
 // The hub and `/_weft/rt` without a server: rings and cursors, backpressure, limits, the Origin check and the bus
 // contract. What a sink does, a real connection does; test/rt.test.mjs runs the same protocol over HTTP.
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { channel, memoryBus, mutation, query, realtime, StartError, stream, topic, tracked, type Bus, type StandardSchemaV1 } from '@weft-js/start'
-import { configure, hub, resetHub, rtRoute, type Body, type Sink, type SubEntry } from '@weft-js/start/hub'
+import {
+  channel,
+  memoryBus,
+  mutation,
+  query,
+  realtime,
+  StartError,
+  stream,
+  topic,
+  tracked,
+  type Bus,
+  type StandardSchemaV1,
+} from '@weft-js/start'
+import {
+  configure,
+  hub,
+  resetHub,
+  rtRoute,
+  type Body,
+  type Sink,
+  type SubEntry,
+} from '@weft-js/start/hub'
 import type { Poke } from '@weft-js/start/changes'
 import { postgresBus } from '@weft-js/start/bus/postgres'
 import { attach, socketRoute } from '../src/socket'
@@ -15,16 +35,35 @@ runtime.scope = () => als.getStore()
 runtime.enter = (scope, fn) => als.run(scope as Scope, fn)
 
 const json = { 'content-type': 'application/json', 'x-weft': '1' }
-const request = (body: unknown, headers: Record<string, string> = json) => new Request('http://app.test/_weft/rt', { method: 'POST', headers, body: JSON.stringify(body) })
+const request = (body: unknown, headers: Record<string, string> = json) =>
+  new Request('http://app.test/_weft/rt', { method: 'POST', headers, body: JSON.stringify(body) })
 
 /** What each event's frame carries, as far as these tests read it. */
-type Frames = { h: { c: string }; p: Poke; m: [number, string, unknown]; e: [number, { code: string }]; a: [number, string[]]; r: [number]; f: [number]; b: { retry: number }; R: unknown }
+type Frames = {
+  h: { c: string }
+  p: Poke
+  m: [number, string, unknown]
+  e: [number, { code: string }]
+  a: [number, string[]]
+  r: [number]
+  f: [number]
+  b: { retry: number }
+  R: unknown
+}
 /** What `socketRoute` answers an upgrade with: crossws reads the hooks off the response. */
 type Upgrade = Response & { crossws: { upgrade(): unknown; open?: unknown } }
 
 function sink(backlog = () => 0) {
   const frames: [string, unknown][] = []
-  const s: Sink & { frames: [string, unknown][]; closed: boolean } = { frames, closed: false, write: (e, d) => void frames.push([e, JSON.parse(d)]), backlog, close() { s.closed = true } }
+  const s: Sink & { frames: [string, unknown][]; closed: boolean } = {
+    frames,
+    closed: false,
+    write: (e, d) => void frames.push([e, JSON.parse(d)]),
+    backlog,
+    close() {
+      s.closed = true
+    },
+  }
   return s
 }
 const open = async (body: Body, s = sink(), ctx: object = {}) => {
@@ -32,9 +71,15 @@ const open = async (body: Body, s = sink(), ctx: object = {}) => {
   const c = await hub().connect(r, createScope(r, { context: () => ctx, dev: true }), body, s)
   return { c, s }
 }
-const of = <E extends keyof Frames>(s: { frames: [string, unknown][] }, e: E) => s.frames.filter(f => f[0] === e).map(f => f[1] as Frames[E])
-const wait = () => new Promise(ok => { setTimeout(ok) })
-const bare: StandardSchemaV1 = { '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ({ value: v }) } }
+const of = <E extends keyof Frames>(s: { frames: [string, unknown][] }, e: E) =>
+  s.frames.filter((f) => f[0] === e).map((f) => f[1] as Frames[E])
+const wait = () =>
+  new Promise((ok) => {
+    setTimeout(ok)
+  })
+const bare: StandardSchemaV1 = {
+  '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ({ value: v }) },
+}
 
 afterEach(async () => {
   await resetHub()
@@ -42,8 +87,15 @@ afterEach(async () => {
 })
 
 const q = query({ $id: 'hub.q', tags: ['a', 'b'], run: () => 1 })
-const t = topic('hub', { message: { '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ({ value: v }) } } })
-stream({ $id: 'hub.feed', async *run({ signal, lastEventId }) { yield* t.subscribe('k', { signal, after: lastEventId }) } })
+const t = topic('hub', {
+  message: { '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ({ value: v }) } },
+})
+stream({
+  $id: 'hub.feed',
+  async *run({ signal, lastEventId }) {
+    yield* t.subscribe('k', { signal, after: lastEventId })
+  },
+})
 void q
 
 describe('pokes', () => {
@@ -69,7 +121,7 @@ describe('pokes', () => {
     await hub().poke(['b'])
     await wait()
     const back = await open({ c: from, s: [[1, 'q', 'hub.q']] })
-    expect(of(back.s, 'p').map(p => p.t)).toEqual([['a'], ['b']])
+    expect(of(back.s, 'p').map((p) => p.t)).toEqual([['a'], ['b']])
     expect(of(back.s, 'R')).toEqual([])
     const other = await open({ c: 'elsewhere:3', s: [[1, 'q', 'hub.q']] })
     expect(of(other.s, 'R')).toHaveLength(1)
@@ -87,7 +139,12 @@ describe('pokes', () => {
   test('a gap on the bus resets every connection and moves the floor', async () => {
     let gap!: () => void
     const bus = memoryBus()
-    configure({ bus: { ...bus, subscribe: (ch, on, g) => (ch === 'weft:poke' && (gap = g!), bus.subscribe(ch, on)) } })
+    configure({
+      bus: {
+        ...bus,
+        subscribe: (ch, on, g) => (ch === 'weft:poke' && (gap = g!), bus.subscribe(ch, on)),
+      },
+    })
     const { s } = await open({ s: [[1, 'q', 'hub.q']] })
     gap()
     expect(of(s, 'R')).toHaveLength(1)
@@ -95,7 +152,10 @@ describe('pokes', () => {
 
   test('held pokes merge by tag', async () => {
     let backlog = 0
-    const { c, s } = await open({ s: [[1, 'q', 'hub.q']] }, sink(() => backlog))
+    const { c, s } = await open(
+      { s: [[1, 'q', 'hub.q']] },
+      sink(() => backlog),
+    )
     backlog = 1 << 20
     await hub().poke(['a'])
     await hub().poke(['b'])
@@ -104,20 +164,25 @@ describe('pokes', () => {
     expect(of(s, 'p')).toEqual([])
     backlog = 0
     hub().drain(c)
-    expect(of(s, 'p').map(p => p.t)).toEqual([['a', 'b']])
+    expect(of(s, 'p').map((p) => p.t)).toEqual([['a', 'b']])
   })
 
   test('W053: the hub reports a live query with no tags', async () => {
     query({ $id: 'hub.none', run: () => 1 })
     const seen: string[] = []
     const r = request({})
-    await hub().connect(r, createScope(r, { dev: true, onDiagnostic: d => seen.push(d.code) }), { s: [[1, 'q', 'hub.none']] }, sink())
+    await hub().connect(
+      r,
+      createScope(r, { dev: true, onDiagnostic: (d) => seen.push(d.code) }),
+      { s: [[1, 'q', 'hub.none']] },
+      sink(),
+    )
     expect(seen).toEqual(['W053'])
   })
 })
 
 describe('streams', () => {
-  const messages = (s: { frames: [string, unknown][] }) => of(s, 'm').map(m => m[2])
+  const messages = (s: { frames: [string, unknown][] }) => of(s, 'm').map((m) => m[2])
 
   test('a topic message reaches a stream with a resumable cursor', async () => {
     const { s } = await open({ s: [[1, 's', 'hub.feed', undefined]] })
@@ -127,9 +192,16 @@ describe('streams', () => {
     expect(of(s, 'm')).toEqual([[1, expect.stringMatching(/:\d+$/), 'one']])
   })
 
-  test('adding a subscription doesn\'t restart another\'s run', async () => {
+  test("adding a subscription doesn't restart another's run", async () => {
     let runs = 0
-    stream({ $id: 'hub.count', async *run({ signal }) { runs++; while (!signal.aborted) await wait(); yield 0 } })
+    stream({
+      $id: 'hub.count',
+      async *run({ signal }) {
+        runs++
+        while (!signal.aborted) await wait()
+        yield 0
+      },
+    })
     const { c } = await open({ s: [[1, 's', 'hub.count']] })
     await wait()
     await hub().change(c, request({}), { dev: true }, { s: [[2, 'q', 'hub.q']] })
@@ -139,7 +211,13 @@ describe('streams', () => {
 
   test('a resume in the window replays, out of it the run restarts without a cursor', async () => {
     const seen: (string | undefined)[] = []
-    stream({ $id: 'hub.resume', async *run({ signal, lastEventId }) { seen.push(lastEventId); yield* t.subscribe('r', { signal, after: lastEventId }) } })
+    stream({
+      $id: 'hub.resume',
+      async *run({ signal, lastEventId }) {
+        seen.push(lastEventId)
+        yield* t.subscribe('r', { signal, after: lastEventId })
+      },
+    })
     const a = await open({ s: [[1, 's', 'hub.resume']] })
     await wait()
     await t.publish('r', 1)
@@ -159,7 +237,10 @@ describe('streams', () => {
 
   test('latest value by default when the client is slow; the held message goes out on drain', async () => {
     let backlog = 0
-    const { c, s } = await open({ s: [[1, 's', 'hub.feed']] }, sink(() => backlog))
+    const { c, s } = await open(
+      { s: [[1, 's', 'hub.feed']] },
+      sink(() => backlog),
+    )
     await wait()
     backlog = 1 << 20
     for (const x of [1, 2, 3]) await t.publish('k', x)
@@ -174,7 +255,10 @@ describe('streams', () => {
     let backlog = 0
     const entry: SubEntry = [1, 's', 'hub.feed']
     entry[5] = 2
-    const { c, s } = await open({ s: [entry] }, sink(() => backlog))
+    const { c, s } = await open(
+      { s: [entry] },
+      sink(() => backlog),
+    )
     await wait()
     backlog = 1 << 20
     for (const x of [1, 2]) await t.publish('k', x)
@@ -191,7 +275,10 @@ describe('streams', () => {
   test('a connection over `queue` bytes gets a bye and closes', async () => {
     configure({ limits: { queue: 8 } })
     let backlog = 0
-    const { s } = await open({ s: [[1, 's', 'hub.feed']] }, sink(() => backlog))
+    const { s } = await open(
+      { s: [[1, 's', 'hub.feed']] },
+      sink(() => backlog),
+    )
     await wait()
     backlog = 1 << 20
     await t.publish('k', 'a message over eight bytes')
@@ -202,7 +289,12 @@ describe('streams', () => {
 
   test('tracked ids go through a plain handler too', async () => {
     // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-    stream({ $id: 'hub.rows', async *run() { yield tracked('row-9', 'x') } })
+    stream({
+      $id: 'hub.rows',
+      async *run() {
+        yield tracked('row-9', 'x')
+      },
+    })
     const { s } = await open({ s: [[1, 's', 'hub.rows']] })
     await wait()
     expect(of(s, 'm')).toEqual([[1, 'row-9', 'x']])
@@ -210,14 +302,22 @@ describe('streams', () => {
   })
 
   test('R006: a run that reads the database before it subscribes', async () => {
-    stream({ $id: 'hub.late', async *run({ signal }) {
-      currentScope()!.touched!.read.add('msgs') // what the driver records for a select
-      yield* t.subscribe('late', { signal })
-    } })
+    stream({
+      $id: 'hub.late',
+      async *run({ signal }) {
+        currentScope()!.touched!.read.add('msgs') // what the driver records for a select
+        yield* t.subscribe('late', { signal })
+      },
+    })
     const seen: string[] = []
     const body: Body = { s: [[1, 's', 'hub.late']] }
     const r = request(body)
-    await hub().connect(r, createScope(r, { dev: true, onDiagnostic: d => seen.push(d.code) }), body, sink())
+    await hub().connect(
+      r,
+      createScope(r, { dev: true, onDiagnostic: (d) => seen.push(d.code) }),
+      body,
+      sink(),
+    )
     await wait()
     expect(seen).toEqual(['R006'])
   })
@@ -231,7 +331,16 @@ describe('limits', () => {
 
   test('R009: too many subscriptions, and too many connections for a user', async () => {
     configure({ limits: { subscriptions: 1, connections: 1 } })
-    const { s } = await open({ s: [[1, 'q', 'hub.q'], [2, 'q', 'hub.q']] }, sink(), { user: { id: 'u' } })
+    const { s } = await open(
+      {
+        s: [
+          [1, 'q', 'hub.q'],
+          [2, 'q', 'hub.q'],
+        ],
+      },
+      sink(),
+      { user: { id: 'u' } },
+    )
     expect(of(s, 'e')[0]![1].code).toBe('R009')
     await expect(open({}, sink(), { user: { id: 'u' } })).rejects.toThrow(/R009/)
   })
@@ -239,7 +348,14 @@ describe('limits', () => {
   test('the session re-check ends an `auth` subscription when the user is gone', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     configure({ limits: { heartbeat: 10, session: 10 } })
-    stream({ $id: 'hub.mine', auth: 'user', async *run({ signal }) { while (!signal.aborted) await wait(); yield 0 } })
+    stream({
+      $id: 'hub.mine',
+      auth: 'user',
+      async *run({ signal }) {
+        while (!signal.aborted) await wait()
+        yield 0
+      },
+    })
     let ctx: object = { user: { id: 'u' } }
     const body: Body = { s: [[1, 's', 'hub.mine']] }
     const r = request(body)
@@ -271,7 +387,11 @@ describe('limits', () => {
 })
 
 describe('a bus that fails', () => {
-  const down = (): Bus => ({ name: 'down', publish: () => Promise.reject(new Error('bus down')), subscribe: () => Promise.reject(new Error('bus down')) })
+  const down = (): Bus => ({
+    name: 'down',
+    publish: () => Promise.reject(new Error('bus down')),
+    subscribe: () => Promise.reject(new Error('bus down')),
+  })
 
   test('making the hub reaches no bus: `weft build` loads this with nothing to connect to', () => {
     let subscribed = 0
@@ -282,7 +402,12 @@ describe('a bus that fails', () => {
   test('opening a connection fails, and the next try starts over', async () => {
     let ok = false
     const bus = memoryBus()
-    configure({ bus: { ...bus, subscribe: (c, on) => (ok ? bus.subscribe(c, on) : Promise.reject(new Error('bus down'))) } })
+    configure({
+      bus: {
+        ...bus,
+        subscribe: (c, on) => (ok ? bus.subscribe(c, on) : Promise.reject(new Error('bus down'))),
+      },
+    })
     await expect(open({})).rejects.toThrow('bus down')
     expect(hub().stats().connections).toBe(0)
     ok = true
@@ -290,12 +415,17 @@ describe('a bus that fails', () => {
     expect(of(s, 'h')).toHaveLength(1)
   })
 
-  test('a mutation still succeeds when its poke can\'t go out', async () => {
+  test("a mutation still succeeds when its poke can't go out", async () => {
     configure({ bus: down() })
     runtime.poke = (tags, origin) => hub().poke(tags, origin)
     const seen: string[] = []
     const m = mutation({ $id: 'hub.m', invalidates: ['x'], run: () => 'done' })
-    const a = await runMutation(createScope(request({}), { onDiagnostic: d => seen.push(d.code) }), fns.get(m.$id)!, undefined, [])
+    const a = await runMutation(
+      createScope(request({}), { onDiagnostic: (d) => seen.push(d.code) }),
+      fns.get(m.$id)!,
+      undefined,
+      [],
+    )
     expect(a.v).toBe('done')
     expect(seen).toEqual(['E_RT'])
     runtime.poke = undefined
@@ -308,9 +438,13 @@ describe('/_weft/rt', () => {
     return rtRoute(r, createScope(r), origins)
   }
 
-  test('R010: another origin is refused, unless it\'s listed', async () => {
+  test("R010: another origin is refused, unless it's listed", async () => {
     expect((await answer({}, { ...json, origin: 'http://evil.test' })).status).toBe(403)
-    const ok = await answer({}, { ...json, origin: 'http://ok.test', 'sec-fetch-site': 'cross-site' }, ['http://ok.test'])
+    const ok = await answer(
+      {},
+      { ...json, origin: 'http://ok.test', 'sec-fetch-site': 'cross-site' },
+      ['http://ok.test'],
+    )
     expect(ok.status).toBe(200)
     await ok.body!.cancel()
   })
@@ -323,13 +457,14 @@ describe('/_weft/rt', () => {
     for (const x of [1, 2, 3, 4]) await t.publish('k', `${x}`.repeat(40_000))
     await wait()
     let text = ''
-    for (; !/"4{40000}"/.test(text); ) text += new TextDecoder().decode((await reader.read()).value)
+    for (; !/"4{40000}"/.test(text);) text += new TextDecoder().decode((await reader.read()).value)
     expect(text.match(/event: m/g)).toHaveLength(3) // 1 and 2 were written; 3 was replaced while held
     await reader.cancel()
   })
 
   test('Q002: a body of the wrong shape', async () => {
-    for (const body of [null, [], { s: 'x' }, { s: [[1]] }, { d: ['a'] }]) expect((await answer(body)).status).toBe(400)
+    for (const body of [null, [], { s: 'x' }, { s: [[1]] }, { d: ['a'] }])
+      expect((await answer(body)).status).toBe(400)
   })
 
   test('Q010: without the CSRF proof', async () => {
@@ -359,9 +494,22 @@ describe('/_weft/rt', () => {
 
 test('R003: a mutation writes a table a live query reads, and pokes none of its tags', async () => {
   const seen: string[] = []
-  const reader = query({ $id: 'hub.reader', tags: ['rows'], run: () => { currentScope()!.touched!.read.add('rows'); return 1 } })
-  const write = mutation({ $id: 'hub.write', invalidates: ['other'], run: () => { currentScope()!.touched!.write.add('rows') } })
-  const scope = createScope(request({}), { dev: true, onDiagnostic: d => seen.push(d.code) })
+  const reader = query({
+    $id: 'hub.reader',
+    tags: ['rows'],
+    run: () => {
+      currentScope()!.touched!.read.add('rows')
+      return 1
+    },
+  })
+  const write = mutation({
+    $id: 'hub.write',
+    invalidates: ['other'],
+    run: () => {
+      currentScope()!.touched!.write.add('rows')
+    },
+  })
+  const scope = createScope(request({}), { dev: true, onDiagnostic: (d) => seen.push(d.code) })
   liveQueries.set(reader.$id, ['rows'])
   await fetchQuery(scope, fns.get(reader.$id)!, undefined)
   await runMutation(scope, fns.get(write.$id)!, undefined, [])
@@ -372,10 +520,11 @@ test('R003: a mutation writes a table a live query reads, and pokes none of its 
 describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres bus', () => {
   const url = process.env.WEFT_TEST_POSTGRES!
 
-  test('two instances: a message crosses, in order, and a long one survives NOTIFY\'s limit', async () => {
-    const a = postgresBus({ url }), b = postgresBus({ url })
+  test("two instances: a message crosses, in order, and a long one survives NOTIFY's limit", async () => {
+    const a = postgresBus({ url }),
+      b = postgresBus({ url })
     const got: string[] = []
-    const stop = await b.subscribe('c', m => got.push(m))
+    const stop = await b.subscribe('c', (m) => got.push(m))
     const long = 'é'.repeat(20_000)
     await a.publish('c', 'one')
     await a.publish('c', long)
@@ -407,25 +556,40 @@ describe('channels on the hub', () => {
   })
 
   test('R004 again at the upgrade, for an app that skipped `realtime()`', async () => {
-    const r = new Request('http://app.test/_weft/ws', { headers: { upgrade: 'websocket', origin: 'http://app.test' } })
+    const r = new Request('http://app.test/_weft/ws', {
+      headers: { upgrade: 'websocket', origin: 'http://app.test' },
+    })
     const seen: string[] = []
-    const res = await socketRoute(r, createScope(r, { onDiagnostic: d => seen.push(d.code) }), ['*']) as Upgrade
+    const res = (await socketRoute(r, createScope(r, { onDiagnostic: (d) => seen.push(d.code) }), [
+      '*',
+    ])) as Upgrade
     expect(seen).toEqual(['R004'])
     expect(() => res.crossws.upgrade()).toThrow()
   })
 
   test('a refused upgrade is a hook that throws the status; an allowed one has `open`', async () => {
     const at = (origin?: string, origins?: string[]) => {
-      const r = new Request('http://app.test/_weft/ws', { headers: { upgrade: 'websocket', ...(origin && { origin }) } })
+      const r = new Request('http://app.test/_weft/ws', {
+        headers: { upgrade: 'websocket', ...(origin && { origin }) },
+      })
       return socketRoute(r, createScope(r), origins) as Promise<Upgrade>
     }
-    const status = async (p: Promise<Upgrade>) => { try { (await p).crossws.upgrade(); return undefined } catch (e) { return (e as { status: number }).status } }
+    const status = async (p: Promise<Upgrade>) => {
+      try {
+        ;(await p).crossws.upgrade()
+        return undefined
+      } catch (e) {
+        return (e as { status: number }).status
+      }
+    }
     expect(await status(at('http://evil.example'))).toBe(403)
     expect(await status(at())).toBe(403)
     expect(await status(at('http://app.test:81'))).toBe(403)
     expect(await status(at('https://app.test'))).toBe(403)
     expect(typeof (await at('http://app.test')).crossws.open).toBe('function')
-    expect(typeof (await at('https://other.example', ['https://other.example'])).crossws.open).toBe('function')
+    expect(typeof (await at('https://other.example', ['https://other.example'])).crossws.open).toBe(
+      'function',
+    )
   })
 
   test('R009: joins and sockets are limited', async () => {
@@ -433,7 +597,11 @@ describe('channels on the hub', () => {
     const d = channel({ $id: 'hub.c', authorize: () => true })
     const frames: [string, number, { code: string }][] = []
     let closed = 0
-    const peer = { send: (text: string) => void frames.push(JSON.parse(text)), close: (c: number) => void (closed = c), backlog: () => 0 }
+    const peer = {
+      send: (text: string) => void frames.push(JSON.parse(text)),
+      close: (c: number) => void (closed = c),
+      backlog: () => 0,
+    }
     const r = new Request('http://app.test/_weft/ws')
     const a = await attach(peer, r, createScope(r, { context: () => ({ user: { id: 'u' } }) }))
     await attach(peer, r, createScope(r, { context: () => ({ user: { id: 'u' } }) }))
@@ -442,7 +610,7 @@ describe('channels on the hub', () => {
     a.message(JSON.stringify(['j', 2, d.$id]))
     await wait()
     await wait()
-    expect(frames.filter(f => f[0] === 'e').map(f => f[2].code)).toEqual(['R009'])
+    expect(frames.filter((f) => f[0] === 'e').map((f) => f[2].code)).toEqual(['R009'])
     await resetHub()
   })
 
@@ -459,7 +627,7 @@ describe('channels on the hub', () => {
   })
 })
 
-test('a plugin\'s bus waits for its first use, and only then loads', async () => {
+test("a plugin's bus waits for its first use, and only then loads", async () => {
   const { slotBus, memoryBus: made } = await import('@weft-js/start/bus')
   let loads = 0
   const bus = slotBus('@weft-js/realtime-redis', () => (loads++, Promise.resolve(made())))
@@ -467,9 +635,11 @@ test('a plugin\'s bus waits for its first use, and only then loads', async () =>
   await bus.close?.()
   expect(loads).toBe(0)
   const got: string[] = []
-  await bus.subscribe('c', m => got.push(m))
+  await bus.subscribe('c', (m) => got.push(m))
   await bus.publish('c', 'x')
-  await new Promise(ok => { setTimeout(ok) })
+  await new Promise((ok) => {
+    setTimeout(ok)
+  })
   expect(got).toEqual(['x'])
   expect(loads).toBe(1)
 })

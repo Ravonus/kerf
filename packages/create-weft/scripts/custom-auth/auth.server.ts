@@ -4,16 +4,29 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 import { defineAuth } from '@weft-js/start/auth'
 import { db } from '#/db/index.server'
 
-interface User { id: string; name: string; email: string }
+interface User {
+  id: string
+  name: string
+  email: string
+}
 
 const COOKIE = 'hand_session'
-const json = (body: unknown, status = 200, headers: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
-const hash = (password: string, salt = randomBytes(16).toString('hex')) => `${salt}:${scryptSync(password, salt, 32).toString('hex')}`
+const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json', ...headers },
+  })
+const hash = (password: string, salt = randomBytes(16).toString('hex')) =>
+  `${salt}:${scryptSync(password, salt, 32).toString('hex')}`
 const verify = (password: string, stored: string) => {
   const [salt, key] = stored.split(':')
-  return timingSafeEqual(Buffer.from(hash(password, salt).split(':')[1], 'hex'), Buffer.from(key, 'hex'))
+  return timingSafeEqual(
+    Buffer.from(hash(password, salt).split(':')[1], 'hex'),
+    Buffer.from(key, 'hex'),
+  )
 }
-const tokenOf = (request: Request) => request.headers.get('cookie')?.match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`))?.[1]
+const tokenOf = (request: Request) =>
+  request.headers.get('cookie')?.match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`))?.[1]
 
 async function start(user: User) {
   const token = randomBytes(32).toString('hex')
@@ -26,13 +39,17 @@ export default defineAuth({
   async session(request) {
     const token = tokenOf(request)
     if (!token) return { user: null, session: null }
-    const [user] = await db.sql`select u.id, u.name, u.email from "session" s join "user" u on u.id = s."userId" where s.token = ${token} and s."expiresAt" > ${new Date().toISOString()}` as unknown as User[]
+    const [user] =
+      (await db.sql`select u.id, u.name, u.email from "session" s join "user" u on u.id = s."userId" where s.token = ${token} and s."expiresAt" > ${new Date().toISOString()}`) as unknown as User[]
     return user ? { user, session: { token } } : { user: null, session: null }
   },
   async handler(request) {
     const path = new URL(request.url).pathname.replace('/api/auth', '')
     if (path === '/ok') return json({ ok: true })
-    const body = request.method === 'POST' ? await request.json().catch(() => ({})) as Record<string, string> : {}
+    const body =
+      request.method === 'POST'
+        ? ((await request.json().catch(() => ({}))) as Record<string, string>)
+        : {}
     if (path === '/sign-up') {
       const [taken] = await db.sql`select id from "user" where email = ${body.email}`
       if (taken) return json({ code: 'TAKEN', message: 'That email is already registered' }, 422)
@@ -43,14 +60,20 @@ export default defineAuth({
       return start(user)
     }
     if (path === '/sign-in') {
-      const [row] = await db.sql`select u.id, u.name, u.email, a.password from "user" u join account a on a."userId" = u.id where u.email = ${body.email}` as unknown as (User & { password: string })[]
-      if (!row || !verify(body.password, row.password)) return json({ code: 'INVALID', message: 'Invalid email or password' }, 401)
+      const [row] =
+        (await db.sql`select u.id, u.name, u.email, a.password from "user" u join account a on a."userId" = u.id where u.email = ${body.email}`) as unknown as (User & {
+          password: string
+        })[]
+      if (!row || !verify(body.password, row.password))
+        return json({ code: 'INVALID', message: 'Invalid email or password' }, 401)
       return start({ id: row.id, name: row.name, email: row.email })
     }
     if (path === '/sign-out') {
       const token = tokenOf(request)
       if (token) await db.sql`delete from "session" where token = ${token}`
-      return json({ ok: true }, 200, { 'set-cookie': `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax` })
+      return json({ ok: true }, 200, {
+        'set-cookie': `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`,
+      })
     }
     return json({ message: 'Not found' }, 404)
   },

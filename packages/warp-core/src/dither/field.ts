@@ -45,25 +45,52 @@ export interface FieldOptions {
 /** The edge a field fades out from. */
 export type Fade = 'left' | 'right' | 'top' | 'bottom' | 'edges'
 const HOT = 0.32
-const smooth = (v: number) => { const k = v < 0 ? 0 : v > 1 ? 1 : v; return k * k * (3 - 2 * k) }
+const smooth = (v: number) => {
+  const k = v < 0 ? 0 : v > 1 ? 1 : v
+  return k * k * (3 - 2 * k)
+}
 const clamp = (v: number, hi: number) => (v < 0 ? 0 : v > hi ? hi : v)
 const family = (el: Element) => getComputedStyle(el).fontFamily || 'sans-serif'
 
 /** The fx state a host shows (08 §1.2): `on` moves, `still` holds a frame. */
-export const fxState = (el: Element, speed: number) => (speed > 0 && !reducedMotion(el) ? 'on' : 'still')
+export const fxState = (el: Element, speed: number) =>
+  speed > 0 && !reducedMotion(el) ? 'on' : 'still'
 
 /** A canvas of dithered, animated noise that the pointer can disturb. */
-export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {}): Action<FieldOptions> {
+export function ditherField(
+  canvas: HTMLCanvasElement,
+  options: FieldOptions = {},
+): Action<FieldOptions> {
   let o = options
   const host = canvas.parentElement ?? canvas
-  let cols = 0, rows = 0, cells = 0
-  let tones = new Float32Array(0), shown = new Float32Array(0), heat = new Float32Array(0), out = new Uint32Array(0), image: ImageData | undefined
-  let inks = new Uint32Array(0), sparks: Uint32Array | undefined, dials = tier(host), mask: Mask | undefined, push: Forces | undefined, ground: Float32Array | undefined
-  let pattern = tile(o.pattern ?? 'bayer8'), fresh = false, painted = false, fontsReady = !o.mask, hot = false, clock = 0, seen = 0
+  let cols = 0,
+    rows = 0,
+    cells = 0
+  let tones = new Float32Array(0),
+    shown = new Float32Array(0),
+    heat = new Float32Array(0),
+    out = new Uint32Array(0),
+    image: ImageData | undefined
+  let inks = new Uint32Array(0),
+    sparks: Uint32Array | undefined,
+    dials = tier(host),
+    mask: Mask | undefined,
+    push: Forces | undefined,
+    ground: Float32Array | undefined
+  let pattern = tile(o.pattern ?? 'bayer8'),
+    fresh = false,
+    painted = false,
+    fontsReady = !o.mask,
+    hot = false,
+    clock = 0,
+    seen = 0
 
   const speedOf = () => (o.speed ?? 1) * dials.speed
   const moves = () => speedOf() > 0
-  const modes = () => { const p = o.pointer; return p ? (Array.isArray(p) ? p : [p]) : [] }
+  const modes = () => {
+    const p = o.pointer
+    return p ? (Array.isArray(p) ? p : [p]) : []
+  }
 
   function retheme() {
     dials = tier(host)
@@ -74,7 +101,13 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
     reforce()
     s?.update(settings())
   }
-  const settings = () => ({ draw, animate: moves(), fps: o.fps, cell: o.cell ?? 8, onTheme: retheme })
+  const settings = () => ({
+    draw,
+    animate: moves(),
+    fps: o.fps,
+    cell: o.cell ?? 8,
+    onTheme: retheme,
+  })
 
   function grow(w: number, h: number) {
     cols = w
@@ -90,68 +123,119 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
     reforce()
     edges()
   }
-  const remask = () => { mask = o.mask && fontsReady && cols ? rasterMask(o.mask, cols, rows, family(host)) : undefined }
-  const reforce = () => { const m = modes(); push = m.length && dials.reach > 0 && !reducedMotion(host) && cols ? forces(m, cols, rows, dials.reach) : undefined }
+  const remask = () => {
+    mask = o.mask && fontsReady && cols ? rasterMask(o.mask, cols, rows, family(host)) : undefined
+  }
+  const reforce = () => {
+    const m = modes()
+    push =
+      m.length && dials.reach > 0 && !reducedMotion(host) && cols
+        ? forces(m, cols, rows, dials.reach)
+        : undefined
+  }
 
   const reveal = (time: number) => !!o.mask && time < (o.reveal ?? 0) + 0.4
 
   function edges() {
     const f = o.fade
     ground = f ? new Float32Array(cells) : undefined
-    if (ground) for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) {
-      const u = x / cols, v = y / rows
-      ground[i] = f === 'left' ? smooth(u * 1.8 - 0.5) : f === 'right' ? smooth((1 - u) * 1.8 - 0.5) : f === 'top' ? smooth(v * 1.8 - 0.5) : f === 'bottom' ? smooth((1 - v) * 1.8 - 0.5) : smooth(Math.min(u, 1 - u) * 6) * smooth(Math.min(v, 1 - v) * 6)
-    }
+    if (ground)
+      for (let y = 0, i = 0; y < rows; y++)
+        for (let x = 0; x < cols; x++, i++) {
+          const u = x / cols,
+            v = y / rows
+          ground[i] =
+            f === 'left'
+              ? smooth(u * 1.8 - 0.5)
+              : f === 'right'
+                ? smooth((1 - u) * 1.8 - 0.5)
+                : f === 'top'
+                  ? smooth(v * 1.8 - 0.5)
+                  : f === 'bottom'
+                    ? smooth((1 - v) * 1.8 - 0.5)
+                    : smooth(Math.min(u, 1 - u) * 6) * smooth(Math.min(v, 1 - v) * 6)
+        }
   }
 
   function compose(now: number, stirred: boolean) {
-    const gain = o.gain ?? dials.gain, m = mask, p = stirred ? push : undefined, g = ground, sweep = moves() && !reducedMotion(host) ? o.reveal ?? 0 : 0
+    const gain = o.gain ?? dials.gain,
+      m = mask,
+      p = stirred ? push : undefined,
+      g = ground,
+      sweep = moves() && !reducedMotion(host) ? (o.reveal ?? 0) : 0
     hot = false
-    for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) {
-      let at = i, energy = 0
-      if (p) {
-        p.at(x, y)
-        energy = p.energy
-        if (energy) at = clamp(Math.round(y + p.oy), rows - 1) * cols + clamp(Math.round(x + p.ox), cols - 1)
+    for (let y = 0, i = 0; y < rows; y++)
+      for (let x = 0; x < cols; x++, i++) {
+        let at = i,
+          energy = 0
+        if (p) {
+          p.at(x, y)
+          energy = p.energy
+          if (energy)
+            at =
+              clamp(Math.round(y + p.oy), rows - 1) * cols + clamp(Math.round(x + p.ox), cols - 1)
+        }
+        const tone = tones[at]!
+        let v = tone * tone * 0.95 * gain * (g ? g[i]! : 1) + energy * 0.55
+        if (m) {
+          const age = sweep ? now - (x / cols) * sweep : 1
+          const on = age <= 0 ? 0 : age >= 0.2 ? 1 : age * 5,
+            flash = age > 0 && age < 0.3 ? (0.3 - age) * 2 * m.shape[at]! : 0
+          v =
+            v * 0.42 +
+            m.halo[at]! * 0.34 * gain * on +
+            m.shape[at]! * (0.46 + tone * 0.72) * on +
+            flash
+        }
+        shown[i] = v
+        heat[i] = energy
+        if (energy > HOT) hot = true
       }
-      const tone = tones[at]!
-      let v = tone * tone * 0.95 * gain * (g ? g[i]! : 1) + energy * 0.55
-      if (m) {
-        const age = sweep ? now - (x / cols) * sweep : 1
-        const on = age <= 0 ? 0 : age >= 0.2 ? 1 : age * 5, flash = age > 0 && age < 0.3 ? (0.3 - age) * 2 * m.shape[at]! : 0
-        v = v * 0.42 + m.halo[at]! * 0.34 * gain * on + m.shape[at]! * (0.46 + tone * 0.72) * on + flash
-      }
-      shown[i] = v
-      heat[i] = energy
-      if (energy > HOT) hot = true
-    }
   }
 
   /** Disturbed cells take the spark inks at the level they already dithered to. */
   function ignite() {
-    const top = inks.length - 1, n = pattern.n, bits = n - 1, spread = o.spread ?? 0.9, shift = (1 - spread) / 2
-    for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) if (heat[i]! > HOT) {
-      const level = shown[i]! * top + pattern.t[(y & bits) * n + (x & bits)]! * spread + shift
-      if (level >= 1) out[i] = sparks![Math.min(sparks!.length - 1, (level | 0) + 1)]!
-    }
+    const top = inks.length - 1,
+      n = pattern.n,
+      bits = n - 1,
+      spread = o.spread ?? 0.9,
+      shift = (1 - spread) / 2
+    for (let y = 0, i = 0; y < rows; y++)
+      for (let x = 0; x < cols; x++, i++)
+        if (heat[i]! > HOT) {
+          const level = shown[i]! * top + pattern.t[(y & bits) * n + (x & bits)]! * spread + shift
+          if (level >= 1) out[i] = sparks![Math.min(sparks!.length - 1, (level | 0) + 1)]!
+        }
   }
 
   function draw({ ctx, width, height, time, dt }: Frame) {
     if (width !== cols || height !== rows) grow(width, height)
     if (!inks.length) retheme()
     if (!cells || !image) return
-    const speed = speedOf(), moving = speed > 0 && !reducedMotion(host)
+    const speed = speedOf(),
+      moving = speed > 0 && !reducedMotion(host)
     clock += (time - seen) * speed * 2 // a change of speed carries on from here, with no jump
     seen = time
     if (moving || !fresh) {
-      const f = o.kind ?? 'weave', own = typeof f === 'function'
-      sample(own ? f : FIELDS[f], cols, rows, (o.seed ?? 12) + clock, tones, own && !o.smooth ? 1 : stepFor(cells))
+      const f = o.kind ?? 'weave',
+        own = typeof f === 'function'
+      sample(
+        own ? f : FIELDS[f],
+        cols,
+        rows,
+        (o.seed ?? 12) + clock,
+        tones,
+        own && !o.smooth ? 1 : stepFor(cells),
+      )
       fresh = true
     }
     const active = push?.step(dt) ?? false
     compose(time, active)
     let changed = quantize(shown, cols, rows, pattern, inks, out, o.spread ?? 0.9)
-    if (sparks && (hot || active)) { ignite(); changed = 1 }
+    if (sparks && (hot || active)) {
+      ignite()
+      changed = 1
+    }
     if (changed || !painted) {
       ctx.putImageData(image, 0, 0)
       painted = true
@@ -161,13 +245,20 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
   }
 
   const s = surface(canvas, settings())
-  if (o.mask) void (document.fonts?.ready ?? Promise.resolve()).then(() => { fontsReady = true; remask(); painted = false; s.invalidate() })
+  if (o.mask)
+    void (document.fonts?.ready ?? Promise.resolve()).then(() => {
+      fontsReady = true
+      remask()
+      painted = false
+      s.invalidate()
+    })
 
   // Pointer events reach the document even when content sits over the field, as a hero's text does.
   const place = (e: PointerEvent, fn: (x: number, y: number) => void) => {
     if (!push || !s.visible()) return
     const r = host.getBoundingClientRect()
-    const x = e.clientX - r.left, y = e.clientY - r.top
+    const x = e.clientX - r.left,
+      y = e.clientY - r.top
     if (x < 0 || y < 0 || x > r.width || y > r.height) return push.leave()
     const k = r.width / cols
     fn(x / k, y / k)
@@ -178,7 +269,10 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
   const wake = () => s.update(settings())
   const move = (e: PointerEvent) => place(e, (x, y) => push!.move(x, y))
   const press = (e: PointerEvent) => place(e, (x, y) => push!.press(x, y))
-  const leave = () => { push?.leave(); s.invalidate() }
+  const leave = () => {
+    push?.leave()
+    s.invalidate()
+  }
   document.addEventListener('pointermove', move, { passive: true })
   document.addEventListener('pointerdown', press, { passive: true })
   document.documentElement.addEventListener('pointerleave', leave)
@@ -186,12 +280,19 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
   return {
     update(next) {
       const was = JSON.stringify([o.mask && typeof o.mask !== 'function' ? o.mask : 0, o.pointer])
-      const fn = o.kind, seed = o.seed
+      const fn = o.kind,
+        seed = o.seed
       o = next
       pattern = tile(o.pattern ?? 'bayer8')
       edges()
       if (fn !== o.kind || next.seed !== seed) fresh = false
-      if (was !== JSON.stringify([o.mask && typeof o.mask !== 'function' ? o.mask : 0, o.pointer])) { fontsReady = true; remask(); reforce() }
+      if (
+        was !== JSON.stringify([o.mask && typeof o.mask !== 'function' ? o.mask : 0, o.pointer])
+      ) {
+        fontsReady = true
+        remask()
+        reforce()
+      }
       retheme()
     },
     destroy() {

@@ -8,11 +8,13 @@ export default function Bubbling() {
   return (
     <Card title="Where a click goes">
       <div role="toolbar" aria-label="Message" onClick={() => say('…and the toolbar heard it too')}>
-        <Button size="sm" onClick={() => say('Open')}>Open</Button>
+        <Button size="sm" onClick={() => say('Open')}>
+          Open
+        </Button>
         <Button
           size="sm"
           emphasis="outline"
-          onClick={e => {
+          onClick={(e) => {
             e.stopPropagation()
             say('Star, stopped here')
           }}
@@ -21,14 +23,20 @@ export default function Bubbling() {
         </Button>
       </div>
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault()
           say('Submitted, and the page stayed put')
         }}
       >
-        <Button type="submit" size="sm" emphasis="ghost">Submit</Button>
+        <Button type="submit" size="sm" emphasis="ghost">
+          Submit
+        </Button>
       </form>
-      <ol>{log.value.map((line, i) => <li key={i}>{line}</li>)}</ol>
+      <ol>
+        {log.value.map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ol>
     </Card>
   )
 }

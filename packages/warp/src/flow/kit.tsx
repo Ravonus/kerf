@@ -1,6 +1,12 @@
 // What the flow screens share (09 §1): the title, mark and rail parts, the step's form frame and its error surfaces.
 // Internal, except what the barrel names.
-import { announce, mapFlowError, secondsClock, type FlowError, type FlowErrorOptions } from '@weft-js/warp-core'
+import {
+  announce,
+  mapFlowError,
+  secondsClock,
+  type FlowError,
+  type FlowErrorOptions,
+} from '@weft-js/warp-core'
 import { derived, flush, onCleanup, onMount, state, untrack, watch } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button, type ButtonProps } from '../Button'
@@ -15,25 +21,73 @@ import '@weft-js/warp-core/styles/layout/stack.css'
 export type Heading = 'h1' | 'h2' | 'h3'
 
 /** A step's title: focus lands here on arrival (09 §1.1). */
-export function Title({ as, id, children }: { as?: Heading | undefined; id?: string; children?: unknown }) {
+export function Title({
+  as,
+  id,
+  children,
+}: {
+  as?: Heading | undefined
+  id?: string
+  children?: unknown
+}) {
   const level = derived(() => as ?? 'h1')
   return (
     <>
-      {level.value === 'h3' ? <h3 data-part="title" data-part-title="" tabindex="-1" id={id}>{children}</h3>
-        : level.value === 'h2' ? <h2 data-part="title" data-part-title="" tabindex="-1" id={id}>{children}</h2>
-        : <h1 data-part="title" data-part-title="" tabindex="-1" id={id}>{children}</h1>}
+      {level.value === 'h3' ? (
+        <h3 data-part="title" data-part-title="" tabindex="-1" id={id}>
+          {children}
+        </h3>
+      ) : level.value === 'h2' ? (
+        <h2 data-part="title" data-part-title="" tabindex="-1" id={id}>
+          {children}
+        </h2>
+      ) : (
+        <h1 data-part="title" data-part-title="" tabindex="-1" id={id}>
+          {children}
+        </h1>
+      )}
     </>
   )
 }
 
 /** The result mark; `draw` strokes a check in. */
-export function Mark({ tone, draw, children }: { tone?: 'positive' | 'caution' | 'critical' | undefined; draw?: boolean; children?: unknown }) {
-  return <span data-part="mark" data-tone={tone}>{draw ? <svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" data-draw="" d="m5 12.5 4.5 4.5L19 7.5" /></svg> : children}</span>
+export function Mark({
+  tone,
+  draw,
+  children,
+}: {
+  tone?: 'positive' | 'caution' | 'critical' | undefined
+  draw?: boolean
+  children?: unknown
+}) {
+  return (
+    <span data-part="mark" data-tone={tone}>
+      {draw ? (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path pathLength="1" data-draw="" d="m5 12.5 4.5 4.5L19 7.5" />
+        </svg>
+      ) : (
+        children
+      )}
+    </span>
+  )
 }
 
 /** The flows rail: `value` in percent. */
-export function Rail({ value, on = true, ...rest }: { value: number; on?: boolean; [attr: string]: unknown }) {
-  return <span data-part="rail" data-on={on ? '' : undefined} style={`--v:${value}%`} {...rest}><span data-part="rail-fill"></span></span>
+export function Rail({
+  value,
+  on = true,
+  ...rest
+}: {
+  value: number
+  on?: boolean
+  [attr: string]: unknown
+}) {
+  return (
+    <span data-part="rail" data-on={on ? '' : undefined} style={`--v:${value}%`} {...rest}>
+      <span data-part="rail-fill"></span>
+    </span>
+  )
 }
 
 /**
@@ -47,11 +101,14 @@ export function useCooldown(seconds: () => number | undefined, onDone?: () => vo
     stop?.()
     stop = undefined
     left.value = n ?? 0
-    if (n) stop = secondsClock(n, s => (left.value = s), onDone)
+    if (n) stop = secondsClock(n, (s) => (left.value = s), onDone)
   }
   onMount(() => {
     // a fresh object each run: a restart with the same seconds still restarts
-    watch(() => ({ n: seconds() }), v => start(v.n))
+    watch(
+      () => ({ n: seconds() }),
+      (v) => start(v.n),
+    )
     onCleanup(() => stop?.())
   })
   return left
@@ -85,15 +142,30 @@ export interface FlowForm<V> {
 }
 
 /** One step's form state: errors from all three sources, the mapped failure and its cooldown, its surfaces' side effects. */
-export function useStepForm<V>(p: FlowForm<V>, check?: (values: Record<string, string>) => Record<string, string | undefined>) {
+export function useStepForm<V>(
+  p: FlowForm<V>,
+  check?: (values: Record<string, string>) => Record<string, string | undefined>,
+) {
   const own = state<Record<string, string>>({})
   const failure = derived(() => {
     const e = p.form ? p.form.message.value : p.error
-    return e ? mapFlowError(e, untrack(() => p.errorOptions)) : undefined
+    return e
+      ? mapFlowError(
+          e,
+          untrack(() => p.errorOptions),
+        )
+      : undefined
   })
-  const errors = derived<Record<string, string>>(() => ({ ...own.value, ...failure.value?.fields, ...(p.form ? p.form.errors.value : p.errors) }))
+  const errors = derived<Record<string, string>>(() => ({
+    ...own.value,
+    ...failure.value?.fields,
+    ...(p.form ? p.form.errors.value : p.errors),
+  }))
   const pending = derived(() => !!(p.form ? p.form.pending.value : p.pending))
-  const cooling = useCooldown(() => failure.value?.retryAfter, () => announce(document, 'You can try again now.'))
+  const cooling = useCooldown(
+    () => failure.value?.retryAfter,
+    () => announce(document, 'You can try again now.'),
+  )
   let root: HTMLElement | undefined
   const focusInvalid = (say?: string) => {
     flush()
@@ -101,49 +173,95 @@ export function useStepForm<V>(p: FlowForm<V>, check?: (values: Record<string, s
     if (say) announce(document, say)
   }
   onMount(() => {
-    watch(() => failure.value, (m: FlowError | undefined) => {
-      if (!m) return
-      if (m.surface === 'field') focusInvalid(m.summary)
-      if (m.surface === 'alert') { flush(); root?.querySelector<HTMLElement>('[data-part="formerr"]')?.focus() }
-      if (m.surface === 'rate-limit') announce(document, `${m.title} Try again in ${m.retryAfter}s.`)
-      if (m.surface === 'toast') toast.show({ title: m.title, description: m.description, tone: 'critical', action: p.onRetry && { label: 'Retry', onClick: () => p.onRetry!() } })
-    })
+    watch(
+      () => failure.value,
+      (m: FlowError | undefined) => {
+        if (!m) return
+        if (m.surface === 'field') focusInvalid(m.summary)
+        if (m.surface === 'alert') {
+          flush()
+          root?.querySelector<HTMLElement>('[data-part="formerr"]')?.focus()
+        }
+        if (m.surface === 'rate-limit')
+          announce(document, `${m.title} Try again in ${m.retryAfter}s.`)
+        if (m.surface === 'toast')
+          toast.show({
+            title: m.title,
+            description: m.description,
+            tone: 'critical',
+            action: p.onRetry && { label: 'Retry', onClick: () => p.onRetry!() },
+          })
+      },
+    )
     let sent = 0
-    watch(() => Object.keys(p.form ? p.form.errors.value : (p.errors ?? {})).length, n => {
-      if (n && n !== sent) focusInvalid()
-      sent = n
-    })
+    watch(
+      () => Object.keys(p.form ? p.form.errors.value : (p.errors ?? {})).length,
+      (n) => {
+        if (n && n !== sent) focusInvalid()
+        sent = n
+      },
+    )
   })
   const submit = (e: SubmitEvent) => {
     e.preventDefault()
     const f = e.currentTarget as HTMLFormElement
     const values = Object.fromEntries(new FormData(f)) as Record<string, string>
-    const bad = Object.fromEntries(Object.entries(check?.(values) ?? {}).filter(([, m]) => m)) as Record<string, string>
+    const bad = Object.fromEntries(
+      Object.entries(check?.(values) ?? {}).filter(([, m]) => m),
+    ) as Record<string, string>
     own.value = bad
     const n = Object.keys(bad).length
     if (n) return focusInvalid(n > 1 ? `${n} fields need attention` : undefined)
     p.onSubmit?.(values as V, e)
   }
   return {
-    errors, failure, pending, cooling, submit,
+    errors,
+    failure,
+    pending,
+    cooling,
+    submit,
     /** Set one field's message from the client (format on blur), or clear it. */
     flag(name: string, message: string | undefined) {
       const { [name]: _, ...rest } = own.value
       own.value = message ? { ...rest, [name]: message } : rest
     },
-    bind(n: HTMLElement) { root = n },
+    bind(n: HTMLElement) {
+      root = n
+    },
   }
 }
 export type StepForm = ReturnType<typeof useStepForm>
 
 /** The step's frame: a <form> of its own, or a plain stack inside `<Form of>`. */
-export function StepFrame({ ctl, embedded, labelledby, children }: { ctl: StepForm; embedded: boolean; labelledby?: string; children?: unknown }) {
+export function StepFrame({
+  ctl,
+  embedded,
+  labelledby,
+  children,
+}: {
+  ctl: StepForm
+  embedded: boolean
+  labelledby?: string
+  children?: unknown
+}) {
   const plain = derived(() => embedded)
   return (
     <>
-      {plain.value
-        ? <div ref={n => ctl.bind(n)} data-scope="stack" role="group" aria-labelledby={labelledby}>{children}</div>
-        : <form ref={n => ctl.bind(n)} data-scope="stack" novalidate aria-labelledby={labelledby} onSubmit={ctl.submit}>{children}</form>}
+      {plain.value ? (
+        <div ref={(n) => ctl.bind(n)} data-scope="stack" role="group" aria-labelledby={labelledby}>
+          {children}
+        </div>
+      ) : (
+        <form
+          ref={(n) => ctl.bind(n)}
+          data-scope="stack"
+          novalidate
+          aria-labelledby={labelledby}
+          onSubmit={ctl.submit}
+        >
+          {children}
+        </form>
+      )}
     </>
   )
 }
@@ -153,18 +271,50 @@ export function FormError({ ctl, actions }: { ctl: StepForm; actions?: unknown }
   const m = derived(() => ctl.failure.value)
   return (
     <div data-part="formerr" tabindex="-1">
-      {m.value?.surface === 'alert' && <Alert tone="critical" live title={m.value.title} actions={actions}>{m.value.description}</Alert>}
-      {m.value?.surface === 'rate-limit' && <Alert tone="caution" title={m.value.title}>{ctl.cooling.value > 0 ? `Try again in ${ctl.cooling.value}s.` : 'You can try again now.'}</Alert>}
-      {m.value?.surface === 'banner' && <Banner tone="caution" live={m.value.live}><b>{m.value.title}</b> {m.value.description}</Banner>}
+      {m.value?.surface === 'alert' && (
+        <Alert tone="critical" live title={m.value.title} actions={actions}>
+          {m.value.description}
+        </Alert>
+      )}
+      {m.value?.surface === 'rate-limit' && (
+        <Alert tone="caution" title={m.value.title}>
+          {ctl.cooling.value > 0 ? `Try again in ${ctl.cooling.value}s.` : 'You can try again now.'}
+        </Alert>
+      )}
+      {m.value?.surface === 'banner' && (
+        <Banner tone="caution" live={m.value.live}>
+          <b>{m.value.title}</b> {m.value.description}
+        </Banner>
+      )}
     </div>
   )
 }
 
 /** The one solid: keeps its label while pending; a rate limit disables it and says why. */
-export function Submit({ ctl, disabled, children, ...rest }: { ctl: StepForm; disabled?: boolean | undefined; children?: unknown } & ButtonProps) {
+export function Submit({
+  ctl,
+  disabled,
+  children,
+  ...rest
+}: { ctl: StepForm; disabled?: boolean | undefined; children?: unknown } & ButtonProps) {
   const wait = derived(() => ctl.cooling.value)
-  return <Button type="submit" size="lg" full loading={ctl.pending.value} disabled={disabled || wait.value > 0} {...rest}>{wait.value > 0 ? `Try again in ${wait.value}s` : children}</Button>
+  return (
+    <Button
+      type="submit"
+      size="lg"
+      full
+      loading={ctl.pending.value}
+      disabled={disabled || wait.value > 0}
+      {...rest}
+    >
+      {wait.value > 0 ? `Try again in ${wait.value}s` : children}
+    </Button>
+  )
 }
 
 /** A text button in a step's row. */
-export const TextLink = ({ children, ...rest }: ButtonProps) => <Button emphasis="link" data-hit="text" {...rest}>{children}</Button>
+export const TextLink = ({ children, ...rest }: ButtonProps) => (
+  <Button emphasis="link" data-hit="text" {...rest}>
+    {children}
+  </Button>
+)

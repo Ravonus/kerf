@@ -57,7 +57,9 @@ fn wait<F: Future>(future: std::pin::Pin<&mut F>) -> F::Output {
     match future.poll(&mut Context::from_waker(Waker::noop())) {
         Poll::Ready(v) => v,
         Poll::Pending => {
-            panic!("a `native()` function can't wait on WASM: nothing would wake it. Use `remote()` for IO")
+            panic!(
+                "a `native()` function can't wait on WASM: nothing would wake it. Use `remote()` for IO"
+            )
         }
     }
 }
@@ -69,13 +71,16 @@ fn dispatch(id: &str, ctx: &str, body: Vec<u8>) -> String {
         Err(e) => return drift_body(&format!("the call's context didn't parse: {e}")).to_string(),
     };
     let Some(handler) = functions().handler(id) else {
-        return drift_body(&format!("this library has no function `{id}`: rebuild it from the current contract"))
-            .to_string();
+        return drift_body(&format!(
+            "this library has no function `{id}`: rebuild it from the current contract"
+        ))
+        .to_string();
     };
     let base = Base::new(id, envelope);
     let call = handler(base.clone(), body);
-    let answer = catch_unwind(AssertUnwindSafe(|| wait(pin!(call))))
-        .unwrap_or_else(|p| Answer::Failed(Failed::Internal(format!("panicked: {}", panic_text(&*p)))));
+    let answer = catch_unwind(AssertUnwindSafe(|| wait(pin!(call)))).unwrap_or_else(|p| {
+        Answer::Failed(Failed::Internal(format!("panicked: {}", panic_text(&*p))))
+    });
     match answer {
         Answer::Value(value) => ok_body(&value, &base),
         Answer::Failed(Failed::Typed(error)) => json!({ "ok": false, "error": error }).to_string(),
@@ -100,7 +105,11 @@ mod addon {
         type JsValue = String;
 
         fn compute(&mut self) -> Result<String> {
-            Ok(super::dispatch(&self.id, &self.ctx, self.body.take().unwrap_or_default().into_bytes()))
+            Ok(super::dispatch(
+                &self.id,
+                &self.ctx,
+                self.body.take().unwrap_or_default().into_bytes(),
+            ))
         }
 
         fn resolve(&mut self, _: Env, reply: String) -> Result<String> {
@@ -110,7 +119,11 @@ mod addon {
 
     #[napi]
     pub fn call(id: String, ctx: String, body: String) -> AsyncTask<Call> {
-        AsyncTask::new(Call { id, ctx, body: Some(body) })
+        AsyncTask::new(Call {
+            id,
+            ctx,
+            body: Some(body),
+        })
     }
 
     #[napi]
@@ -177,7 +190,8 @@ mod wasm {
             }));
         });
         // SAFETY: `body` is a `weft_alloc` box of `body_len` bytes, and it's ours now.
-        let body = unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, body_len)) }.into_vec();
+        let body =
+            unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(body, body_len)) }.into_vec();
         // SAFETY: the caller keeps both strings, valid UTF-8, for the whole call.
         let (id, ctx) = unsafe { (text(id, id_len), text(ctx, ctx_len)) };
         give(super::dispatch(id, ctx, body))

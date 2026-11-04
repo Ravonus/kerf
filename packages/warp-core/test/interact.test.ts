@@ -2,12 +2,22 @@
 // Research 45: real events into anything with a `.value`.
 import { interact } from '../src/interact'
 
-const flags = () => ({ hover: { value: false }, focus: { value: false }, pressed: { value: false } })
+const flags = () => ({
+  hover: { value: false },
+  focus: { value: false },
+  pressed: { value: false },
+})
 const el = () => document.body.appendChild(document.createElement('button'))
-const pointer = (type: string, pointerType = 'mouse') => { const e = new Event(type, { bubbles: true }); Object.assign(e, { pointerType }); return e }
+const pointer = (type: string, pointerType = 'mouse') => {
+  const e = new Event(type, { bubbles: true })
+  Object.assign(e, { pointerType })
+  return e
+}
 
 test('hover follows a mouse and ignores touch', () => {
-  const ui = flags(), b = el(), a = interact(b, ui)
+  const ui = flags(),
+    b = el(),
+    a = interact(b, ui)
   b.dispatchEvent(pointer('pointerenter', 'touch'))
   expect(ui.hover.value).toBe(false)
   b.dispatchEvent(pointer('pointerenter'))
@@ -18,7 +28,11 @@ test('hover follows a mouse and ignores touch', () => {
 })
 
 test('one row on two elements falls only when the last lets go', () => {
-  const ui = flags(), x = el(), y = el(), a = interact(x, ui), b = interact(y, ui)
+  const ui = flags(),
+    x = el(),
+    y = el(),
+    a = interact(x, ui),
+    b = interact(y, ui)
   x.dispatchEvent(pointer('pointerenter'))
   y.dispatchEvent(pointer('pointerenter'))
   x.dispatchEvent(pointer('pointerleave'))
@@ -30,7 +44,9 @@ test('one row on two elements falls only when the last lets go', () => {
 })
 
 test('destroy lets go: no pointerleave comes for a removed element', () => {
-  const ui = flags(), b = el(), a = interact(b, ui)
+  const ui = flags(),
+    b = el(),
+    a = interact(b, ui)
   b.dispatchEvent(pointer('pointerenter'))
   b.dispatchEvent(pointer('pointerdown'))
   b.remove()
@@ -39,7 +55,9 @@ test('destroy lets go: no pointerleave comes for a removed element', () => {
 })
 
 test('a press ends off the element, and when the page goes away', () => {
-  const ui = flags(), b = el(), a = interact(b, ui)
+  const ui = flags(),
+    b = el(),
+    a = interact(b, ui)
   b.dispatchEvent(pointer('pointerdown'))
   expect(ui.pressed.value).toBe(true)
   window.dispatchEvent(pointer('pointerup'))

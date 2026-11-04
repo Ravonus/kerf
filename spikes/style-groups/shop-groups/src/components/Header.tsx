@@ -8,7 +8,15 @@ export const topBar = group('top-bar', {
 
 /** One tab button; `pressed` is the current tab. */
 export const tabButton = group('tab', {
-  base: { control: 'sm', padInline: 'control', radius: 'control', text: 'button', border: 'none', emphasis: 'ghost', cursor: 'pointer' },
+  base: {
+    control: 'sm',
+    padInline: 'control',
+    radius: 'control',
+    text: 'button',
+    border: 'none',
+    emphasis: 'ghost',
+    cursor: 'pointer',
+  },
   states: { pressed: { surface: 'sunken', ink: 'text' }, hover: { surface: 'sunken' } },
 })
 
@@ -18,8 +26,12 @@ export function Header({ tab, count, onTab }: Props) {
   return (
     <header {...topBar()}>
       <nav {...topBar.tabs}>
-        <button {...tabButton({ pressed: tab === 'products' })} onClick={() => onTab('products')}>Products</button>
-        <button {...tabButton({ pressed: tab === 'cart' })} onClick={() => onTab('cart')}>Cart ({count})</button>
+        <button {...tabButton({ pressed: tab === 'products' })} onClick={() => onTab('products')}>
+          Products
+        </button>
+        <button {...tabButton({ pressed: tab === 'cart' })} onClick={() => onTab('cart')}>
+          Cart ({count})
+        </button>
       </nav>
     </header>
   )

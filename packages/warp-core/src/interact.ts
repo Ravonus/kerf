@@ -4,9 +4,15 @@
 // an element removed under the pointer gets no pointerleave, and that is how a hover sticks.
 
 /** A boolean a binding can write to: weft's box, or anything shaped like one. */
-export interface Flag { value: boolean }
+export interface Flag {
+  value: boolean
+}
 /** The flags `interact` keeps up to date. */
-export interface Interactive { hover: Flag; focus: Flag; pressed: Flag }
+export interface Interactive {
+  hover: Flag
+  focus: Flag
+  pressed: Flag
+}
 
 const holders = new WeakMap<Flag, Set<Element>>()
 
@@ -21,23 +27,64 @@ function hold(flag: Flag, el: Element, on: boolean) {
 
 /** Keeps hover, focus-visible and pressed flags on an element, ignoring touch hover. */
 export function interact(el: HTMLElement, ui: Interactive) {
-  const doc = el.ownerDocument, win = doc.defaultView!
+  const doc = el.ownerDocument,
+    win = doc.defaultView!
   const hoverable = win.matchMedia?.('(hover: hover)').matches ?? true
-  const release = () => { hold(ui.hover, el, false); hold(ui.focus, el, false); hold(ui.pressed, el, false) }
+  const release = () => {
+    hold(ui.hover, el, false)
+    hold(ui.focus, el, false)
+    hold(ui.pressed, el, false)
+  }
   const up = () => hold(ui.pressed, el, false)
   const on: [EventTarget, string, (e: never) => void][] = [
-    [el, 'pointerenter', (e: PointerEvent) => { if (e.pointerType !== 'touch') hold(ui.hover, el, true) }],
-    [el, 'pointerleave', (e: PointerEvent) => { if (e.pointerType !== 'touch') hold(ui.hover, el, false) }],
-    [el, 'focusin', () => { if (el.matches(':focus-visible, :has(:focus-visible)')) hold(ui.focus, el, true) }],
-    [el, 'focusout', (e: FocusEvent) => { if (!el.contains(e.relatedTarget as Node | null)) hold(ui.focus, el, false) }],
+    [
+      el,
+      'pointerenter',
+      (e: PointerEvent) => {
+        if (e.pointerType !== 'touch') hold(ui.hover, el, true)
+      },
+    ],
+    [
+      el,
+      'pointerleave',
+      (e: PointerEvent) => {
+        if (e.pointerType !== 'touch') hold(ui.hover, el, false)
+      },
+    ],
+    [
+      el,
+      'focusin',
+      () => {
+        if (el.matches(':focus-visible, :has(:focus-visible)')) hold(ui.focus, el, true)
+      },
+    ],
+    [
+      el,
+      'focusout',
+      (e: FocusEvent) => {
+        if (!el.contains(e.relatedTarget as Node | null)) hold(ui.focus, el, false)
+      },
+    ],
     [el, 'pointerdown', () => hold(ui.pressed, el, true)],
-    [el, 'keydown', (e: KeyboardEvent) => { if (e.key === ' ' || e.key === 'Enter') hold(ui.pressed, el, true) }],
+    [
+      el,
+      'keydown',
+      (e: KeyboardEvent) => {
+        if (e.key === ' ' || e.key === 'Enter') hold(ui.pressed, el, true)
+      },
+    ],
     [el, 'keyup', up],
     [win, 'pointerup', up],
     [win, 'pointercancel', up],
     [win, 'blur', up],
     // Nothing fires a pointerleave for a tab that went away.
-    [doc, 'visibilitychange', () => { if (doc.visibilityState === 'hidden') release() }],
+    [
+      doc,
+      'visibilitychange',
+      () => {
+        if (doc.visibilityState === 'hidden') release()
+      },
+    ],
     [win, 'pagehide', release],
   ]
   for (const [target, type, fn] of on) target.addEventListener(type, fn as EventListener)

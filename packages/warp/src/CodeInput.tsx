@@ -32,8 +32,27 @@ const LEAVE = 'Tab indents · Esc then Tab leaves'
  * Highlight API, so a key press builds no spans; browsers without it show the textarea's own plain text. Tab indents,
  * Shift+Tab outdents, and Esc then Tab leaves, which the hint says. No autocorrect, spellcheck or autocapitalize.
  */
-export function CodeInput({ value, defaultValue, onValueChange, language, lineNumbers = true, tabSize = 2, wrap, rows = 8, errorLine, name, hint, onReset, ...rest }: CodeInputProps) {
-  const held = bindable<string>(() => value, () => defaultValue, '', () => onValueChange)
+export function CodeInput({
+  value,
+  defaultValue,
+  onValueChange,
+  language,
+  lineNumbers = true,
+  tabSize = 2,
+  wrap,
+  rows = 8,
+  errorLine,
+  name,
+  hint,
+  onReset,
+  ...rest
+}: CodeInputProps) {
+  const held = bindable<string>(
+    () => value,
+    () => defaultValue,
+    '',
+    () => onValueChange,
+  )
   const lines = derived(() => held.value.split('\n').map((_, n) => n + 1))
   const numbered = derived(() => lineNumbers && !wrap)
   let box: HTMLDivElement | undefined
@@ -41,32 +60,79 @@ export function CodeInput({ value, defaultValue, onValueChange, language, lineNu
   const set = (area: HTMLTextAreaElement) => held.set(area.value, 'keyboard')
   const onKey = (e: KeyboardEvent) => {
     const area = e.currentTarget as HTMLTextAreaElement
-    if (e.key === 'Escape') { leaving = true; return }
-    if (e.key !== 'Tab') { if (e.key !== 'Shift') leaving = false; return }
-    if (leaving) { leaving = false; return }
+    if (e.key === 'Escape') {
+      leaving = true
+      return
+    }
+    if (e.key !== 'Tab') {
+      if (e.key !== 'Shift') leaving = false
+      return
+    }
+    if (leaving) {
+      leaving = false
+      return
+    }
     e.preventDefault()
     const r = indented(area.value, area.selectionStart, area.selectionEnd, tabSize, e.shiftKey)
     area.setSelectionRange(r.from, r.to)
     // execCommand keeps the browser's undo history, which setRangeText throws away
-    if (!document.execCommand?.('insertText', false, r.insert)) area.setRangeText(r.insert, r.from, r.to, 'end')
+    if (!document.execCommand?.('insertText', false, r.insert))
+      area.setRangeText(r.insert, r.from, r.to, 'end')
     area.setSelectionRange(r.start, r.end)
     set(area)
   }
-  use(codeLayer, () => box, () => ({ text: held.value, language }))
+  use(
+    codeLayer,
+    () => box,
+    () => ({ text: held.value, language }),
+  )
   return (
     <Field
       {...rest}
       hint={hint ?? LEAVE}
       attrs={{ 'data-multiline': '' }}
       filled={held.value.length > 0}
-      reset={() => { held.reset(); onReset?.() }}
-      control={p => (
+      reset={() => {
+        held.reset()
+        onReset?.()
+      }}
+      control={(p) => (
         <div data-part="body">
-          <div ref={n => (box = n)} class="code-in" data-wrap={wrap ? '' : undefined} style={`--_tab:${tabSize}`}>
-            {numbered.value && <ol data-part="lines" class="ln" aria-hidden="true">{lines.value.map(n => <li key={n} data-error={n === errorLine ? '' : undefined}>{n}</li>)}</ol>}
+          <div
+            ref={(n) => (box = n)}
+            class="code-in"
+            data-wrap={wrap ? '' : undefined}
+            style={`--_tab:${tabSize}`}
+          >
+            {numbered.value && (
+              <ol data-part="lines" class="ln" aria-hidden="true">
+                {lines.value.map((n) => (
+                  <li key={n} data-error={n === errorLine ? '' : undefined}>
+                    {n}
+                  </li>
+                ))}
+              </ol>
+            )}
             <div data-part="surface">
               <pre data-part="layer" aria-hidden="true">{`${held.value}\n`}</pre>
-              <textarea {...p.rest} data-part="input" id={p.id} rows={rows} name={name} spellcheck={false} autocapitalize="off" autocomplete="off" wrap={wrap ? 'soft' : 'off'} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} value={held.value} onInput={e => set(e.currentTarget)} onKeyDown={onKey}>{untrack(() => held.value)}</textarea>
+              <textarea
+                {...p.rest}
+                data-part="input"
+                id={p.id}
+                rows={rows}
+                name={name}
+                spellcheck={false}
+                autocapitalize="off"
+                autocomplete="off"
+                wrap={wrap ? 'soft' : 'off'}
+                aria-describedby={p.describedby}
+                aria-invalid={p.invalid ? 'true' : undefined}
+                value={held.value}
+                onInput={(e) => set(e.currentTarget)}
+                onKeyDown={onKey}
+              >
+                {untrack(() => held.value)}
+              </textarea>
             </div>
           </div>
         </div>
@@ -76,17 +142,30 @@ export function CodeInput({ value, defaultValue, onValueChange, language, lineNu
 }
 
 /** Props for JsonEditor: CodeInput with the language fixed to JSON, and a schema check. */
-export type JsonEditorProps = FieldShell & Omit<CodeOwn, 'language' | 'errorLine'> & {
-  /** Checks parsed JSON; what it returns shows as the field's error. */
-  schema?: (value: unknown) => string | null | undefined
-}
+export type JsonEditorProps = FieldShell &
+  Omit<CodeOwn, 'language' | 'errorLine'> & {
+    /** Checks parsed JSON; what it returns shows as the field's error. */
+    schema?: (value: unknown) => string | null | undefined
+  }
 
 /**
  * CodeInput for JSON (04 JsonEditor): parse errors, and an optional schema's, name their line in the field's error and
  * pin the sweep; Format rewrites it with `tabSize`.
  */
-export function JsonEditor({ value, defaultValue, onValueChange, schema, tabSize = 2, ...rest }: JsonEditorProps) {
-  const held = bindable<string>(() => value, () => defaultValue, '', () => onValueChange)
+export function JsonEditor({
+  value,
+  defaultValue,
+  onValueChange,
+  schema,
+  tabSize = 2,
+  ...rest
+}: JsonEditorProps) {
+  const held = bindable<string>(
+    () => value,
+    () => defaultValue,
+    '',
+    () => onValueChange,
+  )
   const checked = state(held.value)
   let timer: ReturnType<typeof setTimeout> | undefined
   onCleanup(() => clearTimeout(timer))
@@ -109,22 +188,41 @@ export function JsonEditor({ value, defaultValue, onValueChange, schema, tabSize
   })
   const format = () => {
     if (jsonProblem(held.value)) return
-    const next = JSON.stringify(JSON.parse(held.value), null, untrack(() => tabSize))
+    const next = JSON.stringify(
+      JSON.parse(held.value),
+      null,
+      untrack(() => tabSize),
+    )
     held.set(next, 'pointer')
     checked.value = next
   }
   return (
     <CodeInput
-      {...(rest)}
+      {...rest}
       tabSize={tabSize}
       language="json"
       value={held.value}
       onValueChange={change}
-      onReset={() => { clearTimeout(timer); checked.value = held.value }}
+      onReset={() => {
+        clearTimeout(timer)
+        checked.value = held.value
+      }}
       error={failed.value}
       hint={problem.value ? LEAVE : summary.value}
       errorLine={problem.value?.line}
-      end={<span data-part="suffix"><Button emphasis="ghost" tone="neutral" size="sm" disabled={!!problem.value} onClick={format}>Format</Button></span>}
+      end={
+        <span data-part="suffix">
+          <Button
+            emphasis="ghost"
+            tone="neutral"
+            size="sm"
+            disabled={!!problem.value}
+            onClick={format}
+          >
+            Format
+          </Button>
+        </span>
+      }
     />
   )
 }

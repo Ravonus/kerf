@@ -24,7 +24,10 @@ export default async function (page, audit, url, settle) {
   await settle(page)
 
   // a repeating event's scope dialog
-  await page.getByRole('button', { name: /^Standup/ }).first().click()
+  await page
+    .getByRole('button', { name: /^Standup/ })
+    .first()
+    .click()
   await settle(page)
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await settle(page)
@@ -32,7 +35,10 @@ export default async function (page, audit, url, settle) {
 
   // keyboard move mode
   await load('week')
-  await page.getByRole('button', { name: /^Lunch,/ }).first().focus()
+  await page
+    .getByRole('button', { name: /^Lunch,/ })
+    .first()
+    .focus()
   await page.keyboard.press('m')
   await page.keyboard.press('ArrowDown')
   await settle(page)

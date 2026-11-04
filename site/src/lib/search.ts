@@ -1,4 +1,11 @@
-import { fuzzyIndex, openIndex, searchIndex, type SearchHit, type SearchIndex, type SearchWire } from '@weft-js/warp-core'
+import {
+  fuzzyIndex,
+  openIndex,
+  searchIndex,
+  type SearchHit,
+  type SearchIndex,
+  type SearchWire,
+} from '@weft-js/warp-core'
 import files from '../generated/search.json'
 
 // Two tiers (research 40 §2). T0, titles, stays in this module for the life of the page and answers a key press in the
@@ -22,7 +29,7 @@ export async function cached(url: string): Promise<SearchWire> {
 
 /** T0, once. Called at idle, and by a key press that beat it. */
 export function loadTitles() {
-  return (loading ??= cached(files.t0).then(wire => (index = openIndex(wire))))
+  return (loading ??= cached(files.t0).then((wire) => (index = openIndex(wire))))
 }
 
 /** Synchronous: undefined until T0 has landed. */
@@ -46,7 +53,7 @@ const bodySeen = new Map<string, SearchHit[]>()
 export function warmBody() {
   if (worker) return
   worker = new Worker(new URL('./search.worker.ts', import.meta.url), { type: 'module' })
-  worker.onmessage = e => {
+  worker.onmessage = (e) => {
     waiting.get(e.data.id)?.(e.data.hits)
     waiting.delete(e.data.id)
   }
@@ -61,8 +68,14 @@ export function body(query: string, signal: AbortSignal): Promise<SearchHit[]> {
   if (held) return Promise.resolve(held)
   const id = ++asked
   worker!.postMessage({ id, q })
-  return new Promise(ok => {
-    waiting.set(id, hits => { bodySeen.set(q, hits); ok(hits) })
-    signal.addEventListener('abort', () => { waiting.delete(id); ok([]) })
+  return new Promise((ok) => {
+    waiting.set(id, (hits) => {
+      bodySeen.set(q, hits)
+      ok(hits)
+    })
+    signal.addEventListener('abort', () => {
+      waiting.delete(id)
+      ok([])
+    })
   })
 }

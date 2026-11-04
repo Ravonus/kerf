@@ -29,7 +29,9 @@ export default function DangerZone() {
     <Card title="Danger zone">
       <Switch
         checked={armed.value}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) => (armed.value = e.currentTarget.checked)}
+        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+          (armed.value = e.currentTarget.checked)
+        }
       >
         Allow deleting
       </Switch>

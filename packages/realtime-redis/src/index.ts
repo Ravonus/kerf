@@ -17,7 +17,11 @@ export interface RedisBusOptions {
 export function redisBus({ url, prefix = 'weft:' }: RedisBusOptions): Bus {
   if (!url && process.env.WEFT_BUILD) url = 'redis://localhost' // a build loads this module and never connects
   if (!/^rediss?:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`redisBus\` needs a \`redis://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``, 'set the URL, or leave `bus` out for the memory bus on one instance')
+    throw new StartError(
+      'Q013',
+      `\`redisBus\` needs a \`redis://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``,
+      'set the URL, or leave `bus` out for the memory bus on one instance',
+    )
   let pub: Redis | undefined, sub: Redis | undefined
   const listeners = new Map<string, Set<(message: string) => void>>()
   const gaps = new Set<() => void>()
@@ -73,4 +77,5 @@ export function redisBus({ url, prefix = 'weft:' }: RedisBusOptions): Bus {
 }
 
 /** The `realtime.bus` provider: `REDIS_URL` unless the plugin was given a `url`. */
-export const bus = (options: Partial<RedisBusOptions> = {}) => redisBus({ ...options, url: options.url ?? process.env.REDIS_URL ?? '' })
+export const bus = (options: Partial<RedisBusOptions> = {}) =>
+  redisBus({ ...options, url: options.url ?? process.env.REDIS_URL ?? '' })

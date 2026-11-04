@@ -8,7 +8,9 @@ export function WaitlistForm() {
 
   return (
     <form action={action} id="join" className="scroll-mt-24">
-      <label htmlFor="email" className="mb-2 block text-sm font-medium">Email</label>
+      <label htmlFor="email" className="mb-2 block text-sm font-medium">
+        Email
+      </label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           id="email"
@@ -30,7 +32,11 @@ export function WaitlistForm() {
         </button>
       </div>
       <p id="join-status" role="status" className="mt-3 min-h-6 text-sm">
-        {state.error ? <span className="font-medium text-danger">{state.error}</span> : <span className="text-muted">We'll write when your place comes up, and not before.</span>}
+        {state.error ? (
+          <span className="font-medium text-danger">{state.error}</span>
+        ) : (
+          <span className="text-muted">We'll write when your place comes up, and not before.</span>
+        )}
       </p>
     </form>
   )

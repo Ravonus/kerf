@@ -33,7 +33,10 @@ function remember(name: Dial, value: string) {
 }
 
 /** The dial's value on `root` (its initial value when unset). */
-export function getDial<D extends Dial>(name: D, root: HTMLElement = document.documentElement): DialValue<D> {
+export function getDial<D extends Dial>(
+  name: D,
+  root: HTMLElement = document.documentElement,
+): DialValue<D> {
   return (root.dataset[name] as DialValue<D> | undefined) ?? DIALS[name].initial
 }
 
@@ -44,9 +47,20 @@ export function getDial<D extends Dial>(name: D, root: HTMLElement = document.do
 export function setDial<D extends Dial>(
   name: D,
   value: DialValue<D>,
-  { root = document.documentElement, url = false, persist = false, transition }: { root?: HTMLElement | undefined; url?: boolean; persist?: boolean; transition?: (write: () => void) => void } = {},
+  {
+    root = document.documentElement,
+    url = false,
+    persist = false,
+    transition,
+  }: {
+    root?: HTMLElement | undefined
+    url?: boolean
+    persist?: boolean
+    transition?: (write: () => void) => void
+  } = {},
 ) {
-  if (!(DIALS[name].values as readonly string[]).includes(value)) throw new RangeError(`${name} is one of ${DIALS[name].values.join(', ')}`)
+  if (!(DIALS[name].values as readonly string[]).includes(value))
+    throw new RangeError(`${name} is one of ${DIALS[name].values.join(', ')}`)
   let done = false
   const write = () => {
     if (done) return
@@ -67,11 +81,16 @@ export function setDial<D extends Dial>(
 }
 
 /** Apply the dials a URL names (?expression=vivid…; ?stop= and ?dial= read as ?expression=). Unknown values are ignored. */
-export function dialsFromUrl(search = location.search, root: HTMLElement = document.documentElement) {
+export function dialsFromUrl(
+  search = location.search,
+  root: HTMLElement = document.documentElement,
+) {
   const q = new URLSearchParams(search)
-  for (const alias of ['stop', 'dial']) if (q.has(alias) && !q.has('expression')) q.set('expression', q.get(alias)!)
+  for (const alias of ['stop', 'dial'])
+    if (q.has(alias) && !q.has('expression')) q.set('expression', q.get(alias)!)
   for (const name of Object.keys(DIALS) as Dial[]) {
     const v = q.get(name)
-    if (v && (DIALS[name].values as readonly string[]).includes(v)) setDial(name, v as DialValue<typeof name>, { root })
+    if (v && (DIALS[name].values as readonly string[]).includes(v))
+      setDial(name, v as DialValue<typeof name>, { root })
   }
 }

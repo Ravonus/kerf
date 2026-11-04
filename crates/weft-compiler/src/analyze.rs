@@ -6,11 +6,12 @@ use std::collections::{HashMap, HashSet};
 
 use oxc_ast::ast::{
     ArrowFunctionBody, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget,
-    AssignmentTargetPropertyIdentifier, BindingIdentifier, BindingPattern, CallExpression, ChainElement,
-    ComputedMemberExpression, Expression, FormalParameters, Function, IdentifierReference, ImportDeclaration,
-    ImportDeclarationSpecifier, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
-    JSXElement, JSXElementName, JSXExpressionContainer, JSXFragment, JSXOpeningElement, ObjectExpression,
-    ObjectPattern, ObjectPropertyKind, Program, PropertyKey, ReturnStatement, SimpleAssignmentTarget, Statement,
+    AssignmentTargetPropertyIdentifier, BindingIdentifier, BindingPattern, CallExpression,
+    ChainElement, ComputedMemberExpression, Expression, FormalParameters, Function,
+    IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier, JSXAttribute,
+    JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXElement, JSXElementName,
+    JSXExpressionContainer, JSXFragment, JSXOpeningElement, ObjectExpression, ObjectPattern,
+    ObjectPropertyKind, Program, PropertyKey, ReturnStatement, SimpleAssignmentTarget, Statement,
     StaticMemberExpression, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, walk};
@@ -36,7 +37,12 @@ pub enum Rewrite {
     Children { local: String, component: SpanKey },
     /// `rest` → `<local>`, one live view of the other props (`const <local> = omit(props, [...])`, declared at the top
     /// of the component when something holds it); `rest.x` → `props.x`; `<el {...rest}>` → a copy, `restOf(props, [...])`.
-    Rest { props: String, exclude: Vec<String>, local: String, component: SpanKey },
+    Rest {
+        props: String,
+        exclude: Vec<String>,
+        local: String,
+        component: SpanKey,
+    },
     /// `const b = a.x` where `a` is itself rewritten and its read isn't a plain path (a default, memoised children):
     /// `b` → `a`'s live read, then `path`.
     Via { of: SymbolId, path: Vec<String> },
@@ -97,8 +103,12 @@ pub struct ChildrenPlan {
 }
 
 pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
-    let mut boxes =
-        Boxes { scoping, set: HashSet::new(), browser: crate::browser::value_imports(program), arrays: HashSet::new() };
+    let mut boxes = Boxes {
+        scoping,
+        set: HashSet::new(),
+        browser: crate::browser::value_imports(program),
+        arrays: HashSet::new(),
+    };
     boxes.visit_program(program);
     let mut a = Analyzer {
         scoping,
@@ -124,7 +134,9 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
 }
 
 fn symbol_of(scoping: &Scoping, id: &IdentifierReference<'_>) -> Option<SymbolId> {
-    id.reference_id.get().and_then(|r| scoping.get_reference(r).symbol_id())
+    id.reference_id
+        .get()
+        .and_then(|r| scoping.get_reference(r).symbol_id())
 }
 
 fn binding_symbol(id: &BindingIdentifier<'_>) -> Option<SymbolId> {
@@ -144,12 +156,18 @@ fn callee_name<'b>(call: &'b CallExpression<'_>) -> Option<&'b str> {
 
 /// `x.map(cb)` → the callback, when it is an inline function.
 fn map_callback<'b, 'a>(call: &'b CallExpression<'a>) -> Option<&'b Expression<'a>> {
-    let Expression::StaticMemberExpression(m) = &call.callee else { return None };
+    let Expression::StaticMemberExpression(m) = &call.callee else {
+        return None;
+    };
     if m.property.name != "map" || call.arguments.is_empty() {
         return None;
     }
     let cb = call.arguments[0].as_expression()?.without_parentheses();
-    matches!(cb, Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)).then_some(cb)
+    matches!(
+        cb,
+        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
+    )
+    .then_some(cb)
 }
 
 fn params_of<'b, 'a>(cb: &'b Expression<'a>) -> &'b FormalParameters<'a> {
@@ -187,7 +205,9 @@ fn returned<'b, 'a>(cb: &'b Expression<'a>) -> (Option<&'b Expression<'a>>, bool
 fn returns_jsx(e: &Expression<'_>) -> bool {
     match e.without_parentheses() {
         Expression::JSXElement(_) | Expression::JSXFragment(_) => true,
-        Expression::ConditionalExpression(c) => returns_jsx(&c.consequent) || returns_jsx(&c.alternate),
+        Expression::ConditionalExpression(c) => {
+            returns_jsx(&c.consequent) || returns_jsx(&c.alternate)
+        }
         Expression::LogicalExpression(l) => returns_jsx(&l.right),
         _ => false,
     }
@@ -233,7 +253,9 @@ pub fn is_key_attr(item: &JSXAttributeItem<'_>) -> bool {
 }
 
 /// `props.items.filter(…)` → (`props`, `items`): the root identifier and the member read right off it.
-fn chain_root_member<'b, 'a>(mut e: &'b Expression<'a>) -> Option<(&'b IdentifierReference<'a>, Option<&'b str>)> {
+fn chain_root_member<'b, 'a>(
+    mut e: &'b Expression<'a>,
+) -> Option<(&'b IdentifierReference<'a>, Option<&'b str>)> {
     let mut member = None;
     loop {
         e = match e.without_parentheses() {
@@ -355,7 +377,9 @@ impl<'s> Analyzer<'s> {
     }
 
     fn body_level(&self) -> Option<&CompCtx> {
-        self.comps.last().filter(|c| c.fn_depth == 0 && c.jsx_depth == 0)
+        self.comps
+            .last()
+            .filter(|c| c.fn_depth == 0 && c.jsx_depth == 0)
     }
 
     fn nested(&mut self, f: impl FnOnce(&mut Self)) {
@@ -368,7 +392,13 @@ impl<'s> Analyzer<'s> {
         }
     }
 
-    fn enter_component(&mut self, name: String, span: Span, params: &FormalParameters<'_>, f: impl FnOnce(&mut Self)) {
+    fn enter_component(
+        &mut self,
+        name: String,
+        span: Span,
+        params: &FormalParameters<'_>,
+        f: impl FnOnce(&mut Self),
+    ) {
         let mut ctx = CompCtx {
             name: Some(name),
             span,
@@ -383,7 +413,12 @@ impl<'s> Analyzer<'s> {
             snapshots: Vec::new(),
         };
         let text = self.text(span);
-        let props_name = if text.contains("props") { "$props" } else { "props" }.to_string();
+        let props_name = if text.contains("props") {
+            "$props"
+        } else {
+            "props"
+        }
+        .to_string();
         if let Some(first) = params.items.first() {
             match &first.pattern {
                 BindingPattern::BindingIdentifier(id) => {
@@ -399,7 +434,10 @@ impl<'s> Analyzer<'s> {
         }
         self.comps.push(ctx);
         f(self);
-        let ctx = self.comps.pop().expect("pushed above, and `f` leaves the stack as it found it");
+        let ctx = self
+            .comps
+            .pop()
+            .expect("pushed above, and `f` leaves the stack as it found it");
         self.component_entry_diagnostics(&ctx);
         self.snapshot_diagnostics(&ctx);
     }
@@ -409,10 +447,17 @@ impl<'s> Analyzer<'s> {
     /// every instance. One diagnostic per box per component; the autofix rewrites every such read to `box.get(k)`.
     fn scan_component_entries(&mut self, e: &Expression<'_>, depth: i32) {
         let Some(ctx) = self.comps.last() else { return };
-        let mut scan = ComponentEntryReads { a: self, ctx, depth, found: Vec::new() };
+        let mut scan = ComponentEntryReads {
+            a: self,
+            ctx,
+            depth,
+            found: Vec::new(),
+        };
         scan.visit_expression(e);
         let found = scan.found;
-        let Some(ctx) = self.comps.last_mut() else { return };
+        let Some(ctx) = self.comps.last_mut() else {
+            return;
+        };
         for hit in found {
             if !ctx.entries.iter().any(|h| h.read == hit.read) {
                 ctx.entries.push(hit);
@@ -429,9 +474,15 @@ impl<'s> Analyzer<'s> {
                 continue;
             }
             seen.push(whole);
-            let (read, name, index) = (self.text(hit.read), self.text(hit.boxed), self.text(hit.index));
+            let (read, name, index) = (
+                self.text(hit.read),
+                self.text(hit.boxed),
+                self.text(hit.index),
+            );
             let help = if hit.local {
-                format!("Read `{name}.get({index})`: it re-runs only when this entry changes (`Object.is`).")
+                format!(
+                    "Read `{name}.get({index})`: it re-runs only when this entry changes (`Object.is`)."
+                )
             } else {
                 format!(
                     "Read `{name}.get({index})` (the `{name}` prop is the box, typed `State<…>`): it re-runs only when \
@@ -472,11 +523,23 @@ impl<'s> Analyzer<'s> {
     /// the setup-time value and never updates. Reads anywhere else (a handler, a `watch`) suggest a deliberate
     /// snapshot and keep it quiet.
     fn snapshot_diagnostics(&mut self, ctx: &CompCtx) {
-        for s in ctx.snapshots.iter().filter(|s| !s.jsx.is_empty() && !s.other) {
+        for s in ctx
+            .snapshots
+            .iter()
+            .filter(|s| !s.jsx.is_empty() && !s.other)
+        {
             let name = &s.name;
             let call = self.text(s.call);
-            let mut edits = vec![Edit { start: s.callee.start, end: s.callee.end, text: "derived".into() }];
-            edits.extend(s.jsx.iter().map(|r| Edit { start: r.end, end: r.end, text: ".value".into() }));
+            let mut edits = vec![Edit {
+                start: s.callee.start,
+                end: s.callee.end,
+                text: "derived".into(),
+            }];
+            edits.extend(s.jsx.iter().map(|r| Edit {
+                start: r.end,
+                end: r.end,
+                text: ".value".into(),
+            }));
             let d = Diagnostic::new(
                 self.source,
                 "W018",
@@ -500,10 +563,18 @@ impl<'s> Analyzer<'s> {
         }
     }
 
-    fn destructure_props(&mut self, obj: &ObjectPattern<'_>, props: &str, path: &[String], ctx: &mut CompCtx) {
+    fn destructure_props(
+        &mut self,
+        obj: &ObjectPattern<'_>,
+        props: &str,
+        path: &[String],
+        ctx: &mut CompCtx,
+    ) {
         let mut seen = Vec::new();
         for prop in &obj.properties {
-            let Some(k) = static_key(&prop.key) else { continue };
+            let Some(k) = static_key(&prop.key) else {
+                continue;
+            };
             seen.push(k.clone());
             let mut sub = path.to_vec();
             sub.push(k.clone());
@@ -512,9 +583,15 @@ impl<'s> Analyzer<'s> {
                     if let Some(sym) = binding_symbol(id) {
                         self.written_prop(sym, &k, path, props, ctx.span, prop.span);
                         let rewrite = if path.is_empty() && k == "children" {
-                            Rewrite::Children { local: self.children_local(ctx, props), component: key(ctx.span) }
+                            Rewrite::Children {
+                                local: self.children_local(ctx, props),
+                                component: key(ctx.span),
+                            }
                         } else {
-                            Rewrite::Prop { props: props.into(), path: sub }
+                            Rewrite::Prop {
+                                props: props.into(),
+                                path: sub,
+                            }
                         };
                         self.plan.rewrites.insert(sym, rewrite);
                         ctx.prop_syms.insert(sym);
@@ -525,7 +602,13 @@ impl<'s> Analyzer<'s> {
                         && let Some(sym) = binding_symbol(id)
                     {
                         self.written_prop(sym, &k, path, props, ctx.span, prop.span);
-                        self.plan.rewrites.insert(sym, Rewrite::Prop { props: props.into(), path: sub });
+                        self.plan.rewrites.insert(
+                            sym,
+                            Rewrite::Prop {
+                                props: props.into(),
+                                path: sub,
+                            },
+                        );
                         ctx.prop_syms.insert(sym);
                         self.defaulted.insert(sym);
                     }
@@ -569,9 +652,17 @@ impl<'s> Analyzer<'s> {
             && let Some(sym) = binding_symbol(id)
         {
             let text = &self.source[ctx.span.start as usize..ctx.span.end as usize];
-            let local = if text.contains("_rest") { "_rest$" } else { "_rest" };
-            let rewrite =
-                Rewrite::Rest { props: props.into(), exclude: seen, local: local.into(), component: key(ctx.span) };
+            let local = if text.contains("_rest") {
+                "_rest$"
+            } else {
+                "_rest"
+            };
+            let rewrite = Rewrite::Rest {
+                props: props.into(),
+                exclude: seen,
+                local: local.into(),
+                component: key(ctx.span),
+            };
             self.plan.rewrites.insert(sym, rewrite);
             ctx.prop_syms.insert(sym);
         }
@@ -593,7 +684,11 @@ impl<'s> Analyzer<'s> {
             }
         };
         let sym = symbol_of(self.scoping, id)?;
-        self.comps.last()?.prop_syms.contains(&sym).then_some((sym, path))
+        self.comps
+            .last()?
+            .prop_syms
+            .contains(&sym)
+            .then_some((sym, path))
     }
 
     /// The props parameter can be named at a use only if no inner scope binds that name too.
@@ -609,7 +704,9 @@ impl<'s> Analyzer<'s> {
     }
 
     fn written(&self, sym: SymbolId) -> bool {
-        self.scoping.get_resolved_references(sym).any(oxc_semantic::Reference::is_write)
+        self.scoping
+            .get_resolved_references(sym)
+            .any(oxc_semantic::Reference::is_write)
     }
 
     /// `const x = props.y`: `x` is another name for the prop, so each use reads it live.
@@ -633,10 +730,16 @@ impl<'s> Analyzer<'s> {
         match self.plan.rewrites.get(&root)? {
             Rewrite::Rest { props, exclude, .. } => {
                 let first = path.first()?;
-                (!exclude.contains(first)).then(|| Rewrite::Prop { props: props.clone(), path })
+                (!exclude.contains(first)).then(|| Rewrite::Prop {
+                    props: props.clone(),
+                    path,
+                })
             }
             Rewrite::Prop { props, path: base } if !self.defaulted.contains(&root) => {
-                Some(Rewrite::Prop { props: props.clone(), path: base.iter().cloned().chain(path).collect() })
+                Some(Rewrite::Prop {
+                    props: props.clone(),
+                    path: base.iter().cloned().chain(path).collect(),
+                })
             }
             Rewrite::Prop { .. } | Rewrite::Children { .. } | Rewrite::Via { .. } => {
                 Some(Rewrite::Via { of: root, path })
@@ -653,14 +756,25 @@ impl<'s> Analyzer<'s> {
                 static_key(&p.key).is_some()
                     && match &p.value {
                         BindingPattern::BindingIdentifier(_) => true,
-                        BindingPattern::AssignmentPattern(a) => matches!(a.left, BindingPattern::BindingIdentifier(_)),
-                        BindingPattern::ObjectPattern(inner) => inner.rest.is_none() && plain(inner),
+                        BindingPattern::AssignmentPattern(a) => {
+                            matches!(a.left, BindingPattern::BindingIdentifier(_))
+                        }
+                        BindingPattern::ObjectPattern(inner) => {
+                            inner.rest.is_none() && plain(inner)
+                        }
                         BindingPattern::ArrayPattern(_) => false,
                     }
-            }) && obj.rest.as_ref().is_none_or(|r| matches!(r.argument, BindingPattern::BindingIdentifier(_)))
+            }) && obj
+                .rest
+                .as_ref()
+                .is_none_or(|r| matches!(r.argument, BindingPattern::BindingIdentifier(_)))
         }
-        let Some((root, path)) = self.prop_path(init) else { return false };
-        let Some(ctx) = self.comps.last() else { return false };
+        let Some((root, path)) = self.prop_path(init) else {
+            return false;
+        };
+        let Some(ctx) = self.comps.last() else {
+            return false;
+        };
         let span = key(ctx.span);
         if !plain(obj) {
             return false;
@@ -672,26 +786,41 @@ impl<'s> Analyzer<'s> {
             (self.scoping.symbol_name(root).to_string(), Vec::new())
         } else {
             match self.plan.rewrites.get(&root) {
-                Some(Rewrite::Prop { props, path }) if !self.defaulted.contains(&root) => (props.clone(), path.clone()),
+                Some(Rewrite::Prop { props, path }) if !self.defaulted.contains(&root) => {
+                    (props.clone(), path.clone())
+                }
                 _ => return false,
             }
         };
         let base: Vec<String> = base.into_iter().chain(path).collect();
         if obj.rest.is_some() {
-            let taken =
-                self.plan.rewrites.values().any(|r| matches!(r, Rewrite::Rest { component, .. } if *component == span));
+            let taken = self
+                .plan
+                .rewrites
+                .values()
+                .any(|r| matches!(r, Rewrite::Rest { component, .. } if *component == span));
             if taken || !base.is_empty() {
                 return false;
             }
         }
-        let Some(mut ctx) = self.comps.pop() else { return false };
+        let Some(mut ctx) = self.comps.pop() else {
+            return false;
+        };
         self.destructure_props(obj, &props, &base, &mut ctx);
         self.comps.push(ctx);
         true
     }
 
     /// A destructured prop that's assigned to: plans its local override.
-    fn written_prop(&mut self, sym: SymbolId, k: &str, path: &[String], props: &str, component: Span, span: Span) {
+    fn written_prop(
+        &mut self,
+        sym: SymbolId,
+        k: &str,
+        path: &[String],
+        props: &str,
+        component: Span,
+        span: Span,
+    ) {
         if !self.written(sym) {
             return;
         }
@@ -704,7 +833,11 @@ impl<'s> Analyzer<'s> {
     }
 
     fn local_prop(&mut self, component: Span, props: &str, k: &str, sym: SymbolId) {
-        let entry = self.plan.local_props.entry(key(component)).or_insert_with(|| (props.to_string(), Vec::new()));
+        let entry = self
+            .plan
+            .local_props
+            .entry(key(component))
+            .or_insert_with(|| (props.to_string(), Vec::new()));
         if !entry.1.iter().any(|(name, _)| name == k) {
             entry.1.push((k.to_string(), sym));
         }
@@ -726,9 +859,16 @@ impl<'s> Analyzer<'s> {
 
     /// `const a = props.a; a = 2`: a `const` is read-only, alias or not. Says where a write can go.
     fn const_written(&mut self, it: &VariableDeclarator<'_>) -> bool {
-        let Some(init) = it.init.as_ref().filter(|i| self.prop_path(i).is_some()) else { return false };
+        let Some(init) = it.init.as_ref().filter(|i| self.prop_path(i).is_some()) else {
+            return false;
+        };
         let names = it.id.get_binding_identifiers();
-        let Some(id) = names.iter().find(|b| binding_symbol(b).is_some_and(|s| self.written(s))) else { return false };
+        let Some(id) = names
+            .iter()
+            .find(|b| binding_symbol(b).is_some_and(|s| self.written(s)))
+        else {
+            return false;
+        };
         let name = id.name.as_str();
         let read = self.text(init.span()).to_string();
         self.plan.diagnostics.push(Diagnostic::new(
@@ -745,10 +885,24 @@ impl<'s> Analyzer<'s> {
 
     /// `props.x = v` anywhere in a component, closures included: the same override a `let` alias makes.
     fn props_write(&mut self, target: &SimpleAssignmentTarget<'_>) {
-        let SimpleAssignmentTarget::StaticMemberExpression(m) = target else { return };
-        let Expression::Identifier(id) = m.object.get_inner_expression() else { return };
-        let Some(sym) = symbol_of(self.scoping, id) else { return };
-        let Some(span) = self.comps.iter().rev().find(|c| c.props_param == Some(sym)).map(|c| c.span) else { return };
+        let SimpleAssignmentTarget::StaticMemberExpression(m) = target else {
+            return;
+        };
+        let Expression::Identifier(id) = m.object.get_inner_expression() else {
+            return;
+        };
+        let Some(sym) = symbol_of(self.scoping, id) else {
+            return;
+        };
+        let Some(span) = self
+            .comps
+            .iter()
+            .rev()
+            .find(|c| c.props_param == Some(sym))
+            .map(|c| c.span)
+        else {
+            return;
+        };
         self.local_prop(span, id.name.as_str(), m.property.name.as_str(), sym);
     }
 
@@ -760,11 +914,15 @@ impl<'s> Analyzer<'s> {
         }
         let aliased = match &it.id {
             BindingPattern::BindingIdentifier(id) => {
-                let Some(sym) = binding_symbol(id) else { return };
+                let Some(sym) = binding_symbol(id) else {
+                    return;
+                };
                 match self.alias(init) {
                     Some(rewrite) => {
                         if self.written(sym) {
-                            let Some(span) = self.comps.last().map(|c| c.span) else { return };
+                            let Some(span) = self.comps.last().map(|c| c.span) else {
+                                return;
+                            };
                             match &rewrite {
                                 Rewrite::Prop { props, path } if path.len() == 1 => {
                                     let (props, k) = (props.clone(), path[0].clone());
@@ -799,8 +957,15 @@ impl<'s> Analyzer<'s> {
     fn children_local(&mut self, ctx: &CompCtx, props: &str) -> String {
         let plan = self.plan.children.entry(key(ctx.span)).or_insert_with(|| {
             let text = &self.source[ctx.span.start as usize..ctx.span.end as usize];
-            let local = if text.contains("_children") { "_children$" } else { "_children" };
-            ChildrenPlan { props: props.into(), local: local.into() }
+            let local = if text.contains("_children") {
+                "_children$"
+            } else {
+                "_children"
+            };
+            ChildrenPlan {
+                props: props.into(),
+                local: local.into(),
+            }
         });
         plan.local.clone()
     }
@@ -810,7 +975,10 @@ impl<'s> Analyzer<'s> {
         if let Some(call) = ctx.state_arg {
             let arg = self.text(span);
             let inner = &self.source[call.start as usize..call.end as usize];
-            let arg_text = inner.strip_prefix("state(").and_then(|s| s.strip_suffix(')')).unwrap_or(arg);
+            let arg_text = inner
+                .strip_prefix("state(")
+                .and_then(|s| s.strip_suffix(')'))
+                .unwrap_or(arg);
             let d = Diagnostic::new(
                 self.source,
                 "W005",
@@ -822,14 +990,21 @@ impl<'s> Analyzer<'s> {
             let fix = Fix {
                 description: "Make it a linked state that resets when the prop changes".into(),
                 safe: false,
-                edits: vec![Edit { start: call.start, end: call.end, text: format!("state.linked(() => {arg_text})") }],
+                edits: vec![Edit {
+                    start: call.start,
+                    end: call.end,
+                    text: format!("state.linked(() => {arg_text})"),
+                }],
             };
             self.plan.diagnostics.push(d.with_fix(fix));
             return;
         }
         let decl = ctx.body_decl;
         if let Some(d) = decl
-            && self.comps.last_mut().is_some_and(|c| !c.reported_decls.insert(key(d)))
+            && self
+                .comps
+                .last_mut()
+                .is_some_and(|c| !c.reported_decls.insert(key(d)))
         {
             return;
         }
@@ -846,7 +1021,11 @@ impl<'s> Analyzer<'s> {
             d = d.with_fix(Fix {
                 description: "Make it a derived value (then read it with `.value`)".into(),
                 safe: false,
-                edits: vec![Edit { start: init.start, end: init.end, text: format!("derived(() => {text})") }],
+                edits: vec![Edit {
+                    start: init.start,
+                    end: init.end,
+                    text: format!("derived(() => {text})"),
+                }],
             });
         }
         self.plan.diagnostics.push(d);
@@ -869,23 +1048,32 @@ impl<'s> Analyzer<'s> {
         .with_fix(Fix {
             description: format!("Read `{name}.value`"),
             safe: true,
-            edits: vec![Edit { start: id.span.end, end: id.span.end, text: ".value".into() }],
+            edits: vec![Edit {
+                start: id.span.end,
+                end: id.span.end,
+                text: ".value".into(),
+            }],
         });
         self.plan.diagnostics.push(d);
     }
 
     /// `<Card person={bind(name)} />`: the one way a child's write reaches the parent.
     fn bound_prop(&mut self, attr: &JSXAttribute<'_>) {
-        let Some(JSXAttributeValue::ExpressionContainer(c)) = &attr.value else { return };
-        let Some(Expression::CallExpression(call)) =
-            c.expression.as_expression().map(oxc_ast::ast::Expression::get_inner_expression)
+        let Some(JSXAttributeValue::ExpressionContainer(c)) = &attr.value else {
+            return;
+        };
+        let Some(Expression::CallExpression(call)) = c
+            .expression
+            .as_expression()
+            .map(oxc_ast::ast::Expression::get_inner_expression)
         else {
             return;
         };
         if self.is_bind(call)
             && let [arg] = call.arguments.as_slice()
             && arg.as_expression().is_some_and(|e| {
-                chain_root_member(e).is_some() || matches!(e.get_inner_expression(), Expression::Identifier(_))
+                chain_root_member(e).is_some()
+                    || matches!(e.get_inner_expression(), Expression::Identifier(_))
             })
         {
             self.plan.bound.insert(key(call.span));
@@ -894,8 +1082,12 @@ impl<'s> Analyzer<'s> {
 
     /// `bind:count={box}`: only on a component, and only with something that can be a box.
     fn bound_attribute(&mut self, attr: &JSXAttributeItem<'_>, intrinsic: bool) {
-        let JSXAttributeItem::Attribute(a) = attr else { return };
-        let JSXAttributeName::NamespacedName(ns) = &a.name else { return };
+        let JSXAttributeItem::Attribute(a) = attr else {
+            return;
+        };
+        let JSXAttributeName::NamespacedName(ns) = &a.name else {
+            return;
+        };
         if ns.namespace.name != "bind" {
             return;
         }
@@ -904,7 +1096,8 @@ impl<'s> Analyzer<'s> {
             _ => None,
         };
         let path = value.is_some_and(|e| {
-            chain_root_member(e).is_some() || matches!(e.get_inner_expression(), Expression::Identifier(_))
+            chain_root_member(e).is_some()
+                || matches!(e.get_inner_expression(), Expression::Identifier(_))
         });
         if intrinsic || !path {
             self.plan.diagnostics.push(Diagnostic::new(
@@ -919,7 +1112,9 @@ impl<'s> Analyzer<'s> {
     }
 
     fn is_bind(&self, call: &CallExpression<'_>) -> bool {
-        let Expression::Identifier(id) = &call.callee else { return false };
+        let Expression::Identifier(id) = &call.callee else {
+            return false;
+        };
         symbol_of(self.scoping, id)
             .and_then(|s| self.imports.get(&s))
             .is_some_and(|(from, name)| from == "@weft-js/core" && name == "bind")
@@ -929,18 +1124,33 @@ impl<'s> Analyzer<'s> {
     /// every read and each read gets a new value. Calls that read props, list items or boxes are meant to stay
     /// live and are left alone; the compiler can't see inside the callee, so it reports instead of hoisting.
     fn call_prop(&mut self, attr: &JSXAttribute<'_>, component: &str) {
-        let Some(JSXAttributeValue::ExpressionContainer(c)) = &attr.value else { return };
-        let Some(value) = c.expression.as_expression() else { return };
+        let Some(JSXAttributeValue::ExpressionContainer(c)) = &attr.value else {
+            return;
+        };
+        let Some(value) = c.expression.as_expression() else {
+            return;
+        };
         // Only calls: the back end treats `new X()` as static and passes its value once.
-        let Expression::CallExpression(call) = value.without_parentheses() else { return };
+        let Expression::CallExpression(call) = value.without_parentheses() else {
+            return;
+        };
         let (callee, span) = (&call.callee, call.span);
-        let mut reactive = Reactive { a: self, found: false };
+        let mut reactive = Reactive {
+            a: self,
+            found: false,
+        };
         reactive.visit_expression(value);
         if reactive.found {
             return;
         }
-        let JSXAttributeName::Identifier(name) = &attr.name else { return };
-        let (name, call, callee) = (name.name.as_str(), self.text(span), self.text(callee.span()));
+        let JSXAttributeName::Identifier(name) = &attr.name else {
+            return;
+        };
+        let (name, call, callee) = (
+            name.name.as_str(),
+            self.text(span),
+            self.text(callee.span()),
+        );
         self.plan.diagnostics.push(Diagnostic::new(
             self.source,
             "W016",
@@ -958,11 +1168,18 @@ impl<'s> Analyzer<'s> {
     }
 
     /// Every name `pattern` binds in a keyed-list row, as a live path from `_item()`. W019 for what a path can't say.
-    fn bind_row(&mut self, pattern: &BindingPattern<'_>, path: &mut Vec<RowStep>, plan: &mut ListPlan) {
+    fn bind_row(
+        &mut self,
+        pattern: &BindingPattern<'_>,
+        path: &mut Vec<RowStep>,
+        plan: &mut ListPlan,
+    ) {
         match pattern {
             BindingPattern::BindingIdentifier(id) => {
                 if let Some(sym) = binding_symbol(id) {
-                    self.plan.rewrites.insert(sym, Rewrite::AccessorPath { path: path.clone() });
+                    self.plan
+                        .rewrites
+                        .insert(sym, Rewrite::AccessorPath { path: path.clone() });
                     plan.item_syms.push(sym);
                 }
             }
@@ -1050,9 +1267,19 @@ impl<'s> Analyzer<'s> {
         }
         let mut keys: Vec<(Span, &str)> = Vec::new();
         for el in &roots {
-            for a in el.opening_element.attributes.iter().filter(|a| is_key_attr(a)) {
-                let JSXAttributeItem::Attribute(attr) = a else { continue };
-                keys.push((attr.span, attr.value.as_ref().map_or("", |v| self.text(v.span()))));
+            for a in el
+                .opening_element
+                .attributes
+                .iter()
+                .filter(|a| is_key_attr(a))
+            {
+                let JSXAttributeItem::Attribute(attr) = a else {
+                    continue;
+                };
+                keys.push((
+                    attr.span,
+                    attr.value.as_ref().map_or("", |v| self.text(v.span())),
+                ));
             }
         }
         plan.key_attrs = keys.iter().map(|(s, _)| key(*s)).collect();
@@ -1079,7 +1306,11 @@ impl<'s> Analyzer<'s> {
             ));
         }
         if plan.key_attrs.is_empty() {
-            let mut uses = MemberUse { scoping: self.scoping, sym: item_sym, props: Vec::new() };
+            let mut uses = MemberUse {
+                scoping: self.scoping,
+                sym: item_sym,
+                props: Vec::new(),
+            };
             uses.visit_expression(cb);
             if destructured || !uses.props.is_empty() {
                 let span = call.span;
@@ -1091,12 +1322,18 @@ impl<'s> Analyzer<'s> {
                     "List over objects without a `key`: rows can't keep their identity when the list changes.",
                     "Add `key={item.id}` (a stable, unique field) to the row's root element.",
                 );
-                if let (Some(el), Some(name), true) = (root, &item_name, uses.props.iter().any(|p| p == "id")) {
+                if let (Some(el), Some(name), true) =
+                    (root, &item_name, uses.props.iter().any(|p| p == "id"))
+                {
                     let at = el.opening_element.name.span().end;
                     d = d.with_fix(Fix {
                         description: format!("Key rows by `{name}.id`"),
                         safe: true,
-                        edits: vec![Edit { start: at, end: at, text: format!(" key={{{name}.id}}") }],
+                        edits: vec![Edit {
+                            start: at,
+                            end: at,
+                            text: format!(" key={{{name}.id}}"),
+                        }],
                     });
                 }
                 self.plan.diagnostics.push(d);
@@ -1116,25 +1353,42 @@ impl<'s> Analyzer<'s> {
     /// A list over a top-level `const` made here as an array (`[…]`, `Array.from(…)`, `new Array(…)`) with no keys:
     /// nothing re-reads it, so `For` could never run twice and the plain `.map` is the same page.
     fn fixed_list(&self, call: &CallExpression<'_>, cb: &Expression<'_>) -> bool {
-        let Expression::StaticMemberExpression(m) = &call.callee else { return false };
-        let Expression::Identifier(id) = m.object.without_parentheses() else { return false };
-        let Some(sym) = symbol_of(self.scoping, id) else { return false };
+        let Expression::StaticMemberExpression(m) = &call.callee else {
+            return false;
+        };
+        let Expression::Identifier(id) = m.object.without_parentheses() else {
+            return false;
+        };
+        let Some(sym) = symbol_of(self.scoping, id) else {
+            return false;
+        };
         let (ret, _) = returned(cb);
         let mut roots = Vec::new();
         if let Some(ret) = ret {
             row_roots(ret, &mut roots);
         }
         self.scoping.symbol_scope_id(sym) == self.scoping.root_scope_id()
-            && !self.scoping.get_resolved_references(sym).any(oxc_semantic::Reference::is_write)
+            && !self
+                .scoping
+                .get_resolved_references(sym)
+                .any(oxc_semantic::Reference::is_write)
             && self.arrays.contains(&sym)
-            && !roots.iter().any(|el| el.opening_element.attributes.iter().any(is_key_attr))
+            && !roots
+                .iter()
+                .any(|el| el.opening_element.attributes.iter().any(is_key_attr))
     }
 
     /// W017: `cart[p.id]` or `cart.value[p.id]` in a row reads one entry of a whole object, so every write to it
     /// re-runs every row. `box.get(key)` re-runs only the row whose entry changed (`Object.is`). A box read gets the
     /// safe autofix; a prop needs the parent to pass the box, which the compiler can't do from here.
     fn entry_reads(&mut self, cb: &Expression<'_>, items: &[SymbolId]) {
-        let mut reads = EntryReads { a: self, items, depth: 0, child: None, found: Vec::new() };
+        let mut reads = EntryReads {
+            a: self,
+            items,
+            depth: 0,
+            child: None,
+            found: Vec::new(),
+        };
         reads.visit_expression(cb);
         let found = reads.found;
         let mut seen: Vec<String> = Vec::new();
@@ -1146,10 +1400,16 @@ impl<'s> Analyzer<'s> {
             seen.push(whole.clone());
             let read = self.text(hit.read);
             let index_text = self.text(hit.index);
-            let name = hit.boxed.map_or_else(|| whole.rsplit('.').next().unwrap_or(&whole), |b| self.text(b));
+            let name = hit.boxed.map_or_else(
+                || whole.rsplit('.').next().unwrap_or(&whole),
+                |b| self.text(b),
+            );
             // Passed straight to a child component (`<Row live={live.value[s.id]} />`): the child's reads of that
             // prop are what re-run, so say where the entry should be read.
-            let child = found.iter().filter(|h| self.text(h.whole) == whole).find_map(|h| h.child.as_ref());
+            let child = found
+                .iter()
+                .filter(|h| self.text(h.whole) == whole)
+                .find_map(|h| h.child.as_ref());
             let fix = match (hit.boxed, child) {
                 (Some(_), Some((comp, prop))) => format!(
                     "Pass the entry with `{prop}={{{name}.get({index_text})}}`, or pass the box (`{name}={{{name}}}`, \
@@ -1205,11 +1465,21 @@ impl<'s> Analyzer<'s> {
             Some(Rewrite::Prop { path, .. }) if path.len() == 1 => Some(path[0].clone()),
             _ => None,
         };
-        let Some(comp) = self.comps.iter().rev().find(|c| c.prop_syms.contains(&sym)) else { return };
-        let prop = prop.or_else(|| (comp.props_param == Some(sym)).then(|| member.map(String::from)).flatten());
+        let Some(comp) = self.comps.iter().rev().find(|c| c.prop_syms.contains(&sym)) else {
+            return;
+        };
+        let prop = prop.or_else(|| {
+            (comp.props_param == Some(sym))
+                .then(|| member.map(String::from))
+                .flatten()
+        });
         if let (Some(component), Some(prop)) = (comp.name.clone(), prop) {
             let (line, _) = line_col(self.source, span.start);
-            self.plan.facts.keyed_props.push(KeyedProp { component, prop, line });
+            self.plan.facts.keyed_props.push(KeyedProp {
+                component,
+                prop,
+                line,
+            });
         }
     }
 
@@ -1218,7 +1488,11 @@ impl<'s> Analyzer<'s> {
             let mut edits = Vec::new();
             for (sym, text) in names {
                 for span in self.ref_spans.get(&sym).into_iter().flatten() {
-                    edits.push(Edit { start: span.start, end: span.end, text: text.clone() });
+                    edits.push(Edit {
+                        start: span.start,
+                        end: span.end,
+                        text: text.clone(),
+                    });
                 }
             }
             if let Some(fix) = self.plan.diagnostics[index].fix.as_mut() {
@@ -1246,7 +1520,9 @@ impl<'s> Analyzer<'s> {
                     )
                 }
                 (None, Some(sym)) => {
-                    for (_, component, import, prop) in self.box_props.iter().filter(|(b, ..)| *b == sym) {
+                    for (_, component, import, prop) in
+                        self.box_props.iter().filter(|(b, ..)| *b == sym)
+                    {
                         self.plan.facts.spread_props.push(SpreadProp {
                             start: span.start,
                             end: span.end,
@@ -1299,12 +1575,19 @@ impl<'a> Visit<'a> for Analyzer<'_> {
             return;
         }
         let name = match &it.id {
-            BindingPattern::BindingIdentifier(id) => Some((id.name.to_string(), binding_symbol(id))),
+            BindingPattern::BindingIdentifier(id) => {
+                Some((id.name.to_string(), binding_symbol(id)))
+            }
             _ => None,
         };
-        let init = it.init.as_ref().map(oxc_ast::ast::Expression::without_parentheses);
-        if let (Some((n, _)), Some(Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_))) =
-            (&name, init)
+        let init = it
+            .init
+            .as_ref()
+            .map(oxc_ast::ast::Expression::without_parentheses);
+        if let (
+            Some((n, _)),
+            Some(Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)),
+        ) = (&name, init)
         {
             self.pending_name = Some(n.clone());
         }
@@ -1315,7 +1598,10 @@ impl<'a> Visit<'a> for Analyzer<'_> {
             && callee_name(call) == Some("untrack")
             && let Some(arg) = call.arguments.first().and_then(|a| a.as_expression())
         {
-            let mut reactive = Reactive { a: self, found: false };
+            let mut reactive = Reactive {
+                a: self,
+                found: false,
+            };
             reactive.visit_expression(arg);
             if reactive.found {
                 let snap = Snapshot {
@@ -1349,12 +1635,18 @@ impl<'a> Visit<'a> for Analyzer<'_> {
     }
 
     fn visit_function(&mut self, it: &Function<'a>, flags: ScopeFlags) {
-        let name = it.id.as_ref().map(|i| i.name.to_string()).or_else(|| self.pending_name.take());
+        let name = it
+            .id
+            .as_ref()
+            .map(|i| i.name.to_string())
+            .or_else(|| self.pending_name.take());
         self.pending_name = None;
         if let Some(name) = name.filter(|n| is_component_name(n))
             && it.body.is_some()
         {
-            self.enter_component(name, it.span, &it.params, |s| walk::walk_function(s, it, flags));
+            self.enter_component(name, it.span, &it.params, |s| {
+                walk::walk_function(s, it, flags)
+            });
         } else {
             self.nested(|s| walk::walk_function(s, it, flags));
         }
@@ -1363,7 +1655,9 @@ impl<'a> Visit<'a> for Analyzer<'_> {
     fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
         let name = self.pending_name.take();
         if let Some(name) = name.filter(|n| is_component_name(n)) {
-            self.enter_component(name, it.span, &it.params, |s| walk::walk_arrow_function_expression(s, it));
+            self.enter_component(name, it.span, &it.params, |s| {
+                walk::walk_arrow_function_expression(s, it)
+            });
         } else {
             self.nested(|s| walk::walk_arrow_function_expression(s, it));
         }
@@ -1418,8 +1712,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
 
     fn visit_jsx_opening_element(&mut self, it: &JSXOpeningElement<'a>) {
         // On a native element a box can only mean its value; on a component it may be passed for write access.
-        let intrinsic =
-            matches!(&it.name, JSXElementName::Identifier(n) if n.name.starts_with(|c: char| c.is_ascii_lowercase()));
+        let intrinsic = matches!(&it.name, JSXElementName::Identifier(n) if n.name.starts_with(|c: char| c.is_ascii_lowercase()));
         for attr in &it.attributes {
             self.bound_attribute(attr, intrinsic);
         }
@@ -1435,7 +1728,9 @@ impl<'a> Visit<'a> for Analyzer<'_> {
         } else {
             let component = jsx_name(&it.name);
             let import = match &it.name {
-                JSXElementName::IdentifierReference(r) => symbol_of(self.scoping, r).and_then(|s| self.imports.get(&s)),
+                JSXElementName::IdentifierReference(r) => {
+                    symbol_of(self.scoping, r).and_then(|s| self.imports.get(&s))
+                }
                 _ => None,
             };
             let (component, import) = match import {
@@ -1443,15 +1738,26 @@ impl<'a> Visit<'a> for Analyzer<'_> {
                 None => (component, None),
             };
             for attr in &it.attributes {
-                let JSXAttributeItem::Attribute(a) = attr else { continue };
+                let JSXAttributeItem::Attribute(a) = attr else {
+                    continue;
+                };
                 self.call_prop(a, &component);
                 self.bound_prop(a);
-                if let (JSXAttributeName::Identifier(n), Some(JSXAttributeValue::ExpressionContainer(c))) =
-                    (&a.name, &a.value)
-                    && let Some((root, _)) = c.expression.as_expression().and_then(chain_root_member)
-                    && let Some(sym) = symbol_of(self.scoping, root).filter(|s| self.boxes.contains(s))
+                if let (
+                    JSXAttributeName::Identifier(n),
+                    Some(JSXAttributeValue::ExpressionContainer(c)),
+                ) = (&a.name, &a.value)
+                    && let Some((root, _)) =
+                        c.expression.as_expression().and_then(chain_root_member)
+                    && let Some(sym) =
+                        symbol_of(self.scoping, root).filter(|s| self.boxes.contains(s))
                 {
-                    self.box_props.push((sym, component.clone(), import.clone(), n.name.to_string()));
+                    self.box_props.push((
+                        sym,
+                        component.clone(),
+                        import.clone(),
+                        n.name.to_string(),
+                    ));
                 }
             }
         }
@@ -1459,7 +1765,9 @@ impl<'a> Visit<'a> for Analyzer<'_> {
     }
 
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-        let Some(sym) = symbol_of(self.scoping, it) else { return };
+        let Some(sym) = symbol_of(self.scoping, it) else {
+            return;
+        };
         self.ref_spans.entry(sym).or_default().push(it.span);
         if let Some(c) = self.comps.last_mut()
             && let Some(snap) = c.snapshots.iter_mut().find(|s| s.sym == sym)
@@ -1471,7 +1779,11 @@ impl<'a> Visit<'a> for Analyzer<'_> {
             }
         }
         // A rest parameter is a live view: holding it reads nothing (`rest.x` is reported as a member read).
-        if self.body_level().is_some_and(|c| c.prop_syms.contains(&sym)) && !self.is_rest(sym) {
+        if self
+            .body_level()
+            .is_some_and(|c| c.prop_syms.contains(&sym))
+            && !self.is_rest(sym)
+        {
             self.report_body_read(it.span, it.name.as_str());
         }
     }
@@ -1479,12 +1791,17 @@ impl<'a> Visit<'a> for Analyzer<'_> {
     fn visit_import_declaration(&mut self, it: &ImportDeclaration<'a>) {
         for spec in it.specifiers.iter().flatten() {
             let (local, imported) = match spec {
-                ImportDeclarationSpecifier::ImportSpecifier(s) => (&s.local, s.imported.name().to_string()),
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => (&s.local, "default".to_string()),
+                ImportDeclarationSpecifier::ImportSpecifier(s) => {
+                    (&s.local, s.imported.name().to_string())
+                }
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
+                    (&s.local, "default".to_string())
+                }
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => continue,
             };
             if let Some(sym) = binding_symbol(local) {
-                self.imports.insert(sym, (it.source.value.to_string(), imported));
+                self.imports
+                    .insert(sym, (it.source.value.to_string(), imported));
             }
         }
     }
@@ -1494,7 +1811,9 @@ impl<'a> Visit<'a> for Analyzer<'_> {
             && let Expression::Identifier(id) = &it.object
             && let Some(sym) = symbol_of(self.scoping, id)
             && self.is_rest(sym)
-            && self.body_level().is_some_and(|c| c.prop_syms.contains(&sym))
+            && self
+                .body_level()
+                .is_some_and(|c| c.prop_syms.contains(&sym))
         {
             self.report_body_read(it.span, self.text(it.span));
         }
@@ -1509,7 +1828,9 @@ impl<'a> Visit<'a> for Analyzer<'_> {
             let ctx_span = ctx.span;
             let local = self.children_local(&ctx, &props);
             self.comps.insert(i, ctx);
-            self.plan.children_reads.insert(key(it.span), (local, key(ctx_span)));
+            self.plan
+                .children_reads
+                .insert(key(it.span), (local, key(ctx_span)));
         }
         if it.property.name == "value"
             && !self.assign_target
@@ -1527,10 +1848,12 @@ impl<'a> Visit<'a> for Analyzer<'_> {
         self.visit_assignment_target(&it.left);
         self.assign_target = prev;
         let ctx = match &it.left {
-            AssignmentTarget::StaticMemberExpression(m) if m.property.name == "value" => match &m.object {
-                Expression::Identifier(id) => symbol_of(self.scoping, id),
-                _ => None,
-            },
+            AssignmentTarget::StaticMemberExpression(m) if m.property.name == "value" => {
+                match &m.object {
+                    Expression::Identifier(id) => symbol_of(self.scoping, id),
+                    _ => None,
+                }
+            }
             _ => None,
         };
         self.spread_ctx.push(ctx);
@@ -1543,8 +1866,12 @@ impl<'a> Visit<'a> for Analyzer<'_> {
         walk::walk_simple_assignment_target(self, it);
     }
 
-    fn visit_assignment_target_property_identifier(&mut self, it: &AssignmentTargetPropertyIdentifier<'a>) {
-        if symbol_of(self.scoping, &it.binding).is_some_and(|s| self.plan.rewrites.contains_key(&s)) {
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        it: &AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        if symbol_of(self.scoping, &it.binding).is_some_and(|s| self.plan.rewrites.contains_key(&s))
+        {
             let name = it.binding.name.to_string();
             self.reassigned(it.span, &name, "a destructuring assignment");
         }
@@ -1572,7 +1899,8 @@ impl<'a> Visit<'a> for Analyzer<'_> {
                         if matches!(&s.argument, Expression::Identifier(id) if id.name == param))
                 })
             {
-                self.spreads.push((it.span, self.spread_ctx.last().copied().flatten()));
+                self.spreads
+                    .push((it.span, self.spread_ctx.last().copied().flatten()));
             }
         }
         if callee_name(it) == Some("derived")
@@ -1595,8 +1923,11 @@ impl<'a> Visit<'a> for Analyzer<'_> {
 
 /// `p => ({ ...p, … })`: the item parameter's name and the object it spreads into.
 fn spread_of_param<'b, 'a>(cb: &'b Expression<'a>) -> Option<(&'b str, &'b ObjectExpression<'a>)> {
-    let Expression::ArrowFunctionExpression(f) = cb else { return None };
-    let Some(BindingPattern::BindingIdentifier(param)) = f.params.items.first().map(|p| &p.pattern) else {
+    let Expression::ArrowFunctionExpression(f) = cb else {
+        return None;
+    };
+    let Some(BindingPattern::BindingIdentifier(param)) = f.params.items.first().map(|p| &p.pattern)
+    else {
         return None;
     };
     let body = f.body.as_expression()?.without_parentheses();
@@ -1655,7 +1986,8 @@ struct RowEntry {
 
 impl EntryReads<'_, '_> {
     fn is_prop(&self, id: &IdentifierReference<'_>) -> bool {
-        symbol_of(self.a.scoping, id).is_some_and(|s| self.a.comps.iter().any(|c| c.prop_syms.contains(&s)))
+        symbol_of(self.a.scoping, id)
+            .is_some_and(|s| self.a.comps.iter().any(|c| c.prop_syms.contains(&s)))
     }
     fn reads_item(&self, e: &Expression<'_>) -> bool {
         reads_any(self.a.scoping, e, |s| self.items.contains(&s))
@@ -1674,7 +2006,11 @@ fn reads_any(scoping: &Scoping, e: &Expression<'_>, hit: impl Fn(SymbolId) -> bo
             self.found |= symbol_of(self.scoping, it).is_some_and(&self.hit);
         }
     }
-    let mut u = Uses { scoping, hit, found: false };
+    let mut u = Uses {
+        scoping,
+        hit,
+        found: false,
+    };
     u.visit_expression(e);
     u.found
 }
@@ -1687,16 +2023,20 @@ impl<'a> Visit<'a> for EntryReads<'_, '_> {
                 Expression::StaticMemberExpression(m) => match &m.object {
                     Expression::Identifier(id)
                         if m.property.name == "value"
-                            && symbol_of(self.a.scoping, id).is_some_and(|s| self.a.boxes.contains(&s)) =>
+                            && symbol_of(self.a.scoping, id)
+                                .is_some_and(|s| self.a.boxes.contains(&s)) =>
                     {
                         Some((m.span, Some(id.span), true))
                     }
-                    Expression::Identifier(id) if m.property.name == "value" && self.is_prop(id) => {
+                    Expression::Identifier(id)
+                        if m.property.name == "value" && self.is_prop(id) =>
+                    {
                         Some((m.span, Some(id.span), false))
                     }
                     Expression::Identifier(id)
-                        if symbol_of(self.a.scoping, id)
-                            .is_some_and(|s| self.a.comps.iter().any(|c| c.props_param == Some(s))) =>
+                        if symbol_of(self.a.scoping, id).is_some_and(|s| {
+                            self.a.comps.iter().any(|c| c.props_param == Some(s))
+                        }) =>
                     {
                         Some((m.span, None, false))
                     }
@@ -1706,14 +2046,20 @@ impl<'a> Visit<'a> for EntryReads<'_, '_> {
             };
             if let Some((whole, boxed, local)) = whole {
                 let child = self.child.clone();
-                self.found.push(RowEntry { read: it.span, whole, boxed, local, index: it.expression.span(), child });
+                self.found.push(RowEntry {
+                    read: it.span,
+                    whole,
+                    boxed,
+                    local,
+                    index: it.expression.span(),
+                    child,
+                });
             }
         }
         walk::walk_computed_member_expression(self, it);
     }
     fn visit_jsx_opening_element(&mut self, it: &JSXOpeningElement<'a>) {
-        let intrinsic =
-            matches!(&it.name, JSXElementName::Identifier(n) if n.name.starts_with(|c: char| c.is_ascii_lowercase()));
+        let intrinsic = matches!(&it.name, JSXElementName::Identifier(n) if n.name.starts_with(|c: char| c.is_ascii_lowercase()));
         if intrinsic {
             return walk::walk_jsx_opening_element(self, it);
         }
@@ -1760,8 +2106,9 @@ impl<'a> Visit<'a> for ComponentEntryReads<'_, '_> {
             && m.property.name == "value"
         {
             let scoping = self.a.scoping;
-            let is_prop =
-                |id: &IdentifierReference<'_>| symbol_of(scoping, id).is_some_and(|s| self.ctx.prop_syms.contains(&s));
+            let is_prop = |id: &IdentifierReference<'_>| {
+                symbol_of(scoping, id).is_some_and(|s| self.ctx.prop_syms.contains(&s))
+            };
             // (box span, box symbol, declared in this file)
             let boxed = match &m.object {
                 Expression::Identifier(id) => {
@@ -1776,7 +2123,8 @@ impl<'a> Visit<'a> for ComponentEntryReads<'_, '_> {
                 }
                 Expression::StaticMemberExpression(inner) => match &inner.object {
                     Expression::Identifier(p)
-                        if symbol_of(scoping, p).is_some() && symbol_of(scoping, p) == self.ctx.props_param =>
+                        if symbol_of(scoping, p).is_some()
+                            && symbol_of(scoping, p) == self.ctx.props_param =>
                     {
                         Some((inner.span, None, false))
                     }
@@ -1785,7 +2133,9 @@ impl<'a> Visit<'a> for ComponentEntryReads<'_, '_> {
                 _ => None,
             };
             if let Some((span, sym, local)) = boxed
-                && reads_any(scoping, &it.expression, |s| self.ctx.prop_syms.contains(&s) && Some(s) != sym)
+                && reads_any(scoping, &it.expression, |s| {
+                    self.ctx.prop_syms.contains(&s) && Some(s) != sym
+                })
             {
                 self.found.push(EntryHit {
                     read: it.span,
@@ -1824,7 +2174,9 @@ struct Boxes<'s> {
 fn makes_array(e: &Expression<'_>) -> bool {
     match e {
         Expression::ArrayExpression(_) => true,
-        Expression::NewExpression(n) => matches!(&n.callee, Expression::Identifier(c) if c.name == "Array"),
+        Expression::NewExpression(n) => {
+            matches!(&n.callee, Expression::Identifier(c) if c.name == "Array")
+        }
         Expression::CallExpression(c) => matches!(&c.callee, Expression::StaticMemberExpression(m)
             if m.property.name == "from" && matches!(&m.object, Expression::Identifier(o) if o.name == "Array")),
         _ => false,
@@ -1835,7 +2187,8 @@ impl<'a> Visit<'a> for Boxes<'_> {
     fn visit_variable_declaration(&mut self, it: &VariableDeclaration<'a>) {
         if it.kind.is_const() {
             for d in &it.declarations {
-                if let (BindingPattern::BindingIdentifier(id), Some(init)) = (&d.id, d.init.as_ref())
+                if let (BindingPattern::BindingIdentifier(id), Some(init)) =
+                    (&d.id, d.init.as_ref())
                     && makes_array(init.without_parentheses())
                     && let Some(sym) = binding_symbol(id)
                 {
@@ -1847,16 +2200,20 @@ impl<'a> Visit<'a> for Boxes<'_> {
     }
 
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
-        if let (BindingPattern::BindingIdentifier(id), Some(Expression::CallExpression(call))) =
-            (&it.id, it.init.as_ref().map(oxc_ast::ast::Expression::without_parentheses))
-        {
+        if let (BindingPattern::BindingIdentifier(id), Some(Expression::CallExpression(call))) = (
+            &it.id,
+            it.init
+                .as_ref()
+                .map(oxc_ast::ast::Expression::without_parentheses),
+        ) {
             let boxed = match &call.callee {
                 Expression::Identifier(c) => {
                     matches!(c.name.as_str(), "state" | "derived" | "resource")
                         || symbol_of(self.scoping, c).is_some_and(|s| self.browser.contains(&s))
                 }
                 Expression::StaticMemberExpression(m) => {
-                    matches!(&m.object, Expression::Identifier(o) if o.name == "state") && m.property.name == "linked"
+                    matches!(&m.object, Expression::Identifier(o) if o.name == "state")
+                        && m.property.name == "linked"
                 }
                 _ => false,
             };

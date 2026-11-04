@@ -18,21 +18,36 @@ const ANONYMOUS = { user: null, session: null }
 const TABLES = ['user', 'session', 'account', 'verification', 'jwks']
 
 /** A cache too big for one cookie is no cache: that session just reads the database. An expired chunk still goes out. */
-const oversized = (line: string) => CHUNK.test(line) && !/max-age=0/i.test(line) && !/^[^=]+=;/.test(line)
+const oversized = (line: string) =>
+  CHUNK.test(line) && !/max-age=0/i.test(line) && !/^[^=]+=;/.test(line)
 
 /** Better Auth's own routes follow the rule `session()` does: only reading who you are can answer from the cache. */
 const cacheRules: BetterAuthPlugin = {
   id: 'weft-session-cache',
   hooks: {
     // `/token` above all: a revoked session mustn't mint a 15-minute token from a cookie it still holds.
-    before: [{ matcher: c => c.path !== '/get-session', handler: createAuthMiddleware(c => Promise.resolve({ context: { query: { ...c.query, disableCookieCache: true } } })) }],
+    before: [
+      {
+        matcher: (c) => c.path !== '/get-session',
+        handler: createAuthMiddleware((c) =>
+          Promise.resolve({ context: { query: { ...c.query, disableCookieCache: true } } }),
+        ),
+      },
+    ],
     // With `revokeOtherSessions` this response already carries the new session's cookies.
     after: [
-      { matcher: c => c.path === '/change-password', handler: createAuthMiddleware(c => Promise.resolve(void (c.context.newSession || expireCookie(c, c.context.authCookies.sessionData)))) },
+      {
+        matcher: (c) => c.path === '/change-password',
+        handler: createAuthMiddleware((c) =>
+          Promise.resolve(
+            void (c.context.newSession || expireCookie(c, c.context.authCookies.sessionData)),
+          ),
+        ),
+      },
       // Chunks go on every request after this one: a big enough user would pass the server's header limit and be locked out with 431s.
       {
         matcher: () => true,
-        handler: createAuthMiddleware(c => {
+        handler: createAuthMiddleware((c) => {
           const out = (c.context as { responseHeaders?: Headers }).responseHeaders
           const all = out?.getSetCookie() ?? []
           if (out && all.some(oversized)) {
@@ -51,18 +66,34 @@ export interface ApiAccess extends JwtOptions {
   /** The server functions a bearer token may call, as a function so this module needn't load them first. No others read it. */
   functions?: () => unknown[]
 }
-type Found = NonNullable<Awaited<ReturnType<ReturnType<typeof betterAuth<BetterAuthOptions>>['api']['getSession']>>>
+type Found = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof betterAuth<BetterAuthOptions>>['api']['getSession']>>
+>
 type Session = { user: Found['user'] | null; session: Found['session'] | null }
 /** What a token of ours carries: Better Auth's claims, the session it came from, and the user's fields. */
-type Claims = { sub: string; sid: string; iss?: string; aud?: string | string[]; exp?: number; iat?: number } & Record<string, unknown>
+type Claims = {
+  sub: string
+  sid: string
+  iss?: string
+  aud?: string | string[]
+  exp?: number
+  iat?: number
+} & Record<string, unknown>
 /** The calls made here. The `jwt` plugin is optional, so `verifyJWT` isn't in the instance's own type. */
 interface Methods {
   verifyJWT(input: { body: { token: string } }): Promise<{ payload: Claims | null }>
-  getSession(input: { headers: Headers; returnHeaders: true; query?: { disableCookieCache: boolean } }): Promise<{ headers: Headers; response: Found | null }>
+  getSession(input: {
+    headers: Headers
+    returnHeaders: true
+    query?: { disableCookieCache: boolean }
+  }): Promise<{ headers: Headers; response: Found | null }>
 }
 type Signed = Parameters<NonNullable<NonNullable<JwtOptions['jwt']>['definePayload']>>[0]
 
-const buildSecret = () => Array.from(crypto.getRandomValues(new Uint8Array(32)), x => x.toString(16).padStart(2, '0')).join('')
+const buildSecret = () =>
+  Array.from(crypto.getRandomValues(new Uint8Array(32)), (x) =>
+    x.toString(16).padStart(2, '0'),
+  ).join('')
 
 /** `createAuth`: the database, the secret, and any Better Auth option on top. */
 export interface AuthOptions<S extends Record<string, unknown>, O extends BetterAuthOptions> {
@@ -78,16 +109,31 @@ export interface AuthOptions<S extends Record<string, unknown>, O extends Better
 }
 
 /** A Better Auth instance with Weft's defaults, on the store `options.database` names. */
-export function createAuth<S extends Record<string, unknown>, const O extends BetterAuthOptions = {}>({ db, secret, options, api }: AuthOptions<S, O>) {
+export function createAuth<
+  S extends Record<string, unknown>,
+  const O extends BetterAuthOptions = {},
+>({ db, secret, options, api }: AuthOptions<S, O>) {
   const handle = db.$weft
   if (options?.database) for (const name of TABLES) handle.exempt.add(name)
-  else throw new StartError('A005', 'Better Auth has no store', 'pass `options.database`: `drizzleAuth(db, schema)` from @weft-js/start/auth/drizzle, or your data layer\'s adapter')
+  else
+    throw new StartError(
+      'A005',
+      'Better Auth has no store',
+      "pass `options.database`: `drizzleAuth(db, schema)` from @weft-js/start/auth/drizzle, or your data layer's adapter",
+    )
   const { functions, ...access } = api || {}
-  const origin = typeof options?.baseURL === 'string' ? options.baseURL : process.env.BETTER_AUTH_URL
+  const origin =
+    typeof options?.baseURL === 'string' ? options.baseURL : process.env.BETTER_AUTH_URL
   const claims = {
-    expirationTime: '15m', issuer: origin, audience: origin, ...access.jwt,
+    expirationTime: '15m',
+    issuer: origin,
+    audience: origin,
+    ...access.jwt,
     // Which session a token came from, so a write can ask whether it still exists.
-    definePayload: async (s: Signed) => ({ ...((await access.jwt?.definePayload?.(s)) ?? s.user), sid: s.session.id }),
+    definePayload: async (s: Signed) => ({
+      ...((await access.jwt?.definePayload?.(s)) ?? s.user),
+      sid: s.session.id,
+    }),
   }
   const auth = betterAuth({
     // A build loads this module with no environment, and in production Better Auth refuses to start without a secret: the
@@ -99,13 +145,29 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
     emailAndPassword: { enabled: true },
     ...options,
     // Login stays an opaque token in the database. This only spares reads of it, for a window: see `session()`.
-    session: { ...options?.session, cookieCache: { enabled: true, maxAge: 300, strategy: 'compact', ...options?.session?.cookieCache } },
+    session: {
+      ...options?.session,
+      cookieCache: {
+        enabled: true,
+        maxAge: 300,
+        strategy: 'compact',
+        ...options?.session?.cookieCache,
+      },
+    },
     // Signing a JWT on every session read would put a query back on each page, and login has no use for one.
-    plugins: [...(options?.plugins ?? []), cacheRules, ...(api === false ? [] : [jwt({ ...access, jwt: claims, disableSettingJwtHeader: true })])],
+    plugins: [
+      ...(options?.plugins ?? []),
+      cacheRules,
+      ...(api === false ? [] : [jwt({ ...access, jwt: claims, disableSettingJwtHeader: true })]),
+    ],
     // The server stamps this header from the socket (server.tsx), so rate limits aren't one bucket for everyone.
     // Its schema check runs when this module loads. On Kysely that connects, in a build, and before a fresh database has
     // had weft's migrations. Q014 covers a schema that doesn't match, so it's off unless you turn it on.
-    advanced: { ...options?.advanced, database: { validateSchema: false, ...options?.advanced?.database }, ipAddress: { ipAddressHeaders: [CLIENT_IP], ...options?.advanced?.ipAddress } },
+    advanced: {
+      ...options?.advanced,
+      database: { validateSchema: false, ...options?.advanced?.database },
+      ipAddress: { ipAddressHeaders: [CLIENT_IP], ...options?.advanced?.ipAddress },
+    },
   })
   const methods = auth.api as unknown as Methods
 
@@ -116,8 +178,10 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
     const { payload } = await methods.verifyJWT({ body: { token } })
     if (!payload) return ANONYMOUS
     if (!read) {
-      const live = await (await auth.$context).internalAdapter.listSessions(payload.sub, { onlyActiveSessions: true })
-      if (!live.some(s => s.id === payload.sid)) return ANONYMOUS
+      const live = await (
+        await auth.$context
+      ).internalAdapter.listSessions(payload.sub, { onlyActiveSessions: true })
+      if (!live.some((s) => s.id === payload.sid)) return ANONYMOUS
     }
     const { iss: _iss, aud: _aud, exp: _exp, iat: _iat, sub, sid: _sid, ...user } = payload
     return { user: { ...user, id: sub } as unknown as Found['user'], session: null }
@@ -126,7 +190,7 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
   const marked = (pathname: string) => {
     if (!functions || !pathname.startsWith(FN)) return false
     const id = pathname.slice(FN.length)
-    return functions().some(f => encodeURIComponent((fnOf(f) as { $id: string }).$id) === id)
+    return functions().some((f) => encodeURIComponent((fnOf(f) as { $id: string }).$id) === id)
   }
 
   return Object.assign(auth, {
@@ -142,20 +206,28 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
       const token = request.headers.get('authorization')?.match(BEARER)?.[1]
       if (token && api !== false && marked(pathname)) return bearer(token, read)
       if (!SESSION.test(request.headers.get('cookie') ?? '')) return ANONYMOUS
-      const { headers, response: s } = await methods.getSession({ headers: request.headers, returnHeaders: true, ...(!(read && !HELD.test(pathname)) && { query: { disableCookieCache: true } }) })
+      const { headers, response: s } = await methods.getSession({
+        headers: request.headers,
+        returnHeaders: true,
+        ...(!(read && !HELD.test(pathname)) && { query: { disableCookieCache: true } }),
+      })
       // A fresh cache cookie, a slid expiry or a dead session's removal. Not `forward`: who's signed in hasn't changed.
       // A socket's re-check runs inside whichever request poked it, and its cookies are that socket's, not this response's.
       const scope = currentScope() as { request?: Request; headers?: Headers } | undefined
-      if (scope?.headers && scope.request === request) for (const c of headers.getSetCookie()) scope.headers.append('set-cookie', c)
+      if (scope?.headers && scope.request === request)
+        for (const c of headers.getSetCookie()) scope.headers.append('set-cookie', c)
       return { user: s?.user ?? null, session: s?.session ?? null }
     },
     $weft: {
       /** On the first request (never in a build, which holds no secrets). */
       check() {
         if (process.env.NODE_ENV === 'production' && (secret?.length ?? 0) < 32)
-          throw new StartError('A001', 'the auth secret is missing or under 32 characters', 'set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) in the server\'s environment')
+          throw new StartError(
+            'A001',
+            'the auth secret is missing or under 32 characters',
+            "set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) in the server's environment",
+          )
       },
     },
   })
 }
-

@@ -6,21 +6,92 @@
  */
 export const slotTable = [
   { id: 'font.build', version: 1, cardinality: 'one', sides: ['build'], default: null, phase: '2' },
-  { id: 'media.build', version: 1, cardinality: 'one', sides: ['build'], default: null, phase: '2' },
-  { id: 'media.encode', version: 1, cardinality: 'keyed', sides: ['build', 'server'], default: null, phase: '3c' },
-  { id: 'media.server', version: 1, cardinality: 'one', sides: ['server'], default: null, phase: '3' },
-  { id: 'text.measure', version: 1, cardinality: 'one', sides: ['client', 'worker'], default: null, phase: '2 (Surfaces)' },
-  { id: 'surface.renderer', version: 1, cardinality: 'keyed', sides: ['client'], default: ['canvas2d', 'webgl2'], phase: '2 (Surfaces)' },
-  { id: 'realtime.bus', version: 1, cardinality: 'one', sides: ['server'], default: 'memory', phase: '3' },
-  { id: 'db.adapter', version: 1, cardinality: 'keyed', sides: ['server'], default: ['drizzle'], phase: '3c' },
-  { id: 'server.extension', version: 1, cardinality: 'keyed', sides: ['server'], default: null, phase: '6c' },
-  { id: 'pay.rail', version: 1, cardinality: 'keyed', sides: ['server', 'client', 'native'], default: null, phase: '6c' },
+  {
+    id: 'media.build',
+    version: 1,
+    cardinality: 'one',
+    sides: ['build'],
+    default: null,
+    phase: '2',
+  },
+  {
+    id: 'media.encode',
+    version: 1,
+    cardinality: 'keyed',
+    sides: ['build', 'server'],
+    default: null,
+    phase: '3c',
+  },
+  {
+    id: 'media.server',
+    version: 1,
+    cardinality: 'one',
+    sides: ['server'],
+    default: null,
+    phase: '3',
+  },
+  {
+    id: 'text.measure',
+    version: 1,
+    cardinality: 'one',
+    sides: ['client', 'worker'],
+    default: null,
+    phase: '2 (Surfaces)',
+  },
+  {
+    id: 'surface.renderer',
+    version: 1,
+    cardinality: 'keyed',
+    sides: ['client'],
+    default: ['canvas2d', 'webgl2'],
+    phase: '2 (Surfaces)',
+  },
+  {
+    id: 'realtime.bus',
+    version: 1,
+    cardinality: 'one',
+    sides: ['server'],
+    default: 'memory',
+    phase: '3',
+  },
+  {
+    id: 'db.adapter',
+    version: 1,
+    cardinality: 'keyed',
+    sides: ['server'],
+    default: ['drizzle'],
+    phase: '3c',
+  },
+  {
+    id: 'server.extension',
+    version: 1,
+    cardinality: 'keyed',
+    sides: ['server'],
+    default: null,
+    phase: '6c',
+  },
+  {
+    id: 'pay.rail',
+    version: 1,
+    cardinality: 'keyed',
+    sides: ['server', 'client', 'native'],
+    default: null,
+    phase: '6c',
+  },
 ]
 
 export function slotDef(id) {
-  const def = slotTable.find(s => s.id === id)
+  const def = slotTable.find((s) => s.id === id)
   if (def) return def
-  if (/^device\.[a-z][\w-]*$/.test(id)) return { id, version: 1, cardinality: 'keyed', sides: ['native', 'client'], default: null, phase: '6b' }
+  if (/^device\.[a-z][\w-]*$/.test(id))
+    return {
+      id,
+      version: 1,
+      cardinality: 'keyed',
+      sides: ['native', 'client'],
+      default: null,
+      phase: '6b',
+    }
   return undefined
 }
 
@@ -32,7 +103,7 @@ export function slotDef(id) {
 export function bindSlots(config, report) {
   const plugins = config.plugins ?? []
   const chosen = config.slots ?? {}
-  const names = new Set(plugins.map(p => p.name))
+  const names = new Set(plugins.map((p) => p.name))
 
   /** slot id → key ('' for `one`) → provider names */
   const offers = new Map()
@@ -40,7 +111,11 @@ export function bindSlots(config, report) {
     for (const item of p.provides ?? []) {
       const { slot, key = '' } = typeof item === 'string' ? { slot: item } : item
       if (!slotDef(slot) && !slot.startsWith(`${p.name}.`)) {
-        report('P008', `\`${p.name}\` provides \`${slot}\`, which is not a slot weft defines.`, p.name)
+        report(
+          'P008',
+          `\`${p.name}\` provides \`${slot}\`, which is not a slot weft defines.`,
+          p.name,
+        )
         continue
       }
       const byKey = offers.get(slot) ?? new Map()
@@ -57,13 +132,15 @@ export function bindSlots(config, report) {
     const picks = typeof pick === 'string' ? { '': pick } : pick
     for (const [key, name] of Object.entries(picks)) {
       if (name.startsWith('weft:default')) continue
-      if (!names.has(name)) report('P009', `\`slots['${id}']\` picks \`${name}\`, which is not in \`plugins\`.`, id)
-      else if (!(offers.get(id)?.get(key) ?? []).includes(name)) report('P009', `\`slots['${id}']\` picks \`${name}\`, which does not provide it.`, id)
+      if (!names.has(name))
+        report('P009', `\`slots['${id}']\` picks \`${name}\`, which is not in \`plugins\`.`, id)
+      else if (!(offers.get(id)?.get(key) ?? []).includes(name))
+        report('P009', `\`slots['${id}']\` picks \`${name}\`, which does not provide it.`, id)
     }
   }
 
   /** @type {Set<string>} */
-  const known = new Set([...slotTable.map(s => s.id), ...offers.keys()])
+  const known = new Set([...slotTable.map((s) => s.id), ...offers.keys()])
   const ids = [...known].sort()
   const out = {}
   for (const id of ids) {
@@ -77,7 +154,11 @@ export function bindSlots(config, report) {
       if (providers.length === 1) return providers[0]
       if (providers.length > 1) {
         const where = key ? `\`${id}\` key \`${key}\`` : `\`${id}\``
-        report('P100', `${where} has ${providers.length} providers: ${providers.join(', ')}. Array order never decides.`, providers[0])
+        report(
+          'P100',
+          `${where} has ${providers.length} providers: ${providers.join(', ')}. Array order never decides.`,
+          providers[0],
+        )
         return null
       }
       return fallback
@@ -86,9 +167,13 @@ export function bindSlots(config, report) {
       out[id] = resolve('', typeof def.default === 'string' ? `weft:default:${def.default}` : null)
     } else {
       /** @type {Set<string>} */
-      const keys = new Set([...(Array.isArray(def.default) ? def.default : []), ...[...byKey.keys()].filter(Boolean)])
+      const keys = new Set([
+        ...(Array.isArray(def.default) ? def.default : []),
+        ...[...byKey.keys()].filter(Boolean),
+      ])
       const block = {}
-      for (const key of [...keys].sort()) block[key] = resolve(key, def.default?.includes(key) ? 'weft:default' : null)
+      for (const key of [...keys].sort())
+        block[key] = resolve(key, def.default?.includes(key) ? 'weft:default' : null)
       out[id] = block
     }
   }

@@ -22,7 +22,14 @@ const record = () =>
     audio: zod.boolean().optional(),
     animated: zod.boolean().optional(),
     loop: zod.number().optional(),
-    copy: zod.object({ src: zod.string(), type: zod.string(), bytes: zod.number().optional(), ratio: zod.number().optional() }).optional(),
+    copy: zod
+      .object({
+        src: zod.string(),
+        type: zod.string(),
+        bytes: zod.number().optional(),
+        ratio: zod.number().optional(),
+      })
+      .optional(),
     swap: zod.enum(['intent', 'idle', 'never']).optional(),
   })
 

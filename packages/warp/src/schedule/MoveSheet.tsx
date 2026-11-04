@@ -1,5 +1,16 @@
 import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
-import { clock, clockRange, dateOf, fmt, longDuration, moveSlots, slotOf, weekDates, type CalEvent, type Slot } from '@weft-js/warp-core'
+import {
+  clock,
+  clockRange,
+  dateOf,
+  fmt,
+  longDuration,
+  moveSlots,
+  slotOf,
+  weekDates,
+  type CalEvent,
+  type Slot,
+} from '@weft-js/warp-core'
 import { derived, state, untrack, type State } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
@@ -29,15 +40,45 @@ export function MoveSheet(p: MoveSheetProps) {
   const title = derived(() => (p.event ? `Move “${p.event.title}”` : 'Move event'))
   const hold = state<(() => void) | null>(null)
   const go = () => hold.value?.()
-  const cancel = () => { p.open.value = false; p.onClose?.() }
+  const cancel = () => {
+    p.open.value = false
+    p.onClose?.()
+  }
   return (
-    <Drawer open={p.open} side="bottom" title={title.value} description={p.event ? `${longDuration(slotOf(p.event).e - slotOf(p.event).s)} · now ${fmt(dateOf(p.event.start), { weekday: 'short' }, p.locale ?? 'en-US')} ${clockRange(slotOf(p.event).s, slotOf(p.event).e, p.locale ?? 'en-US', p.hourCycle)}` : undefined} footer={<><Button emphasis="outline" tone="neutral" onClick={cancel}>Cancel</Button><Button onClick={go}>Move event</Button></>}>
-      {p.event && p.open.value && <Body key={p.event.id} event={p.event} props={p} bind={f => (hold.value = f)} />}
+    <Drawer
+      open={p.open}
+      side="bottom"
+      title={title.value}
+      description={
+        p.event
+          ? `${longDuration(slotOf(p.event).e - slotOf(p.event).s)} · now ${fmt(dateOf(p.event.start), { weekday: 'short' }, p.locale ?? 'en-US')} ${clockRange(slotOf(p.event).s, slotOf(p.event).e, p.locale ?? 'en-US', p.hourCycle)}`
+          : undefined
+      }
+      footer={
+        <>
+          <Button emphasis="outline" tone="neutral" onClick={cancel}>
+            Cancel
+          </Button>
+          <Button onClick={go}>Move event</Button>
+        </>
+      }
+    >
+      {p.event && p.open.value && (
+        <Body key={p.event.id} event={p.event} props={p} bind={(f) => (hold.value = f)} />
+      )}
     </Drawer>
   )
 }
 
-function Body({ event, props: p, bind }: { event: CalEvent; props: MoveSheetProps; bind: (go: () => void) => void }) {
+function Body({
+  event,
+  props: p,
+  bind,
+}: {
+  event: CalEvent
+  props: MoveSheetProps
+  bind: (go: () => void) => void
+}) {
   const e = untrack(() => event)
   const origin = slotOf(e)
   const day = state<string>(origin.date)
@@ -48,31 +89,73 @@ function Body({ event, props: p, bind }: { event: CalEvent; props: MoveSheetProp
   const slots = derived(() => moveSlots(p.events, e, day.value, len.value))
   const stepBy = untrack(() => p.step ?? 15)
   const go = () => {
-    const to = { date: day.value, s: start.value, e: start.value + len.value, resource: origin.resource }
+    const to = {
+      date: day.value,
+      s: start.value,
+      e: start.value + len.value,
+      resource: origin.resource,
+    }
     p.open.value = false
     p.onMove(e, to)
     p.onClose?.()
   }
   untrack(() => bind(go))
-  const pick = (s: number, ev: MouseEvent) => { start.value = s; confirmSweep(ev.currentTarget as Element) }
+  const pick = (s: number, ev: MouseEvent) => {
+    start.value = s
+    confirmSweep(ev.currentTarget as Element)
+  }
   return (
     <div class="stack">
       <div class="chips" role="group" aria-label="Day">
-        {week.value.map(d => <Chip key={d} pressed={d === day.value} onClick={() => (day.value = d)}>{fmt(d, { weekday: 'short', day: 'numeric' }, locale.value)}</Chip>)}
+        {week.value.map((d) => (
+          <Chip key={d} pressed={d === day.value} onClick={() => (day.value = d)}>
+            {fmt(d, { weekday: 'short', day: 'numeric' }, locale.value)}
+          </Chip>
+        ))}
       </div>
       <div data-scope="booking" data-part="root">
         <div data-part="slots" role="group" aria-label="Start time">
-          {slots.value.map(x => (
-            <button key={x.s} type="button" data-part="slot" data-sweep="" aria-pressed={x.s === start.value ? 'true' : 'false'} disabled={x.busy} onClick={(ev: MouseEvent) => pick(x.s, ev)}><SweepParts />{clock(x.s, locale.value, p.hourCycle)}</button>
+          {slots.value.map((x) => (
+            <button
+              key={x.s}
+              type="button"
+              data-part="slot"
+              data-sweep=""
+              aria-pressed={x.s === start.value ? 'true' : 'false'}
+              disabled={x.busy}
+              onClick={(ev: MouseEvent) => pick(x.s, ev)}
+            >
+              <SweepParts />
+              {clock(x.s, locale.value, p.hourCycle)}
+            </button>
           ))}
         </div>
       </div>
       <div class="row" role="group" aria-label="Duration">
-        <Button emphasis="outline" tone="neutral" size="sm" label="Shorter" icon={LeftIcon} disabled={len.value <= stepBy} onClick={() => (len.value = Math.max(stepBy, len.value - stepBy))} />
+        <Button
+          emphasis="outline"
+          tone="neutral"
+          size="sm"
+          label="Shorter"
+          icon={LeftIcon}
+          disabled={len.value <= stepBy}
+          onClick={() => (len.value = Math.max(stepBy, len.value - stepBy))}
+        />
         <output aria-live="polite">{longDuration(len.value)}</output>
-        <Button emphasis="outline" tone="neutral" size="sm" label="Longer" icon={RightIcon} onClick={() => (len.value += stepBy)} />
+        <Button
+          emphasis="outline"
+          tone="neutral"
+          size="sm"
+          label="Longer"
+          icon={RightIcon}
+          onClick={() => (len.value += stepBy)}
+        />
       </div>
-      {e.recurrence && <Alert tone="info" title="This event repeats">Moving changes this one only. Use Edit for the series.</Alert>}
+      {e.recurrence && (
+        <Alert tone="info" title="This event repeats">
+          Moving changes this one only. Use Edit for the series.
+        </Alert>
+      )}
     </div>
   )
 }

@@ -18,23 +18,41 @@ let dist, server, url
 
 beforeAll(async () => {
   dist = mkdtempSync(join(tmpdir(), 'warp-overlays-'))
-  await build({ root: fileURLToPath(new URL('./overlays', import.meta.url)), base: './', logLevel: 'silent', plugins: [weft()], build: { outDir: dist, emptyOutDir: true } })
+  await build({
+    root: fileURLToPath(new URL('./overlays', import.meta.url)),
+    base: './',
+    logLevel: 'silent',
+    plugins: [weft()],
+    build: { outDir: dist, emptyOutDir: true },
+  })
   server = createServer((q, r) => {
     let p = join(dist, q.url.split('?')[0])
     if (p.endsWith('/')) p += 'index.html'
-    if (!existsSync(p)) { r.statusCode = 404; return r.end() }
+    if (!existsSync(p)) {
+      r.statusCode = 404
+      return r.end()
+    }
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise(r => { server.once('listening', r) })
+  await new Promise((r) => {
+    server.once('listening', r)
+  })
   url = `http://localhost:${server.address().port}/`
 })
-afterAll(() => { server?.close(); rmSync(dist, { recursive: true, force: true }) })
+afterAll(() => {
+  server?.close()
+  rmSync(dist, { recursive: true, force: true })
+})
 
-describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
+describe.each(['chromium', 'webkit', 'firefox'])('%s', (name) => {
   let browser
-  beforeAll(async () => { browser = await pw[name].launch() })
-  afterAll(async () => { await browser?.close() })
+  beforeAll(async () => {
+    browser = await pw[name].launch()
+  })
+  afterAll(async () => {
+    await browser?.close()
+  })
 
   async function fresh() {
     const page = await browser.newPage({ viewport: { width: 1100, height: 700 } })
@@ -43,12 +61,30 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.waitForTimeout(100)
     return page
   }
-  const opened = async (page, label) => { await page.getByRole('button', { name: label }).click(); await page.waitForTimeout(300) }
-  const boxes = (page, id) => page.evaluate(host => {
-    const m = document.querySelector(`#${host} [role="menu"]`)
-    const r = m.getBoundingClientRect(), t = document.querySelector(`#${host} button`).getBoundingClientRect()
-    return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, tLeft: t.left, tRight: t.right, tTop: t.top, tBottom: t.bottom, vw: innerWidth, vh: innerHeight, side: m.dataset.side, origin: m.style.getPropertyValue('--warp-origin') }
-  }, id)
+  const opened = async (page, label) => {
+    await page.getByRole('button', { name: label }).click()
+    await page.waitForTimeout(300)
+  }
+  const boxes = (page, id) =>
+    page.evaluate((host) => {
+      const m = document.querySelector(`#${host} [role="menu"]`)
+      const r = m.getBoundingClientRect(),
+        t = document.querySelector(`#${host} button`).getBoundingClientRect()
+      return {
+        left: r.left,
+        right: r.right,
+        top: r.top,
+        bottom: r.bottom,
+        tLeft: t.left,
+        tRight: t.right,
+        tTop: t.top,
+        tBottom: t.bottom,
+        vw: innerWidth,
+        vh: innerHeight,
+        side: m.dataset.side,
+        origin: m.style.getPropertyValue('--warp-origin'),
+      }
+    }, id)
 
   test('a menu low on the screen flips above its trigger, on-screen', async () => {
     const page = await fresh()
@@ -108,7 +144,7 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.waitForTimeout(150)
     const b = await boxes(page, 'scrolled')
     expect(b.tTop).not.toBe(a.tTop)
-    expect(Math.abs((b.top - b.tBottom) - (a.top - a.tBottom))).toBeLessThanOrEqual(2) // place() rounds
+    expect(Math.abs(b.top - b.tBottom - (a.top - a.tBottom))).toBeLessThanOrEqual(2) // place() rounds
     await page.close()
   })
 
@@ -118,8 +154,18 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.keyboard.press('End')
     await page.waitForTimeout(150)
     const r = await page.evaluate(() => {
-      const m = document.querySelector('#tall [role="menu"]'), a = document.activeElement.getBoundingClientRect(), b = m.getBoundingClientRect()
-      return { text: document.activeElement.textContent, top: a.top, bottom: a.bottom, boxTop: b.top, boxBottom: b.bottom, scrollTop: m.scrollTop, vh: innerHeight }
+      const m = document.querySelector('#tall [role="menu"]'),
+        a = document.activeElement.getBoundingClientRect(),
+        b = m.getBoundingClientRect()
+      return {
+        text: document.activeElement.textContent,
+        top: a.top,
+        bottom: a.bottom,
+        boxTop: b.top,
+        boxBottom: b.bottom,
+        scrollTop: m.scrollTop,
+        vh: innerHeight,
+      }
     })
     expect(r.text).toBe('Row 59')
     expect(r.scrollTop).toBeGreaterThan(0)
@@ -137,7 +183,10 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.close()
   })
 
-  test.each([['modal', 'Open modal'], ['drawer', 'Open drawer']])('the page behind a %s stays put, then scrolls again', async (_, label) => {
+  test.each([
+    ['modal', 'Open modal'],
+    ['drawer', 'Open drawer'],
+  ])('the page behind a %s stays put, then scrolls again', async (_, label) => {
     const page = await fresh()
     await opened(page, label)
     await page.mouse.move(20, 300)
@@ -155,7 +204,9 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
   test('the lock keeps the scroll position', async () => {
     const page = await fresh()
     await page.evaluate(() => scrollTo(0, 300))
-    await page.evaluate(() => { window.api.modal.value = true })
+    await page.evaluate(() => {
+      window.api.modal.value = true
+    })
     await page.waitForTimeout(300)
     expect(await page.evaluate(() => scrollY)).toBe(300)
     await page.close()
@@ -168,7 +219,12 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.waitForSelector('[data-kind="combo"]:popover-open')
     await page.keyboard.press('Escape')
     await page.waitForTimeout(200)
-    const after = () => page.evaluate(() => ({ list: !!document.querySelector('[data-kind="combo"]:popover-open'), modal: document.querySelector('dialog[data-scope="dialog"]').open, text: document.querySelector('[role="combobox"]').value }))
+    const after = () =>
+      page.evaluate(() => ({
+        list: !!document.querySelector('[data-kind="combo"]:popover-open'),
+        modal: document.querySelector('dialog[data-scope="dialog"]').open,
+        text: document.querySelector('[role="combobox"]').value,
+      }))
     expect(await after()).toEqual({ list: false, modal: true, text: 'a' })
     await page.keyboard.press('Escape')
     await page.waitForTimeout(250)
@@ -183,16 +239,30 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.waitForSelector('[data-kind="combo"]:popover-open')
     await page.getByRole('heading', { name: 'One' }).click()
     await page.waitForTimeout(200)
-    expect(await page.evaluate(() => [!!document.querySelector('[data-kind="combo"]:popover-open'), document.querySelector('dialog[data-scope="dialog"]').open])).toEqual([false, true])
+    expect(
+      await page.evaluate(() => [
+        !!document.querySelector('[data-kind="combo"]:popover-open'),
+        document.querySelector('dialog[data-scope="dialog"]').open,
+      ]),
+    ).toEqual([false, true])
     await page.close()
   })
 
   test('a slider click in RTL lands where the pointer is', async () => {
     const page = await fresh()
-    const t = await page.evaluate(() => { const r = document.querySelector('#rtl [data-part="track"]'); r.scrollIntoView({ block: 'center' }); const b = r.getBoundingClientRect(); return { l: b.left, w: b.width, y: b.top + b.height / 2 } })
+    const t = await page.evaluate(() => {
+      const r = document.querySelector('#rtl [data-part="track"]')
+      r.scrollIntoView({ block: 'center' })
+      const b = r.getBoundingClientRect()
+      return { l: b.left, w: b.width, y: b.top + b.height / 2 }
+    })
     await page.mouse.click(t.l + t.w * 0.1, t.y)
     await page.waitForTimeout(100)
-    const r = await page.evaluate(() => { const th = document.querySelector('#rtl [data-part="thumb"]'), b = th.getBoundingClientRect(); return { now: th.getAttribute('aria-valuenow'), at: b.left + b.width / 2 } })
+    const r = await page.evaluate(() => {
+      const th = document.querySelector('#rtl [data-part="thumb"]'),
+        b = th.getBoundingClientRect()
+      return { now: th.getAttribute('aria-valuenow'), at: b.left + b.width / 2 }
+    })
     expect(r.now).toBe('90')
     expect(Math.abs(r.at - (t.l + t.w * 0.1))).toBeLessThanOrEqual(20) // the thumb travels inset from the track's ends
     await page.close()
@@ -200,25 +270,42 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
 
   describe('toasts and modals', () => {
     const region = '[data-scope="toast"][data-part="region"]'
-    const where = page => page.evaluate(r => {
-      const el = document.querySelector(r), d = el.closest('dialog')
-      return { dialog: d ? d.querySelector('[data-part="title"]')?.textContent ?? d.dataset.scope : null, popover: el.hasAttribute('popover'), top: el.matches(':popover-open') }
-    }, region)
+    const where = (page) =>
+      page.evaluate((r) => {
+        const el = document.querySelector(r),
+          d = el.closest('dialog')
+        return {
+          dialog: d
+            ? (d.querySelector('[data-part="title"]')?.textContent ?? d.dataset.scope)
+            : null,
+          popover: el.hasAttribute('popover'),
+          top: el.matches(':popover-open'),
+        }
+      }, region)
     // what the pointer would hit at the middle of Undo, and that it works
-    const undo = async page => {
+    const undo = async (page) => {
       const button = page.getByRole('button', { name: 'Undo' }).first()
       const box = await button.boundingBox()
       expect(box.x + box.width).toBeLessThanOrEqual(1100)
       expect(box.y + box.height).toBeLessThanOrEqual(700)
-      const hit = await page.evaluate(({ x, y }) => !!document.elementFromPoint(x, y)?.closest('[data-act]'), { x: box.x + box.width / 2, y: box.y + box.height / 2 })
+      const hit = await page.evaluate(
+        ({ x, y }) => !!document.elementFromPoint(x, y)?.closest('[data-act]'),
+        { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+      )
       expect(hit).toBe(true)
       const was = await page.evaluate(() => window.api.undone)
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
       await page.waitForTimeout(100)
       expect(await page.evaluate(() => window.api.undone)).toBe(was + 1)
     }
-    const raise = (page, opts) => page.evaluate(o => window.api.raise(o), opts)
-    const set = (page, field, to) => page.evaluate(([n, v]) => { window.api[n].value = v }, [field, to])
+    const raise = (page, opts) => page.evaluate((o) => window.api.raise(o), opts)
+    const set = (page, field, to) =>
+      page.evaluate(
+        ([n, v]) => {
+          window.api[n].value = v
+        },
+        [field, to],
+      )
 
     test('Undo works when the toast is raised during a modal, and the modal stays', async () => {
       const page = await fresh()
@@ -227,18 +314,38 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await page.waitForTimeout(300)
       expect(await where(page)).toEqual({ dialog: 'One', popover: true, top: true })
       await undo(page)
-      expect(await page.evaluate(() => document.querySelector('dialog[data-scope="dialog"]').open)).toBe(true)
+      expect(
+        await page.evaluate(() => document.querySelector('dialog[data-scope="dialog"]').open),
+      ).toBe(true)
       await page.close()
     })
 
     test('the toast sits at the viewport corner, not in the dialog box', async () => {
       const page = await fresh()
+      const settled = () =>
+        page
+          .locator(`${region} [data-part="root"]`)
+          .first()
+          .evaluate(async (el) => {
+            await new Promise((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(resolve)),
+            )
+            await Promise.all(
+              el.getAnimations().map((animation) => animation.finished.catch(() => {})),
+            )
+          })
       await raise(page)
-      await page.waitForTimeout(900)   // past the spring's settle
-      const rect = () => page.evaluate(() => { const r = document.querySelector('[data-scope="toast"][data-part="root"]').getBoundingClientRect(); return [Math.round(r.right), Math.round(r.bottom)] })
+      await settled()
+      const rect = () =>
+        page.evaluate(() => {
+          const r = document
+            .querySelector('[data-scope="toast"][data-part="root"]')
+            .getBoundingClientRect()
+          return [Math.round(r.right), Math.round(r.bottom)]
+        })
       const before = await rect()
       await opened(page, 'Open modal')
-      await page.waitForTimeout(200)
+      await settled()
       expect(await rect()).toEqual(before)
       await page.close()
     })
@@ -247,13 +354,25 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       const page = await fresh()
       await raise(page, { duration: 60000 })
       await page.waitForTimeout(500)
-      const time = () => page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.currentTime)
+      const time = () =>
+        page.evaluate(
+          () => document.querySelector('[data-part="progress"]').getAnimations()[0]?.currentTime,
+        )
       const t0 = await time()
       await page.evaluate(() => {
         window.api.modal.value = true
         window.seen = []
         const root = document.querySelector('[data-scope="toast"][data-part="root"]')
-        const look = () => { window.seen.push(new DOMMatrix(getComputedStyle(root).translate === 'none' ? undefined : `translate(${getComputedStyle(root).translate.split(' ').join(',')})`).m42); if (window.seen.length < 20) requestAnimationFrame(look) }
+        const look = () => {
+          window.seen.push(
+            new DOMMatrix(
+              getComputedStyle(root).translate === 'none'
+                ? undefined
+                : `translate(${getComputedStyle(root).translate.split(' ').join(',')})`,
+            ).m42,
+          )
+          if (window.seen.length < 20) requestAnimationFrame(look)
+        }
         requestAnimationFrame(look)
       })
       await page.waitForTimeout(500)
@@ -291,7 +410,7 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await page.close()
     })
 
-    test.each([['drawer'], ['sheet']])('works over a %s', async kind => {
+    test.each([['drawer'], ['sheet']])('works over a %s', async (kind) => {
       const page = await fresh()
       await set(page, kind, true)
       await page.waitForTimeout(350)
@@ -307,7 +426,10 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await opened(page, 'Open modal')
       await raise(page, { duration: 60000 })
       await page.waitForTimeout(300)
-      const state = () => page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
+      const state = () =>
+        page.evaluate(
+          () => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState,
+        )
       expect(await state()).toBe('running')
       const box = await page.getByRole('button', { name: 'Undo' }).first().boundingBox()
       await page.mouse.move(box.x + 2, box.y + 2)
@@ -317,7 +439,11 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await page.waitForTimeout(150)
       expect(await state()).toBe('running')
       await raise(page, { title: 'Brief', duration: 200, action: undefined })
-      await expect.poll(() => page.locator('[data-part="root"]', { hasText: 'Brief' }).count(), { timeout: 3000 }).toBe(0)
+      await expect
+        .poll(() => page.locator('[data-part="root"]', { hasText: 'Brief' }).count(), {
+          timeout: 3000,
+        })
+        .toBe(0)
       await page.close()
     })
 
@@ -328,19 +454,28 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       const box = await page.getByRole('button', { name: 'Undo' }).first().boundingBox()
       await page.mouse.move(box.x + 2, box.y + 2)
       await page.waitForTimeout(150)
-      const state = () => page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
+      const state = () =>
+        page.evaluate(
+          () => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState,
+        )
       expect(await state()).toBe('paused')
       await set(page, 'modal', true)
       // every frame for a second, not one late look: WebKit's own hover check lands about 300 ms after the move
-      const seen = await page.evaluate(() => new Promise(done => {
-        const states = new Set(), end = performance.now() + 1000
-        const look = () => {
-          states.add(document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
-          if (performance.now() < end) requestAnimationFrame(look)
-          else done([...states])
-        }
-        look()
-      }))
+      const seen = await page.evaluate(
+        () =>
+          new Promise((done) => {
+            const states = new Set(),
+              end = performance.now() + 1000
+            const look = () => {
+              states.add(
+                document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState,
+              )
+              if (performance.now() < end) requestAnimationFrame(look)
+              else done([...states])
+            }
+            look()
+          }),
+      )
       expect(seen).toEqual(['paused'])
       await page.mouse.move(box.x + 3, box.y + 3)
       await page.waitForTimeout(150)
@@ -358,13 +493,21 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await page.waitForTimeout(200)
       expect(await page.evaluate(() => document.activeElement.outerHTML)).toBe(before)
       await page.keyboard.press('F8')
-      expect(await page.evaluate(() => !!document.activeElement.closest('[data-scope="toast"]'))).toBe(true)
+      expect(
+        await page.evaluate(() => !!document.activeElement.closest('[data-scope="toast"]')),
+      ).toBe(true)
       await set(page, 'modal2', true)
       await page.waitForTimeout(300)
       await page.evaluate(() => document.querySelector('[data-act]').focus())
       await set(page, 'modal2', false)
       await page.waitForTimeout(300)
-      expect(await page.evaluate(() => !!document.activeElement.closest('[data-scope="toast"]') || document.activeElement.tagName)).not.toBe('BODY')
+      expect(
+        await page.evaluate(
+          () =>
+            !!document.activeElement.closest('[data-scope="toast"]') ||
+            document.activeElement.tagName,
+        ),
+      ).not.toBe('BODY')
       await page.close()
     })
 
@@ -373,10 +516,26 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await opened(page, 'Open modal')
       await raise(page, { title: 'Announced', duration: 60000 })
       await page.waitForTimeout(250)
-      expect(await page.evaluate(() => [...document.querySelectorAll('[data-scope="announcer"]')].map(n => [!!n.closest('dialog'), n.textContent]))).toEqual([[true, 'Announced'], [true, '']])
+      expect(
+        await page.evaluate(() =>
+          [...document.querySelectorAll('[data-scope="announcer"]')].map((n) => [
+            !!n.closest('dialog'),
+            n.textContent,
+          ]),
+        ),
+      ).toEqual([
+        [true, 'Announced'],
+        [true, ''],
+      ])
       await page.keyboard.press('Escape')
       await page.waitForTimeout(300)
-      expect(await page.evaluate(() => [...document.querySelectorAll('[data-scope="announcer"]')].every(n => !n.closest('dialog')))).toBe(true)
+      expect(
+        await page.evaluate(() =>
+          [...document.querySelectorAll('[data-scope="announcer"]')].every(
+            (n) => !n.closest('dialog'),
+          ),
+        ),
+      ).toBe(true)
       await page.close()
     })
   })
@@ -387,7 +546,9 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.waitForTimeout(150)
     expect(await page.evaluate(() => window.api.submitted.value)).toBe(0)
     expect(await page.locator('#form [data-part="error"]').textContent()).not.toBe('')
-    expect(await page.evaluate(() => document.activeElement.getAttribute('role'))).toBe('spinbutton')
+    expect(await page.evaluate(() => document.activeElement.getAttribute('role'))).toBe(
+      'spinbutton',
+    )
     await page.keyboard.type('02032026')
     await page.waitForTimeout(100)
     await page.click('#send')
@@ -405,7 +566,9 @@ test('a classic scrollbar keeps its room when a modal opens (Chromium)', async (
   await page.waitForFunction(() => window.api)
   const width = () => page.evaluate(() => document.body.offsetWidth) // clientWidth reports the gutter's room as its own
   const before = await width()
-  await page.evaluate(() => { window.api.modal.value = true })
+  await page.evaluate(() => {
+    window.api.modal.value = true
+  })
   await page.waitForTimeout(300)
   expect(await width()).toBe(before)
   await browser.close()

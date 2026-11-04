@@ -14,9 +14,17 @@ export const load = async ({ params }: LoadArgs<'/p/[slug]'>) => {
   return product ? { product } : notFound()
 }
 
-export const meta: Meta<typeof load> = ({ data }) => ({ title: data.product.name, description: data.product.description })
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: data.product.name,
+  description: data.product.description,
+})
 
-const stockLine = (stock: number) => (stock === 0 ? 'Back when the workshop catches up.' : stock < 5 ? `Only ${stock} left.` : 'In stock, ships in two days.')
+const stockLine = (stock: number) =>
+  stock === 0
+    ? 'Back when the workshop catches up.'
+    : stock < 5
+      ? `Only ${stock} left.`
+      : 'In stock, ships in two days.'
 
 export default function Product(props: RouteProps<typeof load, '/p/[slug]'>) {
   return (
@@ -25,8 +33,12 @@ export default function Product(props: RouteProps<typeof load, '/p/[slug]'>) {
         <article class="detail">
           <ProductArt name={props.data.product.name} />
           <Stack gap="related">
-            <Link href={`/c/${props.data.product.categorySlug}`} class="crumb">{props.data.product.categoryName}</Link>
-            <Heading level={1} role="title">{props.data.product.name}</Heading>
+            <Link href={`/c/${props.data.product.categorySlug}`} class="crumb">
+              {props.data.product.categoryName}
+            </Link>
+            <Heading level={1} role="title">
+              {props.data.product.name}
+            </Heading>
             <Row gap="related">
               <span class="price price-lg">{money(props.data.product.priceCents)}</span>
               {props.data.product.stock === 0 && <Badge tone="neutral">Sold out</Badge>}
@@ -38,8 +50,13 @@ export default function Product(props: RouteProps<typeof load, '/p/[slug]'>) {
         </article>
         <section aria-labelledby="related-title">
           <Stack gap="related">
-            <Heading level={2} id="related-title">From the same aisle</Heading>
-            <Boundary pending={<ProductGridLoading count={4} cols={4} label="Loading related goods" />} error={(_, retry) => <Failed what="Related goods" retry={retry} />}>
+            <Heading level={2} id="related-title">
+              From the same aisle
+            </Heading>
+            <Boundary
+              pending={<ProductGridLoading count={4} cols={4} label="Loading related goods" />}
+              error={(_, retry) => <Failed what="Related goods" retry={retry} />}
+            >
               <Related id={props.data.product.id} categoryId={props.data.product.categoryId} />
             </Boundary>
           </Stack>

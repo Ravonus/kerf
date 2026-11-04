@@ -13,16 +13,20 @@ describe('jobs', () => {
   })
 
   it('refuses anything but a whole number from 1', () => {
-    for (const bad of ['0', '-1', '2.5', 'lots']) expect(() => jobs([`--jobs=${bad}`], {})).toThrow('whole number')
+    for (const bad of ['0', '-1', '2.5', 'lots'])
+      expect(() => jobs([`--jobs=${bad}`], {})).toThrow('whole number')
   })
 })
 
 describe('pool', () => {
   it('never runs more than the limit, and keeps the order', async () => {
-    let now = 0, most = 0
-    const out = await pool([30, 5, 20, 1, 10], 2, async ms => {
+    let now = 0,
+      most = 0
+    const out = await pool([30, 5, 20, 1, 10], 2, async (ms) => {
       most = Math.max(most, ++now)
-      await new Promise(ok => { setTimeout(ok, ms) })
+      await new Promise((ok) => {
+        setTimeout(ok, ms)
+      })
       now--
       return ms * 2
     })

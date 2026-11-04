@@ -10,22 +10,68 @@ import { strayReason } from './stray.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
-const MUST_IGNORE = ['.env', '.env.local', '.env.production', 'site/.env', 'packages/start/.env', 'netlify.env', '.neon', '.mcp.json', 'site/netlify.env', 'site/.neon', 'server.pem', 'server.key', 'secrets.p12', '.npmrc']
+const MUST_IGNORE = [
+  '.env',
+  '.env.local',
+  '.env.production',
+  'site/.env',
+  'packages/start/.env',
+  'netlify.env',
+  '.neon',
+  '.mcp.json',
+  'site/netlify.env',
+  'site/.neon',
+  'server.pem',
+  'server.key',
+  'secrets.p12',
+  '.npmrc',
+]
 const problems = []
 
-for (const file of MUST_IGNORE) if (spawnSync('git', ['check-ignore', '-q', '--no-index', file], { cwd: root }).status !== 0) problems.push(`.gitignore doesn't keep out ${file}`)
+for (const file of MUST_IGNORE)
+  if (spawnSync('git', ['check-ignore', '-q', '--no-index', file], { cwd: root }).status !== 0)
+    problems.push(`.gitignore doesn't keep out ${file}`)
 
-const tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 }).split('\n')
-for (const file of tracked) if (/(^|\/)(\.env(\.(?!example$)[^/]*)?|netlify\.env|\.neon|\.mcp\.json|\.npmrc)$|\.(pem|p12)$/.test(file)) problems.push(`${file} is committed and looks private`)
+const tracked = execFileSync('git', ['ls-files'], {
+  cwd: root,
+  encoding: 'utf8',
+  maxBuffer: 1 << 28,
+}).split('\n')
+for (const file of tracked)
+  if (
+    /(^|\/)(\.env(\.(?!example$)[^/]*)?|netlify\.env|\.neon|\.mcp\.json|\.npmrc)$|\.(pem|p12)$/.test(
+      file,
+    )
+  )
+    problems.push(`${file} is committed and looks private`)
 
-const dirs = readdirSync(join(root, 'packages')).filter(d => existsSync(join(root, 'packages', d, 'package.json')) && !JSON.parse(readFileSync(join(root, 'packages', d, 'package.json'), 'utf8')).private)
-await pool(dirs, 4, dir => new Promise(ok => {
-  // Asked of pnpm, not of the file list: that's what would be sent. No scripts, so nothing is built to answer.
-  const r = spawnSync(pnpm, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: join(root, 'packages', dir), encoding: 'utf8', maxBuffer: 1 << 28, shell: process.platform === 'win32' })
-  if (r.status !== 0) problems.push(`pnpm pack failed in packages/${dir}: ${r.stderr.slice(-300)}`)
-  else for (const { path } of JSON.parse(r.stdout).files) { const why = strayReason(path); if (why) problems.push(`packages/${dir} would ship ${path}: ${why}`) }
-  ok()
-}))
+const dirs = readdirSync(join(root, 'packages')).filter(
+  (d) =>
+    existsSync(join(root, 'packages', d, 'package.json')) &&
+    !JSON.parse(readFileSync(join(root, 'packages', d, 'package.json'), 'utf8')).private,
+)
+await pool(
+  dirs,
+  4,
+  (dir) =>
+    new Promise((ok) => {
+      // Asked of pnpm, not of the file list: that's what would be sent. No scripts, so nothing is built to answer.
+      const r = spawnSync(pnpm, ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+        cwd: join(root, 'packages', dir),
+        encoding: 'utf8',
+        maxBuffer: 1 << 28,
+        shell: process.platform === 'win32',
+      })
+      if (r.status !== 0)
+        problems.push(`pnpm pack failed in packages/${dir}: ${r.stderr.slice(-300)}`)
+      else
+        for (const { path } of JSON.parse(r.stdout).files) {
+          const why = strayReason(path)
+          if (why) problems.push(`packages/${dir} would ship ${path}: ${why}`)
+        }
+      ok()
+    }),
+)
 
 for (const line of problems) console.log(line)
 process.exit(problems.length ? 1 : 0)

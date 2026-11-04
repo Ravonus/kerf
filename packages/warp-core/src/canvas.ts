@@ -82,25 +82,54 @@ let unhear: (() => void) | undefined
 function hear(fn: Heard) {
   hearers.add(fn)
   if (!unhear) {
-    const tell = (target: Node) => { for (const h of hearers) h(target) }
+    const tell = (target: Node) => {
+      for (const h of hearers) h(target)
+    }
     const root = document.documentElement
-    const dials = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(list => { for (const m of list) if ((m.target as Element).getAttribute(m.attributeName!) !== m.oldValue) tell(m.target) })
-    dials?.observe(root, { attributes: true, attributeOldValue: true, subtree: true, attributeFilter: ['data-theme', 'data-expression', 'data-motion'] })
-    const media = typeof matchMedia === 'function' ? ['(prefers-color-scheme: dark)', '(prefers-reduced-motion: reduce)'].map(q => matchMedia(q)) : []
+    const dials =
+      typeof MutationObserver === 'undefined'
+        ? undefined
+        : new MutationObserver((list) => {
+            for (const m of list)
+              if ((m.target as Element).getAttribute(m.attributeName!) !== m.oldValue)
+                tell(m.target)
+          })
+    dials?.observe(root, {
+      attributes: true,
+      attributeOldValue: true,
+      subtree: true,
+      attributeFilter: ['data-theme', 'data-expression', 'data-motion'],
+    })
+    const media =
+      typeof matchMedia === 'function'
+        ? ['(prefers-color-scheme: dark)', '(prefers-reduced-motion: reduce)'].map((q) =>
+            matchMedia(q),
+          )
+        : []
     const change = () => tell(root)
     for (const m of media) m.addEventListener?.('change', change)
-    unhear = () => { dials?.disconnect(); for (const m of media) m.removeEventListener?.('change', change); unhear = undefined }
+    unhear = () => {
+      dials?.disconnect()
+      for (const m of media) m.removeEventListener?.('change', change)
+      unhear = undefined
+    }
   }
-  return () => { hearers.delete(fn); if (!hearers.size) unhear?.() }
+  return () => {
+    hearers.delete(fn)
+    if (!hearers.size) unhear?.()
+  }
 }
 
 // One listener for every surface that wants the pointer: the document's, which still hears it through content on top.
 const trackers = new Set<(e: PointerEvent) => void>()
-const tell = (e: Event) => { for (const t of trackers) t(e as PointerEvent) }
+const tell = (e: Event) => {
+  for (const t of trackers) t(e as PointerEvent)
+}
 const EVENTS = ['pointermove', 'pointerdown', 'pointerup', 'pointercancel'] as const
 
 function track(fn: (e: PointerEvent) => void) {
-  if (!trackers.size) for (const name of EVENTS) document.addEventListener(name, tell, { passive: true })
+  if (!trackers.size)
+    for (const name of EVENTS) document.addEventListener(name, tell, { passive: true })
   trackers.add(fn)
   return () => {
     trackers.delete(fn)
@@ -113,25 +142,44 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
   let o = options
   const box = canvas.parentElement ?? canvas
   const ctx = canvas.getContext('2d', o.context)
-  let sized = false, dirty = true, seen = true, still = reducedMotion(canvas), kept = false
-  let w = 0, h = 0, dpr = 1, time = 0, last = 0, shown = 0, unit = 1, dials: Tier | undefined, untrack: (() => void) | undefined
+  let sized = false,
+    dirty = true,
+    seen = true,
+    still = reducedMotion(canvas),
+    kept = false
+  let w = 0,
+    h = 0,
+    dpr = 1,
+    time = 0,
+    last = 0,
+    shown = 0,
+    unit = 1,
+    dials: Tier | undefined,
+    untrack: (() => void) | undefined
   const pointer: Pointer = { x: 0, y: 0, down: false, in: false }
 
   const dial = () => (dials ??= tier(box))
   const moves = () => !!o.animate && !still && dial().speed > 0
   const running = () => moves() || kept
   const visible = () => seen && !document.hidden
-  const wake = () => { if (visible() && (dirty || running())) enqueue(run) }
-  const invalidate = () => { dirty = true; wake() }
+  const wake = () => {
+    if (visible() && (dirty || running())) enqueue(run)
+  }
+  const invalidate = () => {
+    dirty = true
+    wake()
+  }
 
   function measure() {
-    const dw = box.clientWidth, dh = box.clientHeight
+    const dw = box.clientWidth,
+      dh = box.clientHeight
     dpr = Math.min(devicePixelRatio || 1, o.maxDpr ?? 2)
     unit = 1
     if (!dw || !dh) return false
     let bw: number, bh: number
     if (o.cell) {
-      const d = Math.max(1, Math.round(o.cell * dpr)), css = (unit = d / dpr)
+      const d = Math.max(1, Math.round(o.cell * dpr)),
+        css = (unit = d / dpr)
       bw = w = Math.ceil(dw / css)
       bh = h = Math.ceil(dh / css)
       canvas.style.width = `${bw * css}px`
@@ -149,7 +197,7 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
     return true
   }
 
-  const run: Run = now => {
+  const run: Run = (now) => {
     if (!visible() || !ctx) return void queue.delete(run)
     if (!dirty && o.fps && now - shown < 1000 / o.fps - 2) return
     if (!sized && !(sized = measure())) return void queue.delete(run)
@@ -158,14 +206,31 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
     shown = now
     if (running()) time += dt
     dirty = false
-    kept = o.draw({ ctx, width: w, height: h, dpr, time, dt, still: !moves(), tier: dial(), pointer }) === true
-    if (!running()) { queue.delete(run); last = 0 }
+    kept =
+      o.draw({
+        ctx,
+        width: w,
+        height: h,
+        dpr,
+        time,
+        dt,
+        still: !moves(),
+        tier: dial(),
+        pointer,
+      }) === true
+    if (!running()) {
+      queue.delete(run)
+      last = 0
+    }
   }
 
   const follow = (e: PointerEvent) => {
     if (!visible()) return
-    const r = box.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top
-    const over = x >= 0 && y >= 0 && x < r.width && y < r.height, down = e.type === 'pointerdown' ? over : e.type === 'pointermove' ? pointer.down : false
+    const r = box.getBoundingClientRect(),
+      x = e.clientX - r.left,
+      y = e.clientY - r.top
+    const over = x >= 0 && y >= 0 && x < r.width && y < r.height,
+      down = e.type === 'pointerdown' ? over : e.type === 'pointermove' ? pointer.down : false
     if (!over && !pointer.in && down === pointer.down) return
     pointer.x = x / unit
     pointer.y = y / unit
@@ -175,23 +240,44 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
   }
   const listen = () => {
     if (o.pointer && !untrack) untrack = track(follow)
-    else if (!o.pointer && untrack) { untrack(); untrack = undefined }
+    else if (!o.pointer && untrack) {
+      untrack()
+      untrack = undefined
+    }
   }
 
-  const size = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => { sized = false; invalidate() })
+  const size =
+    typeof ResizeObserver === 'undefined'
+      ? undefined
+      : new ResizeObserver(() => {
+          sized = false
+          invalidate()
+        })
   size?.observe(box)
-  const seer = typeof IntersectionObserver === 'undefined' ? undefined : new IntersectionObserver(([e]) => {
-seen = e!.isIntersecting
-    box.toggleAttribute('data-fx-offscreen', !seen)
+  const seer =
+    typeof IntersectionObserver === 'undefined'
+      ? undefined
+      : new IntersectionObserver(
+          ([e]) => {
+            seen = e!.isIntersecting
+            box.toggleAttribute('data-fx-offscreen', !seen)
+            last = 0
+            wake()
+          },
+          { rootMargin: '48px' },
+        )
+  seer?.observe(canvas)
+  const shown$ = () => {
     last = 0
     wake()
-  }, { rootMargin: '48px' })
-  seer?.observe(canvas)
-  const shown$ = () => { last = 0; wake() }
-  const rescale = () => { sized = false; invalidate() }
+  }
+  const rescale = () => {
+    sized = false
+    invalidate()
+  }
   document.addEventListener('visibilitychange', shown$)
   addEventListener('resize', rescale)
-  const stop = hear(target => {
+  const stop = hear((target) => {
     if (!target.contains(canvas)) return
     still = reducedMotion(canvas)
     dials = undefined

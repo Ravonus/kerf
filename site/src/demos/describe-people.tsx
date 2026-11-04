@@ -12,19 +12,27 @@ const people = [
 export default function Scientists() {
   const only = state<string | null>(null)
   // Filter first, then map: the filtered list is a derived value, so it follows `only`.
-  const shown = derived(() => (only.value ? people.filter(p => p.profession === only.value) : people))
+  const shown = derived(() =>
+    only.value ? people.filter((p) => p.profession === only.value) : people,
+  )
   return (
     <Card title="Scientists">
-      <Button size="sm" emphasis="outline" onClick={() => (only.value = null)}>Everyone</Button>{' '}
-      <Button size="sm" emphasis="outline" onClick={() => (only.value = 'chemist')}>Chemists</Button>
+      <Button size="sm" emphasis="outline" onClick={() => (only.value = null)}>
+        Everyone
+      </Button>{' '}
+      <Button size="sm" emphasis="outline" onClick={() => (only.value = 'chemist')}>
+        Chemists
+      </Button>
       <ul>
-        {shown.value.map(p => (
+        {shown.value.map((p) => (
           <li key={p.id}>
             <b>{p.name}</b>: {p.profession}
           </li>
         ))}
       </ul>
-      <p>{shown.value.length} of {people.length}</p>
+      <p>
+        {shown.value.length} of {people.length}
+      </p>
     </Card>
   )
 }

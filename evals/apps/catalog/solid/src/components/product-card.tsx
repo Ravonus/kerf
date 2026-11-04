@@ -1,22 +1,24 @@
-import { For, Show } from "solid-js";
+import { For, Show } from 'solid-js'
 
-import { artOf } from "~/lib/art";
-import { money } from "~/lib/format";
+import { artOf } from '~/lib/art'
+import { money } from '~/lib/format'
 
 export function ProductArt(props: { name: string; class?: string }) {
-  const art = () => artOf(props.name);
+  const art = () => artOf(props.name)
   return (
-    <span class={`art ${props.class ?? ""}`} data-material={art().material}>
+    <span class={`art ${props.class ?? ''}`} data-material={art().material}>
       <svg viewBox="0 0 120 120" aria-hidden="true">
         <path fill-rule="evenodd" d={art().path} />
       </svg>
     </span>
-  );
+  )
 }
 
-export const SoldOut = () => <span class="rounded-full bg-sunken px-2 py-0.5 text-xs font-medium text-muted">Sold out</span>;
+export const SoldOut = () => (
+  <span class="rounded-full bg-sunken px-2 py-0.5 text-xs font-medium text-muted">Sold out</span>
+)
 
-export type Card = { slug: string; name: string; priceCents: number; stock: number };
+export type Card = { slug: string; name: string; priceCents: number; stock: number }
 
 export function ProductCard(props: { product: Card }) {
   return (
@@ -32,7 +34,7 @@ export function ProductCard(props: { product: Card }) {
         </span>
       </a>
     </li>
-  );
+  )
 }
 
 export const GridSkeleton = (props: { count: number }) => (
@@ -47,7 +49,7 @@ export const GridSkeleton = (props: { count: number }) => (
       )}
     </For>
   </ul>
-);
+)
 
-export const grid = "grid grid-cols-2 gap-5 sm:grid-cols-3";
-export const wideGrid = "grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4";
+export const grid = 'grid grid-cols-2 gap-5 sm:grid-cols-3'
+export const wideGrid = 'grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4'

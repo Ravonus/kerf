@@ -16,13 +16,13 @@ export interface Handle {
   readonly ready: Promise<void> | null
 }
 
-export type LayoutResult = { height: number, lineCount: number }
+export type LayoutResult = { height: number; lineCount: number }
 
 // A line as a range of the prepared text: segment and grapheme cursors as Pretext gives them (Pretext has
 // no source offsets for plain text yet, upstream issue #198), and the line's width without hanging spaces.
-export type Cursor = { segmentIndex: number, graphemeIndex: number }
+export type Cursor = { segmentIndex: number; graphemeIndex: number }
 // `lite`: the range indexes the lite tier's segments.
-export type LineRange = { width: number, start: Cursor, end: Cursor, lite?: boolean }
+export type LineRange = { width: number; start: Cursor; end: Cursor; lite?: boolean }
 
 export interface MeasureProvider {
   prepare(text: string, font: string, opts?: PrepareOptions): Handle

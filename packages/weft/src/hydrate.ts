@@ -13,31 +13,44 @@ import { keys } from './keys'
 
 let told = 0
 /** One hydration's state: the elements awaiting a claim, what's left to sweep, how many keys missed and the first that did. */
-export const hydration = { misses: 0, first: '', registry: new Map<string, Element>(), /** What only the claim needed. */ trash: [] as (ChildNode | Element)[] }
+export const hydration = {
+  misses: 0,
+  first: '',
+  registry: new Map<string, Element>(),
+  /** What only the claim needed. */ trash: [] as (ChildNode | Element)[],
+}
 
 /**
  * After the claim: drop the markers and keys nothing reads again. Later than the pass itself, so hydrating still writes
  * nothing to the DOM, and a page's reads of its nodes don't pay for a tree that holds hundreds of them.
  */
 export function sweep() {
-  if (hydration.misses > told) console.warn(`weft: ${(told = hydration.misses)} hydration miss(es), first wk=${hydration.first}`)
+  if (hydration.misses > told)
+    console.warn(
+      `weft: ${(told = hydration.misses)} hydration miss(es), first wk=${hydration.first}`,
+    )
   const list = hydration.trash
   hydration.trash = []
-  if (list.length) setTimeout(() => {
-    for (const n of list) {
-      if (n.nodeType === 1) {
-        ;(n as Element).removeAttribute('wk')
-        delete (n as Element & { $k?: string }).$k
-      } else n.remove()
-    }
-  })
+  if (list.length)
+    setTimeout(() => {
+      for (const n of list) {
+        if (n.nodeType === 1) {
+          ;(n as Element).removeAttribute('wk')
+          delete (n as Element & { $k?: string }).$k
+        } else n.remove()
+      }
+    })
 }
 
 /**
  * Hydrate `container`'s server HTML with `code` (the same `() => <App />` the server rendered). The page data is the
  * container's trailing `<script data-weft>`, or `options.data` when the page sends it elsewhere (a stream, research 25).
  */
-export function hydrate(code: () => unknown, container: Element, options: { data?: SsrData | null | undefined } = {}): () => void {
+export function hydrate(
+  code: () => unknown,
+  container: Element,
+  options: { data?: SsrData | null | undefined } = {},
+): () => void {
   const registry = hydration.registry
   for (const el of container.querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
   hydration.misses = told = 0
@@ -48,15 +61,21 @@ export function hydrate(code: () => unknown, container: Element, options: { data
   let dispose!: () => void
   Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })
   try {
-    createRoot(d => {
+    createRoot((d) => {
       dispose = d
       hchild(container, code, script ?? undefined, undefined, undefined, 2) // the app's nodes are those before the data script
     }, null)
   } finally {
-    if (hydration.misses) console.warn('weft: rendered fresh, a key differs between server and client (see `weft docs W044`)')
+    if (hydration.misses)
+      console.warn(
+        'weft: rendered fresh, a key differs between server and client (see `weft docs W044`)',
+      )
     Object.assign(keys, { on: false, hydrating: false, miss: false, p: '', n: 0 })
     rt.data = undefined
-    if (DEV && registry.size) console.warn(`weft: ${registry.size} server element(s) were never claimed (first: wk=${registry.keys().next().value})`)
+    if (DEV && registry.size)
+      console.warn(
+        `weft: ${registry.size} server element(s) were never claimed (first: wk=${registry.keys().next().value})`,
+      )
     registry.clear()
     sweep()
   }

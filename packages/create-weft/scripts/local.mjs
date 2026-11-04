@@ -17,14 +17,25 @@ import { pin, pkgs } from './tarballs.mjs'
 
 const store = resolve(process.env.WEFT_LOCAL_DIR ?? join(homedir(), '.weft/local'))
 const tgz = join(store, 'tgz')
-const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' && cmd === 'npm' }) // npm is npm.cmd there
+const run = (cmd, args, cwd) =>
+  execFileSync(cmd, args, {
+    cwd,
+    stdio: 'inherit',
+    shell: process.platform === 'win32' && cmd === 'npm',
+  }) // npm is npm.cmd there
 const OTHER_LOCKS = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock']
 
 /** The compiler's addon and WASM builds, when a stamp no longer matches the crate. */
 function buildNative() {
-  const { sourceStamp, stampFile } = createRequire(import.meta.url)(join(pkgs, 'weft/scripts/native-stamp.cjs'))
-  const stamped = file => existsSync(stampFile(file)) && readFileSync(stampFile(file), 'utf8').trim() === sourceStamp()
-  const built = [`weft-compiler.${process.platform}-${process.arch}.node`, 'weft-compiler.wasm'].map(f => join(pkgs, 'weft/native', f))
+  const { sourceStamp, stampFile } = createRequire(import.meta.url)(
+    join(pkgs, 'weft/scripts/native-stamp.cjs'),
+  )
+  const stamped = (file) =>
+    existsSync(stampFile(file)) && readFileSync(stampFile(file), 'utf8').trim() === sourceStamp()
+  const built = [
+    `weft-compiler.${process.platform}-${process.arch}.node`,
+    'weft-compiler.wasm',
+  ].map((f) => join(pkgs, 'weft/native', f))
   if (built.every(stamped)) return
   console.log('[local] building the compiler')
   run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'weft'))
@@ -46,7 +57,9 @@ function pack() {
   const packed = packWithAddon(next)
   rmSync(tgz, { recursive: true, force: true })
   renameSync(next, tgz)
-  const tarballs = Object.fromEntries(Object.entries(packed).map(([name, spec]) => [name, spec.replace(next, tgz)]))
+  const tarballs = Object.fromEntries(
+    Object.entries(packed).map(([name, spec]) => [name, spec.replace(next, tgz)]),
+  )
   writeFileSync(join(store, 'tarballs.json'), JSON.stringify(tarballs, null, 2))
   console.log(`[local] ${Object.keys(tarballs).length} packages in ${tgz}`)
   return tarballs
@@ -54,26 +67,29 @@ function pack() {
 
 /** npm keeps a tarball's hash and treats a same-version package as satisfied, so what's being replaced has to go first. */
 function forget(app, tarballs) {
-  const installed = (name, path) => path === `node_modules/${name}` || path.endsWith(`/node_modules/${name}`)
+  const installed = (name, path) =>
+    path === `node_modules/${name}` || path.endsWith(`/node_modules/${name}`)
   const file = join(app, 'package-lock.json')
   const lock = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : { packages: {} }
   for (const path of Object.keys(lock.packages)) {
-    if (!Object.keys(tarballs).some(name => installed(name, path))) continue
+    if (!Object.keys(tarballs).some((name) => installed(name, path))) continue
     delete lock.packages[path]
     rmSync(join(app, path), { recursive: true, force: true })
   }
   if (existsSync(file)) writeFileSync(file, JSON.stringify(lock, null, 2))
-  for (const stale of ['.package-lock.json', '.vite']) rmSync(join(app, 'node_modules', stale), { recursive: true, force: true })
+  for (const stale of ['.package-lock.json', '.vite'])
+    rmSync(join(app, 'node_modules', stale), { recursive: true, force: true })
 }
 
 function refresh(dir, packed) {
   const app = resolve(dir)
   const file = join(app, 'package.json')
   if (!existsSync(file)) throw new Error(`${app} has no package.json`)
-  const other = OTHER_LOCKS.find(lock => existsSync(join(app, lock)))
+  const other = OTHER_LOCKS.find((lock) => existsSync(join(app, lock)))
   if (other) throw new Error(`${app} has ${other}; this works with npm only`)
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  if (!pkg.dependencies?.['@weft-js/core'] && !pkg.devDependencies?.['@weft-js/core']) throw new Error(`${app} doesn't depend on @weft-js/core; start one with \`local.mjs new\``)
+  if (!pkg.dependencies?.['@weft-js/core'] && !pkg.devDependencies?.['@weft-js/core'])
+    throw new Error(`${app} doesn't depend on @weft-js/core; start one with \`local.mjs new\``)
   const tarballs = packed ? JSON.parse(readFileSync(join(store, 'tarballs.json'), 'utf8')) : pack()
   forget(app, tarballs)
   writeFileSync(file, JSON.stringify(pin(pkg, tarballs), null, 2))
@@ -83,16 +99,28 @@ function refresh(dir, packed) {
 
 const [command, ...rest] = process.argv.slice(2)
 try {
-  if (Number(process.versions.node.split('.')[0]) < 26) throw new Error(`weft needs Node 26; this is ${process.version}`)
+  if (Number(process.versions.node.split('.')[0]) < 26)
+    throw new Error(`weft needs Node 26; this is ${process.version}`)
   mkdirSync(store, { recursive: true })
   if (command === 'pack') pack()
-  else if (command === 'refresh') refresh(rest.find(a => !a.startsWith('-')) ?? '.', rest.includes('--packed'))
+  else if (command === 'refresh')
+    refresh(rest.find((a) => !a.startsWith('-')) ?? '.', rest.includes('--packed'))
   else if (command === 'new' && rest[0] && !rest[0].startsWith('-')) {
     pack()
     // Last, so they win: the tarballs are wired up through npm's overrides, and the app is no use uninstalled.
-    run(process.execPath, [fileURLToPath(new URL('../bin/create-weft.mjs', import.meta.url)), ...rest, '--tarballs', store, '--pm', 'npm', '--install'])
+    run(process.execPath, [
+      fileURLToPath(new URL('../bin/create-weft.mjs', import.meta.url)),
+      ...rest,
+      '--tarballs',
+      store,
+      '--pm',
+      'npm',
+      '--install',
+    ])
   } else {
-    console.error('usage: local.mjs pack | new <dir> [create-weft flags] | refresh [dir] [--packed]')
+    console.error(
+      'usage: local.mjs pack | new <dir> [create-weft flags] | refresh [dir] [--packed]',
+    )
     process.exit(1)
   }
 } catch (e) {

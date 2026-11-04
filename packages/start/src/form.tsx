@@ -6,14 +6,29 @@
 // Reachable only from routes that import it, so an app without forms doesn't pay.
 
 import { derived, flush, state, untrack, type Derived } from '@weft-js/core'
-import { currentScope, decodeForm, fieldsOf, fnOf, StartError, SUBMIT, type FnError, type Mutation } from './data'
+import {
+  currentScope,
+  decodeForm,
+  fieldsOf,
+  fnOf,
+  StartError,
+  SUBMIT,
+  type FnError,
+  type Mutation,
+} from './data'
 import type { FormFailure } from './exec'
 
 /** What a failed form's page gives back for a field: what was typed. */
 export type FormValue = string | string[] | undefined
 
 /** A mutation input's field names: `title`, and `a.b` one level down. */
-type Field<I> = I extends object ? { [K in keyof I & string]: NonNullable<I[K]> extends object ? K | `${K}.${keyof NonNullable<I[K]> & string}` : K }[keyof I & string] : string
+type Field<I> = I extends object
+  ? {
+      [K in keyof I & string]: NonNullable<I[K]> extends object
+        ? K | `${K}.${keyof NonNullable<I[K]> & string}`
+        : K
+    }[keyof I & string]
+  : string
 
 /** The state and fields `<Form>` gives its children. */
 export interface FormApi<I = unknown, O = unknown> {
@@ -30,7 +45,12 @@ export interface FormApi<I = unknown, O = unknown> {
   /** What was typed, when a no-JS submit came back with errors. */
   value(name: Field<I>): FormValue
   /** Spread on the input: `name`, the value to restore, and the invalid state. */
-  field(name: Field<I>): { name: string; value?: FormValue; 'aria-invalid'?: true; 'aria-describedby'?: string }
+  field(name: Field<I>): {
+    name: string
+    value?: FormValue
+    'aria-invalid'?: true
+    'aria-describedby'?: string
+  }
   /** The field's error text, in a live region that's in the page before it has anything to say. */
   Error(props: { name: Field<I>; class?: string }): unknown
 }
@@ -67,14 +87,32 @@ function failure(id: string, key?: string): FormFailure | undefined {
   return f
 }
 
-const at = (values: Record<string, unknown> | undefined, name: string) => name.split('.').reduce<unknown>((v, k) => (v as Record<string, unknown> | undefined)?.[k], values) as FormValue
+const at = (values: Record<string, unknown> | undefined, name: string) =>
+  name
+    .split('.')
+    .reduce<unknown>((v, k) => (v as Record<string, unknown> | undefined)?.[k], values) as FormValue
 
 /** A form that posts to a mutation, and works before any code has loaded. */
-export function Form<I, O>({ of, id, reset, onSuccess, onError, children, ...rest }: FormProps<I, O>) {
-  const m = untrack(() => of) as Mutation<I, O> & { [SUBMIT]: (input: unknown, form: true | FormData) => Promise<O> }
+export function Form<I, O>({
+  of,
+  id,
+  reset,
+  onSuccess,
+  onError,
+  children,
+  ...rest
+}: FormProps<I, O>) {
+  const m = untrack(() => of) as Mutation<I, O> & {
+    [SUBMIT]: (input: unknown, form: true | FormData) => Promise<O>
+  }
   const key = untrack(() => id)
   const fnId = fnOf(m)?.$id
-  if (fnOf(m)?.kind !== 'mutation') throw new StartError('F001', '`<Form of>` needs a mutation', '`<Form of={addTodo}>`, with `addTodo` a `mutation()` export of a server module')
+  if (fnOf(m)?.kind !== 'mutation')
+    throw new StartError(
+      'F001',
+      '`<Form of>` needs a mutation',
+      '`<Form of={addTodo}>`, with `addTodo` a `mutation()` export of a server module',
+    )
   const seed = failure(fnId, key)
   const errors = state<Record<string, string>>(seed?.errors ?? {})
   const message = state(seed?.message)
@@ -87,14 +125,22 @@ export function Form<I, O>({ of, id, reset, onSuccess, onError, children, ...res
     errors,
     message,
     result,
-    error: name => errors.get(name),
-    value: name => at(seed?.values, name),
+    error: (name) => errors.get(name),
+    value: (name) => at(seed?.values, name),
     field(name) {
       const value = at(seed?.values, name)
       const invalid = !!errors.get(name)
-      return { name, ...(value !== undefined && { value }), ...(invalid && { 'aria-invalid': true as const, 'aria-describedby': errorId(name) }) }
+      return {
+        name,
+        ...(value !== undefined && { value }),
+        ...(invalid && { 'aria-invalid': true as const, 'aria-describedby': errorId(name) }),
+      }
     },
-    Error: props => <p id={errorId(props.name)} class={props.class} role="alert">{errors.get(props.name)}</p>,
+    Error: (props) => (
+      <p id={errorId(props.name)} class={props.class} role="alert">
+        {errors.get(props.name)}
+      </p>
+    ),
   }
 
   async function submit(e: SubmitEvent) {
@@ -102,7 +148,7 @@ export function Form<I, O>({ of, id, reset, onSuccess, onError, children, ...res
     if (calls.value) return
     const el = e.target as HTMLFormElement
     const data = new FormData(el, e.submitter)
-    const files = [...data.values()].some(v => typeof v !== 'string' && v.size)
+    const files = [...data.values()].some((v) => typeof v !== 'string' && v.size)
     calls.value++
     try {
       const v = await m[SUBMIT](decodeForm(data), files ? data : true)
@@ -125,10 +171,17 @@ export function Form<I, O>({ of, id, reset, onSuccess, onError, children, ...res
   }
 
   return (
-    <form method="post" {...rest} aria-busy={form.pending.value || undefined} onSubmit={e => void submit(e)}>
+    <form
+      method="post"
+      {...rest}
+      aria-busy={form.pending.value || undefined}
+      onSubmit={(e) => void submit(e)}
+    >
       <input type="hidden" name="$fn" value={fnId} />
       {key !== undefined && <input type="hidden" name="$form" value={key} />}
-      {typeof children === 'function' ? (children as (api: FormApi<I, O>) => unknown)(form) : children}
+      {typeof children === 'function'
+        ? (children as (api: FormApi<I, O>) => unknown)(form)
+        : children}
     </form>
   )
 }

@@ -1,19 +1,38 @@
 // weft-allow T005: the task spec names data-testid values as the contract for every framework
 import { screen } from '@testing-library/dom'
-import { cost, fakeApi, field, money, path, portfolio, seed, spark, start, symbols, type Stock, type User } from './helpers'
+import {
+  cost,
+  fakeApi,
+  field,
+  money,
+  path,
+  portfolio,
+  seed,
+  spark,
+  start,
+  symbols,
+  type Stock,
+  type User,
+} from './helpers'
 
 const stocks = seed()
 const sortBox = () => screen.getByLabelText('Sort') as HTMLSelectElement
 const sortBy = (user: User, value: string) => user.selectOptions(sortBox(), value)
-const byChange = (list: Stock[], price: (s: Stock) => number = s => s.price) =>
+const byChange = (list: Stock[], price: (s: Stock) => number = (s) => s.price) =>
   list
     .map((s, i) => ({ s, i, c: (price(s) - s.prevClose) / s.prevClose }))
     .sort((a, b) => b.c - a.c || a.i - b.i)
-    .map(x => x.s.symbol)
+    .map((x) => x.s.symbol)
 
 test('a burst updates every quoted row, the sparklines and the portfolio', async () => {
   const { fake } = await start()
-  await fake.burst([['s1', 11], ['s2', 22], ['s3', 33], ['s1', 12], ['s0', 4]])
+  await fake.burst([
+    ['s1', 11],
+    ['s2', 22],
+    ['s3', 33],
+    ['s1', 12],
+    ['s0', 4],
+  ])
   expect(field(stocks[1].symbol, 'price')).toBe(money(12))
   expect(spark(stocks[1].symbol)).toBe(path([stocks[1].price, 11, 12]))
   expect(field(stocks[2].symbol, 'price')).toBe(money(22))
@@ -36,15 +55,21 @@ test('Sort by Change orders by biggest gain, ties in list order', async () => {
   await sortBy(user, 'change')
   expect(symbols()).toEqual(byChange(stocks))
   await sortBy(user, 'symbol')
-  expect(symbols()).toEqual(stocks.map(s => s.symbol))
+  expect(symbols()).toEqual(stocks.map((s) => s.symbol))
 })
 
 test('with Change selected, the order follows quotes', async () => {
   const { fake, user } = await start()
   await sortBy(user, 'change')
-  await fake.burst([['s7', stocks[7].prevClose * 3], ['s8', stocks[8].prevClose * 0.2]])
-  const prices: Record<string, number> = { s7: stocks[7].prevClose * 3, s8: stocks[8].prevClose * 0.2 }
-  expect(symbols()).toEqual(byChange(stocks, s => prices[s.id] ?? s.price))
+  await fake.burst([
+    ['s7', stocks[7].prevClose * 3],
+    ['s8', stocks[8].prevClose * 0.2],
+  ])
+  const prices: Record<string, number> = {
+    s7: stocks[7].prevClose * 3,
+    s8: stocks[8].prevClose * 0.2,
+  }
+  expect(symbols()).toEqual(byChange(stocks, (s) => prices[s.id] ?? s.price))
   expect(symbols()[0]).toBe(stocks[7].symbol)
   expect(symbols().at(-1)).toBe(stocks[8].symbol)
 })

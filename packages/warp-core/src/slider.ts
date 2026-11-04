@@ -31,7 +31,10 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
       t.style.setProperty('--_v', String(pct(vals[i]!)))
       t.setAttribute('aria-valuenow', String(vals[i]))
       const text = o.format(vals[i]!)
-      t.setAttribute('aria-valuetext', o.names?.[i] && vals.length > 1 ? `${o.names[i]}, ${text}` : text)
+      t.setAttribute(
+        'aria-valuetext',
+        o.names?.[i] && vals.length > 1 ? `${o.names[i]}, ${text}` : text,
+      )
       const bubble = t.querySelector('[data-part="bubble"]')
       if (bubble) bubble.textContent = text
     })
@@ -78,19 +81,45 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
     const big = Math.max(o.step, (o.max - o.min) / 10)
     // the arrows go the way they point: the track runs right to left in RTL
     const along = getComputedStyle(el).direction === 'rtl' ? -o.step : o.step
-    const d = ({ ArrowRight: along, ArrowUp: o.step, ArrowLeft: -along, ArrowDown: -o.step, PageUp: big, PageDown: -big } as Record<string, number>)[e.key]
-    if (d !== undefined) { e.preventDefault(); set(i, vals[i]! + d) }
-    if (e.key === 'Home') { e.preventDefault(); set(i, o.min) }
-    if (e.key === 'End') { e.preventDefault(); set(i, o.max) }
+    const d = (
+      {
+        ArrowRight: along,
+        ArrowUp: o.step,
+        ArrowLeft: -along,
+        ArrowDown: -o.step,
+        PageUp: big,
+        PageDown: -big,
+      } as Record<string, number>
+    )[e.key]
+    if (d !== undefined) {
+      e.preventDefault()
+      set(i, vals[i]! + d)
+    }
+    if (e.key === 'Home') {
+      e.preventDefault()
+      set(i, o.min)
+    }
+    if (e.key === 'End') {
+      e.preventDefault()
+      set(i, o.max)
+    }
   }
   el.addEventListener('pointerdown', onDown)
   el.addEventListener('keydown', onKey)
   // the binding holds the value: a form's reset goes back to the first one through onChange
   const first = vals
-  const reset = formReset(el, () => { vals = first; paint(); o.onChange(vals) })
+  const reset = formReset(el, () => {
+    vals = first
+    paint()
+    o.onChange(vals)
+  })
   paint()
   return {
-    update(next: SliderOptions) { o = next; vals = [...o.values]; paint() },
+    update(next: SliderOptions) {
+      o = next
+      vals = [...o.values]
+      paint()
+    },
     destroy() {
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('keydown', onKey)

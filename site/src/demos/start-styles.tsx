@@ -14,7 +14,9 @@ export default function Special() {
         Until the oat milk runs out.
       </p>
       <Button tone="positive">Order one</Button>{' '}
-      <Button emphasis="outline" tone="neutral">Maybe later</Button>
+      <Button emphasis="outline" tone="neutral">
+        Maybe later
+      </Button>
     </Card>
   )
 }

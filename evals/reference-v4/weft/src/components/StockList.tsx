@@ -14,7 +14,16 @@ type Props = {
 export function StockList({ stocks, live, favorites, onToggle, onDetails }: Props) {
   return (
     <ul aria-label="Stocks">
-      {stocks.map(s => <StockRow key={s.id} stock={s} live={live} favorites={favorites} onToggle={onToggle} onDetails={onDetails} />)}
+      {stocks.map((s) => (
+        <StockRow
+          key={s.id}
+          stock={s}
+          live={live}
+          favorites={favorites}
+          onToggle={onToggle}
+          onDetails={onDetails}
+        />
+      ))}
     </ul>
   )
 }

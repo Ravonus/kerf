@@ -1,10 +1,14 @@
 // Every number here comes with its spread, and a win is only called when the spread allows it.
 
-export const median = xs => { const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2 }
+export const median = (xs) => {
+  const s = [...xs].sort((a, b) => a - b),
+    m = s.length >> 1
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
+}
 
 /** `{ med, min, max, n }` of the numbers in `xs`; holes (a metric a run didn't report) are dropped. */
 export function spread(xs) {
-  const v = xs.filter(x => x != null && Number.isFinite(x))
+  const v = xs.filter((x) => x != null && Number.isFinite(x))
   if (!v.length) return null
   return { med: median(v), min: Math.min(...v), max: Math.max(...v), n: v.length }
 }
@@ -40,26 +44,67 @@ export const METRICS = {
   'browser.elements': { label: 'Elements', unit: '', better: 'low', floor: 10 },
   'browser.comments': { label: 'Comment nodes', unit: '', better: 'low', floor: 5 },
   'server.rps': { label: 'Server req/s', unit: 'rps', better: 'high', floor: 50 },
-  'server.rpsPlain': { label: 'Server req/s, uncompressed', unit: 'rps', better: 'high', floor: 50 },
+  'server.rpsPlain': {
+    label: 'Server req/s, uncompressed',
+    unit: 'rps',
+    better: 'high',
+    floor: 50,
+  },
   'server.p95': { label: 'Server p95', unit: 'ms', better: 'low', floor: 1 },
   'db.queries': { label: 'Queries per request', unit: '', better: 'low', floor: 1 },
   'db.rows': { label: 'Rows per request', unit: '', better: 'low', floor: 1 },
-  'db.roundTrips': { label: 'DB round trips before first byte', unit: '', better: 'low', floor: 0.5 },
+  'db.roundTrips': {
+    label: 'DB round trips before first byte',
+    unit: '',
+    better: 'low',
+    floor: 0.5,
+  },
   'server.ttfb.p50': { label: 'TTFB p50', unit: 'ms', better: 'low', floor: 1 },
   'server.ttfb.p95': { label: 'TTFB p95', unit: 'ms', better: 'low', floor: 1 },
   'server.ttfb.p99': { label: 'TTFB p99', unit: 'ms', better: 'low', floor: 1 },
   'server.flush.head': { label: '</head> byte', unit: 'ms', better: 'low', floor: 1 },
   'flow.interaction.worst': { label: 'Worst interaction, 4x', unit: 'ms', better: 'low', floor: 8 },
   'flow.interaction.p75': { label: 'p75 interaction, 4x', unit: 'ms', better: 'low', floor: 8 },
-  'flow.interaction.streaming': { label: 'First working click while streaming', unit: 'ms', better: 'low', floor: 15 },
-  'flow.mutate.optimistic': { label: 'Input to optimistic DOM', unit: 'ms', better: 'low', floor: 8 },
+  'flow.interaction.streaming': {
+    label: 'First working click while streaming',
+    unit: 'ms',
+    better: 'low',
+    floor: 15,
+  },
+  'flow.mutate.optimistic': {
+    label: 'Input to optimistic DOM',
+    unit: 'ms',
+    better: 'low',
+    floor: 8,
+  },
   'flow.mutate.confirmed': { label: 'Input to confirmed DOM', unit: 'ms', better: 'low', floor: 8 },
   'flow.mutate.requests': { label: 'Requests per mutation', unit: '', better: 'low', floor: 1 },
 }
-for (const visit of ['cold', 'second']) for (const [k, label] of [['url', 'URL'], ['paint', 'paint'], ['data', 'data']]) METRICS[`flow.nav.${k}.${visit}`] = { label: `Click to ${label}, ${visit}`, unit: 'ms', better: 'low', floor: 8 }
-for (const rows of [50, 500]) for (const part of ['html', 'data']) for (const c of ['raw', 'br']) METRICS[`bytes.${part}.${rows}.${c}`] = { label: `${part === 'html' ? 'Markup' : 'Embedded data'} at ${rows} rows, ${c}`, unit: 'bytes', better: 'low', floor: 128 }
+for (const visit of ['cold', 'second'])
+  for (const [k, label] of [
+    ['url', 'URL'],
+    ['paint', 'paint'],
+    ['data', 'data'],
+  ])
+    METRICS[`flow.nav.${k}.${visit}`] = {
+      label: `Click to ${label}, ${visit}`,
+      unit: 'ms',
+      better: 'low',
+      floor: 8,
+    }
+for (const rows of [50, 500])
+  for (const part of ['html', 'data'])
+    for (const c of ['raw', 'br'])
+      METRICS[`bytes.${part}.${rows}.${c}`] = {
+        label: `${part === 'html' ? 'Markup' : 'Embedded data'} at ${rows} rows, ${c}`,
+        unit: 'bytes',
+        better: 'low',
+        floor: 128,
+      }
 /** Everything a database-driven app reports; a probe that can't apply to a page stays null, never 0. */
-export const SITE_METRICS = Object.keys(METRICS).filter(k => /^(db|flow)\.|^server\.(ttfb|flush)|^bytes\.(html|data)\.\d/.test(k))
+export const SITE_METRICS = Object.keys(METRICS).filter((k) =>
+  /^(db|flow)\.|^server\.(ttfb|flush)|^bytes\.(html|data)\.\d/.test(k),
+)
 
 /**
  * `win` when a beats b by more than the metric's floor and no sample of the two overlaps; otherwise `tie`. With n = 3 that
@@ -68,13 +113,19 @@ export const SITE_METRICS = Object.keys(METRICS).filter(k => /^(db|flow)\.|^serv
 export function compare(key, a, b) {
   const m = METRICS[key]
   if (!a || !b) return null
-  const delta = a.med - b.med, ahead = m.better === 'low' ? a.max < b.min : a.min > b.max, behind = m.better === 'low' ? b.max < a.min : b.min > a.max
-  return { delta, verdict: Math.abs(delta) < m.floor ? 'tie' : ahead ? 'win' : behind ? 'loss' : 'tie' }
+  const delta = a.med - b.med,
+    ahead = m.better === 'low' ? a.max < b.min : a.min > b.max,
+    behind = m.better === 'low' ? b.max < a.min : b.min > a.max
+  return {
+    delta,
+    verdict: Math.abs(delta) < m.floor ? 'tie' : ahead ? 'win' : behind ? 'loss' : 'tie',
+  }
 }
 
 export const fmt = (key, s) => {
   if (!s) return '–'
-  const { unit } = METRICS[key] ?? {}, v = s.med ?? s
+  const { unit } = METRICS[key] ?? {},
+    v = s.med ?? s
   if (unit === 'bytes') return `${(v / 1024).toFixed(1)}K`
   if (unit === 'MB') return `${v.toFixed(2)}MB`
   if (key.endsWith('.cls')) return v.toFixed(3)

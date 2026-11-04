@@ -73,7 +73,11 @@ pub struct Functions {
 
 impl Functions {
     pub fn new(service: &'static str, hash: &'static str) -> Self {
-        Functions { service, hash, table: HashMap::new() }
+        Functions {
+            service,
+            hash,
+            table: HashMap::new(),
+        }
     }
 
     /// One function. Called by generated code.
@@ -101,12 +105,16 @@ impl Functions {
                 };
                 drop(body);
                 let Some(ctx) = C::from_base(base) else {
-                    return Answer::Drift("the claims don't fit this function's declaration".into());
+                    return Answer::Drift(
+                        "the claims don't fit this function's declaration".into(),
+                    );
                 };
                 match f(ctx, input).await {
                     Ok(v) => match serde_json::to_string(&v) {
                         Ok(v) => Answer::Value(v),
-                        Err(e) => Answer::Failed(Failed::Internal(format!("the result didn't serialize: {e}"))),
+                        Err(e) => Answer::Failed(Failed::Internal(format!(
+                            "the result didn't serialize: {e}"
+                        ))),
                     },
                     Err(e) => Answer::Failed(e.failed()),
                 }
@@ -137,7 +145,11 @@ impl Functions {
 
 pub(crate) fn ok_body(value: &str, base: &Base) -> String {
     let list = |l: Vec<String>| serde_json::to_string(&l).expect("strings serialize");
-    format!(r#"{{"ok":true,"value":{value},"tags":{},"touched":{}}}"#, list(base.tags()), list(base.touched()))
+    format!(
+        r#"{{"ok":true,"value":{value},"tags":{},"touched":{}}}"#,
+        list(base.tags()),
+        list(base.touched())
+    )
 }
 
 /// `detail` crosses only inside this process: TS logs it, and a client never sees it.

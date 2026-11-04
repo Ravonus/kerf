@@ -6,15 +6,24 @@ import { functionRequestsIdle } from '../../packages/start/scripts/request-idle.
 await test('request settling includes overlapping writes and their follow-up reads', async () => {
   const page = new EventEmitter()
   const idle = functionRequestsIdle(page, { quietMs: 20, timeoutMs: 1000 })
-  const write = { url: () => '/_weft/fn/write' }, read = { url: () => '/_weft/fn/read' }
+  const write = { url: () => '/_weft/fn/write' },
+    read = { url: () => '/_weft/fn/read' }
   let completedRead = false
   page.emit('request', write)
   const timer = setTimeout(() => {
     page.emit('requestfinished', write)
     page.emit('request', read)
-    setTimeout(() => { completedRead = true; page.emit('requestfinished', read) }, 30)
+    setTimeout(() => {
+      completedRead = true
+      page.emit('requestfinished', read)
+    }, 30)
   }, 30)
-  try { await idle(); assert.equal(completedRead, true) } finally { clearTimeout(timer) }
+  try {
+    await idle()
+    assert.equal(completedRead, true)
+  } finally {
+    clearTimeout(timer)
+  }
 })
 
 await test('failed requests settle and unfinished requests fail with a bounded timeout', async () => {

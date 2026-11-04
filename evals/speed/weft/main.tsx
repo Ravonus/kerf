@@ -12,7 +12,13 @@ function Cell(props: { i: number }) {
 }
 
 function Grid() {
-  return <div data-grid>{cells.map((_, i) => <Cell i={i} />)}</div>
+  return (
+    <div data-grid>
+      {cells.map((_, i) => (
+        <Cell i={i} />
+      ))}
+    </div>
+  )
 }
 
 expose({

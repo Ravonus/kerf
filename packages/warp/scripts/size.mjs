@@ -12,7 +12,8 @@ import { brotliCompressSync, constants } from 'node:zlib'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 
-const br = text => brotliCompressSync(Buffer.from(text), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
+const br = (text) =>
+  brotliCompressSync(Buffer.from(text), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 
 // name → JSX that renders it with its required props
 export const ENTRIES = {
@@ -27,8 +28,14 @@ export const ENTRIES = {
   Select: ['Select', '<Select label="Sort" options={[{ value: "a", label: "A" }]} />'],
   Checkbox: ['Checkbox', '<Checkbox>Agree</Checkbox>'],
   Switch: ['Switch', '<Switch>Wi-Fi</Switch>'],
-  Segmented: ['Segmented', '<Segmented label="View" value="a" options={[{ value: "a", label: "A" }]} />'],
-  Tabs: ['Tabs', '<Tabs label="Sections" value="a" options={[{ value: "a", label: "A" }]}>{() => null}</Tabs>'],
+  Segmented: [
+    'Segmented',
+    '<Segmented label="View" value="a" options={[{ value: "a", label: "A" }]} />',
+  ],
+  Tabs: [
+    'Tabs',
+    '<Tabs label="Sections" value="a" options={[{ value: "a", label: "A" }]}>{() => null}</Tabs>',
+  ],
   Card: ['Card', '<Card title="Revenue">x</Card>'],
   Badge: ['Badge', '<Badge>New</Badge>'],
   Stack: ['Stack', '<Stack gap="related">x</Stack>'],
@@ -48,10 +55,22 @@ export const ENTRIES = {
   Modal: ['Modal', '<Modal open={open} title="T">x</Modal>'],
   Drawer: ['Drawer', '<Drawer open={open} title="T">x</Drawer>'],
   Toaster: ['Toaster', '<Toaster />'],
-  Table: ['Table', '<Table caption="Projects" rows={[]} columns={[{ id: "name", header: "Name", sort: true }]} filter="Filter" selection page={{ size: 25 }} />'],
-  LineChart: ['LineChart', '<LineChart title="Revenue" data={[{ m: "Jan", a: 1 }]} x="m" series={["a"]} />'],
-  BarChart: ['BarChart', '<BarChart title="Seats" data={[{ m: "Jan", a: 1 }]} x="m" series={["a"]} />'],
-  ComboChart: ['ComboChart', '<ComboChart title="Revenue" data={[{ m: "Jan", a: 1 }]} x="m" bar="a" />'],
+  Table: [
+    'Table',
+    '<Table caption="Projects" rows={[]} columns={[{ id: "name", header: "Name", sort: true }]} filter="Filter" selection page={{ size: 25 }} />',
+  ],
+  LineChart: [
+    'LineChart',
+    '<LineChart title="Revenue" data={[{ m: "Jan", a: 1 }]} x="m" series={["a"]} />',
+  ],
+  BarChart: [
+    'BarChart',
+    '<BarChart title="Seats" data={[{ m: "Jan", a: 1 }]} x="m" series={["a"]} />',
+  ],
+  ComboChart: [
+    'ComboChart',
+    '<ComboChart title="Revenue" data={[{ m: "Jan", a: 1 }]} x="m" bar="a" />',
+  ],
   DonutChart: ['DonutChart', '<DonutChart title="Plans" data={[{ name: "A", value: 1 }]} />'],
   RadialChart: ['RadialChart', '<RadialChart title="Goals" data={[{ name: "A", value: 0.5 }]} />'],
   FunnelChart: ['FunnelChart', '<FunnelChart title="Funnel" data={[{ name: "A", value: 1 }]} />'],
@@ -71,8 +90,14 @@ export const ENTRIES = {
   TileMap: ['TileMap', '<TileMap title="T" data={[]} />'],
   GaugeChart: ['GaugeChart', '<GaugeChart title="T" data={0.5} />'],
   Sparkline: ['Sparkline', '<Sparkline values={[1, 2]} />'],
-  Shell: ['Shell', '<Shell brand={{ name: "Loom" }} title="Orders" nav={[{ items: [{ id: "a", label: "A", href: "/" }] }]} account={{ name: "A", initials: "A" }}>x</Shell>'],
-  SideNav: ['SideNav', '<SideNav label="Docs" current="/a" sections={[{ title: "Start", items: [{ href: "/a", label: "A" }] }]} />'],
+  Shell: [
+    'Shell',
+    '<Shell brand={{ name: "Loom" }} title="Orders" nav={[{ items: [{ id: "a", label: "A", href: "/" }] }]} account={{ name: "A", initials: "A" }}>x</Shell>',
+  ],
+  SideNav: [
+    'SideNav',
+    '<SideNav label="Docs" current="/a" sections={[{ title: "Start", items: [{ href: "/a", label: "A" }] }]} />',
+  ],
   DateField: ['DateField', '<DateField label="Due" />'],
   DateRangeField: ['DateRangeField', '<DateRangeField label="Period" />'],
   TimeField: ['TimeField', '<TimeField label="Start" />'],
@@ -88,21 +113,39 @@ export const ENTRIES = {
   PhoneField: ['PhoneField', '<PhoneField label="Phone" />'],
   DurationField: ['DurationField', '<DurationField label="Estimate" />'],
   RecurrenceField: ['RecurrenceField', '<RecurrenceField label="Repeats" dtstart="2026-10-28" />'],
-  PlaceLookupInput: ['PlaceLookupInput', '<PlaceLookupInput label="Place" search={async () => []} />'],
+  PlaceLookupInput: [
+    'PlaceLookupInput',
+    '<PlaceLookupInput label="Place" search={async () => []} />',
+  ],
   AddressField: ['AddressField', '<AddressField />'],
-  PaymentCardInput: ['PaymentCardInput', '<PaymentCardInput label="Card" mount={() => ({ on() {}, destroy() {} })} />'],
+  PaymentCardInput: [
+    'PaymentCardInput',
+    '<PaymentCardInput label="Card" mount={() => ({ on() {}, destroy() {} })} />',
+  ],
   CardNumberText: ['CardNumberText', '<CardNumberText last4="4242" />'],
   SignaturePad: ['SignaturePad', '<SignaturePad label="Signature" />'],
   Canvas: ['Canvas', '<Canvas draw={() => {}} />'],
   DitherField: ['DitherField', '<DitherField />'],
   Dither: ['Dither', '<Dither />'],
   DitherGlyph: ['DitherGlyph', '<DitherGlyph text="warp" />'],
-  DataGrid: ['DataGrid', '<DataGrid caption="Projects" rows={[]} columns={[{ id: "name", header: "Name", sort: true, edit: true }]} />'],
-  PivotTable: ['PivotTable', '<PivotTable caption="Cost" rows={[]} row={r => r.a} column={r => r.b} measures={[]} />'],
+  DataGrid: [
+    'DataGrid',
+    '<DataGrid caption="Projects" rows={[]} columns={[{ id: "name", header: "Name", sort: true, edit: true }]} />',
+  ],
+  PivotTable: [
+    'PivotTable',
+    '<PivotTable caption="Cost" rows={[]} row={r => r.a} column={r => r.b} measures={[]} />',
+  ],
   PaginationBar: ['PaginationBar', '<PaginationBar total={100} size={10} />'],
   LoadMore: ['LoadMore', '<LoadMore onLoad={() => {}} />'],
-  CommandPalette: ['CommandPalette', '<CommandPalette open={open} commands={[{ label: "New" }]} />'],
-  MentionsInput: ['MentionsInput', '<MentionsInput label="Comment" triggers={{ "@": async () => [] }} />'],
+  CommandPalette: [
+    'CommandPalette',
+    '<CommandPalette open={open} commands={[{ label: "New" }]} />',
+  ],
+  MentionsInput: [
+    'MentionsInput',
+    '<MentionsInput label="Comment" triggers={{ "@": async () => [] }} />',
+  ],
   CodeInput: ['CodeInput', '<CodeInput label="Script" />'],
   JsonEditor: ['JsonEditor', '<JsonEditor label="Config" />'],
   KeyValueEditor: ['KeyValueEditor', '<KeyValueEditor label="Environment" />'],
@@ -113,26 +156,48 @@ export const ENTRIES = {
 
 async function measure(name, [imp, jsx]) {
   const id = '\0size-entry.tsx'
-  const imps = imp.split(',').filter(Boolean).map(i => (i.startsWith('.') ? `import '${i}'\n` : `import { ${i} } from '@weft-js/warp'\n`)).join('')
+  const imps = imp
+    .split(',')
+    .filter(Boolean)
+    .map((i) => (i.startsWith('.') ? `import '${i}'\n` : `import { ${i} } from '@weft-js/warp'\n`))
+    .join('')
   const code = `import { render } from '@weft-js/core/dom'\nimport { state } from '@weft-js/core'\n${imps}const open = state(false)\nrender(() => ${jsx}, document.body)\n`
   const out = await build({
     configFile: false,
     logLevel: 'silent',
     root: new URL('..', import.meta.url).pathname,
-    plugins: [weft(), { name: 'entry', resolveId: s => (s === 'size-entry.tsx' ? id : null), load: i => (i === id ? code : null) }],
-    build: { write: false, cssCodeSplit: false, modulePreload: false, rolldownOptions: { input: 'size-entry.tsx' } },
+    plugins: [
+      weft(),
+      {
+        name: 'entry',
+        resolveId: (s) => (s === 'size-entry.tsx' ? id : null),
+        load: (i) => (i === id ? code : null),
+      },
+    ],
+    build: {
+      write: false,
+      cssCodeSplit: false,
+      modulePreload: false,
+      rolldownOptions: { input: 'size-entry.tsx' },
+    },
   })
-  const files = (Array.isArray(out) ? out : [out]).flatMap(o => o.output)
-  const js = files.filter(f => f.type === 'chunk').map(f => f.code).join('\n')
-  const css = files.filter(f => f.fileName.endsWith('.css')).map(f => String(f.source)).join('\n')
+  const files = (Array.isArray(out) ? out : [out]).flatMap((o) => o.output)
+  const js = files
+    .filter((f) => f.type === 'chunk')
+    .map((f) => f.code)
+    .join('\n')
+  const css = files
+    .filter((f) => f.fileName.endsWith('.css'))
+    .map((f) => String(f.source))
+    .join('\n')
   return { name, js: br(js), css: css ? br(css) : 0 }
 }
 
-const COMPONENTS = Object.keys(ENTRIES).filter(n => n !== 'runtime' && n !== 'foundation')
+const COMPONENTS = Object.keys(ENTRIES).filter((n) => n !== 'runtime' && n !== 'foundation')
 // one page with every component but `skip`
-const page = skip => {
-  const on = COMPONENTS.filter(n => n !== skip)
-  return [on.map(n => ENTRIES[n][0]).join(','), `<>${on.map(n => ENTRIES[n][1]).join('')}</>`]
+const page = (skip) => {
+  const on = COMPONENTS.filter((n) => n !== skip)
+  return [on.map((n) => ENTRIES[n][0]).join(','), `<>${on.map((n) => ENTRIES[n][1]).join('')}</>`]
 }
 
 export async function sizes(names = Object.keys(ENTRIES)) {
@@ -157,16 +222,22 @@ export async function pageSizes(names = COMPONENTS) {
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   const rows = await sizes()
   const { all, rows: pages } = await pageSizes()
-  const base = rows.find(r => r.name === 'runtime')
+  const base = rows.find((r) => r.name === 'runtime')
   if (process.argv.includes('--json')) console.log(JSON.stringify({ rows, all, pages }, null, 1))
   else {
-    const found = rows.find(r => r.name === 'foundation')
-    const p = Object.fromEntries(pages.map(r => [r.name, r]))
-    console.log('| component | JS br (with runtime) | JS br (own) | ×10 on one page (own) | marginal on the full page | CSS br (with foundation) | CSS br (own) |\n|---|---|---|---|---|---|---|')
+    const found = rows.find((r) => r.name === 'foundation')
+    const p = Object.fromEntries(pages.map((r) => [r.name, r]))
+    console.log(
+      '| component | JS br (with runtime) | JS br (own) | ×10 on one page (own) | marginal on the full page | CSS br (with foundation) | CSS br (own) |\n|---|---|---|---|---|---|---|',
+    )
     for (const r of rows) {
       const own = r.name === 'runtime' ? '—' : r.js - base.js
-      console.log(`| ${r.name} | ${r.js} | ${own} | ${p[r.name] ? p[r.name].ten - base.js : '—'} | ${p[r.name]?.marginal ?? '—'} | ${r.css} | ${r.name === 'runtime' || r.name === 'foundation' ? '—' : r.css - found.css} |`)
+      console.log(
+        `| ${r.name} | ${r.js} | ${own} | ${p[r.name] ? p[r.name].ten - base.js : '—'} | ${p[r.name]?.marginal ?? '—'} | ${r.css} | ${r.name === 'runtime' || r.name === 'foundation' ? '—' : r.css - found.css} |`,
+      )
     }
-    console.log(`| all ${COMPONENTS.length} on one page | ${all.js} | ${all.js - base.js} | — | — | ${all.css} | ${all.css - found.css} |`)
+    console.log(
+      `| all ${COMPONENTS.length} on one page | ${all.js} | ${all.js - base.js} | — | — | ${all.css} | ${all.css - found.css} |`,
+    )
   }
 }

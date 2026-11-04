@@ -22,59 +22,199 @@ import type { ProviderAppearance } from '../PaymentCard'
 /** Where an invoice stands. */
 export type InvoiceStatus = 'paid' | 'retrying' | 'failed' | 'open'
 /** One invoice in the billing history. */
-export type Invoice = { id: string; date: string; number: string; status: InvoiceStatus; amount: number; pdf?: string }
-const STATUS: Record<InvoiceStatus, [string, Tone]> = { paid: ['Paid', 'positive'], retrying: ['Retrying', 'caution'], failed: ['Failed', 'critical'], open: ['Open', 'neutral'] }
+export type Invoice = {
+  id: string
+  date: string
+  number: string
+  status: InvoiceStatus
+  amount: number
+  pdf?: string
+}
+const STATUS: Record<InvoiceStatus, [string, Tone]> = {
+  paid: ['Paid', 'positive'],
+  retrying: ['Retrying', 'caution'],
+  failed: ['Failed', 'critical'],
+  open: ['Open', 'neutral'],
+}
 
 /** Invoices (09 §4.3): a DataTable; a failed payment pins a Banner above it with "Update payment method". */
-export function Invoices({ invoices, currency, locale, onUpdatePayment, onExport }: { invoices: readonly Invoice[] | State<readonly Invoice[]>; currency?: string | undefined; locale?: string | undefined; onUpdatePayment?: () => void; onExport?: () => void }) {
+export function Invoices({
+  invoices,
+  currency,
+  locale,
+  onUpdatePayment,
+  onExport,
+}: {
+  invoices: readonly Invoice[] | State<readonly Invoice[]>
+  currency?: string | undefined
+  locale?: string | undefined
+  onUpdatePayment?: () => void
+  onExport?: () => void
+}) {
   const list = derived(() => read(invoices))
-  const failed = derived(() => list.value.some(i => i.status === 'failed'))
+  const failed = derived(() => list.value.some((i) => i.status === 'failed'))
   const columns: Column<Invoice>[] = [
     { id: 'date', header: 'Date', rowHeader: true, card: 'title' },
     { id: 'number', header: 'Number' },
-    { id: 'status', header: 'Status', card: 'badge', cell: i => <Badge tone={STATUS[i.status][1]} dot>{STATUS[i.status][0]}</Badge> },
-    { id: 'amount', header: 'Amount', numeric: true, value: i => money(i.amount, currency, locale) },
-    { id: 'pdf', header: 'Receipt', value: () => '', cell: i => (i.pdf ? <a data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" href={i.pdf} aria-label={`PDF for ${i.number}`}><FileTextIcon /></a> : '') },
+    {
+      id: 'status',
+      header: 'Status',
+      card: 'badge',
+      cell: (i) => (
+        <Badge tone={STATUS[i.status][1]} dot>
+          {STATUS[i.status][0]}
+        </Badge>
+      ),
+    },
+    {
+      id: 'amount',
+      header: 'Amount',
+      numeric: true,
+      value: (i) => money(i.amount, currency, locale),
+    },
+    {
+      id: 'pdf',
+      header: 'Receipt',
+      value: () => '',
+      cell: (i) =>
+        i.pdf ? (
+          <a
+            data-scope="button"
+            data-emphasis="ghost"
+            data-tone="neutral"
+            data-size="sm"
+            data-icon-only=""
+            href={i.pdf}
+            aria-label={`PDF for ${i.number}`}
+          >
+            <FileTextIcon />
+          </a>
+        ) : (
+          ''
+        ),
+    },
   ]
-  const fix = derived(() => <Button size="sm" tone="critical" onClick={() => onUpdatePayment?.()}>Update payment method</Button>) // one build: Banner reads the prop twice
-  const tools = derived(() => (onExport ? <Button emphasis="ghost" tone="neutral" size="sm" onClick={onExport}>Export CSV</Button> : undefined)) // one build: Table reads the prop twice
+  const fix = derived(() => (
+    <Button size="sm" tone="critical" onClick={() => onUpdatePayment?.()}>
+      Update payment method
+    </Button>
+  )) // one build: Banner reads the prop twice
+  const tools = derived(() =>
+    onExport ? (
+      <Button emphasis="ghost" tone="neutral" size="sm" onClick={onExport}>
+        Export CSV
+      </Button>
+    ) : undefined,
+  ) // one build: Table reads the prop twice
   return (
     <div data-scope="stack">
-      {failed.value && <Banner tone="critical" live="polite" actions={fix.value}>Your last payment failed. Update your card to keep this plan.</Banner>}
-      <Table caption="Invoices" captionHidden rows={list} columns={columns} picker={false} heading={3} actions={tools.value} empty={{ title: 'No invoices yet', text: 'Your first one comes at the end of this period.' }} />
+      {failed.value && (
+        <Banner tone="critical" live="polite" actions={fix.value}>
+          Your last payment failed. Update your card to keep this plan.
+        </Banner>
+      )}
+      <Table
+        caption="Invoices"
+        captionHidden
+        rows={list}
+        columns={columns}
+        picker={false}
+        heading={3}
+        actions={tools.value}
+        empty={{
+          title: 'No invoices yet',
+          text: 'Your first one comes at the end of this period.',
+        }}
+      />
     </div>
   )
 }
 
 /** A card on file. */
-export type PaymentMethod = { id: string; brand: string; last4: string; expires: string; default?: boolean }
+export type PaymentMethod = {
+  id: string
+  brand: string
+  last4: string
+  expires: string
+  default?: boolean
+}
 
 /** Saved cards (09 §4.3): the last four only. Make default applies at once; remove gives Undo. Details live with the provider. */
-export function PaymentMethods({ methods, onAdd, onDefault, onRemove, onRestore }: { methods: readonly PaymentMethod[] | State<readonly PaymentMethod[]>; onAdd?: () => void; onDefault: (m: PaymentMethod) => void; onRemove: (m: PaymentMethod) => void; onRestore?: (m: PaymentMethod) => void }) {
+export function PaymentMethods({
+  methods,
+  onAdd,
+  onDefault,
+  onRemove,
+  onRestore,
+}: {
+  methods: readonly PaymentMethod[] | State<readonly PaymentMethod[]>
+  onAdd?: () => void
+  onDefault: (m: PaymentMethod) => void
+  onRemove: (m: PaymentMethod) => void
+  onRestore?: (m: PaymentMethod) => void
+}) {
   const list = derived(() => read(methods))
   const name = (m: PaymentMethod) => `${m.brand} ending ${m.last4}`
   return (
     <div data-scope="stack">
       <ul data-scope="list" aria-label="Payment methods">
-        {list.value.map(m => (
+        {list.value.map((m) => (
           <li key={m.id}>
             <div data-part="item">
               <span></span>
-              <span><b>{name(m)}</b><br /><span class="muted">Expires {m.expires}</span></span>
+              <span>
+                <b>{name(m)}</b>
+                <br />
+                <span class="muted">Expires {m.expires}</span>
+              </span>
               <span class="row">
-                {m.default
-                  ? <Badge tone="neutral">Default</Badge>
-                  : <>
-                    <Button emphasis="link" aria-label={`Make default: ${name(m)}`} onClick={() => { onDefault(m); toast.show({ title: 'Default payment method changed', tone: 'positive' }) }}>Make default</Button>
-                    <Button emphasis="ghost" tone="critical" size="sm" data-icon-only="" label={`Remove ${name(m)}`} onClick={() => { onRemove(m); toast.show({ title: `${name(m)} removed`, action: onRestore && { label: 'Undo', onClick: () => onRestore(m) } }) }}><TrashIcon /></Button>
-                  </>}
+                {m.default ? (
+                  <Badge tone="neutral">Default</Badge>
+                ) : (
+                  <>
+                    <Button
+                      emphasis="link"
+                      aria-label={`Make default: ${name(m)}`}
+                      onClick={() => {
+                        onDefault(m)
+                        toast.show({ title: 'Default payment method changed', tone: 'positive' })
+                      }}
+                    >
+                      Make default
+                    </Button>
+                    <Button
+                      emphasis="ghost"
+                      tone="critical"
+                      size="sm"
+                      data-icon-only=""
+                      label={`Remove ${name(m)}`}
+                      onClick={() => {
+                        onRemove(m)
+                        toast.show({
+                          title: `${name(m)} removed`,
+                          action: onRestore && { label: 'Undo', onClick: () => onRestore(m) },
+                        })
+                      }}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  </>
+                )}
               </span>
             </div>
           </li>
         ))}
       </ul>
-      {onAdd && <div><Button emphasis="frame" size="sm" onClick={onAdd}>Add method</Button></div>}
-      <span class="muted">Card details live with the payment provider; warp only shows the last four digits.</span>
+      {onAdd && (
+        <div>
+          <Button emphasis="frame" size="sm" onClick={onAdd}>
+            Add method
+          </Button>
+        </div>
+      )}
+      <span class="muted">
+        Card details live with the payment provider; warp only shows the last four digits.
+      </span>
     </div>
   )
 }
@@ -101,22 +241,56 @@ export function PayFrame({ title, src, mount, testMode, ready }: PayFrameProps) 
   const done = derived(() => !!ready || loaded.value)
   const hosted = derived(() => !!src)
   let host: HTMLDivElement | undefined
-  use((el: HTMLDivElement) => {
-    if (!mount) return { update() {}, destroy() {} }
-    const css = getComputedStyle(el)
-    const token = (t: string) => css.getPropertyValue(`--warp-${t}`).trim()
-    const made = mount(el, { fontFamily: css.fontFamily, fontSize: token('text-control-size'), color: token('color-text'), errorColor: token('color-critical-text'), borderRadius: token('radius-control'), borderColor: token('color-border-control') })
-    return { update() {}, destroy: () => made.destroy() }
-  }, () => host)
+  use(
+    (el: HTMLDivElement) => {
+      if (!mount) return { update() {}, destroy() {} }
+      const css = getComputedStyle(el)
+      const token = (t: string) => css.getPropertyValue(`--warp-${t}`).trim()
+      const made = mount(el, {
+        fontFamily: css.fontFamily,
+        fontSize: token('text-control-size'),
+        color: token('color-text'),
+        errorColor: token('color-critical-text'),
+        borderRadius: token('radius-control'),
+        borderColor: token('color-border-control'),
+      })
+      return { update() {}, destroy: () => made.destroy() }
+    },
+    () => host,
+  )
   return (
-    <div data-scope="pay-frame" data-state={done.value ? undefined : 'loading'} aria-busy={done.value ? undefined : 'true'}>
+    <div
+      data-scope="pay-frame"
+      data-state={done.value ? undefined : 'loading'}
+      aria-busy={done.value ? undefined : 'true'}
+    >
       <div data-part="head">
-        <span class="row"><LockIcon />Card fields are hosted by your payment provider</span>
+        <span class="row">
+          <LockIcon />
+          Card fields are hosted by your payment provider
+        </span>
         {testMode && <Badge tone="caution">Test mode</Badge>}
       </div>
-      <div ref={n => (host = n)} data-part="slot" role="group" aria-label={title}>
-        {!done.value && <><i data-loop=""></i><div><i data-loop=""></i><i data-loop=""></i></div></>}
-        {hosted.value && <iframe src={src} title={title} width="100%" height="148" frameborder="0" onLoad={() => (loaded.value = true)}></iframe>}
+      <div ref={(n) => (host = n)} data-part="slot" role="group" aria-label={title}>
+        {!done.value && (
+          <>
+            <i data-loop=""></i>
+            <div>
+              <i data-loop=""></i>
+              <i data-loop=""></i>
+            </div>
+          </>
+        )}
+        {hosted.value && (
+          <iframe
+            src={src}
+            title={title}
+            width="100%"
+            height="148"
+            frameborder="0"
+            onLoad={() => (loaded.value = true)}
+          ></iframe>
+        )}
       </div>
     </div>
   )

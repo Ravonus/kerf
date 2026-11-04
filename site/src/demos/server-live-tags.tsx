@@ -6,7 +6,12 @@ const READERS = ['Alice', 'Bob']
 export default function LiveTags() {
   // Stands in for the database: a mutation writes here, then pokes the tag `todos`.
   const db = state(['Pack the tent', 'Book the train'])
-  const tabs = READERS.map(name => ({ name, rows: state(db.value), up: state(true), missed: state(false) }))
+  const tabs = READERS.map((name) => ({
+    name,
+    rows: state(db.value),
+    up: state(true),
+    missed: state(false),
+  }))
   type Tab = (typeof tabs)[number]
 
   // A poke: every connected reader of the tag refetches. One that's away catches up when it's back.
@@ -30,16 +35,22 @@ export default function LiveTags() {
 
   return (
     <Card title="One live query, two browsers">
-      {tabs.map(t => (
+      {tabs.map((t) => (
         <section key={t.name}>
           <p>
             <b>{t.name}</b>{' '}
-            <Badge tone={t.up.value ? 'positive' : 'caution'}>{t.up.value ? 'live' : 'reconnecting'}</Badge>
+            <Badge tone={t.up.value ? 'positive' : 'caution'}>
+              {t.up.value ? 'live' : 'reconnecting'}
+            </Badge>
           </p>
           <ul>
-            {t.rows.value.map(row => <li key={row}>{row}</li>)}
+            {t.rows.value.map((row) => (
+              <li key={row}>{row}</li>
+            ))}
           </ul>
-          <Button size="sm" disabled={!t.up.value} onClick={() => add(t)}>Add a todo</Button>{' '}
+          <Button size="sm" disabled={!t.up.value} onClick={() => add(t)}>
+            Add a todo
+          </Button>{' '}
           <Button size="sm" emphasis="ghost" tone="neutral" onClick={() => toggle(t)}>
             {t.up.value ? 'Drop the connection' : 'Reconnect'}
           </Button>

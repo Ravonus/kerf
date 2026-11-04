@@ -8,7 +8,12 @@ import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/rich/signature.css'
 
 /** A signature, drawn or typed, with the SVG to show it. */
-export type SignatureValue = { method: 'drawn' | 'typed'; strokes?: Stroke[]; text?: string | undefined; svg: string }
+export type SignatureValue = {
+  method: 'drawn' | 'typed'
+  strokes?: Stroke[]
+  text?: string | undefined
+  svg: string
+}
 /** Props for SignaturePad. */
 export type SignaturePadProps = FieldShell & Bindable<SignatureValue | null>
 
@@ -16,17 +21,43 @@ export type SignaturePadProps = FieldShell & Bindable<SignatureValue | null>
  * SignaturePad (04 §4): a canvas redrawn from its stored points on resize and theme change, with Undo and Clear. Typing
  * the name is the mandatory alternative (WCAG 2.1.1, 2.5.1), so keyboard and switch users can sign.
  */
-export function SignaturePad({ value, defaultValue, onValueChange, label, hint, ...rest }: SignaturePadProps) {
+export function SignaturePad({
+  value,
+  defaultValue,
+  onValueChange,
+  label,
+  hint,
+  ...rest
+}: SignaturePadProps) {
   const id = uid('sig')
-  const v = bindable<SignatureValue | null>(() => value, () => defaultValue, null, () => onValueChange)
+  const v = bindable<SignatureValue | null>(
+    () => value,
+    () => defaultValue,
+    null,
+    () => onValueChange,
+  )
   const start = untrack(() => v.value)
   const strokes = state<Stroke[]>(start?.strokes ?? [])
   const typed = state(start?.text ?? '')
   const method = state<'draw' | 'type'>(start?.method === 'typed' ? 'type' : 'draw')
   const count = derived(() => strokes.value.length)
-  const has = derived(() => (method.value === 'draw' ? count.value > 0 : typed.value.trim().length > 0))
-  const name = derived(() => (method.value === 'type' ? 'Typed signature' : count.value ? `Signature, ${count.value} stroke${count.value === 1 ? '' : 's'}` : 'Signature, empty'))
-  const status = derived(() => (!has.value ? 'Empty' : method.value === 'type' ? 'Typed' : `${count.value} stroke${count.value === 1 ? '' : 's'} · drawn`))
+  const has = derived(() =>
+    method.value === 'draw' ? count.value > 0 : typed.value.trim().length > 0,
+  )
+  const name = derived(() =>
+    method.value === 'type'
+      ? 'Typed signature'
+      : count.value
+        ? `Signature, ${count.value} stroke${count.value === 1 ? '' : 's'}`
+        : 'Signature, empty',
+  )
+  const status = derived(() =>
+    !has.value
+      ? 'Empty'
+      : method.value === 'type'
+        ? 'Typed'
+        : `${count.value} stroke${count.value === 1 ? '' : 's'} · drawn`,
+  )
   let pad: HTMLDivElement | undefined
   let canvas: HTMLCanvasElement | undefined
   let box: HTMLInputElement | undefined
@@ -35,22 +66,49 @@ export function SignaturePad({ value, defaultValue, onValueChange, label, hint, 
   const draw = () => {
     const ctx = canvas?.getContext?.('2d')
     if (!ctx) return
-    const dpr = devicePixelRatio || 1, r = pad!.getBoundingClientRect()
-    if (canvas!.width !== Math.round(r.width * dpr) || canvas!.height !== Math.round(r.height * dpr)) { canvas!.width = Math.max(1, Math.round(r.width * dpr)); canvas!.height = Math.max(1, Math.round(r.height * dpr)) }
+    const dpr = devicePixelRatio || 1,
+      r = pad!.getBoundingClientRect()
+    if (
+      canvas!.width !== Math.round(r.width * dpr) ||
+      canvas!.height !== Math.round(r.height * dpr)
+    ) {
+      canvas!.width = Math.max(1, Math.round(r.width * dpr))
+      canvas!.height = Math.max(1, Math.round(r.height * dpr))
+    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.strokeStyle = ctx.fillStyle = getComputedStyle(pad!).color
     paintStrokes(ctx, strokes.value, r.width, r.height)
   }
   const emit = () => {
     if (!has.value) return v.set(null, 'programmatic')
-    if (method.value === 'draw') v.set({ method: 'drawn', strokes: strokes.value, svg: signatureSvg(strokes.value) }, 'pointer')
-    else { const text = typed.value.trim(); v.set({ method: 'typed', text, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200"><text x="24" y="130" font-size="64" font-style="italic" fill="currentColor">${text.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)}</text></svg>` }, 'keyboard') }
+    if (method.value === 'draw')
+      v.set(
+        { method: 'drawn', strokes: strokes.value, svg: signatureSvg(strokes.value) },
+        'pointer',
+      )
+    else {
+      const text = typed.value.trim()
+      v.set(
+        {
+          method: 'typed',
+          text,
+          svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200"><text x="24" y="130" font-size="64" font-style="italic" fill="currentColor">${text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)}</text></svg>`,
+        },
+        'keyboard',
+      )
+    }
   }
   const down = (e: PointerEvent) => {
     if (method.value !== 'draw') return
     canvas!.setPointerCapture?.(e.pointerId)
     const r = canvas!.getBoundingClientRect()
-    cur = [[(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, e.pointerType === 'pen' && e.pressure ? 1 + e.pressure * 3 : 2.6]]
+    cur = [
+      [
+        (e.clientX - r.left) / r.width,
+        (e.clientY - r.top) / r.height,
+        e.pointerType === 'pen' && e.pressure ? 1 + e.pressure * 3 : 2.6,
+      ],
+    ]
     strokes.value = [...strokes.value, cur]
     last = { x: e.clientX, y: e.clientY, t: e.timeStamp, w: 2.6 }
     draw()
@@ -59,30 +117,82 @@ export function SignaturePad({ value, defaultValue, onValueChange, label, hint, 
     if (!cur) return
     const r = canvas!.getBoundingClientRect()
     for (const ev of e.getCoalescedEvents?.().length ? e.getCoalescedEvents() : [e]) {
-      const speed = Math.hypot(ev.clientX - last.x, ev.clientY - last.y) / Math.max(1, ev.timeStamp - last.t)
+      const speed =
+        Math.hypot(ev.clientX - last.x, ev.clientY - last.y) / Math.max(1, ev.timeStamp - last.t)
       const w = strokeWidth(last.w, speed, ev.pointerType === 'pen' ? ev.pressure : undefined)
       cur.push([(ev.clientX - r.left) / r.width, (ev.clientY - r.top) / r.height, w])
       last = { x: ev.clientX, y: ev.clientY, t: ev.timeStamp, w }
     }
     draw()
   }
-  const up = () => { if (cur) { cur = null; strokes.value = [...strokes.value]; emit() } }
-  const undo = () => { strokes.value = strokes.value.slice(0, -1); flush(); draw(); emit() }
-  const clear = () => { if (method.value === 'draw') strokes.value = []; else typed.value = ''; flush(); draw(); emit() }
-  const pick = (m: 'draw' | 'type') => { method.value = m; flush(); if (m === 'type') box?.focus(); else draw(); emit() }
-  use((el: HTMLDivElement) => {
-    const size = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(draw)
-    size?.observe(el)
-    const theme = new MutationObserver(() => requestAnimationFrame(draw))
-    theme.observe(el.ownerDocument.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-expression'] })
-    return { update() {}, destroy() { size?.disconnect(); theme.disconnect() } }
-  }, () => pad)
+  const up = () => {
+    if (cur) {
+      cur = null
+      strokes.value = [...strokes.value]
+      emit()
+    }
+  }
+  const undo = () => {
+    strokes.value = strokes.value.slice(0, -1)
+    flush()
+    draw()
+    emit()
+  }
+  const clear = () => {
+    if (method.value === 'draw') strokes.value = []
+    else typed.value = ''
+    flush()
+    draw()
+    emit()
+  }
+  const pick = (m: 'draw' | 'type') => {
+    method.value = m
+    flush()
+    if (m === 'type') box?.focus()
+    else draw()
+    emit()
+  }
+  use(
+    (el: HTMLDivElement) => {
+      const size = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(draw)
+      size?.observe(el)
+      const theme = new MutationObserver(() => requestAnimationFrame(draw))
+      theme.observe(el.ownerDocument.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme', 'data-expression'],
+      })
+      return {
+        update() {},
+        destroy() {
+          size?.disconnect()
+          theme.disconnect()
+        },
+      }
+    },
+    () => pad,
+  )
   return (
     <div data-scope="signature" class="stack">
       <div class="row" style="justify-content:flex-end">
         <div class="seg" role="radiogroup" aria-label="Signing method">
-          <label><input type="radio" name={`${id}-m`} checked={method.value === 'draw'} onChange={() => pick('draw')} /><i>Draw</i></label>
-          <label><input type="radio" name={`${id}-m`} checked={method.value === 'type'} onChange={() => pick('type')} /><i>Type</i></label>
+          <label>
+            <input
+              type="radio"
+              name={`${id}-m`}
+              checked={method.value === 'draw'}
+              onChange={() => pick('draw')}
+            />
+            <i>Draw</i>
+          </label>
+          <label>
+            <input
+              type="radio"
+              name={`${id}-m`}
+              checked={method.value === 'type'}
+              onChange={() => pick('type')}
+            />
+            <i>Type</i>
+          </label>
         </div>
       </div>
       <Field
@@ -100,19 +210,56 @@ export function SignaturePad({ value, defaultValue, onValueChange, label, hint, 
           draw()
         }}
         control={() => (
-          <div ref={n => (pad = n)} data-part="pad">
-            <canvas ref={n => (canvas = n)} role="img" aria-label={name.value} style={method.value === 'type' ? 'visibility:hidden' : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}></canvas>
+          <div ref={(n) => (pad = n)} data-part="pad">
+            <canvas
+              ref={(n) => (canvas = n)}
+              role="img"
+              aria-label={name.value}
+              style={method.value === 'type' ? 'visibility:hidden' : undefined}
+              onPointerDown={down}
+              onPointerMove={move}
+              onPointerUp={up}
+              onPointerCancel={up}
+            ></canvas>
             <span data-part="empty"></span>
-            <span data-part="baseline" aria-hidden="true">×</span>
-            <input ref={n => (box = n)} data-part="typed" hidden={method.value !== 'type'} aria-label="Type your full name" placeholder="Type your full name" autocomplete="name" value={typed.value} onInput={e => { typed.value = (e.currentTarget).value; emit() }} />
+            <span data-part="baseline" aria-hidden="true">
+              ×
+            </span>
+            <input
+              ref={(n) => (box = n)}
+              data-part="typed"
+              hidden={method.value !== 'type'}
+              aria-label="Type your full name"
+              placeholder="Type your full name"
+              autocomplete="name"
+              value={typed.value}
+              onInput={(e) => {
+                typed.value = e.currentTarget.value
+                emit()
+              }}
+            />
           </div>
         )}
       />
       <div class="row" style="justify-content:space-between">
-        <span class="muted" aria-live="polite">{status.value}</span>
+        <span class="muted" aria-live="polite">
+          {status.value}
+        </span>
         <span class="row">
-          {method.value === 'draw' && <Button emphasis="ghost" size="sm" icon={UndoIcon} disabled={!count.value} onClick={undo}>Undo</Button>}
-          <Button emphasis="ghost" size="sm" icon={XIcon} disabled={!has.value} onClick={clear}>Clear</Button>
+          {method.value === 'draw' && (
+            <Button
+              emphasis="ghost"
+              size="sm"
+              icon={UndoIcon}
+              disabled={!count.value}
+              onClick={undo}
+            >
+              Undo
+            </Button>
+          )}
+          <Button emphasis="ghost" size="sm" icon={XIcon} disabled={!has.value} onClick={clear}>
+            Clear
+          </Button>
         </span>
       </div>
     </div>

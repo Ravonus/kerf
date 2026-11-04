@@ -7,9 +7,16 @@ import { labelChars } from '../src/floating-label'
 import { nextIndex, roving } from '../src/focus'
 import { installSweep } from '../src/sweep'
 
-afterEach(() => { installSweep().destroy(); document.body.replaceChildren(); document.documentElement.removeAttribute('data-expression') })
+afterEach(() => {
+  installSweep().destroy()
+  document.body.replaceChildren()
+  document.documentElement.removeAttribute('data-expression')
+})
 
-const html = (s: string) => { document.body.innerHTML = s; return document.body.firstElementChild as HTMLElement }
+const html = (s: string) => {
+  document.body.innerHTML = s
+  return document.body.firstElementChild as HTMLElement
+}
 
 test('sweep: pin holds a host, and confirm holds it for one pass', async () => {
   const b = html('<button data-sweep style="--warp-sweep-duration: 10ms">Go</button>')
@@ -20,7 +27,9 @@ test('sweep: pin holds a host, and confirm holds it for one pass', async () => {
   expect(b.hasAttribute('data-pin')).toBe(false)
   m.confirm(b)
   expect(b.hasAttribute('data-confirm')).toBe(true)
-  await new Promise(r => { setTimeout(r, 30) })
+  await new Promise((r) => {
+    setTimeout(r, 30)
+  })
   expect(b.hasAttribute('data-confirm')).toBe(false)
 })
 
@@ -61,7 +70,9 @@ test('roving: one tab stop, arrows move focus and report where it landed, disabl
 
 test('dials: written on <html>, auto removes the attribute, bad values throw, changes are announced', () => {
   const seen: string[] = []
-  document.addEventListener('warp:dial', (e: Event) => seen.push(`${(e as CustomEvent).detail.name}=${(e as CustomEvent).detail.value}`))
+  document.addEventListener('warp:dial', (e: Event) =>
+    seen.push(`${(e as CustomEvent).detail.name}=${(e as CustomEvent).detail.value}`),
+  )
   expect(getDial('expression')).toBe(DIALS.expression.initial)
   setDial('expression', 'vivid')
   expect(document.documentElement.dataset.expression).toBe('vivid')
@@ -90,15 +101,21 @@ test('dials: a persisted initial value is kept, so a page whose own default diff
 })
 
 test('copy: a refused clipboard write is caught and shows a failed state', async () => {
-  const writeText = vi.fn(() => Promise.reject(new DOMException('Write permission denied.', 'NotAllowedError')))
+  const writeText = vi.fn(() =>
+    Promise.reject(new DOMException('Write permission denied.', 'NotAllowedError')),
+  )
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
   const unhandled = vi.fn()
   process.on('unhandledRejection', unhandled)
-  html('<div data-scope="announcer" aria-live="polite"></div><button data-act="copy" data-copy="" data-copy-text="x"></button>')
+  html(
+    '<div data-scope="announcer" aria-live="polite"></div><button data-act="copy" data-copy="" data-copy-text="x"></button>',
+  )
   const stop = copyButtons()
   const b = document.querySelector<HTMLElement>('[data-act="copy"]')!
   b.click()
-  await new Promise(r => { setTimeout(r, 80) })
+  await new Promise((r) => {
+    setTimeout(r, 80)
+  })
   expect(writeText).toHaveBeenCalledWith('x')
   expect(b.hasAttribute('data-failed')).toBe(true)
   expect(b.hasAttribute('data-done')).toBe(false)
@@ -109,11 +126,18 @@ test('copy: a refused clipboard write is caught and shows a failed state', async
   // no clipboard at all fails the same way, and a later copy that lands clears it
   Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
   b.click()
-  await new Promise(r => { setTimeout(r, 0) })
+  await new Promise((r) => {
+    setTimeout(r, 0)
+  })
   expect(b.dataset.state).toBe('failed')
-  Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(async () => {}) }, configurable: true })
+  Object.defineProperty(navigator, 'clipboard', {
+    value: { writeText: vi.fn(async () => {}) },
+    configurable: true,
+  })
   b.click()
-  await new Promise(r => { setTimeout(r, 0) })
+  await new Promise((r) => {
+    setTimeout(r, 0)
+  })
   expect(b.hasAttribute('data-failed')).toBe(false)
   expect(b.dataset.state).toBe('copied')
   stop()
@@ -121,8 +145,15 @@ test('copy: a refused clipboard write is caught and shows a failed state', async
 
 test('copy: a refusal on a page with no announcer still says so, aloud and in words beside the button', async () => {
   vi.useFakeTimers()
-  Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(() => Promise.reject(new DOMException('denied', 'NotAllowedError'))) }, configurable: true })
-  html('<div data-scope="codeblock"><div data-part="head"><button data-act="copy" data-copy="" aria-label="Copy code"><span data-part="indicator"></span></button></div><code>x</code></div>')
+  Object.defineProperty(navigator, 'clipboard', {
+    value: {
+      writeText: vi.fn(() => Promise.reject(new DOMException('denied', 'NotAllowedError'))),
+    },
+    configurable: true,
+  })
+  html(
+    '<div data-scope="codeblock"><div data-part="head"><button data-act="copy" data-copy="" aria-label="Copy code"><span data-part="indicator"></span></button></div><code>x</code></div>',
+  )
   const stop = copyButtons()
   const b = document.querySelector<HTMLElement>('[data-act="copy"]')!
   b.click()
@@ -150,10 +181,13 @@ test('copy: a refusal on a page with no announcer still says so, aloud and in wo
 test('copy: a highlighted block keeps its newlines', async () => {
   const writeText = vi.fn(async () => {})
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
-  html('<div data-scope="codeblock"><button data-act="copy"></button><code><span data-part="line">one</span><span data-part="line">two</span></code></div>')
+  html(
+    '<div data-scope="codeblock"><button data-act="copy"></button><code><span data-part="line">one</span><span data-part="line">two</span></code></div>',
+  )
   const stop = copyButtons()
   document.querySelector<HTMLElement>('[data-act="copy"]')!.click()
-  await Promise.resolve(); await Promise.resolve()
+  await Promise.resolve()
+  await Promise.resolve()
   expect(writeText).toHaveBeenCalledWith('one\ntwo')
   stop()
 })
@@ -167,13 +201,17 @@ test('edges: the box says which sides of its sideways scroller have more, in rtl
   Object.defineProperty(s, 'scrollLeft', { configurable: true, get: () => left })
   const a = edges(s)
   expect(box.dataset.overflow).toBe('end')
-  left = 300; s.dispatchEvent(new Event('scroll'))
+  left = 300
+  s.dispatchEvent(new Event('scroll'))
   expect(box.dataset.overflow).toBe('start end')
-  left = 600; s.dispatchEvent(new Event('scroll'))
+  left = 600
+  s.dispatchEvent(new Event('scroll'))
   expect(box.dataset.overflow).toBe('start')
-  left = -600; s.dispatchEvent(new Event('scroll')) // rtl counts down from 0
+  left = -600
+  s.dispatchEvent(new Event('scroll')) // rtl counts down from 0
   expect(box.dataset.overflow).toBe('start')
-  left = 0; Object.defineProperty(s, 'scrollWidth', { configurable: true, get: () => 400 })
+  left = 0
+  Object.defineProperty(s, 'scrollWidth', { configurable: true, get: () => 400 })
   a.update()
   expect(box.dataset.overflow).toBeUndefined() // it fits: no shadow
   a.destroy()

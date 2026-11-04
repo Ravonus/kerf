@@ -1,11 +1,22 @@
 // weft-allow T005: the task spec names data-testid values as the contract for every framework
-import { calls, change, count, field, fakeApi, money, portfolio, seed, start, symbols } from './helpers'
+import {
+  calls,
+  change,
+  count,
+  field,
+  fakeApi,
+  money,
+  portfolio,
+  seed,
+  start,
+  symbols,
+} from './helpers'
 
 const stocks = seed()
 
 test('lists every stock in order with its count', async () => {
   await start()
-  expect(symbols()).toEqual(stocks.map(s => s.symbol))
+  expect(symbols()).toEqual(stocks.map((s) => s.symbol))
   expect(count()).toBe('50 stocks')
 })
 

@@ -14,13 +14,19 @@ type Cart = Record<string, number>
 function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) {
   const qty = derived(() => cart.get(product.id) ?? 0)
   const change = (by: number) =>
-    cart.set(d => { d[product.id] = Math.max(0, (d[product.id] ?? 0) + by) })
+    cart.set((d) => {
+      d[product.id] = Math.max(0, (d[product.id] ?? 0) + by)
+    })
   return (
     <p>
       {product.name} <strong>${product.price}</strong>
-      <Button size="sm" emphasis="outline" disabled={qty.value === 0} onClick={() => change(-1)}>−</Button>
+      <Button size="sm" emphasis="outline" disabled={qty.value === 0} onClick={() => change(-1)}>
+        −
+      </Button>
       <strong> {qty.value} </strong>
-      <Button size="sm" emphasis="outline" onClick={() => change(1)}>+</Button>
+      <Button size="sm" emphasis="outline" onClick={() => change(1)}>
+        +
+      </Button>
     </p>
   )
 }
@@ -30,7 +36,7 @@ export default function Shop() {
   const search = state('')
   const shown = derived(() => {
     const word = search.value.trim().toLowerCase()
-    return PRODUCTS.filter(p => p.name.toLowerCase().includes(word))
+    return PRODUCTS.filter((p) => p.name.toLowerCase().includes(word))
   })
   const items = derived(() => PRODUCTS.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0))
   const subtotal = derived(() =>
@@ -40,13 +46,21 @@ export default function Shop() {
   const total = derived(() => subtotal.value + shipping.value)
   return (
     <Card title="The shop">
-      <Input label="Search" value={search.value} onInput={e => (search.value = e.currentTarget.value)} />
-      {shown.value.map(p => (
+      <Input
+        label="Search"
+        value={search.value}
+        onInput={(e) => (search.value = e.currentTarget.value)}
+      />
+      {shown.value.map((p) => (
         <ProductRow key={p.id} product={p} cart={cart} />
       ))}
       {shown.value.length === 0 && <p>Nothing matches “{search.value}”.</p>}
-      <p>{items.value} items · subtotal ${subtotal.value} · shipping ${shipping.value}</p>
-      <p><strong>Total ${total.value}</strong></p>
+      <p>
+        {items.value} items · subtotal ${subtotal.value} · shipping ${shipping.value}
+      </p>
+      <p>
+        <strong>Total ${total.value}</strong>
+      </p>
     </Card>
   )
 }

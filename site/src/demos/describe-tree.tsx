@@ -28,7 +28,9 @@ export default function Tree() {
           )}
         </Part>
       </ul>
-      <Button onClick={() => (open.value = !open.value)}>{open.value ? 'Remove' : 'Add'} the sidebar</Button>
+      <Button onClick={() => (open.value = !open.value)}>
+        {open.value ? 'Remove' : 'Add'} the sidebar
+      </Button>
       <pre>{log.value.join('\n')}</pre>
     </Card>
   )

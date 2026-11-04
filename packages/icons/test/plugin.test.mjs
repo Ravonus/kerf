@@ -7,9 +7,14 @@ test('no tier: nothing is aliased, so the page keeps its CSS switch', () => {
   expect(icons().contribute(env).tokens.alias).toBeUndefined()
 })
 
-test.each(['quiet', 'balanced', 'vivid'])('tier %s resolves @weft-js/warp-icons to that tier', tier => {
-  expect(icons({ tier }).contribute(env).tokens.alias).toEqual({ '@weft-js/warp-icons': `@weft-js/warp-icons/${tier}` })
-})
+test.each(['quiet', 'balanced', 'vivid'])(
+  'tier %s resolves @weft-js/warp-icons to that tier',
+  (tier) => {
+    expect(icons({ tier }).contribute(env).tokens.alias).toEqual({
+      '@weft-js/warp-icons': `@weft-js/warp-icons/${tier}`,
+    })
+  },
+)
 
 test('a bad option is refused by name', () => {
   expect(() => icons({ tier: 'loud' })).toThrow(/must be one of/)

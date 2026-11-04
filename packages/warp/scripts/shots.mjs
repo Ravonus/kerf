@@ -6,17 +6,25 @@ import { join } from 'node:path'
 
 const require = createRequire(import.meta.url)
 const { chromium } = require('playwright-core')
-const args = process.argv.slice(2).filter(a => !a.startsWith('--'))
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--'))
 const out = args[0]
 const url = args[1] ?? 'http://localhost:3417/bench/'
-const only = process.argv.find(a => a.startsWith('--stops='))?.slice(8).split(',')
-const stops = only ?? ['quiet', 'balanced', 'vivid'].flatMap(e => ['light', 'dark'].map(t => `${e}/${t}`))
+const only = process.argv
+  .find((a) => a.startsWith('--stops='))
+  ?.slice(8)
+  .split(',')
+const stops =
+  only ?? ['quiet', 'balanced', 'vivid'].flatMap((e) => ['light', 'dark'].map((t) => `${e}/${t}`))
 const browser = await chromium.launch()
 for (const stop of stops) {
   const [expression, theme] = stop.split('/')
-  const page = await browser.newPage({ viewport: { width: 1320, height: 900 }, colorScheme: theme, deviceScaleFactor: 1 })
+  const page = await browser.newPage({
+    viewport: { width: 1320, height: 900 },
+    colorScheme: theme,
+    deviceScaleFactor: 1,
+  })
   const errors = []
-  page.on('pageerror', e => errors.push(String(e)))
+  page.on('pageerror', (e) => errors.push(String(e)))
   await page.goto(`${url}?expression=${expression}&theme=${theme}`)
   await page.waitForTimeout(1200)
   mkdirSync(out, { recursive: true })

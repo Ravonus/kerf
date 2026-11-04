@@ -3,13 +3,17 @@ import userEvent from '@testing-library/user-event'
 import { mount, tick } from '#adapter'
 import { Stopwatch } from './solution'
 
-beforeEach(() => { vi.useFakeTimers() })
-afterEach(() => { vi.useRealTimers() })
+beforeEach(() => {
+  vi.useFakeTimers()
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 const setup = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 const elapsed = () => screen.getByTestId('elapsed').textContent?.trim()
 const btn = (name: string) => screen.getByRole('button', { name })
-const laps = () => screen.queryAllByRole('listitem').map(li => li.textContent?.trim())
+const laps = () => screen.queryAllByRole('listitem').map((li) => li.textContent?.trim())
 
 test('starts stopped at 0.0', () => {
   mount(Stopwatch, {})

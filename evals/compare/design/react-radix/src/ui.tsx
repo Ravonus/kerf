@@ -67,7 +67,9 @@ export function RoleSelect({
     <Select.Root value={value} onValueChange={onValueChange}>
       <Select.Trigger id={id} className={`${inputCls} flex items-center justify-between text-left`}>
         <Select.Value />
-        <Select.Icon aria-hidden className="text-slate-500">▾</Select.Icon>
+        <Select.Icon aria-hidden className="text-slate-500">
+          ▾
+        </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
         <Select.Content

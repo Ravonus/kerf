@@ -15,18 +15,40 @@ export default function Signup() {
       <Form of={signUp}>
         {(form: FormApi) => (
           <Stack gap="related">
-            {form.message.value && <Alert tone="critical" title="We couldn't create your account" live>{form.message.value}</Alert>}
+            {form.message.value && (
+              <Alert tone="critical" title="We couldn't create your account" live>
+                {form.message.value}
+              </Alert>
+            )}
             <Input label="Name" autocomplete="name" required {...form.field('name')} />
             <form.Error name="name" class="form-error" />
-            <Input label="Email" type="email" autocomplete="username" required {...form.field('email')} />
+            <Input
+              label="Email"
+              type="email"
+              autocomplete="username"
+              required
+              {...form.field('email')}
+            />
             <form.Error name="email" class="form-error" />
-            <Input label="Password" type="password" name="password" autocomplete="new-password" required minlength={8} hint="At least 8 characters." />
+            <Input
+              label="Password"
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength={8}
+              hint="At least 8 characters."
+            />
             <form.Error name="password" class="form-error" />
-            <Button type="submit" full loading={form.pending.value}>Create account</Button>
+            <Button type="submit" full loading={form.pending.value}>
+              Create account
+            </Button>
           </Stack>
         )}
       </Form>
-      <Text subtle>Already have an account? <Link href="/login">Sign in</Link></Text>
+      <Text subtle>
+        Already have an account? <Link href="/login">Sign in</Link>
+      </Text>
     </AuthPage>
   )
 }

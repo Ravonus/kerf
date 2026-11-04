@@ -6,7 +6,12 @@ import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/rich/listbox.css'
 import '@weft-js/warp-core/styles/rich/popover.css'
 
-export type ComboRow = { main: string; sub?: string | undefined; meta?: string | undefined; icon?: IconRef | undefined }
+export type ComboRow = {
+  main: string
+  sub?: string | undefined
+  meta?: string | undefined
+  icon?: IconRef | undefined
+}
 
 export type ComboFieldProps<T> = FieldProps & {
   /** The app's search. Superseded calls are aborted. */
@@ -30,7 +35,19 @@ export type ComboFieldProps<T> = FieldProps & {
  * text, a second Esc clears it, ↓ on a closed combobox searches again. Requests are debounced 120ms and aborted when
  * superseded. Shared by PlaceLookupInput and AddressField's line 1.
  */
-export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChars = 2, timeout, status, hint, ...rest }: ComboFieldProps<T>) {
+export function ComboField<T>({
+  find,
+  row,
+  onPick,
+  onText,
+  onFail,
+  text,
+  minChars = 2,
+  timeout,
+  status,
+  hint,
+  ...rest
+}: ComboFieldProps<T>) {
   const id = uid('combo')
   const hits = state<T[]>([])
   const active = state(0)
@@ -41,12 +58,29 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
   let pop: HTMLDivElement | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let stop: AbortController | undefined
-  const cancel = () => { clearTimeout(timer); stop?.abort(); stop = undefined; busy.value = false }
+  const cancel = () => {
+    clearTimeout(timer)
+    stop?.abort()
+    stop = undefined
+    busy.value = false
+  }
   onCleanup(cancel)
-  use(comboPopup, () => pop, () => ({ open: open.value, anchor: (input?.closest('[data-part="control"]') ?? input) as HTMLElement, onClose: () => (open.value = false) }))
+  use(
+    comboPopup,
+    () => pop,
+    () => ({
+      open: open.value,
+      anchor: (input?.closest('[data-part="control"]') ?? input) as HTMLElement,
+      onClose: () => (open.value = false),
+    }),
+  )
   const run = (q: string) => {
     cancel()
-    if (q.trim().length < minChars) { open.value = false; hits.value = []; return }
+    if (q.trim().length < minChars) {
+      open.value = false
+      hits.value = []
+      return
+    }
     // oxlint-disable-next-line typescript/no-misused-promises -- the body catches its own failure, and a sync wrapper would add a closure to a hot field
     timer = setTimeout(async () => {
       const me = (stop = new AbortController())
@@ -59,49 +93,105 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
         active.value = 0
         open.value = r.length > 0
       } catch {
-        if (me === stop || me.signal.aborted) { open.value = false; onFail?.() }
+        if (me === stop || me.signal.aborted) {
+          open.value = false
+          onFail?.()
+        }
       } finally {
         clearTimeout(late)
         if (me === stop) busy.value = false
       }
     }, 120)
   }
-  const pick = (at: number) => { open.value = false; onPick(hits.value[at]!) }
+  const pick = (at: number) => {
+    open.value = false
+    onPick(hits.value[at]!)
+  }
   const onKey = (e: KeyboardEvent) => {
     const el = e.currentTarget as HTMLInputElement
     if (e.key === 'Escape') {
       if (e.defaultPrevented) return // an overlay took it: this popup, or the dialog around a closed one
       e.preventDefault()
-      if (el.value) { cancel(); onText?.('') }
-    } else if (e.key === 'ArrowDown' && !open.value) { e.preventDefault(); run(el.value) }
-    else if (open.value && hits.value.length) {
+      if (el.value) {
+        cancel()
+        onText?.('')
+      }
+    } else if (e.key === 'ArrowDown' && !open.value) {
+      e.preventDefault()
+      run(el.value)
+    } else if (open.value && hits.value.length) {
       const d = ({ ArrowDown: 1, ArrowUp: -1 } as Record<string, number>)[e.key]
       if (d) {
         e.preventDefault()
         active.value = (active.value + d + hits.value.length) % hits.value.length
         flush()
         pop?.querySelector('[data-active]')?.scrollIntoView?.({ block: 'nearest' })
-      } else if (e.key === 'Enter') { e.preventDefault(); pick(active.value) }
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        pick(active.value)
+      }
     }
   }
-  const shownHint = derived(() => (busy.value ? 'Searching…' : status?.() ?? hint))
+  const shownHint = derived(() => (busy.value ? 'Searching…' : (status?.() ?? hint)))
   return (
     <Field
       {...rest}
       hint={shownHint.value}
       filled={text().length > 0}
       hold={open.value}
-      control={p => (
-        <input ref={n => (input = n)} {...p.rest} data-part="input" id={p.id} placeholder=" " role="combobox" aria-autocomplete="list" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} aria-busy={busy.value ? 'true' : undefined} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} autocomplete={p.rest.autocomplete ?? 'off'} value={text()} onInput={e => { const v = (e.currentTarget).value; onText?.(v); run(v) }} onKeyDown={onKey} />
+      control={(p) => (
+        <input
+          ref={(n) => (input = n)}
+          {...p.rest}
+          data-part="input"
+          id={p.id}
+          placeholder=" "
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={open.value ? 'true' : 'false'}
+          aria-controls={id}
+          aria-activedescendant={
+            open.value && hits.value.length ? `${id}-${active.value}` : undefined
+          }
+          aria-busy={busy.value ? 'true' : undefined}
+          aria-describedby={p.describedby}
+          aria-invalid={p.invalid ? 'true' : undefined}
+          autocomplete={p.rest.autocomplete ?? 'off'}
+          value={text()}
+          onInput={(e) => {
+            const v = e.currentTarget.value
+            onText?.(v)
+            run(v)
+          }}
+          onKeyDown={onKey}
+        />
       )}
       end={
-        <div ref={n => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
+        <div
+          ref={(n) => (pop = n)}
+          data-scope="popover"
+          data-kind="combo"
+          data-sweep=""
+          popover="manual"
+          role="presentation"
+          onPointerDown={(e) => e.preventDefault()}
+        >
           <span data-part="sweep" aria-hidden="true"></span>
           <ul data-part="listbox" role="listbox" id={id} aria-label={rest.label}>
             {rows.value.map(({ at, r }) => (
-              <li key={`${at}:${r.main}`} role="option" id={`${id}-${at}`} aria-selected={at === active.value ? 'true' : 'false'} data-active={at === active.value ? '' : undefined} onClick={() => pick(at)}>
+              <li
+                key={`${at}:${r.main}`}
+                role="option"
+                id={`${id}-${at}`}
+                aria-selected={at === active.value ? 'true' : 'false'}
+                data-active={at === active.value ? '' : undefined}
+                onClick={() => pick(at)}
+              >
                 {r.icon && <Icon name={r.icon} />}
-                <span>{r.main}{r.sub && <small> {r.sub}</small>}</span>
+                <span>
+                  {r.main}
+                  {r.sub && <small> {r.sub}</small>}
+                </span>
                 {r.meta && <span data-part="opt-meta">{r.meta}</span>}
               </li>
             ))}

@@ -8,9 +8,10 @@ export function Cart(props: { items: Item[] }) {
     <div>
       <ul aria-label="Cart">
         <For each={props.items}>
-          {item => (
+          {(item) => (
             <li>
-              <span data-testid="name">{item.name}</span> <span data-testid="line">${item.price.toFixed(2)}</span>
+              <span data-testid="name">{item.name}</span>{' '}
+              <span data-testid="line">${item.price.toFixed(2)}</span>
             </li>
           )}
         </For>

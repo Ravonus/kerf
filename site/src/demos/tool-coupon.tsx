@@ -25,7 +25,7 @@ export default function Coupon() {
   return (
     <Card title="Your basket">
       <label>
-        Coupon <input value={code.value} onInput={e => (code.value = e.currentTarget.value)} />
+        Coupon <input value={code.value} onInput={(e) => (code.value = e.currentTarget.value)} />
       </label>
       <Button onClick={apply}>Apply</Button>
       {error.value && <p role="alert">{error.value}</p>}

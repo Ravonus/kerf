@@ -1,4 +1,10 @@
-import { formatSeconds, traceKey, traceRows, traceSummary, type TraceSpan } from '@weft-js/warp-core'
+import {
+  formatSeconds,
+  traceKey,
+  traceRows,
+  traceSummary,
+  type TraceSpan,
+} from '@weft-js/warp-core'
 import { derived, state, untrack } from '@weft-js/core'
 import '../styles'
 import '@weft-js/warp-core/styles/app/tokens.css'
@@ -10,11 +16,17 @@ import '@weft-js/warp-core/styles/app/trace.css'
  * expand, collapse and step in and out, Enter toggles. The line above follows the focused span's time, tokens and cost.
  * Live: pass new `spans`, and rows patch by id.
  */
-export function TraceViewer({ spans, label = 'Spans' }: { spans: TraceSpan[]; label?: string | undefined }) {
+export function TraceViewer({
+  spans,
+  label = 'Spans',
+}: {
+  spans: TraceSpan[]
+  label?: string | undefined
+}) {
   const shut = state<ReadonlySet<string>>(new Set())
   const rows = derived(() => traceRows(spans, shut.value))
   const at = state<string | undefined>(undefined)
-  const stop = derived(() => rows.value.find(r => r.id === at.value) ?? rows.value[0])
+  const stop = derived(() => rows.value.find((r) => r.id === at.value) ?? rows.value[0])
   let grid: HTMLElement | undefined
   const toggle = (id: string) => {
     const next = new Set(shut.value)
@@ -23,7 +35,7 @@ export function TraceViewer({ spans, label = 'Spans' }: { spans: TraceSpan[]; la
   }
   const onKey = (e: KeyboardEvent) => {
     const list = rows.value
-    const i = list.findIndex(r => r.id === stop.value?.id)
+    const i = list.findIndex((r) => r.id === stop.value?.id)
     if (i < 0) return
     const rtl = getComputedStyle(e.currentTarget as Element).direction === 'rtl'
     const go = traceKey(e.key, list, i, rtl)
@@ -32,7 +44,9 @@ export function TraceViewer({ spans, label = 'Spans' }: { spans: TraceSpan[]; la
     if (go.toggle) toggle(go.toggle)
     if (go.focus) {
       at.value = go.focus
-      queueMicrotask(() => grid?.querySelector<HTMLElement>(`[data-id="${untrack(() => at.value)}"]`)?.focus())
+      queueMicrotask(() =>
+        grid?.querySelector<HTMLElement>(`[data-id="${untrack(() => at.value)}"]`)?.focus(),
+      )
     }
   }
   return (
@@ -41,12 +55,39 @@ export function TraceViewer({ spans, label = 'Spans' }: { spans: TraceSpan[]; la
         <span data-part="eyebrow">{label}</span>
         <small data-numeric="">{stop.value ? traceSummary(stop.value) : ''}</small>
       </div>
-      <div ref={n => (grid = n)} data-scope="trace" role="treegrid" aria-label={label} aria-readonly="true" onKeyDown={onKey}>
-        {rows.value.map(r => (
-          <div key={r.id} data-id={r.id} role="row" aria-level={r.level} aria-posinset={r.pos} aria-setsize={r.size} aria-expanded={r.branch ? (r.open ? 'true' : 'false') : undefined} aria-label={`${r.name}, ${traceSummary(r)}`} tabindex={r.id === stop.value?.id ? '0' : '-1'} onFocus={() => (at.value = r.id)} onClick={() => r.branch && toggle(r.id)}>
-            <span role="gridcell" style={`--_d:${r.level - 1}`}>{r.branch ? (r.open ? '▾ ' : '▸ ') : ''}{r.name}</span>
-            <i role="gridcell" style={`--_x:${r.x};--_w:${r.w};--_c:var(--warp-color-data-${r.color})`}></i>
-            <em role="gridcell" data-numeric="">{formatSeconds(r.ms)}</em>
+      <div
+        ref={(n) => (grid = n)}
+        data-scope="trace"
+        role="treegrid"
+        aria-label={label}
+        aria-readonly="true"
+        onKeyDown={onKey}
+      >
+        {rows.value.map((r) => (
+          <div
+            key={r.id}
+            data-id={r.id}
+            role="row"
+            aria-level={r.level}
+            aria-posinset={r.pos}
+            aria-setsize={r.size}
+            aria-expanded={r.branch ? (r.open ? 'true' : 'false') : undefined}
+            aria-label={`${r.name}, ${traceSummary(r)}`}
+            tabindex={r.id === stop.value?.id ? '0' : '-1'}
+            onFocus={() => (at.value = r.id)}
+            onClick={() => r.branch && toggle(r.id)}
+          >
+            <span role="gridcell" style={`--_d:${r.level - 1}`}>
+              {r.branch ? (r.open ? '▾ ' : '▸ ') : ''}
+              {r.name}
+            </span>
+            <i
+              role="gridcell"
+              style={`--_x:${r.x};--_w:${r.w};--_c:var(--warp-color-data-${r.color})`}
+            ></i>
+            <em role="gridcell" data-numeric="">
+              {formatSeconds(r.ms)}
+            </em>
           </div>
         ))}
       </div>

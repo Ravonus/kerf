@@ -10,7 +10,12 @@ export const reach = query({
   tags: ['customers'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const [row] = await ctx.db.select({ customers: count(), cities: sql<number>`count(distinct ${customers.city})`.mapWith(Number) }).from(customers)
+    const [row] = await ctx.db
+      .select({
+        customers: count(),
+        cities: sql<number>`count(distinct ${customers.city})`.mapWith(Number),
+      })
+      .from(customers)
     return row!
   },
 })
@@ -19,7 +24,9 @@ export const topCities = query({
   tags: ['orders', 'customers'],
   auth: 'user',
   run: ({ ctx }) =>
-    ctx.db.select({ city: customers.city, orders: count(), revenue }).from(orders)
+    ctx.db
+      .select({ city: customers.city, orders: count(), revenue })
+      .from(orders)
       .innerJoin(customers, eq(customers.id, orders.customerId))
       .groupBy(customers.city)
       .orderBy(desc(revenue)),
@@ -29,7 +36,9 @@ export const biggestCustomers = query({
   tags: ['orders', 'customers'],
   auth: 'user',
   run: ({ ctx }) =>
-    ctx.db.select({ id: customers.id, name: customers.name, city: customers.city, revenue }).from(orders)
+    ctx.db
+      .select({ id: customers.id, name: customers.name, city: customers.city, revenue })
+      .from(orders)
       .innerJoin(customers, eq(customers.id, orders.customerId))
       .groupBy(customers.id)
       .orderBy(desc(revenue))
@@ -40,10 +49,18 @@ export const recentOrderIds = query({
   tags: ['orders'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const rows = await ctx.db.select({ id: orders.id, customerId: orders.customerId, status: orders.status, totalCents: orders.totalCents, createdAt: orders.createdAt }).from(orders)
+    const rows = await ctx.db
+      .select({
+        id: orders.id,
+        customerId: orders.customerId,
+        status: orders.status,
+        totalCents: orders.totalCents,
+        createdAt: orders.createdAt,
+      })
+      .from(orders)
       .orderBy(desc(orders.createdAt), desc(orders.id))
       .limit(50)
-    return rows.map(row => ({ ...row, createdAt: row.createdAt.toISOString() }))
+    return rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() }))
   },
 })
 
@@ -52,7 +69,10 @@ export const getCustomer = query({
   tags: ['customers'],
   auth: 'user',
   run: async ({ input, ctx }) => {
-    const [customer] = await ctx.db.select({ name: customers.name, city: customers.city }).from(customers).where(eq(customers.id, input.id))
+    const [customer] = await ctx.db
+      .select({ name: customers.name, city: customers.city })
+      .from(customers)
+      .where(eq(customers.id, input.id))
     return customer ?? null
   },
 })
@@ -63,7 +83,9 @@ export const yearReport = query({
   auth: 'user',
   run: async ({ ctx }) => {
     await ctx.db.execute(sql`select pg_sleep(2)`)
-    return ctx.db.select({ status: orders.status, orders: count(), revenue }).from(orders)
+    return ctx.db
+      .select({ status: orders.status, orders: count(), revenue })
+      .from(orders)
       .groupBy(orders.status)
       .orderBy(desc(revenue))
   },

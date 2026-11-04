@@ -8,7 +8,7 @@ export default function Ruler() {
   // The element exists once the component is in the page, so measuring starts there.
   onMount(() => {
     if (!bar) return
-    const seen = new ResizeObserver(entries => {
+    const seen = new ResizeObserver((entries) => {
       const box = entries[0]?.contentRect
       if (box) px.value = Math.round(box.width)
     })
@@ -17,8 +17,18 @@ export default function Ruler() {
   })
   return (
     <Card title="Measure an element">
-      <Slider label="Width" min={10} max={100} value={percent.value} onChange={v => (percent.value = v)} format={v => `${v}%`} />
-      <div ref={(el: HTMLElement) => (bar = el)} style={`inline-size:${percent.value}%;block-size:0.75rem;background:var(--warp-color-accent-solid)`}></div>
+      <Slider
+        label="Width"
+        min={10}
+        max={100}
+        value={percent.value}
+        onChange={(v) => (percent.value = v)}
+        format={(v) => `${v}%`}
+      />
+      <div
+        ref={(el: HTMLElement) => (bar = el)}
+        style={`inline-size:${percent.value}%;block-size:0.75rem;background:var(--warp-color-accent-solid)`}
+      ></div>
       <p>The bar is {px.value} px wide. Resize the window too.</p>
     </Card>
   )

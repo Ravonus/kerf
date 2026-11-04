@@ -15,7 +15,7 @@ export function StockList(props: Props) {
   return (
     <ul aria-label="Stocks">
       <For each={props.stocks}>
-        {s => (
+        {(s) => (
           <StockRow
             stock={s}
             live={props.live[s.id]}

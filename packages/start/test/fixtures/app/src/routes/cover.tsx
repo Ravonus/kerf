@@ -7,9 +7,13 @@ export default function Cover() {
   return (
     <main>
       <h1>Cover</h1>
-      {cover.value ? <Media src={cover.value} alt="The cover" width="480px" /> : <p class="empty">No cover</p>}
+      {cover.value ? (
+        <Media src={cover.value} alt="The cover" width="480px" />
+      ) : (
+        <p class="empty">No cover</p>
+      )}
       <Form of={setCover} enctype="multipart/form-data" class="cover-form">
-        {form => (
+        {(form) => (
           <>
             <input type="file" name="file" />
             <form.Error name="file" class="file-error" />

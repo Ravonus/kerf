@@ -5,12 +5,12 @@ import { setTimeout as delay } from 'node:timers/promises'
 export function functionRequestsIdle(page, { quietMs = 500, timeoutMs = 10_000 } = {}) {
   const pending = new Set()
   let changedAt = Date.now()
-  page.on('request', request => {
+  page.on('request', (request) => {
     if (!request.url().includes('/_weft/fn/')) return
     pending.add(request)
     changedAt = Date.now()
   })
-  const finished = request => {
+  const finished = (request) => {
     if (pending.delete(request)) changedAt = Date.now()
   }
   page.on('requestfinished', finished)

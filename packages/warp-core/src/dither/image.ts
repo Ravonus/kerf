@@ -8,7 +8,12 @@ import { tile, type Pattern } from './tiles'
 /** How a tone becomes ink: an ordered pattern or error diffusion. */
 export type Algorithm = Pattern | Diffusion
 /** A linear or radial tone ramp. */
-export interface Gradient { angle?: number; radial?: boolean; from?: number | undefined; to?: number | undefined }
+export interface Gradient {
+  angle?: number
+  radial?: boolean
+  from?: number | undefined
+  to?: number | undefined
+}
 
 /** Options for dithering an image or a gradient. */
 export interface ImageOptions {
@@ -34,46 +39,74 @@ export function tones(source: CanvasImageSource, cols: number, rows: number) {
   const g = c.getContext('2d', { willReadFrequently: true })!
   const sw = (source as HTMLImageElement).naturalWidth || (source as HTMLCanvasElement).width
   const sh = (source as HTMLImageElement).naturalHeight || (source as HTMLCanvasElement).height
-  const k = Math.max(cols / sw, rows / sh), w = sw * k, h = sh * k
+  const k = Math.max(cols / sw, rows / sh),
+    w = sw * k,
+    h = sh * k
   g.imageSmoothingQuality = 'high'
   g.drawImage(source, (cols - w) / 2, (rows - h) / 2, w, h)
-  const px = g.getImageData(0, 0, cols, rows).data, out = new Float32Array(cols * rows)
-  for (let i = 0; i < out.length; i++) out[i] = (px[i * 4]! * 0.2126 + px[i * 4 + 1]! * 0.7152 + px[i * 4 + 2]! * 0.0722) / 255
+  const px = g.getImageData(0, 0, cols, rows).data,
+    out = new Float32Array(cols * rows)
+  for (let i = 0; i < out.length; i++)
+    out[i] = (px[i * 4]! * 0.2126 + px[i * 4 + 1]! * 0.7152 + px[i * 4 + 2]! * 0.0722) / 255
   return out
 }
 
 /** The tones of a gradient over a grid of cells. */
-export function gradientTones({ angle = 115, radial, from = 0, to = 1 }: Gradient, cols: number, rows: number) {
-  const out = new Float32Array(cols * rows), a = (angle * Math.PI) / 180, dx = Math.cos(a), dy = Math.sin(a)
-  const span = Math.abs(dx) * cols + Math.abs(dy) * rows, far = Math.hypot(cols, rows) / 2
-  for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) {
-    const cx = x + 0.5 - cols / 2, cy = y + 0.5 - rows / 2
-    const s = radial ? 1 - Math.hypot(cx, cy) / far : (cx * dx + cy * dy) / span + 0.5
-    out[i] = from + (to - from) * s
-  }
+export function gradientTones(
+  { angle = 115, radial, from = 0, to = 1 }: Gradient,
+  cols: number,
+  rows: number,
+) {
+  const out = new Float32Array(cols * rows),
+    a = (angle * Math.PI) / 180,
+    dx = Math.cos(a),
+    dy = Math.sin(a)
+  const span = Math.abs(dx) * cols + Math.abs(dy) * rows,
+    far = Math.hypot(cols, rows) / 2
+  for (let y = 0, i = 0; y < rows; y++)
+    for (let x = 0; x < cols; x++, i++) {
+      const cx = x + 0.5 - cols / 2,
+        cy = y + 0.5 - rows / 2
+      const s = radial ? 1 - Math.hypot(cx, cy) / far : (cx * dx + cy * dy) / span + 0.5
+      out[i] = from + (to - from) * s
+    }
   return out
 }
 
 /** Draws an image or gradient to a canvas in dithered inks. */
-export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): Action<ImageOptions> {
+export function ditherImage(
+  canvas: HTMLCanvasElement,
+  options: ImageOptions,
+): Action<ImageOptions> {
   let o = options
   const host = canvas.parentElement ?? canvas
-  let inks: Uint32Array | undefined, base: Float32Array | undefined, cols = 0, rows = 0
+  let inks: Uint32Array | undefined,
+    base: Float32Array | undefined,
+    cols = 0,
+    rows = 0
 
   function draw({ ctx, width, height }: Frame) {
-    if (width !== cols || height !== rows) { cols = width; rows = height; base = undefined }
+    if (width !== cols || height !== rows) {
+      cols = width
+      rows = height
+      base = undefined
+    }
     inks ??= palette(host, o.ramp ?? 'accent', o.inks ?? tier(host).inks + 1)
     const src = o.source
     if (src instanceof Object && 'complete' in src && !src.complete) return
     try {
-      base ??= src ? levels(tones(src, cols, rows), o.contrast ?? 1.1) : gradientTones(o.gradient ?? {}, cols, rows)
+      base ??= src
+        ? levels(tones(src, cols, rows), o.contrast ?? 1.1)
+        : gradientTones(o.gradient ?? {}, cols, rows)
     } catch {
       return host.setAttribute('data-state', 'error') // a tainted canvas: the <img> underneath stays
     }
-    const image = new ImageData(cols, rows), out = new Uint32Array(image.data.buffer), algorithm = o.algorithm ?? (src ? 'atkinson' : 'bayer8')
+    const image = new ImageData(cols, rows),
+      out = new Uint32Array(image.data.buffer),
+      algorithm = o.algorithm ?? (src ? 'atkinson' : 'bayer8')
     // a picture's tones are luma, so it flips unless light takes the strongest ink; a gradient's are ink strength already
     const flip = src ? !(o.invert ?? isDark(host)) : !!o.invert
-    const v = flip ? base.map(x => 1 - x) : base
+    const v = flip ? base.map((x) => 1 - x) : base
     if (isDiffusion(algorithm)) {
       const picked = diffuse(v, cols, rows, inks.length, algorithm)
       for (let i = 0; i < picked.length; i++) out[i] = inks[picked[i]!]!
@@ -83,16 +116,26 @@ export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): A
     host.setAttribute('data-state', 'live')
   }
 
-  const settings = () => ({ draw, cell: o.cell ?? 3, onTheme: () => { inks = undefined } })
+  const settings = () => ({
+    draw,
+    cell: o.cell ?? 3,
+    onTheme: () => {
+      inks = undefined
+    },
+  })
   const s = surface(canvas, settings())
   const img = o.source as HTMLImageElement | undefined
-  const ready = () => { base = undefined; s.invalidate() }
+  const ready = () => {
+    base = undefined
+    s.invalidate()
+  }
   const failed = () => host.setAttribute('data-state', 'error')
   img?.addEventListener?.('load', ready)
   img?.addEventListener?.('error', failed)
   return {
     update(next) {
-      if (next.source !== o.source || next.gradient !== o.gradient || next.contrast !== o.contrast) base = undefined
+      if (next.source !== o.source || next.gradient !== o.gradient || next.contrast !== o.contrast)
+        base = undefined
       o = next
       inks = undefined
       s.update(settings())

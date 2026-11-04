@@ -11,8 +11,12 @@ export function Footer() {
         <Link href="/examples">Examples</Link>
         <Link href="/components">Components</Link>
         <Link href="/icons">Icons</Link>
-        <Link href="/llms.txt" rel="external">llms.txt</Link>
-        <Link href="https://github.com/Ravonus/weft" rel="external">GitHub</Link>
+        <Link href="/llms.txt" rel="external">
+          llms.txt
+        </Link>
+        <Link href="https://github.com/Ravonus/weft" rel="external">
+          GitHub
+        </Link>
       </nav>
     </footer>
   )

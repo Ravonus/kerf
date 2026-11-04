@@ -1,23 +1,30 @@
-import { Meta, Title } from "@solidjs/meta";
-import { createAsync, useParams, useSubmission, type RouteDefinition } from "@solidjs/router";
-import { For, Show } from "solid-js";
+import { Meta, Title } from '@solidjs/meta'
+import { createAsync, useParams, useSubmission, type RouteDefinition } from '@solidjs/router'
+import { For, Show } from 'solid-js'
 
-import { heading, primary } from "~/components/button";
-import { ProductArt, ProductCard, SoldOut, wideGrid } from "~/components/product-card";
-import { NotFound } from "~/components/states";
-import { addToCart, getProduct } from "~/lib/data";
-import { money } from "~/lib/format";
+import { heading, primary } from '~/components/button'
+import { ProductArt, ProductCard, SoldOut, wideGrid } from '~/components/product-card'
+import { NotFound } from '~/components/states'
+import { addToCart, getProduct } from '~/lib/data'
+import { money } from '~/lib/format'
 
-export const route = { preload: ({ params }) => void getProduct(params.slug!) } satisfies RouteDefinition;
+export const route = {
+  preload: ({ params }) => void getProduct(params.slug!),
+} satisfies RouteDefinition
 
-type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
+type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>
 
-const stockLine = (stock: number) => (stock === 0 ? "Back when the workshop catches up." : stock < 5 ? `Only ${stock} left.` : "In stock, ships in two days.");
+const stockLine = (stock: number) =>
+  stock === 0
+    ? 'Back when the workshop catches up.'
+    : stock < 5
+      ? `Only ${stock} left.`
+      : 'In stock, ships in two days.'
 
 export default function ProductPage() {
-  const params = useParams();
+  const params = useParams()
   // Deferred because an unknown product has to answer 404, and a status can't change once the first byte is out.
-  const product = createAsync(() => getProduct(params.slug!), { deferStream: true });
+  const product = createAsync(() => getProduct(params.slug!), { deferStream: true })
 
   return (
     <Show when={product() !== undefined}>
@@ -34,11 +41,14 @@ export default function ProductPage() {
         {(p) => <Details product={p} />}
       </Show>
     </Show>
-  );
+  )
 }
 
 function Details(props: { product: Product }) {
-  const added = useSubmission(addToCart, ([form]) => form.get("product") === String(props.product.id));
+  const added = useSubmission(
+    addToCart,
+    ([form]) => form.get('product') === String(props.product.id),
+  )
 
   return (
     <div class="mx-auto flex max-w-360 flex-col gap-8 px-8 pt-12 pb-8">
@@ -52,7 +62,9 @@ function Details(props: { product: Product }) {
           </a>
           <h1 class={`${heading} text-3xl`}>{props.product.name}</h1>
           <p class="flex items-center gap-2.5">
-            <span class="text-3xl font-semibold tabular-nums">{money(props.product.priceCents)}</span>
+            <span class="text-3xl font-semibold tabular-nums">
+              {money(props.product.priceCents)}
+            </span>
             <Show when={props.product.stock === 0}>
               <SoldOut />
             </Show>
@@ -65,7 +77,9 @@ function Details(props: { product: Product }) {
               Add to cart
             </button>
           </form>
-          <Show when={added.result?.error ?? (added.error && "That wasn't added. Please try again.")}>
+          <Show
+            when={added.result?.error ?? (added.error && "That wasn't added. Please try again.")}
+          >
             {(message) => (
               <p role="alert" class="text-sm font-medium text-danger">
                 {message()}
@@ -81,12 +95,15 @@ function Details(props: { product: Product }) {
         <h2 id="related-title" class={`${heading} text-xl`}>
           From the same aisle
         </h2>
-        <Show when={props.product.related.length} fallback={<p class="text-muted">This is the only piece in its aisle for now.</p>}>
+        <Show
+          when={props.product.related.length}
+          fallback={<p class="text-muted">This is the only piece in its aisle for now.</p>}
+        >
           <ul class={wideGrid}>
             <For each={props.product.related}>{(p) => <ProductCard product={p} />}</For>
           </ul>
         </Show>
       </section>
     </div>
-  );
+  )
 }

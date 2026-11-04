@@ -19,4 +19,23 @@ import { live } from './live.ts'
 import { schedule } from './schedule.ts'
 import type { DocGroup } from '../types.ts'
 
-export const GROUPS: DocGroup[] = [actions, forms, overlays, moving, feedback, showing, layout, data, charts, dates, fields, canvas, agent, admin, collab, flow, live, schedule]
+export const GROUPS: DocGroup[] = [
+  actions,
+  forms,
+  overlays,
+  moving,
+  feedback,
+  showing,
+  layout,
+  data,
+  charts,
+  dates,
+  fields,
+  canvas,
+  agent,
+  admin,
+  collab,
+  flow,
+  live,
+  schedule,
+]

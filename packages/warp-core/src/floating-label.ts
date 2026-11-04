@@ -13,14 +13,17 @@ import { installSweep } from './sweep'
 
 // One span per grapheme cluster (emoji, combining marks, Indic conjuncts stay whole), or per word in joining
 // scripts, where splitting letters would break the joins. Code points are the fallback without Intl.Segmenter.
-const JOINING = /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Nko}\p{Script=Mongolian}\p{Script=Adlam}\p{Script=Hanifi_Rohingya}\p{Script=Mandaic}]/u
+const JOINING =
+  /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Nko}\p{Script=Mongolian}\p{Script=Adlam}\p{Script=Hanifi_Rohingya}\p{Script=Mandaic}]/u
 
 /** The label's letters, as the anatomy renders them (one `<span data-char data-c>` each). */
 export function labelChars(text: string): string[] {
   const clean = text.replace(/ /g, ' ').replace(/\s+/g, ' ').trim()
   if (typeof Intl === 'undefined' || !Intl.Segmenter) return Array.from(clean)
-  const seg = new Intl.Segmenter(undefined, { granularity: JOINING.test(clean) ? 'word' : 'grapheme' })
-  return Array.from(seg.segment(clean), s => s.segment)
+  const seg = new Intl.Segmenter(undefined, {
+    granularity: JOINING.test(clean) ? 'word' : 'grapheme',
+  })
+  return Array.from(seg.segment(clean), (s) => s.segment)
 }
 
 const parts = (host: Element) => {
@@ -47,7 +50,11 @@ function delays(host: Element) {
   const dur = installSweep(host.ownerDocument).duration(box) || 620
   const w = box.offsetWidth
   if (!w) return
-  for (const c of label.querySelectorAll<HTMLElement>('[data-char]')) c.style.setProperty('--d', `${Math.max(0, ((label.offsetLeft + c.offsetLeft) / w) * dur).toFixed(0)}ms`)
+  for (const c of label.querySelectorAll<HTMLElement>('[data-char]'))
+    c.style.setProperty(
+      '--d',
+      `${Math.max(0, ((label.offsetLeft + c.offsetLeft) / w) * dur).toFixed(0)}ms`,
+    )
 }
 
 // a computed colour's alpha: browsers serialize it as rgba(r, g, b, a) for sRGB (transparent is rgba(0, 0, 0, 0)) and
@@ -58,7 +65,8 @@ function alpha(c: string) {
   return m ? Math.round((+(m[1] ?? m[2])! / (m[3] ? 100 : 1)) * 255) / 255 : 1
 }
 const docOffset = (el: HTMLElement): [number, number] => {
-  let x = 0, y = 0
+  let x = 0,
+    y = 0
   for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) {
     x += n.offsetLeft + (n === el ? 0 : n.clientLeft)
     y += n.offsetTop + (n === el ? 0 : n.clientTop)
@@ -73,21 +81,29 @@ function notch(host: Element) {
   let anc = host.parentElement
   for (; anc; anc = anc.parentElement) {
     const cs = getComputedStyle(anc)
-    if ((cs.backgroundImage !== 'none' && !anc.classList.contains('diagram')) || alpha(cs.backgroundColor) >= 0.99) break
+    if (
+      (cs.backgroundImage !== 'none' && !anc.classList.contains('diagram')) ||
+      alpha(cs.backgroundColor) >= 0.99
+    )
+      break
   }
   if (!anc) {
-    for (const k of ['--_notch-color', '--_notch-image', '--_notch-size', '--_notch-pos']) label.style.removeProperty(k)
+    for (const k of ['--_notch-color', '--_notch-image', '--_notch-size', '--_notch-pos'])
+      label.style.removeProperty(k)
     return
   }
   const cs = getComputedStyle(anc)
   let base = cs.backgroundColor
-  for (let n: HTMLElement | null = anc; n && alpha(base) < 0.99; n = n.parentElement) base = getComputedStyle(n).backgroundColor
+  for (let n: HTMLElement | null = anc; n && alpha(base) < 0.99; n = n.parentElement)
+    base = getComputedStyle(n).backgroundColor
   label.style.setProperty('--_notch-color', base)
   if (cs.backgroundImage === 'none' || anc.offsetWidth < 4) {
-    for (const k of ['--_notch-image', '--_notch-size', '--_notch-pos']) label.style.removeProperty(k)
+    for (const k of ['--_notch-image', '--_notch-size', '--_notch-pos'])
+      label.style.removeProperty(k)
     return
   }
-  const [ax, ay] = docOffset(anc), [bx, by] = docOffset(box)
+  const [ax, ay] = docOffset(anc),
+    [bx, by] = docOffset(box)
   const lx = bx - ax - anc.clientLeft + probe(box, 'width', 'var(--warp-pad-control)') - 4
   const ly = by - ay - anc.clientTop + probe(box, 'margin-left', 'var(--warp-label-float-offset)')
   label.style.setProperty('--_notch-image', cs.backgroundImage)
@@ -106,7 +122,7 @@ function onTheme(doc: Document, measure: () => void) {
     const fields = new Set<() => void>()
     let frame = 0
     let late: ReturnType<typeof setTimeout> | undefined
-    const all = () => fields.forEach(f => f())
+    const all = () => fields.forEach((f) => f())
     const changed = () => {
       win.cancelAnimationFrame(frame)
       clearTimeout(late)
@@ -118,12 +134,24 @@ function onTheme(doc: Document, measure: () => void) {
     if (doc.body) seen.observe(doc.body, { attributes: true, attributeFilter: WATCHED })
     const scheme = win.matchMedia?.('(prefers-color-scheme: dark)')
     scheme?.addEventListener('change', changed)
-    w = { fields, stop() { seen.disconnect(); scheme?.removeEventListener('change', changed); win.cancelAnimationFrame(frame); clearTimeout(late); watchers.delete(doc) } }
+    w = {
+      fields,
+      stop() {
+        seen.disconnect()
+        scheme?.removeEventListener('change', changed)
+        win.cancelAnimationFrame(frame)
+        clearTimeout(late)
+        watchers.delete(doc)
+      },
+    }
     watchers.set(doc, w)
   }
   const mine = w
   mine.fields.add(measure)
-  return () => { mine.fields.delete(measure); if (!mine.fields.size) mine.stop() }
+  return () => {
+    mine.fields.delete(measure)
+    if (!mine.fields.size) mine.stop()
+  }
 }
 
 /**
@@ -135,26 +163,48 @@ export function floatingLabel(host: HTMLElement) {
   const { box, label } = parts(host)
   if (!box || !label) return { update() {}, destroy() {} }
   const win = host.ownerDocument.defaultView!
-  const input = box.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('[data-part="input"]')
+  const input = box.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+    '[data-part="input"]',
+  )
   const fill = () => {
     if (!input) return
-    if (input instanceof win.HTMLSelectElement) box.toggleAttribute('data-filled', !!input.value || !!input.selectedOptions[0]?.text)
-    else if (!box.querySelector('[data-scope="tag"]')) box.toggleAttribute('data-filled', input.value.length > 0)
+    if (input instanceof win.HTMLSelectElement)
+      box.toggleAttribute('data-filled', !!input.value || !!input.selectedOptions[0]?.text)
+    else if (!box.querySelector('[data-scope="tag"]'))
+      box.toggleAttribute('data-filled', input.value.length > 0)
   }
-  const measure = () => { delays(host); notch(host) }
-  const onSize = (e: TransitionEvent) => { if (e.propertyName === 'font-size') delays(host) }
+  const measure = () => {
+    delays(host)
+    notch(host)
+  }
+  const onSize = (e: TransitionEvent) => {
+    if (e.propertyName === 'font-size') delays(host)
+  }
   label.addEventListener('transitionend', onSize)
   input?.addEventListener('input', fill)
   input?.addEventListener('change', fill)
   // only felt once the label moves, so the first read waits until after paint rather than force a layout before it
   let wait = 0
-  let frame = win.requestAnimationFrame(() => { wait = win.setTimeout(measure) })
-  const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { win.clearTimeout(wait); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) }) : null
+  let frame = win.requestAnimationFrame(() => {
+    wait = win.setTimeout(measure)
+  })
+  const resize =
+    typeof win.ResizeObserver === 'function'
+      ? new win.ResizeObserver(() => {
+          win.clearTimeout(wait)
+          win.cancelAnimationFrame(frame)
+          frame = win.requestAnimationFrame(measure)
+        })
+      : null
   resize?.observe(box)
   const unwatch = onTheme(host.ownerDocument, () => notch(host))
   return {
     /** Re-measure (after a dial change) and re-read the value (after a programmatic write). */
-    update() { fill(); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) },
+    update() {
+      fill()
+      win.cancelAnimationFrame(frame)
+      frame = win.requestAnimationFrame(measure)
+    },
     destroy() {
       win.cancelAnimationFrame(frame)
       win.clearTimeout(wait)
@@ -189,12 +239,25 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
     else if (n >= max * 0.9) counter.dataset.level = 'near'
     else delete counter.dataset.level
   }
-  const grows = input instanceof HTMLTextAreaElement && !(globalThis.CSS?.supports?.('field-sizing', 'content') ?? true)
-  const grow = () => { if (grows && input) { input.style.height = 'auto'; input.style.height = `${input.scrollHeight + 2}px` } }
-  const onInput = () => { count(); grow() }
+  const grows =
+    input instanceof HTMLTextAreaElement &&
+    !(globalThis.CSS?.supports?.('field-sizing', 'content') ?? true)
+  const grow = () => {
+    if (grows && input) {
+      input.style.height = 'auto'
+      input.style.height = `${input.scrollHeight + 2}px`
+    }
+  }
+  const onInput = () => {
+    count()
+    grow()
+  }
   // a value the binding holds stands: the native reset only knows the markup's
   // oxlint-disable-next-line typescript/no-base-to-string -- the bound value is the app's: a control takes its text
-  const reset = formReset(el, () => { if (input && held != null) input.value = String(held); onInput() })
+  const reset = formReset(el, () => {
+    if (input && held != null) input.value = String(held)
+    onInput()
+  })
   const onClick = (e: MouseEvent) => {
     if (!(e.target as Element).closest?.('[data-part="clear"]') || !input) return
     // a Select's value is its hidden select: the trigger only shows it
@@ -208,15 +271,26 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
     // a composite has no one input: a press on its label (no for) moves focus into the body (04, field shell)
     if (!input && t.closest?.('[data-part="label"]')) {
       e.preventDefault()
-      box?.querySelector<HTMLElement>('[data-part="body"] :is([tabindex="0"], button:not(:disabled), input:not(:disabled))')?.focus()
+      box
+        ?.querySelector<HTMLElement>(
+          '[data-part="body"] :is([tabindex="0"], button:not(:disabled), input:not(:disabled))',
+        )
+        ?.focus()
       return
     }
-    if (!input || t.closest?.('input, textarea, select, button, [data-scope="popup"], [data-scope="tag"], [data-part="scrub"]')) return
+    if (
+      !input ||
+      t.closest?.(
+        'input, textarea, select, button, [data-scope="popup"], [data-scope="tag"], [data-part="scrub"]',
+      )
+    )
+      return
     e.preventDefault()
     input.focus()
   }
   const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && input instanceof HTMLTextAreaElement) input.form?.requestSubmit()
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && input instanceof HTMLTextAreaElement)
+      input.form?.requestSubmit()
   }
   box?.addEventListener('click', onClick)
   box?.addEventListener('pointerdown', onDown)
@@ -225,7 +299,12 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
   count()
   grow()
   return {
-    update(next?: typeof opts) { held = next?.[0]; label.update(); count(); grow() },
+    update(next?: typeof opts) {
+      held = next?.[0]
+      label.update()
+      count()
+      grow()
+    },
     destroy() {
       label.destroy()
       reset.destroy()

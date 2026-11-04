@@ -6,7 +6,7 @@ import '../src/ui'
 
 test('a press from here or from elsewhere marks the host data-press, and letting go clears it', () => {
   const el = document.createElement('label')
-  createRoot(dispose => {
+  createRoot((dispose) => {
     const row = interaction()
     const drawn = row.attach(el)
     // Only the network writes `remote`; the test stands in for it.

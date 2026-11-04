@@ -3,14 +3,20 @@ import { createDb } from '../src/native/mysql'
 
 const seen = vi.hoisted(() => ({ got: 1 }))
 vi.mock('mysql2/promise', () => ({
-  createConnection: () => Promise.resolve({ query: () => Promise.resolve(), end: () => Promise.resolve() }),
+  createConnection: () =>
+    Promise.resolve({ query: () => Promise.resolve(), end: () => Promise.resolve() }),
   createPool: () => ({
-    getConnection: () => Promise.resolve({ query: (text: string) => Promise.resolve([text.includes('get_lock') ? [{ got: seen.got }] : []]), release() {} }),
+    getConnection: () =>
+      Promise.resolve({
+        query: (text: string) =>
+          Promise.resolve([text.includes('get_lock') ? [{ got: seen.got }] : []]),
+        release() {},
+      }),
     execute: () => Promise.resolve([[]]),
   }),
 }))
 
-test('a lock it didn\'t get stops the migrations: two instances don\'t run one file', async () => {
+test("a lock it didn't get stops the migrations: two instances don't run one file", async () => {
   const db = createDb({ url: 'mysql://x/y', migrate: false })
   seen.got = 0
   await expect(db.$weft.migrate([])).rejects.toThrow('migration lock')

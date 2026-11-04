@@ -8,9 +8,15 @@ export default function NotFound() {
     <section class="page-head">
       <Center max="narrow" gutter>
         <Stack gap="group" align="center">
-          <Heading level={1} role="display">We can't find that page</Heading>
-          <Text class="lede" subtle>The link may be old, or the address mistyped.</Text>
-          <Link href="/" class="cta">Back to the home page</Link>
+          <Heading level={1} role="display">
+            We can't find that page
+          </Heading>
+          <Text class="lede" subtle>
+            The link may be old, or the address mistyped.
+          </Text>
+          <Link href="/" class="cta">
+            Back to the home page
+          </Link>
         </Stack>
       </Center>
     </section>

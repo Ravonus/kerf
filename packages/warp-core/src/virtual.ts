@@ -18,9 +18,15 @@ export class Sizes {
     this.fill(sizes)
   }
 
-  get length() { return this.all.length }
-  get total() { return this.sum }
-  get(i: number) { return this.all[i] }
+  get length() {
+    return this.all.length
+  }
+  get total() {
+    return this.sum
+  }
+  get(i: number) {
+    return this.all[i]
+  }
 
   /** Replace everything, in O(n). */
   fill(sizes: readonly number[]) {
@@ -67,10 +73,14 @@ export class Sizes {
   at(y: number) {
     const n = this.all.length
     if (!n || y <= 0) return 0
-    let at = 0, left = y
+    let at = 0,
+      left = y
     for (let step = 1 << (31 - Math.clz32(this.tree.length - 1)); step; step >>= 1) {
       const next = at + step
-      if (next < this.tree.length && next <= n && this.tree[next]! <= left) { at = next; left -= this.tree[next]! }
+      if (next < this.tree.length && next <= n && this.tree[next]! <= left) {
+        at = next
+        left -= this.tree[next]!
+      }
     }
     return Math.min(at, n - 1)
   }
@@ -117,7 +127,7 @@ export interface Virtualizer {
   /** New keys or options. Row sizes stay with their keys; the anchor row stays where it is on screen. */
   update(options: Partial<VirtualOptions>): void
   /** Ask `size` again for `[from, to)`: more text has been prepared. Default everything. */
-  refresh(from?: number  , to?: number  ): void
+  refresh(from?: number, to?: number): void
   /** Take this element as `key`'s row: it's positioned and watched. Returns the release. */
   attach(el: HTMLElement, key: VirtualKey): () => void
   scrollTo(index: number, align?: VirtualAlign): void
@@ -141,7 +151,10 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
   const keyOf = new WeakMap<Element, VirtualKey>()
   let keys: readonly VirtualKey[] = []
   let index = new Map<VirtualKey, number>()
-  let viewport = 0, cross = 0, lead = 0, trail = 0
+  let viewport = 0,
+    cross = 0,
+    lead = 0,
+    trail = 0
   let last: number[] = []
   let renamed = false // the same indices can now hold other keys
   let stuck = o.from === 'end'
@@ -174,7 +187,8 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
   }
 
   function place(key: VirtualKey) {
-    const row = rows.get(key), i = index.get(key)
+    const row = rows.get(key),
+      i = index.get(key)
     if (!row || i === undefined) return
     const at = sizes.offset(i) + head()
     if (at !== row.at) {
@@ -192,8 +206,10 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
   function range() {
     const n = keys.length
     if (!n) return emit([])
-    const over = o.overscan ?? Math.max(room(), 200), top = position()
-    const start = sizes.at(top - over), end = Math.min(n - 1, sizes.at(top + room() + over))
+    const over = o.overscan ?? Math.max(room(), 200),
+      top = position()
+    const start = sizes.at(top - over),
+      end = Math.min(n - 1, sizes.at(top + room() + over))
     const out: number[] = []
     for (let i = start; i <= end; i++) out.push(i)
     for (const key of o.pinned?.() ?? []) {
@@ -220,7 +236,9 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
 
   /** Run a change to the sizes; the row at the top of the viewport doesn't move on screen. */
   function anchored(change: () => void) {
-    const before = position(), at = sizes.at(before), from = sizes.offset(at)
+    const before = position(),
+      at = sizes.at(before),
+      from = sizes.offset(at)
     change()
     bounds()
     for (const key of rows.keys()) place(key)
@@ -245,14 +263,21 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
     let same = 0
     while (same < shared && old[same] === next[same]) same++
     keys = next
-    if (same === old.length) { // the common case, a growing list: nothing above moves
-      for (let i = same; i < next.length; i++) { index.set(next[i]!, i); sizes.push(sizeFor(i)) }
+    if (same === old.length) {
+      // the common case, a growing list: nothing above moves
+      for (let i = same; i < next.length; i++) {
+        index.set(next[i]!, i)
+        sizes.push(sizeFor(i))
+      }
       bounds()
       if (o.stick != null && stuck) end()
       range()
       return
     }
-    const at = position(), held = sizes.at(at), key = old[held]!, within = at - sizes.offset(held)
+    const at = position(),
+      held = sizes.at(at),
+      key = old[held]!,
+      within = at - sizes.offset(held)
     renamed = true
     index = new Map(next.map((k, i) => [k, i]))
     sizes.fill(next.map((_, i) => sizeFor(i)))
@@ -267,45 +292,74 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
 
   const rowBox = (e: ResizeObserverEntry) => {
     const box = e.borderBoxSize?.[0]
-    return box ? (horizontal ? box.inlineSize : box.blockSize) : (horizontal ? (e.target as HTMLElement).offsetWidth : (e.target as HTMLElement).offsetHeight)
+    return box
+      ? horizontal
+        ? box.inlineSize
+        : box.blockSize
+      : horizontal
+        ? (e.target as HTMLElement).offsetWidth
+        : (e.target as HTMLElement).offsetHeight
   }
 
-  const watched = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => {
-    if (measure()) api.refresh() // rows report a new width before the box does: these sizes belong to it
-    const changed: [number, VirtualKey, number][] = []
-    for (const e of entries) {
-      const key = keyOf.get(e.target), i = key === undefined ? undefined : index.get(key)
-      if (key === undefined || i === undefined) continue
-      const size = rowBox(e)
-      if (!size) continue // display: none, or a detached row
-      known.set(key, { size, cross })
-      if (Math.abs(size + gap() - sizes.get(i)!) > 0.01) changed.push([i, key, size])
-    }
-    if (!changed.length) return
-    anchored(() => { for (const [i, , size] of changed) { o.onDrift?.(i, sizes.get(i)! - gap(), size); sizes.set(i, size + gap()) } })
-  }) : null
+  const watched =
+    typeof ResizeObserver === 'function'
+      ? new ResizeObserver((entries) => {
+          if (measure()) api.refresh() // rows report a new width before the box does: these sizes belong to it
+          const changed: [number, VirtualKey, number][] = []
+          for (const e of entries) {
+            const key = keyOf.get(e.target),
+              i = key === undefined ? undefined : index.get(key)
+            if (key === undefined || i === undefined) continue
+            const size = rowBox(e)
+            if (!size) continue // display: none, or a detached row
+            known.set(key, { size, cross })
+            if (Math.abs(size + gap() - sizes.get(i)!) > 0.01) changed.push([i, key, size])
+          }
+          if (!changed.length) return
+          anchored(() => {
+            for (const [i, , size] of changed) {
+              o.onDrift?.(i, sizes.get(i)! - gap(), size)
+              sizes.set(i, size + gap())
+            }
+          })
+        })
+      : null
 
   const measure = () => {
     const c = getComputedStyle(el)
     const pad = parseFloat(horizontal ? c.paddingInlineStart : c.paddingBlockStart) || 0
     trail = parseFloat(horizontal ? c.paddingInlineEnd : c.paddingBlockEnd) || 0
-    lead = o.spacer.offsetParent === el ? (horizontal ? o.spacer.offsetLeft : o.spacer.offsetTop) : pad
+    lead =
+      o.spacer.offsetParent === el ? (horizontal ? o.spacer.offsetLeft : o.spacer.offsetTop) : pad
     const box = el.getBoundingClientRect()
-    const next = { viewport: horizontal ? el.clientWidth : el.clientHeight, cross: o.spacer.getBoundingClientRect()[horizontal ? 'height' : 'width'] || (horizontal ? box.height : box.width) }
+    const next = {
+      viewport: horizontal ? el.clientWidth : el.clientHeight,
+      cross:
+        o.spacer.getBoundingClientRect()[horizontal ? 'height' : 'width'] ||
+        (horizontal ? box.height : box.width),
+    }
     const moved = next.cross !== cross
     viewport = next.viewport
     cross = next.cross
     return moved
   }
 
-  const box = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
-    if (measure()) api.refresh()
-    else { if (o.stick != null && stuck) end(); range() }
-  }) : null
+  const box =
+    typeof ResizeObserver === 'function'
+      ? new ResizeObserver(() => {
+          if (measure()) api.refresh()
+          else {
+            if (o.stick != null && stuck) end()
+            range()
+          }
+        })
+      : null
 
   const api: Virtualizer = {
     sizes,
-    get stuck() { return stuck },
+    get stuck() {
+      return stuck
+    },
     update(next) {
       const before = o.keys
       Object.assign(o, next)
@@ -313,7 +367,9 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       else range()
     },
     refresh(from = 0, to = keys.length) {
-      anchored(() => { for (let i = from; i < Math.min(to, keys.length); i++) sizes.set(i, sizeFor(i)) })
+      anchored(() => {
+        for (let i = from; i < Math.min(to, keys.length); i++) sizes.set(i, sizeFor(i))
+      })
     },
     attach(row, key) {
       keyOf.set(row, key)
@@ -326,8 +382,15 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       }
     },
     scrollTo(i, align = 'start') {
-      const at = sizes.offset(i), size = sizes.get(i) ?? 0
-      move(align === 'start' ? at : align === 'center' ? at - (room() - size) / 2 : at + size - gap() - room())
+      const at = sizes.offset(i),
+        size = sizes.get(i) ?? 0
+      move(
+        align === 'start'
+          ? at
+          : align === 'center'
+            ? at - (room() - size) / 2
+            : at + size - gap() - room(),
+      )
       onScroll()
     },
     scrollToEnd() {
@@ -335,7 +398,8 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       onScroll()
     },
     anchor() {
-      const top = position(), at = sizes.at(top)
+      const top = position(),
+        at = sizes.at(top)
       return { index: at, within: top - sizes.offset(at) }
     },
     destroy() {

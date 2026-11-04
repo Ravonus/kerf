@@ -11,13 +11,35 @@
 import type { Bus } from './bus'
 import { memoryBus } from './bus'
 import { createFeed, functionHost, type Feed, type Poke, type Probe, type Source } from './changes'
-import { currentScope, enter, fns, StartError, type Context, type Fn, type LiveMode, type StandardSchemaV1 } from './data'
+import {
+  currentScope,
+  enter,
+  fns,
+  StartError,
+  type Context,
+  type Fn,
+  type LiveMode,
+  type StandardSchemaV1,
+} from './data'
 import { sessionOf } from './mux-session'
 import type { ShareRule } from './share-server'
-import { createScope, defaultStore, guard, liveQueries, missedFeed, tagsOf, validate, type Scope, type ScopeOptions, type Store } from './exec'
+import {
+  createScope,
+  defaultStore,
+  guard,
+  liveQueries,
+  missedFeed,
+  tagsOf,
+  validate,
+  type Scope,
+  type ScopeOptions,
+  type Store,
+} from './exec'
 
 // An app's tsc may have no Node types, so `process` is named here.
-const proc = globalThis as unknown as { process?: { env: Record<string, string | undefined>; exit(code: number): void } }
+const proc = globalThis as unknown as {
+  process?: { env: Record<string, string | undefined>; exit(code: number): void }
+}
 
 /** What one connection may cost; every number has a default in `LIMITS`. */
 export interface Limits {
@@ -46,7 +68,20 @@ export interface Limits {
   shareKeys: number
 }
 
-const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000, perSecond: 20, burst: 40, shareKeys: 1000 }
+const LIMITS: Limits = {
+  subscriptions: 100,
+  connections: 10,
+  body: 64 * 1024,
+  message: 1 << 20,
+  queue: 1 << 20,
+  ring: 256,
+  window: 60_000,
+  heartbeat: 20_000,
+  session: 300_000,
+  perSecond: 20,
+  burst: 40,
+  shareKeys: 1000,
+}
 const HIGH = 64 * 1024
 const VOLATILE = '{"v":1'
 
@@ -96,7 +131,12 @@ export function realtime(options: RealtimeOptions): RealtimeOptions {
 
 /** R004. `realtime()` is a wrapper an app can leave out, so the upgrade calls this too. */
 export function checkOrigins(origins: string[] = []) {
-  if (origins.some(o => o.includes('*'))) throw new StartError('R004', '`realtime({ origins })` has a wildcard: any site could read this app\'s streams and join its channels with a visitor\'s cookies', 'list the origins, scheme and port included')
+  if (origins.some((o) => o.includes('*')))
+    throw new StartError(
+      'R004',
+      "`realtime({ origins })` has a wildcard: any site could read this app's streams and join its channels with a visitor's cookies",
+      'list the origins, scheme and port included',
+    )
 }
 
 /** Where a connection's frames go. `data` is JSON. */
@@ -109,13 +149,28 @@ export interface Sink {
 }
 
 /** What the client sends (research 30 §4): `[n, kind, id, input, cursor, buffer]`. */
-export type SubEntry = [n: number, kind: 'q' | 's', id: string, input?: unknown, cursor?: string, buffer?: number]
+export type SubEntry = [
+  n: number,
+  kind: 'q' | 's',
+  id: string,
+  input?: unknown,
+  cursor?: string,
+  buffer?: number,
+]
 /** The body of `/_weft/rt`: the cursor, subscriptions to add, and subscriptions to drop. */
-export interface Body { k?: string; c?: string | undefined; s?: SubEntry[]; d?: number[] }
+export interface Body {
+  k?: string
+  c?: string | undefined
+  s?: SubEntry[]
+  d?: number[]
+}
 
 /** A message with its cursor: `yield tracked(row.id, row)`, and a resumed `run` gets it as `lastEventId`. */
 export class Tracked<M> {
-  constructor(public id: string, public value: M) {}
+  constructor(
+    public id: string,
+    public value: M,
+  ) {}
 }
 /** A message with an id, so a stream can resume after it. */
 export const tracked = <M>(id: string, value: M) => new Tracked(id, value)
@@ -124,7 +179,12 @@ export const tracked = <M>(id: string, value: M) => new Tracked(id, value)
 const RESET = new Error('weft.reset')
 
 /** One message in a channel's ring. */
-export interface Ev { seq: number; at: number; raw: string; /** Parsed once, for every socket of a room. */ p?: unknown }
+export interface Ev {
+  seq: number
+  at: number
+  raw: string
+  /** Parsed once, for every socket of a room. */ p?: unknown
+}
 /** One hub channel: its replay ring and who's listening on this instance. */
 export interface Channel {
   name: string
@@ -212,7 +272,7 @@ export interface Hub {
   build?: string | undefined
 }
 
-const unref = <T,>(t: T) => ((t as { unref?(): void } | null | undefined)?.unref?.(), t)
+const unref = <T>(t: T) => ((t as { unref?(): void } | null | undefined)?.unref?.(), t)
 
 /** A hub on these options; `hub()` is the usual way to reach the one a server made. */
 export function createHub(options: HubOptions): Hub {
@@ -226,10 +286,16 @@ export function createHub(options: HubOptions): Hub {
   let seq = 0
   const cursorOf = (n: number) => `${epoch}:${n}`
   const source = options.changes
-  let live: LiveState = source ? { mode: 'off', via: 'none', why: 'not probed yet' } : { mode: 'app', via: 'mutations' }
+  let live: LiveState = source
+    ? { mode: 'off', via: 'none', why: 'not probed yet' }
+    : { mode: 'app', via: 'mutations' }
   let refused: StartError | undefined
-  let waking: Promise<unknown> | undefined, resting: ReturnType<typeof setTimeout> | undefined, beats: ReturnType<typeof setInterval> | undefined, beat = 0
-  const report = (code: string, severity: string, message: string) => options.onDiagnostic?.({ code, severity, message })
+  let waking: Promise<unknown> | undefined,
+    resting: ReturnType<typeof setTimeout> | undefined,
+    beats: ReturnType<typeof setInterval> | undefined,
+    beat = 0
+  const report = (code: string, severity: string, message: string) =>
+    options.onDiagnostic?.({ code, severity, message })
   const status = (down: string | undefined) => {
     if (live.down === down) return
     live = { ...live, down }
@@ -237,12 +303,15 @@ export function createHub(options: HubOptions): Hub {
     for (const c of conns.values()) c.sink.write('L', JSON.stringify(wire()))
   }
   const wire = () => ({ m: live.mode, ...(live.down && { d: 1 }) })
-  const feed: Feed | undefined = source && createFeed(source, {
-    emit: p => pokes().got(JSON.stringify(p)),
-    bump: tags => void (options.store ?? defaultStore).bump(tags),
-    status,
-  })
-  const probed: Promise<unknown> = source && !proc.process?.env.WEFT_BUILD ? settle(source) : Promise.resolve()
+  const feed: Feed | undefined =
+    source &&
+    createFeed(source, {
+      emit: (p) => pokes().got(JSON.stringify(p)),
+      bump: (tags) => void (options.store ?? defaultStore).bump(tags),
+      status,
+    })
+  const probed: Promise<unknown> =
+    source && !proc.process?.env.WEFT_BUILD ? settle(source) : Promise.resolve()
   probed.catch(() => {})
 
   /** Probes rather than assumes (`what works here`), says what it found once, and refuses to serve what was required. */
@@ -251,8 +320,18 @@ export function createHub(options: HubOptions): Hub {
     const how: Probe = src.external
       ? { mode: 'feed', via: 'listener' }
       : host
-        ? { mode: 'off', via: 'none', why: `${host} ends a process with its request, so nothing can hold a database connection`, fix: 'run `weft db listen` on an always-on host and set `listener: \'external\'`, or deploy to a server preset' }
-        : await src.probe().catch(e => ({ mode: 'off' as const, via: 'none', why: e instanceof Error ? e.message : String(e), fix: 'check the database' }))
+        ? {
+            mode: 'off',
+            via: 'none',
+            why: `${host} ends a process with its request, so nothing can hold a database connection`,
+            fix: "run `weft db listen` on an always-on host and set `listener: 'external'`, or deploy to a server preset",
+          }
+        : await src.probe().catch((e) => ({
+            mode: 'off' as const,
+            via: 'none',
+            why: e instanceof Error ? e.message : String(e),
+            fix: 'check the database',
+          }))
     live = { mode: src.external ? 'external' : how.mode, via: how.via, why: how.why, fix: how.fix }
     const line = `live: ${live.mode} (${live.via})${how.why ? `: ${how.why}` : ''}`
     if (how.mode === 'feed') console.info(`weft ${line}`)
@@ -261,7 +340,12 @@ export function createHub(options: HubOptions): Hub {
       report('R016', 'warning', `${line}. \`.live()\` shows \`degraded\``)
     }
     if (how.mode === 'feed' || !options.required?.length) return how
-    refused = new StartError('R015', `${options.required.map(n => `\`${n}\``).join(', ')} require${options.required.length > 1 ? '' : 's'} a live feed, and this server has ${how.mode === 'poll' ? 'only polling' : 'none'}${how.why ? `: ${how.why}` : ''}`, how.fix ?? 'see `weft doctor`', { status: 503 })
+    refused = new StartError(
+      'R015',
+      `${options.required.map((n) => `\`${n}\``).join(', ')} require${options.required.length > 1 ? '' : 's'} a live feed, and this server has ${how.mode === 'poll' ? 'only polling' : 'none'}${how.why ? `: ${how.why}` : ''}`,
+      how.fix ?? 'see `weft doctor`',
+      { status: 503 },
+    )
     console.error(`weft ${refused.message}`)
     if (!options.dev) proc.process?.exit(1)
     return how
@@ -276,24 +360,39 @@ export function createHub(options: HubOptions): Hub {
       if (beats) return
       beat = Date.now()
       void pokes()
-      beats = unref(setInterval(() => { if (Date.now() - beat > limits.window / 2) status('the external listener has gone quiet') }, limits.heartbeat / 2))
+      beats = unref(
+        setInterval(() => {
+          if (Date.now() - beat > limits.window / 2) status('the external listener has gone quiet')
+        }, limits.heartbeat / 2),
+      )
       return
     }
-    return (waking ??= probed.then(how => feed!.start(how as Probe)).catch(e => status(e instanceof Error ? e.message : String(e))).finally(() => { waking = undefined }))
+    return (waking ??= probed
+      .then((how) => feed!.start(how as Probe))
+      .catch((e) => status(e instanceof Error ? e.message : String(e)))
+      .finally(() => {
+        waking = undefined
+      }))
   }
 
   function rest() {
     if (!source || conns.size || resting || !feed?.running) return
-    resting = unref(setTimeout(() => {
-      resting = undefined
-      if (!conns.size) void feed.stop()
-    }, limits.window))
+    resting = unref(
+      setTimeout(() => {
+        resting = undefined
+        if (!conns.size) void feed.stop()
+      }, limits.window),
+    )
   }
 
   const trim = (ch: Channel) => {
     const old = Date.now() - limits.window
     let drop = 0
-    while (drop < ch.ring.length && (ch.ring[drop]!.at < old || ch.ring.length - drop > limits.ring)) drop++
+    while (
+      drop < ch.ring.length &&
+      (ch.ring[drop]!.at < old || ch.ring.length - drop > limits.ring)
+    )
+      drop++
     if (!drop) return
     ch.floor = ch.ring[drop - 1]!.seq
     ch.ring.splice(0, drop)
@@ -306,9 +405,16 @@ export function createHub(options: HubOptions): Hub {
       ch.idle = undefined
       return ch
     }
-    const made: Channel = { name, ring: [], floor: seq, listeners: new Set(), got: undefined as never, ready: undefined as never }
+    const made: Channel = {
+      name,
+      ring: [],
+      floor: seq,
+      listeners: new Set(),
+      got: undefined as never,
+      ready: undefined as never,
+    }
     channels.set(name, made)
-    made.got = raw => {
+    made.got = (raw) => {
       const ev = { seq: ++seq, at: Date.now(), raw }
       // Cursors and presence beats are only worth having now: in the ring they'd push out what a resume needs.
       if (!raw.startsWith(VOLATILE)) {
@@ -317,17 +423,22 @@ export function createHub(options: HubOptions): Hub {
       }
       for (const on of made.listeners) on(ev)
     }
-    made.ready = bus.subscribe(name, made.got, () => {
-      made.ring.length = 0
-      made.floor = seq
-      for (const on of made.listeners) on(null)
-    }).then(stop => {
-      made.stop = stop
-      made.floor = seq
-    }, e => {
-      channels.delete(name) // the next use tries again; whoever awaits `ready` sees the failure
-      throw e
-    })
+    made.ready = bus
+      .subscribe(name, made.got, () => {
+        made.ring.length = 0
+        made.floor = seq
+        for (const on of made.listeners) on(null)
+      })
+      .then(
+        (stop) => {
+          made.stop = stop
+          made.floor = seq
+        },
+        (e) => {
+          channels.delete(name) // the next use tries again; whoever awaits `ready` sees the failure
+          throw e
+        },
+      )
     made.ready.catch(() => {})
     return made
   }
@@ -335,10 +446,12 @@ export function createHub(options: HubOptions): Hub {
   function unlisten(ch: Channel, on: (ev: Ev | null) => void) {
     ch.listeners.delete(on)
     if (ch.listeners.size || ch.idle) return
-    ch.idle = unref(setTimeout(() => {
-      ch.stop?.()
-      channels.delete(ch.name)
-    }, limits.window))
+    ch.idle = unref(
+      setTimeout(() => {
+        ch.stop?.()
+        channels.delete(ch.name)
+      }, limits.window),
+    )
   }
 
   function replay(ch: Channel, after: string): Ev[] | undefined {
@@ -346,7 +459,7 @@ export function createHub(options: HubOptions): Hub {
     const at = Number(n)
     trim(ch)
     if (e !== epoch || !(at >= ch.floor)) return undefined
-    return ch.ring.filter(ev => ev.seq > at)
+    return ch.ring.filter((ev) => ev.seq > at)
   }
 
   /** Listens from the first realtime use on, not from boot: `weft build` loads this with no bus to reach. */
@@ -354,13 +467,14 @@ export function createHub(options: HubOptions): Hub {
     const had = channels.get('weft:poke')
     if (had) return had
     const ch = channel('weft:poke')
-    ch.listeners.add(ev => {
+    ch.listeners.add((ev) => {
       if (!ev) {
         for (const c of conns.values()) c.sink.write('R', JSON.stringify({ c: cursorOf(seq) }))
         return
       }
       const m = JSON.parse(ev.raw) as Poke & { o?: string; b?: 1 }
-      if (m.b) { // an external listener's heartbeat
+      if (m.b) {
+        // an external listener's heartbeat
         beat = Date.now()
         return status(undefined)
       }
@@ -372,18 +486,19 @@ export function createHub(options: HubOptions): Hub {
 
   /** What this connection subscribed to. `k`: a mutation's poke already reaches a subscription with one of these tags. */
   function picked(c: Conn, { t, p, k }: Poke) {
-    if (!p && !k) return t.filter(x => c.tags.has(x))
+    if (!p && !k) return t.filter((x) => c.tags.has(x))
     const out = new Set<string>()
     for (const s of c.subs.values()) {
-      if (k && s.tags.some(x => k.includes(x))) continue
-      for (const x of s.tags) if (t.includes(x) || p?.some(pre => x.startsWith(pre))) out.add(x)
+      if (k && s.tags.some((x) => k.includes(x))) continue
+      for (const x of s.tags) if (t.includes(x) || p?.some((pre) => x.startsWith(pre))) out.add(x)
     }
     return [...out]
   }
 
   function poke(c: Conn, tags: string[], at: number) {
     if (!tags.length) return
-    if (!c.held.size && c.sink.backlog() < HIGH) return c.sink.write('p', JSON.stringify({ t: tags, c: cursorOf(at) }))
+    if (!c.held.size && c.sink.backlog() < HIGH)
+      return c.sink.write('p', JSON.stringify({ t: tags, c: cursorOf(at) }))
     const p = (c.pokes ??= { t: new Set(), c: '' })
     for (const t of tags) p.t.add(t)
     p.c = cursorOf(at)
@@ -409,7 +524,7 @@ export function createHub(options: HubOptions): Hub {
 
   /** Written to the client, or held. False: the buffer overflowed, so this stream resets. */
   function deliver(c: Conn, s: Sub, raw: string): boolean {
-    if (!c.held.size && c.sink.backlog() < HIGH) return c.sink.write('m', raw), true
+    if (!c.held.size && c.sink.backlog() < HIGH) return (c.sink.write('m', raw), true)
     return hold(c, s, raw)
   }
 
@@ -444,13 +559,35 @@ export function createHub(options: HubOptions): Hub {
   }
 
   /** A subscription refused before it existed. */
-  const refuse = (c: Conn, n: number, e: StartError) => c.sink.write('e', JSON.stringify([n, { code: e.code, message: e.message }]))
+  const refuse = (c: Conn, n: number, e: StartError) =>
+    c.sink.write('e', JSON.stringify([n, { code: e.code, message: e.message }]))
 
   function fail(c: Conn, s: Sub, e: unknown) {
     remove(c, s)
-    if (e instanceof StartError) return c.sink.write('e', JSON.stringify([s.n, { code: e.code, message: e.message, ...(e.extra.issues ? { issues: e.extra.issues } : {}) }]))
-    s.options.onDiagnostic?.({ code: 'E_RT', severity: 'error', message: `${s.fn.$id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
-    c.sink.write('e', JSON.stringify([s.n, { message: s.options.dev && e instanceof Error ? e.message : 'Subscription failed.' }]))
+    if (e instanceof StartError)
+      return c.sink.write(
+        'e',
+        JSON.stringify([
+          s.n,
+          {
+            code: e.code,
+            message: e.message,
+            ...(e.extra.issues ? { issues: e.extra.issues } : {}),
+          },
+        ]),
+      )
+    s.options.onDiagnostic?.({
+      code: 'E_RT',
+      severity: 'error',
+      message: `${s.fn.$id}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
+    })
+    c.sink.write(
+      'e',
+      JSON.stringify([
+        s.n,
+        { message: s.options.dev && e instanceof Error ? e.message : 'Subscription failed.' },
+      ]),
+    )
   }
 
   function remove(c: Conn, s: Sub) {
@@ -467,10 +604,38 @@ export function createHub(options: HubOptions): Hub {
   async function add(c: Conn, entry: SubEntry, request: Request, scoped: ScopeOptions) {
     const [n, kind, id, input, cursor, buffer] = entry
     const fn = fns.get(id)
-    if (c.subs.size >= limits.subscriptions) return refuse(c, n, new StartError('R009', `this connection already has ${limits.subscriptions} subscriptions`, 'read fewer keys, or raise `limits.subscriptions`'))
-    if (!fn || fn.kind !== (kind === 'q' ? 'query' : 'stream')) return refuse(c, n, new StartError('Q009', `no ${kind === 'q' ? 'query' : 'stream'} \`${id}\` (the page is older than the server): reload`))
+    if (c.subs.size >= limits.subscriptions)
+      return refuse(
+        c,
+        n,
+        new StartError(
+          'R009',
+          `this connection already has ${limits.subscriptions} subscriptions`,
+          'read fewer keys, or raise `limits.subscriptions`',
+        ),
+      )
+    if (!fn || fn.kind !== (kind === 'q' ? 'query' : 'stream'))
+      return refuse(
+        c,
+        n,
+        new StartError(
+          'Q009',
+          `no ${kind === 'q' ? 'query' : 'stream'} \`${id}\` (the page is older than the server): reload`,
+        ),
+      )
     if (c.subs.has(n)) return
-    const s: Sub = { n, kind, fn, input, tags: [], buffer: buffer ?? 0, q: [], ac: new AbortController(), request, options: scoped }
+    const s: Sub = {
+      n,
+      kind,
+      fn,
+      input,
+      tags: [],
+      buffer: buffer ?? 0,
+      q: [],
+      ac: new AbortController(),
+      request,
+      options: scoped,
+    }
     c.subs.set(n, s) // before any await: a `d` that follows finds it
     try {
       const valid = await validate(fn, input)
@@ -483,7 +648,12 @@ export function createHub(options: HubOptions): Hub {
       if (scoped.dev) {
         liveQueries.set(fn.$id, s.tags)
         if (source) missedFeed(fn, s.tags, source.tables, scoped.onDiagnostic)
-        if (!s.tags.length) scoped.onDiagnostic?.({ code: 'W053', severity: 'error', message: `\`${fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it. Add \`tags\` to the query` })
+        if (!s.tags.length)
+          scoped.onDiagnostic?.({
+            code: 'W053',
+            severity: 'error',
+            message: `\`${fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it. Add \`tags\` to the query`,
+          })
       }
       c.sink.write('a', JSON.stringify([n, s.tags]))
     } catch (e) {
@@ -497,18 +667,33 @@ export function createHub(options: HubOptions): Hub {
     for (;;) {
       try {
         const scope = createScope(s.request, s.options)
-        const frame = s.options.dev ? Object.create(scope, { touched: { value: { read: new Set(), write: new Set() } } }) : scope
+        const frame = s.options.dev
+          ? Object.create(scope, { touched: { value: { read: new Set(), write: new Set() } } })
+          : scope
         await enter(frame, async () => {
           const ctx = await scope.ctx()
           guard(s.fn, ctx)
-          const replaced = s.options.handlers?.get(s.fn.$id) as ((input: unknown, ctx: Context, o: { signal: AbortSignal; lastEventId: unknown }) => unknown) | undefined
-          const out = replaced ? replaced(input, ctx, { signal, lastEventId: cursor }) : s.fn.def.run!({ input, ctx, signal, lastEventId: cursor })
+          const replaced = s.options.handlers?.get(s.fn.$id) as
+            | ((
+                input: unknown,
+                ctx: Context,
+                o: { signal: AbortSignal; lastEventId: unknown },
+              ) => unknown)
+            | undefined
+          const out = replaced
+            ? replaced(input, ctx, { signal, lastEventId: cursor })
+            : s.fn.def.run!({ input, ctx, signal, lastEventId: cursor })
           for await (const y of out as AsyncIterable<unknown>) {
             if (signal.aborted) return
             const [id, msg] = y instanceof Tracked ? [y.id, y.value] : [null, y]
             if (s.options.dev) await checked(s.fn, msg)
             const raw = JSON.stringify([s.n, id, msg])
-            if (raw.length > limits.message) throw new StartError('R008', `\`${s.fn.$id}\` yielded ${raw.length} bytes; a message may be ${limits.message}`, 'send less, or an id the client fetches')
+            if (raw.length > limits.message)
+              throw new StartError(
+                'R008',
+                `\`${s.fn.$id}\` yielded ${raw.length} bytes; a message may be ${limits.message}`,
+                'send less, or an id the client fetches',
+              )
             if (id !== null) cursor = id
             if (!deliver(c, s, raw)) throw RESET
           }
@@ -531,7 +716,7 @@ export function createHub(options: HubOptions): Hub {
       const s = c.subs.get(n)
       if (s) remove(c, s)
     }
-    await Promise.all((body.s ?? []).map(e => add(c, e, request, opts)))
+    await Promise.all((body.s ?? []).map((e) => add(c, e, request, opts)))
   }
 
   function replayPokes(c: Conn, after: string) {
@@ -544,12 +729,18 @@ export function createHub(options: HubOptions): Hub {
   }
 
   async function recheck(c: Conn) {
-    const authed = [...c.subs.values()].filter(s => s.fn.def.auth)
+    const authed = [...c.subs.values()].filter((s) => s.fn.def.auth)
     if (!authed.length) return
-    const ctx = await createScope(authed[0]!.request, authed[0]!.options).ctx().catch(() => ({}) as Context)
+    const ctx = await createScope(authed[0]!.request, authed[0]!.options)
+      .ctx()
+      .catch(() => ({}) as Context)
     if (!conns.has(c.k)) return
     for (const s of authed) {
-      try { guard(s.fn, ctx) } catch (e) { fail(c, s, e) }
+      try {
+        guard(s.fn, ctx)
+      } catch (e) {
+        fail(c, s, e)
+      }
     }
   }
 
@@ -557,42 +748,96 @@ export function createHub(options: HubOptions): Hub {
     const opts = scope.options
     const ctx = await scope.ctx()
     const user = (ctx as { user?: { id?: string } }).user?.id
-    if (!line && user !== undefined && [...conns.values()].filter(c => c.user === user).length >= limits.connections) {
-      throw new StartError('R009', `user \`${user}\` already has ${limits.connections} realtime connections`, 'close tabs, or raise `limits.connections`', { status: 429 })
+    if (
+      !line &&
+      user !== undefined &&
+      [...conns.values()].filter((c) => c.user === user).length >= limits.connections
+    ) {
+      throw new StartError(
+        'R009',
+        `user \`${user}\` already has ${limits.connections} realtime connections`,
+        'close tabs, or raise `limits.connections`',
+        { status: 429 },
+      )
     }
-    const c: Conn = { k: crypto.randomUUID(), sink, user, subs: new Map(), tags: new Map(), held: new Set(), bytes: 0, timers: [] }
+    const c: Conn = {
+      k: crypto.randomUUID(),
+      sink,
+      user,
+      subs: new Map(),
+      tags: new Map(),
+      held: new Set(),
+      bytes: 0,
+      timers: [],
+    }
     conns.set(c.k, c)
-    await pokes().ready.catch(e => {
+    await pokes().ready.catch((e) => {
       conns.delete(c.k)
       throw e
     })
     await want() // before `h`: a client that reads next must not miss a change
-    sink.write('h', JSON.stringify({ k: c.k, e: epoch, b: options.build ?? '', c: cursorOf(seq), ...(source && { l: wire() }) }))
+    sink.write(
+      'h',
+      JSON.stringify({
+        k: c.k,
+        e: epoch,
+        b: options.build ?? '',
+        c: cursorOf(seq),
+        ...(source && { l: wire() }),
+      }),
+    )
     await change(c, request, opts, body)
     if (body.c) replayPokes(c, body.c)
     let ticks = 0
     const every = Math.max(1, Math.round(limits.session / limits.heartbeat))
-    c.timers.push(unref(setInterval(() => {
-      sink.ping?.()
-      if (++ticks % every === 0) void recheck(c)
-    }, limits.heartbeat)))
-    if (options.maxDuration) c.timers.push(unref(setTimeout(() => bye(c, 0), Math.max(1, options.maxDuration - 10) * 1000)))
+    c.timers.push(
+      unref(
+        setInterval(() => {
+          sink.ping?.()
+          if (++ticks % every === 0) void recheck(c)
+        }, limits.heartbeat),
+      ),
+    )
+    if (options.maxDuration)
+      c.timers.push(
+        unref(setTimeout(() => bye(c, 0), Math.max(1, options.maxDuration - 10) * 1000)),
+      )
     return c
   }
 
   return {
-    bus, limits, cursorOf, channel, replay, unlisten, connect, change, drain, close, closing, epoch, dev: options.dev, maxDuration: options.maxDuration, build: options.build, share: options.share,
+    bus,
+    limits,
+    cursorOf,
+    channel,
+    replay,
+    unlisten,
+    connect,
+    change,
+    drain,
+    close,
+    closing,
+    epoch,
+    dev: options.dev,
+    maxDuration: options.maxDuration,
+    build: options.build,
+    share: options.share,
     position: () => cursorOf(seq),
     watch(fn) {
       watchers.add(fn)
       void pokes()
     },
-    find: k => conns.get(k),
+    find: (k) => conns.get(k),
     connections: () => [...conns.values()],
     cursor: () => (pokes().stop ? cursorOf(seq) : undefined),
     ready: () => {
       const on = Promise.resolve(want()).then(rest)
-      return Promise.race([Promise.all([pokes().ready.catch(() => {}), on]), new Promise(ok => { unref(setTimeout(ok, 250)) })])
+      return Promise.race([
+        Promise.all([pokes().ready.catch(() => {}), on]),
+        new Promise((ok) => {
+          unref(setTimeout(ok, 250))
+        }),
+      ])
     },
     async poke(tags, origin) {
       if (!tags.length) return
@@ -611,11 +856,17 @@ export function createHub(options: HubOptions): Hub {
       }
       return hit
     },
-    stats: () => ({ connections: conns.size, subscriptions: [...conns.values()].reduce((n, c) => n + c.subs.size, 0), channels: channels.size }),
+    stats: () => ({
+      connections: conns.size,
+      subscriptions: [...conns.values()].reduce((n, c) => n + c.subs.size, 0),
+      channels: channels.size,
+    }),
     live: () => live,
     probed,
     required: !!options.required?.length,
-    get refused() { return refused },
+    get refused() {
+      return refused
+    },
     async shutdown() {
       clearTimeout(resting)
       clearInterval(beats)
@@ -634,7 +885,13 @@ export function createHub(options: HubOptions): Hub {
 
 async function checked(fn: Fn, msg: unknown) {
   const r = await fn.def.message?.['~standard'].validate(msg)
-  if (r?.issues) throw new StartError('C002', `\`${fn.$id}\` yielded a message its \`message\` schema rejects: ${r.issues.map(i => `${i.path?.map(p => (typeof p === 'object' ? p.key : p)).join('.') ?? ''}: ${i.message}`).join('; ')}`, 'fix `run`, or the schema', { status: 500 })
+  if (r?.issues)
+    throw new StartError(
+      'C002',
+      `\`${fn.$id}\` yielded a message its \`message\` schema rejects: ${r.issues.map((i) => `${i.path?.map((p) => (typeof p === 'object' ? p.key : p)).join('.') ?? ''}: ${i.message}`).join('; ')}`,
+      'fix `run`, or the schema',
+      { status: 500 },
+    )
 }
 
 let current: Hub | undefined
@@ -653,8 +910,14 @@ export const realtimeStats = () => hub().stats()
  * database back, and it recovers by itself.
  */
 export function liveHealth(): LiveState & { ok: boolean; required: boolean } {
-  const h = hub(), s = h.live(), required = h.required
-  return { ...s, required, ok: !required || ((s.mode === 'feed' || s.mode === 'external') && !s.down) }
+  const h = hub(),
+    s = h.live(),
+    required = h.required
+  return {
+    ...s,
+    required,
+    ok: !required || ((s.mode === 'feed' || s.mode === 'external') && !s.down),
+  }
 }
 /** @weft-js/core/test, after each test. */
 export const resetHub = () => {
@@ -673,7 +936,10 @@ export interface Topic<K, M> {
    * The messages of `keys`. Listens from this call, so a read that follows can't miss one (R006's gap): call it before
    * reading a backlog. With `after`, replays what the ring still has; outside the window the stream resets.
    */
-  subscribe(keys: K | K[], options?: { signal?: AbortSignal | undefined; after?: string | undefined }): AsyncGenerator<Tracked<M>, void, void>
+  subscribe(
+    keys: K | K[],
+    options?: { signal?: AbortSignal | undefined; after?: string | undefined },
+  ): AsyncGenerator<Tracked<M>, void, void>
   readonly name: string
   readonly message?: StandardSchemaV1<unknown, M>
 }
@@ -681,7 +947,10 @@ export interface Topic<K, M> {
 type Out<S> = S extends StandardSchemaV1<unknown, infer O> ? O : never
 
 /** A typed server channel: mutations, jobs and webhooks publish, streams read. */
-export function topic<K extends StandardSchemaV1<unknown, string | number>, M extends StandardSchemaV1>(name: string, def: { key?: K; message: M }): Topic<Out<K>, Out<M>> {
+export function topic<
+  K extends StandardSchemaV1<unknown, string | number>,
+  M extends StandardSchemaV1,
+>(name: string, def: { key?: K; message: M }): Topic<Out<K>, Out<M>> {
   const path = (key: unknown) => `weft:t:${name}:${String(key)}`
   return {
     name,
@@ -689,13 +958,23 @@ export function topic<K extends StandardSchemaV1<unknown, string | number>, M ex
     async publish(key, message) {
       const raw = JSON.stringify(message)
       const h = hub()
-      if (raw.length > h.limits.message) throw new StartError('R008', `a \`${name}\` message is ${raw.length} bytes; a message may be ${h.limits.message}`, 'publish less, or an id subscribers fetch')
+      if (raw.length > h.limits.message)
+        throw new StartError(
+          'R008',
+          `a \`${name}\` message is ${raw.length} bytes; a message may be ${h.limits.message}`,
+          'publish less, or an id subscribers fetch',
+        )
       await h.bus.publish(path(key), raw)
     },
     subscribe(keys, { signal, after } = {}) {
       const h = hub()
-      if (currentScope()?.touched?.read.size) currentScope()!.options.onDiagnostic?.({ code: 'R006', severity: 'warning', message: `a stream read ${[...currentScope()!.touched!.read].join(', ')} before \`${name}.subscribe()\`: anything published in between is lost. Call \`subscribe\` first, or pass \`after\`` })
-      const chans = (Array.isArray(keys) ? keys : [keys]).map(k => h.channel(path(k)))
+      if (currentScope()?.touched?.read.size)
+        currentScope()!.options.onDiagnostic?.({
+          code: 'R006',
+          severity: 'warning',
+          message: `a stream read ${[...currentScope()!.touched!.read].join(', ')} before \`${name}.subscribe()\`: anything published in between is lost. Call \`subscribe\` first, or pass \`after\``,
+        })
+      const chans = (Array.isArray(keys) ? keys : [keys]).map((k) => h.channel(path(k)))
       const q: Ev[] = []
       let wake: (() => void) | undefined
       let lost = false
@@ -706,14 +985,16 @@ export function topic<K extends StandardSchemaV1<unknown, string | number>, M ex
         wake?.()
       }
       for (const ch of chans) ch.listeners.add(on) // before anything is read: that's the rule
-      const stop = () => { for (const ch of chans) h.unlisten(ch, on) }
+      const stop = () => {
+        for (const ch of chans) h.unlisten(ch, on)
+      }
       const abort = () => wake?.()
       signal?.addEventListener('abort', abort)
       return (async function* () {
         try {
-          await Promise.all(chans.map(c => c.ready))
+          await Promise.all(chans.map((c) => c.ready))
           if (after) {
-            const seen = new Set(q.map(e => e.seq))
+            const seen = new Set(q.map((e) => e.seq))
             for (const ch of chans) {
               const back = h.replay(ch, after)
               if (!back) throw RESET
@@ -726,7 +1007,10 @@ export function topic<K extends StandardSchemaV1<unknown, string | number>, M ex
             if (lost) throw RESET
             const ev = q.shift()
             if (ev) yield tracked(h.cursorOf(ev.seq), JSON.parse(ev.raw))
-            else await new Promise<void>(ok => { wake = ok })
+            else
+              await new Promise<void>((ok) => {
+                wake = ok
+              })
           }
         } finally {
           signal?.removeEventListener('abort', abort)
@@ -743,41 +1027,89 @@ const enc = new TextEncoder()
 /** Whether a request body has the shape of `Body`. */
 export const validBody = (input: unknown): input is Body => {
   const b = input as Partial<Record<keyof Body, unknown>> | null | undefined
-  return !!b && typeof b === 'object' && !Array.isArray(b) &&
-  (b.k === undefined || typeof b.k === 'string') && (b.c === undefined || typeof b.c === 'string') &&
-  (b.d === undefined || (Array.isArray(b.d) && b.d.every((n: unknown) => typeof n === 'number'))) &&
-  (b.s === undefined || (Array.isArray(b.s) && b.s.every((e: unknown) => Array.isArray(e) && typeof e[0] === 'number' && (e[1] === 'q' || e[1] === 's') && typeof e[2] === 'string')))
+  return (
+    !!b &&
+    typeof b === 'object' &&
+    !Array.isArray(b) &&
+    (b.k === undefined || typeof b.k === 'string') &&
+    (b.c === undefined || typeof b.c === 'string') &&
+    (b.d === undefined ||
+      (Array.isArray(b.d) && b.d.every((n: unknown) => typeof n === 'number'))) &&
+    (b.s === undefined ||
+      (Array.isArray(b.s) &&
+        b.s.every(
+          (e: unknown) =>
+            Array.isArray(e) &&
+            typeof e[0] === 'number' &&
+            (e[1] === 'q' || e[1] === 's') &&
+            typeof e[2] === 'string',
+        )))
+  )
 }
 
 /** `/_weft/rt` (research 30 §4): opens a connection, or changes one. Same proof as a mutation, plus `origins`. */
-export async function rtRoute(request: Request, scope: Scope, origins: string[] = []): Promise<Response> {
+export async function rtRoute(
+  request: Request,
+  scope: Scope,
+  origins: string[] = [],
+): Promise<Response> {
   const refuse = (code: string, message: string, status: number) => {
     scope.options.onDiagnostic?.({ code, severity: 'error', message })
-    return Response.json({ e: { code, message } }, { status, headers: { 'cache-control': 'no-store' } })
+    return Response.json(
+      { e: { code, message } },
+      { status, headers: { 'cache-control': 'no-store' } },
+    )
   }
   if (request.method !== 'POST') return refuse('Q010', 'Q010: `/_weft/rt` needs POST', 405)
   const url = new URL(request.url)
   const origin = request.headers.get('origin')
   const site = request.headers.get('sec-fetch-site')
   const allowed = origin && origins.includes(origin)
-  if (!allowed && ((origin && origin !== url.origin) || (site && site !== 'same-origin' && site !== 'none'))) return refuse('R010', `R010: origin \`${origin ?? site}\` may not open a realtime connection: list it in \`realtime({ origins })\``, 403)
-  if (request.headers.get('x-weft') !== '1' || !request.headers.get('content-type')?.startsWith('application/json')) return refuse('Q010', 'Q010: `/_weft/rt` without the CSRF proof (POST + JSON + `x-weft: 1`)', 403)
+  if (
+    !allowed &&
+    ((origin && origin !== url.origin) || (site && site !== 'same-origin' && site !== 'none'))
+  )
+    return refuse(
+      'R010',
+      `R010: origin \`${origin ?? site}\` may not open a realtime connection: list it in \`realtime({ origins })\``,
+      403,
+    )
+  if (
+    request.headers.get('x-weft') !== '1' ||
+    !request.headers.get('content-type')?.startsWith('application/json')
+  )
+    return refuse(
+      'Q010',
+      'Q010: `/_weft/rt` without the CSRF proof (POST + JSON + `x-weft: 1`)',
+      403,
+    )
   const h = hub()
   const raw = await request.text()
-  if (raw.length > h.limits.body) return refuse('R008', `R008: a realtime request of ${raw.length} bytes; the limit is ${h.limits.body}`, 413)
+  if (raw.length > h.limits.body)
+    return refuse(
+      'R008',
+      `R008: a realtime request of ${raw.length} bytes; the limit is ${h.limits.body}`,
+      413,
+    )
   let body: Body
   try {
     body = JSON.parse(raw)
   } catch {
-    return refuse('Q002', 'Q002: `/_weft/rt` got a body that isn\'t JSON', 400)
+    return refuse('Q002', "Q002: `/_weft/rt` got a body that isn't JSON", 400)
   }
   // A tab that didn't dial the shared socket asks who it is now (link.ts).
-  if ((body as { w?: 1 })?.w === 1) return Response.json({ u: await sessionOf(await scope.ctx()) }, { headers: { 'cache-control': 'no-store' } })
-  if (!validBody(body)) return refuse('Q002', 'Q002: `/_weft/rt` got a body of the wrong shape', 400)
+  if ((body as { w?: 1 })?.w === 1)
+    return Response.json(
+      { u: await sessionOf(await scope.ctx()) },
+      { headers: { 'cache-control': 'no-store' } },
+    )
+  if (!validBody(body))
+    return refuse('Q002', 'Q002: `/_weft/rt` got a body of the wrong shape', 400)
   if (body.k) {
     const c = h.find(body.k)
     const user = c && ((await scope.ctx()) as { user?: { id?: string } }).user?.id
-    if (!c || c.user !== user) return refuse('Q009', 'Q009: no such realtime connection (reconnect with the whole set)', 404)
+    if (!c || c.user !== user)
+      return refuse('Q009', 'Q009: no such realtime connection (reconnect with the whole set)', 404)
     await h.change(c, request, scope.options, body)
     return new Response(null, { status: 204 })
   }
@@ -793,11 +1125,15 @@ export async function rtRoute(request: Request, scope: Scope, origins: string[] 
     write: (event, data) => push(`event: ${event}\ndata: ${data}\n\n`),
     ping: () => push(': ping\n\n'),
     backlog: () => queued,
-    close: () => { try { controller.close() } catch {} },
+    close: () => {
+      try {
+        controller.close()
+      } catch {}
+    },
   }
   const out = new ReadableStream<Uint8Array>(
     {
-      start: c => void (controller = c),
+      start: (c) => void (controller = c),
       // The reader took what was queued: the strategy's hwm of 0 means every pull is an empty queue.
       pull() {
         queued = 0
@@ -818,5 +1154,12 @@ export async function rtRoute(request: Request, scope: Scope, origins: string[] 
     throw e
   }
   if (closed) h.close(conn)
-  return new Response(out, { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store', 'x-accel-buffering': 'no', connection: 'keep-alive' } })
+  return new Response(out, {
+    headers: {
+      'content-type': 'text/event-stream',
+      'cache-control': 'no-store',
+      'x-accel-buffering': 'no',
+      connection: 'keep-alive',
+    },
+  })
 }

@@ -1,0 +1,20 @@
+# The checker supplies tracked source files and excludes these paths itself.
+evals/results/
+site/content/
+packages/cli/docs/
+packages/warp/test/a11y/gallery/assets/
+**/vendor/
+**/gen/
+**/generated/
+*.gen.*
+*.generated.*
+*.min.*
+**/dist/
+**/build/
+**/archive/
+**/archives/
+**/__snapshots__/
+**/snapshots/
+packages/weft/node/css.mjs
+packages/weft/node/matrix.mjs
+packages/weft/node/vocab.mjs

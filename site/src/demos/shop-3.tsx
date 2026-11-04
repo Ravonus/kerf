@@ -8,15 +8,11 @@ const products = [
 ]
 
 export default function Shop() {
-  const total = derived(() =>
-    products.reduce((sum, p) => sum + p.count.value * p.price, 0),
-  )
-  const shipping = derived(() =>
-    total.value === 0 || total.value >= 36 ? 0 : 4,
-  )
+  const total = derived(() => products.reduce((sum, p) => sum + p.count.value * p.price, 0))
+  const shipping = derived(() => (total.value === 0 || total.value >= 36 ? 0 : 4))
   return (
     <Card title="Shop">
-      {products.map(p => (
+      {products.map((p) => (
         <p key={p.id}>
           <Button size="sm" onClick={() => p.count.value++}>
             {p.name}, ${p.price}
@@ -25,7 +21,9 @@ export default function Shop() {
         </p>
       ))}
       <p>Shipping ${shipping.value}</p>
-      <p><strong>Total ${total.value + shipping.value}</strong></p>
+      <p>
+        <strong>Total ${total.value + shipping.value}</strong>
+      </p>
     </Card>
   )
 }

@@ -12,7 +12,11 @@ const api: Api = { listProducts: () => Promise.resolve(structuredClone(products)
 test('lists products after loading', async () => {
   render(<App api={api} />)
   const list = await screen.findByRole('list', { name: 'Products' })
-  expect(within(list).getAllByTestId('name').map(n => n.textContent)).toEqual(['Apple', 'Bread'])
+  expect(
+    within(list)
+      .getAllByTestId('name')
+      .map((n) => n.textContent),
+  ).toEqual(['Apple', 'Bread'])
 })
 
 test('adding updates the cart count and the cart', async () => {

@@ -2,7 +2,17 @@ import { state } from '@weft-js/core'
 import { Button, Card, Stack } from '@weft-js/warp'
 
 // A wrapper: `tone` has a default, `children` is what goes between the tags, and the rest lands on the <section>.
-function Panel({ title, tone = 'plain', children, ...rest }: { title: string; tone?: 'plain' | 'warn'; children?: unknown; [attr: string]: unknown }) {
+function Panel({
+  title,
+  tone = 'plain',
+  children,
+  ...rest
+}: {
+  title: string
+  tone?: 'plain' | 'warn'
+  children?: unknown
+  [attr: string]: unknown
+}) {
   return (
     <section
       {...rest}
@@ -30,7 +40,9 @@ export default function Panels() {
         <Panel title="Milk" tone={stock.value < 2 ? 'warn' : 'plain'} data-low={stock.value < 2}>
           Order more when the beans run low.
         </Panel>
-        <Button onClick={() => (stock.value = stock.value > 0 ? stock.value - 1 : 3)}>Sell a bag</Button>
+        <Button onClick={() => (stock.value = stock.value > 0 ? stock.value - 1 : 3)}>
+          Sell a bag
+        </Button>
       </Stack>
     </Card>
   )

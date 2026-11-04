@@ -32,7 +32,14 @@ const hydratable = new Set(['v3 shop app (hydrate)'])
 // ships. Every change to the runtime shifts it, so run scripts/egg.mjs last, after any merge.
 // Hard caps, in KB of 1024 bytes as printed below: the full runtime 13.37 (it fails the run above that; the speed paths
 // are why it isn't 10, docs/research/42-speed-lab.md), the `weft` entry 6.90 (Solid's solid-js is 7,812 B).
-const budgets = { 'hello world': 3072, 'runtime (every export)': 13691, 'core (the `weft` entry)': 7066, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
+const budgets = {
+  'hello world': 3072,
+  'runtime (every export)': 13691,
+  'core (the `weft` entry)': 7066,
+  'v3 shop app': 10240,
+  'v3 shop app (defineState)': 10240,
+  'v3 shop app (hydrate)': 10240,
+}
 
 const rows = {}
 const only = process.env.ONLY?.split(',')
@@ -43,16 +50,39 @@ for (const [name, entry] of Object.entries(fixtures)) {
     configFile: false,
     logLevel: 'silent',
     plugins: [weft({ hydratable: hydratable.has(name) })],
-    resolve: { alias: [{ find: /^@weft-js\/core\/head$/, replacement: join(pkg, 'src/head-client.ts') }, { find: /^@weft-js\/core\/media$/, replacement: join(pkg, 'src/media.tsx') }, { find: /^@weft-js\/core\/surface$/, replacement: join(pkg, 'src/surface.tsx') }, { find: /^@weft-js\/core\/(dom|persist|history|browser|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }] },
+    resolve: {
+      alias: [
+        { find: /^@weft-js\/core\/head$/, replacement: join(pkg, 'src/head-client.ts') },
+        { find: /^@weft-js\/core\/media$/, replacement: join(pkg, 'src/media.tsx') },
+        { find: /^@weft-js\/core\/surface$/, replacement: join(pkg, 'src/surface.tsx') },
+        {
+          find: /^@weft-js\/core\/(dom|persist|history|browser|shape)$/,
+          replacement: join(pkg, 'src/$1.ts'),
+        },
+        { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') },
+      ],
+    },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
-  const code = [out].flat().flatMap(o => o.output).filter(c => c.type === 'chunk').map(c => c.code).join('\n')
+  const code = [out]
+    .flat()
+    .flatMap((o) => o.output)
+    .filter((c) => c.type === 'chunk')
+    .map((c) => c.code)
+    .join('\n')
   const br = brotliCompressSync(code, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
-  rows[name] = { minBytes: code.length, gzBytes: gzipSync(code, { level: 9 }).length, brBytes: br, budgetBr: budgets[name] ?? null }
+  rows[name] = {
+    minBytes: code.length,
+    gzBytes: gzipSync(code, { level: 9 }).length,
+    brBytes: br,
+    budgetBr: budgets[name] ?? null,
+  }
 }
-const kb = n => (n / 1024).toFixed(2) + ' KB'
+const kb = (n) => (n / 1024).toFixed(2) + ' KB'
 for (const [name, r] of Object.entries(rows))
-  console.log(`${name.padEnd(40)} min ${kb(r.minBytes).padStart(9)}  gz ${kb(r.gzBytes).padStart(8)}  br ${kb(r.brBytes).padStart(8)}${r.budgetBr ? `  budget ${kb(r.budgetBr)} ${r.brBytes <= r.budgetBr ? 'ok' : 'OVER'}` : ''}`)
+  console.log(
+    `${name.padEnd(40)} min ${kb(r.minBytes).padStart(9)}  gz ${kb(r.gzBytes).padStart(8)}  br ${kb(r.brBytes).padStart(8)}${r.budgetBr ? `  budget ${kb(r.budgetBr)} ${r.brBytes <= r.budgetBr ? 'ok' : 'OVER'}` : ''}`,
+  )
 const i = process.argv.indexOf('--json')
 if (i > 0) writeFileSync(process.argv[i + 1], JSON.stringify(rows, null, 2))
 const over = Object.entries(rows).filter(([, r]) => r.budgetBr && r.brBytes > r.budgetBr)

@@ -12,9 +12,13 @@ export function App({ api }: { api: Api }) {
     Promise.all([api.listStocks(), api.listHoldings()]).then(([list, holdings]) => {
       if (!live) return
       setStocks(list)
-      setPortfolio(holdings.reduce((sum, h) => sum + h.qty * (list.find(s => s.id === h.id)?.price ?? 0), 0))
+      setPortfolio(
+        holdings.reduce((sum, h) => sum + h.qty * (list.find((s) => s.id === h.id)?.price ?? 0), 0),
+      )
     })
-    return () => { live = false }
+    return () => {
+      live = false
+    }
   }, [api])
 
   if (!stocks) return <p>Loading…</p>

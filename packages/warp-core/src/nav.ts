@@ -26,7 +26,10 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   let pendingOut = false
 
   const write = (start: number, size: number, cross = 0) => {
-    face.style.transform = axis === 'x' ? `translate(${start}px, ${cross}px) scaleX(${size})` : `translate(${cross}px, ${start}px) scaleY(${size})`
+    face.style.transform =
+      axis === 'x'
+        ? `translate(${start}px, ${cross}px) scaleX(${size})`
+        : `translate(${cross}px, ${start}px) scaleY(${size})`
   }
   const place = (item: HTMLElement) => {
     const a = item.getBoundingClientRect()
@@ -52,7 +55,10 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   }
   const shrink = () => {
     if (phase !== 'in') return
-    if (face.getAnimations().length) { pendingOut = true; return }
+    if (face.getAnimations().length) {
+      pendingOut = true
+      return
+    }
     leave()
   }
   const leave = () => {
@@ -73,13 +79,39 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     if (e.target !== face) return
     if (pendingOut && !(hovered ?? focused ?? current())) return leave()
     pendingOut = false
-    if (phase === 'out') { phase = 'idle'; face.dataset.phase = 'idle' }
+    if (phase === 'out') {
+      phase = 'idle'
+      face.dataset.phase = 'idle'
+    }
   }
-  const link = (t: EventTarget | null) => (t as Element | null)?.closest?.('a[href]') as HTMLElement | null
-  const over = (e: Event) => { const a = link(e.target); if (a && a !== hovered) { hovered = a; settle() } }
-  const off = (e: PointerEvent) => { if (!nav.contains(e.relatedTarget as Node)) { hovered = undefined; settle() } }
-  const focus = (e: Event) => { const a = link(e.target); if (a?.matches(':focus-visible')) { focused = a; settle() } }
-  const blur = (e: FocusEvent) => { if (!nav.contains(e.relatedTarget as Node)) { focused = undefined; settle() } }
+  const link = (t: EventTarget | null) =>
+    (t as Element | null)?.closest?.('a[href]') as HTMLElement | null
+  const over = (e: Event) => {
+    const a = link(e.target)
+    if (a && a !== hovered) {
+      hovered = a
+      settle()
+    }
+  }
+  const off = (e: PointerEvent) => {
+    if (!nav.contains(e.relatedTarget as Node)) {
+      hovered = undefined
+      settle()
+    }
+  }
+  const focus = (e: Event) => {
+    const a = link(e.target)
+    if (a?.matches(':focus-visible')) {
+      focused = a
+      settle()
+    }
+  }
+  const blur = (e: FocusEvent) => {
+    if (!nav.contains(e.relatedTarget as Node)) {
+      focused = undefined
+      settle()
+    }
+  }
   nav.addEventListener('pointerover', over)
   nav.addEventListener('pointerout', off)
   nav.addEventListener('focusin', focus)
@@ -102,9 +134,25 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
 
   const seen = new win.MutationObserver(settle)
   seen.observe(nav, { subtree: true, attributes: true, attributeFilter: ['aria-current'] })
-  const resized = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { const t = hovered ?? focused ?? current(); if (t) { const { start: at, size } = place(t); jump(at, size) } }) : undefined
+  const resized =
+    typeof win.ResizeObserver === 'function'
+      ? new win.ResizeObserver(() => {
+          const t = hovered ?? focused ?? current()
+          if (t) {
+            const { start: at, size } = place(t)
+            jump(at, size)
+          }
+        })
+      : undefined
   resized?.observe(nav)
-  const onDial = () => win.requestAnimationFrame(() => { const t = current(); if (t) { const { start: at, size } = place(t); jump(at, size) } })
+  const onDial = () =>
+    win.requestAnimationFrame(() => {
+      const t = current()
+      if (t) {
+        const { start: at, size } = place(t)
+        jump(at, size)
+      }
+    })
   doc.addEventListener('warp:dial', onDial)
 
   // The last heading past the top of the reading band, or the last of all once the page can't scroll further: the
@@ -122,27 +170,42 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
       queued = 0
       const root = doc.documentElement
       const atEnd = win.scrollY > 0 && win.scrollY + win.innerHeight >= root.scrollHeight - 2
-      const last = atEnd ? order.at(-1) : order.filter(el => el.getBoundingClientRect().top <= win.innerHeight / 4).at(-1) ?? order[0]
+      const last = atEnd
+        ? order.at(-1)
+        : (order.filter((el) => el.getBoundingClientRect().top <= win.innerHeight / 4).at(-1) ??
+          order[0])
       const a = last && byTarget.get(last)
       if (!a || a.hasAttribute('aria-current')) return
       for (const x of links()) x.removeAttribute('aria-current')
       a.setAttribute('aria-current', 'location')
     }
-    const scrolled = () => { queued ||= win.requestAnimationFrame(mark) }
+    const scrolled = () => {
+      queued ||= win.requestAnimationFrame(mark)
+    }
     win.addEventListener('scroll', scrolled, { passive: true })
     win.addEventListener('resize', scrolled, { passive: true })
     mark()
-    unspy = () => { win.removeEventListener('scroll', scrolled); win.removeEventListener('resize', scrolled); if (queued) win.cancelAnimationFrame(queued) }
+    unspy = () => {
+      win.removeEventListener('scroll', scrolled)
+      win.removeEventListener('resize', scrolled)
+      if (queued) win.cancelAnimationFrame(queued)
+    }
   }
 
   return {
-    update() { settle() },
+    update() {
+      settle()
+    },
     destroy() {
       win.cancelAnimationFrame(first)
-      seen.disconnect(); resized?.disconnect(); unspy?.()
+      seen.disconnect()
+      resized?.disconnect()
+      unspy?.()
       doc.removeEventListener('warp:dial', onDial)
-      nav.removeEventListener('pointerover', over); nav.removeEventListener('pointerout', off)
-      nav.removeEventListener('focusin', focus); nav.removeEventListener('focusout', blur)
+      nav.removeEventListener('pointerover', over)
+      nav.removeEventListener('pointerout', off)
+      nav.removeEventListener('focusin', focus)
+      nav.removeEventListener('focusout', blur)
       face.removeEventListener('transitionend', ended)
     },
   }

@@ -1,6 +1,12 @@
 import { derived, DEV, effect, flush, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { measureEngine, type MeasureHandle, type MeasureProvider } from '@weft-js/core/text'
-import { slices, virtualizer, type VirtualAlign, type VirtualKey, type Virtualizer } from '@weft-js/warp-core'
+import {
+  slices,
+  virtualizer,
+  type VirtualAlign,
+  type VirtualKey,
+  type Virtualizer,
+} from '@weft-js/warp-core'
 import './styles'
 import '@weft-js/warp-core/styles/data/virtual.css'
 
@@ -80,7 +86,13 @@ export interface VirtualListProps<T> {
 }
 
 type MeasureOptions = Parameters<MeasureProvider['prepare']>[2]
-interface Metric { font: string; line: number; wrap: number; chrome: number; opts: { whiteSpace: 'normal' | 'pre-wrap'; letterSpacing?: number | undefined } }
+interface Metric {
+  font: string
+  line: number
+  wrap: number
+  chrome: number
+  opts: { whiteSpace: 'normal' | 'pre-wrap'; letterSpacing?: number | undefined }
+}
 const EDGE = 8 // rows from the end at which onStart and onEnd ask for more
 const BATCH = 256 // rows prepared between index updates
 const LONG = 'mmmm '.repeat(400)
@@ -100,9 +112,21 @@ function metricOf(probe: HTMLElement): Metric | undefined {
   box.textContent = 'x'
   const chrome = probe.getBoundingClientRect().height - line
   box.textContent = LONG
-  const wrap = box.getBoundingClientRect().width - (parseFloat(c.paddingInlineStart) || 0) - (parseFloat(c.paddingInlineEnd) || 0)
+  const wrap =
+    box.getBoundingClientRect().width -
+    (parseFloat(c.paddingInlineStart) || 0) -
+    (parseFloat(c.paddingInlineEnd) || 0)
   const white = c.whiteSpaceCollapse === 'preserve' || /pre/.test(c.whiteSpace)
-  return { font: fontOf(c), line, wrap, chrome, opts: { whiteSpace: white ? 'pre-wrap' : 'normal', letterSpacing: parseFloat(c.letterSpacing) || undefined } }
+  return {
+    font: fontOf(c),
+    line,
+    wrap,
+    chrome,
+    opts: {
+      whiteSpace: white ? 'pre-wrap' : 'normal',
+      letterSpacing: parseFloat(c.letterSpacing) || undefined,
+    },
+  }
 }
 
 /**
@@ -115,7 +139,8 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
   let engine: MeasureProvider | null = null
   let stop: (() => void) | undefined
   let measuredAt = -1
-  let slicing = false, cursor = 0 // what the idle pass has reached: a change behind it is prepared now, ahead of it later
+  let slicing = false,
+    cursor = 0 // what the idle pass has reached: a change behind it is prepared now, ahead of it later
   const waiting: [HTMLElement, VirtualKey, (undo: () => void) => void][] = []
   const metrics = new Map<string, Metric>()
   const prepared = new Map<VirtualKey, { text: string; handle: MeasureHandle; font: string }>()
@@ -128,15 +153,20 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
   const keys = derived(() => items.value.map(keyOf))
   const variantOf = (item: T) => props.variant?.(item) ?? ''
   const first = untrack(() => {
-    const n = items.value.length, count = Math.min(n, props.initial ?? 20)
+    const n = items.value.length,
+      count = Math.min(n, props.initial ?? 20)
     return Array.from({ length: count }, (_, i) => (props.from === 'end' ? n - count + i : i))
   })
   // Keys, not indices: a prepend renumbers every row, and that mustn't look like a new set of rows.
-  const shown = state<VirtualKey[]>(untrack(() => first.map(i => keyOf(items.value[i]!))))
+  const shown = state<VirtualKey[]>(untrack(() => first.map((i) => keyOf(items.value[i]!))))
   const index = derived(() => new Map(keys.value.map((k, i) => [k, i])))
   const rows = derived(() => {
-    const all = items.value, at = index.value
-    return shown.value.flatMap(key => { const i = at.get(key); return i === undefined ? [] : [{ item: all[i]!, i, key }] })
+    const all = items.value,
+      at = index.value
+    return shown.value.flatMap((key) => {
+      const i = at.get(key)
+      return i === undefined ? [] : [{ item: all[i]!, i, key }]
+    })
   })
 
   const samples = derived(() => {
@@ -152,20 +182,34 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
   const probing = state(false)
 
   function prepare(i: number) {
-    const item = untrack(() => items.value[i]), m = metrics.get(variantOf(item!)), value = props.text?.(item!)
+    const item = untrack(() => items.value[i]),
+      m = metrics.get(variantOf(item!)),
+      value = props.text?.(item!)
     if (!engine || !m || value == null) return false
-    const key = keyOf(item!), had = prepared.get(key)
+    const key = keyOf(item!),
+      had = prepared.get(key)
     if (had && had.text === value && had.font === m.font) return false
     // Preserved white space leaves the fast tier, so it's asked for only by text that has some to preserve.
-    const handle = engine.prepare(value, m.font, m.opts.whiteSpace === 'pre-wrap' && !/\n| {2}|\t/.test(value) ? { ...m.opts, whiteSpace: 'normal' } as MeasureOptions : m.opts as MeasureOptions)
+    const handle = engine.prepare(
+      value,
+      m.font,
+      m.opts.whiteSpace === 'pre-wrap' && !/\n| {2}|\t/.test(value)
+        ? ({ ...m.opts, whiteSpace: 'normal' } as MeasureOptions)
+        : (m.opts as MeasureOptions),
+    )
     prepared.set(key, { text: value, handle, font: m.font })
-    void handle.ready?.then(() => { const at = index.value.get(key); if (at !== undefined) v?.refresh(at, at + 1) })
+    void handle.ready?.then(() => {
+      const at = index.value.get(key)
+      if (at !== undefined) v?.refresh(at, at + 1)
+    })
     return true
   }
 
   const size = (i: number) => {
     if (!engine) return
-    const item = items.value[i]!, m = metrics.get(variantOf(item)), p = prepared.get(keyOf(item))
+    const item = items.value[i]!,
+      m = metrics.get(variantOf(item)),
+      p = prepared.get(keyOf(item))
     if (!m || !p || p.text !== props.text?.(item)) return
     return m.chrome + Math.max(m.line, engine.layout(p.handle, m.wrap, m.line).height)
   }
@@ -184,9 +228,13 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     stop?.()
     slicing = true
     cursor = 0
-    for (const key of shown.value) { const i = index.value.get(key); if (i !== undefined) prepare(i) }
+    for (const key of shown.value) {
+      const i = index.value.get(key)
+      if (i !== undefined) prepare(i)
+    }
     v?.refresh()
-    let lo = 0, done = 0
+    let lo = 0,
+      done = 0
     stop = slices(() => {
       if (cursor >= items.value.length) {
         slicing = false
@@ -194,7 +242,11 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
         return false
       }
       if (prepare(cursor++)) done++
-      if (done >= BATCH) { v?.refresh(lo, cursor); lo = cursor; done = 0 }
+      if (done >= BATCH) {
+        v?.refresh(lo, cursor)
+        lo = cursor
+        done = 0
+      }
       return true
     })
   }
@@ -204,7 +256,11 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     prepareAll()
   }
 
-  const fontsDone = () => { engine?.clear(); prepared.clear(); start() }
+  const fontsDone = () => {
+    engine?.clear()
+    prepared.clear()
+    start()
+  }
   const root = () => el!.ownerDocument.documentElement
   let dials: MutationObserver | undefined
 
@@ -212,7 +268,9 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
   function reveal(key: VirtualKey) {
     const i = index.value.get(key)
     if (i === undefined || !v) return
-    const a = v.anchor(), now = v.sizes.offset(a.index) + a.within, top = v.sizes.offset(i)
+    const a = v.anchor(),
+      now = v.sizes.offset(a.index) + a.within,
+      top = v.sizes.offset(i)
     if (top < now) v.scrollTo(i, 'start')
     else if (top + v.sizes.get(i)! > now + el!.clientHeight) v.scrollTo(i, 'end')
   }
@@ -230,8 +288,11 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       reveal(key)
     },
     move(by) {
-      const all = keys.value, at = all.indexOf(active.value as VirtualKey)
-      control.focus(all[Math.max(0, Math.min(all.length - 1, (at < 0 ? v!.anchor().index : at) + by))]!)
+      const all = keys.value,
+        at = all.indexOf(active.value as VirtualKey)
+      control.focus(
+        all[Math.max(0, Math.min(all.length - 1, (at < 0 ? v!.anchor().index : at) + by))]!,
+      )
     },
     active: () => active.value,
   }
@@ -239,7 +300,16 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
   function onKeyDown(e: KeyboardEvent) {
     if (props.roving && !e.altKey && !e.ctrlKey && !e.metaKey) {
       const n = keys.value.length
-      const to = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : e.key === 'Home' ? -n : e.key === 'End' ? n : 0
+      const to =
+        e.key === 'ArrowDown'
+          ? 1
+          : e.key === 'ArrowUp'
+            ? -1
+            : e.key === 'Home'
+              ? -n
+              : e.key === 'End'
+                ? n
+                : 0
       if (to && (e.target as HTMLElement).closest?.('[data-part="row"]') === e.target) {
         e.preventDefault()
         control.move(to)
@@ -249,59 +319,105 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     props.onRowKey?.(e, control)
   }
 
-  let askedStart = -1, askedEnd = -1
+  let askedStart = -1,
+    askedEnd = -1
   function edges(indices: number[]) {
     const n = keys.value.length
     if (!n || !indices.length) return
-    if (props.onEnd && indices.at(-1)! >= n - EDGE && askedEnd !== n) { askedEnd = n; props.onEnd() }
-    if (props.onStart && indices[0]! <= EDGE && askedStart !== n) { askedStart = n; props.onStart() }
+    if (props.onEnd && indices.at(-1)! >= n - EDGE && askedEnd !== n) {
+      askedEnd = n
+      props.onEnd()
+    }
+    if (props.onStart && indices[0]! <= EDGE && askedStart !== n) {
+      askedStart = n
+      props.onStart()
+    }
   }
 
   onMount(() => {
     queueMicrotask(() => {
       if (!el) return
       v = virtualizer(el, {
-        keys: untrack(() => keys.value), spacer: list!, estimate: untrack(() => props.estimate ?? 48), gap: untrack(() => props.gap), overscan: untrack(() => props.overscan),
-        stick: untrack(() => props.stick), from: untrack(() => props.from), size: (i, width) => {
+        keys: untrack(() => keys.value),
+        spacer: list!,
+        estimate: untrack(() => props.estimate ?? 48),
+        gap: untrack(() => props.gap),
+        overscan: untrack(() => props.overscan),
+        stick: untrack(() => props.stick),
+        from: untrack(() => props.from),
+        size: (i, width) => {
           if (width !== measuredAt && metrics.size) calibrate()
           return size(i)
         },
         pinned: () => (active.value === undefined ? [] : [active.value]),
-        onRange: indices => { for (const i of indices) prepare(i); shown.value = indices.map(i => keys.value[i]!); edges(indices) },
-        onStick: s => props.onStick?.(s), onDrift: (i, p, a) => {
+        onRange: (indices) => {
+          for (const i of indices) prepare(i)
+          shown.value = indices.map((i) => keys.value[i]!)
+          edges(indices)
+        },
+        onStick: (s) => props.onStick?.(s),
+        onDrift: (i, p, a) => {
           props.onDrift?.(i, p, a)
-          if (DEV && engine && Math.abs(p - a) > 1 && prepared.has(keys.value[i]!)) console.debug(`weft: X001 row ${i} predicted ${p}px and renders ${a}px`)
+          if (DEV && engine && Math.abs(p - a) > 1 && prepared.has(keys.value[i]!))
+            console.debug(`weft: X001 row ${i} predicted ${p}px and renders ${a}px`)
         },
       })
       for (const [row, key, keep] of waiting.splice(0)) keep(v.attach(row, key))
-      effect(() => keys.value, k => {
-        v!.update({ keys: k })
-        const key = untrack(() => pending.value)
-        if (key !== undefined) reveal(key)
-      })
-      effect(() => active.value, () => v!.update({}))
+      effect(
+        () => keys.value,
+        (k) => {
+          v!.update({ keys: k })
+          const key = untrack(() => pending.value)
+          if (key !== undefined) reveal(key)
+        },
+      )
+      effect(
+        () => active.value,
+        () => v!.update({}),
+      )
       untrack(() => props.control?.(control))
       if (!untrack(() => props.text)) return
-      void measureEngine().then(e => {
+      void measureEngine().then((e) => {
         if (!e || !el) return
         engine = e
         probing.value = true
         flush()
         start()
-        effect(() => items.value, (_, prev) => {
-          if (prev === undefined) return
-          let lo = -1, hi = 0
-          const to = slicing ? cursor : items.value.length
-          for (let i = 0; i < to; i++) if (prepare(i)) { if (lo < 0) lo = i; hi = i + 1 }
-          if (lo >= 0) v!.refresh(lo, hi)
-        })
-        effect(() => samples.value.length, () => { // a kind of row that wasn't here at the start
-          if (untrack(() => samples.value.every(([name]) => metrics.has(name)))) return
-          queueMicrotask(() => { calibrate(); prepareAll() })
-        })
+        effect(
+          () => items.value,
+          (_, prev) => {
+            if (prev === undefined) return
+            let lo = -1,
+              hi = 0
+            const to = slicing ? cursor : items.value.length
+            for (let i = 0; i < to; i++)
+              if (prepare(i)) {
+                if (lo < 0) lo = i
+                hi = i + 1
+              }
+            if (lo >= 0) v!.refresh(lo, hi)
+          },
+        )
+        effect(
+          () => samples.value.length,
+          () => {
+            // a kind of row that wasn't here at the start
+            if (untrack(() => samples.value.every(([name]) => metrics.has(name)))) return
+            queueMicrotask(() => {
+              calibrate()
+              prepareAll()
+            })
+          },
+        )
         document.fonts?.addEventListener?.('loadingdone', fontsDone)
-        dials = new MutationObserver(() => { calibrate(); prepareAll() })
-        dials.observe(root(), { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-expression', 'data-density'] })
+        dials = new MutationObserver(() => {
+          calibrate()
+          prepareAll()
+        })
+        dials.observe(root(), {
+          attributes: true,
+          attributeFilter: ['class', 'style', 'data-theme', 'data-expression', 'data-density'],
+        })
       })
     })
     onCleanup(() => {
@@ -321,14 +437,20 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       if (v) keep(v.attach(node!, key))
       else waiting.push([node!, key, keep])
       onCleanup(() => undo?.())
-      effect(() => pending.value === key, go => {
-        if (!go) return
-        pending.value = undefined
-        ;(node!.querySelector<HTMLElement>('[data-focus]') ?? node!).focus()
-      })
+      effect(
+        () => pending.value === key,
+        (go) => {
+          if (!go) return
+          pending.value = undefined
+          ;(node!.querySelector<HTMLElement>('[data-focus]') ?? node!).focus()
+        },
+      )
     })
     const pos = () => p.row.i
-    const place = untrack(() => `position:absolute;inset-inline:0;inset-block-start:0;transform:translateY(${pos() * (props.estimate ?? 48)}px)`) // the first paint; the virtualizer owns it after
+    const place = untrack(
+      () =>
+        `position:absolute;inset-inline:0;inset-block-start:0;transform:translateY(${pos() * (props.estimate ?? 48)}px)`,
+    ) // the first paint; the virtualizer owns it after
     const attrs = () => ({
       ref: (n: HTMLElement) => (node = n),
       'data-part': 'row',
@@ -336,9 +458,15 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       'aria-posinset': props.bareRows ? undefined : pos() + 1,
       'aria-setsize': props.bareRows ? undefined : props.open ? -1 : keys.value.length,
       'data-index': props.bareRows ? pos() + 1 : undefined,
-      tabindex: props.roving ? (active.value === key || (active.value === undefined && key === shown.value[0]) ? 0 : -1) : undefined,
+      tabindex: props.roving
+        ? active.value === key || (active.value === undefined && key === shown.value[0])
+          ? 0
+          : -1
+        : undefined,
       style: place,
-      onFocusIn: () => { active.value = key },
+      onFocusIn: () => {
+        active.value = key
+      },
     })
     const body = props.children(() => p.row.item, pos)
     return props.tag === 'ol' ? <li {...attrs()}>{body}</li> : <div {...attrs()}>{body}</div>
@@ -347,25 +475,47 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
   const inner = untrack(() => props.inner)
   const listRole = () => props.role ?? (props.bareRows ? 'group' : 'list')
   /** A list's rows are its items (axe aria-required-children); `feed`, `log` and bare rows bring or need none. */
-  const rowRole = () => props.rowRole ?? (props.tag !== 'ol' && listRole() === 'list' ? 'listitem' : undefined)
+  const rowRole = () =>
+    props.rowRole ?? (props.tag !== 'ol' && listRole() === 'list' ? 'listitem' : undefined)
   const listAttrs = () => ({
     ref: (n: HTMLElement) => (list = n),
     'data-part': 'spacer',
     'data-scope': props.listScope,
-    role: inner ? listRole() : props.tag === 'ol' ? undefined : rowRole() ? 'presentation' : undefined,
+    role: inner
+      ? listRole()
+      : props.tag === 'ol'
+        ? undefined
+        : rowRole()
+          ? 'presentation'
+          : undefined,
     'aria-label': inner ? props.label : undefined,
     'aria-busy': inner && props.busy ? 'true' : undefined,
     style: 'position:relative;flex:none',
   })
   function Probe(p: { sample: [string, T] }) {
     const [name, item] = untrack(() => p.sample)
-    const body = props.children(() => item, () => 0) // once: measuring overwrites the row's text
-    const attrs = { ref: (n: HTMLElement) => probes.set(name, n), 'data-part': 'row', 'data-probe': '', 'aria-hidden': 'true', inert: true, style: 'position:absolute;inset-inline:0;inset-block-start:0;visibility:hidden;contain:layout' }
-    return untrack(() => props.tag) === 'ol' ? <li {...attrs}>{body}</li> : <div {...attrs}>{body}</div>
+    const body = props.children(
+      () => item,
+      () => 0,
+    ) // once: measuring overwrites the row's text
+    const attrs = {
+      ref: (n: HTMLElement) => probes.set(name, n),
+      'data-part': 'row',
+      'data-probe': '',
+      'aria-hidden': 'true',
+      inert: true,
+      style:
+        'position:absolute;inset-inline:0;inset-block-start:0;visibility:hidden;contain:layout',
+    }
+    return untrack(() => props.tag) === 'ol' ? (
+      <li {...attrs}>{body}</li>
+    ) : (
+      <div {...attrs}>{body}</div>
+    )
   }
   return (
     <div
-      ref={n => (el = n)}
+      ref={(n) => (el = n)}
       class={props.class}
       data-scope={props.scope ?? (props.part ? undefined : 'virtual')}
       data-part={props.part}
@@ -374,13 +524,25 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       aria-label={inner ? undefined : props.label}
       aria-live={props.role === 'log' ? 'off' : undefined}
       aria-busy={!inner && props.busy ? 'true' : undefined}
-      tabindex={untrack(() => props.roving) ? undefined : props.tabindex ?? 0}
+      tabindex={untrack(() => props.roving) ? undefined : (props.tabindex ?? 0)}
       style={props.height ? `block-size:${props.height}` : undefined}
       onKeyDown={onKeyDown}
     >
-      {untrack(() => props.tag) === 'ol'
-        ? <ol {...listAttrs()}>{rows.value.map(r => <Row key={r.key} row={r} />)}{probing.value && samples.value.map(s => <Probe key={s[0]} sample={s} />)}</ol>
-        : <div {...listAttrs()}>{rows.value.map(r => <Row key={r.key} row={r} />)}{probing.value && samples.value.map(s => <Probe key={s[0]} sample={s} />)}</div>}
+      {untrack(() => props.tag) === 'ol' ? (
+        <ol {...listAttrs()}>
+          {rows.value.map((r) => (
+            <Row key={r.key} row={r} />
+          ))}
+          {probing.value && samples.value.map((s) => <Probe key={s[0]} sample={s} />)}
+        </ol>
+      ) : (
+        <div {...listAttrs()}>
+          {rows.value.map((r) => (
+            <Row key={r.key} row={r} />
+          ))}
+          {probing.value && samples.value.map((s) => <Probe key={s[0]} sample={s} />)}
+        </div>
+      )}
     </div>
   )
 }

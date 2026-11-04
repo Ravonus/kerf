@@ -8,7 +8,15 @@ import '@weft-js/warp-core/styles/components/menu.css'
 
 /** One line of a Menu: an item, a group label or a separator. */
 export type MenuEntry =
-  | { label: string; onSelect?: () => void; icon?: IconRef | undefined; shortcut?: string; tone?: 'critical' | undefined; disabled?: boolean | undefined; href?: string }
+  | {
+      label: string
+      onSelect?: () => void
+      icon?: IconRef | undefined
+      shortcut?: string
+      tone?: 'critical' | undefined
+      disabled?: boolean | undefined
+      href?: string
+    }
   | { separator: true }
   | { group: string }
 
@@ -59,7 +67,14 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
   })
   // the panel is shown before menu() moves focus in, so the first move lands without travelling
   const syncOpen = (el: HTMLElement, o: { open: boolean; at: 'first' | 'last' }) => {
-    const opts = () => ({ open: o.open, at: o.at, trigger: () => button, side, align, onClose: close })
+    const opts = () => ({
+      open: o.open,
+      at: o.at,
+      trigger: () => button,
+      side,
+      align,
+      onClose: close,
+    })
     if (o.open) el.showPopover?.()
     const m = menu(el, opts())
     return {
@@ -68,43 +83,106 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         if (n.open && !el.matches(':popover-open')) el.showPopover?.()
         m.update(opts())
         if (!n.open && el.matches(':popover-open')) el.hidePopover?.()
-        if (n.open) requestAnimationFrame(() => requestAnimationFrame(() => face?.removeAttribute('data-instant')))
+        if (n.open)
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => face?.removeAttribute('data-instant')),
+          )
       },
-      destroy() { m.destroy() },
+      destroy() {
+        m.destroy()
+      },
     }
   }
-  use(syncOpen, () => panel, () => ({ open: open.value, at: at.value }))
+  use(
+    syncOpen,
+    () => panel,
+    () => ({ open: open.value, at: at.value }),
+  )
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
     e.preventDefault()
     at.value = e.key === 'ArrowUp' ? 'last' : 'first'
     open.value = true
   }
-  const pick = (e: { onSelect?: () => void }) => { close(); button?.focus(); e.onSelect?.() }
+  const pick = (e: { onSelect?: () => void }) => {
+    close()
+    button?.focus()
+    e.onSelect?.()
+  }
   return (
     <>
-      <Button emphasis="outline" tone="neutral" {...(trigger ?? {})} ref={(el: HTMLButtonElement) => (button = el)} id={`${id}-b`} aria-haspopup="menu" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => { at.value = 'first'; open.value = !open.value }} onKeyDown={onKey}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        {...(trigger ?? {})}
+        ref={(el: HTMLButtonElement) => (button = el)}
+        id={`${id}-b`}
+        aria-haspopup="menu"
+        aria-expanded={open.value ? 'true' : 'false'}
+        aria-controls={id}
+        onClick={() => {
+          at.value = 'first'
+          open.value = !open.value
+        }}
+        onKeyDown={onKey}
+      >
         {label}
       </Button>
       <div
-        ref={n => (panel = n)}
+        ref={(n) => (panel = n)}
         data-scope="menu"
         data-part="content"
         role="menu"
         popover="manual"
         id={id}
         aria-labelledby={`${id}-b`}
-        onFocusIn={(e: FocusEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]'); if (t) follow(t) }}
-        onPointerMove={(e: PointerEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])'); if (t && t !== document.activeElement) t.focus({ preventScroll: true }) }}
+        onFocusIn={(e: FocusEvent) => {
+          const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]')
+          if (t) follow(t)
+        }}
+        onPointerMove={(e: PointerEvent) => {
+          const t = (e.target as HTMLElement).closest?.<HTMLElement>(
+            '[role="menuitem"]:not([aria-disabled="true"])',
+          )
+          if (t && t !== document.activeElement) t.focus({ preventScroll: true })
+        }}
       >
-        <span ref={n => (face = n)} data-part="shuttle" aria-hidden="true"></span>
-        {items.map((e, i) => 'separator' in e
-          ? <div key={i} data-part="separator" role="separator"></div>
-          : 'group' in e
-            ? <div key={i} data-part="group-label">{e.group}</div>
-            : e.href && !e.disabled
-              ? <a key={i} href={e.href} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} onClick={() => pick(e)}><Row e={e} /></a>
-              : <div key={i} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} aria-disabled={e.disabled ? 'true' : undefined} onClick={() => { if (!e.disabled) pick(e) }}><Row e={e} /></div>)}
+        <span ref={(n) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
+        {items.map((e, i) =>
+          'separator' in e ? (
+            <div key={i} data-part="separator" role="separator"></div>
+          ) : 'group' in e ? (
+            <div key={i} data-part="group-label">
+              {e.group}
+            </div>
+          ) : e.href && !e.disabled ? (
+            <a
+              key={i}
+              href={e.href}
+              data-part="item"
+              role="menuitem"
+              tabindex="-1"
+              data-tone={e.tone}
+              onClick={() => pick(e)}
+            >
+              <Row e={e} />
+            </a>
+          ) : (
+            <div
+              key={i}
+              data-part="item"
+              role="menuitem"
+              tabindex="-1"
+              data-tone={e.tone}
+              aria-disabled={e.disabled ? 'true' : undefined}
+              onClick={() => {
+                if (!e.disabled) pick(e)
+              }}
+            >
+              <Row e={e} />
+            </div>
+          ),
+        )}
       </div>
     </>
   )

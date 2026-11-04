@@ -5,10 +5,22 @@ import { customers, orderItems, orders, products } from '#/db/schema'
 import { PAGE_SIZE, sortKeys, statuses } from '#/lib/orders'
 
 const status = z.enum(statuses)
-const sortColumns = { id: orders.id, customer: customers.name, status: orders.status, total: orders.totalCents, created: orders.createdAt }
+const sortColumns = {
+  id: orders.id,
+  customer: customers.name,
+  status: orders.status,
+  total: orders.totalCents,
+  created: orders.createdAt,
+}
 const like = (text: string) => `%${text.replace(/[\\%_]/g, '\\$&')}%`
 
-const listed = { id: orders.id, customer: customers.name, status: orders.status, totalCents: orders.totalCents, createdAt: orders.createdAt }
+const listed = {
+  id: orders.id,
+  customer: customers.name,
+  status: orders.status,
+  totalCents: orders.totalCents,
+  createdAt: orders.createdAt,
+}
 const orderView = z.object({
   page: z.number().int().min(1),
   sort: z.enum(sortKeys),
@@ -17,9 +29,20 @@ const orderView = z.object({
   q: z.string().max(100),
 })
 
-const onTheWire = <T extends { createdAt: Date }>(row: T) => ({ ...row, createdAt: row.createdAt.toISOString() })
+const onTheWire = <T extends { createdAt: Date }>(row: T) => ({
+  ...row,
+  createdAt: row.createdAt.toISOString(),
+})
 
-export type OrderRow = ReturnType<typeof onTheWire<{ id: number; customer: string; status: string; totalCents: number; createdAt: Date }>>
+export type OrderRow = ReturnType<
+  typeof onTheWire<{
+    id: number
+    customer: string
+    status: string
+    totalCents: number
+    createdAt: Date
+  }>
+>
 
 // Aggregates over every order: worth keeping for a minute, and a status change clears them through the tag.
 export const storeStats = query({
@@ -28,11 +51,19 @@ export const storeStats = query({
   cache: { life: 'minutes', scope: 'user' },
   run: async ({ ctx }) => {
     const [[sales], customerCount] = await Promise.all([
-      ctx.db.select({
-        revenue: sql<number>`coalesce(sum(${orders.totalCents}) filter (where ${orders.status} <> 'refunded'), 0)`.mapWith(Number),
-        refunded: sql<number>`coalesce(sum(${orders.totalCents}) filter (where ${orders.status} = 'refunded'), 0)`.mapWith(Number),
-        orders: count(),
-      }).from(orders),
+      ctx.db
+        .select({
+          revenue:
+            sql<number>`coalesce(sum(${orders.totalCents}) filter (where ${orders.status} <> 'refunded'), 0)`.mapWith(
+              Number,
+            ),
+          refunded:
+            sql<number>`coalesce(sum(${orders.totalCents}) filter (where ${orders.status} = 'refunded'), 0)`.mapWith(
+              Number,
+            ),
+          orders: count(),
+        })
+        .from(orders),
       ctx.db.$count(customers),
     ])
     return { ...sales!, customers: customerCount }
@@ -45,15 +76,17 @@ export const revenueByMonth = query({
   cache: { life: 'minutes', scope: 'user' },
   run: async ({ ctx }) => {
     const month = sql`date_trunc('month', ${orders.createdAt} at time zone 'UTC')`
-    const rows = await ctx.db.select({
-      month: sql<string>`to_char(${month}, 'Mon YYYY')`,
-      cents: sql<number>`sum(${orders.totalCents})`.mapWith(Number),
-    }).from(orders)
+    const rows = await ctx.db
+      .select({
+        month: sql<string>`to_char(${month}, 'Mon YYYY')`,
+        cents: sql<number>`sum(${orders.totalCents})`.mapWith(Number),
+      })
+      .from(orders)
       .where(sql`${orders.status} <> 'refunded'`)
       .groupBy(month)
       .orderBy(desc(month))
       .limit(12)
-    return rows.reverse().map(row => ({ month: row.month, revenue: row.cents / 100 }))
+    return rows.reverse().map((row) => ({ month: row.month, revenue: row.cents / 100 }))
   },
 })
 
@@ -61,7 +94,9 @@ export const latestOrders = query({
   tags: ['orders', 'customers'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const rows = await ctx.db.select(listed).from(orders)
+    const rows = await ctx.db
+      .select(listed)
+      .from(orders)
       .innerJoin(customers, eq(customers.id, orders.customerId))
       .orderBy(desc(orders.createdAt), desc(orders.id))
       .limit(10)
@@ -74,17 +109,26 @@ export const listOrders = query({
   tags: ['orders', 'customers'],
   auth: 'user',
   run: async ({ input, ctx }) => {
-    const where = and(input.status ? eq(orders.status, input.status) : undefined, input.q ? ilike(customers.name, like(input.q)) : undefined)
+    const where = and(
+      input.status ? eq(orders.status, input.status) : undefined,
+      input.q ? ilike(customers.name, like(input.q)) : undefined,
+    )
     const direction = input.dir === 'asc' ? asc : desc
     const [rows, [found]] = await Promise.all([
-      ctx.db.select(listed).from(orders)
+      ctx.db
+        .select(listed)
+        .from(orders)
         .innerJoin(customers, eq(customers.id, orders.customerId))
         .where(where)
         .orderBy(direction(sortColumns[input.sort]), direction(orders.id))
         .limit(PAGE_SIZE)
         .offset((input.page - 1) * PAGE_SIZE),
       input.q
-        ? ctx.db.select({ total: count() }).from(orders).innerJoin(customers, eq(customers.id, orders.customerId)).where(where)
+        ? ctx.db
+            .select({ total: count() })
+            .from(orders)
+            .innerJoin(customers, eq(customers.id, orders.customerId))
+            .where(where)
         : ctx.db.select({ total: count() }).from(orders).where(where),
     ])
     return { rows: rows.map(onTheWire), total: found!.total }
@@ -97,10 +141,19 @@ export const getOrder = query({
   auth: 'user',
   run: async ({ input, ctx }) => {
     const [[order], items] = await Promise.all([
-      ctx.db.select({ ...listed, email: customers.email, city: customers.city }).from(orders)
+      ctx.db
+        .select({ ...listed, email: customers.email, city: customers.city })
+        .from(orders)
         .innerJoin(customers, eq(customers.id, orders.customerId))
         .where(eq(orders.id, input.id)),
-      ctx.db.select({ id: orderItems.id, product: products.name, quantity: orderItems.quantity, priceCents: orderItems.priceCents }).from(orderItems)
+      ctx.db
+        .select({
+          id: orderItems.id,
+          product: products.name,
+          quantity: orderItems.quantity,
+          priceCents: orderItems.priceCents,
+        })
+        .from(orderItems)
         .innerJoin(products, eq(products.id, orderItems.productId))
         .where(eq(orderItems.orderId, input.id))
         .orderBy(asc(orderItems.id)),
@@ -113,7 +166,10 @@ export const setOrderStatus = mutation({
   input: z.object({ id: z.number().int().positive(), status }),
   auth: 'user',
   invalidates: ['orders'],
-  optimistic: ({ input }, cache) => cache.update(getOrder, { id: input.id }, order => { if (order) order.status = input.status }),
+  optimistic: ({ input }, cache) =>
+    cache.update(getOrder, { id: input.id }, (order) => {
+      if (order) order.status = input.status
+    }),
   run: async ({ input, ctx }) => {
     await ctx.db.update(orders).set({ status: input.status }).where(eq(orders.id, input.id))
   },
@@ -121,11 +177,14 @@ export const setOrderStatus = mutation({
 
 export const markShipped = mutation({
   // `view` names the list on screen, for the optimistic update; the server only reads `ids`.
-  input: z.object({ ids: z.array(z.number().int().positive()).min(1).max(PAGE_SIZE), view: orderView }),
+  input: z.object({
+    ids: z.array(z.number().int().positive()).min(1).max(PAGE_SIZE),
+    view: orderView,
+  }),
   auth: 'user',
   invalidates: ['orders'],
   optimistic: ({ input }, cache) =>
-    cache.update(listOrders, input.view, list => {
+    cache.update(listOrders, input.view, (list) => {
       for (const row of list.rows) if (input.ids.includes(row.id)) row.status = 'shipped'
     }),
   run: async ({ input, ctx }) => {

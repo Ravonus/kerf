@@ -7,7 +7,8 @@ const button = document.createElement('button')
 button.textContent = '0'
 const grid = document.createElement('div')
 grid.setAttribute('data-grid', '')
-const texts = [], cells = new Array(CELLS).fill(0)
+const texts = [],
+  cells = new Array(CELLS).fill(0)
 for (let i = 0; i < CELLS; i++) {
   const c = document.createElement('i')
   c.textContent = '0'
@@ -17,5 +18,13 @@ for (let i = 0; i < CELLS; i++) {
 main.append(button, grid)
 root.append(main)
 let n = 0
-const tick = k => { for (let i = k % 10; i < CELLS; i += 10) texts[i].data = glyph(++cells[i]) }
-harness(root, { click: () => { button.firstChild.data = ++n }, tick, runs: () => 0 })
+const tick = (k) => {
+  for (let i = k % 10; i < CELLS; i += 10) texts[i].data = glyph(++cells[i])
+}
+harness(root, {
+  click: () => {
+    button.firstChild.data = ++n
+  },
+  tick,
+  runs: () => 0,
+})

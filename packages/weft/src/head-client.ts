@@ -9,10 +9,13 @@ export type { Merged, Meta, Site } from './head'
 /** Replace the `[data-wm]` tags with `m`'s (structured data just goes: nothing reads it here) and set `document.title`. */
 export function setHead(m: Merged, path: string): void {
   const head = document.head
-  head.querySelectorAll('[data-wm]:not(title)').forEach(e => e.remove())
+  head.querySelectorAll('[data-wm]:not(title)').forEach((e) => e.remove())
   const at = head.querySelector('title[data-wm]')?.nextSibling ?? head.firstChild
   for (const [tag, attrs, text] of headTags(m, path)) {
-    if (tag === 'title') { document.title = text!; continue }
+    if (tag === 'title') {
+      document.title = text!
+      continue
+    }
     const e = document.createElement(tag)
     for (const k in attrs) e.setAttribute(k, attrs[k]!)
     e.setAttribute('data-wm', '')

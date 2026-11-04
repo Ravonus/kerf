@@ -5,15 +5,49 @@
 //
 // A poke is a local `cache.invalidate`: readers refetch through `query`, and the keyed list writes what changed.
 
-import { DEV, batch, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
-import type { AuthScope, Context, Fn, LiveApi, LiveMode, LiveOptions, LiveStatus, Skip, StandardSchemaV1 } from './data'
+import {
+  DEV,
+  batch,
+  createRoot,
+  derived,
+  effect,
+  getOwner,
+  onCleanup,
+  state,
+  untrack,
+  type Derived,
+  type State,
+} from '@weft-js/core'
+import type {
+  AuthScope,
+  Context,
+  Fn,
+  LiveApi,
+  LiveMode,
+  LiveOptions,
+  LiveStatus,
+  Skip,
+  StandardSchemaV1,
+} from './data'
 import type { Body, SubEntry, Tracked } from './hub'
 import { HANDOVER, noSockets, openLine, type Line } from './link'
 
 // `data.ts` hands these over (`use`). A static import would close a cycle with its `import('./live')`, and the bundler
 // would then keep this chunk, the hub and the split they force in apps that never read `.live`.
-let cache: LiveApi['cache'], currentScope: LiveApi['currentScope'], fns: LiveApi['fns'], FnError: LiveApi['FnError'], keyOf: LiveApi['keyOf'], net: LiveApi['net'], rt: LiveApi['rt'], runtime: LiveApi['runtime'], skip: LiveApi['skip'], StartError: LiveApi['StartError'], track: LiveApi['track']
-export const use = (api: LiveApi) => void ({ cache, currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track } = api)
+let cache: LiveApi['cache'],
+  currentScope: LiveApi['currentScope'],
+  fns: LiveApi['fns'],
+  FnError: LiveApi['FnError'],
+  keyOf: LiveApi['keyOf'],
+  net: LiveApi['net'],
+  rt: LiveApi['rt'],
+  runtime: LiveApi['runtime'],
+  skip: LiveApi['skip'],
+  StartError: LiveApi['StartError'],
+  track: LiveApi['track']
+export const use = (api: LiveApi) =>
+  void ({ cache, currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track } =
+    api)
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
 
@@ -30,7 +64,12 @@ export interface StreamDef<S, M, A = undefined> {
   message?: StandardSchemaV1<unknown, M>
   auth?: A
   /** `lastEventId`: the last `tracked` id the client saw, on a resume. Stop when `signal` aborts. */
-  run: (args: { input: Out<S>; ctx: Context; signal: AbortSignal; lastEventId?: string }) => AsyncIterable<M | Tracked<M>>
+  run: (args: {
+    input: Out<S>
+    ctx: Context
+    signal: AbortSignal
+    lastEventId?: string
+  }) => AsyncIterable<M | Tracked<M>>
   $id?: string
 }
 
@@ -64,16 +103,27 @@ type Arg<I> = I | (() => I | Skip)
 const FN = Symbol.for('weft.fn')
 let auto = 0
 
-export function stream<M, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: StreamDef<S, M, A>): StreamFn<In<S>, M> {
+export function stream<
+  M,
+  S extends StandardSchemaV1 | undefined = undefined,
+  const A extends AuthScope | undefined = undefined,
+>(def: StreamDef<S, M, A>): StreamFn<In<S>, M> {
   const id = def.$id ?? `s${++auto}`
   const fn: Fn = { kind: 'stream', $id: id, def: def as unknown as Fn['def'] }
   fns.set(id, fn)
-  return Object.assign((input: unknown, options?: StreamOptions<never, unknown>) => read(fn, input, options), { kind: 'stream', $id: id, [FN]: fn }) as unknown as StreamFn<In<S>, M>
+  return Object.assign(
+    (input: unknown, options?: StreamOptions<never, unknown>) => read(fn, input, options),
+    { kind: 'stream', $id: id, [FN]: fn },
+  ) as unknown as StreamFn<In<S>, M>
 }
 
 // ---- subscriptions --------------------------------------------------------------------------------------------------
 
-interface View { fold?: ((acc: never, m: never) => unknown) | undefined; initial: unknown; box: State<unknown> }
+interface View {
+  fold?: ((acc: never, m: never) => unknown) | undefined
+  initial: unknown
+  box: State<unknown>
+}
 interface Sub {
   n: number
   key: string
@@ -106,7 +156,21 @@ function acquire(fn: Fn, input: unknown): Sub {
   const key = keyOf(fn.$id, input)
   let s = subs.get(key)
   if (!s) {
-    s = createRoot(() => ({ n: ++nth, key, fn, input, refs: 0, tags: [], acked: false, views: new Map(), error: state<unknown>(undefined), done: state(false) }), null)
+    s = createRoot(
+      () => ({
+        n: ++nth,
+        key,
+        fn,
+        input,
+        refs: 0,
+        tags: [],
+        acked: false,
+        views: new Map(),
+        error: state<unknown>(undefined),
+        done: state(false),
+      }),
+      null,
+    )
     // Not at the top level: a side effect there would keep this chunk in apps that never read `.live`.
     if (DEV && net() && !net()!.resets.includes(reset)) net()!.resets.push(reset)
     subs.set(key, s)
@@ -151,7 +215,15 @@ export function hold(fn: Fn, input: unknown, options?: LiveOptions): () => void 
 
 function read(fn: Fn, input: unknown, o: StreamOptions<never, unknown> = {}): Stream<unknown> {
   if (!getOwner())
-    throw new StartError('W051', DEV ? `\`${fn.$id}()\` (a stream) was called outside a component or scope: nothing would close it` : fn.$id, DEV ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`' : undefined)
+    throw new StartError(
+      'W051',
+      DEV
+        ? `\`${fn.$id}()\` (a stream) was called outside a component or scope: nothing would close it`
+        : fn.$id,
+      DEV
+        ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`'
+        : undefined,
+    )
   const scope = currentScope()
   if (scope) {
     scope.live = true // the server renders `initial`, and the client hydrates to the same
@@ -159,25 +231,42 @@ function read(fn: Fn, input: unknown, o: StreamOptions<never, unknown> = {}): St
   }
   const view = state<{ s: Sub; v: View } | undefined>(undefined)
   const fold = o.fold ? String(o.fold) : ''
-  effect(() => {
-    const arg = typeof input === 'function' ? (input as () => unknown)() : input
-    if (arg === skip) return undefined
-    return untrack(() => {
-      const s = acquire(fn, arg)
-      if (o.fold) s.buffer ??= o.buffer ?? 256
-      else if (o.buffer) s.buffer ??= o.buffer
-      let v = s.views.get(fold)
-      if (!v) s.views.set(fold, (v = createRoot(() => ({ fold: o.fold, initial: o.initial, box: state<unknown>(o.initial) }), null)))
-      v.fold = o.fold
-      onCleanup(held(s, o.keep))
-      return { s, v }
-    })
-  }, now => { view.value = now })
+  effect(
+    () => {
+      const arg = typeof input === 'function' ? (input as () => unknown)() : input
+      if (arg === skip) return undefined
+      return untrack(() => {
+        const s = acquire(fn, arg)
+        if (o.fold) s.buffer ??= o.buffer ?? 256
+        else if (o.buffer) s.buffer ??= o.buffer
+        let v = s.views.get(fold)
+        if (!v)
+          s.views.set(
+            fold,
+            (v = createRoot(
+              () => ({ fold: o.fold, initial: o.initial, box: state<unknown>(o.initial) }),
+              null,
+            )),
+          )
+        v.fold = o.fold
+        onCleanup(held(s, o.keep))
+        return { s, v }
+      })
+    },
+    (now) => {
+      view.value = now
+    },
+  )
   const status = derived(() => (view.value?.s.done.value ? 'done' : rt.status.value))
   return {
-    get value() { const now = view.value; return now ? now.v.box.value : o.initial },
+    get value() {
+      const now = view.value
+      return now ? now.v.box.value : o.initial
+    },
     status,
-    get error() { return view.value?.s.error.value },
+    get error() {
+      return view.value?.s.error.value
+    },
   }
 }
 
@@ -186,12 +275,22 @@ function read(fn: Fn, input: unknown, o: StreamOptions<never, unknown> = {}): St
 /** How the client reaches `/_weft/rt`: SSE, a shared socket, or a fake under test. */
 export interface Link {
   /** Resolves when the connection ends. */
-  open(body: Body, frame: (event: string, data: unknown) => void, signal: AbortSignal, alive: () => void): Promise<void>
+  open(
+    body: Body,
+    frame: (event: string, data: unknown) => void,
+    signal: AbortSignal,
+    alive: () => void,
+  ): Promise<void>
   change(body: Body): Promise<void>
 }
 
 const post = (body: Body, signal?: AbortSignal) =>
-  fetch('/_weft/rt', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-weft': '1' }, body: JSON.stringify(body), ...(signal && { signal }) })
+  fetch('/_weft/rt', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-weft': '1' },
+    body: JSON.stringify(body),
+    ...(signal && { signal }),
+  })
 
 const http: Link = {
   async open(body, heard, signal, alive) {
@@ -226,16 +325,22 @@ let line: Line | undefined
 const socket: Link = {
   open(body, heard, signal, alive) {
     return new Promise<void>((done, fail) => {
-      const l = (line = openLine('r', JSON.stringify(body), text => {
-        alive()
-        const at = text.indexOf(':'), event = text.slice(0, at)
-        if (event !== 'ping') heard(event, JSON.parse(text.slice(at + 1)))
-      }, (code, reason) => {
-        if (line === l) line = undefined
-        if (code === HANDOVER) retry = 0
-        if (code === 4000 && reason) fail(new FnError(JSON.parse(reason), 429))
-        else done()
-      }))
+      const l = (line = openLine(
+        'r',
+        JSON.stringify(body),
+        (text) => {
+          alive()
+          const at = text.indexOf(':'),
+            event = text.slice(0, at)
+          if (event !== 'ping') heard(event, JSON.parse(text.slice(at + 1)))
+        },
+        (code, reason) => {
+          if (line === l) line = undefined
+          if (code === HANDOVER) retry = 0
+          if (code === 4000 && reason) fail(new FnError(JSON.parse(reason), 429))
+          else done()
+        },
+      ))
       signal.addEventListener('abort', () => l.close())
     })
   },
@@ -254,10 +359,18 @@ const FAKE = './live-fake.ts'
 const fake: Link = {
   open(body, heard, signal) {
     let up!: () => void
-    void track(new Promise<void>(ok => { up = ok })) // `net.settle()` waits for the connection, not for its end
-    return import(/* @vite-ignore */ FAKE).then(m => m.open(body, heard, signal, up, subs, (close: () => unknown) => (closeHub = close))).finally(up)
+    void track(
+      new Promise<void>((ok) => {
+        up = ok
+      }),
+    ) // `net.settle()` waits for the connection, not for its end
+    return import(/* @vite-ignore */ FAKE)
+      .then((m) =>
+        m.open(body, heard, signal, up, subs, (close: () => unknown) => (closeHub = close)),
+      )
+      .finally(up)
   },
-  change: async body => (await import(/* @vite-ignore */ FAKE)).change(body),
+  change: async (body) => (await import(/* @vite-ignore */ FAKE)).change(body),
 }
 
 /** Two sockets that never answered, and this host has none. */
@@ -265,12 +378,20 @@ const link = (): Link => (DEV && net() ? fake : noSockets() ? http : socket)
 let via: Link = socket
 let closeHub: (() => unknown) | undefined
 
-const BASE = 500, CAP = 30_000, DEAD = 45_000, HIDDEN = 300_000
+const BASE = 500,
+  CAP = 30_000,
+  DEAD = 45_000,
+  HIDDEN = 300_000
 
 /** Full jitter: anywhere from 0 to 0.5 s, 1 s, 2 s … 30 s. */
-export const backoff = (attempt: number, random = Math.random) => random() * Math.min(CAP, BASE * 2 ** attempt)
+export const backoff = (attempt: number, random = Math.random) =>
+  random() * Math.min(CAP, BASE * 2 ** attempt)
 
-interface Live { ac: AbortController; k?: string; sent: Set<number> }
+interface Live {
+  ac: AbortController
+  k?: string
+  sent: Set<number>
+}
 let conn: Live | undefined
 let running = false
 let attempt = 0
@@ -297,9 +418,17 @@ function readPage() {
   seeded = !!cursor
 }
 
-const entry = (s: Sub): SubEntry => (s.fn.kind === 'query' ? [s.n, 'q', s.fn.$id, s.input] : [s.n, 's', s.fn.$id, s.input, s.cursor ?? '', s.buffer ?? 0])
-const set = (status: LiveStatus) => { rt.status.value = status }
-interface Linked { m: LiveMode; d?: 1 }
+const entry = (s: Sub): SubEntry =>
+  s.fn.kind === 'query'
+    ? [s.n, 'q', s.fn.$id, s.input]
+    : [s.n, 's', s.fn.$id, s.input, s.cursor ?? '', s.buffer ?? 0]
+const set = (status: LiveStatus) => {
+  rt.status.value = status
+}
+interface Linked {
+  m: LiveMode
+  d?: 1
+}
 /** What's positional in a frame: `[subscription, ...]`. What the rest of the fields mean goes by the event. */
 type Row = { 0: number; 1: never; 2: unknown }
 
@@ -309,11 +438,13 @@ function linked(l?: Linked) {
   set(l?.d ? 'reconnecting' : l?.m === 'poll' || l?.m === 'off' ? 'degraded' : 'live')
   if (DEV && l && l.m !== 'feed' && l.m !== 'external' && !warned) {
     warned = true
-    console.warn(`weft: R016 live queries are \`degraded\` (mode \`${l.m}\`): writes from outside the app arrive late or not at all. The server log says why.`)
+    console.warn(
+      `weft: R016 live queries are \`degraded\` (mode \`${l.m}\`): writes from outside the app arrive late or not at all. The server log says why.`,
+    )
   }
 }
 let warned = false
-const offline = () => ! navigator.onLine
+const offline = () => !navigator.onLine
 
 function flushPokes() {
   const tags = [...pokes]
@@ -323,7 +454,8 @@ function flushPokes() {
 }
 
 function frame(event: string, data: unknown) {
-  const d = data as Row & Record<'b' | 'k' | 'c', string> & { l?: Linked; t: string[]; retry: number }
+  const d = data as Row &
+    Record<'b' | 'k' | 'c', string> & { l?: Linked; t: string[]; retry: number }
   batch(() => {
     if (event === 'h') {
       if (build && d.b && d.b !== build) rt.stale.value = true
@@ -338,7 +470,10 @@ function frame(event: string, data: unknown) {
       if (!s) return
       s.tags = d[1]
       s.error.value = undefined
-      if (DEV && !s.tags.length) console.warn(`weft: W053 \`${s.fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it.\n  fix: add \`tags\` to the query`)
+      if (DEV && !s.tags.length)
+        console.warn(
+          `weft: W053 \`${s.fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it.\n  fix: add \`tags\` to the query`,
+        )
       // Data older than the subscription may have missed a write. A page's first connect is covered by its cursor.
       if (!s.acked && !seeded && s.tags.length) void cache.invalidate(...s.tags)
       s.acked = true
@@ -349,13 +484,14 @@ function frame(event: string, data: unknown) {
       else pokeTimer ??= setTimeout(flushPokes, 50 + Math.random() * 250)
     } else if (event === 'R') {
       cursor = d.c
-      void cache.invalidate(...[...subs.values()].flatMap(s => s.tags))
+      void cache.invalidate(...[...subs.values()].flatMap((s) => s.tags))
     } else if (event === 'm') {
       const s = byN.get(d[0])
       if (!s) return
       if (d[1] !== null) s.cursor = d[1]
       s.error.value = undefined
-      for (const v of s.views.values()) v.box.value = v.fold ? v.fold(v.box.value as never, d[2] as never) : d[2]
+      for (const v of s.views.values())
+        v.box.value = v.fold ? v.fold(v.box.value as never, d[2] as never) : d[2]
     } else if (event === 'r') {
       const s = byN.get(d[0])
       if (!s) return
@@ -366,21 +502,23 @@ function frame(event: string, data: unknown) {
       if (s) s.done.value = true
     } else if (event === 'e') {
       const s = byN.get(d[0])
-      if (s) s.error.value = new FnError(d[1], (d[1] as { code?: string }).code === 'A002' ? 401 : 500)
+      if (s)
+        s.error.value = new FnError(d[1], (d[1] as { code?: string }).code === 'A002' ? 401 : 500)
     } else if (event === 'L') linked(d as unknown as Linked)
     else if (event === 'b') retry = d.retry
   })
 }
 
 /** Woken early by `online`, by the tab showing again and by a change to the set. */
-const sleep = (t: number) => new Promise<void>(ok => {
-  const timer = setTimeout(ok, t)
-  nudge = () => {
-    clearTimeout(timer)
-    nudge = undefined
-    ok()
-  }
-})
+const sleep = (t: number) =>
+  new Promise<void>((ok) => {
+    const timer = setTimeout(ok, t)
+    nudge = () => {
+      clearTimeout(timer)
+      nudge = undefined
+      ok()
+    }
+  })
 
 async function run() {
   running = true
@@ -402,9 +540,18 @@ async function run() {
     alive()
     retry = undefined
     try {
-      await (via = link()).open({ c: cursor, s: [...subs.values()].filter(s => !s.done.value).map(entry) }, frame, ac.signal, alive)
+      await (via = link()).open(
+        { c: cursor, s: [...subs.values()].filter((s) => !s.done.value).map(entry) },
+        frame,
+        ac.signal,
+        alive,
+      )
     } catch (e) {
-      if (!ac.signal.aborted && e instanceof FnError) for (const s of subs.values()) untrack(() => { s.error.value = e })
+      if (!ac.signal.aborted && e instanceof FnError)
+        for (const s of subs.values())
+          untrack(() => {
+            s.error.value = e
+          })
     }
     clearTimeout(dead)
     conn = undefined
@@ -431,8 +578,8 @@ function sync() {
     if (!running) return void run()
     const live = conn
     if (!live?.k) return
-    const add = [...byN.values()].filter(s => !live.sent.has(s.n))
-    const gone = [...live.sent].filter(n => !byN.has(n))
+    const add = [...byN.values()].filter((s) => !live.sent.has(s.n))
+    const gone = [...live.sent].filter((n) => !byN.has(n))
     if (!add.length && !gone.length) return
     for (const s of add) live.sent.add(s.n)
     for (const n of gone) live.sent.delete(n)
@@ -495,5 +642,8 @@ function reset() {
   n.reconnects = 0
   n.rt = undefined
   void closeHub?.()
-  untrack(() => { rt.stale.value = false; rt.status.value = 'connecting' })
+  untrack(() => {
+    rt.stale.value = false
+    rt.status.value = 'connecting'
+  })
 }

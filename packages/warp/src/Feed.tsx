@@ -49,8 +49,8 @@ export function Feed<T extends FeedItem>(props: FeedProps<T>) {
       label={props.label}
       height={props.height ?? '480px'}
       items={props.items}
-      rowKey={i => i.id}
-      text={i => i.detail ?? ''}
+      rowKey={(i) => i.id}
+      text={(i) => i.detail ?? ''}
       estimate={56}
       busy={props.busy}
       onEnd={props.onEnd}
@@ -59,16 +59,20 @@ export function Feed<T extends FeedItem>(props: FeedProps<T>) {
       roving
       onRowKey={keys}
     >
-      {item => (render
-        ? render(item)
-        : (
+      {(item) =>
+        render ? (
+          render(item)
+        ) : (
           <>
             <span data-part="knot" data-tone={item().tone}></span>
             <span data-part="what">{item().what}</span>
             <time data-part="when">{item().when}</time>
-            <span data-part="detail" data-measure="">{item().detail}</span>
+            <span data-part="detail" data-measure="">
+              {item().detail}
+            </span>
           </>
-        ))}
+        )
+      }
     </VirtualList>
   )
 }

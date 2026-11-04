@@ -26,10 +26,21 @@ export function StatusSelect({ id, status }: { id: number; status: string }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <StatusBadge status={shown} />
-      <select aria-label="Status" value={shown} onChange={e => change(e.target.value)} className={`${field} capitalize`}>
-        {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+      <select
+        aria-label="Status"
+        value={shown}
+        onChange={(e) => change(e.target.value)}
+        className={`${field} capitalize`}
+      >
+        {statuses.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
-      <p role="alert" className="text-sm font-medium text-danger empty:hidden">{problem}</p>
+      <p role="alert" className="text-sm font-medium text-danger empty:hidden">
+        {problem}
+      </p>
     </div>
   )
 }

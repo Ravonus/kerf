@@ -8,7 +8,13 @@ type Todo = { id: string; title: string; saving?: boolean }
 let saved = 1
 const save = (title: string) =>
   new Promise<Todo>((done, fail) => {
-    setTimeout(() => (title.includes('fail') ? fail(new Error(`The server refused "${title}".`)) : done({ id: String(++saved), title })), 900)
+    setTimeout(
+      () =>
+        title.includes('fail')
+          ? fail(new Error(`The server refused "${title}".`))
+          : done({ id: String(++saved), title }),
+      900,
+    )
   })
 
 export default function Todos() {
@@ -26,25 +32,40 @@ export default function Todos() {
     problem.value = ''
     try {
       const row = await save(text)
-      todos.value = todos.value.map(t => (t.id === temp ? row : t))
+      todos.value = todos.value.map((t) => (t.id === temp ? row : t))
     } catch (err) {
       // The server said no: the layer goes, and the list is what the server has.
-      todos.value = todos.value.filter(t => t.id !== temp)
+      todos.value = todos.value.filter((t) => t.id !== temp)
       problem.value = err instanceof Error ? err.message : String(err)
     }
   }
   return (
     <Card title="Todos">
       <ul>
-        {todos.value.map(t => (
-          <li key={t.id}>{t.title} {t.saving && <Badge tone="info">saving</Badge>}</li>
+        {todos.value.map((t) => (
+          <li key={t.id}>
+            {t.title} {t.saving && <Badge tone="info">saving</Badge>}
+          </li>
         ))}
       </ul>
-      <form onSubmit={e => { e.preventDefault(); void add() }}>
-        <Input label="New todo" value={title.value} onInput={e => (title.value = e.currentTarget.value)} />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          void add()
+        }}
+      >
+        <Input
+          label="New todo"
+          value={title.value}
+          onInput={(e) => (title.value = e.currentTarget.value)}
+        />
         <Button type="submit">Add</Button>
       </form>
-      {problem.value && <Alert tone="critical" live>{problem.value}</Alert>}
+      {problem.value && (
+        <Alert tone="critical" live>
+          {problem.value}
+        </Alert>
+      )}
     </Card>
   )
 }

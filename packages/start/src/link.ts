@@ -15,15 +15,21 @@
 /** Bump when a message here changes shape: tabs of two shapes share nothing, and each is its own client. */
 const WIRE = 1
 const NAME = `weft:link:${WIRE}`
-const PING = 20_000, DEAD = 45_000, BASE = 200, CAP = 30_000, IDLE = 1000
+const PING = 20_000,
+  DEAD = 45_000,
+  BASE = 200,
+  CAP = 30_000,
+  IDLE = 1000
 export const BEAT = 5000
 const PONG = 1500
 /** The line went because the leader did: not the network's fault, so reopen at once. */
 export const HANDOVER = 4900
 
 // getRandomValues, not randomUUID: a page on plain http (a LAN address) has no randomUUID, and this runs on import.
-export const tab = typeof crypto === 'undefined' ? '' : crypto.getRandomValues(new Uint32Array(1))[0]!.toString(36)
-const locks = (): LockManager | undefined => (typeof navigator !== 'undefined' ? navigator.locks : undefined)
+export const tab =
+  typeof crypto === 'undefined' ? '' : crypto.getRandomValues(new Uint32Array(1))[0]!.toString(36)
+const locks = (): LockManager | undefined =>
+  typeof navigator !== 'undefined' ? navigator.locks : undefined
 export const shareable = () => !!locks() && typeof BroadcastChannel !== 'undefined'
 
 /** What a test reads. */
@@ -31,13 +37,24 @@ export const linkStats = { role: 'none' as 'none' | 'leader' | 'follower', steal
 
 // ---- a lock, a queue and a ping ---------------------------------------------------------------------------------------
 
-export interface Campaign { probe(): void; stop(): void; leading(): boolean; pinged?: () => void }
+export interface Campaign {
+  probe(): void
+  stop(): void
+  leading(): boolean
+  pinged?: () => void
+}
 
 /** `lead` when this tab takes the lock; `lose` when another tab takes it from under this one. */
-export function campaign(name: string, won: () => void, lose: () => void, stolen?: () => void): Campaign {
+export function campaign(
+  name: string,
+  won: () => void,
+  lose: () => void,
+  stolen?: () => void,
+): Campaign {
   const l = locks()
   const lockName = `${name}:leader`
-  let on = true, leads = false
+  let on = true,
+    leads = false
   let release: (() => void) | undefined
   let abort: AbortController | undefined
   let waiting: ReturnType<typeof setTimeout> | undefined
@@ -49,8 +66,16 @@ export function campaign(name: string, won: () => void, lose: () => void, stolen
     won()
   }
   if (!l || typeof BroadcastChannel === 'undefined') {
-    queueMicrotask(() => { if (on) hold() })
-    return { probe() {}, leading: () => leads, stop() { on = leads = false } }
+    queueMicrotask(() => {
+      if (on) hold()
+    })
+    return {
+      probe() {},
+      leading: () => leads,
+      stop() {
+        on = leads = false
+      },
+    }
   }
   const bc = new BroadcastChannel(`${name}:e`)
   const me: Campaign = {
@@ -93,17 +118,24 @@ export function campaign(name: string, won: () => void, lose: () => void, stolen
   function elect(steal = false) {
     const ctl = new AbortController()
     abort = ctl
-    l!.request(lockName, steal ? { steal: true } : { signal: ctl.signal }, () => new Promise<void>(ok => {
-      release = ok
-      hold()
-    })).catch(() => {
-      if (!on || abort !== ctl) return // this tab left the queue on purpose
-      if (leads) {
-        leads = false
-        lose()
-      }
-      elect()
-    })
+    l!
+      .request(
+        lockName,
+        steal ? { steal: true } : { signal: ctl.signal },
+        () =>
+          new Promise<void>((ok) => {
+            release = ok
+            hold()
+          }),
+      )
+      .catch(() => {
+        if (!on || abort !== ctl) return // this tab left the queue on purpose
+        if (leads) {
+          leads = false
+          lose()
+        }
+        elect()
+      })
   }
   const timer = setInterval(() => me.probe(), BEAT)
   elect()
@@ -121,11 +153,17 @@ export function holdTab(then: () => void) {
   if (tabHeld || !locks()) return then()
   whenHeld.push(then)
   if (whenHeld.length > 1) return
-  locks()!.request(`${NAME}:tab:${tab}`, () => new Promise<void>(ok => {
-    tabFree = ok
-    tabHeld = true
-    for (const f of whenHeld.splice(0)) f()
-  })).catch(() => {})
+  locks()!
+    .request(
+      `${NAME}:tab:${tab}`,
+      () =>
+        new Promise<void>((ok) => {
+          tabFree = ok
+          tabHeld = true
+          for (const f of whenHeld.splice(0)) f()
+        }),
+    )
+    .catch(() => {})
 }
 
 /** Comes through when that tab is gone, crash included. */
@@ -135,12 +173,23 @@ export function freeTab() {
   tabFree = undefined
 }
 
-export const whenGone = (t: string, fn: () => void) => void locks()?.request(`${NAME}:tab:${t}`, () => fn()).catch(() => {})
+export const whenGone = (t: string, fn: () => void) =>
+  void locks()
+    ?.request(`${NAME}:tab:${t}`, () => fn())
+    .catch(() => {})
 
 // ---- lines, as a tab sees them ----------------------------------------------------------------------------------------
 
-export interface Line { send(text: string): void; close(): void }
-interface Mine { id: string; hello: string; frame(text: string): void; closed(code: number, reason?: string): void }
+export interface Line {
+  send(text: string): void
+  close(): void
+}
+interface Mine {
+  id: string
+  hello: string
+  frame(text: string): void
+  closed(code: number, reason?: string): void
+}
 
 const lines = new Map<string, Mine>()
 let nth = 0
@@ -164,7 +213,9 @@ function end(l: Mine, code: number, reason?: string) {
   lines.delete(l.id)
   l.closed(code, reason)
 }
-const endAll = (code: number) => { for (const l of Array.from(lines.values())) end(l, code) }
+const endAll = (code: number) => {
+  for (const l of Array.from(lines.values())) end(l, code)
+}
 
 function arrive(text: string) {
   const at = text.indexOf(':', 2)
@@ -178,7 +229,12 @@ function arrive(text: string) {
 }
 
 /** `c`: a socket's frames (socket.ts). `r`: realtime events, opened with a `/_weft/rt` body (hub.ts). */
-export function openLine(kind: 'c' | 'r', hello: string, frame: (text: string) => void, closed: (code: number, reason?: string) => void): Line {
+export function openLine(
+  kind: 'c' | 'r',
+  hello: string,
+  frame: (text: string) => void,
+  closed: (code: number, reason?: string) => void,
+): Line {
   start()
   const id = `${tab}.${++nth}`
   const l: Mine = { id, hello: `o:${id}:${kind}:${hello}`, frame, closed }
@@ -186,7 +242,9 @@ export function openLine(kind: 'c' | 'r', hello: string, frame: (text: string) =
   say(id, 'o', l.hello)
   if (!election?.leading()) election?.probe()
   return {
-    send(text) { if (lines.has(id)) say(id, 'f', `f:${id}:${text}`) },
+    send(text) {
+      if (lines.has(id)) say(id, 'f', `f:${id}:${text}`)
+    },
     close() {
       if (!lines.has(id)) return
       say(id, 'x', `x:${id}:`)
@@ -199,7 +257,11 @@ export function openLine(kind: 'c' | 'r', hello: string, frame: (text: string) =
 
 type Up = { tab: string; id: string; k: 'o' | 'x' | 'f'; l: string }
 type Note =
-  | { t: 'lead' } | { t: 'lost'; code: number; never: boolean } | { t: 'who'; tab: string } | { t: 'you'; to: string; u?: string } | { t: 'redial' }
+  | { t: 'lead' }
+  | { t: 'lost'; code: number; never: boolean }
+  | { t: 'who'; tab: string }
+  | { t: 'you'; to: string; u?: string }
+  | { t: 'redial' }
   | { t: 'bye'; tab: string }
 
 let running = false
@@ -223,13 +285,18 @@ function start() {
   running = true
   if (shareable()) {
     notes = new BroadcastChannel(NAME)
-    notes.onmessage = e => note(e.data)
+    notes.onmessage = (e) => note(e.data)
     down = new BroadcastChannel(`${NAME}:down:${tab}`)
-    down.onmessage = e => arrive(e.data)
+    down.onmessage = (e) => arrive(e.data)
     upTo = new BroadcastChannel(`${NAME}:up`)
   }
   listen()
-  election = campaign(NAME, lead, () => hangUp(HANDOVER), () => void linkStats.steals++)
+  election = campaign(
+    NAME,
+    lead,
+    () => hangUp(HANDOVER),
+    () => void linkStats.steals++,
+  )
   linkStats.role = 'follower'
   if (!shareable() || session) return
   gate = []
@@ -244,11 +311,12 @@ function note(m: Note) {
     if (election?.leading()) return
     if (m.never) socketFailures++
     endAll(m.code)
-  }
-  else if (m.t === 'who') { if (election?.leading()) notes!.postMessage({ t: 'you', to: m.tab, u: open ? user : undefined }) }
-  else if (m.t === 'you' && m.to === tab) theirs?.(m.u)
-  else if (m.t === 'redial') { if (election?.leading() && ws) lost(ws, HANDOVER, true) }
-  else if (m.t === 'bye') dropTab(m.tab)
+  } else if (m.t === 'who') {
+    if (election?.leading()) notes!.postMessage({ t: 'you', to: m.tab, u: open ? user : undefined })
+  } else if (m.t === 'you' && m.to === tab) theirs?.(m.u)
+  else if (m.t === 'redial') {
+    if (election?.leading() && ws) lost(ws, HANDOVER, true)
+  } else if (m.t === 'bye') dropTab(m.tab)
 }
 
 let session: Promise<void> | undefined
@@ -256,8 +324,15 @@ let theirs: ((u: string | undefined) => void) | undefined
 
 /** One round trip, once, the first time a tab that didn't dial opens a line: a new socket used to cost the same. */
 function checkSession() {
-  const mine = fetch('/_weft/rt', { method: 'POST', headers: { 'content-type': 'application/json', 'x-weft': '1' }, body: '{"w":1}' }).then(r => (r.ok ? r.json() : undefined)).then(r => r?.u as string | undefined).catch(() => undefined)
-  const leader = new Promise<string | undefined>(ok => {
+  const mine = fetch('/_weft/rt', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-weft': '1' },
+    body: '{"w":1}',
+  })
+    .then((r) => (r.ok ? r.json() : undefined))
+    .then((r) => r?.u as string | undefined)
+    .catch(() => undefined)
+  const leader = new Promise<string | undefined>((ok) => {
     theirs = ok
     notes!.postMessage({ t: 'who', tab })
     setTimeout(ok, 1000)
@@ -288,7 +363,7 @@ const opened = new Map<string, Set<string>>()
 const ears = new Map<string, BroadcastChannel>()
 let upFrom: BroadcastChannel | undefined
 
-const offline = () => ! navigator.onLine
+const offline = () => !navigator.onLine
 const send = (line: string) => {
   if (open) ws!.send(line)
   else {
@@ -310,13 +385,14 @@ function take(m: Up) {
   } else if (m.k === 'x') set?.delete(m.id)
   // A line that closed before the socket came never has to be opened.
   if (m.k === 'x' && !open) {
-    const hello = queue.findIndex(q => q.startsWith(`o:${m.id}:`))
+    const hello = queue.findIndex((q) => q.startsWith(`o:${m.id}:`))
     if (hello >= 0) queue.splice(hello, 1)
   } else send(m.l)
-  if (![...opened.values()].some(s => s.size)) idle ??= setTimeout(() => {
-    idle = undefined
-    if (ws && ![...opened.values()].some(s => s.size)) lost(ws, 1000)
-  }, IDLE)
+  if (![...opened.values()].some((s) => s.size))
+    idle ??= setTimeout(() => {
+      idle = undefined
+      if (ws && ![...opened.values()].some((s) => s.size)) lost(ws, 1000)
+    }, IDLE)
 }
 
 function dropTab(t: string) {
@@ -358,20 +434,27 @@ function forward(owner: string, text: string) {
 function wantSocket() {
   if (!SOCKETS || ws || retry !== undefined || !election?.leading() || offline()) return
   if (!attempt) return dial()
-  retry = setTimeout(() => {
-    retry = undefined
-    dial()
-  }, Math.random() * Math.min(CAP, BASE * 2 ** attempt))
+  retry = setTimeout(
+    () => {
+      retry = undefined
+      dial()
+    },
+    Math.random() * Math.min(CAP, BASE * 2 ** attempt),
+  )
 }
 
 function dial() {
   if (ws || !election?.leading()) return
   linkStats.dials++
-  const s = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_weft/ws?mux=1`)
+  const s = new WebSocket(
+    `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_weft/ws?mux=1`,
+  )
   ws = s
-  s.onmessage = e => arriveFrom(e.data)
+  s.onmessage = (e) => arriveFrom(e.data)
   s.onclose = () => lost(s, 1006)
-  ping = setInterval(() => { if (open) s.send('p') }, PING)
+  ping = setInterval(() => {
+    if (open) s.send('p')
+  }, PING)
   dead = setTimeout(() => lost(s, 1006), DEAD)
 }
 
@@ -418,7 +501,7 @@ function lead() {
   linkStats.role = 'leader'
   if (shareable()) {
     upFrom = new BroadcastChannel(`${NAME}:up`)
-    upFrom.onmessage = e => take(e.data)
+    upFrom.onmessage = (e) => take(e.data)
     notes!.postMessage({ t: 'lead' })
   }
   // What this tab held for the session check goes straight out, and its lines were waiting on nobody.

@@ -6,7 +6,10 @@ import { mongoChanges } from '../src/mongo'
 
 const url = process.env.WEFT_TEST_MONGO
 const solo = process.env.WEFT_TEST_MONGO_SOLO
-const wait = (ms = 0) => new Promise(ok => { setTimeout(ok, ms) })
+const wait = (ms = 0) =>
+  new Promise((ok) => {
+    setTimeout(ok, ms)
+  })
 async function until(ok: () => boolean, ms = 6000) {
   const end = Date.now() + ms
   while (!ok() && Date.now() < end) await wait(5)
@@ -27,7 +30,7 @@ describe.skipIf(!url)('mongo change feed', () => {
   const on = () => {
     const pokes: unknown[] = []
     const s = mongoChanges(db, ['todos'])
-    return { pokes, s, feed: createFeed(s, { emit: p => pokes.push(p), status() {} }, {}) }
+    return { pokes, s, feed: createFeed(s, { emit: (p) => pokes.push(p), status() {} }, {}) }
   }
 
   test('a write is a poke of collection and id, with no field; other collections are silent', async () => {
@@ -47,7 +50,9 @@ describe.skipIf(!url)('mongo change feed', () => {
     const f = on()
     await f.feed.start(await f.s.probe())
     await wait(300)
-    await db.collection('todos').updateOne({ _id: 'a' as unknown as ObjectId }, { $set: { secret: 'z' } })
+    await db
+      .collection('todos')
+      .updateOne({ _id: 'a' as unknown as ObjectId }, { $set: { secret: 'z' } })
     await f.feed.settle(['todos', 'todos:a'])
     await wait(250)
     expect(f.pokes).toEqual([])

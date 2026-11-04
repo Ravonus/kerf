@@ -18,18 +18,38 @@ export function livekit({ url }: LivekitOptions): PeerTransport {
   return {
     name: 'livekit',
     open(room: PeerRoom): PeerLink & { room: Room } {
-      return createRoot(dispose => {
+      return createRoot((dispose) => {
         const live = new Room()
         const here = state<string[]>([])
-        const sync = () => { here.value = [...live.remoteParticipants.values()].map(p => p.identity) }
-        const decoder = new TextDecoder(), encoder = new TextEncoder()
-        live.on(RoomEvent.DataReceived, (bytes, participant, _kind, topic) => { if (topic === TOPIC && participant) room.receive(participant.identity, decoder.decode(bytes)) })
-        for (const e of [RoomEvent.ParticipantConnected, RoomEvent.ParticipantDisconnected, RoomEvent.Connected, RoomEvent.Disconnected]) live.on(e, sync)
+        const sync = () => {
+          here.value = [...live.remoteParticipants.values()].map((p) => p.identity)
+        }
+        const decoder = new TextDecoder(),
+          encoder = new TextEncoder()
+        live.on(RoomEvent.DataReceived, (bytes, participant, _kind, topic) => {
+          if (topic === TOPIC && participant)
+            room.receive(participant.identity, decoder.decode(bytes))
+        })
+        for (const e of [
+          RoomEvent.ParticipantConnected,
+          RoomEvent.ParticipantDisconnected,
+          RoomEvent.Connected,
+          RoomEvent.Disconnected,
+        ])
+          live.on(e, sync)
         if (room.ticket) void live.connect(url, room.ticket as string).then(sync, () => {})
         return {
           room: live,
-          up: derived(() => { const ids = room.peers.value; return ids.length > 0 && ids.every(id => here.value.includes(id)) }),
-          send(text) { if (untrack(() => here.value.length)) void live.localParticipant.publishData(encoder.encode(text), { reliable: false, topic: TOPIC }).catch(() => {}) },
+          up: derived(() => {
+            const ids = room.peers.value
+            return ids.length > 0 && ids.every((id) => here.value.includes(id))
+          }),
+          send(text) {
+            if (untrack(() => here.value.length))
+              void live.localParticipant
+                .publishData(encoder.encode(text), { reliable: false, topic: TOPIC })
+                .catch(() => {})
+          },
           close() {
             void live.disconnect()
             dispose()

@@ -1,95 +1,95 @@
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 
-import { LemonAvatar, type LemonExpression } from "~/components/lemon";
-import { CoachBubble, cx } from "~/components/ui";
-import { RotateCcw } from "~/components/ui/icons";
+import { LemonAvatar, type LemonExpression } from '~/components/lemon'
+import { CoachBubble, cx } from '~/components/ui'
+import { RotateCcw } from '~/components/ui/icons'
 
 type Line =
-  | { from: "coach"; text: string; expression: LemonExpression }
-  | { from: "kid"; text: string };
+  | { from: 'coach'; text: string; expression: LemonExpression }
+  | { from: 'kid'; text: string }
 
 /** Illustrative conversation (not a real learner). Lemon asks; the kid decides. */
 const SCRIPT: Line[] = [
   {
-    from: "coach",
-    expression: "curious",
-    text: "Hi Maya! Your idea is dog-walking. Who do you think would pay for it?",
+    from: 'coach',
+    expression: 'curious',
+    text: 'Hi Maya! Your idea is dog-walking. Who do you think would pay for it?',
   },
-  { from: "kid", text: "Everyone with a dog?" },
+  { from: 'kid', text: 'Everyone with a dog?' },
   {
-    from: "coach",
-    expression: "thinking",
+    from: 'coach',
+    expression: 'thinking',
     text: "Good start. Let's get specific: which neighbors are busy at 4pm on a weekday?",
   },
-  { from: "kid", text: "The Parks! They both work late." },
+  { from: 'kid', text: 'The Parks! They both work late.' },
   {
-    from: "coach",
-    expression: "excited",
+    from: 'coach',
+    expression: 'excited',
     text: "That's your first customer interview. What three questions will you ask them?",
   },
-];
+]
 
-const BEAT_MS = 1700;
-const TYPING_MS = 900;
+const BEAT_MS = 1700
+const TYPING_MS = 900
 
 /**
  * A mini chat that plays once when scrolled into view. Built in markup, no
  * screenshots. Under reduced motion it shows the whole exchange at once.
  */
 export function CoachDemo() {
-  const [shown, setShown] = createSignal(1);
-  const [typing, setTyping] = createSignal(false);
-  const [run, setRun] = createSignal(1);
-  let root!: HTMLDivElement;
-  let stop = () => {};
+  const [shown, setShown] = createSignal(1)
+  const [typing, setTyping] = createSignal(false)
+  const [run, setRun] = createSignal(1)
+  let root!: HTMLDivElement
+  let stop = () => {}
 
   const arm = () => {
-    stop();
-    const timers: number[] = [];
+    stop()
+    const timers: number[] = []
     const play = () => {
-      setShown(1);
+      setShown(1)
       for (let i = 1; i < SCRIPT.length; i++) {
-        const t = i * BEAT_MS;
-        if (SCRIPT[i]!.from === "coach") {
-          timers.push(window.setTimeout(() => setTyping(true), t - TYPING_MS));
+        const t = i * BEAT_MS
+        if (SCRIPT[i]!.from === 'coach') {
+          timers.push(window.setTimeout(() => setTyping(true), t - TYPING_MS))
         }
         timers.push(
           window.setTimeout(() => {
-            setTyping(false);
-            setShown(i + 1);
+            setTyping(false)
+            setShown(i + 1)
           }, t),
-        );
+        )
       }
-    };
+    }
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          io.disconnect();
-          play();
+          io.disconnect()
+          play()
         }
       },
       { threshold: 0.45 },
-    );
-    io.observe(root);
+    )
+    io.observe(root)
     stop = () => {
-      io.disconnect();
-      timers.forEach((t) => window.clearTimeout(t));
-    };
-  };
+      io.disconnect()
+      timers.forEach((t) => window.clearTimeout(t))
+    }
+  }
 
   onMount(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setShown(SCRIPT.length);
-    else arm();
-  });
-  onCleanup(() => stop());
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setShown(SCRIPT.length)
+    else arm()
+  })
+  onCleanup(() => stop())
 
-  const lines = createMemo(() => SCRIPT.slice(0, shown()));
+  const lines = createMemo(() => SCRIPT.slice(0, shown()))
   const mood = createMemo<LemonExpression>(() => {
-    if (typing()) return "thinking";
-    const last = lines().findLast((l) => l.from === "coach");
-    return last?.from === "coach" ? last.expression : "happy";
-  });
-  const done = () => shown() >= SCRIPT.length;
+    if (typing()) return 'thinking'
+    const last = lines().findLast((l) => l.from === 'coach')
+    return last?.from === 'coach' ? last.expression : 'happy'
+  })
+  const done = () => shown() >= SCRIPT.length
 
   return (
     <div ref={root} class="overflow-hidden rounded-panel bg-surface shadow-pop ring-2 ring-navy">
@@ -98,19 +98,19 @@ export function CoachDemo() {
         <div class="min-w-0 flex-1">
           <p class="leading-tight font-semibold">Lemon</p>
           <p class="text-sm text-white/75" aria-live="off">
-            {typing() ? "thinking…" : "Your coach · Step 2: Test your idea"}
+            {typing() ? 'thinking…' : 'Your coach · Step 2: Test your idea'}
           </p>
         </div>
         <button
           type="button"
           onClick={() => {
-            setTyping(false);
-            setRun((n) => n + 1);
-            arm();
+            setTyping(false)
+            setRun((n) => n + 1)
+            arm()
           }}
           class={cx(
-            "grid size-11 place-items-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white",
-            !done() && "invisible",
+            'grid size-11 place-items-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white',
+            !done() && 'invisible',
           )}
           aria-label="Replay conversation"
           tabindex={done() ? 0 : -1}
@@ -128,7 +128,7 @@ export function CoachDemo() {
           <For each={lines()}>
             {(line) => (
               <div class="animate-pop-in">
-                {line.from === "coach" ? (
+                {line.from === 'coach' ? (
                   <CoachBubble name="Lemon">{line.text}</CoachBubble>
                 ) : (
                   <CoachBubble from="kid" name="Maya, 11">
@@ -154,15 +154,18 @@ export function CoachDemo() {
           </div>
         </Show>
       </div>
-      <div class="flex flex-wrap items-center gap-2 border-t border-line px-4 py-3.5 sm:px-6" aria-hidden={!done()}>
+      <div
+        class="flex flex-wrap items-center gap-2 border-t border-line px-4 py-3.5 sm:px-6"
+        aria-hidden={!done()}
+      >
         <span class="text-sm text-muted">Maya chooses:</span>
-        <For each={["Help me start", "I'll write them myself"]}>
+        <For each={['Help me start', "I'll write them myself"]}>
           {(chip, i) => (
             <span
               class={cx(
-                "rounded-pill px-3 py-1.5 text-sm font-semibold transition-opacity duration-500",
-                i() === 1 ? "bg-navy text-white" : "bg-gold-soft text-ink ring-1 ring-line",
-                done() ? "opacity-100" : "opacity-0",
+                'rounded-pill px-3 py-1.5 text-sm font-semibold transition-opacity duration-500',
+                i() === 1 ? 'bg-navy text-white' : 'bg-gold-soft text-ink ring-1 ring-line',
+                done() ? 'opacity-100' : 'opacity-0',
               )}
             >
               {chip}
@@ -171,5 +174,5 @@ export function CoachDemo() {
         </For>
       </div>
     </div>
-  );
+  )
 }

@@ -12,9 +12,20 @@ import { Status as ClientStatus } from './fixtures/browser/Status.tsx?weft-hydra
 /** Count native listeners added and removed for `type` on window and document while `fn` runs. */
 function listeners(type: string) {
   const add = [vi.spyOn(window, 'addEventListener'), vi.spyOn(document, 'addEventListener')]
-  const remove = [vi.spyOn(window, 'removeEventListener'), vi.spyOn(document, 'removeEventListener')]
-  const count = (spies: typeof add) => spies.flatMap(s => s.mock.calls).filter(c => c[0] === type).length
-  return { get added() { return count(add) }, get removed() { return count(remove) } }
+  const remove = [
+    vi.spyOn(window, 'removeEventListener'),
+    vi.spyOn(document, 'removeEventListener'),
+  ]
+  const count = (spies: typeof add) =>
+    spies.flatMap((s) => s.mock.calls).filter((c) => c[0] === type).length
+  return {
+    get added() {
+      return count(add)
+    },
+    get removed() {
+      return count(remove)
+    },
+  }
 }
 
 afterEach(() => vi.restoreAllMocks())
@@ -37,7 +48,15 @@ describe('online', () => {
   it('fifty readers share one listener per event, removed with the last one', async () => {
     const l = listeners('offline')
     function Many() {
-      return <ul>{Array.from({ length: 50 }, (_, i) => <li key={i}><Status /></li>)}</ul>
+      return (
+        <ul>
+          {Array.from({ length: 50 }, (_, i) => (
+            <li key={i}>
+              <Status />
+            </li>
+          ))}
+        </ul>
+      )
     }
     const { unmount } = render(Many)
     expect(l.added).toBe(1)
@@ -110,7 +129,11 @@ it('media follows its query; queries are independent', async () => {
   function Theme() {
     const dark = media('(prefers-color-scheme: dark)', { ssr: false })
     const wide = media('(min-width: 800px)', { ssr: false })
-    return <p role="status">{dark.value ? 'dark' : 'light'} {wide.value ? 'wide' : 'narrow'}</p>
+    return (
+      <p role="status">
+        {dark.value ? 'dark' : 'light'} {wide.value ? 'wide' : 'narrow'}
+      </p>
+    )
   }
   render(Theme)
   const text = () => screen.getByRole('status').textContent
@@ -121,7 +144,7 @@ it('media follows its query; queries are independent', async () => {
   expect(text()).toBe('dark wide')
 })
 
-it('works from derived and inside a defineState setup (which doesn\'t collect its boxes)', async () => {
+it("works from derived and inside a defineState setup (which doesn't collect its boxes)", async () => {
   const net$ = defineState('net', () => {
     const isOnline = online()
     const label = derived(() => (isOnline.value ? 'up' : 'down'))
@@ -140,7 +163,7 @@ describe('on', () => {
   it('listens until the owner goes; the event is typed from the target', () => {
     const keys: string[] = []
     function Keys() {
-      on(window, 'keydown', e => keys.push(e.key))
+      on(window, 'keydown', (e) => keys.push(e.key))
       return <p>k</p>
     }
     const { unmount } = render(Keys)
@@ -153,7 +176,7 @@ describe('on', () => {
   it('shares one native listener per (target, type); options get their own', () => {
     const l = listeners('resize')
     const seen: number[] = []
-    const dispose = createRoot(d => {
+    const dispose = createRoot((d) => {
       on(window, 'resize', () => seen.push(1))
       on(window, 'resize', () => seen.push(2))
       on(window, 'resize', () => seen.push(3), { passive: true })
@@ -168,7 +191,7 @@ describe('on', () => {
 
   it('returns a stop function', () => {
     const seen: string[] = []
-    const dispose = createRoot(d => {
+    const dispose = createRoot((d) => {
       const stop = on(document, 'click', () => seen.push('c'))
       document.dispatchEvent(new Event('click'))
       stop()
@@ -198,9 +221,16 @@ describe('interval', () => {
     expect(n).toBe(3)
   })
 
-  it.each([[250, 250], ['500ms', 500], ['2s', 2000], ['1.5s', 1500], ['1m', 60000], ['1h', 3600000]] as const)('%s is %i ms', (every, ms) => {
+  it.each([
+    [250, 250],
+    ['500ms', 500],
+    ['2s', 2000],
+    ['1.5s', 1500],
+    ['1m', 60000],
+    ['1h', 3600000],
+  ] as const)('%s is %i ms', (every, ms) => {
     let n = 0
-    const dispose = createRoot(d => (interval(every as never, () => n++), d))
+    const dispose = createRoot((d) => (interval(every as never, () => n++), d))
     vi.advanceTimersByTime(ms - 1)
     expect(n).toBe(0)
     vi.advanceTimersByTime(1)
@@ -208,7 +238,7 @@ describe('interval', () => {
     dispose()
   })
 
-  it('rejects what isn\'t a duration', () => {
+  it("rejects what isn't a duration", () => {
     expect(() => createRoot(() => interval('soon' as never, () => {}))).toThrow(/isn't a duration/)
   })
 })
@@ -225,7 +255,7 @@ describe('W051 at runtime: outside an owner', () => {
   })
 
   it('an explicit createRoot is an owner', () => {
-    const dispose = createRoot(d => (online().value, d))
+    const dispose = createRoot((d) => (online().value, d))
     expect(leaks()).toEqual(['online()'])
     dispose()
     expect(leaks()).toEqual([])
@@ -233,13 +263,17 @@ describe('W051 at runtime: outside an owner', () => {
 })
 
 describe('server and hydration', () => {
-  afterEach(() => { document.body.innerHTML = '' })
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
 
   it('renders the declared values on the server and touches no browser API', () => {
     const match = vi.spyOn(window, 'matchMedia')
     const l = listeners('keydown')
     const html = renderToString(() => ServerStatus({}))
-    expect(Object.assign(document.createElement('div'), { innerHTML: html }).textContent).toBe('online light')
+    expect(Object.assign(document.createElement('div'), { innerHTML: html }).textContent).toBe(
+      'online light',
+    )
     expect(match).not.toHaveBeenCalled()
     expect(l.added).toBe(0)
     expect(leaks()).toEqual([])
@@ -247,9 +281,14 @@ describe('server and hydration', () => {
 
   it('media without ssr warns (W054) and renders false on the server', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const html = renderToString(() => { const d = media('(prefers-color-scheme: dark)'); return String(d.value) })
+    const html = renderToString(() => {
+      const d = media('(prefers-color-scheme: dark)')
+      return String(d.value)
+    })
     expect(html).toBe('false')
-    expect(warn.mock.calls[0]![0]).toMatch(/^W054: media\('\(prefers-color-scheme: dark\)'\) is read on the server without `ssr`/)
+    expect(warn.mock.calls[0]![0]).toMatch(
+      /^W054: media\('\(prefers-color-scheme: dark\)'\) is read on the server without `ssr`/,
+    )
   })
 
   it('hydrates with the server value, then switches to the real one in the next flush', async () => {
@@ -275,7 +314,9 @@ describe('T012: the leak check', () => {
       void online().value
     }) // never disposed
     expect(leaks()).toEqual(['`keydown` listener', "interval('1s')", 'online()'])
-    expect(() => assertNoLeaks()).toThrow(/^T012: the test ended with 3 open subscriptions, listeners or intervals:\n {2}- `keydown` listener\n {2}- interval\('1s'\)\n {2}- online\(\)\n {2}fix: unmount/)
+    expect(() => assertNoLeaks()).toThrow(
+      /^T012: the test ended with 3 open subscriptions, listeners or intervals:\n {2}- `keydown` listener\n {2}- interval\('1s'\)\n {2}- online\(\)\n {2}fix: unmount/,
+    )
     expect(leaks()).toEqual([])
     expect(l.removed).toBe(1)
   })
@@ -283,14 +324,22 @@ describe('T012: the leak check', () => {
   it('names the component it was made in (dev names)', () => {
     devComponent.label = '<Leaky> (Leaky.tsx:3:5)'
     try {
-      createRoot(() => { on(window, 'keydown', () => {}); void online().value })
-    } finally { devComponent.label = undefined }
-    expect(leaks()).toEqual(['`keydown` listener in <Leaky> (Leaky.tsx:3:5)', 'online() in <Leaky> (Leaky.tsx:3:5)'])
+      createRoot(() => {
+        on(window, 'keydown', () => {})
+        void online().value
+      })
+    } finally {
+      devComponent.label = undefined
+    }
+    expect(leaks()).toEqual([
+      '`keydown` listener in <Leaky> (Leaky.tsx:3:5)',
+      'online() in <Leaky> (Leaky.tsx:3:5)',
+    ])
     expect(() => assertNoLeaks()).toThrow(/T012/)
   })
 
   it('passes once everything is unmounted', () => {
-    const { unmount } = render(() => (on(window, 'keydown', () => {}), <p>ok</p>))
+    const { unmount } = render(() => (on(window, 'keydown', () => {}), (<p>ok</p>)))
     unmount()
     expect(() => assertNoLeaks()).not.toThrow()
   })

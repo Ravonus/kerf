@@ -21,8 +21,12 @@ export function createTabSearch(api: Api, query: () => string) {
     onCleanup(() => controller.abort())
     setSearch('state', 'pending')
     api.search(text, controller.signal).then(
-      ids => { if (!controller.signal.aborted) setSearch({ state: 'idle', results: new Set(ids) }) },
-      () => { if (!controller.signal.aborted) setSearch('state', 'failed') },
+      (ids) => {
+        if (!controller.signal.aborted) setSearch({ state: 'idle', results: new Set(ids) })
+      },
+      () => {
+        if (!controller.signal.aborted) setSearch('state', 'failed')
+      },
     )
   })
   return search

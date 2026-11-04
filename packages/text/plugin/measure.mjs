@@ -4,7 +4,8 @@
 /** Pretext's own lines carry their text, so `lineText` only has to hand it back. */
 function pretext(P) {
   return {
-    prepare: (text, font, opts) => Object.assign(P.prepareWithSegments(text, font, opts), { exact: true, ready: null }),
+    prepare: (text, font, opts) =>
+      Object.assign(P.prepareWithSegments(text, font, opts), { exact: true, ready: null }),
     layout: (h, width, lineHeight) => P.layout(h, width, lineHeight),
     lines: (h, width) => P.layoutWithLines(h, width, 1).lines,
     lineText: (_, line) => line.text,

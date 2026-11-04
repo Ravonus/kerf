@@ -10,10 +10,12 @@ import { announce } from './toast'
 export type FlowDirection = 'forward' | 'back'
 
 /** Which way a step change moves: by position in `ids`. */
-export const flowDirection = (ids: readonly string[], from: string, to: string): FlowDirection => (ids.indexOf(to) < ids.indexOf(from) ? 'back' : 'forward')
+export const flowDirection = (ids: readonly string[], from: string, to: string): FlowDirection =>
+  ids.indexOf(to) < ids.indexOf(from) ? 'back' : 'forward'
 
 /** "Step 2 of 4, Shipping", what the polite region says on arrival. */
-export const stepAnnouncement = (ids: readonly string[], id: string, label?: string) => `Step ${ids.indexOf(id) + 1} of ${ids.length}${label ? `, ${label}` : ''}`
+export const stepAnnouncement = (ids: readonly string[], id: string, label?: string) =>
+  `Step ${ids.indexOf(id) + 1} of ${ids.length}${label ? `, ${label}` : ''}`
 
 /** The step a URL names, when it names one of `ids`. */
 export function stepFromSearch(search: string, param: string, ids: readonly string[]) {
@@ -56,26 +58,38 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
   let live = true
   const doc = el.ownerDocument
   const win = doc.defaultView!
-  const section = (id: string) => [...el.children].find(c => (c as HTMLElement).dataset.part === 'step' && (c as HTMLElement).dataset.step === id) as HTMLElement | undefined
+  const section = (id: string) =>
+    [...el.children].find(
+      (c) => (c as HTMLElement).dataset.part === 'step' && (c as HTMLElement).dataset.step === id,
+    ) as HTMLElement | undefined
 
   function leave(step: HTMLElement) {
     step.dataset.state = 'leaving'
-    const end = () => { if (live && step.dataset.state === 'leaving') delete step.dataset.state }
+    const end = () => {
+      if (live && step.dataset.state === 'leaving') delete step.dataset.state
+    }
     const running = step.getAnimations?.() ?? []
-    if (running.length) void Promise.allSettled(running.map(a => a.finished)).then(end)
+    if (running.length) void Promise.allSettled(running.map((a) => a.finished)).then(end)
     else end()
   }
 
   function arrive(from: string, to: string, push: boolean) {
     el.dataset.dir = flowDirection(o.steps, from, to) === 'back' ? 'back' : 'forward'
-    for (const s of el.querySelectorAll<HTMLElement>(':scope > [data-part="step"][data-state="leaving"]')) delete s.dataset.state
-    const old = section(from), next = section(to)
+    for (const s of el.querySelectorAll<HTMLElement>(
+      ':scope > [data-part="step"][data-state="leaving"]',
+    ))
+      delete s.dataset.state
+    const old = section(from),
+      next = section(to)
     next?.toggleAttribute('data-after-exit', !!old)
     if (old && old !== next) leave(old)
-    const target = next?.querySelector<HTMLElement>('[data-autofocus]') ?? next?.querySelector<HTMLElement>(STEP_TITLE)
+    const target =
+      next?.querySelector<HTMLElement>('[data-autofocus]') ??
+      next?.querySelector<HTMLElement>(STEP_TITLE)
     target?.focus({ preventScroll: true })
     if (o.announce !== false) announce(doc, stepAnnouncement(o.steps, to, o.label(to)))
-    if (push && o.history) win.history.pushState(win.history.state, '', stepUrl(win.location.href, o.history, to))
+    if (push && o.history)
+      win.history.pushState(win.history.state, '', stepUrl(win.location.href, o.history, to))
   }
 
   function moved(to: string, push: boolean) {
@@ -83,7 +97,9 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
     if (from === to) return
     at = to
     // after the render that moved data-state="active": the effect that fed `update` runs in the same flush
-    queueMicrotask(() => { if (live && at === to) arrive(from, to, push) })
+    queueMicrotask(() => {
+      if (live && at === to) arrive(from, to, push)
+    })
   }
 
   const onPop = () => {
@@ -96,12 +112,21 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
   win.addEventListener('popstate', onPop)
   if (o.history) {
     const named = stepFromSearch(win.location.search, o.history, o.steps)
-    if (named && named !== at) { moved(named, false); o.onStep(named) }
-    else if (!named) win.history.replaceState(win.history.state, '', stepUrl(win.location.href, o.history, at))
+    if (named && named !== at) {
+      moved(named, false)
+      o.onStep(named)
+    } else if (!named)
+      win.history.replaceState(win.history.state, '', stepUrl(win.location.href, o.history, at))
   }
   return {
-    update(next: StepFlowOptions) { o = next; moved(o.step, true) },
-    destroy() { live = false; win.removeEventListener('popstate', onPop) },
+    update(next: StepFlowOptions) {
+      o = next
+      moved(o.step, true)
+    },
+    destroy() {
+      live = false
+      win.removeEventListener('popstate', onPop)
+    },
   }
 }
 
@@ -130,9 +155,15 @@ export interface FlowError {
 }
 
 /** What a server sends with an error, past the code: the fields mapFlowError reads, and whatever a domain adds. */
-export type FlowData = { until?: string; retryAfter?: number; attemptsLeft?: number } & Record<string, unknown>
+export type FlowData = { until?: string; retryAfter?: number; attemptsLeft?: number } & Record<
+  string,
+  unknown
+>
 
-interface IssueLike { message: string; path?: readonly (PropertyKey | { readonly key: PropertyKey })[] }
+interface IssueLike {
+  message: string
+  path?: readonly (PropertyKey | { readonly key: PropertyKey })[]
+}
 
 /** What `mapFlowError` needs beyond the error itself. */
 export interface FlowErrorOptions {
@@ -146,45 +177,136 @@ export interface FlowErrorOptions {
 export function issueFields(issues: readonly IssueLike[] = []) {
   const fields: Record<string, string> = {}
   for (const i of issues) {
-    const name = (i.path ?? []).map(p => String(typeof p === 'object' && p !== null ? p.key : p)).join('.')
+    const name = (i.path ?? [])
+      .map((p) => String(typeof p === 'object' && p !== null ? p.key : p))
+      .join('.')
     if (name) fields[name] ??= i.message
   }
   return fields
 }
 
 /** "2 fields need attention": the line said on submit. */
-export const fieldSummary = (n: number) => (n === 1 ? '1 field needs attention' : `${n} fields need attention`)
+export const fieldSummary = (n: number) =>
+  n === 1 ? '1 field needs attention' : `${n} fields need attention`
 
 const utc = (iso: string) => {
   const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? iso : `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`
+  return Number.isNaN(d.getTime())
+    ? iso
+    : `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`
 }
-const tries = (n: number | undefined) => (n === undefined ? '' : n === 1 ? ' 1 try left.' : ` ${n} tries left.`)
+const tries = (n: number | undefined) =>
+  n === undefined ? '' : n === 1 ? ' 1 try left.' : ` ${n} tries left.`
 
 /** One message per cause: what happened and what to do, in one sentence. Takes a `FnError`, anything like one, or a string. */
-export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowErrorOptions = {}): FlowError {
-  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string; status?: number; message?: string; issues?: readonly IssueLike[]; data?: FlowData; extra?: FlowData; name?: string }
+export function mapFlowError(
+  error: unknown,
+  { online = true, copy = {} }: FlowErrorOptions = {},
+): FlowError {
+  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as {
+    code?: string
+    status?: number
+    message?: string
+    issues?: readonly IssueLike[]
+    data?: FlowData
+    extra?: FlowData
+    name?: string
+  }
   const data: FlowData = e.data ?? e.extra ?? e
   const base = { code: e.code, fields: {} as Record<string, string> }
-  const alert = (title: string, description?: string): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
+  const alert = (title: string, description?: string): FlowError => ({
+    ...base,
+    surface: 'alert',
+    title,
+    description,
+    focus: 'alert',
+    live: 'assertive',
+  })
   const fields = issueFields(e.issues)
   const named = Object.keys(fields).length
-  if (named) return { ...base, surface: 'field', fields, title: e.message ?? fieldSummary(named), summary: fieldSummary(named), focus: 'field', live: 'polite' }
+  if (named)
+    return {
+      ...base,
+      surface: 'field',
+      fields,
+      title: e.message ?? fieldSummary(named),
+      summary: fieldSummary(named),
+      focus: 'field',
+      live: 'polite',
+    }
   const known = e.code ? copy[e.code] : undefined
   if (known) return alert(typeof known === 'function' ? known(data) : known)
   switch (e.code) {
-    case 'INVALID_CREDENTIALS': return alert("That email and password don't match.", 'Try again, or reset your password.')
-    case 'LOCKED': return { ...alert(`This account is locked${data.until ? ` until ${utc(data.until)}` : ''}.`, 'Reset your password to get back in sooner.'), until: data.until }
-    case 'RATE_LIMITED': return { ...base, surface: 'rate-limit', title: 'Too many tries.', retryAfter: data.retryAfter, focus: 'stay', live: 'polite' }
-    case 'WRONG_CODE': return { ...base, surface: 'field', fields: { code: `That code didn't work.${tries(data.attemptsLeft)}` }, title: `That code didn't work.${tries(data.attemptsLeft)}`, attemptsLeft: data.attemptsLeft, focus: 'field', live: 'assertive' }
-    case 'EXPIRED': return { ...base, surface: 'field', fields: { code: 'That code expired. We sent a new one.' }, title: 'That code expired. We sent a new one.', focus: 'field', live: 'assertive' }
+    case 'INVALID_CREDENTIALS':
+      return alert("That email and password don't match.", 'Try again, or reset your password.')
+    case 'LOCKED':
+      return {
+        ...alert(
+          `This account is locked${data.until ? ` until ${utc(data.until)}` : ''}.`,
+          'Reset your password to get back in sooner.',
+        ),
+        until: data.until,
+      }
+    case 'RATE_LIMITED':
+      return {
+        ...base,
+        surface: 'rate-limit',
+        title: 'Too many tries.',
+        retryAfter: data.retryAfter,
+        focus: 'stay',
+        live: 'polite',
+      }
+    case 'WRONG_CODE':
+      return {
+        ...base,
+        surface: 'field',
+        fields: { code: `That code didn't work.${tries(data.attemptsLeft)}` },
+        title: `That code didn't work.${tries(data.attemptsLeft)}`,
+        attemptsLeft: data.attemptsLeft,
+        focus: 'field',
+        live: 'assertive',
+      }
+    case 'EXPIRED':
+      return {
+        ...base,
+        surface: 'field',
+        fields: { code: 'That code expired. We sent a new one.' },
+        title: 'That code expired. We sent a new one.',
+        focus: 'field',
+        live: 'assertive',
+      }
     case undefined:
-    default: break
+    default:
+      break
   }
-  if (e.code === 'STALE_SCHEMA' || e.code === 'CONTRACT_CHANGED') return { ...base, surface: 'banner', title: 'A new version is ready.', description: 'Reload to finish saving.', focus: 'stay', live: 'polite' }
-  if (!online) return { ...base, surface: 'banner', title: "You're offline.", description: 'Your changes are kept. Try again when you reconnect.', focus: 'stay', live: 'assertive' }
-  if (e.name === 'TypeError' || (e.status !== undefined && (e.status === 0 || e.status >= 500))) return { ...base, surface: 'toast', title: "We couldn't reach the server.", description: 'Your changes are kept. Try again.', focus: 'stay', live: 'assertive' }
-  return alert(e.message || 'That didn\'t go through. Try again.')
+  if (e.code === 'STALE_SCHEMA' || e.code === 'CONTRACT_CHANGED')
+    return {
+      ...base,
+      surface: 'banner',
+      title: 'A new version is ready.',
+      description: 'Reload to finish saving.',
+      focus: 'stay',
+      live: 'polite',
+    }
+  if (!online)
+    return {
+      ...base,
+      surface: 'banner',
+      title: "You're offline.",
+      description: 'Your changes are kept. Try again when you reconnect.',
+      focus: 'stay',
+      live: 'assertive',
+    }
+  if (e.name === 'TypeError' || (e.status !== undefined && (e.status === 0 || e.status >= 500)))
+    return {
+      ...base,
+      surface: 'toast',
+      title: "We couldn't reach the server.",
+      description: 'Your changes are kept. Try again.',
+      focus: 'stay',
+      live: 'assertive',
+    }
+  return alert(e.message || "That didn't go through. Try again.")
 }
 
 /** Ticks once a second until zero, from the clock, so a throttled tab catches up. Countdowns are information: reduced motion keeps them. */
@@ -193,7 +315,10 @@ export function secondsClock(seconds: number, onTick: (left: number) => void, on
   const id = setInterval(() => {
     const left = Math.max(0, Math.ceil((end - Date.now()) / 1000))
     onTick(left)
-    if (left === 0) { clearInterval(id); onDone?.() }
+    if (left === 0) {
+      clearInterval(id)
+      onDone?.()
+    }
   }, 1000)
   return () => clearInterval(id)
 }
@@ -202,11 +327,17 @@ export function secondsClock(seconds: number, onTick: (left: number) => void, on
 export const clockLabel = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
 /** Cancelling the OS sheet is not an error (09 §2.1): nothing shows. */
-export const isPasskeyCancel = (e: unknown) => ['NotAllowedError', 'AbortError'].includes((e as { name?: string } | null)?.name ?? '')
+export const isPasskeyCancel = (e: unknown) =>
+  ['NotAllowedError', 'AbortError'].includes((e as { name?: string } | null)?.name ?? '')
 
 /** Copy to the clipboard; a refusal stays quiet (the text is on the page to select). */
 export async function copyText(doc: Document, text: string) {
-  try { await doc.defaultView?.navigator.clipboard?.writeText(text); return true } catch { return false }
+  try {
+    await doc.defaultView?.navigator.clipboard?.writeText(text)
+    return true
+  } catch {
+    return false
+  }
 }
 
 // ---- email and password (09 §2.3) -----------------------------------------------------------------------------------
@@ -215,10 +346,15 @@ export async function copyText(doc: Document, text: string) {
 export const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)
 
 /** The format message on blur: never "Invalid input". Empty says nothing until submit. */
-export const emailError = (v: string) => (v && !isEmail(v) ? "That doesn't look like an email. Check for a typo." : undefined)
+export const emailError = (v: string) =>
+  v && !isEmail(v) ? "That doesn't look like an email. Check for a typo." : undefined
 
 /** One line of the password checklist. */
-export interface PasswordRule { id: string; label: string; met: boolean }
+export interface PasswordRule {
+  id: string
+  label: string
+  met: boolean
+}
 
 /** The checklist shown under a new password, each rule with whether `v` meets it. */
 export const passwordRules = (v: string): PasswordRule[] => [
@@ -228,14 +364,25 @@ export const passwordRules = (v: string): PasswordRule[] => [
 ]
 
 /** `passwordStrength`'s answer: a score from 0 to 4, its word and its tone. */
-export type PasswordStrength = { score: 0 | 1 | 2 | 3 | 4; label: string; tone: 'critical' | 'caution' | 'positive' }
+export type PasswordStrength = {
+  score: 0 | 1 | 2 | 3 | 4
+  label: string
+  tone: 'critical' | 'caution' | 'positive'
+}
 
-const STRENGTH = [['Too short', 'critical'], ['Weak', 'critical'], ['Fair', 'caution'], ['Good', 'positive'], ['Strong', 'positive']] as const
+const STRENGTH = [
+  ['Too short', 'critical'],
+  ['Weak', 'critical'],
+  ['Fair', 'caution'],
+  ['Good', 'positive'],
+  ['Strong', 'positive'],
+] as const
 
 /** A rough score: length and variety, with a repeated run or a too-short password held down. */
 export function passwordStrength(v: string): PasswordStrength {
-  const kinds = [/\p{Ll}/u, /\p{Lu}/u, /\d/, /[^\p{L}\d]/u].filter(r => r.test(v)).length
-  let score = v.length < 8 ? 0 : Math.min(4, kinds - 1 + (v.length >= 12 ? 1 : 0) + (v.length >= 16 ? 1 : 0))
+  const kinds = [/\p{Ll}/u, /\p{Lu}/u, /\d/, /[^\p{L}\d]/u].filter((r) => r.test(v)).length
+  let score =
+    v.length < 8 ? 0 : Math.min(4, kinds - 1 + (v.length >= 12 ? 1 : 0) + (v.length >= 16 ? 1 : 0))
   if (v.length >= 8) score = Math.max(1, score)
   if (/^(.)\1+$/.test(v)) score = Math.min(score, 1)
   const [label, tone] = STRENGTH[score]!
@@ -268,8 +415,9 @@ export function otpInput(el: HTMLElement, opts: OtpOptions) {
   const doc = el.ownerDocument
   const m = installSweep(doc)
   const paint = () => {
-    const v = input.value = otpClean(input.value, o.length)
-    const at = Math.min(v.length, o.length - 1), focused = doc.activeElement === input
+    const v = (input.value = otpClean(input.value, o.length))
+    const at = Math.min(v.length, o.length - 1),
+      focused = doc.activeElement === input
     cells.forEach((c, i) => {
       c.querySelector('[data-part="char"]')!.textContent = v[i] ?? ''
       m.pin(c, o.invalid || o.success || (focused && i === at))
@@ -296,9 +444,14 @@ export function otpInput(el: HTMLElement, opts: OtpOptions) {
   paint()
   return {
     update(next: OtpOptions) {
-      const wrong = next.invalid && !o.invalid, won = next.success && !o.success
+      const wrong = next.invalid && !o.invalid,
+        won = next.success && !o.success
       o = next
-      if (wrong) { input.value = ''; o.onValue(''); input.focus({ preventScroll: true }) }
+      if (wrong) {
+        input.value = ''
+        o.onValue('')
+        input.focus({ preventScroll: true })
+      }
       if (won) input.blur()
       paint()
     },
@@ -313,24 +466,42 @@ export function otpInput(el: HTMLElement, opts: OtpOptions) {
 // ---- tour (09 §3.2) ------------------------------------------------------------------------------------------------
 
 /** A rectangle in viewport pixels: the tour's target or its card. */
-export interface TourBox { x: number; y: number; w: number; h: number }
+export interface TourBox {
+  x: number
+  y: number
+  w: number
+  h: number
+}
 
 /** Where the card goes: beside the target with a flip; on a phone, docked to the edge away from it. */
-export function tourPlacement(target: TourBox, card: { w: number; h: number }, view: { w: number; h: number }): { left: number; top: number; width?: number } {
-  if (view.w < 600) return { left: 12, width: view.w - 24, top: target.y + target.h / 2 > view.h / 2 ? 12 : view.h - card.h - 12 }
+export function tourPlacement(
+  target: TourBox,
+  card: { w: number; h: number },
+  view: { w: number; h: number },
+): { left: number; top: number; width?: number } {
+  if (view.w < 600)
+    return {
+      left: 12,
+      width: view.w - 24,
+      top: target.y + target.h / 2 > view.h / 2 ? 12 : view.h - card.h - 12,
+    }
   if (target.x + target.w + card.w + 24 < view.w && target.x < view.w * 0.3)
-    return { left: target.x + target.w + 14, top: Math.min(Math.max(12, target.y + target.h / 2 - card.h / 2), view.h - card.h - 12) }
+    return {
+      left: target.x + target.w + 14,
+      top: Math.min(Math.max(12, target.y + target.h / 2 - card.h / 2), view.h - card.h - 12),
+    }
   const left = Math.min(Math.max(12, target.x + target.w - card.w), view.w - card.w - 12)
   const below = target.y + target.h + 14
   return { left, top: below + card.h > view.h - 12 ? Math.max(12, target.y - card.h - 14) : below }
 }
 
-const CARD_FOCUS = 'button:not(:disabled):not([hidden]), a[href], input:not(:disabled), [tabindex="0"]'
+const CARD_FOCUS =
+  'button:not(:disabled):not([hidden]), a[href], input:not(:disabled), [tabindex="0"]'
 
 /** Prefer an element that is on screen: a target can exist twice, in a hidden layout. */
 function findTarget(doc: Document, selector: string) {
   const all = [...doc.querySelectorAll<HTMLElement>(selector)]
-  return all.find(t => t.getClientRects().length) ?? all[0] ?? null
+  return all.find((t) => t.getClientRects().length) ?? all[0] ?? null
 }
 
 /** Options for the tour spotlight action. */
@@ -377,23 +548,37 @@ export function tourSpot(root: HTMLElement, opts: TourSpotOptions) {
     target = t
     if (t) {
       described = t.getAttribute('aria-describedby')
-      t.setAttribute('aria-describedby', [described, card.getAttribute('aria-describedby')].filter(Boolean).join(' '))
+      t.setAttribute(
+        'aria-describedby',
+        [described, card.getAttribute('aria-describedby')].filter(Boolean).join(' '),
+      )
     }
   }
   function place() {
     if (!target?.isConnected) return
     const r = target.getBoundingClientRect()
     const box = { x: r.left - 4, y: r.top - 4, w: r.width + 8, h: r.height + 8 }
-    spot.style.left = `${box.x}px`; spot.style.top = `${box.y}px`; spot.style.width = `${box.w}px`; spot.style.height = `${box.h}px`
-    const p = tourPlacement(box, { w: card.offsetWidth || 300, h: card.offsetHeight || 170 }, { w: win.innerWidth, h: win.innerHeight })
-    card.style.left = `${p.left}px`; card.style.top = `${p.top}px`; card.style.width = p.width ? `${p.width}px` : ''
+    spot.style.left = `${box.x}px`
+    spot.style.top = `${box.y}px`
+    spot.style.width = `${box.w}px`
+    spot.style.height = `${box.h}px`
+    const p = tourPlacement(
+      box,
+      { w: card.offsetWidth || 300, h: card.offsetHeight || 170 },
+      { w: win.innerWidth, h: win.innerHeight },
+    )
+    card.style.left = `${p.left}px`
+    card.style.top = `${p.top}px`
+    card.style.width = p.width ? `${p.width}px` : ''
   }
   function arrive() {
     if (off) return
     const t = findTarget(doc, o.target)
     if (!t) return o.onMissing()
     describe(t)
-    const instant = win.matchMedia?.('(prefers-reduced-motion: reduce)').matches || doc.documentElement.dataset.motion === 'reduce'
+    const instant =
+      win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ||
+      doc.documentElement.dataset.motion === 'reduce'
     t.scrollIntoView?.({ block: 'center', behavior: instant ? 'instant' : 'smooth' })
     place()
     spot.dataset.phase = 'idle'
@@ -419,7 +604,12 @@ export function tourSpot(root: HTMLElement, opts: TourSpotOptions) {
   if (doc.querySelector('dialog[open]')) {
     off = true
     queueMicrotask(() => o.onBlocked())
-    return { update(next: TourSpotOptions) { o = next }, destroy() {} }
+    return {
+      update(next: TourSpotOptions) {
+        o = next
+      },
+      destroy() {},
+    }
   }
   const remove = pushLayer({ el: card, modal: true, close: () => o.onClose() })
   card.addEventListener('keydown', onKey)
@@ -447,7 +637,10 @@ export function tourSpot(root: HTMLElement, opts: TourSpotOptions) {
 }
 
 /** A coachmark's layer: no scrim; the beacon sits on the target's corner and the card by it. */
-export function coachSpot(root: HTMLElement, opts: { target: string; open: boolean; onClose(): void }) {
+export function coachSpot(
+  root: HTMLElement,
+  opts: { target: string; open: boolean; onClose(): void },
+) {
   let o = opts
   const doc = root.ownerDocument
   const win = doc.defaultView!
@@ -465,8 +658,14 @@ export function coachSpot(root: HTMLElement, opts: { target: string; open: boole
     beacon.style.top = `${r.top - 8}px`
     const card = root.querySelector<HTMLElement>('[data-part="card"]')
     if (!card) return
-    const p = tourPlacement({ x: r.left, y: r.top, w: r.width, h: r.height }, { w: card.offsetWidth || 300, h: card.offsetHeight || 170 }, { w: win.innerWidth, h: win.innerHeight })
-    card.style.left = `${p.left}px`; card.style.top = `${p.top}px`; card.style.width = p.width ? `${p.width}px` : ''
+    const p = tourPlacement(
+      { x: r.left, y: r.top, w: r.width, h: r.height },
+      { w: card.offsetWidth || 300, h: card.offsetHeight || 170 },
+      { w: win.innerWidth, h: win.innerHeight },
+    )
+    card.style.left = `${p.left}px`
+    card.style.top = `${p.top}px`
+    card.style.width = p.width ? `${p.width}px` : ''
   }
   function sync() {
     remove?.()
@@ -502,7 +701,17 @@ export function coachSpot(root: HTMLElement, opts: { target: string; open: boole
 export type ConnView = 'offline' | 'reconnecting' | 'online' | 'stale' | undefined
 
 /** What the banner shows: offline over reconnecting over a stale deploy; `recovered` is the short "Back online". */
-export function connView({ online, state, stale, recovered }: { online: boolean; state?: string | undefined; stale?: boolean | undefined; recovered?: boolean | undefined }): ConnView {
+export function connView({
+  online,
+  state,
+  stale,
+  recovered,
+}: {
+  online: boolean
+  state?: string | undefined
+  stale?: boolean | undefined
+  recovered?: boolean | undefined
+}): ConnView {
   if (!online || state === 'offline') return 'offline'
   if (state === 'reconnecting' || state === 'connecting') return 'reconnecting'
   if (recovered) return 'online'
@@ -522,53 +731,94 @@ export interface Shortcut {
   run?: (e: KeyboardEvent) => void
 }
 
-const NAMES: Record<string, string> = { esc: 'Escape', escape: 'Escape', left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', enter: 'Enter', space: ' ' }
-const GLYPHS: Record<string, string> = { esc: 'Esc', escape: 'Esc', left: '←', right: '→', up: '↑', down: '↓', enter: 'Enter', space: 'Space', shift: 'Shift' }
+const NAMES: Record<string, string> = {
+  esc: 'Escape',
+  escape: 'Escape',
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+  up: 'ArrowUp',
+  down: 'ArrowDown',
+  enter: 'Enter',
+  space: ' ',
+}
+const GLYPHS: Record<string, string> = {
+  esc: 'Esc',
+  escape: 'Esc',
+  left: '←',
+  right: '→',
+  up: '↑',
+  down: '↓',
+  enter: 'Enter',
+  space: 'Space',
+  shift: 'Shift',
+}
 const SEQUENCE_MS = 1000
 
 const MODS = new Set(['mod', 'ctrl', 'cmd', 'alt', 'shift'])
 const parts = (step: string) => (step === '+' ? ['+'] : step.split('+'))
 
 /** Whether `mod` means ⌘: an Apple platform, from the navigator. */
-export const isApple = (nav: { platform?: string; userAgent?: string } | undefined) => /mac|iphone|ipad|ipod/i.test(nav?.platform ?? nav?.userAgent ?? '')
+export const isApple = (nav: { platform?: string; userAgent?: string } | undefined) =>
+  /mac|iphone|ipad|ipod/i.test(nav?.platform ?? nav?.userAgent ?? '')
 
 /** The chips for each step: `[['⌘', 'K']]`, or `[['Ctrl', 'K']]`, `[['G'], ['M']]`. */
 export function shortcutLabels(keys: string, apple: boolean) {
-  return keys.trim().split(/\s+/).map(step => parts(step).map(p => {
-    const k = p.toLowerCase()
-    if (k === 'mod' || k === 'cmd') return apple ? '⌘' : 'Ctrl'
-    if (k === 'ctrl') return 'Ctrl'
-    if (k === 'alt') return apple ? '⌥' : 'Alt'
-    return GLYPHS[k] ?? p.toUpperCase()
-  }))
+  return keys
+    .trim()
+    .split(/\s+/)
+    .map((step) =>
+      parts(step).map((p) => {
+        const k = p.toLowerCase()
+        if (k === 'mod' || k === 'cmd') return apple ? '⌘' : 'Ctrl'
+        if (k === 'ctrl') return 'Ctrl'
+        if (k === 'alt') return apple ? '⌥' : 'Alt'
+        return GLYPHS[k] ?? p.toUpperCase()
+      }),
+    )
 }
 
 /** A single-key shortcut has no ⌘, Ctrl or Alt: WCAG 2.1.4 lets the user turn these off. */
-export const isSingleKey = (keys: string) => !keys.split(/\s+/).some(s => parts(s).some(p => ['mod', 'ctrl', 'cmd', 'alt'].includes(p.toLowerCase())))
+export const isSingleKey = (keys: string) =>
+  !keys
+    .split(/\s+/)
+    .some((s) => parts(s).some((p) => ['mod', 'ctrl', 'cmd', 'alt'].includes(p.toLowerCase())))
 
 /** A field that takes typing: a single-key shortcut never fires there. */
 export function isTextTarget(t: EventTarget | null) {
   const el = t as HTMLElement | null
   if (!el?.tagName) return false
-  if (el.isContentEditable || el.closest?.('[contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"]')) return true
+  if (
+    el.isContentEditable ||
+    el.closest?.(
+      '[contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"]',
+    )
+  )
+    return true
   if (el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true
-  return el.tagName === 'INPUT' && !/^(button|checkbox|color|file|image|radio|range|reset|submit)$/i.test((el as HTMLInputElement).type)
+  return (
+    el.tagName === 'INPUT' &&
+    !/^(button|checkbox|color|file|image|radio|range|reset|submit)$/i.test(
+      (el as HTMLInputElement).type,
+    )
+  )
 }
 
 function matches(step: string, e: KeyboardEvent, apple: boolean) {
   const list = parts(step)
-  const key = list.find(p => !MODS.has(p.toLowerCase())) ?? ''
-  const want = list.map(p => p.toLowerCase())
+  const key = list.find((p) => !MODS.has(p.toLowerCase())) ?? ''
+  const want = list.map((p) => p.toLowerCase())
   const mod = want.includes('mod')
   const named = NAMES[key.toLowerCase()]
   const hit = named ? e.key === named : e.key.toLowerCase() === key.toLowerCase()
   // a symbol's shift is part of the key: `?` is Shift+/ on one layout and something else on another
   const shiftCounts = want.includes('shift') || /^[a-z0-9]$/i.test(key) || !!named
-  return hit
-    && e.metaKey === (want.includes('cmd') || (mod && apple))
-    && e.ctrlKey === (want.includes('ctrl') || (mod && !apple))
-    && e.altKey === want.includes('alt')
-    && (!shiftCounts || e.shiftKey === want.includes('shift'))
+  return (
+    hit &&
+    e.metaKey === (want.includes('cmd') || (mod && apple)) &&
+    e.ctrlKey === (want.includes('ctrl') || (mod && !apple)) &&
+    e.altKey === want.includes('alt') &&
+    (!shiftCounts || e.shiftKey === want.includes('shift'))
+  )
 }
 
 /** A registry of shortcuts, so the overlay is always true. Most apps use the shared `shortcuts`. */
@@ -577,7 +827,7 @@ export function createShortcuts() {
   const subs = new Set<() => void>()
   const docs = new Map<Document, { n: number; stop(): void }>()
   let singleKeys = true
-  const notify = () => subs.forEach(s => s())
+  const notify = () => subs.forEach((s) => s())
 
   function listener(doc: Document) {
     let held: { steps: string[]; s: Shortcut }[] = []
@@ -586,16 +836,25 @@ export function createShortcuts() {
       if (e.defaultPrevented || e.isComposing || e.repeat) return
       if (['Shift', 'Control', 'Meta', 'Alt'].includes(e.key)) return
       const apple = isApple(doc.defaultView?.navigator)
-      const live = [...list].filter(s => !s.when || s.when())
-      const open = (s: Shortcut) => (!isSingleKey(s.keys) || (singleKeys && !isTextTarget(e.target)))
+      const live = [...list].filter((s) => !s.when || s.when())
+      const open = (s: Shortcut) => !isSingleKey(s.keys) || (singleKeys && !isTextTarget(e.target))
       const pending = e.timeStamp - heldAt < SEQUENCE_MS ? held : []
-      const next = pending.filter(h => matches(h.steps[0] ?? '', e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
-      const start = live.filter(open).map(s => ({ s, steps: s.keys.trim().split(/\s+/) }))  .filter(h => matches(h.steps[0] ?? '', e, apple)).map(h => ({ ...h, steps: h.steps.slice(1) }))
+      const next = pending
+        .filter((h) => matches(h.steps[0] ?? '', e, apple))
+        .map((h) => ({ ...h, steps: h.steps.slice(1) }))
+      const start = live
+        .filter(open)
+        .map((s) => ({ s, steps: s.keys.trim().split(/\s+/) }))
+        .filter((h) => matches(h.steps[0] ?? '', e, apple))
+        .map((h) => ({ ...h, steps: h.steps.slice(1) }))
       const hits = [...next, ...start]
-      const done = hits.find(h => !h.steps.length)
+      const done = hits.find((h) => !h.steps.length)
       held = done ? [] : hits
       heldAt = e.timeStamp
-      if (done?.s.run) { e.preventDefault(); done.s.run(e) }
+      if (done?.s.run) {
+        e.preventDefault()
+        done.s.run(e)
+      }
     }
   }
 
@@ -604,15 +863,26 @@ export function createShortcuts() {
     register(s: Shortcut) {
       list.add(s)
       notify()
-      return () => { list.delete(s); notify() }
+      return () => {
+        list.delete(s)
+        notify()
+      }
     },
     /** Everything registered now, in order, `when` applied. */
-    list: () => [...list].filter(s => !s.when || s.when()),
+    list: () => [...list].filter((s) => !s.when || s.when()),
     /** Called when the list or the setting changes. */
-    subscribe(fn: () => void) { subs.add(fn); return () => void subs.delete(fn) },
+    subscribe(fn: () => void) {
+      subs.add(fn)
+      return () => void subs.delete(fn)
+    },
     /** Whether single-key shortcuts fire. */
-    get singleKeys() { return singleKeys },
-    set singleKeys(on: boolean) { singleKeys = on; notify() },
+    get singleKeys() {
+      return singleKeys
+    },
+    set singleKeys(on: boolean) {
+      singleKeys = on
+      notify()
+    },
     /** Start listening on a document; the returned function stops. Shared between callers. */
     listen(doc: Document) {
       let d = docs.get(doc)
@@ -624,7 +894,12 @@ export function createShortcuts() {
       }
       d.n++
       const entry = d
-      return () => { if (--entry.n === 0) { entry.stop(); docs.delete(doc) } }
+      return () => {
+        if (--entry.n === 0) {
+          entry.stop()
+          docs.delete(doc)
+        }
+      }
     },
   }
 }
@@ -635,10 +910,19 @@ export type Shortcuts = ReturnType<typeof createShortcuts>
 export const shortcuts = /* @__PURE__ */ createShortcuts()
 
 /** Shortcuts whose name or keys hold `query`. */
-export function filterShortcuts<S extends Shortcut>(list: readonly S[], query: string, apple: boolean) {
+export function filterShortcuts<S extends Shortcut>(
+  list: readonly S[],
+  query: string,
+  apple: boolean,
+) {
   const q = query.trim().toLowerCase()
   if (!q) return [...list]
-  return list.filter(s => s.label.toLowerCase().includes(q) || s.keys.toLowerCase().includes(q) || shortcutLabels(s.keys, apple).flat().join(' ').toLowerCase().includes(q))
+  return list.filter(
+    (s) =>
+      s.label.toLowerCase().includes(q) ||
+      s.keys.toLowerCase().includes(q) ||
+      shortcutLabels(s.keys, apple).flat().join(' ').toLowerCase().includes(q),
+  )
 }
 
 /** `text` split around `query`, for `<mark>`. */

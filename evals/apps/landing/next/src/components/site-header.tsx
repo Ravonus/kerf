@@ -10,9 +10,24 @@ export function SiteHeader() {
           Emberline
         </Link>
         <nav aria-label="Main" className="flex items-center gap-1 text-sm font-medium sm:gap-3">
-          <Link href="/pricing" className="rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink">Pricing</Link>
-          <Link href="/privacy" className="rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink">Privacy</Link>
-          <Link href="/#join" className="hidden rounded-lg border border-line px-3.5 py-2 transition-colors hover:border-ink sm:block">Get early access</Link>
+          <Link
+            href="/pricing"
+            className="rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink"
+          >
+            Pricing
+          </Link>
+          <Link
+            href="/privacy"
+            className="rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink"
+          >
+            Privacy
+          </Link>
+          <Link
+            href="/#join"
+            className="hidden rounded-lg border border-line px-3.5 py-2 transition-colors hover:border-ink sm:block"
+          >
+            Get early access
+          </Link>
         </nav>
       </div>
     </header>

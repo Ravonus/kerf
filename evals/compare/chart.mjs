@@ -8,6 +8,15 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const results = JSON.parse(readFileSync(join(here, 'results.json'), 'utf8'))
 const file = join(here, '../results/compare-history.jsonl')
-const history = existsSync(file) ? readFileSync(file, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l)) : []
-const page = readFileSync(join(here, 'chart.html'), 'utf8').replace('/*DATA*/null', JSON.stringify({ results, history }).replaceAll('<', '\\u003c'))
+const history = existsSync(file)
+  ? readFileSync(file, 'utf8')
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => JSON.parse(l))
+  : []
+const page = readFileSync(join(here, 'chart.html'), 'utf8').replace(
+  '/*DATA*/null',
+  JSON.stringify({ results, history }).replaceAll('<', '\\u003c'),
+)
 writeFileSync(join(here, '../results/compare.html'), page)

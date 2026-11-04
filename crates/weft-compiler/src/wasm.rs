@@ -20,8 +20,16 @@ pub unsafe extern "C" fn free(ptr: *mut u8, len: usize) {
 /// # Safety
 /// Both buffers come from `alloc` and hold `*_len` bytes of UTF-8 (the host's `TextEncoder`). `transform` frees them.
 #[unsafe(no_mangle)]
-#[allow(clippy::same_length_and_capacity, reason = "`alloc` made each buffer exactly this big")]
-pub unsafe extern "C" fn transform(source: *mut u8, source_len: usize, options: *mut u8, options_len: usize) -> u64 {
+#[allow(
+    clippy::same_length_and_capacity,
+    reason = "`alloc` made each buffer exactly this big"
+)]
+pub unsafe extern "C" fn transform(
+    source: *mut u8,
+    source_len: usize,
+    options: *mut u8,
+    options_len: usize,
+) -> u64 {
     // SAFETY: each buffer is a whole `alloc` of its stated length, filled with UTF-8, and is ours to free from here.
     let source = unsafe { String::from_raw_parts(source, source_len, source_len) };
     // SAFETY: as for `source`.

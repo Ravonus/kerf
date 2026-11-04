@@ -5,7 +5,8 @@
 
 import { CHAIN, INLINE, LITERAL, MICRO, ORDERED, POP, REUSE } from './flags'
 
-const CLEAN = 0, CHECK = 1
+const CLEAN = 0,
+  CHECK = 1
 /** A node's value is out of date: it recomputes the next time it's read or flushed. */
 export const DIRTY = 2
 /** `effect` of a disposed node: it never runs again, and there's no field for it on the live ones. */
@@ -14,7 +15,13 @@ const DEAD = 3
 /** Dev build: diagnostic text, dev names and dev-only checks. Vite folds it to `false` in production builds. */
 export const DEV: boolean = (import.meta as { env?: { DEV?: boolean } }).env?.DEV !== false
 
-type Source = { v: unknown; /** first reader, then the rest */ f: Computation | undefined; o: Computation[]; /** a `get(key)` source: its box and key */ b?: Box<unknown>; key?: PropertyKey }
+type Source = {
+  v: unknown
+  /** first reader, then the rest */ f: Computation | undefined
+  o: Computation[]
+  /** a `get(key)` source: its box and key */ b?: Box<unknown>
+  key?: PropertyKey
+}
 
 /** What holds computations and cleanups: a root, or a computation over what it makes. Disposing it disposes them. */
 export interface Owner {
@@ -49,7 +56,10 @@ export interface Computation extends Source, Owner {
 }
 
 /** Dev names compiled bindings pass (`name`/`loc`). */
-export interface EffectOptions { name?: string | undefined; loc?: string | undefined }
+export interface EffectOptions {
+  name?: string | undefined
+  loc?: string | undefined
+}
 
 /** Dev only: the component being created (`createComponent(Comp, props, name, loc)`), for binding names. */
 export const devComponent: { label?: string | undefined; id?: number | undefined } = {}
@@ -64,7 +74,9 @@ let queue: Computation[] = []
 /** @weft-js/core/keyed: tells a box's entry readers about a write. */
 let keyed: ((box: Box<unknown>, prev: unknown, v: unknown) => void) | undefined
 /** Hands the core its entry-reader update, so an app that never calls `get` doesn't ship it. */
-export const setKeyed = (f: typeof keyed) => { keyed = f }
+export const setKeyed = (f: typeof keyed) => {
+  keyed = f
+}
 /** The newest queued effect's id, and whether one came out of creation order. */
 let last = 0
 let mixed = false
@@ -99,7 +111,15 @@ export const rt: {
 } = { server: false }
 
 /** What the server hands the client: resolved resources, boundary states and changed state boxes. */
-export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'>; /** The page is still streaming: the client may start before its Boundaries land. */ w?: 1; /** `defineState` boxes that differ from `init`, by scope */ s?: Record<string, Record<string, unknown>> }
+export type SsrData = {
+  r: Record<string, { v?: unknown; e?: string }>
+  b: Record<string, 'c' | 'p' | 'e'>
+  /** The page is still streaming: the client may start before its Boundaries land. */ w?: 1
+  /** `defineState` boxes that differ from `init`, by scope */ s?: Record<
+    string,
+    Record<string, unknown>
+  >
+}
 
 /** Reactive work counter, read by `@weft-js/core/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }
@@ -136,9 +156,11 @@ export function read(node: Source) {
       at = 1
       return
     }
-    const s = l.s, r = INLINE ? at - 1 : at
+    const s = l.s,
+      r = INLINE ? at - 1 : at
     if (REUSE && s[r] === node) at++
-    else if (l.p !== node && (!r || r > 8 || s.lastIndexOf(node, r - 1) < 0)) { // short lists don't hold one box twice
+    else if (l.p !== node && (!r || r > 8 || s.lastIndexOf(node, r - 1) < 0)) {
+      // short lists don't hold one box twice
       if (r < s.length) unlink(l, at)
       l.s = add(l.s, node)
       link(node, l)
@@ -175,16 +197,21 @@ function mark(node: Computation, state: number) {
 function schedule() {
   if (!scheduled && (queue.length || mounts.length)) {
     scheduled = true
-    queueMicrotask(MICRO ? () => {
-      scheduled = false
-      flush()
-    } : flush)
+    queueMicrotask(
+      MICRO
+        ? () => {
+            scheduled = false
+            flush()
+          }
+        : flush,
+    )
   }
 }
 
 /** Take `node` off its sources from `from` on. */
 function unlink(node: Computation, from: number) {
-  const s = node.s, rest = INLINE && from ? from - 1 : from
+  const s = node.s,
+    rest = INLINE && from ? from - 1 : from
   for (let i = s.length - 1; i >= rest; i--) drop(s[i]!, node)
   if (INLINE && !from && node.p) {
     drop(node.p, node)
@@ -234,7 +261,9 @@ function dispose(node: Computation) {
 function run(node: Computation) {
   if (node.owned || node.cleanups) clean(node)
   if (!REUSE) unlink(node, 0)
-  const prevListener = listener, prevOwner = owner, prevAt = at
+  const prevListener = listener,
+    prevOwner = owner,
+    prevAt = at
   listener = owner = node
   at = 0
   try {
@@ -255,7 +284,8 @@ function run(node: Computation) {
       for (let i = 0; i < o.length; i++) o[i]!.state = DIRTY
     }
   } catch (e) {
-    if (DEV && node.n && e && typeof e === 'object' && !(e as { weft?: string }).weft) (e as { weft?: string }).weft = node.n // where it threw
+    if (DEV && node.n && e && typeof e === 'object' && !(e as { weft?: string }).weft)
+      (e as { weft?: string }).weft = node.n // where it threw
     throw e
   } finally {
     if (at < node.s.length + (INLINE && node.p ? 1 : 0)) unlink(node, at) // what this run didn't read
@@ -295,18 +325,27 @@ function parts(v: unknown[], node: Computation) {
   const put = () => node.a!(out.slice(), undefined, node.h)
   for (let i = 0; i < v.length; i++) {
     const x = v[i]
-    if (live(x)) settle(computation(typeof x === 'function' ? x as () => unknown : () => x, 2, y => { out[i] = y; if (ready) put() }))
+    if (live(x))
+      settle(
+        computation(typeof x === 'function' ? (x as () => unknown) : () => x, 2, (y) => {
+          out[i] = y
+          if (ready) put()
+        }),
+      )
   }
   ready = true
   untrack(put)
 }
 
-const live = (v: unknown): boolean => typeof v === 'function' || (Array.isArray(v) && v !== flat && v.some(live))
+const live = (v: unknown): boolean =>
+  typeof v === 'function' || (Array.isArray(v) && v !== flat && v.some(live))
 
 /** The last row list made of single elements (@weft-js/core/dom `For`): nothing in it is live, and `place` can take it as it is. */
 export let flat: unknown = NONE
 /** Records the list `place` may take whole: see `flat`. */
-export const setFlat = (list: unknown) => { flat = list }
+export const setFlat = (list: unknown) => {
+  flat = list
+}
 
 function adopt(node: Computation) {
   if (!CHAIN) owner!.owned = add((owner!.owned ?? NONE) as Computation[], node)
@@ -319,10 +358,29 @@ function adopt(node: Computation) {
   }
 }
 
-function computation(fn: Computation['fn'], kind: 0 | 1 | 2, a?: Computation['a'], h?: unknown): Computation {
+function computation(
+  fn: Computation['fn'],
+  kind: 0 | 1 | 2,
+  a?: Computation['a'],
+  h?: unknown,
+): Computation {
   const node: Computation = {
-    fn, v: undefined, f: undefined, o: NONE, p: undefined, s: NONE, state: DIRTY, effect: kind, a, h, id: nextId++,
-    owned: null, tail: null, sib: null, cleanups: null, owner,
+    fn,
+    v: undefined,
+    f: undefined,
+    o: NONE,
+    p: undefined,
+    s: NONE,
+    state: DIRTY,
+    effect: kind,
+    a,
+    h,
+    id: nextId++,
+    owned: null,
+    tail: null,
+    sib: null,
+    cleanups: null,
+    owner,
   }
   if (DEV && devComponent.label) node.n = devComponent.label
   if (owner) adopt(node)
@@ -368,15 +426,20 @@ export interface State<T> {
 /** How a box is kept: where it persists, whether tabs share it, and whether undo sees it. */
 export interface StateOptions<T> {
   /** Persist through reloads (§4.5). Only inside `defineState`. The short form takes primitive `init` only. */
-  persist?: 'local' | 'session' | 'cookie' | 'memory' | {
-    in: 'local' | 'session' | 'cookie' | 'memory'
-    /** Required for object and array values: a Standard Schema (Zod, Valibot, ArkType). */
-    schema?: StandardSchema<T>
-    version?: number
-    migrate?: Record<number, (old: never) => unknown>
-    /** `cookie` only: seconds it lives. Default one year. */
-    maxAge?: number
-  }
+  persist?:
+    | 'local'
+    | 'session'
+    | 'cookie'
+    | 'memory'
+    | {
+        in: 'local' | 'session' | 'cookie' | 'memory'
+        /** Required for object and array values: a Standard Schema (Zod, Valibot, ArkType). */
+        schema?: StandardSchema<T>
+        version?: number
+        migrate?: Record<number, (old: never) => unknown>
+        /** `cookie` only: seconds it lives. Default one year. */
+        maxAge?: number
+      }
   /** Keep this box the same in every tab (research 32 §1). Needs `persist`, not in `'session'`: new tabs read it there. */
   sync?: 'tabs'
   /** Leave this box out of its scope's undo history. */
@@ -388,7 +451,12 @@ export interface StateOptions<T> {
 /** The validation half of the Standard Schema spec (standardschema.dev). */
 export interface StandardSchema<T = unknown> {
   readonly '~standard': {
-    validate(value: unknown): { value: T; issues?: undefined } | { issues: readonly { message: string }[] } | Promise<unknown>
+    validate(
+      value: unknown,
+    ):
+      | { value: T; issues?: undefined }
+      | { issues: readonly { message: string }[] }
+      | Promise<unknown>
   }
 }
 
@@ -401,8 +469,13 @@ export interface Derived<T> {
 export let collecting: Box<unknown>[] | null = null
 /** Runs `fn` and returns what it returned, with every box it created. */
 export function collect<T>(fn: () => T): [T, Box<unknown>[]] {
-  const prev = collecting, boxes: Box<unknown>[] = (collecting = [])
-  try { return [fn(), boxes] } finally { collecting = prev }
+  const prev = collecting,
+    boxes: Box<unknown>[] = (collecting = [])
+  try {
+    return [fn(), boxes]
+  } finally {
+    collecting = prev
+  }
 }
 
 /** True for an object literal: one whose own keys are all there is to compare. */
@@ -431,8 +504,13 @@ export class Box<T> implements State<T> {
     if (opts) this.opts = opts
     if (collecting) collecting.push(this)
   }
-  get value() { read(this); return this.v }
-  set value(v: T) { this.w(v) }
+  get value() {
+    read(this)
+    return this.v
+  }
+  set value(v: T) {
+    this.w(v)
+  }
   w(v: T) {
     const prev = this.v
     if (Object.is(prev, v)) return
@@ -454,7 +532,8 @@ export interface Linked<T> extends State<T> {
 export const state: {
   <T>(init: T, options?: StateOptions<T>): State<T>
   linked<T>(source: () => T, options?: { key: () => unknown }): Linked<T>
-} = ((init: unknown, options?: StateOptions<unknown>) => new Box(init, options)) as unknown as typeof state
+} = ((init: unknown, options?: StateOptions<unknown>) =>
+  new Box(init, options)) as unknown as typeof state
 
 /** The object `derived` returns: a computation with a `value`. */
 export class Memo<T> implements Derived<T> {
@@ -522,10 +601,13 @@ class Once<T> implements Derived<T> {
  * Side effects only. `source` is tracked; `act` is not. `act` may return a cleanup, called before the next run
  * and when the owner is disposed.
  */
-export function watch<T>(source: () => T, act: (value: T, prev: T | undefined) => void | (() => void)) {
+export function watch<T>(
+  source: () => T,
+  act: (value: T, prev: T | undefined) => void | (() => void),
+) {
   let cleanup: void | (() => void)
   let prev: T | undefined
-  effect(source, value => {
+  effect(source, (value) => {
     if (cleanup) cleanup()
     cleanup = untrack(() => act(value, prev))
     prev = value
@@ -534,10 +616,15 @@ export function watch<T>(source: () => T, act: (value: T, prev: T | undefined) =
 }
 
 /** Compiled binding: `compute` is tracked, `apply(value, prev)` writes the DOM. Runs once now; never on the server. */
-export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | undefined) => void, options?: EffectOptions) {
+export function effect<T>(
+  compute: (prev?: T) => T,
+  apply: (value: T, prev: T | undefined) => void,
+  options?: EffectOptions,
+) {
   if (rt.server) return
   const node = computation(compute as Computation['fn'], 1, apply as Computation['a'])
-  if (DEV && options?.name) node.n = `${options.name} (${options.loc})${node.n ? ` in ${node.n}` : ''}`
+  if (DEV && options?.name)
+    node.n = `${options.name} (${options.loc})${node.n ? ` in ${node.n}` : ''}`
   settle(node)
 }
 
@@ -547,7 +634,10 @@ function settle(node: Computation) {
   const done = !node.p && node.s === NONE && !node.owned
   if (done && !node.cleanups && owner) {
     if (!CHAIN) {
-      if ((owner.owned as Computation[] | null)?.[(owner.owned as Computation[]).length - 1] === node) (owner.owned as Computation[]).pop()
+      if (
+        (owner.owned as Computation[] | null)?.[(owner.owned as Computation[]).length - 1] === node
+      )
+        (owner.owned as Computation[]).pop()
     } else if (owner.tail === node) {
       owner.tail = node.sib
       if (!node.sib) owner.owned = null
@@ -557,7 +647,11 @@ function settle(node: Computation) {
 }
 
 /** A child hole (@weft-js/core/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. True: it read nothing, so it's done. */
-export function hole<H>(value: () => unknown, apply: (value: unknown, was: unknown, h: H) => void, h?: H) {
+export function hole<H>(
+  value: () => unknown,
+  apply: (value: unknown, was: unknown, h: H) => void,
+  h?: H,
+) {
   if (rt.server) return false
   return settle(computation(value, 2, apply as Computation['a'], h))
 }
@@ -576,8 +670,12 @@ export function onMount(fn: () => void) {
   if (rt.server) return
   const mine = owner
   let alive = true
-  onCleanup(() => { alive = false })
-  mounts.push(() => { if (alive) within(mine!, fn) })
+  onCleanup(() => {
+    alive = false
+  })
+  mounts.push(() => {
+    if (alive) within(mine!, fn)
+  })
   schedule()
 }
 
@@ -610,7 +708,8 @@ export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | nu
 
 /** Run `fn` untracked with `root` as its owner: a root the caller made (For's rows are their own roots). */
 export function within<T>(root: Owner, fn: () => T): T {
-  const prevOwner = owner, prevListener = listener
+  const prevOwner = owner,
+    prevListener = listener
   owner = root
   listener = null
   try {
@@ -633,7 +732,7 @@ export function context<T>(fallback?: T) {
   return {
     provide<R>(value: T, fn: () => R): R {
       const parent = owner
-      return createRoot(end => {
+      return createRoot((end) => {
         if (parent) (parent.cleanups ??= []).push(end) // the subtree goes when its parent does
         owner!.context = { ...contexts(parent), [id]: value }
         return fn()
@@ -647,7 +746,8 @@ export function context<T>(fallback?: T) {
 }
 
 function once<T>(fn: () => T) {
-  let done = false, v: T
+  let done = false,
+    v: T
   return () => (done ? v : ((v = fn()), (done = true), v))
 }
 
@@ -658,8 +758,10 @@ function once<T>(fn: () => T) {
 export function view(sources: unknown[], skip: string[] = []): Record<PropertyKey, unknown> {
   if (rt.server && sources.length === 1) return seen(sources[0], skip)
   // A server renders once and nothing it reads can move: a getter (a `restOf` copy, so every prop) runs once, not per read.
-  if (rt.server) sources = sources.map(s => (typeof s === 'function' ? once(s as () => unknown) : s))
-  const open = (s: unknown): Record<PropertyKey, unknown> => Object(typeof s === 'function' ? s() : s)
+  if (rt.server)
+    sources = sources.map((s) => (typeof s === 'function' ? once(s as () => unknown) : s))
+  const open = (s: unknown): Record<PropertyKey, unknown> =>
+    Object(typeof s === 'function' ? s() : s)
   const kept = (k: PropertyKey) => !skip.includes(k as string)
   // Which source holds each key, later winning, in the order keys were first met. Once on a server, for the same reason.
   let held: Map<PropertyKey, Record<PropertyKey, unknown>> | undefined
@@ -673,36 +775,49 @@ export function view(sources: unknown[], skip: string[] = []): Record<PropertyKe
     if (rt.server) held = map
     return map
   }
-  return new Proxy({}, {
-    get(_, k) {
-      if (rt.server) {
-        const o = owners().get(k)
-        if (o) return o[k]
-      }
-      if (kept(k))
-        for (let i = sources.length - 1; i >= 0; i--) {
-          const s = open(sources[i])
-          if (k in s) return s[k]
+  return new Proxy(
+    {},
+    {
+      get(_, k) {
+        if (rt.server) {
+          const o = owners().get(k)
+          if (o) return o[k]
         }
-      return undefined
+        if (kept(k))
+          for (let i = sources.length - 1; i >= 0; i--) {
+            const s = open(sources[i])
+            if (k in s) return s[k]
+          }
+        return undefined
+      },
+      has: (_, k) => kept(k) && sources.some((s) => k in open(s)),
+      ownKeys: () => [...owners().keys()] as (string | symbol)[],
+      getOwnPropertyDescriptor: (_, k) =>
+        kept(k) && (!rt.server || owners().has(k))
+          ? { configurable: true, enumerable: true }
+          : undefined,
     },
-    has: (_, k) => kept(k) && sources.some(s => k in open(s)),
-    ownKeys: () => [...owners().keys()] as (string | symbol)[],
-    getOwnPropertyDescriptor: (_, k) => (kept(k) && (!rt.server || owners().has(k)) ? { configurable: true, enumerable: true } : undefined),
-  })
+  )
 }
 
 /** A server's view of one source: itself, when nothing is left out, or a thin view that only drops `skip`. */
 function seen(source: unknown, skip: string[]): Record<PropertyKey, unknown> {
   const s = typeof source === 'function' ? once(source as () => unknown) : source
-  const open: () => Record<PropertyKey, unknown> = typeof s === 'function' ? () => Object(s()) : () => Object(s)
+  const open: () => Record<PropertyKey, unknown> =
+    typeof s === 'function' ? () => Object(s()) : () => Object(s)
   if (!skip.length && typeof s !== 'function') return open()
-  return new Proxy({}, {
-    get: (_, k) => (skip.includes(k as string) ? undefined : open()[k]),
-    has: (_, k) => !skip.includes(k as string) && k in open(),
-    ownKeys: () => Reflect.ownKeys(open()).filter(k => !skip.includes(k as string)),
-    getOwnPropertyDescriptor: (_, k) => (!skip.includes(k as string) && Object.hasOwn(open(), k) ? { configurable: true, enumerable: true } : undefined),
-  })
+  return new Proxy(
+    {},
+    {
+      get: (_, k) => (skip.includes(k as string) ? undefined : open()[k]),
+      has: (_, k) => !skip.includes(k as string) && k in open(),
+      ownKeys: () => Reflect.ownKeys(open()).filter((k) => !skip.includes(k as string)),
+      getOwnPropertyDescriptor: (_, k) =>
+        !skip.includes(k as string) && Object.hasOwn(open(), k)
+          ? { configurable: true, enumerable: true }
+          : undefined,
+    },
+  )
 }
 
 export { localProps } from './linked'
@@ -714,13 +829,15 @@ export { localProps } from './linked'
 export const bind = <T>(box: State<T>): T => box.value
 
 /** A live view of `props` without `keys` (`({ a, ...rest }) =>`, §3.3). */
-export const omit = <P extends object, K extends PropertyKey>(props: P, keys: K[]) => view([props], keys as string[]) as Omit<P, K>
+export const omit = <P extends object, K extends PropertyKey>(props: P, keys: K[]) =>
+  view([props], keys as string[]) as Omit<P, K>
 
 /** `<div {...rest}>`: a plain copy of `props` without `keys`, read where the element's spread reads its attributes. */
 export function restOf<P extends object>(props: P, keys: string[]) {
   const out: Record<string, unknown> = {}
   // Not `for in`: over a view (a Proxy) it asks for every key's descriptor and walks the prototype, which costs more than the copy.
-  for (const k of Reflect.ownKeys(props)) if (typeof k === 'string' && !keys.includes(k)) out[k] = (props as Record<string, unknown>)[k]
+  for (const k of Reflect.ownKeys(props))
+    if (typeof k === 'string' && !keys.includes(k)) out[k] = (props as Record<string, unknown>)[k]
   return out
 }
 

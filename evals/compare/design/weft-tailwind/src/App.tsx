@@ -12,18 +12,22 @@ const links = [
 
 const read = () => {
   const r = location.hash.replace(/^#\/?/, '')
-  return links.some(l => l[0] === r) ? r : 'settings'
+  return links.some((l) => l[0] === r) ? r : 'settings'
 }
 
 export function App() {
   const route = state(read())
-  on(window, 'hashchange', () => { route.value = read() })
+  on(window, 'hashchange', () => {
+    route.value = read()
+  })
 
   return (
     <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div class="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <span class="text-lg font-bold tracking-tight text-indigo-600 dark:text-indigo-400">Northwind</span>
+          <span class="text-lg font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
+            Northwind
+          </span>
           <nav aria-label="Main" class="-mx-2 flex gap-1">
             {links.map(([id, label]) => (
               <a
@@ -39,7 +43,13 @@ export function App() {
         </div>
       </header>
       <main class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
-        {route.value === 'customers' ? <Customers /> : route.value === 'pricing' ? <Pricing /> : <Settings />}
+        {route.value === 'customers' ? (
+          <Customers />
+        ) : route.value === 'pricing' ? (
+          <Pricing />
+        ) : (
+          <Settings />
+        )}
       </main>
     </div>
   )

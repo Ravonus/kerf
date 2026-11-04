@@ -13,7 +13,11 @@ function Section(props: { children?: unknown }) {
 
 function Title(props: { children?: unknown }) {
   const level = LevelContext.use
-  return <Heading level={level}>{props.children} (h{level})</Heading>
+  return (
+    <Heading level={level}>
+      {props.children} (h{level})
+    </Heading>
+  )
 }
 
 export default function Outline() {

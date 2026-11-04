@@ -8,9 +8,13 @@ export function AddToCart({ slug, soldOut }: { slug: string; soldOut: boolean })
       {(form: FormApi) => (
         <Stack gap="tight">
           <input type="hidden" name="slug" value={slug} />
-          <Button type="submit" size="lg" full disabled={soldOut} loading={form.pending.value}>Add to cart</Button>
+          <Button type="submit" size="lg" full disabled={soldOut} loading={form.pending.value}>
+            Add to cart
+          </Button>
           <form.Error name="slug" class="form-error" />
-          <p class="added" role="status">{form.result.value ? 'In your cart.' : ''}</p>
+          <p class="added" role="status">
+            {form.result.value ? 'In your cart.' : ''}
+          </p>
         </Stack>
       )}
     </Form>

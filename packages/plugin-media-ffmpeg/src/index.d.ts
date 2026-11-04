@@ -15,4 +15,6 @@ export interface MediaFfmpegOptions {
 /** The media.encode@1 keys this plugin provides, one per codec. */
 export declare const KEYS: string[]
 /** The plugin for `weft.config.ts`: encodes video and audio with ffmpeg for `@weft-js/plugin-media`. */
-export declare function mediaFfmpeg(options?: MediaFfmpegOptions): PluginInstance<MediaFfmpegOptions>
+export declare function mediaFfmpeg(
+  options?: MediaFfmpegOptions,
+): PluginInstance<MediaFfmpegOptions>

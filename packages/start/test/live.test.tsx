@@ -3,49 +3,85 @@
 // memory bus, no sockets.
 import { createRoot, state, untrack, watch } from '@weft-js/core'
 import { clock, flush, net, page, render, screen } from '@weft-js/core/test'
-import { mutation, query, skip, stale, stream, topic, tracked, type StandardSchemaV1 } from '@weft-js/start'
+import {
+  mutation,
+  query,
+  skip,
+  stale,
+  stream,
+  topic,
+  tracked,
+  type StandardSchemaV1,
+} from '@weft-js/start'
 import { backoff } from '@weft-js/start/live'
 import { configure, hub } from '@weft-js/start/hub'
 import { seed } from '@weft-js/start/data'
 
 type Todo = { id: string; title: string }
-const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const any: StandardSchemaV1<unknown> = {
+  '~standard': { version: 1, vendor: 't', validate: (v) => ({ value: v }) },
+}
 const typed = <T,>() => any as StandardSchemaV1<T>
 type Price = { symbol?: string; price: number }
 
 let db: Todo[]
 let runs: number
 beforeEach(() => {
-  db = [{ id: '1', title: 'One' }, { id: '2', title: 'Two' }]
+  db = [
+    { id: '1', title: 'One' },
+    { id: '2', title: 'Two' },
+  ]
   runs = 0
 })
 
-const listTodos = query({ $id: 'live.list', tags: ['todos'], run: () => (runs++, db.map(t => ({ ...t }))) })
-const byList = query({ $id: 'live.by', input: typed<{ id: string }>(), tags: ({ id }) => [`list:${id}`], run: ({ input }) => (runs++, `list ${input.id}`) })
+const listTodos = query({
+  $id: 'live.list',
+  tags: ['todos'],
+  run: () => (runs++, db.map((t) => ({ ...t }))),
+})
+const byList = query({
+  $id: 'live.by',
+  input: typed<{ id: string }>(),
+  tags: ({ id }) => [`list:${id}`],
+  run: ({ input }) => (runs++, `list ${input.id}`),
+})
 const untagged = query({ $id: 'live.none', run: () => 1 })
-const rename = mutation({ $id: 'live.rename', input: typed<{ id: string; title: string }>(), invalidates: ['todos'], run: ({ input }) => { db.find(t => t.id === input.id)!.title = input.title } })
+const rename = mutation({
+  $id: 'live.rename',
+  input: typed<{ id: string; title: string }>(),
+  invalidates: ['todos'],
+  run: ({ input }) => {
+    db.find((t) => t.id === input.id)!.title = input.title
+  },
+})
 
 function List() {
   const todos = listTodos.live()
   return (
     <>
       <p aria-label="status">{todos.live.value}</p>
-      <ul>{(todos.value ?? []).map(t => <li key={t.id}>{t.title}</li>)}</ul>
+      <ul>
+        {(todos.value ?? []).map((t) => (
+          <li key={t.id}>{t.title}</li>
+        ))}
+      </ul>
     </>
   )
 }
-const items = () => screen.getAllByRole('listitem').map(li => li.textContent)
+const items = () => screen.getAllByRole('listitem').map((li) => li.textContent)
 const status = () => screen.getByLabelText('status').textContent
 
 describe('.live', () => {
-  test('a poke while a refetch is in flight isn\'t swallowed by that older answer', async () => {
+  test("a poke while a refetch is in flight isn't swallowed by that older answer", async () => {
     render(List)
     await net.settle()
     let release!: () => void
-    const held = new Promise<void>(ok => { release = ok })
+    const held = new Promise<void>((ok) => {
+      release = ok
+    })
     let first = true
     net.handle(listTodos, async () => {
-      const snapshot = db.map(t => ({ ...t })) // read now, answered later: what a slow query does
+      const snapshot = db.map((t) => ({ ...t })) // read now, answered later: what a slow query does
       if (first) {
         first = false
         await held
@@ -53,11 +89,15 @@ describe('.live', () => {
       return snapshot
     })
     void net.poke('todos') // the first write: a refetch starts, and reads
-    await new Promise(ok => { setTimeout(ok, 5) })
+    await new Promise((ok) => {
+      setTimeout(ok, 5)
+    })
     expect(first).toBe(false)
     db[1]!.title = 'Second write'
     void net.poke('todos') // arrives while that refetch is out
-    await new Promise(ok => { setTimeout(ok, 5) })
+    await new Promise((ok) => {
+      setTimeout(ok, 5)
+    })
     release()
     await net.settle()
     expect(items()).toEqual(['One', 'Second write'])
@@ -101,7 +141,11 @@ describe('.live', () => {
     function Two() {
       const a = byList.live(() => ({ id: id.value }))
       const b = byList.live(() => ({ id: id.value }))
-      return <p>{a.value} {b.value}</p>
+      return (
+        <p>
+          {a.value} {b.value}
+        </p>
+      )
     }
     render(Two)
     await net.settle()
@@ -110,7 +154,7 @@ describe('.live', () => {
     id.value = 'b'
     await net.settle()
     expect(screen.getByText('list b list b')).toBeTruthy()
-    expect(net.subscriptions().map(s => s.input)).toContainEqual({ id: 'b' })
+    expect(net.subscriptions().map((s) => s.input)).toContainEqual({ id: 'b' })
   })
 
   test('skip subscribes to nothing until there is an input', async () => {
@@ -161,7 +205,10 @@ describe('.live', () => {
   })
 
   test('a live query that leaks past its test is T012', async () => {
-    const stop = createRoot(dispose => { listTodos.live(); return dispose })
+    const stop = createRoot((dispose) => {
+      listTodos.live()
+      return dispose
+    })
     await net.settle()
     const { leaks } = await import('@weft-js/core/test')
     expect(leaks().join()).toContain('live.list')
@@ -215,21 +262,69 @@ describe('reconnects', () => {
   })
 })
 
-const priceTopic = topic('prices', { key: any as StandardSchemaV1<unknown, string>, message: typed<Price>() })
-const prices = stream({ $id: 'live.prices', input: typed<{ symbols: string[] }>(), message: typed<Price>(), async *run({ input, signal, lastEventId }) { yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId }) } })
+const priceTopic = topic('prices', {
+  key: any as StandardSchemaV1<unknown, string>,
+  message: typed<Price>(),
+})
+const prices = stream({
+  $id: 'live.prices',
+  input: typed<{ symbols: string[] }>(),
+  message: typed<Price>(),
+  async *run({ input, signal, lastEventId }) {
+    yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId })
+  },
+})
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const counter = stream({ $id: 'live.count', async *run({ lastEventId }) { let n = Number(lastEventId ?? 0); for (;;) { yield tracked(String(++n), n); if (n % 2 === 0) return } } })
+const counter = stream({
+  $id: 'live.count',
+  async *run({ lastEventId }) {
+    let n = Number(lastEventId ?? 0)
+    for (;;) {
+      yield tracked(String(++n), n)
+      if (n % 2 === 0) return
+    }
+  },
+})
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const secret = stream({ $id: 'live.secret', auth: 'user', async *run() { yield 'hidden' } })
+const secret = stream({
+  $id: 'live.secret',
+  auth: 'user',
+  async *run() {
+    yield 'hidden'
+  },
+})
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const once = stream({ $id: 'live.once', async *run() { yield 1; yield 2 } })
-const numeric: StandardSchemaV1<unknown, number> = { '~standard': { version: 1, vendor: 't', validate: v => (typeof v === 'number' ? { value: v } : { issues: [{ message: 'not a number' }] }) } }
+const once = stream({
+  $id: 'live.once',
+  async *run() {
+    yield 1
+    yield 2
+  },
+})
+const numeric: StandardSchemaV1<unknown, number> = {
+  '~standard': {
+    version: 1,
+    vendor: 't',
+    validate: (v) =>
+      typeof v === 'number' ? { value: v } : { issues: [{ message: 'not a number' }] },
+  },
+}
 // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const broken = stream({ $id: 'live.broken', message: numeric, async *run() { yield 'nope' as unknown as number } })
+const broken = stream({
+  $id: 'live.broken',
+  message: numeric,
+  async *run() {
+    yield 'nope' as unknown as number
+  },
+})
 
 function Tick() {
   const tick = prices({ symbols: ['A'] })
-  return <p aria-label="tick">{tick.status.value}: {tick.value?.price ?? 'none'}</p>
+  return (
+    <p aria-label="tick">
+      {tick.status.value}: {tick.value?.price ?? 'none'}
+    </p>
+  )
 }
 const tick = () => screen.getByLabelText('tick').textContent
 
@@ -249,7 +344,14 @@ describe('stream', () => {
   test('a fold lives in the cache: a remount within `keep` finds its state', async () => {
     const show = state(true)
     function Board() {
-      const board = prices({ symbols: ['A'] }, { fold: (acc: number[], m: { price: number }) => [...acc, m.price], initial: [] as number[], keep: '30s' })
+      const board = prices(
+        { symbols: ['A'] },
+        {
+          fold: (acc: number[], m: { price: number }) => [...acc, m.price],
+          initial: [] as number[],
+          keep: '30s',
+        },
+      )
       return <p aria-label="board">{board.value.join(',')}</p>
     }
     render(() => <div>{show.value ? <Board /> : null}</div>)
@@ -266,9 +368,19 @@ describe('stream', () => {
 
   test('two folds over one key share one server subscription', async () => {
     function Both() {
-      const sum = prices({ symbols: ['A'] }, { fold: (a: number, m: { price: number }) => a + m.price, initial: 0 })
-      const max = prices({ symbols: ['A'] }, { fold: (a: number, m: { price: number }) => Math.max(a, m.price), initial: 0 })
-      return <p aria-label="both">{sum.value} {max.value}</p>
+      const sum = prices(
+        { symbols: ['A'] },
+        { fold: (a: number, m: { price: number }) => a + m.price, initial: 0 },
+      )
+      const max = prices(
+        { symbols: ['A'] },
+        { fold: (a: number, m: { price: number }) => Math.max(a, m.price), initial: 0 },
+      )
+      return (
+        <p aria-label="both">
+          {sum.value} {max.value}
+        </p>
+      )
     }
     render(Both)
     await net.settle()
@@ -279,7 +391,13 @@ describe('stream', () => {
 
   test('resume: a reconnect gets what the ring still has, exactly once', async () => {
     function Log() {
-      const log = prices({ symbols: ['A'] }, { fold: (acc: number[], m: { price: number }) => [...acc, m.price], initial: [] as number[] })
+      const log = prices(
+        { symbols: ['A'] },
+        {
+          fold: (acc: number[], m: { price: number }) => [...acc, m.price],
+          initial: [] as number[],
+        },
+      )
       return <p aria-label="log">{log.value.join(',')}</p>
     }
     render(Log)
@@ -299,7 +417,11 @@ describe('stream', () => {
   test('a finished stream reports done and is not rerun by a reconnect', async () => {
     function One() {
       const s = once(undefined as void, { fold: (a: number, m: number) => a + m, initial: 0 })
-      return <p aria-label="once">{s.status.value}: {s.value}</p>
+      return (
+        <p aria-label="once">
+          {s.status.value}: {s.value}
+        </p>
+      )
     }
     render(One)
     await vi.waitFor(() => expect(screen.getByLabelText('once').textContent).toBe('done: 3'))
@@ -308,17 +430,26 @@ describe('stream', () => {
   test('`tracked` ids come back as lastEventId', async () => {
     function Count() {
       const s = counter(undefined as void)
-      return <p aria-label="count">{s.status.value} {s.value}</p>
+      return (
+        <p aria-label="count">
+          {s.status.value} {s.value}
+        </p>
+      )
     }
     render(Count)
     await vi.waitFor(() => expect(screen.getByLabelText('count').textContent).toBe('done 2'))
   })
 
-  test('auth: \'user\' with no session fails with A002', async () => {
+  test("auth: 'user' with no session fails with A002", async () => {
     let seen: unknown
     function S() {
       const s = secret(undefined as void)
-      watch(() => s.error, e => { seen = e })
+      watch(
+        () => s.error,
+        (e) => {
+          seen = e
+        },
+      )
       return <p aria-label="err">{s.error ? (s.error as Error).message : 'none'}</p>
     }
     net.context({ user: null })
@@ -345,7 +476,7 @@ describe('stream', () => {
   })
 })
 
-describe('the page\'s cursor (#weft-rt)', () => {
+describe("the page's cursor (#weft-rt)", () => {
   const carry = (payload: object) => {
     const el = document.createElement('script')
     el.id = 'weft-rt'

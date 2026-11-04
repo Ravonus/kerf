@@ -12,8 +12,16 @@ export default function Status() {
   if (typeof window !== 'undefined') on(window, 'keydown', () => presses.value++)
   return (
     <Card title="The browser, as values">
-      <p>Network <Badge tone={isOnline.value ? 'positive' : 'critical'}>{isOnline.value ? 'online' : 'offline'}</Badge></p>
-      <p>This page is <strong>{page.value}</strong>, and your system prefers <strong>{dark.value ? 'dark' : 'light'}</strong>.</p>
+      <p>
+        Network{' '}
+        <Badge tone={isOnline.value ? 'positive' : 'critical'}>
+          {isOnline.value ? 'online' : 'offline'}
+        </Badge>
+      </p>
+      <p>
+        This page is <strong>{page.value}</strong>, and your system prefers{' '}
+        <strong>{dark.value ? 'dark' : 'light'}</strong>.
+      </p>
       <p>Keys pressed while this page has focus: {presses.value}</p>
     </Card>
   )

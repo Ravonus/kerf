@@ -12,9 +12,9 @@ export function App(props: { api: Api }) {
   const [cart, setCart] = createSignal<Cart>({})
   const [tab, setTab] = createSignal<Tab>('products')
 
-  const add = (id: string) => setCart(c => ({ ...c, [id]: (c[id] ?? 0) + 1 }))
+  const add = (id: string) => setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }))
   const change = (id: string, delta: number) =>
-    setCart(c => {
+    setCart((c) => {
       const next = (c[id] ?? 0) + delta
       const { [id]: _, ...rest } = c
       return next > 0 ? { ...rest, [id]: next } : rest
@@ -26,9 +26,15 @@ export function App(props: { api: Api }) {
     <div>
       <Header tab={tab()} count={count()} onTab={setTab} />
       <Switch>
-        <Match when={!products()}><p>Loading…</p></Match>
-        <Match when={tab() === 'products'}><ProductList products={products()!} onAdd={add} /></Match>
-        <Match when={tab() === 'cart'}><CartView products={products()!} cart={cart()} onChange={change} /></Match>
+        <Match when={!products()}>
+          <p>Loading…</p>
+        </Match>
+        <Match when={tab() === 'products'}>
+          <ProductList products={products()!} onAdd={add} />
+        </Match>
+        <Match when={tab() === 'cart'}>
+          <CartView products={products()!} cart={cart()} onChange={change} />
+        </Match>
       </Switch>
     </div>
   )

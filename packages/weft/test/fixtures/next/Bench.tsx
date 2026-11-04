@@ -13,7 +13,12 @@ let nextId = 1
 const buildData = (count: number): Row[] => {
   const data = new Array<Row>(count)
   for (let i = 0; i < count; i++)
-    data[i] = { id: nextId++, label: state(`${adjectives[random(adjectives.length)]} ${colors[random(colors.length)]} ${nouns[random(nouns.length)]}`) }
+    data[i] = {
+      id: nextId++,
+      label: state(
+        `${adjectives[random(adjectives.length)]} ${colors[random(colors.length)]} ${nouns[random(nouns.length)]}`,
+      ),
+    }
   return data
 }
 
@@ -47,7 +52,7 @@ export function Main() {
       data.value = list
     }
   }
-  const remove = (id: number) => (data.value = data.value.filter(r => r.id !== id))
+  const remove = (id: number) => (data.value = data.value.filter((r) => r.id !== id))
 
   return (
     <div class="container">
@@ -70,7 +75,7 @@ export function Main() {
       </div>
       <table class="table table-hover table-striped test-data">
         <tbody>
-          {data.value.map(row => (
+          {data.value.map((row) => (
             <tr key={row.id} class={selected.get(row.id) ? 'danger' : ''}>
               <td class="col-md-1">{row.id}</td>
               <td class="col-md-4">
@@ -90,4 +95,3 @@ export function Main() {
     </div>
   )
 }
-

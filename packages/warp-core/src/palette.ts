@@ -22,15 +22,21 @@ export function fuzzy(q: string, text: string): { score: number; hits: number[] 
  * starts only, as initials ("np" in "New project") or each word of the query starting a word; 1 the query as written
  * inside a word; 0 its letters in order anywhere ("us" in "eu-west"). Null when they aren't all there.
  */
-export function matchStrength(q: string, text: string): { tier: 0 | 1 | 2 | 3; score: number; hits: number[] } | null {
+export function matchStrength(
+  q: string,
+  text: string,
+): { tier: 0 | 1 | 2 | 3; score: number; hits: number[] } | null {
   if (!q) return { tier: 3, score: 0, hits: [] }
   const t = text.toLowerCase()
   const run = (at: number) => Array.from({ length: q.length }, (_, k) => at + k)
-  for (let at = t.indexOf(q); at >= 0; at = t.indexOf(q, at + 1)) if (starts(t, at)) return { tier: 3, score: 100 - at, hits: run(at) }
+  for (let at = t.indexOf(q); at >= 0; at = t.indexOf(q, at + 1))
+    if (starts(t, at)) return { tier: 3, score: 100 - at, hits: run(at) }
   // initials: each letter of the query starts a word, in order
   const initials: number[] = []
-  for (let i = 0; i < t.length && initials.length < q.length; i++) if (starts(t, i) && t[i] === q[initials.length]) initials.push(i)
-  if (initials.length === q.length && !/\s/.test(q)) return { tier: 2, score: 50 - initials[0]!, hits: initials }
+  for (let i = 0; i < t.length && initials.length < q.length; i++)
+    if (starts(t, i) && t[i] === q[initials.length]) initials.push(i)
+  if (initials.length === q.length && !/\s/.test(q))
+    return { tier: 2, score: 50 - initials[0]!, hits: initials }
   // each word of the query starts a word of the text, in order
   const words = q.split(/\s+/).filter(Boolean)
   if (words.length > 1) {
@@ -39,7 +45,10 @@ export function matchStrength(q: string, text: string): { tier: 0 | 1 | 2 | 3; s
     for (const w of words) {
       let at = t.indexOf(w, from)
       while (at >= 0 && !starts(t, at)) at = t.indexOf(w, at + 1)
-      if (at < 0) { hits.length = 0; break }
+      if (at < 0) {
+        hits.length = 0
+        break
+      }
       hits.push(...Array.from({ length: w.length }, (_, k) => at + k))
       from = at + w.length
     }
@@ -52,9 +61,16 @@ export function matchStrength(q: string, text: string): { tier: 0 | 1 | 2 | 3; s
 }
 
 /** What the command palette ranks by. */
-export interface Rankable { label: string; group?: string | undefined; keywords?: string[] }
+export interface Rankable {
+  label: string
+  group?: string | undefined
+  keywords?: string[]
+}
 /** An item that matched, with the letters that hit. */
-export interface Ranked<C> { item: C; hits: number[] }
+export interface Ranked<C> {
+  item: C
+  hits: number[]
+}
 
 /**
  * What a query shows, best first and then gathered by group in the order the groups turn up. A match at a word's start
@@ -66,13 +82,22 @@ export function rankCommands<C extends Rankable>(items: readonly C[], query: str
   const found: (Ranked<C> & { tier: number; score: number })[] = []
   for (const item of items) {
     const own = matchStrength(q, item.label)
-    const alias = item.keywords?.map(k => matchStrength(q, k)).filter(Boolean).sort((a, b) => b!.tier - a!.tier)[0]
+    const alias = item.keywords
+      ?.map((k) => matchStrength(q, k))
+      .filter(Boolean)
+      .sort((a, b) => b!.tier - a!.tier)[0]
     // a keyword can rank a row higher than its label's scattered letters, but never marks the label
     const best = own && (!alias || own.tier >= alias.tier) ? own : alias
-    if (best) found.push({ item, hits: own && best === own ? own.hits : [], tier: best.tier, score: best.score })
+    if (best)
+      found.push({
+        item,
+        hits: own && best === own ? own.hits : [],
+        tier: best.tier,
+        score: best.score,
+      })
   }
-  const strong = found.some(f => f.tier > 0)
-  const shown = q && strong ? found.filter(f => f.tier > 0) : found
+  const strong = found.some((f) => f.tier > 0)
+  const shown = q && strong ? found.filter((f) => f.tier > 0) : found
   if (q) shown.sort((a, b) => b.tier - a.tier || b.score - a.score)
   const groups = new Map<string, Ranked<C>[]>()
   for (const f of shown) {
@@ -96,16 +121,29 @@ export function marked(label: string, hits: readonly number[]) {
 }
 
 /** ⌘K or Ctrl+K anywhere in the document (05 §3). */
-export function paletteHotkey(el: HTMLElement, opts: { key: string; slash?: boolean | undefined; onPress(): void }) {
+export function paletteHotkey(
+  el: HTMLElement,
+  opts: { key: string; slash?: boolean | undefined; onPress(): void },
+) {
   let o = opts
   const doc = el.ownerDocument
   const onKey = (e: KeyboardEvent) => {
     const target = e.target as HTMLElement | null
-    const slash = o.slash && e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !target?.closest?.('input, textarea, select') && !target?.isContentEditable
+    const slash =
+      o.slash &&
+      e.key === '/' &&
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      !target?.closest?.('input, textarea, select') &&
+      !target?.isContentEditable
     if (!slash && (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== o.key)) return
     e.preventDefault()
     o.onPress()
   }
   doc.addEventListener('keydown', onKey)
-  return { update: (next: typeof opts) => void (o = next), destroy: () => doc.removeEventListener('keydown', onKey) }
+  return {
+    update: (next: typeof opts) => void (o = next),
+    destroy: () => doc.removeEventListener('keydown', onKey),
+  }
 }

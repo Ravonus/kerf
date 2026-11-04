@@ -7,5 +7,21 @@ export { FIELDS, sample, stepFor, type Field, type FieldName } from './fields'
 export { forces, type Forces, type PointerMode } from './pointer'
 export { rasterMask, type Mask, type MaskSource } from './mask'
 export { ditherField, fxState, type Fade, type FieldOptions } from './field'
-export { ditherImage, tones, gradientTones, type Algorithm, type Gradient, type ImageOptions } from './image'
-export { ditherStage, LEVEL, PAINTERS, type Brush, type DitherPainter, type DitherPiece, type DitherStageOptions, type Skin } from './stage'
+export {
+  ditherImage,
+  tones,
+  gradientTones,
+  type Algorithm,
+  type Gradient,
+  type ImageOptions,
+} from './image'
+export {
+  ditherStage,
+  LEVEL,
+  PAINTERS,
+  type Brush,
+  type DitherPainter,
+  type DitherPiece,
+  type DitherStageOptions,
+  type Skin,
+} from './stage'

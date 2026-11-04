@@ -8,9 +8,15 @@ export default function Focus() {
     <Card title="Focus and select">
       <input ref={field} aria-label="Your name" value="Ada Lovelace" />
       <Row gap="tight">
-        <Button size="sm" onClick={() => field.focus()}>Focus</Button>
-        <Button size="sm" emphasis="outline" onClick={() => field.select()}>Select all</Button>
-        <Button size="sm" emphasis="ghost" onClick={() => field.blur()}>Blur</Button>
+        <Button size="sm" onClick={() => field.focus()}>
+          Focus
+        </Button>
+        <Button size="sm" emphasis="outline" onClick={() => field.select()}>
+          Select all
+        </Button>
+        <Button size="sm" emphasis="ghost" onClick={() => field.blur()}>
+          Blur
+        </Button>
       </Row>
     </Card>
   )

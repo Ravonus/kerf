@@ -11,7 +11,13 @@ import '../../styles/learn.css'
 export default function LearnLayout(props: RouteProps) {
   return (
     <div data-site="docs" data-learn="">
-      <SideNav lead={SITE_LINKS} label="Learn" sections={learnSections} current={props.params.slug ? `/learn/${props.params.slug}` : '/learn'} remember="weft:site:learn" />
+      <SideNav
+        lead={SITE_LINKS}
+        label="Learn"
+        sections={learnSections}
+        current={props.params.slug ? `/learn/${props.params.slug}` : '/learn'}
+        remember="weft:site:learn"
+      />
       {props.children}
     </div>
   )

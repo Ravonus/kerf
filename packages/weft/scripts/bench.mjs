@@ -10,7 +10,10 @@ const args = process.argv.slice(2)
 const solidAt = args.indexOf('--solid')
 const solidPath = solidAt >= 0 ? args.splice(solidAt, 2)[1] : null
 const [dir = 'bench/corpus', runs = '7'] = args
-const files = readdirSync(dir).filter(f => f.endsWith('.tsx')).sort().map(f => [join(dir, f), readFileSync(join(dir, f), 'utf8')])
+const files = readdirSync(dir)
+  .filter((f) => f.endsWith('.tsx'))
+  .sort()
+  .map((f) => [join(dir, f), readFileSync(join(dir, f), 'utf8')])
 
 function time(label, fn) {
   const ms = []
@@ -20,14 +23,25 @@ function time(label, fn) {
     ms.push(performance.now() - t)
   }
   ms.sort((a, b) => a - b)
-  console.log(JSON.stringify({ label, files: files.length, minMs: +ms[0].toFixed(1), medianMs: +ms[ms.length >> 1].toFixed(1) }))
+  console.log(
+    JSON.stringify({
+      label,
+      files: files.length,
+      minMs: +ms[0].toFixed(1),
+      medianMs: +ms[ms.length >> 1].toFixed(1),
+    }),
+  )
 }
 
 const { transform } = require('../compiler.cjs')
 const { backend } = require('../compiler.cjs')
 time(`weft (${backend.kind}, full)`, (source, filename) => transform(source, { filename }))
-time(`weft (${backend.kind}, check only)`, (source, filename) => transform(source, { filename, checkOnly: true }))
+time(`weft (${backend.kind}, check only)`, (source, filename) =>
+  transform(source, { filename, checkOnly: true }),
+)
 if (solidPath) {
   const solid = require(solidPath)
-  time('@solidjs/compiler (napi, no weft pre-pass)', (source, filename) => solid.transform(source, { filename, moduleName: '@weft-js/core/dom' }))
+  time('@solidjs/compiler (napi, no weft pre-pass)', (source, filename) =>
+    solid.transform(source, { filename, moduleName: '@weft-js/core/dom' }),
+  )
 }

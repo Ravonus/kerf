@@ -8,8 +8,11 @@ import { fix } from '../src/fix.mjs'
 import { project } from './helpers.mjs'
 
 const file = 'src/routes/flags.tsx'
-const app = body => project({ [file]: `export default function Flags(props: { on: boolean }) {\n  return ${body}\n}\n` })
-const w043 = r => r.diagnostics.filter(d => d.code === 'W043')
+const app = (body) =>
+  project({
+    [file]: `export default function Flags(props: { on: boolean }) {\n  return ${body}\n}\n`,
+  })
+const w043 = (r) => r.diagnostics.filter((d) => d.code === 'W043')
 
 describe('W043', () => {
   it('is in the catalog, as a warning', () => {
@@ -50,15 +53,18 @@ describe('W043', () => {
 })
 
 describe('W044', () => {
-  const w044 = r => r.diagnostics.filter(d => d.code === 'W044')
+  const w044 = (r) => r.diagnostics.filter((d) => d.code === 'W044')
   it('is in the catalog, as a warning', () => {
     expect(entry('W044')).toMatchObject({ severity: 'warning', by: 'cli' })
   })
-  it.each(['crypto.randomUUID()', 'Date.now()', 'Math.random()', `\`row-\${Date.now()}\``])('flags key={%s}', async key => {
-    const [d] = w044(await check(app(`<ul>{[1].map(n => <li key={${key}}>{n}</li>)}</ul>`)))
-    expect(d).toMatchObject({ severity: 'warning', file })
-    expect(d.why).toContain('differs between the server and the client')
-  })
+  it.each(['crypto.randomUUID()', 'Date.now()', 'Math.random()', `\`row-\${Date.now()}\``])(
+    'flags key={%s}',
+    async (key) => {
+      const [d] = w044(await check(app(`<ul>{[1].map(n => <li key={${key}}>{n}</li>)}</ul>`)))
+      expect(d).toMatchObject({ severity: 'warning', file })
+      expect(d.why).toContain('differs between the server and the client')
+    },
+  )
   it('leaves a stable key alone', async () => {
     expect(w044(await check(app('<ul>{[1].map(n => <li key={n}>{n}</li>)}</ul>')))).toEqual([])
   })

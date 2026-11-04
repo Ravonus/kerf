@@ -3,7 +3,23 @@ import { state } from '@weft-js/core'
 import { flush, render, screen } from '@weft-js/core/test'
 
 function Rows({ rows }: { rows: () => [string, { name: [string] }, ...number[]][] }) {
-  return <ul>{rows().map(([id, { name: [first] }, ...more]) => <li key={id}>{first}:{more.length}</li>)}</ul>
+  return (
+    <ul>
+      {rows().map(
+        ([
+          id,
+          {
+            name: [first],
+          },
+          ...more
+        ]) => (
+          <li key={id}>
+            {first}:{more.length}
+          </li>
+        ),
+      )}
+    </ul>
+  )
 }
 
 test('a row destructures nested patterns and a rest, and stays live', async () => {

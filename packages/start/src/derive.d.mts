@@ -9,7 +9,10 @@ export function descriptionProblem(text: string): string | undefined
 /** A page's title and description, as a person would pick them out of its HTML. */
 export function pageText(html: string): { title?: string; description?: string }
 /** The site's URL, from its config or from what the host says about this deploy. */
-export function deployUrl(site: { url?: string | undefined } | undefined, env?: Record<string, string | undefined>): string | undefined
+export function deployUrl(
+  site: { url?: string | undefined } | undefined,
+  env?: Record<string, string | undefined>,
+): string | undefined
 /** The card title's font size, smaller for a longer title. */
 export function cardTitleSize(title: string): number
 /** `paths` in pages that each fit in a response header. */

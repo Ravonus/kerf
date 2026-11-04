@@ -2,7 +2,10 @@ import { bump, counter, noteFeed, postNote } from '../server/feed'
 
 export default function Live() {
   const count = counter.live()
-  const feed = noteFeed(undefined, { fold: (acc: string[], m: { text: string }) => [...acc, m.text], initial: [] as string[] })
+  const feed = noteFeed(undefined, {
+    fold: (acc: string[], m: { text: string }) => [...acc, m.text],
+    initial: [] as string[],
+  })
   return (
     <main>
       <p aria-label="status">{count.live.value}</p>

@@ -1,30 +1,36 @@
-import { Title } from "@solidjs/meta";
-import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { For, Suspense } from "solid-js";
+import { Title } from '@solidjs/meta'
+import { createAsync, type RouteDefinition } from '@solidjs/router'
+import { For, Suspense } from 'solid-js'
 
-import { heading } from "~/components/button";
-import { GridSkeleton, ProductArt, ProductCard, wideGrid } from "~/components/product-card";
-import { getHome } from "~/lib/data";
+import { heading } from '~/components/button'
+import { GridSkeleton, ProductArt, ProductCard, wideGrid } from '~/components/product-card'
+import { getHome } from '~/lib/data'
 
-export const route = { preload: () => void getHome() } satisfies RouteDefinition;
+export const route = { preload: () => void getHome() } satisfies RouteDefinition
 
 const promises = [
-  ["Screws, not glue", "Every piece comes apart with a screwdriver you already own."],
-  ["Parts on the shelf", "Handles, hinges and cords are stocked for as long as we sell the piece."],
-  ["Repairs by post", "Send it in, and it comes back working. Free for ten years."],
-];
+  ['Screws, not glue', 'Every piece comes apart with a screwdriver you already own.'],
+  ['Parts on the shelf', 'Handles, hinges and cords are stocked for as long as we sell the piece.'],
+  ['Repairs by post', 'Send it in, and it comes back working. Free for ten years.'],
+]
 
 export default function Home() {
   // Nothing here can change the status, so the page goes out at once and these two stream into it.
-  const home = createAsync(() => getHome());
+  const home = createAsync(() => getHome())
   return (
     <div class="mx-auto max-w-360 px-8">
       <Title>Goods made to be mended · Mendwell</Title>
       <section class="grid items-center gap-12 py-8 md:grid-cols-[3fr_2fr]">
         <div class="flex flex-col items-start gap-2.5">
           <h1 class={`${heading} text-4xl sm:text-5xl`}>Buy it once. Mend it forever.</h1>
-          <p class="max-w-xl text-xl">Everyday goods in oak, copper, linen and slate, built with screws instead of glue, and repaired free for ten years.</p>
-          <a href="#featured" class="rounded-full bg-accent px-5 py-2.5 font-semibold text-accent-ink hover:bg-accent-hover">
+          <p class="max-w-xl text-xl">
+            Everyday goods in oak, copper, linen and slate, built with screws instead of glue, and
+            repaired free for ten years.
+          </p>
+          <a
+            href="#featured"
+            class="rounded-full bg-accent px-5 py-2.5 font-semibold text-accent-ink hover:bg-accent-hover"
+          >
             See this month's table
           </a>
         </div>
@@ -39,11 +45,23 @@ export default function Home() {
           <h2 id="aisles-title" class={`${heading} text-xl`}>
             Aisles
           </h2>
-          <nav aria-label="Aisles" class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] border-t-2 border-ink">
-            <Suspense fallback={<For each={Array.from({ length: 8 })}>{() => <span class="border-b border-line py-2.5 text-xl">&nbsp;</span>}</For>}>
+          <nav
+            aria-label="Aisles"
+            class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] border-t-2 border-ink"
+          >
+            <Suspense
+              fallback={
+                <For each={Array.from({ length: 8 })}>
+                  {() => <span class="border-b border-line py-2.5 text-xl">&nbsp;</span>}
+                </For>
+              }
+            >
               <For each={home()?.categories}>
                 {(c) => (
-                  <a href={`/c/${c.slug}`} class="border-b border-line py-2.5 text-xl font-semibold hover:text-accent-text">
+                  <a
+                    href={`/c/${c.slug}`}
+                    class="border-b border-line py-2.5 text-xl font-semibold hover:text-accent-text"
+                  >
                     {c.name}
                   </a>
                 )}
@@ -73,5 +91,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-  );
+  )
 }

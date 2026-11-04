@@ -22,8 +22,18 @@ export default function Together() {
       <p aria-label="status">{hits.live.value}</p>
       <p aria-label="hits">{hits.value?.hits}</p>
       <p aria-label="chat">{chat.status.value}</p>
-      <ul aria-label="said">{said.value.map(m => <li key={m.text}>{m.text}</li>)}</ul>
-      <input aria-label="draft" value={draft.value} onInput={e => { draft.value = e.currentTarget.value }} />
+      <ul aria-label="said">
+        {said.value.map((m) => (
+          <li key={m.text}>{m.text}</li>
+        ))}
+      </ul>
+      <input
+        aria-label="draft"
+        value={draft.value}
+        onInput={(e) => {
+          draft.value = e.currentTarget.value
+        }}
+      />
       <button onClick={() => chat.send('say', { text: draft.value })}>send</button>
       <button onClick={() => bump()}>bump</button>
     </main>

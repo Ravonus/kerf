@@ -11,7 +11,9 @@ export type Presentation = 'auto' | 'popover' | 'sheet'
 export function isSheet(el: Element, presentation: Presentation = 'auto') {
   if (presentation !== 'auto') return presentation === 'sheet'
   const frame = el.closest<HTMLElement>('[data-form]')
-  return frame ? frame.dataset.form === 'phone' : (el.ownerDocument.defaultView?.innerWidth ?? 1024) < 600
+  return frame
+    ? frame.dataset.form === 'phone'
+    : (el.ownerDocument.defaultView?.innerWidth ?? 1024) < 600
 }
 
 /** Options for a picker's panel. */
@@ -43,7 +45,13 @@ export function pickerPanel(el: HTMLDialogElement, opts: PanelOptions) {
       } else {
         delete el.dataset.presentation
         el.removeAttribute('aria-modal')
-        cur = popover(el, { open: true, trigger: o.trigger, onClose: close, side: o.side, align: o.align })
+        cur = popover(el, {
+          open: true,
+          trigger: o.trigger,
+          onClose: close,
+          side: o.side,
+          align: o.align,
+        })
       }
     } else if (!o.open && cur) {
       cur.update({ open: false, trigger: o.trigger, onClose: close })
@@ -54,17 +62,38 @@ export function pickerPanel(el: HTMLDialogElement, opts: PanelOptions) {
   }
   sync()
   return {
-    update(next: PanelOptions) { o = next; sync() },
-    destroy() { cur?.destroy() },
+    update(next: PanelOptions) {
+      o = next
+      sync()
+    },
+    destroy() {
+      cur?.destroy()
+    },
   }
 }
 
-export interface ListMove { to: number; pick?: boolean; handled: boolean }
+export interface ListMove {
+  to: number
+  pick?: boolean
+  handled: boolean
+}
 
 /** A slot list or combobox's keys over `count` options: arrows, a page of `page`, Home/End, Enter (and Space, unless typing). */
-export function listKey(key: string, at: number, count: number, { page = 4, wrap = false, typing = false } = {}): ListMove {
+export function listKey(
+  key: string,
+  at: number,
+  count: number,
+  { page = 4, wrap = false, typing = false } = {},
+): ListMove {
   const step = { ArrowDown: 1, ArrowUp: -1, PageDown: page, PageUp: -page }[key]
-  if (step) return { to: wrap && Math.abs(step) === 1 ? (at + step + count) % count : Math.max(0, Math.min(count - 1, at + step)), handled: true }
+  if (step)
+    return {
+      to:
+        wrap && Math.abs(step) === 1
+          ? (at + step + count) % count
+          : Math.max(0, Math.min(count - 1, at + step)),
+      handled: true,
+    }
   if (!typing && key === 'Home') return { to: 0, handled: true }
   if (!typing && key === 'End') return { to: count - 1, handled: true }
   if (key === 'Enter' || (!typing && key === ' ')) return { to: at, pick: true, handled: true }
@@ -72,7 +101,11 @@ export function listKey(key: string, at: number, count: number, { page = 4, wrap
 }
 
 /** A shortcut in a range picker. */
-export type RangePreset = { id: string; label: string; range: (today: IsoDate, weekStart: number) => DateRange }
+export type RangePreset = {
+  id: string
+  label: string
+  range: (today: IsoDate, weekStart: number) => DateRange
+}
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 /** The rail's defaults (04 DateRangeField). Today and Yesterday are the locale's own words. */
@@ -80,13 +113,21 @@ export const defaultPresets = (locale: string): RangePreset[] => {
   const rel = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
   const span = (start: string, end: string) => ({ start: start as IsoDate, end: end as IsoDate })
   return [
-    { id: 'today', label: capital(rel.format(0, 'day')), range: t => span(t, t) },
-    { id: 'yesterday', label: capital(rel.format(-1, 'day')), range: t => span(addDays(t, -1), addDays(t, -1)) },
-    { id: '7d', label: 'Last 7 days', range: t => span(addDays(t, -6), t) },
-    { id: '30d', label: 'Last 30 days', range: t => span(addDays(t, -29), t) },
-    { id: 'month', label: 'This month', range: t => span(monthStart(t), t) },
-    { id: 'lastmonth', label: 'Last month', range: t => span(monthStart(addMonths(t, -1)), addDays(monthStart(t), -1)) },
-    { id: 'ytd', label: 'Year to date', range: t => span(`${t.slice(0, 4)}-01-01`, t) },
+    { id: 'today', label: capital(rel.format(0, 'day')), range: (t) => span(t, t) },
+    {
+      id: 'yesterday',
+      label: capital(rel.format(-1, 'day')),
+      range: (t) => span(addDays(t, -1), addDays(t, -1)),
+    },
+    { id: '7d', label: 'Last 7 days', range: (t) => span(addDays(t, -6), t) },
+    { id: '30d', label: 'Last 30 days', range: (t) => span(addDays(t, -29), t) },
+    { id: 'month', label: 'This month', range: (t) => span(monthStart(t), t) },
+    {
+      id: 'lastmonth',
+      label: 'Last month',
+      range: (t) => span(monthStart(addMonths(t, -1)), addDays(monthStart(t), -1)),
+    },
+    { id: 'ytd', label: 'Year to date', range: (t) => span(`${t.slice(0, 4)}-01-01`, t) },
   ]
 }
 
@@ -95,7 +136,10 @@ export const defaultPresets = (locale: string): RangePreset[] => {
  * the input owns the keys. It is a layer, so Escape closes it before any dialog around it (the input sees that as
  * `defaultPrevented`), and `onClose` hears that and a press outside.
  */
-export function comboPopup(el: HTMLElement, opts: { open: boolean; anchor: HTMLElement; onClose(): void }) {
+export function comboPopup(
+  el: HTMLElement,
+  opts: { open: boolean; anchor: HTMLElement; onClose(): void },
+) {
   let o = opts
   const win = el.ownerDocument.defaultView!
   const reposition = () => el.matches(':popover-open') && place(el, o.anchor, 'bottom', 'start', 8)
@@ -122,5 +166,11 @@ export function comboPopup(el: HTMLElement, opts: { open: boolean; anchor: HTMLE
     remove?.()
   }
   sync()
-  return { update(next: typeof opts) { o = next; sync() }, destroy: off }
+  return {
+    update(next: typeof opts) {
+      o = next
+      sync()
+    },
+    destroy: off,
+  }
 }

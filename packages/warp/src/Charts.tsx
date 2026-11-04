@@ -1,6 +1,52 @@
 // The chart forms (06 §12), one line each: a form is a pure layout in warp-core, and `Chart` is the frame around it.
 // Nothing here runs at import, so an app pays only for the forms it renders.
-import { spark as sparkAction, sparkScene, SSR_WIDTH, toHTML, bar, box, brush, bubble, candlestick, combo, donut, funnel, gauge, heat, histogram, line, radar, radial, sankey, scatter, stream, sunburst, tile, treemap, waterfall, type BarConfig, type BoxConfig, type BrushConfig, type CandleConfig, type ComboConfig, type DonutConfig, type FunnelConfig, type GaugeConfig, type HeatConfig, type HistConfig, type LineConfig, type RadarConfig, type RadialConfig, type SankeyConfig, type ScatterConfig, type StreamConfig, type SunConfig, type TileConfig, type TreemapConfig, type WaterConfig } from '@weft-js/warp-core/charts'
+import {
+  spark as sparkAction,
+  sparkScene,
+  SSR_WIDTH,
+  toHTML,
+  bar,
+  box,
+  brush,
+  bubble,
+  candlestick,
+  combo,
+  donut,
+  funnel,
+  gauge,
+  heat,
+  histogram,
+  line,
+  radar,
+  radial,
+  sankey,
+  scatter,
+  stream,
+  sunburst,
+  tile,
+  treemap,
+  waterfall,
+  type BarConfig,
+  type BoxConfig,
+  type BrushConfig,
+  type CandleConfig,
+  type ComboConfig,
+  type DonutConfig,
+  type FunnelConfig,
+  type GaugeConfig,
+  type HeatConfig,
+  type HistConfig,
+  type LineConfig,
+  type RadarConfig,
+  type RadialConfig,
+  type SankeyConfig,
+  type ScatterConfig,
+  type StreamConfig,
+  type SunConfig,
+  type TileConfig,
+  type TreemapConfig,
+  type WaterConfig,
+} from '@weft-js/warp-core/charts'
 import { state, untrack } from '@weft-js/core'
 import { Button } from './Button'
 import { Chart, type ChartFrame } from './Chart'
@@ -38,7 +84,9 @@ export const Sunburst = (p: ChartFrame & SunConfig) => <Chart form={sunburst} {.
 /** Flows between stages, band width showing the amount. */
 export const SankeyChart = (p: ChartFrame & SankeyConfig) => <Chart form={sankey} {...p} />
 /** Open, high, low and close per period. */
-export const CandlestickChart = (p: ChartFrame & CandleConfig) => <Chart form={candlestick} {...p} />
+export const CandlestickChart = (p: ChartFrame & CandleConfig) => (
+  <Chart form={candlestick} {...p} />
+)
 /** Quartiles and whiskers per group. */
 export const BoxPlot = (p: ChartFrame & BoxConfig) => <Chart form={box} {...p} />
 /** A running total, each step a rise or a fall. */
@@ -54,16 +102,57 @@ export const GaugeChart = (p: ChartFrame & GaugeConfig) => <Chart form={gauge} {
 export function StreamChart(p: ChartFrame & Omit<StreamConfig, 'paused'>) {
   const paused = state(false)
   let held = untrack(() => p.data)
-  const flip = () => { held = p.data; paused.value = !paused.value }
-  return <Chart form={stream} {...p} data={paused.value ? held : p.data} paused={paused.value} toolbar={<Button emphasis="outline" onClick={flip}>{paused.value ? 'Resume' : 'Pause'}</Button>} />
+  const flip = () => {
+    held = p.data
+    paused.value = !paused.value
+  }
+  return (
+    <Chart
+      form={stream}
+      {...p}
+      data={paused.value ? held : p.data}
+      paused={paused.value}
+      toolbar={
+        <Button emphasis="outline" onClick={flip}>
+          {paused.value ? 'Resume' : 'Pause'}
+        </Button>
+      }
+    />
+  )
 }
 
 /** No axes, end dot, `aria-hidden`: a sparkline is context inside a labelled parent. */
 /** `format` says a hovered point the way the headline beside it does (`v => \`${v}%\``), so the unit carries over. */
-export function Sparkline({ values, color, format }: { values: number[]; color?: string | undefined; format?: ((value: number) => string) | undefined }) {
+export function Sparkline({
+  values,
+  color,
+  format,
+}: {
+  values: number[]
+  color?: string | undefined
+  format?: ((value: number) => string) | undefined
+}) {
   let svg: SVGSVGElement | undefined
-  use(sparkAction, () => svg, () => (format ? { values, format } : values))
-  return <svg ref={n => (svg = n)} data-part="spark" viewBox={`0 0 ${SSR_WIDTH} 36`} aria-hidden="true" preserveAspectRatio="none" style={`display:block;inline-size:100%;block-size:36px;overflow:visible${color ? `;--_dc:${color}` : ''}`}
-    // oxlint-disable-next-line weft/no-html-sink -- toHTML escapes every text and attribute of the scene
-    innerHTML={toHTML(sparkScene(untrack(() => values), SSR_WIDTH))}></svg>
+  use(
+    sparkAction,
+    () => svg,
+    () => (format ? { values, format } : values),
+  )
+  return (
+    <svg
+      ref={(n) => (svg = n)}
+      data-part="spark"
+      viewBox={`0 0 ${SSR_WIDTH} 36`}
+      aria-hidden="true"
+      preserveAspectRatio="none"
+      style={`display:block;inline-size:100%;block-size:36px;overflow:visible${color ? `;--_dc:${color}` : ''}`}
+      // oxlint-disable-next-line weft/no-html-sink -- toHTML escapes every text and attribute of the scene
+      innerHTML={toHTML(
+        sparkScene(
+          untrack(() => values),
+          SSR_WIDTH,
+        ),
+      )}
+    ></svg>
+  )
 }

@@ -13,7 +13,21 @@
 // (exec.ts) is the server's, and the in-process fake transport @weft-js/core/test turns on loads it on demand. Realtime
 // (research 30) costs a query app one method here: `q.live()` imports live.ts on its first call.
 
-import { DEV, createRoot, derived, effect, flush, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from '@weft-js/core'
+import {
+  DEV,
+  createRoot,
+  derived,
+  effect,
+  flush,
+  getOwner,
+  onCleanup,
+  resource,
+  state,
+  untrack,
+  type Derived,
+  type Resource,
+  type State,
+} from '@weft-js/core'
 import { fill, mask } from '@weft-js/core/shape'
 import { client, peers } from './router'
 import type { MediaAsset } from '@weft-js/core/media'
@@ -53,9 +67,14 @@ export interface StandardSchemaV1<I = unknown, O = I> {
   }
 }
 /** What a Standard Schema validator answers. */
-export type SchemaResult<O> = { readonly value: O; readonly issues?: undefined } | { readonly issues: readonly SchemaIssue[] }
+export type SchemaResult<O> =
+  | { readonly value: O; readonly issues?: undefined }
+  | { readonly issues: readonly SchemaIssue[] }
 /** One failure from a schema, with the path to the field when there is one. */
-export interface SchemaIssue { readonly message: string; readonly path?: readonly (PropertyKey | { readonly key: PropertyKey })[] | undefined }
+export interface SchemaIssue {
+  readonly message: string
+  readonly path?: readonly (PropertyKey | { readonly key: PropertyKey })[] | undefined
+}
 
 /**
  * What `run` and `load` get. Augment it with what `src/context.server.ts` returns:
@@ -80,7 +99,11 @@ export type Life = 'seconds' | 'minutes' | 'hours' | 'days' | 'max' | number
 
 /** `auth: 'user'` narrows `ctx.user` to non-null in `run` (A002 answers a call with no session). */
 export type AuthScope = 'user'
-type Ctx<A> = A extends 'user' ? (Context extends { user: infer U } ? Omit<Context, 'user'> & { user: NonNullable<U> } : Context) : Context
+type Ctx<A> = A extends 'user'
+  ? Context extends { user: infer U }
+    ? Omit<Context, 'user'> & { user: NonNullable<U> }
+    : Context
+  : Context
 
 type In<S> = S extends StandardSchemaV1<infer I, unknown> ? I : void
 type Out<S> = S extends StandardSchemaV1<unknown, infer O> ? O : undefined
@@ -90,10 +113,20 @@ type Tags<A extends unknown[]> = readonly string[] | ((...args: A) => readonly s
 type QueryTags<I, A> = Tags<[input: I, ctx: Ctx<A>]>
 
 /** What an `Impl` is called with. */
-export interface ImplCall { fn: Fn; input: unknown; ctx: Context; request: Request }
+export interface ImplCall {
+  fn: Fn
+  input: unknown
+  ctx: Context
+  request: Request
+}
 
 /** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft-js/start/rust` (research 36, 37). */
-export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: ImplCall): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
+export interface Impl {
+  readonly kind: string
+  readonly target: string
+  readonly service: string
+  call(c: ImplCall): Promise<{ value: unknown; tags: string[]; touched: string[] }>
+}
 
 /** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
 export type Errors = Record<string, StandardSchemaV1>
@@ -116,7 +149,10 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
     verify?: true | string | VerifyOptions
   }
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
-  cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
+  cache?: {
+    life?: Life
+    /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user'
+  }
   /** Named failures, for the client as `FnError.code` and `.data`. */
   errors?: Errors
   run: (args: { input: Out<S>; ctx: Ctx<A> }) => O | Promise<O>
@@ -126,9 +162,15 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
 }
 
 /** The same declaration with its body elsewhere: `output` is required, because it's the whole contract for what comes back. */
-export type ImplQueryDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<QueryDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
+export type ImplQueryDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<
+  QueryDef<S, Out<OS>, A>,
+  'run' | 'impl' | 'output'
+> & { output: OS; impl: Impl; run?: undefined }
 /** `mutation()` with `impl` and an `output` schema: no `run` here. */
-export type ImplMutationDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<MutationDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
+export type ImplMutationDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<
+  MutationDef<S, Out<OS>, A>,
+  'run' | 'impl' | 'output'
+> & { output: OS; impl: Impl; run?: undefined }
 
 /** `mutation()` with a `run` on this server. */
 export interface MutationDef<S, O, A = undefined> extends FnOptions {
@@ -155,7 +197,9 @@ type Arg<I> = I | (() => I | Skip)
 /** What `query()` returns: call it for a resource, or `.live()` for one that stays current. */
 export interface Query<I, O> {
   /** The live value, read in a component or a defineState setup (Q001 elsewhere: use `fetch`). */
-  (...args: [I] extends [void] ? [input?: undefined | (() => undefined | Skip)] : [input: Arg<I>]): Resource<O>
+  (
+    ...args: [I] extends [void] ? [input?: undefined | (() => undefined | Skip)] : [input: Arg<I>]
+  ): Resource<O>
   /** The value as a promise: in `load`, handlers, server code and tests. Through the request or client cache. */
   fetch(...args: [I] extends [void] ? [] : [input: I]): Promise<O>
   /** A placeholder result to size a pending view by (last seen, else declared), or undefined when nothing is known. */
@@ -164,7 +208,11 @@ export interface Query<I, O> {
    * The same value, refetched whenever a mutation anywhere invalidates one of its tags. `.live` is the connection's
    * status. `keep`: how long the subscription outlives its last reader (`'30s'`, `'session'`).
    */
-  live(...args: [I] extends [void] ? [input?: undefined | (() => undefined | Skip), options?: LiveOptions] : [input: Arg<I>, options?: LiveOptions]): LiveQuery<O>
+  live(
+    ...args: [I] extends [void]
+      ? [input?: undefined | (() => undefined | Skip), options?: LiveOptions]
+      : [input: Arg<I>, options?: LiveOptions]
+  ): LiveQuery<O>
   readonly kind: 'query'
   readonly $id: string
 }
@@ -194,16 +242,45 @@ export interface LiveOptions {
   required?: boolean
 }
 /** A resource that also says how live it is. */
-export type LiveQuery<O> = Resource<O> & { readonly live: Derived<LiveStatus>; readonly liveMode: Derived<LiveMode> }
+export type LiveQuery<O> = Resource<O> & {
+  readonly live: Derived<LiveStatus>
+  readonly liveMode: Derived<LiveMode>
+}
 
 /** Any definition, as the executor and transports see it. */
 export interface Fn {
   kind: 'query' | 'mutation' | 'stream' | 'channel' | 'shared'
   $id: string
   def: {
-    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: { input: unknown; ctx: Context; signal?: AbortSignal; lastEventId?: unknown }) => unknown; impl?: Impl; errors?: Errors; tags?: Tags<[input: unknown, ctx?: Context]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<[unknown, unknown]>; optimistic?: (args: { input: unknown }, cache: OptimisticCache) => void
+    input?: StandardSchemaV1
+    output?: StandardSchemaV1
+    message?: StandardSchemaV1
+    shape?: unknown
+    auth?: AuthScope
+    run?: (args: {
+      input: unknown
+      ctx: Context
+      signal?: AbortSignal
+      lastEventId?: unknown
+    }) => unknown
+    impl?: Impl
+    errors?: Errors
+    tags?: Tags<[input: unknown, ctx?: Context]>
+    cache?: { life?: Life; scope?: 'user' }
+    invalidates?: Tags<[unknown, unknown]>
+    optimistic?: (args: { input: unknown }, cache: OptimisticCache) => void
     /** `channel` and `sharedState` (research 32). */
-    params?: StandardSchemaV1; authorize?: unknown; left?: (args: { id: string; ctx: Context; params: unknown; room: unknown }) => unknown; recheck?: (args: { id: string; ctx: Context; reply: unknown }) => unknown; client?: Record<string, StandardSchemaV1>; server?: Record<string, StandardSchemaV1>; on?: Record<string, (args: never) => unknown>; limits?: { perSecond?: number }; key?: StandardSchemaV1; value?: StandardSchemaV1; initial?: unknown
+    params?: StandardSchemaV1
+    authorize?: unknown
+    left?: (args: { id: string; ctx: Context; params: unknown; room: unknown }) => unknown
+    recheck?: (args: { id: string; ctx: Context; reply: unknown }) => unknown
+    client?: Record<string, StandardSchemaV1>
+    server?: Record<string, StandardSchemaV1>
+    on?: Record<string, (args: never) => unknown>
+    limits?: { perSecond?: number }
+    key?: StandardSchemaV1
+    value?: StandardSchemaV1
+    initial?: unknown
   }
 }
 
@@ -223,7 +300,12 @@ export class StartError extends Error {
   declare data?: unknown
   /** `raise`: this is a failure the function declares, so its message reaches the client. */
   declare typed?: boolean
-  constructor(public code: string, message: string, fix?: string, public extra: Record<string, unknown> = {}) {
+  constructor(
+    public code: string,
+    message: string,
+    fix?: string,
+    public extra: Record<string, unknown> = {},
+  ) {
     super(`${code}: ${message}${fix ? `\n  fix: ${fix}` : ''}`)
     Object.assign(this, extra)
   }
@@ -236,7 +318,10 @@ export class FnError extends Error {
   issues?: SchemaIssue[]
   /** What a declared error (`errors`) carries. */
   data?: unknown
-  constructor(e: { message?: string; code?: string; issues?: SchemaIssue[] | undefined; data?: unknown }, status: number) {
+  constructor(
+    e: { message?: string; code?: string; issues?: SchemaIssue[] | undefined; data?: unknown },
+    status: number,
+  ) {
     super(e.message ?? `server function failed (${status})`)
     this.status = status
     Object.assign(this, { code: e.code, issues: e.issues, data: e.data })
@@ -262,7 +347,8 @@ export function redirect(href: string, status: 301 | 302 | 303 | 307 | 308 = 307
 }
 
 /** Whether a thrown value is a `redirect()`. */
-export const isRedirect = (v: unknown): v is Redirect => !!v && typeof v === 'object' && (v as Partial<Redirect>).isRedirect === true
+export const isRedirect = (v: unknown): v is Redirect =>
+  !!v && typeof v === 'object' && (v as Partial<Redirect>).isRedirect === true
 
 /**
  * Fail with an error the function declares in `errors`. The client sees it as `FnError.code` and `.data`, whether `run`
@@ -274,7 +360,10 @@ export function raise(code: string, data?: unknown): never {
 
 /** Refuse a value the schema can't judge (`email` is taken): `<Form>` shows it next to the field, as a schema issue. */
 export function invalid(fields: Record<string, string>): never {
-  throw new StartError('Q002', Object.keys(fields).join(', '), undefined, { status: 422, issues: Object.entries(fields).map(([k, message]) => ({ message, path: k.split('.') })) })
+  throw new StartError('Q002', Object.keys(fields).join(', '), undefined, {
+    status: 422,
+    issues: Object.entries(fields).map(([k, message]) => ({ message, path: k.split('.') })),
+  })
 }
 
 /** Issues as a form shows them: by field (`a.b`), and the ones that name no field. */
@@ -282,7 +371,7 @@ export function fieldsOf(issues: readonly SchemaIssue[] = []) {
   const errors: Record<string, string> = {}
   let message: string | undefined
   for (const i of issues) {
-    const key = i.path?.map(p => (typeof p === 'object' ? p.key : p)).join('.')
+    const key = i.path?.map((p) => (typeof p === 'object' ? p.key : p)).join('.')
     if (key) errors[key] ??= i.message
     else message ??= i.message
   }
@@ -300,7 +389,7 @@ export function decodeForm(data: FormData): Record<string, unknown> {
     if (name[0] === '$' || (typeof value !== 'string' && !value.size)) continue // `$fn`; a file input left empty
     const list = name.endsWith('[]')
     const path = (list ? name.slice(0, -2) : name).split('.')
-    if (path.some(p => UNSAFE.has(p))) continue
+    if (path.some((p) => UNSAFE.has(p))) continue
     let at = out
     for (const p of path.slice(0, -1)) {
       const next = at[p]
@@ -321,7 +410,15 @@ export function decodeForm(data: FormData): Record<string, unknown> {
 /** JSON with sorted object keys: the same input gives the same key on both sides (no input: `''`; JSON sends null). */
 export function stable(v: unknown): string {
   if (v == null) return ''
-  return JSON.stringify(v, (_, x: Record<string, unknown>) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(k => [k, x[k]])) : x))
+  return JSON.stringify(v, (_, x: Record<string, unknown>) =>
+    x && typeof x === 'object' && !Array.isArray(x)
+      ? Object.fromEntries(
+          Object.keys(x)
+            .sort()
+            .map((k) => [k, x[k]]),
+        )
+      : x,
+  )
 }
 
 /** The cache key of one call: the function's id and its input in a stable order. */
@@ -333,13 +430,24 @@ export const keyOf = (id: string, input: unknown) => `${id}:${stable(input)}`
 export type Wire = [id: string, input: unknown, value: unknown, tags: string[]]
 
 /** What the transports answer (research 27 §3). */
-export interface Answer { v?: unknown; t?: string[]; c?: Wire[]; r?: string; /** `r` is a full load: the session changed, so nothing cached may survive. */ x?: 1 }
+export interface Answer {
+  v?: unknown
+  t?: string[]
+  c?: Wire[]
+  r?: string
+  /** `r` is a full load: the session changed, so nothing cached may survive. */ x?: 1
+}
 
 /** How a client call reaches the server: `fetch` by default, a fake under test. */
 export interface Transport {
   query(id: string, input: unknown): Promise<Answer>
   /** `form`: the input came from a form, so strings may be coerced; a FormData is sent as is (it holds files). */
-  mutate(id: string, input: unknown, refresh: [string, unknown][], form?: true | FormData): Promise<Answer>
+  mutate(
+    id: string,
+    input: unknown,
+    refresh: [string, unknown][],
+    form?: true | FormData,
+  ): Promise<Answer>
 }
 
 /**
@@ -362,15 +470,32 @@ export const runtime: {
   /** This tab's realtime connection: sent with mutations, so the tab doesn't poke itself. */
   conn?: string | undefined
   /** `room.in(params).publish`: socket.ts, on a server or under the fake. */
-  channels?: { publish(fn: Fn, params: unknown, name: string, message: unknown, options?: { exceptSelf?: boolean; from?: string }): Promise<void>; set(fn: Fn, key: unknown, value: unknown): Promise<void> }
+  channels?: {
+    publish(
+      fn: Fn,
+      params: unknown,
+      name: string,
+      message: unknown,
+      options?: { exceptSelf?: boolean; from?: string },
+    ): Promise<void>
+    set(fn: Fn, key: unknown, value: unknown): Promise<void>
+  }
 } = {}
 
 /** The realtime connection's status and "this tab is older than the server" (research 30 §2). */
-export const rt = createRoot(() => ({ status: state<LiveStatus>('connecting'), mode: state<LiveMode>('app'), stale: state(false) }), null)
+export const rt = createRoot(
+  () => ({
+    status: state<LiveStatus>('connecting'),
+    mode: state<LiveMode>('app'),
+    stale: state(false),
+  }),
+  null,
+)
 /** The server runs a different build than this tab loaded: offer a reload. */
 export const stale: Derived<boolean> = rt.stale
 
-const go = (href: string, replace?: boolean) => (runtime.navigate ? runtime.navigate(href, replace) : void client.navigate?.(href, { replace }))
+const go = (href: string, replace?: boolean) =>
+  runtime.navigate ? runtime.navigate(href, replace) : void client.navigate?.(href, { replace })
 
 /** @weft-js/core/test's controls, when it's loaded; the first look registers the cache reset it runs after each test. */
 let registered = false
@@ -405,9 +530,22 @@ export interface NetControl {
   /** Subscriptions an owner holds: open at the end of a test, they're T012. */
   open: Map<object, [what: string, close: () => void]>
   /** The realtime fake, while one is connected: `net.push`, `net.poke`, `net.drop`. */
-  rt?: { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] } | undefined
+  rt?:
+    | {
+        push(id: string, msg: unknown): number
+        poke(tags: string[]): Promise<void>
+        drop(): void
+        subscriptions(): { kind: string; id: string; input: unknown }[]
+      }
+    | undefined
   /** The channel fake, while a socket is open. */
-  ws?: { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> } | undefined
+  ws?:
+    | {
+        publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>
+        drop(): void
+        recheck(): Promise<void>
+      }
+    | undefined
   /** What this client's sockets sent, across reconnects. */
   sent: { id: string; name: string; msg: unknown }[]
   reconnects: number
@@ -416,13 +554,26 @@ export interface NetControl {
 // ---- definitions --------------------------------------------------------------------------------------------------
 
 const oneBody = (def: { run?: unknown; impl?: unknown; $id?: string }) => {
-  if (def.run && def.impl) throw new StartError('R103', `\`${def.$id ?? 'a function'}\` has both \`run\` and \`impl\``, 'keep one: `impl` replaces the body')
+  if (def.run && def.impl)
+    throw new StartError(
+      'R103',
+      `\`${def.$id ?? 'a function'}\` has both \`run\` and \`impl\``,
+      'keep one: `impl` replaces the body',
+    )
 }
 
 /** A server function that reads, with its output typed by a schema. */
-export function query<OS extends StandardSchemaV1, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: ImplQueryDef<S, OS, A>): Query<In<S>, Out<OS>>
+export function query<
+  OS extends StandardSchemaV1,
+  S extends StandardSchemaV1 | undefined = undefined,
+  const A extends AuthScope | undefined = undefined,
+>(def: ImplQueryDef<S, OS, A>): Query<In<S>, Out<OS>>
 /** A server function that reads, with its output typed by `run`. */
-export function query<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: QueryDef<S, O, A>): Query<In<S>, Awaited<O>>
+export function query<
+  O,
+  S extends StandardSchemaV1 | undefined = undefined,
+  const A extends AuthScope | undefined = undefined,
+>(def: QueryDef<S, O, A>): Query<In<S>, Awaited<O>>
 /** A server function that reads: cached by input on the client, and tagged for what invalidates it. */
 export function query(def: unknown): unknown {
   const d = def as Fn['def'] & { $id?: string }
@@ -438,9 +589,17 @@ export function query(def: unknown): unknown {
 }
 
 /** A server function that writes, with its output typed by a schema. */
-export function mutation<OS extends StandardSchemaV1, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: ImplMutationDef<S, OS, A>): Mutation<In<S>, Out<OS>>
+export function mutation<
+  OS extends StandardSchemaV1,
+  S extends StandardSchemaV1 | undefined = undefined,
+  const A extends AuthScope | undefined = undefined,
+>(def: ImplMutationDef<S, OS, A>): Mutation<In<S>, Out<OS>>
 /** A server function that writes, with its output typed by `run`. */
-export function mutation<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: MutationDef<S, O, A>): Mutation<In<S>, Awaited<O>>
+export function mutation<
+  O,
+  S extends StandardSchemaV1 | undefined = undefined,
+  const A extends AuthScope | undefined = undefined,
+>(def: MutationDef<S, O, A>): Mutation<In<S>, Awaited<O>>
 /** A server function that writes, and invalidates the queries that read what it changed. */
 export function mutation(def: unknown): unknown {
   const d = def as Fn['def'] & { $id?: string }
@@ -449,10 +608,24 @@ export function mutation(def: unknown): unknown {
   const fn: Fn = { kind: 'mutation', $id: id, def: d }
   fns.set(id, fn)
   // Module-level boxes, read on the client only (a server render never shows a call in flight).
-  const { calls, error } = createRoot(() => ({ calls: state(0), error: state<unknown>(undefined) }), null)
+  const { calls, error } = createRoot(
+    () => ({ calls: state(0), error: state<unknown>(undefined) }),
+    null,
+  )
   const pending = createRoot(() => derived(() => calls.value > 0), null)
   const m = (input?: unknown) => mutate(fn, input, calls, error)
-  return Object.assign(m, { kind: 'mutation', $id: id, pending, error: { get value() { return error.value } }, [FN]: fn, [SUBMIT]: (input: unknown, form: true | FormData) => mutate(fn, input, calls, error, form) })
+  return Object.assign(m, {
+    kind: 'mutation',
+    $id: id,
+    pending,
+    error: {
+      get value() {
+        return error.value
+      },
+    },
+    [FN]: fn,
+    [SUBMIT]: (input: unknown, form: true | FormData) => mutate(fn, input, calls, error, form),
+  })
 }
 
 const FN = Symbol.for('weft.fn')
@@ -467,53 +640,74 @@ const server = () => runtime.scope?.() ?? (net()?.als.getStore() as Scope | unde
 /** The request scope in progress, on the server or under the fake transport. */
 export const currentScope = server
 /** Run `fn` with `scope` current. */
-export const enter = <T>(scope: unknown, fn: () => T): T => (runtime.enter ? runtime.enter(scope, fn) : net() ? net()!.als.run(scope, fn) : fn())
+export const enter = <T>(scope: unknown, fn: () => T): T =>
+  runtime.enter ? runtime.enter(scope, fn) : net() ? net()!.als.run(scope, fn) : fn()
 
 function fetchQuery(fn: Fn, input: unknown): Promise<unknown> {
   const scope = server()
-  if (scope) return runtime.exec!.fetchQuery(scope, fn, input).then(e => e.v)
-  if (runtime.exec && !net()) return runtime.exec.fetchQuery(runtime.exec.createScope(new Request('http://localhost/')), fn, input).then(e => e.v)
+  if (scope) return runtime.exec!.fetchQuery(scope, fn, input).then((e) => e.v)
+  if (runtime.exec && !net())
+    return runtime.exec
+      .fetchQuery(runtime.exec.createScope(new Request('http://localhost/')), fn, input)
+      .then((e) => e.v)
   const e = entry(fn, input)
   return untrack(() => fresh(e)) ? Promise.resolve(untrack(() => e.value.value)) : load(e)
 }
 
 function use(fn: Fn, input: unknown): Resource<unknown> {
   if (!getOwner())
-    throw DEV ? new StartError('Q001', `\`${fn.$id}()\` (a live query) was called outside a component or scope`, `\`await ${name(fn)}.fetch(input)\` in \`load\`, handlers and server code`) : new StartError('Q001', fn.$id)
+    throw DEV
+      ? new StartError(
+          'Q001',
+          `\`${fn.$id}()\` (a live query) was called outside a component or scope`,
+          `\`await ${name(fn)}.fetch(input)\` in \`load\`, handlers and server code`,
+        )
+      : new StartError('Q001', fn.$id)
   const read = () => (typeof input === 'function' ? (input as () => unknown)() : input)
-  return resource(() => {
-    const arg = read()
-    if (arg === skip) return undefined
-    const scope = server()
-    if (scope) return runtime.exec!.readQuery(scope, fn, arg)
-    const e = entry(fn, arg)
-    e.readers++
-    onCleanup(() => void e.readers--)
-    const v = e.value.value // tracked: a new base or layer re-runs this, and the resource settles to it in place
-    if (fresh(e)) return v
-    if (e.has.value && predicted(e)) {
-      e.held = true // the prediction shows now, and a read waits for the calls behind it
-      return v
-    }
-    return e.has.value ? load(e).catch(() => untrack(() => e.value.value)) : load(e) // a failed refetch leaves what's on screen
-  }, {
-    data: false,
-    shape: {
-      of: fn,
-      read() {
-        const arg = read()
-        return arg === skip ? undefined : shapeOf(fn, arg)
+  return resource(
+    () => {
+      const arg = read()
+      if (arg === skip) return undefined
+      const scope = server()
+      if (scope) return runtime.exec!.readQuery(scope, fn, arg)
+      const e = entry(fn, arg)
+      e.readers++
+      onCleanup(() => void e.readers--)
+      const v = e.value.value // tracked: a new base or layer re-runs this, and the resource settles to it in place
+      if (fresh(e)) return v
+      if (e.has.value && predicted(e)) {
+        e.held = true // the prediction shows now, and a read waits for the calls behind it
+        return v
+      }
+      return e.has.value ? load(e).catch(() => untrack(() => e.value.value)) : load(e) // a failed refetch leaves what's on screen
+    },
+    {
+      data: false,
+      shape: {
+        of: fn,
+        read() {
+          const arg = read()
+          return arg === skip ? undefined : shapeOf(fn, arg)
+        },
       },
     },
-  })
+  )
 }
 
 /** Research 31 §2: this entry's value or the query's last seen, masked; else the declared shape. */
 function shapeOf(fn: Fn, input: unknown): unknown {
   const limit: number | undefined = (input as { limit?: number } | undefined)?.limit
   const here = entries.get(keyOf(fn.$id, input))
-  const e = server() ? undefined : here && untrack(() => here.has.value) ? here : lastSeen.get(fn.$id)
-  if (e) return mask(untrack(() => e.value.value), limit)
+  const e = server()
+    ? undefined
+    : here && untrack(() => here.has.value)
+      ? here
+      : lastSeen.get(fn.$id)
+  if (e)
+    return mask(
+      untrack(() => e.value.value),
+      limit,
+    )
   const tree = runtime.exec ? runtime.exec.shapeOf(fn) : fn.def.shape
   return tree === undefined ? undefined : fill(tree, limit)
 }
@@ -524,20 +718,24 @@ function liveQuery(fn: Fn, input: unknown, options?: LiveOptions): LiveQuery<unk
   const scope = server()
   if (scope) scope.live = true
   else
-    effect(() => {
-      const arg = typeof input === 'function' ? (input as () => unknown)() : input
-      if (arg === skip) return
-      let gone = false, stop: (() => void) | undefined
-      const held = import('./live').then(m => {
-        m.use(liveApi)
-        if (!gone) stop = m.hold(fn, arg, options)
-      })
-      void track(held)
-      onCleanup(() => {
-        gone = true
-        stop?.()
-      })
-    }, () => {})
+    effect(
+      () => {
+        const arg = typeof input === 'function' ? (input as () => unknown)() : input
+        if (arg === skip) return
+        let gone = false,
+          stop: (() => void) | undefined
+        const held = import('./live').then((m) => {
+          m.use(liveApi)
+          if (!gone) stop = m.hold(fn, arg, options)
+        })
+        void track(held)
+        onCleanup(() => {
+          gone = true
+          stop?.()
+        })
+      },
+      () => {},
+    )
   return Object.assign(r, { live: rt.status, liveMode: rt.mode })
 }
 
@@ -545,7 +743,11 @@ const name = (fn: Fn) => fn.$id.replace(/\..*$/, '')
 
 // ---- the client cache -----------------------------------------------------------------------------------------
 
-interface Layer { m: number; apply: (draft: unknown) => unknown; waiting?: boolean }
+interface Layer {
+  m: number
+  apply: (draft: unknown) => unknown
+  waiting?: boolean
+}
 interface Entry {
   key: string
   id: string
@@ -575,7 +777,7 @@ const entries = new Map<string, Entry>()
 let clock = 0
 /** When each tag was last invalidated: a value read before that is out of date, whether or not the cache held it then. */
 const written = new Map<string, number>()
-const passed = (tags: string[], since: number) => tags.some(t => written.get(t)! > since)
+const passed = (tags: string[], since: number) => tags.some((t) => written.get(t)! > since)
 /** Each query's latest entry: a skeleton for other args takes its shape (research 31 §4). */
 const lastSeen = new Map<string, Entry>()
 /** Objects an optimistic layer made (`cache.isOptimistic(row)`). */
@@ -591,14 +793,32 @@ function entry(fn: Fn, input: unknown): Entry {
   } else {
     // Owned by no component: the entry outlives its readers (the next reader finds it seeded).
     e = createRoot(() => {
-      const base = state<unknown>(undefined), has = state(false), dated = state(false), layers = state<Layer[]>([])
+      const base = state<unknown>(undefined),
+        has = state(false),
+        dated = state(false),
+        layers = state<Layer[]>([])
       const value = derived(() => {
         let v = base.value
         if (!has.value) return v
         for (const l of layers.value) v = produce(v, l.apply)
         return v
       })
-      return { key, id: fn.$id, input, base, has, stale: dated, layers, value, tags: [], readers: 0, since: 0, gen: 0, run: 0, at: 0 }
+      return {
+        key,
+        id: fn.$id,
+        input,
+        base,
+        has,
+        stale: dated,
+        layers,
+        value,
+        tags: [],
+        readers: 0,
+        since: 0,
+        gen: 0,
+        run: 0,
+        at: 0,
+      }
     }, null)
     entries.set(key, e)
     if (entries.size > ceiling) evict(e)
@@ -613,7 +833,14 @@ let ceiling = ENTRIES
 function evict(fresh: Entry) {
   for (const e of entries.values()) {
     if (entries.size <= ENTRIES) break
-    if (e !== fresh && !e.readers && !e.p && !untrack(() => e.layers.value.length) && lastSeen.get(e.id) !== e) entries.delete(e.key)
+    if (
+      e !== fresh &&
+      !e.readers &&
+      !e.p &&
+      !untrack(() => e.layers.value.length) &&
+      lastSeen.get(e.id) !== e
+    )
+      entries.delete(e.key)
   }
   ceiling = Math.max(ENTRIES, entries.size + (entries.size >> 2))
 }
@@ -621,7 +848,7 @@ function evict(fresh: Entry) {
 const fresh = (e: Entry) => e.has.value && !e.stale.value
 
 /** A prediction no reply has confirmed yet. */
-const predicted = (e: Entry) => e.layers.value.some(l => !l.waiting)
+const predicted = (e: Entry) => e.layers.value.some((l) => !l.waiting)
 
 function load(e: Entry): Promise<unknown> {
   if (e.p && e.gen <= e.since) return e.p
@@ -631,32 +858,34 @@ function load(e: Entry): Promise<unknown> {
     return Promise.resolve(untrack(() => e.value.value))
   }
   const since = (e.since = clock)
-  const p: Promise<unknown> = transport().query(e.id, e.input).then(
-    a => {
-      if (e.p === p) e.p = undefined
-      tries = 0
-      if (a.r !== undefined) {
-        go(a.r, true)
-        redirect(a.r)
-      }
-      const tags = a.t ?? []
-      if (untrack(() => !e.has.value) && passed(tags, since)) return load(e) // a first load's tags come with its answer
-      if (!land(e, a.v, tags, since)) {
-        if (e.p) return e.p
-        if (untrack(() => e.stale.value)) return load(e)
-      }
-      return untrack(() => e.value.value)
-    },
-    err => {
-      if (e.p === p) e.p = undefined
-      untrack(() => {
-        if (!e.has.value) return
-        if (err instanceof FnError && (err.status === 401 || err.status === 403)) forget(e)
-        else if (!isRedirect(err) && (!(err instanceof FnError) || err.status >= 500)) retry()
-      })
-      throw err
-    },
-  )
+  const p: Promise<unknown> = transport()
+    .query(e.id, e.input)
+    .then(
+      (a) => {
+        if (e.p === p) e.p = undefined
+        tries = 0
+        if (a.r !== undefined) {
+          go(a.r, true)
+          redirect(a.r)
+        }
+        const tags = a.t ?? []
+        if (untrack(() => !e.has.value) && passed(tags, since)) return load(e) // a first load's tags come with its answer
+        if (!land(e, a.v, tags, since)) {
+          if (e.p) return e.p
+          if (untrack(() => e.stale.value)) return load(e)
+        }
+        return untrack(() => e.value.value)
+      },
+      (err) => {
+        if (e.p === p) e.p = undefined
+        untrack(() => {
+          if (!e.has.value) return
+          if (err instanceof FnError && (err.status === 401 || err.status === 403)) forget(e)
+          else if (!isRedirect(err) && (!(err instanceof FnError) || err.status >= 500)) retry()
+        })
+        throw err
+      },
+    )
   return (e.p = p)
 }
 
@@ -668,7 +897,8 @@ function forget(e: Entry) {
 }
 
 /** How often a failed read is tried again, doubling, for as long as something on screen is out of date. */
-const RETRY = 1000, RETRIES = 30_000
+const RETRY = 1000,
+  RETRIES = 30_000
 let again: ReturnType<typeof setTimeout> | undefined
 let tries = 0
 
@@ -683,7 +913,9 @@ function owed() {
   // Off a browser `onLine` isn't there, and that isn't offline.
   if (globalThis.document?.hidden || (navigator as { onLine?: boolean }).onLine === false) return // `back` or `online` comes here
   untrack(() => {
-    for (const e of entries.values()) if (e.readers && e.has.value && e.stale.value && !e.p && !e.held && !predicted(e)) load(e).catch(() => {})
+    for (const e of entries.values())
+      if (e.readers && e.has.value && e.stale.value && !e.p && !e.held && !predicted(e))
+        load(e).catch(() => {})
   })
 }
 
@@ -721,7 +953,8 @@ function setBase(e: Entry, v: unknown, tags: string[]) {
     e.has.value = true
     e.stale.value = false
     lastSeen.set(e.id, e)
-    if (e.layers.value.some(l => l.waiting)) e.layers.value = e.layers.value.filter(l => !l.waiting)
+    if (e.layers.value.some((l) => l.waiting))
+      e.layers.value = e.layers.value.filter((l) => !l.waiting)
   })
 }
 
@@ -746,7 +979,8 @@ function staleTags(tags: string[], except: Set<string> = new Set()) {
     written.delete(t)
   }
   untrack(() => {
-    for (const e of entries.values()) if (!except.has(e.key) && e.tags.some(t => tags.includes(t))) outdate(e)
+    for (const e of entries.values())
+      if (!except.has(e.key) && e.tags.some((t) => tags.includes(t))) outdate(e)
   })
   owed() // one a failed read left stale has nothing else to wake it
   client.invalidated?.(tags)
@@ -755,18 +989,30 @@ function staleTags(tags: string[], except: Set<string> = new Set()) {
 /** How old a value can be when its tab comes back and still be left alone. */
 const FOCUS = 30_000
 
-async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State<unknown>, form?: true | FormData): Promise<unknown> {
+async function mutate(
+  fn: Fn,
+  input: unknown,
+  calls: State<number>,
+  error: State<unknown>,
+  form?: true | FormData,
+): Promise<unknown> {
   const scope = server()
   if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [], !!form)).v
   const m = ++callId
   const touched = new Set<Entry>()
   let overlap = 0
   untrack(() => calls.value++)
-  const drop = (e: Entry) => { e.layers.value = e.layers.value.filter(l => l.m !== m) }
-  const wait = (e: Entry) => { e.layers.value = e.layers.value.map(l => (l.m === m ? { ...l, waiting: true } : l)) }
+  const drop = (e: Entry) => {
+    e.layers.value = e.layers.value.filter((l) => l.m !== m)
+  }
+  const wait = (e: Entry) => {
+    e.layers.value = e.layers.value.map((l) => (l.m === m ? { ...l, waiting: true } : l))
+  }
   try {
     if (fn.def.optimistic) untrack(() => fn.def.optimistic!({ input }, overlay(m, touched)))
-    const refresh = [...entries.values()].filter(e => e.readers > 0).map(e => [e.id, e.input] as [string, unknown])
+    const refresh = [...entries.values()]
+      .filter((e) => e.readers > 0)
+      .map((e) => [e.id, e.input] as [string, unknown])
     if (!open++) run++
     overlap = run
     const a = await settled(() => transport().mutate(fn.$id, input, refresh, form))
@@ -780,7 +1026,7 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
         seen.push(e)
         // Replies don't say which came first, and one taken in arrival order can put back what a later call changed: where
         // calls overlap on an entry its layers stay, in order, and it reads once the last has answered.
-        if (e.held || e.run === overlap || e.layers.value.some(l => l.m !== m)) {
+        if (e.held || e.run === overlap || e.layers.value.some((l) => l.m !== m)) {
           e.held = true
           wait(e)
         } else {
@@ -793,8 +1039,10 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
         if (refreshed.has(e.key)) continue
         // S011: the server sent no fresh value for an entry this call predicted. Keep the layer until the entry's
         // next value (refetched now) instead of flashing back to the old one.
-        if (DEV && !e.tags.some(t => a.t?.includes(t)))
-          console.warn(`weft: S011 \`${fn.$id}\`'s optimistic updated \`${e.key}\` (tags ${JSON.stringify(e.tags)}), but its invalidated tags ${JSON.stringify(a.t ?? [])} don't cover it: the prediction had no fresh value to land on.\n  fix: add one of its tags to \`invalidates\``)
+        if (DEV && !e.tags.some((t) => a.t?.includes(t)))
+          console.warn(
+            `weft: S011 \`${fn.$id}\`'s optimistic updated \`${e.key}\` (tags ${JSON.stringify(e.tags)}), but its invalidated tags ${JSON.stringify(a.t ?? [])} don't cover it: the prediction had no fresh value to land on.\n  fix: add one of its tags to \`invalidates\``,
+          )
         wait(e)
         e.held = true
       }
@@ -806,7 +1054,10 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
     })
     if (a.t?.length) peers?.postMessage(a.t)
     if (a.x) peers?.postMessage(0)
-    if (a.r !== undefined) { if (a.x) location.assign(a.r); else go(a.r) }
+    if (a.r !== undefined) {
+      if (a.x) location.assign(a.r)
+      else go(a.r)
+    }
     return out
   } catch (err) {
     untrack(() => {
@@ -850,7 +1101,9 @@ function overlay(m: number, touched: Set<Entry>): OptimisticCache {
 }
 
 /** A query handle, whatever its input: what the cache needs of one. */
-export type QueryRef<O> = Pick<Query<void, O>, 'kind' | '$id'> & { fetch(...args: never[]): Promise<O> }
+export type QueryRef<O> = Pick<Query<void, O>, 'kind' | '$id'> & {
+  fetch(...args: never[]): Promise<O>
+}
 
 /** The cache as an `optimistic` sees it. */
 export interface OptimisticCache {
@@ -866,10 +1119,21 @@ export interface OptimisticCache {
  * The client cache. In `optimistic`, `update`/`set` add layers; elsewhere they write the base (until the next server
  * value). `invalidate` marks tags stale (readers refetch).
  */
-export const cache: OptimisticCache & { invalidate(...tags: string[]): Promise<void> | undefined; clear(): void } = {
+export const cache: OptimisticCache & {
+  invalidate(...tags: string[]): Promise<void> | undefined
+  clear(): void
+} = {
   update(q, input, recipe) {
     const e = entry(fnOf(q), input)
-    if (untrack(() => e.has.value)) setBase(e, produce(untrack(() => e.base.value), recipe as Layer['apply']), e.tags)
+    if (untrack(() => e.has.value))
+      setBase(
+        e,
+        produce(
+          untrack(() => e.base.value),
+          recipe as Layer['apply'],
+        ),
+        e.tags,
+      )
   },
   set(q, input, value) {
     const e = entry(fnOf(q), input)
@@ -879,7 +1143,7 @@ export const cache: OptimisticCache & { invalidate(...tags: string[]): Promise<v
     const e = entries.get(keyOf(fnOf(q).$id, input))
     return e && (untrack(() => e.value.value) as O)
   },
-  isOptimistic: v => !!v && typeof v === 'object' && made.has(v),
+  isOptimistic: (v) => !!v && typeof v === 'object' && made.has(v),
   invalidate(...tags) {
     const scope = server()
     if (scope) return runtime.exec!.invalidate(scope, tags)
@@ -895,7 +1159,11 @@ export const cache: OptimisticCache & { invalidate(...tags: string[]): Promise<v
   },
 }
 
-if ((import.meta as ImportMeta & { hot?: unknown }).hot) client.refreshed = () => untrack(() => { for (const e of entries.values()) outdate(e) })
+if ((import.meta as ImportMeta & { hot?: unknown }).hot)
+  client.refreshed = () =>
+    untrack(() => {
+      for (const e of entries.values()) outdate(e)
+    })
 
 /** Server: drop `tags` for this response and the shared cache. Client: refetch what reads them. */
 export const invalidate = (...tags: string[]) => cache.invalidate(...tags)
@@ -909,19 +1177,33 @@ function transport(): Transport {
 }
 
 const answer = async (res: Response): Promise<Answer> => {
-  const body = await res.json().catch(() => ({ e: { message: `server function answered ${res.status}` } }))
+  const body = await res
+    .json()
+    .catch(() => ({ e: { message: `server function answered ${res.status}` } }))
   if (body.e) throw new FnError(body.e, res.status)
   return body
 }
 
 /** The browser's: GET for queries, POST + JSON + `x-weft` for mutations (research 27 §3). */
 export const http: Transport = {
-  query: (id, input) => fetch(`/_weft/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, { headers: { accept: 'application/json' } }).then(answer),
+  query: (id, input) =>
+    fetch(`/_weft/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, {
+      headers: { accept: 'application/json' },
+    }).then(answer),
   mutate(id, input, f, form) {
-    const headers: Record<string, string> = { accept: 'application/json', 'x-weft': '1', ...(runtime.conn && { 'x-weft-conn': runtime.conn }) }
+    const headers: Record<string, string> = {
+      accept: 'application/json',
+      'x-weft': '1',
+      ...(runtime.conn && { 'x-weft-conn': runtime.conn }),
+    }
     if (form instanceof FormData) form.set('$r', JSON.stringify(f))
     else headers['content-type'] = 'application/json'
-    return fetch(`/_weft/fn/${id}`, { method: 'POST', headers, body: form instanceof FormData ? form : JSON.stringify({ i: input, f, ...(form && { c: 1 }) }) }).then(answer)
+    return fetch(`/_weft/fn/${id}`, {
+      method: 'POST',
+      headers,
+      body:
+        form instanceof FormData ? form : JSON.stringify({ i: input, f, ...(form && { c: 1 }) }),
+    }).then(answer)
   },
 }
 
@@ -930,13 +1212,24 @@ export const http: Transport = {
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
 export const fakeScope = (exec: typeof Exec, n: NetControl, request: Request) =>
-  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, extensions: n.extensions, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
+  exec.createScope(request, {
+    context: () => n.ctx ?? {},
+    handlers: n.handlers,
+    dev: true,
+    extensions: n.extensions,
+    onDiagnostic: (d) =>
+      console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`),
+  })
 
 type Call = (exec: typeof Exec, scope: Scope, fn: Fn) => Promise<Answer>
 
 const inProcess: Transport = {
-  query: (id, input) => fake(id, 'query', input, (exec, scope, fn) => exec.fetchQuery(scope, fn, input).then(e => ({ v: e.v, t: e.tags }))),
-  mutate: (id, input, f, form) => fake(id, 'mutation', input, (exec, scope, fn) => exec.runMutation(scope, fn, input, f, !!form)),
+  query: (id, input) =>
+    fake(id, 'query', input, (exec, scope, fn) =>
+      exec.fetchQuery(scope, fn, input).then((e) => ({ v: e.v, t: e.tags })),
+    ),
+  mutate: (id, input, f, form) =>
+    fake(id, 'mutation', input, (exec, scope, fn) => exec.runMutation(scope, fn, input, f, !!form)),
 }
 
 function fake(id: string, kind: string, input: unknown, call: Call): Promise<Answer> {
@@ -953,21 +1246,43 @@ export function track<T>(p: Promise<T>): Promise<T> {
   return p
 }
 
-async function fakeCall(n: NetControl, id: string, kind: string, input: unknown, call: Call): Promise<Answer> {
+async function fakeCall(
+  n: NetControl,
+  id: string,
+  kind: string,
+  input: unknown,
+  call: Call,
+): Promise<Answer> {
   n.log.push({ id, kind, input })
   const exec = (runtime.exec ??= await import('./exec'))
-  if (n.latency) await new Promise(ok => { setTimeout(ok, n.latency) })
-  if (!n.online()) throw Object.assign(new Error(`offline: ${id} wasn't sent`), { name: 'OfflineError' })
+  if (n.latency)
+    await new Promise((ok) => {
+      setTimeout(ok, n.latency)
+    })
+  if (!n.online())
+    throw Object.assign(new Error(`offline: ${id} wasn't sent`), { name: 'OfflineError' })
   const fails = n.fails.get(id)
   if (fails?.length) throw fails.shift()
   const fn = fns.get(id)
   if (!fn) throw new FnError({ code: 'Q009', message: `Q009: no server function \`${id}\`` }, 404)
-  const scope = fakeScope(exec, n, new Request(`http://localhost/_weft/fn/${id}`, { method: kind === 'query' ? 'GET' : 'POST', headers: runtime.conn ? { 'x-weft-conn': runtime.conn } : {} }))
+  const scope = fakeScope(
+    exec,
+    n,
+    new Request(`http://localhost/_weft/fn/${id}`, {
+      method: kind === 'query' ? 'GET' : 'POST',
+      headers: runtime.conn ? { 'x-weft-conn': runtime.conn } : {},
+    }),
+  )
   try {
     return JSON.parse(JSON.stringify(await n.als.run(scope, () => call(exec, scope, fn))))
   } catch (e) {
     if (isRedirect(e)) return { r: e.href }
-    throw e instanceof StartError ? new FnError({ code: e.code, message: e.message, issues: e.issues, data: e.data }, e.status ?? 500) : e
+    throw e instanceof StartError
+      ? new FnError(
+          { code: e.code, message: e.message, issues: e.issues, data: e.data },
+          e.status ?? 500,
+        )
+      : e
   }
 }
 
@@ -976,11 +1291,16 @@ async function fakeCall(n: NetControl, id: string, kind: string, input: unknown,
 type Obj = Record<PropertyKey, unknown>
 
 const plain = (v: unknown): v is Obj =>
-  !!v && typeof v === 'object' && (Array.isArray(v) || Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null)
+  !!v &&
+  typeof v === 'object' &&
+  (Array.isArray(v) ||
+    Object.getPrototypeOf(v) === Object.prototype ||
+    Object.getPrototypeOf(v) === null)
 
 /** `next`, with every subtree deep-equal to `prev`'s replaced by `prev`'s (TanStack's replaceEqualDeep). */
 export function share<T>(prev: unknown, next: T): T {
-  if (prev === next || !plain(prev) || !plain(next) || Array.isArray(prev) !== Array.isArray(next)) return next
+  if (prev === next || !plain(prev) || !plain(next) || Array.isArray(prev) !== Array.isArray(next))
+    return next
   const keys = Object.keys(next)
   let same = Object.keys(prev).length === keys.length
   const out = (Array.isArray(next) ? [] : {}) as Obj
@@ -991,7 +1311,12 @@ export function share<T>(prev: unknown, next: T): T {
   return (same ? prev : out) as T
 }
 
-interface Draft { b: Obj; c?: Obj; px: Obj; done?: Obj }
+interface Draft {
+  b: Obj
+  c?: Obj
+  px: Obj
+  done?: Obj
+}
 
 /**
  * Run `recipe` on a copy-on-write draft of `base`: only objects it writes (and their parents) are copied. A recipe
@@ -1004,13 +1329,14 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
   }
   const nodes = new Map<object, Draft>()
   const byProxy = new WeakMap<object, Draft>()
-  const unwrap = (v: unknown) => (v && typeof v === 'object' && byProxy.has(v) ? byProxy.get(v)!.b : v)
+  const unwrap = (v: unknown) =>
+    v && typeof v === 'object' && byProxy.has(v) ? byProxy.get(v)!.b : v
   const cur = (n: Draft) => n.c ?? n.b
   const own = (n: Draft) => (n.c ??= (Array.isArray(n.b) ? n.b.slice() : { ...n.b }) as Obj)
   const node = (b: Obj): Draft => {
     let n = nodes.get(b)
     if (n) return n
-    const self: Draft = n = { b, px: b }
+    const self: Draft = (n = { b, px: b })
     n.px = new Proxy((Array.isArray(b) ? [] : {}) as Obj, {
       get: (_, k) => {
         const v = cur(self)[k]
@@ -1028,7 +1354,7 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
       getOwnPropertyDescriptor: (t, k) => {
         const d = Reflect.getOwnPropertyDescriptor(cur(self), k)
         if (d && k === 'length' && Array.isArray(t)) return { ...d, configurable: false }
-        return d && { ...d, configurable: true, value: (self.px)[k] }
+        return d && { ...d, configurable: true, value: self.px[k] }
       },
     })
     nodes.set(b, n)
@@ -1062,7 +1388,20 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
 }
 
 /** What `live.ts` reads from here; see its header. */
-export const liveApi = { cache, currentScope, fakeScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track }
+export const liveApi = {
+  cache,
+  currentScope,
+  fakeScope,
+  fns,
+  FnError,
+  keyOf,
+  net,
+  rt,
+  runtime,
+  skip,
+  StartError,
+  track,
+}
 /** What `live.ts` is handed, instead of a static import that would close a cycle. */
 export type LiveApi = typeof liveApi
 
@@ -1079,7 +1418,8 @@ if (typeof document !== 'undefined' && !runtime.scope) {
   if (el) seed(JSON.parse(el.textContent))
   // A stream's chunks say what landed: here is everything so far, and each one's script pushes the next.
   // They were read for this page, so anything written here since is newer.
-  const landed = ((globalThis as { $wc?: { c: Wire[] }[] }).$wc ||= []), since = clock
+  const landed = ((globalThis as { $wc?: { c: Wire[] }[] }).$wc ||= []),
+    since = clock
   for (const l of landed) seed(l.c, since)
   landed.push = (...l) => {
     for (const x of l) seed(x.c, since)
@@ -1090,16 +1430,20 @@ if (typeof document !== 'undefined' && !runtime.scope) {
     if (document.hidden) return
     const old = performance.now() - FOCUS
     // Showing and focus can come apart: one already stale is being read, and marking it again would throw that read away.
-    untrack(() => { for (const e of entries.values()) if (e.readers && e.has.value && e.at < old && !e.stale.value) outdate(e) })
+    untrack(() => {
+      for (const e of entries.values())
+        if (e.readers && e.has.value && e.at < old && !e.stale.value) outdate(e)
+    })
     if (later.length) staleTags(later.splice(0))
     owed()
   }
   // A hidden tab reads nothing until it shows: every open tab refetching on every write is what this would cost otherwise.
-  if (peers) peers.onmessage = m => {
-    if (!m.data) return // the session changed: run.tsx reloads
-    if (document.hidden) later.push(...m.data)
-    else staleTags(m.data)
-  }
+  if (peers)
+    peers.onmessage = (m) => {
+      if (!m.data) return // the session changed: run.tsx reloads
+      if (document.hidden) later.push(...m.data)
+      else staleTags(m.data)
+    }
   addEventListener('focus', back)
   addEventListener('online', owed)
   document.addEventListener('visibilitychange', back)

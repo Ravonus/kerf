@@ -24,12 +24,17 @@ export default function FoldDemo() {
   return (
     <Card title="One stream, read two ways">
       <p>
-        Without <code>fold</code>: {latest.value ? `${latest.value.symbol} ${latest.value.price}` : 'waiting…'}
+        Without <code>fold</code>:{' '}
+        {latest.value ? `${latest.value.symbol} ${latest.value.price}` : 'waiting…'}
       </p>
-      <p>With <code>fold</code>:</p>
+      <p>
+        With <code>fold</code>:
+      </p>
       <ul>
-        {Object.values(board.value).map(p => (
-          <li key={p.symbol}>{p.symbol}: {p.price}</li>
+        {Object.values(board.value).map((p) => (
+          <li key={p.symbol}>
+            {p.symbol}: {p.price}
+          </li>
         ))}
       </ul>
       <Button size="sm" tone="neutral" onClick={() => (running.value = !running.value)}>

@@ -27,9 +27,15 @@ export function Ticker({ value, format, locale }: TickerProps) {
     <span data-scope="ticker">
       <span data-part="sr">{text.value}</span>
       <span aria-hidden="true">
-        {parts.value.map(p => /\d/.test(p.c)
-          ? <span key={p.at} data-part="digit" style={`--_d:${p.c};--_at:${p.at}`}></span>
-          : <span key={p.at} data-part="sym">{p.c}</span>)}
+        {parts.value.map((p) =>
+          /\d/.test(p.c) ? (
+            <span key={p.at} data-part="digit" style={`--_d:${p.c};--_at:${p.at}`}></span>
+          ) : (
+            <span key={p.at} data-part="sym">
+              {p.c}
+            </span>
+          ),
+        )}
       </span>
     </span>
   )

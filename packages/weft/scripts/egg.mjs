@@ -12,24 +12,33 @@ const json = join(here, '.egg-size.json')
 const file = join(here, '../src/egg.ts')
 
 /** Noise: brotli can't shrink it much, so a length maps steadily to bytes. The same length gives the same text. */
-const noise = n => {
+const noise = (n) => {
   let out = ''
-  for (let i = 0; out.length < n; i++) out += createHash('sha256').update(`weft ${i}`).digest('base64url')
+  for (let i = 0; out.length < n; i++)
+    out += createHash('sha256').update(`weft ${i}`).digest('base64url')
   return out.slice(0, n)
 }
-const write = n => writeFileSync(file, `/** Not code. The owner likes 13.37 KB, and this pads the full runtime to it (scripts/egg.mjs). It's an export nothing
+const write = (n) =>
+  writeFileSync(
+    file,
+    `/** Not code. The owner likes 13.37 KB, and this pads the full runtime to it (scripts/egg.mjs). It's an export nothing
  * reads, so no app ships it and it does nothing at runtime. */
 export const egg = '${noise(n)}'
-`)
-const measure = n => {
+`,
+  )
+const measure = (n) => {
   write(n)
   try {
-    execFileSync(process.execPath, [join(here, 'size.mjs'), '--json', json], { env: { ...process.env, ONLY: 'runtime (every export)' }, stdio: 'ignore' })
+    execFileSync(process.execPath, [join(here, 'size.mjs'), '--json', json], {
+      env: { ...process.env, ONLY: 'runtime (every export)' },
+      stdio: 'ignore',
+    })
   } catch {} // over the cap fails the run, and that's what this is looking for
   return JSON.parse(readFileSync(json, 'utf8'))['runtime (every export)'].brBytes
 }
 
-let lo = 0, hi = 8000
+let lo = 0,
+  hi = 8000
 while (lo < hi) {
   const mid = (lo + hi + 1) >> 1
   if (measure(mid) <= target) lo = mid
@@ -39,7 +48,10 @@ while (lo < hi) {
 let got = measure(lo)
 for (let n = lo - 40; n <= lo + 40 && got !== target; n++) {
   const b = measure(n)
-  if (b <= target && b > got) { got = b; lo = n }
+  if (b <= target && b > got) {
+    got = b
+    lo = n
+  }
 }
 got = measure(lo)
 rmSync(json, { force: true })

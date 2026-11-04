@@ -16,12 +16,18 @@ export default function Notes() {
         aria-label="New note"
         placeholder="Type, then press Enter"
         value={draft.value}
-        onInput={e => (draft.value = e.currentTarget.value)}
-        onKeyDown={e => { if (e.key === 'Enter') add() }}
+        onInput={(e) => (draft.value = e.currentTarget.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') add()
+        }}
       />
       <p>{draft.value.length} characters</p>
       <Button onClick={add}>Add note</Button>
-      <ul>{notes.value.map(n => <li key={n.id}>{n.text}</li>)}</ul>
+      <ul>
+        {notes.value.map((n) => (
+          <li key={n.id}>{n.text}</li>
+        ))}
+      </ul>
     </Card>
   )
 }

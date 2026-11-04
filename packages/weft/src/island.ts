@@ -11,7 +11,17 @@
 // runs when it's near, `i` only fetches then. Claiming it is a pass of its own, and then `drain` replays what the script
 // held, in order: an event on an island still loading holds up those behind it, so a click can't pass the typing before.
 
-import { DEV, flush, getOwner, onCleanup, rt, runMounts, within, type Owner, type SsrData } from './index'
+import {
+  DEV,
+  flush,
+  getOwner,
+  onCleanup,
+  rt,
+  runMounts,
+  within,
+  type Owner,
+  type SsrData,
+} from './index'
 import { hchild } from './claim'
 import { hydration, sweep } from './hydrate'
 import { keys, under } from './keys'
@@ -37,7 +47,7 @@ function comments(nodes: Node[], visit: (c: Comment) => void) {
 /** The markers of level `d` in `nodes`. */
 function bounds(nodes: Node[], d: number): [Comment | undefined, Comment | undefined] {
   let a: Comment | undefined, b: Comment | undefined
-  comments(nodes, c => {
+  comments(nodes, (c) => {
     if (c.data.startsWith(`wl:${d}:`)) a = c
     else if (c.data === `/wl:${d}`) b = c
   })
@@ -84,10 +94,28 @@ function closing(open: Node) {
 /** A comment only the claim reads, which never belongs to a hole: a level's or an island's or a slot's. */
 export const marks = (n: Node) => n.nodeType === 8 && /^\/?w[lis]:?/.test((n as Comment).data)
 
-interface Later { key: string; when: string; wait: () => Promise<unknown>; mount(): void; running?: Promise<void> }
+interface Later {
+  key: string
+  when: string
+  wait: () => Promise<unknown>
+  mount(): void
+  running?: Promise<void>
+}
 const later = new Map<string, Later>()
 /** What `capture.mjs` left: see there for the fields. */
-const held = () => (window as Window & { __wq?: { q: Event[]; d: boolean; r?: number | undefined; p(e: Event): void; l?: Element; w(k: Element, lead?: 1): void } }).__wq
+const held = () =>
+  (
+    window as Window & {
+      __wq?: {
+        q: Event[]
+        d: boolean
+        r?: number | undefined
+        p(e: Event): void
+        l?: Element
+        w(k: Element, lead?: 1): void
+      }
+    }
+  ).__wq
 
 /** The island `el` (which has `wk`) is in, if it's still waiting. Keys nest by `/`, an island's own being the prefix. */
 function waiting(el: Element | null | undefined) {
@@ -114,7 +142,8 @@ function stale() {
   const note = document.createElement('p')
   note.setAttribute('data-weft-stale', '')
   note.setAttribute('role', 'alert')
-  note.style.cssText = 'position:fixed;inset:auto 1rem 1rem;z-index:2147483647;margin:0;padding:.75rem 1rem;background:#111;color:#fff;font:14px/1.4 system-ui,sans-serif'
+  note.style.cssText =
+    'position:fixed;inset:auto 1rem 1rem;z-index:2147483647;margin:0;padding:.75rem 1rem;background:#111;color:#fff;font:14px/1.4 system-ui,sans-serif'
   note.textContent = 'Part of this page could not load. Reload to try again.'
   document.body.append(note)
 }
@@ -123,15 +152,24 @@ const RETRY_MS = 800
 
 /** Load and claim, once. Code that can't load is tried again, then `stale`: its held events take their defaults. */
 // oxlint-disable-next-line no-promise-executor-return -- `setTimeout` returns nothing a promise looks at, and braces cost bytes on every page with an island
-const run = (r: Later) => (r.running ??= r.wait().catch(() => new Promise(go => setTimeout(go, RETRY_MS)).then(r.wait)).then(() => {
-  if (later.get(r.key) === r) {
-    later.delete(r.key)
-    r.mount()
-  }
-}, () => {
-  later.delete(r.key)
-  stale()
-}).catch(console.error).then(drain))
+const run = (r: Later) =>
+  (r.running ??= r
+    .wait()
+    .catch(() => new Promise((go) => setTimeout(go, RETRY_MS)).then(r.wait))
+    .then(
+      () => {
+        if (later.get(r.key) === r) {
+          later.delete(r.key)
+          r.mount()
+        }
+      },
+      () => {
+        later.delete(r.key)
+        stale()
+      },
+    )
+    .catch(console.error)
+    .then(drain))
 
 /** Claims the island `el` is in now, without waiting for what it was waiting for. */
 export function wake(el: Element) {
@@ -168,11 +206,22 @@ function typed(nodes: Node[]) {
   if (!c) return
   for (const n of nodes) {
     if (n.nodeType !== 1) continue
-    for (const el of [n as Control, ...(n as Element).querySelectorAll<Control>('input,textarea,select')]) {
-      if (!/^(input|textarea|select)$/.test(el.localName) || c.q.some(e => e.target === el)) continue
-      const moved = el.localName === 'select' ? el.selectedIndex !== Math.max([...el.options].findIndex(o => o.defaultSelected), 0)
-        : /^(checkbox|radio)$/.test(el.type) ? el.checked !== el.defaultChecked
-        : el.value !== el.defaultValue
+    for (const el of [
+      n as Control,
+      ...(n as Element).querySelectorAll<Control>('input,textarea,select'),
+    ]) {
+      if (!/^(input|textarea|select)$/.test(el.localName) || c.q.some((e) => e.target === el))
+        continue
+      const moved =
+        el.localName === 'select'
+          ? el.selectedIndex !==
+            Math.max(
+              [...el.options].findIndex((o) => o.defaultSelected),
+              0,
+            )
+          : /^(checkbox|radio)$/.test(el.type)
+            ? el.checked !== el.defaultChecked
+            : el.value !== el.defaultValue
       if (!moved) continue
       const was = c.r
       c.r = 1
@@ -188,20 +237,23 @@ function watch(r: Later, c: Comment) {
   const el = c.nextElementSibling
   // oxlint-disable-next-line typescript/no-misused-promises -- `run` retries and then marks the island stale itself; a `void` here costs bytes on every page with an island
   if (!el) return void (r.when === 'v' && setTimeout(() => run(r)))
-  near ??= new IntersectionObserver(list => {
-    for (const e of list) {
-      const hit = e.isIntersecting && watched.get(e.target)
-      if (!hit) continue
-      near!.unobserve(e.target)
-      void (hit.when === 'v' ? run(hit) : hit.wait().catch(() => {}))
-    }
-  }, { rootMargin: '600px' })
+  near ??= new IntersectionObserver(
+    (list) => {
+      for (const e of list) {
+        const hit = e.isIntersecting && watched.get(e.target)
+        if (!hit) continue
+        near!.unobserve(e.target)
+        void (hit.when === 'v' ? run(hit) : hit.wait().catch(() => {}))
+      }
+    },
+    { rootMargin: '600px' },
+  )
   watched.set(el, r)
   near.observe(el)
 }
 
 function drop(c: Comment, close: Node) {
-  for (let n: Node | null = c.nextSibling; n && n !== close; ) {
+  for (let n: Node | null = c.nextSibling; n && n !== close;) {
     const x: Node | null = n.nextSibling
     n.parentNode!.removeChild(n)
     n = x
@@ -214,7 +266,7 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
   const found: [Comment, boolean][] = []
   const tops = new Set(nodes)
   let nested = 0
-  comments(nodes, c => {
+  comments(nodes, (c) => {
     if (c.data.startsWith('wl:')) nested++
     else if (c.data.startsWith('/wl:')) nested--
     else if (!nested && c.data.startsWith('wi:')) found.push([c, tops.has(c)])
@@ -226,8 +278,15 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
     const mount = () => {
       const ranges = slot(open, close!)
       let read = 0
-      const props = { v, get s() { return ranges[read++ % ranges.length] } }
-      under(key + '/', () => hchild(c.parentNode as Element, () => load(id)(props), close, undefined, undefined, 1))
+      const props = {
+        v,
+        get s() {
+          return ranges[read++ % ranges.length]
+        },
+      }
+      under(key + '/', () =>
+        hchild(c.parentNode as Element, () => load(id)(props), close, undefined, undefined, 1),
+      )
       // At the level's top with a range that stays: the island decides what's in it, so the level can't list it.
       if (top && !hydration.trash.includes(close as ChildNode)) onCleanup(() => drop(c, close!))
       else hydration.trash.push(c)
@@ -257,10 +316,14 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
     })
     // No capture script (a strict CSP, say): nothing would ever wake it, so it doesn't wait.
     // oxlint-disable-next-line typescript/no-misused-promises -- `run` retries and then marks the island stale itself; a `void` here costs bytes on every page with an island
-  if (!held()) setTimeout(() => run(r))
+    if (!held()) setTimeout(() => run(r))
     else if (!held()!.d) watch(r, c)
     // Not part of this pass: `hydrate` would call them unclaimed.
-    if (DEV) for (const n of siblings(open, close)) if (n.nodeType === 1) for (const el of [n as Element, ...(n as Element).querySelectorAll('[wk]')]) hydration.registry.delete(el.getAttribute('wk')!)
+    if (DEV)
+      for (const n of siblings(open, close))
+        if (n.nodeType === 1)
+          for (const el of [n as Element, ...(n as Element).querySelectorAll('[wk]')])
+            hydration.registry.delete(el.getAttribute('wk')!)
   }
 }
 
@@ -269,8 +332,10 @@ function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
   const { registry } = hydration
   for (const n of nodes) {
     if (n.nodeType !== 1) continue
-    if ((n as Element).hasAttribute('wk')) registry.set((n as Element).getAttribute('wk')!, n as Element)
-    for (const el of (n as Element).querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
+    if ((n as Element).hasAttribute('wk'))
+      registry.set((n as Element).getAttribute('wk')!, n as Element)
+    for (const el of (n as Element).querySelectorAll('[wk]'))
+      registry.set(el.getAttribute('wk')!, el)
   }
   const was = { d: rt.data, s: rt.state }
   const missed = hydration.misses
@@ -280,7 +345,10 @@ function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
   try {
     fn()
   } finally {
-    if (hydration.misses > missed) console.warn('weft: rendered fresh, a key differs between server and client (see `weft docs W044`)')
+    if (hydration.misses > missed)
+      console.warn(
+        'weft: rendered fresh, a key differs between server and client (see `weft docs W044`)',
+      )
     Object.assign(keys, { on: false, hydrating: false, miss: false, p: '', n: 0 })
     rt.data = was.d
     rt.state = was.s
@@ -305,7 +373,14 @@ export function enter<T>(fn: () => T): T {
  * `next` (the next level) where that level's markers are. The value goes in the hole that shows the level. `wait`
  * loads an island that doesn't have to be there first.
  */
-export function level(html: string, d: number, next: () => unknown, load: Load, data?: SsrData, wait?: (id: string) => Promise<unknown>): unknown {
+export function level(
+  html: string,
+  d: number,
+  next: () => unknown,
+  load: Load,
+  data?: SsrData,
+  wait?: (id: string) => Promise<unknown>,
+): unknown {
   const page = !html
   const t = document.createElement('template')
   let own: Comment[] = []
@@ -319,15 +394,18 @@ export function level(html: string, d: number, next: () => unknown, load: Load, 
   t.innerHTML = html
   let nodes = read()
   const [a, b] = bounds(nodes, d + 1)
-  resume = page && a ? (JSON.parse(a.data.slice(a.data.indexOf(':', 3) + 1)) as [string, number]) : undefined
+  resume =
+    page && a
+      ? (JSON.parse(a.data.slice(a.data.indexOf(':', 3) + 1)) as [string, number])
+      : undefined
   const scope = resume
   resume = undefined
   const islands = () => mountIslands(nodes, load, wait)
   page ? islands() : claiming(nodes, data, islands)
   resume = scope
-  hydration.trash.push(...own.filter(n => !anchors.has(n)))
+  hydration.trash.push(...own.filter((n) => !anchors.has(n)))
   if (!page) sweep()
-  nodes = read().filter(n => n === a || n === b || !marks(n))
+  nodes = read().filter((n) => n === a || n === b || !marks(n))
   if (!a) return nodes
   const i = nodes.indexOf(a)
   if (i >= 0) {

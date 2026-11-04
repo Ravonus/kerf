@@ -8,7 +8,10 @@ import { auth } from './auth'
 
 export type SignInState = { error?: string }
 
-const credentials = z.object({ email: z.string().trim().toLowerCase().pipe(z.email()), password: z.string().min(1) })
+const credentials = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email()),
+  password: z.string().min(1),
+})
 
 export async function signIn(_: SignInState, form: FormData): Promise<SignInState> {
   const parsed = credentials.safeParse({ email: form.get('email'), password: form.get('password') })

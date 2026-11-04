@@ -8,7 +8,7 @@ function tables(engine) {
   const columns = ({ table, id, str, long }) => `export const purchases = ${table}('purchases', {
   id: ${id}.primaryKey(),
   rail: ${str}.notNull(),
-${PURCHASE.map(c => `  ${c}: ${str},`).join('\n')}
+${PURCHASE.map((c) => `  ${c}: ${str},`).join('\n')}
   state: ${str}.notNull(),
   at: ${long}.notNull(),
   expires: ${long},
@@ -21,9 +21,12 @@ export const payEvents = ${table}('pay_events', {
 })
 `
   return {
-    sqlite: () => `import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'\n\n${columns({ table: 'sqliteTable', id: 'text()', str: 'text()', long: 'integer()' })}`,
-    postgres: () => `import { bigint, pgTable, text } from 'drizzle-orm/pg-core'\n\n${columns({ table: 'pgTable', id: 'text()', str: 'text()', long: "bigint({ mode: 'number' })" })}`,
-    mysql: () => `import { bigint, mysqlTable, varchar } from 'drizzle-orm/mysql-core'\n\n${columns({ table: 'mysqlTable', id: 'varchar({ length: 191 })', str: 'varchar({ length: 191 })', long: "bigint({ mode: 'number' })" })}`,
+    sqlite: () =>
+      `import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'\n\n${columns({ table: 'sqliteTable', id: 'text()', str: 'text()', long: 'integer()' })}`,
+    postgres: () =>
+      `import { bigint, pgTable, text } from 'drizzle-orm/pg-core'\n\n${columns({ table: 'pgTable', id: 'text()', str: 'text()', long: "bigint({ mode: 'number' })" })}`,
+    mysql: () =>
+      `import { bigint, mysqlTable, varchar } from 'drizzle-orm/mysql-core'\n\n${columns({ table: 'mysqlTable', id: 'varchar({ length: 191 })', str: 'varchar({ length: 191 })', long: "bigint({ mode: 'number' })" })}`,
   }[engine]()
 }
 
@@ -40,7 +43,9 @@ export const pro = product({
 })
 `
 
-const ledger = store => `${store === 'drizzle' ? "import { drizzlePayStore } from '@weft-js/pay/drizzle'\nimport { definePay } from '@weft-js/pay/server'\nimport { db } from '#/db/index.server'\nimport { payEvents, purchases } from '#/db/schema'\n" : "import { definePay, memoryPayStore } from '@weft-js/pay/server'\n"}import * as catalog from './pay/catalog'
+const ledger = (
+  store,
+) => `${store === 'drizzle' ? "import { drizzlePayStore } from '@weft-js/pay/drizzle'\nimport { definePay } from '@weft-js/pay/server'\nimport { db } from '#/db/index.server'\nimport { payEvents, purchases } from '#/db/schema'\n" : "import { definePay, memoryPayStore } from '@weft-js/pay/server'\n"}import * as catalog from './pay/catalog'
 
 // Served at /_weft/x/pay/<rail>, the webhook URL to give your provider. A verified event is the only grant.
 export default definePay({ catalog, store: ${store === 'drizzle' ? 'drizzlePayStore(db, { purchases, payEvents })' : 'memoryPayStore()'}, urls: { success: '/', cancel: '/' } })
@@ -77,7 +82,8 @@ export const setup = {
   run({ engine, layer, read }) {
     const drizzle = layer === 'drizzle'
     const env = read('src/env.server.ts') ?? ''
-    if (!env.includes('STRIPE_SECRET_KEY') && !/server: \{\n/.test(env)) throw new Error('src/env.server.ts has no `server: {` block to add the Stripe keys to')
+    if (!env.includes('STRIPE_SECRET_KEY') && !/server: \{\n/.test(env))
+      throw new Error('src/env.server.ts has no `server: {` block to add the Stripe keys to')
     return {
       files: {
         'src/pay/catalog.ts': catalog,
@@ -86,12 +92,23 @@ export const setup = {
         ...(drizzle && { 'src/db/pay.schema.ts': tables(engine) }),
       },
       edits: {
-        ...(!env.includes('STRIPE_SECRET_KEY') && { 'src/env.server.ts': env.replace('server: {\n', 'server: {\n    STRIPE_SECRET_KEY: z.string().min(1),\n    STRIPE_WEBHOOK_SECRET: z.string().min(1),\n') }),
-        ...(drizzle && { 'src/db/schema.ts': `${read('src/db/schema.ts').trimEnd()}\n\nexport * from './pay.schema'\n` }),
+        ...(!env.includes('STRIPE_SECRET_KEY') && {
+          'src/env.server.ts': env.replace(
+            'server: {\n',
+            'server: {\n    STRIPE_SECRET_KEY: z.string().min(1),\n    STRIPE_WEBHOOK_SECRET: z.string().min(1),\n',
+          ),
+        }),
+        ...(drizzle && {
+          'src/db/schema.ts': `${read('src/db/schema.ts').trimEnd()}\n\nexport * from './pay.schema'\n`,
+        }),
       },
       env: { STRIPE_SECRET_KEY: 'sk_test_placeholder', STRIPE_WEBHOOK_SECRET: 'whsec_placeholder' },
       next: [
-        ...(drizzle ? ['`weft db generate`, then reload: the migration applies on the next request'] : ['`src/pay.server.ts` starts on `memoryPayStore()`: write a `PayStore` on your data layer (PAY016)']),
+        ...(drizzle
+          ? ['`weft db generate`, then reload: the migration applies on the next request']
+          : [
+              '`src/pay.server.ts` starts on `memoryPayStore()`: write a `PayStore` on your data layer (PAY016)',
+            ]),
         'put your real test keys in .env, and give Stripe the webhook URL /_weft/x/pay/stripe',
       ],
     }

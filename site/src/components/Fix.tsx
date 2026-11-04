@@ -12,7 +12,12 @@ const SAY = [
   'Put the sum in derived, and it follows the count.',
   'The same button now moves the total.',
 ]
-const HINT = ['Press +1. The count goes up, the total stays stuck.', 'Still stuck: nothing has been built.', 'Still stuck: the fix is not built yet.', 'Press +1. The price follows.']
+const HINT = [
+  'Press +1. The count goes up, the total stays stuck.',
+  'Still stuck: nothing has been built.',
+  'Still stuck: the fix is not built yet.',
+  'Press +1. The price follows.',
+]
 const PAUSE = 2600
 
 function Live(props: { count: number }) {
@@ -34,28 +39,48 @@ export function Fix() {
     stop()
     step.value = 0
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    timers = [1, 2, 3].map(n => setTimeout(() => (step.value = n), n * PAUSE)) as unknown as number[]
+    timers = [1, 2, 3].map((n) =>
+      setTimeout(() => (step.value = n), n * PAUSE),
+    ) as unknown as number[]
   }
   const go = (n: number) => {
     stop()
     step.value = n
   }
   onMount(() => {
-    const seen = new IntersectionObserver(([e]) => {
-      if (e!.isIntersecting) { play(); seen.disconnect() }
-    }, { threshold: 0.35 })
+    const seen = new IntersectionObserver(
+      ([e]) => {
+        if (e!.isIntersecting) {
+          play()
+          seen.disconnect()
+        }
+      },
+      { threshold: 0.35 },
+    )
     seen.observe(box!)
-    return () => { seen.disconnect(); stop() }
+    return () => {
+      seen.disconnect()
+      stop()
+    }
   })
   return (
-    <section data-site="fix" data-step={step.value} ref={el => (box = el)}>
+    <section data-site="fix" data-step={step.value} ref={(el) => (box = el)}>
       <h2>When your agent makes a mistake, weft catches it</h2>
-      <p data-part="intro">The compiler stops the mistake before it ships and says how to fix it, in words your agent can act on.</p>
+      <p data-part="intro">
+        The compiler stops the mistake before it ships and says how to fix it, in words your agent
+        can act on.
+      </p>
       <ol data-part="steps">
         {STEPS.map((title, n) => (
           <li key={title}>
-            <Button emphasis="ghost" tone="neutral" aria-current={step.value === n ? 'step' : undefined} onClick={() => go(n)}>
-              <span>{n + 1}</span>{title}
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              aria-current={step.value === n ? 'step' : undefined}
+              onClick={() => go(n)}
+            >
+              <span>{n + 1}</span>
+              {title}
             </Button>
           </li>
         ))}
@@ -64,29 +89,58 @@ export function Fix() {
         <div data-part="code">
           <p data-part="say">{SAY[step.value]}</p>
           <div data-part="panels">
-            <div data-show="0" data-scope="codeblock"
+            <div
+              data-show="0"
+              data-scope="codeblock"
               // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
-              innerHTML={show.bad}></div>
-            <div data-show="1" data-part="diag"><b>{show.code}</b> {show.message}<small>{show.file}. Fix: {show.fix}</small></div>
-            <div data-show="2" data-scope="codeblock"
+              innerHTML={show.bad}
+            ></div>
+            <div data-show="1" data-part="diag">
+              <b>{show.code}</b> {show.message}
+              <small>
+                {show.file}. Fix: {show.fix}
+              </small>
+            </div>
+            <div
+              data-show="2"
+              data-scope="codeblock"
               // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
-              innerHTML={show.diff}></div>
-            <div data-show="3" data-scope="codeblock"
+              innerHTML={show.diff}
+            ></div>
+            <div
+              data-show="3"
+              data-scope="codeblock"
               // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
-              innerHTML={show.good}></div>
+              innerHTML={show.good}
+            ></div>
           </div>
         </div>
         <div data-part="play">
-          <output aria-live="polite">{step.value < 3 ? <b>{START * EACH}</b> : <Live count={count.value} />}</output>
+          <output aria-live="polite">
+            {step.value < 3 ? <b>{START * EACH}</b> : <Live count={count.value} />}
+          </output>
           <p data-part="amount">Count {count.value}</p>
-          <Button size="lg" onClick={() => count.value++}>+1</Button>
-          <Button size="lg" emphasis="ghost" tone="neutral" onClick={play}>Replay</Button>
+          <Button size="lg" onClick={() => count.value++}>
+            +1
+          </Button>
+          <Button size="lg" emphasis="ghost" tone="neutral" onClick={play}>
+            Replay
+          </Button>
           <p data-part="hint">{HINT[step.value]}</p>
         </div>
       </div>
       <dl>
-        <div><dt>Try this</dt><dd>Press +1 on step 1, then again on step 4.</dd></div>
-        <div><dt>Why it matters</dt><dd>The error carries the reason and the fix, so an agent can correct its own mistake before you read the code.</dd></div>
+        <div>
+          <dt>Try this</dt>
+          <dd>Press +1 on step 1, then again on step 4.</dd>
+        </div>
+        <div>
+          <dt>Why it matters</dt>
+          <dd>
+            The error carries the reason and the fix, so an agent can correct its own mistake before
+            you read the code.
+          </dd>
+        </div>
       </dl>
     </section>
   )

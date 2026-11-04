@@ -19,13 +19,36 @@ export const productRow = group('product-row', {
   defaults: { stock: 'in' },
 })
 
-export function ProductRow({ product, left, onAdd }: { product: Product; left: number; onAdd: (id: string) => void }) {
+export function ProductRow({
+  product,
+  left,
+  onAdd,
+}: {
+  product: Product
+  left: number
+  onAdd: (id: string) => void
+}) {
   return (
     <li {...productRow({ stock: left <= 0 ? 'out' : left <= 3 ? 'low' : 'in' })}>
-      <span {...productRow.name} data-testid="name">{product.name}</span>
-      <span {...productRow.price} data-testid="price">{money(product.price)}</span>
-      {left <= 0 ? <span {...productRow.note}>Out of stock</span> : left <= 3 ? <span {...productRow.note}>Only {left} left</span> : null}
-      <button {...action()} aria-label={`Add ${product.name}`} disabled={left <= 0} onClick={() => onAdd(product.id)}>Add</button>
+      <span {...productRow.name} data-testid="name">
+        {product.name}
+      </span>
+      <span {...productRow.price} data-testid="price">
+        {money(product.price)}
+      </span>
+      {left <= 0 ? (
+        <span {...productRow.note}>Out of stock</span>
+      ) : left <= 3 ? (
+        <span {...productRow.note}>Only {left} left</span>
+      ) : null}
+      <button
+        {...action()}
+        aria-label={`Add ${product.name}`}
+        disabled={left <= 0}
+        onClick={() => onAdd(product.id)}
+      >
+        Add
+      </button>
     </li>
   )
 }

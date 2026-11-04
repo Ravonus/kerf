@@ -3,13 +3,23 @@ import type { RouteProps } from '@weft-js/start'
 import { later } from '../db'
 
 // `title` is awaited (meta reads it); `reviews` and `stock` are deferred: they stream into their Boundaries.
-export const load = async () => ({ title: await later(5, 'Slow page'), reviews: later(60, ['Great', 'Fine']), stock: later(20, 7) })
+export const load = async () => ({
+  title: await later(5, 'Slow page'),
+  reviews: later(60, ['Great', 'Fine']),
+  stock: later(20, 7),
+})
 
 export const meta = ({ data }: { data: { title: string } }) => ({ title: data.title })
 
 function Reviews(props: { list: Promise<string[]> }) {
   const r = resource(() => props.list)
-  return <ul class="reviews">{(r.value ?? []).map(t => <li>{t}</li>)}</ul>
+  return (
+    <ul class="reviews">
+      {(r.value ?? []).map((t) => (
+        <li>{t}</li>
+      ))}
+    </ul>
+  )
 }
 
 function Stock(props: { n: Promise<number> }) {

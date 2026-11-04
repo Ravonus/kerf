@@ -1,6 +1,6 @@
-import { Title } from "@solidjs/meta";
+import { Title } from '@solidjs/meta'
 
-import { NotFound } from "~/components/states";
+import { NotFound } from '~/components/states'
 
 export default function Missing() {
   return (
@@ -8,5 +8,5 @@ export default function Missing() {
       <Title>Not on the shelves · Mendwell</Title>
       <NotFound />
     </>
-  );
+  )
 }

@@ -3,7 +3,8 @@
 import { useActionState } from 'react'
 import { signIn } from '@/server/account'
 
-const field = 'h-12 w-full rounded-xl border border-line bg-raised px-4 text-base outline-none transition-colors focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-accent/25'
+const field =
+  'h-12 w-full rounded-xl border border-line bg-raised px-4 text-base outline-none transition-colors focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-accent/25'
 
 export function SignInForm() {
   const [state, action, pending] = useActionState(signIn, {})
@@ -11,12 +12,30 @@ export function SignInForm() {
   return (
     <form action={action} className="mt-8 flex flex-col gap-4">
       <div>
-        <label htmlFor="email" className="mb-1.5 block text-sm font-medium">Email</label>
-        <input id="email" name="email" type="email" required autoComplete="email" className={field} />
+        <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+          Email
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          className={field}
+        />
       </div>
       <div>
-        <label htmlFor="password" className="mb-1.5 block text-sm font-medium">Password</label>
-        <input id="password" name="password" type="password" required autoComplete="current-password" className={field} />
+        <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
+          Password
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          autoComplete="current-password"
+          className={field}
+        />
       </div>
       <button
         type="submit"
@@ -25,7 +44,9 @@ export function SignInForm() {
       >
         Sign in
       </button>
-      <p role="alert" className="min-h-6 text-sm font-medium text-danger">{state.error}</p>
+      <p role="alert" className="min-h-6 text-sm font-medium text-danger">
+        {state.error}
+      </p>
     </form>
   )
 }

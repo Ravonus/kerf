@@ -1,7 +1,10 @@
 import { state } from '@weft-js/core'
 import { Badge, Button, Card, Spinner } from '@weft-js/warp'
 
-const save = () => new Promise(done => { setTimeout(done, 800) })
+const save = () =>
+  new Promise((done) => {
+    setTimeout(done, 800)
+  })
 
 export default function Profile() {
   const saving = state(false)

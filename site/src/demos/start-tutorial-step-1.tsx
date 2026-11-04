@@ -20,7 +20,7 @@ function ProductRow({ product }: { product: Product }) {
 export default function Shop() {
   return (
     <Card title="The shop">
-      {PRODUCTS.map(p => (
+      {PRODUCTS.map((p) => (
         <ProductRow key={p.id} product={p} />
       ))}
     </Card>

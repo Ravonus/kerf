@@ -10,7 +10,14 @@ import '../../styles/docs.css'
 export default function ReferenceLayout(props: RouteProps) {
   return (
     <div data-site="docs">
-      <SideNav lead={SITE_LINKS} label="Reference" sections={referenceSections} current={props.params.slug ? `/reference/${props.params.slug}` : '/reference'} filter remember="weft:site:reference" />
+      <SideNav
+        lead={SITE_LINKS}
+        label="Reference"
+        sections={referenceSections}
+        current={props.params.slug ? `/reference/${props.params.slug}` : '/reference'}
+        filter
+        remember="weft:site:reference"
+      />
       {props.children}
     </div>
   )

@@ -9,7 +9,17 @@
 
 import type { Context } from '@weft-js/start'
 import type { ServerExtension } from '@weft-js/start/extension'
-import { entitlementTag, PayError, type CheckoutLine, type Interval, type PayRail, type Plan, type Product, type PurchaseState, type RailEvent } from './index'
+import {
+  entitlementTag,
+  PayError,
+  type CheckoutLine,
+  type Interval,
+  type PayRail,
+  type Plan,
+  type Product,
+  type PurchaseState,
+  type RailEvent,
+} from './index'
 
 declare module '@weft-js/start' {
   interface Context {
@@ -56,12 +66,21 @@ export function memoryPayStore(): PayStore & { clear(): void } {
   const rows = new Map<string, Purchase>()
   return {
     memory: true,
-    seen: e => Promise.resolve(events.has(e)),
-    mark(e) { events.add(e); return Promise.resolve() },
-    purchase: id => Promise.resolve(rows.get(id) ?? null),
-    save(p) { rows.set(p.id, p); return Promise.resolve() },
-    byUser: user => Promise.resolve([...rows.values()].filter(p => p.user === user)),
-    clear() { events.clear(); rows.clear() },
+    seen: (e) => Promise.resolve(events.has(e)),
+    mark(e) {
+      events.add(e)
+      return Promise.resolve()
+    },
+    purchase: (id) => Promise.resolve(rows.get(id) ?? null),
+    save(p) {
+      rows.set(p.id, p)
+      return Promise.resolve()
+    },
+    byUser: (user) => Promise.resolve([...rows.values()].filter((p) => p.user === user)),
+    clear() {
+      events.clear()
+      rows.clear()
+    },
   }
 }
 
@@ -73,7 +92,10 @@ export interface Entitlements {
 }
 
 /** What pay reads of `ctx`: the request's URL, and what `user` reads, `user.id` by default. A real `ctx` fits, and so does a test's. */
-export type PayContext = Partial<Omit<Context, 'request'>> & { request: { url: string }; user?: { id?: string | null } | null }
+export type PayContext = Partial<Omit<Context, 'request'>> & {
+  request: { url: string }
+  user?: { id?: string | null } | null
+}
 
 /** What `definePay` takes. */
 export interface PayOptions<P extends Product> {
@@ -109,7 +131,14 @@ export interface CheckoutInput<P extends Product = Product> {
 export interface Pay<P extends Product = Product> extends ServerExtension {
   readonly catalog: readonly P[]
   /** For a mutation's `input`: the catalog decides what can be bought, and the client sends only names. */
-  readonly input: { readonly '~standard': { version: 1; vendor: 'weft'; validate(v: unknown): { value: CheckoutInput<P> } | { issues: { message: string }[] }; types?: { input: CheckoutInput<P>; output: CheckoutInput<P> } } }
+  readonly input: {
+    readonly '~standard': {
+      version: 1
+      vendor: 'weft'
+      validate(v: unknown): { value: CheckoutInput<P> } | { issues: { message: string }[] }
+      types?: { input: CheckoutInput<P>; output: CheckoutInput<P> }
+    }
+  }
   /** The hosted checkout's URL, for this buyer. Grants nothing. */
   checkout(ctx: PayContext, input: CheckoutInput<P>): Promise<string>
   /** Where this buyer manages or cancels. */
@@ -120,7 +149,11 @@ export interface Pay<P extends Product = Product> extends ServerExtension {
   forContext(ctx: PayContext): Entitlements
   purchases(user: string): Promise<Purchase[]>
   /** One verified delivery. `tags` go on to the app's live readers. */
-  webhook(rail: string, request: Request, report?: PayReport): Promise<{ response: Response; tags: string[] }>
+  webhook(
+    rail: string,
+    request: Request,
+    report?: PayReport,
+  ): Promise<{ response: Response; tags: string[] }>
   /** Apply events that have been verified. Anything else must go through `webhook`. */
   ingest(rail: string, events: RailEvent[], report?: PayReport): Promise<string[]>
   refund(purchase: string): Promise<void>
@@ -135,31 +168,50 @@ const FINAL: ReadonlySet<PurchaseState> = new Set(['refunded', 'revoked'])
 const DAY = 86_400_000
 const BODY = 1 << 20
 
-const hex = async (s: string) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('')
+const hex = async (s: string) =>
+  [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
 const issue = (message: string) => ({ issues: [{ message }] })
 const errorMessage = (e: unknown) => String((e as Error | null)?.message ?? e)
 
 /** The one ledger of an app: `src/pay.server.ts` default-exports what this returns. */
 export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
-  const catalog = (Array.isArray(options.catalog) ? options.catalog : Object.values(options.catalog)) as P[]
-  const byId = new Map(catalog.map(p => [p.id, p]))
+  const catalog = (
+    Array.isArray(options.catalog) ? options.catalog : Object.values(options.catalog)
+  ) as P[]
+  const byId = new Map(catalog.map((p) => [p.id, p]))
   const { store, urls, leeway = 3 * DAY } = options
-  const userOf = options.user ?? (ctx => ctx?.user?.id)
-  const slot = options.slot ?? (() => {
-    // A generated module, declared in .weft/slots.d.ts only once bound: an expect-error would be wrong in one case or the other.
-    // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- the cast is what lets this compile when the slot isn't declared
-    return import('weft:slot/pay.rail' as string)
-  })
+  const userOf = options.user ?? ((ctx) => ctx?.user?.id)
+  const slot =
+    options.slot ??
+    (() => {
+      // A generated module, declared in .weft/slots.d.ts only once bound: an expect-error would be wrong in one case or the other.
+      // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- the cast is what lets this compile when the slot isn't declared
+      return import('weft:slot/pay.rail' as string)
+    })
   let override: PayRail | undefined
   const rails = new Map<string, Promise<PayRail>>()
 
   async function railFor(key?: string): Promise<PayRail> {
     if (override) return override
     const { load, providers = {} } = await slot()
-    const bound = Object.keys(providers).filter(k => providers[k])
-    if (!bound.length) throw new PayError('P101', '`pay.rail` has no provider: add one to `plugins` in weft.config.ts', 500)
+    const bound = Object.keys(providers).filter((k) => providers[k])
+    if (!bound.length)
+      throw new PayError(
+        'P101',
+        '`pay.rail` has no provider: add one to `plugins` in weft.config.ts',
+        500,
+      )
     const pick = key ?? options.rail ?? (bound.length === 1 ? bound[0] : undefined)
-    if (!pick || !bound.includes(pick)) throw new PayError('PAY022', pick ? `no rail \`${pick}\` is bound (${bound.join(', ')})` : `${bound.join(' and ')} are both bound: set \`rail\` in \`definePay\``, 500)
+    if (!pick || !bound.includes(pick))
+      throw new PayError(
+        'PAY022',
+        pick
+          ? `no rail \`${pick}\` is bound (${bound.join(', ')})`
+          : `${bound.join(' and ')} are both bound: set \`rail\` in \`definePay\``,
+        500,
+      )
     let r = rails.get(pick)
     if (!r) rails.set(pick, (r = load(pick) as Promise<PayRail>))
     return r
@@ -169,45 +221,72 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
     const p = byId.get(input.product)
     if (!p) throw new PayError('PAY021', `no product \`${input.product}\``, 404)
     const subscription = p.kind === 'subscription'
-    const name = subscription ? input.plan ?? Object.keys(p.plans!)[0] : undefined
+    const name = subscription ? (input.plan ?? Object.keys(p.plans!)[0]) : undefined
     const row: Plan | undefined = subscription ? p.plans![name as keyof typeof p.plans] : p.price
     if (!row) throw new PayError('PAY021', `\`${p.id}\` has no plan \`${input.plan}\``, 404)
-    const currency = input.currency ?? Object.keys(row).find(k => k !== 'trialDays' && k !== 'interval')!
+    const currency =
+      input.currency ?? Object.keys(row).find((k) => k !== 'trialDays' && k !== 'interval')!
     const amount = row[currency]
-    if (typeof amount !== 'number') throw new PayError('PAY021', `\`${p.id}\` has no ${currency} price`, 404)
+    if (typeof amount !== 'number')
+      throw new PayError('PAY021', `\`${p.id}\` has no ${currency} price`, 404)
     return {
-      product: p.id, name: p.name ?? p.id, amount, currency, mode: subscription ? 'subscription' : 'payment', quantity: subscription ? 1 : input.quantity ?? 1,
-      ...(subscription ? { plan: name!, interval: (row.interval ?? name) as Interval, ...(row.trialDays ? { trialDays: row.trialDays } : {}) } : {}),
+      product: p.id,
+      name: p.name ?? p.id,
+      amount,
+      currency,
+      mode: subscription ? 'subscription' : 'payment',
+      quantity: subscription ? 1 : (input.quantity ?? 1),
+      ...(subscription
+        ? {
+            plan: name!,
+            interval: (row.interval ?? name) as Interval,
+            ...(row.trialDays ? { trialDays: row.trialDays } : {}),
+          }
+        : {}),
       ...(p.shipping ? { shipping: true } : {}),
     }
   }
 
-  const live = (p: Purchase) => ACCESS.has(p.state) && (p.expires === null || Date.now() < p.expires + leeway)
+  const live = (p: Purchase) =>
+    ACCESS.has(p.state) && (p.expires === null || Date.now() < p.expires + leeway)
 
   async function granted(user: string) {
     const out = new Set<string>()
-    for (const p of await store.byUser(user)) if (live(p)) for (const g of byId.get(p.product!)?.grants ?? []) out.add(g)
+    for (const p of await store.byUser(user))
+      if (live(p)) for (const g of byId.get(p.product!)?.grants ?? []) out.add(g)
     return [...out].sort()
   }
 
   const entitlements = (user: string | null | undefined): Entitlements => {
     let list: Promise<string[]> | undefined
     const read = () => (list ??= user ? granted(user) : Promise.resolve([]))
-    return { has: id => read().then(l => l.includes(id)), list: read }
+    return { has: (id) => read().then((l) => l.includes(id)), list: read }
   }
 
   /** One event onto its purchase. Identity always merges; state moves only forward on the rail's clock. */
   async function apply(rail: string, e: RailEvent, report?: PayReport): Promise<string | null> {
     const id = `${rail}:${e.purchase}`
     const had = await store.purchase(id)
-    const newer = !had || e.at > had.at || (e.at === had.at && (!FINAL.has(had.state) || FINAL.has(e.state)))
+    const newer =
+      !had || e.at > had.at || (e.at === had.at && (!FINAL.has(had.state) || FINAL.has(e.state)))
     const next: Purchase = {
-      id, rail,
-      user: had?.user ?? e.user ?? null, product: had?.product ?? e.product ?? null, plan: e.plan ?? had?.plan ?? null, customer: e.customer ?? had?.customer ?? null,
-      state: newer ? e.state : had.state, at: newer ? e.at : had.at, expires: newer ? e.expires ?? had?.expires ?? null : had.expires,
+      id,
+      rail,
+      user: had?.user ?? e.user ?? null,
+      product: had?.product ?? e.product ?? null,
+      plan: e.plan ?? had?.plan ?? null,
+      customer: e.customer ?? had?.customer ?? null,
+      state: newer ? e.state : had.state,
+      at: newer ? e.at : had.at,
+      expires: newer ? (e.expires ?? had?.expires ?? null) : had.expires,
     }
     await store.save(next)
-    if (next.product && !byId.has(next.product)) report?.({ code: 'PAY021', severity: 'warning', message: `purchase \`${id}\` is for \`${next.product}\`, which isn't in the catalog: it grants nothing` })
+    if (next.product && !byId.has(next.product))
+      report?.({
+        code: 'PAY021',
+        severity: 'warning',
+        message: `purchase \`${id}\` is for \`${next.product}\`, which isn't in the catalog: it grants nothing`,
+      })
     return next.user && entitlementTag(next.user)
   }
 
@@ -230,48 +309,101 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
         version: 1,
         vendor: 'weft',
         validate(v: unknown) {
-          const { product, plan, currency, quantity } = (v && typeof v === 'object' ? v : {}) as Partial<Record<keyof CheckoutInput, unknown>>
+          const { product, plan, currency, quantity } = (
+            v && typeof v === 'object' ? v : {}
+          ) as Partial<Record<keyof CheckoutInput, unknown>>
           if (typeof product !== 'string') return issue('`product` is required')
           const p = byId.get(product)
           if (!p) return issue(`no product \`${product}\``)
-          if (plan !== undefined && (typeof plan !== 'string' || !p.plans || !(plan in p.plans))) return issue(`\`${p.id}\` has no plan \`${typeof plan === 'string' ? plan : JSON.stringify(plan)}\``)
-          if (currency !== undefined && typeof currency !== 'string') return issue('`currency` is a string')
-          if (quantity !== undefined && !(typeof quantity === 'number' && Number.isInteger(quantity) && quantity > 0 && quantity < 1000)) return issue('`quantity` is a whole number under 1000')
-          return { value: { product, ...(plan !== undefined && { plan }), ...(currency !== undefined && { currency }), ...(quantity !== undefined && { quantity }) } }
+          if (plan !== undefined && (typeof plan !== 'string' || !p.plans || !(plan in p.plans)))
+            return issue(
+              `\`${p.id}\` has no plan \`${typeof plan === 'string' ? plan : JSON.stringify(plan)}\``,
+            )
+          if (currency !== undefined && typeof currency !== 'string')
+            return issue('`currency` is a string')
+          if (
+            quantity !== undefined &&
+            !(
+              typeof quantity === 'number' &&
+              Number.isInteger(quantity) &&
+              quantity > 0 &&
+              quantity < 1000
+            )
+          )
+            return issue('`quantity` is a whole number under 1000')
+          return {
+            value: {
+              product,
+              ...(plan !== undefined && { plan }),
+              ...(currency !== undefined && { currency }),
+              ...(quantity !== undefined && { quantity }),
+            },
+          }
         },
       },
     },
     async checkout(ctx, input) {
       const user = userOf(ctx)
-      if (!user) throw new PayError('PAY010', 'Sign in before buying: a purchase has to belong to someone', 401)
+      if (!user)
+        throw new PayError(
+          'PAY010',
+          'Sign in before buying: a purchase has to belong to someone',
+          401,
+        )
       const line = lineOf(input)
       const rail = await railFor()
       const mine = await store.byUser(user)
-      if (line.mode === 'subscription' && mine.some(p => p.product === line.product && live(p))) throw new PayError('PAY023', `You already have \`${line.product}\``, 409)
+      if (line.mode === 'subscription' && mine.some((p) => p.product === line.product && live(p)))
+        throw new PayError('PAY023', `You already have \`${line.product}\``, 409)
       const origin = options.origin ?? new URL(ctx.request.url).origin
-      const customer = mine.find(p => p.customer && p.rail === rail.id)?.customer ?? undefined
-      const idempotencyKey = await hex(JSON.stringify([user, line, Math.floor(Date.now() / 60_000)]))
-      const { url } = await rail.checkout({ user, ...(customer && { customer }), line, successUrl: new URL(urls.success, origin).href, cancelUrl: new URL(urls.cancel, origin).href, idempotencyKey })
+      const customer = mine.find((p) => p.customer && p.rail === rail.id)?.customer ?? undefined
+      const idempotencyKey = await hex(
+        JSON.stringify([user, line, Math.floor(Date.now() / 60_000)]),
+      )
+      const { url } = await rail.checkout({
+        user,
+        ...(customer && { customer }),
+        line,
+        successUrl: new URL(urls.success, origin).href,
+        cancelUrl: new URL(urls.cancel, origin).href,
+        idempotencyKey,
+      })
       return url
     },
     async portal(ctx) {
       const user = userOf(ctx)
       if (!user) throw new PayError('PAY010', 'Sign in first', 401)
       const rail = await railFor()
-      const customer = (await store.byUser(user)).find(p => p.customer && p.rail === rail.id)?.customer
-      if (!customer) throw new PayError('PAY024', 'Nothing to manage yet: this user has bought nothing here', 404)
+      const customer = (await store.byUser(user)).find(
+        (p) => p.customer && p.rail === rail.id,
+      )?.customer
+      if (!customer)
+        throw new PayError(
+          'PAY024',
+          'Nothing to manage yet: this user has bought nothing here',
+          404,
+        )
       const origin = options.origin ?? new URL(ctx.request.url).origin
-      return (await rail.portal({ customer, returnUrl: new URL(urls.portal ?? urls.cancel, origin).href })).url
+      return (
+        await rail.portal({ customer, returnUrl: new URL(urls.portal ?? urls.cancel, origin).href })
+      ).url
     },
     entitlements,
-    forContext: ctx => entitlements(userOf(ctx)),
-    purchases: user => store.byUser(user),
+    forContext: (ctx) => entitlements(userOf(ctx)),
+    purchases: (user) => store.byUser(user),
     ingest,
     async webhook(key, request, report) {
-      const plain = (body: string, status: number) => ({ response: new Response(body, { status, headers: { 'content-type': 'text/plain' } }), tags: [] })
+      const plain = (body: string, status: number) => ({
+        response: new Response(body, { status, headers: { 'content-type': 'text/plain' } }),
+        tags: [],
+      })
       if (request.method !== 'POST') return plain('Method not allowed', 405)
       let rail: PayRail
-      try { rail = await railFor(key) } catch { return plain('Not found', 404) }
+      try {
+        rail = await railFor(key)
+      } catch {
+        return plain('Not found', 404)
+      }
       if (Number(request.headers.get('content-length') ?? 0) > BODY) return plain('Too large', 413)
       const body = await request.text() // the exact bytes: a parsed and re-encoded body can't be verified
       if (body.length > BODY) return plain('Too large', 413)
@@ -280,13 +412,26 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
         events = await rail.verify({ body, headers: request.headers })
       } catch (e) {
         // A retry can't fix this one, and the reason stays in the log: a forger learns nothing.
-        report?.({ code: (e as { code?: string } | null)?.code ?? 'PAY011', severity: 'error', message: `a ${key} webhook failed verification: ${errorMessage(e)}` })
+        report?.({
+          code: (e as { code?: string } | null)?.code ?? 'PAY011',
+          severity: 'error',
+          message: `a ${key} webhook failed verification: ${errorMessage(e)}`,
+        })
         return plain('Bad signature', 400)
       }
       try {
-        return { response: new Response('{"received":true}', { headers: { 'content-type': 'application/json' } }), tags: await ingest(rail.id, events, report) }
+        return {
+          response: new Response('{"received":true}', {
+            headers: { 'content-type': 'application/json' },
+          }),
+          tags: await ingest(rail.id, events, report),
+        }
       } catch (e) {
-        report?.({ code: 'E_PAY', severity: 'error', message: `a ${key} webhook failed, and it will be redelivered: ${errorMessage(e)}` })
+        report?.({
+          code: 'E_PAY',
+          severity: 'error',
+          message: `a ${key} webhook failed, and it will be redelivered: ${errorMessage(e)}`,
+        })
         return plain('Try again', 500)
       }
     },
@@ -297,7 +442,9 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
       if (!rail.refund) throw new PayError('PAY022', `\`${rail.id}\` can't refund from here`, 501)
       await rail.refund({ purchase: id.slice(p.rail.length + 1) })
     },
-    use(rail) { override = rail },
+    use(rail) {
+      override = rail
+    },
     reset() {
       override = undefined
       ;(store as { clear?(): void }).clear?.()
@@ -305,18 +452,25 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
 
     // ---- what makes this a `server.extension` ---------------------------------------------------------------------
     async handle(request, path, api) {
-      const { response, tags } = await pay.webhook(path, request, d => api.report(d))
+      const { response, tags } = await pay.webhook(path, request, (d) => api.report(d))
       await api.invalidate(tags)
       return response
     },
-    context: ctx => ({ entitlements: pay.forContext(ctx) }),
+    context: (ctx) => ({ entitlements: pay.forContext(ctx) }),
     async guard(fn, ctx) {
-      for (const id of (fn.def.requires as readonly string[] | undefined) ?? []) if (!(await ctx.entitlements.has(id))) throw new PayError('ENTITLEMENT_REQUIRED', `This needs \`${id}\``, 403)
+      for (const id of (fn.def.requires as readonly string[] | undefined) ?? [])
+        if (!(await ctx.entitlements.has(id)))
+          throw new PayError('ENTITLEMENT_REQUIRED', `This needs \`${id}\``, 403)
     },
     options: ['requires'],
     personal: ['entitlements'],
     check(dev) {
-      if (store.memory && !dev) throw new PayError('PAY016', 'The ledger is in memory: every purchase is gone on the next deploy. Pass a durable `store` to `definePay`', 500)
+      if (store.memory && !dev)
+        throw new PayError(
+          'PAY016',
+          'The ledger is in memory: every purchase is gone on the next deploy. Pass a durable `store` to `definePay`',
+          500,
+        )
     },
   }
   return pay

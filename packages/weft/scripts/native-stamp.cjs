@@ -11,10 +11,18 @@ const crate = join(__dirname, '..', '..', '..', 'crates', 'weft-compiler')
 exports.sourceStamp = () => {
   if (!existsSync(crate)) return null
   const hash = createHash('sha256')
-  const add = rel => hash.update(rel).update('\0').update(readFileSync(join(crate, rel))).update('\0')
-  for (const f of ['Cargo.toml', 'Cargo.lock', 'build.rs', 'rust-toolchain.toml']) if (existsSync(join(crate, f))) add(f)
-  const walk = dir => {
-    for (const e of readdirSync(join(crate, dir), { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+  const add = (rel) =>
+    hash
+      .update(rel)
+      .update('\0')
+      .update(readFileSync(join(crate, rel)))
+      .update('\0')
+  for (const f of ['Cargo.toml', 'Cargo.lock', 'build.rs', 'rust-toolchain.toml'])
+    if (existsSync(join(crate, f))) add(f)
+  const walk = (dir) => {
+    for (const e of readdirSync(join(crate, dir), { withFileTypes: true }).sort((a, b) =>
+      a.name < b.name ? -1 : 1,
+    )) {
       const rel = `${dir}/${e.name}`
       if (e.isDirectory()) walk(rel)
       else add(rel)
@@ -24,4 +32,4 @@ exports.sourceStamp = () => {
   return hash.digest('hex')
 }
 
-exports.stampFile = native => `${native}.stamp`
+exports.stampFile = (native) => `${native}.stamp`

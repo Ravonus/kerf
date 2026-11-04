@@ -15,15 +15,85 @@ export { Link } from './view'
 export { Form, type FormApi, type FormProps } from './form'
 export { navigate, type NavigateOptions } from './router'
 export {
-  query, mutation, redirect, raise, invalid, invalidate, cache, skip, isRedirect, stale, StartError, FnError,
-  type Query, type Mutation, type QueryDef, type MutationDef, type AuthScope, type Context, type Errors, type FnOptions, type Life, type LiveMode, type LiveOptions, type LiveQuery, type LiveStatus, type OptimisticCache, type Redirect, type Skip, type StandardSchemaV1,
+  query,
+  mutation,
+  redirect,
+  raise,
+  invalid,
+  invalidate,
+  cache,
+  skip,
+  isRedirect,
+  stale,
+  StartError,
+  FnError,
+  type Query,
+  type Mutation,
+  type QueryDef,
+  type MutationDef,
+  type AuthScope,
+  type Context,
+  type Errors,
+  type FnOptions,
+  type Life,
+  type LiveMode,
+  type LiveOptions,
+  type LiveQuery,
+  type LiveStatus,
+  type OptimisticCache,
+  type Redirect,
+  type Skip,
+  type StandardSchemaV1,
 } from './data'
-export { stream, type Stream, type StreamDef, type StreamOptions, type StreamStatus } from './stream'
-export { channel, sharedState, type Channel, type ChannelDef, type ChannelStatus, type Connection, type PublishOptions, type SharedBox, type SharedState } from './channel'
-export { liveHealth, realtime, realtimeStats, topic, tracked, type Limits, type LiveState, type RealtimeOptions, type Topic, type Tracked } from './hub'
-export { dbChanges, type Change, type ChangeOptions, type Probe, type Sink, type Source } from './changes'
+export {
+  stream,
+  type Stream,
+  type StreamDef,
+  type StreamOptions,
+  type StreamStatus,
+} from './stream'
+export {
+  channel,
+  sharedState,
+  type Channel,
+  type ChannelDef,
+  type ChannelStatus,
+  type Connection,
+  type PublishOptions,
+  type SharedBox,
+  type SharedState,
+} from './channel'
+export {
+  liveHealth,
+  realtime,
+  realtimeStats,
+  topic,
+  tracked,
+  type Limits,
+  type LiveState,
+  type RealtimeOptions,
+  type Topic,
+  type Tracked,
+} from './hub'
+export {
+  dbChanges,
+  type Change,
+  type ChangeOptions,
+  type Probe,
+  type Sink,
+  type Source,
+} from './changes'
 export { memoryBus, type Bus } from './bus'
-export { listInput, type DbAdapter, type ListPage, type ListParams, type ListRequest, type ListSource, type ListSpec, type SourceSpec } from './list'
+export {
+  listInput,
+  type DbAdapter,
+  type ListPage,
+  type ListParams,
+  type ListRequest,
+  type ListSource,
+  type ListSpec,
+  type SourceSpec,
+} from './list'
 export type { Merged, Site } from '@weft-js/core/ssr'
 
 /** Filled by the generated `.weft/routes.d.ts` with every route file's path (`'/users/[id]': true`). */
@@ -71,7 +141,9 @@ type AnyLoad = (args: never) => unknown
 export type DataOf<L> = L extends AnyLoad ? Exclude<Awaited<ReturnType<L>>, NotFound> : undefined
 
 /** The data `meta` and cards see: deferred (promise) fields left out, since they're still streaming (H007). */
-export type Settled<D> = D extends object ? { [K in keyof D as D[K] extends PromiseLike<unknown> ? never : K]: D[K] } : D
+export type Settled<D> = D extends object
+  ? { [K in keyof D as D[K] extends PromiseLike<unknown> ? never : K]: D[K] }
+  : D
 
 /** A route or layout component's props. `children` is the next level (layouts render it where the page goes). */
 export interface RouteProps<L = undefined, P extends string = string> {
@@ -103,4 +175,6 @@ export interface OgProps<L = undefined, P extends string = string> {
 }
 
 /** The params of a param route whose cards `weft build` renders (static routes always are). */
-export type Prerender<P extends string = string> = ParamsOf<P>[] | (() => ParamsOf<P>[] | Promise<ParamsOf<P>[]>)
+export type Prerender<P extends string = string> =
+  | ParamsOf<P>[]
+  | (() => ParamsOf<P>[] | Promise<ParamsOf<P>[]>)

@@ -14,13 +14,17 @@ export function App({ api }: { api: Api }) {
 
   useEffect(() => {
     let cancelled = false
-    api.listProducts().then(list => { if (!cancelled) setProducts(list) })
-    return () => { cancelled = true }
+    api.listProducts().then((list) => {
+      if (!cancelled) setProducts(list)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [api])
 
-  const add = (id: string) => setCart(c => ({ ...c, [id]: (c[id] ?? 0) + 1 }))
+  const add = (id: string) => setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }))
   const change = (id: string, delta: number) =>
-    setCart(c => {
+    setCart((c) => {
       const next = (c[id] ?? 0) + delta
       const { [id]: _, ...rest } = c
       return next > 0 ? { ...rest, [id]: next } : rest

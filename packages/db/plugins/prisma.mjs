@@ -9,8 +9,16 @@ export const prismaSource = definePlugin({
   weft: '*',
   permissions: { net: ['driver:prisma'] },
   contribute: () => ({
-    provides: [provide(slot, { key: 'prisma', sides: { server: { module: '@weft-js/db/prisma', export: 'adapter' } } })],
-    agents: { title: 'Lists (prisma)', text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back.' },
+    provides: [
+      provide(slot, {
+        key: 'prisma',
+        sides: { server: { module: '@weft-js/db/prisma', export: 'adapter' } },
+      }),
+    ],
+    agents: {
+      title: 'Lists (prisma)',
+      text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back.',
+    },
   }),
 })
 

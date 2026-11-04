@@ -19,8 +19,22 @@ import '@weft-js/warp-core/styles/flows/meter.css' // the result mark
 import '@weft-js/warp-core/styles/flows/confirm.css'
 
 /** The danger zone (09 §4.4): the one critical-bordered section. Rows are SettingRows. */
-export function DangerZone({ id = 'danger', title = 'Danger zone', description, children }: { id?: string; title?: unknown; description?: unknown; children: unknown }) {
-  return <SettingsSection id={id} title={title} description={description} tone="critical">{children}</SettingsSection>
+export function DangerZone({
+  id = 'danger',
+  title = 'Danger zone',
+  description,
+  children,
+}: {
+  id?: string
+  title?: unknown
+  description?: unknown
+  children: unknown
+}) {
+  return (
+    <SettingsSection id={id} title={title} description={description} tone="critical">
+      {children}
+    </SettingsSection>
+  )
 }
 
 /** Props for ConfirmDialog. */
@@ -39,23 +53,68 @@ export interface ConfirmDialogProps {
   onCancel?: () => void
 }
 
-const failed = (retry: () => unknown) => toast.show({ title: 'That didn’t go through', description: 'Nothing changed. Try again.', tone: 'critical', action: { label: 'Retry', onClick: retry } })
+const failed = (retry: () => unknown) =>
+  toast.show({
+    title: 'That didn’t go through',
+    description: 'Nothing changed. Try again.',
+    tone: 'critical',
+    action: { label: 'Retry', onClick: retry },
+  })
 
 /** A plain AlertDialog (05 §3): focus on Cancel. Pending on the confirm button; the dialog closes when it's done. */
-export function ConfirmDialog({ open, title, description, action, cancel = 'Cancel', tone, glyph, children, onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({
+  open,
+  title,
+  description,
+  action,
+  cancel = 'Cancel',
+  tone,
+  glyph,
+  children,
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) {
   const armed = latch(untrack(() => open))
   const busy = state(false)
   const go = async () => {
     if (busy.value) return
     busy.value = true
-    try { await onConfirm(); open.value = false }
-    catch { failed(go) }
-    finally { busy.value = false }
+    try {
+      await onConfirm()
+      open.value = false
+    } catch {
+      failed(go)
+    } finally {
+      busy.value = false
+    }
   }
   return (
     <>
       {armed.value && (
-        <Modal open={open} alert size="sm" title={title} description={description} mark={glyph ? <span data-part="mark" data-tone={tone === 'critical' ? 'critical' : undefined}>{typeof glyph === 'string' ? <Glyph d={glyph} /> : glyph({})}</span> : undefined} footer={<><Button emphasis="frame" autofocus data-close="" onClick={() => onCancel?.()}>{cancel}</Button><Button tone={tone} loading={busy.value} onClick={go}>{action}</Button></>}>
+        <Modal
+          open={open}
+          alert
+          size="sm"
+          title={title}
+          description={description}
+          mark={
+            glyph ? (
+              <span data-part="mark" data-tone={tone === 'critical' ? 'critical' : undefined}>
+                {typeof glyph === 'string' ? <Glyph d={glyph} /> : glyph({})}
+              </span>
+            ) : undefined
+          }
+          footer={
+            <>
+              <Button emphasis="frame" autofocus data-close="" onClick={() => onCancel?.()}>
+                {cancel}
+              </Button>
+              <Button tone={tone} loading={busy.value} onClick={go}>
+                {action}
+              </Button>
+            </>
+          }
+        >
           {children}
         </Modal>
       )}
@@ -81,27 +140,84 @@ export interface TypeToConfirmProps {
  * Type-to-confirm (09 §4.4): an AlertDialog whose field sweeps critical. Deviation from 05: focus goes to the field,
  * not Cancel. The confirm stays disabled until the text matches exactly, and Enter submits only then.
  */
-export function TypeToConfirm({ open, title, description, confirmText, items, action, glyph = TrashIcon, onConfirm }: TypeToConfirmProps) {
+export function TypeToConfirm({
+  open,
+  title,
+  description,
+  confirmText,
+  items,
+  action,
+  glyph = TrashIcon,
+  onConfirm,
+}: TypeToConfirmProps) {
   const armed = latch(untrack(() => open))
   const typed = state('')
   const busy = state(false)
   const ok = derived(() => confirmMatches(typed.value, confirmText))
-  watch(() => open.value, on => { if (on) typed.value = '' })
+  watch(
+    () => open.value,
+    (on) => {
+      if (on) typed.value = ''
+    },
+  )
   const go = async () => {
     if (!ok.value || busy.value) return
     busy.value = true
-    try { await onConfirm(); open.value = false }
-    catch { failed(go) }
-    finally { busy.value = false }
+    try {
+      await onConfirm()
+      open.value = false
+    } catch {
+      failed(go)
+    } finally {
+      busy.value = false
+    }
   }
-  const submit = (e: Event) => { e.preventDefault(); void go() }
+  const submit = (e: Event) => {
+    e.preventDefault()
+    void go()
+  }
   return (
     <>
       {armed.value && (
-        <Modal open={open} alert size="sm" tone="critical" title={title} description={description} mark={<span data-part="mark" data-tone="critical">{typeof glyph === 'string' ? <Glyph d={glyph} /> : glyph({})}</span>} footer={<><Button emphasis="frame" data-close="">Cancel</Button><Button tone="critical" disabled={!ok.value} loading={busy.value} onClick={go}>{action}</Button></>}>
+        <Modal
+          open={open}
+          alert
+          size="sm"
+          tone="critical"
+          title={title}
+          description={description}
+          mark={
+            <span data-part="mark" data-tone="critical">
+              {typeof glyph === 'string' ? <Glyph d={glyph} /> : glyph({})}
+            </span>
+          }
+          footer={
+            <>
+              <Button emphasis="frame" data-close="">
+                Cancel
+              </Button>
+              <Button tone="critical" disabled={!ok.value} loading={busy.value} onClick={go}>
+                {action}
+              </Button>
+            </>
+          }
+        >
           <form data-scope="confirm" novalidate onSubmit={submit}>
-            {items && <ul>{items.map(t => <li key={t}>{t}</li>)}</ul>}
-            <Input label={`Type ${confirmText} to confirm`} autofocus autocomplete="off" spellcheck="false" value={typed.value} onInput={e => (typed.value = e.currentTarget.value)} />
+            {items && (
+              <ul>
+                {items.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            )}
+            <Input
+              label={`Type ${confirmText} to confirm`}
+              autofocus
+              autocomplete="off"
+              spellcheck="false"
+              value={typed.value}
+              onInput={(e) => (typed.value = e.currentTarget.value)}
+            />
           </form>
         </Modal>
       )}

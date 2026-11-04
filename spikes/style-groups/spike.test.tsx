@@ -8,7 +8,9 @@ import { touches } from '@weft-js/core/test'
 import { start, type Product } from './helpers'
 
 const out: Record<string, unknown> = {}
-afterAll(() => { if (process.env.SPIKE_OUT) writeFileSync(process.env.SPIKE_OUT, JSON.stringify(out, null, 2)) })
+afterAll(() => {
+  if (process.env.SPIKE_OUT) writeFileSync(process.env.SPIKE_OUT, JSON.stringify(out, null, 2))
+})
 
 const products = (): Product[] => [
   { id: 'apple', name: 'Apple', category: 'fruit', price: 0.5, stock: 20 },
@@ -20,13 +22,26 @@ const products = (): Product[] => [
 /** Attribute mutations by name, from a list of MutationRecords. */
 async function record(fn: () => Promise<unknown>) {
   const records: MutationRecord[] = []
-  const obs = new MutationObserver(r => records.push(...r))
-  obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true })
+  const obs = new MutationObserver((r) => records.push(...r))
+  obs.observe(document.body, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+  })
   const t = await touches(fn)
   records.push(...obs.takeRecords())
   obs.disconnect()
-  const attrs = records.filter(r => r.type === 'attributes').map(r => r.attributeName)
-  return { mutations: t.mutations, added: t.added, removed: t.removed, text: t.text, attributes: t.attributes, runs: t.runs, attrs }
+  const attrs = records.filter((r) => r.type === 'attributes').map((r) => r.attributeName)
+  return {
+    mutations: t.mutations,
+    added: t.added,
+    removed: t.removed,
+    text: t.text,
+    attributes: t.attributes,
+    runs: t.runs,
+    attrs,
+  }
 }
 
 test('markup snapshots for counting (catalogue, then cart with a moved price)', async () => {
@@ -46,7 +61,7 @@ test('stock change (in → low): the axis is one attribute write', async () => {
   const r = await record(() => user.click(screen.getByRole('button', { name: 'Add Banana' })))
   out.stockChange = r
   expect(within(row).getByText('Only 3 left')).toBeTruthy()
-  const axis = r.attrs.filter(a => a !== 'disabled')
+  const axis = r.attrs.filter((a) => a !== 'disabled')
   expect(axis.length).toBeLessThanOrEqual(1)
 })
 

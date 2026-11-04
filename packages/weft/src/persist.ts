@@ -9,10 +9,25 @@
 // A server renders `init` for local and session, so while hydrating those boxes stay at `init` and take the stored
 // value once hydration ends; reading one in a server render is S013. A cookie is the same on both sides.
 
-import { DEV, createRoot, onMount, rt, type Box, type StandardSchema, type StateOptions } from './index'
+import {
+  DEV,
+  createRoot,
+  onMount,
+  rt,
+  type Box,
+  type StandardSchema,
+  type StateOptions,
+} from './index'
 import { keys } from './keys'
 import { memoryStorage } from './memory'
-import { StateError, features, report, unserializable, type Instance, type StorageLike } from './scope'
+import {
+  StateError,
+  features,
+  report,
+  unserializable,
+  type Instance,
+  type StorageLike,
+} from './scope'
 
 type Options = Exclude<Exclude<StateOptions<unknown>['persist'], undefined>, string>
 type Envelope = { v: number; at: number; data: unknown }
@@ -35,11 +50,16 @@ function cookies(inst: Instance, maxAge = YEAR): StorageLike {
   return {
     getItem(key) {
       const name = cookieName(key)
-      const raw = jar ? jar.get(name) : document.cookie.split('; ').find(c => c.startsWith(`${name}=`))?.slice(name.length + 1)
+      const raw = jar
+        ? jar.get(name)
+        : document.cookie
+            .split('; ')
+            .find((c) => c.startsWith(`${name}=`))
+            ?.slice(name.length + 1)
       return raw === undefined ? null : decodeURIComponent(raw)
     },
     setItem: (key, value) => write(key, encodeURIComponent(value), maxAge),
-    removeItem: key => write(key, '', 0),
+    removeItem: (key) => write(key, '', 0),
   }
 }
 
@@ -61,19 +81,32 @@ function options(scope: string, name: string, box: Box<unknown>): Options {
   const o: Options = typeof p === 'string' ? { in: p } : p
   if (DEV) {
     if (o.in !== 'local' && o.in !== 'session' && o.in !== 'cookie' && o.in !== 'memory')
-      throw new StateError('S008', `\`${scope}.${name}\` persists to '${o.in as string}', which weft doesn't have yet`, "use 'local', 'session', 'cookie' or 'memory'")
+      throw new StateError(
+        'S008',
+        `\`${scope}.${name}\` persists to '${o.in as string}', which weft doesn't have yet`,
+        "use 'local', 'session', 'cookie' or 'memory'",
+      )
     if (object && !o.schema)
-      throw new StateError('S008', `\`${scope}.${name}\` persists an object or array without a schema`, `persist: { in: '${o.in}', schema: z.…(), version: 1 }`)
+      throw new StateError(
+        'S008',
+        `\`${scope}.${name}\` persists an object or array without a schema`,
+        `persist: { in: '${o.in}', schema: z.…(), version: 1 }`,
+      )
     if (o.migrate && o.version === undefined)
-      throw new StateError('S003', `\`${scope}.${name}\` has migrations but no version`, 'add `version` (the current schema version)')
+      throw new StateError(
+        'S003',
+        `\`${scope}.${name}\` has migrations but no version`,
+        'add `version` (the current schema version)',
+      )
   }
   return o
 }
 
 function validate<T>(schema: StandardSchema<T>, value: unknown): { value: T } | string {
   const r = schema['~standard'].validate(value)
-  if (r instanceof Promise) return 'the schema validates asynchronously; local and session read synchronously'
-  return r.issues ? r.issues.map(i => i.message).join('; ') : { value: r.value }
+  if (r instanceof Promise)
+    return 'the schema validates asynchronously; local and session read synchronously'
+  return r.issues ? r.issues.map((i) => i.message).join('; ') : { value: r.value }
 }
 
 function load(inst: Instance, box: Box<unknown>, name: string) {
@@ -81,16 +114,31 @@ function load(inst: Instance, box: Box<unknown>, name: string) {
   const store = backend(inst, opts.in, opts.maxAge)
   const key = `weft:${inst.app.name}:${inst.name}.${name}`
   slots.set(box, { store, key, opts })
-  if (DEV && rt.server && (opts.in === 'local' || opts.in === 'session')) readsOnServer(box, `${inst.name}.${name}`, opts.in)
+  if (DEV && rt.server && (opts.in === 'local' || opts.in === 'session'))
+    readsOnServer(box, `${inst.name}.${name}`, opts.in)
   let raw: string | null = null
-  try { raw = store.getItem(key) } catch {}
+  try {
+    raw = store.getItem(key)
+  } catch {}
   if (raw === null) return
   const corrupt = (why: string) => {
-    try { store.setItem(`${key}:corrupt`, raw); store.removeItem(key) } catch {}
-    if (DEV) report('S003', `the stored \`${inst.name}.${name}\` couldn't be read (${why}); using its initial value`, 'bump `version` and add `migrate[n]` when the schema changes')
+    try {
+      store.setItem(`${key}:corrupt`, raw)
+      store.removeItem(key)
+    } catch {}
+    if (DEV)
+      report(
+        'S003',
+        `the stored \`${inst.name}.${name}\` couldn't be read (${why}); using its initial value`,
+        'bump `version` and add `migrate[n]` when the schema changes',
+      )
   }
   let env: Envelope
-  try { env = JSON.parse(raw) } catch { return corrupt('not JSON') }
+  try {
+    env = JSON.parse(raw)
+  } catch {
+    return corrupt('not JSON')
+  }
   if (!env || typeof env.v !== 'number') return corrupt('no version envelope')
   const version = opts.version ?? 1
   if (env.v > version) return corrupt(`stored v${env.v} is newer than v${version}`)
@@ -98,7 +146,11 @@ function load(inst: Instance, box: Box<unknown>, name: string) {
   for (let v = env.v; v < version; v++) {
     const step = opts.migrate?.[v]
     if (!step) return corrupt(`stored v${env.v}, current v${version}, no migrate[${v}]`)
-    try { data = step(data as never) } catch (e) { return corrupt(`migrate[${v}] threw: ${(e as Error).message}`) }
+    try {
+      data = step(data as never)
+    } catch (e) {
+      return corrupt(`migrate[${v}] threw: ${(e as Error).message}`)
+    }
   }
   if (opts.schema) {
     const r = validate(opts.schema, data)
@@ -107,12 +159,16 @@ function load(inst: Instance, box: Box<unknown>, name: string) {
   } else if (typeof data !== typeof box.v) return corrupt(`expected a ${typeof box.v}`)
   // The server rendered `init` for these. Storage already holds the value, so the late write skips the write hook.
   if (keys.hydrating && opts.in !== 'cookie')
-    createRoot(() => onMount(() => {
-      const hook = box.h
-      box.h = undefined
-      box.w(data)
-      box.h = hook
-    }), null)
+    createRoot(
+      () =>
+        onMount(() => {
+          const hook = box.h
+          box.h = undefined
+          box.w(data)
+          box.h = hook
+        }),
+      null,
+    )
   else box.v = data
 }
 
@@ -124,26 +180,59 @@ function readsOnServer(box: Box<unknown>, name: string, where: string) {
     get() {
       if (rt.server && !told) {
         told = true
-        report('S013', `\`${name}\` persists to '${where}', which a server can't read: the page shows its initial value, then flashes to the stored one`, "`persist: { in: 'cookie' }` if it's small, or render it client-only")
+        report(
+          'S013',
+          `\`${name}\` persists to '${where}', which a server can't read: the page shows its initial value, then flashes to the stored one`,
+          "`persist: { in: 'cookie' }` if it's small, or render it client-only",
+        )
       }
       return value.get!.call(box)
     },
-    set(v) { value.set!.call(box, v) },
+    set(v) {
+      value.set!.call(box, v)
+    },
   })
 }
 
 /** Dev-only S008: the bytes this app's cookies take; a browser drops a cookie over 4 KB without a word. */
 const COOKIE_BUDGET = 3072
-const cookieBytes = () => document.cookie.split('; ').filter(c => c.startsWith('weft.')).reduce((n, c) => n + c.length, 0)
+const cookieBytes = () =>
+  document.cookie
+    .split('; ')
+    .filter((c) => c.startsWith('weft.'))
+    .reduce((n, c) => n + c.length, 0)
 
 function flush() {
   for (const box of pending) {
     const { store, key, opts } = slots.get(box)!
     const bad = DEV && unserializable(box.v, box.n!)
-    if (bad) { report('S010', `\`${box.n}\` can't be persisted: ${bad}`, 'store plain data (ids, numbers, strings), or drop `persist`'); continue }
-    try { store.setItem(key, JSON.stringify({ v: opts.version ?? 1, at: Date.now(), data: box.v } satisfies Envelope)) }
-    catch (e) { if (DEV) report('S008', `writing \`${box.n}\` failed: ${(e as Error).message}`, 'the storage is full or blocked; persist less') }
-    if (DEV && opts.in === 'cookie' && cookieBytes() > COOKIE_BUDGET) report('S008', `this app's cookies take ${cookieBytes()} bytes, over the 3 KB budget`, "move the big box to `persist: 'local'`")
+    if (bad) {
+      report(
+        'S010',
+        `\`${box.n}\` can't be persisted: ${bad}`,
+        'store plain data (ids, numbers, strings), or drop `persist`',
+      )
+      continue
+    }
+    try {
+      store.setItem(
+        key,
+        JSON.stringify({ v: opts.version ?? 1, at: Date.now(), data: box.v } satisfies Envelope),
+      )
+    } catch (e) {
+      if (DEV)
+        report(
+          'S008',
+          `writing \`${box.n}\` failed: ${(e as Error).message}`,
+          'the storage is full or blocked; persist less',
+        )
+    }
+    if (DEV && opts.in === 'cookie' && cookieBytes() > COOKIE_BUDGET)
+      report(
+        'S008',
+        `this app's cookies take ${cookieBytes()} bytes, over the 3 KB budget`,
+        "move the big box to `persist: 'local'`",
+      )
   }
   pending.clear()
 }

@@ -13,8 +13,17 @@ export function AppearanceGate() {
     box!.querySelector('button')!.click()
   }
   return (
-    <span data-site="gate" ref={n => (box = n)}>
-      <Button emphasis="ghost" tone="neutral" size="sm" icon="palette" label="Appearance" onClick={open} onPointerEnter={fetchMenu} onFocus={fetchMenu} />
+    <span data-site="gate" ref={(n) => (box = n)}>
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        size="sm"
+        icon="palette"
+        label="Appearance"
+        onClick={open}
+        onPointerEnter={fetchMenu}
+        onFocus={fetchMenu}
+      />
     </span>
   )
 }

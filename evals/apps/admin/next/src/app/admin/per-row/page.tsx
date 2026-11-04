@@ -15,12 +15,18 @@ async function Row({ order }: { order: Ref }) {
   const customer = await loadCustomer(order.customerId)
   return (
     <tr className={tableRow}>
-      <td className={bodyCell}><OrderLink id={order.id} /></td>
+      <td className={bodyCell}>
+        <OrderLink id={order.id} />
+      </td>
       <td className={bodyCell}>{customer.name}</td>
       <td className={`${bodyCell} text-muted`}>{customer.city}</td>
-      <td className={bodyCell}><StatusBadge status={order.status} /></td>
+      <td className={bodyCell}>
+        <StatusBadge status={order.status} />
+      </td>
       <td className={`${bodyCell} text-right tabular-nums`}>{money(order.totalCents)}</td>
-      <td className={`${bodyCell} whitespace-nowrap text-muted tabular-nums`}>{date(order.createdAt)}</td>
+      <td className={`${bodyCell} whitespace-nowrap text-muted tabular-nums`}>
+        {date(order.createdAt)}
+      </td>
     </tr>
   )
 }
@@ -33,12 +39,24 @@ async function Rows() {
       <table className="w-full min-w-[42rem] border-collapse">
         <thead className="bg-tint">
           <tr className="border-b border-line">
-            {['Order', 'Customer', 'City', 'Status'].map(h => <th key={h} scope="col" className={headCell}>{h}</th>)}
-            <th scope="col" className={`${headCell} text-right`}>Total</th>
-            <th scope="col" className={headCell}>Date</th>
+            {['Order', 'Customer', 'City', 'Status'].map((h) => (
+              <th key={h} scope="col" className={headCell}>
+                {h}
+              </th>
+            ))}
+            <th scope="col" className={`${headCell} text-right`}>
+              Total
+            </th>
+            <th scope="col" className={headCell}>
+              Date
+            </th>
           </tr>
         </thead>
-        <tbody>{orders.map(order => <Row key={order.id} order={order} />)}</tbody>
+        <tbody>
+          {orders.map((order) => (
+            <Row key={order.id} order={order} />
+          ))}
+        </tbody>
       </table>
     </div>
   )
@@ -48,7 +66,9 @@ export default function PerRow() {
   return (
     <div className="flex flex-col gap-5">
       <PageTitle note="The last 50 orders, each with who placed it.">Order feed</PageTitle>
-      <Suspense fallback={<TableSkeleton rows={24} />}><Rows /></Suspense>
+      <Suspense fallback={<TableSkeleton rows={24} />}>
+        <Rows />
+      </Suspense>
     </div>
   )
 }

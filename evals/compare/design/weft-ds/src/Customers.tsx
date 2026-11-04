@@ -27,7 +27,9 @@ export function Customers() {
   const pending = state<Customer | null>(null)
   const confirming = state(false)
 
-  const shown = derived(() => rows.value.filter(c => c.name.toLowerCase().includes(query.value.trim().toLowerCase())))
+  const shown = derived(() =>
+    rows.value.filter((c) => c.name.toLowerCase().includes(query.value.trim().toLowerCase())),
+  )
 
   const ask = (c: Customer) => {
     pending.value = c
@@ -35,34 +37,61 @@ export function Customers() {
   }
   const remove = () => {
     const gone = pending.value
-    if (gone) rows.value = rows.value.filter(c => c.id !== gone.id)
+    if (gone) rows.value = rows.value.filter((c) => c.id !== gone.id)
     confirming.value = false
   }
 
   return (
     <Stack gap="group">
       <Stack gap="related">
-        <Heading level={1} role="title">Customers</Heading>
+        <Heading level={1} role="title">
+          Customers
+        </Heading>
         <Text subtle>Everyone on a Northwind plan, and where their account stands.</Text>
       </Stack>
-      <Search label="Search" value={query.value} onInput={(e: any) => (query.value = e.currentTarget.value)} />
-      {shown.value.length > 0
-        ? (
-          <Table
-            caption="Customers"
-            captionHidden
-            picker={false}
-            rows={shown}
-            columns={[
-              { id: 'name', header: 'Name', rowHeader: true },
-              { id: 'email', header: 'Email', priority: 2 },
-              { id: 'plan', header: 'Plan' },
-              { id: 'status', header: 'Status', cell: (c: Customer) => <Badge tone={tones[c.status]} dot>{c.status}</Badge> },
-              { id: 'actions', header: 'Actions', cell: (c: Customer) => <Button emphasis="ghost" tone="critical" size="sm" onClick={() => ask(c)}>{`Delete ${c.name}`}</Button> },
-            ]}
-          />
-        )
-        : <Text role="heading" subtle>No customers found</Text>}
+      <Search
+        label="Search"
+        value={query.value}
+        onInput={(e: any) => (query.value = e.currentTarget.value)}
+      />
+      {shown.value.length > 0 ? (
+        <Table
+          caption="Customers"
+          captionHidden
+          picker={false}
+          rows={shown}
+          columns={[
+            { id: 'name', header: 'Name', rowHeader: true },
+            { id: 'email', header: 'Email', priority: 2 },
+            { id: 'plan', header: 'Plan' },
+            {
+              id: 'status',
+              header: 'Status',
+              cell: (c: Customer) => (
+                <Badge tone={tones[c.status]} dot>
+                  {c.status}
+                </Badge>
+              ),
+            },
+            {
+              id: 'actions',
+              header: 'Actions',
+              cell: (c: Customer) => (
+                <Button
+                  emphasis="ghost"
+                  tone="critical"
+                  size="sm"
+                  onClick={() => ask(c)}
+                >{`Delete ${c.name}`}</Button>
+              ),
+            },
+          ]}
+        />
+      ) : (
+        <Text role="heading" subtle>
+          No customers found
+        </Text>
+      )}
       <Modal
         open={confirming}
         alert
@@ -71,8 +100,17 @@ export function Customers() {
         description={`${pending.value?.name ?? 'This customer'} will be removed from Northwind. This can't be undone.`}
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" autofocus onClick={() => (confirming.value = false)}>Keep</Button>
-            <Button tone="critical" onClick={remove}>Delete</Button>
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              autofocus
+              onClick={() => (confirming.value = false)}
+            >
+              Keep
+            </Button>
+            <Button tone="critical" onClick={remove}>
+              Delete
+            </Button>
           </>
         }
       >

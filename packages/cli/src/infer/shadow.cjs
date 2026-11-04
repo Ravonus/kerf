@@ -6,7 +6,8 @@ function shadow(text, edits) {
   const sorted = [...edits].sort((a, b) => a.start - b.start)
   const parts = []
   const segments = [] // { src, out, len }: runs that are unchanged
-  let at = 0, out = 0
+  let at = 0,
+    out = 0
   for (const e of sorted) {
     const len = e.start - at
     segments.push({ src: at, out, len })
@@ -20,7 +21,8 @@ function shadow(text, edits) {
 }
 
 function find(segments, pos, key) {
-  let lo = 0, hi = segments.length - 1
+  let lo = 0,
+    hi = segments.length - 1
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1
     if (segments[mid][key] <= pos) lo = mid
@@ -30,10 +32,16 @@ function find(segments, pos, key) {
 }
 
 /** Source position to shadow position. */
-const toShadow = (map, pos) => { const s = find(map.segments, pos, 'src'); return s.out + Math.min(pos - s.src, s.len) }
+const toShadow = (map, pos) => {
+  const s = find(map.segments, pos, 'src')
+  return s.out + Math.min(pos - s.src, s.len)
+}
 
 /** Shadow position to source position. A position inside generated text lands where that text was inserted. */
-const toSource = (map, pos) => { const s = find(map.segments, pos, 'out'); return s.src + Math.min(pos - s.out, s.len) }
+const toSource = (map, pos) => {
+  const s = find(map.segments, pos, 'out')
+  return s.src + Math.min(pos - s.out, s.len)
+}
 
 /** Whether a shadow span is inside text the source doesn't have. */
 const inGenerated = (map, start, length) => {
@@ -41,6 +49,6 @@ const inGenerated = (map, start, length) => {
   return start >= s.out + s.len && length >= 0
 }
 
-const identity = text => ({ text, segments: [{ src: 0, out: 0, len: text.length }], edits: [] })
+const identity = (text) => ({ text, segments: [{ src: 0, out: 0, len: text.length }], edits: [] })
 
 module.exports = { shadow, toShadow, toSource, inGenerated, identity }

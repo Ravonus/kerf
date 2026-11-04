@@ -21,7 +21,9 @@ export default function Quote() {
     <Card title="Text that holds its place">
       {/* While there's no text, `reserve` keeps about 60 characters of room, so the button below doesn't jump. */}
       <Text reserve={60}>{quote.value}</Text>
-      <Button size="sm" onClick={load}>Load a quote</Button>
+      <Button size="sm" onClick={load}>
+        Load a quote
+      </Button>
     </Card>
   )
 }

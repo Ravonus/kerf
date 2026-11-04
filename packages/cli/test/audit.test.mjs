@@ -9,7 +9,8 @@ import { appRoutes, audit, pagesIn, samplePages, serveStatic } from '../src/audi
 import { findChrome } from '../src/browser/client.mjs'
 import { unsafeAllowed } from '../src/start.mjs'
 
-const head = (title = 'A page', extra = '') => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><link rel="icon" href="data:,"><meta name="description" content="What the page is."><style>body{background:#fff;color:#111;font:16px sans-serif}${extra}</style></head>`
+const head = (title = 'A page', extra = '') =>
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><link rel="icon" href="data:,"><meta name="description" content="What the page is."><style>body{background:#fff;color:#111;font:16px sans-serif}${extra}</style></head>`
 const pages = {
   'index.html': `${head()}<body><main><h1>Fine</h1><p>Every word reads.</p><button type="button">Save</button></main></body></html>`,
   // the search button's bug: its only text hidden by CSS on a phone, so there it has no name
@@ -34,7 +35,9 @@ describe('which pages', () => {
   })
 
   it('samples one page of each kind: a section at each depth, every top-level page', () => {
-    expect(samplePages(['/', '/a', '/learn/x', '/learn/y', '/learn/x/deep', '/learn/z/deep', '/b'])).toEqual(['/', '/a', '/learn/x', '/learn/x/deep', '/b'])
+    expect(
+      samplePages(['/', '/a', '/learn/x', '/learn/y', '/learn/x/deep', '/learn/z/deep', '/b']),
+    ).toEqual(['/', '/a', '/learn/x', '/learn/x/deep', '/b'])
     expect(samplePages(['/a', '/b', '/c'], 2)).toEqual(['/a', '/b'])
   })
 
@@ -43,40 +46,68 @@ describe('which pages', () => {
     try {
       expect((await fetch(`${server.url}/faded`)).status).toBe(200)
       // fetch() resolves `..` away; a raw request keeps it, and gets the served folder's own index, not its parent's
-      const body = await new Promise(ok => { get(`${server.url}/../index.html`, { path: '/../index.html' }, res => { let b = ''; res.on('data', c => (b += c)).on('end', () => ok(b)) }) })
+      const body = await new Promise((ok) => {
+        get(`${server.url}/../index.html`, { path: '/../index.html' }, (res) => {
+          let b = ''
+          res.on('data', (c) => (b += c)).on('end', () => ok(b))
+        })
+      })
       expect(body).toMatch('<h1>Docs</h1>')
-    } finally { server.close() }
+    } finally {
+      server.close()
+    }
   })
 })
 
 describe('a build served as files', () => {
   it("knows the app's other pages are the server's to answer, not missing files", () => {
     const root = mkdtempSync(join(tmpdir(), 'weft-routes-'))
-    for (const f of ['index.tsx', 'about.tsx', 'docs/[slug].tsx', 'files/[...rest].tsx', '(app)/settings.tsx', 'notes.server.ts']) {
+    for (const f of [
+      'index.tsx',
+      'about.tsx',
+      'docs/[slug].tsx',
+      'files/[...rest].tsx',
+      '(app)/settings.tsx',
+      'notes.server.ts',
+    ]) {
       mkdirSync(join(root, 'src/routes', f, '..'), { recursive: true })
       writeFileSync(join(root, 'src/routes', f), '')
     }
     const served = appRoutes(root)
-    expect(['/', '/about', '/docs/a', '/files/a/b', '/files', '/settings'].filter(p => !served(p))).toEqual([])
+    expect(
+      ['/', '/about', '/docs/a', '/files/a/b', '/files', '/settings'].filter((p) => !served(p)),
+    ).toEqual([])
     expect(['/docs/a/b', '/notes', '/assets/x.js', '/about.x'].filter(served)).toEqual([])
     rmSync(root, { recursive: true, force: true })
   })
 })
 
 describe('--unsafe-allow', () => {
-  const d = code => ({ code, severity: 'error', why: 'x' })
+  const d = (code) => ({ code, severity: 'error', why: 'x' })
   it('lets named codes, a family or everything through, as warnings that say so', () => {
     const u = unsafeAllowed('R002,L', {})
-    expect([u.allows(d('R002')), u.allows(d('L003')), u.allows(d('R003')), u.allows(d('W001'))]).toEqual([true, true, false, false])
-    expect(u.let(d('R002'))).toMatchObject({ severity: 'warning', why: 'UNSAFE, let through (--unsafe-allow): x' })
-    expect(unsafeAllowed(undefined, { build: { unsafeAllow: { all: 'demo deploy' } } }).let(d('Q001')).why).toBe('UNSAFE, let through (demo deploy): x')
+    expect([
+      u.allows(d('R002')),
+      u.allows(d('L003')),
+      u.allows(d('R003')),
+      u.allows(d('W001')),
+    ]).toEqual([true, true, false, false])
+    expect(u.let(d('R002'))).toMatchObject({
+      severity: 'warning',
+      why: 'UNSAFE, let through (--unsafe-allow): x',
+    })
+    expect(
+      unsafeAllowed(undefined, { build: { unsafeAllow: { all: 'demo deploy' } } }).let(d('Q001'))
+        .why,
+    ).toBe('UNSAFE, let through (demo deploy): x')
     expect(unsafeAllowed(undefined, {}).allows(d('R002'))).toBe(false)
   })
 })
 
 const chrome = findChrome()
 
-describe.skipIf(!chrome)('the rendered pages, in Chrome', () => { // skipped without Chrome: CI machines and containers may not have it
+describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
+  // skipped without Chrome: CI machines and containers may not have it
   let root
   let result
   beforeAll(async () => {
@@ -88,7 +119,7 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => { // skipped wit
     result = await audit(root)
   }, 120_000)
   afterAll(() => rmSync(root, { recursive: true, force: true }))
-  const of = code => result.diagnostics.filter(d => d.code === code)
+  const of = (code) => result.diagnostics.filter((d) => d.code === code)
 
   it('says when a page names no icon: the browser asks for /favicon.ico and logs the 404', () => {
     // asked by the audit, not left to Chrome's lazy request: every page that names none, at both widths
@@ -119,7 +150,7 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => { // skipped wit
   })
 
   it('leaves the good page alone, and gives each finding the fix from the catalog', () => {
-    expect(result.diagnostics.filter(d => d.file === '/')).toEqual([])
+    expect(result.diagnostics.filter((d) => d.file === '/')).toEqual([])
     for (const d of result.diagnostics) expect(d.fix.text).not.toBe('')
   })
 })

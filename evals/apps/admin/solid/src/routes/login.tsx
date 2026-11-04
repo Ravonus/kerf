@@ -1,18 +1,18 @@
-import { Title } from "@solidjs/meta";
-import { createAsync, Navigate, useSubmission, type RouteDefinition } from "@solidjs/router";
-import { Show } from "solid-js";
+import { Title } from '@solidjs/meta'
+import { createAsync, Navigate, useSubmission, type RouteDefinition } from '@solidjs/router'
+import { Show } from 'solid-js'
 
-import { field, primary } from "~/components/button";
-import { Logo } from "~/components/logo";
-import { getViewer, signInAction } from "~/lib/data";
+import { field, primary } from '~/components/button'
+import { Logo } from '~/components/logo'
+import { getViewer, signInAction } from '~/lib/data'
 
-export const route = { preload: () => getViewer() } satisfies RouteDefinition;
+export const route = { preload: () => getViewer() } satisfies RouteDefinition
 
 export default function Login() {
   // Deferred so a signed-in visitor gets a redirect, not a flash of the form.
-  const viewer = createAsync(() => getViewer(), { deferStream: true });
-  const submission = useSubmission(signInAction);
-  const error = () => submission.result?.error;
+  const viewer = createAsync(() => getViewer(), { deferStream: true })
+  const submission = useSubmission(signInAction)
+  const error = () => submission.result?.error
 
   return (
     <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
@@ -34,7 +34,14 @@ export default function Login() {
           <label for="password" class="mb-1.5 block text-sm font-medium">
             Password
           </label>
-          <input id="password" name="password" type="password" required autocomplete="current-password" class={field} />
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autocomplete="current-password"
+            class={field}
+          />
         </div>
         <button type="submit" class={`${primary} mt-2 h-11 w-full`} disabled={submission.pending}>
           Sign in
@@ -44,5 +51,5 @@ export default function Login() {
         </p>
       </form>
     </main>
-  );
+  )
 }

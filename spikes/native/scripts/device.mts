@@ -32,15 +32,22 @@ function socket(port: number): Promise<{ send: Send; close(): void }> {
     let buf = ''
     const waiting: ((r: Reply) => void)[] = []
     s.setEncoding('utf8')
-    s.on('data', d => {
+    s.on('data', (d) => {
       buf += d
-      for (let i; (i = buf.indexOf('\n')) >= 0; buf = buf.slice(i + 1)) waiting.shift()?.(JSON.parse(buf.slice(0, i)))
+      for (let i; (i = buf.indexOf('\n')) >= 0; buf = buf.slice(i + 1))
+        waiting.shift()?.(JSON.parse(buf.slice(0, i)))
     })
     s.once('error', reject)
-    s.once('connect', () => resolve({
-      send: req => new Promise(r => { waiting.push(r); s.write(JSON.stringify(req) + '\n') }),
-      close: () => s.end(),
-    }))
+    s.once('connect', () =>
+      resolve({
+        send: (req) =>
+          new Promise((r) => {
+            waiting.push(r)
+            s.write(JSON.stringify(req) + '\n')
+          }),
+        close: () => s.end(),
+      }),
+    )
   })
 }
 
@@ -50,13 +57,22 @@ async function probe(port: number) {
     const hello = await c.send({ cmd: 'hello' })
     c.close()
     return hello.ok ? (hello as unknown as { os: string; device: string }) : null
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
 function androidSerials(): string[] {
   try {
-    return execFileSync(adb, ['devices'], { encoding: 'utf8' }).split('\n').slice(1).map(l => l.split('\t')).filter(c => c[1] === 'device').map(c => c[0])
-  } catch { return [] }
+    return execFileSync(adb, ['devices'], { encoding: 'utf8' })
+      .split('\n')
+      .slice(1)
+      .map((l) => l.split('\t'))
+      .filter((c) => c[1] === 'device')
+      .map((c) => c[0])
+  } catch {
+    return []
+  }
 }
 
 /** Forwards a Mac port to the app's dev socket on that device: 9401 for the first device, 9402 for the next... */
@@ -69,8 +85,11 @@ function forward(serial: string, index: number): number {
 async function open(target: string): Promise<{ send: Send; close(): void }> {
   const [kind, arg] = target.split(':')
   if (kind === 'ios') {
-    for (const p of arg ? [Number(arg)] : Array.from({ length: 10 }, (_, i) => 9301 + i)) if ((await probe(p))?.os === 'ios') return socket(p)
-    throw new Error('no iOS app answering on 127.0.0.1:9301-9310 (is a Debug build running in a simulator?)')
+    for (const p of arg ? [Number(arg)] : Array.from({ length: 10 }, (_, i) => 9301 + i))
+      if ((await probe(p))?.os === 'ios') return socket(p)
+    throw new Error(
+      'no iOS app answering on 127.0.0.1:9301-9310 (is a Debug build running in a simulator?)',
+    )
   }
   if (kind === 'android') {
     const serials = androidSerials()
@@ -79,17 +98,25 @@ async function open(target: string): Promise<{ send: Send; close(): void }> {
     return socket(forward(serial, Math.max(0, serials.indexOf(serial))))
   }
   if (kind === 'node') {
-    const d = (devices.devices as { id: string; os: string; w: number; h: number; hinge?: Rect }[]).find(x => x.id === arg)
-    if (!d) throw new Error(`node:<id> takes a device from protocol/devices.json: ${devices.devices.map(x => x.id).join(', ')}`)
+    const d = (
+      devices.devices as { id: string; os: string; w: number; h: number; hinge?: Rect }[]
+    ).find((x) => x.id === arg)
+    if (!d)
+      throw new Error(
+        `node:<id> takes a device from protocol/devices.json: ${devices.devices.map((x) => x.id).join(', ')}`,
+      )
     configure({ os: d.os as OS })
     const host = new RecordingHost(d.w, d.h)
     host.resize(d.w, d.h, d.hinge)
     const seed = seedProducts(150)
-    const api: Api = { listProducts: () => Promise.resolve(structuredClone(seed)), subscribePrices: () => () => {} }
+    const api: Api = {
+      listProducts: () => Promise.resolve(structuredClone(seed)),
+      subscribePrices: () => () => {},
+    }
     mount(host, () => App({ api }))
     for (let i = 0; i < 4; i++) await Promise.resolve()
     flush()
-    return { send: req => host.dev(req), close() {} }
+    return { send: (req) => host.dev(req), close() {} }
   }
   throw new Error(`unknown target "${target}": ios, android, node:<device id>`)
 }
@@ -106,30 +133,53 @@ async function translate(send: Send, req: Request, error: string): Promise<Reque
   const snap = await send({ cmd: 'snapshot' })
   if (!snap.ok) return null
   const nodes: SnapNode[] = []
-  const walk = (n: SnapNode) => { nodes.push(n); n.children?.forEach(walk) }
+  const walk = (n: SnapNode) => {
+    nodes.push(n)
+    n.children?.forEach(walk)
+  }
   walk((snap as unknown as Snapshot).root)
   if (req.cmd === 'tap' && error.startsWith('no node')) {
-    const seg = nodes.find(n => n.type === 'Choice' && n.options?.includes(req.label!))
+    const seg = nodes.find((n) => n.type === 'Choice' && n.options?.includes(req.label!))
     if (seg) return { cmd: 'select', id: seg.id, index: seg.options!.indexOf(req.label!) }
   }
   if (req.cmd === 'select' && error.startsWith("can't")) {
-    const row = nodes.find(n => n.label === req.label && n.type === 'Row')
-    const chip = row?.children?.filter(c => c.type === 'Button')[req.index]
+    const row = nodes.find((n) => n.label === req.label && n.type === 'Row')
+    const chip = row?.children?.filter((c) => c.type === 'Button')[req.index]
     if (chip) return { cmd: 'tap', id: chip.id }
   }
   return null
 }
 
 async function run(send: Send, [cmd, ...args]: string[]): Promise<boolean> {
-  const fail = (r: Reply) => { console.error(`✗ ${cmd}: ${r.ok ? '' : r.error}`); return false }
+  const fail = (r: Reply) => {
+    console.error(`✗ ${cmd}: ${r.ok ? '' : r.error}`)
+    return false
+  }
   switch (cmd) {
-    case 'hello': case 'viewport': { const r = await send({ cmd }); console.log(JSON.stringify(r)); return r.ok }
-    case 'snapshot': case 'find': {
+    case 'hello':
+    case 'viewport': {
+      const r = await send({ cmd })
+      console.log(JSON.stringify(r))
+      return r.ok
+    }
+    case 'snapshot':
+    case 'find': {
       const r = await send({ cmd: 'snapshot' })
       if (!r.ok) return fail(r)
-      if (args.includes('--json')) { console.log(JSON.stringify(r, null, 2)); return true }
+      if (args.includes('--json')) {
+        console.log(JSON.stringify(r, null, 2))
+        return true
+      }
       const text = render(r as unknown as Snapshot, args.includes('--all') || cmd === 'find')
-      console.log(cmd === 'find' ? text.split('\n').filter(l => l.includes(args[0] ?? '')).map(l => l.trim()).join('\n') : text)
+      console.log(
+        cmd === 'find'
+          ? text
+              .split('\n')
+              .filter((l) => l.includes(args[0] ?? ''))
+              .map((l) => l.trim())
+              .join('\n')
+          : text,
+      )
       return true
     }
     case 'frames': {
@@ -139,14 +189,28 @@ async function run(send: Send, [cmd, ...args]: string[]): Promise<boolean> {
       console.log(`wrote ${args[0] ?? 'frames.json'}`)
       return true
     }
-    case 'tap': case 'type': case 'select': {
-      if (!args[0]) { console.error(`✗ ${cmd} needs a label or #id`); return false }
-      const req = (cmd === 'tap' ? { cmd, ...ref(args[0]) } : cmd === 'type' ? { cmd, ...ref(args[0]), text: args[1] ?? '' } : { cmd, ...ref(args[0]), index: Number(args[1]) }) as Request
+    case 'tap':
+    case 'type':
+    case 'select': {
+      if (!args[0]) {
+        console.error(`✗ ${cmd} needs a label or #id`)
+        return false
+      }
+      const req = (
+        cmd === 'tap'
+          ? { cmd, ...ref(args[0]) }
+          : cmd === 'type'
+            ? { cmd, ...ref(args[0]), text: args[1] ?? '' }
+            : { cmd, ...ref(args[0]), index: Number(args[1]) }
+      ) as Request
       let r = await send(req)
       let via = ''
       if (!r.ok) {
         const alt = await translate(send, req, r.error)
-        if (alt) { r = await send(alt); via = ` (as ${alt.cmd}: this platform draws "${args[0]}" ${alt.cmd === 'select' ? 'as a segment' : 'as chips'})` }
+        if (alt) {
+          r = await send(alt)
+          via = ` (as ${alt.cmd}: this platform draws "${args[0]}" ${alt.cmd === 'select' ? 'as a segment' : 'as chips'})`
+        }
       }
       if (!r.ok) return fail(r)
       console.log(`✓ ${cmd} #${r.id}${r.visible ? '' : ' (offscreen)'}${via}`)
@@ -159,7 +223,10 @@ async function run(send: Send, [cmd, ...args]: string[]): Promise<boolean> {
 
 const argv = process.argv.slice(2)
 if (argv[0] === 'list' || !argv.length) {
-  for (let p = 9301; p <= 9310; p++) { const h = await probe(p); if (h) console.log(`ios:${p}\t${h.device}`) }
+  for (let p = 9301; p <= 9310; p++) {
+    const h = await probe(p)
+    if (h) console.log(`ios:${p}\t${h.device}`)
+  }
   const serials = androidSerials()
   for (const [i, s] of serials.entries()) {
     const h = await probe(forward(s, i))

@@ -12,7 +12,14 @@ describe('weft check on evals/reference-v3/weft', () => {
   it('compiles every component and finds nothing in the reference', async () => {
     const r = await check(fixture)
     expect(r.ok).toBe(true)
-    expect(r.files).toEqual(['src/App.tsx', 'src/components/CartView.tsx', 'src/components/Header.tsx', 'src/components/ProductList.tsx', 'src/components/ProductRow.tsx', 'src/main.tsx'])
+    expect(r.files).toEqual([
+      'src/App.tsx',
+      'src/components/CartView.tsx',
+      'src/components/Header.tsx',
+      'src/components/ProductList.tsx',
+      'src/components/ProductRow.tsx',
+      'src/main.tsx',
+    ])
     expect(r.diagnostics).toEqual([])
     expect(r.config).toBeNull()
     expect(r.weft.version).toBe('0.1.1')
@@ -37,17 +44,29 @@ describe('weft check on evals/reference-v3/weft', () => {
 
 describe('project view: cross-file W014', () => {
   it('follows the #/ alias like a relative import', async () => {
-    const aliased = app.replace(...spreadBug).replaceAll("from './components/", "from '#/components/")
+    const aliased = app
+      .replace(...spreadBug)
+      .replaceAll("from './components/", "from '#/components/")
     expect(aliased).toContain('#/components/ProductList')
-    const r = await check(project({ 'src/App.tsx': aliased, 'tsconfig.json': JSON.stringify({ compilerOptions: { paths: { '#/*': ['./src/*'] } } }) }))
-    expect(r.diagnostics.map(d => [d.code, d.severity, d.project])).toEqual([['W014', 'error', true]])
+    const r = await check(
+      project({
+        'src/App.tsx': aliased,
+        'tsconfig.json': JSON.stringify({ compilerOptions: { paths: { '#/*': ['./src/*'] } } }),
+      }),
+    )
+    expect(r.diagnostics.map((d) => [d.code, d.severity, d.project])).toEqual([
+      ['W014', 'error', true],
+    ])
   })
 
   it('follows whatever alias the app declares', async () => {
     const aliased = app.replace(...spreadBug).replaceAll("from './components/", "from '@/ui/")
-    const tsconfig = '// the app\'s own\n{ "compilerOptions": { "paths": { "@/ui/*": ["./src/components/*"] } } }\n'
+    const tsconfig =
+      '// the app\'s own\n{ "compilerOptions": { "paths": { "@/ui/*": ["./src/components/*"] } } }\n'
     const r = await check(project({ 'src/App.tsx': aliased, 'tsconfig.json': tsconfig }))
-    expect(r.diagnostics.map(d => [d.code, d.severity, d.project])).toEqual([['W014', 'error', true]])
+    expect(r.diagnostics.map((d) => [d.code, d.severity, d.project])).toEqual([
+      ['W014', 'error', true],
+    ])
   })
 
   it('promotes the spread habit to an error when the box reaches a keyed list in another file', async () => {
@@ -57,12 +76,18 @@ describe('project view: cross-file W014', () => {
     expect(r.ok).toBe(false)
     const [d] = r.diagnostics
     expect(r.diagnostics).toHaveLength(1)
-    expect(d).toMatchObject({ code: 'W014', severity: 'error', project: true, file: 'src/App.tsx', docs: 'weft docs W014' })
+    expect(d).toMatchObject({
+      code: 'W014',
+      severity: 'error',
+      project: true,
+      file: 'src/App.tsx',
+      docs: 'weft docs W014',
+    })
     const text = readFileSync(join(dir, 'src/App.tsx'), 'utf8')
     expect(text.slice(...d.offset)).toMatch(/^products\.value\.map\(p => \(\{ \.\.\.p/)
     expect(d.span.slice(0, 2)).toEqual([21, 44])
     expect(d.why).toContain('src/components/ProductList.tsx:29')
-    expect(d.related.map(x => [x.file, x.span[0], x.why])).toEqual([
+    expect(d.related.map((x) => [x.file, x.span[0], x.why])).toEqual([
       ['src/App.tsx', 43, 'passed as `<ProductList products>`'],
       ['src/components/ProductList.tsx', 29, 'rendered here as a keyed list'],
     ])
@@ -85,7 +110,9 @@ export function App() {
 `,
     })
     const r = await check(dir, { files: ['src/App.tsx', 'src/Count.tsx'] })
-    expect(r.diagnostics.map(d => [d.code, d.severity, d.project ?? false])).toEqual([['W014', 'warning', false]])
+    expect(r.diagnostics.map((d) => [d.code, d.severity, d.project ?? false])).toEqual([
+      ['W014', 'warning', false],
+    ])
   })
 
   it('follows props through derived and a second component', async () => {
@@ -120,7 +147,9 @@ export function Table({ items }: { items: { id: string; price: number }[] }) {
 
 describe('diagnostic shape', () => {
   it('converts byte offsets to UTF-16 lines and columns, with edits for autofixes', async () => {
-    const dir = project({ 'src/Badge.tsx': `import { state } from '@weft-js/core'\n// é ü 🎉\nexport function Badge() {\n  const n = state(0)\n  return <p title="é🎉">{n}</p>\n}\n` })
+    const dir = project({
+      'src/Badge.tsx': `import { state } from '@weft-js/core'\n// é ü 🎉\nexport function Badge() {\n  const n = state(0)\n  return <p title="é🎉">{n}</p>\n}\n`,
+    })
     const r = await check(dir, { files: ['src/Badge.tsx'] })
     const [d] = r.diagnostics
     const text = readFileSync(join(dir, 'src/Badge.tsx'), 'utf8')
@@ -134,34 +163,57 @@ describe('diagnostic shape', () => {
   })
 
   it('reports P002 for package.json scripts that are not weft aliases', async () => {
-    const dir = project({ 'package.json': JSON.stringify({ scripts: { dev: 'weft dev', seed: 'node seed.mjs' } }, null, 2) })
+    const dir = project({
+      'package.json': JSON.stringify(
+        { scripts: { dev: 'weft dev', seed: 'node seed.mjs' } },
+        null,
+        2,
+      ),
+    })
     const r = await check(dir)
-    expect(r.diagnostics.map(d => [d.code, d.file, d.span[0]])).toEqual([['P002', 'package.json', 4]])
+    expect(r.diagnostics.map((d) => [d.code, d.file, d.span[0]])).toEqual([
+      ['P002', 'package.json', 4],
+    ])
     expect(r.ok).toBe(true)
   })
 
-  it('reports R004 for a socket handler of the app\'s own', async () => {
-    const dir = project({ 'src/server/ws.ts': "import { defineWebSocketHandler } from 'nitro'\nexport default defineWebSocketHandler({})\n" })
+  it("reports R004 for a socket handler of the app's own", async () => {
+    const dir = project({
+      'src/server/ws.ts':
+        "import { defineWebSocketHandler } from 'nitro'\nexport default defineWebSocketHandler({})\n",
+    })
     const r = await check(dir)
-    expect(r.diagnostics.map(d => [d.code, d.file])).toEqual([['R004', 'src/server/ws.ts']])
+    expect(r.diagnostics.map((d) => [d.code, d.file])).toEqual([['R004', 'src/server/ws.ts']])
   })
 
   it('reports R007 for a socket library in dependencies, and nothing for one in devDependencies', async () => {
-    const dir = project({ 'package.json': JSON.stringify({ dependencies: { ws: '8.0.0' }, devDependencies: { 'socket.io-client': '4.0.0' } }, null, 2) })
+    const dir = project({
+      'package.json': JSON.stringify(
+        { dependencies: { ws: '8.0.0' }, devDependencies: { 'socket.io-client': '4.0.0' } },
+        null,
+        2,
+      ),
+    })
     const r = await check(dir)
-    expect(r.diagnostics.map(d => [d.code, d.file])).toEqual([['R007', 'package.json']])
+    expect(r.diagnostics.map((d) => [d.code, d.file])).toEqual([['R007', 'package.json']])
     expect(r.diagnostics[0].severity).toBe('warning')
   })
 
   it('reports P120 for a weft plugin wired straight into vite.config.ts', async () => {
-    const dir = project({ 'vite.config.ts': "import { text } from '@weft-js/text'\nexport default { plugins: [text().vite] }\n" })
+    const dir = project({
+      'vite.config.ts':
+        "import { text } from '@weft-js/text'\nexport default { plugins: [text().vite] }\n",
+    })
     const r = await check(dir)
-    expect(r.diagnostics.map(d => [d.code, d.file, d.span])).toEqual([['P120', 'vite.config.ts', [1, 23, 1, 36]]])
+    expect(r.diagnostics.map((d) => [d.code, d.file, d.span])).toEqual([
+      ['P120', 'vite.config.ts', [1, 23, 1, 36]],
+    ])
   })
 
   it('never compiles files under scope.forbid', async () => {
     const dir = project({
-      'weft.config.ts': "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ scope: { forbid: ['src/components/**'] } })\n",
+      'weft.config.ts':
+        "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ scope: { forbid: ['src/components/**'] } })\n",
     })
     const r = await check(dir)
     expect(r.files).toEqual(['src/App.tsx', 'src/main.tsx'])
@@ -180,8 +232,15 @@ export function Clock() {
 `
     const dir = project({ 'src/Clock.tsx': clock })
     const r = await check(dir)
-    expect(r.diagnostics.map(d => [d.code, d.severity, d.span[0]])).toEqual([['W051', 'error', 3], ['W054', 'warning', 6], ['W050', 'error', 7]])
-    const apply = d => d.fix.edits.toSorted((a, b) => b.offset[0] - a.offset[0]).reduce((t, e) => t.slice(0, e.offset[0]) + e.text + t.slice(e.offset[1]), clock)
+    expect(r.diagnostics.map((d) => [d.code, d.severity, d.span[0]])).toEqual([
+      ['W051', 'error', 3],
+      ['W054', 'warning', 6],
+      ['W050', 'error', 7],
+    ])
+    const apply = (d) =>
+      d.fix.edits
+        .toSorted((a, b) => b.offset[0] - a.offset[0])
+        .reduce((t, e) => t.slice(0, e.offset[0]) + e.text + t.slice(e.offset[1]), clock)
     const [w051, w054, w050] = r.diagnostics
     expect(w051.fix.edits).toBeUndefined()
     expect(apply(w054)).toContain("media('(prefers-color-scheme: dark)', { ssr: false })")
@@ -193,8 +252,11 @@ export function Clock() {
 })
 
 describe('Q015', () => {
-  const db = { 'drizzle.config.ts': 'export default {}\n', 'src/db/schema.ts': 'export const a = 1\n' }
-  const q015 = async dir => (await check(dir)).diagnostics.filter(d => d.code === 'Q015')
+  const db = {
+    'drizzle.config.ts': 'export default {}\n',
+    'src/db/schema.ts': 'export const a = 1\n',
+  }
+  const q015 = async (dir) => (await check(dir)).diagnostics.filter((d) => d.code === 'Q015')
 
   it('no migrations yet, then the schema drifting from the recorded hash', async () => {
     const dir = project(db)
@@ -213,43 +275,96 @@ describe('Q015', () => {
 
 describe('what a build reports to weft check', () => {
   const solver = readFileSync(new URL('../../weft/node/hydration.mjs', import.meta.url), 'utf8')
-  const codes = [...new Set([...solver.matchAll(/code: '(\w+)'/g)].map(m => m[1]))]
+  const codes = [...new Set([...solver.matchAll(/code: '(\w+)'/g)].map((m) => m[1]))]
 
   it('every code the solver writes has a catalog entry and leaves a build passing', async () => {
     expect(codes).toEqual(expect.arrayContaining(['H010', 'H017']))
     for (const code of codes) expect([code, entry(code)?.severity]).toEqual([code, 'info'])
     const root = project({})
     mkdirSync(join(root, '.weft'))
-    writeFileSync(join(root, '.weft/hydration.json'), JSON.stringify({ diagnostics: codes.map(code => ({ code, file: 'src/App.tsx', line: 1, why: 'why', fix: 'fix' })) }))
+    writeFileSync(
+      join(root, '.weft/hydration.json'),
+      JSON.stringify({
+        diagnostics: codes.map((code) => ({
+          code,
+          file: 'src/App.tsx',
+          line: 1,
+          why: 'why',
+          fix: 'fix',
+        })),
+      }),
+    )
     const r = await check(root)
-    expect(r.diagnostics.filter(d => codes.includes(d.code)).map(d => [d.code, d.severity])).toEqual(codes.map(c => [c, 'info']))
+    expect(
+      r.diagnostics.filter((d) => codes.includes(d.code)).map((d) => [d.code, d.severity]),
+    ).toEqual(codes.map((c) => [c, 'info']))
     expect(r.ok).toBe(true)
   })
 })
 
 describe('U001–U005: interaction() and ui', () => {
-  const page = body => `import { interaction } from '@weft-js/core/interaction'\nimport { Button, Tabs } from '@weft-js/warp'\nexport function A() {\n${body}\n}\n`
-  const codes = async files => (await check(project(files))).diagnostics.map(d => d.code).filter(c => c.startsWith('U'))
+  const page = (body) =>
+    `import { interaction } from '@weft-js/core/interaction'\nimport { Button, Tabs } from '@weft-js/warp'\nexport function A() {\n${body}\n}\n`
+  const codes = async (files) =>
+    (await check(project(files))).diagnostics.map((d) => d.code).filter((c) => c.startsWith('U'))
 
   it('a key that can never match', async () => {
-    expect(await codes({ 'src/A.tsx': page(`const row = interaction({ share: \`r:\${Math.random()}\` }); return <Button ui={row}>x</Button>`) })).toEqual(['U001'])
+    expect(
+      await codes({
+        'src/A.tsx': page(
+          `const row = interaction({ share: \`r:\${Math.random()}\` }); return <Button ui={row}>x</Button>`,
+        ),
+      }),
+    ).toEqual(['U001'])
   })
   it('a key the user chose', async () => {
-    expect(await codes({ 'src/A.tsx': page('const row = interaction({ share: location.pathname + "x" }); return <Button ui={row}>x</Button>') })).toEqual(['U002'])
+    expect(
+      await codes({
+        'src/A.tsx': page(
+          'const row = interaction({ share: location.pathname + "x" }); return <Button ui={row}>x</Button>',
+        ),
+      }),
+    ).toEqual(['U002'])
   })
   it('share with no rule, in a full-stack app only', async () => {
-    const body = { 'src/A.tsx': page("const row = interaction({ share: 'a' }); return <Button ui={row}>x</Button>") }
+    const body = {
+      'src/A.tsx': page(
+        "const row = interaction({ share: 'a' }); return <Button ui={row}>x</Button>",
+      ),
+    }
     expect(await codes(body)).toEqual([])
-    expect(await codes({ ...body, 'src/routes/index.tsx': 'export default () => <p>x</p>\n' })).toEqual(['U003'])
-    expect(await codes({ ...body, 'src/routes/index.tsx': 'export default () => <p>x</p>\n', 'src/realtime.server.ts': 'export default { share: () => true }\n' })).toEqual([])
+    expect(
+      await codes({ ...body, 'src/routes/index.tsx': 'export default () => <p>x</p>\n' }),
+    ).toEqual(['U003'])
+    expect(
+      await codes({
+        ...body,
+        'src/routes/index.tsx': 'export default () => <p>x</p>\n',
+        'src/realtime.server.ts': 'export default { share: () => true }\n',
+      }),
+    ).toEqual([])
   })
   it('writing remote', async () => {
-    expect(await codes({ 'src/A.tsx': page('const row = interaction(); const go = () => { row.remote.value = {} }; return <Button ui={row} onClick={go}>x</Button>') })).toEqual(['U004'])
+    expect(
+      await codes({
+        'src/A.tsx': page(
+          'const row = interaction(); const go = () => { row.remote.value = {} }; return <Button ui={row} onClick={go}>x</Button>',
+        ),
+      }),
+    ).toEqual(['U004'])
   })
   it('ui on a component that does not take it', async () => {
-    expect(await codes({ 'src/A.tsx': page('const row = interaction(); return <Tabs ui={row} />') })).toEqual(['U005'])
+    expect(
+      await codes({ 'src/A.tsx': page('const row = interaction(); return <Tabs ui={row} />') }),
+    ).toEqual(['U005'])
   })
   it('a correct row is quiet', async () => {
-    expect(await codes({ 'src/A.tsx': page("const row = interaction({ share: 'fixed' }); return <Button ui={row}>{row.hover.value ? 'y' : 'n'}</Button>") })).toEqual([])
+    expect(
+      await codes({
+        'src/A.tsx': page(
+          "const row = interaction({ share: 'fixed' }); return <Button ui={row}>{row.hover.value ? 'y' : 'n'}</Button>",
+        ),
+      }),
+    ).toEqual([])
   })
 })

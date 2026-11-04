@@ -1,11 +1,11 @@
-import { DropdownMenu } from "@kobalte/core/dropdown-menu";
-import { useAction } from "@solidjs/router";
+import { DropdownMenu } from '@kobalte/core/dropdown-menu'
+import { useAction } from '@solidjs/router'
 
-import { signOutAction } from "~/lib/data";
-import { avatar } from "./button";
+import { signOutAction } from '~/lib/data'
+import { avatar } from './button'
 
 export default function AccountPanel(props: { name: string; email: string }) {
-  const signOut = useAction(signOutAction);
+  const signOut = useAction(signOutAction)
 
   return (
     <DropdownMenu defaultOpen placement="bottom-end" gutter={8}>
@@ -19,11 +19,14 @@ export default function AccountPanel(props: { name: string; email: string }) {
             <p class="text-sm text-muted">{props.email}</p>
           </div>
           <DropdownMenu.Separator class="my-1 h-px border-none bg-line" />
-          <DropdownMenu.Item onSelect={() => signOut()} class="cursor-pointer rounded-lg px-3 py-2 text-sm font-medium outline-none data-highlighted:bg-sunken">
+          <DropdownMenu.Item
+            onSelect={() => signOut()}
+            class="cursor-pointer rounded-lg px-3 py-2 text-sm font-medium outline-none data-highlighted:bg-sunken"
+          >
             Sign out
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu>
-  );
+  )
 }

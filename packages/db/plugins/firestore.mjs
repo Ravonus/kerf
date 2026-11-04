@@ -9,8 +9,16 @@ export const firestoreSource = definePlugin({
   weft: '*',
   permissions: { net: ['driver:firebase-admin'] },
   contribute: () => ({
-    provides: [provide(slot, { key: 'firestore', sides: { server: { module: '@weft-js/db/firestore', export: 'adapter' } } })],
-    agents: { title: 'Lists (firestore)', text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back. Search is by prefix on one field, and only without another sort.' },
+    provides: [
+      provide(slot, {
+        key: 'firestore',
+        sides: { server: { module: '@weft-js/db/firestore', export: 'adapter' } },
+      }),
+    ],
+    agents: {
+      title: 'Lists (firestore)',
+      text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back. Search is by prefix on one field, and only without another sort.',
+    },
   }),
 })
 

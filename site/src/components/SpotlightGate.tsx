@@ -12,9 +12,16 @@ export function SpotlightGate() {
   const load = () => {
     if (asked) return
     asked = true
-    void import('./Spotlight').then(({ Spotlight }) => { stop = render(() => <Spotlight />, box!) })
+    void import('./Spotlight').then(({ Spotlight }) => {
+      stop = render(() => <Spotlight />, box!)
+    })
   }
-  watch(() => spotlightOpen.value, open => { if (open) load() })
+  watch(
+    () => spotlightOpen.value,
+    (open) => {
+      if (open) load()
+    },
+  )
   onMount(() => {
     const key = (e: KeyboardEvent) => {
       if (asked || e.key.toLowerCase() !== 'k' || !(e.metaKey || e.ctrlKey)) return
@@ -29,5 +36,5 @@ export function SpotlightGate() {
       stop?.()
     })
   })
-  return <div ref={el => (box = el)}></div>
+  return <div ref={(el) => (box = el)}></div>
 }

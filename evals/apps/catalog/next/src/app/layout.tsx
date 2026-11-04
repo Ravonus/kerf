@@ -23,7 +23,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <CartProvider>
           <header className="sticky top-0 z-10 border-b border-line bg-paper">
             <div className="mx-auto flex max-w-360 items-center justify-between gap-5 px-8 py-2.5">
-              <Link href="/"><Logo /></Link>
+              <Link href="/">
+                <Logo />
+              </Link>
               <Suspense fallback={<CartLink />}>
                 <CartCount />
               </Suspense>

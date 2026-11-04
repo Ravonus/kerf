@@ -10,14 +10,20 @@ import { fixture } from './dev-server.setup.mjs'
 const url = inject('url')
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 let browser
-beforeAll(async () => { browser = await chromium.launch() })
-afterAll(async () => { await browser?.close() })
+beforeAll(async () => {
+  browser = await chromium.launch()
+})
+afterAll(async () => {
+  await browser?.close()
+})
 
 async function open(path) {
   const page = await browser.newPage()
   const errors = []
-  page.on('pageerror', e => errors.push(e.message))
-  page.on('console', m => m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined)
+  page.on('pageerror', (e) => errors.push(e.message))
+  page.on('console', (m) =>
+    m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
+  )
   await page.goto(url + path)
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   return { page, errors }
@@ -27,16 +33,33 @@ async function open(path) {
 async function record(page) {
   await page.evaluate(() => {
     window.__writes = []
-    window.__mo = new MutationObserver(r => window.__writes.push(...r.map(x => `${x.type}:${x.target.nodeName}${x.attributeName ? '.' + x.attributeName : ''}`)))
-    window.__mo.observe(document.getElementById('app'), { subtree: true, childList: true, characterData: true, attributes: true })
+    window.__mo = new MutationObserver((r) =>
+      window.__writes.push(
+        ...r.map(
+          (x) => `${x.type}:${x.target.nodeName}${x.attributeName ? '.' + x.attributeName : ''}`,
+        ),
+      ),
+    )
+    window.__mo.observe(document.getElementById('app'), {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+    })
   })
-  return () => page.evaluate(() => { window.__writes.push(...window.__mo.takeRecords().map(x => `${x.type}:${x.target.nodeName}`)); return window.__writes.splice(0) })
+  return () =>
+    page.evaluate(() => {
+      window.__writes.push(
+        ...window.__mo.takeRecords().map((x) => `${x.type}:${x.target.nodeName}`),
+      )
+      return window.__writes.splice(0)
+    })
 }
 
-test('a client that starts after a failure lands takes its error view, and doesn\'t read it again', async () => {
+test("a client that starts after a failure lands takes its error view, and doesn't read it again", async () => {
   const fetched = []
   const page = await browser.newPage()
-  page.on('request', r => r.url().includes('/_weft/') && fetched.push(r.url()))
+  page.on('request', (r) => r.url().includes('/_weft/') && fetched.push(r.url()))
   await page.goto(url + '/held?ms=0')
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   await page.waitForSelector('[role=alert]')
@@ -58,16 +81,19 @@ test('a streamed page: Boundaries swapped in before hydration, then 0/0, and no 
   expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
   await page.waitForSelector('.reviews li')
   expect(await page.textContent('.stock')).toBe('In stock: 7')
-  expect(await page.$$eval('.reviews li', l => l.map(e => e.textContent))).toEqual(['Great', 'Fine'])
+  expect(await page.$$eval('.reviews li', (l) => l.map((e) => e.textContent))).toEqual([
+    'Great',
+    'Fine',
+  ])
   expect(await page.$('.skeleton')).toBeNull()
   const markers = await page.evaluate(() => {
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT)
     const out = []
-    for (let n; (n = w.nextNode()); ) if (/^\/?wb:/.test(n.data)) out.push(n.data)
+    for (let n; (n = w.nextNode());) if (/^\/?wb:/.test(n.data)) out.push(n.data)
     return out
   })
   expect(markers).toEqual([])
-  expect(errors.filter(e => !e.includes('X031'))).toEqual([]) // its fallback isn't sized, and a chunk can land on a running client
+  expect(errors.filter((e) => !e.includes('X031'))).toEqual([]) // its fallback isn't sized, and a chunk can land on a running client
   await page.close()
 })
 
@@ -76,18 +102,22 @@ describe('a client running before the chunks land', () => {
     const fetched = []
     const page = await browser.newPage()
     const errors = []
-    page.on('pageerror', e => errors.push(e.message))
-    page.on('request', r => r.url().includes('/_weft/') && fetched.push(r.url()))
+    page.on('pageerror', (e) => errors.push(e.message))
+    page.on('request', (r) => r.url().includes('/_weft/') && fetched.push(r.url()))
     await page.goto(url + '/held?ms=2500', { waitUntil: 'commit' })
     await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
     // Not a timing assumption: it's what these tests are of.
     expect(await page.$('.wait-late')).not.toBeNull()
     expect(await page.$('.late')).toBeNull()
-    expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+    expect(await page.evaluate(() => window.__weft)).toEqual({
+      misses: 0,
+      writes: 0,
+      hydrated: true,
+    })
     return { page, errors, fetched }
   }
 
-  test('a navigation on the same route drops the old URL\'s chunk: the page keeps the new data', async () => {
+  test("a navigation on the same route drops the old URL's chunk: the page keeps the new data", async () => {
     const { page, errors } = await held()
     await page.click('a.same')
     await page.waitForSelector('.late')
@@ -116,7 +146,7 @@ describe('a client running before the chunks land', () => {
     const markers = await page.evaluate(() => {
       const w = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT)
       const out = []
-      for (let n; (n = w.nextNode()); ) if (/^\/?wb:/.test(n.data)) out.push(n.data)
+      for (let n; (n = w.nextNode());) if (/^\/?wb:/.test(n.data)) out.push(n.data)
       return out
     })
     expect(markers).toEqual([])
@@ -137,7 +167,7 @@ describe('a client running before the chunks land', () => {
     await page.waitForSelector('.ok')
     expect(await page.textContent('.ok')).toBe('recovered')
     expect(await page.$('[role=alert]')).toBeNull()
-    expect(fetched.filter(u => u.includes('/_weft/data'))).toHaveLength(1)
+    expect(fetched.filter((u) => u.includes('/_weft/data'))).toHaveLength(1)
     expect(errors).toEqual([])
     await page.close()
   })
@@ -147,37 +177,57 @@ test('navigating between users keeps both layouts and writes only what changed',
   const { page, errors } = await open('/users/1')
   const section = await page.$('section.users')
   // A string, so vitest doesn't rewrite the import(); the module is the one the page already loaded.
-  const mounts = () => page.evaluate("import('/src/routes/users/_layout.tsx').then(m => m.mounts.value)")
+  const mounts = () =>
+    page.evaluate("import('/src/routes/users/_layout.tsx').then(m => m.mounts.value)")
   expect(await mounts()).toBe(1)
   const take = await record(page)
   await page.click('a[href="/users/2"]')
   await page.waitForFunction(() => document.querySelector('h2')?.textContent === 'Grace Hopper')
   // The detail route is static, so the server's HTML replaces it; aria-current moves from one link to the other; nothing else.
-  expect((await take()).sort()).toEqual(['attributes:A.aria-current', 'attributes:A.aria-current', 'childList:DIV', 'childList:DIV'])
-  expect(await section.evaluate(e => e.isConnected)).toBe(true)
+  expect((await take()).sort()).toEqual([
+    'attributes:A.aria-current',
+    'attributes:A.aria-current',
+    'childList:DIV',
+    'childList:DIV',
+  ])
+  expect(await section.evaluate((e) => e.isConnected)).toBe(true)
   expect(await mounts()).toBe(1)
   expect(page.url()).toBe(url + '/users/2')
   // The head is the server's merged metadata for the new route (setHead), for the tab title and history.
   expect(await page.title()).toBe('Grace Hopper · Acme')
-  expect(await page.getAttribute('meta[name=description]', 'content')).toBe('Compilers, COBOL and nanoseconds.')
+  expect(await page.getAttribute('meta[name=description]', 'content')).toBe(
+    'Compilers, COBOL and nanoseconds.',
+  )
   expect(await page.getAttribute('link[rel=canonical]', 'href')).toBe('https://acme.dev/users/2')
-  expect(await page.getAttribute('meta[property="og:image"]', 'content')).toMatch(/\/_weft\/og\/users\/2\.png\?v=/)
-  expect(await page.$$eval('head [data-wm]', l => l.length)).toBe(16)
+  expect(await page.getAttribute('meta[property="og:image"]', 'content')).toMatch(
+    /\/_weft\/og\/users\/2\.png\?v=/,
+  )
+  expect(await page.$$eval('head [data-wm]', (l) => l.length)).toBe(16)
   expect(errors).toEqual([])
   await page.close()
 })
 
 test('navigating to a page with no meta brings the words it rendered, and takes the home page`s structured data away', async () => {
   const { page, errors } = await open('/')
-  expect(await page.$$eval('script[type="application/ld+json"][data-wm]', l => l.length)).toBe(1)
-  await page.evaluate(() => { const a = document.createElement('a'); a.href = '/meta/plain'; a.textContent = 'go'; a.id = 'go'; document.body.append(a) })
+  expect(await page.$$eval('script[type="application/ld+json"][data-wm]', (l) => l.length)).toBe(1)
+  await page.evaluate(() => {
+    const a = document.createElement('a')
+    a.href = '/meta/plain'
+    a.textContent = 'go'
+    a.id = 'go'
+    document.body.append(a)
+  })
   await page.click('#go')
   await page.waitForFunction(() => document.querySelector('h1')?.textContent?.startsWith('Harvest'))
   await page.waitForFunction(() => document.title === 'Harvest & storage notes · Acme')
-  expect(await page.getAttribute('meta[name=description]', 'content')).toMatch(/^Harvest when 5 < 7/)
-  expect(await page.getAttribute('meta[property="og:image"]', 'content')).toMatch(/\/_weft\/og\/meta\/plain\.png\?v=/)
+  expect(await page.getAttribute('meta[name=description]', 'content')).toMatch(
+    /^Harvest when 5 < 7/,
+  )
+  expect(await page.getAttribute('meta[property="og:image"]', 'content')).toMatch(
+    /\/_weft\/og\/meta\/plain\.png\?v=/,
+  )
   expect(await page.getAttribute('link[rel=canonical]', 'href')).toBe('https://acme.dev/meta/plain')
-  expect(await page.$$eval('script[type="application/ld+json"]', l => l.length)).toBe(0)
+  expect(await page.$$eval('script[type="application/ld+json"]', (l) => l.length)).toBe(0)
   expect(errors).toEqual([])
   await page.close()
 })
@@ -201,7 +251,10 @@ test('leaving the users layout replaces it; back and forward restore', async () 
 test('client navigation to a missing page shows the 404 route', async () => {
   const { page } = await open('/')
   await page.evaluate(() => {
-    const a = Object.assign(document.createElement('a'), { href: '/users/999', textContent: 'gone' })
+    const a = Object.assign(document.createElement('a'), {
+      href: '/users/999',
+      textContent: 'gone',
+    })
     document.body.append(a)
     a.click()
   })
@@ -230,14 +283,24 @@ test('dev: with JS off the first paint has every stylesheet of the route, and on
   try {
     const page = await context.newPage()
     await page.goto(url + '/styled')
-    const color = selector => page.locator(selector).first().evaluate(e => getComputedStyle(e).color)
+    const color = (selector) =>
+      page
+        .locator(selector)
+        .first()
+        .evaluate((e) => getComputedStyle(e).color)
     expect(await color('html')).toBe('rgb(13, 14, 15)') // src/entry.client.ts's import
     expect(await color('.root')).toBe('rgb(7, 8, 9)')
     expect(await color('.styled')).toBe('rgb(1, 2, 3)')
     expect(await color('.badge')).toBe('rgb(4, 5, 6)')
-    for (const href of await page.locator('link[rel="stylesheet"]').evaluateAll(l => l.map(e => e.href))) {
+    for (const href of await page
+      .locator('link[rel="stylesheet"]')
+      .evaluateAll((l) => l.map((e) => e.href))) {
       const res = await fetch(href, { headers: { accept: 'text/css' } })
-      expect([href, res.status, res.headers.get('content-type')]).toEqual([href, 200, expect.stringContaining('text/css')])
+      expect([href, res.status, res.headers.get('content-type')]).toEqual([
+        href,
+        200,
+        expect.stringContaining('text/css'),
+      ])
     }
     expect(await page.locator('link[href^="/@weft-sheet/"]').count()).toBe(1) // a virtual sheet links too
     await page.goto(url + '/about')
@@ -253,13 +316,29 @@ test('dev: the client adds no second copy of a linked sheet, and HMR updates the
   const file = join(fixture, 'src/routes/styled.css')
   const before = readFileSync(file, 'utf8')
   const { page, errors } = await open('/styled')
-  const copies = () => page.evaluate(() => [...document.styleSheets].filter(s => { try { return [...s.cssRules].some(r => r.selectorText === '.styled') } catch { return false } }).length)
+  const copies = () =>
+    page.evaluate(
+      () =>
+        [...document.styleSheets].filter((s) => {
+          try {
+            return [...s.cssRules].some((r) => r.selectorText === '.styled')
+          } catch {
+            return false
+          }
+        }).length,
+    )
   try {
     expect(await copies()).toBe(1)
     expect(await page.locator('style[data-vite-dev-id]').count()).toBe(0)
     writeFileSync(file, before.replace('rgb(1, 2, 3)', 'rgb(21, 22, 23)'))
-    await page.waitForFunction(() => getComputedStyle(document.querySelector('.styled')).color === 'rgb(21, 22, 23)', null, { timeout: 10_000 })
-    await page.waitForFunction(() => document.querySelectorAll('link[href*="styled.css"]').length === 1)
+    await page.waitForFunction(
+      () => getComputedStyle(document.querySelector('.styled')).color === 'rgb(21, 22, 23)',
+      null,
+      { timeout: 10_000 },
+    )
+    await page.waitForFunction(
+      () => document.querySelectorAll('link[href*="styled.css"]').length === 1,
+    )
     expect(await copies()).toBe(1)
     expect(errors).toEqual([])
   } finally {
@@ -267,4 +346,3 @@ test('dev: the client adds no second copy of a linked sheet, and HMR updates the
     await page.close()
   }
 })
-

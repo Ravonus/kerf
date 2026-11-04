@@ -1,6 +1,29 @@
 // The flow pack's logic: 09 §1.1 steps, §1.3 errors, §2.3 passwords and codes, §3.2 placement, §5 connection, §7 shortcuts.
 import { describe, expect, test, vi } from 'vitest'
-import { clockLabel, connView, createShortcuts, emailError, fieldSummary, filterShortcuts, flowDirection, isPasskeyCancel, isSingleKey, isTextTarget, issueFields, mapFlowError, markParts, otpClean, passwordRules, passwordStrength, secondsClock, shortcutLabels, stepAnnouncement, stepFromSearch, stepUrl, tourPlacement } from '../src/flow-pack'
+import {
+  clockLabel,
+  connView,
+  createShortcuts,
+  emailError,
+  fieldSummary,
+  filterShortcuts,
+  flowDirection,
+  isPasskeyCancel,
+  isSingleKey,
+  isTextTarget,
+  issueFields,
+  mapFlowError,
+  markParts,
+  otpClean,
+  passwordRules,
+  passwordStrength,
+  secondsClock,
+  shortcutLabels,
+  stepAnnouncement,
+  stepFromSearch,
+  stepUrl,
+  tourPlacement,
+} from '../src/flow-pack'
 
 describe('steps', () => {
   const ids = ['cart', 'ship', 'pay', 'done']
@@ -8,7 +31,8 @@ describe('steps', () => {
     expect(flowDirection(ids, 'ship', 'pay')).toBe('forward')
     expect(flowDirection(ids, 'pay', 'cart')).toBe('back')
   })
-  test('the announcement names the step', () => expect(stepAnnouncement(ids, 'ship', 'Shipping')).toBe('Step 2 of 4, Shipping'))
+  test('the announcement names the step', () =>
+    expect(stepAnnouncement(ids, 'ship', 'Shipping')).toBe('Step 2 of 4, Shipping'))
   test('the URL names only known steps and keeps the rest', () => {
     expect(stepFromSearch('?step=pay&x=1', 'step', ids)).toBe('pay')
     expect(stepFromSearch('?step=nope', 'step', ids)).toBeUndefined()
@@ -18,31 +42,75 @@ describe('steps', () => {
 
 describe('error mapping, one message per cause', () => {
   test('issues go to their fields, with a summary', () => {
-    const m = mapFlowError({ message: 'bad', issues: [{ message: 'Too short', path: ['password'] }, { message: 'Nope', path: [{ key: 'a' }, 'b'] }, { message: 'Second', path: ['password'] }] })
-    expect(m).toMatchObject({ surface: 'field', fields: { password: 'Too short', 'a.b': 'Nope' }, summary: '2 fields need attention', focus: 'field' })
+    const m = mapFlowError({
+      message: 'bad',
+      issues: [
+        { message: 'Too short', path: ['password'] },
+        { message: 'Nope', path: [{ key: 'a' }, 'b'] },
+        { message: 'Second', path: ['password'] },
+      ],
+    })
+    expect(m).toMatchObject({
+      surface: 'field',
+      fields: { password: 'Too short', 'a.b': 'Nope' },
+      summary: '2 fields need attention',
+      focus: 'field',
+    })
     expect(fieldSummary(1)).toBe('1 field needs attention')
     expect(issueFields([{ message: 'no path' }])).toEqual({})
   })
   test('a wrong password and an unknown email read the same', () => {
     const m = mapFlowError({ code: 'INVALID_CREDENTIALS', status: 401 })
-    expect(m).toMatchObject({ surface: 'alert', title: "That email and password don't match.", focus: 'alert', live: 'assertive' })
+    expect(m).toMatchObject({
+      surface: 'alert',
+      title: "That email and password don't match.",
+      focus: 'alert',
+      live: 'assertive',
+    })
   })
-  test('locked without a date says only that', () => expect(mapFlowError({ code: 'LOCKED' }).title).toBe('This account is locked.'))
-  test('locked says until when, in UTC', () => expect(mapFlowError({ code: 'LOCKED', data: { until: '2026-10-30T14:05:00Z' } }).title).toContain('14:05 UTC'))
-  test('rate limit stays polite and keeps focus', () => expect(mapFlowError({ code: 'RATE_LIMITED', data: { retryAfter: 20 } })).toMatchObject({ surface: 'rate-limit', retryAfter: 20, focus: 'stay', live: 'polite' }))
+  test('locked without a date says only that', () =>
+    expect(mapFlowError({ code: 'LOCKED' }).title).toBe('This account is locked.'))
+  test('locked says until when, in UTC', () =>
+    expect(
+      mapFlowError({ code: 'LOCKED', data: { until: '2026-10-30T14:05:00Z' } }).title,
+    ).toContain('14:05 UTC'))
+  test('rate limit stays polite and keeps focus', () =>
+    expect(mapFlowError({ code: 'RATE_LIMITED', data: { retryAfter: 20 } })).toMatchObject({
+      surface: 'rate-limit',
+      retryAfter: 20,
+      focus: 'stay',
+      live: 'polite',
+    }))
   test('codes land on the code field', () => {
-    expect(mapFlowError({ code: 'WRONG_CODE', data: { attemptsLeft: 2 } }).fields.code).toBe("That code didn't work. 2 tries left.")
-    expect(mapFlowError({ code: 'WRONG_CODE', data: { attemptsLeft: 1 } }).fields.code).toBe("That code didn't work. 1 try left.")
-    expect(mapFlowError({ code: 'EXPIRED' }).fields.code).toBe('That code expired. We sent a new one.')
+    expect(mapFlowError({ code: 'WRONG_CODE', data: { attemptsLeft: 2 } }).fields.code).toBe(
+      "That code didn't work. 2 tries left.",
+    )
+    expect(mapFlowError({ code: 'WRONG_CODE', data: { attemptsLeft: 1 } }).fields.code).toBe(
+      "That code didn't work. 1 try left.",
+    )
+    expect(mapFlowError({ code: 'EXPIRED' }).fields.code).toBe(
+      'That code expired. We sent a new one.',
+    )
   })
   test('transport is a toast, offline a banner, a stale contract a polite banner', () => {
     expect(mapFlowError({ status: 503 }).surface).toBe('toast')
     expect(mapFlowError(new TypeError('Failed to fetch')).surface).toBe('toast')
-    expect(mapFlowError(new TypeError('Failed to fetch'), { online: false })).toMatchObject({ surface: 'banner', live: 'assertive' })
-    expect(mapFlowError({ code: 'STALE_SCHEMA' })).toMatchObject({ surface: 'banner', live: 'polite' })
+    expect(mapFlowError(new TypeError('Failed to fetch'), { online: false })).toMatchObject({
+      surface: 'banner',
+      live: 'assertive',
+    })
+    expect(mapFlowError({ code: 'STALE_SCHEMA' })).toMatchObject({
+      surface: 'banner',
+      live: 'polite',
+    })
   })
   test('copy by code wins; a bare message or string is an alert', () => {
-    expect(mapFlowError({ code: 'SEATS', data: { n: 2 } }, { copy: { SEATS: d => `${String(d.n)} seats left.` } }).title).toBe('2 seats left.')
+    expect(
+      mapFlowError(
+        { code: 'SEATS', data: { n: 2 } },
+        { copy: { SEATS: (d) => `${String(d.n)} seats left.` } },
+      ).title,
+    ).toBe('2 seats left.')
     expect(mapFlowError('Nope').title).toBe('Nope')
     expect(mapFlowError(undefined).title).toMatch(/Try again/)
   })
@@ -52,7 +120,7 @@ test('the clock counts from time, and stops at zero', () => {
   vi.useFakeTimers()
   const ticks: number[] = []
   const done = vi.fn()
-  secondsClock(2, s => ticks.push(s), done)
+  secondsClock(2, (s) => ticks.push(s), done)
   vi.advanceTimersByTime(5000)
   expect(ticks).toEqual([1, 0])
   expect(done).toHaveBeenCalledOnce()
@@ -71,8 +139,12 @@ test('emails and passwords', () => {
   expect(emailError('')).toBeUndefined()
   expect(emailError('a@b.co')).toBeUndefined()
   expect(emailError('a@b')).toMatch(/typo/)
-  expect(passwordRules('abcdefg1').every(r => r.met)).toBe(true)
-  expect(passwordRules('short').filter(r => !r.met).map(r => r.id)).toEqual(['length', 'number'])
+  expect(passwordRules('abcdefg1').every((r) => r.met)).toBe(true)
+  expect(
+    passwordRules('short')
+      .filter((r) => !r.met)
+      .map((r) => r.id),
+  ).toEqual(['length', 'number'])
   expect(passwordStrength('abc')).toMatchObject({ score: 0, label: 'Too short', tone: 'critical' })
   expect(passwordStrength('aaaaaaaaaaaa').score).toBe(1)
   expect(passwordStrength('abcdefg1').tone).toBe('critical')
@@ -84,13 +156,25 @@ test('a pasted code keeps its digits', () => expect(otpClean('123 456 789', 6)).
 
 describe('tour placement', () => {
   const card = { w: 300, h: 170 }
-  test('beside a target on the start edge', () => expect(tourPlacement({ x: 20, y: 100, w: 200, h: 40 }, card, { w: 1280, h: 800 })).toEqual({ left: 234, top: 35 }))
+  test('beside a target on the start edge', () =>
+    expect(tourPlacement({ x: 20, y: 100, w: 200, h: 40 }, card, { w: 1280, h: 800 })).toEqual({
+      left: 234,
+      top: 35,
+    }))
   test('below otherwise, flipping above at the bottom', () => {
-    expect(tourPlacement({ x: 900, y: 100, w: 100, h: 40 }, card, { w: 1280, h: 800 }).top).toBe(154)
-    expect(tourPlacement({ x: 900, y: 700, w: 100, h: 40 }, card, { w: 1280, h: 800 }).top).toBe(516)
+    expect(tourPlacement({ x: 900, y: 100, w: 100, h: 40 }, card, { w: 1280, h: 800 }).top).toBe(
+      154,
+    )
+    expect(tourPlacement({ x: 900, y: 700, w: 100, h: 40 }, card, { w: 1280, h: 800 }).top).toBe(
+      516,
+    )
   })
   test('docks to the edge away from the target on a phone', () => {
-    expect(tourPlacement({ x: 10, y: 700, w: 100, h: 40 }, card, { w: 390, h: 800 })).toEqual({ left: 12, width: 366, top: 12 })
+    expect(tourPlacement({ x: 10, y: 700, w: 100, h: 40 }, card, { w: 390, h: 800 })).toEqual({
+      left: 12,
+      width: 366,
+      top: 12,
+    })
     expect(tourPlacement({ x: 10, y: 50, w: 100, h: 40 }, card, { w: 390, h: 800 }).top).toBe(618)
   })
 })
@@ -105,7 +189,11 @@ test('connection views rank offline over reconnecting over stale', () => {
 })
 
 describe('shortcuts', () => {
-  const press = (key: string, init: KeyboardEventInit = {}, target: EventTarget = document.body) => {
+  const press = (
+    key: string,
+    init: KeyboardEventInit = {},
+    target: EventTarget = document.body,
+  ) => {
     const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
     target.dispatchEvent(e)
     return e
@@ -137,7 +225,8 @@ describe('shortcuts', () => {
   })
   test('never in a text input; a mod chord still does', () => {
     const { reg, stop } = setup()
-    const one = vi.fn(), chord = vi.fn()
+    const one = vi.fn(),
+      chord = vi.fn()
     reg.register({ keys: 't', label: 'Theme', run: one })
     reg.register({ keys: 'mod+k', label: 'Search', run: chord })
     const input = document.body.appendChild(document.createElement('input'))
@@ -150,18 +239,22 @@ describe('shortcuts', () => {
     box.type = 'checkbox'
     expect(isTextTarget(box)).toBe(false)
     expect(isTextTarget(input)).toBe(true)
-    input.remove(); box.remove(); stop()
+    input.remove()
+    box.remove()
+    stop()
   })
   test('sequences, and single keys turn off', () => {
     const { reg, stop } = setup()
     const run = vi.fn()
     reg.register({ keys: 'g m', label: 'Members', run })
-    press('g'); press('m')
+    press('g')
+    press('m')
     expect(run).toHaveBeenCalledOnce()
     press('m')
     expect(run).toHaveBeenCalledOnce()
     reg.singleKeys = false
-    press('g'); press('m')
+    press('g')
+    press('m')
     expect(run).toHaveBeenCalledOnce()
     stop()
   })
@@ -183,10 +276,16 @@ describe('shortcuts', () => {
     expect(reg.list()).toEqual([])
   })
   test('filter matches names and keys; marks split around the match', () => {
-    const list = [{ keys: 'mod+k', label: 'Search' }, { keys: 'g m', label: 'Members' }]
-    expect(filterShortcuts(list, 'mem', false).map(s => s.label)).toEqual(['Members'])
-    expect(filterShortcuts(list, 'ctrl', false).map(s => s.label)).toEqual(['Search'])
-    expect(markParts('Members', 'mem').map(p => [p.text, p.hit])).toEqual([['Mem', true], ['bers', false]])
+    const list = [
+      { keys: 'mod+k', label: 'Search' },
+      { keys: 'g m', label: 'Members' },
+    ]
+    expect(filterShortcuts(list, 'mem', false).map((s) => s.label)).toEqual(['Members'])
+    expect(filterShortcuts(list, 'ctrl', false).map((s) => s.label)).toEqual(['Search'])
+    expect(markParts('Members', 'mem').map((p) => [p.text, p.hit])).toEqual([
+      ['Mem', true],
+      ['bers', false],
+    ])
     expect(markParts('Any', '')).toEqual([{ at: 0, text: 'Any', hit: false }])
   })
 })

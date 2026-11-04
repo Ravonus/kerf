@@ -9,27 +9,37 @@ import { fixture } from './dev-server.setup.mjs'
 const url = inject('url')
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 let browser
-beforeAll(async () => { browser = await chromium.launch() })
-afterAll(async () => { await browser?.close() })
+beforeAll(async () => {
+  browser = await chromium.launch()
+})
+afterAll(async () => {
+  await browser?.close()
+})
 
 async function open(path, desktop = false) {
   const page = await browser.newPage()
-  if (desktop) await page.addInitScript(() => Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 }))
+  if (desktop)
+    await page.addInitScript(() =>
+      Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 }),
+    )
   const errors = []
-  page.on('pageerror', e => errors.push(e.message))
-  page.on('console', m => m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined)
+  page.on('pageerror', (e) => errors.push(e.message))
+  page.on('console', (m) =>
+    m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
+  )
   await page.goto(url + path)
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   return { page, errors }
 }
 
-const settled = page => page.waitForTimeout(50) // the sweep is a macrotask after the claim
-const count = page => page.evaluate(() => {
-  const w = document.createTreeWalker(document.getElementById('app'), 128)
-  const left = []
-  while (w.nextNode()) left.push(w.currentNode.data.slice(0, 3))
-  return { comments: left, wk: document.querySelectorAll('#app [wk]').length }
-})
+const settled = (page) => page.waitForTimeout(50) // the sweep is a macrotask after the claim
+const count = (page) =>
+  page.evaluate(() => {
+    const w = document.createTreeWalker(document.getElementById('app'), 128)
+    const left = []
+    while (w.nextNode()) left.push(w.currentNode.data.slice(0, 3))
+    return { comments: left, wk: document.querySelectorAll('#app [wk]').length }
+  })
 
 test('the server writes no keys or markers in the static parts, and props as JSON', async () => {
   const html = await (await fetch(url + '/islands')).text()
@@ -38,10 +48,23 @@ test('the server writes no keys or markers in the static parts, and props as JSO
   expect(html).toMatch(/<!--wi:\["src\/routes\/islands\.tsx#\d+","[^"]+",\[5\]\]-->/) // the literal label stays in the island's code
   expect(html).toContain('<template><p class="late">From the server</p></template>') // Reveal didn't render its children
   const plan = JSON.parse(readFileSync(join(fixture, '.weft/hydration.json'), 'utf8'))
-  expect(plan.islands.filter(i => i.startsWith('src/routes/islands.tsx')).length).toBeGreaterThanOrEqual(5)
-  expect(plan.files.find(f => f.file === 'src/routes/islands.tsx').nodes.find(n => n.name === 'Islands').client).toBeNull()
-  expect(plan.files.find(f => f.file === 'src/components/islands.tsx').nodes.find(n => n.name === 'Counter').client).toMatch(/@weft client/)
-  expect(plan.files.find(f => f.file === 'src/components/lazy.tsx').nodes.find(n => n.name === 'Tap').client).toMatch(/onClick/)
+  expect(
+    plan.islands.filter((i) => i.startsWith('src/routes/islands.tsx')).length,
+  ).toBeGreaterThanOrEqual(5)
+  expect(
+    plan.files
+      .find((f) => f.file === 'src/routes/islands.tsx')
+      .nodes.find((n) => n.name === 'Islands').client,
+  ).toBeNull()
+  expect(
+    plan.files
+      .find((f) => f.file === 'src/components/islands.tsx')
+      .nodes.find((n) => n.name === 'Counter').client,
+  ).toMatch(/@weft client/)
+  expect(
+    plan.files.find((f) => f.file === 'src/components/lazy.tsx').nodes.find((n) => n.name === 'Tap')
+      .client,
+  ).toMatch(/onClick/)
 })
 
 test('a row whose key differs between server and client is built whole, works, and says so', async () => {
@@ -67,15 +90,19 @@ test('a row whose key differs between server and client is built whole, works, a
 test('what was typed before a miss is not overwritten by the first writes after it', async () => {
   const page = await browser.newPage()
   const held = []
-  let letGo = go => held.push(go)
-  await page.route(/\.(js|mjs|ts|tsx)(\?|$)/, r => new Promise(go => { letGo(go) }).then(() => r.continue()))
+  let letGo = (go) => held.push(go)
+  await page.route(/\.(js|mjs|ts|tsx)(\?|$)/, (r) =>
+    new Promise((go) => {
+      letGo(go)
+    }).then(() => r.continue()),
+  )
   await page.goto(url + '/miss', { waitUntil: 'commit' })
   await page.locator('.miss .later').waitFor({ state: 'attached' })
   await page.locator('.miss .typed').fill('before')
   await page.locator('.miss .ticked').click() // held, then replayed
   await page.locator('.miss .later').fill('sibling')
-  letGo = go => go()
-  held.forEach(go => go())
+  letGo = (go) => go()
+  held.forEach((go) => go())
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   await settled(page)
   expect((await page.evaluate(() => window.__weft)).misses).toBeGreaterThan(0)
@@ -92,8 +119,8 @@ test('islands hydrate 0/0, then what only the claim needed goes', async () => {
   await settled(page)
   const { comments, wk } = await count(page)
   expect(wk).toBe(0)
-  expect(comments.filter(c => /^(wi:|wl:|ws|\/ws|\[)/.test(c))).toEqual([])
-  expect(comments.filter(c => c === '/wl')).toEqual(['/wl']) // where the next level goes: the one marker a level keeps
+  expect(comments.filter((c) => /^(wi:|wl:|ws|\/ws|\[)/.test(c))).toEqual([])
+  expect(comments.filter((c) => c === '/wl')).toEqual(['/wl']) // where the next level goes: the one marker a level keeps
   expect(errors).toEqual([])
   await page.close()
 })
@@ -120,14 +147,14 @@ test('props reach an island, and each row of a keyed list keeps its own state', 
   await page.close()
 })
 
-test('an island\'s children stay the server\'s: rendered, or waiting until it shows them', async () => {
+test("an island's children stay the server's: rendered, or waiting until it shows them", async () => {
   const { page, errors } = await open('/islands')
   const kept = await page.$('.kept')
   await page.click('.fold-toggle')
   await page.waitForFunction(() => !document.querySelector('.kept'))
   await page.click('.fold-toggle')
   await page.waitForSelector('.kept')
-  expect(await kept.evaluate(e => e.isConnected)).toBe(true) // the same node
+  expect(await kept.evaluate((e) => e.isConnected)).toBe(true) // the same node
   expect(await page.$('.late')).toBeNull()
   await page.click('.reveal')
   expect(await page.textContent('.late')).toBe('From the server')
@@ -167,7 +194,7 @@ test('client navigation into a static route: its HTML, with islands running', as
   await page.close()
 })
 
-test('an island at a level\'s top takes its own nodes with it', async () => {
+test("an island at a level's top takes its own nodes with it", async () => {
   const { page, errors } = await open('/islands-top')
   await settled(page)
   await page.click('.many-toggle')
@@ -185,7 +212,7 @@ test('an island at a level\'s top takes its own nodes with it', async () => {
   await page.close()
 })
 
-test('a prop JSON can\'t carry fails on the server, and says how to fix it', async () => {
+test("a prop JSON can't carry fails on the server, and says how to fix it", async () => {
   const res = await fetch(url + '/island-bad')
   expect(res.status).toBe(500)
   expect(await res.text()).toMatch(/H009/)
@@ -197,7 +224,11 @@ test('dev: editing a static route reloads the page, since no browser holds its c
   const before = readFileSync(file, 'utf8')
   try {
     writeFileSync(file, before.replace('Mostly static', 'Edited static'))
-    await page.waitForFunction(() => document.querySelector('h1')?.textContent === 'Edited static', null, { timeout: 10_000 })
+    await page.waitForFunction(
+      () => document.querySelector('h1')?.textContent === 'Edited static',
+      null,
+      { timeout: 10_000 },
+    )
   } finally {
     writeFileSync(file, before)
     await page.close()
@@ -210,7 +241,11 @@ test('dev: editing an island keeps the page working', async () => {
   const before = readFileSync(file, 'utf8')
   try {
     writeFileSync(file, before.replace('>reveal<', '>show<'))
-    await page.waitForFunction(() => document.querySelector('.reveal')?.textContent === 'show', null, { timeout: 10_000 })
+    await page.waitForFunction(
+      () => document.querySelector('.reveal')?.textContent === 'show',
+      null,
+      { timeout: 10_000 },
+    )
     await page.click('.counter[data-label=solo]')
     expect(await page.textContent('.counter[data-label=solo]')).toBe('solo: 6')
     expect(errors).toEqual([])
@@ -222,36 +257,41 @@ test('dev: editing an island keeps the page working', async () => {
 
 // ---- lazy islands: nothing runs before it's needed, and nothing done before then is lost -------------------------
 
-const CODE = u => u.pathname.endsWith('/components/lazy.tsx') && !u.search.includes('weft-assets')
+const CODE = (u) => u.pathname.endsWith('/components/lazy.tsx') && !u.search.includes('weft-assets')
 /** `/lazy`, with its islands' code stalled until `release`. */
 async function stalled(path = '/lazy', options) {
   const context = await browser.newContext(options)
   const page = await context.newPage()
   const errors = []
-  page.on('pageerror', e => errors.push(e.message))
+  page.on('pageerror', (e) => errors.push(e.message))
   let release
-  const gate = new Promise(ok => { release = ok })
-  await page.route(CODE, async r => { await gate; await r.continue() })
+  const gate = new Promise((ok) => {
+    release = ok
+  })
+  await page.route(CODE, async (r) => {
+    await gate
+    await r.continue()
+  })
   await page.goto(url + path)
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   return { page, errors, release, close: () => context.close() }
 }
-const claimed = (page, sel) => page.$eval(sel, e => !!e.$k || !e.hasAttribute('wk'))
+const claimed = (page, sel) => page.$eval(sel, (e) => !!e.$k || !e.hasAttribute('wk'))
 
-test('a page that\'s only read runs no client at all; the first click brings it, and counts', async () => {
+test("a page that's only read runs no client at all; the first click brings it, and counts", async () => {
   const page = await browser.newPage()
   const errors = []
-  page.on('pageerror', e => errors.push(e.message))
+  page.on('pageerror', (e) => errors.push(e.message))
   const asked = []
-  page.on('request', r => asked.push(new URL(r.url()).pathname))
+  page.on('request', (r) => asked.push(new URL(r.url()).pathname))
   await page.goto(url + '/lazy?boot')
   await page.waitForTimeout(300)
-  expect(asked.filter(p => /\/run\.tsx|components\/lazy\.tsx/.test(p))).toEqual([])
+  expect(asked.filter((p) => /\/run\.tsx|components\/lazy\.tsx/.test(p))).toEqual([])
   expect(await page.evaluate(() => window.__weft)).toBeUndefined()
   await page.click('.tap[data-id=one]')
   await page.click('.tap[data-id=one]')
   await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 2')
-  expect(asked.filter(p => /\/run\.tsx/.test(p)).length).toBe(1)
+  expect(asked.filter((p) => /\/run\.tsx/.test(p)).length).toBe(1)
   expect(errors).toEqual([])
   await page.close()
 })
@@ -259,14 +299,20 @@ test('a page that\'s only read runs no client at all; the first click brings it,
 test('scrolling to an island that wants to run brings the client, and a link is a plain link until then', async () => {
   const page = await browser.newPage()
   await page.goto(url + '/lazy?boot')
-  await page.$eval('.seen', e => e.scrollIntoView())
+  await page.$eval('.seen', (e) => e.scrollIntoView())
   await page.waitForFunction(() => document.querySelector('.seen').textContent === 'ran')
   await page.close()
   const other = await browser.newPage()
   await other.goto(url + '/lazy?boot')
   await other.evaluate(() => {
     window.stayed = true
-    document.body.append(Object.assign(document.createElement('a'), { href: '/about', id: 'plain', textContent: 'plain' }))
+    document.body.append(
+      Object.assign(document.createElement('a'), {
+        href: '/about',
+        id: 'plain',
+        textContent: 'plain',
+      }),
+    )
   })
   await other.click('#plain')
   await other.waitForURL('**/about')
@@ -277,16 +323,29 @@ test('scrolling to an island that wants to run brings the client, and a link is 
 test('hydration.json says when each island loads and why, and H010 what would let it wait', async () => {
   await fetch(url + '/lazy')
   const plan = JSON.parse(readFileSync(join(fixture, '.weft/hydration.json'), 'utf8'))
-  const of = tag => plan.loads.find(l => l.id.startsWith('src/routes/lazy') && l.tag === tag)
-  expect(of('Tap')).toMatchObject({ when: 'interaction', why: expect.stringMatching(/handlers only/) })
+  const of = (tag) => plan.loads.find((l) => l.id.startsWith('src/routes/lazy') && l.tag === tag)
+  expect(of('Tap')).toMatchObject({
+    when: 'interaction',
+    why: expect.stringMatching(/handlers only/),
+  })
   expect(of('Named').when).toBe('interaction')
-  expect(of('Seen')).toMatchObject({ when: 'visible', why: expect.stringMatching(/onMount.*stays inside/) })
+  expect(of('Seen')).toMatchObject({
+    when: 'visible',
+    why: expect.stringMatching(/onMount.*stays inside/),
+  })
   expect(of('Held')).toMatchObject({ when: 'visible', why: expect.stringMatching(/server data/) })
   expect(of('Auto')).toMatchObject({ when: 'load', why: expect.stringMatching(/autofocus/) })
   expect(of('Titled')).toMatchObject({ when: 'load', why: expect.stringMatching(/document/) })
-  expect(plan.loads.find(l => l.tag === 'Counter')).toMatchObject({ when: 'load', why: expect.stringMatching(/@weft client/) })
-  expect(plan.diagnostics.find(d => d.line && d.why.includes('Titled'))).toMatchObject({ code: 'H010', file: 'src/routes/lazy-early.tsx', fix: expect.stringMatching(/@weft visible/) })
-  expect(plan.diagnostics.some(d => d.why.includes('Auto'))).toBe(false)
+  expect(plan.loads.find((l) => l.tag === 'Counter')).toMatchObject({
+    when: 'load',
+    why: expect.stringMatching(/@weft client/),
+  })
+  expect(plan.diagnostics.find((d) => d.line && d.why.includes('Titled'))).toMatchObject({
+    code: 'H010',
+    file: 'src/routes/lazy-early.tsx',
+    fix: expect.stringMatching(/@weft visible/),
+  })
+  expect(plan.diagnostics.some((d) => d.why.includes('Auto'))).toBe(false)
 })
 
 test('a page of lazy islands hydrates with no complaints about the ones that wait', async () => {
@@ -348,7 +407,9 @@ test('typing before hydration: the value and the caret stay, and the island catc
 
 test('a value no event told anyone about (autofill, a restored form) reaches the island too', async () => {
   const { page, release, close } = await stalled()
-  await page.$eval('.field-in', e => { e.value = 'filled' })
+  await page.$eval('.field-in', (e) => {
+    e.value = 'filled'
+  })
   await page.click('.field-box')
   release()
   await page.waitForFunction(() => document.querySelector('.field-out').textContent === 'filled|on')
@@ -358,7 +419,9 @@ test('a value no event told anyone about (autofill, a restored form) reaches the
 test('a form submitted before hydration runs in place, by click and by Enter', async () => {
   for (const how of ['click', 'enter']) {
     const { page, errors, release, close } = await stalled()
-    await page.evaluate(() => { window.stayed = true })
+    await page.evaluate(() => {
+      window.stayed = true
+    })
     await page.fill('.name-in', 'Ada')
     if (how === 'click') await page.click('.name-go')
     else await page.press('.name-in', 'Enter')
@@ -374,7 +437,7 @@ test('a form submitted before hydration runs in place, by click and by Enter', a
 test('code that never comes: what was held takes its default, so the page still works', async () => {
   const context = await browser.newContext()
   const page = await context.newPage()
-  await page.route(CODE, r => r.abort())
+  await page.route(CODE, (r) => r.abort())
   await page.goto(url + '/lazy')
   await page.waitForFunction(() => window.__weft?.hydrated)
   await page.fill('.name-in', 'Ada')
@@ -387,7 +450,9 @@ test('code that never comes: what was held takes its default, so the page still 
 
 test('a link in an island: its handler runs, then the router takes it', async () => {
   const { page, errors, release, close } = await stalled()
-  await page.evaluate(() => { window.stayed = true })
+  await page.evaluate(() => {
+    window.stayed = true
+  })
   await page.click('.away')
   release()
   await page.waitForURL('**/about')
@@ -396,7 +461,7 @@ test('a link in an island: its handler runs, then the router takes it', async ()
   await close()
 })
 
-test('client navigation: the page shows before its islands\' code, and leaving drops what waited', async () => {
+test("client navigation: the page shows before its islands' code, and leaving drops what waited", async () => {
   const { page, errors, release, close } = await stalled('/about')
   await page.evaluate(() => {
     const a = Object.assign(document.createElement('a'), { href: '/lazy', id: 'go' })
@@ -418,7 +483,7 @@ test('client navigation: the page shows before its islands\' code, and leaving d
   await close()
 })
 
-test('an island\'s slot stays the server\'s when it runs late, and the nodes go with the level', async () => {
+test("an island's slot stays the server's when it runs late, and the nodes go with the level", async () => {
   const { page, errors, release, close } = await stalled()
   expect(await page.$('.late')).toBeNull()
   await page.click('.unfold')
@@ -434,7 +499,7 @@ test('a Boundary in a lazy island and work of its own run when it comes into vie
   release()
   await page.waitForTimeout(200)
   expect(await page.textContent('.seen')).toBe('waiting')
-  await page.$eval('.seen', e => e.scrollIntoView())
+  await page.$eval('.seen', (e) => e.scrollIntoView())
   await page.waitForFunction(() => document.querySelector('.seen').textContent === 'ran')
   expect(await page.textContent('.lazy-stock')).toBe('In stock: 3')
   expect(errors).toEqual([])
@@ -443,45 +508,60 @@ test('a Boundary in a lazy island and work of its own run when it comes into vie
 
 test('a visitor who asked for less data loads on interaction only', async () => {
   const context = await browser.newContext()
-  await context.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true } }))
+  await context.addInitScript(() =>
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
+  )
   const page = await context.newPage()
   let asked = 0
-  page.on('request', r => { if (r.url().includes('components/lazy.tsx')) asked++ })
+  page.on('request', (r) => {
+    if (r.url().includes('components/lazy.tsx')) asked++
+  })
   await page.goto(url + '/lazy')
   await page.waitForFunction(() => window.__weft?.hydrated)
-  await page.$eval('.seen', e => e.scrollIntoView())
+  await page.$eval('.seen', (e) => e.scrollIntoView())
   await page.waitForTimeout(200)
   expect(asked).toBe(0)
   expect(await page.textContent('.seen')).toBe('waiting')
   await page.click('.tap[data-id=far]')
-  await page.waitForFunction(() => document.querySelector('.tap[data-id=far]').textContent === 'far: 1')
+  await page.waitForFunction(
+    () => document.querySelector('.tap[data-id=far]').textContent === 'far: 1',
+  )
   await context.close()
 })
 
 test('an island whose code fails once is tried again, and a press on it still lands', async () => {
   const context = await browser.newContext()
-  await context.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true } }))
+  await context.addInitScript(() =>
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
+  )
   const page = await context.newPage()
   let failed = 0
-  await page.route('**/components/lazy.tsx*', r => (failed++ ? r.continue() : r.abort()))
+  await page.route('**/components/lazy.tsx*', (r) => (failed++ ? r.continue() : r.abort()))
   await page.goto(url + '/lazy')
   await page.waitForFunction(() => window.__weft?.hydrated)
   await page.click('.tap[data-id=far]')
-  await page.waitForFunction(() => document.querySelector('.tap[data-id=far]').textContent === 'far: 1')
+  await page.waitForFunction(
+    () => document.querySelector('.tap[data-id=far]').textContent === 'far: 1',
+  )
   await context.close()
 })
 
 test('an island whose code never comes reloads once, then says so instead of staying dead', async () => {
   const context = await browser.newContext()
-  await context.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true } }))
+  await context.addInitScript(() =>
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
+  )
   const page = await context.newPage()
-  await page.route('**/components/lazy.tsx*', r => r.abort())
+  await page.route('**/components/lazy.tsx*', (r) => r.abort())
   let loads = 0
   page.on('load', () => loads++)
   await page.goto(url + '/lazy')
   await page.waitForFunction(() => window.__weft?.hydrated)
   await page.click('.tap[data-id=far]')
-  await page.waitForFunction(() => sessionStorage.length > 0 && document.readyState === 'complete' && window.__weft?.hydrated)
+  await page.waitForFunction(
+    () =>
+      sessionStorage.length > 0 && document.readyState === 'complete' && window.__weft?.hydrated,
+  )
   await page.waitForTimeout(1500)
   await page.waitForFunction(() => window.__weft?.hydrated)
   await page.click('.tap[data-id=far]')
@@ -494,22 +574,24 @@ test('running late moves nothing: no layout shift, and the same element under th
   const { page, errors, release, close } = await stalled()
   await page.evaluate(() => {
     window.shift = 0
-    new PerformanceObserver(l => { for (const e of l.getEntries()) window.shift += e.value }).observe({ type: 'layout-shift', buffered: true })
+    new PerformanceObserver((l) => {
+      for (const e of l.getEntries()) window.shift += e.value
+    }).observe({ type: 'layout-shift', buffered: true })
     window.was = document.querySelector('.tap')
   })
-  const before = await page.$eval('.tap', e => JSON.stringify(e.getBoundingClientRect()))
+  const before = await page.$eval('.tap', (e) => JSON.stringify(e.getBoundingClientRect()))
   await page.click('.tap[data-id=one]')
   release()
   await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 1')
   await settled(page)
-  expect(await page.$eval('.tap', e => JSON.stringify(e.getBoundingClientRect()))).toBe(before)
+  expect(await page.$eval('.tap', (e) => JSON.stringify(e.getBoundingClientRect()))).toBe(before)
   expect(await page.evaluate(() => window.was === document.querySelector('.tap'))).toBe(true)
   expect(await page.evaluate(() => window.shift)).toBe(0)
   expect(errors).toEqual([])
   await close()
 })
 
-test('what can\'t wait runs with the page, beside what can', async () => {
+test("what can't wait runs with the page, beside what can", async () => {
   const { page } = await open('/lazy-early')
   await page.waitForFunction(() => document.title === 'titled')
   expect(await claimed(page, '.auto')).toBe(true)
@@ -523,19 +605,25 @@ test('what can\'t wait runs with the page, beside what can', async () => {
 test('a CSP that blocks the capture script: islands stop waiting, so nothing is left dead', async () => {
   const context = await browser.newContext()
   const page = await context.newPage()
-  await page.route('**/lazy', async r => {
+  await page.route('**/lazy', async (r) => {
     const res = await r.fetch()
-    await r.fulfill({ response: res, headers: { ...res.headers(), 'content-security-policy': "script-src 'self' 'unsafe-eval'" } })
+    await r.fulfill({
+      response: res,
+      headers: { ...res.headers(), 'content-security-policy': "script-src 'self' 'unsafe-eval'" },
+    })
   })
   await page.goto(url + '/lazy')
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
-  await page.waitForFunction(() => { const t = document.querySelector('.tap'); return !t.hasAttribute('wk') || t.$k })
+  await page.waitForFunction(() => {
+    const t = document.querySelector('.tap')
+    return !t.hasAttribute('wk') || t.$k
+  })
   await page.click('.tap[data-id=one]')
   expect(await page.textContent('.tap[data-id=one]')).toBe('one: 1')
   await context.close()
 })
 
-test('the capture script comes before anything else that runs, and says when a page can\'t wait', async () => {
+test("the capture script comes before anything else that runs, and says when a page can't wait", async () => {
   const lazy = await (await fetch(url + '/lazy')).text()
   expect(lazy.indexOf('__wq')).toBeGreaterThan(0)
   expect(lazy.indexOf('__wq')).toBeLessThan(lazy.indexOf('type="module"'))
@@ -546,12 +634,18 @@ test('the capture script comes before anything else that runs, and says when a p
 test('an island inside a client page is just a component: its children are claimed, not added', async () => {
   const { page, errors } = await open('/mixed')
   await settled(page)
-  expect(await page.$$eval('.mixed-link', a => a.map(x => x.getAttribute('href')))).toEqual(['#one', '#two', '#three'])
-  expect(await page.$$eval('.pair-link', a => a.map(x => x.getAttribute('href')))).toEqual(['#alone'])
-  expect(await page.$$eval('.pair-b', b => b.length)).toBe(1)
-  expect(await page.$$eval('.rail[data-ready]', r => r.length)).toBe(2)
+  expect(await page.$$eval('.mixed-link', (a) => a.map((x) => x.getAttribute('href')))).toEqual([
+    '#one',
+    '#two',
+    '#three',
+  ])
+  expect(await page.$$eval('.pair-link', (a) => a.map((x) => x.getAttribute('href')))).toEqual([
+    '#alone',
+  ])
+  expect(await page.$$eval('.pair-b', (b) => b.length)).toBe(1)
+  expect(await page.$$eval('.rail[data-ready]', (r) => r.length)).toBe(2)
   expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
-  expect((await count(page)).comments.filter(c => /^\/?ws/.test(c))).toEqual([])
+  expect((await count(page)).comments.filter((c) => /^\/?ws/.test(c))).toEqual([])
   expect(errors).toEqual([])
   await page.close()
 })
@@ -561,7 +655,7 @@ test('a route change on a phone-sized CPU does not ask for a fade at all', async
   await context.addInitScript(() => {
     Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 4 })
     window.__fades = 0
-    document.startViewTransition = fn => {
+    document.startViewTransition = (fn) => {
       window.__fades++
       const done = Promise.resolve().then(fn)
       return { ready: done, updateCallbackDone: done, finished: done }
@@ -570,7 +664,11 @@ test('a route change on a phone-sized CPU does not ask for a fade at all', async
   const page = await context.newPage()
   await page.goto(url + '/about')
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
-  await page.evaluate(() => { const a = Object.assign(document.createElement('a'), { href: '/islands' }); document.body.append(a); a.click() })
+  await page.evaluate(() => {
+    const a = Object.assign(document.createElement('a'), { href: '/islands' })
+    document.body.append(a)
+    a.click()
+  })
   await page.waitForURL('**/islands')
   expect(await page.evaluate(() => window.__fades)).toBe(0)
   await context.close()
@@ -580,14 +678,27 @@ test('a route fade that was slow to start is not asked for again', async () => {
   const { page, errors } = await open('/about', true)
   await page.evaluate(() => {
     window.__fades = 0
-    document.startViewTransition = fn => {
+    document.startViewTransition = (fn) => {
       window.__fades++
       const done = Promise.resolve().then(fn)
-      return { ready: done.then(() => new Promise(r => { setTimeout(r, 150) })), updateCallbackDone: done, finished: done }
+      return {
+        ready: done.then(
+          () =>
+            new Promise((r) => {
+              setTimeout(r, 150)
+            }),
+        ),
+        updateCallbackDone: done,
+        finished: done,
+      }
     }
   })
-  const go = async href => {
-    await page.evaluate(h => { window.__link = Object.assign(document.createElement('a'), { href: h }); document.body.append(window.__link); window.__link.click() }, href)
+  const go = async (href) => {
+    await page.evaluate((h) => {
+      window.__link = Object.assign(document.createElement('a'), { href: h })
+      document.body.append(window.__link)
+      window.__link.click()
+    }, href)
     await page.waitForURL('**' + href)
     await page.waitForTimeout(250)
   }

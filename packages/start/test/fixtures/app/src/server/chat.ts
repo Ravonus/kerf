@@ -9,7 +9,11 @@ export const room = channel({
   authorize: ({ params }) => !banned.has(params.roomId),
   client: { say: object({ text: 'string' }) },
   server: { said: object({ text: 'string' }) },
-  on: { say: async ({ msg, room }) => { await room.publish('said', { text: msg.text }) } },
+  on: {
+    say: async ({ msg, room }) => {
+      await room.publish('said', { text: msg.text })
+    },
+  },
 })
 
 export const counter = sharedState('count', {
@@ -21,10 +25,14 @@ export const counter = sharedState('count', {
 
 export const postToRoom = mutation({
   input: object({ roomId: 'string', text: 'string' }),
-  run: async ({ input }) => { await room.in({ roomId: input.roomId }).publish('said', { text: input.text }) },
+  run: async ({ input }) => {
+    await room.in({ roomId: input.roomId }).publish('said', { text: input.text })
+  },
 })
 
 export const ban = mutation({
   input: object({ roomId: 'string' }),
-  run: async ({ input }) => { banned.add(input.roomId) },
+  run: async ({ input }) => {
+    banned.add(input.roomId)
+  },
 })

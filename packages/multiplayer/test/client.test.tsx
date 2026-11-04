@@ -4,11 +4,26 @@
 import { channel, type StandardSchemaV1 } from '@weft-js/start'
 import { state } from '@weft-js/core'
 import { net, render, screen } from '@weft-js/core/test'
-import { applyPeer, cursors, expire, hue, locate, presence, readCursor, relay, resolve } from '../src/index'
+import {
+  applyPeer,
+  cursors,
+  expire,
+  hue,
+  locate,
+  presence,
+  readCursor,
+  relay,
+  resolve,
+} from '../src/index'
 import { multiplayer } from '../src/server'
 
-const pass = <T,>(): StandardSchemaV1<T> => ({ '~standard': { version: 1, vendor: 't', validate: v => ({ value: v as T }) } })
-const mp = multiplayer({ user: ({ ctx }) => ({ id: (ctx as { user?: { id: string } }).user?.id ?? 'guest', name: 'Me' }), relay: { ping: pass() } })
+const pass = <T,>(): StandardSchemaV1<T> => ({
+  '~standard': { version: 1, vendor: 't', validate: (v) => ({ value: v as T }) },
+})
+const mp = multiplayer({
+  user: ({ ctx }) => ({ id: (ctx as { user?: { id: string } }).user?.id ?? 'guest', name: 'Me' }),
+  relay: { ping: pass() },
+})
 const room = channel({
   $id: 'mp.room',
   params: pass<{ id: string }>(),
@@ -26,18 +41,33 @@ function Room() {
   return (
     <>
       <p aria-label="self">{live.self.value ?? ''}</p>
-      <ul>{live.peers.value.map(p => <li key={p.id}>{`${p.user.name}:${p.state?.typing}`}</li>)}</ul>
-      <button onClick={() => { typing.value = !typing.value }}>type</button>
+      <ul>
+        {live.peers.value.map((p) => (
+          <li key={p.id}>{`${p.user.name}:${p.state?.typing}`}</li>
+        ))}
+      </ul>
+      <button
+        onClick={() => {
+          typing.value = !typing.value
+        }}
+      >
+        type
+      </button>
     </>
   )
 }
-const peer = (id: string, typing = false) => ({ id, user: { id, name: id.toUpperCase() }, state: { typing }, at: 1 })
-const items = () => screen.queryAllByRole('listitem').map(li => li.textContent)
+const peer = (id: string, typing = false) => ({
+  id,
+  user: { id, name: id.toUpperCase() },
+  state: { typing },
+  at: 1,
+})
+const items = () => screen.queryAllByRole('listitem').map((li) => li.textContent)
 
 test('hello on join, and the server names this connection', async () => {
   render(Room, {})
   await net.settle()
-  expect(net.sent(room).some(s => s.name === 'mp.hello')).toBe(true)
+  expect(net.sent(room).some((s) => s.name === 'mp.hello')).toBe(true)
   expect(screen.getByLabelText('self').textContent).toMatch(/\w/)
 })
 
@@ -63,9 +93,14 @@ test('a state change is sent, coalesced', async () => {
   screen.getByRole('button', { name: 'type' }).click()
   screen.getByRole('button', { name: 'type' }).click()
   screen.getByRole('button', { name: 'type' }).click()
-  await new Promise(ok => { setTimeout(ok, 100) })
+  await new Promise((ok) => {
+    setTimeout(ok, 100)
+  })
   await net.settle()
-  const after = net.sent(room).slice(before).filter(s => s.name === 'mp.state')
+  const after = net
+    .sent(room)
+    .slice(before)
+    .filter((s) => s.name === 'mp.state')
   expect(after).toHaveLength(1)
   expect(after[0]!.msg).toEqual({ state: { typing: true } })
 })
@@ -75,13 +110,19 @@ test('someone asking gets an answer addressed to them', async () => {
   await net.settle()
   await net.publish(room, { id: 'r' }, 'mp.ask', { id: 'b' })
   await net.settle()
-  expect(net.sent(room).filter(s => s.name === 'mp.answer')[0]!.msg).toEqual({ to: 'b', state: { typing: false } })
+  expect(net.sent(room).filter((s) => s.name === 'mp.answer')[0]!.msg).toEqual({
+    to: 'b',
+    state: { typing: false },
+  })
 })
 
 test('the roster keeps one entry per connection, and ages out the silent', () => {
   expect(applyPeer([peer('a')], peer('a', true))).toEqual([peer('a', true)])
-  const list = [{ ...peer('a'), at: 100 }, { ...peer('b'), at: 900 }]
-  expect(expire(list, 1000, 500).map(p => p.id)).toEqual(['b'])
+  const list = [
+    { ...peer('a'), at: 100 },
+    { ...peer('b'), at: 900 },
+  ]
+  expect(expire(list, 1000, 500).map((p) => p.id)).toEqual(['b'])
   expect(expire(list, 1000, 5000)).toBe(list)
 })
 
@@ -103,8 +144,14 @@ test('a position reads the same on a screen of another size', () => {
   el.getBoundingClientRect = () => ({ left: 0, top: 0, width: 400, height: 200 }) as DOMRect
   expect(resolve(at, 'data-anchor', { width: 300, height: 300 })).toEqual({ left: 100, top: 100 })
   expect(resolve({ a: 'gone', x: 0, y: 0 })).toBeNull()
-  expect(resolve({ x: 0.5, y: 0.25 }, 'data-anchor', { width: 300, height: 400 })).toEqual({ left: 150, top: 100 })
-  expect(locate(null, 150, 100, 'data-anchor', { width: 300, height: 200 })).toEqual({ x: 0.5, y: 0.5 })
+  expect(resolve({ x: 0.5, y: 0.25 }, 'data-anchor', { width: 300, height: 400 })).toEqual({
+    left: 150,
+    top: 100,
+  })
+  expect(locate(null, 150, 100, 'data-anchor', { width: 300, height: 200 })).toEqual({
+    x: 0.5,
+    y: 0.5,
+  })
   el.remove()
 })
 
@@ -117,7 +164,9 @@ function Relay() {
   const chat = room.connect({ id: 'r' })
   const r = relay<{ ping: { at: string } }>(chat)
   const got = state('')
-  r.on('ping', e => { got.value = `${e.peer}:${e.data.at}` })
+  r.on('ping', (e) => {
+    got.value = `${e.peer}:${e.data.at}`
+  })
   return <p aria-label="got">{got.value}</p>
 }
 
@@ -133,7 +182,13 @@ function Pointers() {
   const chat = room.connect({ id: 'r' })
   const live = presence(chat)
   const c = cursors(live)
-  return <ol>{c.list.value.map(x => <li key={x.id}>{`${x.id}:${x.left}`}</li>)}</ol>
+  return (
+    <ol>
+      {c.list.value.map((x) => (
+        <li key={x.id}>{`${x.id}:${x.left}`}</li>
+      ))}
+    </ol>
+  )
 }
 
 test('another cursor shows, and goes with its peer', async () => {

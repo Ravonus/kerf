@@ -1,5 +1,21 @@
-import { CommandIcon, FileIcon, GlobeIcon, MicIcon, PaperclipIcon, SendIcon, StopIcon, XIcon } from '@weft-js/warp-icons'
-import { announce, applySuggest, autosize, installSweep, suggestQuery, uid } from '@weft-js/warp-core'
+import {
+  CommandIcon,
+  FileIcon,
+  GlobeIcon,
+  MicIcon,
+  PaperclipIcon,
+  SendIcon,
+  StopIcon,
+  XIcon,
+} from '@weft-js/warp-icons'
+import {
+  announce,
+  applySuggest,
+  autosize,
+  installSweep,
+  suggestQuery,
+  uid,
+} from '@weft-js/warp-core'
 import { derived, onMount, state, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { use } from '@weft-js/warp-core/weft'
@@ -18,7 +34,10 @@ export type PromptFile = { id: string; name: string; progress?: number }
 /** A completion shown under the prompt. */
 export type PromptSuggestion = { value: string; description?: string | undefined }
 /** What the prompt hands out through `control`. */
-export interface PromptControl { insert(text: string): void; focus(): void }
+export interface PromptControl {
+  insert(text: string): void
+  focus(): void
+}
 
 /** Props for Prompt. */
 export interface PromptProps {
@@ -79,7 +98,11 @@ export interface PromptProps {
  */
 export function Prompt(p: PromptProps) {
   const id = uid('prompt')
-  const draft = held<string>(() => p.value, '', () => p.onValueChange)
+  const draft = held<string>(
+    () => p.value,
+    '',
+    () => p.onValueChange,
+  )
   const toolset = derived(() => p.tools ?? ['attach', 'slash', 'mic', 'web'])
   const shown = (t: PromptTool) => toolset.value.includes(t)
   const open = state<ReturnType<typeof suggestQuery>>(null)
@@ -89,7 +112,7 @@ export function Prompt(p: PromptProps) {
     const q = open.value
     if (!q) return []
     const list = (q.trigger === '/' ? p.commands : p.mentions) ?? []
-    return list.filter(o => o.value.slice(1).toLowerCase().startsWith(q.query))
+    return list.filter((o) => o.value.slice(1).toLowerCase().startsWith(q.query))
   })
   const listed = derived(() => options.value.length > 0)
   const oid = (o: PromptSuggestion) => `${id}-o-${o.value.slice(1)}`
@@ -99,7 +122,11 @@ export function Prompt(p: PromptProps) {
   let box: HTMLTextAreaElement | undefined
   let host: HTMLElement | undefined
   let picker: HTMLInputElement | undefined
-  use(autosize, () => box, () => draft.value)
+  use(
+    autosize,
+    () => box,
+    () => draft.value,
+  )
   onMount(() => {
     p.control?.({
       insert(text) {
@@ -140,53 +167,210 @@ export function Prompt(p: PromptProps) {
   const onKey = (e: KeyboardEvent) => {
     if (listed.value) {
       const n = options.value.length
-      if (e.key === 'Escape') { e.preventDefault(); open.value = null; return }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); active.value = (active.value + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; return }
-      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(current.value!.value); return }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        open.value = null
+        return
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        active.value = (active.value + (e.key === 'ArrowDown' ? 1 : n - 1)) % n
+        return
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        pick(current.value!.value)
+        return
+      }
     }
-    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send() }
-    else if (e.key === 'Escape' && p.busy) { e.preventDefault(); p.onStop?.() }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault()
+      send()
+    } else if (e.key === 'Escape' && p.busy) {
+      e.preventDefault()
+      p.onStop?.()
+    }
   }
-  const add = (list: FileList | null | undefined) => { const f = [...(list ?? [])]; if (f.length) p.onAttach?.(f) }
-  const onDrop = (e: DragEvent) => { e.preventDefault(); drag.value = false; add(e.dataTransfer?.files) }
-  const over = (e: DragEvent) => { e.preventDefault(); drag.value = true }
+  const add = (list: FileList | null | undefined) => {
+    const f = [...(list ?? [])]
+    if (f.length) p.onAttach?.(f)
+  }
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault()
+    drag.value = false
+    add(e.dataTransfer?.files)
+  }
+  const over = (e: DragEvent) => {
+    e.preventDefault()
+    drag.value = true
+  }
   return (
-    <div data-scope="prompt" style="position:relative;padding:0 var(--warp-space-group) var(--warp-space-group)">
+    <div
+      data-scope="prompt"
+      style="position:relative;padding:0 var(--warp-space-group) var(--warp-space-group)"
+    >
       {p.children}
-      <div ref={n => (host = n)} data-scope="composer" data-sweep="" data-pin={drag.value ? '' : undefined} style="margin:0" onDragOver={over} onDragLeave={() => (drag.value = false)} onDrop={onDrop}>
+      <div
+        ref={(n) => (host = n)}
+        data-scope="composer"
+        data-sweep=""
+        data-pin={drag.value ? '' : undefined}
+        style="margin:0"
+        onDragOver={over}
+        onDragLeave={() => (drag.value = false)}
+        onDrop={onDrop}
+      >
         <Sweep />
         {hasFiles.value && (
           <div data-part="files">
-            {p.attachments ?? (p.files ?? []).map(f => (
-              <span key={f.id} data-part="file">
-                <FileIcon /><span>{f.name}</span>
-                <IconButton icon={XIcon} label={`Remove ${f.name}`} onClick={() => p.onRemoveFile?.(f.id)} />
-                {f.progress !== undefined && f.progress < 1 && <Bar label={`Uploading ${f.name}`} value={f.progress} />}
-              </span>
-            ))}
+            {p.attachments ??
+              (p.files ?? []).map((f) => (
+                <span key={f.id} data-part="file">
+                  <FileIcon />
+                  <span>{f.name}</span>
+                  <IconButton
+                    icon={XIcon}
+                    label={`Remove ${f.name}`}
+                    onClick={() => p.onRemoveFile?.(f.id)}
+                  />
+                  {f.progress !== undefined && f.progress < 1 && (
+                    <Bar label={`Uploading ${f.name}`} value={f.progress} />
+                  )}
+                </span>
+              ))}
           </div>
         )}
-        <label data-part="sr-only" for={`${id}-in`}>{p.label ?? 'Message the assistant'}</label>
-        <textarea ref={n => (box = n)} id={`${id}-in`} rows="1" enterkeyhint="send" placeholder={p.placeholder ?? 'Ask, or type / for commands'} aria-describedby={p.blocked ? `${id}-hint ${id}-why` : `${id}-hint`} aria-controls={listed.value ? `${id}-list` : undefined} aria-activedescendant={activeId.value} value={draft.value} onInput={e => { draft.set((e.currentTarget).value); look() }} onKeyDown={onKey} onClick={look} onBlur={() => (open.value = null)}></textarea>
-        {p.blocked && <span data-part="hint" data-state="error" id={`${id}-why`}>{p.blocked}</span>}
+        <label data-part="sr-only" for={`${id}-in`}>
+          {p.label ?? 'Message the assistant'}
+        </label>
+        <textarea
+          ref={(n) => (box = n)}
+          id={`${id}-in`}
+          rows="1"
+          enterkeyhint="send"
+          placeholder={p.placeholder ?? 'Ask, or type / for commands'}
+          aria-describedby={p.blocked ? `${id}-hint ${id}-why` : `${id}-hint`}
+          aria-controls={listed.value ? `${id}-list` : undefined}
+          aria-activedescendant={activeId.value}
+          value={draft.value}
+          onInput={(e) => {
+            draft.set(e.currentTarget.value)
+            look()
+          }}
+          onKeyDown={onKey}
+          onClick={look}
+          onBlur={() => (open.value = null)}
+        ></textarea>
+        {p.blocked && (
+          <span data-part="hint" data-state="error" id={`${id}-why`}>
+            {p.blocked}
+          </span>
+        )}
         <div data-part="row">
-          {shown('attach') && <IconButton icon={PaperclipIcon} label="Attach file" onClick={() => picker?.click()} />}
-          {shown('attach') && <input ref={n => (picker = n)} type="file" multiple hidden onChange={e => { add((e.currentTarget).files); (e.currentTarget).value = '' }} />}
-          {shown('slash') && !!p.commands?.length && <IconButton icon={CommandIcon} label="Commands" onClick={() => { draft.set('/'); box!.value = '/'; box!.focus(); box!.setSelectionRange(1, 1); look() }} />}
-          {shown('mic') && <IconButton icon={MicIcon} label="Dictate" tone={p.mic ? 'critical' : 'neutral'} aria-pressed={p.mic ? 'true' : 'false'} onClick={p.onMic} />}
-          {shown('web') && !p.compact && <Button emphasis="ghost" tone="neutral" size="sm" aria-pressed={p.web ? 'true' : 'false'} onClick={() => p.onWebChange?.(!p.web)}><GlobeIcon /><span data-part="label">Web</span></Button>}
+          {shown('attach') && (
+            <IconButton icon={PaperclipIcon} label="Attach file" onClick={() => picker?.click()} />
+          )}
+          {shown('attach') && (
+            <input
+              ref={(n) => (picker = n)}
+              type="file"
+              multiple
+              hidden
+              onChange={(e) => {
+                add(e.currentTarget.files)
+                e.currentTarget.value = ''
+              }}
+            />
+          )}
+          {shown('slash') && !!p.commands?.length && (
+            <IconButton
+              icon={CommandIcon}
+              label="Commands"
+              onClick={() => {
+                draft.set('/')
+                box!.value = '/'
+                box!.focus()
+                box!.setSelectionRange(1, 1)
+                look()
+              }}
+            />
+          )}
+          {shown('mic') && (
+            <IconButton
+              icon={MicIcon}
+              label="Dictate"
+              tone={p.mic ? 'critical' : 'neutral'}
+              aria-pressed={p.mic ? 'true' : 'false'}
+              onClick={p.onMic}
+            />
+          )}
+          {shown('web') && !p.compact && (
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              size="sm"
+              aria-pressed={p.web ? 'true' : 'false'}
+              onClick={() => p.onWebChange?.(!p.web)}
+            >
+              <GlobeIcon />
+              <span data-part="label">Web</span>
+            </Button>
+          )}
           <span data-part="spacer"></span>
-          {p.context && <ContextMeter used={p.context.used} limit={p.context.limit} parts={p.context.parts} onCompact={p.onCompact} />}
-          {p.models && <ModelPicker models={p.models} value={p.model} onChange={p.onModelChange} compact={p.compact} />}
-          <Button data-part="send" data-icon-only="" tone={p.busy ? 'neutral' : undefined} label={p.busy ? 'Stop' : 'Send'} aria-disabled={p.blocked && !p.busy ? 'true' : undefined} onClick={press}>{p.busy ? <StopIcon /> : <SendIcon />}</Button>
+          {p.context && (
+            <ContextMeter
+              used={p.context.used}
+              limit={p.context.limit}
+              parts={p.context.parts}
+              onCompact={p.onCompact}
+            />
+          )}
+          {p.models && (
+            <ModelPicker
+              models={p.models}
+              value={p.model}
+              onChange={p.onModelChange}
+              compact={p.compact}
+            />
+          )}
+          <Button
+            data-part="send"
+            data-icon-only=""
+            tone={p.busy ? 'neutral' : undefined}
+            label={p.busy ? 'Stop' : 'Send'}
+            aria-disabled={p.blocked && !p.busy ? 'true' : undefined}
+            onClick={press}
+          >
+            {p.busy ? <StopIcon /> : <SendIcon />}
+          </Button>
         </div>
-        <span data-part="sr-only" id={`${id}-hint`}>Enter sends, Shift+Enter adds a line, Escape stops a running answer.</span>
+        <span data-part="sr-only" id={`${id}-hint`}>
+          Enter sends, Shift+Enter adds a line, Escape stops a running answer.
+        </span>
         {listed.value && (
-          <div data-scope="suggest" role="listbox" id={`${id}-list`} aria-label={open.value?.trigger === '/' ? 'Commands' : 'Mentions'}>
-            <div data-part="group" aria-hidden="true">{open.value?.trigger === '/' ? 'Commands' : 'Mentions'}</div>
-            {options.value.map(o => (
-              <div key={o.value} id={oid(o)} role="option" aria-selected={o === current.value ? 'true' : 'false'} onMouseDown={e => { e.preventDefault(); pick(o.value) }}>
-                <span data-part="cmd">{o.value}</span><small>{o.description}</small><kbd>{o === current.value ? '↵' : ''}</kbd>
+          <div
+            data-scope="suggest"
+            role="listbox"
+            id={`${id}-list`}
+            aria-label={open.value?.trigger === '/' ? 'Commands' : 'Mentions'}
+          >
+            <div data-part="group" aria-hidden="true">
+              {open.value?.trigger === '/' ? 'Commands' : 'Mentions'}
+            </div>
+            {options.value.map((o) => (
+              <div
+                key={o.value}
+                id={oid(o)}
+                role="option"
+                aria-selected={o === current.value ? 'true' : 'false'}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  pick(o.value)
+                }}
+              >
+                <span data-part="cmd">{o.value}</span>
+                <small>{o.description}</small>
+                <kbd>{o === current.value ? '↵' : ''}</kbd>
               </div>
             ))}
           </div>

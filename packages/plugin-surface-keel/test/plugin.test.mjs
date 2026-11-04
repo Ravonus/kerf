@@ -8,7 +8,10 @@ describe('keel()', () => {
     const p = keel()
     expect(p.provides).toEqual([{ slot: 'surface.renderer', key: 'keel-pixel' }])
     const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides
-    expect(ref.sides.client).toEqual({ module: '@weft-js/plugin-surface-keel/runtime', export: 'renderer' })
+    expect(ref.sides.client).toEqual({
+      module: '@weft-js/plugin-surface-keel/runtime',
+      export: 'renderer',
+    })
   })
 
   it('a recipe gives the same theme every time, and tokens at an integer scale', () => {

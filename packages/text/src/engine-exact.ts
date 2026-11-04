@@ -14,7 +14,7 @@ export const engine: TextEngine = {
   lineText: exact.lineText,
   clear: exact.clear,
   needs: exact.needs,
-  load: packs => exact.load(packs.filter((p): p is Exclude<Pack, 'exact'> => p !== 'exact')),
+  load: (packs) => exact.load(packs.filter((p): p is Exclude<Pack, 'exact'> => p !== 'exact')),
   loaded: () => ['exact', ...exact.loaded()],
   setLocale: exact.setLocale,
 }

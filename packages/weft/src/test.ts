@@ -35,7 +35,13 @@ const mounted = new Set<() => void>()
  * `options.state` seeds scopes (`{ cart: { note: 'hi' } }`); pass one `storage` to several renders to test reloads.
  * Unmounted automatically after each test.
  */
-export function render<P extends object>(Comp: (props: P) => unknown, props: P = {} as P, options: AppOptions & { /** Slot overrides: `{ 'text.measure': fakeMeasure() }`. */ slots?: Record<string, unknown> } = {}) {
+export function render<P extends object>(
+  Comp: (props: P) => unknown,
+  props: P = {} as P,
+  options: AppOptions & {
+    /** Slot overrides: `{ 'text.measure': fakeMeasure() }`. */ slots?: Record<string, unknown>
+  } = {},
+) {
   const app = createApp(options)
   useApp(app)
   if (options.slots) rt.slots = options.slots
@@ -66,17 +72,31 @@ function recording(canvas: HTMLCanvasElement) {
   const log: { name: string; args: unknown[] }[] = []
   calls.set(canvas, log)
   const values: Record<string, unknown> = {}
-  const ctx: unknown = new Proxy({}, {
-    get(_, key: string) {
-      if (key in values) return values[key]
-      if (key === 'measureText') return (text: string) => ({ width: text.length * 8, fontBoundingBoxAscent: 12, fontBoundingBoxDescent: 4 })
-      if (key === 'getImageData') return () => ({ data: new Uint8ClampedArray(4) })
-      if (key === 'getExtension') return () => null
-      if (key === 'canvas') return canvas
-      return (...args: unknown[]) => { log.push({ name: key, args }); return ctx }
+  const ctx: unknown = new Proxy(
+    {},
+    {
+      get(_, key: string) {
+        if (key in values) return values[key]
+        if (key === 'measureText')
+          return (text: string) => ({
+            width: text.length * 8,
+            fontBoundingBoxAscent: 12,
+            fontBoundingBoxDescent: 4,
+          })
+        if (key === 'getImageData') return () => ({ data: new Uint8ClampedArray(4) })
+        if (key === 'getExtension') return () => null
+        if (key === 'canvas') return canvas
+        return (...args: unknown[]) => {
+          log.push({ name: key, args })
+          return ctx
+        }
+      },
+      set(_, key: string, value) {
+        values[key] = value
+        return true
+      },
     },
-    set(_, key: string, value) { values[key] = value; return true },
-  })
+  )
   return ctx
 }
 
@@ -99,15 +119,20 @@ export function fakeMeasure() {
     let line = ''
     for (const word of h.text.split(/\s+/).filter(Boolean)) {
       const next = line ? `${line} ${word}` : word
-      if (line && next.length * 8 > width) { out.push({ width: line.length * 8, text: line }); line = word }
-      else line = next
+      if (line && next.length * 8 > width) {
+        out.push({ width: line.length * 8, text: line })
+        line = word
+      } else line = next
     }
     if (line) out.push({ width: line.length * 8, text: line })
     return out
   }
   return {
     prepare: (text: string): H => ({ exact: true, ready: null, text }),
-    layout: (h: H, width: number, lineHeight: number) => { const n = wrap(h, width).length; return { height: n * lineHeight, lineCount: n } },
+    layout: (h: H, width: number, lineHeight: number) => {
+      const n = wrap(h, width).length
+      return { height: n * lineHeight, lineCount: n }
+    },
     lines: wrap,
     lineText: (_: H, line: { text: string }) => line.text,
     clear() {},
@@ -120,31 +145,84 @@ export function fakeMeasure() {
  */
 export const screen = {
   // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
-  getByRole: dom.getByRole, getAllByRole: dom.getAllByRole, queryByRole: dom.queryByRole, queryAllByRole: dom.queryAllByRole, findByRole: dom.findByRole, findAllByRole: dom.findAllByRole,
+  getByRole: dom.getByRole,
+  getAllByRole: dom.getAllByRole,
+  queryByRole: dom.queryByRole,
+  queryAllByRole: dom.queryAllByRole,
+  findByRole: dom.findByRole,
+  findAllByRole: dom.findAllByRole,
   // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
-  getByLabelText: dom.getByLabelText, getAllByLabelText: dom.getAllByLabelText, queryByLabelText: dom.queryByLabelText, queryAllByLabelText: dom.queryAllByLabelText, findByLabelText: dom.findByLabelText, findAllByLabelText: dom.findAllByLabelText,
+  getByLabelText: dom.getByLabelText,
+  getAllByLabelText: dom.getAllByLabelText,
+  queryByLabelText: dom.queryByLabelText,
+  queryAllByLabelText: dom.queryAllByLabelText,
+  findByLabelText: dom.findByLabelText,
+  findAllByLabelText: dom.findAllByLabelText,
   // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
-  getByText: dom.getByText, getAllByText: dom.getAllByText, queryByText: dom.queryByText, queryAllByText: dom.queryAllByText, findByText: dom.findByText, findAllByText: dom.findAllByText,
+  getByText: dom.getByText,
+  getAllByText: dom.getAllByText,
+  queryByText: dom.queryByText,
+  queryAllByText: dom.queryAllByText,
+  findByText: dom.findByText,
+  findAllByText: dom.findAllByText,
 }
 
 type UserEvent = ReturnType<typeof userEvent.setup>
-type Actions = Pick<UserEvent, 'click' | 'dblClick' | 'type' | 'clear' | 'keyboard' | 'hover' | 'unhover' | 'tab' | 'selectOptions' | 'deselectOptions' | 'upload' | 'paste'>
+type Actions = Pick<
+  UserEvent,
+  | 'click'
+  | 'dblClick'
+  | 'type'
+  | 'clear'
+  | 'keyboard'
+  | 'hover'
+  | 'unhover'
+  | 'tab'
+  | 'selectOptions'
+  | 'deselectOptions'
+  | 'upload'
+  | 'paste'
+>
 
 let session: UserEvent | undefined
 const act = <K extends keyof Actions>(name: K) =>
   (async (...args: unknown[]) => {
-    session ??= userEvent.setup({ advanceTimers: ms => (clock.installed ? vi.advanceTimersByTimeAsync(ms).then(() => {}) : undefined) })
+    session ??= userEvent.setup({
+      advanceTimers: (ms) =>
+        clock.installed ? vi.advanceTimersByTimeAsync(ms).then(() => {}) : undefined,
+    })
     await (session[name] as (...a: unknown[]) => Promise<void>)(...args)
     await flush()
   }) as unknown as Actions[K]
 
 /** User actions (`@testing-library/user-event`); each one ends in `flush()`, so there is nothing to wait for (T004). */
 export const user: Actions = {
-  click: act('click'), dblClick: act('dblClick'), type: act('type'), clear: act('clear'), keyboard: act('keyboard'), hover: act('hover'),
-  unhover: act('unhover'), tab: act('tab'), selectOptions: act('selectOptions'), deselectOptions: act('deselectOptions'), upload: act('upload'), paste: act('paste'),
+  click: act('click'),
+  dblClick: act('dblClick'),
+  type: act('type'),
+  clear: act('clear'),
+  keyboard: act('keyboard'),
+  hover: act('hover'),
+  unhover: act('unhover'),
+  tab: act('tab'),
+  selectOptions: act('selectOptions'),
+  deselectOptions: act('deselectOptions'),
+  upload: act('upload'),
+  paste: act('paste'),
 }
 
-const faked = ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'setImmediate', 'clearImmediate', 'requestAnimationFrame', 'cancelAnimationFrame', 'Date', 'performance'] as const
+const faked = [
+  'setTimeout',
+  'clearTimeout',
+  'setInterval',
+  'clearInterval',
+  'setImmediate',
+  'clearImmediate',
+  'requestAnimationFrame',
+  'cancelAnimationFrame',
+  'Date',
+  'performance',
+] as const
 
 /**
  * A deterministic clock for timers, `resource` fetches that wait on them, and rAF. `install()` before anything
@@ -157,7 +235,10 @@ export const clock = {
     clock.installed = true
   },
   async advance(ms: number) {
-    if (!clock.installed) throw new Error('T004: clock.advance() needs clock.install() first, before the code under test schedules its timers')
+    if (!clock.installed)
+      throw new Error(
+        'T004: clock.advance() needs clock.install() first, before the code under test schedules its timers',
+      )
     await vi.advanceTimersByTimeAsync(ms)
     await flush()
   },
@@ -175,15 +256,25 @@ export const clock = {
   },
 }
 
-afterEach(context => {
+afterEach((context) => {
   cleanup()
   clock.uninstall()
   session = undefined
-  try { assertNoLeaks() } finally { resetPage(); resetTransport(); lines.clear(); posted.clear() } // T012
+  try {
+    assertNoLeaks()
+  } finally {
+    resetPage()
+    resetTransport()
+    lines.clear()
+    posted.clear()
+  } // T012
   // T001 at runtime: catches what the static check can't see (assertions hidden in helpers it couldn't read, or none).
-  const failed = context.task.result?.state === 'fail' || (context.task.result?.errors?.length ?? 0) > 0
+  const failed =
+    context.task.result?.state === 'fail' || (context.task.result?.errors?.length ?? 0) > 0
   if (!failed && !context.task.fails && expect.getState().assertionCalls === 0)
-    throw new Error(`T001: "${context.task.name}" made no assertion, so it passes as long as nothing throws.\n  fix: assert what the user sees, e.g. expect(screen.getByRole('button').textContent).toBe('Count 1'). Docs: weft docs T001`)
+    throw new Error(
+      `T001: "${context.task.name}" made no assertion, so it passes as long as nothing throws.\n  fix: assert what the user sees, e.g. expect(screen.getByRole('button').textContent).toBe('Count 1'). Docs: weft docs T001`,
+    )
 })
 
 // ---- @weft-js/core/browser: the leak check (T012) and the page fakes -----------------------------------------------------
@@ -200,17 +291,23 @@ export function assertNoLeaks() {
   const list = leaks()
   for (const [, close] of Array.from(open.values())) close()
   throw new Error(
-    `T012: the test ended with ${list.length} open subscription${list.length > 1 ? 's' : ''}, listener${list.length > 1 ? 's' : ''} or interval${list.length > 1 ? 's' : ''}:\n${list.map(w => `  - ${w}`).join('\n')}\n` +
+    `T012: the test ended with ${list.length} open subscription${list.length > 1 ? 's' : ''}, listener${list.length > 1 ? 's' : ''} or interval${list.length > 1 ? 's' : ''}:\n${list.map((w) => `  - ${w}`).join('\n')}\n` +
       '  fix: unmount what the test created (`render` unmounts itself; call the `dispose` of any `createRoot`), or fix the leak: create them in setup, where their owner removes them',
   )
 }
 
-const fake = { online: true, visibility: 'visible' as DocumentVisibilityState, focus: true, media: new Map<string, boolean>() }
+const fake = {
+  online: true,
+  visibility: 'visible' as DocumentVisibilityState,
+  focus: true,
+  media: new Map<string, boolean>(),
+}
 const lists = new Map<string, EventTarget & { media: string; matches: boolean }>()
 
 function installPage() {
   if (typeof document === 'undefined') return
-  const define = (o: object, key: string, get: () => unknown) => Object.defineProperty(o, key, { configurable: true, get })
+  const define = (o: object, key: string, get: () => unknown) =>
+    Object.defineProperty(o, key, { configurable: true, get })
   define(navigator, 'onLine', () => fake.online)
   define(document, 'visibilityState', () => fake.visibility)
   define(document, 'hidden', () => fake.visibility === 'hidden')
@@ -220,7 +317,13 @@ function installPage() {
     configurable: true,
     value: (media: string) => {
       let list = lists.get(media)
-      if (!list) lists.set(media, (list = Object.defineProperty(Object.assign(new EventTarget(), { media }), 'matches', { get: () => fake.media.get(media) ?? false }) as unknown as NonNullable<typeof list>))
+      if (!list)
+        lists.set(
+          media,
+          (list = Object.defineProperty(Object.assign(new EventTarget(), { media }), 'matches', {
+            get: () => fake.media.get(media) ?? false,
+          }) as unknown as NonNullable<typeof list>),
+        )
       return list
     },
   })
@@ -234,7 +337,8 @@ function resetPage() {
 
 installPage()
 
-const fire = (target: EventTarget, type: string, init?: object) => target.dispatchEvent(Object.assign(new Event(type), init))
+const fire = (target: EventTarget, type: string, init?: object) =>
+  target.dispatchEvent(Object.assign(new Event(type), init))
 
 /**
  * The fake transport for @weft-js/start's server functions (research 27 §7). With @weft-js/core/test loaded, `query`/`mutation`
@@ -259,11 +363,24 @@ const transport = {
   /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as @weft-js/core/browser's. */
   open,
   /** The channel fake while a socket is open (@weft-js/start's channel.ts). */
-  ws: undefined as undefined | { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> },
+  ws: undefined as
+    | undefined
+    | {
+        publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>
+        drop(): void
+        recheck(): Promise<void>
+      },
   /** What this client's sockets sent. */
   sent: [] as { id: string; name: string; msg: unknown }[],
   /** The realtime fake while one is connected (@weft-js/start's live.ts). */
-  rt: undefined as undefined | { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] },
+  rt: undefined as
+    | undefined
+    | {
+        push(id: string, msg: unknown): number
+        poke(tags: string[]): Promise<void>
+        drop(): void
+        subscriptions(): { kind: string; id: string; input: unknown }[]
+      },
   /** Times the realtime connection was lost. */
   reconnects: 0,
   /** Server extensions for this test (`net.extension`): a plugin's fake runs through the real scope. */
@@ -286,23 +403,41 @@ function resetTransport() {
 /** The network as @weft-js/core/browser's `online()` and @weft-js/start's server functions see it. */
 export const net = {
   /** Offline: `online()` turns false, and server function calls reject with an `OfflineError`. */
-  offline() { fake.online = false; fire(window, 'offline'); return flush() },
-  online() { fake.online = true; fire(window, 'online'); return flush() },
+  offline() {
+    fake.online = false
+    fire(window, 'offline')
+    return flush()
+  },
+  online() {
+    fake.online = true
+    fire(window, 'online')
+    return flush()
+  },
   /** Every server function call waits `ms` first (fake timers: advance them with `clock.tick`). */
-  latency(ms: number) { transport.latency = ms },
+  latency(ms: number) {
+    transport.latency = ms
+  },
   /** The `ctx` server functions get (`{ db, user }`); `request` and `response` are added. */
-  context(ctx: object) { transport.ctx = ctx },
+  context(ctx: object) {
+    transport.ctx = ctx
+  },
   /** A plugin's server extension in the fake scope, for this test: its `context` and `guard` run, and `reset` after it. */
-  extension(extension: { reset?(): void }) { transport.extensions.push(extension) },
+  extension(extension: { reset?(): void }) {
+    transport.extensions.push(extension)
+  },
   /** The next call of `fn` rejects with `error` (queue several by calling again). */
   fail(fn: FnRef, error: unknown = new Error(`net.fail(${fnId(fn)})`)) {
     const id = fnId(fn)
     transport.fails.set(id, [...(transport.fails.get(id) ?? []), error])
   },
   /** Replace `fn`'s `run`: `net.handle(listTodos, () => [{ id: '1', title: 'Milk', done: false }])`. */
-  handle<I = never, O = unknown>(fn: FnRef, run: (input: I, ctx: never) => O | Promise<O>) { transport.handlers.set(fnId(fn), run) },
+  handle<I = never, O = unknown>(fn: FnRef, run: (input: I, ctx: never) => O | Promise<O>) {
+    transport.handlers.set(fnId(fn), run)
+  },
   /** The calls so far, in order: `{ id, kind, input }`. */
-  calls() { return transport.log.slice() },
+  calls() {
+    return transport.log.slice()
+  },
   /** A message straight to every reader of `stream`, as the server would send it. Returns how many got it. */
   push(stream: FnRef, message: unknown) {
     const n = connected().push(fnId(stream), message)
@@ -322,12 +457,17 @@ export const net = {
   },
   /** A message to everyone in a room, as another user's `room.publish` would: `net.publish(room, { roomId }, 'said', row)`. */
   async publish(room: FnRef, params: unknown, name: string, message: unknown) {
-    if (!transport.ws) throw new Error('net: no channel socket yet: render a `.connect()`, then `await net.settle()`')
+    if (!transport.ws)
+      throw new Error(
+        'net: no channel socket yet: render a `.connect()`, then `await net.settle()`',
+      )
     await transport.ws.publish(fnId(room), params, name, message)
     await net.settle()
   },
   /** What this client's sockets sent: `{ id, name, msg }`, in order. */
-  sent(room?: FnRef) { return transport.sent.filter(s => !room || s.id === fnId(room)) },
+  sent(room?: FnRef) {
+    return transport.sent.filter((s) => !room || s.id === fnId(room))
+  },
   /** A new `ctx` (or none: signed out), and the session re-check at once. */
   async session(ctx: object) {
     transport.ctx = ctx
@@ -350,7 +490,10 @@ export const net = {
 }
 
 function connected() {
-  if (!transport.rt) throw new Error('net: no realtime connection yet: render a `.live()` or a stream, then `await net.settle()`')
+  if (!transport.rt)
+    throw new Error(
+      'net: no realtime connection yet: render a `.live()` or a stream, then `await net.settle()`',
+    )
   return transport.rt
 }
 
@@ -370,14 +513,20 @@ class FakeLine {
     posted.set(this.name, [...(posted.get(this.name) ?? []), copy])
     deliver(this.name, copy, this)
   }
-  close() { lines.get(this.name)?.delete(this) }
+  close() {
+    lines.get(this.name)?.delete(this)
+  }
 }
 
 function deliver(name: string, data: unknown, from?: FakeLine) {
-  queueMicrotask(() => { for (const line of Array.from(lines.get(name) ?? [])) if (line !== from) line.onmessage?.({ data }) })
+  queueMicrotask(() => {
+    for (const line of Array.from(lines.get(name) ?? []))
+      if (line !== from) line.onmessage?.({ data })
+  })
 }
 
-if (typeof document !== 'undefined') (globalThis as Record<string, unknown>).BroadcastChannel = FakeLine
+if (typeof document !== 'undefined')
+  (globalThis as Record<string, unknown>).BroadcastChannel = FakeLine
 
 /**
  * Other tabs. Two `render()`s are two tabs: each gets its own channels, and a shared `storage` is the shared
@@ -385,28 +534,62 @@ if (typeof document !== 'undefined') (globalThis as Record<string, unknown>).Bro
  */
 export const tabs = {
   /** A message from another tab. */
-  post(name: string, message: unknown) { deliver(`weft:tab:${name}`, structuredClone(message)); return flush() },
+  post(name: string, message: unknown) {
+    deliver(`weft:tab:${name}`, structuredClone(message))
+    return flush()
+  },
   /** What this page posted, in order. */
   posted: (name: string) => (posted.get(`weft:tab:${name}`) ?? []).slice(),
 }
 
-const visibility = (to: DocumentVisibilityState) => { fake.visibility = to; fire(document, 'visibilitychange') }
+const visibility = (to: DocumentVisibilityState) => {
+  fake.visibility = to
+  fire(document, 'visibilitychange')
+}
 
 /**
  * The page as `visible()`, `lifecycle()` and `media()` see it. The page starts visible, focused and online, with
  * every media query false; each test starts from that again. Each call fires the real events, then flushes.
  */
 export const page = {
-  hide() { visibility('hidden'); return flush() },
-  show() { visibility('visible'); return flush() },
-  blur() { fake.focus = false; fire(window, 'blur'); return flush() },
-  focus() { fake.focus = true; fire(window, 'focus'); return flush() },
-  freeze() { fire(document, 'freeze'); return flush() },
-  resume() { fire(document, 'resume'); return flush() },
+  hide() {
+    visibility('hidden')
+    return flush()
+  },
+  show() {
+    visibility('visible')
+    return flush()
+  },
+  blur() {
+    fake.focus = false
+    fire(window, 'blur')
+    return flush()
+  },
+  focus() {
+    fake.focus = true
+    fire(window, 'focus')
+    return flush()
+  },
+  freeze() {
+    fire(document, 'freeze')
+    return flush()
+  },
+  resume() {
+    fire(document, 'resume')
+    return flush()
+  },
   /** Leave the page: hidden, then `pagehide`. `persisted`: kept in the back/forward cache (frozen), else terminated. */
-  leave({ persisted = false } = {}) { visibility('hidden'); fire(window, 'pagehide', { persisted }); return flush() },
+  leave({ persisted = false } = {}) {
+    visibility('hidden')
+    fire(window, 'pagehide', { persisted })
+    return flush()
+  },
   /** Come back from the back/forward cache. */
-  restore() { fire(window, 'pageshow', { persisted: true }); visibility('visible'); return flush() },
+  restore() {
+    fire(window, 'pageshow', { persisted: true })
+    visibility('visible')
+    return flush()
+  },
   /** Make `query` match (or not) and fire its `change`. */
   media(query: string, matches: boolean) {
     fake.media.set(query, matches)
@@ -430,14 +613,26 @@ export type Touches = {
 /** Count the DOM mutations and reactive re-runs one interaction causes, after everything has settled. */
 export async function touches(interaction: () => unknown): Promise<Touches> {
   const records: MutationRecord[] = []
-  const observer = new MutationObserver(r => records.push(...r))
-  observer.observe(document, { subtree: true, childList: true, characterData: true, attributes: true })
+  const observer = new MutationObserver((r) => records.push(...r))
+  observer.observe(document, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+  })
   const runs = stats.runs
   await interaction()
   await flush()
   records.push(...observer.takeRecords())
   observer.disconnect()
-  const t: Touches = { mutations: records.length, runs: stats.runs - runs, added: 0, removed: 0, text: 0, attributes: 0 }
+  const t: Touches = {
+    mutations: records.length,
+    runs: stats.runs - runs,
+    added: 0,
+    removed: 0,
+    text: 0,
+    attributes: 0,
+  }
   for (const r of records) {
     if (r.type === 'characterData') t.text++
     else if (r.type === 'attributes') t.attributes++
@@ -450,7 +645,11 @@ export async function touches(interaction: () => unknown): Promise<Touches> {
 }
 
 expect.extend({
-  async toTouchAtMost(interaction: () => unknown, mutations: number, budget: { runs?: number } = {}) {
+  async toTouchAtMost(
+    interaction: () => unknown,
+    mutations: number,
+    budget: { runs?: number } = {},
+  ) {
     const t = await touches(interaction)
     const pass = t.mutations <= mutations && (budget.runs === undefined || t.runs <= budget.runs)
     const limits = `≤ ${mutations} DOM mutations${budget.runs === undefined ? '' : ` and ≤ ${budget.runs} re-runs`}`

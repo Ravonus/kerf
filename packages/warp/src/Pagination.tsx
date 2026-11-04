@@ -49,9 +49,35 @@ export type PaginationBarProps = {
  * under 520px of its own width only ‹ current › remain and the range says the rest. Cursor mode: Previous and Next,
  * and how many are showing. A press keeps focus on the current page, whichever button that now is.
  */
-export function PaginationBar({ label = 'Pagination', mode = 'offset', page, defaultPage, onPageChange, total = 0, size, sizes = [10, 25, 50, 100], onSizeChange, hasMore, hasPrev, pageIndex = 0, supply, totalFetched, locale }: PaginationBarProps) {
-  const at = bindable<number>(() => page, () => defaultPage, 1, () => p => onPageChange?.(p))
-  const per = bindable<number>(() => size, () => undefined, 25, () => s => onSizeChange?.(s))
+export function PaginationBar({
+  label = 'Pagination',
+  mode = 'offset',
+  page,
+  defaultPage,
+  onPageChange,
+  total = 0,
+  size,
+  sizes = [10, 25, 50, 100],
+  onSizeChange,
+  hasMore,
+  hasPrev,
+  pageIndex = 0,
+  supply,
+  totalFetched,
+  locale,
+}: PaginationBarProps) {
+  const at = bindable<number>(
+    () => page,
+    () => defaultPage,
+    1,
+    () => (p) => onPageChange?.(p),
+  )
+  const per = bindable<number>(
+    () => size,
+    () => undefined,
+    25,
+    () => (s) => onSizeChange?.(s),
+  )
   const pages = derived(() => Math.max(1, Math.ceil(total / per.value)))
   const current = derived(() => Math.min(pages.value, Math.max(1, at.value)))
   const numbers = derived(() => new Intl.NumberFormat(locale ?? 'en-US'))
@@ -76,8 +102,28 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
         <span>{`Showing ${fmt(totalFetched ?? (pageIndex + 1) * per.value)}${supply !== undefined ? ` of ${fmt(supply)}` : ''}${hasMore ? ' · more available' : ''}`}</span>
         <span data-part="spacer"></span>
         <ol>
-          <li><Button emphasis="outline" tone="neutral" size="sm" disabled={!hasPrev} onClick={() => onPageChange?.(pageIndex - 1)}>Previous</Button></li>
-          <li><Button emphasis="outline" tone="neutral" size="sm" disabled={!hasMore} onClick={() => onPageChange?.(pageIndex + 1)}>Next</Button></li>
+          <li>
+            <Button
+              emphasis="outline"
+              tone="neutral"
+              size="sm"
+              disabled={!hasPrev}
+              onClick={() => onPageChange?.(pageIndex - 1)}
+            >
+              Previous
+            </Button>
+          </li>
+          <li>
+            <Button
+              emphasis="outline"
+              tone="neutral"
+              size="sm"
+              disabled={!hasMore}
+              onClick={() => onPageChange?.(pageIndex + 1)}
+            >
+              Next
+            </Button>
+          </li>
         </ol>
       </nav>
     )
@@ -86,21 +132,81 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   const first = derived(() => (total ? (current.value - 1) * per.value + 1 : 0))
   // "Go to" and its box are one item, so the bar never wraps between them: the pair moves to the next line together
   return (
-    <nav ref={n => (nav = n)} data-scope="pagination" aria-label={label}>
+    <nav ref={(n) => (nav = n)} data-scope="pagination" aria-label={label}>
       <span data-part="field">
-        <span aria-hidden="true">Rows<span data-part="long"> per page</span></span>
-        <CompactSelect label="Rows per page" value={String(per.value)} options={sizes.map(s => ({ value: String(s), label: String(s) }))} onValueChange={v => { per.set(+v); at.set(1) }} />
+        <span aria-hidden="true">
+          Rows<span data-part="long"> per page</span>
+        </span>
+        <CompactSelect
+          label="Rows per page"
+          value={String(per.value)}
+          options={sizes.map((s) => ({ value: String(s), label: String(s) }))}
+          onValueChange={(v) => {
+            per.set(+v)
+            at.set(1)
+          }}
+        />
       </span>
       <span>{`${fmt(first.value)}–${fmt(Math.min(total, current.value * per.value))} of ${fmt(total)}`}</span>
       <span data-part="spacer"></span>
       <ol>
-        <li><button type="button" data-part="page" data-edge="" disabled={current.value === 1} aria-label="Previous page" onClick={() => go(current.value - 1)}>‹</button></li>
-        {pageList(current.value, pages.value).map((p, i) => <li key={p === 'gap' ? `gap${i}` : p} data-part={p === 'gap' ? 'gap' : undefined} aria-hidden={p === 'gap' ? 'true' : undefined}>{p === 'gap' ? '…' : <button type="button" data-part="page" aria-current={p === current.value ? 'page' : undefined} aria-label={`Page ${p}`} onClick={() => go(p)}>{p}</button>}</li>)}
-        <li><button type="button" data-part="page" data-edge="" disabled={current.value === pages.value} aria-label="Next page" onClick={() => go(current.value + 1)}>›</button></li>
+        <li>
+          <button
+            type="button"
+            data-part="page"
+            data-edge=""
+            disabled={current.value === 1}
+            aria-label="Previous page"
+            onClick={() => go(current.value - 1)}
+          >
+            ‹
+          </button>
+        </li>
+        {pageList(current.value, pages.value).map((p, i) => (
+          <li
+            key={p === 'gap' ? `gap${i}` : p}
+            data-part={p === 'gap' ? 'gap' : undefined}
+            aria-hidden={p === 'gap' ? 'true' : undefined}
+          >
+            {p === 'gap' ? (
+              '…'
+            ) : (
+              <button
+                type="button"
+                data-part="page"
+                aria-current={p === current.value ? 'page' : undefined}
+                aria-label={`Page ${p}`}
+                onClick={() => go(p)}
+              >
+                {p}
+              </button>
+            )}
+          </li>
+        ))}
+        <li>
+          <button
+            type="button"
+            data-part="page"
+            data-edge=""
+            disabled={current.value === pages.value}
+            aria-label="Next page"
+            onClick={() => go(current.value + 1)}
+          >
+            ›
+          </button>
+        </li>
       </ol>
       <span data-part="field" data-goto="">
-        <label for={`${id}-go`}>Go to<span data-part="sr-only"> page</span></label>
-        <input id={`${id}-go`} data-part="jump" inputmode="numeric" placeholder={String(pages.value)} onKeyDown={jump} />
+        <label for={`${id}-go`}>
+          Go to<span data-part="sr-only"> page</span>
+        </label>
+        <input
+          id={`${id}-go`}
+          data-part="jump"
+          inputmode="numeric"
+          placeholder={String(pages.value)}
+          onKeyDown={jump}
+        />
       </span>
     </nav>
   )
@@ -110,14 +216,38 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
  * Load more (06 §8): a sentinel watched with a 120px margin, and a button that is always there as the fallback. Set
  * `loading` while a page is on its way (the list shows its skeletons and `aria-busy`); `done` swaps in the end message.
  */
-export function LoadMore({ onLoad, loading, done, message, auto = true, root }: { onLoad: () => void; loading?: boolean | undefined; done?: boolean; message?: unknown; auto?: boolean; root?: (() => HTMLElement | null) | undefined }) {
+export function LoadMore({
+  onLoad,
+  loading,
+  done,
+  message,
+  auto = true,
+  root,
+}: {
+  onLoad: () => void
+  loading?: boolean | undefined
+  done?: boolean
+  message?: unknown
+  auto?: boolean
+  root?: (() => HTMLElement | null) | undefined
+}) {
   let el: HTMLDivElement | undefined
-  const reach = () => { if (auto && !loading && !done) onLoad() }
-  use(infiniteScroll, () => el, () => ({ onReach: reach, root: root?.() }))
+  const reach = () => {
+    if (auto && !loading && !done) onLoad()
+  }
+  use(
+    infiniteScroll,
+    () => el,
+    () => ({ onReach: reach, root: root?.() }),
+  )
   return (
-    <div ref={n => (el = n)} data-scope="load-more">
+    <div ref={(n) => (el = n)} data-scope="load-more">
       <span aria-live="polite">{loading ? 'Loading…' : message}</span>
-      {!done && <Button emphasis="outline" tone="neutral" disabled={!!loading} onClick={onLoad}>Load more</Button>}
+      {!done && (
+        <Button emphasis="outline" tone="neutral" disabled={!!loading} onClick={onLoad}>
+          Load more
+        </Button>
+      )}
     </div>
   )
 }

@@ -15,10 +15,10 @@
 use std::collections::{HashMap, HashSet};
 
 use oxc_ast::ast::{
-    Argument, ArrowFunctionBody, ArrowFunctionExpression, AssignmentOperator, AssignmentTarget, AwaitExpression,
-    BindingIdentifier, BindingPattern, CallExpression, Expression, Function, IdentifierReference,
-    ImportDeclarationSpecifier, JSXAttribute, JSXAttributeName, JSXAttributeValue, NewExpression, ObjectPropertyKind,
-    Program, Statement, VariableDeclarator,
+    Argument, ArrowFunctionBody, ArrowFunctionExpression, AssignmentOperator, AssignmentTarget,
+    AwaitExpression, BindingIdentifier, BindingPattern, CallExpression, Expression, Function,
+    IdentifierReference, ImportDeclarationSpecifier, JSXAttribute, JSXAttributeName,
+    JSXAttributeValue, NewExpression, ObjectPropertyKind, Program, Statement, VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::{Scoping, SymbolId};
@@ -36,7 +36,11 @@ pub type Ssr = Option<bool>;
 
 /// Local bindings of @weft-js/core/browser's values (`online`, `visible`, `lifecycle`, `media`): their results are boxes.
 pub fn value_imports(program: &Program<'_>) -> HashSet<SymbolId> {
-    imports(program).into_iter().filter(|(_, (name, _))| VALUES.contains(&name.as_str())).map(|(s, _)| s).collect()
+    imports(program)
+        .into_iter()
+        .filter(|(_, (name, _))| VALUES.contains(&name.as_str()))
+        .map(|(s, _)| s)
+        .collect()
 }
 
 /// @weft-js/core/browser import bindings: symbol → (imported name, local name).
@@ -53,7 +57,10 @@ fn imports(program: &Program<'_>) -> HashMap<SymbolId, (String, String)> {
             if let ImportDeclarationSpecifier::ImportSpecifier(s) = spec
                 && let Some(sym) = s.local.symbol_id.get()
             {
-                out.insert(sym, (s.imported.name().to_string(), s.local.name.to_string()));
+                out.insert(
+                    sym,
+                    (s.imported.name().to_string(), s.local.name.to_string()),
+                );
             }
         }
     }
@@ -180,7 +187,10 @@ fn is_component_name(name: &str) -> bool {
 }
 
 fn is_fn(e: &Expression<'_>) -> bool {
-    matches!(e.without_parentheses(), Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_))
+    matches!(
+        e.without_parentheses(),
+        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
+    )
 }
 
 /// `setTimeout` and `window.setTimeout` → `setTimeout`; `x.then` → `then`.
@@ -204,7 +214,10 @@ impl<'s> Checker<'s> {
         let Expression::Identifier(id) = callee.without_parentheses() else {
             return None;
         };
-        let sym = id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id())?;
+        let sym = id
+            .reference_id
+            .get()
+            .and_then(|r| self.scoping.get_reference(r).symbol_id())?;
         self.imports.get(&sym).map(|(name, _)| name.as_str())
     }
 
@@ -230,18 +243,38 @@ impl<'s> Checker<'s> {
             return None;
         }
         let edit = match (self.browser_import, self.last_import) {
-            (Some(at), _) => Edit { start: at, end: at, text: format!(", {name}") },
-            (None, Some(at)) => Edit { start: at, end: at, text: format!("\nimport {{ {name} }} from '{MODULE}'") },
-            (None, None) => Edit { start: 0, end: 0, text: format!("import {{ {name} }} from '{MODULE}'\n") },
+            (Some(at), _) => Edit {
+                start: at,
+                end: at,
+                text: format!(", {name}"),
+            },
+            (None, Some(at)) => Edit {
+                start: at,
+                end: at,
+                text: format!("\nimport {{ {name} }} from '{MODULE}'"),
+            },
+            (None, None) => Edit {
+                start: 0,
+                end: 0,
+                text: format!("import {{ {name} }} from '{MODULE}'\n"),
+            },
         };
         Some((name.to_string(), Some(edit)))
     }
 
     fn fix(&self, name: &str, call: Span, args: &str, description: String) -> Option<Fix> {
         let (local, import) = self.browser_name(name)?;
-        let mut edits = vec![Edit { start: call.start, end: call.end, text: format!("{local}({args})") }];
+        let mut edits = vec![Edit {
+            start: call.start,
+            end: call.end,
+            text: format!("{local}({args})"),
+        }];
         edits.extend(import);
-        Some(Fix { description, safe: false, edits })
+        Some(Fix {
+            description,
+            safe: false,
+            edits,
+        })
     }
 
     fn enter_fn(&mut self, role: Role, component: bool, f: impl FnOnce(&mut Self)) {
@@ -250,11 +283,17 @@ impl<'s> Checker<'s> {
         } else if let Some(c) = self.comps.last_mut() {
             c.fn_depth += 1;
         }
-        self.fns.push(FnCtx { role, awaited: false });
+        self.fns.push(FnCtx {
+            role,
+            awaited: false,
+        });
         f(self);
         self.fns.pop();
         if component {
-            let c = self.comps.pop().expect("pushed above, and `f` leaves the stack as it found it");
+            let c = self
+                .comps
+                .pop()
+                .expect("pushed above, and `f` leaves the stack as it found it");
             self.finish_component(c);
         } else if let Some(c) = self.comps.last_mut() {
             c.fn_depth -= 1;
@@ -324,7 +363,9 @@ impl<'s> Checker<'s> {
     }
 
     fn comp(&mut self) -> &mut Comp {
-        self.comps.last_mut().expect("`raw` returns when no component encloses the call")
+        self.comps
+            .last_mut()
+            .expect("`raw` returns when no component encloses the call")
     }
 
     /// W050: raw listeners and intervals, recorded on the enclosing component and judged when it ends.
@@ -337,7 +378,9 @@ impl<'s> Checker<'s> {
         };
         let target = match object {
             None => None,
-            Some(Expression::Identifier(id)) if GLOBALS.contains(&id.name.as_str()) => Some(id.name.as_str()),
+            Some(Expression::Identifier(id)) if GLOBALS.contains(&id.name.as_str()) => {
+                Some(id.name.as_str())
+            }
             Some(o) => Some(self.text(o.span())),
         };
         let args = &call.arguments;
@@ -365,16 +408,22 @@ impl<'s> Checker<'s> {
                 self.comp().removes.insert((target, ty));
             }
             "setInterval" if object.is_none() || target.is_some_and(|t| GLOBALS.contains(&t)) => {
-                let fix = (owned && args.len() == 2 && !args.iter().any(|a| matches!(a, Argument::SpreadElement(_))))
-                    .then(|| {
-                        self.fix(
-                            "interval",
-                            call.span,
-                            &format!("{}, {}", self.text(args[1].span()), self.text(args[0].span())),
-                            "Use `interval(ms, fn)` (cleared with its owner)".into(),
-                        )
-                    })
-                    .flatten();
+                let fix = (owned
+                    && args.len() == 2
+                    && !args.iter().any(|a| matches!(a, Argument::SpreadElement(_))))
+                .then(|| {
+                    self.fix(
+                        "interval",
+                        call.span,
+                        &format!(
+                            "{}, {}",
+                            self.text(args[1].span()),
+                            self.text(args[0].span())
+                        ),
+                        "Use `interval(ms, fn)` (cleared with its owner)".into(),
+                    )
+                })
+                .flatten();
                 self.comp().intervals.push((call.span, fix));
             }
             "clearInterval" => self.comp().clears = true,
@@ -417,26 +466,42 @@ impl<'s> Checker<'s> {
             .and_then(|a| a.as_expression())
             .map(oxc_ast::ast::Expression::without_parentheses)
         {
-            None if call.arguments.len() == 1 => {
-                Edit { start: query.span().end, end: query.span().end, text: ", { ssr: false }".into() }
-            }
+            None if call.arguments.len() == 1 => Edit {
+                start: query.span().end,
+                end: query.span().end,
+                text: ", { ssr: false }".into(),
+            },
             Some(Expression::ObjectExpression(o)) => {
                 let named = |p: &ObjectPropertyKind<'_>| match p {
-                    ObjectPropertyKind::ObjectProperty(p) => p.key.static_name().is_some_and(|k| k == "ssr"),
+                    ObjectPropertyKind::ObjectProperty(p) => {
+                        p.key.static_name().is_some_and(|k| k == "ssr")
+                    }
                     ObjectPropertyKind::SpreadProperty(_) => true, // may carry it
                 };
                 if o.properties.iter().any(named) {
                     return;
                 }
                 match o.properties.first() {
-                    Some(p) => Edit { start: p.span().start, end: p.span().start, text: "ssr: false, ".into() },
-                    None => Edit { start: o.span.start, end: o.span.end, text: "{ ssr: false }".into() },
+                    Some(p) => Edit {
+                        start: p.span().start,
+                        end: p.span().start,
+                        text: "ssr: false, ".into(),
+                    },
+                    None => Edit {
+                        start: o.span.start,
+                        end: o.span.end,
+                        text: "{ ssr: false }".into(),
+                    },
                 }
             }
             _ => return, // options from elsewhere: can't tell
         };
         let q = self.text(query.span());
-        let severity = if self.ssr == Some(true) { Severity::Error } else { Severity::Warning };
+        let severity = if self.ssr == Some(true) {
+            Severity::Error
+        } else {
+            Severity::Warning
+        };
         let maybe = if self.ssr == Some(true) {
             "This file is server-rendered"
         } else {
@@ -468,7 +533,9 @@ impl<'s> Checker<'s> {
         let Expression::Identifier(live) = &read.object else {
             return;
         };
-        if read.property.name != "value" || !self.symbol(live).is_some_and(|s| self.live.contains(&s)) {
+        if read.property.name != "value"
+            || !self.symbol(live).is_some_and(|s| self.live.contains(&s))
+        {
             return;
         }
         let Some(Expression::AssignmentExpression(a)) = single_expression(run) else {
@@ -486,7 +553,9 @@ impl<'s> Checker<'s> {
             _ => None,
         };
         let (name, list) = (live.name.as_str(), boxed.name.as_str());
-        if target.property.name == "value" && self.text(a.right.span()).contains(&format!("{list}.value")) {
+        if target.property.name == "value"
+            && self.text(a.right.span()).contains(&format!("{list}.value"))
+        {
             self.out.push(Diagnostic::new(
                 self.source,
                 "W052",
@@ -518,7 +587,9 @@ impl<'s> Checker<'s> {
     }
 
     fn symbol(&self, id: &IdentifierReference<'_>) -> Option<SymbolId> {
-        id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id())
+        id.reference_id
+            .get()
+            .and_then(|r| self.scoping.get_reference(r).symbol_id())
     }
 
     /// What role a function passed to `callee` runs in.
@@ -531,9 +602,13 @@ impl<'s> Checker<'s> {
             };
         }
         match call_name(&call.callee).map(|(n, _)| n) {
-            Some("setTimeout" | "setInterval" | "requestAnimationFrame" | "requestIdleCallback" | "queueMicrotask") => {
-                Role::Unowned("in a timer callback")
-            }
+            Some(
+                "setTimeout"
+                | "setInterval"
+                | "requestAnimationFrame"
+                | "requestIdleCallback"
+                | "queueMicrotask",
+            ) => Role::Unowned("in a timer callback"),
             Some("then" | "catch" | "finally") => Role::Unowned("in a promise callback"),
             Some("addEventListener") => Role::Unowned("in an event listener"),
             Some(
@@ -562,14 +637,21 @@ fn single_expression<'b, 'a>(f: &'b Expression<'a>) -> Option<&'b Expression<'a>
     let statements = match f.without_parentheses() {
         Expression::ArrowFunctionExpression(f) => match &f.body {
             ArrowFunctionBody::FunctionBody(body) => &body.statements,
-            body => return body.as_expression().map(oxc_ast::ast::Expression::without_parentheses),
+            body => {
+                return body
+                    .as_expression()
+                    .map(oxc_ast::ast::Expression::without_parentheses);
+            }
         },
         Expression::FunctionExpression(f) => &f.body.as_ref()?.statements,
         _ => return None,
     };
     match statements.as_slice() {
         [Statement::ExpressionStatement(s)] => Some(s.expression.without_parentheses()),
-        [Statement::ReturnStatement(r)] => r.argument.as_ref().map(oxc_ast::ast::Expression::without_parentheses),
+        [Statement::ReturnStatement(r)] => r
+            .argument
+            .as_ref()
+            .map(oxc_ast::ast::Expression::without_parentheses),
         _ => None,
     }
 }
@@ -577,13 +659,18 @@ fn single_expression<'b, 'a>(f: &'b Expression<'a>) -> Option<&'b Expression<'a>
 impl<'a> Visit<'a> for Checker<'_> {
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
         if let BindingPattern::BindingIdentifier(id) = &it.id
-            && let Some(init) = it.init.as_ref().map(oxc_ast::ast::Expression::without_parentheses)
+            && let Some(init) = it
+                .init
+                .as_ref()
+                .map(oxc_ast::ast::Expression::without_parentheses)
         {
             if is_fn(init) {
                 self.pending_name = Some(id.name.to_string());
             }
             if let Expression::CallExpression(c) = init {
-                let live = self.browser_fn(&c.callee).is_some_and(|n| VALUES.contains(&n))
+                let live = self
+                    .browser_fn(&c.callee)
+                    .is_some_and(|n| VALUES.contains(&n))
                     || matches!(&c.callee, Expression::StaticMemberExpression(m) if m.property.name == "live")
                     || matches!(&c.callee, Expression::Identifier(f) if self.symbol(f).is_some_and(|s| self.server_imports.contains(&s)));
                 if live && let Some(sym) = id.symbol_id.get() {
@@ -596,15 +683,23 @@ impl<'a> Visit<'a> for Checker<'_> {
     }
 
     fn visit_function(&mut self, it: &Function<'a>, flags: ScopeFlags) {
-        let name = it.id.as_ref().map(|i| i.name.to_string()).or_else(|| self.pending_name.take());
+        let name = it
+            .id
+            .as_ref()
+            .map(|i| i.name.to_string())
+            .or_else(|| self.pending_name.take());
         let (role, component) = self.role_for(name);
-        self.enter_fn(role, component && it.body.is_some(), |s| walk::walk_function(s, it, flags));
+        self.enter_fn(role, component && it.body.is_some(), |s| {
+            walk::walk_function(s, it, flags)
+        });
     }
 
     fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
         let name = self.pending_name.take();
         let (role, component) = self.role_for(name);
-        self.enter_fn(role, component, |s| walk::walk_arrow_function_expression(s, it));
+        self.enter_fn(role, component, |s| {
+            walk::walk_arrow_function_expression(s, it)
+        });
     }
 
     fn visit_await_expression(&mut self, it: &AwaitExpression<'a>) {

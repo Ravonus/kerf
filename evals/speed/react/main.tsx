@@ -18,7 +18,13 @@ function Grid() {
   const [cells, set] = useState(() => new Array<number>(start).fill(0))
   setAll = set
   latest = cells
-  return <div data-grid>{cells.map((value, i) => <Cell key={i} value={value} />)}</div>
+  return (
+    <div data-grid>
+      {cells.map((value, i) => (
+        <Cell key={i} value={value} />
+      ))}
+    </div>
+  )
 }
 
 // js-framework-benchmark's keyed React entry (hooks, a memoised row), without its buttons.
@@ -27,7 +33,10 @@ let nextId = 1
 const buildData = (count: number): Item[] => {
   const data = new Array<Item>(count)
   for (let i = 0; i < count; i++)
-    data[i] = { id: nextId++, label: `${adjectives[random(adjectives.length)]} ${colors[random(colors.length)]} ${nouns[random(nouns.length)]}` }
+    data[i] = {
+      id: nextId++,
+      label: `${adjectives[random(adjectives.length)]} ${colors[random(colors.length)]} ${nouns[random(nouns.length)]}`,
+    }
   return data
 }
 let list: Item[] = []
@@ -36,20 +45,29 @@ const seen = new Set<() => void>()
 const put = (next: Item[], pick = selected) => {
   list = next
   selected = pick
-  flushSync(() => { for (const f of seen) f() })
+  flushSync(() => {
+    for (const f of seen) f()
+  })
 }
 const subscribe = (f: () => void) => (seen.add(f), () => void seen.delete(f))
 let version = 0
 const bump = () => version
-const notify = (next: Item[], pick?: number) => { version++; put(next, pick) }
+const notify = (next: Item[], pick?: number) => {
+  version++
+  put(next, pick)
+}
 
 const Row = memo(function Row({ item, on }: { item: Item; on: boolean }) {
   return (
     <tr className={on ? 'danger' : ''}>
       <td className="col-md-1">{item.id}</td>
-      <td className="col-md-4"><a onClick={() => notify(list, item.id)}>{item.label}</a></td>
+      <td className="col-md-4">
+        <a onClick={() => notify(list, item.id)}>{item.label}</a>
+      </td>
       <td className="col-md-1">
-        <a onClick={() => rows.remove(list.indexOf(item))}><span className="glyphicon glyphicon-remove" aria-hidden="true" /></a>
+        <a onClick={() => rows.remove(list.indexOf(item))}>
+          <span className="glyphicon glyphicon-remove" aria-hidden="true" />
+        </a>
       </td>
       <td className="col-md-6" />
     </tr>
@@ -60,7 +78,11 @@ function Main() {
   useSyncExternalStore(subscribe, bump)
   return (
     <table className="table table-hover table-striped test-data">
-      <tbody>{list.map(item => <Row key={item.id} item={item} on={item.id === selected} />)}</tbody>
+      <tbody>
+        {list.map((item) => (
+          <Row key={item.id} item={item} on={item.id === selected} />
+        ))}
+      </tbody>
     </table>
   )
 }
@@ -71,7 +93,8 @@ const rows = {
   add: () => notify([...list, ...buildData(1_000)]),
   update: () => {
     const next = list.slice()
-    for (let i = 0; i < next.length; i += 10) next[i] = { ...next[i], label: next[i].label + ' !!!' }
+    for (let i = 0; i < next.length; i += 10)
+      next[i] = { ...next[i], label: next[i].label + ' !!!' }
     notify(next)
   },
   clear: () => notify([]),
@@ -87,7 +110,7 @@ const rows = {
   select: (k: number) => notify(list, list[k].id),
   remove: (k: number) => {
     const id = list[k].id
-    notify(list.filter(r => r.id !== id))
+    notify(list.filter((r) => r.id !== id))
   },
 }
 
@@ -98,7 +121,8 @@ expose({
       root = createRoot(at)
       flushSync(() => root!.render(<Grid />))
     },
-    tick: (k: number, step: number) => flushSync(() => setAll(cells => cells.map((v, i) => (i % step === k % step ? v + 1 : v)))),
+    tick: (k: number, step: number) =>
+      flushSync(() => setAll((cells) => cells.map((v, i) => (i % step === k % step ? v + 1 : v)))),
     unmount: () => flushSync(() => root!.unmount()),
     check: () => latest.reduce((sum, c) => sum + c, 0),
   },

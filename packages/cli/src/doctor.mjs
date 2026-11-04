@@ -7,7 +7,8 @@ import { loadCompiler, resolveWeft } from './weft.mjs'
 /** One line for `weft check --verbose` and `weft doctor`. */
 export function compilerLine(backend) {
   if (!backend) return 'compiler: this weft does not say which build it uses'
-  if (backend.kind === 'native') return `compiler: native addon${backend.package ? ` (${backend.package})` : ` (${backend.file})`}`
+  if (backend.kind === 'native')
+    return `compiler: native addon${backend.package ? ` (${backend.package})` : ` (${backend.file})`}`
   const offer = backend.wanted?.length
     ? `. Optional, and faster: ${backend.wanted.join(' or ')}, which a normal install adds by itself`
     : '. No prebuilt addon for this platform, and none is needed'
@@ -19,12 +20,23 @@ export function doctor(root) {
   const { backend } = loadCompiler(weft)
   const cargo = spawnSync('cargo', ['--version'], { encoding: 'utf8' })
   const version = cargo.status === 0 ? cargo.stdout.trim() : null
-  const runtime = globalThis.Deno ? `Deno ${Deno.version.deno}` : globalThis.Bun ? `Bun ${Bun.version}` : `Node ${process.version}`
-  return { ok: true, weft: weft.version, runtime, compiler: backend ?? null, rust: { cargo: version, required: false } }
+  const runtime = globalThis.Deno
+    ? `Deno ${Deno.version.deno}`
+    : globalThis.Bun
+      ? `Bun ${Bun.version}`
+      : `Node ${process.version}`
+  return {
+    ok: true,
+    weft: weft.version,
+    runtime,
+    compiler: backend ?? null,
+    rust: { cargo: version, required: false },
+  }
 }
 
-export const formatDoctor = r => [
-  `weft ${r.weft} on ${r.runtime}`,
-  compilerLine(r.compiler),
-  `rust: ${r.rust.cargo ?? 'no cargo on PATH'}. Not needed for weft; only \`weft add rust\` sidecars and native() use it`,
-].join('\n')
+export const formatDoctor = (r) =>
+  [
+    `weft ${r.weft} on ${r.runtime}`,
+    compilerLine(r.compiler),
+    `rust: ${r.rust.cargo ?? 'no cargo on PATH'}. Not needed for weft; only \`weft add rust\` sidecars and native() use it`,
+  ].join('\n')

@@ -15,23 +15,39 @@ const DWELL = 150
 const VIDEO_CAP = 2 * 1024 * 1024
 const CONTROLS = 48
 
-const saving = () => (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true
+const saving = () =>
+  (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true
 const idle = (run: () => void) => (window.requestIdleCallback ?? setTimeout)(run)
 
-const cached = (url: string) => fetch(url, { cache: 'only-if-cached', mode: 'same-origin' }).then(r => {
-  void r.body?.cancel()
-  // oxlint-disable-next-line typescript/only-throw-error -- only `Promise.any` sees this, and it only needs a rejection; an Error here costs bytes
-  if (!r.ok) throw r
-})
+const cached = (url: string) =>
+  fetch(url, { cache: 'only-if-cached', mode: 'same-origin' }).then((r) => {
+    void r.body?.cancel()
+    // oxlint-disable-next-line typescript/only-throw-error -- only `Promise.any` sees this, and it only needs a rejection; an Error here costs bytes
+    if (!r.ok) throw r
+  })
 
 function intent(el: HTMLElement, run: () => void) {
   let timer: ReturnType<typeof setTimeout> | undefined
-  const now = () => { clearTimeout(timer); run() }
-  el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') timer = setTimeout(now, DWELL) })
+  const now = () => {
+    clearTimeout(timer)
+    run()
+  }
+  el.addEventListener('pointerenter', (e) => {
+    if (e.pointerType === 'mouse') timer = setTimeout(now, DWELL)
+  })
   el.addEventListener('pointerleave', () => clearTimeout(timer))
-  el.addEventListener('touchstart', () => { timer = setTimeout(now, DWELL) }, { passive: true })
+  el.addEventListener(
+    'touchstart',
+    () => {
+      timer = setTimeout(now, DWELL)
+    },
+    { passive: true },
+  )
   el.addEventListener('touchend', () => clearTimeout(timer))
-  for (const name of ['pointerdown', 'contextmenu', 'dragstart']) el.addEventListener(name, e => { if (name !== 'pointerdown' || (e as PointerEvent).button === 2) now() })
+  for (const name of ['pointerdown', 'contextmenu', 'dragstart'])
+    el.addEventListener(name, (e) => {
+      if (name !== 'pointerdown' || (e as PointerEvent).button === 2) now()
+    })
 }
 
 /** A sibling over `el`, for the overlay and the second video. The wrapper `<Media>` renders is what it sits in. */
@@ -41,7 +57,7 @@ function above(el: HTMLElement, child: HTMLElement, bottom = 0) {
 }
 
 function stillSwap(img: HTMLImageElement) {
-  img.parentElement?.querySelectorAll('source').forEach(s => s.remove())
+  img.parentElement?.querySelectorAll('source').forEach((s) => s.remove())
 }
 
 function gifOverlay(video: HTMLVideoElement, copy: NonNullable<MediaAsset['copy']>) {
@@ -75,13 +91,16 @@ function videoSwap(a: HTMLVideoElement, url: string, lead = 0.6) {
     above(a, b)
     b.style.opacity = '0'
     // oxlint-disable-next-line no-promise-executor-return -- `addEventListener` returns nothing a promise looks at, and braces cost bytes in <Media>
-    const once = (name: string) => new Promise(ok => b.addEventListener(name, ok, { once: true }))
+    const once = (name: string) => new Promise((ok) => b.addEventListener(name, ok, { once: true }))
     await once('loadeddata')
     const flip = () => {
       b.style.opacity = '1'
       b.muted = a.muted
       a.muted = true
-      requestAnimationFrame(() => { a.pause(); a.style.visibility = 'hidden' })
+      requestAnimationFrame(() => {
+        a.pause()
+        a.style.visibility = 'hidden'
+      })
     }
     const target = a.paused ? a.currentTime : a.currentTime + lead
     b.currentTime = target
@@ -103,17 +122,28 @@ async function choose(v: HTMLVideoElement, asset: MediaAsset) {
   const found: [HTMLSourceElement, boolean][] = []
   for (const s of v.querySelectorAll('source')) {
     if (s.media && !matchMedia(s.media).matches) continue
-    const info = await list.decodingInfo({ type: 'file', video: { contentType: s.type, width: asset.width, height: asset.height, bitrate: 1e6, framerate: 30 } }).catch(() => null)
+    const info = await list
+      .decodingInfo({
+        type: 'file',
+        video: {
+          contentType: s.type,
+          width: asset.width,
+          height: asset.height,
+          bitrate: 1e6,
+          framerate: 30,
+        },
+      })
+      .catch(() => null)
     if (info?.supported) found.push([s, info.powerEfficient])
   }
-  const best = (found.find(f => f[1]) ?? found[0])?.[0]
+  const best = (found.find((f) => f[1]) ?? found[0])?.[0]
   if (best && best !== v.querySelector('source')) v.src = best.src
 }
 
 export function attach(el: HTMLImageElement | HTMLVideoElement, asset: MediaAsset) {
   const copy = asset.copy
   if (!copy) return
-  const mode = saving() ? 'never' : asset.swap ?? 'intent'
+  const mode = saving() ? 'never' : (asset.swap ?? 'intent')
   if (el instanceof HTMLVideoElement) void choose(el, asset)
   if (mode === 'never') return
   let run: () => unknown
@@ -123,7 +153,9 @@ export function attach(el: HTMLImageElement | HTMLVideoElement, asset: MediaAsse
   else return
   // Already in the HTTP cache from an earlier visit: use it now. `only-if-cached` never touches the network, and a blob
   // or Cache Storage copy wouldn't do, because a `blob:` URL can't be saved.
-  const urls = (el as HTMLImageElement).srcset?.split(', ').map(c => c.split(' ')[0]!) || [copy.src]
+  const urls = (el as HTMLImageElement).srcset?.split(', ').map((c) => c.split(' ')[0]!) || [
+    copy.src,
+  ]
   void Promise.any(urls.map(cached)).then(run, () => {})
   if (mode === 'intent') intent(el, run)
   else if ((copy.ratio ?? 1) <= 1.5) idle(run)

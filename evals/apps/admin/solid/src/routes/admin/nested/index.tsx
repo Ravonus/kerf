@@ -1,17 +1,17 @@
-import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { For } from "solid-js";
+import { createAsync, type RouteDefinition } from '@solidjs/router'
+import { For } from 'solid-js'
 
-import { panel, td, th } from "~/components/button";
-import { Loads } from "~/components/states";
-import { getBiggestCustomers, getTopCities } from "~/lib/data";
-import { money } from "~/lib/format";
+import { panel, td, th } from '~/components/button'
+import { Loads } from '~/components/states'
+import { getBiggestCustomers, getTopCities } from '~/lib/data'
+import { money } from '~/lib/format'
 
 export const route = {
   preload: () => {
-    void getTopCities();
-    void getBiggestCustomers();
+    void getTopCities()
+    void getBiggestCustomers()
   },
-} satisfies RouteDefinition;
+} satisfies RouteDefinition
 
 export default function NestedPage() {
   return (
@@ -33,19 +33,25 @@ export default function NestedPage() {
         </Loads>
       </section>
     </div>
-  );
+  )
 }
 
 function Cities() {
-  const cities = createAsync(() => getTopCities());
+  const cities = createAsync(() => getTopCities())
   return (
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="border-b border-line">
           <tr>
-            <th scope="col" class={th}>City</th>
-            <th scope="col" class={`${th} text-right`}>Orders</th>
-            <th scope="col" class={`${th} text-right`}>Revenue</th>
+            <th scope="col" class={th}>
+              City
+            </th>
+            <th scope="col" class={`${th} text-right`}>
+              Orders
+            </th>
+            <th scope="col" class={`${th} text-right`}>
+              Revenue
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-line">
@@ -53,7 +59,7 @@ function Cities() {
             {(c) => (
               <tr>
                 <td class={td}>{c.city}</td>
-                <td class={`${td} text-right tabular-nums`}>{c.orders.toLocaleString("en-US")}</td>
+                <td class={`${td} text-right tabular-nums`}>{c.orders.toLocaleString('en-US')}</td>
                 <td class={`${td} text-right tabular-nums`}>{money(c.cents)}</td>
               </tr>
             )}
@@ -61,11 +67,11 @@ function Cities() {
         </tbody>
       </table>
     </div>
-  );
+  )
 }
 
 function Biggest() {
-  const people = createAsync(() => getBiggestCustomers());
+  const people = createAsync(() => getBiggestCustomers())
   return (
     <ul class="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <For each={people()}>
@@ -78,5 +84,5 @@ function Biggest() {
         )}
       </For>
     </ul>
-  );
+  )
 }

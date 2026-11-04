@@ -10,7 +10,8 @@ import ranges from './alphabet.json'
 
 const flat: number[] = []
 for (const [lo, hi] of [...ranges].sort((a, b) => a[0]! - b[0]!)) {
-  if (flat.length && lo! <= flat[flat.length - 1]! + 1) flat[flat.length - 1] = Math.max(flat[flat.length - 1]!, hi!)
+  if (flat.length && lo! <= flat[flat.length - 1]! + 1)
+    flat[flat.length - 1] = Math.max(flat[flat.length - 1]!, hi!)
   else flat.push(lo!, hi!)
 }
 
@@ -30,7 +31,10 @@ export function inBaseAlphabet(text: string): boolean {
     if (c < 0x370) continue
     if ((c & 0xfc00) === 0xd800 && i + 1 < text.length) {
       const d = text.charCodeAt(i + 1)
-      if ((d & 0xfc00) === 0xdc00) { c = ((c - 0xd800) << 10) + d - 0xdc00 + 0x10000; i++ }
+      if ((d & 0xfc00) === 0xdc00) {
+        c = ((c - 0xd800) << 10) + d - 0xdc00 + 0x10000
+        i++
+      }
     }
     if (!inRanges(c)) return false
   }

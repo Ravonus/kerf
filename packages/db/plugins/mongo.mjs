@@ -9,8 +9,16 @@ export const mongoSource = definePlugin({
   weft: '*',
   permissions: { net: ['driver:mongodb'] },
   contribute: () => ({
-    provides: [provide(slot, { key: 'mongo', sides: { server: { module: '@weft-js/db/mongo', export: 'adapter' } } })],
-    agents: { title: 'Lists (mongo)', text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back. `watchMongo` turns writes from anywhere into tag pokes.' },
+    provides: [
+      provide(slot, {
+        key: 'mongo',
+        sides: { server: { module: '@weft-js/db/mongo', export: 'adapter' } },
+      }),
+    ],
+    agents: {
+      title: 'Lists (mongo)',
+      text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back. `watchMongo` turns writes from anywhere into tag pokes.',
+    },
   }),
 })
 

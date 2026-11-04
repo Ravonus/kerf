@@ -7,22 +7,41 @@ import type { EventName, NodeTypeName, PropName } from './protocol.gen'
 
 // ---- boxes ----
 
-export interface State<T> { value: T }
-export interface Derived<T> { readonly value: T }
+export interface State<T> {
+  value: T
+}
+export interface Derived<T> {
+  readonly value: T
+}
 
 export function state<T>(init: T): State<T> {
   const s = signal(init)
-  return { get value() { return s() }, set value(v: T) { s(v) } }
+  return {
+    get value() {
+      return s()
+    },
+    set value(v: T) {
+      s(v)
+    },
+  }
 }
 
 export function derived<T>(fn: () => T): Derived<T> {
   const c = computed(fn)
-  return { get value() { return c() } }
+  return {
+    get value() {
+      return c()
+    },
+  }
 }
 
 const untracked = <T>(fn: () => T): T => {
   const prev = setActiveSub(undefined)
-  try { return fn() } finally { setActiveSub(prev) }
+  try {
+    return fn()
+  } finally {
+    setActiveSub(prev)
+  }
 }
 
 // ---- ownership ----
@@ -31,14 +50,21 @@ const untracked = <T>(fn: () => T): T => {
 
 class Owner {
   cleanups: (() => void)[] = []
-  dispose() { for (const c of this.cleanups.splice(0).reverse()) c() }
+  dispose() {
+    for (const c of this.cleanups.splice(0).reverse()) c()
+  }
 }
 let owner: Owner | null = null
 
 function owned<T>(fn: () => T): { value: T; owner: Owner } {
-  const o = new Owner(), prev = owner
+  const o = new Owner(),
+    prev = owner
   owner = o
-  try { return { value: untracked(fn), owner: o } } finally { owner = prev }
+  try {
+    return { value: untracked(fn), owner: o }
+  } finally {
+    owner = prev
+  }
 }
 
 function watch(fn: () => void) {
@@ -48,7 +74,9 @@ function watch(fn: () => void) {
 
 // ---- host ----
 
-export interface Host { apply(bytes: Uint8Array, ops: number): void }
+export interface Host {
+  apply(bytes: Uint8Array, ops: number): void
+}
 
 const out = new OpWriter()
 let host: Host | null = null
@@ -57,7 +85,11 @@ const handlers = new Map<number, Partial<Record<EventName, (payload: string) => 
 let nextId = 1
 
 const defer: (fn: () => void) => void =
-  typeof queueMicrotask === 'function' ? queueMicrotask : fn => { Promise.resolve().then(fn) }
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : (fn) => {
+        Promise.resolve().then(fn)
+      }
 
 function schedule() {
   if (scheduled || !host) return
@@ -79,7 +111,11 @@ export function dispatch(id: number, event: EventName, payload = '') {
   const fn = handlers.get(id)?.[event]
   if (!fn) return
   startBatch()
-  try { fn(payload) } finally { endBatch() }
+  try {
+    fn(payload)
+  } finally {
+    endBatch()
+  }
   schedule()
 }
 
@@ -110,7 +146,10 @@ export function el(type: NodeTypeName, props: Props = {}, ...children: Child[]):
       let last: unknown = undefined
       watch(() => {
         const next = (v as () => string | number | boolean)()
-        if (next !== last) { last = next; setProp(id, prop, next) } // unchanged values cost no op
+        if (next !== last) {
+          last = next
+          setProp(id, prop, next)
+        } // unchanged values cost no op
       })
     } else if (v !== undefined) setProp(id, prop, v as string | number | boolean)
   }
@@ -130,10 +169,16 @@ export function el(type: NodeTypeName, props: Props = {}, ...children: Child[]):
 }
 
 /** A dynamic child region. In the spike it must be its parent's only child. */
-export interface Region { attach(parent: number): void }
+export interface Region {
+  attach(parent: number): void
+}
 
 /** Keyed list: one row subgraph per key, a live item per row, minimal moves. */
-export function list<T>(items: () => readonly T[], key: (item: T) => string | number, render: (item: Derived<T>) => number): Region {
+export function list<T>(
+  items: () => readonly T[],
+  key: (item: T) => string | number,
+  render: (item: Derived<T>) => number,
+): Region {
   return {
     attach(parent) {
       type Row = { node: number; item: ReturnType<typeof signal<T>>; owner: Owner }
@@ -151,9 +196,9 @@ export function list<T>(items: () => readonly T[], key: (item: T) => string | nu
             out.remove(row.node)
             rows.delete(k)
           }
-          const kept = order.filter(k => wanted.has(k))
+          const kept = order.filter((k) => wanted.has(k))
           const oldIndex = new Map(kept.map((k, i) => [k, i]))
-          const stable = lis(keys.map(k => oldIndex.get(k) ?? -1))
+          const stable = lis(keys.map((k) => oldIndex.get(k) ?? -1))
           const fresh = new Set<string | number>()
           next.forEach((value, i) => {
             const k = keys[i]
@@ -161,14 +206,21 @@ export function list<T>(items: () => readonly T[], key: (item: T) => string | nu
             if (row) row.item(value) // same reference: no-op; new object: only bindings whose value changed emit
             else {
               const item = signal(value)
-              const made = owned(() => render({ get value() { return item() } }))
+              const made = owned(() =>
+                render({
+                  get value() {
+                    return item()
+                  },
+                }),
+              )
               rows.set(k, { node: made.value, item, owner: made.owner })
               fresh.add(k)
             }
           })
           let before = 0
           for (let i = keys.length - 1; i >= 0; i--) {
-            const k = keys[i], row = rows.get(k)!
+            const k = keys[i],
+              row = rows.get(k)!
             if (fresh.has(k) || !stable.has(i)) out.insert(parent, row.node, before)
             before = row.node
           }
@@ -176,7 +228,10 @@ export function list<T>(items: () => readonly T[], key: (item: T) => string | nu
           schedule()
         })
       })
-      owner?.cleanups.push(() => { for (const r of rows.values()) r.owner.dispose(); rows = new Map() })
+      owner?.cleanups.push(() => {
+        for (const r of rows.values()) r.owner.dispose()
+        rows = new Map()
+      })
     },
   }
 }
@@ -190,7 +245,10 @@ export function match<K extends string>(which: () => K, cases: Record<K, () => n
         const k = which()
         if (current?.key === k) return
         untracked(() => {
-          if (current) { current.owner.dispose(); out.remove(current.node) }
+          if (current) {
+            current.owner.dispose()
+            out.remove(current.node)
+          }
           const made = owned(cases[k])
           out.insert(parent, made.value)
           current = { key: k, node: made.value, owner: made.owner }
@@ -204,11 +262,17 @@ export function match<K extends string>(which: () => K, cases: Record<K, () => n
 
 /** Indices (into `seq`) of a longest increasing subsequence, ignoring -1 entries. Those rows don't move. */
 function lis(seq: number[]): Set<number> {
-  const tails: number[] = [], prev = new Array<number>(seq.length).fill(-1)
+  const tails: number[] = [],
+    prev = new Array<number>(seq.length).fill(-1)
   for (let i = 0; i < seq.length; i++) {
     if (seq[i] < 0) continue
-    let lo = 0, hi = tails.length
-    while (lo < hi) { const mid = (lo + hi) >> 1; if (seq[tails[mid]] < seq[i]) lo = mid + 1; else hi = mid }
+    let lo = 0,
+      hi = tails.length
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (seq[tails[mid]] < seq[i]) lo = mid + 1
+      else hi = mid
+    }
     if (lo > 0) prev[i] = tails[lo - 1]
     tails[lo] = i
   }
@@ -223,5 +287,10 @@ export function mount(target: Host, app: () => number): () => void {
   const made = owned(app)
   out.root(made.value)
   flush()
-  return () => { made.owner.dispose(); out.remove(made.value); flush(); host = null }
+  return () => {
+    made.owner.dispose()
+    out.remove(made.value)
+    flush()
+    host = null
+  }
 }

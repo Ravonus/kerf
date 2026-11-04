@@ -31,7 +31,15 @@ export interface TourProps {
   onStepChange?: ((index: number) => void) | undefined
 }
 
-function Running({ steps, onEnd, onStepChange }: { steps: TourStep[]; onEnd: (done: boolean) => void; onStepChange?: ((i: number) => void) | undefined }) {
+function Running({
+  steps,
+  onEnd,
+  onStepChange,
+}: {
+  steps: TourStep[]
+  onEnd: (done: boolean) => void
+  onStepChange?: ((i: number) => void) | undefined
+}) {
   const id = uid('tour')
   const list = untrack(() => steps)
   const at = state(0)
@@ -45,26 +53,68 @@ function Running({ steps, onEnd, onStepChange }: { steps: TourStep[]; onEnd: (do
     at.value = i
     onStepChange?.(i)
   }
-  watch(() => at.value, i => { if (typeof document === 'object') announce(document, `${many ? `Step ${i + 1} of ${list.length}. ` : ''}${typeof list[i]!.title === 'string' ? list[i]!.title : ''}`) })
+  watch(
+    () => at.value,
+    (i) => {
+      if (typeof document === 'object')
+        announce(
+          document,
+          `${many ? `Step ${i + 1} of ${list.length}. ` : ''}${typeof list[i]!.title === 'string' ? list[i]!.title : ''}`,
+        )
+    },
+  )
   let root: HTMLDivElement | undefined
-  use(tourSpot, () => root, () => ({
-    target: step.value!.target, step: at.value, interactive: step.value!.interactive,
-    onNext: () => go(at.value + 1), onPrev: () => go(at.value - 1, -1), onClose: () => onEnd(false),
-    onMissing: () => (way.value < 0 && at.value === 0 ? onEnd(false) : go(at.value + way.value, way.value)),
-    onBlocked: () => onEnd(false),
-  }))
+  use(
+    tourSpot,
+    () => root,
+    () => ({
+      target: step.value!.target,
+      step: at.value,
+      interactive: step.value!.interactive,
+      onNext: () => go(at.value + 1),
+      onPrev: () => go(at.value - 1, -1),
+      onClose: () => onEnd(false),
+      onMissing: () =>
+        way.value < 0 && at.value === 0 ? onEnd(false) : go(at.value + way.value, way.value),
+      onBlocked: () => onEnd(false),
+    }),
+  )
   return (
-    <div ref={n => (root = n)} data-scope="tour">
-      <div data-part="spotlight" data-sweep="" data-hold=""><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></div>
-      <div data-part="card" role="dialog" aria-modal="false" aria-labelledby={`${id}-t`} aria-describedby={`${id}-d`}>
-        <span data-part="step-count">{many ? `Step ${at.value + 1} of ${list.length}` : 'Tip'}</span>
-        <h4 id={`${id}-t`} tabindex="-1" aria-level="2">{step.value!.title}</h4>
+    <div ref={(n) => (root = n)} data-scope="tour">
+      <div data-part="spotlight" data-sweep="" data-hold="">
+        <span data-part="sweep-base" aria-hidden="true"></span>
+        <span data-part="sweep" aria-hidden="true"></span>
+      </div>
+      <div
+        data-part="card"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby={`${id}-t`}
+        aria-describedby={`${id}-d`}
+      >
+        <span data-part="step-count">
+          {many ? `Step ${at.value + 1} of ${list.length}` : 'Tip'}
+        </span>
+        <h4 id={`${id}-t`} tabindex="-1" aria-level="2">
+          {step.value!.title}
+        </h4>
         <p id={`${id}-d`}>{step.value!.body}</p>
         <footer>
-          <span data-part="pips" aria-hidden="true">{many && list.map((s, i) => <i key={s.target} data-on={i === at.value ? '' : undefined}></i>)}</span>
-          <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => onEnd(false)}>Skip tour</Button>
-          {at.value > 0 && <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => go(at.value - 1, -1)}>Back</Button>}
-          <Button size="sm" onClick={() => go(at.value + 1)}>{at.value === list.length - 1 ? 'Done' : 'Next'}</Button>
+          <span data-part="pips" aria-hidden="true">
+            {many &&
+              list.map((s, i) => <i key={s.target} data-on={i === at.value ? '' : undefined}></i>)}
+          </span>
+          <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => onEnd(false)}>
+            Skip tour
+          </Button>
+          {at.value > 0 && (
+            <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => go(at.value - 1, -1)}>
+              Back
+            </Button>
+          )}
+          <Button size="sm" onClick={() => go(at.value + 1)}>
+            {at.value === list.length - 1 ? 'Done' : 'Next'}
+          </Button>
         </footer>
       </div>
     </div>
@@ -77,7 +127,11 @@ function Running({ steps, onEnd, onStepChange }: { steps: TourStep[]; onEnd: (do
  * ends it and focus returns to where it began.
  */
 export function Tour({ steps, open, onDone, onSkip, onStepChange }: TourProps) {
-  const on = bindable<boolean>(() => open, () => false, false)
+  const on = bindable<boolean>(
+    () => open,
+    () => false,
+    false,
+  )
   const end = (done: boolean) => {
     on.set(false)
     ;(done ? onDone : onSkip)?.()
@@ -86,21 +140,62 @@ export function Tour({ steps, open, onDone, onSkip, onStepChange }: TourProps) {
 }
 
 /** A coachmark (09 §3.2): one tip with no scrim: a beacon on the target, the card on a press. Persisting the dismissal is the app's (`onDismiss`). */
-export function Coachmark({ target, title, body, onDismiss }: { target: string; title: unknown; body: unknown; onDismiss?: () => void }) {
+export function Coachmark({
+  target,
+  title,
+  body,
+  onDismiss,
+}: {
+  target: string
+  title: unknown
+  body: unknown
+  onDismiss?: () => void
+}) {
   const id = uid('coach')
   const open = state(false)
   const gone = state(false)
   let root: HTMLDivElement | undefined
-  use(coachSpot, () => root, () => ({ target, open: open.value, onClose: () => (open.value = false) }))
+  use(
+    coachSpot,
+    () => root,
+    () => ({ target, open: open.value, onClose: () => (open.value = false) }),
+  )
   return (
-    <div ref={n => (root = n)} data-scope="tour" hidden={gone.value || undefined}>
-      <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" data-beacon="" aria-label="Show tip" aria-expanded={open.value ? 'true' : 'false'} onClick={() => (open.value = !open.value)}><span data-part="beacon" aria-hidden="true"></span></button>
+    <div ref={(n) => (root = n)} data-scope="tour" hidden={gone.value || undefined}>
+      <button
+        type="button"
+        data-scope="button"
+        data-emphasis="ghost"
+        data-tone="neutral"
+        data-size="sm"
+        data-icon-only=""
+        data-beacon=""
+        aria-label="Show tip"
+        aria-expanded={open.value ? 'true' : 'false'}
+        onClick={() => (open.value = !open.value)}
+      >
+        <span data-part="beacon" aria-hidden="true"></span>
+      </button>
       {open.value && (
         <div data-part="card" role="dialog" aria-modal="false" aria-labelledby={`${id}-t`}>
           <span data-part="step-count">Tip</span>
-          <h4 id={`${id}-t`} tabindex="-1" aria-level="2">{title}</h4>
+          <h4 id={`${id}-t`} tabindex="-1" aria-level="2">
+            {title}
+          </h4>
           <p>{body}</p>
-          <footer><span data-part="pips"></span><Button size="sm" onClick={() => { open.value = false; gone.value = true; onDismiss?.() }}>Got it</Button></footer>
+          <footer>
+            <span data-part="pips"></span>
+            <Button
+              size="sm"
+              onClick={() => {
+                open.value = false
+                gone.value = true
+                onDismiss?.()
+              }}
+            >
+              Got it
+            </Button>
+          </footer>
         </div>
       )}
     </div>

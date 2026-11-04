@@ -6,12 +6,18 @@ import { interval, lifecycle, media, on, online, visible } from '@weft-js/core/b
 function Counter() {
   const count = state(0)
   const double = derived(() => count.value * 2)
-  const up = online(), shown = visible(), page = lifecycle(), dark = media('(prefers-color-scheme: dark)', { ssr: false })
-  on(window, 'keydown', e => { if (e.key === '+') count.value++ })
+  const up = online(),
+    shown = visible(),
+    page = lifecycle(),
+    dark = media('(prefers-color-scheme: dark)', { ssr: false })
+  on(window, 'keydown', (e) => {
+    if (e.key === '+') count.value++
+  })
   interval('1s', () => count.value++)
   return (
     <button onClick={() => count.value++}>
-      {count.value} × 2 = {double.value} {up.value ? 'online' : 'offline'} {shown.value ? page.value : 'hidden'} {dark.value ? 'dark' : 'light'}
+      {count.value} × 2 = {double.value} {up.value ? 'online' : 'offline'}{' '}
+      {shown.value ? page.value : 'hidden'} {dark.value ? 'dark' : 'light'}
     </button>
   )
 }

@@ -23,12 +23,30 @@
 
 import { readFileSync, statSync } from 'node:fs'
 
-const PURE = { '@weft-js/core': new Set(['For', 'mergeProps', 'untrack']), '@weft-js/start': new Set(['Link']) }
+const PURE = {
+  '@weft-js/core': new Set(['For', 'mergeProps', 'untrack']),
+  '@weft-js/start': new Set(['Link']),
+}
 const OPAQUE = /^@weft-js\/(?:core|start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
 /** weft API that needs nothing from the page and starts nothing by itself. */
 const QUIET = {
-  '@weft-js/core': new Set(['state', 'derived', 'memo', 'untrack', 'batch', 'flush', 'onCleanup', 'For', 'mergeProps', 'name', 'getOwner', 'view', 'omit', 'restOf']),
+  '@weft-js/core': new Set([
+    'state',
+    'derived',
+    'memo',
+    'untrack',
+    'batch',
+    'flush',
+    'onCleanup',
+    'For',
+    'mergeProps',
+    'name',
+    'getOwner',
+    'view',
+    'omit',
+    'restOf',
+  ]),
   '@weft-js/core/style': { has: () => true },
   '@weft-js/start': new Set(['Link', 'Form']),
 }
@@ -36,10 +54,14 @@ const STARTS = new Set(['onMount', 'watch', 'effect'])
 const DATA = new Set(['resource', 'Boundary'])
 const BOXES = new Set(['state', 'derived', 'memo', 'defineState'])
 /** Globals work may touch and still be its island's own: nothing here reaches past the island. */
-const SAFE = new Set(`Array BigInt Boolean Date Error Infinity IntersectionObserver Intl JSON Map Math MutationObserver NaN Number Object Promise
+const SAFE = new Set(
+  `Array BigInt Boolean Date Error Infinity IntersectionObserver Intl JSON Map Math MutationObserver NaN Number Object Promise
   RegExp ResizeObserver Set String Symbol WeakMap WeakSet cancelAnimationFrame clearInterval clearTimeout console decodeURI decodeURIComponent encodeURI encodeURIComponent isFinite isNaN matchMedia parseFloat parseInt
-  performance queueMicrotask requestAnimationFrame setInterval setTimeout structuredClone undefined`.split(/\s+/))
-const isServer = f => /\/src\/server\//.test(f) || /\.server\.[cm]?[jt]sx?$/.test(f)
+  performance queueMicrotask requestAnimationFrame setInterval setTimeout structuredClone undefined`.split(
+    /\s+/,
+  ),
+)
+const isServer = (f) => /\/src\/server\//.test(f) || /\.server\.[cm]?[jt]sx?$/.test(f)
 
 /**
  * @param {object} o
@@ -67,7 +89,13 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     if (mods.has(file)) continue
     const facts = read(file, transform, cache)
     if (!facts) continue
-    const mod = { file, facts, nodes: new Map(facts.nodes.map(n => [n.name, n])), imports: new Map(facts.imports.map(i => [i.local, i])), resolved: new Map() }
+    const mod = {
+      file,
+      facts,
+      nodes: new Map(facts.nodes.map((n) => [n.name, n])),
+      imports: new Map(facts.imports.map((i) => [i.local, i])),
+      resolved: new Map(),
+    }
     for (const n of facts.nodes) n.mod = mod
     mods.set(file, mod)
     if (isServer(file)) continue
@@ -87,7 +115,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       if (!m || effect(m, seen)) return `\`import "${s}"\``
     }
   }
-  const found = [...mods.values()].map(m => [m, effect(m)])
+  const found = [...mods.values()].map((m) => [m, effect(m)])
   for (const [m, why] of found) m.facts = { ...m.facts, effects: why }
 
   /** What `name` in `mod` is: a node, `true` (needs the client), or `false` (needs nothing). */
@@ -95,13 +123,13 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     if (seen.has(mod.file + name)) return true
     seen.add(mod.file + name)
     if (isServer(mod.file)) return true
-    const e = mod.facts.exports.find(x => x.exported === name)
+    const e = mod.facts.exports.find((x) => x.exported === name)
     if (e?.source) return e.imported === '*' ? true : across(mod, e.source, e.imported, seen)
     if (e) return local(mod, e.local, seen)
     for (const star of mod.facts.stars) {
       const file = mod.resolved.get(star)
       const m = file && mods.get(file)
-      if (m && (m.facts.exports.some(x => x.exported === name) || m.facts.stars.length)) {
+      if (m && (m.facts.exports.some((x) => x.exported === name) || m.facts.stars.length)) {
         const hit = exported(m, name, seen)
         if (hit !== undefined) return hit
       }
@@ -133,10 +161,10 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
   }
 
   const client = new Map() // node → why
-  const all = [...mods.values()].flatMap(m => m.facts.nodes)
+  const all = [...mods.values()].flatMap((m) => m.facts.nodes)
   // Read as a value, a component could be called with anything. A module-level value passes that on to what it holds.
   const loose = new Set()
-  const free = t => {
+  const free = (t) => {
     if (t?.ns) t.ns.facts.nodes.forEach(free)
     else if (t && typeof t === 'object' && !loose.has(t)) {
       loose.add(t)
@@ -144,10 +172,15 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     }
   }
   for (const m of mods.values()) for (const u of m.facts.loose) free(local(m, u, new Set()))
-  const isClient = t => t === true || (t && typeof t === 'object' && client.has(t))
+  const isClient = (t) => t === true || (t && typeof t === 'object' && client.has(t))
   for (const n of all) {
     if (n.force === 'static') continue
-    const why = n.force === 'client' ? '`@weft client`' : n.own ?? (loose.has(n) ? n.passes : null) ?? (n.mod.facts.effects && `the module runs ${n.mod.facts.effects} as it loads`)
+    const why =
+      n.force === 'client'
+        ? '`@weft client`'
+        : (n.own ??
+          (loose.has(n) ? n.passes : null) ??
+          (n.mod.facts.effects && `the module runs ${n.mod.facts.effects} as it loads`))
     if (why) client.set(n, why)
   }
   const interactive = (n, s) => s.handler || isClient(tagOf(n.mod, s))
@@ -158,38 +191,55 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     }
   }
   /** Sites inside a hoisted site's children: they run on the client with it. */
-  const hoist = (n, s) => s.kids.present && !!(s.kids.own || s.kids.sites.some(i => interactive(n, n.sites.find(x => x.index === i))))
-  const inner = n => {
+  const hoist = (n, s) =>
+    s.kids.present &&
+    !!(
+      s.kids.own ||
+      s.kids.sites.some((i) =>
+        interactive(
+          n,
+          n.sites.find((x) => x.index === i),
+        ),
+      )
+    )
+  const inner = (n) => {
     const skip = new Set()
-    for (const s of n.sites) if (!skip.has(s.index) && interactive(n, s) && hoist(n, s)) for (const i of s.kids.sites) skip.add(i)
-    return n.sites.filter(s => !skip.has(s.index))
+    for (const s of n.sites)
+      if (!skip.has(s.index) && interactive(n, s) && hoist(n, s))
+        for (const i of s.kids.sites) skip.add(i)
+    return n.sites.filter((s) => !skip.has(s.index))
   }
-  const why = n => {
+  const why = (n) => {
     const own = reads(n, n.uses)
     if (own) return own
     for (const s of inner(n)) {
       if (!interactive(n, s)) {
-        const hit = reads(n, [...s.attrs.flatMap(a => a.uses), ...s.kids.uses]) ?? s.attrs.find(a => a.own)?.own ?? s.kids.own
+        const hit =
+          reads(n, [...s.attrs.flatMap((a) => a.uses), ...s.kids.uses]) ??
+          s.attrs.find((a) => a.own)?.own ??
+          s.kids.own
         if (hit) return hit
         continue
       }
       if (!s.tag) return `a handler on a tag only known at run time (line ${s.line})`
       for (const a of s.attrs) {
-        if (a.kind === 'closure') return `prop \`${a.name}\` of <${s.tag}> is a function over local names (line ${s.line})`
+        if (a.kind === 'closure')
+          return `prop \`${a.name}\` of <${s.tag}> is a function over local names (line ${s.line})`
         if (a.kind === 'spread') return `a spread on <${s.tag}> (line ${s.line})`
         if (a.kind === 'value') {
           const hit = reads(n, a.uses)
           if (hit) return hit
         }
       }
-      if (s.kids.present && hoist(n, s) && !s.kids.closed) return `the children of <${s.tag}> need the client and read local names (line ${s.line})`
+      if (s.kids.present && hoist(n, s) && !s.kids.closed)
+        return `the children of <${s.tag}> need the client and read local names (line ${s.line})`
       if (s.kids.present && !hoist(n, s)) {
         const hit = reads(n, s.kids.uses)
         if (hit) return hit
       }
     }
   }
-  for (let grew = true; grew; ) {
+  for (let grew = true; grew;) {
     grew = false
     for (const n of all) {
       if (client.has(n) || n.force === 'static') continue
@@ -204,19 +254,32 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
   /** When an island may load: `when` (`v`, `i`, or none for the page's load), `why`, and `fix` when it's avoidable. */
   const timing = (n, s) => {
     const seen = new Set()
-    const at = o => `${o.name} (${rel(o.mod.file)}:${o.line})`
+    const at = (o) => `${o.name} (${rel(o.mod.file)}:${o.line})`
     let start, data, forced, stop
-    const halt = (why, fix) => { stop ??= { why, fix } }
+    const halt = (why, fix) => {
+      stop ??= { why, fix }
+    }
     const look = (owner, names) => {
       for (const u of names) {
         const i = owner.mod.imports.get(u)
         if (i && OPAQUE.test(i.source)) {
-          if (i.source === '@weft-js/core' && STARTS.has(i.imported)) start ??= `\`${i.imported}\` in ${at(owner)}`
-          else if (i.source === '@weft-js/core' && DATA.has(i.imported)) data ??= `\`${i.imported}\` in ${at(owner)}`
+          if (i.source === '@weft-js/core' && STARTS.has(i.imported))
+            start ??= `\`${i.imported}\` in ${at(owner)}`
+          else if (i.source === '@weft-js/core' && DATA.has(i.imported))
+            data ??= `\`${i.imported}\` in ${at(owner)}`
           else if (i.source === '@weft-js/core' && BOXES.has(i.imported)) {
-            if (owner.value) halt(`\`${owner.name}\` is a box at module level (${at(owner)}): a write from outside couldn't reach an island that isn't running`, `make the box inside the component, or pass it down from one that runs: nothing else keeps this island from waiting`)
-          } else if (i.source === '@weft-js/core/media' && i.imported === 'Media') start ??= `\`Media\` in ${at(owner)}` // a video's motion, a swap for a better copy
-          else if (!QUIET[i.source]?.has(i.imported)) halt(`\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
+            if (owner.value)
+              halt(
+                `\`${owner.name}\` is a box at module level (${at(owner)}): a write from outside couldn't reach an island that isn't running`,
+                `make the box inside the component, or pass it down from one that runs: nothing else keeps this island from waiting`,
+              )
+          } else if (i.source === '@weft-js/core/media' && i.imported === 'Media')
+            start ??= `\`Media\` in ${at(owner)}` // a video's motion, a swap for a better copy
+          else if (!QUIET[i.source]?.has(i.imported))
+            halt(
+              `\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`,
+              `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`,
+            )
           continue
         }
         const file = i && owner.mod.resolved.get(i.source)
@@ -226,35 +289,62 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
         }
         const t = local(owner.mod, u, new Set())
         if (t?.ns) t.ns.facts.nodes.forEach(visit)
-        else if (t === true) halt(`\`${u}\` in ${at(owner)} is code the compiler can't see into`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
+        else if (t === true)
+          halt(
+            `\`${u}\` in ${at(owner)} is code the compiler can't see into`,
+            `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`,
+          )
         else if (t) visit(t)
       }
     }
     const site = (owner, x) => {
-      look(owner, x.attrs.flatMap(a => a.uses))
+      look(
+        owner,
+        x.attrs.flatMap((a) => a.uses),
+      )
       look(owner, x.kids.uses)
       if (x.tag) look(owner, [x.tag])
     }
     /** The island's own site and the ones hoisted with it: `$iN` runs them, and a tag isn't among `kids.uses`. */
     const nested = (owner, x) => {
       site(owner, x)
-      for (const i of x.kids.sites) site(owner, owner.sites.find(o => o.index === i))
+      for (const i of x.kids.sites)
+        site(
+          owner,
+          owner.sites.find((o) => o.index === i),
+        )
     }
-    const visit = o => {
+    const visit = (o) => {
       if (seen.has(o)) return
       seen.add(o)
       if (o.force === 'visible') return void (forced = o)
       if (o.force === 'static' || o.force === 'interaction') return
       if (o.force === 'client') return halt(`\`@weft client\` on ${at(o)}`)
-      if (o.early) halt(`${o.early} in ${at(o)}`, o.early.startsWith('`autofocus') ? undefined : `keep the \`ref\` to storing the node, and do the work in a handler`)
-      if (o.mod.facts.effects) halt(`${rel(o.mod.file)} runs ${o.mod.facts.effects} as it loads`, `move that into a function an island calls`)
+      if (o.early)
+        halt(
+          `${o.early} in ${at(o)}`,
+          o.early.startsWith('`autofocus')
+            ? undefined
+            : `keep the \`ref\` to storing the node, and do the work in a handler`,
+        )
+      if (o.mod.facts.effects)
+        halt(
+          `${rel(o.mod.file)} runs ${o.mod.facts.effects} as it loads`,
+          `move that into a function an island calls`,
+        )
       look(o, o.uses)
       for (const x of o.sites) site(o, x)
     }
     nested(n, s)
     if (stop) return stop
-    const away = [...seen].flatMap(o => (o.force === 'interaction' ? [] : o.globals)).filter(g => !SAFE.has(g))
-    if (start && away.length) return { why: `${start} can reach \`${away[0]}\`, past the island`, fix: `\`/* @weft visible */\` above the component, when that only matters once it's on screen` }
+    const away = [...seen]
+      .flatMap((o) => (o.force === 'interaction' ? [] : o.globals))
+      .filter((g) => !SAFE.has(g))
+    if (start && away.length)
+      return {
+        why: `${start} can reach \`${away[0]}\`, past the island`,
+        fix: `\`/* @weft visible */\` above the component, when that only matters once it's on screen`,
+      }
     if (forced) return { when: 'v', why: `\`@weft visible\` on ${at(forced)}` }
     if (start) return { when: 'v', why: `${start} stays inside the island` }
     if (data) return { when: 'v', why: `${data} reads server data` }
@@ -278,8 +368,21 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
         const t = lazy ? timing(n, s) : { why: 'hydration: partial' }
         sites.push({ index: s.index, hoist: hoisted, when: t.when ?? '' })
         islands.push({ id, file: mod.file, index: s.index })
-        loads.push({ id, tag: s.member ?? s.tag, line: s.line, when: NAMES[t.when] ?? 'load', why: t.why })
-        if (t.fix) diagnostics.push({ code: 'H010', file: rel(mod.file), line: s.line, why: `<${s.member ?? s.tag}> has to load with the page: ${t.why}`, fix: t.fix })
+        loads.push({
+          id,
+          tag: s.member ?? s.tag,
+          line: s.line,
+          when: NAMES[t.when] ?? 'load',
+          why: t.why,
+        })
+        if (t.fix)
+          diagnostics.push({
+            code: 'H010',
+            file: rel(mod.file),
+            line: s.line,
+            why: `<${s.member ?? s.tag}> has to load with the page: ${t.why}`,
+            fix: t.fix,
+          })
       }
     }
     if (sites.length) files.set(mod.file, { id: rel(mod.file), sites })
@@ -287,22 +390,38 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
   // A closure can't reach an island, so all of its caller runs in the browser, and nothing but the report says so.
   for (const n of all) {
     const w = client.get(n)
-    if (w?.includes('is a function over local names') && !n.mod.file.includes('/node_modules/')) diagnostics.push({ code: 'H017', file: rel(n.mod.file), line: n.line, why: `${n.name} has to hydrate whole: ${w}`, fix: `nothing, when ${n.name} is mostly controls; otherwise move each control and what its function reads into a small component of its own, which becomes the island and leaves the rest static` })
+    if (w?.includes('is a function over local names') && !n.mod.file.includes('/node_modules/'))
+      diagnostics.push({
+        code: 'H017',
+        file: rel(n.mod.file),
+        line: n.line,
+        why: `${n.name} has to hydrate whole: ${w}`,
+        fix: `nothing, when ${n.name} is mostly controls; otherwise move each control and what its function reads into a small component of its own, which becomes the island and leaves the rest static`,
+      })
   }
-  const defaultOf = file => {
+  const defaultOf = (file) => {
     const m = mods.get(file)
     return m ? exported(m, 'default') : true
   }
-  const statics = new Set(entries.filter(f => !isClient(defaultOf(f))))
-  const report = [...mods.values()].filter(m => !isServer(m.file)).map(m => ({
-    file: rel(m.file),
-    nodes: m.facts.nodes.filter(n => n.sites.length || /^[A-Z]/.test(n.name)).map(n => ({ name: n.name, line: n.line, client: client.get(n) ?? null })),
-  })).filter(f => f.nodes.length)
+  const statics = new Set(entries.filter((f) => !isClient(defaultOf(f))))
+  const report = [...mods.values()]
+    .filter((m) => !isServer(m.file))
+    .map((m) => ({
+      file: rel(m.file),
+      nodes: m.facts.nodes
+        .filter((n) => n.sites.length || /^[A-Z]/.test(n.name))
+        .map((n) => ({ name: n.name, line: n.line, client: client.get(n) ?? null })),
+    }))
+    .filter((f) => f.nodes.length)
   return { files, islands, loads, diagnostics, statics, report, stamps: [...mods.keys()] }
 }
 
 function external(spec, file) {
-  return file.includes('/node_modules/') && !/\/node_modules\/@weft-js\//.test(file) && !spec.startsWith('.')
+  return (
+    file.includes('/node_modules/') &&
+    !/\/node_modules\/@weft-js\//.test(file) &&
+    !spec.startsWith('.')
+  )
 }
 
 function read(file, transform, cache) {
@@ -314,7 +433,7 @@ function read(file, transform, cache) {
   try {
     const code = readFileSync(file, 'utf8')
     const out = transform(code, { filename: file, checkOnly: true })
-    if (code && !out.diagnostics?.some(d => d.code === 'W000')) facts = out.facts.hydration
+    if (code && !out.diagnostics?.some((d) => d.code === 'W000')) facts = out.facts.hydration
   } catch {}
   // Mid-edit a file may not parse: what it was is a better guess than nothing, which would look static.
   if (!facts) return hit && structuredClone(hit.facts)

@@ -12,7 +12,20 @@ export function toJson(schema, side) {
 }
 
 /** Typical lengths by field name, for strings with no hint (research 11 §7.1). */
-const NAMES = { title: 40, name: 16, label: 16, email: 22, body: 200, content: 200, text: 120, description: 120, summary: 120, slug: 24, url: 40, id: 8 }
+const NAMES = {
+  title: 40,
+  name: 16,
+  label: 16,
+  email: 22,
+  body: 200,
+  content: 200,
+  text: 120,
+  description: 120,
+  summary: 120,
+  slug: 24,
+  url: 40,
+  id: 8,
+}
 const FORMATS = { email: 22, uuid: 36, url: 40, uri: 40, 'date-time': 24, date: 10, time: 8 }
 /** A string with no hint: X036 if a skeleton shows one. */
 const UNHINTED = 16
@@ -35,7 +48,7 @@ export function schemaTree(s, name = '') {
   if (s.enum) return s.enum[0]
   const union = s.anyOf ?? s.oneOf
   if (union) {
-    const some = union.filter(x => x.type !== 'null')
+    const some = union.filter((x) => x.type !== 'null')
     return some.length < union.length && !(s.probability >= 0.5) ? null : schemaTree(some[0], name)
   }
   switch (s.type) {
@@ -47,10 +60,14 @@ export function schemaTree(s, name = '') {
     case 'boolean':
       return false
     case 'array':
-      return { ...(s.maxItems !== undefined ? { $a: s.maxItems } : {}), $of: schemaTree(s.items, name) }
+      return {
+        ...(s.maxItems !== undefined ? { $a: s.maxItems } : {}),
+        $of: schemaTree(s.items, name),
+      }
     case 'object': {
       const out = {}
-      for (const [k, v] of Object.entries(s.properties ?? {})) if (s.required?.includes(k) || v.probability >= 0.5) out[k] = schemaTree(v, k)
+      for (const [k, v] of Object.entries(s.properties ?? {}))
+        if (s.required?.includes(k) || v.probability >= 0.5) out[k] = schemaTree(v, k)
       return out
     }
   }
@@ -60,8 +77,15 @@ export function schemaTree(s, name = '') {
 /** `example` (a declared `shape`) over `tree`. */
 function merge(tree, example) {
   if (example === undefined) return tree
-  if (Array.isArray(example)) return example.length > 1 || !tree?.$of ? example : { ...tree, $of: merge(tree.$of, example[0]) }
-  if (example && typeof example === 'object') return Object.fromEntries([...Object.entries(tree ?? {}), ...Object.entries(example).map(([k, v]) => [k, merge(tree?.[k], v)])])
+  if (Array.isArray(example))
+    return example.length > 1 || !tree?.$of
+      ? example
+      : { ...tree, $of: merge(tree.$of, example[0]) }
+  if (example && typeof example === 'object')
+    return Object.fromEntries([
+      ...Object.entries(tree ?? {}),
+      ...Object.entries(example).map(([k, v]) => [k, merge(tree?.[k], v)]),
+    ])
   return example
 }
 

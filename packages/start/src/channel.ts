@@ -3,9 +3,38 @@
 // finds its messages. The socket server is socket.ts, and `room.in(params).publish` reaches it through
 // `runtime.channels`, so nothing of the server ships here.
 
-import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
+import {
+  Box,
+  DEV,
+  batch,
+  collect as boxes,
+  createRoot,
+  derived,
+  effect,
+  getOwner,
+  onCleanup,
+  state,
+  untrack,
+  type Derived,
+  type State,
+} from '@weft-js/core'
 import { HANDOVER, SOCKETS, openLine, socketDown } from './link'
-import { currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track, type Context, type Fn, type Skip, type StandardSchemaV1 } from './data'
+import {
+  currentScope,
+  fns,
+  FnError,
+  keyOf,
+  net,
+  rt,
+  runtime,
+  skip,
+  StartError,
+  track,
+  type Context,
+  type Fn,
+  type Skip,
+  type StandardSchemaV1,
+} from './data'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
 
@@ -19,7 +48,13 @@ type Outputs<T extends Schemas> = { [K in keyof T]: Out<T[K]> }
  * Where a connection stands; `unauthorized` waits for `rejoin`. `unavailable`: this deploy can't hold a socket (a
  * function host, R024), so nothing connects and nothing is retried.
  */
-export type ChannelStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized' | 'unavailable'
+export type ChannelStatus =
+  | 'connecting'
+  | 'open'
+  | 'reconnecting'
+  | 'closed'
+  | 'unauthorized'
+  | 'unavailable'
 
 /** `room.publish`: who a message goes to, and whether it can be replayed. */
 export interface PublishOptions {
@@ -35,11 +70,19 @@ export interface PublishOptions {
 export interface Room<P, M> {
   params: P
   /** To everyone in the room, on every instance. */
-  publish<K extends keyof M & string>(name: K, message: M[K], options?: PublishOptions): Promise<void>
+  publish<K extends keyof M & string>(
+    name: K,
+    message: M[K],
+    options?: PublishOptions,
+  ): Promise<void>
 }
 
 /** `channel()`: the params, the messages each side may send, and who may join. */
-export interface ChannelDef<P extends StandardSchemaV1 | undefined, C extends Schemas, S extends Schemas> {
+export interface ChannelDef<
+  P extends StandardSchemaV1 | undefined,
+  C extends Schemas,
+  S extends Schemas,
+> {
   params?: P
   /** Required (R001). Runs on every join and at each session re-check. `() => true` must be written out. */
   authorize: (args: { ctx: Context; params: Out<P> }) => boolean | Promise<boolean>
@@ -48,9 +91,22 @@ export interface ChannelDef<P extends StandardSchemaV1 | undefined, C extends Sc
   /** Server → client, validated in dev and tests. */
   server?: S
   /** `id` is the sender's connection, the same one `left` gets. */
-  on?: { [K in keyof C]?: (args: { msg: Out<C[K]>; id: string; ctx: Context; params: Out<P>; room: Room<Out<P>, Inputs<S>> }) => unknown }
+  on?: {
+    [K in keyof C]?: (args: {
+      msg: Out<C[K]>
+      id: string
+      ctx: Context
+      params: Out<P>
+      room: Room<Out<P>, Inputs<S>>
+    }) => unknown
+  }
   /** A connection stopped being in the room: it left, closed, or lost `authorize`. Not called if its instance dies. */
-  left?: (args: { id: string; ctx: Context; params: Out<P>; room: Room<Out<P>, Inputs<S>> }) => unknown
+  left?: (args: {
+    id: string
+    ctx: Context
+    params: Out<P>
+    room: Room<Out<P>, Inputs<S>>
+  }) => unknown
   limits?: { perSecond?: number }
   $id?: string
 }
@@ -65,7 +121,10 @@ export interface Connection<C, S> {
   /** Ticks when the server couldn't resume: messages may be missing, so refetch what the room's history is. */
   readonly resets: Derived<number>
   /** Keep a room's messages of one name, in the cache: a remount within `keep` finds them. `key` drops a repeat. */
-  collect<K extends keyof S & string>(name: K, options?: { max?: number; key?: (message: S[K]) => unknown }): Derived<S[K][]>
+  collect<K extends keyof S & string>(
+    name: K,
+    options?: { max?: number; key?: (message: S[K]) => unknown },
+  ): Derived<S[K][]>
   /** Each message of one name, until the owner is disposed. */
   on<K extends keyof S & string>(name: K, fn: (message: S[K]) => void): () => void
   onReset(fn: () => void): () => void
@@ -77,14 +136,22 @@ export interface Connection<C, S> {
 
 type Arg<P> = P | (() => P | Skip)
 /** How long a join outlives the last component using it. */
-export interface ConnectOptions { keep?: string | number }
+export interface ConnectOptions {
+  keep?: string | number
+}
 
 /** What `channel()` returns: connect from a page, publish from the server. */
 export interface Channel<P, C, S> {
   /** In a component or scope. A function argument re-joins when what it reads changes; `skip` leaves. */
-  connect(...args: [P] extends [void] ? [params?: undefined | (() => undefined | Skip), options?: ConnectOptions] : [params: Arg<P>, options?: ConnectOptions]): Connection<C, S>
+  connect(
+    ...args: [P] extends [void]
+      ? [params?: undefined | (() => undefined | Skip), options?: ConnectOptions]
+      : [params: Arg<P>, options?: ConnectOptions]
+  ): Connection<C, S>
   /** On the server, from a mutation or a job. */
-  in(...args: [P] extends [void] ? [] : [params: P]): { publish<K extends keyof S & string>(name: K, message: S[K]): Promise<void> }
+  in(...args: [P] extends [void] ? [] : [params: P]): {
+    publish<K extends keyof S & string>(name: K, message: S[K]): Promise<void>
+  }
   readonly kind: 'channel'
   readonly $id: string
 }
@@ -93,15 +160,29 @@ const FN = Symbol.for('weft.fn')
 let auto = 0
 
 /** A named room of schema-checked messages over the shared socket. */
-export function channel<P extends StandardSchemaV1 | undefined = undefined, C extends Schemas = {}, S extends Schemas = {}>(def: ChannelDef<P, C, S>): Channel<In<P>, Inputs<C>, Outputs<S>> {
+export function channel<
+  P extends StandardSchemaV1 | undefined = undefined,
+  C extends Schemas = {},
+  S extends Schemas = {},
+>(def: ChannelDef<P, C, S>): Channel<In<P>, Inputs<C>, Outputs<S>> {
   const id = def.$id ?? `c${++auto}`
-  if (!(def as { $stub?: boolean }).$stub && !def.authorize) throw new StartError('R001', `\`${id}\` has no \`authorize\`: anyone could join it`, 'add `authorize` (`() => true` must be written out)')
+  if (!(def as { $stub?: boolean }).$stub && !def.authorize)
+    throw new StartError(
+      'R001',
+      `\`${id}\` has no \`authorize\`: anyone could join it`,
+      'add `authorize` (`() => true` must be written out)',
+    )
   const fn: Fn = { kind: 'channel', $id: id, def: def as Fn['def'] }
   fns.set(id, fn)
   return {
-    kind: 'channel', $id: id, [FN]: fn,
+    kind: 'channel',
+    $id: id,
+    [FN]: fn,
     connect: (params?: unknown, options?: ConnectOptions) => connect(fn, params, options),
-    in: (params?: unknown) => ({ publish: (name: string, message: unknown) => runtime.channels!.publish(fn, params, name, message) }),
+    in: (params?: unknown) => ({
+      publish: (name: string, message: unknown) =>
+        runtime.channels!.publish(fn, params, name, message),
+    }),
   } as never
 }
 
@@ -112,12 +193,18 @@ export interface SharedDef<K extends StandardSchemaV1, V extends StandardSchemaV
   /** What a reader has until the server says otherwise. Kept in the client bundle, so plain data. */
   initial: Out<V>
   /** Both required (R001). */
-  authorize: { read: (args: { ctx: Context; key: Out<K> }) => boolean | Promise<boolean>; write: (args: { ctx: Context; key: Out<K> }) => boolean | Promise<boolean> }
+  authorize: {
+    read: (args: { ctx: Context; key: Out<K> }) => boolean | Promise<boolean>
+    write: (args: { ctx: Context; key: Out<K> }) => boolean | Promise<boolean>
+  }
   $id?: string
 }
 
 /** A box in a scope: reads as a value, and a write is optimistic, sent, and last writer wins on the server. */
-export type SharedBox<T> = State<T> & { readonly status: Derived<ChannelStatus>; readonly error: unknown }
+export type SharedBox<T> = State<T> & {
+  readonly status: Derived<ChannelStatus>
+  readonly error: unknown
+}
 
 /** What `sharedState()` returns: read a value on a page, set it from the server. */
 export interface SharedState<K, V> {
@@ -129,13 +216,23 @@ export interface SharedState<K, V> {
 }
 
 /** One value per key that every client holding that key sees change. */
-export function sharedState<K extends StandardSchemaV1, V extends StandardSchemaV1>(name: string, def: SharedDef<K, V>): SharedState<In<K>, Out<V>> {
+export function sharedState<K extends StandardSchemaV1, V extends StandardSchemaV1>(
+  name: string,
+  def: SharedDef<K, V>,
+): SharedState<In<K>, Out<V>> {
   const id = def.$id ?? `shared:${name}`
-  if (!(def as { $stub?: boolean }).$stub && (!def.authorize?.read || !def.authorize?.write)) throw new StartError('R001', `\`${id}\` needs \`authorize: { read, write }\`: anyone could read or write it`, '`() => true` must be written out')
+  if (!(def as { $stub?: boolean }).$stub && (!def.authorize?.read || !def.authorize?.write))
+    throw new StartError(
+      'R001',
+      `\`${id}\` needs \`authorize: { read, write }\`: anyone could read or write it`,
+      '`() => true` must be written out',
+    )
   const fn: Fn = { kind: 'shared', $id: id, def }
   fns.set(id, fn)
   return {
-    kind: 'shared', $id: id, [FN]: fn,
+    kind: 'shared',
+    $id: id,
+    [FN]: fn,
     connect: (key: unknown, options?: ConnectOptions) => shared(fn, key, options),
     in: (key: unknown) => ({ set: (value: unknown) => runtime.channels!.set(fn, key, value) }),
   } as never
@@ -143,9 +240,19 @@ export function sharedState<K extends StandardSchemaV1, V extends StandardSchema
 
 // ---- joins ----------------------------------------------------------------------------------------------------------
 
-interface ListSpec { name: string; max: number; key?: ((m: never) => unknown) | undefined }
-interface List extends ListSpec { box: State<unknown[]> }
-interface Handle { on: Map<string, Set<(m: never) => void>>; resets: Set<() => void>; value?(v: { v: unknown; at: number }): void }
+interface ListSpec {
+  name: string
+  max: number
+  key?: ((m: never) => unknown) | undefined
+}
+interface List extends ListSpec {
+  box: State<unknown[]>
+}
+interface Handle {
+  on: Map<string, Set<(m: never) => void>>
+  resets: Set<() => void>
+  value?(v: { v: unknown; at: number }): void
+}
 interface Join {
   n: number
   key: string
@@ -180,7 +287,24 @@ function acquire(fn: Fn, params: unknown): Join {
   const key = keyOf(fn.$id, params)
   let j = joins.get(key)
   if (!j) {
-    j = createRoot(() => ({ n: ++nth, key, fn, params, refs: 0, joined: false, refused: false, status: state<ChannelStatus>('connecting'), error: state<unknown>(undefined), resets: state(0), lists: new Map(), handles: new Set(), waiting: new Set() }), null)
+    j = createRoot(
+      () => ({
+        n: ++nth,
+        key,
+        fn,
+        params,
+        refs: 0,
+        joined: false,
+        refused: false,
+        status: state<ChannelStatus>('connecting'),
+        error: state<unknown>(undefined),
+        resets: state(0),
+        lists: new Map(),
+        handles: new Set(),
+        waiting: new Set(),
+      }),
+      null,
+    )
     if (DEV && net() && !net()!.resets.includes(reset)) net()!.resets.push(reset)
     joins.set(key, j)
     byN.set(j.n, j)
@@ -231,46 +355,86 @@ const NONE: never[] = []
 type View = Join | undefined
 
 /** The part `connect` and `shared` have in common: the current join, as the argument moves. */
-function follow(fn: Fn, arg: unknown, options: ConnectOptions | undefined, handle: Handle, joined?: (j: Join) => void): State<View> {
+function follow(
+  fn: Fn,
+  arg: unknown,
+  options: ConnectOptions | undefined,
+  handle: Handle,
+  joined?: (j: Join) => void,
+): State<View> {
   const view = state<View>(undefined)
-  effect(() => {
-    const params = typeof arg === 'function' ? (arg as () => unknown)() : arg
-    if (params === skip) return undefined
-    return untrack(() => {
-      const j = acquire(fn, params)
-      j.handles.add(handle)
-      joined?.(j)
-      const stop = hold(j, options?.keep)
-      onCleanup(() => {
-        j.handles.delete(handle)
-        stop()
+  effect(
+    () => {
+      const params = typeof arg === 'function' ? (arg as () => unknown)() : arg
+      if (params === skip) return undefined
+      return untrack(() => {
+        const j = acquire(fn, params)
+        j.handles.add(handle)
+        joined?.(j)
+        const stop = hold(j, options?.keep)
+        onCleanup(() => {
+          j.handles.delete(handle)
+          stop()
+        })
+        return j
       })
-      return j
-    })
-  }, now => { view.value = now })
+    },
+    (now) => {
+      view.value = now
+    },
+  )
   return view
 }
 
 function owned(fn: Fn) {
-  if (!getOwner()) throw new StartError('W051', DEV ? `\`${fn.$id}.connect()\` was called outside a component or scope: nothing would close it` : fn.$id, DEV ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`' : undefined)
+  if (!getOwner())
+    throw new StartError(
+      'W051',
+      DEV
+        ? `\`${fn.$id}.connect()\` was called outside a component or scope: nothing would close it`
+        : fn.$id,
+      DEV
+        ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`'
+        : undefined,
+    )
 }
 
 /** `@weft-js/start/share`'s way in: a join that nothing on the page declared, so a tab shares this socket and its lifecycle. */
-export const connectBuiltIn = ($id: string) => connect({ kind: 'channel', $id, def: {} }, undefined, { keep: 0 })
+export const connectBuiltIn = ($id: string) =>
+  connect({ kind: 'channel', $id, def: {} }, undefined, { keep: 0 })
 
-function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<Record<string, never>, Record<string, never>> {
+function connect(
+  fn: Fn,
+  arg: unknown,
+  options?: ConnectOptions,
+): Connection<Record<string, never>, Record<string, never>> {
   owned(fn)
   if (currentScope()) {
     const closed = { value: 'connecting' as ChannelStatus }
-    return { status: closed, room: { value: undefined }, error: undefined, resets: { value: 0 }, collect: () => ({ value: NONE }), on: () => () => {}, onReset: () => () => {}, send: () => Promise.reject(new FnError({ message: 'a channel has no socket on the server' }, 500)), retry() {} }
+    return {
+      status: closed,
+      room: { value: undefined },
+      error: undefined,
+      resets: { value: 0 },
+      collect: () => ({ value: NONE }),
+      on: () => () => {},
+      onReset: () => () => {},
+      send: () =>
+        Promise.reject(new FnError({ message: 'a channel has no socket on the server' }, 500)),
+      retry() {},
+    }
   }
   const handle: Handle = { on: new Map(), resets: new Set() }
   const wanted: ListSpec[] = []
-  const view = follow(fn, arg, options, handle, j => { for (const w of wanted) listOf(j, w) })
+  const view = follow(fn, arg, options, handle, (j) => {
+    for (const w of wanted) listOf(j, w)
+  })
   return {
     status: derived(() => view.value?.status.value ?? 'closed'),
     room: derived(() => view.value?.key),
-    get error() { return view.value?.error.value },
+    get error() {
+      return view.value?.error.value
+    },
     resets: derived(() => view.value?.resets.value ?? 0),
     collect(name, { max = 200, key } = {}) {
       const spec: ListSpec = { name, max, key }
@@ -298,7 +462,9 @@ function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<Rec
     },
     send(name, message) {
       const j = untrack(() => view.value)
-      return j ? post(j, name, message) : Promise.reject(new FnError({ message: 'this channel is closed' }, 400))
+      return j
+        ? post(j, name, message)
+        : Promise.reject(new FnError({ message: 'this channel is closed' }, 400))
     },
     retry() {
       const j = untrack(() => view.value)
@@ -315,8 +481,12 @@ class Shared<T> extends Box<T> {
   declare view: State<View>
   declare statusOf: Derived<ChannelStatus>
   declare problem: State<unknown>
-  get status() { return this.statusOf }
-  get error() { return this.problem.value }
+  get status() {
+    return this.statusOf
+  }
+  get error() {
+    return this.problem.value
+  }
   /** A server value: applied unless a local write is still on its way. */
   apply(v: { v: T; at: number }) {
     if (v.at >= this.base.at) this.base = v
@@ -334,10 +504,21 @@ class Shared<T> extends Box<T> {
     super.w(v)
     this.pending++
     this.problem.value = undefined
-    void track(post(j, '$set', v).then(() => { this.pending-- }, e => {
-      this.pending--
-      this.problem.value = e
-    }).finally(() => { if (!this.pending) this.quiet(this.base.v) }))
+    void track(
+      post(j, '$set', v)
+        .then(
+          () => {
+            this.pending--
+          },
+          (e) => {
+            this.pending--
+            this.problem.value = e
+          },
+        )
+        .finally(() => {
+          if (!this.pending) this.quiet(this.base.v)
+        }),
+    )
   }
 }
 
@@ -353,8 +534,10 @@ function shared(fn: Fn, arg: unknown, options?: ConnectOptions): SharedBox<unkno
     b.view = state<View>(undefined)
     return b
   }
-  const handle: Handle = { on: new Map(), resets: new Set(), value: v => b.apply(v) }
-  b.view = follow(fn, arg, options, handle, () => { b.base = { v: initial, at: 0 } })
+  const handle: Handle = { on: new Map(), resets: new Set(), value: (v) => b.apply(v) }
+  b.view = follow(fn, arg, options, handle, () => {
+    b.base = { v: initial, at: 0 }
+  })
   b.statusOf = derived(() => b.view.value?.status.value ?? 'closed')
   return b
 }
@@ -366,9 +549,10 @@ const acks = new Map<number, { ok: () => void; no: (e: unknown) => void; n: numb
 let ackId = 0
 
 async function post(j: Join, name: string, message: unknown): Promise<void> {
-  if (!SOCKETS && !(DEV && net())) throw new FnError({ code: 'R024', message: "this deploy can't hold a socket: not sent" }, 503)
+  if (!SOCKETS && !(DEV && net()))
+    throw new FnError({ code: 'R024', message: "this deploy can't hold a socket: not sent" }, 503)
   if (!j.joined && !j.refused) {
-    await new Promise<void>(ok => {
+    await new Promise<void>((ok) => {
       const done = () => {
         clearTimeout(t)
         j.waiting.delete(done)
@@ -378,9 +562,18 @@ async function post(j: Join, name: string, message: unknown): Promise<void> {
       j.waiting.add(done)
     })
   }
-  if (!j.joined) throw new FnError({ ...(j.refused && { code: 'R011' }), message: j.refused ? 'not allowed in this channel' : 'no connection: not sent' }, j.refused ? 403 : 503)
+  if (!j.joined)
+    throw new FnError(
+      {
+        ...(j.refused && { code: 'R011' }),
+        message: j.refused ? 'not allowed in this channel' : 'no connection: not sent',
+      },
+      j.refused ? 403 : 503,
+    )
   const ack = ++ackId
-  const p = new Promise<void>((ok, no) => { acks.set(ack, { ok, no, n: j.n }) })
+  const p = new Promise<void>((ok, no) => {
+    acks.set(ack, { ok, no, n: j.n })
+  })
   send(['m', j.n, ack, name, message])
   return track(p)
 }
@@ -404,7 +597,7 @@ export interface SocketLink {
 
 /** This tab's line on the browser's one socket (link.ts). `done` gets the close code. */
 function browser(onFrame: (d: Frame) => void, closed: (code: number) => void): SocketLink {
-  return openLine('c', '', text => onFrame(JSON.parse(text)), closed)
+  return openLine('c', '', (text) => onFrame(JSON.parse(text)), closed)
 }
 
 /** @weft-js/core/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
@@ -412,12 +605,31 @@ const FAKE = './channel-fake.ts' // with its extension: nothing resolves this on
 function fake(onFrame: (d: Frame) => void, closed: (code: number) => void): SocketLink {
   let link: SocketLink | undefined
   let up!: () => void
-  void track(new Promise<void>(ok => { up = ok }))
-  const loading = import(/* @vite-ignore */ FAKE).then(m => m.open(onFrame, closed, up)).then(l => (link = l), e => (up(), closed(1006), Promise.reject(e))).catch(() => {})
-  return { send: t => void track(loading.then(() => link?.send(t))), close: () => { void loading.then(() => link?.close()) } }
+  void track(
+    new Promise<void>((ok) => {
+      up = ok
+    }),
+  )
+  const loading = import(/* @vite-ignore */ FAKE)
+    .then((m) => m.open(onFrame, closed, up))
+    .then(
+      (l) => (link = l),
+      (e) => (up(), closed(1006), Promise.reject(e)),
+    )
+    .catch(() => {})
+  return {
+    send: (t) => void track(loading.then(() => link?.send(t))),
+    close: () => {
+      void loading.then(() => link?.close())
+    },
+  }
 }
 
-const BASE = 500, CAP = 30_000, PING = 20_000, DEAD = 45_000, HIDDEN = 300_000
+const BASE = 500,
+  CAP = 30_000,
+  PING = 20_000,
+  DEAD = 45_000,
+  HIDDEN = 300_000
 
 let live: SocketLink | undefined
 let open = false
@@ -432,7 +644,9 @@ let hiddenAt: ReturnType<typeof setTimeout> | undefined
 export const keepOpen: { stay?: (() => boolean) | undefined } = {}
 
 const send = (f: unknown[]) => live?.send(JSON.stringify(f))
-const statusAll = (s: ChannelStatus) => { for (const j of joins.values()) if (!j.refused) j.status.value = s }
+const statusAll = (s: ChannelStatus) => {
+  for (const j of joins.values()) if (!j.refused) j.status.value = s
+}
 
 function enter(j: Join) {
   if (!open || !live) return
@@ -463,7 +677,7 @@ function dispatch(j: Join, name: string, msg: never) {
     if (l.name !== name) continue
     const was = untrack(() => l.box.value)
     const key = l.key?.(msg)
-    const at = l.key ? was.findIndex(m => l.key!(m as never) === key) : -1
+    const at = l.key ? was.findIndex((m) => l.key!(m as never) === key) : -1
     const next = at >= 0 ? was.map((m, i) => (i === at ? msg : m)) : [...was, msg]
     l.box.value = next.length > l.max ? next.slice(-l.max) : next
   }
@@ -508,20 +722,21 @@ function frame(d: Frame) {
   })
 }
 
-const sleep = (t: number) => new Promise<void>(ok => {
-  const timer = setTimeout(ok, t)
-  nudge = () => {
-    clearTimeout(timer)
-    nudge = undefined
-    ok()
-  }
-})
+const sleep = (t: number) =>
+  new Promise<void>((ok) => {
+    const timer = setTimeout(ok, t)
+    nudge = () => {
+      clearTimeout(timer)
+      nudge = undefined
+      ok()
+    }
+  })
 
 async function run() {
   listen(true)
   const fakeNet = () => (DEV ? net() : undefined)
   while (joins.size) {
-    if (parked || ! navigator.onLine) {
+    if (parked || !navigator.onLine) {
       statusAll('reconnecting')
       await sleep(CAP)
       continue
@@ -533,12 +748,12 @@ async function run() {
       clearTimeout(dead)
       if (!fakeNet()) dead = setTimeout(() => live?.close(), DEAD)
     }
-    await new Promise<void>(done => {
+    await new Promise<void>((done) => {
       const take = (d: Frame) => {
         alive()
         frame(d)
       }
-      live = (fakeNet() ? fake : browser)(take, c => {
+      live = (fakeNet() ? fake : browser)(take, (c) => {
         code = c
         done()
       })
@@ -552,7 +767,9 @@ async function run() {
     for (const j of joins.values()) j.joined = false
     for (const [id, p] of acks) {
       acks.delete(id)
-      p.no(new FnError({ message: 'the connection dropped: this may or may not have been sent' }, 503))
+      p.no(
+        new FnError({ message: 'the connection dropped: this may or may not have been sent' }, 503),
+      )
     }
     if (!joins.size) break
     const n = fakeNet()
@@ -618,5 +835,7 @@ function reset() {
   parked = false
   attempt = 0
   net()!.reconnects = 0
-  untrack(() => { rt.stale.value = false })
+  untrack(() => {
+    rt.stale.value = false
+  })
 }

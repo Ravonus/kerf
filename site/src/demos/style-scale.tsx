@@ -13,7 +13,12 @@ export default function Scale() {
   const gap = state<Space>('related')
   return (
     <Card title="Steps, not pixels">
-      <Segmented label="Gap" value={gap.value} options={GAPS} onChange={next => (gap.value = next)} />
+      <Segmented
+        label="Gap"
+        value={gap.value}
+        options={GAPS}
+        onChange={(next) => (gap.value = next)}
+      />
       <Stack gap={gap.value}>
         <Heading level={3}>Roasts</Heading>
         <Text subtle>Each role sets a size, weight and leading from the theme.</Text>
@@ -22,7 +27,9 @@ export default function Scale() {
           <Tag>Medium</Tag>
           <Tag>Dark</Tag>
         </Row>
-        <Text role="caption" faint>Prices include shipping.</Text>
+        <Text role="caption" faint>
+          Prices include shipping.
+        </Text>
       </Stack>
     </Card>
   )

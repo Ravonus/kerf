@@ -10,18 +10,57 @@ import { fakePay } from '@weft-js/pay/test'
 import { mutation, query, redirect } from '@weft-js/start'
 
 const DAY = 86_400_000
-const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } }, grants: ['pro'] })
-const credits = product({ id: 'credits', kind: 'consumable', use: 'digital', price: { usd: 500 }, grants: ['credits'] })
+const pro = product({
+  id: 'pro',
+  kind: 'subscription',
+  use: 'digital',
+  plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } },
+  grants: ['pro'],
+})
+const credits = product({
+  id: 'credits',
+  kind: 'consumable',
+  use: 'digital',
+  price: { usd: 500 },
+  grants: ['credits'],
+})
 
-const pay = definePay({ catalog: { pro, credits }, store: memoryPayStore(), urls: { success: '/thanks', cancel: '/pricing' } })
+const pay = definePay({
+  catalog: { pro, credits },
+  store: memoryPayStore(),
+  urls: { success: '/thanks', cancel: '/pricing' },
+})
 
-const entitlements = query({ $id: 'pay.mine', auth: 'user', tags: (_, ctx) => [entitlementTag(ctx.user.id)], run: ({ ctx }) => ctx.entitlements.list() })
-const checkout = mutation({ $id: 'pay.checkout', auth: 'user', input: pay.input, run: async ({ input, ctx }) => redirect(await pay.checkout(ctx, input), 303) })
-const report = query({ $id: 'pay.report', auth: 'user', requires: ['pro'], run: () => 'the numbers' })
+const entitlements = query({
+  $id: 'pay.mine',
+  auth: 'user',
+  tags: (_, ctx) => [entitlementTag(ctx.user.id)],
+  run: ({ ctx }) => ctx.entitlements.list(),
+})
+const checkout = mutation({
+  $id: 'pay.checkout',
+  auth: 'user',
+  input: pay.input,
+  run: async ({ input, ctx }) => redirect(await pay.checkout(ctx, input), 303),
+})
+const report = query({
+  $id: 'pay.report',
+  auth: 'user',
+  requires: ['pro'],
+  run: () => 'the numbers',
+})
 const export_ = mutation({ $id: 'pay.export', auth: 'user', requires: ['pro'], run: () => 'done' })
-const has = query({ $id: 'pay.has', auth: 'user', run: async ({ ctx }) => ctx.entitlements.has('pro') })
+const has = query({
+  $id: 'pay.has',
+  auth: 'user',
+  run: async ({ ctx }) => ctx.entitlements.has('pro'),
+})
 
-declare module '@weft-js/start' { interface Context { user: { id: string } | null } }
+declare module '@weft-js/start' {
+  interface Context {
+    user: { id: string } | null
+  }
+}
 
 function Paywall() {
   const mine = entitlements.live()
@@ -29,7 +68,9 @@ function Paywall() {
   return (
     <>
       <p aria-label="plan">{isPro.value ? 'Pro' : 'Free'}</p>
-      <button onClick={() => void checkout({ product: 'pro', plan: 'month' })}>Go Pro · {price(pro, 'month').display}</button>
+      <button onClick={() => void checkout({ product: 'pro', plan: 'month' })}>
+        Go Pro · {price(pro, 'month').display}
+      </button>
     </>
   )
 }
@@ -45,7 +86,10 @@ describe('a purchase, as a user sees it', () => {
 
     await user.click(screen.getByRole('button', { name: /Go Pro · \$9\.99/ }))
     await net.settle()
-    expect(fake.sessions[0]).toMatchObject({ user: 'u1', line: { product: 'pro', amount: 999, interval: 'month' } })
+    expect(fake.sessions[0]).toMatchObject({
+      user: 'u1',
+      line: { product: 'pro', amount: 999, interval: 'month' },
+    })
     expect(fake.sessions[0]!.successUrl).toBe('http://localhost/thanks')
     expect(plan()).toBe('Free')
 
@@ -69,7 +113,7 @@ describe('a purchase, as a user sees it', () => {
 })
 
 describe('between tests', () => {
-  test('a purchase on the app\'s own ledger', async () => {
+  test("a purchase on the app's own ledger", async () => {
     const fake = fakePay(pay)
     await fake.buy('leak', 'pro', 'month')
     expect(await fake.entitlements('leak')).toEqual(['pro'])
@@ -77,7 +121,11 @@ describe('between tests', () => {
 
   test('is gone, and so is the fake rail', async () => {
     expect(await pay.entitlements('leak').list()).toEqual([])
-    await expect(Promise.resolve().then(() => pay.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }))).rejects.toMatchObject({ code: 'P101' })
+    await expect(
+      Promise.resolve().then(() =>
+        pay.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }),
+      ),
+    ).rejects.toMatchObject({ code: 'P101' })
   })
 })
 
@@ -89,7 +137,10 @@ describe('the life of a subscription, on the clock', () => {
     expect(await fake.entitlements('u1')).toEqual(['pro'])
 
     await fake.simulate('renewal')
-    expect((await fake.purchases('u1'))[0]).toMatchObject({ state: 'active', expires: Date.UTC(2026, 0, 1) + 60 * DAY })
+    expect((await fake.purchases('u1'))[0]).toMatchObject({
+      state: 'active',
+      expires: Date.UTC(2026, 0, 1) + 60 * DAY,
+    })
     expect(await fake.entitlements('u1')).toEqual(['pro'])
 
     await fake.simulate('renewal-failed')
@@ -134,7 +185,16 @@ describe('the life of a subscription, on the clock', () => {
 })
 
 describe('webhooks', () => {
-  const event = (over: object) => ({ id: 'e1', at: 1000, purchase: 'p1', state: 'active', user: 'u1', product: 'pro', ...over }) as RailEvent
+  const event = (over: object) =>
+    ({
+      id: 'e1',
+      at: 1000,
+      purchase: 'p1',
+      state: 'active',
+      user: 'u1',
+      product: 'pro',
+      ...over,
+    }) as RailEvent
 
   test('a forged delivery is refused and changes nothing', async () => {
     const fake = fakePay({ catalog: [pro] })
@@ -153,13 +213,17 @@ describe('webhooks', () => {
   })
 
   test('a repeat pokes no one', async () => {
-    const ledger = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' } })
+    const ledger = definePay({
+      catalog: [pro],
+      store: memoryPayStore(),
+      urls: { success: '/', cancel: '/' },
+    })
     const events = [event({})]
     expect(await ledger.ingest('fake', events)).toEqual(['entitlements:u1'])
     expect(await ledger.ingest('fake', events)).toEqual([])
   })
 
-  test('events out of order land where the rail\'s clock puts them', async () => {
+  test("events out of order land where the rail's clock puts them", async () => {
     const fake = fakePay({ catalog: [pro] })
     await fake.deliver(event({ id: 'new', at: 2000, state: 'expired' }))
     await fake.deliver(event({ id: 'old', at: 1000, state: 'active' }))
@@ -180,11 +244,14 @@ describe('webhooks', () => {
     expect((await fake.purchases('u1'))[0]).toMatchObject({ user: 'u1', state: 'revoked' })
   })
 
-  test('a store failure answers 500, so the rail redelivers, and the event isn\'t marked seen', async () => {
+  test("a store failure answers 500, so the rail redelivers, and the event isn't marked seen", async () => {
     const store = memoryPayStore()
     const save = store.save.bind(store)
     let down = true
-    store.save = async p => { if (down) throw new Error('database down'); return save(p) }
+    store.save = async (p) => {
+      if (down) throw new Error('database down')
+      return save(p)
+    }
     const fake = fakePay({ catalog: [pro], store })
     expect(await fake.deliver(event({}))).toBe(500)
     down = false
@@ -201,13 +268,16 @@ describe('on the server', () => {
     expect(await has.fetch()).toBe(true)
     net.context({ user: { id: 'u2' } })
     await net.session({ user: { id: 'u2' } })
-    expect((await fake.entitlements('u2'))).toEqual([])
+    expect(await fake.entitlements('u2')).toEqual([])
   })
 
   test('`requires` answers a typed 403 before `run`, in a query and a mutation', async () => {
     const fake = fakePay({ catalog: [pro] })
     net.context({ user: { id: 'u1' } })
-    await expect(report.fetch()).rejects.toMatchObject({ code: 'ENTITLEMENT_REQUIRED', status: 403 })
+    await expect(report.fetch()).rejects.toMatchObject({
+      code: 'ENTITLEMENT_REQUIRED',
+      status: 403,
+    })
     await expect(export_()).rejects.toMatchObject({ code: 'ENTITLEMENT_REQUIRED', status: 403 })
     await fake.buy('u1', 'pro', 'month')
     expect(await export_()).toBe('done')
@@ -215,9 +285,14 @@ describe('on the server', () => {
 
   test('a signed-out buyer and a second subscription are refused, by code', async () => {
     const fake = fakePay({ catalog: [pro] })
-    await expect(fake.pay.checkout({ user: null, request: { url: 'http://x/' } }, { product: 'pro' })).rejects.toMatchObject({ code: 'PAY010', status: 401 })
+    await expect(
+      fake.pay.checkout({ user: null, request: { url: 'http://x/' } }, { product: 'pro' }),
+    ).rejects.toMatchObject({ code: 'PAY010', status: 401 })
     await fake.buy('u1', 'pro', 'month')
-    await expect(fake.buy('u1', 'pro', 'month')).rejects.toMatchObject({ code: 'PAY023', status: 409 })
+    await expect(fake.buy('u1', 'pro', 'month')).rejects.toMatchObject({
+      code: 'PAY023',
+      status: 409,
+    })
   })
 
   test('a second purchase reuses the customer, and the portal needs one', async () => {
@@ -233,30 +308,62 @@ describe('on the server', () => {
   test('the input takes names; an unknown product or plan fails validation, and an amount is dropped', () => {
     const standard = pay.input['~standard']
     const validate = (v: unknown) => standard.validate(v)
-    expect(validate({ product: 'pro', plan: 'month', amount: 1 })).toEqual({ value: { product: 'pro', plan: 'month' } })
-    expect(validate({ product: 'free' })).toMatchObject({ issues: [{ message: 'no product `free`' }] })
-    expect(validate({ product: 'pro', plan: 'week' })).toMatchObject({ issues: [{ message: '`pro` has no plan `week`' }] })
+    expect(validate({ product: 'pro', plan: 'month', amount: 1 })).toEqual({
+      value: { product: 'pro', plan: 'month' },
+    })
+    expect(validate({ product: 'free' })).toMatchObject({
+      issues: [{ message: 'no product `free`' }],
+    })
+    expect(validate({ product: 'pro', plan: 'week' })).toMatchObject({
+      issues: [{ message: '`pro` has no plan `week`' }],
+    })
     expect(validate({ product: 'credits', quantity: 1.5 })).toMatchObject({ issues: [{}] })
   })
 
   test('a memory ledger is refused outside dev, and two rails need a choice', async () => {
-    const memory = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' }, slot: () => Promise.resolve({ load: () => Promise.resolve({}), providers: { stripe: '@a', paddle: '@b' } }) })
+    const memory = definePay({
+      catalog: [pro],
+      store: memoryPayStore(),
+      urls: { success: '/', cancel: '/' },
+      slot: () =>
+        Promise.resolve({
+          load: () => Promise.resolve({}),
+          providers: { stripe: '@a', paddle: '@b' },
+        }),
+    })
     expect(() => memory.check!(false)).toThrow(expect.objectContaining({ code: 'PAY016' }))
     memory.check!(true)
-    await expect(Promise.resolve().then(() => memory.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }))).rejects.toMatchObject({ code: 'PAY022' })
+    await expect(
+      Promise.resolve().then(() =>
+        memory.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }),
+      ),
+    ).rejects.toMatchObject({ code: 'PAY022' })
   })
 })
 
 describe('the catalog', () => {
   test('a float or a missing currency is PAY008, at definition', () => {
-    expect(() => product({ id: 'x', kind: 'one-time', use: 'digital', price: { usd: 9.99 } })).toThrow(expect.objectContaining({ code: 'PAY008' }))
-    expect(() => product({ id: 'x', kind: 'one-time', use: 'digital', price: {} })).toThrow(expect.objectContaining({ code: 'PAY008' }))
-    expect(() => product({ id: 'x', kind: 'subscription', use: 'digital', plans: { month: { usd: 1.5 } } })).toThrow(expect.objectContaining({ code: 'PAY008' }))
+    expect(() =>
+      product({ id: 'x', kind: 'one-time', use: 'digital', price: { usd: 9.99 } }),
+    ).toThrow(expect.objectContaining({ code: 'PAY008' }))
+    expect(() => product({ id: 'x', kind: 'one-time', use: 'digital', price: {} })).toThrow(
+      expect.objectContaining({ code: 'PAY008' }),
+    )
+    expect(() =>
+      product({ id: 'x', kind: 'subscription', use: 'digital', plans: { month: { usd: 1.5 } } }),
+    ).toThrow(expect.objectContaining({ code: 'PAY008' }))
   })
 
-  test('`price` formats by the currency\'s own exponent', () => {
+  test("`price` formats by the currency's own exponent", () => {
     const yen = product({ id: 'y', kind: 'one-time', use: 'digital', price: { jpy: 500 } })
     expect(price(yen, undefined, { locale: 'en-US' }).display).toBe('¥500')
-    expect(price(pro, 'year', { locale: 'en-US' })).toEqual({ amount: 7999, currency: 'usd', display: '$79.99', plan: 'year', interval: 'year', trialDays: 7 })
+    expect(price(pro, 'year', { locale: 'en-US' })).toEqual({
+      amount: 7999,
+      currency: 'usd',
+      display: '$79.99',
+      plan: 'year',
+      interval: 'year',
+      trialDays: 7,
+    })
   })
 })

@@ -16,11 +16,14 @@ const jar = (c: Record<string, string>) => ({ get: (n: string) => c[n] })
 const payload = (html: string) => JSON.parse(/data-weft>(.*)<\/script>/.exec(html)?.[1] ?? 'null')
 
 function clearCookies() {
-  for (const c of document.cookie.split('; ')) if (c) document.cookie = `${c.split('=')[0]}=; Path=/; Max-Age=0`
+  for (const c of document.cookie.split('; '))
+    if (c) document.cookie = `${c.split('=')[0]}=; Path=/; Max-Age=0`
 }
 
 let prevApp: ReturnType<typeof useApp>
-beforeEach(() => { prevApp = useApp(createApp()) })
+beforeEach(() => {
+  prevApp = useApp(createApp())
+})
 afterEach(() => {
   useApp(prevApp)
   document.body.innerHTML = ''
@@ -33,7 +36,7 @@ function hydrateInto(html: string, client: () => unknown) {
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
   const writes: MutationRecord[] = []
-  const mo = new MutationObserver(r => writes.push(...r))
+  const mo = new MutationObserver((r) => writes.push(...r))
   mo.observe(container, { subtree: true, childList: true, characterData: true, attributes: true })
   const dispose = hydrate(client, container)
   writes.push(...mo.takeRecords())
@@ -41,7 +44,10 @@ function hydrateInto(html: string, client: () => unknown) {
 }
 
 test('a cookie box renders its value on the server and hydrates 0/0', () => {
-  const cookies = jar({ 'weft.app.prefs.theme': envelope('dark'), 'weft.app.prefs.cart': envelope({ n: 3 }, 2) })
+  const cookies = jar({
+    'weft.app.prefs.theme': envelope('dark'),
+    'weft.app.prefs.cart': envelope({ n: 3 }, 2),
+  })
   const html = renderToString(() => ServerPrefs({}), { app: { cookies } })
   expect(html).toContain('data-theme="dark"')
   expect(html).toContain('<b>3</b>')
@@ -56,19 +62,25 @@ test('a cookie box renders its value on the server and hydrates 0/0', () => {
 })
 
 test('the payload wins over a cookie that changed since the page was rendered', () => {
-  const html = renderToString(() => ServerPrefs({}), { app: { cookies: jar({ 'weft.app.prefs.theme': envelope('dark') }) } })
+  const html = renderToString(() => ServerPrefs({}), {
+    app: { cookies: jar({ 'weft.app.prefs.theme': envelope('dark') }) },
+  })
   document.cookie = `weft.app.prefs.theme=${envelope('sepia')}; Path=/`
   const { writes } = hydrateInto(html, () => ClientPrefs({}))
   expect(writes).toEqual([])
 })
 
 test('a box a render wrote travels in the payload, and nothing goes when nothing differs', () => {
-  const html = renderToString(() => ServerPrefs({ label: 'from load' }), { app: { cookies: jar({}) } })
+  const html = renderToString(() => ServerPrefs({ label: 'from load' }), {
+    app: { cookies: jar({}) },
+  })
   expect(payload(html).s).toEqual({ prefs: { label: 'from load' } })
   const { writes } = hydrateInto(html, () => ClientPrefs({}))
   expect(hydration.misses).toBe(0)
   expect(writes).toEqual([])
-  expect(renderToString(() => ServerPrefs({}), { app: { cookies: jar({}) } })).not.toContain('data-weft>')
+  expect(renderToString(() => ServerPrefs({}), { app: { cookies: jar({}) } })).not.toContain(
+    'data-weft>',
+  )
 })
 
 test('each scope takes its payload once: a later app starts clean', () => {
@@ -79,30 +91,43 @@ test('each scope takes its payload once: a later app starts clean', () => {
 })
 
 test('the streamed page data carries the state of the last pass', async () => {
-  const s = renderToStream(() => ServerPrefs({ label: 'streamed' }), { app: { cookies: jar({ 'weft.app.prefs.theme': envelope('dark') }) } })
+  const s = renderToStream(() => ServerPrefs({ label: 'streamed' }), {
+    app: { cookies: jar({ 'weft.app.prefs.theme': envelope('dark') }) },
+  })
   for await (const _ of s.chunks);
   expect(s.data()?.s).toEqual({ prefs: { theme: 'dark', label: 'streamed' } })
 })
 
 test('a cookie the schema rejects, or that is not even JSON, renders `init`', () => {
   const err = vi.spyOn(console, 'error').mockImplementation(() => {})
-  const bad = renderToString(() => ServerPrefs({}), { app: { cookies: jar({ 'weft.app.prefs.cart': envelope({ n: 'x' }, 2), 'weft.app.prefs.theme': '%7Bnope' }) } })
+  const bad = renderToString(() => ServerPrefs({}), {
+    app: {
+      cookies: jar({
+        'weft.app.prefs.cart': envelope({ n: 'x' }, 2),
+        'weft.app.prefs.theme': '%7Bnope',
+      }),
+    },
+  })
   expect(bad).toContain('<b>0</b>')
   expect(bad).toContain('data-theme="light"')
-  expect(err.mock.calls.map(c => String(c[0]).slice(0, 4))).toEqual(['S003', 'S003'])
+  expect(err.mock.calls.map((c) => String(c[0]).slice(0, 4))).toEqual(['S003', 'S003'])
 })
 
 test('an old cookie is migrated on the server', () => {
-  const html = renderToString(() => ServerPrefs({}), { app: { cookies: jar({ 'weft.app.prefs.cart': envelope(7, 1) }) } })
+  const html = renderToString(() => ServerPrefs({}), {
+    app: { cookies: jar({ 'weft.app.prefs.cart': envelope(7, 1) }) },
+  })
   expect(html).toContain('<b>7</b>')
 })
 
 test('a client write reaches the cookie, encoded, and the next server render sees it', async () => {
   prefs.setTheme('dark; Path=/x')
   await flush()
-  const raw = document.cookie.split('; ').find(c => c.startsWith('weft.app.prefs.theme='))!
+  const raw = document.cookie.split('; ').find((c) => c.startsWith('weft.app.prefs.theme='))!
   expect(raw).toMatch(/%3B%20Path%3D/)
-  const html = renderToString(() => ServerPrefs({}), { app: { cookies: jar({ 'weft.app.prefs.theme': raw.split('=')[1]! }) } })
+  const html = renderToString(() => ServerPrefs({}), {
+    app: { cookies: jar({ 'weft.app.prefs.theme': raw.split('=')[1]! }) },
+  })
   expect(html).toContain('data-theme="dark; Path=/x"')
 })
 
@@ -110,7 +135,7 @@ test('S008: cookies over the 3 KB budget', async () => {
   const err = vi.spyOn(console, 'error').mockImplementation(() => {})
   prefs.setTheme('x'.repeat(3200))
   await flush()
-  expect(err.mock.calls.some(c => /^S008.*3 KB/.test(String(c[0])))).toBe(true)
+  expect(err.mock.calls.some((c) => /^S008.*3 KB/.test(String(c[0])))).toBe(true)
 })
 
 test('a local box stays at init through hydration, then takes the stored value', async () => {
@@ -137,26 +162,36 @@ test('outside hydration a local box reads storage at once', () => {
 test('S013: a local box read in a server render', () => {
   const err = vi.spyOn(console, 'error').mockImplementation(() => {})
   renderToString(() => ServerNote())
-  expect(err.mock.calls.map(c => String(c[0]))).toEqual([expect.stringMatching(/^S013: `prefs\.note` persists to 'local'/)])
+  expect(err.mock.calls.map((c) => String(c[0]))).toEqual([
+    expect.stringMatching(/^S013: `prefs\.note` persists to 'local'/),
+  ])
 })
 
 test('S010: a value JSON would change stays out of the payload', () => {
   const err = vi.spyOn(console, 'error').mockImplementation(() => {})
-  const html = renderToString(() => { odd.when.value = new Date(0); return null })
+  const html = renderToString(() => {
+    odd.when.value = new Date(0)
+    return null
+  })
   expect(html).not.toContain('data-weft>')
-  expect(err.mock.calls.map(c => String(c[0]).slice(0, 4))).toEqual(['S010'])
+  expect(err.mock.calls.map((c) => String(c[0]).slice(0, 4))).toEqual(['S010'])
 })
 
 describe('S002', () => {
-  beforeEach(() => { useApp(prevApp); rt.isolated = true })
-  afterEach(() => { rt.isolated = false })
+  beforeEach(() => {
+    useApp(prevApp)
+    rt.isolated = true
+  })
+  afterEach(() => {
+    rt.isolated = false
+  })
 
   test('a handle reached outside a render throws, on a server process', () => {
     expect(() => prefs.theme).toThrow(/^S002/)
     expect(prefs.$name).toBe('prefs') // the name needs no instance
   })
 
-  test('inside a render it resolves to that render\'s own app, and requests do not share it', () => {
+  test("inside a render it resolves to that render's own app, and requests do not share it", () => {
     const one = renderToString(() => ServerPrefs({ label: 'a' }), { app: { cookies: jar({}) } })
     const two = renderToString(() => ServerPrefs({}), { app: { cookies: jar({}) } })
     expect(one).toContain('<i>a</i>')

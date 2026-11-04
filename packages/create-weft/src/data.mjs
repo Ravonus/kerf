@@ -9,24 +9,71 @@ const engineSql = {
 
 // Better Auth's tables under its default names, which are camelCase, so they're quoted. MySQL can't key a TEXT column.
 export function nativeAuthSql(db) {
-  const q = name => (db === 'mysql' ? `\`${name}\`` : `"${name}"`)
+  const q = (name) => (db === 'mysql' ? `\`${name}\`` : `"${name}"`)
   const key = 'varchar(255)'
   const text = 'text'
   const when = { sqlite: 'date', postgres: 'timestamptz', mysql: 'datetime(3)' }[db]
   const bool = { sqlite: 'integer', postgres: 'boolean', mysql: 'boolean' }[db]
-  const table = (name, columns) => `create table ${q(name)} (\n${columns.map(([c, type]) => `  ${q(c)} ${type}`).join(',\n')}\n);\n`
-  const ref = to => `references ${q(to)} (${q('id')}) on delete cascade`
-  const stamps = [['createdAt', `${when} not null`], ['updatedAt', `${when} not null`]]
+  const table = (name, columns) =>
+    `create table ${q(name)} (\n${columns.map(([c, type]) => `  ${q(c)} ${type}`).join(',\n')}\n);\n`
+  const ref = (to) => `references ${q(to)} (${q('id')}) on delete cascade`
+  const stamps = [
+    ['createdAt', `${when} not null`],
+    ['updatedAt', `${when} not null`],
+  ]
   return [
-    table('user', [['id', `${key} primary key`], ['name', `${text} not null`], ['email', `${key} not null unique`], ['emailVerified', `${bool} not null`], ['image', text], ...stamps]),
-    table('session', [['id', `${key} primary key`], ['expiresAt', `${when} not null`], ['token', `${key} not null unique`], ...stamps, ['ipAddress', text], ['userAgent', text], ['userId', `${key} not null ${ref('user')}`]]),
-    table('account', [['id', `${key} primary key`], ['accountId', `${text} not null`], ['providerId', `${text} not null`], ['userId', `${key} not null ${ref('user')}`], ['accessToken', text], ['refreshToken', text], ['idToken', text], ['accessTokenExpiresAt', when], ['refreshTokenExpiresAt', when], ['scope', text], ['password', text], ...stamps]),
-    table('verification', [['id', `${key} primary key`], ['identifier', `${text} not null`], ['value', `${text} not null`], ['expiresAt', `${when} not null`], ['createdAt', when], ['updatedAt', when]]),
-    table('jwks', [['id', `${key} primary key`], ['publicKey', `${text} not null`], ['privateKey', `${text} not null`], ['createdAt', `${when} not null`], ['expiresAt', when], ['alg', text], ['crv', text]]),
+    table('user', [
+      ['id', `${key} primary key`],
+      ['name', `${text} not null`],
+      ['email', `${key} not null unique`],
+      ['emailVerified', `${bool} not null`],
+      ['image', text],
+      ...stamps,
+    ]),
+    table('session', [
+      ['id', `${key} primary key`],
+      ['expiresAt', `${when} not null`],
+      ['token', `${key} not null unique`],
+      ...stamps,
+      ['ipAddress', text],
+      ['userAgent', text],
+      ['userId', `${key} not null ${ref('user')}`],
+    ]),
+    table('account', [
+      ['id', `${key} primary key`],
+      ['accountId', `${text} not null`],
+      ['providerId', `${text} not null`],
+      ['userId', `${key} not null ${ref('user')}`],
+      ['accessToken', text],
+      ['refreshToken', text],
+      ['idToken', text],
+      ['accessTokenExpiresAt', when],
+      ['refreshTokenExpiresAt', when],
+      ['scope', text],
+      ['password', text],
+      ...stamps,
+    ]),
+    table('verification', [
+      ['id', `${key} primary key`],
+      ['identifier', `${text} not null`],
+      ['value', `${text} not null`],
+      ['expiresAt', `${when} not null`],
+      ['createdAt', when],
+      ['updatedAt', when],
+    ]),
+    table('jwks', [
+      ['id', `${key} primary key`],
+      ['publicKey', `${text} not null`],
+      ['privateKey', `${text} not null`],
+      ['createdAt', `${when} not null`],
+      ['expiresAt', when],
+      ['alg', text],
+      ['crv', text],
+    ]),
   ].join('\n')
 }
 
-const nativeTodos = auth => {
+const nativeTodos = (auth) => {
   const use = auth ? `\n  auth: 'user',` : ''
   const mine = auth ? ` and user_id = \${ctx.user.id}` : ''
   return `import { mutation, query } from '@weft-js/start'
@@ -104,13 +151,21 @@ export default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { datab
 
 const PROVIDER = { sqlite: 'sqlite', postgres: 'postgresql', mysql: 'mysql' }
 const ADAPTER = {
-  sqlite: { pkg: '@prisma/adapter-libsql', name: 'PrismaLibSql', make: "{ url: env.DATABASE_URL }" },
-  postgres: { pkg: '@prisma/adapter-pg', name: 'PrismaPg', make: "{ connectionString: env.DATABASE_URL }" },
+  sqlite: {
+    pkg: '@prisma/adapter-libsql',
+    name: 'PrismaLibSql',
+    make: '{ url: env.DATABASE_URL }',
+  },
+  postgres: {
+    pkg: '@prisma/adapter-pg',
+    name: 'PrismaPg',
+    make: '{ connectionString: env.DATABASE_URL }',
+  },
   mysql: { pkg: '@prisma/adapter-mariadb', name: 'PrismaMariaDb', make: 'env.DATABASE_URL' },
 }
-export const prismaAdapterPackage = db => ADAPTER[db].pkg
+export const prismaAdapterPackage = (db) => ADAPTER[db].pkg
 
-const authModels = db => {
+const authModels = (db) => {
   const long = db === 'mysql' ? ' @db.Text' : ''
   return `
 // Better Auth's tables: it reads and writes them through Prisma, with these names.
@@ -187,9 +242,9 @@ model Jwks {
 `
 }
 
-export const prismaAuthModels = db => authModels(db).replace('  todos         Todo[]\n', '')
+export const prismaAuthModels = (db) => authModels(db).replace('  todos         Todo[]\n', '')
 
-const prismaTodos = auth => {
+const prismaTodos = (auth) => {
   const use = auth ? `\n  auth: 'user',` : ''
   const mine = auth ? `, userId: ctx.user.id` : ''
   return `import { mutation, query } from '@weft-js/start'
@@ -251,9 +306,13 @@ model Todo {
   id        String   @id
   title     String
   done      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")${auth ? `
+  createdAt DateTime @default(now()) @map("created_at")${
+    auth
+      ? `
   userId    String   @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)` : ''}
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)`
+      : ''
+  }
 
   @@map("todos")
 }

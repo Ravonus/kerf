@@ -3,13 +3,42 @@
 // a memory bus, no sockets. `test/channel-ws.test.mjs` runs the protocol over a real WebSocket.
 import { createRoot, defineState, state } from '@weft-js/core'
 import { clock, flush, net, render, screen } from '@weft-js/core/test'
-import { channel, sharedState, skip, StartError, type Context, type StandardSchemaV1 } from '@weft-js/start'
+import {
+  channel,
+  sharedState,
+  skip,
+  StartError,
+  type Context,
+  type StandardSchemaV1,
+} from '@weft-js/start'
 import { hub } from '@weft-js/start/hub'
 import { keepOpen } from '../src/channel'
 
-const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
-const text: StandardSchemaV1<unknown, { text: string }> = { '~standard': { version: 1, vendor: 't', validate: v => { const t = (v as { text?: unknown } | null)?.text; return typeof t === 'string' && t.length <= 8 ? { value: v as { text: string } } : { issues: [{ message: 'bad text' }] } } } }
-const Msg: StandardSchemaV1<unknown, { id: number; text: string }> = { '~standard': { version: 1, vendor: 't', validate: v => (typeof (v as { id?: unknown } | null)?.id === 'number' ? { value: v as { id: number; text: string } } : { issues: [{ message: 'no id' }] }) } }
+const any: StandardSchemaV1<unknown> = {
+  '~standard': { version: 1, vendor: 't', validate: (v) => ({ value: v }) },
+}
+const text: StandardSchemaV1<unknown, { text: string }> = {
+  '~standard': {
+    version: 1,
+    vendor: 't',
+    validate: (v) => {
+      const t = (v as { text?: unknown } | null)?.text
+      return typeof t === 'string' && t.length <= 8
+        ? { value: v as { text: string } }
+        : { issues: [{ message: 'bad text' }] }
+    },
+  },
+}
+const Msg: StandardSchemaV1<unknown, { id: number; text: string }> = {
+  '~standard': {
+    version: 1,
+    vendor: 't',
+    validate: (v) =>
+      typeof (v as { id?: unknown } | null)?.id === 'number'
+        ? { value: v as { id: number; text: string } }
+        : { issues: [{ message: 'no id' }] },
+  },
+}
 
 type Visitor = Context & { user?: { id: string } | null }
 
@@ -23,29 +52,38 @@ beforeEach(() => {
 const room = channel({
   $id: 'chat.room',
   params: any as StandardSchemaV1<unknown, { roomId: string }>,
-  authorize: ({ ctx, params }) => !!members[params.roomId]?.includes((ctx as Visitor).user?.id ?? ''),
+  authorize: ({ ctx, params }) =>
+    !!members[params.roomId]?.includes((ctx as Visitor).user?.id ?? ''),
   client: { say: text, boom: any },
   server: { said: Msg, typing: any },
   on: {
-    say: async ({ msg, room: here }) => { await here.publish('said', { id: ++nextId, text: msg.text }) },
-    boom: () => { throw new Error('secret detail') },
+    say: async ({ msg, room: here }) => {
+      await here.publish('said', { id: ++nextId, text: msg.text })
+    },
+    boom: () => {
+      throw new Error('secret detail')
+    },
   },
 })
 type RoomConnection = ReturnType<typeof room.connect>
 
 function Chat(props: { roomId: string }) {
   const chat = room.connect(() => ({ roomId: props.roomId }))
-  const said = chat.collect('said', { max: 3, key: m => m.id })
+  const said = chat.collect('said', { max: 3, key: (m) => m.id })
   return (
     <>
       <p aria-label="status">{chat.status.value}</p>
-      <ul>{said.value.map(m => <li key={m.id}>{m.text}</li>)}</ul>
+      <ul>
+        {said.value.map((m) => (
+          <li key={m.id}>{m.text}</li>
+        ))}
+      </ul>
       <button onClick={() => void chat.send('say', { text: 'hi' }).catch(() => {})}>say</button>
     </>
   )
 }
 const status = () => screen.getByLabelText('status').textContent
-const items = () => screen.queryAllByRole('listitem').map(li => li.textContent)
+const items = () => screen.queryAllByRole('listitem').map((li) => li.textContent)
 const say = () => screen.getByRole('button', { name: 'say' }).click()
 
 describe('channel', () => {
@@ -53,10 +91,17 @@ describe('channel', () => {
     expect(() => channel({ $id: 'no.auth', client: {} } as never)).toThrow(StartError)
     expect(() => channel({ $id: 'no.auth' } as never)).toThrow('R001')
     expect(() => channel({ $id: 'stub', $stub: 1 } as never)).not.toThrow()
-    expect(() => sharedState('x', { key: any, value: any, initial: 0, authorize: { read: () => true } } as never)).toThrow('R001')
+    expect(() =>
+      sharedState('x', {
+        key: any,
+        value: any,
+        initial: 0,
+        authorize: { read: () => true },
+      } as never),
+    ).toThrow('R001')
   })
 
-  test('join, send, and the room\'s message comes back through the bus', async () => {
+  test("join, send, and the room's message comes back through the bus", async () => {
     net.context({ user: { id: 'ann' } })
     render(Chat, { roomId: 'a' })
     await net.settle()
@@ -72,7 +117,13 @@ describe('channel', () => {
     const seen: unknown[] = []
     function Probe() {
       const chat = room.connect({ roomId: 'a' })
-      return <button onClick={() => void chat.send('say', { text: 'x' }).catch(e => seen.push(e.code))}>{chat.status.value}</button>
+      return (
+        <button
+          onClick={() => void chat.send('say', { text: 'x' }).catch((e) => seen.push(e.code))}
+        >
+          {chat.status.value}
+        </button>
+      )
     }
     render(Probe)
     await net.settle()
@@ -89,7 +140,13 @@ describe('channel', () => {
     function Probe() {
       const chat = room.connect({ roomId: 'a' })
       const said = chat.collect('said')
-      return <button onClick={() => void chat.send('say', { text: 'much too long' }).catch(e => (error = e))}>{said.value.length}</button>
+      return (
+        <button
+          onClick={() => void chat.send('say', { text: 'much too long' }).catch((e) => (error = e))}
+        >
+          {said.value.length}
+        </button>
+      )
     }
     render(Probe)
     await net.settle()
@@ -110,7 +167,9 @@ describe('channel', () => {
     }
     render(Probe)
     await net.settle()
-    await conn.send('constructor' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
+    await conn
+      .send('constructor' as unknown as 'say', {})
+      .catch((e: StartError) => out.push(e.code))
     await conn.send('toString' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
     expect(out).toEqual(['Q002', 'Q002'])
   })
@@ -119,11 +178,18 @@ describe('channel', () => {
     net.context({ user: { id: 'ann' } })
     render(Chat, { roomId: 'a' })
     await net.settle()
-    for (const m of [{ id: 1, text: 'a' }, { id: 2, text: 'b' }, { id: 1, text: 'A' }, { id: 3, text: 'c' }, { id: 4, text: 'd' }]) await net.publish(room, { roomId: 'a' }, 'said', m)
+    for (const m of [
+      { id: 1, text: 'a' },
+      { id: 2, text: 'b' },
+      { id: 1, text: 'A' },
+      { id: 3, text: 'c' },
+      { id: 4, text: 'd' },
+    ])
+      await net.publish(room, { roomId: 'a' }, 'said', m)
     expect(items()).toEqual(['b', 'c', 'd'])
   })
 
-  test('a message another user published reaches the reader; another room\'s does not', async () => {
+  test("a message another user published reaches the reader; another room's does not", async () => {
     net.context({ user: { id: 'bob' } })
     render(Chat, { roomId: 'a' })
     await net.settle()
@@ -136,7 +202,9 @@ describe('channel', () => {
     net.context({ user: { id: 'ann' } })
     render(Chat, { roomId: 'a' })
     await net.settle()
-    await expect(net.publish(room, { roomId: 'a' }, 'said', { text: 'no id' })).rejects.toThrow('C002')
+    await expect(net.publish(room, { roomId: 'a' }, 'said', { text: 'no id' })).rejects.toThrow(
+      'C002',
+    )
     await expect(net.publish(room, { roomId: 'a' }, 'nope', {})).rejects.toThrow('C002')
   })
 
@@ -185,7 +253,8 @@ describe('channel', () => {
     await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
     expect(screen.getByLabelText('n').textContent).toBe('1')
     await net.offline()
-    hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`).floor = Number.MAX_SAFE_INTEGER
+    hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`).floor =
+      Number.MAX_SAFE_INTEGER
     await net.online()
     await net.settle()
     expect(fired).toHaveBeenCalledTimes(1)
@@ -196,8 +265,10 @@ describe('channel', () => {
   test('a send in flight when the socket dies rejects; one sent while down waits for the rejoin', async () => {
     net.context({ user: { id: 'ann' } })
     const slow = channel({
-      $id: 'chat.slow', authorize: () => true,
-      client: { hold: any, go: any }, server: {},
+      $id: 'chat.slow',
+      authorize: () => true,
+      client: { hold: any, go: any },
+      server: {},
       on: { hold: () => new Promise(() => {}), go: () => {} },
     })
     let conn!: ReturnType<typeof slow.connect>
@@ -243,7 +314,9 @@ describe('channel', () => {
     await net.settle()
     members.a = []
     await hub().poke(['session:ann'])
-    await new Promise(ok => { setTimeout(ok) })
+    await new Promise((ok) => {
+      setTimeout(ok)
+    })
     await net.settle()
     expect(status()).toBe('unauthorized')
   })
@@ -258,7 +331,7 @@ describe('channel', () => {
     first.unmount()
     render(Chat, { roomId: 'a' })
     await net.settle()
-    expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['one', 'one'])
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['one', 'one'])
   })
 
   test('`skip` leaves, a new param moves the reader', async () => {
@@ -284,7 +357,7 @@ describe('channel', () => {
     expect(() => room.connect({ roomId: 'a' })).toThrow('W051')
     net.context({ user: { id: 'ann' } })
     let close!: () => void
-    createRoot(dispose => {
+    createRoot((dispose) => {
       close = dispose
       room.connect({ roomId: 'a' })
     })
@@ -323,14 +396,27 @@ describe('channel', () => {
 
 describe('sharedState', () => {
   let writers: string[]
-  beforeEach(() => { writers = ['ann'] })
+  beforeEach(() => {
+    writers = ['ann']
+  })
   const slide = sharedState('deck', {
-    $id: 'deck.slide', key: any as StandardSchemaV1<unknown, string>, value: any as StandardSchemaV1<unknown, number>, initial: 0,
-    authorize: { read: ({ ctx }) => !!(ctx as Visitor).user, write: ({ ctx }) => writers.includes((ctx as Visitor).user?.id ?? '') },
+    $id: 'deck.slide',
+    key: any as StandardSchemaV1<unknown, string>,
+    value: any as StandardSchemaV1<unknown, number>,
+    initial: 0,
+    authorize: {
+      read: ({ ctx }) => !!(ctx as Visitor).user,
+      write: ({ ctx }) => writers.includes((ctx as Visitor).user?.id ?? ''),
+    },
   })
   const meeting = defineState('meeting', () => {
     const value = slide.connect('d1')
-    return { value, next() { value.value += 1 } }
+    return {
+      value,
+      next() {
+        value.value += 1
+      },
+    }
   })
   function Deck() {
     return (
@@ -398,9 +484,15 @@ describe('what multiplayer needs of a room', () => {
     client: { me: any, only: any, gone: any },
     server: { hi: any as StandardSchemaV1<unknown, { id: string }>, tick: any },
     on: {
-      me: async ({ id, room: here }) => { await here.publish('hi', { id }, { to: id }) },
-      only: async ({ msg, room: here }) => { await here.publish('hi', { id: 'nobody' }, { to: msg as string }) },
-      gone: async ({ room: here }) => { await here.publish('tick', { n: 1 }, { volatile: true }) },
+      me: async ({ id, room: here }) => {
+        await here.publish('hi', { id }, { to: id })
+      },
+      only: async ({ msg, room: here }) => {
+        await here.publish('hi', { id: 'nobody' }, { to: msg as string })
+      },
+      gone: async ({ room: here }) => {
+        await here.publish('tick', { n: 1 }, { volatile: true })
+      },
     },
     left: ({ id, params }) => void log.push({ id, params }),
   })
@@ -411,7 +503,11 @@ describe('what multiplayer needs of a room', () => {
       <>
         <p aria-label="status">{chat.status.value}</p>
         <p aria-label="room">{chat.room.value ?? 'none'}</p>
-        <ul>{hi.value.map(m => <li key={m.id}>{m.id}</li>)}</ul>
+        <ul>
+          {hi.value.map((m) => (
+            <li key={m.id}>{m.id}</li>
+          ))}
+        </ul>
         <button onClick={() => void chat.send('me', {})}>me</button>
         <button onClick={() => void chat.send('only', 'someone-else')}>only</button>
         <button onClick={() => void chat.send('gone', {})}>tick</button>
@@ -422,7 +518,9 @@ describe('what multiplayer needs of a room', () => {
     screen.getByRole('button', { name }).click()
     await net.settle()
   }
-  beforeEach(() => { log.length = 0 })
+  beforeEach(() => {
+    log.length = 0
+  })
 
   test('a handler has the connection, `to` reaches only it, and `left` gets the same id', async () => {
     net.context({ user: { id: 'ann' } })
@@ -451,7 +549,7 @@ describe('what multiplayer needs of a room', () => {
     const seen: unknown[] = []
     function Ticks() {
       const chat = lively.connect({ roomId: 'a' })
-      chat.on('tick', m => seen.push(m))
+      chat.on('tick', (m) => seen.push(m))
       return <button onClick={() => void chat.send('gone', {})}>tick</button>
     }
     render(Ticks, {})
@@ -467,13 +565,16 @@ test('a hidden tab parks its socket, unless a sibling is looking (`share`)', asy
   clock.install()
   const open = channel({ $id: 'park.room', authorize: () => true })
   let conn!: ReturnType<typeof open.connect>
-  const stop = createRoot(dispose => {
+  const stop = createRoot((dispose) => {
     conn = open.connect(undefined, { keep: 0 })
     return dispose
   })
   await net.settle()
   const hide = (hidden: boolean) => {
-    Object.defineProperty(document, 'visibilityState', { configurable: true, value: hidden ? 'hidden' : 'visible' })
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: hidden ? 'hidden' : 'visible',
+    })
     document.dispatchEvent(new Event('visibilitychange'))
   }
   let looking = true
@@ -487,7 +588,7 @@ test('a hidden tab parks its socket, unless a sibling is looking (`share`)', asy
   await clock.advance(300_000)
   await net.settle()
   void flush()
-  expect(conn.status.value).toBe('reconnecting')       // parked
+  expect(conn.status.value).toBe('reconnecting') // parked
   hide(false)
   await net.settle()
   keepOpen.stay = undefined

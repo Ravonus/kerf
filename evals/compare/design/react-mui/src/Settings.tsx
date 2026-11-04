@@ -49,13 +49,23 @@ export function Settings() {
   return (
     <Stack spacing={3} sx={{ maxWidth: 640 }}>
       <div>
-        <Typography variant="h1" component="h1">Settings</Typography>
-        <Typography color="text.secondary" sx={{ mt: 1 }}>Manage your profile and notification preferences.</Typography>
+        <Typography variant="h1" component="h1">
+          Settings
+        </Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          Manage your profile and notification preferences.
+        </Typography>
       </div>
       <Paper variant="outlined" sx={{ p: { xs: 2, sm: 4 } }}>
         <form onSubmit={submit} noValidate>
           <Stack spacing={3}>
-            <TextField id="full-name" label="Full name" value={form.name} onChange={(e) => set('name', e.target.value)} fullWidth />
+            <TextField
+              id="full-name"
+              label="Full name"
+              value={form.name}
+              onChange={(e) => set('name', e.target.value)}
+              fullWidth
+            />
             <TextField
               id="email"
               label="Email"
@@ -66,20 +76,47 @@ export function Settings() {
               helperText={error || undefined}
               fullWidth
             />
-            <TextField id="role" label="Role" select value={form.role} onChange={(e) => set('role', e.target.value)} fullWidth>
+            <TextField
+              id="role"
+              label="Role"
+              select
+              value={form.role}
+              onChange={(e) => set('role', e.target.value)}
+              fullWidth
+            >
               {['Admin', 'Editor', 'Viewer'].map((r) => (
-                <MenuItem key={r} value={r}>{r}</MenuItem>
+                <MenuItem key={r} value={r}>
+                  {r}
+                </MenuItem>
               ))}
             </TextField>
-            <TextField id="bio" label="Bio" multiline minRows={4} value={form.bio} onChange={(e) => set('bio', e.target.value)} fullWidth />
+            <TextField
+              id="bio"
+              label="Bio"
+              multiline
+              minRows={4}
+              value={form.bio}
+              onChange={(e) => set('bio', e.target.value)}
+              fullWidth
+            />
             <FormControlLabel
-              control={<Switch checked={form.updates} onChange={(e) => set('updates', e.target.checked)} />}
+              control={
+                <Switch checked={form.updates} onChange={(e) => set('updates', e.target.checked)} />
+              }
               label="Email updates"
             />
-            {done && <Alert severity="success" role="status">Saved</Alert>}
+            {done && (
+              <Alert severity="success" role="status">
+                Saved
+              </Alert>
+            )}
             <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-              <Button type="button" variant="outlined" color="inherit" onClick={cancel}>Cancel</Button>
-              <Button type="submit" variant="contained">Save</Button>
+              <Button type="button" variant="outlined" color="inherit" onClick={cancel}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained">
+                Save
+              </Button>
             </Stack>
           </Stack>
         </form>

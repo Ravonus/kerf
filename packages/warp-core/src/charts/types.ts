@@ -1,7 +1,12 @@
 import type { Kid } from './scene'
 
 /** What a form asks of the running chart: the legend's hidden series, the mark radius in px, an id for gradients. */
-export type Ctx = { id: string; hidden: ReadonlySet<number>; r: number; view?: { b0: number; b1: number } | undefined }
+export type Ctx = {
+  id: string
+  hidden: ReadonlySet<number>
+  r: number
+  view?: { b0: number; b1: number } | undefined
+}
 export type TipRow = [color: string, label: string, value: string, dim?: boolean]
 /** What a tooltip shows. */
 export type Tip = { title?: string; rows?: TipRow[] }

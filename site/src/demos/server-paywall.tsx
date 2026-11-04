@@ -43,19 +43,30 @@ export default function Paywall() {
 
   return (
     <Card title="Pro, one plan">
-      <p>Your plan: <Badge tone={pro.value ? 'positive' : 'neutral'}>{pro.value ? 'Pro' : 'Free'}</Badge></p>
+      <p>
+        Your plan:{' '}
+        <Badge tone={pro.value ? 'positive' : 'neutral'}>{pro.value ? 'Pro' : 'Free'}</Badge>
+      </p>
       {step.value === 'idle' && !pro.value && <Button onClick={checkout}>Go Pro</Button>}
       {step.value === 'hosted' && (
         <section aria-label="The rail's hosted checkout page">
           <p>The provider’s checkout page (simulated)</p>
           <Button onClick={pay}>Pay with a test card</Button>{' '}
-          <Button emphasis="ghost" tone="neutral" onClick={close}>Close it</Button>
+          <Button emphasis="ghost" tone="neutral" onClick={close}>
+            Close it
+          </Button>
         </section>
       )}
       {step.value === 'waiting' && <p>Back on your site, waiting for the webhook…</p>}
-      {pro.value && <Button tone="neutral" emphasis="ghost" onClick={() => deliver('evt_1')}>Redeliver the event</Button>}
+      {pro.value && (
+        <Button tone="neutral" emphasis="ghost" onClick={() => deliver('evt_1')}>
+          Redeliver the event
+        </Button>
+      )}
       <ol>
-        {log.value.map(l => <li key={l.n}>{l.text}</li>)}
+        {log.value.map((l) => (
+          <li key={l.n}>{l.text}</li>
+        ))}
       </ol>
     </Card>
   )

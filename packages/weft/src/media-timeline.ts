@@ -2,7 +2,16 @@
 // write is a command (seek, play, pause). `currentTime` updates once per presented frame, through
 // requestVideoFrameCallback, or rAF on audio and where it's missing. A cue fires when playback crosses it, not on a seek.
 
-import { batch, derived, getOwner, onCleanup, state, watch, type Derived, type State } from './index'
+import {
+  batch,
+  derived,
+  getOwner,
+  onCleanup,
+  state,
+  watch,
+  type Derived,
+  type State,
+} from './index'
 import type { MediaAsset } from './media'
 
 /** A timeline's named moments and how it follows its element. */
@@ -30,14 +39,20 @@ export interface Timeline<C extends string = string> {
 }
 
 /** The timeline of an animated asset, a video or an audio file. On the server it stays at 0, paused. */
-export function timeline<C extends string = never>(asset: MediaAsset, options: TimelineOptions<C> = {}): Timeline<C> {
+export function timeline<C extends string = never>(
+  asset: MediaAsset,
+  options: TimelineOptions<C> = {},
+): Timeline<C> {
   const currentTime = state(0)
   const playing = state(false)
   const length = state(asset.duration ?? 0)
   const over = state(false)
   const reached = state<C | null>(null)
   const failure = state<Error | null>(null)
-  const cues = Object.entries<number>(options.cues ?? ({})).sort((a, b) => a[1] - b[1]) as [C, number][]
+  const cues = Object.entries<number>(options.cues ?? {}).sort((a, b) => a[1] - b[1]) as [
+    C,
+    number,
+  ][]
   const listeners = new Map<C, Set<() => void>>()
   let media: HTMLMediaElement | undefined
   let seen = 0
@@ -52,22 +67,32 @@ export function timeline<C extends string = never>(asset: MediaAsset, options: T
       for (const [id, when] of cues) {
         if (when > t) break
         at = id
-        if (crossing && when > last) listeners.get(id)?.forEach(run => run())
+        if (crossing && when > last) listeners.get(id)?.forEach((run) => run())
       }
       reached.value = at
     })
     last = t
   }
 
-  watch(() => currentTime.value, t => {
-    if (media && t !== seen) media.currentTime = t
-  })
-  watch(() => playing.value, on => {
-    shown = on
-    if (!media || on !== media.paused) return
-    if (on) media.play().catch(e => { failure.value = e; playing.value = false })
-    else media.pause()
-  })
+  watch(
+    () => currentTime.value,
+    (t) => {
+      if (media && t !== seen) media.currentTime = t
+    },
+  )
+  watch(
+    () => playing.value,
+    (on) => {
+      shown = on
+      if (!media || on !== media.paused) return
+      if (on)
+        media.play().catch((e) => {
+          failure.value = e
+          playing.value = false
+        })
+      else media.pause()
+    },
+  )
 
   return {
     currentTime,
@@ -92,7 +117,10 @@ export function timeline<C extends string = never>(asset: MediaAsset, options: T
       let live = true
       const next = () => {
         if (el.paused || !live) return
-        if (frames) video.requestVideoFrameCallback((_, m) => { tick(m.mediaTime) })
+        if (frames)
+          video.requestVideoFrameCallback((_, m) => {
+            tick(m.mediaTime)
+          })
         else requestAnimationFrame(() => tick(el.currentTime))
       }
       const tick = (t: number) => {
@@ -105,11 +133,28 @@ export function timeline<C extends string = never>(asset: MediaAsset, options: T
         over.value = el.ended
       }
       const events: [string, () => void][] = [
-        ['play', () => { sync(); next() }],
+        [
+          'play',
+          () => {
+            sync()
+            next()
+          },
+        ],
         ['pause', sync],
         ['ended', sync],
-        ['seeked', () => { last = el.currentTime; place(el.currentTime, false) }],
-        ['durationchange', () => { if (Number.isFinite(el.duration)) length.value = el.duration }],
+        [
+          'seeked',
+          () => {
+            last = el.currentTime
+            place(el.currentTime, false)
+          },
+        ],
+        [
+          'durationchange',
+          () => {
+            if (Number.isFinite(el.duration)) length.value = el.duration
+          },
+        ],
       ]
       for (const [name, run] of events) el.addEventListener(name, run)
       sync()

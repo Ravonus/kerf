@@ -15,31 +15,63 @@ const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
-const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
+const freePort = () =>
+  new Promise((ok) => {
+    const s = createServer().listen(0, () => {
+      const { port } = s.address()
+      s.close(() => ok(port))
+    })
+  })
 
 function app(ui, options = {}) {
   const dir = join(tmp, `app-${ui}`)
   rmSync(dir, { recursive: true, force: true })
   scaffold(dir, { ui, ...options })
-  const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft-js/cli': 1 })
-  for (const name of deps.filter(d => d.startsWith('@weft-js/'))) {
+  const deps = Object.keys({
+    ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies,
+    '@weft-js/cli': 1,
+  })
+  for (const name of deps.filter((d) => d.startsWith('@weft-js/'))) {
     mkdirSync(join(dir, 'node_modules', '@weft-js'), { recursive: true })
-    symlinkSync(join(pkgs, name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', '')), join(dir, 'node_modules', name), 'dir')
+    symlinkSync(
+      join(
+        pkgs,
+        name
+          .replace('@weft-js/core', 'weft')
+          .replace('@weft-js/create', 'create-weft')
+          .replace('@weft-js/warp-icons', 'icons')
+          .replace('@weft-js/', ''),
+      ),
+      join(dir, 'node_modules', name),
+      'dir',
+    )
   }
   return dir
 }
 
 describe.each([
-  ['warp', /data-scope="surface"[^>]*><span[^>]*data-part="eyebrow">weft \+ warp<\/span><span[^>]*data-part="title">Welcome to App Warp</, /<button[^>]*data-scope="button"[^>]*>/],
-  ['headless', /<section[^>]*class="card"><h1>Welcome to App Headless<\/h1>/, /<button type="button">Clicked <!--\[-->0<!--\]--> times/],
-  ['none', /<section[^>]*class="card"><h1>Welcome to App None<\/h1>/, /<button type="button">Clicked <!--\[-->0<!--\]--> times/],
+  [
+    'warp',
+    /data-scope="surface"[^>]*><span[^>]*data-part="eyebrow">weft \+ warp<\/span><span[^>]*data-part="title">Welcome to App Warp</,
+    /<button[^>]*data-scope="button"[^>]*>/,
+  ],
+  [
+    'headless',
+    /<section[^>]*class="card"><h1>Welcome to App Headless<\/h1>/,
+    /<button type="button">Clicked <!--\[-->0<!--\]--> times/,
+  ],
+  [
+    'none',
+    /<section[^>]*class="card"><h1>Welcome to App None<\/h1>/,
+    /<button type="button">Clicked <!--\[-->0<!--\]--> times/,
+  ],
 ])('--ui %s', (ui, card, button) => {
   it('weft check is clean, and / server-renders', async () => {
     const dir = app(ui)
     const r = await check(dir)
-    expect(r.diagnostics.filter(d => d.severity === 'error')).toEqual([])
+    expect(r.diagnostics.filter((d) => d.severity === 'error')).toEqual([])
     // Each page has its own `meta`; what's left is the one thing only its owner knows: where it will live.
-    expect(r.diagnostics.map(d => d.code)).toEqual(['H001'])
+    expect(r.diagnostics.map((d) => d.code)).toEqual(['H001'])
 
     const server = await devCommand(dir, { port: await freePort() })
     try {
@@ -57,23 +89,36 @@ describe.each([
 
   it('tsc is clean, on the app and the packages it pulls in', () => {
     const dir = app(ui)
-    const tsc = spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' })
+    const tsc = spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], {
+      cwd: dir,
+      encoding: 'utf8',
+    })
     expect(tsc.stdout).toBe('')
   })
 })
 
-it('the alias is the app\'s: a tsconfig edit is all it takes to use its own', async () => {
+it("the alias is the app's: a tsconfig edit is all it takes to use its own", async () => {
   const dir = app('none')
   const file = join(dir, 'tsconfig.json')
   writeFileSync(file, readFileSync(file, 'utf8').replace('"#/*"', '"~/*"'))
   mkdirSync(join(dir, 'src/lib'))
   writeFileSync(join(dir, 'src/lib/label.ts'), "export const label = 'from the alias'\n")
-  writeFileSync(join(dir, 'src/routes/about.tsx'), "import { label } from '~/lib/label'\n\nexport default function About() {\n  return <p>{label}</p>\n}\n")
-  expect(spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' }).stdout).toBe('')
-  expect((await check(dir)).diagnostics.filter(d => d.severity === 'error')).toEqual([])
+  writeFileSync(
+    join(dir, 'src/routes/about.tsx'),
+    "import { label } from '~/lib/label'\n\nexport default function About() {\n  return <p>{label}</p>\n}\n",
+  )
+  expect(
+    spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], {
+      cwd: dir,
+      encoding: 'utf8',
+    }).stdout,
+  ).toBe('')
+  expect((await check(dir)).diagnostics.filter((d) => d.severity === 'error')).toEqual([])
   const server = await devCommand(dir, { port: await freePort() })
   try {
-    expect(await (await fetch(`${server.resolvedUrls.local[0]}about`)).text()).toContain('from the alias')
+    expect(await (await fetch(`${server.resolvedUrls.local[0]}about`)).text()).toContain(
+      'from the alias',
+    )
   } finally {
     await server.close()
   }
@@ -87,11 +132,16 @@ it('AGENTS.md for the biggest scaffold stays under the limit, plugin sections in
   expect(bytes).toBeLessThan(limit)
 })
 
-it.each(['json', 'yaml'])('a %s config gives the same app as TypeScript', async format => {
+it.each(['json', 'yaml'])('a %s config gives the same app as TypeScript', async (format) => {
   const dir = app('warp', { config: format })
   const r = await check(dir)
-  expect(r.diagnostics.map(d => d.code)).toEqual(['H001'])
-  expect(spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' }).stdout).toBe('')
+  expect(r.diagnostics.map((d) => d.code)).toEqual(['H001'])
+  expect(
+    spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], {
+      cwd: dir,
+      encoding: 'utf8',
+    }).stdout,
+  ).toBe('')
   const server = await devCommand(dir, { port: await freePort() })
   try {
     const html = await (await fetch(server.resolvedUrls.local[0])).text()
@@ -107,20 +157,36 @@ it('the template: warp() only for warp, a stylesheet otherwise, and only weft sc
   expect(warp['weft.config.ts']).toContain("import { warp } from '@weft-js/warp/plugin'")
   expect(warp['weft.config.ts']).toContain('plugins: [warp()]')
   expect(warp['src/app.css']).toBeUndefined()
-  expect(JSON.parse(warp['package.json']).scripts).toEqual({ dev: 'weft dev', build: 'weft build', check: 'weft check', typecheck: 'weft tsc', start: 'weft start' })
+  expect(JSON.parse(warp['package.json']).scripts).toEqual({
+    dev: 'weft dev',
+    build: 'weft build',
+    check: 'weft check',
+    typecheck: 'weft tsc',
+    start: 'weft start',
+  })
   const headless = template({ ui: 'headless' })
-  expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual(['@weft-js/core', '@weft-js/start', '@weft-js/warp-core'])
-  expect(headless['src/routes/_layout.tsx']).toContain("import '@weft-js/warp-core/styles/warp.css'")
+  expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual([
+    '@weft-js/core',
+    '@weft-js/start',
+    '@weft-js/warp-core',
+  ])
+  expect(headless['src/routes/_layout.tsx']).toContain(
+    "import '@weft-js/warp-core/styles/warp.css'",
+  )
   expect(template({ ui: 'none' })['weft.config.ts']).not.toContain('plugins')
-  expect(() => template({ ui: 'bootstrap' })).toThrow('--ui must be one of warp, headless, tailwind, none')
+  expect(() => template({ ui: 'bootstrap' })).toThrow(
+    '--ui must be one of warp, headless, tailwind, none',
+  )
 })
 
 describe('--db, --auth, --runtime', () => {
-  const pkg = t => JSON.parse(t['package.json'])
+  const pkg = (t) => JSON.parse(t['package.json'])
 
   it('--db sqlite: drizzle and one driver-free app, a generated script, no postgres', () => {
     const t = template({ ui: 'none', db: 'sqlite' })
-    expect(Object.keys(pkg(t).dependencies)).toEqual(expect.arrayContaining(['drizzle-orm', 'drizzle-zod', 'zod']))
+    expect(Object.keys(pkg(t).dependencies)).toEqual(
+      expect.arrayContaining(['drizzle-orm', 'drizzle-zod', 'zod']),
+    )
     expect(pkg(t).dependencies.postgres).toBeUndefined()
     expect(pkg(t).scripts['db:generate']).toBe('weft db generate')
     expect(t['src/db/index.server.ts']).toContain("from '@weft-js/start/db/sqlite'")
@@ -141,7 +207,7 @@ describe('--db, --auth, --runtime', () => {
   it('--auth: better-auth, a guard, a sign-in page, a fresh secret per scaffold', () => {
     const a = template({ ui: 'warp', db: 'sqlite', auth: true })
     const b = template({ ui: 'warp', db: 'sqlite', auth: true })
-    const secret = t => /BETTER_AUTH_SECRET=(.+)/.exec(t['.env'])[1]
+    const secret = (t) => /BETTER_AUTH_SECRET=(.+)/.exec(t['.env'])[1]
     expect(pkg(a).dependencies['better-auth']).toBeDefined()
     expect(a['src/routes/todos/_layout.tsx']).toContain("redirect('/login')")
     expect(a['src/routes/login.tsx']).toBeDefined()
@@ -155,22 +221,29 @@ describe('--db, --auth, --runtime', () => {
   })
 
   // A Boundary waits only for what its children make: the todos query belongs in a component inside it (X037).
-  it.each(['warp', 'headless', 'tailwind', 'none'])('--ui %s: the todos query is made inside its Boundary', async ui => {
-    const dir = app(ui, { db: 'sqlite', auth: true })
-    const page = readFileSync(join(dir, 'src/routes/todos/index.tsx'), 'utf8')
-    const owner = page.slice(page.indexOf('export default function Todos'))
-    expect(owner).toContain('<Boundary')
-    expect(owner).not.toContain('listTodos(')
-    expect((await check(dir)).diagnostics.filter(d => d.code === 'X037')).toEqual([])
-  })
+  it.each(['warp', 'headless', 'tailwind', 'none'])(
+    '--ui %s: the todos query is made inside its Boundary',
+    async (ui) => {
+      const dir = app(ui, { db: 'sqlite', auth: true })
+      const page = readFileSync(join(dir, 'src/routes/todos/index.tsx'), 'utf8')
+      const owner = page.slice(page.indexOf('export default function Todos'))
+      expect(owner).toContain('<Boundary')
+      expect(owner).not.toContain('listTodos(')
+      expect((await check(dir)).diagnostics.filter((d) => d.code === 'X037')).toEqual([])
+    },
+  )
 
-  it.each(['bun', 'deno'])('--runtime %s lands in the config', runtime => {
+  it.each(['bun', 'deno'])('--runtime %s lands in the config', (runtime) => {
     expect(template({ ui: 'none', runtime })['weft.config.ts']).toContain(`runtime: '${runtime}'`)
   })
 
-  it('refuses what can\'t work', () => {
-    expect(() => template({ ui: 'none', db: 'mongo' })).toThrow('--db must be one of sqlite, postgres, mysql, none')
-    expect(() => template({ ui: 'none', runtime: 'workerd' })).toThrow('--runtime must be one of node, bun, deno')
+  it("refuses what can't work", () => {
+    expect(() => template({ ui: 'none', db: 'mongo' })).toThrow(
+      '--db must be one of sqlite, postgres, mysql, none',
+    )
+    expect(() => template({ ui: 'none', runtime: 'workerd' })).toThrow(
+      '--runtime must be one of node, bun, deno',
+    )
     expect(() => template({ ui: 'none', auth: true })).toThrow('--auth keeps users in a database')
   })
 })
@@ -203,10 +276,12 @@ describe('--layer', () => {
 
   it('drizzle on MySQL never calls returning(), and Native never concatenates', () => {
     expect(template({ db: 'mysql' })['src/server/todos.ts']).not.toContain('.returning()')
-    expect(template({ db: 'sqlite', layer: 'native' })['src/server/todos.ts']).not.toMatch(/sql\([`'"]/)
+    expect(template({ db: 'sqlite', layer: 'native' })['src/server/todos.ts']).not.toMatch(
+      /sql\([`'"]/,
+    )
   })
 
-  it('auth on Native brings Better Auth\'s tables and scopes every todo query', () => {
+  it("auth on Native brings Better Auth's tables and scopes every todo query", () => {
     const files = template({ db: 'mysql', layer: 'native', auth: true })
     expect(files['migrations/0000_todos.sql']).toContain('create table `user`')
     expect(files['src/auth.server.ts']).toContain('nativeAuth(db)')

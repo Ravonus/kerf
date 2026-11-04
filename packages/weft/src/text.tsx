@@ -42,7 +42,8 @@ const FENCE = /^ {0,3}(```|~~~)/
 export function streamBlocks(text: string): { done: string[]; tail: string } {
   const done: string[] = []
   const lines = text.split('\n')
-  let block: string[] = [], fence = false
+  let block: string[] = [],
+    fence = false
   lines.forEach((line, i) => {
     const last = i === lines.length - 1
     if (FENCE.test(line)) fence = !fence
@@ -60,8 +61,14 @@ function Blocks(props: { text: () => string; format?: ((block: string) => unknow
   const list = derived(() => parts.value.done.map((text, i) => ({ text, i })))
   return (
     <>
-      {list.value.map(b => <div key={b.i} data-block="done" style={props.format ? undefined : 'white-space:pre-wrap'}>{props.format ? props.format(b.text) : b.text}</div>)}
-      <div data-block="tail" style="white-space:pre-wrap">{parts.value.tail}</div>
+      {list.value.map((b) => (
+        <div key={b.i} data-block="done" style={props.format ? undefined : 'white-space:pre-wrap'}>
+          {props.format ? props.format(b.text) : b.text}
+        </div>
+      ))}
+      <div data-block="tail" style="white-space:pre-wrap">
+        {parts.value.tail}
+      </div>
     </>
   )
 }
@@ -69,38 +76,65 @@ function Blocks(props: { text: () => string; format?: ((block: string) => unknow
 /** Text that can hold its place while it loads, and keep its lines still while it streams. */
 export function Text(props: TextProps) {
   let el: HTMLElement | undefined
-  const kid = derived(() => (typeof props.children === 'function' ? props.children() : props.children))
+  const kid = derived(() =>
+    typeof props.children === 'function' ? props.children() : props.children,
+  )
   const streaming = untrack(() => props.stream)
   const shown = state<unknown>(streaming ? untrack(() => kid.value) : undefined) // one write per frame, however many tokens
   const value = streaming ? shown : kid
-  const busy = derived(() => !!props.reserve && (value.value == null || value.value === '' || value.value === false))
-  const sample = () => (typeof props.reserve === 'string' ? props.reserve : placeholder(typeof props.reserve === 'number' ? props.reserve : 80))
+  const busy = derived(
+    () => !!props.reserve && (value.value == null || value.value === '' || value.value === false),
+  )
+  const sample = () =>
+    typeof props.reserve === 'string'
+      ? props.reserve
+      : placeholder(typeof props.reserve === 'number' ? props.reserve : 80)
   const live = derived(() => streaming && typeof value.value === 'string') // read alone, so a token doesn't rebuild the blocks
   if (streaming) {
     onMount(() => {
-      let high = 0, frame = 0, width = 0
+      let high = 0,
+        frame = 0,
+        width = 0
       // The frame lays out after this write anyway, so reading the height here costs no extra layout.
       const hold = () => {
         const box = el!.getBoundingClientRect()
-        if (box.width !== width) { high = 0; width = box.width } // a new width wraps differently: the old height means nothing
+        if (box.width !== width) {
+          high = 0
+          width = box.width
+        } // a new width wraps differently: the old height means nothing
         const leading = parseFloat(getComputedStyle(el!).lineHeight)
-        high = Math.max(high, leading ? Math.ceil(box.height / leading - 0.01) * leading : box.height)
+        high = Math.max(
+          high,
+          leading ? Math.ceil(box.height / leading - 0.01) * leading : box.height,
+        )
         el!.style.minBlockSize = `${high}px`
       }
-      effect(() => kid.value, () => {
-        frame ||= requestAnimationFrame(() => {
-          frame = 0
-          shown.value = untrack(() => kid.value)
-          flush()
-          hold()
-        })
-      })
+      effect(
+        () => kid.value,
+        () => {
+          frame ||= requestAnimationFrame(() => {
+            frame = 0
+            shown.value = untrack(() => kid.value)
+            flush()
+            hold()
+          })
+        },
+      )
       onCleanup(() => cancelAnimationFrame(frame))
     })
   }
   const content = () => {
-    if (busy.value) return <span data-skeleton style="color:transparent">{sample()}</span>
-    return live.value ? <Blocks text={() => (value.value ?? '') as string} format={props.format} /> : value.value
+    if (busy.value)
+      return (
+        <span data-skeleton style="color:transparent">
+          {sample()}
+        </span>
+      )
+    return live.value ? (
+      <Blocks text={() => (value.value ?? '') as string} format={props.format} />
+    ) : (
+      value.value
+    )
   }
   return hosts[untrack(() => props.as) ?? (streaming ? 'div' : 'p')]!(
     () => ({
@@ -114,4 +148,14 @@ export function Text(props: TextProps) {
   )
 }
 
-export { fit, lines, measure, measureEngine, type FitSpec, type MeasureHandle, type MeasureProvider, type MeasureSpec, type TextBox } from './measure'
+export {
+  fit,
+  lines,
+  measure,
+  measureEngine,
+  type FitSpec,
+  type MeasureHandle,
+  type MeasureProvider,
+  type MeasureSpec,
+  type TextBox,
+} from './measure'

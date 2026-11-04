@@ -27,7 +27,8 @@ const EPS = __ENGINE__ === 'webkit' ? 1 / 64 : 0.005
 
 // Characters whose handling in Pretext goes past "segment between breaks, measure, sum".
 // oxlint-disable-next-line no-control-regex -- control characters are half of what this class is for
-const OUTSIDE = /[\u034f\ufe00-\ufe0e\0-\x08\x0b\x0e-\x1f\x7f-\xa0\xad\u2000-\u200c\u200e\u200f\u2011\u2028-\u202f\u205f-\u206f\ufeff]/
+const OUTSIDE =
+  /[\u034f\ufe00-\ufe0e\0-\x08\x0b\x0e-\x1f\x7f-\xa0\xad\u2000-\u200c\u200e\u200f\u2011\u2028-\u202f\u205f-\u206f\ufeff]/
 const EMOJI = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\ufe0f\u20e3]/u
 const QUOTE = /[\u2018\u2019\u201c\u201d]/
 const GENERIC = /(?:^|[\s,])(?:serif|sans-serif|cursive|fantasy|monospace)\s*(?:,|$)/i
@@ -41,19 +42,31 @@ let locale: string | undefined
 // without one under its default locale.
 function language(): string | null {
   let l: string | null = locale ?? null
-  if (locale === undefined && typeof document !== 'undefined') l = document.documentElement?.lang ?? null
+  if (locale === undefined && typeof document !== 'undefined')
+    l = document.documentElement?.lang ?? null
   return l === '' && __ENGINE__ === 'blink' ? new Intl.DateTimeFormat().resolvedOptions().locale : l
 }
 
-type Font = { widths: Map<string, number>, space: number, kerns: boolean, kerning: Map<number, number>, emoji: number | null }
+type Font = {
+  widths: Map<string, number>
+  space: number
+  kerns: boolean
+  kerning: Map<number, number>
+  emoji: number | null
+}
 const fonts = new Map<string, Font>()
 
 function context(lang: string | null) {
   if (ctx === null || ctxLang !== lang) {
-    ctx = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(1, 1).getContext('2d') : document.createElement('canvas').getContext('2d')
+    ctx =
+      typeof OffscreenCanvas !== 'undefined'
+        ? new OffscreenCanvas(1, 1).getContext('2d')
+        : document.createElement('canvas').getContext('2d')
     if (ctx === null) throw new Error('text-engine: no Canvas 2D context')
     if (lang !== null && 'lang' in ctx) (ctx as { lang: string }).lang = lang
-    ctxLang = lang; ctxFont = ''; fonts.clear()
+    ctxLang = lang
+    ctxFont = ''
+    fonts.clear()
   }
   return ctx
 }
@@ -61,7 +74,7 @@ function measure(f: Font, font: string, s: string): number {
   let w = f.widths.get(s)
   if (w === undefined) {
     if (ctxFont !== font) ctx!.font = ctxFont = font
-    f.widths.set(s, w = ctx!.measureText(s).width)
+    f.widths.set(s, (w = ctx!.measureText(s).width))
   }
   return w
 }
@@ -87,11 +100,12 @@ function fontOf(font: string, lang: string | null): Font {
   return f
 }
 // The base alphabet's combining marks: U+0300-036F, U+20D0-20FF (keycaps, enclosing marks), the variation selectors.
-const isMark = (c: number) => (c >= 0x300 && c <= 0x36f) || (c >= 0x20d0 && c <= 0x20ff) || (c >= 0xfe00 && c <= 0xfe0f)
+const isMark = (c: number) =>
+  (c >= 0x300 && c <= 0x36f) || (c >= 0x20d0 && c <= 0x20ff) || (c >= 0xfe00 && c <= 0xfe0f)
 // getCharacterSpaceKerning(): a character's kerning with the space after it (or before it), zero within
 // float32 rounding. In the envelope the characters that take none are marks and surrogate halves; Canvas word letters (kana, Han) are outside the base alphabet.
 function charKerning(f: Font, font: string, code: number, spaceFirst: boolean): number {
-  const key = code << 1 | (spaceFirst ? 1 : 0)
+  const key = (code << 1) | (spaceFirst ? 1 : 0)
   let k = f.kerning.get(key)
   if (k === undefined) {
     k = 0
@@ -108,12 +122,16 @@ function charKerning(f: Font, font: string, code: number, spaceFirst: boolean): 
 // getSpaceKerning() is zero for this segment: its first and last characters, past U+FE0F (the one default
 // ignorable the envelope lets in), kern nothing with a space. A first character with a mark after it takes none.
 function edgesKernNothing(f: Font, font: string, seg: string): boolean {
-  let first = 0, last = seg.length - 1
+  let first = 0,
+    last = seg.length - 1
   while (first < last && seg.charCodeAt(first) === 0xfe0f) first++
   while (last > first && seg.charCodeAt(last) === 0xfe0f) last--
   const next = seg.charCodeAt(first + 1)
   const markNext = first < last && isMark(next)
-  return (markNext || charKerning(f, font, seg.charCodeAt(first), true) === 0) && charKerning(f, font, seg.charCodeAt(last), false) === 0
+  return (
+    (markNext || charKerning(f, font, seg.charCodeAt(first), true) === 0) &&
+    charKerning(f, font, seg.charCodeAt(last), false) === 0
+  )
 }
 // Blink's Han kerning (han-kerning.ts) trims in-alphabet text only where the font's curly quotes type as
 // fullwidth marks: getFontData()'s quoteFullwidth. Every other mark it could halt is a CJK character. This
@@ -123,12 +141,28 @@ function quotesFullwidth(f: Font, font: string): boolean {
   const one = '\u300C'
   if (2 * measure(f, font, one) - measure(f, font, one + one) <= 1e-3) return false
   const type = (c: string) => {
-    const m = ctx!.measureText(c), half = m.width / 2, left = -m.actualBoundingBoxLeft, right = m.actualBoundingBoxRight
-    return m.width + ':' + (right <= half ? 'C' : left >= half ? 'O' : right - left <= half && left >= half / 2 ? 'M' : '-')
+    const m = ctx!.measureText(c),
+      half = m.width / 2,
+      left = -m.actualBoundingBoxLeft,
+      right = m.actualBoundingBoxRight
+    return (
+      m.width +
+      ':' +
+      (right <= half
+        ? 'C'
+        : left >= half
+          ? 'O'
+          : right - left <= half && left >= half / 2
+            ? 'M'
+            : '-')
+    )
   }
   ctx!.font = ctxFont = font
-  const open = type('\u201C'), close = type('\u201D')
-  return open === type('\u2018') && open.endsWith('O') && close === type('\u2019') && close.endsWith('C')
+  const open = type('\u201C'),
+    close = type('\u201D')
+  return (
+    open === type('\u2018') && open.endsWith('O') && close === type('\u2019') && close.endsWith('C')
+  )
 }
 // getEmojiCorrection()'s probe: zero unless Canvas draws an emoji wider than the font size and the page
 // draws it narrower than Canvas. Lite only when it is zero.
@@ -139,7 +173,8 @@ function emojiCorrectionIsZero(f: Font, font: string): boolean {
     f.emoji = 0
     if (canvasW > size + 0.5 && typeof document !== 'undefined' && document.body) {
       const span = document.createElement('span')
-      span.style.cssText = 'all:initial!important;-webkit-locale:inherit!important;display:inline-block!important;visibility:hidden!important;position:absolute!important'
+      span.style.cssText =
+        'all:initial!important;-webkit-locale:inherit!important;display:inline-block!important;visibility:hidden!important;position:absolute!important'
       span.style.setProperty('font', font, 'important')
       span.textContent = '\u{1F600}'
       document.body.appendChild(span)
@@ -161,8 +196,14 @@ export type LiteHandle = {
 }
 
 // The envelope check that needs no font: run before the font probes.
-export function textFits(text: string, opts?: { whiteSpace?: string, wordBreak?: string, letterSpacing?: number }): boolean {
-  return !(opts?.whiteSpace === 'pre-wrap' || opts?.wordBreak === 'keep-all' || opts?.letterSpacing) && !OUTSIDE.test(text)
+export function textFits(
+  text: string,
+  opts?: { whiteSpace?: string; wordBreak?: string; letterSpacing?: number },
+): boolean {
+  return (
+    !(opts?.whiteSpace === 'pre-wrap' || opts?.wordBreak === 'keep-all' || opts?.letterSpacing) &&
+    !OUTSIDE.test(text)
+  )
 }
 
 // Prepare, or null when this text and font fall outside the envelope.
@@ -182,13 +223,20 @@ export function prepareLite(input: string, font: string, keepText = false): Lite
   if (__ENGINE__ === 'blink' && QUOTE.test(t) && quotesFullwidth(f, font)) return null
   // A scan path the coverage run never saw sits in the exact tier's rare pack: such text isn't lite.
   let br: Uint8Array
-  try { br = __ENGINE__ === 'webkit' ? getWebKitLineBreaks(t, false, false, lang) : getBlinkLineBreaks(t, false, lang) } catch (e) {
+  try {
+    br =
+      __ENGINE__ === 'webkit'
+        ? getWebKitLineBreaks(t, false, false, lang)
+        : getBlinkLineBreaks(t, false, lang)
+  } catch (e) {
     if (e instanceof PackMissing) return null
     throw e
   }
   // prepare.ts asks for the font's space kerning only where the text has a space
   const kernable = t.includes(' ')
-  const widths: number[] = [], kinds: number[] = [], starts: number[] = []
+  const widths: number[] = [],
+    kinds: number[] = [],
+    starts: number[] = []
   let maxText = 0
   for (let s = 0, i = 1; i <= t.length; i++) {
     if (i < t.length && !br[i]) continue
@@ -196,13 +244,23 @@ export function prepareLite(input: string, font: string, keepText = false): Lite
     if (t.charCodeAt(e - 1) === 0x20) e--
     if (e > s) {
       const word = t.slice(s, e)
-      if (__ENGINE__ === 'blink' && f.kerns && kernable && !edgesKernNothing(f, font, word)) return null
+      if (__ENGINE__ === 'blink' && f.kerns && kernable && !edgesKernNothing(f, font, word))
+        return null
       // WebKit: getFollowingSpaceTail() is '' where a U+0020 follows, whether or not the scan put a break before it
-      const w = __ENGINE__ === 'webkit' && t.charCodeAt(e) === 0x20 ? measure(f, font, word + ' ') - f.space : measure(f, font, word)
-      widths.push(w); kinds.push(1); starts.push(s)
+      const w =
+        __ENGINE__ === 'webkit' && t.charCodeAt(e) === 0x20
+          ? measure(f, font, word + ' ') - f.space
+          : measure(f, font, word)
+      widths.push(w)
+      kinds.push(1)
+      starts.push(s)
       if (w > maxText) maxText = w
     }
-    if (e < i) { widths.push(f.space); kinds.push(0); starts.push(e) }
+    if (e < i) {
+      widths.push(f.space)
+      kinds.push(0)
+      starts.push(e)
+    }
     s = i
   }
   const handle = { widths: Float64Array.from(widths), text: Uint8Array.from(kinds), maxText }
@@ -214,12 +272,19 @@ export function prepareLite(input: string, font: string, keepText = false): Lite
 export function countLite(h: LiteHandle, maxWidth: number): number {
   const fitLimit = Math.max(0, maxWidth) + EPS
   const { widths, text } = h
-  let count = 0, lineW = 0, hasContent = false
+  let count = 0,
+    lineW = 0,
+    hasContent = false
   for (let i = 0; i < widths.length; i++) {
     const w = widths[i]!
     if (hasContent) {
-      if (lineW + w <= fitLimit) { lineW += w; continue }
-      count++; lineW = 0; hasContent = false
+      if (lineW + w <= fitLimit) {
+        lineW += w
+        continue
+      }
+      count++
+      lineW = 0
+      hasContent = false
       if (!text[i]) continue
     } else if (!text[i]) continue
     lineW += w
@@ -230,7 +295,11 @@ export function countLite(h: LiteHandle, maxWidth: number): number {
 
 // walkPreparedLinesRaw()'s ranges for the same handles: [start, end) segment indices, the hanging space
 // inside, and the line's width without it, as Pretext's simple stepper reports them.
-export function walkLite(h: LiteHandle, maxWidth: number, onLine: (width: number, start: number, end: number) => void): number {
+export function walkLite(
+  h: LiteHandle,
+  maxWidth: number,
+  onLine: (width: number, start: number, end: number) => void,
+): number {
   const fitLimit = Math.max(0, maxWidth) + EPS
   const { widths, text } = h
   let count = 0
@@ -238,8 +307,13 @@ export function walkLite(h: LiteHandle, maxWidth: number, onLine: (width: number
     while (i < widths.length && !text[i]) i++
     if (i >= widths.length) break
     const start = i
-    let lineW = widths[i++]!, contentW = lineW
-    while (i < widths.length && lineW + widths[i]! <= fitLimit) { lineW += widths[i]!; if (text[i]) contentW = lineW; i++ }
+    let lineW = widths[i++]!,
+      contentW = lineW
+    while (i < widths.length && lineW + widths[i]! <= fitLimit) {
+      lineW += widths[i]!
+      if (text[i]) contentW = lineW
+      i++
+    }
     // a space hangs: the line ends after it even where it overflows
     if (i < widths.length && !text[i]) i++
     count++
@@ -250,9 +324,17 @@ export function walkLite(h: LiteHandle, maxWidth: number, onLine: (width: number
 
 // A line's text, for handles prepared with keepText: its segments as a slice, without the hanging space.
 export function lineTextLite(h: LiteHandle, start: number, end: number): string {
-  return h.source!.slice(h.starts![start], end < h.starts!.length ? h.starts![end] : h.source!.length).trimEnd()
+  return h
+    .source!.slice(h.starts![start], end < h.starts!.length ? h.starts![end] : h.source!.length)
+    .trimEnd()
 }
 
-export function setLiteLocale(l?: string): void { locale = l; ctx = null }
+export function setLiteLocale(l?: string): void {
+  locale = l
+  ctx = null
+}
 // A new context too: WebKit's keeps the face it resolved a font string to, so a font that loaded later is never seen.
-export function clearLite(): void { fonts.clear(); ctx = null }
+export function clearLite(): void {
+  fonts.clear()
+  ctx = null
+}

@@ -10,37 +10,51 @@ const server = await import('./fixtures/Surfaces.tsx?weft-ssr')
 // @ts-expect-error: query imports (@weft-js/core/vite)
 const client = await import('./fixtures/Surfaces.tsx?weft-hydrate')
 
-const key = (el: Element, k: string, init: KeyboardEventInit = {}) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }))
+const key = (el: Element, k: string, init: KeyboardEventInit = {}) =>
+  el.dispatchEvent(
+    new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }),
+  )
 const out = (c: Element) => c.querySelector('[data-out]')!.textContent
-const tick = () => new Promise(r => { setTimeout(r) })
+const tick = () =>
+  new Promise((r) => {
+    setTimeout(r)
+  })
 const type = (el: HTMLInputElement | HTMLTextAreaElement, v: string, caret = v.length) => {
   el.value = v
   el.setSelectionRange(caret, caret)
   el.dispatchEvent(new InputEvent('input', { bubbles: true }))
 }
 
-test.each(Object.keys(client).filter(n => n.endsWith('Case')))('%s: SSR + hydrate, 0 misses, 0 writes', name => {
-  resetIds()
-  const html = renderToString(() => server[name]())
-  const root = document.body.appendChild(document.createElement('div'))
-  root.innerHTML = html
-  const writes: MutationRecord[] = []
-  const observer = new MutationObserver(r => writes.push(...r))
-  observer.observe(root, { subtree: true, childList: true, attributes: true, characterData: true })
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-  resetIds()
-  const dispose = hydrate(() => client[name](), root)
-  writes.push(...observer.takeRecords())
-  observer.disconnect()
-  expect(warn).not.toHaveBeenCalled()
-  warn.mockRestore()
-  expect(hydration.misses).toBe(0)
-  expect(writes).toEqual([])
-  dispose()
-  root.remove()
-})
+test.each(Object.keys(client).filter((n) => n.endsWith('Case')))(
+  '%s: SSR + hydrate, 0 misses, 0 writes',
+  (name) => {
+    resetIds()
+    const html = renderToString(() => server[name]())
+    const root = document.body.appendChild(document.createElement('div'))
+    root.innerHTML = html
+    const writes: MutationRecord[] = []
+    const observer = new MutationObserver((r) => writes.push(...r))
+    observer.observe(root, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    resetIds()
+    const dispose = hydrate(() => client[name](), root)
+    writes.push(...observer.takeRecords())
+    observer.disconnect()
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
+    expect(hydration.misses).toBe(0)
+    expect(writes).toEqual([])
+    dispose()
+    root.remove()
+  },
+)
 
-test('a textarea\'s text is in the server HTML', () => {
+test("a textarea's text is in the server HTML", () => {
   for (const name of ['MentionsCase', 'CodeCase', 'MarkdownEditorCase']) {
     const root = document.createElement('div')
     root.innerHTML = renderToString(() => server[name]())
@@ -96,7 +110,7 @@ describe('PaginationBar', () => {
     const { container: c } = render(() => <C.PagesCase />)
     expect(c.querySelector('nav')!.getAttribute('aria-label')).toBe('Projects')
     expect(c.querySelector('[aria-current="page"]')!.textContent).toBe('3')
-    ;[...c.querySelectorAll('button')].find(b => b.textContent === '4')!.click()
+    ;[...c.querySelectorAll('button')].find((b) => b.textContent === '4')!.click()
     await flush()
     expect(out(c)).toBe('4')
     expect(c.querySelector('[aria-current="page"]')!.textContent).toBe('4')
@@ -108,19 +122,23 @@ describe('CommandPalette', () => {
     const r = render(() => <C.PaletteCase />)
     r.container.querySelector('button')!.click()
     await flush()
-    return Object.assign(document.querySelector<HTMLInputElement>('[role="combobox"]')!, { box: r.container })
+    return Object.assign(document.querySelector<HTMLInputElement>('[role="combobox"]')!, {
+      box: r.container,
+    })
   }
   test('filters by fuzzy letters and keywords, and Enter runs the active row', async () => {
     const input = await opened()
     const c = input.box
     type(input, 'teammate')
     await flush()
-    expect([...c.querySelectorAll('[role="option"]')].map(o => o.textContent)).toEqual([expect.stringContaining('Invite member')])
+    expect([...c.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toEqual([
+      expect.stringContaining('Invite member'),
+    ])
     key(input, 'Enter')
     await flush()
     expect(c.querySelector('[data-out]')!.textContent).toBe('inv')
   })
-  test('a narrowing query redraws the row\'s label, not adds to it', async () => {
+  test("a narrowing query redraws the row's label, not adds to it", async () => {
     const input = await opened()
     type(input, 'se')
     await flush()
@@ -134,7 +152,10 @@ describe('CommandPalette', () => {
     r.container.querySelector('button')!.click()
     await flush()
     const input = document.querySelector<HTMLInputElement>('[role="combobox"]')!
-    const labels = () => [...document.querySelectorAll('[role="option"]')].filter(o => !(o as HTMLElement).hidden).map(o => o.textContent)
+    const labels = () =>
+      [...document.querySelectorAll('[role="option"]')]
+        .filter((o) => !(o as HTMLElement).hidden)
+        .map((o) => o.textContent)
     type(input, 'Move')
     await flush()
     expect(labels()).toEqual([expect.stringContaining('Move to')])
@@ -157,7 +178,10 @@ describe('CommandPalette', () => {
     key(input, 'ArrowLeft') // at the query's start: back to the top, with the query cleared
     await flush()
     expect(input.value).toBe('')
-    expect(labels()).toEqual([expect.stringContaining('Move to'), expect.stringContaining('Settings')])
+    expect(labels()).toEqual([
+      expect.stringContaining('Move to'),
+      expect.stringContaining('Settings'),
+    ])
     type(input, 'Move')
     await flush()
     key(input, 'ArrowRight')
@@ -200,7 +224,10 @@ describe('CommandPalette', () => {
     r.container.querySelector('button')!.click()
     await flush()
     const input = document.querySelector<HTMLInputElement>('[role="combobox"]')!
-    const labels = () => [...document.querySelectorAll('[role="option"]')].filter(o => !(o as HTMLElement).hidden).map(o => o.textContent)
+    const labels = () =>
+      [...document.querySelectorAll('[role="option"]')]
+        .filter((o) => !(o as HTMLElement).hidden)
+        .map((o) => o.textContent)
     type(input, 'Move')
     await flush()
     key(input, 'Enter')
@@ -212,7 +239,7 @@ describe('CommandPalette', () => {
     await flush()
     expect(labels()).toEqual(['eu-west', 'us-west'])
   })
-  test('Esc clears a typed query first and keeps the palette open; the next Esc closes it, and the dialog\'s own cancel steps back the same way', async () => {
+  test("Esc clears a typed query first and keeps the palette open; the next Esc closes it, and the dialog's own cancel steps back the same way", async () => {
     const input = await opened()
     const dlg = input.closest('dialog')!
     type(input, 'Dep')
@@ -223,7 +250,9 @@ describe('CommandPalette', () => {
     expect(dlg.hasAttribute('open')).toBe(true)
     type(input, 'Dep')
     await flush()
-    await new Promise(r => { setTimeout(r, 100) }) // past the layer stack's Escape window: a cancel on its own (a back gesture)
+    await new Promise((r) => {
+      setTimeout(r, 100)
+    }) // past the layer stack's Escape window: a cancel on its own (a back gesture)
     dlg.dispatchEvent(new Event('cancel', { cancelable: true }))
     await flush()
     expect(input.value).toBe('')
@@ -257,7 +286,9 @@ describe('MentionsInput', () => {
     const area = c.querySelector('textarea')!
     type(area, 'Ask @Ada Lovelace @al')
     await flush()
-    await new Promise(r => { setTimeout(r, 150) })
+    await new Promise((r) => {
+      setTimeout(r, 150)
+    })
     await flush()
     expect(area.getAttribute('aria-activedescendant')).toBeTruthy()
     key(area, 'Enter')
@@ -322,7 +353,9 @@ describe('RichTextEditor', () => {
     const content = c.querySelector<HTMLElement>('[data-part="content"][role="textbox"]')!
     expect(content.getAttribute('role')).toBe('textbox')
     expect(content.getAttribute('aria-multiline')).toBe('true')
-    expect(document.getElementById(content.getAttribute('aria-labelledby')!)?.textContent).toContain('Notes')
+    expect(
+      document.getElementById(content.getAttribute('aria-labelledby')!)?.textContent,
+    ).toContain('Notes')
     const bar = c.querySelector<HTMLElement>('[role="toolbar"]')!
     expect(bar.querySelectorAll('[tabindex="0"]')).toHaveLength(1)
     const first = bar.querySelector<HTMLElement>('[tabindex="0"]')!
@@ -334,11 +367,15 @@ describe('RichTextEditor', () => {
   })
   test('what enters from a value is sanitized', () => {
     const { container: c } = render(() => <C.RteCase />)
-    expect(c.querySelector('[data-part="content"][role="textbox"]')!.innerHTML).toBe('<p>Hello <strong>world</strong></p>')
+    expect(c.querySelector('[data-part="content"][role="textbox"]')!.innerHTML).toBe(
+      '<p>Hello <strong>world</strong></p>',
+    )
   })
   test('markdown format renders into the editor', () => {
     const { container: c } = render(() => <C.RteMarkdownCase />)
-    expect(c.querySelector('[data-part="content"] h1, [data-part="content"] h2')!.textContent).toBe('Title')
+    expect(c.querySelector('[data-part="content"] h1, [data-part="content"] h2')!.textContent).toBe(
+      'Title',
+    )
   })
 })
 

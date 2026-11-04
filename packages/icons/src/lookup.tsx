@@ -6,4 +6,5 @@ const table = all as unknown as Record<string, IconComponent>
 const title = (name: string) => name.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
 
 /** The icon of a kebab-case name, in `solid` or `action` if asked: undefined for a name nobody drew. */
-export const lookup = (name: string, variant?: string): IconComponent | undefined => table[`${title(name)}Icon${variant ? variant[0]!.toUpperCase() + variant.slice(1) : ''}`]
+export const lookup = (name: string, variant?: string): IconComponent | undefined =>
+  table[`${title(name)}Icon${variant ? variant[0]!.toUpperCase() + variant.slice(1) : ''}`]

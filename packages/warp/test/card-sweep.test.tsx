@@ -4,7 +4,10 @@ import { Card } from '../src/Card'
 
 const attr = (c: Element) => {
   const host = c.querySelector('[data-scope="surface"]')!
-  return { sweep: host.getAttribute('data-sweep'), part: !!host.querySelector(':scope > [data-part="sweep"]') }
+  return {
+    sweep: host.getAttribute('data-sweep'),
+    part: !!host.querySelector(':scope > [data-part="sweep"]'),
+  }
 }
 
 test.each([
@@ -24,5 +27,8 @@ test.each([
 })
 
 test('sweep={false} leaves the parts out altogether', () => {
-  expect(attr(render(() => <Card sweep={false} title="A" />).container)).toEqual({ sweep: null, part: false })
+  expect(attr(render(() => <Card sweep={false} title="A" />).container)).toEqual({
+    sweep: null,
+    part: false,
+  })
 })

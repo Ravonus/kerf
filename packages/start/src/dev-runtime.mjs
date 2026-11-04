@@ -5,7 +5,7 @@
 
 const alternate = Boolean(process.versions.bun || process.versions.deno)
 
-export const devRunner = sockets => (alternate && sockets ? 'self' : undefined)
+export const devRunner = (sockets) => (alternate && sockets ? 'self' : undefined)
 
 const GUARD = /if \("Deno" in globalThis \|\| "Bun" in globalThis\) throw new Error\([^)]*\);?/
 
@@ -23,19 +23,23 @@ export const devSockets = () => ({
   },
   transform: {
     filter: { id: /crossws/, code: 'incompatible environment' },
-    handler: code => code.replace(GUARD, ''),
+    handler: (code) => code.replace(GUARD, ''),
   },
 })
 
 // Nitro can name an environment to the runner before Vite has made it. Across a process that takes long enough, but
 // `self` answers at once: the first request goes to nothing and the environment hangs for good. So each one is held
 // until it exists, and `init` names it again. (The worker keeps these on globalThis, and `self` is this process.)
-const HELD = { hasEvaluated: () => false, reload: async () => {}, fetch: () => Promise.resolve(new Response('starting', { status: 503 })) }
+const HELD = {
+  hasEvaluated: () => false,
+  reload: async () => {},
+  fetch: () => Promise.resolve(new Response('starting', { status: 503 })),
+}
 
 function hold(name) {
   const environments = (globalThis.__nitro_vite_envs__ ??= {})
   environments[name] = HELD
-  return environment => {
+  return (environment) => {
     environments[name] = undefined
     return environment
   }

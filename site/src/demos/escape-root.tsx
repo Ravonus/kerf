@@ -10,7 +10,7 @@ export default function Session() {
   // A click has no owner, so it makes one: the root owns the interval until `stop` ends it.
   const start = () => {
     if (stop) return
-    createRoot(dispose => {
+    createRoot((dispose) => {
       stop = dispose
       interval('1s', () => seconds.value++)
     })
@@ -26,10 +26,16 @@ export default function Session() {
 
   return (
     <Card title="An owner made by hand">
-      <p>Session: {seconds.value} s {running.value ? '(running)' : '(stopped)'}</p>
+      <p>
+        Session: {seconds.value} s {running.value ? '(running)' : '(stopped)'}
+      </p>
       <Row gap="tight">
-        <Button size="sm" disabled={running.value} onClick={start}>Start</Button>
-        <Button size="sm" emphasis="outline" disabled={!running.value} onClick={end}>Stop</Button>
+        <Button size="sm" disabled={running.value} onClick={start}>
+          Start
+        </Button>
+        <Button size="sm" emphasis="outline" disabled={!running.value} onClick={end}>
+          Stop
+        </Button>
       </Row>
     </Card>
   )

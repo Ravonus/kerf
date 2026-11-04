@@ -12,12 +12,19 @@ const client = await import('./fixtures/Virtual.tsx?weft-hydrate')
 test('server HTML holds a window of each collection; hydration claims it all and writes nothing', async () => {
   resetIds()
   const html = renderToString(() => server.Virtuals())
-  for (const part of ['role="log"', 'role="feed"', 'data-scope="kanban"', 'role="grid"', 'aria-posinset="1"']) expect(html).toContain(part)
+  for (const part of [
+    'role="log"',
+    'role="feed"',
+    'data-scope="kanban"',
+    'role="grid"',
+    'aria-posinset="1"',
+  ])
+    expect(html).toContain(part)
   expect((html.match(/role="article"/g) ?? []).length).toBeLessThanOrEqual(40)
   const root = document.body.appendChild(document.createElement('div'))
   root.innerHTML = html
   const writes: MutationRecord[] = []
-  const observer = new MutationObserver(r => writes.push(...r))
+  const observer = new MutationObserver((r) => writes.push(...r))
   observer.observe(root, { subtree: true, childList: true, attributes: true, characterData: true })
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   resetIds()

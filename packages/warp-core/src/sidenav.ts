@@ -26,7 +26,9 @@ export function readFolds(key: string): Folds {
   try {
     const raw: unknown = JSON.parse(globalThis.localStorage?.getItem(key) ?? '{}')
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
-    return Object.fromEntries(Object.entries(raw).filter((e): e is [string, boolean] => typeof e[1] === 'boolean'))
+    return Object.fromEntries(
+      Object.entries(raw).filter((e): e is [string, boolean] => typeof e[1] === 'boolean'),
+    )
   } catch {
     return {}
   }
@@ -59,7 +61,8 @@ export function writeFolds(key: string, folds: Folds) {
   }
 }
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * `el` is the side navigation's root, holding `[data-part="panel"]` (with an id), `[data-part="scroll"]`,
@@ -68,29 +71,48 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabi
  * is kept here, since only the CSS knows which of the two it is.
  */
 export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
-  const doc = el.ownerDocument, win = doc.defaultView
+  const doc = el.ownerDocument,
+    win = doc.defaultView
   const panel = el.querySelector<HTMLElement>('[data-part="panel"]') ?? el
   const scroller = el.querySelector<HTMLElement>('[data-part="scroll"]') ?? panel
   const bar = panel.querySelector<HTMLElement>('[data-part="bar"]')
-  let o = opts, frame = 0, opener: HTMLElement | null = null, shown = false
+  let o = opts,
+    frame = 0,
+    opener: HTMLElement | null = null,
+    shown = false
   const overlaid = () => !!win && win.getComputedStyle(panel).position === 'fixed'
-  const controllers = () => (panel.id ? [...doc.querySelectorAll<HTMLElement>(`[aria-controls~="${panel.id}"]`)].filter(b => !panel.contains(b)) : [])
+  const controllers = () =>
+    panel.id
+      ? [...doc.querySelectorAll<HTMLElement>(`[aria-controls~="${panel.id}"]`)].filter(
+          (b) => !panel.contains(b),
+        )
+      : []
   const ask = (open: boolean) => o.onOpenChange?.(open)
 
   const reveal = () => {
     const at = scroller.querySelector<HTMLElement>('[aria-current="page"]')
     if (!at || scroller.scrollHeight <= scroller.clientHeight) return
-    const box = scroller.getBoundingClientRect(), a = at.getBoundingClientRect()
-    if (a.top < box.top || a.bottom > box.bottom) scroller.scrollTop += a.top - box.top - scroller.clientHeight / 3
+    const box = scroller.getBoundingClientRect(),
+      a = at.getBoundingClientRect()
+    if (a.top < box.top || a.bottom > box.bottom)
+      scroller.scrollTop += a.top - box.top - scroller.clientHeight / 3
   }
   // After the framework's own update, so a section the new page opened has its height.
-  const later = () => { if (win) { win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(reveal) } }
+  const later = () => {
+    if (win) {
+      win.cancelAnimationFrame(frame)
+      frame = win.requestAnimationFrame(reveal)
+    }
+  }
 
   const onDocClick = (e: MouseEvent) => {
     const t = e.target as Element | null
     if (bar && t && bar.contains(t)) {
       e.preventDefault()
-      if (!overlaid()) { o.onCollapsedChange?.(!o.collapsed); return }
+      if (!overlaid()) {
+        o.onCollapsedChange?.(!o.collapsed)
+        return
+      }
       if (!o.open) opener = bar
       ask(!o.open)
       return
@@ -109,19 +131,33 @@ export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
   }
   const onKey = (e: KeyboardEvent) => {
     if (!o.open || !overlaid()) return
-    if (e.key === 'Escape') { e.preventDefault(); ask(false); return }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      ask(false)
+      return
+    }
     if (e.key !== 'Tab') return
-    const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(n => n.getClientRects().length > 0)
+    const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+      (n) => n.getClientRects().length > 0,
+    )
     if (!items.length) return
-    const first = items[0]!, last = items.at(-1)!
+    const first = items[0]!,
+      last = items.at(-1)!
     const at = doc.activeElement
-    if (e.shiftKey && (at === first || !panel.contains(at))) { e.preventDefault(); last.focus() } else if (!e.shiftKey && (at === last || !panel.contains(at))) { e.preventDefault(); first.focus() }
+    if (e.shiftKey && (at === first || !panel.contains(at))) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && (at === last || !panel.contains(at))) {
+      e.preventDefault()
+      first.focus()
+    }
   }
   doc.addEventListener('click', onDocClick)
   doc.addEventListener('keydown', onKey)
 
   const sync = () => {
-    const over = overlaid(), open = !!o.open && over
+    const over = overlaid(),
+      open = !!o.open && over
     for (const b of controllers()) b.setAttribute('aria-expanded', open ? 'true' : 'false')
     bar?.setAttribute('aria-expanded', (over ? open : !o.collapsed) ? 'true' : 'false')
     if (open === shown) return
@@ -134,25 +170,34 @@ export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
       if (title?.id) panel.setAttribute('aria-labelledby', title.id)
       doc.documentElement.style.overflow = 'hidden'
       later()
-      win?.requestAnimationFrame(() => (panel.querySelector<HTMLElement>('[data-part="close"]') ?? panel).focus())
+      win?.requestAnimationFrame(() =>
+        (panel.querySelector<HTMLElement>('[data-part="close"]') ?? panel).focus(),
+      )
     } else {
       panel.removeAttribute('role')
       panel.removeAttribute('aria-modal')
       panel.removeAttribute('aria-labelledby')
       doc.documentElement.style.overflow = ''
       // Back to what opened it, or the bar, unless focus has already gone somewhere else on the page.
-      const at = doc.activeElement, back = opener?.isConnected ? opener : bar
+      const at = doc.activeElement,
+        back = opener?.isConnected ? opener : bar
       if (back && (!at || at === doc.body || panel.contains(at))) back.focus()
       opener = null
     }
   }
   // A phone turned wide while the panel was open: the panel docks, so the modal state goes.
-  const onResize = () => { if (o.open && !overlaid()) ask(false); sync() }
+  const onResize = () => {
+    if (o.open && !overlaid()) ask(false)
+    sync()
+  }
   win?.addEventListener('resize', onResize)
   // A fold read from storage just after this lands as it is, not as a fold in motion: transitions wait two frames.
   let settle = 0
   el.setAttribute('data-settling', '')
-  if (win) settle = win.requestAnimationFrame(() => { settle = win.requestAnimationFrame(() => el.removeAttribute('data-settling')) })
+  if (win)
+    settle = win.requestAnimationFrame(() => {
+      settle = win.requestAnimationFrame(() => el.removeAttribute('data-settling'))
+    })
   else el.removeAttribute('data-settling')
   sync()
   later()

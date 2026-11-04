@@ -10,13 +10,14 @@ let pending: Promise<TextEngine> | null = null
 export function loadTextEngine(name: EngineName = detectEngine()): Promise<TextEngine> {
   // dist/<engine>/engine.js, built per engine by scripts/build.mjs; they exist only beside dist/index.js
   type M = Promise<{ engine: TextEngine }>
-  return pending ??= (name === 'webkit'
-    // @ts-expect-error built output
-    ? import('./webkit/engine.js') as M
-    : name === 'gecko'
-    // @ts-expect-error built output
-      ? import('./gecko/engine.js') as M
-    // @ts-expect-error built output
-      : import('./blink/engine.js') as M)
-    .then(m => m.engine)
+  return (pending ??= (
+    name === 'webkit'
+      ? // @ts-expect-error built output
+        (import('./webkit/engine.js') as M)
+      : name === 'gecko'
+        ? // @ts-expect-error built output
+          (import('./gecko/engine.js') as M)
+        : // @ts-expect-error built output
+          (import('./blink/engine.js') as M)
+  ).then((m) => m.engine))
 }
