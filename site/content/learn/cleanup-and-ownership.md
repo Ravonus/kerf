@@ -91,7 +91,11 @@ export function Saved() {
     timer = setTimeout(() => (shown.value = false), 2000)
   }
   onCleanup(() => clearTimeout(timer))
-  return <Button onClick={flash}>{shown.value ? 'Saved' : 'Save'}</Button>
+  return (
+    <Button onClick={flash}>
+      {shown.value ? 'Saved' : 'Save'}
+    </Button>
+  )
 }
 ```
 :::
@@ -104,24 +108,33 @@ in `onMount`, where the element exists, and register the cleanup there:
 ```tsx
 import { onCleanup, onMount } from '@weft-js/core'
 
-type MapView = { setCentre(lat: number, lng: number): void; destroy(): void }
+type MapView = {
+  setCentre(lat: number, lng: number): void
+  destroy(): void
+}
 declare function createMap(el: HTMLElement): MapView
 
-export function Location(props: { lat: number; lng: number }) {
+export function Location({ lat, lng }: { lat: number; lng: number }) {
   let box: HTMLElement | undefined
   onMount(() => {
     if (!box) return
     const map = createMap(box)
-    map.setCentre(props.lat, props.lng)
+    map.setCentre(lat, lng)
     onCleanup(() => map.destroy())
   })
-  return <div ref={el => (box = el)} style="block-size:20rem" aria-label="Map" />
+  return (
+    <div
+      ref={el => (box = el)}
+      style="block-size:20rem"
+      aria-label="Map"
+    />
+  )
 }
 ```
 
 `onMount` runs your function under the component's owner, so the `onCleanup` inside it belongs to the component like
 one in the body would. To keep the map centred when the props change, add a `watch` inside the same `onMount`:
-`watch(() => [props.lat, props.lng] as const, ([lat, lng]) => map.setCentre(lat, lng))`.
+`watch(() => [lat, lng] as const, ([lat, lng]) => map.setCentre(lat, lng))`.
 
 warp's components wire their behaviours the same way, through a helper you can use too: see
 [Reusing logic](/learn/reusing-logic).
@@ -156,7 +169,8 @@ export function Session() {
   onCleanup(end)
   return (
     <p>
-      {seconds.value} s <Button onClick={start}>Start</Button> <Button onClick={end}>Stop</Button>
+      {seconds.value} s <Button onClick={start}>Start</Button>{' '}
+      <Button onClick={end}>Stop</Button>
     </p>
   )
 }
@@ -186,7 +200,9 @@ import { on } from '@weft-js/core/browser'
 
 export const keyboard = defineState('keyboard', () => {
   const lastKey = state('')
-  if (typeof window !== 'undefined') on(window, 'keydown', e => (lastKey.value = e.key))
+  if (typeof window !== 'undefined') {
+    on(window, 'keydown', e => (lastKey.value = e.key))
+  }
   return { lastKey }
 })
 ```
@@ -217,7 +233,8 @@ export function Video(props: { src: string }) {
   onCleanup(() => (alive = false))
   onMount(() => {
     void loadPlayer().then(lib => {
-      if (!alive || !owner) return // the component went while the library loaded
+      // The component may have gone while the library loaded.
+      if (!alive || !owner) return
       within(owner, () => {
         const player = lib.start(props.src)
         onCleanup(() => player.stop())
@@ -249,8 +266,12 @@ import { derived, state, untrack } from '@weft-js/core'
 export function Total() {
   const items = state([3, 4, 5])
   const currency = state('EUR')
-  // Follows `items`; reads `currency` without re-running when it changes.
-  const label = derived(() => `${items.value.reduce((a, b) => a + b, 0)} ${untrack(() => currency.value)}`)
+  // Follow `items`, but don't follow `currency`.
+  const label = derived(() => {
+    const sum = items.value.reduce((a, b) => a + b, 0)
+    const unit = untrack(() => currency.value)
+    return `${sum} ${unit}`
+  })
   return <p>{label.value}</p>
 }
 ```
@@ -283,8 +304,10 @@ the panel opens another one is added. Fix it.
 import { state } from '@weft-js/core'
 import { Button } from '@weft-js/warp'
 
-function Panel(props: { onClose: () => void }) {
-  const close = (e: KeyboardEvent) => { if (e.key === 'Escape') props.onClose() }
+function Panel({ onClose }: { onClose: () => void }) {
+  const close = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+  }
   window.addEventListener('keydown', close)
   return <p>Press Escape to close.</p>
 }
@@ -307,8 +330,12 @@ import { state } from '@weft-js/core'
 import { on } from '@weft-js/core/browser'
 import { Button } from '@weft-js/warp'
 
-function Panel(props: { onClose: () => void }) {
-  if (typeof window !== 'undefined') on(window, 'keydown', e => { if (e.key === 'Escape') props.onClose() })
+function Panel({ onClose }: { onClose: () => void }) {
+  if (typeof window !== 'undefined') {
+    on(window, 'keydown', e => {
+      if (e.key === 'Escape') onClose()
+    })
+  }
   return <p>Press Escape to close.</p>
 }
 
@@ -352,12 +379,19 @@ export function notify(text: string) {
       messages.value = messages.value.filter(m => m.id !== id)
       dispose()
     })
-    messages.value = [...messages.value, { id, text, left: () => left.value }]
+    messages.value = [
+      ...messages.value,
+      { id, text, left: () => left.value },
+    ]
   })
 }
 
 export function Messages() {
-  return <ul>{messages.value.map(m => <li key={m.id}>{m.text} ({m.left()} s)</li>)}</ul>
+  return (
+    <ul>{messages.value.map(m => (
+      <li key={m.id}>{m.text} ({m.left()} s)</li>
+    ))}</ul>
+  )
 }
 ```
 
@@ -378,7 +412,9 @@ export function Settings() {
   const load = async () => {
     const res = await fetch('/api/settings')
     theme.value = ((await res.json()) as { theme: string }).theme
-    on(window, 'storage', e => { if (e.key === 'theme' && e.newValue) theme.value = e.newValue })
+    on(window, 'storage', e => {
+      if (e.key === 'theme' && e.newValue) theme.value = e.newValue
+    })
   }
   void load()
   return <p>Theme: {theme.value}</p>
@@ -394,7 +430,11 @@ import { on } from '@weft-js/core/browser'
 
 export function Settings() {
   const theme = state('light')
-  if (typeof window !== 'undefined') on(window, 'storage', e => { if (e.key === 'theme' && e.newValue) theme.value = e.newValue })
+  if (typeof window !== 'undefined') {
+    on(window, 'storage', e => {
+      if (e.key === 'theme' && e.newValue) theme.value = e.newValue
+    })
+  }
   const load = async () => {
     const res = await fetch('/api/settings')
     theme.value = ((await res.json()) as { theme: string }).theme

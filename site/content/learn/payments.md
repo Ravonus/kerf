@@ -133,7 +133,11 @@ import { db } from '#/db/index.server'
 import { payEvents, purchases } from '#/db/pay.schema'
 import * as catalog from './pay/catalog'
 
-export default definePay({ catalog, store: drizzlePayStore(db, { purchases, payEvents }), urls: { success: '/', cancel: '/' } })
+export default definePay({
+  catalog,
+  store: drizzlePayStore(db, { purchases, payEvents }),
+  urls: { success: '/', cancel: '/' },
+})
 ```
 
 (`weft add pay` imports the tables from `#/db/schema`, which re-exports them; either path works.)
@@ -159,7 +163,8 @@ export const entitlements = query({
 export const checkout = mutation({
   auth: 'user',
   input: pay.input,
-  run: async ({ input, ctx }) => redirect(await pay.checkout(ctx, input), 303),
+  run: async ({ input, ctx }) =>
+    redirect(await pay.checkout(ctx, input), 303),
 })
 
 export const portal = mutation({
@@ -183,7 +188,11 @@ import type { Meta } from '@weft-js/start'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements, portal } from '#/server/pay'
 
-export const meta: Meta = { title: 'Pricing', description: 'Pro unlocks reports and exports, billed monthly or yearly.' }
+export const meta: Meta = {
+  title: 'Pricing',
+  description: 'Pro unlocks reports and exports, ' +
+    'billed monthly or yearly.',
+}
 
 export default function Pricing() {
   const mine = entitlements.live()
@@ -193,10 +202,15 @@ export default function Pricing() {
       {mine.value?.includes('pro') ? (
         <>
           <p aria-label="plan">Pro</p>
-          <button type="button" onClick={() => portal()}>Manage your plan</button>
+          <button type="button" onClick={() => portal()}>
+            Manage your plan
+          </button>
         </>
       ) : (
-        <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>
+        <button
+          type="button"
+          onClick={() => checkout({ product: 'pro', plan: 'year' })}
+        >
           Go Pro · {price(pro, 'year').display}
         </button>
       )}
@@ -254,8 +268,12 @@ export const report = query({
   auth: 'user',
   requires: ['pro'],
   run: async ({ ctx }) => {
-    const rows = await ctx.db.select().from(todos).where(eq(todos.userId, ctx.user.id))
-    return { total: rows.length, done: rows.filter(t => t.done).length }
+    const rows = await ctx.db
+      .select()
+      .from(todos)
+      .where(eq(todos.userId, ctx.user.id))
+    const done = rows.filter(t => t.done).length
+    return { total: rows.length, done }
   },
 })
 ```
@@ -323,12 +341,15 @@ test('Pro arrives with the event, not the click', async () => {
   const fake = fakePay(pay)
   net.context({ user: { id: 'u1' } })
   render(Pricing)
-  await user.click(await screen.findByRole('button', { name: /Go Pro/ }))
+  const goPro = await screen.findByRole('button', { name: /Go Pro/ })
+  await user.click(goPro)
   expect(screen.queryByLabelText('plan')).toBeNull()
   await fake.complete()
-  expect((await screen.findByLabelText('plan')).textContent).toBe('Pro')
+  expect((await screen.findByLabelText('plan')).textContent)
+    .toBe('Pro')
   await fake.simulate('refund')
-  expect(await screen.findByRole('button', { name: /Go Pro/ })).toBeTruthy()
+  expect(await screen.findByRole('button', { name: /Go Pro/ }))
+    .toBeTruthy()
 })
 ```
 
@@ -396,8 +417,13 @@ import { todos } from '#/db/schema'
 export const exportCsv = mutation({
   auth: 'user',
   run: async ({ ctx }) => {
-    const rows = await ctx.db.select().from(todos).where(eq(todos.userId, ctx.user.id))
-    return rows.map(t => `${t.id},${JSON.stringify(t.title)}`).join('\n')
+    const rows = await ctx.db
+      .select()
+      .from(todos)
+      .where(eq(todos.userId, ctx.user.id))
+    return rows
+      .map(t => `${t.id},${JSON.stringify(t.title)}`)
+      .join('\n')
   },
 })
 ```
@@ -414,8 +440,13 @@ export const exportCsv = mutation({
   auth: 'user',
   requires: ['pro'],
   run: async ({ ctx }) => {
-    const rows = await ctx.db.select().from(todos).where(eq(todos.userId, ctx.user.id))
-    return rows.map(t => `${t.id},${JSON.stringify(t.title)}`).join('\n')
+    const rows = await ctx.db
+      .select()
+      .from(todos)
+      .where(eq(todos.userId, ctx.user.id))
+    return rows
+      .map(t => `${t.id},${JSON.stringify(t.title)}`)
+      .join('\n')
   },
 })
 ```

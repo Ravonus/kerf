@@ -37,7 +37,10 @@ import { media } from '@weft-js/plugin-media'
 import { warp } from '@weft-js/warp/plugin'
 
 export default defineConfig({
-  plugins: [warp(), media({ server: { maxBytes: 10 * 1024 * 1024 } })],
+  plugins: [
+    warp(),
+    media({ server: { maxBytes: 10 * 1024 * 1024 } }),
+  ],
 })
 ```
 
@@ -63,7 +66,9 @@ export const photos = sqliteTable('photos', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   alt: text('alt').notNull(),
-  image: text('image', { mode: 'json' }).$type<MediaAsset>().notNull(),
+  image: text('image', { mode: 'json' })
+    .$type<MediaAsset>()
+    .notNull(),
   createdAt: integer('created_at').notNull(),
 })
 ```
@@ -84,12 +89,17 @@ import { photos } from '#/db/photos.schema'
 export const listPhotos = query({
   tags: ['photos'],
   auth: 'user',
-  run: ({ ctx }) => ctx.db.select().from(photos).where(eq(photos.userId, ctx.user.id)).orderBy(desc(photos.createdAt)),
+  run: ({ ctx }) => ctx.db
+    .select()
+    .from(photos)
+    .where(eq(photos.userId, ctx.user.id))
+    .orderBy(desc(photos.createdAt)),
 })
 
 export const uploadPhoto = mutation({
   input: z.object({
-    photo: z.file().max(8 * 1024 * 1024).mime(['image/jpeg', 'image/png', 'image/webp']),
+    photo: z.file().max(8 * 1024 * 1024)
+      .mime(['image/jpeg', 'image/png', 'image/webp']),
     alt: z.string().trim().min(1).max(200),
   }),
   auth: 'user',
@@ -98,7 +108,13 @@ export const uploadPhoto = mutation({
     const image = await ctx.media.ingest(input.photo)
     const [row] = await ctx.db
       .insert(photos)
-      .values({ id: crypto.randomUUID(), userId: ctx.user.id, alt: input.alt, image, createdAt: Date.now() })
+      .values({
+        id: crypto.randomUUID(),
+        userId: ctx.user.id,
+        alt: input.alt,
+        image,
+        createdAt: Date.now(),
+      })
       .returning()
     return row
   },
@@ -124,7 +140,12 @@ export function Photos() {
         {(form: FormApi) => (
           <>
             <label>
-              Photo <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required />
+              Photo <input
+                type="file"
+                name="photo"
+                accept="image/jpeg,image/png,image/webp"
+                required
+              />
             </label>
             <form.Error name="photo" />
             <label>
@@ -141,7 +162,11 @@ export function Photos() {
       <ul>
         {(photos.value ?? []).map(p => (
           <li key={p.id}>
-            <Media src={p.image} alt={p.alt} width="240px" />
+            <Media
+              src={p.image}
+              alt={p.alt}
+              width="240px"
+            />
           </li>
         ))}
       </ul>
@@ -174,12 +199,15 @@ returns a `MediaAsset` record:
 
 ```ts
 {
-  kind: 'photo',                     // or 'graphic', 'vector', 'video', 'audio'
+  kind: 'photo', // also 'graphic', 'vector', 'video', 'audio'
   src: '/_weft/m/3f9c…/1280.auto',   // the largest size
   width: 1280, height: 853,          // after EXIF rotation
   type: 'image/jpeg',
-  sources: [{ type: 'image/jpeg', srcset: '/_weft/m/3f9c…/320.auto 320w, …' }],
-  dominant: '#6b7f5a',               // a colour to fill the box with until it loads
+  sources: [{
+    type: 'image/jpeg',
+    srcset: '/_weft/m/3f9c…/320.auto 320w, …',
+  }],
+  dominant: '#6b7f5a', // fill the box until it loads
   placeholder: 'data:image/webp;base64,…',
   name: 'IMG_2041.jpg',
   quality: 'fixed',
@@ -203,7 +231,12 @@ A record that comes from somewhere else (a CMS, an import, an old table) should 
 import { query } from '@weft-js/start'
 import { z } from '@weft-js/start/media'
 
-const Post = z.object({ slug: z.string(), title: z.string(), cover: z.media(), coverAlt: z.string() })
+const Post = z.object({
+  slug: z.string(),
+  title: z.string(),
+  cover: z.media(),
+  coverAlt: z.string(),
+})
 
 export const featured = query({
   tags: ['posts'],
@@ -330,7 +363,10 @@ import { z } from '@weft-js/start/media'
 import { profiles } from '#/db/profiles.schema'
 
 export const setAvatar = mutation({
-  input: z.object({ avatar: z.file().max(2 * 1024 * 1024).mime(['image/jpeg', 'image/png', 'image/webp']) }),
+  input: z.object({
+    avatar: z.file().max(2 * 1024 * 1024)
+      .mime(['image/jpeg', 'image/png', 'image/webp']),
+  }),
   auth: 'user',
   invalidates: ['profiles'],
   run: async ({ input, ctx }) => {
@@ -338,7 +374,10 @@ export const setAvatar = mutation({
     await ctx.db
       .insert(profiles)
       .values({ userId: ctx.user.id, avatar })
-      .onConflictDoUpdate({ target: profiles.userId, set: { avatar } })
+      .onConflictDoUpdate({
+        target: profiles.userId,
+        set: { avatar },
+      })
     return avatar
   },
 })
@@ -381,9 +420,15 @@ export const importImage = mutation({
   auth: 'user',
   run: async ({ input, ctx }) => {
     const res = await fetch(input.url)
-    if (!res.ok) throw new FnError({ message: `That link answered ${res.status}` }, 422)
+    if (!res.ok) {
+      throw new FnError(
+        { message: `That link answered ${res.status}` }, 422,
+      )
+    }
     const bytes = new Uint8Array(await res.arrayBuffer())
-    return ctx.media.ingest(bytes, { name: new URL(input.url).pathname.split('/').pop() || 'image' })
+    const path = new URL(input.url).pathname
+    const name = path.split('/').pop() || 'image'
+    return ctx.media.ingest(bytes, { name })
   },
 })
 ```
