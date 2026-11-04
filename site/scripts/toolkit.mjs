@@ -26,10 +26,10 @@ export function readToolkit(repo) {
         types: [],
         allowImportingTsExtensions: true,
         paths: {
-          weft: ['../weft/src/index.ts'],
-          'weft/*': ['../weft/src/*'],
+          weft: ['../core/src/index.ts'],
+          'weft/*': ['../core/src/*'],
           '@weft-js/warp-core': ['../warp-core/src/index.ts'],
-          '@weft-js/warp-icons': ['../icons/src/gen/index.tsx'],
+          '@weft-js/warp-icons': ['../warp-icons/src/gen/index.tsx'],
         },
       },
       files: ['src/index.ts'],
