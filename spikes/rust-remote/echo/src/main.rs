@@ -18,7 +18,9 @@ async fn f(headers: HeaderMap, body: Bytes) -> Vec<u8> {
 #[tokio::main]
 async fn main() {
     let app = Router::new().route("/f", post(f));
-    let tcp = tokio::net::TcpListener::bind("127.0.0.1:7911").await.unwrap();
+    let tcp = tokio::net::TcpListener::bind("127.0.0.1:7911")
+        .await
+        .unwrap();
     let _ = std::fs::remove_file("/tmp/weft-spike.sock");
     let uds = tokio::net::UnixListener::bind("/tmp/weft-spike.sock").unwrap();
     let a = app.clone();

@@ -1,1 +1,3 @@
-fn main() { weft::build::generate("media"); }
+fn main() {
+    weft::build::generate("media");
+}

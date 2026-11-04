@@ -31,9 +31,16 @@ fn blur_rows(src: &[u8], dst: &mut [u8], width: usize) {
     let n = stride - 16;
     dst.copy_from_slice(src);
     for (s, d) in src.chunks_exact(stride).zip(dst.chunks_exact_mut(stride)) {
-        let (a, b, c, e, f) = (&s[..n], &s[4..4 + n], &s[8..8 + n], &s[12..12 + n], &s[16..16 + n]);
+        let (a, b, c, e, f) = (
+            &s[..n],
+            &s[4..4 + n],
+            &s[8..8 + n],
+            &s[12..12 + n],
+            &s[16..16 + n],
+        );
         for (i, o) in d[8..8 + n].iter_mut().enumerate() {
-            let sum = a[i] as u16 + 4 * b[i] as u16 + 6 * c[i] as u16 + 4 * e[i] as u16 + f[i] as u16;
+            let sum =
+                a[i] as u16 + 4 * b[i] as u16 + 6 * c[i] as u16 + 4 * e[i] as u16 + f[i] as u16;
             *o = ((sum + 8) >> 4) as u8;
         }
     }
@@ -44,9 +51,16 @@ fn blur_columns(src: &[u8], dst: &mut [u8], width: usize, height: usize) {
     let s = width * 4;
     dst.copy_from_slice(src);
     for y in 2..height - 2 {
-        let (a, b, c, e, f) = (&src[(y - 2) * s..][..s], &src[(y - 1) * s..][..s], &src[y * s..][..s], &src[(y + 1) * s..][..s], &src[(y + 2) * s..][..s]);
+        let (a, b, c, e, f) = (
+            &src[(y - 2) * s..][..s],
+            &src[(y - 1) * s..][..s],
+            &src[y * s..][..s],
+            &src[(y + 1) * s..][..s],
+            &src[(y + 2) * s..][..s],
+        );
         for (i, o) in dst[y * s..][..s].iter_mut().enumerate() {
-            let sum = a[i] as u16 + 4 * b[i] as u16 + 6 * c[i] as u16 + 4 * e[i] as u16 + f[i] as u16;
+            let sum =
+                a[i] as u16 + 4 * b[i] as u16 + 6 * c[i] as u16 + 4 * e[i] as u16 + f[i] as u16;
             *o = ((sum + 8) >> 4) as u8;
         }
     }
@@ -78,7 +92,11 @@ fn shrink(src: &[u8], width: usize, height: usize, factor: usize) -> Vec<u8> {
 }
 
 impl Service for Media {
-    async fn thumbnail(&self, _ctx: weft::Ctx, input: ThumbnailInput) -> Result<ThumbnailOutput, weft::Error> {
+    async fn thumbnail(
+        &self,
+        _ctx: weft::Ctx,
+        input: ThumbnailInput,
+    ) -> Result<ThumbnailOutput, weft::Error> {
         let (width, height) = (input.width as usize, input.height as usize);
         let mut a = photo(input.seed as u32, width, height);
         let mut b = vec![0u8; a.len()];
@@ -94,10 +112,18 @@ impl Service for Media {
             mean[i & 3] += v as u64;
         }
         let pixels = (out.len() / 4) as u64;
-        Ok(ThumbnailOutput { checksum: format!("{hash:08x}"), mean: mean.iter().map(|m| (m / pixels) as i64).collect(), thumb: out[..16].iter().map(|&v| v as i64).collect() })
+        Ok(ThumbnailOutput {
+            checksum: format!("{hash:08x}"),
+            mean: mean.iter().map(|m| (m / pixels) as i64).collect(),
+            thumb: out[..16].iter().map(|&v| v as i64).collect(),
+        })
     }
 
-    async fn guarded(&self, _ctx: weft::Ctx, input: GuardedInput) -> Result<GuardedOutput, GuardedError> {
+    async fn guarded(
+        &self,
+        _ctx: weft::Ctx,
+        input: GuardedInput,
+    ) -> Result<GuardedOutput, GuardedError> {
         let pixels = input.width.get() as i64 * input.height.get() as i64;
         if pixels > 100_000_000 {
             return Err(GuardedError::TooLarge(GuardedTooLarge { pixels }));
