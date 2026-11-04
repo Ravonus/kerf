@@ -115,15 +115,16 @@ test('a Shell deep in the page gates its own host, not the page: flow keeps runn
   await close()
 })
 
-test('a code block resting at the fold is mid-scan, and the scan runs under its text, never over it', async () => {
+test('a code block resting at the fold finishes its scan, and the scan runs under its text, never over it', async () => {
   const { page, close } = await stage(`<div style="block-size:560px"></div>
     <figure data-scope="codeblock" id="code" style="margin:0;block-size:240px;inline-size:600px"><pre id="pre" style="margin:0;overflow:clip">${"import { Button } from '@weft-js/warp'; ".repeat(4)}</pre></figure>
     <div style="block-size:3000px"></div>`)
+  await page.waitForTimeout(1200) // the scan plays once on a timer; it never rests part way
   const m = await page.evaluate(() => {
     const c = document.getElementById('code'), a = getComputedStyle(c, '::after')
     return { scale: a.scale, z: a.zIndex, iso: getComputedStyle(c).isolation, bg: a.backgroundColor, host: getComputedStyle(c).backgroundColor }
   })
-  expect(m.scale).not.toBe('0 1') // part way: this is the state that cut lines at a fixed column
+  expect(m.scale).toBe('0 1') // done: part way was the state that cut lines at a fixed column
   expect(m.z).toBe('-1')
   expect(m.iso).toBe('isolate')
   // the text paints above the scan: the pixel under a glyph's stem is the ink, not the scan's ground
@@ -155,9 +156,9 @@ const scroll = async (page, top) => { await page.evaluate(y => scrollTo({ top: y
 
 test('a fixed child sits where it asked at rest, in every family that moves', async () => {
   const fixed = '<i style="position:fixed;top:40px;left:50px;inline-size:4px;block-size:4px"></i>'
-  const families = ['surface', 'tile', 'image', 'chart', 'row', 'item', 'heading', 'deal']
+  const families = ['surface', 'tile', 'image', 'chart', 'row', 'item', 'heading', 'deal', 'specimen', 'block', 'plot', 'icon']
   const attr = f => (f === 'surface' ? 'data-scope="surface"' : `data-flow="${f}"`)
-  const { page, close } = await stage(`${families.map(f => `<div ${attr(f)} id="${f}" style="block-size:60px">${fixed}</div>`).join('')}${BELOW}`)
+  const { page, close } = await stage(`<div style="block-size:60px"></div>${families.map(f => `<div ${attr(f)} id="${f}" style="block-size:36px">${fixed}</div>`).join('')}${BELOW}`) // all at rest: clear of the bar, past their entry
   await scroll(page, 0)
   for (const f of families) expect([f, ...(await fixedAt(page, f))]).toEqual([f, 50, 40])
   await close()
@@ -204,14 +205,77 @@ test('nothing at rest has started to leave, and a leaving block visibly does', a
   await close()
 })
 
-test('inside a flowed element only the outer one leaves, so the fade does not multiply', async () => {
-  const { page, close } = await stage(`${ABOVE}<div data-flow="card" id="outer" style="block-size:400px"><div style="block-size:300px"></div><figure data-scope="codeblock" id="inner" style="margin:0;block-size:100px"></figure></div>${BELOW}`, { expression: 'vivid' })
-  const names = (await timelines(page, 'inner')).map(t => t.name)
-  expect(names).toContain('warp-out-none')
-  await scroll(page, 900 + 400 - 80)
-  expect(+(await style(page, 'inner', 'opacity'))).toBe(1)
-  expect(+(await style(page, 'outer', 'opacity'))).toBeLessThan(0.9)
+test('inside a flowed element each one leaves on its own: what sits at the top of a tall host fades as it passes', async () => {
+  // /examples, a frame, an art piece: a heading or a code pane at the top of a tall host sat whole until the host's far end left
+  const { page, close } = await stage(`${ABOVE}<div data-flow="card" id="outer" style="block-size:900px"><h2 data-flow="heading" id="head" style="margin:0;block-size:40px">Head</h2><figure data-scope="codeblock" id="inner" style="margin:0;block-size:100px"></figure><div style="block-size:760px"></div></div>${BELOW}`, { expression: 'vivid', head: ':root { --warp-flow-top: 57px }' })
+  expect((await timelines(page, 'inner')).map(t => t.name)).toEqual(['warp-in-fade', 'warp-out-fade', 'warp-in-scan'])
+  expect((await timelines(page, 'head')).map(t => t.name)).toEqual(['warp-in-heading', 'warp-out-fade'])
+  await scroll(page, 900 + 140 - 57)        // the code's bottom edge at the header
+  expect(+(await style(page, 'inner', 'opacity'))).toBeLessThan(0.75)
+  expect(+(await style(page, 'head', 'opacity'))).toBeLessThan(0.3)
+  expect(+(await style(page, 'outer', 'opacity'))).toBe(1) // its end is still far below
   await close()
+})
+
+// Every family names an entry and an exit, and each pair is its own. Only fields (and a focused or targeted element,
+// above) stay whole: a form someone is filling must not fade under their cursor.
+const FAMILIES = {
+  card: ['data-flow="card"', 'warp-in-card', 'warp-out-card'],
+  surface: ['data-scope="surface"', 'warp-in-card', 'warp-out-card'],
+  tile: ['data-flow="tile"', 'warp-in-tile', 'warp-out-card'],
+  row: ['data-flow="row"', 'warp-in-row', 'warp-out-row'],
+  item: ['data-flow="item"', 'warp-in-item', 'warp-out-fade'],
+  stat: ['data-flow="stat"', 'warp-in-fade', 'warp-out-fade'],
+  chart: ['data-flow="chart"', 'warp-in-chart', 'warp-out-chart'],
+  image: ['data-flow="image"', 'warp-in-image', 'warp-out-image'],
+  heading: ['data-flow="heading"', 'warp-in-heading', 'warp-out-fade'],
+  code: ['data-flow="code"', 'warp-in-fade', 'warp-out-fade'],
+  deal: ['data-flow="deal"', 'warp-in-deal', 'warp-out-card'],
+  specimen: ['data-flow="specimen"', 'warp-in-specimen', 'warp-out-specimen'],
+  block: ['data-flow="block"', 'warp-in-block', 'warp-out-block'],
+  plot: ['data-flow="plot"', 'warp-in-plot', 'warp-out-plot'],
+  icon: ['data-flow="icon"', 'warp-in-icon', 'warp-out-icon'],
+}
+test('every flow family has an entry and an exit; only fields stay whole', async () => {
+  const { page, close } = await stage(`${ABOVE}${Object.entries(FAMILIES).map(([f, [attr]]) => `<div ${attr} id="fam-${f}" style="block-size:40px"></div>`).join('')}<div data-scope="field" id="fam-field"><input></div>${BELOW}`)
+  for (const [f, [, entry, exit]] of Object.entries(FAMILIES)) {
+    const names = (await timelines(page, `fam-${f}`)).map(t => t.name)
+    expect([f, names[0], names[1]]).toEqual([f, entry, exit])
+    expect(names[1], f).not.toBe('warp-out-none')
+  }
+  expect((await timelines(page, 'fam-field')).map(t => t.name)).toEqual(['warp-in-fade', 'warp-out-none'])
+  await close()
+})
+
+test('a live example\'s host moves for what it shows: specimen, block and plot are each their own', async () => {
+  const pairs = Object.entries(FAMILIES).map(([, [, i, o]]) => `${i}+${o}`)
+  for (const f of ['specimen', 'block', 'plot', 'icon']) expect(pairs.filter(p => p === `${FAMILIES[f][1]}+${FAMILIES[f][2]}`).length, f).toBe(1)
+  const { page, close } = await stage(`${ABOVE}<div data-flow="specimen" id="s" style="block-size:300px"></div><div data-flow="block" id="b" style="block-size:300px"></div><div data-flow="plot" id="p" style="block-size:300px"></div>${BELOW}`, { expression: 'vivid' })
+  await scroll(page, 900 - 700 + 40) // the specimen's top 40px are in: all three still arriving
+  const moved = await page.evaluate(() => ['s', 'b', 'p'].map(id => { const c = getComputedStyle(document.getElementById(id)); return [c.scale, c.translate, c.transformOrigin] }))
+  expect(moved[0][0]).not.toBe('none')                 // a specimen grows in about its centre, with no travel
+  expect(+moved[0][0].split(' ')[0]).toBeLessThan(1)
+  expect(moved[0][1]).toBe('none')
+  expect(moved[1][1]).not.toBe('none')                 // a block rises as it unfolds from its top edge
+  expect(moved[1][2]).toMatch(/ 0px$/)
+  expect(moved[2][2]).toMatch(/^0px /)                 // a plot opens from its left edge
+  await close()
+})
+
+test('icon cells in a virtual window flow on the window\'s timeline; reduced motion still holds them', async () => {
+  const cells = Array.from({ length: 6 }, (_, i) => `<button data-flow="icon" id="cell-${i}">i</button>`).join('')
+  const body = `<div data-scope="virtual" id="win" style="block-size:200px;overflow:auto"><div data-part="spacer" style="block-size:1200px;position:relative"><div data-part="row" style="position:absolute;inset-block-start:600px">${cells}</div><div data-part="row" data-probe="" style="visibility:hidden"><button data-flow="icon" id="probe">p</button></div></div></div>${BELOW}`
+  const { page, close } = await stage(body)
+  const list = await timelines(page, 'cell-0')
+  expect(list.map(t => t.name)).toEqual(['warp-in-icon', 'warp-out-icon'])
+  expect(list.every(t => !t.root)).toBe(true) // the window's own scroller, not the page
+  expect(await timelines(page, 'probe')).toEqual([])
+  await close()
+  const context = await browser.newContext({ viewport: { width: 800, height: 700 }, reducedMotion: 'reduce' })
+  const quiet = await context.newPage()
+  await quiet.setContent(`<!doctype html><html><style>body{margin:0}</style><style>${css}</style><body>${body}`)
+  expect(await timelines(quiet, 'cell-0')).toEqual([])
+  await context.close()
 })
 
 test('prose flows by itself: its paragraphs, lists and quotes as items, tables as cards, a bare pre as code, only the top level', async () => {

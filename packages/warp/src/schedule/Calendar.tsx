@@ -100,6 +100,8 @@ export type CalendarProps = {
 const LABEL: Record<CalView, string> = { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda', timeline: 'Timeline', year: 'Year' }
 const ALL: CalView[] = ['month', 'week', 'day', 'agenda', 'timeline', 'year']
 const hours = (m: number) => `calc(var(--warp-cal-hour) * ${m / 60})`
+/** A week day's least width when the whole week fits its box: its head ("Sat" over "7") and a little time to press. */
+const DAY_FIT = 48
 
 type Ctx = ReturnType<typeof useCalendar>
 
@@ -296,6 +298,7 @@ function Column({ day, c, stop, weekend }: { day: string; c: Ctx; stop: string |
   const lanes = derived(() => layoutDay(segs.value.filter(s => s.id !== c.preview.value?.id)))
   const today = derived(() => day === c.env.today.value)
   const nowAt = derived(() => { const n = c.now.value; return n && dateOf(n) === day ? minuteOf(n) : null })
+  const nowRuns = derived(() => nowSpans(nowAt.value, segs.value.filter(s => s.id !== c.preview.value?.id), lanes.value))
   const ghost = derived(() => { const v = c.drag.value; return v?.origin && v.origin.date === day ? v.origin : null })
   const draft = derived(() => { const v = c.drag.value; return v?.mode === 'create' && v.date === day ? v : null })
   const read = derived(() => {
@@ -305,15 +308,42 @@ function Column({ day, c, stop, weekend }: { day: string; c: Ctx; stop: string |
   })
   return (
     <div data-part="col" role="gridcell" data-date={day} data-weekend={weekend ? '' : undefined} aria-current={today.value ? 'date' : undefined}>
-      <span data-part="band" style={`--_top:0px;--_h:${hours(hrs.value[0]!)}`}></span>
-      <span data-part="band" style={`--_top:${hours(hrs.value[1]!)};--_h:${hours(1440 - hrs.value[1]!)}`}></span>
+      <span data-part="off-hours" style={`--_top:0px;--_h:${hours(hrs.value[0]!)}`}></span>
+      <span data-part="off-hours" style={`--_top:${hours(hrs.value[1]!)};--_h:${hours(1440 - hrs.value[1]!)}`}></span>
       {ghost.value && <span data-part="ghost" style={`--_top:${hours(ghost.value.s)};--_h:${hours(ghost.value.e - ghost.value.s)}`}></span>}
       {segs.value.map(s => <EventBlock key={s.id} seg={s} lane={lanes.value.get(s.id) ?? { col: 0, cols: 1, span: 1 }} c={c} stop={stop === s.id} />)}
       {draft.value && <span data-part="draft" style={`--_top:${hours(draft.value.s)};--_h:${hours(draft.value.e - draft.value.s)}`}>New event · {c.span(draft.value.s, draft.value.e)}</span>}
       {read.value && <span data-part="readout" role="status" style={`inset-block-start:${read.value.top}`}>{read.value.text}</span>}
-      {nowAt.value !== null && <span data-part="now" style={`--_top:${hours(nowAt.value)}`} aria-hidden="true"></span>}
+      {nowAt.value !== null && nowRuns.value.map(r => <span key={`${r.a}-${r.b}`} data-part="now" data-cut={r.a > 0 ? '' : undefined} style={`--_top:${hours(nowAt.value!)};${r.inset}`} aria-hidden="true"></span>)}
     </div>
   )
+}
+
+/**
+ * Where a day's now line shows. It runs under the events, so where events cover the minute it would peek out only as a
+ * tick at the column's edge and a dash in the gap past the last lane, marks that read as strays rather than a line.
+ * Instead it is drawn in the lanes that are free at that minute, from lane edge to lane edge, and not at all when every
+ * lane is taken (the gutter's label still says the time). Its dot stays on the column's edge, so only a run from it.
+ */
+export function nowSpans(now: number | null, segs: { id: string; s: number; e: number }[], lanes: Map<string, { col: number; cols: number; span: number }>) {
+  if (now === null) return []
+  const over = segs.filter(s => s.s <= now && s.e > now).map(s => lanes.get(s.id)).filter((l): l is { col: number; cols: number; span: number } => !!l)
+  if (!over.length) return [{ a: 0, b: 1, inset: '' }]
+  const cols = Math.max(...over.map(l => l.cols))
+  const taken = Array.from({ length: cols }, () => false)
+  for (const l of over) for (let k = l.col; k < Math.min(cols, l.col + l.span); k++) taken[k] = true
+  const runs: { a: number; b: number; inset: string }[] = []
+  for (let k = 0; k < cols; k++) {
+    if (taken[k]) continue
+    const a = k
+    while (k < cols && !taken[k]) k++
+    const b = k
+    // the lane geometry of [data-part="event"] in calendar.css: (100% - 6px) shared by the lanes, 2px in from each
+    const start = a === 0 ? '0px' : `calc((100% - 6px) * ${a} / ${cols} + 2px)`
+    const end = b === cols ? '0px' : `calc(100% - (100% - 6px) * ${b} / ${cols})`
+    runs.push({ a, b, inset: `inset-inline:${start} ${end}` })
+  }
+  return runs
 }
 
 /** Week and Day (07 §2.5): an APG grid, day columns as columnheaders, events inside gridcells. */
@@ -343,6 +373,76 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
     const gutter = cols.querySelector<HTMLElement>('[data-part="gutter"]')?.offsetWidth ?? 0
     if (col && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = Math.max(0, col.offsetLeft - gutter)
   })
+  // Every name reads whole (calendar.css breaks it only between words). A day needs room for its longest word in each lane
+  // it shares (a short event's whole name, on its one line). When every day's need fits the box, the week shows all its
+  // days and spreads them over the room; when it can't (a phone), each day keeps --warp-cal-day-min too and the week
+  // scrolls sideways. Then the hours lengthen until no name runs past the bottom of its event.
+  const fit = () => {
+    const s = scroller, box = cols
+    if (!s || !box || untrack(() => c.drag.value || c.moving.value)) return
+    const scrolled = s.scrollTop / Math.max(1, box.offsetHeight)
+    for (const v of ['--_tracks', '--_week-w', '--warp-cal-hour']) s.style.removeProperty(v)
+    const gutter = box.querySelector<HTMLElement>('[data-part="gutter"]')?.offsetWidth ?? 52
+    const floor = parseFloat(getComputedStyle(s).getPropertyValue('--warp-cal-day-min')) || 128
+    const need = [...box.querySelectorAll<HTMLElement>(':scope > [data-part="col"]')].map(col => Math.max(DAY_FIT, ...[...col.querySelectorAll<HTMLElement>(':scope > [data-part="event"]')].map(ev => {
+      const title = ev.querySelector<HTMLElement>('[data-part="event-title"]')
+      if (!title) return 0
+      const probe = title.cloneNode(true) as HTMLElement
+      probe.style.cssText = `position:absolute;visibility:hidden;inline-size:${ev.hasAttribute('data-short') ? 'max-content' : 'min-content'}`
+      ev.append(probe)
+      const word = probe.getBoundingClientRect().width
+      probe.remove()
+      const cs = getComputedStyle(ev)
+      const lanes = (+ev.style.getPropertyValue('--_cols') || 1) / (+ev.style.getPropertyValue('--_span') || 1)
+      // an event is (day - 6px) / lanes - 2px wide (calendar.css)
+      return Math.ceil((word + parseFloat(cs.paddingInlineStart) + parseFloat(cs.paddingInlineEnd) + 2) * lanes + 6 + 0.5)
+    })))
+    // an all-day event's longest word, shared by the days it spans
+    for (const chip of s.querySelectorAll<HTMLElement>('[data-part="allday"] > [data-part="chip"]')) {
+      const [, col, span] = /(\d+)\s*\/\s*span\s+(\d+)/.exec(chip.style.gridColumn) ?? []
+      if (!col || !span) continue
+      const probe = chip.cloneNode(true) as HTMLElement
+      probe.style.cssText = 'position:absolute;visibility:hidden;inline-size:min-content'
+      chip.parentElement!.append(probe)
+      const each = Math.ceil(probe.getBoundingClientRect().width / +span)
+      probe.remove()
+      for (let i = +col - 2; i < +col - 2 + +span && i < need.length; i++) need[i] = Math.max(need[i] ?? 0, each)
+    }
+    const room = s.clientWidth - gutter
+    const fits = need.reduce((a, b) => a + b, 0) <= room
+    const f = untrack(() => widths.value)
+    const least = need.map((n, i) => (fits ? n : Math.max(n, Math.ceil(floor * (f[i] ?? 1)))))
+    s.style.setProperty('--_tracks', `${gutter}px ${least.map(n => `minmax(${n}px, 1fr)`).join(' ')}`)
+    s.style.setProperty('--_week-w', fits ? '0px' : `${gutter + least.reduce((a, b) => a + b, 0)}px`)
+    const doc = s.ownerDocument
+    const cut = () => [...box.querySelectorAll<HTMLElement>('[data-part="col"] > [data-part="event"] [data-part="event-title"]')].some(t => {
+      const r = doc.createRange()
+      r.selectNodeContents(t)
+      const w = r.getBoundingClientRect(), b = t.closest('[data-part="event"]')!.getBoundingClientRect()
+      return w.width > 0 && (w.bottom > b.bottom + 0.5 || w.right > b.right + 0.5)
+    })
+    const base = box.offsetHeight / 24
+    for (let hour = base, i = 0; i < 40 && hour < base * 3 && cut(); i++) s.style.setProperty('--warp-cal-hour', `${(hour += 4)}px`)
+    s.scrollTop = scrolled * box.offsetHeight
+  }
+  let frame = 0
+  const refit = () => { if (typeof requestAnimationFrame === 'undefined') return; cancelAnimationFrame(frame); frame = requestAnimationFrame(fit) }
+  // Day and Week share this grid: a fit for one day's tracks would lay a week out in one column until the next frame
+  let shownDays = 0
+  watch(() => [c.visible.value, days.value] as const, ([, d]) => {
+    if (d.length !== shownDays && scroller) for (const v of ['--_tracks', '--_week-w']) scroller.style.removeProperty(v)
+    shownDays = d.length
+    refit()
+  })
+  onMount(() => {
+    refit()
+    void scroller?.ownerDocument.fonts?.ready.then(refit)
+    if (typeof ResizeObserver === 'undefined' || !scroller) return
+    let w = 0
+    const ro = new ResizeObserver(r => { const n = Math.round(r[0]!.contentRect.width); if (n !== w) { w = n; refit() } })
+    ro.observe(scroller)
+    onCleanup(() => { ro.disconnect(); cancelAnimationFrame(frame) })
+  })
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { days: days.value, next: (k, id) => eventKey(k, id, list.value, getComputedStyle(e.target as Element).direction === 'rtl') })
   const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
   return (
@@ -371,6 +471,9 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   )
 }
 
+/** A month chip's heights in calendar.css: one line, two lines, and the gap between rows. The date above them is DATE_H. */
+const CHIP_H = 18, CHIP_2H = 34, CHIP_GAP = 2, DATE_H = 16
+
 function MonthGrid({ c }: { c: Ctx }) {
   const hint = uid('month')
   const weeks = derived(() => monthCells(c.date.value, c.first.value))
@@ -385,8 +488,9 @@ function MonthGrid({ c }: { c: Ctx }) {
   let panel: HTMLDivElement | undefined
   use(popover, () => panel, () => ({ open: moreOpen.value, trigger: moreAt.value!, side: 'bottom' as const, align: 'start' as const, onClose: () => (moreOpen.value = false) }))
   // The weeks share the height the calendar has (calendar.css), so a whole month is in view: a day shows the chips its
-  // row has room for, and "+N more" for the rest. Until measured, three and "+N more" (fit 4), as the server renders.
-  const fit = state(4)
+  // row has room for, and "+N more" for the rest. `room` is the height under the date, measured; until then (and on a
+  // phone, whose days draw dots) three and "+N more", as the server renders.
+  const room = state<number | null>(null)
   onMount(() => {
     const win = grid?.ownerDocument.defaultView
     if (!grid || !win || typeof win.ResizeObserver !== 'function') return
@@ -394,18 +498,32 @@ function MonthGrid({ c }: { c: Ctx }) {
       const cell = grid!.querySelector<HTMLElement>('[role="gridcell"]')
       if (!cell) return
       const cs = win.getComputedStyle(cell)
-      // a phone's days draw dots that wrap in a row (calendar.css): three and "+N more", as before
-      if (cs.display !== 'grid' || cs.gridTemplateColumns.split(' ').length > 1) { fit.value = 4; return }
-      const chip = 22 // 20px chips, 2px gap
-      const room = cell.clientHeight - parseFloat(cs.paddingBlockStart) - parseFloat(cs.paddingBlockEnd) - (cell.querySelector<HTMLElement>('[aria-hidden="true"]:not([data-part])')?.offsetHeight ?? 18) - 2
-      fit.value = Math.max(1, Math.floor((room + 2) / chip))
+      if (cs.display !== 'grid' || cs.gridTemplateColumns.split(' ').length > 1) { room.value = null; return }
+      const date = cell.querySelector<HTMLElement>('[aria-hidden="true"]:not([data-part])')?.offsetHeight ?? DATE_H
+      room.value = cell.clientHeight - parseFloat(cs.paddingBlockStart) - parseFloat(cs.paddingBlockEnd) - date - CHIP_GAP
     }
     const ro = new win.ResizeObserver(measure)
     ro.observe(grid)
     onCleanup(() => ro.disconnect())
   })
+  /**
+   * Long names take a second line on every day or on none, so one event reads the same on a quiet weekend as on a full
+   * Tuesday: they do when every day in view has room for all its events at two lines each. Otherwise each name keeps
+   * to one line, ending in an ellipsis if it must. A short name stays one line either way.
+   */
+  const twoLines = derived(() => {
+    const r = room.value
+    if (r === null) return false
+    const most = Math.max(0, ...weeks.value.flatMap(w => w.cells.map(x => onDay(x.iso).length)))
+    return most * (CHIP_2H + CHIP_GAP) - CHIP_GAP <= r
+  })
   /** The chips a day shows, and how many go behind "+N more" (which takes a chip's room). */
-  const shownOn = (list: CalEvent[]) => { const n = list.length <= fit.value ? list.length : Math.max(0, fit.value - 1); return { chips: list.slice(0, n), more: list.length - n } }
+  const shownOn = (list: CalEvent[]) => {
+    const r = room.value
+    const fit = r === null ? 4 : Math.max(1, Math.floor((r + CHIP_GAP) / (CHIP_H + CHIP_GAP)))
+    const n = list.length <= fit ? list.length : Math.max(0, fit - 1)
+    return { chips: list.slice(0, n).map(e => ({ e, wrap: twoLines.value })), more: list.length - n }
+  }
   const openDay = (iso: string) => { c.date.set(iso); c.view.set('day'); c.say(`Day view, ${fmt(iso, { dateStyle: 'full' }, c.env.locale.value)}`) }
   const onKey = (e: KeyboardEvent) => {
     const cell = (e.target as Element).closest?.<HTMLElement>('[role="gridcell"]')
@@ -445,7 +563,7 @@ function MonthGrid({ c }: { c: Ctx }) {
                 <div key={x.iso} data-part="day-cell" role="gridcell" tabindex={x.iso === cursor.value ? '0' : '-1'} data-date={x.iso} data-outside={x.outside ? '' : undefined} aria-current={x.iso === c.env.today.value ? 'date' : undefined}>
                   <span class="sr">{label(x.iso, onDay(x.iso))}</span>
                   <span aria-hidden="true">{ymd(x.iso)[2]}</span>
-                  {shownOn(onDay(x.iso)).chips.map(e => <span key={e.id} data-part="chip" data-cal={e.cal ?? 1} style={tint(e.cal)} aria-hidden="true">{e.title}</span>)}
+                  {shownOn(onDay(x.iso)).chips.map(({ e, wrap }) => <span key={e.id} data-part="chip" data-cal={e.cal ?? 1} data-wrap={wrap ? '' : undefined} style={tint(e.cal)} aria-hidden="true">{e.title}</span>)}
                   {shownOn(onDay(x.iso)).more > 0 && <button type="button" data-part="more" tabindex="-1" aria-hidden="true">+{shownOn(onDay(x.iso)).more} more</button>}
                 </div>
               ))}
@@ -639,7 +757,8 @@ function ZoneChip({ c }: { c: Ctx }) {
  * Calendar (07 §2, `#cal-desk`): toolbar, rail, and Month, Week, Day, Agenda, Timeline and Year behind APG tabs. Drag
  * moves, resizes and creates on a 15-minute snap; `M` is the keyboard move mode, a long press opens the MoveSheet, and
  * the editor's fields do it all without either. `today` and `now` are props or arrive after mount, so hydration writes
- * nothing. A week keeps all seven days at a readable width and scrolls sideways under its hours when its box is narrower,
+ * nothing. A week shows all seven days when every name fits its box, and on a narrower one keeps each day readable and
+ * scrolls sideways under its hours; event names are never cut (the hours lengthen for a long one),
  * and below 1000px the mini month moves into the title's popover.
  */
 export function Calendar(p: CalendarProps) {

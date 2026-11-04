@@ -28,6 +28,10 @@
    midnight. The stage's height is that bound. */
 [data-site="frame"] [data-part="mount"][data-stage="fill"]:has(> [data-scope="calendar"]) { block-size: var(--stage-h); }
 [data-site="frame"] [data-part="mount"][data-stage="fill"] > [data-scope="calendar"] { block-size: 100%; min-block-size: 0; }
+/* and it is an app's window: edge to edge in its frame, so a desktop week has the room for all seven days */
+[data-site="frame"] [data-part="mount"][data-stage="fill"]:has(> [data-scope="calendar"]) { padding: 0; }
+/* a grid is wide by nature: half the usual ground around it, so a six-column grid shows whole on a desk */
+[data-site="frame"] [data-part="mount"][data-stage="fill"]:has(> [data-scope="table"]) { padding: 16px; }
 [data-part="mount"] { box-sizing: border-box; min-inline-size: 0; padding: 32px; }
 [data-part="mount"][data-stage="center"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-group); }
 [data-part="mount"][data-stage="narrow"] { display: grid; align-content: center; justify-self: center; inline-size: min(100%, 424px); }
@@ -51,23 +55,46 @@
 [data-site="frame"][data-open] > [data-part="code"][data-fold] > div:first-child::after { display: none; }
 [data-site="frame"] > [data-part="code"] > [data-act="stage-code"] { background: var(--warp-color-surface); }
 
-/* the playground: stage left, knobs right */
-[data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) 248px; }
+/* -- the playground ("Try it"): one object. A bar names it live and holds the stage's own tools; the stage is large with
+   the controls panel beside it (under it on a phone, or when the component wants the full width); the call the
+   controls add up to docks under both, never folded, with its own copy button. -- */
+[data-site="frame"][data-play] [data-part="tools"] [data-part="play-live"] { display: inline-flex; align-items: center; gap: var(--warp-space-tight); padding-inline: var(--warp-space-tight); font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
+[data-site="frame"][data-play] [data-part="play-live"] [data-part="dot"] { inline-size: 6px; block-size: 6px; border-radius: 50%; background: var(--warp-color-positive-solid, var(--warp-color-accent-solid)); }
+/* The panel takes a little under half the frame, up to 320px (264px left four short options cut or ragged): the stage
+   gives way but stays the wider of the two. Six options still need two rows, so they lay out as an even 3×2 grid. */
+[data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) clamp(264px, 48%, 320px); }
+[data-site="frame"][data-play] [data-part="stage"] { --stage-h: 320px; }
+[data-site="frame"][data-play] [data-part="stage"]:has(> [data-part="mount"][data-stage="center"]) { --stage-h: 300px; }
 [data-site="frame"][data-play="wide"] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); }
-[data-site="frame"][data-play="wide"] [data-part="knobs"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); align-items: end; border-inline-start: 0; border-block-start: var(--warp-border-hairline) solid var(--rule); }
-[data-site="frame"] [data-part="knobs"] { display: grid; align-content: start; gap: var(--warp-space-group); padding: var(--warp-space-group); background: var(--warp-color-surface); border-inline-start: var(--warp-border-hairline) solid var(--rule); }
-[data-site="frame"] [data-part="knobs"] > [data-scope="button"] { justify-self: start; }
+[data-site="frame"] [data-part="knobs"] { display: grid; align-content: start; gap: var(--warp-space-group); min-inline-size: 0; padding: var(--warp-space-related) var(--warp-space-group) var(--warp-space-group); background: var(--warp-color-surface); border-inline-start: var(--warp-border-hairline) solid var(--rule); }
+[data-site="frame"][data-play="wide"] [data-part="knobs"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); align-items: end; column-gap: 24px; border-inline-start: 0; border-block-start: var(--warp-border-hairline) solid var(--rule); }
+[data-site="frame"] [data-part="knobs-head"] { display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-tight); margin-inline-end: calc(var(--warp-space-tight) * -1); }
+[data-site="frame"][data-play="wide"] [data-part="knobs-head"], [data-site="frame"][data-play="wide"] [data-part="presets"] { grid-column: 1 / -1; }
+[data-site="frame"] [data-part="knobs-title"] { font: 600 var(--doc-small)/1.4 var(--doc-sans); color: var(--ink); }
 [data-site="frame"] [data-part="knob"] { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
-[data-site="frame"] [data-part="knob"] > [data-part="knob-label"] { font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
+[data-site="frame"] [data-part="knobs"] [data-part="knob-label"] { font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
 [data-site="frame"] [data-part="knob"] [data-scope="segmented"] { max-inline-size: 100%; }
-/* measured at its natural width, then wrapped when that is wider than the panel (Playground's wrap()) */
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-measure] { max-inline-size: none; inline-size: max-content; }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { display: flex; flex-wrap: wrap; justify-self: stretch; }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label { flex: 1 1 auto; }
+/* measured at its natural width (Playground's wrap()); too wide for the panel, it becomes an even grid of equal columns,
+   or, when none fits, gives way to the same choice as a dropdown */
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-measure] { display: inline-grid; max-inline-size: none; inline-size: max-content; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { grid-auto-flow: row; grid-template-columns: repeat(var(--seg-cols, 2), minmax(0, 1fr)); justify-self: stretch; }
 [data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > [data-part="indicator"] { display: none; }
 [data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label:has(input:checked) { background: var(--warp-color-accent-solid); }
+[data-site="frame"] [data-part="knob"]:not([data-fallback]) > [data-scope="field"]:has([role="combobox"]):not(:only-child),
+[data-site="frame"] [data-part="knob"][data-fallback] > :is([data-part="knob-label"], [data-scope="segmented"]) { display: none; }
 [data-site="frame"] [data-part="knob"][hidden] { display: none; }
-[data-site="frame"] [data-part="presets"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); }
+/* switches read as a list: a run of them sits closer together than the labelled controls */
+[data-site="frame"] [data-part="knob"][data-control="switch"] + [data-part="knob"][data-control="switch"] { margin-block-start: calc(var(--warp-space-tight) - var(--warp-space-group)); }
+[data-site="frame"][data-play="wide"] [data-part="knob"][data-control="switch"] + [data-part="knob"][data-control="switch"] { margin-block-start: 0; }
+[data-site="frame"] [data-part="presets"] { display: grid; gap: var(--warp-space-tight); padding-block-end: var(--warp-space-group); border-block-end: var(--warp-border-hairline) solid var(--rule); }
+[data-site="frame"] [data-part="preset-list"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); }
+/* the call: a head that says it is live, the code whole */
+[data-site="frame"][data-play] > [data-part="code"] [data-scope="codeblock"] { margin: 0; }
+[data-site="frame"][data-play] > [data-part="code"] [data-part="head"] { display: flex; align-items: center; gap: var(--warp-space-tight); background: var(--warp-color-surface); }
+[data-site="frame"][data-play] > [data-part="code"] [data-part="lang"] { font: 600 var(--doc-tiny)/1.4 var(--doc-sans); color: var(--ink); }
+[data-site="frame"][data-play] > [data-part="code"] [data-part="live-note"] { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
+[data-site="frame"][data-play] > [data-part="code"] pre { margin: 0; }
+[data-site="tk-section"][data-try] > [data-part="note"] { margin-block-end: var(--warp-space-related); }
 
 /* -- component page rhythm -- */
 [data-site="tk-default"] { margin-block-start: 32px; scroll-margin-block-start: 88px; }
@@ -146,14 +173,18 @@
 [data-tk="group"] > header { display: grid; gap: var(--warp-space-tight); margin-block-end: var(--warp-space-group); }
 [data-tk="group"] h2 { font: 600 var(--doc-h2)/1.25 var(--doc-sans); letter-spacing: -0.015em; text-transform: none; color: var(--ink); text-box: normal; }
 [data-tk="group"] > header p { max-inline-size: 68ch; color: var(--dim); font-size: var(--doc-small); line-height: 1.5; }
-[data-tk="tiles"] { --warp-flow-cols: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: var(--warp-space-group); }
+/* A desktop hub is three cards to a row (two on a narrower window), each picture about 300px wide: four to a row drew
+   them at 150 to 220px, where an example's words were specks. Its picture is 3:2 (a chart's 4:3, since a chart always
+   shows whole) and draws at half size or more: below that it shows its top instead (--tile-readable, fitTile). */
+[data-tk="tiles"] { --warp-flow-cols: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--warp-space-group); }
 [data-site="tile"] { display: grid; grid-template-rows: auto 1fr; contain-intrinsic-size: auto 200px; border: var(--warp-border-hairline) solid var(--rule); border-radius: var(--warp-radius-surface); overflow: hidden; background: var(--warp-color-surface); color: var(--ink); text-decoration: none; transition: border-color var(--warp-duration-fast) var(--warp-ease-out); }
 [data-site="tile"][hidden], [data-site="tile"][data-rest]:not([data-show]) { display: none; }
 [data-site="tile"]:hover { border-color: var(--warp-color-border-strong); }
 [data-site="tile"]:hover { translate: 0 -1px; }
 /* A card's preview is a picture: the example lays out at a working width and Preview scales it to the card (fitTile). */
-[data-site="tile"] [data-part="stage"] { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--warp-color-surface); border-block-end: var(--warp-border-hairline) solid var(--rule); }
-[data-site="tile"] [data-part="mount"] { --tile-zoom: 0.8; position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: var(--tile-w, 100%); container-type: inline-size; padding: var(--warp-space-group); pointer-events: none; transform-origin: 0 0; opacity: 0; }
+[data-site="tile"] [data-part="stage"] { position: relative; aspect-ratio: 3 / 2; overflow: hidden; background: var(--warp-color-surface); border-block-end: var(--warp-border-hairline) solid var(--rule); }
+@media (min-width: 600px) { [data-area="charts"] [data-site="tile"] [data-part="stage"] { aspect-ratio: 4 / 3; } }
+[data-site="tile"] [data-part="mount"] { --tile-zoom: 0.8; --tile-readable: 0.5; position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: var(--tile-w, 100%); container-type: inline-size; padding: var(--warp-space-group); pointer-events: none; transform-origin: 0 0; opacity: 0; }
 [data-site="tile"] [data-part="mount"]:not([data-ready]) { inset: 0; inline-size: auto; transform: none; opacity: 1; }
 [data-site="tile"] [data-part="mount"][data-stage="narrow"] { justify-self: auto; }
 [data-site="tile"] [data-part="mount"] > * { max-inline-size: 100%; }
@@ -168,7 +199,7 @@
   [data-tk="tiles"] { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-related); }
   [data-site="tile"] { grid-template-rows: auto auto; contain-intrinsic-size: auto 200px; }
   [data-site="tile"] [data-part="stage"] { aspect-ratio: auto; block-size: 120px; }
-  [data-site="tile"] [data-part="mount"] { --tile-hug: 240px; padding: var(--warp-space-related); }
+  [data-site="tile"] [data-part="mount"] { --tile-hug: 240px; --tile-readable: 0.3; padding: var(--warp-space-related); }
   [data-site="tile"] [data-part="words"] { display: grid; gap: var(--warp-space-hair); padding: var(--warp-space-tight) var(--warp-space-related) var(--warp-space-related); min-inline-size: 0; }
   [data-site="tile"] strong { overflow-wrap: anywhere; }
   [data-site="tile"] [data-part="words"] span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
@@ -178,8 +209,11 @@
 @media (max-width: 899.98px) {
   [data-site="frame"] [data-part="stage"] { overflow-x: auto; }
   [data-site="frame"][data-play] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); }
+  [data-site="frame"][data-play] [data-part="stage"] { --stage-h: 240px; }
   [data-site="frame"] [data-part="knobs"] { border-inline-start: 0; border-block-start: var(--warp-border-hairline) solid var(--rule); }
+  [data-site="frame"][data-play] > [data-part="code"] [data-part="live-note"] { display: none; }
   [data-part="mount"] { padding: var(--warp-space-group); }
   [data-site="tk-section"] [data-part="keys"] > div { grid-template-columns: 120px minmax(0, 1fr); }
   [data-site="frame"] [data-part="tools"] { display: none; }
 }
+[data-site="dial"] { display: contents; }

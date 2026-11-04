@@ -172,6 +172,46 @@ describe('CommandPalette', () => {
     await flush()
     expect(input.closest('dialog')!.hasAttribute('open')).toBe(false)
   })
+  test('a nested level names itself before the query, and the name goes when you leave it', async () => {
+    const r = render(() => <C.PaletteRegions />)
+    r.container.querySelector('button')!.click()
+    await flush()
+    const input = document.querySelector<HTMLInputElement>('[role="combobox"]')!
+    const crumb = () => input.parentElement!.querySelector<HTMLElement>('[data-part="crumb"]')
+    expect(crumb()).toBeNull()
+    type(input, 'Move')
+    await flush()
+    key(input, 'Enter')
+    await flush()
+    expect(crumb()!.textContent).toBe('Region›')
+    expect(input.placeholder).toBe('Search Region…')
+    expect(document.querySelector(`label[for="${input.id}"]`)!.textContent).toContain('Region')
+    crumb()!.click() // the chip goes back up
+    await flush()
+    expect(crumb()).toBeNull()
+    type(input, 'Tag')
+    await flush()
+    key(input, 'Enter')
+    await flush()
+    expect(crumb()!.textContent).toBe('Tag release›') // no title: the row's label
+  })
+  test('"us" finds the us regions, not eu-west\'s scattered letters', async () => {
+    const r = render(() => <C.PaletteRegions />)
+    r.container.querySelector('button')!.click()
+    await flush()
+    const input = document.querySelector<HTMLInputElement>('[role="combobox"]')!
+    const labels = () => [...document.querySelectorAll('[role="option"]')].filter(o => !(o as HTMLElement).hidden).map(o => o.textContent)
+    type(input, 'Move')
+    await flush()
+    key(input, 'Enter')
+    await flush()
+    type(input, 'us')
+    await flush()
+    expect(labels()).toEqual(['us-east', 'us-west'])
+    type(input, 'west')
+    await flush()
+    expect(labels()).toEqual(['eu-west', 'us-west'])
+  })
   test('Esc clears a typed query first and keeps the palette open; the next Esc closes it, and the dialog\'s own cancel steps back the same way', async () => {
     const input = await opened()
     const dlg = input.closest('dialog')!

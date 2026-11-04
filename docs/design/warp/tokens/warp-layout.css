@@ -95,8 +95,8 @@
    @layer warp.signature. Layout only says where it goes and how it looks:
      nav items  always (sidebar, rail, bottom bar), base border invisible
      command    always; a floating-border field on tablet+, a ring on phone
-     surfaces   [data-scope="surface"][data-sweep]: gated by
-                --warp-sweep-surfaces (vivid, or data-flair="sweep")
+     surfaces   [data-scope="surface"][data-sweep]: never by default; data-flair="sweep"
+                shows data-sweep="surface", any other data-sweep opts in (warp.css §4)
    ======================================================================== */
 :where([data-scope="shell"] [data-part="nav-item"][data-sweep]) {
   --warp-color-sweep-base: transparent; --warp-sweep-radius: var(--warp-radius-round);
@@ -1441,7 +1441,7 @@
 :where([data-scope="pull-refresh"][data-state="refreshing"] > [data-part="indicator"] > span) { --_p: 1; animation: warp-spin 0.8s linear infinite; }
 :where([data-scope="pull-refresh"] > [data-part="content"]) { transform: translateY(calc(var(--_pull, 0) * 1px)); transition: transform var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="pull-refresh"][data-pulling] > [data-part="content"]) { transition: none; }
-@keyframes warp-spin { to { transform: translateY(0) rotate(360deg); } }
+@keyframes warp-spin { to { rotate: 1turn; } }
 
 /* Pager — previous / next at the end of a docs page */
 :where([data-scope="pager"]) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--warp-space-related); margin-block-start: var(--warp-space-section); }

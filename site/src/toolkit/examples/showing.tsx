@@ -44,6 +44,18 @@ export const CardBare = () => (
   </Card>
 )
 
+/** The hover line is opt-in: hover each card, and only the one with `sweep` draws it. */
+export const CardSweep = () => (
+  <Grid min="xs" gap="related">
+    <Card href="/components/button" eyebrow="sweep" title="With the line" sweep>
+      <Text subtle>Hover me: a line runs around the edge.</Text>
+    </Card>
+    <Card href="/components/button" eyebrow="Default" title="Without it">
+      <Text subtle>Hover me: only its shadow deepens.</Text>
+    </Card>
+  </Grid>
+)
+
 export const CardStats = () => (
   <Grid min="xs" gap="related">
     <Card eyebrow="Requests" title="86.1M"><Text role="caption" tone="positive">Up 8.6% on September</Text></Card>

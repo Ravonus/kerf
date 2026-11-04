@@ -297,7 +297,7 @@ export function CommandPaletteNested() {
   const open = state(false)
   const region = state('eu-west')
   const commands: Command[] = [
-    { id: 'region', label: 'Move storefront to…', group: 'Projects', icon: 'globe', children: () => REGIONS.map(({ region: r }) => ({ id: r, label: r, group: 'Regions', icon: 'pin', run: () => (region.value = r) })) },
+    { id: 'region', label: 'Move storefront to…', title: 'Region', group: 'Projects', icon: 'globe', children: () => REGIONS.map(({ region: r }) => ({ id: r, label: r, group: 'Regions', icon: 'pin', run: () => (region.value = r) })) },
     { id: 'deploy', label: 'Deploy storefront', group: 'Projects', icon: 'rocket', shortcut: '⌘D' },
   ]
   return (

@@ -39,6 +39,14 @@
   font: 400 max(16px, calc(var(--warp-text-body-size) + 2px))/1 var(--warp-text-body-font);
 }
 :where([data-scope="palette"] [data-part="input"])::placeholder { color: var(--warp-color-text-subtle); }
+/* a nested level names itself before the query: "Region ›", so you know which list you are filtering */
+:where([data-scope="palette"] [data-part="crumb"]) {
+  all: unset; flex: none; display: inline-flex; align-items: center; gap: 4px; max-inline-size: 40%; block-size: 26px; padding-inline: 8px;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
+  font: 500 var(--warp-text-caption-size)/1 var(--warp-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis; cursor: pointer;
+}
+:where([data-scope="palette"] [data-part="crumb"]:hover) { background: color-mix(in oklab, var(--warp-color-accent-soft), var(--warp-color-accent-solid) 12%); }
+:where([data-scope="palette"] [data-part="crumb"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
 :where([data-scope="palette"] [data-part="list"]) { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; padding: var(--warp-space-tight) var(--warp-space-related) var(--warp-space-related); --_inset: var(--warp-space-related); }
 :where([data-scope="palette"] [data-part="item"]) { min-block-size: max(40px, var(--warp-target-min)); }
 :where([data-scope="palette"] [data-part="item"] [data-part="hint"]) { flex: 1 1 0; min-inline-size: 0; overflow: clip; white-space: nowrap; text-overflow: ellipsis; text-align: end; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }

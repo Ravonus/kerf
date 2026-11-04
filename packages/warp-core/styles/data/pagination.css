@@ -15,6 +15,13 @@
 :where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
 /* the spacer gives back its own column gap, so an empty spacer never pushes Go to onto the next line */
 :where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; margin-inline-end: -14px; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="pagination"] ol > li:not(:first-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep"]),
+:where([data-scope="pagination"] ol > li:not(:first-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="pagination"] ol > li:not(:last-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep"]),
+:where([data-scope="pagination"] ol > li:not(:last-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
 :where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; flex: none; white-space: nowrap; }
 /* the sm jump input: on touch the transparent block band makes the 44px hit area, and negative margins give it back */
 :where([data-scope="pagination"] [data-part="jump"]) {

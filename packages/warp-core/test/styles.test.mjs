@@ -81,3 +81,20 @@ test('the sweep has one switch: no stylesheet reads a phase, and every part draw
   expect(css).toMatch(/@property --_sr/)
   expect(css).toMatch(/\{ --_a: 1; \}/)
 })
+
+// One name, one motion: keyframes are global, so a second definition anywhere in the spec silently replaces the first
+// for every user (the table's slide from the side once took over every phone sheet's slide up).
+test('a keyframes name defined in more than one place is defined the same everywhere', () => {
+  const seen = new Map()
+  for (const name of readdirSync(new URL('../../../docs/design/warp/tokens/', import.meta.url)).filter(f => f.endsWith('.css'))) {
+    const css = spec(name)
+    for (const m of css.matchAll(/@keyframes ([\w-]+)\s*\{/g)) {
+      let depth = 1, i = m.index + m[0].length
+      while (depth && i < css.length) { depth += css[i] === '{' ? 1 : css[i] === '}' ? -1 : 0; i++ }
+      const body = css.slice(m.index + m[0].length, i - 1).replace(/\s+/g, ' ').trim()
+      const first = seen.get(m[1])
+      if (first) expect(body, `@keyframes ${m[1]} in ${name} differs from ${first.name}`).toBe(first.body)
+      else seen.set(m[1], { name, body })
+    }
+  }
+})

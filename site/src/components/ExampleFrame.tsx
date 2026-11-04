@@ -11,10 +11,10 @@ const FOLD = 3
  * The page's one object: stage, then code docked under it. The stage's own controls and the fold are plain attributes,
  * handled by StageBar's one listener, so a page of twenty frames runs no code per frame.
  */
-export function ExampleFrame(props: { file: string; example: ShownExample; hero?: boolean }) {
+export function ExampleFrame(props: { file: string; example: ShownExample; hero?: boolean; flow?: string }) {
   const ex = props.example
   return (
-    <div data-site="frame" data-flow="card" data-hero={props.hero ? '' : undefined}>
+    <div data-site="frame" data-flow={props.flow ?? 'card'} data-hero={props.hero ? '' : undefined}>
       <div data-part="tools">
         <span data-part="views" role="group" aria-label="View">
           <Button emphasis="ghost" tone="neutral" size="sm" data-act="stage-view" data-view="preview" aria-pressed="true">Preview</Button>

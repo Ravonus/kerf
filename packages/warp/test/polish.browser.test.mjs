@@ -277,11 +277,58 @@ test('a phone day shows its all-day event by name, and a short event\'s name bef
   expect(m.title.w).toBeGreaterThanOrEqual(m.title.need - 1) // "Standup" whole; the times give way first
 })
 
-test('month chips end a long name in an ellipsis, not a hard cut', async () => {
-  const chips = await page.$$eval('#month [data-part="day-cell"] [data-part="chip"]', cs => cs.map(c => ({ text: c.textContent, over: c.scrollWidth > c.clientWidth + 1, ellipsis: getComputedStyle(c).textOverflow, display: getComputedStyle(c).display })))
+const monthChips = sel => page.$$eval(`${sel} [data-part="day-cell"] [data-part="chip"]`, cs => cs.map(c => ({ day: c.closest('[data-part="day-cell"]').dataset.date, text: c.textContent, over: c.scrollWidth > c.clientWidth + 1, ellipsis: getComputedStyle(c).textOverflow, display: getComputedStyle(c).display, wrap: c.hasAttribute('data-wrap'), clamp: getComputedStyle(c).webkitLineClamp, h: Math.round(c.getBoundingClientRect().height) })))
+
+test('a month with full days keeps every name to one line, ending a long one in an ellipsis, on every day alike', async () => {
+  const chips = await monthChips('#month')
+  expect(chips.filter(c => c.wrap).map(c => `${c.day} ${c.text}`)).toEqual([]) // "Quarter close" and "Retro" sit alone, and stay one line like the rest
+  expect(new Set(chips.map(c => c.h))).toEqual(new Set([18]))
   const long = chips.filter(c => c.over)
   expect(long.map(c => c.text)).toContain('Release 2026.11 to every region')
   for (const c of long) { expect(c.ellipsis, c.text).toBe('ellipsis'); expect(c.display).toBe('block') }
+})
+
+test('a month whose every day has room lets long names take a second line on every day, weekend or not', async () => {
+  const chips = await monthChips('#month-roomy')
+  expect(chips.length).toBeGreaterThan(0)
+  for (const c of chips) { expect(c.wrap, c.text).toBe(true); expect(c.clamp, c.text).toBe('2'); expect(c.h, c.text).toBeLessThanOrEqual(34.5) }
+  const release = chips.filter(c => c.text === 'Release 2026.11 to every region') // Saturday, Sunday and Monday
+  expect(release.length).toBe(3)
+  expect(new Set(release.map(c => c.h)).size).toBe(1)
+  expect(release[0].h).toBeGreaterThan(18)
+  expect(chips.find(c => c.text === 'Retro').h).toBe(18) // a short name stays one line
+})
+
+test('a month day fills its room before it says "+N more", and shows everything when it can', async () => {
+  const days = await page.$$eval('#month [data-part="day-cell"]', cells => cells.map(c => {
+    const box = c.getBoundingClientRect(), more = c.querySelector('[data-part="more"]'), chips = c.querySelectorAll('[data-part="chip"]').length
+    const n = +(/(\d+) events/.exec(c.querySelector('.sr').textContent)?.[1] ?? 0)
+    const last = [...c.children].filter(k => !k.classList.contains('sr')).at(-1).getBoundingClientRect()
+    return { date: c.dataset.date, n, chips, more: more ? +/\d+/.exec(more.textContent)[0] : 0, left: box.bottom - parseFloat(getComputedStyle(c).paddingBlockEnd) - last.bottom }
+  }))
+  for (const d of days) {
+    expect(d.chips + d.more, d.date).toBe(d.n)
+    if (d.more) expect(d.left, `${d.date}: room for another chip behind +${d.more} more`).toBeLessThan(20)
+  }
+  expect(days.filter(d => d.more).length).toBeGreaterThan(0)
+})
+
+test('the now line never peeks out beside the events over it: no tick at the edge, no dash past the last lane', async () => {
+  const m = await page.evaluate(sel => {
+    const root = document.querySelector(sel)
+    return [...root.querySelectorAll('[data-part="col"]')].flatMap(col => [...col.querySelectorAll(':scope > [data-part="now"]')].map(now => {
+      const r = now.getBoundingClientRect(), dot = getComputedStyle(now, '::before').content
+      const hit = [...col.querySelectorAll('[data-part="event"]')].filter(e => { const b = e.getBoundingClientRect(); return b.top <= r.top && b.bottom >= r.top && b.left < r.right - 1 && b.right > r.left + 1 }).map(e => e.dataset.id)
+      return { day: col.dataset.date, w: r.width, hit, dot, edge: Math.abs(r.left - col.getBoundingClientRect().left) < 1 }
+    }))
+  }, calendarIn('week-free'))
+  for (const n of m) {
+    expect(n.hit, n.day).toEqual([])
+    expect(n.w, n.day).toBeGreaterThan(12)
+    if (!n.edge) expect(n.dot, n.day).toBe('none')
+  }
+  // 10:40 on Wednesday the 4th is inside "Incident review: mobile-bff", the whole column at that minute
+  expect(m.filter(n => n.day === '2026-11-04')).toEqual([])
 })
 
 test('the month shows all its weeks in the height it has, with "+N more" for days that hold more', async () => {

@@ -5,6 +5,8 @@
   display: block; position: relative; isolation: isolate; padding: 4px; border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised);
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); --warp-color-sweep-base: var(--warp-color-border); container-type: inline-size;
 }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="stat-row"][data-variant="inline"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 :where([data-scope="stat-row"][data-variant="inline"] > dl) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 0; margin: 0; }
 :where([data-scope="stat-row"][data-variant="inline"] > dl > div) { padding: 14px 18px; display: grid; gap: 4px; align-content: start; }
 :where([data-scope="stat-row"][data-variant="inline"] > dl > div + div) { border-inline-start: 1px solid var(--warp-color-border); }

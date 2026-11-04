@@ -290,7 +290,15 @@ export function DataGridBulk() {
   return <DataGrid caption="Projects" captionHidden rows={rows} columns={GRID} exportName={false} bulk={keys => <Button size="sm" emphasis="outline" tone="neutral" icon="pause" onClick={() => pause(keys)}>Pause</Button>} />
 }
 
-export const DataGridDetails = () => <DataGrid caption="Projects" captionHidden rows={PROJECTS} columns={GRID} expand={details} exportName={false} />
+/** Deploys moves under the row, with the other numbers: the grid keeps room for its details button. */
+const DETAIL_GRID = GRID.filter(c => c.id !== 'deploys')
+const gridDetails = (p: Project) => (
+  <Row gap="section">
+    <Stack gap="hair"><Text role="label" subtle>Deploys</Text><Text>{p.deploys}</Text></Stack>
+    {details(p)}
+  </Row>
+)
+export const DataGridDetails = () => <DataGrid caption="Projects" captionHidden rows={PROJECTS} columns={DETAIL_GRID} expand={gridDetails} exportName={false} />
 
 export const DataGridPaged = () => <DataGrid caption="Projects" captionHidden rows={PROJECTS} columns={GRID} page={FOUR} exportName={false} />
 

@@ -6,7 +6,8 @@
      data-theme       light | dark            (none = follow prefers-color-scheme)
      data-expression  quiet | balanced | vivid (none = balanced)
      data-density     compact | cozy | comfortable (none = cozy)
-     data-flair       sweep | none            sweep on buttons + surfaces too / inputs only
+     data-flair       sweep | none            sweep on buttons + surfaces too / inputs only (a surface that opts in with
+                                              data-sweep sweeps at every stop, flair or not)
      data-fields      floating | classic      the one field switch: on :root (app), a form, any ancestor;
                                               nearest wins; data-variant on a field overrides. Pure CSS.
      data-motion      reduce | full           (none = follow prefers-reduced-motion)
@@ -75,6 +76,7 @@
 @property --_flow-sx  { syntax: "<number>"; inherits: false; initial-value: 1; }
 @property --_flow-sy  { syntax: "<number>"; inherits: false; initial-value: 1; }
 @property --_flow-rot { syntax: "<angle>";  inherits: false; initial-value: 0deg; }
+@property --_flow-scan { syntax: "<number>"; inherits: false; initial-value: 0; }   /* 1 while a code block waits below the fold for its scan */
 @property --warp-text-display-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-title-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-heading-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
@@ -101,7 +103,19 @@
 @property --_a { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --_sl { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
 @property --_sr { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
-@property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 520ms; }
+/* the sweep's clocks (warp.signature §1): linear counters, in sweeps, that the edges are worked out from */
+@property --_kc { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_kh { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_ks { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_kx { syntax: "<number>"; inherits: false; initial-value: 3; }
+@property --_kw { syntax: "<number>"; inherits: false; initial-value: 1.5; }
+@property --_hp { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_tp { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_tq { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_c0 { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_hd { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_td { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 620ms; }
 @layer warp.tokens {
 
 /* ---------------------------------------------------------------------------
@@ -169,13 +183,13 @@
   --warp-ref-stagger: 32ms;
   --warp-ref-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --warp-ref-ease-pop: cubic-bezier(0.16, 1, 0.3, 1);
-  /* signature: the original sweep, quickened to 520ms; buttons sweep, surfaces don't */
+  /* signature: the original sweep, 620ms; buttons sweep, surfaces don't */
   /* the two clocks (redesign §2-3): how this stop feels in the hand */
   --warp-ref-spring: linear(0, 0.085, 0.261, 0.454, 0.625, 0.761, 0.86, 0.927, 0.969, 0.993, 1.005, 1.01, 1.011, 1);   /* ζ 0.82: settles once, 1.1% over */
   --warp-ref-spring-ms: 380ms; --warp-ref-press: 0.97; --warp-ref-touch-out: 160ms;
   --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 300ms; --warp-ref-offset: 0px;
-  --warp-ref-sweep: 520ms;     --warp-ref-sweep-k: 1;
-  --warp-ref-frame: 640ms;     /* frame button: the original's 760ms --btn-sweep-duration, a tad quicker */
+  --warp-ref-sweep: 620ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 620ms;     /* frame button: on the sweep's clock, so every stroke draws at one speed */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
   --warp-ref-sweep-base: var(--warp-color-text);
   /* fields rest neutral at every stop; the accent tint arrives with the sweep (hover, focus) */
@@ -235,8 +249,8 @@
   --warp-ref-spring: cubic-bezier(0.2, 0, 0, 1);
   --warp-ref-spring-ms: 240ms; --warp-ref-press: 0.985; --warp-ref-touch-out: 120ms;
   --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 180ms; --warp-ref-offset: 0px;
-  --warp-ref-sweep: 400ms;     --warp-ref-sweep-k: 1;
-  --warp-ref-frame: 490ms;     /* frame, quieter: 640 at the same 400/520 ratio */
+  --warp-ref-sweep: 480ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 480ms;     /* frame, quieter: on the sweep's clock */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
   --warp-ref-sweep-base: var(--warp-color-text);
   --warp-ref-field-fill: var(--warp-color-surface-raised);
@@ -297,8 +311,8 @@
   --warp-ref-spring: linear(0, 0.154, 0.44, 0.701, 0.883, 0.985, 1.029, 1.038, 1.032, 1.021, 1.011, 1.004, 1, 0.999, 1);
   --warp-ref-spring-ms: 520ms; --warp-ref-press: 0.96; --warp-ref-touch-out: 200ms;
   --warp-ref-shuttle-head: 150ms; --warp-ref-shuttle-tail: 420ms; --warp-ref-offset: 3px;
-  --warp-ref-sweep: 580ms;     --warp-ref-sweep-k: 1;
-  --warp-ref-frame: 640ms;     /* frame: the original 760, a tad quicker, top of the vivid range */
+  --warp-ref-sweep: 700ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 700ms;     /* frame: on the sweep's clock, top of the vivid range */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;   /* the sweep answers a click target; a static surface keeps its hairline */
   --warp-ref-sweep-base: var(--warp-color-text);
   /* neutral at rest (00 §10); accent-soft arrives with the sweep */
@@ -714,7 +728,7 @@
   --warp-stagger-max: 6;                                         /* items; later ones share the last delay */
 
   /* -- signature: sweep + floating border label ------------------------- */
-  --warp-sweep-duration: calc(var(--warp-ref-sweep) * var(--warp-motion-scale)); /* 400 · 520 · 580; 0 = instant */
+  --warp-sweep-duration: calc(var(--warp-ref-sweep) * var(--warp-motion-scale)); /* 480 · 620 · 700; 0 = instant */
   --warp-sweep-ease: cubic-bezier(0.65, 0, 0.35, 1);
   --warp-sweep-ease-in: cubic-bezier(0.3, 0.55, 0.15, 1);        /* in leaves at once (redesign §2); out keeps the original curve */
   --warp-sweep-width: calc(1px + 0.5px * min(1, var(--warp-x) * 2));   /* stroke 1 · 1.5 · 1.5 */
@@ -728,7 +742,7 @@
   /* frame button (§1b): track = ink (#050505-strength) in light, ink at 62% in dark */
   --warp-frame-track: light-dark(var(--warp-color-text), color-mix(in oklab, var(--warp-color-text) 62%, transparent));
   --warp-frame-corner: 10px; --warp-frame-weight: 2px; --warp-frame-stroke: 2.6;
-  --warp-frame-duration: calc(var(--warp-ref-frame) * var(--warp-motion-scale)); /* 490 · 640 · 640; 0 = instant */
+  --warp-frame-duration: calc(var(--warp-ref-frame) * var(--warp-motion-scale)); /* 480 · 620 · 700, the sweep's; 0 = instant */
   --warp-color-sweep-critical: var(--warp-color-critical-solid);
   --warp-color-field: var(--warp-ref-field-fill);                  /* at rest */
   --warp-color-field-active: var(--warp-ref-field-fill-active);    /* hover / focus, with the sweep */
@@ -1113,7 +1127,7 @@
 /* ===========================================================================
    SIGNATURE · the sweep border + the floating border label.  Every stop.
    Source of truth: ../SIGNATURE.md.
-     --_a is 1 while a host is active; two registered edges do the rest, so a part has no states. It draws L→R, leaves L→R,
+     --_a is 1 while a host is active; each part's clocks do the rest (§1), so a part has no states. It draws L→R, leaves L→R,
      and never reverses. Duration 0 (reduced motion) makes every change instant, with the same end states.
    Hosts: [data-sweep]. Set --warp-sweep-radius to the host's corner radius
    (clip-path `round` must match it). --_on gates decorative hosts (0 = fade).
@@ -1135,33 +1149,51 @@
          :is([data-scope="field"] > [data-part="control"], [data-scope="field"][data-sweep], [data-scope="composer"], [data-part="input-row"], [data-sweep-focus="within"]):focus-within,
          dialog[data-scope="palette"][open] > [data-sweep], [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
 
-  /* -- 1 · two edges. Each has one job, so a part needs no states. Active: the right edge draws across on the "in" curve
-     while the left stands at 0. Inactive: the left edge follows it out on the out curve, and the right edge waits that long,
-     then resets out of sight. It never reverses, and leaving part way only means the left edge catches up sooner. */
+  /* -- 1 · two edges, worked out from clocks. Once the stroke starts it draws all the way round, even when the host lets
+     go part way, and only then leaves. It draws L→R, leaves L→R and never reverses. An edge can't be a transition of its
+     own (a transition retargets the moment the host lets go), so each part runs linear clocks, counted in sweeps, and
+     works the edges out from them. The head is how far the stroke has drawn, the tail how far it has left (0…1):
+       --_kc  sweeps since the host went active (to 3); holds two sweeps after it lets go, then resets
+       --_kh  the same, but holds one sweep: it says the last hover was long (> 0.55 sweep) and recent (--_kk)
+       --_ks  sweeps since the host went active (to 3); 0 the moment it lets go
+       --_kx  sweeps since the host let go (to 3); 0 the moment it goes active
+       --_kw  sweeps since the host let go (to 1.5); runs back down to 0 at 3 per sweep when it goes active
+     A fresh hover draws on --_ks. Let go after a short hover, the stroke keeps drawing on --_kc + --_kx (time since it
+     went active), then leaves. Let go after a long one, it leaves at once on --_kw. Back again mid-exit, --_kw runs down,
+     so the tail draws back round to the start and the stroke is whole again. --_kc and --_kh restart from what they held,
+     so --_c0 and --_h0 work that value back out. Every clock stops within three sweeps. The head is on the "in" curve, the
+     tail on the out curve. Duration 0 (reduced motion) makes every clock instant, with the same end states. */
   :where([data-part="sweep"]),
   :where([data-part="sweep-base"]),
   :where([data-part="sweep-fill"]),
   :where([data-part="sweep-corners"]),
+  :where([data-part="sweep-outline"]),
   :where([data-part="sweep-label"]),
   :where([data-part="sweep-content"]),
   :where([data-part="rail-hover"]) {
-    --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
-    --_edges: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
-              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
-              --_a 0s linear var(--_latch, 0s);
+    --_kc: calc(var(--_a, 0) * 3); --_kh: calc(var(--_a, 0) * 3); --_ks: calc(var(--_a, 0) * 3);
+    --_kx: calc((1 - var(--_a, 0)) * 3); --_kw: calc((1 - var(--_a, 0)) * 1.5);
+    --_c0: calc((var(--_kc) - var(--_ks)) / max(0.0001, 1 - var(--_ks) / 3));
+    --_kk: clamp(0, ((var(--_kh) - var(--_ks)) / max(0.0001, 1 - var(--_ks) / 3) - 0.55) * 1000 + 1, 1);
+    --_hp: calc(var(--_kk) * clamp(0, var(--_kc) + var(--_kw) + 3 * var(--_ks), 1)
+              + (1 - var(--_kk)) * clamp(0, var(--_ks) + (1 - var(--_a, 0)) * (var(--_kc) + var(--_kx)), 1));
+    /* the tail: after a long hover --_tq, where it stood when the host came back (--_kw + 3·--_ks is --_kw then), and the
+       gap closes in step with --_kw; otherwise --_tp */
+    --_tq: clamp(0, min(var(--_kw) + 3 * var(--_ks), var(--_c0) + var(--_kw) + 3 * var(--_ks) - 1), 1);
+    --_tp: clamp(0, (1 - var(--_a, 0)) * (var(--_kc) + var(--_kx) - 1), 1);
+    /* the curves as polynomials: --warp-sweep-ease-in (head) and --warp-sweep-ease (tail), to within ~2% */
+    --_hd: calc(1 - (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 + 2.95 * var(--_hp) - 0.7 * var(--_hp) * var(--_hp)));
+    --_td: calc(var(--_kk) * (min(4 * var(--_tq) * var(--_tq) * var(--_tq), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tq)) * (1 - var(--_tq)) * (1 - var(--_tq))))
+                 * var(--_kw) / max(0.0001, var(--_kw) + 3 * var(--_ks))
+              + (1 - var(--_kk)) * (min(4 * var(--_tp) * var(--_tp) * var(--_tp), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tp)) * (1 - var(--_tp)) * (1 - var(--_tp)))));
+    /* once the tail is all the way out, the head goes back to the start too: at rest both edges sit at the right, as ever */
+    --_sl: calc(var(--_td) * 100%); --_sr: calc((1 - var(--_hd) * (1 - clamp(0, (var(--_td) - 0.999) * 1000, 1))) * 100%);
+    --_edges: --_kc calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * 2 * var(--warp-sweep-duration)),
+              --_kh calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+              --_ks calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear,
+              --_kx calc((1 - var(--_a, 0)) * 3 * var(--warp-sweep-duration)) linear,
+              --_kw calc(((1 - var(--_a, 0)) * 1.5 + var(--_a, 0) * 0.5) * var(--warp-sweep-duration)) linear;
     transition: var(--_edges);
-  }
-  /* A tap's :active is over in a blink. Each part keeps its --_a for one sweep past it, so a tap draws in whole, then exits. */
-  @media (hover: none) {
-    :where([data-part="sweep"]),
-    :where([data-part="sweep-base"]),
-    :where([data-part="sweep-fill"]),
-    :where([data-part="sweep-corners"]),
-    :where([data-part="sweep-outline"]),
-    :where([data-part="sweep-label"]),
-    :where([data-part="sweep-content"]) {
-      --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--warp-sweep-duration));
-    }
   }
   /* two stacked 1px borders (or any content, e.g. an icon) */
   :where([data-part="sweep"]),
@@ -1171,14 +1203,38 @@
   }
   :where([data-part="sweep"]:empty) { border: var(--warp-sweep-width) solid currentColor; }
   :where([data-part="sweep-base"]:empty) { border: var(--warp-sweep-base-width) solid currentColor; }
+  /* the clip's corners, physical (top-left, top-right, bottom-right, bottom-left): a joined item squares its start
+     (--_js: 0) or end (--_je: 0) corners; a vertical group sets --_round to top, top, bottom, bottom */
+  :where([data-part="sweep"]),
+  :where([data-part="sweep-base"]) {
+    --_rs: calc(var(--warp-sweep-radius) * var(--_js, 1)); --_re: calc(var(--warp-sweep-radius) * var(--_je, 1));
+    --_round: var(--_rs) var(--_re) var(--_re) var(--_rs);
+  }
+  :where([data-part="sweep"]):where(:dir(rtl)),
+  :where([data-part="sweep-base"]):where(:dir(rtl)) { --_round: var(--_re) var(--_rs) var(--_rs) var(--_re); }
+  /* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+     hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+     Logical edges, so RTL flips; a vertical group does the same with top and bottom.
+     Any group opts in with [data-joined] (data-joined="vertical" for a column); warp's own groups are joined in their
+     own files (segmented, toggle group, attached button group, tabs, pagination). */
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+  :where([data-joined="vertical"] > [data-sweep]) > :where([data-part="sweep"]),
+  :where([data-joined="vertical"] > [data-sweep]) > :where([data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
   /* the base wipes away ahead of the stroke and is back the moment the host lets go */
   :where([data-part="sweep-base"]) {
     z-index: 1; color: var(--warp-color-sweep-base);
-    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
+    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--_round, var(--warp-sweep-radius)));
   }
   :where([data-part="sweep"]) {
     z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on);
-    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--_round, var(--warp-sweep-radius)));
   }
   /* error: pinned in by the switch, painted critical */
   :where([data-invalid] > [data-part="sweep"]),
@@ -1227,7 +1283,7 @@
      The outline is CSS, not SVG: an SVG dash with pathLength + non-scaling-stroke
      is measured in screen px in Chrome and leaves gaps past ~200px wide. Here two
      registered numbers, --warp-frame-head (head) and --warp-frame-tail (tail), run 0 → 1 on the
-     frame's own 640ms curve (the original 760ms --btn-sweep-duration, quickened; --warp-frame-duration); each of six
+     frame's curve, on the sweep's clock (the original ran 760ms; --warp-frame-duration); each of six
      2.6px segments sizes itself from them with container units, so the drawn length is exact at any size.
      Label: at rest in the tone (the original .btn-idle-accent); the copy wipes in L→R in the text colour.
      This is the only frame implementation: pages supply the button's fill, ink and shape, nothing else.
@@ -1235,7 +1291,7 @@
      <span data-part="sweep-corners"><i></i><i></i><i></i><i></i></span>
      <span data-part="sweep-outline"><i></i><i></i><i></i><i></i><i></i><i></i></span>
      <span data-part="sweep-label">…</span><span data-part="sweep-content" aria-hidden="true">…</span>  */
-  /* the frame host runs on the frame's duration, so every part (and sweep()) reads 760ms */
+  /* the frame host runs on the frame's duration, so every part (and sweep()) reads the frame's time */
   :where([data-sweep]:has(> [data-part="sweep-outline"])) { --warp-sweep-duration: var(--warp-frame-duration); }
   :where([data-part="frame-corners"]),
   :where([data-part="sweep-corners"]) {
@@ -1257,10 +1313,7 @@
   :where([data-part="sweep-outline"]) {
     position: absolute; inset: 0; z-index: 0; pointer-events: none;
     container-type: size;               /* its children measure it: 100cqw × 100cqh */
-    --warp-frame-tail: calc(1 - var(--_a, 0)); --warp-frame-head: var(--_a, 0); opacity: var(--_on);
-    transition: --warp-frame-tail calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
-                --warp-frame-head calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
-                --_a 0s linear var(--_latch, 0s);
+    --warp-frame-tail: var(--_td); --warp-frame-head: var(--_hd); opacity: var(--_on);
   }
   /* each segment: offset o along the route, length n; route length L = w + h
      (h/2 up the left, w across, h/2 down the right — same as M1 50 V1 H99 V50) */
@@ -1481,11 +1534,11 @@
 
   /* -- 4 · decorative hosts gated by the dial ---------------------------- */
   :where([data-scope="button"][data-sweep]) { --_on: var(--warp-sweep-buttons); }
+  /* surfaces (cards, panels, list rows, tiles, stat rows, clickable cards too) never sweep by default at any stop. The
+     kit marks them data-sweep="surface": the parts are there, and only data-flair="sweep" lights them. Any other
+     data-sweep on a surface is an explicit opt-in and sweeps at every stop (Card's `sweep` prop). Each surface family
+     restates the opt-in after its own gate, in its own layer. */
   :where([data-scope="surface"][data-sweep]) { --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); }
-  /* a surface you can press is a click target, so it sweeps at every stop */
-  :where(a[data-scope="surface"][data-sweep]),
-  :where(button[data-scope="surface"][data-sweep]),
-  :where([data-scope="stat"][data-interactive][data-sweep]) { --_on: 1; }
   /* panels with no click of their own: only a pin or a confirm lights them */
   :where([data-scope="comment-thread"]):where([data-sweep]):not([data-pin], [data-confirm]),
   :where([data-scope="artifact"]):where([data-sweep]):not([data-pin], [data-confirm]),
@@ -1650,6 +1703,13 @@
        out. Their hosts only, each one a direct child: a bare `[data-part="scrim"]` in :has() matched every ancestor up to
        html, so one Shell anywhere on a page (a hub thumbnail) silenced the whole page's flow. */
     :has(> :is([data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"]))) { --warp-flow-gate: none; }
+  /* a virtual window holds its rows out (they mount and recycle), but cells in a row that name a family opt back in, on
+     the window's own timeline, with no header over it. Only the window's hold lifts: reduced motion, print and
+     data-flow="off" still win */
+  :where([data-part="spacer"] > [data-part="row"]:not([data-probe]) [data-flow]:not([data-flow="off"])) { --warp-flow-gate: initial; --warp-flow-top: 0px; }
+  @media print { :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --warp-flow-gate: none; } }
+  @media (prefers-reduced-motion: reduce) { :root:not([data-motion]) :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --warp-flow-gate: none; } }
+  :where([data-motion="reduce"], [data-flow="off"]) :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --warp-flow-gate: none; }
   /* the budget: past the 120th sibling nothing is armed. Long lists go virtual, and those rows use @starting-style on mount */
   :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-scope="prose"] > *, [data-flow]):nth-child(n + 121) { --warp-flow-gate: none; }
 }
@@ -1685,7 +1745,7 @@
   :where([data-scope="stat"]),
   :where([data-flow="stat"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; }
   :where([data-scope="chart"]),
-  :where([data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-fade; --_flow-o: 50% 100%; }
+  :where([data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-chart; --_flow-o: 50% 100%; }
   :where([data-scope="gallery"] [data-part="item"]),
   :where(figure),
   :where([data-flow="image"]) { --_flow-in: warp-in-image; --_flow-out: warp-out-image; }
@@ -1706,6 +1766,14 @@
   :where([data-flow="form"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-none; }
   :where([data-scope="kanban"] [data-part="card"]),
   :where([data-flow="deal"]) { --_flow-in: warp-in-deal; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
+  /* hosts for a live example, one motion per kind of thing shown. A specimen (one component on its bench) grows in
+     about its centre, with no travel, and recedes the same way; a block (a page's section) unfolds down from its top edge and folds back up; a plot
+     (a chart in its frame) opens along its time axis from the left and closes back to it */
+  :where([data-flow="specimen"]) { --_flow-in: warp-in-specimen; --_flow-out: warp-out-specimen; }
+  :where([data-flow="block"]) { --_flow-in: warp-in-block; --_flow-out: warp-out-block; --_flow-o: 50% 0%; }
+  :where([data-flow="plot"]) { --_flow-in: warp-in-plot; --_flow-out: warp-out-plot; --_flow-o: 0% 50%; }
+  /* a glyph in a grid: pops in by column, shrinks away */
+  :where([data-flow="icon"]) { --_flow-in: warp-in-icon; --_flow-out: warp-out-icon; }
 
   :where([data-scope="kanban"] [data-part="card"]:nth-child(even)) { --_flow-s: -1; }
 
@@ -1720,7 +1788,7 @@
       --_flow-w: min(100%, max(var(--_flow-e), 45%));
       --_flow-t: var(--warp-flow-top, calc(var(--warp-control-md) + 12px));   /* warp's bar by default; a page with another header, or none, sets its own */
       --_flow-i: 0;
-      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-nest, var(--_flow-out)));
+      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-out));
       animation-timeline: view(), view();
       animation-duration: auto, auto;
       animation-timing-function: var(--warp-ref-flow-ease), linear;
@@ -1736,6 +1804,23 @@
       scale: if(style(--_flow-sx: 1) and style(--_flow-sy: 1): revert-layer; else: var(--_flow-sx) var(--_flow-sy));
       rotate: if(style(--_flow-rot: 0deg): revert-layer; else: var(--_flow-rot));
     }
+    /* the scan passes under the code, and it is played, never scrubbed. The scroll only says when a block has arrived: a
+       third animation on the block's own timeline holds --_flow-scan at 1 until its top edge is in, then lets it go
+       to 0, and the tint transitions there in time. Scrubbed, a block resting near the fold held the tint part way, a
+       slab across every line at one column for as long as the page sat there. Played, a block at rest is plain at any
+       position. The way back is instant, below the fold, so a block re-entering scans again. */
+    :where([data-scope="codeblock"]),
+    :where([data-flow="code"]) {
+      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-out)), var(--warp-flow-gate, warp-in-scan);
+      animation-timeline: view(), view(), --warp-flow-host;
+      animation-duration: auto, auto, auto;
+      animation-timing-function: var(--warp-ref-flow-ease), linear, linear;
+      animation-fill-mode: backwards, forwards, backwards;
+      animation-range:
+        entry calc(var(--_flow-i) * var(--warp-ref-flow-step)) cover calc(min(var(--_flow-r), 340px) + var(--_flow-i) * var(--warp-ref-flow-step)),
+        exit calc(100% - var(--_flow-t) - var(--_flow-w) * 0.4) exit calc(100% - var(--_flow-t) + var(--_flow-w) * 0.6),
+        entry 0 entry 2px;   /* played the moment it shows, so no strip of it rests tinted at the fold */
+    }
     /* a focused field never fades; a jump target arrives whole. Not through the gate: that inherits, and html is :focus-within */
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
       [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
@@ -1747,9 +1832,10 @@
       [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
       [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
       [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])):where(:target) { animation-name: none; }
-    /* opacity multiplies, so inside a flowed element only the outer one leaves: two at 0.6 would read as 0.36 */
-    :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
-      [data-scope="chart"], figure, [data-scope="codeblock"], [data-scope="prose"] > :is(p, ul, ol, dl, blockquote, pre, table), [data-flow]:not([data-flow="off"])) > * { --_flow-nest: warp-out-none; }
+    /* inside a flowed element each one leaves on its own, where it is: in a tall host, what sits at its top fades as it
+       passes the header, not when the host's far end does. (Only the outer one used to leave, so a frame's heading and
+       code stayed whole for as long as the frame was on screen.) Opacity multiplies, so the last of them, level with
+       its host's end, leaves a little faster than the rest. */
     /* stagger: siblings in one row arrive in order, by column. The grid tells us its column count, or 4 */
     @supports (width: calc(sibling-index() * 1px)) {
       :where([data-scope="surface"]),
@@ -1759,7 +1845,8 @@
       :where([data-scope="stat"]),
       :where([data-scope="gallery"] [data-part="item"]),
       :where([data-scope="form"] > *),
-      :where([data-scope="kanban"] [data-part="card"]) {
+      :where([data-scope="kanban"] [data-part="card"]),
+      :where([data-flow="icon"]) {
         --_flow-i: mod(calc(sibling-index() - 1), var(--warp-flow-cols, 4));
       }
     }
@@ -1772,14 +1859,12 @@
       display: block; animation: var(--warp-flow-gate, warp-in-value) auto var(--warp-ref-flow-ease) backwards;
       animation-timeline: --warp-flow-host; animation-range: entry 0 cover var(--warp-ref-flow-reach);
     }
-    /* the scan passes under the code, never over it: scrubbed by the scroll, a block that rests near the fold would hold
-       it part way, and as a cover that cut every line at the same column for as long as the page sat there */
     :where([data-scope="codeblock"])::after,
     :where([data-flow="code"])::after {
-      content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%; scale: 0 1;
+      content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%;
       background: color-mix(in oklab, var(--warp-color-accent-soft) 50%, var(--warp-color-surface-sunken));
-      animation: var(--warp-flow-gate, warp-in-scan) auto linear backwards;
-      animation-timeline: --warp-flow-host; animation-range: entry 0 cover calc(var(--warp-ref-flow-reach) * 1.3);
+      --_flow-scan: inherit; scale: var(--_flow-scan) 1;
+      transition: scale calc((1 - var(--_flow-scan)) * var(--warp-duration-slow) * 2) var(--warp-ease-out);
     }
   } }
 
@@ -1797,12 +1882,22 @@
   @keyframes warp-in-heading { from { opacity: 0; --_flow-dx: calc(var(--warp-ref-flow-x) * -1); } }
   @keyframes warp-in-deal    { from { opacity: 0; --_flow-dy: calc(var(--warp-ref-flow-y) * -0.6); --_flow-rot: calc(var(--warp-ref-flow-r) * var(--_flow-s, 1)); } }
   @keyframes warp-in-value   { from { opacity: 0; translate: 0 0.4em; } }
-  @keyframes warp-in-scan    { from { scale: 1 1; } }
+  @keyframes warp-in-scan    { from, to { --_flow-scan: 1; } }   /* a hold, not a move: backwards, so it holds before entry too */
   @keyframes warp-out-card   { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.5); } }
-  @keyframes warp-out-row    { to { opacity: var(--warp-ref-flow-floor); --_flow-dx: calc(var(--warp-ref-flow-x) * 0.5); } }
+  /* back the way it came: a row moving toward the end edge widened its table's scroll width as it left */
+  @keyframes warp-out-row    { to { opacity: var(--warp-ref-flow-floor); --_flow-dx: calc(var(--warp-ref-flow-x) * -0.5); } }
   @keyframes warp-out-fade   { to { opacity: var(--warp-ref-flow-floor); } }
   @keyframes warp-out-image  { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.4); } }
   @keyframes warp-out-none   { to { opacity: 1; } }
+  @keyframes warp-out-chart  { to { opacity: var(--warp-ref-flow-floor); --_flow-sy: var(--warp-ref-flow-s); } }   /* settles back to its baseline */
+  @keyframes warp-in-specimen  { from { opacity: 0; --_flow-sx: var(--warp-ref-flow-s); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-out-specimen { to { opacity: var(--warp-ref-flow-floor); --_flow-sx: var(--warp-ref-flow-s); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-block     { from { opacity: 0; --_flow-dy: calc(var(--warp-ref-flow-y) * 0.6); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-out-block    { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.3); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-plot      { from { opacity: 0; --_flow-sx: calc(1 - (1 - var(--warp-ref-flow-s)) * 1.5); } }
+  @keyframes warp-out-plot     { to { opacity: var(--warp-ref-flow-floor); --_flow-sx: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-icon      { from { opacity: 0; --_flow-sx: calc(1 - (1 - var(--warp-ref-flow-s)) * 5); --_flow-sy: calc(1 - (1 - var(--warp-ref-flow-s)) * 5); --_flow-rot: calc(var(--warp-ref-flow-r) * -4); } }
+  @keyframes warp-out-icon     { to { opacity: var(--warp-ref-flow-floor); --_flow-sx: calc(1 - (1 - var(--warp-ref-flow-s)) * 3); --_flow-sy: calc(1 - (1 - var(--warp-ref-flow-s)) * 3); } }
 
   :where([data-part="spacer"] ~ [data-part="row"]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out); @starting-style { opacity: 0; } }
 

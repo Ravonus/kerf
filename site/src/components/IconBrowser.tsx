@@ -66,7 +66,7 @@ export function IconBrowser() {
         {row => (
           <div data-part="line" style={`--cols:${cols.value}`}>
             {row().names.map(n => (
-              <Button key={n} emphasis="ghost" tone="neutral" data-part="cell" onClick={() => show(n)} aria-label={n}>
+              <Button key={n} emphasis="ghost" tone="neutral" data-part="cell" data-flow="icon" onClick={() => show(n)} aria-label={n}>
                 <span data-part="glyph"
                   // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
                   innerHTML={drawing(n, form.value)}></span>

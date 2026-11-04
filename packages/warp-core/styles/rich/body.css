@@ -18,7 +18,7 @@
   :where([data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-part="segments"]) { opacity: 0; }
   :where([data-scope="field"] > [data-part="message"] svg) { inline-size: 13px; block-size: 13px; vertical-align: -2px; margin-inline-end: 4px; }
   :where([data-scope="field"] > [data-part="message"][hidden]) { display: none; }
-  /* panels that sweep at vivid (--warp-sweep-surfaces) */
+  /* panels that sweep only with data-flair="sweep" (--warp-sweep-surfaces) */
   :where([data-scope="popover"][data-sweep]) { --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); }
   :where([data-scope="popover"][data-presentation="sheet"][data-sweep]) { --_on: 0; }
   /* the popover is a <dialog popover>, in the top layer: placed by warp-core's place(), or opened modal as the sheet */

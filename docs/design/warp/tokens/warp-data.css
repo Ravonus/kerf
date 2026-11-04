@@ -135,18 +135,23 @@
   font-weight: var(--warp-text-eyebrow-weight); letter-spacing: var(--warp-text-eyebrow-tracking);
   text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); line-height: 1.25;
 }
-/* data surfaces (panels, stat rows, KPI tiles, interactive or not): gated like surfaces (vivid / flair) */
+/* data surfaces (panels, stat rows, KPI tiles, interactive or not): gated like surfaces (data-flair="sweep" only) */
 :where([data-scope="panel"][data-sweep]),
 :where([data-scope="stat"][data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
-/* cards are surfaces too (SIGNATURE §3: cards, panels and stat rows sweep by default only
-   at vivid, or with data-flair="sweep"), even when they are links or draggable. Their
-   hover/focus feedback at quiet and balanced is the fill change and the focus ring. */
+/* cards are surfaces too (SIGNATURE §3: cards, panels and stat rows never sweep by default,
+   at any stop; data-flair="sweep" shows them), even when they are links or draggable. Their
+   hover/focus feedback is the fill change and the focus ring. */
 :where([data-scope="card"][data-sweep]),
 :where([data-scope="kanban"] [data-part="card"][data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="panel"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="stat"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="card"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="kanban"] [data-part="card"]):where([data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 :where([data-scope="kanban"] [data-part="card"][data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); }
 /* data surfaces rest on the decorative hairline, not the field's ink border */
 :where([data-scope="panel"], [data-scope="stat"], [data-scope="card"], [data-scope="kanban"] [data-part="card"]):where([data-sweep]) {
@@ -446,12 +451,12 @@
   display: grid; grid-template-rows: auto 1fr; background: var(--warp-color-surface-overlay);
   border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); box-shadow: var(--warp-elevation-3);
   border-radius: var(--warp-radius-surface) 0 0 var(--warp-radius-surface);
-  animation: warp-sheet-in var(--warp-duration-slow) var(--warp-ease-out);
+  animation: warp-table-sheet-in var(--warp-duration-slow) var(--warp-ease-out);
 }
 :where([data-scope="table"] [data-part="sheet"][hidden]) { display: none; }
 :where([data-scope="table"] [data-part="sheet"] > header) { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-block-end: 1px solid var(--warp-color-border); }
 :where([data-scope="table"] [data-part="sheet"] > div) { overflow: auto; padding: 16px; }
-@keyframes warp-sheet-in { from { transform: translateX(calc(24px * var(--warp-motion-scale))); opacity: 0; } }
+@keyframes warp-table-sheet-in { from { transform: translateX(calc(24px * var(--warp-motion-scale))); opacity: 0; } }
 
 /* ===========================================================================
    DELTA · price up/down, KPI change: shape + sign + colour (CVD-safe)
@@ -775,7 +780,7 @@
 :where([data-scope="desc"] dd) { font-variant-numeric: tabular-nums; min-inline-size: 0; overflow-wrap: anywhere; }
 :where([data-scope="desc"] > div:last-child > *) { border-block-end: 0; }
 
-/* card + card grid (interactive cards sweep) */
+/* card + card grid (a card sweeps only when it opts in) */
 :where([data-scope="card-grid"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); list-style: none; margin: 0; padding: 0; }
 :where([data-scope="card"]) {
   position: relative; display: grid; gap: 8px; align-content: start; padding: var(--warp-pad-surface);
@@ -987,6 +992,13 @@
 :where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
 /* the spacer gives back its own column gap, so an empty spacer never pushes Go to onto the next line */
 :where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; margin-inline-end: -14px; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="pagination"] ol > li:not(:first-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep"]),
+:where([data-scope="pagination"] ol > li:not(:first-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="pagination"] ol > li:not(:last-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep"]),
+:where([data-scope="pagination"] ol > li:not(:last-child) > [data-part="page"][data-sweep]) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
 :where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; flex: none; white-space: nowrap; }
 /* the sm jump input: on touch the transparent block band makes the 44px hit area, and negative margins give it back */
 :where([data-scope="pagination"] [data-part="jump"]) {
@@ -1233,6 +1245,8 @@
   display: block; position: relative; isolation: isolate; padding: 4px; border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised);
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); --warp-color-sweep-base: var(--warp-color-border); container-type: inline-size;
 }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="stat-row"][data-variant="inline"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 :where([data-scope="stat-row"][data-variant="inline"] > dl) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 0; margin: 0; }
 :where([data-scope="stat-row"][data-variant="inline"] > dl > div) { padding: 14px 18px; display: grid; gap: 4px; align-content: start; }
 :where([data-scope="stat-row"][data-variant="inline"] > dl > div + div) { border-inline-start: 1px solid var(--warp-color-border); }
@@ -1243,7 +1257,7 @@
 :where([data-expression="vivid"] [data-scope="stat-row"][data-accent] dd small) { color: var(--warp-color-text-subtle); }
 @container (max-width: 560px) { :where([data-scope="stat-row"][data-variant="inline"] > dl > div + div) { border-inline-start: 0; border-block-start: 1px solid var(--warp-color-border); } }
 
-/* interactive surfaces always answer hover with a fill step (the sweep adds to it at vivid).
+/* interactive surfaces always answer hover with a fill step (the sweep adds to it only when the surface opts in).
    Last in the layer so it beats each surface's own background. */
 :where([data-scope="card"], [data-scope="stat"][data-interactive], [data-scope="kanban"] [data-part="card"], [data-scope="flow"] [data-part="node"]):where(:hover) {
   background-color: color-mix(in oklab, var(--warp-color-text) calc(var(--warp-state-hover) * 100%), var(--warp-color-surface-raised));

@@ -150,7 +150,7 @@ Rail (desktop ≥ 1000): Tabs Plan · Trace · Changes   Plan = TaskList + Queue
 |---|---|---|---|---|
 | token arrival | 120 ms opacity per token | same | same | no fade, text still streams |
 | tool running | light travels bottom edge | same | same, slower | static 50% accent line |
-| tool done / approved | border sweep in → out, 400 ms | 520 ms | 580 ms | instant colour flash |
+| tool done / approved | border sweep in → out, 480 ms | 620 ms | 700 ms | instant colour flash |
 | reasoning fold | height 200 ms | 270 ms | 320 ms | instant |
 | new turn | fade + 4px | 8px + top-edge sweep | 12px + spring + full-border sweep | fade only |
 

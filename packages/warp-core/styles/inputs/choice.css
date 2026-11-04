@@ -175,6 +175,15 @@
    leave the old ink over the new fill for 420ms */
 :where([data-scope="segmented"] > [data-part="indicator"][data-instant] ~ label [data-part="item"]) { transition: none; }
 :where([data-scope="segmented"][data-size="sm"] [data-part="item"]) { block-size: calc(var(--warp-control-sm) - 8px); font-size: var(--warp-text-caption-size); }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom.
+   A group laid out over several rows ([data-wrap], e.g. as an even grid) is not one row: its items sit apart in their
+   cells, so each strokes its whole box. */
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-child(1 of label))) > :where([data-part="sweep"]),
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-child(1 of label))) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-last-child(1 of label))) > :where([data-part="sweep"]),
+:where([data-scope="segmented"]:not([data-wrap]) > label[data-sweep]:not(:nth-last-child(1 of label))) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
 
 /* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */
 :where([data-scope="chip"][data-sweep]) {

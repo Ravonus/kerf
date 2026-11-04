@@ -39,6 +39,21 @@ const part = (id, name) => `#${id} > [data-part="${name}"]`
 const running = (page, selector) => page.locator(selector).evaluate(n => n.getAnimations().length)
 const clip = (page, selector) => page.locator(selector).evaluate(n => getComputedStyle(n).clipPath)
 const finished = (page, selector) => page.locator(selector).evaluate(n => Promise.all(n.getAnimations().map(a => a.finished)))
+// a virtual clock on one part: pause its transitions and move them all on by ms, then read its edges. Real time can't
+// stall it, so a 50 ms hover is 50 ms, however busy the machine.
+const step = (page, selector, ms) => page.locator(selector).evaluate((n, by) => {
+  for (const a of n.getAnimations()) { a.pause(); a.currentTime = (a.currentTime ?? 0) + by }
+  const g = getComputedStyle(n)
+  return { sl: parseFloat(g.getPropertyValue('--_sl')), sr: parseFloat(g.getPropertyValue('--_sr')) }
+}, ms)
+// how much of the stroke shows, in %: what lies between the left edge and the right
+const cover = e => Math.max(0, 100 - e.sl - e.sr)
+const run = async (page, selector, ms, every = 8) => {
+  const out = []
+  for (let t = 0; t < ms; t += every) out.push(await step(page, selector, every))
+  return out
+}
+const SWEEP = 620 // balanced
 
 let browser
 beforeAll(async () => { browser = await chromium.launch() })
@@ -55,43 +70,43 @@ async function open(options) {
 test('every host kind goes active and lets go', async () => {
   const { page, close } = await open()
   const trace = []
-  const step = async (label, act) => { await act(); trace.push(`${label}: ${(await active(page)).join(' ')}`) }
+  const at = async (label, act) => { await act(); trace.push(`${label}: ${(await active(page)).join(' ')}`) }
 
-  await step('install', () => {})
-  await step('hover soft', () => page.hover('#soft'))
-  await step('move within soft', () => page.hover('#soft-in'))
-  await step('leave soft', () => away(page))
-  await step('hover frame', () => page.hover('#frame'))
-  await step('leave frame', () => away(page))
-  await step('expand menu', () => set(page, 'menu', 'aria-expanded', 'true'))
-  await step('collapse menu', () => set(page, 'menu', 'aria-expanded', 'false'))
-  await step('unpress', () => set(page, 'pressed', 'aria-pressed', 'false'))
-  await step('press again', () => set(page, 'pressed', 'aria-pressed', 'true'))
-  await step('hover checkbox label', () => page.hover('#cb-label'))
-  await step('hover switch label', () => page.hover('#sw-label'))
-  await step('leave labels', () => away(page))
-  await step('focus field', () => page.focus('#in'))
-  await step('blur field', () => page.evaluate(() => document.activeElement.blur()))
-  await step('field data-open', () => set(page, 'field', 'data-open', ''))
-  await step('field closed', () => set(page, 'field', 'data-open', null))
-  await step('hover inner of a surface', () => page.hover('#inner'))
-  await step('leave surface', () => away(page))
-  await step('popover data-state', () => set(page, 'pop', 'data-state', 'open'))
-  await step('popover closed', () => set(page, 'pop', 'data-state', null))
-  await step('accordion child expanded', () => set(page, 'acc', 'aria-expanded', 'true'))
-  await step('accordion collapsed', () => set(page, 'acc', 'aria-expanded', 'false'))
-  await step('pin', () => set(page, 'soft', 'data-pin', ''))
-  await step('unpin', () => set(page, 'soft', 'data-pin', null))
-  await step('confirm', () => set(page, 'soft', 'data-confirm', ''))
-  await step('confirm over', () => set(page, 'soft', 'data-confirm', null))
-  await step('invalid', () => set(page, 'soft', 'data-invalid', ''))
-  await step('valid', () => set(page, 'soft', 'data-invalid', null))
-  await step('host added later', () => page.evaluate(() => {
+  await at('install', () => {})
+  await at('hover soft', () => page.hover('#soft'))
+  await at('move within soft', () => page.hover('#soft-in'))
+  await at('leave soft', () => away(page))
+  await at('hover frame', () => page.hover('#frame'))
+  await at('leave frame', () => away(page))
+  await at('expand menu', () => set(page, 'menu', 'aria-expanded', 'true'))
+  await at('collapse menu', () => set(page, 'menu', 'aria-expanded', 'false'))
+  await at('unpress', () => set(page, 'pressed', 'aria-pressed', 'false'))
+  await at('press again', () => set(page, 'pressed', 'aria-pressed', 'true'))
+  await at('hover checkbox label', () => page.hover('#cb-label'))
+  await at('hover switch label', () => page.hover('#sw-label'))
+  await at('leave labels', () => away(page))
+  await at('focus field', () => page.focus('#in'))
+  await at('blur field', () => page.evaluate(() => document.activeElement.blur()))
+  await at('field data-open', () => set(page, 'field', 'data-open', ''))
+  await at('field closed', () => set(page, 'field', 'data-open', null))
+  await at('hover inner of a surface', () => page.hover('#inner'))
+  await at('leave surface', () => away(page))
+  await at('popover data-state', () => set(page, 'pop', 'data-state', 'open'))
+  await at('popover closed', () => set(page, 'pop', 'data-state', null))
+  await at('accordion child expanded', () => set(page, 'acc', 'aria-expanded', 'true'))
+  await at('accordion collapsed', () => set(page, 'acc', 'aria-expanded', 'false'))
+  await at('pin', () => set(page, 'soft', 'data-pin', ''))
+  await at('unpin', () => set(page, 'soft', 'data-pin', null))
+  await at('confirm', () => set(page, 'soft', 'data-confirm', ''))
+  await at('confirm over', () => set(page, 'soft', 'data-confirm', null))
+  await at('invalid', () => set(page, 'soft', 'data-invalid', ''))
+  await at('valid', () => set(page, 'soft', 'data-invalid', null))
+  await at('host added later', () => page.evaluate(() => {
     document.body.insertAdjacentHTML('beforeend', '<button id="late" data-sweep aria-pressed="true"><span data-part="sweep"></span>L</button>')
   }))
   ids.push('late')
-  await step('late host seen', () => {})
-  await step('late host removed', () => page.evaluate(() => document.getElementById('late').remove()))
+  await at('late host seen', () => {})
+  await at('late host removed', () => page.evaluate(() => document.getElementById('late').remove()))
   ids.pop()
   expect(trace).toMatchSnapshot()
   await close()
@@ -135,6 +150,70 @@ test('re-entering during the exit shows the stroke whole (SIGNATURE §1.4)', asy
   await close()
 })
 
+test('a 50 ms hover draws the stroke all the way round, then it leaves L→R (SIGNATURE §1.4)', async () => {
+  const { page, close } = await open()
+  const stroke = part('soft', 'sweep')
+  expect(cover(await step(page, stroke, 0))).toBe(0)
+  await page.hover('#soft')
+  await step(page, stroke, 50)
+  await away(page)
+  const trace = await run(page, stroke, 3 * SWEEP)
+  const top = trace.findIndex(e => cover(e) > 99.5)
+  expect(top).toBeGreaterThan(0)                                     // it got all the way round...
+  expect(Math.max(...trace.slice(0, top).map(e => e.sl))).toBeLessThan(0.5) // ...before the tail moved
+  for (let i = 1; i < trace.length; i++) {
+    if (cover(trace[i]) === 0) continue // gone: at rest both edges go back to the right
+    expect(trace[i].sr).toBeLessThanOrEqual(trace[i - 1].sr + 0.01)  // the head never goes back
+    expect(trace[i].sl).toBeGreaterThanOrEqual(trace[i - 1].sl - 0.01) // nor the tail: it leaves L→R
+  }
+  expect(trace.at(-1)).toEqual({ sl: 100, sr: 100 })
+  expect(cover(trace.at(-1))).toBe(0)
+  await close()
+})
+
+test('a long hover leaves at once; re-entering mid-exit draws the tail back with no jump', async () => {
+  const { page, close } = await open()
+  const stroke = part('soft', 'sweep')
+  await page.hover('#soft')
+  await run(page, stroke, 2 * SWEEP, 40)
+  expect(cover(await step(page, stroke, 0))).toBeGreaterThan(99.5)
+  await away(page)
+  const out = await run(page, stroke, SWEEP / 2)
+  expect(out[2].sl).toBeGreaterThan(0)                               // the exit starts at once
+  const mid = cover(out.at(-1))
+  expect(mid).toBeGreaterThan(5)
+  expect(mid).toBeLessThan(95)
+  await page.hover('#soft')
+  const back = [out.at(-1), ...await run(page, stroke, SWEEP)]
+  // a draw moves at most ~2.5% of the stroke per 8 ms; a jump would be the whole gap in one step
+  for (let i = 1; i < back.length; i++) expect(Math.abs(cover(back[i]) - cover(back[i - 1]))).toBeLessThan(6)
+  expect(cover(back.at(-1))).toBeGreaterThan(99.5)
+  await close()
+})
+
+test('the frame outline also draws all the way round after a brief hover', async () => {
+  const { page, close } = await open()
+  const outline = part('frame', 'sweep-outline')
+  const read = () => page.locator(outline).evaluate(n => {
+    const g = getComputedStyle(n)
+    return [+g.getPropertyValue('--warp-frame-head'), +g.getPropertyValue('--warp-frame-tail')]
+  })
+  await page.hover('#frame')
+  await step(page, outline, 50)
+  await away(page)
+  let peak = 0, tailBeforePeak = 0
+  for (let t = 0; t < 3 * 760; t += 16) {
+    await step(page, outline, 16)
+    const [head, tail] = await read()
+    if (peak < 0.995) tailBeforePeak = Math.max(tailBeforePeak, tail)
+    peak = Math.max(peak, head)
+  }
+  expect(peak).toBeGreaterThan(0.995)
+  expect(tailBeforePeak).toBeLessThan(0.005)
+  expect((await read())[1]).toBeGreaterThan(0.995)
+  await close()
+})
+
 test('the label gives way to its copy, and is back at once', async () => {
   const { page, close } = await open()
   const label = part('frame', 'sweep-label')
@@ -167,16 +246,17 @@ test('touch: hover never counts, and a tap draws one whole sweep, then exits', a
   const { page, close } = await open({ hasTouch: true, isMobile: true })
   expect(await page.evaluate(() => matchMedia('(hover: none)').matches)).toBe(true)
   const stroke = part('soft', 'sweep')
-  const on = () => page.locator(stroke).evaluate(n => getComputedStyle(n).getPropertyValue('--_a').trim())
+  const on = () => page.locator('#soft').evaluate(n => getComputedStyle(n).getPropertyValue('--_a').trim())
   const box = await page.locator('#soft').boundingBox()
   await page.mouse.move(box.x + 4, box.y + 4)
   expect(await on()).toBe('0')
+  expect(cover(await step(page, stroke, 0))).toBe(0)
   await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2)
-  await expect.poll(on).toBe('1')
-  await page.waitForTimeout(150) // long after :active has gone
-  expect(await page.locator('#soft').evaluate(n => n.matches(':active'))).toBe(false)
-  expect(await on()).toBe('1')
-  await expect.poll(on, { timeout: 3000 }).toBe('0')
+  await expect.poll(on).toBe('0') // :active is over in a blink...
+  await step(page, stroke, 0)
+  const trace = await run(page, stroke, 3 * SWEEP)
+  expect(Math.max(...trace.map(cover))).toBeGreaterThan(99.5) // ...and the stroke still went all the way round
+  expect(cover(trace.at(-1))).toBe(0)
   await close()
 })
 

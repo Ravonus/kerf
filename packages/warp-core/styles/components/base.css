@@ -13,6 +13,8 @@
 :where([data-scope="select"][data-part="content"]),
 :where([data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
 :where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--warp-sweep-surfaces); }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="surface"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 :where([data-part="content"][hidden]),
 :where([data-part="content"][popover]:not(:popover-open)) { display: none; }
 /* bracket corners: [data-part="frame-corners"] + [data-part="sweep-corners"] (warp.signature §1b) */

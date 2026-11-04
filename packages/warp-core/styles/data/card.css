@@ -1,12 +1,17 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
-/* cards are surfaces too (SIGNATURE §3: cards, panels and stat rows sweep by default only
-   at vivid, or with data-flair="sweep"), even when they are links or draggable. Their
-   hover/focus feedback at quiet and balanced is the fill change and the focus ring. */
+/* cards are surfaces too (SIGNATURE §3: cards, panels and stat rows never sweep by default,
+   at any stop; data-flair="sweep" shows them), even when they are links or draggable. Their
+   hover/focus feedback is the fill change and the focus ring. */
 :where([data-scope="card"][data-sweep]),
 :where([data-scope="kanban"] [data-part="card"][data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="panel"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="stat"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="card"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="kanban"] [data-part="card"]):where([data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 /* data surfaces rest on the decorative hairline, not the field's ink border */
 :where([data-scope="panel"], [data-scope="stat"], [data-scope="card"], [data-scope="kanban"] [data-part="card"]):where([data-sweep]) {
   --warp-color-sweep-base: var(--warp-color-border);
@@ -20,7 +25,7 @@
 :where([data-scope="card"] :is(h3)),
 :where([data-scope="card"] :is(h4)) { margin: 0; font-size: calc(var(--warp-text-body-size) + 1px); font-weight: 600; }
 :where([data-scope="card"] p) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
-/* interactive surfaces always answer hover with a fill step (the sweep adds to it at vivid).
+/* interactive surfaces always answer hover with a fill step (the sweep adds to it only when the surface opts in).
    Last in the layer so it beats each surface's own background. */
 :where([data-scope="card"], [data-scope="stat"][data-interactive], [data-scope="kanban"] [data-part="card"], [data-scope="flow"] [data-part="node"]):where(:hover) {
   background-color: color-mix(in oklab, var(--warp-color-text) calc(var(--warp-state-hover) * 100%), var(--warp-color-surface-raised));

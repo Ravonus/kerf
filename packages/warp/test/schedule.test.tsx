@@ -1,11 +1,12 @@
 // The schedule pack driven as a user would: views, keyboard move, the card, dialogs, rollback, and the fields paths (07 §2, §6.4).
+import { readFileSync } from 'node:fs'
 import { state } from '@weft-js/core'
 import { flush, render } from '@weft-js/core/test'
 import type { CalEvent } from '@weft-js/warp-core'
 import { Agenda } from '../src/schedule/Agenda'
 import { AvailabilityEditor } from '../src/schedule/AvailabilityEditor'
 import { BookingCalendar } from '../src/schedule/BookingCalendar'
-import { Calendar } from '../src/schedule/Calendar'
+import { Calendar, nowSpans } from '../src/schedule/Calendar'
 import { MeetingPlanner } from '../src/schedule/MeetingPlanner'
 import { MoveSheet } from '../src/schedule/MoveSheet'
 import { YearView } from '../src/schedule/YearView'
@@ -53,6 +54,33 @@ describe('Calendar', () => {
     expect(c.querySelectorAll('[data-part="col"]').length || c.querySelectorAll('[data-date][role="gridcell"]').length).toBe(7)
     expect(c.querySelectorAll('[data-part="now"]').length).toBe(1)
     expect(c.querySelectorAll('[data-part="event"][tabindex="0"]').length).toBe(1)
+  })
+
+  test('the now line runs only in the lanes free at that minute, lane edge to lane edge', () => {
+    const lanes = new Map([['a', { col: 0, cols: 3, span: 1 }], ['b', { col: 1, cols: 3, span: 1 }], ['c', { col: 2, cols: 3, span: 1 }]])
+    const segs = [{ id: 'a', s: 600, e: 660 }, { id: 'b', s: 620, e: 700 }, { id: 'c', s: 600, e: 630 }]
+    expect(nowSpans(null, segs, lanes)).toEqual([])
+    expect(nowSpans(500, segs, lanes)).toEqual([{ a: 0, b: 1, inset: '' }]) // nothing over it: the whole column, with its dot
+    expect(nowSpans(625, segs, lanes)).toEqual([])                         // every lane taken: only the gutter's label says the time
+    const third = nowSpans(645, [segs[0]!, segs[1]!], lanes)                  // the last lane is free: from its edge to the column's
+    expect(third).toEqual([{ a: 2, b: 3, inset: 'inset-inline:calc((100% - 6px) * 2 / 3 + 2px) 0px' }])
+    expect(nowSpans(625, [segs[1]!, segs[2]!], lanes)).toEqual([{ a: 0, b: 1, inset: 'inset-inline:0px calc(100% - (100% - 6px) * 1 / 3)' }])
+  })
+
+  test('out of working hours is its own part, one shade before the day and after it', () => {
+    const { container: c } = calendar({ defaultView: 'day', workingHours: [540, 1080] })
+    const off = [...c.querySelectorAll<HTMLElement>('[data-part="col"] > [data-part="off-hours"]')]
+    expect(off.map(o => [o.style.getPropertyValue('--_top'), o.style.getPropertyValue('--_h')])).toEqual([['0px', 'calc(var(--warp-cal-hour) * 9)'], ['calc(var(--warp-cal-hour) * 18)', 'calc(var(--warp-cal-hour) * 6)']])
+    // "band" is a common page part name: a site's own rule for it drew a picture over the evening
+    expect(c.querySelector('[data-part="band"]')).toBeNull()
+  })
+
+  test('week and day names are never ellipsized: they break between words and the grid makes room', () => {
+    const css = readFileSync(`${process.cwd()}/../warp-core/styles/app/calendar.css`, 'utf8')
+    const title = /:where\(\[data-scope="calendar"\] \[data-part="event"\] \[data-part="event-title"\]\) \{([^}]*)\}/.exec(css)![1]
+    expect(title).toContain('white-space: normal')
+    expect(title).not.toContain('ellipsis')
+    expect(css).not.toMatch(/\[data-part="band"\]/)
   })
 
   test('M lifts, arrows step by the snap and a day, Escape puts it back with nothing saved', async () => {

@@ -37,6 +37,8 @@
 :where([data-scope="select"][data-part="content"]),
 :where([data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
 :where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--warp-sweep-surfaces); }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="surface"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 :where([data-part="content"][hidden]),
 :where([data-part="content"][popover]:not(:popover-open)) { display: none; }
 /* bracket corners: [data-part="frame-corners"] + [data-part="sweep-corners"] (warp.signature §1b) */
@@ -267,7 +269,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
       var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%);
   transition:
-    transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out),
+    transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
     --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D));     /* snaps in; collapses unseen after the exit */
 }
@@ -277,7 +279,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"][data-state="open"])::before,
 :where([data-scope="button"][aria-expanded="true"])::before {
   transform: scaleX(1); transform-origin: left center;
-  transition-duration: var(--warp-duration-base), var(--_D), 1ms;
+  transition-duration: var(--warp-sweep-duration), var(--_D), 1ms;
 }
 /* a tap is shorter than the fill, so a finger gets it at once and watches it part */
 @media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
@@ -420,6 +422,19 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 }
 /* split button: the menu half is a square */
 :where([data-scope="button-group"][data-split] > [data-scope="button"]:last-child) { inline-size: var(--warp-control-md); padding: 0; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]),
+:where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]),
+:where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]) > :where([data-part="sweep"]),
+:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]) > :where([data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]),
+:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]),
+:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
 
 /* -- Toggle button / toggle group ----------------------------------------- */
 :where([data-scope="toggle"]) {
@@ -481,6 +496,19 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   transition: translate var(--warp-sweep-duration) var(--warp-sweep-ease), inline-size var(--warp-sweep-duration) var(--warp-sweep-ease);
 }
 :where([data-scope="toggle-group"] > [data-part="indicator"][data-instant]) { transition: none; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="toggle-group"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="toggle"][data-sweep]:not(:nth-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"]),
+:where([data-scope="toggle-group"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="toggle"][data-sweep]:not(:nth-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="toggle-group"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="toggle"][data-sweep]:not(:nth-last-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"]),
+:where([data-scope="toggle-group"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="toggle"][data-sweep]:not(:nth-last-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]) > :where([data-part="sweep"]),
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]) > :where([data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]:not(:nth-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"]),
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]:not(:nth-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]:not(:nth-last-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep"]),
+:where([data-scope="toggle-group"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="toggle"][data-sweep]:not(:nth-last-child(1 of [data-scope="toggle"]))) > :where([data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
 
 /* -- Chip (filter / toggle chip): sweeps on hover, holds while pressed -------------- */
 :where([data-scope="chip"]) {
@@ -497,7 +525,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="chip"][aria-pressed="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
 :where([data-scope="chip"][aria-pressed="true"] > svg[data-icon]) { display: block; }
 
-/* -- Surface (card / panel / stat): interactive ones always sweep; static ones at vivid */
+/* -- Surface (card / panel / stat): none sweeps by default, at any stop; Card's `sweep` prop (data-sweep) opts in */
 :where([data-scope="surface"]) {
   position: relative; display: grid; gap: var(--warp-space-related); padding: var(--warp-pad-surface);
   background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-surface-line);
@@ -1044,6 +1072,14 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   font: 400 max(16px, calc(var(--warp-text-body-size) + 2px))/1 var(--warp-text-body-font);
 }
 :where([data-scope="palette"] [data-part="input"])::placeholder { color: var(--warp-color-text-subtle); }
+/* a nested level names itself before the query: "Region ›", so you know which list you are filtering */
+:where([data-scope="palette"] [data-part="crumb"]) {
+  all: unset; flex: none; display: inline-flex; align-items: center; gap: 4px; max-inline-size: 40%; block-size: 26px; padding-inline: 8px;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
+  font: 500 var(--warp-text-caption-size)/1 var(--warp-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis; cursor: pointer;
+}
+:where([data-scope="palette"] [data-part="crumb"]:hover) { background: color-mix(in oklab, var(--warp-color-accent-soft), var(--warp-color-accent-solid) 12%); }
+:where([data-scope="palette"] [data-part="crumb"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
 :where([data-scope="palette"] [data-part="list"]) { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; padding: var(--warp-space-tight) var(--warp-space-related) var(--warp-space-related); --_inset: var(--warp-space-related); }
 :where([data-scope="palette"] [data-part="item"]) { min-block-size: max(40px, var(--warp-target-min)); }
 :where([data-scope="palette"] [data-part="item"] [data-part="hint"]) { flex: 1 1 0; min-inline-size: 0; overflow: clip; white-space: nowrap; text-overflow: ellipsis; text-align: end; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
@@ -1097,6 +1133,19 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="tabs"] > [data-part="content"]) { min-inline-size: 0; }
 :where([data-scope="tabs"] > [data-part="content"]:focus-visible) { outline-offset: 4px; border-radius: var(--warp-radius-control); }
 :where([data-scope="tabs"] > [data-part="content"][hidden]) { display: none; }
+/* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+   hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+   Logical edges, so RTL flips; a vertical group does the same with top and bottom. */
+:where([data-scope="tabs"] > [data-part="list"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-part="trigger"][data-sweep]:not(:nth-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"]),
+:where([data-scope="tabs"] > [data-part="list"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-part="trigger"][data-sweep]:not(:nth-child(1 of [data-part="trigger"]))) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+:where([data-scope="tabs"] > [data-part="list"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-part="trigger"][data-sweep]:not(:nth-last-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"]),
+:where([data-scope="tabs"] > [data-part="list"]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-part="trigger"][data-sweep]:not(:nth-last-child(1 of [data-part="trigger"]))) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]) > :where([data-part="sweep"]),
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]) > :where([data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]:not(:nth-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"]),
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]:not(:nth-child(1 of [data-part="trigger"]))) > :where([data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]:not(:nth-last-child(1 of [data-part="trigger"]))) > :where([data-part="sweep"]),
+:where([data-scope="tabs"] > [data-part="list"]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-part="trigger"][data-sweep]:not(:nth-last-child(1 of [data-part="trigger"]))) > :where([data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
 :where([data-scope="tabs"] > [data-part="content"]:not([hidden])) { animation: warp-settle var(--warp-spring-duration) var(--warp-ease-spring); }
 @keyframes warp-settle { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.5); } }
 /* pill */

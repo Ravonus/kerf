@@ -52,6 +52,8 @@
    overlap; Calendar writes --_tracks and --_week-w), so a narrow box scrolls the week sideways under its hours, which stay
    put, and the day heads and all-day row stay on top as the hours scroll */
 :where([data-scope="calendar"] [data-part="grid"][data-view="time"]) { grid-template-rows: minmax(0, 1fr); }
+/* Calendar keeps the hour in view itself as the grid refits; the browser's anchoring would chase a moving event instead */
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"]) { overflow-anchor: none; }
 :where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="top"])),
 :where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="cols"])) { min-inline-size: var(--_week-w, 0px); }
 :where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="top"]) { position: sticky; inset-block-start: 0; z-index: 9; background: var(--warp-color-surface); }
@@ -61,7 +63,8 @@
 :where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: stretch; justify-self: stretch; display: flex; align-items: center; justify-content: end; }
 :where([data-scope="calendar"] [data-part="head"]) { border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
 :where([data-scope="calendar"] [data-part="dayhead"]) {
-  display: flex; align-items: baseline; justify-content: center; gap: 6px; padding-block: 10px 8px;
+  /* a narrow day (a quiet weekend in a week that fits its box) puts its date under its name */
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 2px 6px; padding-block: 10px 8px;
   border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); min-inline-size: 0;
 }
 :where([data-scope="calendar"] [data-part="dayhead"] span) { font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
@@ -95,10 +98,12 @@
 }
 :where([data-scope="calendar"] [data-part="col"][data-weekend]) { background-color: color-mix(in oklab, var(--warp-color-surface-sunken) 60%, transparent); }
 :where([data-scope="calendar"] [data-part="col"][aria-current="date"]) { background-color: color-mix(in oklab, var(--warp-color-accent-soft) 35%, transparent); }
-/* availability / working hours: calm band behind events, never intercepts */
-:where([data-scope="calendar"] [data-part="band"]) {
+/* out of working hours: the same quiet shade before the day starts and after it ends, behind events, never intercepts.
+   Its own part name: a page's "band" (a site's woven strip) once drew over the evening as a loud green slab */
+:where([data-scope="calendar"] [data-part="off-hours"]) {
   position: absolute; inset-inline: 0; pointer-events: none; inset-block-start: var(--_top); block-size: var(--_h);
-  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--warp-color-text) 4%, transparent) 0 1px, transparent 1px 7px);
+  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--warp-color-text) 4%, transparent) 0 1px, transparent 1px 7px),
+    color-mix(in oklab, var(--warp-color-surface-sunken) 55%, transparent);
 }
 /* the event */
 :where([data-scope="calendar"] [data-part="event"]) {
@@ -107,8 +112,10 @@
   inset-block-start: var(--_top); block-size: max(var(--_h), 20px);
   inset-inline-start: calc((100% - 6px) * var(--_col, 0) / var(--_cols, 1) + 2px);
   inline-size: calc((100% - 6px) * var(--_span, 1) / var(--_cols, 1) - 2px);
-  display: flex; flex-direction: column; gap: 1px; overflow: clip;
-  padding: 4px 6px 4px calc(6px + var(--warp-cal-bar));
+  /* a column that wraps: the name comes first and keeps the first column; a line that has no room below it (the times,
+     the place) wraps into a second column, out of the box, rather than show half cut */
+  display: flex; flex-flow: column wrap; align-content: flex-start; gap: 1px 24px; overflow: clip;
+  padding: 4px 3px 4px calc(4px + var(--warp-cal-bar));
   border-radius: calc(var(--warp-radius-control) - 1px);
   background: color-mix(in oklab, var(--_c) var(--warp-cal-tint), var(--warp-color-surface-raised));
   box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), 0 0 0 1px var(--warp-color-surface);
@@ -116,12 +123,18 @@
   cursor: grab; user-select: none; touch-action: none; outline-offset: 1px;
   transition: box-shadow var(--warp-duration-fast) var(--warp-ease-out), opacity var(--warp-duration-fast);
 }
-:where([data-scope="calendar"] [data-part="event"][data-short]) { flex-direction: row; align-items: baseline; gap: 6px; padding-block: 2px; }
-:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; flex: 0 1 auto; }
-/* a flex item: without min 0 it never shrinks to its ellipsis */
-/* a short event on one line: the times give way before the name does */
-:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-time"]) { flex-shrink: 1000; }
+:where([data-scope="calendar"] [data-part="event"]) > :where(:not(.sr, [data-part="resize"], [data-part="sweep"], [data-part="sweep-base"])) { inline-size: 100%; }
+:where([data-scope="calendar"] [data-part="event"][data-short]) { flex-flow: row wrap; align-items: baseline; gap: 24px 6px; padding-block: 2px; }
+:where([data-scope="calendar"] [data-part="event"][data-short]) > :where(:not(.sr)) { inline-size: auto; }
+/* the whole name, broken only between words: Calendar widens a day for its longest word and lengthens the hours until
+   every name is whole, so a name never ends in an ellipsis */
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; white-space: normal; overflow-wrap: normal; min-inline-size: 0; flex: none; }
+/* a short event on one line: its whole name, and its times beside it when they fit whole (else they wrap out of sight) */
+:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-title"]) { white-space: nowrap; }
+:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-time"]) { flex: none; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; overflow: clip; text-overflow: ellipsis; min-inline-size: 0; }
+/* in a narrow event the times break after their dash rather than end in an ellipsis */
+:where([data-scope="calendar"] [data-part="event"]:not([data-short]) [data-part="event-time"]) { white-space: normal; text-overflow: clip; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-start"]) { display: none; font: 500 10.5px/1.2 var(--warp-font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: clip; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
 :where([data-scope="calendar"] [data-part="event"] svg[data-icon]) { inline-size: 12px; block-size: 12px; vertical-align: -1px; }
@@ -181,6 +194,8 @@
   content: ""; position: absolute; inset-inline-start: -5px; inset-block-start: calc(-4px - var(--warp-border-emphasis) / 2);
   inline-size: 8px; block-size: 8px; border-radius: 99px; background: var(--warp-color-sweep);
 }
+/* a run of the line between events (Calendar draws it only in the lanes free at that minute): no dot mid-column */
+:where([data-scope="calendar"] [data-part="now"][data-cut])::before { content: none; }
 :where([data-scope="calendar"] [data-part="now-label"]) {
   position: absolute; z-index: 4; inset-inline-end: 4px; inset-block-start: var(--_top); translate: 0 -50%;
   padding: 2px 4px; border-radius: var(--warp-radius-mark); background: var(--warp-color-sweep); color: var(--warp-color-accent-on-solid);
@@ -188,21 +203,35 @@
 }
 /* month view */
 /* the weeks share the height the calendar has, so the whole month is in view: a day shows the chips its row has room for
-   and "+N more" (Calendar measures it). Below 72px a week the month scrolls. */
+   and "+N more" (Calendar measures it, from the heights here: a 16px date, 18px chips, 34px for two lines, 2px apart).
+   Below 72px a week the month scrolls. */
 :where([data-scope="calendar"] [data-part="month"][role="grid"]) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(72px, 1fr); block-size: 100%; }
 :where([data-scope="calendar"] [data-part="day-cell"]) {
-  display: grid; align-content: start; gap: 2px; padding: 4px; min-inline-size: 0; min-block-size: 0; overflow: clip;
+  display: grid; align-content: start; gap: 2px; padding: 3px; min-inline-size: 0; min-block-size: 0; overflow: clip;
   border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
 }
 :where([data-scope="calendar"] [data-part="day-cell"][data-outside]) { background: var(--warp-color-surface-sunken); color: var(--warp-color-text-subtle); }
+:where([data-scope="calendar"] [data-part="day-cell"]) > :where([aria-hidden="true"]:not([data-part])) { padding-inline: 3px; font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
 :where([data-scope="calendar"] [data-part="chip"]) {
   /* a block, not a flex row: the title is its own text, so a long one ends in an ellipsis rather than a hard cut */
   --_c: var(--warp-color-data-1);
-  display: block; min-inline-size: 0; block-size: 20px; padding-inline: 6px; border-radius: var(--warp-radius-mark);
-  font-size: 11.5px; line-height: 20px; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent);
+  display: block; min-inline-size: 0; block-size: 18px; padding-inline: 4px; border-radius: var(--warp-radius-mark);
+  font-size: 11.5px; line-height: 18px; color: var(--warp-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent);
   white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
-:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; display: inline-block; vertical-align: 1px; margin-inline-end: 6px; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* the dot and padding are 4px apart so a 91px day (a desk's month) gives a name 66px */
+:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; display: inline-block; vertical-align: 1px; margin-inline-end: 4px; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* a month whose every day has room for all its events at two lines (Calendar decides, for all days alike) lets long
+   names take a second line, then an ellipsis: 34px at most, 18px if it's short */
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap]) {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  block-size: auto; max-block-size: 34px; padding-block: 1px; line-height: 16px; white-space: normal; overflow-wrap: anywhere;
+}
+/* its dot hangs in the padding, so a long first word starts beside it rather than leaving the dot alone on line one */
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap]) { position: relative; padding-inline-start: 14px; }
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap])::before { position: absolute; inset-inline-start: 4px; inset-block-start: 6px; margin: 0; }
+/* an all-day event in Week and Day keeps its whole name too: it breaks between words and the row grows */
+:where([data-scope="calendar"] [data-part="allday"] [data-part="chip"]) { block-size: auto; min-block-size: 20px; padding-block: 2px; line-height: 16px; white-space: normal; text-overflow: clip; }
 /* a phone's month day is too narrow for a title: its events become dots, and each keeps its name for assistive tech.
    Only the month's: an all-day event in Week and Day keeps its name */
 @container calendar (max-width: 479.98px) {
@@ -211,7 +240,7 @@
 :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"]) { display: flex; inline-size: 8px; block-size: 8px; padding: 0; background: none; font-size: 0; line-height: 0; }
 :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"])::before { margin: 0; inline-size: 8px; block-size: 8px; }
 }
-:where([data-scope="calendar"] [data-part="more"]) { font: 500 11px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 6px; background: none; border: 0; text-align: start; }
+:where([data-scope="calendar"] [data-part="more"]) { block-size: 18px; font: 500 11px/18px var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 4px; background: none; border: 0; text-align: start; }
 /* resource / timeline view: rows are people or rooms, time runs across */
 /* an hour never gets narrower than --warp-cal-hour-w: past that the hours scroll sideways under the names, which stay
    put, and the edges box (layout) shades the side with more */
@@ -242,7 +271,7 @@
   position: relative; inset: auto; block-size: auto; min-block-size: 40px; inline-size: auto; min-inline-size: 0; margin-inline-end: 2px;
   /* a booking reads its own width: its whole name, broken only between words (Calendar widens the hours when a word
      needs it), with its times under it when there's room; or only its start when it is too narrow for a word */
-  container: cal-event / inline-size; flex-direction: column; align-items: stretch; justify-content: center; gap: 1px;
+  container: cal-event / inline-size; flex-flow: column nowrap; align-items: stretch; justify-content: center; gap: 1px;
   padding-block: 4px; padding-inline: calc(4px + var(--warp-cal-bar)) 3px;
 }
 :where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) {

@@ -21,7 +21,7 @@ export const dates: DocGroup = {
           { id: 'CalendarWeek', title: 'Editable week', stage: 'fill', height: 760, note: 'Drag to move, drag an edge to resize, drag empty time to create. Your handlers keep the events.' },
           { id: 'CalendarMonth', title: 'Read-only month', stage: 'fill', height: 680, note: '`views` limits the tabs and `readOnly` turns off every edit.' },
           { id: 'CalendarRooms', title: 'Rooms timeline', stage: 'fill', height: 460, note: '`resources` adds the rows, and events point at one with `resource`. `timeline` sets the hours it spans.' },
-          { id: 'CalendarBusyDay', title: 'Overlapping meetings', stage: 'fill', height: 760, note: 'Events that overlap share the column in lanes, so none hides another. Switch to Week to see the same morning beside the rest.' },
+          { id: 'CalendarBusyDay', title: 'Overlapping meetings', stage: 'fill', height: 760, note: 'Events that overlap share the column in lanes, so none hides another. Switch to Week to see the same morning beside the rest. The now line runs only through the lanes free at its minute.' },
           { id: 'CalendarAgenda', title: 'Agenda of the week', stage: 'fill', height: 620, note: 'The same events as a list, day by day: what a phone or a quick look wants.' },
         ] },
       ],

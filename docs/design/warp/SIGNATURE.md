@@ -25,11 +25,15 @@ The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
    `inset(0)`. At the same moment the base border wipes away left to right, from `inset(0)` to `inset(0 0 0 100%)`.
 3. **Out:** the sweep border **keeps travelling left to right**. It clips away from the left, `inset(0)` →
    `inset(0 0 0 100%)`, while the base border snaps back underneath. It never reverses.
-4. **One switch, two edges (redesign.md §6).** `--_a` is 1 while a host is hovered, focused or held, and two registered
-   edges (`--_sl`, `--_sr`) draw from it: active, the right edge draws across; inactive, the left edge follows it out and the
-   right resets out of sight once that has finished. So a stroke can't reverse, and leaving part way only ends it sooner.
-   Re-entering during an exit shows the stroke whole at once, where the phase machine restarted it from the left: neither
-   runs backwards. Hover and focus are the browser's, so the sweep runs with no script and writes nothing to the DOM.
+4. **One switch, clocks, two edges (redesign.md §6).** `--_a` is 1 while a host is hovered, focused or held. Each part
+   runs a few registered linear clocks off it, counted in sweeps, and works the two edges (`--_sl`, `--_sr`) out from
+   them, so a part has no states and nothing is scripted. Once the stroke starts it **draws all the way round**, even if
+   the pointer leaves after 50 ms, and only then leaves left to right. A long hover leaves at once. Re-entering during
+   the exit draws the tail back round to the start, so the stroke is whole again with no jump. Known rough edges: coming
+   back during the exit of a hover shorter than about half a sweep restarts the draw from the left; leaving within a
+   third of a sweep of coming back moves the tail on in one step; and a brief second hover one to two sweeps after a
+   long one ends with a step. Every clock stops within three sweeps. Hover and focus are the browser's, so the sweep runs
+   with no script and writes nothing to the DOM.
 5. **Timing:** 620 ms, `cubic-bezier(0.65, 0, 0.35, 1)`. The clip-path corners use `round` to match the host's corner
    radius.
    Phase **in** runs on `--warp-sweep-ease-in`, front-loaded so the stroke leaves at once (redesign.md §2); phase **out**
@@ -40,6 +44,11 @@ The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
    - buttons (`btn-border-sweep`, plus a filled variant)
    - cards, panels, chips, pills, segmented controls, accordion, stat rows, skeleton
    - the generic `SweepBorderOverlay`, for any custom surface
+8. **Joined groups:** in a row of items with shared edges (segmented controls, toggle groups, attached button groups,
+   pagination, tabs) a hovered item draws only its outer edges, so it never boxes itself in: the first draws start, top
+   and bottom; middle items top and bottom; the last end, top and bottom. Its inner corners go square. The edges are
+   logical, so RTL flips them, and a vertical group (`data-orientation`/`aria-orientation="vertical"`) does the same
+   with top and bottom. Any other group opts in with `data-joined` (`data-joined="vertical"` for a column).
 
 ## 1b. The frame button (`btn-border-sweep`): match it exactly
 
@@ -66,8 +75,9 @@ Source: `buttons/core/Button.frame.tsx` and `theme/tokens.css:228-480`.
      copy of the label in the **text** colour wipes in over it, left to right, with `clip-path`.
 3. **On leave:** the outline **keeps travelling** (its tail follows its head, the original's `dashoffset: 0 → -1`),
    so it exits through the right side. The corners and content clip out to the right.
-4. **Timing: 640 ms**, `cubic-bezier(0.65,0,0.35,1)`: the original's `--btn-sweep-duration`, longer than the 520 ms
-   field sweep. Token `--warp-frame-duration` (quiet 490 ms, balanced 640 ms, vivid 640 ms; 0 under reduced motion).
+4. **Timing: 620 ms**, `cubic-bezier(0.65,0,0.35,1)`: the field sweep's own clock, so every stroke draws at one speed (the
+   original's `--btn-sweep-duration` ran 760 ms). Token `--warp-frame-duration` (quiet 480 ms, balanced 620 ms, vivid 700 ms;
+   0 under reduced motion).
    The frame host runs every part on it.
 5. **Filled variant** (`btn-border-sweep-filled`): a tone fill slides in from the left (`translateX(-101%) → 0`) and
    leaves to the right (`→ 101%`).
@@ -132,11 +142,16 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 |---|---|---|---|
 | Sweep | present everywhere it's used | present, the original | present, the original |
 | Sweep colour | full accent (only faster) | full accent | full accent, richer contrast |
-| Sweep speed | about 400 ms | 520 ms | 520–640 ms |
+| Sweep speed | about 480 ms | 620 ms | 620–760 ms |
 | Floating label + notch | yes | yes | yes |
 | Per-character label tint | yes (subtle by colour) | yes | yes |
 | Icon sweep | yes | yes | yes |
-| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | the same, plus the two-colour button fill. Static cards and panels never sweep; a card you can press does, at every stop |
+| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | the same, plus the two-colour button fill |
+
+**Surfaces opt in.** Cards, panels, list rows, tiles, stat rows and clickable cards never sweep by default, at any
+stop. The kit marks them `data-sweep="surface"`: the parts are there, and only `data-flair="sweep"` lights them. Any
+other `data-sweep` on a surface is an explicit opt-in and sweeps at every stop; `<Card sweep>` writes it, and
+`sweep={false}` leaves the parts out.
 
 **Reduced motion:**
 - The sweep becomes an instant border-colour change.
@@ -145,8 +160,8 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 
 ## 4. In weft
 
-- The sweep is CSS: `--_a` plus two registered edges (§1.4). `installSweep()` keeps only `confirm()`, `pin()` and `duration()`.
-- A tap draws one whole sweep, then exits. `:active` ends too soon to do that, so each part keeps its `--_a` for 1.25 sweeps past it: still no script.
+- The sweep is CSS: `--_a` plus each part's clocks and two edges (§1.4). `installSweep()` keeps only `confirm()`, `pin()` and `duration()`.
+- A tap draws one whole sweep, then exits: `:active` ends at once, and the clocks finish the draw (§1.4). Still no script.
 - A held sweep never stacks two copies of its text: the resting label wipes away ahead of the copy and returns the moment the host lets go.
 - The per-character delays come from one layout read after mount, re-read on resize.
 - The notch window is a `derived` value that reads the layout once.

@@ -444,9 +444,15 @@ export const TEAMS_BY_STATE = 'AK,ME,VT,NH,WA,ID,MT,ND,MN,IL,WI,MI,NY,RI,MA,OR,N
   value: ({ CA: 188, NY: 142, TX: 121, WA: 96, MA: 74, IL: 68, CO: 57, GA: 44, FL: 52 } as Record<string, number>)[id] ?? 4 + (i * 37) % 31,
 }))
 
-/** One Monday in weft's week. Fixed, so server and client agree. */
+/** One Monday in weft's week, and its morning: the day tinted as today is the day the now line is on. Fixed, so server and client agree. */
 export const CAL_TODAY = '2026-11-02'
-export const CAL_NOW = '2026-11-04T10:40'
+export const CAL_NOW = '2026-11-02T10:40'
+/**
+ * The examples about Wednesday's crowded morning are seen on that Wednesday: it is their today, they open on it, and
+ * their now line is late in the morning, when one meeting has ended and the next still runs beside its free lane.
+ */
+export const BUSY_TODAY = '2026-11-04'
+export const BUSY_NOW = '2026-11-04T11:40'
 export const CALENDARS = ['Releases', 'On-call', 'Team', 'Customers'].map((name, i) => ({ id: i + 1, name }))
 export const ROOMS = [{ id: 'atlas', name: 'Atlas', meta: '8 seats' }, { id: 'birch', name: 'Birch', meta: '6 seats' }, { id: 'cedar', name: 'Cedar', meta: '12 seats' }]
 export const EVENTS: CalEvent[] = [
@@ -455,19 +461,51 @@ export const EVENTS: CalEvent[] = [
   { id: 'e3', title: 'Standup', start: '2026-11-04T09:30', end: '2026-11-04T09:45', cal: 3, recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' },
   { id: 'e4', title: 'Standup', start: '2026-11-05T09:30', end: '2026-11-05T09:45', cal: 3, recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' },
   { id: 'e5', title: 'Standup', start: '2026-11-06T09:30', end: '2026-11-06T09:45', cal: 3, recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' },
-  { id: 'e6', title: 'Ship checkout to production', start: '2026-11-02T11:00', end: '2026-11-02T12:00', cal: 1, location: 'Room Atlas', attendees: ['Tomás Oliveira', 'Mara Lindqvist'], resource: 'atlas' },
-  { id: 'e7', title: 'Search ranking review', start: '2026-11-03T14:00', end: '2026-11-03T15:30', cal: 3, attendees: ['Lena Fischer', 'Noor Haddad'], video: true, resource: 'birch' },
+  { id: 'e6', title: 'Go-live', start: '2026-11-02T11:00', end: '2026-11-02T12:00', cal: 1, location: 'Room Atlas', attendees: ['Tomás Oliveira', 'Mara Lindqvist'], resource: 'atlas' },
+  { id: 'e7', title: 'Ranking v2', start: '2026-11-03T14:00', end: '2026-11-03T15:30', cal: 3, attendees: ['Lena Fischer', 'Noor Haddad'], video: true, resource: 'birch' },
   { id: 'e8', title: 'Acme onboarding', start: '2026-11-04T10:00', end: '2026-11-04T11:00', cal: 4, video: true, attendees: ['Priya Raman'] },
   { id: 'e9', title: 'Incident review: mobile-bff', start: '2026-11-04T10:30', end: '2026-11-04T11:30', cal: 2, attendees: ['Sam Okafor', 'Jun Tanaka'], resource: 'cedar' },
-  { id: 'e10', title: 'Rotate edge certificates', start: '2026-11-05T13:00', end: '2026-11-05T14:00', cal: 2, locked: true, location: 'Do not move' },
-  { id: 'e11', title: 'Northwind renewal', start: '2026-11-05T15:00', end: '2026-11-05T16:00', cal: 4, tentative: true, location: 'Waiting on Inés' },
-  { id: 'e12', title: 'Release retro', start: '2026-11-06T11:00', end: '2026-11-06T12:00', cal: 1, video: true, resource: 'atlas' },
+  { id: 'e10', title: 'Rotate keys', start: '2026-11-05T13:00', end: '2026-11-05T14:00', cal: 2, locked: true, location: 'Do not move' },
+  { id: 'e11', title: 'Northwind', start: '2026-11-05T15:00', end: '2026-11-05T16:00', cal: 4, tentative: true, location: 'Waiting on Inés' },
+  { id: 'e12', title: 'Retro', start: '2026-11-06T11:00', end: '2026-11-06T12:00', cal: 1, video: true, resource: 'atlas' },
   { id: 'e13', title: 'Design crit', start: '2026-11-04T09:00', end: '2026-11-04T10:00', cal: 3, resource: 'atlas' },
   { id: 'e14', title: 'Hiring sync', start: '2026-11-04T13:00', end: '2026-11-04T14:30', cal: 3, resource: 'atlas' },
   { id: 'e15', title: 'Billing walkthrough', start: '2026-11-04T11:00', end: '2026-11-04T12:00', cal: 4, resource: 'birch' },
   { id: 'e16', title: 'Roadmap', start: '2026-11-04T15:00', end: '2026-11-04T16:30', cal: 3, resource: 'cedar' },
   { id: 'a1', title: 'Jun on call', start: '2026-11-02', end: '2026-11-04', allDay: true, cal: 2 },
-  { id: 'a2', title: 'Release 2026.11', start: '2026-11-06', end: '2026-11-06', allDay: true, cal: 1 },
+  { id: 'a2', title: 'Ship 26.11', start: '2026-11-06', end: '2026-11-06', allDay: true, cal: 1 },
+]
+
+/**
+ * The same team across the whole month the month view shows (26 October to 6 December): the week above, then standups
+ * every working day, the releases, on-call handovers, customer calls and a few busy days, so every week has something
+ * in it and some days have more than fit. Names are what a team writes in its own calendar, short enough to read whole
+ * in a desk's month day (66px).
+ */
+const MONTH_EXTRA = [
+  ['Q1 planning', '2026-10-27T10:00', 3], ['Acme QBR', '2026-10-29T15:00', 4], ['Ship 26.10', '2026-10-30T11:00', 1],
+  ['Planning', '2026-11-09T10:00', 3], ['Billing v2', '2026-11-09T14:00', 4], ['Postgres 17', '2026-11-10T07:00', 2],
+  ['Ranking v2', '2026-11-10T14:00', 3], ['Sec review', '2026-11-11T13:00', 4], ['Ship 26.11.1', '2026-11-12T11:00', 1],
+  ['1:1 with Jun', '2026-11-12T15:30', 3], ['Design crit', '2026-11-13T10:00', 3], ['Load test', '2026-11-16T09:00', 2],
+  ['Acme sync', '2026-11-16T13:00', 4], ['Team lunch', '2026-11-17T12:00', 3], ['Debrief', '2026-11-17T15:00', 2],
+  ['Ship 26.11.2', '2026-11-19T11:00', 1], ['Interview', '2026-11-19T14:00', 3], ['Board prep', '2026-11-20T16:00', 4],
+  ['Demo day', '2026-11-23T15:00', 3], ['DB failover', '2026-11-24T10:00', 2], ['Globex call', '2026-11-24T14:00', 4],
+  ['Roadmap', '2026-11-25T11:00', 3], ['Ship 26.11.3', '2026-11-30T11:00', 1], ['Design crit', '2026-11-30T14:00', 3],
+  ['2027 plan', '2026-12-01T10:00', 3], ['Initech pilot', '2026-12-02T13:00', 4], ['Chaos drill', '2026-12-03T09:00', 2],
+  ['Ship 26.12.1', '2026-12-04T11:00', 1],
+] as const
+const MONTH_DAYS = Array.from({ length: 42 }, (_, i) => new Date(Date.UTC(2026, 9, 26 + i)).toISOString().slice(0, 10))
+export const MONTH_EVENTS = [
+  ...EVENTS,
+  ...MONTH_DAYS.filter(d => d > '2026-11-06' || d < '2026-11-02').filter(d => [1, 2, 3, 4, 5].includes(new Date(`${d}T12:00Z`).getUTCDay()) && d !== '2026-11-26' && d !== '2026-11-27')
+    .map(d => ({ id: `s-${d}`, title: 'Standup', start: `${d}T09:30`, end: `${d}T09:45`, cal: 3, recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' })),
+  ...MONTH_EXTRA.map(([title, start, cal], i) => ({ id: `m${i}`, title, start, end: `${start.slice(0, 11)}${String(+start.slice(11, 13) + 1).padStart(2, '0')}${start.slice(13)}`, cal })),
+  { id: 'a3', title: 'Sam on call', start: '2026-11-09', end: '2026-11-15', allDay: true, cal: 2 },
+  { id: 'a4', title: 'Inés on call', start: '2026-11-16', end: '2026-11-22', allDay: true, cal: 2 },
+  { id: 'a5', title: 'Offsite', location: 'Lisbon', start: '2026-11-18', end: '2026-11-19', allDay: true, cal: 3 },
+  { id: 'a6', title: 'No deploys', start: '2026-11-25', end: '2026-11-25', allDay: true, cal: 1 },
+  { id: 'a7', title: 'US holiday', start: '2026-11-26', end: '2026-11-27', allDay: true, cal: 3 },
+  { id: 'a8', title: 'Jun on call', start: '2026-11-30', end: '2026-12-06', allDay: true, cal: 2 },
 ]
 
 // -- the collab pack: the same people, in a room --

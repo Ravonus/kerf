@@ -42,17 +42,23 @@ export interface GridPaste<T> { row: T; column: string; value: unknown }
 
 /** Props for DataGrid. */
 export interface DataGridProps<T> {
+  /** The rows, as an array or a State of one. */
   rows: readonly T[] | State<readonly T[]>
+  /** The columns, in order: as in Table, plus `filter`, `options`, `aggregate` and `format`. */
   columns: GridColumn<T>[]
   /** Names the grid (required). It stays in the accessibility tree when `captionHidden`. */
   caption: string
+  /** Hides the caption on screen. Screen readers still hear it as the grid's name. */
   captionHidden?: boolean | undefined
+  /** The field that identifies a row, or a function that returns it. Keys a row's selection, edits and saved state. Default `id`. */
   rowKey?: (string | ((row: T) => string)) | undefined
+  /** Row height and cell padding: `compact` fits the most rows, `comfortable` reads easiest. Default `cozy`. */
   density?: 'compact' | 'cozy' | 'comfortable' | undefined
   /** The named views in the select. */
   views?: Record<string, GridView> | undefined
   /** Starts on this view. */
   view?: string | undefined
+  /** Save view pressed: the new view's name (`My view 1`) and its columns, filters, sort and grouping, for you to keep. */
   onSaveView?: ((name: string, view: GridView) => void) | undefined
   /** The Group toggle groups by this column. */
   groupBy?: string | undefined
@@ -60,6 +66,7 @@ export interface DataGridProps<T> {
   tree?: GridTree<T> | undefined
   /** Show the tree's filter field, labelled this. */
   filter?: string | undefined
+  /** A cell edit committed: the row, the column's id and the new value. A column takes edits when it has `edit`. */
   onEdit?: ((row: T, column: string, value: unknown) => void) | undefined
   /** A validated paste, as one change. Default each cell through `onEdit`. */
   onPaste?: ((changes: GridPaste<T>[]) => void) | undefined
@@ -67,10 +74,13 @@ export interface DataGridProps<T> {
   expand?: ((row: T) => unknown) | undefined
   /** The bulk bar's actions, over the rows in the range. */
   bulk?: ((rows: string[]) => unknown) | undefined
+  /** Shows `size` rows at a time, with a pagination bar under them. */
   page?: { size: number } | undefined
   /** The CSV's name; `false` drops Export. */
   exportName?: string | false | undefined
+  /** Your own controls in the toolbar, before Filters, Group, Columns and Export. */
   actions?: unknown
+  /** A CSS height past which the rows scroll under a sticky header, such as `480px`. */
   maxHeight?: string | undefined
 }
 

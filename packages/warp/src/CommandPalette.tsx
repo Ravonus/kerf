@@ -33,6 +33,8 @@ export interface Command {
   href?: string
   /** → on the row, or picking a row with no `run`, shows these in the same list. */
   children?: () => Command[]
+  /** The name of the list `children` opens ("Region"), shown before the query while you're in it. The label without it. */
+  title?: string
   /** What picking the row does. It runs after the palette has closed, so what it opens takes focus. */
   run?: () => void
 }
@@ -187,6 +189,8 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   const rows = state<Row[]>([])
   const size = state(0)
   const drill = state<Command[] | undefined>(undefined)
+  // the open level's name: its row's `title`, or its label without a trailing "…"
+  const crumb = state('')
   const mode = derived(() => modes?.find(m => typed.value.startsWith(m.prefix)))
   const items = derived(() => rows.value.flatMap(r => (r.item ? [r.item] : [])))
   const pending = state(false)
@@ -244,6 +248,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (!on) return
     typed.value = ''
     drill.value = undefined
+    crumb.value = ''
     active.value = 0
     if (input) input.value = ''
     answer('')
@@ -253,20 +258,23 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (input) input.value = ''
     typed.value = ''
   }
-  const down = (kids: Command[]) => {
+  const down = (from: Command) => {
     clear()
-    drill.value = kids
+    crumb.value = from.title ?? from.label.replace(/\s*(…|\.\.\.)$/, '')
+    drill.value = from.children!()
     answer('')
   }
   const up = () => {
     clear()
     drill.value = undefined
+    crumb.value = ''
     answer('')
+    input?.focus()
   }
   const run = (at: number, reason: 'pointer' | 'keyboard') => {
     const c = items.value[at]
     if (!c) return
-    if (!c.run && c.children) return down(c.children())
+    if (!c.run && c.children) return down(c)
     flag.set(false)
     flush()
     // after the dialog has gone, so what the command opens takes focus from the opener
@@ -296,7 +304,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     }
     if (e.key === 'ArrowRight' && input && input.selectionStart === input.value.length && items.value[at]?.children) {
       e.preventDefault()
-      return down(items.value[at].children())
+      return down(items.value[at])
     }
     if (e.key === 'ArrowLeft' && drill.value && !input?.selectionStart) {
       e.preventDefault()
@@ -332,8 +340,9 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
       <div data-part="input-row" data-sweep="">
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         <SearchIcon />
-        <label for={`${id}-in`} data-part="sr-only">{label}</label>
-        <input ref={n => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined} placeholder={mode.value?.placeholder ?? placeholder} autocomplete="off" spellcheck={false} onInput={onInput} onKeyDown={onKey} />
+        <label for={`${id}-in`} data-part="sr-only">{crumb.value ? `${label}, ${crumb.value}` : label}</label>
+        {crumb.value && <button type="button" data-part="crumb" tabindex="-1" aria-label={`Back from ${crumb.value}`} onClick={up}>{crumb.value}<span aria-hidden="true">›</span></button>}
+        <input ref={n => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined} placeholder={crumb.value ? `Search ${crumb.value}…` : mode.value?.placeholder ?? placeholder} autocomplete="off" spellcheck={false} onInput={onInput} onKeyDown={onKey} />
         {mode.value ? <span data-part="mode">{mode.value.label}</span> : <Kbd>esc</Kbd>}
       </div>
       <div ref={n => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">

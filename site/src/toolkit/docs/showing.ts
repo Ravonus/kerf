@@ -20,7 +20,7 @@ export const showing: DocGroup = {
         knobs: [
           { prop: 'eyebrow', control: 'text', initial: 'Project', default: '' },
           { prop: 'title', control: 'text', initial: 'storefront', default: '' },
-          { prop: 'sweep', control: 'switch', initial: true, default: true },
+          { prop: 'sweep', control: 'switch', initial: false, default: false },
         ],
       },
       sections: [
@@ -28,7 +28,8 @@ export const showing: DocGroup = {
           { id: 'CardStatic', title: 'Static', stage: 'narrow' },
           { id: 'CardAsLink', title: 'A link', note: '`href` makes the whole card a link.', stage: 'narrow' },
           { id: 'CardPress', title: 'A button', note: '`onClick` makes the whole card a button.', stage: 'narrow' },
-          { id: 'CardBare', title: 'Bare', note: 'Every part is optional, and `sweep={false}` drops the hover line.', stage: 'narrow' },
+          { id: 'CardSweep', title: 'The hover line', note: '`sweep` opts a card in to the line that runs around its edge on hover. Without it, as on the right, a card has none.', stage: 'fill', height: 200 },
+          { id: 'CardBare', title: 'Bare', note: 'Every part is optional, and `sweep={false}` leaves the hover line out even under `data-flair="sweep"`.', stage: 'narrow' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
           { id: 'CardStats', title: 'A row of figures', note: 'Use `eyebrow` and `title` for a label and a figure, laid out in a `Grid`.', stage: 'fill', height: 180 },
@@ -41,7 +42,7 @@ export const showing: DocGroup = {
         title: 'The card\'s title.',
         href: 'Makes the card a link.',
         onClick: 'Makes the card a button.',
-        sweep: 'The line that runs on hover.',
+        sweep: 'Opts in to the line that runs on hover, at every expression. No card sweeps by default, a link or button card included.',
       },
       related: ['Grid', 'Badge', 'Inset'],
     },
