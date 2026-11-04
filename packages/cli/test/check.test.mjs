@@ -85,7 +85,7 @@ describe('project view: cross-file W014', () => {
     expect(d.span.slice(0, 2)).toEqual([26, 28])
     expect(d.why).toContain('src/components/ProductList.tsx:71')
     expect(d.related.map((x) => [x.file, x.span[0], x.why])).toEqual([
-      ['src/App.tsx', 53, 'passed as `<ProductList products>`'],
+      ['src/App.tsx', 54, 'passed as `<ProductList products>`'],
       ['src/components/ProductList.tsx', 71, 'rendered here as a keyed list'],
     ])
     expect(d.fix.text).toContain('p.id === id ? { ...p, price } : p')

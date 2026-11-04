@@ -172,8 +172,8 @@ describe.each([
     expect(codes.filter((c) => c.startsWith('W080'))).toHaveLength(1)
     expect(codes.filter((c) => c.startsWith('W081'))).toEqual([
       'W081:src/card.tsx:1',
-      'W081:src/card.tsx:2',
-      'W081:src/card.tsx:3',
+      'W081:src/card.tsx:4',
+      'W081:src/card.tsx:7',
     ])
   }, 60_000)
 })
