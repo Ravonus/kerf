@@ -13,6 +13,8 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { jobs, pool } from './jobs.mjs'
+import { checkLengths } from './quality/lengths.mjs'
+import { clippyProblems, lintProblems } from './quality/length-diagnostics.mjs'
 
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
 const LEVEL = 'error'
@@ -32,10 +34,10 @@ const hasCargo = sub => spawnSync('cargo', [sub, '--version'], { stdio: 'ignore'
 function run(cmd, args, cwd = '.', env = {}) {
   return new Promise(ok => {
     const child = spawn(cmd, args, { cwd: join(root, cwd), env: { ...process.env, NO_COLOR: '1', ...env }, shell: windows, stdio: ['ignore', 'pipe', 'pipe'] })
-    let out = ''
-    child.stdout.on('data', d => (out += d)); child.stderr.on('data', d => (out += d))
+    let out = '', stdout = '', stderr = ''
+    child.stdout.on('data', d => { out += d; stdout += d }); child.stderr.on('data', d => { out += d; stderr += d })
     child.on('error', e => ok({ code: 1, out: String(e) }))
-    child.on('close', code => ok({ code, out }))
+    child.on('close', code => ok({ code, out, stdout, stderr }))
   })
 }
 
@@ -46,11 +48,29 @@ async function all(items, job) {
   return { problems: failed.flatMap(r => [`--- ${r.item}`, ...r.out.trim().split('\n').slice(-40)]) }
 }
 const lines = r => (r.code === 0 ? { problems: [] } : { problems: r.out.trim().split('\n') })
+let lengthResult
+const lengths = () => (lengthResult ??= checkLengths())
 
 /** Where a gitleaks finding is, never what it found. */
 const leakPlaces = text => JSON.parse(text || '[]').map(f => `${f.File}:${f.StartLine} ${f.RuleID}${f.Commit ? ` in ${f.Commit.slice(0, 8)}` : ''}`)
 
 const STEPS = [
+  {
+    id: 'format', covers: 'oxfmt source formatting at 100 columns, with a checked-file count',
+    fix: 'Run `node scripts/quality/format.mjs --write`.',
+    async run() {
+      const result = await run(process.execPath, ['scripts/quality/format.mjs'])
+      return { ...lines(result), detail: result.code === 0 ? result.out.trim() : '' }
+    },
+  },
+  {
+    id: 'sample-width', covers: '70-column doc fences and 58-column split-pane samples (warnings in S0)',
+    fix: 'Rewrite samples to fit their boxes; Sprint 1 makes these warnings errors.',
+    async run() {
+      const result = await run(process.execPath, ['site/scripts/sample-width.mjs'])
+      return { ...lines(result), detail: result.code === 0 ? result.out.trim() : '' }
+    },
+  },
   {
     id: 'lint', covers: 'Oxlint with type-aware rules: bugs, async mistakes, types, comments, tests, code from strings',
     fix: 'Run `pnpm run fix` for what can be fixed by machine. Each line names the rule. A disable needs a reason: `// oxlint-disable-next-line <rule> -- <why>`, and CONTRIBUTING.md says when one is allowed.',
@@ -58,7 +78,20 @@ const STEPS = [
       const r = await run(bin('oxlint'), ['--type-aware', '--report-unused-disable-directives-severity=error', '--format', 'json', ...LINT_PATHS])
       let report
       try { report = JSON.parse(r.out.slice(r.out.indexOf('{'))) } catch { return lines({ code: 1, out: r.out }) }
-      return { problems: [...new Set(report.diagnostics.map(d => `${d.filename}:${d.labels?.[0]?.span.line ?? 0} ${d.code ?? 'plugin'} ${d.message.split('\n')[0]}`))] }
+      const problems = lintProblems(report, lengths())
+      if (r.code !== 0 && !report.diagnostics.length) problems.push(r.out.trim() || 'Oxlint failed without diagnostics')
+      return { problems }
+    },
+  },
+  {
+    id: 'lengths', covers: '400 source / 800 generated and test lines; 80 per function, with a shrinking Git baseline',
+    fix: 'Split the file or function, and regenerate the baseline. The baseline may only shrink against its Git base.',
+    run() {
+      const result = lengths()
+      const files = result.findings.filter(f => f.kind === 'file').length
+      const functions = result.findings.length - files
+      const tokens = result.findings.reduce((sum, f) => sum + f.tokens, 0)
+      return { problems: result.problems, detail: `${files} files, ${functions} functions, ${tokens} syntax units (whitespace-independent)` }
     },
   },
   {
@@ -94,12 +127,12 @@ const STEPS = [
     id: 'clippy', covers: 'cargo clippy with pedantic: no unwrap outside tests, SAFETY comments on unsafe, reasons on allows',
     fix: 'Each block is one lint. `#[allow(...)]` needs `reason = "..."`. Use `expect("why it holds")` over unwrap; `unsafe` takes a `// SAFETY:` comment.',
     async run() {
-      const found = []
+      const found = [], measured = lengths()
       await pool(CRATES, limit, async c => {
-        const r = await run('cargo', ['clippy', '--all-targets', '--message-format=short', '--', '-D', 'warnings'], c)
-        if (r.code !== 0) found.push(...new Set(r.out.split('\n').filter(l => /^\S+\.rs:\d+:\d+: (?:error|warning)/.test(l) || /^error: (?!could not compile)/.test(l)).map(l => `${c}/${l}`)))
+        const r = await run('cargo', ['clippy', '--all-targets', '--message-format=json', '--', '-D', 'warnings', '-W', 'clippy::too_many_lines'], c)
+        found.push(...clippyProblems(c, r, measured))
       })
-      return { problems: found.toSorted((a, b) => a.localeCompare(b)) }
+      return { problems: [...measured.problems, ...new Set(found)].toSorted((a, b) => a.localeCompare(b)) }
     },
   },
   {
@@ -174,7 +207,7 @@ for (const step of chosen) {
   try { result = await step.run() } catch (e) { result = { problems: [String(e?.stack ?? e)] } }
   const seconds = ((performance.now() - started) / 1000).toFixed(1)
   const count = result.problems?.length ?? 0
-  console.log(result.skipped ? `skipped: ${result.skipped}` : count ? `${count} problem(s), ${seconds}s` : `ok, ${seconds}s`)
+  console.log(result.skipped ? `skipped: ${result.skipped}` : count ? `${count} problem(s), ${seconds}s` : `ok, ${seconds}s${result.detail ? `; ${result.detail}` : ''}`)
   results.push({ step, ...result })
 }
 

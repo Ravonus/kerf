@@ -1,0 +1,6 @@
+{
+  "jsPlugins": ["./length-plugin.mjs"],
+  "options": { "respectEslintDisableDirectives": false },
+  "categories": { "correctness": "off", "suspicious": "off" },
+  "rules": { "length/collect": "error" }
+}
