@@ -99,8 +99,8 @@ export function defaultDeploy(root, target, needs) {
   return { target, [target]: per[target], ci: 'github', branch: 'main' }
 }
 
-const literal = (v, pad = '  ') => {
-  if (v && typeof v === 'object') return `{ ${Object.entries(v).map(([k, x]) => `${k}: ${literal(x, pad)}`).join(', ')} }`
+const literal = (v) => {
+  if (v && typeof v === 'object') return `{ ${Object.entries(v).map(([k, x]) => `${k}: ${literal(x)}`).join(', ')} }`
   return typeof v === 'string' ? `'${v}'` : String(v)
 }
 
@@ -171,7 +171,7 @@ function cliFor(name, { which = cmd => spawnSync(process.platform === 'win32' ? 
  * The steps `weft deploy` takes for a target, as data: a dry run prints them, `--yes` runs them. A step reads env vars
  * by name; their values are filled in only as it runs.
  */
-export function deploySteps(root, config, { target, prod = false, which } = {}) {
+export function deploySteps(root, config, { target, prod = false } = {}) {
   const h = host(target)
   const deploy = config.deploy ?? {}
   const runtime = config.runtime ?? 'node'
@@ -216,7 +216,7 @@ export function urlFrom(step, stdout) {
   if (step.url === 'json') {
     try { const j = JSON.parse(stdout.slice(stdout.indexOf('{'))); return j.url ?? j.deploy_url } catch { return }
   }
-  if (step.url === 'last-line') return stdout.trim().split('\n').reverse().find(l => /^https:\/\//.test(l.trim()))?.trim()
+  if (step.url === 'last-line') return stdout.trim().split('\n').reverse().find(l => l.trim().startsWith('https://'))?.trim()
   if (step.url === 'workers') return /https:\/\/[\w.-]+\.workers\.dev/.exec(stdout)?.[0]
   if (step.url === 'fly') return /https:\/\/[\w.-]+\.fly\.dev/.exec(stdout)?.[0]
   return step.url
@@ -239,7 +239,7 @@ export async function deployCommand(root, config, { target, prod = false, yes = 
   const findings = fit(needs, h, { deploy: config.deploy ?? {}, local: !env.CI }).findings
   const blocking = findings.filter(f => f.severity === 'error' && !unsafe?.allows(f))
   if (blocking.length) throw refused(`${h.name} can't run this app:\n${blocking.map(f => `  ${f.code} ${f.file}: ${f.why}.\n       Fix: ${f.fix}`).join('\n')}\nTo deploy anyway: --unsafe-allow ${[...new Set(blocking.map(f => f.code))].join(',')}`)
-  const steps = deploySteps(root, config, { target: id, prod, which })
+  const steps = deploySteps(root, config, { target: id, prod })
   const envFindings = missingEnv(root, id, config, env)
   const diagnostics = [...findings, ...envFindings, ...cdnFindings(config, { env })].map(f => toDiagnostic(root, f))
   if (!yes) return { ok: true, dryRun: true, target: id, prod, steps: steps.map(s => ({ what: s.what, reads: s.reads ?? [] })), diagnostics }
@@ -258,7 +258,7 @@ export async function deployCommand(root, config, { target, prod = false, yes = 
     } else {
       const [cmd, ...pre] = cliFor(s.cli, { which })
       const args = [...pre, ...s.args, ...(s.token && env[s.token] ? ['--token', env[s.token]] : [])]
-      const r = await exec(cmd, args, { cwd: join(root, s.cwd ?? ''), env })
+      const r = await Promise.resolve(exec(cmd, args, { cwd: join(root, s.cwd ?? ''), env }))
       if (r.code !== 0) throw refused(`${s.cli} failed (exit ${r.code}): nothing more was run.\n${(r.stderr || r.stdout).trim().split('\n').slice(-15).join('\n')}`)
       url = urlFrom(s, r.stdout) ?? url
     }

@@ -18,7 +18,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@weft-js/create": "file:../create-weft",
+    "@weft-js/create": "workspace:*",
     "axe-core": "4.14.0",
     "typescript": "6.0.3",
     "yaml": "2.9.1",
@@ -28,7 +28,8 @@
     "@weft-js/core": "*"
   },
   "devDependencies": {
-    "@weft-js/core": "file:../weft",
+    "@weft-js/core": "workspace:*",
+    "vite": "8.3.5",
     "vitest": "5.0.5"
   },
   "publishConfig": {

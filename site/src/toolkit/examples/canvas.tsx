@@ -431,7 +431,7 @@ const rng = (seed: number) => () => { seed = (seed * 16807) % 2147483647; return
 
 function outline(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, st: Style, seed: number) {
   ctx.beginPath()
-  if (!st.rough) return void ctx.roundRect(x, y, w, h, Math.min(r, h / 2, w / 2))
+  if (!st.rough) { ctx.roundRect(x, y, w, h, Math.min(r, h / 2, w / 2)); return }
   const j = rng(seed), k = st.rough, pts: [number, number][] = []
   const edge = (ax: number, ay: number, bx: number, by: number) => { const n = Math.max(2, Math.round(Math.hypot(bx - ax, by - ay) / 28)); for (let i = 0; i < n; i++) pts.push([ax + ((bx - ax) * i) / n + j() * k, ay + ((by - ay) * i) / n + j() * k]) }
   edge(x, y, x + w, y); edge(x + w, y, x + w, y + h); edge(x + w, y + h, x, y + h); edge(x, y + h, x, y)

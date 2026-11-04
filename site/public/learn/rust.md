@@ -86,7 +86,7 @@ says what it found, why it matters and how to fix it, and many come with an auto
 
 ### Building the compiler yourself
 
-This is for working on weft itself, in a checkout of the repository, not for building an app. `npm run setup` at the
+This is for working on weft itself, in a checkout of the repository, not for building an app. `pnpm run setup` at the
 repository root builds everything once, the compiler included. After you change the crate, rebuild the addon and the
 WebAssembly module from `packages/weft`:
 

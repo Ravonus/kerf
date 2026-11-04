@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// One command for every rule on the framework's own code: `npm run check`. It says what failed and how to fix it, and it's what
+// One command for every rule on the framework's own code: `pnpm run check`. It says what failed and how to fix it, and it's what
 // CI runs. `weft check` is something else: the rules an app gets.
 //
-//   npm run check                    everything
-//   npm run check -- --fast          everything but the test suites
-//   npm run check -- --only=lint,types
-//   npm run check -- --list          the steps, and what each covers
-//   npm run check -- --require-tools a missing gitleaks or cargo-deny fails instead of skipping (CI does this)
-//   npm run check -- --jobs=4        how much to run at once (see scripts/jobs.mjs)
+//   pnpm run check                 everything
+//   pnpm run check --fast          everything but the test suites
+//   pnpm run check --only=lint,types
+//   pnpm run check --list          the steps, and what each covers
+//   pnpm run check --require-tools a missing gitleaks or cargo-deny fails instead of skipping (CI does this)
+//   pnpm run check --jobs=4        how much to run at once (see scripts/jobs.mjs)
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -25,7 +25,6 @@ const windows = process.platform === 'win32'
 const bin = name => join(root, 'node_modules', '.bin', windows ? `${name}.cmd` : name)
 const CRATES = ['crates/weft-compiler', 'crates/weft-layout', 'crates/weft']
 const PACKAGES = readdirSync(join(root, 'packages')).filter(d => existsSync(join(root, 'packages', d, 'package.json'))).map(d => `packages/${d}`)
-const LOCKED = ['.', 'site', ...PACKAGES].filter(d => existsSync(join(root, d, 'package-lock.json')))
 const LINT_PATHS = ['packages', 'scripts', 'site', ...readdirSync(join(root, 'evals')).filter(f => f.endsWith('.mjs')).map(f => `evals/${f}`)]
 const has = cmd => spawnSync(cmd, ['--version'], { stdio: 'ignore', shell: windows }).status === 0
 const hasCargo = sub => spawnSync('cargo', [sub, '--version'], { stdio: 'ignore', shell: windows }).status === 0
@@ -54,7 +53,7 @@ const leakPlaces = text => JSON.parse(text || '[]').map(f => `${f.File}:${f.Star
 const STEPS = [
   {
     id: 'lint', covers: 'Oxlint with type-aware rules: bugs, async mistakes, types, comments, tests, code from strings',
-    fix: 'Run `npm run fix` for what can be fixed by machine. Each line names the rule. A disable needs a reason: `// oxlint-disable-next-line <rule> -- <why>`, and CONTRIBUTING.md says when one is allowed.',
+    fix: 'Run `pnpm run fix` for what can be fixed by machine. Each line names the rule. A disable needs a reason: `// oxlint-disable-next-line <rule> -- <why>`, and CONTRIBUTING.md says when one is allowed.',
     async run() {
       const r = await run(bin('oxlint'), ['--type-aware', '--report-unused-disable-directives-severity=error', '--format', 'json', ...LINT_PATHS])
       let report
@@ -88,7 +87,7 @@ const STEPS = [
   },
   {
     id: 'rust-fmt', covers: 'cargo fmt --check on crates/',
-    fix: 'Run `npm run fix`.',
+    fix: 'Run `pnpm run fix`.',
     run: () => all(CRATES, async c => run('cargo', ['fmt', '--check'], c)),
   },
   {
@@ -126,14 +125,13 @@ const STEPS = [
     run: async () => lines(await run(process.execPath, ['scripts/quality/licences.mjs'])),
   },
   {
-    id: 'npm-audit', covers: 'npm audit for every lockfile',
-    fix: 'Update the dependency in that package and run `npm install` there. Each package has its own lockfile.',
-    run: () => all(LOCKED, async d => {
+    id: 'npm-audit', covers: 'pnpm audit over the workspace lockfile',
+    fix: 'Update the dependency in the package that names it and run `pnpm install` at the root.',
+    run: async () => {
       // Anything that ships, at any severity; dev tools from high up, since they only ever run on a contributor's machine.
-      const shipped = await run('npm', ['audit', '--omit=dev', '--audit-level=low', '--no-fund'], d)
-      const r = shipped.code ? shipped : await run('npm', ['audit', '--audit-level=high', '--no-fund'], d)
-      return { ...r, out: r.out.split('\n').filter(l => !l.startsWith('npm warn')).join('\n') }
-    }),
+      const shipped = await run('pnpm', ['audit', '--prod', '--audit-level=low'])
+      return shipped.code ? shipped : run('pnpm', ['audit', '--audit-level=high'])
+    },
   },
   {
     id: 'cargo-deny', covers: 'cargo deny: advisories, licences, bans and sources for each crate',
@@ -155,9 +153,9 @@ const STEPS = [
     run: () => all(CRATES, c => run('cargo', ['test'], c)),
   },
   {
-    id: 'tests', covers: 'every package\'s npm test', slow: true,
-    fix: 'Run the failing package on its own: `cd packages/<name> && npm test`.',
-    run: () => all(PACKAGES.filter(d => JSON.parse(readFileSync(join(root, d, 'package.json'), 'utf8')).scripts?.test), d => run('npm', ['test'], d)),
+    id: 'tests', covers: 'every package\'s test script', slow: true,
+    fix: 'Run the failing package on its own: `pnpm --filter <name> test`.',
+    run: () => all(PACKAGES.filter(d => JSON.parse(readFileSync(join(root, d, 'package.json'), 'utf8')).scripts?.test), d => run('pnpm', ['test'], d)),
   },
 ]
 
@@ -185,10 +183,10 @@ const skipped = results.filter(r => r.skipped)
 for (const { step, problems } of failed) {
   console.log(`\n${step.id}: ${problems.length} problem(s)`)
   for (const line of problems.slice(0, 60)) console.log(`  ${line}`)
-  if (problems.length > 60) console.log(`  ... and ${problems.length - 60} more: npm run check -- --only=${step.id}`)
+  if (problems.length > 60) console.log(`  ... and ${problems.length - 60} more: pnpm run check --only=${step.id}`)
   console.log(`  how to fix: ${step.fix}`)
 }
 for (const { step, skipped: why } of skipped) console.log(`\n${step.id} did not run: ${why}. Install it: ${step.install}`)
 const missed = requireTools ? skipped.length : 0
-console.log(failed.length || missed ? `\nnpm run check: ${failed.map(r => r.step.id).concat(requireTools ? skipped.map(r => r.step.id) : []).join(', ')} failed` : `\nnpm run check: all passed${skipped.length ? `, ${skipped.length} skipped` : ''}`)
+console.log(failed.length || missed ? `\npnpm run check: ${failed.map(r => r.step.id).concat(requireTools ? skipped.map(r => r.step.id) : []).join(', ')} failed` : `\npnpm run check: all passed${skipped.length ? `, ${skipped.length} skipped` : ''}`)
 process.exit(LEVEL === 'error' && (failed.length || missed) ? 1 : 0)

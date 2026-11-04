@@ -52,8 +52,10 @@ describe('which pages', () => {
 describe('a build served as files', () => {
   it("knows the app's other pages are the server's to answer, not missing files", () => {
     const root = mkdtempSync(join(tmpdir(), 'weft-routes-'))
-    for (const f of ['index.tsx', 'about.tsx', 'docs/[slug].tsx', 'files/[...rest].tsx', '(app)/settings.tsx', 'notes.server.ts'])
-      mkdirSync(join(root, 'src/routes', f, '..'), { recursive: true }), writeFileSync(join(root, 'src/routes', f), '')
+    for (const f of ['index.tsx', 'about.tsx', 'docs/[slug].tsx', 'files/[...rest].tsx', '(app)/settings.tsx', 'notes.server.ts']) {
+      mkdirSync(join(root, 'src/routes', f, '..'), { recursive: true })
+      writeFileSync(join(root, 'src/routes', f), '')
+    }
     const served = appRoutes(root)
     expect(['/', '/about', '/docs/a', '/files/a/b', '/files', '/settings'].filter(p => !served(p))).toEqual([])
     expect(['/docs/a/b', '/notes', '/assets/x.js', '/about.x'].filter(served)).toEqual([])
@@ -74,7 +76,7 @@ describe('--unsafe-allow', () => {
 
 const chrome = findChrome()
 
-describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
+describe.skipIf(!chrome)('the rendered pages, in Chrome', () => { // skipped without Chrome: CI machines and containers may not have it
   let root
   let result
   beforeAll(async () => {

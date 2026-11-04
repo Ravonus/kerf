@@ -23,9 +23,9 @@
     "@weft-js/core": "*"
   },
   "devDependencies": {
-    "@weft-js/plugin-media-ffmpeg": "file:../plugin-media-ffmpeg",
+    "@weft-js/plugin-media-ffmpeg": "workspace:*",
     "vitest": "5.0.5",
-    "@weft-js/core": "file:../weft"
+    "@weft-js/core": "workspace:*"
   },
   "engines": {
     "node": ">=26"

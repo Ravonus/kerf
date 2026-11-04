@@ -266,7 +266,7 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
   }
 
   // Its float: a box with no ground of its own, which the float's own painters fill.
-  LOOKS.set(host, c => { const f = stage(c, { ...o, layout: 'box', rail: false, background: undefined }); return { update() {}, destroy: f.destroy } })
+  LOOKS.set(host, c => { const f = stage(c, { ...o, layout: 'box', rail: false, background: undefined }); return { update() {}, destroy: () => f.destroy() } })
   const s = surface(canvas, settings())
   const invalidate = () => s.invalidate()
   // A CSS transition can move a piece after the event that started it, so paint on for a moment after any of them.

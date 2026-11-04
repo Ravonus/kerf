@@ -1,8 +1,8 @@
-// Every dependency's licence, read from the lockfiles, against the list of licences this repo accepts. Rust's are in deny.toml.
+// Every dependency's licence, as pnpm reads it from the workspace's installed packages, against the list of licences this repo accepts. Rust's are in deny.toml.
 //
 //   node scripts/quality/licences.mjs
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -22,17 +22,17 @@ const fits = expr => {
   return ALLOWED.has(parts.trim())
 }
 
-const locks = ['package-lock.json', 'site/package-lock.json', ...readdirSync(join(root, 'packages')).map(d => `packages/${d}/package-lock.json`)].map(f => join(root, f)).filter(existsSync)
+// WEFT_LICENCES_JSON: a `pnpm licenses list --json` result to read instead (prove.mjs plants a bad one this way)
+const listed = JSON.parse(process.env.WEFT_LICENCES_JSON ?? execFileSync(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', ['licenses', 'list', '--json', '--recursive'], { cwd: root, encoding: 'utf8', maxBuffer: 64 << 20, shell: process.platform === 'win32' }))
 const problems = new Set()
 let seen = 0
-for (const lock of locks) {
-  for (const [path, entry] of Object.entries(JSON.parse(readFileSync(lock, 'utf8')).packages ?? {})) {
-    if (!path || entry.link || !path.includes('node_modules/') || path.includes('@weft-js/')) continue
+for (const [license, entries] of Object.entries(listed)) {
+  for (const { name, versions } of entries) {
+    if (name.startsWith('@weft-js/')) continue
     seen++
-    const name = path.split('node_modules/').at(-1)
     if (REVIEWED.some(([re]) => re.test(name))) continue
-    if (!entry.license) problems.add(`${name}@${entry.version}: no licence in ${relative(root, lock)}`)
-    else if (!fits(entry.license)) problems.add(`${name}@${entry.version}: ${entry.license} (${relative(root, lock)})`)
+    if (!license || license === 'Unknown') problems.add(`${name}@${versions.join(',')}: no licence`)
+    else if (!fits(license)) problems.add(`${name}@${versions.join(',')}: ${license}`)
   }
 }
 for (const line of problems) console.log(line)

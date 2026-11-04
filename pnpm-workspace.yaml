@@ -1,0 +1,22 @@
+# One install for the whole repo: `pnpm install` here. Each tool (vitest, vite, typescript…) is stored once and linked
+# into every package that uses it. evals/ stays out: each stack there is a stand-alone app, installed as its users would.
+packages:
+  - packages/*
+  - site
+  - site/arena
+
+# No third-party release younger than 3 days (the owner's supply-chain rule, in minutes). It travels with the repo,
+# so an install on any machine is held to it. Our own packages are exempt.
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - '@weft-js/*'
+
+# Dependencies' install scripts don't run (as with ignore-scripts before): esbuild and workerd ship their binaries as
+# optional packages, and `pnpm run setup` runs `prisma generate` itself.
+allowBuilds:
+  '@firebase/util': false
+  '@prisma/engines': false
+  esbuild: false
+  prisma: false
+  protobufjs: false
+  workerd: false

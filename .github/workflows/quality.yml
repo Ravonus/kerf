@@ -1,4 +1,4 @@
-# Every rule on the framework's own code: `npm run check` does the work, so what passes here is what passes on your machine.
+# Every rule on the framework's own code: `pnpm run check` does the work, so what passes here is what passes on your machine.
 name: quality
 on:
   pull_request:
@@ -27,10 +27,10 @@ jobs:
           tar xzf "$RUNNER_TEMP/gitleaks.tgz" -C "$RUNNER_TEMP" gitleaks
           sudo install "$RUNNER_TEMP/gitleaks" /usr/local/bin/gitleaks
           cargo install cargo-deny --version 0.20.2 --locked
-      - run: npm ci
-      - run: npm run setup
-      - run: npx --prefix packages/start playwright-core install --with-deps chromium
-      - run: npm run check -- --require-tools
+      - uses: pnpm/action-setup@v4
+      - run: pnpm run setup
+      - run: pnpm --filter @weft-js/start exec playwright-core install --with-deps chromium
+      - run: pnpm run check --require-tools
       - name: Every commit is signed off
         if: github.event_name == 'pull_request'
         run: node scripts/quality/commits.mjs --base "origin/$GITHUB_BASE_REF" --dco

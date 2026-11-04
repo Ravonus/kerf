@@ -10,15 +10,15 @@ You need [Node 26](.nvmrc) and [Rust](https://rustup.rs). rustup picks the right
 ```bash
 git clone <your fork>
 cd weft
-npm ci          # the rule tools
-npm run setup   # every package, and the compiler
-npm run check   # everything
+pnpm run setup   # one install for every package, then the compiler
+pnpm run check   # everything
 ```
 
-Each package has its own lockfile, so `npm run setup` runs `npm ci` in each one. There's no workspace. The first run takes a
-few minutes because it builds the compiler.
+The repo is one pnpm workspace (`pnpm-workspace.yaml`), so a tool every package uses is installed once. Use pnpm, not
+npm. The workspace holds every install to releases at least 3 days old. The first run takes a few minutes because it builds
+the compiler.
 
-Two more tools make `npm run check` complete: [gitleaks](https://github.com/gitleaks/gitleaks) and
+Two more tools make `pnpm run check` complete: [gitleaks](https://github.com/gitleaks/gitleaks) and
 [cargo-deny](https://github.com/EmbarkStudios/cargo-deny). If you don't have them, those two steps say they were skipped,
 and CI runs them for you.
 
@@ -26,20 +26,20 @@ and CI runs them for you.
 
 | Command | What it does |
 |---|---|
-| `npm run check` | Runs every rule and every test. Prints what failed and how to fix it. |
-| `npm run check -- --fast` | The same without the test suites. |
-| `npm run check -- --only=lint,types` | Only those steps. `--list` shows them all. |
-| `npm run fix` | Fixes what a machine can fix. Run it first when `check` complains. |
-| `npm run hooks` | Turns on an optional pre-commit hook that checks staged files in a few seconds. |
+| `pnpm run check` | Runs every rule and every test. Prints what failed and how to fix it. |
+| `pnpm run check --fast` | The same without the test suites. |
+| `pnpm run check --only=lint,types` | Only those steps. `--list` shows them all. |
+| `pnpm run fix` | Fixes what a machine can fix. Run it first when `check` complains. |
+| `pnpm run hooks` | Turns on an optional pre-commit hook that checks staged files in a few seconds. |
 
-To work on one package: `cd packages/<name> && npm test`. To undo the hook: `git config --unset core.hooksPath`.
+To work on one package: `pnpm --filter @weft-js/<name> test`. To undo the hook: `git config --unset core.hooksPath`.
 
-`npm run check` is about the code in this repo. Don't confuse it with `weft check`, which is the product: the diagnostics an
+`pnpm run check` is about the code in this repo. Don't confuse it with `weft check`, which is the product: the diagnostics an
 app built with weft gets.
 
 ## The rules
 
-CI runs `npm run check`, so a pull request has to pass it. The rules are all in the repo: [.oxlintrc.json](.oxlintrc.json),
+CI runs `pnpm run check`, so a pull request has to pass it. The rules are all in the repo: [.oxlintrc.json](.oxlintrc.json),
 [tsconfig.base.json](tsconfig.base.json), the `[lints]` table in each `Cargo.toml`, [deny.toml](deny.toml) and
 [scripts/quality/](scripts/quality/).
 
@@ -97,12 +97,12 @@ A diagnostic is a stable code, one line of why, a fix, and an autofix when the c
    `packages/cli/test/`.
 4. If the rule is new to users, document it in `packages/cli/docs/rules.md`.
 
-After a compiler change, rebuild with `npm run build:native` in `packages/weft`.
+After a compiler change, rebuild with `pnpm run build:native` in `packages/weft`.
 
 ## Adding a warp component
 
 1. Behaviour that isn't tied to a framework goes in `packages/warp-core/src`, and its CSS in
-   `packages/warp-core/styles/components/`. Run `npm run build:css` there.
+   `packages/warp-core/styles/components/`. Run `pnpm run build:css` there.
 2. The component goes in `packages/warp/src/<Name>.tsx`, using `data-scope` and `data-part` the way its neighbours do.
 3. Export it from `packages/warp/src/index.ts` with a doc comment, and register it in `packages/warp/plugin.mjs` and
    `packages/warp/scripts/size.mjs`.
@@ -113,7 +113,7 @@ After a compiler change, rebuild with `npm run build:native` in `packages/weft`.
 
 - One change. Refactors go in their own pull request.
 - It says what changed and why, in plain words. Link the issue if there is one.
-- `npm run check` passes.
+- `pnpm run check` passes.
 - It has a test. A bug fix has a test that fails without the fix.
 - Public API changes update the docs: see below.
 

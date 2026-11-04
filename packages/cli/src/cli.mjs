@@ -194,7 +194,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           say([`weft deploy init ${result.target}${result.dryRun ? ' (dry run: nothing written)' : ''}:`, ...result.actions.map(a => `  ${a}`), '', 'then, once:', ...result.next.map(n => `  ${n}`)].join('\n'))
           return 0
         }
-        if (sub !== undefined) throw Object.assign(new Error(`weft deploy ${sub}: use \`weft deploy\`, \`weft deploy hosts\` or \`weft deploy init [target]\``), { code: 'E_USAGE' })
+        if (sub !== undefined) throw Object.assign(new Error(`weft deploy ${String(sub)}: use \`weft deploy\`, \`weft deploy hosts\` or \`weft deploy init [target]\``), { code: 'E_USAGE' })
         const result = await deployCommand(args.root, loaded.config, { target: args.flags.target, prod: !!args.flags.prod, yes: !!args.flags.yes, unsafe, build: (root, o) => buildCommand(root, { ...o, unsafeAllow: args.flags['unsafe-allow'] }) })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))

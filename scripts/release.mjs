@@ -19,7 +19,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { dirname, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { SECRET, STRAY } from './quality/stray.mjs'
 
@@ -34,7 +34,8 @@ let otp
 /** One line from the terminal, even with stdin redirected. */
 const ask = prompt => execFileSync('bash', ['-c', `read -r -p "${prompt}" a </dev/tty >/dev/tty; echo "$a"`], { encoding: 'utf8', stdio: ['inherit', 'pipe', 'inherit'] }).trim()
 const out = resolve(flag('out') ?? join(root, '.release'))
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm' // the registry: view, and publish with its passkey approval
+const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 const run = (cmd, args, cwd, stdio = 'pipe') => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio, shell: process.platform === 'win32' })
 const read = file => JSON.parse(readFileSync(file, 'utf8'))
 const say = line => console.log(`[release] ${line}`)
@@ -86,11 +87,11 @@ function published(pkg, names, version) {
 /** Pack in place (its `prepack` runs), rewrite the manifest in a copy, pack that with no scripts. */
 function stage(item, names, version, work) {
   const tmp = mkdtempSync(join(work, 'pack-'))
-  const packed = JSON.parse(run(npm, ['pack', '--json', '--pack-destination', tmp], item.dir)).at(-1).filename.replace('@', '').replace('/', '-')
+  const packed = basename(JSON.parse(run(pnpm, ['pack', '--json', '--pack-destination', tmp], item.dir)).filename)
   run('tar', ['xzf', packed], tmp)
   const dir = join(tmp, 'package')
   writeFileSync(join(dir, 'package.json'), `${JSON.stringify(published(read(join(dir, 'package.json')), names, version), null, 2)}\n`)
-  const file = JSON.parse(run(npm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], dir)).at(-1).filename.replace('@', '').replace('/', '-')
+  const file = basename(JSON.parse(run(pnpm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], dir)).filename)
   rmSync(tmp, { recursive: true })
   return join(out, file)
 }
@@ -136,6 +137,7 @@ function check(tgz, names, version) {
     if (SECRET.test(text)) bad.push(`${f} looks like it holds a secret`)
     if (/agorix/i.test(text)) bad.push(`${f} mentions the old name`)
     if (/github\.com\/Ravonus/.test(text)) bad.push(`${f} links the private repo`)
+    if (f.startsWith('templates/')) continue // files a scaffold copies into an app: their imports are the app's
     const code = text.replace(/^\s*(?:\/\/|\/?\*).*$/gm, '')
     for (const m of code.matchAll(/^(?:import|export)\s+(?!type\b)[^'"\n`]*from\s+['"]([^'"]+)['"]/gm)) {
       const spec = m[1]

@@ -281,7 +281,7 @@ export function ditherStage(canvas: HTMLCanvasElement, options: DitherStageOptio
     let buf = arts.get(p.el)
     if (!buf || buf.length !== cells) arts.set(p.el, (buf = new Float32Array(cells)))
     sample(FIELDS[kind] ?? FIELDS.flow, p.w, p.h, 12 + clock + p.hover, buf, stepFor(cells))
-    fill(p.x, p.y, p.w, p.h, p.r, (x, y) => { const v = buf![(y - p.y) * p.w + (x - p.x)]!; return clamp(v * v * (1.05 + p.hover * 0.3) + glow(p, x, y) * 0.3) })
+    fill(p.x, p.y, p.w, p.h, p.r, (x, y) => { const v = buf[(y - p.y) * p.w + (x - p.x)]!; return clamp(v * v * (1.05 + p.hover * 0.3) + glow(p, x, y) * 0.3) })
     ring(p.x, p.y, p.w, p.h, p.r, 1, E, 0)
   }
 
@@ -354,7 +354,7 @@ export function ditherStage(canvas: HTMLCanvasElement, options: DitherStageOptio
   const core = () => ({ layout: o.layout, cell: o.cell ?? 3, rail: o.rail, fps: o.fps, animate: (o.ground ?? 0.5) > 0 && (o.speed ?? 1) > 0, paint, onTheme: retheme })
   const s = stage(canvas, core())
   // A float out of this stage, a select's list, is dithered too: clean paper, no rail, veil or ripple.
-  LOOKS.set(host, c => { const f = ditherStage(c, { ...o, layout: 'box', rail: false, veil: undefined, ripple: false, ground: 0 }); return { update() {}, destroy: f.destroy } })
+  LOOKS.set(host, c => { const f = ditherStage(c, { ...o, layout: 'box', rail: false, veil: undefined, ripple: false, ground: 0 }); return { update() {}, destroy: () => f.destroy() } })
   void document.fonts?.ready.then(() => { masks = new WeakMap() })
   return {
     update(next) {

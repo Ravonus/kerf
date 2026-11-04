@@ -73,7 +73,7 @@ test('a test that never asserts fails with T001; asserting and test.fails tests 
   const cwd = resolve(__dirname, '..')
   let out = ''
   try {
-    execFileSync(process.execPath, ['node_modules/vitest/vitest.mjs', 'run', '--config', 'test/fixtures/runtime/vitest.config.ts'], { cwd, encoding: 'utf8', stdio: 'pipe' })
+    execFileSync(process.execPath, ['node_modules/vitest/vitest.mjs', 'run', '--config', 'test/fixtures/runtime/vitest.config.ts'], { cwd, encoding: 'utf8', stdio: 'pipe', env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' } })
   } catch (e) {
     const failed = e as { stdout: string; stderr: string }
     out = `${failed.stdout}${failed.stderr}`

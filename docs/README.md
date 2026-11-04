@@ -14,7 +14,7 @@
 
 | Where | What |
 |---|---|
-| [CONTRIBUTING.md](../CONTRIBUTING.md) | Setup, `npm run check`, the rules and what a good pull request looks like. |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | Setup, `pnpm run check`, the rules and what a good pull request looks like. |
 | [getting-started.md](getting-started.md) | Using a checkout of this repo in your own apps before weft is on npm. |
 | [SECURITY.md](../SECURITY.md) | Reporting a security problem. |
 | [evals/compare/README.md](../evals/compare/README.md) | How speed and size are measured against other stacks. |

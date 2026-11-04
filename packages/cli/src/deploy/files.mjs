@@ -115,6 +115,7 @@ function workflow({ target, deploy, manager }) {
     'permissions:',
     '  contents: read',
     'concurrency:',
+    // oxlint-disable-next-line no-template-curly-in-string -- a GitHub Actions expression, not a JS template
     '  group: weft-deploy-${{ github.ref }}',
     '  cancel-in-progress: true',
     'jobs:',
@@ -126,6 +127,7 @@ function workflow({ target, deploy, manager }) {
     ...(target === 'fly' ? ['      - uses: superfly/flyctl-actions/setup-flyctl@master'] : []),
     `      - run: ${manager.install}`,
     `      - run: ${manager.x} weft check`,
+    // oxlint-disable-next-line no-template-curly-in-string -- a GitHub Actions expression, not a JS template
     `      - run: ${manager.x} weft deploy --yes${previews ? " ${{ github.event_name == 'push' && '--prod' || '' }}" : ' --prod'}`,
     '        env:',
     ...h.env.map(k => `          ${k}: \${{ secrets.${k} }}`),

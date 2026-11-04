@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "vitest": "5.0.5",
-    "@weft-js/core": "file:../weft"
+    "@weft-js/core": "workspace:*"
   },
   "engines": {
     "node": ">=26"

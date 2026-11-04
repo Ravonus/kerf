@@ -140,8 +140,10 @@ describe('files', () => {
   it('the workflow reads every secret by name, and previews only where the host has them', () => {
     const dir = app()
     const netlify = filesFor(initContext(dir, { deploy: { target: 'netlify' } }, 'netlify')).find(f => f.path.endsWith('.yml')).text
+    // oxlint-disable-next-line no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
     expect(netlify).toContain('NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}')
     expect(netlify).toContain('pull_request:')
+    // oxlint-disable-next-line no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
     expect(netlify).toContain("npx weft deploy --yes ${{ github.event_name == 'push' && '--prod' || '' }}")
     const render = filesFor(initContext(dir, { deploy: { target: 'render', branch: 'prod' } }, 'render'))
     const wf = render.find(f => f.path.endsWith('.yml')).text
@@ -165,6 +167,7 @@ describe('secrets and CDN', () => {
   it('E008: a token in a committed file, never an env var or a GitHub secret', () => {
     const dir = app({
       'netlify.toml': '[build]\n  environment = { NETLIFY_AUTH_TOKEN = "nfp_abcdefghijklmnopqrstuvwx1234" }\n',
+      // oxlint-disable-next-line no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
       '.github/workflows/deploy.yml': 'env:\n  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}\n  hook: https://api.render.com/deploy/srv-abc123?key=xyz789\n',
       'weft.config.ts': "export default { deploy: { target: 'netlify' }, apiKey: 'abcdef0123456789abcdef', token: process.env.TOKEN }\n",
     })
@@ -266,8 +269,8 @@ describe('weft deploy', () => {
     const calls = []
     const r = await deployCommand(app(), { deploy: { target: 'netlify' } }, {
       yes: true, prod: true, which, env: { NETLIFY_AUTH_TOKEN: 't', NETLIFY_SITE_ID: 's' },
-      build: async (_, o) => (calls.push(['build', o.preset]), { ok: true, diagnostics: [] }),
-      exec: async (cmd, args) => (calls.push([cmd, ...args]), { code: 0, stdout: 'Deploying…\n{ "deploy_url": "https://x--shop.netlify.app", "url": "https://shop.netlify.app" }' }),
+      build: (_, o) => Promise.resolve((calls.push(['build', o.preset]), { ok: true, diagnostics: [] })),
+      exec: (cmd, args) => Promise.resolve((calls.push([cmd, ...args]), { code: 0, stdout: 'Deploying…\n{ "deploy_url": "https://x--shop.netlify.app", "url": "https://shop.netlify.app" }' })),
     })
     expect(calls).toEqual([['build', 'netlify'], ['netlify', 'deploy', '--dir', 'dist', '--functions', '.netlify/functions-internal', '--json', '--prod']])
     expect(r.url).toBe('https://shop.netlify.app')
@@ -279,7 +282,7 @@ describe('weft deploy', () => {
   })
 
   it('E007 in CI: a token the CLI would otherwise take from its login', async () => {
-    await expect(deployCommand(app(), { deploy: { target: 'netlify', netlify: { site: 's' } } }, { yes: true, which, env: { CI: '1' }, build: async () => ({ ok: true, diagnostics: [] }) })).rejects.toThrow(/E007: `NETLIFY_AUTH_TOKEN` is unset/)
+    await expect(deployCommand(app(), { deploy: { target: 'netlify', netlify: { site: 's' } } }, { yes: true, which, env: { CI: '1' }, build: () => Promise.resolve({ ok: true, diagnostics: [] }) })).rejects.toThrow(/E007: `NETLIFY_AUTH_TOKEN` is unset/)
     const local = await deployCommand(app(), { deploy: { target: 'netlify', netlify: { site: 's' } } }, { which, env: {} })
     expect(local.diagnostics.map(d => [d.code, d.severity])).toEqual([['E007', 'warning']])
   })
@@ -288,14 +291,14 @@ describe('weft deploy', () => {
     const dir = app(CHAT)
     await expect(deployCommand(dir, { deploy: { target: 'fly', fly: { app: 'shop' } } }, { which, env: {} })).rejects.toThrow(/--prod/)
     const calls = []
-    const r = await deployCommand(dir, { deploy: { target: 'fly', fly: { app: 'shop' } } }, { yes: true, prod: true, which, env: { FLY_API_TOKEN: 't' }, exec: async (cmd, args) => (calls.push([cmd, ...args]), { code: 0, stdout: '' }) })
+    const r = await deployCommand(dir, { deploy: { target: 'fly', fly: { app: 'shop' } } }, { yes: true, prod: true, which, env: { FLY_API_TOKEN: 't' }, exec: (cmd, args) => Promise.resolve((calls.push([cmd, ...args]), { code: 0, stdout: '' })) })
     expect(calls).toEqual([['flyctl', 'deploy', '--remote-only', '--app', 'shop', '--ha=false']])
     expect(r.url).toBe('https://shop.fly.dev')
   })
 
   it('Render: the deploy hook, read from the environment', async () => {
     const posted = []
-    const r = await deployCommand(app(), { deploy: { target: 'render', render: { service: 'shop' } } }, { yes: true, prod: true, env: { RENDER_DEPLOY_HOOK_URL: 'https://api.render.com/deploy/srv-1?key=k' }, post: async url => (posted.push(url), { ok: true }) })
+    const r = await deployCommand(app(), { deploy: { target: 'render', render: { service: 'shop' } } }, { yes: true, prod: true, env: { RENDER_DEPLOY_HOOK_URL: 'https://api.render.com/deploy/srv-1?key=k' }, post: url => Promise.resolve((posted.push(url), { ok: true })) })
     expect(posted).toEqual(['https://api.render.com/deploy/srv-1?key=k'])
     expect(r.url).toBe('https://shop.onrender.com')
   })

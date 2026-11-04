@@ -16,9 +16,9 @@
     "@weft-js/core": "*"
   },
   "devDependencies": {
-    "@weft-js/start": "file:../start",
+    "@weft-js/start": "workspace:*",
     "vitest": "5.0.5",
-    "@weft-js/core": "file:../weft",
+    "@weft-js/core": "workspace:*",
     "miniflare": "^4.20260730.0",
     "vite": "8.3.5"
   },

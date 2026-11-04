@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Proves the rules bite: plants one violation in each area, runs that `npm run check` step, and wants a failure naming it. Every
+// Proves the rules bite: plants one violation in each area, runs that `pnpm run check` step, and wants a failure naming it. Every
 // planted file is removed, and every edit undone, before the next one, and the tree is checked clean at the end.
 //
 //   node scripts/quality/prove.mjs [step…]   with steps: only their plants
@@ -46,7 +46,7 @@ const PLANTS = [
   { area: 'unsafe needs SAFETY', step: 'clippy', expect: 'unsafe block missing a safety comment', edit: { file: 'crates/weft-layout/src/lib.rs', append: '\n#[must_use]\npub fn planted(x: *const u8) -> u8 { unsafe { *x } }\n' } },
   // Security
   { area: 'secret scanning', step: 'secrets', expect: 'planted-secret', file: 'packages/weft/test/planted-secret.ts', code: `export const k = '${['AKIA', 'Z3MPL9QX', 'T7VNW2KD'].join('')}'\nexport const j = 'ghp_${'a1B2c3D4e5'.repeat(3)}abcdef'\n` },
-  { area: 'licence allowlist', step: 'licences', expect: 'planted-pkg', edit: { file: 'packages/multiplayer/package-lock.json', json: lock => { lock.packages['node_modules/planted-pkg'] = { version: '1.0.0', license: 'GPL-3.0' } } } },
+  { area: 'licence allowlist', step: 'licences', expect: 'planted-pkg', env: { WEFT_LICENCES_JSON: JSON.stringify({ 'GPL-3.0': [{ name: 'planted-pkg', versions: ['1.0.0'] }] }) } },
   { area: 'no eval', step: 'lint', expect: 'no-eval', ...ts('weft/test/planted.ts', "export const f = () => eval('1')\n") },
   { area: 'no new Function', step: 'lint', expect: 'no-new-func', ...ts('weft/test/planted.ts', "export const f = new Function('return 1')\n") },
   { area: 'no html hole', step: 'lint', expect: 'no-html-sink', ...ts('weft/src/planted.ts', "export const f = (el: Element, s: string) => { el.innerHTML = s }\n") },
@@ -73,14 +73,14 @@ function plant(p) {
 const clear = () => { while (undo.length) undo.pop()() }
 process.on('SIGINT', () => { clear(); process.exit(130) })
 
-const check = step => spawnSync(process.execPath, ['scripts/check.mjs', `--only=${step}`, '--jobs=8'], { cwd: root, encoding: 'utf8' })
+const check = (step, env) => spawnSync(process.execPath, ['scripts/check.mjs', `--only=${step}`, '--jobs=8'], { cwd: root, encoding: 'utf8', env: { ...process.env, ...env } })
 const steps = process.argv.slice(2)
 const chosen = steps.length ? PLANTS.filter(p => steps.includes(p.step)) : PLANTS
 let wrong = 0
 for (const p of chosen) {
   plant(p)
   let r
-  try { r = check(p.step) } finally { clear() }
+  try { r = check(p.step, p.env) } finally { clear() }
   const caught = r.status === 1 && r.stdout.includes(p.expect)
   if (!caught) wrong++
   console.log(`${caught ? 'caught' : 'MISSED'}  ${p.area} (${p.step})`)

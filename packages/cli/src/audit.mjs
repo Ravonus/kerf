@@ -72,7 +72,7 @@ export function pagesIn(dir) {
     }
   }
   walk(dir)
-  return out.sort()
+  return out.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 }
 
 /**
@@ -236,7 +236,7 @@ async function auditPage(browser, url, form, statics, served) {
       if (statics && /\/_weft\/(rt|ws|fn|data|m|x)\b/.test(`${p.entry.url ?? ''} ${p.entry.text}`)) return
       if (statics && p.entry.url && /status of 404/.test(p.entry.text) && served(new URL(p.entry.url).pathname)) return
       // the favicon: Chrome asks for it lazily, once a session, so the head probe asks instead (below)
-      if (/\/favicon\.ico$/.test(p.entry.url ?? '')) return
+      if ((p.entry.url ?? '').endsWith('/favicon.ico')) return
       found.push({ code: 'L011', key: `${p.entry.url ?? ''} ${p.entry.text}`, at: where(p.entry.url), text: p.entry.text })
     } else if (m.method === 'Audits.issueAdded') {
       const { code, details } = p.issue

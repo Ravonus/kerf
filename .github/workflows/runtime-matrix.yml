@@ -12,14 +12,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 26 }
+      - uses: pnpm/action-setup@v4
       - uses: oven-sh/setup-bun@v2
       - uses: denoland/setup-deno@v2
       - uses: dtolnay/rust-toolchain@stable
       - name: Install the packages
         run: |
-          (cd packages/weft && npm ci && npm run build:native)
-          for p in start cli create-weft warp-core icons warp multiplayer; do (cd packages/$p && npm ci); done
-          (cd packages/start && npx playwright-core install --with-deps chromium)
+          pnpm install --frozen-lockfile
+          (cd packages/weft && pnpm run build:native)
+          (cd packages/start && pnpm exec playwright-core install --with-deps chromium)
       - name: Scaffold the todo + auth app
         run: |
           node packages/create-weft/bin/create-weft.mjs "$RUNNER_TEMP/app" --db sqlite --auth --ui warp

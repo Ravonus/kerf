@@ -4,12 +4,12 @@
 /** A scalar field: a tone at a point and a time. */
 export type Field = (x: number, y: number, t: number) => number
 /** The name of a built-in field. */
-export type FieldName = keyof typeof FIELDS
+export type FieldName = 'weave' | 'flow' | 'rings' | 'aurora' | 'drift'
 
 const { sin, cos, exp, hypot, min, max } = Math
 
 /** The built-in fields. */
-export const FIELDS = {
+export const FIELDS: Record<FieldName, Field> = {
   /** The loom: long crossing swells, the site's hero. */
   weave(x: number, y: number, t: number) {
     const u = x * 4.4, v = y * 4.4
@@ -40,7 +40,7 @@ export const FIELDS = {
     }
     return 1 - exp(-e * 1.1)
   },
-} satisfies Record<string, Field>
+}
 
 /** The field across a grid, into `out`. `step` > 1 interpolates between lattice points. */
 export function sample(field: Field, cols: number, rows: number, t: number, out: Float32Array, step = 1) {

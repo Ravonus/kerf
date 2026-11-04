@@ -267,8 +267,8 @@ export function createHandler(options: HandlerOptions) {
     // The page's `[...name]`, so its layouts see the catch-all under that name too (the loaders copy `hold` as they start).
     hold.splat = (router.getMatchedRoutes(router.latestLocation.pathname)[2] as { options: { weft?: RouteEntry } } | undefined)?.options.weft?.splat
     await router.load()
-    const moved = hold.out.redirect
-    if (moved) return { status: moved.status, path, levels: [], head: mergeMeta(site), redirect: moved }
+    const goes = hold.out.redirect
+    if (goes) return { status: goes.status, path, levels: [], head: mergeMeta(site), redirect: goes }
     const matches = router.state.matches.map(m => ({ m, weft: (router.routesById as Record<string, { options: { weft?: RouteEntry | LayoutEntry } }>)[m.routeId]?.options.weft }))
     const params = (m: { params: Record<string, unknown> }, splat?: string) => cleanParams(m.params, splat)
     const leaf = matches.at(-1)?.weft

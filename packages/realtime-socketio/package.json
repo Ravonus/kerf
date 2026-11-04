@@ -27,10 +27,10 @@
     }
   },
   "devDependencies": {
-    "@weft-js/start": "file:../start",
+    "@weft-js/start": "workspace:*",
     "vitest": "5.0.5",
-    "@weft-js/core": "file:../weft",
-    "@weft-js/multiplayer": "file:../multiplayer",
+    "@weft-js/core": "workspace:*",
+    "@weft-js/multiplayer": "workspace:*",
     "socket.io": "4.8.4"
   },
   "engines": {
