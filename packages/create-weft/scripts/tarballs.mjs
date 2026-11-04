@@ -15,9 +15,12 @@ export function writePackedPolicy(dir, tarballs = {}, packages = []) {
   const overrides = Object.entries(tarballs)
     .map(([name, spec]) => `  ${JSON.stringify(name)}: ${JSON.stringify(spec)}\n`)
     .join('')
+  const merged = /^overrides:\n/m.test(policy)
+    ? policy.replace(/^overrides:\n/m, `overrides:\n${overrides}`)
+    : `${policy}${overrides ? `\noverrides:\n${overrides}` : ''}`
   writeFileSync(
     join(dir, 'pnpm-workspace.yaml'),
-    `${packages.length ? `packages:\n${packages.map((name) => `  - ${JSON.stringify(name)}\n`).join('')}` : ''}${policy}\n${overrides ? `overrides:\n${overrides}` : ''}`,
+    `${packages.length ? `packages:\n${packages.map((name) => `  - ${JSON.stringify(name)}\n`).join('')}` : ''}${merged}\n`,
   )
 }
 

@@ -8,6 +8,22 @@ import { test } from 'node:test'
 import { pack, pin, writePackedPolicy } from '../../packages/create-weft/scripts/tarballs.mjs'
 import { writeToolShim } from '../../packages/create-weft/scripts/tool-shim.mjs'
 
+await test('packed policy merges tarballs into its inherited security overrides', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'weft-policy-merge-'))
+  try {
+    const rootPolicy = readFileSync(new URL('../../pnpm-workspace.yaml', import.meta.url), 'utf8')
+    const inherited = /^overrides:\n((?:[ \t].*\n)*)/m.exec(rootPolicy)?.[1]
+    assert.ok(inherited)
+    writePackedPolicy(dir, { '@weft-js/packed-test': 'file:/packed.tgz' })
+    const policy = readFileSync(join(dir, 'pnpm-workspace.yaml'), 'utf8')
+    assert.equal(policy.match(/^overrides:$/gm)?.length, 1)
+    assert.ok(policy.includes(inherited))
+    assert.match(policy, /"@weft-js\/packed-test": "file:\/packed.tgz"/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 await test('restricted PATH preserves a launcher that resolves its sibling executable', () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-packed-shim-'))
   try {
