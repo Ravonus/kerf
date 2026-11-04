@@ -1,7 +1,9 @@
 import { state } from '@weft-js/core'
 import { Button, Card, Checkbox } from '@weft-js/warp'
 
-const start = ['Buy beans', 'Grind', 'Brew', 'Drink'].map((id) => ({ id }))
+const start = ['Buy beans', 'Grind', 'Brew', 'Drink'].map(
+  (id) => ({ id }),
+)
 
 export default function Tasks() {
   const tasks = state(start)
@@ -14,7 +16,11 @@ export default function Tasks() {
       {tasks.value.map((t) => (
         <Checkbox key={t.id}>{t.id}</Checkbox>
       ))}
-      <Button emphasis="ghost" tone="neutral" onClick={later}>
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        onClick={later}
+      >
         Do the first one later
       </Button>
     </Card>
