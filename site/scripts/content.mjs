@@ -1289,10 +1289,10 @@ export function Counter() {
   const marked = (text, lines) => {
     let n = -1
     return `<pre tabindex="0"><code>${highlight(text, 'tsx').replace(
-      /<span data-part="line">/g,
+      /<span data-part="line"[^>]*>/g,
       (tag) => {
         n++
-        return lines[n] ? `<span data-part="line" data-${lines[n]}="">` : tag
+        return lines[n] ? tag.replace('>', ` data-${lines[n]}="">`) : tag
       },
     )}</code></pre>`
   }
@@ -1435,10 +1435,8 @@ const demoHtml = (f) => {
       : undefined
   let n = -1
   const lines = text.split('\n')
-  const html = highlight(text, 'tsx').replace(/<span data-part="line">/g, (tag) =>
-    before && lines[++n].trim() && !before.has(lines[n])
-      ? '<span data-part="line" data-new="">'
-      : tag,
+  const html = highlight(text, 'tsx').replace(/<span data-part="line"[^>]*>/g, (tag) =>
+    before && lines[++n].trim() && !before.has(lines[n]) ? tag.replace('>', ' data-new="">') : tag,
   )
   return `<pre tabindex="0"><code>${html}</code></pre>`
 }

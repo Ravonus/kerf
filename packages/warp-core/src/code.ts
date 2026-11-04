@@ -84,6 +84,7 @@ export function highlight(text: string, language = 'tsx') {
   const json = language === 'json'
   const plain = !shell && !json && !/^[jt]sx?$|^mjs$|^jsonc$/.test(language)
   const out: string[] = []
+  const indents = text.split('\n').map((line) => line.match(/^ */)![0].length)
   let at = 0
   const span = (cls: string, from: number, to: number) => {
     if (from > at) out.push(esc(text.slice(at, from)))
@@ -111,7 +112,9 @@ export function highlight(text: string, language = 'tsx') {
         const closes = (line.match(/<\/span>/g) ?? []).length
         const unclosed = opens.length > closes ? opens.at(-1)! : ''
         const body = acc.open + line + (unclosed || (acc.open && closes === 0) ? '</span>' : '')
-        acc.lines.push(`<span data-part="line">${body}</span>`)
+        acc.lines.push(
+          `<span data-part="line" style="--indent:${indents[acc.lines.length]}ch">${body}</span>`,
+        )
         acc.open = unclosed || (acc.open && closes === 0 ? acc.open : '')
         return acc
       },
