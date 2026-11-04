@@ -95,7 +95,7 @@ describe('weft mcp (stdio)', () => {
 
   it('check sees the cross-file W014 in a planted copy', async () => {
     const app = readFileSync(join(fixture, 'src/App.tsx'), 'utf8')
-    const c = client(project({ 'src/App.tsx': app.replace(...spreadBug) }))
+    const c = client(project({ 'src/App.tsx': spreadBug(app) }))
     await c.request('initialize', { protocolVersion: '2025-06-18', capabilities: {} })
     const r = await c.request('tools/call', {
       name: 'check',
