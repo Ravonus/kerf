@@ -88,15 +88,15 @@ says what it found, why it matters and how to fix it, and many come with an auto
 
 This is for working on weft itself, in a checkout of the repository, not for building an app. `pnpm run setup` at the
 repository root builds everything once, the compiler included. After you change the crate, rebuild the addon and the
-WebAssembly module from `packages/weft`:
+WebAssembly module from `packages/core`:
 
 ```bash
-cd packages/weft
-npm run build:native
+cd packages/core
+pnpm run build:native
 ```
 
 The crate pins its Rust version in `rust-toolchain.toml`, and rustup picks it up by itself. In a checkout, weft refuses to
-load an addon that's older than the crate's source, with a message that says to run `npm run build:native`, so you can't
+load an addon that's older than the crate's source, with a message asking you to rebuild, so you can't
 test a stale compiler by accident.
 
 ## Server functions in Rust
@@ -242,7 +242,7 @@ The [Rust reference](/reference/rust) has the rest: every option, the deployment
   same output. `weft doctor` says which.
 - The compiler parses each file once with Oxc, analyzes it (the W-codes), transforms props and lists, emits templates and
   bindings, and records facts that `weft check` joins across files.
-- `npm run build:native` in `packages/weft` is for working on weft itself.
+- `pnpm run build:native` in `packages/core` is for working on weft itself.
 - Write a server function in Rust at about a millisecond of CPU per call. `native()` runs it in process; `remote()` runs a
   sidecar. `weft add rust` sets either up.
 - The Zod schema is the contract. The Rust types are generated from it, so a schema change stops `cargo` where the Rust no
