@@ -38,14 +38,28 @@ import { derived, state } from '@weft-js/core'
 type Snack = { id: number; title: string }
 
 export function Menu(props: { snacks: Snack[] }) {
+  const { snacks } = props
   const chosenId = state<number | null>(null)
-  const chosen = derived(() => props.snacks.find(s => s.id === chosenId.value))
+  const chosen = derived(() =>
+    snacks.find(s => s.id === chosenId.value),
+  )
+  const label = derived(() => chosen.value
+    ? `You picked ${chosen.value.title}`
+    : 'Pick a snack',
+  )
+  const choose = (id: number) => (chosenId.value = id)
   return (
     <section>
-      {props.snacks.map(s => (
-        <button key={s.id} type="button" onClick={() => (chosenId.value = s.id)}>{s.title}</button>
+      {snacks.map(s => (
+        <button
+          key={s.id}
+          type="button"
+          onClick={() => choose(s.id)}
+        >
+          {s.title}
+        </button>
       ))}
-      <p>{chosen.value ? `You picked ${chosen.value.title}` : 'Pick a snack'}</p>
+      <p>{label.value}</p>
     </section>
   )
 }
