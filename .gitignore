@@ -36,3 +36,7 @@ packages/start/test/.tmp/
 
 # Template test apps are regenerated from packages/create-weft/templates.
 packages/create-weft/test/.tmp-templates/
+
+# Generated site content.
+/site/public/reference/
+/site/public/learn/
