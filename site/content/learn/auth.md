@@ -227,13 +227,14 @@ import { me, signOut } from '#/server/session'
 export const load = () => me.fetch()
 
 export default function Root(props: RouteProps<typeof load>) {
+  const { data, children } = props
   return (
     <>
       <nav>
         <Link href="/">Home</Link>
-        {props.data ? (
+        {data ? (
           <>
-            <span>{props.data.name}</span>
+            <span>{data.name}</span>
             <Button emphasis="ghost" onClick={() => void signOut()}>
               Sign out
             </Button>
@@ -242,7 +243,7 @@ export default function Root(props: RouteProps<typeof load>) {
           <Link href="/login">Sign in</Link>
         )}
       </nav>
-      <main>{props.children}</main>
+      <main>{children}</main>
     </>
   )
 }

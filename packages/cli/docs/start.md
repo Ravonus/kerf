@@ -37,7 +37,8 @@ export const meta: Meta<typeof load> = ({ data }) => ({
 export default function List(
   props: RouteProps<typeof load, '/lists/[id]'>,
 ) {
-  return <h1>{props.data.list.name}</h1>
+  const { data } = props
+  return <h1>{data.list.name}</h1>
 }
 ```
 
@@ -69,7 +70,9 @@ const schemas = schemasOf(schema, {
 export const listTodos = query({
   tags: ['todos'],                  // what invalidates it
   auth: 'user', // anyone else gets A002; ctx.user is non-null
-  run: ({ ctx }) => ctx.db.select().from(todos)
+  run: ({ ctx }) => ctx.db
+    .select()
+    .from(todos)
     .where(eq(todos.userId, ctx.user.id)),
 })
 
@@ -87,12 +90,15 @@ export const addTodo = mutation({
     }))
   },
   run: async ({ input, ctx }) => {
-    const [row] = await ctx.db.insert(todos).values({
-      id: crypto.randomUUID(),
-      userId: ctx.user.id,
-      createdAt: Date.now(),
-      ...input,
-    }).returning()
+    const [row] = await ctx.db
+      .insert(todos)
+      .values({
+        id: crypto.randomUUID(),
+        userId: ctx.user.id,
+        createdAt: Date.now(),
+        ...input,
+      })
+      .returning()
     return row
   },
 })
@@ -336,7 +342,9 @@ export const myNotes = query({
   tags: ['notes'], // table name, or `notes:${id}` for one row
   auth: 'user',
   live: { required: true, verify: 'staging' },   // both optional
-  run: ({ ctx }) => ctx.db.select().from(notes)
+  run: ({ ctx }) => ctx.db
+    .select()
+    .from(notes)
     .where(eq(notes.owner, ctx.user.id)),
 })
 ```
