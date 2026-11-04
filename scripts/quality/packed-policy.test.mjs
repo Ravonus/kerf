@@ -24,7 +24,7 @@ await test('restricted PATH preserves a launcher that resolves its sibling execu
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 
-test('packed pnpm installs keep the age policy and use transitive tarball overrides', () => {
+await test('packed pnpm installs keep the age policy and use transitive tarball overrides', () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-packed-policy-'))
   try {
     const source = join(root, 'source'), dest = join(root, 'tgz'), scope = join(root, 'scope'), app = join(scope, 'person')

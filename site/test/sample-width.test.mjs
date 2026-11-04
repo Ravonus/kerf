@@ -5,22 +5,22 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { scanMarkdown, scanSamples, scanSource } from '../scripts/sample-width.mjs'
 
-test('only fenced code is measured, at the boundary', () => {
+await test('only fenced code is measured, at the boundary', () => {
   const text = ['x'.repeat(71), '```js', 'x'.repeat(70), 'x'.repeat(71), '```', 'x'.repeat(71)].join('\n')
   assert.deepEqual(scanMarkdown(text), [{ line: 4, width: 71, limit: 70 }])
 })
 
-test('indented, list, quote and callout fences measure rendered code', () => {
+await test('indented, list, quote and callout fences measure rendered code', () => {
   const long = 'x'.repeat(71)
   const text = ['  ```', `  ${long}`, '  ```', '- ```', `  ${long}`, '  ```', '> ```', `> ${long}`, '> ```', ':::note', '~~~js', long, '~~~', ':::'].join('\n')
   assert.deepEqual(scanMarkdown(text).map(v => v.line), [2, 5, 8, 12])
 })
 
-test('split-pane sources use 58 columns', () => {
+await test('split-pane sources use 58 columns', () => {
   assert.deepEqual(scanSource(`${'x'.repeat(58)}\n${'x'.repeat(59)}`), [{ line: 2, width: 59, limit: 58 }])
 })
 
-test('repository scan includes canonical sources without generated copies or snapshots', () => {
+await test('repository scan includes canonical sources without generated copies or snapshots', () => {
   const root = mkdtempSync(join(tmpdir(), 'sample-width-'))
   try {
     const put = (path, content) => { const file = join(root, path); mkdirSync(join(file, '..'), { recursive: true }); writeFileSync(file, content) }
