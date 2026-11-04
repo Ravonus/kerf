@@ -1,5 +1,7 @@
+// Shared exit-gate helpers keep command failures and recorded check results consistent.
 import { spawnSync } from 'node:child_process'
 
+/** Create command runners with the gate's working directory and output budget. */
 export function commands(dir, maxBuffer, mergeEnv = false) {
   const run = (cmd, args, cwd = dir, env = {}) =>
     spawnSync(cmd, args, {
@@ -16,6 +18,7 @@ export function commands(dir, maxBuffer, mergeEnv = false) {
   return { run, must }
 }
 
+/** Poll until a value is ready, retaining the gates' timeout and retry behavior. */
 export async function until(what, fn, ms = 60_000) {
   const end = Date.now() + ms
   for (;;) {
@@ -26,6 +29,7 @@ export async function until(what, fn, ms = 60_000) {
   }
 }
 
+/** Reject unequal JSON values with a bounded description of the difference. */
 export function eq(a, b, what) {
   if (JSON.stringify(a) !== JSON.stringify(b))
     throw new Error(
@@ -33,6 +37,7 @@ export function eq(a, b, what) {
     )
 }
 
+/** Record each check without stopping the remaining checks after a failure. */
 export function makeCheck(checks, log, limit) {
   return async (name, fn) => {
     const t = performance.now()
