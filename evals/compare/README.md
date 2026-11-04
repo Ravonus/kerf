@@ -15,6 +15,8 @@ paging, column picker, inline details, a live cell). One data set, latest stable
 `shared/design.css` is one hand-written sheet, so those four stacks ship the same rules: compare frameworks there. The same-CSS
 stacks are the fair framework test; warp and MUI each bring a design system, so compare them as kits.
 
+    pnpm install         # every stack and design app, linked to this repo's packages
+    node serve.mjs       # each built app on its own port, from 5401, to click through
     node measure.mjs     # size, load, parity script with DOM mutations and CPU, row scale, screen sweep
 
 `results.json` holds the latest numbers, `../results/compare-history.jsonl` gets a line per run, and
@@ -33,7 +35,7 @@ then up, and reads back how far each on-screen row moved. Anything but 120 is a 
 `design/` holds the apps a fresh agent built from one brief (`../ds-exit.mjs`, Phase 4's exit check): the same three screens on
 each stack, in that stack's usual kit, plus weft on raw Tailwind. Each is an agent's real output, kept as it came. `measure.mjs`
 rebuilds and re-audits them (`design/audit.mjs`: axe, focus, reflow, distinct computed values and role drift, read only from the
-page in Chromium) when `npm install --legacy-peer-deps` has run in the folder, so a change to warp shows up here. It can't see
+page in Chromium) when `pnpm install` has run here, so a change to warp shows up here. It can't see
 whether a page looks good.
 
 ## The rule
@@ -46,7 +48,7 @@ change. To add a stack, add a folder; to add a scenario, add it to every folder 
 
 The count is a MutationObserver on the whole document: every node added or removed and every attribute and text change. It
 can't see property writes (`input.value`, `checked`), shadow roots or CSSOM, and one `<style>` edit counts once however many
-cells it restyles. So read it with the CPU ms beside it, and each step also asserts the page shows the right result. Run `npm install --legacy-peer-deps` in each stack first.
+cells it restyles. So read it with the CPU ms beside it, and each step also asserts the page shows the right result. Run `pnpm install` here first (one install covers every stack).
 
 weft without warp has no menu keyboard handling (arrow keys, typeahead) or focus trap beyond what native `popover` gives, where
 Radix and Kobalte add them, and it has no headless table library in its bundle. warp also keeps a phone sort bar and closed
