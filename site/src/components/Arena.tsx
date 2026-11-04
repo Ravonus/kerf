@@ -18,6 +18,7 @@ const FRAMES = [
   { id: 'solid', name: 'Solid' },
   { id: 'react', name: 'React' },
 ] as const
+const ARENA_BUILD = '../benchmarks/arena/build.mjs'
 
 const n = (v: number) => v.toLocaleString('en-US')
 const kb = (size: number) => `${(size / 1024).toFixed(1)} KB`
@@ -93,7 +94,7 @@ export function Arena() {
       {!built.frames && (
         <p data-part="missing" role="status">
           The live comparison isn't in this build: its three frames come from{' '}
-          <code>../benchmarks/arena/build.mjs</code>, which hasn't been run. The measured table below doesn't need
+          <code>{ARENA_BUILD}</code>, which hasn't been run. The measured table below doesn't need
           them.
         </p>
       )}

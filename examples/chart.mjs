@@ -4,10 +4,10 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { METRICS } from './lib/stats.mjs'
+import { historyFile as file } from './lib/app.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const results = JSON.parse(readFileSync(join(here, 'results.json'), 'utf8'))
-const file = join(here, '../evals/results/apps-history.jsonl')
 const history = existsSync(file)
   ? readFileSync(file, 'utf8')
       .trim()

@@ -1,6 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { commands, eq, makeCheck, until } from '../lib/gate.mjs'
+import { readFileSync } from 'node:fs'
+import { commands, eq, localPackages, makeCheck, repo, until } from '../lib/gate.mjs'
+
+test('local dependencies resolve to packages with the requested npm name', () => {
+  const pkg = localPackages(repo)
+  for (const name of ['core', 'warp-icons', 'create']) {
+    const expected = `@weft-js/${name}`
+    const manifest = JSON.parse(readFileSync(new URL(`${pkg(expected)}/package.json`), 'utf8'))
+    assert.equal(manifest.name, expected)
+  }
+  assert.throws(() => readFileSync(new URL(`${pkg('@weft-js/missing')}/package.json`)), /ENOENT/)
+})
 
 test('commands preserve cwd, environment, and failures', () => {
   const { run, must } = commands(process.cwd(), 1 << 26)

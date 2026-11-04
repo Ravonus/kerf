@@ -69,11 +69,13 @@ const live = (text) =>
   )
 const write = (file, value) => writeFileSync(join(out, file), live(JSON.stringify(value)))
 
+const readData = (path) => JSON.parse(readFileSync(join(repo, path), 'utf8'))
+
 // ------------------------------------------------------------------ numbers
 
 /** The stack comparison, from benchmarks/compare/results.json and the run that wrote it. */
 function numbers() {
-  const results = JSON.parse(readFileSync(join(repo, 'benchmarks/compare/results.json'), 'utf8'))
+  const results = readData('benchmarks/compare/results.json')
   const run = readFileSync(join(repo, 'evals/results/compare-history.jsonl'), 'utf8')
     .trim()
     .split('\n')
@@ -1322,9 +1324,7 @@ export const products = query({
 // in Shop: the list now comes from the database
 const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
-  const size = JSON.parse(
-    readFileSync(join(repo, 'evals/results/summary.json'), 'utf8'),
-  ).warpExit.size
+  const size = readData('evals/results/summary.json').warpExit.size
   const kb = (n) => +(n / 1024).toFixed(2)
   write('showcase.json', {
     receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) },
@@ -1348,7 +1348,7 @@ const list = products()
 
 /** The arena's table: benchmarks/speed's numbers whichever way they fall, including the rows weft loses. */
 function buildSpeed() {
-  const run = JSON.parse(readFileSync(join(repo, 'benchmarks/speed/results.json'), 'utf8'))
+  const run = readData('benchmarks/speed/results.json')
   if (!run.valid) throw new Error('benchmarks/speed/results.json was measured under too much load')
   const rows = [
     ['Create 1,000 rows', 'rows total', 'create'],
@@ -1371,7 +1371,7 @@ function buildSpeed() {
     const { lo, hi } = run.compared.weft[group][key]
     return { label, weft, solid, react, fastest: hi < 1 ? 'weft' : lo > 1 ? 'Solid' : 'Too close' }
   })
-  const arena = JSON.parse(readFileSync(join(repo, 'benchmarks/speed/arena-site.json'), 'utf8'))
+  const arena = readData('benchmarks/speed/arena-site.json')
   write('speed.json', {
     arena,
     machine: run.machine,
@@ -1450,7 +1450,7 @@ const framed = (name) => existsSync(join(site, 'public/arena', name, 'index.html
 const arena = { frames: ['weft', 'solid', 'react'].every(framed), graph: framed('graph') }
 if (!arena.frames || !arena.graph)
   console.warn(
-    '[content] arena not built: its demos will say so. Run `pnpm install` at the repo root, then `node ../benchmarks/arena/build.mjs` from site.',
+    '[content] Build arena frames: `pnpm install` then `node benchmarks/arena/build.mjs` (repo root).',
   )
 write('arena-built.json', arena)
 write(

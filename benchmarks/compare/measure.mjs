@@ -18,6 +18,7 @@ import { createServer } from 'node:http'
 import { dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
+import { historyFile as history } from './history.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const META = Object.fromEntries(
@@ -590,7 +591,6 @@ if (kept.length) {
 await browser.close()
 writeFileSync(join(here, 'results.json'), JSON.stringify(results, null, 1) + '\n')
 // One line per run, so a chart can follow each stack over time.
-const history = join(here, '../../evals/results/compare-history.jsonl')
 const git = (...a) => execFileSync('git', a, { cwd: here, encoding: 'utf8' }).trim()
 appendFileSync(
   history,

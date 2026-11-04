@@ -11,10 +11,11 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { commands } from '../lib/gate.mjs'
+import { commands, localPackages } from '../lib/gate.mjs'
 
 const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
+const pkg = localPackages(repo)
 const [step, dirArg] = process.argv.slice(2)
 if (!['prepare', 'verify'].includes(step) || !dirArg) {
   console.error('usage: phase3b-exit.mjs prepare|verify <dir>')
@@ -75,7 +76,7 @@ if (step === 'prepare') {
     for (const name of Object.keys(deps ?? {}))
       if (name === '@weft-js/core' || name.startsWith('@weft-js/'))
         deps[name] =
-          `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
+          pkg(name)
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   must('npm', ['install', '--no-audit', '--no-fund'])
   must('npx', ['weft', 'db', 'generate'])

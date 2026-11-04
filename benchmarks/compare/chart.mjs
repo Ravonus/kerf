@@ -4,10 +4,10 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { historyFile as file } from './history.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const results = JSON.parse(readFileSync(join(here, 'results.json'), 'utf8'))
-const file = join(here, '../../evals/results/compare-history.jsonl')
 const history = existsSync(file)
   ? readFileSync(file, 'utf8')
       .trim()

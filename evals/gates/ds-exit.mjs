@@ -11,14 +11,14 @@
 // 03 §1.1), and the claim is that the good result comes by construction. Exit 1 if @weft-js/core/ds doesn't beat raw Tailwind.
 import { execFile, execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import { audit, chromium } from '../compare/design/audit.mjs'
+import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { audit, chromium } from '../../benchmarks/compare/design/audit.mjs'
 import { pool } from '../../scripts/jobs.mjs'
+import { localPackages, repo } from '../lib/gate.mjs'
 
-const here = join(dirname(fileURLToPath(import.meta.url)), '..')
-const repo = join(here, '..')
-const pkg = (name) => `file:${join(repo, 'packages', name)}`
+const here = join(repo, 'evals')
+const pkg = localPackages(repo)
 const [step, dirArg] = process.argv.slice(2)
 const opt = (n) => {
   const i = process.argv.indexOf(`--${n}`)
@@ -449,7 +449,7 @@ async function verify(dir) {
 function keep(dir) {
   for (const id of Object.keys(STACKS)) {
     const from = join(dir, `${id}.sonnet.1`),
-      to = join(here, 'compare/design', id)
+      to = join(repo, 'benchmarks/compare/design', id)
     mkdirSync(to, { recursive: true })
     for (const f of [
       'src',

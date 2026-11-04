@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { benchUser, seedHash } from '../shared/pg/env.mjs'
 
 export const here = fileURLToPath(new URL('..', import.meta.url))
+/** Benchmark runs and charts keep their shared history under evaluation results. */
+export const historyFile = join(here, '../evals/results/apps-history.jsonl')
 export const stacks = JSON.parse(readFileSync(join(here, 'stacks.json'), 'utf8'))
 
 const LOCKS = [

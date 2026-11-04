@@ -32,10 +32,11 @@ import { loadavg } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
-import { commands, until, eq, makeCheck } from '../lib/gate.mjs'
+import { commands, until, eq, makeCheck, localPackages } from '../lib/gate.mjs'
 
 const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
+const pkg = localPackages(repo)
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -270,7 +271,7 @@ for (const deps of [pkg.dependencies, pkg.devDependencies])
   for (const name of Object.keys(deps ?? {}))
     if (name === '@weft-js/core' || name.startsWith('@weft-js/'))
       deps[name] =
-        `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
+        pkg(name)
 pkg.dependencies.zod = '4.6.7'
 writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
 must('npm', ['install', '--no-audit', '--no-fund'])

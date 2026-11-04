@@ -1,5 +1,14 @@
 // Shared exit-gate helpers keep command failures and recorded check results consistent.
 import { spawnSync } from 'node:child_process'
+import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+/** The repository root shared by exit gates and their package dependencies. */
+export const repo = resolve(fileURLToPath(new URL('../..', import.meta.url)))
+
+/** Resolve local package dependencies by the folder that matches their npm name. */
+export const localPackages = (repo) => (name) =>
+  `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
 
 /** Create command runners with the gate's working directory and output budget. */
 export function commands(dir, maxBuffer, mergeEnv = false) {

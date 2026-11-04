@@ -16,7 +16,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileS
 import { cpus, homedir, hostname, loadavg } from 'node:os'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
-import { allApps, freshness, here, loadApp } from './lib/app.mjs'
+import { allApps, freshness, here, historyFile as history, loadApp } from './lib/app.mjs'
 import { cpuBusy, jobs as defaultJobs, pool } from '../scripts/jobs.mjs'
 import { attribute } from './lib/attribute.mjs'
 import { linesOfCode, packOnce, prepare, repoState } from './lib/build.mjs'
@@ -56,8 +56,7 @@ const BUSY = windows ? 80 : 40,
   load = (ms) => (windows ? 100 * cpuBusy(ms) : loadavg()[0])
 process.on('SIGINT', () => process.exit(130))
 process.on('SIGTERM', () => process.exit(143))
-const results = join(here, 'results.json'),
-  history = join(here, '../evals/results/apps-history.jsonl')
+const results = join(here, 'results.json')
 const work = process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench'),
   store = join(work, 'store')
 const samplesWanted = +opt.samples,
