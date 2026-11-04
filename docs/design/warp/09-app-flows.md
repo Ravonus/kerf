@@ -53,23 +53,52 @@ every code it can receive at build time.
 
 ```ts
 // server/auth.ts
-export const SignIn = z.object({ email: z.email(), password: z.string().min(8, 'At least 8 characters') })
+export const SignIn = z.object({
+  email: z.email(),
+  password: z.string().min(8, 'At least 8 characters'),
+})
 export const signIn = mutation({
   input: SignIn,
-  errors: { INVALID_CREDENTIALS: z.object({}), MFA_REQUIRED: z.object({ ticket: z.string(), methods: z.array(z.enum(['totp', 'sms', 'passkey'])) }),
-            LOCKED: z.object({ until: z.iso.datetime() }), RATE_LIMITED: z.object({ retryAfter: z.number() }) },
-  run: ({ input, ctx }) => ctx.auth.signIn(input),          // Better Auth underneath
+  errors: {
+    INVALID_CREDENTIALS: z.object({}),
+    MFA_REQUIRED: z.object({
+      ticket: z.string(),
+      methods: z.array(z.enum(['totp', 'sms', 'passkey'])),
+    }),
+    LOCKED: z.object({ until: z.iso.datetime() }),
+    RATE_LIMITED: z.object({ retryAfter: z.number() }),
+  },
+  run: ({ input, ctx }) => ctx.auth.signIn(input), // Better Auth
 })
 
 // app/sign-in.tsx
-const step = state<'credentials' | 'otp' | 'magic' | 'done'>('credentials')
-<Form of={signIn} fields="floating"
-      onError={{ MFA_REQUIRED: (e) => step.set('otp'), RATE_LIMITED: (e) => cooldown(e.retryAfter) }}
-      onSuccess={() => step.set('done')}>
-  <Field name="email" label="Email" autocomplete="username webauthn" />
-  <Field name="password" type="password" label="Password" autocomplete="current-password" />
-  <Form.Error />                               {/* form-level Alert: INVALID_CREDENTIALS, LOCKED */}
-  <Form.Submit>Sign in</Form.Submit>           {/* pending: spinner + label kept, disabled, aria-busy */}
+const step = state<'credentials' | 'otp' | 'magic' | 'done'>(
+  'credentials',
+)
+<Form
+  of={signIn}
+  fields="floating"
+  onError={{
+    MFA_REQUIRED: (e) => step.set('otp'),
+    RATE_LIMITED: (e) => cooldown(e.retryAfter),
+  }}
+  onSuccess={() => step.set('done')}
+>
+  <Field
+    name="email"
+    label="Email"
+    autocomplete="username webauthn"
+  />
+  <Field
+    name="password"
+    type="password"
+    label="Password"
+    autocomplete="current-password"
+  />
+  {/* Form-level Alert: INVALID_CREDENTIALS, LOCKED */}
+  <Form.Error />
+  {/* Pending: spinner and label, disabled, aria-busy */}
+  <Form.Submit>Sign in</Form.Submit>
 </Form>
 ```
 
@@ -172,11 +201,23 @@ sheet is not an error: nothing shows. **SSO:** Provider buttons are frame button
 
 ```ts
 export const verifyOtp = mutation({
-  input: z.object({ ticket: z.string(), code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code') }),
-  errors: { WRONG_CODE: z.object({ attemptsLeft: z.number() }), EXPIRED: z.object({}) },
+  input: z.object({
+    ticket: z.string(),
+    code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code'),
+  }),
+  errors: {
+    WRONG_CODE: z.object({ attemptsLeft: z.number() }),
+    EXPIRED: z.object({}),
+  },
   run: ({ input, ctx }) => ctx.auth.verifyTotp(input),
-})
-<Form of={verifyOtp} autoSubmit="complete"><OTP name="code" length={6} autocomplete="one-time-code" /></Form>
+});
+<Form of={verifyOtp} autoSubmit="complete">
+  <OTP
+    name="code"
+    length={6}
+    autocomplete="one-time-code"
+  />
+</Form>
 ```
 
 ### 2.4 SignGate (an action gated on a signed agreement, provider's embedded signer)
@@ -194,9 +235,18 @@ export const verifyOtp = mutation({
 - **Motion:** when status turns `signed`, the iframe exits, the mark strokes in and the badge sweeps once (balanced+).
 
 ```ts
-const status = query.live(signStatus, { input: () => ({ envelopeId }), tags: [`sign:${envelopeId}`] })
-<SignGate status={status} src={signerUrl} onResend={resend} onSigned={() => nav('/workspace')}>
-  <SignGate.Badge />  <SignGate.Blocker title="Sign the data agreement to continue" />
+const status = query.live(signStatus, {
+  input: () => ({ envelopeId }),
+  tags: [`sign:${envelopeId}`],
+})
+<SignGate
+  status={status}
+  src={signerUrl}
+  onResend={resend}
+  onSigned={() => nav('/workspace')}
+>
+  <SignGate.Badge />
+  <SignGate.Blocker title="Sign the data agreement to continue" />
 </SignGate>
 ```
 
@@ -230,8 +280,17 @@ a Hide button; Hide shows a Toast with Undo (10 s), and the checklist moves to H
   (`aria-describedby`) while spotlit; ending the tour returns focus to where it started.
 
 ```ts
-<Tour id="projects-v2" steps={[{ target: '[data-tour=new]', title: 'Start a project', body: '…', interactive: true }, …]}
-      open={tourOpen} onDone={() => markTour({ id: 'projects-v2' })} />
+<Tour
+  id="projects-v2"
+  steps={[{
+    target: '[data-tour=new]',
+    title: 'Start a project',
+    body: '…',
+    interactive: true,
+  }, …]}
+  open={tourOpen}
+  onDone={() => markTour({ id: 'projects-v2' })}
+/>
 ```
 
 ## 4. Settings, billing and admin
@@ -247,9 +306,20 @@ a Hide button; Hide shows a Toast with Undo (10 s), and the checklist moves to H
 
 ```ts
 const profile = query(getProfile, { cache: { tags: ['me'] } })
-export const updateProfile = mutation({ input: Profile.pick({ name: true, email: true, handle: true }),
-  errors: { HANDLE_TAKEN: z.object({ suggestion: z.string() }) }, invalidates: ['me'], run })
-<Form of={updateProfile} initial={profile} saveBar>…</Form>    // saveBar = Dock + dirty diff + leave guard
+export const updateProfile = mutation({
+  input: Profile.pick({ name: true, email: true, handle: true }),
+  errors: { HANDLE_TAKEN: z.object({ suggestion: z.string() }) },
+  invalidates: ['me'],
+  run,
+})
+// saveBar = Dock + dirty diff + leave guard
+<Form
+  of={updateProfile}
+  initial={profile}
+  saveBar
+>
+  …
+</Form>
 ```
 
 ### 4.2 Profile, members and roles, API keys
@@ -290,11 +360,20 @@ export const updateProfile = mutation({ input: Profile.pick({ name: true, email:
 
 ```ts
 export const changePlan = mutation({
-  input: z.object({ plan: z.enum(['free', 'team', 'scale']), interval: z.enum(['month', 'year']) }),
-  errors: { CARD_DECLINED: z.object({ reason: z.string() }), SEAT_LIMIT: z.object({ seats: z.number() }) },
-  invalidates: ['billing', 'usage'], run,
+  input: z.object({
+    plan: z.enum(['free', 'team', 'scale']),
+    interval: z.enum(['month', 'year']),
+  }),
+  errors: {
+    CARD_DECLINED: z.object({ reason: z.string() }),
+    SEAT_LIMIT: z.object({ seats: z.number() }),
+  },
+  invalidates: ['billing', 'usage'],
+  run,
 })
-const preview = query(prorationPreview, { input: () => ({ plan: pick.value, interval: interval.value }) })
+const preview = query(prorationPreview, {
+  input: () => ({ plan: pick.value, interval: interval.value }),
+})
 ```
 
 ### 4.4 Danger zone
@@ -307,9 +386,16 @@ because typing is the required act and Cancel is one Tab away. Reversible acts (
 AlertDialog and give Undo for 10 s.
 
 ```ts
-export const deleteProject = mutation({ input: z.object({ id: z.string(), confirm: z.string() })
-  .refine((v) => v.confirm === v.slug, { path: ['confirm'], message: 'Type the project name exactly' }),
-  invalidates: ['projects'], run })
+export const deleteProject = mutation({
+  input: z
+    .object({ id: z.string(), confirm: z.string() })
+    .refine(v => v.confirm === v.slug, {
+      path: ['confirm'],
+      message: 'Type the project name exactly',
+    }),
+  invalidates: ['projects'],
+  run,
+})
 ```
 
 ### 4.5 CRUD with bulk actions, audit log
@@ -339,10 +425,24 @@ export const deleteProject = mutation({ input: z.object({ id: z.string(), confir
   URL (validated on submit, then live) and event checkboxes; the signing secret is shown once, like an API key.
 
 ```ts
-export const connectIntegration = mutation({ input: z.object({ provider: z.enum(['github', 'slack', 'linear', 'pagerduty']) }),
-  run: ({ input, ctx }) => ctx.oauth.begin(input.provider) })            // → redirect URL; the card reads integrationStatus .live
-export const addWebhook = mutation({ input: z.object({ url: z.url().startsWith('https://', 'Use a full https:// URL'),
-  events: z.array(z.enum(['deploy.succeeded', 'deploy.failed', 'member.added'])).min(1) }), invalidates: ['webhooks'], run })
+export const connectIntegration = mutation({
+  input: z.object({
+    provider: z.enum(['github', 'slack', 'linear', 'pagerduty']),
+  }),
+  run: ({ input, ctx }) => ctx.oauth.begin(input.provider),
+}) // → redirect URL; the card reads integrationStatus .live
+export const addWebhook = mutation({
+  input: z.object({
+    url: z.url().startsWith('https://', 'Use a full https:// URL'),
+    events: z
+      .array(
+        z.enum(['deploy.succeeded', 'deploy.failed', 'member.added']),
+      )
+      .min(1),
+  }),
+  invalidates: ['webhooks'],
+  run,
+})
 ```
 
 ### 4.7 CSV import wizard
@@ -405,8 +505,14 @@ failed action's Toast says "Reload to finish saving".
 
 ```ts
 import { online } from '@weft-js/core/browser'
-const conn = connection()            // { state: LiveState, stale: Signal<boolean> }
-<ConnBanner online={online} state={conn.state} stale={conn.stale} onReload={saveDraftsAndReload} />
+// { state: LiveState, stale: Signal<boolean> }
+const conn = connection()
+<ConnBanner
+  online={online}
+  state={conn.state}
+  stale={conn.stale}
+  onReload={saveDraftsAndReload}
+/>
 ```
 
 ### 5.5 Rate limited
@@ -443,11 +549,20 @@ Cart → Address → Shipping → Payment → Review → Confirmation. Steps (05
 
 ```ts
 export const placeOrder = mutation({
-  input: z.object({ cartId: z.string(), address: Address, shipping: z.enum(['standard', 'express']),
-                    paymentToken: z.string(), idempotencyKey: z.uuid() }),
-  errors: { CARD_DECLINED: z.object({ reason: z.string() }), OUT_OF_STOCK: z.object({ sku: z.string() }),
-            PRICE_CHANGED: z.object({ total: z.number() }) },
-  invalidates: ['cart', 'orders'], run,
+  input: z.object({
+    cartId: z.string(),
+    address: Address,
+    shipping: z.enum(['standard', 'express']),
+    paymentToken: z.string(),
+    idempotencyKey: z.uuid(),
+  }),
+  errors: {
+    CARD_DECLINED: z.object({ reason: z.string() }),
+    OUT_OF_STOCK: z.object({ sku: z.string() }),
+    PRICE_CHANGED: z.object({ total: z.number() }),
+  },
+  invalidates: ['cart', 'orders'],
+  run,
 })
 ```
 

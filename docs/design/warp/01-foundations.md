@@ -9,7 +9,8 @@ will emit it from DTCG). Direction and rationale: [00-direction.md](00-direction
 ## 1. Layers and naming
 
 ```
-seed (≈8 values, Zod) → ref (ramps, raw scales, per-stop inputs) → sys (roles) → component (escape layer) → CSS vars
+seed (≈8 values, Zod) → ref (ramps, raw scales, per-stop inputs)
+→ sys (roles) → component (escape layer) → CSS vars
 ```
 
 | Layer | Who edits it | CSS prefix | Example |
@@ -279,9 +280,12 @@ duration by `max(motion-scale, 0.001)`: that keeps a compositor animation alive.
 
 ```html
 <label data-part="label" for="f-email">
-  <span data-part="label-text">Email address</span>          <!-- visually hidden, text-transform: none: the name -->
-  <span data-part="label-chars" aria-hidden="true">           <!-- what you see: one span per letter -->
-    <span data-char data-c="E"></span><span data-char data-c="m"></span>…
+  <!-- Visually hidden; text-transform: none. -->
+  <span data-part="label-text">Email address</span>
+  <!-- Visible: one span per letter. -->
+  <span data-part="label-chars" aria-hidden="true">
+    <span data-char data-c="E"></span><span
+      data-char data-c="m"></span>…
   </span>
 </label>
 ```
@@ -417,24 +421,41 @@ import { defineConfig } from "@weft-js/core";
 
 export default defineConfig({
   ui: {
-    kit: "warp",                       // "warp" | "headless" | "none"  (§9)
-    theme: {                           // Zod .strict(): unknown keys are errors
+    // "warp" | "headless" | "none"  (§9)
+    kit: "warp",
+    // Zod .strict(): unknown keys are errors
+    theme: {
       seed: {
-        accent: "oklch(0.55 0.12 152)",         // hue + chroma used; L is solved per theme
-        neutral: { hue: 80, chroma: 0.005 },    // optional; else the stop's temperature
-        status: { critical: "oklch(0.55 0.19 27)" }, // optional overrides, still checked
-        focus: "accent",                        // or an oklch(); must clear 3:1
+        // hue + chroma used; L is solved per theme
+        accent: "oklch(0.55 0.12 152)",
+        // optional; else the stop's temperature
+        neutral: { hue: 80, chroma: 0.005 },
+        // optional overrides, still checked
+        status: { critical: "oklch(0.55 0.19 27)" },
+        // or an oklch(); must clear 3:1
+        focus: "accent",
       },
-      fonts: {                                  // role → family; loaded by weft/start
-        sans: "Inter", display: "Space Grotesk", mono: "IBM Plex Mono",
+      // role → family; loaded by weft/start
+      fonts: {
+        sans: "Inter",
+        display: "Space Grotesk",
+        mono: "IBM Plex Mono",
       },
-      expression: "balanced",           // "quiet" | "balanced" | "vivid" | 0…1
-      density: "cozy",                  // "compact" | "cozy" | "comfortable"
-      schemes: ["light", "dark"],       // drop one to ship single-scheme
-      flair: { sweep: "auto" },         // reach: "auto" (by stop) | "on" (+buttons, cards) | "off" (fields only)
-      fields: "floating",               // "floating" | "classic"  → data-fields on <html> (one switch)
-      contrast: "AA",                   // "AAA" raises text to 7:1, UI to 4.5:1
-      pins: { dark: { "color.surface.base": "oklch(0.2 0.01 80)" } }, // still contrast-checked
+      // "quiet" | "balanced" | "vivid" | 0…1
+      expression: "balanced",
+      // "compact" | "cozy" | "comfortable"
+      density: "cozy",
+      // drop one to ship single-scheme
+      schemes: ["light", "dark"],
+      // reach: "auto" (by stop) | "on" (+buttons, cards) | "off"
+      // (fields only)
+      flair: { sweep: "auto" },
+      // "floating" | "classic"  → data-fields on <html> (one switch)
+      fields: "floating",
+      // "AAA" raises text to 7:1, UI to 4.5:1
+      contrast: "AA",
+      // still contrast-checked
+      pins: { dark: { "color.surface.base": "oklch(0.2 0.01 80)" } },
     },
     adapters: ["tailwind"],             // emits @theme inline aliases
   },
@@ -480,7 +501,10 @@ wrapped in `:where()` (specificity 0). Rules of the road:
   @layer warp, theme, base, components, utilities;
   @import "@weft-js/warp/warp.css";
   @import "tailwindcss";
-  @theme inline { --color-accent: var(--warp-color-accent-solid); --radius-control: var(--warp-radius-control); }
+  @theme inline {
+    --color-accent: var(--warp-color-accent-solid);
+    --radius-control: var(--warp-radius-control);
+  }
   ```
 - **Other layered systems** (Panda, vanilla-extract): declare `warp` before their layers.
 - `!important` appears only in `warp.base`, for accessibility guarantees: the reduced-motion rules (§2 Motion),
@@ -580,16 +604,29 @@ extras.
 **Contract.**
 - Markup, the whole of it:
   ```html
-  <link rel="stylesheet" href="warp-bar.css">                     <!-- after the token sheets -->
+  <!-- After the token sheets. -->
+  <link rel="stylesheet" href="warp-bar.css">
   …
-  <header data-specimen-bar data-label="inputs v0.2"             text after the "warp" mark
-          data-flair-target=".screen"                             optional: these elements also get data-flair
-          data-aliases="x:expression">                            optional: legacy URL parameters
-    <div data-extra="pointer" data-label="Pointer" data-options="auto:Auto, fine:Fine, coarse:Touch"
-         title="page extra: …"></div>                             declarative extra; first option is the default
-    <div class="wb-ctl">…</div>                                   or a hand-written extra (wb-ctl › span + wb-seg)
+  <!-- Label follows the mark. Optional flair target gets data-flair;
+       aliases name legacy URL parameters. -->
+  <header
+    data-specimen-bar
+    data-label="inputs v0.2"
+    data-flair-target=".screen"
+    data-aliases="x:expression"
+  >
+    <!-- Declarative extra; first option is the default. -->
+    <div
+      data-extra="pointer"
+      data-label="Pointer"
+      data-options="auto:Auto, fine:Fine, coarse:Touch"
+      title="page extra: …"
+    ></div>
+    <!-- Or a hand-written extra: wb-ctl › span + wb-seg. -->
+    <div class="wb-ctl">…</div>
   </header>
-  <script src="warp-bar.js"></script>                             right after </header>, not deferred
+  <!-- Right after the header, not deferred. -->
+  <script src="warp-bar.js"></script>
   ```
 - CSS: unlayered, every selector under `[data-specimen-bar]`, so it never collides with page styles.
 - JS: builds the bar, then applies URL parameters to `<html>` before first paint. It writes the six standard

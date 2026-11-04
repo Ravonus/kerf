@@ -12,8 +12,13 @@ App code names products, never a rail:
 // src/pay/catalog.ts: reaches the client, so names and amounts only
 import { product } from '@weft-js/pay'
 
-export const pro = product({ id: 'pro', kind: 'subscription', use: 'digital',
-  plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } }, grants: ['pro'] })
+export const pro = product({
+  id: 'pro',
+  kind: 'subscription',
+  use: 'digital',
+  plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } },
+  grants: ['pro'],
+})
 ```
 
 <!-- example: skip needs what `weft add pay` writes -->
@@ -27,8 +32,15 @@ export default function Pricing() {
   const mine = entitlements.live()
   return (
     <section>
-      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>Go Pro · {price(pro, 'year').display}</button>
-      <button type="button" onClick={() => portal()}>Manage</button>
+      <button
+        type="button"
+        onClick={() => checkout({ product: 'pro', plan: 'year' })}
+      >
+        Go Pro · {price(pro, 'year').display}
+      </button>
+      <button type="button" onClick={() => portal()}>
+        Manage
+      </button>
       {mine.value?.includes('pro') && <p>You have Pro.</p>}
     </section>
   )
@@ -48,8 +60,13 @@ A bad signature answers 400; a failure answers 500, so the rail delivers it agai
 
 <!-- example: skip fragments of a server module -->
 ```ts
-export const report = query({ auth: 'user', requires: ['pro'], run: ({ ctx }) => buildReport(ctx) })  // a typed 403: ENTITLEMENT_REQUIRED
-if (!(await ctx.entitlements.has('pro'))) redirect('/pricing')                                          // await it (PAY015)
+export const report = query({
+  auth: 'user',
+  requires: ['pro'],
+  run: ({ ctx }) => buildReport(ctx),
+}) // a typed 403: ENTITLEMENT_REQUIRED
+// Await it (PAY015).
+if (!(await ctx.entitlements.has('pro'))) redirect('/pricing')
 ```
 
 `ctx.entitlements` has `has(id)` and `list()`, and works in any `query`, `mutation` or `load`. A query with `cache: { life }`
@@ -82,13 +99,15 @@ generated file (PAY003).
 ledger, so a test sees what a user would:
 
 ```tsx
-const fake = fakePay(pay)                     // your `definePay`, or fakePay({ catalog })
+const fake = fakePay(pay) // your `definePay`, or fakePay({ catalog })
 net.context({ user: { id: 'u1' } })
 render(Paywall)
 await user.click(screen.getByRole('button', { name: /Go Pro/ }))
-await fake.complete()                          // the buyer finishes the hosted page
+await fake.complete() // the buyer finishes the hosted page
 expect(screen.getByLabelText('plan').textContent).toBe('Pro')
-await fake.simulate('renewal-failed')          // renewal, recovered, grace-expired, cancel, pause, resume, refund, revoke
+// renewal, recovered, grace-expired, cancel, pause, resume,
+// refund, revoke
+await fake.simulate('renewal-failed')
 ```
 
 `fake.buy(user, product, plan)` skips the page. `renewal` and `renewal-failed` move `clock` to the period's end when it's
