@@ -1,12 +1,19 @@
 ```tsx
 import { derived } from '@weft-js/core'
 
-export function Cart({ items, taxRate }: { items: { id: string; name: string; price: number }[]; taxRate: number }) {
-  const subtotal = derived(() => items.reduce((s, i) => s + i.price, 0))
+export function Cart({ items, taxRate }: {
+  items: { id: string; name: string; price: number }[]
+  taxRate: number
+}) {
+  const subtotal = derived(() =>
+    items.reduce((s, i) => s + i.price, 0),
+  )
   const total = derived(() => subtotal.value * (1 + taxRate))
   return (
     <section>
-      <ul>{items.map(item => <li key={item.id}>{item.name}</li>)}</ul>
+      <ul>
+        {items.map(item => <li key={item.id}>{item.name}</li>)}
+      </ul>
       <p>{total.value.toFixed(2)}</p>
     </section>
   )

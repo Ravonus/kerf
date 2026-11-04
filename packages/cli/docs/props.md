@@ -7,10 +7,21 @@ Leave a component's props unannotated. weft infers them from its callers and its
 
 ```tsx
 function Row(props) {
-  return <li><button type="button" onClick={props.onPick}>{props.label.toUpperCase()}</button></li>
+  const { label, onPick } = props
+  return (
+    <li>
+      <button type="button" onClick={onPick}>
+        {label.toUpperCase()}
+      </button>
+    </li>
+  )
 }
 export default function List() {
-  return <ul><Row label="One" onPick={() => console.log('picked one')} /></ul>
+  return (
+    <ul>
+      <Row label="One" onPick={() => console.log('picked one')} />
+    </ul>
+  )
 }
 ```
 
