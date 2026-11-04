@@ -41,7 +41,7 @@ beforeEach(() => {
   const call = (kind: string) => (id: string, input: unknown) => new Promise<Answer>((ok, no) => { calls.push({ kind, id, input, ok, no }) })
   runtime.transport = { query: call('query'), mutate: call('mutate') }
 })
-afterEach(() => { runtime.transport = undefined })
+afterEach(() => { delete runtime.transport })
 
 const rows = (done: boolean): Row[] => [{ id: 'a', done }]
 const reply = (done: boolean): Answer => ({ t: ['rows'], c: [['rows', undefined, rows(done), ['rows']]] })
@@ -77,7 +77,7 @@ async function ready(done = false) {
 test('one call, nothing overlapping: its reply lands and nothing is read again', async () => {
   await ready()
   const p = set({ id: 'a', done: true })
-  calls[0].ok(reply(true))
+  calls[0]!.ok(reply(true))
   await p
   await tick()
   expect(shown()).toEqual(['done'])
@@ -90,17 +90,17 @@ test('two overlapping calls answered in reverse: no reply lands, and one read af
   await flush()
   expect(shown()).toEqual(['open'])
   const [first, second] = calls
-  second.ok(reply(false))
+  second!.ok(reply(false))
   await b
   await tick()
   expect(shown()).toEqual(['open'])
   expect(reads()).toEqual([])
-  first.ok(reply(true)) // the older value, last in: it must not show
+  first!.ok(reply(true)) // the older value, last in: it must not show
   await a
   await tick()
   expect(shown()).toEqual(['open'])
   expect(reads().length).toBe(1)
-  reads()[0].ok(read(false))
+  reads()[0]!.ok(read(false))
   await tick()
   expect(shown()).toEqual(['open'])
   expect(cache.get(list)).toEqual(rows(false))
@@ -116,13 +116,13 @@ test('five overlapping toggles, any order of replies: the screen follows the cli
     await flush()
     const sent = calls.slice()
     for (const i of order) {
-      sent[i].ok(reply(want[i]))
+      sent[i]!.ok(reply(want[i]!))
       await done[i]
       await tick()
       expect(shown().at(-1)).toBe('done') // the last click, whatever has answered
     }
     expect(reads().length).toBe(1)
-    reads()[0].ok(read(true))
+    reads()[0]!.ok(read(true))
     await tick()
     expect(shown().at(-1)).toBe('done')
     expect(cache.get(list)).toEqual(rows(true))
@@ -134,14 +134,14 @@ test('a click after a reply keeps the order of the layers left: a dropped newer 
   await ready()
   const a = set({ id: 'a', done: true }), b = set({ id: 'a', done: false }), c = set({ id: 'a', done: true })
   await flush()
-  calls[2].ok(reply(true))
+  calls[2]!.ok(reply(true))
   await c
   await tick()
   expect(shown()).toEqual(['done']) // not b's `false`, reapplied with c's layer gone
-  calls[0].ok(reply(true)); calls[1].ok(reply(false))
+  calls[0]!.ok(reply(true)); calls[1]!.ok(reply(false))
   await Promise.all([a, b])
   await tick()
-  reads()[0].ok(read(true))
+  reads()[0]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
 })
@@ -153,11 +153,11 @@ test('a call with no prediction overlapping one with: replies in either order en
     await ready()
     const a = set({ id: 'a', done: true }), b = plain()
     await flush()
-    const [first, second] = flip ? [calls[1], calls[0]] : [calls[0], calls[1]]
+    const [first, second] = flip ? [calls[1]!, calls[0]!] : [calls[0]!, calls[1]!]
     first.ok(reply(true)); await tick()
     second.ok(reply(false)); await Promise.all([a, b]); await tick()
     expect(reads().length).toBe(1)
-    reads()[0].ok(read(true))
+    reads()[0]!.ok(read(true))
     await tick()
     expect(cache.get(list)).toEqual(rows(true))
     document.body.textContent = ''
@@ -168,10 +168,10 @@ test('calls on different entries do not hold each other up', async () => {
   seed([['rows', undefined, rows(false), ['rows']], ['other', undefined, 1, ['other']]])
   const bump = mutation({ $id: 'bump', invalidates: ['other'], run: () => {} })
   const a = set({ id: 'a', done: true }), b = bump()
-  calls[1].ok({ t: ['other'], c: [['other', undefined, 2, ['other']]] })
+  calls[1]!.ok({ t: ['other'], c: [['other', undefined, 2, ['other']]] })
   await b
   expect(cache.get(other)).toBe(2)
-  calls[0].ok(reply(true))
+  calls[0]!.ok(reply(true))
   await a
   await tick()
   expect(cache.get(list)).toEqual(rows(true))
@@ -188,7 +188,7 @@ test('a late read does not revert what a mutation brought', async () => {
   await p
   await tick()
   expect(shown()).toEqual(['done'])
-  reads()[0].ok(read(false)) // sent before the write
+  reads()[0]!.ok(read(false)) // sent before the write
   await tick()
   expect(shown()).toEqual(['done'])
   expect(reads().length).toBe(1)
@@ -201,11 +201,11 @@ test('a read that left before an invalidation does not land, and the rerun does 
   void cache.invalidate('rows') // what the first read saw is out of date now
   await tick()
   const [old] = reads()
-  old.ok(read(false))
+  old!.ok(read(false))
   await tick()
   expect(reads().length).toBe(2)
   expect(shown()).toEqual(['open'])
-  reads()[1].ok(read(true))
+  reads()[1]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
 })
@@ -215,10 +215,10 @@ test('a first load in flight, whose tags nothing knows yet, is still invalidated
   await tick()
   expect(reads().length).toBe(1)
   void cache.invalidate('rows')
-  reads()[0].ok(read(false))
+  reads()[0]!.ok(read(false))
   await tick()
   expect(reads().length).toBe(2)
-  reads()[1].ok(read(true))
+  reads()[1]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
 })
@@ -227,7 +227,7 @@ test('a first load with tags that did not change lands: an invalidation elsewher
   render(List)
   await tick()
   void cache.invalidate('elsewhere')
-  reads()[0].ok(read(true))
+  reads()[0]!.ok(read(true))
   await tick()
   expect(reads().length).toBe(1)
   expect(shown()).toEqual(['done'])
@@ -240,7 +240,7 @@ test('a read that lands under a prediction waits: the layer does not apply twice
   const p = push()
   await flush()
   expect(shown()).toEqual(['open', 'open'])
-  reads()[0].ok({ v: [...rows(false), { id: 'new', done: false }], t: ['rows'] }) // already holds the row
+  reads()[0]!.ok({ v: [...rows(false), { id: 'new', done: false }], t: ['rows'] }) // already holds the row
   await tick()
   expect(shown()).toEqual(['open', 'open'])
   calls.find(c => c.kind === 'mutate')!.ok({ t: ['rows'], c: [['rows', undefined, [...rows(false), { id: 'new', done: false }], ['rows']]] })
@@ -254,11 +254,11 @@ test('a read that lands under a prediction waits: the layer does not apply twice
 test('a call whose reply was lost may have committed, so its entry reads again; a refused one has not', async () => {
   await ready()
   const gone = set({ id: 'a', done: true })
-  calls[0].no(new TypeError('Failed to fetch'))
+  calls[0]!.no(new TypeError('Failed to fetch'))
   await expect(gone).rejects.toThrow('Failed')
   await tick()
   expect(reads().length).toBe(1)
-  reads()[0].ok(read(true))
+  reads()[0]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
   const refused = set({ id: 'a', done: false })
@@ -273,7 +273,7 @@ test('a navigation\'s entries older than a write do not land', async () => {
   await ready()
   const since = router.now!()
   const p = plain()
-  calls[0].ok(reply(true))
+  calls[0]!.ok(reply(true))
   await p
   seed([['rows', undefined, rows(false), ['rows']]], since)
   await tick()
@@ -297,11 +297,11 @@ test('a streaming page\'s chunks land in the cache as they arrive, under anythin
 test('a gateway\'s 5xx after a write may have committed too, so its entry reads again', async () => {
   await ready()
   const gone = set({ id: 'a', done: true })
-  calls[0].no(new FnError({ message: 'server function answered 502' }, 502))
+  calls[0]!.no(new FnError({ message: 'server function answered 502' }, 502))
   await expect(gone).rejects.toThrow('502')
   await tick()
   expect(reads().length).toBe(1)
-  reads()[0].ok(read(true))
+  reads()[0]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
 })
@@ -313,19 +313,19 @@ test('a lost write whose read fails too rolls back at once and keeps the list, a
   const p = set({ id: 'a', done: true })
   await flush()
   expect(shown()).toEqual(['done'])
-  calls[0].no(lost())
+  calls[0]!.no(lost())
   await p.catch(() => {})
   await flush()
   expect(shown()).toEqual(['open']) // not when the read answers: it may never
   expect(reads().length).toBe(1)
-  reads()[0].no(lost())
+  reads()[0]!.no(lost())
   await tick()
   expect(shown()).toEqual(['open'])
   expect(screen.queryByText('failed')).toBeNull()
   window.dispatchEvent(new Event('online'))
   await tick()
   expect(reads().length).toBe(2)
-  reads()[1].ok(read(true)) // it had landed after all
+  reads()[1]!.ok(read(true)) // it had landed after all
   await tick()
   expect(shown()).toEqual(['done'])
 })
@@ -337,12 +337,12 @@ test('a tab back after 30 s with the network down keeps its list, and recovers b
   returns(focus)
   await tick()
   expect(reads().length).toBe(1)
-  reads()[0].no(lost())
+  reads()[0]!.no(lost())
   await tick()
   expect(shown()).toEqual(['open'])
   await new Promise(ok => { setTimeout(ok, 1100) }) // no `online` event: the server was what went away
   expect(reads().length).toBe(2)
-  reads()[1].ok(read(true))
+  reads()[1]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
 })
@@ -353,7 +353,7 @@ test('a server that refuses a background read leaves the list, unless it refused
   await flush()
   void cache.invalidate('rows')
   await tick()
-  reads()[0].no(new FnError({ message: 'down' }, 500))
+  reads()[0]!.no(new FnError({ message: 'down' }, 500))
   await tick()
   expect(shown()).toEqual(['open'])
   void cache.invalidate('rows')
@@ -370,7 +370,7 @@ test('a server that refuses a background read leaves the list, unless it refused
 test('a first load with nothing to show takes the error view', async () => {
   render(Guarded)
   await tick()
-  reads()[0].no(lost())
+  reads()[0]!.no(lost())
   await tick()
   expect(screen.getByText('failed')).toBeTruthy()
 })
@@ -382,7 +382,7 @@ test('showing and focus arriving apart read each entry once', async () => {
   returns(focus)
   await tick()
   expect(reads().length).toBe(1)
-  reads()[0].ok(read(true))
+  reads()[0]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
   focus()
@@ -414,11 +414,11 @@ test('past the limit what nothing reads goes, oldest first', () => {
 test('two plain calls answered in the same task: neither reply is believed, and one read says what is true', async () => {
   await ready()
   const a = plain(), b = plain()
-  calls[0].ok(reply(true)); calls[1].ok(reply(false))
+  calls[0]!.ok(reply(true)); calls[1]!.ok(reply(false))
   await Promise.all([a, b])
   await tick()
   expect(reads().length).toBe(1)
-  reads()[0].ok(read(true))
+  reads()[0]!.ok(read(true))
   await tick()
   expect(shown()).toEqual(['done'])
 })
@@ -428,11 +428,11 @@ test('an `optimistic` that throws fails its call and leaves nothing behind', asy
   await expect(bad()).rejects.toThrow('bad prediction')
   expect(bad.pending.value).toBe(false)
   const first = plain()
-  calls[0].ok(reply(true))
+  calls[0]!.ok(reply(true))
   await first
   await tick()
   const second = plain()
-  calls[1].ok(reply(false))
+  calls[1]!.ok(reply(false))
   await second
   await tick()
   expect(reads()).toEqual([])
@@ -443,7 +443,7 @@ test('a value read before a write is out of date even for a key the cache did no
   await ready()
   const since = router.now!()
   const p = plain()
-  calls[0].ok({ t: ['rows'], c: [] })
+  calls[0]!.ok({ t: ['rows'], c: [] })
   await p
   await tick()
   router.seed!([['row', { i: 1 }, 'old', ['rows']], ['row', { i: 2 }, 'kept', ['else']]], since)
@@ -458,7 +458,7 @@ test('a value read before a write is out of date even for a key the cache did no
 test('a stream chunk read before a write is out of date even for a key the cache did not hold then', async () => {
   await ready()
   const p = plain()
-  calls[0].ok({ t: ['rows'], c: [] })
+  calls[0]!.ok({ t: ['rows'], c: [] })
   await p
   await tick()
   landed().push({ c: [['row', { i: 3 }, 'old', ['rows']]] })
@@ -475,11 +475,11 @@ test('a fetch under a prediction reads only after the call behind it answers', a
   const p = set({ id: 'a', done: true })
   expect(await list.fetch()).toEqual(rows(true))
   expect(reads()).toEqual([])
-  calls[0].ok({ t: ['else'] })
+  calls[0]!.ok({ t: ['else'] })
   await p
   await tick()
   expect(reads().length).toBe(1)
-  reads()[0].ok(read(true))
+  reads()[0]!.ok(read(true))
   await tick()
   expect(cache.get(list)).toEqual(rows(true))
 })

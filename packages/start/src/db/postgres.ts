@@ -61,7 +61,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
     get(t, key) {
       if (key === 'begin') return async (...a: Parameters<typeof t.begin>) => (await ready(), t.begin(...a))
       if (key !== 'unsafe') return Reflect.get(t, key)
-      return (text: string, params?: Parameters<typeof t.unsafe>[1], options?: Parameters<typeof t.unsafe>[2]) => {
+      return (text: string, params?: postgres.ParameterOrJSON<never>[], options?: postgres.UnsafeQueryOptions) => {
         const send = () => t.unsafe(text, params, { ...options, prepare: prepare && (params?.length ?? 0) <= KEPT })
         const after = <T>(go: () => PromiseLike<T>) => Promise.resolve(ready()).then(go)
         // oxlint-disable-next-line unicorn/no-thenable -- postgres.js's query is a lazy thenable, and Drizzle awaits it as one

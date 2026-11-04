@@ -386,6 +386,7 @@ function around(k: string) {
     if (n.data === 'wb:' + k) a = n
     else if (a && n.data === '/wb:' + k) return [a, n] as const
   }
+  return undefined
 }
 
 /** The border box around the elements of a rendered value (nodes, arrays of them), or undefined when it has none. */

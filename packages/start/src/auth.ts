@@ -14,7 +14,7 @@ export interface AuthProvider<U = unknown, S = unknown> {
    */
   session(request: Request): Promise<{ user: U | null; session: S | null }>
   /** Where `handler` is mounted (default `/api/auth`). */
-  basePath?: string
+  basePath?: string | undefined
   $weft?: {
     /** On the first request, never in a build: throw for a server that can't run safely. */
     check(): void

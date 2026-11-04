@@ -76,7 +76,7 @@ async function token(cookie: string) {
   const res = await auth.handler(new Request(`${base}/api/auth/token`, { headers: { cookie } }))
   return { res, token: (await res.clone().json().catch(() => null))?.token as string }
 }
-const payloadOf = (t: string) => JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString())
+const payloadOf = (t: string) => JSON.parse(Buffer.from(t.split('.')[1]!, 'base64url').toString())
 
 beforeAll(() => db.$weft.migrate([{ tag: 'auth', sql: ddl }]))
 afterEach(() => vi.restoreAllMocks())
@@ -88,7 +88,7 @@ describe('the cookie cache', () => {
     const data = line(res, 'session_data')!
     expect(data).toMatch(/max-age=300/i)
     expect(data).toMatch(/httponly/i)
-    const value = decodeURIComponent(line(res, 'session_token')!.split(';')[0].split('=')[1])
+    const value = decodeURIComponent(line(res, 'session_token')!.split(';')[0]!.split('=')[1]!)
     expect(value.split('.').length).toBeLessThan(3)
   })
 
@@ -122,7 +122,7 @@ describe('the cookie cache', () => {
     const again = line(page, 'session_data')!
     expect(again).toMatch(/max-age=300/i)
     await revoke(id)
-    const renewed = cookie.split('; ').filter(c => !c.includes('session_data')).concat(again.split(';')[0]).join('; ')
+    const renewed = cookie.split('; ').filter(c => !c.includes('session_data')).concat(again.split(';')[0]!).join('; ')
     expect((await (await get(whoami, renewed)).json()).v).toBe(email) // the fresh cookie answers without the row
     const gone = await get(whoami, cookie)
     expect(gone.status).toBe(401)
@@ -160,7 +160,7 @@ describe('the cookie cache', () => {
     await revoke(id)
     expect((await token(cookie)).res.status).toBe(401)
     await expect(auth.api.updateUser({ body: { name: 'New' }, headers: new Headers({ cookie }) })).rejects.toThrow(/unauthorized/i)
-    expect((await db.select().from(user).where(eq(user.id, id)))[0].name).toBe('U')
+    expect((await db.select().from(user).where(eq(user.id, id)))[0]!.name).toBe('U')
   })
 
   test('overridable, and off means every read is the database', async () => {
@@ -262,11 +262,11 @@ describe('API tokens', () => {
     const [head, body, sig] = t.split('.')
     const claims = payloadOf(t)
     const forged = Buffer.from(JSON.stringify({ ...claims, sub: 'someone-else', id: 'someone-else' })).toString('base64url')
-    const none = Buffer.from(JSON.stringify({ alg: 'none', kid: JSON.parse(Buffer.from(head, 'base64url').toString()).kid })).toString('base64url')
+    const none = Buffer.from(JSON.stringify({ alg: 'none', kid: JSON.parse(Buffer.from(head!, 'base64url').toString()).kid })).toString('base64url')
     const sign = (payload: object) => auth.api.signJWT({ body: { payload: { sub: id, sid: claims.sid, ...payload } } }).then((r: { token: string }) => r.token)
     const bad = {
       tampered: `${head}.${forged}.${sig}`,
-      resigned: `${head}.${body}.${sig.slice(0, -4)}AAAA`,
+      resigned: `${head}.${body}.${sig!.slice(0, -4)}AAAA`,
       none: `${none}.${forged}.`,
       noneSigned: `${none}.${body}.${sig}`,
       expired: await sign({ exp: Math.floor(Date.now() / 1000) - 60 }),

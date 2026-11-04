@@ -189,7 +189,7 @@ test('a miss in one hole ends with it: the next hole still claims', () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   const c = put(renderToString(() => <Server.Beside on={() => {}} />))
   const [first, last] = c.querySelectorAll('button')
-  first.removeAttribute('wk')
+  first!.removeAttribute('wk')
   hydrate(() => <Client.Beside on={() => {}} />, c)
   expect(hydration.misses).toBe(1)
   expect(c.querySelectorAll('button')[1]).toBe(last)
@@ -206,7 +206,7 @@ describe('a view of a getter', () => {
     const { n, get, v } = sourced()
     expect([v.a, v.b]).toEqual([1, 2])
     expect(get.mock.calls.length).toBeGreaterThanOrEqual(2)
-    const seen: number[] = []
+    const seen: unknown[] = []
     createRoot(() => effect(() => v.a, x => void seen.push(x)))
     n.value = 5
     flush()

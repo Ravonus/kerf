@@ -147,7 +147,7 @@ export function readQuery(scope: Scope, fn: Fn, input: unknown): unknown {
 /** How long a landed read waits for the others in flight, in ms: long enough for a pool's worth of replies. */
 const GATHER = 4
 
-interface Landing { flying: number; held: (() => void)[]; timer?: ReturnType<typeof setTimeout> }
+interface Landing { flying: number; held: (() => void)[]; timer?: ReturnType<typeof setTimeout> | undefined }
 const landings = new WeakMap<object, Landing>()
 
 /**

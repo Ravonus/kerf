@@ -70,7 +70,7 @@ export interface AuthOptions<S extends Record<string, unknown>, O extends Better
   /** The tables, Better Auth's included, for a data layer that needs them. */
   schema?: S
   /** 32+ characters (A001 in production). */
-  secret?: string
+  secret?: string | undefined
   /** The rest of Better Auth's options; they win over the defaults here. */
   options?: O
   /** Short-lived JWTs for other services and API clients, with a public JWKS: Better Auth's `jwt` options. `false` turns it off. */

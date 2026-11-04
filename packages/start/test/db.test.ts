@@ -216,8 +216,8 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
     const db = createPg({ schema: { rows }, url, migrate: false, max: 1 })
     await db.$weft.migrate(table)
     for (let n = 1; n <= 100; n++) await db.select().from(rows).where(inArray(rows.id, Array.from({ length: n }, (_, i) => `id${i}`)))
-    const [{ n }] = await db.execute(sql`select count(*)::int as n from pg_prepared_statements where statement like '%weft_test_rows%' and from_sql = false`)
-    expect(n).toBeLessThanOrEqual(32)
+    const [row] = await db.execute<{ n: number }>(sql`select count(*)::int as n from pg_prepared_statements where statement like '%weft_test_rows%' and from_sql = false`)
+    expect(row!.n).toBeLessThanOrEqual(32)
   })
 
   test('same API, migrations, Q011 and Q014; Q013 on a file URL', async () => {

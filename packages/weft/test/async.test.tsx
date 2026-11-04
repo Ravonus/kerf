@@ -256,7 +256,7 @@ test('a Boundary that goes away takes its content with it; one that stays keeps 
 
 test('a held Boundary the server gave up on fetches behind its fallback, and shows no empty content', async () => {
   const html = renderToString(() => ServerUsers({ load: api(0).load }))
-  const key = /<p wk="([^"]+)f\/0" class="skeleton">/.exec(html)![1]
+  const key = /<p wk="([^"]+)f\/0" class="skeleton">/.exec(html)![1]!
   const id = encodeURIComponent(key)
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html.replace(/<p wk="[^"]+" class="skeleton">.*?<\/p>/, m => `<!--wb:${id}-->${m}<!--/wb:${id}-->`)
@@ -282,8 +282,8 @@ test('a held Boundary the server gave up on fetches behind its fallback, and sho
 test('a Boundary that first runs after its chunk landed claims the content, and holds for nothing', async () => {
   const load = () => Promise.resolve({ name: 'Ada' })
   const html = await renderToStringAsync(() => ServerUsers({ load }))
-  const data = JSON.parse(/data-weft>(.*?)<\/script>/.exec(html)![1])
-  const key = Object.keys(data.b)[0]
+  const data = JSON.parse(/data-weft>(.*?)<\/script>/.exec(html)![1]!)
+  const key = Object.keys(data.b)[0]!
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
   const profile = container.querySelector('.profile')!

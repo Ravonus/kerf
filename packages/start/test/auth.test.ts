@@ -9,7 +9,7 @@ import { createAuth } from '../src/auth/better-auth'
 import { drizzleAuth } from '../src/auth/drizzle'
 import { createDb } from '../src/db/sqlite'
 import { createScope, fetchQuery, memoryStore, runMutation } from '../src/exec'
-import { createHandler, type HandlerOptions, type Manifest, type RouteModule } from '../src/server'
+import { createHandler, type Manifest, type RouteModule } from '../src/server'
 
 type User = { id: string; email: string }
 type Signed = Context & { user: User }
@@ -151,7 +151,7 @@ describe('the handler', () => {
     login: { default: () => 'login' },
   }
   const found: { code: string; severity: string }[] = []
-  const handler = createHandler({ manifest, modules, auth: auth as NonNullable<HandlerOptions['auth']>, context, dev: true, onDiagnostic: d => found.push(d) })
+  const handler = createHandler({ manifest, modules, auth, context, dev: true, onDiagnostic: d => found.push(d) })
   const call = (name: string, cookieHeader?: string) => handler(new Request(`${base}/_weft/fn/${name}`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-weft': '1', ...(cookieHeader && { cookie: cookieHeader }) }, body: JSON.stringify({ i: { email: 'ada@example.test', password } }) }))
   mutation({ $id: 'login', input: credentials, run: ({ input, ctx }) => forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true })).then(() => redirect('/app/page')) })
   mutation({ $id: 'silentLogin', input: credentials, run: ({ input, ctx }) => forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true })).then(() => null) })

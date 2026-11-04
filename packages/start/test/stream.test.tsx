@@ -221,7 +221,7 @@ describe('a read that never settles down', () => {
 })
 
 describe('what a failure may say in production', () => {
-  const script = (html: string, id: string) => JSON.parse(html.slice(html.lastIndexOf(`id="${id}">`) + id.length + 6).split('</script>')[0])
+  const script = (html: string, id: string) => JSON.parse(html.slice(html.lastIndexOf(`id="${id}">`) + id.length + 6).split('</script>')[0]!)
   const View = (props: { data: { list: Promise<string> } }) => {
     const Read = () => {
       const r = resource(() => props.data.list)
@@ -295,7 +295,7 @@ test('a chunk says what its render changed of the page\'s state, once', async ()
   const Later = () => <p>{resource(() => new Promise<string>(ok => { setTimeout(ok, 30, 'x') })).value}</p>
   const get = serve({ '/': () => <main><Boundary pending={<i>a</i>}><Late /></Boundary><Boundary pending={<i>b</i>}><Later /></Boundary></main> })
   const html = await body(await get('/'))
-  const pushes = [...html.matchAll(/\|\|\[\]\)\.push\((.*?)\);\$wb/g)].map(m => JSON.parse(m[1]))
+  const pushes = [...html.matchAll(/\|\|\[\]\)\.push\((.*?)\);\$wb/g)].map(m => JSON.parse(m[1]!))
   expect(pushes.filter(p => p.s).map(p => p.s)).toEqual([{ 'chunk.seen': { n: 7 } }])
 })
 

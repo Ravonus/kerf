@@ -82,7 +82,7 @@ export const rt: {
   wait?: Promise<unknown>[]
   /** Server only: the resources this pass has values for. Client: a tick's cancelled hydrate runs, false once a real one is among them. */
   got?: number
-  probe?: boolean
+  probe?: boolean | undefined
   /** Resources outside any Boundary: `settle()` waits for them, since they have nowhere to stream to. */
   top?: Promise<unknown>[]
   resolve?: (v: unknown) => string
