@@ -16,6 +16,7 @@ import { createServer } from 'node:net'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
+import { pin, writePackedPolicy } from '../../create-weft/scripts/tarballs.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = resolve(here, '../../..')
@@ -50,12 +51,12 @@ if (command === 'prepare') {
   const where = name => `file:${join(repo, 'packages', name === '@weft-js/core' ? 'weft' : name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
   const tarballs = values.tarballs && JSON.parse(readFileSync(join(values.tarballs, 'tarballs.json'), 'utf8'))
   for (const name of LINKED) pkg.dependencies[name] = tarballs?.[name] ?? where(name)
-  if (tarballs) pkg.overrides = tarballs
   pkg.dependencies['socket.io-client'] = '4.8.4'
   pkg.dependencies['livekit-client'] = '2.23.0'
-  writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
+  writeFileSync(file, JSON.stringify(tarballs ? pin(pkg, tarballs) : pkg, null, 2) + '\n')
   cpSync(join(here, '../fixture/src'), join(app, 'src'), { recursive: true })
-  must('npm', ['install', '--no-audit', '--no-fund'])
+  writePackedPolicy(app, tarballs)
+  must('pnpm', ['install', '--no-frozen-lockfile'])
   configure('memory')
   console.log(`prepared ${app}`)
   process.exit(0)

@@ -15,7 +15,7 @@ import { fnId } from '../../start/src/vite.mjs'
 import { hostPlatform } from '../../weft/scripts/platform-package.mjs'
 import { hotChecks, prepare } from './hot-checks.mjs'
 import { packWithAddon } from './pack-all.mjs'
-import { pin, pkgs } from './tarballs.mjs'
+import { pin, pkgs, writePackedPolicy } from './tarballs.mjs'
 import { jobs, pool } from '../../../scripts/jobs.mjs'
 
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
@@ -31,7 +31,7 @@ const hostAddon = `compiler-${hostPlatform().name}`
 async function mediaApp(app, weft, log, sh) {
   await sh(weft, ['add', 'media'], app)
   await sh(weft, ['add', 'media-ffmpeg'], app)
-  await sh('npm', ['install', '--silent', 'sharp@0.35.5'], app) // the media route loads it at run time (M017)
+  await sh('pnpm', ['add', 'sharp@0.35.5'], app) // the media route loads it at run time (M017)
   const config = join(app, 'weft.config.ts')
   writeFileSync(config, readFileSync(config, 'utf8').replace(/media\(\)/, "media({ encoder: 'compatible', quality: { scorer: 'none' }, video: { widths: [160, 320] } })"))
   await sh(weft, ['plugins', 'approve', '--all'], app)
@@ -215,7 +215,7 @@ function mockStripe(port, sessions) {
 function withoutRust() {
   const bin = join(root, 'no-rust-bin')
   mkdirSync(bin)
-  for (const tool of ['node', 'npm', 'npx', 'ffmpeg', 'ffprobe']) {
+  for (const tool of ['node', 'pnpm', 'ffmpeg', 'ffprobe']) {
     const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8' }).trim()
     if (found) symlinkSync(found, join(bin, tool))
   }
@@ -278,7 +278,8 @@ await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ na
     writeFileSync(file, readFileSync(file, 'utf8').replace('warp()', `warp(${themed})`))
   }
 
-  await sh('npm', ['install', '--silent'], app)
+  writePackedPolicy(app, tarballs)
+  await sh('pnpm', ['install', '--no-frozen-lockfile'], app)
   const weft = join(app, 'node_modules/.bin/weft')
   if (wasm) rmSync(join(app, 'node_modules/@weft-js', hostAddon), { recursive: true, force: true })
   const { compiler } = JSON.parse((await sh(weft, ['doctor', '--json'], app)).stdout)
@@ -341,8 +342,11 @@ const room = join(root, 'room')
 const browsers = join(pkgs, 'multiplayer/scripts/e2e-browsers.mjs')
 writeFileSync(join(root, 'tgz/tarballs.json'), JSON.stringify(tarballs))
 // A person's path through the bin: the install, then the AGENTS.md of the weft that install brought.
-const person = join(root, 'person')
-await shell('node', [join(pkgs, 'create-weft/bin/create-weft.mjs'), person, '--yes', '--pm', 'npm', '--install', '--no-git', '--tarballs', join(root, 'tgz')], root)
+const personScope = join(root, 'person-scope')
+mkdirSync(personScope)
+writePackedPolicy(personScope, tarballs, ['person'])
+const person = join(personScope, 'person')
+await shell('node', [join(pkgs, 'create-weft/bin/create-weft.mjs'), person, '--yes', '--pm', 'pnpm', '--install', '--no-git', '--tarballs', join(root, 'tgz')], root)
 if (!readFileSync(join(person, 'AGENTS.md'), 'utf8').includes('weft check')) throw new Error('create-weft left no AGENTS.md')
 console.log('[packed] create-weft: AGENTS.md at scaffold: pass')
 await shell('node', [browsers, 'prepare', room, '--tarballs', join(root, 'tgz')], root)
