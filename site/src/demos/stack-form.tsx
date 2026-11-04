@@ -1,8 +1,10 @@
 import { flush, state } from '@weft-js/core'
 import { Alert, Button, Card, Input } from '@weft-js/warp'
 
-// Stands in for the server: the schema's checks, then one only the server can make (an email that is taken).
-// It answers with errors by field, the shape `<Form>` gets from a schema issue or from `invalid()`.
+// Stands in for the server: schema checks, then a check
+// only the server can make (an email that is taken).
+// It returns errors by field, as `<Form>` gets from a
+// schema issue or `invalid()`.
 const signUp = (name: string, email: string) =>
   new Promise<Record<string, string>>((done) => {
     setTimeout(() => {
@@ -45,14 +47,15 @@ export default function SignUp() {
         ?.focus()
     }
   }
+  const onSubmit = (
+    e: Event & { currentTarget: HTMLFormElement },
+  ) => {
+    e.preventDefault()
+    void submit(e.currentTarget)
+  }
   return (
     <Card title="Create an account">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          void submit(e.currentTarget)
-        }}
-      >
+      <form onSubmit={onSubmit}>
         <Input
           label="Name"
           name="name"

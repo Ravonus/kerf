@@ -25,7 +25,8 @@ export default function Todos() {
   }
   const remove = (id: number) =>
     (todos.value = todos.value.filter((t) => t.id !== id))
-  // A new object for the one that changed; every other item keeps its identity.
+  // Only the changed item gets a new object; the rest
+  // keep their identity.
   const toggle = (id: number) =>
     (todos.value = todos.value.map((t) =>
       t.id === id ? { ...t, done: !t.done } : t,

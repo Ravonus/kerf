@@ -2,13 +2,15 @@ import { Boundary, resource, state } from '@weft-js/core'
 import { Badge, Button, Card, Row } from '@weft-js/warp'
 
 const CITIES = ['Lisbon', 'Oslo', 'Nairobi', 'Lima']
-// Stands in for a request: a temperature after 800 ms, unless `signal` cancels it first.
+// A request returns a temperature after 800 ms,
+// unless `signal` cancels it first.
 const fetchTemp = (city: string, signal: AbortSignal) =>
   new Promise<string>((done, fail) => {
     const t = setTimeout(
       () =>
         done(
-          `${city}: ${10 + Math.round(Math.random() * 20)}°`,
+          `${city}: ` +
+            `${10 + Math.round(Math.random() * 20)}°`,
         ),
       800,
     )
@@ -18,10 +20,11 @@ const fetchTemp = (city: string, signal: AbortSignal) =>
     })
   })
 
-function Temperature(props: { city: string }) {
-  // Reads `props.city` before it waits, so a new city fetches again and cancels the old fetch.
+function Temperature({ city }: { city: string }) {
+  // Reads `city` before waiting, so a new city fetches
+  // again and cancels the old fetch.
   const temp = resource((signal) =>
-    fetchTemp(props.city, signal),
+    fetchTemp(city, signal),
   )
   return (
     <p
@@ -39,7 +42,9 @@ function Temperature(props: { city: string }) {
 export default function Weather() {
   const city = state('Lisbon')
   return (
-    <Card title="The old value stays while the new one loads">
+    <Card
+      title="The old value stays while the new one loads"
+    >
       <Row gap="tight" wrap>
         {CITIES.map((c) => (
           <Button
@@ -54,7 +59,8 @@ export default function Weather() {
           </Button>
         ))}
       </Row>
-      {/* The resource is made in Temperature, inside the Boundary, so the Boundary shows the first load. */}
+      {/* Temperature makes the resource inside the
+          Boundary, so it shows the first load. */}
       <Boundary
         pending={<p>Loading the first answer…</p>}
       >
