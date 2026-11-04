@@ -40,3 +40,10 @@ packages/create-weft/test/.tmp-templates/
 # Generated site content.
 /site/public/reference/
 /site/public/learn/
+
+# Regenerated test and benchmark output.
+/packages/warp/test/a11y/gallery/assets/
+/packages/warp-icons/contact-sheet.html
+/packages/cli/.vitest/
+/evals/results/sites/first-run-*.json
+/benchmarks/speed/lab.json
