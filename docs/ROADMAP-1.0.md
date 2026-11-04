@@ -181,6 +181,15 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
 
 Every file under 400 lines and every function under 80, with the allowlist from Sprint 0 empty.
 
+**Flaky tests first** (found in S2's verification, 2026-11-04). Make these deterministic, by waiting
+on the state rather than on wall-clock time, before any split. Each one failed once and passed on a re-run:
+- [ ] `packages/warp/test/sweep.browser.test.mjs:234`: the per-step draw limit (`< 6`) fails on a slow
+      ARM VM at 13.1.
+- [ ] `packages/start/test/ui-state.browser.test.mjs`, "killing the leader mid-hover: no stuck hover
+      anywhere", fails with "Matcher did not succeed in time".
+- [ ] `packages/start` SSR test asserting the page doesn't yet contain "In stock" (the streamed slot
+      resolved first), in Linux CI `quality` run 41905808021, attempt 1.
+
 **Splits**, largest first. Each split moves code as-is and doesn't change behaviour, so each can be
 its own PR.
 
