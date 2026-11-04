@@ -7,7 +7,7 @@ import { execFile, execFileSync, spawn } from 'node:child_process'
 import { createHmac } from 'node:crypto'
 import { createServer } from 'node:http'
 import { promisify, parseEnv } from 'node:util'
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import { scaffold } from '../src/index.mjs'
@@ -16,6 +16,7 @@ import { hostPlatform } from '../../weft/scripts/platform-package.mjs'
 import { hotChecks, prepare } from './hot-checks.mjs'
 import { packWithAddon } from './pack-all.mjs'
 import { pin, pkgs, writePackedPolicy } from './tarballs.mjs'
+import { writeToolShim } from './tool-shim.mjs'
 import { jobs, pool } from '../../../scripts/jobs.mjs'
 
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
@@ -217,7 +218,7 @@ function withoutRust() {
   mkdirSync(bin)
   for (const tool of ['node', 'pnpm', 'ffmpeg', 'ffprobe']) {
     const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8' }).trim()
-    if (found) symlinkSync(found, join(bin, tool))
+    if (found) writeToolShim(join(bin, tool), found)
   }
   const PATH = [bin, '/usr/bin', '/bin'].join(':')
   for (const tool of ['cargo', 'rustc', 'rustup']) {

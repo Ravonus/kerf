@@ -6,6 +6,23 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { pack, pin, writePackedPolicy } from '../../packages/create-weft/scripts/tarballs.mjs'
+import { writeToolShim } from '../../packages/create-weft/scripts/tool-shim.mjs'
+
+await test('restricted PATH preserves a launcher that resolves its sibling executable', () => {
+  const root = mkdtempSync(join(tmpdir(), 'weft-packed-shim-'))
+  try {
+    const tools = join(root, "original tools'"), bin = join(root, 'restricted')
+    mkdirSync(tools); mkdirSync(bin)
+    const launcher = join(tools, 'pnpm')
+    writeFileSync(join(tools, 'actual'), '#!/bin/sh\nprintf "%s\\n" "$@"\n', { mode: 0o755 })
+    writeFileSync(launcher, '#!/bin/sh\nexec "$(dirname "$0")/actual" "$@"\n', { mode: 0o755 })
+    const shim = join(bin, 'pnpm')
+    writeToolShim(shim, launcher)
+    assert.equal(execFileSync(shim, ['two words', 'next'], {
+      encoding: 'utf8', env: { PATH: `${bin}:/usr/bin:/bin` },
+    }), 'two words\nnext\n')
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
 
 test('packed pnpm installs keep the age policy and use transitive tarball overrides', () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-packed-policy-'))
