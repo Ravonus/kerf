@@ -3,6 +3,7 @@
 // nothing leaves the local server.
 import { randomBytes } from 'node:crypto'
 import { createRequire } from 'node:module'
+import { functionRequestsIdle } from './request-idle.mjs'
 
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 
@@ -19,9 +20,10 @@ export function suite({ url, log }) {
   const open = async browser => {
     const context = await browser.newContext({ baseURL: url })
     const page = await context.newPage()
+    const idle = functionRequestsIdle(page)
     const errors = []
     page.on('pageerror', e => errors.push(e.message))
-    return { context, page, errors }
+    return { context, page, errors, idle }
   }
   const hydrated = page => page.waitForLoadState('networkidle')
   const signUp = async (page, u) => {
@@ -88,7 +90,7 @@ export async function base(t, { url, browser }) {
     await a.page.locator('ul.todos li', { hasText: 'Ship it' }).waitFor({ state: 'detached' })
   })
   await check('a toggle writes at most one attribute in the list', async () => {
-    await a.page.waitForLoadState('networkidle')
+    await a.idle()
     await a.page.evaluate(() => {
       window.__w = []
       window.__mo = new MutationObserver(r => window.__w.push(...r.map(x => `${x.type}:${x.target.nodeName}.${x.attributeName ?? ''}`)))
@@ -98,12 +100,13 @@ export async function base(t, { url, browser }) {
     const written = a.page.waitForResponse(r => r.url().includes('/_weft/fn/') && r.request().method() === 'POST')
     await a.page.locator('ul.todos li', { hasText: 'Write the note' }).getByRole('checkbox').click()
     await a.page.locator('ul.todos li.done').waitFor()
-    await written
-    await a.page.waitForTimeout(100) // the refetch that follows
+    await (await written).finished()
+    await a.idle()
     const writes = await a.page.evaluate(() => (window.__w.push(...window.__mo.takeRecords().map(x => x.type)), window.__w))
     if (writes.length > 1) fail(`toggle wrote ${JSON.stringify(writes)}`)
   })
   await check('a reload renders the list on the server and hydrates with no fetch and no writes', async () => {
+    await a.idle()
     const calls = []
     const listen = r => { if (r.url().includes('/_weft/fn/')) calls.push(r.url()) }
     a.page.on('request', listen)
