@@ -72,9 +72,8 @@ Steps marked ∥ can each run in their own session or worktree at the same time.
 
 Make `main` trustworthy, and make the rules above automatic before anyone starts moving code.
 
-**Status:** blocked. The guardrails are implemented on `sprint/S0`; the packed landing
-template's `Input`/`FormValue` type mismatch needs an M3 source fix or an ownership exception.
-The sprint has not merged to `main`, and its two-green-main-run exit remains unmet.
+**Status:** in progress. The guardrails are implemented on `sprint/S0`; the landing
+template fix is authorized. The full checks and two-green-main-run exit remain pending.
 
 - [ ] Get CI green. Install Firefox and WebKit in `quality.yml`, allowlist the deploy fixture in
       `.gitleaks.toml`, and fix `runtime-matrix.yml`. Its header still says there's no CI.
@@ -247,6 +246,8 @@ fix. Today, these are in the catalog but the compiler never emits them:
       better as a TS-error mapping, which the plan allows.
 - [ ] Add W016 to the catalog (it's emitted at `analyze.rs:946` but has no entry) and give W085 a
       test.
+- [ ] Type `form.field()` values by field kind. A text field currently returns
+      `string | string[] | undefined`; the landing template narrows its email value at the call site.
 - [ ] Add a check that the catalog matches the compiler. Every `by: 'compiler'` entry must have an
       emit site and a test, and every emitted code must have an entry. The catalog can't drift
       again.
@@ -362,7 +363,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 
 ## Status
 
-- Sprint 0: blocked on the packed landing template type error; guardrails are implemented on `sprint/S0`
+- Sprint 0: in progress; guardrails are implemented on `sprint/S0`, with CI verification pending
 - Sprint 1: not started
 - Sprint 2: not started
 - Sprint 3: not started
