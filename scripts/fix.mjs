@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // `pnpm run fix`: everything a machine can fix safely. What's left, `pnpm run check` explains.
+import { repoRoot } from './lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const root = repoRoot
 const windows = process.platform === 'win32'
 const run = (cmd, args, cwd = root) =>
   spawnSync(cmd, args, { cwd, stdio: 'inherit', shell: windows })

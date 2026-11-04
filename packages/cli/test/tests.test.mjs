@@ -1,6 +1,6 @@
+import { repoRoot } from '../../../scripts/lib/helpers.mjs'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { catalog } from '../src/catalog.mjs'
 import { check } from '../src/check.mjs'
@@ -8,7 +8,7 @@ import { discover } from '../src/files.mjs'
 import { checkTestFile, checkTests, probeTests } from '../src/tests.mjs'
 import { project } from './helpers.mjs'
 
-const repo = fileURLToPath(new URL('../../../', import.meta.url))
+const repo = repoRoot
 const codes = (src, file = 'x.test.tsx') => checkTestFile(src, file).map((d) => d.code)
 const apply = (src, fix) =>
   [...fix.edits]

@@ -1,4 +1,5 @@
 // The agent pack driven as a user would: keyboard paths, states, focus moves and announcements.
+import { wait } from './timers.mjs'
 import { fireEvent } from '@testing-library/dom'
 import {
   foldAnswer,
@@ -33,10 +34,6 @@ import { TraceViewer } from '../src/agent/TraceViewer'
 const said = (c: Element, urgent = false) =>
   document.querySelector(`[data-scope="announcer"][aria-live="${urgent ? 'assertive' : 'polite'}"]`)
     ?.textContent ?? c.textContent
-const wait = (ms = 80) =>
-  new Promise((r) => {
-    setTimeout(r, ms)
-  })
 const button = (c: Element, name: string) =>
   [...c.querySelectorAll('button')].find(
     (b) => (b.getAttribute('aria-label') ?? b.textContent)?.trim() === name,

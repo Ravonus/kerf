@@ -8,13 +8,14 @@
 //
 // verify writes evals/results/phase3b-exit.md and .json; exit 1 if any part fails. Needs bun and deno on PATH and
 // packages/core's native compiler built.
+import { repoRoot } from '../../scripts/lib/helpers.mjs'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { commands, localPackages } from '../lib/gate.mjs'
 
 const here = join(dirname(fileURLToPath(import.meta.url)), '..')
-const repo = join(here, '..')
+const repo = repoRoot
 const packageUrl = localPackages(repo)
 const [step, dirArg] = process.argv.slice(2)
 if (!['prepare', 'verify'].includes(step) || !dirArg) {

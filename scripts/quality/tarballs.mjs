@@ -1,14 +1,14 @@
 // Nothing private goes out in a package, and nothing private can be committed by accident.
 //
 //   node scripts/quality/tarballs.mjs
+import { repoRoot } from '../lib/helpers.mjs'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { pool } from '../jobs.mjs'
 import { strayReason } from './stray.mjs'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 const MUST_IGNORE = [
   '.env',

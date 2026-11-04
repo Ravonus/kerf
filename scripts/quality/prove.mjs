@@ -3,12 +3,12 @@
 // planted file is removed, and every edit undone, before the next one, and the tree is checked clean at the end.
 //
 //   node scripts/quality/prove.mjs [step…]   with steps: only their plants
+import { repoRoot } from '../lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { appendFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 const ts = (file, code) => ({ file: `packages/${file}`, code })
 
 const PLANTS = [

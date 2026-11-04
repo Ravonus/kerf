@@ -5,6 +5,7 @@
 //   xvfb-run -a -s "-screen 0 1280x1000x24" node packages/plugin-media/test/save.headful.mjs <dir>/media
 //
 // Also here because they need a real browser: a copy already in the HTTP cache swaps in at mount, and timeline() boxes.
+import { sleep } from '../../../scripts/lib/helpers.mjs'
 import { execFileSync, spawn } from 'node:child_process'
 import { existsSync, mkdirSync, openSync, readSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { createServer, request } from 'node:http'
@@ -15,10 +16,6 @@ const app = resolve(process.argv[2])
 const { chromium, firefox } = createRequire(join(process.cwd(), 'package.json'))('playwright-core')
 const PORT = 5301
 const PROXY = 5302
-const sleep = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 const x = (...args) => execFileSync('xdotool', args.map(String))
 const dl = join(app, 'saved')
 const failures = []

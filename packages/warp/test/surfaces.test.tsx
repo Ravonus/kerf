@@ -1,4 +1,5 @@
 // DataGrid, the pagination bar, the palette, mentions, code and the editors: keyboard, ARIA, SSR + hydration.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { resetIds } from '@weft-js/warp-core'
 import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
@@ -15,10 +16,7 @@ const key = (el: Element, k: string, init: KeyboardEventInit = {}) =>
     new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }),
   )
 const out = (c: Element) => c.querySelector('[data-out]')!.textContent
-const tick = () =>
-  new Promise((r) => {
-    setTimeout(r)
-  })
+
 const type = (el: HTMLInputElement | HTMLTextAreaElement, v: string, caret = v.length) => {
   el.value = v
   el.setSelectionRange(caret, caret)

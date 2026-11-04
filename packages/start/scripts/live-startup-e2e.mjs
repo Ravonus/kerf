@@ -1,4 +1,4 @@
-import { freePort } from '../../../scripts/lib/helpers.mjs'
+import { freePort, sleep as wait } from '../../../scripts/lib/helpers.mjs'
 // What a built server does at startup with a required live query, on real infrastructure: a pooler in each mode, no
 // triggers, a role that can't add them; and a separate listener process feeding an app that holds no feed of its own.
 //
@@ -13,10 +13,6 @@ const { chromium } = createRequire(import.meta.url)('playwright-core')
 const { DIRECT, TX, SESSION } = process.env
 const fixture = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.url))
 const bin = fileURLToPath(new URL('../../cli/bin/weft.mjs', import.meta.url))
-const wait = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 const failed = []
 const check = (ok, what) => {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`)

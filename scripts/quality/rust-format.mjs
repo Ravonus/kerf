@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Format every tracked Rust file without fetching or building dependencies.
+import { repoRoot } from '../lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const root = repoRoot
 const args = process.argv.slice(2)
 if (args.length > 1 || (args.length && args[0] !== '--write')) {
   console.error('Usage: node scripts/quality/rust-format.mjs [--write]')

@@ -3,11 +3,11 @@
 // install at the root covers every package, the site and the arena.
 //
 // Needs Node (.nvmrc) and Rust (rustup reads rust-toolchain.toml in each crate, including the wasm target).
+import { repoRoot } from './lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const root = repoRoot
 const windows = process.platform === 'win32'
 const run = (cwd, cmd, ...args) => {
   console.log(`[setup] ${cwd}: ${cmd} ${args.join(' ')}`)

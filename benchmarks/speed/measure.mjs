@@ -1,3 +1,4 @@
+import { upperMedian as median } from '../../scripts/lib/helpers.mjs'
 // Before, after, and the other stacks, on one machine, one page at a time. Every stack gets the same driver
 // (shared/driver.js), the same production settings, the same 5 microsecond timer (cross-origin isolated) and fresh
 // pages, and the order of the stacks changes each round. Nothing here counts at load above 20.
@@ -77,7 +78,6 @@ async function heap(page) {
   return { js: u.usedSize, native: (u.embedderHeapUsedSize ?? 0) + (u.backingStorageSize ?? 0) }
 }
 
-const median = (list) => [...list].sort((a, b) => a - b)[list.length >> 1]
 const data = {}
 const note = (stack, group, name, value) =>
   (((data[stack] ??= {})[group] ??= {})[name] ??= []).push(value)

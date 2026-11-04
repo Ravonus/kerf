@@ -5,6 +5,7 @@
 //   node packages/create/scripts/alt-runtimes.mjs <empty-dir> [bun,deno,node] [--tarballs <dir>]
 //
 // Without `--tarballs` it packs them, which takes Node. A runtime that isn't installed is reported and skipped.
+import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import { execFile, spawn, spawnSync } from 'node:child_process'
 import {
   existsSync,
@@ -161,10 +162,6 @@ function scrubbed(runtime, dir) {
   return env
 }
 
-const wait = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 async function until(what, ms, test) {
   const end = Date.now() + ms
   let last

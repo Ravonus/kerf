@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { freePort } from '../../scripts/lib/helpers.mjs'
+import { freePort, sleep, repoRoot } from '../../scripts/lib/helpers.mjs'
 // Phase 5a's exit check (PLAN §9, "5a. Rust: remote"; research 36): a search sidecar replaces a TS `query` with no client
 // change. The same app is built twice. Before: every function's body is a TS `run`. After: each is `impl: search`, and
 // a Rust crate does the work. The swap touches server modules and adds a crate; this script holds it to that, and to
@@ -35,7 +35,7 @@ import { parseArgs } from 'node:util'
 import { commands, until, eq, makeCheck, localPackages } from '../lib/gate.mjs'
 
 const here = join(dirname(fileURLToPath(import.meta.url)), '..')
-const repo = join(here, '..')
+const repo = repoRoot
 const packageUrl = localPackages(repo)
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -56,10 +56,6 @@ const { fnId } = await import(join(repo, 'packages/start/src/vite.mjs'))
 
 const log = (...a) => console.log('[5a]', ...a)
 const { run, must } = commands(dir, 1 << 28, true)
-const sleep = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 const weft = () => join(dir, 'node_modules/.bin/weft')
 const ID = {
   search: fnId('searchDocs', 'src/server/docs.ts'),

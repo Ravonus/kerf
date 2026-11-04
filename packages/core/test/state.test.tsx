@@ -1,14 +1,10 @@
 // defineState (PLAN §4.5, research 14 §2) and keyed reads of object boxes.
 // weft-allow T004: persistence writes land on a macrotask; `tick` waits for that, not for an update
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { screen } from '@testing-library/dom'
 import { z } from 'zod'
 import { defineState, derived, flush as flushGraph, state, StateError } from '@weft-js/core'
 import { flush, memoryStorage, render, scope, touches } from '@weft-js/core/test'
-
-const tick = () =>
-  new Promise((r) => {
-    setTimeout(r)
-  })
 
 describe('keyed reads: box.get(key)', () => {
   test('a reader of one entry re-runs only when that entry changes', () => {

@@ -4,12 +4,11 @@
 //
 // A commit that fixes a bug touches a test, or says why it can't in a `No-Regression-Test: <reason>` trailer.
 // --dco also wants a `Signed-off-by:` on every commit: CI asks that of pull requests.
+import { repoRoot } from '../lib/helpers.mjs'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 const { values } = parseArgs({ options: { base: { type: 'string' }, dco: { type: 'boolean' } } })
 const git = (...args) =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 })

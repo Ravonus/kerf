@@ -7,6 +7,7 @@
 //   node evals/gates/surfaces-exit.mjs verify <dir>      weft check, tsc, build, then the hidden checks in Chrome
 //
 // verify writes evals/results/surfaces-exit.md and .json; exit 1 if any part fails. Needs packages/core's native compiler.
+import { repoRoot } from '../../scripts/lib/helpers.mjs'
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -15,7 +16,7 @@ import { fileURLToPath } from 'node:url'
 import { commands, localPackages } from '../lib/gate.mjs'
 
 const here = join(dirname(fileURLToPath(import.meta.url)), '..')
-const repo = join(here, '..')
+const repo = repoRoot
 const packageUrl = localPackages(repo)
 const [step, dirArg] = process.argv.slice(2)
 if (!['prepare', 'verify'].includes(step) || !dirArg) {

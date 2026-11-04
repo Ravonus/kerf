@@ -2,12 +2,13 @@
 // browser entry reaches Node two files down.
 //
 //   node scripts/quality/boundaries.mjs [--json]
+import { repoRoot } from '../lib/helpers.mjs'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 const FRAMEWORK =
   /^(?:@weft-js\/|react(?:-dom)?(?:\/|$)|solid-js(?:\/|$)|vue(?:\/|$)|svelte(?:\/|$)|preact(?:\/|$))/
 const NODE = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)])

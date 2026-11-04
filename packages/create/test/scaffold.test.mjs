@@ -1,8 +1,8 @@
 // Each `--ui` variant scaffolds an app that `weft check` passes clean and `weft dev` server-renders. The workspace
 // packages stand in for the npm ones through node_modules links.
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
-import { createServer } from 'node:net'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
@@ -14,14 +14,6 @@ import { scaffold, template } from '../src/index.mjs'
 const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
-
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 
 function app(ui, options = {}) {
   const dir = join(tmp, `app-${ui}`)

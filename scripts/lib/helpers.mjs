@@ -1,8 +1,11 @@
 // Helpers for repository scripts; these are not part of a published package.
+import { sleep } from './sleep.mjs'
 import { readdirSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { fileURLToPath } from 'node:url'
 import { join, resolve } from 'node:path'
+
+export { sleep } from './sleep.mjs'
 
 export const freePort = () =>
   new Promise((ok) => {
@@ -12,16 +15,13 @@ export const freePort = () =>
     })
   })
 
-export const sleep = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
-
 export const median = (xs) => {
   const sorted = [...xs].sort((a, b) => a - b)
   const middle = sorted.length >> 1
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
 }
+
+export const upperMedian = (xs) => [...xs].sort((a, b) => a - b)[xs.length >> 1]
 
 /** Poll until a value is ready, retaining the gates' timeout and retry behavior. */
 export async function until(what, fn, ms = 60_000) {
@@ -32,9 +32,7 @@ export async function until(what, fn, ms = 60_000) {
       .catch(() => undefined)
     if (v) return v
     if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
-    await new Promise((ok) => {
-      setTimeout(ok, 50)
-    })
+    await sleep(50)
   }
 }
 

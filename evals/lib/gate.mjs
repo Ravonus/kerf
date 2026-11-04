@@ -1,11 +1,11 @@
 // Shared exit-gate helpers keep command failures and recorded check results consistent.
 import { spawnSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { repoRoot } from '../../scripts/lib/helpers.mjs'
 
 /** The repository root shared by exit gates and their package dependencies. */
-export const repo = resolve(fileURLToPath(new URL('../..', import.meta.url)))
+export const repo = repoRoot
 
 /** Resolve local package dependencies by the folder that matches their npm name. */
 export const localPackages = (root) => (name) =>

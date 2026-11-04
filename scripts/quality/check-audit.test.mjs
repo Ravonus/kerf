@@ -1,12 +1,12 @@
+import { repoRoot } from '../lib/helpers.mjs'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 
-const root = fileURLToPath(new URL('../../', import.meta.url))
+const root = repoRoot
 
 for (const stage of ['production', 'development', 'clean'])
   await test(`the check reports a ${stage} dependency audit faithfully`, () => {

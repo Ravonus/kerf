@@ -1,4 +1,5 @@
 // The live pack's logic: arrivals, the toast policy, the preferences model, meetings, the transport model.
+import { sleep as tickMO } from '../../../scripts/lib/sleep.mjs'
 import { describe, expect, test, vi } from 'vitest'
 import {
   applyPrefs,
@@ -38,10 +39,6 @@ import {
   type TransportConfig,
 } from '../src/live'
 
-const tickMO = () =>
-  new Promise((r) => {
-    setTimeout(r, 0)
-  })
 const list = (ids: string[]) => {
   const el = document.createElement('ul')
   el.innerHTML = ids.map((i) => `<li data-id="${i}"></li>`).join('')

@@ -1,7 +1,7 @@
 // Every number here comes with its spread, and a win is only called when the spread allows it.
 
-import { median } from '../../scripts/lib/helpers.mjs'
-export { median }
+import { median, sleep } from '../../scripts/lib/helpers.mjs'
+export { median, sleep }
 
 /** `{ med, min, max, n }` of the numbers in `xs`; holes (a metric a run didn't report) are dropped. */
 export function spread(xs) {

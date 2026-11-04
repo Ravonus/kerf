@@ -1,4 +1,5 @@
 // Research 45: shared UI state in a real browser. Real pointer, real tabs, real sockets, real locks.
+import { sleep } from './ui-state.helpers.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
@@ -21,11 +22,6 @@ afterEach(async () => {
   await Promise.all(browser.contexts().map((c) => c.close().catch(() => {})))
   await sleep(100)
 })
-
-const sleep = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 
 async function open(context, path = '/ui-state', init) {
   const page = await context.newPage()

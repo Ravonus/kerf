@@ -8,17 +8,19 @@
 //   pnpm run check --list          the steps, and what each covers
 //   pnpm run check --require-tools a missing gitleaks or cargo-deny fails instead of skipping (CI does this)
 //   pnpm run check --jobs=4        how much to run at once (see scripts/jobs.mjs)
+import { repoRoot } from './lib/helpers.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { jobs, pool } from './jobs.mjs'
+import { leakPlaces } from './quality/leak-places.mjs'
+import { packageProblems } from './quality/package-folders.mjs'
 import { checkLengths } from './quality/lengths.mjs'
 import { clippyProblems, lintProblems } from './quality/length-diagnostics.mjs'
 
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
 const LEVEL = 'error'
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const root = repoRoot
 const argv = process.argv.slice(2)
 const only = argv
   .find((a) => a.startsWith('--only='))
@@ -83,26 +85,22 @@ const lines = (r) => (r.code === 0 ? { problems: [] } : { problems: r.out.trim()
 let lengthResult
 const lengths = () => (lengthResult ??= checkLengths())
 
-/** Where a gitleaks finding is, never what it found. */
-const leakPlaces = (text) =>
-  JSON.parse(text || '[]').map(
-    (f) => `${f.File}:${f.StartLine} ${f.RuleID}${f.Commit ? ` in ${f.Commit.slice(0, 8)}` : ''}`,
-  )
-
 const STEPS = [
   {
     id: 'package-folders',
-    covers: 'package folders match npm names; archived and generated paths stay untracked',
+    covers: 'package folders, tracked paths and shared repository helpers',
     fix: 'Rename mismatched package folders and remove archived or generated files from the index.',
     async run() {
-      const check = await run(process.execPath, ['--test', 'scripts/quality/layout-paths.test.mjs'])
+      const check = await run(process.execPath, [
+        '--test',
+        'scripts/quality/layout-paths.test.mjs',
+        'scripts/quality/shared-helpers.test.mjs',
+      ])
       const { problems } = lines(check)
-      for (const dir of PACKAGES) {
-        const { name } = JSON.parse(readFileSync(join(root, dir, 'package.json'), 'utf8'))
-        const expected = typeof name === 'string' ? name.split('/').at(-1) : ''
-        if (!expected || dir !== `packages/${expected}`)
-          problems.push(`${dir}: package name ${name} requires packages/${expected}`)
-      }
+      problems.push(
+        ...lines(await run(process.execPath, ['scripts/quality/shared-helpers.mjs'])).problems,
+      )
+      problems.push(...packageProblems(root, PACKAGES))
       return { problems, detail: `${PACKAGES.length} packages checked` }
     },
   },

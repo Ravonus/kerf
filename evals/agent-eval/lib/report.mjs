@@ -1,13 +1,10 @@
+import { median as sharedMedian } from '../../../scripts/lib/helpers.mjs'
 // Reads runs.jsonl and reports what was pre-registered: medians, spread, every failure. No run is dropped here; infra
 // failures show in their own column.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const median = (xs) => {
-  const s = [...xs].sort((a, b) => a - b),
-    n = s.length
-  return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null
-}
+const median = (xs) => (xs.length ? sharedMedian(xs) : null)
 const fmt = (x) => (x === null || x === undefined ? 'n/a' : Math.round(x).toLocaleString('en-US'))
 const spread = (xs) => (xs.length ? `${fmt(Math.min(...xs))}–${fmt(Math.max(...xs))}` : 'n/a')
 

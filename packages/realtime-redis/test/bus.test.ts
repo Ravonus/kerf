@@ -1,17 +1,10 @@
 // redis against a real server, through the `realtime.bus` suite. `WEFT_TEST_REDIS` is the path to a binary (the test
 // runs its own, so it can restart it); without it the server half skips, which is reported, not hidden.
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { spawn, type ChildProcess } from 'node:child_process'
-import { createServer, type AddressInfo } from 'node:net'
 import { busSuite } from '@weft-js/core/test/plugins'
 import { bus, redisBus } from '../src/index'
 
-const freePort = () =>
-  new Promise<number>((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address() as AddressInfo
-      s.close(() => ok(port))
-    })
-  })
 const stop = (c: ChildProcess) =>
   new Promise((ok) => {
     c.once('close', ok)

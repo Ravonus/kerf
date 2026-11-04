@@ -1,4 +1,4 @@
-import { freePort } from '../../../scripts/lib/helpers.mjs'
+import { freePort, sleep } from '../../../scripts/lib/helpers.mjs'
 // The redis and nats buses across two real instances, on each runtime (research 32 §6): both started by this script
 // on throwaway servers. A message said on one instance reaches a client of the other, in both directions, and a shared
 // value crosses too.
@@ -25,10 +25,6 @@ const SERVERS = {
   bun: ['bun', ['run', '.output/server/index.mjs']],
   deno: ['deno', ['run', '-A', '.output/server/index.mjs']],
 }
-const sleep = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 const kids = new Set()
 const start = (cmd, args, opts) => {
   const c = spawn(cmd, args, { stdio: 'ignore', ...opts })

@@ -1,3 +1,4 @@
+import { wait } from './timers.mjs'
 import { onTestFinished } from 'vitest'
 // The collab pack driven as a user would (07 §5, §6; 06 §10).
 import { fireEvent } from '@testing-library/dom'
@@ -52,10 +53,6 @@ const type = (el: HTMLTextAreaElement | HTMLInputElement, v: string) => {
 }
 const polite = () => q(document, '[data-scope="announcer"][aria-live="polite"]').textContent
 const loud = () => q(document, '[data-scope="announcer"][aria-live="assertive"]').textContent
-const wait = (ms = 80) =>
-  new Promise((r) => {
-    setTimeout(r, ms)
-  })
 const tick = async () => {
   await Promise.resolve()
   await flush()

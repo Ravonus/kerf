@@ -1,5 +1,7 @@
 // The change feed on a real Postgres. `WEFT_TEST_POSTGRES=postgres://…` turns these on, and its database is yours to lose:
 // they drop and create their tables. `WEFT_TEST_PGBOUNCER`: the same database through pgBouncer in transaction mode.
+import { until5000 as until } from './change-wait.helpers.mjs'
+import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import postgres from 'postgres'
 import { changeStatements } from '../src/changes-sql.mjs'
 import { createFeed, type Poke, type Probe, type Sink, type Source } from '../src/changes'
@@ -7,15 +9,6 @@ import { postgresChanges } from '../src/db/changes-postgres'
 
 const url = process.env.WEFT_TEST_POSTGRES!
 const bouncer = process.env.WEFT_TEST_PGBOUNCER
-const wait = (ms = 0) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
-async function until(ok: () => boolean, ms = 5000) {
-  const end = Date.now() + ms
-  while (!ok() && Date.now() < end) await wait(5)
-  expect(ok()).toBe(true)
-}
 
 function source(
   sql: ReturnType<typeof postgres>,

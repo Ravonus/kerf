@@ -1,6 +1,6 @@
-import { walk as walkFiles } from '../../scripts/lib/helpers.mjs'
 // Copy a variant out of its folder (read only), install, and build it in the work area. Weft variants always go through
 // local.mjs, so they're on tarballs of this checkout whatever their package.json says.
+import { walk as walkFiles, repoRoot } from '../../scripts/lib/helpers.mjs'
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
@@ -18,11 +18,10 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative } from 'node:path'
-import { here } from './app.mjs'
 import { quote } from './serve.mjs'
 import { spread } from './stats.mjs'
 
-const repo = join(here, '..')
+const repo = repoRoot
 export const localMjs = join(repo, 'packages/create/scripts/local.mjs')
 
 // Never copied: a real env file or anything else that can hold a credential, and any build or dependency folder.

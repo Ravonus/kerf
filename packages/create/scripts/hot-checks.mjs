@@ -1,5 +1,6 @@
 // What a save in `weft dev` has to keep, in a real browser: typed input, a counter, focus and scroll, with no page load.
 // Shared by the packed gates. Runs on Node, Bun and Deno. `prepare` writes the files, before the app's dev server starts.
+import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { findChrome, launch } from './cdp.mjs'
@@ -43,10 +44,6 @@ export function prepare(app) {
   for (const file in FILES) writeFileSync(join(app, file), FILES[file])
 }
 
-const wait = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 async function until(what, ms, test) {
   const end = Date.now() + ms
   let last

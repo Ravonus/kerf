@@ -3,12 +3,13 @@
 // import graph as boundaries.mjs, from every browser entry of the packages and from the site's client code.
 //
 //   node scripts/quality/browser-apis.mjs [--json] [files…]   files: scan these too, as browser code
+import { repoRoot } from '../lib/helpers.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { BROWSER, entry, trail, walk } from './boundaries.mjs'
 
-const root = resolve(fileURLToPath(new URL('.', import.meta.url)), '..', '..')
+const root = repoRoot
 // A call on a line that also tests `typeof … randomUUID` is the fallback pattern (warp-core's newOrderKey), and allowed.
 const CALL = /\brandomUUID\s*\(/
 const GUARDED = /typeof\s+[\w.]*randomUUID\b/

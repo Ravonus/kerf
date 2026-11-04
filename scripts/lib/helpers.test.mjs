@@ -3,11 +3,25 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { freePort, median, repoRoot, sleep, until, walk } from './helpers.mjs'
+import { spawnSync } from 'node:child_process'
+import { pathToFileURL } from 'node:url'
+import { freePort, median, repoRoot, sleep, until, upperMedian, walk } from './helpers.mjs'
 
-test('shared helpers retain their results', async () => {
-  assert.equal(repoRoot, process.cwd())
+void test('shared helpers retain their results', async () => {
+  const probe = spawnSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `import { repoRoot } from ${JSON.stringify(pathToFileURL(join(repoRoot, 'scripts/lib/helpers.mjs')).href)}; console.log(repoRoot)`,
+    ],
+    { cwd: tmpdir(), encoding: 'utf8' },
+  )
+  assert.equal(probe.status, 0)
+  assert.equal(probe.stdout.trim(), repoRoot)
   assert.equal(median([4, 1, 2, 3]), 2.5)
+  assert.equal(upperMedian([4, 1, 2, 3]), 3)
+  assert.equal(upperMedian([]), undefined)
   assert.equal(median([3, 1, 2]), 2)
   assert.ok(Number.isNaN(median([])))
   assert.ok((await freePort()) > 0)
@@ -15,7 +29,7 @@ test('shared helpers retain their results', async () => {
   assert.equal(await until('value', () => 7), 7)
 })
 
-test('walk skips named directories', () => {
+void test('walk skips named directories', () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-walk-'))
   try {
     mkdirSync(join(root, 'skip'))

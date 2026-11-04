@@ -1,4 +1,6 @@
 // The change feed on real SQLite files, with a real second process as the outside writer.
+import { until5000 as until } from './change-wait.helpers.mjs'
+import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import { execFile } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -9,15 +11,6 @@ import { changeStatements } from '../src/changes-sql.mjs'
 import { createDb, open } from '../src/db/sqlite'
 
 const run = promisify(execFile)
-const wait = (ms = 0) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
-async function until(ok: () => boolean, ms = 5000) {
-  const end = Date.now() + ms
-  while (!ok() && Date.now() < end) await wait(5)
-  expect(ok()).toBe(true)
-}
 
 const outside = (file: string, sql: string) =>
   run(process.execPath, [

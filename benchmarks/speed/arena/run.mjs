@@ -1,3 +1,4 @@
+import { median } from '../../../scripts/lib/helpers.mjs'
 // The arena's "time per update", taken apart: at 60 Hz and flat out, with and without the harness's observer, and with
 // text writes muted. Each row is a fresh page with three frames, in the slot the subject has on the site.
 //   node run.mjs --rounds 3 --ticks 1200 [--subjects weft,raw] [--out arena.json]
@@ -81,10 +82,6 @@ for (const p of plans) {
 }
 await browser.close()
 server.close()
-const median = (a) => {
-  a = [...a].sort((x, y) => x - y)
-  return a.length % 2 ? a[a.length >> 1] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2
-}
 const table = {}
 for (const row of rows)
   for (const s of row.stacks)

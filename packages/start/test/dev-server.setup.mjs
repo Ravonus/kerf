@@ -1,7 +1,7 @@
 // One `weft dev` (Vite + weftStart + Nitro) for the fixture app, shared by the e2e tests: they fetch it as a crawler
 // would (no JS) and drive it in Chrome. The URL goes to tests through `inject('url')`.
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { createServer } from 'node:net'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dev } from '../src/app.mjs'
@@ -16,14 +16,6 @@ export const site = {
   image: 'auto',
   twitter: { card: 'summary_large_image', site: '@acme' },
 }
-
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 
 /** Bind a font.build provider the way `weft plugins sync` does, so the head carries font preloads. */
 function bindFonts() {
