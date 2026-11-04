@@ -5,7 +5,8 @@ export default function Ruler() {
   const percent = state(60)
   const px = state(0)
   let bar: HTMLElement | undefined
-  // The element exists once the component is in the page, so measuring starts there.
+  // The element exists once the component is in the
+  // page, so measuring starts there.
   onMount(() => {
     if (!bar) return
     const seen = new ResizeObserver((entries) => {
@@ -27,9 +28,17 @@ export default function Ruler() {
       />
       <div
         ref={(el: HTMLElement) => (bar = el)}
-        style={`inline-size:${percent.value}%;block-size:0.75rem;background:var(--warp-color-accent-solid)`}
-      ></div>
-      <p>The bar is {px.value} px wide. Resize the window too.</p>
+        style={
+          `inline-size:${percent.value}%;` +
+          'block-size:0.75rem;' +
+          'background:var(--warp-color-accent-solid)'
+        }
+      >
+      </div>
+      <p>
+        The bar is {px.value} px wide. Resize the window
+        too.
+      </p>
     </Card>
   )
 }

@@ -6,14 +6,19 @@ type Room = 'general' | 'travel' | 'music'
 export default function ChatRoom() {
   const room = state<Room>('general')
   const log = state<string[]>([])
-  const say = (line: string) => (log.value = [...log.value.slice(-5), line])
+  const say = (line: string) =>
+    (log.value = [...log.value.slice(-5), line])
 
-  // Runs now, and again whenever `room` changes. The function it returns undoes this run first.
+  // Runs now and whenever `room` changes. The returned
+  // function undoes this run before the next one.
   watch(
     () => room.value,
     (name) => {
       say(`Connecting to #${name}…`)
-      const done = setTimeout(() => say(`Connected to #${name}`), 500)
+      const done = setTimeout(
+        () => say(`Connected to #${name}`),
+        500,
+      )
       return () => {
         clearTimeout(done)
         say(`Disconnected from #${name}`)

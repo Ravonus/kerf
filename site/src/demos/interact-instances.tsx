@@ -1,13 +1,18 @@
 import { state } from '@weft-js/core'
 import { Badge, Button, Card } from '@weft-js/warp'
 
-// Every <Counter /> runs this function once, so each one makes its own box.
-function Counter(props: { label: string }) {
+// Each <Counter /> runs this function once, making
+// its own box.
+function Counter({ label }: { label: string }) {
   const count = state(0)
   return (
     <p>
-      {props.label} <Badge count>{count.value}</Badge>{' '}
-      <Button size="sm" emphasis="outline" onClick={() => count.value++}>
+      {label} <Badge count>{count.value}</Badge>{' '}
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => count.value++}
+      >
         +1
       </Button>
     </p>
