@@ -4,7 +4,8 @@
 //
 //   node scripts/release.mjs                         build, stage, check, then `npm publish --dry-run` each. Nothing leaves.
 //   node scripts/release.mjs --publish               the same, then really publish to npmjs.org. You approve in a browser.
-//   git tag v<version> && git push origin v<version>    .github/workflows/publish.yml does the --publish, no approval.
+//   node scripts/release.mjs --publish --otp         the same, but one 6-digit code from your authenticator app covers
+//                                                    every package (it asks again only if the code runs out part way)
 //   node scripts/release.mjs --publish --registry http://localhost:4873/    publish to a local registry instead
 //
 //   --out <dir>       where tarballs go (default .release/, gitignored)
@@ -28,6 +29,10 @@ const flag = name => (argv.includes(`--${name}`) ? argv[argv.indexOf(`--${name}`
 const publish = argv.includes('--publish')
 const registry = flag('registry') ?? 'https://registry.npmjs.org/'
 const local = !registry.includes('registry.npmjs.org')
+const useOtp = argv.includes('--otp')
+let otp
+/** One line from the terminal, even with stdin redirected. */
+const ask = prompt => execFileSync('bash', ['-c', `read -r -p "${prompt}" a </dev/tty >/dev/tty; echo "$a"`], { encoding: 'utf8', stdio: ['inherit', 'pipe', 'inherit'] }).trim()
 const out = resolve(flag('out') ?? join(root, '.release'))
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 const run = (cmd, args, cwd, stdio = 'pipe') => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio, shell: process.platform === 'win32' })
@@ -155,8 +160,11 @@ const isUp = (name, version) => spawnSync(npm, ['view', `${name}@${version}`, 'v
 /** Exits non-zero on the first refusal: everything after it depends on it. */
 function send(tgz, name, version) {
   if (isUp(name, version)) return say(`${name}@${version} is already up`)
-  const auth = local || process.env.GITHUB_ACTIONS ? [] : ['--auth-type=web'] // in CI npm uses the workflow's OIDC identity
-  const r = spawnSync(npm, ['publish', tgz, '--access', 'public', '--tag', 'latest', '--registry', registry, '--ignore-scripts', ...auth, ...(publish ? [] : ['--dry-run'])], { stdio: 'inherit', shell: process.platform === 'win32' })
+  if (useOtp && publish && !otp) otp = ask('6-digit code from your authenticator app: ')
+  const auth = local ? [] : useOtp ? [`--otp=${otp}`] : ['--auth-type=web']
+  const r = spawnSync(npm, ['publish', tgz, '--access', 'public', '--tag', 'latest', '--registry', registry, '--ignore-scripts', ...auth, ...(publish ? [] : ['--dry-run'])], { stdio: ['inherit', 'inherit', 'pipe'], encoding: 'utf8', shell: process.platform === 'win32' })
+  process.stderr.write(r.stderr ?? '')
+  if (r.status !== 0 && useOtp && /EOTP/.test(r.stderr ?? '')) { otp = undefined; return send(tgz, name, version) } // the code ran out: ask for the next one
   if (r.status !== 0) throw new Error(`${name}: npm publish failed. Fix it and run this again: what's already up is skipped.`)
 }
 
