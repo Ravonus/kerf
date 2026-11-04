@@ -1,6 +1,6 @@
 {
   "name": "@weft-js/warp-icons",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Icons for warp and weft",
   "license": "MIT",
   "type": "module",

@@ -8,6 +8,7 @@ import { loadCompiler, resolveWeft } from '../src/weft.mjs'
 import { fixture, project } from './helpers.mjs'
 
 const status = probe(loadCompiler(resolveWeft(fixture)))
+const at = resolveWeft(fixture).pkg.version.replaceAll('.', '\\.')
 
 describe('catalog probe', () => {
   it('finds the codes the Phase 1 compiler reports, with their autofixes', () => {
@@ -48,10 +49,10 @@ describe('docs', () => {
   })
 
   it('explains a code with its status in the installed weft', async () => {
-    expect((await docs(fixture, 'w014')).text).toMatch(/^# W014 \(error\)[\s\S]*Status in weft@0\.1\.0:\*\* reported\./)
+    expect((await docs(fixture, 'w014')).text).toMatch(new RegExp(`^# W014 \\(error\\)[\\s\\S]*Status in weft@${at}:\\*\\* reported\\.`))
     expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
     expect((await docs(fixture, 'P004')).text).toContain('reported by weft check')
-    expect((await docs(fixture, 'W054')).text).toMatch(/Status in weft@0\.1\.0:\*\* reported, suggested edit\./)
+    expect((await docs(fixture, 'W054')).text).toMatch(new RegExp(`Status in weft@${at}:\\*\\* reported, suggested edit\\.`))
     expect((await docs(fixture, 'diagnostics')).text).toMatch(/^\| T012 \| error \| .* \| reported by @weft-js\/core\/test after each test \|$/m)
   })
 
@@ -65,7 +66,7 @@ describe('AGENTS.md', () => {
     const { text, bytes, overLimit } = await agentsMd(fixture)
     expect(bytes).toBeLessThan(limit)
     expect(overLimit).toBe(false)
-    expect(text).toContain('weft@0.1.0')
+    expect(text).toContain(`weft@${resolveWeft(fixture).pkg.version}`)
     // `weft check` prints what a catalog here would: the rules cite the main codes, the rest are one line
     expect(text).not.toMatch(/^\| [A-Z]\d{3} \|/m)
     expect(text).toContain('`weft docs <code>` explains one')

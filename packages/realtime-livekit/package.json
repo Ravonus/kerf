@@ -1,6 +1,6 @@
 {
   "name": "@weft-js/realtime-livekit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "@weft-js/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
   "license": "MIT",
   "type": "module",

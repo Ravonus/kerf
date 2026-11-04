@@ -1,6 +1,6 @@
 {
   "name": "@weft-js/realtime-redis",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "@weft-js/realtime-redis: the realtime.bus provider for Redis pub/sub",
   "license": "MIT",
   "type": "module",
