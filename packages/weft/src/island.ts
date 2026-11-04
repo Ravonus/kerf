@@ -151,11 +151,15 @@ function stale() {
 const RETRY_MS = 800
 
 /** Load and claim, once. Code that can't load is tried again, then `stale`: its held events take their defaults. */
-// oxlint-disable-next-line no-promise-executor-return -- `setTimeout` returns nothing a promise looks at, and braces cost bytes on every page with an island
+// oxlint-disable no-promise-executor-return -- `setTimeout` returns nothing a promise looks at, and braces cost bytes on every page with an island
 const run = (r: Later) =>
   (r.running ??= r
     .wait()
-    .catch(() => new Promise((go) => setTimeout(go, RETRY_MS)).then(r.wait))
+    .catch(() =>
+      new Promise(
+        (go) => setTimeout(go, RETRY_MS) /* oxlint-enable no-promise-executor-return */,
+      ).then(r.wait),
+    )
     .then(
       () => {
         if (later.get(r.key) === r) {
@@ -326,7 +330,6 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
             hydration.registry.delete(el.getAttribute('wk')!)
   }
 }
-
 /** Run `fn` as a claiming pass over `nodes`, for HTML that isn't part of `hydrate()`'s own pass. */
 function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
   const { registry } = hydration
@@ -356,18 +359,15 @@ function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
     sweep()
   }
 }
-
 let resume: [string, number] | undefined
 /** End markers a parent level inserts before: they outlive the level they close. */
 const anchors = new WeakSet<Node>()
-
 /** A level's start: when a static level holds it, the key scope the server recorded there (`region`). */
 export function enter<T>(fn: () => T): T {
   const s = resume
   resume = undefined
   return s && keys.on ? under(s[0], () => ((keys.n = s[1]), fn())) : fn()
 }
-
 /**
  * Show level `d`: the nodes of `html`, or those between its markers when `html` is empty, with its islands running and
  * `next` (the next level) where that level's markers are. The value goes in the hole that shows the level. `wait`

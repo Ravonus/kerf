@@ -87,10 +87,11 @@ export function createDb<S extends Record<string, unknown>>({
         const send = () =>
           t.unsafe(text, params, { ...options, prepare: prepare && (params?.length ?? 0) <= KEPT })
         const after = <T>(go: () => PromiseLike<T>) => Promise.resolve(ready()).then(go)
-        // oxlint-disable-next-line unicorn/no-thenable -- postgres.js's query is a lazy thenable, and Drizzle awaits it as one
+        // oxlint-disable unicorn/no-thenable -- postgres.js's query is a lazy thenable, and Drizzle awaits it as one
         return {
           values: () => after(() => send().values()),
-          then: <A, B>(ok: (rows: unknown) => A, no: (e: unknown) => B) => after(send).then(ok, no),
+          then: <A, B>(ok: (rows: unknown) => A, no: (e: unknown) => B) =>
+            after(send).then(ok, no) /* oxlint-enable unicorn/no-thenable */,
         }
       }
     },

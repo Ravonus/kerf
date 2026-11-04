@@ -217,10 +217,10 @@ describe('files', () => {
     // oxlint-disable-next-line no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
     expect(netlify).toContain('NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}')
     expect(netlify).toContain('pull_request:')
-    // oxlint-disable-next-line no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
+    // oxlint-disable no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
     expect(netlify).toContain(
       "npx weft deploy --yes ${{ github.event_name == 'push' && '--prod' || '' }}",
-    )
+    ) /* oxlint-enable no-template-curly-in-string */
     const render = filesFor(
       initContext(dir, { deploy: { target: 'render', branch: 'prod' } }, 'render'),
     )
@@ -253,9 +253,9 @@ describe('secrets and CDN', () => {
     const dir = app({
       'netlify.toml':
         '[build]\n  environment = { NETLIFY_AUTH_TOKEN = "nfp_abcdefghijklmnopqrstuvwx1234" }\n',
-      // oxlint-disable-next-line no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
+      // oxlint-disable no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
       '.github/workflows/deploy.yml':
-        'env:\n  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}\n  hook: https://api.render.com/deploy/srv-abc123?key=xyz789\n',
+        'env:\n  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}\n  hook: https://api.render.com/deploy/srv-abc123?key=xyz789\n' /* oxlint-enable no-template-curly-in-string */,
       'weft.config.ts':
         "export default { deploy: { target: 'netlify' }, apiKey: 'abcdef0123456789abcdef', token: process.env.TOKEN }\n",
     })

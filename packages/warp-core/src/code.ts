@@ -120,9 +120,9 @@ export function highlight(text: string, language = 'tsx') {
     .lines.join('')
 }
 
-// oxlint-disable-next-line no-control-regex -- a JSON string may not hold a raw control character
+// oxlint-disable no-control-regex -- a JSON string may not hold a raw control character
 const JSON_ATOM =
-  /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[\da-fA-F]{4}))*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y
+  /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[\da-fA-F]{4}))*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y /* oxlint-enable no-control-regex */
 
 /** Where JSON stops being JSON. V8 names a position only sometimes and short text never, so this walks it itself. */
 function jsonStop(text: string) {

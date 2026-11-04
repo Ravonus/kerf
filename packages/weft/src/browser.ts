@@ -148,12 +148,12 @@ export function online(options: { ssr?: boolean } = {}): Derived<boolean> {
 let visibleSrc: Shared<boolean> | undefined
 /** Whether the page is visible (`document.visibilityState`). On the server: `ssr` (default `true`). */
 export function visible(options: { ssr?: boolean } = {}): Derived<boolean> {
-  // oxlint-disable-next-line eqeqeq -- two strings; the extra character is a byte in every page's runtime
+  // oxlint-disable eqeqeq -- two strings; the extra character is a byte in every page's runtime
   return reader(
     'visible',
     () =>
       (visibleSrc ??= shared(
-        () => document.visibilityState != 'hidden',
+        () => document.visibilityState != 'hidden' /* oxlint-enable eqeqeq */,
         (u) => listen(document, 'visibilitychange', u),
       )),
     options.ssr ?? true,
@@ -176,14 +176,14 @@ export function lifecycle(options: { ssr?: Lifecycle } = {}): Derived<Lifecycle>
       if (lifecycleSrc) return lifecycleSrc
       let gone: Lifecycle | undefined // frozen or terminated: events say so, nothing can be asked
       return (lifecycleSrc = shared(
-        // oxlint-disable-next-line eqeqeq -- two strings; the extra character is a byte in every page's runtime
+        // oxlint-disable eqeqeq -- two strings; the extra character is a byte in every page's runtime
         () =>
           gone ??
           (document.visibilityState == 'hidden'
             ? 'hidden'
             : document.hasFocus()
               ? 'active'
-              : 'passive'),
+              : 'passive') /* oxlint-enable eqeqeq */,
         (u) => {
           gone = undefined
           const set = (to?: Lifecycle) => () => {

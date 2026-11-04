@@ -322,20 +322,20 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', (name) => {
 
     test('the toast sits at the viewport corner, not in the dialog box', async () => {
       const page = await fresh()
-      const settled = () =>
+      const settle = () =>
         page
           .locator(`${region} [data-part="root"]`)
           .first()
           .evaluate(async (el) => {
-            await new Promise((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(resolve)),
-            )
+            await new Promise((resolve) => {
+              requestAnimationFrame(() => requestAnimationFrame(resolve))
+            })
             await Promise.all(
               el.getAnimations().map((animation) => animation.finished.catch(() => {})),
             )
           })
       await raise(page)
-      await settled()
+      await settle()
       const rect = () =>
         page.evaluate(() => {
           const r = document
@@ -345,7 +345,7 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', (name) => {
         })
       const before = await rect()
       await opened(page, 'Open modal')
-      await settled()
+      await settle()
       expect(await rect()).toEqual(before)
       await page.close()
     })

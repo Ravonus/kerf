@@ -26,9 +26,9 @@ declare const __ENGINE__: 'blink' | 'webkit' | 'gecko'
 const EPS = __ENGINE__ === 'webkit' ? 1 / 64 : 0.005
 
 // Characters whose handling in Pretext goes past "segment between breaks, measure, sum".
-// oxlint-disable-next-line no-control-regex -- control characters are half of what this class is for
+// oxlint-disable no-control-regex -- control characters are half of what this class is for
 const OUTSIDE =
-  /[\u034f\ufe00-\ufe0e\0-\x08\x0b\x0e-\x1f\x7f-\xa0\xad\u2000-\u200c\u200e\u200f\u2011\u2028-\u202f\u205f-\u206f\ufeff]/
+  /[\u034f\ufe00-\ufe0e\0-\x08\x0b\x0e-\x1f\x7f-\xa0\xad\u2000-\u200c\u200e\u200f\u2011\u2028-\u202f\u205f-\u206f\ufeff]/ /* oxlint-enable no-control-regex */
 const EMOJI = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\ufe0f\u20e3]/u
 const QUOTE = /[\u2018\u2019\u201c\u201d]/
 const GENERIC = /(?:^|[\s,])(?:serif|sans-serif|cursive|fantasy|monospace)\s*(?:,|$)/i

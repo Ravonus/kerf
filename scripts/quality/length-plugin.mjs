@@ -2,6 +2,7 @@
 import { fileLimit, lineCount } from './length-metrics.mjs'
 
 const functionTypes = ['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']
+const tokenWeight = (value) => (['(', ')', ',', ';'].includes(value) ? 0 : String(value).length)
 const nameOf = (node) =>
   node?.name ??
   node?.value ??
@@ -45,7 +46,7 @@ export default {
         function report(node, id, count, kind) {
           const tokens = source
             .getTokens(node)
-            .reduce((sum, token) => sum + String(token.value).length, 0)
+            .reduce((sum, token) => sum + tokenWeight(token.value), 0)
           context.report({
             node,
             message: JSON.stringify({

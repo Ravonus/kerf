@@ -113,14 +113,19 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
     headers,
     options,
     said: new Set(),
-    // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- needed where a plugin such as pay adds required fields to Context
+    // oxlint-disable typescript/no-unnecessary-type-assertion -- needed where a plugin such as pay adds required fields to Context
     ctx: () =>
       (ctx ??= Promise.resolve()
         .then(() => options.context?.({ request }) ?? {})
         .then(
           (app) =>
             extended(
-              { ...app, request, response: { headers }, media: mediaApi(options) } as Context,
+              {
+                ...app,
+                request,
+                response: { headers },
+                media: mediaApi(options),
+              } /* oxlint-enable typescript/no-unnecessary-type-assertion */ as Context,
               options,
             ),
           (e) => {
@@ -713,7 +718,6 @@ function rejected(fn: Fn, list: readonly SchemaIssue[]) {
     { status: 400, issues },
   )
 }
-
 /** A form's string as the type it may stand for (research 29 §5): the schema says whether it was wrong. */
 function reading(s: string): unknown {
   if (s === '') return undefined
@@ -721,7 +725,6 @@ function reading(s: string): unknown {
   if (s === 'false') return false
   return /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s
 }
-
 /**
  * A form sends strings and a schema may want numbers or booleans, and Standard Schema can't say which: each issue
  * on a string tries its obvious reading, then the input is validated again. Fields a reading fixed report nothing; the
@@ -767,7 +770,6 @@ async function formInput(fn: Fn, input: unknown): Promise<unknown> {
     left.map((i) => first.issues?.find((o) => where(o) === where(i)) ?? i),
   )
 }
-
 /** Dev and tests: the value against `output` (C002), and what JSON would change (Q005). */
 async function checked(v: unknown, fn: Fn, scope: Scope) {
   serializable(v, fn, scope)
@@ -782,7 +784,6 @@ async function checked(v: unknown, fn: Fn, scope: Scope) {
       { status: 500 },
     )
 }
-
 /** Q005 (dev): what JSON would change on the way to the client. */
 function serializable(v: unknown, fn: Fn, scope: Scope) {
   const bad = (x: unknown, path: string): string | undefined => {
@@ -815,7 +816,6 @@ function serializable(v: unknown, fn: Fn, scope: Scope) {
       message: `\`${fn.$id}\`'s ${b}: the client gets a different value than the server rendered with. Send plain data (ISO strings, arrays, objects)`,
     })
 }
-
 /**
  * Q008 (dev, once): each mutation's static `invalidates` against the tags queries declare. A tags function is called
  * with an input whose every field reads `*`, so `todo:${id}` declares `todo:*`.

@@ -605,10 +605,10 @@ export function socketRoute(
     Promise.resolve(Object.assign(new Response('Upgrade required', { status: 426 }), { crossws }))
   const turnAway = (code: string, message: string, status: number) => {
     scope.options.onDiagnostic?.({ code, severity: 'error', message })
-    // oxlint-disable-next-line only-throw-error -- crossws answers an upgrade with the Response its hook throws
+    // oxlint-disable only-throw-error -- crossws answers an upgrade with the Response its hook throws
     return hooks({
       upgrade() {
-        throw new Response(message, { status })
+        throw new Response(message, { status }) /* oxlint-enable only-throw-error */
       },
     })
   }

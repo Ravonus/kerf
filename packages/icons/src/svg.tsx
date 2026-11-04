@@ -21,7 +21,7 @@ export type IconComponent = (props: IconProps) => JSX.Element
 const length = (size: number | string) => (typeof size === 'number' ? `${size}px` : size)
 
 export function Svg({ label, size, tier, html, style, ...rest }: IconProps & { html: string }) {
-  // oxlint-disable-next-line weft/no-html-sink -- `html` is this package's generated art: `icon` and `acting` set it after the props spread, so no caller reaches it
+  // oxlint-disable weft/no-html-sink -- `html` is this package's generated art: `icon` and `acting` set it after the props spread, so no caller reaches it
   return (
     <svg
       data-icon
@@ -36,7 +36,7 @@ export function Svg({ label, size, tier, html, style, ...rest }: IconProps & { h
           ? style
           : `width:${length(size)};height:${length(size)}${style ? `;${style}` : ''}`
       }
-      innerHTML={html}
+      innerHTML={html} /* oxlint-enable weft/no-html-sink */
       {...rest}
     />
   )

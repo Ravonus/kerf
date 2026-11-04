@@ -22,10 +22,10 @@ const fakeChrome = (body) => {
 }
 const profiles = () => new Set(readdirSync(tmpdir()).filter((f) => f.startsWith('weft-chrome-')))
 
+// skipped on Windows: the fake is a shell script
 test.skipIf(process.platform === 'win32')(
   'a Chrome whose debugger never answers is killed, with its profile',
   async () => {
-    // skipped on Windows: the fake is a shell script
     const { dir, exe } = fakeChrome(
       'echo $$ > "$(dirname "$0")/pid"\necho "DevTools listening on ws://127.0.0.1:9/none" >&2\nexec sleep 60',
     )
@@ -38,10 +38,10 @@ test.skipIf(process.platform === 'win32')(
   },
 )
 
+// skipped on Windows: the fake is a shell script
 test.skipIf(process.platform === 'win32')(
   'a Chrome that exits at once fails the launch straight away',
   async () => {
-    // skipped on Windows: the fake is a shell script
     const { dir, exe } = fakeChrome('exit 3')
     const started = Date.now()
     await expect(launch(exe)).rejects.toThrow(/exited with 3/)

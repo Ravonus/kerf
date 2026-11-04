@@ -104,7 +104,7 @@ export function summary(results) {
     lines.push(
       `${(kind + ' ' + A + ' / ' + B).padEnd(42)} pass ${scores.filter((s) => s.ok).length}, worst ${Math.min(...scores.map((s) => s.score)).toFixed(2)}, median ${scores
         .map((s) => s.score)
-        .sort((a, b) => a - b)
+        .sort((a, b) => a - b) // oxlint-disable-next-line no-unexpected-multiline -- computed member in this chain
         [scores.length >> 1].toFixed(2)}`,
     )
   }

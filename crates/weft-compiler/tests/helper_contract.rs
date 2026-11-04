@@ -85,7 +85,7 @@ fn exports_of(file: &Path) -> BTreeSet<String> {
         };
         match declaration {
             Declaration::FunctionDeclaration(f) => {
-                names.extend(f.id.as_ref().map(|i| i.name.to_string()))
+                names.extend(f.id.as_ref().map(|i| i.name.to_string()));
             }
             Declaration::VariableDeclaration(v) => {
                 names.extend(
@@ -95,7 +95,7 @@ fn exports_of(file: &Path) -> BTreeSet<String> {
                 );
             }
             Declaration::ClassDeclaration(c) => {
-                names.extend(c.id.as_ref().map(|i| i.name.to_string()))
+                names.extend(c.id.as_ref().map(|i| i.name.to_string()));
             }
             _ => {}
         }

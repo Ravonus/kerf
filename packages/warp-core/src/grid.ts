@@ -186,9 +186,18 @@ export function pivotTable<T>(
 }
 
 /** A copied range. Tabs and line breaks inside a cell would split it, so they become spaces. */
-// oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
+// oxlint-disable typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
 export const toTSV = (rows: readonly (readonly unknown[])[]) =>
-  rows.map((r) => r.map((c) => String(c ?? '').replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n')
+  rows
+    .map((r) =>
+      r
+        .map((c) =>
+          String(c ?? '') /* oxlint-enable typescript/no-base-to-string */
+            .replace(/[\t\r\n]+/g, ' '),
+        )
+        .join('\t'),
+    )
+    .join('\n')
 /** A pasted TSV as rows of cells. */
 export const parseTSV = (text: string) =>
   text
@@ -207,14 +216,12 @@ const csvCell = (c: unknown) => {
 /** Rows as CSV, with cells a spreadsheet would run as formulas made safe. */
 export const toCSV = (head: readonly unknown[], rows: readonly (readonly unknown[])[]) =>
   [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n')
-
 /** Move `item` so it sits at `to`, in a copy. */
 export function moved<T>(list: readonly T[], item: T, to: number) {
   const rest = list.filter((x) => x !== item)
   rest.splice(Math.max(0, Math.min(rest.length, to)), 0, item)
   return rest
 }
-
 /** Options for the data grid's keyboard, selection and clipboard. */
 export interface GridOptions {
   /** Grouped or tree data: role=treegrid, where a row takes focus too. */
@@ -232,10 +239,8 @@ export interface GridOptions {
   /** A TSV pasted at this cell. */
   onPaste?(cell: HTMLElement, rows: string[][]): void
 }
-
 type At = [row: number, col: number]
 const PAGE = 5 // PageUp/PageDown, in rows (06 §6)
-
 /** Attach to `[data-scope="table"]` around a role=grid or treegrid table. */
 export function grid(root: HTMLElement, opts: GridOptions) {
   let o = opts
@@ -246,7 +251,6 @@ export function grid(root: HTMLElement, opts: GridOptions) {
   let at: At = [0, o.tree ? -1 : 0]
   let anchor: At | undefined
   let current: HTMLElement | undefined
-
   const target = (p: At) => {
     const tr = rows()[p[0]]
     return p[1] < 0 ? tr : cells(tr)[Math.min(p[1], cells(tr).length - 1)]
@@ -289,7 +293,6 @@ export function grid(root: HTMLElement, opts: GridOptions) {
     at = p
     settle()?.focus()
   }
-
   const copy = async () => {
     const picked = selected()
     const lines = new Map<Element, string[]>()
@@ -308,7 +311,6 @@ export function grid(root: HTMLElement, opts: GridOptions) {
     }
     o.onStatus?.(`Copied ${table.length} × ${table[0]!.length} cells`)
   }
-
   const parentOf = (i: number, all: HTMLElement[]) => {
     const level = +all[i]!.getAttribute('aria-level')!
     for (let j = i - 1; j >= 0; j--) if (+all[j]!.getAttribute('aria-level')! < level) return j
@@ -433,7 +435,6 @@ export function grid(root: HTMLElement, opts: GridOptions) {
     e.preventDefault()
     o.onPaste(cell, parseTSV(text))
   }
-
   // the header's drag: the keyboard path is Alt + arrows above
   let dragged: string | undefined
   const heads = () => root.querySelectorAll<HTMLElement>('thead th[data-col]')
@@ -477,7 +478,6 @@ export function grid(root: HTMLElement, opts: GridOptions) {
     dragged = undefined
     clearDrop()
   }
-
   const on: [string, (e: never) => void][] = [
     ['keydown', onKey],
     ['click', place],

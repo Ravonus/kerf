@@ -74,7 +74,7 @@ export function ArtifactPanel({
     announce(root!.ownerDocument, `Previewing ${v.label}`)
     queueMicrotask(() =>
       root!
-        .querySelectorAll<HTMLElement>('[role="option"]')
+        .querySelectorAll<HTMLElement>('[role="option"]') // oxlint-disable-next-line no-unexpected-multiline -- computed member in this chain
         [versions.findIndex((x) => x.id === v.id)]?.focus(),
     )
   }

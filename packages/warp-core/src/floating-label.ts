@@ -253,11 +253,11 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
     grow()
   }
   // a value the binding holds stands: the native reset only knows the markup's
-  // oxlint-disable-next-line typescript/no-base-to-string -- the bound value is the app's: a control takes its text
+  // oxlint-disable typescript/no-base-to-string -- the bound value is the app's: a control takes its text
   const reset = formReset(el, () => {
     if (input && held != null) input.value = String(held)
     onInput()
-  })
+  }) // oxlint-enable typescript/no-base-to-string
   const onClick = (e: MouseEvent) => {
     if (!(e.target as Element).closest?.('[data-part="clear"]') || !input) return
     // a Select's value is its hidden select: the trigger only shows it

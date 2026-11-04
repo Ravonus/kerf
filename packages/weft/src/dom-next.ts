@@ -177,8 +177,8 @@ export function spread(el: Element, props: () => Record<string, unknown>) {
       if (listeners[key]) el.removeEventListener(name, listeners[key]!, capture)
       if (fn) el.addEventListener(name, (listeners[key] = fn as EventListener), capture)
       else delete listeners[key]
-      // oxlint-disable-next-line weft/no-html-sink -- `dangerouslySetInnerHTML` is the app saying this markup is safe; the name is the warning
     } else if (key === 'dangerouslySetInnerHTML')
+      // oxlint-disable-next-line weft/no-html-sink -- `dangerouslySetInnerHTML` is the app saying this markup is safe; the name is the warning
       el.innerHTML = (value as { __html?: string } | null | undefined)?.__html ?? ''
     else if (key === 'autoFocus') focus(el as HTMLElement, value)
     else if (key === 'class' || key === 'className') className(el, value, prev)

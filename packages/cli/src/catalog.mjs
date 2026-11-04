@@ -1555,14 +1555,14 @@ export const catalog = [
       "A variable `weft deploy --yes` reads is unset (an error in CI or for an id the CLI can't find; a warning where the host CLI's own login stands in)",
     fix: "Set it in the environment, or log in with the host's CLI here. Never in a file",
   },
-  // oxlint-disable-next-line no-template-curly-in-string -- shows the GitHub Actions syntax
+  // oxlint-disable no-template-curly-in-string -- shows the GitHub Actions syntax
   {
     code: 'E008',
     severity: 'error',
     by: 'cli',
     catches:
       'A deploy credential in a committed file: a Netlify or Fly token, a Render deploy hook, a Cloudinary URL with its secret, or a long value for a key named token, secret, api key or password, in the config, a host file or a workflow',
-    fix: 'Move it to the environment (host settings, or GitHub secrets as `${{ secrets.NAME }}`), and rotate it',
+    fix: 'Move it to the environment (host settings, or GitHub secrets as `${{ secrets.NAME }}`), and rotate it' /* oxlint-enable no-template-curly-in-string */,
   },
   {
     code: 'E009',

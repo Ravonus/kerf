@@ -144,27 +144,27 @@ export function fakeMeasure() {
  * There is no container, selector or test-id query (T005).
  */
 export const screen = {
-  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
+  // oxlint-disable typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByRole: dom.getByRole,
   getAllByRole: dom.getAllByRole,
   queryByRole: dom.queryByRole,
   queryAllByRole: dom.queryAllByRole,
   findByRole: dom.findByRole,
-  findAllByRole: dom.findAllByRole,
-  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
+  findAllByRole: dom.findAllByRole /* oxlint-enable typescript/unbound-method */,
+  // oxlint-disable typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByLabelText: dom.getByLabelText,
   getAllByLabelText: dom.getAllByLabelText,
   queryByLabelText: dom.queryByLabelText,
   queryAllByLabelText: dom.queryAllByLabelText,
   findByLabelText: dom.findByLabelText,
-  findAllByLabelText: dom.findAllByLabelText,
-  // oxlint-disable-next-line typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
+  findAllByLabelText: dom.findAllByLabelText /* oxlint-enable typescript/unbound-method */,
+  // oxlint-disable typescript/unbound-method -- testing-library's queries are bound functions, only typed as methods
   getByText: dom.getByText,
   getAllByText: dom.getAllByText,
   queryByText: dom.queryByText,
   queryAllByText: dom.queryAllByText,
   findByText: dom.findByText,
-  findAllByText: dom.findAllByText,
+  findAllByText: dom.findAllByText /* oxlint-enable typescript/unbound-method */,
 }
 
 type UserEvent = ReturnType<typeof userEvent.setup>

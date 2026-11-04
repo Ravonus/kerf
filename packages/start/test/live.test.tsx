@@ -274,33 +274,39 @@ const prices = stream({
     yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId })
   },
 })
-// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const counter = stream({
-  $id: 'live.count',
-  async *run({ lastEventId }) {
-    let n = Number(lastEventId ?? 0)
-    for (;;) {
-      yield tracked(String(++n), n)
-      if (n % 2 === 0) return
-    }
-  },
-})
-// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const secret = stream({
-  $id: 'live.secret',
-  auth: 'user',
-  async *run() {
-    yield 'hidden'
-  },
-})
-// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const once = stream({
-  $id: 'live.once',
-  async *run() {
-    yield 1
-    yield 2
-  },
-})
+// oxlint-disable typescript/require-await -- `run` is an async generator whatever its body does
+const counter = stream(
+  {
+    $id: 'live.count',
+    async *run({ lastEventId }) {
+      let n = Number(lastEventId ?? 0)
+      for (;;) {
+        yield tracked(String(++n), n)
+        if (n % 2 === 0) return
+      }
+    },
+  } /* oxlint-enable typescript/require-await */,
+)
+// oxlint-disable typescript/require-await -- `run` is an async generator whatever its body does
+const secret = stream(
+  {
+    $id: 'live.secret',
+    auth: 'user',
+    async *run() {
+      yield 'hidden'
+    },
+  } /* oxlint-enable typescript/require-await */,
+)
+// oxlint-disable typescript/require-await -- `run` is an async generator whatever its body does
+const once = stream(
+  {
+    $id: 'live.once',
+    async *run() {
+      yield 1
+      yield 2
+    },
+  } /* oxlint-enable typescript/require-await */,
+)
 const numeric: StandardSchemaV1<unknown, number> = {
   '~standard': {
     version: 1,
@@ -309,14 +315,16 @@ const numeric: StandardSchemaV1<unknown, number> = {
       typeof v === 'number' ? { value: v } : { issues: [{ message: 'not a number' }] },
   },
 }
-// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-const broken = stream({
-  $id: 'live.broken',
-  message: numeric,
-  async *run() {
-    yield 'nope' as unknown as number
-  },
-})
+// oxlint-disable typescript/require-await -- `run` is an async generator whatever its body does
+const broken = stream(
+  {
+    $id: 'live.broken',
+    message: numeric,
+    async *run() {
+      yield 'nope' as unknown as number
+    },
+  } /* oxlint-enable typescript/require-await */,
+)
 
 function Tick() {
   const tick = prices({ symbols: ['A'] })

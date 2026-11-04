@@ -613,9 +613,9 @@ export function For<T>(props: {
         if (from < end && (!LINEAR || end - from > 8)) left = new Map()
         if (left) for (let i = from; i < end; i++) left.set(order[i]!.key, order[i]!)
       } else for (let i = from; i < end; i++) clean(order[i]!)
-      // oxlint-disable-next-line unicorn/no-new-array -- sized up front: filling a list of known length is the keyed list's hot path
+      // oxlint-disable unicorn/no-new-array -- sized up front: filling a list of known length is the keyed list's hot path
       const next = new Array<Item>(list.length),
-        nodes = new Array<unknown>(list.length)
+        nodes = new Array<unknown>(list.length) /* oxlint-enable unicorn/no-new-array */
       for (let i = 0; i < list.length; i++) {
         const item = list[i]!
         let row = i < from ? order[i] : i >= stop ? order[i + end - stop] : undefined

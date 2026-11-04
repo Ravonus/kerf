@@ -56,7 +56,7 @@ export function Tabs<V extends string>({
     e.preventDefault()
     onChange(tabs[to]!.value)
     ;(e.currentTarget as HTMLElement)
-      .querySelectorAll<HTMLElement>('[role="tab"]')
+      .querySelectorAll<HTMLElement>('[role="tab"]') // oxlint-disable-next-line no-unexpected-multiline -- computed member in this chain
       [options.findIndex((o) => o.value === tabs[to]!.value)]?.focus() // by position: a hydrated server id isn't this side's
   }
   const selected = () => options.findIndex((o) => o.value === value)

@@ -106,8 +106,8 @@ describe('--unsafe-allow', () => {
 
 const chrome = findChrome()
 
+// skipped without Chrome: CI machines and containers may not have it
 describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
-  // skipped without Chrome: CI machines and containers may not have it
   let root
   let result
   beforeAll(async () => {

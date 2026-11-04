@@ -9,7 +9,7 @@ findings pass only when the collector matches the finding and the baseline check
 passes. Other diagnostics still fail the check.
 
 A baseline entry records lines and the total length of syntax tokens. The
-token count ignores whitespace, comments and Rust statement terminators, so it exposes code growth even when
+token count ignores whitespace, comments and formatter punctuation (JS delimiters and Rust statement terminators), so it exposes code growth even when
 formatting changes. Literal contents count. The check reports the number of file and
 function offenders and their syntax-token size. Named functions use their name and
 containing function or class; repeated names use an occurrence number, never a line

@@ -319,7 +319,7 @@ test('a keyed row with an index reads it live; its key is written once', async (
 test('a fragment holding children with live parts updates them; a spread of an undefined prop is empty', async () => {
   const n = state(0)
   function Wrap({ children, attrs }: { children?: unknown; attrs?: Record<string, unknown> }) {
-    // oxlint-disable-next-line no-constant-binary-expression -- a constant false in a fragment is the case under test
+    // oxlint-disable no-constant-binary-expression -- a constant false in a fragment is the case under test
     return (
       <b {...attrs}>
         <>
@@ -327,7 +327,7 @@ test('a fragment holding children with live parts updates them; a spread of an u
           {children}
         </>
       </b>
-    )
+    ) /* oxlint-enable no-constant-binary-expression */
   }
   const { container } = render(() => <Wrap>Added {n.value}</Wrap>)
   n.value++

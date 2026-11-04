@@ -214,10 +214,10 @@ async function scenario(browser, urlA, urlB, via, log) {
     await a.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     await b.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     check(`cursors are going over ${via}`, true)
-    // oxlint-disable-next-line typescript/unbound-method -- wrapping a prototype method: `s.call(this, t)` gives it its `this` back
+    // oxlint-disable typescript/unbound-method -- wrapping a prototype method: `s.call(this, t)` gives it its `this` back
     await a.page.evaluate(() => {
       window.__sent = 0
-      const s = WebSocket.prototype.send
+      const s = WebSocket.prototype.send /* oxlint-enable typescript/unbound-method */
       WebSocket.prototype.send = function (t) {
         if (typeof t === 'string' && t.includes('mp.cursor')) window.__sent++
         return s.call(this, t)

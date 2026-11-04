@@ -186,7 +186,7 @@ describe('sanitizeHtml', () => {
     expect(sanitizeHtml('<span data-mention title="Ada">@Ada</span>')).toContain('role="img"')
   })
   test('safeUrl refuses protocol tricks', () => {
-    // oxlint-disable-next-line no-script-url -- the sanitizer's own test: these are the inputs it must refuse
+    // oxlint-disable no-script-url -- the sanitizer's own test: these are the inputs it must refuse
     for (const u of [
       'javascript:x',
       'JaVaScRiPt:x',
@@ -194,7 +194,7 @@ describe('sanitizeHtml', () => {
       '//evil.dev',
       '/\\evil.dev',
       '\\\\evil.dev',
-    ])
+    ] /* oxlint-enable no-script-url */)
       expect(safeUrl(u), u).toBeFalsy()
     for (const u of ['https://x.dev', 'mailto:a@x.dev', '/a', '#b'])
       expect(safeUrl(u), u).toBeTruthy()

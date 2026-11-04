@@ -286,21 +286,21 @@ describe('streams', () => {
     expect(of(s, 'b')).toEqual([{ retry: 0 }])
     expect(s.closed).toBe(true)
   })
-
   test('tracked ids go through a plain handler too', async () => {
-    // oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
-    stream({
-      $id: 'hub.rows',
-      async *run() {
-        yield tracked('row-9', 'x')
-      },
-    })
+    // oxlint-disable typescript/require-await -- `run` is an async generator whatever its body does
+    stream(
+      {
+        $id: 'hub.rows',
+        async *run() {
+          yield tracked('row-9', 'x')
+        },
+      } /* oxlint-enable typescript/require-await */,
+    )
     const { s } = await open({ s: [[1, 's', 'hub.rows']] })
     await wait()
     expect(of(s, 'm')).toEqual([[1, 'row-9', 'x']])
     expect(of(s, 'f')).toEqual([[1]])
   })
-
   test('R006: a run that reads the database before it subscribes', async () => {
     stream({
       $id: 'hub.late',
