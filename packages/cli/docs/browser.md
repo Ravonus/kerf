@@ -3,7 +3,12 @@
 ```tsx
 import { state } from '@weft-js/core'
 import {
-  online, visible, lifecycle, media, on, interval,
+  online,
+  visible,
+  lifecycle,
+  media,
+  on,
+  interval,
 } from '@weft-js/core/browser'
 
 export function Toolbar() {

@@ -134,7 +134,11 @@ jsdom has no canvas, so `@weft-js/core/test` gives it a recording one:
 <!-- example: skip imports the Page above from its own file -->
 ```tsx
 import {
-  canvasCalls, clock, fakeMeasure, flush, render,
+  canvasCalls,
+  clock,
+  fakeMeasure,
+  flush,
+  render,
 } from '@weft-js/core/test'
 import { expect, test } from 'vitest'
 import { Page } from './Page'   // the Bars page above

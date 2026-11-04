@@ -52,7 +52,10 @@ A route like `/posts/[slug]` is many pages, and each should say what it is. Make
 // src/routes/posts/[slug].tsx
 import { notFound } from '@weft-js/start'
 import type {
-  LoadArgs, Meta, Prerender, RouteProps,
+  LoadArgs,
+  Meta,
+  Prerender,
+  RouteProps,
 } from '@weft-js/start'
 
 const POSTS = [

@@ -50,7 +50,12 @@ the fields. warp's field components take an `error` and show it under the field,
 // src/routes/feedback.tsx
 import { Form, type FormApi, type Meta } from '@weft-js/start'
 import {
-  Alert, Button, Card, Checkbox, Input, Textarea,
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  Input,
+  Textarea,
 } from '@weft-js/warp'
 import { sendFeedback } from '#/server/feedback'
 
