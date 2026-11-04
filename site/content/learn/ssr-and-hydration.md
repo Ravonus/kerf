@@ -193,7 +193,13 @@ file which of its components need the client. For the kettle page it says someth
 {
   "islands": ["src/routes/kettle.tsx#0"],
   "loads": [
-    { "id": "src/routes/kettle.tsx#0", "tag": "AddToCart", "line": 33, "when": "interaction", "why": "handlers only: nothing happens before an event" }
+    {
+      "id": "src/routes/kettle.tsx#0",
+      "tag": "AddToCart",
+      "line": 33,
+      "when": "interaction",
+      "why": "handlers only: nothing happens before an event"
+    }
   ]
 }
 ```
@@ -218,11 +224,18 @@ import { onMount, state } from '@weft-js/core'
 
 /* @weft visible */
 export function Weight(props: { grams: number }) {
+  const { grams } = props
   const imperial = state(false)
   onMount(() => {
     imperial.value = localStorage.getItem('units') === 'imperial'
   })
-  return <p>{imperial.value ? `${(props.grams / 28.35).toFixed(1)} oz` : `${props.grams} g`}</p>
+  return (
+    <p>
+      {imperial.value
+        ? `${(grams / 28.35).toFixed(1)} oz`
+        : `${grams} g`}
+    </p>
+  )
 }
 ```
 
@@ -254,24 +267,45 @@ wasted work. Export `prerender` from the route and `weft build` writes them as s
 
 ```tsx
 // src/routes/guides/[topic].tsx
-import { notFound, type LoadArgs, type Meta, type Prerender, type RouteProps } from '@weft-js/start'
+import {
+  notFound,
+  type LoadArgs,
+  type Meta,
+  type Prerender,
+  type RouteProps,
+} from '@weft-js/start'
 
 const GUIDES = [
-  { topic: 'install', title: 'Installing', intro: 'From an empty folder to a running app in two commands.' },
-  { topic: 'deploy', title: 'Deploying', intro: 'Building for Node, Bun or Deno, and what a host needs.' },
+  {
+    topic: 'install',
+    title: 'Installing',
+    intro: 'From an empty folder to a running app in two commands.',
+  },
+  {
+    topic: 'deploy',
+    title: 'Deploying',
+    intro: 'Building for Node, Bun or Deno, and what a host needs.',
+  },
 ]
 
-export const load = ({ params }: LoadArgs<'/guides/[topic]'>) => GUIDES.find(g => g.topic === params.topic) ?? notFound()
+export const load = ({ params }: LoadArgs<'/guides/[topic]'>) =>
+  GUIDES.find(g => g.topic === params.topic) ?? notFound()
 
-export const meta: Meta<typeof load, '/guides/[topic]'> = ({ data }) => ({ title: data.title, description: data.intro })
+export const meta: Meta<typeof load, '/guides/[topic]'> = ({
+  data,
+}) => ({ title: data.title, description: data.intro })
 
-export const prerender: Prerender<'/guides/[topic]'> = () => GUIDES.map(g => ({ topic: g.topic }))
+export const prerender: Prerender<'/guides/[topic]'> = () =>
+  GUIDES.map(g => ({ topic: g.topic }))
 
-export default function Guide(props: RouteProps<typeof load, '/guides/[topic]'>) {
+export default function Guide(
+  props: RouteProps<typeof load, '/guides/[topic]'>,
+) {
+  const { data } = props
   return (
     <article>
-      <h1>{props.data.title}</h1>
-      <p>{props.data.intro}</p>
+      <h1>{data.title}</h1>
+      <p>{data.intro}</p>
     </article>
   )
 }
@@ -313,13 +347,23 @@ export function Price(props: { cents: number }) {
 
 export function Like() {
   const liked = state(false)
-  return <button type="button" onClick={() => (liked.value = !liked.value)}>{liked.value ? 'Liked' : 'Like'}</button>
+  return (
+    <button
+      type="button"
+      onClick={() => (liked.value = !liked.value)}
+    >
+      {liked.value ? 'Liked' : 'Like'}
+    </button>
+  )
 }
 
 export function Clock() {
   const now = state(new Date().toLocaleTimeString())
   onMount(() => {
-    const t = setInterval(() => (now.value = new Date().toLocaleTimeString()), 1000)
+    const t = setInterval(
+      () => (now.value = new Date().toLocaleTimeString()),
+      1000,
+    )
     return () => clearInterval(t)
   })
   return <time>{now.value}</time>
@@ -350,8 +394,17 @@ export function Menu() {
   })
   return (
     <div>
-      <button type="button" onClick={() => (open.value = !open.value)}>Menu</button>
-      {open.value && <ul><li>Settings</li></ul>}
+      <button
+        type="button"
+        onClick={() => (open.value = !open.value)}
+      >
+        Menu
+      </button>
+      {open.value && (
+        <ul>
+          <li>Settings</li>
+        </ul>
+      )}
     </div>
   )
 }
@@ -366,9 +419,22 @@ import { state } from '@weft-js/core'
 export function Menu() {
   const open = state(false)
   return (
-    <div onKeyDown={e => { if (e.key === 'Escape') open.value = false }}>
-      <button type="button" onClick={() => (open.value = !open.value)}>Menu</button>
-      {open.value && <ul><li>Settings</li></ul>}
+    <div
+      onKeyDown={e => {
+        if (e.key === 'Escape') open.value = false
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => (open.value = !open.value)}
+      >
+        Menu
+      </button>
+      {open.value && (
+        <ul>
+          <li>Settings</li>
+        </ul>
+      )}
     </div>
   )
 }
@@ -385,19 +451,29 @@ static HTML. What happens to a page added to `PAGES` after the build?
 :::solution
 ```tsx
 // src/routes/docs/[page].tsx
-import { notFound, type LoadArgs, type Prerender, type RouteProps } from '@weft-js/start'
+import {
+  notFound,
+  type LoadArgs,
+  type Prerender,
+  type RouteProps,
+} from '@weft-js/start'
 
 const PAGES = [
   { slug: 'intro', title: 'Introduction' },
   { slug: 'routing', title: 'Routing' },
 ]
 
-export const load = ({ params }: LoadArgs<'/docs/[page]'>) => PAGES.find(p => p.slug === params.page) ?? notFound()
+export const load = ({ params }: LoadArgs<'/docs/[page]'>) =>
+  PAGES.find(p => p.slug === params.page) ?? notFound()
 
-export const prerender: Prerender<'/docs/[page]'> = () => PAGES.map(p => ({ page: p.slug }))
+export const prerender: Prerender<'/docs/[page]'> = () =>
+  PAGES.map(p => ({ page: p.slug }))
 
-export default function DocPage(props: RouteProps<typeof load, '/docs/[page]'>) {
-  return <h1>{props.data.title}</h1>
+export default function DocPage(
+  props: RouteProps<typeof load, '/docs/[page]'>,
+) {
+  const { data } = props
+  return <h1>{data.title}</h1>
 }
 ```
 
