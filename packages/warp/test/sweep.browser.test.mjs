@@ -62,8 +62,11 @@ const clip = (page, selector) =>
   page.locator(selector).evaluate((n) => getComputedStyle(n).clipPath)
 const finished = (page, selector) =>
   page.locator(selector).evaluate((n) => Promise.all(n.getAnimations().map((a) => a.finished)))
-// a virtual clock on one part: pause its transitions and move them all on by ms, then read its edges. Real time can't
-// stall it, so a 50 ms hover is 50 ms, however busy the machine.
+// Freeze new transitions before input, then advance the part by ms. Time between input and sampling cannot escape.
+const freeze = async (page) => {
+  const session = await page.context().newCDPSession(page)
+  await session.send('Animation.setPlaybackRate', { playbackRate: 0 })
+}
 const step = (page, selector, ms) =>
   page.locator(selector).evaluate((n, by) => {
     for (const a of n.getAnimations()) {
@@ -196,6 +199,7 @@ test('re-entering during the exit shows the stroke whole (SIGNATURE §1.4)', asy
 
 test('a 50 ms hover draws the stroke all the way round, then it leaves L→R (SIGNATURE §1.4)', async () => {
   const { page, close } = await open()
+  await freeze(page)
   const stroke = part('soft', 'sweep')
   expect(cover(await step(page, stroke, 0))).toBe(0)
   await page.hover('#soft')
@@ -218,6 +222,7 @@ test('a 50 ms hover draws the stroke all the way round, then it leaves L→R (SI
 test('a long hover leaves at once; re-entering mid-exit draws the tail back with no jump', async () => {
   const { page, close } = await open()
   const stroke = part('soft', 'sweep')
+  await freeze(page)
   await page.hover('#soft')
   await run(page, stroke, 2 * SWEEP, 40)
   expect(cover(await step(page, stroke, 0))).toBeGreaterThan(99.5)
@@ -228,6 +233,7 @@ test('a long hover leaves at once; re-entering mid-exit draws the tail back with
   expect(mid).toBeGreaterThan(5)
   expect(mid).toBeLessThan(95)
   await page.hover('#soft')
+  await page.waitForTimeout(150) // delayed sampling must not advance the new transition
   const back = [out.at(-1), ...(await run(page, stroke, SWEEP))]
   // a draw moves at most ~2.5% of the stroke per 8 ms; a jump would be the whole gap in one step
   for (let i = 1; i < back.length; i++)
@@ -238,6 +244,7 @@ test('a long hover leaves at once; re-entering mid-exit draws the tail back with
 
 test('the frame outline also draws all the way round after a brief hover', async () => {
   const { page, close } = await open()
+  await freeze(page)
   const outline = part('frame', 'sweep-outline')
   const read = () =>
     page.locator(outline).evaluate((n) => {
@@ -291,6 +298,7 @@ test('reduced motion: the same end states, with nothing running', async () => {
 
 test('touch: hover never counts, and a tap draws one whole sweep, then exits', async () => {
   const { page, close } = await open({ hasTouch: true, isMobile: true })
+  await freeze(page)
   expect(await page.evaluate(() => matchMedia('(hover: none)').matches)).toBe(true)
   const stroke = part('soft', 'sweep')
   const on = () =>
