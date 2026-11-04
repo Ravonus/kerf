@@ -13,7 +13,7 @@ import { join, resolve } from 'node:path'
 import { commands, localPackages, repo } from '../lib/gate.mjs'
 
 const here = join(repo, 'evals')
-const pkg = localPackages(repo)
+const packageUrl = localPackages(repo)
 const [step, dirArg] = process.argv.slice(2)
 if (!['prepare', 'verify'].includes(step) || !dirArg) {
   console.error('usage: phase3-exit.mjs prepare|verify <dir>')
@@ -69,7 +69,7 @@ if (step === 'prepare') {
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   for (const deps of [pkg.dependencies, pkg.devDependencies])
     for (const name of Object.keys(deps ?? {}))
-      if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = pkg(name)
+      if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = packageUrl(name)
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   must('npm', ['install', '--no-audit', '--no-fund'])
   must('npx', ['weft', 'db', 'generate'])

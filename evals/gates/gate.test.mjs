@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { commands, eq, localPackages, makeCheck, repo, until } from '../lib/gate.mjs'
 
 test('local dependencies resolve to packages with the requested npm name', () => {
-  const pkg = localPackages(repo)
+  const packageUrl = localPackages(repo)
   for (const name of ['core', 'warp-icons', 'create']) {
     const expected = `@weft-js/${name}`
     const manifest = JSON.parse(readFileSync(new URL(`${pkg(expected)}/package.json`), 'utf8'))

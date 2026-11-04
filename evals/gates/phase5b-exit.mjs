@@ -36,7 +36,7 @@ import { commands, until, eq, makeCheck, localPackages } from '../lib/gate.mjs'
 
 const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
-const pkg = localPackages(repo)
+const packageUrl = localPackages(repo)
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -269,7 +269,7 @@ const pkgFile = join(dir, 'package.json')
 const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'))
 for (const deps of [pkg.dependencies, pkg.devDependencies])
   for (const name of Object.keys(deps ?? {}))
-    if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = pkg(name)
+    if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = packageUrl(name)
 pkg.dependencies.zod = '4.6.7'
 writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
 must('npm', ['install', '--no-audit', '--no-fund'])
