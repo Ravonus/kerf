@@ -22,7 +22,11 @@ Here's a gallery that should move to the next picture when you press Next. It ke
 ```tsx
 import { Button } from '@weft-js/warp'
 
-const pictures = ['Homenaje a la Neurocirugía', 'Floralis Genérica', 'Eternal Presence']
+const pictures = [
+  'Homenaje a la Neurocirugía',
+  'Floralis Genérica',
+  'Eternal Presence',
+]
 
 export function Gallery() {
   let index = 0
@@ -57,14 +61,24 @@ Import `state` from `@weft-js/core` and make a box in the component body:
 import { state } from '@weft-js/core'
 import { Button } from '@weft-js/warp'
 
-const pictures = ['Homenaje a la Neurocirugía', 'Floralis Genérica', 'Eternal Presence']
+const pictures = [
+  'Homenaje a la Neurocirugía',
+  'Floralis Genérica',
+  'Eternal Presence',
+]
 
 export function Gallery() {
   const index = state(0)
   return (
     <section>
       <h2>{pictures[index.value]}</h2>
-      <Button onClick={() => (index.value = (index.value + 1) % pictures.length)}>Next</Button>
+      <Button
+        onClick={() => (
+          index.value = (index.value + 1) % pictures.length
+        )}
+      >
+        Next
+      </Button>
     </section>
   )
 }
@@ -102,8 +116,10 @@ type Draft = { text: string; at: number }
 
 export function makeBoxes() {
   const name = state('')                       // State<string>
-  const picked = state<string | null>(null)    // without <…> this would be State<null>
-  const drafts = state<Draft[]>([])            // without <…> this would be State<never[]>
+  // Without <…> this would be State<null>.
+  const picked = state<string | null>(null)
+  // Without <…> this would be State<never[]>.
+  const drafts = state<Draft[]>([])
   return { name, picked, drafts }
 }
 ```
@@ -176,7 +192,8 @@ Pressing Show details writes `showMore`; only the details update.
 When two values always change together, one box holding an object can be clearer:
 
 ```tsx
-const position = state({ x: 0, y: 0 })   // a pointer position: x and y move together
+// A pointer position: x and y move together.
+const position = state({ x: 0, y: 0 })
 ```
 
 [Choosing the state structure](/learn/choosing-state-structure) has the guidelines. And a value you can work out from
@@ -239,7 +256,11 @@ In a production build `name` does nothing.
 In the add-to-cart demo at the top of the page, add a second button that takes one away, but never below zero.
 :::solution
 ```tsx
-<Button emphasis="ghost" disabled={inCart.value === 0} onClick={() => inCart.value--}>
+<Button
+  emphasis="ghost"
+  disabled={inCart.value === 0}
+  onClick={() => inCart.value--}
+>
   Remove
 </Button>
 ```
@@ -255,7 +276,11 @@ Next on the last, and show "2 of 3" between them.
 import { state } from '@weft-js/core'
 import { Button } from '@weft-js/warp'
 
-const pictures = ['Homenaje a la Neurocirugía', 'Floralis Genérica', 'Eternal Presence']
+const pictures = [
+  'Homenaje a la Neurocirugía',
+  'Floralis Genérica',
+  'Eternal Presence',
+]
 
 export function Gallery() {
   const index = state(0)
@@ -272,16 +297,31 @@ export function Gallery() {
 import { state } from '@weft-js/core'
 import { Button } from '@weft-js/warp'
 
-const pictures = ['Homenaje a la Neurocirugía', 'Floralis Genérica', 'Eternal Presence']
+const pictures = [
+  'Homenaje a la Neurocirugía',
+  'Floralis Genérica',
+  'Eternal Presence',
+]
 
 export function Gallery() {
   const index = state(0)
   return (
     <section>
       <h2>{pictures[index.value]}</h2>
-      <Button emphasis="outline" disabled={index.value === 0} onClick={() => index.value--}>Previous</Button>
+      <Button
+        emphasis="outline"
+        disabled={index.value === 0}
+        onClick={() => index.value--}
+      >
+        Previous
+      </Button>
       <span> {index.value + 1} of {pictures.length} </span>
-      <Button disabled={index.value === pictures.length - 1} onClick={() => index.value++}>Next</Button>
+      <Button
+        disabled={index.value === pictures.length - 1}
+        onClick={() => index.value++}
+      >
+        Next
+      </Button>
     </section>
   )
 }
@@ -302,8 +342,16 @@ export function Greeting() {
   let last = ''
   return (
     <section>
-      <Input label="First name" value={first} onInput={e => (first = e.currentTarget.value)} />
-      <Input label="Last name" value={last} onInput={e => (last = e.currentTarget.value)} />
+      <Input
+        label="First name"
+        value={first}
+        onInput={e => (first = e.currentTarget.value)}
+      />
+      <Input
+        label="Last name"
+        value={last}
+        onInput={e => (last = e.currentTarget.value)}
+      />
       <p>Hi, {first} {last}</p>
     </section>
   )
@@ -319,8 +367,16 @@ export function Greeting() {
   const last = state('')
   return (
     <section>
-      <Input label="First name" value={first.value} onInput={e => (first.value = e.currentTarget.value)} />
-      <Input label="Last name" value={last.value} onInput={e => (last.value = e.currentTarget.value)} />
+      <Input
+        label="First name"
+        value={first.value}
+        onInput={e => (first.value = e.currentTarget.value)}
+      />
+      <Input
+        label="Last name"
+        value={last.value}
+        onInput={e => (last.value = e.currentTarget.value)}
+      />
       <p>Hi, {first.value} {last.value}</p>
     </section>
   )

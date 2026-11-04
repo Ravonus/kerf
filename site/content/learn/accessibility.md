@@ -149,10 +149,16 @@ export function Reveal() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="link" aria-expanded={open.value} onClick={() => (open.value = !open.value)}>
+      <Button
+        emphasis="link"
+        aria-expanded={open.value}
+        onClick={() => (open.value = !open.value)}
+      >
         Shipping details
       </Button>
-      {open.value && <Text>Roasted on Monday, shipped on Tuesday.</Text>}
+      {open.value && (
+        <Text>Roasted on Monday, shipped on Tuesday.</Text>
+      )}
     </>
   )
 }
@@ -200,7 +206,8 @@ spell out letter by letter. Each code has a page under [Diagnostics](/reference/
 Each message names the WCAG criterion it's about:
 
 ```
-D031 6: <Button> has no name a screen reader can read: only an icon, or nothing (WCAG 4.1.2).
+D031 6: <Button> has no name a screen reader can read:
+  only an icon, or nothing (WCAG 4.1.2).
 ```
 
 `weft fix` applies the ones with a safe fix, like turning a positive `tabindex` into `0`. A fix that changes an element,
@@ -230,7 +237,13 @@ function Favourite() {
   const on = state(false)
   return (
     <>
-      <Button emphasis="ghost" icon="star" label="Favourite" aria-pressed={on.value} onClick={() => (on.value = !on.value)} />
+      <Button
+        emphasis="ghost"
+        icon="star"
+        label="Favourite"
+        aria-pressed={on.value}
+        onClick={() => (on.value = !on.value)}
+      />
       <Text>{on.value ? 'Saved to favourites' : 'Not saved'}</Text>
     </>
   )
@@ -274,11 +287,17 @@ function SignIn() {
 test('Tab goes email, password, then the button', async () => {
   render(SignIn)
   await user.tab()
-  expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Email' }))
+  expect(document.activeElement).toBe(
+    screen.getByRole('textbox', { name: 'Email' }),
+  )
   await user.tab()
-  expect(document.activeElement).toBe(screen.getByLabelText('Password'))
+  expect(document.activeElement).toBe(
+    screen.getByLabelText('Password'),
+  )
   await user.tab()
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Sign in' }))
+  expect(document.activeElement).toBe(
+    screen.getByRole('button', { name: 'Sign in' }),
+  )
 })
 ```
 
@@ -314,7 +333,9 @@ changing how it looks to a mouse user.
 
 <!-- example: skip the challenge's starting code, which has D033 on purpose -->
 ```tsx
-export function ProductCard(props: { name: string; onOpen: () => void }) {
+export function ProductCard(
+  props: { name: string; onOpen: () => void },
+) {
   return (
     <div class="product" onClick={props.onOpen}>
       {props.name}
@@ -326,7 +347,9 @@ export function ProductCard(props: { name: string; onOpen: () => void }) {
 ```tsx
 import { Card } from '@weft-js/warp'
 
-export function ProductCard(props: { name: string; onOpen: () => void }) {
+export function ProductCard(
+  props: { name: string; onOpen: () => void },
+) {
   return <Card title={props.name} onClick={props.onOpen} />
 }
 ```
@@ -378,8 +401,18 @@ export function Terms() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Read the terms</Button>
-      <Modal open={open} title="Terms" footer={<Button data-close="">Done</Button>}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
+        Read the terms
+      </Button>
+      <Modal
+        open={open}
+        title="Terms"
+        footer={<Button data-close="">Done</Button>}
+      >
         <Text>Be kind.</Text>
       </Modal>
     </>
@@ -397,8 +430,18 @@ function Terms() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>Read the terms</Button>
-      <Modal open={open} title="Terms" footer={<Button data-close="">Done</Button>}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
+        Read the terms
+      </Button>
+      <Modal
+        open={open}
+        title="Terms"
+        footer={<Button data-close="">Done</Button>}
+      >
         <Text>Be kind.</Text>
       </Modal>
     </>
@@ -407,7 +450,9 @@ function Terms() {
 
 test('closing the terms puts focus back on the button', async () => {
   render(Terms)
-  const opener = screen.getByRole('button', { name: 'Read the terms' })
+  const opener = screen.getByRole('button', {
+    name: 'Read the terms',
+  })
   await user.click(opener)
   await user.click(screen.getByRole('button', { name: 'Done' }))
   expect(document.activeElement).toBe(opener)
