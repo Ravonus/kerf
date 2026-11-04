@@ -49,16 +49,16 @@ export function check(cwd = repoRoot) {
       (part) => part.replace(/[^\n]/g, ' '),
     )
     const declarations =
-      /\b(?:async\s+)?function\s+(freePort|sleep|until|walk|median)\s*\(|\b(?:const|let)\s+(freePort|sleep|until|walk|median)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[a-zA-Z_$][\w$]*)\s*=>/g
+      /\b(?:async\s+)?function\s+(freePort|sleep|until|walk|median)\s*\(|\b(?:const|let)\s+(freePort|sleep|until|walk|median)\s*=\s*(?:async\s*)?(?:(?:\([^)]*\)|[a-zA-Z_$][\w$]*)\s*=>|function\b)/g
     const waits =
-      /\b(?:const|let)\s+(\w+)\s*=\s*\((\w+)(?:\s*=\s*0)?\)\s*=>\s*new\s+Promise(?:<void>)?\s*\(\s*\((\w+)\)\s*=>\s*(?:\{\s*)?setTimeout\s*\(\s*\3\s*,\s*\2\s*\)/g
+      /\b(?:const|let)\s+(\w+)\s*=\s*\(?\s*(\w+)(?:\s*=\s*0)?\s*\)?\s*=>\s*new\s+Promise(?:<void>)?\s*\(\s*\(?\s*(\w+)\s*\)?\s*=>\s*(?:\{\s*)?setTimeout\s*\(\s*\3\s*,\s*\2\s*\)/g
     for (const match of code.matchAll(waits)) {
       if (match[1] === 'sleep') continue
       const line = code.slice(0, match.index).split('\n').length
       problems.push(`${path}:${line}: duplicate sleep (${match[1]})`)
     }
     const ticks =
-      /\b(?:const|let)\s+(\w+)\s*=\s*\(\)\s*=>\s*new\s+Promise(?:<void>)?\s*\(\s*\((\w+)\)\s*=>\s*(?:\{\s*)?setTimeout\s*\(\s*\2\s*(?:,\s*0)?\s*\)/g
+      /\b(?:const|let)\s+(\w+)\s*=\s*\(\)\s*=>\s*new\s+Promise(?:<void>)?\s*\(\s*\(?\s*(\w+)\s*\)?\s*=>\s*(?:\{\s*)?setTimeout\s*\(\s*\2\s*(?:,\s*0)?\s*\)/g
     for (const match of code.matchAll(ticks)) {
       const line = code.slice(0, match.index).split('\n').length
       problems.push(`${path}:${line}: duplicate sleep (${match[1]})`)

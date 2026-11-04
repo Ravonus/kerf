@@ -27,6 +27,15 @@ void test('checks tracked setup files and rejects duplicate helpers', () => {
     assert.equal(cli.status, 1)
     writeFileSync(file, 'const delay = (ms) => new Promise((ok) => setTimeout(ok, ms))\n')
     assert.match(check(dir).problems[0], /duplicate sleep/)
+    for (const source of [
+      'const sleep = function(ms) { return new Promise(ok => setTimeout(ok, ms)) }',
+      'const delay = (ms) => new Promise(ok => setTimeout(ok, ms))',
+      'const delay = ms => new Promise((ok) => setTimeout(ok, ms))',
+      'const tick = () => new Promise(ok => setTimeout(ok))',
+    ]) {
+      writeFileSync(file, source + '\n')
+      assert.ok(check(dir).problems.some((problem) => /duplicate sleep/.test(problem)), source)
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
