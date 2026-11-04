@@ -12,11 +12,11 @@
 // reload with no failed request, a schema edit reported as R103 with the function's id, and R101/R102 from `weft check`.
 // Each `weft start` runs on Node, Bun and Deno. The swap is scripted, not done by an agent.
 //
-//   node evals/phase5a-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--docs 20000]
+//   node evals/gates/phase5a-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--docs 20000]
 //
 // Writes evals/results/phase5a-exit.md and .json; exit 1 if any check fails. Needs cargo, and bun and deno for those
 // runtimes, packages/weft's native compiler built, and each package's dependencies installed.
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import {
   cpSync,
@@ -32,8 +32,9 @@ import { createServer } from 'node:net'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
+import { commands, until, eq, makeCheck } from '../lib/gate.mjs'
 
-const here = dirname(fileURLToPath(import.meta.url))
+const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -53,18 +54,7 @@ const { chromium } = createRequire(join(repo, 'packages/start/package.json'))('p
 const { fnId } = await import(join(repo, 'packages/start/src/vite.mjs'))
 
 const log = (...a) => console.log('[5a]', ...a)
-const run = (cmd, args, cwd = dir, env = {}) =>
-  spawnSync(cmd, args, {
-    cwd,
-    encoding: 'utf8',
-    maxBuffer: 1 << 28,
-    env: { ...process.env, ...env },
-  })
-const must = (cmd, args, cwd, env) => {
-  const r = run(cmd, args, cwd, env)
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${r.stdout}\n${r.stderr}`)
-  return r
-}
+const { run, must } = commands(dir, 1 << 28, true)
 const sleep = (ms) =>
   new Promise((ok) => {
     setTimeout(ok, ms)
@@ -76,17 +66,6 @@ const freePort = () =>
       s.close(() => ok(port))
     })
   })
-const until = async (what, fn, ms = 60_000) => {
-  const end = Date.now() + ms
-  for (;;) {
-    const v = await Promise.resolve()
-      .then(fn)
-      .catch(() => undefined)
-    if (v) return v
-    if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
-    await sleep(50)
-  }
-}
 const weft = () => join(dir, 'node_modules/.bin/weft')
 const ID = {
   search: fnId('searchDocs', 'src/server/docs.ts'),
@@ -96,31 +75,10 @@ const ID = {
 }
 
 const checks = []
-const eq = (a, b, what) => {
-  if (JSON.stringify(a) !== JSON.stringify(b))
-    throw new Error(
-      `${what}: got ${JSON.stringify(a)?.slice(0, 400)}, want ${JSON.stringify(b)?.slice(0, 400)}`,
-    )
-}
 const ok = (v, what) => {
   if (!v) throw new Error(what)
 }
-async function check(name, fn) {
-  const t = performance.now()
-  try {
-    const detail = await fn()
-    checks.push({
-      name,
-      ok: true,
-      ms: Math.round(performance.now() - t),
-      ...(detail !== undefined && { detail }),
-    })
-    log(`pass: ${name}${detail !== undefined ? ` (${JSON.stringify(detail).slice(0, 120)})` : ''}`)
-  } catch (e) {
-    checks.push({ name, ok: false, error: e.message })
-    log(`FAIL: ${name}\n${e.stack}`)
-  }
-}
+const check = makeCheck(checks, log, 120)
 
 // ---- the corpus -----------------------------------------------------------------------------------------------------
 

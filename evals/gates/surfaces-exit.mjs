@@ -2,18 +2,19 @@
 // The Surfaces exit check (PLAN §9, "2. Surfaces"; research 33 §10): an agent adds a surface to a page from a one-line
 // request. The Keel half is `npm run test:e2e` in packages/plugin-surface-keel.
 //
-//   node evals/surfaces-exit.mjs prepare <dir>     scaffold and install; prints the request
+//   node evals/gates/surfaces-exit.mjs prepare <dir>     scaffold and install; prints the request
 //   (a fresh agent works in <dir>, from the request and what the app ships, and sees no e2e)
-//   node evals/surfaces-exit.mjs verify <dir>      weft check, tsc, build, then the hidden checks in Chrome
+//   node evals/gates/surfaces-exit.mjs verify <dir>      weft check, tsc, build, then the hidden checks in Chrome
 //
 // verify writes evals/results/surfaces-exit.md and .json; exit 1 if any part fails. Needs packages/weft's native compiler.
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { commands } from '../lib/gate.mjs'
 
-const here = dirname(fileURLToPath(import.meta.url))
+const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
 const [step, dirArg] = process.argv.slice(2)
 if (!['prepare', 'verify'].includes(step) || !dirArg) {
@@ -21,13 +22,7 @@ if (!['prepare', 'verify'].includes(step) || !dirArg) {
   process.exit(1)
 }
 const dir = resolve(dirArg)
-const run = (cmd, args, cwd = dir) =>
-  spawnSync(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 1 << 26 })
-const must = (cmd, args, cwd) => {
-  const r = run(cmd, args, cwd)
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${r.stdout}\n${r.stderr}`)
-  return r
-}
+const { run, must } = commands(dir, 1 << 26)
 
 export const REQUEST =
   'Add an animated starfield to the home page, with a slider that sets how dense it is.'

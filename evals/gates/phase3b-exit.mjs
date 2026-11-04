@@ -2,18 +2,18 @@
 // Phase 3b's exit check (PLAN §9, "3b. Channels"; research 32): a chat room built by an agent passes the R-code checks
 // and a reconnect/resume test, on Node, Bun and Deno.
 //
-//   node evals/phase3b-exit.mjs prepare <dir>     scaffold, install, `weft db generate`; prints the agent's brief
+//   node evals/gates/phase3b-exit.mjs prepare <dir>     scaffold, install, `weft db generate`; prints the agent's brief
 //   (a fresh agent works in <dir>, from the brief and what the app ships, and sees no e2e)
-//   node evals/phase3b-exit.mjs verify <dir>      weft check, tsc, source rules, then the hidden e2e on all three runtimes
+//   node evals/gates/phase3b-exit.mjs verify <dir>      weft check, tsc, source rules, then the hidden e2e on all three runtimes
 //
 // verify writes evals/results/phase3b-exit.md and .json; exit 1 if any part fails. Needs bun and deno on PATH and
 // packages/weft's native compiler built.
-import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { commands } from '../lib/gate.mjs'
 
-const here = dirname(fileURLToPath(import.meta.url))
+const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
 const [step, dirArg] = process.argv.slice(2)
 if (!['prepare', 'verify'].includes(step) || !dirArg) {
@@ -21,13 +21,7 @@ if (!['prepare', 'verify'].includes(step) || !dirArg) {
   process.exit(1)
 }
 const dir = resolve(dirArg)
-const run = (cmd, args, cwd = dir) =>
-  spawnSync(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 1 << 26 })
-const must = (cmd, args, cwd) => {
-  const r = run(cmd, args, cwd)
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${r.stdout}\n${r.stderr}`)
-  return r
-}
+const { run, must } = commands(dir, 1 << 26)
 
 export const BRIEF = `Add chat rooms to this app. The app is a weft app: read AGENTS.md first, then \`npx weft docs start\`. Run
 \`npx weft check --json\` after changes. Work only inside this directory; don't read weft's own sources in
@@ -151,7 +145,7 @@ const matrix = run(
     join(repo, 'packages/start/scripts/runtime-matrix.mjs'),
     dir,
     '--e2e',
-    join(here, 'phase3b-exit.e2e.mjs'),
+    join(here, 'gates', 'phase3b-exit.e2e.mjs'),
     '--json',
     json,
   ],

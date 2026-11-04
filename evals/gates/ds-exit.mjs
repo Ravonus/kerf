@@ -2,10 +2,10 @@
 // Phase 4's exit check (PLAN §9, "4. Design"; research 37): @weft-js/core/ds against raw Tailwind on consistency and a11y, from
 // one brief given to a fresh agent, and repeated on every stack in evals/compare (CLAUDE.md).
 //
-//   node evals/ds-exit.mjs prepare <dir> [--models sonnet,haiku] [--samples 3]    one workspace per stack × model under <dir>
-//   node evals/ds-exit.mjs agent <dir> [--concurrency 3] [--budget 4]   run headless `claude -p` in each
-//   node evals/ds-exit.mjs verify <dir>   build, audit (compare/design/audit.mjs) and write results/ds-exit.{json,md}
-//   node evals/ds-exit.mjs keep <dir>     copy the Sonnet apps to compare/design, which measure.mjs re-audits on every run
+//   node evals/gates/ds-exit.mjs prepare <dir> [--models sonnet,haiku] [--samples 3]    one workspace per stack × model under <dir>
+//   node evals/gates/ds-exit.mjs agent <dir> [--concurrency 3] [--budget 4]   run headless `claude -p` in each
+//   node evals/gates/ds-exit.mjs verify <dir>   build, audit (compare/design/audit.mjs) and write results/ds-exit.{json,md}
+//   node evals/gates/ds-exit.mjs keep <dir>     copy the Sonnet apps to compare/design, which measure.mjs re-audits on every run
 //
 // The brief names no accessibility or consistency goal, on purpose: prompting for them is known not to help (research
 // 03 §1.1), and the claim is that the good result comes by construction. Exit 1 if @weft-js/core/ds doesn't beat raw Tailwind.
@@ -13,10 +13,10 @@ import { execFile, execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { audit, chromium } from './compare/design/audit.mjs'
-import { pool } from '../scripts/jobs.mjs'
+import { audit, chromium } from '../compare/design/audit.mjs'
+import { pool } from '../../scripts/jobs.mjs'
 
-const here = dirname(fileURLToPath(import.meta.url))
+const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
 const pkg = (name) => `file:${join(repo, 'packages', name)}`
 const [step, dirArg] = process.argv.slice(2)

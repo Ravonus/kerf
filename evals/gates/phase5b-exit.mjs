@@ -11,11 +11,11 @@
 // machine, a panic, a deadline, a stale library, R103–R105, `weft dev` reloading in place, `weft add rust` from nothing,
 // and a build with no `native()` carrying none of it. Each `weft start` runs on Node, Bun and Deno. The swap is scripted.
 //
-//   node evals/phase5b-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--no-browser] [--results phase5b-exit]
+//   node evals/gates/phase5b-exit.mjs <empty-dir> [--runtimes node,bun,deno] [--no-browser] [--results phase5b-exit]
 //
 // Writes evals/results/<results>.md and .json; exit 1 if any check fails. Needs cargo with Rust 1.99, bun and deno for those
 // runtimes, packages/weft's native compiler built, and each package's dependencies installed.
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   cpSync,
@@ -32,8 +32,9 @@ import { loadavg } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
+import { commands, until, eq, makeCheck } from '../lib/gate.mjs'
 
-const here = dirname(fileURLToPath(import.meta.url))
+const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -55,18 +56,7 @@ const runtimes = values.runtimes.split(',')
 const { fnId } = await import(join(repo, 'packages/start/src/vite.mjs'))
 
 const log = (...a) => console.log('[5b]', ...a)
-const run = (cmd, args, cwd = dir, env = {}) =>
-  spawnSync(cmd, args, {
-    cwd,
-    encoding: 'utf8',
-    maxBuffer: 1 << 28,
-    env: { ...process.env, ...env },
-  })
-const must = (cmd, args, cwd, env) => {
-  const r = run(cmd, args, cwd, env)
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${r.stdout}\n${r.stderr}`)
-  return r
-}
+const { run, must } = commands(dir, 1 << 28, true)
 const sleep = (ms) =>
   new Promise((ok) => {
     setTimeout(ok, ms)
@@ -78,17 +68,6 @@ const freePort = () =>
       s.close(() => ok(port))
     })
   })
-const until = async (what, fn, ms = 60_000) => {
-  const end = Date.now() + ms
-  for (;;) {
-    const v = await Promise.resolve()
-      .then(fn)
-      .catch(() => undefined)
-    if (v) return v
-    if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
-    await sleep(50)
-  }
-}
 const weft = () => join(dir, 'node_modules/.bin/weft')
 const ID = Object.fromEntries(
   ['thumbnail', 'guarded', 'stats', 'boom', 'spin'].map((n) => [n, fnId(n, 'src/server/thumb.ts')]),
@@ -96,31 +75,10 @@ const ID = Object.fromEntries(
 const REQUIRED = 5
 
 const checks = []
-const eq = (a, b, what) => {
-  if (JSON.stringify(a) !== JSON.stringify(b))
-    throw new Error(
-      `${what}: got ${JSON.stringify(a)?.slice(0, 400)}, want ${JSON.stringify(b)?.slice(0, 400)}`,
-    )
-}
 const ok = (v, what) => {
   if (!v) throw new Error(what)
 }
-async function check(name, fn) {
-  const t = performance.now()
-  try {
-    const detail = await fn()
-    checks.push({
-      name,
-      ok: true,
-      ms: Math.round(performance.now() - t),
-      ...(detail !== undefined && { detail }),
-    })
-    log(`pass: ${name}${detail !== undefined ? ` (${JSON.stringify(detail).slice(0, 140)})` : ''}`)
-  } catch (e) {
-    checks.push({ name, ok: false, error: e.message })
-    log(`FAIL: ${name}\n${e.stack}`)
-  }
-}
+const check = makeCheck(checks, log, 140)
 
 function build(runtime, ...more) {
   const t = performance.now()

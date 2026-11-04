@@ -1,10 +1,10 @@
 // The hidden e2e for evals/phase3b-exit.mjs: the chat room in Chrome (live, history, typing, reconnect and resume,
 // after a killed socket and after a reset), then the R-code rules over a raw WebSocket (Origin, `authorize`, bounds).
 import { createRequire } from 'node:module'
-import { suite } from '../packages/start/scripts/e2e-todo.mjs'
-import { fnId, handshake, open as socket } from '../packages/start/test/ws-client.mjs'
+import { suite } from '../../packages/start/scripts/e2e-todo.mjs'
+import { fnId, handshake, open as socket } from '../../packages/start/test/ws-client.mjs'
 
-const { chromium } = createRequire(new URL('../packages/start/package.json', import.meta.url))(
+const { chromium } = createRequire(new URL('../../packages/start/package.json', import.meta.url))(
   'playwright-core',
 )
 

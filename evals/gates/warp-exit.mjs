@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { brotliCompressSync, constants } from 'node:zlib'
 
-const root = dirname(fileURLToPath(import.meta.url))
+const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(root, '..')
 const exec = promisify(execFile)
 const arg = (n, d) => {
