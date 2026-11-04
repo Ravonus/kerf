@@ -1,18 +1,57 @@
 import { derived } from '@weft-js/core'
 import { Card, Checkbox, Input } from '@weft-js/warp'
 
-type Product = { category: string; price: string; stocked: boolean; name: string }
+type Product = {
+  category: string
+  price: string
+  stocked: boolean
+  name: string
+}
 
 const PRODUCTS: Product[] = [
-  { category: 'Beans', price: '$12', stocked: true, name: 'House blend' },
-  { category: 'Beans', price: '$16', stocked: false, name: 'Ethiopia natural' },
-  { category: 'Beans', price: '$14', stocked: true, name: 'Decaf' },
-  { category: 'Gear', price: '$40', stocked: true, name: 'Hand grinder' },
-  { category: 'Gear', price: '$5', stocked: false, name: 'Paper filters' },
-  { category: 'Gear', price: '$35', stocked: true, name: 'Kettle' },
+  {
+    category: 'Beans',
+    price: '$12',
+    stocked: true,
+    name: 'House blend',
+  },
+  {
+    category: 'Beans',
+    price: '$16',
+    stocked: false,
+    name: 'Ethiopia natural',
+  },
+  {
+    category: 'Beans',
+    price: '$14',
+    stocked: true,
+    name: 'Decaf',
+  },
+  {
+    category: 'Gear',
+    price: '$40',
+    stocked: true,
+    name: 'Hand grinder',
+  },
+  {
+    category: 'Gear',
+    price: '$5',
+    stocked: false,
+    name: 'Paper filters',
+  },
+  {
+    category: 'Gear',
+    price: '$35',
+    stocked: true,
+    name: 'Kettle',
+  },
 ]
 
-function ProductCategoryRow({ category }: { category: string }) {
+function ProductCategoryRow({
+  category,
+}: {
+  category: string
+}) {
   return (
     <tr>
       <th colspan="2">{category}</th>
@@ -23,7 +62,13 @@ function ProductCategoryRow({ category }: { category: string }) {
 function ProductRow({ product }: { product: Product }) {
   return (
     <tr>
-      <td style={{ color: product.stocked ? undefined : 'var(--warp-color-critical-text)' }}>
+      <td
+        style={{
+          color: product.stocked
+            ? undefined
+            : 'var(--warp-color-critical-text)',
+        }}
+      >
         {product.name}
       </td>
       <td>{product.price}</td>
@@ -31,8 +76,14 @@ function ProductRow({ product }: { product: Product }) {
   )
 }
 
-function ProductTable({ products }: { products: Product[] }) {
-  const categories = derived(() => [...new Set(products.map((p) => p.category))])
+function ProductTable({
+  products,
+}: {
+  products: Product[]
+}) {
+  const categories = derived(() => [
+    ...new Set(products.map((p) => p.category)),
+  ])
   return (
     <table>
       <thead>
