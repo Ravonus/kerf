@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { freePort } from '../../scripts/lib/helpers.mjs'
 // Phase 5a's exit check (PLAN §9, "5a. Rust: remote"; research 36): a search sidecar replaces a TS `query` with no client
 // change. The same app is built twice. Before: every function's body is a TS `run`. After: each is `impl: search`, and
 // a Rust crate does the work. The swap touches server modules and adds a crate; this script holds it to that, and to
@@ -28,7 +29,6 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { createRequire } from 'node:module'
-import { createServer } from 'node:net'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -59,13 +59,6 @@ const { run, must } = commands(dir, 1 << 28, true)
 const sleep = (ms) =>
   new Promise((ok) => {
     setTimeout(ok, ms)
-  })
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
   })
 const weft = () => join(dir, 'node_modules/.bin/weft')
 const ID = {

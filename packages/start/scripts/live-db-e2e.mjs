@@ -1,3 +1,4 @@
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 // The change feed end to end: a built app, two instances, a real browser, and a second process writing straight to the
 // database. Not in `vitest`: it needs a real database and takes a minute.
 //
@@ -6,7 +7,6 @@
 import { execFile, spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, symlinkSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { createServer } from 'node:net'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { changeStatements } from '../src/changes-sql.mjs'
@@ -28,13 +28,6 @@ const check = (ok, what) => {
   say(`${ok ? 'ok  ' : 'FAIL'} ${what}`)
   if (!ok) failed.push(what)
 }
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 
 const file = url.replace(/^file:/, '')
 /** The outside writer: a process of its own, knowing nothing of weft. */

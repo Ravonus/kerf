@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 // Two browsers, one document (research 35 §6): a real app, built for each runtime, served on it, and driven by two
 // Chromium contexts with different users and window sizes. With `--bus redis` or `nats` each browser talks to its own
 // instance, so everything also has to cross the bus. `--via` runs cursors over a transport pack.
@@ -12,7 +13,6 @@ import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { cpSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { createServer } from 'node:net'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -105,13 +105,6 @@ const SERVERS = {
   bun: ['bun', ['run', '.output/server/index.mjs']],
   deno: ['deno', ['run', '-A', '.output/server/index.mjs']],
 }
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 const sleep = (ms) =>
   new Promise((ok) => {
     setTimeout(ok, ms)

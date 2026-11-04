@@ -1,3 +1,4 @@
+import { sleep } from '../../scripts/lib/helpers.mjs'
 // What a database-driven site adds to a sample: is the data live, what a request cost the database, and how flows feel from a real
 // click. Input goes through CDP (`Input.dispatchMouseEvent`), so it's trusted, unlike the `dispatchEvent` in measure.mjs.
 import { randomBytes } from 'node:crypto'
@@ -8,7 +9,6 @@ import { raceOnce } from './race.mjs'
 import { SITE_METRICS, median, spread } from './stats.mjs'
 import { benchUser } from '../shared/pg/env.mjs'
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 export const cookieHeader = (cookies) =>
   cookies?.length ? cookies.map((c) => `${c.name}=${c.value}`).join('; ') : undefined
 export const randomValue = () => `v${randomBytes(5).toString('hex')}`

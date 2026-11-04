@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { freePort } from '../../scripts/lib/helpers.mjs'
 // Phase 5b's exit check (PLAN §9, "5b. Rust: native"; research 39): a CPU-bound demo beats its TS `run` by at least 5× on
 // Node and Bun. The same app is built twice. Before: `thumbnail` is a TS `run`, written with typed arrays as a careful
 // author writes it. After: it's `impl: media`, and a crate does the same arithmetic, which this script holds it to:
@@ -27,7 +28,6 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { createRequire } from 'node:module'
-import { createServer } from 'node:net'
 import { loadavg } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -61,13 +61,6 @@ const { run, must } = commands(dir, 1 << 28, true)
 const sleep = (ms) =>
   new Promise((ok) => {
     setTimeout(ok, ms)
-  })
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
   })
 const weft = () => join(dir, 'node_modules/.bin/weft')
 const ID = Object.fromEntries(

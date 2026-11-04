@@ -1,10 +1,10 @@
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 // What a built server does at startup with a required live query, on real infrastructure: a pooler in each mode, no
 // triggers, a role that can't add them; and a separate listener process feeding an app that holds no feed of its own.
 //
 //   DIRECT=postgres://…/live TX=postgres://…pgbouncer-transaction…/live SESSION=postgres://…session…/live node scripts/live-startup-e2e.mjs
 import { spawn, spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { createServer } from 'node:net'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
 import { changeStatements } from '../src/changes-sql.mjs'
@@ -22,13 +22,6 @@ const check = (ok, what) => {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`)
   if (!ok) failed.push(what)
 }
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 
 if (!process.env.SKIP_BUILD) {
   const b = spawnSync(

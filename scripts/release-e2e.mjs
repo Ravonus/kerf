@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { freePort } from './lib/helpers.mjs'
 // Proves the install: serves a directory of tarballs from a local registry, then from an empty folder runs what a new user
 // runs, with no repo in reach. Needs only Node and this script's neighbour registry.mjs, so it can be copied to a machine
 // that has neither the repo nor Rust, plus a Chrome or Edge (`CHROME` names one): serving HTML proves nothing about
@@ -9,7 +10,6 @@
 // --no-rust removes every directory holding cargo or rustc from PATH first, and fails if one is still found.
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { createServer } from 'node:net'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -110,13 +110,6 @@ const probe = async (port, path = '/', tries = 90) => {
   }
   return last
 }
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 /** A real page: the route with a live query, clicked until its counter moves, with no error and each module loaded once. */
 async function hydrates(chrome, port, what) {
   const page = await chrome.page(`http://localhost:${port}/hot`)

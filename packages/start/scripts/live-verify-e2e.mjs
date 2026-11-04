@@ -1,3 +1,4 @@
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 // `live: { verify }` against a disposable Postgres and a built app: a pass, each link broken on purpose, the refusals, and
 // proof no row survives any of it. Needs `node scripts/live-db-e2e.mjs` to have built the fixture.
 //
@@ -7,7 +8,6 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createServer } from 'node:net'
 import postgres from 'postgres'
 import { writeContract, readLivePlan } from '../src/contract.mjs'
 import { changeStatements } from '../src/changes-sql.mjs'
@@ -24,13 +24,6 @@ const check = (ok, what) => {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`)
   if (!ok) failed.push(what)
 }
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 
 const sql = postgres(url, { max: 2, onnotice() {} })
 await sql.unsafe(
