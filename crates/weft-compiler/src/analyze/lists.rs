@@ -13,7 +13,7 @@ use super::{
     is_key_attr, key, params_of, returned, root_element, row_roots, static_key, symbol_of,
 };
 
-impl<'s> Analyzer<'s> {
+impl Analyzer<'_> {
     /// Every name `pattern` binds in a keyed-list row, as a live path from `_item()`. W019 for what a path can't say.
     pub(super) fn bind_row(
         &mut self,

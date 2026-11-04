@@ -10,7 +10,7 @@ use crate::diag::{Diagnostic, Severity};
 
 use super::{Analyzer, Rewrite, binding_symbol, key, static_key, symbol_of};
 
-impl<'s> Analyzer<'s> {
+impl Analyzer<'_> {
     /// `const x = props.y`: `x` is another name for the prop, so each use reads it live.
     pub(super) fn alias(&mut self, init: &Expression<'_>) -> Option<Rewrite> {
         let (root, path) = self.prop_path(init)?;

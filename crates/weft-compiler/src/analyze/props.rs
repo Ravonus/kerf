@@ -8,7 +8,7 @@ use crate::diag::{Diagnostic, Edit, Fix, Severity};
 
 use super::{Analyzer, ChildrenPlan, CompCtx, Rewrite, binding_symbol, key, static_key, symbol_of};
 
-impl<'s> Analyzer<'s> {
+impl Analyzer<'_> {
     pub(super) fn destructure_props(
         &mut self,
         obj: &ObjectPattern<'_>,

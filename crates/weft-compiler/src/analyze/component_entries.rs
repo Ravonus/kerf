@@ -11,7 +11,7 @@ use crate::diag::{Diagnostic, Edit, Fix, Severity};
 
 use super::{Analyzer, CompCtx, EntryHit, reads_any, symbol_of};
 
-impl<'s> Analyzer<'s> {
+impl Analyzer<'_> {
     /// W017 outside a list: a component's JSX or `derived` reads `box.value[k]` where `k` comes from its props
     /// (`live.value[stock.id]` in a row component). Each instance depends on the whole box, so one write re-runs
     /// every instance. One diagnostic per box per component; the autofix rewrites every such read to `box.get(k)`.

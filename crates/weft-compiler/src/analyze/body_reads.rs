@@ -11,7 +11,7 @@ use crate::diag::{Diagnostic, Edit, Fix, Severity};
 
 use super::{Analyzer, Reactive, chain_root_member, key, symbol_of};
 
-impl<'s> Analyzer<'s> {
+impl Analyzer<'_> {
     pub(super) fn report_body_read(&mut self, span: Span, what: &str) {
         let Some(ctx) = self.body_level() else { return };
         if let Some(call) = ctx.state_arg {

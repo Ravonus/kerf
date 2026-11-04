@@ -5,7 +5,7 @@ use crate::project::SpreadProp;
 
 use super::{Analyzer, Plan};
 
-impl<'s> Analyzer<'s> {
+impl Analyzer<'_> {
     pub(super) fn finish(mut self) -> Plan {
         for (index, names) in std::mem::take(&mut self.w006) {
             let mut edits = Vec::new();

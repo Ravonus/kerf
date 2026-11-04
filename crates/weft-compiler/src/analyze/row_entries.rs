@@ -13,7 +13,7 @@ use crate::diag::{Diagnostic, Edit, Fix, Severity};
 
 use super::{Analyzer, jsx_name, symbol_of};
 
-impl<'s> Analyzer<'s> {
+impl Analyzer<'_> {
     /// W017: `cart[p.id]` or `cart.value[p.id]` in a row reads one entry of a whole object, so every write to it
     /// re-runs every row. `box.get(key)` re-runs only the row whose entry changed (`Object.is`). A box read gets the
     /// safe autofix; a prop needs the parent to pass the box, which the compiler can't do from here.
