@@ -12,7 +12,10 @@ export default function Todos() {
     { id: 2, title: 'Brew tea', done: false },
   ])
   const add = () => {
-    todos.value = [...todos.value, { id: nextId++, title: draft.value, done: false }]
+    todos.value = [
+      ...todos.value,
+      { id: nextId++, title: draft.value, done: false },
+    ]
     draft.value = ''
   }
   return (
@@ -20,9 +23,15 @@ export default function Todos() {
       <Input
         label="New todo"
         value={draft.value}
-        onInput={(e) => (draft.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (draft.value = e.currentTarget.value)
+        }
       />
-      <Button size="sm" disabled={!draft.value.trim()} onClick={add}>
+      <Button
+        size="sm"
+        disabled={!draft.value.trim()}
+        onClick={add}
+      >
         Add
       </Button>
       <ul>

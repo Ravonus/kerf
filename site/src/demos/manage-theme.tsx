@@ -1,13 +1,17 @@
 import { context, state, type State } from '@weft-js/core'
 import { Button, Card, Row, Switch } from '@weft-js/warp'
 
-// A box, so a change reaches every reader. The fallback serves anything outside a provider.
+// A box, so a change reaches every reader. The
+// fallback serves anything outside a provider.
 const Armed = context<State<boolean>>(state(false))
 
 function DeleteButton() {
   const armed = Armed.use
   return (
-    <Button tone={armed.value ? 'critical' : 'neutral'} disabled={!armed.value}>
+    <Button
+      tone={armed.value ? 'critical' : 'neutral'}
+      disabled={!armed.value}
+    >
       Delete everything
     </Button>
   )
@@ -29,9 +33,9 @@ export default function DangerZone() {
     <Card title="Danger zone">
       <Switch
         checked={armed.value}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-          (armed.value = e.currentTarget.checked)
-        }
+        onChange={(
+          e: Event & { currentTarget: HTMLInputElement },
+        ) => (armed.value = e.currentTarget.checked)}
       >
         Allow deleting
       </Switch>
