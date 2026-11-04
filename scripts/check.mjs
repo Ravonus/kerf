@@ -181,9 +181,9 @@ const STEPS = [
           '--pretty',
           'false',
         ])
-        // Tests import examples from evals/ and spikes/ to prove they work, and text's gen/ is vendored code rewritten. Not held to this.
+        // Tests import examples from evals/ and examples/ to prove they work, and text's gen/ is vendored code rewritten. Not held to this.
         for (const line of r.out.split('\n'))
-          if (/error TS\d+/.test(line) && !/^(?:evals|spikes|packages\/text\/gen)\//.test(line))
+          if (/error TS\d+/.test(line) && !/^(?:evals|examples|packages\/text\/gen)\//.test(line))
             found.add(line)
       })
       return { problems: [...found].toSorted((a, b) => a.localeCompare(b)) }
