@@ -1,5 +1,4 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "include": ["src", "test", "*.mjs", "*.cjs", "*.mts", "*.ts"],
-  "exclude": ["**/fixture/**", "**/fixtures/**", "**/node_modules/**", "**/vendor/**", "**/dist/**"]
+  "extends": "../../tsconfig.realtime.json",
+  "include": ["src", "test", "*.mjs", "*.cjs", "*.mts", "*.ts"]
 }
