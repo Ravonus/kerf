@@ -1,5 +1,14 @@
 import { state } from '@weft-js/core'
-import { Button, Card, Menu, Modal, Row, Stack, Tabs, Text } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Menu,
+  Modal,
+  Row,
+  Stack,
+  Tabs,
+  Text,
+} from '@weft-js/warp'
 
 type Tab = 'details' | 'shipping' | 'returns'
 
@@ -10,9 +19,11 @@ const TABS = [
 ]
 
 const COPY: Record<Tab, string> = {
-  details: 'A washed coffee with notes of lemon and black tea.',
+  details:
+    'A washed coffee with notes of lemon and black tea.',
   shipping: 'Roasted on Monday, shipped on Tuesday.',
-  returns: 'Unopened bags can be returned within 30 days.',
+  returns:
+    'Unopened bags can be returned within 30 days.',
 }
 
 export default function Keyboard() {
@@ -32,10 +43,19 @@ export default function Keyboard() {
         <Row gap="tight">
           <Menu
             label="Share"
-            trigger={{ emphasis: 'outline', tone: 'neutral' }}
-            items={[{ label: 'Copy link' }, { label: 'Email' }]}
+            trigger={{
+              emphasis: 'outline',
+              tone: 'neutral',
+            }}
+            items={[
+              { label: 'Copy link' },
+              { label: 'Email' },
+            ]}
           />
-          <Button emphasis="soft" onClick={() => (confirm.value = true)}>
+          <Button
+            emphasis="soft"
+            onClick={() => (confirm.value = true)}
+          >
             Subscribe
           </Button>
         </Row>
@@ -47,7 +67,8 @@ export default function Keyboard() {
         footer={<Button data-close="">Done</Button>}
       >
         <Text subtle>
-          Focus moved into this dialog. Escape closes it and puts focus back on Subscribe.
+          Focus moved into this dialog. Escape closes it
+          and puts focus back on Subscribe.
         </Text>
       </Modal>
     </Card>

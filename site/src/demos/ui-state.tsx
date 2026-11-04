@@ -1,16 +1,33 @@
-import { defineState, derived, state, type State } from '@weft-js/core'
+import {
+  defineState,
+  derived,
+  state,
+  type State,
+} from '@weft-js/core'
 import { interaction } from '@weft-js/core/interaction'
 import { Card, Checkbox } from '@weft-js/warp'
 
-// What's ticked is data: one box each, read by both panes, and with sync: 'tabs' by every tab.
+// What's ticked is data: one box each, read by both
+// panes, and with sync: 'tabs' by every tab.
 const trip = defineState('demo-trip', () => ({
-  flights: state(false, { persist: 'local', sync: 'tabs' }),
+  flights: state(false, {
+    persist: 'local',
+    sync: 'tabs',
+  }),
   pack: state(false, { persist: 'local', sync: 'tabs' }),
 }))
 
-function Row(props: { id: string; text: string; done: State<boolean> }) {
-  // Hover, focus and press are UI state: one key is one row, here, in other tabs and on other clients.
-  const row = interaction({ share: () => `demo:${props.id}` })
+function Row({ id, text, done }: {
+  id: string
+  text: string
+  done: State<boolean>
+}) {
+  // Hover, focus and press are UI state: one key is
+  // one row, here, in other tabs and on other
+  // clients.
+  const row = interaction({
+    share: () => `demo:${id}`,
+  })
   const note = derived(() => {
     if (row.hover.value) return 'here'
     const { hover, pressed } = row.remote.value
@@ -21,12 +38,12 @@ function Row(props: { id: string; text: string; done: State<boolean> }) {
     <Checkbox
       ui={row}
       hint={note.value}
-      checked={props.done.value}
+      checked={done.value}
       onChange={() => {
-        props.done.value = !props.done.value
+        done.value = !done.value
       }}
     >
-      {props.text}
+      {text}
     </Checkbox>
   )
 }
@@ -36,7 +53,11 @@ export default function UiState() {
     <div data-part="panes">
       {['Ana', 'Ben'].map((who) => (
         <Card key={who} title={who}>
-          <Row id="flights" text="Book flights" done={trip.flights} />
+          <Row
+            id="flights"
+            text="Book flights"
+            done={trip.flights}
+          />
           <Row id="pack" text="Pack" done={trip.pack} />
         </Card>
       ))}
