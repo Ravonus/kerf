@@ -75,7 +75,7 @@ if (step === 'prepare') {
     for (const name of Object.keys(deps ?? {}))
       if (name === '@weft-js/core' || name.startsWith('@weft-js/'))
         deps[name] =
-          `file:${join(repo, 'packages', name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
+          `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   must('npm', ['install', '--no-audit', '--no-fund'])
   must('npx', ['weft', 'db', 'generate'])

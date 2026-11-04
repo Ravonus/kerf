@@ -38,7 +38,7 @@ function buildNative() {
   ].map((f) => join(pkgs, 'weft/native', f))
   if (built.every(stamped)) return
   console.log('[local] building the compiler')
-  run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'weft'))
+  run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'core'))
 }
 
 /** dist/ is gitignored and it's all @weft-js/text/engine exports, so it's built every time rather than trusted. */

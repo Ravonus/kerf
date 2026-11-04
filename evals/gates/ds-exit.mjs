@@ -53,7 +53,7 @@ export const STACKS = {
     label: '@weft-js/core/ds (weft + warp)',
     tool: 'weft + @weft-js/warp',
     deps: {
-      '@weft-js/core': pkg('weft'),
+      '@weft-js/core': pkg('core'),
       '@weft-js/warp': pkg('warp'),
       '@weft-js/warp-core': pkg('warp-core'),
       '@weft-js/cli': pkg('cli'),
@@ -75,7 +75,7 @@ export const STACKS = {
   'weft-tailwind': {
     label: 'Raw Tailwind (weft + Tailwind)',
     tool: 'weft + Tailwind',
-    deps: { '@weft-js/core': pkg('weft'), '@weft-js/cli': pkg('cli') },
+    deps: { '@weft-js/core': pkg('core'), '@weft-js/cli': pkg('cli') },
     dev: { vite: '8.3.5', ...TAILWIND },
     files: {
       'vite.config.ts': `import tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\nimport weft from '@weft-js/core/vite'\nexport default defineConfig({ plugins: [weft(), tailwindcss()] })\n`,

@@ -86,7 +86,7 @@ if (command === 'prepare') {
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   delete pkg.devDependencies?.['@weft-js/cli']
   const where = (name) =>
-    `file:${join(repo, 'packages', name === '@weft-js/core' ? 'weft' : name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
+    `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
   const tarballs =
     values.tarballs && JSON.parse(readFileSync(join(values.tarballs, 'tarballs.json'), 'utf8'))
   for (const name of LINKED) pkg.dependencies[name] = tarballs?.[name] ?? where(name)
