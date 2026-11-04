@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { commands, eq, localPackages, makeCheck, repo, until } from '../lib/gate.mjs'
 
-test('local dependencies resolve to packages with the requested npm name', () => {
+await test('local dependencies resolve to packages with the requested npm name', () => {
   const packageUrl = localPackages(repo)
   for (const name of ['core', 'warp-icons', 'create']) {
     const expected = `@weft-js/${name}`
@@ -18,7 +18,7 @@ test('local dependencies resolve to packages with the requested npm name', () =>
   )
 })
 
-test('commands preserve cwd, environment, and failures', () => {
+await test('commands preserve cwd, environment, and failures', () => {
   const { run, must } = commands(process.cwd(), 1 << 26)
   assert.equal(run(process.execPath, ['-p', 'process.cwd()']).stdout.trim(), process.cwd())
   assert.throws(() => must(process.execPath, ['-e', 'process.exit(2)']))
@@ -31,7 +31,7 @@ test('commands preserve cwd, environment, and failures', () => {
   )
 })
 
-test('until and eq accept success and reject bad input', async () => {
+await test('until and eq accept success and reject bad input', async () => {
   assert.equal(await until('value', () => 'ready', 10), 'ready')
   await assert.rejects(
     until(
@@ -47,7 +47,7 @@ test('until and eq accept success and reject bad input', async () => {
   assert.throws(() => eq(1, 2, 'number'), /number: got 1, want 2/)
 })
 
-test('check records success and failure', async () => {
+await test('check records success and failure', async () => {
   const checks = []
   const logs = []
   const check = makeCheck(checks, (s) => logs.push(s), 120)

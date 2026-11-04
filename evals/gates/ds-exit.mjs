@@ -12,7 +12,7 @@
 import { execFile, execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { audit, chromium } from '../../benchmarks/compare/design/audit.mjs'
 import { pool } from '../../scripts/jobs.mjs'
 import { localPackages, repo } from '../lib/gate.mjs'
