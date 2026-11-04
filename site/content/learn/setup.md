@@ -147,7 +147,11 @@ in a library others will type-check, write `count={bind(count)}`: it's the same 
 import { Button } from '@weft-js/warp'
 
 export function Stepper(props: { count: number }) {
-  return <Button onClick={() => props.count++}>Count: {props.count}</Button>
+  return (
+    <Button onClick={() => props.count++}>
+      Count: {props.count}
+    </Button>
+  )
 }
 ```
 
@@ -214,10 +218,12 @@ export function Badge(props: { label: string; count: number }) {
 import type { Props } from '@weft-js/core'
 import { Badge } from '#/components/Badge'
 
-export function BadgeList(props: { items: (Props<typeof Badge> & { id: string })[] }) {
+export function BadgeList(
+  { items }: { items: (Props<typeof Badge> & { id: string })[] },
+) {
   return (
     <ul>
-      {props.items.map(item => (
+      {items.map(item => (
         <li key={item.id}>
           <Badge label={item.label} count={item.count} />
         </li>
@@ -263,7 +269,8 @@ npx weft doctor
 ```text
 weft 0.1.0 on Node v26.1.0
 compiler: native addon (@weft-js/compiler-darwin-arm64)
-rust: no cargo on PATH. Not needed for weft; only `weft add rust` sidecars and native() use it
+rust: no cargo on PATH. Not needed for weft; only `weft add rust`
+sidecars and native() use it
 ```
 
 On WebAssembly, the second line says so, and names the addon that would make it faster where one exists for your
@@ -341,10 +348,12 @@ string, and shows the badge with the note beside it. Don't write `label: string;
 import type { Props } from '@weft-js/core'
 import { Badge } from '#/components/Badge'
 
-export function HighlightedBadge(props: Props<typeof Badge> & { note: string }) {
+export function HighlightedBadge(
+  { label, count, note }: Props<typeof Badge> & { note: string },
+) {
   return (
     <p>
-      <Badge label={props.label} count={props.count} /> <em>{props.note}</em>
+      <Badge label={label} count={count} /> <em>{note}</em>
     </p>
   )
 }

@@ -44,7 +44,12 @@ A component is a JavaScript function whose name starts with a capital letter and
 
 ```tsx
 export default function Profile() {
-  return <img src="https://i.imgur.com/MK3eW3As.jpg" alt="Katherine Johnson" />
+  return (
+    <img
+      src="https://i.imgur.com/MK3eW3As.jpg"
+      alt="Katherine Johnson"
+    />
+  )
 }
 ```
 
@@ -76,7 +81,10 @@ TypeScript. The return can fit on one line, or span several inside parentheses:
 export default function Profile() {
   return (
     <div>
-      <img src="https://i.imgur.com/MK3eW3As.jpg" alt="Katherine Johnson" />
+      <img
+        src="https://i.imgur.com/MK3eW3As.jpg"
+        alt="Katherine Johnson"
+      />
     </div>
   )
 }
@@ -170,14 +178,16 @@ It also means that a value computed in the body is computed once:
 ```tsx
 import { derived } from '@weft-js/core'
 
-export function Total(props: { price: number; qty: number }) {
-  // const total = props.price * props.qty  would be worked out once and never change: the compiler reports W001.
-  const total = derived(() => props.price * props.qty)
+export function Total(
+  { price, qty }: { price: number; qty: number },
+) {
+  // const total = price * qty runs once: W001.
+  const total = derived(() => price * qty)
   return <p>Total: {total.value}</p>
 }
 ```
 
-Work values out in the markup itself (`{props.price * props.qty}`) or with `derived` (see
+Work values out in the markup itself (`{price * qty}`) or with `derived` (see
 [Derived values](/learn/derived)). If you compute from a prop or a piece of state in the body, the compiler stops you with
 **W001** and offers the `derived` version as a fix. [Components run once](/learn/components-run-once) is the page on this
 idea, with the mistakes it catches.
@@ -226,13 +236,23 @@ This file defines a component but nothing else can use it, and a route file must
 <!-- example: skip the starting point, deliberately missing its export -->
 ```tsx
 function Profile() {
-  return <img src="https://i.imgur.com/lICfvbD.jpg" alt="Aklilu Lemma" />
+  return (
+    <img
+      src="https://i.imgur.com/lICfvbD.jpg"
+      alt="Aklilu Lemma"
+    />
+  )
 }
 ```
 :::solution
 ```tsx
 export default function Profile() {
-  return <img src="https://i.imgur.com/lICfvbD.jpg" alt="Aklilu Lemma" />
+  return (
+    <img
+      src="https://i.imgur.com/lICfvbD.jpg"
+      alt="Aklilu Lemma"
+    />
+  )
 }
 ```
 `export default` makes `Profile` the file's main export, so another file can write `import Profile from './Profile'`.
@@ -245,7 +265,10 @@ This component shows nothing. Why?
 ```tsx
 export default function Profile() {
   return
-    <img src="https://i.imgur.com/jA8hHMpm.jpg" alt="Katsuko Saruhashi" />
+    <img
+      src="https://i.imgur.com/jA8hHMpm.jpg"
+      alt="Katsuko Saruhashi"
+    />
 }
 ```
 :::solution
@@ -255,7 +278,10 @@ reached. Keep the markup on the `return` line, or wrap it in parentheses that op
 ```tsx
 export default function Profile() {
   return (
-    <img src="https://i.imgur.com/jA8hHMpm.jpg" alt="Katsuko Saruhashi" />
+    <img
+      src="https://i.imgur.com/jA8hHMpm.jpg"
+      alt="Katsuko Saruhashi"
+    />
   )
 }
 ```
