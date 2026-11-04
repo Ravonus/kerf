@@ -9,7 +9,7 @@
     "**/fixture/**", "**/fixtures/**", "**/vendor/**", "**/gallery/assets/**",
     "packages/warp-icons/src/gen/**", "packages/warp-icons/art/**", "packages/text/gen/**", "packages/core/node/*.mjs", "packages/core/native/**",
     "packages/core/bench/corpus/**", "packages/warp-core/scripts/contrast-check.mjs", "packages/core/test/corpus-gen/**", "packages/db/test/generated/**",
-    "docs/**", "spikes/**", "evals/*/**", "site/public/**", "site/content/**", "site/review/**"
+    "docs/**", "spikes/**", "evals/*/**", "!evals/gates/**", "!evals/lib/**", "site/public/**", "site/content/**", "site/review/**"
   ],
   "env": { "browser": true, "node": true, "es2024": true, "vitest": true },
   "globals": { "Bun": "readonly", "Deno": "readonly" },

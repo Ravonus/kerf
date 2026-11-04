@@ -38,6 +38,7 @@ const LINT_PATHS = [
   'scripts',
   'site',
   'evals/gates',
+  'evals/lib',
   ...readdirSync(join(root, 'evals'))
     .filter((f) => f.endsWith('.mjs'))
     .map((f) => `evals/${f}`),
