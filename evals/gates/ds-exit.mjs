@@ -15,7 +15,7 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { audit, chromium } from '../../benchmarks/compare/design/audit.mjs'
 import { pool } from '../../scripts/jobs.mjs'
-import { localPackages, repo } from '../lib/gate.mjs'
+import { localPackages, repo, writeJson } from '../lib/gate.mjs'
 
 const here = join(repo, 'evals')
 const pkg = localPackages(repo)
@@ -464,7 +464,7 @@ function keep(dir) {
     for (const k of ['dependencies', 'devDependencies'])
       for (const [n, v] of Object.entries(p[k] ?? {}))
         if (v.startsWith('file:')) p[k][n] = `file:../../../../packages/${v.split('/').pop()}`
-    writeFileSync(join(to, 'package.json'), JSON.stringify(p, null, 2) + '\n')
+    writeJson(join(to, 'package.json'), p)
   }
 }
 

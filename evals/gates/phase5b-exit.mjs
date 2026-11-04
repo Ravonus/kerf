@@ -32,7 +32,7 @@ import { loadavg } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
-import { commands, until, eq, makeCheck, localPackages } from '../lib/gate.mjs'
+import { commands, until, eq, makeCheck, localPackages, writeJson } from '../lib/gate.mjs'
 
 const here = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(here, '..')
@@ -737,7 +737,7 @@ const result = {
   checks,
 }
 mkdirSync(join(here, 'results'), { recursive: true })
-writeFileSync(join(here, `results/${values.results}.json`), JSON.stringify(result, null, 2) + '\n')
+writeJson(join(here, `results/${values.results}.json`), result)
 const speedRows = Object.entries(speed).flatMap(([r, s]) => [
   `| ${r} | TS \`run\` | ${s.ts.p50} | ${s.ts.p99} | ${s.ts.perSecond} | |`,
   `| ${r} | addon | ${s.rust.p50} | ${s.rust.p99} | ${s.rust.perSecond} | **${s.latency}× p50, ${s.throughput}× calls/s** |`,
