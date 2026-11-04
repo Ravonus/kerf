@@ -3,7 +3,8 @@
 A new app has no test runner. Add one:
 
 ```bash
-npm install -D vitest jsdom @testing-library/dom @testing-library/user-event
+npm install -D vitest jsdom @testing-library/dom \
+  @testing-library/user-event
 ```
 
 <!-- example: skip @weft-js/core/vite has no type declarations yet (TS7016 under strict) -->
@@ -12,7 +13,10 @@ npm install -D vitest jsdom @testing-library/dom @testing-library/user-event
 import weft from '@weft-js/core/vite'
 import { defineConfig } from 'vitest/config'
 
-export default defineConfig({ plugins: [weft()], test: { environment: 'jsdom' } })
+export default defineConfig({
+  plugins: [weft()],
+  test: { environment: 'jsdom' },
+})
 ```
 
 Then `npx vitest run`. A test:
@@ -24,14 +28,20 @@ import { expect, test } from 'vitest'
 
 function Cart() {
   const count = state(0)
-  return <button type="button" onClick={() => count.value++}>Cart ({count.value})</button>
+  return (
+    <button type="button" onClick={() => count.value++}>
+      Cart ({count.value})
+    </button>
+  )
 }
 
 test('adding to the cart', async () => {
   render(Cart)
   await user.click(screen.getByRole('button', { name: 'Cart (0)' }))
-  expect(screen.getByRole('button', { name: 'Cart (1)' })).toBeTruthy()
-  await expect(() => user.click(screen.getByRole('button'))).toTouchAtMost(1, { runs: 2 })
+  expect(screen.getByRole('button', { name: 'Cart (1)' }))
+    .toBeTruthy()
+  const click = () => user.click(screen.getByRole('button'))
+  await expect(click).toTouchAtMost(1, { runs: 2 })
 })
 ```
 

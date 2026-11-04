@@ -10,8 +10,18 @@ export default defineConfig({
   plugins: [
     text({
       fonts: {
-        body: { family: 'Inter', src: 'assets/fonts/inter.woff2', fallback: 'Arial', axes: { wght: [100, 900] } },
-        display: { family: 'Fraunces', src: 'assets/fonts/fraunces.woff2', fallback: 'Georgia', weight: 700 },
+        body: {
+          family: 'Inter',
+          src: 'assets/fonts/inter.woff2',
+          fallback: 'Arial',
+          axes: { wght: [100, 900] },
+        },
+        display: {
+          family: 'Fraunces',
+          src: 'assets/fonts/fraunces.woff2',
+          fallback: 'Georgia',
+          weight: 700,
+        },
       },
     }),
   ],

@@ -25,15 +25,29 @@ sets a dial, such as a Table's density.
 ```ts
 warp({
   dials: { expression: 'quiet', flair: 'none' },
-  fonts: { display: 'ui-monospace, monospace', body: 'ui-monospace, monospace' },
-  tokens: { '--warp-radius-mark': '0px', '--warp-radius-control': '0px', '--warp-radius-surface': '0px' },
+  fonts: {
+    display: 'ui-monospace, monospace',
+    body: 'ui-monospace, monospace',
+  },
+  tokens: {
+    '--warp-radius-mark': '0px',
+    '--warp-radius-control': '0px',
+    '--warp-radius-surface': '0px',
+  },
 })
 ```
 
 ```css
 /* src/theme.css */
-[data-scope="button"] { --warp-tone-edge: var(--warp-color-text); border-width: 2px; box-shadow: 4px 4px 0 var(--warp-color-text); }
-[data-scope="surface"] { border: 2px solid var(--warp-color-text); box-shadow: none; }
+[data-scope="button"] {
+  --warp-tone-edge: var(--warp-color-text);
+  border-width: 2px;
+  box-shadow: 4px 4px 0 var(--warp-color-text);
+}
+[data-scope="surface"] {
+  border: 2px solid var(--warp-color-text);
+  box-shadow: none;
+}
 ```
 
 Raw colours and shadows in `src/theme.css` or on a `[data-scope]` rule are D001 and D003 warnings, not errors.
@@ -75,7 +89,11 @@ stay together, at every emphasis:
 | `--warp-tone-layer` | The hover layer that wipes across |
 
 ```css
-[data-scope="button"][data-emphasis="solid"] { --warp-tone-fill: #111111; --warp-tone-ink: #ffffff; --warp-tone-layer: #333333; }
+[data-scope="button"][data-emphasis="solid"] {
+  --warp-tone-fill: #111111;
+  --warp-tone-ink: #ffffff;
+  --warp-tone-layer: #333333;
+}
 ```
 
 The channels are on Button only. Fields read `--warp-field-*`, tables `--warp-table-*`.
