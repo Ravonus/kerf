@@ -1,4 +1,4 @@
--- One schema for every variant of every app in evals/apps: landing, todo, admin, catalog.
+-- One schema for every variant of every app in examples: landing, todo, admin, catalog.
 -- Better Auth's tables keep its default camelCase names, so every stack can use it unconfigured.
 create table "user" (
   id varchar(255) primary key, name text not null, email varchar(255) not null unique, "emailVerified" boolean not null,

@@ -1,4 +1,4 @@
-// node --test evals/apps/lib: the parts of the harness a wrong result would hide in.
+// node --test examples/lib: the parts of the harness a wrong result would hide in.
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { createServer } from 'node:http'

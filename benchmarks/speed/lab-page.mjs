@@ -122,7 +122,7 @@ thead th{color:var(--dim);font-size:13px}tbody th{white-space:nowrap}.n{text-ali
 .win{color:var(--win)}.loss{color:var(--loss)}.tie{color:var(--tie)}.flags span{display:inline-block;margin-right:10px;font-size:13px}code{font:13px ui-monospace,monospace}
 </style>
 <h1>Weft speed lab</h1>
-<p>${esc(lab.when.slice(0, 16).replace('T', ' '))} UTC${t ? ` · ${esc(t.machine)} · load ${t.loads ? Math.min(...t.loads) : ''} to ${t.maxLoad} ${t.valid ? '' : '(<b>too high to count</b>)'}` : ' · sizes only'}. ${t?.compared ? 'The last column is the median gap with its 95% interval across runs: coloured only when the whole interval is on one side.' : `Differences under ${NOISE}% are noise here and are not coloured.`} Run it again with <code>node evals/speed/lab.mjs</code>.</p>
+<p>${esc(lab.when.slice(0, 16).replace('T', ' '))} UTC${t ? ` · ${esc(t.machine)} · load ${t.loads ? Math.min(...t.loads) : ''} to ${t.maxLoad} ${t.valid ? '' : '(<b>too high to count</b>)'}` : ' · sizes only'}. ${t?.compared ? 'The last column is the median gap with its 95% interval across runs: coloured only when the whole interval is on one side.' : `Differences under ${NOISE}% are noise here and are not coloured.`} Run it again with <code>node benchmarks/speed/lab.mjs</code>.</p>
 ${t ? `<h2>Before and after, against Solid</h2><p>Milliseconds unless the row says otherwise. Green beats Solid, red loses to it.</p><div class=wrap>${compare(lab)}</div>` : ''}
 <h2>Each speed path</h2><p>Bundle columns are what the path adds, in brotli bytes. Each row is everything on except that path.</p><div class=wrap>${ablation(lab)}</div>`
 }

@@ -1,6 +1,6 @@
 # Real apps, any stack
 
-`evals/compare` is one synthetic screen. This is the other half: point it at a real app and its other versions, and it reports
+`benchmarks/compare` is one synthetic screen. This is the other half: point it at a real app and its other versions, and it reports
 how weft compares and what to tune in weft or warp because of it. Run it after converting an app, and after changing weft.
 
     npm install                                  # once, Node 26
@@ -13,7 +13,7 @@ how weft compares and what to tune in weft or warp because of it. Run it after c
 It's a tool for improving weft. Apps are fast by construction: this is not a budget gate, and it isn't a step in an app's
 workflow.
 
-`results.json` holds each app's latest run, `../results/apps-history.jsonl` gets a line per run, and `../results/apps.html` is
+`results.json` holds each app's latest run, `../evals/results/apps-history.jsonl` gets a line per run, and `../evals/results/apps.html` is
 rewritten from both. Commit all three when a run is worth keeping.
 
 ## Adding an app
@@ -68,7 +68,7 @@ Per variant and page, on production builds, `--samples` samples (3 by default, 5
 
 ## Database-driven sites
 
-`landing`, `todo`, `admin` and `catalog` follow [the contract](../../docs/research/40-site-benchmarks.md). Their weft variant is the
+`landing`, `todo`, `admin` and `catalog` follow [the contract](../docs/research/40-site-benchmarks.md). Their weft variant is the
 template; `solid` and `next` are folders here. `--all` skips a site whose folders aren't written yet, and says so.
 
     node e2e.mjs todo weft                  # build if needed, database, proxy, production server, tests, stop it all
@@ -158,7 +158,7 @@ app's last run; and a ranked list, where bytes and milliseconds are converted to
   timing metrics before anything is called a change.
 - Peak load is recorded per run. Over 40 at start it refuses: use another machine, with `BENCH_WORK` set. Windows has no load average, so there it's the percent of CPU in use: a 3 s sample over 80% refuses, and `loadMax` is a percent.
 
-The stack rule still holds: a claim about weft gets measured across the other variants, here and in `evals/compare`.
+The stack rule still holds: a claim about weft gets measured across the other variants, here and in `benchmarks/compare`.
 
 `node --test lib` covers the win logic, the freshness checks and stack detection; with Postgres up, it also runs the database, proxy
 and race probes for real against `lib/fixture`, the todo contract with no framework.

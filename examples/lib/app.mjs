@@ -30,7 +30,7 @@ function manifestFile(target) {
   for (const f of [join(here, target, 'app.json'), resolve(target, 'app.json'), resolve(target)])
     if (existsSync(f) && statSync(f).isFile()) return f
   throw new Error(
-    `no app "${target}": give a name under evals/apps, a folder holding app.json, or the path to one`,
+    `no app "${target}": give a name under examples, a folder holding app.json, or the path to one`,
   )
 }
 
@@ -53,7 +53,7 @@ export function detect(pkg) {
   )
 }
 
-/** A `scaffold` variant is what create-weft writes today, regenerated each load, so nothing under evals/apps can fork it. */
+/** A `scaffold` variant is what create-weft writes today, regenerated each load, so nothing under examples can fork it. */
 function generate(app, name, options) {
   const dir = join(
     process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench'),
@@ -62,7 +62,7 @@ function generate(app, name, options) {
     name,
   )
   const { scaffold } = createRequire(import.meta.url)(
-    join(here, '../../packages/create-weft/src/index.mjs'),
+    join(here, '../packages/create-weft/src/index.mjs'),
   )
   rmSync(dir, { recursive: true, force: true })
   // A fixed secret: the default is random, and would change the build key every load.

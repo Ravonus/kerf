@@ -49,7 +49,7 @@ export function harness(root, { click, tick, runs }) {
       renders: count.renders - base.renders,
       runs: runs() - base.runs,
       created, // from this module loading to the app in place
-      heap: performance.memory?.usedJSHeapSize, // Chromium only, rounded by the browser; evals/speed has the exact figure
+      heap: performance.memory?.usedJSHeapSize, // Chromium only, rounded by the browser; benchmarks/speed has the exact figure
       isolated: crossOriginIsolated, // the 5 microsecond clock; without it the browser rounds to 100 and the sum still holds
     }),
   }

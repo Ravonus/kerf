@@ -590,7 +590,7 @@ if (kept.length) {
 await browser.close()
 writeFileSync(join(here, 'results.json'), JSON.stringify(results, null, 1) + '\n')
 // One line per run, so a chart can follow each stack over time.
-const history = join(here, '../results/compare-history.jsonl')
+const history = join(here, '../../evals/results/compare-history.jsonl')
 const git = (...a) => execFileSync('git', a, { cwd: here, encoding: 'utf8' }).trim()
 appendFileSync(
   history,

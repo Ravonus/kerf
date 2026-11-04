@@ -19,8 +19,8 @@ stacks are the fair framework test; warp and MUI each bring a design system, so 
     node serve.mjs       # each built app on its own port, from 5401, to click through
     node measure.mjs     # size, load, parity script with DOM mutations and CPU, row scale, screen sweep
 
-`results.json` holds the latest numbers, `../results/compare-history.jsonl` gets a line per run, and
-`../results/compare.html` is rewritten from both. A stack is a folder here with a `stack.json`; `chart.html` is the page.
+`results.json` holds the latest numbers, `../../evals/results/compare-history.jsonl` gets a line per run, and
+`../../evals/results/compare.html` is rewritten from both. A stack is a folder here with a `stack.json`; `chart.html` is the page.
 
 ## The long list
 
@@ -32,7 +32,7 @@ then up, and reads back how far each on-screen row moved. Anything but 120 is a 
 
 ## One brief, built by an agent
 
-`design/` holds the apps a fresh agent built from one brief (`../ds-exit.mjs`, Phase 4's exit check): the same three screens on
+`design/` holds the apps a fresh agent built from one brief (`../../evals/ds-exit.mjs`, Phase 4's exit check): the same three screens on
 each stack, in that stack's usual kit, plus weft on raw Tailwind. Each is an agent's real output, kept as it came. `measure.mjs`
 rebuilds and re-audits them (`design/audit.mjs`: axe, focus, reflow, distinct computed values and role drift, read only from the
 page in Chromium) when `pnpm install` has run here, so a change to warp shows up here. It can't see

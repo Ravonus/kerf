@@ -17,7 +17,7 @@ import { cpus, homedir, hostname, loadavg } from 'node:os'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { allApps, freshness, here, loadApp } from './lib/app.mjs'
-import { cpuBusy, jobs as defaultJobs, pool } from '../../scripts/jobs.mjs'
+import { cpuBusy, jobs as defaultJobs, pool } from '../scripts/jobs.mjs'
 import { attribute } from './lib/attribute.mjs'
 import { linesOfCode, packOnce, prepare, repoState } from './lib/build.mjs'
 import { diagnose, report } from './lib/diagnose.mjs'
@@ -57,7 +57,7 @@ const BUSY = windows ? 80 : 40,
 process.on('SIGINT', () => process.exit(130))
 process.on('SIGTERM', () => process.exit(143))
 const results = join(here, 'results.json'),
-  history = join(here, '../results/apps-history.jsonl')
+  history = join(here, '../evals/results/apps-history.jsonl')
 const work = process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench'),
   store = join(work, 'store')
 const samplesWanted = +opt.samples,
@@ -409,4 +409,4 @@ for (const app of apps) {
   appendFileSync(history, JSON.stringify(line) + '\n')
   execFileSync(process.execPath, [join(here, 'chart.mjs')], { stdio: 'inherit' })
 }
-if (!opt['no-record']) say(`\nchart: ${join(here, '../results/apps.html')}`)
+if (!opt['no-record']) say(`\nchart: ${join(here, '../evals/results/apps.html')}`)

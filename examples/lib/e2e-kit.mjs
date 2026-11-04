@@ -7,7 +7,7 @@ import { launchBrowser } from './measure.mjs'
 import { benchUser, clone, psql, rows } from '../shared/pg/env.mjs'
 
 const env = JSON.parse(process.env.BENCH_E2E ?? 'null')
-if (!env) throw new Error('run this through e2e.mjs: node evals/apps/e2e.mjs <site> <variant>')
+if (!env) throw new Error('run this through e2e.mjs: node examples/e2e.mjs <site> <variant>')
 let browser
 const open = []
 before(async () => {

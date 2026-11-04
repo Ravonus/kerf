@@ -1,4 +1,4 @@
-// node --test evals/apps/lib: the database half of the harness. The last tests need Postgres, psql and Chromium, and run the probes
+// node --test examples/lib: the database half of the harness. The last tests need Postgres, psql and Chromium, and run the probes
 // for real against lib/fixture, which has the todo contract and no framework.
 import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'

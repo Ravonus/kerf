@@ -7,7 +7,7 @@ import { METRICS } from './lib/stats.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const results = JSON.parse(readFileSync(join(here, 'results.json'), 'utf8'))
-const file = join(here, '../results/apps-history.jsonl')
+const file = join(here, '../evals/results/apps-history.jsonl')
 const history = existsSync(file)
   ? readFileSync(file, 'utf8')
       .trim()
@@ -19,4 +19,4 @@ const page = readFileSync(join(here, 'chart.html'), 'utf8').replace(
   '/*DATA*/null',
   JSON.stringify({ results, history, METRICS }).replaceAll('<', '\\u003c'),
 )
-writeFileSync(join(here, '../results/apps.html'), page)
+writeFileSync(join(here, '../evals/results/apps.html'), page)

@@ -1,4 +1,4 @@
-// Builds the site's arena apps (site/arena, read only) for arena/run.mjs: this weft, Solid, React, and a plain DOM frame
+// Builds the site's arena apps (benchmarks/arena, read only) for arena/run.mjs: this weft, Solid, React, and a plain DOM frame
 // that makes the same writes. `SITE=<site worktree>` adds that site's deployed bundles as `weft-site` and `solid-site`.
 import {
   copyFileSync,
@@ -16,7 +16,7 @@ import { build } from 'vite'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const pkg = join(here, '../../../packages/weft')
-const from = join(here, '../../../site/arena')
+const from = join(here, '../../arena')
 const site = join(here, '../dist/.arena') // a copy, so these resolve against this bench's packages
 const out = join(here, '..', process.env.OUT ?? 'dist/arena')
 const weft = (await import(join(pkg, 'vite.mjs'))).default
