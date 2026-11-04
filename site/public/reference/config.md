@@ -23,7 +23,7 @@ export default defineConfig({
     locale: 'en_US',
     image: { url: '/og.png', width: 1200, height: 630 },   // default 'auto': a generated card (weft docs meta); false: none
     twitter: { card: 'summary_large_image', site: '@acme' },
-    inlineCss: false, // default true: each page carries what its first paint needs; false keeps plain links
+    inlineCss: false, // default true: each page carries what its first paint needs; false keeps plain links, as a strict CSP needs (D012)
     criticalCss: false, // default true: one hashed sheet plus a first-paint part; false splits by chunk and inlines up to 48 KB
     criticalKeep: ['theme-x'], // words of selectors a first paint keeps, for classes a head script sets
     head: dialScript, // raw HTML in every page's head, before the stylesheets: dialScript from @weft-js/warp/plugin restores `setDial(…, { persist: true })` before the first paint

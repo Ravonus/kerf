@@ -42,7 +42,7 @@ export function Cart({ items, taxRate }: { items: { id: string; name: string; pr
 9. **Side effects go in `watch(() => source, value => cleanup?)`**; DOM work in `onMount`. `flush()` applies pending
    DOM updates now.
 10. **Async data is `resource(signal => fetch(…))`** (`.value .pending .error .refresh()`), never `derived(async …)` (W012).
-    Loading and errors: `<Boundary pending={…} error={(e, retry) => …}>`. More: `weft docs async`.
+    Loading and errors: `<Boundary pending={…} error={(e, retry) => …}>`.
 
 **Leave props untyped**: `weft docs props`.
 
@@ -57,26 +57,26 @@ export function Cart({ items, taxRate }: { items: { id: string; name: string; pr
 
 ## Diagnostics
 
-`weft docs <code>` explains one. Also flagged: raw `addEventListener`, `setInterval` or sockets with no cleanup (W050), and a `watch` that folds a stream (W052) or copies a live value into `state` (W056).
+`weft docs <code>` explains one. Also flagged: an early `return` in a `.map` callback (W013), raw `addEventListener`, `setInterval` or sockets with no cleanup (W050), and a `watch` that folds a stream (W052) or copies a live value into `state` (W056).
 
 Test checks (`weft check` on test files): T001–T009, T013. No assertion, tautologies, sleeps, `container`/selectors/test ids, mocking weft, snapshots, conditional `expect`, `.only`/`.skip`. To allow one: `// weft-allow T00x: <reason>`.
 
-Before a change is done, see it work (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). More: `weft docs verify`.
+Before a change is done, see it work (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `weft build` ends by auditing the pages it built at a phone's and a desktop's width (L-codes: names, contrast, console, the head, sideways scroll, layout shift) and fails on an error; `weft audit --url <deploy>` checks a live site. More: `weft docs verify`.
 
 ## Full stack
 
-`@weft-js/start` app: file routes in `src/routes` (`_layout.tsx`, `[id].tsx`, `load`, `meta`), server functions in `src/server/**` or `*.server.ts`. Read `weft docs start` first. Import your own code as `#/server/todos` (`src/server/todos`); generated files are `weft:slot/<id>` and `weft:tokens/<name>`.
+`@weft-js/start` app: file routes in `src/routes` (`_layout.tsx`, `[id].tsx`, `load`, `meta`), server functions in `src/server/**` or `*.server.ts`. Import your own code as `#/server/todos` (`src/server/todos`); generated files are `weft:slot/<id>` and `weft:tokens/<name>`.
 
 - **Reads:** `query({ tags: ['todos'], auth: 'user', run: ({ ctx }) => ctx.db.select().from(todos) })`. In a component `todos().value ?? []`; in `load` and handlers `await todos.fetch()`.
 - **Writes:** `mutation({ input, auth: 'user', invalidates: ['todos'], optimistic, run })`.
 - **Database:** Drizzle; `await` every statement. Schema change: `weft db generate` (Q015). Inputs: `schemas.todos.insert.pick({ title: true })`.
-- **Auth:** `ctx.user` is the user or `null`; `auth: 'user'` refuses anyone else (A002). A guard is `redirect('/login')` in a layout's `load`. `run` must still check who owns a row.
+- **Auth:** `ctx.user` is the user or `null`; `auth: 'user'` refuses anyone else (A002). A guard is `redirect('/login')` in a layout's `load`. `run` must still check who owns a row. Login is a database session: a signed cookie caches it for pages for 5 minutes, and mutations read the database (`session.cookieCache` in `createAuth`). JWTs are API-only (`api: { functions }`).
 - **Never** copy query results into `state`, import `db` from a component (Q012), `fetch` `/_weft/*`, or poll (`todos.live()`; rooms: `channel`).
 - **Every page sets `meta` as you build it**, from `data` and `params`: `weft docs meta`.
 
 ## Styling
 
-**Run `weft style find <what it is>` first**, then reuse a group or add an axis value; never class lists. New: `const card = group('card', { base: { pad: 'group' }, axes: { status: { late: { tone: 'critical' } } } })` from `@weft-js/core/style`, `<li {...card({ status })}>`. Tokens only. D001–D007, D011, D020–D025, D030–D040, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes.
+**Run `weft style find <what it is>` first**, then reuse a group or add an axis value; never class lists. New: `const card = group('card', { base: { pad: 'group' }, axes: { status: { late: { tone: 'critical' } } } })` from `@weft-js/core/style`, `<li {...card({ status })}>`. Tokens only. D001–D007, D011, D012, D020–D025, D030–D041, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes.
 
 ## Commands
 

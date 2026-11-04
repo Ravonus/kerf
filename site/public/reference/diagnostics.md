@@ -1,6 +1,6 @@
 # Diagnostics
 
-Every code weft reports, 239 in all. `weft docs <code>` prints the same page.
+Every code weft reports, 274 in all. `weft docs <code>` prints the same page.
 
 ## Compiler
 
@@ -54,10 +54,12 @@ Every code weft reports, 239 in all. `weft docs <code>` prints the same page.
 | `D003` | Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`) |
 | `D004` | Layout spelled out on an element (`display: flex`, `flex flex-col gap-4`) where a primitive says it |
 | `D040` | The style gate (`data-weft="styled"`) on the main content or a page heading: the first paint hides what it should show |
+| `D041` | `aria-label` or `aria-labelledby` on a `<div>`, `<span>` or other element whose role may not be named: screen readers drop it (axe aria-prohibited-attr) |
 | `D005` | A browser-painted control in a warp app: `<button>`, `<select>`, `<textarea>`, an input type like `date`, `number` or `range`, or a `title` tooltip |
 | `D006` | One heading level at two roles across an app (`h1` as both `title` and `display`), or a bare `<hN>` beside `<Heading>` |
 | `D007` | A bare `<a href>` in a warp app |
 | `D011` | A literal text and background colour pair on one element below 4.5:1 |
+| `D012` | A Content-Security-Policy that blocks inline styles, or every script a page could switch its deferred sheets on with, in an app that inlines its CSS; as a warning, one that refuses only inline scripts |
 | `D030` | An `<input>`, `<select>` or `<textarea>` with no label |
 | `D031` | A button or link with no accessible name (icon only, or empty) |
 | `D032` | `<img>` with no `alt` |
@@ -136,6 +138,7 @@ Every code weft reports, 239 in all. `weft docs <code>` prints the same page.
 |---|---|
 | `H009` | A prop of an island is something JSON can't carry (a function, a Date, a class instance), found as the server renders |
 | `H010` | An island has to load with the page for a reason its code could avoid: work that reaches past it, a module that runs as it loads, a box at module level, code the compiler can't see into. `.weft/hydration.json` says why for every island |
+| `H017` | A prop on a component holds a function over local names, which can't cross to an island, so the component around it hydrates whole |
 | `H001` | No `site.url`: a build has no absolute canonical, og:url or og:image, and a server takes them from the request's Host header |
 | `H002` | Param route with an `auto` image on a static-only preset and no `prerender` (`weft routes --meta --preset static`) |
 | `H003` | No description after merging the config, layouts and route (`weft check`, per route and on `site`) |
@@ -241,6 +244,7 @@ Every code weft reports, 239 in all. `weft docs <code>` prints the same page.
 | `R021` | A `verify` target isn't available here: fails `weft build`, and `weft check` warns and skips |
 | `R022` | A `verify` target that looks like production, or that nothing marks as not: a round trip writes rows |
 | `R023` | A `verify` passed with only one kind of target, so some links went untested |
+| `R024` | A `channel` or `sharedState` built for a target that can't hold a WebSocket (Netlify, Vercel, AWS Lambda): `weft build` fails, and where it is let through the page never dials, the channel's `status` is `unavailable` and a send rejects with R024 |
 | `R018` | A table in `changes` that no migration gives a change trigger (`weft check`, `weft build`): the server would fall back to polling |
 | `R101` | A function with `impl` has no `output`, a type JSON can't carry (`z.date()`, `z.bigint()`, `z.void()`, `z.custom()`), or a one-way `.transform()` on its input (`weft build`, `weft check`, `weft dev`) |
 | `R102` | A plain `z.union` of objects in a function with `impl`: it has no tag, so Rust can't tell its arms apart reliably. Scalar unions and `.nullable()` are fine |

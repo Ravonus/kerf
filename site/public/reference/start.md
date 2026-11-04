@@ -122,6 +122,39 @@ A guard: `export const load = ({ ctx }: LoadArgs) => ctx.user ?? redirect('/logi
 `BETTER_AUTH_URL` in `.env` must match where the app runs: on another port (`weft dev --port`), sign-in answers
 `INVALID_ORIGIN`.
 
+**Login is an opaque token in the database, not a JWT.** The HTTP-only cookie holds a random token, so a session can be
+revoked by deleting its row, and nothing about it can outlive that. A JWT can't be taken back before it expires.
+
+**The session cache.** `createAuth` turns on Better Auth's cookie cache: an HTTP-only `session_data` cookie (`compact`:
+signed, not encrypted) that spares a page and a query their two
+session reads for **5 minutes**. So a revoked session can still be shown pages for up to 5 minutes. It can't write: a
+mutation, a realtime connection and Better Auth's own routes always read the database, without you asking, and
+sign-out and a password change clear the cookie. A request past the window reads the database and renews it.
+
+```ts
+createAuth({ db, secret, options: { database, session: { cookieCache: { maxAge: 60 } } } })     // a shorter window
+createAuth({ db, secret, options: { database, session: { cookieCache: { enabled: false } } } }) // every request reads the database
+```
+
+A hand-written provider follows the same rule: its `session` may cache for GET, never for another method.
+
+**API access.** JWTs are for other services and API clients only, and never log a browser in. `GET /api/auth/token`, with a
+live session, gives a token good for 15 minutes; `GET /api/auth/jwks` is public, so a service verifies it with the public
+keys and no database (`iss` and `aud` are `BETTER_AUTH_URL`). Signing keys live in the `jwks` table of the auth schema. A
+function takes a token only if it's listed, and `auth: 'user'` still applies:
+
+```ts
+createAuth({ db, secret, options, api: { functions: () => [orders, shipOrder], jwt: { audience: 'https://api.example.com', expirationTime: '15m' } } })
+```
+
+    GET  /_weft/fn/<id>?i=<json>   authorization: Bearer <token>
+    POST /_weft/fn/<id>            authorization: Bearer <token>, content-type: application/json, x-weft: 1, body {"i": input}
+
+`<id>` is `fnOf(orders).$id`. `ctx.user` is what the token says and `ctx.session` is `null`. An unlisted function ignores the
+token. A token can't be revoked, so reads last until it expires; a mutation also checks that its session still exists.
+With no `BETTER_AUTH_URL` or fixed `baseURL`, no token is accepted, since nothing could check `iss` and `aud`.
+`api: false` removes all of this.
+
 ## Runtimes
 
 The CLI runs on whichever of the three starts it, with none of the others installed: `bun --bun`, or `deno run -A

@@ -85,13 +85,14 @@ In every app:
 | D038 | Two solid Buttons side by side | One primary action per region |
 | D039 | `<html>` with no `lang` | Set it |
 
-D010 is warp's contrast gate on the seed and tokens. D020–D025 are style groups.
+D010 is warp's contrast gate on the seed and tokens: `weft build` stops on it. D012 is a CSP that blocks the inlined CSS. D020–D025 are style groups.
 
 `// weft-allow D001: <reason>` on the line above keeps one site; the reason is required. `check: { design: false }` in
 the config turns these off.
 
 ## Tokens
 
-The theme is `warp({ seed, dials, radius, fonts, tokens })`: every value goes through the contrast check. `weft tokens`
+The theme is `warp({ seed, dials, radius, fonts, tokens })`: every value goes through the contrast check. `weft docs theme`
+has worked looks and the button channels. `weft tokens`
 writes the resolved tokens to `.weft/tokens/` as DTCG 2025.10, one file per theme × expression plus a resolver, for
 Figma, Style Dictionary or Terrazzo.
