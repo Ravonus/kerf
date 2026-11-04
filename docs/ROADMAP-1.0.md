@@ -72,8 +72,8 @@ Steps marked ∥ can each run in their own session or worktree at the same time.
 
 Make `main` trustworthy, and make the rules above automatic before anyone starts moving code.
 
-**Status:** implemented. The quality and runtime workflows pass with formatting, shrinking
-length baselines and warning-only sample widths enforced.
+**Status:** implemented. Source formatting includes Rust in evals, benchmarks and spikes.
+Length baselines only shrink, and sample-width violations remain warnings.
 
 - [x] Get CI green. Install Firefox and WebKit in `quality.yml`, allowlist the deploy fixture in
       `.gitleaks.toml`, and fix `runtime-matrix.yml`. Its header still says there's no CI.

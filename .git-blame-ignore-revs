@@ -2,3 +2,6 @@ fa5dae8842ab67389ca9f2b971995fcad0fbee16
 
 # S0: oxfmt and rustfmt at 100 columns, plus matching generated Node style modules.
 0b27fee073c9baf0fb186cf8401158c6ea42872e
+
+# S0 verifier repair: Rust files outside the main crates.
+42ea985e11ef3f6ab2f5379a0cee2dd571fc7edd

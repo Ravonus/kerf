@@ -76,6 +76,8 @@ speed: in the hot paths of `packages/weft/src` and the compiler, a narrow disabl
 **Formatting.** Run `pnpm run fix` to format tracked JavaScript and TypeScript with oxfmt and Rust with rustfmt.
 Both use a 100-column width. The source formatter skips generated and vendor files, archived evaluation results, snapshots,
 and documentation content. Run `node scripts/quality/format.mjs` to check its tracked source files without writing them.
+Rust formatting covers every tracked `.rs` file, using its manifest edition and the root `rustfmt.toml`.
+Run `node scripts/quality/rust-format.mjs` to check, or add `--write` to format those files.
 
 ## Speed and size
 
