@@ -11,7 +11,7 @@ Pretext does the hard part: it ports Blink's, WebKit's and Gecko's line breaking
 JavaScript, so a paragraph's height comes from arithmetic over canvas widths instead of DOM reflow. This package
 changes none of that logic. It specialises Pretext per engine, cuts its tables down to a base alphabet, moves the
 rest into lazy chunks, and puts a small "lite" tier in front for plain Latin and emoji text. Credit for the
-engine goes to Pretext. Bugs in the slicing are ours. Research and numbers: `docs/research/12-text-engine-slim.md`.
+engine goes to Pretext. Bugs in the slicing are ours. Research and numbers: [archived research](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/12-text-engine-slim.md).
 
 ## Size
 

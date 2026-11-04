@@ -10,7 +10,7 @@ predecessor become the two ends of one dial.
 
 **Citations.** `old:` is the predecessor's `packages/ui/src/` on its shipped working tree (the "field" look);
 `old@main:` is the same path on its `main` branch (the "clean" look). Full repo paths are in the
-predecessor research notes under `docs/research/`.
+predecessor [research notes](https://github.com/Ravonus/weft/tree/archive/evals-2026-11/docs/research).
 
 ---
 

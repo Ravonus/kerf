@@ -1,4 +1,4 @@
-// renderCard for weft (research 20 §4, §9; promoted from spikes/og/card): weft SSR HTML → PNG/JPEG/WebP/SVG, on
+// renderCard for weft (research 20 §4, §9; promoted from archive/evals-2026-11:spikes/og/card): weft SSR HTML → PNG/JPEG/WebP/SVG, on
 // Takumi, with what Satori did better added around it:
 //   - strict styles: every declaration is checked once against the renderer (an invalid value would fail the whole
 //     card, an unknown property is silently dropped) and reported as H005; production drops the bad declaration and

@@ -27,7 +27,7 @@ token contrast at every theme × expression stop, and axe plus pixel-measured co
 on the shop and on every warp component (`packages/warp/scripts/a11y.mjs`). Exit 1 on any failure. Results:
 [findings](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/evals/results/v3-warp-FINDINGS.md).
 
-The historical [exit command](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/evals/warp-exit.mjs) and results are archived.
+Run `node gates/warp-exit.mjs` for the current exit check. Historical results remain in the archive.
 
 ### v4 (`tasks-v4/watchlist`, `run-app.mjs --suite tasks-v4`)
 

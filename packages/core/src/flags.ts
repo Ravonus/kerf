@@ -1,6 +1,6 @@
 // Speed paths. Each one is the same behaviour, faster on some work and paid for in bytes, and each can be turned off
 // to measure it: `weft({ off: ['SWAP'] })`, or `WEFT_OFF=SWAP,TEXT` for a whole run (`all` for every one). The suite
-// passes both ways, and benchmarks/speed/lab.mjs prices each. docs/research/42-speed-lab.md records why each stayed.
+// passes both ways, and benchmarks/speed/lab.mjs prices each. docs/decisions/performance.md records why each stayed.
 
 /** A re-run keeps the links of the sources it reads again, in order. */
 export const REUSE = true

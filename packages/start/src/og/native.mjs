@@ -1,5 +1,5 @@
 // `@takumi-rs/core`: Node, Bun and Deno servers, `weft build`, Vercel and Netlify Node functions. A file of its own so
-// an edge bundle (`@takumi-rs/wasm`, spikes/og/card/wasm.mjs) never pulls in the native addon. Both builds draw byte-identical cards (§9.4).
+// an edge bundle (`@takumi-rs/wasm`, archive/evals-2026-11:spikes/og/card/wasm.mjs) never pulls in the native addon. Both builds draw byte-identical cards (§9.4).
 export async function native() {
   // Takumi's addon in the same process as a later Rolldown pass kills a Windows `weft build` (0xC0000005) before the
   // server is written. WEFT_START_DIR means a build, and the cards come out the same.
