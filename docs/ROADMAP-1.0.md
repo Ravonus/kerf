@@ -130,7 +130,7 @@ go in the PR.
 
 ### Sprint 2: a normal repo layout
 
-**Status:** layout implemented; final exit checks are in progress.
+**Status:** complete. Packages, benchmarks, gates and archives use the target layout.
 
 Moves and deletes come before the refactors, because moving files later would collide with every
 open branch.
@@ -367,7 +367,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 
 - Sprint 0: guardrails implemented; formatting, lengths, sample warnings and CI are enforced
 - Sprint 1: not started
-- Sprint 2: layout implemented; final exit checks are in progress
+- Sprint 2: complete; layout and archive regression gates pass
 - Sprint 3: not started
 - Sprint 4: not started
 - Sprint 5: not started
