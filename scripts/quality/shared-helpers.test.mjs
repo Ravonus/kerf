@@ -34,7 +34,10 @@ void test('checks tracked setup files and rejects duplicate helpers', () => {
       'const tick = () => new Promise(ok => setTimeout(ok))',
     ]) {
       writeFileSync(file, source + '\n')
-      assert.ok(check(dir).problems.some((problem) => /duplicate sleep/.test(problem)), source)
+      assert.ok(
+        check(dir).problems.some((problem) => /duplicate sleep/.test(problem)),
+        source,
+      )
     }
   } finally {
     rmSync(dir, { recursive: true, force: true })
