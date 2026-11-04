@@ -1,0 +1,3250 @@
+{
+  "file:crates/weft-compiler/src/analyze.rs": {
+    "lines": 2258,
+    "tokens": 49541
+  },
+  "file:crates/weft-compiler/src/browser.rs": {
+    "lines": 753,
+    "tokens": 16921
+  },
+  "file:crates/weft-compiler/src/emit.rs": {
+    "lines": 1854,
+    "tokens": 36293
+  },
+  "file:crates/weft-compiler/src/hydration.rs": {
+    "lines": 1417,
+    "tokens": 29001
+  },
+  "file:crates/weft-compiler/src/shape.rs": {
+    "lines": 878,
+    "tokens": 18417
+  },
+  "file:crates/weft-compiler/src/style.rs": {
+    "lines": 808,
+    "tokens": 17196
+  },
+  "file:crates/weft-compiler/src/transform.rs": {
+    "lines": 830,
+    "tokens": 18784
+  },
+  "file:crates/weft-compiler/tests/compile.rs": {
+    "lines": 2111,
+    "tokens": 53635
+  },
+  "file:crates/weft-layout/src/lib.rs": {
+    "lines": 594,
+    "tokens": 9446
+  },
+  "file:crates/weft/src/build.rs": {
+    "lines": 433,
+    "tokens": 10774
+  },
+  "file:docs/design/warp/scripts/contrast-check.mjs": {
+    "lines": 534,
+    "tokens": 13668
+  },
+  "file:evals/agent-eval/run.mjs": {
+    "lines": 804,
+    "tokens": 20377
+  },
+  "file:evals/apps/bench.mjs": {
+    "lines": 412,
+    "tokens": 10263
+  },
+  "file:evals/apps/lemonstand/solid/src/components/lemon/rig.tsx": {
+    "lines": 534,
+    "tokens": 10037
+  },
+  "file:evals/apps/lemonstand/solid/src/components/site/sections.tsx": {
+    "lines": 646,
+    "tokens": 20078
+  },
+  "file:evals/apps/lib/build.mjs": {
+    "lines": 436,
+    "tokens": 10372
+  },
+  "file:evals/apps/lib/diagnose.mjs": {
+    "lines": 431,
+    "tokens": 10716
+  },
+  "file:evals/apps/lib/flow.mjs": {
+    "lines": 493,
+    "tokens": 11711
+  },
+  "file:evals/compare/design/audit.mjs": {
+    "lines": 435,
+    "tokens": 9860
+  },
+  "file:evals/compare/measure.mjs": {
+    "lines": 655,
+    "tokens": 18131
+  },
+  "file:evals/ds-exit.mjs": {
+    "lines": 479,
+    "tokens": 15409
+  },
+  "file:evals/phase5a-exit.mjs": {
+    "lines": 850,
+    "tokens": 21017
+  },
+  "file:evals/phase5b-exit.mjs": {
+    "lines": 818,
+    "tokens": 22030
+  },
+  "file:packages/cli/src/add.mjs": {
+    "lines": 548,
+    "tokens": 17514
+  },
+  "file:packages/cli/src/audit.mjs": {
+    "lines": 665,
+    "tokens": 17674
+  },
+  "file:packages/cli/src/catalog.mjs": {
+    "lines": 2242,
+    "tokens": 69335
+  },
+  "file:packages/cli/src/check.mjs": {
+    "lines": 556,
+    "tokens": 13423
+  },
+  "file:packages/cli/src/cli.mjs": {
+    "lines": 638,
+    "tokens": 19025
+  },
+  "file:packages/cli/src/deploy/index.mjs": {
+    "lines": 551,
+    "tokens": 15231
+  },
+  "file:packages/cli/src/design-checks.mjs": {
+    "lines": 1121,
+    "tokens": 26257
+  },
+  "file:packages/cli/src/gate.mjs": {
+    "lines": 478,
+    "tokens": 12155
+  },
+  "file:packages/cli/src/infer/engine.cjs": {
+    "lines": 810,
+    "tokens": 19494
+  },
+  "file:packages/cli/src/infer/facts.cjs": {
+    "lines": 446,
+    "tokens": 10886
+  },
+  "file:packages/cli/src/load-config.mjs": {
+    "lines": 541,
+    "tokens": 12548
+  },
+  "file:packages/cli/src/mcp.mjs": {
+    "lines": 413,
+    "tokens": 12346
+  },
+  "file:packages/cli/src/start.mjs": {
+    "lines": 478,
+    "tokens": 12290
+  },
+  "file:packages/cli/src/state-checks.mjs": {
+    "lines": 408,
+    "tokens": 9657
+  },
+  "file:packages/cli/src/style.mjs": {
+    "lines": 444,
+    "tokens": 10989
+  },
+  "file:packages/cli/src/tests.mjs": {
+    "lines": 987,
+    "tokens": 22534
+  },
+  "file:packages/cli/src/trust.mjs": {
+    "lines": 488,
+    "tokens": 12195
+  },
+  "file:packages/create-weft/scripts/packed.mjs": {
+    "lines": 616,
+    "tokens": 18555
+  },
+  "file:packages/create-weft/src/stack.mjs": {
+    "lines": 623,
+    "tokens": 19978
+  },
+  "file:packages/icons/art/a-marks.mjs": {
+    "lines": 548,
+    "tokens": 5453
+  },
+  "file:packages/icons/art/c-people.mjs": {
+    "lines": 604,
+    "tokens": 7741
+  },
+  "file:packages/icons/art/d-files.mjs": {
+    "lines": 595,
+    "tokens": 7044
+  },
+  "file:packages/icons/art/e-things.mjs": {
+    "lines": 609,
+    "tokens": 7415
+  },
+  "file:packages/icons/art/style/masters.mjs": {
+    "lines": 476,
+    "tokens": 7229
+  },
+  "file:packages/icons/compile.mjs": {
+    "lines": 875,
+    "tokens": 22601
+  },
+  "file:packages/icons/src/gen/all.tsx": {
+    "lines": 1966,
+    "tokens": 1595797
+  },
+  "file:packages/multiplayer/src/index.ts": {
+    "lines": 531,
+    "tokens": 10166
+  },
+  "file:packages/pay/src/server.ts": {
+    "lines": 482,
+    "tokens": 10979
+  },
+  "file:packages/plugin-media/src/video.mjs": {
+    "lines": 439,
+    "tokens": 10650
+  },
+  "file:packages/plugin-surface-keel/vendor/keel-render.mjs": {
+    "lines": 2268,
+    "tokens": 87801
+  },
+  "file:packages/plugin-surface-keel/vendor/keel-theme.mjs": {
+    "lines": 3571,
+    "tokens": 104951
+  },
+  "file:packages/start/src/channel.ts": {
+    "lines": 841,
+    "tokens": 15436
+  },
+  "file:packages/start/src/contract.mjs": {
+    "lines": 522,
+    "tokens": 13767
+  },
+  "file:packages/start/src/data.ts": {
+    "lines": 1450,
+    "tokens": 27491
+  },
+  "file:packages/start/src/exec.ts": {
+    "lines": 864,
+    "tokens": 19779
+  },
+  "file:packages/start/src/hub.ts": {
+    "lines": 1165,
+    "tokens": 22699
+  },
+  "file:packages/start/src/inspect.mjs": {
+    "lines": 542,
+    "tokens": 13654
+  },
+  "file:packages/start/src/link.ts": {
+    "lines": 544,
+    "tokens": 9761
+  },
+  "file:packages/start/src/live.ts": {
+    "lines": 649,
+    "tokens": 11854
+  },
+  "file:packages/start/src/run.tsx": {
+    "lines": 481,
+    "tokens": 10682
+  },
+  "file:packages/start/src/rust.ts": {
+    "lines": 612,
+    "tokens": 13514
+  },
+  "file:packages/start/src/server.tsx": {
+    "lines": 1955,
+    "tokens": 46394
+  },
+  "file:packages/start/src/share.ts": {
+    "lines": 549,
+    "tokens": 9727
+  },
+  "file:packages/start/src/sidecar.mjs": {
+    "lines": 699,
+    "tokens": 16371
+  },
+  "file:packages/start/src/socket.ts": {
+    "lines": 664,
+    "tokens": 14475
+  },
+  "file:packages/start/src/verify.ts": {
+    "lines": 415,
+    "tokens": 9978
+  },
+  "file:packages/start/src/vite.mjs": {
+    "lines": 1423,
+    "tokens": 38429
+  },
+  "file:packages/start/test/ui-state.browser.test.mjs": {
+    "lines": 993,
+    "tokens": 28526
+  },
+  "file:packages/text/scripts/gendata.mjs": {
+    "lines": 435,
+    "tokens": 9807
+  },
+  "file:packages/text/scripts/specialize.mjs": {
+    "lines": 479,
+    "tokens": 13602
+  },
+  "file:packages/text/vendor/pretext/src/line-break.ts": {
+    "lines": 1103,
+    "tokens": 25153
+  },
+  "file:packages/text/vendor/pretext/src/line-breaks.ts": {
+    "lines": 885,
+    "tokens": 18198
+  },
+  "file:packages/text/vendor/pretext/src/measurement.ts": {
+    "lines": 1443,
+    "tokens": 27549
+  },
+  "file:packages/text/vendor/pretext/src/rich-inline.ts": {
+    "lines": 1258,
+    "tokens": 32173
+  },
+  "file:packages/warp-core/scripts/contrast-check.mjs": {
+    "lines": 534,
+    "tokens": 13668
+  },
+  "file:packages/warp-core/scripts/split-css.mjs": {
+    "lines": 446,
+    "tokens": 9838
+  },
+  "file:packages/warp-core/src/admin.ts": {
+    "lines": 432,
+    "tokens": 8817
+  },
+  "file:packages/warp-core/src/agent.ts": {
+    "lines": 842,
+    "tokens": 16558
+  },
+  "file:packages/warp-core/src/charts/cartesian.ts": {
+    "lines": 1311,
+    "tokens": 25308
+  },
+  "file:packages/warp-core/src/charts/engine.ts": {
+    "lines": 449,
+    "tokens": 11416
+  },
+  "file:packages/warp-core/src/charts/shapes.ts": {
+    "lines": 838,
+    "tokens": 15689
+  },
+  "file:packages/warp-core/src/collab.ts": {
+    "lines": 960,
+    "tokens": 21452
+  },
+  "file:packages/warp-core/src/dither/stage.ts": {
+    "lines": 577,
+    "tokens": 11044
+  },
+  "file:packages/warp-core/src/editor.ts": {
+    "lines": 566,
+    "tokens": 14347
+  },
+  "file:packages/warp-core/src/flow-pack.ts": {
+    "lines": 942,
+    "tokens": 20238
+  },
+  "file:packages/warp-core/src/grid.ts": {
+    "lines": 516,
+    "tokens": 11732
+  },
+  "file:packages/warp-core/src/listbox.ts": {
+    "lines": 416,
+    "tokens": 9541
+  },
+  "file:packages/warp-core/src/live.ts": {
+    "lines": 1255,
+    "tokens": 25994
+  },
+  "file:packages/warp-core/src/schedule.ts": {
+    "lines": 1017,
+    "tokens": 22455
+  },
+  "file:packages/warp-core/src/stage.ts": {
+    "lines": 551,
+    "tokens": 10263
+  },
+  "file:packages/warp-core/src/virtual.ts": {
+    "lines": 442,
+    "tokens": 8434
+  },
+  "file:packages/warp/plugin.mjs": {
+    "lines": 568,
+    "tokens": 17721
+  },
+  "file:packages/warp/scripts/a11y.mjs": {
+    "lines": 759,
+    "tokens": 20890
+  },
+  "file:packages/warp/scripts/virtual.mjs": {
+    "lines": 453,
+    "tokens": 12220
+  },
+  "file:packages/warp/src/Calendar.tsx": {
+    "lines": 413,
+    "tokens": 8219
+  },
+  "file:packages/warp/src/CommandPalette.tsx": {
+    "lines": 555,
+    "tokens": 11143
+  },
+  "file:packages/warp/src/DataGrid.tsx": {
+    "lines": 1189,
+    "tokens": 27774
+  },
+  "file:packages/warp/src/DateField.tsx": {
+    "lines": 506,
+    "tokens": 10298
+  },
+  "file:packages/warp/src/MonthPicker.tsx": {
+    "lines": 550,
+    "tokens": 9619
+  },
+  "file:packages/warp/src/RichSelect.tsx": {
+    "lines": 644,
+    "tokens": 12578
+  },
+  "file:packages/warp/src/RichTextEditor.tsx": {
+    "lines": 500,
+    "tokens": 10792
+  },
+  "file:packages/warp/src/Shell.tsx": {
+    "lines": 704,
+    "tokens": 16103
+  },
+  "file:packages/warp/src/Table.tsx": {
+    "lines": 1019,
+    "tokens": 22663
+  },
+  "file:packages/warp/src/TimeField.tsx": {
+    "lines": 595,
+    "tokens": 10450
+  },
+  "file:packages/warp/src/VirtualList.tsx": {
+    "lines": 548,
+    "tokens": 11476
+  },
+  "file:packages/warp/src/admin/Checkout.tsx": {
+    "lines": 672,
+    "tokens": 17912
+  },
+  "file:packages/warp/src/admin/Integrations.tsx": {
+    "lines": 456,
+    "tokens": 9768
+  },
+  "file:packages/warp/src/admin/Members.tsx": {
+    "lines": 423,
+    "tokens": 8601
+  },
+  "file:packages/warp/src/collab/Thread.tsx": {
+    "lines": 519,
+    "tokens": 11142
+  },
+  "file:packages/warp/src/flow/SystemPage.tsx": {
+    "lines": 529,
+    "tokens": 11746
+  },
+  "file:packages/warp/src/live/Inbox.tsx": {
+    "lines": 452,
+    "tokens": 9828
+  },
+  "file:packages/warp/src/live/MeetingRoom.tsx": {
+    "lines": 724,
+    "tokens": 14375
+  },
+  "file:packages/warp/src/live/NotificationPreferences.tsx": {
+    "lines": 401,
+    "tokens": 8779
+  },
+  "file:packages/warp/src/schedule/Agenda.tsx": {
+    "lines": 402,
+    "tokens": 8883
+  },
+  "file:packages/warp/src/schedule/AvailabilityEditor.tsx": {
+    "lines": 414,
+    "tokens": 9478
+  },
+  "file:packages/warp/src/schedule/Calendar.tsx": {
+    "lines": 2030,
+    "tokens": 46351
+  },
+  "file:packages/warp/src/schedule/MeetingPlanner.tsx": {
+    "lines": 477,
+    "tokens": 12187
+  },
+  "file:packages/warp/test/admin.test.tsx": {
+    "lines": 1015,
+    "tokens": 28871
+  },
+  "file:packages/warp/test/agent.test.tsx": {
+    "lines": 862,
+    "tokens": 25950
+  },
+  "file:packages/warp/test/collab.test.tsx": {
+    "lines": 931,
+    "tokens": 28300
+  },
+  "file:packages/warp/test/flow.test.tsx": {
+    "lines": 1155,
+    "tokens": 35517
+  },
+  "file:packages/warp/test/polish.browser.test.mjs": {
+    "lines": 832,
+    "tokens": 25095
+  },
+  "file:packages/weft/node/css.mjs": {
+    "lines": 564,
+    "tokens": 11446
+  },
+  "file:packages/weft/node/hydration.mjs": {
+    "lines": 442,
+    "tokens": 10888
+  },
+  "file:packages/weft/node/matrix.mjs": {
+    "lines": 589,
+    "tokens": 11852
+  },
+  "file:packages/weft/node/purge.mjs": {
+    "lines": 493,
+    "tokens": 10429
+  },
+  "file:packages/weft/src/agent.ts": {
+    "lines": 1036,
+    "tokens": 24130
+  },
+  "file:packages/weft/src/async.ts": {
+    "lines": 510,
+    "tokens": 10391
+  },
+  "file:packages/weft/src/browser.ts": {
+    "lines": 404,
+    "tokens": 7390
+  },
+  "file:packages/weft/src/dom.ts": {
+    "lines": 665,
+    "tokens": 13362
+  },
+  "file:packages/weft/src/index.ts": {
+    "lines": 848,
+    "tokens": 13429
+  },
+  "file:packages/weft/src/island.ts": {
+    "lines": 423,
+    "tokens": 7901
+  },
+  "file:packages/weft/src/scope.ts": {
+    "lines": 478,
+    "tokens": 9218
+  },
+  "file:packages/weft/src/ssr.ts": {
+    "lines": 695,
+    "tokens": 13623
+  },
+  "file:packages/weft/src/style/css.ts": {
+    "lines": 564,
+    "tokens": 13313
+  },
+  "file:packages/weft/src/style/matrix.ts": {
+    "lines": 589,
+    "tokens": 14416
+  },
+  "file:packages/weft/src/surface.tsx": {
+    "lines": 588,
+    "tokens": 10649
+  },
+  "file:packages/weft/src/test.ts": {
+    "lines": 674,
+    "tokens": 13431
+  },
+  "file:packages/weft/vite.mjs": {
+    "lines": 867,
+    "tokens": 18911
+  },
+  "file:scripts/rename-scope.mjs": {
+    "lines": 601,
+    "tokens": 18623
+  },
+  "file:site/scripts/content.mjs": {
+    "lines": 1474,
+    "tokens": 40321
+  },
+  "file:site/src/toolkit/docs/actions.ts": {
+    "lines": 412,
+    "tokens": 9396
+  },
+  "file:site/src/toolkit/docs/admin.ts": {
+    "lines": 838,
+    "tokens": 19178
+  },
+  "file:site/src/toolkit/docs/agent.ts": {
+    "lines": 735,
+    "tokens": 15798
+  },
+  "file:site/src/toolkit/docs/canvas.ts": {
+    "lines": 630,
+    "tokens": 19125
+  },
+  "file:site/src/toolkit/docs/charts.ts": {
+    "lines": 697,
+    "tokens": 14088
+  },
+  "file:site/src/toolkit/docs/collab.ts": {
+    "lines": 634,
+    "tokens": 13258
+  },
+  "file:site/src/toolkit/docs/data.ts": {
+    "lines": 819,
+    "tokens": 18458
+  },
+  "file:site/src/toolkit/docs/dates.ts": {
+    "lines": 725,
+    "tokens": 15455
+  },
+  "file:site/src/toolkit/docs/feedback.ts": {
+    "lines": 655,
+    "tokens": 13122
+  },
+  "file:site/src/toolkit/docs/fields.ts": {
+    "lines": 1014,
+    "tokens": 21157
+  },
+  "file:site/src/toolkit/docs/flow.ts": {
+    "lines": 717,
+    "tokens": 15228
+  },
+  "file:site/src/toolkit/docs/forms.ts": {
+    "lines": 1245,
+    "tokens": 27426
+  },
+  "file:site/src/toolkit/docs/layout.ts": {
+    "lines": 878,
+    "tokens": 19335
+  },
+  "file:site/src/toolkit/docs/live.ts": {
+    "lines": 513,
+    "tokens": 11361
+  },
+  "file:site/src/toolkit/docs/moving.ts": {
+    "lines": 634,
+    "tokens": 15302
+  },
+  "file:site/src/toolkit/docs/overlays.ts": {
+    "lines": 436,
+    "tokens": 10376
+  },
+  "file:site/src/toolkit/docs/showing.ts": {
+    "lines": 890,
+    "tokens": 18244
+  },
+  "file:site/src/toolkit/examples/actions.tsx": {
+    "lines": 568,
+    "tokens": 12097
+  },
+  "file:site/src/toolkit/examples/admin.tsx": {
+    "lines": 913,
+    "tokens": 19502
+  },
+  "file:site/src/toolkit/examples/agent.tsx": {
+    "lines": 689,
+    "tokens": 15576
+  },
+  "file:site/src/toolkit/examples/canvas.tsx": {
+    "lines": 1910,
+    "tokens": 45419
+  },
+  "file:site/src/toolkit/examples/charts.tsx": {
+    "lines": 583,
+    "tokens": 10658
+  },
+  "file:site/src/toolkit/examples/collab.tsx": {
+    "lines": 663,
+    "tokens": 15227
+  },
+  "file:site/src/toolkit/examples/data.tsx": {
+    "lines": 1285,
+    "tokens": 25343
+  },
+  "file:site/src/toolkit/examples/dates.tsx": {
+    "lines": 905,
+    "tokens": 20056
+  },
+  "file:site/src/toolkit/examples/feedback.tsx": {
+    "lines": 635,
+    "tokens": 12505
+  },
+  "file:site/src/toolkit/examples/fields.tsx": {
+    "lines": 1219,
+    "tokens": 27042
+  },
+  "file:site/src/toolkit/examples/flow.tsx": {
+    "lines": 816,
+    "tokens": 16430
+  },
+  "file:site/src/toolkit/examples/forms.tsx": {
+    "lines": 1388,
+    "tokens": 30238
+  },
+  "file:site/src/toolkit/examples/layout.tsx": {
+    "lines": 1293,
+    "tokens": 27564
+  },
+  "file:site/src/toolkit/examples/live.tsx": {
+    "lines": 476,
+    "tokens": 9292
+  },
+  "file:site/src/toolkit/examples/moving.tsx": {
+    "lines": 780,
+    "tokens": 15568
+  },
+  "file:site/src/toolkit/examples/overlays.tsx": {
+    "lines": 913,
+    "tokens": 21104
+  },
+  "file:site/src/toolkit/examples/showing.tsx": {
+    "lines": 856,
+    "tokens": 17871
+  },
+  "file:site/src/toolkit/world.ts": {
+    "lines": 1983,
+    "tokens": 37405
+  },
+  "file:site/test/qa.mjs": {
+    "lines": 2582,
+    "tokens": 74890
+  },
+  "file:spikes/native/js/src/recording-host.ts": {
+    "lines": 403,
+    "tokens": 8861
+  },
+  "function:crates/weft-compiler/src/analyze.rs:analyze_list": {
+    "lines": 123,
+    "tokens": 3016
+  },
+  "function:crates/weft-compiler/src/analyze.rs:destructure_props": {
+    "lines": 104,
+    "tokens": 2231
+  },
+  "function:crates/weft-compiler/src/bin/weftc.rs:main": {
+    "lines": 143,
+    "tokens": 2835
+  },
+  "function:crates/weft-compiler/src/emit.rs:emit": {
+    "lines": 97,
+    "tokens": 2108
+  },
+  "function:crates/weft-compiler/src/emit.rs:props": {
+    "lines": 111,
+    "tokens": 2498
+  },
+  "function:crates/weft-compiler/src/emit.rs:walk": {
+    "lines": 337,
+    "tokens": 7090
+  },
+  "function:crates/weft-compiler/src/hydration.rs:facts": {
+    "lines": 262,
+    "tokens": 5449
+  },
+  "function:crates/weft-compiler/src/hydration.rs:visit_jsx_element#2": {
+    "lines": 130,
+    "tokens": 2613
+  },
+  "function:crates/weft-compiler/src/lib.rs:compile_source": {
+    "lines": 157,
+    "tokens": 3250
+  },
+  "function:crates/weft-compiler/src/shape.rs:apply": {
+    "lines": 122,
+    "tokens": 2557
+  },
+  "function:crates/weft-compiler/src/shape.rs:collect": {
+    "lines": 94,
+    "tokens": 1982
+  },
+  "function:crates/weft-compiler/src/srcmap.rs:decode": {
+    "lines": 82,
+    "tokens": 1653
+  },
+  "function:crates/weft-compiler/src/style.rs:apply": {
+    "lines": 122,
+    "tokens": 2649
+  },
+  "function:crates/weft-compiler/src/style.rs:lower": {
+    "lines": 187,
+    "tokens": 4147
+  },
+  "function:crates/weft/src/build.rs:render": {
+    "lines": 143,
+    "tokens": 3881
+  },
+  "function:docs/design/warp/specimens/warp-bar.js:call(callback)": {
+    "lines": 246,
+    "tokens": 7873
+  },
+  "function:docs/design/warp/specimens/warp-sweep.js:call(callback)": {
+    "lines": 298,
+    "tokens": 7115
+  },
+  "function:evals/agent-eval/lib/agent.mjs:startAgent": {
+    "lines": 102,
+    "tokens": 1521
+  },
+  "function:evals/agent-eval/run.mjs:canary": {
+    "lines": 98,
+    "tokens": 2299
+  },
+  "function:evals/agent-eval/run.mjs:runOne": {
+    "lines": 103,
+    "tokens": 2722
+  },
+  "function:evals/agent-eval/tasks/small-todo/reference/next-shadcn/src/app/page.tsx:Page": {
+    "lines": 106,
+    "tokens": 2414
+  },
+  "function:evals/agent-eval/tasks/small-todo/reference/vite-react/src/App.tsx:App": {
+    "lines": 95,
+    "tokens": 2288
+  },
+  "function:evals/agent-eval/tasks/small-todo/reference/weft-warp/src/routes/index.tsx:Home": {
+    "lines": 142,
+    "tokens": 2687
+  },
+  "function:evals/apps/admin/next/src/components/orders-table.tsx:OrdersTable": {
+    "lines": 97,
+    "tokens": 2421
+  },
+  "function:evals/apps/admin/solid/src/routes/admin/orders/[id].tsx:Details": {
+    "lines": 100,
+    "tokens": 3554
+  },
+  "function:evals/apps/admin/solid/src/routes/admin/orders/index.tsx:OrderTable": {
+    "lines": 202,
+    "tokens": 5183
+  },
+  "function:evals/apps/bench.mjs:benchApp": {
+    "lines": 222,
+    "tokens": 4912
+  },
+  "function:evals/apps/catalog/next/src/components/cart-lines.tsx:CartLines": {
+    "lines": 93,
+    "tokens": 2840
+  },
+  "function:evals/apps/catalog/solid/src/routes/(shop)/c/[slug].tsx:Category": {
+    "lines": 116,
+    "tokens": 3767
+  },
+  "function:evals/apps/catalog/solid/src/routes/(shop)/c/[slug].tsx:Category/anonymous": {
+    "lines": 94,
+    "tokens": 3346
+  },
+  "function:evals/apps/catalog/solid/src/routes/(shop)/cart.tsx:Cart": {
+    "lines": 105,
+    "tokens": 3316
+  },
+  "function:evals/apps/lemonstand/solid/src/components/lemon/face.tsx:mouth": {
+    "lines": 83,
+    "tokens": 1858
+  },
+  "function:evals/apps/lemonstand/solid/src/components/site/coach-demo.tsx:CoachDemo": {
+    "lines": 140,
+    "tokens": 3477
+  },
+  "function:evals/apps/lemonstand/solid/src/components/site/contact-form.tsx:ContactForm": {
+    "lines": 191,
+    "tokens": 5514
+  },
+  "function:evals/apps/lemonstand/solid/src/components/site/sections.tsx:Audiences": {
+    "lines": 81,
+    "tokens": 2414
+  },
+  "function:evals/apps/lemonstand/solid/src/components/site/waitlist-form.tsx:WaitlistForm": {
+    "lines": 170,
+    "tokens": 4006
+  },
+  "function:evals/apps/lib/diagnose.mjs:report": {
+    "lines": 84,
+    "tokens": 2593
+  },
+  "function:evals/apps/lib/diagnose.mjs:tuneFor": {
+    "lines": 157,
+    "tokens": 4451
+  },
+  "function:evals/apps/lib/flow.mjs:sitePass": {
+    "lines": 107,
+    "tokens": 3055
+  },
+  "function:evals/apps/lib/measure.mjs:bytesPass": {
+    "lines": 92,
+    "tokens": 2135
+  },
+  "function:evals/apps/lib/sites.test.mjs:describe(against Postgres and a browser)": {
+    "lines": 189,
+    "tokens": 3924
+  },
+  "function:evals/apps/todo/next/src/components/todo-app.tsx:TodoApp": {
+    "lines": 131,
+    "tokens": 2998
+  },
+  "function:evals/apps/todo/solid/src/routes/todos.tsx:TodoList": {
+    "lines": 102,
+    "tokens": 2930
+  },
+  "function:evals/apps/todo/solid/src/routes/todos.tsx:Todos": {
+    "lines": 127,
+    "tokens": 3423
+  },
+  "function:evals/buggy-v4/react/effect-portfolio/App.tsx:App": {
+    "lines": 172,
+    "tokens": 4192
+  },
+  "function:evals/buggy-v4/react/one-search/App.tsx:App": {
+    "lines": 169,
+    "tokens": 4088
+  },
+  "function:evals/buggy-v4/react/sort-spread/App.tsx:App": {
+    "lines": 173,
+    "tokens": 4169
+  },
+  "function:evals/buggy-v4/react/stale-rollback/App.tsx:App": {
+    "lines": 172,
+    "tokens": 4178
+  },
+  "function:evals/buggy-v4/solid/no-batch/App.tsx:App": {
+    "lines": 163,
+    "tokens": 3876
+  },
+  "function:evals/buggy-v4/solid/one-search/App.tsx:App": {
+    "lines": 163,
+    "tokens": 3810
+  },
+  "function:evals/buggy-v4/solid/spread-update/App.tsx:App": {
+    "lines": 177,
+    "tokens": 4174
+  },
+  "function:evals/buggy-v4/solid/stale-rollback/App.tsx:App": {
+    "lines": 174,
+    "tokens": 4081
+  },
+  "function:evals/buggy-v4/weft/one-search/App.tsx:App": {
+    "lines": 168,
+    "tokens": 3923
+  },
+  "function:evals/buggy-v4/weft/search-race/App.tsx:App": {
+    "lines": 208,
+    "tokens": 4581
+  },
+  "function:evals/buggy-v4/weft/spread-update/App.tsx:App": {
+    "lines": 175,
+    "tokens": 4286
+  },
+  "function:evals/buggy-v4/weft/stale-rollback/App.tsx:App": {
+    "lines": 178,
+    "tokens": 4227
+  },
+  "function:evals/compare/design/audit.mjs:audit": {
+    "lines": 121,
+    "tokens": 2866
+  },
+  "function:evals/compare/design/audit.mjs:brief": {
+    "lines": 98,
+    "tokens": 2289
+  },
+  "function:evals/compare/design/react-mui/src/Customers.tsx:Customers": {
+    "lines": 101,
+    "tokens": 2925
+  },
+  "function:evals/compare/design/react-mui/src/Pricing.tsx:Pricing": {
+    "lines": 89,
+    "tokens": 2443
+  },
+  "function:evals/compare/design/react-mui/src/Settings.tsx:Settings": {
+    "lines": 107,
+    "tokens": 2258
+  },
+  "function:evals/compare/design/react-radix/src/Customers.tsx:Customers": {
+    "lines": 109,
+    "tokens": 4119
+  },
+  "function:evals/compare/design/react-radix/src/Settings.tsx:Settings": {
+    "lines": 102,
+    "tokens": 2738
+  },
+  "function:evals/compare/design/react-zustand/src/Customers.tsx:Customers": {
+    "lines": 118,
+    "tokens": 4294
+  },
+  "function:evals/compare/design/react-zustand/src/Settings.tsx:Settings": {
+    "lines": 149,
+    "tokens": 4373
+  },
+  "function:evals/compare/design/solid-kobalte/src/pages/Customers.tsx:Customers": {
+    "lines": 116,
+    "tokens": 3985
+  },
+  "function:evals/compare/design/solid-kobalte/src/pages/Settings.tsx:Settings": {
+    "lines": 101,
+    "tokens": 2251
+  },
+  "function:evals/compare/design/weft-ds/src/Customers.tsx:Customers": {
+    "lines": 98,
+    "tokens": 1888
+  },
+  "function:evals/compare/design/weft-ds/src/Settings.tsx:Settings": {
+    "lines": 90,
+    "tokens": 2107
+  },
+  "function:evals/compare/design/weft-tailwind/src/Customers.tsx:Customers": {
+    "lines": 128,
+    "tokens": 3697
+  },
+  "function:evals/compare/design/weft-tailwind/src/Settings.tsx:Settings": {
+    "lines": 119,
+    "tokens": 2975
+  },
+  "function:evals/compare/measure.mjs:parity": {
+    "lines": 124,
+    "tokens": 2611
+  },
+  "function:evals/compare/react-radix/src/DataTable.tsx:DataTable": {
+    "lines": 142,
+    "tokens": 3981
+  },
+  "function:evals/compare/react-zustand/src/DataTable.tsx:DataTable": {
+    "lines": 141,
+    "tokens": 3934
+  },
+  "function:evals/compare/solid-kobalte/src/DataTable.tsx:DataTable": {
+    "lines": 146,
+    "tokens": 4030
+  },
+  "function:evals/compare/weft-plain/src/DataTable.tsx:DataTable": {
+    "lines": 128,
+    "tokens": 3374
+  },
+  "function:evals/phase3-exit.e2e.mjs:anonymous": {
+    "lines": 130,
+    "tokens": 4469
+  },
+  "function:evals/phase3b-exit.e2e.mjs:anonymous": {
+    "lines": 238,
+    "tokens": 6672
+  },
+  "function:evals/reference-v4/react/src/App.tsx:App": {
+    "lines": 171,
+    "tokens": 4150
+  },
+  "function:evals/reference-v4/solid/src/App.tsx:App": {
+    "lines": 173,
+    "tokens": 4037
+  },
+  "function:evals/reference-v4/weft/src/App.tsx:App": {
+    "lines": 177,
+    "tokens": 4205
+  },
+  "function:evals/results/smoke/solutions/react__4-inline-edit__1.tsx:InlineEdit": {
+    "lines": 82,
+    "tokens": 1311
+  },
+  "function:evals/results/v2-haiku/solutions/react__4-autocomplete__1.tsx:CityPicker": {
+    "lines": 150,
+    "tokens": 2746
+  },
+  "function:evals/results/v2-haiku/solutions/solid__3-profile-form__1.tsx:ProfileForm": {
+    "lines": 81,
+    "tokens": 1674
+  },
+  "function:evals/results/v2-haiku/solutions/solid__4-autocomplete__1.tsx:CityPicker": {
+    "lines": 140,
+    "tokens": 2603
+  },
+  "function:evals/results/v2-sonnet/solutions/react__4-autocomplete__1.tsx:CityPicker": {
+    "lines": 117,
+    "tokens": 2161
+  },
+  "function:evals/results/v2-sonnet/solutions/solid__4-autocomplete__1.tsx:CityPicker": {
+    "lines": 108,
+    "tokens": 2010
+  },
+  "function:evals/results/v4-bug-react-effect-portfolio/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4132
+  },
+  "function:evals/results/v4-bug-react-inline-callback/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 139,
+    "tokens": 4090
+  },
+  "function:evals/results/v4-bug-react-no-memo/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 139,
+    "tokens": 4090
+  },
+  "function:evals/results/v4-bug-react-one-search/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 137,
+    "tokens": 4032
+  },
+  "function:evals/results/v4-bug-react-search-race/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 139,
+    "tokens": 4090
+  },
+  "function:evals/results/v4-bug-react-snapshot-price/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 139,
+    "tokens": 4090
+  },
+  "function:evals/results/v4-bug-react-sort-spread/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 139,
+    "tokens": 4107
+  },
+  "function:evals/results/v4-bug-react-stale-rollback/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4120
+  },
+  "function:evals/results/v4-bug-solid-destructured-live/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 145,
+    "tokens": 3910
+  },
+  "function:evals/results/v4-bug-solid-destructured-props/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 145,
+    "tokens": 3910
+  },
+  "function:evals/results/v4-bug-solid-no-batch/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 135,
+    "tokens": 3751
+  },
+  "function:evals/results/v4-bug-solid-one-search/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 3691
+  },
+  "function:evals/results/v4-bug-solid-search-race/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 145,
+    "tokens": 3910
+  },
+  "function:evals/results/v4-bug-solid-snapshot-price/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 145,
+    "tokens": 3910
+  },
+  "function:evals/results/v4-bug-solid-spread-update/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 149,
+    "tokens": 4043
+  },
+  "function:evals/results/v4-bug-solid-stale-rollback/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 146,
+    "tokens": 3954
+  },
+  "function:evals/results/v4-bug-weft-entry-prop/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4142
+  },
+  "function:evals/results/v4-bug-weft-entry-reads/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4142
+  },
+  "function:evals/results/v4-bug-weft-one-search/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 136,
+    "tokens": 3862
+  },
+  "function:evals/results/v4-bug-weft-search-race/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 166,
+    "tokens": 4514
+  },
+  "function:evals/results/v4-bug-weft-setup-read-untrack/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4142
+  },
+  "function:evals/results/v4-bug-weft-setup-read/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4142
+  },
+  "function:evals/results/v4-bug-weft-snapshot-price/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4142
+  },
+  "function:evals/results/v4-bug-weft-spread-update/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 142,
+    "tokens": 4222
+  },
+  "function:evals/results/v4-bug-weft-stale-rollback/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 141,
+    "tokens": 4164
+  },
+  "function:evals/results/v4-haiku/snapshots/react/t5/src/App.tsx:App": {
+    "lines": 81,
+    "tokens": 2601
+  },
+  "function:evals/results/v4-haiku/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 117,
+    "tokens": 3186
+  },
+  "function:evals/results/v4-ref-solid/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 145,
+    "tokens": 3910
+  },
+  "function:evals/results/v4-ref-weft/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 140,
+    "tokens": 4142
+  },
+  "function:evals/results/v4-ref/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 139,
+    "tokens": 4090
+  },
+  "function:evals/results/v4-solid-haiku/snapshots/solid/t2/src/App.tsx:App": {
+    "lines": 84,
+    "tokens": 1837
+  },
+  "function:evals/results/v4-solid-haiku/snapshots/solid/t3/src/App.tsx:App": {
+    "lines": 126,
+    "tokens": 2937
+  },
+  "function:evals/results/v4-solid-haiku/snapshots/solid/t4/src/App.tsx:App": {
+    "lines": 249,
+    "tokens": 5996
+  },
+  "function:evals/results/v4-solid-haiku/snapshots/solid/t5/src/App.tsx:App": {
+    "lines": 284,
+    "tokens": 6822
+  },
+  "function:evals/results/v4-solid-haiku/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 315,
+    "tokens": 7044
+  },
+  "function:evals/results/v4-solid-sonnet/snapshots/solid/t2/src/App.tsx:App": {
+    "lines": 90,
+    "tokens": 2093
+  },
+  "function:evals/results/v4-solid-sonnet/snapshots/solid/t3/src/App.tsx:App": {
+    "lines": 136,
+    "tokens": 3318
+  },
+  "function:evals/results/v4-solid-sonnet/snapshots/solid/t4/src/App.tsx:App": {
+    "lines": 188,
+    "tokens": 4443
+  },
+  "function:evals/results/v4-solid-sonnet/snapshots/solid/t5/src/App.tsx:App": {
+    "lines": 226,
+    "tokens": 5329
+  },
+  "function:evals/results/v4-solid-sonnet/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 278,
+    "tokens": 6572
+  },
+  "function:evals/results/v4-solid-sonnet/snapshots/solid/t6/src/App.tsx:App/anonymous": {
+    "lines": 95,
+    "tokens": 2531
+  },
+  "function:evals/results/v4-sonnet/snapshots/react/t3/src/App.tsx:App": {
+    "lines": 97,
+    "tokens": 2740
+  },
+  "function:evals/results/v4-sonnet/snapshots/react/t4/src/App.tsx:App": {
+    "lines": 103,
+    "tokens": 3053
+  },
+  "function:evals/results/v4-sonnet/snapshots/react/t5/src/App.tsx:App": {
+    "lines": 126,
+    "tokens": 3935
+  },
+  "function:evals/results/v4-sonnet/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 151,
+    "tokens": 4543
+  },
+  "function:evals/results/v4-weft-haiku/snapshots/weft/t2/src/App.tsx:App": {
+    "lines": 82,
+    "tokens": 1907
+  },
+  "function:evals/results/v4-weft-haiku/snapshots/weft/t3/src/App.tsx:App": {
+    "lines": 114,
+    "tokens": 3021
+  },
+  "function:evals/results/v4-weft-haiku/snapshots/weft/t4/src/App.tsx:App": {
+    "lines": 175,
+    "tokens": 4879
+  },
+  "function:evals/results/v4-weft-haiku/snapshots/weft/t5/src/App.tsx:App": {
+    "lines": 193,
+    "tokens": 5497
+  },
+  "function:evals/results/v4-weft-haiku/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 224,
+    "tokens": 6318
+  },
+  "function:evals/results/v4-weft-sonnet/snapshots/weft/t2/src/App.tsx:App": {
+    "lines": 96,
+    "tokens": 2164
+  },
+  "function:evals/results/v4-weft-sonnet/snapshots/weft/t3/src/App.tsx:App": {
+    "lines": 124,
+    "tokens": 3310
+  },
+  "function:evals/results/v4-weft-sonnet/snapshots/weft/t4/src/App.tsx:App": {
+    "lines": 174,
+    "tokens": 4931
+  },
+  "function:evals/results/v4-weft-sonnet/snapshots/weft/t5/src/App.tsx:App": {
+    "lines": 190,
+    "tokens": 5605
+  },
+  "function:evals/results/v4-weft-sonnet/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 210,
+    "tokens": 6949
+  },
+  "function:evals/results/v4q-haiku/snapshots/react/t3/src/App.tsx:App": {
+    "lines": 108,
+    "tokens": 3198
+  },
+  "function:evals/results/v4q-haiku/snapshots/react/t4/src/App.tsx:App": {
+    "lines": 143,
+    "tokens": 3996
+  },
+  "function:evals/results/v4q-haiku/snapshots/react/t5/src/App.tsx:App": {
+    "lines": 154,
+    "tokens": 4530
+  },
+  "function:evals/results/v4q-haiku/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 196,
+    "tokens": 5453
+  },
+  "function:evals/results/v4q-haiku/snapshots/solid/t2/src/App.tsx:App": {
+    "lines": 100,
+    "tokens": 2059
+  },
+  "function:evals/results/v4q-haiku/snapshots/solid/t3/src/App.tsx:App": {
+    "lines": 136,
+    "tokens": 3168
+  },
+  "function:evals/results/v4q-haiku/snapshots/solid/t4/src/App.tsx:App": {
+    "lines": 264,
+    "tokens": 6117
+  },
+  "function:evals/results/v4q-haiku/snapshots/solid/t5/src/App.tsx:App": {
+    "lines": 284,
+    "tokens": 6867
+  },
+  "function:evals/results/v4q-haiku/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 347,
+    "tokens": 7956
+  },
+  "function:evals/results/v4q-haiku/snapshots/solid/t6/src/App.tsx:App/anonymous": {
+    "lines": 95,
+    "tokens": 2768
+  },
+  "function:evals/results/v4q-haiku/snapshots/weft/t2/src/App.tsx:App": {
+    "lines": 81,
+    "tokens": 1912
+  },
+  "function:evals/results/v4q-haiku/snapshots/weft/t3/src/App.tsx:App": {
+    "lines": 109,
+    "tokens": 3061
+  },
+  "function:evals/results/v4q-haiku/snapshots/weft/t4/src/App.tsx:App": {
+    "lines": 202,
+    "tokens": 5532
+  },
+  "function:evals/results/v4q-haiku/snapshots/weft/t5/src/App.tsx:App": {
+    "lines": 216,
+    "tokens": 6223
+  },
+  "function:evals/results/v4q-haiku/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 255,
+    "tokens": 7128
+  },
+  "function:evals/results/v4q-sonnet/snapshots/react/t3/src/App.tsx:App": {
+    "lines": 89,
+    "tokens": 2937
+  },
+  "function:evals/results/v4q-sonnet/snapshots/react/t4/src/App.tsx:App": {
+    "lines": 124,
+    "tokens": 3924
+  },
+  "function:evals/results/v4q-sonnet/snapshots/react/t5/src/App.tsx:App": {
+    "lines": 142,
+    "tokens": 4694
+  },
+  "function:evals/results/v4q-sonnet/snapshots/react/t6/src/App.tsx:App": {
+    "lines": 179,
+    "tokens": 5888
+  },
+  "function:evals/results/v4q-sonnet/snapshots/solid/t2/src/App.tsx:App": {
+    "lines": 85,
+    "tokens": 1960
+  },
+  "function:evals/results/v4q-sonnet/snapshots/solid/t3/src/App.tsx:App": {
+    "lines": 122,
+    "tokens": 3217
+  },
+  "function:evals/results/v4q-sonnet/snapshots/solid/t4/src/App.tsx:App": {
+    "lines": 164,
+    "tokens": 4281
+  },
+  "function:evals/results/v4q-sonnet/snapshots/solid/t5/src/App.tsx:App": {
+    "lines": 197,
+    "tokens": 5126
+  },
+  "function:evals/results/v4q-sonnet/snapshots/solid/t6/src/App.tsx:App": {
+    "lines": 243,
+    "tokens": 6505
+  },
+  "function:evals/results/v4q-sonnet/snapshots/weft/t2/src/App.tsx:App": {
+    "lines": 102,
+    "tokens": 2111
+  },
+  "function:evals/results/v4q-sonnet/snapshots/weft/t3/src/App.tsx:App": {
+    "lines": 137,
+    "tokens": 3372
+  },
+  "function:evals/results/v4q-sonnet/snapshots/weft/t4/src/App.tsx:App": {
+    "lines": 179,
+    "tokens": 4578
+  },
+  "function:evals/results/v4q-sonnet/snapshots/weft/t5/src/App.tsx:App": {
+    "lines": 199,
+    "tokens": 5388
+  },
+  "function:evals/results/v4q-sonnet/snapshots/weft/t6/src/App.tsx:App": {
+    "lines": 178,
+    "tokens": 5175
+  },
+  "function:evals/speed/shared/driver.js:expose": {
+    "lines": 118,
+    "tokens": 2300
+  },
+  "function:packages/cli/src/add.mjs:addAuth": {
+    "lines": 87,
+    "tokens": 3330
+  },
+  "function:packages/cli/src/add.mjs:addCommand": {
+    "lines": 101,
+    "tokens": 2883
+  },
+  "function:packages/cli/src/agents-md.mjs:agentsMd": {
+    "lines": 137,
+    "tokens": 5400
+  },
+  "function:packages/cli/src/agents-md.mjs:agentsMd/page": {
+    "lines": 104,
+    "tokens": 4571
+  },
+  "function:packages/cli/src/audit.mjs:audit": {
+    "lines": 91,
+    "tokens": 2342
+  },
+  "function:packages/cli/src/audit.mjs:auditPage": {
+    "lines": 183,
+    "tokens": 4819
+  },
+  "function:packages/cli/src/browser/commands.mjs:browser": {
+    "lines": 85,
+    "tokens": 1920
+  },
+  "function:packages/cli/src/check.mjs:check": {
+    "lines": 139,
+    "tokens": 3911
+  },
+  "function:packages/cli/src/cli.mjs:main": {
+    "lines": 467,
+    "tokens": 12236
+  },
+  "function:packages/cli/src/contributions.mjs:contributions": {
+    "lines": 84,
+    "tokens": 1825
+  },
+  "function:packages/cli/src/deploy/needs.mjs:needsOf": {
+    "lines": 88,
+    "tokens": 3237
+  },
+  "function:packages/cli/src/design-checks.mjs:designChecks": {
+    "lines": 561,
+    "tokens": 13064
+  },
+  "function:packages/cli/src/gate.mjs:gate": {
+    "lines": 379,
+    "tokens": 9615
+  },
+  "function:packages/cli/src/infer/engine.cjs:Engine.infer": {
+    "lines": 155,
+    "tokens": 3938
+  },
+  "function:packages/cli/src/infer/engine.cjs:Engine.report": {
+    "lines": 84,
+    "tokens": 2668
+  },
+  "function:packages/cli/src/infer/facts.cjs:fileFacts": {
+    "lines": 153,
+    "tokens": 3735
+  },
+  "function:packages/cli/src/infer/lsp.mjs:lsp": {
+    "lines": 168,
+    "tokens": 4215
+  },
+  "function:packages/cli/src/jsx-scan.mjs:scanJsx": {
+    "lines": 104,
+    "tokens": 2372
+  },
+  "function:packages/cli/src/load-config.mjs:loadConfig": {
+    "lines": 86,
+    "tokens": 2583
+  },
+  "function:packages/cli/src/mcp.mjs:browserTools": {
+    "lines": 127,
+    "tokens": 3775
+  },
+  "function:packages/cli/src/plugin-checks.mjs:pluginChecks": {
+    "lines": 98,
+    "tokens": 2034
+  },
+  "function:packages/cli/src/project.mjs:componentsOf": {
+    "lines": 89,
+    "tokens": 2100
+  },
+  "function:packages/cli/src/project.mjs:projectView": {
+    "lines": 114,
+    "tokens": 3229
+  },
+  "function:packages/cli/src/share-checks.mjs:shareChecks": {
+    "lines": 100,
+    "tokens": 2352
+  },
+  "function:packages/cli/src/start.mjs:buildCommand": {
+    "lines": 132,
+    "tokens": 3615
+  },
+  "function:packages/cli/src/state-checks.mjs:scan": {
+    "lines": 194,
+    "tokens": 4944
+  },
+  "function:packages/cli/src/state-checks.mjs:scan/visit": {
+    "lines": 100,
+    "tokens": 2481
+  },
+  "function:packages/cli/src/tests.mjs:checkTestFile": {
+    "lines": 437,
+    "tokens": 10422
+  },
+  "function:packages/cli/src/tests.mjs:checkTestFile/walk(callback)#5": {
+    "lines": 204,
+    "tokens": 4749
+  },
+  "function:packages/cli/src/text-checks.mjs:textChecks": {
+    "lines": 229,
+    "tokens": 6166
+  },
+  "function:packages/cli/test/add.test.mjs:describe(weft add db)": {
+    "lines": 114,
+    "tokens": 4560
+  },
+  "function:packages/cli/test/add.test.mjs:describe(weft add)": {
+    "lines": 183,
+    "tokens": 6530
+  },
+  "function:packages/cli/test/browser.test.mjs:call(weft browser against the v3 shop under `vite`)": {
+    "lines": 123,
+    "tokens": 3338
+  },
+  "function:packages/cli/test/check.test.mjs:describe(diagnostic shape)": {
+    "lines": 105,
+    "tokens": 3469
+  },
+  "function:packages/cli/test/check.test.mjs:describe(project view: cross-file W014)": {
+    "lines": 102,
+    "tokens": 3705
+  },
+  "function:packages/cli/test/cli.test.mjs:describe(weft (bin))": {
+    "lines": 120,
+    "tokens": 4504
+  },
+  "function:packages/cli/test/config.test.mjs:describe(site (research 20 §2, §6))": {
+    "lines": 96,
+    "tokens": 3230
+  },
+  "function:packages/cli/test/config.test.mjs:describe(weft.config.ts)": {
+    "lines": 91,
+    "tokens": 3278
+  },
+  "function:packages/cli/test/deploy.test.mjs:describe(weft deploy)": {
+    "lines": 144,
+    "tokens": 3415
+  },
+  "function:packages/cli/test/design-checks.test.mjs:describe(D012 reads the policy a browser would apply)": {
+    "lines": 108,
+    "tokens": 2967
+  },
+  "function:packages/cli/test/design-checks.test.mjs:describe(contrast and accessibility (every app))": {
+    "lines": 81,
+    "tokens": 3259
+  },
+  "function:packages/cli/test/design-checks.test.mjs:describe(role drift)": {
+    "lines": 92,
+    "tokens": 4327
+  },
+  "function:packages/cli/test/design-checks.test.mjs:describe(values (an app with warp))": {
+    "lines": 124,
+    "tokens": 4692
+  },
+  "function:packages/cli/test/docs.test.mjs:describe(AGENTS.md)": {
+    "lines": 108,
+    "tokens": 4476
+  },
+  "function:packages/cli/test/gate.test.mjs:describe(the gate)": {
+    "lines": 117,
+    "tokens": 3594
+  },
+  "function:packages/cli/test/infer.test.mjs:call(inference on %s)": {
+    "lines": 81,
+    "tokens": 2600
+  },
+  "function:packages/cli/test/infer.test.mjs:describe(an editor on TypeScript 7, through weft lsp)": {
+    "lines": 82,
+    "tokens": 2427
+  },
+  "function:packages/cli/test/infer.test.mjs:describe(the editor, through the TS server protocol)": {
+    "lines": 82,
+    "tokens": 2327
+  },
+  "function:packages/cli/test/plugins.test.mjs:describe(@weft-js/core/plugin + weft plugins)": {
+    "lines": 145,
+    "tokens": 4986
+  },
+  "function:packages/cli/test/style.test.mjs:describe(weft check: the style D-codes and .weft/styles.json)": {
+    "lines": 101,
+    "tokens": 4818
+  },
+  "function:packages/cli/test/style.test.mjs:describe(weft style explain)": {
+    "lines": 113,
+    "tokens": 3211
+  },
+  "function:packages/cli/test/surface-checks.test.mjs:describe(surface checks)": {
+    "lines": 134,
+    "tokens": 4518
+  },
+  "function:packages/cli/test/tasks.test.mjs:describe(weft tasks)": {
+    "lines": 103,
+    "tokens": 2780
+  },
+  "function:packages/cli/test/tests.test.mjs:describe(T-codes: each fires on junk)": {
+    "lines": 259,
+    "tokens": 8669
+  },
+  "function:packages/cli/test/text-checks.test.mjs:describe(X-codes)": {
+    "lines": 141,
+    "tokens": 5018
+  },
+  "function:packages/cli/test/trust.test.mjs:describe(the plugin lock)": {
+    "lines": 101,
+    "tokens": 3585
+  },
+  "function:packages/cli/ts-plugin/index.js:init": {
+    "lines": 219,
+    "tokens": 5090
+  },
+  "function:packages/cli/ts-plugin/index.js:init/create": {
+    "lines": 216,
+    "tokens": 5045
+  },
+  "function:packages/create-weft/scripts/alt-runtimes.mjs:flow": {
+    "lines": 82,
+    "tokens": 2624
+  },
+  "function:packages/create-weft/scripts/cdp.mjs:launch": {
+    "lines": 114,
+    "tokens": 2353
+  },
+  "function:packages/create-weft/scripts/hot-checks.mjs:hotChecks": {
+    "lines": 117,
+    "tokens": 4121
+  },
+  "function:packages/create-weft/scripts/packed.mjs:mediaApp": {
+    "lines": 89,
+    "tokens": 2590
+  },
+  "function:packages/create-weft/scripts/packed.mjs:pool(callback)": {
+    "lines": 105,
+    "tokens": 3300
+  },
+  "function:packages/create-weft/scripts/registry.mjs:serveRegistry": {
+    "lines": 90,
+    "tokens": 2635
+  },
+  "function:packages/create-weft/src/index.mjs:template": {
+    "lines": 103,
+    "tokens": 3463
+  },
+  "function:packages/create-weft/templates/admin/files/src/components/OrdersTable.tsx:OrdersTable": {
+    "lines": 86,
+    "tokens": 1759
+  },
+  "function:packages/create-weft/templates/landing/files/src/routes/index.tsx:Home": {
+    "lines": 82,
+    "tokens": 2470
+  },
+  "function:packages/db/src/dynamodb.ts:dynamoSource": {
+    "lines": 140,
+    "tokens": 3545
+  },
+  "function:packages/db/src/firestore.ts:firestoreSource": {
+    "lines": 87,
+    "tokens": 2080
+  },
+  "function:packages/db/src/kysely.ts:kyselySource": {
+    "lines": 112,
+    "tokens": 2465
+  },
+  "function:packages/db/src/prisma.ts:prismaSource": {
+    "lines": 84,
+    "tokens": 1843
+  },
+  "function:packages/db/src/sql.ts:sqlSource": {
+    "lines": 115,
+    "tokens": 3127
+  },
+  "function:packages/icons/compile.mjs:analyze": {
+    "lines": 296,
+    "tokens": 7525
+  },
+  "function:packages/icons/compile.mjs:read": {
+    "lines": 172,
+    "tokens": 4166
+  },
+  "function:packages/icons/compile.mjs:read/visit": {
+    "lines": 121,
+    "tokens": 2821
+  },
+  "function:packages/icons/compile.mjs:rewrite": {
+    "lines": 97,
+    "tokens": 2846
+  },
+  "function:packages/icons/scripts/raster.mjs:raw": {
+    "lines": 83,
+    "tokens": 1317
+  },
+  "function:packages/multiplayer/scripts/e2e-browsers.mjs:scenario": {
+    "lines": 100,
+    "tokens": 3223
+  },
+  "function:packages/multiplayer/src/index.ts:cursors": {
+    "lines": 89,
+    "tokens": 2006
+  },
+  "function:packages/multiplayer/src/index.ts:presence": {
+    "lines": 132,
+    "tokens": 2805
+  },
+  "function:packages/multiplayer/src/server.ts:multiplayer": {
+    "lines": 95,
+    "tokens": 2542
+  },
+  "function:packages/pay/src/checks.mjs:run": {
+    "lines": 106,
+    "tokens": 2938
+  },
+  "function:packages/pay/src/server.ts:definePay": {
+    "lines": 299,
+    "tokens": 7780
+  },
+  "function:packages/pay/src/stripe.ts:stripeRail": {
+    "lines": 127,
+    "tokens": 3471
+  },
+  "function:packages/pay/src/test.ts:fakePay": {
+    "lines": 132,
+    "tokens": 3439
+  },
+  "function:packages/pay/test/stripe.test.ts:describe(checkout)": {
+    "lines": 132,
+    "tokens": 3932
+  },
+  "function:packages/pay/test/stripe.test.ts:describe(verify)": {
+    "lines": 156,
+    "tokens": 3803
+  },
+  "function:packages/plugin-media-ffmpeg/src/build.mjs:createMediaEncode": {
+    "lines": 186,
+    "tokens": 3627
+  },
+  "function:packages/plugin-media/src/build.mjs:raster": {
+    "lines": 101,
+    "tokens": 2609
+  },
+  "function:packages/plugin-media/src/check.mjs:checkMedia": {
+    "lines": 219,
+    "tokens": 5303
+  },
+  "function:packages/plugin-media/src/index.mjs:options": {
+    "lines": 95,
+    "tokens": 2759
+  },
+  "function:packages/plugin-media/src/server.mjs:storage": {
+    "lines": 174,
+    "tokens": 4356
+  },
+  "function:packages/plugin-media/src/server.mjs:storage/ingest": {
+    "lines": 99,
+    "tokens": 2407
+  },
+  "function:packages/plugin-media/src/upload.mjs:uploads": {
+    "lines": 208,
+    "tokens": 4943
+  },
+  "function:packages/plugin-media/test/video.test.mjs:call(GIF)": {
+    "lines": 91,
+    "tokens": 2696
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-render.mjs:createIndexedPass": {
+    "lines": 137,
+    "tokens": 4752
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-render.mjs:createPixelRenderer": {
+    "lines": 653,
+    "tokens": 20386
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-render.mjs:createPixelRenderer/render": {
+    "lines": 146,
+    "tokens": 4959
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-render.mjs:fxUniforms": {
+    "lines": 82,
+    "tokens": 2422
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-theme.mjs:compile": {
+    "lines": 813,
+    "tokens": 18638
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-theme.mjs:dynCodec": {
+    "lines": 155,
+    "tokens": 3163
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-theme.mjs:structCodec": {
+    "lines": 106,
+    "tokens": 2874
+  },
+  "function:packages/plugin-surface-keel/vendor/keel-theme.mjs:themeOf": {
+    "lines": 102,
+    "tokens": 4193
+  },
+  "function:packages/realtime-durable-object/test/bus.test.ts:describe(durableObjectBus on workerd)": {
+    "lines": 107,
+    "tokens": 3121
+  },
+  "function:packages/realtime-webrtc/src/index.ts:webrtc": {
+    "lines": 112,
+    "tokens": 2245
+  },
+  "function:packages/realtime-webrtc/src/index.ts:webrtc/open": {
+    "lines": 107,
+    "tokens": 2148
+  },
+  "function:packages/realtime-webrtc/src/index.ts:webrtc/open/createRoot(callback)": {
+    "lines": 105,
+    "tokens": 2104
+  },
+  "function:packages/start/scripts/e2e-channels.mjs:run": {
+    "lines": 105,
+    "tokens": 3111
+  },
+  "function:packages/start/scripts/e2e-realtime.mjs:run": {
+    "lines": 96,
+    "tokens": 2424
+  },
+  "function:packages/start/scripts/e2e-todo.mjs:base": {
+    "lines": 190,
+    "tokens": 6490
+  },
+  "function:packages/start/src/auth/better-auth.ts:createAuth": {
+    "lines": 122,
+    "tokens": 3107
+  },
+  "function:packages/start/src/bus/postgres.ts:postgresBus": {
+    "lines": 81,
+    "tokens": 2112
+  },
+  "function:packages/start/src/changes.ts:createFeed": {
+    "lines": 122,
+    "tokens": 2149
+  },
+  "function:packages/start/src/contract.mjs:describe": {
+    "lines": 108,
+    "tokens": 2742
+  },
+  "function:packages/start/src/contract.mjs:describe/.map(callback)": {
+    "lines": 89,
+    "tokens": 2255
+  },
+  "function:packages/start/src/data.ts:mutate": {
+    "lines": 85,
+    "tokens": 1909
+  },
+  "function:packages/start/src/db/changes-mysql.ts:mysqlChanges": {
+    "lines": 102,
+    "tokens": 2670
+  },
+  "function:packages/start/src/db/changes-postgres.ts:postgresChanges": {
+    "lines": 207,
+    "tokens": 4809
+  },
+  "function:packages/start/src/db/changes-sqlite.ts:sqliteChanges": {
+    "lines": 122,
+    "tokens": 2733
+  },
+  "function:packages/start/src/db/sqlite.ts:createDb": {
+    "lines": 90,
+    "tokens": 2176
+  },
+  "function:packages/start/src/form.tsx:Form": {
+    "lines": 92,
+    "tokens": 2087
+  },
+  "function:packages/start/src/hub.ts:createHub": {
+    "lines": 607,
+    "tokens": 12725
+  },
+  "function:packages/start/src/hub.ts:rtRoute": {
+    "lines": 115,
+    "tokens": 2630
+  },
+  "function:packages/start/src/inspect.mjs:compare": {
+    "lines": 138,
+    "tokens": 4169
+  },
+  "function:packages/start/src/inspect.mjs:routesMeta": {
+    "lines": 242,
+    "tokens": 5867
+  },
+  "function:packages/start/src/link.ts:campaign": {
+    "lines": 96,
+    "tokens": 1411
+  },
+  "function:packages/start/src/mux.ts:muxed": {
+    "lines": 145,
+    "tokens": 3263
+  },
+  "function:packages/start/src/og/index.mjs:createCardRenderer": {
+    "lines": 116,
+    "tokens": 2518
+  },
+  "function:packages/start/src/routes.mjs:scanRoutes": {
+    "lines": 113,
+    "tokens": 2631
+  },
+  "function:packages/start/src/run.tsx:start": {
+    "lines": 349,
+    "tokens": 7862
+  },
+  "function:packages/start/src/rust.ts:native": {
+    "lines": 115,
+    "tokens": 2898
+  },
+  "function:packages/start/src/server.tsx:createHandler": {
+    "lines": 1113,
+    "tokens": 28743
+  },
+  "function:packages/start/src/server.tsx:createHandler/fn": {
+    "lines": 99,
+    "tokens": 2893
+  },
+  "function:packages/start/src/server.tsx:createHandler/page": {
+    "lines": 337,
+    "tokens": 8199
+  },
+  "function:packages/start/src/server.tsx:createHandler/resolve": {
+    "lines": 129,
+    "tokens": 3188
+  },
+  "function:packages/start/src/server.tsx:routeTree": {
+    "lines": 94,
+    "tokens": 1885
+  },
+  "function:packages/start/src/share-server.ts:shareChannel": {
+    "lines": 91,
+    "tokens": 2212
+  },
+  "function:packages/start/src/sidecar.mjs:devSidecars": {
+    "lines": 213,
+    "tokens": 4899
+  },
+  "function:packages/start/src/verify.ts:roundTrip": {
+    "lines": 204,
+    "tokens": 5205
+  },
+  "function:packages/start/src/vite.mjs:weftStart": {
+    "lines": 421,
+    "tokens": 11048
+  },
+  "function:packages/start/test/auth-cache.test.ts:describe(API tokens)": {
+    "lines": 168,
+    "tokens": 5424
+  },
+  "function:packages/start/test/auth-cache.test.ts:describe(the cookie cache)": {
+    "lines": 147,
+    "tokens": 4172
+  },
+  "function:packages/start/test/auth.test.ts:describe(the handler)": {
+    "lines": 118,
+    "tokens": 2563
+  },
+  "function:packages/start/test/build.test.mjs:describe(node preset, end to end)": {
+    "lines": 525,
+    "tokens": 16417
+  },
+  "function:packages/start/test/build.test.mjs:describe(node preset, end to end)/describe(callback)": {
+    "lines": 110,
+    "tokens": 3139
+  },
+  "function:packages/start/test/changes-postgres.test.ts:call(postgres change feed)": {
+    "lines": 215,
+    "tokens": 6746
+  },
+  "function:packages/start/test/changes.test.ts:describe(dedupe)": {
+    "lines": 85,
+    "tokens": 2427
+  },
+  "function:packages/start/test/changes.test.ts:describe(modes)": {
+    "lines": 141,
+    "tokens": 3797
+  },
+  "function:packages/start/test/channel.test.tsx:describe(channel)": {
+    "lines": 307,
+    "tokens": 8397
+  },
+  "function:packages/start/test/channel.test.tsx:describe(what multiplayer needs of a room)": {
+    "lines": 85,
+    "tokens": 2302
+  },
+  "function:packages/start/test/extension.test.ts:describe(a plugin on the server)": {
+    "lines": 138,
+    "tokens": 3153
+  },
+  "function:packages/start/test/hub.test.ts:describe(pokes)": {
+    "lines": 82,
+    "tokens": 2078
+  },
+  "function:packages/start/test/hub.test.ts:describe(streams)": {
+    "lines": 141,
+    "tokens": 3118
+  },
+  "function:packages/start/test/live.test.tsx:describe(.live)": {
+    "lines": 145,
+    "tokens": 3544
+  },
+  "function:packages/start/test/live.test.tsx:describe(stream)": {
+    "lines": 147,
+    "tokens": 3695
+  },
+  "function:packages/start/test/rust.test.ts:describe(cargo's messages)": {
+    "lines": 85,
+    "tokens": 2033
+  },
+  "function:packages/start/test/rust.test.ts:describe(native())": {
+    "lines": 203,
+    "tokens": 6145
+  },
+  "function:packages/start/test/rust.test.ts:describe(the contract)": {
+    "lines": 123,
+    "tokens": 3969
+  },
+  "function:packages/start/test/stream.test.tsx:describe(a read that never settles down)": {
+    "lines": 133,
+    "tokens": 2344
+  },
+  "function:packages/start/test/stream.test.tsx:describe(what a failure may say in production)": {
+    "lines": 113,
+    "tokens": 3239
+  },
+  "function:packages/text/plugin/build.mjs:createFontBuild": {
+    "lines": 137,
+    "tokens": 3772
+  },
+  "function:packages/text/plugin/build.mjs:createFontBuild/build": {
+    "lines": 132,
+    "tokens": 3701
+  },
+  "function:packages/text/scripts/gendata.mjs:genEngineData": {
+    "lines": 284,
+    "tokens": 6835
+  },
+  "function:packages/text/scripts/specialize.mjs:moveFunctions": {
+    "lines": 174,
+    "tokens": 4409
+  },
+  "function:packages/text/scripts/specialize.mjs:specialize": {
+    "lines": 183,
+    "tokens": 6746
+  },
+  "function:packages/text/test/accuracy/corpus.js:makeCorpus": {
+    "lines": 117,
+    "tokens": 2169
+  },
+  "function:packages/text/test/fonts.test.mjs:describe(axes)": {
+    "lines": 83,
+    "tokens": 2738
+  },
+  "function:packages/text/test/fonts.test.mjs:describe(createFontBuild().build())": {
+    "lines": 173,
+    "tokens": 5117
+  },
+  "function:packages/text/test/fonts.test.mjs:describe(createFontBuild().build())/describe(trimming)": {
+    "lines": 81,
+    "tokens": 2199
+  },
+  "function:packages/text/vendor/pretext/src/analysis.ts:analyzeText": {
+    "lines": 140,
+    "tokens": 3464
+  },
+  "function:packages/text/vendor/pretext/src/analysis.ts:segmentAtLineBreaks": {
+    "lines": 94,
+    "tokens": 2845
+  },
+  "function:packages/text/vendor/pretext/src/gecko-line-breaks.ts:markWordBreaks": {
+    "lines": 146,
+    "tokens": 3101
+  },
+  "function:packages/text/vendor/pretext/src/gecko-line-breaks.ts:transformText": {
+    "lines": 124,
+    "tokens": 2371
+  },
+  "function:packages/text/vendor/pretext/src/line-break.ts:walkPreparedComplexLines": {
+    "lines": 578,
+    "tokens": 14297
+  },
+  "function:packages/text/vendor/pretext/src/line-breaks.ts:markRuleBoundaries": {
+    "lines": 81,
+    "tokens": 1790
+  },
+  "function:packages/text/vendor/pretext/src/prepare.ts:measureAnalysis": {
+    "lines": 284,
+    "tokens": 8640
+  },
+  "function:packages/text/vendor/pretext/src/rich-inline.ts:createLine": {
+    "lines": 144,
+    "tokens": 4087
+  },
+  "function:packages/text/vendor/pretext/src/rich-inline.ts:prepareRichInline": {
+    "lines": 472,
+    "tokens": 13787
+  },
+  "function:packages/warp-core/scripts/split-css.mjs:split": {
+    "lines": 92,
+    "tokens": 2070
+  },
+  "function:packages/warp-core/src/agent.ts:dictation": {
+    "lines": 83,
+    "tokens": 1610
+  },
+  "function:packages/warp-core/src/agent.ts:step": {
+    "lines": 143,
+    "tokens": 2607
+  },
+  "function:packages/warp-core/src/canvas.ts:surface": {
+    "lines": 169,
+    "tokens": 3012
+  },
+  "function:packages/warp-core/src/charts/cartesian.ts:plot": {
+    "lines": 114,
+    "tokens": 2232
+  },
+  "function:packages/warp-core/src/charts/cartesian.ts:plot#11": {
+    "lines": 113,
+    "tokens": 1863
+  },
+  "function:packages/warp-core/src/charts/cartesian.ts:plot#2": {
+    "lines": 126,
+    "tokens": 2104
+  },
+  "function:packages/warp-core/src/charts/cartesian.ts:plot#5": {
+    "lines": 82,
+    "tokens": 1228
+  },
+  "function:packages/warp-core/src/charts/cartesian.ts:plot#7": {
+    "lines": 89,
+    "tokens": 1469
+  },
+  "function:packages/warp-core/src/charts/engine.ts:chart": {
+    "lines": 292,
+    "tokens": 7511
+  },
+  "function:packages/warp-core/src/charts/shapes.ts:plot": {
+    "lines": 88,
+    "tokens": 1596
+  },
+  "function:packages/warp-core/src/charts/shapes.ts:plot#8": {
+    "lines": 86,
+    "tokens": 1461
+  },
+  "function:packages/warp-core/src/collab.ts:kanban": {
+    "lines": 141,
+    "tokens": 4015
+  },
+  "function:packages/warp-core/src/collab.ts:messageLog": {
+    "lines": 121,
+    "tokens": 3532
+  },
+  "function:packages/warp-core/src/collab.ts:syncedForm": {
+    "lines": 81,
+    "tokens": 2028
+  },
+  "function:packages/warp-core/src/dither/field.ts:ditherField": {
+    "lines": 246,
+    "tokens": 4952
+  },
+  "function:packages/warp-core/src/dither/pointer.ts:forces": {
+    "lines": 122,
+    "tokens": 2283
+  },
+  "function:packages/warp-core/src/dither/stage.ts:ditherStage": {
+    "lines": 308,
+    "tokens": 6037
+  },
+  "function:packages/warp-core/src/dither/stage.ts:ditherStage/paint": {
+    "lines": 96,
+    "tokens": 1922
+  },
+  "function:packages/warp-core/src/editor.ts:richText": {
+    "lines": 246,
+    "tokens": 6308
+  },
+  "function:packages/warp-core/src/floating-label.ts:field": {
+    "lines": 92,
+    "tokens": 2297
+  },
+  "function:packages/warp-core/src/flow-pack.ts:createShortcuts": {
+    "lines": 81,
+    "tokens": 1593
+  },
+  "function:packages/warp-core/src/flow-pack.ts:mapFlowError": {
+    "lines": 109,
+    "tokens": 2310
+  },
+  "function:packages/warp-core/src/flow-pack.ts:tourSpot": {
+    "lines": 109,
+    "tokens": 2962
+  },
+  "function:packages/warp-core/src/grid.ts:grid": {
+    "lines": 277,
+    "tokens": 7210
+  },
+  "function:packages/warp-core/src/grid.ts:grid/onKey": {
+    "lines": 92,
+    "tokens": 2397
+  },
+  "function:packages/warp-core/src/listbox.ts:listbox": {
+    "lines": 370,
+    "tokens": 8542
+  },
+  "function:packages/warp-core/src/listbox.ts:listbox/build": {
+    "lines": 83,
+    "tokens": 2234
+  },
+  "function:packages/warp-core/src/live.ts:transportSim": {
+    "lines": 257,
+    "tokens": 5859
+  },
+  "function:packages/warp-core/src/nav.ts:navIndicator": {
+    "lines": 197,
+    "tokens": 4456
+  },
+  "function:packages/warp-core/src/overlays.ts:tooltip": {
+    "lines": 95,
+    "tokens": 1725
+  },
+  "function:packages/warp-core/src/schedule.ts:calendarDrag": {
+    "lines": 207,
+    "tokens": 4480
+  },
+  "function:packages/warp-core/src/shell.ts:shell": {
+    "lines": 92,
+    "tokens": 2126
+  },
+  "function:packages/warp-core/src/sidenav.ts:sideNav": {
+    "lines": 149,
+    "tokens": 3824
+  },
+  "function:packages/warp-core/src/slider.ts:slider": {
+    "lines": 112,
+    "tokens": 2716
+  },
+  "function:packages/warp-core/src/stage-select.ts:stageSelect": {
+    "lines": 171,
+    "tokens": 3930
+  },
+  "function:packages/warp-core/src/stage.ts:stage": {
+    "lines": 400,
+    "tokens": 8234
+  },
+  "function:packages/warp-core/src/stage.ts:stage/draw": {
+    "lines": 90,
+    "tokens": 1635
+  },
+  "function:packages/warp-core/src/table.ts:table": {
+    "lines": 116,
+    "tokens": 3387
+  },
+  "function:packages/warp-core/src/toast.ts:toaster": {
+    "lines": 216,
+    "tokens": 4977
+  },
+  "function:packages/warp-core/src/virtual.ts:virtualizer": {
+    "lines": 277,
+    "tokens": 5841
+  },
+  "function:packages/warp-core/test/agent.test.ts:describe(foldAnswer)": {
+    "lines": 151,
+    "tokens": 4125
+  },
+  "function:packages/warp-core/test/dither.test.ts:describe(surface)": {
+    "lines": 172,
+    "tokens": 4325
+  },
+  "function:packages/warp-core/test/flow.test.ts:describe(shortcuts)": {
+    "lines": 101,
+    "tokens": 2791
+  },
+  "function:packages/warp-core/test/live.test.ts:describe(transport)": {
+    "lines": 92,
+    "tokens": 2469
+  },
+  "function:packages/warp-core/test/schedule.test.ts:describe(calendarDrag)": {
+    "lines": 164,
+    "tokens": 4447
+  },
+  "function:packages/warp-core/test/trace.test.ts:test(field shell: a scripted session)": {
+    "lines": 90,
+    "tokens": 3678
+  },
+  "function:packages/warp/scripts/a11y.mjs:a11y": {
+    "lines": 175,
+    "tokens": 4599
+  },
+  "function:packages/warp/scripts/a11y.mjs:a11y/pool(callback)": {
+    "lines": 131,
+    "tokens": 3324
+  },
+  "function:packages/warp/scripts/a11y.mjs:a11y/pool(callback)/audit": {
+    "lines": 101,
+    "tokens": 2240
+  },
+  "function:packages/warp/scripts/a11y.mjs:pixelContrast": {
+    "lines": 110,
+    "tokens": 3651
+  },
+  "function:packages/warp/src/Button.tsx:Button": {
+    "lines": 108,
+    "tokens": 2337
+  },
+  "function:packages/warp/src/Calendar.tsx:CalendarGrid": {
+    "lines": 137,
+    "tokens": 2981
+  },
+  "function:packages/warp/src/Chart.tsx:Ready": {
+    "lines": 89,
+    "tokens": 2221
+  },
+  "function:packages/warp/src/CodeInput.tsx:CodeInput": {
+    "lines": 108,
+    "tokens": 2065
+  },
+  "function:packages/warp/src/Combobox.tsx:ComboField": {
+    "lines": 166,
+    "tokens": 3297
+  },
+  "function:packages/warp/src/CommandPalette.tsx:CommandPalette": {
+    "lines": 329,
+    "tokens": 6915
+  },
+  "function:packages/warp/src/DataGrid.tsx:DataGrid": {
+    "lines": 707,
+    "tokens": 17599
+  },
+  "function:packages/warp/src/DataGrid.tsx:GridCell": {
+    "lines": 105,
+    "tokens": 2285
+  },
+  "function:packages/warp/src/DataGrid.tsx:PivotTable": {
+    "lines": 84,
+    "tokens": 2145
+  },
+  "function:packages/warp/src/DateField.tsx:DateField": {
+    "lines": 176,
+    "tokens": 3203
+  },
+  "function:packages/warp/src/DateField.tsx:DateRangeField": {
+    "lines": 234,
+    "tokens": 5411
+  },
+  "function:packages/warp/src/Drawer.tsx:Drawer": {
+    "lines": 84,
+    "tokens": 1658
+  },
+  "function:packages/warp/src/DurationField.tsx:DurationField": {
+    "lines": 130,
+    "tokens": 2787
+  },
+  "function:packages/warp/src/Field.tsx:Field": {
+    "lines": 158,
+    "tokens": 3255
+  },
+  "function:packages/warp/src/KeyValueEditor.tsx:KeyValueEditor": {
+    "lines": 165,
+    "tokens": 3793
+  },
+  "function:packages/warp/src/Markdown.tsx:MarkdownEditor": {
+    "lines": 82,
+    "tokens": 1927
+  },
+  "function:packages/warp/src/MentionsInput.tsx:MentionsInput": {
+    "lines": 214,
+    "tokens": 4554
+  },
+  "function:packages/warp/src/Menu.tsx:Menu": {
+    "lines": 145,
+    "tokens": 2913
+  },
+  "function:packages/warp/src/Modal.tsx:Modal": {
+    "lines": 91,
+    "tokens": 1691
+  },
+  "function:packages/warp/src/MonthPicker.tsx:MonthPicker": {
+    "lines": 89,
+    "tokens": 1318
+  },
+  "function:packages/warp/src/MonthPicker.tsx:PeriodGrid": {
+    "lines": 116,
+    "tokens": 2354
+  },
+  "function:packages/warp/src/MonthPicker.tsx:PeriodPicker": {
+    "lines": 104,
+    "tokens": 1673
+  },
+  "function:packages/warp/src/MonthPicker.tsx:WeekPicker": {
+    "lines": 85,
+    "tokens": 1242
+  },
+  "function:packages/warp/src/NumberField.tsx:NumberField": {
+    "lines": 109,
+    "tokens": 2164
+  },
+  "function:packages/warp/src/Pagination.tsx:PaginationBar": {
+    "lines": 162,
+    "tokens": 3435
+  },
+  "function:packages/warp/src/PlaceField.tsx:AddressField": {
+    "lines": 121,
+    "tokens": 2848
+  },
+  "function:packages/warp/src/RecurrenceField.tsx:RecurrenceField": {
+    "lines": 216,
+    "tokens": 5016
+  },
+  "function:packages/warp/src/RichSelect.tsx:ListField": {
+    "lines": 105,
+    "tokens": 1658
+  },
+  "function:packages/warp/src/RichSelect.tsx:PhoneField": {
+    "lines": 197,
+    "tokens": 4180
+  },
+  "function:packages/warp/src/RichSelect.tsx:SearchList": {
+    "lines": 89,
+    "tokens": 1904
+  },
+  "function:packages/warp/src/RichTextEditor.tsx:RichTextEditor": {
+    "lines": 345,
+    "tokens": 7585
+  },
+  "function:packages/warp/src/RichTextEditor.tsx:RichTextEditor/anonymous": {
+    "lines": 129,
+    "tokens": 3170
+  },
+  "function:packages/warp/src/ScrollGrid.tsx:ScrollGrid": {
+    "lines": 290,
+    "tokens": 6388
+  },
+  "function:packages/warp/src/Segments.tsx:Segments": {
+    "lines": 173,
+    "tokens": 3400
+  },
+  "function:packages/warp/src/Select.tsx:useList": {
+    "lines": 98,
+    "tokens": 2040
+  },
+  "function:packages/warp/src/Shell.tsx:Shell": {
+    "lines": 464,
+    "tokens": 11692
+  },
+  "function:packages/warp/src/SideNav.tsx:SideNav": {
+    "lines": 186,
+    "tokens": 4540
+  },
+  "function:packages/warp/src/SignaturePad.tsx:SignaturePad": {
+    "lines": 244,
+    "tokens": 5374
+  },
+  "function:packages/warp/src/Table.tsx:Row": {
+    "lines": 84,
+    "tokens": 2207
+  },
+  "function:packages/warp/src/Table.tsx:Table": {
+    "lines": 500,
+    "tokens": 12288
+  },
+  "function:packages/warp/src/Tabs.tsx:Tabs": {
+    "lines": 99,
+    "tokens": 2034
+  },
+  "function:packages/warp/src/TimeField.tsx:DateTimeField": {
+    "lines": 155,
+    "tokens": 2800
+  },
+  "function:packages/warp/src/TimeField.tsx:TimeField": {
+    "lines": 144,
+    "tokens": 2551
+  },
+  "function:packages/warp/src/TimeField.tsx:Wheels": {
+    "lines": 109,
+    "tokens": 2190
+  },
+  "function:packages/warp/src/Toast.tsx:Toaster": {
+    "lines": 87,
+    "tokens": 1771
+  },
+  "function:packages/warp/src/VirtualList.tsx:VirtualList": {
+    "lines": 413,
+    "tokens": 8971
+  },
+  "function:packages/warp/src/VirtualList.tsx:VirtualList/onMount(callback)": {
+    "lines": 93,
+    "tokens": 1812
+  },
+  "function:packages/warp/src/VirtualList.tsx:VirtualList/onMount(callback)/queueMicrotask(callback)": {
+    "lines": 85,
+    "tokens": 1672
+  },
+  "function:packages/warp/src/admin/ApiKeys.tsx:ApiKeys": {
+    "lines": 254,
+    "tokens": 5432
+  },
+  "function:packages/warp/src/admin/Audit.tsx:AuditLog": {
+    "lines": 153,
+    "tokens": 3207
+  },
+  "function:packages/warp/src/admin/Billing.tsx:Invoices": {
+    "lines": 91,
+    "tokens": 1614
+  },
+  "function:packages/warp/src/admin/Checkout.tsx:Checkout": {
+    "lines": 559,
+    "tokens": 15336
+  },
+  "function:packages/warp/src/admin/CsvImport.tsx:CsvImport": {
+    "lines": 291,
+    "tokens": 7290
+  },
+  "function:packages/warp/src/admin/Danger.tsx:TypeToConfirm": {
+    "lines": 84,
+    "tokens": 1409
+  },
+  "function:packages/warp/src/admin/Integrations.tsx:IntegrationsGrid": {
+    "lines": 96,
+    "tokens": 1938
+  },
+  "function:packages/warp/src/admin/Integrations.tsx:Webhooks": {
+    "lines": 196,
+    "tokens": 3969
+  },
+  "function:packages/warp/src/admin/InviteDialog.tsx:InviteDialog": {
+    "lines": 93,
+    "tokens": 1924
+  },
+  "function:packages/warp/src/admin/Members.tsx:MembersTable": {
+    "lines": 246,
+    "tokens": 4967
+  },
+  "function:packages/warp/src/admin/Plans.tsx:PlanPicker": {
+    "lines": 204,
+    "tokens": 5194
+  },
+  "function:packages/warp/src/admin/SaveBar.tsx:SaveBar": {
+    "lines": 137,
+    "tokens": 2785
+  },
+  "function:packages/warp/src/admin/TagsInput.tsx:TagsInput": {
+    "lines": 99,
+    "tokens": 1901
+  },
+  "function:packages/warp/src/agent/Actions.tsx:MessageActions": {
+    "lines": 101,
+    "tokens": 2022
+  },
+  "function:packages/warp/src/agent/ArtifactPanel.tsx:ArtifactPanel": {
+    "lines": 156,
+    "tokens": 3709
+  },
+  "function:packages/warp/src/agent/Message.tsx:Message": {
+    "lines": 81,
+    "tokens": 1738
+  },
+  "function:packages/warp/src/agent/ModelPicker.tsx:ModelPicker": {
+    "lines": 115,
+    "tokens": 2772
+  },
+  "function:packages/warp/src/agent/Prompt.tsx:Prompt": {
+    "lines": 283,
+    "tokens": 6306
+  },
+  "function:packages/warp/src/agent/Question.tsx:Question": {
+    "lines": 100,
+    "tokens": 2377
+  },
+  "function:packages/warp/src/agent/SpeechInput.tsx:SpeechInput": {
+    "lines": 147,
+    "tokens": 3915
+  },
+  "function:packages/warp/src/agent/ToolCall.tsx:ToolCall": {
+    "lines": 131,
+    "tokens": 3393
+  },
+  "function:packages/warp/src/collab/Composer.tsx:Composer": {
+    "lines": 243,
+    "tokens": 4913
+  },
+  "function:packages/warp/src/collab/ConversationList.tsx:ConversationList": {
+    "lines": 85,
+    "tokens": 2015
+  },
+  "function:packages/warp/src/collab/Kanban.tsx:Card": {
+    "lines": 122,
+    "tokens": 2220
+  },
+  "function:packages/warp/src/collab/Kanban.tsx:Kanban": {
+    "lines": 130,
+    "tokens": 2992
+  },
+  "function:packages/warp/src/collab/PresenceStack.tsx:PresenceStack": {
+    "lines": 91,
+    "tokens": 1900
+  },
+  "function:packages/warp/src/collab/ShareDialog.tsx:ShareDialog": {
+    "lines": 149,
+    "tokens": 3525
+  },
+  "function:packages/warp/src/collab/Thread.tsx:Message": {
+    "lines": 196,
+    "tokens": 4564
+  },
+  "function:packages/warp/src/collab/Thread.tsx:Thread": {
+    "lines": 172,
+    "tokens": 3759
+  },
+  "function:packages/warp/src/collab/VersionHistory.tsx:VersionHistory": {
+    "lines": 116,
+    "tokens": 2191
+  },
+  "function:packages/warp/src/flow/Checklist.tsx:Checklist": {
+    "lines": 130,
+    "tokens": 2824
+  },
+  "function:packages/warp/src/flow/ConnBanner.tsx:ConnBanner": {
+    "lines": 121,
+    "tokens": 3028
+  },
+  "function:packages/warp/src/flow/MfaSetup.tsx:MfaSetup": {
+    "lines": 153,
+    "tokens": 3137
+  },
+  "function:packages/warp/src/flow/Otp.tsx:OtpField": {
+    "lines": 91,
+    "tokens": 1799
+  },
+  "function:packages/warp/src/flow/ShortcutsOverlay.tsx:ShortcutsOverlay": {
+    "lines": 86,
+    "tokens": 1894
+  },
+  "function:packages/warp/src/flow/SignGate.tsx:SignGate": {
+    "lines": 92,
+    "tokens": 2074
+  },
+  "function:packages/warp/src/flow/SignIn.tsx:SignIn": {
+    "lines": 84,
+    "tokens": 2503
+  },
+  "function:packages/warp/src/flow/SystemPage.tsx:Denied": {
+    "lines": 163,
+    "tokens": 4158
+  },
+  "function:packages/warp/src/flow/Tour.tsx:Running": {
+    "lines": 89,
+    "tokens": 2134
+  },
+  "function:packages/warp/src/flow/kit.tsx:useStepForm": {
+    "lines": 88,
+    "tokens": 1940
+  },
+  "function:packages/warp/src/live/Inbox.tsx:Inbox": {
+    "lines": 255,
+    "tokens": 5676
+  },
+  "function:packages/warp/src/live/Inbox.tsx:Row": {
+    "lines": 96,
+    "tokens": 2090
+  },
+  "function:packages/warp/src/live/MeetingRoom.tsx:ControlBar": {
+    "lines": 107,
+    "tokens": 1761
+  },
+  "function:packages/warp/src/live/MeetingRoom.tsx:MeetingRoom": {
+    "lines": 347,
+    "tokens": 7383
+  },
+  "function:packages/warp/src/live/NotificationPreferences.tsx:NotificationPreferences": {
+    "lines": 307,
+    "tokens": 7077
+  },
+  "function:packages/warp/src/live/Prejoin.tsx:Prejoin": {
+    "lines": 115,
+    "tokens": 2531
+  },
+  "function:packages/warp/src/live/TransportPicker.tsx:TransportPicker": {
+    "lines": 213,
+    "tokens": 5746
+  },
+  "function:packages/warp/src/schedule/Agenda.tsx:Agenda": {
+    "lines": 221,
+    "tokens": 5545
+  },
+  "function:packages/warp/src/schedule/AvailabilityEditor.tsx:AvailabilityEditor": {
+    "lines": 261,
+    "tokens": 6512
+  },
+  "function:packages/warp/src/schedule/AvailabilityEditor.tsx:Day": {
+    "lines": 102,
+    "tokens": 1995
+  },
+  "function:packages/warp/src/schedule/BookingCalendar.tsx:BookingCalendar": {
+    "lines": 221,
+    "tokens": 5254
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:Calendar": {
+    "lines": 351,
+    "tokens": 7917
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:Column": {
+    "lines": 105,
+    "tokens": 2225
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:MiniMonth": {
+    "lines": 130,
+    "tokens": 3127
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:MonthGrid": {
+    "lines": 213,
+    "tokens": 5150
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:TimeGrid": {
+    "lines": 267,
+    "tokens": 7250
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:Timeline": {
+    "lines": 194,
+    "tokens": 5215
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:useCalendar": {
+    "lines": 362,
+    "tokens": 7609
+  },
+  "function:packages/warp/src/schedule/Calendar.tsx:useCalendar/eventKeys": {
+    "lines": 97,
+    "tokens": 1835
+  },
+  "function:packages/warp/src/schedule/EventEditor.tsx:Fields": {
+    "lines": 119,
+    "tokens": 2580
+  },
+  "function:packages/warp/src/schedule/EventPopover.tsx:EventPopover": {
+    "lines": 125,
+    "tokens": 2968
+  },
+  "function:packages/warp/src/schedule/MeetingPlanner.tsx:MeetingPlanner": {
+    "lines": 388,
+    "tokens": 10288
+  },
+  "function:packages/warp/src/schedule/MoveSheet.tsx:Body": {
+    "lines": 89,
+    "tokens": 2017
+  },
+  "function:packages/warp/src/schedule/YearView.tsx:YearView": {
+    "lines": 300,
+    "tokens": 7886
+  },
+  "function:packages/warp/test/admin.test.tsx:describe(ApiKeys)": {
+    "lines": 83,
+    "tokens": 2236
+  },
+  "function:packages/warp/test/admin.test.tsx:describe(Checkout)": {
+    "lines": 155,
+    "tokens": 4948
+  },
+  "function:packages/warp/test/admin.test.tsx:describe(Integrations)": {
+    "lines": 103,
+    "tokens": 2931
+  },
+  "function:packages/warp/test/admin.test.tsx:describe(MembersTable)": {
+    "lines": 118,
+    "tokens": 3301
+  },
+  "function:packages/warp/test/admin.test.tsx:describe(SaveBar)": {
+    "lines": 102,
+    "tokens": 2797
+  },
+  "function:packages/warp/test/bench/bench.tsx:App": {
+    "lines": 433,
+    "tokens": 10636
+  },
+  "function:packages/warp/test/collab.test.tsx:describe(Kanban)": {
+    "lines": 162,
+    "tokens": 4632
+  },
+  "function:packages/warp/test/collab.test.tsx:describe(ShareDialog)": {
+    "lines": 82,
+    "tokens": 2241
+  },
+  "function:packages/warp/test/collab.test.tsx:describe(Thread)": {
+    "lines": 175,
+    "tokens": 6055
+  },
+  "function:packages/warp/test/collab.test.tsx:describe(presence)": {
+    "lines": 124,
+    "tokens": 3800
+  },
+  "function:packages/warp/test/datagrid-tree.test.tsx:describe(DataGrid tree)": {
+    "lines": 158,
+    "tokens": 4380
+  },
+  "function:packages/warp/test/fixes.test.tsx:describe(form.reset())": {
+    "lines": 288,
+    "tokens": 8293
+  },
+  "function:packages/warp/test/fixes.test.tsx:describe(required on a composite)": {
+    "lines": 112,
+    "tokens": 2811
+  },
+  "function:packages/warp/test/fixtures/Ordinary.tsx:Ordinary": {
+    "lines": 111,
+    "tokens": 2659
+  },
+  "function:packages/warp/test/fixtures/pack-admin.tsx:SettingsCase": {
+    "lines": 96,
+    "tokens": 2497
+  },
+  "function:packages/warp/test/fixtures/pack-agent.tsx:Desk": {
+    "lines": 109,
+    "tokens": 2576
+  },
+  "function:packages/warp/test/fixtures/pack-collab.tsx:Part": {
+    "lines": 138,
+    "tokens": 4126
+  },
+  "function:packages/warp/test/fixtures/pack-flow.tsx:Part": {
+    "lines": 82,
+    "tokens": 1514
+  },
+  "function:packages/warp/test/fixtures/pack-live.tsx:Demo": {
+    "lines": 102,
+    "tokens": 2553
+  },
+  "function:packages/warp/test/flow.test.tsx:describe(Flow)": {
+    "lines": 94,
+    "tokens": 2532
+  },
+  "function:packages/warp/test/flow.test.tsx:describe(OtpField)": {
+    "lines": 81,
+    "tokens": 2922
+  },
+  "function:packages/warp/test/flow.test.tsx:describe(SignIn)": {
+    "lines": 127,
+    "tokens": 4240
+  },
+  "function:packages/warp/test/flow.test.tsx:describe(SystemPage)": {
+    "lines": 145,
+    "tokens": 4490
+  },
+  "function:packages/warp/test/flow.test.tsx:describe(Tour)": {
+    "lines": 120,
+    "tokens": 3688
+  },
+  "function:packages/warp/test/live-props.test.tsx:describe(warp props changed after mount)": {
+    "lines": 122,
+    "tokens": 3961
+  },
+  "function:packages/warp/test/live.test.tsx:describe(Inbox)": {
+    "lines": 140,
+    "tokens": 4636
+  },
+  "function:packages/warp/test/live.test.tsx:describe(NotificationPreferences)": {
+    "lines": 137,
+    "tokens": 4440
+  },
+  "function:packages/warp/test/live.test.tsx:describe(meetings)": {
+    "lines": 227,
+    "tokens": 8037
+  },
+  "function:packages/warp/test/overlays.browser.test.mjs:call(%s)": {
+    "lines": 513,
+    "tokens": 14545
+  },
+  "function:packages/warp/test/overlays.browser.test.mjs:call(%s)/describe(toasts and modals)": {
+    "lines": 271,
+    "tokens": 7454
+  },
+  "function:packages/warp/test/overlays/main.tsx:App": {
+    "lines": 109,
+    "tokens": 3007
+  },
+  "function:packages/warp/test/polish-browser/main.tsx:render(callback)": {
+    "lines": 144,
+    "tokens": 3460
+  },
+  "function:packages/warp/test/schedule.test.tsx:describe(Calendar)": {
+    "lines": 228,
+    "tokens": 7080
+  },
+  "function:packages/warp/test/select.test.tsx:describe(keyboard)": {
+    "lines": 117,
+    "tokens": 3396
+  },
+  "function:packages/warp/test/select.test.tsx:describe(the form)": {
+    "lines": 108,
+    "tokens": 2892
+  },
+  "function:packages/warp/test/select.test.tsx:describe(the list)": {
+    "lines": 90,
+    "tokens": 2687
+  },
+  "function:packages/warp/test/surfaces.test.tsx:describe(CommandPalette)": {
+    "lines": 156,
+    "tokens": 4695
+  },
+  "function:packages/weft/assets.mjs:assets": {
+    "lines": 126,
+    "tokens": 2873
+  },
+  "function:packages/weft/node/css.mjs:emitGroups": {
+    "lines": 121,
+    "tokens": 3363
+  },
+  "function:packages/weft/node/hydration.mjs:solve": {
+    "lines": 343,
+    "tokens": 9090
+  },
+  "function:packages/weft/node/hydration.mjs:solve/timing": {
+    "lines": 98,
+    "tokens": 2822
+  },
+  "function:packages/weft/node/matrix.mjs:buildMatrix": {
+    "lines": 240,
+    "tokens": 5703
+  },
+  "function:packages/weft/node/matrix.mjs:explainGroup": {
+    "lines": 89,
+    "tokens": 2560
+  },
+  "function:packages/weft/node/purge.mjs:pieces": {
+    "lines": 112,
+    "tokens": 2976
+  },
+  "function:packages/weft/src/agent.ts:code": {
+    "lines": 83,
+    "tokens": 3154
+  },
+  "function:packages/weft/src/async.ts:Boundary": {
+    "lines": 199,
+    "tokens": 4629
+  },
+  "function:packages/weft/src/async.ts:resource": {
+    "lines": 129,
+    "tokens": 2534
+  },
+  "function:packages/weft/src/dom.ts:For": {
+    "lines": 129,
+    "tokens": 2717
+  },
+  "function:packages/weft/src/dom.ts:For/memo(callback)": {
+    "lines": 92,
+    "tokens": 1984
+  },
+  "function:packages/weft/src/dom.ts:For/memo(callback)/untrack(callback)#2": {
+    "lines": 85,
+    "tokens": 1822
+  },
+  "function:packages/weft/src/media-timeline.ts:timeline": {
+    "lines": 128,
+    "tokens": 2110
+  },
+  "function:packages/weft/src/scope.ts:Instance.constructor": {
+    "lines": 102,
+    "tokens": 2471
+  },
+  "function:packages/weft/src/ssr.ts:renderToStream": {
+    "lines": 112,
+    "tokens": 2568
+  },
+  "function:packages/weft/src/style/css.ts:emitGroups": {
+    "lines": 121,
+    "tokens": 3584
+  },
+  "function:packages/weft/src/style/matrix.ts:buildMatrix": {
+    "lines": 240,
+    "tokens": 6083
+  },
+  "function:packages/weft/src/style/matrix.ts:explainGroup": {
+    "lines": 89,
+    "tokens": 2904
+  },
+  "function:packages/weft/src/surface-text.ts:surfaceText": {
+    "lines": 136,
+    "tokens": 2943
+  },
+  "function:packages/weft/src/surface.tsx:mountSurface": {
+    "lines": 254,
+    "tokens": 5129
+  },
+  "function:packages/weft/src/surface.tsx:mountSurface/start": {
+    "lines": 188,
+    "tokens": 3692
+  },
+  "function:packages/weft/src/surface.tsx:mountSurface/start/boot": {
+    "lines": 114,
+    "tokens": 1837
+  },
+  "function:packages/weft/src/surface.tsx:mountSurface/start/boot/createRoot(callback)": {
+    "lines": 111,
+    "tokens": 1798
+  },
+  "function:packages/weft/src/test-plugins.ts:busSuite": {
+    "lines": 88,
+    "tokens": 2106
+  },
+  "function:packages/weft/src/test-plugins.ts:listSuite": {
+    "lines": 162,
+    "tokens": 4778
+  },
+  "function:packages/weft/src/test-plugins.ts:textMeasureSuite": {
+    "lines": 135,
+    "tokens": 3749
+  },
+  "function:packages/weft/test/async.test.tsx:describe(a Boundary directly in a conditional hole)": {
+    "lines": 82,
+    "tokens": 1553
+  },
+  "function:packages/weft/test/back-end.test.tsx:describe(weft back end, step 2)": {
+    "lines": 112,
+    "tokens": 3278
+  },
+  "function:packages/weft/test/back-end.test.tsx:describe(weft back end: basics)": {
+    "lines": 100,
+    "tokens": 2377
+  },
+  "function:packages/weft/test/deps.test.ts:describe(per-key reads between plain objects)": {
+    "lines": 98,
+    "tokens": 1924
+  },
+  "function:packages/weft/test/hmr.test.ts:describe(updates)": {
+    "lines": 178,
+    "tokens": 5401
+  },
+  "function:packages/weft/test/media.test.tsx:describe(@weft-js/core/vite assets)": {
+    "lines": 165,
+    "tokens": 5875
+  },
+  "function:packages/weft/test/ssr.test.ts:describe(round trips of every lowered construct: 0 misses, 0 DOM writes, then live)": {
+    "lines": 97,
+    "tokens": 2968
+  },
+  "function:packages/weft/test/state.test.tsx:describe(defineState)": {
+    "lines": 138,
+    "tokens": 3023
+  },
+  "function:packages/weft/test/state.test.tsx:describe(persist)": {
+    "lines": 123,
+    "tokens": 3517
+  },
+  "function:packages/weft/test/style-matrix.test.ts:describe(buildMatrix)": {
+    "lines": 121,
+    "tokens": 3491
+  },
+  "function:packages/weft/test/style.test.tsx:describe(CSS: only what call sites can produce)": {
+    "lines": 85,
+    "tokens": 2335
+  },
+  "function:packages/weft/test/style.test.tsx:describe(compiler: call sites lower to attributes)": {
+    "lines": 118,
+    "tokens": 4589
+  },
+  "function:packages/weft/test/surface.test.tsx:describe(dev checks on the live mirror)": {
+    "lines": 94,
+    "tokens": 2845
+  },
+  "function:packages/weft/test/tabs.test.tsx:describe(sync: 'tabs')": {
+    "lines": 120,
+    "tokens": 3182
+  },
+  "function:packages/weft/vite.mjs:agent": {
+    "lines": 133,
+    "tokens": 2870
+  },
+  "function:packages/weft/vite.mjs:agent/configureServer": {
+    "lines": 85,
+    "tokens": 1937
+  },
+  "function:packages/weft/vite.mjs:icons": {
+    "lines": 113,
+    "tokens": 2814
+  },
+  "function:packages/weft/vite.mjs:styleGroups": {
+    "lines": 181,
+    "tokens": 4295
+  },
+  "function:packages/weft/vite.mjs:weft": {
+    "lines": 98,
+    "tokens": 2093
+  },
+  "function:scripts/quality/packed-policy.test.mjs:test(packed pnpm installs keep the age policy and use transitive tarball overrides)": {
+    "lines": 82,
+    "tokens": 2227
+  },
+  "function:site/scripts/content.mjs:buildToolkit": {
+    "lines": 189,
+    "tokens": 5398
+  },
+  "function:site/scripts/toolkit.mjs:readExamples": {
+    "lines": 85,
+    "tokens": 2482
+  },
+  "function:site/scripts/toolkit.mjs:readToolkit": {
+    "lines": 133,
+    "tokens": 3650
+  },
+  "function:site/src/components/Arena.tsx:Arena": {
+    "lines": 178,
+    "tokens": 5483
+  },
+  "function:site/src/components/ComponentPage.tsx:ComponentPage": {
+    "lines": 178,
+    "tokens": 5058
+  },
+  "function:site/src/components/ExampleFrame.tsx:ExampleFrame": {
+    "lines": 98,
+    "tokens": 1944
+  },
+  "function:site/src/components/Fix.tsx:Fix": {
+    "lines": 119,
+    "tokens": 2646
+  },
+  "function:site/src/components/IconBrowser.tsx:IconBrowser": {
+    "lines": 139,
+    "tokens": 3079
+  },
+  "function:site/src/components/LearnDemo.tsx:LearnDemo": {
+    "lines": 116,
+    "tokens": 6285
+  },
+  "function:site/src/components/Loom.tsx:Loom": {
+    "lines": 134,
+    "tokens": 2955
+  },
+  "function:site/src/components/Loom.tsx:Loom/onMount(callback)": {
+    "lines": 130,
+    "tokens": 2819
+  },
+  "function:site/src/components/Loom.tsx:Loom/onMount(callback)/build": {
+    "lines": 113,
+    "tokens": 2516
+  },
+  "function:site/src/components/Playground.tsx:Playground": {
+    "lines": 229,
+    "tokens": 5447
+  },
+  "function:site/src/lib/loom.ts:weaver": {
+    "lines": 116,
+    "tokens": 2344
+  },
+  "function:site/src/routes/index.tsx:Home": {
+    "lines": 157,
+    "tokens": 5410
+  },
+  "function:site/src/routes/learn/[slug].tsx:LearnPage": {
+    "lines": 84,
+    "tokens": 1907
+  },
+  "function:site/src/toolkit/art/bobbin-sdf.tsx:BobbinSdf": {
+    "lines": 129,
+    "tokens": 2289
+  },
+  "function:site/src/toolkit/art/curl-threads.tsx:CurlThreads": {
+    "lines": 105,
+    "tokens": 1848
+  },
+  "function:site/src/toolkit/art/latency-rain.tsx:LatencyRain": {
+    "lines": 110,
+    "tokens": 2583
+  },
+  "function:site/src/toolkit/art/pluck.tsx:Pluck": {
+    "lines": 96,
+    "tokens": 1857
+  },
+  "function:site/src/toolkit/art/sand-table.tsx:SandTable": {
+    "lines": 113,
+    "tokens": 2056
+  },
+  "function:site/src/toolkit/art/selvedge-plan.tsx:SelvedgePlan": {
+    "lines": 88,
+    "tokens": 1736
+  },
+  "function:site/src/toolkit/art/shuttle.tsx:Shuttle": {
+    "lines": 99,
+    "tokens": 2152
+  },
+  "function:site/src/toolkit/art/socket-tide.tsx:SocketTide": {
+    "lines": 96,
+    "tokens": 2224
+  },
+  "function:site/src/toolkit/art/token-spectrum.tsx:TokenSpectrum": {
+    "lines": 120,
+    "tokens": 2538
+  },
+  "function:site/src/toolkit/art/truchet-cloth.tsx:TruchetCloth": {
+    "lines": 102,
+    "tokens": 1936
+  },
+  "function:site/src/toolkit/art/turing-cloth.tsx:TuringCloth": {
+    "lines": 92,
+    "tokens": 1467
+  },
+  "function:site/src/toolkit/examples/canvas.tsx:Landing": {
+    "lines": 339,
+    "tokens": 10038
+  },
+  "function:site/src/toolkit/examples/canvas.tsx:lookKit": {
+    "lines": 261,
+    "tokens": 5371
+  },
+  "function:site/test/qa.mjs:check(callback)#15": {
+    "lines": 103,
+    "tokens": 3165
+  },
+  "function:site/test/qa.mjs:check(callback)#7": {
+    "lines": 82,
+    "tokens": 2543
+  },
+  "function:spikes/native/js/src/intents.ts:AppTabs": {
+    "lines": 113,
+    "tokens": 2252
+  },
+  "function:spikes/og/card/index.mjs:createCardRenderer": {
+    "lines": 116,
+    "tokens": 2518
+  },
+  "function:spikes/og/cards/Avatar.tsx:AvatarCard": {
+    "lines": 84,
+    "tokens": 1543
+  }
+}
