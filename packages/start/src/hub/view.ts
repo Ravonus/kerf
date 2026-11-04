@@ -113,14 +113,14 @@ function createOperations(deps: View) {
         }),
       ])
     },
-    async poke(tags: string[], origin?: string | null) {
+    async poke(this: void, tags: string[], origin?: string | null) {
       if (!tags.length) return
       // In this order: a client's refetch must start after what the barrier claims is covered.
       if (feedState.live().mode === 'feed' || feedState.live().mode === 'external')
         await feed?.settle(tags)
       await bus.publish('weft:poke', JSON.stringify({ t: tags, ...(origin && { o: origin }) }))
     },
-    push(id: string, msg: unknown) {
+    push(this: void, id: string, msg: unknown) {
       let hit = 0
       for (const c of conns.values()) {
         for (const s of c.subs.values()) {
@@ -131,7 +131,7 @@ function createOperations(deps: View) {
       }
       return hit
     },
-    async shutdown() {
+    async shutdown(this: void) {
       feedState.clear()
       await feed?.stop()
       for (const fn of closing) fn()
