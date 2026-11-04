@@ -20,8 +20,12 @@ export const load = async ({ request }: { request: Request }) => {
   if (token && !release) {
     let stock!: () => void
     let reviews!: () => void
-    const stockReady = new Promise<void>((resolve) => (stock = resolve))
-    const reviewsReady = new Promise<void>((resolve) => (reviews = resolve))
+    const stockReady = new Promise<void>((resolve) => {
+      stock = resolve
+    })
+    const reviewsReady = new Promise<void>((resolve) => {
+      reviews = resolve
+    })
     gates.set(token, { stock, reviews })
     return {
       title: 'Slow page',
