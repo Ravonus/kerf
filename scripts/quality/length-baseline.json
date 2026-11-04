@@ -1,4 +1,12 @@
 {
+  "file:benchmarks/compare/design/audit.mjs": {
+    "lines": 435,
+    "tokens": 8919
+  },
+  "file:benchmarks/compare/measure.mjs": {
+    "lines": 655,
+    "tokens": 16355
+  },
   "file:crates/weft-compiler/src/analyze.rs": {
     "lines": 2258,
     "tokens": 49088
@@ -45,11 +53,23 @@
   },
   "file:evals/agent-eval/run.mjs": {
     "lines": 804,
-    "tokens": 18678
+    "tokens": 18668
+  },
+  "file:evals/gates/ds-exit.mjs": {
+    "lines": 479,
+    "tokens": 14431
+  },
+  "file:evals/gates/phase5a-exit.mjs": {
+    "lines": 807,
+    "tokens": 18278
+  },
+  "file:evals/gates/phase5b-exit.mjs": {
+    "lines": 775,
+    "tokens": 19189
   },
   "file:examples/bench.mjs": {
-    "lines": 412,
-    "tokens": 9312
+    "lines": 411,
+    "tokens": 9288
   },
   "file:examples/lemonstand/solid/src/components/lemon/rig.tsx": {
     "lines": 534,
@@ -61,7 +81,7 @@
   },
   "file:examples/lib/build.mjs": {
     "lines": 436,
-    "tokens": 9265
+    "tokens": 9257
   },
   "file:examples/lib/diagnose.mjs": {
     "lines": 431,
@@ -70,26 +90,6 @@
   "file:examples/lib/flow.mjs": {
     "lines": 493,
     "tokens": 10588
-  },
-  "file:benchmarks/compare/design/audit.mjs": {
-    "lines": 435,
-    "tokens": 8919
-  },
-  "file:benchmarks/compare/measure.mjs": {
-    "lines": 655,
-    "tokens": 16363
-  },
-  "file:evals/gates/ds-exit.mjs": {
-    "lines": 479,
-    "tokens": 14445
-  },
-  "file:evals/gates/phase5a-exit.mjs": {
-    "lines": 850,
-    "tokens": 19144
-  },
-  "file:evals/gates/phase5b-exit.mjs": {
-    "lines": 818,
-    "tokens": 20074
   },
   "file:packages/cli/src/add.mjs": {
     "lines": 548,
@@ -159,41 +159,81 @@
     "lines": 488,
     "tokens": 11203
   },
+  "file:packages/core/node/css.mjs": {
+    "lines": 564,
+    "tokens": 10256
+  },
+  "file:packages/core/node/hydration.mjs": {
+    "lines": 442,
+    "tokens": 9940
+  },
+  "file:packages/core/node/matrix.mjs": {
+    "lines": 589,
+    "tokens": 10780
+  },
+  "file:packages/core/node/purge.mjs": {
+    "lines": 493,
+    "tokens": 9296
+  },
+  "file:packages/core/src/agent.ts": {
+    "lines": 1036,
+    "tokens": 22357
+  },
+  "file:packages/core/src/async.ts": {
+    "lines": 510,
+    "tokens": 9518
+  },
+  "file:packages/core/src/browser.ts": {
+    "lines": 404,
+    "tokens": 6723
+  },
+  "file:packages/core/src/dom.ts": {
+    "lines": 665,
+    "tokens": 12371
+  },
+  "file:packages/core/src/index.ts": {
+    "lines": 848,
+    "tokens": 12354
+  },
+  "file:packages/core/src/island.ts": {
+    "lines": 423,
+    "tokens": 7185
+  },
+  "file:packages/core/src/scope.ts": {
+    "lines": 478,
+    "tokens": 8624
+  },
+  "file:packages/core/src/ssr.ts": {
+    "lines": 695,
+    "tokens": 12640
+  },
+  "file:packages/core/src/style/css.ts": {
+    "lines": 564,
+    "tokens": 12079
+  },
+  "file:packages/core/src/style/matrix.ts": {
+    "lines": 589,
+    "tokens": 13282
+  },
+  "file:packages/core/src/surface.tsx": {
+    "lines": 588,
+    "tokens": 9820
+  },
+  "file:packages/core/src/test.ts": {
+    "lines": 674,
+    "tokens": 12427
+  },
+  "file:packages/core/vite.mjs": {
+    "lines": 867,
+    "tokens": 17394
+  },
   "file:packages/create/scripts/packed.mjs": {
-    "lines": 615,
-    "tokens": 17022
+    "lines": 612,
+    "tokens": 16871
   },
   "file:packages/create/src/stack.mjs": {
     "lines": 623,
     "tokens": 19510
-  },
-  "file:packages/warp-icons/art/a-marks.mjs": {
-    "lines": 548,
-    "tokens": 5359
-  },
-  "file:packages/warp-icons/art/c-people.mjs": {
-    "lines": 604,
-    "tokens": 7569
-  },
-  "file:packages/warp-icons/art/d-files.mjs": {
-    "lines": 595,
-    "tokens": 6869
-  },
-  "file:packages/warp-icons/art/e-things.mjs": {
-    "lines": 609,
-    "tokens": 7292
-  },
-  "file:packages/warp-icons/art/style/masters.mjs": {
-    "lines": 476,
-    "tokens": 7196
-  },
-  "file:packages/warp-icons/compile.mjs": {
-    "lines": 875,
-    "tokens": 20719
-  },
-  "file:packages/warp-icons/src/gen/all.tsx": {
-    "lines": 1966,
-    "tokens": 1589931
   },
   "file:packages/multiplayer/src/index.ts": {
     "lines": 531,
@@ -375,6 +415,34 @@
     "lines": 442,
     "tokens": 7715
   },
+  "file:packages/warp-icons/art/a-marks.mjs": {
+    "lines": 548,
+    "tokens": 5359
+  },
+  "file:packages/warp-icons/art/c-people.mjs": {
+    "lines": 604,
+    "tokens": 7569
+  },
+  "file:packages/warp-icons/art/d-files.mjs": {
+    "lines": 595,
+    "tokens": 6869
+  },
+  "file:packages/warp-icons/art/e-things.mjs": {
+    "lines": 609,
+    "tokens": 7292
+  },
+  "file:packages/warp-icons/art/style/masters.mjs": {
+    "lines": 476,
+    "tokens": 7196
+  },
+  "file:packages/warp-icons/compile.mjs": {
+    "lines": 875,
+    "tokens": 20719
+  },
+  "file:packages/warp-icons/src/gen/all.tsx": {
+    "lines": 1966,
+    "tokens": 1589931
+  },
   "file:packages/warp/plugin.mjs": {
     "lines": 568,
     "tokens": 16633
@@ -499,81 +567,9 @@
     "lines": 832,
     "tokens": 22953
   },
-  "file:packages/core/node/css.mjs": {
-    "lines": 564,
-    "tokens": 10256
-  },
-  "file:packages/core/node/hydration.mjs": {
-    "lines": 442,
-    "tokens": 9940
-  },
-  "file:packages/core/node/matrix.mjs": {
-    "lines": 589,
-    "tokens": 10780
-  },
-  "file:packages/core/node/purge.mjs": {
-    "lines": 493,
-    "tokens": 9296
-  },
-  "file:packages/core/src/agent.ts": {
-    "lines": 1036,
-    "tokens": 22357
-  },
-  "file:packages/core/src/async.ts": {
-    "lines": 510,
-    "tokens": 9518
-  },
-  "file:packages/core/src/browser.ts": {
-    "lines": 404,
-    "tokens": 6723
-  },
-  "file:packages/core/src/dom.ts": {
-    "lines": 665,
-    "tokens": 12371
-  },
-  "file:packages/core/src/index.ts": {
-    "lines": 848,
-    "tokens": 12354
-  },
-  "file:packages/core/src/island.ts": {
-    "lines": 423,
-    "tokens": 7185
-  },
-  "file:packages/core/src/scope.ts": {
-    "lines": 478,
-    "tokens": 8624
-  },
-  "file:packages/core/src/ssr.ts": {
-    "lines": 695,
-    "tokens": 12640
-  },
-  "file:packages/core/src/style/css.ts": {
-    "lines": 564,
-    "tokens": 12079
-  },
-  "file:packages/core/src/style/matrix.ts": {
-    "lines": 589,
-    "tokens": 13282
-  },
-  "file:packages/core/src/surface.tsx": {
-    "lines": 588,
-    "tokens": 9820
-  },
-  "file:packages/core/src/test.ts": {
-    "lines": 674,
-    "tokens": 12427
-  },
-  "file:packages/core/vite.mjs": {
-    "lines": 867,
-    "tokens": 17394
-  },
-  "file:scripts/rename-scope.mjs": {
-    "lines": 601,
-    "tokens": 17540
-  },
   "file:site/scripts/content.mjs": {
-    "lines": 1474,
-    "tokens": 37259
+    "lines": 1471,
+    "tokens": 37240
   },
   "file:site/src/toolkit/docs/actions.ts": {
     "lines": 412,
@@ -719,9 +715,89 @@
     "lines": 2582,
     "tokens": 68740
   },
-  "file:spikes/native/js/src/recording-host.ts": {
-    "lines": 403,
-    "tokens": 8224
+  "function:benchmarks/compare/design/audit.mjs:audit": {
+    "lines": 121,
+    "tokens": 2598
+  },
+  "function:benchmarks/compare/design/audit.mjs:brief": {
+    "lines": 98,
+    "tokens": 2040
+  },
+  "function:benchmarks/compare/design/react-mui/src/Customers.tsx:Customers": {
+    "lines": 101,
+    "tokens": 2845
+  },
+  "function:benchmarks/compare/design/react-mui/src/Pricing.tsx:Pricing": {
+    "lines": 89,
+    "tokens": 2395
+  },
+  "function:benchmarks/compare/design/react-mui/src/Settings.tsx:Settings": {
+    "lines": 107,
+    "tokens": 2166
+  },
+  "function:benchmarks/compare/design/react-radix/src/Customers.tsx:Customers": {
+    "lines": 109,
+    "tokens": 4060
+  },
+  "function:benchmarks/compare/design/react-radix/src/Settings.tsx:Settings": {
+    "lines": 102,
+    "tokens": 2655
+  },
+  "function:benchmarks/compare/design/react-zustand/src/Customers.tsx:Customers": {
+    "lines": 118,
+    "tokens": 4236
+  },
+  "function:benchmarks/compare/design/react-zustand/src/Settings.tsx:Settings": {
+    "lines": 149,
+    "tokens": 4286
+  },
+  "function:benchmarks/compare/design/solid-kobalte/src/pages/Customers.tsx:Customers": {
+    "lines": 116,
+    "tokens": 3894
+  },
+  "function:benchmarks/compare/design/solid-kobalte/src/pages/Settings.tsx:Settings": {
+    "lines": 101,
+    "tokens": 2125
+  },
+  "function:benchmarks/compare/design/weft-ds/src/Customers.tsx:Customers": {
+    "lines": 98,
+    "tokens": 1809
+  },
+  "function:benchmarks/compare/design/weft-ds/src/Settings.tsx:Settings": {
+    "lines": 90,
+    "tokens": 2057
+  },
+  "function:benchmarks/compare/design/weft-tailwind/src/Customers.tsx:Customers": {
+    "lines": 128,
+    "tokens": 3638
+  },
+  "function:benchmarks/compare/design/weft-tailwind/src/Settings.tsx:Settings": {
+    "lines": 119,
+    "tokens": 2927
+  },
+  "function:benchmarks/compare/measure.mjs:parity": {
+    "lines": 124,
+    "tokens": 2261
+  },
+  "function:benchmarks/compare/react-radix/src/DataTable.tsx:DataTable": {
+    "lines": 142,
+    "tokens": 3837
+  },
+  "function:benchmarks/compare/react-zustand/src/DataTable.tsx:DataTable": {
+    "lines": 141,
+    "tokens": 3800
+  },
+  "function:benchmarks/compare/solid-kobalte/src/DataTable.tsx:DataTable": {
+    "lines": 146,
+    "tokens": 3858
+  },
+  "function:benchmarks/compare/weft-plain/src/DataTable.tsx:DataTable": {
+    "lines": 128,
+    "tokens": 3202
+  },
+  "function:benchmarks/speed/shared/driver.js:expose": {
+    "lines": 118,
+    "tokens": 1997
   },
   "function:crates/weft-compiler/src/analyze.rs:analyze_list": {
     "lines": 123,
@@ -783,14 +859,6 @@
     "lines": 143,
     "tokens": 3850
   },
-  "function:docs/design/warp/specimens/warp-bar.js:call(callback)": {
-    "lines": 246,
-    "tokens": 7255
-  },
-  "function:docs/design/warp/specimens/warp-sweep.js:call(callback)": {
-    "lines": 298,
-    "tokens": 6530
-  },
   "function:evals/agent-eval/lib/agent.mjs:startAgent": {
     "lines": 102,
     "tokens": 1363
@@ -814,6 +882,74 @@
   "function:evals/agent-eval/tasks/small-todo/reference/weft-warp/src/routes/index.tsx:Home": {
     "lines": 142,
     "tokens": 2507
+  },
+  "function:evals/buggy-v4/react/effect-portfolio/App.tsx:App": {
+    "lines": 172,
+    "tokens": 3830
+  },
+  "function:evals/buggy-v4/react/one-search/App.tsx:App": {
+    "lines": 169,
+    "tokens": 3743
+  },
+  "function:evals/buggy-v4/react/sort-spread/App.tsx:App": {
+    "lines": 173,
+    "tokens": 3808
+  },
+  "function:evals/buggy-v4/react/stale-rollback/App.tsx:App": {
+    "lines": 172,
+    "tokens": 3825
+  },
+  "function:evals/buggy-v4/solid/no-batch/App.tsx:App": {
+    "lines": 163,
+    "tokens": 3506
+  },
+  "function:evals/buggy-v4/solid/one-search/App.tsx:App": {
+    "lines": 163,
+    "tokens": 3462
+  },
+  "function:evals/buggy-v4/solid/spread-update/App.tsx:App": {
+    "lines": 177,
+    "tokens": 3774
+  },
+  "function:evals/buggy-v4/solid/stale-rollback/App.tsx:App": {
+    "lines": 174,
+    "tokens": 3697
+  },
+  "function:evals/buggy-v4/weft/one-search/App.tsx:App": {
+    "lines": 168,
+    "tokens": 3642
+  },
+  "function:evals/buggy-v4/weft/search-race/App.tsx:App": {
+    "lines": 208,
+    "tokens": 4250
+  },
+  "function:evals/buggy-v4/weft/spread-update/App.tsx:App": {
+    "lines": 175,
+    "tokens": 3977
+  },
+  "function:evals/buggy-v4/weft/stale-rollback/App.tsx:App": {
+    "lines": 178,
+    "tokens": 3924
+  },
+  "function:evals/gates/phase3-exit.e2e.mjs:anonymous": {
+    "lines": 130,
+    "tokens": 4080
+  },
+  "function:evals/gates/phase3b-exit.e2e.mjs:anonymous": {
+    "lines": 238,
+    "tokens": 6030
+  },
+  "function:evals/reference-v4/react/src/App.tsx:App": {
+    "lines": 171,
+    "tokens": 3793
+  },
+  "function:evals/reference-v4/solid/src/App.tsx:App": {
+    "lines": 173,
+    "tokens": 3653
+  },
+  "function:evals/reference-v4/weft/src/App.tsx:App": {
+    "lines": 177,
+    "tokens": 3902
   },
   "function:examples/admin/next/src/components/orders-table.tsx:OrdersTable": {
     "lines": 97,
@@ -898,518 +1034,6 @@
   "function:examples/todo/solid/src/routes/todos.tsx:Todos": {
     "lines": 127,
     "tokens": 3287
-  },
-  "function:evals/buggy-v4/react/effect-portfolio/App.tsx:App": {
-    "lines": 172,
-    "tokens": 3830
-  },
-  "function:evals/buggy-v4/react/one-search/App.tsx:App": {
-    "lines": 169,
-    "tokens": 3743
-  },
-  "function:evals/buggy-v4/react/sort-spread/App.tsx:App": {
-    "lines": 173,
-    "tokens": 3808
-  },
-  "function:evals/buggy-v4/react/stale-rollback/App.tsx:App": {
-    "lines": 172,
-    "tokens": 3825
-  },
-  "function:evals/buggy-v4/solid/no-batch/App.tsx:App": {
-    "lines": 163,
-    "tokens": 3506
-  },
-  "function:evals/buggy-v4/solid/one-search/App.tsx:App": {
-    "lines": 163,
-    "tokens": 3462
-  },
-  "function:evals/buggy-v4/solid/spread-update/App.tsx:App": {
-    "lines": 177,
-    "tokens": 3774
-  },
-  "function:evals/buggy-v4/solid/stale-rollback/App.tsx:App": {
-    "lines": 174,
-    "tokens": 3697
-  },
-  "function:evals/buggy-v4/weft/one-search/App.tsx:App": {
-    "lines": 168,
-    "tokens": 3642
-  },
-  "function:evals/buggy-v4/weft/search-race/App.tsx:App": {
-    "lines": 208,
-    "tokens": 4250
-  },
-  "function:evals/buggy-v4/weft/spread-update/App.tsx:App": {
-    "lines": 175,
-    "tokens": 3977
-  },
-  "function:evals/buggy-v4/weft/stale-rollback/App.tsx:App": {
-    "lines": 178,
-    "tokens": 3924
-  },
-  "function:benchmarks/compare/design/audit.mjs:audit": {
-    "lines": 121,
-    "tokens": 2598
-  },
-  "function:benchmarks/compare/design/audit.mjs:brief": {
-    "lines": 98,
-    "tokens": 2040
-  },
-  "function:benchmarks/compare/design/react-mui/src/Customers.tsx:Customers": {
-    "lines": 101,
-    "tokens": 2845
-  },
-  "function:benchmarks/compare/design/react-mui/src/Pricing.tsx:Pricing": {
-    "lines": 89,
-    "tokens": 2395
-  },
-  "function:benchmarks/compare/design/react-mui/src/Settings.tsx:Settings": {
-    "lines": 107,
-    "tokens": 2166
-  },
-  "function:benchmarks/compare/design/react-radix/src/Customers.tsx:Customers": {
-    "lines": 109,
-    "tokens": 4060
-  },
-  "function:benchmarks/compare/design/react-radix/src/Settings.tsx:Settings": {
-    "lines": 102,
-    "tokens": 2655
-  },
-  "function:benchmarks/compare/design/react-zustand/src/Customers.tsx:Customers": {
-    "lines": 118,
-    "tokens": 4236
-  },
-  "function:benchmarks/compare/design/react-zustand/src/Settings.tsx:Settings": {
-    "lines": 149,
-    "tokens": 4286
-  },
-  "function:benchmarks/compare/design/solid-kobalte/src/pages/Customers.tsx:Customers": {
-    "lines": 116,
-    "tokens": 3894
-  },
-  "function:benchmarks/compare/design/solid-kobalte/src/pages/Settings.tsx:Settings": {
-    "lines": 101,
-    "tokens": 2125
-  },
-  "function:benchmarks/compare/design/weft-ds/src/Customers.tsx:Customers": {
-    "lines": 98,
-    "tokens": 1809
-  },
-  "function:benchmarks/compare/design/weft-ds/src/Settings.tsx:Settings": {
-    "lines": 90,
-    "tokens": 2057
-  },
-  "function:benchmarks/compare/design/weft-tailwind/src/Customers.tsx:Customers": {
-    "lines": 128,
-    "tokens": 3638
-  },
-  "function:benchmarks/compare/design/weft-tailwind/src/Settings.tsx:Settings": {
-    "lines": 119,
-    "tokens": 2927
-  },
-  "function:benchmarks/compare/measure.mjs:parity": {
-    "lines": 124,
-    "tokens": 2261
-  },
-  "function:benchmarks/compare/react-radix/src/DataTable.tsx:DataTable": {
-    "lines": 142,
-    "tokens": 3837
-  },
-  "function:benchmarks/compare/react-zustand/src/DataTable.tsx:DataTable": {
-    "lines": 141,
-    "tokens": 3800
-  },
-  "function:benchmarks/compare/solid-kobalte/src/DataTable.tsx:DataTable": {
-    "lines": 146,
-    "tokens": 3858
-  },
-  "function:benchmarks/compare/weft-plain/src/DataTable.tsx:DataTable": {
-    "lines": 128,
-    "tokens": 3202
-  },
-  "function:evals/gates/phase3-exit.e2e.mjs:anonymous": {
-    "lines": 130,
-    "tokens": 4080
-  },
-  "function:evals/gates/phase3b-exit.e2e.mjs:anonymous": {
-    "lines": 238,
-    "tokens": 6030
-  },
-  "function:evals/reference-v4/react/src/App.tsx:App": {
-    "lines": 171,
-    "tokens": 3793
-  },
-  "function:evals/reference-v4/solid/src/App.tsx:App": {
-    "lines": 173,
-    "tokens": 3653
-  },
-  "function:evals/reference-v4/weft/src/App.tsx:App": {
-    "lines": 177,
-    "tokens": 3902
-  },
-  "function:evals/results/smoke/solutions/react__4-inline-edit__1.tsx:InlineEdit": {
-    "lines": 82,
-    "tokens": 1182
-  },
-  "function:evals/results/v2-haiku/solutions/react__4-autocomplete__1.tsx:CityPicker": {
-    "lines": 150,
-    "tokens": 2494
-  },
-  "function:evals/results/v2-haiku/solutions/solid__3-profile-form__1.tsx:ProfileForm": {
-    "lines": 81,
-    "tokens": 1517
-  },
-  "function:evals/results/v2-haiku/solutions/solid__4-autocomplete__1.tsx:CityPicker": {
-    "lines": 140,
-    "tokens": 2329
-  },
-  "function:evals/results/v2-sonnet/solutions/react__4-autocomplete__1.tsx:CityPicker": {
-    "lines": 117,
-    "tokens": 1997
-  },
-  "function:evals/results/v2-sonnet/solutions/solid__4-autocomplete__1.tsx:CityPicker": {
-    "lines": 108,
-    "tokens": 1785
-  },
-  "function:evals/results/v4-bug-react-effect-portfolio/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3806
-  },
-  "function:evals/results/v4-bug-react-inline-callback/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 139,
-    "tokens": 3769
-  },
-  "function:evals/results/v4-bug-react-no-memo/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 139,
-    "tokens": 3769
-  },
-  "function:evals/results/v4-bug-react-one-search/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 137,
-    "tokens": 3719
-  },
-  "function:evals/results/v4-bug-react-search-race/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 139,
-    "tokens": 3769
-  },
-  "function:evals/results/v4-bug-react-snapshot-price/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 139,
-    "tokens": 3769
-  },
-  "function:evals/results/v4-bug-react-sort-spread/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 139,
-    "tokens": 3784
-  },
-  "function:evals/results/v4-bug-react-stale-rollback/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3801
-  },
-  "function:evals/results/v4-bug-solid-destructured-live/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 145,
-    "tokens": 3565
-  },
-  "function:evals/results/v4-bug-solid-destructured-props/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 145,
-    "tokens": 3565
-  },
-  "function:evals/results/v4-bug-solid-no-batch/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 135,
-    "tokens": 3418
-  },
-  "function:evals/results/v4-bug-solid-one-search/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3374
-  },
-  "function:evals/results/v4-bug-solid-search-race/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 145,
-    "tokens": 3565
-  },
-  "function:evals/results/v4-bug-solid-snapshot-price/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 145,
-    "tokens": 3565
-  },
-  "function:evals/results/v4-bug-solid-spread-update/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 149,
-    "tokens": 3686
-  },
-  "function:evals/results/v4-bug-solid-stale-rollback/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 146,
-    "tokens": 3609
-  },
-  "function:evals/results/v4-bug-weft-entry-prop/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3870
-  },
-  "function:evals/results/v4-bug-weft-entry-reads/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3870
-  },
-  "function:evals/results/v4-bug-weft-one-search/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 136,
-    "tokens": 3610
-  },
-  "function:evals/results/v4-bug-weft-search-race/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 166,
-    "tokens": 4218
-  },
-  "function:evals/results/v4-bug-weft-setup-read-untrack/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3870
-  },
-  "function:evals/results/v4-bug-weft-setup-read/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3870
-  },
-  "function:evals/results/v4-bug-weft-snapshot-price/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3870
-  },
-  "function:evals/results/v4-bug-weft-spread-update/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 142,
-    "tokens": 3945
-  },
-  "function:evals/results/v4-bug-weft-stale-rollback/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 141,
-    "tokens": 3892
-  },
-  "function:evals/results/v4-haiku/snapshots/react/t5/src/App.tsx:App": {
-    "lines": 81,
-    "tokens": 2433
-  },
-  "function:evals/results/v4-haiku/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 117,
-    "tokens": 2983
-  },
-  "function:evals/results/v4-ref-solid/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 145,
-    "tokens": 3565
-  },
-  "function:evals/results/v4-ref-weft/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 140,
-    "tokens": 3870
-  },
-  "function:evals/results/v4-ref/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 139,
-    "tokens": 3769
-  },
-  "function:evals/results/v4-solid-haiku/snapshots/solid/t2/src/App.tsx:App": {
-    "lines": 84,
-    "tokens": 1683
-  },
-  "function:evals/results/v4-solid-haiku/snapshots/solid/t3/src/App.tsx:App": {
-    "lines": 126,
-    "tokens": 2695
-  },
-  "function:evals/results/v4-solid-haiku/snapshots/solid/t4/src/App.tsx:App": {
-    "lines": 249,
-    "tokens": 5568
-  },
-  "function:evals/results/v4-solid-haiku/snapshots/solid/t5/src/App.tsx:App": {
-    "lines": 284,
-    "tokens": 6330
-  },
-  "function:evals/results/v4-solid-haiku/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 315,
-    "tokens": 6533
-  },
-  "function:evals/results/v4-solid-sonnet/snapshots/solid/t2/src/App.tsx:App": {
-    "lines": 90,
-    "tokens": 1909
-  },
-  "function:evals/results/v4-solid-sonnet/snapshots/solid/t3/src/App.tsx:App": {
-    "lines": 136,
-    "tokens": 3045
-  },
-  "function:evals/results/v4-solid-sonnet/snapshots/solid/t4/src/App.tsx:App": {
-    "lines": 188,
-    "tokens": 4082
-  },
-  "function:evals/results/v4-solid-sonnet/snapshots/solid/t5/src/App.tsx:App": {
-    "lines": 226,
-    "tokens": 4908
-  },
-  "function:evals/results/v4-solid-sonnet/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 278,
-    "tokens": 6036
-  },
-  "function:evals/results/v4-solid-sonnet/snapshots/solid/t6/src/App.tsx:App/anonymous": {
-    "lines": 95,
-    "tokens": 2362
-  },
-  "function:evals/results/v4-sonnet/snapshots/react/t3/src/App.tsx:App": {
-    "lines": 97,
-    "tokens": 2519
-  },
-  "function:evals/results/v4-sonnet/snapshots/react/t4/src/App.tsx:App": {
-    "lines": 103,
-    "tokens": 2808
-  },
-  "function:evals/results/v4-sonnet/snapshots/react/t5/src/App.tsx:App": {
-    "lines": 126,
-    "tokens": 3634
-  },
-  "function:evals/results/v4-sonnet/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 151,
-    "tokens": 4219
-  },
-  "function:evals/results/v4-weft-haiku/snapshots/weft/t2/src/App.tsx:App": {
-    "lines": 82,
-    "tokens": 1773
-  },
-  "function:evals/results/v4-weft-haiku/snapshots/weft/t3/src/App.tsx:App": {
-    "lines": 114,
-    "tokens": 2810
-  },
-  "function:evals/results/v4-weft-haiku/snapshots/weft/t4/src/App.tsx:App": {
-    "lines": 175,
-    "tokens": 4544
-  },
-  "function:evals/results/v4-weft-haiku/snapshots/weft/t5/src/App.tsx:App": {
-    "lines": 193,
-    "tokens": 5131
-  },
-  "function:evals/results/v4-weft-haiku/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 224,
-    "tokens": 5885
-  },
-  "function:evals/results/v4-weft-sonnet/snapshots/weft/t2/src/App.tsx:App": {
-    "lines": 96,
-    "tokens": 2026
-  },
-  "function:evals/results/v4-weft-sonnet/snapshots/weft/t3/src/App.tsx:App": {
-    "lines": 124,
-    "tokens": 3107
-  },
-  "function:evals/results/v4-weft-sonnet/snapshots/weft/t4/src/App.tsx:App": {
-    "lines": 174,
-    "tokens": 4636
-  },
-  "function:evals/results/v4-weft-sonnet/snapshots/weft/t5/src/App.tsx:App": {
-    "lines": 190,
-    "tokens": 5268
-  },
-  "function:evals/results/v4-weft-sonnet/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 210,
-    "tokens": 6546
-  },
-  "function:evals/results/v4q-haiku/snapshots/react/t3/src/App.tsx:App": {
-    "lines": 108,
-    "tokens": 2965
-  },
-  "function:evals/results/v4q-haiku/snapshots/react/t4/src/App.tsx:App": {
-    "lines": 143,
-    "tokens": 3719
-  },
-  "function:evals/results/v4q-haiku/snapshots/react/t5/src/App.tsx:App": {
-    "lines": 154,
-    "tokens": 4228
-  },
-  "function:evals/results/v4q-haiku/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 196,
-    "tokens": 5091
-  },
-  "function:evals/results/v4q-haiku/snapshots/solid/t2/src/App.tsx:App": {
-    "lines": 100,
-    "tokens": 1890
-  },
-  "function:evals/results/v4q-haiku/snapshots/solid/t3/src/App.tsx:App": {
-    "lines": 136,
-    "tokens": 2926
-  },
-  "function:evals/results/v4q-haiku/snapshots/solid/t4/src/App.tsx:App": {
-    "lines": 264,
-    "tokens": 5712
-  },
-  "function:evals/results/v4q-haiku/snapshots/solid/t5/src/App.tsx:App": {
-    "lines": 284,
-    "tokens": 6400
-  },
-  "function:evals/results/v4q-haiku/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 347,
-    "tokens": 7423
-  },
-  "function:evals/results/v4q-haiku/snapshots/solid/t6/src/App.tsx:App/anonymous": {
-    "lines": 95,
-    "tokens": 2692
-  },
-  "function:evals/results/v4q-haiku/snapshots/weft/t2/src/App.tsx:App": {
-    "lines": 81,
-    "tokens": 1786
-  },
-  "function:evals/results/v4q-haiku/snapshots/weft/t3/src/App.tsx:App": {
-    "lines": 109,
-    "tokens": 2866
-  },
-  "function:evals/results/v4q-haiku/snapshots/weft/t4/src/App.tsx:App": {
-    "lines": 202,
-    "tokens": 5234
-  },
-  "function:evals/results/v4q-haiku/snapshots/weft/t5/src/App.tsx:App": {
-    "lines": 216,
-    "tokens": 5884
-  },
-  "function:evals/results/v4q-haiku/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 255,
-    "tokens": 6708
-  },
-  "function:evals/results/v4q-sonnet/snapshots/react/t3/src/App.tsx:App": {
-    "lines": 89,
-    "tokens": 2700
-  },
-  "function:evals/results/v4q-sonnet/snapshots/react/t4/src/App.tsx:App": {
-    "lines": 124,
-    "tokens": 3626
-  },
-  "function:evals/results/v4q-sonnet/snapshots/react/t5/src/App.tsx:App": {
-    "lines": 142,
-    "tokens": 4342
-  },
-  "function:evals/results/v4q-sonnet/snapshots/react/t6/src/App.tsx:App": {
-    "lines": 179,
-    "tokens": 5461
-  },
-  "function:evals/results/v4q-sonnet/snapshots/solid/t2/src/App.tsx:App": {
-    "lines": 85,
-    "tokens": 1811
-  },
-  "function:evals/results/v4q-sonnet/snapshots/solid/t3/src/App.tsx:App": {
-    "lines": 122,
-    "tokens": 2976
-  },
-  "function:evals/results/v4q-sonnet/snapshots/solid/t4/src/App.tsx:App": {
-    "lines": 164,
-    "tokens": 3963
-  },
-  "function:evals/results/v4q-sonnet/snapshots/solid/t5/src/App.tsx:App": {
-    "lines": 197,
-    "tokens": 4752
-  },
-  "function:evals/results/v4q-sonnet/snapshots/solid/t6/src/App.tsx:App": {
-    "lines": 243,
-    "tokens": 6016
-  },
-  "function:evals/results/v4q-sonnet/snapshots/weft/t2/src/App.tsx:App": {
-    "lines": 102,
-    "tokens": 1967
-  },
-  "function:evals/results/v4q-sonnet/snapshots/weft/t3/src/App.tsx:App": {
-    "lines": 137,
-    "tokens": 3154
-  },
-  "function:evals/results/v4q-sonnet/snapshots/weft/t4/src/App.tsx:App": {
-    "lines": 179,
-    "tokens": 4292
-  },
-  "function:evals/results/v4q-sonnet/snapshots/weft/t5/src/App.tsx:App": {
-    "lines": 199,
-    "tokens": 5050
-  },
-  "function:evals/results/v4q-sonnet/snapshots/weft/t6/src/App.tsx:App": {
-    "lines": 178,
-    "tokens": 4861
-  },
-  "function:benchmarks/speed/shared/driver.js:expose": {
-    "lines": 118,
-    "tokens": 1997
   },
   "function:packages/cli/src/add.mjs:addAuth": {
     "lines": 87,
@@ -1635,6 +1259,190 @@
     "lines": 216,
     "tokens": 4557
   },
+  "function:packages/core/assets.mjs:assets": {
+    "lines": 126,
+    "tokens": 2614
+  },
+  "function:packages/core/node/css.mjs:emitGroups": {
+    "lines": 121,
+    "tokens": 3037
+  },
+  "function:packages/core/node/hydration.mjs:solve": {
+    "lines": 343,
+    "tokens": 8248
+  },
+  "function:packages/core/node/hydration.mjs:solve/timing": {
+    "lines": 98,
+    "tokens": 2609
+  },
+  "function:packages/core/node/matrix.mjs:buildMatrix": {
+    "lines": 240,
+    "tokens": 5199
+  },
+  "function:packages/core/node/matrix.mjs:explainGroup": {
+    "lines": 89,
+    "tokens": 2337
+  },
+  "function:packages/core/node/purge.mjs:pieces": {
+    "lines": 112,
+    "tokens": 2602
+  },
+  "function:packages/core/src/agent.ts:code": {
+    "lines": 83,
+    "tokens": 2966
+  },
+  "function:packages/core/src/async.ts:Boundary": {
+    "lines": 199,
+    "tokens": 4233
+  },
+  "function:packages/core/src/async.ts:resource": {
+    "lines": 129,
+    "tokens": 2296
+  },
+  "function:packages/core/src/dom.ts:For": {
+    "lines": 129,
+    "tokens": 2476
+  },
+  "function:packages/core/src/dom.ts:For/memo(callback)": {
+    "lines": 92,
+    "tokens": 1801
+  },
+  "function:packages/core/src/dom.ts:For/memo(callback)/untrack(callback)#2": {
+    "lines": 85,
+    "tokens": 1655
+  },
+  "function:packages/core/src/media-timeline.ts:timeline": {
+    "lines": 128,
+    "tokens": 1895
+  },
+  "function:packages/core/src/scope.ts:Instance.constructor": {
+    "lines": 102,
+    "tokens": 2318
+  },
+  "function:packages/core/src/ssr.ts:renderToStream": {
+    "lines": 112,
+    "tokens": 2326
+  },
+  "function:packages/core/src/style/css.ts:emitGroups": {
+    "lines": 121,
+    "tokens": 3251
+  },
+  "function:packages/core/src/style/matrix.ts:buildMatrix": {
+    "lines": 240,
+    "tokens": 5572
+  },
+  "function:packages/core/src/style/matrix.ts:explainGroup": {
+    "lines": 89,
+    "tokens": 2672
+  },
+  "function:packages/core/src/surface-text.ts:surfaceText": {
+    "lines": 136,
+    "tokens": 2698
+  },
+  "function:packages/core/src/surface.tsx:mountSurface": {
+    "lines": 254,
+    "tokens": 4695
+  },
+  "function:packages/core/src/surface.tsx:mountSurface/start": {
+    "lines": 188,
+    "tokens": 3378
+  },
+  "function:packages/core/src/surface.tsx:mountSurface/start/boot": {
+    "lines": 114,
+    "tokens": 1652
+  },
+  "function:packages/core/src/surface.tsx:mountSurface/start/boot/createRoot(callback)": {
+    "lines": 111,
+    "tokens": 1620
+  },
+  "function:packages/core/src/test-plugins.ts:busSuite": {
+    "lines": 88,
+    "tokens": 1894
+  },
+  "function:packages/core/src/test-plugins.ts:listSuite": {
+    "lines": 162,
+    "tokens": 4353
+  },
+  "function:packages/core/src/test-plugins.ts:textMeasureSuite": {
+    "lines": 135,
+    "tokens": 3493
+  },
+  "function:packages/core/test/async.test.tsx:describe(a Boundary directly in a conditional hole)": {
+    "lines": 82,
+    "tokens": 1391
+  },
+  "function:packages/core/test/back-end.test.tsx:describe(weft back end, step 2)": {
+    "lines": 112,
+    "tokens": 2951
+  },
+  "function:packages/core/test/back-end.test.tsx:describe(weft back end: basics)": {
+    "lines": 100,
+    "tokens": 2094
+  },
+  "function:packages/core/test/deps.test.ts:describe(per-key reads between plain objects)": {
+    "lines": 98,
+    "tokens": 1707
+  },
+  "function:packages/core/test/hmr.test.ts:describe(updates)": {
+    "lines": 178,
+    "tokens": 4950
+  },
+  "function:packages/core/test/media.test.tsx:describe(@weft-js/core/vite assets)": {
+    "lines": 165,
+    "tokens": 5369
+  },
+  "function:packages/core/test/ssr.test.ts:describe(round trips of every lowered construct: 0 misses, 0 DOM writes, then live)": {
+    "lines": 97,
+    "tokens": 2658
+  },
+  "function:packages/core/test/state.test.tsx:describe(defineState)": {
+    "lines": 138,
+    "tokens": 2668
+  },
+  "function:packages/core/test/state.test.tsx:describe(persist)": {
+    "lines": 123,
+    "tokens": 3115
+  },
+  "function:packages/core/test/style-matrix.test.ts:describe(buildMatrix)": {
+    "lines": 121,
+    "tokens": 3285
+  },
+  "function:packages/core/test/style.test.tsx:describe(CSS: only what call sites can produce)": {
+    "lines": 85,
+    "tokens": 2143
+  },
+  "function:packages/core/test/style.test.tsx:describe(compiler: call sites lower to attributes)": {
+    "lines": 118,
+    "tokens": 4349
+  },
+  "function:packages/core/test/surface.test.tsx:describe(dev checks on the live mirror)": {
+    "lines": 94,
+    "tokens": 2585
+  },
+  "function:packages/core/test/tabs.test.tsx:describe(sync: 'tabs')": {
+    "lines": 120,
+    "tokens": 2874
+  },
+  "function:packages/core/vite.mjs:agent": {
+    "lines": 133,
+    "tokens": 2619
+  },
+  "function:packages/core/vite.mjs:agent/configureServer": {
+    "lines": 85,
+    "tokens": 1754
+  },
+  "function:packages/core/vite.mjs:icons": {
+    "lines": 113,
+    "tokens": 2598
+  },
+  "function:packages/core/vite.mjs:styleGroups": {
+    "lines": 181,
+    "tokens": 3882
+  },
+  "function:packages/core/vite.mjs:weft": {
+    "lines": 98,
+    "tokens": 1930
+  },
   "function:packages/create/scripts/alt-runtimes.mjs:flow": {
     "lines": 82,
     "tokens": 2366
@@ -1652,8 +1460,8 @@
     "tokens": 2469
   },
   "function:packages/create/scripts/packed.mjs:pool(callback)": {
-    "lines": 104,
-    "tokens": 2901
+    "lines": 100,
+    "tokens": 2811
   },
   "function:packages/create/scripts/registry.mjs:serveRegistry": {
     "lines": 90,
@@ -1690,26 +1498,6 @@
   "function:packages/db/src/sql.ts:sqlSource": {
     "lines": 115,
     "tokens": 2872
-  },
-  "function:packages/warp-icons/compile.mjs:analyze": {
-    "lines": 296,
-    "tokens": 6762
-  },
-  "function:packages/warp-icons/compile.mjs:read": {
-    "lines": 172,
-    "tokens": 3877
-  },
-  "function:packages/warp-icons/compile.mjs:read/visit": {
-    "lines": 121,
-    "tokens": 2654
-  },
-  "function:packages/warp-icons/compile.mjs:rewrite": {
-    "lines": 97,
-    "tokens": 2619
-  },
-  "function:packages/warp-icons/scripts/raster.mjs:raw": {
-    "lines": 83,
-    "tokens": 1129
   },
   "function:packages/multiplayer/scripts/e2e-browsers.mjs:scenario": {
     "lines": 100,
@@ -2302,6 +2090,26 @@
   "function:packages/warp-core/test/trace.test.ts:test(field shell: a scripted session)": {
     "lines": 90,
     "tokens": 3470
+  },
+  "function:packages/warp-icons/compile.mjs:analyze": {
+    "lines": 296,
+    "tokens": 6762
+  },
+  "function:packages/warp-icons/compile.mjs:read": {
+    "lines": 172,
+    "tokens": 3877
+  },
+  "function:packages/warp-icons/compile.mjs:read/visit": {
+    "lines": 121,
+    "tokens": 2654
+  },
+  "function:packages/warp-icons/compile.mjs:rewrite": {
+    "lines": 97,
+    "tokens": 2619
+  },
+  "function:packages/warp-icons/scripts/raster.mjs:raw": {
+    "lines": 83,
+    "tokens": 1129
   },
   "function:packages/warp/scripts/a11y.mjs:a11y": {
     "lines": 175,
@@ -2915,190 +2723,6 @@
     "lines": 156,
     "tokens": 4178
   },
-  "function:packages/core/assets.mjs:assets": {
-    "lines": 126,
-    "tokens": 2614
-  },
-  "function:packages/core/node/css.mjs:emitGroups": {
-    "lines": 121,
-    "tokens": 3037
-  },
-  "function:packages/core/node/hydration.mjs:solve": {
-    "lines": 343,
-    "tokens": 8248
-  },
-  "function:packages/core/node/hydration.mjs:solve/timing": {
-    "lines": 98,
-    "tokens": 2609
-  },
-  "function:packages/core/node/matrix.mjs:buildMatrix": {
-    "lines": 240,
-    "tokens": 5199
-  },
-  "function:packages/core/node/matrix.mjs:explainGroup": {
-    "lines": 89,
-    "tokens": 2337
-  },
-  "function:packages/core/node/purge.mjs:pieces": {
-    "lines": 112,
-    "tokens": 2602
-  },
-  "function:packages/core/src/agent.ts:code": {
-    "lines": 83,
-    "tokens": 2966
-  },
-  "function:packages/core/src/async.ts:Boundary": {
-    "lines": 199,
-    "tokens": 4233
-  },
-  "function:packages/core/src/async.ts:resource": {
-    "lines": 129,
-    "tokens": 2296
-  },
-  "function:packages/core/src/dom.ts:For": {
-    "lines": 129,
-    "tokens": 2476
-  },
-  "function:packages/core/src/dom.ts:For/memo(callback)": {
-    "lines": 92,
-    "tokens": 1801
-  },
-  "function:packages/core/src/dom.ts:For/memo(callback)/untrack(callback)#2": {
-    "lines": 85,
-    "tokens": 1655
-  },
-  "function:packages/core/src/media-timeline.ts:timeline": {
-    "lines": 128,
-    "tokens": 1895
-  },
-  "function:packages/core/src/scope.ts:Instance.constructor": {
-    "lines": 102,
-    "tokens": 2318
-  },
-  "function:packages/core/src/ssr.ts:renderToStream": {
-    "lines": 112,
-    "tokens": 2326
-  },
-  "function:packages/core/src/style/css.ts:emitGroups": {
-    "lines": 121,
-    "tokens": 3251
-  },
-  "function:packages/core/src/style/matrix.ts:buildMatrix": {
-    "lines": 240,
-    "tokens": 5572
-  },
-  "function:packages/core/src/style/matrix.ts:explainGroup": {
-    "lines": 89,
-    "tokens": 2672
-  },
-  "function:packages/core/src/surface-text.ts:surfaceText": {
-    "lines": 136,
-    "tokens": 2698
-  },
-  "function:packages/core/src/surface.tsx:mountSurface": {
-    "lines": 254,
-    "tokens": 4695
-  },
-  "function:packages/core/src/surface.tsx:mountSurface/start": {
-    "lines": 188,
-    "tokens": 3378
-  },
-  "function:packages/core/src/surface.tsx:mountSurface/start/boot": {
-    "lines": 114,
-    "tokens": 1652
-  },
-  "function:packages/core/src/surface.tsx:mountSurface/start/boot/createRoot(callback)": {
-    "lines": 111,
-    "tokens": 1620
-  },
-  "function:packages/core/src/test-plugins.ts:busSuite": {
-    "lines": 88,
-    "tokens": 1894
-  },
-  "function:packages/core/src/test-plugins.ts:listSuite": {
-    "lines": 162,
-    "tokens": 4353
-  },
-  "function:packages/core/src/test-plugins.ts:textMeasureSuite": {
-    "lines": 135,
-    "tokens": 3493
-  },
-  "function:packages/core/test/async.test.tsx:describe(a Boundary directly in a conditional hole)": {
-    "lines": 82,
-    "tokens": 1391
-  },
-  "function:packages/core/test/back-end.test.tsx:describe(weft back end, step 2)": {
-    "lines": 112,
-    "tokens": 2951
-  },
-  "function:packages/core/test/back-end.test.tsx:describe(weft back end: basics)": {
-    "lines": 100,
-    "tokens": 2094
-  },
-  "function:packages/core/test/deps.test.ts:describe(per-key reads between plain objects)": {
-    "lines": 98,
-    "tokens": 1707
-  },
-  "function:packages/core/test/hmr.test.ts:describe(updates)": {
-    "lines": 178,
-    "tokens": 4950
-  },
-  "function:packages/core/test/media.test.tsx:describe(@weft-js/core/vite assets)": {
-    "lines": 165,
-    "tokens": 5369
-  },
-  "function:packages/core/test/ssr.test.ts:describe(round trips of every lowered construct: 0 misses, 0 DOM writes, then live)": {
-    "lines": 97,
-    "tokens": 2658
-  },
-  "function:packages/core/test/state.test.tsx:describe(defineState)": {
-    "lines": 138,
-    "tokens": 2668
-  },
-  "function:packages/core/test/state.test.tsx:describe(persist)": {
-    "lines": 123,
-    "tokens": 3115
-  },
-  "function:packages/core/test/style-matrix.test.ts:describe(buildMatrix)": {
-    "lines": 121,
-    "tokens": 3285
-  },
-  "function:packages/core/test/style.test.tsx:describe(CSS: only what call sites can produce)": {
-    "lines": 85,
-    "tokens": 2143
-  },
-  "function:packages/core/test/style.test.tsx:describe(compiler: call sites lower to attributes)": {
-    "lines": 118,
-    "tokens": 4349
-  },
-  "function:packages/core/test/surface.test.tsx:describe(dev checks on the live mirror)": {
-    "lines": 94,
-    "tokens": 2585
-  },
-  "function:packages/core/test/tabs.test.tsx:describe(sync: 'tabs')": {
-    "lines": 120,
-    "tokens": 2874
-  },
-  "function:packages/core/vite.mjs:agent": {
-    "lines": 133,
-    "tokens": 2619
-  },
-  "function:packages/core/vite.mjs:agent/configureServer": {
-    "lines": 85,
-    "tokens": 1754
-  },
-  "function:packages/core/vite.mjs:icons": {
-    "lines": 113,
-    "tokens": 2598
-  },
-  "function:packages/core/vite.mjs:styleGroups": {
-    "lines": 181,
-    "tokens": 3882
-  },
-  "function:packages/core/vite.mjs:weft": {
-    "lines": 98,
-    "tokens": 1930
-  },
   "function:scripts/quality/packed-policy.test.mjs:test(packed pnpm installs keep the age policy and use transitive tarball overrides)": {
     "lines": 82,
     "tokens": 2037
@@ -3112,12 +2736,12 @@
     "tokens": 2221
   },
   "function:site/scripts/toolkit.mjs:readToolkit": {
-    "lines": 133,
-    "tokens": 3363
+    "lines": 128,
+    "tokens": 3216
   },
   "function:site/src/components/Arena.tsx:Arena": {
     "lines": 178,
-    "tokens": 5307
+    "tokens": 5305
   },
   "function:site/src/components/ComponentPage.tsx:ComponentPage": {
     "lines": 178,
@@ -3226,17 +2850,5 @@
   "function:site/test/qa.mjs:check(callback)#7": {
     "lines": 82,
     "tokens": 2340
-  },
-  "function:spikes/native/js/src/intents.ts:AppTabs": {
-    "lines": 113,
-    "tokens": 1966
-  },
-  "function:spikes/og/card/index.mjs:createCardRenderer": {
-    "lines": 116,
-    "tokens": 2323
-  },
-  "function:spikes/og/cards/Avatar.tsx:AvatarCard": {
-    "lines": 84,
-    "tokens": 1494
   }
 }
