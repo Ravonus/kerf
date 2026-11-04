@@ -190,11 +190,12 @@ export function Orders(
     orders: { id: string; total: number; open: boolean }[]
   },
 ) {
+  const { orders } = props
   const showAll = state(false)
   const shown = derived(
     () => (showAll.value
-      ? props.orders
-      : props.orders.filter((o) => o.open))
+      ? orders
+      : orders.filter((o) => o.open))
   )
   const sum = derived(() =>
     shown.value.reduce((n, o) => n + o.total, 0)

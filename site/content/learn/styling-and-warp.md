@@ -43,12 +43,13 @@ const badge = group('stock-badge', {
 })
 
 export function Stock(props: { count: number }) {
+  const { count } = props
   const level = derived(() =>
-    props.count === 0 ? 'none' : props.count < 5 ? 'low' : 'plenty'
+    count === 0 ? 'none' : count < 5 ? 'low' : 'plenty'
   )
   return (
     <span {...badge({ level: level.value })}>
-      {props.count} left
+      {count} left
     </span>
   )
 }
