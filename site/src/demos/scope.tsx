@@ -1,11 +1,18 @@
-import { defineState, derived, state } from '@weft-js/core'
+import {
+  defineState,
+  derived,
+  state,
+} from '@weft-js/core'
 import { Badge, Button, Card } from '@weft-js/warp'
 
-// One scope of shared state. Any component can import it; it is set up the first time something reads it.
+// Any component can import this shared state. It is
+// set up the first time something reads it.
 const basket = defineState('learn-basket', () => {
   const items = state<string[]>([])
   const count = derived(() => items.value.length)
-  return { items, count, add: (name: string) => (items.value = [...items.value, name]) }
+  const add = (name: string) =>
+    (items.value = [...items.value, name])
+  return { items, count, add }
 })
 
 function Header() {
@@ -22,7 +29,11 @@ function Shelf() {
       <Button size="sm" onClick={() => basket.add('Tea')}>
         Add tea
       </Button>
-      <Button size="sm" emphasis="outline" onClick={() => basket.add('Cake')}>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => basket.add('Cake')}
+      >
         Add cake
       </Button>
     </p>
@@ -34,7 +45,9 @@ export default function Shop() {
     <Card title="Two components, one basket">
       <Header />
       <Shelf />
-      <p>{basket.items.value.join(', ') || 'Nothing yet'}</p>
+      <p>
+        {basket.items.value.join(', ') || 'Nothing yet'}
+      </p>
     </Card>
   )
 }
