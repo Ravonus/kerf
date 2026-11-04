@@ -443,7 +443,9 @@ export function Compose() {
       <Button
         type="submit"
         disabled={!text.value.trim() || left.value < 0}
-      >Post</Button>
+      >
+        Post
+      </Button>
     </form>
   )
 }

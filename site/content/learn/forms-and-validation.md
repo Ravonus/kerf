@@ -101,7 +101,9 @@ export default function Feedback() {
             <Button
               type="submit"
               loading={form.pending.value}
-            >Send</Button>
+            >
+              Send
+            </Button>
           </>
         )}
       </Form>
@@ -297,7 +299,9 @@ export function AddTodo(props: { onAdded: () => void }) {
           <Button
             type="submit"
             loading={form.pending.value}
-          >Add</Button>
+          >
+            Add
+          </Button>
         </>
       )}
     </Form>
@@ -329,7 +333,9 @@ export function PlainAdd() {
           <button
             type="submit"
             disabled={form.pending.value}
-          >Add</button>
+          >
+            Add
+          </button>
         </>
       )}
     </Form>
