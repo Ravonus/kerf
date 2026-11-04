@@ -12,8 +12,7 @@ export const localPackages = (root) => (name) =>
   `file:${join(root, 'packages', name.replace('@weft-js/', ''))}`
 
 /** Write exit evidence with stable indentation and a final newline. */
-export const writeJson = (file, value) =>
-  writeFileSync(file, JSON.stringify(value, null, 2) + '\n')
+export const writeJson = (file, value) => writeFileSync(file, JSON.stringify(value, null, 2) + '\n')
 
 /** Create command runners with the gate's working directory and output budget. */
 export function commands(dir, maxBuffer, mergeEnv = false) {
