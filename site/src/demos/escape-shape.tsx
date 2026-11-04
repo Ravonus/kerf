@@ -12,10 +12,20 @@ const loadPosts = () =>
           {
             id: 1,
             title: 'Components run once',
-            body: 'And the compiler wires each read to the DOM.',
+            body:
+              'And the compiler wires each read ' +
+              'to the DOM.',
           },
-          { id: 2, title: 'State is a box', body: 'Read and write it through .value.' },
-          { id: 3, title: 'Effects are rare', body: 'Most things are derived.' },
+          {
+            id: 2,
+            title: 'State is a box',
+            body: 'Read and write it through .value.',
+          },
+          {
+            id: 3,
+            title: 'Effects are rare',
+            body: 'Most things are derived.',
+          },
         ]),
       1200,
     )
@@ -40,13 +50,14 @@ export default function Posts() {
     <Card title="A skeleton made from the markup">
       <Switch
         checked={shown.value}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-          (shown.value = e.currentTarget.checked)
-        }
+        onChange={(
+          e: Event & { currentTarget: HTMLInputElement },
+        ) => (shown.value = e.currentTarget.checked)}
       >
         Show the feed
       </Switch>
-      {/* The compiler writes a placeholder copy of Feed; the Boundary shows it until the posts arrive. */}
+      {/* The compiler writes a placeholder copy of Feed;
+          Boundary shows it until the posts arrive. */}
       {shown.value && (
         <Boundary pending="shape">
           <Feed />
