@@ -1,10 +1,16 @@
 import { Card } from '@weft-js/warp'
 
-function Greeting(props: { name: string; visits: number }) {
+function Greeting(props: {
+  name: string
+  visits: number
+}) {
+  const { name, visits } = props
   return (
     <p>
-      Hello, <strong>{props.name}</strong>.{' '}
-      {props.visits > 1 ? `Visit ${props.visits}.` : 'First visit.'}
+      Hello, <strong>{name}</strong>.{' '}
+      {visits > 1
+        ? `Visit ${visits}.`
+        : 'First visit.'}
     </p>
   )
 }

@@ -7,7 +7,10 @@ export default function Notes() {
   const add = () => {
     const text = draft.value.trim()
     if (!text) return
-    notes.value = [...notes.value, { id: notes.value.length, text }]
+    notes.value = [
+      ...notes.value,
+      { id: notes.value.length, text },
+    ]
     draft.value = ''
   }
   return (
@@ -16,7 +19,9 @@ export default function Notes() {
         aria-label="New note"
         placeholder="Type, then press Enter"
         value={draft.value}
-        onInput={(e) => (draft.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (draft.value = e.currentTarget.value)
+        }
         onKeyDown={(e) => {
           if (e.key === 'Enter') add()
         }}
