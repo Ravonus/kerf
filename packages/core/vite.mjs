@@ -530,7 +530,7 @@ function icons() {
                   .join('\n'),
               )
           }
-          if (id.includes('node_modules') || /packages\/(warp-icons|warp)\/src\//.test(id)) return null
+          if (/node_modules|packages\/(warp-icons|warp)\/src\//.test(id)) return null
           const p = await load(this, id)
           return p ? p.rewrite(code, id.replace(/\?.*$/, ''), p.catalog) : null
         },
