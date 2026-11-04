@@ -72,10 +72,10 @@ Steps marked ∥ can each run in their own session or worktree at the same time.
 
 Make `main` trustworthy, and make the rules above automatic before anyone starts moving code.
 
-**Status:** in progress. The guardrails are implemented on `sprint/S0`; the landing
-template fix is authorized. The full checks and two-green-main-run exit remain pending.
+**Status:** implemented. The quality and runtime workflows pass with formatting, shrinking
+length baselines and warning-only sample widths enforced.
 
-- [ ] Get CI green. Install Firefox and WebKit in `quality.yml`, allowlist the deploy fixture in
+- [x] Get CI green. Install Firefox and WebKit in `quality.yml`, allowlist the deploy fixture in
       `.gitleaks.toml`, and fix `runtime-matrix.yml`. Its header still says there's no CI.
 - [x] Add `oxfmt` with `printWidth: 100`, set `rustfmt` to `max_width = 100`, and format the whole
       repo in one commit. Add that commit's hash to `.git-blame-ignore-revs`.
@@ -363,7 +363,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 
 ## Status
 
-- Sprint 0: in progress; guardrails are implemented on `sprint/S0`, with CI verification pending
+- Sprint 0: guardrails implemented; formatting, lengths, sample warnings and CI are enforced
 - Sprint 1: not started
 - Sprint 2: not started
 - Sprint 3: not started
