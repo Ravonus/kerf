@@ -1,13 +1,27 @@
 import { derived, state } from '@weft-js/core'
-import { Alert, Button, Card, Textarea } from '@weft-js/warp'
+import {
+  Alert,
+  Button,
+  Card,
+  Textarea,
+} from '@weft-js/warp'
 
 type Status = 'typing' | 'submitting' | 'success'
 
-// Pretends to ask a server: it waits, then accepts "lima" and refuses anything else.
+// Pretends to ask a server: it waits, then accepts
+// "lima" and refuses anything else.
 const check = (answer: string) =>
   new Promise<void>((resolve, reject) => {
     const right = answer.trim().toLowerCase() === 'lima'
-    setTimeout(() => (right ? resolve() : reject(new Error('Good guess, but no. Try again.'))), 800)
+    setTimeout(
+      () =>
+        right
+          ? resolve()
+          : reject(
+              new Error('Good guess, but no. Try again.'),
+            ),
+      800,
+    )
   })
 
 export default function Quiz() {
@@ -24,8 +38,14 @@ export default function Quiz() {
       status.value = 'success'
     } catch (err) {
       status.value = 'typing'
-      error.value = err instanceof Error ? err.message : String(err)
+      error.value =
+        err instanceof Error ? err.message : String(err)
     }
+  }
+
+  const updateAnswer = (value: string) => {
+    answer.value = value
+    error.value = null
   }
 
   return (
@@ -42,12 +62,15 @@ export default function Quiz() {
             value={answer.value}
             disabled={status.value === 'submitting'}
             error={error.value}
-            onInput={(e) => {
-              answer.value = e.currentTarget.value
-              error.value = null
-            }}
+            onInput={(e) =>
+              updateAnswer(e.currentTarget.value)
+            }
           />
-          <Button type="submit" loading={status.value === 'submitting'} disabled={empty.value}>
+          <Button
+            type="submit"
+            loading={status.value === 'submitting'}
+            disabled={empty.value}
+          >
             Submit
           </Button>
         </form>

@@ -6,10 +6,16 @@ const PRICE = 18
 export default function Tea() {
   const qty = state(2)
   const code = state('')
-  // A chain: total reads subtotal and discount, which read the boxes.
+  // Total reads subtotal and discount, which read
+  // the boxes.
   const subtotal = derived(() => PRICE * qty.value)
-  const discount = derived(() => (code.value.trim().toUpperCase() === 'TEA10' ? 0.1 : 0))
-  const total = derived(() => subtotal.value * (1 - discount.value))
+  const discount = derived(() => {
+    const entered = code.value.trim().toUpperCase()
+    return entered === 'TEA10' ? 0.1 : 0
+  })
+  const total = derived(
+    () => subtotal.value * (1 - discount.value),
+  )
   return (
     <Card title="Loose-leaf tea">
       <p>
@@ -19,7 +25,12 @@ export default function Tea() {
         <Button size="sm" onClick={() => qty.value++}>
           Add one
         </Button>
-        <Button size="sm" emphasis="ghost" disabled={qty.value <= 1} onClick={() => qty.value--}>
+        <Button
+          size="sm"
+          emphasis="ghost"
+          disabled={qty.value <= 1}
+          onClick={() => qty.value--}
+        >
           Remove one
         </Button>
       </Row>
@@ -27,7 +38,9 @@ export default function Tea() {
         label="Discount code"
         hint="Try TEA10"
         value={code.value}
-        onInput={(e) => (code.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (code.value = e.currentTarget.value)
+        }
       />
       <p>
         <strong>Total ${total.value.toFixed(2)}</strong>

@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { Button, Card, Input, Spinner } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Input,
+  Spinner,
+} from '@weft-js/warp'
 
 // Stands in for a request to a server.
 const send = (email: string) =>
@@ -15,10 +20,15 @@ export default function Newsletter() {
     joined.value = await send(email)
     sending.value = false
   }
-  const submit = (e: SubmitEvent & { currentTarget: HTMLFormElement }) => {
-    // Without this the browser would post the form and load a new page.
+  const submit = (
+    e: SubmitEvent & { currentTarget: HTMLFormElement },
+  ) => {
+    // Without this the browser would post the form
+    // and load a new page.
     e.preventDefault()
-    const email = new FormData(e.currentTarget).get('email')
+    const email = new FormData(e.currentTarget).get(
+      'email',
+    )
     if (typeof email === 'string') void join(email)
   }
   return (
@@ -27,7 +37,13 @@ export default function Newsletter() {
         <p>Thanks, {joined.value} is on the list.</p>
       ) : (
         <form onSubmit={submit}>
-          <Input label="Email" name="email" type="email" required disabled={sending.value} />
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            required
+            disabled={sending.value}
+          />
           <Button type="submit" disabled={sending.value}>
             {sending.value ? <Spinner /> : 'Join'}
           </Button>
