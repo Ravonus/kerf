@@ -139,7 +139,9 @@ only its own entry.
 Third, the row reads and writes its entry:
 
 ```tsx
-const add = () => cart.set(d => { d[product.id] = (d[product.id] ?? 0) + 1 })
+const add = () => cart.set(d => {
+  d[product.id] = (d[product.id] ?? 0) + 1
+})
 // …
 <Badge count>{cart.get(product.id) ?? 0}</Badge>
 ```
@@ -195,7 +197,9 @@ The two buttons share one function:
 
 ```tsx
 const change = (by: number) =>
-  cart.set(d => { d[product.id] = Math.max(0, (d[product.id] ?? 0) + by) })
+  cart.set(d => {
+    d[product.id] = Math.max(0, (d[product.id] ?? 0) + by)
+  })
 ```
 
 `Math.max(0, …)` keeps a count from going below zero, and `disabled={qty.value === 0}` turns the minus button off at
@@ -211,11 +215,17 @@ Now the shop should say what the order costs. Shipping is $4, free from $40, and
 All four new values are `derived`, in `Shop`:
 
 ```tsx
-const items = derived(() => PRODUCTS.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0))
-const subtotal = derived(() =>
-  PRODUCTS.reduce((sum, p) => sum + (cart.get(p.id) ?? 0) * p.price, 0),
+const items = derived(() =>
+  PRODUCTS.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0),
 )
-const shipping = derived(() => (subtotal.value === 0 || subtotal.value >= 40 ? 0 : 4))
+const subtotal = derived(() =>
+  PRODUCTS.reduce(
+    (sum, p) => sum + (cart.get(p.id) ?? 0) * p.price, 0,
+  ),
+)
+const shipping = derived(() =>
+  subtotal.value === 0 || subtotal.value >= 40 ? 0 : 4,
+)
 const total = derived(() => subtotal.value + shipping.value)
 ```
 
@@ -248,7 +258,11 @@ The search text is state, and the input writes it:
 ```tsx
 const search = state('')
 // …
-<Input label="Search" value={search.value} onInput={e => (search.value = e.currentTarget.value)} />
+<Input
+  label="Search"
+  value={search.value}
+  onInput={e => (search.value = e.currentTarget.value)}
+/>
 ```
 
 `Input` is warp's text field. `value={search.value}` shows the state, and `onInput` writes it on every key press. The two
@@ -325,7 +339,12 @@ cart is empty: `disabled={items.value === 0}`.
 The receipt shows when there is one:
 
 ```tsx
-{receipt.value && <p>Thanks! ${receipt.value.total} paid. The receipt goes to {receipt.value.email}.</p>}
+{receipt.value && (
+  <p>
+    Thanks! ${receipt.value.total} paid. The receipt goes to{' '}
+    {receipt.value.email}.
+  </p>
+)}
 ```
 
 `receipt.value && …` is safe here because the left side is an object or `null`, never a number.
@@ -358,8 +377,9 @@ so they can never disagree about what shipping costs:
 
 ```ts
 // src/shipping.ts
-/** Shipping in dollars for a subtotal: free from $40, and nothing for an empty cart. */
-export const shippingFor = (subtotal: number) => (subtotal === 0 || subtotal >= 40 ? 0 : 4)
+/** Shipping is free from $40 and for an empty cart. */
+export const shippingFor = (subtotal: number) =>
+  subtotal === 0 || subtotal >= 40 ? 0 : 4
 ```
 
 A plain module like this is safe to import anywhere. The ones that must stay on the server are under `src/server/`.
@@ -406,20 +426,40 @@ import { Button, Card, Input } from '@weft-js/warp'
 import { listProducts, type Product } from '#/server/shop'
 import { shippingFor } from '#/shipping'
 
-export const meta: Meta = { title: 'Shop', description: 'Coffee beans and the gear to brew them.' }
+export const meta: Meta = {
+  title: 'Shop',
+  description: 'Coffee beans and the gear to brew them.',
+}
 
 type Cart = Record<string, number>
 
-function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) {
+function ProductRow(
+  { product, cart }: { product: Product; cart: State<Cart> },
+) {
   const qty = derived(() => cart.get(product.id) ?? 0)
   const change = (by: number) =>
-    cart.set(d => { d[product.id] = Math.max(0, (d[product.id] ?? 0) + by) })
+    cart.set(d => {
+      d[product.id] = Math.max(0, (d[product.id] ?? 0) + by)
+    })
   return (
     <p>
       {product.name} <strong>${product.price}</strong>
-      <Button size="sm" emphasis="outline" disabled={qty.value === 0} onClick={() => change(-1)}>−</Button>
+      <Button
+        size="sm"
+        emphasis="outline"
+        disabled={qty.value === 0}
+        onClick={() => change(-1)}
+      >
+        −
+      </Button>
       <strong> {qty.value} </strong>
-      <Button size="sm" emphasis="outline" onClick={() => change(1)}>+</Button>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => change(1)}
+      >
+        +
+      </Button>
     </p>
   )
 }
@@ -435,9 +475,13 @@ export default function Shop() {
     const word = search.value.trim().toLowerCase()
     return all.value.filter(p => p.name.toLowerCase().includes(word))
   })
-  const items = derived(() => all.value.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0))
+  const items = derived(() =>
+    all.value.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0),
+  )
   const subtotal = derived(() =>
-    all.value.reduce((sum, p) => sum + (cart.get(p.id) ?? 0) * p.price, 0),
+    all.value.reduce(
+      (sum, p) => sum + (cart.get(p.id) ?? 0) * p.price, 0,
+    ),
   )
   const shipping = derived(() => shippingFor(subtotal.value))
   const total = derived(() => subtotal.value + shipping.value)
@@ -448,17 +492,42 @@ export default function Shop() {
   }
   return (
     <Card title="The shop">
-      <Input label="Search" value={search.value} onInput={e => (search.value = e.currentTarget.value)} />
+      <Input
+        label="Search"
+        value={search.value}
+        onInput={e => (search.value = e.currentTarget.value)}
+      />
       {shown.value.map(p => (
-        <ProductRow key={p.id} product={p} cart={cart} />
+        <ProductRow
+          key={p.id}
+          product={p}
+          cart={cart}
+        />
       ))}
-      <p>{items.value} items · subtotal ${subtotal.value} · shipping ${shipping.value}</p>
+      <p>
+        {items.value} items · subtotal ${subtotal.value}
+        {' '}· shipping ${shipping.value}
+      </p>
       <p><strong>Total ${total.value}</strong></p>
       <form onSubmit={checkout}>
-        <Input label="Email for the receipt" type="email" required value={email.value} onInput={e => (email.value = e.currentTarget.value)} />
-        <Button type="submit" disabled={items.value === 0}>Place order</Button>
+        <Input
+          label="Email for the receipt"
+          type="email"
+          required
+          value={email.value}
+          onInput={e => (email.value = e.currentTarget.value)}
+        />
+        <Button type="submit" disabled={items.value === 0}>
+          Place order
+        </Button>
       </form>
-      {receipt.value && <p>Thanks! ${receipt.value.total} paid. The receipt goes to {receipt.value.email}.</p>}
+      {receipt.value && (
+        <p>
+          Thanks! ${receipt.value.total} paid.{' '}
+          The receipt goes to{' '}
+          {receipt.value.email}.
+        </p>
+      )}
     </Card>
   )
 }
@@ -489,7 +558,10 @@ when it's ready. [Async and loading states](/learn/async-and-loading) shows how.
 ```tsx
 import type { Meta } from '@weft-js/start'
 
-export const meta: Meta = { title: 'Shop', description: 'Coffee beans and the gear to brew them.' }
+export const meta: Meta = {
+  title: 'Shop',
+  description: 'Coffee beans and the gear to brew them.',
+}
 ```
 
 `meta` sets the page's title and description. It's read on the server and never reaches the browser's code. Give every
@@ -547,11 +619,19 @@ export const placeOrder = mutation({
     let subtotal = 0
     for (const [id, qty] of Object.entries(input.lines)) {
       const product = PRODUCTS.find(p => p.id === id)
-      if (!product) throw new FnError({ message: `We don't sell ${id}.` }, 400)
+      if (!product) {
+        throw new FnError({ message: `We don't sell ${id}.` }, 400)
+      }
       subtotal += product.price * qty
     }
-    if (subtotal === 0) throw new FnError({ message: 'Your cart is empty.' }, 400)
-    return { order: crypto.randomUUID().slice(0, 8), email: input.email, total: subtotal + shippingFor(subtotal) }
+    if (subtotal === 0) {
+      throw new FnError({ message: 'Your cart is empty.' }, 400)
+    }
+    return {
+      order: crypto.randomUUID().slice(0, 8),
+      email: input.email,
+      total: subtotal + shippingFor(subtotal),
+    }
   },
 })
 ```
@@ -572,24 +652,48 @@ And the page: the handler calls the mutation, and two new lines show what's happ
 import { derived, state, type State } from '@weft-js/core'
 import type { Meta } from '@weft-js/start'
 import { Button, Card, Input } from '@weft-js/warp'
-import { listProducts, placeOrder, type Product } from '#/server/shop'
+import {
+  listProducts,
+  placeOrder,
+  type Product,
+} from '#/server/shop'
 import { shippingFor } from '#/shipping'
 
-export const meta: Meta = { title: 'Shop', description: 'Coffee beans and the gear to brew them.' }
+export const meta: Meta = {
+  title: 'Shop',
+  description: 'Coffee beans and the gear to brew them.',
+}
 
 type Cart = Record<string, number>
 type Receipt = { order: string; email: string; total: number }
 
-function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) {
+function ProductRow(
+  { product, cart }: { product: Product; cart: State<Cart> },
+) {
   const qty = derived(() => cart.get(product.id) ?? 0)
   const change = (by: number) =>
-    cart.set(d => { d[product.id] = Math.max(0, (d[product.id] ?? 0) + by) })
+    cart.set(d => {
+      d[product.id] = Math.max(0, (d[product.id] ?? 0) + by)
+    })
   return (
     <p>
       {product.name} <strong>${product.price}</strong>
-      <Button size="sm" emphasis="outline" disabled={qty.value === 0} onClick={() => change(-1)}>−</Button>
+      <Button
+        size="sm"
+        emphasis="outline"
+        disabled={qty.value === 0}
+        onClick={() => change(-1)}
+      >
+        −
+      </Button>
       <strong> {qty.value} </strong>
-      <Button size="sm" emphasis="outline" onClick={() => change(1)}>+</Button>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => change(1)}
+      >
+        +
+      </Button>
     </p>
   )
 }
@@ -606,9 +710,13 @@ export default function Shop() {
     const word = search.value.trim().toLowerCase()
     return all.value.filter(p => p.name.toLowerCase().includes(word))
   })
-  const items = derived(() => all.value.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0))
+  const items = derived(() =>
+    all.value.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0),
+  )
   const subtotal = derived(() =>
-    all.value.reduce((sum, p) => sum + (cart.get(p.id) ?? 0) * p.price, 0),
+    all.value.reduce(
+      (sum, p) => sum + (cart.get(p.id) ?? 0) * p.price, 0,
+    ),
   )
   const shipping = derived(() => shippingFor(subtotal.value))
   const total = derived(() => subtotal.value + shipping.value)
@@ -616,26 +724,59 @@ export default function Shop() {
     e.preventDefault()
     problem.value = ''
     try {
-      receipt.value = await placeOrder({ email: email.value, lines: cart.value })
+      receipt.value = await placeOrder({
+        email: email.value,
+        lines: cart.value,
+      })
       cart.value = {}
     } catch (err) {
-      problem.value = err instanceof Error ? err.message : 'The order did not go through.'
+      problem.value = err instanceof Error
+        ? err.message
+        : 'The order did not go through.'
     }
   }
   return (
     <Card title="The shop">
-      <Input label="Search" value={search.value} onInput={e => (search.value = e.currentTarget.value)} />
+      <Input
+        label="Search"
+        value={search.value}
+        onInput={e => (search.value = e.currentTarget.value)}
+      />
       {shown.value.map(p => (
-        <ProductRow key={p.id} product={p} cart={cart} />
+        <ProductRow
+          key={p.id}
+          product={p}
+          cart={cart}
+        />
       ))}
-      <p>{items.value} items · subtotal ${subtotal.value} · shipping ${shipping.value}</p>
+      <p>
+        {items.value} items · subtotal ${subtotal.value}
+        {' '}· shipping ${shipping.value}
+      </p>
       <p><strong>Total ${total.value}</strong></p>
       <form onSubmit={checkout}>
-        <Input label="Email for the receipt" type="email" required value={email.value} onInput={e => (email.value = e.currentTarget.value)} />
-        <Button type="submit" loading={placeOrder.pending.value} disabled={items.value === 0}>Place order</Button>
+        <Input
+          label="Email for the receipt"
+          type="email"
+          required
+          value={email.value}
+          onInput={e => (email.value = e.currentTarget.value)}
+        />
+        <Button
+          type="submit"
+          loading={placeOrder.pending.value}
+          disabled={items.value === 0}
+        >
+          Place order
+        </Button>
       </form>
       {problem.value && <p role="alert">{problem.value}</p>}
-      {receipt.value && <p>Thanks! Order {receipt.value.order}: ${receipt.value.total} paid. The receipt goes to {receipt.value.email}.</p>}
+      {receipt.value && (
+        <p>
+          Thanks! Order {receipt.value.order}: ${receipt.value.total}
+          {' '}paid. The receipt goes to {receipt.value.email}.
+        </p>
+      )}
     </Card>
   )
 }
@@ -644,7 +785,10 @@ export default function Shop() {
 Here is what changed.
 
 ```tsx
-receipt.value = await placeOrder({ email: email.value, lines: cart.value })
+receipt.value = await placeOrder({
+  email: email.value,
+  lines: cart.value,
+})
 ```
 
 A mutation is called like an async function. It sends the input to the server, waits, and gives back what `run`
@@ -653,7 +797,9 @@ own total is still there, for showing; the server's is the one that counts.
 
 ```tsx
 } catch (err) {
-  problem.value = err instanceof Error ? err.message : 'The order did not go through.'
+  problem.value = err instanceof Error
+    ? err.message
+    : 'The order did not go through.'
 }
 ```
 
@@ -727,7 +873,12 @@ Add a button under the totals that empties the cart in one press. It should be o
 Start from the Step 6 demo.
 :::solution
 ```tsx
-<Button emphasis="ghost" tone="neutral" disabled={items.value === 0} onClick={() => (cart.value = {})}>
+<Button
+  emphasis="ghost"
+  tone="neutral"
+  disabled={items.value === 0}
+  onClick={() => (cart.value = {})}
+>
   Empty the cart
 </Button>
 ```
@@ -742,7 +893,9 @@ line once shipping is free.
 ```tsx
 const toFree = derived(() => Math.max(0, 40 - subtotal.value))
 // …in the markup:
-{subtotal.value > 0 && toFree.value > 0 && <p>Add ${toFree.value} more for free shipping.</p>}
+{subtotal.value > 0 && toFree.value > 0 && (
+  <p>Add ${toFree.value} more for free shipping.</p>
+)}
 ```
 `toFree` is one more derived value, so it can't disagree with `shipping`. Both sides of each `&&` are comparisons, so a
 zero never shows up on the page.
@@ -760,9 +913,15 @@ import { FnError, mutation, query } from '@weft-js/start'
 import { z } from 'zod'
 import { shippingFor } from '#/shipping'
 
-export type Product = { id: string; name: string; price: number; stock: number }
+export type Product = {
+  id: string
+  name: string
+  price: number
+  stock: number
+}
 
-// A real shop keeps these in a table. In memory, they last until the server restarts.
+// A real shop keeps these in a table. In memory, they last
+// until the server restarts.
 const PRODUCTS: Product[] = [
   { id: 'beans', name: 'House beans, 250 g', price: 12, stock: 20 },
   { id: 'filters', name: 'Paper filters', price: 5, stock: 50 },
@@ -782,20 +941,33 @@ export const placeOrder = mutation({
   }),
   invalidates: ['products'],
   run: ({ input }) => {
-    const lines = Object.entries(input.lines).filter(([, qty]) => qty > 0)
+    const lines = Object.entries(input.lines)
+      .filter(([, qty]) => qty > 0)
     let subtotal = 0
     for (const [id, qty] of lines) {
       const product = PRODUCTS.find(p => p.id === id)
-      if (!product) throw new FnError({ message: `We don't sell ${id}.` }, 400)
-      if (qty > product.stock) throw new FnError({ message: `Only ${product.stock} of ${product.name} left.` }, 409)
+      if (!product) {
+        throw new FnError({ message: `We don't sell ${id}.` }, 400)
+      }
+      if (qty > product.stock) {
+        throw new FnError({
+          message: `Only ${product.stock} of ${product.name} left.`,
+        }, 409)
+      }
       subtotal += product.price * qty
     }
-    if (subtotal === 0) throw new FnError({ message: 'Your cart is empty.' }, 400)
+    if (subtotal === 0) {
+      throw new FnError({ message: 'Your cart is empty.' }, 400)
+    }
     for (const [id, qty] of lines) {
       const product = PRODUCTS.find(p => p.id === id)
       if (product) product.stock -= qty
     }
-    return { order: crypto.randomUUID().slice(0, 8), email: input.email, total: subtotal + shippingFor(subtotal) }
+    return {
+      order: crypto.randomUUID().slice(0, 8),
+      email: input.email,
+      total: subtotal + shippingFor(subtotal),
+    }
   },
 })
 ```
