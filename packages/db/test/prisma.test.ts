@@ -20,8 +20,8 @@ let prisma: Client
 
 beforeAll(async () => {
   const env = { ...process.env, DATABASE_URL: url, PRISMA_HIDE_UPDATE_MESSAGE: '1' }
-  execFileSync('npx', ['prisma', 'generate'], { env, stdio: 'pipe' })
-  execFileSync('npx', ['prisma', 'db', 'push'], { env, stdio: 'pipe' })
+  execFileSync('pnpm', ['exec', 'prisma', 'generate'], { env, stdio: 'pipe' })
+  execFileSync('pnpm', ['exec', 'prisma', 'db', 'push'], { env, stdio: 'pipe' })
   const { PrismaClient } = await import('./generated/client')
   const { PrismaLibSql } = await import('@prisma/adapter-libsql')
   prisma = new PrismaClient({ adapter: new PrismaLibSql({ url }) }) as unknown as Client

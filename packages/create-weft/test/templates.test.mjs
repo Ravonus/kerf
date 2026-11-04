@@ -240,11 +240,11 @@ it('the bin takes --template, and the tarball carries templates/', () => {
     expect.arrayContaining(['.schema-hash', '0000_landing.sql', 'meta']),
   )
   const packed = JSON.parse(
-    spawnSync('npm', ['pack', '--dry-run', '--json'], {
+    spawnSync('pnpm', ['pack', '--dry-run', '--json'], {
       cwd: fileURLToPath(here),
       encoding: 'utf8',
     }).stdout,
-  )[0].files.map((f) => f.path)
+  ).files.map((f) => f.path)
   expect(packed).toEqual(
     expect.arrayContaining([
       'templates/landing/template.json',

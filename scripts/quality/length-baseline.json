@@ -1548,12 +1548,12 @@
     "tokens": 3224
   },
   "function:packages/cli/test/check.test.mjs:describe(project view: cross-file W014)": {
-    "lines": 102,
-    "tokens": 3502
+    "lines": 99,
+    "tokens": 3442
   },
   "function:packages/cli/test/cli.test.mjs:describe(weft (bin))": {
     "lines": 120,
-    "tokens": 4087
+    "tokens": 4076
   },
   "function:packages/cli/test/config.test.mjs:describe(site (research 20 §2, §6))": {
     "lines": 96,
@@ -1591,17 +1591,9 @@
     "lines": 117,
     "tokens": 3333
   },
-  "function:packages/cli/test/infer.test.mjs:call(inference on %s)": {
-    "lines": 81,
-    "tokens": 2394
-  },
   "function:packages/cli/test/infer.test.mjs:describe(an editor on TypeScript 7, through weft lsp)": {
     "lines": 82,
     "tokens": 2218
-  },
-  "function:packages/cli/test/infer.test.mjs:describe(the editor, through the TS server protocol)": {
-    "lines": 82,
-    "tokens": 2134
   },
   "function:packages/cli/test/plugins.test.mjs:describe(@weft-js/core/plugin + weft plugins)": {
     "lines": 145,
