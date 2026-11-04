@@ -2,20 +2,29 @@
 
 ```tsx
 import { state } from '@weft-js/core'
-import { online, visible, lifecycle, media, on, interval } from '@weft-js/core/browser'
+import {
+  online, visible, lifecycle, media, on, interval,
+} from '@weft-js/core/browser'
 
 export function Toolbar() {
-  const isOnline = online()                                         // Derived<boolean>; server: true
-  const shown = visible()                                           // Derived<boolean>; server: true
-  const page = lifecycle()                                          // 'active' | 'passive' | 'hidden' | 'frozen' | 'terminated'
-  const dark = media('(prefers-color-scheme: dark)', { ssr: false }) // server renders `ssr`
+  const isOnline = online() // Derived<boolean>; server: true
+  const shown = visible() // Derived<boolean>; server: true
+  // 'active' | 'passive' | 'hidden' | 'frozen' | 'terminated'
+  const page = lifecycle()
+  // Server renders `ssr`.
+  const dark = media('(prefers-color-scheme: dark)', { ssr: false })
   const open = state(true)
   const now = state(Date.now())
-  on(window, 'keydown', e => { if (e.key === 'Escape') open.value = false })  // e: KeyboardEvent
-  interval('1s', () => { now.value = Date.now() })                  // also '500ms', '5m', '1h', or a number of ms
+  on(window, 'keydown', e => { // e: KeyboardEvent
+    if (e.key === 'Escape') open.value = false
+  })
+  // Also '500ms', '5m', '1h', or a number of ms.
+  interval('1s', () => { now.value = Date.now() })
   return (
     <p hidden={!open.value}>
-      {isOnline.value ? 'online' : 'offline'}, {dark.value ? 'dark' : 'light'}, {shown.value ? page.value : 'hidden'},
+      {isOnline.value ? 'online' : 'offline'}{', '}
+      {dark.value ? 'dark' : 'light'}{', '}
+      {shown.value ? page.value : 'hidden'},
       {new Date(now.value).toLocaleTimeString()}
     </p>
   )
