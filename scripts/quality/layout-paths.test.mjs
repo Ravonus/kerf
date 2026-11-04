@@ -9,7 +9,9 @@ import { BROWSER, entry } from './boundaries.mjs'
 await test('browser entries name tracked package folders', (t) => {
   const manifests = execFileSync('git', ['ls-files', ':(glob)packages/*/package.json'], {
     encoding: 'utf8',
-  }).trim().split('\n')
+  })
+    .trim()
+    .split('\n')
   const folders = new Set(manifests.map(dirname))
   let entries = 0
   for (const [folder, exports] of Object.entries(BROWSER)) {
@@ -20,7 +22,9 @@ await test('browser entries name tracked package folders', (t) => {
       entries++
     }
   }
-  t.diagnostic(`${entries} browser entries in ${Object.keys(BROWSER).length}/${manifests.length} tracked packages`)
+  t.diagnostic(
+    `${entries} browser entries in ${Object.keys(BROWSER).length}/${manifests.length} tracked packages`,
+  )
 })
 
 await test('Vite keeps core internals outside app transforms after the folder move', () => {
@@ -28,12 +32,18 @@ await test('Vite keeps core internals outside app transforms after the folder mo
   for (const name of ['weft:keyed', 'weft:features', 'weft:interaction']) {
     const plugin = plugins.find((item) => item.name === name)
     const exclude = plugin.transform.filter.id.exclude
-    for (const path of ['/repo/packages/core/src/index.ts', 'C:\\repo\\packages\\core\\src\\index.ts'])
+    for (const path of [
+      '/repo/packages/core/src/index.ts',
+      'C:\\repo\\packages\\core\\src\\index.ts',
+    ])
       assert.ok(exclude.test(path), `${name} rewrites core internals: ${path}`)
     assert.equal(exclude.test('/repo/app/src/index.ts'), false)
   }
   const flags = plugins.find((item) => item.name === 'weft:flags').transform
-  for (const path of ['/repo/packages/core/src/flags.ts', 'C:\\repo\\packages\\core\\src\\flags.ts'])
+  for (const path of [
+    '/repo/packages/core/src/flags.ts',
+    'C:\\repo\\packages\\core\\src\\flags.ts',
+  ])
     assert.ok(flags.filter.id.test(path), `speed flags miss the moved source: ${path}`)
   assert.match(flags.handler('export const REUSE = true').code, /REUSE = false/)
 })

@@ -33,15 +33,7 @@ function app(ui, options = {}) {
   })
   for (const name of deps.filter((d) => d.startsWith('@weft-js/'))) {
     mkdirSync(join(dir, 'node_modules', '@weft-js'), { recursive: true })
-    symlinkSync(
-      join(
-        pkgs,
-        name
-          .replace('@weft-js/', ''),
-      ),
-      join(dir, 'node_modules', name),
-      'dir',
-    )
+    symlinkSync(join(pkgs, name.replace('@weft-js/', '')), join(dir, 'node_modules', name), 'dir')
   }
   return dir
 }
