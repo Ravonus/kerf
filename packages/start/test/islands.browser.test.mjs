@@ -240,7 +240,11 @@ test('dev: editing an island keeps the page working', async () => {
   const file = join(fixture, 'src/components/islands.tsx')
   const before = readFileSync(file, 'utf8')
   try {
-    writeFileSync(file, before.replace('>reveal<', '>show<'))
+    const needle = /(>\s*)reveal(\s*<\/button>)/g
+    expect([...before.matchAll(needle)]).toHaveLength(1)
+    const after = before.replace(needle, '$1show$2')
+    expect(after).not.toBe(before)
+    writeFileSync(file, after)
     await page.waitForFunction(
       () => document.querySelector('.reveal')?.textContent === 'show',
       null,
