@@ -43,7 +43,12 @@ import { state } from '@weft-js/core'
 export function Pointer() {
   const pos = state({ x: 0, y: 0 })
   return (
-    <div style="block-size: 12rem" onPointerMove={e => (pos.value = { x: e.offsetX, y: e.offsetY })}>
+    <div
+      style="block-size: 12rem"
+      onPointerMove={e => (pos.value = {
+        x: e.offsetX, y: e.offsetY,
+      })}
+    >
       {pos.value.x}, {pos.value.y}
     </div>
   )
@@ -72,7 +77,8 @@ When you're unsure, start with separate boxes. Merge them when you notice you al
 Changing a field in place doesn't count as a write:
 
 ```ts
-pos.value.x = 5 // nothing updates: the box still holds the same object
+// Nothing updates: the box still holds the same object.
+pos.value.x = 5
 ```
 
 A box only notices when `.value` gets a different value (`Object.is`). Give it a new object, or use `.set`, which copies
@@ -115,7 +121,8 @@ If you can compute a value from props or other state while the page runs, don't 
 ```ts
 const first = state('')
 const last = state('')
-const full = state('') // redundant: every write to first or last must also write this
+// Redundant: every write to first or last must also write this.
+const full = state('')
 ```
 
 Make it a derived value instead:
@@ -129,8 +136,16 @@ export function Name() {
   const full = derived(() => `${first.value} ${last.value}`.trim())
   return (
     <form>
-      <input aria-label="First name" value={first.value} onInput={e => (first.value = e.currentTarget.value)} />
-      <input aria-label="Last name" value={last.value} onInput={e => (last.value = e.currentTarget.value)} />
+      <input
+        aria-label="First name"
+        value={first.value}
+        onInput={e => (first.value = e.currentTarget.value)}
+      />
+      <input
+        aria-label="Last name"
+        value={last.value}
+        onInput={e => (last.value = e.currentTarget.value)}
+      />
       <p>Your ticket will be issued to <b>{full.value}</b></p>
     </form>
   )
@@ -168,9 +183,12 @@ What to do depends on what you meant:
 import { state, untrack } from '@weft-js/core'
 
 export function Counter(props: { initialCount: number }) {
-  // Only the first value matters: later changes to `initialCount` are ignored, on purpose.
+  // Only the first value matters; later changes are ignored.
   const count = state(untrack(() => props.initialCount))
-  return <button type="button" onClick={() => count.value++}>{count.value}</button>
+  return <button
+    type="button"
+    onClick={() => count.value++}
+  >{count.value}</button>
 }
 ```
 
@@ -197,7 +215,9 @@ Store its id instead, and derive the item:
 
 ```ts
 const chosenId = state(1)
-const chosen = derived(() => snacks.value.find(s => s.id === chosenId.value))
+const chosen = derived(() =>
+  snacks.value.find(s => s.id === chosenId.value),
+)
 ```
 
 The snack lives in one place, the list. The choice is a number. Renaming updates the list, and `chosen` reads the renamed
@@ -233,15 +253,28 @@ Greece's row and its parent's list, nothing else:
 import { derived, state, type State } from '@weft-js/core'
 import { initialPlan, type Place } from '../lib/plan'
 
-function PlaceTree(props: { id: number; plan: State<Record<number, Place>>; onDone: (parent: number, id: number) => void; parent: number }) {
-  const place = derived(() => props.plan.get(props.id))
+function PlaceTree(props: {
+  id: number
+  plan: State<Record<number, Place>>
+  onDone: (parent: number, id: number) => void
+  parent: number
+}) {
+  const { id, plan, onDone, parent } = props
+  const place = derived(() => plan.get(id))
+  const finish = () => onDone(parent, id)
   return (
     <li>
       {place.value.title}
-      <button type="button" onClick={() => props.onDone(props.parent, props.id)}>Done</button>
+      <button type="button" onClick={finish}>Done</button>
       <ol>
         {place.value.childIds.map(child => (
-          <PlaceTree key={child} id={child} parent={props.id} plan={props.plan} onDone={props.onDone} />
+          <PlaceTree
+            key={child}
+            id={child}
+            parent={id}
+            plan={plan}
+            onDone={onDone}
+          />
         ))}
       </ol>
     </li>
@@ -253,12 +286,24 @@ export function TravelPlan() {
   const done = (parent: number, id: number) =>
     plan.set(d => {
       const p = d[parent]
-      if (p) d[parent] = { ...p, childIds: p.childIds.filter(c => c !== id) }
+      if (p) {
+        d[parent] = {
+          ...p, childIds: p.childIds.filter(c => c !== id),
+        }
+      }
     })
   const root = derived(() => plan.get(0))
   return (
     <ol>
-      {root.value.childIds.map(id => <PlaceTree key={id} id={id} parent={0} plan={plan} onDone={done} />)}
+      {root.value.childIds.map(id => (
+        <PlaceTree
+          key={id}
+          id={id}
+          parent={0}
+          plan={plan}
+          onDone={done}
+        />
+      ))}
     </ol>
   )
 }
@@ -310,7 +355,9 @@ The component never changes the colour, so it needs no state at all. Reading the
 This list stores the totals in boxes and keeps them up to date by hand, and they drift. Remove the redundant state.
 
 ```ts
-const items = state<{ id: number; title: string; packed: boolean }[]>([])
+const items = state<{
+  id: number; title: string; packed: boolean
+}[]>([])
 const total = state(0)
 const packed = state(0)
 ```
@@ -325,16 +372,24 @@ export function Packing() {
     { id: 1, title: 'Passport', packed: true },
     { id: 2, title: 'Charger', packed: false },
   ])
-  const packed = derived(() => items.value.filter(i => i.packed).length)
+  const packed = derived(() =>
+    items.value.filter(i => i.packed).length,
+  )
   const toggle = (id: number) =>
-    (items.value = items.value.map(i => (i.id === id ? { ...i, packed: !i.packed } : i)))
+    (items.value = items.value.map(i =>
+      i.id === id ? { ...i, packed: !i.packed } : i,
+    ))
   return (
     <section>
       <ul>
         {items.value.map(i => (
           <li key={i.id}>
             <label>
-              <input type="checkbox" checked={i.packed} onChange={() => toggle(i.id)} /> {i.title}
+              <input
+                type="checkbox"
+                checked={i.packed}
+                onChange={() => toggle(i.id)}
+              /> {i.title}
             </label>
           </li>
         ))}
@@ -358,7 +413,9 @@ type Snack = { id: number; title: string }
 export function Snacks(props: { snacks: Snack[] }) {
   // One entry per chosen id. Rows read their own entry with `.get`.
   const chosen = state<Record<number, boolean>>({})
-  const count = derived(() => Object.values(chosen.value).filter(Boolean).length)
+  const count = derived(() =>
+    Object.values(chosen.value).filter(Boolean).length,
+  )
   return (
     <section>
       {props.snacks.map(s => (

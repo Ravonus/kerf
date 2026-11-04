@@ -27,12 +27,17 @@ import { z } from 'zod'
 export const sendFeedback = mutation({
   input: z.object({
     email: z.email('Enter an email address.'),
-    rating: z.int('Pick a number from 1 to 5.').min(1, 'Pick a number from 1 to 5.').max(5, 'Pick a number from 1 to 5.'),
-    message: z.string().trim().min(10, 'Tell us a little more: 10 characters at least.'),
+    rating: z.int('Pick a number from 1 to 5.')
+      .min(1, 'Pick a number from 1 to 5.')
+      .max(5, 'Pick a number from 1 to 5.'),
+    message: z.string().trim()
+      .min(10, 'Tell us a little more: 10 characters at least.'),
     reply: z.boolean().default(false),
   }),
   run: ({ input }) => {
-    if (input.email.endsWith('@example.invalid')) invalid({ email: 'We can\'t send mail to that address.' })
+    if (input.email.endsWith('@example.invalid')) {
+      invalid({ email: 'We can\'t send mail to that address.' })
+    }
     return { thanks: input.email }
   },
 })
@@ -44,10 +49,15 @@ the fields. warp's field components take an `error` and show it under the field,
 ```tsx
 // src/routes/feedback.tsx
 import { Form, type FormApi, type Meta } from '@weft-js/start'
-import { Alert, Button, Card, Checkbox, Input, Textarea } from '@weft-js/warp'
+import {
+  Alert, Button, Card, Checkbox, Input, Textarea,
+} from '@weft-js/warp'
 import { sendFeedback } from '#/server/feedback'
 
-export const meta: Meta = { title: 'Feedback', description: 'Tell us what works and what doesn\'t.' }
+export const meta: Meta = {
+  title: 'Feedback',
+  description: 'Tell us what works and what doesn\'t.',
+}
 
 export default function Feedback() {
   return (
@@ -55,13 +65,38 @@ export default function Feedback() {
       <Form of={sendFeedback}>
         {(form: FormApi) => (
           <>
-            <Input label="Email" type="email" name="email" error={form.error('email')} />
-            <Input label="Rating, 1 to 5" type="number" name="rating" error={form.error('rating')} />
-            <Textarea label="Message" name="message" error={form.error('message')} />
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              error={form.error('email')}
+            />
+            <Input
+              label="Rating, 1 to 5"
+              type="number"
+              name="rating"
+              error={form.error('rating')}
+            />
+            <Textarea
+              label="Message"
+              name="message"
+              error={form.error('message')}
+            />
             <Checkbox name="reply">Reply to me</Checkbox>
-            {form.message.value && <Alert tone="critical" live>{form.message.value}</Alert>}
-            {form.result.value && <Alert tone="positive">Thanks. We'll write to you if you asked us to.</Alert>}
-            <Button type="submit" loading={form.pending.value}>Send</Button>
+            {form.message.value && (
+              <Alert tone="critical" live>
+                {form.message.value}
+              </Alert>
+            )}
+            {form.result.value && (
+              <Alert tone="positive">
+                Thanks. We'll write to you if you asked us to.
+              </Alert>
+            )}
+            <Button
+              type="submit"
+              loading={form.pending.value}
+            >Send</Button>
           </>
         )}
       </Form>
@@ -156,8 +191,12 @@ import { user } from '#/db/schema'
 export const checkEmail = mutation({
   input: z.object({ email: z.email() }),
   run: async ({ input, ctx }) => {
-    const [taken] = await ctx.db.select({ id: user.id }).from(user).where(eq(user.email, input.email))
-    if (taken) invalid({ email: 'That email already has an account.' })
+    const [taken] = await ctx.db.select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, input.email))
+    if (taken) {
+      invalid({ email: 'That email already has an account.' })
+    }
     return { free: true }
   },
 })
@@ -201,9 +240,21 @@ export function EmailField() {
   const problem = state<string | undefined>(undefined)
   const check = (value: string) => {
     const r = email.safeParse(value)
-    problem.value = r.success || value === '' ? undefined : r.error.issues[0]?.message
+    problem.value = r.success || value === ''
+      ? undefined
+      : r.error.issues[0]?.message
   }
-  return <Input label="Email" name="email" error={problem.value} onBlur={(e: FocusEvent) => check((e.currentTarget as HTMLInputElement).value)} />
+  const onBlur = (e: FocusEvent) => {
+    check((e.currentTarget as HTMLInputElement).value)
+  }
+  return (
+    <Input
+      label="Email"
+      name="email"
+      error={problem.value}
+      onBlur={onBlur}
+    />
+  )
 }
 ```
 
@@ -233,8 +284,15 @@ export function AddTodo(props: { onAdded: () => void }) {
     <Form of={addTodo} onSuccess={() => props.onAdded()}>
       {(form: FormApi) => (
         <>
-          <Input label="New todo" name="title" error={form.error('title')} />
-          <Button type="submit" loading={form.pending.value}>Add</Button>
+          <Input
+            label="New todo"
+            name="title"
+            error={form.error('title')}
+          />
+          <Button
+            type="submit"
+            loading={form.pending.value}
+          >Add</Button>
         </>
       )}
     </Form>
@@ -263,7 +321,10 @@ export function PlainAdd() {
             Title <input {...form.field('title')} />
           </label>
           <form.Error name="title" class="error" />
-          <button type="submit" disabled={form.pending.value}>Add</button>
+          <button
+            type="submit"
+            disabled={form.pending.value}
+          >Add</button>
         </>
       )}
     </Form>
@@ -337,7 +398,9 @@ import { z } from 'zod'
 export const order = mutation({
   input: z.object({
     item: z.string().min(1),
-    qty: z.int('Enter a whole number.').min(1, 'At least 1.').max(10, 'At most 10.'),
+    qty: z.int('Enter a whole number.')
+      .min(1, 'At least 1.')
+      .max(10, 'At most 10.'),
   }),
   run: ({ input }) => ({ ordered: `${input.qty} × ${input.item}` }),
 })
@@ -376,7 +439,9 @@ const booked = new Set(['09:00'])
 export const book = mutation({
   input: z.object({ slot: z.string().min(1) }),
   run: ({ input }) => {
-    if (booked.has(input.slot)) invalid({ slot: 'That slot is booked.' })
+    if (booked.has(input.slot)) {
+      invalid({ slot: 'That slot is booked.' })
+    }
     booked.add(input.slot)
     return { slot: input.slot }
   },
