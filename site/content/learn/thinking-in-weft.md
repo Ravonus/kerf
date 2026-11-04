@@ -23,12 +23,42 @@ Imagine you already have a JSON API and a mockup from a designer. The API return
 
 ```json
 [
-  { "category": "Beans", "price": "$12", "stocked": true, "name": "House blend" },
-  { "category": "Beans", "price": "$16", "stocked": false, "name": "Ethiopia natural" },
-  { "category": "Beans", "price": "$14", "stocked": true, "name": "Decaf" },
-  { "category": "Gear", "price": "$40", "stocked": true, "name": "Hand grinder" },
-  { "category": "Gear", "price": "$5", "stocked": false, "name": "Paper filters" },
-  { "category": "Gear", "price": "$35", "stocked": true, "name": "Kettle" }
+  {
+    "category": "Beans",
+    "price": "$12",
+    "stocked": true,
+    "name": "House blend"
+  },
+  {
+    "category": "Beans",
+    "price": "$16",
+    "stocked": false,
+    "name": "Ethiopia natural"
+  },
+  {
+    "category": "Beans",
+    "price": "$14",
+    "stocked": true,
+    "name": "Decaf"
+  },
+  {
+    "category": "Gear",
+    "price": "$40",
+    "stocked": true,
+    "name": "Hand grinder"
+  },
+  {
+    "category": "Gear",
+    "price": "$5",
+    "stocked": false,
+    "name": "Paper filters"
+  },
+  {
+    "category": "Gear",
+    "price": "$35",
+    "stocked": true,
+    "name": "Kettle"
+  }
 ]
 ```
 
@@ -105,10 +135,12 @@ works out the categories, and for each one shows a `ProductCategoryRow` and then
 You can build top-down, starting from `FilterableProductTable`, or bottom-up, starting from `ProductRow`. On a small
 screen like this one top-down is usually easier; on a big project, bottom-up lets you finish and test pieces as you go.
 
-One line here is already different from the React version:
+One expression here is already different from the React version:
 
 ```tsx
-const categories = derived(() => [...new Set(products.map(p => p.category))])
+const categories = derived(() =>
+  [...new Set(products.map(p => p.category))],
+)
 ```
 
 In React you'd compute this in the render, as a plain `const`, and it would be recomputed each time the component
@@ -202,7 +234,10 @@ So the two boxes live in `FilterableProductTable`, which passes their values dow
 ```tsx
 const shown = derived(() => {
   const word = filterText.toLowerCase()
-  return products.filter(p => p.name.toLowerCase().includes(word) && (p.stocked || !inStockOnly))
+  return products.filter(p =>
+    p.name.toLowerCase().includes(word) &&
+    (p.stocked || !inStockOnly),
+  )
 })
 ```
 
@@ -238,7 +273,10 @@ In weft the parent passes its boxes with `bind:`, and the child writes to its ow
 Two things changed. In the parent, the call site now says `bind:`:
 
 ```tsx
-<SearchBar bind:filterText={filterText} bind:inStockOnly={inStockOnly} />
+<SearchBar
+  bind:filterText={filterText}
+  bind:inStockOnly={inStockOnly}
+/>
 ```
 
 And in `SearchBar`, the props become writable locals:
@@ -246,7 +284,11 @@ And in `SearchBar`, the props become writable locals:
 ```tsx
 let { filterText = '', inStockOnly = false } = props
 // …
-<Input label="Search" value={filterText} onInput={e => (filterText = e.currentTarget.value)} />
+<Input
+  label="Search"
+  value={filterText}
+  onInput={e => (filterText = e.currentTarget.value)}
+/>
 ```
 
 `let` makes a local name for each prop that the component can assign to. On its own, an assignment like
@@ -273,17 +315,22 @@ editor do: under them a required prop is satisfied by `bind:`, and a wrong type 
 import type { State } from '@weft-js/core'
 import { Checkbox, Input } from '@weft-js/warp'
 
-export function SearchBar(props: { filterText: State<string>; inStockOnly: State<boolean> }) {
+export function SearchBar(
+  { filterText, inStockOnly }: {
+    filterText: State<string>; inStockOnly: State<boolean>
+  },
+) {
   return (
     <form>
       <Input
         label="Search"
-        value={props.filterText.value}
-        onInput={e => (props.filterText.value = e.currentTarget.value)}
+        value={filterText.value}
+        onInput={e => (filterText.value = e.currentTarget.value)}
       />
       <Checkbox
-        checked={props.inStockOnly.value}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) => (props.inStockOnly.value = e.currentTarget.checked)}
+        checked={inStockOnly.value}
+        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+          (inStockOnly.value = e.currentTarget.checked)}
       >
         Only show products in stock
       </Checkbox>
@@ -358,8 +405,17 @@ lives before you write it.
 ```tsx
 const cheapestFirst = state(false)
 // …
-<SearchBar bind:filterText={filterText} bind:inStockOnly={inStockOnly} bind:cheapestFirst={cheapestFirst} />
-<ProductTable products={PRODUCTS} filterText={filterText.value} inStockOnly={inStockOnly.value} cheapestFirst={cheapestFirst.value} />
+<SearchBar
+  bind:filterText={filterText}
+  bind:inStockOnly={inStockOnly}
+  bind:cheapestFirst={cheapestFirst}
+/>
+<ProductTable
+  products={PRODUCTS}
+  filterText={filterText.value}
+  inStockOnly={inStockOnly.value}
+  cheapestFirst={cheapestFirst.value}
+/>
 ```
 
 `SearchBar` gets one more optional prop and checkbox, the same as `inStockOnly`. `ProductTable` sorts inside `shown`:
@@ -367,8 +423,15 @@ const cheapestFirst = state(false)
 ```tsx
 const shown = derived(() => {
   const word = filterText.toLowerCase()
-  const found = products.filter(p => p.name.toLowerCase().includes(word) && (p.stocked || !inStockOnly))
-  return cheapestFirst ? found.toSorted((a, b) => Number(a.price.slice(1)) - Number(b.price.slice(1))) : found
+  const found = products.filter(p =>
+    p.name.toLowerCase().includes(word) &&
+    (p.stocked || !inStockOnly),
+  )
+  return cheapestFirst
+    ? found.toSorted((a, b) =>
+        Number(a.price.slice(1)) - Number(b.price.slice(1)),
+      )
+    : found
 })
 ```
 
@@ -387,17 +450,22 @@ The child reads and writes `.value` on its props:
 import { state, type State } from '@weft-js/core'
 import { Checkbox, Input } from '@weft-js/warp'
 
-function SearchBar(props: { filterText: State<string>; inStockOnly: State<boolean> }) {
+function SearchBar(
+  { filterText, inStockOnly }: {
+    filterText: State<string>; inStockOnly: State<boolean>
+  },
+) {
   return (
     <form>
       <Input
         label="Search"
-        value={props.filterText.value}
-        onInput={e => (props.filterText.value = e.currentTarget.value)}
+        value={filterText.value}
+        onInput={e => (filterText.value = e.currentTarget.value)}
       />
       <Checkbox
-        checked={props.inStockOnly.value}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) => (props.inStockOnly.value = e.currentTarget.checked)}
+        checked={inStockOnly.value}
+        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+          (inStockOnly.value = e.currentTarget.checked)}
       >
         Only show products in stock
       </Checkbox>
@@ -411,7 +479,10 @@ export function Filters() {
   return (
     <>
       <SearchBar filterText={filterText} inStockOnly={inStockOnly} />
-      <p>Searching for “{filterText.value}”{inStockOnly.value ? ', in stock only' : ''}.</p>
+      <p>
+        Searching for “{filterText.value}”
+        {inStockOnly.value ? ', in stock only' : ''}.
+      </p>
     </>
   )
 }

@@ -29,7 +29,11 @@ export function Banner() {
   const urgent = state(false)
   return (
     <section class={urgent.value ? 'banner urgent' : 'banner'}>
-      <Switch checked={urgent.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (urgent.value = e.currentTarget.checked)}>
+      <Switch
+        checked={urgent.value}
+        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+          (urgent.value = e.currentTarget.checked)}
+      >
         Urgent
       </Switch>
     </section>
@@ -43,10 +47,14 @@ their own:
 ```tsx
 import { state } from '@weft-js/core'
 
-export function Row(props: { done: boolean }) {
+export function Row({ done }: { done: boolean }) {
   const hovered = state(false)
   return (
-    <li class={{ row: true, done: props.done, hot: hovered.value }} onPointerEnter={() => (hovered.value = true)} onPointerLeave={() => (hovered.value = false)}>
+    <li
+      class={{ row: true, done, hot: hovered.value }}
+      onPointerEnter={() => (hovered.value = true)}
+      onPointerLeave={() => (hovered.value = false)}
+    >
       Grind the beans
     </li>
   )
@@ -69,8 +77,19 @@ export function Meter() {
   const level = state(40)
   return (
     <>
-      <Slider label="Level" value={level.value} onChange={(v: number) => (level.value = v)} />
-      <div style={{ inlineSize: `${level.value}%`, opacity: level.value / 100, '--level': level.value }} data-meter />
+      <Slider
+        label="Level"
+        value={level.value}
+        onChange={(v: number) => (level.value = v)}
+      />
+      <div
+        style={{
+          inlineSize: `${level.value}%`,
+          opacity: level.value / 100,
+          '--level': level.value,
+        }}
+        data-meter
+      />
     </>
   )
 }
@@ -106,7 +125,7 @@ component rules use `:where()`, which has no specificity. Style groups go in `@l
 a layer comes after every layer, so it wins:
 
 ```css
-/* src/app.css: no @layer, so this beats warp's own rule for the same element */
+/* src/app.css: without @layer, this beats warp's rule. */
 [data-scope="button"] { letter-spacing: 0.02em; }
 ```
 
@@ -152,20 +171,37 @@ import { group } from '@weft-js/core/style'
 
 /** A summary card for one order in a list. */
 export const orderCard = group('order-card', {
-  base: { surface: 'raised', pad: 'group', radius: 'surface', layout: 'stack', gap: 'related' },
-  axes: { status: { open: { tone: 'info' }, shipped: { tone: 'positive' }, late: { tone: 'critical' } } },
-  parts: { title: { text: 'title' }, meta: { text: 'caption', ink: 'subtle' } },
+  base: {
+    surface: 'raised', pad: 'group', radius: 'surface',
+    layout: 'stack', gap: 'related',
+  },
+  axes: { status: {
+    open: { tone: 'info' }, shipped: { tone: 'positive' },
+    late: { tone: 'critical' },
+  } },
+  parts: {
+    title: { text: 'title' },
+    meta: { text: 'caption', ink: 'subtle' },
+  },
   states: { selected: { ring: 'accent' } },
   defaults: { status: 'open' },
 })
 
-type Order = { name: string; date: string; status: 'open' | 'shipped' | 'late' }
+type Order = {
+  name: string
+  date: string
+  status: 'open' | 'shipped' | 'late'
+}
 
-export function OrderCard(props: { order: Order; selected: boolean }) {
+export function OrderCard(
+  { order, selected }: { order: Order; selected: boolean },
+) {
   return (
-    <article {...orderCard({ status: props.order.status, selected: props.selected })}>
-      <p {...orderCard.title}>{props.order.name}</p>
-      <p {...orderCard.meta}>{props.order.date}</p>
+    <article {...orderCard({
+      status: order.status, selected,
+    })}>
+      <p {...orderCard.title}>{order.name}</p>
+      <p {...orderCard.meta}>{order.date}</p>
     </article>
   )
 }
@@ -195,7 +231,7 @@ The compiler lowers each call site to plain attributes, and the build writes the
 </article>
 ```
 
-So changing `props.order.status` is one attribute write. No class string is rebuilt and nothing is diffed. The CSS lands
+So changing `order.status` is one attribute write. No class string is rebuilt and nothing is diffed. The CSS lands
 in `@layer app.groups` as readable rules keyed on those attributes, and only for the values your call sites can produce.
 
 :::pitfall A group definition must be literal data
@@ -218,7 +254,11 @@ const promo = group('promo', {
 })
 
 export function Promo() {
-  return <aside {...promo({ accent: { radius: 'round' } })}>Free shipping this week</aside>
+  return (
+    <aside {...promo({ accent: { radius: 'round' } })}>
+      Free shipping this week
+    </aside>
+  )
 }
 ```
 
@@ -236,8 +276,10 @@ padding the tokens already have.
 Two groups that resolve to nearly the same CSS are D021. Before you make one, ask what exists:
 
 ```bash
-weft style find card                       # groups that fit, best first, with axes, parts and how often each is used
-weft style explain order-card[status=late] # every declaration on the root and parts, and where each came from
+# Groups that fit, with axes, parts and usage.
+weft style find card
+# Declarations on the root and parts, and their sources.
+weft style explain order-card[status=late]
 ```
 
 `weft dev`, `weft build` and `weft check` keep `.weft/styles.json` current: every group, its values and resolved CSS,
@@ -357,7 +399,9 @@ export function Chip(props: { label: string }) {
   const hot = state(false)
   return (
     <span
-      class={'chip' + (on.value ? ' on' : '') + (hot.value ? ' hot' : '')}
+      class={
+        'chip' + (on.value ? ' on' : '') + (hot.value ? ' hot' : '')
+      }
       onPointerEnter={() => (hot.value = true)}
       onPointerLeave={() => (hot.value = false)}
     >
@@ -374,7 +418,11 @@ export function Chip(props: { label: string }) {
   const on = state(false)
   const hot = state(false)
   return (
-    <span class={{ chip: true, on: on.value, hot: hot.value }} onPointerEnter={() => (hot.value = true)} onPointerLeave={() => (hot.value = false)}>
+    <span
+      class={{ chip: true, on: on.value, hot: hot.value }}
+      onPointerEnter={() => (hot.value = true)}
+      onPointerLeave={() => (hot.value = false)}
+    >
       {props.label}
     </span>
   )
@@ -392,7 +440,10 @@ intent `tone`), default it to `info`, and make `Callout` take the tone as a prop
 import { group } from '@weft-js/core/style'
 
 const callout = group('callout', {
-  base: { surface: 'raised', pad: 'group', radius: 'surface', border: 'tone' },
+  base: {
+    surface: 'raised', pad: 'group', radius: 'surface',
+    border: 'tone',
+  },
 })
 
 export function Callout(props: { text: string }) {
@@ -404,18 +455,31 @@ export function Callout(props: { text: string }) {
 import { group } from '@weft-js/core/style'
 
 const callout = group('callout', {
-  base: { surface: 'raised', pad: 'group', radius: 'surface', border: 'tone' },
-  axes: { tone: { info: { tone: 'info' }, caution: { tone: 'caution' }, critical: { tone: 'critical' } } },
+  base: {
+    surface: 'raised', pad: 'group', radius: 'surface',
+    border: 'tone',
+  },
+  axes: { tone: {
+    info: { tone: 'info' }, caution: { tone: 'caution' },
+    critical: { tone: 'critical' },
+  } },
   defaults: { tone: 'info' },
 })
 
-export function Callout(props: { text: string; tone: 'info' | 'caution' | 'critical' }) {
-  return <aside {...callout({ tone: props.tone })}>{props.text}</aside>
+export function Callout({ text, tone }: {
+  text: string
+  tone: 'info' | 'caution' | 'critical'
+}) {
+  return (
+    <aside {...callout({ tone })}>
+      {text}
+    </aside>
+  )
 }
 ```
 
 The axis is named `tone` and so is the intent each value sets; they live in different places, so that is fine. The
-call compiles to `data-tone={props.tone}`, one attribute that follows the prop.
+call compiles to `data-tone={tone}`, one attribute that follows the prop.
 :::
 
 :::challenge Answer the D-codes
@@ -426,7 +490,9 @@ reports none, and replace the hand-made flex row while you're there.
 ```tsx
 export function Total(props: { amount: string }) {
   return (
-    <div style={{ display: 'flex', gap: 8, padding: 16, color: '#0a7d4f' }}>
+    <div style={{
+      display: 'flex', gap: 8, padding: 16, color: '#0a7d4f',
+    }}>
       <span>Total</span>
       <strong>{props.amount}</strong>
     </div>

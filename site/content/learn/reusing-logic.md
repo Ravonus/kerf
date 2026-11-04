@@ -23,8 +23,10 @@ Here's the debounced value from the demo, on its own:
 // src/lib/debounced.ts
 import { state, untrack, watch, type Derived } from '@weft-js/core'
 
-/** `source`'s value once it has stopped changing for `ms`. Call it while a component is being set up. */
-export function debounced<T>(source: () => T, ms: number): Derived<T> {
+/** Follow `source` after it settles for `ms`, during setup. */
+export function debounced<T>(
+  source: () => T, ms: number,
+): Derived<T> {
   const settled = state(untrack(source))
   watch(source, value => {
     const timer = setTimeout(() => (settled.value = value), ms)
@@ -46,7 +48,11 @@ export function Search() {
   const query = debounced(() => typed.value.trim(), 400)
   return (
     <div>
-      <Input label="Search" value={typed.value} onInput={e => (typed.value = e.currentTarget.value)} />
+      <Input
+        label="Search"
+        value={typed.value}
+        onInput={e => (typed.value = e.currentTarget.value)}
+      />
       <p>Searching for “{query.value}”</p>
     </div>
   )
@@ -98,13 +104,24 @@ function counter(start = 0, step = 1) {
 }
 
 export function Tally() {
-  const cups = counter()
-  const pages = counter(10, 5)
+  const { count: cups, increment: addCup, reset: resetCups } =
+    counter()
+  const {
+    count: pages, even, increment: addPages, reset: resetPages,
+  } = counter(10, 5)
+  const resetBoth = () => {
+    resetCups()
+    resetPages()
+  }
   return (
     <div>
-      <Button onClick={cups.increment}>Cups: {cups.count.value}</Button>
-      <Button onClick={pages.increment}>Pages: {pages.count.value} {pages.even.value ? '(even)' : ''}</Button>
-      <Button emphasis="ghost" onClick={() => { cups.reset(); pages.reset() }}>Reset both</Button>
+      <Button onClick={addCup}>
+        Cups: {cups.value}
+      </Button>
+      <Button onClick={addPages}>
+        Pages: {pages.value} {even.value ? '(even)' : ''}
+      </Button>
+      <Button emphasis="ghost" onClick={resetBoth}>Reset both</Button>
     </div>
   )
 }
@@ -131,9 +148,15 @@ function counter(start = 0) {
 const NAMES = ['Tea', 'Coffee', 'Water']
 
 export function Drinks() {
-  // A counter per name, made in a loop. React would forbid this; here it's an ordinary array.
+  // A counter per name. This ordinary loop is fine in weft.
   const counts = NAMES.map(name => ({ name, ...counter() }))
-  return <p>{counts.map(c => <Button key={c.name} onClick={c.increment}>{c.name}: {c.count.value}</Button>)}</p>
+  return (
+    <p>{counts.map(c => (
+      <Button key={c.name} onClick={c.increment}>
+        {c.name}: {c.count.value}
+      </Button>
+    ))}</p>
+  )
 }
 ```
 
@@ -165,14 +188,17 @@ listener belongs to whoever called the function:
 import { state } from '@weft-js/core'
 import { on } from '@weft-js/core/browser'
 
-/** Where the pointer is over `el()`. The listener goes when the caller's owner does. */
+/** Pointer position over `el()`, scoped to the caller's owner. */
 export function pointer(el: () => HTMLElement | undefined) {
   const at = state({ x: 0, y: 0, inside: false })
   if (typeof window !== 'undefined') on(window, 'pointermove', e => {
     const box = el()?.getBoundingClientRect()
     if (!box) return
-    const x = Math.round(e.clientX - box.left), y = Math.round(e.clientY - box.top)
-    at.value = { x, y, inside: x >= 0 && y >= 0 && x <= box.width && y <= box.height }
+    const x = Math.round(e.clientX - box.left)
+    const y = Math.round(e.clientY - box.top)
+    const inside =
+      x >= 0 && y >= 0 && x <= box.width && y <= box.height
+    at.value = { x, y, inside }
   })
   return at
 }
@@ -214,8 +240,10 @@ import { state } from '@weft-js/core'
 import type { Action } from '@weft-js/warp-core'
 import { use } from '@weft-js/warp-core/weft'
 
-/** Grows a textarea with its text, up to `max` lines. Plain DOM: no framework in here. */
-function autosize(el: HTMLTextAreaElement, opts: { max: number }): Action<{ max: number }> {
+/** Grow a textarea up to `max` lines, using plain DOM. */
+function autosize(
+  el: HTMLTextAreaElement, opts: { max: number },
+): Action<{ max: number }> {
   let max = opts.max
   const fit = () => {
     const line = parseFloat(getComputedStyle(el).lineHeight) || 20
@@ -234,7 +262,13 @@ export function Note() {
   const lines = state(5)
   let box: HTMLTextAreaElement | undefined
   use(autosize, () => box, () => ({ max: lines.value }))
-  return <textarea ref={el => (box = el)} aria-label="Note" rows={1} />
+  return (
+    <textarea
+      ref={el => (box = el)}
+      aria-label="Note"
+      rows={1}
+    />
+  )
 }
 ```
 
@@ -280,13 +314,21 @@ function toggle(initial = false) {
 }
 
 export function Settings() {
-  const sound = toggle(true)
-  const motion = toggle()
+  const { on: sound, flip: flipSound, set: setSound } = toggle(true)
+  const { on: motion, flip: flipMotion, set: setMotion } = toggle()
+  const allOff = () => {
+    setSound(false)
+    setMotion(false)
+  }
   return (
     <div>
-      <Button onClick={sound.flip}>Sound {sound.on.value ? 'on' : 'off'}</Button>
-      <Button onClick={motion.flip}>Motion {motion.on.value ? 'on' : 'off'}</Button>
-      <Button emphasis="ghost" onClick={() => { sound.set(false); motion.set(false) }}>All off</Button>
+      <Button onClick={flipSound}>
+        Sound {sound.value ? 'on' : 'off'}
+      </Button>
+      <Button onClick={flipMotion}>
+        Motion {motion.value ? 'on' : 'off'}
+      </Button>
+      <Button emphasis="ghost" onClick={allOff}>All off</Button>
     </div>
   )
 }
@@ -305,14 +347,23 @@ import { state, type Derived } from '@weft-js/core'
 import { on } from '@weft-js/core/browser'
 
 function windowWidth(ssr = 1024): Derived<number> {
-  const width = state(typeof window === 'undefined' ? ssr : window.innerWidth)
-  if (typeof window !== 'undefined') on(window, 'resize', () => (width.value = window.innerWidth))
+  const width = state(
+    typeof window === 'undefined' ? ssr : window.innerWidth,
+  )
+  if (typeof window !== 'undefined') {
+    on(window, 'resize', () => (width.value = window.innerWidth))
+  }
   return width
 }
 
 export function Layout() {
   const width = windowWidth()
-  return <p>{width.value < 600 ? 'Phone layout' : 'Wide layout'} ({width.value} px)</p>
+  return (
+    <p>
+      {width.value < 600 ? 'Phone layout' : 'Wide layout'}
+      {' '}({width.value} px)
+    </p>
+  )
 }
 ```
 
@@ -344,7 +395,11 @@ function countdown(from: () => number) {
 
 export function Timer(props: { seconds: number }) {
   const timer = countdown(() => props.seconds)
-  return <p>{timer.done.value ? 'Time is up' : `${timer.left.value} s left`}</p>
+  return (
+    <p>
+      {timer.done.value ? 'Time is up' : `${timer.left.value} s left`}
+    </p>
+  )
 }
 ```
 
