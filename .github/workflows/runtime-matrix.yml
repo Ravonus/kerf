@@ -1,9 +1,10 @@
-# The same app on Node, Bun and Deno (research 28 §5). The repo has no CI yet: this is here for when it does, and
-# `packages/start/scripts/runtime-matrix.mjs` run locally is the gate until then.
+# Build the same scaffold for Node, Bun and Deno and run the shared end-to-end checks on each runtime.
 name: runtime-matrix
 on:
   pull_request:
-    paths: ['packages/start/**', 'packages/create-weft/**', 'packages/cli/**', 'packages/weft/**']
+    paths: ['packages/start/**', 'packages/create-weft/**', 'packages/cli/**', 'packages/weft/**', '.github/workflows/runtime-matrix.yml']
+  push:
+    branches: [main]
   workflow_dispatch:
 jobs:
   matrix:
@@ -11,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 26 }
+        with: { node-version-file: .nvmrc }
       - uses: pnpm/action-setup@v4
       - uses: oven-sh/setup-bun@v2
       - uses: denoland/setup-deno@v2
@@ -25,10 +26,20 @@ jobs:
         run: |
           node packages/create-weft/bin/create-weft.mjs "$RUNNER_TEMP/app" --db sqlite --auth --ui warp
           cd "$RUNNER_TEMP/app"
-          for p in start warp cli; do npm pkg set "dependencies.@weft-js/$p=file:$GITHUB_WORKSPACE/packages/$p"; done
-          npm pkg delete devDependencies.@weft-js/cli
-          npm pkg set "dependencies.@weft-js/core=file:$GITHUB_WORKSPACE/packages/weft"
-          npm install
-          npx weft db generate
+          node --input-type=module -e '
+            import { readFileSync, writeFileSync } from "node:fs"
+            const pkg = JSON.parse(readFileSync("package.json", "utf8"))
+            for (const p of ["start", "warp", "cli"]) pkg.dependencies[`@weft-js/${p}`] = `file:${process.env.GITHUB_WORKSPACE}/packages/${p}`
+            delete pkg.devDependencies["@weft-js/cli"]
+            pkg.dependencies["@weft-js/core"] = `file:${process.env.GITHUB_WORKSPACE}/packages/weft`
+            writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")
+          '
+          cp "$GITHUB_WORKSPACE/pnpm-workspace.yaml" pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+          pnpm exec weft db generate
       - run: node packages/start/scripts/runtime-matrix.mjs "$RUNNER_TEMP/app"
-      - run: node packages/create-weft/scripts/packed.mjs "$RUNNER_TEMP/packed"
+      # Keep the packed gate required until its out-of-scope scripts use pnpm and preserve the age policy.
+      - name: Packed gate requires pnpm support
+        run: |
+          echo "Packed gate is blocked: packages/create-weft/scripts/packed.mjs and its packing helpers use an unsupported package manager."
+          exit 1
