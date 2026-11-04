@@ -84,8 +84,8 @@ Run `node scripts/quality/rust-format.mjs` to check, or add `--write` to format 
 Speed comes first, then bytes. If you change the compiler, the runtime, warp or warp-core:
 
 - `node packages/core/scripts/size.mjs` and the tests in each package hold the size budgets.
-- `node evals/compare/measure.mjs` measures every stack in `evals/compare`, not only weft, and you commit the new line in
-  `evals/results/compare-history.jsonl` and the regenerated `compare.html`. [evals/compare/README.md](evals/compare/README.md)
+- `node benchmarks/compare/measure.mjs` measures every stack in `benchmarks/compare`, not only weft, and you commit the new line in
+  `evals/results/compare-history.jsonl` and the regenerated `compare.html`. [benchmarks/compare/README.md](benchmarks/compare/README.md)
   has the rules.
 
 ## Adding a diagnostic

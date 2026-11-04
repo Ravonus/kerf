@@ -93,7 +93,7 @@ export function Arena() {
       {!built.frames && (
         <p data-part="missing" role="status">
           The live comparison isn't in this build: its three frames come from{' '}
-          <code>arena/build.mjs</code>, which hasn't been run. The measured table below doesn't need
+          <code>../benchmarks/arena/build.mjs</code>, which hasn't been run. The measured table below doesn't need
           them.
         </p>
       )}

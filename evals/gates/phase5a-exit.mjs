@@ -388,7 +388,7 @@ const tree = () =>
 
 // ---- before ---------------------------------------------------------------------------------------------------------
 
-/** `tsc` on the app, as evals/phase3b-exit.mjs runs it: what a linked package reports isn't the app's. */
+/** `tsc` on the app, as evals/gates/phase3b-exit.mjs runs it: what a linked package reports isn't the app's. */
 function types() {
   const shared = ['zod']
   const paths = Object.fromEntries(
@@ -785,7 +785,7 @@ writeFileSync(
   `# Phase 5a exit check
 
 ${result.date}: **${failed.length ? 'FAIL' : 'PASS'}**, ${passed} of ${checks.length} checks. A search sidecar replaces a TS \`query\` with no client change.
-The swap is scripted (\`evals/phase5a-exit.mjs\`, the app in \`evals/phase5a/\`), not done by an agent. ${result.docs} documents; \`weft start\` on ${runtimes.join(', ')}.
+The swap is scripted (\`evals/gates/phase5a-exit.mjs\`, the app in \`evals/phase5a/\`), not done by an agent. ${result.docs} documents; \`weft start\` on ${runtimes.join(', ')}.
 
 Changed under \`src/\`: ${changed.map((f) => `\`${f}\``).join(', ')}. Added: \`crates/search\`.
 
@@ -796,7 +796,7 @@ ${checks.map((c) => `| ${c.name} | ${c.ok ? 'pass' : `**FAIL**: ${String(c.error
 ## Speed
 
 The same tf-idf search over one corpus, through the public \`GET /_weft/fn/<id>\`, on one machine. Sequential p50 and p99, then 32 callers at once.
-A within-weft comparison of two server bodies: the \`evals/compare\` stacks have no server functions, so they have no counterpart.
+A within-weft comparison of two server bodies: the \`benchmarks/compare\` stacks have no server functions, so they have no counterpart.
 
 | Runtime | Body | p50 ms | p99 ms | calls/s |
 |---|---|---|---|---|

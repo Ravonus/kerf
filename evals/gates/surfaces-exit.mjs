@@ -250,7 +250,7 @@ ${result.date}: **${ok_ ? 'PASS' : 'FAIL'}**. \`create-weft --ui warp\`, then a 
 
 > ${REQUEST}
 
-Then the hidden checks in \`evals/surfaces-exit.mjs\`, against \`weft build\` + \`weft start\` in Chrome.
+Then the hidden checks in \`evals/gates/surfaces-exit.mjs\`, against \`weft build\` + \`weft start\` in Chrome.
 
 | Check | Result | Detail |
 |---|---|---|

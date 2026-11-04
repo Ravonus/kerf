@@ -32,7 +32,7 @@ then up, and reads back how far each on-screen row moved. Anything but 120 is a 
 
 ## One brief, built by an agent
 
-`design/` holds the apps a fresh agent built from one brief (`../../evals/ds-exit.mjs`, Phase 4's exit check): the same three screens on
+`design/` holds the apps a fresh agent built from one brief (`../../evals/gates/ds-exit.mjs`, Phase 4's exit check): the same three screens on
 each stack, in that stack's usual kit, plus weft on raw Tailwind. Each is an agent's real output, kept as it came. `measure.mjs`
 rebuilds and re-audits them (`design/audit.mjs`: axe, focus, reflow, distinct computed values and role drift, read only from the
 page in Chromium) when `pnpm install` has run here, so a change to warp shows up here. It can't see

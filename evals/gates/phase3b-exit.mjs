@@ -173,7 +173,7 @@ writeFileSync(
   `# Phase 3b exit check
 
 ${result.date}: **${ok ? 'PASS' : 'FAIL'}**. \`create-weft --db sqlite --auth --ui warp\`, extended by a fresh agent with chat
-rooms from the brief in \`evals/phase3b-exit.mjs\`, then the hidden e2e (\`evals/phase3b-exit.e2e.mjs\`) per runtime, in
+rooms from the brief in \`evals/gates/phase3b-exit.mjs\`, then the hidden e2e (\`evals/gates/phase3b-exit.e2e.mjs\`) per runtime, in
 Chrome and over a raw WebSocket.
 
 | Runtime | Result | Checks |

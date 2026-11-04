@@ -71,6 +71,11 @@ await test('renamed offenders retain their trusted limit', () => {
   const renamed = 'file:packages/core/src/a.ts'
   assert.deepEqual(compareLengths(entry(renamed, 500), entry(renamed, 500), entry(old, 500)), [])
   assert.match(compareLengths(entry(renamed, 501), entry(renamed, 501), entry(old, 500)).join('\n'), /baseline increases/)
+  for (const [from, to] of [['apps/a.ts', 'examples/a.ts'], ['compare/a.ts', 'benchmarks/compare/a.ts'], ['speed/a.ts', 'benchmarks/speed/a.ts'], ['phase3-exit.e2e.mjs', 'evals/gates/phase3-exit.e2e.mjs']]) {
+    const previous = `file:evals/${from}`, current = `file:${to}`
+    assert.deepEqual(compareLengths(entry(current, 500), entry(current, 500), entry(previous, 500)), [])
+    assert.match(compareLengths(entry(current, 501), entry(current, 501), entry(previous, 500)).join('\n'), /baseline increases/)
+  }
 })
 
 await test('enlarged or added baseline entries cannot authorize growth', () => {

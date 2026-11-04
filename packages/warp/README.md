@@ -51,6 +51,6 @@ has the options.
 
 ## Size
 
-An app built with warp has a ceiling of 50 KB of brotli JavaScript and CSS. `evals/warp-exit.mjs` builds the shop app
+An app built with warp has a ceiling of 50 KB of brotli JavaScript and CSS. `evals/gates/warp-exit.mjs` builds the shop app
 from the evals with warp and checks it against that.
 `npm run size` in this folder prints what each component costs on its own and on a page with the others.

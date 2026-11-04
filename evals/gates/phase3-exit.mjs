@@ -153,7 +153,7 @@ writeFileSync(
   `# Phase 3 exit check
 
 ${result.date}: **${ok ? 'PASS' : 'FAIL'}**. \`create-weft --db sqlite --auth --ui warp\`, extended by a fresh agent with todo
-sharing from the brief in \`evals/phase3-exit.mjs\`, then the hidden e2e (\`evals/phase3-exit.e2e.mjs\`) per runtime.
+sharing from the brief in \`evals/gates/phase3-exit.mjs\`, then the hidden e2e (\`evals/gates/phase3-exit.e2e.mjs\`) per runtime.
 
 | Runtime | Result | Checks |
 |---|---|---|

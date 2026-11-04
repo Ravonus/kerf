@@ -3,7 +3,7 @@
 packages:
   - packages/*
   - site
-  - site/arena
+  - benchmarks/arena
 
 # No third-party release younger than 3 days (the owner's supply-chain rule, in minutes). It travels with the repo,
 # so an install on any machine is held to it. Our own packages are exempt.

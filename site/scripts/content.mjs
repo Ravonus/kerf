@@ -71,9 +71,9 @@ const write = (file, value) => writeFileSync(join(out, file), live(JSON.stringif
 
 // ------------------------------------------------------------------ numbers
 
-/** The stack comparison, from evals/compare/results.json and the run that wrote it. */
+/** The stack comparison, from benchmarks/compare/results.json and the run that wrote it. */
 function numbers() {
-  const results = JSON.parse(readFileSync(join(repo, 'evals/compare/results.json'), 'utf8'))
+  const results = JSON.parse(readFileSync(join(repo, 'benchmarks/compare/results.json'), 'utf8'))
   const run = readFileSync(join(repo, 'evals/results/compare-history.jsonl'), 'utf8')
     .trim()
     .split('\n')
@@ -1346,10 +1346,10 @@ const list = products()
   })
 }
 
-/** The arena's table: evals/speed's numbers whichever way they fall, including the rows weft loses. */
+/** The arena's table: benchmarks/speed's numbers whichever way they fall, including the rows weft loses. */
 function buildSpeed() {
-  const run = JSON.parse(readFileSync(join(repo, 'evals/speed/results.json'), 'utf8'))
-  if (!run.valid) throw new Error('evals/speed/results.json was measured under too much load')
+  const run = JSON.parse(readFileSync(join(repo, 'benchmarks/speed/results.json'), 'utf8'))
+  if (!run.valid) throw new Error('benchmarks/speed/results.json was measured under too much load')
   const rows = [
     ['Create 1,000 rows', 'rows total', 'create'],
     ['Replace 1,000 rows', 'rows total', 'replace'],
@@ -1371,7 +1371,7 @@ function buildSpeed() {
     const { lo, hi } = run.compared.weft[group][key]
     return { label, weft, solid, react, fastest: hi < 1 ? 'weft' : lo > 1 ? 'Solid' : 'Too close' }
   })
-  const arena = JSON.parse(readFileSync(join(repo, 'evals/speed/arena-site.json'), 'utf8'))
+  const arena = JSON.parse(readFileSync(join(repo, 'benchmarks/speed/arena-site.json'), 'utf8'))
   write('speed.json', {
     arena,
     machine: run.machine,
@@ -1427,7 +1427,7 @@ buildShowcase()
 buildSpeed()
 // The shop's steps, and any demo named `<name>-step-<n>`, mark the lines each one added, so the code shows the app growing.
 // `ask` is a frame, so what it shows is the app inside it. `slow` shows the page it loads.
-const SHOWN = { 'ask.tsx': 'arena/graph/main.tsx', 'slow.tsx': 'src/routes/examples/slow.tsx' }
+const SHOWN = { 'ask.tsx': '../benchmarks/arena/graph/main.tsx', 'slow.tsx': 'src/routes/examples/slow.tsx' }
 const demoText = (f) => readFileSync(join(site, SHOWN[f] ?? `src/demos/${f}`), 'utf8').trim()
 const demoHtml = (f) => {
   const text = demoText(f)
@@ -1445,12 +1445,12 @@ const demoHtml = (f) => {
   )
   return `<pre tabindex="0"><code>${html}</code></pre>`
 }
-// The arena's frames are built by arena/build.mjs and aren't in git. Without them the site says so instead of framing 404s.
+// The arena's frames are built by ../benchmarks/arena/build.mjs and aren't in git. Without them the site says so instead of framing 404s.
 const framed = (name) => existsSync(join(site, 'public/arena', name, 'index.html'))
 const arena = { frames: ['weft', 'solid', 'react'].every(framed), graph: framed('graph') }
 if (!arena.frames || !arena.graph)
   console.warn(
-    '[content] arena not built: its demos will say so. Run `npm ci` in site/arena, then `node arena/build.mjs`.',
+    '[content] arena not built: its demos will say so. Run `pnpm install` at the repo root, then `node ../benchmarks/arena/build.mjs` from site.',
   )
 write('arena-built.json', arena)
 write(

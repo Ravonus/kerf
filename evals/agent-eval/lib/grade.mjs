@@ -185,7 +185,7 @@ export async function quality(task, base, copy, golden) {
 async function lighthouse(url) {
   const script = join(here, '../apps/lib/lighthouse-run.mjs')
   if (!existsSync(join(here, '../apps/node_modules/lighthouse')))
-    return { skipped: 'npm ci in evals/apps first' }
+    return { skipped: 'npm ci in examples first' }
   try {
     const { stdout } = await run(
       process.execPath,

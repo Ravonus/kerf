@@ -119,7 +119,7 @@ with no `<option>` until it opens.
 
 warp's kit was 7.57 KB against the 7.00 KB allowance before this pass, and 9.22 KB once it added the custom Select. It was
 6.36 KB after two changes of construction, then the scripted Select came back on purpose, and the allowance is now 11 KB
-(`evals/warp-exit.mjs`). Measured with brotli 11, whole page with one component, runtime included: Select 15.04 KB against
+(`evals/gates/warp-exit.mjs`). Measured with brotli 11, whole page with one component, runtime included: Select 15.04 KB against
 10.63 KB for the base-select version, so **4.42 KB** more; Input 10.27 KB; CompactSelect 10.21 KB; NumberField 11.29 KB, 1.02 KB
 over Input. The owner's rule is speed over bytes inside the 50 KB ceiling, and the shop stays well inside it. The panel is built
 on first open and kept, so the bytes buy no mount work: a closed Select is a button and its hidden select.

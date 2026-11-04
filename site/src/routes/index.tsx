@@ -161,7 +161,7 @@ export default function Home() {
           </ul>
           <p data-part="note">
             JavaScript sent to the browser, compressed with brotli, from this repo's{' '}
-            <a href="https://github.com/Ravonus/weft/tree/main/evals/compare" rel="external">
+            <a href="https://github.com/Ravonus/weft/tree/main/benchmarks/compare" rel="external">
               comparison app
             </a>
             .

@@ -47,47 +47,47 @@
     "lines": 804,
     "tokens": 18678
   },
-  "file:evals/apps/bench.mjs": {
+  "file:examples/bench.mjs": {
     "lines": 412,
     "tokens": 9312
   },
-  "file:evals/apps/lemonstand/solid/src/components/lemon/rig.tsx": {
+  "file:examples/lemonstand/solid/src/components/lemon/rig.tsx": {
     "lines": 534,
     "tokens": 9525
   },
-  "file:evals/apps/lemonstand/solid/src/components/site/sections.tsx": {
+  "file:examples/lemonstand/solid/src/components/site/sections.tsx": {
     "lines": 646,
     "tokens": 19795
   },
-  "file:evals/apps/lib/build.mjs": {
+  "file:examples/lib/build.mjs": {
     "lines": 436,
     "tokens": 9265
   },
-  "file:evals/apps/lib/diagnose.mjs": {
+  "file:examples/lib/diagnose.mjs": {
     "lines": 431,
     "tokens": 9901
   },
-  "file:evals/apps/lib/flow.mjs": {
+  "file:examples/lib/flow.mjs": {
     "lines": 493,
     "tokens": 10588
   },
-  "file:evals/compare/design/audit.mjs": {
+  "file:benchmarks/compare/design/audit.mjs": {
     "lines": 435,
     "tokens": 8919
   },
-  "file:evals/compare/measure.mjs": {
+  "file:benchmarks/compare/measure.mjs": {
     "lines": 655,
     "tokens": 16363
   },
-  "file:evals/ds-exit.mjs": {
+  "file:evals/gates/ds-exit.mjs": {
     "lines": 479,
     "tokens": 14445
   },
-  "file:evals/phase5a-exit.mjs": {
+  "file:evals/gates/phase5a-exit.mjs": {
     "lines": 850,
     "tokens": 19144
   },
-  "file:evals/phase5b-exit.mjs": {
+  "file:evals/gates/phase5b-exit.mjs": {
     "lines": 818,
     "tokens": 20074
   },
@@ -815,87 +815,87 @@
     "lines": 142,
     "tokens": 2507
   },
-  "function:evals/apps/admin/next/src/components/orders-table.tsx:OrdersTable": {
+  "function:examples/admin/next/src/components/orders-table.tsx:OrdersTable": {
     "lines": 97,
     "tokens": 2326
   },
-  "function:evals/apps/admin/solid/src/routes/admin/orders/[id].tsx:Details": {
+  "function:examples/admin/solid/src/routes/admin/orders/[id].tsx:Details": {
     "lines": 100,
     "tokens": 3495
   },
-  "function:evals/apps/admin/solid/src/routes/admin/orders/index.tsx:OrderTable": {
+  "function:examples/admin/solid/src/routes/admin/orders/index.tsx:OrderTable": {
     "lines": 202,
     "tokens": 4933
   },
-  "function:evals/apps/bench.mjs:benchApp": {
+  "function:examples/bench.mjs:benchApp": {
     "lines": 222,
     "tokens": 4391
   },
-  "function:evals/apps/catalog/next/src/components/cart-lines.tsx:CartLines": {
+  "function:examples/catalog/next/src/components/cart-lines.tsx:CartLines": {
     "lines": 93,
     "tokens": 2743
   },
-  "function:evals/apps/catalog/solid/src/routes/(shop)/c/[slug].tsx:Category": {
+  "function:examples/catalog/solid/src/routes/(shop)/c/[slug].tsx:Category": {
     "lines": 116,
     "tokens": 3660
   },
-  "function:evals/apps/catalog/solid/src/routes/(shop)/c/[slug].tsx:Category/anonymous": {
+  "function:examples/catalog/solid/src/routes/(shop)/c/[slug].tsx:Category/anonymous": {
     "lines": 94,
     "tokens": 3267
   },
-  "function:evals/apps/catalog/solid/src/routes/(shop)/cart.tsx:Cart": {
+  "function:examples/catalog/solid/src/routes/(shop)/cart.tsx:Cart": {
     "lines": 105,
     "tokens": 3221
   },
-  "function:evals/apps/lemonstand/solid/src/components/lemon/face.tsx:mouth": {
+  "function:examples/lemonstand/solid/src/components/lemon/face.tsx:mouth": {
     "lines": 83,
     "tokens": 1834
   },
-  "function:evals/apps/lemonstand/solid/src/components/site/coach-demo.tsx:CoachDemo": {
+  "function:examples/lemonstand/solid/src/components/site/coach-demo.tsx:CoachDemo": {
     "lines": 140,
     "tokens": 3299
   },
-  "function:evals/apps/lemonstand/solid/src/components/site/contact-form.tsx:ContactForm": {
+  "function:examples/lemonstand/solid/src/components/site/contact-form.tsx:ContactForm": {
     "lines": 191,
     "tokens": 5363
   },
-  "function:evals/apps/lemonstand/solid/src/components/site/sections.tsx:Audiences": {
+  "function:examples/lemonstand/solid/src/components/site/sections.tsx:Audiences": {
     "lines": 81,
     "tokens": 2373
   },
-  "function:evals/apps/lemonstand/solid/src/components/site/waitlist-form.tsx:WaitlistForm": {
+  "function:examples/lemonstand/solid/src/components/site/waitlist-form.tsx:WaitlistForm": {
     "lines": 170,
     "tokens": 3897
   },
-  "function:evals/apps/lib/diagnose.mjs:report": {
+  "function:examples/lib/diagnose.mjs:report": {
     "lines": 84,
     "tokens": 2376
   },
-  "function:evals/apps/lib/diagnose.mjs:tuneFor": {
+  "function:examples/lib/diagnose.mjs:tuneFor": {
     "lines": 157,
     "tokens": 4135
   },
-  "function:evals/apps/lib/flow.mjs:sitePass": {
+  "function:examples/lib/flow.mjs:sitePass": {
     "lines": 107,
     "tokens": 2756
   },
-  "function:evals/apps/lib/measure.mjs:bytesPass": {
+  "function:examples/lib/measure.mjs:bytesPass": {
     "lines": 92,
     "tokens": 1891
   },
-  "function:evals/apps/lib/sites.test.mjs:describe(against Postgres and a browser)": {
+  "function:examples/lib/sites.test.mjs:describe(against Postgres and a browser)": {
     "lines": 189,
     "tokens": 3593
   },
-  "function:evals/apps/todo/next/src/components/todo-app.tsx:TodoApp": {
+  "function:examples/todo/next/src/components/todo-app.tsx:TodoApp": {
     "lines": 131,
     "tokens": 2867
   },
-  "function:evals/apps/todo/solid/src/routes/todos.tsx:TodoList": {
+  "function:examples/todo/solid/src/routes/todos.tsx:TodoList": {
     "lines": 102,
     "tokens": 2754
   },
-  "function:evals/apps/todo/solid/src/routes/todos.tsx:Todos": {
+  "function:examples/todo/solid/src/routes/todos.tsx:Todos": {
     "lines": 127,
     "tokens": 3287
   },
@@ -947,91 +947,91 @@
     "lines": 178,
     "tokens": 3924
   },
-  "function:evals/compare/design/audit.mjs:audit": {
+  "function:benchmarks/compare/design/audit.mjs:audit": {
     "lines": 121,
     "tokens": 2598
   },
-  "function:evals/compare/design/audit.mjs:brief": {
+  "function:benchmarks/compare/design/audit.mjs:brief": {
     "lines": 98,
     "tokens": 2040
   },
-  "function:evals/compare/design/react-mui/src/Customers.tsx:Customers": {
+  "function:benchmarks/compare/design/react-mui/src/Customers.tsx:Customers": {
     "lines": 101,
     "tokens": 2845
   },
-  "function:evals/compare/design/react-mui/src/Pricing.tsx:Pricing": {
+  "function:benchmarks/compare/design/react-mui/src/Pricing.tsx:Pricing": {
     "lines": 89,
     "tokens": 2395
   },
-  "function:evals/compare/design/react-mui/src/Settings.tsx:Settings": {
+  "function:benchmarks/compare/design/react-mui/src/Settings.tsx:Settings": {
     "lines": 107,
     "tokens": 2166
   },
-  "function:evals/compare/design/react-radix/src/Customers.tsx:Customers": {
+  "function:benchmarks/compare/design/react-radix/src/Customers.tsx:Customers": {
     "lines": 109,
     "tokens": 4060
   },
-  "function:evals/compare/design/react-radix/src/Settings.tsx:Settings": {
+  "function:benchmarks/compare/design/react-radix/src/Settings.tsx:Settings": {
     "lines": 102,
     "tokens": 2655
   },
-  "function:evals/compare/design/react-zustand/src/Customers.tsx:Customers": {
+  "function:benchmarks/compare/design/react-zustand/src/Customers.tsx:Customers": {
     "lines": 118,
     "tokens": 4236
   },
-  "function:evals/compare/design/react-zustand/src/Settings.tsx:Settings": {
+  "function:benchmarks/compare/design/react-zustand/src/Settings.tsx:Settings": {
     "lines": 149,
     "tokens": 4286
   },
-  "function:evals/compare/design/solid-kobalte/src/pages/Customers.tsx:Customers": {
+  "function:benchmarks/compare/design/solid-kobalte/src/pages/Customers.tsx:Customers": {
     "lines": 116,
     "tokens": 3894
   },
-  "function:evals/compare/design/solid-kobalte/src/pages/Settings.tsx:Settings": {
+  "function:benchmarks/compare/design/solid-kobalte/src/pages/Settings.tsx:Settings": {
     "lines": 101,
     "tokens": 2125
   },
-  "function:evals/compare/design/weft-ds/src/Customers.tsx:Customers": {
+  "function:benchmarks/compare/design/weft-ds/src/Customers.tsx:Customers": {
     "lines": 98,
     "tokens": 1809
   },
-  "function:evals/compare/design/weft-ds/src/Settings.tsx:Settings": {
+  "function:benchmarks/compare/design/weft-ds/src/Settings.tsx:Settings": {
     "lines": 90,
     "tokens": 2057
   },
-  "function:evals/compare/design/weft-tailwind/src/Customers.tsx:Customers": {
+  "function:benchmarks/compare/design/weft-tailwind/src/Customers.tsx:Customers": {
     "lines": 128,
     "tokens": 3638
   },
-  "function:evals/compare/design/weft-tailwind/src/Settings.tsx:Settings": {
+  "function:benchmarks/compare/design/weft-tailwind/src/Settings.tsx:Settings": {
     "lines": 119,
     "tokens": 2927
   },
-  "function:evals/compare/measure.mjs:parity": {
+  "function:benchmarks/compare/measure.mjs:parity": {
     "lines": 124,
     "tokens": 2261
   },
-  "function:evals/compare/react-radix/src/DataTable.tsx:DataTable": {
+  "function:benchmarks/compare/react-radix/src/DataTable.tsx:DataTable": {
     "lines": 142,
     "tokens": 3837
   },
-  "function:evals/compare/react-zustand/src/DataTable.tsx:DataTable": {
+  "function:benchmarks/compare/react-zustand/src/DataTable.tsx:DataTable": {
     "lines": 141,
     "tokens": 3800
   },
-  "function:evals/compare/solid-kobalte/src/DataTable.tsx:DataTable": {
+  "function:benchmarks/compare/solid-kobalte/src/DataTable.tsx:DataTable": {
     "lines": 146,
     "tokens": 3858
   },
-  "function:evals/compare/weft-plain/src/DataTable.tsx:DataTable": {
+  "function:benchmarks/compare/weft-plain/src/DataTable.tsx:DataTable": {
     "lines": 128,
     "tokens": 3202
   },
-  "function:evals/phase3-exit.e2e.mjs:anonymous": {
+  "function:evals/gates/phase3-exit.e2e.mjs:anonymous": {
     "lines": 130,
     "tokens": 4080
   },
-  "function:evals/phase3b-exit.e2e.mjs:anonymous": {
+  "function:evals/gates/phase3b-exit.e2e.mjs:anonymous": {
     "lines": 238,
     "tokens": 6030
   },
@@ -1407,7 +1407,7 @@
     "lines": 178,
     "tokens": 4861
   },
-  "function:evals/speed/shared/driver.js:expose": {
+  "function:benchmarks/speed/shared/driver.js:expose": {
     "lines": 118,
     "tokens": 1997
   },

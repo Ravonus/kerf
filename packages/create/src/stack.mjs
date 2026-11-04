@@ -99,7 +99,7 @@ const authTablesFile = (db) =>
 
 const camel = (column) => column.replace(/_(\w)/g, (_, c) => c.toUpperCase())
 
-/** A template's `src/db/auth.ts`: Better Auth's own column names with time zones, as evals/apps/shared/pg/schema.sql has them. */
+/** A template's `src/db/auth.ts`: Better Auth's own column names with time zones, as examples/shared/pg/schema.sql has them. */
 export const sharedAuthTables = () =>
   `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg().replace(
     /(text|boolean|timestamp)\('(\w+)'\)/g,

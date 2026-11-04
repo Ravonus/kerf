@@ -8,7 +8,7 @@
 // (1.4.3), which axe only knows for the control's own text.
 //
 //   node scripts/a11y.mjs                         the gallery (test/a11y: every component, fixtures/Variants.tsx)
-//   node scripts/a11y.mjs shop=<dist dir> [--json] also a built v3 shop (evals/warp-exit.mjs builds and passes it)
+//   node scripts/a11y.mjs shop=<dist dir> [--json] also a built v3 shop (evals/gates/warp-exit.mjs builds and passes it)
 //   node scripts/a11y.mjs --stop=quiet/dark/full   one stop, while fixing what it finds
 //
 // Exit 1 on any violation, page error or motion leak.

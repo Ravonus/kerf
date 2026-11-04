@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Phase 4's exit check (PLAN §9, "4. Design"; research 37): @weft-js/core/ds against raw Tailwind on consistency and a11y, from
-// one brief given to a fresh agent, and repeated on every stack in evals/compare (CLAUDE.md).
+// one brief given to a fresh agent, and repeated on every stack in benchmarks/compare (CLAUDE.md).
 //
 //   node evals/gates/ds-exit.mjs prepare <dir> [--models sonnet,haiku] [--samples 3]    one workspace per stack × model under <dir>
 //   node evals/gates/ds-exit.mjs agent <dir> [--concurrency 3] [--budget 4]   run headless `claude -p` in each

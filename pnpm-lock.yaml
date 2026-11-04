@@ -732,7 +732,7 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
-  site/arena:
+  benchmarks/arena:
     dependencies:
       react:
         specifier: 19.1.0

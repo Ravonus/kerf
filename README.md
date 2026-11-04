@@ -63,7 +63,7 @@ Brotli, as `node packages/core/scripts/size.mjs` reports it:
 - The `@weft-js/core` entry alone: 4.76 KB.
 - Hello world: 1.54 KB.
 
-An app built with warp has a ceiling of 50 KB of JavaScript and CSS, which `evals/warp-exit.mjs` checks.
+An app built with warp has a ceiling of 50 KB of JavaScript and CSS, which `evals/gates/warp-exit.mjs` checks.
 
 ## Docs
 

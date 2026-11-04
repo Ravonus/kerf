@@ -25,7 +25,7 @@ run('packages/text', 'node', 'scripts/specialize.mjs')
 process.env.DATABASE_URL ??= 'file:./setup.db' // prisma wants one to generate, and never opens it
 run('packages/db', 'pnpm', 'exec', 'prisma', 'generate') // tests and their types read the client
 // The site's types read what these generate.
-run('site', 'node', 'arena/build.mjs')
+run('site', 'node', '../benchmarks/arena/build.mjs')
 run('site', 'pnpm', 'exec', 'weft', 'plugins', 'sync')
 run('site', 'pnpm', 'exec', 'weft', 'run', 'content')
 console.log('[setup] done. `pnpm run check` runs everything.')

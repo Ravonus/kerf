@@ -10,8 +10,8 @@
   "cores": 28,
   "host": "GatorBuilder",
   "loadMax": 6.56,
-  "label": "Dashboard (evals/compare)",
-  "note": "The synthetic screen from evals/compare, every stack, client-rendered and served statically, so warp is measured on a real bundle. A manifest only: the stack folders aren't changed.",
+  "label": "Dashboard (benchmarks/compare)",
+  "note": "The synthetic screen from benchmarks/compare, every stack, client-rendered and served statically, so warp is measured on a real bundle. A manifest only: the stack folders aren't changed.",
   "pages": [
    "/"
   ],

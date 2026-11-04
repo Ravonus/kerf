@@ -194,7 +194,7 @@ const patches = [
   // The Vite plugin. A package in node_modules no longer has `weft` as a path segment.
   ['*', R`@weft-js\/(icons|warp)`, R`@weft-js\/(warp-icons|warp)`, 'any'],
   [
-    'site/arena/build.mjs',
+    'benchmarks/arena/build.mjs',
     "'../node_modules/weft/vite.mjs'",
     "'../node_modules/@weft-js/core/vite.mjs'",
     'all',
@@ -253,7 +253,7 @@ const patches = [
     '/^- `weft`: `Boundary`',
     `/^- \`${CORE.replace('/', '\\/')}\`: \`Boundary\``.replace('\\`Boundary\\`', '`Boundary`'),
   ],
-  ['evals/apps/stacks.json', '"detect": ["weft"', `"detect": ["${CORE}"`],
+  ['examples/stacks.json', '"detect": ["weft"', `"detect": ["${CORE}"`],
   [
     'crates/weft-compiler/tests/helper_contract.rs',
     '("weft", exports_of',

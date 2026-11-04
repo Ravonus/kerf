@@ -131,7 +131,7 @@ export const demos: Record<string, Demo> = {
   },
   receipt: {
     title: 'The shop, itemised',
-    look: 'What the shop app in the repo evals sends to the browser, in compressed JavaScript. Measured by evals/warp-exit.mjs with brotli; the app and the results are in the repo.',
+    look: 'What the shop app in the repo evals sends to the browser, in compressed JavaScript. Measured by evals/gates/warp-exit.mjs with brotli; the app and the results are in the repo.',
     tryIt: 'Compare it with the download sizes on the home page, which measure a larger dashboard.',
     why: "You pay for the components you use. A page that imports a button doesn't bring the rest of warp with it.",
   },

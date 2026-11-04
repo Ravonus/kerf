@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "weft run content && weft dev --port 3300",
-    "build": "node arena/build.mjs && weft run content && weft build",
+    "build": "node ../benchmarks/arena/build.mjs && weft run content && weft build",
     "check": "weft check",
     "start": "weft start",
     "content": "weft run content"

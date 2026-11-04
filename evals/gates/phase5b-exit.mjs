@@ -753,7 +753,7 @@ writeFileSync(
   `# Phase 5b exit check
 
 ${result.date}: **${failed.length ? 'FAIL' : 'PASS'}**, ${passed} of ${checks.length} checks, on ${host}. A CPU-bound demo beats its TS \`run\` by at least ${REQUIRED}×.
-The swap is scripted (\`evals/phase5b-exit.mjs\`, the app in \`evals/phase5b/\`), not done by an agent. \`weft start\` on ${runtimes.join(', ')}.
+The swap is scripted (\`evals/gates/phase5b-exit.mjs\`, the app in \`evals/phase5b/\`), not done by an agent. \`weft start\` on ${runtimes.join(', ')}.
 
 Changed under \`src/\`: ${changed.map((f) => `\`${f}\``).join(', ')}. Added: \`crates/media\`. Addon ${Math.round(sizes.bytes / 1024)} KB, WASM ${Math.round(sizes.wasmBytes / 1024)} KB.
 
@@ -764,7 +764,7 @@ ${checks.map((c) => `| ${c.name} | ${c.ok ? 'pass' : `**FAIL**: ${String(c.error
 ## Speed
 
 A 1600×1200 RGBA image, four passes of a 5-tap blur each way and an 8× box shrink, through the public \`GET /_weft/fn/<id>\`. TS and Rust produce the same bytes, which the wire check holds them to.
-Sequential p50 and p99, then 32 callers at once. A within-weft comparison of two server bodies: the \`evals/compare\` stacks have no server functions.
+Sequential p50 and p99, then 32 callers at once. A within-weft comparison of two server bodies: the \`benchmarks/compare\` stacks have no server functions.
 
 | Runtime | Body | p50 ms | p99 ms | calls/s | Over TS |
 |---|---|---|---|---|---|

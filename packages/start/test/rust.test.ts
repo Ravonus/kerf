@@ -1,5 +1,5 @@
 // `remote()` against a stand-in sidecar on a real socket (research 36): what crosses, and every way a call can come back.
-// The real crate is covered by `cargo test` in crates/weft and by evals/phase5a-exit.mjs.
+// The real crate is covered by `cargo test` in crates/weft and by evals/gates/phase5a-exit.mjs.
 import type { AddressInfo } from 'node:net'
 import { createHmac } from 'node:crypto'
 import { mkdtempSync, renameSync, writeFileSync } from 'node:fs'
@@ -588,7 +588,7 @@ describe("cargo's messages", () => {
 })
 
 // `native()` with `process.dlopen` stood in for: what crosses, and what a build's manifest decides. The real addon and
-// its WASM are covered by evals/phase5b-exit.mjs.
+// its WASM are covered by evals/gates/phase5b-exit.mjs.
 describe('native()', () => {
   const dlopen = process.dlopen.bind(process)
   let dir: string

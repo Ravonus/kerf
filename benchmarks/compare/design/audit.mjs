@@ -1,4 +1,4 @@
-// The stack-neutral design audit behind `evals/ds-exit.mjs` (PLAN §9 Phase 4) and measure.mjs: it reads only the built
+// The stack-neutral design audit behind `evals/gates/ds-exit.mjs` (PLAN §9 Phase 4) and measure.mjs: it reads only the built
 // page in Chromium, so it can't tell weft from React. Every screen of the brief, in light and dark, at 1280 and 390.
 //
 //   a11y         axe (WCAG 2.0–2.2 A/AA + best practice) nodes, split by contrast and everything else, over the resting
