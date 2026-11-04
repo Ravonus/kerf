@@ -77,7 +77,8 @@ import { derived, state } from '@weft-js/core'
 export function Name() {
   const first = state('Ada')
   const last = state('Lovelace')
-  const full = derived(() => `${first.value} ${last.value}`) // not a watch that writes a box
+  // Not a watch that writes a box.
+  const full = derived(() => `${first.value} ${last.value}`)
   return <p>{full.value}</p>
 }
 ```
@@ -98,7 +99,8 @@ import { interval } from '@weft-js/core/browser'
 
 export function Ticker() {
   const seconds = state(0)
-  interval('1s', () => seconds.value++) // cleared when this component's branch goes
+  // Cleared when this component's branch goes.
+  interval('1s', () => seconds.value++)
   return <p>{seconds.value} s</p>
 }
 ```
@@ -117,12 +119,20 @@ import { Button } from '@weft-js/warp'
 
 function counter(start = 0) {
   const count = state(start)
-  return { count, double: derived(() => count.value * 2), increment: () => count.value++ }
+  return {
+    count,
+    double: derived(() => count.value * 2),
+    increment: () => count.value++,
+  }
 }
 
 export function Tally() {
   const cups = counter()
-  return <Button onClick={cups.increment}>{cups.count.value} cups, {cups.double.value} halves</Button>
+  return (
+    <Button onClick={cups.increment}>
+      {cups.count.value} cups, {cups.double.value} halves
+    </Button>
+  )
 }
 ```
 
@@ -142,15 +152,22 @@ import { Boundary, resource } from '@weft-js/core'
 import { Spinner } from '@weft-js/warp'
 
 function Report(props: { city: string }) {
-  const report = resource(signal => fetch(`/api/weather/${props.city}`, { signal }).then(r => r.text()))
+  const report = resource((signal) =>
+    fetch(`/api/weather/${props.city}`, { signal }).then((r) =>
+      r.text()
+    )
+  )
   return (
     <p aria-busy={report.pending ? 'true' : 'false'}>
-      {report.value} {report.pending && report.value !== undefined && <Spinner label="Updating" />}
+      {report.value}{' '}
+      {report.pending && report.value !== undefined && (
+        <Spinner label="Updating" />
+      )}
     </p>
   )
 }
 
-// The resource is made inside the Boundary, so the Boundary knows to wait for it.
+// The resource is inside the Boundary, which knows to wait.
 export function Weather(props: { city: string }) {
   return (
     <Boundary pending={<p>Loading…</p>}>

@@ -21,16 +21,36 @@ thing, its variations and its pieces, in tokens, and compiles each use to plain 
 :::demo style-order
 
 ```tsx
+import { derived } from '@weft-js/core'
 import { group } from '@weft-js/core/style'
 
 const badge = group('stock-badge', {
-  base: { layout: 'inline', padInline: 'related', radius: 'round', text: 'caption', emphasis: 'soft' },
-  axes: { level: { plenty: { tone: 'positive' }, low: { tone: 'caution' }, none: { tone: 'critical' } } },
+  base: {
+    layout: 'inline',
+    padInline: 'related',
+    radius: 'round',
+    text: 'caption',
+    emphasis: 'soft',
+  },
+  axes: {
+    level: {
+      plenty: { tone: 'positive' },
+      low: { tone: 'caution' },
+      none: { tone: 'critical' },
+    },
+  },
   defaults: { level: 'plenty' },
 })
 
 export function Stock(props: { count: number }) {
-  return <span {...badge({ level: props.count === 0 ? 'none' : props.count < 5 ? 'low' : 'plenty' })}>{props.count} left</span>
+  const level = derived(() =>
+    props.count === 0 ? 'none' : props.count < 5 ? 'low' : 'plenty'
+  )
+  return (
+    <span {...badge({ level: level.value })}>
+      {props.count} left
+    </span>
+  )
 }
 ```
 
@@ -76,7 +96,9 @@ export function Sidebar() {
   return (
     <aside data-theme="dark" data-density="compact">
       <Card title="Today">
-        <Text subtle>Dark and compact, whatever the page around it is.</Text>
+        <Text subtle>
+          Dark and compact, whatever the page around it is.
+        </Text>
       </Card>
     </aside>
   )
@@ -100,8 +122,15 @@ import { Button } from '@weft-js/warp'
 export function Done() {
   return (
     <>
-      <p><CheckIcon /> Saved</p>
-      <Button emphasis="ghost" tone="neutral" icon="x" label="Close" />
+      <p>
+        <CheckIcon /> Saved
+      </p>
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="x"
+        label="Close"
+      />
     </>
   )
 }
@@ -124,7 +153,12 @@ export default defineConfig({
   plugins: [
     text({
       fonts: {
-        body: { family: 'Inter', src: 'assets/fonts/inter.woff2', fallback: 'Arial', axes: { wght: [100, 900] } },
+        body: {
+          family: 'Inter',
+          src: 'assets/fonts/inter.woff2',
+          fallback: 'Arial',
+          axes: { wght: [100, 900] },
+        },
       },
     }),
   ],
@@ -149,8 +183,16 @@ export function Details() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="link" aria-expanded={open.value} onClick={() => (open.value = !open.value)}>Shipping</Button>
-      {open.value && <Text>Roasted on Monday, shipped on Tuesday.</Text>}
+      <Button
+        emphasis="link"
+        aria-expanded={open.value}
+        onClick={() => (open.value = !open.value)}
+      >
+        Shipping
+      </Button>
+      {open.value && (
+        <Text>Roasted on Monday, shipped on Tuesday.</Text>
+      )}
     </>
   )
 }
