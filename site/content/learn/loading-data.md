@@ -31,7 +31,12 @@ export const countOpen = query({
   tags: ['todos'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const [row] = await ctx.db.select({ n: count() }).from(todos).where(and(eq(todos.userId, ctx.user.id), eq(todos.done, false)))
+    const [row] = await ctx.db
+      .select({ n: count() })
+      .from(todos)
+      .where(
+      and(eq(todos.userId, ctx.user.id), eq(todos.done, false)),
+    )
     return row?.n ?? 0
   },
 })
@@ -41,7 +46,15 @@ export const findTodo = query({
   auth: 'user',
   tags: ({ id }) => ['todos', `todos:${id}`],
   run: async ({ input, ctx }) => {
-    const [row] = await ctx.db.select().from(todos).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)))
+    const [row] = await ctx.db
+      .select()
+      .from(todos)
+      .where(
+      and(
+        eq(todos.id, input.id),
+        eq(todos.userId, ctx.user.id),
+      ),
+    )
     return row ?? null
   },
 })
@@ -56,13 +69,21 @@ import { me } from '#/server/session'
 import { countOpen } from '#/server/summary'
 
 export const load = async () => {
-  const [user, open] = await Promise.all([me.fetch(), countOpen.fetch()])
+  const [user, open] = await Promise.all([
+    me.fetch(),
+    countOpen.fetch(),
+  ])
   return { name: user?.name ?? 'there', open }
 }
 
-export const meta: Meta<typeof load> = ({ data }) => ({ title: `${data.open} open`, description: 'What is left to do.' })
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: `${data.open} open`,
+  description: 'What is left to do.',
+})
 
-export default function Summary(props: RouteProps<typeof load>) {
+export default function Summary(
+  props: RouteProps<typeof load>,
+) {
   return (
     <main>
       <h1>Hello, {props.data.name}</h1>
@@ -120,16 +141,27 @@ import { listTodos } from '#/server/todos'
 
 export const load = async () => ({
   open: await countOpen.fetch(),
-  // Not awaited: the page goes out without it, and the list streams in when it's ready.
+  // Not awaited: the page goes out first; the list streams in
+  // when it's ready.
   list: listTodos.fetch(),
 })
 
-function List(props: { todos: Promise<{ id: string; title: string }[]> }) {
+function List(
+  props: { todos: Promise<{ id: string; title: string }[]> },
+) {
   const todos = resource(() => props.todos)
-  return <ul>{(todos.value ?? []).map(t => <li key={t.id}>{t.title}</li>)}</ul>
+  return (
+    <ul>
+      {(todos.value ?? []).map((t) => (
+        <li key={t.id}>{t.title}</li>
+      ))}
+    </ul>
+  )
 }
 
-export default function Overview(props: RouteProps<typeof load>) {
+export default function Overview(
+  props: RouteProps<typeof load>,
+) {
   return (
     <main>
       <h1>{props.data.open} open</h1>
@@ -180,7 +212,13 @@ import { listTodos } from '#/server/todos'
 
 function OpenList() {
   const todos = listTodos()
-  return <ul>{(todos.value ?? []).filter(t => !t.done).map(t => <li key={t.id}>{t.title}</li>)}</ul>
+  return (
+    <ul>
+      {(todos.value ?? [])
+        .filter((t) => !t.done)
+        .map((t) => <li key={t.id}>{t.title}</li>)}
+    </ul>
+  )
 }
 
 export function Sidebar() {
@@ -231,7 +269,9 @@ import { findTodo } from '#/server/summary'
 import { listTodos } from '#/server/todos'
 
 function Detail(props: { id: string | null }) {
-  const todo = findTodo(() => (props.id ? { id: props.id } : skip))
+  const todo = findTodo(
+    () => (props.id ? { id: props.id } : skip)
+  )
   return <p>{todo.value ? todo.value.title : 'Pick a todo.'}</p>
 }
 
@@ -240,8 +280,15 @@ export function Picker() {
   const picked = state<string | null>(null)
   return (
     <div>
-      {(todos.value ?? []).map(t => (
-        <Button key={t.id} size="sm" emphasis="ghost" onClick={() => (picked.value = t.id)}>{t.title}</Button>
+      {(todos.value ?? []).map((t) => (
+        <Button
+          key={t.id}
+          size="sm"
+          emphasis="ghost"
+          onClick={() => (picked.value = t.id)}
+        >
+          {t.title}
+        </Button>
       ))}
       <Boundary pending={<p>Loading…</p>}>
         <Detail id={picked.value} />
@@ -316,7 +363,14 @@ import { invalidate } from '@weft-js/start'
 import { Button } from '@weft-js/warp'
 
 export function RefreshButton() {
-  return <Button emphasis="ghost" onClick={() => void invalidate('todos')}>Refresh</Button>
+  return (
+    <Button
+      emphasis="ghost"
+      onClick={() => void invalidate('todos')}
+    >
+      Refresh
+    </Button>
+  )
 }
 ```
 
@@ -394,7 +448,11 @@ export default function Home(props: RouteProps<typeof load>) {
   return (
     <main>
       <h1>Hello, {props.data.user?.name ?? 'there'}</h1>
-      <ul>{props.data.suggestions.map(t => <li key={t.id}>{t.title}</li>)}</ul>
+      <ul>
+        {props.data.suggestions.map((t) => (
+          <li key={t.id}>{t.title}</li>
+        ))}
+      </ul>
     </main>
   )
 }
@@ -413,9 +471,17 @@ export const load = async () => ({
   suggestions: listTodos.fetch(),
 })
 
-function Suggestions(props: { list: Promise<{ id: string; title: string }[]> }) {
+function Suggestions(
+  props: { list: Promise<{ id: string; title: string }[]> },
+) {
   const list = resource(() => props.list)
-  return <ul>{(list.value ?? []).map(t => <li key={t.id}>{t.title}</li>)}</ul>
+  return (
+    <ul>
+      {(list.value ?? []).map((t) => (
+        <li key={t.id}>{t.title}</li>
+      ))}
+    </ul>
+  )
 }
 
 export default function Home(props: RouteProps<typeof load>) {

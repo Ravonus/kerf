@@ -24,11 +24,14 @@ function Price(props: { value: number }) {
 }
 ```
 
-`weft check` says:
+`weft check` says (wrapped here to fit):
 
 ```text
-src/components/Price.tsx:2:23  W005 error  `state(props.value)` copies `props.value` once; later changes are ignored.
-    fix: Use `state.linked(() => …)` to reset when it changes, or `untrack()` if a snapshot is intended. (autofix)
+src/components/Price.tsx:2:23  W005 error
+  `state(props.value)` copies `props.value` once;
+  later changes are ignored.
+    fix: Use `state.linked(() => …)` to reset when it changes,
+    or `untrack()` if a snapshot is intended. (autofix)
 weft check: 14 files, 1 errors, 0 warnings (812 ms)
 ```
 
@@ -140,7 +143,8 @@ The flags:
 
 ### In JSON
 
-With `--json`, each diagnostic is an object, and the same shape comes from every command and the MCP server:
+With `--json`, each diagnostic is an object, and the same shape comes from every command and the MCP server.
+The text values below are shortened:
 
 ```json
 {
@@ -150,12 +154,19 @@ With `--json`, each diagnostic is an object, and the same shape comes from every
   "file": "src/components/Price.tsx",
   "span": [2, 23, 2, 34],
   "offset": [65, 76],
-  "why": "`state(props.value)` copies `props.value` once; later changes are ignored.",
+  "why": "`state(props.value)` copies `props.value` once; …",
   "fix": {
-    "text": "Use `state.linked(() => …)` to reset when it changes, or `untrack()` if a snapshot is intended.",
-    "description": "Make it a linked state that resets when the prop changes",
+    "text": "Use `state.linked(() => …)` to reset …",
+    "description": "Make it a linked state …",
     "safe": false,
-    "edits": [{ "file": "src/components/Price.tsx", "span": [2, 17, 2, 35], "offset": [59, 77], "text": "state.linked(() => props.value)" }]
+    "edits": [
+      {
+        "file": "src/components/Price.tsx",
+        "span": [2, 17, 2, 35],
+        "offset": [59, 77],
+        "text": "state.linked(() => props.value)"
+      }
+    ]
   },
   "docs": "weft docs W005"
 }
@@ -198,7 +209,7 @@ the diagnostic was pointing at.
 
 ## Looking up a code: `weft docs`
 
-Every code has a page, in the terminal:
+Every code has a page, in the terminal (wrapped below to fit):
 
 ```bash
 npx weft docs W005
@@ -207,7 +218,8 @@ npx weft docs W005
 ```text
 # W005 (error)
 
-`state(prop)`: React's `useState(prop)` bug, the box never follows the prop.
+`state(prop)`: React's `useState(prop)` bug,
+the box never follows the prop.
 
 **Fix:** `state.linked(() => prop)`, or `untrack` for a one-time copy.
 
@@ -332,7 +344,11 @@ export function NameField() {
   const name = state('')
   return (
     <label>
-      Name <input value={name.value} onChange={e => (name.value = e.currentTarget.value)} />
+      Name{' '}
+      <input
+        value={name.value}
+        onChange={(e) => (name.value = e.currentTarget.value)}
+      />
       <span>Hello, {name.value}</span>
     </label>
   )
@@ -408,7 +424,13 @@ This component shows a `0` on the page when there are no messages. Run `weft doc
 function Inbox(props) {
   return (
     <section>
-      {props.messages.length && <ul>{props.messages.map(m => <li key={m.id}>{m.subject}</li>)}</ul>}
+      {props.messages.length && (
+        <ul>
+          {props.messages.map((m) => (
+            <li key={m.id}>{m.subject}</li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }
@@ -419,12 +441,14 @@ the left side is a boolean:
 
 ```tsx
 // src/components/Inbox.tsx
-export function Inbox(props: { messages: { id: string; subject: string }[] }) {
+export function Inbox(
+  props: { messages: { id: string; subject: string }[] },
+) {
   return (
     <section>
       {props.messages.length > 0 && (
         <ul>
-          {props.messages.map(m => (
+          {props.messages.map((m) => (
             <li key={m.id}>{m.subject}</li>
           ))}
         </ul>

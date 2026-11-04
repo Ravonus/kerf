@@ -27,7 +27,9 @@ export function Save() {
   return (
     <p>
       <Button ui={row}>Save</Button>
-      {row.hover.value && <small>Saves a draft. Nothing is published.</small>}
+      {row.hover.value && (
+        <small>Saves a draft. Nothing is published.</small>
+      )}
     </p>
   )
 }
@@ -89,8 +91,16 @@ import { Checkbox } from '@weft-js/warp'
 
 export function TodoRow(props: { id: string; text: string }) {
   const row = interaction({ share: () => `todo:${props.id}` })
-  const note = derived(() => (row.hover.value ? 'here' : row.remote.value.hover ? 'someone else is here' : ''))
-  return <Checkbox ui={row} hint={note.value}>{props.text}</Checkbox>
+  const note = derived(
+    () => (row.hover.value
+      ? 'here'
+      : row.remote.value.hover
+      ? 'someone else is here'
+      : '')
+  )
+  return (
+    <Checkbox ui={row} hint={note.value}>{props.text}</Checkbox>
+  )
 }
 ```
 
@@ -128,7 +138,9 @@ import { Button } from '@weft-js/warp'
 export function Open(props: { id: string }) {
   const row = interaction({ share: () => `doc:${props.id}` })
   // Prefetch on your own hover, never on someone else's.
-  watch(() => row.hover.value, on => { if (on) void fetch(`/api/docs/${props.id}`) })
+  watch(() => row.hover.value, (on) => {
+    if (on) void fetch(`/api/docs/${props.id}`)
+  })
   return <Button ui={row} emphasis="soft">Open</Button>
 }
 ```
@@ -146,7 +158,10 @@ Sharing with other browsers is off until the server says who may see which keys.
 ```ts
 import { realtime } from '@weft-js/start'
 
-export default realtime({ share: ({ ctx, key }) => ctx.user !== null && key.startsWith('todo:') })
+export default realtime({
+  share: ({ ctx, key }) =>
+    ctx.user !== null && key.startsWith('todo:'),
+})
 ```
 
 The rule runs once per key, when a client joins and at each session re-check. With no `share` rule, the socket refuses
@@ -182,7 +197,10 @@ import { defineState, state } from '@weft-js/core'
 
 export const layout = defineState('layout', () => ({
   sidebar: state(true, { persist: 'local', sync: 'tabs' }),
-  view: state<'list' | 'grid'>('list', { persist: 'local', sync: 'tabs' }),
+  view: state<'list' | 'grid'>('list', {
+    persist: 'local',
+    sync: 'tabs',
+  }),
 }))
 ```
 
@@ -191,8 +209,14 @@ import { Button } from '@weft-js/warp'
 import { layout } from '../state/layout'
 
 export function SidebarToggle() {
+  const toggle = () => {
+    layout.sidebar.value = !layout.sidebar.value
+  }
   return (
-    <Button emphasis="ghost" onClick={() => (layout.sidebar.value = !layout.sidebar.value)}>
+    <Button
+      emphasis="ghost"
+      onClick={toggle}
+    >
       {layout.sidebar.value ? 'Hide sidebar' : 'Show sidebar'}
     </Button>
   )
@@ -220,13 +244,18 @@ import { tabs } from '@weft-js/core/browser'
 import { z } from 'zod'
 
 export function SignOut() {
-  const auth = tabs.channel('auth', z.object({ type: z.literal('signed-out') }))
+  const auth = tabs.channel(
+    'auth',
+    z.object({ type: z.literal('signed-out') }),
+  )
   auth.on(() => location.assign('/login'))
   const signOut = () => {
     auth.post({ type: 'signed-out' })
     location.assign('/login')
   }
-  return <button type="button" onClick={signOut}>Sign out</button>
+  return (
+    <button type="button" onClick={signOut}>Sign out</button>
+  )
 }
 ```
 
@@ -292,14 +321,24 @@ function CityItem(props: { name: string }) {
 
 function Pin(props: { name: string }) {
   const row = interaction({ share: () => `city:${props.name}` })
-  return <Button ui={row} size="sm" emphasis="ghost">pin: {props.name}</Button>
+  return (
+    <Button
+      ui={row}
+      size="sm"
+      emphasis="ghost"
+    >
+      pin: {props.name}
+    </Button>
+  )
 }
 
 export function MapView() {
   return (
     <>
-      <div>{CITIES.map(c => <CityItem key={c} name={c} />)}</div>
-      <div>{CITIES.map(c => <Pin key={c} name={c} />)}</div>
+      <div>
+        {CITIES.map((c) => <CityItem key={c} name={c} />)}
+      </div>
+      <div>{CITIES.map((c) => <Pin key={c} name={c} />)}</div>
     </>
   )
 }
@@ -313,7 +352,9 @@ This component tries to show others' hover by writing it into `remote`, and `wef
 
 ```tsx
 const row = interaction({ share: () => `todo:${props.id}` })
-watch(() => row.hover.value, on => { row.remote.value = { hover: on ? 1 : 0, focus: 0, pressed: 0 } })
+watch(() => row.hover.value, (on) => {
+  row.remote.value = { hover: on ? 1 : 0, focus: 0, pressed: 0 }
+})
 ```
 :::solution
 Don't write `remote`: it's what others are doing, and only the network writes it. Read it instead, next to your own:
@@ -325,8 +366,14 @@ import { Checkbox } from '@weft-js/warp'
 
 export function Todo(props: { id: string; text: string }) {
   const row = interaction({ share: () => `todo:${props.id}` })
-  const lit = derived(() => row.hover.value || row.remote.value.hover > 0)
-  return <Checkbox ui={row} hint={lit.value ? 'in view' : ''}>{props.text}</Checkbox>
+  const lit = derived(() =>
+    row.hover.value || row.remote.value.hover > 0
+  )
+  return (
+    <Checkbox ui={row} hint={lit.value ? 'in view' : ''}>
+      {props.text}
+    </Checkbox>
+  )
 }
 ```
 :::
