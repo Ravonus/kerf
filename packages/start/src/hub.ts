@@ -8,6 +8,7 @@
 //   backpressure past the high-water mark a subscription holds its last message, or up to `buffer`; pokes merge by tag.
 //                A buffer that overflows resets that stream; a connection over `queue` bytes is closed, and resumes.
 
+import { createDelivery } from './hub/delivery'
 import type { Bus } from './bus'
 import { memoryBus } from './bus'
 import { createFeed, functionHost, type Feed, type Poke, type Probe, type Source } from './changes'
@@ -82,7 +83,6 @@ const LIMITS: Limits = {
   burst: 40,
   shareKeys: 1000,
 }
-const HIGH = 64 * 1024
 const VOLATILE = '{"v":1'
 
 /** `realtime()`: the options of an app's `src/realtime.server.ts`. */
@@ -285,6 +285,7 @@ export function createHub(options: HubOptions): Hub {
   const closing = new Set<() => void>()
   let seq = 0
   const cursorOf = (n: number) => `${epoch}:${n}`
+  const { poke, deliver, drain } = createDelivery(limits, cursorOf, bye)
   const source = options.changes
   let live: LiveState = source
     ? { mode: 'off', via: 'none', why: 'not probed yet' }
@@ -493,55 +494,6 @@ export function createHub(options: HubOptions): Hub {
       for (const x of s.tags) if (t.includes(x) || p?.some((pre) => x.startsWith(pre))) out.add(x)
     }
     return [...out]
-  }
-
-  function poke(c: Conn, tags: string[], at: number) {
-    if (!tags.length) return
-    if (!c.held.size && c.sink.backlog() < HIGH)
-      return c.sink.write('p', JSON.stringify({ t: tags, c: cursorOf(at) }))
-    const p = (c.pokes ??= { t: new Set(), c: '' })
-    for (const t of tags) p.t.add(t)
-    p.c = cursorOf(at)
-  }
-
-  /** Over `queue`: the client gets a bye, reconnects and resumes, rather than this process growing. */
-  function hold(c: Conn, s: Sub, raw: string): boolean {
-    const size = raw.length
-    if (!s.buffer) {
-      for (const x of s.q) c.bytes -= x.size
-      s.q.length = 0
-    } else if (s.q.length >= s.buffer) {
-      for (const x of s.q) c.bytes -= x.size
-      s.q.length = 0
-      return false
-    }
-    s.q.push({ raw, size })
-    c.bytes += size
-    c.held.add(s)
-    if (c.bytes > limits.queue) bye(c, 0)
-    return true
-  }
-
-  /** Written to the client, or held. False: the buffer overflowed, so this stream resets. */
-  function deliver(c: Conn, s: Sub, raw: string): boolean {
-    if (!c.held.size && c.sink.backlog() < HIGH) return (c.sink.write('m', raw), true)
-    return hold(c, s, raw)
-  }
-
-  function drain(c: Conn) {
-    if (c.pokes && c.sink.backlog() < HIGH) {
-      c.sink.write('p', JSON.stringify({ t: [...c.pokes.t], c: c.pokes.c }))
-      c.pokes = undefined
-    }
-    for (const s of c.held) {
-      while (s.q.length && c.sink.backlog() < HIGH) {
-        const x = s.q.shift()!
-        c.bytes -= x.size
-        c.sink.write('m', x.raw)
-      }
-      if (s.q.length) return
-      c.held.delete(s)
-    }
   }
 
   function bye(c: Conn, retry: number) {
