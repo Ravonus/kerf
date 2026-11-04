@@ -21,12 +21,13 @@ too.
 A new app made with `--auth` (the default when you choose a database) has these files for it:
 
 ```
-src/auth.server.ts          the auth provider: Better Auth on your database
-src/db/schema.ts            also has Better Auth's tables: user, session, account, verification
-src/context.server.ts       puts the session on ctx: ctx.user and ctx.session
+src/auth.server.ts          Better Auth on your database
+src/db/schema.ts            Better Auth tables: user, session,
+                            account, verification
+src/context.server.ts       puts user and session on ctx
 src/server/session.ts       me, signUp, signIn and signOut
 src/routes/login.tsx        the sign-in and sign-up page
-src/routes/todos/_layout.tsx  the guard: /todos is for signed-in users only
+src/routes/todos/_layout.tsx  guards /todos for signed-in users
 .env                        BETTER_AUTH_SECRET and BETTER_AUTH_URL
 ```
 
@@ -44,7 +45,11 @@ import { db } from '#/db/index.server'
 import * as schema from '#/db/schema'
 import { env } from '#/env.server'
 
-export default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { database: drizzleAuth(db, schema) } })
+export default createAuth({
+  db,
+  secret: env.BETTER_AUTH_SECRET,
+  options: { database: drizzleAuth(db, schema) },
+})
 ```
 
 weft serves Better Auth's own routes under `/api/auth/*`. Anything in `options` goes to Better Auth as is, and wins over
@@ -61,7 +66,10 @@ import { session } from '@weft-js/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
-export default async ({ request }: { request: Request }) => ({ db, ...(await session(auth, request)) })
+export default async ({ request }: { request: Request }) => ({
+  db,
+  ...(await session(auth, request)),
+})
 
 type Session = Awaited<ReturnType<typeof auth.session>>
 
@@ -92,18 +100,28 @@ import { forward } from '@weft-js/start/auth'
 import { z } from 'zod'
 import auth from '#/auth.server'
 
-const credentials = z.object({ email: z.email(), password: z.string().min(8) })
+const credentials = z.object({
+  email: z.email(),
+  password: z.string().min(8),
+})
 
 /** Who is signed in, or null. */
 export const me = query({
   tags: ['session'],
-  run: ({ ctx }) => (ctx.user ? { id: ctx.user.id, name: ctx.user.name, email: ctx.user.email } : null),
+  run: ({ ctx }) => ctx.user
+    ? { id: ctx.user.id, name: ctx.user.name, email: ctx.user.email }
+    : null,
 })
 
 export const signUp = mutation({
   input: credentials.extend({ name: z.string().trim().min(1) }),
   run: async ({ input, ctx }) => {
-    await forward(ctx, auth.api.signUpEmail({ body: input, headers: ctx.request.headers, asResponse: true }))
+    const response = auth.api.signUpEmail({
+      body: input,
+      headers: ctx.request.headers,
+      asResponse: true,
+    })
+    await forward(ctx, response)
     redirect('/todos')
   },
 })
@@ -111,14 +129,23 @@ export const signUp = mutation({
 export const signIn = mutation({
   input: credentials,
   run: async ({ input, ctx }) => {
-    await forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true }))
+    const response = auth.api.signInEmail({
+      body: input,
+      headers: ctx.request.headers,
+      asResponse: true,
+    })
+    await forward(ctx, response)
     redirect('/todos')
   },
 })
 
 export const signOut = mutation({
   run: async ({ ctx }) => {
-    await forward(ctx, auth.api.signOut({ headers: ctx.request.headers, asResponse: true }))
+    const response = auth.api.signOut({
+      headers: ctx.request.headers,
+      asResponse: true,
+    })
+    await forward(ctx, response)
     redirect('/login')
   },
 })
@@ -134,7 +161,13 @@ validated on the server, and no Better Auth code reaches the browser. The sign-i
 
 ```tsx
 // src/routes/signin.tsx
-import { Form, redirect, type FormApi, type LoadArgs, type Meta } from '@weft-js/start'
+import {
+  Form,
+  redirect,
+  type FormApi,
+  type LoadArgs,
+  type Meta,
+} from '@weft-js/start'
 import { Alert, Button, Card, Input } from '@weft-js/warp'
 import { signIn } from '#/server/session'
 
@@ -143,7 +176,10 @@ export const load = ({ ctx }: LoadArgs) => {
   if (ctx.user) redirect('/todos')
 }
 
-export const meta: Meta = { title: 'Sign in', description: 'Sign in to see your todos.' }
+export const meta: Meta = {
+  title: 'Sign in',
+  description: 'Sign in to see your todos.',
+}
 
 export default function SignIn() {
   return (
@@ -151,10 +187,28 @@ export default function SignIn() {
       <Form of={signIn}>
         {(form: FormApi) => (
           <>
-            <Input label="Email" type="email" name="email" autocomplete="email" error={form.error('email')} />
-            <Input label="Password" type="password" name="password" autocomplete="current-password" error={form.error('password')} />
-            {form.message.value && <Alert tone="critical" live>{form.message.value}</Alert>}
-            <Button type="submit" loading={form.pending.value}>Sign in</Button>
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              autocomplete="email"
+              error={form.error('email')}
+            />
+            <Input
+              label="Password"
+              type="password"
+              name="password"
+              autocomplete="current-password"
+              error={form.error('password')}
+            />
+            {form.message.value && (
+              <Alert tone="critical" live>
+                {form.message.value}
+              </Alert>
+            )}
+            <Button type="submit" loading={form.pending.value}>
+              Sign in
+            </Button>
           </>
         )}
       </Form>
@@ -180,7 +234,9 @@ export default function Root(props: RouteProps<typeof load>) {
         {props.data ? (
           <>
             <span>{props.data.name}</span>
-            <Button emphasis="ghost" onClick={() => void signOut()}>Sign out</Button>
+            <Button emphasis="ghost" onClick={() => void signOut()}>
+              Sign out
+            </Button>
           </>
         ) : (
           <Link href="/login">Sign in</Link>
@@ -213,7 +269,10 @@ import { todos } from '#/db/schema'
 export const myTodos = query({
   tags: ['todos'],
   auth: 'user',
-  run: ({ ctx }) => ctx.db.select().from(todos).where(eq(todos.userId, ctx.user.id)),
+  run: ({ ctx }) => ctx.db
+    .select()
+    .from(todos)
+    .where(eq(todos.userId, ctx.user.id)),
 })
 ```
 
@@ -232,7 +291,9 @@ export const userCount = query({
   tags: ['user'],
   auth: 'user',
   run: async ({ ctx }) => {
-    if (!ADMINS.includes(ctx.user.email)) throw new FnError({ message: 'Only admins can see this.' }, 403)
+    if (!ADMINS.includes(ctx.user.email)) {
+      throw new FnError({ message: 'Only admins can see this.' }, 403)
+    }
     const [row] = await ctx.db.select({ n: count() }).from(user)
     return row?.n ?? 0
   },
@@ -249,7 +310,11 @@ export const userCount = query({
 A page is protected by its `load`. A guard redirects before anything renders:
 
 ```tsx
-import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import {
+  redirect,
+  type LoadArgs,
+  type RouteProps,
+} from '@weft-js/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
@@ -288,13 +353,18 @@ import { defineAuth } from '@weft-js/start/auth'
 
 type User = { id: string; name: string }
 
-const tokens = new Map<string, User>([['demo-token', { id: 'u1', name: 'Demo' }]])
+const tokens = new Map<string, User>([
+  ['demo-token', { id: 'u1', name: 'Demo' }],
+])
 
 export default defineAuth<User, { token: string }>({
   async session(request) {
-    const token = /(?:^|;\s*)token=([^;]+)/.exec(request.headers.get('cookie') ?? '')?.[1]
+    const cookie = request.headers.get('cookie') ?? ''
+    const token = /(?:^|;\s*)token=([^;]+)/.exec(cookie)?.[1]
     const user = token ? tokens.get(token) : undefined
-    return user && token ? { user, session: { token } } : { user: null, session: null }
+    return user && token
+      ? { user, session: { token } }
+      : { user: null, session: null }
   },
   async handler() {
     return new Response('Not found', { status: 404 })
@@ -333,7 +403,12 @@ import auth from '#/auth.server'
 export const quickSignIn = mutation({
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
-    await forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true }))
+    const response = auth.api.signInEmail({
+      body: input,
+      headers: ctx.request.headers,
+      asResponse: true,
+    })
+    await forward(ctx, response)
     return { ok: true }
   },
 })
@@ -350,7 +425,12 @@ import auth from '#/auth.server'
 export const quickSignIn = mutation({
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
-    await forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true }))
+    const response = auth.api.signInEmail({
+      body: input,
+      headers: ctx.request.headers,
+      asResponse: true,
+    })
+    await forward(ctx, response)
     redirect('/todos')
   },
 })
@@ -366,7 +446,11 @@ Make every page under `/account` redirect to `/login` for a visitor who isn't si
 A layout for the folder, `src/routes/account/_layout.tsx`, with a guard in its `load`:
 
 ```tsx
-import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import {
+  redirect,
+  type LoadArgs,
+  type RouteProps,
+} from '@weft-js/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
@@ -395,7 +479,11 @@ export const editTodo = mutation({
   input: z.object({ id: z.string(), title: z.string().min(1) }),
   auth: 'user',
   invalidates: ['todos'],
-  run: ({ input, ctx }) => ctx.db.update(todos).set({ title: input.title }).where(eq(todos.id, input.id)).returning(),
+  run: ({ input, ctx }) => ctx.db
+    .update(todos)
+    .set({ title: input.title })
+    .where(eq(todos.id, input.id))
+    .returning(),
 })
 ```
 :::solution
@@ -415,7 +503,10 @@ export const editTodo = mutation({
     const [row] = await ctx.db
       .update(todos)
       .set({ title: input.title })
-      .where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)))
+      .where(and(
+        eq(todos.id, input.id),
+        eq(todos.userId, ctx.user.id),
+      ))
       .returning()
     if (!row) throw new FnError({ message: 'Not yours.' }, 403)
     return row
