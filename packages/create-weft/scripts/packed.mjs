@@ -17,7 +17,7 @@ import { hotChecks, prepare } from './hot-checks.mjs'
 import { packWithAddon } from './pack-all.mjs'
 import { pin, pkgs, writePackedPolicy } from './tarballs.mjs'
 import { writeToolShim } from './tool-shim.mjs'
-import { checkPackedCrate, forceWasmCompiler } from './packed-paths.mjs'
+import * as packed from './packed-paths.mjs'
 import { jobs, pool } from '../../../scripts/jobs.mjs'
 
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
@@ -125,7 +125,7 @@ export default function Page() {
 async function rustApp(app, weft, log, sh) {
   await sh(weft, ['add', 'rust', 'hasher'], app)
   const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
-  checkPackedCrate(app, cargo)
+  packed.checkPackedCrate(app, cargo)
   const checked = JSON.parse((await sh(weft, ['check', '--json'], app)).stdout)
   if (!checked.ok) throw new Error(`rust: weft check: ${JSON.stringify(checked.diagnostics)}`)
   log('weft add rust, check: pass')
@@ -437,7 +437,11 @@ const only = process.argv
   .filter((a) => !a.startsWith('--'))[1]
   ?.split(',')
 const apps = [
-  { name: 'default', options: { ui: 'warp', db: 'sqlite', auth: true } },
+  {
+    name: 'default',
+    dir: packed.parityDirs.default,
+    options: { ui: 'warp', db: 'sqlite', auth: true },
+  },
   {
     name: 'tailwind',
     options: { ui: 'tailwind', db: 'sqlite', auth: true },
@@ -455,14 +459,13 @@ const apps = [
   { name: 'pay', options: { ui: 'warp', db: 'sqlite', auth: true }, pay: true },
   {
     name: 'wasm',
-    dir: 'wasm/default',
+    dir: packed.parityDirs.wasm,
     options: { ui: 'warp', db: 'sqlite', auth: true },
     wasm: true,
   }, // the same app name, so the same bytes
   { name: 'landing', options: { template: 'landing' } }, // reads nothing on `/`, so no database is needed to serve it
 ]
 const clients = {}
-
 await pool(
   apps.filter((a) => !only || only.includes(a.name)),
   jobs(),
@@ -483,7 +486,7 @@ await pool(
     writePackedPolicy(app, tarballs)
     await sh('pnpm', ['install', '--no-frozen-lockfile'], app)
     const weft = join(app, 'node_modules/.bin/weft')
-    if (wasm) forceWasmCompiler(app, hostAddon)
+    if (wasm) packed.forceWasmCompiler(app, hostAddon)
     const { compiler } = JSON.parse((await sh(weft, ['doctor', '--json'], app)).stdout)
     if (compiler.kind !== (wasm ? 'wasm' : 'native'))
       throw new Error(`${name}: compiling with ${JSON.stringify(compiler)}`)
@@ -521,11 +524,7 @@ await pool(
       .join('')
     if (/STRIPE_|api\.stripe\.com|checkout\/sessions/.test(client))
       throw new Error(`${name}: a rail reached the client`)
-    clients[name] = Object.fromEntries(
-      readdirSync(join(app, '.output/public/assets'))
-        .sort()
-        .map((f) => [f, readFileSync(join(app, '.output/public/assets', f), 'utf8')]),
-    )
+    clients[name] = packed.readClientAssets(app)
     if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client))
       throw new Error(`${name}: @weft-js/pay is in the bundle of an app that sells nothing`)
 
@@ -571,10 +570,8 @@ await pool(
     }
   },
 )
-
 if (clients.default && clients.wasm) {
-  if (JSON.stringify(clients.default) !== JSON.stringify(clients.wasm))
-    throw new Error('the same app built with the addon and with WASM differs')
+  packed.checkClientParity(clients.default, clients.wasm)
   console.log(
     `[packed] native and WASM builds of one app: ${Object.keys(clients.wasm).length} client files identical: pass`,
   )
