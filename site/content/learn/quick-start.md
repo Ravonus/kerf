@@ -18,7 +18,7 @@ from state are **derived**. Those three ideas carry most of what makes weft diff
 
 :::note Running the examples on your own machine
 weft isn't on npm yet. Once it is, `npm create @weft-js` will make an app. Until then you make one from a checkout of the
-repository with `node packages/create-weft/scripts/local.mjs new my-app`. [Installation](/learn/installation) has every
+repository with `node packages/create/scripts/local.mjs new my-app`. [Installation](/learn/installation) has every
 step. You don't need an app to read this page: the examples run right here.
 :::
 

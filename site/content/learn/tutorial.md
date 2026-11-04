@@ -33,7 +33,7 @@ step before. That's enough to learn everything until the server part.
 
 ```bash
 git clone https://github.com/Ravonus/weft.git
-node weft/packages/create-weft/scripts/local.mjs new my-shop --yes
+node weft/packages/create/scripts/local.mjs new my-shop --yes
 cd my-shop
 npx weft dev
 ```

@@ -34,7 +34,7 @@ Run this from the folder that holds `weft`. It builds what's out of date, packs 
 `my-app` beside the repo, wired to those tarballs.
 
 ```bash
-node weft/packages/create-weft/scripts/local.mjs new my-app --yes --db none
+node weft/packages/create/scripts/local.mjs new my-app --yes --db none
 ```
 
 `--db none` leaves out the database so there's nothing to set up. Leave off `--yes` and it asks you each question in turn,
@@ -101,10 +101,10 @@ stops and says so. A few combinations, to give you the idea:
 
 ```bash
 # a static-looking site with Tailwind and no server data
-node weft/packages/create-weft/scripts/local.mjs new site --yes --ui tailwind --db none
+node weft/packages/create/scripts/local.mjs new site --yes --ui tailwind --db none
 
 # Postgres through Prisma, no sign-in, built for Bun
-node weft/packages/create-weft/scripts/local.mjs new shop --yes --db postgres --layer prisma --no-auth --runtime bun
+node weft/packages/create/scripts/local.mjs new shop --yes --db postgres --layer prisma --no-auth --runtime bun
 ```
 
 `local.mjs new` always installs with npm, because that's what the tarballs are wired up for: `--pm` and `--install` are
@@ -112,7 +112,7 @@ for the published generator.
 
 :::note Making it from a checkout
 `local.mjs` keeps the packed tarballs in `~/.weft/local` (set `WEFT_LOCAL_DIR` to move it). After you pull new changes to
-weft, run `node weft/packages/create-weft/scripts/local.mjs refresh my-app` to rebuild what changed and put the new
+weft, run `node weft/packages/create/scripts/local.mjs refresh my-app` to rebuild what changed and put the new
 tarballs in the app, then restart `weft dev`.
 :::
 
@@ -242,7 +242,7 @@ point them at your checkout's tarballs:
 ```
 
 ```bash
-node weft/packages/create-weft/scripts/local.mjs refresh my-vite-app
+node weft/packages/create/scripts/local.mjs refresh my-vite-app
 ```
 
 `refresh` works with npm only, and stops if it finds another package manager's lockfile.

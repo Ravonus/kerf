@@ -237,7 +237,7 @@ downloads. Compress them the way your host does (brotli, usually) before you com
 which islands load when.
 
 :::note Inside the weft repository
-The framework holds itself to size budgets with `node packages/weft/scripts/size.mjs`, which builds a set of fixture apps
+The framework holds itself to size budgets with `node packages/core/scripts/size.mjs`, which builds a set of fixture apps
 and reports their brotli sizes, and to speed with the benchmarks in `evals/`. These are for working on weft itself, not
 commands for your app. `CONTRIBUTING.md` says when to run them.
 :::
@@ -266,7 +266,7 @@ Read them with their limits:
 - **Smaller isn't always faster to paint.** weft + warp is a quarter of the JavaScript of React + Radix, but Solid +
   Kobalte paints its first frame sooner. The table has both columns for that reason.
 - **Kits differ in what they do.** Radix and Kobalte add menu keyboard handling and focus traps that the no-warp weft page
-  doesn't have, and warp keeps some closed menus mounted. `evals/compare/README.md` lists every difference.
+  doesn't have, and warp keeps some closed menus mounted. `benchmarks/compare/README.md` lists every difference.
 
 The home page also has a speed table against Solid and React on the usual benchmark operations (create, update, swap and
 remove rows). weft wins some rows and loses others, and rows where the rounds overlap are marked as too close to call.
