@@ -3,7 +3,8 @@
 `benchmarks/compare` is one synthetic screen. This is the other half: point it at a real app and its other versions, and it reports
 how weft compares and what to tune in weft or warp because of it. Run it after converting an app, and after changing weft.
 
-    npm install                                  # once, Node 26
+    pnpm run setup                              # repo root, Node 26
+    cd examples
     node bench.mjs lemonstand                    # one app
     node bench.mjs --all                         # every folder here with an app.json
     node bench.mjs ~/dev/shop --samples=5        # any folder holding an app.json
@@ -162,3 +163,5 @@ The stack rule still holds: a claim about weft gets measured across the other va
 
 `node --test lib` covers the win logic, the freshness checks and stack detection; with Postgres up, it also runs the database, proxy
 and race probes for real against `lib/fixture`, the todo contract with no framework.
+
+`style-groups/src` holds the source fixture used by core's style and SSR round-trip tests.
