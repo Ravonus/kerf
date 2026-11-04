@@ -11,8 +11,9 @@ afterAll(async () => { await browser?.close() })
 
 const settle = page => page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
 
-async function open(path, ctx = browser) {
+async function open(path, ctx = browser, desktop = false) {
   const page = await ctx.newPage()
+  if (desktop) await page.addInitScript(() => Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 }))
   const errors = []
   page.on('pageerror', e => errors.push(e.message))
   await page.goto(url + path)
@@ -191,7 +192,7 @@ test('a write in one tab reaches another at once, with no focus and no connectio
 
 /** A fade running over the page, with a link in the corner holding `html`. */
 async function fading(html) {
-  const { page, errors } = await open('/')
+  const { page, errors } = await open('/', browser, true)
   await page.addStyleTag({ content: '::view-transition-group(root){animation-duration:3s}' })
   await link(page, '/about')
   await page.waitForFunction(() => location.pathname === '/about')

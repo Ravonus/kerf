@@ -12,8 +12,9 @@ let browser
 beforeAll(async () => { browser = await chromium.launch() })
 afterAll(async () => { await browser?.close() })
 
-async function open(path) {
+async function open(path, desktop = false) {
   const page = await browser.newPage()
+  if (desktop) await page.addInitScript(() => Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 }))
   const errors = []
   page.on('pageerror', e => errors.push(e.message))
   page.on('console', m => m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined)
@@ -576,7 +577,7 @@ test('a route change on a phone-sized CPU does not ask for a fade at all', async
 })
 
 test('a route fade that was slow to start is not asked for again', async () => {
-  const { page, errors } = await open('/about')
+  const { page, errors } = await open('/about', true)
   await page.evaluate(() => {
     window.__fades = 0
     document.startViewTransition = fn => {
