@@ -187,11 +187,36 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
+  benchmarks/arena:
+    dependencies:
+      '@weft-js/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      react:
+        specifier: 19.1.0
+        version: 19.1.0
+      react-dom:
+        specifier: 19.1.0
+        version: 19.1.0(react@19.1.0)
+      solid-js:
+        specifier: 1.9.17
+        version: 1.9.17
+    devDependencies:
+      '@vitejs/plugin-react':
+        specifier: 4.5.0
+        version: 4.5.0(supports-color@10.2.2)(vite@6.4.4(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vite:
+        specifier: 6.4.4
+        version: 6.4.4(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+      vite-plugin-solid:
+        specifier: 2.11.6
+        version: 2.11.6(solid-js@1.9.17)(supports-color@10.2.2)(vite@6.4.4(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
   packages/cli:
     dependencies:
       '@weft-js/create':
         specifier: workspace:*
-        version: link:../create-weft
+        version: link:../create
       axe-core:
         specifier: 4.14.0
         version: 4.14.0
@@ -207,13 +232,45 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       vite:
         specifier: 8.3.5
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/core:
+    dependencies:
+      dom-accessibility-api:
+        specifier: 0.7.1
+        version: 0.7.1
+    devDependencies:
+      '@testing-library/dom':
+        specifier: 10.4.2
+        version: 10.4.2
+      '@testing-library/user-event':
+        specifier: 14.6.8
+        version: 14.6.8(@testing-library/dom@10.4.2)
+      jsdom:
+        specifier: 30.1.3
+        version: 30.1.3(@noble/hashes@2.4.0)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vite:
+        specifier: 8.3.5
+        version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+      vitest:
+        specifier: 5.0.5
+        version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    optionalDependencies:
+      '@weft-js/compiler-darwin-arm64':
+        specifier: 0.1.1
+        version: 0.1.1
 
   packages/create:
     devDependencies:
@@ -241,7 +298,7 @@ importers:
         version: 7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2))(typescript@7.0.2)
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/start':
         specifier: workspace:*
         version: link:../start
@@ -267,21 +324,6 @@ importers:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
-  packages/warp-icons:
-    devDependencies:
-      '@weft-js/core':
-        specifier: workspace:*
-        version: link:../weft
-      jsdom:
-        specifier: 30.1.3
-        version: 30.1.3(@noble/hashes@2.4.0)
-      vite:
-        specifier: 8.3.5
-        version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
-      vitest:
-        specifier: 5.0.5
-        version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-
   packages/multiplayer:
     devDependencies:
       '@testing-library/dom':
@@ -292,7 +334,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/start':
         specifier: workspace:*
         version: link:../start
@@ -323,7 +365,7 @@ importers:
         version: link:../cli
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/start':
         specifier: workspace:*
         version: link:../start
@@ -348,7 +390,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/plugin-media-ffmpeg':
         specifier: workspace:*
         version: link:../plugin-media-ffmpeg
@@ -360,7 +402,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
@@ -369,7 +411,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/text':
         specifier: workspace:*
         version: link:../text
@@ -390,7 +432,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/start':
         specifier: workspace:*
         version: link:../start
@@ -412,7 +454,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/multiplayer':
         specifier: workspace:*
         version: link:../multiplayer
@@ -431,7 +473,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/start':
         specifier: workspace:*
         version: link:../start
@@ -447,7 +489,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/start':
         specifier: workspace:*
         version: link:../start
@@ -463,7 +505,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/multiplayer':
         specifier: workspace:*
         version: link:../multiplayer
@@ -481,7 +523,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       '@weft-js/multiplayer':
         specifier: workspace:*
         version: link:../multiplayer
@@ -521,7 +563,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       better-auth:
         specifier: 1.7.14
         version: 1.7.14(1dc53cdc138db325c79e5d61afd992cf)
@@ -588,7 +630,7 @@ importers:
         version: 5.3.0
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
@@ -612,7 +654,7 @@ importers:
         version: link:../warp-core
       '@weft-js/warp-icons':
         specifier: workspace:*
-        version: link:../icons
+        version: link:../warp-icons
     devDependencies:
       '@testing-library/dom':
         specifier: 10.4.2
@@ -622,7 +664,7 @@ importers:
         version: 14.6.8(@testing-library/dom@10.4.2)
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       axe-core:
         specifier: ^4.14.0
         version: 4.14.0
@@ -646,7 +688,7 @@ importers:
     devDependencies:
       '@weft-js/core':
         specifier: workspace:*
-        version: link:../weft
+        version: link:../core
       jsdom:
         specifier: 30.1.3
         version: 30.1.3(@noble/hashes@2.4.0)
@@ -657,37 +699,20 @@ importers:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
-  packages/core:
-    dependencies:
-      dom-accessibility-api:
-        specifier: 0.7.1
-        version: 0.7.1
+  packages/warp-icons:
     devDependencies:
-      '@testing-library/dom':
-        specifier: 10.4.2
-        version: 10.4.2
-      '@testing-library/user-event':
-        specifier: 14.6.8
-        version: 14.6.8(@testing-library/dom@10.4.2)
+      '@weft-js/core':
+        specifier: workspace:*
+        version: link:../core
       jsdom:
         specifier: 30.1.3
         version: 30.1.3(@noble/hashes@2.4.0)
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
       vite:
         specifier: 8.3.5
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-      zod:
-        specifier: 4.6.7
-        version: 4.6.7
-    optionalDependencies:
-      '@weft-js/compiler-darwin-arm64':
-        specifier: 0.1.1
-        version: 0.1.1
 
   site:
     dependencies:
@@ -731,28 +756,6 @@ importers:
       typescript:
         specifier: 7.0.2
         version: 7.0.2
-
-  benchmarks/arena:
-    dependencies:
-      react:
-        specifier: 19.1.0
-        version: 19.1.0
-      react-dom:
-        specifier: 19.1.0
-        version: 19.1.0(react@19.1.0)
-      solid-js:
-        specifier: 1.9.17
-        version: 1.9.17
-    devDependencies:
-      '@vitejs/plugin-react':
-        specifier: 4.5.0
-        version: 4.5.0(supports-color@10.2.2)(vite@6.4.4(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-      vite:
-        specifier: 6.4.4
-        version: 6.4.4(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
-      vite-plugin-solid:
-        specifier: 2.11.6
-        version: 2.11.6(solid-js@1.9.17)(supports-color@10.2.2)(vite@6.4.4(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
 packages:
 
