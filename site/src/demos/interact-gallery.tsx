@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { derived, state } from '@weft-js/core'
 import { Button, Card } from '@weft-js/warp'
 
 const sculptures = [
@@ -23,20 +23,30 @@ export default function Gallery() {
   // Two boxes, because they change for different reasons.
   const index = state(0)
   const showMore = state(false)
-  const next = () => (index.value = (index.value + 1) % sculptures.length)
+  const sculpture = derived(() => sculptures[index.value])
+  const next = () =>
+    (index.value = (index.value + 1) % sculptures.length)
   return (
     <Card
-      eyebrow={`${index.value + 1} of ${sculptures.length}`}
-      title={sculptures[index.value]?.name}
+      eyebrow={
+        `${index.value + 1} of ${sculptures.length}`
+      }
+      title={sculpture.value?.name}
     >
-      <p>by {sculptures[index.value]?.artist}</p>
+      <p>by {sculpture.value?.artist}</p>
       <Button size="sm" onClick={next}>
         Next
       </Button>
-      <Button size="sm" emphasis="ghost" onClick={() => (showMore.value = !showMore.value)}>
+      <Button
+        size="sm"
+        emphasis="ghost"
+        onClick={() => (showMore.value = !showMore.value)}
+      >
         {showMore.value ? 'Hide' : 'Show'} details
       </Button>
-      {showMore.value && <p>{sculptures[index.value]?.about}</p>}
+      {showMore.value && (
+        <p>{sculpture.value?.about}</p>
+      )}
     </Card>
   )
 }
