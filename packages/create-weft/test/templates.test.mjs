@@ -12,6 +12,7 @@ import {
   symlinkSync,
 } from 'node:fs'
 import { join } from 'node:path'
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
 import { check } from '../../cli/src/check.mjs'
@@ -19,6 +20,7 @@ import { scaffold, template, TEMPLATES } from '../src/index.mjs'
 import { resolveChoices } from '../src/wizard.mjs'
 import { idempotent, loadTemplate, withTemplate } from '../src/templates.mjs'
 
+const ts = createRequire(new URL('../../cli/package.json', import.meta.url))('typescript')
 const here = new URL('../', import.meta.url)
 const tmp = fileURLToPath(new URL('./.tmp-templates/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
@@ -36,6 +38,19 @@ const home = (dep) =>
 const written = TEMPLATES.filter((name) =>
   existsSync(new URL(`templates/${name}/template.json`, here)),
 )
+
+function literal(node) {
+  if (ts.isStringLiteral(node)) return node.text
+  if (ts.isNumericLiteral(node)) return Number(node.text)
+  if (ts.isObjectLiteralExpression(node))
+    return Object.fromEntries(
+      node.properties.map((p) => {
+        expect(ts.isPropertyAssignment(p)).toBe(true)
+        return [p.name.text, literal(p.initializer)]
+      }),
+    )
+  throw new Error(`Unexpected warp option: ${node.getText()}`)
+}
 
 function app(name, options = {}) {
   const dir = join(tmp, `${name}-${options.config ?? 'ts'}`)
@@ -130,9 +145,20 @@ describe('the overlay', () => {
   })
 
   it("puts the template's warp options in the config", () => {
-    expect(files['weft.config.ts']).toContain(
-      `warp(${JSON.stringify(loadTemplate('landing').warp)})`,
+    const source = ts.createSourceFile(
+      'weft.config.ts',
+      files['weft.config.ts'],
+      ts.ScriptTarget.Latest,
     )
+    const calls = []
+    const visit = (node) => {
+      if (ts.isCallExpression(node) && node.expression.getText(source) === 'warp') calls.push(node)
+      ts.forEachChild(node, visit)
+    }
+    visit(source)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].arguments).toHaveLength(1)
+    expect(literal(calls[0].arguments[0])).toEqual(loadTemplate('landing').warp)
   })
 
   it('the default stays what it was without a template', () => {
