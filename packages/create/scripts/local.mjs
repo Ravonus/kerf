@@ -28,7 +28,7 @@ const OTHER_LOCKS = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock']
 /** The compiler's addon and WASM builds, when a stamp no longer matches the crate. */
 function buildNative() {
   const { sourceStamp, stampFile } = createRequire(import.meta.url)(
-    join(pkgs, 'weft/scripts/native-stamp.cjs'),
+    join(pkgs, 'core/scripts/native-stamp.cjs'),
   )
   const stamped = (file) =>
     existsSync(stampFile(file)) && readFileSync(stampFile(file), 'utf8').trim() === sourceStamp()

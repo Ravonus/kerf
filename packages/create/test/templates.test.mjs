@@ -26,14 +26,8 @@ const tmp = fileURLToPath(new URL('./.tmp-templates/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
-// The package a scoped name is, by its directory: most drop the scope, a few kept their old directory names.
-const home = (dep) =>
-  join(
-    pkgs,
-    { '@weft-js/core': 'weft', '@weft-js/create': 'create-weft', '@weft-js/warp-icons': 'icons' }[
-      dep
-    ] ?? dep.replace('@weft-js/', ''),
-  )
+// Package folders match their npm name without the scope.
+const home = (dep) => join(pkgs, dep.replace('@weft-js/', ''))
 
 const written = TEMPLATES.filter((name) =>
   existsSync(new URL(`templates/${name}/template.json`, here)),

@@ -590,7 +590,7 @@ const person = join(personScope, 'person')
 await shell(
   'node',
   [
-    join(pkgs, 'create-weft/bin/create-weft.mjs'),
+    join(pkgs, 'create/bin/create-weft.mjs'),
     person,
     '--yes',
     '--pm',

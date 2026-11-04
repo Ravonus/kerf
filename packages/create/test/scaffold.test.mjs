@@ -78,7 +78,7 @@ describe.each([
 
   it('tsc is clean, on the app and the packages it pulls in', () => {
     const dir = app(ui)
-    const tsc = spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], {
+    const tsc = spawnSync(join(pkgs, 'core/node_modules/.bin/tsc'), ['--noEmit'], {
       cwd: dir,
       encoding: 'utf8',
     })
@@ -97,7 +97,7 @@ it("the alias is the app's: a tsconfig edit is all it takes to use its own", asy
     "import { label } from '~/lib/label'\n\nexport default function About() {\n  return <p>{label}</p>\n}\n",
   )
   expect(
-    spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], {
+    spawnSync(join(pkgs, 'core/node_modules/.bin/tsc'), ['--noEmit'], {
       cwd: dir,
       encoding: 'utf8',
     }).stdout,
@@ -126,7 +126,7 @@ it.each(['json', 'yaml'])('a %s config gives the same app as TypeScript', async 
   const r = await check(dir)
   expect(r.diagnostics.map((d) => d.code)).toEqual(['H001'])
   expect(
-    spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], {
+    spawnSync(join(pkgs, 'core/node_modules/.bin/tsc'), ['--noEmit'], {
       cwd: dir,
       encoding: 'utf8',
     }).stdout,
