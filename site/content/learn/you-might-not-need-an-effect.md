@@ -87,10 +87,12 @@ import { derived, state } from '@weft-js/core'
 type Row = { id: number; name: string }
 
 export function Directory(props: { rows: Row[] }) {
+  const { rows } = props
   const query = state('')
-  const matches = derived(() => props.rows.filter(r =>
-    r.name.toLowerCase().includes(query.value.toLowerCase()),
-  ))
+  const matches = derived(() => {
+    const lowerQuery = query.value.toLowerCase()
+    return rows.filter(r => r.name.toLowerCase().includes(lowerQuery))
+  })
   return (
     <div>
       <input
@@ -124,20 +126,22 @@ import { state } from '@weft-js/core'
 type Person = { id: number; name: string }
 
 function Profile(props: { person: Person }) {
+  const { person } = props
   const note = state('')
   return (
     <textarea
       value={note.value}
       onInput={e => (note.value = e.currentTarget.value)}
-      aria-label={`A note about ${props.person.name}`}
+      aria-label={`A note about ${person.name}`}
     />
   )
 }
 
 export function People(props: { shown: Person }) {
+  const { shown } = props
   return (
     <div>
-      {[props.shown].map(p => <Profile key={p.id} person={p} />)}
+      {[shown].map(p => <Profile key={p.id} person={p} />)}
     </div>
   )
 }
@@ -157,14 +161,15 @@ import { state } from '@weft-js/core'
 type Contact = { id: number; name: string }
 
 export function Chat(props: { contact: Contact }) {
+  const { contact } = props
   const draft = state.linked(() => '', {
-    key: () => props.contact.id,
+    key: () => contact.id,
   })
   return (
     <textarea
       value={draft.value}
       onInput={e => (draft.value = e.currentTarget.value)}
-      aria-label={`Message to ${props.contact.name}`}
+      aria-label={`Message to ${contact.name}`}
     />
   )
 }
@@ -339,9 +344,10 @@ import { Boundary, resource, state } from '@weft-js/core'
 type Hit = { id: string; title: string }
 
 function Hits(props: { query: string }) {
+  const { query } = props
   const hits = resource(signal =>
     fetch(
-      `/api/search?q=${encodeURIComponent(props.query)}`,
+      `/api/search?q=${encodeURIComponent(query)}`,
       { signal },
     ).then(r => r.json() as Promise<Hit[]>),
   )
@@ -432,9 +438,10 @@ import { state, watch } from '@weft-js/core'
 type Item = { id: number; name: string; price: number }
 
 export function Cheap(props: { items: Item[] }) {
+  const { items } = props
   const max = state(10)
   const shown = state<Item[]>([])
-  watch(() => props.items.filter(i => i.price <= max.value), list => {
+  watch(() => items.filter(i => i.price <= max.value), list => {
     shown.value = list
   })
   return (
@@ -451,7 +458,7 @@ export function Cheap(props: { items: Item[] }) {
 }
 ```
 :::solution
-`shown` is computed from `props.items` and `max`, so it's `derived`:
+`shown` is computed from `items` and `max`, so it's `derived`:
 
 ```tsx
 import { derived, state } from '@weft-js/core'
@@ -459,9 +466,10 @@ import { derived, state } from '@weft-js/core'
 type Item = { id: number; name: string; price: number }
 
 export function Cheap(props: { items: Item[] }) {
+  const { items } = props
   const max = state(10)
   const shown = derived(() =>
-    props.items.filter(i => i.price <= max.value),
+    items.filter(i => i.price <= max.value),
   )
   return (
     <div>
@@ -539,7 +547,8 @@ import { state, untrack } from '@weft-js/core'
 type Document = { id: string; title: string }
 
 export function Editor(props: { doc: Document }) {
-  const title = state(untrack(() => props.doc.title))
+  const { doc } = props
+  const title = state(untrack(() => doc.title))
   return (
     <input
       value={title.value}
@@ -559,8 +568,9 @@ import { state } from '@weft-js/core'
 type Document = { id: string; title: string }
 
 export function Editor(props: { doc: Document }) {
-  const title = state.linked(() => props.doc.title, {
-    key: () => props.doc.id,
+  const { doc } = props
+  const title = state.linked(() => doc.title, {
+    key: () => doc.id,
   })
   return (
     <input
