@@ -160,8 +160,8 @@
     "tokens": 12195
   },
   "file:packages/create-weft/scripts/packed.mjs": {
-    "lines": 616,
-    "tokens": 18555
+    "lines": 615,
+    "tokens": 18450
   },
   "file:packages/create-weft/src/stack.mjs": {
     "lines": 623,
@@ -1660,8 +1660,8 @@
     "tokens": 2590
   },
   "function:packages/create-weft/scripts/packed.mjs:pool(callback)": {
-    "lines": 105,
-    "tokens": 3300
+    "lines": 104,
+    "tokens": 3253
   },
   "function:packages/create-weft/scripts/registry.mjs:serveRegistry": {
     "lines": 90,

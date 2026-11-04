@@ -17,6 +17,7 @@ import { hotChecks, prepare } from './hot-checks.mjs'
 import { packWithAddon } from './pack-all.mjs'
 import { pin, pkgs, writePackedPolicy } from './tarballs.mjs'
 import { writeToolShim } from './tool-shim.mjs'
+import { checkPackedCrate, forceWasmCompiler } from './packed-paths.mjs'
 import { jobs, pool } from '../../../scripts/jobs.mjs'
 
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
@@ -124,8 +125,7 @@ export default function Page() {
 async function rustApp(app, weft, log, sh) {
   await sh(weft, ['add', 'rust', 'hasher'], app)
   const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
-  if (!cargo.includes('path = "../../node_modules/@weft-js/start/crate"'))
-    throw new Error(`rust: the crate isn't the one @weft-js/start shipped:\n${cargo}`)
+  checkPackedCrate(app, cargo)
   const checked = JSON.parse((await sh(weft, ['check', '--json'], app)).stdout)
   if (!checked.ok) throw new Error(`rust: weft check: ${JSON.stringify(checked.diagnostics)}`)
   log('weft add rust, check: pass')
@@ -483,8 +483,7 @@ await pool(
     writePackedPolicy(app, tarballs)
     await sh('pnpm', ['install', '--no-frozen-lockfile'], app)
     const weft = join(app, 'node_modules/.bin/weft')
-    if (wasm)
-      rmSync(join(app, 'node_modules/@weft-js', hostAddon), { recursive: true, force: true })
+    if (wasm) forceWasmCompiler(app, hostAddon)
     const { compiler } = JSON.parse((await sh(weft, ['doctor', '--json'], app)).stdout)
     if (compiler.kind !== (wasm ? 'wasm' : 'native'))
       throw new Error(`${name}: compiling with ${JSON.stringify(compiler)}`)
