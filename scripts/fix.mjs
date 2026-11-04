@@ -23,7 +23,8 @@ for (const crate of ['crates/weft-compiler', 'crates/weft-layout', 'crates/weft'
     ['clippy', '--fix', '--allow-dirty', '--allow-staged', '--all-targets', '--quiet'],
     join(root, crate),
   )
-  run('cargo', ['fmt'], join(root, crate))
 }
+const rust = run(process.execPath, ['scripts/quality/rust-format.mjs', '--write'])
 run(process.execPath, ['scripts/quality/format.mjs', '--write'])
+if (rust.status !== 0) process.exit(rust.status ?? 1)
 console.log('Done. `pnpm run check` shows what is left.')

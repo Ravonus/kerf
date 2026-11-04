@@ -187,9 +187,16 @@ const STEPS = [
   },
   {
     id: 'rust-fmt',
-    covers: 'cargo fmt --check on crates/',
+    covers: 'rustfmt --check on all tracked Rust files',
     fix: 'Run `pnpm run fix`.',
-    run: () => all(CRATES, async (c) => run('cargo', ['fmt', '--check'], c)),
+    async run() {
+      const result = await run(process.execPath, ['scripts/quality/rust-format.mjs'])
+      const output = lines(result)
+      output.problems.sort(
+        (a, b) => Number(b.startsWith('rustfmt failed:')) - Number(a.startsWith('rustfmt failed:')),
+      )
+      return { ...output, detail: result.code === 0 ? result.out.trim() : '' }
+    },
   },
   {
     id: 'clippy',
