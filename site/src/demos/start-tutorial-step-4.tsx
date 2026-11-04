@@ -11,20 +11,38 @@ const PRODUCTS = [
 type Product = (typeof PRODUCTS)[number]
 type Cart = Record<string, number>
 
-function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) {
+function ProductRow({
+  product,
+  cart,
+}: {
+  product: Product
+  cart: State<Cart>
+}) {
   const qty = derived(() => cart.get(product.id) ?? 0)
   const change = (by: number) =>
     cart.set((d) => {
-      d[product.id] = Math.max(0, (d[product.id] ?? 0) + by)
+      d[product.id] = Math.max(
+        0,
+        (d[product.id] ?? 0) + by,
+      )
     })
   return (
     <p>
       {product.name} <strong>${product.price}</strong>
-      <Button size="sm" emphasis="outline" disabled={qty.value === 0} onClick={() => change(-1)}>
+      <Button
+        size="sm"
+        emphasis="outline"
+        disabled={qty.value === 0}
+        onClick={() => change(-1)}
+      >
         −
       </Button>
       <strong> {qty.value} </strong>
-      <Button size="sm" emphasis="outline" onClick={() => change(1)}>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => change(1)}
+      >
         +
       </Button>
     </p>
@@ -33,19 +51,37 @@ function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) 
 
 export default function Shop() {
   const cart = state<Cart>({})
-  const items = derived(() => PRODUCTS.reduce((n, p) => n + (cart.get(p.id) ?? 0), 0))
-  const subtotal = derived(() =>
-    PRODUCTS.reduce((sum, p) => sum + (cart.get(p.id) ?? 0) * p.price, 0),
+  const items = derived(() =>
+    PRODUCTS.reduce(
+      (n, p) => n + (cart.get(p.id) ?? 0),
+      0,
+    ),
   )
-  const shipping = derived(() => (subtotal.value === 0 || subtotal.value >= 40 ? 0 : 4))
-  const total = derived(() => subtotal.value + shipping.value)
+  const subtotal = derived(() =>
+    PRODUCTS.reduce(
+      (sum, p) => sum + (cart.get(p.id) ?? 0) * p.price,
+      0,
+    ),
+  )
+  const shipping = derived(() =>
+    subtotal.value === 0 || subtotal.value >= 40 ? 0 : 4,
+  )
+  const total = derived(
+    () => subtotal.value + shipping.value,
+  )
   return (
     <Card title="The shop">
       {PRODUCTS.map((p) => (
-        <ProductRow key={p.id} product={p} cart={cart} />
+        <ProductRow
+          key={p.id}
+          product={p}
+          cart={cart}
+        />
       ))}
       <p>
-        {items.value} items · subtotal ${subtotal.value} · shipping ${shipping.value}
+        {items.value} items · subtotal ${subtotal.value}
+        {' '}·
+        shipping ${shipping.value}
       </p>
       <p>
         <strong>Total ${total.value}</strong>
