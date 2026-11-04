@@ -71,7 +71,6 @@ const write = (file, value) => writeFileSync(join(out, file), live(JSON.stringif
 
 const readData = (path) => JSON.parse(readFileSync(join(repo, path), 'utf8'))
 
-// ------------------------------------------------------------------ numbers
 
 /** The stack comparison, from benchmarks/compare/results.json and the run that wrote it. */
 function numbers() {
@@ -99,7 +98,6 @@ function numbers() {
   return { stacks, at: run.at.slice(0, 10), commit: run.commit, codes: catalog.length }
 }
 
-// ------------------------------------------------------------------ docs
 
 const file = (path) => () => readFileSync(join(repo, path), 'utf8')
 const topic = (name) => async () => (await weftDocs(site, name)).text
@@ -615,7 +613,6 @@ function buildLearn(reference) {
   return { nav, pages, flat }
 }
 
-// ------------------------------------------------------------------ search
 
 /** Heading-sized pieces of one page, for the body index. */
 function sections(md) {

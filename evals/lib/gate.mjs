@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url'
 export const repo = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 
 /** Resolve local package dependencies by the folder that matches their npm name. */
-export const localPackages = (repo) => (name) =>
-  `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
+export const localPackages = (root) => (name) =>
+  `file:${join(root, 'packages', name.replace('@weft-js/', ''))}`
 
 /** Create command runners with the gate's working directory and output budget. */
 export function commands(dir, maxBuffer, mergeEnv = false) {
@@ -36,7 +36,9 @@ export async function until(what, fn, ms = 60_000) {
       .catch(() => undefined)
     if (v) return v
     if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
-    await new Promise((ok) => setTimeout(ok, 50))
+    await new Promise((ok) => {
+      setTimeout(ok, 50)
+    })
   }
 }
 
