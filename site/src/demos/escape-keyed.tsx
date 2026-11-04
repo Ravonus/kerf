@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { Button, Card, Row, Textarea } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Row,
+  Textarea,
+} from '@weft-js/warp'
 
 type Person = { id: number; name: string }
 const PEOPLE: Person[] = [
@@ -9,7 +14,8 @@ const PEOPLE: Person[] = [
 ]
 
 function Profile(props: { person: Person }) {
-  // Two boxes, made fresh each time this component is made.
+  const { person } = props
+  // Two boxes, made fresh with each component.
   const note = state('')
   const starred = state(false)
   return (
@@ -19,12 +25,15 @@ function Profile(props: { person: Person }) {
         emphasis={starred.value ? 'solid' : 'outline'}
         onClick={() => (starred.value = !starred.value)}
       >
-        {starred.value ? 'Starred' : 'Star'} {props.person.name}
+        {starred.value ? 'Starred' : 'Star'}{' '}
+        {person.name}
       </Button>
       <Textarea
-        label={`A note about ${props.person.name}`}
+        label={`A note about ${person.name}`}
         value={note.value}
-        onInput={(e) => (note.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (note.value = e.currentTarget.value)
+        }
       />
     </>
   )
@@ -39,14 +48,16 @@ export default function People() {
           <Button
             key={p.id}
             size="sm"
-            emphasis={shown.value.id === p.id ? 'solid' : 'ghost'}
+            emphasis={
+              shown.value.id === p.id ? 'solid' : 'ghost'
+            }
             onClick={() => (shown.value = p)}
           >
             {p.name}
           </Button>
         ))}
       </Row>
-      {/* A list of one, keyed by the person: a new key throws the old row away and makes a new one. */}
+      {/* A new person key replaces the old row. */}
       {[shown.value].map((p) => (
         <Profile key={p.id} person={p} />
       ))}
