@@ -5,6 +5,7 @@ how weft compares and what to tune in weft or warp because of it. Run it after c
 
     pnpm run setup                              # repo root, Node 26
     cd examples
+    pnpm install                                # benchmark tools
     node bench.mjs lemonstand                    # one app
     node bench.mjs --all                         # every folder here with an app.json
     node bench.mjs ~/dev/shop --samples=5        # any folder holding an app.json

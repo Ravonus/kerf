@@ -1,0 +1,6 @@
+# The app benchmark tools install separately from the apps they measure.
+packages: []
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - '@weft-js/*'
+ignoreScripts: true
