@@ -14,9 +14,10 @@ export function flow(doc: Document | undefined = typeof document === 'undefined'
     seen(doc)
     root.dataset.flowArmed = ''
     release(doc)
+    scans(doc)
     fallback(doc)
   }
-  if (root.hasAttribute('data-flow-armed')) fallback(doc)
+  if (root.hasAttribute('data-flow-armed')) { scans(doc); fallback(doc) }
   else doc.addEventListener('scroll', arm, { capture: true, once: true, passive: true })
 }
 
@@ -51,17 +52,17 @@ function release(doc: Document) {
 }
 
 /**
- * What warp.flow moves, read from the sheets: the rules that set `--_flow-r`, the reach each family's view() range reads.
+ * What warp.flow moves, read from the sheets: the rules that set `--_flow-r` (or `prop`), the reach each family's view() range reads.
  * The list lives in the CSS alone, so the fallback moves what the CSS moves, and the JS names no family: a name here is
  * a word in every build, and weft's purge would keep every family's rules and keyframes for it. Custom properties
  * survive a parser that can't read animation-timeline, and a sheet behind @supports is still in the CSSOM.
  */
-function families(doc: Document) {
+function families(doc: Document, prop = '--_flow-r') {
   const found: string[] = []
   const walk = (rules: CSSRuleList) => {
     for (const rule of rules) {
       if ('cssRules' in rule) walk((rule as CSSGroupingRule).cssRules)
-      if ('selectorText' in rule && (rule as CSSStyleRule).style.getPropertyValue('--_flow-r')) found.push((rule as CSSStyleRule).selectorText)
+      if ('selectorText' in rule && (rule as CSSStyleRule).style.getPropertyValue(prop)) found.push((rule as CSSStyleRule).selectorText)
     }
   }
   for (const sheet of doc.styleSheets) {
@@ -70,6 +71,37 @@ function families(doc: Document) {
     } catch {} // another origin's sheet
   }
   return found.join(',')
+}
+
+/**
+ * A code block's scan waits below the fold and plays the moment it shows. Where it is drawn decides, transforms included,
+ * so a view() range can't: a block inside a card that rises in has entered by its own box while the card still holds it
+ * under the fold. The blocks are the rules that set `--_flow-scans`, read from the sheets like the families.
+ */
+function scans(doc: Document) {
+  const sel = families(doc, '--_flow-scans')
+  if (!sel || typeof IntersectionObserver === 'undefined' || typeof ResizeObserver === 'undefined') return
+  const below = (el: HTMLElement) => { const r = el.getBoundingClientRect(); if (r.height && r.top >= innerHeight) el.dataset.flowScan = '' }
+  // The root reaches up without end, so "not intersecting" is "below the fold", and a jump from above to below says so
+  // too: with the plain viewport, a block that never crosses the screen on its way down is never reported.
+  const io = new IntersectionObserver(entries => {
+    for (const { target, isIntersecting, boundingClientRect: r } of entries) {
+      const el = target as HTMLElement
+      if (isIntersecting) delete el.dataset.flowScan
+      else if (r.height) el.dataset.flowScan = ''
+    }
+  }, { rootMargin: '1000000px 0px 0px 0px' })
+  // A block shown below the fold (a tab opened, a panel unfolded) never crosses the edge, so its box changing says so.
+  const ro = new ResizeObserver(entries => { for (const e of entries) below(e.target as HTMLElement) })
+  const take = (el: Element) => { below(el as HTMLElement); io.observe(el); ro.observe(el) }
+  const watch = (node: Node) => {
+    if (node.nodeType !== 1) return
+    const el = node as Element
+    if (el.matches(sel)) take(el)
+    for (const f of el.querySelectorAll(sel)) take(f)
+  }
+  watch(doc.documentElement)
+  new MutationObserver(list => { for (const m of list) m.addedNodes.forEach(watch) }).observe(doc.documentElement, { childList: true, subtree: true })
 }
 
 /** Only where view() is missing. It hides nothing until it has seen an element below the fold, so failed JS can't trap content. */

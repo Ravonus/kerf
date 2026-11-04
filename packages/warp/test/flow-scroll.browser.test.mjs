@@ -208,13 +208,37 @@ test('nothing at rest has started to leave, and a leaving block visibly does', a
 test('inside a flowed element each one leaves on its own: what sits at the top of a tall host fades as it passes', async () => {
   // /examples, a frame, an art piece: a heading or a code pane at the top of a tall host sat whole until the host's far end left
   const { page, close } = await stage(`${ABOVE}<div data-flow="card" id="outer" style="block-size:900px"><h2 data-flow="heading" id="head" style="margin:0;block-size:40px">Head</h2><figure data-scope="codeblock" id="inner" style="margin:0;block-size:100px"></figure><div style="block-size:760px"></div></div>${BELOW}`, { expression: 'vivid', head: ':root { --warp-flow-top: 57px }' })
-  expect((await timelines(page, 'inner')).map(t => t.name)).toEqual(['warp-in-fade', 'warp-out-fade', 'warp-in-scan'])
+  expect((await timelines(page, 'inner')).map(t => t.name)).toEqual(['warp-in-fade', 'warp-out-fade'])
   expect((await timelines(page, 'head')).map(t => t.name)).toEqual(['warp-in-heading', 'warp-out-fade'])
   await scroll(page, 900 + 140 - 57)        // the code's bottom edge at the header
   expect(+(await style(page, 'inner', 'opacity'))).toBeLessThan(0.75)
   expect(+(await style(page, 'head', 'opacity'))).toBeLessThan(0.3)
   expect(+(await style(page, 'outer', 'opacity'))).toBe(1) // its end is still far below
   await close()
+})
+
+test('a code block in a card that rises in waits under the fold where it is drawn, and scans the moment it shows', async () => {
+  // /examples: the block's own box had entered while the rising card still held it under the fold, so it scanned unseen
+  const context = await browser.newContext({ viewport: { width: 800, height: 700 } })
+  const page = await context.newPage()
+  await page.setContent(`<!doctype html><html data-expression="vivid" data-flow-armed><style>body{margin:0}</style><style>${css}</style><body><div style="block-size:900px"></div><div data-flow="card" id="card" style="block-size:600px"><figure data-scope="codeblock" id="code" style="margin:0;block-size:200px"></figure></div><div style="block-size:1400px"></div><script>${armScript};flow(document)</script>`)
+  const at = () => page.evaluate(() => { const c = document.getElementById('code'); return { top: c.getBoundingClientRect().top, wait: c.hasAttribute('data-flow-scan'), x: parseFloat(getComputedStyle(c, '::after').scale) } })
+  await scroll(page, 900 - 700 + 10)         // its own box 10px in; the card, at the start of its rise, draws it lower
+  const under = await at()
+  expect(under.top).toBeGreaterThan(700)
+  expect([under.wait, under.x]).toEqual([true, 1])
+  await scroll(page, 900 - 700 + 200)        // drawn on screen now: it lets go and the scan plays
+  const shown = await at()
+  expect(shown.top).toBeLessThan(700)
+  expect(shown.wait).toBe(false)
+  expect(shown.x).toBeLessThan(1)
+  await scroll(page, 0)                       // back under the fold: waiting whole again, at once
+  expect(await at()).toMatchObject({ wait: true, x: 1 })
+  await scroll(page, 900 - 700 + 200)
+  await scroll(page, 2400)                    // scrolled past, above the screen
+  await scroll(page, 0)                       // and one jump to below it, never crossing the screen: waiting again
+  expect(await at()).toMatchObject({ wait: true, x: 1 })
+  await context.close()
 })
 
 // Every family names an entry and an exit, and each pair is its own. Only fields (and a focused or targeted element,

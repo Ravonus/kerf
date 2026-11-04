@@ -1758,7 +1758,7 @@
   :where([data-scope="prose"] > :is(h3)),
   :where([data-flow="heading"]) { --_flow-in: warp-in-heading; --_flow-out: warp-out-fade; }
   :where([data-scope="codeblock"]),
-  :where([data-flow="code"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; position: relative; overflow: clip; isolation: isolate; }
+  :where([data-flow="code"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; --_flow-scans: 1; position: relative; overflow: clip; isolation: isolate; }
   /* a bare <pre> in prose fades as code does, but keeps its own scrolling: no clip, no scan */
   :where([data-scope="prose"] > pre) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; }
   :where([data-scope="form"] > *),
@@ -1804,23 +1804,13 @@
       scale: if(style(--_flow-sx: 1) and style(--_flow-sy: 1): revert-layer; else: var(--_flow-sx) var(--_flow-sy));
       rotate: if(style(--_flow-rot: 0deg): revert-layer; else: var(--_flow-rot));
     }
-    /* the scan passes under the code, and it is played, never scrubbed. The scroll only says when a block has arrived: a
-       third animation on the block's own timeline holds --_flow-scan at 1 until its top edge is in, then lets it go
-       to 0, and the tint transitions there in time. Scrubbed, a block resting near the fold held the tint part way, a
-       slab across every line at one column for as long as the page sat there. Played, a block at rest is plain at any
-       position. The way back is instant, below the fold, so a block re-entering scans again. */
-    :where([data-scope="codeblock"]),
-    :where([data-flow="code"]) {
-      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-out)), var(--warp-flow-gate, warp-in-scan);
-      animation-timeline: view(), view(), --warp-flow-host;
-      animation-duration: auto, auto, auto;
-      animation-timing-function: var(--warp-ref-flow-ease), linear, linear;
-      animation-fill-mode: backwards, forwards, backwards;
-      animation-range:
-        entry calc(var(--_flow-i) * var(--warp-ref-flow-step)) cover calc(min(var(--_flow-r), 340px) + var(--_flow-i) * var(--warp-ref-flow-step)),
-        exit calc(100% - var(--_flow-t) - var(--_flow-w) * 0.4) exit calc(100% - var(--_flow-t) + var(--_flow-w) * 0.6),
-        entry 0 entry 2px;   /* played the moment it shows, so no strip of it rests tinted at the fold */
-    }
+    /* the scan passes under the code, and it is played, never scrubbed. Scrubbed, a block resting near the fold held the
+       tint part way, a slab across every line at one column for as long as the page sat there. Played, a block at rest is
+       plain at any position. warp.flow's script holds --_flow-scan at 1 ([data-flow-scan]) while the block is below the
+       fold where it is drawn, transforms included: a block in a card that rises in is still under the fold when its own
+       box has entered. The moment a pixel shows it lets go, and the tint transitions to 0. The way back is instant, so a
+       block re-entering scans again. No script, no hold: the code sits plain. */
+    [data-flow-scan] { --_flow-scan: 1; }
     /* a focused field never fades; a jump target arrives whole. Not through the gate: that inherits, and html is :focus-within */
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
       [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
@@ -1882,7 +1872,6 @@
   @keyframes warp-in-heading { from { opacity: 0; --_flow-dx: calc(var(--warp-ref-flow-x) * -1); } }
   @keyframes warp-in-deal    { from { opacity: 0; --_flow-dy: calc(var(--warp-ref-flow-y) * -0.6); --_flow-rot: calc(var(--warp-ref-flow-r) * var(--_flow-s, 1)); } }
   @keyframes warp-in-value   { from { opacity: 0; translate: 0 0.4em; } }
-  @keyframes warp-in-scan    { from, to { --_flow-scan: 1; } }   /* a hold, not a move: backwards, so it holds before entry too */
   @keyframes warp-out-card   { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.5); } }
   /* back the way it came: a row moving toward the end edge widened its table's scroll width as it left */
   @keyframes warp-out-row    { to { opacity: var(--warp-ref-flow-floor); --_flow-dx: calc(var(--warp-ref-flow-x) * -0.5); } }
