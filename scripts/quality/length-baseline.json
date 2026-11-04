@@ -225,7 +225,7 @@
   },
   "file:packages/core/vite.mjs": {
     "lines": 867,
-    "tokens": 17394
+    "tokens": 17385
   },
   "file:packages/create/scripts/packed.mjs": {
     "lines": 612,
@@ -1433,7 +1433,7 @@
   },
   "function:packages/core/vite.mjs:icons": {
     "lines": 113,
-    "tokens": 2598
+    "tokens": 2589
   },
   "function:packages/core/vite.mjs:styleGroups": {
     "lines": 181,
