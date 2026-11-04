@@ -2,7 +2,7 @@
 
 Status: v0.2, 2026-10-28. Tokens: [tokens/warp.css](tokens/warp.css) (signature layer) +
 [tokens/warp-inputs.css](tokens/warp-inputs.css) (`@layer warp.inputs`). Specimen:
-[specimens/inputs.html](specimens/inputs.html) (the canonical settings bar, 01-foundations §13: Expression · Fields ·
+[specimens/inputs.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/inputs.html) (the canonical settings bar, 01-foundations §13: Expression · Fields ·
 Theme · Density · Motion · Flair, page extra Pointer; URL params `?expression=&fields=&theme=&density=&motion=&flair=&pointer=`,
 old `?stop=` still works). Signature: [SIGNATURE.md](SIGNATURE.md).
 Temporal and rich inputs: [04-inputs-rich.md](04-inputs-rich.md) (same shell, same `FieldShell`).

@@ -2,8 +2,8 @@
 
 Status: v0.3, 2026-10-28 (market gaps closed: §4.2 reviews, §5.2 selection, §5.3 players + `timeline()`, §3.6 wall, §3.12 section set, §6.2–§6.6 backgrounds, text effects, scroll-driven, `fancy` presets, MotionCard; a second specimen page). v0.2: review round (01, 02, 03 findings fixed; §3.13, §3.14, §4.1, §6.1 new). Owner: brand and motion (`market` in [COVERAGE.md](COVERAGE.md)). Reads: [SIGNATURE.md](SIGNATURE.md),
 [00-direction.md](00-direction.md), [01-foundations.md](01-foundations.md). CSS: [tokens/warp-marketing.css](tokens/warp-marketing.css)
-(`@layer warp.marketing`). Specimens: [specimens/marketing.html](specimens/marketing.html), one landing page that flips between
-quiet, balanced and vivid live, with phone, tablet and desktop frames, and [specimens/marketing-more.html](specimens/marketing-more.html)
+(`@layer warp.marketing`). Specimens: [specimens/marketing.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/marketing.html), one landing page that flips between
+quiet, balanced and vivid live, with phone, tablet and desktop frames, and [specimens/marketing-more.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/marketing-more.html)
 (media, presets, backgrounds, text and scroll effects, the wall and the section set) on the same shared files. Citations: `old:` = the predecessor's
 `packages/ui/src/` (read-only).
 
@@ -740,14 +740,14 @@ scarce context to save nothing.
 
 ## 9. Specimen
 
-[specimens/marketing.html](specimens/marketing.html) is a fictional product ("Tensile") landing page: announcement bar,
+[specimens/marketing.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/marketing.html) is a fictional product ("Tensile") landing page: announcement bar,
 top bar with the page pause, theme toggle and cart, hero (4 layouts), logo marquee with its pause, count-up stats,
 spotlight bento, the ParallaxScene, vivid word band, scroll story, testimonial carousel (5 modes, governed), poster
 gallery with pinch-zoom lightbox, compare slider, confetti and the theme-transition demo, pricing with toggle, beam
 and comparison table, template marketplace, store (zoom gallery, variants, reviews, cart sheet with checkout steps),
 lobby with countdown and fact carousel, the live room, FAQ, CTA, newsletter field, footer.
 
-[specimens/marketing-more.html](specimens/marketing-more.html) is the second page, loading the same files (`warp.css`,
+[specimens/marketing-more.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/marketing-more.html) is the second page, loading the same files (`warp.css`,
 `warp-components.css`, `warp-marketing.css`, `warp-bar`, `warp-sweep`) with the same governor and its own registry
 table: `fancy` presets `#fancy`, MotionCard `#motion-card`, video `#video-player` and audio `#audio-player` /
 `#voice-note` (`#video`, `#audio`), backgrounds `#backgrounds`, text effects `#text-fx`, scroll-driven `#scroll-fx`

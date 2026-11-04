@@ -3,7 +3,7 @@
 Status: v0.2, 2026-10-28. Owner: interaction design, temporal and rich inputs. Reads: [00-direction.md](00-direction.md),
 [01-foundations.md](01-foundations.md), [SIGNATURE.md](SIGNATURE.md), [tokens/warp.css](tokens/warp.css). Siblings:
 `03-inputs.md` (core inputs), `07-app-patterns.md` (full calendar and scheduler). Specimen:
-[specimens/inputs-rich.html](specimens/inputs-rich.html) (the canonical settings bar, 01-foundations §13, with page
+[specimens/inputs-rich.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/inputs-rich.html) (the canonical settings bar, 01-foundations §13, with page
 extras Frame and Locale; deep links `?expression=vivid&theme=dark&frame=phone&locale=de-DE&open=date`). `old:` = the predecessor's `packages/ui/src/components/`.
 
 **Coverage (rows owned by `rich`).** DatePicker → DateField · DateRangePicker → DateRangeField · DateTimePicker →

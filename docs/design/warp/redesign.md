@@ -1,6 +1,6 @@
 # warp redesign: the loom
 
-Status: 2026-10-31. Audit and evidence: [../../research/41-warp-audit.md](../../research/41-warp-audit.md). Keeps
+Status: 2026-10-31. Audit and evidence: [../../research/41-warp-audit.md](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/41-warp-audit.md). Keeps
 [SIGNATURE.md](SIGNATURE.md); where this changes it, it says so.
 
 ## 1. What warp is

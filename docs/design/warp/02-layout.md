@@ -1,7 +1,7 @@
 # warp 02 — Layout, navigation and responsive behaviour
 
 Status: v0.3, 2026-10-28 (v0.2 review fixes: §14; v0.3 adds the Spacer demo and the locale provider: §15). CSS: [tokens/warp-layout.css](tokens/warp-layout.css), in `@layer warp.layout`. Specimen:
-[specimens/layout.html](specimens/layout.html) (nine templates × phone 390 / tablet 834 (portrait or landscape) /
+[specimens/layout.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/layout.html) (nine templates × phone 390 / tablet 834 (portrait or landscape) /
 desktop 1280, plus galleries of every part; the picker also flips `fields: floating | classic` page-wide). It builds on [01-foundations.md](01-foundations.md) and
 [SIGNATURE.md](SIGNATURE.md).
 

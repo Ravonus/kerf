@@ -105,7 +105,7 @@ Title tracking = display tracking × 0.6. Controls use `text.control.size` = max
 Every role has an explicit unitless leading (shorthands included: a `font:` without `/leading` resets it to
 `normal`, which is font-dependent and shifts on the font swap). Sizes are in the user's rem (below), not px.
 
-#### How type sizes, fits and loads (research: [11 — text and type](../../research/11-text-and-type.md))
+#### How type sizes, fits and loads (research: [11 — text and type](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/11-text-and-type.md))
 
 - **Fluid display and title** (§8.3 of research 11). `size = clamp(min·rem, b·rem + m·fu, max·rem)`, where `fu`
   (`--warp-ref-fluid-unit`) is `1cqi` and falls back to `1vw` (iOS 15: `@supports (width: 1cqi)` swaps the unit,

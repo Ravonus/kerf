@@ -2,7 +2,7 @@
 
 Status: v0.2, 2026-10-28. Owner: foundations (art direction + design system). Downstream: layout, inputs,
 components. Tokens: [01-foundations.md](01-foundations.md) · [tokens/warp.css](tokens/warp.css) ·
-[specimens/foundations.html](specimens/foundations.html).
+[specimens/foundations.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/foundations.html).
 
 warp is weft's default toolkit. It keeps the predecessor toolkit's base idea (hairline chrome, a surface ladder,
 mono caps labels, a left-to-right sweep) and rebuilds everything underneath it. Two shipped looks of that
