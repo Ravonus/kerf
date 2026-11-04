@@ -1,0 +1,55 @@
+{
+  "seed": 42,
+  "reps": 5,
+  "tasks": [
+    "small-todo",
+    "medium-shop",
+    "large-live",
+    "edit-shop",
+    "bugfix-shop"
+  ],
+  "cells": [
+    {
+      "stack": "weft-warp",
+      "model": "sonnet",
+      "effort": "medium",
+      "group": "primary",
+      "budgetScale": 1
+    },
+    {
+      "stack": "next-shadcn",
+      "model": "sonnet",
+      "effort": "medium",
+      "group": "primary",
+      "budgetScale": 1
+    },
+    {
+      "stack": "vite-react",
+      "model": "sonnet",
+      "effort": "medium",
+      "group": "primary",
+      "budgetScale": 1
+    },
+    {
+      "stack": "weft-warp",
+      "model": "haiku",
+      "effort": "medium",
+      "group": "tier",
+      "budgetScale": 1
+    },
+    {
+      "stack": "next-shadcn",
+      "model": "haiku",
+      "effort": "medium",
+      "group": "tier",
+      "budgetScale": 1
+    },
+    {
+      "stack": "next-shadcn",
+      "model": "opus",
+      "effort": "medium",
+      "group": "tier",
+      "budgetScale": 1
+    }
+  ]
+}

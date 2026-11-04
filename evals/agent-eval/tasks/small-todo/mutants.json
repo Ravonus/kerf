@@ -1,0 +1,6 @@
+[
+  { "name": "plural never singular", "find": "=== 1 ? 'item' : 'items'", "replace": "=== 1 ? 'items' : 'items'", "mustFail": "todos keep the order added, and the count is right and pluralised" },
+  { "name": "filter not persisted", "find": "localStorage.setItem('filter'", "replace": "localStorage.setItem('filterX'", "mustFail": "todos, completion and filter survive a reload" },
+  { "name": "Escape does nothing", "find": "'Escape'", "replace": "'Esc'", "mustFail": "Escape cancels an edit" },
+  { "name": "text not trimmed on add", "find": "const v = text.trim()", "alt": "const v = text.value.trim()", "replace": "const v = TEXT", "mustFail": "Enter adds a trimmed todo and clears the input" }
+]
