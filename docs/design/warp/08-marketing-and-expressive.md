@@ -58,15 +58,21 @@ quiet effects. `--warp-motion-scale` = 0 (reduced motion) is read alongside.
 
 ```ts
 type Stop = "quiet" | "balanced" | "vivid";
-type FxState = "on" | "still" | "off";           // moves · present but static · absent / substituted
-type FxClass = "C" | "P" | "S";                   // §1.4
+// moves · present but static · absent / substituted
+type FxState = "on" | "still" | "off";
+type FxClass = "C" | "P" | "S"; // §1.4
 interface EffectSpec {
   name: string;
-  min: Stop;                    // below this the effect is "off" and its substitute renders
-  moves?: Stop;                 // from min up to (not incl.) this stop it is "still"; default = min
-  reduced: "still" | "off";     // what prefers-reduced-motion or data-motion="reduce" gets
-  class: FxClass; budget: { ms?: number; count?: number; loops?: boolean };
-  pointer?: "fine";             // pointer-driven effects go still/off on coarse pointers
+  // below this the effect is "off" and its substitute renders
+  min: Stop;
+  // from min up to (not incl.) this stop it is "still"; default = min
+  moves?: Stop;
+  // what prefers-reduced-motion or data-motion="reduce" gets
+  reduced: "still" | "off";
+  class: FxClass;
+  budget: { ms?: number; count?: number; loops?: boolean };
+  // pointer-driven effects go still/off on coarse pointers
+  pointer?: "fine";
 }
 ```
 
@@ -153,10 +159,14 @@ The catalogue in §6 adds the P2 effects with the same columns.
 
 ```ts
 import { defineEffect, fx, Effects } from "@weft-js/warp/expressive";
-// any element: <h1><em use:fx="gradient-text">trust</em></h1>; fx() returns the live state for custom work
+// any element: <h1><em use:fx="gradient-text">trust</em></h1>; fx()
+// returns the live state for custom work
 const state: State<FxState> = fx(el, "spotlight");
-defineEffect({ name: "rain", min: "vivid", reduced: "off", class: "S", budget: { ms: 1600, count: 120 } });
-// weft.config.ts → ui.theme.fx: { cap?: Stop; pauseControl?: "auto" | "always" | "none"; effects?: Record<string, Partial<EffectSpec> | false> }
+defineEffect({ name: "rain", min: "vivid", reduced: "off", class: "S",
+  budget: { ms: 1600, count: 120 } });
+// weft.config.ts → ui.theme.fx: { cap?: Stop; pauseControl?: "auto" |
+// "always" | "none"; effects?: Record<string, Partial<EffectSpec> |
+// false> }
 ```
 
 `<Effects cap="balanced">` is just `data-fx-cap` on a wrapper. Agents get one rule (`weft check` D-code `D081`): an
@@ -175,8 +185,17 @@ element with an animation that is not a registered effect, or a `data-fx` host w
 - **Reveal**: `data-reveal` and `--_d` for stagger (§1.3). Never on the first viewport's content (LCP).
 
 ```ts
-type BlockProps = { tone?: "page" | "sunken" | "inverse"; divider?: boolean; eyebrow?: Child; index?: string;
-  title: Child; lede?: Child; align?: "start" | "center"; rule?: boolean; children: Child };
+type BlockProps = {
+  tone?: "page" | "sunken" | "inverse";
+  divider?: boolean;
+  eyebrow?: Child;
+  index?: string;
+  title: Child;
+  lede?: Child;
+  align?: "start" | "center";
+  rule?: boolean;
+  children: Child;
+};
 ```
 
 ## 3. Marketing blocks
@@ -198,9 +217,18 @@ Each block lists **anatomy**, **states**, **phone / tablet / desktop**, **motion
   `sr`; aurora and weave are `aria-hidden`. No autoplaying video without a visible pause.
 
 ```ts
-type HeroProps = { layout?: "split" | "centered" | "stacked" | "editorial"; tone?: "page" | "sunken" | "accent";
-  announce?: { label: Child; href: string; badge?: Child }; eyebrow?: Child; title: Child; lede?: Child;
-  actions?: Child; proof?: Child; media?: Child; backdrop?: ("weave" | "glow" | "aurora" | "grain")[] | "auto" };
+type HeroProps = {
+  layout?: "split" | "centered" | "stacked" | "editorial";
+  tone?: "page" | "sunken" | "accent";
+  announce?: { label: Child; href: string; badge?: Child };
+  eyebrow?: Child;
+  title: Child;
+  lede?: Child;
+  actions?: Child;
+  proof?: Child;
+  media?: Child;
+  backdrop?: ("weave" | "glow" | "aurora" | "grain")[] | "auto";
+};
 ```
 
 ### 3.2 Logo cloud and marquee (`LogoCloud`)
@@ -215,8 +243,14 @@ type HeroProps = { layout?: "split" | "centered" | "stacked" | "editorial"; tone
   `data-loop`.
 
 ```ts
-type MarqueeProps = { items: Child[]; speed?: number; direction?: "left" | "right" | "up" | "down";
-  variant?: "logos" | "band" | "cards"; pauseOnHover?: boolean /* default true */; label: string };
+type MarqueeProps = {
+  items: Child[];
+  speed?: number;
+  direction?: "left" | "right" | "up" | "down";
+  variant?: "logos" | "band" | "cards";
+  pauseOnHover?: boolean /* default true */;
+  label: string;
+};
 ```
 Testimonial and card marquees use `variant="cards"` (min balanced, still = a 3-up grid).
 
@@ -225,7 +259,15 @@ Testimonial and card marquees use `variant="cards"` (min balanced, still = a 3-u
   rules and 2.1× numerals. Values use `--warp-text-numeric-variant`; ticking figures (the lobby countdown) also take
   `--warp-text-numeric-font`, since vivid's serif has no `tnum`. Count-up per §1.3; the final string is in the DOM from the start.
 ```ts
-type StatsBandProps = { items: { value: number; format?: Intl.NumberFormatOptions; suffix?: string; label: Child }[]; countUp?: boolean };
+type StatsBandProps = {
+  items: {
+    value: number;
+    format?: Intl.NumberFormatOptions;
+    suffix?: string;
+    label: Child;
+  }[];
+  countUp?: boolean;
+};
 ```
 
 ### 3.4 Feature grid and bento (`FeatureGrid`)
@@ -236,7 +278,17 @@ type StatsBandProps = { items: { value: number; format?: Intl.NumberFormatOption
 - **States:** interactive tiles sweep (signature) and lift no further than `elevation-2`; spotlight per §1.3.
 - **A11y:** a linked tile is one `<a>` with a heading inside; no nested interactive content.
 ```ts
-type BentoProps = { items: { icon?: Icon; name: Child; body?: Child; art?: Child; span?: "1x1" | "2x1" | "2x2"; href?: string }[]; spotlight?: boolean };
+type BentoProps = {
+  items: {
+    icon?: Icon;
+    name: Child;
+    body?: Child;
+    art?: Child;
+    span?: "1x1" | "2x1" | "2x2";
+    href?: string;
+  }[];
+  spotlight?: boolean;
+};
 ```
 
 ### 3.5 Scroll story (sticky scroll reveal)
@@ -246,7 +298,10 @@ type BentoProps = { items: { icon?: Icon; name: Child; body?: Child; art?: Child
   fills by step. **Phone/tablet:** steps stack with numbers, no sticking (no scroll-jacking on touch).
 - **Motion:** q — three columns, no sticky. b — sticky, crossfade between frames. v — display-serif step titles.
 ```ts
-type ScrollStoryProps = { steps: { title: Child; body: Child; visual: Child }[]; rail?: boolean };
+type ScrollStoryProps = {
+  steps: { title: Child; body: Child; visual: Child }[];
+  rail?: boolean;
+};
 ```
 
 ### 3.6 Testimonials (`TestimonialCard`): card, wall, carousel
@@ -274,10 +329,27 @@ type ScrollStoryProps = { steps: { title: Child; body: Child; visual: Child }[];
   first column, featured column tinted, ✓/— with `sr` text "Yes/No"; horizontally scrollable region with
   `tabindex=0` on phone.
 ```ts
-type PricingProps = { periods?: { id: string; label: Child; note?: Child }[]; period?: Bindable<string>;
-  plans: { id: string; name: Child; desc?: Child; price: Record<string, string> | Child; per?: Child;
-    features: { text: Child; excluded?: boolean }[]; cta: Child; featured?: boolean; badge?: Child }[];
-  compare?: { groups: { label: string; rows: { label: Child; values: (Child | boolean)[] }[] }[] } };
+type PricingProps = {
+  periods?: { id: string; label: Child; note?: Child }[];
+  period?: Bindable<string>;
+  plans: {
+    id: string;
+    name: Child;
+    desc?: Child;
+    price: Record<string, string> | Child;
+    per?: Child;
+    features: { text: Child; excluded?: boolean }[];
+    cta: Child;
+    featured?: boolean;
+    badge?: Child;
+  }[];
+  compare?: {
+    groups: {
+      label: string;
+      rows: { label: Child; values: (Child | boolean)[] }[];
+    }[];
+  };
+};
 ```
 
 ### 3.8 FAQ (`FAQ`)
@@ -291,7 +363,11 @@ deep-link `#faq-3` opens and scrolls. Emits `FAQPage` JSON-LD when `structuredDa
   idle, invalid (sweep pinned critical, message slides in), submitting (button `data-loading`), success (toast and
   inline text), already-subscribed. Fine print for consent sits under the field.
 ```ts
-type NewsletterProps = { action: (email: string) => Promise<"ok" | "exists">; label?: string; fine?: Child };
+type NewsletterProps = {
+  action: (email: string) => Promise<"ok" | "exists">;
+  label?: string;
+  fine?: Child;
+};
 ```
 
 ### 3.10 Footer (`Footer`)
@@ -306,9 +382,20 @@ italic syllable), `aria-hidden`.
 - **Fact carousel:** a stacked carousel of short facts, 7s rotation at balanced+, own pause, prev/next, hover and
   focus hold, `aria-live="off"` while rotating. Phases swap with the lobby: `live` replaces the countdown with Join.
 ```ts
-type SessionLobbyProps = { phase: "before" | "ready" | "live" | "ended"; startsAt?: string; title: Child; feature?: Child;
-  aside?: Child; primaryAction?: Child; stageLabels?: Partial<Record<SessionLobbyProps["phase"], string>> };
-type FactCarouselProps = { items: { id: string; eyebrow?: Child; title: Child; body: Child }[]; intervalMs?: number; controls?: boolean };
+type SessionLobbyProps = {
+  phase: "before" | "ready" | "live" | "ended";
+  startsAt?: string;
+  title: Child;
+  feature?: Child;
+  aside?: Child;
+  primaryAction?: Child;
+  stageLabels?: Partial<Record<SessionLobbyProps["phase"], string>>;
+};
+type FactCarouselProps = {
+  items: { id: string; eyebrow?: Child; title: Child; body: Child }[];
+  intervalMs?: number;
+  controls?: boolean;
+};
 ```
 
 ### 3.12 The standard section set
@@ -355,7 +442,13 @@ All use Block + Head and only tokens; each has a quiet and vivid reading and no 
 - **Responsive:** below 640px the decorative cards hide and the captions stack under the thread; touch never gets
   pointer depth. **A11y:** the scene is `role="img"` with a sentence label; layers are `aria-hidden`.
 ```ts
-type ParallaxSceneProps = { label: string; ratio?: number; depth?: number; pointer?: boolean | "auto"; children: Child };
+type ParallaxSceneProps = {
+  label: string;
+  ratio?: number;
+  depth?: number;
+  pointer?: boolean | "auto";
+  children: Child;
+};
 type ParallaxLayerProps = { speed: number; children: Child };
 ```
 
@@ -376,8 +469,23 @@ wired by hand.
   `aria-hidden`.
 - **Responsive:** room and sidebar side by side ≥ 900px, stacked below; a ResizeObserver re-places outlines.
 ```ts
-type LiveRoomProps = { peers: State<{ id: string; name: string; color: 1|2|3|4|5|6|7|8; target?: string; kind?: "hover" | "focus" }[]>;
-  onTrack?: (e: { id: string; kind: "hover" | "focus" | "click" }) => void; snapshot?: Record<string, string>; children: Child };
+type LiveRoomProps = {
+  peers: State<
+    {
+      id: string;
+      name: string;
+      color: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+      target?: string;
+      kind?: "hover" | "focus";
+    }[]
+  >;
+  onTrack?: (e: {
+    id: string;
+    kind: "hover" | "focus" | "click";
+  }) => void;
+  snapshot?: Record<string, string>;
+  children: Child;
+};
 ```
 
 ## 4. Commerce
@@ -416,15 +524,49 @@ type LiveRoomProps = { peers: State<{ id: string; name: string; color: 1|2|3|4|5
   price is a radiogroup (roving tabindex, arrows); the count is a status region, so the reader hears "Showing 3 of 12
   templates" once per change.
 ```ts
-type MarketplaceProps = { items: { id: string; name: string; by: string; cat: string; tags: string[]; rating: number; installs: number; price: number; art?: Child }[];
-  categories: string[]; query?: Bindable<string>; sort?: Bindable<"popular" | "rating" | "new" | "price">; onInstall: (id: string) => Promise<void> };
+type MarketplaceProps = {
+  items: {
+    id: string;
+    name: string;
+    by: string;
+    cat: string;
+    tags: string[];
+    rating: number;
+    installs: number;
+    price: number;
+    art?: Child;
+  }[];
+  categories: string[];
+  query?: Bindable<string>;
+  sort?: Bindable<"popular" | "rating" | "new" | "price">;
+  onInstall: (id: string) => Promise<void>;
+};
 ```
 
 ```ts
-type ProductGalleryProps = { media: { src: string; alt: string; kind?: "image" | "video" }[]; index?: Bindable<number>; zoom?: "hover" | "tap" | "none" };
-type VariantPickerProps = { name: string; label: Child; kind: "swatch" | "tile"; value: Bindable<string>;
-  options: { value: string; label: string; color?: string; disabled?: boolean; note?: Child }[] };
-type RatingSummaryProps = { score: number; count: number; distribution: [number, number, number, number, number] };
+type ProductGalleryProps = {
+  media: { src: string; alt: string; kind?: "image" | "video" }[];
+  index?: Bindable<number>;
+  zoom?: "hover" | "tap" | "none";
+};
+type VariantPickerProps = {
+  name: string;
+  label: Child;
+  kind: "swatch" | "tile";
+  value: Bindable<string>;
+  options: {
+    value: string;
+    label: string;
+    color?: string;
+    disabled?: boolean;
+    note?: Child;
+  }[];
+};
+type RatingSummaryProps = {
+  score: number;
+  count: number;
+  distribution: [number, number, number, number, number];
+};
 ```
 
 ### 4.2 Reviews (demo `#review-list`, sheet `#review-sheet`)
@@ -462,10 +604,27 @@ type RatingSummaryProps = { score: number; count: number; distribution: [number,
   The rotation control is first in tab order; hover holds; focus entering the carousel stops rotation for good
   (APG); a hairline shows time to next slide.
 ```ts
-type CarouselProps = { slides: { id: string; content: Child; label?: string }[]; mode?: "slide" | "fade" | "scale" | "stack" | "coverflow" | "marquee";
-  per?: number | "auto" | { sm?: number; md?: number; lg?: number }; gap?: Space; peek?: number; loop?: boolean;
-  autoplay?: number | false; arrows?: boolean; dots?: boolean; fraction?: boolean; ratio?: number;
-  index?: Bindable<number>; label: string };
+type CarouselProps = {
+  slides: { id: string; content: Child; label?: string }[];
+  mode?:
+    | "slide"
+    | "fade"
+    | "scale"
+    | "stack"
+    | "coverflow"
+    | "marquee";
+  per?: number | "auto" | { sm?: number; md?: number; lg?: number };
+  gap?: Space;
+  peek?: number;
+  loop?: boolean;
+  autoplay?: number | false;
+  arrows?: boolean;
+  dots?: boolean;
+  fraction?: boolean;
+  ratio?: number;
+  index?: Bindable<number>;
+  label: string;
+};
 ```
 
 ### 5.2 Lightbox and gallery (`old:overlays/dialogs/Lightbox.tsx`)
@@ -491,9 +650,24 @@ type CarouselProps = { slides: { id: string; content: Child; label?: string }[];
   swipes ±60px to change image and swipes down 110px to close (image follows the finger, fades); double-tap toggles
   2.5× at the tap point; wheel / trackpad zooms at the cursor; keys ← → + − 0 Esc. Pan is clamped to the image.
 ```ts
-type LightboxProps = { items: { src: string; alt: string; caption?: Child; srcset?: string }[]; open: Bindable<boolean>; index?: Bindable<number>; maxZoom?: number };
-type GalleryProps = { items: LightboxProps["items"]; selectable?: boolean; selected?: Bindable<Set<string>>;
-  onDelete?: (ids: string[]) => void | "undoable"; onDownload?: (ids: string[]) => void };
+type LightboxProps = {
+  items: {
+    src: string;
+    alt: string;
+    caption?: Child;
+    srcset?: string;
+  }[];
+  open: Bindable<boolean>;
+  index?: Bindable<number>;
+  maxZoom?: number;
+};
+type GalleryProps = {
+  items: LightboxProps["items"];
+  selectable?: boolean;
+  selected?: Bindable<Set<string>>;
+  onDelete?: (ids: string[]) => void | "undoable";
+  onDownload?: (ids: string[]) => void;
+};
 ```
 The Lightbox takes any list (the gallery, a review's photos), labels itself by it ("Photos from Maya A.") and returns
 focus to the opener. The Toast gains an optional `action: { label, run }`.
@@ -533,12 +707,31 @@ focus to the opener. The Toast gains an optional `action: { label, run }`.
   meanwhile). The cue box updates before `currentTime`, so a time subscriber reads the matching chapter. Chapters and
   transcript lines are cues; the specimen's readout prints the boxes and the last `on()` firing.
 ```ts
-type MediaPlayerProps = { src: string | { src: string; type: string }[]; kind: "video" | "audio"; poster?: string;
-  tracks?: { src: string; lang: string; label: string; kind: "captions" | "chapters" }[]; peaks?: number[];
-  cues?: { id: string; at: number; end?: number; label: string }[]; timeline?: Timeline;   // bring your own, or one is made
-  transcript?: boolean; autoplay?: "never" | "muted-loop"; chrome?: "full" | "compact" };
-type Timeline = { currentTime: Box<number>; playing: Box<boolean>; duration: Box<number>; ended: Box<boolean>;
-  cue: Box<Cue | null>; on(id: string, fn: (c: Cue) => void): () => void };
+type MediaPlayerProps = {
+  src: string | { src: string; type: string }[];
+  kind: "video" | "audio";
+  poster?: string;
+  tracks?: {
+    src: string;
+    lang: string;
+    label: string;
+    kind: "captions" | "chapters";
+  }[];
+  peaks?: number[];
+  cues?: { id: string; at: number; end?: number; label: string }[];
+  timeline?: Timeline; // bring your own, or one is made
+  transcript?: boolean;
+  autoplay?: "never" | "muted-loop";
+  chrome?: "full" | "compact";
+};
+type Timeline = {
+  currentTime: Box<number>;
+  playing: Box<boolean>;
+  duration: Box<number>;
+  ended: Box<boolean>;
+  cue: Box<Cue | null>;
+  on(id: string, fn: (c: Cue) => void): () => void;
+};
 ```
 
 ### 5.4 Compare slider, QR and share
@@ -656,7 +849,8 @@ circle opens from the press point `--sx/--sy`, centre for keys, with a fading gl
 from the centre, 360ms). Every other stop runs the stop's plain enter / exit (`mk-plain-in/out`); reduced motion makes
 that a fade. Never on text people are reading.
 ```ts
-fancy(el, "crt-on" | "crt-off" | "flicker" | "glitch" | "spotlight" | "iris", { at?: [x: number, y: number] }): Promise<void>
+fancy(el, "crt-on" | "crt-off" | "flicker" | "glitch" | "spotlight"
+  | "iris", { at?: [x: number, y: number] }): Promise<void>
 ```
 
 ### 6.6 MotionCard (demo `#motion-card`; `old:` `MotionCard`, whileHover y −2, scale 1.01, tap 0.98)
@@ -674,10 +868,18 @@ pixel ratio, resize, a pause off screen and in a hidden tab, one still frame und
 blue noise, halftone), error diffusion (Floyd-Steinberg, Atkinson) for stills, fields, masks and a spring lattice for the pointer.
 
 ```tsx
-<DitherField fill pointer={['pull', 'shockwave']} fade="left" />   // a hero's background, behind its content
-<Dither src="/team.jpg" alt="The team" />                          // a photo in warp's inks
-<DitherGlyph text="warp" reveal={1.4} />                           // a word woven from the field
-<Canvas draw={({ ctx, width, height, time }) => …} animate />      // anything else
+// a hero's background, behind its content
+<DitherField
+  fill
+  pointer={['pull', 'shockwave']}
+  fade="left"
+/>
+// a photo in warp's inks
+<Dither src="/team.jpg" alt="The team" />
+// a word woven from the field
+<DitherGlyph text="warp" reveal={1.4} />
+// anything else
+<Canvas draw={({ ctx, width, height, time }) => …} animate />
 ```
 
 | Registry | Min | quiet | balanced | vivid | Reduced | Class · budget |

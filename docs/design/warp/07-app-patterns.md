@@ -52,18 +52,31 @@ shortcuts overlay.
 ### weft bindings (research 07 §9)
 
 ```ts
-// Server state that changes elsewhere: poke + refetch, driven by tags.
-const inbox = query.live(listNotifications, { tags: ['inbox:me'] })   // Resource<Note[]> & { live: LiveState }
+// Server state that changes elsewhere: poke + refetch, driven by
+// tags.
+// Resource<Note[]> & { live: LiveState }
+const inbox = query.live(listNotifications, { tags: ['inbox:me'] })
 type LiveState = 'connecting' | 'live' | 'reconnecting' | 'offline'
 
-// Incremental output (AI tokens, tool events): fold chunks into a value, keep the last N for replay.
-const answer = stream(run.events, { fold: foldAnswer, keep: 'all' })   // Signal<Answer> & { status, stop() }
+// Incremental output (AI tokens, tool events): fold chunks into a
+// value, keep the last N for replay.
+// Signal<Answer> & { status, stop() }
+const answer = stream(run.events, { fold: foldAnswer, keep: 'all' })
 
-// Two-way, named messages with auth; presence and cursors use delivery: 'latest'.
-const room = channel('room/:id', { authorize, client: { cursor, react, hand }, server: { joined, left, speaking } })
-room.status   // 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
-const peers = presence(room)          // @weft-js/multiplayer: Signal<Peer[]>, cursors anchored to [data-anchor]
-online(); visible()                   // browser values: pause animation and polling when hidden
+// Two-way, named messages with auth; presence and cursors use
+// delivery: 'latest'.
+const room = channel('room/:id', {
+  authorize,
+  client: { cursor, react, hand },
+  server: { joined, left, speaking },
+})
+// 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
+room.status
+// @weft-js/multiplayer: Signal<Peer[]>, cursors anchored to
+// [data-anchor]
+const peers = presence(room)
+// browser values: pause animation and polling when hidden
+online(); visible()
 ```
 
 Every pattern below names which of the three it reads. Optimistic writes use `mutation({ optimistic, rollback })`:
@@ -77,17 +90,26 @@ Demo: `#ai-desk` (1240×820: thread, plan/trace/changes rail), `#ai-phone` (390�
 
 ```
 Conversation (role=log)
-├─ Message[data-mine] > Bubble[data-variant=prompt] + Status (edit, copy)
+├─ Message[data-mine] > Bubble[data-variant=prompt] + Status (edit,
+    copy)
 ├─ Assistant (article)  Mark · Content · Actions · BranchSwitcher
-│   ├─ Reasoning (<details>)          "Thinking…" shimmer → "Thought for 4 s", folds when the answer starts
-│   ├─ ToolCall[data-state]           name · args preview · duration · chevron → input/output
-│   ├─ Prose (Markdown, streaming)    caret on the last block, cites [n]
-│   ├─ ToolCall[data-state=approval]  editable args · Approve · Deny · "Always allow for this repo"
-│   ├─ Question (form)                radio / checkbox / free text; the run pauses
-│   └─ Sources                        numbered cards, same numbers as the cites
+│   ├─ Reasoning (<details>)          "Thinking…" shimmer → "Thought
+    for 4 s", folds when the answer starts
+│   ├─ ToolCall[data-state]           name · args preview · duration ·
+    chevron → input/output
+│   ├─ Prose (Markdown, streaming)    caret on the last block, cites
+    [n]
+│   ├─ ToolCall[data-state=approval]  editable args · Approve · Deny ·
+    "Always allow for this repo"
+│   ├─ Question (form)                radio / checkbox / free text;
+    the run pauses
+│   └─ Sources                        numbered cards, same numbers as
+    the cites
 ├─ Suggestions (chips)                follow-ups after the turn
-└─ Prompt  Composer[data-sweep] · Files · Tools (attach, /, mic, web) · ModelChip · ContextMeter · Send/Stop
-Rail (desktop ≥ 1000): Tabs Plan · Trace · Changes   Plan = TaskList + Queue; Trace = spans; Changes = CommitCard
+└─ Prompt  Composer[data-sweep] · Files · Tools (attach, /, mic, web)
+    · ModelChip · ContextMeter · Send/Stop
+Rail (desktop ≥ 1000): Tabs Plan · Trace · Changes   Plan = TaskList +
+    Queue; Trace = spans; Changes = CommitCard
 ```
 
 ### 1.2 States
@@ -172,14 +194,38 @@ Rail (desktop ≥ 1000): Tabs Plan · Trace · Changes   Plan = TaskList + Queue
 ### 1.7 API
 
 ```ts
-<Conversation run={run}>                                   // run: stream() of AgentEvent
-  {(turn) => <Turn turn={turn} onRegenerate onEdit onFeedback />}
+// run: stream() of AgentEvent
+<Conversation run={run}>
+  {(turn) => (
+    <Turn
+      turn={turn}
+      onRegenerate
+      onEdit
+      onFeedback
+    />
+  )}
 </Conversation>
-<Prompt value={draft} onSubmit={send} onStop={run.stop} busy={run.status === 'running'}
-        model={model} models={models} onModelChange tools={['attach', 'slash', 'mic', 'web']}
-        context={{ used, limit }} queue={queue} />
-<ToolCall call={c} onApprove={(args) => …} onDeny alwaysAllow={{ scope: 'repo' }} />
-type AgentEvent = { kind: 'reasoning' | 'text' | 'tool' | 'tool-result' | 'approval' | 'question' | 'source' | 'done' | 'error'; … }
+<Prompt
+  value={draft}
+  onSubmit={send}
+  onStop={run.stop}
+  busy={run.status === 'running'}
+  model={model}
+  models={models}
+  onModelChange
+  tools={['attach', 'slash', 'mic', 'web']}
+  context={{ used, limit }}
+  queue={queue}
+/>
+<ToolCall
+  call={c}
+  onApprove={(args) => …}
+  onDeny
+  alwaysAllow={{ scope: 'repo' }}
+/>
+type AgentEvent = { kind: 'reasoning' | 'text' | 'tool'
+  | 'tool-result' | 'approval' | 'question' | 'source' | 'done'
+  | 'error'; … }
 ```
 
 `foldAnswer` turns the event stream into `Answer { blocks, tools, sources, plan }`; the UI renders the folded value
@@ -194,13 +240,20 @@ Demo: `#cal-desk` (week, 1240×760; the Year tab is `#cal-tab-year`), `#cal-phon
 
 ```
 Calendar (container: calendar)
-├─ Toolbar   ‹ › Today · title · LiveStatus · TimeZone chip · ViewTabs (Month Week Day Agenda Timeline Year) · New event
-├─ Rail (≥ 1000)   MiniMonth (CalendarGrid picker from 04) · My calendars (checkbox per source, data-cal 1–8) · Time zones
-└─ Grid      Head (day, date; today is accent) · AllDay row · Scroller > Gutter + Columns
-    Column   Slots (15-min) · Event* · NowLine (today) · Ghost (while dragging) · Draft (create) · Readout
-    Event    [data-cal] bar + tint · title · time · location; tentative = hatch; locked = no handles; Resize handle
-EventPopover (Popover) · EventEditor (Sheet right / bottom on phone) · MoveSheet (bottom Sheet, phone)
-Agenda (phone)  Strip (7 days + dots) · Pages (prev, current, next day; swipe) · Row* · Now · "1 h free" gaps · FAB
+├─ Toolbar   ‹ › Today · title · LiveStatus · TimeZone chip · ViewTabs
+    (Month Week Day Agenda Timeline Year) · New event
+├─ Rail (≥ 1000)   MiniMonth (CalendarGrid picker from 04) · My
+    calendars (checkbox per source, data-cal 1–8) · Time zones
+└─ Grid      Head (day, date; today is accent) · AllDay row · Scroller
+    > Gutter + Columns
+    Column   Slots (15-min) · Event* · NowLine (today) · Ghost (while
+        dragging) · Draft (create) · Readout
+    Event    [data-cal] bar + tint · title · time · location;
+        tentative = hatch; locked = no handles; Resize handle
+EventPopover (Popover) · EventEditor (Sheet right / bottom on phone) ·
+    MoveSheet (bottom Sheet, phone)
+Agenda (phone)  Strip (7 days + dots) · Pages (prev, current, next
+    day; swipe) · Row* · Now · "1 h free" gaps · FAB
 ```
 
 ### 2.2 States and rules
@@ -268,11 +321,33 @@ Drag lift is the same at all stops (elevation, no scale); vivid adds the snap re
 ### 2.6 API
 
 ```ts
-const events = query.live(listEvents, { tags: [`cal:${userId}`], input: range })  // .live → toolbar LiveStatus
-<Calendar view={view} date={date} events={events} calendars={sources} timeZone={tz}
-          snap={15} onMove={(e, to, reason) => move.run({ id: e.id, ...to })} onResize onCreate onOpen />
-<Agenda date={date} events={events} onDateChange onLongPress={openMoveSheet} />
-<MeetingPlanner loadAttendees loadSlots duration={30} onSubmit />
+// .live → toolbar LiveStatus
+const events = query.live(listEvents, { tags: [`cal:${userId}`],
+  input: range })
+<Calendar
+  view={view}
+  date={date}
+  events={events}
+  calendars={sources}
+  timeZone={tz}
+  snap={15}
+  onMove={(e, to, reason) => move.run({ id: e.id, ...to })}
+  onResize
+  onCreate
+  onOpen
+/>
+<Agenda
+  date={date}
+  events={events}
+  onDateChange
+  onLongPress={openMoveSheet}
+/>
+<MeetingPlanner
+  loadAttendees
+  loadSlots
+  duration={30}
+  onSubmit
+/>
 <BookingCalendar slots={query(slotsFor, { input: day })} onBook />
 ```
 
@@ -286,9 +361,12 @@ Demo: the Year tab of `#cal-desk` and the standalone `#cal-year` card (same comp
 ```
 YearView[data-scope="year"] (container: year)
 ├─ Toolbar   ‹ 2026 › · legend (0, 1–2, 3–4, 5+ events) · "Today"
-├─ Months    12 × Month (data-part="year-month"): heading button ("October", count) · 7-column day grid (role=grid)
-│   Day      date · 0–3 density dots · today (accent disc) · selected (ring) · weekend (subtle ink)
-└─ Detail    the picked day or month: count, the busiest day, up to 4 events, "Open in Day / Month view"
+├─ Months    12 × Month (data-part="year-month"): heading button
+    ("October", count) · 7-column day grid (role=grid)
+│   Day      date · 0–3 density dots · today (accent disc) · selected
+    (ring) · weekend (subtle ink)
+└─ Detail    the picked day or month: count, the busiest day, up to 4
+    events, "Open in Day / Month view"
 ```
 
 - **Columns follow the container, never the window:** 1 column below 480px, 2 from 480, 3 from 720, 4 from 960.
@@ -319,16 +397,22 @@ Demo: `#meet-desk` (1240×720, dark island), `#meet-phone` (390×800, speaker), 
 ### 3.1 Anatomy
 
 ```
-MeetingRoom (container: room; grid: header / stage + sidebar / controls)
-├─ Header   title · timer · REC · LayoutSwitch (Gallery Speaker Presentation Board) · LiveStatus (network)
+MeetingRoom (container: room; grid: header / stage + sidebar /
+    controls)
+├─ Header   title · timer · REC · LayoutSwitch (Gallery Speaker
+    Presentation Board) · LiveStatus (network)
 ├─ Stage[data-layout]
-│   gallery: auto grid (2 cols < 600, 3 ≥ 600, 4 ≥ 1200) · speaker: main + strip
+│   gallery: auto grid (2 cols < 600, 3 ≥ 600, 4 ≥ 1200) · speaker:
+    main + strip
 │   presentation: share + rail of tiles · board: board + narrow rail
-│   Tile  video/avatar · name chip (level bars) · flags (muted, hand, poor network) · speaking ring (sweep)
+│   Tile  video/avatar · name chip (level bars) · flags (muted, hand,
+    poor network) · speaking ring (sweep)
 │   Pip (self view, draggable, snaps to the nearest corner)
 ├─ Sidebar (≥ 1000 docked 300px; overlay below)   People | Chat
-└─ ControlBar   Mic · Camera | Share · Hand · React · Chat · People · More | Leave (the only solid, critical)
-Prejoin (preview tile, mic meter, device Selects, Join) · Lobby (waiting) · ScheduledLobby (Countdown, Join disabled)
+└─ ControlBar   Mic · Camera | Share · Hand · React · Chat · People ·
+    More | Leave (the only solid, critical)
+Prejoin (preview tile, mic meter, device Selects, Join) · Lobby
+    (waiting) · ScheduledLobby (Countdown, Join disabled)
 ```
 
 ### 3.2 Rules
@@ -356,11 +440,24 @@ gallery 2–3 columns, sidebar overlays the stage. Desktop: gallery + docked sid
 - ControlBar is an APG **toolbar** (arrow keys between controls, Tab leaves). LayoutSwitch is a radio group.
 
 ```ts
-const room = channel(`meet/${id}`, { authorize, client: { hand, react, mute }, server: { joined, left, speaking, level } })
-const people = room.collect('joined', 'left')            // Signal<Participant[]>
-<MeetingRoom room={room} layout={layout} onLayoutChange participants={people} self={me} onLeave />
+const room = channel(`meet/${id}`, {
+  authorize,
+  client: { hand, react, mute },
+  server: { joined, left, speaking, level },
+})
+// Signal<Participant[]>
+const people = room.collect('joined', 'left')
+<MeetingRoom
+  room={room}
+  layout={layout}
+  onLayoutChange
+  participants={people}
+  self={me}
+  onLeave
+/>
 type MeetingLayout = 'gallery' | 'speaker' | 'presentation' | 'board'
-interface Participant { id; name; role; isSpeaking; isMuted; isCamOn; handRaised; network: 'good' | 'poor' }
+interface Participant { id; name; role; isSpeaking; isMuted; isCamOn;
+  handRaised; network: 'good' | 'poor' }
 ```
 
 Audio levels arrive at 10 Hz on `delivery: 'latest'`; the level bars read `--level` directly (no re-render).
@@ -379,9 +476,12 @@ Inbox (Popover 400px desktop · full page on phone)
 ├─ Header   title · Mark all as read · More
 ├─ Tabs     All · Unread n · Mentions
 ├─ Group    "Today", "Yesterday" (sticky)
-│   Notification  avatar + kind badge · text (actor verb object) · quote · time · source · actions · unread dot
+│   Notification  avatar + kind badge · text (actor verb object) ·
+    quote · time · source · actions · unread dot
 └─ Footer   "Up to date" / "n new" pill · View all
-ToastRegion (05) · Activity feed · PushSoftAsk (P2) · NotificationPreferences (P1, §4.6; the settings page frame is 09's)
+ToastRegion (05) · Activity feed · PushSoftAsk (P2) ·
+    NotificationPreferences (P1, §4.6; the settings page frame is
+    09's)
 ```
 
 ### 4.2 Rules
@@ -430,8 +530,17 @@ page is 09's.
 ```ts
 const inbox = query.live(listNotifications, { tags: ['inbox:me'] })
 <Bell count={() => inbox.value?.filter(n => !n.read).length} onOpen />
-<Inbox items={inbox} live={inbox.live} onRead onReadAll onDismiss onAction tabs={['all', 'unread', 'mentions']} />
-<LiveStatus state={inbox.live} />          // also accepts stream().status and channel.status, mapped to 4 states
+<Inbox
+  items={inbox}
+  live={inbox.live}
+  onRead
+  onReadAll
+  onDismiss
+  onAction
+  tabs={['all', 'unread', 'mentions']}
+/>
+// also accepts stream().status and channel.status, mapped to 4 states
+<LiveStatus state={inbox.live} />
 ```
 
 ### 4.6 Notification preferences
@@ -441,10 +550,14 @@ Demo: `#nt-prefs` (fluid card) and `#nt-prefs-phone` (390px phone frame); both e
 ```
 NotificationPreferences[data-scope="prefs-matrix"] (container: prefs)
 ├─ Grid (role=grid, aria-labelledby the title)
-│   Head row      "Event" · per channel: name + channel toggle (tri-state, "Email, all events")
-│   Group row     group name ("Collaboration") · per channel: group toggle (tri-state, "Collaboration, all email")
-│   Event row     rowheader (name + one-line hint) · per channel: Checkbox | Locked (checked, lock) | "Not offered"
-├─ Delivery       Email delivery Select: Instantly · Hourly digest · Daily digest at 9:00 · Weekly digest, Mondays
+│   Head row      "Event" · per channel: name + channel toggle
+    (tri-state, "Email, all events")
+│   Group row     group name ("Collaboration") · per channel: group
+    toggle (tri-state, "Collaboration, all email")
+│   Event row     rowheader (name + one-line hint) · per channel:
+    Checkbox | Locked (checked, lock) | "Not offered"
+├─ Delivery       Email delivery Select: Instantly · Hourly digest ·
+    Daily digest at 9:00 · Weekly digest, Mondays
 └─ Footer         role=status "Saved" line · Reset to defaults
 ```
 
@@ -472,10 +585,20 @@ NotificationPreferences[data-scope="prefs-matrix"] (container: prefs)
   Under forced colours the boxes are the 03 checkbox repaint; locked cells add a `GrayText` lock.
 
 ```ts
-const prefs = query(getNotificationPrefs)            // { events: { [id]: { [channel]: boolean } }, digest }
-const save = mutation(setNotificationPref, { optimistic: (c, { event, channel, on }) => setCell(c, event, channel, on) })
-<NotificationPreferences value={prefs} channels={['inapp', 'email', 'push', 'sms']} groups={GROUPS}
-  locked={{ security: ['email'] }} offered={OFFERED} onChange={save.run} digest={prefs.value?.digest} onDigest />
+// { events: { [id]: { [channel]: boolean } }, digest }
+const prefs = query(getNotificationPrefs)
+const save = mutation(setNotificationPref, { optimistic: (c, { event,
+  channel, on }) => setCell(c, event, channel, on) })
+<NotificationPreferences
+  value={prefs}
+  channels={['inapp', 'email', 'push', 'sms']}
+  groups={GROUPS}
+  locked={{ security: ['email'] }}
+  offered={OFFERED}
+  onChange={save.run}
+  digest={prefs.value?.digest}
+  onDigest
+/>
 ```
 
 ### 4.7 Transport picker (realtime sandbox)
@@ -492,14 +615,21 @@ wires, tabs only (BroadcastChannel, `tabs.channel`, no server) or the fake in-me
 ```
 TransportPicker[data-scope="transport"] (container: transport)
 ├─ Header    title · LiveStatus (worst lane) · Reset
-├─ Wire      radiogroup (choice cards): weft default (SSE + WebSocket) · Tabs only · Fake (@weft-js/core/test)
-├─ Bus       radiogroup (choice cards): memory · postgres · redis · nats · durable-object · Preset Select
-│            (Single instance · Multi-instance · Cloudflare); an invalid pair shows the build error inline
-├─ Network   Select: Good · Slow · Lossy · WebSocket blocked · Offline (a Select, not a segmented: five
+├─ Wire      radiogroup (choice cards): weft default (SSE + WebSocket)
+    · Tabs only · Fake (@weft-js/core/test)
+├─ Bus       radiogroup (choice cards): memory · postgres · redis ·
+    nats · durable-object · Preset Select
+│            (Single instance · Multi-instance · Cloudflare); an
+    invalid pair shows the build error inline
+├─ Network   Select: Good · Slow · Lossy · WebSocket blocked · Offline
+    (a Select, not a segmented: five
 │            options would not fit a phone row)
-├─ Lanes     one row per primitive: .live (SSE) · stream (SSE) · channel (WebSocket)
-│   Lane     name + wire · LiveStatus · latency p50 / p95 + 20-sample bars · cursor <epoch>:<seq> · next retry
-└─ Actions   Ping · Drop connection · Fall behind · event log (role=log)
+├─ Lanes     one row per primitive: .live (SSE) · stream (SSE) ·
+    channel (WebSocket)
+│   Lane     name + wire · LiveStatus · latency p50 / p95 + 20-sample
+    bars · cursor <epoch>:<seq> · next retry
+└─ Actions   Ping · Drop connection · Fall behind · event log
+    (role=log)
 ```
 
 - **States are the four of §4.4.** Each lane maps its native status: `channel.status` `open` → live, `connecting`,
@@ -528,10 +658,20 @@ TransportPicker[data-scope="transport"] (container: transport)
 
 ```ts
 // weft.config.ts: the only production knob
-export default defineConfig({ realtime: { bus: 'postgres', origins: ['https://app.example'] } })
-// sandbox / tests: the fake pair from @weft-js/core/test, with a network model (proposed)
-const net = server.network({ latency: [40, 120], loss: 0.02, blockUpgrade: false })
-<TransportPicker lanes={{ live: todos.live, stream: board.status, channel: chat.status }} bus="postgres" />
+export default defineConfig({ realtime: { bus: 'postgres',
+  origins: ['https://app.example'] } })
+// sandbox / tests: the fake pair from @weft-js/core/test, with a
+// network model (proposed)
+const net = server.network({ latency: [40, 120], loss: 0.02,
+  blockUpgrade: false })
+<TransportPicker
+  lanes={{
+    live: todos.live,
+    stream: board.status,
+    channel: chat.status,
+  }}
+  bus="postgres"
+/>
 ```
 
 ## 5. Messaging and chat
@@ -542,14 +682,18 @@ tablet frame: a seeded quote reply plus Quote on every message).
 ### 5.1 Anatomy
 
 ```
-ConversationList   item: avatar (presence) · name · last message · time · unread Badge · pinned · muted
+ConversationList   item: avatar (presence) · name · last message ·
+    time · unread Badge · pinned · muted
 Thread (role=log)
 ├─ Header   channel · members · avatar stack · call · search
 ├─ Day divider · Unread divider ("New · Today", accent hairline)
-├─ Message  avatar · author · time · Bubble (Quote?) · attachments · Reactions · ThreadReplies · Receipt · Actions (Quote, Copy)
-│           grouped: a continued message hides avatar and author within 5 min
+├─ Message  avatar · author · time · Bubble (Quote?) · attachments ·
+    Reactions · ThreadReplies · Receipt · Actions (Quote, Copy)
+│           grouped: a continued message hides avatar and author
+    within 5 min
 ├─ Typing indicator ("Mei is typing", three dots)
-└─ Composer[data-sweep]  QuoteDraft? · Textarea (field-sizing) · attach · emoji (EmojiPicker, 04) · @mention · Send
+└─ Composer[data-sweep]  QuoteDraft? · Textarea (field-sizing) ·
+    attach · emoji (EmojiPicker, 04) · @mention · Send
 ```
 
 ### 5.2 Rules
@@ -580,9 +724,21 @@ status says "New message from Mei". Messages are `article`s with `aria-setsize="
 "Enter sends, Shift+Enter adds a line". ConversationList is a listbox with `aria-selected` on the open channel.
 
 ```ts
-const ch = channel(`chat/${id}`, { authorize, client: { send, typing, react, read }, server: { message, typing, receipt } })
+const ch = channel(`chat/${id}`, {
+  authorize,
+  client: { send, typing, react, read },
+  server: { message, typing, receipt },
+})
 const messages = query.live(listMessages, { tags: [`chat:${id}`] })
-<Thread messages={messages} me={me} onSend={send.run} onRetry onReact onReply typing={ch.collect('typing')} />
+<Thread
+  messages={messages}
+  me={me}
+  onSend={send.run}
+  onRetry
+  onReact
+  onReply
+  typing={ch.collect('typing')}
+/>
 ```
 
 ### 5.5 Quote reply
@@ -608,8 +764,14 @@ are different tools: a quote answers one line in place, a thread moves a discuss
 - **Motion:** the draft enters with the arrival grammar (§0, `data-arrive`); reduced motion fades.
 
 ```ts
-<Thread … onQuote={(m, selection) => draft.quote({ id: m.id, author: m.author, text: selection || m.text })} />
-send.run({ text, quote: draft.quote?.id })   // the server stores the reference; rendering reads the live source
+<Thread
+  …
+  onQuote={(m, selection) => draft.quote({
+    id: m.id, author: m.author, text: selection || m.text,
+  })}
+/>
+// the server stores the reference; rendering reads the live source
+send.run({ text, quote: draft.quote?.id })
 ```
 
 ## 6. Real-time collaboration
@@ -663,12 +825,31 @@ Demo: `#collab-demo` (shared brief: cursors, peer selections, lock, conflict, co
   joined"). Comments rail is a `complementary` landmark; each thread is an `article`.
 
 ```ts
-const doc = channel(`doc/${id}`, { authorize, client: { cursor, select, relay }, server: { op, presence } })
-const peers = presence(doc, { delivery: 'latest' })        // @weft-js/multiplayer
+const doc = channel(`doc/${id}`, {
+  authorize,
+  client: { cursor, select, relay },
+  server: { op, presence },
+})
+// @weft-js/multiplayer
+const peers = presence(doc, { delivery: 'latest' })
 <PresenceStack peers={peers} onFollow />
-<Cursors peers={peers} anchor="[data-anchor]" idle={5000} />
-<ShareDialog object={doc} members={query(listMembers)} onInvite onRoleChange onLinkAccess />
-<VersionHistory versions={query.live(listVersions)} onPreview onRestore />
+<Cursors
+  peers={peers}
+  anchor="[data-anchor]"
+  idle={5000}
+/>
+<ShareDialog
+  object={doc}
+  members={query(listMembers)}
+  onInvite
+  onRoleChange
+  onLinkAccess
+/>
+<VersionHistory
+  versions={query.live(listVersions)}
+  onPreview
+  onRestore
+/>
 ```
 
 ### 6.4 Coverage additions (v0.2)
@@ -742,8 +923,16 @@ which belongs to sharing: the way in is a request the owner answers from their i
   app shell so navigation still works.
 
 ```ts
-<SystemPage kind="403" object={{ title: 'Q4 brief', owner }} account={me}
-  request={{ allowed: true, onSend: requestAccess.run, pending: req.value }} accounts={accounts} onSwitch />
+<SystemPage
+  kind="403"
+  object={{ title: 'Q4 brief', owner }}
+  account={me}
+  request={{
+    allowed: true, onSend: requestAccess.run, pending: req.value,
+  }}
+  accounts={accounts}
+  onSwitch
+/>
 ```
 
 ## 7. Dial and theming

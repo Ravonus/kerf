@@ -19,21 +19,36 @@ icon sweep), and all 22 §2.1 gaps. §9 maps each row to its section and its spe
 One shell, `<Field>`, renders every text-like input. Choice, range and file controls reuse its parts (§5).
 
 ```
-root [data-scope=field] [data-variant?] [data-appearance=line?] [data-invalid|data-valid|data-loading|data-disabled|data-readonly|data-open]
-├─ control [data-part=control] [data-sweep] [data-phase=idle|in|out] [data-filled?] [data-pin?]
-│   ├─ sweep-base   aria-hidden   resting border, --warp-color-sweep-base, 1px
-│   ├─ sweep        aria-hidden   accent border, --warp-color-sweep, --warp-sweep-width (1 → 1.5px)
-│   ├─ icon?        aria-hidden   two copies of the glyph: sweep-base (text-subtle) + sweep (accent), clipped like the border
-│   ├─ label        always a real <label>: <label for> on a labelable input, or <label id> + aria-labelledby on a
-│   │               [role=combobox] trigger / composite group. Its text is split into <span data-char> (display:
-│   │               inline, --d delays). NOT aria-hidden: its text is the accessible name.
-│   ├─ prefix?      fixed text, never submitted; visible once the label has lifted (always, in classic)
-│   ├─ input        the one interactive element: <input>, <textarea>, <select>, or a [role=combobox] trigger
+root [data-scope=field] [data-variant?] [data-appearance=line?]
+    [data-invalid|data-valid|data-loading|
+     data-disabled|data-readonly|data-open]
+├─ control [data-part=control] [data-sweep] [data-phase=idle|in|out]
+    [data-filled?] [data-pin?]
+│   ├─ sweep-base   aria-hidden   resting border,
+    --warp-color-sweep-base, 1px
+│   ├─ sweep        aria-hidden   accent border, --warp-color-sweep,
+    --warp-sweep-width (1 → 1.5px)
+│   ├─ icon?        aria-hidden   two copies of the glyph: sweep-base
+    (text-subtle) + sweep (accent), clipped like the border
+│   ├─ label        always a real <label>: <label for> on a labelable
+    input, or <label id> + aria-labelledby on a
+│   │               [role=combobox] trigger / composite group. Its
+    text is split into <span data-char> (display:
+│   │               inline, --d delays). NOT aria-hidden: its text is
+    the accessible name.
+│   ├─ prefix?      fixed text, never submitted; visible once the
+    label has lifted (always, in classic)
+│   ├─ input        the one interactive element: <input>, <textarea>,
+    <select>, or a [role=combobox] trigger
 │   ├─ suffix?
-│   ├─ end slots    in this order: spinner · status · clear · action · stepper · indicator (24px, hit area ≥ 44px on touch)
-│   └─ popup?       popovers are children of control, so label and sweep stay up while open (data-open = force)
-└─ message [data-part=message] id → merged into the input's aria-describedby
-    ├─ hint | error [role=alert] (error replaces hint, slides in over --warp-message-duration)
+│   ├─ end slots    in this order: spinner · status · clear · action ·
+    stepper · indicator (24px, hit area ≥ 44px on touch)
+│   └─ popup?       popovers are children of control, so label and
+    sweep stay up while open (data-open = force)
+└─ message [data-part=message] id → merged into the input's
+    aria-describedby
+    ├─ hint | error [role=alert] (error replaces hint, slides in over
+        --warp-message-duration)
     └─ counter? (tabular; caution at 90%, critical over the limit)
 ```
 
@@ -122,24 +137,58 @@ Shared with 04-inputs-rich (identical `Bindable`, `ChangeReason`, `Openable`, `F
 
 ```ts
 type Bindable<T> =
-  | { value: State<T>; defaultValue?: never; onValueChange?: (v: T, reason: ChangeReason) => void }
-  | { value?: T; defaultValue?: T; onValueChange?: (v: T, reason: ChangeReason) => void };
+  | {
+      value: State<T>;
+      defaultValue?: never;
+      onValueChange?: (v: T, reason: ChangeReason) => void;
+    }
+  | {
+      value?: T;
+      defaultValue?: T;
+      onValueChange?: (v: T, reason: ChangeReason) => void;
+    };
 type ChangeReason = "pointer" | "keyboard" | "programmatic";
-type Openable = { open?: State<boolean> | boolean; defaultOpen?: boolean; onOpenChange?: (o: boolean) => void };
-
-type FieldShell = {
-  label: string; hint?: string; error?: string | State<string | null>; icon?: IconName;
-  variant?: "floating" | "classic";                 // default: nearest <Form fields> → warp({ fields })
-  appearance?: "box" | "line";                      // line = FloatingLineInput
-  required?: boolean; disabled?: boolean; readOnly?: boolean; size?: "sm" | "md" | "lg";
-  prefix?: JSX.Element; suffix?: JSX.Element; name?: string;
-  locale?: string;                                  // default: nearest <Surface lang> → document lang
-  labelBackground?: string;                         // overrides the measured notch fill
+type Openable = {
+  open?: State<boolean> | boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (o: boolean) => void;
 };
 
-// The shell itself, for anything not listed below (rich inputs build on this):
-function Field(p: FieldShell & { children: JSX.Element /* the input slot */; end?: JSX.Element;
-  counter?: number; loading?: boolean; valid?: boolean; force?: boolean /* = data-open */ }): JSX.Element;
+type FieldShell = {
+  label: string;
+  hint?: string;
+  error?: string | State<string | null>;
+  icon?: IconName;
+  // default: nearest <Form fields> → warp({ fields })
+  variant?: "floating" | "classic";
+  // line = FloatingLineInput
+  appearance?: "box" | "line";
+  required?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  size?: "sm" | "md" | "lg";
+  prefix?: JSX.Element;
+  suffix?: JSX.Element;
+  name?: string;
+  // default: nearest <Surface lang> → document lang
+  locale?: string;
+  // overrides the measured notch fill
+  labelBackground?: string;
+};
+
+// The shell itself, for anything not listed below (rich inputs build
+// on this):
+function Field(
+  p: FieldShell & {
+    // The input slot.
+    children: JSX.Element;
+    end?: JSX.Element;
+    counter?: number;
+    loading?: boolean;
+    valid?: boolean;
+    force?: boolean /* = data-open */;
+  },
+): JSX.Element;
 ```
 
 Rules:
@@ -153,45 +202,194 @@ Rules:
 - `name` writes a hidden input with the serialised value, so native `<form>` posts work.
 
 ```ts
-type TextFieldProps = FieldShell & Bindable<string> & { type?: "text" | "email" | "url" | "search" | "tel";
-  maxLength?: number; counter?: boolean; clearable?: boolean; autoComplete?: string; inputMode?: string; enterKeyHint?: string };
-type PasswordFieldProps = FieldShell & Bindable<string> & { reveal?: boolean; strength?: boolean | ((v: string) => 0|1|2|3|4);
-  rules?: { id: string; label: string; test: (v: string) => boolean }[]; generate?: boolean; mode?: "new" | "current" };
-type NumberFieldProps = FieldShell & Bindable<number | null> & { min?: number; max?: number; step?: number;
-  stepper?: boolean; scrub?: boolean; format?: Intl.NumberFormatOptions; unit?: string };
-type CurrencyFieldProps = FieldShell & Bindable<{ minor: number; currency: string } | null> & { currencies?: string[] };
-type MaskedFieldProps = FieldShell & Bindable<string> & { mask: string /* 0 digit · A alnum · literals */; raw?: boolean };
-type QuantityProps = Bindable<number> & { min: number; max: number; step?: number; label: string };
-type OtpProps = Bindable<string> & { length: number; masked?: boolean; label: string;
-  onComplete?: (code: string) => void | Promise<void | { error: string }>;  // a returned error = wrong code
-  autoSubmit?: boolean /* default true: completing the code calls onComplete, then submits the form */; error?: string };
-type InlineEditProps = Bindable<string> & { label: string; placeholder?: string; validate?: (v: string) => string | null };
-type InputGroupProps = { children: JSX.Element[] };   // Addon | Field | Button, joined corners
-type SelectProps<T> = FieldShell & Bindable<T | null> & Openable & { options: Option<T>[] | Group<T>[];
-  presentation?: "auto" | "popover" | "sheet"; searchable?: boolean };
-type ComboboxProps<T> = FieldShell & Bindable<T | null> & Openable & { options: Option<T>[] | ((q: string, s: AbortSignal) => Promise<Option<T>[]>);
-  creatable?: boolean | ((q: string) => T); };
-type MultiComboboxProps<T> = FieldShell & Bindable<T[]> & Openable & Omit<ComboboxProps<T>, keyof Bindable<T | null>>;  // TagsInput
-type AutocompleteProps = FieldShell & Bindable<string> & { suggest: (q: string, s: AbortSignal) => Promise<string[]> };
-type CascaderProps = FieldShell & Bindable<string[]> & Openable & { tree: CascadeNode[] };
-type TreeSelectProps = FieldShell & Bindable<string[]> & Openable & { tree: TreeNode[]; checkStrategy?: "leaves" | "parents" };
-type ListboxProps<T> = Bindable<T[]> & { options: Option<T>[]; multiple?: boolean; label: string };
-type TransferProps<T> = Bindable<T[]> & { options: Option<T>[]; titles: [string, string] };
-type CheckboxProps = Bindable<boolean | "mixed"> & { label: string; hint?: string; error?: string };
-type SwitchProps = Bindable<boolean> & { label: string; hint?: string; size?: "sm" | "md"; placement?: "start" | "end" };
-type RadioGroupProps<T> = Bindable<T> & { options: Option<T>[]; orientation?: "horizontal" | "vertical"; cards?: boolean };
-type SegmentedProps<T> = Bindable<T> & { options: Option<T>[]; size?: "sm" | "md"; label: string };
-type ChipGroupProps<T> = Bindable<T[]> & { options: Option<T>[]; multiple?: boolean; label: string };
-type SliderProps = Bindable<number> & { min: number; max: number; step?: number; ticks?: string[]; format?: (v: number) => string; label: string };
-type RangeSliderProps = Bindable<[number, number]> & Omit<SliderProps, keyof Bindable<number>> & { histogram?: number[]; names?: [string, string] };
-type KnobProps = Bindable<number> & { max?: number /* 360 */; step?: number; variant?: "arc" | "hue"; label: string };
-type XYPadProps = Bindable<{ x: number; y: number }> & { labels: [string, string]; format?: (x: number, y: number) => string };
+type TextFieldProps = FieldShell &
+  Bindable<string> & {
+    type?: "text" | "email" | "url" | "search" | "tel";
+    maxLength?: number;
+    counter?: boolean;
+    clearable?: boolean;
+    autoComplete?: string;
+    inputMode?: string;
+    enterKeyHint?: string;
+  };
+type PasswordFieldProps = FieldShell &
+  Bindable<string> & {
+    reveal?: boolean;
+    strength?: boolean | ((v: string) => 0 | 1 | 2 | 3 | 4);
+    rules?: {
+      id: string;
+      label: string;
+      test: (v: string) => boolean;
+    }[];
+    generate?: boolean;
+    mode?: "new" | "current";
+  };
+type NumberFieldProps = FieldShell &
+  Bindable<number | null> & {
+    min?: number;
+    max?: number;
+    step?: number;
+    stepper?: boolean;
+    scrub?: boolean;
+    format?: Intl.NumberFormatOptions;
+    unit?: string;
+  };
+type CurrencyFieldProps = FieldShell &
+  Bindable<{ minor: number; currency: string } | null> & {
+    currencies?: string[];
+  };
+type MaskedFieldProps = FieldShell &
+  Bindable<string> & {
+    mask: string /* 0 digit · A alnum · literals */;
+    raw?: boolean;
+  };
+type QuantityProps = Bindable<number> & {
+  min: number;
+  max: number;
+  step?: number;
+  label: string;
+};
+type OtpProps = Bindable<string> & {
+  length: number;
+  masked?: boolean;
+  label: string;
+  // a returned error = wrong code
+  onComplete?: (code: string) => void | Promise<void | {
+    error: string;
+  }>;
+  // Default true: completion calls onComplete, then submits.
+  autoSubmit?: boolean;
+  error?: string;
+};
+type InlineEditProps = Bindable<string> & {
+  label: string;
+  placeholder?: string;
+  validate?: (v: string) => string | null;
+};
+// Addon | Field | Button, joined corners
+type InputGroupProps = { children: JSX.Element[] };
+type SelectProps<T> = FieldShell &
+  Bindable<T | null> &
+  Openable & {
+    options: Option<T>[] | Group<T>[];
+    presentation?: "auto" | "popover" | "sheet";
+    searchable?: boolean;
+  };
+type ComboboxProps<T> = FieldShell &
+  Bindable<T | null> &
+  Openable & {
+    options: Option<T>[] | ((q: string, s: AbortSignal)
+    => Promise<Option<T>[]>);
+    creatable?: boolean | ((q: string) => T);
+  };
+// TagsInput
+type MultiComboboxProps<T> = FieldShell &
+  Bindable<T[]> &
+  Openable &
+  Omit<ComboboxProps<T>, keyof Bindable<T | null>>;
+type AutocompleteProps = FieldShell &
+  Bindable<string> & {
+    suggest: (q: string, s: AbortSignal) => Promise<string[]>;
+  };
+type CascaderProps = FieldShell &
+  Bindable<string[]> &
+  Openable & {
+    tree: CascadeNode[];
+  };
+type TreeSelectProps = FieldShell &
+  Bindable<string[]> &
+  Openable & {
+    tree: TreeNode[];
+    checkStrategy?: "leaves" | "parents";
+  };
+type ListboxProps<T> = Bindable<T[]> & {
+  options: Option<T>[];
+  multiple?: boolean;
+  label: string;
+};
+type TransferProps<T> = Bindable<T[]> & {
+  options: Option<T>[];
+  titles: [string, string];
+};
+type CheckboxProps = Bindable<boolean | "mixed"> & {
+  label: string;
+  hint?: string;
+  error?: string;
+};
+type SwitchProps = Bindable<boolean> & {
+  label: string;
+  hint?: string;
+  size?: "sm" | "md";
+  placement?: "start" | "end";
+};
+type RadioGroupProps<T> = Bindable<T> & {
+  options: Option<T>[];
+  orientation?: "horizontal" | "vertical";
+  cards?: boolean;
+};
+type SegmentedProps<T> = Bindable<T> & {
+  options: Option<T>[];
+  size?: "sm" | "md";
+  label: string;
+};
+type ChipGroupProps<T> = Bindable<T[]> & {
+  options: Option<T>[];
+  multiple?: boolean;
+  label: string;
+};
+type SliderProps = Bindable<number> & {
+  min: number;
+  max: number;
+  step?: number;
+  ticks?: string[];
+  format?: (v: number) => string;
+  label: string;
+};
+type RangeSliderProps = Bindable<[number, number]> &
+  Omit<SliderProps, keyof Bindable<number>> & {
+    histogram?: number[];
+    names?: [string, string];
+  };
+type KnobProps = Bindable<number> & {
+  max?: number /* 360 */;
+  step?: number;
+  variant?: "arc" | "hue";
+  label: string;
+};
+type XYPadProps = Bindable<{ x: number; y: number }> & {
+  labels: [string, string];
+  format?: (x: number, y: number) => string;
+};
 type RatingProps = Bindable<number> & { max?: number; label: string };
-type ColorPickerProps = FieldShell & Bindable<string /* #rrggbb */> & { swatches?: string[]; eyedropper?: boolean; alpha?: boolean };
-type GradientEditorProps = Bindable<{ angle: number; stops: { at: number; color: string }[] }> & { label: string };
-type FileDropzoneProps = Bindable<UploadItem[]> & { accept?: string; multiple?: boolean; maxSize?: number;
-  upload: (f: File, signal: AbortSignal, progress: (p: number) => void) => Promise<void>; camera?: boolean };
-type ImageCropProps = Bindable<CropRect> & { src: string; aspect?: number; preview?: boolean };
+type ColorPickerProps = FieldShell &
+  Bindable<string /* #rrggbb */> & {
+    swatches?: string[];
+    eyedropper?: boolean;
+    alpha?: boolean;
+  };
+type GradientEditorProps = Bindable<{
+  angle: number;
+  stops: {
+    at: number;
+    color: string;
+  }[];
+}> & { label: string };
+type FileDropzoneProps = Bindable<UploadItem[]> & {
+  accept?: string;
+  multiple?: boolean;
+  maxSize?: number;
+  upload: (
+    f: File,
+    signal: AbortSignal,
+    progress: (p: number) => void,
+  ) => Promise<void>;
+  camera?: boolean;
+};
+type ImageCropProps = Bindable<CropRect> & {
+  src: string;
+  aspect?: number;
+  preview?: boolean;
+};
 ```
 
 ---

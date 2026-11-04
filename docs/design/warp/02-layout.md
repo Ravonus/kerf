@@ -59,17 +59,30 @@ All take `gap?: Space`, `class?`, `as?` and pass aria-* and `data-*` through. `S
 Inspector is itself a container.
 
 ```ts
-Stack(p: { gap?: Space; align?: "start" | "center" | "end"; divided?: boolean })          // data-scope="stack"
-Row(p: { gap?: Space; justify?: "start" | "between" | "end" | "center"; align?: ...; wrap?: boolean; reflow?: Step })
-Grid(p: { min?: "xs" | "sm" | "md" | "lg"; cols?: 2 | 3 | 4 | 6; gap?: Space })            // intrinsic columns
-Split(p: { side?: "start" | "end"; width?: "rail" | "nav" | "list" | "half"; at?: Step; sticky?: boolean })
-Center(p: { max?: "measure" | "narrow" | "content" | "wide"; gutter?: boolean; intrinsic?: boolean })
-Cover(p: { min?: "screen" | "fill" }) & { Center: Component }                              // auth, error
-Frame(p: { ratio: "square" | "4:3" | "16:9" | "21:9" | "9:16" | `${number}:${number}` })
-ScrollArea(p: { axis?: "y" | "x" | "both"; snap?: boolean; fade?: boolean; label?: string })
-Spacer()                                                  // flex: 1 inside Row / Stack
-Inset(p: { pad?: "group" | "section" })                   // sunken padded region
-bleed?: true | "start" | "end"                            // any element: out to the page edge, honours safe areas
+// data-scope="stack"
+Stack(p: { gap?: Space; align?: "start" | "center" | "end";
+  divided?: boolean })
+Row(p: { gap?: Space; justify?: "start" | "between" | "end"
+  | "center"; align?: ...; wrap?: boolean; reflow?: Step })
+// intrinsic columns
+Grid(p: { min?: "xs" | "sm" | "md" | "lg"; cols?: 2 | 3 | 4 | 6;
+  gap?: Space })
+Split(p: { side?: "start" | "end"; width?: "rail" | "nav" | "list"
+  | "half"; at?: Step; sticky?: boolean })
+Center(p: { max?: "measure" | "narrow" | "content" | "wide";
+  gutter?: boolean; intrinsic?: boolean })
+// auth, error
+Cover(p: { min?: "screen" | "fill" }) & { Center: Component }
+Frame(p: { ratio: "square" | "4:3" | "16:9" | "21:9" | "9:16"
+  | `${number}:${number}` })
+ScrollArea(p: { axis?: "y" | "x" | "both"; snap?: boolean;
+  fade?: boolean; label?: string })
+// flex: 1 inside Row / Stack
+Spacer()
+// sunken padded region
+Inset(p: { pad?: "group" | "section" })
+// any element: out to the page edge, honours safe areas
+bleed?: true | "start" | "end"
 ```
 
 - **Grid**: `repeat(auto-fit, minmax(min(100%, max(min, (100% - gaps) / cols)), 1fr))`, so no breakpoints.
@@ -87,18 +100,30 @@ bleed?: true | "start" | "end"                            // any element: out to
 ## 4. Page parts (coverage rows)
 
 ```ts
-Section(p: { variant?: "plain" | "band" | "inset"; divided?: boolean; header?: Slot })
-PageHeader(p: { eyebrow?: string; title: string; description?: string; actions?: Slot; meta?: Slot; tabs?: Slot })
+Section(p: { variant?: "plain" | "band" | "inset"; divided?: boolean;
+  header?: Slot })
+PageHeader(p: { eyebrow?: string; title: string; description?: string;
+  actions?: Slot; meta?: Slot; tabs?: Slot })
 Masonry(p: { min?: "xs" | "sm" | "md" | "lg"; gap?: Space })
-SplitPane(p: { orientation?: "horizontal" | "vertical"; size: Bindable<number>; min?: number; max?: number;
-               collapsible?: boolean; label: string })                                   // size in %
-FloatPanel(p: { title: string; position: Bindable<{ x: number; y: number }>; bounds?: "parent" | "viewport";
-                snap?: number } & Openable)                                               // DraggablePanel
-StickyBar(p: { edge?: "top" | "bottom"; tone?: "default" | "accent"; variant?: "bar" | "floating" })  // Shell.Dock = bar
-Banner(p: { tone?: "info" | "positive" | "caution" | "critical" | "accent"; icon?: Icon; actions?: Slot;
+// size in %
+SplitPane(p: { orientation?: "horizontal" | "vertical";
+  size: Bindable<number>; min?: number; max?: number;
+  collapsible?: boolean; label: string })
+// DraggablePanel
+FloatPanel(p: { title: string; position: Bindable<{ x: number;
+  y: number }>; bounds?: "parent" | "viewport";
+  snap?: number } & Openable)
+// Shell.Dock = bar
+StickyBar(p: { edge?: "top" | "bottom"; tone?: "default" | "accent";
+  variant?: "bar" | "floating" })
+Banner(p: { tone?: "info" | "positive" | "caution" | "critical"
+  | "accent"; icon?: Icon; actions?: Slot;
             dismissible?: boolean })
-AnnouncementBar(p: { tone?: "inverse" | "accent"; dismissKey?: string } & Openable)
-ConsentBanner(p: { onAccept(): void; onReject(): void; onCustomize?(): void })          // CookieBanner
+AnnouncementBar(p: { tone?: "inverse" | "accent";
+  dismissKey?: string } & Openable)
+// CookieBanner
+ConsentBanner(p: { onAccept(): void; onReject(): void;
+  onCustomize?(): void })
 ```
 
 - **Section** gives vertical rhythm (`section` padding, `group` gap). `band` is a full-bleed surface;
@@ -131,15 +156,25 @@ ConsentBanner(p: { onAccept(): void; onReject(): void; onCustomize?(): void })  
 ## 5. Navigation parts
 
 ```ts
-TopNav(p: { brand: Slot; links: NavLink[]; actions?: Slot; current?: string })        // marketing / docs
-NavLink = { label: string; href?: string; mega?: { icon?: Icon; title: string; description?: string; href: string }[] }
-NavList(p: { groups: { label?: string; items: NavItem[] }[]; current?: string; label: string })
-NavItem = { id: string; label: string; icon?: Icon; href?: string; count?: number; badge?: string; children?: NavItem[] }
-AnchorNav(p: { items: { id: string; label: string; children?: ... }[]; scroller?: Element; label?: string })
-Breadcrumb(p: { items: { label: string; href?: string }[]; label?: string })
-TabNav(p: { items: NavItem[]; current: string; orientation?: "horizontal" | "auto"; label: string })
-Pager(p: { prev?: { label: string; href: string }; next?: { label: string; href: string } })
-VersionSwitcher(p: { versions: string[]; value: Bindable<string> })                      // a compact Select
+// marketing / docs
+TopNav(p: { brand: Slot; links: NavLink[]; actions?: Slot;
+  current?: string })
+NavLink = { label: string; href?: string; mega?: { icon?: Icon;
+  title: string; description?: string; href: string }[] }
+NavList(p: { groups: { label?: string; items: NavItem[] }[];
+  current?: string; label: string })
+NavItem = { id: string; label: string; icon?: Icon; href?: string;
+  count?: number; badge?: string; children?: NavItem[] }
+AnchorNav(p: { items: { id: string; label: string; children?: ... }[];
+  scroller?: Element; label?: string })
+Breadcrumb(p: { items: { label: string; href?: string }[];
+  label?: string })
+TabNav(p: { items: NavItem[]; current: string;
+  orientation?: "horizontal" | "auto"; label: string })
+Pager(p: { prev?: { label: string; href: string }; next?: {
+  label: string; href: string } })
+// a compact Select
+VersionSwitcher(p: { versions: string[]; value: Bindable<string> })
 ```
 
 - **A row of links never wraps (priority+).** Links are `white-space: nowrap`. When they don't fit, the ones at
@@ -168,11 +203,15 @@ VersionSwitcher(p: { versions: string[]; value: Bindable<string> })             
 ## 6. The app shell
 
 ```ts
-Shell(p: { variant?: "app" | "focus"; nav?: NavItem[]; current?: string; collapsed?: Bindable<boolean | "hidden">;
+Shell(p: { variant?: "app" | "focus"; nav?: NavItem[];
+  current?: string; collapsed?: Bindable<boolean | "hidden">;
            depth?: "root" | "child"; label?: string }) & {
-  Header, Brand, Switcher, Title, Crumbs, Command, Actions, Account, Nav, NavGroup, NavFoot, Main, Dock, Overlays }
-Shell.Command(p: { label?: string; shortcut?: string /* "⌘K" */; onOpen(): void })
-Shell.Switcher(p: { current: { name: string; meta?: string }; workspaces: ...[]; onSwitch(id): void })
+  Header, Brand, Switcher, Title, Crumbs, Command, Actions, Account,
+    Nav, NavGroup, NavFoot, Main, Dock, Overlays }
+Shell.Command(p: { label?: string; shortcut?: string /* "⌘K" */;
+  onOpen(): void })
+Shell.Switcher(p: { current: { name: string; meta?: string };
+  workspaces: ...[]; onSwitch(id): void })
 ```
 
 | | Phone < 600 | Tablet 600 – 999 | Desktop ≥ 1000 |
@@ -257,11 +296,19 @@ show (list 300 / 340). Templates in the specimen, each a composition with no new
 ## 8. Workbench and app chrome
 
 ```ts
-Inspector(p: { label: string } & Openable)                 // aside beside content ≥1000 of the page; sheet below
-DocTabs(p: { tabs: { id; label; dirty?: boolean }[]; value: Bindable<string>; onClose(id); onReorder(ids) })
-StatusBar(p: {}) & { Item(p: { optional?: boolean; tone?: "accent" }) }
-Board(p: { widgets: { id; w: number; h: number }[]; onChange(layout) })    // dashboard grid
-Canvas(p: { view: Bindable<{ x; y; zoom }>; minimap?: boolean; controls?: boolean })
+// aside beside content ≥1000 of the page; sheet below
+Inspector(p: { label: string } & Openable)
+DocTabs(p: { tabs: { id; label; dirty?: boolean }[];
+  value: Bindable<string>; onClose(id); onReorder(ids) })
+StatusBar(p: {}) & {
+  Item(p: { optional?: boolean; tone?: "accent" })
+}
+// dashboard grid
+Board(p: {
+  widgets: { id; w: number; h: number }[]; onChange(layout)
+})
+Canvas(p: { view: Bindable<{ x; y; zoom }>; minimap?: boolean;
+  controls?: boolean })
 PullToRefresh(p: { onRefresh(): Promise<void> })
 BackToTop(p: { after?: number /* px, default one viewport */ })
 RouteProgress(p: { state: "idle" | "loading" | "done" })
@@ -310,23 +357,39 @@ on `<html>`). Every component inside reads the same context.
 
 ```ts
 Locale(p: {
-  locale: string;                        // BCP 47: "en-US", "de-DE", "ar-EG"
-  dir?: "auto" | "ltr" | "rtl";          // default "auto": from the locale's script
-  currency?: string;                     // ISO 4217: the default for values that carry none (a market's price list)
-  timeZone?: string;                     // IANA; default: the user's resolved zone
-  numberingSystem?: string;              // "latn", "arab", …; default: the locale's own
-  calendar?: string; hourCycle?: "h12" | "h23"; weekStart?: 1 | 2 | 3 | 4 | 5 | 6 | 7;   // defaults from the locale
-  as?: string;                           // render a real box (data-box); default: display: contents
+  // BCP 47: "en-US", "de-DE", "ar-EG"
+  locale: string;
+  // default "auto": from the locale's script
+  dir?: "auto" | "ltr" | "rtl";
+  // ISO 4217: the default for values that carry none (a market's
+  // price list)
+  currency?: string;
+  // IANA; default: the user's resolved zone
+  timeZone?: string;
+  // "latn", "arab", …; default: the locale's own
+  numberingSystem?: string;
+  // defaults from the locale
+  calendar?: string; hourCycle?: "h12" | "h23"; weekStart?: 1 | 2 | 3
+    | 4 | 5 | 6 | 7;
+  // render a real box (data-box); default: display: contents
+  as?: string;
 })
 locale(): LocaleContext                  // the nearest provider
 
 type LocaleContext = {
-  locale: string; dir: "ltr" | "rtl"; currency?: string; timeZone: string; weekStart: number;
-  decimal: string; group: string; digits: string[];                    // what the parser accepts
-  number(n, o?): string; money(n, currency?): string; percent(n): string; unit(n, unit): string; compact(n): string;
-  date(d, o?): string; range(a, b, o?): string; relative(n, unit): string; list(xs, type?): string;
-  plural(n): Intl.LDMLPluralRule; collator(o?): Intl.Collator; name(code, type?): string;   // DisplayNames
-  parse(text): number | null;                                          // typed input → number
+  locale: string; dir: "ltr" | "rtl"; currency?: string;
+    timeZone: string; weekStart: number;
+  // what the parser accepts
+  decimal: string; group: string; digits: string[];
+  number(n, o?): string; money(n, currency?): string;
+    percent(n): string; unit(n, unit): string; compact(n): string;
+  date(d, o?): string; range(a, b, o?): string; relative(n,
+    unit): string; list(xs, type?): string;
+  // DisplayNames
+  plural(n): Intl.LDMLPluralRule; collator(o?): Intl.Collator;
+    name(code, type?): string;
+  // typed input → number
+  parse(text): number | null;
 }
 ```
 
