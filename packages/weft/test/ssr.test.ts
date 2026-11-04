@@ -2,6 +2,7 @@
 // twice: `?weft-ssr` compiles them for @weft-js/core/ssr, `?weft-hydrate` for hydratable @weft-js/core/dom (vite.mjs), both with
 // weft's own back end (research 19 §2.4: keys are source paths, ` wk="0.1/0"`).
 // weft-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
+import { readFileSync } from 'node:fs'
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
 import { attr, renderToString } from '@weft-js/core/ssr'
@@ -277,13 +278,17 @@ test('client-only watchers and extra memos shift no key', () => {
 })
 
 test('dev hydration warnings name the source line of the template that missed', () => {
+  const source = readFileSync('test/fixtures/next/Basics.tsx', 'utf8')
+  const button = source.indexOf('<button')
+  expect(button).toBeGreaterThan(-1)
+  const line = source.slice(0, button).split('\n').length
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = renderToString(() => basicsS.Hello({}))
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   hydrate(() => basicsC.Counter({}), container)
   expect(hydration.misses).toBe(1)
   expect(warn.mock.calls[0]![0]).toBe(
-    'weft: hydration mismatch at test/fixtures/next/Basics.tsx:12 <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh',
+    `weft: hydration mismatch at test/fixtures/next/Basics.tsx:${line} <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh`,
   )
   warn.mockRestore()
   container.remove()
