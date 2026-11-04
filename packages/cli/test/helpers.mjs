@@ -1,3 +1,4 @@
+import { strict as assert } from 'node:assert'
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -45,8 +46,14 @@ export function startApp() {
   return dir
 }
 
-/** The v3 spread habit: every price push gives every product a new identity. */
-export const spreadBug = [
-  'products.value.map(p => (p.id === id ? { ...p, price } : p))',
-  'products.value.map(p => ({ ...p, price: p.id === id ? price : p.price }))',
-]
+/** Plant the v3 spread habit: every price push gives every product a new identity. */
+export function spreadBug(src) {
+  const needle =
+    /products\.value\.map\(\s*\(?p\)?\s*=>\s*\(\s*p\.id\s*===\s*id\s*\?\s*\{\s*\.\.\.p,\s*price\s*\}\s*:\s*p\s*\)\s*\)/
+  const result = src.replace(
+    needle,
+    'products.value.map((p) => ({ ...p, price: p.id === id ? price : p.price }))',
+  )
+  assert.notEqual(result, src, 'spread bug must change the fixture')
+  return result
+}

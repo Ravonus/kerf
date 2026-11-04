@@ -72,10 +72,10 @@ describe('weft (bin)', () => {
 
   it('check exits 1 when there are errors, and prints them for humans', () => {
     const app = readFileSync(join(fixture, 'src/App.tsx'), 'utf8')
-    const r = weft('check', '--root', project({ 'src/App.tsx': app.replace(...spreadBug) }))
+    const r = weft('check', '--root', project({ 'src/App.tsx': spreadBug(app) }))
     expect(r.code).toBe(1)
     expect(r.stdout).toBe('')
-    expect(r.stderr).toMatch(/^src\/App\.tsx:21:44 {2}W014 error/m)
+    expect(r.stderr).toMatch(/^src\/App\.tsx:26:28 {2}W014 error/m)
   })
 
   it('tasks --json and docs work from the bin', () => {

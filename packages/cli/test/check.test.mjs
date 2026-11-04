@@ -44,9 +44,7 @@ describe('weft check on evals/reference-v3/weft', () => {
 
 describe('project view: cross-file W014', () => {
   it('follows the #/ alias like a relative import', async () => {
-    const aliased = app
-      .replace(...spreadBug)
-      .replaceAll("from './components/", "from '#/components/")
+    const aliased = spreadBug(app).replaceAll("from './components/", "from '#/components/")
     expect(aliased).toContain('#/components/ProductList')
     const r = await check(
       project({
@@ -60,7 +58,7 @@ describe('project view: cross-file W014', () => {
   })
 
   it('follows whatever alias the app declares', async () => {
-    const aliased = app.replace(...spreadBug).replaceAll("from './components/", "from '@/ui/")
+    const aliased = spreadBug(app).replaceAll("from './components/", "from '@/ui/")
     const tsconfig =
       '// the app\'s own\n{ "compilerOptions": { "paths": { "@/ui/*": ["./src/components/*"] } } }\n'
     const r = await check(project({ 'src/App.tsx': aliased, 'tsconfig.json': tsconfig }))
@@ -70,8 +68,7 @@ describe('project view: cross-file W014', () => {
   })
 
   it('promotes the spread habit to an error when the box reaches a keyed list in another file', async () => {
-    expect(app).toContain(spreadBug[0])
-    const dir = project({ 'src/App.tsx': app.replace(...spreadBug) })
+    const dir = project({ 'src/App.tsx': spreadBug(app) })
     const r = await check(dir)
     expect(r.ok).toBe(false)
     const [d] = r.diagnostics
@@ -84,12 +81,12 @@ describe('project view: cross-file W014', () => {
       docs: 'weft docs W014',
     })
     const text = readFileSync(join(dir, 'src/App.tsx'), 'utf8')
-    expect(text.slice(...d.offset)).toMatch(/^products\.value\.map\(p => \(\{ \.\.\.p/)
-    expect(d.span.slice(0, 2)).toEqual([21, 44])
-    expect(d.why).toContain('src/components/ProductList.tsx:29')
+    expect(text.slice(...d.offset)).toMatch(/^products\.value\.map\(\(p\) => \(\{ \.\.\.p/)
+    expect(d.span.slice(0, 2)).toEqual([26, 28])
+    expect(d.why).toContain('src/components/ProductList.tsx:71')
     expect(d.related.map((x) => [x.file, x.span[0], x.why])).toEqual([
-      ['src/App.tsx', 43, 'passed as `<ProductList products>`'],
-      ['src/components/ProductList.tsx', 29, 'rendered here as a keyed list'],
+      ['src/App.tsx', 53, 'passed as `<ProductList products>`'],
+      ['src/components/ProductList.tsx', 71, 'rendered here as a keyed list'],
     ])
     expect(d.fix.text).toContain('p.id === id ? { ...p, price } : p')
   })

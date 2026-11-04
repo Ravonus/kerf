@@ -116,19 +116,18 @@ describe.each([
   }, 60_000)
 
   it('misuse in the child is a real error at the true source', async () => {
+    const goal = readFileSync(join(here, 'fixtures/infer/src/goal.tsx'), 'utf8')
+    expect(goal).toContain('props.count++')
     const r = await run(
       app(
         {
           ...goalOnly,
-          'src/goal.tsx': readFileSync(join(here, 'fixtures/infer/src/goal.tsx'), 'utf8').replace(
-            'props.count++',
-            'props.count.toUpperCase()',
-          ),
+          'src/goal.tsx': goal.replace('props.count++', 'props.count.toUpperCase()'),
         },
         { version },
       ),
     )
-    expect(r.list).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 4 }])
+    expect(r.list).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 7 }])
   }, 60_000)
 
   it('every edge in the fixture', async () => {
@@ -159,7 +158,7 @@ describe.each([
     expect(t.Rest).toBe('Omit<Parameters<typeof Button>[0], "title"> & { title: string }')
     expect(t.Home).toContain('RouteProps')
     const codes = list.map((d) => `${d.code}:${d.file}:${d.line}`)
-    expect(codes).toContain('W084:src/edges.tsx:73')
+    expect(codes).toContain('W084:src/edges.tsx:153')
     expect(codes.filter((c) => c.startsWith('TS'))).toEqual([]) // the odd caller's own error is W084
     expect(list.find((d) => d.code === 'W084').why).toMatch(
       /`n` here is string, but `Inc` uses it as number/,
@@ -169,7 +168,7 @@ describe.each([
         .filter((d) => d.code === 'W083')
         .map((d) => d.why)
         .join(),
-    ).toMatch(/JSON\.parse\('\{\}'\)` \(line 45\)/)
+    ).toMatch(/JSON\.parse\('\{\}'\)` \(line 98\)/)
     expect(codes.filter((c) => c.startsWith('W080'))).toHaveLength(1)
     expect(codes.filter((c) => c.startsWith('W081'))).toEqual([
       'W081:src/card.tsx:1',
@@ -383,10 +382,11 @@ describe('the dev listener', () => {
     await next('done')
     const file = join(dir, 'src/goal.tsx')
     const good = readFileSync(file, 'utf8')
+    expect(good).toContain('props.count++')
     writeFileSync(file, good.replace('props.count++', 'props.count.oops()'))
     server.watcher.emit('change', file)
     const bad = await next('done')
-    expect(bad.diagnostics).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 4 }])
+    expect(bad.diagnostics).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 7 }])
     expect(
       JSON.parse(readFileSync(join(dir, '.weft/props.json'), 'utf8')).diagnostics,
     ).toHaveLength(1)
@@ -505,28 +505,37 @@ describe('an editor on TypeScript 7, through weft lsp', () => {
   }, 60_000)
 })
 
+const editorApp = () =>
+  app(
+    {
+      ...goalOnly,
+      'src/card.tsx': 'export function Card(props) { return <h2>{props.title}</h2> }\n',
+      'src/use.tsx':
+        'import { Card } from \'./card\'\nexport const Use = () => <Card title="t" />\n',
+    },
+    { version: 6, plugin: true },
+  )
+
 describe('the editor, through the TS server protocol', () => {
   it('hover, diagnostics, go-to-definition, completion, rename and a fix, all at source positions', async () => {
-    const dir = app(
-      {
-        ...goalOnly,
-        'src/card.tsx': 'export function Card(props) { return <h2>{props.title}</h2> }\n',
-        'src/use.tsx':
-          'import { Card } from \'./card\'\nexport const Use = () => <Card title="t" />\n',
-      },
-      { version: 6, plugin: true },
-    )
+    const dir = editorApp()
     const file = join(dir, 'src/goal.tsx')
     const s = tsserver(dir)
     try {
       s.send('open', { file })
       const lines = readFileSync(file, 'utf8').split('\n')
       const line = lines.findIndex((l) => l.includes('function AddButton')) + 1
+      const bodyLine = lines.findIndex((l) => l.includes('props.count++')) + 1
+      expect(bodyLine).toBeGreaterThan(0)
       const hover = (
-        await s.ask('quickinfo', { file, line, offset: lines[line - 1].indexOf('props.count') + 8 })
+        await s.ask('quickinfo', {
+          file,
+          line: bodyLine,
+          offset: lines[bodyLine - 1].indexOf('props.count') + 8,
+        })
       ).body
       expect(hover.displayString).toContain('count: number')
-      expect(hover.start).toMatchObject({ line })
+      expect(hover.start).toMatchObject({ line: bodyLine })
       const param = (
         await s.ask('quickinfo', { file, line, offset: lines[line - 1].indexOf('(props') + 2 })
       ).body
@@ -542,20 +551,20 @@ describe('the editor, through the TS server protocol', () => {
         })
       ).body
       expect(def[0].start).toMatchObject({ line, offset: lines[line - 1].indexOf('AddButton') + 1 })
-      const after = lines[line - 1].indexOf('props.count') + 7
-      const done = (await s.ask('completionInfo', { file, line, offset: after })).body
+      const after = lines[bodyLine - 1].indexOf('props.count') + 7
+      const done = (await s.ask('completionInfo', { file, line: bodyLine, offset: after })).body
       expect(done.entries.map((e) => e.name)).toContain('count')
 
       s.send('change', {
         file,
-        line,
-        offset: lines[line - 1].indexOf('props.count++') + 1,
-        endLine: line,
-        endOffset: lines[line - 1].indexOf('props.count++') + 14,
+        line: bodyLine,
+        offset: lines[bodyLine - 1].indexOf('props.count++') + 1,
+        endLine: bodyLine,
+        endOffset: lines[bodyLine - 1].indexOf('props.count++') + 14,
         insertString: 'props.count.oops()',
       })
       const bad = (await s.ask('semanticDiagnosticsSync', { file })).body
-      expect(bad).toMatchObject([{ code: 2339, start: { line } }])
+      expect(bad).toMatchObject([{ code: 2339, start: { line: bodyLine } }])
 
       const card = join(dir, 'src/card.tsx')
       s.send('open', { file: card })
