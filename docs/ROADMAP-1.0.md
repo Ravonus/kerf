@@ -139,8 +139,8 @@ The target top level:
 packages/        npm packages. Folder = npm name without the scope
 crates/          Rust: weft, weft-compiler, weft-layout
 site/            the docs site (weft.dev); generated pages aren't tracked
-examples/        small runnable apps people copy (from evals/apps and spikes)
-benchmarks/      evals/compare, evals/speed and site/arena: what we publish
+examples/        small runnable apps people copy
+benchmarks/      published size, speed and interactive comparisons
 evals/           agent evals: tasks, references and gates, latest version only
 scripts/         repo tooling, plus scripts/lib for the shared helpers
 docs/            contributor docs, ARCHITECTURE.md, decisions/
@@ -154,20 +154,20 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
       `weft-js/eval-results` repo. Keep one summary file, plus `compare-history.jsonl`.
 - [ ] Remove the frozen Phase 0 eval baselines (`tasks`, `tasks-v2`, `reference`, `reference-v2`,
       `buggy`, `buggy-v2`) and keep the latest version of each. The archive tag keeps the history.
-- [ ] Move the eleven `evals/*-exit.mjs` gates to `evals/gates/`, sharing one `evals/lib/gate.mjs`
+- [ ] Move the nine exit scripts and e2e companions to `evals/gates/`, sharing one `evals/lib/gate.mjs`
       for `run`, `must`, `until`, `eq` and `check`.
-- [ ] Move `evals/compare`, `evals/speed` and `site/arena` to `benchmarks/`, with one README that
+- [ ] Put the dashboard, speed and arena benchmarks in `benchmarks/`, with one README that
       explains the method (see Sprint 5).
 - [ ] Remove `site/review/` (21 screenshots). Stop tracking the generated `site/public/reference`
       and `site/public/learn`, and generate them in `build`.
 - [ ] Stop tracking other build output: `packages/warp/test/a11y/gallery/assets/*`,
       `packages/warp-icons/contact-sheet.html`, `packages/cli/.vitest/`,
-      `evals/results/sites/first-run-*.json` and `evals/speed/lab.json`. Add them to `.gitignore`.
+      `evals/results/sites/first-run-*.json` and `benchmarks/speed/lab.json`. Add them to `.gitignore`.
 - [ ] Archive `docs/research/` (58 notes), `docs/design/warp/reviews/` (215 files),
       `docs/design/warp/specimens/` and `spikes/` under the archive tag. In their place, write
       `docs/decisions/`: one short file per decision that still holds, linking to the archived
       note. Cut `docs/PLAN.md` down to `docs/ARCHITECTURE.md` plus this roadmap.
-- [ ] Remove absolute `/Users/ravonus` paths from tracked files (`docs/research/04`, `40`, and
+- [ ] Remove absolute home-directory paths from tracked files (`docs/research/04`, `40`, and
       `evals/agent-eval/lib/transcript.mjs`).
 - [ ] Delete `scripts/rename-scope.mjs`, which was a one-off.
 
