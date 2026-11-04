@@ -15,7 +15,12 @@ A server function in `src/server/` runs on the server. The client gets a stub th
 // src/server/greeting.ts
 import { query } from '@weft-js/start'
 
-export const greeting = query({ run: () => `Hello at ${new Date().toISOString()}` })
+export const greeting = query({
+  run: () => {
+    const time = new Date().toISOString()
+    return `Hello at ${time}`
+  },
+})
 ```
 
 A route in `src/routes/` reads it. Calling the query in a component gives a `Resource`, a box that fills when the data
