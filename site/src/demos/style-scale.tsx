@@ -1,6 +1,14 @@
 import { state } from '@weft-js/core'
 import type { Space } from '@weft-js/core/ds'
-import { Card, Heading, Row, Segmented, Stack, Tag, Text } from '@weft-js/warp'
+import {
+  Card,
+  Heading,
+  Row,
+  Segmented,
+  Stack,
+  Tag,
+  Text,
+} from '@weft-js/warp'
 
 const GAPS: { value: Space; label: string }[] = [
   { value: 'tight', label: 'tight' },
@@ -21,7 +29,10 @@ export default function Scale() {
       />
       <Stack gap={gap.value}>
         <Heading level={3}>Roasts</Heading>
-        <Text subtle>Each role sets a size, weight and leading from the theme.</Text>
+        <Text subtle>
+          Each role sets a size, weight and leading from
+          the theme.
+        </Text>
         <Row gap={gap.value} wrap>
           <Tag>Light</Tag>
           <Tag>Medium</Tag>

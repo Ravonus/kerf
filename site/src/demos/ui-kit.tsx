@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { Button, Card, Input, Switch } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Input,
+  Switch,
+} from '@weft-js/warp'
 
 export default function Billing() {
   const saved = state(false)
@@ -12,7 +17,9 @@ export default function Billing() {
       <form onSubmit={submit}>
         <Input label="Billing email" type="email" />
         <Switch defaultChecked>Send a receipt</Switch>
-        <Button type="submit">{saved.value ? 'Saved' : 'Save'}</Button>
+        <Button type="submit">
+          {saved.value ? 'Saved' : 'Save'}
+        </Button>
       </form>
     </Card>
   )
