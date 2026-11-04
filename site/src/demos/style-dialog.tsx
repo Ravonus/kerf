@@ -1,5 +1,14 @@
 import { state } from '@weft-js/core'
-import { Button, Card, Input, Menu, Modal, Row, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Input,
+  Menu,
+  Modal,
+  Row,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 export default function Project() {
   const name = state('storefront')
@@ -19,11 +28,24 @@ export default function Project() {
         <Text role="heading">{name.value}</Text>
         <Menu
           label="Actions"
-          trigger={{ emphasis: 'outline', tone: 'neutral', size: 'sm' }}
+          trigger={{
+            emphasis: 'outline',
+            tone: 'neutral',
+            size: 'sm',
+          }}
           items={[
-            { label: 'Rename', icon: 'pencil', onSelect: open },
+            {
+              label: 'Rename',
+              icon: 'pencil',
+              onSelect: open,
+            },
             { separator: true },
-            { label: 'Delete', icon: 'trash', tone: 'critical', disabled: true },
+            {
+              label: 'Delete',
+              icon: 'trash',
+              tone: 'critical',
+              disabled: true,
+            },
           ]}
         />
       </Row>
@@ -33,7 +55,11 @@ export default function Project() {
         title="Rename project"
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" data-close="">
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              data-close=""
+            >
               Cancel
             </Button>
             <Button onClick={save}>Save</Button>
@@ -45,7 +71,9 @@ export default function Project() {
             label="Project name"
             autofocus
             value={draft.value}
-            onInput={(e) => (draft.value = e.currentTarget.value)}
+            onInput={(e) =>
+              (draft.value = e.currentTarget.value)
+            }
           />
         </Stack>
       </Modal>
