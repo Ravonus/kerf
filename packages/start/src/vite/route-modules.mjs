@@ -1,0 +1,118 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { isCSSRequest } from 'vite'
+import { here, ASSETS, SHEET } from './shared.mjs'
+
+/**
+ * `dev`: the stylesheets from `devStyles`; a build asks Nitro's manifest instead (the plugin's expression reads up to
+ * the first `)`, which a path can hold). `meta` is read once per level that renders, before the first byte: that's
+ * how the entry learns the request's levels (`routeCss`), outermost first, 404 and error pages included.
+ */
+export function serverRoutes(manifest, abs, dev, plan) {
+  const files = [
+    ...manifest.layouts.map((l) => l.file),
+    ...manifest.routes.map((r) => r.file),
+    ...manifest.routes.map((r) => r.card).filter(Boolean),
+    manifest.defaultCard,
+  ].filter(Boolean)
+  const unique = [...new Set(files)]
+  const levels = new Set([...manifest.layouts, ...manifest.routes].map((r) => r.file))
+  // A file with no default export renders nothing, and may leave no chunk for the manifest to find.
+  const renders = (f) => levels.has(f) && /\bdefault\b/.test(readFileSync(abs(f), 'utf8'))
+  const isStatic = (f) => plan?.statics.has(abs(f))
+  const clientAssets = (file) =>
+    `import.meta.vite.assets(${JSON.stringify({ import: file, environment: 'client' }).replaceAll(')', '\\u0029')})`
+  const css = (f) =>
+    dev
+      ? JSON.stringify(dev.files[f] ?? [])
+      : `${clientAssets(abs(f) + (isStatic(f) ? ASSETS : ''))}.css`
+  return [
+    ...unique.map((f, i) => `import * as m${i} from ${JSON.stringify(abs(f))}`),
+    `import { runtime } from ${JSON.stringify(join(here, 'data.ts'))}`,
+    `const matched = new WeakMap()
+const styled = (m, css) => !css.length ? m : { ...m, get meta() {
+  const scope = runtime.scope?.()
+  if (scope) matched.set(scope, [...(matched.get(scope) ?? []), ...css])
+  return m.meta
+} }
+export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? [])}, ...css, ...(matched.get(runtime.scope?.()) ?? [])].map(c => [c.href, c])).values()]`,
+    `export const manifest = ${JSON.stringify({ dir: manifest.dir, routes: manifest.routes, layouts: manifest.layouts, defaultCard: manifest.defaultCard })}`,
+    // The built-in 404 and error pages have no state, and stand in only when the app has no route file for them.
+    `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter((r) => isStatic(r.file)).map((r) => r.id), ...['404', 'error'].filter((id) => !manifest.routes.some((r) => r.id === id))])}`,
+    `export const lazy = ${!!plan?.loads.some((l) => l.when !== 'load')}`,
+    // The chunks a page's levels and islands will import, for the document's modulepreloads. Dev has no chunks.
+    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter((r) => !isStatic(r.file) && renders(r.file)).map((r) => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map((i) => [i.id, i.file]), ['$client', join(here, 'run.tsx')]].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
+    `export const modules = { ${unique.map((f, i) => `${JSON.stringify(f)}: ${renders(f) ? `styled(m${i}, ${css(f)})` : `m${i}`}`).join(', ')} }`,
+  ].join('\n')
+}
+
+/**
+ * The CSS each module reaches in the client graph, as `?assets=client` can't say in dev: the entry's, and each route
+ * and layout's. The client env transforms what the browser is about to ask for anyway, and `<link href>` to a module's
+ * URL gets the compiled sheet (Tailwind's output too). A module that doesn't transform fails again when it's imported.
+ */
+export async function devStyles(env, manifest, abs, entry) {
+  const reachFrom = async (start) => {
+    const seen = new Set(),
+      css = new Map()
+    const walk = async (url) => {
+      const mod =
+        (await env.moduleGraph.getModuleByUrl(url).catch(() => undefined)) ??
+        (await env.moduleGraph.ensureEntryFromUrl(url).catch(() => undefined))
+      if (!mod || seen.has(mod) || mod.id?.startsWith('\0virtual:weft/routes')) return // routes import every route
+      seen.add(mod)
+      await env.transformRequest(mod.url).catch(() => {})
+      for (const next of mod.importedModules) {
+        if (!next.id) continue
+        if (!isCSSRequest(next.id)) await walk(next.url)
+        else if (!/[?&](url|inline|raw)\b/.test(next.id))
+          css.set(next.url, {
+            href: next.url[0] === '/' ? next.url : SHEET + encodeURIComponent(next.id),
+          })
+      }
+    }
+    await walk(start)
+    return [...css.values()]
+  }
+  const files = {}
+  for (const { file } of [...manifest.layouts, ...manifest.routes])
+    files[file] = await reachFrom(abs(file))
+  return {
+    entry: await reachFrom(entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry),
+    files,
+  }
+}
+
+/**
+ * Vite's client, in dev: the fullstack plugin's patch hands a sheet to its `<link data-vite-dev-id>`, so the module
+ * doesn't inject a second copy and CSS HMR swaps the link. The server only writes `href`, so the id is added here,
+ * before the patched client reads the links.
+ */
+export const markLinks = (
+  root,
+) => `document.querySelectorAll('link[rel="stylesheet"]:not([data-vite-dev-id])').forEach(l => {
+  const href = l.getAttribute('href')
+  if (href.startsWith('${SHEET}')) l.setAttribute('data-vite-dev-id', decodeURIComponent(href.slice(${SHEET.length})))
+  else if (href.startsWith('/@fs/')) l.setAttribute('data-vite-dev-id', href.replace(/^\\/@fs(\\/(?=[A-Za-z]:))?/, ''))
+  else if (href[0] === '/' && href[1] !== '/') l.setAttribute('data-vite-dev-id', ${JSON.stringify(root)} + href)
+})
+`
+
+export function clientRoutes(manifest, abs, plan) {
+  const table = manifest.routes
+    .filter((r) => r.kind === 'page')
+    .map((r) => ({ id: r.id, pattern: r.pattern, layouts: r.layouts }))
+  const levels = [...manifest.layouts, ...manifest.routes]
+  const isStatic = (r) => plan?.statics.has(abs(r.file))
+  // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
+  const loads = levels.map(
+    (r) =>
+      `${JSON.stringify(r.id)}: () => import(${JSON.stringify(abs(r.file) + (isStatic(r) ? ASSETS : ''))})`,
+  )
+  // Straight from the file: a module of its own per island would be a chunk that only re-exports.
+  const islands = (plan?.islands ?? []).map(
+    (i) =>
+      `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
+  )
+  return `export const table = ${JSON.stringify(table)}\nexport const load = { ${loads.join(', ')} }\nexport const islands = { ${islands.join(', ')} }\n`
+}
