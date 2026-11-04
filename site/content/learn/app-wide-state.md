@@ -54,8 +54,12 @@ export function Header() {
 export function Shelf() {
   return (
     <>
-      <button type="button" onClick={() => basket.add('Tea')}>Add tea</button>
-      <button type="button" onClick={() => basket.add('Cake')}>Add cake</button>
+      <button type="button" onClick={() => basket.add('Tea')}>
+        Add tea
+      </button>
+      <button type="button" onClick={() => basket.add('Cake')}>
+        Add cake
+      </button>
     </>
   )
 }
@@ -92,16 +96,22 @@ state, and components only call them.
 // src/state/board.ts
 import { defineState, derived, state } from '@weft-js/core'
 
-export const board = defineState('board', () => {
-  const pins = state<string[]>([])
-  const count = derived(() => pins.value.length)
-  const pin = (city: string) => {
-    if (!pins.value.includes(city)) pins.value = [...pins.value, city]
-  }
-  const unpin = (city: string) => (pins.value = pins.value.filter(c => c !== city))
-  const clear = () => (pins.value = [])
-  return { pins, count, pin, unpin, clear }
-}, { history: { limit: 50 } })
+export const board = defineState(
+  'board',
+  () => {
+    const pins = state<string[]>([])
+    const count = derived(() => pins.value.length)
+    const pin = (city: string) => {
+      if (!pins.value.includes(city))
+        pins.value = [...pins.value, city]
+    }
+    const unpin = (city: string) =>
+      (pins.value = pins.value.filter((c) => c !== city))
+    const clear = () => (pins.value = [])
+    return { pins, count, pin, unpin, clear }
+  },
+  { history: { limit: 50 } },
+)
 ```
 
 Read the setup and you know everything that can happen to `pins`. A component says *what happened*
@@ -121,37 +131,71 @@ export type TaskAction =
   | { type: 'changed'; task: Task }
   | { type: 'deleted'; id: number }
 
-export function tasksReducer(tasks: Task[], action: TaskAction): Task[] {
+export function tasksReducer(
+  tasks: Task[],
+  action: TaskAction,
+): Task[] {
   switch (action.type) {
     case 'added':
-      return [...tasks, { id: action.id, text: action.text, done: false }]
+      return [
+        ...tasks,
+        { id: action.id, text: action.text, done: false },
+      ]
     case 'changed':
-      return tasks.map(t => (t.id === action.task.id ? action.task : t))
+      return tasks.map((t) =>
+        t.id === action.task.id ? action.task : t,
+      )
     case 'deleted':
-      return tasks.filter(t => t.id !== action.id)
+      return tasks.filter((t) => t.id !== action.id)
   }
 }
 ```
 
 ```tsx
 import { state } from '@weft-js/core'
-import { tasksReducer, type Task, type TaskAction } from '../state/tasks'
+import {
+  tasksReducer,
+  type Task,
+  type TaskAction,
+} from '../state/tasks'
 
 export function TaskApp() {
   const tasks = state<Task[]>([])
-  const dispatch = (action: TaskAction) => (tasks.value = tasksReducer(tasks.value, action))
+  const dispatch = (action: TaskAction) =>
+    (tasks.value = tasksReducer(tasks.value, action))
   let nextId = 0
   return (
     <section>
-      <button type="button" onClick={() => dispatch({ type: 'added', id: nextId++, text: 'New task' })}>Add</button>
+      <button
+        type="button"
+        onClick={() =>
+          dispatch({ type: 'added', id: nextId++, text: 'New task' })
+        }
+      >
+        Add
+      </button>
       <ul>
-        {tasks.value.map(t => (
+        {tasks.value.map((t) => (
           <li key={t.id}>
             <label>
-              <input type="checkbox" checked={t.done} onChange={() => dispatch({ type: 'changed', task: { ...t, done: !t.done } })} />
+              <input
+                type="checkbox"
+                checked={t.done}
+                onChange={() =>
+                  dispatch({
+                    type: 'changed',
+                    task: { ...t, done: !t.done },
+                  })
+                }
+              />
               {t.text}
             </label>
-            <button type="button" onClick={() => dispatch({ type: 'deleted', id: t.id })}>Delete</button>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'deleted', id: t.id })}
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>
@@ -188,8 +232,20 @@ export function UndoBar() {
   const history = board.$history
   return (
     <p>
-      <button type="button" disabled={!history.canUndo.value} onClick={() => history.undo()}>Undo</button>
-      <button type="button" disabled={!history.canRedo.value} onClick={() => history.redo()}>Redo</button>
+      <button
+        type="button"
+        disabled={!history.canUndo.value}
+        onClick={() => history.undo()}
+      >
+        Undo
+      </button>
+      <button
+        type="button"
+        disabled={!history.canRedo.value}
+        onClick={() => history.redo()}
+      >
+        Redo
+      </button>
       <small>{history.entries.value.length} steps</small>
     </p>
   )
@@ -240,12 +296,27 @@ import { z } from 'zod'
 
 const Lines = z.record(z.string(), z.number())
 
-export const cart = defineState('cart', () => {
-  const lines = state<Record<string, number>>({}, { persist: { in: 'local', schema: Lines, version: 1 }, sync: 'tabs' })
-  const count = derived(() => Object.values(lines.value).reduce((a, b) => a + b, 0))
-  const add = (id: string) => lines.set(d => { d[id] = (d[id] ?? 0) + 1 })
-  return { lines, count, add }
-}, { history: { limit: 100 } })
+export const cart = defineState(
+  'cart',
+  () => {
+    const lines = state<Record<string, number>>(
+      {},
+      {
+        persist: { in: 'local', schema: Lines, version: 1 },
+        sync: 'tabs',
+      },
+    )
+    const count = derived(() =>
+      Object.values(lines.value).reduce((a, b) => a + b, 0),
+    )
+    const add = (id: string) =>
+      lines.set((d) => {
+        d[id] = (d[id] ?? 0) + 1
+      })
+    return { lines, count, add }
+  },
+  { history: { limit: 100 } },
+)
 ```
 
 Any [Standard Schema](https://standardschema.dev) library works: Zod, Valibot, ArkType. A stored value that fails the
@@ -260,19 +331,30 @@ When the shape changes, bump `version` and say how to turn the old shape into th
 import { defineState, state } from '@weft-js/core'
 import { z } from 'zod'
 
-const Reading = z.object({ theme: z.enum(['light', 'dark']), fontSize: z.number() })
+const Reading = z.object({
+  theme: z.enum(['light', 'dark']),
+  fontSize: z.number(),
+})
 type Reading = z.infer<typeof Reading>
 
 export const reading = defineState('reading', () => ({
-  options: state<Reading>({ theme: 'light', fontSize: 16 }, {
-    persist: {
-      in: 'local',
-      schema: Reading,
-      version: 2,
-      // Version 1 stored only `{ dark: boolean }`.
-      migrate: { 1: (old: { dark: boolean }) => ({ theme: old.dark ? 'dark' : 'light', fontSize: 16 }) },
+  options: state<Reading>(
+    { theme: 'light', fontSize: 16 },
+    {
+      persist: {
+        in: 'local',
+        schema: Reading,
+        version: 2,
+        // Version 1 stored only `{ dark: boolean }`.
+        migrate: {
+          1: (old: { dark: boolean }) => ({
+            theme: old.dark ? 'dark' : 'light',
+            fontSize: 16,
+          }),
+        },
+      },
     },
-  }),
+  ),
 }))
 ```
 
@@ -380,7 +462,13 @@ export function Header() {
   return (
     <header>
       Basket ({shop.count.value})
-      <button type="button" disabled={shop.count.value === 0} onClick={() => shop.clear()}>Empty</button>
+      <button
+        type="button"
+        disabled={shop.count.value === 0}
+        onClick={() => shop.clear()}
+      >
+        Empty
+      </button>
     </header>
   )
 }
@@ -400,10 +488,14 @@ const look = defineState('look', () => ({
 }))
 
 export function ThemeToggle() {
-  const flip = () => (look.theme.value = look.theme.value === 'light' ? 'dark' : 'light')
+  const flip = () =>
+    (look.theme.value =
+      look.theme.value === 'light' ? 'dark' : 'light')
   return (
     <div data-theme={look.theme.value}>
-      <button type="button" onClick={flip}>{look.theme.value === 'light' ? 'Dark' : 'Light'} mode</button>
+      <button type="button" onClick={flip}>
+        {look.theme.value === 'light' ? 'Dark' : 'Light'} mode
+      </button>
     </div>
   )
 }
@@ -419,16 +511,26 @@ reverse. Make a move one step.
 ```tsx
 import { defineState, state } from '@weft-js/core'
 
-export const route = defineState('route', () => {
-  const stops = state<string[]>(['Lisbon', 'Porto', 'Faro'])
-  const remove = (city: string) => (stops.value = stops.value.filter(c => c !== city))
-  const insert = (city: string, at: number) => (stops.value = [...stops.value.slice(0, at), city, ...stops.value.slice(at)])
-  const move = (city: string, at: number) => {
-    remove(city)
-    insert(city, at)
-  }
-  return { stops, remove, insert, move }
-}, { history: { limit: 50 } })
+export const route = defineState(
+  'route',
+  () => {
+    const stops = state<string[]>(['Lisbon', 'Porto', 'Faro'])
+    const remove = (city: string) =>
+      (stops.value = stops.value.filter((c) => c !== city))
+    const insert = (city: string, at: number) =>
+      (stops.value = [
+        ...stops.value.slice(0, at),
+        city,
+        ...stops.value.slice(at),
+      ])
+    const move = (city: string, at: number) => {
+      remove(city)
+      insert(city, at)
+    }
+    return { stops, remove, insert, move }
+  },
+  { history: { limit: 50 } },
+)
 ```
 Each call from outside the scope is one step, and actions called inside another join it. `route.move('Faro', 0)` is one
 undo.

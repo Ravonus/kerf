@@ -25,8 +25,11 @@ export function Basket() {
   const total = derived(() => price * qty.value + shipping.value)
   return (
     <p>
-      {qty.value} × ${price} + ${shipping.value} shipping = ${total.value}
-      <button type="button" onClick={() => qty.value++}>Add one</button>
+      {qty.value} × ${price} + ${shipping.value} shipping = $
+      {total.value}
+      <button type="button" onClick={() => qty.value++}>
+        Add one
+      </button>
     </p>
   )
 }
@@ -60,7 +63,8 @@ There are three places a computed value can go, and one place it can't.
 :::pitfall A value computed in the body is a snapshot
 ```tsx
 const qty = state(1)
-const total = price * qty.value // W001: computed once, when the component was made
+// W001: computed once, when the component was made.
+const total = price * qty.value
 ```
 This compiles in plain TypeScript and looks right, which is what makes it a trap. It renders `12` and stays `12`,
 however many times you press the button. Wrap it: `const total = derived(() => price * qty.value)` and read
@@ -95,11 +99,18 @@ export function Greeting() {
   const formal = state(false)
   const first = state('Ana')
   const last = state('Silva')
-  const greeting = derived(() => (formal.value ? `Dear Ms ${last.value}` : `Hi ${first.value}`))
+  const greeting = derived(() =>
+    formal.value ? `Dear Ms ${last.value}` : `Hi ${first.value}`,
+  )
   return (
     <p>
       {greeting.value}
-      <button type="button" onClick={() => (formal.value = !formal.value)}>Switch</button>
+      <button
+        type="button"
+        onClick={() => (formal.value = !formal.value)}
+      >
+        Switch
+      </button>
     </p>
   )
 }
@@ -129,27 +140,54 @@ its own inputs change:
 ```tsx
 import { derived, state } from '@weft-js/core'
 
-type Item = { id: string; name: string; price: number; tags: string[] }
+type Item = {
+  id: string
+  name: string
+  price: number
+  tags: string[]
+}
 
 export function Catalogue(props: { items: Item[] }) {
+  const { items } = props
   const query = state('')
   const sortBy = state<'name' | 'price'>('name')
   const matching = derived(() => {
     const q = query.value.toLowerCase()
-    return props.items.filter(i => i.name.toLowerCase().includes(q))
+    return items.filter((i) => i.name.toLowerCase().includes(q))
   })
   const sorted = derived(() =>
-    [...matching.value].sort((a, b) => (sortBy.value === 'price' ? a.price - b.price : a.name.localeCompare(b.name))),
+    [...matching.value].sort((a, b) =>
+      sortBy.value === 'price'
+        ? a.price - b.price
+        : a.name.localeCompare(b.name),
+    ),
   )
-  const cheapest = derived(() => Math.min(...matching.value.map(i => i.price)))
+  const cheapest = derived(() =>
+    Math.min(...matching.value.map((i) => i.price)),
+  )
   return (
     <section>
-      <input aria-label="Search" value={query.value} onInput={e => (query.value = e.currentTarget.value)} />
-      <button type="button" onClick={() => (sortBy.value = sortBy.value === 'name' ? 'price' : 'name')}>
+      <input
+        aria-label="Search"
+        value={query.value}
+        onInput={(e) => (query.value = e.currentTarget.value)}
+      />
+      <button
+        type="button"
+        onClick={() =>
+          (sortBy.value = sortBy.value === 'name' ? 'price' : 'name')
+        }
+      >
         Sort by {sortBy.value === 'name' ? 'price' : 'name'}
       </button>
       {matching.value.length > 0 && <p>From ${cheapest.value}</p>}
-      <ul>{sorted.value.map(i => <li key={i.id}>{i.name}: ${i.price}</li>)}</ul>
+      <ul>
+        {sorted.value.map((i) => (
+          <li key={i.id}>
+            {i.name}: ${i.price}
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
@@ -166,15 +204,26 @@ follows:
 ```tsx
 import { derived, state } from '@weft-js/core'
 
-export function PriceTag({ price, currency }: { price: number; currency: string }) {
+export function PriceTag({
+  price,
+  currency,
+}: {
+  price: number
+  currency: string
+}) {
   const qty = state(1)
   const label = derived(() =>
-    new Intl.NumberFormat('en', { style: 'currency', currency }).format(price * qty.value),
+    new Intl.NumberFormat('en', {
+      style: 'currency',
+      currency,
+    }).format(price * qty.value),
   )
   return (
     <p>
       {label.value}
-      <button type="button" onClick={() => qty.value++}>+</button>
+      <button type="button" onClick={() => qty.value++}>
+        +
+      </button>
     </p>
   )
 }
@@ -194,7 +243,12 @@ looks like it could also keep one value in step with another:
 
 ```tsx
 const total = state(0)
-watch(() => qty.value, q => { total.value = price * q }) // W004: use derived
+watch(
+  () => qty.value,
+  (q) => {
+    total.value = price * q
+  },
+) // W004: use derived
 ```
 
 Don't. This version has three problems that `derived` doesn't:
@@ -248,8 +302,12 @@ export function Basket() {
   return (
     <p>
       {qty.value} in the basket
-      {toFree.value > 0 && <small> {toFree.value} more for free shipping</small>}
-      <button type="button" onClick={() => qty.value++}>Add one</button>
+      {toFree.value > 0 && (
+        <small> {toFree.value} more for free shipping</small>
+      )}
+      <button type="button" onClick={() => qty.value++}>
+        Add one
+      </button>
     </p>
   )
 }
@@ -268,7 +326,12 @@ function Invoice() {
   return (
     <p>
       Total: {total}
-      <button type="button" onClick={() => (lines.value = [...lines.value, 10])}>Add a line</button>
+      <button
+        type="button"
+        onClick={() => (lines.value = [...lines.value, 10])}
+      >
+        Add a line
+      </button>
     </p>
   )
 }
@@ -285,7 +348,12 @@ export function Invoice() {
   return (
     <p>
       Total: {total.value}
-      <button type="button" onClick={() => (lines.value = [...lines.value, 10])}>Add a line</button>
+      <button
+        type="button"
+        onClick={() => (lines.value = [...lines.value, 10])}
+      >
+        Add a line
+      </button>
     </p>
   )
 }
@@ -300,11 +368,22 @@ This form keeps `valid` in step with `email` using a `watch`. Rewrite it without
 function Signup() {
   const email = state('')
   const valid = state(false)
-  watch(() => email.value, e => { valid.value = e.includes('@') })
+  watch(
+    () => email.value,
+    (e) => {
+      valid.value = e.includes('@')
+    },
+  )
   return (
     <form>
-      <input aria-label="Email" value={email.value} onInput={e => (email.value = e.currentTarget.value)} />
-      <button type="submit" disabled={!valid.value}>Sign up</button>
+      <input
+        aria-label="Email"
+        value={email.value}
+        onInput={(e) => (email.value = e.currentTarget.value)}
+      />
+      <button type="submit" disabled={!valid.value}>
+        Sign up
+      </button>
     </form>
   )
 }
@@ -318,8 +397,14 @@ export function Signup() {
   const valid = derived(() => email.value.includes('@'))
   return (
     <form>
-      <input aria-label="Email" value={email.value} onInput={e => (email.value = e.currentTarget.value)} />
-      <button type="submit" disabled={!valid.value}>Sign up</button>
+      <input
+        aria-label="Email"
+        value={email.value}
+        onInput={(e) => (email.value = e.currentTarget.value)}
+      />
+      <button type="submit" disabled={!valid.value}>
+        Sign up
+      </button>
     </form>
   )
 }
@@ -337,16 +422,29 @@ import { derived, state } from '@weft-js/core'
 type Product = { id: string; name: string; price: number }
 
 export function Shelf(props: { products: Product[] }) {
+  const { products } = props
   const cheap = state(false)
-  const shown = derived(() => (cheap.value ? props.products.filter(p => p.price < 20) : props.products))
+  const shown = derived(() =>
+    cheap.value
+      ? products.filter((p) => p.price < 20)
+      : products,
+  )
   return (
     <section>
       <h2>{shown.value.length} products</h2>
       <label>
-        <input type="checkbox" checked={cheap.value} onChange={e => (cheap.value = e.currentTarget.checked)} />
+        <input
+          type="checkbox"
+          checked={cheap.value}
+          onChange={(e) => (cheap.value = e.currentTarget.checked)}
+        />
         Under $20
       </label>
-      <ul>{shown.value.map(p => <li key={p.id}>{p.name}</li>)}</ul>
+      <ul>
+        {shown.value.map((p) => (
+          <li key={p.id}>{p.name}</li>
+        ))}
+      </ul>
     </section>
   )
 }

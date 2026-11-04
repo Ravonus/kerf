@@ -30,7 +30,11 @@ type User = { name: string }
 
 export function Profile() {
   const id = state('ada')
-  const user = resource(signal => fetch(`/api/users/${id.value}`, { signal }).then(r => r.json() as Promise<User>))
+  const user = resource((signal) =>
+    fetch(`/api/users/${id.value}`, { signal }).then(
+      (r) => r.json() as Promise<User>,
+    ),
+  )
   return <p>{user.value?.name ?? '…'}</p>
 }
 ```
@@ -61,10 +65,19 @@ import { resource, state } from '@weft-js/core'
 export function Orders() {
   const page = state(1)
   const sort = state('date')
-  const orders = resource(async signal => {
-    const res = await fetch(`/api/orders?page=${page.value}`, { signal }) // page is read before the await: followed
-    const all = (await res.json()) as { id: string; date: string; total: number }[]
-    return sort.value === 'date' ? all : [...all].sort((a, b) => a.total - b.total) // read after it: not followed
+  const orders = resource(async (signal) => {
+    const res = await fetch(`/api/orders?page=${page.value}`, {
+      signal,
+    }) // page is read before the await: followed
+    const all = (await res.json()) as {
+      id: string
+      date: string
+      total: number
+    }[]
+    // The sort is read after await, so it is not followed.
+    return sort.value === 'date'
+      ? all
+      : [...all].sort((a, b) => a.total - b.total)
   })
   return <p>{orders.value?.length ?? 0} orders</p>
 }
@@ -78,8 +91,9 @@ import { resource, state } from '@weft-js/core'
 export function Orders() {
   const page = state(1)
   const sort = state('date')
-  const orders = resource(async signal => {
-    const query = `/api/orders?page=${page.value}&sort=${sort.value}` // both read before the await
+  const orders = resource(async (signal) => {
+    // Both values are read before the await.
+    const query = `/api/orders?page=${page.value}&sort=${sort.value}`
     const res = await fetch(query, { signal })
     return (await res.json()) as { id: string; total: number }[]
   })
@@ -117,10 +131,17 @@ import { Badge } from '@weft-js/warp'
 
 export function Rates() {
   const base = state('EUR')
-  const rates = resource(signal => fetch(`/api/rates/${base.value}`, { signal }).then(r => r.json() as Promise<Record<string, number>>))
+  const rates = resource((signal) =>
+    fetch(`/api/rates/${base.value}`, { signal }).then(
+      (r) => r.json() as Promise<Record<string, number>>,
+    ),
+  )
   return (
     <p>
-      USD {rates.value?.USD ?? '…'} {rates.pending && rates.value !== undefined && <Badge tone="info">updating</Badge>}
+      USD {rates.value?.USD ?? '…'}{' '}
+      {rates.pending && rates.value !== undefined && (
+        <Badge tone="info">updating</Badge>
+      )}
     </p>
   )
 }
@@ -144,17 +165,27 @@ import { Button } from '@weft-js/warp'
 type User = { name: string }
 
 function Name(props: { id: string }) {
-  const user = resource(signal => fetch(`/api/users/${props.id}`, { signal }).then(r => r.json() as Promise<User>))
+  const { id } = props
+  const user = resource((signal) =>
+    fetch(`/api/users/${id}`, { signal }).then(
+      (r) => r.json() as Promise<User>,
+    ),
+  )
   return <h1>{user.value?.name}</h1>
 }
 
 export function Profile(props: { id: string }) {
+  const { id } = props
   return (
     <Boundary
       pending={<p>Loading…</p>}
-      error={(e, retry) => <Button onClick={retry}>Couldn't load the profile. Retry</Button>}
+      error={(e, retry) => (
+        <Button onClick={retry}>
+          Couldn't load the profile. Retry
+        </Button>
+      )}
     >
-      <Name id={props.id} />
+      <Name id={id} />
     </Boundary>
   )
 }
@@ -243,7 +274,9 @@ export function Save() {
   }
   return (
     <p>
-      <Button disabled={saving.value} onClick={() => void save()}>{saving.value ? 'Saving…' : 'Save'}</Button>
+      <Button disabled={saving.value} onClick={() => void save()}>
+        {saving.value ? 'Saving…' : 'Save'}
+      </Button>
       {failed.value && ' Saving failed. Try again.'}
     </p>
   )
@@ -297,7 +330,7 @@ Write `UserCard(props: { id: number })` that loads `https://jsonplaceholder.typi
 user's name and email. While it loads, show "Loading…"; if it fails, show the message and a Retry button. A new `id`
 should load the new user and cancel the old request.
 :::solution
-The fetcher reads `props.id` before anything waits, so a new id refetches, and it passes `signal` to `fetch`, so the old
+The fetcher reads `id` before anything waits, so a new id refetches, and it passes `signal` to `fetch`, so the old
 request is cancelled. The resource is made in `Details`, inside the Boundary, so the Boundary covers both the loading
 and the error view.
 
@@ -308,25 +341,36 @@ import { Button } from '@weft-js/warp'
 type User = { name: string; email: string }
 
 function Details(props: { id: number }) {
-  const user = resource(async signal => {
-    const res = await fetch(`https://jsonplaceholder.typicode.com/users/${props.id}`, { signal })
-    if (!res.ok) throw new Error(`No user ${props.id} (${res.status})`)
+  const { id } = props
+  const user = resource(async (signal) => {
+    const res = await fetch(
+      `https://jsonplaceholder.typicode.com/users/${id}`,
+      { signal },
+    )
+    if (!res.ok)
+      throw new Error(`No user ${id} (${res.status})`)
     return (await res.json()) as User
   })
-  return <p>{user.value?.name}, {user.value?.email}</p>
+  return (
+    <p>
+      {user.value?.name}, {user.value?.email}
+    </p>
+  )
 }
 
 export function UserCard(props: { id: number }) {
+  const { id } = props
   return (
     <Boundary
       pending={<p>Loading…</p>}
       error={(e, retry) => (
         <p>
-          {e instanceof Error ? e.message : 'Failed'} <Button onClick={retry}>Retry</Button>
+          {e instanceof Error ? e.message : 'Failed'}{' '}
+          <Button onClick={retry}>Retry</Button>
         </p>
       )}
     >
-      <Details id={props.id} />
+      <Details id={id} />
     </Boundary>
   )
 }
@@ -346,11 +390,26 @@ import { Select } from '@weft-js/warp'
 
 export function Report() {
   const month = state<string | null>('2026-10')
-  const report = resource(signal => fetch(`/api/report/${month.value}`, { signal }).then(r => r.json() as Promise<{ total: number }>))
+  const report = resource((signal) =>
+    fetch(`/api/report/${month.value}`, { signal }).then(
+      (r) => r.json() as Promise<{ total: number }>,
+    ),
+  )
   return (
     <div>
-      <Select label="Month" value={month} options={[{ value: '2026-10', label: 'October' }, { value: '2026-11', label: 'November' }]} />
-      {report.pending ? <p>Loading…</p> : <p>Total: {report.value?.total}</p>}
+      <Select
+        label="Month"
+        value={month}
+        options={[
+          { value: '2026-10', label: 'October' },
+          { value: '2026-11', label: 'November' },
+        ]}
+      />
+      {report.pending ? (
+        <p>Loading…</p>
+      ) : (
+        <p>Total: {report.value?.total}</p>
+      )}
     </div>
   )
 }
@@ -365,15 +424,34 @@ import { Boundary, resource, state } from '@weft-js/core'
 import { Select } from '@weft-js/warp'
 
 function Total(props: { month: string | null }) {
-  const report = resource(signal => fetch(`/api/report/${props.month}`, { signal }).then(r => r.json() as Promise<{ total: number }>))
-  return <p>Total: {report.value?.total} {report.pending && report.value !== undefined && <small>updating…</small>}</p>
+  const { month } = props
+  const report = resource((signal) =>
+    fetch(`/api/report/${month}`, { signal }).then(
+      (r) => r.json() as Promise<{ total: number }>,
+    ),
+  )
+  return (
+    <p>
+      Total: {report.value?.total}{' '}
+      {report.pending && report.value !== undefined && (
+        <small>updating…</small>
+      )}
+    </p>
+  )
 }
 
 export function Report() {
   const month = state<string | null>('2026-10')
   return (
     <div>
-      <Select label="Month" value={month} options={[{ value: '2026-10', label: 'October' }, { value: '2026-11', label: 'November' }]} />
+      <Select
+        label="Month"
+        value={month}
+        options={[
+          { value: '2026-10', label: 'October' },
+          { value: '2026-11', label: 'November' },
+        ]}
+      />
       <Boundary pending={<p>Loading…</p>}>
         <Total month={month.value} />
       </Boundary>
@@ -390,11 +468,20 @@ for the chart. Make each appear as soon as its own data is ready.
 ```tsx
 import { Boundary, resource } from '@weft-js/core'
 
-const wait = <T,>(ms: number, value: T) => new Promise<T>(done => { setTimeout(() => done(value), ms) })
+const wait = <T,>(ms: number, value: T) =>
+  new Promise<T>((done) => {
+    setTimeout(() => done(value), ms)
+  })
 
 function Alerts() {
   const alerts = resource(() => wait(200, ['Disk at 80%']))
-  return <ul>{(alerts.value ?? []).map(a => <li key={a}>{a}</li>)}</ul>
+  return (
+    <ul>
+      {(alerts.value ?? []).map((a) => (
+        <li key={a}>{a}</li>
+      ))}
+    </ul>
+  )
 }
 
 function Sales() {
@@ -417,11 +504,20 @@ A resource reports to the nearest Boundary above it, so give each region its own
 ```tsx
 import { Boundary, resource } from '@weft-js/core'
 
-const wait = <T,>(ms: number, value: T) => new Promise<T>(done => { setTimeout(() => done(value), ms) })
+const wait = <T,>(ms: number, value: T) =>
+  new Promise<T>((done) => {
+    setTimeout(() => done(value), ms)
+  })
 
 function Alerts() {
   const alerts = resource(() => wait(200, ['Disk at 80%']))
-  return <ul>{(alerts.value ?? []).map(a => <li key={a}>{a}</li>)}</ul>
+  return (
+    <ul>
+      {(alerts.value ?? []).map((a) => (
+        <li key={a}>{a}</li>
+      ))}
+    </ul>
+  )
 }
 
 function Sales() {

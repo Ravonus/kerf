@@ -37,7 +37,10 @@ with a `meta` added so the tab and search results say what it is:
 // src/routes/about.tsx
 import type { Meta } from '@weft-js/start'
 
-export const meta: Meta = { title: 'About', description: 'Who makes this app, and why.' }
+export const meta: Meta = {
+  title: 'About',
+  description: 'Who makes this app, and why.',
+}
 
 export default function About() {
   return (
@@ -86,7 +89,12 @@ export const getTodo = query({
   auth: 'user',
   tags: ({ id }) => ['todos', `todos:${id}`],
   run: async ({ input, ctx }) => {
-    const [row] = await ctx.db.select().from(todos).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)))
+    const [row] = await ctx.db
+      .select()
+      .from(todos)
+      .where(
+        and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)),
+      )
     return row ?? null
   },
 })
@@ -96,18 +104,30 @@ Then the route reads the parameter, loads the row, and shows it:
 
 ```tsx
 // src/routes/todos/[id].tsx
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import {
+  notFound,
+  type LoadArgs,
+  type Meta,
+  type RouteProps,
+} from '@weft-js/start'
 import { getTodo } from '#/server/todo'
 
-export const load = async ({ params }: LoadArgs<'/todos/[id]'>) => (await getTodo.fetch({ id: params.id })) ?? notFound()
+export const load = async ({ params }: LoadArgs<'/todos/[id]'>) =>
+  (await getTodo.fetch({ id: params.id })) ?? notFound()
 
-export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: `A todo: ${data.title}.` })
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: data.title,
+  description: `A todo: ${data.title}.`,
+})
 
-export default function Todo(props: RouteProps<typeof load, '/todos/[id]'>) {
+export default function Todo(
+  props: RouteProps<typeof load, '/todos/[id]'>,
+) {
+  const { data } = props
   return (
     <article>
-      <h1>{props.data.title}</h1>
-      <p>{props.data.done ? 'Done.' : 'Still to do.'}</p>
+      <h1>{data.title}</h1>
+      <p>{data.done ? 'Done.' : 'Still to do.'}</p>
     </article>
   )
 }
@@ -115,7 +135,7 @@ export default function Todo(props: RouteProps<typeof load, '/todos/[id]'>) {
 
 The string you pass to `LoadArgs` and `RouteProps` is the route's file path, and it types `params`: here `params.id` is a
 `string`, and `params.idd` is an error. `RouteProps<typeof load>` types `props.data` from what `load` returns, with
-`notFound()` taken out, so `props.data.title` needs no check. weft writes `.weft/routes.d.ts` with every route path, so
+`notFound()` taken out, so `data.title` needs no check. weft writes `.weft/routes.d.ts` with every route path, so
 an editor can complete them.
 
 `load` and `meta` never reach the browser: the build strips them from the client's copy of the file. [Loading
@@ -130,8 +150,11 @@ holds the whole remainder, slashes included:
 // src/routes/docs/[...rest].tsx
 import type { RouteProps } from '@weft-js/start'
 
-export default function Docs(props: RouteProps<undefined, '/docs/[...rest]'>) {
-  return <p>You asked for the page at {props.params.rest}.</p>
+export default function Docs(
+  props: RouteProps<undefined, '/docs/[...rest]'>,
+) {
+  const { params } = props
+  return <p>You asked for the page at {params.rest}.</p>
 }
 ```
 
@@ -221,9 +244,14 @@ runs before the `load` of anything below it, which makes it the place for a chec
 
 ```tsx
 // src/routes/todos/_layout.tsx
-import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import {
+  redirect,
+  type LoadArgs,
+  type RouteProps,
+} from '@weft-js/start'
 
-// A layout's `load` runs before its pages', so nothing under /todos runs for a visitor who isn't signed in.
+// A layout's load runs first, so signed-out visitors cannot
+// run pages under /todos.
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
 }
@@ -245,7 +273,10 @@ import { Link } from '@weft-js/start'
 export function Footer() {
   return (
     <footer>
-      <Link href="/about">About</Link> · <Link href="/todos" class="cta">Your todos</Link>
+      <Link href="/about">About</Link> ·{' '}
+      <Link href="/todos" class="cta">
+        Your todos
+      </Link>
     </footer>
   )
 }
@@ -267,7 +298,9 @@ export function QuickAdd() {
     await addTodo({ title: 'Call the plumber' })
     await navigate('/todos')
   }
-  return <Button onClick={() => void add()}>Add and go to the list</Button>
+  return (
+    <Button onClick={() => void add()}>Add and go to the list</Button>
+  )
 }
 ```
 
@@ -289,13 +322,18 @@ throws) `notFound()`. It renders inside the root layout, with status 404. Its da
 // src/routes/404.tsx
 import { Link, type Meta } from '@weft-js/start'
 
-export const meta: Meta = { title: 'Page not found', description: 'There is no page at this address.' }
+export const meta: Meta = {
+  title: 'Page not found',
+  description: 'There is no page at this address.',
+}
 
 export default function NotFound(props: { data: { path: string } }) {
   return (
     <main>
       <h1>Nothing at {props.data.path}</h1>
-      <p><Link href="/">Back to the start</Link></p>
+      <p>
+        <Link href="/">Back to the start</Link>
+      </p>
     </main>
   )
 }
@@ -311,11 +349,14 @@ import type { Meta } from '@weft-js/start'
 
 export const meta: Meta = { title: 'Something went wrong' }
 
-export default function Failed(props: { data: { status: number; message: string } }) {
+export default function Failed(props: {
+  data: { status: number; message: string }
+}) {
+  const { data } = props
   return (
     <main>
-      <h1>Error {props.data.status}</h1>
-      <p>{props.data.message}</p>
+      <h1>Error {data.status}</h1>
+      <p>{data.message}</p>
     </main>
   )
 }
@@ -337,8 +378,11 @@ TypeScript knows it:
 import { redirect, type LoadArgs } from '@weft-js/start'
 import { getTodo } from '#/server/todo'
 
-export const load = async ({ params }: LoadArgs<'/old-todos/[id]'>) => {
-  const todo = (await getTodo.fetch({ id: params.id })) ?? redirect('/todos')
+export const load = async ({
+  params,
+}: LoadArgs<'/old-todos/[id]'>) => {
+  const todo =
+    (await getTodo.fetch({ id: params.id })) ?? redirect('/todos')
   return { todo }
 }
 ```
@@ -361,10 +405,16 @@ ahead of time, and `weft check` checks their metadata. A static host, with no se
 ```tsx
 import type { Prerender, RouteProps } from '@weft-js/start'
 
-export const prerender: Prerender<'/guides/[slug]'> = [{ slug: 'setup' }, { slug: 'deploying' }]
+export const prerender: Prerender<'/guides/[slug]'> = [
+  { slug: 'setup' },
+  { slug: 'deploying' },
+]
 
-export default function Guide(props: RouteProps<undefined, '/guides/[slug]'>) {
-  return <h1>{props.params.slug}</h1>
+export default function Guide(
+  props: RouteProps<undefined, '/guides/[slug]'>,
+) {
+  const { params } = props
+  return <h1>{params.slug}</h1>
 }
 ```
 
@@ -413,19 +463,32 @@ path under `/docs` answers 404 with your `404.tsx`.
 Look the path up in `load`, and return `notFound()` when it isn't there:
 
 ```tsx
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import {
+  notFound,
+  type LoadArgs,
+  type Meta,
+  type RouteProps,
+} from '@weft-js/start'
 
-const PAGES: Record<string, string> = { setup: 'Setting up', 'guides/deploying': 'Deploying' }
+const PAGES: Record<string, string> = {
+  setup: 'Setting up',
+  'guides/deploying': 'Deploying',
+}
 
 export const load = ({ params }: LoadArgs<'/docs/[...rest]'>) => {
   const title = PAGES[params.rest]
   return title ? { title } : notFound()
 }
 
-export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title })
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: data.title,
+})
 
-export default function Doc(props: RouteProps<typeof load, '/docs/[...rest]'>) {
-  return <h1>{props.data.title}</h1>
+export default function Doc(
+  props: RouteProps<typeof load, '/docs/[...rest]'>,
+) {
+  const { data } = props
+  return <h1>{data.title}</h1>
 }
 ```
 
@@ -440,7 +503,11 @@ before any settings page runs.
 Give the section a layout whose `load` checks `ctx.user`:
 
 ```tsx
-import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import {
+  redirect,
+  type LoadArgs,
+  type RouteProps,
+} from '@weft-js/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
