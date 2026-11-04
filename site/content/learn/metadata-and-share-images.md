@@ -86,10 +86,11 @@ export const prerender: Prerender<'/posts/[slug]'> = () =>
 export default function Post(
   props: RouteProps<typeof load, '/posts/[slug]'>,
 ) {
+  const { data } = props
   return (
     <article>
-      <h1>{props.data.title}</h1>
-      <p>{props.data.summary}</p>
+      <h1>{data.title}</h1>
+      <p>{data.summary}</p>
     </article>
   )
 }
@@ -229,6 +230,7 @@ import type { load } from './[slug]'
 export default function PostCard(
   props: OgProps<typeof load, '/posts/[slug]'>,
 ) {
+  const { data, site } = props
   return (
     <div
       style={
@@ -243,13 +245,13 @@ export default function PostCard(
       }
     >
       <p style="margin:0;font-size:28px;color:#6ee7a0">
-        {props.site.name ?? 'Blog'}
+        {site.name ?? 'Blog'}
       </p>
       <h1 style="margin:0;font-size:76px;line-height:1.05">
-        {props.data.title}
+        {data.title}
       </h1>
       <p style="margin:0;font-size:30px;color:#b9bfb4">
-        {props.data.summary}
+        {data.summary}
       </p>
     </div>
   )
@@ -341,7 +343,8 @@ export const meta: Meta = { title: 'Product' }
 export default function ProductPage(
   props: RouteProps<typeof load, '/products/[id]'>,
 ) {
-  return <h1>{props.data.name}</h1>
+  const { data } = props
+  return <h1>{data.name}</h1>
 }
 ```
 :::solution
@@ -367,7 +370,8 @@ export const meta: Meta<typeof load, '/products/[id]'> =
 export default function ProductPage(
   props: RouteProps<typeof load, '/products/[id]'>,
 ) {
-  return <h1>{props.data.name}</h1>
+  const { data } = props
+  return <h1>{data.name}</h1>
 }
 ```
 
@@ -407,6 +411,7 @@ in a corner. Which file, and which props?
 import type { OgProps } from '@weft-js/start'
 
 export default function Card(props: OgProps) {
+  const { title, description, site } = props
   return (
     <div
       style={
@@ -421,13 +426,13 @@ export default function Card(props: OgProps) {
       }
     >
       <h1 style="margin:0;font-size:72px;line-height:1.05">
-        {props.title}
+        {title}
       </h1>
       <p style="margin:0;font-size:30px;color:#615e56">
-        {props.description}
+        {description}
       </p>
       <p style="margin:0;font-size:26px;font-weight:700">
-        {props.site.name}
+        {site.name}
       </p>
     </div>
   )
