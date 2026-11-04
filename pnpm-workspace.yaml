@@ -20,3 +20,9 @@ allowBuilds:
   prisma: false
   protobufjs: false
   workerd: false
+
+# Keep deprecated loaders and pinned Miniflare dependencies on patched releases.
+overrides:
+  "@esbuild-kit/core-utils>esbuild": 0.25.0
+  "miniflare>sharp": 0.35.5
+  "miniflare>undici": 7.30.1
