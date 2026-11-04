@@ -2,6 +2,17 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
+import {
+  away,
+  box,
+  leaderOf,
+  lit,
+  person,
+  remote,
+  settled,
+  sleep,
+  stats,
+} from './ui-state.helpers.mjs'
 
 const url = inject('url')
 const engines = createRequire(import.meta.url)('playwright-core')
@@ -21,11 +32,6 @@ afterEach(async () => {
   await Promise.all(browser.contexts().map((c) => c.close().catch(() => {})))
   await sleep(100)
 })
-
-const sleep = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 
 async function open(context, path = '/ui-state', init) {
   const page = await context.newPage()
@@ -48,25 +54,6 @@ async function open(context, path = '/ui-state', init) {
   return page
 }
 
-const person = (page, pane, name) => page.getByTestId(`${pane}-${name}`)
-const box = (page, pane, name) => person(page, pane, name).locator('label[data-scope="checkbox"]')
-const hold = (l) => l.evaluate((el) => el.hasAttribute('data-hold'))
-const lit = async (l, on = true) => {
-  await expect.poll(() => hold(l), { timeout: 5000, interval: 10 }).toBe(on)
-}
-const remote = async (l, on = true) => {
-  await expect
-    .poll(() => l.evaluate((el) => el.hasAttribute('data-remote')), { timeout: 5000, interval: 10 })
-    .toBe(on)
-}
-const stats = (page) => page.evaluate(() => ({ ...window.__share }))
-const leaderOf = async (pages) => {
-  for (const p of pages) if ((await stats(p)).role === 'leader') return p
-}
-const settled = async (page, n = 1) => {
-  await expect.poll(async () => ((await stats(page)).conn ? 1 : 0), { timeout: 10_000 }).toBe(n)
-}
-const away = (page) => page.mouse.move(2, 2)
 const shot = async (page, name) => {
   if (shots) await page.screenshot({ path: `${shots}/${name}.png` })
 }
