@@ -193,8 +193,7 @@ const STEPS = [
   },
   {
     id: 'clippy',
-    covers:
-      'cargo clippy with pedantic: no unwrap outside tests, SAFETY comments on unsafe, reasons on allows',
+    covers: 'Clippy: no unwrap outside tests, SAFETY comments on unsafe, reasons on allows',
     fix: 'Each block is one lint. `#[allow(...)]` needs `reason = "..."`. Use `expect("why it holds")` over unwrap; `unsafe` takes a `// SAFETY:` comment.',
     async run() {
       const found = [],
@@ -209,7 +208,7 @@ const STEPS = [
             '--',
             '-D',
             'warnings',
-            '-W',
+            '--force-warn',
             'clippy::too_many_lines',
           ],
           c,
