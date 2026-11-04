@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { flush, render } from '@weft-js/core/test'
+import { transformWithOxc } from 'vite'
 import { AccountMenu } from './fixtures/direct-menu'
 import { Settings } from './fixtures/direct-tabs'
 
@@ -18,12 +19,22 @@ const settle = async () => {
 const key = (el: Element, k: string) =>
   el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
 
-test('the fixtures are what the README shows', () => {
+test('the fixtures are what the README shows', async () => {
   const readme = readFileSync(join(process.cwd(), '../warp-core/README.md'), 'utf8')
-  for (const name of ['tabs', 'menu'])
-    expect(readme).toContain(
-      readFileSync(join(process.cwd(), `test/fixtures/direct-${name}.tsx`), 'utf8'),
-    )
+  const blocks = [...readme.matchAll(/```tsx\n([\s\S]*?)\n```/g)].map((match) => match[1]!)
+  const canonical = async (code: string) => (await transformWithOxc(code, 'example.tsx')).code
+  for (const [name, component, value] of [
+    ['tabs', 'Settings', 'Billing'],
+    ['menu', 'AccountMenu', 'Sign out'],
+  ]) {
+    const examples = blocks.filter((block) => block.includes(`export function ${component}(`))
+    expect(examples).toHaveLength(1)
+    const fixture = readFileSync(join(process.cwd(), `test/fixtures/direct-${name}.tsx`), 'utf8')
+    const emitted = await canonical(fixture)
+    expect(await canonical(examples[0]!)).toBe(emitted)
+    expect(fixture.split(value!)).toHaveLength(2)
+    expect(await canonical(fixture.replace(value!, 'Changed'))).not.toBe(emitted)
+  }
 })
 
 test('tabs: nextIndex wraps and moves focus, the indicator follows, one tab stop', async () => {
