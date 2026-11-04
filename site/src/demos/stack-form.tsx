@@ -8,13 +8,17 @@ const signUp = (name: string, email: string) =>
     setTimeout(() => {
       const errors: Record<string, string> = {}
       if (!name.trim()) errors.name = 'Enter your name.'
-      if (!/^\S+@\S+\.\S+$/.test(email)) errors.email = 'Enter an email address.'
-      else if (email === 'taken@example.com') errors.email = 'That email already has an account.'
+      if (!/^\S+@\S+\.\S+$/.test(email))
+        errors.email = 'Enter an email address.'
+      else if (email === 'taken@example.com')
+        errors.email =
+          'That email already has an account.'
       done(errors)
     }, 700)
   })
 
-const text = (v: FormDataEntryValue | null) => (typeof v === 'string' ? v : '')
+const text = (v: FormDataEntryValue | null) =>
+  typeof v === 'string' ? v : ''
 
 export default function SignUp() {
   const errors = state<Record<string, string>>({})
@@ -24,14 +28,21 @@ export default function SignUp() {
     const data = new FormData(form)
     const name = text(data.get('name'))
     pending.value = true
-    errors.value = await signUp(name, text(data.get('email')))
+    errors.value = await signUp(
+      name,
+      text(data.get('email')),
+    )
     pending.value = false
     const ok = Object.keys(errors.value).length === 0
     welcome.value = ok ? `Welcome, ${name}.` : ''
     if (ok) form.reset()
     else {
       flush()
-      form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      form
+        .querySelector<HTMLElement>(
+          '[aria-invalid="true"]',
+        )
+        ?.focus()
     }
   }
   return (
@@ -42,13 +53,24 @@ export default function SignUp() {
           void submit(e.currentTarget)
         }}
       >
-        <Input label="Name" name="name" error={errors.get('name')} />
-        <Input label="Email" name="email" autocomplete="email" error={errors.get('email')} />
+        <Input
+          label="Name"
+          name="name"
+          error={errors.get('name')}
+        />
+        <Input
+          label="Email"
+          name="email"
+          autocomplete="email"
+          error={errors.get('email')}
+        />
         <Button type="submit" loading={pending.value}>
           Sign up
         </Button>
       </form>
-      {welcome.value && <Alert tone="positive">{welcome.value}</Alert>}
+      {welcome.value && (
+        <Alert tone="positive">{welcome.value}</Alert>
+      )}
     </Card>
   )
 }

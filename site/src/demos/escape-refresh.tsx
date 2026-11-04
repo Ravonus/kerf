@@ -5,7 +5,13 @@ const CITIES = ['Lisbon', 'Oslo', 'Nairobi', 'Lima']
 // Stands in for a request: a temperature after 800 ms, unless `signal` cancels it first.
 const fetchTemp = (city: string, signal: AbortSignal) =>
   new Promise<string>((done, fail) => {
-    const t = setTimeout(() => done(`${city}: ${10 + Math.round(Math.random() * 20)}°`), 800)
+    const t = setTimeout(
+      () =>
+        done(
+          `${city}: ${10 + Math.round(Math.random() * 20)}°`,
+        ),
+      800,
+    )
     signal.addEventListener('abort', () => {
       clearTimeout(t)
       fail(new Error('cancelled'))
@@ -14,10 +20,18 @@ const fetchTemp = (city: string, signal: AbortSignal) =>
 
 function Temperature(props: { city: string }) {
   // Reads `props.city` before it waits, so a new city fetches again and cancels the old fetch.
-  const temp = resource((signal) => fetchTemp(props.city, signal))
+  const temp = resource((signal) =>
+    fetchTemp(props.city, signal),
+  )
   return (
-    <p aria-busy={temp.pending ? 'true' : 'false'} style={temp.pending ? 'opacity: 0.5' : ''}>
-      {temp.value} {temp.pending && temp.value !== undefined && <Badge tone="info">updating</Badge>}
+    <p
+      aria-busy={temp.pending ? 'true' : 'false'}
+      style={temp.pending ? 'opacity: 0.5' : ''}
+    >
+      {temp.value}{' '}
+      {temp.pending && temp.value !== undefined && (
+        <Badge tone="info">updating</Badge>
+      )}
     </p>
   )
 }
@@ -31,7 +45,9 @@ export default function Weather() {
           <Button
             key={c}
             size="sm"
-            emphasis={city.value === c ? 'solid' : 'ghost'}
+            emphasis={
+              city.value === c ? 'solid' : 'ghost'
+            }
             onClick={() => (city.value = c)}
           >
             {c}
@@ -39,7 +55,9 @@ export default function Weather() {
         ))}
       </Row>
       {/* The resource is made in Temperature, inside the Boundary, so the Boundary shows the first load. */}
-      <Boundary pending={<p>Loading the first answer…</p>}>
+      <Boundary
+        pending={<p>Loading the first answer…</p>}
+      >
         <Temperature city={city.value} />
       </Boundary>
     </Card>
