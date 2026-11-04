@@ -4,6 +4,7 @@
 Zustand, or MUI. It builds each stack and measures size, load, DOM changes, CPU, and row scale. The same-CSS stacks compare
 frameworks; warp and MUI bring their own design systems. See [compare/README.md](compare/README.md) for the method and rules.
 
+At the repo root, run `pnpm run setup` and `pnpm --filter @weft-js/text run build` first.
 From `benchmarks/compare`, run `pnpm install` and `node measure.mjs`. The latest results stay in `compare/results.json`;
 history and the chart go to `evals/results/compare-history.jsonl` and `evals/results/compare.html`.
 
