@@ -37,9 +37,6 @@ function app(ui, options = {}) {
       join(
         pkgs,
         name
-          .replace('@weft-js/core', 'weft')
-          .replace('@weft-js/create', 'create-weft')
-          .replace('@weft-js/warp-icons', 'icons')
           .replace('@weft-js/', ''),
       ),
       join(dir, 'node_modules', name),

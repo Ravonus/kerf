@@ -137,7 +137,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
     for (const name of Object.keys(deps ?? {}))
       if (name === '@weft-js/core' || name.startsWith('@weft-js/'))
         deps[name] =
-          `file:${join(repo, 'packages', name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
+          `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
   pkg.dependencies.postgres = '4.0.0'
   pkg.dependencies['@weft-js/realtime-redis'] = `file:${join(repo, 'packages/realtime-redis')}`
   pkg.dependencies['@weft-js/realtime-nats'] = `file:${join(repo, 'packages/realtime-nats')}`

@@ -14,7 +14,7 @@ const NODE = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}
 
 /** Entries that end up in a browser bundle, by package directory. Everything else a package exports runs on a server or in a build. */
 export const BROWSER = {
-  weft: [
+  core: [
     '.',
     './keyed',
     './jsx-runtime',
@@ -37,7 +37,7 @@ export const BROWSER = {
   ],
   'warp-core': ['.', './weft', './motion', './charts', './canvas', './dither', './search'],
   warp: ['.', './skeleton', './ui'],
-  icons: ['.', './all', './quiet', './balanced', './vivid', './names', './icon', './late'],
+  'warp-icons': ['.', './all', './quiet', './balanced', './vivid', './names', './icon', './late'],
   text: ['./measure'],
   multiplayer: ['.', './ui'],
   start: ['./client'],

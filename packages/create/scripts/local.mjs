@@ -35,7 +35,7 @@ function buildNative() {
   const built = [
     `weft-compiler.${process.platform}-${process.arch}.node`,
     'weft-compiler.wasm',
-  ].map((f) => join(pkgs, 'weft/native', f))
+  ].map((f) => join(pkgs, 'core/native', f))
   if (built.every(stamped)) return
   console.log('[local] building the compiler')
   run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'core'))

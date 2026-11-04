@@ -7,7 +7,7 @@ import { pack, packAll, pkgs } from './tarballs.mjs'
 
 export function packWithAddon(dest) {
   const tarballs = packAll(dest)
-  const addon = join(pkgs, 'weft/native', `weft-compiler.${process.platform}-${process.arch}.node`)
+  const addon = join(pkgs, 'core/native', `weft-compiler.${process.platform}-${process.arch}.node`)
   const platform = hostPlatform()
   if (!platform || !existsSync(addon)) return tarballs
   const dir = join(dest, `.${platform.name}`)

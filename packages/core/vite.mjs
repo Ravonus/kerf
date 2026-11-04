@@ -49,7 +49,7 @@ const keyed = {
     filter: {
       id: {
         include: /\.[cm]?[jt]sx?(\?|$)/,
-        exclude: /[\\/]packages[\\/]weft[\\/]src[\\/]|[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/,
+        exclude: /[\\/]packages[\\/]core[\\/]src[\\/]|[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/,
       },
       code: /\.(?:get|set|linked)\b|\[\s*['"`](?:get|set|linked)['"`]\s*\]|\{[^{}]*\blinked\b[^{}]*\}\s*=\s*state\b/,
     },
@@ -67,7 +67,7 @@ const features = {
     filter: {
       id: {
         include: /\.[cm]?[jt]sx?$/,
-        exclude: /node_modules|[\\/]packages[\\/]weft[\\/]src[\\/]/,
+        exclude: /node_modules|[\\/]packages[\\/]core[\\/]src[\\/]/,
       },
       code: /\b(persist|history|sync)\s*:/,
     },
@@ -94,7 +94,7 @@ const interactionFeatures = {
     filter: {
       id: {
         include: /\.[cm]?[jt]sx?$/,
-        exclude: /node_modules|[\\/]packages[\\/](weft|warp|ui-core|start)[\\/]src[\\/]/,
+        exclude: /node_modules|[\\/]packages[\\/](core|warp|ui-core|start)[\\/]src[\\/]/,
       },
       code: /\bui=\{|\bshare\s*:/,
     },
@@ -113,7 +113,7 @@ const flags = (off) => ({
   name: 'weft:flags',
   enforce: 'pre',
   transform: {
-    filter: { id: /[\\/](?:weft|@weft-js[\\/]core)[\\/]src[\\/]flags\.ts$/ },
+    filter: { id: /[\\/](?:core|@weft-js[\\/]core)[\\/]src[\\/]flags\.ts$/ },
     handler(code) {
       const names = [...(off ?? []), ...(process.env.WEFT_OFF?.split(',').filter(Boolean) ?? [])]
       if (!names.length) return
@@ -530,7 +530,7 @@ function icons() {
                   .join('\n'),
               )
           }
-          if (id.includes('node_modules') || /packages\/(icons|warp)\/src\//.test(id)) return null
+          if (id.includes('node_modules') || /packages\/(warp-icons|warp)\/src\//.test(id)) return null
           const p = await load(this, id)
           return p ? p.rewrite(code, id.replace(/\?.*$/, ''), p.catalog) : null
         },
