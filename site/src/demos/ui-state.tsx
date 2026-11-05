@@ -58,7 +58,11 @@ export default function UiState() {
             text="Book flights"
             done={trip.flights}
           />
-          <Row id="pack" text="Pack" done={trip.pack} />
+          <Row
+            id="pack"
+            text="Pack"
+            done={trip.pack}
+          />
         </Card>
       ))}
     </div>
