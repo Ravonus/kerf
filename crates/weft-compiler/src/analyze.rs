@@ -14,6 +14,8 @@ mod handler_values;
 mod lists;
 mod numeric_facts;
 mod numeric_jsx;
+mod numeric_properties;
+mod numeric_writes;
 mod props;
 mod react;
 mod row_entries;

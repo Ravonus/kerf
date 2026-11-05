@@ -5,3 +5,4 @@ include!("compile/react.rs");
 include!("compile/early_returns.rs");
 include!("compile/handler_mutations.rs");
 include!("compile/numeric_jsx.rs");
+include!("compile/numeric_properties.rs");
