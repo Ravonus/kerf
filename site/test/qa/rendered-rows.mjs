@@ -1,16 +1,15 @@
 // Measure glyph rectangles so a highlighted span cannot hide a wrapped source line.
 export function measureBlock(pre) {
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
+  const ctx = document.createElement('canvas').getContext('2d')
   const box = pre.getBoundingClientRect()
   const preStyle = getComputedStyle(pre)
   const scrollable =
     pre.tabIndex >= 0 &&
     /^(auto|scroll)$/.test(preStyle.overflowX) &&
     pre.scrollWidth > pre.clientWidth
-  let obstructed = false
-  let ancestorLeft = -Infinity
-  let ancestorRight = Infinity
+  let obstructed = false,
+    ancestorLeft = -Infinity,
+    ancestorRight = Infinity
   for (let parent = pre.parentElement; parent; parent = parent.parentElement) {
     const style = getComputedStyle(parent)
     if (!/^(auto|scroll|hidden|clip)$/.test(style.overflowX)) continue
@@ -21,12 +20,11 @@ export function measureBlock(pre) {
   }
   const visible = (element) =>
     element.checkVisibility({ visibilityProperty: true, opacityProperty: true })
-  const lines = [...pre.querySelectorAll('[data-part="line"]')].filter(visible)
   return {
     missing: !pre.querySelector('[data-part="line"]') && !!pre.textContent.trim(),
     scrollable,
     obstructed,
-    lines: lines.map((line, index) => {
+    lines: [...pre.querySelectorAll('[data-part="line"]')].filter(visible).map((line, index) => {
       const style = getComputedStyle(line)
       ctx.font = style.font
       const ch = ctx.measureText('0').width + (parseFloat(style.letterSpacing) || 0)
@@ -43,19 +41,15 @@ export function measureBlock(pre) {
             range.setEnd(node, offset + char.length)
             const r = range.getBoundingClientRect()
             chars.push({ char, top: r.top, left: r.left, right: r.right })
-          } else {
-            chars.push({ char })
-          }
+          } else chars.push({ char })
           offset += char.length
         }
       }
       const glyphs = chars.filter((c) => c.top !== undefined)
       const rows = []
-      for (const glyph of glyphs) {
-        if (!rows.some((row) => Math.abs(row.top - glyph.top) < 1)) rows.push(glyph)
-      }
-      let wordTop
-      let splitWord = false
+      for (const g of glyphs) if (!rows.some((r) => Math.abs(r.top - g.top) < 1)) rows.push(g)
+      let wordTop,
+        splitWord = false
       for (const glyph of chars) {
         if (glyph.top === undefined || !/[\p{L}\p{N}_$]/u.test(glyph.char)) wordTop = undefined
         else if (wordTop === undefined) wordTop = glyph.top
