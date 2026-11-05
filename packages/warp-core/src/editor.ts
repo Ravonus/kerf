@@ -3,6 +3,9 @@
 // text, so a value or a paste can't carry a script. The `richText` action is the specimen's engine, contenteditable
 // and execCommand (inputs-rich.html:1522), which costs no editor library.
 
+import { safeUrl, unesc } from './editor-url'
+export { safeUrl } from './editor-url'
+
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 // text keeps its entities (an editor's innerHTML is full of &nbsp;): in element content they can only ever be text
@@ -11,21 +14,6 @@ const escText = (s: string) =>
     .replace(/&(?!#?\w+;)/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-const unesc = (s: string) =>
-  s.replace(
-    /&(lt|gt|quot|#39|amp);/g,
-    (_, e) => ({ lt: '<', gt: '>', quot: '"', '#39': "'", amp: '&' })[e as 'lt'],
-  )
-
-/** http, https, mailto and relative only (04 Markdown). */
-export const safeUrl = (url: string) => {
-  // browsers drop tabs, line breaks and controls before reading a scheme
-  // oxlint-disable-next-line no-control-regex -- the point: these are what hide a scheme
-  const u = unesc(url).replace(/[\u0000- ]+/g, '')
-  return /^(https?:|mailto:|\/(?![/\\])|#|\.)/i.test(u) || !/^[a-z][a-z0-9+.-]*:|^[/\\]{2}/i.test(u)
-    ? u
-    : null
-}
 
 const ALLOWED: Record<string, string> = {
   b: 'strong',
