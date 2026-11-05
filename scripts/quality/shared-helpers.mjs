@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { repoRoot } from '../lib/helpers.mjs'
+import { inspectSource } from './shared-helpers-source.mjs'
 
 const scope =
   /^(?:(?:scripts|evals|benchmarks|examples)\/|packages\/[^/]+\/(?:scripts|test)\/).+\.(?:[cm]?[jt]sx?)$/
@@ -40,13 +41,21 @@ const distinct = new Set([
 
 /** Check every tracked repository script and test, including setup files. */
 export function check(cwd = repoRoot) {
-  const files = execFileSync('git', ['ls-files', '-z'], { cwd, encoding: 'utf8' })
+  const tracked = execFileSync('git', ['ls-files', '-z'], { cwd, encoding: 'utf8' })
     .split('\0')
-    .filter((p) => scope.test(p))
+    .filter(Boolean)
+  const roots = tracked.filter((p) => scope.test(p))
+  const escapes = tracked.filter(
+    (p) => scope.test(p) || /^(?:packages\/[^/]+\/src\/|site\/src\/).+\.(?:[cm]?[jt]sx?)$/.test(p),
+  )
+  const files = [...new Set([...roots, ...escapes])]
   const problems = []
   for (const path of files) {
     if (path === 'scripts/lib/helpers.mjs' || path === 'scripts/lib/sleep.mjs') continue
     const text = readFileSync(resolve(cwd, path), 'utf8')
+    if (path !== 'packages/core/src/markup-shared.mjs')
+      problems.push(...inspectSource(path, text, cwd, roots.includes(path), escapes.includes(path)))
+    if (!scope.test(path)) continue
     const code = text.replace(
       /\/\*[\s\S]*?\*\/|\/\/[^\n]*|(['"`])(?:\\[\s\S]|(?!\1)[^\\])*?\1/g,
       (part) => part.replace(/[^\n]/g, ' '),
@@ -82,7 +91,7 @@ if (
   resolve(process.argv[1]) === resolve(repoRoot, 'scripts/quality/shared-helpers.mjs')
 ) {
   const result = check(process.argv[2] ? resolve(process.argv[2]) : repoRoot)
-  console.log(`Checked ${result.files.length} tracked script and test files`)
+  console.log(`Checked ${result.files.length} tracked source files`)
   if (result.problems.length) console.error(result.problems.join('\n'))
   process.exitCode = result.problems.length ? 1 : 0
 }

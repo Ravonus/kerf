@@ -1,12 +1,13 @@
+import { repoRoot } from '../lib/helpers.mjs'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { conventions, tracked } from './conventions.mjs'
 
-const root = resolve(import.meta.dirname, '../..')
+const root = repoRoot
 const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' })
 
 void test('inventory covers Git paths in every checked category', () => {

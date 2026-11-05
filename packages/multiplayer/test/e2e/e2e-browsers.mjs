@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { freePort, sleep } from '../../../../scripts/lib/helpers.mjs'
+import { freePort, repoRoot, sleep } from '../../../../scripts/lib/helpers.mjs'
 // Two browsers, one document (research 35 §6): a real app, built for each runtime, served on it, and driven by two
 // Chromium contexts with different users and window sizes. With `--bus redis` or `nats` each browser talks to its own
 // instance, so everything also has to cross the bus. `--via` runs cursors over a transport pack.
@@ -19,7 +19,7 @@ import { parseArgs } from 'node:util'
 import { pin, writePackedPolicy } from '../../../create/scripts/tarballs.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const repo = resolve(here, '../../../..')
+const repo = repoRoot
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
