@@ -40,9 +40,10 @@ export function ConfirmDialogPause() {
             ? 'Resume deploys?'
             : 'Pause deploys?'
         }
-        description={
-          'This applies to everyone on ' + 'checkout.'
-        }
+        description={[
+          'This applies to everyone on ',
+          'checkout.',
+        ].join('')}
         action={paused.value ? 'Resume' : 'Pause deploys'}
         onConfirm={confirm}
       />

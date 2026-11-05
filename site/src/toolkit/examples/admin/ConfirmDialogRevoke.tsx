@@ -17,9 +17,10 @@ export function ConfirmDialogRevoke() {
         open={open}
         tone="critical"
         title="Remove 2 members?"
-        description={
-          'Priya and Tomás lose access right ' + 'away.'
-        }
+        description={[
+          'Priya and Tomás lose access right ',
+          'away.',
+        ].join('')}
         action="Remove 2 members"
         onConfirm={() => wait(600)}
       />

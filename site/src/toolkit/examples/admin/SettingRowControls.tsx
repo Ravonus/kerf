@@ -12,16 +12,17 @@ export const SettingRowControls = () => (
     <SettingsSection
       id="row-kinds"
       title="Build"
-      description={
-        'A control on the end, or stacked ' +
-        'for a wide field.'
-      }
+      description={[
+        'A control on the end, or stacked ',
+        'for a wide field.',
+      ].join('')}
     >
       <SettingRow
         title="Node version"
-        description={
-          'Used for every build of this ' + 'project.'
-        }
+        description={[
+          'Used for every build of this ',
+          'project.',
+        ].join('')}
       >
         <Select
           label="Node version"

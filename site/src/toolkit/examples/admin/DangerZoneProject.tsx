@@ -15,16 +15,17 @@ export function DangerZoneProject() {
     <SettingsWidth>
       <DangerZone
         id="danger-demo"
-        description={
-          'These change who can reach ' +
-          "storefront. One can't be undone."
-        }
+        description={[
+          'These change who can reach ',
+          "storefront. One can't be undone.",
+        ].join('')}
       >
         <SettingRow
           title="Transfer project"
-          description={
-            'Give storefront to another ' + 'workspace.'
-          }
+          description={[
+            'Give storefront to another ',
+            'workspace.',
+          ].join('')}
         >
           <Button
             emphasis="outline"
@@ -37,10 +38,10 @@ export function DangerZoneProject() {
         </SettingRow>
         <SettingRow
           title="Delete project"
-          description={
-            'Deletes storefront and its 412 ' +
-            'deploys for good.'
-          }
+          description={[
+            'Deletes storefront and its 412 ',
+            'deploys for good.',
+          ].join('')}
         >
           <Button
             emphasis="soft"
@@ -54,19 +55,20 @@ export function DangerZoneProject() {
         <ConfirmDialog
           open={transfer}
           title="Transfer storefront?"
-          description={
-            'You lose access until the new ' +
-            'owner invites you.'
-          }
+          description={[
+            'You lose access until the new ',
+            'owner invites you.',
+          ].join('')}
           action="Transfer project"
           onConfirm={() => wait(600)}
         />
         <TypeToConfirm
           open={remove}
           title="Delete storefront?"
-          description={
-            'This permanently deletes the ' + 'project.'
-          }
+          description={[
+            'This permanently deletes the ',
+            'project.',
+          ].join('')}
           confirmText="storefront"
           items={[
             '412 deploys and their logs',

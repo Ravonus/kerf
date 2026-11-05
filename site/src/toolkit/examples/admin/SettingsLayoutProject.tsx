@@ -51,9 +51,10 @@ export function SettingsLayoutProject() {
       <DangerZone id="project-danger">
         <SettingRow
           title="Archive project"
-          description={
-            'Stops deploys and makes it ' + 'read-only.'
-          }
+          description={[
+            'Stops deploys and makes it ',
+            'read-only.',
+          ].join('')}
         >
           <Button
             emphasis="soft"
@@ -68,10 +69,10 @@ export function SettingsLayoutProject() {
       <ConfirmDialog
         open={archive}
         title="Archive storefront?"
-        description={
-          'Deploys stop. You can restore it ' +
-          'at any time.'
-        }
+        description={[
+          'Deploys stop. You can restore it ',
+          'at any time.',
+        ].join('')}
         action="Archive project"
         onConfirm={() => wait(600)}
       />
@@ -124,10 +125,10 @@ function ProjectAlerts({
     >
       <SettingRow
         title="Failed deploys"
-        description={
-          "Mail the project's owner when a " +
-          'deploy fails.'
-        }
+        description={[
+          "Mail the project's owner when a ",
+          'deploy fails.',
+        ].join('')}
       >
         {(ids: {
           label: string

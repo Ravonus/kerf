@@ -14,9 +14,10 @@ export const SettingsSectionNotifications = () => (
     >
       <SettingRow
         title="Weekly summary"
-        description={
-          'Deploys, uptime and spend, every ' + 'Monday.'
-        }
+        description={[
+          'Deploys, uptime and spend, every ',
+          'Monday.',
+        ].join('')}
       >
         {(ids: {
           label: string
