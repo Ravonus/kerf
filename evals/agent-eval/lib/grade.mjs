@@ -1,3 +1,4 @@
+import { calibrationChecks } from '../run/calibration-target.mjs'
 // Hidden tests against the running app. Works on a clone so a build can't touch what the agent is still working on, and
 // builds and serves inside the same box, because this is agent-written code. Tests and measures run outside it.
 import { execFile, spawn } from 'node:child_process'
@@ -116,8 +117,9 @@ export async function serve(copy, stack) {
 }
 
 /** Run a task's hidden tests, each in a fresh browser context. A failure gets one rerun, and a flake is recorded as one. */
-export async function hidden(task, base) {
-  const { tests } = await import(pathToFileURL(join(here, 'tasks', task, 'hidden.mjs')).href)
+export async function hidden(task, base, calibration = false) {
+  const module = await import(pathToFileURL(join(here, 'tasks', task, 'hidden.mjs')).href)
+  const tests = calibration ? calibrationChecks(task, module) : module.tests
   const browser = await chromium.launch()
   const once = async (t) => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })

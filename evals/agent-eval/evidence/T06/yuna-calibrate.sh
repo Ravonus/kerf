@@ -14,7 +14,7 @@ if [[ "${WEFT_T06_CLEAN_ENV:-}" != 1 ]]; then
 fi
 
 repo="$WEFT_T06_REPO"
-[[ "$WEFT_T06_TASK" == medium-shop || "$WEFT_T06_TASK" == edit-shop ]] || { echo 'Unknown calibration task' >&2; exit 2; }
+[[ "$WEFT_T06_TASK" == medium-shop || "$WEFT_T06_TASK" == edit-shop || "$WEFT_T06_TASK" == bugfix-shop ]] || { echo 'Unknown calibration task' >&2; exit 2; }
 node="$WEFT_T06_NODE"
 pnpm="$WEFT_T06_PNPM_ENTRY"
 pnpm_root="$(dirname "$(dirname "$pnpm")")"
