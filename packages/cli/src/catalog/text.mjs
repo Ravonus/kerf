@@ -1,37 +1,5 @@
-/** Diagnostic entries in their catalog order. */
-export const part07 = [
-  {
-    code: 'R106',
-    severity: 'error',
-    by: 'start',
-    catches:
-      "A `remote()` call can't be made: no address, no `WEFT_RUST_SECRET`, or the sidecar refused the signature (503)",
-    fix: 'Set `WEFT_RUST_<NAME>_URL` and the same `WEFT_RUST_SECRET` on both sides. `weft dev` and `weft start` do it for what they supervise',
-  },
-  {
-    code: 'R107',
-    severity: 'error',
-    by: 'start',
-    catches:
-      "A sidecar didn't answer, or ran past the deadline (503, 504). Only that function fails",
-    fix: "Check that it's running, or raise `timeout` on `remote()`",
-  },
-  {
-    code: 'R108',
-    severity: 'error',
-    by: 'start',
-    catches:
-      "A sidecar function panicked or returned an undeclared error (500). The detail stays in the sidecar's log, under the request id",
-    fix: "Find the request id in the sidecar's log, or declare the failure in `errors`",
-  },
-  {
-    code: 'R109',
-    severity: 'error',
-    by: 'cli',
-    catches:
-      "A sidecar doesn't build for a reason no contract function explains: a compile error, no crate, or no `cargo`",
-    fix: 'Fix the crate, point `rust.services.<name>.crate` at it, or set `external: true` for one built elsewhere',
-  },
+/** text diagnostic entries in catalog order. */
+export const text = [
   // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: weft check (text-checks.mjs).
   {
     code: 'X001',
@@ -228,48 +196,5 @@ export const part07 = [
     catches:
       'A `resource` or query made in the component that renders the `<Boundary>` meant to wait for it, and read inside it: the Boundary only waits for what its children make, so no fallback shows',
     fix: 'Make it in a small component rendered inside the Boundary',
-  },
-  {
-    code: 'M001',
-    severity: 'error',
-    by: 'plugin',
-    owner: '@weft-js/plugin-media',
-    catches:
-      'Raw `<img>`/`<video>` without `width`/`height` or `aspect-ratio`, outside a `<Boundary>` (inside it is X030)',
-    fix: 'Insert the intrinsic `width`/`height` (autofix for an imported file), or use `<Media>`',
-  },
-  {
-    code: 'M002',
-    severity: 'error',
-    by: 'plugin',
-    owner: '@weft-js/plugin-media',
-    catches: 'An image rendered through a `?url` import or a string path, bypassing the optimizer',
-    fix: '`import x from \'./x.jpg?media\'` and `<Media src={x} alt="…" />`',
-  },
-  {
-    code: 'M003',
-    severity: 'warning',
-    by: 'plugin',
-    owner: '@weft-js/plugin-media',
-    catches:
-      'A raw `<img>` whose file is wider than its `width` × 2 (DPR) × 1.25: bytes nobody sees',
-    fix: '`<Media>`, which resizes',
-  },
-  {
-    code: 'M004',
-    severity: 'warning',
-    by: 'plugin',
-    owner: '@weft-js/plugin-media',
-    catches: 'A GIF over 256 KB rendered raw',
-    fix: '`<Media>` with `mediaFfmpeg()` in `plugins`, which turns GIFs into video when that saves 15%',
-  },
-  {
-    code: 'M005',
-    severity: 'error',
-    by: 'plugin',
-    owner: '@weft-js/plugin-media',
-    catches:
-      '`<video autoplay>` without `muted`: browsers block it, and sound before a gesture is hostile',
-    fix: 'Add `muted` (autofix)',
   },
 ]

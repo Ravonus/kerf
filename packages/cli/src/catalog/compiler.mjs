@@ -1,5 +1,5 @@
-/** Diagnostic entries in their catalog order. */
-export const part01 = [
+/** Compiler diagnostic entries in catalog order. */
+export const compilerDiagnostics = [
   {
     code: 'W000',
     severity: 'error',
@@ -269,5 +269,61 @@ export const part01 = [
       'A @weft-js/core/browser value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await`',
     fix: "Create it in a component's (or `defineState`'s) setup, or inside `createRoot(dispose => …)`",
     example: "import { online } from '@weft-js/core/browser'\nexport const up = online()",
+  },
+  {
+    code: 'W052',
+    severity: 'error',
+    by: 'compiler',
+    catches: '`watch` folding a stream by hand',
+    fix: '`fold` + `initial` where it is read: kept in the cache',
+    example:
+      "import { state, watch } from '@weft-js/core'\nimport { prices } from './server/prices'\nexport function A() { const tick = prices({}); const list = state([]); watch(() => tick.value, m => { list.value = [...list.value, m] }); return <p>{list.value.length}</p> }",
+  },
+  {
+    code: 'W053',
+    severity: 'error',
+    by: 'start',
+    catches: '`.live()` on a query with no `tags` (dev): no mutation can ever poke it',
+    fix: 'Add `tags` to the query, and the same tag to the mutations that change it',
+  },
+  {
+    code: 'W054',
+    severity: 'error',
+    by: 'compiler',
+    catches:
+      '`media(query)` without `ssr` in a server-rendered component (hydration mismatch); a warning when `weft check` cannot tell',
+    fix: 'Pass the server value: `media(query, { ssr: false })`',
+    example:
+      "import { media } from '@weft-js/core/browser'\nexport function A() { const dark = media('(prefers-color-scheme: dark)'); return <p>{dark.value ? 'dark' : 'light'}</p> }",
+  },
+  {
+    code: 'W056',
+    severity: 'warning',
+    by: 'compiler',
+    catches:
+      '`watch` that copies a live value (a @weft-js/core/browser value, `.live()`) into `state`',
+    fix: 'Read `live.value` directly, or `derived(() => live.value)`',
+    example:
+      "import { state, watch } from '@weft-js/core'\nimport { online } from '@weft-js/core/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
+  },
+  {
+    code: 'W060',
+    severity: 'error',
+    by: 'compiler',
+    catches:
+      "A `group()` from @weft-js/core/style that can't be evaluated at build: a value that isn't a literal (named with its path), a `group()` outside a top-level `const`, or an accent that isn't literal tokens",
+    fix: "Inline the token name or literal; define groups as `export const x = group('x', { … })`; raw CSS goes in `css: { … }`",
+    example:
+      "import { group } from '@weft-js/core/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
+  },
+  {
+    code: 'W061',
+    severity: 'error',
+    by: 'compiler',
+    catches:
+      "`bind:x` on a native element, or `bind:x`/`bind(box)` with something that isn't a box or that isn't a component prop",
+    fix: 'Write `<Card bind:person={name} />`. A form element takes `value` and `onChange`',
+    example:
+      "import { bind, state } from '@weft-js/core'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
   },
 ]
