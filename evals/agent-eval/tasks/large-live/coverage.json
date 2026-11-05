@@ -1,0 +1,21 @@
+{
+  "status": "partial; prepared checks are not yet connected to grading",
+  "covered": [
+    { "id": "auth_success_errors", "check": "signup, signout, login and duplicate credentials" },
+    { "id": "http_only_cookie", "check": "signup, signout, login and duplicate credentials" },
+    { "id": "blank_newest_author", "check": "messages reject blanks and appear newest first" },
+    {
+      "id": "remote_post_delete_visibility",
+      "check": "other signed-in browsers see posts and deletes without reload"
+    }
+  ],
+  "missing": [
+    "server password hashing",
+    "server rejects over-280 even when client is bypassed",
+    "author-only server deletion including forged requests",
+    "online presence count and disconnect",
+    "cross-origin POST rejection",
+    "own post appears at once",
+    "semantic mutants and canonical server-backed reference"
+  ]
+}
