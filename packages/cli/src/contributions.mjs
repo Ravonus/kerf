@@ -56,50 +56,7 @@ export function contributions(plugins, report, env) {
         p.name,
       )
 
-    const ns = p.namespace ?? `${p.name.replace(/^@[^/]+\//, '').replace(/^plugin-/, '')}/`
-    for (const d of manifest.diagnostics ?? []) {
-      if (!d.code.startsWith(ns))
-        report(
-          'P111',
-          `\`${p.name}\` declares \`${d.code}\`, outside its namespace \`${ns}\`.`,
-          p.name,
-        )
-    }
-    const agents = manifest.agents
-    if (agents) {
-      const bytes = Buffer.byteLength(agentsSection(agents))
-      if (bytes > agentsLimit)
-        report(
-          'P112',
-          `\`${p.name}\`'s AGENTS section is ${bytes} bytes (limit ${agentsLimit}).`,
-          p.name,
-        )
-    }
-    if ((manifest.map?.length ?? 0) > mapLimit)
-      report(
-        'P112',
-        `\`${p.name}\` adds ${manifest.map.length} map rows (limit ${mapLimit}).`,
-        p.name,
-      )
-    const tns = manifest.tokens?.namespace
-    if (tns) {
-      if (tokenOwner.has(tns))
-        report(
-          'P113',
-          `Token namespace \`${tns}\` is contributed by both \`${tokenOwner.get(tns)}\` and \`${p.name}\`.`,
-          p.name,
-        )
-      else tokenOwner.set(tns, p.name)
-    }
-    for (const c of manifest.catalog ?? []) {
-      if (catalogOwner.has(c.name))
-        report(
-          'P113',
-          `Catalog entry \`${c.name}\` is contributed by both \`${catalogOwner.get(c.name)}\` and \`${p.name}\`.`,
-          p.name,
-        )
-      else catalogOwner.set(c.name, p.name)
-    }
+    const ns = checkManifest(p, manifest, report, tokenOwner, catalogOwner)
     out.push({
       name: p.name,
       version: p.version,
@@ -109,6 +66,54 @@ export function contributions(plugins, report, env) {
     })
   }
   return out
+}
+
+function checkManifest(p, manifest, report, tokenOwner, catalogOwner) {
+  const ns = p.namespace ?? `${p.name.replace(/^@[^/]+\//, '').replace(/^plugin-/, '')}/`
+  for (const d of manifest.diagnostics ?? []) {
+    if (!d.code.startsWith(ns))
+      report(
+        'P111',
+        `\`${p.name}\` declares \`${d.code}\`, outside its namespace \`${ns}\`.`,
+        p.name,
+      )
+  }
+  const agents = manifest.agents
+  if (agents) {
+    const bytes = Buffer.byteLength(agentsSection(agents))
+    if (bytes > agentsLimit)
+      report(
+        'P112',
+        `\`${p.name}\`'s AGENTS section is ${bytes} bytes (limit ${agentsLimit}).`,
+        p.name,
+      )
+  }
+  if ((manifest.map?.length ?? 0) > mapLimit)
+    report(
+      'P112',
+      `\`${p.name}\` adds ${manifest.map.length} map rows (limit ${mapLimit}).`,
+      p.name,
+    )
+  const tns = manifest.tokens?.namespace
+  if (tns) {
+    if (tokenOwner.has(tns))
+      report(
+        'P113',
+        `Token namespace \`${tns}\` is contributed by both \`${tokenOwner.get(tns)}\` and \`${p.name}\`.`,
+        p.name,
+      )
+    else tokenOwner.set(tns, p.name)
+  }
+  for (const c of manifest.catalog ?? []) {
+    if (catalogOwner.has(c.name))
+      report(
+        'P113',
+        `Catalog entry \`${c.name}\` is contributed by both \`${catalogOwner.get(c.name)}\` and \`${p.name}\`.`,
+        p.name,
+      )
+    else catalogOwner.set(c.name, p.name)
+  }
+  return ns
 }
 
 export const agentsSection = (agents) => `### ${agents.title}\n\n${agents.text.trim()}\n`
