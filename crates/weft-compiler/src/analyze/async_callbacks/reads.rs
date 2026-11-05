@@ -3,12 +3,13 @@
 use std::collections::HashSet;
 
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, AwaitExpression, BindingPattern, BreakStatement,
-    CallExpression, ComputedMemberExpression, ConditionalExpression, ContinueStatement,
-    DoWhileStatement, Expression, ForInStatement, ForOfStatement, ForStatement, Function,
-    IdentifierReference, IfStatement, LabeledStatement, LogicalExpression, ReturnStatement,
-    SimpleAssignmentTarget, Statement, StaticMemberExpression, SwitchStatement, ThrowStatement,
-    TryStatement, UnaryExpression, UpdateExpression, VariableDeclarator, WhileStatement,
+    ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, AssignmentTargetWithDefault,
+    AwaitExpression, BindingPattern, BreakStatement, CallExpression, ComputedMemberExpression,
+    ConditionalExpression, ContinueStatement, DoWhileStatement, Expression, ForInStatement,
+    ForOfStatement, ForStatement, Function, IdentifierReference, IfStatement, LabeledStatement,
+    LogicalExpression, ReturnStatement, SimpleAssignmentTarget, Statement, StaticMemberExpression,
+    SwitchStatement, ThrowStatement, TryStatement, UnaryExpression, UpdateExpression,
+    VariableDeclarator, WhileStatement,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_span::{GetSpan, Span};
@@ -55,6 +56,29 @@ impl<'x, 's> Flow<'x, 's> {
                 if props { self.index.props.contains(&sym) } else { self.index.boxes.contains(&sym) }))
     }
 
+    fn assignment<'a>(
+        &mut self,
+        target: &AssignmentTarget<'a>,
+        value: &Expression<'a>,
+        write_only: bool,
+    ) {
+        let pattern = matches!(
+            target,
+            AssignmentTarget::ObjectAssignmentTarget(_)
+                | AssignmentTarget::ArrayAssignmentTarget(_)
+        );
+        // Patterns receive the RHS before evaluating targets; ordinary references form first.
+        if pattern {
+            self.visit_expression(value);
+        }
+        let previous = std::mem::replace(&mut self.write_only, write_only);
+        self.visit_assignment_target(target);
+        self.write_only = previous;
+        if !pattern {
+            self.visit_expression(value);
+        }
+    }
+
     fn report(&mut self, span: Span) {
         if !self.state.untracked || !self.reported.insert(key(span)) {
             return;
@@ -85,13 +109,15 @@ impl<'x, 's> Flow<'x, 's> {
 
 impl<'a> Visit<'a> for Flow<'_, '_> {
     fn visit_assignment_expression(&mut self, it: &AssignmentExpression<'a>) {
-        let previous = std::mem::replace(
-            &mut self.write_only,
+        self.assignment(
+            &it.left,
+            &it.right,
             it.operator == AssignmentOperator::Assign,
         );
-        self.visit_assignment_target(&it.left);
-        self.write_only = previous;
-        self.visit_expression(&it.right);
+    }
+
+    fn visit_assignment_target_with_default(&mut self, it: &AssignmentTargetWithDefault<'a>) {
+        self.assignment(&it.binding, &it.init, true);
     }
 
     fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {

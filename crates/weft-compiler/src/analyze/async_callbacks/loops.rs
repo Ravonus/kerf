@@ -30,11 +30,18 @@ impl Flow<'_, '_> {
             }
             header = next;
         }
-        self.state = exits.join(self.frames.pop().unwrap().breaks);
+        let frame = self
+            .frames
+            .pop()
+            .expect("repeat keeps its frame until all iterations finish");
+        self.state = exits.join(frame.breaks);
     }
 
     fn next_iteration(&mut self) {
-        let frame = self.frames.last_mut().unwrap();
+        let frame = self
+            .frames
+            .last_mut()
+            .expect("loop steps run inside the frame pushed by repeat");
         self.state = self.state.join(std::mem::take(&mut frame.continues));
     }
 
@@ -149,7 +156,11 @@ impl Flow<'_, '_> {
                 ..Frame::default()
             });
             self.visit_statement(&it.body);
-            self.state = self.state.join(self.frames.pop().unwrap().breaks);
+            let frame = self
+                .frames
+                .pop()
+                .expect("a labeled block pushes a frame before visiting its body");
+            self.state = self.state.join(frame.breaks);
         }
     }
 }

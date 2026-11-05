@@ -156,7 +156,11 @@ impl Flow<'_, '_> {
                 self.visit_statement(statement);
             }
         }
-        self.state = self.state.join(self.frames.pop().unwrap().breaks);
+        let frame = self
+            .frames
+            .pop()
+            .expect("switch pushes a frame before visiting cases");
+        self.state = self.state.join(frame.breaks);
         if default.is_none() {
             self.state = self.state.join(unmatched);
         }
@@ -170,14 +174,21 @@ impl Flow<'_, '_> {
             ..Trap::default()
         });
         self.visit_block_statement(&it.block);
-        let trapped = self.traps.pop().unwrap();
+        let trapped = self
+            .traps
+            .pop()
+            .expect("try pushes a trap before visiting its block");
         let normal = self.state;
         let mut abrupt = trapped.abrupt;
         if let Some(handler) = &it.handler {
             self.state = trapped.exceptions;
             self.traps.push(Trap::default());
             self.visit_catch_clause(handler);
-            abrupt = abrupt.join(self.traps.pop().unwrap().abrupt);
+            let caught = self
+                .traps
+                .pop()
+                .expect("catch pushes a trap before visiting its handler");
+            abrupt = abrupt.join(caught.abrupt);
             self.state = self.state.join(normal);
         } else {
             abrupt = abrupt.join(trapped.exceptions);

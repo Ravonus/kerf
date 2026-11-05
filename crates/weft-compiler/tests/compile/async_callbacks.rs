@@ -5,8 +5,12 @@ fn async_callback_errors(diagnostics: &[Diagnostic]) -> Vec<&Diagnostic> {
 }
 
 fn resource_body(body: &str) -> String {
+    resource_with_state("1", body)
+}
+
+fn resource_with_state(initial: &str, body: &str) -> String {
     format!(
-        "import {{ state, resource }} from '@weft-js/core'; const n = state(1); \
+        "import {{ state, resource }} from '@weft-js/core'; const n = state({initial}); \
          resource(async () => {{ {body} }});"
     )
 }
@@ -101,6 +105,96 @@ fn w012_reports_only_reads_evaluated_after_suspension() {
         let (_, diagnostics) = run(&source);
         assert!(
             async_callback_errors(&diagnostics).is_empty(),
+            "{source}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w012_destructuring_rhs_precedes_member_and_default_targets() {
+    for body in [
+        "({ x: n.value.field } = await load()); return 0",
+        "[n.value.field] = await load(); return 0",
+        "({ x: { y: n.value.field } } = await load()); return 0",
+        "[[n.value.field]] = await load(); return 0",
+        "const target = {}; ({ x: target[n.value] } = await load()); return 0",
+        "const target = {}; [target[n.value]] = await load(); return 0",
+        "const target = {}; ({ [n.value]: target.field } = await load()); return 0",
+        "({ x: n.value.field = 0 } = await load()); return 0",
+        "[n.value.field = 0] = await load(); return 0",
+        "let value; ({ x: value = n.value } = await load()); return 0",
+        "let value; [value = n.value] = await load(); return 0",
+        "({ x: { y: n.value.field } = await load() } = {}); return 0",
+        "[[n.value.field] = await load()] = []; return 0",
+        "({ [await key()]: n.value.field } = {}); return 0",
+    ] {
+        let source = resource_with_state("{ field: 0 }", body);
+        let (_, diagnostics) = run(&source);
+        let errors = async_callback_errors(&diagnostics);
+        assert_eq!(errors.len(), 1, "{source}: {diagnostics:?}");
+        assert!(
+            errors[0].message.contains("n.value"),
+            "{source}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w012_repaired_destructuring_captures_values_before_await() {
+    for body in [
+        "const target = n.value; ({ x: target.field } = await load()); return target.field",
+        "const target = n.value; [target.field] = await load(); return target.field",
+        "const key = n.value.field; const target = {}; \
+         ({ [key]: target.field } = await load()); return 0",
+        "const key = n.value.field; const target = {}; \
+         [target[key]] = await load(); return 0",
+        "const fallback = n.value; let value; \
+         ({ x: value = fallback } = await load()); return value",
+        "const fallback = n.value; let value; [value = fallback] = await load(); return value",
+        "const target = n.value; \
+         ({ x: { y: target.field } = await load() } = {}); return target.field",
+        "const target = n.value; [[target.field] = await load()] = []; return target.field",
+    ] {
+        let source = resource_with_state("{ field: 0 }", body);
+        let (code, diagnostics) = run(&source);
+        assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
+        assert!(!code.is_empty(), "{source}");
+    }
+}
+
+#[test]
+fn w012_reference_assignments_keep_lhs_before_rhs_order() {
+    for (body, count) in [
+        ("n.value.field = await load(); return 0", 0),
+        ("n.value['field'] = await load(); return 0", 0),
+        ("n.value.field += await load(); return 0", 0),
+        ("n.value[await key()] = 0; return 0", 0),
+        (
+            "const target = {}; target[n.value] = await load(); return 0",
+            0,
+        ),
+        ("({ x: n.value.field = await load() } = {}); return 0", 0),
+        ("[n.value.field = await load()] = []; return 0", 0),
+        (
+            "const target = {}; ({ x: target[await key()] } = { x: n.value }); return 0",
+            0,
+        ),
+        (
+            "const target = {}; [target[await key()]] = [n.value]; return 0",
+            0,
+        ),
+        (
+            "const target = {}; target[await key()] = n.value; return 0",
+            1,
+        ),
+        ("(await load()).field = n.value; return 0", 1),
+        ("n.value.field = (await load(), n.value); return 0", 1),
+    ] {
+        let source = resource_with_state("{ field: 0 }", body);
+        let (_, diagnostics) = run(&source);
+        assert_eq!(
+            async_callback_errors(&diagnostics).len(),
+            count,
             "{source}: {diagnostics:?}"
         );
     }
