@@ -20,10 +20,11 @@ type Data<T> = {
 export function saveActions<T extends Record<string, unknown>>(
   d: Data<T>,
   errors: () => SaveBarProps<T>['errors'],
-  validate: () => SaveBarProps<T>['validate'],
-  onSave: () => SaveBarProps<T>['onSave'],
-  onDiscard: () => SaveBarProps<T>['onDiscard'],
-  onLeave: () => SaveBarProps<T>['onLeave'],
+  validate: (now: T) => FieldErrors | undefined,
+  onSave: SaveBarProps<T>['onSave'],
+  onDiscard: () => void,
+  hasLeave: () => SaveBarProps<T>['onLeave'],
+  onLeave: () => void,
 ) {
   const { box, base, phase, fixes, leaving, dirty, refs } = d
   const fail = (found: FieldErrors) => {
@@ -36,11 +37,11 @@ export function saveActions<T extends Record<string, unknown>>(
   const save = async () => {
     if (phase.value === 'pending' || !dirty.value) return
     const now = box.value
-    const found = validate()?.(now)
+    const found = validate(now)
     if (found && Object.keys(found).length) return fail(found)
     phase.value = 'pending'
     try {
-      const back = await onSave()(now)
+      const back = await onSave(now)
       if (back && Object.keys(back).length) {
         phase.value = 'idle'
         return fail(back)
@@ -65,12 +66,12 @@ export function saveActions<T extends Record<string, unknown>>(
     box.value = base.value
     if (errors()) errors()!.value = {}
     fixes.value = 0
-    onDiscard()?.()
+    onDiscard()
   }
   const leave = () => {
     leaving.value = false
     discard()
-    if (onLeave()) onLeave()!(refs.target)
+    if (hasLeave()) onLeave()
     else refs.el?.ownerDocument.defaultView?.location.assign(refs.target)
   }
   return { save, discard, leave }

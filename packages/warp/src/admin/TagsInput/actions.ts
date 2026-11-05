@@ -7,8 +7,8 @@ export function tagActions(
   draft: State<string>,
   armed: State<boolean>,
   refs: { host?: HTMLElement | undefined },
-  onEdit: () => (() => void) | undefined,
-  onSubmit: () => (() => void) | undefined,
+  onEdit: () => void,
+  onSubmit: () => void,
 ) {
   const say = (text: string) => {
     if (refs.host) announce(refs.host.ownerDocument, text)
@@ -20,13 +20,13 @@ export function tagActions(
     value().value = list
     armed.value = false
     say(`Added ${added.join(', ')}. ${list.length} in total.`)
-    onEdit()?.()
+    onEdit()
   }
   const drop = (tag: string) => {
     value().value = value().value.filter((t) => t !== tag)
     armed.value = false
     say(`Removed ${tag}.`)
-    onEdit()?.()
+    onEdit()
     afterFlush(() => refs.host?.focus())
   }
   const key = (e: KeyboardEvent) => {
@@ -36,7 +36,7 @@ export function tagActions(
       add(text)
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      onSubmit()?.()
+      onSubmit()
     } else if (e.key === 'Backspace' && !draft.value && value().value.length) {
       if (armed.value) drop(value().value[value().value.length - 1]!)
       else armed.value = true
