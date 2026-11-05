@@ -59,10 +59,16 @@ export default function Dials() {
         data-expression={expression.value}
         data-density={density.value}
       >
-        <Card eyebrow="Coffee" title="House blend, 250 g">
+        <Card
+          eyebrow="Coffee"
+          title="House blend, 250 g"
+        >
           <Stack gap="related">
             <Input label="Gift note" />
-            <Row gap="tight" justify="between">
+            <Row
+              gap="tight"
+              justify="between"
+            >
               <Badge tone="positive">In stock</Badge>
               <Button>Add to cart</Button>
             </Row>
