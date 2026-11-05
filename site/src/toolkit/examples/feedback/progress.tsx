@@ -1,5 +1,14 @@
 import { derived, onCleanup, state } from '@weft-js/core'
-import { Button, Card, Progress, Row, Skeleton, Spinner, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Progress,
+  Row,
+  Skeleton,
+  Spinner,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 export function ProgressRun() {
   const pct = state(0)
@@ -12,7 +21,10 @@ export function ProgressRun() {
           ? 'Uploading'
           : 'Live',
   )
-  const timer = setInterval(() => (pct.value = Math.min(100, pct.value + 2)), 80)
+  const timer = setInterval(
+    () => (pct.value = Math.min(100, pct.value + 2)),
+    80,
+  )
   onCleanup(() => clearInterval(timer))
   return (
     <Stack>
@@ -26,24 +38,52 @@ export function ProgressRun() {
 }
 
 export const ProgressPlanUsage = () => (
-  <Card eyebrow="October" title="Your plan">
+  <Card
+    eyebrow="October"
+    title="Your plan"
+  >
     <Stack gap="group">
-      <Progress label="Build minutes" value={82} tone="caution" />
-      <Progress label="Bandwidth" value={46} />
-      <Progress label="Seats" value={80} />
+      <Progress
+        label="Build minutes"
+        value={82}
+        tone="caution"
+      />
+      <Progress
+        label="Bandwidth"
+        value={46}
+      />
+      <Progress
+        label="Seats"
+        value={80}
+      />
     </Stack>
   </Card>
 )
 
-export const SpinnerPlay = (p: { size: 'sm' | 'md' | 'lg'; label: string }) => (
-  <Spinner size={p.size} label={p.label} />
+export const SpinnerPlay = ({
+  size,
+  label,
+}: {
+  size: 'sm' | 'md' | 'lg'
+  label: string
+}) => (
+  <Spinner
+    size={size}
+    label={label}
+  />
 )
 
 export const SpinnerSizes = () => (
   <>
-    <Spinner size="sm" label="Loading" />
+    <Spinner
+      size="sm"
+      label="Loading"
+    />
     <Spinner label="Loading" />
-    <Spinner size="lg" label="Loading" />
+    <Spinner
+      size="lg"
+      label="Loading"
+    />
   </>
 )
 
@@ -65,7 +105,10 @@ export function SpinnerRefresh() {
     }, 1400)
   }
   return (
-    <Row justify="between" gap="group">
+    <Row
+      justify="between"
+      gap="group"
+    >
       <Stack gap="hair">
         <Text role="heading">storefront logs</Text>
         <Text subtle>Updated {when.value}</Text>
@@ -73,7 +116,13 @@ export function SpinnerRefresh() {
       {busy.value ? (
         <Spinner label="Refreshing logs" />
       ) : (
-        <Button size="sm" emphasis="outline" tone="neutral" icon="refresh" onClick={refresh}>
+        <Button
+          size="sm"
+          emphasis="outline"
+          tone="neutral"
+          icon="refresh"
+          onClick={refresh}
+        >
           Refresh
         </Button>
       )}
@@ -83,14 +132,25 @@ export function SpinnerRefresh() {
 
 export const SpinnerPanel = () => (
   <Card>
-    <Stack gap="related" align="center">
-      <Spinner size="lg" label="Waiting for the first build" />
+    <Stack
+      gap="related"
+      align="center"
+    >
+      <Spinner
+        size="lg"
+        label="Waiting for the first build"
+      />
       <Text subtle>Waiting for the first build</Text>
     </Stack>
   </Card>
 )
 
-export const SkeletonPlay = (p: {
+export const SkeletonPlay = ({
+  shape,
+  lines,
+  width,
+  height,
+}: {
   shape: 'text' | 'circle' | 'block'
   lines: number
   width: string
@@ -98,10 +158,10 @@ export const SkeletonPlay = (p: {
 }) => (
   <Stack gap="tight">
     <Skeleton
-      shape={p.shape}
-      lines={p.lines}
-      width={p.width || undefined}
-      height={p.height || undefined}
+      shape={shape}
+      lines={lines}
+      width={width || undefined}
+      height={height || undefined}
     />
   </Stack>
 )
@@ -109,7 +169,14 @@ export const SkeletonPlay = (p: {
 export const SkeletonShapes = () => (
   <Stack gap="group">
     <Skeleton />
-    <Skeleton shape="circle" width="48px" height="48px" />
-    <Skeleton shape="block" height="96px" />
+    <Skeleton
+      shape="circle"
+      width="48px"
+      height="48px"
+    />
+    <Skeleton
+      shape="block"
+      height="96px"
+    />
   </Stack>
 )
