@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs'
 import sharp from 'sharp'
 
-export function createGif({
+export function createGif(
   encode,
   o,
   sourceOf,
@@ -13,7 +13,7 @@ export function createGif({
   store,
   COMPATIBLE,
   SMALLER,
-}) {
+) {
   /** An animated GIF: null when it should stay one (the rules in src/video.mjs, on the top H.264 rung). */
   return async function gif(hash, bytes, name, meta) {
     if (

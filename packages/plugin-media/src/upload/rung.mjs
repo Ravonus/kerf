@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export function createRung({ dir, encode, sourceOf, flight, COMPATIBLE }) {
+export function createRung(dir, encode, sourceOf, flight, COMPATIBLE) {
   /** One rung, encoded once: the queue and a waiting request share the work, and the file lands whole or not at all. */
   return function rung(hash, meta, width, format) {
     const file = join(dir, hash, `${width}.${format}`)

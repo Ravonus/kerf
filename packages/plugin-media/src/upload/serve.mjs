@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export function createServe({ dir, sourceOf, rung, TYPES }) {
+export function createServe(dir, sourceOf, rung, TYPES) {
   return async function serve(hash, meta, width, format) {
     if (format === 'webp' && width === 0)
       return {

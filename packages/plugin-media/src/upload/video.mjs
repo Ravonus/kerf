@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { poster } from '../video.mjs'
 
-export function createVideo({
+export function createVideo(
   videoRungs,
   encode,
   sourceOf,
@@ -14,7 +14,7 @@ export function createVideo({
   playable,
   COMPATIBLE,
   o,
-}) {
+) {
   return async function video(hash, bytes, name, info, extra = {}) {
     const { width, height } = info.video
     const plan = videoRungs(info, width)

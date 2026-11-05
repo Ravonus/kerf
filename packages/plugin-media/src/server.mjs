@@ -58,9 +58,9 @@ function storage(o, root, encode) {
 
   const timed = uploads({ o, dir, encode, url, store, refuse })
 
-  const ingest = imageIngest({ limit, metaOf, dir, encode, timed, url, store, refuse, o })
+  const ingest = imageIngest(limit, metaOf, dir, encode, timed, url, store, refuse, o)
 
-  const serve = imageServe({ dir, flight, metaOf, timed, o, negotiate })
+  const serve = imageServe(dir, flight, metaOf, timed, o, negotiate)
 
   return { ingest, serve, settled: timed.settled }
 }

@@ -51,7 +51,7 @@ export function uploads({ o, dir, encode, url, store, refuse }) {
   const efficient = () => (o.video.codecs ?? []).map((c) => `video/${c}`).find((k) => encode[k])
   const sourceOf = (hash) => join(dir, hash, 'source')
 
-  const rung = createRung({ dir, encode, sourceOf, flight, COMPATIBLE })
+  const rung = createRung(dir, encode, sourceOf, flight, COMPATIBLE)
 
   const enqueue = (hash, meta) => {
     for (const [width, format] of meta.rungs)
@@ -77,7 +77,7 @@ export function uploads({ o, dir, encode, url, store, refuse }) {
   const hasCopy = () => o.encoder === 'compatible'
   const compatible = (asset) => (hasCopy() ? { ...asset, swap: o.swap ?? 'intent' } : asset)
 
-  const video = createVideo({
+  const video = createVideo(
     videoRungs,
     encode,
     sourceOf,
@@ -89,9 +89,9 @@ export function uploads({ o, dir, encode, url, store, refuse }) {
     playable,
     COMPATIBLE,
     o,
-  })
+  )
 
-  const ingest = createIngest({
+  const ingest = createIngest(
     encode,
     sourceOf,
     refuse,
@@ -101,9 +101,9 @@ export function uploads({ o, dir, encode, url, store, refuse }) {
     store,
     video,
     COMPATIBLE,
-  })
+  )
 
-  const gif = createGif({
+  const gif = createGif(
     encode,
     o,
     sourceOf,
@@ -115,9 +115,9 @@ export function uploads({ o, dir, encode, url, store, refuse }) {
     store,
     COMPATIBLE,
     SMALLER,
-  })
+  )
 
-  const serve = createServe({ dir, sourceOf, rung, TYPES })
+  const serve = createServe(dir, sourceOf, rung, TYPES)
 
   return { ingest, gif, serve, settled: () => line }
 }

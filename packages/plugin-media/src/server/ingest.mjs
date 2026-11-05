@@ -8,7 +8,7 @@ import { hex, isPhoto, MIME } from '../shared.mjs'
 import { unsafeSvg } from '../svg.mjs'
 import { sniff } from '../upload.mjs'
 
-export function imageIngest({ limit, metaOf, dir, encode, timed, url, store, refuse, o }) {
+export function imageIngest(limit, metaOf, dir, encode, timed, url, store, refuse, o) {
   return async function ingest(bytes, { name = 'upload' } = {}) {
     if (bytes.length > limit)
       refuse(

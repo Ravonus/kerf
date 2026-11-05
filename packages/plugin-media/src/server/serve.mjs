@@ -7,7 +7,7 @@ const FORMATS_TIMED = new Set(['mp4', 'webm', 'm4a', 'gif', 'webp'])
 const EXT = { avif: 'avif', webp: 'webp', jpeg: 'jpg', png: 'png' }
 const FORMAT = { avif: 'avif', webp: 'webp', jpg: 'jpeg', png: 'png' }
 
-export function imageServe({ dir, flight, metaOf, timed, o, negotiate }) {
+export function imageServe(dir, flight, metaOf, timed, o, negotiate) {
   /** One variant, encoded once: concurrent requests share the encode, and the file lands whole or not at all. */
   function variant(hash, width, format) {
     const file = join(dir, hash, `${width}.${EXT[format]}`)
