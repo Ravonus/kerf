@@ -48,41 +48,15 @@ export function MfaSetup({ open, qr, secret, onVerify, codes, onDownload, onDone
   const problem = state<string | undefined>(undefined)
   const busy = state(false)
   const saved = state(false)
-  const copy = async (text: string) => {
-    await copyText(document, text)
-    announce(document, 'Copied')
-  }
-  const next = async () => {
-    if (step.value === 'scan') {
-      step.value = 'verify'
-      return
-    }
-    if (step.value === 'codes') {
-      open.value = false
-      onDone?.()
-      return
-    }
-    if (!/^\d{6}$/.test(code.value)) {
-      problem.value = 'Enter the 6 digits from the app.'
-      return
-    }
-    busy.value = true
-    try {
-      if ((await onVerify(code.value)) === false)
-        problem.value = "That code didn't match. Use the newest one."
-      else {
-        problem.value = undefined
-        step.value = 'codes'
-      }
-    } catch (e) {
-      const m = mapFlowError(e)
-      if (m.surface === 'toast')
-        toast.show({ title: m.title, description: m.description, tone: 'critical' })
-      else problem.value = m.fields.code ?? m.title
-    } finally {
-      busy.value = false
-    }
-  }
+  const next = mfaNext(
+    step,
+    code,
+    problem,
+    busy,
+    () => open,
+    () => onVerify,
+    () => onDone,
+  )
   const label = derived(() => (step.value === 'codes' ? 'Finish' : 'Continue'))
   return (
     <Modal
@@ -111,87 +85,152 @@ export function MfaSetup({ open, qr, secret, onVerify, codes, onDownload, onDone
           {
             id: 'scan',
             label: 'scan',
-            render: () => (
-              <div data-scope="stack">
-                {qr}
-                <p>
-                  Can't scan? Enter this key: <code>{secret}</code>{' '}
-                  <TextLink onClick={() => copy(secret)}>Copy key</TextLink>
-                </p>
-              </div>
-            ),
+            render: () => <MfaScan qr={qr} secret={secret} />,
           },
           {
             id: 'verify',
             label: 'confirm',
-            render: () => (
-              <form
-                novalidate
-                onSubmit={(e: SubmitEvent) => {
-                  e.preventDefault()
-                  void next()
-                }}
-              >
-                <Input
-                  label="6-digit code from the app"
-                  name="totp"
-                  inputmode="numeric"
-                  autocomplete="one-time-code"
-                  maxlength="6"
-                  hint=""
-                  error={problem.value}
-                  data-autofocus=""
-                  onInput={(e) => (code.value = e.currentTarget.value)}
-                />
-              </form>
-            ),
+            render: () => <MfaVerify problem={problem} code={code} next={next} />,
           },
           {
             id: 'codes',
             label: 'backup codes',
-            render: () => (
-              <div data-scope="stack">
-                <p>
-                  Each code works once if you lose your phone. Store them somewhere safe; you won't
-                  see them again.
-                </p>
-                <ol data-part="codes" aria-label="Backup codes">
-                  {codes.map((c) => (
-                    <li key={c}>
-                      <code>{c}</code>
-                    </li>
-                  ))}
-                </ol>
-                <div data-scope="row">
-                  <Button emphasis="frame" size="sm" onClick={() => (onDownload ?? save)(codes)}>
-                    {() => (
-                      <>
-                        <DownloadIcon />
-                        Download
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    emphasis="ghost"
-                    tone="neutral"
-                    size="sm"
-                    onClick={() => copy(codes.join('\n'))}
-                  >
-                    Copy all
-                  </Button>
-                </div>
-                <Checkbox
-                  onChange={(e: Event) =>
-                    (saved.value = (e.currentTarget as HTMLInputElement).checked)
-                  }
-                >
-                  I saved my backup codes
-                </Checkbox>
-              </div>
-            ),
+            render: () => <MfaCodes codes={codes} saved={saved} onDownload={onDownload} />,
           },
         ]}
       />
     </Modal>
+  )
+}
+
+async function copy(text: string) {
+  await copyText(document, text)
+  announce(document, 'Copied')
+}
+
+function mfaNext(
+  step: State<keyof typeof STEPS>,
+  code: State<string>,
+  problem: State<string | undefined>,
+  busy: State<boolean>,
+  open: () => MfaSetupProps['open'],
+  onVerify: () => MfaSetupProps['onVerify'],
+  onDone: () => MfaSetupProps['onDone'],
+) {
+  return async () => {
+    if (step.value === 'scan') {
+      step.value = 'verify'
+      return
+    }
+    if (step.value === 'codes') {
+      open().value = false
+      onDone()?.()
+      return
+    }
+    if (!/^\d{6}$/.test(code.value)) {
+      problem.value = 'Enter the 6 digits from the app.'
+      return
+    }
+    busy.value = true
+    try {
+      if ((await onVerify()(code.value)) === false)
+        problem.value = "That code didn't match. Use the newest one."
+      else {
+        problem.value = undefined
+        step.value = 'codes'
+      }
+    } catch (e) {
+      const m = mapFlowError(e)
+      if (m.surface === 'toast')
+        toast.show({ title: m.title, description: m.description, tone: 'critical' })
+      else problem.value = m.fields.code ?? m.title
+    } finally {
+      busy.value = false
+    }
+  }
+}
+function MfaScan({ qr, secret }: { qr: unknown; secret: string }) {
+  return (
+    <div data-scope="stack">
+      {qr}
+      <p>
+        Can't scan? Enter this key: <code>{secret}</code>{' '}
+        <TextLink onClick={() => copy(secret)}>Copy key</TextLink>
+      </p>
+    </div>
+  )
+}
+function MfaVerify({
+  problem,
+  code,
+  next,
+}: {
+  problem: State<string | undefined>
+  code: State<string>
+  next: () => Promise<void>
+}) {
+  return (
+    <form
+      novalidate
+      onSubmit={(e: SubmitEvent) => {
+        e.preventDefault()
+        void next()
+      }}
+    >
+      <Input
+        label="6-digit code from the app"
+        name="totp"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        maxlength="6"
+        hint=""
+        error={problem.value}
+        data-autofocus=""
+        onInput={(e) => (code.value = e.currentTarget.value)}
+      />
+    </form>
+  )
+}
+function MfaCodes({
+  codes,
+  saved,
+  onDownload,
+}: {
+  codes: string[]
+  saved: State<boolean>
+  onDownload: MfaSetupProps['onDownload']
+}) {
+  return (
+    <div data-scope="stack">
+      <p>
+        Each code works once if you lose your phone. Store them somewhere safe; you won't see them
+        again.
+      </p>
+      <ol data-part="codes" aria-label="Backup codes">
+        {codes.map((c) => (
+          <li key={c}>
+            <code>{c}</code>
+          </li>
+        ))}
+      </ol>
+      <div data-scope="row">
+        <Button emphasis="frame" size="sm" onClick={() => (onDownload ?? save)(codes)}>
+          {() => (
+            <>
+              <DownloadIcon />
+              Download
+            </>
+          )}
+        </Button>
+        <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => copy(codes.join('\n'))}>
+          Copy all
+        </Button>
+      </div>
+      <Checkbox
+        onChange={(e: Event) => (saved.value = (e.currentTarget as HTMLInputElement).checked)}
+      >
+        I saved my backup codes
+      </Checkbox>
+    </div>
   )
 }
