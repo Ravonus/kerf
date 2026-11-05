@@ -39,14 +39,24 @@ import {
 import { mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
+import type * as Playwright from 'playwright-core'
 import { box, lit, sleep } from './ui-state.helpers.mjs'
 
+declare global {
+  interface Window {
+    __t0: number[]
+    __t1: number[]
+    __armed: boolean
+    __watching: boolean
+  }
+}
+
 const url = inject('url')
-const engines = createRequire(import.meta.url)('playwright-core')
-const engine = process.env.UI_STATE_BROWSER ?? 'chromium'
+const engines = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+const engine = (process.env.UI_STATE_BROWSER ?? 'chromium') as 'chromium' | 'firefox' | 'webkit'
 const onlyChromium = engine === 'chromium' ? test : test.skip // CDP
 const shots = process.env.UI_STATE_SHOTS
-let browser
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await engines[engine].launch()
   if (shots) mkdirSync(shots, { recursive: true })
@@ -60,15 +70,15 @@ afterEach(async () => {
   await sleep(100)
 })
 
-async function open(context, path = '/ui-state', init) {
+async function open(context: Playwright.BrowserContext, path = '/ui-state', init?: () => void) {
   const page = await context.newPage()
-  const errors = []
+  const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.addInitScript(() => {
     const Real = window.WebSocket
     window.__sockets = []
     window.WebSocket = class extends Real {
-      constructor(u, ...a) {
+      constructor(u: string | URL, ...a: [protocols?: string | string[]]) {
         super(u, ...a)
         if (String(u).includes('/_weft/ws')) window.__sockets.push(this)
       }
@@ -77,11 +87,11 @@ async function open(context, path = '/ui-state', init) {
   if (init) await page.addInitScript(init)
   await page.goto(url + path)
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
-  page.errors = errors
-  return page
+  Object.assign(page, { errors })
+  return page as Playwright.Page & { errors: string[] }
 }
 
-const shot = async (page, name) => {
+const shot = async (page: Playwright.Page, name: string) => {
   if (shots) await page.screenshot({ path: `${shots}/${name}.png` })
 }
 
@@ -140,7 +150,7 @@ registerHighFrequencyHoverThrottledLatestValueKept(() => browser, open)
 // ---- measurements: `UI_STATE_MEASURE=<file>` -----------------------------------------------------------------------
 
 // Date.now on both sides: it is the one clock two renderers share, to 1 ms. `timeOrigin` differs per process.
-const arm = (from, to, name = 'Ana') =>
+const arm = (from: Playwright.Page, to: Playwright.Page, name = 'Ana') =>
   Promise.all([
     from.evaluate(() => {
       window.__t0 = []
@@ -149,7 +159,8 @@ const arm = (from, to, name = 'Ana') =>
       document.addEventListener(
         'pointerover',
         (e) => {
-          if (e.target.closest?.('[data-testid="left-Ana"] label')) window.__t0.push(Date.now())
+          if ((e.target as Element).closest?.('[data-testid="left-Ana"] label'))
+            window.__t0.push(Date.now())
         },
         { capture: true },
       )
@@ -158,16 +169,16 @@ const arm = (from, to, name = 'Ana') =>
       window.__t1 = []
       if (window.__watching) return
       window.__watching = true
-      const el = document.querySelector(`[data-testid="right-${n}"] label`)
+      const el = document.querySelector(`[data-testid="right-${n}"] label`)!
       new MutationObserver(() => {
         if (el.hasAttribute('data-hold')) window.__t1.push(Date.now())
       }).observe(el, { attributes: true, attributeFilter: ['data-hold'] })
     }, name),
   ])
 
-async function measure(from, to, runs = 40) {
+async function measure(from: Playwright.Page, to: Playwright.Page, runs = 40) {
   await arm(from, to)
-  const at = await box(from, 'left', 'Ana').boundingBox()
+  const at = (await box(from, 'left', 'Ana').boundingBox())!
   const out = []
   for (let i = 0; i < runs; i++) {
     await from.mouse.move(at.x + 8, at.y + 8)
@@ -179,21 +190,22 @@ async function measure(from, to, runs = 40) {
   }
   const a = await from.evaluate(() => window.__t0),
     b = await to.evaluate(() => window.__t1)
-  for (let i = 0; i < Math.min(a.length, b.length); i++) out.push(b[i] - a[i])
+  for (let i = 0; i < Math.min(a.length, b.length); i++) out.push(b[i]! - a[i]!)
   return out.sort((x, y) => x - y)
 }
-const q = (v, p) => +v[Math.min(v.length - 1, Math.floor(v.length * p))].toFixed(2)
+const q = (v: number[], p: number) =>
+  +v[Math.min(v.length - 1, Math.floor(v.length * p))]!.toFixed(2)
 
 registerLatencyPerRouteAndSocketsPerClient(() => browser, open, measure, q)
 
 // ---- one browser, one socket: share, channel and live on the leader's link ---------------------------------------------
 
-const label = (page, name) => page.getByLabel(name, { exact: true })
-const socketsOpen = (pages) =>
+const label = (page: Playwright.Page, name: string) => page.getByLabel(name, { exact: true })
+const socketsOpen = (pages: Playwright.Page[]) =>
   Promise.all(
     pages.map((p) => p.evaluate(() => window.__sockets.filter((s) => s.readyState === 1).length)),
   ).then((n) => n.reduce((a, b) => a + b, 0))
-async function together(ctx, n) {
+async function together(ctx: Playwright.BrowserContext, n: number) {
   const pages = []
   for (let i = 0; i < n; i++) pages.push(await open(ctx, '/together'))
   await Promise.all(
@@ -204,12 +216,12 @@ async function together(ctx, n) {
   )
   return pages
 }
-const hitsOf = async (p) => +(await label(p, 'hits').textContent())
-const say = async (p, text) => {
+const hitsOf = async (p: Playwright.Page) => +(await label(p, 'hits').textContent())!
+const say = async (p: Playwright.Page, text: string) => {
   await label(p, 'draft').fill(text)
   await p.getByRole('button', { name: 'send', exact: true }).click()
 }
-const heard = async (p, text) => {
+const heard = async (p: Playwright.Page, text: string) => {
   await expect.poll(() => label(p, 'said').textContent(), { timeout: 10_000 }).toContain(text)
 }
 
