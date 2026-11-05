@@ -14,10 +14,10 @@ hypotheses unchanged and do not claim a comparison from these results.
 
 The S5 run waits for S4 PASS and merge. It also waits for a Codex runner,
 verified isolation with AGENTS.md, weft docs and MCP, and an explicit way to
-record framework-source reads. The current runner invokes Claude and is not a
-Codex runner. Four substantive tasks have no hidden grader or reference.
-Scaffolding and grading still use npm and have not been migrated to the pnpm
-minimumReleaseAge policy. Commands that could install or run agents are disabled
+record framework-source reads. The current runner invokes Claude. A separate Codex JSONL adapter has
+mocked event tests, but is not connected to the sandbox, MCP or grader. Four substantive tasks have no hidden grader or reference.
+Scaffolding and grading still use npm. A standalone pnpm policy helper is
+tested but is not connected to the install path. Commands that could install or run agents are disabled
 until those gaps are closed.
 
 After those gaps are resolved, build artifacts from the merged candidate, run
