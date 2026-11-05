@@ -28,7 +28,10 @@ export default function Quote() {
           for about 60 characters so the button below
           doesn't jump. */}
       <Text reserve={60}>{quote.value}</Text>
-      <Button size="sm" onClick={load}>
+      <Button
+        size="sm"
+        onClick={load}
+      >
         Load a quote
       </Button>
     </Card>

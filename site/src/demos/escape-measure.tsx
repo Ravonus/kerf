@@ -33,8 +33,7 @@ export default function Ruler() {
           'block-size:0.75rem;' +
           'background:var(--warp-color-accent-solid)'
         }
-      >
-      </div>
+      ></div>
       <p>
         The bar is {px.value} px wide. Resize the window
         too.

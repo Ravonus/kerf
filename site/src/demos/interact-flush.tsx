@@ -25,7 +25,10 @@ export default function Flush() {
           {count.value}
         </strong>
       </p>
-      <Button size="sm" onClick={add}>
+      <Button
+        size="sm"
+        onClick={add}
+      >
         Add one
       </Button>
       <p>{report.value}</p>
