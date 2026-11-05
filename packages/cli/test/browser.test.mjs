@@ -72,7 +72,11 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     await run('close').catch(() => {})
     await server?.close()
   })
+  registerBrowserNavigationTests(run)
+  registerBrowserSessionTests(run)
+})
 
+function registerBrowserNavigationTests(run) {
   it('snapshots roles, names and refs, plus the graph with real names', async () => {
     expect(
       (
@@ -112,7 +116,9 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     ).toMatchObject({ ok: true })
     await run('set', { name: 'App.tab', value: 'products' })
   })
+}
 
+function registerBrowserSessionTests(run) {
   it('pauses the clock from page load: nothing loads until time advances', async () => {
     await run('time', { op: 'pause', reload: true })
     await new Promise((r) => {
@@ -166,4 +172,4 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     const { path } = await run('screenshot', {})
     expect(path).toMatch(/\.png$/)
   })
-})
+}
