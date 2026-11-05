@@ -2,7 +2,7 @@
 // (research 46). Nothing here talks to a provider except `weft deploy --yes`, which runs the host's own CLI.
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import ts from 'typescript'
 import { diagnostic, locate } from '../diag.mjs'
@@ -10,8 +10,13 @@ import { findConfig, isDataConfig } from '../load-config.mjs'
 import { cdnFindings, writtenSecrets } from './cdn.mjs'
 import { fileStates, filesFor, managerOf, writeFiles } from './files.mjs'
 import { fit, hostsReport } from './fit.mjs'
-import { HOSTS, TARGETS, host, presetFor } from './hosts.mjs'
+import { HOSTS, TARGETS, host } from './hosts.mjs'
 import { needsOf } from './needs.mjs'
+import { cliFor } from './index/cli.mjs'
+import { deploySteps } from './index/steps.mjs'
+import { missingEnv, urlFrom } from './index/environment.mjs'
+
+export { deploySteps, urlFrom }
 
 export { HOSTS, TARGETS, fit, hostsReport, needsOf }
 
@@ -283,175 +288,6 @@ export function initCommand(root, config, { target, dryRun = false, force = fals
     next,
     findings: result.findings.map((f) => toDiagnostic(root, f)),
   }
-}
-
-/** The host's CLI: on PATH, else through npx for the ones on npm. */
-function cliFor(
-  name,
-  {
-    which = (cmd) =>
-      spawnSync(process.platform === 'win32' ? 'where' : 'which', [cmd], { encoding: 'utf8' })
-        .status === 0,
-  } = {},
-) {
-  const npm = { netlify: 'netlify-cli', vercel: 'vercel', wrangler: 'wrangler' }
-  for (const cmd of name === 'flyctl' ? ['flyctl', 'fly'] : [name]) if (which(cmd)) return [cmd]
-  if (npm[name]) return ['npx', '--yes', npm[name]]
-  throw refused(
-    `\`${name}\` isn't installed: ${name === 'flyctl' ? 'https://fly.io/docs/flyctl/install/' : `npm install -g ${npm[name] ?? name}`}`,
-  )
-}
-
-/**
- * The steps `weft deploy` takes for a target, as data: a dry run prints them, `--yes` runs them. A step reads env vars
- * by name; their values are filled in only as it runs.
- */
-export function deploySteps(root, config, { target, prod = false } = {}) {
-  const h = host(target)
-  const deploy = config.deploy ?? {}
-  const runtime = config.runtime ?? 'node'
-  const needs = needsOf(root, config)
-  const steps = []
-  const build = {
-    kind: 'build',
-    what: `weft build --preset ${presetFor(h, runtime)}`,
-    preset: presetFor(h, runtime),
-  }
-  if (target === 'netlify') {
-    const site = process.env.NETLIFY_SITE_ID
-      ? []
-      : deploy.netlify?.site
-        ? ['--site', deploy.netlify.site]
-        : []
-    steps.push(build, {
-      kind: 'run',
-      cli: 'netlify',
-      args: [
-        'deploy',
-        '--dir',
-        'dist',
-        '--functions',
-        '.netlify/functions-internal',
-        '--json',
-        ...site,
-        ...(prod ? ['--prod'] : []),
-      ],
-      reads: ['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'],
-      url: 'json',
-    })
-  }
-  if (target === 'vercel')
-    steps.push(build, {
-      kind: 'run',
-      cli: 'vercel',
-      args: ['deploy', '--prebuilt', '--yes', ...(prod ? ['--prod'] : [])],
-      token: 'VERCEL_TOKEN',
-      reads: ['VERCEL_TOKEN', 'VERCEL_ORG_ID', 'VERCEL_PROJECT_ID'],
-      url: 'last-line',
-    })
-  if (target === 'cloudflare')
-    steps.push(build, {
-      kind: 'run',
-      cli: 'wrangler',
-      args: ['deploy'],
-      cwd: '.output',
-      reads: ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'],
-      url: 'workers',
-    })
-  if (target === 'fly') {
-    // one machine unless a bus reaches the others: a second machine would split the rooms, and a volume is per machine
-    const one = needs.memoryBus || deploy.fly?.volume
-    steps.push({
-      kind: 'run',
-      cli: 'flyctl',
-      args: [
-        'deploy',
-        '--remote-only',
-        ...(deploy.fly?.app ? ['--app', deploy.fly.app] : []),
-        ...(one ? ['--ha=false'] : []),
-      ],
-      reads: ['FLY_API_TOKEN'],
-      url: deploy.fly?.app ? `https://${deploy.fly.app}.fly.dev` : 'fly',
-    })
-  }
-  if (target === 'render')
-    steps.push({
-      kind: 'hook',
-      what: 'POST $RENDER_DEPLOY_HOOK_URL (Render builds the pushed commit)',
-      reads: ['RENDER_DEPLOY_HOOK_URL'],
-      url: deploy.render?.service ? `https://${deploy.render.service}.onrender.com` : undefined,
-    })
-  for (const s of steps)
-    if (s.cli)
-      s.what = `${s.cli} ${s.args.join(' ')}${s.token ? ` --token $${s.token}` : ''}${s.cwd ? `   (in ${s.cwd}/)` : ''}`
-  return steps
-}
-
-/** A variable a step reads, and whether its absence stops the deploy (E007). */
-function missingEnv(root, target, config, env) {
-  const ci = !!env.CI
-  const linked = {
-    netlify: existsSync(join(root, '.netlify/state.json')) || !!config.deploy?.netlify?.site,
-    vercel: existsSync(join(root, '.vercel/project.json')),
-  }
-  // a token: the CLI's own login stands in, except in CI. An id: needed unless the project is linked.
-  const token = (k, how) => [k, ci ? 'error' : 'warning', how, ": the CLI's own login is used"]
-  const id = (k, known, how) => [k, known ? null : 'error', how, '']
-  const need = {
-    netlify: [
-      token(
-        'NETLIFY_AUTH_TOKEN',
-        '`netlify login` here, or a personal access token from User settings → Applications',
-      ),
-      id(
-        'NETLIFY_SITE_ID',
-        linked.netlify,
-        '`netlify link`, `deploy.netlify.site`, or the site id from Site configuration',
-      ),
-    ],
-    vercel: [
-      token('VERCEL_TOKEN', '`vercel login` here, or a token from Account Settings → Tokens'),
-      id('VERCEL_ORG_ID', linked.vercel, '`vercel link` writes it to .vercel/project.json'),
-      id('VERCEL_PROJECT_ID', linked.vercel, '`vercel link` writes it to .vercel/project.json'),
-    ],
-    cloudflare: [
-      token('CLOUDFLARE_API_TOKEN', '`wrangler login` here, or a token with Workers Scripts: Edit'),
-      id('CLOUDFLARE_ACCOUNT_ID', !ci, 'the account id on the Workers overview page'),
-    ],
-    fly: [token('FLY_API_TOKEN', '`flyctl auth login` here, or `flyctl tokens create deploy`')],
-    render: [id('RENDER_DEPLOY_HOOK_URL', false, "the service's Settings → Deploy Hook")],
-  }[target]
-  return need
-    .filter(([k, severity]) => severity && !env[k])
-    .map(([k, severity, how, local]) => ({
-      code: 'E007',
-      severity,
-      file: 'weft.config.ts',
-      why: `\`${k}\` is unset${severity === 'warning' ? local : ''}`,
-      fix: `${how}. Set it in the environment (never a file)`,
-    }))
-}
-
-/** The URL a host's CLI printed. */
-export function urlFrom(step, stdout) {
-  if (step.url === 'json') {
-    try {
-      const j = JSON.parse(stdout.slice(stdout.indexOf('{')))
-      return j.url ?? j.deploy_url
-    } catch {
-      return
-    }
-  }
-  if (step.url === 'last-line')
-    return stdout
-      .trim()
-      .split('\n')
-      .reverse()
-      .find((l) => l.trim().startsWith('https://'))
-      ?.trim()
-  if (step.url === 'workers') return /https:\/\/[\w.-]+\.workers\.dev/.exec(stdout)?.[0]
-  if (step.url === 'fly') return /https:\/\/[\w.-]+\.fly\.dev/.exec(stdout)?.[0]
-  return step.url
 }
 
 /**
