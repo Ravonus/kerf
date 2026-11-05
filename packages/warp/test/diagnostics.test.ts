@@ -9,7 +9,7 @@ import { expect, test } from 'vitest'
 
 const { transform } = createRequire(import.meta.url)('../../core/compiler.cjs')
 const src = fileURLToPath(new URL('../src', import.meta.url))
-const sources = readdirSync(src, { recursive: true })
+const sources = readdirSync(src, { recursive: true, encoding: 'utf8' })
   .filter((f) => f.endsWith('.tsx'))
   .map((f) => join(src, f))
 
@@ -19,7 +19,10 @@ test('the kit compiles without a diagnostic', () => {
     (
       transform(readFileSync(filename, 'utf8'), { filename, generate: 'dom', dev: true })
         .diagnostics ?? []
-    ).map((d) => `${filename}:${d.line} ${d.code} ${d.message}`),
+    ).map(
+      (d: { line: number; code: string; message: string }) =>
+        `${filename}:${d.line} ${d.code} ${d.message}`,
+    ),
   )
   expect(said).toEqual([])
 })
