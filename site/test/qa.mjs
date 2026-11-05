@@ -10,6 +10,7 @@ await import('./qa/calendar-and-controls.mjs')
 await import('./qa/flow-and-code.mjs')
 await import('./qa/dial-and-playground.mjs')
 await import('./qa/playground-changes.mjs')
+await import('./qa/rendered-code.mjs')
 
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
