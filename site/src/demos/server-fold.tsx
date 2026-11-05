@@ -6,8 +6,8 @@ const SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'TSLA']
 type Price = { symbol: string; price: number }
 type Prices = Record<string, Price>
 
-// The same function you'd pass to:
-// prices(input, { fold, initial: {} })
+// Pass this as the prices fold option and start
+// with an empty object for initial.
 const fold = (acc: Prices, m: Price): Prices => ({
   ...acc,
   [m.symbol]: m,
