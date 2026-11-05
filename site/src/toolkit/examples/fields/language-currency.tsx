@@ -8,7 +8,8 @@ import {
   Text,
   TimeZoneSelect,
 } from '@weft-js/warp'
-import { Cell, NEAR_LANGUAGES, NEAR_CURRENCIES, OFFICE_ZONES } from './phone-country'
+import { Cell } from '../../world'
+import { NEAR_LANGUAGES, NEAR_CURRENCIES, OFFICE_ZONES } from './phone-country'
 
 export const LanguageSelectStates = () => (
   <Grid cols={3} gap="group">

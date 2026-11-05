@@ -1,8 +1,7 @@
 import { DateTimeField, Grid } from '@weft-js/warp'
 
-import { TODAY, Cell } from './shared-event'
-
-import { REGIONS as _REGIONS } from '../../world'
+import { Cell, REGIONS as _REGIONS } from '../../world'
+import { TODAY } from './shared-event'
 
 export const DateTimeFieldStates = () => (
   <Grid cols={2} gap="group">

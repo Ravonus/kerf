@@ -1,7 +1,7 @@
 import { state } from '@weft-js/core'
 import { Button, Grid, SignaturePad, Stack, Text } from '@weft-js/warp'
 import type { SignatureValue } from '@weft-js/warp'
-import { Cell } from './phone-country'
+import { Cell } from '../../world'
 
 export const SignaturePadStates = () => (
   <Grid cols={3} gap="group">

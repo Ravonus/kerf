@@ -1,5 +1,5 @@
 import { Button, Row, Stack } from '@weft-js/warp'
-import { TONES } from './shared'
+import { TONES } from '../../world'
 
 export const ButtonTones = () => (
   <Stack gap="related">
