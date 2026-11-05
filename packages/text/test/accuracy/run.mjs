@@ -27,7 +27,7 @@ const outFile = path.resolve(root, opt('out', `test/accuracy/results-${browserNa
 const upstream = (
   await esbuild.build({
     stdin: {
-      contents: `import * as P from './vendor/pretext/src/layout.ts'; window.UPSTREAM = P`,
+      contents: `import * as P from './node_modules/@chenglou/pretext/src/layout.ts'; window.UPSTREAM = P`,
       resolveDir: root,
       loader: 'ts',
     },

@@ -15,14 +15,14 @@ engine goes to Pretext. Bugs in the slicing are ours. Research and numbers: [arc
 
 ## Size
 
-Brotli 11 after terser, as `npm run build && npm run size` reports it. This build skips `npm run coverage`, which needs
-Chrome, so the "rare" pack is empty and its code is still in the exact tier.
+Brotli 11 after terser, measured with `node scripts/specialize.mjs --no-rare` and
+`node scripts/build.mjs --minifier terser`. The "rare" pack is empty and its code is still in the exact tier.
 
-| Engine | Base chunk (what a page loads) | Exact tier (lazy) | Script data + CJK/SEA code (lazy) | Other lazy packs |
-|---|---|---|---|---|
-| Blink | **8.17 KB** | 11.22 KB | 12.37 KB | complex 2.0, spacing 0.8 |
-| WebKit | **9.49 KB** | 10.14 KB | 10.31 KB | complex 2.2, spacing 0.8, families 1.9 |
-| Gecko | 16.58 KB (exact tier in base; no lite tier yet) | n/a | 7.84 KB | complex 2.1, spacing 0.8 |
+| Engine | Base chunk (what a page loads)                  | Exact tier (lazy) | Script data + CJK/SEA code (lazy) | Other lazy packs                       |
+| ------ | ----------------------------------------------- | ----------------- | --------------------------------- | -------------------------------------- |
+| Blink  | **8.20 KB**                                     | 11.06 KB          | 12.32 KB                          | complex 2.0, spacing 0.8               |
+| WebKit | **9.50 KB**                                     | 10.03 KB          | 10.33 KB                          | complex 2.2, spacing 0.8, families 1.9 |
+| Gecko  | 16.57 KB (exact tier in base; no lite tier yet) | n/a               | 7.76 KB                           | complex 2.1, spacing 0.8               |
 
 Upstream `prepare` + `layout` + `clearCache` was 33.9 KB br for all engines in one file when research 12 measured it. The base figures include
 the 0.21 KB detector shell (`dist/index.js`).
@@ -30,6 +30,7 @@ the 0.21 KB detector shell (`dist/index.js`).
 ## API
 
 <!-- example: skip @weft-js/text/engine ships no type declarations yet, and text, width and lineHeight are yours -->
+
 ```ts
 import { loadTextEngine } from '@weft-js/text/engine'
 // Load only this browser's engine chunk.
@@ -43,6 +44,7 @@ te.clear()
 ```
 
 It follows weft's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `lineText`, `clear`, see `src/types.ts`). Extras:
+
 - `needs(text, font, opts)`: the lazy packs a text needs, from a scan of its code points.
 - `load(packs)`: preload those packs.
 - `setLocale()`.
@@ -56,9 +58,12 @@ A handle has `exact` and `ready`. While a pack it needs is still loading, `layou
 
 ## How it is built
 
-- **`vendor/pretext/`** is the unmodified source of the pinned npm tarball. Its version, sha256 and integrity are in
-  `package.json` under `pretext`.
+- **`vendor/pretext/`** is a mechanically split copy of the pinned npm tarball. Its version, sha256 and integrity are in
+  `package.json` under `pretext`; the independent accuracy reference uses the installed pin.
+  `node scripts/pretext-split.mjs` checks the split against its pinned input and patch; pass `--write` to regenerate it.
 - **`scripts/specialize.mjs`** writes `gen/<engine>/`:
+  - It inlines the split walker, preparation, Gecko analysis and boundary helpers from their vendor source.
+    This keeps hot values local in the shipped engine. Shape checks reject unsupported scopes and calls.
   - It folds the engine profile to constants, so esbuild drops the other engines' code.
   - It re-encodes the break data for that engine only, restricted to `src/alphabet.json`. The scan's state machines
     are pruned to the states reachable over the alphabet's categories and then minimised.
@@ -87,6 +92,7 @@ Fonts are Arial, Times New Roman, Georgia, Verdana and Helvetica.
 The bar is zero differences from upstream, and the 2026-10-28 run met it. Every DOM mismatch is one upstream has too.
 
 `npm test` (vitest, no browser) checks:
+
 - the restricted break scans against upstream's full ones, on the corpus and a fuzz over the alphabet, with and
   without the rare pack;
 - the lite counter and walker;

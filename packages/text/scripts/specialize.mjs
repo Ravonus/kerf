@@ -15,31 +15,67 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { genEngineData } from './gendata.mjs'
+import { inlineWalker } from './specialize/inline-walker.mjs'
+import { inlineAnalysis, inlineAnalysisSegments } from './specialize/inline-analysis.mjs'
+import { inlineBoundaries } from './specialize/inline-boundaries.mjs'
+import { inlinePreparation } from './specialize/inline-prepare.mjs'
+import { exportPreparationFinish } from './specialize/inline-prepare-output.mjs'
 import { moveFunctions } from './specialize/move.mjs'
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const vendor = path.join(root, 'vendor/pretext/src')
 const ALPHABET = JSON.parse(fs.readFileSync(path.join(root, 'src/alphabet.json'), 'utf8'))
+const upstream = path.join(root, 'node_modules/@chenglou/pretext/src')
+const upstreamFunctions = new Map(
+  fs
+    .readdirSync(upstream)
+    .filter((f) => f.endsWith('.ts'))
+    .map((f) => [
+      f,
+      new Set(
+        ts
+          .createSourceFile(
+            f,
+            fs.readFileSync(path.join(upstream, f), 'utf8'),
+            ts.ScriptTarget.Latest,
+            true,
+          )
+          .statements.filter((s) => ts.isFunctionDeclaration(s) && s.name)
+          .map((s) => s.name.text),
+      ),
+    ]),
+)
+// Coverage names still refer to upstream functions after those functions move to a sibling.
+const SPLIT_ORIGINS = {
+  'analysis-segments.ts': 'analysis.ts',
+  'analysis-whitespace.ts': 'analysis.ts',
+  'gecko-line-breaks-clusters.ts': 'gecko-line-breaks.ts',
+  'gecko-line-breaks-transform.ts': 'gecko-line-breaks.ts',
+  'prepare-common.ts': 'prepare.ts',
+  'prepare-finish.ts': 'prepare.ts',
+  'prepare-measure.ts': 'prepare.ts',
+  'prepare-script.ts': 'prepare.ts',
+}
 
 // pack -> module -> functions. Every call site upstream is behind a guard that base text never meets
 // (see the comment per pack); the provider checks the same conditions before it prepares.
 const MOVES = {
   // Text with hard breaks, preserved spaces, tabs, soft hyphens, letter spacing or no break at a segment
   // boundary takes the full line walker. Provider gate: !handle.simpleLineWalkFastPath or UNBROKEN flags.
-  complex: { 'line-break.ts': ['walkPreparedComplexLines'] },
+  complex: { 'line-break-complex.ts': ['walkPreparedComplexLines'] },
   // Script-only code. Guards: Han kerning (textMayHanKern), kana pairs (kanaPairRe), U+3000, and SA
   // dictionary runs. None of those characters is in the base alphabet. Provider gate: alphabet scan.
   scripts: {
     // not han-kerning.ts: Blink asks it of every text with a curly quote (textMayHanKern), Latin too
     'measurement.ts': ['getFontKanaKerning', 'getKanaKerning'],
-    'prepare.ts': ['addKanaKerning', 'addIdeographicSpaceHangs'],
+    'prepare-finish.ts': ['addKanaKerning', 'addIdeographicSpaceHangs'],
     'line-breaks.ts': ['markDictionaryWords'],
   },
   // letterSpacing != 0 only. Provider gate: options.letterSpacing.
   spacing: {
     'measurement.ts': ['getExtraSpacings'],
-    'prepare.ts': ['getUnspacedGraphemes'],
-    'line-break.ts': ['getTerminalLetterSpacing'],
+    'prepare-script.ts': ['getUnspacedGraphemes'],
+    'line-break-complex.ts': ['getTerminalLetterSpacing'],
   },
   // WebKit only: the generic families a language names, computed on the first font string that holds a
   // generic keyword (patched below). Provider gate: font string has a generic keyword and a language is set.
@@ -57,7 +93,7 @@ const MOVES = {
 }
 
 function readProfile(engine) {
-  const m = fs.readFileSync(path.join(vendor, 'measurement.ts'), 'utf8')
+  const m = fs.readFileSync(path.join(vendor, 'measurement-engine.ts'), 'utf8')
   const body = m.slice(m.indexOf('function buildEngineProfile'))
   const lit = body.slice(body.indexOf('  return {') + 9, body.indexOf('\n  }\n') + 4)
   // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- `lit` is the object literal in the vendored, pinned Pretext source, and it has to run to fold its reads
@@ -95,7 +131,16 @@ function foldProfile(src, engine, profile) {
 }
 
 // Modules layout() runs: never split by coverage, since layout must not throw.
-const LAYOUT_TIME = new Set(['line-break.ts', 'layout.ts', 'line-text.ts', 'graphemes.ts'])
+const LAYOUT_TIME = new Set([
+  'line-break.ts',
+  'line-break-complex.ts',
+  'line-break-complex-state.ts',
+  'line-break-simple.ts',
+  'line-break-geometry.ts',
+  'layout.ts',
+  'line-text.ts',
+  'graphemes.ts',
+])
 // Called by the specialiser's own code or the provider.
 const KEEP = new Set([
   '__resetEngineData',
@@ -107,6 +152,16 @@ const KEEP = new Set([
   'clearCache',
   'setLocale',
 ])
+// These caches are owned by the modules that read the installed engine tables.
+const RESETS = {
+  'line-breaks.ts':
+    'classRuns = null; classRemaps = null; for (const k in breakRules) delete (breakRules as Record<string, unknown>)[k]; webkitLineRules.clear()',
+  'graphemes.ts':
+    'for (const k in graphemeRules) delete (graphemeRules as Record<string, unknown>)[k]',
+  'prepare-script.ts': 'scriptClasses = null',
+  'gecko-line-breaks-transform.ts': 'eastAsianWidths = null',
+  'gecko-line-breaks.ts': 'lineData = null',
+}
 
 export async function specialize(engine, { useCoverage = true } = {}) {
   const covFile = path.join(root, 'src/coverage', `${engine}.json`)
@@ -170,20 +225,13 @@ export function __missing(pack: string, fn: string): never { throw new PackMissi
         `import * as full from './generated/engine-break-data.full.js'`,
         `import { installEngineData } from './generated/engine-break-data.js'`,
       )
-      for (const f of Object.keys({
-        'line-breaks.ts': 1,
-        'graphemes.ts': 1,
-        'prepare.ts': 1,
-        'gecko-line-breaks.ts': 1,
-      }))
+      for (const f of Object.keys(RESETS))
         lines.push(
           `import { __resetEngineData as r_${f.replace(/\W/g, '_')} } from './${f.replace(/\.ts$/, '.js')}'`,
         )
       lines.push(
         `installEngineData(full)`,
-        ...['line-breaks.ts', 'graphemes.ts', 'prepare.ts', 'gecko-line-breaks.ts'].map(
-          (f) => `r_${f.replace(/\W/g, '_')}()`,
-        ),
+        ...Object.keys(RESETS).map((f) => `r_${f.replace(/\W/g, '_')}()`),
       )
     }
     lines.push(
@@ -244,10 +292,24 @@ function writeModules(engine, profile, rare, out) {
 
 function prepareModule(f, engine, profile, rare, folds, foundMoves) {
   let src = fs.readFileSync(path.join(vendor, f), 'utf8')
+  if (f === 'analysis.ts') src = inlineAnalysis(src)
+  if (f === 'analysis-segments.ts') src = inlineAnalysisSegments(src)
+  if (f === 'line-breaks.ts') src = inlineBoundaries(src)
+  if (f === 'prepare.ts')
+    src = inlinePreparation(
+      src,
+      fs.readFileSync(path.join(vendor, 'prepare-measure.ts'), 'utf8'),
+      fs.readFileSync(path.join(vendor, 'prepare-finish.ts'), 'utf8'),
+    )
+  if (f === 'prepare-finish.ts') src = exportPreparationFinish(src)
+  if (f === 'line-break-complex.ts') {
+    const state = fs.readFileSync(path.join(vendor, 'line-break-complex-state.ts'), 'utf8')
+    src = inlineWalker(src, state)
+  }
   const r = foldProfile(src, engine, profile)
   src = r.src
   folds.count += r.n
-  if (f === 'measurement.ts') {
+  if (f === 'measurement-engine.ts') {
     // Every profile field is folded at its reads, so the profile object is never read: build an empty one.
     src = src.replace(
       /function buildEngineProfile\(\): EngineProfile \{[\s\S]*?\n\}\n/,
@@ -255,6 +317,8 @@ function prepareModule(f, engine, profile, rare, folds, foundMoves) {
         ? `function buildEngineProfile(): EngineProfile {\n  return { namesGenericFamiliesByLanguage: !/^(?:Linux|Win32|Haiku|$)/.test(navigator.platform) } as EngineProfile\n}\n`
         : `function buildEngineProfile(): EngineProfile {\n  return {} as EngineProfile\n}\n`,
     )
+  }
+  if (f === 'measurement.ts') {
     if (engine === 'webkit') {
       // Resolve the language's generic families on the first font string that names a generic keyword,
       // not on the first measurement: getCanvasFont returns a font without one unchanged, so this is the
@@ -277,16 +341,8 @@ function prepareModule(f, engine, profile, rare, folds, foundMoves) {
     }
   }
   // reset hooks for caches over engine data, called when the scripts pack installs the full tables
-  const resets = {
-    'line-breaks.ts':
-      'classRuns = null; classRemaps = null; for (const k in breakRules) delete (breakRules as Record<string, unknown>)[k]; webkitLineRules.clear()',
-    'graphemes.ts':
-      'for (const k in graphemeRules) delete (graphemeRules as Record<string, unknown>)[k]',
-    'prepare.ts': 'scriptClasses = null',
-    'gecko-line-breaks.ts': 'eastAsianWidths = null; lineData = null',
-  }
-  if (resets[f])
-    src += `\n// specialize.mjs: drop what was unpacked from the base tables once the full tables are installed.\nexport function __resetEngineData(): void { ${resets[f]} }\n`
+  if (RESETS[f])
+    src += `\n// specialize.mjs: drop what was unpacked from the base tables once the full tables are installed.\nexport function __resetEngineData(): void { ${RESETS[f]} }\n`
   const moves = {}
   for (const [pack, mods] of Object.entries(MOVES)) for (const fn of mods[f] ?? []) moves[fn] = pack
   // coverage-guided: prepare-time functions that never ran on in-alphabet text go to "rare"
@@ -296,6 +352,7 @@ function prepareModule(f, engine, profile, rare, folds, foundMoves) {
         ts.isFunctionDeclaration(st) &&
         st.name &&
         st.body &&
+        upstreamFunctions.get(SPLIT_ORIGINS[f] ?? f)?.has(st.name.text) &&
         !rare.has(st.name.text) &&
         !moves[st.name.text] &&
         !KEEP.has(st.name.text)
