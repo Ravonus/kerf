@@ -169,30 +169,12 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
       mkdirSync(cacheDir, { recursive: true })
       const trimming = trim && !dev
       const scan = scanAxes(source)
-      const latin = rangeText(RANGES.latin)
-      const core = trimming
-        ? rangeText(CORE) +
-          [...new Set(source)].filter((c) => c > '~' && latin.includes(c)).join('')
-        : ''
-      const coreSet = new Set(core)
-      const parts = (subset) =>
-        trimming && subset === 'latin'
-          ? [
-              { subset, text: core },
-              {
-                subset: 'latin-rest',
-                text: Array.from(latin)
-                  .filter((c) => !coreSet.has(c))
-                  .join(''),
-              },
-            ].map((p) => ({ ...p, range: toRange(p.text) }))
-          : [{ subset, text: rangeText(RANGES[subset]), range: RANGES[subset] }]
+      const parts = subsetParts(source, trimming)
       const files = []
       const preloads = []
       const metrics = {}
       const faces = []
       const fallbacks = new Map()
-      const rules = []
       const seen = new Map() // family+src → its preload flag, so two roles on one face emit it once
 
       for (const [role, f] of Object.entries(fonts)) {
@@ -205,15 +187,7 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
         seen.set(key, entry)
         const bytes = readFileSync(isAbsolute(f.src) ? f.src : join(root, f.src))
         const m = await fromBuffer(bytes)
-        metrics[f.family] ??= {
-          unitsPerEm: m.unitsPerEm,
-          ascent: m.ascent / m.unitsPerEm,
-          descent: m.descent / m.unitsPerEm,
-          lineGap: m.lineGap / m.unitsPerEm,
-          capHeight: m.capHeight / m.unitsPerEm,
-          xHeight: m.xHeight / m.unitsPerEm,
-          xWidthAvg: avgWidth(m),
-        }
+        metrics[f.family] ??= fontMetrics(m)
         if (!fallbacks.has(f.family))
           fallbacks.set(f.family, {
             fallback: f.fallback,
@@ -246,38 +220,9 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
         faces.push(entry)
       }
 
-      for (const f of faces) {
-        const weight = f.axes.wght ? `${f.axes.wght[0]} ${f.axes.wght[1]}` : f.weight
-        for (const file of f.files) {
-          rules.push(
-            `@font-face{font-family:"${f.family}";src:url(${url(file.name)}) format("woff2");font-weight:${weight};font-style:${f.style};font-display:${f.display};unicode-range:${file.range}}`,
-          )
-        }
-        const first = f.files.find((x) => x.subset === 'latin') ?? f.files[0]
-        if (f.preload && first)
-          preloads.push({ href: url(first.name), type: 'font/woff2', bytes: first.bytes })
-      }
-      for (const [family, fb] of fallbacks) {
-        rules.push(
-          `@font-face{font-family:"${family} Fallback";src:local("${fb.fallback}");size-adjust:${fb.sizeAdjust};ascent-override:${fb.ascentOverride};descent-override:${fb.descentOverride};line-gap-override:${fb.lineGapOverride}}`,
-        )
-      }
-      const css = rules.join('\n') + (rules.length ? '\n' : '')
+      const css = fontCss(faces, fallbacks, url, preloads)
 
-      const preloadBytes = preloads.reduce((n, p) => n + p.bytes, 0)
-      const cssBrotli = brotliCompressSync(css).length
-      const overBudget = []
-      // Dev keeps whole faces, so its sizes say nothing about what ships.
-      if (!dev && preloadBytes > BUDGET.preloadBytes)
-        overBudget.push([
-          'X022',
-          `The preloaded fonts are ${Math.round(preloadBytes / 1024)} KB, over the 100 KB budget for text above the fold: preload fewer faces (\`preload: false\`) or use fewer weights.`,
-        ])
-      if (cssBrotli > BUDGET.cssBrotli)
-        overBudget.push([
-          'X022',
-          `The generated font CSS is ${cssBrotli} B brotli, over the 1.5 KB budget: fewer faces or subsets.`,
-        ])
+      const { preloadBytes, cssBrotli, overBudget } = fontBudget(preloads, css, dev)
 
       return {
         css,
@@ -285,12 +230,7 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
         files,
         metrics,
         report: {
-          faces: faces.map((f) => ({
-            family: f.family,
-            role: f.role,
-            pinned: f.pins,
-            files: f.files.map(({ subset, bytes }) => ({ subset, bytes })),
-          })),
+          faces: faceReport(faces),
           preloadBytes,
           cssBrotli,
           overBudget,
@@ -298,4 +238,84 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
       }
     },
   }
+}
+
+function subsetParts(source, trimming) {
+  const latin = rangeText(RANGES.latin)
+  const core = trimming
+    ? rangeText(CORE) + [...new Set(source)].filter((c) => c > '~' && latin.includes(c)).join('')
+    : ''
+  const coreSet = new Set(core)
+  return (subset) =>
+    trimming && subset === 'latin'
+      ? [
+          { subset, text: core },
+          {
+            subset: 'latin-rest',
+            text: Array.from(latin)
+              .filter((c) => !coreSet.has(c))
+              .join(''),
+          },
+        ].map((p) => ({ ...p, range: toRange(p.text) }))
+      : [{ subset, text: rangeText(RANGES[subset]), range: RANGES[subset] }]
+}
+
+function fontCss(faces, fallbacks, url, preloads) {
+  const rules = []
+  for (const f of faces) {
+    const weight = f.axes.wght ? `${f.axes.wght[0]} ${f.axes.wght[1]}` : f.weight
+    for (const file of f.files) {
+      rules.push(
+        `@font-face{font-family:"${f.family}";src:url(${url(file.name)}) format("woff2");font-weight:${weight};font-style:${f.style};font-display:${f.display};unicode-range:${file.range}}`,
+      )
+    }
+    const first = f.files.find((x) => x.subset === 'latin') ?? f.files[0]
+    if (f.preload && first)
+      preloads.push({ href: url(first.name), type: 'font/woff2', bytes: first.bytes })
+  }
+  for (const [family, fb] of fallbacks) {
+    rules.push(
+      `@font-face{font-family:"${family} Fallback";src:local("${fb.fallback}");size-adjust:${fb.sizeAdjust};ascent-override:${fb.ascentOverride};descent-override:${fb.descentOverride};line-gap-override:${fb.lineGapOverride}}`,
+    )
+  }
+  return rules.join('\n') + (rules.length ? '\n' : '')
+}
+
+function fontBudget(preloads, css, dev) {
+  const preloadBytes = preloads.reduce((n, p) => n + p.bytes, 0)
+  const cssBrotli = brotliCompressSync(css).length
+  const overBudget = []
+  // Dev keeps whole faces, so its sizes say nothing about what ships.
+  if (!dev && preloadBytes > BUDGET.preloadBytes)
+    overBudget.push([
+      'X022',
+      `The preloaded fonts are ${Math.round(preloadBytes / 1024)} KB, over the 100 KB budget for text above the fold: preload fewer faces (\`preload: false\`) or use fewer weights.`,
+    ])
+  if (cssBrotli > BUDGET.cssBrotli)
+    overBudget.push([
+      'X022',
+      `The generated font CSS is ${cssBrotli} B brotli, over the 1.5 KB budget: fewer faces or subsets.`,
+    ])
+  return { preloadBytes, cssBrotli, overBudget }
+}
+
+function fontMetrics(m) {
+  return {
+    unitsPerEm: m.unitsPerEm,
+    ascent: m.ascent / m.unitsPerEm,
+    descent: m.descent / m.unitsPerEm,
+    lineGap: m.lineGap / m.unitsPerEm,
+    capHeight: m.capHeight / m.unitsPerEm,
+    xHeight: m.xHeight / m.unitsPerEm,
+    xWidthAvg: avgWidth(m),
+  }
+}
+
+function faceReport(faces) {
+  return faces.map((f) => ({
+    family: f.family,
+    role: f.role,
+    pinned: f.pins,
+    files: f.files.map(({ subset, bytes }) => ({ subset, bytes })),
+  }))
 }
