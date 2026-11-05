@@ -28,47 +28,8 @@ export function scanJsx(text, file = 'file.tsx') {
   const functions = new Map()
   const stack = []
 
-  const attrsOf = (attributes) =>
-    attributes.properties.map((p) => {
-      if (ts.isJsxSpreadAttribute(p))
-        return {
-          name: '...',
-          kind: 'spread',
-          expr: p.expression.getText(sf),
-          start: p.getStart(sf),
-          end: p.end,
-        }
-      const name = p.name.getText(sf)
-      const base = { name, start: p.getStart(sf), end: p.end }
-      if (!p.initializer) return { ...base, kind: 'bool' }
-      if (ts.isStringLiteral(p.initializer))
-        return {
-          ...base,
-          kind: 'string',
-          value: p.initializer.text,
-          valueStart: p.initializer.getStart(sf),
-          valueEnd: p.initializer.end,
-        }
-      const e = p.initializer.expression
-      if (e && (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)))
-        return {
-          ...base,
-          kind: 'string',
-          value: e.text,
-          valueStart: e.getStart(sf),
-          valueEnd: e.end,
-        }
-      return {
-        ...base,
-        kind: 'expr',
-        expr: e ? e.getText(sf) : '',
-        valueStart: e?.getStart(sf),
-        valueEnd: e?.end,
-      }
-    })
-
   const record = (open, node) => {
-    const attrs = attrsOf(open.attributes)
+    const attrs = attrsOf(sf, open.attributes)
     const el = {
       name: open.tagName.getText(sf),
       attrs,
@@ -124,4 +85,44 @@ export function scanJsx(text, file = 'file.tsx') {
 export function importOf(scan, expr) {
   const id = /^\s*([A-Za-z_$][\w$]*)/.exec(expr ?? '')?.[1]
   return id ? scan.imports.find((i) => i.local === id) : undefined
+}
+
+function attrsOf(sf, attributes) {
+  return attributes.properties.map((p) => {
+    if (ts.isJsxSpreadAttribute(p))
+      return {
+        name: '...',
+        kind: 'spread',
+        expr: p.expression.getText(sf),
+        start: p.getStart(sf),
+        end: p.end,
+      }
+    const name = p.name.getText(sf)
+    const base = { name, start: p.getStart(sf), end: p.end }
+    if (!p.initializer) return { ...base, kind: 'bool' }
+    if (ts.isStringLiteral(p.initializer))
+      return {
+        ...base,
+        kind: 'string',
+        value: p.initializer.text,
+        valueStart: p.initializer.getStart(sf),
+        valueEnd: p.initializer.end,
+      }
+    const e = p.initializer.expression
+    if (e && (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)))
+      return {
+        ...base,
+        kind: 'string',
+        value: e.text,
+        valueStart: e.getStart(sf),
+        valueEnd: e.end,
+      }
+    return {
+      ...base,
+      kind: 'expr',
+      expr: e ? e.getText(sf) : '',
+      valueStart: e?.getStart(sf),
+      valueEnd: e?.end,
+    }
+  })
 }
