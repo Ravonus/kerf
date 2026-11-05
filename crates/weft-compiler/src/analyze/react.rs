@@ -64,7 +64,7 @@ fn hook_import(module: &str, name: &str) -> bool {
     hook_name(name) && (module == "react" || !known_hook(name))
 }
 
-fn imported_call<'b>(
+pub(super) fn imported_call<'b>(
     call: &'b CallExpression<'_>,
     scoping: &Scoping,
     imports: &'b HashMap<SymbolId, (String, String)>,

@@ -1,5 +1,5 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics
-//! (W001, W005, W006, W010, W013, W014, W015, W016, W017, W018, W019, W020, W040, W041).
+//! (W001, W005, W006, W010, W011, W013, W014, W015, W016, W017, W018, W019, W020, W040, W041).
 //! The @weft-js/core/browser diagnostics live in `browser`. Produces a `Plan` that `transform`
 //! applies to the same AST, and the per-file facts `weft check` joins across files (`project`).
 
@@ -12,6 +12,8 @@ mod finish;
 mod handler_mutations;
 mod handler_values;
 mod lists;
+mod numeric_facts;
+mod numeric_jsx;
 mod props;
 mod react;
 mod row_entries;
@@ -146,6 +148,9 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
     };
     a.react_wrappers = react::wrappers(program, scoping, &a.react_imports);
     a.visit_program(program);
+    a.plan
+        .diagnostics
+        .extend(numeric_jsx::diagnostics(program, scoping, source));
     a.finish()
 }
 
