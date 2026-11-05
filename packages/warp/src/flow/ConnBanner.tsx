@@ -91,7 +91,7 @@ export function ConnBanner({
     recovered,
     later,
     () => name,
-    () => onLater,
+    () => onLater?.(),
   )
   return (
     <>
@@ -136,7 +136,7 @@ function connectionEffects(
   recovered: State<boolean>,
   later: State<boolean>,
   name: () => string,
-  onLater: () => ConnBannerProps['onLater'],
+  onLater: () => void,
 ) {
   let hide: ReturnType<typeof setTimeout> | undefined
   onCleanup(() => clearTimeout(hide))
@@ -159,7 +159,7 @@ function connectionEffects(
   return () => {
     later.value = true
     hide = setTimeout(() => (later.value = false), LATER_MS)
-    onLater()?.()
+    onLater()
   }
 }
 

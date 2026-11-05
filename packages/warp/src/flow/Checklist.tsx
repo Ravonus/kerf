@@ -59,8 +59,8 @@ export function Checklist({
   watchChecklist(count, total)
   const hide = checklistHide(
     hidden,
-    () => onHide,
-    () => onUndoHide,
+    () => onHide?.(),
+    () => onUndoHide?.(),
   )
   return (
     <section
@@ -127,14 +127,10 @@ function watchChecklist(count: { readonly value: number }, total: { readonly val
     },
   )
 }
-function checklistHide(
-  hidden: State<boolean>,
-  onHide: () => ChecklistProps['onHide'],
-  onUndoHide: () => ChecklistProps['onUndoHide'],
-) {
+function checklistHide(hidden: State<boolean>, onHide: () => void, onUndoHide: () => void) {
   return () => {
     hidden.value = true
-    onHide()?.()
+    onHide()
     toast.show({
       title: 'Checklist hidden',
       description: 'Find it again under Help.',
@@ -143,7 +139,7 @@ function checklistHide(
         label: 'Undo',
         onClick() {
           hidden.value = false
-          onUndoHide()?.()
+          onUndoHide()
         },
       },
     })

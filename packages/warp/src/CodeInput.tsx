@@ -76,10 +76,10 @@ function codeEvents(held: ReturnType<typeof codeValue>, tabSize: () => 2 | 4) {
   return { set, onKey: codeKeys(tabSize, set) }
 }
 
-function codeReset(held: ReturnType<typeof codeValue>, onReset: () => CodeOwn['onReset']) {
+function codeReset(held: ReturnType<typeof codeValue>, onReset: () => void) {
   return () => {
     held.reset()
-    onReset()?.()
+    onReset()
   }
 }
 
@@ -123,7 +123,7 @@ export function CodeInput({
       hint={hint ?? LEAVE}
       attrs={{ 'data-multiline': '' }}
       filled={held.value.length > 0}
-      reset={codeReset(held, () => onReset)}
+      reset={codeReset(held, () => onReset?.())}
       control={(p) => (
         <div data-part="body">
           <div
