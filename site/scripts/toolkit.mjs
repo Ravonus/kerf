@@ -5,6 +5,7 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import { expandExamples } from './toolkit/examples.mjs'
+import { readWorld } from './toolkit/world.mjs'
 
 const require = createRequire(new URL('../../packages/cli/package.json', import.meta.url))
 const ts = require('typescript')
@@ -25,32 +26,6 @@ const names = (binding) =>
     ? [binding.text]
     : binding.elements.flatMap((e) => (ts.isOmittedExpression(e) ? [] : names(e.name)))
 
-/** The shared world's declarations, so an example that uses them can be pasted without this site's files. */
-function readWorld(path) {
-  const sf = ts.createSourceFile(
-    path,
-    readFileSync(path, 'utf8'),
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS,
-  )
-  const decls = new Map(),
-    imports = []
-  sf.forEachChild((n) => {
-    if (ts.isImportDeclaration(n)) {
-      for (const e of n.importClause?.namedBindings?.elements ?? [])
-        imports.push({ name: e.name.text, from: n.moduleSpecifier.text })
-      return
-    }
-    const text = n.getText().replace(/^export /, '')
-    if (ts.isVariableStatement(n))
-      for (const d of n.declarationList.declarations)
-        for (const name of names(d.name)) decls.set(name, text)
-    else if (n.name && ts.isIdentifier(n.name)) decls.set(n.name.text, text)
-  })
-  return { decls, imports }
-}
-
 /**
  * Each named export of an examples file, with what a reader needs to paste it: the component under a short name, the
  * imports it uses, and every helper and piece of the shared world it reaches, so the code runs on its own.
@@ -69,7 +44,7 @@ function scanExample(sf, path) {
   sf.forEachChild((n) => {
     if (ts.isImportDeclaration(n)) {
       if (n.moduleSpecifier.text.endsWith('/world')) {
-        world = readWorld(join(dirname(path), `${n.moduleSpecifier.text}.ts`))
+        world = readWorld(join(dirname(path), `${n.moduleSpecifier.text}.ts`), ts)
         return
       }
       imports.push({
@@ -138,13 +113,13 @@ function readExampleSource(path, text) {
           ? [`import ${type ? 'type ' : ''}{ ${used.join(', ')} } from '${module}'`]
           : []
       }),
-      ...[...new Set(typed.map((i) => i.from))].map(
-        (f) =>
-          `import type { ${typed
-            .filter((i) => i.from === f)
-            .map((i) => i.name)
-            .join(', ')} } from '${f}'`,
-      ),
+      ...[...new Set(typed.map((i) => `${i.type ? 'type' : 'value'}\0${i.from}`))].map((key) => {
+        const [kind, f] = key.split('\0')
+        return `import ${kind === 'type' ? 'type ' : ''}{ ${typed
+          .filter((i) => i.from === f && i.type === (kind === 'type'))
+          .map((i) => i.name)
+          .join(', ')} } from '${f}'`
+      }),
     ]
     out.set(name, { name, stateless, body, head, local })
   }
