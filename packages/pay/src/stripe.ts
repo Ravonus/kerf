@@ -170,10 +170,12 @@ function normalise(event: StripeEvent): RailEvent | null {
   return null
 }
 
-/** The Stripe `pay.rail` provider: hosted Checkout, the customer portal, and webhooks verified here. */
-export function stripeRail(options: StripeOptions = {}): PayRail {
-  const { prices = {}, api = API, apiVersion = '2025-09-30.clover', tolerance = 300 } = options
-  const fetcher = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args))
+function stripeCall(
+  options: StripeOptions,
+  api: string,
+  apiVersion: string,
+  fetcher: typeof fetch,
+) {
   const secret = () => {
     const key = options.secretKey ?? process.env.STRIPE_SECRET_KEY
     if (!key) throw new PayError('PAY003', '`STRIPE_SECRET_KEY` is not set on the server', 500)
@@ -209,6 +211,39 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
       )
     return data
   }
+
+  return call
+}
+
+async function verifyStripe(
+  options: StripeOptions,
+  tolerance: number,
+  { body, headers }: Parameters<PayRail['verify']>[0],
+) {
+  const signing = options.webhookSecret ?? process.env.STRIPE_WEBHOOK_SECRET
+  if (!signing)
+    throw new PayError(
+      'PAY011',
+      '`STRIPE_WEBHOOK_SECRET` is not set: refusing every webhook rather than trusting one',
+    )
+  const parts = (headers.get('stripe-signature') ?? '').split(',').map((p) => p.trim().split('='))
+  const t = Number(parts.find(([k]) => k === 't')?.[1])
+  const given = parts.filter(([k]) => k === 'v1').map(([, v]) => v ?? '')
+  if (!Number.isInteger(t) || !given.length)
+    throw new PayError('PAY011', 'no `stripe-signature` to check')
+  if (!(await verified(signing, `${t}.${body}`, given)))
+    throw new PayError('PAY011', 'the signature does not match this body')
+  if (Math.abs(Date.now() / 1000 - t) > tolerance)
+    throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
+  const event = normalise(JSON.parse(body) as StripeEvent)
+  return event ? [event] : []
+}
+
+/** The Stripe `pay.rail` provider: hosted Checkout, the customer portal, and webhooks verified here. */
+export function stripeRail(options: StripeOptions = {}): PayRail {
+  const { prices = {}, api = API, apiVersion = '2025-09-30.clover', tolerance = 300 } = options
+  const fetcher = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args))
+  const call = stripeCall(options, api, apiVersion, fetcher)
 
   function lineItem({ line }: CheckoutRequest) {
     const known = prices[line.plan ? `${line.product}.${line.plan}` : line.product]
@@ -266,27 +301,7 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
       const session = await call('/v1/billing_portal/sessions', { customer, return_url: returnUrl })
       return { url: session!.url! }
     },
-    async verify({ body, headers }) {
-      const signing = options.webhookSecret ?? process.env.STRIPE_WEBHOOK_SECRET
-      if (!signing)
-        throw new PayError(
-          'PAY011',
-          '`STRIPE_WEBHOOK_SECRET` is not set: refusing every webhook rather than trusting one',
-        )
-      const parts = (headers.get('stripe-signature') ?? '')
-        .split(',')
-        .map((p) => p.trim().split('='))
-      const t = Number(parts.find(([k]) => k === 't')?.[1])
-      const given = parts.filter(([k]) => k === 'v1').map(([, v]) => v ?? '')
-      if (!Number.isInteger(t) || !given.length)
-        throw new PayError('PAY011', 'no `stripe-signature` to check')
-      if (!(await verified(signing, `${t}.${body}`, given)))
-        throw new PayError('PAY011', 'the signature does not match this body')
-      if (Math.abs(Date.now() / 1000 - t) > tolerance)
-        throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
-      const event = normalise(JSON.parse(body) as StripeEvent)
-      return event ? [event] : []
-    },
+    verify: (delivery) => verifyStripe(options, tolerance, delivery),
     async refund({ purchase }) {
       if (!purchase.startsWith('pi_'))
         throw new PayError(

@@ -79,17 +79,11 @@ const sign = (secret: string, t: number, body: string) =>
   createHmac('sha256', secret).update(`${t}.${body}`).digest('hex')
 const SECRET = 'fake-pay-signing-key'
 
-/** `fakePay(pay)` with the app's own `definePay`, or `fakePay({ catalog })`. It backs `ctx.entitlements` for this test. */
-export function fakePay(
-  app: Pay | (Pick<PayOptions<Product>, 'catalog'> & Partial<PayOptions<Product>>),
-): FakePay {
-  const sessions: CheckoutRequest[] = [],
-    deliveries: FakePay['deliveries'] = []
-  const purchases = new Map<string, Bought>()
-  let seq = 0,
-    last: RailEvent | undefined
-  const next = (prefix: string) => `${prefix}_${++seq}`
-
+function fakeRail(
+  sessions: CheckoutRequest[],
+  next: (prefix: string) => string,
+  refund: (purchase: string) => Promise<void>,
+): PayRail {
   const rail: PayRail = {
     id: 'fake',
     checkout(request) {
@@ -106,9 +100,72 @@ export function fakePay(
       return JSON.parse(body)
     },
     async refund({ purchase }) {
-      await simulate('refund', purchase)
+      await refund(purchase)
     },
   }
+
+  return rail
+}
+
+async function post(pay: Pay, deliveries: FakePay['deliveries'], event: RailEvent, secret: string) {
+  const body = JSON.stringify([event]),
+    t = Date.now()
+  const request = new Request('http://localhost/_weft/pay/fake', {
+    method: 'POST',
+    body,
+    headers: { 'x-fake-signature': `${t},${sign(secret, t, body)}` },
+  })
+  const { response, tags } = await pay.webhook('fake', request)
+  deliveries.push({ event, status: response.status })
+  if (tags.length && net.subscriptions().length) await net.poke(...tags)
+  return response.status
+}
+
+async function open(
+  s: CheckoutRequest,
+  purchases: Map<string, Bought>,
+  next: (prefix: string) => string,
+  deliver: FakePay['deliver'],
+  event: (b: Bought) => RailEvent,
+) {
+  const { line, user } = s
+  const b: Bought = {
+    id: next(line.mode === 'subscription' ? 'sub' : 'pay'),
+    user,
+    product: line.product,
+    state: line.trialDays ? 'trial' : 'active',
+    customer: s.customer ?? next('cus'),
+    ...(line.plan && { plan: line.plan }),
+    ...(line.interval && { interval: line.interval }),
+  }
+  if (b.interval)
+    b.expires = Date.now() + (line.trialDays ? line.trialDays * DAY : PERIOD[b.interval])
+  purchases.set(b.id, b)
+  await deliver(event(b))
+  return b.id
+}
+
+function take(sessions: CheckoutRequest[], user?: string) {
+  const i = user ? sessions.findLastIndex((s) => s.user === user) : sessions.length - 1
+  if (i < 0)
+    throw new Error(
+      `fakePay: no open checkout${user ? ` for ${user}` : ''}: call \`checkout\` first`,
+    )
+  return sessions.splice(i, 1)[0]!
+}
+
+/** `fakePay(pay)` with the app's own `definePay`, or `fakePay({ catalog })`. It backs `ctx.entitlements` for this test. */
+export function fakePay(
+  app: Pay | (Pick<PayOptions<Product>, 'catalog'> & Partial<PayOptions<Product>>),
+): FakePay {
+  const sessions: CheckoutRequest[] = [],
+    deliveries: FakePay['deliveries'] = []
+  const purchases = new Map<string, Bought>()
+  let seq = 0,
+    last: RailEvent | undefined
+  const next = (prefix: string) => `${prefix}_${++seq}`
+
+  const rail = fakeRail(sessions, next, (purchase) => simulate('refund', purchase))
 
   const pay: Pay =
     'webhook' in app
@@ -117,22 +174,9 @@ export function fakePay(
   pay.use(rail)
   net.extension(pay)
 
-  async function post(event: RailEvent, secret: string) {
-    const body = JSON.stringify([event]),
-      t = Date.now()
-    const request = new Request('http://localhost/_weft/pay/fake', {
-      method: 'POST',
-      body,
-      headers: { 'x-fake-signature': `${t},${sign(secret, t, body)}` },
-    })
-    const { response, tags } = await pay.webhook('fake', request)
-    deliveries.push({ event, status: response.status })
-    if (tags.length && net.subscriptions().length) await net.poke(...tags)
-    return response.status
-  }
   const deliver: FakePay['deliver'] = (event, options) => {
     if (!options?.forged) last = event
-    return post(event, options?.forged ? 'not-the-key' : SECRET)
+    return post(pay, deliveries, event, options?.forged ? 'not-the-key' : SECRET)
   }
 
   const event = (b: Bought): RailEvent => ({
@@ -146,33 +190,6 @@ export function fakePay(
     customer: b.customer,
     ...(b.expires !== undefined && { expires: b.expires }),
   })
-
-  async function open(s: CheckoutRequest) {
-    const { line, user } = s
-    const b: Bought = {
-      id: next(line.mode === 'subscription' ? 'sub' : 'pay'),
-      user,
-      product: line.product,
-      state: line.trialDays ? 'trial' : 'active',
-      customer: s.customer ?? next('cus'),
-      ...(line.plan && { plan: line.plan }),
-      ...(line.interval && { interval: line.interval }),
-    }
-    if (b.interval)
-      b.expires = Date.now() + (line.trialDays ? line.trialDays * DAY : PERIOD[b.interval])
-    purchases.set(b.id, b)
-    await deliver(event(b))
-    return b.id
-  }
-
-  const take = (user?: string) => {
-    const i = user ? sessions.findLastIndex((s) => s.user === user) : sessions.length - 1
-    if (i < 0)
-      throw new Error(
-        `fakePay: no open checkout${user ? ` for ${user}` : ''}: call \`checkout\` first`,
-      )
-    return sessions.splice(i, 1)[0]!
-  }
 
   async function simulate(what: PayScenario, id?: string) {
     const b = id ? purchases.get(id) : [...purchases.values()].at(-1)
@@ -195,18 +212,18 @@ export function fakePay(
     deliveries,
     deliver,
     simulate,
-    complete: (user) => open(take(user)),
-    abandon: (user) => void take(user),
+    complete: (user) => open(take(sessions, user), purchases, next, deliver, event),
+    abandon: (user) => void take(sessions, user),
     async buy(user, product, plan) {
       await pay.checkout(
         { user: { id: user }, request: { url: 'http://localhost/' } },
         { product, ...(plan && { plan }) },
       )
-      return open(take(user))
+      return open(take(sessions, user), purchases, next, deliver, event)
     },
     redeliver() {
       if (!last) throw new Error('fakePay: nothing delivered yet')
-      return post(last, SECRET)
+      return post(pay, deliveries, last, SECRET)
     },
     entitlements: (user) => pay.entitlements(user).list(),
     purchases: (user) => pay.purchases(user),
