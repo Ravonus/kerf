@@ -1,0 +1,32 @@
+[
+  {
+    "name": "wrong stock",
+    "find": "name: 'Banana', category: 'fruit', price: 25, stock: 3",
+    "replace": "name: 'Banana', category: 'fruit', price: 25, stock: 4",
+    "mustFail": "products show names, prices, stock and default order"
+  },
+  {
+    "name": "wrong price sort",
+    "find": "? a.price - b.price",
+    "replace": "? b.price - a.price",
+    "mustFail": "search and category filter, count and sort products"
+  },
+  {
+    "name": "wrong total",
+    "find": "n + p.price * (cart.value[p.name] ?? 0)",
+    "replace": "n + p.price",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "accept invalid email",
+    "find": "!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.value)",
+    "replace": "false",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "reject spaced card",
+    "find": "card.value.replaceAll(' ', '')",
+    "replace": "card.value",
+    "mustFail": "valid checkout accepts spaces, empties cart and thanks buyer"
+  }
+]
