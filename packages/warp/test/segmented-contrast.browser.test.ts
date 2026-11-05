@@ -6,22 +6,25 @@ import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type * as Playwright from 'playwright-core'
+import type * as Axe from 'axe-core'
+declare const axe: typeof Axe
 
 const require = createRequire(import.meta.url)
-const { chromium } = require('playwright-core')
-const axe = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
+const { chromium } = require('playwright-core') as typeof Playwright
+const axeSource = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
 const css = ['warp.css', 'components/base.css', 'inputs/base.css', 'inputs/choice.css']
   .map((f) => readFileSync(join(styles, f), 'utf8'))
   .join('\n')
-const option = (v, on) =>
+const option = (v: string, on?: boolean) =>
   `<label><input type="radio" name="layout" value="${v}"${on ? ' checked' : ''}><span data-part="item">${v}</span></label>`
 // what the server sends: the indicator with no geometry yet
 const group = `<div data-scope="segmented" role="radiogroup" aria-label="Layout" data-size="sm"><span data-part="indicator" aria-hidden="true" data-instant=""></span>${option('Grouped', true)}${option('Stacked')}</div>`
 
-let browser
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -29,7 +32,7 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function contrast(place, flip) {
+async function contrast(place: boolean, flip?: boolean) {
   const page = await browser.newPage()
   await page.setContent(
     `<!doctype html><html lang="en"><title>t</title><style>${css}</style><body><main>${group}</main>`,
@@ -37,15 +40,15 @@ async function contrast(place, flip) {
   // hydration moving the selection (the server rendered a default, the client holds another): the indicator is instant
   if (flip)
     await page.evaluate(() => {
-      document.querySelector('input[value="Stacked"]').checked = true
+      document.querySelector<HTMLInputElement>('input[value="Stacked"]')!.checked = true
     })
   if (place)
     await page.evaluate(() => {
-      const label = document.querySelector('label:has(input:checked)')
-      document.querySelector('[data-part="indicator"]').style.cssText =
+      const label = document.querySelector<HTMLElement>('label:has(input:checked)')!
+      document.querySelector<HTMLElement>('[data-part="indicator"]')!.style.cssText =
         `--warp-a:${label.offsetLeft}px;--warp-b:${label.offsetLeft + label.offsetWidth}px`
     })
-  await page.addScriptTag({ content: axe })
+  await page.addScriptTag({ content: axeSource })
   const found = await page.evaluate(
     async () => (await axe.run(document, { runOnly: ['color-contrast'] })).violations,
   )
