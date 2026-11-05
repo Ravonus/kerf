@@ -23,13 +23,16 @@ const { shadow, toShadow, toSource } = require('../src/infer/shadow.cjs')
 const here = dirname(fileURLToPath(import.meta.url))
 const cli = join(here, '..')
 const tmp = join(here, '.tmp')
-const made = []
+const made: string[] = []
 afterAll(() => {
   for (const d of made) rmSync(d, { recursive: true, force: true })
 })
 
 /** The fixture with TypeScript 7 (or `typescript`'s own 6, when `version` says so), weft and the CLI linked in. */
-function app(files = {}, { version = 7, plugin } = {}) {
+function app(
+  files: Record<string, string | null> = {},
+  { version = 7, plugin }: { version?: number; plugin?: boolean } = {},
+) {
   mkdirSync(tmp, { recursive: true })
   const dir = mkdtempSync(join(tmp, 'infer-'))
   made.push(dir)
@@ -56,14 +59,16 @@ function app(files = {}, { version = 7, plugin } = {}) {
   return dir
 }
 
-async function run(dir) {
+async function run(dir: string) {
   const session = new Session(ts, dir)
   const result = await session.analyze()
   const types = Object.fromEntries(
-    session.engine.comps().map((c) => [c.name, session.engine.state.get(c.id)?.type]),
+    session.engine
+      .comps()
+      .map((c: { name: string; id: string }) => [c.name, session.engine.state.get(c.id)?.type]),
   )
   const list = [...result.findings, ...result.errors].flatMap(([f, l]) =>
-    l.map((x) => ({
+    l.map((x: { start: number }) => ({
       ...x,
       file: f.slice(dir.length + 1),
       line: session.engine.texts.get(f).slice(0, x.start).split('\n').length,
@@ -105,7 +110,7 @@ describe.each([
   }, 60_000)
 
   it('bind: satisfies a required prop, and a box of the wrong type is an error', async () => {
-    const page = (box) =>
+    const page = (box: string) =>
       `import { state } from '@weft-js/core'\nfunction Card(props: { n: number }) { return <b>{props.n}</b> }\nexport default function P() { const box = state(${box}); return <Card bind:n={box} /> }\n`
     expect((await run(app({ ...goalOnly, 'src/goal.tsx': page('1') }, { version }))).list).toEqual(
       [],
@@ -263,7 +268,7 @@ describe('agents', () => {
 })
 
 describe('the CLI', () => {
-  const weft = (...args) => {
+  const weft = (...args: string[]) => {
     const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
     return { code: r.status, stdout: r.stdout, stderr: r.stderr }
   }
@@ -306,7 +311,7 @@ describe('the CLI', () => {
   }, 60_000)
 })
 
-function tsserver(dir) {
+function tsserver(dir: string) {
   const child = spawn(
     process.execPath,
     [
@@ -319,14 +324,14 @@ function tsserver(dir) {
   )
   let seq = 0,
     buffer = Buffer.alloc(0)
-  const wait = new Map()
+  const wait = new Map<number, (value: unknown) => void>()
   const events = []
   child.stdout.on('data', (d) => {
     buffer = Buffer.concat([buffer, d])
     for (;;) {
       const head = buffer.indexOf('\r\n\r\n')
       if (head < 0) return
-      const len = Number(/Content-Length: (\d+)/.exec(buffer.subarray(0, head).toString())[1])
+      const len = Number(/Content-Length: (\d+)/.exec(buffer.subarray(0, head).toString())![1])
       if (buffer.length < head + 4 + len) return
       const msg = JSON.parse(buffer.subarray(head + 4, head + 4 + len).toString())
       buffer = buffer.subarray(head + 4 + len)
@@ -336,7 +341,7 @@ function tsserver(dir) {
       } else events.push(msg)
     }
   })
-  const send = (command, args) => {
+  const send = (command: string, args: Record<string, unknown>) => {
     child.stdin.write(
       `${JSON.stringify({ seq: ++seq, type: 'request', command, arguments: args })}\n`,
     )
@@ -345,33 +350,33 @@ function tsserver(dir) {
   return {
     child,
     send,
-    ask: (command, args) =>
-      new Promise((ok) => {
-        wait.set(send(command, args), ok)
+    ask: <T>(command: string, args: Record<string, unknown>) =>
+      new Promise<{ body: T }>((ok) => {
+        wait.set(send(command, args), (value) => ok(value as { body: T }))
       }),
   }
 }
 
 describe('the dev listener', () => {
-  const listen = async (dir) => {
+  const listen = async (dir: string) => {
     const { attachProps } = await import('../src/props-listener.mjs')
     const server = Object.assign(new EventEmitter(), {
       watcher: new EventEmitter(),
-      sent: [],
-      ws: { send: (m) => server.sent.push(m) },
+      sent: [] as { type: string }[],
+      ws: { send: (m: { type: string }) => server.sent.push(m) },
       config: { logger: { warn() {}, info() {} } },
       close: async () => {},
     })
     const live = attachProps(server, dir, {})
-    const next = (kind) =>
-      new Promise((ok) => {
-        const on = (m) => {
+    const next = (kind: string) =>
+      new Promise<{ type: string; diagnostics: unknown[] }>((ok) => {
+        const on = (m: { type: string; diagnostics: unknown[] }) => {
           if (m.type === kind) {
-            live.worker.off('message', on)
+            live!.worker.off('message', on)
             ok(m)
           }
         }
-        live.worker.on('message', on)
+        live!.worker.on('message', on)
       })
     return { server, live, next }
   }
@@ -422,6 +427,8 @@ describe('the dev listener', () => {
   }, 30_000)
 })
 
+type LspReply = { result: { range: { start: { line: number } }; items: { code: string }[] } }
+
 async function editorHoverAndDiagnostics() {
   const dir = app({
     ...goalOnly,
@@ -433,13 +440,13 @@ async function editorHoverAndDiagnostics() {
   })
   let id = 0,
     buffer = Buffer.alloc(0)
-  const wait = new Map()
+  const wait = new Map<number, (value: unknown) => void>()
   child.stdout.on('data', (d) => {
     buffer = Buffer.concat([buffer, d])
     for (;;) {
       const head = buffer.indexOf('\r\n\r\n')
       if (head < 0) return
-      const len = Number(/Content-Length: (\d+)/.exec(buffer.subarray(0, head).toString())[1])
+      const len = Number(/Content-Length: (\d+)/.exec(buffer.subarray(0, head).toString())![1])
       if (buffer.length < head + 4 + len) return
       const msg = JSON.parse(buffer.subarray(head + 4, head + 4 + len).toString())
       buffer = buffer.subarray(head + 4 + len)
@@ -450,14 +457,15 @@ async function editorHoverAndDiagnostics() {
         child.stdin.write(wire({ jsonrpc: '2.0', id: msg.id, result: null }))
     }
   })
-  const wire = (m) => {
+  const wire = (m: unknown) => {
     const b = Buffer.from(JSON.stringify(m))
     return Buffer.concat([Buffer.from(`Content-Length: ${b.length}\r\n\r\n`), b])
   }
-  const note = (method, params) => child.stdin.write(wire({ jsonrpc: '2.0', method, params }))
-  const ask = (method, params) =>
-    new Promise((ok) => {
-      wait.set(++id, ok)
+  const note = (method: string, params: unknown) =>
+    child.stdin.write(wire({ jsonrpc: '2.0', method, params }))
+  const ask = (method: string, params: unknown) =>
+    new Promise<LspReply>((ok) => {
+      wait.set(++id, (value) => ok(value as LspReply))
       child.stdin.write(wire({ jsonrpc: '2.0', id, method, params }))
     })
   try {
@@ -477,7 +485,7 @@ async function editorHoverAndDiagnostics() {
     const line = lines.findIndex((l) => l.includes('function AddButton'))
     const hover = await ask('textDocument/hover', {
       textDocument: { uri },
-      position: { line, character: lines[line].indexOf('props.count') + 7 },
+      position: { line, character: lines[line]!.indexOf('props.count') + 7 },
     })
     expect(JSON.stringify(hover.result)).toContain('count: number')
     expect(hover.result.range.start.line).toBe(line)
@@ -517,83 +525,117 @@ const editorApp = () =>
     { version: 6, plugin: true },
   )
 
-describe('the editor, through the TS server protocol', () => {
-  it('hover, diagnostics, go-to-definition, completion, rename and a fix, all at source positions', async () => {
-    const dir = editorApp()
-    const file = join(dir, 'src/goal.tsx')
-    const s = tsserver(dir)
-    try {
-      s.send('open', { file })
-      const lines = readFileSync(file, 'utf8').split('\n')
-      const line = lines.findIndex((l) => l.includes('function AddButton')) + 1
-      const bodyLine = lines.findIndex((l) => l.includes('props.count++')) + 1
-      expect(bodyLine).toBeGreaterThan(0)
-      const hover = (
-        await s.ask('quickinfo', {
-          file,
-          line: bodyLine,
-          offset: lines[bodyLine - 1].indexOf('props.count') + 8,
-        })
-      ).body
-      expect(hover.displayString).toContain('count: number')
-      expect(hover.start).toMatchObject({ line: bodyLine })
-      const param = (
-        await s.ask('quickinfo', { file, line, offset: lines[line - 1].indexOf('(props') + 2 })
-      ).body
-      expect(param.displayString).toMatch(/props: \{\s+count: number;\s+\}/)
-      const diags = (await s.ask('semanticDiagnosticsSync', { file })).body
-      expect(diags).toEqual([])
-      const shop = lines.findIndex((l) => l.includes('<AddButton')) + 1
-      const def = (
-        await s.ask('definition', {
-          file,
-          line: shop,
-          offset: lines[shop - 1].indexOf('<AddButton') + 3,
-        })
-      ).body
-      expect(def[0].start).toMatchObject({ line, offset: lines[line - 1].indexOf('AddButton') + 1 })
-      const after = lines[bodyLine - 1].indexOf('props.count') + 7
-      const done = (await s.ask('completionInfo', { file, line: bodyLine, offset: after })).body
-      expect(done.entries.map((e) => e.name)).toContain('count')
-
-      s.send('change', {
+async function editorTsProtocol() {
+  const dir = editorApp()
+  const file = join(dir, 'src/goal.tsx')
+  const s = tsserver(dir)
+  try {
+    s.send('open', { file })
+    const lines = readFileSync(file, 'utf8').split('\n')
+    const line = lines.findIndex((l) => l.includes('function AddButton')) + 1
+    const bodyLine = lines.findIndex((l) => l.includes('props.count++')) + 1
+    expect(bodyLine).toBeGreaterThan(0)
+    const hover = (
+      await s.ask<{ displayString: string; start: { line: number } }>('quickinfo', {
         file,
         line: bodyLine,
-        offset: lines[bodyLine - 1].indexOf('props.count++') + 1,
-        endLine: bodyLine,
-        endOffset: lines[bodyLine - 1].indexOf('props.count++') + 14,
-        insertString: 'props.count.oops()',
+        offset: lines[bodyLine - 1]!.indexOf('props.count') + 8,
       })
-      const bad = (await s.ask('semanticDiagnosticsSync', { file })).body
-      expect(bad).toMatchObject([{ code: 2339, start: { line: bodyLine } }])
+    ).body
+    expect(hover.displayString).toContain('count: number')
+    expect(hover.start).toMatchObject({ line: bodyLine })
+    const param = (
+      await s.ask<{ displayString: string; start: { line: number } }>('quickinfo', {
+        file,
+        line,
+        offset: lines[line - 1]!.indexOf('(props') + 2,
+      })
+    ).body
+    expect(param.displayString).toMatch(/props: \{\s+count: number;\s+\}/)
+    const diags = (await s.ask('semanticDiagnosticsSync', { file })).body
+    expect(diags).toEqual([])
+    const shop = lines.findIndex((l) => l.includes('<AddButton')) + 1
+    const def = (
+      await s.ask<{ start: { line: number; offset: number } }[]>('definition', {
+        file,
+        line: shop,
+        offset: lines[shop - 1]!.indexOf('<AddButton') + 3,
+      })
+    ).body
+    expect(def[0]!.start).toMatchObject({
+      line,
+      offset: lines[line - 1]!.indexOf('AddButton') + 1,
+    })
+    const after = lines[bodyLine - 1]!.indexOf('props.count') + 7
+    const done = (
+      await s.ask<{ entries: { name: string }[] }>('completionInfo', {
+        file,
+        line: bodyLine,
+        offset: after,
+      })
+    ).body
+    expect(done.entries.map((e) => e.name)).toContain('count')
 
-      const card = join(dir, 'src/card.tsx')
-      s.send('open', { file: card })
-      const w = (await s.ask('semanticDiagnosticsSync', { file: card })).body
-      expect(w).toMatchObject([{ code: 9081, start: { line: 1, offset: 17 } }])
-      const fix = (
-        await s.ask('getCodeFixes', {
-          file: card,
-          startLine: 1,
-          startOffset: 17,
-          endLine: 1,
-          endOffset: 21,
-          errorCodes: [9081],
-        })
-      ).body
-      expect(fix[0].changes[0].textChanges[0].start).toMatchObject({ line: 1, offset: 27 })
+    await verifyEditorEdits(s, file, lines, bodyLine, shop, dir, line)
+  } finally {
+    s.child.kill()
+  }
+}
 
-      const rename = (
-        await s.ask('rename', {
-          file,
-          line: shop,
-          offset: lines[shop - 1].indexOf('<AddButton') + 3,
-        })
-      ).body
-      const spots = rename.locs[0].locs.map((l) => l.start.line)
-      expect(spots).toEqual(expect.arrayContaining([line, shop]))
-    } finally {
-      s.child.kill()
-    }
-  }, 120_000)
+async function verifyEditorEdits(
+  s: ReturnType<typeof tsserver>,
+  file: string,
+  lines: string[],
+  bodyLine: number,
+  shop: number,
+  dir: string,
+  line: number,
+) {
+  s.send('change', {
+    file,
+    line: bodyLine,
+    offset: lines[bodyLine - 1]!.indexOf('props.count++') + 1,
+    endLine: bodyLine,
+    endOffset: lines[bodyLine - 1]!.indexOf('props.count++') + 14,
+    insertString: 'props.count.oops()',
+  })
+  const bad = (await s.ask('semanticDiagnosticsSync', { file })).body
+  expect(bad).toMatchObject([{ code: 2339, start: { line: bodyLine } }])
+
+  const card = join(dir, 'src/card.tsx')
+  s.send('open', { file: card })
+  const w = (await s.ask('semanticDiagnosticsSync', { file: card })).body
+  expect(w).toMatchObject([{ code: 9081, start: { line: 1, offset: 17 } }])
+  const fix = (
+    await s.ask<{ changes: { textChanges: { start: { line: number; offset: number } }[] }[] }[]>(
+      'getCodeFixes',
+      {
+        file: card,
+        startLine: 1,
+        startOffset: 17,
+        endLine: 1,
+        endOffset: 21,
+        errorCodes: [9081],
+      },
+    )
+  ).body
+  expect(fix[0]!.changes[0]!.textChanges[0]!.start).toMatchObject({ line: 1, offset: 27 })
+
+  const rename = (
+    await s.ask<{ locs: { locs: { start: { line: number } }[] }[] }>('rename', {
+      file,
+      line: shop,
+      offset: lines[shop - 1]!.indexOf('<AddButton') + 3,
+    })
+  ).body
+  const spots = rename.locs[0]!.locs.map((l) => l.start.line)
+  expect(spots).toEqual(expect.arrayContaining([line, shop]))
+}
+
+describe('the editor, through the TS server protocol', () => {
+  it(
+    'hover, diagnostics, go-to-definition, completion, rename and a fix, all at source positions',
+    editorTsProtocol,
+    120_000,
+  )
 })
