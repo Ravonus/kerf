@@ -189,6 +189,81 @@ export interface Feed {
 
 const unref = <T>(t: T) => ((t as { unref?(): void } | null | undefined)?.unref?.(), t)
 
+function feedHandle(
+  source: Source,
+  known: Set<string>,
+  sink: Sink,
+  cancel: () => void,
+  barrier: number,
+): Feed {
+  let stopping: (() => unknown) | undefined
+  let running = false
+  return {
+    get running() {
+      return running
+    },
+    covers(tag) {
+      const at = tag.indexOf(':')
+      return known.has(at < 0 ? tag : tag.slice(0, at))
+    },
+    async start(probe) {
+      if (running) return
+      running = true
+      try {
+        stopping = await source.start(sink, probe)
+      } catch (e) {
+        running = false
+        throw e
+      }
+    },
+    async stop() {
+      cancel()
+      running = false
+      const stop = stopping
+      stopping = undefined
+      await stop?.()
+    },
+    async settle(tags) {
+      const ours = tags.filter((t) => this.covers(t))
+      if (!ours.length || !source.settle) return
+      let late: ReturnType<typeof setTimeout> | undefined
+      await Promise.race([
+        source.settle(ours),
+        new Promise<void>((ok) => {
+          late = unref(setTimeout(ok, barrier))
+        }),
+      ]).catch(() => {})
+      clearTimeout(late)
+    },
+  }
+}
+
+function addChanges(
+  list: Change[],
+  known: Set<string>,
+  source: Source,
+  pending: Set<string>,
+  covered: Set<string>,
+  prefixes: Set<string>,
+  out: FeedOut,
+  arm: () => void,
+) {
+  const seen: string[] = []
+  for (const c of list) {
+    if (!known.has(c.table)) continue
+    for (const t of source.tagged?.(c) ??
+      (c.id === undefined ? [c.table] : [c.table, `${c.table}:${c.id}`])) {
+      pending.add(t)
+      covered.delete(t) // a change after the barrier: no poke covers it
+      seen.push(t)
+    }
+    if (c.id === undefined) prefixes.add(`${c.table}:`)
+  }
+  if (!seen.length) return
+  out.bump?.(seen)
+  arm()
+}
+
 /** Batches a source's changes into pokes, held and throttled so a burst of writes is one refetch. */
 export function createFeed(
   source: Source,
@@ -202,8 +277,6 @@ export function createFeed(
   let timer: ReturnType<typeof setTimeout> | undefined
   let last = 0
   let first: number | undefined
-  let stopping: (() => unknown) | undefined
-  let running = false
   let isDown = false
 
   const flush = () => {
@@ -227,26 +300,8 @@ export function createFeed(
     )
   }
 
-  const tagsOf = (change: Change) =>
-    source.tagged?.(change) ??
-    (change.id === undefined ? [change.table] : [change.table, `${change.table}:${change.id}`])
-
   const sink: Sink = {
-    changes(list) {
-      const seen: string[] = []
-      for (const c of list) {
-        if (!known.has(c.table)) continue
-        for (const t of tagsOf(c)) {
-          pending.add(t)
-          covered.delete(t) // a change after the barrier: no poke covers it
-          seen.push(t)
-        }
-        if (c.id === undefined) prefixes.add(`${c.table}:`)
-      }
-      if (!seen.length) return
-      out.bump?.(seen)
-      arm()
-    },
+    changes: (list) => addChanges(list, known, source, pending, covered, prefixes, out, arm),
     settled(tags) {
       for (const t of tags) {
         if (pending.delete(t)) covered.add(t)
@@ -272,43 +327,14 @@ export function createFeed(
     },
   }
 
-  return {
-    get running() {
-      return running
-    },
-    covers(tag) {
-      const at = tag.indexOf(':')
-      return known.has(at < 0 ? tag : tag.slice(0, at))
-    },
-    async start(probe) {
-      if (running) return
-      running = true
-      try {
-        stopping = await source.start(sink, probe)
-      } catch (e) {
-        running = false
-        throw e
-      }
-    },
-    async stop() {
+  return feedHandle(
+    source,
+    known,
+    sink,
+    () => {
       clearTimeout(timer)
       timer = undefined
-      running = false
-      const stop = stopping
-      stopping = undefined
-      await stop?.()
     },
-    async settle(tags) {
-      const ours = tags.filter((t) => this.covers(t))
-      if (!ours.length || !source.settle) return
-      let late: ReturnType<typeof setTimeout> | undefined
-      await Promise.race([
-        source.settle(ours),
-        new Promise<void>((ok) => {
-          late = unref(setTimeout(ok, barrier))
-        }),
-      ]).catch(() => {})
-      clearTimeout(late)
-    },
-  }
+    barrier,
+  )
 }
