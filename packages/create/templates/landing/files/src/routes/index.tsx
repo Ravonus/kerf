@@ -37,6 +37,18 @@ const steps = [
   },
 ]
 
+function heroArt() {
+  return (
+    <Media
+      src={hero}
+      priority
+      sizes="(max-width: 599px) 100vw, min(46vw, 696px)"
+      class="hero-art"
+      alt="The Emberline board: customer requests grouped into Now, Next and Later, with a quote from a renewal call"
+    />
+  )
+}
+
 export default function Home() {
   return (
     <Stack gap="none">
@@ -56,13 +68,7 @@ export default function Home() {
               </Text>
               <WaitlistForm />
             </Stack>
-            <Media
-              src={hero}
-              priority
-              sizes="(max-width: 599px) 100vw, min(46vw, 696px)"
-              class="hero-art"
-              alt="The Emberline board: customer requests grouped into Now, Next and Later, with a quote from a renewal call"
-            />
+            {heroArt()}
           </Split>
         </Center>
       </section>
