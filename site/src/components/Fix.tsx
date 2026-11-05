@@ -63,85 +63,97 @@ export function Fix() {
       stop()
     }
   })
-  return (
-    <section data-site="fix" data-step={step.value} ref={(el) => (box = el)}>
-      <h2>When your agent makes a mistake, weft catches it</h2>
-      <p data-part="intro">
-        The compiler stops the mistake before it ships and says how to fix it, in words your agent
-        can act on.
-      </p>
-      <ol data-part="steps">
-        {STEPS.map((title, n) => (
-          <li key={title}>
-            <Button
-              emphasis="ghost"
-              tone="neutral"
-              aria-current={step.value === n ? 'step' : undefined}
-              onClick={() => go(n)}
-            >
-              <span>{n + 1}</span>
-              {title}
-            </Button>
-          </li>
-        ))}
-      </ol>
-      <div data-part="stage">
-        <div data-part="code">
-          <p data-part="say">{SAY[step.value]}</p>
-          <div data-part="panels">
-            <div
-              data-show="0"
-              data-scope="codeblock"
-              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
-              innerHTML={show.bad}
-            ></div>
-            <div data-show="1" data-part="diag">
-              <b>{show.code}</b> {show.message}
-              <small>
-                {show.file}. Fix: {show.fix}
-              </small>
-            </div>
-            <div
-              data-show="2"
-              data-scope="codeblock"
-              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
-              innerHTML={show.diff}
-            ></div>
-            <div
-              data-show="3"
-              data-scope="codeblock"
-              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
-              innerHTML={show.good}
-            ></div>
+  return renderFix(step, count, go, play, (el) => (box = el))
+}
+
+type FixRenderer = (
+  step: ReturnType<typeof state<number>>,
+  count: ReturnType<typeof state<number>>,
+  go: (n: number) => void,
+  play: () => void,
+  setBox: (el: HTMLElement) => void,
+) => unknown
+
+const renderFix: FixRenderer = (step, count, go, play, setBox) => (
+  <section data-site="fix" data-step={step.value} ref={setBox}>
+    <h2>When your agent makes a mistake, weft catches it</h2>
+    <p data-part="intro">
+      The compiler stops the mistake before it ships and says how to fix it, in words your agent can
+      act on.
+    </p>
+    <ol data-part="steps">
+      {STEPS.map((title, n) => (
+        <li key={title}>
+          <Button
+            emphasis="ghost"
+            tone="neutral"
+            aria-current={step.value === n ? 'step' : undefined}
+            onClick={() => go(n)}
+          >
+            <span>{n + 1}</span>
+            {title}
+          </Button>
+        </li>
+      ))}
+    </ol>
+    <div data-part="stage">
+      <div data-part="code">
+        <p data-part="say">{SAY[step.value]}</p>
+        <div data-part="panels">
+          <div
+            data-show="0"
+            data-scope="codeblock"
+            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            innerHTML={show.bad}
+          ></div>
+          <div data-show="1" data-part="diag">
+            <b>{show.code}</b> {show.message}
+            <small>
+              {show.file}. Fix: {show.fix}
+            </small>
           </div>
-        </div>
-        <div data-part="play">
-          <output aria-live="polite">
-            {step.value < 3 ? <b>{START * EACH}</b> : <Live count={count.value} />}
-          </output>
-          <p data-part="amount">Count {count.value}</p>
-          <Button size="lg" onClick={() => count.value++}>
-            +1
-          </Button>
-          <Button size="lg" emphasis="ghost" tone="neutral" onClick={play}>
-            Replay
-          </Button>
-          <p data-part="hint">{HINT[step.value]}</p>
+          <div
+            data-show="2"
+            data-scope="codeblock"
+            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            innerHTML={show.diff}
+          ></div>
+          <div
+            data-show="3"
+            data-scope="codeblock"
+            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            innerHTML={show.good}
+          ></div>
         </div>
       </div>
-      <dl>
-        <div>
-          <dt>Try this</dt>
-          <dd>Press +1 on step 1, then again on step 4.</dd>
-        </div>
-        <div>
-          <dt>Why it matters</dt>
-          <dd>
-            The error carries the reason and the fix, so an agent can correct its own mistake before
-            you read the code.
-          </dd>
-        </div>
-      </dl>
-    </section>
-  )
+      <div data-part="play">
+        <output aria-live="polite">{fixTotal(step, count)}</output>
+        <p data-part="amount">Count {count.value}</p>
+        <Button size="lg" onClick={() => count.value++}>
+          +1
+        </Button>
+        <Button size="lg" emphasis="ghost" tone="neutral" onClick={play}>
+          Replay
+        </Button>
+        <p data-part="hint">{HINT[step.value]}</p>
+      </div>
+    </div>
+    <dl>
+      <div>
+        <dt>Try this</dt>
+        <dd>Press +1 on step 1, then again on step 4.</dd>
+      </div>
+      <div>
+        <dt>Why it matters</dt>
+        <dd>
+          The error carries the reason and the fix, so an agent can correct its own mistake before
+          you read the code.
+        </dd>
+      </div>
+    </dl>
+  </section>
+)
+
+function fixTotal(step: ReturnType<typeof state<number>>, count: ReturnType<typeof state<number>>) {
+  return step.value < 3 ? <b>{START * EACH}</b> : <Live count={count.value} />
 }
