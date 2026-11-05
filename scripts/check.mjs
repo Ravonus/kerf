@@ -9,7 +9,8 @@
 //   pnpm run check --require-tools a missing gitleaks or cargo-deny fails instead of skipping (CI does this)
 //   pnpm run check --jobs=4        how much to run at once (see scripts/jobs.mjs)
 import { repoRoot } from './lib/helpers.mjs'
-import { spawn, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
+import { run, allJobs } from './check/run.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { jobs, pool } from './jobs.mjs'
@@ -50,38 +51,7 @@ const has = (cmd) => spawnSync(cmd, ['--version'], { stdio: 'ignore', shell: win
 const hasCargo = (sub) =>
   spawnSync('cargo', [sub, '--version'], { stdio: 'ignore', shell: windows }).status === 0
 
-function run(cmd, args, cwd = '.', env = {}) {
-  return new Promise((ok) => {
-    const child = spawn(cmd, args, {
-      cwd: join(root, cwd),
-      env: { ...process.env, NO_COLOR: '1', ...env },
-      shell: windows,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-    let out = '',
-      stdout = '',
-      stderr = ''
-    child.stdout.on('data', (d) => {
-      out += d
-      stdout += d
-    })
-    child.stderr.on('data', (d) => {
-      out += d
-      stderr += d
-    })
-    child.on('error', (e) => ok({ code: 1, out: String(e) }))
-    child.on('close', (code) => ok({ code, out, stdout, stderr }))
-  })
-}
-
-/** Runs each job, at most `limit` at once, and joins what the failures printed. */
-async function all(items, job) {
-  const results = await pool(items, limit, async (item) => ({ item, ...(await job(item)) }))
-  const failed = results.filter((r) => r.code !== 0)
-  return {
-    problems: failed.flatMap((r) => [`--- ${r.item}`, ...r.out.trim().split('\n').slice(-40)]),
-  }
-}
+const all = (items, job) => allJobs(items, job, limit)
 const lines = (r) => (r.code === 0 ? { problems: [] } : { problems: r.out.trim().split('\n') })
 let lengthResult
 const lengths = () => (lengthResult ??= checkLengths())
