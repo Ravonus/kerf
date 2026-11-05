@@ -1,3 +1,9 @@
+import * as accordion from './AccordionHeardChange'
+import * as offset from './PaginationBarOffset'
+import * as cursor from './PaginationBarCursor'
+import * as narrow from './PaginationBarNarrow'
+import * as controlled from './PaginationBarControlled'
+
 export { TabsPlay } from './TabsPlay'
 export { TabsLine } from './TabsLine'
 export { TabsPill } from './TabsPill'
@@ -11,7 +17,6 @@ export { AccordionBoxed } from './AccordionBoxed'
 export { AccordionLine } from './AccordionLine'
 export { AccordionMultiple } from './AccordionMultiple'
 export { AccordionDisabled } from './AccordionDisabled'
-import * as accordion from './AccordionHeardChange'
 export const { AccordionHeardChange } = accordion
 export { AccordionSettings } from './AccordionSettings'
 export { NavPlay } from './NavPlay'
@@ -21,13 +26,9 @@ export { NavProductHeader } from './NavProductHeader'
 export { NavSettings } from './NavSettings'
 export { NavContents } from './NavContents'
 export { PaginationBarPlay } from './PaginationBarPlay'
-import * as offset from './PaginationBarOffset'
 export const { PaginationBarOffset } = offset
-import * as cursor from './PaginationBarCursor'
 export const { PaginationBarCursor } = cursor
-import * as narrow from './PaginationBarNarrow'
 export const { PaginationBarNarrow } = narrow
-import * as controlled from './PaginationBarControlled'
 export const { PaginationBarControlled } = controlled
 export { PaginationBarList } from './PaginationBarList'
 export { LoadMorePlay } from './LoadMorePlay'
