@@ -19,7 +19,9 @@ export type CheckoutInput = {
 } & {
   applyCoupon: (code: string) => ReturnType<NonNullable<CheckoutProps['coupon']>> | undefined
   onStepChange: (step: CheckoutStep) => void
-  onPlaceOrder: CheckoutProps['onPlaceOrder']
+  onPlaceOrder: (
+    order: () => Parameters<CheckoutProps['onPlaceOrder']>[0],
+  ) => ReturnType<CheckoutProps['onPlaceOrder']>
 }
 
 /** Create checkout state under the caller's owner. */

@@ -63,7 +63,7 @@ export function Checkout({
       coupon: () => coupon,
       applyCoupon: (code) => coupon?.(code),
       idempotencyKey: () => idempotencyKey,
-      onPlaceOrder: (order) => onPlaceOrder(order),
+      onPlaceOrder: (order) => onPlaceOrder(order()),
       onStepChange: (step) => onStepChange?.(step),
       onContinueShopping: () => onContinueShopping,
       signInHref: () => signInHref,

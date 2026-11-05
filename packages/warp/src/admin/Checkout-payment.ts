@@ -37,7 +37,7 @@ export function checkoutPayment(
     const useKey = input.idempotencyKey() ?? (key ??= newOrderKey())
     const a = address.value!
     try {
-      const r = await input.onPlaceOrder({
+      const r = await input.onPlaceOrder(() => ({
         lines: lines.value,
         name: name.value,
         email: email.value,
@@ -48,7 +48,7 @@ export function checkoutPayment(
         coupon: applied.value?.code,
         total: total.value,
         idempotencyKey: useKey,
-      })
+      }))
       if ('order' in r) {
         placed.value = r.order
         key = undefined
