@@ -7,21 +7,13 @@ import { preferencesCells } from './NotificationPreferencesCells'
 import { preferencesActions } from './NotificationPreferencesActions'
 import type { NotificationPreferencesProps } from './NotificationPreferences'
 
-export type Inputs = {
-  [K in keyof NotificationPreferencesProps]-?: NotificationPreferencesProps[K] | undefined
-} & Pick<NotificationPreferencesProps, 'groups' | 'channels' | 'value'> & {
-    title: string
-    lockReason: string
-    digest: string
-    digestChannel: string
-    digests: { value: string; label: string }[]
-  }
+export type Inputs = NotificationPreferencesProps
 export type Save = 'idle' | 'saving' | 'saved' | 'error'
 
 export function preferencesModel(p: () => Inputs) {
   const id = uid('prefs')
   const model = state<PrefValues>(untrack(() => val<PrefValues>(p().value)))
-  const mail = state(untrack(() => p().digest))
+  const mail = state(untrack(() => (p().digest === undefined ? 'instant' : p().digest!)))
   const save = state<Save>('idle')
   // what a cell is (a box, locked, not offered) never depends on the values: its node stays through every change
   const fixed: PrefRules = untrack(() => ({ offered: p().offered, locked: p().locked }))
@@ -41,7 +33,15 @@ export function preferencesModel(p: () => Inputs) {
 
   const { parentBox, na } = preferencesCells(model, fixed, parent, onNa)
   const emailOn = derived(() =>
-    events.value.some((e) => prefCell(model.value, fixed, e.id, p().digestChannel) === 'on'),
+    events.value.some(
+      (e) =>
+        prefCell(
+          model.value,
+          fixed,
+          e.id,
+          p().digestChannel === undefined ? 'email' : p().digestChannel!,
+        ) === 'on',
+    ),
   )
   const hint = derived(() =>
     !emailOn.value

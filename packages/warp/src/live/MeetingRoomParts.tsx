@@ -98,7 +98,8 @@ function Presentation({ model, p: get }: ViewProps) {
   return (
     <div data-part="share">
       <header>
-        <G name="screen" /> {model.presenterText.value} · {get().shareTitle}
+        <G name="screen" /> {model.presenterText.value} ·{' '}
+        {get().shareTitle === undefined ? 'Shared screen' : get().shareTitle}
         {model.sharingOn.value && (
           <Button tone="critical" size="sm" onClick={() => model.toggle('share')}>
             Stop sharing

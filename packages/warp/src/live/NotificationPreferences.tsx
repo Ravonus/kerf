@@ -48,40 +48,12 @@ const DIGESTS = [
  * tri-state; a required channel is locked and says why; a channel an event can't use is a plain "—" that still takes
  * focus. Saves on every change, optimistically; a rejected save flips back. The same DOM restacks below 560px.
  */
-export function NotificationPreferences({
-  title = 'Notification preferences',
-  groups,
-  channels,
-  value,
-  offered,
-  locked,
-  lockReason = 'Required: this alert always goes to your account.',
-  onChange,
-  digest = 'instant',
-  digestChannel = 'email',
-  digests = DIGESTS,
-  onDigest,
-  defaults,
-}: NotificationPreferencesProps) {
-  const state = preferencesModel(() => ({
-    title,
-    groups,
-    channels,
-    value,
-    offered,
-    locked,
-    lockReason,
-    onChange: onChange ? (changes: PrefChange[]) => onChange?.(changes) : undefined,
-    digest,
-    digestChannel,
-    digests,
-    onDigest: onDigest ? (next: string) => onDigest?.(next) : undefined,
-    defaults,
-  }))
+export function NotificationPreferences(props: NotificationPreferencesProps) {
+  const state = preferencesModel(() => props)
   return (
     <div data-scope="prefs-matrix">
       <span data-part="sr-only" id={`${state.id}-t`}>
-        {title}
+        {props.title === undefined ? 'Notification preferences' : props.title}
       </span>
       <div
         ref={state.setGrid}
@@ -90,9 +62,9 @@ export function NotificationPreferences({
         aria-labelledby={`${state.id}-t`}
         aria-describedby={`${state.id}-k`}
       >
-        <PreferencesHead channels={channels} state={state} />
-        {groups.map((g) => (
-          <PreferencesGroup key={g.id} g={g} channels={channels} state={state} />
+        <PreferencesHead channels={props.channels} state={state} />
+        {props.groups.map((g) => (
+          <PreferencesGroup key={g.id} g={g} channels={props.channels} state={state} />
         ))}
       </div>
       <span data-part="sr-only" id={`${state.id}-k`}>
@@ -100,12 +72,14 @@ export function NotificationPreferences({
         grid's corners, Space toggles.
       </span>
       <span data-part="sr-only" id={`${state.id}-lock`}>
-        {lockReason}
+        {props.lockReason === undefined
+          ? 'Required: this alert always goes to your account.'
+          : props.lockReason}
       </span>
       <div data-part="footer">
         <Select
           label="Email delivery"
-          options={digests}
+          options={props.digests === undefined ? DIGESTS : props.digests}
           value={state.mail.value}
           disabled={!state.emailOn.value}
           hint={state.hint.value}

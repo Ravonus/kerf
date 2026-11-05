@@ -21,7 +21,7 @@ export function inboxGestures(
   use(feed, list, () => ({ items: '[data-scope="notification"]' }))
   use(readOnView, list, () => ({
     items: '[data-scope="notification"]',
-    active: !!(p().open as unknown),
+    active: !!(p().open === undefined ? true : p().open),
     onRead: (rid: string) => p().onRead?.(rid),
   }))
   use(arrivals, list, () => ({

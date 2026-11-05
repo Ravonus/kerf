@@ -61,7 +61,11 @@ export function preferencesSave(
     grid()!
       .querySelector<HTMLElement>(`#${(e.currentTarget as HTMLElement).id}`)
       ?.focus()
-    say(p().lockReason)
+    say(
+      p().lockReason === undefined
+        ? 'Required: this alert always goes to your account.'
+        : p().lockReason!,
+    )
   }
   const onNa = (e: KeyboardEvent) => {
     if (e.key === ' ') {

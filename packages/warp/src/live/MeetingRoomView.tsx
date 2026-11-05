@@ -14,7 +14,7 @@ export function MeetingRoomView({
       ref={model.setRoot}
       data-scope="room"
       data-part="root"
-      data-theme={p().theme}
+      data-theme={p().theme === undefined ? 'dark' : p().theme}
       role="region"
       aria-label={`${p().title} meeting`}
     >
