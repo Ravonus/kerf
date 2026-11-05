@@ -40,7 +40,7 @@ pub use self::facts::facts;
 pub use self::islands::{by_index, hoisted, mark, marked};
 use self::loose::{Loose, TagRefs, calls, hatch};
 use self::scan::{attr_kind, attr_name, component_tag, has_kids, is_handler, kids_closed};
-use self::visit::{Calls, Collect, Frame, MOVES, WINDOW, add};
+use self::visit::{Calls, Collect, MOVES, WINDOW, add};
 
 use std::collections::{HashMap, HashSet};
 

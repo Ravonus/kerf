@@ -9,7 +9,7 @@ use oxc_ast_visit::Visit;
 use oxc_semantic::SymbolId;
 use oxc_span::GetSpan;
 
-use super::{Bindings, Gen, Reads, arrow_body, has_jsx, returned, strip};
+use super::{BAR, Bindings, Gen, Reads, arrow_body, has_jsx, returned, strip};
 
 impl Gen<'_> {
     pub(super) fn reads(&self, e: &Expression<'_>) -> Vec<SymbolId> {

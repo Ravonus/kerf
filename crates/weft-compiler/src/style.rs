@@ -186,7 +186,7 @@ pub fn apply<'a>(
         return (Vec::new(), Vec::new());
     }
 
-    let (defs, handled) = definitions(program, scoping, source, group_fn, &mut metas);
+    let (defs, handled) = definitions(program, scoping, source, group_fn, &mut metas, diagnostics);
 
     let mut lower = Lower {
         allocator,
@@ -210,6 +210,7 @@ fn definitions(
     source: &str,
     group_fn: Option<SymbolId>,
     metas: &mut HashMap<SymbolId, Meta>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) -> (Vec<GroupDef>, HashSet<u32>) {
     // Definitions: `const x = group('name', { … })` at the top level, exported or not.
     let mut defs = Vec::new();

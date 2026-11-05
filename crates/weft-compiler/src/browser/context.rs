@@ -5,7 +5,7 @@ use oxc_span::Span;
 
 use crate::diag::{Diagnostic, Edit, Fix, Severity};
 
-use super::{Checker, Comp, FnCtx, Role, is_component_name};
+use super::{Checker, Comp, FnCtx, MODULE, Role, is_component_name};
 
 impl<'s> Checker<'s> {
     pub(super) fn text(&self, span: Span) -> &'s str {
