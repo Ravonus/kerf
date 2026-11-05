@@ -133,10 +133,10 @@ function webhookForm(
   )
 }
 
-function webhookTester(onTest: () => WebhooksProps['onTest']) {
+function webhookTester(onTest: WebhooksProps['onTest']) {
   const test = async (h: Webhook) => {
     try {
-      const r = await onTest()(h)
+      const r = await onTest(h)
       toast.show({
         title: `Test delivered: ${r.status}`,
         description: `${h.url} answered in ${r.ms} ms.`,
@@ -179,7 +179,7 @@ function webhookFooter(
 }
 
 function webhookSaver(
-  onAdd: () => WebhooksProps['onAdd'],
+  onAdd: WebhooksProps['onAdd'],
   busy: State<boolean>,
   tried: State<boolean>,
   check: () => void,
@@ -197,7 +197,7 @@ function webhookSaver(
     if (urlError.value || eventError.value) return
     busy.value = true
     try {
-      secret.value = await onAdd()(url.value.trim(), picked.value)
+      secret.value = await onAdd(url.value.trim(), picked.value)
     } catch {
       toast.show({
         title: 'The endpoint wasn’t added',
@@ -220,7 +220,7 @@ function validateUrl(url: State<string>, urlError: State<string>) {
 }
 
 /** Webhooks (09 §4.6): a DataTable of endpoints. Send test reports the code and time; a new signing secret is shown once. */
-export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
+export function Webhooks(props: WebhooksProps) {
   const adding = state(false)
   const armed = latch(adding)
   const { secret, seen } = useReveal(adding)
@@ -231,11 +231,11 @@ export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
   const eventError = state('')
   const tried = state(false)
   const busy = state(false)
-  const list = derived(() => read(hooks))
+  const list = derived(() => read(props.hooks))
   const check = () => validateUrl(url, urlError)
-  const test = webhookTester(() => onTest)
+  const test = webhookTester((hook) => props.onTest(hook))
   const save = webhookSaver(
-    () => onAdd,
+    (endpoint, selected) => props.onAdd(endpoint, selected),
     busy,
     tried,
     check,
@@ -247,7 +247,7 @@ export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
   )
   const open = () => {
     url.value = ''
-    picked.value = events.slice(0, 2)
+    picked.value = props.events.slice(0, 2)
     urlError.value = ''
     eventError.value = ''
     tried.value = false
@@ -293,7 +293,7 @@ export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
               ack="I’ve saved this secret somewhere safe"
             />
           ) : (
-            webhookForm(() => events, url, picked, urlError, eventError, tried, check, save)
+            webhookForm(() => props.events, url, picked, urlError, eventError, tried, check, save)
           )}
         </Modal>
       )}
