@@ -10,3 +10,4 @@ include!("compile/async_callbacks.rs");
 include!("compile/derived_writes.rs");
 include!("compile/watch_cycles.rs");
 include!("compile/watch_patterns.rs");
+include!("compile/watch_copies.rs");

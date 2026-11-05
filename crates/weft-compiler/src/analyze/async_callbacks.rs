@@ -2,6 +2,7 @@
 //! Only stable bindings and statically named core members have local provenance.
 //! Nested functions are checked separately only when passed to a known core API.
 
+mod copies;
 mod flow;
 mod loops;
 mod patterns;
@@ -325,5 +326,7 @@ pub(super) fn diagnostics<'s>(program: &Program<'_>, a: &'s Analyzer<'s>) -> Vec
         &check.calls,
         &check.accesses,
     ));
+    let copies = copies::diagnostics(program, &check.index, &check.calls);
+    check.diagnostics.extend(copies);
     check.diagnostics
 }
