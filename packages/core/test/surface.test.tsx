@@ -365,7 +365,7 @@ test('dev validates props against the schema', async () => {
   warn.mockRestore()
 })
 
-describe('dev checks on the live mirror', () => {
+function mirrorFixture() {
   const warnings = async (build: () => unknown, extra?: () => void) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     time.install()
@@ -388,6 +388,10 @@ describe('dev checks on the live mirror', () => {
       },
     })
 
+  return { warnings, surface }
+}
+
+function registerMirrorMismatch({ warnings, surface }: ReturnType<typeof mirrorFixture>) {
   test('X001: the rendered mirror differs from the prediction', async () => {
     const S = surface('drift one', { font: '16px Inter', lineHeight: 20 })
     const rect = vi
@@ -420,7 +424,9 @@ describe('dev checks on the live mirror', () => {
       (await warnings(() => <Surface use={S} label="x" />)).some((m) => m.includes('X002')),
     ).toBe(true)
   })
+}
 
+function registerMirrorWarnings({ warnings, surface }: ReturnType<typeof mirrorFixture>) {
   test("X003: the font isn't loaded and there is no fallback face", async () => {
     const S = surface('loading', { font: '16px Brand' })
     const fonts = Object.assign([], {
@@ -458,4 +464,10 @@ describe('dev checks on the live mirror', () => {
     ))
     expect(seen.some((m) => m.includes('X011'))).toBe(true)
   })
+}
+
+describe('dev checks on the live mirror', () => {
+  const fixture = mirrorFixture()
+  registerMirrorMismatch(fixture)
+  registerMirrorWarnings(fixture)
 })

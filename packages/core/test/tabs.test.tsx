@@ -86,7 +86,7 @@ describe('tabs.channel', () => {
   })
 })
 
-describe("sync: 'tabs'", () => {
+function syncFixture() {
   const cart = defineState('cart-sync', () => {
     const lines$ = state<Record<string, number>>(
       {},
@@ -127,6 +127,10 @@ describe("sync: 'tabs'", () => {
   }
   const lineText = (n: string) => screen.getByLabelText(`lines ${n}`).textContent
 
+  return { Tab, two, lineText }
+}
+
+function registerTabSync({ Tab, two, lineText }: ReturnType<typeof syncFixture>) {
   test('tabs sync on plain http, where the browser has no crypto.randomUUID', async () => {
     Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true })
     try {
@@ -166,7 +170,9 @@ describe("sync: 'tabs'", () => {
     render(Tab, { name: 'c' }, { storage })
     expect(lineText('c')).toBe('{"a":1}')
   })
+}
 
+function registerTabConflict({ two, lineText }: ReturnType<typeof syncFixture>) {
   test('a write from a tab on another schema is dropped', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     two()
@@ -195,7 +201,12 @@ describe("sync: 'tabs'", () => {
     bc.close()
     expect(JSON.parse(lineText('a'))).toEqual({ k: 2, j: 1 })
   })
+}
 
+describe("sync: 'tabs'", () => {
+  const fixture = syncFixture()
+  registerTabSync(fixture)
+  registerTabConflict(fixture)
   test('`session`, or no persist, is S008', () => {
     const bad = defineState('sync-session', () => ({
       n: state(0, { persist: 'session', sync: 'tabs' }),
