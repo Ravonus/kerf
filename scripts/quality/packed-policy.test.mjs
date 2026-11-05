@@ -109,24 +109,20 @@ await test('packed pnpm installs keep the age policy and use transitive tarball 
       cwd: standalone,
       stdio: 'pipe',
     })
-    const fromStandaloneBridge = createRequire(
-      realpathSync(join(standalone, 'node_modules/packed-bridge/package.json')),
-    )
-    assert.equal(
-      JSON.parse(
-        readFileSync(fromStandaloneBridge.resolve('@weft-js/packed-test/package.json'), 'utf8'),
-      ).version,
-      '1.0.0',
-    )
-    const fromBridge = createRequire(
-      realpathSync(join(app, 'node_modules/packed-bridge/package.json')),
-    )
-    assert.equal(
-      JSON.parse(readFileSync(fromBridge.resolve('@weft-js/packed-test/package.json'), 'utf8'))
-        .version,
-      '1.0.0',
-    )
+    assertBridgeVersion(standalone)
+    assertBridgeVersion(app)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
 })
+
+function assertBridgeVersion(app) {
+  const fromBridge = createRequire(
+    realpathSync(join(app, 'node_modules/packed-bridge/package.json')),
+  )
+  assert.equal(
+    JSON.parse(readFileSync(fromBridge.resolve('@weft-js/packed-test/package.json'), 'utf8'))
+      .version,
+    '1.0.0',
+  )
+}
