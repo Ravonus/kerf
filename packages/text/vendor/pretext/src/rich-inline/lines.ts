@@ -246,4 +246,3 @@ export function createLine(
   trimFragments(fragments, itemSegments, items, width, lineW)
   return { fragments, width: Math.max(0, width), end }
 }
-

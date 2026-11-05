@@ -61,4 +61,3 @@ export function getSourceOffset(sourceStarts: number[], sourceUnits: (number[] |
   const units = sourceUnits === null ? null : sourceUnits[segmentIndex]!
   return units === null ? sourceStarts[segmentIndex]! + unit : units[unit]!
 }
-

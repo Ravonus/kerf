@@ -23,4 +23,3 @@ export function zeros(count: number): number[] {
   for (let i = 0; i < count; i++) out.push(0)
   return out
 }
-

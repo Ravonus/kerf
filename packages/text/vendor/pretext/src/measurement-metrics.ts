@@ -45,4 +45,3 @@ const kanaRe = /[\u3041-\u30FF]/
 export function getSpaceWidth(measurement: FontMeasurement): number {
   return measurement.spaceWidth ??= getSegmentMetrics(' ', measurement).width
 }
-

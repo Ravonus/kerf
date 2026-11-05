@@ -40,4 +40,3 @@ function readWidthIn(parent: HTMLElement, span: HTMLElement): number {
   parent.removeChild(span)
   return Math.abs(drawn - width) <= width * 1e-5 ? drawn : width
 }
-

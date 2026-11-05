@@ -75,4 +75,3 @@ function buildEngineProfile(): EngineProfile {
     transformsSegmentBreaksAcrossItems: engine === 'blink',
   }
 }
-

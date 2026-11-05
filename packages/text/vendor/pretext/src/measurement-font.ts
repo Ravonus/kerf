@@ -62,4 +62,3 @@ export function parseFontSize(font: string): number {
   const m = font.match(/(?:^|\D)(\d+(?:\.\d+)?)\s*px/)
   return m ? parseFloat(m[1]!) : 16
 }
-

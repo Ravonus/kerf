@@ -379,4 +379,3 @@ function getOpeningFit(flags: number[], from: number, to: number, extraWidth: nu
   }
   return extraWidth
 }
-
