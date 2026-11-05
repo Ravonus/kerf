@@ -30,7 +30,7 @@ function Toolbar(props: {
 export default function App() {
   const said = state('Nothing yet')
   const play = () =>
-    (said.value = 'Playing Kiki’s ' + 'Delivery Service')
+    (said.value = 'Playing Kiki’s Delivery Service')
   return (
     <Card title="A toolbar">
       <Toolbar
