@@ -342,7 +342,8 @@ function SearchBar() {
   )
 }
 function List(props: { cities: string[] }) {
-  return <ul>{props.cities.map((c) => <li key={c}>{c}</li>)}</ul>
+  const { cities } = props
+  return <ul>{cities.map((c) => <li key={c}>{c}</li>)}</ul>
 }
 ```
 :::solution
@@ -365,7 +366,8 @@ function SearchBar(props: { query?: string }) {
 }
 
 function List(props: { cities: string[] }) {
-  return <ul>{props.cities.map((c) => <li key={c}>{c}</li>)}</ul>
+  const { cities } = props
+  return <ul>{cities.map((c) => <li key={c}>{c}</li>)}</ul>
 }
 
 export function Cities() {
