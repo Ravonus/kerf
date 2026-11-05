@@ -4,7 +4,8 @@ import { metaExport, routesMeta, h006, staticRouteChecks } from '../src/inspect.
 import { fixture, site } from './dev-server.setup.mjs'
 
 // The `?v=` of a static route's card hashes the card's source and the build: stable in a run, noise in a snapshot.
-const stable = (r) => JSON.parse(JSON.stringify(r).replace(/\?v=[a-z0-9]+/g, '?v=<hash>'))
+const stable = (r: unknown): Awaited<ReturnType<typeof routesMeta>> =>
+  JSON.parse(JSON.stringify(r).replace(/\?v=[a-z0-9]+/g, '?v=<hash>'))
 
 test('the fixture: merged meta, tags, card mode and diagnostics for every route', async () => {
   const r = stable(await routesMeta({ root: fixture, site }))
@@ -55,12 +56,12 @@ test('H002: a static-only preset and a param route whose card is rendered on dem
     '/meta/[name]',
     '/tags/[tag]',
   ])
-  expect(r.routes.find((x) => x.path === '/users/[id]').image).toBe('prerender+on-demand')
+  expect(r.routes.find((x) => x.path === '/users/[id]')!.image).toBe('prerender+on-demand')
 })
 
 test('H006: meta that reads a box or calls a hook, found in the source', () => {
-  const found = []
-  const report = (why, file) => found.push([file, why.slice(0, 30)])
+  const found: string[][] = []
+  const report = (why: string, file: string) => found.push([file, why.slice(0, 30)])
   h006(
     `import { state } from '@weft-js/core'\nconst n = state(1)\nexport const meta = () => ({ title: String(n.value) })`,
     'a.tsx',
@@ -83,8 +84,8 @@ test('H006: meta that reads a box or calls a hook, found in the source', () => {
 })
 
 describe('what `weft check` reports per route', () => {
-  let r
-  const found = (code, route) =>
+  let r: Awaited<ReturnType<typeof routesMeta>>
+  const found = (code: string, route?: string) =>
     r.diagnostics.filter((d) => d.code === code && (!route || d.route === route))
   beforeAll(async () => {
     r = await routesMeta({ root: fixture, site })
@@ -92,9 +93,9 @@ describe('what `weft check` reports per route', () => {
 
   test('H011: what was derived, and text an agent can apply', () => {
     const [d] = found('H011', '/meta/plain')
-    expect(d.severity).toBe('warning')
-    expect(d.why).toContain('"Harvest & storage notes · Acme"')
-    expect(d.help).toBe(
+    expect(d!.severity).toBe('warning')
+    expect(d!.why).toContain('"Harvest & storage notes · Acme"')
+    expect(d!.help).toBe(
       'export const meta: Meta = { title: "Harvest & storage notes", description: "Harvest when 5 < 7 and the \\"tonnes\\" & crates are in: every mark here is escaped wherever it lands." }',
     )
   })
@@ -102,17 +103,17 @@ describe('what `weft check` reports per route', () => {
     expect(found('H011', '/about')).toEqual([])
   })
   test('H012, H013: what routes share, from real samples', () => {
-    expect(found('H012')[0].why).toMatch(/routes share this title/)
-    expect(found('H013')[0].why).toMatch(/the site default/)
+    expect(found('H012')[0]!.why).toMatch(/routes share this title/)
+    expect(found('H013')[0]!.why).toMatch(/the site default/)
   })
   test('the table: each page, sampled from `prerender` and from links, with its source', () => {
     const users = r.routes.find((x) => x.path === '/users/[id]')
-    expect(users.samples[0]).toMatchObject({
+    expect(users!.samples[0]).toMatchObject({
       url: '/users/1',
       title: 'Ada Lovelace · Acme',
       source: { title: 'route', description: 'route', image: 'card' },
     })
-    expect(r.routes.find((x) => x.path === '/meta/plain').source).toEqual({
+    expect(r.routes.find((x) => x.path === '/meta/plain')!.source).toEqual({
       title: 'auto',
       description: 'auto',
       image: 'auto',
@@ -143,7 +144,7 @@ test('H003, H004, H005, H008: each one found on what the routes really produce',
   const r = await routesMeta({ root: fixture, site })
   const card = r.diagnostics.filter((d) => d.route === '/meta/badcard')
   expect(card.map((d) => d.code).sort()).toEqual(['H005', 'H008'])
-  expect(card.find((d) => d.code === 'H008').why).toMatch(/not allowed/)
+  expect(card.find((d) => d.code === 'H008')!.why).toMatch(/not allowed/)
 })
 
 test('metaExport: H014 needs to know whether `meta` reads anything', () => {
