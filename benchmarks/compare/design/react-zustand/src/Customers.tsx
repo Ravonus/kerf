@@ -38,60 +38,7 @@ export function Customers() {
       </div>
 
       <div className={`${card} overflow-hidden`}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-              <tr>
-                <th scope="col" className="px-4 py-3 font-medium">
-                  Name
-                </th>
-                <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">
-                  Email
-                </th>
-                <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">
-                  Plan
-                </th>
-                <th scope="col" className="px-4 py-3 font-medium">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-              {rows.map((c) => (
-                <tr key={c.id}>
-                  <td className="px-4 py-3">
-                    <div className="font-medium">{c.name}</div>
-                    <div className="text-slate-600 sm:hidden dark:text-slate-400">{c.plan}</div>
-                  </td>
-                  <td className="hidden px-4 py-3 text-slate-600 md:table-cell dark:text-slate-400">
-                    {c.email}
-                  </td>
-                  <td className="hidden px-4 py-3 sm:table-cell">{c.plan}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}
-                    >
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <Button
-                      variant="ghost"
-                      className="min-h-9 px-3"
-                      aria-label={`Delete ${c.name}`}
-                      onClick={() => setTarget(c)}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {customerTable(rows, setTarget)}
         {rows.length === 0 && (
           <p className="px-4 py-12 text-center text-slate-600 dark:text-slate-400">
             No customers found
@@ -125,5 +72,64 @@ export function Customers() {
         </Dialog.Portal>
       </Dialog.Root>
     </>
+  )
+}
+
+function customerTable(rows: Customer[], setTarget: (customer: Customer) => void) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+          <tr>
+            <th scope="col" className="px-4 py-3 font-medium">
+              Name
+            </th>
+            <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">
+              Email
+            </th>
+            <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">
+              Plan
+            </th>
+            <th scope="col" className="px-4 py-3 font-medium">
+              Status
+            </th>
+            <th scope="col" className="px-4 py-3 text-right font-medium">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+          {rows.map((c) => (
+            <tr key={c.id}>
+              <td className="px-4 py-3">
+                <div className="font-medium">{c.name}</div>
+                <div className="text-slate-600 sm:hidden dark:text-slate-400">{c.plan}</div>
+              </td>
+              <td className="hidden px-4 py-3 text-slate-600 md:table-cell dark:text-slate-400">
+                {c.email}
+              </td>
+              <td className="hidden px-4 py-3 sm:table-cell">{c.plan}</td>
+              <td className="px-4 py-3">
+                <span
+                  className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}
+                >
+                  {c.status}
+                </span>
+              </td>
+              <td className="px-4 py-2 text-right">
+                <Button
+                  variant="ghost"
+                  className="min-h-9 px-3"
+                  aria-label={`Delete ${c.name}`}
+                  onClick={() => setTarget(c)}
+                >
+                  Delete
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
