@@ -104,7 +104,7 @@ export function ApiKeys({
     now: () => now,
     hasReauth: () => !!onReauth,
     onReauth: (reason: string) => onReauth!(reason),
-    onCreate: (draft: KeyDraft) => onCreate(draft),
+    onCreate: (draft: () => KeyDraft) => onCreate(draft()),
     onRevoke: (key: ApiKey) => onRevoke(key),
     getForm: () => form,
     getOpener: () => opener,

@@ -2,7 +2,7 @@ import { usedWithinDay } from '@weft-js/warp-core'
 import type { State } from '@weft-js/core'
 import { toast } from '../Toast'
 import { afterFlush } from './atoms'
-import type { ApiKey, ApiKeysProps } from './ApiKeys'
+import type { ApiKey, ApiKeysProps, KeyDraft } from './ApiKeys'
 
 export type KeyActionsContext = {
   creating: State<boolean>
@@ -20,7 +20,7 @@ export type KeyActionsContext = {
   now: () => string
   hasReauth: () => boolean
   onReauth: NonNullable<ApiKeysProps['onReauth']>
-  onCreate: ApiKeysProps['onCreate']
+  onCreate: (draft: () => KeyDraft) => Promise<string>
   onRevoke: ApiKeysProps['onRevoke']
   getForm: () => HTMLElement | undefined
   getOpener: () => HTMLElement | undefined
@@ -68,7 +68,11 @@ export function createKeyActions({
       )
     busy.value = true
     try {
-      secret.value = await onCreate({ name: n, scopes: chosen.value, expires: expires.value })
+      secret.value = await onCreate(() => ({
+        name: n,
+        scopes: chosen.value,
+        expires: expires.value,
+      }))
     } catch {
       toast.show({
         title: 'The key wasn’t created',
