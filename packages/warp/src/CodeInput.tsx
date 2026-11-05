@@ -27,6 +27,62 @@ export type CodeInputProps = FieldShell & CodeOwn
 
 const LEAVE = 'Tab indents · Esc then Tab leaves'
 
+function codeKeys(tabSize: () => 2 | 4, set: (area: HTMLTextAreaElement) => void) {
+  let leaving = false
+  const onKey = (e: KeyboardEvent) => {
+    const area = e.currentTarget as HTMLTextAreaElement
+    if (e.key === 'Escape') {
+      leaving = true
+      return
+    }
+    if (e.key !== 'Tab') {
+      if (e.key !== 'Shift') leaving = false
+      return
+    }
+    if (leaving) {
+      leaving = false
+      return
+    }
+    e.preventDefault()
+    const r = indented(area.value, area.selectionStart, area.selectionEnd, tabSize(), e.shiftKey)
+    area.setSelectionRange(r.from, r.to)
+    // execCommand keeps the browser's undo history, which setRangeText throws away
+    if (!document.execCommand?.('insertText', false, r.insert))
+      area.setRangeText(r.insert, r.from, r.to, 'end')
+    area.setSelectionRange(r.start, r.end)
+    set(area)
+  }
+  return onKey
+}
+
+function attachCode(
+  box: () => HTMLDivElement | undefined,
+  text: () => string,
+  language: () => string | undefined,
+) {
+  use(codeLayer, box, () => ({ text: text(), language: language() }))
+}
+
+function codeValue(
+  value: () => CodeOwn['value'],
+  initial: () => string | undefined,
+  onChange: () => CodeOwn['onValueChange'],
+) {
+  return bindable<string>(value, initial, '', onChange)
+}
+
+function codeEvents(held: ReturnType<typeof codeValue>, tabSize: () => 2 | 4) {
+  const set = (area: HTMLTextAreaElement) => held.set(area.value, 'keyboard')
+  return { set, onKey: codeKeys(tabSize, set) }
+}
+
+function codeReset(held: ReturnType<typeof codeValue>, onReset: () => CodeOwn['onReset']) {
+  return () => {
+    held.reset()
+    onReset()?.()
+  }
+}
+
 /**
  * A code field (04 CodeInput; inputs-rich.html:2223-2241): a <textarea> over a layer coloured with the CSS Custom
  * Highlight API, so a key press builds no spans; browsers without it show the textarea's own plain text. Tab indents,
@@ -47,44 +103,19 @@ export function CodeInput({
   onReset,
   ...rest
 }: CodeInputProps) {
-  const held = bindable<string>(
+  const held = codeValue(
     () => value,
     () => defaultValue,
-    '',
     () => onValueChange,
   )
   const lines = derived(() => held.value.split('\n').map((_, n) => n + 1))
   const numbered = derived(() => lineNumbers && !wrap)
   let box: HTMLDivElement | undefined
-  let leaving = false
-  const set = (area: HTMLTextAreaElement) => held.set(area.value, 'keyboard')
-  const onKey = (e: KeyboardEvent) => {
-    const area = e.currentTarget as HTMLTextAreaElement
-    if (e.key === 'Escape') {
-      leaving = true
-      return
-    }
-    if (e.key !== 'Tab') {
-      if (e.key !== 'Shift') leaving = false
-      return
-    }
-    if (leaving) {
-      leaving = false
-      return
-    }
-    e.preventDefault()
-    const r = indented(area.value, area.selectionStart, area.selectionEnd, tabSize, e.shiftKey)
-    area.setSelectionRange(r.from, r.to)
-    // execCommand keeps the browser's undo history, which setRangeText throws away
-    if (!document.execCommand?.('insertText', false, r.insert))
-      area.setRangeText(r.insert, r.from, r.to, 'end')
-    area.setSelectionRange(r.start, r.end)
-    set(area)
-  }
-  use(
-    codeLayer,
+  const { set, onKey } = codeEvents(held, () => tabSize)
+  attachCode(
     () => box,
-    () => ({ text: held.value, language }),
+    () => held.value,
+    () => language,
   )
   return (
     <Field
@@ -92,10 +123,7 @@ export function CodeInput({
       hint={hint ?? LEAVE}
       attrs={{ 'data-multiline': '' }}
       filled={held.value.length > 0}
-      reset={() => {
-        held.reset()
-        onReset?.()
-      }}
+      reset={codeReset(held, () => onReset)}
       control={(p) => (
         <div data-part="body">
           <div
