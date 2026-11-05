@@ -17,7 +17,11 @@ const trip = defineState('demo-trip', () => ({
   pack: state(false, { persist: 'local', sync: 'tabs' }),
 }))
 
-function Row({ id, text, done }: {
+function Row({
+  id,
+  text,
+  done,
+}: {
   id: string
   text: string
   done: State<boolean>
@@ -52,7 +56,10 @@ export default function UiState() {
   return (
     <div data-part="panes">
       {['Ana', 'Ben'].map((who) => (
-        <Card key={who} title={who}>
+        <Card
+          key={who}
+          title={who}
+        >
           <Row
             id="flights"
             text="Book flights"
