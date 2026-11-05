@@ -11,18 +11,21 @@ const warpPkg = {
     dependencies: { '@weft-js/core': '*', '@weft-js/warp': '*' },
   }),
 }
-const codes = (r) =>
+const codes = (r: Awaited<ReturnType<typeof check>>) =>
   r.diagnostics
     .filter((d) => d.code.startsWith('D0'))
     .map((d) => d.code)
-    .sort()
-const run = async (src, files = warpPkg) => {
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+const run = async (src: string, files: Record<string, string> = warpPkg) => {
   const root = project({ ...files, 'src/Page.tsx': src })
   return { root, result: await check(root, { files: ['src/Page.tsx'] }) }
 }
 /** Apply a diagnostic's edits, last first, as an agent or an editor does. */
-function apply(root, d) {
-  const file = join(root, d.fix.edits[0].file)
+function apply(
+  root: string,
+  d: { fix: { edits: { file: string; offset: [number, number]; text: string }[] } },
+) {
+  const file = join(root, d.fix.edits[0]!.file)
   let text = readFileSync(file, 'utf8')
   for (const e of [...d.fix.edits].sort((a, b) => b.offset[0] - a.offset[0]))
     text = text.slice(0, e.offset[0]) + e.text + text.slice(e.offset[1])
@@ -31,14 +34,14 @@ function apply(root, d) {
 }
 
 /** A warp app of several files, checked whole. */
-const app = async (pages) => {
+const app = async (pages: Record<string, string>) => {
   const root = project({ ...warpPkg, ...pages })
   return { root, result: await check(root, { files: Object.keys(pages) }) }
 }
 const IMPORT = `import { Heading } from '@weft-js/warp'\n`
 
 describe("what isn't off-system", () => {
-  const sheet = (css, path = 'src/app.css') =>
+  const sheet = (css: string, path = 'src/app.css') =>
     app({ [path]: css, 'src/Page.tsx': 'export const P = () => <p>x</p>' })
   test('a url, a zero radius, and sizes that follow the text or the container pass', async () => {
     const { result } = await sheet(
@@ -89,11 +92,11 @@ describe('a CSP against inlined CSS', () => {
 
 describe('D012 reads the policy a browser would apply', () => {
   const page = 'export const P = () => <p>x</p>'
-  const found = async (files) =>
+  const found = async (files: Record<string, string>) =>
     (await app({ 'src/Page.tsx': page, ...files })).result.diagnostics
       .filter((d) => d.code === 'D012')
       .map((d) => d.severity)
-  const in_ = (policy) => ({
+  const in_ = (policy: string) => ({
     'src/headers.tsx': `export const h = { 'Content-Security-Policy': "${policy}" }\n`,
   })
 
@@ -406,7 +409,10 @@ test('a share card is an image: its raw colours and sizes are fine', async () =>
   ).toEqual([])
 })
 
-function registerPolicyCases(found, in_) {
+function registerPolicyCases(
+  found: (files: Record<string, string>) => Promise<string[]>,
+  in_: (policy: string) => Record<string, string>,
+) {
   test.each([
     ['style-src alone', "style-src 'self'", ['error']],
     ['default-src as the fallback', "default-src 'self'", ['error']],
@@ -569,7 +575,7 @@ function registerTailwindSpacing() {
   })
 }
 
-function registerAccessibleMarkupCases(bare) {
+function registerAccessibleMarkupCases(bare: Record<string, string>) {
   test.each([
     `<label>Name <input /></label>`,
     `<><label for="a">Name</label><input id="a" /></>`,
