@@ -31,6 +31,40 @@ function ProductRow({ product, cart }: { product: Product; cart: State<Cart> }) 
   )
 }
 
+function Checkout({
+  email,
+  items,
+  receipt,
+  checkout,
+}: {
+  email: State<string>
+  items: State<number>
+  receipt: State<{ email: string; total: number } | null>
+  checkout: (e: SubmitEvent) => void
+}) {
+  return (
+    <>
+      <form onSubmit={checkout}>
+        <Input
+          label="Email for the receipt"
+          type="email"
+          required
+          value={email.value}
+          onInput={(e) => (email.value = e.currentTarget.value)}
+        />
+        <Button type="submit" disabled={items.value === 0}>
+          Place order
+        </Button>
+      </form>
+      {receipt.value && (
+        <p>
+          Thanks! ${receipt.value.total} paid. The receipt goes to {receipt.value.email}.
+        </p>
+      )}
+    </>
+  )
+}
+
 export default function Shop() {
   const cart = state<Cart>({})
   const search = state('')
@@ -68,23 +102,7 @@ export default function Shop() {
       <p>
         <strong>Total ${total.value}</strong>
       </p>
-      <form onSubmit={checkout}>
-        <Input
-          label="Email for the receipt"
-          type="email"
-          required
-          value={email.value}
-          onInput={(e) => (email.value = e.currentTarget.value)}
-        />
-        <Button type="submit" disabled={items.value === 0}>
-          Place order
-        </Button>
-      </form>
-      {receipt.value && (
-        <p>
-          Thanks! ${receipt.value.total} paid. The receipt goes to {receipt.value.email}.
-        </p>
-      )}
+      <Checkout email={email} items={items} receipt={receipt} checkout={checkout} />
     </Card>
   )
 }
