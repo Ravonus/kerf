@@ -108,44 +108,118 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
   const win = doc.defaultView!
   const timers = new Map<HTMLElement, Animation | ReturnType<typeof setTimeout>>()
   const seen = new Set<string>()
-  const items = () => [
-    ...region.querySelectorAll<HTMLElement>(
-      ':scope > [data-scope="toast"][data-part="root"]:not([data-state])',
-    ),
-  ]
+  const items = () => toastItems(region)
   // WebKit's first pointerenter after a move can come before :hover is true, and nothing follows it, so the event counts too
   let over = false
   const expanded = () => over || region.matches(':hover, :focus-within')
   const paused = () => expanded() || doc.hidden
 
-  function layout() {
-    const list = items()
-    const open = expanded()
-    let y = 0
-    const front = list[0]?.offsetHeight ?? 0
-    const dir = region.dataset.position?.startsWith('top') ? 1 : -1 // top corners stack downward
-    list.forEach((el, i) => {
-      el.style.zIndex = String(100 - i)
-      const behind = i > 0 && !open
-      el.toggleAttribute('data-behind', behind)
-      el.inert = behind
-      el.style.maxBlockSize = behind ? `${front}px` : ''
-      el.style.overflow = behind ? 'hidden' : ''
-      if (open) {
-        el.style.setProperty('--_y', `${dir * y}px`)
-        el.style.setProperty('--_s', '1')
-        el.style.setProperty('--_o', i < 5 ? '1' : '0')
-        y += el.offsetHeight + 8
-      } else {
-        const k = Math.min(i, 3)
-        el.style.setProperty('--_y', `${dir * k * 12}px`)
-        el.style.setProperty('--_s', String(1 - k * 0.05))
-        el.style.setProperty('--_o', i < 3 ? '1' : '0')
-      }
-    })
-    region.style.blockSize = list.length ? `${open ? Math.max(0, y - 8) : front}px` : ''
-  }
+  const layout = () => layoutToasts(region, items, expanded)
 
+  const { render, syncTimers } = toastTimers(toasts, items, paused, layout, timers, seen, doc)
+  // the binding renders the list into the region; follow it
+  const observer = new win.MutationObserver(() => render())
+  observer.observe(region, {
+    childList: true,
+    attributes: true,
+    attributeFilter: ['data-state'],
+    subtree: false,
+  })
+  const unsubscribe = toasts.subscribe(() => win.queueMicrotask(render))
+
+  const onHover = () => {
+    layout()
+    syncTimers()
+  }
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key !== 'F8') return
+    e.preventDefault()
+    region.focus()
+    items()[0]?.querySelector<HTMLElement>('button')?.focus()
+  }
+  const { onDown, onMove, onUp } = toastSwipe(toasts, layout)
+  const follow = toastFollow(region, doc, win, onHover, () => {
+    over = false
+  })
+  const unwatch = onTopModal(doc, follow)
+  const on: [EventTarget, string, (e: never) => void][] = [
+    [
+      region,
+      'pointerenter',
+      (e: PointerEvent) => {
+        over = e.pointerType !== 'touch'
+        onHover()
+      },
+    ],
+    [
+      region,
+      'pointerleave',
+      () => {
+        over = false
+        onHover()
+      },
+    ],
+    [region, 'focusin', onHover],
+    [region, 'focusout', () => win.requestAnimationFrame(onHover)],
+    [doc, 'visibilitychange', syncTimers],
+    [doc, 'keydown', onKey],
+    [region, 'pointerdown', onDown],
+    [region, 'pointermove', onMove],
+    [region, 'pointerup', onUp],
+    [region, 'pointercancel', onUp],
+  ]
+  for (const [t, type, fn] of on) t.addEventListener(type, fn as EventListener)
+  render()
+  return {
+    update: render,
+    destroy() {
+      observer.disconnect()
+      unsubscribe()
+      unwatch()
+      follow(null)
+      for (const [t, type, fn] of on) t.removeEventListener(type, fn as EventListener)
+      for (const a of timers.values()) stop(a)
+    },
+  }
+}
+
+function layoutToasts(region: HTMLElement, items: () => HTMLElement[], expanded: () => boolean) {
+  const list = items()
+  const open = expanded()
+  let y = 0
+  const front = list[0]?.offsetHeight ?? 0
+  const dir = region.dataset.position?.startsWith('top') ? 1 : -1 // top corners stack downward
+  list.forEach((el, i) => {
+    el.style.zIndex = String(100 - i)
+    const behind = i > 0 && !open
+    el.toggleAttribute('data-behind', behind)
+    el.inert = behind
+    el.style.maxBlockSize = behind ? `${front}px` : ''
+    el.style.overflow = behind ? 'hidden' : ''
+    if (open) {
+      el.style.setProperty('--_y', `${dir * y}px`)
+      el.style.setProperty('--_s', '1')
+      el.style.setProperty('--_o', i < 5 ? '1' : '0')
+      y += el.offsetHeight + 8
+    } else {
+      const k = Math.min(i, 3)
+      el.style.setProperty('--_y', `${dir * k * 12}px`)
+      el.style.setProperty('--_s', String(1 - k * 0.05))
+      el.style.setProperty('--_o', i < 3 ? '1' : '0')
+    }
+  })
+  region.style.blockSize = list.length ? `${open ? Math.max(0, y - 8) : front}px` : ''
+}
+
+function toastTimers(
+  toasts: ToastStore,
+  items: () => HTMLElement[],
+  paused: () => boolean,
+  layout: () => void,
+  timers: Map<HTMLElement, Animation | ReturnType<typeof setTimeout>>,
+  seen: Set<string>,
+  doc: Document,
+) {
   // the timer is the progress hairline running down; its end dismisses
   function arm(el: HTMLElement, t: { id: string; life: number }) {
     if (timers.has(el) || !t.life) return
@@ -188,26 +262,10 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
       }
     layout()
   }
-  // the binding renders the list into the region; follow it
-  const observer = new win.MutationObserver(() => render())
-  observer.observe(region, {
-    childList: true,
-    attributes: true,
-    attributeFilter: ['data-state'],
-    subtree: false,
-  })
-  const unsubscribe = toasts.subscribe(() => win.queueMicrotask(render))
+  return { render, syncTimers }
+}
 
-  const onHover = () => {
-    layout()
-    syncTimers()
-  }
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key !== 'F8') return
-    e.preventDefault()
-    region.focus()
-    items()[0]?.querySelector<HTMLElement>('button')?.focus()
-  }
+function toastSwipe(toasts: ToastStore, layout: () => void) {
   // swipe: the toast follows the pointer; past 35% of its width or a flick (> 0.5px/ms) dismisses it that way
   let drag: { el: HTMLElement; x: number; t: number; id: string } | null = null
   const onDown = (e: PointerEvent) => {
@@ -240,6 +298,16 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
       layout()
     }
   }
+  return { onDown, onMove, onUp }
+}
+
+function toastFollow(
+  region: HTMLElement,
+  doc: Document,
+  win: Window,
+  onHover: () => void,
+  clearOver: () => void,
+) {
   // showModal makes everything outside the dialog inert, top layer or not, so while a modal is open the region and the
   // live regions live inside the topmost one, a popover there so the dialog's box neither clips nor positions it. A
   // comment holds their place. data-moving stops the toasts replaying their entrance; their timers are Animations,
@@ -271,51 +339,20 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
       doc.addEventListener(
         'pointermove',
         () => {
-          over = false
+          clearOver()
           onHover()
         },
         { once: true },
       )
     else onHover()
   }
-  const unwatch = onTopModal(doc, follow)
-  const on: [EventTarget, string, (e: never) => void][] = [
-    [
-      region,
-      'pointerenter',
-      (e: PointerEvent) => {
-        over = e.pointerType !== 'touch'
-        onHover()
-      },
-    ],
-    [
-      region,
-      'pointerleave',
-      () => {
-        over = false
-        onHover()
-      },
-    ],
-    [region, 'focusin', onHover],
-    [region, 'focusout', () => win.requestAnimationFrame(onHover)],
-    [doc, 'visibilitychange', syncTimers],
-    [doc, 'keydown', onKey],
-    [region, 'pointerdown', onDown],
-    [region, 'pointermove', onMove],
-    [region, 'pointerup', onUp],
-    [region, 'pointercancel', onUp],
+  return follow
+}
+
+function toastItems(region: HTMLElement) {
+  return [
+    ...region.querySelectorAll<HTMLElement>(
+      ':scope > [data-scope="toast"][data-part="root"]:not([data-state])',
+    ),
   ]
-  for (const [t, type, fn] of on) t.addEventListener(type, fn as EventListener)
-  render()
-  return {
-    update: render,
-    destroy() {
-      observer.disconnect()
-      unsubscribe()
-      unwatch()
-      follow(null)
-      for (const [t, type, fn] of on) t.removeEventListener(type, fn as EventListener)
-      for (const a of timers.values()) stop(a)
-    },
-  }
 }
