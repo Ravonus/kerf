@@ -5,8 +5,9 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { createRequire, stripTypeScriptTypes } from 'node:module'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type * as Playwright from 'playwright-core'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
@@ -14,7 +15,7 @@ const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
 const armScript = stripTypeScriptTypes(
   readFileSync(fileURLToPath(new URL('../../warp-core/src/flow.ts', import.meta.url)), 'utf8'),
 ).replace(/^export /gm, '')
-const read = (file) => readFileSync(join(styles, file), 'utf8')
+const read = (file: string) => readFileSync(join(styles, file), 'utf8')
 const css = ['warp.css', 'components/base.css', 'components/surface.css', 'data/table.css']
   .filter((f) => {
     try {
@@ -44,22 +45,22 @@ const PAGE = `
   <div style="block-size:1600px"></div>`
 
 const flowed = ['card', 'tile', 'art', 'heading', 'flat-row', 'row-0', 'row-3']
-const timelines = (page, id) =>
+const timelines = (page: Playwright.Page, id: string) =>
   page.evaluate(
     (i) =>
       document
-        .getElementById(i)
+        .getElementById(i)!
         .getAnimations()
-        .filter((a) => a.animationName?.startsWith('warp-'))
+        .filter((a) => (a as CSSAnimation).animationName?.startsWith('warp-'))
         .map((a) => ({
-          name: a.animationName,
-          root: a.timeline?.source === document.scrollingElement,
+          name: (a as CSSAnimation).animationName,
+          root: (a.timeline as ScrollTimeline | null)?.source === document.scrollingElement,
           kind: a.timeline?.constructor.name,
         })),
     id,
   )
 
-let browser
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -67,7 +68,10 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function open(options, expression = 'balanced') {
+async function open(
+  options?: Parameters<Playwright.Browser['newContext']>[0],
+  expression = 'balanced',
+) {
   const context = await browser.newContext({ viewport: { width: 800, height: 700 }, ...options })
   const page = await context.newPage()
   await page.setContent(
@@ -103,15 +107,15 @@ test('families move differently, and the arrival is long enough to see', async (
   const { page, close } = await open(undefined, 'vivid')
   const names = await Promise.all(
     ['card', 'tile', 'art', 'heading', 'flat-row'].map(
-      async (id) => (await timelines(page, id))[0].name,
+      async (id) => (await timelines(page, id))[0]!.name,
     ),
   )
   expect(new Set(names).size).toBe(5)
   const opacity = async () =>
-    +(await page.evaluate(() => getComputedStyle(document.getElementById('card')).opacity))
-  const at = async (inView) => {
+    +(await page.evaluate(() => getComputedStyle(document.getElementById('card')!).opacity))
+  const at = async (inView: number) => {
     await page.evaluate((y) => {
-      const top = document.getElementById('card').offsetTop
+      const top = document.getElementById('card')!.offsetTop
       window.scrollTo(0, top - innerHeight + y)
     }, inView)
     await page.waitForTimeout(100)
@@ -148,10 +152,10 @@ test('a Shell deep in the page gates its own host, not the page: flow keeps runn
     <div data-flow="tile" id="thumb"><div data-scope="shell" id="shell"><nav></nav><div data-part="scrim" hidden></div></div></div>
     ${Array.from({ length: 6 }, (_, i) => `<div data-flow="card" id="after-${i}" style="block-size:200px">Card ${i}</div>`).join('')}
     <div style="block-size:3000px"></div>`)
-  const gate = (id) =>
+  const gate = (id: string | null) =>
     page.evaluate(
       (i) =>
-        getComputedStyle(i ? document.getElementById(i) : document.documentElement)
+        getComputedStyle(i ? document.getElementById(i)! : document.documentElement)
           .getPropertyValue('--warp-flow-gate')
           .trim(),
       id,
@@ -170,7 +174,7 @@ test('a code block resting at the fold finishes its scan, and the scan runs unde
     <div style="block-size:3000px"></div>`)
   await page.waitForTimeout(1200) // the scan plays once on a timer; it never rests part way
   const m = await page.evaluate(() => {
-    const c = document.getElementById('code'),
+    const c = document.getElementById('code')!,
       a = getComputedStyle(c, '::after')
     return {
       scale: a.scale,
@@ -185,7 +189,7 @@ test('a code block resting at the fold finishes its scan, and the scan runs unde
   expect(m.iso).toBe('isolate')
   // the text paints above the scan: the pixel under a glyph's stem is the ink, not the scan's ground
   const box = await page.evaluate(() => {
-    const b = document.getElementById('pre').getBoundingClientRect()
+    const b = document.getElementById('pre')!.getBoundingClientRect()
     return { x: b.left, y: b.top, w: b.width, h: b.height }
   })
   const shot = await page.screenshot({
@@ -198,12 +202,12 @@ test('a code block resting at the fold finishes its scan, and the scan runs unde
     const c = document.createElement('canvas')
     c.width = img.width
     c.height = img.height
-    const g = c.getContext('2d')
+    const g = c.getContext('2d')!
     g.drawImage(img, 0, 0)
     const d = g.getImageData(0, 0, img.width, img.height).data,
-      cols = new Set()
+      cols = new Set<number>()
     for (let i = 0; i < d.length; i += 4)
-      if (d[i] + d[i + 1] + d[i + 2] < 450) cols.add((i / 4) % img.width)
+      if (d[i]! + d[i + 1]! + d[i + 2]! < 450) cols.add((i / 4) % img.width)
     return { cols: cols.size, width: img.width, last: Math.max(...cols) }
   }, shot.toString('base64'))
   expect(inked.last).toBeGreaterThan(inked.width * 0.95) // ink reaches the box's end: nothing covers the lines' tails
@@ -212,7 +216,10 @@ test('a code block resting at the fold finishes its scan, and the scan runs unde
 
 const ABOVE = `<div style="block-size:900px"></div>`
 const BELOW = `<div style="block-size:3000px"></div>`
-async function stage(body, { expression = 'balanced', head = '' } = {}) {
+async function stage(
+  body: string,
+  { expression = 'balanced', head = '' }: { expression?: string; head?: string } = {},
+) {
   const context = await browser.newContext({ viewport: { width: 800, height: 700 } })
   const page = await context.newPage()
   await page.setContent(
@@ -221,14 +228,18 @@ async function stage(body, { expression = 'balanced', head = '' } = {}) {
   await page.waitForTimeout(50)
   return { page, close: () => context.close() }
 }
-const fixedAt = (page, id) =>
+const fixedAt = (page: Playwright.Page, id: string) =>
   page.evaluate((i) => {
-    const r = document.querySelector(`#${i} i`).getBoundingClientRect()
+    const r = document.querySelector(`#${i} i`)!.getBoundingClientRect()
     return [Math.round(r.left), Math.round(r.top)]
   }, id)
-const style = (page, id, prop) =>
-  page.evaluate(([i, p]) => getComputedStyle(document.getElementById(i))[p], [id, prop])
-const scroll = async (page, top) => {
+const style = (page: Playwright.Page, id: string, prop: string) =>
+  page.evaluate(
+    ([i, p]) =>
+      getComputedStyle(document.getElementById(i)!)[p as keyof CSSStyleDeclaration] as string,
+    [id, prop] as [string, string],
+  )
+const scroll = async (page: Playwright.Page, top: number) => {
   await page.evaluate((y) => scrollTo({ top: y, behavior: 'instant' }), top)
   await page.waitForTimeout(120)
 }
@@ -249,7 +260,7 @@ test('a fixed child sits where it asked at rest, in every family that moves', as
     'plot',
     'icon',
   ]
-  const attr = (f) => (f === 'surface' ? 'data-scope="surface"' : `data-flow="${f}"`)
+  const attr = (f: string) => (f === 'surface' ? 'data-scope="surface"' : `data-flow="${f}"`)
   const { page, close } = await stage(
     `<div style="block-size:60px"></div>${families.map((f) => `<div ${attr(f)} id="${f}" style="block-size:36px">${fixed}</div>`).join('')}${BELOW}`,
   ) // all at rest: clear of the bar, past their entry
@@ -285,7 +296,7 @@ test("a component's own translate and scale still apply at rest, and no transiti
   const running = await page.evaluate(
     () =>
       document
-        .getElementById('card')
+        .getElementById('card')!
         .getAnimations()
         .filter((a) => a.constructor.name === 'CSSTransition').length,
   )
@@ -301,7 +312,7 @@ test.each(['quiet', 'balanced', 'vivid'])(
         `${ABOVE}<div data-flow="card" id="card" style="block-size:${height}px"></div>${BELOW}`,
         { expression, head: ':root { --warp-flow-top: 57px }' },
       )
-      const bottom = (at) =>
+      const bottom = (at: number) =>
         scroll(page, 900 + height - at)
           .then(() => style(page, 'card', 'opacity'))
           .then(Number)
@@ -353,7 +364,7 @@ test('a code block in a card that rises in waits under the fold where it is draw
   )
   const at = () =>
     page.evaluate(() => {
-      const c = document.getElementById('code')
+      const c = document.getElementById('code')!
       return {
         top: c.getBoundingClientRect().top,
         wait: c.hasAttribute('data-flow-scan'),
@@ -380,7 +391,7 @@ test('a code block in a card that rises in waits under the fold where it is draw
 
 // Every family names an entry and an exit, and each pair is its own. Only fields (and a focused or targeted element,
 // above) stay whole: a form someone is filling must not fade under their cursor.
-const FAMILIES = {
+const FAMILIES: Record<string, string[]> = {
   card: ['data-flow="card"', 'warp-in-card', 'warp-out-card'],
   surface: ['data-scope="surface"', 'warp-in-card', 'warp-out-card'],
   tile: ['data-flow="tile"', 'warp-in-tile', 'warp-out-card'],
@@ -418,7 +429,7 @@ test('every flow family has an entry and an exit; only fields stay whole', async
 test("a live example's host moves for what it shows: specimen, block and plot are each their own", async () => {
   const pairs = Object.entries(FAMILIES).map(([, [, i, o]]) => `${i}+${o}`)
   for (const f of ['specimen', 'block', 'plot', 'icon'])
-    expect(pairs.filter((p) => p === `${FAMILIES[f][1]}+${FAMILIES[f][2]}`).length, f).toBe(1)
+    expect(pairs.filter((p) => p === `${FAMILIES[f]![1]}+${FAMILIES[f]![2]}`).length, f).toBe(1)
   const { page, close } = await stage(
     `${ABOVE}<div data-flow="specimen" id="s" style="block-size:300px"></div><div data-flow="block" id="b" style="block-size:300px"></div><div data-flow="plot" id="p" style="block-size:300px"></div>${BELOW}`,
     { expression: 'vivid' },
@@ -426,16 +437,16 @@ test("a live example's host moves for what it shows: specimen, block and plot ar
   await scroll(page, 900 - 700 + 40) // the specimen's top 40px are in: all three still arriving
   const moved = await page.evaluate(() =>
     ['s', 'b', 'p'].map((id) => {
-      const c = getComputedStyle(document.getElementById(id))
+      const c = getComputedStyle(document.getElementById(id)!)
       return [c.scale, c.translate, c.transformOrigin]
     }),
   )
-  expect(moved[0][0]).not.toBe('none') // a specimen grows in about its centre, with no travel
-  expect(+moved[0][0].split(' ')[0]).toBeLessThan(1)
-  expect(moved[0][1]).toBe('none')
-  expect(moved[1][1]).not.toBe('none') // a block rises as it unfolds from its top edge
-  expect(moved[1][2]).toMatch(/ 0px$/)
-  expect(moved[2][2]).toMatch(/^0px /) // a plot opens from its left edge
+  expect(moved[0]![0]).not.toBe('none') // a specimen grows in about its centre, with no travel
+  expect(+moved[0]![0]!.split(' ')[0]!).toBeLessThan(1)
+  expect(moved[0]![1]).toBe('none')
+  expect(moved[1]![1]).not.toBe('none') // a block rises as it unfolds from its top edge
+  expect(moved[1]![2]).toMatch(/ 0px$/)
+  expect(moved[2]![2]).toMatch(/^0px /) // a plot opens from its left edge
   await close()
 })
 
@@ -473,7 +484,8 @@ test('prose flows by itself: its paragraphs, lists and quotes as items, tables a
     </div>
     <p data-flow="item" id="item">Item</p><div data-flow="card" id="card-twin">Card</div>
     <div style="block-size:3000px"></div>`)
-  const names = async (id) => (await timelines(page, id)).map((t) => [t.name, t.kind, t.root])
+  const names = async (id: string) =>
+    (await timelines(page, id)).map((t) => [t.name, t.kind, t.root])
   const item = await names('item'),
     card = await names('card-twin')
   expect(item.length).toBe(2)
@@ -481,10 +493,10 @@ test('prose flows by itself: its paragraphs, lists and quotes as items, tables a
   expect(await names('p-table')).toEqual(card)
   expect((await names('p-pre')).map((n) => n[0])).toEqual(['warp-in-fade', 'warp-out-fade'])
   expect(
-    await page.evaluate(() => getComputedStyle(document.getElementById('p-pre')).overflowX),
+    await page.evaluate(() => getComputedStyle(document.getElementById('p-pre')!).overflowX),
   ).toBe('auto') // keeps its own scrolling
-  expect((await names('p-figure'))[0][0]).toBe('warp-in-image')
-  expect((await names('p-h2'))[0][0]).toBe('warp-in-heading')
+  expect((await names('p-figure'))[0]![0]).toBe('warp-in-image')
+  expect((await names('p-h2'))[0]![0]).toBe('warp-in-heading')
   expect(await timelines(page, 'p-li-p')).toEqual([]) // moves with its list
   await close()
 })
@@ -517,17 +529,17 @@ async function unarmed() {
   await page.waitForTimeout(50)
   return { page, close: () => context.close() }
 }
-const moving = (page, id) =>
+const moving = (page: Playwright.Page, id: string) =>
   page.evaluate(
     (i) =>
       document
-        .getElementById(i)
+        .getElementById(i)!
         .getAnimations()
-        .filter((a) => a.animationName?.startsWith('warp-')).length,
+        .filter((a) => (a as CSSAnimation).animationName?.startsWith('warp-')).length,
     id,
   )
-const opacityOf = (page, id) =>
-  page.evaluate((i) => +getComputedStyle(document.getElementById(i)).opacity, id)
+const opacityOf = (page: Playwright.Page, id: string) =>
+  page.evaluate((i) => +getComputedStyle(document.getElementById(i)!).opacity, id)
 
 test('flow waits for a person: before the first scroll nothing moves, and text below the fold is whole for a crawler or an audit', async () => {
   const { page, close } = await unarmed()
@@ -549,13 +561,13 @@ test('the first scroll arms it: what was on screen stays put, what is below rise
     true,
   )
   expect(
-    await page.evaluate(() => document.getElementById('first').hasAttribute('data-flow-seen')),
+    await page.evaluate(() => document.getElementById('first')!.hasAttribute('data-flow-seen')),
   ).toBe(true)
   expect(await moving(page, 'first')).toBe(0) // no part-faded jump on the first screen
   expect(await moving(page, 'later')).toBeGreaterThan(0)
   expect(await opacityOf(page, 'later')).toBe(0) // waiting below the fold, now that someone is scrolling
   await page.evaluate(() =>
-    document.getElementById('later').scrollIntoView({ block: 'center', behavior: 'instant' }),
+    document.getElementById('later')!.scrollIntoView({ block: 'center', behavior: 'instant' }),
   )
   await page.waitForTimeout(100)
   expect(await opacityOf(page, 'later')).toBe(1)
