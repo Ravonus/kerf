@@ -1,5 +1,5 @@
 import { createRoot, derived, state, untrack, type Derived, type State } from '@weft-js/core'
-import { client } from '../router'
+import { client, peers } from '../router'
 import { fnOf, fns, go, net, registered, runtime, server } from './foundation'
 import { FnError, isRedirect, keyOf, redirect } from './primitives'
 import { isMade, produce, resetMade, share } from './draft'
@@ -299,3 +299,56 @@ export function resetRetry() {
 
 /** Server: drop `tags` for this response and the shared cache. Client: refetch what reads them. */
 export const invalidate = (...tags: string[]) => cache.invalidate(...tags)
+
+/** How old a value can be when its tab comes back and still be left alone. */
+const FOCUS = 30_000
+
+if ((import.meta as ImportMeta & { hot?: unknown }).hot)
+  client.refreshed = () =>
+    untrack(() => {
+      for (const e of entries.values()) outdate(e)
+    })
+
+// ---- start-up ----------------------------------------------------------------------------------------------------
+
+// In the browser, as the first route chunk that uses a query loads (before hydration): the page's entries, and
+// whatever a navigation brought before this module loaded.
+if (typeof document !== 'undefined' && !runtime.scope) {
+  client.seed = seed
+  client.now = () => clock
+  seed(client.seeds)
+  client.seeds = undefined
+  const el = document.getElementById('weft-cache')
+  if (el) seed(JSON.parse(el.textContent))
+  // A stream's chunks say what landed: here is everything so far, and each one's script pushes the next.
+  // They were read for this page, so anything written here since is newer.
+  const landed = ((globalThis as { $wc?: { c: Wire[] }[] }).$wc ||= []),
+    since = clock
+  for (const l of landed) seed(l.c, since)
+  landed.push = (...l) => {
+    for (const x of l) seed(x.c, since)
+    return Array.prototype.push.apply(landed, l)
+  }
+  const later: string[] = []
+  const back = () => {
+    if (document.hidden) return
+    const old = performance.now() - FOCUS
+    // Showing and focus can come apart: one already stale is being read, and marking it again would throw that read away.
+    untrack(() => {
+      for (const e of entries.values())
+        if (e.readers && e.has.value && e.at < old && !e.stale.value) outdate(e)
+    })
+    if (later.length) staleTags(later.splice(0))
+    owed()
+  }
+  // A hidden tab reads nothing until it shows: every open tab refetching on every write is what this would cost otherwise.
+  if (peers)
+    peers.onmessage = (m) => {
+      if (!m.data) return // the session changed: run.tsx reloads
+      if (document.hidden) later.push(...m.data)
+      else staleTags(m.data)
+    }
+  addEventListener('focus', back)
+  addEventListener('online', owed)
+  document.addEventListener('visibilitychange', back)
+}

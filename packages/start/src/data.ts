@@ -13,13 +13,10 @@
 // (exec.ts) is the server's, and the in-process fake transport @weft-js/core/test turns on loads it on demand. Realtime
 // (research 30) costs a query app one method here: `q.live()` imports live.ts on its first call.
 
-import { untrack } from '@weft-js/core'
 import type { MediaAsset } from '@weft-js/core/media'
-import { client, peers } from './router'
-import { cache, clock, entries, outdate, owed, resetRetry, seed, staleTags } from './data/cache'
-import { configureReset, runtime } from './data/foundation'
+import { cache, resetRetry } from './data/cache'
+import { configureReset } from './data/foundation'
 import { resetMutation } from './data/mutation'
-import type { Wire } from './data/types'
 
 export type {
   VerifyOptions,
@@ -100,61 +97,8 @@ export const CLIENT_IP = 'x-weft-client-ip'
 /** Options a plugin adds to `query` and `mutation`, by augmenting this; its extension's `guard` reads them. Empty here. */
 export interface FnOptions {}
 
-/** How old a value can be when its tab comes back and still be left alone. */
-const FOCUS = 30_000
-
-if ((import.meta as ImportMeta & { hot?: unknown }).hot)
-  client.refreshed = () =>
-    untrack(() => {
-      for (const e of entries.values()) outdate(e)
-    })
-
 configureReset(() => {
   cache.clear()
   resetRetry()
   resetMutation()
 })
-
-// ---- start-up ----------------------------------------------------------------------------------------------------
-
-// In the browser, as the first route chunk that uses a query loads (before hydration): the page's entries, and
-// whatever a navigation brought before this module loaded.
-if (typeof document !== 'undefined' && !runtime.scope) {
-  client.seed = seed
-  client.now = () => clock
-  seed(client.seeds)
-  client.seeds = undefined
-  const el = document.getElementById('weft-cache')
-  if (el) seed(JSON.parse(el.textContent))
-  // A stream's chunks say what landed: here is everything so far, and each one's script pushes the next.
-  // They were read for this page, so anything written here since is newer.
-  const landed = ((globalThis as { $wc?: { c: Wire[] }[] }).$wc ||= []),
-    since = clock
-  for (const l of landed) seed(l.c, since)
-  landed.push = (...l) => {
-    for (const x of l) seed(x.c, since)
-    return Array.prototype.push.apply(landed, l)
-  }
-  const later: string[] = []
-  const back = () => {
-    if (document.hidden) return
-    const old = performance.now() - FOCUS
-    // Showing and focus can come apart: one already stale is being read, and marking it again would throw that read away.
-    untrack(() => {
-      for (const e of entries.values())
-        if (e.readers && e.has.value && e.at < old && !e.stale.value) outdate(e)
-    })
-    if (later.length) staleTags(later.splice(0))
-    owed()
-  }
-  // A hidden tab reads nothing until it shows: every open tab refetching on every write is what this would cost otherwise.
-  if (peers)
-    peers.onmessage = (m) => {
-      if (!m.data) return // the session changed: run.tsx reloads
-      if (document.hidden) later.push(...m.data)
-      else staleTags(m.data)
-    }
-  addEventListener('focus', back)
-  addEventListener('online', owed)
-  document.addEventListener('visibilitychange', back)
-}
