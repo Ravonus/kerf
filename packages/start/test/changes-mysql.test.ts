@@ -1,19 +1,12 @@
 // The change feed on a real MySQL. `WEFT_TEST_MYSQL=mysql://…`, a database that's yours to lose.
+import { until6000 as until } from './change-wait.helpers.mjs'
+import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import { createPool } from 'mysql2/promise'
 import { createFeed, type Poke } from '../src/changes'
 import { changeStatements } from '../src/changes-sql.mjs'
 import { mysqlChanges } from '../src/db/changes-mysql'
 
 const url = process.env.WEFT_TEST_MYSQL!
-const wait = (ms = 0) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
-async function until(ok: () => boolean, ms = 6000) {
-  const end = Date.now() + ms
-  while (!ok() && Date.now() < end) await wait(5)
-  expect(ok()).toBe(true)
-}
 
 // Needs a MySQL server, named by WEFT_TEST_MYSQL.
 describe.skipIf(!url)('mysql change feed', () => {

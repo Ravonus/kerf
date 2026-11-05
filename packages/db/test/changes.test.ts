@@ -1,20 +1,13 @@
 // The change feed on a real MongoDB: `WEFT_TEST_MONGO` a replica set, `WEFT_TEST_MONGO_SOLO` a standalone. Their
 // databases are yours to lose.
+import { until6000 as until } from '../../start/test/change-wait.helpers.mjs'
+import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import { createFeed } from '@weft-js/start/changes'
 import type { Db, MongoClient, ObjectId } from 'mongodb'
 import { mongoChanges } from '../src/mongo'
 
 const url = process.env.WEFT_TEST_MONGO
 const solo = process.env.WEFT_TEST_MONGO_SOLO
-const wait = (ms = 0) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
-async function until(ok: () => boolean, ms = 6000) {
-  const end = Date.now() + ms
-  while (!ok() && Date.now() < end) await wait(5)
-  expect(ok()).toBe(true)
-}
 
 // A change stream needs a real replica set, which only a machine with one configures.
 describe.skipIf(!url)('mongo change feed', () => {

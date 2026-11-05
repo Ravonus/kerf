@@ -1,5 +1,6 @@
 // The change feed without a database: tags, coalescing, the barrier, status and modes. A fake source plays the database;
 // test/changes-postgres.test.ts and changes-sqlite.test.ts run the same promises against real ones.
+import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import type { statfsSync } from 'node:fs'
 import {
   memoryBus,
@@ -28,11 +29,6 @@ import {
   type ScopeOptions,
 } from '../src/exec'
 import { onNetwork } from '../src/db/changes-sqlite'
-
-const wait = (ms = 0) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
 
 function fakeSource(over: Partial<Source> = {}) {
   let sink!: Sink

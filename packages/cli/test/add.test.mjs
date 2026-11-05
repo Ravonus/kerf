@@ -1,4 +1,5 @@
 // `weft add` (research 34 §7): one insert into any config format, and no change at all when it can't be sure.
+import { repoRoot } from '../../../scripts/lib/helpers.mjs'
 import {
   existsSync,
   mkdirSync,
@@ -249,7 +250,7 @@ describe('weft add', () => {
   })
 
   it('no package or doc names a `weft db` command that does not exist', () => {
-    const repo = join(import.meta.dirname, '../../..')
+    const repo = repoRoot
     const dirs = [
       ...readdirSync(join(repo, 'packages')).map((p) => join(repo, 'packages', p, 'src')),
       join(repo, 'packages/cli/docs'),

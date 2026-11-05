@@ -1,4 +1,5 @@
 // The live pack driven as a user: keyboard paths, states, error paths, focus moves, announcements.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { fireEvent } from '@testing-library/dom'
 import { state } from '@weft-js/core'
 import { flush, render } from '@weft-js/core/test'
@@ -45,10 +46,6 @@ const mount = (fn: () => unknown) => render(fn)
 beforeEach(() => {
   render(() => <Toaster />)
 })
-const tick = () =>
-  new Promise((r) => {
-    setTimeout(r, 0)
-  })
 
 function inbox(extra: Record<string, unknown> = {}) {
   const items = state<Note[]>(NOTES)

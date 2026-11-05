@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 // Format tracked source without touching generated output or archived results.
 import { spawnSync } from 'node:child_process'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { repoRoot as root } from '../lib/helpers.mjs'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const args = process.argv.slice(2)
 if (args.some((arg) => arg !== '--write')) {
   console.error('Usage: node scripts/quality/format.mjs [--write]')

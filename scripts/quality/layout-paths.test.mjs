@@ -1,14 +1,14 @@
+import { repoRoot } from '../lib/helpers.mjs'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
-import { fileURLToPath } from 'node:url'
 import weft from '../../packages/core/vite.mjs'
 import { BROWSER, entry } from './boundaries.mjs'
 
-const root = fileURLToPath(new URL('../../', import.meta.url))
+const root = repoRoot
 
 await test('archived and generated paths stay untracked', (t) => {
   const prefixes = [

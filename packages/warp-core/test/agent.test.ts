@@ -1,4 +1,5 @@
 // The agent pack's pure logic: the fold first, since every part renders only what it returns.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import {
   argsDiff,
   applySuggest,
@@ -309,10 +310,6 @@ describe('stick', () => {
     })
     return el
   }
-  const tick = () =>
-    new Promise((r) => {
-      setTimeout(r)
-    })
 
   test('goes to the bottom and follows growth while within 48px', async () => {
     const el = box(1000, 100)

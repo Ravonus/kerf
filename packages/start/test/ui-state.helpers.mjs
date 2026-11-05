@@ -1,8 +1,5 @@
 // Shared browser-test helpers for the UI state fixture.
-export const sleep = (ms) =>
-  new Promise((ok) => {
-    setTimeout(ok, ms)
-  })
+export { sleep } from '../../../scripts/lib/sleep.mjs'
 
 export const person = (page, pane, name) => page.getByTestId(`${pane}-${name}`)
 export const box = (page, pane, name) =>

@@ -17,7 +17,6 @@ const freePort = () =>
       s.close(() => ok(port))
     })
   })
-const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 const windows = process.platform === 'win32'
 
 /** A path for a command line that goes through the shell: cmd takes no JSON escapes. */

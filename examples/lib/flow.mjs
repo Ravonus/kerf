@@ -5,10 +5,9 @@ import http from 'node:http'
 import { brotliCompressSync, constants } from 'node:zlib'
 import { freshness } from './app.mjs'
 import { raceOnce } from './race.mjs'
-import { SITE_METRICS, median, spread } from './stats.mjs'
+import { SITE_METRICS, median, sleep, spread } from './stats.mjs'
 import { benchUser } from '../shared/pg/env.mjs'
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 export const cookieHeader = (cookies) =>
   cookies?.length ? cookies.map((c) => `${c.name}=${c.value}`).join('; ') : undefined
 export const randomValue = () => `v${randomBytes(5).toString('hex')}`

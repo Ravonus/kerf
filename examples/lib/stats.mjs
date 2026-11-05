@@ -1,10 +1,7 @@
 // Every number here comes with its spread, and a win is only called when the spread allows it.
 
-export const median = (xs) => {
-  const s = [...xs].sort((a, b) => a - b),
-    m = s.length >> 1
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
-}
+import { median, sleep } from '../../scripts/lib/helpers.mjs'
+export { median, sleep }
 
 /** `{ med, min, max, n }` of the numbers in `xs`; holes (a metric a run didn't report) are dropped. */
 export function spread(xs) {

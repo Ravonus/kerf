@@ -1,5 +1,6 @@
 // The hub and `/_weft/rt` without a server: rings and cursors, backpressure, limits, the Origin check and the bus
 // contract. What a sink does, a real connection does; test/rt.test.mjs runs the same protocol over HTTP.
+import { sleep as wait } from '../../../scripts/lib/sleep.mjs'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import {
   channel,
@@ -73,10 +74,7 @@ const open = async (body: Body, s = sink(), ctx: object = {}) => {
 }
 const of = <E extends keyof Frames>(s: { frames: [string, unknown][] }, e: E) =>
   s.frames.filter((f) => f[0] === e).map((f) => f[1] as Frames[E])
-const wait = () =>
-  new Promise((ok) => {
-    setTimeout(ok)
-  })
+
 const bare: StandardSchemaV1 = {
   '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ({ value: v }) },
 }

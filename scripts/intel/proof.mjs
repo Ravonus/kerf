@@ -6,14 +6,14 @@
 //
 // Intel Node comes from NODE_X64 (a directory holding bin/node), or is downloaded to .release/node-x64 and checked against
 // nodejs.org's SHASUMS256.txt. The tarballs come from `node scripts/release.mjs` after `build-platform` for darwin-x64.
+import { repoRoot } from '../lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 const tarballs = resolve(process.argv[2] ?? join(root, '.release'))
 if (process.platform !== 'darwin' || process.arch !== 'arm64')
   throw new Error(

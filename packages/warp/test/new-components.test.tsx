@@ -1,11 +1,8 @@
 // Menu, Accordion, Slider, RadioGroup, Ticker, the Select menu and toast.promise: roles, keyboard, state.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { flush, render } from '@weft-js/core/test'
 import * as F from './fixtures/NewParts'
 
-const tick = () =>
-  new Promise((r) => {
-    setTimeout(r)
-  })
 const key = (el: Element, k: string) =>
   el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
 

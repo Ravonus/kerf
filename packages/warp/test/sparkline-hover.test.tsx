@@ -1,11 +1,8 @@
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { fireEvent } from '@testing-library/dom'
 import { flush, render } from '@weft-js/core/test'
 import { Sparkline } from '../src/Charts'
 
-const tick = (ms = 0) =>
-  new Promise((r) => {
-    setTimeout(r, ms)
-  })
 const settle = async () => {
   await tick()
   await flush()

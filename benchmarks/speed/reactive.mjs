@@ -1,3 +1,4 @@
+import { upperMedian as median } from '../../scripts/lib/helpers.mjs'
 // The reactive core alone, no DOM: js-reactivity-benchmark's kairo cases, cellx, a dynamic graph, then creation and
 // memory. One library per process, so one's JIT state can't touch another's.
 //   node --expose-gc reactive.mjs weft|weft-base|solid|alien [--rounds 9]
@@ -283,8 +284,6 @@ function dynamic({ width, layers, sources, staticShare, readShare }) {
 }
 
 // ---- running -------------------------------------------------------------------------------------------------------
-
-const median = (list) => [...list].sort((a, b) => a - b)[list.length >> 1]
 
 function timed(setup, ms = 120) {
   const run = root(setup)

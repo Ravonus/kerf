@@ -1,5 +1,6 @@
 // Copy a variant out of its folder (read only), install, and build it in the work area. Weft variants always go through
 // local.mjs, so they're on tarballs of this checkout whatever their package.json says.
+import { walk as walkFiles, repoRoot } from '../../scripts/lib/helpers.mjs'
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
@@ -17,11 +18,10 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative } from 'node:path'
-import { here } from './app.mjs'
 import { quote } from './serve.mjs'
 import { spread } from './stats.mjs'
 
-const repo = join(here, '..')
+const repo = repoRoot
 export const localMjs = join(repo, 'packages/create/scripts/local.mjs')
 
 // Never copied: a real env file or anything else that can hold a credential, and any build or dependency folder.
@@ -99,22 +99,15 @@ export function run(cmd, { cwd, env, log }) {
 }
 
 const sha = (b) => createHash('sha256').update(b).digest('hex')
-function walk(dir, each) {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    const p = join(dir, e.name)
-    if (e.isDirectory()) {
-      if (e.name !== 'cache' && e.name !== 'node_modules' && e.name !== 'server') walk(p, each)
-    } else if (e.isFile()) each(p)
-  }
-}
-
+const walkBuild = (dir, each) =>
+  walkFiles(dir, each, (name) => name === 'cache' || name === 'node_modules' || name === 'server')
 /** What this build can legitimately serve: every output file by content, so a served asset either matches or isn't ours. */
 function fingerprint(root, v) {
   const hashes = new Set(),
     newest = []
   for (const d of [...v.stack.out, v.publicDir])
     if (existsSync(join(root, d)))
-      walk(join(root, d), (f) => {
+      walkBuild(join(root, d), (f) => {
         if (/\.(js|mjs|css)$/.test(f)) hashes.add(sha(readFileSync(f)))
         newest.push(f)
       })
@@ -130,7 +123,7 @@ function installedIsPacked(root, store) {
     execFileSync('tar', ['-xzf', tgz, '-C', tmp])
     let n = 0,
       wrong = []
-    walk(join(tmp, 'package'), (f) => {
+    walkBuild(join(tmp, 'package'), (f) => {
       const r = relative(join(tmp, 'package'), f),
         i = join(root, 'node_modules/@weft-js/core', r)
       n++
@@ -384,7 +377,7 @@ async function buildWithMaps(v) {
     const maps = []
     for (const d of held)
       if (existsSync(join(v.root, d)))
-        walk(join(v.root, d), (f) => {
+        walkBuild(join(v.root, d), (f) => {
           if (/\.m?js\.map$/.test(f)) {
             const js = f.replace(/\.map$/, '')
             if (existsSync(js)) {

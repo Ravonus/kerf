@@ -15,6 +15,7 @@
 // there is left out of the core's optionalDependencies, and that platform runs the WASM build.
 //
 // A publish that stops part way is safe to run again: versions already on the registry are skipped.
+import { repoRoot } from './lib/helpers.mjs'
 import { execFileSync, spawnSync } from 'node:child_process'
 import {
   existsSync,
@@ -29,10 +30,9 @@ import {
 import { builtinModules, createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { SECRET, STRAY } from './quality/stray.mjs'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const root = repoRoot
 const argv = process.argv.slice(2)
 const flag = (name) =>
   argv.includes(`--${name}`) ? argv[argv.indexOf(`--${name}`) + 1] : undefined

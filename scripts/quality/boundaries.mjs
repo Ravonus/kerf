@@ -2,12 +2,13 @@
 // browser entry reaches Node two files down.
 //
 //   node scripts/quality/boundaries.mjs [--json]
+import { repoRoot } from '../lib/helpers.mjs'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 const FRAMEWORK =
   /^(?:@weft-js\/|react(?:-dom)?(?:\/|$)|solid-js(?:\/|$)|vue(?:\/|$)|svelte(?:\/|$)|preact(?:\/|$))/
 const NODE = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)])
@@ -20,6 +21,7 @@ export const BROWSER = {
     './jsx-runtime',
     './dom',
     './head',
+    './markup',
     './persist',
     './history',
     './sync',
@@ -92,6 +94,34 @@ function imports(file) {
   return out
 }
 
+/** The markup entry loads only the two audited string-processing modules. */
+export function standaloneMarkup(cwd = root) {
+  const core = join(cwd, 'packages/core')
+  const value = JSON.parse(readFileSync(join(core, 'package.json'), 'utf8')).exports?.['./markup']
+  const sub = typeof value === 'string' ? value : value?.default
+  if (
+    typeof sub !== 'string' ||
+    (typeof value === 'object' &&
+      Object.keys(value).some((key) => !['types', 'default'].includes(key)))
+  )
+    return false
+  const allowed = new Set(
+    ['markup.mjs', 'markup-shared.mjs'].map((name) => join(core, 'src', name)),
+  )
+  const start = resolve(core, sub)
+  if (!allowed.has(start) || !isFile(start)) return false
+  let pure = true
+  walk(
+    start,
+    (file, spec) => {
+      const next = spec.startsWith('.') && resolveRelative(file, spec)
+      if (!next || !allowed.has(next)) pure = false
+    },
+    (file) => !allowed.has(file),
+  )
+  return pure
+}
+
 /** Every file `start` loads, however deep: `visit` sees each import; a file `skip` names isn't followed into. */
 export function walk(start, visit, skip = () => false) {
   const seen = new Map([[start, undefined]])
@@ -121,6 +151,14 @@ export const trail = (seen, file) => {
 /** Every broken boundary, as `{ rule, file, detail, fix }`. */
 export function findProblems() {
   const problems = []
+  const pureMarkup = standaloneMarkup()
+  if (!pureMarkup)
+    problems.push({
+      rule: 'markup-runtime',
+      file: 'packages/core/package.json',
+      detail: 'markup must load only its standalone string-processing modules',
+      fix: 'Keep the markup export independent of framework and Node code.',
+    })
   for (const [dir, subs] of Object.entries(BROWSER)) {
     for (const sub of subs) {
       const start = entry(dir, sub)
@@ -149,7 +187,7 @@ export function findProblems() {
     .map(String)
     .filter((f) => /\.[cm]?[jt]sx?$/.test(f))) {
     for (const { spec } of imports(join(core, name)))
-      if (FRAMEWORK.test(spec))
+      if (FRAMEWORK.test(spec) && !(spec === '@weft-js/core/markup' && pureMarkup))
         problems.push({
           rule: 'warp-core-framework',
           file: `packages/warp-core/src/${name}`,

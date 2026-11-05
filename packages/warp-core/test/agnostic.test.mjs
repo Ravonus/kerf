@@ -1,13 +1,16 @@
 // @vitest-environment node
 // warp-core is the framework-agnostic layer: plain TS over the DOM. Nothing in src may import weft, React, Preact,
 // Solid, Vue or Svelte, or contain JSX, so another binding can sit on it unchanged.
+// The shared markup entry is string processing; its complete import graph is checked below.
 import { readFileSync, readdirSync } from 'node:fs'
+import { standaloneMarkup } from '../../../scripts/quality/boundaries.mjs'
 
 const src = new URL('../src/', import.meta.url)
 const files = readdirSync(src, { recursive: true }).filter((f) => /\.[mc]?[jt]sx?$/.test(f))
 
 test('no framework imports and no JSX in warp-core/src', () => {
   expect(files.length).toBeGreaterThan(0)
+  expect(standaloneMarkup()).toBe(true)
   for (const f of files) {
     expect(f, 'no .tsx/.jsx files').not.toMatch(/x$/)
     const text = readFileSync(new URL(f, src), 'utf8')
@@ -16,7 +19,8 @@ test('no framework imports and no JSX in warp-core/src', () => {
         /^\s*(?:import|export)\b[^;\n]*?\bfrom\s*['"]([^'"]+)['"]|^\s*import\s*['"]([^'"]+)['"]|\bimport\(\s*['"]([^'"]+)['"]\s*\)/gm,
       ),
     ].map((m) => m[1] ?? m[2] ?? m[3])
-    for (const s of specifiers) expect(s, `${String(f)} imports ${String(s)}`).toMatch(/^\.\.?\//)
+    for (const s of specifiers)
+      expect(s, `${String(f)} imports ${String(s)}`).toMatch(/^(?:\.\.?\/|@weft-js\/core\/markup$)/)
   }
 })
 

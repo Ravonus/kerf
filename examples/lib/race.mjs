@@ -1,9 +1,8 @@
+import { sleep } from '../../scripts/lib/helpers.mjs'
 // race.*: does the page end up telling the truth? Each probe resets the database, drives a real browser, holds or shuffles the
 // replies with Playwright route interception (the server does the work in order; only the answers are late), and then compares
 // the list on screen with Postgres. Pass or fail, nothing else, and a fail outranks any millisecond (rule 7).
 import { centre, press, target, tracker, trustedClick } from './flow.mjs'
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 /** The same seed, the same order of replies: a failure can be replayed. */
 export function shuffled(n, seed) {

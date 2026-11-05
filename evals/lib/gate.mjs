@@ -1,11 +1,11 @@
 // Shared exit-gate helpers keep command failures and recorded check results consistent.
 import { spawnSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { repoRoot } from '../../scripts/lib/helpers.mjs'
 
 /** The repository root shared by exit gates and their package dependencies. */
-export const repo = resolve(fileURLToPath(new URL('../..', import.meta.url)))
+export const repo = repoRoot
 
 /** Resolve local package dependencies by the folder that matches their npm name. */
 export const localPackages = (root) => (name) =>
@@ -31,20 +31,7 @@ export function commands(dir, maxBuffer, mergeEnv = false) {
   return { run, must }
 }
 
-/** Poll until a value is ready, retaining the gates' timeout and retry behavior. */
-export async function until(what, fn, ms = 60_000) {
-  const end = Date.now() + ms
-  for (;;) {
-    const v = await Promise.resolve()
-      .then(fn)
-      .catch(() => undefined)
-    if (v) return v
-    if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
-    await new Promise((ok) => {
-      setTimeout(ok, 50)
-    })
-  }
-}
+export { until } from '../../scripts/lib/helpers.mjs'
 
 /** Reject unequal JSON values with a bounded description of the difference. */
 export function eq(a, b, what) {

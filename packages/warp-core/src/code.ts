@@ -1,6 +1,8 @@
 // CodeInput's editing and its highlighted layer (04 CodeInput; inputs-rich.html:2223): the keys a code field changes,
 // a small tokenizer, and the layer itself, drawn with the CSS Custom Highlight API so no key press builds a span.
 
+import { esc as escapeHtml } from '@weft-js/core/markup'
+
 /** Indent or outdent. A selection across lines moves whole lines; a caret takes one indent. */
 export function indented(text: string, start: number, end: number, size: number, outdent = false) {
   const pad = ' '.repeat(size)
@@ -61,8 +63,7 @@ export function tokenize(text: string, language = 'code') {
   return spans
 }
 
-const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' }
-const esc = (s: string) => s.replace(/[&<>]/g, (c) => HTML_ESCAPES[c]!)
+const esc = (s: string) => escapeHtml(s, 'text')
 const TSX_KEYWORDS =
   'import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|class|extends|new|await|async|type|interface|typeof|keyof|as|try|catch|throw|yield'
 const SHELL = /(#[^\n]*)|("[^"\n]*"|'[^'\n]*')|(?<![\w-])(--?[\w-]+)|^(\s*\w[\w-]*)/gm

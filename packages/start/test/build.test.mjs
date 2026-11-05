@@ -1,6 +1,7 @@
 // `weft build` (research 25 §6): Vite + Nitro to `.output`, run as the production server it makes. Node end to end
 // (pages, prerendered and on-demand cards, hydration in Chrome); Bun runs its build when `bun` is on PATH; Deno's
 // build is checked to complete (no deno here).
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import {
   existsSync,
@@ -12,7 +13,6 @@ import {
   utimesSync,
   writeFileSync,
 } from 'node:fs'
-import { createServer } from 'node:net'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -20,13 +20,6 @@ import { fnId, inlineSheets, sheetPieces } from '../src/vite.mjs'
 import { INLINE_CSS_MAX } from '../src/inline.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
 
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 // Each build runs in its own node process, as `weft build` does: Nitro's build stalls inside vitest's module runner.
 function build({ preset, ...rest }) {
   const opts = JSON.stringify({ ...rest, preset, logLevel: 'error' })

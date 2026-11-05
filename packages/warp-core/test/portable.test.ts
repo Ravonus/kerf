@@ -1,14 +1,10 @@
+import { vi } from 'vitest'
 // Portability: the core drives the specimen markup with plain DOM, no framework. Tabs wired by hand (nextIndex for
 // keys, indicator + overflow for the face), a modal dialog, and a toast region rendered from the store: the same
 // actions the weft binding attaches, so a React or Svelte binding is only rendering plus these calls.
 import { dialog, indicator, nextIndex, overflow, toastStore, toaster } from '../src'
 
 afterEach(() => document.body.replaceChildren())
-const frames = () =>
-  new Promise((r) => {
-    setTimeout(r, 100)
-  }) // three animation frames: place, then drop data-instant two frames later
-
 test('tabs: arrow keys select and focus with one tab stop, panels follow, the indicator moves', async () => {
   document.body.innerHTML = `
     <div data-scope="tabs" data-part="root">
@@ -47,10 +43,11 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
       select(to)
     }
   })
-  await frames()
   const bar = list.querySelector<HTMLElement>('[data-part="indicator"]')!
-  expect(bar.style.getPropertyValue('--warp-b')).toMatch(/px$/)
-  expect(bar.hasAttribute('data-instant')).toBe(false)
+  await vi.waitFor(() => {
+    expect(bar.style.getPropertyValue('--warp-b')).toMatch(/px$/)
+    expect(bar.hasAttribute('data-instant')).toBe(false)
+  })
 
   tabs[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
   expect(document.activeElement).toBe(tabs[2])

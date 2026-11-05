@@ -1,10 +1,10 @@
 // The rules Oxlint has no built-in for, as an Oxlint plugin so they show up with every other lint. These are rules for the
 // framework's own code; what apps get is `weft check`, in the compiler and the CLI.
+import { repoRoot } from '../lib/helpers.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 
 // ---- what is public ----
 

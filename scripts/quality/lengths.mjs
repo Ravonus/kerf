@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // Collect every tracked or new source file and compare it to the Git-anchored baseline.
+import { repoRoot } from '../lib/helpers.mjs'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { compareLengths, renamedBaseline, validateBaseline } from './length-baseline.mjs'
 import { rustFindings } from './length-rust.mjs'
 
-export const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+export const root = repoRoot
 const baselinePath = 'scripts/quality/length-baseline.json'
 const git = (args, cwd = root) =>
   execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()

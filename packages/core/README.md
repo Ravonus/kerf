@@ -39,25 +39,29 @@ The source of each page is in [packages/cli/docs](../cli/docs).
 
 ## Entries
 
-| Import | What it has |
-|---|---|
-| `@weft-js/core` | `state`, `derived`, `watch`, `onMount`, `onCleanup`, `untrack`, `flush`, `batch`, `context`, `defineState`, `resource`, `<Boundary>` |
-| `@weft-js/core/keyed` | `box.get(key)`, `box.set(fn)` and `state.linked`, for a page the Vite plugin builds without them |
-| `@weft-js/core/dom` | `render` and `hydrate` |
-| `@weft-js/core/ssr` | `renderToString`, `renderToStringAsync` and `renderToStream` |
-| `@weft-js/core/test` | `render`, `screen`, `user`, `flush`, a fake clock, `scope`, `touches` and `toTouchAtMost` |
-| `@weft-js/core/persist`, `/sync`, `/history` | `defineState`'s `persist`, `sync: 'tabs'` and `history` options. The Vite plugin adds each import where it's used |
-| `@weft-js/core/browser` | Browser events as values: `online`, `visible`, `lifecycle`, `media`, `on`, `interval` |
-| `@weft-js/core/interaction` | `interaction()`: hover, focus and press as state |
-| `@weft-js/core/style` | Style groups |
-| `@weft-js/core/ds` | The design language: `Stack`, `Row`, `Heading`, `Text` and the rest |
-| `@weft-js/core/surface` | Canvas and WebGL as layout children: `defineSurface` and `<Surface>` |
-| `@weft-js/core/media`, `/text`, `/shape`, `/head` | `<Media>`, `<Text>`, skeleton shapes and `setHead`, which `@weft-js/start` uses |
-| `@weft-js/core/config` | `defineConfig` for `weft.config.ts` |
-| `@weft-js/core/vite` | The Vite plugin |
-| `@weft-js/core/compiler` | `transform(source, options)`, which returns `{ code, map, diagnostics }`, and `backend`, which says which build is running |
+| Import                                            | What it has                                                                                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `@weft-js/core`                                   | `state`, `derived`, `watch`, `onMount`, `onCleanup`, `untrack`, `flush`, `batch`, `context`, `defineState`, `resource`, `<Boundary>` |
+| `@weft-js/core/keyed`                             | `box.get(key)`, `box.set(fn)` and `state.linked`, for a page the Vite plugin builds without them                                     |
+| `@weft-js/core/dom`                               | `render` and `hydrate`                                                                                                               |
+| `@weft-js/core/ssr`                               | `renderToString`, `renderToStringAsync` and `renderToStream`                                                                         |
+| `@weft-js/core/test`                              | `render`, `screen`, `user`, `flush`, a fake clock, `scope`, `touches` and `toTouchAtMost`                                            |
+| `@weft-js/core/persist`, `/sync`, `/history`      | `defineState`'s `persist`, `sync: 'tabs'` and `history` options. The Vite plugin adds each import where it's used                    |
+| `@weft-js/core/browser`                           | Browser events as values: `online`, `visible`, `lifecycle`, `media`, `on`, `interval`                                                |
+| `@weft-js/core/interaction`                       | `interaction()`: hover, focus and press as state                                                                                     |
+| `@weft-js/core/style`                             | Style groups                                                                                                                         |
+| `@weft-js/core/ds`                                | The design language: `Stack`, `Row`, `Heading`, `Text` and the rest                                                                  |
+| `@weft-js/core/surface`                           | Canvas and WebGL as layout children: `defineSurface` and `<Surface>`                                                                 |
+| `@weft-js/core/media`, `/text`, `/shape`, `/head` | `<Media>`, `<Text>`, skeleton shapes and `setHead`, which `@weft-js/start` uses                                                      |
+| `@weft-js/core/config`                            | `defineConfig` for `weft.config.ts`                                                                                                  |
+| `@weft-js/core/vite`                              | The Vite plugin                                                                                                                      |
+| `@weft-js/core/compiler`                          | `transform(source, options)`, which returns `{ code, map, diagnostics }`, and `backend`, which says which build is running           |
+| `@weft-js/core/markup`                            | `markup(html)` indexes selectors for CSS pruning; `esc(text, context?)` escapes HTML                                                 |
 
-The other entries (`/client`, `/hydration`, `/markup`, `/node-purge`, `/hmr`, `/plugin`, `/devtools`, `/agent`,
+`esc` escapes `&`, `<` and double quotes by default. Pass `'text'` to escape `&`, `<` and `>`,
+or `'full'` to escape all four. Apostrophes stay literal. This entry runs in Node and browsers.
+
+The other entries (`/client`, `/hydration`, `/node-purge`, `/hmr`, `/plugin`, `/devtools`, `/agent`,
 `/media-probe`, `/test/plugins`, `/style/matrix`, `/jsx-runtime`) are for the CLI, `@weft-js/start`, plugins and compiled
 code.
 

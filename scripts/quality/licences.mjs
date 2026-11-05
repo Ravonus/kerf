@@ -1,11 +1,10 @@
 // Every dependency's licence, as pnpm reads it from the workspace's installed packages, against the list of licences this repo accepts. Rust's are in deny.toml.
 //
 //   node scripts/quality/licences.mjs
+import { repoRoot } from '../lib/helpers.mjs'
 import { execFileSync } from 'node:child_process'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const root = repoRoot
 export const ALLOWED = new Set([
   'MIT',
   'MIT-0',

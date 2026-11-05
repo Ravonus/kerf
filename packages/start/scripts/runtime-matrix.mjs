@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { freePort } from '../../../scripts/lib/helpers.mjs'
 // The runtime matrix (PLAN §4.1, research 28 §5): build one app per runtime, serve each build on its own runtime with
 // its own empty database, and run one e2e file against it. This builds on Node for all three, so it's the check that
 // a Bun or Deno break doesn't ship. `create-weft/scripts/alt-runtimes.mjs` is the one with no Node on the machine.
@@ -12,7 +13,6 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -35,13 +35,6 @@ const SERVERS = {
 }
 
 const log = (...a) => console.log('[matrix]', ...a)
-const freePort = () =>
-  new Promise((ok) => {
-    const s = createServer().listen(0, () => {
-      const { port } = s.address()
-      s.close(() => ok(port))
-    })
-  })
 const version = (cmd) =>
   spawnSync(cmd, ['--version'], { encoding: 'utf8' }).stdout.split('\n')[0].trim()
 

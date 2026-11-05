@@ -1,11 +1,8 @@
 // When a Table is cards: the width that decides it, measured the way the table measures it.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { flush, render } from '@weft-js/core/test'
 import { Table, type Column } from '../src/Table'
 
-const tick = (ms = 0) =>
-  new Promise((r) => {
-    setTimeout(r, ms)
-  })
 const settle = async () => {
   await tick()
   await flush()

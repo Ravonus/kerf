@@ -1,10 +1,10 @@
 // What claiming leaves behind and what it does when it can't claim: markers, keys, and a key that isn't there.
 // weft-allow T004, T005: framework test of hydration; server markup and node identity are the subject
+import { sleep as settle } from '../../../scripts/lib/sleep.mjs'
 import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { createRoot, derived, effect, flush, rt, state, view } from '@weft-js/core'
 import { hydration } from '../src/hydrate'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module: the same file compiled for the server, then for hydration
 import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'
 import * as Client from './fixtures/ssr/Claims.tsx?weft-hydrate'
 
@@ -18,10 +18,7 @@ const put = (html: string) => {
   c.innerHTML = html
   return c
 }
-const settle = () =>
-  new Promise((ok) => {
-    setTimeout(ok)
-  })
+
 const comments = (c: Element) => {
   const w = document.createTreeWalker(c, 128),
     out: string[] = []

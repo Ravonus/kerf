@@ -1,4 +1,5 @@
 // The examples in warp-core's README, run as they're written (test/fixtures/direct-*.tsx): behaviour with no warp component.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { flush, render } from '@weft-js/core/test'
@@ -6,10 +7,6 @@ import { transformWithOxc } from 'vite'
 import { AccountMenu } from './fixtures/direct-menu'
 import { Settings } from './fixtures/direct-tabs'
 
-const tick = () =>
-  new Promise((r) => {
-    setTimeout(r)
-  })
 const settle = async () => {
   await tick()
   await flush()

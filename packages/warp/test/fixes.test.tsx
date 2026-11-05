@@ -1,4 +1,5 @@
 // Regressions from the Kobalte audit that jsdom can see; layout, stacking and Escape are in overlays.browser.test.mjs.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { flush, render } from '@weft-js/core/test'
 import type { Address, IsoDate } from '@weft-js/warp-core'
 import type { Place } from '../src/PlaceField'
@@ -29,10 +30,6 @@ import {
 } from '../src/index'
 import { ComboField } from '../src/Combobox'
 
-const tick = (ms = 0) =>
-  new Promise((r) => {
-    setTimeout(r, ms)
-  })
 const settle = async () => {
   await tick()
   await flush()

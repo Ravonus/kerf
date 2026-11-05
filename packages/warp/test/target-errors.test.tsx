@@ -1,4 +1,5 @@
 // Page errors from the QA sweep: a listener given something other than the Element it assumed.
+import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { fireEvent } from '@testing-library/dom'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -7,10 +8,6 @@ import { Kanban } from '../src/collab/Kanban'
 import { Select } from '../src/Select'
 import { RichTextEditor } from '../src/RichTextEditor'
 
-const tick = (ms = 0) =>
-  new Promise((r) => {
-    setTimeout(r, ms)
-  })
 const settle = async () => {
   await tick()
   await flush()
