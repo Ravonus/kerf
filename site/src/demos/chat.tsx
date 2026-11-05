@@ -8,8 +8,7 @@ export default function Chat() {
   const joined = state(false)
   const up = state(true)
   const draft = state('')
-  // A plain http page (such as on a LAN) has no
-  // randomUUID, so use getRandomValues.
+  // LAN HTTP has no randomUUID; use getRandomValues.
   const id = crypto
     .getRandomValues(new Uint32Array(4))
     .join('-')
@@ -22,9 +21,8 @@ export default function Chat() {
   })
   const send = (e: Event) => {
     e.preventDefault()
-    void chat.send('say', {
-      text: draft.value || 'Hello',
-    })
+    const message = { text: draft.value || 'Hello' }
+    void chat.send('say', message)
     draft.value = ''
   }
   const join = () => {
