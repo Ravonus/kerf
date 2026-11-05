@@ -2,6 +2,7 @@
 import { untrack } from '@weft-js/core'
 import { hideRule } from '@weft-js/warp-core'
 import { Sheet } from './Table-rows'
+import { Checkbox } from './Choice'
 import { tableHead } from './Table-head'
 import { tableBody } from './Table-body'
 import { tableToolbar } from './Table-toolbar'
@@ -13,15 +14,15 @@ type Model<T> = ReturnType<typeof tableModel<T>>
 
 /** Render the table under the caller's owner. */
 export function tableView<T>(m: Model<T>) {
-  const { input, refs, base, source, selection, details, paging, toolbar, hideable, flip } = m
-  const { id, typed, sel, hidden, picking, picked, shape, sheet } = base
+  const { input, refs, base, source, selection, details, paging, toolbar } = m
+  const { id, sel, hidden, shape, sheet } = base
   return (
     <div
       ref={(n) => (refs.el = n)}
       data-scope="table"
       data-phone={shape.value}
       data-state={source.phase.value}
-      data-density={input.density()}
+      data-density={input.density}
       id={id}
     >
       {untrack(() => hidden.value.length > 0) && (
@@ -31,85 +32,53 @@ export function tableView<T>(m: Model<T>) {
           innerHTML={untrack(() => hideRule(id, hidden.value))}
         ></style>
       )}
-      {toolbar.value &&
-        tableToolbar({
-          filter: input.filter,
-          actions: input.actions,
-          picker: () => input.picker()!,
-          typed,
-          count: paging.count,
-          picking,
-          picked,
-          id,
-          hideable,
-          hidden,
-          flip,
-          setTrigger: (n) => (refs.columnsButton = n),
-          trigger: () => refs.columnsButton!,
-        })}
-      {sel && tableBulk({ chosen: selection.chosen, write: selection.write, bulk: input.bulk })}
-      {shape.value === 'cards' &&
-        selection.sortChoices.value.length > 0 &&
-        tableSortbar({
-          order: base.order,
-          cols: base.cols,
-          sortChoices: selection.sortChoices,
-          askSort: selection.askSort,
-        })}
-      {tableViewport(m)}
+      {toolbar.value && tableToolbar(m)}
+      {sel && tableBulk({ chosen: selection.chosen, write: selection.write, props: input })}
+      {shape.value === 'cards' && selection.sortChoices.value.length > 0 && tableSortbar(m)}
+      <div
+        data-part="viewport"
+        tabindex="0"
+        role="region"
+        aria-labelledby={`${id}-cap`}
+        style={input.maxHeight ? `--warp-table-max-h:${input.maxHeight}` : undefined}
+      >
+        <table
+          role="table"
+          aria-labelledby={`${id}-cap`}
+          aria-rowcount={source.shown.value.length + 1}
+        >
+          <caption id={`${id}-cap`} data-part={input.captionHidden ? 'sr-only' : undefined}>
+            {input.caption}
+          </caption>
+          <thead>
+            <tr role="row">
+              {sel && (
+                <th role="columnheader" scope="col" data-part="select" data-pinned="first">
+                  <Checkbox
+                    checked={selection.headerCheck.value === 'all'}
+                    indeterminate={selection.headerCheck.value === 'some'}
+                    aria-label="Select all rows on this page"
+                    onClick={selection.pickAll}
+                  />
+                </th>
+              )}
+              {details.hasDetails && (
+                <th role="columnheader" scope="col" style="inline-size:1px;padding-inline:4px">
+                  <span data-part="sr-only">Details</span>
+                </th>
+              )}
+              {tableHead(m)}
+            </tr>
+          </thead>
+          <tbody aria-busy={source.phase.value === 'loading' ? 'true' : undefined}>
+            {tableBody(m)}
+          </tbody>
+        </table>
+      </div>
       {paging.footer.value && tableFooter(paging)}
       {sheet.value && (
         <Sheet row={sheet.value.row} ctx={details.ctx} onClose={details.closeSheet} />
       )}
-    </div>
-  )
-}
-
-function tableViewport<T>(m: Model<T>) {
-  const { input, base, source, selection, details, notice } = m
-  const { id, sel, cols, order, keyOf, level, typed } = base
-  return (
-    <div
-      data-part="viewport"
-      tabindex="0"
-      role="region"
-      aria-labelledby={`${id}-cap`}
-      style={input.maxHeight() ? `--warp-table-max-h:${input.maxHeight()}` : undefined}
-    >
-      <table
-        role="table"
-        aria-labelledby={`${id}-cap`}
-        aria-rowcount={source.shown.value.length + 1}
-      >
-        <caption id={`${id}-cap`} data-part={input.captionHidden() ? 'sr-only' : undefined}>
-          {input.caption()}
-        </caption>
-        {tableHead({
-          sel,
-          headerCheck: selection.headerCheck,
-          pickAll: selection.pickAll,
-          hasDetails: details.hasDetails,
-          cols,
-          order,
-          askSort: selection.askSort,
-        })}
-        {tableBody({
-          phase: source.phase,
-          sel,
-          hasDetails: details.hasDetails,
-          cols,
-          visible: source.visible,
-          keyOf,
-          ctx: details.ctx,
-          level,
-          noticeTitle: notice.noticeTitle,
-          noticeText: notice.noticeText,
-          retry: notice.retry,
-          typed,
-          clear: notice.clear,
-          emptyAction: () => input.empty()?.action,
-        })}
-      </table>
     </div>
   )
 }

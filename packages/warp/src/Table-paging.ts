@@ -8,21 +8,19 @@ const isResource = (r: unknown): r is Resource<unknown> =>
 
 /** Create paging and count state under the table's owner. */
 export function tablePaging<T>(
-  rows: () => TableProps<T>['rows'],
-  page: () => TableProps<T>['page'],
-  onPageChange: () => TableProps<T>['onPageChange'],
+  props: TableProps<T>,
   source: ReturnType<typeof tableSource<T>>,
   at: State<number>,
 ) {
   const { remote, list, envelope, shown, paged, visible, phase } = source
   const go = (reason: 'next' | 'prev') => {
     if (remote.value)
-      return onPageChange()?.(
+      return props.onPageChange?.(
         reason === 'next' ? envelope.value?.next : envelope.value?.prev,
         reason,
       )
     at.value = paged.value!.page + (reason === 'next' ? 1 : -1)
-    onPageChange()?.(at.value, reason)
+    props.onPageChange?.(at.value, reason)
   }
   const hasPrev = derived(
     () =>
@@ -46,7 +44,7 @@ export function tablePaging<T>(
   const count = derived(() =>
     phase.value === 'ready' && !remote.value ? `${shown.value.length} of ${list.value.length}` : '',
   )
-  const footer = derived(() => page() !== undefined || isResource(rows()))
+  const footer = derived(() => props.page !== undefined || isResource(props.rows))
 
   return { go, hasPrev, hasNext, range, count, footer }
 }

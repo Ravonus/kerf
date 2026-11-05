@@ -1,7 +1,7 @@
 // Selection and sorting state for a table.
 import { derived, type State } from '@weft-js/core'
 import { checkState, rangeOf, type SortDir } from '@weft-js/warp-core'
-import type { Column, TableSort } from './Table-types'
+import type { Column, TableProps, TableSort } from './Table-types'
 
 /** Create selection and sort callbacks under the table's owner. */
 export function tableSelection<T>(
@@ -10,15 +10,14 @@ export function tableSelection<T>(
   keyOf: (row: T) => string,
   cols: { readonly value: Column<T>[] },
   order: State<TableSort | undefined>,
-  selectionChange: () => ((keys: string[]) => void) | undefined,
-  sortChange: () => ((sort: TableSort) => void) | undefined,
+  props: TableProps<T>,
 ) {
   let anchor: string | undefined
   const keys = derived(() => visible.value.map(keyOf))
   const chosen = () => Object.keys(sel!.value).filter((k) => sel!.value[k])
   const write = (next: Record<string, boolean>) => {
     sel!.value = next
-    selectionChange()?.(Object.keys(next).filter((k) => next[k]))
+    props.onSelectionChange?.(Object.keys(next).filter((k) => next[k]))
   }
   const pick = (key: string, e: MouseEvent) => {
     const next = { ...sel!.value }
@@ -49,7 +48,7 @@ export function tableSelection<T>(
       dir: dir ?? (now?.id === c.id && now.dir === 'ascending' ? 'descending' : 'ascending'),
     }
     order.value = next
-    sortChange()?.(next)
+    props.onSortChange?.(next)
   }
   const sortable = derived(() => cols.value.filter((c) => c.sort))
 

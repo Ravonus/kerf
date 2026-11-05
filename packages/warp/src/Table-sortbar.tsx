@@ -1,28 +1,23 @@
 // The phone card sorting controls.
-import type { State } from '@weft-js/core'
-import type { SortDir } from '@weft-js/warp-core'
 import { Button } from './Button'
 import { Select } from './Select'
-import type { Column, TableSort } from './Table-types'
+import type { tableModel } from './Table-model'
 
 /** Render the sort controls under the table's owner. */
-export function tableSortbar<T>(ctx: {
-  order: State<TableSort | undefined>
-  cols: { readonly value: Column<T>[] }
-  sortChoices: { readonly value: Column<T>[] }
-  askSort: (column: Column<T>, dir?: SortDir) => void
-}) {
+export function tableSortbar<T>(m: ReturnType<typeof tableModel<T>>) {
+  const { order, cols } = m.base
+  const { sortChoices, askSort } = m.selection
   return (
     <div data-part="sortbar">
       <Select
         label="Sort by"
         size="sm"
-        value={ctx.order.value?.id ?? ''}
+        value={order.value?.id ?? ''}
         placeholder="None"
-        options={ctx.sortChoices.value.map((c) => ({ value: c.id, label: c.header }))}
+        options={sortChoices.value.map((c) => ({ value: c.id, label: c.header }))}
         onChange={(e: Event) => {
-          const c = ctx.cols.value.find((x) => x.id === (e.currentTarget as HTMLInputElement).value)
-          if (c) ctx.askSort(c, ctx.order.value?.dir ?? 'ascending')
+          const c = cols.value.find((x) => x.id === (e.currentTarget as HTMLInputElement).value)
+          if (c) askSort(c, order.value?.dir ?? 'ascending')
         }}
       />
       <Button
@@ -30,13 +25,13 @@ export function tableSortbar<T>(ctx: {
         tone="neutral"
         size="sm"
         aria-label="Toggle sort direction"
-        disabled={!ctx.order.value}
+        disabled={!order.value}
         onClick={() => {
-          const c = ctx.cols.value.find((x) => x.id === ctx.order.value?.id)
-          if (c) ctx.askSort(c, ctx.order.value!.dir === 'ascending' ? 'descending' : 'ascending')
+          const c = cols.value.find((x) => x.id === order.value?.id)
+          if (c) askSort(c, order.value!.dir === 'ascending' ? 'descending' : 'ascending')
         }}
       >
-        {ctx.order.value?.dir === 'ascending' ? '↑' : '↓'}
+        {order.value?.dir === 'ascending' ? '↑' : '↓'}
       </Button>
     </div>
   )
