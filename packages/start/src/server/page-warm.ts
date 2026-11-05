@@ -1,6 +1,6 @@
 // A known head can go out before the new render finishes.
 import { pageStyles, type keptSheets } from '../inline.mjs'
-import { capture } from '../capture.mjs'
+import { capture } from '../capture'
 import { withHeaders } from './request'
 import { esc } from './text'
 import { pageShell, render, rest, shaped, table, top } from './page-stream'
