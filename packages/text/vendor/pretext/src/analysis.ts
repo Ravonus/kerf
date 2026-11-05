@@ -324,6 +324,36 @@ function isControlSegmentCode(code: number): boolean {
 // A run of them ends where an item of a rich-inline paragraph starts inside it, and an item that
 // starts with one starts a text segment with the text after it, as a chunk does, after the break
 // the scan gives at the run, so its fragments keep the controls it starts with.
+const flagUnbroken = (flags: number[], starts: number[], breaks: Uint8Array, hangTabs: boolean): boolean => {
+  // A line ends only where the scan breaks, so the walkers learn where it doesn't:
+  // before text, zero-width glue or a control, other than at a line start. A
+  // ZWSP or soft hyphen there is zero-width glue. Before a space, tab or hard break
+  // the scan has no break either, but the line can still end there, as they hang or
+  // end it, so it keeps its kind. A tab that doesn't hang (EngineProfile's hangTabs) ends
+  // no line before itself, nor do the spaces after it, which hang only where the run of
+  // white space ends the line: Gecko breaks only after the whole run (nsLineBreaker.cpp:
+  // 318-330). A soft hyphen before the tab keeps its break (GetHyphenationBreaks,
+  // nsTextFrame.cpp:4409-4457).
+  let hasUnbroken = false
+  const count = flags.length
+  for (let j = count - 2; j >= 0; j--) {
+    const kind = flags[j]! & KIND_BITS
+    const next = flags[j + 1]! & KIND_BITS
+    if ((breaks[starts[j + 1]!]! & BREAK) !== 0 || kind === HARD_BREAK) continue
+    if (!hangTabs && (next === TAB || (next === PRESERVED_SPACE && kind === TAB))) {
+      if (kind === SOFT_HYPHEN) continue
+    } else if (next === TEXT || next === ZERO_WIDTH_GLUE || next === CONTROL) {
+      if (kind === ZERO_WIDTH_BREAK || kind === SOFT_HYPHEN) flags[j] = flags[j]! & ~KIND_BITS | ZERO_WIDTH_GLUE
+    } else {
+      continue
+    }
+    flags[j + 1] = flags[j + 1]! | UNBROKEN
+    hasUnbroken = true
+  }
+  if (hasUnbroken) for (let j = 0; j < count; j++) if ((flags[j]! & UNBROKEN) === 0) flags[j] = flags[j]! | RETURNABLE
+  return hasUnbroken
+}
+
 function segmentAtLineBreaks(normalized: string, spaceSources: Uint16Array | null, breaks: Uint8Array, whiteSpace: WhiteSpaceMode, scan: AnalysisProfile['lineBreakScan'], hangTabs: boolean, dropsBidiControl: boolean): TextAnalysis {
   const oneCluster = scan === 'gecko' ? ONE_CLUSTER : 0
   const starts: number[] = []
@@ -385,38 +415,88 @@ function segmentAtLineBreaks(normalized: string, spaceSources: Uint16Array | nul
     lastKind = kind
     lastAlone = alone
   }
-  // A line ends only where the scan breaks, so the walkers learn where it doesn't:
-  // before text, zero-width glue or a control, other than at a line start. A
-  // ZWSP or soft hyphen there is zero-width glue. Before a space, tab or hard break
-  // the scan has no break either, but the line can still end there, as they hang or
-  // end it, so it keeps its kind. A tab that doesn't hang (EngineProfile's hangTabs) ends
-  // no line before itself, nor do the spaces after it, which hang only where the run of
-  // white space ends the line: Gecko breaks only after the whole run (nsLineBreaker.cpp:
-  // 318-330). A soft hyphen before the tab keeps its break (GetHyphenationBreaks,
-  // nsTextFrame.cpp:4409-4457).
-  let hasUnbroken = false
+  const hasUnbroken = flagUnbroken(flags, starts, breaks, hangTabs)
   const count = flags.length
-  for (let j = count - 2; j >= 0; j--) {
-    const kind = flags[j]! & KIND_BITS
-    const next = flags[j + 1]! & KIND_BITS
-    if ((breaks[starts[j + 1]!]! & BREAK) !== 0 || kind === HARD_BREAK) continue
-    if (!hangTabs && (next === TAB || (next === PRESERVED_SPACE && kind === TAB))) {
-      if (kind === SOFT_HYPHEN) continue
-    } else if (next === TEXT || next === ZERO_WIDTH_GLUE || next === CONTROL) {
-      if (kind === ZERO_WIDTH_BREAK || kind === SOFT_HYPHEN) flags[j] = flags[j]! & ~KIND_BITS | ZERO_WIDTH_GLUE
-    } else {
-      continue
-    }
-    flags[j + 1] = flags[j + 1]! | UNBROKEN
-    hasUnbroken = true
-  }
-  if (hasUnbroken) for (let j = 0; j < count; j++) if ((flags[j]! & UNBROKEN) === 0) flags[j] = flags[j]! | RETURNABLE
   // Each segment's text, sliced once here for measurement and the neighbours it reads: sliced
   // where measurement reads it, Firefox's rich-inline preparation ran 11-19% slower (RESEARCH.md,
   // Keeping Work Bounded).
   const texts: string[] = []
   for (let j = 0; j < count; j++) texts.push(normalized.slice(starts[j], j + 1 < count ? starts[j + 1] : normalized.length))
   return { normalized, spaceSources, texts, starts, flags, hasUnbroken }
+}
+
+const trimGeckoSource = (source: string, normalized: string, sourceBreaks: Uint8Array, leftOut: Uint8Array | null, preserve: boolean, dropsBidiControl: boolean, profile: AnalysisProfile): [string, string] => {
+  // Gecko's white-space run reads through the soft hyphens and bidi controls in it, which its
+  // text run drops, and keeps its segment break if it holds one, or else its first white space
+  // (TransformWhiteSpaces, nsTextFrameUtils.cpp:151-193); the scan takes the text as one text
+  // frame (transformText in src/gecko-line-breaks.ts). The white space the scan's text run left
+  // out of such a run leaves the source too, and so does white space before only bidi controls
+  // at the end, which the line end trims, and a CR or FF, which ends a run and takes no room
+  // (the CR of a CRLF stays, to collapse into the line feed's space); white space on its two
+  // sides then touches and is one space, where Firefox keeps two.
+  // The other units keep their breaks: none is at white space, and the unit after a CR or FF
+  // has its own, as a CR is one of nsLineBreaker's breakable spaces, whose run gives the unit
+  // after it a break (IsSegmentSpace, nsLineBreaker.h:260-264; nsLineBreaker.cpp:318-327), and
+  // an FF is UAX #14's BK, which the word breaker breaks after. Only a combining mark there has
+  // none, since a break inside a cluster holds only after a space (SetPotentialLineBreaks,
+  // gfxTextRun.cpp:219-226), so the break Firefox has before the CR is lost (ENGINE_FOLLOWUPS.md).
+  // Where the white space right after a soft hyphen leaves, the break after it stays that white
+  // space's, which draws no hyphen (SOFT_HYPHEN_BREAK): Gecko hyphenates only at a soft hyphen
+  // that ends what its text run left out (GetHyphenationBreaks, nsTextFrame.cpp:4436-4443).
+  const trailing = !preserve && (dropsBidiControl || leftOut !== null) ? getTrailingCollapsibleStart(source, 0, profile) : source.length
+  if (leftOut !== null || trailing < source.length) {
+    // A run that goes on into that trailing white space and keeps its one white space there, as
+    // a segment break after a soft hyphen, keeps its first white space instead: the text before
+    // the trailing white space holds the run's space, as a rich-inline paragraph's run keeps the
+    // white space of the item it starts in (transformText in src/gecko-line-breaks.ts).
+    let runSpace = -1
+    if (leftOut !== null && trailing < source.length) {
+      for (let i = trailing - 1; i >= 0; i--) {
+        const code = source.charCodeAt(i)
+        if (!isSpaceOrTabOrSegmentBreak(code) && !isDiscardable(code, false)) break
+        if (isSpaceOrTabOrSegmentBreak(code) && leftOut[i] !== 1) {
+          runSpace = -1
+          break
+        }
+        if (isSpaceOrTabOrSegmentBreak(code)) runSpace = i
+      }
+    }
+    // Only the units from the first one that leaves move.
+    const from = leftOut === null ? trailing : 0
+    let kept = ''
+    let copied = 0
+    let count = from
+    let last = from - 1
+    for (let i = from; i < source.length; i++) {
+      if (i < trailing ? leftOut !== null && leftOut[i] === 1 && i !== runSpace : isCollapsibleSpaceCode(source.charCodeAt(i))) {
+        kept += source.slice(copied, i)
+        copied = i + 1
+        continue
+      }
+      const breakBefore = sourceBreaks[i]!
+      sourceBreaks[count++] = last >= 0 && last < i - 1 && (breakBefore & BREAK) !== 0 && source.charCodeAt(last) === 0x00AD ? breakBefore | SOFT_HYPHEN_BREAK : breakBefore
+      last = i
+    }
+    sourceBreaks[count] = sourceBreaks[source.length]!
+    source = kept + source.slice(copied)
+    normalized = collapseWhitespaceNormal(source)
+  }
+  return [source, normalized]
+}
+
+const clearAtomicBreaks = (source: string, sourceBreaks: Uint8Array, paragraph: ParagraphItems | null, scanStarts: number[] | null): void => {
+  // Gecko's line breaker starts again after an atomic frame (BuildTextRunsScanner::ScanFrame,
+  // nsTextFrame.cpp:2248-2251, 2264-2268), so the text after one has no break of the scan's at
+  // its start, where the scan finds one after the U+FFFC: a soft hyphen that starts that text
+  // hyphenates there, and the break after the atomic item comes before it (markItemStarts).
+  if (paragraph !== null) {
+    for (let k = 0; k < paragraph.atomic.length; k++) {
+      if (!paragraph.atomic[k]) continue
+      let after = scanStarts![k]! + 1
+      while (after < source.length && isDiscardable(source.charCodeAt(after), false)) after++
+      sourceBreaks[after] = sourceBreaks[after]! & ~SOFT_HYPHEN_BREAK
+    }
+  }
 }
 
 export function analyzeText(
@@ -484,74 +564,9 @@ export function analyzeText(
       const gecko = getGeckoLineBreaks(source, preserve, keepAll, profile.graphemeTable, scanStarts)
       dropsBidiControl = gecko.dropsBidiControl
       sourceBreaks = gecko.breaks
-      // Gecko's line breaker starts again after an atomic frame (BuildTextRunsScanner::ScanFrame,
-      // nsTextFrame.cpp:2248-2251, 2264-2268), so the text after one has no break of the scan's at
-      // its start, where the scan finds one after the U+FFFC: a soft hyphen that starts that text
-      // hyphenates there, and the break after the atomic item comes before it (markItemStarts).
-      if (paragraph !== null) {
-        for (let k = 0; k < paragraph.atomic.length; k++) {
-          if (!paragraph.atomic[k]) continue
-          let after = scanStarts![k]! + 1
-          while (after < source.length && isDiscardable(source.charCodeAt(after), false)) after++
-          sourceBreaks[after] = sourceBreaks[after]! & ~SOFT_HYPHEN_BREAK
-        }
-      }
-      // Gecko's white-space run reads through the soft hyphens and bidi controls in it, which its
-      // text run drops, and keeps its segment break if it holds one, or else its first white space
-      // (TransformWhiteSpaces, nsTextFrameUtils.cpp:151-193); the scan takes the text as one text
-      // frame (transformText in src/gecko-line-breaks.ts). The white space the scan's text run left
-      // out of such a run leaves the source too, and so does white space before only bidi controls
-      // at the end, which the line end trims, and a CR or FF, which ends a run and takes no room
-      // (the CR of a CRLF stays, to collapse into the line feed's space); white space on its two
-      // sides then touches and is one space, where Firefox keeps two.
-      // The other units keep their breaks: none is at white space, and the unit after a CR or FF
-      // has its own, as a CR is one of nsLineBreaker's breakable spaces, whose run gives the unit
-      // after it a break (IsSegmentSpace, nsLineBreaker.h:260-264; nsLineBreaker.cpp:318-327), and
-      // an FF is UAX #14's BK, which the word breaker breaks after. Only a combining mark there has
-      // none, since a break inside a cluster holds only after a space (SetPotentialLineBreaks,
-      // gfxTextRun.cpp:219-226), so the break Firefox has before the CR is lost (ENGINE_FOLLOWUPS.md).
-      // Where the white space right after a soft hyphen leaves, the break after it stays that white
-      // space's, which draws no hyphen (SOFT_HYPHEN_BREAK): Gecko hyphenates only at a soft hyphen
-      // that ends what its text run left out (GetHyphenationBreaks, nsTextFrame.cpp:4436-4443).
-      const leftOut = gecko.leftOut
-      const trailing = !preserve && (dropsBidiControl || leftOut !== null) ? getTrailingCollapsibleStart(source, 0, profile) : source.length
-      if (leftOut !== null || trailing < source.length) {
-        // A run that goes on into that trailing white space and keeps its one white space there, as
-        // a segment break after a soft hyphen, keeps its first white space instead: the text before
-        // the trailing white space holds the run's space, as a rich-inline paragraph's run keeps the
-        // white space of the item it starts in (transformText in src/gecko-line-breaks.ts).
-        let runSpace = -1
-        if (leftOut !== null && trailing < source.length) {
-          for (let i = trailing - 1; i >= 0; i--) {
-            const code = source.charCodeAt(i)
-            if (!isSpaceOrTabOrSegmentBreak(code) && !isDiscardable(code, false)) break
-            if (isSpaceOrTabOrSegmentBreak(code) && leftOut[i] !== 1) {
-              runSpace = -1
-              break
-            }
-            if (isSpaceOrTabOrSegmentBreak(code)) runSpace = i
-          }
-        }
-        // Only the units from the first one that leaves move.
-        const from = leftOut === null ? trailing : 0
-        let kept = ''
-        let copied = 0
-        let count = from
-        let last = from - 1
-        for (let i = from; i < source.length; i++) {
-          if (i < trailing ? leftOut !== null && leftOut[i] === 1 && i !== runSpace : isCollapsibleSpaceCode(source.charCodeAt(i))) {
-            kept += source.slice(copied, i)
-            copied = i + 1
-            continue
-          }
-          const breakBefore = sourceBreaks[i]!
-          sourceBreaks[count++] = last >= 0 && last < i - 1 && (breakBefore & BREAK) !== 0 && source.charCodeAt(last) === 0x00AD ? breakBefore | SOFT_HYPHEN_BREAK : breakBefore
-          last = i
-        }
-        sourceBreaks[count] = sourceBreaks[source.length]!
-        source = kept + source.slice(copied)
-        normalized = collapseWhitespaceNormal(source)
-      }
+      clearAtomicBreaks(source, sourceBreaks, paragraph, scanStarts)
+      ;[source, normalized] = trimGeckoSource(source, normalized, sourceBreaks, gecko.leftOut, preserve, dropsBidiControl, profile)
+
     }
     if (profile.lineBreakScan === 'webkit' && !preserve && source !== normalized) spaceSources = new Uint16Array(normalized.length)
     breaks = source === normalized ? sourceBreaks : mapSourceLineBreaks(source, normalized.length, sourceBreaks, whiteSpace, spaceSources)

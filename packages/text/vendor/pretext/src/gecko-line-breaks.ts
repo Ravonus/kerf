@@ -178,6 +178,96 @@ export function isEastAsianSegmentBreak(text: string, start: number, end: number
 // that frame. In 16px Arial at 56px Firefox fits `see this` of items `see`, ` \u00AD`,
 // ` this word` on a 55.15px line, and not of `see `, `\u00AD `, `this word`, whose text in one node
 // it fits.
+    // A CR or FF is no white space to TransformText (:51-57), so it ends a white-space run and
+    // stays in the text run, which gives it no glyph and no advance: it skips a control
+    // character it doesn't draw as a hexbox, which is never CR and, in release and beta builds,
+    // no other one either (gfxFont::SplitAndInitTextRun, gfxFont.cpp:3620-3627 and :3874-3892;
+    // layout.css.control-characters.visible, StaticPrefList.yaml:10926-10929). Every Canvas
+    // measures it as a space (Firefox's: CanvasRenderingContext2D.cpp:4634-4637), so a layout
+    // of the source leaves it out. Kept as a control of no advance, as the profile keeps the
+    // other controls Firefox hides (hidesControlCharacters), it is text at a line's edges,
+    // where Firefox trims it, and takes text with CRLF off the simple line walk (RESEARCH.md,
+    // Dead Ends). A CR right before a line feed needs no mark: the run that starts there keeps
+    // that line feed, and the CR, a breakable space to the scan too, collapses into it.
+const collapseText = (input: string, is8bit: boolean, frameStarts: number[] | null, orig: Int32Array, skipped: Uint8Array): [number, Uint8Array | null, boolean] => {
+  const len = input.length
+  let n = 0
+  let leftOut: Uint8Array | null = null
+  let dropsBidiControl = false
+  // COMPRESS_WHITESPACE_NEWLINE, :272-387
+  let inWhitespace = false
+  let i = 0
+  // Where the frame a white-space run starts in ends, the next frame start past the run's start:
+  // the input's end for one text. Only a run reads it, so it is found where one starts.
+  let frame = 0
+  let frameEnd = frameStarts === null ? len : 0
+  while (i < len) {
+    const ch = input.charCodeAt(i)
+    if (!isSpaceOrTabOrSegmentBreak(ch) && !isDiscardable(ch, is8bit)) {
+
+      if (ch === 0x0c || (ch === 0x0d && input.charCodeAt(i + 1) !== 0x0a)) (leftOut ??= new Uint8Array(len))[i] = 1
+      orig[n++] = i
+      inWhitespace = false
+      i++
+      continue
+    }
+    if (isSpaceOrTabOrSegmentBreak(ch)) {
+      if (i >= frameEnd) {
+        while (frame < frameStarts!.length && frameStarts![frame]! <= i) frame++
+        frameEnd = frame < frameStarts!.length ? frameStarts![frame]! : len
+      }
+      let keepLastSpace = false
+      let hasSegmentBreak = ch === 0x0a
+      let trailingDiscardables = 0
+      // How many characters the run holds that the text run drops.
+      let dropped = 0
+      // A run that goes on from the frame before, after the characters that frame's run dropped at
+      // its end, leaves out white space that doesn't touch the unit the run kept.
+      const goesOnPastDropped = inWhitespace && i > 0 && isDiscardable(input.charCodeAt(i - 1), is8bit)
+      let j = i + 1
+      for (; j < frameEnd; j++) {
+        const c = input.charCodeAt(j)
+        if (c === 0x0a) hasSegmentBreak = true
+        else if (isDiscardable(c, is8bit)) dropped++
+        else if (!isSpaceOrTab(c)) break
+      }
+      while (isDiscardable(input.charCodeAt(j - 1), is8bit)) { j--; trailingDiscardables++ } // :334-336
+      if (!is8bit && input.charCodeAt(j - 1) === 0x20 && j < frameEnd && isSpaceCombiningSequenceTail(input, j)) { keepLastSpace = true; j-- } // :339-345
+      // TransformWhiteSpaces over [i, j), :84-209. The runs it deletes whole, next to a ZWSP or
+      // between East Asian characters (:120-150), are gone already (removeSkippableSegmentBreaks in
+      // src/analysis.ts), so a run keeps one space. A space or tab in a run with a segment break
+      // goes (:152-162), and the run's first segment break stays as a space (:181-193).
+      for (let k = i; k < j; k++) {
+        const c = input.charCodeAt(k)
+        if (isDiscardable(c, is8bit)) {
+          skipped[k] = 1
+          dropsBidiControl ||= c !== CH_SHY
+        } else if (inWhitespace || (hasSegmentBreak && isSpaceOrTab(c))) {
+          skipped[k] = 1
+          // Where the run reads through a dropped character, white space it leaves out may not
+          // touch the unit it keeps, so collapsing adjacent white space wouldn't drop it.
+          if (dropped > trailingDiscardables || goesOnPastDropped) (leftOut ??= new Uint8Array(len))[k] = 1
+        } else {
+          orig[n++] = k
+          inWhitespace = true
+        }
+      }
+      if (keepLastSpace) orig[n++] = j++
+      for (let k = 0; k < trailingDiscardables; k++) {
+        dropsBidiControl ||= input.charCodeAt(j) !== CH_SHY
+        skipped[j++] = 1
+      }
+      i = j
+      continue
+    }
+    skipped[i] = 1 // :370-379
+    dropsBidiControl ||= ch !== CH_SHY
+    inWhitespace = false
+    i++
+  }
+  return [n, leftOut, dropsBidiControl]
+}
+
 function transformText(input: string, is8bit: boolean, preserveWhiteSpace: boolean, frameStarts: number[] | null): Transformed {
   const len = input.length
   // The source index of each kept unit.
@@ -198,87 +288,7 @@ function transformText(input: string, is8bit: boolean, preserveWhiteSpace: boole
       }
     }
   } else {
-    // COMPRESS_WHITESPACE_NEWLINE, :272-387
-    let inWhitespace = false
-    let i = 0
-    // Where the frame a white-space run starts in ends, the next frame start past the run's start:
-    // the input's end for one text. Only a run reads it, so it is found where one starts.
-    let frame = 0
-    let frameEnd = frameStarts === null ? len : 0
-    while (i < len) {
-      const ch = input.charCodeAt(i)
-      if (!isSpaceOrTabOrSegmentBreak(ch) && !isDiscardable(ch, is8bit)) {
-        // A CR or FF is no white space to TransformText (:51-57), so it ends a white-space run and
-        // stays in the text run, which gives it no glyph and no advance: it skips a control
-        // character it doesn't draw as a hexbox, which is never CR and, in release and beta builds,
-        // no other one either (gfxFont::SplitAndInitTextRun, gfxFont.cpp:3620-3627 and :3874-3892;
-        // layout.css.control-characters.visible, StaticPrefList.yaml:10926-10929). Every Canvas
-        // measures it as a space (Firefox's: CanvasRenderingContext2D.cpp:4634-4637), so a layout
-        // of the source leaves it out. Kept as a control of no advance, as the profile keeps the
-        // other controls Firefox hides (hidesControlCharacters), it is text at a line's edges,
-        // where Firefox trims it, and takes text with CRLF off the simple line walk (RESEARCH.md,
-        // Dead Ends). A CR right before a line feed needs no mark: the run that starts there keeps
-        // that line feed, and the CR, a breakable space to the scan too, collapses into it.
-        if (ch === 0x0c || (ch === 0x0d && input.charCodeAt(i + 1) !== 0x0a)) (leftOut ??= new Uint8Array(len))[i] = 1
-        orig[n++] = i
-        inWhitespace = false
-        i++
-        continue
-      }
-      if (isSpaceOrTabOrSegmentBreak(ch)) {
-        if (i >= frameEnd) {
-          while (frame < frameStarts!.length && frameStarts![frame]! <= i) frame++
-          frameEnd = frame < frameStarts!.length ? frameStarts![frame]! : len
-        }
-        let keepLastSpace = false
-        let hasSegmentBreak = ch === 0x0a
-        let trailingDiscardables = 0
-        // How many characters the run holds that the text run drops.
-        let dropped = 0
-        // A run that goes on from the frame before, after the characters that frame's run dropped at
-        // its end, leaves out white space that doesn't touch the unit the run kept.
-        const goesOnPastDropped = inWhitespace && i > 0 && isDiscardable(input.charCodeAt(i - 1), is8bit)
-        let j = i + 1
-        for (; j < frameEnd; j++) {
-          const c = input.charCodeAt(j)
-          if (c === 0x0a) hasSegmentBreak = true
-          else if (isDiscardable(c, is8bit)) dropped++
-          else if (!isSpaceOrTab(c)) break
-        }
-        while (isDiscardable(input.charCodeAt(j - 1), is8bit)) { j--; trailingDiscardables++ } // :334-336
-        if (!is8bit && input.charCodeAt(j - 1) === 0x20 && j < frameEnd && isSpaceCombiningSequenceTail(input, j)) { keepLastSpace = true; j-- } // :339-345
-        // TransformWhiteSpaces over [i, j), :84-209. The runs it deletes whole, next to a ZWSP or
-        // between East Asian characters (:120-150), are gone already (removeSkippableSegmentBreaks in
-        // src/analysis.ts), so a run keeps one space. A space or tab in a run with a segment break
-        // goes (:152-162), and the run's first segment break stays as a space (:181-193).
-        for (let k = i; k < j; k++) {
-          const c = input.charCodeAt(k)
-          if (isDiscardable(c, is8bit)) {
-            skipped[k] = 1
-            dropsBidiControl ||= c !== CH_SHY
-          } else if (inWhitespace || (hasSegmentBreak && isSpaceOrTab(c))) {
-            skipped[k] = 1
-            // Where the run reads through a dropped character, white space it leaves out may not
-            // touch the unit it keeps, so collapsing adjacent white space wouldn't drop it.
-            if (dropped > trailingDiscardables || goesOnPastDropped) (leftOut ??= new Uint8Array(len))[k] = 1
-          } else {
-            orig[n++] = k
-            inWhitespace = true
-          }
-        }
-        if (keepLastSpace) orig[n++] = j++
-        for (let k = 0; k < trailingDiscardables; k++) {
-          dropsBidiControl ||= input.charCodeAt(j) !== CH_SHY
-          skipped[j++] = 1
-        }
-        i = j
-        continue
-      }
-      skipped[i] = 1 // :370-379
-      dropsBidiControl ||= ch !== CH_SHY
-      inWhitespace = false
-      i++
-    }
+    ;[n, leftOut, dropsBidiControl] = collapseText(input, is8bit, frameStarts, orig, skipped)
   }
   // The kept units, as slices of the input where they run unchanged: in collapsed white space, a kept
   // tab or segment break becomes a space.
@@ -445,6 +455,107 @@ function readCodePoint(text: string, i: number, end: number): number {
 // Utf16Indices' front_offset and current_pos_data (:821-823): `pos` is the current code point's
 // offset in the word, `cp` its code point and `front` the next one's offset, and `pos` reaches
 // the word's length past its end.
+const intermediateBreak = (line: LineData, text: string, start: number, end: number, breakState: number, rightProp: number, afterZwj: boolean, front: number, pos: number, cp: number): [number, number, number, number] => {
+  const states = line.states
+  const len = end - start
+  let index = breakState >= INTERMEDIATE ? breakState - INTERMEDIATE : breakState
+  let prevFront = front
+  let prevPos = pos
+  let prevCp = cp
+  let previousIsAfterZwj = afterZwj
+  let leftPropPreLb9 = rightProp
+  // (:976-981), where lb8a_after_lb9 is false once LB9 has passed.
+  const isIntermediateRuleNoMatch = index > geckoLineLastCodepointProperty
+
+  for (;;) {
+    const innerAfterZwj = leftPropPreLb9 === ZWJ
+    const previousBreakStateIsCpProp = index <= geckoLineLastCodepointProperty
+    pos = front
+    if (pos >= len) { // (:990-1007)
+      if (states[index * geckoLinePropertyCount + geckoLineEotProperty] !== NO_MATCH) return [2, front, pos, cp]
+      front = prevFront; pos = prevPos; cp = prevCp
+      if (previousIsAfterZwj) return [0, front, pos, cp]
+      return [1, front, pos, cp]
+    }
+    cp = readCodePoint(text, start + pos, end)
+    front += cp > 0xffff ? 2 : 1
+    const prop = getLineBreakClass(line, cp)
+
+    if ((prop === CM || prop === ZWJ) && leftPropPreLb9 !== BK && leftPropPreLb9 !== CR && leftPropPreLb9 !== LF &&
+      leftPropPreLb9 !== NL && leftPropPreLb9 !== SP && leftPropPreLb9 !== ZW) { // (:1009-1019)
+      leftPropPreLb9 = prop
+      continue
+    }
+
+    const next = states[index * geckoLinePropertyCount + prop]! // (:1021-1061)
+    if (next === KEEP) return [0, front, pos, cp]
+    if (next === NO_MATCH) {
+      front = prevFront; pos = prevPos; cp = prevCp
+      if (innerAfterZwj) {
+        if (isIntermediateRuleNoMatch && !previousIsAfterZwj) return [1, front, pos, cp]
+        return [0, front, pos, cp]
+      }
+      if (previousIsAfterZwj) return [0, front, pos, cp]
+      return [1, front, pos, cp]
+    }
+    if (next === BREAK) {
+      if (innerAfterZwj) return [0, front, pos, cp]
+      return [1, front, pos, cp]
+    }
+    if (next >= INTERMEDIATE) {
+      index = next - INTERMEDIATE
+      prevFront = front; prevPos = pos; prevCp = cp
+      previousIsAfterZwj = innerAfterZwj
+    } else {
+      index = next
+      if (previousBreakStateIsCpProp) {
+        prevFront = front; prevPos = pos; prevCp = cp
+        previousIsAfterZwj = innerAfterZwj
+      }
+    }
+    leftPropPreLb9 = prop
+  }
+}
+
+const advanceCachedBreak = (text: string, start: number, end: number, cache: number[], cacheAt: number, cacheOffset: number, pos: number, front: number, cp: number): [number, number, number, number, number] | null => {
+  const len = end - start
+  const firstPos = cache[cacheAt++]! - cacheOffset
+  let i = 0
+  while (i !== firstPos) {
+    i += cp > 0xffff ? 2 : 1 // Utf16::char_len (rule_segmenter.rs:335-341)
+    pos = front
+    if (pos >= len) return null
+    cp = readCodePoint(text, start + pos, end)
+    front += cp > 0xffff ? 2 : 1
+  }
+  cacheOffset += i
+  return [cacheAt, cacheOffset, pos, front, cp]
+}
+
+const complexBreaks = (line: LineData, text: string, start: number, end: number, leftCodepoint: number, cp: number, pos: number, front: number): [number[], number, number, number, number, number] | null => {
+  const len = end - start
+  const units = [leftCodepoint & 0xffff]
+  for (let p = pos, c = cp; ;) {
+    units.push(c & 0xffff)
+    p += c > 0xffff ? 2 : 1
+    if (p >= len) break
+    c = readCodePoint(text, start + p, end)
+    if (getLineBreakClass(line, c) !== SA) break
+  }
+  const cache = segmentComplex(units)
+  const cacheAt = 1
+  let i = 1
+  while (i !== cache[0]) {
+    i++
+    pos = front
+    if (pos >= len) return null
+    cp = readCodePoint(text, start + pos, end)
+    front += cp > 0xffff ? 2 : 1
+  }
+  const cacheOffset = i
+  return [cache, cacheAt, cacheOffset, pos, front, cp]
+}
+
 function markWordBreaks(line: LineData, text: string, start: number, end: number, keepAll: boolean, state: Uint8Array): void {
   const len = end - start
   const states = line.states
@@ -459,23 +570,16 @@ function markWordBreaks(line: LineData, text: string, start: number, end: number
   for (;;) {
     // Break points cached by a complex-script run (:840-855).
     if (cacheAt < cache.length) {
-      const firstPos = cache[cacheAt++]! - cacheOffset
-      let i = 0
-      while (i !== firstPos) {
-        i += cp > 0xffff ? 2 : 1 // Utf16::char_len (rule_segmenter.rs:335-341)
-        pos = front
-        if (pos >= len) return
-        cp = readCodePoint(text, start + pos, end)
-        front += cp > 0xffff ? 2 : 1
-      }
-      cacheOffset += i
+      const advanced = advanceCachedBreak(text, start, end, cache, cacheAt, cacheOffset, pos, front, cp)
+      if (advanced === null) return
+      ;[cacheAt, cacheOffset, pos, front, cp] = advanced
       state[start + pos] = 1
       continue
     }
 
     let lb9Left = -1 // (:858)
     let lb8aAfterLb9 = false // (:861)
-    outer: for (;;) {
+    for (;;) {
       const leftCodepoint = cp
       const leftProp = lb9Left >= 0 ? lb9Left : getLineBreakClass(line, leftCodepoint)
       const afterZwj = lb8aAfterLb9 || (lb9Left < 0 && leftProp === ZWJ)
@@ -501,25 +605,9 @@ function markWordBreaks(line: LineData, text: string, start: number, end: number
       // Complex scripts (:941-950), Utf16 line_handle_complex_language (:1263-1316), which counts
       // code points one unit each: they are truncated to u16 there.
       if (getLineBreakClass(line, leftCodepoint) === SA && rightProp === SA) {
-        const units = [leftCodepoint & 0xffff]
-        for (let p = pos, c = cp; ;) {
-          units.push(c & 0xffff)
-          p += c > 0xffff ? 2 : 1
-          if (p >= len) break
-          c = readCodePoint(text, start + p, end)
-          if (getLineBreakClass(line, c) !== SA) break
-        }
-        cache = segmentComplex(units)
-        cacheAt = 1
-        let i = 1
-        while (i !== cache[0]) {
-          i++
-          pos = front
-          if (pos >= len) return
-          cp = readCodePoint(text, start + pos, end)
-          front += cp > 0xffff ? 2 : 1
-        }
-        cacheOffset = i
+        const complex = complexBreaks(line, text, start, end, leftCodepoint, cp, pos, front)
+        if (complex === null) return
+        ;[cache, cacheAt, cacheOffset, pos, front, cp] = complex
         break
       }
 
@@ -530,63 +618,11 @@ function markWordBreaks(line: LineData, text: string, start: number, end: number
       }
       if (breakState === KEEP) continue
 
-      let index = breakState >= INTERMEDIATE ? breakState - INTERMEDIATE : breakState
-      let prevFront = front
-      let prevPos = pos
-      let prevCp = cp
-      let previousIsAfterZwj = afterZwj
-      let leftPropPreLb9 = rightProp
-      // (:976-981), where lb8a_after_lb9 is false once LB9 has passed.
-      const isIntermediateRuleNoMatch = index > geckoLineLastCodepointProperty
-
-      for (;;) {
-        const innerAfterZwj = leftPropPreLb9 === ZWJ
-        const previousBreakStateIsCpProp = index <= geckoLineLastCodepointProperty
-        pos = front
-        if (pos >= len) { // (:990-1007)
-          if (states[index * geckoLinePropertyCount + geckoLineEotProperty] !== NO_MATCH) return
-          front = prevFront; pos = prevPos; cp = prevCp
-          if (previousIsAfterZwj) continue outer
-          break outer
-        }
-        cp = readCodePoint(text, start + pos, end)
-        front += cp > 0xffff ? 2 : 1
-        const prop = getLineBreakClass(line, cp)
-
-        if ((prop === CM || prop === ZWJ) && leftPropPreLb9 !== BK && leftPropPreLb9 !== CR && leftPropPreLb9 !== LF &&
-          leftPropPreLb9 !== NL && leftPropPreLb9 !== SP && leftPropPreLb9 !== ZW) { // (:1009-1019)
-          leftPropPreLb9 = prop
-          continue
-        }
-
-        const next = states[index * geckoLinePropertyCount + prop]! // (:1021-1061)
-        if (next === KEEP) continue outer
-        if (next === NO_MATCH) {
-          front = prevFront; pos = prevPos; cp = prevCp
-          if (innerAfterZwj) {
-            if (isIntermediateRuleNoMatch && !previousIsAfterZwj) break outer
-            continue outer
-          }
-          if (previousIsAfterZwj) continue outer
-          break outer
-        }
-        if (next === BREAK) {
-          if (innerAfterZwj) continue outer
-          break outer
-        }
-        if (next >= INTERMEDIATE) {
-          index = next - INTERMEDIATE
-          prevFront = front; prevPos = pos; prevCp = cp
-          previousIsAfterZwj = innerAfterZwj
-        } else {
-          index = next
-          if (previousBreakStateIsCpProp) {
-            prevFront = front; prevPos = pos; prevCp = cp
-            previousIsAfterZwj = innerAfterZwj
-          }
-        }
-        leftPropPreLb9 = prop
-      }
+      const [action, nextFront, nextPos, nextCp] = intermediateBreak(line, text, start, end, breakState, rightProp, afterZwj, front, pos, cp)
+      front = nextFront; pos = nextPos; cp = nextCp
+      if (action === 2) return
+      if (action === 0) continue
+      break
     }
     state[start + pos] = 1
   }

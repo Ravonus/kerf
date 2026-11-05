@@ -348,6 +348,71 @@ function getTextSegmentWidth(text: string, textMetrics: SegmentMetrics, measurem
 // copy of its part of the analysis and no lists of its own to copy from. The handle returned
 // holds those lists; what else it holds is the measured segments' alone, each list from the
 // first of them.
+const finishMeasurement = (
+  analysis: TextAnalysis,
+  from: number,
+  to: number,
+  own: string,
+  fontMeasurement: FontMeasurement,
+  engineProfile: EngineProfile,
+  letterSpacing: number,
+  emojiCorrection: number,
+  widths: number[],
+  base: number,
+  segmentFlags: Uint8Array,
+  simpleKinds: boolean,
+  breakableFitAdvances: (number[] | null)[],
+  breakableLineStartExtras: (number[] | null)[] | null,
+  discretionaryHyphenContexts: number[] | null,
+  tabStopAdvance: number,
+  minimumTabAdvance: number,
+  segments: string[] | null,
+): (PreparedText & PreparedLineBreakData) | (PreparedText & PreparedSegments) => {
+  // The hyphen a chosen soft hyphen paints, which only a text that holds one asks for, with
+  // the gap before it, plus the hyphen's own spacing where the engine letter-spaces it.
+  const hyphenText = discretionaryHyphenContexts === null ? '-' : engineProfile.hyphenFromPrimaryFont ? getHyphenText(fontMeasurement) : '\u2010'
+  const discretionaryHyphenWidth = getTextWidth(hyphenText, fontMeasurement, emojiCorrection) +
+    (letterSpacing === 0 ? 0 : letterSpacing * (engineProfile.letterSpaceDiscretionaryHyphen ? 2 : 1))
+
+  // A segment's width is its width between the text before and after it; one that starts
+  // a line takes back the halt Blink gives its first character there.
+  let hanKerning: HanKerningTrims = { widthTrims: null, lineStartExtras: null, lineEndTrims: null, overflowLineEndTrims: null }
+  if (engineProfile.hanKerning && textMayHanKern(own)) {
+    hanKerning = getHanKerningTrims(fontMeasurement, analysis, from, to)
+    const trims = hanKerning.widthTrims
+    if (trims !== null) for (let i = 0; i < trims.length; i++) widths[base + i] = widths[base + i]! - trims[i]!
+  }
+  // The loop above has measured every segment in the font, so text in a font that has measured
+  // no kana, as in one that has answered that it kerns none, isn't looked through for kana.
+  let lineStartExtras = hanKerning.lineStartExtras
+  if (engineProfile.kernsAcrossCanvasWords && fontMeasurement.measuredKana && fontMeasurement.kanaKerning !== null && kanaPairRe.test(own)) {
+    const kanaKerning = getFontKanaKerning(fontMeasurement)
+    if (kanaKerning !== null) lineStartExtras = addKanaKerning(lineStartExtras, widths, base, analysis, from, to, fontMeasurement, kanaKerning)
+  }
+  let lineEndTrims = hanKerning.lineEndTrims
+  if (engineProfile.hangsIdeographicSpace && own.includes('\u3000')) {
+    lineEndTrims = addIdeographicSpaceHangs(lineEndTrims, analysis, fontMeasurement, letterSpacing, discretionaryHyphenWidth, from, to)
+  }
+  const prepared = {
+    widths,
+    segmentFlags,
+    simpleLineWalkFastPath: simpleKinds && !analysis.hasUnbroken,
+    simpleLineCountFastPath: simpleKinds,
+    breakableFitAdvances,
+    letterSpacing,
+    discretionaryHyphenWidth,
+    discretionaryHyphenContexts,
+    breakableLineStartExtras,
+    lineStartExtras,
+    lineEndTrims,
+    overflowLineEndTrims: hanKerning.overflowLineEndTrims,
+    tabStopAdvance,
+    minimumTabAdvance,
+  } satisfies PreparedLineBreakData as unknown as PreparedText & PreparedSegments
+  if (segments !== null) prepared.segments = segments
+  return prepared
+}
+
 export function measureAnalysis(
   analysis: TextAnalysis,
   from: number,
@@ -588,49 +653,26 @@ export function measureAnalysis(
     }
   }
 
-  // The hyphen a chosen soft hyphen paints, which only a text that holds one asks for, with
-  // the gap before it, plus the hyphen's own spacing where the engine letter-spaces it.
-  const hyphenText = discretionaryHyphenContexts === null ? '-' : engineProfile.hyphenFromPrimaryFont ? getHyphenText(fontMeasurement) : '\u2010'
-  const discretionaryHyphenWidth = getTextWidth(hyphenText, fontMeasurement, emojiCorrection) +
-    (letterSpacing === 0 ? 0 : letterSpacing * (engineProfile.letterSpaceDiscretionaryHyphen ? 2 : 1))
-
-  // A segment's width is its width between the text before and after it; one that starts
-  // a line takes back the halt Blink gives its first character there.
-  let hanKerning: HanKerningTrims = { widthTrims: null, lineStartExtras: null, lineEndTrims: null, overflowLineEndTrims: null }
-  if (engineProfile.hanKerning && textMayHanKern(own)) {
-    hanKerning = getHanKerningTrims(fontMeasurement, analysis, from, to)
-    const trims = hanKerning.widthTrims
-    if (trims !== null) for (let i = 0; i < trims.length; i++) widths[base + i] = widths[base + i]! - trims[i]!
-  }
-  // The loop above has measured every segment in the font, so text in a font that has measured
-  // no kana, as in one that has answered that it kerns none, isn't looked through for kana.
-  let lineStartExtras = hanKerning.lineStartExtras
-  if (engineProfile.kernsAcrossCanvasWords && fontMeasurement.measuredKana && fontMeasurement.kanaKerning !== null && kanaPairRe.test(own)) {
-    const kanaKerning = getFontKanaKerning(fontMeasurement)
-    if (kanaKerning !== null) lineStartExtras = addKanaKerning(lineStartExtras, widths, base, analysis, from, to, fontMeasurement, kanaKerning)
-  }
-  let lineEndTrims = hanKerning.lineEndTrims
-  if (engineProfile.hangsIdeographicSpace && own.includes('\u3000')) {
-    lineEndTrims = addIdeographicSpaceHangs(lineEndTrims, analysis, fontMeasurement, letterSpacing, discretionaryHyphenWidth, from, to)
-  }
-  const prepared = {
-    widths,
-    segmentFlags,
-    simpleLineWalkFastPath: simpleKinds && !analysis.hasUnbroken,
-    simpleLineCountFastPath: simpleKinds,
-    breakableFitAdvances,
+  return finishMeasurement(
+    analysis,
+    from,
+    to,
+    own,
+    fontMeasurement,
+    engineProfile,
     letterSpacing,
-    discretionaryHyphenWidth,
-    discretionaryHyphenContexts,
+    emojiCorrection,
+    widths,
+    base,
+    segmentFlags,
+    simpleKinds,
+    breakableFitAdvances,
     breakableLineStartExtras,
-    lineStartExtras,
-    lineEndTrims,
-    overflowLineEndTrims: hanKerning.overflowLineEndTrims,
+    discretionaryHyphenContexts,
     tabStopAdvance,
     minimumTabAdvance,
-  } satisfies PreparedLineBreakData as unknown as PreparedText & PreparedSegments
-  if (segments !== null) prepared.segments = segments
-  return prepared
+    segments,
+  )
 }
 
 // Blink's layout shapes a run of one script in one call and takes katakana for hiragana, so
