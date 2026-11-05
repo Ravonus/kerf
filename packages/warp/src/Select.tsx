@@ -81,6 +81,36 @@ const OWN = [
   'searchable',
 ]
 
+function listItems(props: ListProps) {
+  return derived<ListItem[]>(() => [
+    ...(props.placeholder !== undefined ? [{ value: '', label: props.placeholder }] : []),
+    ...props.options.flatMap<ListItem>((o) =>
+      'group' in o
+        ? o.options.map((x) => ({
+            value: x.value,
+            label: x.label,
+            disabled: x.disabled,
+            hint: x.hint,
+            group: o.group,
+          }))
+        : [o],
+    ),
+  ])
+}
+
+function listCurrent(
+  v: ReturnType<typeof bindable<string | null>>,
+  items: ReturnType<typeof listItems>,
+) {
+  // with no value the first option shows, as a select does
+  const current = derived(() => v.value ?? items.value.find((i) => !i.disabled)?.value ?? '')
+  const text = derived(() => {
+    const c = current.value
+    return c === '' ? '' : (items.value.find((i) => i.value === c)?.label ?? '')
+  })
+  return { current, text }
+}
+
 /**
  * What a Select holds, with or without a form behind it: the value, the row list and its action on the trigger. The
  * carrier, when there is one, is a real <select>: `onChange`, `selectedOptions`, `required`, reset and autofill all stay
@@ -100,26 +130,8 @@ function useList(props: ListProps) {
     false,
     () => props.onOpenChange,
   )
-  const items = derived<ListItem[]>(() => [
-    ...(props.placeholder !== undefined ? [{ value: '', label: props.placeholder }] : []),
-    ...props.options.flatMap<ListItem>((o) =>
-      'group' in o
-        ? o.options.map((x) => ({
-            value: x.value,
-            label: x.label,
-            disabled: x.disabled,
-            hint: x.hint,
-            group: o.group,
-          }))
-        : [o],
-    ),
-  ])
-  // with no value the first option shows, as a select does
-  const current = derived(() => v.value ?? items.value.find((i) => !i.disabled)?.value ?? '')
-  const text = derived(() => {
-    const c = current.value
-    return c === '' ? '' : (items.value.find((i) => i.value === c)?.label ?? '')
-  })
+  const items = listItems(props)
+  const { current, text } = listCurrent(v, items)
   let trigger: HTMLButtonElement | undefined
   let carrier: HTMLSelectElement | undefined
   let picking = false
