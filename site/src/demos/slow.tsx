@@ -31,8 +31,7 @@ export default function SlowPage() {
           `/examples/slow?ms=${ms.value}` +
           `&run=${run.value}`
         }
-      >
-      </iframe>
+      ></iframe>
     </div>
   )
 }
