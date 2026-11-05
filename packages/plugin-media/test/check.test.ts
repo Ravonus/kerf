@@ -8,9 +8,9 @@ import { check } from '../../cli/src/check.mjs'
 
 const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
 const plugin = fileURLToPath(new URL('../src/index.mjs', import.meta.url))
-let root
+let root: string
 
-const png = (w, h) =>
+const png = (w: number, h: number) =>
   sharp({ create: { width: w, height: h, channels: 3, background: '#468' } })
     .png()
     .toBuffer()
@@ -92,10 +92,10 @@ it('reports each M-code once where it applies, owned by the plugin, with fixes',
   for (const d of m) expect(d.owner).toBe('@weft-js/plugin-media')
 
   const text = readFileSync(join(root, 'src/routes/index.tsx'), 'utf8')
-  const apply = (d) =>
-    text.slice(0, d.fix.edits[0].offset[0]) +
-    d.fix.edits[0].text +
-    text.slice(d.fix.edits[0].offset[1])
+  const apply = (d: { fix: { edits: { offset: [number, number]; text: string }[] } }) =>
+    text.slice(0, d.fix.edits[0]!.offset[0]) +
+    d.fix.edits[0]!.text +
+    text.slice(d.fix.edits[0]!.offset[1])
   const m001 = m.find((d) => d.code === 'M001')
   expect(m001.fix.safe).toBe(true)
   expect(apply(m001)).toContain(
