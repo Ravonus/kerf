@@ -23,7 +23,7 @@ const distinct = new Set([
   'packages/core/scripts/parity.mjs:walk',
   'packages/core/scripts/native-stamp.cjs:walk',
   'packages/warp-icons/scripts/style.mjs:walk',
-  'packages/warp/test/native.test.mjs:walk',
+  'packages/warp/test/native.test.ts:walk',
   'packages/warp/test/critical.browser.test.tsx:walk',
   'benchmarks/compare/design/audit.mjs:walk',
   'evals/gates/ds-exit.mjs:walk',

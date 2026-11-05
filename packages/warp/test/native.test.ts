@@ -4,13 +4,13 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 const src = join(import.meta.dirname, '../src')
-const walk = (dir) =>
+const walk = (dir: string): string[] =>
   readdirSync(dir).flatMap((n) => {
     const p = join(dir, n)
     return statSync(p).isDirectory() ? walk(p) : p.endsWith('.tsx') ? [p] : []
   })
-const files = walk(src).map((p) => [relative(src, p), readFileSync(p, 'utf8')])
-const hits = (re) =>
+const files = walk(src).map((p) => [relative(src, p), readFileSync(p, 'utf8')] as [string, string])
+const hits = (re: RegExp) =>
   files.flatMap(([name, text]) => [...text.matchAll(re)].map((m) => `${name}: ${m[0]}`))
 
 test('the only <select> is the one Select hides as its form value', () => {
