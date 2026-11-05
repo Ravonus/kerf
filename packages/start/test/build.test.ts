@@ -14,14 +14,37 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { createRequire } from 'node:module'
+import type * as Playwright from 'playwright-core'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fnId, inlineSheets, sheetPieces } from '../src/vite.mjs'
 import { INLINE_CSS_MAX } from '../src/inline.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
 
+type Server = { url: string; stop: () => boolean }
+type GetServer = () => Server
+type ReadPage = (path: string) => Promise<{ html: string; res: Response }>
+type Paint = (html: string) => string
+type Open = (
+  options?: Parameters<Playwright.Browser['newContext']>[0],
+  hold?: (route: Playwright.Route) => Promise<void>,
+) => Promise<{
+  context: Playwright.BrowserContext
+  tab: Playwright.Page
+  vis: () => Promise<string>
+}>
+type Under = (
+  policy: string,
+  path: string,
+) => Promise<{ tab: Playwright.Page; browser: Playwright.Browser }>
+declare global {
+  interface Window {
+    seen: unknown
+  }
+}
+
 // Each build runs in its own node process, as `weft build` does: Nitro's build stalls inside vitest's module runner.
-function build({ preset, ...rest }) {
+function build({ preset, ...rest }: { preset: string; [key: string]: unknown }) {
   const opts = JSON.stringify({ ...rest, preset, logLevel: 'error' })
   const r = spawnSync(process.execPath, [join(import.meta.dirname, 'build-app.mjs'), opts], {
     encoding: 'utf8',
@@ -29,9 +52,9 @@ function build({ preset, ...rest }) {
   })
   if (r.status !== 0) throw new Error(`${preset} build failed:\n${r.stderr}`)
 }
-const out = (preset) => join(fixture, `.output-test-${preset}`)
+const out = (preset: string) => join(fixture, `.output-test-${preset}`)
 
-async function serve(cmd, entry) {
+async function serve(cmd: string, entry: string) {
   const port = await freePort()
   const child = spawn(cmd, [entry], {
     env: { ...process.env, NODE_ENV: 'production', PORT: String(port) },
@@ -64,12 +87,15 @@ afterAll(() => {
   for (const p of ['node', 'bun', 'deno_server']) rmSync(out(p), { recursive: true, force: true })
 })
 
-function registerGateThePagePaintsWithoutTheSheetHolds(open, geometry) {
+function registerGateThePagePaintsWithoutTheSheetHolds(
+  open: Open,
+  geometry: (tab: Playwright.Page) => Promise<number[]>,
+) {
   test('the page paints without the sheet, holds the gate with its room kept, and shows it when the sheet lands', async () => {
-    const held = []
+    const held: (() => void)[] = []
     const release = () => held.forEach((go) => go())
     const { context, tab, vis } = await open({}, async (r) => {
-      await new Promise((go) => {
+      await new Promise<void>((go) => {
         held.push(go)
       })
       await r.continue()
@@ -80,7 +106,7 @@ function registerGateThePagePaintsWithoutTheSheetHolds(open, geometry) {
     const before = await geometry(tab)
     release()
     await tab.waitForFunction(
-      () => getComputedStyle(document.getElementById('gated')).visibility === 'visible',
+      () => getComputedStyle(document.getElementById('gated')!).visibility === 'visible',
     )
     expect(await geometry(tab)).toEqual(before)
     expect(await tab.locator('#gated').isVisible()).toBe(true)
@@ -88,11 +114,11 @@ function registerGateThePagePaintsWithoutTheSheetHolds(open, geometry) {
   })
 }
 
-function registerGateASheetThatNeverComesOrIs(open) {
+function registerGateASheetThatNeverComesOrIs(open: Open) {
   test("a sheet that never comes, or is gone after a deploy, can't hide it for good", async () => {
     const { context, tab } = await open({}, (r) => r.fulfill({ status: 404, body: '' }))
     await tab.waitForFunction(
-      () => getComputedStyle(document.getElementById('gated')).visibility === 'visible',
+      () => getComputedStyle(document.getElementById('gated')!).visibility === 'visible',
       null,
       { timeout: 5000 },
     )
@@ -100,7 +126,7 @@ function registerGateASheetThatNeverComesOrIs(open) {
   })
 }
 
-function registerGateWithNoScriptAtAllAndIn(open) {
+function registerGateWithNoScriptAtAllAndIn(open: Open) {
   test('with no script at all, and in the accessibility tree once shown', async () => {
     const { context, tab, vis } = await open({ javaScriptEnabled: false })
     await tab.waitForLoadState('load')
@@ -112,27 +138,30 @@ function registerGateWithNoScriptAtAllAndIn(open) {
   })
 }
 
-function registerGateReducedMotionShowsItWithNoFade(open) {
+function registerGateReducedMotionShowsItWithNoFade(open: Open) {
   test('reduced motion shows it with no fade', async () => {
     const { context, tab } = await open({ reducedMotion: 'reduce' })
     await tab.waitForLoadState('load')
     await tab.waitForFunction(
-      () => getComputedStyle(document.getElementById('gated')).visibility === 'visible',
+      () => getComputedStyle(document.getElementById('gated')!).visibility === 'visible',
     )
     expect(
-      await tab.evaluate(() => getComputedStyle(document.getElementById('gated')).animationName),
+      await tab.evaluate(() => getComputedStyle(document.getElementById('gated')!).animationName),
     ).toBe('none')
     await context.close()
   })
 }
 
-function registerGateAStreamedBoundaryWaitsForTheSheet(getBrowser, getServer) {
+function registerGateAStreamedBoundaryWaitsForTheSheet(
+  getBrowser: () => Playwright.Browser,
+  getServer: GetServer,
+) {
   test('a streamed Boundary waits for the sheet, and a client route change finds its styles', async () => {
-    let release
+    let release!: () => void
     const context = await getBrowser().newContext()
     const tab = await context.newPage()
     await tab.route('**/assets/sheet-*.css', async (r) => {
-      await new Promise((go) => {
+      await new Promise<void>((go) => {
         release = go
       })
       await r.continue()
@@ -153,12 +182,12 @@ function registerGateAStreamedBoundaryWaitsForTheSheet(getBrowser, getServer) {
   })
 }
 
-function registerStyleGates(getServer) {
-  const browsers = ['chromium', 'firefox', 'webkit']
+function registerStyleGates(getServer: GetServer) {
+  const browsers = ['chromium', 'firefox', 'webkit'] as const
   for (const name of browsers)
     describe(`style gate in ${name}`, () => {
-      const pw = createRequire(import.meta.url)('playwright-core')
-      let browser
+      const pw = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+      let browser: Playwright.Browser
       beforeAll(async () => {
         browser = await pw[name].launch()
       })
@@ -166,7 +195,7 @@ function registerStyleGates(getServer) {
         await browser?.close()
       })
 
-      const open = async (options = {}, hold) => {
+      const open: Open = async (options = {}, hold) => {
         const context = await browser.newContext(options)
         const tab = await context.newPage()
         if (hold) await tab.route('**/assets/sheet-*.css', hold)
@@ -176,12 +205,12 @@ function registerStyleGates(getServer) {
           context,
           tab,
           vis: () =>
-            tab.evaluate(() => getComputedStyle(document.getElementById('gated')).visibility),
+            tab.evaluate(() => getComputedStyle(document.getElementById('gated')!).visibility),
         }
       }
-      const geometry = (tab) =>
+      const geometry = (tab: Playwright.Page) =>
         tab.evaluate(() => {
-          const r = document.getElementById('gated').getBoundingClientRect()
+          const r = document.getElementById('gated')!.getBoundingClientRect()
           return [r.top, r.height]
         })
 
@@ -205,7 +234,7 @@ function registerBuildCardsForStaticRoutesAndPrerenderParams() {
   })
 }
 
-function registerBuildAPageEveryTagHashedClientAssets(getServer) {
+function registerBuildAPageEveryTagHashedClientAssets(getServer: GetServer) {
   test('a page: every tag, hashed client assets, the status before the first byte', async () => {
     const res = await fetch(getServer().url + '/users/42')
     const text = await res.text()
@@ -220,14 +249,14 @@ function registerBuildAPageEveryTagHashedClientAssets(getServer) {
   })
 }
 
-function registerBuildCardsPrerenderedAndOnDemandBothImmutable(getServer) {
+function registerBuildCardsPrerenderedAndOnDemandBothImmutable(getServer: GetServer) {
   test('cards: prerendered and on demand, both immutable', async () => {
     const pre = await fetch(getServer().url + '/_weft/og/users/1.png?v=anything')
     expect([pre.status, pre.headers.get('content-type'), pre.headers.get('cache-control')]).toEqual(
       [200, 'image/png', 'public, max-age=31536000, immutable'],
     )
     const page = await (await fetch(getServer().url + '/users/2')).text()
-    const src = /og:image" content="https:\/\/acme\.dev([^"]+)"/.exec(page)[1]
+    const src = /og:image" content="https:\/\/acme\.dev([^"]+)"/.exec(page)![1]!
     const live = await fetch(getServer().url + src)
     expect([live.status, live.headers.get('cache-control')]).toEqual([
       200,
@@ -238,9 +267,9 @@ function registerBuildCardsPrerenderedAndOnDemandBothImmutable(getServer) {
   })
 }
 
-function registerBuildAFormWorksWithoutJSAndAn(getServer) {
+function registerBuildAFormWorksWithoutJSAndAn(getServer: GetServer) {
   test('a form works without JS, and an upload reaches the media route', async () => {
-    const id = (name, file) => fnId(name, file)
+    const id = (name: string, file: string) => fnId(name, file)
     const add = new URLSearchParams({
       $fn: id('addNote', 'src/server/forms.ts'),
       title: 'Built',
@@ -292,7 +321,7 @@ function registerBuildAFormWorksWithoutJSAndAn(getServer) {
   })
 }
 
-function registerBuildAPageCarriesTheFirstPaintOf(page, paint) {
+function registerBuildAPageCarriesTheFirstPaintOf(page: ReadPage, paint: Paint) {
   test("a page carries the first paint of what it rendered, and no other route's", async () => {
     const styled = paint((await page('/styled')).html)
     for (const rule of ['html{', '.root{', '.styled{', '.badge{']) expect(styled).toContain(rule)
@@ -304,12 +333,12 @@ function registerBuildAPageCarriesTheFirstPaintOf(page, paint) {
   })
 }
 
-function registerBuildThePageSSheetsAreAtMost(getServer, page) {
+function registerBuildThePageSSheetsAreAtMost(getServer: GetServer, page: ReadPage) {
   test("the page's sheets are at most two links past the shell, with every rule it needs and no other route's, cached for good", async () => {
     const { html } = await page('/styled')
     const head = html.slice(0, html.indexOf('</head>'))
     expect(head).not.toMatch(/<link rel="stylesheet"/)
-    const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1])
+    const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1]!)
     expect(links.length).toBeLessThanOrEqual(2)
     let css = ''
     for (const href of links) {
@@ -323,7 +352,7 @@ function registerBuildThePageSSheetsAreAtMost(getServer, page) {
   })
 }
 
-function registerBuildAHitAndAMissAreThe(getServer, page, paint) {
+function registerBuildAHitAndAMissAreThe(getServer: GetServer, page: ReadPage, paint: Paint) {
   test('a hit and a miss are the same bytes, and nothing varies on the visitor', async () => {
     const a = await page('/styled'),
       b = await page('/styled')
@@ -336,10 +365,10 @@ function registerBuildAHitAndAMissAreThe(getServer, page, paint) {
   })
 }
 
-function registerBuildAStreamedBoundaryComesAfterTheSheet(page) {
+function registerBuildAStreamedBoundaryComesAfterTheSheet(page: ReadPage) {
   test("a streamed Boundary comes after the sheet's link, with only the styles not yet sent", async () => {
     const { html } = await page('/slow')
-    const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1])
+    const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]!)
     const link = html.indexOf('<link rel="stylesheet" href=')
     const swap = html.indexOf('<template')
     if (swap > 0) expect(link).toBeLessThan(swap)
@@ -373,7 +402,7 @@ function registerBuildInlineSheetsLeavesOutWhatWouldBreakIn() {
   })
 }
 
-function registerBuildABoundaryChunkNeedingRulesTheHead(getServer) {
+function registerBuildABoundaryChunkNeedingRulesTheHead(getServer: GetServer) {
   test('a Boundary chunk needing rules the head left out brings them, styled from the first frame it shows', async () => {
     const html = await (await fetch(getServer().url + '/stream-sheet')).text()
     const head = html.slice(0, html.indexOf('</head>'))
@@ -383,7 +412,7 @@ function registerBuildABoundaryChunkNeedingRulesTheHead(getServer) {
     expect(/<style>[^<]*late-card[^<]*<\/style>[\s\S]*?<template>/.test(body)).toBe(true)
     expect(body).not.toMatch(/<link rel="stylesheet"[^>]*>\n<template>/) // a link would hold the chunk until it loaded
 
-    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
     const browser = await chromium.launch()
     try {
       const tab = await browser.newPage()
@@ -412,11 +441,11 @@ function registerBuildABoundaryChunkNeedingRulesTheHead(getServer) {
   }, 30_000)
 }
 
-function registerBuildARouteThatRenderedBeforeSendsIts(getServer) {
+function registerBuildARouteThatRenderedBeforeSendsIts(getServer: GetServer) {
   test('a route that rendered before sends its head first, and brings what this render reaches beyond it', async () => {
     const plain = await (await fetch(getServer().url + '/stream-sheet')).text()
     const again = await (await fetch(getServer().url + '/stream-sheet')).text()
-    const app = (html) =>
+    const app = (html: string) =>
       html.slice(
         html.indexOf('<div id="app">'),
         html.indexOf('<script type="application/json" id="weft-route">'),
@@ -430,7 +459,7 @@ function registerBuildARouteThatRenderedBeforeSendsIts(getServer) {
     )
     expect(head).not.toContain('extra-card')
 
-    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
     const browser = await chromium.launch()
     try {
       const tab = await browser.newPage()
@@ -460,7 +489,7 @@ function registerBuildARouteThatRenderedBeforeSendsIts(getServer) {
   }, 30_000)
 }
 
-function registerBuildACSPThatRefusesInlineScriptsStill(getServer, under) {
+function registerBuildACSPThatRefusesInlineScriptsStill(getServer: GetServer, under: Under) {
   test('a CSP that refuses inline scripts still gets every deferred sheet', async () => {
     // Deferred (`media="print"`) sheets are `criticalCss: false`'s; with the first-paint table they're plain links past the shell.
     const { tab, browser } = await under("script-src 'self'", '/late-css')
@@ -477,7 +506,7 @@ function registerBuildACSPThatRefusesInlineScriptsStill(getServer, under) {
   }, 30_000)
 }
 
-function registerBuildACSPThatRefusesInlineStylesStill(getServer, under) {
+function registerBuildACSPThatRefusesInlineStylesStill(getServer: GetServer, under: Under) {
   test('a CSP that refuses inline styles still gets the sheets of a page that inlined them whole', async () => {
     const { tab, browser } = await under("style-src 'self'", '/styled')
     try {
@@ -488,7 +517,7 @@ function registerBuildACSPThatRefusesInlineStylesStill(getServer, under) {
       await tab.waitForFunction(
         () =>
           [...document.querySelectorAll('link[rel=stylesheet]:not([disabled])')].every(
-            (l) => l.sheet,
+            (l) => (l as HTMLLinkElement).sheet,
           ),
         undefined,
         { timeout: 5000 },
@@ -500,9 +529,9 @@ function registerBuildACSPThatRefusesInlineStylesStill(getServer, under) {
   }, 30_000)
 }
 
-function registerBuildAnIslandThatWakesOnSightWakes(getServer) {
+function registerBuildAnIslandThatWakesOnSightWakes(getServer: GetServer) {
   test('an island that wakes on sight wakes when a chunk replaces the fallback watching for it', async () => {
-    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
     const browser = await chromium.launch()
     try {
       for (const path of ['/held-island', '/held-island?boot']) {
@@ -511,7 +540,7 @@ function registerBuildAnIslandThatWakesOnSightWakes(getServer) {
         await tab.waitForSelector('.wait-awake', { state: 'attached' }) // what the observers have, once the entry's run
         await tab.waitForSelector('.awake')
         await tab.waitForFunction(
-          () => !document.querySelector('.awake').hasAttribute('wk'),
+          () => !document.querySelector('.awake')!.hasAttribute('wk'),
           null,
           { timeout: 5000 },
         ) // claimed
@@ -523,19 +552,19 @@ function registerBuildAnIslandThatWakesOnSightWakes(getServer) {
   }, 30_000)
 }
 
-function registerBuildTheHeadAsksForTheEntryOnce(getServer) {
+function registerBuildTheHeadAsksForTheEntryOnce(getServer: GetServer) {
   test('the head asks for the entry once: its script tag, or a preload when the tag is in the body', async () => {
     for (let i = 0; i < 2; i++) {
       // the second request's head goes out before the page renders
       const [head, body] = (await (await fetch(getServer().url + '/about')).text()).split('</head>')
-      const entry = /<script type="module" src="([^"]+)"/.exec(head + body)[1]
+      const entry = /<script type="module" src="([^"]+)"/.exec(head! + body)![1]!
       const asks = [
         `<script type="module" src="${entry}"`,
         `<link rel="modulepreload" href="${entry}"`,
-      ].filter((t) => head.includes(t))
+      ].filter((t) => head!.includes(t))
       expect(asks).toHaveLength(1)
-      expect(body.includes(`<script type="module" src="${entry}"`)).toBe(
-        asks[0].startsWith('<link'),
+      expect(body!.includes(`<script type="module" src="${entry}"`)).toBe(
+        asks[0]!.startsWith('<link'),
       )
     }
   })
@@ -582,9 +611,9 @@ function registerBuildNoChunkCarriesZodASchemaOnly() {
   })
 }
 
-function registerBuildTheProductionBuildHydratesWithInChrome(getServer) {
+function registerBuildTheProductionBuildHydratesWithInChrome(getServer: GetServer) {
   test('the production build hydrates with 0/0 in Chrome and navigates', async () => {
-    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
     const browser = await chromium.launch()
     try {
       const tab = await browser.newPage()
@@ -615,7 +644,7 @@ function registerBuildTheProductionBuildHydratesWithInChrome(getServer) {
 }
 
 describe('node preset, end to end', () => {
-  let server
+  let server: Server
   beforeAll(async () => {
     build({ root: fixture, site, preset: 'node', nitro: { output: { dir: out('node') } } })
     server = await serve(process.execPath, join(out('node'), 'server/index.mjs'))
@@ -630,10 +659,10 @@ describe('node preset, end to end', () => {
 
   registerBuildAFormWorksWithoutJSAndAn(() => server)
 
-  const page = (path) =>
+  const page = (path: string) =>
     fetch(server.url + path).then(async (r) => ({ html: await r.text(), res: r }))
-  const paint = (html) =>
-    [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('')
+  const paint = (html: string) =>
+    [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]!).join('')
 
   registerBuildAPageCarriesTheFirstPaintOf(page, paint)
 
@@ -652,8 +681,8 @@ describe('node preset, end to end', () => {
   registerBuildARouteThatRenderedBeforeSendsIts(() => server)
 
   /** The page with this policy on it, the document only, as a host would send it. */
-  async function under(policy, path) {
-    const { chromium } = createRequire(import.meta.url)('playwright-core')
+  async function under(policy: string, path: string) {
+    const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
     const browser = await chromium.launch()
     const tab = await browser.newPage()
     await tab.route(
