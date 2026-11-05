@@ -2,20 +2,35 @@ import { ControlBar, Stack, Text } from '@weft-js/warp'
 import { useControls } from './shared'
 
 export function ControlBarCall() {
-  const c = useControls()
+  const {
+    mic,
+    camera,
+    sharing,
+    hand,
+    side,
+    onToggle,
+    onLeave,
+    said,
+  } = useControls()
   return (
-    <Stack gap="related" align="center">
+    <Stack
+      gap="related"
+      align="center"
+    >
       <ControlBar
-        mic={c.mic.value}
-        camera={c.camera.value}
-        sharing={c.sharing.value}
-        hand={c.hand.value}
-        side={c.side.value}
-        onToggle={c.onToggle}
-        onLeave={c.onLeave}
+        mic={mic.value}
+        camera={camera.value}
+        sharing={sharing.value}
+        hand={hand.value}
+        side={side.value}
+        onToggle={onToggle}
+        onLeave={onLeave}
       />
-      <Text role="caption" subtle>
-        {c.said.value}
+      <Text
+        role="caption"
+        subtle
+      >
+        {said.value}
       </Text>
     </Stack>
   )

@@ -1,5 +1,11 @@
 import { state } from '@weft-js/core'
-import { Button, Prejoin, Row, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  Prejoin,
+  Row,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 import { CALL_DEVICES } from '../../world'
 import { pause } from './shared'
 
@@ -18,7 +24,12 @@ export function PrejoinIncidentCall() {
       {joined.value ? (
         <Row gap="related">
           <Text>{joined.value} is in the call.</Text>
-          <Button emphasis="outline" tone="neutral" size="sm" onClick={() => (joined.value = '')}>
+          <Button
+            emphasis="outline"
+            tone="neutral"
+            size="sm"
+            onClick={() => (joined.value = '')}
+          >
             Go back
           </Button>
         </Row>
@@ -30,10 +41,15 @@ export function PrejoinIncidentCall() {
             level={0.4}
             joining={joining.value}
             onJoin={(n) => void join(n)}
-            onTestSound={() => (said.value = 'Test sound played')}
+            onTestSound={() =>
+              (said.value = 'Test sound played')
+            }
           />
           {said.value && (
-            <Text role="caption" subtle>
+            <Text
+              role="caption"
+              subtle
+            >
               {said.value}
             </Text>
           )}

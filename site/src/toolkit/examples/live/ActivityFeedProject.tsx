@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { ActivityFeed, Button, Row, Stack } from '@weft-js/warp'
+import {
+  ActivityFeed,
+  Button,
+  Row,
+  Stack,
+} from '@weft-js/warp'
 import { ACTIVITY } from '../../world'
 
 export function ActivityFeedProject() {
@@ -18,9 +23,18 @@ export function ActivityFeedProject() {
     ])
   return (
     <Stack gap="related">
-      <ActivityFeed items={items} live="live" title="Project activity" />
+      <ActivityFeed
+        items={items}
+        live="live"
+        title="Project activity"
+      />
       <Row>
-        <Button emphasis="outline" tone="neutral" size="sm" onClick={add}>
+        <Button
+          emphasis="outline"
+          tone="neutral"
+          size="sm"
+          onClick={add}
+        >
           Add a deploy
         </Button>
       </Row>

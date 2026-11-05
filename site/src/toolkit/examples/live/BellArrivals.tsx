@@ -5,8 +5,16 @@ export function BellArrivals() {
   const count = state(3)
   return (
     <Row gap="related">
-      <Bell count={count} onOpen={() => (count.value = 0)} />
-      <Button emphasis="outline" tone="neutral" size="sm" onClick={() => count.value++}>
+      <Bell
+        count={count}
+        onOpen={() => (count.value = 0)}
+      />
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        size="sm"
+        onClick={() => count.value++}
+      >
         A deploy failed
       </Button>
     </Row>

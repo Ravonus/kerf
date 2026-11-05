@@ -8,8 +8,13 @@ export function MeetingRoomIncident() {
   return (
     <div style="block-size:560px">
       {left.value ? (
-        <Card title="You left the incident review" sweep={false}>
-          <Button onClick={() => (left.value = false)}>Rejoin</Button>
+        <Card
+          title="You left the incident review"
+          sweep={false}
+        >
+          <Button onClick={() => (left.value = false)}>
+            Rejoin
+          </Button>
         </Card>
       ) : (
         <MeetingRoom
