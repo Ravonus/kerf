@@ -1,3 +1,4 @@
+import { sleep as pause } from '../../../scripts/lib/sleep.mjs'
 import { fireEvent } from '@testing-library/dom'
 import { flush, render } from '@weft-js/core/test'
 import { Inbox, type InboxProps } from '../src/live/Inbox'
@@ -16,10 +17,6 @@ const click = (root: ParentNode, name: string) => {
   if (!button) throw new Error(`Missing button ${name}`)
   button.click()
 }
-const pause = (ms = 0) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
 afterEach(() => {
   document.body.innerHTML = ''
   vi.useRealTimers()

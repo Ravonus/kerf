@@ -7,14 +7,7 @@ import { meetingMount } from './MeetingRoomMount'
 import { meetingHandlers } from './MeetingRoomHandlers'
 import type { MeetingRoomProps, Participant } from './MeetingRoomTypes'
 
-export type RoomInputs = {
-  [K in keyof MeetingRoomProps]-?: MeetingRoomProps[K] | undefined
-} & Pick<MeetingRoomProps, 'title' | 'participants' | 'self'> & {
-    live: string | (() => string)
-    theme: 'dark' | 'light'
-    shareTitle: string
-    reaction: string
-  }
+export type RoomInputs = MeetingRoomProps
 
 export function meetingModel(p: () => RoomInputs) {
   const people = derived(() => val<Participant[]>(p().participants) ?? [])

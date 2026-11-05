@@ -62,6 +62,7 @@ export function Checklist({
     () => onHide?.(),
     () => onUndoHide?.(),
   )
+  const toggle = (get: () => [string, boolean]) => onToggle?.(...get())
   return (
     <section
       data-scope="checklist"
@@ -105,7 +106,7 @@ export function Checklist({
         </div>
       </div>
       <ChecklistProgress count={count} total={total} />
-      <ChecklistRows id={id} closed={closed} list={list} onToggle={onToggle} />
+      <ChecklistRows id={id} closed={closed} list={list} onToggle={onToggle} toggle={toggle} />
       <div data-part="done">
         <Mark tone="positive" draw />
         <div>
@@ -150,11 +151,13 @@ function ChecklistRows({
   closed,
   list,
   onToggle,
+  toggle,
 }: {
   id: string
   closed: State<boolean>
   list: { readonly value: ChecklistItem[] }
   onToggle: ChecklistProps['onToggle']
+  toggle: (get: () => [string, boolean]) => void
 }) {
   return (
     <ol id={`${id}-l`} hidden={closed.value || undefined}>
@@ -165,7 +168,7 @@ function ChecklistRows({
             disabled={!onToggle}
             aria-labelledby={`${id}-${it.id}`}
             onChange={(e: Event) =>
-              onToggle?.(it.id, (e.currentTarget as HTMLInputElement).checked)
+              toggle(() => [it.id, (e.currentTarget as HTMLInputElement).checked])
             }
           />
           <b id={`${id}-${it.id}`}>

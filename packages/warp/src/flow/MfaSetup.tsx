@@ -54,8 +54,8 @@ export function MfaSetup({ open, qr, secret, onVerify, codes, onDownload, onDone
     problem,
     busy,
     () => open,
-    () => onVerify,
-    () => onDone,
+    (value) => onVerify(value()),
+    () => onDone?.(),
   )
   const label = derived(() => (step.value === 'codes' ? 'Finish' : 'Continue'))
   return (
@@ -114,8 +114,8 @@ function mfaNext(
   problem: State<string | undefined>,
   busy: State<boolean>,
   open: () => MfaSetupProps['open'],
-  onVerify: () => MfaSetupProps['onVerify'],
-  onDone: () => MfaSetupProps['onDone'],
+  onVerify: (value: () => string) => unknown,
+  onDone: () => void,
 ) {
   return async () => {
     if (step.value === 'scan') {
@@ -124,7 +124,7 @@ function mfaNext(
     }
     if (step.value === 'codes') {
       open().value = false
-      onDone()?.()
+      onDone()
       return
     }
     if (!/^\d{6}$/.test(code.value)) {
@@ -133,7 +133,7 @@ function mfaNext(
     }
     busy.value = true
     try {
-      if ((await onVerify()(code.value)) === false)
+      if ((await onVerify(() => code.value)) === false)
         problem.value = "That code didn't match. Use the newest one."
       else {
         problem.value = undefined

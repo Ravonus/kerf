@@ -103,8 +103,8 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
             diff={diff}
             refs={refs}
             leave={leave}
-            onApprove={onApprove}
-            onDeny={onDeny}
+            onApprove={() => onApprove?.(args.value, always.value)}
+            onDeny={() => onDeny?.()}
             alwaysAllow={alwaysAllow}
           />
         )}
@@ -172,8 +172,8 @@ function ToolApproval({
   diff: { readonly value: string }
   refs: { ok?: HTMLElement | undefined }
   leave: (then: () => void) => void
-  onApprove?: ((args: string, always: boolean) => void) | undefined
-  onDeny?: (() => void) | undefined
+  onApprove: () => void
+  onDeny: () => void
   alwaysAllow?: string | undefined
 }) {
   return (
@@ -194,15 +194,11 @@ function ToolApproval({
         </section>
       )}
       <div>
-        <Button
-          size="sm"
-          ref={(n) => (refs.ok = n)}
-          onClick={() => leave(() => onApprove?.(args.value, always.value))}
-        >
+        <Button size="sm" ref={(n) => (refs.ok = n)} onClick={() => leave(() => onApprove())}>
           <CheckIcon />
           Approve
         </Button>
-        <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny?.())}>
+        <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny())}>
           Deny
         </Button>
         {alwaysAllow !== undefined && (
