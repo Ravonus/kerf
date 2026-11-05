@@ -24,23 +24,7 @@ export default function Cart() {
   const subtotal = () => shown().reduce((sum, l) => sum + l.priceCents * quantity(l), 0)
   const failed = () => [...steps].at(-1)?.error
 
-  const To = (props: {
-    line: Line
-    to: number
-    label: string
-    class: string
-    disabled?: boolean
-    children: JSX.Element
-  }) => (
-    <form action={setQuantity} method="post" class="contents">
-      <input type="hidden" name="product" value={props.line.id} />
-      <input type="hidden" name="quantity" value={props.to} />
-      <input type="hidden" name="change" value={props.to - quantity(props.line)} />
-      <button type="submit" aria-label={props.label} class={props.class} disabled={props.disabled}>
-        {props.children}
-      </button>
-    </form>
-  )
+  const To = quantityForm(quantity)
 
   return (
     <div class="mx-auto flex max-w-290 flex-col gap-5 px-8 py-12">
@@ -51,18 +35,7 @@ export default function Cart() {
           That didn't save. Your cart is back as it was. Try again in a moment.
         </p>
       </Show>
-      <Show
-        when={shown().length}
-        fallback={
-          <div class="flex flex-col items-start gap-1 py-12">
-            <h2 class={`${heading} text-xl`}>Your cart is empty</h2>
-            <p class="text-muted">Everything you add stays here for sixty days.</p>
-            <a href="/" class={textLink}>
-              Back to the aisles
-            </a>
-          </div>
-        }
-      >
+      <Show when={shown().length} fallback={emptyCart()}>
         <ul aria-label="Cart">
           <For each={shown()}>
             {(line) => (
@@ -113,6 +86,39 @@ export default function Cart() {
         </div>
         <p class="text-muted">Checkout opens soon. Your cart keeps until then.</p>
       </Show>
+    </div>
+  )
+}
+
+function quantityForm(quantity: (line: Line) => number) {
+  const To = (props: {
+    line: Line
+    to: number
+    label: string
+    class: string
+    disabled?: boolean
+    children: JSX.Element
+  }) => (
+    <form action={setQuantity} method="post" class="contents">
+      <input type="hidden" name="product" value={props.line.id} />
+      <input type="hidden" name="quantity" value={props.to} />
+      <input type="hidden" name="change" value={props.to - quantity(props.line)} />
+      <button type="submit" aria-label={props.label} class={props.class} disabled={props.disabled}>
+        {props.children}
+      </button>
+    </form>
+  )
+  return To
+}
+
+function emptyCart() {
+  return (
+    <div class="flex flex-col items-start gap-1 py-12">
+      <h2 class={`${heading} text-xl`}>Your cart is empty</h2>
+      <p class="text-muted">Everything you add stays here for sixty days.</p>
+      <a href="/" class={textLink}>
+        Back to the aisles
+      </a>
     </div>
   )
 }
