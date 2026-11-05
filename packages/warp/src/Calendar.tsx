@@ -1,17 +1,11 @@
 import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
 import {
   addMonths,
-  dayState,
-  fmt,
   gridKey,
-  isoWeek,
-  isWeekend,
   isUnavailable,
   messages,
   monthEnd,
   monthStart,
-  monthWeeks,
-  ymd,
   weekStart,
   weekdays,
   type CalendarContext,
@@ -21,9 +15,10 @@ import {
   type DateRange,
   type IsoDate,
 } from '@weft-js/warp-core'
-import { derived, flush, state, untrack, watch } from '@weft-js/core'
+import { derived, flush, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from './Button'
-import { bindable, uid, usePickerEnv, type Bindable } from './Picker'
+import { Month } from './Calendar-month'
+import { bindable, usePickerEnv, type Bindable } from './Picker'
 import './styles'
 import '@weft-js/warp-core/styles/rich/calendar-grid.css'
 
@@ -58,18 +53,58 @@ const startOf = (v: CalendarValue, today: string, mode: CalendarMode) =>
         ? null
         : (v as string | null)) ?? today
 
-/**
- * The APG date grid (04 §1.4): one table per month, one tab stop on the cursor's day. Blank cells stand for days of
- * other months. A day is never named "14" alone: every button carries the full date and its state.
- */
-export function CalendarGrid(p: GridProps) {
+function calendarEvents(
+  p: GridProps,
+  firstDay: { readonly value: number },
+  cursor: State<string>,
+  hover: State<string | null>,
+  box: () => HTMLDivElement | undefined,
+  pick: (iso: string, reason: ChangeReason) => void,
+  moveTo: (iso: string) => void,
+  focusCursor: () => void,
+) {
+  const onKey = (e: KeyboardEvent) => {
+    if (!(e.target as Element).closest?.('[data-part="day"]')) return
+    const to = gridKey(
+      e.key,
+      e.shiftKey,
+      cursor.value,
+      firstDay.value,
+      getComputedStyle(box()!).direction === 'rtl',
+    )
+    if (!to) return
+    e.preventDefault()
+    if (to === 'pick') return pick(cursor.value, 'keyboard')
+    if (p.mode === 'range') hover.value = to
+    moveTo(to)
+    focusCursor()
+  }
+  const onClick = (e: MouseEvent) => {
+    const b = (e.target as Element).closest?.<HTMLElement>('[data-part="day"]')
+    if (b) pick(b.dataset.date!, 'pointer')
+  }
+  const onOver = (e: PointerEvent) => {
+    const b = (e.target as Element).closest?.<HTMLElement>('[data-part="day"]')
+    if (p.mode !== 'range' || !b || hover.value === b.dataset.date) return
+    hover.value = b.dataset.date!
+    p.onHover?.(hover.value as IsoDate)
+  }
+  const onLeave = () => {
+    if (p.mode === 'range') {
+      hover.value = null
+      p.onHover?.(null)
+    }
+  }
+  return { onKey, onClick, onOver, onLeave }
+}
+
+function calendarController(p: GridProps, box: () => HTMLDivElement | undefined) {
   const firstDay = derived(() => p.firstDayOfWeek ?? weekStart(p.locale))
   const count = () => p.months ?? 1
   const cursor = state(untrack(() => startOf(p.value(), p.today, p.mode)))
   const view = state(monthStart(untrack(() => cursor.value)))
   const hover = state<string | null>(null)
   const anim = state<'next' | 'prev' | undefined>(undefined)
-  let box: HTMLDivElement | undefined
   const shown = derived(() =>
     Array.from({ length: count() }, (_, n) => ({ month: addMonths(view.value, n) })),
   )
@@ -99,7 +134,7 @@ export function CalendarGrid(p: GridProps) {
   }
   const focusCursor = () => {
     flush()
-    box?.querySelector<HTMLElement>('[data-part="day"][tabindex="0"]')?.focus()
+    box()?.querySelector<HTMLElement>('[data-part="day"][tabindex="0"]')?.focus()
   }
   const pick = (iso: string, reason: ChangeReason) => {
     if (isUnavailable(iso, context())) return p.onUnavailable?.(iso as IsoDate)
@@ -107,38 +142,16 @@ export function CalendarGrid(p: GridProps) {
     hover.value = null
     p.onPick(iso as IsoDate, reason)
   }
-  const onKey = (e: KeyboardEvent) => {
-    if (!(e.target as Element).closest?.('[data-part="day"]')) return
-    const to = gridKey(
-      e.key,
-      e.shiftKey,
-      cursor.value,
-      firstDay.value,
-      getComputedStyle(box!).direction === 'rtl',
-    )
-    if (!to) return
-    e.preventDefault()
-    if (to === 'pick') return pick(cursor.value, 'keyboard')
-    if (p.mode === 'range') hover.value = to
-    moveTo(to)
-    focusCursor()
-  }
-  const onClick = (e: MouseEvent) => {
-    const b = (e.target as Element).closest?.<HTMLElement>('[data-part="day"]')
-    if (b) pick(b.dataset.date!, 'pointer')
-  }
-  const onOver = (e: PointerEvent) => {
-    const b = (e.target as Element).closest?.<HTMLElement>('[data-part="day"]')
-    if (p.mode !== 'range' || !b || hover.value === b.dataset.date) return
-    hover.value = b.dataset.date!
-    p.onHover?.(hover.value as IsoDate)
-  }
-  const onLeave = () => {
-    if (p.mode === 'range') {
-      hover.value = null
-      p.onHover?.(null)
-    }
-  }
+  const { onKey, onClick, onOver, onLeave } = calendarEvents(
+    p,
+    firstDay,
+    cursor,
+    hover,
+    box,
+    pick,
+    moveTo,
+    focusCursor,
+  )
   const page = (d: number) => {
     anim.value = d > 0 ? 'next' : 'prev'
     view.value = addMonths(view.value, d)
@@ -149,6 +162,32 @@ export function CalendarGrid(p: GridProps) {
     (iso) => {
       if (iso) moveTo(iso)
     },
+  )
+  return { firstDay, cursor, anim, shown, heads, t, context, page, onKey, onClick, onOver, onLeave }
+}
+
+/**
+ * The APG date grid (04 §1.4): one table per month, one tab stop on the cursor's day. Blank cells stand for days of
+ * other months. A day is never named "14" alone: every button carries the full date and its state.
+ */
+export function CalendarGrid(p: GridProps) {
+  let box: HTMLDivElement | undefined
+  const {
+    firstDay,
+    cursor,
+    anim,
+    shown,
+    heads,
+    t,
+    context,
+    page,
+    onKey,
+    onClick,
+    onOver,
+    onLeave,
+  } = calendarController(
+    untrack(() => p),
+    () => box,
   )
   return (
     <div ref={(n) => (box = n)} data-scope="calendar" data-part="root">
@@ -197,132 +236,6 @@ export function CalendarGrid(p: GridProps) {
       </div>
       {p.children}
     </div>
-  )
-}
-
-function Month({
-  month,
-  heads,
-  first,
-  weekNumbers,
-  locale,
-  wholeWeek,
-  ctx,
-  cursor,
-  initial,
-}: {
-  month: string
-  heads: readonly (readonly [string, string, number])[]
-  first: number
-  weekNumbers?: boolean | undefined
-  locale: string
-  wholeWeek: boolean
-  ctx: () => CalendarContext
-  cursor: string
-  initial?: boolean | undefined
-}) {
-  const cap = uid('cap')
-  const weeks = derived(() =>
-    monthWeeks(month, first).map((days) => ({
-      days: days.map((iso, c) => ({ iso, k: iso ?? `b${c}`, weekday: (first + c) % 7 })),
-      k: days.find(Boolean)!,
-      week: isoWeek(days.find(Boolean)!).week,
-    })),
-  )
-  return (
-    <div data-part="month">
-      <div data-part="caption" id={cap} aria-live="polite">
-        {fmt(month, { month: 'long', year: 'numeric' }, locale)}
-      </div>
-      <table role="grid" aria-labelledby={cap}>
-        <thead>
-          <tr>
-            {weekNumbers && (
-              <th scope="col" abbr={messages(locale).week}>
-                <span class="sr">{messages(locale).week}</span>
-              </th>
-            )}
-            {heads.map((h) => (
-              <th key={h[0]} scope="col" abbr={h[0]}>
-                {h[1]}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {weeks.value.map((w) => (
-            <tr key={w.k}>
-              {weekNumbers && (
-                <th scope="row" data-part="week">
-                  {w.week}
-                </th>
-              )}
-              {w.days.map((d) =>
-                d.iso ? (
-                  <Day
-                    key={d.k}
-                    iso={d.iso}
-                    weekend={isWeekend(d.weekday, locale)}
-                    locale={locale}
-                    wholeWeek={wholeWeek}
-                    ctx={ctx}
-                    cursor={cursor}
-                    initial={initial}
-                  />
-                ) : (
-                  <td key={d.k} role="gridcell"></td>
-                ),
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function Day({
-  iso,
-  weekend,
-  locale,
-  ctx,
-  cursor,
-  initial,
-}: {
-  iso: IsoDate
-  weekend: boolean
-  locale: string
-  wholeWeek: boolean
-  ctx: () => CalendarContext
-  cursor: string
-  initial?: boolean | undefined
-}) {
-  const s = derived(() => dayState(iso, ctx()))
-  const n = derived(() => new Intl.NumberFormat(locale).format(ymd(iso)[2]))
-  return (
-    <td
-      role="gridcell"
-      aria-selected={s.value.cellSelected ? 'true' : 'false'}
-      data-range={s.value.range}
-      data-preview={s.value.preview ? '' : undefined}
-      data-compare={s.value.compare ? '' : undefined}
-    >
-      <button
-        type="button"
-        data-part="day"
-        data-date={iso}
-        tabindex={iso === cursor ? '0' : '-1'}
-        data-initial={initial && iso === cursor ? '' : undefined}
-        data-weekend={weekend ? '' : undefined}
-        data-selected={s.value.selected ? '' : undefined}
-        data-booked={s.value.unavailable && s.value.booked ? '' : undefined}
-        aria-current={s.value.today ? 'date' : undefined}
-        aria-disabled={s.value.unavailable ? 'true' : undefined}
-        aria-label={s.value.name}
-      >
-        {n.value}
-      </button>
-    </td>
   )
 }
 
