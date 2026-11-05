@@ -3,6 +3,8 @@
 // reactive, and components can't add to it. `mergeMeta` and `metaTags` are server-side (exported from @weft-js/core/ssr);
 // `headTags` is the pure tag list both the string writer and the client's `setHead` (@weft-js/core/head) use.
 
+import { esc } from './markup-shared.mjs'
+
 /** `site` in weft.config.ts: the defaults every page starts from (§2). */
 export interface Site {
   name?: string | undefined
@@ -194,9 +196,6 @@ export function headTags(m: Merged, path: string): Tag[] {
   for (const e of m.extra) tags.push('rel' in e ? ['link', { ...e }] : ['meta', { ...e }])
   return tags
 }
-
-const esc = (s: string) =>
-  s.replace(/[&<"]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
 
 /** The tags as HTML, one per line, each marked `data-wm` (weft-managed) for client navigation. */
 export function metaTags(m: Merged, path: string): string {
