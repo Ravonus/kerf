@@ -24,7 +24,7 @@ export function segmentEvents(
   kind: () => SegmentKind,
   locale: () => string,
   today: () => string,
-  onBlurPartial: () => (() => unknown) | undefined,
+  onBlurPartial: () => unknown,
   make: () => SegmentPart[],
   value: () => string | null,
   clears: () => number | undefined,
@@ -63,7 +63,7 @@ export function segmentEvents(
     if (at >= 0) update(settle(parts.value, at, year()))
     if (group()!.contains(e.relatedTarget as Node)) return
     const st = parts.value.filter(isSegment)
-    if (st.some((s) => s.value !== null) && st.some((s) => s.value === null)) onBlurPartial()?.()
+    if (st.some((s) => s.value !== null) && st.some((s) => s.value === null)) onBlurPartial()
   }
   const onPaste = (e: ClipboardEvent) => {
     if (readonly() || disabled()) return
