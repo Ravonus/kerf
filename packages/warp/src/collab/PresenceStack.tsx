@@ -19,6 +19,33 @@ import '@weft-js/warp-core/styles/app/base.css'
 import '@weft-js/warp-core/styles/app/avatar-stack.css'
 import '@weft-js/warp-core/styles/app/follow-flag.css'
 
+type PresenceStackProps = {
+  peers: Live<Peer[]>
+  max?: number | undefined
+  following?: string | null | undefined
+  onFollow?: (p: Peer | null) => void
+  label?: string | undefined
+}
+
+function presenceAnnounce(
+  list: { readonly value: Peer[] },
+  panel: () => HTMLDivElement | undefined,
+) {
+  onMount(() => {
+    const told = burst<string>((lines) => announce(panel()!.ownerDocument, lines.join('. ')))
+    let was = untrack(() => list.value)
+    onCleanup(told.cancel)
+    watch(
+      () => list.value,
+      (now) => {
+        const line = presenceDelta(was, now)
+        was = now
+        if (line) told.push(line)
+      },
+    )
+  })
+}
+
 /**
  * Who is here (07 §6.1): avatars with a ring in each peer's colour, `+n` overflow opening the list, joins and leaves
  * announced as one summary. With `onFollow` each avatar is a toggle: `following` is the peer's id.
@@ -29,13 +56,7 @@ export function PresenceStack({
   following,
   onFollow,
   label = 'People here',
-}: {
-  peers: Live<Peer[]>
-  max?: number | undefined
-  following?: string | null | undefined
-  onFollow?: (p: Peer | null) => void
-  label?: string | undefined
-}) {
+}: PresenceStackProps) {
   const id = uid('presence')
   const list = derived(() => read(peers))
   const front = derived(() => list.value.slice(0, max))
@@ -49,19 +70,7 @@ export function PresenceStack({
     () => panel,
     () => ({ open: open.value, trigger: more!, onClose: () => (open.value = false) }),
   )
-  onMount(() => {
-    const told = burst<string>((lines) => announce(panel!.ownerDocument, lines.join('. ')))
-    let was = untrack(() => list.value)
-    onCleanup(told.cancel)
-    watch(
-      () => list.value,
-      (now) => {
-        const line = presenceDelta(was, now)
-        was = now
-        if (line) told.push(line)
-      },
-    )
-  })
+  presenceAnnounce(list, () => panel)
   return (
     <span data-scope="avatar-stack" role="group" aria-label={label}>
       {front.value.map((p) =>

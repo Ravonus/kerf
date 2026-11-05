@@ -5,7 +5,6 @@ import {
   findCard,
   isSheet,
   kanban,
-  menu,
   moveCard,
   moveLine,
   uid,
@@ -18,6 +17,7 @@ import { Drawer } from '../Drawer'
 import { Input } from '../Field'
 import { use } from '@weft-js/warp-core/weft'
 import { VirtualList, type VirtualControl } from '../VirtualList'
+import { cardState, type Ctx } from './Kanban-card'
 import { SWEEP } from './peer'
 import '../styles'
 import '@weft-js/warp-core/styles/data/base.css'
@@ -35,137 +35,93 @@ export type KanbanCardData = BoardCard & {
 /** A board column of warp cards. */
 export type KanbanColumn = BoardColumn<KanbanCardData>
 
-type Ctx = {
-  board: () => KanbanColumn[]
-  move: (id: string, col: number, index: number) => void
-  sheet: (c: KanbanCardData) => void
-  coarse: (el: Element) => boolean
-  focus: (id: string) => void
-  hint: string
-  drift?: (index: number, predicted: number, actual: number) => void
-  window: (column: string, c: VirtualControl) => void
-  adds: () => boolean
-  add: (column: string, title: string) => void
-}
-
 const hasFooter = (c: KanbanCardData) =>
   c.label !== undefined || c.assignee !== undefined || c.meta !== undefined
 
-function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
-  const open = state(false)
-  let btn: HTMLButtonElement | undefined
-  let panel: HTMLDivElement | undefined
-  let el: HTMLDivElement | undefined
-  use(
-    menu,
-    () => panel,
-    () => ({ open: open.value, trigger: () => btn, onClose: () => (open.value = false) }),
+type CardProps = { card: KanbanCardData; ctx: Ctx }
+type CardModel = ReturnType<typeof cardState>
+
+function Card(props: CardProps) {
+  const model = cardState(untrack(() => props))
+  return cardView(
+    untrack(() => props),
+    model,
   )
-  watch(
-    () => open.value,
-    (on) => {
-      const row = el?.parentElement
-      if (row) row.style.zIndex = on ? '5' : ''
-    },
-  ) // a row is its own stacking context, so the menu's has to rise
-  const to = (col: number, index: number) => {
-    const id = card.id
-    open.value = false
-    ctx.move(id, col, index)
-    ctx.focus(id)
-  }
-  const at = () => findCard(ctx.board(), card.id)
+}
+
+function cardView(props: CardProps, [open, at, actions, refs]: CardModel) {
   return (
     <div
-      ref={(n) => (el = n)}
+      ref={(n) => refs.element(n)}
       data-part="card"
       data-virtual=""
       data-focus=""
       data-sweep="surface"
       tabindex="0"
       draggable="true"
-      data-id={card.id}
-      aria-label={card.title}
-      aria-describedby={ctx.hint}
+      data-id={props.card.id}
+      aria-label={props.card.title}
+      aria-describedby={props.ctx.hint}
     >
       <SWEEP />
-      <h4 data-measure="">{card.title}</h4>
-      {hasFooter(card) && (
+      <h4 data-measure="">{props.card.title}</h4>
+      {hasFooter(props.card) && (
         <footer>
-          {card.meta}
-          {card.label !== undefined && (
-            <span data-part="label-chip" style={`--_dc:var(--warp-color-data-${card.color ?? 1})`}>
+          {props.card.meta}
+          {props.card.label !== undefined && (
+            <span
+              data-part="label-chip"
+              style={`--_dc:var(--warp-color-data-${props.card.color ?? 1})`}
+            >
               <i></i>
-              {card.label}
+              {props.card.label}
             </span>
           )}
-          {card.assignee !== undefined && (
+          {props.card.assignee !== undefined && (
             <span data-scope="avatar" data-size="sm" aria-hidden="true">
-              {card.assignee}
+              {props.card.assignee}
             </span>
           )}
         </footer>
       )}
       <button
-        ref={(n) => (btn = n)}
+        ref={(n) => refs.button(n)}
         type="button"
         data-part="move"
         aria-haspopup="true"
         aria-expanded={open.value ? 'true' : 'false'}
-        aria-label={`Move ${card.title}`}
-        onClick={(e: MouseEvent) => {
-          if (ctx.coarse(e.currentTarget as Element)) ctx.sheet(card)
-          else open.value = !open.value
-        }}
+        aria-label={`Move ${props.card.title}`}
+        onClick={(e: MouseEvent) => actions.show(e)}
       >
         <MoreIcon />
       </button>
       <div
-        ref={(n) => (panel = n)}
+        ref={(n) => refs.menu(n)}
         data-part="menu"
         hidden={!open.value}
         role="menu"
         aria-label="Move to"
       >
         {open.value &&
-          ctx.board().map((c) => (
+          props.ctx.board().map((c) => (
             <button
               key={c.id}
               type="button"
               role="menuitem"
               tabindex="-1"
-              aria-disabled={at()?.col === ctx.board().indexOf(c) ? 'true' : undefined}
-              onClick={() => {
-                const n = ctx.board().indexOf(c)
-                if (at()?.col !== n) to(n, c.cards.length)
-              }}
+              aria-disabled={at()?.col === props.ctx.board().indexOf(c) ? 'true' : undefined}
+              onClick={() => actions.choose(c)}
             >
               Move to {c.title}
             </button>
           ))}
         {open.value && (
-          <button
-            type="button"
-            role="menuitem"
-            tabindex="-1"
-            onClick={() => {
-              const a = at()!
-              to(a.col, a.index - 1)
-            }}
-          >
+          <button type="button" role="menuitem" tabindex="-1" onClick={() => actions.up()}>
             Move up
           </button>
         )}
         {open.value && (
-          <button
-            type="button"
-            role="menuitem"
-            tabindex="-1"
-            onClick={() => {
-              const a = at()!
-              to(a.col, a.index + 1)
-            }}
-          >
+          <button type="button" role="menuitem" tabindex="-1" onClick={() => actions.down()}>
             Move down
           </button>
         )}
@@ -247,37 +203,35 @@ function Column({ col, ctx, hint }: { col: () => KanbanColumn; ctx: Ctx; hint: s
   )
 }
 
-/**
- * The board (07 §6.2, 06 §10). Columns are `section > ol`, each a window, so one with 10,000 cards costs what one with
- * 20 does, with count and WIP limit, caution when over. Three move paths: HTML drag with a placeholder; keyboard
- * (Alt + arrows, or Space, arrows, Space); the Move button, a menu at a fine pointer and a Sheet on a phone. Each move is
- * announced. `columns` is a box, or a list the board follows and `onMove` reports to. `height` defaults to 560px.
- */
-export function Kanban({
-  columns,
-  onMove,
-  onAdd,
-  onDrift,
-  height,
-  label = 'Board',
-}: {
+type KanbanProps = {
   columns: State<KanbanColumn[]> | KanbanColumn[]
   onMove?: (id: string, column: string, index: number) => void
   onAdd?: (column: string, title: string) => void
   onDrift?: ((index: number, predicted: number, actual: number) => void) | undefined
   height?: string
   label?: string | undefined
-}) {
+}
+
+type KanbanOptions = {
+  columns: () => KanbanProps['columns']
+  hasAdd: () => boolean
+  onMove: (id: string, next: KanbanColumn[], at: NonNullable<ReturnType<typeof findCard>>) => void
+  onAdd: (column: string, title: string) => void
+  onDrift: (index: number, predicted: number, actual: number) => void
+}
+
+function kanbanState(opts: KanbanOptions) {
   const hint = uid('kanban')
-  const own = state(untrack(() => (columns instanceof Box ? [] : columns)))
-  const board = derived<KanbanColumn[]>(() => (columns instanceof Box ? columns.value : own.value))
-  watch(
-    () => columns,
-    (c) => {
-      if (!(c instanceof Box)) own.value = c
-    },
+  const own = state(
+    untrack(() => (opts.columns() instanceof Box ? [] : (opts.columns() as KanbanColumn[]))),
   )
-  const adds = derived(() => onAdd !== undefined)
+  const board = derived<KanbanColumn[]>(() =>
+    opts.columns() instanceof Box ? (opts.columns() as State<KanbanColumn[]>).value : own.value,
+  )
+  watch(opts.columns, (c) => {
+    if (!(c instanceof Box)) own.value = c as KanbanColumn[]
+  })
+  const adds = derived(() => opts.hasAdd())
   const moving = state<KanbanCardData | null>(null)
   const sheetOpen = state(false)
   const windows = new Map<string, VirtualControl>()
@@ -288,12 +242,12 @@ export function Kanban({
   }
   const move = (id: string, col: number, index: number) => {
     const next = moveCard(board.value, id, col, index)
-    if (columns instanceof Box) columns.value = next
+    if (opts.columns() instanceof Box) (opts.columns() as State<KanbanColumn[]>).value = next
     else own.value = next
     flush()
     const at = findCard(next, id)!
     announce(host!.ownerDocument, moveLine(next, id))
-    onMove?.(id, next[at.col]!.id, at.index)
+    opts.onMove(id, next, at)
   }
   use(
     kanban,
@@ -312,10 +266,10 @@ export function Kanban({
       moving.value = c
       sheetOpen.value = true
     },
-    drift: (i, p, a) => onDrift?.(i, p, a),
+    drift: (i, p, a) => opts.onDrift(i, p, a),
     window: (column, c) => windows.set(column, c),
     adds: () => adds.value,
-    add: (column, title) => onAdd?.(column, title),
+    add: (column, title) => opts.onAdd(column, title),
   }
   const sheetTo = (col: number, index: number) => {
     const id = moving.value!.id
@@ -324,11 +278,37 @@ export function Kanban({
     focus(id)
   }
   const place = derived(() => (moving.value ? findCard(board.value, moving.value.id) : null))
+  return [
+    hint,
+    board,
+    ctx,
+    moving,
+    sheetOpen,
+    sheetTo,
+    place,
+    (n: HTMLDivElement) => (host = n),
+  ] as const
+}
+
+/**
+ * The board (07 §6.2, 06 §10). Columns are `section > ol`, each a window, so one with 10,000 cards costs what one with
+ * 20 does, with count and WIP limit, caution when over. Three move paths: HTML drag with a placeholder; keyboard
+ * (Alt + arrows, or Space, arrows, Space); the Move button, a menu at a fine pointer and a Sheet on a phone. Each move is
+ * announced. `columns` is a box, or a list the board follows and `onMove` reports to. `height` defaults to 560px.
+ */
+export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board' }: KanbanProps) {
+  const [hint, board, ctx, moving, sheetOpen, sheetTo, place, setHost] = kanbanState({
+    columns: () => columns,
+    hasAdd: () => onAdd !== undefined,
+    onMove: (id, next, at) => onMove?.(id, next[at.col]!.id, at.index),
+    onAdd: (column, title) => onAdd?.(column, title),
+    onDrift: (index, predicted, actual) => onDrift?.(index, predicted, actual),
+  })
   return (
     <>
       <div data-scope="edges">
         <div
-          ref={(n) => (host = n)}
+          ref={(n) => setHost(n)}
           data-scope="kanban"
           role="group"
           aria-label={label}
