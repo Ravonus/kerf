@@ -8,6 +8,14 @@ import type { ServerExtension } from '../src/extension'
 const manifest: Manifest = { dir: 'src/routes', routes: [], layouts: [] }
 
 describe('a plugin on the server', () => {
+  extensionRouteTests()
+
+  extensionGuardTests()
+
+  extensionOptionTests()
+})
+
+function extensionRouteTests() {
   test('its routes are `/_weft/x/<key>/...`, loaded on first use, and it reports through the API', async () => {
     const report = vi.fn()
     const load = vi.fn((): Promise<ServerExtension> =>
@@ -58,7 +66,9 @@ describe('a plugin on the server', () => {
       ),
     ).rejects.toThrow('refused')
   })
+}
 
+function extensionGuardTests() {
   test('`personal` keeps a key out of a shared cache', async () => {
     query({
       $id: 'x.cached',
@@ -124,7 +134,9 @@ describe('a plugin on the server', () => {
       ).v,
     ).toBe(1)
   })
+}
 
+function extensionOptionTests() {
   test('`check` can refuse a boot', async () => {
     const handler = createHandler({
       manifest,
@@ -144,4 +156,4 @@ describe('a plugin on the server', () => {
     })
     await expect(handler(new Request('http://x/_weft/x/kit/a'))).rejects.toThrow('not configured')
   })
-})
+}

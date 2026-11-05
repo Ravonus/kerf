@@ -5,6 +5,27 @@ import { LAND_SECTION, H2, LAND_PLANS, LAND_FAQ, DISPLAY, LookStage } from './st
 import type { Look } from './stage-landing'
 import { landingHeader, landingHero, landingFeatures, landingControls } from './landing-sections'
 
+function billingPeriod(yearly: State<boolean>) {
+  return (
+    <Row gap="tight" role="group" aria-label="Billing period">
+      <button
+        data-skin="chip"
+        aria-pressed={yearly.value ? 'false' : 'true'}
+        onClick={() => (yearly.value = false)}
+      >
+        Monthly
+      </button>
+      <button
+        data-skin="chip"
+        aria-pressed={yearly.value ? 'true' : 'false'}
+        onClick={() => (yearly.value = true)}
+      >
+        Yearly, two months free
+      </button>
+    </Row>
+  )
+}
+
 export function landingPricing(
   yearly: State<boolean>,
   plan: State<string>,
@@ -17,22 +38,7 @@ export function landingPricing(
           <h2 data-skin="type" style={H2}>
             Pricing
           </h2>
-          <Row gap="tight" role="group" aria-label="Billing period">
-            <button
-              data-skin="chip"
-              aria-pressed={yearly.value ? 'false' : 'true'}
-              onClick={() => (yearly.value = false)}
-            >
-              Monthly
-            </button>
-            <button
-              data-skin="chip"
-              aria-pressed={yearly.value ? 'true' : 'false'}
-              onClick={() => (yearly.value = true)}
-            >
-              Yearly, two months free
-            </button>
-          </Row>
+          {billingPeriod(yearly)}
         </Row>
         <Grid min="md" cols={3} gap="group">
           {LAND_PLANS.map((p) => (

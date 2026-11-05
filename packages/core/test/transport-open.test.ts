@@ -1,0 +1,12 @@
+import { open } from '@weft-js/core/browser'
+import { assertNoLeaks, leaks } from '@weft-js/core/test'
+
+test('the fake transport shares the browser subscription map', () => {
+  const transport = Reflect.get(globalThis, Symbol.for('weft.net')) as { open: typeof open }
+  expect(transport.open).toBe(open)
+  const token = {}
+  transport.open.set(token, ['test channel', () => transport.open.delete(token)])
+  expect(leaks()).toEqual(['test channel'])
+  expect(() => assertNoLeaks()).toThrow('T012')
+  expect(transport.open.has(token)).toBe(false)
+})

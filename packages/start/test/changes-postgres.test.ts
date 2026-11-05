@@ -52,11 +52,25 @@ describe.skipIf(!url)('postgres change feed', () => {
     await sql.end()
   })
 
+  postgresProbeTests(() => sql)
+
+  postgresNotificationTests(() => sql)
+
+  postgresFallbackTests(() => sql)
+
+  postgresPooledListenerTests()
+})
+
+void (0 as unknown as Sink)
+
+function postgresProbeTests(getSql: () => ReturnType<typeof postgres>) {
   test('the probe proves it: triggers there, a NOTIFY heard', async () => {
+    const sql = getSql()
     expect(await source(sql).probe()).toEqual({ mode: 'feed', via: 'postgres-notify' })
   })
 
   test('a write from another connection is a poke of table and row, and no column', async () => {
+    const sql = getSql()
     const f = sinkless(source(sql))
     await f.start()
     const other = postgres(url, { max: 1, connection: { application_name: 'not-weft' } })
@@ -71,6 +85,7 @@ describe.skipIf(!url)('postgres change feed', () => {
   })
 
   test('what reaches the channel is ids: anyone who can LISTEN sees no column', async () => {
+    const sql = getSql()
     const heard: string[] = []
     const l = postgres(url, { max: 1, onnotice: () => {} })
     await l.listen('weft_changes', (p) => heard.push(p))
@@ -81,6 +96,7 @@ describe.skipIf(!url)('postgres change feed', () => {
   })
 
   test('a composite key is one id; a rollback and an update of nothing are silent', async () => {
+    const sql = getSql()
     const f = sinkless(source(sql))
     await f.start()
     await sql
@@ -99,6 +115,7 @@ describe.skipIf(!url)('postgres change feed', () => {
   })
 
   test("a table it doesn't list, and a table with no trigger, make no poke", async () => {
+    const sql = getSql()
     const f = sinkless(source(sql))
     await f.start()
     await sql`insert into live_c values (${Date.now() % 1e9})`
@@ -107,8 +124,11 @@ describe.skipIf(!url)('postgres change feed', () => {
     expect(f.pokes).toEqual([])
     await f.feed.stop()
   })
+}
 
+function postgresNotificationTests(getSql: () => ReturnType<typeof postgres>) {
   test('10k rows in a statement: one notification, one table-level poke, with its prefix', async () => {
+    const sql = getSql()
     const f = sinkless(source(sql))
     const notes: string[] = []
     const l = postgres(url, { max: 1, onnotice: () => {} })
@@ -124,6 +144,7 @@ describe.skipIf(!url)('postgres change feed', () => {
   })
 
   test('two instances each hear a change once, and a barrier reaches both', async () => {
+    const sql = getSql()
     const a = sinkless(source(sql)),
       b = sinkless(source(sql))
     await a.start()
@@ -144,6 +165,7 @@ describe.skipIf(!url)('postgres change feed', () => {
   })
 
   test('barrier and write in one flow: a real commit, then its barrier, is never poked', async () => {
+    const sql = getSql()
     const f = sinkless(source(sql), undefined, 250)
     await f.start()
     for (let i = 0; i < 25; i++) {
@@ -156,6 +178,7 @@ describe.skipIf(!url)('postgres change feed', () => {
   })
 
   test('a dropped connection: the listener comes back, and pokes every table for what it missed', async () => {
+    const sql = getSql()
     const f = sinkless(source(sql))
     await f.start()
     const before = f.pokes.length
@@ -172,8 +195,11 @@ describe.skipIf(!url)('postgres change feed', () => {
     await until(() => f.pokes.some((p) => p.t.includes('live_a:1')))
     await f.feed.stop()
   })
+}
 
+function postgresFallbackTests(getSql: () => ReturnType<typeof postgres>) {
   test('no trigger: it says so and estimates from the counters, table by table', async () => {
+    const sql = getSql()
     const tables = ['live_plain']
     const s = source(sql, tables)
     const how = await s.probe()
@@ -189,6 +215,7 @@ describe.skipIf(!url)('postgres change feed', () => {
   })
 
   test("a role that can't create triggers is told who can", async () => {
+    const sql = getSql()
     await sql.unsafe(
       `drop role if exists live_ro; create role live_ro login; grant select on live_plain to live_ro; grant connect on database ${new URL(url).pathname.slice(1)} to live_ro`,
     )
@@ -225,8 +252,9 @@ describe.skipIf(!url)('postgres change feed', () => {
       await pooled.end()
     },
   )
+}
 
-  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
+function postgresPooledListenerTests() {
   // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
   test.skipIf(!bouncer)(
     'the app through the pooler, the listener direct: a full feed',
@@ -247,6 +275,4 @@ describe.skipIf(!url)('postgres change feed', () => {
       await pooled.end()
     },
   )
-})
-
-void (0 as unknown as Sink)
+}

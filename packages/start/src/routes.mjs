@@ -66,6 +66,15 @@ export function scanRoutes(root, dir = join(root, 'src', 'routes')) {
     else cards.set(m[1], rel(f))
   }
 
+  appendRoutes(files, out, rel, layoutOf, cards)
+  out.routes.sort((a, b) => cmpRank(a.rank, b.rank) || a.id.localeCompare(b.id))
+  for (const [b, file] of cards)
+    if (!out.routes.some((r) => r.card === file))
+      out.problems.push({ file, message: `no route \`${b}\` for this card` })
+  return out
+}
+
+function appendRoutes(files, out, rel, layoutOf, cards) {
   for (const f of files) {
     const base = f.replace(EXT, '')
     const name = base.split('/').pop()
@@ -133,11 +142,6 @@ export function scanRoutes(root, dir = join(root, 'src', 'routes')) {
       kind: 'page',
     })
   }
-  out.routes.sort((a, b) => cmpRank(a.rank, b.rank) || a.id.localeCompare(b.id))
-  for (const [b, file] of cards)
-    if (!out.routes.some((r) => r.card === file))
-      out.problems.push({ file, message: `no route \`${b}\` for this card` })
-  return out
 }
 
 /** Layout ids from the root down to `d`. */
