@@ -10,6 +10,7 @@ import {
   useOptimistic,
   useRef,
   useState,
+  type RefObject,
 } from 'react'
 import { addTodo, deleteTodo, setDone } from '@/server/todos'
 import type { Filter, Todo } from '@/server/todo-data'
@@ -66,14 +67,11 @@ function useRefreshOnReturn() {
   }, [router])
 }
 
-export function TodoApp({ todos, left, filter }: List & { filter: Filter }) {
-  const [list, change] = useOptimistic<List, Change>({ todos, left }, (state, next) =>
-    applyChange(state, next, filter),
-  )
-  const [problem, setProblem] = useState('')
-  const input = useRef<HTMLInputElement>(null)
-  useRefreshOnReturn()
-
+function useTodoActions(
+  change: (next: Change) => void,
+  setProblem: (problem: string) => void,
+  input: RefObject<HTMLInputElement | null>,
+) {
   // Every failed write ends here: the transition ending rolls the optimistic change back, and this says so.
   const run = useCallback(
     (next: Change, write: () => Promise<void>, failure: string) => {
@@ -126,6 +124,19 @@ export function TodoApp({ todos, left, filter }: List & { filter: Filter }) {
     )
   }
 
+  return { toggle, remove, add }
+}
+
+export function TodoApp({ todos, left, filter }: List & { filter: Filter }) {
+  const [list, change] = useOptimistic<List, Change>({ todos, left }, (state, next) =>
+    applyChange(state, next, filter),
+  )
+  const [problem, setProblem] = useState('')
+  const input = useRef<HTMLInputElement>(null)
+  useRefreshOnReturn()
+
+  const { toggle, remove, add } = useTodoActions(change, setProblem, input)
+
   return (
     <>
       <form action={add} className="mt-6 flex gap-2">
@@ -152,18 +163,7 @@ export function TodoApp({ todos, left, filter }: List & { filter: Filter }) {
       </p>
 
       <div className="mt-1 flex items-center justify-between gap-4">
-        <nav aria-label="Filter" className="flex gap-1 text-sm font-medium">
-          {links.map((link) => (
-            <Link
-              key={link.filter}
-              href={link.href}
-              aria-current={link.filter === filter ? 'page' : undefined}
-              className="rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink aria-[current=page]:bg-tint aria-[current=page]:text-accent-strong"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {filterNavigation(filter)}
         <p role="status" className="text-sm text-muted tabular-nums">
           {list.left} left
         </p>
@@ -195,6 +195,23 @@ export function TodoApp({ todos, left, filter }: List & { filter: Filter }) {
         </p>
       )}
     </>
+  )
+}
+
+function filterNavigation(filter: Filter) {
+  return (
+    <nav aria-label="Filter" className="flex gap-1 text-sm font-medium">
+      {links.map((link) => (
+        <Link
+          key={link.filter}
+          href={link.href}
+          aria-current={link.filter === filter ? 'page' : undefined}
+          className="rounded-lg px-3 py-2 text-muted transition-colors hover:text-ink aria-[current=page]:bg-tint aria-[current=page]:text-accent-strong"
+        >
+          {link.label}
+        </Link>
+      ))}
+    </nav>
   )
 }
 
