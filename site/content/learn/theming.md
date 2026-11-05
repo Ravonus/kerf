@@ -129,7 +129,11 @@ import { Card, Split, Stack, Text } from '@weft-js/warp'
 export function Layout() {
   return (
     <Split side="start" width="nav">
-      <nav data-theme="dark" data-density="compact" aria-label="Main">
+      <nav
+        data-theme="dark"
+        data-density="compact"
+        aria-label="Main"
+      >
         <Text>Orders</Text>
         <Text>Customers</Text>
       </nav>
