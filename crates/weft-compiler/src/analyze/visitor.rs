@@ -117,6 +117,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
                 walk::walk_function(s, it, flags);
                 if let Some(body) = &it.body {
                     s.early_return_diagnostics(&body.statements);
+                    s.handler_mutation_diagnostics(&body.statements);
                 }
             });
         } else {
@@ -131,6 +132,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
                 walk::walk_arrow_function_expression(s, it);
                 if let ArrowFunctionBody::FunctionBody(body) = &it.body {
                     s.early_return_diagnostics(&body.statements);
+                    s.handler_mutation_diagnostics(&body.statements);
                 }
             });
         } else {

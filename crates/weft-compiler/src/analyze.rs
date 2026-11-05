@@ -1,5 +1,5 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics
-//! (W001, W005, W006, W010, W013, W014, W015, W016, W017, W018, W019, W020, W040).
+//! (W001, W005, W006, W010, W013, W014, W015, W016, W017, W018, W019, W020, W040, W041).
 //! The @weft-js/core/browser diagnostics live in `browser`. Produces a `Plan` that `transform`
 //! applies to the same AST, and the per-file facts `weft check` joins across files (`project`).
 
@@ -9,6 +9,7 @@ mod component_entries;
 mod context;
 mod early_returns;
 mod finish;
+mod handler_mutations;
 mod lists;
 mod props;
 mod react;
