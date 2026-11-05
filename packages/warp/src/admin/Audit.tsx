@@ -71,7 +71,7 @@ export function AuditLog({
   )
   let root: HTMLElement | undefined
   const say = auditAnnouncer(() => root)
-  const exportIt = auditExport(() => onExport, wait, say)
+  const exportIt = auditExport(() => onExport?.(), wait, say)
   const refilter = () => queueMicrotask(() => say(`${plural(shown.value.length, 'event')} shown`))
   const columns = auditColumns(() => now)
   const diff = (event: AuditEvent) => auditDiff(event)
@@ -208,14 +208,14 @@ function auditFilters(
 }
 
 function auditExport(
-  onExport: () => AuditLogProps['onExport'],
+  onExport: () => ReturnType<NonNullable<AuditLogProps['onExport']>> | undefined,
   wait: State<number>,
   say: (t: string) => void,
 ) {
   let tick: ReturnType<typeof setInterval> | undefined
   onCleanup(() => clearInterval(tick))
   const exportIt = async () => {
-    const r = await onExport()?.()
+    const r = await onExport()
     if (!r?.retryAfter) return
     wait.value = r.retryAfter
     say(`Export limit reached. Try again in ${r.retryAfter} seconds.`)

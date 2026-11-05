@@ -18,9 +18,10 @@ export type KeyActionsContext = {
   typedOpen: State<boolean>
   plainOpen: State<boolean>
   now: () => string
-  onReauth: () => ApiKeysProps['onReauth']
-  onCreate: () => ApiKeysProps['onCreate']
-  onRevoke: () => ApiKeysProps['onRevoke']
+  hasReauth: () => boolean
+  onReauth: NonNullable<ApiKeysProps['onReauth']>
+  onCreate: ApiKeysProps['onCreate']
+  onRevoke: ApiKeysProps['onRevoke']
   getForm: () => HTMLElement | undefined
   getOpener: () => HTMLElement | undefined
   setOpener: (node: HTMLElement) => void
@@ -36,6 +37,7 @@ export function createKeyActions({
   busy,
   secret,
   list,
+  hasReauth,
   onReauth,
   onCreate,
   getForm,
@@ -43,7 +45,7 @@ export function createKeyActions({
 }: KeyActionsContext) {
   const start = async (e: MouseEvent) => {
     setOpener(e.currentTarget as HTMLElement)
-    if (onReauth() && !(await onReauth()!('Creating an API key needs a fresh sign-in.'))) return
+    if (hasReauth() && !(await onReauth('Creating an API key needs a fresh sign-in.'))) return
     name.value = ''
     chosen.value = ['read']
     expires.value = '90'
@@ -66,7 +68,7 @@ export function createKeyActions({
       )
     busy.value = true
     try {
-      secret.value = await onCreate()({ name: n, scopes: chosen.value, expires: expires.value })
+      secret.value = await onCreate({ name: n, scopes: chosen.value, expires: expires.value })
     } catch {
       toast.show({
         title: 'The key wasn’t created',
@@ -106,7 +108,7 @@ export function revokeKeyActions({
   }
   const gone = async () => {
     const k = revoking.value!
-    await onRevoke()(k)
+    await onRevoke(k)
     toast.show({
       title: `“${k.name}” revoked`,
       description: 'Requests with it now get 401.',
