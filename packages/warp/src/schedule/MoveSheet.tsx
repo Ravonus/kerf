@@ -70,15 +70,7 @@ export function MoveSheet(p: MoveSheetProps) {
   )
 }
 
-function Body({
-  event,
-  props: p,
-  bind,
-}: {
-  event: CalEvent
-  props: MoveSheetProps
-  bind: (go: () => void) => void
-}) {
+function bodyModel(event: CalEvent, p: MoveSheetProps, bind: (go: () => void) => void) {
   const e = untrack(() => event)
   const origin = slotOf(e)
   const day = state<string>(origin.date)
@@ -104,6 +96,21 @@ function Body({
     start.value = s
     confirmSweep(ev.currentTarget as Element)
   }
+  return { e, day, start, len, locale, week, slots, stepBy, pick }
+}
+
+function Body({
+  event,
+  props: p,
+  bind,
+}: {
+  event: CalEvent
+  props: MoveSheetProps
+  bind: (go: () => void) => void
+}) {
+  const { e, day, start, len, locale, week, slots, stepBy, pick } = untrack(() =>
+    bodyModel(event, p, bind),
+  )
   return (
     <div class="stack">
       <div class="chips" role="group" aria-label="Day">

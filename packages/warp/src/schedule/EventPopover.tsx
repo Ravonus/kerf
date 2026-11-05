@@ -12,7 +12,7 @@ import {
   type CalEvent,
   type Side,
 } from '@weft-js/warp-core'
-import { derived, type State } from '@weft-js/core'
+import { derived, untrack, type State } from '@weft-js/core'
 import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -39,9 +39,7 @@ export type EventPopoverProps = {
   onJoin?: ((e: CalEvent) => void) | undefined
 }
 
-/** The event card (07 §2.1, `#ev-pop`): a non-modal dialog on the event; Escape returns to it. */
-export function EventPopover(p: EventPopoverProps) {
-  let panel: HTMLDivElement | undefined
+function eventTime(p: EventPopoverProps) {
   const locale = derived(() => p.locale ?? 'en-US')
   const when = derived(() => {
     const e = p.event
@@ -54,6 +52,82 @@ export function EventPopover(p: EventPopoverProps) {
       length: e.allDay ? undefined : longDuration(s.e - s.s),
     }
   })
+  return { locale, when }
+}
+
+function eventDetails(
+  p: EventPopoverProps,
+  when: ReturnType<typeof eventTime>['when'],
+  locale: ReturnType<typeof eventTime>['locale'],
+) {
+  return (
+    <dl>
+      <dt>
+        <ClockIcon />
+      </dt>
+      <dd>
+        {when.value!.date} · {when.value!.time}
+        {(when.value!.length || p.zoneLabel) && (
+          <>
+            <br />
+            <span class="muted">
+              {[when.value!.length, p.zoneLabel].filter(Boolean).join(' · ')}
+            </span>
+          </>
+        )}
+      </dd>
+      {p.event!.recurrence && (
+        <>
+          <dt>
+            <RepeatIcon />
+          </dt>
+          <dd>
+            {ruleSentence(parseRule(p.event!.recurrence), dateOf(p.event!.start), locale.value)}
+          </dd>
+        </>
+      )}
+      {p.event!.location && (
+        <>
+          <dt>
+            <PinIcon />
+          </dt>
+          <dd>{p.event!.location}</dd>
+        </>
+      )}
+      {p.event!.attendees?.length ? (
+        <>
+          <dt>
+            <UsersIcon />
+          </dt>
+          <dd>
+            <span data-scope="avatar-stack">
+              {p.event!.attendees.slice(0, 5).map((n) => (
+                <Avatar key={n} name={n} size="sm" />
+              ))}
+            </span>{' '}
+            <span class="muted">{p.event!.attendees.length} going</span>
+          </dd>
+        </>
+      ) : null}
+      {p.event!.tentative && (
+        <>
+          <dt>
+            <InfoIcon />
+          </dt>
+          <dd>
+            <Badge tone="caution">Tentative</Badge>
+          </dd>
+        </>
+      )}
+    </dl>
+  )
+}
+
+/** The event card (07 §2.1, `#ev-pop`): a non-modal dialog on the event; Escape returns to it. */
+export function EventPopover(p: EventPopoverProps) {
+  let panel: HTMLDivElement | undefined
+  const props = untrack(() => p)
+  const { locale, when } = eventTime(props)
   const close = () => (p.open.value = false)
   use(
     popover,
@@ -83,65 +157,7 @@ export function EventPopover(p: EventPopoverProps) {
       {p.event && (
         <div data-scope="event-card" data-cal={p.event.cal ?? 1}>
           <h4 data-part="title">{p.event.title}</h4>
-          <dl>
-            <dt>
-              <ClockIcon />
-            </dt>
-            <dd>
-              {when.value!.date} · {when.value!.time}
-              {(when.value!.length || p.zoneLabel) && (
-                <>
-                  <br />
-                  <span class="muted">
-                    {[when.value!.length, p.zoneLabel].filter(Boolean).join(' · ')}
-                  </span>
-                </>
-              )}
-            </dd>
-            {p.event.recurrence && (
-              <>
-                <dt>
-                  <RepeatIcon />
-                </dt>
-                <dd>
-                  {ruleSentence(parseRule(p.event.recurrence), dateOf(p.event.start), locale.value)}
-                </dd>
-              </>
-            )}
-            {p.event.location && (
-              <>
-                <dt>
-                  <PinIcon />
-                </dt>
-                <dd>{p.event.location}</dd>
-              </>
-            )}
-            {p.event.attendees?.length ? (
-              <>
-                <dt>
-                  <UsersIcon />
-                </dt>
-                <dd>
-                  <span data-scope="avatar-stack">
-                    {p.event.attendees.slice(0, 5).map((n) => (
-                      <Avatar key={n} name={n} size="sm" />
-                    ))}
-                  </span>{' '}
-                  <span class="muted">{p.event.attendees.length} going</span>
-                </dd>
-              </>
-            ) : null}
-            {p.event.tentative && (
-              <>
-                <dt>
-                  <InfoIcon />
-                </dt>
-                <dd>
-                  <Badge tone="caution">Tentative</Badge>
-                </dd>
-              </>
-            )}
-          </dl>
+          {eventDetails(p, when, locale)}
           <div data-part="actions">
             {!p.event.locked && p.onDelete && (
               <Button emphasis="ghost" tone="critical" size="sm" onClick={act(p.onDelete)}>

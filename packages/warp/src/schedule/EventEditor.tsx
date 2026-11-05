@@ -82,15 +82,7 @@ export function EventEditor(p: EventEditorProps) {
   )
 }
 
-function Fields({
-  draft,
-  props: p,
-  form,
-}: {
-  draft: CalEvent
-  props: EventEditorProps
-  form: (n: HTMLFormElement) => void
-}) {
+function fieldsModel(draft: CalEvent, p: EventEditorProps) {
   const e = untrack(() => draft)
   const title = state(e.title)
   const date = state<IsoDate | null>(dateOf(e.start))
@@ -135,37 +127,103 @@ function Fields({
       cal: +cal.value,
     })
   }
+  return {
+    e,
+    title,
+    date,
+    start,
+    end,
+    repeats,
+    rule,
+    zone,
+    place,
+    cal,
+    titleError,
+    timeError,
+    sources,
+    submit,
+    setBox: (n: HTMLFormElement) => (box = n),
+  }
+}
+
+function fieldsTime(
+  e: CalEvent,
+  p: EventEditorProps,
+  start: ReturnType<typeof fieldsModel>['start'],
+  end: ReturnType<typeof fieldsModel>['end'],
+  timeError: ReturnType<typeof fieldsModel>['timeError'],
+) {
+  return (
+    !e.allDay && (
+      <div class="row">
+        <TimeField label="Starts" value={start} locale={p.locale} hourCycle="h23" />
+        <TimeField
+          label="Ends"
+          value={end}
+          locale={p.locale}
+          hourCycle="h23"
+          error={timeError.value}
+        />
+      </div>
+    )
+  )
+}
+
+function fieldsTitle(
+  title: ReturnType<typeof fieldsModel>['title'],
+  titleError: ReturnType<typeof fieldsModel>['titleError'],
+) {
+  return (
+    <Input
+      label="Title"
+      value={title.value}
+      error={titleError.value}
+      required
+      autofocus
+      onInput={(i) => (title.value = i.currentTarget.value)}
+    />
+  )
+}
+
+function Fields({
+  draft,
+  props: p,
+  form,
+}: {
+  draft: CalEvent
+  props: EventEditorProps
+  form: (n: HTMLFormElement) => void
+}) {
+  const {
+    e,
+    title,
+    date,
+    start,
+    end,
+    repeats,
+    rule,
+    zone,
+    place,
+    cal,
+    titleError,
+    timeError,
+    sources,
+    submit,
+    setBox,
+  } = untrack(() => fieldsModel(draft, p))
   return (
     <form
       ref={(n) => {
-        box = n
+        setBox(n)
         form(n)
       }}
       class="stack"
       onSubmit={submit}
       noValidate
     >
-      <Input
-        label="Title"
-        value={title.value}
-        error={titleError.value}
-        required
-        autofocus
-        onInput={(i) => (title.value = i.currentTarget.value)}
-      />
+      {fieldsTitle(title, titleError)}
       <DateField label="Date" value={date} today={p.today} locale={p.locale} />
-      {!e.allDay && (
-        <div class="row">
-          <TimeField label="Starts" value={start} locale={p.locale} hourCycle="h23" />
-          <TimeField
-            label="Ends"
-            value={end}
-            locale={p.locale}
-            hourCycle="h23"
-            error={timeError.value}
-          />
-        </div>
-      )}
+      {fieldsTime(e, p, start, end, timeError)}
       <Switch
         checked={repeats.value}
         onChange={(i: Event) => (repeats.value = (i.currentTarget as HTMLInputElement).checked)}
