@@ -4,13 +4,13 @@ import { pathPages } from '../src/derive.mjs'
 // one GET, no JavaScript (research 20 §1). Routing, metadata, status codes, streaming order, the navigation data
 // endpoint and share cards.
 const url = inject('url')
-const get = (path, init) => fetch(url + path, { redirect: 'manual', ...init })
-const html = async (path) => {
+const get = (path: string, init?: RequestInit) => fetch(url + path, { redirect: 'manual', ...init })
+const html = async (path: string) => {
   const res = await get(path)
   return { status: res.status, type: res.headers.get('content-type'), text: await res.text() }
 }
 /** The `data-wm` tags in <head>, in order, as `tag attr=value…` lines. */
-const tags = (text) =>
+const tags = (text: string) =>
   [
     ...text
       .slice(0, text.indexOf('</head>'))
@@ -18,7 +18,7 @@ const tags = (text) =>
   ].map(([, tag, attrs, body]) =>
     [
       tag,
-      ...[...attrs.matchAll(/(\w[\w:-]*)="([^"]*)"/g)].map(([, k, v]) => `${k}=${v}`),
+      ...[...attrs!.matchAll(/(\w[\w:-]*)="([^"]*)"/g)].map(([, k, v]) => `${k}=${v}`),
       ...(body !== undefined ? [body] : []),
     ].join(' '),
   )
@@ -60,7 +60,7 @@ describe('a crawler fetching a param route sees every tag in the first response'
   })
 
   test('the card hash follows the data: another user, another ?v=', async () => {
-    const v = async (p) => /og\/[^?]+\?v=([a-z0-9]+)/.exec((await html(p)).text)[1]
+    const v = async (p: string) => /og\/[^?]+\?v=([a-z0-9]+)/.exec((await html(p)).text)![1]
     expect(await v('/users/1')).not.toBe(await v('/users/2'))
     expect(await v('/users/1')).toBe(await v('/users/1'))
   })
@@ -119,17 +119,17 @@ describe('streaming', () => {
     const token = crypto.randomUUID()
     const path = `/slow?sync=${token}`
     const res = await get(path)
-    const reader = res.body.getReader()
+    const reader = res.body!.getReader()
     const dec = new TextDecoder()
     let all = ''
-    const readUntil = async (marker) => {
+    const readUntil = async (marker: string) => {
       while (!all.includes(marker)) {
         const part = await reader.read()
         if (part.done) throw new Error(`Stream ended before ${marker}`)
         all += dec.decode(part.value, { stream: true })
       }
     }
-    const release = async (name) => {
+    const release = async (name: string) => {
       const control = await get(`${path}&release=${name}`)
       await control.text()
     }
@@ -160,8 +160,8 @@ describe('streaming', () => {
     expect(all.lastIndexOf('id="weft-data"')).toBeGreaterThan(reviews)
     expect(all.match(/\$wb=function/g)).toHaveLength(1)
     // The resolved values travel in the page data, so the client never refetches them.
-    const data = JSON.parse([...all.matchAll(/id="weft-data">(.*?)<\/script>/g)].at(-1)[1])
-    expect(Object.values(data.r).map((x) => x.v)).toEqual(
+    const data = JSON.parse([...all.matchAll(/id="weft-data">(.*?)<\/script>/g)].at(-1)![1]!)
+    expect(Object.values(data.r as Record<string, { v: unknown }>).map((x) => x.v)).toEqual(
       expect.arrayContaining([7, ['Great', 'Fine']]),
     )
     expect(Object.values(data.b)).toEqual(['c', 'c'])
@@ -172,7 +172,11 @@ describe('the navigation endpoint', () => {
   test('/_weft/data/<path>: matches, params, data and the merged head, as JSON', async () => {
     const res = await get('/_weft/data/users/1')
     const body = await res.json()
-    expect(body.m.map((m) => m.id)).toEqual(['layout:', 'layout:users', '/users/$id'])
+    expect(body.m.map((m: { id: string }) => m.id)).toEqual([
+      'layout:',
+      'layout:users',
+      '/users/$id',
+    ])
     expect(body.m[1]).toMatchObject({ data: { users: expect.any(Array) } })
     expect(body.m[2]).toMatchObject({
       params: { id: '1' },
@@ -195,14 +199,14 @@ describe('the navigation endpoint', () => {
   test('a missing page: the 404 route as data', async () => {
     const body = await (await get('/_weft/data/users/999')).json()
     expect(body.s).toBe(404)
-    expect(body.m.map((m) => m.id)).toEqual(['layout:', '404'])
+    expect(body.m.map((m: { id: string }) => m.id)).toEqual(['layout:', '404'])
   })
 })
 
 describe('share cards', () => {
   test("a param route's card is a 1200×630 PNG, rendered on demand", async () => {
     const page = await html('/users/42')
-    const src = /og:image" content="https:\/\/acme\.dev([^"]+)"/.exec(page.text)[1]
+    const src = /og:image" content="https:\/\/acme\.dev([^"]+)"/.exec(page.text)![1]!
     const res = await get(src)
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('image/png')
@@ -226,7 +230,7 @@ describe('share cards', () => {
 
   test('build mode: the server lists the cards to prerender (static routes and `prerender` params)', async () => {
     const res = await get('/_weft/og-routes')
-    const list = res.headers.get('x-nitro-prerender').split(',')
+    const list = res.headers.get('x-nitro-prerender')!.split(',')
     expect(list).toContain('/_weft/og/index.png')
     expect(list).toContain('/_weft/og/about.png')
     expect(list).toContain('/_weft/og/users/1.png') // prerender: [{ id: '1' }]
@@ -243,8 +247,8 @@ describe('fonts', () => {
       /<link rel="preload" as="font" type="font\/woff2" href="([^"]+)" crossorigin>/.exec(head)
     expect(link?.[1]).toBe('/@weft-assets/acme-400-latin-0123abcd.woff2')
     const css = head.indexOf('rel="stylesheet"')
-    if (css >= 0) expect(link.index).toBeLessThan(css)
-    const res = await get(link[1])
+    if (css >= 0) expect(link!.index).toBeLessThan(css)
+    const res = await get(link![1]!)
     expect(res.status).toBe(200)
     expect(await res.text()).toBe('wOF2 fixture')
   })
