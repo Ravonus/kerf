@@ -44,9 +44,7 @@ const pascal = (n: string) => n.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase
 const svg = (inner: string) =>
   `<svg data-icon viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`
 
-/** All the icons, and one attribute between tiers: the set is drawings in one file, loaded with the first look. */
-/* @weft client */
-export function IconBrowser() {
+function iconBrowserState(getBox: () => HTMLDivElement) {
   const set = state<Set | undefined>(undefined)
   const query = state('')
   const tier = state<Tier>('balanced')
@@ -59,8 +57,6 @@ export function IconBrowser() {
   const cols = derived(() => Math.max(2, Math.floor(width.value / CELL[size.value].width)))
   const open = state(false)
   const picked = state('')
-  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
-  let box!: HTMLDivElement
   const names = derived(() => {
     const q = query.value.trim().toLowerCase()
     return q ? files.names.filter((n) => n.includes(q)) : files.names
@@ -81,15 +77,53 @@ export function IconBrowser() {
       .then((r) => r.json())
       .then((s) => (set.value = s))
     const seen = new ResizeObserver(([e]) => (width.value = e!.contentRect.width))
-    seen.observe(box)
+    seen.observe(getBox())
     onCleanup(() => seen.disconnect())
   })
   const show = (name: string) => {
     picked.value = name
     open.value = true
   }
-  // The size is a custom property, not a data-size rule: the build's purge keeps `[data-size=…]` rules only for values it
-  // finds as words in the output, and these come from a control, so in a build every size drew at 16px.
+  return { query, tier, form, size, cols, open, picked, names, rows, drawing, show }
+}
+
+function iconBrowserSheet(model: ReturnType<typeof iconBrowserState>) {
+  const { open, picked, drawing } = model
+  return (
+    <Modal open={open} title={picked.value}>
+      <div data-site="icon-sheet">
+        {['quiet', 'balanced', 'vivid'].map((t) => (
+          <div key={t} data-expression={t}>
+            <Tag>{t}</Tag>
+            <span
+              data-part="glyph"
+              // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+              innerHTML={drawing(picked.value, 'hollow')}
+            ></span>
+            <span
+              data-part="glyph"
+              // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+              innerHTML={drawing(picked.value, 'solid')}
+            ></span>
+          </div>
+        ))}
+      </div>
+      <Snippet
+        code={`import { ${pascal(picked.value)}Icon, ${pascal(picked.value)}IconSolid } from '@weft-js/warp-icons'`}
+      />
+    </Modal>
+  )
+}
+
+// The size is a custom property, not a data-size rule: the build's purge keeps `[data-size=…]` rules only for values it
+// finds as words in the output, and these come from a control, so in a build every size drew at 16px.
+/** All the icons, and one attribute between tiers: the set is drawings in one file, loaded with the first look. */
+/* @weft client */
+export function IconBrowser() {
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
+  let box!: HTMLDivElement
+  const model = iconBrowserState(() => box)
+  const { query, tier, form, size, cols, names, rows, drawing, show } = model
   return (
     <div
       data-site="icons"
@@ -160,28 +194,7 @@ export function IconBrowser() {
           </div>
         )}
       </VirtualList>
-      <Modal open={open} title={picked.value}>
-        <div data-site="icon-sheet">
-          {['quiet', 'balanced', 'vivid'].map((t) => (
-            <div key={t} data-expression={t}>
-              <Tag>{t}</Tag>
-              <span
-                data-part="glyph"
-                // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
-                innerHTML={drawing(picked.value, 'hollow')}
-              ></span>
-              <span
-                data-part="glyph"
-                // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
-                innerHTML={drawing(picked.value, 'solid')}
-              ></span>
-            </div>
-          ))}
-        </div>
-        <Snippet
-          code={`import { ${pascal(picked.value)}Icon, ${pascal(picked.value)}IconSolid } from '@weft-js/warp-icons'`}
-        />
-      </Modal>
+      {iconBrowserSheet(model)}
     </div>
   )
 }
