@@ -191,6 +191,16 @@ const STEPS = [
     },
   },
   {
+    id: 'diagnostic-catalog',
+    covers: 'compiler diagnostic catalog, emit sites and compile test assertions',
+    fix: 'Resolve catalog coverage gaps or update the temporary baseline.',
+    async run() {
+      const test = await run(process.execPath, ['--test', 'scripts/quality/diagnostic-catalog.test.mjs'])
+      const check = await run(process.execPath, ['scripts/quality/diagnostic-catalog.mjs'])
+      return { problems: [...lines(test).problems, ...lines(check).problems] }
+    },
+  },
+  {
     id: 'boundaries',
     covers: 'warp-core imports no framework; browser entries reach no Node code, however deep',
     fix: 'Each line shows the chain of imports. Move the Node code behind a server entry, or the framework code into bindings/.',
