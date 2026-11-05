@@ -3,9 +3,19 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { gate, gitChanges } from '../src/gate.mjs'
+import { gate as gateSource, gitChanges } from '../src/gate.mjs'
 import { changedLines, mutants, sample } from '../src/mutate.mjs'
 import { changedCases, testCases, weakened } from '../src/testdiff.mjs'
+
+type GateResult = {
+  ok: boolean
+  diagnostics: { code: string; span: number[]; severity: string }[]
+  tests: { name: string; before: string | null; after: string; kills: number }[]
+  mutants: { run: number; generated: number }
+  survivors: { suggestion: string; op: string }[]
+  notes: string[]
+}
+const gate = gateSource as (...args: Parameters<typeof gateSource>) => Promise<GateResult>
 
 const tmpRoot = fileURLToPath(new URL('./.tmp/', import.meta.url))
 
@@ -36,7 +46,7 @@ test('calls back', () => { expect(cb).toHaveBeenCalledWith(1) })`
   })
 
   it('T020: deleted, skipped, loosened and removed assertions', () => {
-    const codes = (after) =>
+    const codes = (after: string) =>
       weakened(v1, after, 'a.test.ts').map((d) => d.why.split('. An existing')[0])
     expect(codes(v1.replace(/ {2}test\('zero'.*\n/, ''))).toEqual([
       'test "stock > zero" was deleted',
@@ -112,12 +122,12 @@ const keep = 1 + 2`
 
   it('samples round-robin across lines', () => {
     const list = [1, 1, 1, 2, 2, 3].map((line, i) => ({ file: 'a', line, i }))
-    expect(sample(list, 4).map((m) => m.i)).toEqual([0, 3, 5, 1])
+    expect(sample(list, 4).map((m: { i: number }) => m.i)).toEqual([0, 3, 5, 1])
   })
 })
 
 /** A small TS project under this package (vitest resolves from packages/cli/node_modules). */
-function fixture(files) {
+function fixture(files: Record<string, string>) {
   mkdirSync(tmpRoot, { recursive: true })
   const dir = mkdtempSync(join(tmpRoot, 'gate-'))
   const all = {
@@ -247,7 +257,7 @@ test('label is a string with text', () => {
       'src/stock.test.ts':
         "import { label } from './stock'\ntest('label', () => {\n  expect(label(1, 3)).toBe('x')\n})\n",
     })
-    const git = (...a) => execFileSync('git', ['-C', dir, ...a], { stdio: 'pipe' })
+    const git = (...a: string[]) => execFileSync('git', ['-C', dir, ...a], { stdio: 'pipe' })
     git('init', '-q')
     git('add', '.')
     git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'base')
