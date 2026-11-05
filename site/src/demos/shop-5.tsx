@@ -31,6 +31,9 @@ const products = [
 export default function Shop() {
   const search = state('')
   const ordered = state(false)
+  const orderLabel = derived(() =>
+    ordered.value ? 'Order placed' : 'Place order',
+  )
   const shown = derived(() => {
     const word = search.value.toLowerCase()
     return products.filter((p) =>
@@ -86,7 +89,7 @@ export default function Shop() {
           type="submit"
           disabled={total.value === 0}
         >
-          {ordered.value ? 'Order placed' : 'Place order'}
+          {orderLabel.value}
         </Button>
       </form>
     </Card>
