@@ -23,7 +23,10 @@ export default function Profile() {
   return (
     <Card title="Profile">
       <Badge tone="positive">Saves: {saves.value}</Badge>
-      <Button disabled={saving.value} onClick={go}>
+      <Button
+        disabled={saving.value}
+        onClick={go}
+      >
         {saving.value ? <Spinner /> : 'Save changes'}
       </Button>
     </Card>

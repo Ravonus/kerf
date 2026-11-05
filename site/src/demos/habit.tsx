@@ -12,7 +12,10 @@ export default function Habit() {
           : 'Build the React habit'}
       </Button>
       {open.value && (
-        <Alert tone="critical" title={show.habit.code}>
+        <Alert
+          tone="critical"
+          title={show.habit.code}
+        >
           {show.habit.message}
         </Alert>
       )}
