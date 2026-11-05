@@ -1,4 +1,4 @@
-// The page overlays.browser.test.mjs drives: overlays near the viewport's edges, and inside a Modal.
+// The page overlays.browser.test.ts drives: overlays near the viewport's edges, and inside a Modal.
 import { render } from '@weft-js/core/dom'
 import { state, type State } from '@weft-js/core'
 import { Button, DateField, Drawer, Menu, Modal, Slider, Toaster, toast } from '../../src/index'

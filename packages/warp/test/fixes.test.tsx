@@ -1,4 +1,4 @@
-// Regressions from the Kobalte audit that jsdom can see; layout, stacking and Escape are in overlays.browser.test.mjs.
+// Regressions from the Kobalte audit that jsdom can see; layout, stacking and Escape are in overlays.browser.test.ts.
 import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { flush, render } from '@weft-js/core/test'
 import type { Address, IsoDate } from '@weft-js/warp-core'

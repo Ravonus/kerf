@@ -1,4 +1,4 @@
-// A schema only a type reads besides the definition: the client gets neither it nor zod (build.test.mjs).
+// A schema only a type reads besides the definition: the client gets neither it nor zod (build.test.ts).
 import { mutation } from '@weft-js/start'
 import { z } from 'zod'
 

@@ -91,5 +91,8 @@ npm test
 node scripts/size.mjs  # brotli sizes against the budgets
 ```
 
+`node --test scripts/node-style.test.mjs` runs the style-generation check directly in Node. It stays `.mjs` because
+Node runs it without a TypeScript loader.
+
 `size.mjs` holds the whole runtime to 13.37 KB of brotli and the `@weft-js/core` entry to 6.90 KB. Today the entry is
 4.76 KB.
