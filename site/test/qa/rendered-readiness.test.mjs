@@ -15,7 +15,7 @@ const css = [
   .map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'))
   .join('\n')
 
-test('home flow makes scrolled code measurable at each viewport', async () => {
+await test('home flow makes scrolled code measurable at each viewport', async () => {
   const browser = await chromium.launch()
   try {
     for (const width of [390, 1024, 1440]) {

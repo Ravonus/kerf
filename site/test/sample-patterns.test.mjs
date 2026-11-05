@@ -11,7 +11,7 @@ import { scanPatternSource } from '../scripts/sample-patterns.mjs'
 
 const rules = (source) => scanPatternSource(source, 'fixture.tsx').map((finding) => finding.rule)
 
-test('three or more JSX attributes occupy their own lines', () => {
+await test('three or more JSX attributes occupy their own lines', () => {
   for (const source of [
     'const x = <Card a={1} b={2} c={3} />',
     'const x = <Card a={1}\n b={2}\n c={3}\n/>',
@@ -23,7 +23,7 @@ test('three or more JSX attributes occupy their own lines', () => {
   assert.deepEqual(rules('const x = <Card a={1} b={2} />'), [])
 })
 
-test('JSX event handlers name multi-statement work', () => {
+await test('JSX event handlers name multi-statement work', () => {
   assert.deepEqual(rules('const x = <Button onClick={() => { a(); b() }} />'), [
     'multi-statement JSX handler',
   ])
@@ -119,7 +119,7 @@ function runEntry(dir, entry) {
   return spawnSync(process.execPath, entry, { cwd: dir, env, encoding: 'utf8' })
 }
 
-test('both real entry paths reject bad samples and pass clean fixtures', () => {
+await test('both real entry paths reject bad samples and pass clean fixtures', () => {
   const { dir, put } = fixture()
   const entries = [['scripts/check.mjs', '--only=sample-width'], ['site/scripts/content.mjs']]
   const cases = [
@@ -183,7 +183,7 @@ test('both real entry paths reject bad samples and pass clean fixtures', () => {
   }
 })
 
-test('JSX does not map directly from props fields', () => {
+await test('JSX does not map directly from props fields', () => {
   assert.deepEqual(rules('const x = <ul>{props.items.map(item => <li>{item}</li>)}</ul>'), [
     'direct props field map in JSX',
   ])
@@ -199,7 +199,7 @@ test('JSX does not map directly from props fields', () => {
   ])
 })
 
-test('quoted and list fenced JSX keeps the original line numbers', () => {
+await test('quoted and list fenced JSX keeps the original line numbers', () => {
   const text = ['> - ```tsx', '>   const x = <Card a={1} b={2} c={3} />', '>   ```'].join('\n')
   const [fence] = markdownFences(text)
   const results = scanPatternSource(
@@ -212,7 +212,7 @@ test('quoted and list fenced JSX keeps the original line numbers', () => {
   ])
 })
 
-test('pitfall fences are checked without changing their teaching bugs', () => {
+await test('pitfall fences are checked without changing their teaching bugs', () => {
   const text = [
     ':::pitfall',
     '```tsx',
