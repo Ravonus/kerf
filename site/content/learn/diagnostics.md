@@ -311,7 +311,18 @@ an editable copy that resets, or `untrack(() => props.value)` for a value that s
 ### W010: a list without keys
 
 ```tsx
-<ul>{props.todos.map(t => <li>{t.title}</li>)}</ul>
+function TodoList(props: {
+  todos: { id: string; title: string }[]
+}) {
+  const { todos } = props
+  return (
+    <ul>
+      {todos.map((t) => (
+        <li>{t.title}</li>
+      ))}
+    </ul>
+  )
+}
 ```
 
 A row needs `key`, from a stable id in the data: `<li key={t.id}>`. With it, weft moves and reuses rows instead of
@@ -422,11 +433,12 @@ This component shows a `0` on the page when there are no messages. Run `weft doc
 
 ```tsx
 function Inbox(props) {
+  const { messages } = props
   return (
     <section>
-      {props.messages.length && (
+      {messages.length && (
         <ul>
-          {props.messages.map((m) => (
+          {messages.map((m) => (
             <li key={m.id}>{m.subject}</li>
           ))}
         </ul>
@@ -444,11 +456,12 @@ the left side is a boolean:
 export function Inbox(
   props: { messages: { id: string; subject: string }[] },
 ) {
+  const { messages } = props
   return (
     <section>
-      {props.messages.length > 0 && (
+      {messages.length > 0 && (
         <ul>
-          {props.messages.map((m) => (
+          {messages.map((m) => (
             <li key={m.id}>{m.subject}</li>
           ))}
         </ul>
