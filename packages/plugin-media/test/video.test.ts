@@ -12,36 +12,42 @@ import { createMediaBuild, findScorer } from '../src/build.mjs'
 import { createMediaServer } from '../src/server.mjs'
 
 const hasFfmpeg = !spawnSync('ffmpeg', ['-version']).error
-const encode = Object.fromEntries(KEYS.map((key) => [key, createMediaEncode({ key })]))
+const encoder = createMediaEncode as (opts: { key: string }) => ReturnType<typeof createMediaEncode>
+const encode = Object.fromEntries(KEYS.map((key) => [key, encoder({ key })]))
 const options = { quality: { scorer: 'none' }, video: { widths: [160, 320] } }
-let dir
-const ff = (...args) =>
+let dir: string
+const ff = (...args: string[]) =>
   execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args])
-const read = (name) =>
+const read = (name: string) =>
   new Uint8Array(execFileSync('cat', [join(dir, name)], { maxBuffer: 1 << 28 }))
-const build = (name, opts = options, extra = {}) =>
+const build = (
+  name: string,
+  opts: {
+    quality: { scorer: string }
+    video: { widths: number[] }
+    encoder?: string
+    swap?: string
+    gif?: { toVideo?: string; keepUnder?: number }
+  } = options,
+  extra = {},
+) =>
   createMediaBuild(opts).build(
     { file: join(dir, name), bytes: read(name), ...extra },
     { cacheDir: mkdtempSync(join(dir, 'c-')), encode },
   )
-const info = (name, bytes) => {
+const info = (name: string, bytes: Uint8Array) => {
   const file = join(dir, `probe-${name}`)
   writeFileSync(file, bytes)
   return JSON.parse(
-    execFileSync('ffprobe', [
-      '-v',
-      'error',
-      '-show_format',
-      '-show_streams',
-      '-count_frames',
-      '-of',
-      'json',
-      file,
-    ]),
+    execFileSync(
+      'ffprobe',
+      ['-v', 'error', '-show_format', '-show_streams', '-count_frames', '-of', 'json', file],
+      { encoding: 'utf8' },
+    ),
   )
 }
 /** A flat UI-like animation in a GIF: compresses far better as video. */
-async function flatGif(name, delay) {
+async function flatGif(name: string, delay: number | number[]) {
   const frames = 24
   const width = 320
   const height = 180
@@ -130,10 +136,15 @@ describe.skipIf(!hasFfmpeg)('video', () => {
     expect(asset.sources.at(-1).type).toMatch(/^video\/mp4; codecs="avc1\.\w+, mp4a\.40\.2"$/)
     expect(asset.sources.at(-1).srcset).toMatch(/160w, .*320w$/)
     expect(asset.poster).toMatch(/\.webp$/)
-    const top = files.find((f) => f.name === asset.src)
+    const top = files.find((f: { name: string; bytes: Uint8Array }) => f.name === asset.src)
     const probed = info('top.mp4', top.bytes)
-    expect(probed.streams.map((s) => s.codec_name).sort()).toEqual(['aac', 'h264'])
-    expect(probed.streams.find((s) => s.codec_type === 'video').width).toBe(320)
+    expect(probed.streams.map((s: { codec_name: string }) => s.codec_name).sort()).toEqual([
+      'aac',
+      'h264',
+    ])
+    expect(probed.streams.find((s: { codec_type: string }) => s.codec_type === 'video').width).toBe(
+      320,
+    )
     expect(Buffer.from(top.bytes).indexOf('moov')).toBeLessThan(
       Buffer.from(top.bytes).indexOf('mdat'),
     ) // +faststart
@@ -141,7 +152,7 @@ describe.skipIf(!hasFfmpeg)('video', () => {
 
   it('keeps H.264 already at its width: the top rung is the same stream', async () => {
     const { asset, files } = await build('web.mp4')
-    const top = files.find((f) => f.name === asset.src)
+    const top = files.find((f: { name: string; bytes: Uint8Array }) => f.name === asset.src)
     const a = info('a.mp4', top.bytes).streams[0]
     const b = info('b.mp4', read('web.mp4')).streams[0]
     expect([a.nb_read_frames, a.bit_rate]).toEqual([b.nb_read_frames, b.bit_rate])
@@ -165,7 +176,7 @@ describe.skipIf(!hasFfmpeg)('video', () => {
     if (asset.sources.length < 2) return // AV1 lost the 15% rule on this clip: nothing to swap
     expect(asset.copy).toMatchObject({ src: asset.src, type: 'video/mp4' })
     expect(asset.swap).toBe('idle')
-    expect(diagnostics.map((d) => d.code)).toContain('M014')
+    expect(diagnostics.map((d: { code: string }) => d.code)).toContain('M014')
   })
 })
 
@@ -183,14 +194,17 @@ function registerGifConversion() {
     expect(
       Math.abs(asset.duration - Number(info('f.gif', read('flat.gif')).format.duration)),
     ).toBeLessThan(0.15)
-    expect(files.find((f) => f.name === asset.src).bytes.length).toBeLessThan(
-      read('flat.gif').length * 0.85,
-    )
+    expect(
+      files.find((f: { name: string; bytes: Uint8Array }) => f.name === asset.src).bytes.length,
+    ).toBeLessThan(read('flat.gif').length * 0.85)
   })
 
   it('keeps variable delays', async () => {
     const { asset, files } = await build('steps.gif')
-    const s = info('steps.mp4', files.find((f) => f.name === asset.src).bytes)
+    const s = info(
+      'steps.mp4',
+      files.find((f: { name: string; bytes: Uint8Array }) => f.name === asset.src).bytes,
+    )
     expect(Number(s.format.duration)).toBeCloseTo(12 * 0.04 + 12 * 0.12, 0)
     expect(Number(s.streams[0].nb_read_frames)).toBe(24)
   })
@@ -198,7 +212,9 @@ function registerGifConversion() {
   it('background: the original GIF is the copy', async () => {
     const { asset, files } = await build('flat.gif', { ...options, encoder: 'compatible' })
     expect(asset.copy.type).toBe('image/gif')
-    expect(files.find((f) => f.name === asset.copy.src).bytes).toEqual(read('flat.gif'))
+    expect(
+      files.find((f: { name: string; bytes: Uint8Array }) => f.name === asset.copy.src).bytes,
+    ).toEqual(read('flat.gif'))
   })
 }
 
@@ -251,14 +267,20 @@ function registerGifFallbackAndAudio() {
     )
     const { asset } = await build('alpha.gif', { ...options, gif: { keepUnder: 0 } })
     expect(asset.kind).toBe('graphic')
-    expect(asset.sources.flatMap((s) => s.type)).not.toContain('video/mp4')
+    expect(asset.sources.flatMap((s: { type: string }) => s.type)).not.toContain('video/mp4')
   })
 
   it('muxes `audio=`: the GIF loops for the length of the sound', async () => {
     const { asset, files } = await build('flat.gif', options, { audio: join(dir, 'beat.opus') })
     expect(asset).toMatchObject({ kind: 'video', audio: true, animated: false })
-    const s = info('mux.mp4', files.find((f) => f.name === asset.src).bytes)
-    expect(s.streams.map((t) => t.codec_name).sort()).toEqual(['aac', 'h264'])
+    const s = info(
+      'mux.mp4',
+      files.find((f: { name: string; bytes: Uint8Array }) => f.name === asset.src).bytes,
+    )
+    expect(s.streams.map((t: { codec_name: string }) => t.codec_name).sort()).toEqual([
+      'aac',
+      'h264',
+    ])
     expect(Number(s.format.duration)).toBeCloseTo(3, 0)
   })
 }
@@ -275,7 +297,7 @@ describe.skipIf(!hasFfmpeg)('audio', () => {
     const { asset, files } = await build('tone.wav')
     expect(asset).toMatchObject({ kind: 'audio', audio: true })
     expect(asset.duration).toBeCloseTo(3, 1)
-    expect(asset.sources.map((s) => s.type)).toEqual([
+    expect(asset.sources.map((s: { type: string }) => s.type)).toEqual([
       'audio/webm; codecs="opus"',
       'audio/mp4; codecs="mp4a.40.2"',
     ])
@@ -284,7 +306,7 @@ describe.skipIf(!hasFfmpeg)('audio', () => {
 
   it('remuxes Opus already under the bitrate instead of re-encoding', async () => {
     const { asset, files } = await build('beat.opus')
-    const opus = files.find((f) => f.name.endsWith('.webm'))
+    const opus = files.find((f: { name: string; bytes: Uint8Array }) => f.name.endsWith('.webm'))
     expect(asset.kind).toBe('audio')
     expect(Number(info('o.webm', opus.bytes).format.bit_rate)).toBeLessThan(90_000)
   })
@@ -292,13 +314,13 @@ describe.skipIf(!hasFfmpeg)('audio', () => {
 
 // Needs a real `ffmpeg` on PATH: uploads go through the real media.encode@1 provider.
 describe.skipIf(!hasFfmpeg)('uploads', () => {
-  const upload = (opts) =>
+  const upload = (opts: Record<string, unknown> = {}) =>
     createMediaServer({ ...options, ...opts, server: { dir: mkdtempSync(join(dir, 's-')) } }).at(
       '/unused',
       encode,
     )
-  const want = (m, u) => {
-    const [, hash, width, format] = /\/m\/(\w+)\/(\d+)\.(\w+)/.exec(u.split(' ')[0])
+  const want = (m: ReturnType<ReturnType<typeof createMediaServer>['at']>, u: string) => {
+    const [, hash, width, format] = /\/m\/(\w+)\/(\d+)\.(\w+)/.exec(u.split(' ')[0]!)!
     return m.serve({ hash, width: Number(width), format, accept: '' })
   }
 
@@ -328,7 +350,7 @@ describe.skipIf(!hasFfmpeg)('uploads', () => {
     expect(out.temporary).toBeUndefined()
     expect(
       info('up.mp4', out.bytes)
-        .streams.map((t) => t.codec_name)
+        .streams.map((t: { codec_name: string }) => t.codec_name)
         .sort(),
     ).toEqual(['aac', 'h264'])
   })
