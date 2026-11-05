@@ -1,6 +1,6 @@
 import { ClockIcon, RefreshIcon, SparkleIcon, WifiIcon, WifiOffIcon } from '@weft-js/warp-icons'
 import { announce, connView } from '@weft-js/warp-core'
-import { derived, onCleanup, onMount, state, untrack, watch } from '@weft-js/core'
+import { derived, onCleanup, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button, type ButtonProps } from '../Button'
 import { useCooldown } from './kit'
 import '../styles'
@@ -86,29 +86,13 @@ export function ConnBanner({
     () => (recovered.value = false),
   )
   const retry = useCooldown(() => retryIn)
-  let hide: ReturnType<typeof setTimeout> | undefined
-  onCleanup(() => clearTimeout(hide))
-  onMount(() => {
-    watch(
-      () => view.value,
-      (v, was) => {
-        if (v === 'offline')
-          announce(document, "You're offline. Changes are saved on this device.", true)
-        if (v === 'stale') announce(document, `A new version of ${untrack(() => name)} is ready.`)
-        if (was === 'offline' || was === 'reconnecting') {
-          if (v === undefined || v === 'stale') {
-            recovered.value = true
-            announce(document, 'Back online.')
-          }
-        }
-      },
-    )
-  })
-  const postpone = () => {
-    later.value = true
-    hide = setTimeout(() => (later.value = false), LATER_MS)
-    onLater?.()
-  }
+  const postpone = connectionEffects(
+    view,
+    recovered,
+    later,
+    () => name,
+    () => onLater,
+  )
   return (
     <>
       {view.value && (
@@ -117,18 +101,7 @@ export function ConnBanner({
           data-state={view.value === 'stale' && contractFailed ? 'limited' : view.value}
         >
           {view.value === 'offline' && (
-            <>
-              <WifiOffIcon />
-              <span data-part="msg">
-                <b>You're offline.</b> Changes are saved on this device and sync when you reconnect.
-              </span>
-              {retryIn !== undefined && <span>Retrying in {retry.value}s</span>}
-              {onRetry && (
-                <Button emphasis="ghost" size="sm" tone="neutral" onClick={onRetry}>
-                  Retry now
-                </Button>
-              )}
-            </>
+            <ConnOffline retryIn={retryIn} retry={retry} onRetry={onRetry} />
           )}
           {view.value === 'reconnecting' && (
             <>
@@ -143,39 +116,51 @@ export function ConnBanner({
               </span>
             </>
           )}
-          {view.value === 'online' && (
-            <>
-              <WifiIcon />
-              <span data-part="msg">
-                <b>Back online.</b> {changes > 0 ? `${plural(changes)} synced.` : ''}
-              </span>
-              <span data-part="rail" data-on="" aria-hidden="true">
-                <span data-part="rail-fill" style={`--p:${backIn.value / RECOVERED_S}`}></span>
-              </span>
-            </>
-          )}
+          {view.value === 'online' && <ConnOnline changes={changes} backIn={backIn} />}
           {view.value === 'stale' && (
-            <>
-              <SparkleIcon />
-              <span data-part="msg">
-                <b>A new version of {name} is ready.</b>{' '}
-                {contractFailed
-                  ? 'Reload to finish saving.'
-                  : 'Reload to update; your draft is kept.'}
-              </span>
-              <Button emphasis="ghost" size="sm" tone="neutral" onClick={postpone}>
-                Later
-              </Button>
-              <Button size="sm" tone="info" onClick={onReload}>
-                <RefreshIcon />
-                Reload
-              </Button>
-            </>
+            <ConnStale
+              name={name}
+              contractFailed={contractFailed}
+              postpone={postpone}
+              onReload={onReload}
+            />
           )}
         </div>
       )}
     </>
   )
+}
+
+function connectionEffects(
+  view: { readonly value: ReturnType<typeof connView> },
+  recovered: State<boolean>,
+  later: State<boolean>,
+  name: () => string,
+  onLater: () => ConnBannerProps['onLater'],
+) {
+  let hide: ReturnType<typeof setTimeout> | undefined
+  onCleanup(() => clearTimeout(hide))
+  onMount(() => {
+    watch(
+      () => view.value,
+      (v, was) => {
+        if (v === 'offline')
+          announce(document, "You're offline. Changes are saved on this device.", true)
+        if (v === 'stale') announce(document, `A new version of ${untrack(name)} is ready.`)
+        if (was === 'offline' || was === 'reconnecting') {
+          if (v === undefined || v === 'stale') {
+            recovered.value = true
+            announce(document, 'Back online.')
+          }
+        }
+      },
+    )
+  })
+  return () => {
+    later.value = true
+    hide = setTimeout(() => (later.value = false), LATER_MS)
+    onLater()?.()
+  }
 }
 
 /** Props for RateLimited. */
@@ -236,5 +221,78 @@ export function RateLimited({
         </div>
       )}
     </div>
+  )
+}
+
+function ConnOnline({
+  changes,
+  backIn,
+}: {
+  changes: number
+  backIn: ReturnType<typeof useCooldown>
+}) {
+  return (
+    <>
+      <WifiIcon />
+      <span data-part="msg">
+        <b>Back online.</b> {changes > 0 ? `${plural(changes)} synced.` : ''}
+      </span>
+      <span data-part="rail" data-on="" aria-hidden="true">
+        <span data-part="rail-fill" style={`--p:${backIn.value / RECOVERED_S}`}></span>
+      </span>
+    </>
+  )
+}
+function ConnStale({
+  name,
+  contractFailed,
+  postpone,
+  onReload,
+}: {
+  name: string
+  contractFailed: ConnBannerProps['contractFailed']
+  postpone: () => void
+  onReload: ConnBannerProps['onReload']
+}) {
+  return (
+    <>
+      <SparkleIcon />
+      <span data-part="msg">
+        <b>A new version of {name} is ready.</b>{' '}
+        {contractFailed ? 'Reload to finish saving.' : 'Reload to update; your draft is kept.'}
+      </span>
+      <Button emphasis="ghost" size="sm" tone="neutral" onClick={postpone}>
+        Later
+      </Button>
+      <Button size="sm" tone="info" onClick={onReload}>
+        <RefreshIcon />
+        Reload
+      </Button>
+    </>
+  )
+}
+
+function ConnOffline({
+  retryIn,
+  retry,
+  onRetry,
+}: {
+  retryIn: ConnBannerProps['retryIn']
+  retry: ReturnType<typeof useCooldown>
+  onRetry: ConnBannerProps['onRetry']
+}) {
+  return (
+    <>
+      <WifiOffIcon />
+      <span data-part="msg">
+        <b>You're offline.</b> Changes are saved on this device and sync when you reconnect.
+      </span>
+      {retryIn !== undefined && <span>Retrying in {retry.value}s</span>}
+      {onRetry && (
+        <Button emphasis="ghost" size="sm" tone="neutral" onClick={onRetry}>
+          Retry now
+        </Button>
+      )}
+    </>
   )
 }
