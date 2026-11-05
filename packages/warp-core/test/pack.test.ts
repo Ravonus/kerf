@@ -10,7 +10,7 @@ const { files } = JSON.parse(
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
   }),
-)
+) as { files: { path: string }[] }
 const paths = files.map((f) => f.path)
 
 test('every export and what the warp plugin reads ship', () => {

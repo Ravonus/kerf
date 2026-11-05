@@ -6,9 +6,9 @@ import { transform } from 'lightningcss'
 import { build } from '../scripts/split-css.mjs'
 
 const { files, parts, routed } = build()
-const spec = (name) =>
+const spec = (name: string) =>
   readFileSync(new URL(`../../../docs/design/warp/tokens/${name}`, import.meta.url), 'utf8')
-const disk = (name) => readFileSync(new URL(`../styles/${name}`, import.meta.url), 'utf8')
+const disk = (name: string) => readFileSync(new URL(`../styles/${name}`, import.meta.url), 'utf8')
 
 test('styles/ is the split of the current spec (node scripts/split-css.mjs)', () => {
   for (const [name, text] of files) expect(disk(name), name).toBe(text)
@@ -21,12 +21,12 @@ test('every rule of the rule-routed families ships verbatim, in spec order, and 
     ['layout', 'warp-layout.css'],
     ['app', 'warp-app.css'],
     ['flows', 'warp-flows.css'],
-  ]) {
+  ] as const) {
     const css = spec(source)
     const shipped = new Set()
     for (const [name, list] of routed[family].files) {
       let at = 0
-      for (const text of list.flatMap((e) => e.inner)) {
+      for (const text of list.flatMap((e: { inner: string[] }) => e.inner)) {
         shipped.add(text)
         if (text.startsWith('@keyframes')) {
           expect(css).toContain(text)
@@ -41,7 +41,7 @@ test('every rule of the rule-routed families ships verbatim, in spec order, and 
       }
     }
     const { code } = transform({ filename: source, code: Buffer.from(css), minify: true })
-    const every = [...shipped, ...files.get(`${family}/tokens.css`).split('\n')].join('\n')
+    const every = [...shipped, ...files.get(`${family}/tokens.css`)!.split('\n')].join('\n')
     for (const name of String(code).matchAll(/@keyframes ([\w-]+)/g))
       expect(every, name[1]).toContain(`@keyframes ${name[1]}`)
   }
@@ -52,14 +52,14 @@ test('every rule of the spec ships verbatim, in spec order within its file', () 
     ['components', 'warp-components.css'],
     ['inputs', 'warp-inputs.css'],
     ['rich', 'warp-inputs-rich.css'],
-  ]) {
+  ] as const) {
     const css = spec(source)
     for (const [name, list] of parts[family].files) {
       let at = 0
       // a tail @media block split by owner is a new wrapper around the spec's own rules: check those instead
       for (const text of list
-        .filter((i) => i.kind === 'rule')
-        .flatMap((i) => i.inner ?? [i.text])) {
+        .filter((i: { kind: string }) => i.kind === 'rule')
+        .flatMap((i: { inner?: string[]; text: string }) => i.inner ?? [i.text])) {
         const item = { text }
         const found = css.indexOf(item.text, at)
         expect(
@@ -77,7 +77,7 @@ test('every spec rule outside the tail lands in exactly one file; tail rules lan
     ['components', 'warp-components.css'],
     ['inputs', 'warp-inputs.css'],
     ['rich', 'warp-inputs-rich.css'],
-  ]) {
+  ] as const) {
     const shipped = [...files]
       .filter(([k]) => k.startsWith(`${family}/`))
       .map(([, v]) => v)

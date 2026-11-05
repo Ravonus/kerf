@@ -6,7 +6,9 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { standaloneMarkup } from '../../../scripts/quality/boundaries.mjs'
 
 const src = new URL('../src/', import.meta.url)
-const files = readdirSync(src, { recursive: true }).filter((f) => /\.[mc]?[jt]sx?$/.test(f))
+const files = readdirSync(src, { recursive: true, encoding: 'utf8' }).filter((f) =>
+  /\.[mc]?[jt]sx?$/.test(f),
+)
 
 test('no framework imports and no JSX in warp-core/src', () => {
   expect(files.length).toBeGreaterThan(0)
@@ -20,7 +22,7 @@ test('no framework imports and no JSX in warp-core/src', () => {
       ),
     ].map((m) => m[1] ?? m[2] ?? m[3])
     for (const s of specifiers)
-      expect(s, `${String(f)} imports ${String(s)}`).toMatch(/^(?:\.\.?\/|@weft-js\/core\/markup$)/)
+      expect(s, `${f} imports ${String(s)}`).toMatch(/^(?:\.\.?\/|@weft-js\/core\/markup$)/)
   }
 })
 
