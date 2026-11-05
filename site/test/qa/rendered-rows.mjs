@@ -3,11 +3,29 @@ export function measureBlock(pre) {
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
   const box = pre.getBoundingClientRect()
+  const preStyle = getComputedStyle(pre)
+  const scrollable =
+    pre.tabIndex >= 0 &&
+    /^(auto|scroll)$/.test(preStyle.overflowX) &&
+    pre.scrollWidth > pre.clientWidth
+  let obstructed = false
+  let ancestorLeft = -Infinity
+  let ancestorRight = Infinity
+  for (let parent = pre.parentElement; parent; parent = parent.parentElement) {
+    const style = getComputedStyle(parent)
+    if (!/^(auto|scroll|hidden|clip)$/.test(style.overflowX)) continue
+    const bounds = parent.getBoundingClientRect()
+    ancestorLeft = Math.max(ancestorLeft, bounds.left)
+    ancestorRight = Math.min(ancestorRight, bounds.right)
+    if (bounds.left > box.left + 1 || bounds.right < box.right - 1) obstructed = true
+  }
   const visible = (element) =>
     element.checkVisibility({ visibilityProperty: true, opacityProperty: true })
   const lines = [...pre.querySelectorAll('[data-part="line"]')].filter(visible)
   return {
     missing: !pre.querySelector('[data-part="line"]') && !!pre.textContent.trim(),
+    scrollable,
+    obstructed,
     lines: lines.map((line, index) => {
       const style = getComputedStyle(line)
       ctx.font = style.font
@@ -39,7 +57,7 @@ export function measureBlock(pre) {
       let wordTop
       let splitWord = false
       for (const glyph of chars) {
-        if (glyph.top === undefined) wordTop = undefined
+        if (glyph.top === undefined || !/[\p{L}\p{N}_$]/u.test(glyph.char)) wordTop = undefined
         else if (wordTop === undefined) wordTop = glyph.top
         else if (Math.abs(wordTop - glyph.top) >= 1) splitWord = true
       }
@@ -49,7 +67,13 @@ export function measureBlock(pre) {
         rows,
         ch,
         splitWord,
-        clipped: glyphs.some((g) => g.left < box.left - 1 || g.right > box.right + 1),
+        clippedByAncestor: glyphs.some(
+          (g) =>
+            (g.left < ancestorLeft - 1 && g.left >= box.left - 1) ||
+            (g.right > ancestorRight + 1 && g.right <= box.right + 1),
+        ),
+        clippedLeft: glyphs.some((g) => g.left < box.left - 1),
+        clippedRight: glyphs.some((g) => g.right > box.right + 1),
         fontSize: parseFloat(style.fontSize),
         indent: style.getPropertyValue('--indent').trim(),
         padding: parseFloat(style.paddingInlineStart),
@@ -83,7 +107,12 @@ export function checkBlock(result, phone, label) {
       throw new Error(`${where}: invalid hanging indent style`)
 
     if (line.splitWord) throw new Error(`${where}: wraps inside a word`)
-    if (line.clipped) throw new Error(`${where}: code extends beyond its visible block`)
+    if (
+      line.clippedByAncestor ||
+      line.clippedLeft ||
+      (line.clippedRight && (!result.scrollable || result.obstructed))
+    )
+      throw new Error(`${where}: code extends beyond its visible block`)
     for (const row of line.rows.slice(1)) {
       if (Math.abs(row.left - line.rows[0].left - 2 * line.ch) > 1.5)
         throw new Error(`${where}: continuation does not hang 2ch past its indent`)

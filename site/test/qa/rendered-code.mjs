@@ -1,6 +1,11 @@
 import { check } from './context.mjs'
 import { measureBlock, checkBlock } from './rendered-rows.mjs'
-import { prepareCode, checkPageOverflow, settleBlock } from './rendered-readiness.mjs'
+import {
+  prepareCode,
+  checkPageOverflow,
+  settleBlock,
+  checkCodeScroll,
+} from './rendered-readiness.mjs'
 import { checkCopies } from './rendered-copy.mjs'
 
 const paths = [
@@ -43,8 +48,13 @@ for (const path of paths) {
             el.checkVisibility({ visibilityProperty: true, opacityProperty: true }),
           )
           if (!visible) continue
+          await block.evaluate((el) => {
+            el.scrollLeft = 0
+          })
           const result = await block.evaluate(measureBlock)
           checkBlock(result, width === 390, `block ${i + 1}`)
+          if (width === 390 && result.scrollable && result.lines.some((line) => line.clippedRight))
+            await checkCodeScroll(page, block)
           measured += result.lines.filter((line) => line.rows.length).length
         }
         if (!measured) throw new Error('no visible highlighted source lines')

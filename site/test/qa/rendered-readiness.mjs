@@ -5,9 +5,11 @@ export async function prepareCode(page) {
     for (const details of document.querySelectorAll('[data-site="challenge"] details'))
       details.open = true
   })
-  await page.mouse.move(100, 100)
-  await page.mouse.wheel(0, 1)
-  await page.waitForFunction(() => document.documentElement.hasAttribute('data-flow-armed'))
+  await page.waitForFunction(() => {
+    if (document.documentElement.hasAttribute('data-flow-armed')) return true
+    window.scrollTo({ top: window.scrollY ? 0 : 1, behavior: 'instant' })
+    return false
+  })
   const mounts = page.locator('[data-part="mount"]')
   for (let i = 0; i < (await mounts.count()); i++) {
     const mount = mounts.nth(i)
@@ -58,5 +60,19 @@ export async function settleBlock(block) {
       }
     }
     await Promise.allSettled(pending)
+  })
+}
+
+// A focusable code scroller must respond to the keyboard before overflow is accepted.
+export async function checkCodeScroll(page, block) {
+  await block.focus()
+  await block.evaluate((el) => {
+    el.scrollLeft = 0
+  })
+  await page.keyboard.press('ArrowRight')
+  const element = await block.elementHandle()
+  await page.waitForFunction((el) => el.scrollLeft > 0, element)
+  await block.evaluate((el) => {
+    el.scrollLeft = 0
   })
 }
