@@ -7,6 +7,7 @@ import {
   type VirtualKey,
   type Virtualizer,
 } from '@weft-js/warp-core'
+import { metricOf, type Metric } from './VirtualList-metrics'
 import './styles'
 import '@weft-js/warp-core/styles/data/virtual.css'
 
@@ -86,49 +87,8 @@ export interface VirtualListProps<T> {
 }
 
 type MeasureOptions = Parameters<MeasureProvider['prepare']>[2]
-interface Metric {
-  font: string
-  line: number
-  wrap: number
-  chrome: number
-  opts: { whiteSpace: 'normal' | 'pre-wrap'; letterSpacing?: number | undefined }
-}
 const EDGE = 8 // rows from the end at which onStart and onEnd ask for more
 const BATCH = 256 // rows prepared between index updates
-const LONG = 'mmmm '.repeat(400)
-
-function fontOf(c: CSSStyleDeclaration) {
-  return `${c.fontStyle} ${c.fontWeight} ${c.fontSize} ${c.fontFamily}`
-}
-
-/** One row's text and everything around it, read from a real hidden row: nothing here knows warp's padding. */
-function metricOf(probe: HTMLElement): Metric | undefined {
-  const box = probe.querySelector<HTMLElement>('[data-measure]')
-  if (!box) return
-  const c = getComputedStyle(box)
-  const line = parseFloat(c.lineHeight)
-  if (!line) return // `normal` has no one answer
-  box.style.display = 'block'
-  box.textContent = 'x'
-  const chrome = probe.getBoundingClientRect().height - line
-  box.textContent = LONG
-  const wrap =
-    box.getBoundingClientRect().width -
-    (parseFloat(c.paddingInlineStart) || 0) -
-    (parseFloat(c.paddingInlineEnd) || 0)
-  const white = c.whiteSpaceCollapse === 'preserve' || /pre/.test(c.whiteSpace)
-  return {
-    font: fontOf(c),
-    line,
-    wrap,
-    chrome,
-    opts: {
-      whiteSpace: white ? 'pre-wrap' : 'normal',
-      letterSpacing: parseFloat(c.letterSpacing) || undefined,
-    },
-  }
-}
-
 /**
  * A long list (06 §9): one window of rows at known offsets. Give it `text` and rows have exact heights before they
  * exist; rows the engine can't size are measured when they render, and what's on screen never moves when one corrects.
