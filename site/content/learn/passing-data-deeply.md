@@ -222,8 +222,9 @@ lines:
 import { context, derived, type Derived } from '@weft-js/core'
 
 type Density = 'compact' | 'cozy'
+const defaultDensity = derived<Density>(() => 'cozy')
 export const DensityContext = context<Derived<Density>>(
-  derived<Density>(() => 'cozy'),
+  defaultDensity,
 )
 
 export function DensityScope(
