@@ -128,6 +128,14 @@ import { state } from '@weft-js/core'
 
 export function Quantity() {
   const qty = state(1)
+  const updateQuantity = (
+    e: Event & {
+      currentTarget: HTMLInputElement
+    },
+  ) => {
+    const n = e.currentTarget.valueAsNumber
+    if (!Number.isNaN(n)) qty.value = n
+  }
   return (
     <label>
       Quantity{' '}
@@ -135,10 +143,7 @@ export function Quantity() {
         type="number"
         min={1}
         value={qty.value}
-        onInput={e => {
-          const n = e.currentTarget.valueAsNumber
-          if (!Number.isNaN(n)) qty.value = n
-        }}
+        onInput={updateQuantity}
       />
       <p>Total ${qty.value * 12}</p>
     </label>
@@ -157,7 +162,12 @@ export function Quantity() {
   const qty = state<number | null>(1)
   return (
     <section>
-      <NumberField label="Quantity" min={1} max={20} value={qty} />
+      <NumberField
+        label="Quantity"
+        min={1}
+        max={20}
+        value={qty}
+      />
       <p>Total ${(qty.value ?? 0) * 12}</p>
     </section>
   )
@@ -464,7 +474,11 @@ import { Button, Input } from '@weft-js/warp'
 export function SignUp() {
   return (
     <form>
-      <Input label="Name" name="name" required />
+      <Input
+        label="Name"
+        name="name"
+        required
+      />
       <Button type="submit">Sign up</Button>
     </form>
   )
@@ -490,7 +504,11 @@ export function SignUp() {
         ? <p>Welcome, {name.value}!</p>
         : (
           <form onSubmit={submit}>
-            <Input label="Name" name="name" required />
+            <Input
+              label="Name"
+              name="name"
+              required
+            />
             <Button type="submit">Sign up</Button>
           </form>
         )}
@@ -527,15 +545,20 @@ import { Input } from '@weft-js/warp'
 
 export function Pin() {
   const pin = state('')
+  const updatePin = (
+    e: Event & {
+      currentTarget: HTMLInputElement
+    },
+  ) => {
+    pin.value = e.currentTarget.value.replace(/\D/g, '')
+    e.currentTarget.value = pin.value
+  }
   return (
     <Input
       label="PIN"
       inputmode="numeric"
       value={pin.value}
-      onInput={e => {
-        pin.value = e.currentTarget.value.replace(/\D/g, '')
-        e.currentTarget.value = pin.value
-      }}
+      onInput={updatePin}
     />
   )
 }
