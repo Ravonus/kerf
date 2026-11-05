@@ -90,3 +90,88 @@ test('transport configure and reset keep the current callback and original props
     { receiver: props, wire: 'tabs' },
   ])
 })
+
+test('tab callback lookup precedes the next value getter', () => {
+  const order: string[] = []
+  let recording = false
+  const props: Parameters<typeof Tabs>[0] = {
+    label: 'Pages',
+    value: 'a',
+    onChange: vi.fn(),
+    options: [
+      { value: 'a', label: 'A' },
+      {
+        get value() {
+          if (recording) order.push('argument')
+          return 'b'
+        },
+        label: 'B',
+      },
+    ],
+  }
+  const { container } = render(() => Tabs(props))
+  Object.defineProperty(props, 'onChange', {
+    get() {
+      order.push('lookup')
+      return function (this: unknown, value: string) {
+        order.push('called')
+        recording = false
+        expect(this).toBe(props)
+        expect(value).toBe('b')
+      }
+    },
+  })
+  recording = true
+  container
+    .querySelector('[role="tablist"]')!
+    .dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
+    )
+  expect(order).toEqual(['lookup', 'argument', 'called'])
+})
+
+test('question callback lookup precedes argument reads and absence skips them', () => {
+  const order: string[] = []
+  let recording = false
+  let present = true
+  const props: Parameters<typeof Question>[0] = {
+    quiet: true,
+    onAnswer: vi.fn(),
+    question: {
+      id: 'q',
+      prompt: 'Which?',
+      options: ['a'],
+      get multiple() {
+        if (recording) order.push('argument')
+        return false
+      },
+    },
+  }
+  const { container } = render(() => Question(props))
+  Object.defineProperty(props, 'onAnswer', {
+    get() {
+      order.push('lookup')
+      return present
+        ? function (this: unknown, answer: string | string[]) {
+            order.push('called')
+            expect(this).toBe(props)
+            expect(answer).toBe('a')
+          }
+        : undefined
+    },
+  })
+  const submit = () =>
+    container
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+  recording = true
+  submit()
+  recording = false
+  expect(order).toEqual(['lookup', 'argument', 'called'])
+  order.length = 0
+  present = false
+  recording = true
+  submit()
+  recording = false
+  expect(order).toEqual(['lookup'])
+})
