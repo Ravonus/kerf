@@ -44,6 +44,176 @@ export type PaginationBarProps = {
   locale?: string
 }
 
+type CursorContext = {
+  label: () => string
+  totalFetched: () => number | undefined
+  pageIndex: () => number
+  supply: () => number | undefined
+  hasMore: () => boolean | undefined
+  hasPrev: () => boolean | undefined
+  previous: () => void
+  next: () => void
+  per: { readonly value: number }
+  fmt: (n: number) => string
+}
+
+function cursorPagination(ctx: CursorContext) {
+  return (
+    <nav data-scope="pagination" aria-label={ctx.label()}>
+      <span>{`Showing ${ctx.fmt(ctx.totalFetched() ?? (ctx.pageIndex() + 1) * ctx.per.value)}${ctx.supply() !== undefined ? ` of ${ctx.fmt(ctx.supply()!)}` : ''}${ctx.hasMore() ? ' · more available' : ''}`}</span>
+      <span data-part="spacer"></span>
+      <ol>
+        <li>
+          <Button
+            emphasis="outline"
+            tone="neutral"
+            size="sm"
+            disabled={!ctx.hasPrev()}
+            onClick={() => ctx.previous()}
+          >
+            Previous
+          </Button>
+        </li>
+        <li>
+          <Button
+            emphasis="outline"
+            tone="neutral"
+            size="sm"
+            disabled={!ctx.hasMore()}
+            onClick={() => ctx.next()}
+          >
+            Next
+          </Button>
+        </li>
+      </ol>
+    </nav>
+  )
+}
+
+type OffsetContext = {
+  setNav: (el: HTMLElement) => void
+  label: () => string
+  readonly sizes: number[]
+  total: () => number
+  per: ReturnType<typeof bindable<number>>
+  at: ReturnType<typeof bindable<number>>
+  current: { readonly value: number }
+  first: { readonly value: number }
+  pages: { readonly value: number }
+  fmt: (n: number) => string
+  go: (n: number) => void
+  jump: (e: KeyboardEvent) => void
+  id: string
+}
+
+function paginationJump(at: OffsetContext['at'], pages: OffsetContext['pages']) {
+  return (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    const box = e.currentTarget as HTMLInputElement
+    const n = parseInt(box.value, 10)
+    if (n) at.set(Math.min(pages.value, Math.max(1, n)))
+    box.value = ''
+  }
+}
+
+function paginationSizeChange(ctx: OffsetContext) {
+  return (v: string) => {
+    ctx.per.set(+v)
+    ctx.at.set(1)
+  }
+}
+
+// "Go to" and its box are one item, so the bar never wraps between them: the pair moves to the next line together
+function paginationSizes(ctx: OffsetContext) {
+  return {
+    get value() {
+      return ctx.sizes
+    },
+  }
+}
+
+function offsetPagination(ctx: OffsetContext) {
+  const onSizeChange = paginationSizeChange(ctx)
+  const sizes = paginationSizes(ctx)
+  return (
+    <nav ref={(n) => ctx.setNav(n)} data-scope="pagination" aria-label={ctx.label()}>
+      <span data-part="field">
+        <span aria-hidden="true">
+          Rows<span data-part="long"> per page</span>
+        </span>
+        <CompactSelect
+          label="Rows per page"
+          value={String(ctx.per.value)}
+          options={sizes.value.map((s) => ({ value: String(s), label: String(s) }))}
+          onValueChange={onSizeChange}
+        />
+      </span>
+      <span>{`${ctx.fmt(ctx.first.value)}–${ctx.fmt(Math.min(ctx.total(), ctx.current.value * ctx.per.value))} of ${ctx.fmt(ctx.total())}`}</span>
+      <span data-part="spacer"></span>
+      <ol>
+        <li>
+          <button
+            type="button"
+            data-part="page"
+            data-edge=""
+            disabled={ctx.current.value === 1}
+            aria-label="Previous page"
+            onClick={() => ctx.go(ctx.current.value - 1)}
+          >
+            ‹
+          </button>
+        </li>
+        {pageList(ctx.current.value, ctx.pages.value).map((p, i) => (
+          <li
+            key={p === 'gap' ? `gap${i}` : p}
+            data-part={p === 'gap' ? 'gap' : undefined}
+            aria-hidden={p === 'gap' ? 'true' : undefined}
+          >
+            {p === 'gap' ? (
+              '…'
+            ) : (
+              <button
+                type="button"
+                data-part="page"
+                aria-current={p === ctx.current.value ? 'page' : undefined}
+                aria-label={`Page ${p}`}
+                onClick={() => ctx.go(p)}
+              >
+                {p}
+              </button>
+            )}
+          </li>
+        ))}
+        <li>
+          <button
+            type="button"
+            data-part="page"
+            data-edge=""
+            disabled={ctx.current.value === ctx.pages.value}
+            aria-label="Next page"
+            onClick={() => ctx.go(ctx.current.value + 1)}
+          >
+            ›
+          </button>
+        </li>
+      </ol>
+      <span data-part="field" data-goto="">
+        <label for={`${ctx.id}-go`}>
+          Go to<span data-part="sr-only"> page</span>
+        </label>
+        <input
+          id={`${ctx.id}-go`}
+          data-part="jump"
+          inputmode="numeric"
+          placeholder={String(ctx.pages.value)}
+          onKeyDown={ctx.jump}
+        />
+      </span>
+    </nav>
+  )
+}
+
 /**
  * The pagination bar (06 §8; data.html:1893-1913). Offset mode: rows per page, the range, ‹ 1 … 4 5 6 … 100 › and Go to;
  * under 520px of its own width only ‹ current › remain and the range says the rest. Cursor mode: Previous and Next,
@@ -88,128 +258,40 @@ export function PaginationBar({
     flush()
     nav?.querySelector<HTMLElement>('[aria-current="page"]')?.focus()
   }
-  const jump = (e: KeyboardEvent) => {
-    if (e.key !== 'Enter') return
-    e.preventDefault()
-    const box = e.currentTarget as HTMLInputElement
-    const n = parseInt(box.value, 10)
-    if (n) at.set(Math.min(pages.value, Math.max(1, n)))
-    box.value = ''
-  }
+  const jump = paginationJump(at, pages)
   if (untrack(() => mode) === 'cursor') {
-    return (
-      <nav data-scope="pagination" aria-label={label}>
-        <span>{`Showing ${fmt(totalFetched ?? (pageIndex + 1) * per.value)}${supply !== undefined ? ` of ${fmt(supply)}` : ''}${hasMore ? ' · more available' : ''}`}</span>
-        <span data-part="spacer"></span>
-        <ol>
-          <li>
-            <Button
-              emphasis="outline"
-              tone="neutral"
-              size="sm"
-              disabled={!hasPrev}
-              onClick={() => onPageChange?.(pageIndex - 1)}
-            >
-              Previous
-            </Button>
-          </li>
-          <li>
-            <Button
-              emphasis="outline"
-              tone="neutral"
-              size="sm"
-              disabled={!hasMore}
-              onClick={() => onPageChange?.(pageIndex + 1)}
-            >
-              Next
-            </Button>
-          </li>
-        </ol>
-      </nav>
-    )
+    return cursorPagination({
+      label: () => label,
+      totalFetched: () => totalFetched,
+      pageIndex: () => pageIndex,
+      supply: () => supply,
+      hasMore: () => hasMore,
+      hasPrev: () => hasPrev,
+      previous: () => onPageChange?.(pageIndex - 1),
+      next: () => onPageChange?.(pageIndex + 1),
+      per,
+      fmt,
+    })
   }
   const id = uid('pg')
   const first = derived(() => (total ? (current.value - 1) * per.value + 1 : 0))
-  // "Go to" and its box are one item, so the bar never wraps between them: the pair moves to the next line together
-  return (
-    <nav ref={(n) => (nav = n)} data-scope="pagination" aria-label={label}>
-      <span data-part="field">
-        <span aria-hidden="true">
-          Rows<span data-part="long"> per page</span>
-        </span>
-        <CompactSelect
-          label="Rows per page"
-          value={String(per.value)}
-          options={sizes.map((s) => ({ value: String(s), label: String(s) }))}
-          onValueChange={(v) => {
-            per.set(+v)
-            at.set(1)
-          }}
-        />
-      </span>
-      <span>{`${fmt(first.value)}–${fmt(Math.min(total, current.value * per.value))} of ${fmt(total)}`}</span>
-      <span data-part="spacer"></span>
-      <ol>
-        <li>
-          <button
-            type="button"
-            data-part="page"
-            data-edge=""
-            disabled={current.value === 1}
-            aria-label="Previous page"
-            onClick={() => go(current.value - 1)}
-          >
-            ‹
-          </button>
-        </li>
-        {pageList(current.value, pages.value).map((p, i) => (
-          <li
-            key={p === 'gap' ? `gap${i}` : p}
-            data-part={p === 'gap' ? 'gap' : undefined}
-            aria-hidden={p === 'gap' ? 'true' : undefined}
-          >
-            {p === 'gap' ? (
-              '…'
-            ) : (
-              <button
-                type="button"
-                data-part="page"
-                aria-current={p === current.value ? 'page' : undefined}
-                aria-label={`Page ${p}`}
-                onClick={() => go(p)}
-              >
-                {p}
-              </button>
-            )}
-          </li>
-        ))}
-        <li>
-          <button
-            type="button"
-            data-part="page"
-            data-edge=""
-            disabled={current.value === pages.value}
-            aria-label="Next page"
-            onClick={() => go(current.value + 1)}
-          >
-            ›
-          </button>
-        </li>
-      </ol>
-      <span data-part="field" data-goto="">
-        <label for={`${id}-go`}>
-          Go to<span data-part="sr-only"> page</span>
-        </label>
-        <input
-          id={`${id}-go`}
-          data-part="jump"
-          inputmode="numeric"
-          placeholder={String(pages.value)}
-          onKeyDown={jump}
-        />
-      </span>
-    </nav>
-  )
+  return offsetPagination({
+    setNav: (n) => (nav = n),
+    label: () => label,
+    get sizes() {
+      return sizes
+    },
+    total: () => total,
+    per,
+    at,
+    current,
+    first,
+    pages,
+    fmt,
+    go,
+    jump,
+    id,
+  })
 }
 
 /**
