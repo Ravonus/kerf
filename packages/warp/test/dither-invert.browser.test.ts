@@ -4,11 +4,22 @@
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { rolldown } from 'rolldown'
+import type * as Playwright from 'playwright-core'
+import type * as Dither from '../../warp-core/src/dither/index'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+declare const dither: typeof Dither
+declare global {
+  interface Window {
+    action: ReturnType<typeof dither.ditherImage>
+  }
+}
+type Args = [string[], boolean?]
+
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
-let browser, bundle
+let browser: Playwright.Browser
+let bundle: string
 beforeAll(async () => {
   const build = await rolldown({
     input: fileURLToPath(new URL('../../warp-core/src/dither/index.ts', import.meta.url)),
@@ -24,30 +35,30 @@ const PAGE = `<!doctype html><html data-expression="balanced"><body style="margi
 const INKS = ['#000', '#fff']
 
 /** Share of white ink in the left and right halves of the painted canvas, after `script` has run in the page. */
-async function coverage(script, arg) {
+async function coverage(script: (arg: Args) => void, arg: Args) {
   const page = await browser.newPage()
   await page.setContent(PAGE)
   await page.addScriptTag({ content: bundle })
   await page.evaluate(script, arg)
   await page.waitForFunction(
-    () => document.getElementById('host').getAttribute('data-state') === 'live',
+    () => document.getElementById('host')!.getAttribute('data-state') === 'live',
   )
   const shares = await page.evaluate(
     () =>
-      new Promise((done) => {
+      new Promise<number[]>((done) => {
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
-            const c = document.getElementById('c'),
-              d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data
+            const c = document.getElementById('c') as HTMLCanvasElement,
+              d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data
             const half = c.width / 2,
               sum = [0, 0],
               all = [0, 0]
             for (let i = 0; i < d.length; i += 4) {
               const side = (i / 4) % c.width < half ? 0 : 1
-              all[side]++
-              if (d[i] > 127) sum[side]++
+              all[side]!++
+              if (d[i]! > 127) sum[side]!++
             }
-            done(sum.map((n, i) => n / all[i]))
+            done(sum.map((n, i) => n / all[i]!))
           }),
         )
       }),
@@ -56,8 +67,8 @@ async function coverage(script, arg) {
   return shares
 }
 
-const gradient = ([ramp, invert]) => {
-  window.action = dither.ditherImage(document.getElementById('c'), {
+const gradient = ([ramp, invert]: Args) => {
+  window.action = dither.ditherImage(document.getElementById('c') as HTMLCanvasElement, {
     ramp,
     invert,
     gradient: { angle: 0 },
@@ -70,34 +81,34 @@ test('Invert turns a gradient round, and off or unset leaves it as drawn', async
   const unset = await coverage(gradient, [INKS])
   const off = await coverage(gradient, [INKS, false])
   const on = await coverage(gradient, [INKS, true])
-  expect(unset[1]).toBeGreaterThan(unset[0] + 0.3)
+  expect(unset[1]!).toBeGreaterThan(unset[0]! + 0.3)
   expect(off).toEqual(unset)
-  expect(on[0]).toBeGreaterThan(on[1] + 0.3)
+  expect(on[0]!).toBeGreaterThan(on[1]! + 0.3)
 })
 
 test('a live knob change repaints the gradient the other way', async () => {
   const shares = await coverage(
     ([ramp]) => {
-      const options = { ramp, gradient: { angle: 0 }, algorithm: 'bayer8', cell: 2 }
-      window.action = dither.ditherImage(document.getElementById('c'), options)
+      const options = { ramp, gradient: { angle: 0 }, algorithm: 'bayer8' as const, cell: 2 }
+      window.action = dither.ditherImage(document.getElementById('c') as HTMLCanvasElement, options)
       requestAnimationFrame(() => window.action.update({ ...options, invert: true }))
     },
     [INKS],
   )
-  expect(shares[0]).toBeGreaterThan(shares[1] + 0.3)
+  expect(shares[0]!).toBeGreaterThan(shares[1]! + 0.3)
 })
 
 test('a picture still follows its own rule: invert gives light parts the strongest ink', async () => {
-  const picture = ([ramp, invert]) => {
+  const picture = ([ramp, invert]: Args) => {
     const source = document.createElement('canvas')
     source.width = 120
     source.height = 60
-    const g = source.getContext('2d')
+    const g = source.getContext('2d')!
     g.fillStyle = '#000'
     g.fillRect(0, 0, 60, 60)
     g.fillStyle = '#fff'
     g.fillRect(60, 0, 60, 60)
-    window.action = dither.ditherImage(document.getElementById('c'), {
+    window.action = dither.ditherImage(document.getElementById('c') as HTMLCanvasElement, {
       source,
       ramp,
       invert,
@@ -107,6 +118,6 @@ test('a picture still follows its own rule: invert gives light parts the stronge
   }
   const on = await coverage(picture, [INKS, true])
   const off = await coverage(picture, [INKS, false])
-  expect(on[1]).toBeGreaterThan(on[0] + 0.5)
-  expect(off[0]).toBeGreaterThan(off[1] + 0.5)
+  expect(on[1]!).toBeGreaterThan(on[0]! + 0.5)
+  expect(off[0]).toBeGreaterThan(off[1]! + 0.5)
 })
