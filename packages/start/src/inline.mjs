@@ -1,6 +1,8 @@
 // A page's stylesheets. All of them inline while the document fits the first flight; past that, the rules the server's
 // HTML can reach, with every sheet behind them as an immutable link that doesn't hold the paint.
 
+import { esc } from '@weft-js/core/markup'
+
 /**
  * The one order every app shares. Layers rank by first appearance, so this goes before any sheet: warp's own too, or the
  * order would follow whichever component's sheet a page lists first.
@@ -38,7 +40,6 @@ const PRINT = /^@media\s+print\s*(?:and\b[^,]*)?$/i
 const FORCED_COLORS = /^@media\s*\(\s*forced-colors\s*:\s*active\s*\)\s*(?:and\b[^,]*)?$/i
 const GROUPING = /^@(?:media|supports|layer|container|scope|starting-style)\b/
 
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 const print = (nodes) =>
   nodes.map((n) => (n.body === undefined ? `${n.head};` : `${n.head}{${n.body}}`)).join('')
 

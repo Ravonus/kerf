@@ -1,6 +1,7 @@
+import { esc } from '@weft-js/core/markup'
+export { esc } from '@weft-js/core/markup'
+
 export const json = (v: unknown) => JSON.stringify(v ?? null).replace(/</g, '\\u003c')
-export const esc = (s: string) =>
-  s.replace(/[&<"]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
 /**
  * A redirect's body. A server's 3xx is followed by its `location`; a prerendered one is a file on a static host, and this
  * is what that file says: go now, and the address to index. No stylesheet, so no view transition starts on a page

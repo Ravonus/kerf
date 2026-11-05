@@ -56,7 +56,10 @@
     },
     "./style/matrix": "./node/matrix.mjs",
     "./hydration": "./node/hydration.mjs",
-    "./markup": "./src/markup.mjs",
+    "./markup": {
+      "types": "./src/markup-shared.d.mts",
+      "default": "./src/markup-shared.mjs"
+    },
     "./node-purge": "./node/purge.mjs",
     "./hmr": "./src/hmr.ts",
     "./plugin": {
