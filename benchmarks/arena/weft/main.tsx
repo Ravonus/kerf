@@ -1,4 +1,5 @@
-import { flush, state, stats } from '@weft-js/core'
+import { flush, state } from '@weft-js/core'
+import { stats } from '@weft-js/core/internal'
 import { render } from '@weft-js/core/dom'
 import { CELLS, count, glyph, harness } from '../shared/harness.js'
 
