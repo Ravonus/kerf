@@ -106,12 +106,108 @@ function codecString(s) {
   return s.codec_name
 }
 
-/** The media.encode@1 provider for one codec key: `encode` runs ffmpeg on a file and a recipe, and gives the bytes back. */
-export function createMediaEncode({ key, binary = 'system', probe, sha256, timeout = 600_000 }) {
-  const spec = CODECS[key]
-  if (!spec) throw new Error(`media.encode: no ffmpeg recipe for ${key}`)
-  const ffmpeg = binary === 'system' ? 'ffmpeg' : binary
-  const ffprobe = probe ?? (binary === 'system' ? 'ffprobe' : join(dirname(binary), 'ffprobe'))
+function createInfo({ run, ffprobe }) {
+  return async function info(file) {
+    const { stdout } = await run(ffprobe, [
+      '-v',
+      'error',
+      '-protocol_whitelist',
+      'file,pipe',
+      '-show_format',
+      '-show_streams',
+      '-of',
+      'json',
+      file,
+    ])
+    const { streams = [], format = {} } = JSON.parse(String(stdout))
+    const v = streams.find((s) => s.codec_type === 'video' && !s.disposition?.attached_pic)
+    const a = streams.find((s) => s.codec_type === 'audio')
+    const side = v?.side_data_list?.find((d) => d.rotation !== undefined)?.rotation ?? 0
+    const turned = Math.abs(side) % 180 === 90
+    return {
+      format: format.format_name,
+      duration: Number(format.duration) || 0,
+      video: v && {
+        codec: v.codec_name,
+        pix: v.pix_fmt,
+        width: turned ? v.height : v.width,
+        height: turned ? v.width : v.height,
+        fps: fraction(v.avg_frame_rate),
+        frames: Number(v.nb_read_frames ?? v.nb_frames) || undefined,
+        string: codecString(v),
+        hdr:
+          ['smpte2084', 'arib-std-b67'].includes(v.color_transfer) ||
+          /1[02]le$/.test(v.pix_fmt ?? ''),
+      },
+      audio: a && {
+        codec: a.codec_name,
+        channels: a.channels,
+        bitrate: Number(a.bit_rate) || undefined,
+        string: codecString(a),
+      },
+    }
+  }
+}
+
+function createEncode({ encoderName, ffmpeg, spec, key, output, input, scale }) {
+  return async function encode(file, { knob, width, copy, audio, loopVideo } = {}) {
+    const name = await encoderName()
+    if (!name)
+      throw Object.assign(
+        new Error(`M019 ${ffmpeg} has no ${spec.names.join(' or ')} encoder for ${key}.`),
+        { code: 'M019' },
+      )
+    const common = ['-map_metadata', '-1', '-map_chapters', '-1']
+    if (key.startsWith('audio/'))
+      return output(spec.ext, [
+        ...input(file),
+        ...common,
+        '-map',
+        '0:a:0',
+        '-vn',
+        ...(copy ? ['-c:a', 'copy'] : spec.audio),
+        ...spec.mux,
+      ])
+    // `-shortest` overruns on a looping GIF by what the encoder has buffered, so the sound's length is set outright.
+    const tracks =
+      typeof audio === 'string'
+        ? [
+            ...input(file, loopVideo),
+            ...input(audio),
+            '-map',
+            '0:v:0',
+            '-map',
+            '1:a:0',
+            '-t',
+            String((await this.info(audio)).duration),
+            ...spec.audio,
+          ]
+        : [
+            ...input(file),
+            '-map',
+            '0:v:0',
+            ...(audio === false
+              ? []
+              : ['-map', '0:a:0?', ...(copy ? ['-c:a', 'copy'] : spec.audio)]),
+          ]
+    const video = copy
+      ? ['-c:v', 'copy']
+      : [
+          '-vf',
+          scale(width),
+          '-fps_mode',
+          'passthrough',
+          '-c:v',
+          name,
+          '-crf',
+          String(knob ?? spec.fixed),
+          ...spec.args[name],
+        ]
+    return output(spec.ext, [...tracks, ...common, ...video, ...spec.mux])
+  }
+}
+
+function createRunner({ ffmpeg, sha256, key, timeout }) {
   let pinned = !sha256
 
   async function run(bin, args) {
@@ -135,8 +231,10 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
       )
     })
   }
+  return run
+}
 
-  /** ffmpeg writing one temporary file, which comes back as bytes. */
+function createOutput(ffmpeg, run) {
   async function output(ext, args) {
     const dir = mkdtempSync(join(tmpdir(), 'weft-ffmpeg-'))
     try {
@@ -147,6 +245,19 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
       rmSync(dir, { recursive: true, force: true })
     }
   }
+  return output
+}
+
+/** The media.encode@1 provider for one codec key: `encode` runs ffmpeg on a file and a recipe, and gives the bytes back. */
+export function createMediaEncode({ key, binary = 'system', probe, sha256, timeout = 600_000 }) {
+  const spec = CODECS[key]
+  if (!spec) throw new Error(`media.encode: no ffmpeg recipe for ${key}`)
+  const ffmpeg = binary === 'system' ? 'ffmpeg' : binary
+  const ffprobe = probe ?? (binary === 'system' ? 'ffprobe' : join(dirname(binary), 'ffprobe'))
+  const run = createRunner({ ffmpeg, sha256, key, timeout })
+
+  /** ffmpeg writing one temporary file, which comes back as bytes. */
+  const output = createOutput(ffmpeg, run)
 
   const input = (file, loop) => [
     '-protocol_whitelist',
@@ -155,6 +266,7 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
     '-i',
     file,
   ]
+
   const scale = (width) =>
     `scale=${width ? `${width}:-2` : 'trunc(iw/2)*2:trunc(ih/2)*2'}:flags=lanczos,format=yuv420p`
 
@@ -177,46 +289,7 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
     }),
 
     /** What a file is, from ffprobe. */
-    async info(file) {
-      const { stdout } = await run(ffprobe, [
-        '-v',
-        'error',
-        '-protocol_whitelist',
-        'file,pipe',
-        '-show_format',
-        '-show_streams',
-        '-of',
-        'json',
-        file,
-      ])
-      const { streams = [], format = {} } = JSON.parse(String(stdout))
-      const v = streams.find((s) => s.codec_type === 'video' && !s.disposition?.attached_pic)
-      const a = streams.find((s) => s.codec_type === 'audio')
-      const side = v?.side_data_list?.find((d) => d.rotation !== undefined)?.rotation ?? 0
-      const turned = Math.abs(side) % 180 === 90
-      return {
-        format: format.format_name,
-        duration: Number(format.duration) || 0,
-        video: v && {
-          codec: v.codec_name,
-          pix: v.pix_fmt,
-          width: turned ? v.height : v.width,
-          height: turned ? v.width : v.height,
-          fps: fraction(v.avg_frame_rate),
-          frames: Number(v.nb_read_frames ?? v.nb_frames) || undefined,
-          string: codecString(v),
-          hdr:
-            ['smpte2084', 'arib-std-b67'].includes(v.color_transfer) ||
-            /1[02]le$/.test(v.pix_fmt ?? ''),
-        },
-        audio: a && {
-          codec: a.codec_name,
-          channels: a.channels,
-          bitrate: Number(a.bit_rate) || undefined,
-          string: codecString(a),
-        },
-      }
-    },
+    info: createInfo({ run, ffprobe }),
 
     /** One frame as a PNG, for the poster and the quality search. */
     still: (file, { at = 0, width } = {}) =>
@@ -236,60 +309,6 @@ export function createMediaEncode({ key, binary = 'system', probe, sha256, timeo
      * @param {{ knob?: number, width?: number, copy?: boolean, audio?: string | false, loopVideo?: boolean }} recipe
      *   `copy`: remux without re-encoding. `audio`: a file to mux in, or false to drop the source's own.
      */
-    async encode(file, { knob, width, copy, audio, loopVideo } = {}) {
-      const name = await encoderName()
-      if (!name)
-        throw Object.assign(
-          new Error(`M019 ${ffmpeg} has no ${spec.names.join(' or ')} encoder for ${key}.`),
-          { code: 'M019' },
-        )
-      const common = ['-map_metadata', '-1', '-map_chapters', '-1']
-      if (key.startsWith('audio/'))
-        return output(spec.ext, [
-          ...input(file),
-          ...common,
-          '-map',
-          '0:a:0',
-          '-vn',
-          ...(copy ? ['-c:a', 'copy'] : spec.audio),
-          ...spec.mux,
-        ])
-      // `-shortest` overruns on a looping GIF by what the encoder has buffered, so the sound's length is set outright.
-      const tracks =
-        typeof audio === 'string'
-          ? [
-              ...input(file, loopVideo),
-              ...input(audio),
-              '-map',
-              '0:v:0',
-              '-map',
-              '1:a:0',
-              '-t',
-              String((await this.info(audio)).duration),
-              ...spec.audio,
-            ]
-          : [
-              ...input(file),
-              '-map',
-              '0:v:0',
-              ...(audio === false
-                ? []
-                : ['-map', '0:a:0?', ...(copy ? ['-c:a', 'copy'] : spec.audio)]),
-            ]
-      const video = copy
-        ? ['-c:v', 'copy']
-        : [
-            '-vf',
-            scale(width),
-            '-fps_mode',
-            'passthrough',
-            '-c:v',
-            name,
-            '-crf',
-            String(knob ?? spec.fixed),
-            ...spec.args[name],
-          ]
-      return output(spec.ext, [...tracks, ...common, ...video, ...spec.mux])
-    },
+    encode: createEncode({ encoderName, ffmpeg, spec, key, output, input, scale }),
   }
 }
