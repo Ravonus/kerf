@@ -352,9 +352,25 @@ export function Toolbar() {
   // One tab stop; arrow keys move between buttons.
   use(roving, () => bar, () => ({ items: '[data-tool]' }))
   return (
-    <div role="toolbar" aria-label="Text" ref={el => { bar = el }}>
-      <span role="button" tabindex="0" data-tool>Bold</span>
-      <span role="button" tabindex="-1" data-tool>Italic</span>
+    <div
+      role="toolbar"
+      aria-label="Text"
+      ref={el => { bar = el }}
+    >
+      <span
+        role="button"
+        tabindex="0"
+        data-tool
+      >
+        Bold
+      </span>
+      <span
+        role="button"
+        tabindex="-1"
+        data-tool
+      >
+        Italic
+      </span>
     </div>
   )
 }
