@@ -82,6 +82,49 @@ export function lsp(root, { input = process.stdin, output = process.stdout } = {
   const toServer = (m) => server.stdin.write(frame(m))
   const toClient = (m) => output.write(frame(m))
   const fileOf = (uri) => fileURLToPath(uri)
+  const { pos, back, items } = makeMapping(session, docs)
+
+  const client = makeClient({ docs, session, toServer, pos, fileOf, pending })
+
+  // One at a time: a request has to see the shadow its position is mapped for.
+  let line = Promise.resolve()
+  framed(input, (msg) => {
+    line = line.then(() => client(msg)).catch((e) => process.stderr.write(`weft lsp: ${e.stack}\n`))
+  })
+
+  framed(server.stdout, (msg) => {
+    if (msg.method === 'textDocument/publishDiagnostics') {
+      const doc = docs.get(msg.params.uri)
+      return toClient(
+        doc
+          ? { ...msg, params: { ...msg.params, diagnostics: items(doc, msg.params.diagnostics) } }
+          : msg,
+      )
+    }
+    const hold = msg.id !== undefined && !msg.method ? pending.get(msg.id) : null
+    if (!hold) return toClient(msg)
+    pending.delete(msg.id)
+    if (hold.method === 'textDocument/diagnostic' && msg.result?.items)
+      return toClient({
+        ...msg,
+        result: { ...msg.result, items: items(hold.doc, msg.result.items) },
+      })
+    toClient({ ...msg, result: back(msg.result, hold.doc) })
+  })
+  server.on('exit', (code) => {
+    session.close()
+    process.exitCode = code ?? 0
+  })
+  return {
+    server,
+    close: () => {
+      server.kill()
+      session.close()
+    },
+  }
+}
+
+function makeMapping(session, docs) {
   const mapOf = (doc) => doc && session.engine.maps.get(doc.file)
 
   const pos = (doc, p, to) => {
@@ -134,6 +177,10 @@ export function lsp(root, { input = process.stdin, output = process.stdout } = {
     ...ours(doc),
   ]
 
+  return { pos, back, items }
+}
+
+function makeClient({ docs, session, toServer, pos, fileOf, pending }) {
   /** Inference over the buffers, then every open file whose shadow moved. */
   async function refresh(changed) {
     if (session.host)
@@ -157,11 +204,6 @@ export function lsp(root, { input = process.stdin, output = process.stdout } = {
     }
   }
 
-  // One at a time: a request has to see the shadow its position is mapped for.
-  let line = Promise.resolve()
-  framed(input, (msg) => {
-    line = line.then(() => client(msg)).catch((e) => process.stderr.write(`weft lsp: ${e.stack}\n`))
-  })
   async function client(msg) {
     const p = msg.params
     if (msg.method === 'textDocument/didOpen') {
@@ -194,34 +236,5 @@ export function lsp(root, { input = process.stdin, output = process.stdout } = {
     toServer(msg)
   }
 
-  framed(server.stdout, (msg) => {
-    if (msg.method === 'textDocument/publishDiagnostics') {
-      const doc = docs.get(msg.params.uri)
-      return toClient(
-        doc
-          ? { ...msg, params: { ...msg.params, diagnostics: items(doc, msg.params.diagnostics) } }
-          : msg,
-      )
-    }
-    const hold = msg.id !== undefined && !msg.method ? pending.get(msg.id) : null
-    if (!hold) return toClient(msg)
-    pending.delete(msg.id)
-    if (hold.method === 'textDocument/diagnostic' && msg.result?.items)
-      return toClient({
-        ...msg,
-        result: { ...msg.result, items: items(hold.doc, msg.result.items) },
-      })
-    toClient({ ...msg, result: back(msg.result, hold.doc) })
-  })
-  server.on('exit', (code) => {
-    session.close()
-    process.exitCode = code ?? 0
-  })
-  return {
-    server,
-    close: () => {
-      server.kill()
-      session.close()
-    },
-  }
+  return client
 }
