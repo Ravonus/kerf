@@ -183,15 +183,17 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
 
 ### Sprint 3: KISS and DRY
 
+**Status:** source work complete. Final exact-commit checks and the measured performance decision remain.
+
 Every file under 400 lines and every function under 80, with the allowlist from Sprint 0 empty.
 
 **Flaky tests first** (found in S2's verification, 2026-11-04). Make these deterministic, by waiting
 on the state rather than on wall-clock time, before any split. Each one failed once and passed on a re-run:
-- [ ] `packages/warp/test/sweep.browser.test.mjs:234`: the per-step draw limit (`< 6`) fails on a slow
+- [x] `packages/warp/test/sweep.browser.test.ts`: the per-step draw limit (`< 6`) fails on a slow
       ARM VM at 13.1.
-- [ ] `packages/start/test/ui-state.browser.test.mjs`, "killing the leader mid-hover: no stuck hover
+- [x] `packages/start/test/ui-state.browser.test.ts`, "killing the leader mid-hover: no stuck hover
       anywhere", fails with "Matcher did not succeed in time".
-- [ ] `packages/start` SSR test asserting the page doesn't yet contain "In stock" (the streamed slot
+- [x] `packages/start` SSR test asserting the page doesn't yet contain "In stock" (the streamed slot
       resolved first), in Linux CI `quality` run 41905808021, attempt 1.
 
 **Splits**, largest first. Each split moves code as-is and doesn't change behaviour, so each can be
@@ -214,25 +216,25 @@ its own PR.
 
 **One home for each helper:**
 
-- [ ] `scripts/lib/` (repo-internal, unpublished) holds `freePort`, `sleep`, `until`, `walk`,
+- [x] `scripts/lib/` (repo-internal, unpublished) holds `freePort`, `sleep`, `until`, `walk`,
       `median` and `repoRoot`. Twelve copies become imports, and 58 scripts stop computing their
       own `repo`, `root` or `here`.
-- [ ] An HTML `esc` is exported once, from `@weft-js/core/markup`. Today there are copies in
+- [x] An HTML `esc` is exported once, from `@weft-js/core/markup`. Today there are copies in
       `start/src/server.tsx`, `start/src/inline.mjs`, `core/src/head.ts` and
       `warp-core/src/{code,editor}.ts`.
-- [ ] The six `realtime-*` packages share one `vitest` and `tsconfig` base. Their configs are
+- [x] The six `realtime-*` packages share one `vitest` and `tsconfig` base. Their configs are
       byte-identical today.
-- [ ] `site/src/toolkit/world.ts` holds the shared demo data (`TONES`, `WORDS`, `VIEWS`, `Cell`…).
+- [x] `site/src/toolkit/world.ts` holds the shared demo data (`TONES`, `WORDS`, `VIEWS`, `Cell`…).
 
 **Conventions** (written into CONTRIBUTING and AGENTS.md):
 
-- [ ] Inside `src/`, use `.ts` and `.tsx`. Use `.mjs` only for files Node runs untranspiled
+- [x] Inside `src/`, use `.ts` and `.tsx`. Use `.mjs` only for files Node runs untranspiled
       (configs, `bin`, scripts). One extension style per package: `cli` stays `.mjs` with JSDoc
       types, and `start` stops mixing.
-- [ ] Tests are `*.test.ts(x)` for unit tests and `*.browser.test.ts(x)` for browser tests, in
+- [x] Tests are `*.test.ts(x)` for unit tests and `*.browser.test.ts(x)` for browser tests, in
       `test/`. The 56 ad-hoc `packages/*/scripts/*-e2e.mjs` move into `test/e2e/` and run under
       `pnpm test:e2e`.
-- [ ] One `vitest.config.ts` per package (15 are `.mjs` today).
+- [x] One `vitest.config.ts` per package (15 are `.mjs` today).
 
 **Exit:** both length allowlists are empty and the duplicate-helper grep finds nothing. Every
 benchmark is within noise of the Sprint 0 numbers: these are moves, not rewrites.
