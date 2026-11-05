@@ -15,8 +15,8 @@ export function ModalInvite() {
   const role = state('Member')
   const sent = state('')
   const send = () => {
-    sent.value =
-      `Invited ${email.value} as ` + `${role.value}.`
+    const invitation = `Invited ${email.value} as `
+    sent.value = invitation + `${role.value}.`
     email.value = ''
     open.value = false
   }

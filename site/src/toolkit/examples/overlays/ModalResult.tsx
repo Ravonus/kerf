@@ -22,7 +22,7 @@ export function ModalResult() {
         }
         title="storefront is live"
         description={
-          'Deployed 9f3ac21 to' + ' eu-west in 2 minutes.'
+          'Deployed 9f3ac21 to eu-west in 2 minutes.'
         }
         footer={<Button data-close="">Nice</Button>}
       />

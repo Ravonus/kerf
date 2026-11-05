@@ -10,7 +10,7 @@ export function ModalTile() {
       size="sm"
       title="Rename project"
       description={
-        'Everyone on the' + ' project sees the new name.'
+        'Everyone on the project sees the new name.'
       }
       footer={
         <>

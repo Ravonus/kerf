@@ -7,7 +7,7 @@ export const PopoverAligns = () => (
       align="start"
       title="Start"
       description={
-        'Lines up with the' + ' left edge. The default.'
+        'Lines up with the left edge. The default.'
       }
     />
     <Popover
