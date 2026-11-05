@@ -26,7 +26,10 @@ export default function Runs() {
         {pearLine.value.text}, computed{' '}
         {pearLine.value.runs} times
       </p>
-      <Button size="sm" onClick={() => apples.value++}>
+      <Button
+        size="sm"
+        onClick={() => apples.value++}
+      >
         Add an apple
       </Button>
       <Button

@@ -1,7 +1,12 @@
 import { state } from '@weft-js/core'
 import { Button, Card } from '@weft-js/warp'
 
-function Panel({ title, active, onShow, children }: {
+function Panel({
+  title,
+  active,
+  onShow,
+  children,
+}: {
   title: string
   active: boolean
   onShow: () => void
