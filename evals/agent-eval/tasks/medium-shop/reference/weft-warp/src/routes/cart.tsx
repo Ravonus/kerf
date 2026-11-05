@@ -35,7 +35,7 @@ export function cartView(m: Model) {
       <p>Total: {money(m.total.value)}</p>
       <form noValidate onSubmit={m.order}>
         {fields.map((f, i) => (
-          <div>
+          <div key={f.id}>
             <label for={f.id}>{f.label}</label>
             <input
               id={f.id}

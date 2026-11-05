@@ -35,16 +35,32 @@ export function cloneForGrading(box, n) {
 
 export async function build(copy, stack) {
   for (const d of stack.built) rmSync(join(copy.app, d), { recursive: true, force: true })
+  const environment = stack.calibrationPnpm
+    ? env(copy, {
+        PATH: `${join(copy.app, '.calibration-bin')}:${env(copy).PATH}`,
+        npm_config_verify_deps_before_run: 'false',
+        FORCE_COLOR: '0',
+      })
+    : env(copy)
   const [cmd, argv] = boxed(copy, 'pnpm', ['run', 'build'])
   const at = Date.now()
   try {
-    await run(cmd, argv, { cwd: copy.app, env: env(copy), timeout: 300_000, maxBuffer: 1 << 26 })
+    if (stack.calibrationPnpm) {
+      const [typeCmd, typeArgs] = boxed(copy, 'pnpm', ['run', 'typecheck'])
+      await run(typeCmd, typeArgs, {
+        cwd: copy.app,
+        env: environment,
+        timeout: 300_000,
+        maxBuffer: 1 << 26,
+      })
+    }
+    await run(cmd, argv, { cwd: copy.app, env: environment, timeout: 300_000, maxBuffer: 1 << 26 })
     return { ok: true, ms: Date.now() - at }
   } catch (e) {
     return {
       ok: false,
       ms: Date.now() - at,
-      error: `${e.stdout ?? ''}\n${e.stderr ?? ''}`.slice(-1500),
+      error: `${e.stdout ?? ''}\n${e.stderr ?? ''}`.slice(-16000),
     }
   }
 }
@@ -55,7 +71,13 @@ export async function serve(copy, stack) {
   const [cmd, argv] = boxed(copy, argv0[0], argv0.slice(1))
   const child = spawn(cmd, argv, {
     cwd: copy.app,
-    env: env(copy, { PORT: String(port), HOST: '127.0.0.1' }),
+    env: env(copy, {
+      PORT: String(port),
+      HOST: '127.0.0.1',
+      ...(stack.calibrationPnpm
+        ? { PATH: `${join(copy.app, '.calibration-bin')}:${env(copy).PATH}` }
+        : {}),
+    }),
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
   })
@@ -98,17 +120,19 @@ export async function hidden(task, base) {
       if (m.type() === 'error') problems.push(m.text())
     })
     page.on('pageerror', (e) => problems.push(e.message))
+    let timer
     try {
       await Promise.race([
         t.run({ page, base, problems }),
         new Promise((_, no) => {
-          setTimeout(() => no(new Error('test timed out')), 30_000)
+          timer = setTimeout(() => no(new Error('test timed out')), 30_000)
         }),
       ])
       return null
     } catch (e) {
-      return String(e.message).split('\n')[0].slice(0, 300)
+      return String(e.message).slice(0, 2000)
     } finally {
+      clearTimeout(timer)
       await ctx.close()
     }
   }

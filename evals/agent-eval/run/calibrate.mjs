@@ -25,11 +25,12 @@ export async function calibrate(args) {
   try {
     mkdirSync(box.home)
     mkdirSync(box.tmp)
-    cpSync(golden, box.app, { recursive: true, dereference: false })
+    cpSync(golden, box.app, { recursive: true, dereference: false, verbatimSymlinks: true })
     const reference = join(here, 'tasks/medium-shop/reference/weft-warp')
     cpSync(reference, box.app, { recursive: true })
     if (mutant) applyMutant(reference, box.app, mutant)
     const stack = JSON.parse(readFileSync(join(here, 'stacks.json'), 'utf8'))['weft-warp']
+    stack.calibrationPnpm = true
     const grade = await gradeOnce(box, 'weft-warp', 'medium-shop', 1, false, {
       stack,
       gradeable: false,

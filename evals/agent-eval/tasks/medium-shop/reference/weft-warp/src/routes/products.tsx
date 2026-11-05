@@ -45,16 +45,20 @@ export function productView(m: Model) {
       </p>
       <ul aria-label="Products">
         {m.shown.value.map((p) => {
-          const remaining = p.stock - (m.cart.value[p.name] ?? 0)
           return (
             <li key={p.name}>
               <span>{p.name}</span> <span>{money(p.price)}</span>
-              {remaining === 0 ? (
+              {p.stock - (m.cart.value[p.name] ?? 0) === 0 ? (
                 <span>Out of stock</span>
               ) : (
-                remaining <= 3 && <span>Only {remaining} left</span>
+                p.stock - (m.cart.value[p.name] ?? 0) <= 3 && (
+                  <span>Only {p.stock - (m.cart.value[p.name] ?? 0)} left</span>
+                )
               )}
-              <button disabled={remaining === 0} onClick={() => m.change(p, 1)}>
+              <button
+                disabled={p.stock - (m.cart.value[p.name] ?? 0) === 0}
+                onClick={() => m.change(p, 1)}
+              >
                 Add {p.name}
               </button>
             </li>
