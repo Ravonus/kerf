@@ -1,16 +1,7 @@
 import { RightIcon, XIcon } from '@weft-js/warp-icons'
-import {
-  navIndicator,
-  readCollapsed,
-  readFolds,
-  sideNav,
-  uid,
-  writeCollapsed,
-  writeFolds,
-  type Folds,
-} from '@weft-js/warp-core'
-import { derived, onMount, state, untrack, watch } from '@weft-js/core'
-import { use } from '@weft-js/warp-core/weft'
+import { untrack } from '@weft-js/core'
+import { sideNavState } from './SideNav/state'
+import { SideNavLead, SideNavSections } from './SideNav/sections'
 import './styles'
 import '@weft-js/warp-core/styles/components/button.css' // the close button, without a bar
 import '@weft-js/warp-core/styles/layout/navlist.css'
@@ -59,83 +50,23 @@ export interface SideNavProps {
  * navigates as usual.
  */
 export function SideNav(props: SideNavProps) {
-  const id = untrack(() => props.id) ?? uid('sidenav')
-  const chosen = state<Folds>({})
-  const query = state('')
-  const open = state(false)
-  const collapsible = untrack(() => props.collapsible) !== false
-  const collapsed = state(false)
-  let root: HTMLElement | undefined
-  let list: HTMLElement | undefined
-
-  const key = () =>
-    props.remember === false ? undefined : (props.remember ?? `warp:sidenav:${props.label}`)
-  const holds = (s: SideNavSection) => s.items.some((i) => i.href === props.current)
-  const words = derived(() => query.value.trim().toLowerCase())
-  const shown = derived(() =>
-    props.sections
-      .map((section, n) => ({
-        section,
-        n,
-        items: words.value
-          ? section.items.filter((i) => i.label.toLowerCase().includes(words.value))
-          : section.items,
-      }))
-      .filter((x) => x.items.length > 0),
-  )
-  const unfolded = (s: SideNavSection) =>
-    words.value !== '' || !!s.pinned || (chosen.value[s.title] ?? holds(s))
-  const toggle = (s: SideNavSection) => {
-    chosen.value = { ...chosen.value, [s.title]: !unfolded(s) }
-    const k = key()
-    if (k) writeFolds(k, chosen.value)
-  }
-  // Arriving on a page opens its section, whatever was remembered, so the current link is never folded away.
-  const reveal = () => {
-    const s = props.sections.find(holds)
-    if (s && chosen.value[s.title] === false) chosen.value = { ...chosen.value, [s.title]: true }
-  }
-  const fold = (v: boolean) => {
-    collapsed.value = v
-    const k = key()
-    if (k) writeCollapsed(`${k}:collapsed`, v)
-  }
-  onMount(() => {
-    const k = key()
-    if (k) chosen.value = readFolds(k)
-    if (k && collapsible) collapsed.value = readCollapsed(`${k}:collapsed`)
-    reveal()
-  })
-  watch(
-    () => props.current,
-    () => {
-      reveal()
-      open.value = false
-    },
-  )
-  use(
-    sideNav,
-    () => root,
-    () => ({
-      current: props.current,
-      open: open.value,
-      onOpenChange: (v: boolean) => (open.value = v),
-      collapsed: collapsed.value,
-      onCollapsedChange: fold,
-    }),
-  )
-  // warp's sliding bar, as Nav and the on-page rail have it: it follows the pointer and keyboard, and slides to a new page.
-  use(
-    navIndicator,
-    () => list,
-    () => ({ axis: 'y' as const }),
-  )
-
-  const filterText = () =>
-    typeof props.filter === 'string' ? props.filter : `Filter ${props.label.toLowerCase()}`
+  const {
+    id,
+    query,
+    open,
+    collapsible,
+    collapsed,
+    refs,
+    words,
+    shown,
+    holds,
+    unfolded,
+    toggle,
+    filterText,
+  } = sideNavState(untrack(() => props))
   return (
     <div
-      ref={(n) => (root = n)}
+      ref={(n) => (refs.root = n)}
       data-scope="sidenav"
       data-open={open.value ? '' : undefined}
       data-collapsible={collapsible ? '' : undefined}
@@ -163,23 +94,7 @@ export function SideNav(props: SideNavProps) {
           )}
         </div>
         <div data-part="scroll">
-          {props.lead && props.lead.length > 0 && (
-            <div data-part="lead" data-scope="navlist">
-              <ul>
-                {props.lead.map((i) => (
-                  <li key={i.href}>
-                    <a
-                      data-part="item"
-                      href={i.href}
-                      aria-current={props.current?.startsWith(i.href) ? 'true' : undefined}
-                    >
-                      {i.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {props.lead && props.lead.length > 0 && <SideNavLead props={props} />}
           {props.filter && (
             <input
               type="search"
@@ -190,45 +105,15 @@ export function SideNav(props: SideNavProps) {
               onInput={(e: Event) => (query.value = (e.currentTarget as HTMLInputElement).value)}
             />
           )}
-          <nav ref={(n) => (list = n)} data-scope="navlist" data-bar="" aria-label={props.label}>
-            <ul data-part="sections">
-              {shown.value.map((x) => (
-                <li key={x.section.title} data-current={holds(x.section) ? '' : undefined}>
-                  {x.section.pinned ? (
-                    <p data-part="group-label">{x.section.title}</p>
-                  ) : (
-                    <button
-                      type="button"
-                      data-part="item"
-                      data-fold=""
-                      aria-expanded={unfolded(x.section) ? 'true' : 'false'}
-                      aria-controls={`${id}-${x.n}`}
-                      onClick={() => toggle(x.section)}
-                    >
-                      <span data-part="fold-label">{x.section.title}</span>
-                      <span data-part="chevron" aria-hidden="true">
-                        <RightIcon />
-                      </span>
-                    </button>
-                  )}
-                  <ul id={`${id}-${x.n}`} hidden={!unfolded(x.section)}>
-                    {x.items.map((i) => (
-                      <li key={i.href}>
-                        <a
-                          data-part="item"
-                          href={i.href}
-                          aria-current={i.href === props.current ? 'page' : undefined}
-                        >
-                          {i.label}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-            <span data-part="indicator" aria-hidden="true"></span>
-          </nav>
+          <SideNavSections
+            props={props}
+            id={id}
+            refs={refs}
+            shown={shown}
+            holds={holds}
+            unfolded={unfolded}
+            toggle={toggle}
+          />
           {words.value !== '' && shown.value.length === 0 && (
             <p data-part="empty">No pages match “{query.value.trim()}”.</p>
           )}
