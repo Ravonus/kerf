@@ -42,6 +42,58 @@ const faqs = [
   ],
 ]
 
+function planGrid() {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gap: 3,
+        gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+        alignItems: 'stretch',
+      }}
+    >
+      {plans.map((p) => (
+        <Paper
+          key={p.name}
+          variant="outlined"
+          sx={{
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            borderWidth: p.featured ? 2 : 1,
+            borderColor: p.featured ? 'primary.main' : 'divider',
+            boxShadow: p.featured ? 6 : 0,
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="h2" component="h2" sx={{ fontSize: '1.5rem' }}>
+              {p.name}
+            </Typography>
+            {p.featured && <Chip label="Most popular" color="primary" size="small" />}
+          </Stack>
+          <Typography color="text.secondary">{p.blurb}</Typography>
+          <Typography sx={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>
+            {p.price}
+            <Typography component="span" color="text.secondary">
+              {' '}
+              /month
+            </Typography>
+          </Typography>
+          <Box component="ul" sx={{ m: 0, pl: 2.5, flexGrow: 1, '& li': { py: 0.5 } }}>
+            {p.features.map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+          </Box>
+          <Button variant={p.featured ? 'contained' : 'outlined'} size="large" fullWidth>
+            {p.cta}
+          </Button>
+        </Paper>
+      ))}
+    </Box>
+  )
+}
+
 export function Pricing() {
   return (
     <Stack spacing={{ xs: 6, md: 8 }}>
@@ -63,53 +115,7 @@ export function Pricing() {
         </Button>
       </Box>
 
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 3,
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-          alignItems: 'stretch',
-        }}
-      >
-        {plans.map((p) => (
-          <Paper
-            key={p.name}
-            variant="outlined"
-            sx={{
-              p: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              borderWidth: p.featured ? 2 : 1,
-              borderColor: p.featured ? 'primary.main' : 'divider',
-              boxShadow: p.featured ? 6 : 0,
-            }}
-          >
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography variant="h2" component="h2" sx={{ fontSize: '1.5rem' }}>
-                {p.name}
-              </Typography>
-              {p.featured && <Chip label="Most popular" color="primary" size="small" />}
-            </Stack>
-            <Typography color="text.secondary">{p.blurb}</Typography>
-            <Typography sx={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>
-              {p.price}
-              <Typography component="span" color="text.secondary">
-                {' '}
-                /month
-              </Typography>
-            </Typography>
-            <Box component="ul" sx={{ m: 0, pl: 2.5, flexGrow: 1, '& li': { py: 0.5 } }}>
-              {p.features.map((f) => (
-                <li key={f}>{f}</li>
-              ))}
-            </Box>
-            <Button variant={p.featured ? 'contained' : 'outlined'} size="large" fullWidth>
-              {p.cta}
-            </Button>
-          </Paper>
-        ))}
-      </Box>
+      {planGrid()}
 
       <Box component="section" sx={{ maxWidth: 800, mx: 'auto', width: '100%' }}>
         <Typography variant="h2" component="h2" sx={{ mb: 3 }}>

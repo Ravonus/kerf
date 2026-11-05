@@ -37,6 +37,40 @@ const seed: [string, string, string, Status][] = [
 
 const statusColor = { Active: 'success', Trial: 'info', 'Past due': 'warning' } as const
 
+function customerRows(rows: Customer[], setTarget: (customer: Customer | null) => void) {
+  return (
+    <TableBody>
+      {rows.map((c) => (
+        <TableRow key={c.id} hover>
+          <TableCell sx={{ fontWeight: 600 }}>{c.name}</TableCell>
+          <TableCell>{c.email}</TableCell>
+          <TableCell>{c.plan}</TableCell>
+          <TableCell>
+            <Chip size="small" label={c.status} color={statusColor[c.status]} variant="outlined" />
+          </TableCell>
+          <TableCell align="right">
+            <Button
+              size="small"
+              color="error"
+              aria-label={`Delete ${c.name}`}
+              onClick={() => setTarget(c)}
+            >
+              Delete
+            </Button>
+          </TableCell>
+        </TableRow>
+      ))}
+      {rows.length === 0 && (
+        <TableRow>
+          <TableCell colSpan={5} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+            No customers found
+          </TableCell>
+        </TableRow>
+      )}
+    </TableBody>
+  )
+}
+
 export function Customers() {
   const [customers, setCustomers] = useState<Customer[]>(
     seed.map(([name, email, plan, status], id) => ({ id, name, email, plan, status })),
@@ -82,40 +116,7 @@ export function Customers() {
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {rows.map((c) => (
-                <TableRow key={c.id} hover>
-                  <TableCell sx={{ fontWeight: 600 }}>{c.name}</TableCell>
-                  <TableCell>{c.email}</TableCell>
-                  <TableCell>{c.plan}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={c.status}
-                      color={statusColor[c.status]}
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Button
-                      size="small"
-                      color="error"
-                      aria-label={`Delete ${c.name}`}
-                      onClick={() => setTarget(c)}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                    No customers found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
+            {customerRows(rows, setTarget)}
           </Table>
         </TableContainer>
       </Paper>
