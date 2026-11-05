@@ -20,7 +20,8 @@ export function Settings() {
     if (to < 0) return
     e.preventDefault()
     at.value = to
-    list?.querySelectorAll<HTMLElement>('[role="tab"]')[to]?.focus()
+    const tabs = list?.querySelectorAll<HTMLElement>('[role="tab"]')
+    tabs?.[to]?.focus()
   }
 
   return (
