@@ -117,7 +117,7 @@ export function presence<S = undefined>(conn: Conn, options: PresenceOptions<S> 
   const signals = new Set<(from: string, data: unknown) => void>()
   const linked = state<PeerLink | undefined>(undefined)
 
-  listenPresence({ conn, self, ticket, list, heard, signals, own, hello })
+  listenPresence(conn, self, ticket, list, heard, signals, own, hello)
 
   // Open, or moved to another room: everything held is about the last one.
   effect(
@@ -162,7 +162,7 @@ export function presence<S = undefined>(conn: Conn, options: PresenceOptions<S> 
     })
   }
 
-  if (transport) openTransport({ transport, self, ticket, ids, linked, conn, signals, heard })
+  if (transport) openTransport(transport, self, ticket, ids, linked, conn, signals, heard)
 
   return {
     peers: list,

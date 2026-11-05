@@ -3,27 +3,16 @@ import type { CursorAt, Peer, PeerLink, PeerTransport } from '../index'
 import { applyPeer, readCursor } from './peer'
 import { hear, silent, type Conn } from './shared'
 
-type ListenerArgs<S> = {
-  conn: Conn
-  self: State<string | undefined>
-  ticket: State<unknown>
-  list: State<Peer<S>[]>
-  heard: Set<(id: string, at: CursorAt | null) => void>
-  signals: Set<(from: string, data: unknown) => void>
-  own: () => S | null
-  hello: () => void
-}
-
-export function listenPresence<S>({
-  conn,
-  self,
-  ticket,
-  list,
-  heard,
-  signals,
-  own,
-  hello,
-}: ListenerArgs<S>) {
+export function listenPresence<S>(
+  conn: Conn,
+  self: State<string | undefined>,
+  ticket: State<unknown>,
+  list: State<Peer<S>[]>,
+  heard: Set<(id: string, at: CursorAt | null) => void>,
+  signals: Set<(from: string, data: unknown) => void>,
+  own: () => S | null,
+  hello: () => void,
+) {
   hear(conn, 'mp.you', ({ id, ticket: t }: { id: string; ticket?: unknown }) => {
     self.value = id
     ticket.value = t
@@ -55,27 +44,16 @@ export function listenPresence<S>({
   })
 }
 
-type TransportArgs = {
-  transport: PeerTransport
-  self: State<string | undefined>
-  ticket: State<unknown>
-  ids: Derived<string[]>
-  linked: State<PeerLink | undefined>
-  conn: Conn
-  signals: Set<(from: string, data: unknown) => void>
-  heard: Set<(id: string, at: CursorAt | null) => void>
-}
-
-export function openTransport({
-  transport,
-  self,
-  ticket,
-  ids,
-  linked,
-  conn,
-  signals,
-  heard,
-}: TransportArgs) {
+export function openTransport(
+  transport: PeerTransport,
+  self: State<string | undefined>,
+  ticket: State<unknown>,
+  ids: Derived<string[]>,
+  linked: State<PeerLink | undefined>,
+  conn: Conn,
+  signals: Set<(from: string, data: unknown) => void>,
+  heard: Set<(id: string, at: CursorAt | null) => void>,
+) {
   let link: PeerLink | undefined
   effect(
     () => [self.value, ticket.value] as const,

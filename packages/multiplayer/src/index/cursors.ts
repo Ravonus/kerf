@@ -96,7 +96,7 @@ export function cursors<S>(room: Presence<S>, options: CursorOptions = {}): Curs
     raw.value = at ? { ...rest, [id]: { at, moved: Date.now() } } : rest
   })
 
-  onMount(() => mountCursor({ root, gap, anchor, style, send, layout, clock }))
+  onMount(() => mountCursor(root, gap, anchor, style, send, layout, clock))
 
   const list = derived(() => {
     void layout.value
@@ -120,17 +120,15 @@ export function cursors<S>(room: Presence<S>, options: CursorOptions = {}): Curs
   return { list, anchor }
 }
 
-type MountCursor = {
-  root: (() => HTMLElement | Document) | undefined
-  gap: number
-  anchor: string
-  style: string | undefined
-  send: (at: CursorAt | null) => void
-  layout: State<number>
-  clock: State<number>
-}
-
-function mountCursor({ root, gap, anchor, style, send, layout, clock }: MountCursor) {
+function mountCursor(
+  root: (() => HTMLElement | Document) | undefined,
+  gap: number,
+  anchor: string,
+  style: string | undefined,
+  send: (at: CursorAt | null) => void,
+  layout: State<number>,
+  clock: State<number>,
+) {
   if (isServer()) return
   const host = root?.() ?? document
   let last = 0,
