@@ -7,23 +7,12 @@ const CARDS_BELOW = 480
 const isState = (r: object | null | undefined): r is State<unknown> =>
   r != null && !Array.isArray(r) && 'value' in r
 
-type BaseInput<T> = {
-  heading: () => number
-  columns: () => Column<T>[]
-  rowKey: () => string | ((row: T) => string)
-  query: () => TableProps<T>['query']
-  sort: () => TableProps<T>['sort']
-  selection: () => TableProps<T>['selection']
-  hiddenColumns: () => TableProps<T>['hiddenColumns']
-  phone: () => NonNullable<TableProps<T>['phone']>
-}
-
 /** Initialize the table's per-instance state. */
-export function tableBase<T>(input: BaseInput<T>) {
-  const { heading, columns, rowKey, query, sort, selection, hiddenColumns, phone } = input
+export function tableBase<T>(input: TableProps<T>) {
+  const rowKey = () => (input.rowKey === undefined ? 'id' : input.rowKey)
   const id = uid('tbl')
-  const level = untrack(heading)
-  const cols = derived(columns)
+  const level = untrack(() => (input.heading === undefined ? 2 : input.heading))
+  const cols = derived(() => input.columns)
   const keyOf = (r: T) =>
     String(
       typeof rowKey() === 'function'
@@ -35,12 +24,12 @@ export function tableBase<T>(input: BaseInput<T>) {
   const title = (r: T) =>
     String((read(named.value!, r) as string | number | null | undefined) ?? '')
 
-  const typed = untrack(query) ?? state('')
-  const order = untrack(sort) ?? state<TableSort | undefined>(undefined)
-  const given = untrack(selection)
+  const typed = untrack(() => input.query) ?? state('')
+  const order = untrack(() => input.sort) ?? state<TableSort | undefined>(undefined)
+  const given = untrack(() => input.selection)
   const sel = given ? (given === true ? state<Record<string, boolean>>({}) : given) : undefined
   const open = state<Record<string, boolean>>({})
-  const startHidden = untrack(hiddenColumns)
+  const startHidden = untrack(() => input.hiddenColumns)
   const hidden: State<readonly string[]> = isState(startHidden)
     ? startHidden
     : state<readonly string[]>(startHidden ?? [])
@@ -51,7 +40,12 @@ export function tableBase<T>(input: BaseInput<T>) {
   const picked = state(false)
   const width = state<number | undefined>(undefined)
   const shape = derived(() =>
-    phone() === 'cards' && (width.value ?? 0) >= CARDS_BELOW ? 'columns' : phone(),
+    (input.phone === undefined ? 'cards' : input.phone) === 'cards' &&
+    (width.value ?? 0) >= CARDS_BELOW
+      ? 'columns'
+      : input.phone === undefined
+        ? 'cards'
+        : input.phone,
   )
 
   return {

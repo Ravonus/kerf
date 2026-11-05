@@ -15,9 +15,8 @@ type DetailInput<T> = {
   pick: (key: string, event: MouseEvent) => void
   sheet: State<{ row: T; from: HTMLElement } | undefined>
   columns: () => Column<T>[]
-  expand: () => TableProps<T>['expand']
+  props: TableProps<T>
   details: () => TableProps<T>['details']
-  onEdit: () => TableProps<T>['onEdit']
   element: () => HTMLElement | undefined
 }
 
@@ -35,12 +34,11 @@ export function tableDetails<T>(input: DetailInput<T>) {
     pick,
     sheet,
     columns,
-    expand,
+    props,
     details,
-    onEdit,
     element,
   } = input
-  const hasDetails = untrack(() => expand() !== undefined || columns().some((c) => c.priority))
+  const hasDetails = untrack(() => props.expand !== undefined || columns().some((c) => c.priority))
   const toggle = (row: T, from: HTMLElement) => {
     if (details() === 'sheet' && (element()?.clientWidth ?? 1000) < 1000) {
       sheet.value = { row, from }
@@ -71,8 +69,8 @@ export function tableDetails<T>(input: DetailInput<T>) {
     pick,
     toggle,
     span: () => cols.value.length + (sel ? 1 : 0) + (hasDetails ? 1 : 0),
-    body: (row) => (expand() ? expand()!(row) : <Fields row={row} ctx={ctx} />),
-    edit: (r, c, v) => onEdit()?.(r, c, v),
+    body: (row) => (props.expand ? props.expand(row) : <Fields row={row} ctx={ctx} />),
+    edit: (r, c, v) => props.onEdit?.(r, c, v),
   }
 
   return { ctx, hasDetails, closeSheet }

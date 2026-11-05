@@ -14,7 +14,12 @@ import type { CheckoutProps, CheckoutStep, Coupon } from './Checkout-types'
 import { WIDE } from './Checkout-steps'
 
 /** Live access to checkout props. */
-export type CheckoutInput = { [K in keyof CheckoutProps]-?: () => CheckoutProps[K] }
+export type CheckoutInput = {
+  [K in Exclude<keyof CheckoutProps, 'onStepChange' | 'onPlaceOrder'>]-?: () => CheckoutProps[K]
+} & {
+  onStepChange: (step: CheckoutStep) => void
+  onPlaceOrder: CheckoutProps['onPlaceOrder']
+}
 
 /** Create checkout state under the caller's owner. */
 export function checkoutState(input: CheckoutInput) {

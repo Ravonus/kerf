@@ -1,11 +1,12 @@
 // Bulk actions and page navigation in a table.
+import type { TableProps } from './Table-types'
 import { Button } from './Button'
 
 /** Render actions for the current selection. */
 export function tableBulk(ctx: {
   chosen: () => string[]
   write: (next: Record<string, boolean>) => void
-  bulk: () => ((keys: string[]) => unknown) | undefined
+  props: Pick<TableProps<unknown>, 'bulk'>
 }) {
   return (
     <div
@@ -15,7 +16,7 @@ export function tableBulk(ctx: {
       aria-label="Bulk actions"
     >
       <b>{ctx.chosen().length} selected</b>
-      {ctx.bulk()?.(ctx.chosen())}
+      {ctx.props.bulk?.(ctx.chosen())}
       <Button emphasis="ghost" onClick={() => ctx.write({})}>
         Clear
       </Button>

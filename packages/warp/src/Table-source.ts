@@ -10,10 +10,7 @@ const isState = (r: object | null | undefined): r is State<unknown> =>
 
 /** Create the table's derived row and status views. */
 export function tableSource<T>(
-  rows: () => TableProps<T>['rows'],
-  server: () => boolean | undefined,
-  page: () => TableProps<T>['page'],
-  status: () => TableStatus | undefined,
+  props: TableProps<T>,
   cols: { readonly value: Column<T>[] },
   typed: State<string>,
   order: State<TableSort | undefined>,
@@ -21,12 +18,12 @@ export function tableSource<T>(
   read: (column: Column<T>, row: T) => unknown,
 ) {
   const source = () =>
-    (isResource(rows())
-      ? (rows() as Resource<unknown>).value
-      : isState(rows())
-        ? (rows() as State<unknown>).value
-        : rows()) as readonly T[] | ListPage<T> | undefined
-  const remote = derived(() => !!server() || isResource(rows()))
+    (isResource(props.rows)
+      ? (props.rows as Resource<unknown>).value
+      : isState(props.rows)
+        ? (props.rows as State<unknown>).value
+        : props.rows) as readonly T[] | ListPage<T> | undefined
+  const remote = derived(() => !!props.server || isResource(props.rows))
   const list = derived<readonly T[]>(() => {
     const v = source()
     return Array.isArray(v) ? (v as readonly T[]) : ((v as ListPage<T> | undefined)?.items ?? [])
@@ -45,13 +42,13 @@ export function tableSource<T>(
     return sortRows(found, typeof by.sort === 'function' ? by.sort : (r) => read(by, r), s.dir)
   })
   const paged = derived(() => {
-    const size = page()?.size
+    const size = props.page?.size
     return size && !remote.value ? pageSlice(shown.value, at.value, size) : undefined
   })
   const visible = derived(() => paged.value?.rows ?? shown.value)
   const phase = derived<TableStatus>(() => {
-    if (status()) return status()!
-    const r = rows()
+    if (props.status) return props.status
+    const r = props.rows
     if (isResource(r)) {
       if (r.error) return 'error'
       if (r.value === undefined) return 'loading'

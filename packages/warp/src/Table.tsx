@@ -1,3 +1,4 @@
+import { untrack } from '@weft-js/core'
 import type { TableProps } from './Table-types'
 import { tableModel } from './Table-model'
 import { tableView } from './Table-view'
@@ -22,68 +23,6 @@ export { columnsIcon } from './Table-toolbar'
  * value patches a cell. Given `T[]` it sorts, filters and pages by itself; a Resource or `server` leaves that to the
  * server and reports what was asked. Queries its own width, never the window.
  */
-export function Table<T>({
-  rows,
-  caption,
-  captionHidden,
-  columns,
-  rowKey = 'id',
-  phone = 'cards',
-  density,
-  filter,
-  query,
-  sort,
-  onSortChange,
-  server,
-  selection,
-  onSelectionChange,
-  bulk,
-  page,
-  onPageChange,
-  expand,
-  details = 'inline',
-  onEdit,
-  actions,
-  picker = true,
-  hiddenColumns,
-  status,
-  empty,
-  error,
-  onRetry,
-  maxHeight,
-  heading = 2,
-}: TableProps<T>) {
-  return tableView(
-    tableModel({
-      rows: () => rows,
-      caption: () => caption,
-      captionHidden: () => captionHidden,
-      columns: () => columns,
-      rowKey: () => rowKey,
-      phone: () => phone,
-      density: () => density,
-      filter: () => filter,
-      query: () => query,
-      sort: () => sort,
-      onSortChange: () => onSortChange,
-      server: () => server,
-      selection: () => selection,
-      onSelectionChange: () => onSelectionChange,
-      bulk: () => bulk,
-      page: () => page,
-      onPageChange: () => onPageChange,
-      expand: () => expand,
-      details: () => details,
-      onEdit: () => onEdit,
-      actions: () => actions,
-      picker: () => picker,
-      hiddenColumns: () => hiddenColumns,
-      status: () => status,
-      empty: () => empty,
-      error: () => error,
-      onRetry: () => onRetry,
-      maxHeight: () => maxHeight,
-      heading: () => heading,
-    }),
-  )
+export function Table<T>(props: TableProps<T>) {
+  return tableView(tableModel(untrack(() => props)))
 }
