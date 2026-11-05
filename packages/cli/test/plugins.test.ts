@@ -56,7 +56,8 @@ ${extra}
 export default defineConfig({ plugins: [${order.map((n) => `all.${n}`).join(', ')}] })
 `
 
-const codes = (r) => r.diagnostics.map((d) => d.code)
+const codes = (r: { diagnostics: object[] }) =>
+  r.diagnostics.map((d) => (d as { code: string }).code)
 
 function registerPluginListing() {
   it('lists plugins sorted by name, with the slots they provide and bind', async () => {
@@ -80,8 +81,8 @@ function registerPluginListing() {
       diagnostics: ['D010'],
       agents: 'kit',
     })
-    expect(r.slots['font.build']).toBe('@acme/plugin-fonts')
-    expect(r.slots['surface.renderer']).toEqual({
+    expect((r.slots as Record<string, unknown>)['font.build']).toBe('@acme/plugin-fonts')
+    expect((r.slots as Record<string, unknown>)['surface.renderer']).toEqual({
       canvas2d: 'weft:default',
       pixel: '@acme/plugin-fonts',
       webgl2: 'weft:default',
@@ -114,8 +115,8 @@ function registerPluginGeneration() {
     await check(a)
     expect(
       await main(['plugins', 'sync', '--root', b], {
-        stdout: { write() {} },
-        stderr: { write() {} },
+        stdout: { write() {} } as unknown as typeof process.stdout,
+        stderr: { write() {} } as unknown as typeof process.stderr,
       }),
     ).toBe(0)
     const files = ['font.build', 'text.measure', 'surface.renderer', 'realtime.bus']
@@ -164,7 +165,7 @@ function registerPluginDiagnostics() {
     const dir = project({ 'weft.config.ts': config({ extra: 'fonts({ subset: 1 as any })' }) })
     const r = await loadConfig(dir)
     expect(codes(r)).toEqual(['P115'])
-    expect(r.diagnostics[0].why).toContain('subset')
+    expect((r.diagnostics[0] as { why: string }).why).toContain('subset')
   })
 
   it('P112 (AGENTS section over 1 KB), P111 (code outside the namespace), P117 (impure contribute)', async () => {
