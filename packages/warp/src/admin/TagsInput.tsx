@@ -43,8 +43,8 @@ export function TagsInput({
     draft,
     armed,
     refs,
-    () => onEdit,
-    () => onSubmit,
+    () => onEdit?.(),
+    () => onSubmit?.(),
   )
   const last = derived(() => value.value[value.value.length - 1])
   return (

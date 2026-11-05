@@ -68,10 +68,11 @@ export function SaveBar<T extends Record<string, unknown>>({
   const { save, discard, leave } = saveActions(
     { box, base, phase, fixes, leaving, dirty, refs },
     () => errors,
-    () => validate,
-    () => onSave,
-    () => onDiscard,
+    (now) => validate?.(now),
+    (now) => onSave(now),
+    () => onDiscard?.(),
     () => onLeave,
+    () => onLeave!(refs.target),
   )
   bindSaveBar(refs, dirty, leaving, save)
   return (
