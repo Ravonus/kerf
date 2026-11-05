@@ -392,69 +392,9 @@ describe('weft deploy init', () => {
 describe('weft deploy', () => {
   const which = (cmd) => cmd === 'netlify' || cmd === 'flyctl'
 
-  it('without --yes runs nothing, and says what it would', async () => {
-    let ran = false
-    const r = await deployCommand(
-      app(),
-      { deploy: { target: 'netlify', netlify: { site: 'shop' } } },
-      {
-        which,
-        env: {},
-        build: () => {
-          ran = true
-        },
-        exec: () => {
-          ran = true
-        },
-      },
-    )
-    expect(ran).toBe(false)
-    expect(r.dryRun).toBe(true)
-    expect(r.steps.map((s) => s.what)).toEqual([
-      'weft build --preset netlify',
-      'netlify deploy --dir dist --functions .netlify/functions-internal --json --site shop',
-    ])
-    expect(r.steps[1].reads).toEqual(['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'])
-  })
+  registerDryDeploy(which)
 
-  it('--yes builds for the target, runs the host CLI and reports the URL', async () => {
-    const calls = []
-    const r = await deployCommand(
-      app(),
-      { deploy: { target: 'netlify' } },
-      {
-        yes: true,
-        prod: true,
-        which,
-        env: { NETLIFY_AUTH_TOKEN: 't', NETLIFY_SITE_ID: 's' },
-        build: (_, o) =>
-          Promise.resolve((calls.push(['build', o.preset]), { ok: true, diagnostics: [] })),
-        exec: (cmd, args) =>
-          Promise.resolve(
-            (calls.push([cmd, ...args]),
-            {
-              code: 0,
-              stdout:
-                'Deploying…\n{ "deploy_url": "https://x--shop.netlify.app", "url": "https://shop.netlify.app" }',
-            }),
-          ),
-      },
-    )
-    expect(calls).toEqual([
-      ['build', 'netlify'],
-      [
-        'netlify',
-        'deploy',
-        '--dir',
-        'dist',
-        '--functions',
-        '.netlify/functions-internal',
-        '--json',
-        '--prod',
-      ],
-    ])
-    expect(r.url).toBe('https://shop.netlify.app')
-  })
+  registerProductionDeploy(which)
 
   it("refuses a host that can't run the app before it builds, and names the way past", async () => {
     await expect(
@@ -466,26 +406,7 @@ describe('weft deploy', () => {
     })
   })
 
-  it('E007 in CI: a token the CLI would otherwise take from its login', async () => {
-    await expect(
-      deployCommand(
-        app(),
-        { deploy: { target: 'netlify', netlify: { site: 's' } } },
-        {
-          yes: true,
-          which,
-          env: { CI: '1' },
-          build: () => Promise.resolve({ ok: true, diagnostics: [] }),
-        },
-      ),
-    ).rejects.toThrow(/E007: `NETLIFY_AUTH_TOKEN` is unset/)
-    const local = await deployCommand(
-      app(),
-      { deploy: { target: 'netlify', netlify: { site: 's' } } },
-      { which, env: {} },
-    )
-    expect(local.diagnostics.map((d) => [d.code, d.severity])).toEqual([['E007', 'warning']])
-  })
+  registerCiTokenChecks(which)
 
   it('a server host deploys production only, one machine for the memory bus, and the URL from the app', async () => {
     const dir = app(CHAT)
@@ -533,3 +454,94 @@ describe('weft deploy', () => {
     )
   })
 })
+
+function registerProductionDeploy(which) {
+  it('--yes builds for the target, runs the host CLI and reports the URL', async () => {
+    const calls = []
+    const r = await deployCommand(
+      app(),
+      { deploy: { target: 'netlify' } },
+      {
+        yes: true,
+        prod: true,
+        which,
+        env: { NETLIFY_AUTH_TOKEN: 't', NETLIFY_SITE_ID: 's' },
+        build: (_, o) =>
+          Promise.resolve((calls.push(['build', o.preset]), { ok: true, diagnostics: [] })),
+        exec: (cmd, args) =>
+          Promise.resolve(
+            (calls.push([cmd, ...args]),
+            {
+              code: 0,
+              stdout:
+                'Deploying…\n{ "deploy_url": "https://x--shop.netlify.app", "url": "https://shop.netlify.app" }',
+            }),
+          ),
+      },
+    )
+    expect(calls).toEqual([
+      ['build', 'netlify'],
+      [
+        'netlify',
+        'deploy',
+        '--dir',
+        'dist',
+        '--functions',
+        '.netlify/functions-internal',
+        '--json',
+        '--prod',
+      ],
+    ])
+    expect(r.url).toBe('https://shop.netlify.app')
+  })
+}
+
+function registerDryDeploy(which) {
+  it('without --yes runs nothing, and says what it would', async () => {
+    let ran = false
+    const r = await deployCommand(
+      app(),
+      { deploy: { target: 'netlify', netlify: { site: 'shop' } } },
+      {
+        which,
+        env: {},
+        build: () => {
+          ran = true
+        },
+        exec: () => {
+          ran = true
+        },
+      },
+    )
+    expect(ran).toBe(false)
+    expect(r.dryRun).toBe(true)
+    expect(r.steps.map((s) => s.what)).toEqual([
+      'weft build --preset netlify',
+      'netlify deploy --dir dist --functions .netlify/functions-internal --json --site shop',
+    ])
+    expect(r.steps[1].reads).toEqual(['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'])
+  })
+}
+
+function registerCiTokenChecks(which) {
+  it('E007 in CI: a token the CLI would otherwise take from its login', async () => {
+    await expect(
+      deployCommand(
+        app(),
+        { deploy: { target: 'netlify', netlify: { site: 's' } } },
+        {
+          yes: true,
+          which,
+          env: { CI: '1' },
+          build: () => Promise.resolve({ ok: true, diagnostics: [] }),
+        },
+      ),
+    ).rejects.toThrow(/E007: `NETLIFY_AUTH_TOKEN` is unset/)
+    const local = await deployCommand(
+      app(),
+      { deploy: { target: 'netlify', netlify: { site: 's' } } },
+      { which, env: {} },
+    )
+    expect(local.diagnostics.map((d) => [d.code, d.severity])).toEqual([['E007', 'warning']])
+  })
+}

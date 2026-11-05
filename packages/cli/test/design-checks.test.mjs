@@ -97,76 +97,7 @@ describe('D012 reads the policy a browser would apply', () => {
     'src/headers.tsx': `export const h = { 'Content-Security-Policy': "${policy}" }\n`,
   })
 
-  test.each([
-    ['style-src alone', "style-src 'self'", ['error']],
-    ['default-src as the fallback', "default-src 'self'", ['error']],
-    [
-      'unsafe-inline only for attributes',
-      "style-src 'self'; style-src-attr 'unsafe-inline'",
-      ['error'],
-    ],
-    [
-      'a nonce beside unsafe-inline',
-      "style-src 'unsafe-inline' 'nonce-abc'; script-src-attr 'unsafe-inline'",
-      ['error'],
-    ],
-    [
-      'a hash beside unsafe-inline',
-      "style-src 'unsafe-inline' 'sha256-abc'; script-src-attr 'unsafe-inline'",
-      ['error'],
-    ],
-    [
-      'elements allowed by their own directive',
-      "style-src 'self'; style-src-elem 'unsafe-inline'; script-src-attr 'unsafe-inline'",
-      [],
-    ],
-    ['handlers only: the page has none', "style-src 'unsafe-inline'; script-src-attr 'none'", []],
-    [
-      'script-src as the fallback for inline scripts',
-      "style-src 'unsafe-inline'; script-src 'self'",
-      ['warning'],
-    ],
-    [
-      'script-src-elem before script-src',
-      "style-src 'unsafe-inline'; script-src 'unsafe-inline'; script-src-elem 'self'",
-      ['warning'],
-    ],
-    [
-      'default-src as the fallback for inline scripts',
-      "default-src 'self'; style-src 'unsafe-inline'",
-      ['warning'],
-    ],
-    [
-      'a host the entry may come from',
-      "style-src 'unsafe-inline'; script-src https://cdn.example.com",
-      ['warning'],
-    ],
-    [
-      'no script at all, so nothing switches the sheets on',
-      "style-src 'unsafe-inline'; script-src 'none'",
-      ['error'],
-    ],
-    [
-      "a nonce weft doesn't put on its scripts",
-      "style-src 'unsafe-inline'; script-src 'nonce-abc' 'strict-dynamic'",
-      ['error'],
-    ],
-    [
-      "strict-dynamic ignores the 'self' beside it",
-      "style-src 'unsafe-inline'; script-src 'nonce-a' 'strict-dynamic' 'self'",
-      ['error'],
-    ],
-    [
-      'inline scripts alone still switch the sheets on',
-      "style-src 'unsafe-inline'; script-src 'unsafe-inline'",
-      [],
-    ],
-    ['a default that allows inline scripts', "default-src 'unsafe-inline'", []],
-    ['everything allowed', "style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'", []],
-    ['a policy on neither', "img-src 'self'", []],
-  ])('%s', async (_, policy, want) => {
-    expect(await found(in_(policy))).toEqual(want)
-  })
+  registerPolicyCases(found, in_)
 
   test('a report-only policy blocks nothing', async () => {
     expect(
@@ -219,24 +150,7 @@ describe('role drift', () => {
     expect(rest).toEqual([])
     expect(apply(root, d)).toContain('<Heading role="display" level={1}>C</Heading>')
   })
-  test('D006 h2 is the default level, a bare heading beside Heading is swapped, and the import follows', async () => {
-    const { root, result } = await app({
-      'src/A.tsx': `${IMPORT}export const A = () => <><Heading>A</Heading><Heading role="title">B</Heading></>`,
-      'src/B.tsx': `export const B = () => <h3>C</h3>`,
-      'src/C.tsx': `${IMPORT}export const C = () => <Heading level={3}>D</Heading>`,
-    })
-    const ds = result.diagnostics.filter((d) => d.code === 'D006')
-    expect(ds.map((d) => d.file).sort((a, b) => a.localeCompare(b))).toEqual([
-      'src/A.tsx',
-      'src/B.tsx',
-    ])
-    const fixed = apply(
-      root,
-      ds.find((d) => d.file === 'src/B.tsx'),
-    )
-    expect(fixed).toContain('<Heading level={3}>C</Heading>')
-    expect(fixed).toContain(`import { Heading } from '@weft-js/warp'`)
-  })
+  registerDefaultHeadingRole()
   test('D006 leaves one role per level, a hidden role, and an allowed exception alone', async () => {
     const { result } = await app({
       'src/A.tsx': `${IMPORT}export const A = ({ r, n }) => <><Heading level={1}>A</Heading><Heading level={1} role={r}>B</Heading><Heading level={n} role="label">C</Heading></>`,
@@ -305,30 +219,12 @@ describe('values (an app with warp)', () => {
     expect(apply(root, d)).toContain(`padding: 'var(--warp-space-group)'`)
     expect(codes(await check(root, { files: ['src/Page.tsx'] }))).toEqual([])
   })
-  test('D002 a number and a shorthand', async () => {
-    const { root, result } = await run(
-      `export const P = () => <p style={{ gap: 8, margin: '4px 16px' }}>x</p>`,
-    )
-    const [a, b] = result.diagnostics.filter((d) => d.code === 'D002')
-    apply(root, b)
-    expect(apply(root, a)).toContain(
-      `gap: 'var(--warp-space-related)', margin: 'var(--warp-space-tight) var(--warp-space-group)'`,
-    )
-  })
+  registerSpacingShorthand()
   test('D002 off the scale has no fix', async () => {
     const { result } = await run(`export const P = () => <p style="padding: 13px">x</p>`)
     expect(result.diagnostics.find((d) => d.code === 'D002').fix.edits).toBeUndefined()
   })
-  test('D002 Tailwind steps map to the adapter', async () => {
-    const { root, result } = await run(
-      `export const P = () => <p class="p-4 md:gap-2 mt-[13px] p-related">x</p>`,
-    )
-    const ds = result.diagnostics.filter((d) => d.code === 'D002')
-    expect(ds).toHaveLength(3)
-    apply(root, ds[1])
-    expect(apply(root, ds[0])).toContain('class="p-group md:gap-related mt-[13px] p-related"')
-    expect(ds[2].fix.edits).toBeUndefined()
-  })
+  registerTailwindSpacing()
   test('D001 and D003 on Tailwind classes', async () => {
     const { result } = await run(
       `export const P = () => <p class="bg-purple-500 text-lg rounded-[8px] bg-surface">x</p>`,
@@ -338,29 +234,8 @@ describe('values (an app with warp)', () => {
       'rounded-control',
     )
   })
-  test('D004 a hand-rolled stack becomes <Stack> with its import', async () => {
-    const { root, result } = await run(
-      `export function P() {\n  return <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}><p>x</p></div>\n}\n`,
-    )
-    const d = result.diagnostics.find((x) => x.code === 'D004')
-    const text = apply(root, d)
-    expect(text).toContain(`<Stack gap="group"><p>x</p></Stack>`)
-    expect(text.startsWith(`import { Stack } from '@weft-js/warp'\n`)).toBe(true)
-    expect(
-      (await check(root, { files: ['src/Page.tsx'] })).diagnostics.filter((x) => x.code === 'D004'),
-    ).toEqual([])
-  })
-  test('D004 Tailwind classes, into an existing import', async () => {
-    const { root, result } = await run(
-      `import { Card } from '@weft-js/warp'\nexport const P = () => <section class="flex gap-2"><Card /></section>\n`,
-    )
-    const text = apply(
-      root,
-      result.diagnostics.find((d) => d.code === 'D004'),
-    )
-    expect(text).toContain(`import { Card, Row } from '@weft-js/warp'`)
-    expect(text).toContain(`<Row as="section" gap="related"><Card /></Row>`)
-  })
+  registerHandRolledStack()
+  registerTailwindStack()
   test('D005 an input type or title the browser paints', async () => {
     const { result } = await run(
       `import { Input } from '@weft-js/warp'\nexport const A = () => <><Input label="N" type="number" /><input type="date" aria-label="D" /><span title="x">y</span><input data-part="sr-only" type="range" aria-label="R" /><iframe title="f" /></>`,
@@ -368,17 +243,7 @@ describe('values (an app with warp)', () => {
     expect(result.diagnostics.filter((d) => d.code === 'D005')).toHaveLength(3)
   })
 
-  test('D005 a native button becomes Button', async () => {
-    const { root, result } = await run(
-      `export const P = () => <button onClick={() => {}}>Save</button>\n`,
-    )
-    expect(
-      apply(
-        root,
-        result.diagnostics.find((d) => d.code === 'D005'),
-      ),
-    ).toContain(`<Button onClick={() => {}}>Save</Button>`)
-  })
+  registerNativeButton()
   test('!important is not part of a value: zero stays zero, and a raw value is still caught', async () => {
     const root = project({
       ...warpPkg,
@@ -436,37 +301,7 @@ describe('contrast and accessibility (every app)', () => {
     const { result } = await run(`export const P = () => ${jsx}`, bare)
     expect(codes(result)).toContain(code)
   })
-  test.each([
-    `<label>Name <input /></label>`,
-    `<><label for="a">Name</label><input id="a" /></>`,
-    `<input aria-label="Name" />`,
-    `<input type="hidden" />`,
-    `<input {...attrs} />`,
-    `<><label for={\`\${id}-a\`}>Name</label><input id={\`\${id}-a\`} /></>`,
-    `<input aria-hidden="true" tabindex={-1} name="website" />`,
-    `<Field label="Name" for="a"><input id="a" /></Field>`,
-    `<Field label="Name"><input /></Field>`,
-    `<button aria-label="Close"><svg /></button>`,
-    `<button>Save</button>`,
-    `<button>{label}</button>`,
-    `<a href="/x"><img src="a.png" alt="Home" /></a>`,
-    `<a name="top"></a>`,
-    `<img src="a.png" alt="" />`,
-    `<div role="button" tabindex="0" onClick={() => {}}>x</div>`,
-    `<p style={{ color: '#111', background: '#fff' }}>x</p>`,
-    `<input aria-label="x" class="outline-none focus-visible:ring-2" />`,
-    `<><h1>a</h1><h2>b</h2><h3>c</h3><h2>d</h2></>`,
-    `<label>Pick <button>one</button></label>`,
-    `<span role="img" aria-label="required"></span>`,
-    `<div role="region" aria-label="Prices" tabindex="0">x</div>`,
-    `<nav aria-label="Main">x</nav>`,
-  ])('quiet: %s', async (jsx) => {
-    const { result } = await run(
-      `const attrs = {}, label = 'x'\nexport const P = () => ${jsx}`,
-      bare,
-    )
-    expect(codes(result)).toEqual([])
-  })
+  registerAccessibleMarkupCases(bare)
   test('D033 turns a div into a button; D037 has a safe fix', async () => {
     const { root, result } = await run(
       `export const P = () => <div onClick={() => {}}>x</div>\n`,
@@ -570,3 +405,200 @@ test('a share card is an image: its raw colours and sizes are fine', async () =>
     ),
   ).toEqual([])
 })
+
+function registerPolicyCases(found, in_) {
+  test.each([
+    ['style-src alone', "style-src 'self'", ['error']],
+    ['default-src as the fallback', "default-src 'self'", ['error']],
+    [
+      'unsafe-inline only for attributes',
+      "style-src 'self'; style-src-attr 'unsafe-inline'",
+      ['error'],
+    ],
+    [
+      'a nonce beside unsafe-inline',
+      "style-src 'unsafe-inline' 'nonce-abc'; script-src-attr 'unsafe-inline'",
+      ['error'],
+    ],
+    [
+      'a hash beside unsafe-inline',
+      "style-src 'unsafe-inline' 'sha256-abc'; script-src-attr 'unsafe-inline'",
+      ['error'],
+    ],
+    [
+      'elements allowed by their own directive',
+      "style-src 'self'; style-src-elem 'unsafe-inline'; script-src-attr 'unsafe-inline'",
+      [],
+    ],
+    ['handlers only: the page has none', "style-src 'unsafe-inline'; script-src-attr 'none'", []],
+    [
+      'script-src as the fallback for inline scripts',
+      "style-src 'unsafe-inline'; script-src 'self'",
+      ['warning'],
+    ],
+    [
+      'script-src-elem before script-src',
+      "style-src 'unsafe-inline'; script-src 'unsafe-inline'; script-src-elem 'self'",
+      ['warning'],
+    ],
+    [
+      'default-src as the fallback for inline scripts',
+      "default-src 'self'; style-src 'unsafe-inline'",
+      ['warning'],
+    ],
+    [
+      'a host the entry may come from',
+      "style-src 'unsafe-inline'; script-src https://cdn.example.com",
+      ['warning'],
+    ],
+    [
+      'no script at all, so nothing switches the sheets on',
+      "style-src 'unsafe-inline'; script-src 'none'",
+      ['error'],
+    ],
+    [
+      "a nonce weft doesn't put on its scripts",
+      "style-src 'unsafe-inline'; script-src 'nonce-abc' 'strict-dynamic'",
+      ['error'],
+    ],
+    [
+      "strict-dynamic ignores the 'self' beside it",
+      "style-src 'unsafe-inline'; script-src 'nonce-a' 'strict-dynamic' 'self'",
+      ['error'],
+    ],
+    [
+      'inline scripts alone still switch the sheets on',
+      "style-src 'unsafe-inline'; script-src 'unsafe-inline'",
+      [],
+    ],
+    ['a default that allows inline scripts', "default-src 'unsafe-inline'", []],
+    ['everything allowed', "style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'", []],
+    ['a policy on neither', "img-src 'self'", []],
+  ])('%s', async (_, policy, want) => {
+    expect(await found(in_(policy))).toEqual(want)
+  })
+}
+
+function registerDefaultHeadingRole() {
+  test('D006 h2 is the default level, a bare heading beside Heading is swapped, and the import follows', async () => {
+    const { root, result } = await app({
+      'src/A.tsx': `${IMPORT}export const A = () => <><Heading>A</Heading><Heading role="title">B</Heading></>`,
+      'src/B.tsx': `export const B = () => <h3>C</h3>`,
+      'src/C.tsx': `${IMPORT}export const C = () => <Heading level={3}>D</Heading>`,
+    })
+    const ds = result.diagnostics.filter((d) => d.code === 'D006')
+    expect(ds.map((d) => d.file).sort((a, b) => a.localeCompare(b))).toEqual([
+      'src/A.tsx',
+      'src/B.tsx',
+    ])
+    const fixed = apply(
+      root,
+      ds.find((d) => d.file === 'src/B.tsx'),
+    )
+    expect(fixed).toContain('<Heading level={3}>C</Heading>')
+    expect(fixed).toContain(`import { Heading } from '@weft-js/warp'`)
+  })
+}
+
+function registerHandRolledStack() {
+  test('D004 a hand-rolled stack becomes <Stack> with its import', async () => {
+    const { root, result } = await run(
+      `export function P() {\n  return <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}><p>x</p></div>\n}\n`,
+    )
+    const d = result.diagnostics.find((x) => x.code === 'D004')
+    const text = apply(root, d)
+    expect(text).toContain(`<Stack gap="group"><p>x</p></Stack>`)
+    expect(text.startsWith(`import { Stack } from '@weft-js/warp'\n`)).toBe(true)
+    expect(
+      (await check(root, { files: ['src/Page.tsx'] })).diagnostics.filter((x) => x.code === 'D004'),
+    ).toEqual([])
+  })
+}
+
+function registerTailwindStack() {
+  test('D004 Tailwind classes, into an existing import', async () => {
+    const { root, result } = await run(
+      `import { Card } from '@weft-js/warp'\nexport const P = () => <section class="flex gap-2"><Card /></section>\n`,
+    )
+    const text = apply(
+      root,
+      result.diagnostics.find((d) => d.code === 'D004'),
+    )
+    expect(text).toContain(`import { Card, Row } from '@weft-js/warp'`)
+    expect(text).toContain(`<Row as="section" gap="related"><Card /></Row>`)
+  })
+}
+
+function registerNativeButton() {
+  test('D005 a native button becomes Button', async () => {
+    const { root, result } = await run(
+      `export const P = () => <button onClick={() => {}}>Save</button>\n`,
+    )
+    expect(
+      apply(
+        root,
+        result.diagnostics.find((d) => d.code === 'D005'),
+      ),
+    ).toContain(`<Button onClick={() => {}}>Save</Button>`)
+  })
+}
+
+function registerSpacingShorthand() {
+  test('D002 a number and a shorthand', async () => {
+    const { root, result } = await run(
+      `export const P = () => <p style={{ gap: 8, margin: '4px 16px' }}>x</p>`,
+    )
+    const [a, b] = result.diagnostics.filter((d) => d.code === 'D002')
+    apply(root, b)
+    expect(apply(root, a)).toContain(
+      `gap: 'var(--warp-space-related)', margin: 'var(--warp-space-tight) var(--warp-space-group)'`,
+    )
+  })
+}
+
+function registerTailwindSpacing() {
+  test('D002 Tailwind steps map to the adapter', async () => {
+    const { root, result } = await run(
+      `export const P = () => <p class="p-4 md:gap-2 mt-[13px] p-related">x</p>`,
+    )
+    const ds = result.diagnostics.filter((d) => d.code === 'D002')
+    expect(ds).toHaveLength(3)
+    apply(root, ds[1])
+    expect(apply(root, ds[0])).toContain('class="p-group md:gap-related mt-[13px] p-related"')
+    expect(ds[2].fix.edits).toBeUndefined()
+  })
+}
+
+function registerAccessibleMarkupCases(bare) {
+  test.each([
+    `<label>Name <input /></label>`,
+    `<><label for="a">Name</label><input id="a" /></>`,
+    `<input aria-label="Name" />`,
+    `<input type="hidden" />`,
+    `<input {...attrs} />`,
+    `<><label for={\`\${id}-a\`}>Name</label><input id={\`\${id}-a\`} /></>`,
+    `<input aria-hidden="true" tabindex={-1} name="website" />`,
+    `<Field label="Name" for="a"><input id="a" /></Field>`,
+    `<Field label="Name"><input /></Field>`,
+    `<button aria-label="Close"><svg /></button>`,
+    `<button>Save</button>`,
+    `<button>{label}</button>`,
+    `<a href="/x"><img src="a.png" alt="Home" /></a>`,
+    `<a name="top"></a>`,
+    `<img src="a.png" alt="" />`,
+    `<div role="button" tabindex="0" onClick={() => {}}>x</div>`,
+    `<p style={{ color: '#111', background: '#fff' }}>x</p>`,
+    `<input aria-label="x" class="outline-none focus-visible:ring-2" />`,
+    `<><h1>a</h1><h2>b</h2><h3>c</h3><h2>d</h2></>`,
+    `<label>Pick <button>one</button></label>`,
+    `<span role="img" aria-label="required"></span>`,
+    `<div role="region" aria-label="Prices" tabindex="0">x</div>`,
+    `<nav aria-label="Main">x</nav>`,
+  ])('quiet: %s', async (jsx) => {
+    const { result } = await run(
+      `const attrs = {}, label = 'x'\nexport const P = () => ${jsx}`,
+      bare,
+    )
+    expect(codes(result)).toEqual([])
+  })
+}
