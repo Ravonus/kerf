@@ -1,8 +1,6 @@
 // `weft dev`, `weft build` and `weft routes` for an app with src/routes: they run @weft-js/start (research 25 §6–7).
 // @weft-js/start resolves from the app first (its own version), then from this workspace.
 
-import { audit, builtPublic } from './audit.mjs'
-import { writeMap } from './map.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -11,12 +9,17 @@ import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseEnv } from 'node:util'
 import { dbLayer } from './db-layer.mjs'
-import { diagnostic, locate, positions } from './diag.mjs'
+import { diagnostic } from './diag.mjs'
+import { routeDiagnostics } from './start/routes.mjs'
+import { finishBuild, startBuildSidecars, buildPreset } from './start/build.mjs'
+import { writeMap } from './map.mjs'
+
 import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { requireTrust } from './trust.mjs'
 import { attachProps } from './props-listener.mjs'
-import { host, presetFor } from './deploy/hosts.mjs'
+
+export { routeDiagnostics } from './start/routes.mjs'
 
 export async function start(root, sub) {
   let file
@@ -131,16 +134,7 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
   const { writeContract } = await start(root, 'contract')
   const t = performance.now()
   const config = await site(root)
-  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? hostRuntime()
-  // `deploy.target` picks the preset when nothing else does: a build for Fly is the runtime's server, for Netlify `netlify`
-  const target = !preset && !runtime && (await loadConfig(root)).config?.deploy?.target
-  if (target) preset = presetFor(host(target), chosen)
-  if (!preset && !PRESETS[chosen])
-    throw Object.assign(
-      new Error(`unknown runtime "${chosen}": use ${Object.keys(PRESETS).join(', ')}`),
-      { code: 'E_USAGE' },
-    )
-  preset ??= PRESETS[chosen]
+  preset = await buildPreset(root, { preset, runtime, hostRuntime, PRESETS })
   // A build holds no secrets: an app's env check stands down, and server modules load without a database.
   const held = process.env.WEFT_BUILD
   process.env.WEFT_BUILD = '1'
@@ -167,21 +161,15 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
     })
     const unlive = plan.diagnostics.find((d) => d.severity === 'error')
     if (unlive) refuse(unlive)
-    const { buildSidecars, shipSidecars, startSidecars, usesRemote } = await start(root, 'sidecar')
-    const contracted = () => writeContract({ root, site: config.site, preset, rust })
-    let warned = []
-    // Sidecars first: prerendering a share card runs its route's `load`, which may read one.
-    const running = usesRemote(root)
-      ? await contracted().then(async (c) => {
-          const stop = c.diagnostics.find((d) => d.severity === 'error')
-          if (stop) refuse(stop)
-          const built = await buildSidecars({ root, contract: c.contract, rust, preset })
-          const failed = built.diagnostics.find((d) => d.severity === 'error')
-          if (failed) refuse(failed)
-          warned = built.diagnostics
-          return startSidecars({ root, built: true, log: () => {} })
-        })
-      : undefined
+    const { running, warned, shipSidecars } = await startBuildSidecars({
+      start,
+      root,
+      config,
+      preset,
+      rust,
+      refuse,
+      writeContract,
+    })
     const before = { ...process.env }
     Object.assign(process.env, running?.env)
     let output
@@ -192,59 +180,22 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
       for (const k of Object.keys(running?.env ?? {}))
         before[k] === undefined ? delete process.env[k] : (process.env[k] = before[k])
     }
-    const contract = await writeContract({
+    return await finishBuild({
       root,
-      site: config.site,
+      config,
       preset,
       rust,
-      live: (await loadConfig(root)).config?.live,
-      verify: true,
-    })
-    for (const refused of contract.diagnostics.filter((d) => d.severity === 'error'))
-      refuse(refused)
-    if (running) shipSidecars(root)
-    await writeMap(root)
-    // Last, the pages as built, in a clean Chrome at a phone's width and a desktop's (audit.mjs): an error fails the build.
-    const settings = (await loadConfig(root)).config?.build?.audit ?? true
-    const audited =
-      settings === false
-        ? {
-            diagnostics: [
-              diagnostic({
-                code: 'L000',
-                severity: 'warning',
-                file: 'weft.config.ts',
-                why: '`build.audit` is false: the built pages were not audited.',
-              }),
-            ],
-          }
-        : await audit(root, {
-            dir: builtPublic(root),
-            ...(typeof settings === 'object' && settings),
-          })
-    const pages = audited.diagnostics.map((d) =>
-      d.severity === 'error' && unsafe.allows(d) ? unsafe.let(d) : d,
-    )
-    const kept = [
-      ...contract.diagnostics.filter((d) => !(d.severity === 'error' && unsafe.allows(d))),
-      ...warned,
-    ].map((d) => diagnostic({ file: '.weft/contract.json', ...d }))
-    const diagnostics = [
-      ...kept,
-      ...pages,
-      ...forced.map((d) => diagnostic({ file: '.weft/contract.json', ...d })),
-    ]
-    return {
-      ok: !diagnostics.some((d) => d.severity === 'error'),
-      preset,
+      refuse,
+      running,
+      shipSidecars,
       output,
-      contract: contract.path,
-      functions: contract.functions,
-      notes: loaded.contributions.flatMap((c) => c.manifest.notes ?? []),
-      audited: audited.pages?.length ?? 0,
-      diagnostics,
-      ms: Math.round(performance.now() - t),
-    }
+      warned,
+      unsafe,
+      forced,
+      loaded,
+      t,
+      writeContract,
+    })
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held
@@ -317,41 +268,6 @@ export async function dbCommand(root, sub, name) {
       schemaHash(readFileSync(schema)) + '\n',
     )
   return { ok: true, output }
-}
-
-/**
- * Route findings as diagnostics, pointing at the `meta` export, or at where one goes. H011's fix is that export, as an
- * edit an agent can apply: not safe, since the words are a start and not the page's best.
- */
-export function routeDiagnostics(root, found) {
-  const text = (f) => {
-    try {
-      return readFileSync(join(root, f), 'utf8')
-    } catch {
-      return ''
-    }
-  }
-  return found.map(({ code, severity, file, route, why, help }) => {
-    const source = text(file)
-    const at =
-      code === 'H011' &&
-      help?.startsWith('export const') &&
-      !/\bexport\s+(?:const|function|async function)\s+meta\b/.test(source)
-        ? source.indexOf('export default')
-        : -1
-    const place = positions(source)
-    const fix = at >= 0 && {
-      fix: {
-        safe: false,
-        description: 'Add `meta`',
-        edits: [{ file, span: place.span(at, at), offset: [at, at], text: `${help}\n\n` }],
-      },
-    }
-    return {
-      ...diagnostic({ code, severity, file, why, help, ...locate(source, 'meta'), ...fix }),
-      route,
-    }
-  })
 }
 
 /** `weft db live`: a migration that adds change triggers to the tables in `changes` (Postgres, SQLite, MySQL). */

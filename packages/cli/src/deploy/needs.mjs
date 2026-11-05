@@ -73,30 +73,7 @@ export function needsOf(root, config = {}) {
     const native = Object.entries(contract.services ?? {}).find(([, s]) => s.kind === 'native')
     if (native) needs.native = { file: '.weft/contract.json', what: `\`native('${native[0]}')\`` }
   }
-  for (const f of files) {
-    const text = read(f)
-    const server = /^src\/server\/|\.server\.[cm]?[jt]sx?$/.test(rel(f))
-    if (!contract && server) {
-      const m = /\b(channel|sharedState)\s*[(<]/.exec(text)
-      if (m && !needs.sockets) needs.sockets = { file: rel(f), what: `a \`${m[1]}\`` }
-      if (/\b(stream|channel|sharedState)\s*[(<]/.test(text)) streams = true
-    }
-    if (/\.live\(/.test(text)) streams = true
-    if (/['"]@weft-js\/start\/rust['"]/.test(text)) {
-      for (const m of text.matchAll(/\bremote\(\s*['"`]rust:\/\/([\w-]+)/g))
-        if (!config.rust?.services?.[m[1]]?.external)
-          needs.sidecar ??= { file: rel(f), what: `\`remote('rust://${m[1]}')\`` }
-      const n = /\bnative\(\s*['"`]([\w-]+)/.exec(text)
-      if (n) needs.native ??= { file: rel(f), what: `\`native('${n[1]}')\`` }
-    }
-    if (
-      !/listener:\s*['"]external['"]/.test(realtime) &&
-      /\.live\(([^;\n]*?)\brequired:\s*true|\blive:\s*\{[^}]*required:\s*true/.test(text)
-    )
-      needs.required ??= { file: rel(f), what: 'a live query marked `required`' }
-    if (/\bctx\.media\b|\bz\.media\b/.test(text))
-      needs.uploads ??= { file: rel(f), what: 'media uploads' }
-  }
+  streams = scanNeeds({ files, rel, contract, needs, config, realtime, streams })
   if (!needs.sockets && /\bshare\s*[:,}]/.test(realtime))
     needs.sockets = { file: 'src/realtime.server.ts', what: '`realtime({ share })`' }
   if (/\bchanges\s*[:,}]/.test(realtime) && !/listener:\s*['"]external['"]/.test(realtime))
@@ -141,4 +118,32 @@ export function needsOf(root, config = {}) {
     if (addon) needs.addons = { file: 'package.json', what: `\`${addon}\`` }
   } catch {}
   return needs
+}
+
+function scanNeeds({ files, rel, contract, needs, config, realtime, streams }) {
+  for (const f of files) {
+    const text = read(f)
+    const server = /^src\/server\/|\.server\.[cm]?[jt]sx?$/.test(rel(f))
+    if (!contract && server) {
+      const m = /\b(channel|sharedState)\s*[(<]/.exec(text)
+      if (m && !needs.sockets) needs.sockets = { file: rel(f), what: `a \`${m[1]}\`` }
+      if (/\b(stream|channel|sharedState)\s*[(<]/.test(text)) streams = true
+    }
+    if (/\.live\(/.test(text)) streams = true
+    if (/['"]@weft-js\/start\/rust['"]/.test(text)) {
+      for (const m of text.matchAll(/\bremote\(\s*['"`]rust:\/\/([\w-]+)/g))
+        if (!config.rust?.services?.[m[1]]?.external)
+          needs.sidecar ??= { file: rel(f), what: `\`remote('rust://${m[1]}')\`` }
+      const n = /\bnative\(\s*['"`]([\w-]+)/.exec(text)
+      if (n) needs.native ??= { file: rel(f), what: `\`native('${n[1]}')\`` }
+    }
+    if (
+      !/listener:\s*['"]external['"]/.test(realtime) &&
+      /\.live\(([^;\n]*?)\brequired:\s*true|\blive:\s*\{[^}]*required:\s*true/.test(text)
+    )
+      needs.required ??= { file: rel(f), what: 'a live query marked `required`' }
+    if (/\bctx\.media\b|\bz\.media\b/.test(text))
+      needs.uploads ??= { file: rel(f), what: 'media uploads' }
+  }
+  return streams
 }

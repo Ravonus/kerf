@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { entry } from '../src/catalog.mjs'
@@ -271,7 +271,15 @@ describe('Q015', () => {
 })
 
 describe('what a build reports to weft check', () => {
-  const solver = readFileSync(new URL('../../core/node/hydration.mjs', import.meta.url), 'utf8')
+  const folder = new URL('../../core/node/', import.meta.url)
+  const sources = [
+    'hydration.mjs',
+    ...readdirSync(new URL('hydration/', folder))
+      .filter((file) => file.endsWith('.mjs'))
+      .sort()
+      .map((file) => `hydration/${file}`),
+  ]
+  const solver = sources.map((file) => readFileSync(new URL(file, folder), 'utf8')).join('\n')
   const codes = [...new Set([...solver.matchAll(/code: '(\w+)'/g)].map((m) => m[1]))]
 
   it('every code the solver writes has a catalog entry and leaves a build passing', async () => {
