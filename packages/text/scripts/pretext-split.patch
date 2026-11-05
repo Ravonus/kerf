@@ -2690,11 +2690,55 @@ diff --git a/rich-inline.ts b/rich-inline.ts
    // The paragraph's text: the items' texts joined, an atomic item or a box as one U+FFFC. An atomic
    // item's own white space is none of the paragraph's: its inline-block lays its text out as a
    // paragraph of its own, whose lines drop white space at their start and end. Blink puts the box in
-@@ -277,6 +197,26 @@
+@@ -277,6 +197,70 @@
      if (!isAtomic && (item.extraWidth ?? 0) !== 0) padded++
      if ((item.extraWidth ?? 0) < 0) mayNarrow = true
    }
 +  return { source, starts, atomic, paddedOrObject, padded, sharedSpacing, spacingsDiffer, mayNarrow }
++}
++
++function indexSegments(
++  items: Array<RichInlineItem | RichInlineBox>, widths: number[], flags: Uint8Array,
++  itemSegments: number[], segments: string[], marksReturnable: boolean,
++  discretionaryHyphenContexts: number[] | null, hasUnbroken: boolean, fontsDiffer: boolean,
++  hyphenWidths: number[], tabStopAdvances: number[], minimumTabAdvances: number[],
++) {
++  const segmentCount = widths.length
++  while (itemSegments.length <= items.length) itemSegments.push(segmentCount)
++  const segmentFlags = segmentCount === flags.length ? flags : flags.subarray(0, segmentCount)
++  // A paragraph whose lines return from an unfit hyphen marks every break the scan gives before
++  // text, so its walk records each as the line's latest break (pendingBreakSegmentIndex in
++  // walkPreparedComplexLines). The return itself reads no mark, as a text's doesn't; what the marks
++  // still decide is where the Gecko profile ends a line that an object of width 0 sticks out of
++  // (ENGINE_FOLLOWUPS.md, Rich-inline item edges).
++  if (marksReturnable || (discretionaryHyphenContexts !== null && !hasUnbroken)) for (let i = 0; i < segmentCount; i++) if ((segmentFlags[i]! & UNBROKEN) === 0) segmentFlags[i] = segmentFlags[i]! | RETURNABLE
++
++  const segmentItems = new Int32Array(segmentCount)
++  const gapSegments = new Uint8Array(segmentCount)
++  for (let index = 0; index < items.length; index++) {
++    const firstSegment = itemSegments[index]!
++    const end = itemSegments[index + 1]!
++    for (let i = firstSegment; i < end; i++) {
++      segmentItems[i] = index
++      if ((i === firstSegment || i === end - 1) && (segmentFlags[i]! & KIND_BITS) === SPACE && segments[i]!.length === 1) gapSegments[i] = 1
++    }
++  }
++
++  let segmentHyphenWidths: number[] | null = null
++  let segmentTabStopAdvances: number[] | null = null
++  let segmentMinimumTabAdvances: number[] | null = null
++  if (fontsDiffer) {
++    segmentHyphenWidths = []
++    segmentTabStopAdvances = []
++    segmentMinimumTabAdvances = []
++    for (let i = 0; i < segmentCount; i++) {
++      const index = segmentItems[i]!
++      segmentHyphenWidths.push(hyphenWidths[index]!)
++      segmentTabStopAdvances.push(tabStopAdvances[index]!)
++      segmentMinimumTabAdvances.push(minimumTabAdvances[index]!)
++    }
++  }
++  return { segmentFlags, segmentItems, gapSegments, segmentHyphenWidths, segmentTabStopAdvances, segmentMinimumTabAdvances }
 +}
 +
 +export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, options?: RichInlineOptions): PreparedRichInline {
@@ -2717,7 +2761,7 @@ diff --git a/rich-inline.ts b/rich-inline.ts
    const paragraph: ParagraphItems = { items, starts, atomic, ownSegmentBreaks: !profile.transformsSegmentBreaksAcrossItems, sourceOffsets: null }
    const analysis = analyzeText(source, profile, whiteSpace, wordBreak, language, paragraph)
    const offsets = paragraph.sourceOffsets!
-@@ -342,44 +282,11 @@
+@@ -342,44 +326,11 @@
      itemStart = widths.length
  
      if (item.text === undefined || atomic[index]) {
@@ -2764,7 +2808,52 @@ diff --git a/rich-inline.ts b/rich-inline.ts
        from = to
        continue
      }
-@@ -666,125 +573,6 @@
+@@ -575,41 +526,9 @@
+     }
+     from = to
+   }
+-  const segmentCount = widths.length
+-  while (itemSegments.length <= items.length) itemSegments.push(segmentCount)
+-  const segmentFlags = segmentCount === flags.length ? flags : flags.subarray(0, segmentCount)
+-  // A paragraph whose lines return from an unfit hyphen marks every break the scan gives before
+-  // text, so its walk records each as the line's latest break (pendingBreakSegmentIndex in
+-  // walkPreparedComplexLines). The return itself reads no mark, as a text's doesn't; what the marks
+-  // still decide is where the Gecko profile ends a line that an object of width 0 sticks out of
+-  // (ENGINE_FOLLOWUPS.md, Rich-inline item edges).
+-  if (marksReturnable || (discretionaryHyphenContexts !== null && !analysis.hasUnbroken)) for (let i = 0; i < segmentCount; i++) if ((segmentFlags[i]! & UNBROKEN) === 0) segmentFlags[i] = segmentFlags[i]! | RETURNABLE
+-
+-  const segmentItems = new Int32Array(segmentCount)
+-  const gapSegments = new Uint8Array(segmentCount)
+-  for (let index = 0; index < items.length; index++) {
+-    const firstSegment = itemSegments[index]!
+-    const end = itemSegments[index + 1]!
+-    for (let i = firstSegment; i < end; i++) {
+-      segmentItems[i] = index
+-      if ((i === firstSegment || i === end - 1) && (segmentFlags[i]! & KIND_BITS) === SPACE && segments[i]!.length === 1) gapSegments[i] = 1
+-    }
+-  }
+-
+-  let segmentHyphenWidths: number[] | null = null
+-  let segmentTabStopAdvances: number[] | null = null
+-  let segmentMinimumTabAdvances: number[] | null = null
+-  if (fontsDiffer) {
+-    segmentHyphenWidths = []
+-    segmentTabStopAdvances = []
+-    segmentMinimumTabAdvances = []
+-    for (let i = 0; i < segmentCount; i++) {
+-      const index = segmentItems[i]!
+-      segmentHyphenWidths.push(hyphenWidths[index]!)
+-      segmentTabStopAdvances.push(tabStopAdvances[index]!)
+-      segmentMinimumTabAdvances.push(minimumTabAdvances[index]!)
+-    }
+-  }
++  const { segmentFlags, segmentItems, gapSegments, segmentHyphenWidths, segmentTabStopAdvances, segmentMinimumTabAdvances } =
++    indexSegments(items, widths, flags, itemSegments, segments, marksReturnable, discretionaryHyphenContexts,
++      analysis.hasUnbroken, fontsDiffer, hyphenWidths, tabStopAdvances, minimumTabAdvances)
+   const segmentData: ParagraphSegmentData = {
+     hyphenWidths: segmentHyphenWidths, tabStopAdvances: segmentTabStopAdvances, minimumTabAdvances: segmentMinimumTabAdvances,
+     itemEndHalts,
+@@ -666,125 +585,6 @@
  // a soft hyphen of that item: for one inside an earlier item Blink asks only that the line fit
  // (:4138-4158), and this leaves room for that item's hyphen (ENGINE_FOLLOWUPS.md, Rich-inline item
  // edges).
@@ -2890,7 +2979,7 @@ diff --git a/rich-inline.ts b/rich-inline.ts
  // Finds the paragraph's line where nothing wraps it, which is taken without a walk at any width it
  // fits: most paragraphs of a chat are one line. That is a premise. Blink, Gecko and WebKit each fit
  // a line at prefixes of it, after each item, at each break opportunity and frame end, and after each
-@@ -881,216 +669,6 @@
+@@ -881,216 +681,6 @@
    return extraWidth
  }
  
@@ -3107,7 +3196,7 @@ diff --git a/rich-inline.ts b/rich-inline.ts
  // The paragraph's segment a cursor names, or the segment count for one past the last item.
  function getSegmentIndex(flow: InternalPreparedRichInline, cursor: RichInlineCursor): number {
    const { itemSegments } = flow
-@@ -1115,65 +693,6 @@
+@@ -1115,65 +705,6 @@
    if (width === null) return null
    return flow.onlyItem >= 0 ? createOnlyItemLine(flow, width, startSegmentIndex, startGraphemeIndex, lineEnd.segmentIndex, lineEnd.graphemeIndex)
      : createLine(flow, width, startSegmentIndex, startGraphemeIndex, lineEnd.segmentIndex, lineEnd.graphemeIndex)

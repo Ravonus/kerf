@@ -200,6 +200,50 @@ function collectItems(items: Array<RichInlineItem | RichInlineBox>, profile: Eng
   return { source, starts, atomic, paddedOrObject, padded, sharedSpacing, spacingsDiffer, mayNarrow }
 }
 
+function indexSegments(
+  items: Array<RichInlineItem | RichInlineBox>, widths: number[], flags: Uint8Array,
+  itemSegments: number[], segments: string[], marksReturnable: boolean,
+  discretionaryHyphenContexts: number[] | null, hasUnbroken: boolean, fontsDiffer: boolean,
+  hyphenWidths: number[], tabStopAdvances: number[], minimumTabAdvances: number[],
+) {
+  const segmentCount = widths.length
+  while (itemSegments.length <= items.length) itemSegments.push(segmentCount)
+  const segmentFlags = segmentCount === flags.length ? flags : flags.subarray(0, segmentCount)
+  // A paragraph whose lines return from an unfit hyphen marks every break the scan gives before
+  // text, so its walk records each as the line's latest break (pendingBreakSegmentIndex in
+  // walkPreparedComplexLines). The return itself reads no mark, as a text's doesn't; what the marks
+  // still decide is where the Gecko profile ends a line that an object of width 0 sticks out of
+  // (ENGINE_FOLLOWUPS.md, Rich-inline item edges).
+  if (marksReturnable || (discretionaryHyphenContexts !== null && !hasUnbroken)) for (let i = 0; i < segmentCount; i++) if ((segmentFlags[i]! & UNBROKEN) === 0) segmentFlags[i] = segmentFlags[i]! | RETURNABLE
+
+  const segmentItems = new Int32Array(segmentCount)
+  const gapSegments = new Uint8Array(segmentCount)
+  for (let index = 0; index < items.length; index++) {
+    const firstSegment = itemSegments[index]!
+    const end = itemSegments[index + 1]!
+    for (let i = firstSegment; i < end; i++) {
+      segmentItems[i] = index
+      if ((i === firstSegment || i === end - 1) && (segmentFlags[i]! & KIND_BITS) === SPACE && segments[i]!.length === 1) gapSegments[i] = 1
+    }
+  }
+
+  let segmentHyphenWidths: number[] | null = null
+  let segmentTabStopAdvances: number[] | null = null
+  let segmentMinimumTabAdvances: number[] | null = null
+  if (fontsDiffer) {
+    segmentHyphenWidths = []
+    segmentTabStopAdvances = []
+    segmentMinimumTabAdvances = []
+    for (let i = 0; i < segmentCount; i++) {
+      const index = segmentItems[i]!
+      segmentHyphenWidths.push(hyphenWidths[index]!)
+      segmentTabStopAdvances.push(tabStopAdvances[index]!)
+      segmentMinimumTabAdvances.push(minimumTabAdvances[index]!)
+    }
+  }
+  return { segmentFlags, segmentItems, gapSegments, segmentHyphenWidths, segmentTabStopAdvances, segmentMinimumTabAdvances }
+}
+
 export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, options?: RichInlineOptions): PreparedRichInline {
   const whiteSpace = options?.whiteSpace ?? 'normal'
   const wordBreak = options?.wordBreak ?? 'normal'
@@ -482,41 +526,9 @@ export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, 
     }
     from = to
   }
-  const segmentCount = widths.length
-  while (itemSegments.length <= items.length) itemSegments.push(segmentCount)
-  const segmentFlags = segmentCount === flags.length ? flags : flags.subarray(0, segmentCount)
-  // A paragraph whose lines return from an unfit hyphen marks every break the scan gives before
-  // text, so its walk records each as the line's latest break (pendingBreakSegmentIndex in
-  // walkPreparedComplexLines). The return itself reads no mark, as a text's doesn't; what the marks
-  // still decide is where the Gecko profile ends a line that an object of width 0 sticks out of
-  // (ENGINE_FOLLOWUPS.md, Rich-inline item edges).
-  if (marksReturnable || (discretionaryHyphenContexts !== null && !analysis.hasUnbroken)) for (let i = 0; i < segmentCount; i++) if ((segmentFlags[i]! & UNBROKEN) === 0) segmentFlags[i] = segmentFlags[i]! | RETURNABLE
-
-  const segmentItems = new Int32Array(segmentCount)
-  const gapSegments = new Uint8Array(segmentCount)
-  for (let index = 0; index < items.length; index++) {
-    const firstSegment = itemSegments[index]!
-    const end = itemSegments[index + 1]!
-    for (let i = firstSegment; i < end; i++) {
-      segmentItems[i] = index
-      if ((i === firstSegment || i === end - 1) && (segmentFlags[i]! & KIND_BITS) === SPACE && segments[i]!.length === 1) gapSegments[i] = 1
-    }
-  }
-
-  let segmentHyphenWidths: number[] | null = null
-  let segmentTabStopAdvances: number[] | null = null
-  let segmentMinimumTabAdvances: number[] | null = null
-  if (fontsDiffer) {
-    segmentHyphenWidths = []
-    segmentTabStopAdvances = []
-    segmentMinimumTabAdvances = []
-    for (let i = 0; i < segmentCount; i++) {
-      const index = segmentItems[i]!
-      segmentHyphenWidths.push(hyphenWidths[index]!)
-      segmentTabStopAdvances.push(tabStopAdvances[index]!)
-      segmentMinimumTabAdvances.push(minimumTabAdvances[index]!)
-    }
-  }
+  const { segmentFlags, segmentItems, gapSegments, segmentHyphenWidths, segmentTabStopAdvances, segmentMinimumTabAdvances } =
+    indexSegments(items, widths, flags, itemSegments, segments, marksReturnable, discretionaryHyphenContexts,
+      analysis.hasUnbroken, fontsDiffer, hyphenWidths, tabStopAdvances, minimumTabAdvances)
   const segmentData: ParagraphSegmentData = {
     hyphenWidths: segmentHyphenWidths, tabStopAdvances: segmentTabStopAdvances, minimumTabAdvances: segmentMinimumTabAdvances,
     itemEndHalts,
