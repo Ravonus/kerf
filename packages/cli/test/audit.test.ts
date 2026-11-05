@@ -83,7 +83,7 @@ describe('a build served as files', () => {
 })
 
 describe('--unsafe-allow', () => {
-  const d = (code) => ({ code, severity: 'error', why: 'x' })
+  const d = (code: string) => ({ code, severity: 'error', why: 'x' })
   it('lets named codes, a family or everything through, as warnings that say so', () => {
     const u = unsafeAllowed('R002,L', {})
     expect([
@@ -108,23 +108,27 @@ const chrome = findChrome()
 
 // skipped without Chrome: CI machines and containers may not have it
 describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
-  let root
-  let result
+  let root: string
+  let result: {
+    pages: string[]
+    ok: boolean
+    diagnostics: { code: string; why: string; file: string; fix: { text: string } }[]
+  }
   beforeAll(async () => {
     root = mkdtempSync(join(tmpdir(), 'weft-audit-'))
     for (const [rel, html] of Object.entries(pages)) {
       mkdirSync(join(root, 'dist', rel, '..'), { recursive: true })
       writeFileSync(join(root, 'dist', rel), html)
     }
-    result = await audit(root)
+    result = (await audit(root)) as typeof result
   }, 120_000)
   afterAll(() => rmSync(root, { recursive: true, force: true }))
-  const of = (code) => result.diagnostics.filter((d) => d.code === code)
+  const of = (code: string) => result.diagnostics.filter((d) => d.code === code)
 
   it('says when a page names no icon: the browser asks for /favicon.ico and logs the 404', () => {
     // asked by the audit, not left to Chrome's lazy request: every page that names none, at both widths
     expect(of('L011')).toHaveLength(1)
-    expect(of('L011')[0].why).toMatch(/names no icon.*\(phone and desktop, \/docs\/a\/b\/\)/)
+    expect(of('L011')[0]!.why).toMatch(/names no icon.*\(phone and desktop, \/docs\/a\/b\/\)/)
   })
 
   it('finds the build and audits each kind of page', () => {
@@ -134,19 +138,19 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
 
   it('names a button that has text in its source but none on a phone, and only there', () => {
     expect(of('L001')).toHaveLength(1)
-    expect(of('L001')[0].why).toMatch(/^<button type="button">.*\(phone, \/docs\/\)$/)
+    expect(of('L001')[0]!.why).toMatch(/^<button type="button">.*\(phone, \/docs\/\)$/)
   })
 
   it('reports contrast with the colours and the ratio', () => {
-    expect(of('L003')[0].why).toMatch(/#bbbbbb on #ffffff is 1\.9\d?:1/)
-    expect(of('L003')[0].why).toMatch(/phone and desktop, \/docs\/faded\//)
+    expect(of('L003')[0]!.why).toMatch(/#bbbbbb on #ffffff is 1\.9\d?:1/)
+    expect(of('L003')[0]!.why).toMatch(/phone and desktop, \/docs\/faded\//)
   })
 
   it('reads the head a crawler reads, and the console', () => {
-    expect(of('L020')[0].file).toBe('/docs/a/b/')
+    expect(of('L020')[0]!.file).toBe('/docs/a/b/')
     expect(of('L022')).toHaveLength(1)
     expect(of('L023')).toHaveLength(1)
-    expect(of('L010')[0].why).toMatch(/Console error.*boom/)
+    expect(of('L010')[0]!.why).toMatch(/Console error.*boom/)
   })
 
   it('leaves the good page alone, and gives each finding the fix from the catalog', () => {
