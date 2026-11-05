@@ -14,7 +14,9 @@ export function LoadMoreScrolling() {
       loading.value = false
     }, 700)
   }
-  const done = derived(() => shown.value >= PROJECTS.length)
+  const done = derived(
+    () => shown.value >= PROJECTS.length,
+  )
   return (
     <Stack
       gap="related"
@@ -22,13 +24,19 @@ export function LoadMoreScrolling() {
       style="block-size:220px;overflow-y:auto"
     >
       {PROJECTS.slice(0, shown.value).map((p) => (
-        <ProjectRow key={p.id} name={p.name} owner={p.owner} />
+        <ProjectRow
+          key={p.id}
+          name={p.name}
+          owner={p.owner}
+        />
       ))}
       <LoadMore
         root={() => box ?? null}
         loading={loading.value}
         done={done.value}
-        message={done.value ? 'That is every project.' : ''}
+        message={
+          done.value ? 'That is every project.' : ''
+        }
         onLoad={load}
       />
     </Stack>

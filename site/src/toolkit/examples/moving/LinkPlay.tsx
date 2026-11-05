@@ -1,11 +1,21 @@
 import { Link } from '@weft-js/warp'
 
-export const LinkPlay = (p: { children: string; subtle: boolean; external: boolean }) => (
+export const LinkPlay = ({
+  children,
+  subtle,
+  external,
+}: {
+  children: string
+  subtle: boolean
+  external: boolean
+}) => (
   <Link
-    href={p.external ? 'https://example.com' : '/toolkit/button'}
-    subtle={p.subtle}
-    external={p.external}
+    href={
+      external ? 'https://example.com' : '/toolkit/button'
+    }
+    subtle={subtle}
+    external={external}
   >
-    {p.children}
+    {children}
   </Link>
 )

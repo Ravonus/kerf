@@ -14,7 +14,9 @@ export function NavAcross() {
         <a
           key={name}
           href={`#${name}`}
-          aria-current={at.value === name ? 'page' : undefined}
+          aria-current={
+            at.value === name ? 'page' : undefined
+          }
           onClick={(e) => go(e, name)}
         >
           {name}
