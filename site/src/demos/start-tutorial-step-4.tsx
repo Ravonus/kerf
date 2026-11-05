@@ -79,8 +79,7 @@ export default function Shop() {
         />
       ))}
       <p>
-        {items.value} items · subtotal ${subtotal.value}
-        {' '}·
+        {items.value} items · subtotal ${subtotal.value} ·
         shipping ${shipping.value}
       </p>
       <p>

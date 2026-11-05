@@ -14,10 +14,10 @@ export const tries: Record<string, string> = {
     'name, and press Save. Then try it with the ' +
     'keyboard only: Enter, the arrows, Escape.',
   'style-table':
-    "Press a column header to sort by it, and " +
-    "again to reverse. The table scrolls " +
+    'Press a column header to sort by it, and ' +
+    'again to reverse. The table scrolls ' +
     "sideways where it can't fit, rather than " +
-    "turning into cards.",
+    'turning into cards.',
   'style-dials':
     'Switch the theme, the expression and the ' +
     'density. The card and its field change ' +
