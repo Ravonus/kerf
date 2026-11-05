@@ -2,10 +2,17 @@
 // before anything landed, a deploy taking the chunks away, two tabs, and a refresh racing a click.
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
+import type * as Playwright from 'playwright-core'
+
+declare global {
+  interface Window {
+    __n: number
+  }
+}
 
 const url = inject('url')
-const { chromium } = createRequire(import.meta.url)('playwright-core')
-let browser
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -13,16 +20,20 @@ afterAll(async () => {
   await browser?.close()
 })
 
-const settle = (page) =>
+const settle = (page: Playwright.Page) =>
   page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
 
-async function open(path, ctx = browser, desktop = false) {
+async function open(
+  path: string,
+  ctx: Playwright.Browser | Playwright.BrowserContext = browser,
+  desktop = false,
+) {
   const page = await ctx.newPage()
   if (desktop)
     await page.addInitScript(() =>
       Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 }),
     )
-  const errors = []
+  const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto(url + path)
   await settle(page)
@@ -30,9 +41,9 @@ async function open(path, ctx = browser, desktop = false) {
 }
 
 /** Replies to matching requests wait until the returned function is called. */
-async function hold(page, match) {
-  let release
-  const gate = new Promise((ok) => {
+async function hold(page: Playwright.Page, match: string) {
+  let release!: () => void
+  const gate = new Promise<void>((ok) => {
     release = ok
   })
   await page.route(match, async (r) => {
@@ -43,7 +54,7 @@ async function hold(page, match) {
   return release
 }
 
-const link = (page, href) =>
+const link = (page: Playwright.Page, href: string) =>
   page.evaluate((h) => {
     const a = Object.assign(document.createElement('a'), { href: h })
     document.body.append(a)
@@ -90,7 +101,7 @@ test('tags a stopped refresh was reading are still owed to the page', async () =
   const { page } = await open('/about', ctx)
   await link(page, '/todos')
   await page.waitForFunction(() => document.title.startsWith('Todos ('))
-  const count = await page.evaluate(() => +/\((\d+)\)/.exec(document.title)[1])
+  const count = await page.evaluate(() => +/\((\d+)\)/.exec(document.title)![1]!)
   await page.route('**/_weft/data/todos*', () => {}) // the refresh goes out and never answers
   await page.route('**/_weft/data/users*', () => {})
   const other = await open('/todos', ctx)
@@ -111,9 +122,9 @@ test('tags a stopped refresh was reading are still owed to the page', async () =
 test("a navigation's cache entries older than a write in this tab do not land", async () => {
   const { page } = await open('/todos?from=1')
   const was = await page.$$eval('ul.todos li', (l) => l.length)
-  let first = true,
-    open_
-  const gate = new Promise((ok) => {
+  let first = true
+  let open_!: () => void
+  const gate = new Promise<void>((ok) => {
     open_ = ok
   })
   await page.route('**/_weft/data/todos*', async (r) => {
@@ -160,8 +171,8 @@ test('a pressed link whose preloaded reply comes after the user moved on does no
 
 test('a click captured before hydration goes through the router, not a page load', async () => {
   const page = await browser.newPage()
-  let release
-  const gate = new Promise((ok) => {
+  let release!: () => void
+  const gate = new Promise<void>((ok) => {
     release = ok
   })
   await page.route('**/*', async (r) => {
@@ -171,7 +182,7 @@ test('a click captured before hydration goes through the router, not a page load
   await page.goto(url + '/users/1', { waitUntil: 'commit' })
   await page.waitForSelector('a[href="/users/2"]')
   await page.evaluate(() => {
-    window.__same = 1
+    ;(window as unknown as { __same: number }).__same = 1
   })
   await page.click('a[href="/users/2"]', { noWaitAfter: true })
   release()
@@ -208,7 +219,7 @@ test('Back then Forward before anything lands stays on the page, and leaves noth
 test('a chunk the deploy took away falls back to loading the page', async () => {
   const { page } = await open('/')
   await page.evaluate(() => {
-    window.__same = 1
+    ;(window as unknown as { __same: number }).__same = 1
   })
   await page.route('**/routes/about.tsx*', (r) =>
     r.request().resourceType() === 'document'
@@ -239,7 +250,7 @@ test('a write in one tab reaches another at once, with no focus and no connectio
 })
 
 /** A fade running over the page, with a link in the corner holding `html`. */
-async function fading(html) {
+async function fading(html: string) {
   const { page, errors } = await open('/', browser, true)
   await page.addStyleTag({ content: '::view-transition-group(root){animation-duration:3s}' })
   await link(page, '/about')
@@ -318,7 +329,7 @@ test('a press on the bare page after a fade has ended is one click', async () =>
   await page.mouse.click(700, 500)
   await page.waitForTimeout(200)
   expect(
-    await page.evaluate(() => [window.__n, document.elementFromPoint(700, 500).tagName]),
+    await page.evaluate(() => [window.__n, document.elementFromPoint(700, 500)!.tagName]),
   ).toEqual([1, 'HTML'])
   await page.close()
 })
@@ -365,11 +376,11 @@ test('a hidden tab reads nothing for a write until it shows, then once', async (
   const a = await open('/todos', ctx),
     b = await open('/todos', ctx)
   const was = await b.page.$$eval('ul.todos li', (l) => l.length)
-  const reads = []
+  const reads: string[] = []
   b.page.on('request', (r) => {
     if (r.url().includes('/_weft/fn/listTodos')) reads.push(r.url())
   })
-  const shown = (v) =>
+  const shown = (v: boolean) =>
     b.page.evaluate((h) => {
       Object.defineProperty(document, 'hidden', { configurable: true, get: () => h })
       document.dispatchEvent(new Event('visibilitychange'))
@@ -401,7 +412,7 @@ test('a sign-out in one tab leaves no rows in the others, shown or hidden', asyn
   })
   for (const t of [shown, hidden])
     await t.page.evaluate(() => {
-      window.__same = 1
+      ;(window as unknown as { __same: number }).__same = 1
     })
   // What the server answers a mutation that changed the session: a redirect, and a full load.
   await a.page.route('**/_weft/fn/toggleTodo*', (r) => r.fulfill({ json: { r: '/about', x: 1 } }))
@@ -414,7 +425,7 @@ test('a sign-out in one tab leaves no rows in the others, shown or hidden', asyn
 test('a route refresh that fails leaves the page and goes again by itself', async () => {
   const ctx = await browser.newContext()
   const { page } = await open('/todos', ctx)
-  const count = await page.evaluate(() => +/\((\d+)\)/.exec(document.title)[1])
+  const count = await page.evaluate(() => +/\((\d+)\)/.exec(document.title)![1]!)
   await page.route('**/_weft/data/todos*', (r) => r.abort('failed'))
   const other = await open('/todos', ctx)
   await other.page.click('button.add')
