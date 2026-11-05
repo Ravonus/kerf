@@ -1,3 +1,4 @@
+import { configChecks } from './checks/config.mjs'
 // The PAY-codes (research 10 §7, 37): what `weft check` reports for this plugin, through the `check` hook any plugin has.
 // `run` gets the project through `ctx` and returns findings, and weft does the rest: spans, fixes, `weft fix`, `--json`.
 // TypeScript is loaded here, not in plugin.mjs, so a config load doesn't pay for it. A regex decides which files parse.
@@ -288,6 +289,18 @@ function serverImports(rel, text, out) {
     })
 }
 
+function unmatchedReads(reads, known, out) {
+  for (const r of reads) {
+    if (known.has(r.id)) continue
+    out.push({
+      code: 'PAY013',
+      ...at(r.sf, r.rel, r.node),
+      why: `\`${r.id}\` is checked only on the client: no \`requires\` or \`ctx.entitlements.has\` on the server names it, so a request made by hand gets the same thing as a paying user.`,
+      help: `Add \`requires: ['${r.id}']\` to the query or mutation it protects, or check \`await ctx.entitlements.has('${r.id}')\` in the route's \`load\``,
+    })
+  }
+}
+
 /** @param {import('@weft-js/core/plugin').CheckContext} ctx */
 export function run(ctx) {
   const out = []
@@ -328,37 +341,9 @@ export function run(ctx) {
     }
   }
 
-  for (const r of reads) {
-    if (known.has(r.id)) continue
-    out.push({
-      code: 'PAY013',
-      ...at(r.sf, r.rel, r.node),
-      why: `\`${r.id}\` is checked only on the client: no \`requires\` or \`ctx.entitlements.has\` on the server names it, so a request made by hand gets the same thing as a paying user.`,
-      help: `Add \`requires: ['${r.id}']\` to the query or mutation it protects, or check \`await ctx.entitlements.has('${r.id}')\` in the route's \`load\``,
-    })
-  }
+  unmatchedReads(reads, known, out)
 
-  for (const rel of ctx.files.filter((r) => r.startsWith('weft.config.'))) {
-    const text = ctx.read(rel)
-    secrets(rel, text, true, out)
-    const m = SECRET_OPTION.exec(text)
-    if (m)
-      out.push({
-        code: 'PAY003',
-        ...spanOf(rel, m.index, m[0].length),
-        why: 'Plugin options are written into `.weft/slots/`, so a key given here sits in a generated file.',
-      })
-  }
-
-  for (const rel of ctx.files.filter(isTest)) {
-    const text = ctx.read(rel)
-    for (const m of text.matchAll(/\b(?:sk|rk)_live_\w+/g))
-      out.push({
-        code: 'PAY031',
-        ...spanOf(rel, m.index, m[0].length),
-        why: 'A live key in a test: it charges real cards, and it is now in git.',
-      })
-  }
+  configChecks(ctx, out, secrets, spanOf, isTest, SECRET_OPTION)
 
   const config = ctx.files.find((r) => r.startsWith('weft.config.')) ?? 'weft.config.ts'
   if (!payFile) {
