@@ -21,7 +21,10 @@ export default function Shop() {
   return (
     <Card title="The shop">
       {PRODUCTS.map((p) => (
-        <ProductRow key={p.id} product={p} />
+        <ProductRow
+          key={p.id}
+          product={p}
+        />
       ))}
     </Card>
   )
