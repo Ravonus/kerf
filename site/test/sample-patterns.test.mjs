@@ -4,10 +4,10 @@ import { spawnSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { delimiter, dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { delimiter, dirname, join } from 'node:path'
 import { markdownFences } from '../scripts/sample-width.mjs'
 import { scanPatternSource } from '../scripts/sample-patterns.mjs'
+import { repoRoot } from '../../scripts/lib/helpers.mjs'
 
 const rules = (source) => scanPatternSource(source, 'fixture.tsx').map((finding) => finding.rule)
 
@@ -37,7 +37,7 @@ await test('JSX event handlers name multi-statement work', () => {
   ])
 })
 
-const root = resolve(fileURLToPath(new URL('../..', import.meta.url)))
+const root = repoRoot
 const require = createRequire(new URL('../../packages/cli/package.json', import.meta.url))
 const typescriptModules = dirname(dirname(require.resolve('typescript/package.json')))
 

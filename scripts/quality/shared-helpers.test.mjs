@@ -176,3 +176,93 @@ for (const [name, source, expected, suffix] of [
     }
   })
 }
+
+for (const [name, path, source] of [
+  [
+    'site script root',
+    'site/scripts/copy.mjs',
+    "import {resolve} from 'node:path'; const root = resolve(import.meta.dirname, '../..')",
+  ],
+  [
+    'site content root',
+    'site/scripts/content/context.mjs',
+    "import {dirname,join} from 'node:path'; import {fileURLToPath} from 'node:url'; const site = join(dirname(fileURLToPath(new URL('../content.mjs', import.meta.url))), '..'); const repo = join(site, '..')",
+  ],
+  [
+    'site setup timer',
+    'site/test/copy.setup.mjs',
+    'const sleep = (ms) => new Promise(ok => setTimeout(ok, ms))',
+  ],
+  [
+    'text escape',
+    'site/scripts/text.mjs',
+    `const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')`,
+  ],
+  [
+    'existing scope text',
+    'scripts/text.mjs',
+    `const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')`,
+  ],
+  ['existing scope attribute', 'scripts/attr.mjs', `const esc = t => t.replace(/[&<"]/g, c => c)`],
+  ['attribute escape', 'site/scripts/attr.mjs', `const esc = t => t.replace(/[&<"]/g, c => c)`],
+  ['full escape', 'site/scripts/full.mjs', `const esc = t => t.replace(/[&<>"]/g, c => c)`],
+]) {
+  void test(`site helper gate rejects ${name}`, () => {
+    const dir = mkdtempSync(join(tmpdir(), 'weft-site-helper-'))
+    try {
+      execFileSync('git', ['init', '-q', dir])
+      mkdirSync(join(dir, path, '..'), { recursive: true })
+      writeFileSync(join(dir, path), source + '\n')
+      execFileSync('git', ['-C', dir, 'add', '.'])
+      const cli = spawnSync(
+        process.execPath,
+        [new URL('./shared-helpers.mjs', import.meta.url).pathname, dir],
+        { encoding: 'utf8' },
+      )
+      assert.equal(cli.status, 1, name)
+      assert.match(cli.stderr, new RegExp(path.replaceAll('.', '\\.')))
+      assert.equal(check(dir).files.length, 1)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+}
+
+void test('site helper gate accepts canonical delegates and distinct escape policies', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'weft-site-distinct-'))
+  try {
+    execFileSync('git', ['init', '-q', dir])
+    mkdirSync(join(dir, 'site/scripts'), { recursive: true })
+    writeFileSync(
+      join(dir, 'site/scripts/valid.mjs'),
+      `
+import { esc as canonical } from '@weft-js/core/markup'
+const esc = s => canonical(s, 'text')
+const numeric = v => v.replace(/[&<]/g, c => '&#' + c.charCodeAt(0) + ';')
+const partial = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+const apostrophe = v => v.replace(/[&<>"']/g, c => c)
+`,
+    )
+    writeFileSync(
+      join(dir, 'site/scripts/numeric.mjs'),
+      `const esc = v => v.replace(/[&<>]/g, c => '&#' + c.charCodeAt(0) + ';')`,
+    )
+    writeFileSync(
+      join(dir, 'site/scripts/coercion.mjs'),
+      `const esc = v => String(v).replace(/[&<>"]/g, c => c)`,
+    )
+    writeFileSync(
+      join(dir, 'site/scripts/apostrophe.mjs'),
+      `const esc = v => v.replace(/[&<>"']/g, c => c)`,
+    )
+    execFileSync('git', ['-C', dir, 'add', '.'])
+    assert.deepEqual(check(dir).problems, [])
+    const cli = spawnSync(process.execPath, [
+      new URL('./shared-helpers.mjs', import.meta.url).pathname,
+      dir,
+    ])
+    assert.equal(cli.status, 0)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})

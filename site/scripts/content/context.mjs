@@ -13,6 +13,7 @@ import '../../../packages/cli/src/weft.mjs'
 import '../../../packages/start/src/derive.mjs'
 import '../toolkit.mjs'
 import { reportSampleWidths } from '../sample-width.mjs'
+import { repoRoot } from '../../../scripts/lib/helpers.mjs'
 
 // warp-core's source imports without extensions, for bundlers; here Node reads it directly.
 registerHooks({
@@ -31,7 +32,7 @@ const { level, PALETTE } = await import('../../src/lib/field.ts')
 const { GROUPS } = await import('../../src/toolkit/docs/index.ts')
 
 const site = join(dirname(fileURLToPath(new URL('../content.mjs', import.meta.url))), '..')
-const repo = join(site, '..')
+const repo = repoRoot
 const out = join(site, 'src/generated')
 const pub = join(site, 'public')
 rmSync(join(pub, 'search'), { recursive: true, force: true })

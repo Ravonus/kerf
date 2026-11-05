@@ -1,11 +1,12 @@
 // Check displayed sample widths and patterns without importing the content generator.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { join, relative, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { SHOWN } from './content/displayed.mjs'
 import { scanPatternSource } from './sample-patterns.mjs'
+import { repoRoot } from '../../scripts/lib/helpers.mjs'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const root = repoRoot
 
 // Markdown container markers do not occupy columns in the rendered code block.
 const unquote = (text, limit = Infinity) => {

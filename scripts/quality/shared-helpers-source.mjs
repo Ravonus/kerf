@@ -55,7 +55,7 @@ function pathValue(node, values, file) {
     return { value: (name === 'join' ? join : resolve)(...items), anchored }
 }
 
-function fullEscape(node) {
+function canonicalEscape(node) {
   if (
     !ts.isArrowFunction(node) &&
     !ts.isFunctionExpression(node) &&
@@ -63,8 +63,18 @@ function fullEscape(node) {
   )
     return false
   const chars = new Set()
-  let apostrophe = false
+  let apostrophe = false,
+    numeric = false,
+    coercion = false
   function visit(part) {
+    if (ts.isStringLiteral(part) && part.text.includes('&#')) numeric = true
+    if (
+      ts.isCallExpression(part) &&
+      (part.expression.getText() === 'String' ||
+        (ts.isPropertyAccessExpression(part.expression) &&
+          part.expression.name.text === 'toString'))
+    )
+      coercion = true
     if (
       ts.isCallExpression(part) &&
       ts.isPropertyAccessExpression(part.expression) &&
@@ -83,7 +93,14 @@ function fullEscape(node) {
     ts.forEachChild(part, visit)
   }
   visit(node)
-  return chars.size === 4 && !apostrophe
+  return (
+    chars.has('&') &&
+    chars.has('<') &&
+    (chars.has('>') || chars.has('"')) &&
+    !apostrophe &&
+    !numeric &&
+    !coercion
+  )
 }
 
 function localBindings(node, scope) {
@@ -157,14 +174,14 @@ export function inspectSource(path, text, cwd, roots, escapes) {
       ts.isIdentifier(node.name) &&
       ['esc', 'escapeHtml', 'escapeHTML'].includes(node.name.text) &&
       node.initializer &&
-      fullEscape(node.initializer)
+      canonicalEscape(node.initializer)
     )
       add(node, 'esc')
     if (
       escapes &&
       ts.isFunctionDeclaration(node) &&
       ['esc', 'escapeHtml', 'escapeHTML'].includes(node.name?.text) &&
-      fullEscape(node)
+      canonicalEscape(node)
     )
       add(node, 'esc')
     ts.forEachChild(node, (child) => visit(child, scope, owner))

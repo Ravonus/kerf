@@ -7,10 +7,13 @@ import { repoRoot } from '../lib/helpers.mjs'
 import { inspectSource } from './shared-helpers-source.mjs'
 
 const scope =
-  /^(?:(?:scripts|evals|benchmarks|examples)\/|packages\/[^/]+\/(?:scripts|test)\/).+\.(?:[cm]?[jt]sx?)$/
+  /^(?:(?:scripts|evals|benchmarks|examples)\/|site\/(?:scripts|test)\/|packages\/[^/]+\/(?:scripts|test)\/).+\.(?:[cm]?[jt]sx?)$/
 const distinct = new Set([
   // This consumer is copied beside registry.mjs to machines without the repository helpers.
   'scripts/release-e2e.mjs:freePort',
+  // The site walker filters and returns an array; its poller has its own timeout and error behavior.
+  'site/scripts/sample-width.mjs:walk',
+  'site/test/controls.mjs:until',
   'examples/lib/serve.mjs:freePort',
   'evals/agent-eval/lib/grade.mjs:freePort',
   'evals/agent-eval/lib/report.mjs:median',
