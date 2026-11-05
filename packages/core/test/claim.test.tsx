@@ -7,7 +7,7 @@ import { createRoot, derived, effect, flush, state, view } from '@weft-js/core'
 import { rt } from '@weft-js/core/internal'
 import { hydration } from '../src/hydrate'
 import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'
-import * as Client from './fixtures/ssr/Claims.tsx?weft-hydrate'
+import * as Client from './fixtures/ssr/Claims-hydrate'
 
 afterEach(() => {
   document.body.textContent = ''

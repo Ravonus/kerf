@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
 import { repoRoot as root } from '../lib/helpers.mjs'
-import { catalog } from '../../packages/cli/src/catalog.mjs'
+import { catalog as allCatalog } from '../../packages/cli/src/catalog.mjs'
 
 // These compiler-family rules move to the CLI checker; ownership never exempts coverage.
 const mappedCodes = new Set(['W007', 'W008', 'W030'])
@@ -234,7 +234,7 @@ export function check() {
   )
   const cliSource = tracked('packages/cli/src').filter((path) => /\.(?:mjs|cjs)$/.test(path))
   const cliTests = tracked('packages/cli/test').filter((path) => /\.(?:ts|tsx|mjs)$/.test(path))
-  const result = gaps(catalog, readFiles(source), readFiles(tests), {
+  const result = gaps(allCatalog, readFiles(source), readFiles(tests), {
     source: readFiles(cliSource),
     tests: readFiles(cliTests),
   })

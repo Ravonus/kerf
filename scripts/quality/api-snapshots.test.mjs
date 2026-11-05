@@ -8,7 +8,7 @@ const exports = { '.': './index.ts', './test': { types: './test.d.ts', default: 
 const snapshot = { exports }
 const docs = '- `@weft-js/core`: Root API.\n- `@weft-js/core/test`: Tests.\n'
 
-test('detects added, removed and changed paths and conditions', () => {
+void test('detects added, removed and changed paths and conditions', () => {
   assert.deepEqual(problemsFor('core', exports, snapshot, docs), [])
   for (const bad of [
     { ...exports, './new': './new.ts' },
@@ -20,7 +20,7 @@ test('detects added, removed and changed paths and conditions', () => {
   assert.match(problemsFor('core', exports, { exports: {} }, docs).join('\n'), /export map differs/)
 })
 
-test('requires a reference entry for every path', () => {
+void test('requires a reference entry for every path', () => {
   assert.match(
     problemsFor('core', exports, snapshot, '- `@weft-js/core`: Root.\n').join('\n'),
     /missing reference for @weft-js\/core\/test/,
@@ -31,7 +31,7 @@ test('requires a reference entry for every path', () => {
   )
 })
 
-test('inventories all tracked core and start manifests and their export targets', () => {
+void test('inventories all tracked core and start manifests and their export targets', () => {
   const result = check()
   assert.deepEqual(check(process.cwd()), result)
   const manifests = execFileSync(

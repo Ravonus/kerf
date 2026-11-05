@@ -2,34 +2,41 @@ import { test } from 'node:test'
 import { deepStrictEqual, ok } from 'node:assert/strict'
 import { gaps, compare } from './diagnostic-catalog.mjs'
 
-const catalog = [{ code: 'W001', by: 'compiler' }]
-const source = { 'source.rs': 'Diagnostic::new(source, "W001", severity, span);' }
-const tests = { 'compile.rs': 'assert_eq!(codes(&d), ["W001"]);' }
-const run = (c = catalog, s = source, t = tests, baseline = []) => compare(gaps(c, s, t), baseline)
+const baseCatalog = [{ code: 'W001', by: 'compiler' }]
+const baseSource = { 'source.rs': 'Diagnostic::new(source, "W001", severity, span);' }
+const baseTests = { 'compile.rs': 'assert_eq!(codes(&d), ["W001"]);' }
+const runBase = (c = baseCatalog, s = baseSource, t = baseTests, baseline = []) =>
+  compare(gaps(c, s, t), baseline)
 
-test('valid inputs and repaired gaps pass', () => {
-  deepStrictEqual(run(), [])
+void test('valid inputs and repaired gaps pass', () => {
+  deepStrictEqual(runBase(), [])
   for (const [bad, expected] of [
-    [run([], source, tests), 'missing entry: W001'],
-    [run(catalog, {}, tests), 'missing emit: W001'],
-    [run(catalog, source, {}), 'missing test: W001'],
+    [runBase([], baseSource, baseTests), 'missing entry: W001'],
+    [runBase(baseCatalog, {}, baseTests), 'missing emit: W001'],
+    [runBase(baseCatalog, baseSource, {}), 'missing test: W001'],
   ]) {
     ok(bad.includes(expected))
-    deepStrictEqual(run(), [])
+    deepStrictEqual(runBase(), [])
   }
 })
 
-test('baseline admits current gaps but rejects stale entries', () => {
+void test('baseline admits current gaps but rejects stale entries', () => {
   const baseline = ['missing test: W001']
-  deepStrictEqual(run(catalog, source, {}, baseline), [])
-  deepStrictEqual(run(catalog, source, tests, baseline), ['stale baseline: missing test: W001'])
-  deepStrictEqual(run(), [])
+  deepStrictEqual(runBase(baseCatalog, baseSource, {}, baseline), [])
+  deepStrictEqual(runBase(baseCatalog, baseSource, baseTests, baseline), [
+    'stale baseline: missing test: W001',
+  ])
+  deepStrictEqual(runBase(), [])
 })
 
-test('unknown dynamic constructor fails', () => {
-  const problems = run(catalog, { 'source.rs': 'Diagnostic::new(source, code, severity);' }, tests)
+void test('unknown dynamic constructor fails', () => {
+  const problems = runBase(
+    baseCatalog,
+    { 'source.rs': 'Diagnostic::new(source, code, severity);' },
+    baseTests,
+  )
   ok(problems.some((problem) => problem.includes('unrecognized constructor')))
-  deepStrictEqual(run(), [])
+  deepStrictEqual(runBase(), [])
 })
 
 const mappedCatalog = [{ code: 'W008', by: 'cli' }]
@@ -40,7 +47,7 @@ const cli = {
 const mapped = (c = mappedCatalog, s = cli.source, t = cli.tests) =>
   compare(gaps(c, {}, {}, { source: s, tests: t }), [])
 
-test('mapped CLI rules require both real emit and assertion sites', () => {
+void test('mapped CLI rules require both real emit and assertion sites', () => {
   deepStrictEqual(mapped(), [])
   deepStrictEqual(mapped(mappedCatalog, {}), ['missing emit: W008'])
   deepStrictEqual(mapped(mappedCatalog, cli.source, {}), ['missing test: W008'])
@@ -49,7 +56,7 @@ test('mapped CLI rules require both real emit and assertion sites', () => {
   deepStrictEqual(mapped(), [])
 })
 
-test('CLI mentions, strings, comments and catalog entries are not coverage', () => {
+void test('CLI mentions, strings, comments and catalog entries are not coverage', () => {
   for (const text of [
     "// return { code: 'W008' }",
     'const text = "return { code: \'W008\' }"',
@@ -57,7 +64,7 @@ test('CLI mentions, strings, comments and catalog entries are not coverage', () 
     "format({ code: 'W008' })",
     "const pattern = /return { code: 'W008' }/",
     'const text = `return { code: "W008" }`',
-    'const text = `a ${`nested`} return { code: "W008" }`',
+    `const text = \`a \${\`nested\`} return { code: "W008" }\``,
   ])
     deepStrictEqual(mapped(mappedCatalog, { 'fake.cjs': text }), ['missing emit: W008'])
   for (const text of [
@@ -73,7 +80,7 @@ test('CLI mentions, strings, comments and catalog entries are not coverage', () 
   deepStrictEqual(mapped(), [])
 })
 
-test('W030 graph emit, test and CLI ownership remain mandatory', () => {
+void test('W030 graph emit, test and CLI ownership remain mandatory', () => {
   const catalog = [{ code: 'W030', by: 'cli' }]
   const source = { 'server-state-checks.mjs': "function run() { diagnostic({ code: 'W030' }) }" }
   const tests = { 'server-state-checks.test.ts': "expect(finding.code).toBe('W030')" }
@@ -91,31 +98,31 @@ test('W030 graph emit, test and CLI ownership remain mandatory', () => {
   deepStrictEqual(run(), [])
 })
 
-test('compiler entries in other catalog partitions require emits and assertions', () => {
+void test('compiler entries in other catalog partitions require emits and assertions', () => {
   const compiler = [{ code: 'W001', by: 'compiler' }]
   const style = [{ code: 'D024', by: 'compiler' }]
   const source = { 'style.rs': 'Diagnostic::new(source, "D024", severity, span);' }
   const tests = { 'compile.rs': 'assert_eq!(codes(&d), ["D024"]);' }
-  const baseSource = {
+  const mergedSource = {
     ...source,
     'compiler.rs': 'Diagnostic::new(source, "W001", severity, span);',
   }
-  const baseTests = { ...tests, 'other.rs': 'assert_eq!(codes(&d), ["W001"]);' }
-  const check = (entries, emit = baseSource, coverage = baseTests) =>
+  const mergedTests = { ...tests, 'other.rs': 'assert_eq!(codes(&d), ["W001"]);' }
+  const check = (entries, emit = mergedSource, coverage = mergedTests) =>
     compare(gaps(entries, emit, coverage), [])
   deepStrictEqual(check([...compiler, ...style]), [])
   deepStrictEqual(check(compiler), ['missing entry: D024'])
-  deepStrictEqual(check([...compiler, ...style], { 'compiler.rs': baseSource['compiler.rs'] }), [
+  deepStrictEqual(check([...compiler, ...style], { 'compiler.rs': mergedSource['compiler.rs'] }), [
     'missing emit: D024',
   ])
   deepStrictEqual(
-    check([...compiler, ...style], baseSource, { 'other.rs': baseTests['other.rs'] }),
+    check([...compiler, ...style], mergedSource, { 'other.rs': mergedTests['other.rs'] }),
     ['missing test: D024'],
   )
   deepStrictEqual(check([...compiler, ...style]), [])
 })
 
-test('W007 requires CLI emit, assertion and truthful owner evidence', () => {
+void test('W007 requires CLI emit, assertion and truthful owner evidence', () => {
   const entries = [{ code: 'W007', by: 'cli' }]
   const source = { 'derived-writes.cjs': "function emit() { return { code: 'W007' } }" }
   const tests = { 'derived-writes.test.ts': "expect(result.code).toBe('W007')" }

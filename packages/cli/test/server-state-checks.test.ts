@@ -218,7 +218,7 @@ describe('W030 server-reachable module state', () => {
         'typeof missing',
         'new Object()',
       ]) {
-        const source = "import { state } from '@weft-js/core'; " + `(${form})(${argument})`
+        const source = `import { state } from '@weft-js/core'; (${form})(${argument})`
         expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
       }
     }
@@ -227,7 +227,7 @@ describe('W030 server-reachable module state', () => {
   it('keeps omitted and explicit undefined defaults in every function form', () => {
     for (const form of defaultForms) {
       for (const argument of ['', 'undefined', 'void 0', '(undefined as unknown as number)']) {
-        const source = "import { state } from '@weft-js/core'; " + `(${form})(${argument})`
+        const source = `import { state } from '@weft-js/core'; (${form})(${argument})`
         expect(
           inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code),
         ).toEqual(['W030'])

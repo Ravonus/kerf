@@ -22,12 +22,24 @@ const graphNames = [
 ] as const
 
 test('the internal entry shares runtime objects and box constructors', () => {
-  for (const name of graphNames) expect(internal[name]).toBe(graph[name])
+  expect(internal.DIRTY).toBe(graph.DIRTY)
+  expect(internal.rt).toBe(graph.rt)
+  expect(internal.listener).toBe(graph.listener)
+  expect(internal.read).toBe(graph.read)
+  expect(internal.reach).toBe(graph.reach)
+  expect(internal.clean).toBe(graph.clean)
+  expect(internal.setFlat).toBe(graph.setFlat)
+  expect(internal.flat).toBe(graph.flat)
+  expect(internal.runMounts).toBe(graph.runMounts)
+  expect(internal.setKeyed).toBe(graph.setKeyed)
+  expect(internal.NONE).toBe(graph.NONE)
+  expect(internal.stats).toBe(graph.stats)
+  expect(internal.devComponent).toBe(graph.devComponent)
   expect(internal.Box).toBe(Box)
   const [box, collected] = collect(() => {
-    const box = state(1)
-    expect(internal.collecting).toContain(box)
-    return box
+    const collectedBox = state(1)
+    expect(internal.collecting).toContain(collectedBox)
+    return collectedBox
   })
   expect(box).toBeInstanceOf(internal.Box)
   expect(collected).toEqual([box])
@@ -37,7 +49,7 @@ test('the internal entry shares runtime objects and box constructors', () => {
 test('internal bindings and public state share tracking and disposal', () => {
   const count = state(1)
   const seen: unknown[] = []
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot((disposeRoot) => {
     internal.hole(
       () => {
         expect(internal.listener).toBe(graph.listener)
@@ -46,7 +58,7 @@ test('internal bindings and public state share tracking and disposal', () => {
       },
       (value) => seen.push(value),
     )
-    return dispose
+    return disposeRoot
   })
   try {
     count.value = 2
