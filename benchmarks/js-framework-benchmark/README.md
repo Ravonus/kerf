@@ -30,18 +30,45 @@ Apply `upstream.patch` to a clean checkout of the pinned upstream revision:
 git apply /absolute/path/to/benchmarks/js-framework-benchmark/upstream.patch
 ```
 
-Upstream asks for its root `npm run rebuild-ci keyed/weft` and the
-`webdriver-ts` `npm run isKeyed` test, as well as fixed versions, a reference
-DOM and its CSS, and no files outside the framework directory. Its discovery
-also expects `package-lock.json`. This repo permits pnpm only, including child
-installs. Upstream's harness and lockfile generation must be checked for npm
-child calls and reconciled with that policy before running; the patch does not
-include an npm lockfile. These checks have not passed yet. With an isolated
-upstream checkout and a policy-compatible harness, run the equivalent of
-`pnpm rebuild-ci keyed/weft` at the root and `pnpm --dir webdriver-ts isKeyed --framework keyed/weft --headless`
-after installing/building the harness with pnpm and retaining minimumReleaseAge.
-Record the full output and verify the framework is actually discovered.
-Do not submit until both checks and the manager's review pass.
+Upstream's server discovers only directories with `package-lock.json` and
+reads the weft version from it. `discovery-lock.mjs` writes the minimal
+metadata for a pnpm-based local harness. It is not a complete npm lockfile
+and must not be submitted as one or used with npm ci. A complete npm lockfile
+and the upstream npm-based rebuild remain submission requirements.
+
+The upstream rebuild command runs npm ci and npm scripts internally. Run the
+same focused driver directly with pnpm to respect this repository's policy.
+In an isolated checkout of the pinned revision, after applying the patch:
+
+```sh
+node /absolute/path/to/benchmarks/js-framework-benchmark/discovery-lock.mjs frameworks/keyed/weft
+pnpm --dir frameworks/keyed/weft install --frozen-lockfile --ignore-scripts
+pnpm --dir frameworks/keyed/weft build-prod
+```
+
+Put `minimumReleaseAge: 4320` and the `@weft-js/*` exemption in separate
+`server/pnpm-workspace.yaml` and `webdriver-ts/pnpm-workspace.yaml` files.
+Then install with `pnpm --dir server install --ignore-scripts` and
+`pnpm --dir webdriver-ts install --ignore-scripts`. The upstream driver imports
+transitive packages directly, so add them explicitly in this temporary checkout:
+
+```sh
+pnpm --dir webdriver-ts add -D --ignore-scripts --save-exact playwright-core@1.61.1 chrome-launcher@1.2.2
+pnpm --dir webdriver-ts compile
+PORT=19387 pnpm --dir server start
+```
+
+In another shell, after checking the port and server ownership, run:
+
+```sh
+PORT=19387 pnpm --dir webdriver-ts isKeyed --framework keyed/weft --headless --chromeBinary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+PORT=19387 pnpm --dir webdriver-ts bench --runner playwright --headless true --smoketest true --chromeBinary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' keyed/weft
+```
+
+These commands exercised the pinned upstream driver on macOS with local Chrome.
+The metadata fixture is not an upstream submission lockfile. The upstream
+maintainer still needs a complete npm lockfile and the unmodified rebuild-ci
+check; do not submit until those and review are complete.
 
 This is an upstream workload, not a comparative result. Any speed or size
 claim needs the full comparison in `benchmarks/compare` across all stacks.
