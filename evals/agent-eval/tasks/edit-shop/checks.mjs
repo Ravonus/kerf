@@ -15,6 +15,43 @@ const update = (page, id, price) =>
     { id, price },
   )
 
+export function checkFlashTiming(sample, overlap = false) {
+  if (
+    sample.elapsed >= 900 ||
+    (overlap && (sample.firstElapsed <= 1000 || sample.updateElapsed >= 900))
+  )
+    throw new Error('flash timing inconclusive: retry calibration')
+  same(
+    sample.flag,
+    'true',
+    overlap ? 'flash persists after overlapping update' : 'flash persists near one second',
+  )
+}
+
+function sampleFlash(apple, overlap) {
+  return apple.evaluate(async (node, isOverlap) => {
+    const send = (price) =>
+      window.dispatchEvent(new CustomEvent('weft-price-update', { detail: { id: 'apple', price } }))
+    const wait = (ms) =>
+      new Promise((resolve) => {
+        setTimeout(resolve, ms)
+      })
+    const first = performance.now()
+    send(isOverlap ? 125 : 75)
+    if (isOverlap) await wait(400)
+    const latest = isOverlap ? performance.now() : first
+    if (isOverlap) send(150)
+    await wait(isOverlap ? 700 : 850)
+    const now = performance.now()
+    return {
+      elapsed: now - latest,
+      firstElapsed: now - first,
+      updateElapsed: latest - first,
+      flag: node.getAttribute('data-flash'),
+    }
+  }, overlap)
+}
+
 export const editTests = [
   {
     title: 'live prices update products, cart lines and totals',
@@ -38,22 +75,18 @@ export const editTests = [
       const apple = row(page, 'Products', 'Apple')
       await update(page, 'apple', 50)
       same((await apple.getAttribute('data-flash')) === 'true', false, 'unchanged price')
-      const started = await update(page, 'apple', 75)
-      await until('flash begins', async () => (await apple.getAttribute('data-flash')) === 'true')
-      const early = await apple.evaluate(async (node, at) => {
-        await new Promise((resolve) => {
-          setTimeout(resolve, 400)
-        })
-        return { elapsed: performance.now() - at, flag: node.getAttribute('data-flash') }
-      }, started)
-      if (early.elapsed < 900) same(early.flag, 'true', 'flash persists before one second')
+      checkFlashTiming(await sampleFlash(apple, false))
       await until(
         'flash expires',
         async () => (await apple.getAttribute('data-flash')) !== 'true',
         3000,
       )
-      await update(page, 'apple', 100)
-      await until('flash returns', async () => (await apple.getAttribute('data-flash')) === 'true')
+      checkFlashTiming(await sampleFlash(apple, true), true)
+      await until(
+        'flash expires after latest update',
+        async () => (await apple.getAttribute('data-flash')) !== 'true',
+        3000,
+      )
     },
   },
   {

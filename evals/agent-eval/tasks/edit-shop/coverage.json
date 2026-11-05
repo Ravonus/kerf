@@ -85,6 +85,16 @@
       "id": "flash_duration",
       "check": "price flash expires and a later update starts it again",
       "mutant": "flash expires too early"
+    },
+    {
+      "id": "flash_near_one_second",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "flash expires after 600ms"
+    },
+    {
+      "id": "flash_overlap_resets",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "overlapping flash timer not cleared"
     }
   ]
 }
