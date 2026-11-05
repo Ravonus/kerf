@@ -1,18 +1,9 @@
-import { Badge, Row, Stack, Text } from '@weft-js/warp'
+import { Badge, Row } from '@weft-js/warp'
 import type { SegmentedOption } from '@weft-js/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS } from '../../world'
 
 // oxlint-disable-next-line typescript/no-explicit-any -- knob values are checked by the playground's own schema, not here
 export type Knobs = any
-
-export const Cell = (p: { name: string; children?: unknown }) => (
-  <Stack gap="tight">
-    <Text role="caption" subtle>
-      {p.name}
-    </Text>
-    {p.children}
-  </Stack>
-)
 
 export const SLUG = /^[a-z0-9-]+$/
 

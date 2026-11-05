@@ -1,5 +1,6 @@
 import { Grid, Select } from '@weft-js/warp'
-import { Cell, REGION_OPTIONS } from './shared'
+import { Cell } from '../../world'
+import { REGION_OPTIONS } from './shared'
 
 export const SelectStates = () => (
   <Grid cols={3} gap="group">

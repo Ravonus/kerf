@@ -1,7 +1,5 @@
 import { state } from '@weft-js/core'
 
-import { Stack, Text } from '@weft-js/warp'
-
 import type { DateRange, IsoDate, IsoTime } from '@weft-js/warp'
 
 import { EVENTS } from '../../world'
@@ -9,16 +7,6 @@ import { EVENTS } from '../../world'
 export type Event = (typeof EVENTS)[number]
 
 export const TODAY: IsoDate = '2026-11-02'
-
-/** One state in a States grid: its name, then the field. */
-export const Cell = (p: { name: string; children?: unknown }) => (
-  <Stack gap="tight">
-    <Text role="caption" subtle>
-      {p.name}
-    </Text>
-    {p.children}
-  </Stack>
-)
 
 export const isWeekend = (d: IsoDate) => [0, 6].includes(new Date(`${d}T12:00Z`).getUTCDay())
 
