@@ -3,10 +3,18 @@
 // box by key.
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
+import type * as Playwright from 'playwright-core'
+
+declare global {
+  interface Window {
+    __sockets: WebSocket[]
+    __weft?: { hydrated: boolean }
+  }
+}
 
 const url = inject('url')
-const { chromium } = createRequire(import.meta.url)('playwright-core')
-let browser
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -14,15 +22,15 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function open(context, path) {
+async function open(context: Playwright.BrowserContext, path: string) {
   const page = await context.newPage()
-  const errors = []
+  const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.addInitScript(() => {
     const Real = window.WebSocket
     window.__sockets = []
     window.WebSocket = class extends Real {
-      constructor(u, ...a) {
+      constructor(u: string | URL, ...a: [protocols?: string | string[]]) {
         super(u, ...a)
         if (String(u).includes('/_weft/ws')) window.__sockets.push(this)
       }
@@ -38,13 +46,13 @@ async function open(context, path) {
   return { page, errors }
 }
 
-const open_ = (page) =>
+const open_ = (page: Playwright.Page) =>
   page.getByLabel('status').filter({ hasText: 'open' }).waitFor({ timeout: 10_000 })
-const say = async (page, text) => {
+const say = async (page: Playwright.Page, text: string) => {
   await page.getByLabel('draft').fill(text)
   await page.getByRole('button', { name: 'send' }).click()
 }
-const said = (page, text) =>
+const said = (page: Playwright.Page, text: string) =>
   page.getByRole('listitem').filter({ hasText: text }).waitFor({ timeout: 10_000 })
 
 test('two pages share a room over a real socket', async () => {
@@ -70,7 +78,7 @@ test('a killed socket reconnects and catches up, with nothing doubled', async ()
   await open_(b.page)
   await say(a.page, 'before')
   await said(b.page, 'before')
-  await b.page.evaluate(() => window.__sockets.at(-1).close())
+  await b.page.evaluate(() => window.__sockets.at(-1)!.close())
   await say(a.page, 'during')
   await said(b.page, 'during')
   await open_(b.page)
@@ -92,7 +100,7 @@ test('a page offline for a moment comes back by itself', async () => {
   await open_(a.page)
   await open_(b.page)
   await other.setOffline(true)
-  await b.page.evaluate(() => window.__sockets.at(-1).close())
+  await b.page.evaluate(() => window.__sockets.at(-1)!.close())
   await other.setOffline(false)
   await open_(b.page)
   await say(b.page, 'back')
@@ -112,7 +120,7 @@ test('`tabs.channel` and `sync: tabs` cross real tabs; a late tab starts from st
   await b.page.getByLabel('lines').filter({ hasText: '"a":1' }).waitFor({ timeout: 5000 })
   await b.page.getByLabel('b', { exact: true }).click()
   await a.page.getByLabel('lines').filter({ hasText: '"b":2' }).waitFor({ timeout: 5000 })
-  expect(JSON.parse(await a.page.getByLabel('lines').textContent())).toEqual({ a: 1, b: 2 })
+  expect(JSON.parse((await a.page.getByLabel('lines').textContent())!)).toEqual({ a: 1, b: 2 })
   const c = await open(ctx, '/tabs')
   await c.page.getByLabel('lines').filter({ hasText: '"b":2' }).waitFor({ timeout: 5000 })
   expect([...a.errors, ...b.errors, ...c.errors]).toEqual([])
