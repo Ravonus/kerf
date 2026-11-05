@@ -16,6 +16,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { genEngineData } from './gendata.mjs'
 import { inlineWalker } from './specialize/inline-walker.mjs'
+import { inlineAnalysis, inlineAnalysisSegments } from './specialize/inline-analysis.mjs'
+import { inlineBoundaries } from './specialize/inline-boundaries.mjs'
+import { inlinePreparation } from './specialize/inline-prepare.mjs'
+import { exportPreparationFinish } from './specialize/inline-prepare-output.mjs'
 import { moveFunctions } from './specialize/move.mjs'
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
@@ -288,6 +292,16 @@ function writeModules(engine, profile, rare, out) {
 
 function prepareModule(f, engine, profile, rare, folds, foundMoves) {
   let src = fs.readFileSync(path.join(vendor, f), 'utf8')
+  if (f === 'analysis.ts') src = inlineAnalysis(src)
+  if (f === 'analysis-segments.ts') src = inlineAnalysisSegments(src)
+  if (f === 'line-breaks.ts') src = inlineBoundaries(src)
+  if (f === 'prepare.ts')
+    src = inlinePreparation(
+      src,
+      fs.readFileSync(path.join(vendor, 'prepare-measure.ts'), 'utf8'),
+      fs.readFileSync(path.join(vendor, 'prepare-finish.ts'), 'utf8'),
+    )
+  if (f === 'prepare-finish.ts') src = exportPreparationFinish(src)
   if (f === 'line-break-complex.ts') {
     const state = fs.readFileSync(path.join(vendor, 'line-break-complex-state.ts'), 'utf8')
     src = inlineWalker(src, state)

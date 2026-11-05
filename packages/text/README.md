@@ -20,9 +20,9 @@ Brotli 11 after terser, measured with `node scripts/specialize.mjs --no-rare` an
 
 | Engine | Base chunk (what a page loads)                  | Exact tier (lazy) | Script data + CJK/SEA code (lazy) | Other lazy packs                       |
 | ------ | ----------------------------------------------- | ----------------- | --------------------------------- | -------------------------------------- |
-| Blink  | **8.20 KB**                                     | 11.71 KB          | 12.33 KB                          | complex 2.0, spacing 0.8               |
-| WebKit | **9.50 KB**                                     | 10.78 KB          | 10.35 KB                          | complex 2.2, spacing 0.8, families 1.9 |
-| Gecko  | 17.25 KB (exact tier in base; no lite tier yet) | n/a               | 7.76 KB                           | complex 2.1, spacing 0.8               |
+| Blink  | **8.20 KB**                                     | 11.06 KB          | 12.32 KB                          | complex 2.0, spacing 0.8               |
+| WebKit | **9.50 KB**                                     | 10.03 KB          | 10.33 KB                          | complex 2.2, spacing 0.8, families 1.9 |
+| Gecko  | 16.57 KB (exact tier in base; no lite tier yet) | n/a               | 7.76 KB                           | complex 2.1, spacing 0.8               |
 
 Upstream `prepare` + `layout` + `clearCache` was 33.9 KB br for all engines in one file when research 12 measured it. The base figures include
 the 0.21 KB detector shell (`dist/index.js`).
@@ -59,8 +59,8 @@ A handle has `exact` and `ready`. While a pack it needs is still loading, `layou
   `package.json` under `pretext`; the independent accuracy reference uses the installed pin.
   `node scripts/pretext-split.mjs` checks the split against its pinned input and patch; pass `--write` to regenerate it.
 - **`scripts/specialize.mjs`** writes `gen/<engine>/`:
-  - It inlines the split complex-walker helpers from their vendor source, keeping the scan's state local in the
-    shipped engine. The inliner checks the helper shapes before it writes the generated code.
+  - It inlines the split walker, preparation, Gecko analysis and boundary helpers from their vendor source.
+    This keeps hot values local in the shipped engine. Shape checks reject unsupported scopes and calls.
   - It folds the engine profile to constants, so esbuild drops the other engines' code.
   - It re-encodes the break data for that engine only, restricted to `src/alphabet.json`. The scan's state machines
     are pruned to the states reachable over the alphabet's categories and then minimised.

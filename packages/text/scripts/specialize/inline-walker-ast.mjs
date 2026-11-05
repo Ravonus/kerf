@@ -6,10 +6,24 @@ export function moduleFunctions(name, source) {
   if (file.parseDiagnostics.length) throw new Error(`${name}: cannot parse walker source`)
   const functions = new Map()
   for (const statement of file.statements) {
-    if (ts.isFunctionDeclaration(statement) && statement.name && statement.body) {
-      if (functions.has(statement.name.text))
-        throw new Error(`duplicate walker helper: ${statement.name.text}`)
-      functions.set(statement.name.text, { node: statement, file, source })
+    const declarations = ts.isVariableStatement(statement)
+      ? statement.declarationList.declarations
+      : []
+    const entries =
+      ts.isFunctionDeclaration(statement) && statement.name && statement.body
+        ? [[statement.name.text, statement]]
+        : declarations
+            .filter(
+              (node) =>
+                ts.isIdentifier(node.name) &&
+                node.initializer &&
+                ts.isArrowFunction(node.initializer) &&
+                ts.isBlock(node.initializer.body),
+            )
+            .map((node) => [node.name.text, node.initializer])
+    for (const [helperName, node] of entries) {
+      if (functions.has(helperName)) throw new Error(`duplicate walker helper: ${helperName}`)
+      functions.set(helperName, { node, file, source, statement })
     }
   }
   return functions
@@ -18,13 +32,14 @@ export function moduleFunctions(name, source) {
 export function parts(functions, name) {
   const item = functions.get(name)
   if (!item) throw new Error(`walker helper missing: ${name}`)
-  const { node, file, source } = item
+  const { node, file, source, statement } = item
   const block = node.body
   return {
     text: source.slice(block.getStart(file) + 1, block.end - 1),
     node,
     file,
     source,
+    statement,
   }
 }
 

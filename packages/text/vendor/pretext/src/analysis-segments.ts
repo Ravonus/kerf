@@ -133,7 +133,7 @@ function isControlSegmentCode(code: number): boolean {
 // A run of them ends where an item of a rich-inline paragraph starts inside it, and an item that
 // starts with one starts a text segment with the text after it, as a chunk does, after the break
 // the scan gives at the run, so its fragments keep the controls it starts with.
-const flagUnbroken = (flags: number[], starts: number[], breaks: Uint8Array, hangTabs: boolean): boolean => {
+const flagUnbroken = (flags: number[], starts: number[], breaks: Uint8Array, hangTabs: boolean, count: number): boolean => {
   // A line ends only where the scan breaks, so the walkers learn where it doesn't:
   // before text, zero-width glue or a control, other than at a line start. A
   // ZWSP or soft hyphen there is zero-width glue. Before a space, tab or hard break
@@ -144,7 +144,6 @@ const flagUnbroken = (flags: number[], starts: number[], breaks: Uint8Array, han
   // 318-330). A soft hyphen before the tab keeps its break (GetHyphenationBreaks,
   // nsTextFrame.cpp:4409-4457).
   let hasUnbroken = false
-  const count = flags.length
   for (let j = count - 2; j >= 0; j--) {
     const kind = flags[j]! & KIND_BITS
     const next = flags[j + 1]! & KIND_BITS
@@ -224,8 +223,8 @@ export function segmentAtLineBreaks(normalized: string, spaceSources: Uint16Arra
     lastKind = kind
     lastAlone = alone
   }
-  const hasUnbroken = flagUnbroken(flags, starts, breaks, hangTabs)
   const count = flags.length
+  const hasUnbroken = flagUnbroken(flags, starts, breaks, hangTabs, count)
   // Each segment's text, sliced once here for measurement and the neighbours it reads: sliced
   // where measurement reads it, Firefox's rich-inline preparation ran 11-19% slower (RESEARCH.md,
   // Keeping Work Bounded).

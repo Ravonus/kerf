@@ -124,38 +124,36 @@ type MeasureState = ReturnType<typeof createMeasurement>
 
 function textKerning(ctx: MeasureState, mi: number, at: number, text: string, textMetrics: SegmentMetrics, followingSpaceKerning: number): number {
   const { fontSpaceKerning, from, to, flags, fontMeasurement, scriptRuns, own, starts, ownStart, widths } = ctx
-  if (fontSpaceKerning !== null && textMetrics.spaceKerning !== noSpaceKerning) {
-    const spaceBefore = mi > from && isSpaceKind(flags[mi - 1]! & KIND_BITS)
-    const spaceAfter = mi + 1 < to && isSpaceKind(flags[mi + 1]! & KIND_BITS)
-    if (spaceBefore || spaceAfter) {
-      const kerning = textMetrics.spaceKerning ?? getSpaceKerning(text, textMetrics, fontMeasurement, fontSpaceKerning)
-      if (spaceAfter) {
-        // Premise: a kerning that tightens the word and the space after it goes on the
-        // space, which hangs, so a line that ends there has the word without it, as in
-        // Blink under a text-align other than start and for text whose element has a
-        // decoration or a background (NeedsAccurateEndPosition, line_breaker.cc:255-268).
-        // One that widens stays on the word, whose end Blink finds in the run shaped
-        // whole. In other text a line's last word is wider here than there by the
-        // kerning, never narrower (RESEARCH.md, Kerning At Line Edges).
-        followingSpaceKerning = Math.max(kerning.after, 0)
-        ctx.spaceShare = Math.min(kerning.after, 0)
-      }
-      // The space takes its kerning with this word, and takes it along where it hangs: a
-      // line that breaks between the two is shaped again without it
-      // (shaping_line_breaker.cc:307-324). Preserved spaces that start the text or follow
-      // a forced break are a Blink item of their own (inline_items_builder.cc:988-1034),
-      // which kerns with nothing.
-      if (spaceBefore && kerning.before !== 0 &&
-        !((flags[mi - 1]! & KIND_BITS) === PRESERVED_SPACE && (mi === from + 1 || (flags[mi - 2]! & KIND_BITS) === HARD_BREAK)) &&
-        spaceSharesScriptRun(scriptRuns, own, starts[mi]! - ownStart, starts[mi]! - ownStart + text.length)) {
-        widths[at - 1] = widths[at - 1]! + kerning.before
-      }
+  const spaceBefore = mi > from && isSpaceKind(flags[mi - 1]! & KIND_BITS)
+  const spaceAfter = mi + 1 < to && isSpaceKind(flags[mi + 1]! & KIND_BITS)
+  if (spaceBefore || spaceAfter) {
+    const kerning = textMetrics.spaceKerning ?? getSpaceKerning(text, textMetrics, fontMeasurement, fontSpaceKerning!)
+    if (spaceAfter) {
+      // Premise: a kerning that tightens the word and the space after it goes on the
+      // space, which hangs, so a line that ends there has the word without it, as in
+      // Blink under a text-align other than start and for text whose element has a
+      // decoration or a background (NeedsAccurateEndPosition, line_breaker.cc:255-268).
+      // One that widens stays on the word, whose end Blink finds in the run shaped
+      // whole. In other text a line's last word is wider here than there by the
+      // kerning, never narrower (RESEARCH.md, Kerning At Line Edges).
+      followingSpaceKerning = Math.max(kerning.after, 0)
+      ctx.spaceShare = Math.min(kerning.after, 0)
+    }
+    // The space takes its kerning with this word, and takes it along where it hangs: a
+    // line that breaks between the two is shaped again without it
+    // (shaping_line_breaker.cc:307-324). Preserved spaces that start the text or follow
+    // a forced break are a Blink item of their own (inline_items_builder.cc:988-1034),
+    // which kerns with nothing.
+    if (spaceBefore && kerning.before !== 0 &&
+      !((flags[mi - 1]! & KIND_BITS) === PRESERVED_SPACE && (mi === from + 1 || (flags[mi - 2]! & KIND_BITS) === HARD_BREAK)) &&
+      spaceSharesScriptRun(scriptRuns, own, starts[mi]! - ownStart, starts[mi]! - ownStart + text.length)) {
+      widths[at - 1] = widths[at - 1]! + kerning.before
     }
   }
   return followingSpaceKerning
 }
 
-function textSpacing(ctx: MeasureState, mi: number, text: string, textMetrics: SegmentMetrics): void {
+function textSpacing(ctx: MeasureState, mi: number, kind: SegmentKindCode, text: string, textMetrics: SegmentMetrics): void {
   const { fontMeasurement, engineProfile, cursiveSpacing, own, starts, ownStart, scriptRuns, letterSpacing } = ctx
   // The walkers put a gap after every grapheme of a spaced segment, so a grapheme
   // the engine gives none takes one back from its advance, here and in the advances
@@ -164,7 +162,7 @@ function textSpacing(ctx: MeasureState, mi: number, text: string, textMetrics: S
   // complex path.
   ctx.unspaced = null
   ctx.extraSpacings = noExtraSpacings
-  ctx.spacingGraphemeCount = countRenderedSpacingGraphemes(text, TEXT, engineProfile.graphemeTable)
+  ctx.spacingGraphemeCount = countRenderedSpacingGraphemes(text, kind, engineProfile.graphemeTable)
   if (cursiveSpacing) {
     ctx.unspaced = getUnspacedGraphemes(own, starts[mi]! - ownStart, starts[mi]! - ownStart + text.length, engineProfile.graphemeTable, engineProfile.unspacedCursive === 'run' ? scriptRuns : null)
     if (ctx.unspaced !== null) ctx.width -= ctx.unspaced.length * letterSpacing
@@ -175,27 +173,18 @@ function textSpacing(ctx: MeasureState, mi: number, text: string, textMetrics: S
   }
 }
 
-function measureOther(ctx: MeasureState, mi: number, kind: SegmentKindCode, text: string): void {
+function measureControl(ctx: MeasureState, mi: number, text: string): void {
   const { from, to, texts, flags, fontMeasurement, emojiCorrection, hasLetterSpacing } = ctx
-  switch (kind) {
-      case CONTROL: {
-        ctx.width = getTextWidth(text, fontMeasurement, emojiCorrection)
-        // NEL shares a WebKit text item with the text before it and with
-        // combining marks after it, and the complex text path spaces it. Complex
-        // text shares the item only when its direction matches the page's, which
-        // preparation cannot see, so NEL next to complex text keeps its spacing.
-        const nextText = mi + 1 < to ? texts[mi + 1]! : ''
-        if (hasLetterSpacing && (
-          (mi > from && (flags[mi - 1]! & KIND_BITS) === TEXT && needsComplexTextPath(texts[mi - 1]!)) ||
-          (leadingCombiningMarkRe().test(nextText) && needsComplexTextPath(nextText))
-        )) ctx.spacingGraphemeCount = 1
-        break
-      }
-      case SOFT_HYPHEN:
-      case ZERO_WIDTH_GLUE:
-      case HARD_BREAK:
-        break
-  }
+  ctx.width = getTextWidth(text, fontMeasurement, emojiCorrection)
+  // NEL shares a WebKit text item with the text before it and with
+  // combining marks after it, and the complex text path spaces it. Complex
+  // text shares the item only when its direction matches the page's, which
+  // preparation cannot see, so NEL next to complex text keeps its spacing.
+  const nextText = mi + 1 < to ? texts[mi + 1]! : ''
+  if (hasLetterSpacing && (
+    (mi > from && (flags[mi - 1]! & KIND_BITS) === TEXT && needsComplexTextPath(texts[mi - 1]!)) ||
+    (leadingCombiningMarkRe().test(nextText) && needsComplexTextPath(nextText))
+  )) ctx.spacingGraphemeCount = 1
 }
 
 function adjustAdvances(ctx: MeasureState, followingSpaceKerning: number, extraSpacings: number[], unspaced: number[] | null, letterSpacing: number): void {
@@ -268,7 +257,7 @@ export function measureSegments(ctx: MeasureState): void {
         let unspaced: number[] | null = null
         let extraSpacings = noExtraSpacings
         if (hasLetterSpacing) {
-          textSpacing(ctx, mi, text, textMetrics)
+          textSpacing(ctx, mi, kind, text, textMetrics)
           unspaced = ctx.unspaced as number[] | null
           extraSpacings = ctx.extraSpacings
         }
@@ -284,9 +273,7 @@ export function measureSegments(ctx: MeasureState): void {
         if (ctx.fitAdvances === null) break
         // A difference from the advance, so it holds whatever the advances take below.
         if (fit.lineStartExtras !== null) (ctx.breakableLineStartExtras ??= new Array<number[] | null>(to - from).fill(null))[mi - from] = fit.lineStartExtras
-        if (followingSpaceKerning !== 0 || extraSpacings.length !== 0 || unspaced !== null) {
-          adjustAdvances(ctx, followingSpaceKerning, extraSpacings, unspaced, letterSpacing)
-        }
+        adjustAdvances(ctx, followingSpaceKerning, extraSpacings, unspaced, letterSpacing)
         break
       }
       case SPACE:
@@ -300,8 +287,12 @@ export function measureSegments(ctx: MeasureState): void {
         if (engineProfile.letterSpaceTabs) ctx.spacingGraphemeCount = 1
         if (ctx.minimumTabAdvance === 0) ctx.minimumTabAdvance = getTextWidth(engineProfile.tabMinimumCharacter, fontMeasurement, emojiCorrection) / 2
         break
-      default:
-        measureOther(ctx, mi, kind, text)
+      case CONTROL:
+        measureControl(ctx, mi, text)
+        break
+      case SOFT_HYPHEN:
+      case ZERO_WIDTH_GLUE:
+      case HARD_BREAK:
         break
     }
     if (kind !== TEXT && kind !== SPACE && kind !== ZERO_WIDTH_BREAK) ctx.simpleKinds = false
@@ -310,8 +301,6 @@ export function measureSegments(ctx: MeasureState): void {
     widths[at] = addInternalLetterSpacing(ctx.width, ctx.spacingGraphemeCount, letterSpacing)
     breakableFitAdvances[at] = ctx.fitAdvances
     if (segments !== null) segments[mi - from] = text
-    if ((kind !== TEXT && text.charCodeAt(0) === 0xAD) || ctx.discretionaryHyphenContexts !== null) {
-      storeHyphenContext(ctx, mi, kind, text)
-    }
+    storeHyphenContext(ctx, mi, kind, text)
   }
 }

@@ -31,7 +31,7 @@
     "rich-inline/lines.ts": "5ab39dbfad7692e9653bfafe4caf89fa5020e3c4d8e354d79463b50f7f8e42ea",
     "rich-inline/sources.ts": "6a659bd7cdd103a0b2c871cae440d80a92049f2d6fe3ef3032d8e5104d773d8b",
     "analysis.ts": "5fcbde7ee6897c5efc44e355a929d362b63846d55d02450dc4878194fcfd25ef",
-    "analysis-segments.ts": "4f5fc6d3ec08465857dd442d32d6d2fdb682b16325c2d3d9dd39333721bc7d8d",
+    "analysis-segments.ts": "cac1680aab787df12124ac5688cd596f93cc3482fa7ee35265147b6f4305cb38",
     "analysis-types.ts": "1a63641f195e341f06c7217c3b51de9bf0603a929dd926784ffbbdbabc375312",
     "analysis-whitespace.ts": "1d70002e945e4f8c5ffba529b8f48e24a611f316b4b991e5b6361230c872767e",
     "gecko-line-breaks.ts": "d921afa2df8f8dfc5a86ad7795d74d4d3b68cfcc7f0f6c545a71eb43ed2655ea",
@@ -40,7 +40,7 @@
     "prepare.ts": "f85950e872ee9235e0689161c9512b525f4baeb234f9c20204b682038da8706c",
     "prepare-common.ts": "39ca5be54ffa6e1622a3929c431d2173e6e1e11b554b70b78e7c1c7204bc7283",
     "prepare-finish.ts": "82f41d2b20c9517e0eaeee0430be28d36bc7f1bbe26bec80f710c3d4f3f36d6c",
-    "prepare-measure.ts": "27fae9be446e0c8414e7708598c57758ed6ff5b09acda0a61a5a10a669d8a282",
+    "prepare-measure.ts": "c40326d458374e2bd996e32a5d4b21f51a97f8422a6c8fcce6178bd9d6194dad",
     "prepare-script.ts": "8dd335e9103926851cbc3f5cdb01fe4c7f3e6ed36833c660e121c7bf8c10e3b0",
     "line-break-complex.ts": "898481bb091a7a1513ec394c9ef8c53804bd171d2568ef5e04f8d00ca91a2feb",
     "line-break-complex-state.ts": "a1bb4b7bb58f133edd8d2121b7aef347a8ef9d7824752937ad71d9de9670f5f0"
