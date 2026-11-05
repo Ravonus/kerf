@@ -10,6 +10,7 @@ import { promisify } from 'node:util'
 import { gzipSync } from 'node:zlib'
 import { here } from './paths.mjs'
 import { boxed, env } from './sandbox.mjs'
+import { normalizeOverrides } from './pnpm-policy.mjs'
 
 const dependencyRoot = process.env.WEFT_EVAL_DEPS ?? here
 const require = createRequire(join(dependencyRoot, 'package.json'))
@@ -33,7 +34,10 @@ export function cloneForGrading(box, n) {
   mkdirSync(copy.home)
   mkdirSync(copy.tmp)
   // Clones, and symlinks stay symlinks: a built app has to resolve the way it did for the agent.
-  return run('/bin/cp', ['-cRP', box.app, copy.app]).then(() => copy)
+  return run('/bin/cp', ['-cRP', box.app, copy.app]).then(() => {
+    normalizeOverrides(copy.app)
+    return copy
+  })
 }
 
 export async function build(copy, stack) {
@@ -41,7 +45,6 @@ export async function build(copy, stack) {
   const environment = stack.calibrationPnpm
     ? env(copy, {
         PATH: `${join(copy.app, '.calibration-bin')}:${env(copy).PATH}`,
-        npm_config_verify_deps_before_run: 'false',
         FORCE_COLOR: '0',
       })
     : env(copy)
@@ -80,7 +83,6 @@ export async function serve(copy, stack) {
       ...(stack.calibrationPnpm
         ? {
             PATH: `${join(copy.app, '.calibration-bin')}:${env(copy).PATH}`,
-            npm_config_verify_deps_before_run: 'false',
           }
         : {}),
     }),

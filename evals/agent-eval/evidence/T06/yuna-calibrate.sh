@@ -120,6 +120,8 @@ const { writePackedPolicy } = await import(pathToFileURL(join(stage, 'source/pac
 const tarballs = JSON.parse((await import('node:fs')).readFileSync(join(stage, 'state/tgz/tarballs.json')))
 const app = join(stage, 'state/golden/weft-warp/app')
 writePackedPolicy(app, tarballs)
+const { normalizeOverrides } = await import(pathToFileURL(join(process.env.WEFT_T06_REPO, 'evals/agent-eval/lib/pnpm-policy.mjs')))
+normalizeOverrides(app)
 appendFileSync(join(app, 'pnpm-workspace.yaml'), '\nnodeLinker: hoisted\n')
 writeFileSync(join(stage, 'deps/package.json'), JSON.stringify({private:true,dependencies:{'playwright-core':'1.64.1','axe-core':'4.14.0'}}))
 writePackedPolicy(join(stage, 'deps'))
