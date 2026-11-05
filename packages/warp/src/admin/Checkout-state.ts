@@ -17,6 +17,7 @@ import { WIDE } from './Checkout-steps'
 export type CheckoutInput = {
   [K in Exclude<keyof CheckoutProps, 'onStepChange' | 'onPlaceOrder'>]-?: () => CheckoutProps[K]
 } & {
+  applyCoupon: (code: string) => ReturnType<NonNullable<CheckoutProps['coupon']>> | undefined
   onStepChange: (step: CheckoutStep) => void
   onPlaceOrder: CheckoutProps['onPlaceOrder']
 }
