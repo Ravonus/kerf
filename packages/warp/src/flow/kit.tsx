@@ -141,6 +141,44 @@ export interface FlowForm<V> {
   heading?: Heading
 }
 
+function watchStepFailure<V>(
+  p: FlowForm<V>,
+  failure: { readonly value: FlowError | undefined },
+  root: () => HTMLElement | undefined,
+  focusInvalid: (say?: string) => void,
+) {
+  onMount(() => {
+    watch(
+      () => failure.value,
+      (m: FlowError | undefined) => {
+        if (!m) return
+        if (m.surface === 'field') focusInvalid(m.summary)
+        if (m.surface === 'alert') {
+          flush()
+          root()?.querySelector<HTMLElement>('[data-part="formerr"]')?.focus()
+        }
+        if (m.surface === 'rate-limit')
+          announce(document, `${m.title} Try again in ${m.retryAfter}s.`)
+        if (m.surface === 'toast')
+          toast.show({
+            title: m.title,
+            description: m.description,
+            tone: 'critical',
+            action: p.onRetry && { label: 'Retry', onClick: () => p.onRetry!() },
+          })
+      },
+    )
+    let sent = 0
+    watch(
+      () => Object.keys(p.form ? p.form.errors.value : (p.errors ?? {})).length,
+      (n) => {
+        if (n && n !== sent) focusInvalid()
+        sent = n
+      },
+    )
+  })
+}
+
 /** One step's form state: errors from all three sources, the mapped failure and its cooldown, its surfaces' side effects. */
 export function useStepForm<V>(
   p: FlowForm<V>,
@@ -172,36 +210,7 @@ export function useStepForm<V>(
     root?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
     if (say) announce(document, say)
   }
-  onMount(() => {
-    watch(
-      () => failure.value,
-      (m: FlowError | undefined) => {
-        if (!m) return
-        if (m.surface === 'field') focusInvalid(m.summary)
-        if (m.surface === 'alert') {
-          flush()
-          root?.querySelector<HTMLElement>('[data-part="formerr"]')?.focus()
-        }
-        if (m.surface === 'rate-limit')
-          announce(document, `${m.title} Try again in ${m.retryAfter}s.`)
-        if (m.surface === 'toast')
-          toast.show({
-            title: m.title,
-            description: m.description,
-            tone: 'critical',
-            action: p.onRetry && { label: 'Retry', onClick: () => p.onRetry!() },
-          })
-      },
-    )
-    let sent = 0
-    watch(
-      () => Object.keys(p.form ? p.form.errors.value : (p.errors ?? {})).length,
-      (n) => {
-        if (n && n !== sent) focusInvalid()
-        sent = n
-      },
-    )
-  })
+  watchStepFailure(p, failure, () => root, focusInvalid)
   const submit = (e: SubmitEvent) => {
     e.preventDefault()
     const f = e.currentTarget as HTMLFormElement
