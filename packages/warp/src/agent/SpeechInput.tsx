@@ -40,7 +40,90 @@ export interface SpeechInputProps {
  * blocked mic is a caution Alert with the fix, not a dead button. Uses the browser's speech recognition unless given an `engine`.
  */
 export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProps) {
-  const start = untrack(() => initial)
+  const view = speechState(
+    () => initial,
+    () => mics,
+    () => engine,
+    () => onInsert,
+  )
+  return (
+    <div ref={(n) => (view.refs.root = n)} data-scope="speech" data-state={view.mode.value}>
+      <Select
+        label="Microphone"
+        options={view.options.value}
+        onChange={(e: Event) => {
+          const s = e.currentTarget as HTMLSelectElement
+          view.mic.value = s.value
+          view.say(`Microphone: ${s.selectedOptions[0]!.textContent}`)
+        }}
+      />
+      <div data-part="mic">
+        <span data-part="level" aria-hidden="true" style={`--level:${view.level.value}`}>
+          <i></i>
+          <i></i>
+          <i></i>
+        </span>
+        <span>{view.mode.value === 'blocked' ? 'Blocked by the browser' : 'Input level'}</span>
+      </div>
+      <div data-part="strip" data-sweep="" data-pin={view.on.value ? '' : undefined}>
+        <Sweep />
+        <Button
+          data-icon-only=""
+          tone={view.on.value ? 'critical' : undefined}
+          aria-pressed={view.on.value ? 'true' : 'false'}
+          label={view.on.value ? 'Stop dictation' : 'Start dictation'}
+          onClick={view.toggle}
+        >
+          <MicIcon />
+        </Button>
+        <span ref={(n) => (view.refs.wave = n)} data-part="wave" data-loop="" aria-hidden="true">
+          {BARS.map((b) => (
+            <i key={b}></i>
+          ))}
+        </span>
+        <span data-part="time" role="timer" aria-label="Recording time" data-numeric="">
+          {formatClock(view.seconds.value)}
+        </span>
+      </div>
+      <div data-part="transcript" role="log" aria-live="polite" aria-label="Transcript">
+        {view.words.value ? (
+          <>
+            {view.final.value} <span data-part="interim">{view.interim.value}</span>
+          </>
+        ) : (
+          <small>Press the mic and speak. Nothing is sent until you insert it.</small>
+        )}
+      </div>
+      <div>
+        <Button size="sm" disabled={!view.words.value || view.on.value} onClick={view.insert}>
+          Insert into message
+        </Button>{' '}
+        <Button emphasis="ghost" tone="neutral" size="sm" onClick={view.clear}>
+          Clear
+        </Button>
+      </div>
+      {view.mode.value === 'blocked' && (
+        <Alert tone="caution" title="The browser is blocking the microphone">
+          Click the lock in the address bar, allow Microphone, then press the mic again. Typing
+          still works.
+        </Alert>
+      )}
+      {view.mode.value === 'unsupported' && (
+        <Alert tone="info" title="This browser has no dictation">
+          Typing still works.
+        </Alert>
+      )}
+    </div>
+  )
+}
+
+function speechState(
+  initial: () => SpeechInputProps['initial'],
+  mics: () => SpeechInputProps['mics'],
+  engine: () => SpeechInputProps['engine'],
+  onInsert: () => SpeechInputProps['onInsert'],
+) {
+  const start = untrack(initial)
   const mode = state<DictationState>(start?.state ?? 'idle')
   const final = state(start?.final ?? '')
   const interim = state(start?.interim ?? '')
@@ -48,25 +131,55 @@ export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProp
   const level = state(0)
   const found = state<{ value: string; label: string }[]>(DEFAULT_MIC)
   const mic = state('')
-  const options = derived(() => mics ?? found.value)
+  const options = derived(() => mics() ?? found.value)
   const on = derived(() => mode.value === 'listening')
   const words = derived(() => (final.value + ' ' + interim.value).trim())
-  let root: HTMLElement | undefined
-  let wave: HTMLElement | undefined
-  let live: DictationEngine | undefined
-  let clock: ReturnType<typeof setInterval> | undefined
+  const refs: {
+    root?: HTMLElement | undefined
+    wave?: HTMLElement | undefined
+    live?: DictationEngine | undefined
+    clock?: ReturnType<typeof setInterval> | undefined
+  } = {}
   useSweep()
   use(
     speechWave,
-    () => wave,
+    () => refs.wave,
     () => level.value,
   )
-  const say = (text: string, urgent = false) => announce(root!.ownerDocument, text, urgent)
+  const data = { mode, final, interim, seconds, level, found, mic, options, on, words, refs }
+  const actions = speechControl(data, mics, engine, onInsert)
+  return { ...data, ...actions }
+}
+type SpeechData = {
+  mode: ReturnType<typeof state<DictationState>>
+  final: ReturnType<typeof state<string>>
+  interim: ReturnType<typeof state<string>>
+  seconds: ReturnType<typeof state<number>>
+  level: ReturnType<typeof state<number>>
+  found: ReturnType<typeof state<{ value: string; label: string }[]>>
+  mic: ReturnType<typeof state<string>>
+  on: { readonly value: boolean }
+  words: { readonly value: string }
+  refs: {
+    root?: HTMLElement | undefined
+    wave?: HTMLElement | undefined
+    live?: DictationEngine | undefined
+    clock?: ReturnType<typeof setInterval> | undefined
+  }
+}
+function speechControl(
+  d: SpeechData,
+  mics: () => SpeechInputProps['mics'],
+  engine: () => SpeechInputProps['engine'],
+  onInsert: () => SpeechInputProps['onInsert'],
+) {
+  const { mode, final, interim, seconds, level, found, mic, on, words, refs } = d
+  const say = (text: string, urgent = false) => announce(refs.root!.ownerDocument, text, urgent)
   const tick = (run: boolean) => {
-    clearInterval(clock)
+    clearInterval(refs.clock)
     if (run) {
       seconds.value = 0
-      clock = setInterval(() => seconds.value++, 1000)
+      refs.clock = setInterval(() => seconds.value++, 1000)
     }
   }
   const events: DictationEvents = {
@@ -93,96 +206,28 @@ export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProp
     },
   }
   onMount(() => {
-    if (!untrack(() => mics))
+    if (!untrack(mics))
       void listMics(window).then((list) => {
         if (list.length) found.value = list
       })
     onCleanup(() => {
-      clearInterval(clock)
-      live?.stop()
+      clearInterval(refs.clock)
+      refs.live?.stop()
     })
   })
   const toggle = () => {
-    if (on.value) return live?.stop()
-    live ??= (untrack(() => engine) ?? ((e) => dictation(window, e)))(events)
+    if (on.value) return refs.live?.stop()
+    refs.live ??= (untrack(engine) ?? ((e) => dictation(window, e)))(events)
     final.value = interim.value = ''
-    live.start(mic.value || undefined)
+    refs.live.start(mic.value || undefined)
   }
   const clear = () => {
-    if (on.value) live?.stop()
+    if (on.value) refs.live?.stop()
     final.value = interim.value = ''
   }
   const insert = () => {
-    onInsert?.(words.value)
+    onInsert()?.(words.value)
     clear()
   }
-  return (
-    <div ref={(n) => (root = n)} data-scope="speech" data-state={mode.value}>
-      <Select
-        label="Microphone"
-        options={options.value}
-        onChange={(e: Event) => {
-          const s = e.currentTarget as HTMLSelectElement
-          mic.value = s.value
-          say(`Microphone: ${s.selectedOptions[0]!.textContent}`)
-        }}
-      />
-      <div data-part="mic">
-        <span data-part="level" aria-hidden="true" style={`--level:${level.value}`}>
-          <i></i>
-          <i></i>
-          <i></i>
-        </span>
-        <span>{mode.value === 'blocked' ? 'Blocked by the browser' : 'Input level'}</span>
-      </div>
-      <div data-part="strip" data-sweep="" data-pin={on.value ? '' : undefined}>
-        <Sweep />
-        <Button
-          data-icon-only=""
-          tone={on.value ? 'critical' : undefined}
-          aria-pressed={on.value ? 'true' : 'false'}
-          label={on.value ? 'Stop dictation' : 'Start dictation'}
-          onClick={toggle}
-        >
-          <MicIcon />
-        </Button>
-        <span ref={(n) => (wave = n)} data-part="wave" data-loop="" aria-hidden="true">
-          {BARS.map((b) => (
-            <i key={b}></i>
-          ))}
-        </span>
-        <span data-part="time" role="timer" aria-label="Recording time" data-numeric="">
-          {formatClock(seconds.value)}
-        </span>
-      </div>
-      <div data-part="transcript" role="log" aria-live="polite" aria-label="Transcript">
-        {words.value ? (
-          <>
-            {final.value} <span data-part="interim">{interim.value}</span>
-          </>
-        ) : (
-          <small>Press the mic and speak. Nothing is sent until you insert it.</small>
-        )}
-      </div>
-      <div>
-        <Button size="sm" disabled={!words.value || on.value} onClick={insert}>
-          Insert into message
-        </Button>{' '}
-        <Button emphasis="ghost" tone="neutral" size="sm" onClick={clear}>
-          Clear
-        </Button>
-      </div>
-      {mode.value === 'blocked' && (
-        <Alert tone="caution" title="The browser is blocking the microphone">
-          Click the lock in the address bar, allow Microphone, then press the mic again. Typing
-          still works.
-        </Alert>
-      )}
-      {mode.value === 'unsupported' && (
-        <Alert tone="info" title="This browser has no dictation">
-          Typing still works.
-        </Alert>
-      )}
-    </div>
-  )
+  return { say, toggle, clear, insert }
 }
