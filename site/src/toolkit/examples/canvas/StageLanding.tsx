@@ -8,23 +8,35 @@ export const StageLanding = () => {
   const look = state<Look>('dither')
   return (
     <Stack gap="related">
-      <Row gap="tight" role="group" aria-label="Look">
+      <Row
+        gap="tight"
+        role="group"
+        aria-label="Look"
+      >
         {LOOK_NAMES.map(([id, label]) => (
           <Button
             key={id}
             size="sm"
             tone="neutral"
-            emphasis={look.value === id ? 'solid' : 'outline'}
-            aria-pressed={look.value === id ? 'true' : 'false'}
+            emphasis={
+              look.value === id ? 'solid' : 'outline'
+            }
+            aria-pressed={
+              look.value === id ? 'true' : 'false'
+            }
             onClick={() => (look.value = id)}
           >
             {label}
           </Button>
         ))}
       </Row>
-      {look.value === 'dither' && <Landing look="dither" />}
+      {look.value === 'dither' && (
+        <Landing look="dither" />
+      )}
       {look.value === 'flat' && <Landing look="flat" />}
-      {look.value === 'sketch' && <Landing look="sketch" />}
+      {look.value === 'sketch' && (
+        <Landing look="sketch" />
+      )}
       {look.value === 'neon' && <Landing look="neon" />}
     </Stack>
   )

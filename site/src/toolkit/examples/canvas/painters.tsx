@@ -1,6 +1,18 @@
 import type { StagePainter } from '@weft-js/warp'
-import type { Style, PaintColor, PaintRing, PaintLift, PaintBody } from './paint-primitives'
-import { stroke, paint, outline, seedOf, rng } from './paint-primitives'
+import type {
+  Style,
+  PaintColor,
+  PaintRing,
+  PaintLift,
+  PaintBody,
+} from './paint-primitives'
+import {
+  stroke,
+  paint,
+  outline,
+  seedOf,
+  rng,
+} from './paint-primitives'
 
 export function fieldPainters(
   st: Style,
@@ -22,8 +34,18 @@ export function fieldPainters(
       const line = p.invalid
         ? c(s, '--warp-color-critical-solid')
         : c(s, p.focus > 0.5 ? st.accent : st.soft)
-      body(p, s, c(s, st.paper), line, 1.5 + p.focus, true)
-      if (p.el.tagName === 'SELECT' || p.el.getAttribute('aria-haspopup') === 'listbox') {
+      body(
+        p,
+        s,
+        c(s, st.paper),
+        line,
+        1.5 + p.focus,
+        true,
+      )
+      if (
+        p.el.tagName === 'SELECT' ||
+        p.el.getAttribute('aria-haspopup') === 'listbox'
+      ) {
         const ctx = s.ctx,
           x = p.x + p.w - 18,
           y = p.y + p.h / 2,
@@ -35,13 +57,23 @@ export function fieldPainters(
         stroke(ctx, c(s, st.ink), 1.6, st)
       }
     },
-    // A StageSelect's list, in a stage of its own: a panel on a short lift, and the row under the keys or pointer filled.
+    // A StageSelect's list, in a stage of its own: a
+    // panel on a short lift, and the row under the keys
+    // or pointer filled.
     menu(p, s) {
       lift(p, s, 6)
-      body(p, s, c(s, st.paper), c(s, st.rough ? st.ink : st.soft), 1.5, true)
+      body(
+        p,
+        s,
+        c(s, st.paper),
+        c(s, st.rough ? st.ink : st.soft),
+        1.5,
+        true,
+      )
     },
     option(p, s) {
-      if (p.hover > 0.5) body(p, s, c(s, st.accent), c(s, st.accent), 1)
+      if (p.hover > 0.5)
+        body(p, s, c(s, st.accent), c(s, st.accent), 1)
       else if (p.on > 0.5) {
         const ctx = s.ctx
         ctx.beginPath()
@@ -62,20 +94,39 @@ export function checkPainters(
   return {
     check(p, s) {
       const ctx = s.ctx,
-        radio = (p.el as HTMLInputElement).type === 'radio',
+        radio =
+          (p.el as HTMLInputElement).type === 'radio',
         round = radio ? p.w / 2 : 5
       body(
         { ...p, r: round },
         s,
         c(s, p.hover ? st.soft : st.paper),
-        c(s, st.rough ? st.ink : p.on > 0.5 ? st.accent : st.soft),
+        c(
+          s,
+          st.rough
+            ? st.ink
+            : p.on > 0.5
+              ? st.accent
+              : st.soft,
+        ),
         1.6,
       )
       if (p.on > 0) {
         if (radio) {
           ctx.beginPath()
-          ctx.arc(p.x + p.w / 2, p.y + p.h / 2, (p.w / 4) * p.on, 0, Math.PI * 2)
-          paint(ctx, c(s, st.accent), { ...st, hatch: false }, [p.x, p.y, p.w, p.h])
+          ctx.arc(
+            p.x + p.w / 2,
+            p.y + p.h / 2,
+            (p.w / 4) * p.on,
+            0,
+            Math.PI * 2,
+          )
+          paint(
+            ctx,
+            c(s, st.accent),
+            { ...st, hatch: false },
+            [p.x, p.y, p.w, p.h],
+          )
         } else {
           // The tick draws itself on as `on` eases in.
           ctx.beginPath()
@@ -111,7 +162,13 @@ export function switchPainters(
         1.4,
       )
       ctx.beginPath()
-      ctx.arc(kx + d / 2, p.y + 3 + d / 2, d / 2, 0, Math.PI * 2)
+      ctx.arc(
+        kx + d / 2,
+        p.y + 3 + d / 2,
+        d / 2,
+        0,
+        Math.PI * 2,
+      )
       ctx.fillStyle = c(s, st.paper)
       ctx.fill()
       stroke(ctx, c(s, st.ink), 1.2, st)
@@ -144,13 +201,44 @@ export function rangeMeterPainters(
       ctx.fillStyle = c(s, st.paper)
       ctx.fill()
       stroke(ctx, c(s, st.accent), 2.5, st)
-      if (p.focus > 0.5) ring({ ...p, x: kx - 10, y: y - 10, w: 20, h: 20, r: 10 }, s)
+      if (p.focus > 0.5)
+        ring(
+          {
+            ...p,
+            x: kx - 10,
+            y: y - 10,
+            w: 20,
+            h: 20,
+            r: 10,
+          },
+          s,
+        )
     },
     meter(p, s) {
-      body({ ...p, r: p.h / 2 }, s, c(s, st.paper), c(s, st.soft), 1.2)
+      body(
+        { ...p, r: p.h / 2 },
+        s,
+        c(s, st.paper),
+        c(s, st.soft),
+        1.2,
+      )
       const ctx = s.ctx
-      outline(ctx, p.x, p.y, Math.max(p.h, p.w * p.value), p.h, p.h / 2, st, seedOf(p.el) + 5)
-      paint(ctx, c(s, st.accent), st, [p.x, p.y, p.w * p.value, p.h])
+      outline(
+        ctx,
+        p.x,
+        p.y,
+        Math.max(p.h, p.w * p.value),
+        p.h,
+        p.h / 2,
+        st,
+        seedOf(p.el) + 5,
+      )
+      paint(ctx, c(s, st.accent), st, [
+        p.x,
+        p.y,
+        p.w * p.value,
+        p.h,
+      ])
     },
   }
 }
@@ -166,7 +254,14 @@ export function chipRulePainters(
       body(
         { ...p, r: p.h / 2 },
         s,
-        c(s, p.on > 0.5 ? st.accent : p.hover ? st.soft : st.paper),
+        c(
+          s,
+          p.on > 0.5
+            ? st.accent
+            : p.hover
+              ? st.soft
+              : st.paper,
+        ),
         c(s, p.on > 0.5 ? st.accent : st.soft),
         1.2,
       )
@@ -178,13 +273,17 @@ export function chipRulePainters(
         j = rng(seedOf(p.el))
       ctx.beginPath()
       ctx.moveTo(p.x, y)
-      for (let x = p.x; x <= p.x + p.w; x += 24) ctx.lineTo(x, y + j() * st.rough * 1.5)
+      for (let x = p.x; x <= p.x + p.w; x += 24)
+        ctx.lineTo(x, y + j() * st.rough * 1.5)
       stroke(ctx, c(s, st.soft), 1.5, st)
     },
   }
 }
 
-export function detailPainters(st: Style, c: PaintColor): Record<string, StagePainter> {
+export function detailPainters(
+  st: Style,
+  c: PaintColor,
+): Record<string, StagePainter> {
   return {
     clear(p, s) {
       const ctx = s.ctx

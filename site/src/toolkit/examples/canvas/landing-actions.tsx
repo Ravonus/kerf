@@ -1,13 +1,34 @@
 import type { State } from '@weft-js/core'
-import { Stack, Row, Grid, StageSelect } from '@weft-js/warp'
 import { state, untrack } from '@weft-js/core'
-import { LAND_SECTION, H2, LAND_PLANS, LAND_FAQ, DISPLAY, LookStage } from './stage-landing'
+import {
+  Stack,
+  Row,
+  Grid,
+  StageSelect,
+} from '@weft-js/warp'
+import {
+  LAND_SECTION,
+  H2,
+  LAND_PLANS,
+  LAND_FAQ,
+  DISPLAY,
+} from './landing-content'
+import { LookStage } from './stage-landing'
 import type { Look } from './stage-landing'
-import { landingHeader, landingHero, landingFeatures, landingControls } from './landing-sections'
+import {
+  landingHeader,
+  landingHero,
+  landingFeatures,
+  landingControls,
+} from './landing-sections'
 
 function billingPeriod(yearly: State<boolean>) {
   return (
-    <Row gap="tight" role="group" aria-label="Billing period">
+    <Row
+      gap="tight"
+      role="group"
+      aria-label="Billing period"
+    >
       <button
         data-skin="chip"
         aria-pressed={yearly.value ? 'false' : 'true'}
@@ -32,31 +53,64 @@ export function landingPricing(
   price: (monthly: number) => number,
 ) {
   return (
-    <section data-land="pricing" style={LAND_SECTION}>
+    <section
+      data-land="pricing"
+      style={LAND_SECTION}
+    >
       <Stack gap="group">
-        <Row justify="between" gap="related" wrap>
-          <h2 data-skin="type" style={H2}>
+        <Row
+          justify="between"
+          gap="related"
+          wrap
+        >
+          <h2
+            data-skin="type"
+            style={H2}
+          >
             Pricing
           </h2>
           {billingPeriod(yearly)}
         </Row>
-        <Grid min="md" cols={3} gap="group">
+        <Grid
+          min="md"
+          cols={3}
+          gap="group"
+        >
           {LAND_PLANS.map((p) => (
             <button
               key={p.name}
               data-skin="card"
-              data-ramp={p.name === 'Team' ? 'accent' : undefined}
-              aria-pressed={plan.value === p.name ? 'true' : 'false'}
+              data-ramp={
+                p.name === 'Team' ? 'accent' : undefined
+              }
+              aria-pressed={
+                plan.value === p.name ? 'true' : 'false'
+              }
               onClick={() => (plan.value = p.name)}
             >
-              <span style="font-weight:700;font-size:18px">{p.name}</span>
-              <span style="font-family:var(--warp-font-display);font-size:44px;font-weight:800;line-height:1">
+              <span
+                style={'font-weight:700;font-size:18px'}
+              >
+                {p.name}
+              </span>
+              <span
+                style={
+                  'font-family:' +
+                  'var(--warp-font-display);' +
+                  'font-size:44px;font-weight:800;' +
+                  'line-height:1'
+                }
+              >
                 ${price(p.monthly)}
-                <span style="font-size:15px;font-weight:500">
+                <span
+                  style={'font-size:15px;font-weight:500'}
+                >
                   {yearly.value ? ' a year' : ' a month'}
                 </span>
               </span>
-              <span style="line-height:1.5">{p.blurb}</span>
+              <span style="line-height:1.5">
+                {p.blurb}
+              </span>
             </button>
           ))}
         </Grid>
@@ -67,13 +121,22 @@ export function landingPricing(
 
 export function landingFaq() {
   return (
-    <section data-land="faq" style={LAND_SECTION}>
+    <section
+      data-land="faq"
+      style={LAND_SECTION}
+    >
       <Stack gap="group">
-        <h2 data-skin="type" style={H2}>
+        <h2
+          data-skin="type"
+          style={H2}
+        >
           Questions
         </h2>
         {LAND_FAQ.map((f) => (
-          <details key={f.q} data-skin="card">
+          <details
+            key={f.q}
+            data-skin="card"
+          >
             <summary>{f.q}</summary>
             <p style="line-height:1.55">{f.a}</p>
           </details>
@@ -84,23 +147,33 @@ export function landingFaq() {
 }
 
 export function landingFooter(joined: State<boolean>) {
+  const submit = (e: Event) => {
+    e.preventDefault()
+    joined.value = true
+  }
   return (
-    <footer style={`${LAND_SECTION};display:grid;gap:24px`}>
+    <footer
+      style={`${LAND_SECTION};display:grid;gap:24px`}
+    >
       <form
         data-skin="card"
-        onSubmit={(e: Event) => {
-          e.preventDefault()
-          joined.value = true
-        }}
+        onSubmit={submit}
       >
         <h2
           data-skin="type"
           data-ramp="accent"
-          style={`${DISPLAY};font-size:clamp(26px,4cqi,40px)`}
+          style={
+            DISPLAY + ';font-size:clamp(26px,4cqi,40px)'
+          }
         >
-          {joined.value ? 'You are on the list.' : 'Get the changelog'}
+          {joined.value
+            ? 'You are on the list.'
+            : 'Get the changelog'}
         </h2>
-        <Row gap="related" wrap>
+        <Row
+          gap="related"
+          wrap
+        >
           <input
             type="email"
             required
@@ -113,9 +186,15 @@ export function landingFooter(joined: State<boolean>) {
         </Row>
       </form>
       <div data-skin="rule"></div>
-      <Row justify="between" wrap gap="related">
+      <Row
+        justify="between"
+        wrap
+        gap="related"
+      >
         <span data-skin="clear">© 2026 weft</span>
-        <span data-skin="clear">Painted on one canvas.</span>
+        <span data-skin="clear">
+          Painted on one canvas.
+        </span>
       </Row>
     </footer>
   )
@@ -128,19 +207,26 @@ export function landingDialog(
   setDialog: (n: HTMLDialogElement) => HTMLDialogElement,
   close: () => void,
 ) {
+  const submit = (e: Event) => {
+    e.preventDefault()
+    signedUp.value = true
+  }
   return (
-    <dialog ref={setDialog} aria-label="Start a project" onClose={() => (signedUp.value = false)}>
+    <dialog
+      ref={setDialog}
+      aria-label="Start a project"
+      onClose={() => (signedUp.value = false)}
+    >
       <LookStage
         look={name}
         role="modal"
-        onClick={(e: MouseEvent) => e.target === e.currentTarget && close()}
+        onClick={(e: MouseEvent) =>
+          e.target === e.currentTarget && close()
+        }
       >
         <form
           data-skin="panel"
-          onSubmit={(e: Event) => {
-            e.preventDefault()
-            signedUp.value = true
-          }}
+          onSubmit={submit}
         >
           <div data-skin="bar">
             <span>Start a project</span>
@@ -148,16 +234,27 @@ export function landingDialog(
           <Stack gap="related">
             {signedUp.value ? (
               <p style="margin:0;line-height:1.5">
-                Done. Your first preview builds as soon as you push.
+                Done. Your first preview builds as soon as
+                you push.
               </p>
             ) : (
               signupFields(plan)
             )}
-            <Row gap="related" justify="end">
-              <button type="button" data-skin="button" data-look="outline" onClick={() => close()}>
+            <Row
+              gap="related"
+              justify="end"
+            >
+              <button
+                type="button"
+                data-skin="button"
+                data-look="outline"
+                onClick={() => close()}
+              >
                 {signedUp.value ? 'Close' : 'Cancel'}
               </button>
-              {!signedUp.value && <button data-skin="button">Create</button>}
+              {!signedUp.value && (
+                <button data-skin="button">Create</button>
+              )}
             </Row>
           </Stack>
         </form>
@@ -171,7 +268,13 @@ function signupFields(plan: State<string>) {
     <>
       <label data-part="label">
         Email
-        <input type="email" required autofocus placeholder="you@company.com" data-skin="field" />
+        <input
+          type="email"
+          required
+          autofocus
+          placeholder="you@company.com"
+          data-skin="field"
+        />
       </label>
       <label data-part="label">
         Plan
@@ -183,7 +286,11 @@ function signupFields(plan: State<string>) {
         />
       </label>
       <label data-part="option">
-        <input type="checkbox" data-skin="check" checked />
+        <input
+          type="checkbox"
+          data-skin="check"
+          checked
+        />
         Send me the changelog
       </label>
     </>
@@ -198,12 +305,20 @@ export function Landing({ look }: { look: Look }) {
   const signedUp = state(false)
   const name = untrack(() => look)
   let dialog: HTMLDialogElement | undefined
-  const price = (monthly: number) => (yearly.value ? Math.round(monthly * 10) : monthly)
+  const price = (monthly: number) =>
+    yearly.value ? Math.round(monthly * 10) : monthly
   const open = () => dialog?.showModal()
   const close = () => dialog?.close()
   const setDialog = (n: HTMLDialogElement) => (dialog = n)
   return (
-    <LookStage look={name} role="page" aria-label="weft, a landing page painted on one canvas">
+    <LookStage
+      look={name}
+      role="page"
+      aria-label={[
+        'weft, a landing page painted ',
+        'on one canvas',
+      ].join('')}
+    >
       {landingHeader(name, open)}
 
       {landingHero(open)}
@@ -218,7 +333,13 @@ export function Landing({ look }: { look: Look }) {
 
       {landingFooter(joined)}
 
-      {landingDialog(name, plan, signedUp, setDialog, close)}
+      {landingDialog(
+        name,
+        plan,
+        signedUp,
+        setDialog,
+        close,
+      )}
     </LookStage>
   )
 }
