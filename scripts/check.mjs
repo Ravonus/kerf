@@ -191,6 +191,16 @@ const STEPS = [
     },
   },
   {
+    id: 'api-snapshots',
+    covers: 'core and start export maps and reference coverage',
+    fix: 'Review export changes, update snapshots, and document each path.',
+    async run() {
+      const test = await run(process.execPath, ['--test', 'scripts/quality/api-snapshots.test.mjs'])
+      const check = await run(process.execPath, ['scripts/quality/api-snapshots.mjs'])
+      return { problems: [...lines(test).problems, ...lines(check).problems] }
+    },
+  },
+  {
     id: 'diagnostic-catalog',
     covers: 'compiler diagnostic catalog, emit sites and compile test assertions',
     fix: 'Resolve catalog coverage gaps or update the temporary baseline.',
