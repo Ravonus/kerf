@@ -5,7 +5,7 @@ import type { IconRef } from './Icon'
 import { fieldView } from './Field/view'
 import { use } from '@weft-js/warp-core/weft'
 import './fields'
-import '@weft-js/warp-core/styles/inputs/text.css'
+import '@weft-js/warp-core/styles/inputs/text-field.css'
 
 interface FieldBase {
   /** The accessible name, drawn as the floating border label (or above, classic). Required. */
