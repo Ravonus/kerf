@@ -18,6 +18,7 @@ export function checkoutAddress(model: CheckoutModel, Nav: CheckoutNav) {
     addressAlert,
   } = model.s
   const { input } = model
+  const live = addressProps(input)
   const { submitAddress } = model.nav
   return (
     <section
@@ -35,10 +36,10 @@ export function checkoutAddress(model: CheckoutModel, Nav: CheckoutNav) {
         <AddressField
           label="Shipping address"
           value={address}
-          countries={input.countries()}
-          defaultCountry={input.defaultCountry()!}
-          provider={input.addressProvider()}
-          locale={input.locale()}
+          countries={live.countries}
+          defaultCountry={live.defaultCountry!}
+          provider={live.addressProvider}
+          locale={live.locale}
           errors={addressErrors.value}
         />
         <Input
@@ -62,9 +63,9 @@ export function checkoutAddress(model: CheckoutModel, Nav: CheckoutNav) {
           <AddressField
             label="Billing address"
             value={billing}
-            countries={input.countries()}
-            defaultCountry={input.defaultCountry()!}
-            locale={input.locale()}
+            countries={live.countries}
+            defaultCountry={live.defaultCountry!}
+            locale={live.locale}
             errors={billingErrors.value}
           />
         )}
@@ -104,4 +105,21 @@ function checkoutContact(model: CheckoutModel) {
       />
     </div>
   )
+}
+
+function addressProps(input: CheckoutModel['input']) {
+  return {
+    get countries() {
+      return input.countries()
+    },
+    get defaultCountry() {
+      return input.defaultCountry()
+    },
+    get addressProvider() {
+      return input.addressProvider()
+    },
+    get locale() {
+      return input.locale()
+    },
+  }
 }
