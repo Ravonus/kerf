@@ -23,7 +23,7 @@ function findings(source: string, extra: Record<string, string> = {}) {
 
 const codes = (source: string) => findings(source).map((finding: { code: string }) => finding.code)
 
-describe('W007 core Derived writes', () => {
+describe('W007 write diagnostics', () => {
   it('maps a real TS2540 to error severity and state/pure-derived advice without edits', () => {
     const result = findings(`${prefix} d.value = 1`)
     expect(result).toHaveLength(1)
@@ -54,7 +54,7 @@ describe('W007 core Derived writes', () => {
   })
 })
 
-describe('W007 core Derived writes', () => {
+describe('W007 aliases and exclusions', () => {
   it('follows core import, namespace, receiver and written type aliases', () => {
     for (const source of [
       "import { derived as calculate } from '@weft-js/core'; const d = calculate(() => 0); d.value = 1",
@@ -97,7 +97,7 @@ describe('W007 core Derived writes', () => {
   })
 })
 
-describe('W007 core Derived writes', () => {
+describe('W007 aliases and repairs', () => {
   it('recognizes the exported Derived alias without mistaking a matching State mapping for it', () => {
     const mapped = `declare module '@weft-js/core' {
       export interface State<T> { value: T; readonly stateBrand: 'state' }
@@ -118,7 +118,7 @@ describe('W007 core Derived writes', () => {
   })
 })
 
-describe('W007 core Derived writes', () => {
+describe('W007 project and host checks', () => {
   it('checks plain TypeScript through analyze/all and clears repaired findings', async () => {
     for (const filename of ['state.ts', 'state.mts', 'state.cts']) {
       const root = mkdtempSync(join(tmpdir(), 'weft-derived-write-'))

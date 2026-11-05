@@ -26,7 +26,7 @@ function findings(source: string, extra: Record<string, string> = {}) {
 
 const codes = (source: string) => findings(source).map((finding: { code: string }) => finding.code)
 
-describe('W008 typed component props', () => {
+describe('W008 value and box contracts', () => {
   it('reports both directions with error severity, advice and no edits', () => {
     for (const [jsx, direction] of [
       ['<Value n={n} />', 'expects a value'],
@@ -94,7 +94,7 @@ describe('W008 typed component props', () => {
   })
 })
 
-describe('W008 typed component props', () => {
+describe('W008 aliases and quiet cases', () => {
   it('keeps repaired value and valid box props quiet', () => {
     for (const jsx of [
       '<Value n={n.value} />',
@@ -141,7 +141,7 @@ describe('W008 typed component props', () => {
   })
 })
 
-describe('W008 typed component props', () => {
+describe('W008 project and host checks', () => {
   it('preserves unrelated type errors, valid unions, native props and non-prop errors', () => {
     expect(codes(`${prefix} const s = state('wrong'); const a = <Value n={s} />`)).toEqual([
       'TS2322',
