@@ -111,14 +111,9 @@ import DemoUiState from '../demos/ui-state'
 import '@weft-js/warp-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
-/**
- * A Learn page's live demo. One JSX site per demo, as in PageExample: each is then an island the server renders, and a
- * press before its code has loaded is held and replayed. scripts/content.mjs reads the ids here, so a page can only name
- * a demo that has a site.
- */
-export function LearnDemo(props: { id: string }) {
+function learnBasics(props: { id: string }) {
   return (
-    <div data-part="run">
+    <>
       {props.id === 'alias' && <DemoAlias />}
       {props.id === 'async' && <DemoAsync />}
       {props.id === 'bind' && <DemoBind />}
@@ -155,6 +150,13 @@ export function LearnDemo(props: { id: string }) {
       {props.id === 'events' && <DemoEvents />}
       {props.id === 'getting-started' && <DemoGettingStarted />}
       {props.id === 'hello' && <DemoHello />}
+    </>
+  )
+}
+
+function learnInteraction(props: { id: string }) {
+  return (
+    <>
       {props.id === 'interact-bind-input' && <DemoInteractBindInput />}
       {props.id === 'interact-controls' && <DemoInteractControls />}
       {props.id === 'interact-flush' && <DemoInteractFlush />}
@@ -171,6 +173,13 @@ export function LearnDemo(props: { id: string }) {
       {props.id === 'interact-todos-step-3' && <DemoInteractTodosStep3 />}
       {props.id === 'interact-toolbar' && <DemoInteractToolbar />}
       {props.id === 'loading' && <DemoLoading />}
+    </>
+  )
+}
+
+function learnState(props: { id: string }) {
+  return (
+    <>
       {props.id === 'manage-accordion' && <DemoManageAccordion />}
       {props.id === 'manage-chain' && <DemoManageChain />}
       {props.id === 'manage-context' && <DemoManageContext />}
@@ -187,6 +196,13 @@ export function LearnDemo(props: { id: string }) {
       {props.id === 'rules' && <DemoRules />}
       {props.id === 'scope' && <DemoScope />}
       {props.id === 'search' && <DemoSearch />}
+    </>
+  )
+}
+
+function learnServer(props: { id: string }) {
+  return (
+    <>
       {props.id === 'server-fold' && <DemoServerFold />}
       {props.id === 'server-live-tags' && <DemoServerLiveTags />}
       {props.id === 'server-meta-preview' && <DemoServerMetaPreview />}
@@ -198,6 +214,13 @@ export function LearnDemo(props: { id: string }) {
       {props.id === 'stack-form' && <DemoStackForm />}
       {props.id === 'stack-optimistic' && <DemoStackOptimistic />}
       {props.id === 'stack-tags' && <DemoStackTags />}
+    </>
+  )
+}
+
+function learnStart(props: { id: string }) {
+  return (
+    <>
       {props.id === 'start-components' && <DemoStartComponents />}
       {props.id === 'start-conditional' && <DemoStartConditional />}
       {props.id === 'start-counter' && <DemoStartCounter />}
@@ -216,6 +239,13 @@ export function LearnDemo(props: { id: string }) {
       {props.id === 'start-tutorial-step-4' && <DemoStartTutorialStep4 />}
       {props.id === 'start-tutorial-step-5' && <DemoStartTutorialStep5 />}
       {props.id === 'start-tutorial-step-6' && <DemoStartTutorialStep6 />}
+    </>
+  )
+}
+
+function learnStyle(props: { id: string }) {
+  return (
+    <>
       {props.id === 'style-dialog' && <DemoStyleDialog />}
       {props.id === 'style-dials' && <DemoStyleDials />}
       {props.id === 'style-icons' && <DemoStyleIcons />}
@@ -229,6 +259,24 @@ export function LearnDemo(props: { id: string }) {
       {props.id === 'tool-rows' && <DemoToolRows />}
       {props.id === 'ui-kit' && <DemoUiKit />}
       {props.id === 'ui-state' && <DemoUiState />}
+    </>
+  )
+}
+
+/**
+ * A Learn page's live demo. One JSX site per demo, as in PageExample: each is then an island the server renders, and a
+ * press before its code has loaded is held and replayed. scripts/content.mjs reads the ids here, so a page can only name
+ * a demo that has a site.
+ */
+export function LearnDemo(props: { id: string }) {
+  return (
+    <div data-part="run">
+      {learnBasics(props)}
+      {learnInteraction(props)}
+      {learnState(props)}
+      {learnServer(props)}
+      {learnStart(props)}
+      {learnStyle(props)}
     </div>
   )
 }
