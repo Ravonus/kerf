@@ -25,4 +25,4 @@ id = "generic-api-key"
 
 [[rules.allowlists]]
 description = "Deploy diagnostics test contains intentional fake credentials"
-paths = ['''^packages/cli/test/deploy\.test\.mjs$''']
+paths = ['''^packages/cli/test/deploy\.test\.ts$''']
