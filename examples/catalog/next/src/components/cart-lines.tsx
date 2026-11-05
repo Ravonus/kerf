@@ -53,56 +53,58 @@ export function CartLines({ lines }: { lines: CartLine[] }) {
           That didn't save. Your cart is back as it was. Try again in a moment.
         </p>
       )}
-      <ul aria-label="Cart">
-        {shown.map((line) => (
-          <li
-            key={line.id}
-            className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line py-2.5 md:grid-cols-[4.5rem_minmax(0,1fr)_auto_5.5rem_auto]"
-          >
-            <ProductArt name={line.name} />
-            <div>
-              <Link href={`/p/${line.slug}`}>{line.name}</Link>
-              <p className="text-muted">{money(line.priceCents)} each</p>
-            </div>
-            <div className="inline-flex items-center gap-1 tabular-nums">
-              <button
-                type="button"
-                aria-label={`One fewer ${line.name}`}
-                onClick={() => change(line, line.quantity - 1)}
-                className={step}
-              >
-                −
-              </button>
-              <span aria-label={`Quantity of ${line.name}`}>{line.quantity}</span>
-              <button
-                type="button"
-                aria-label={`One more ${line.name}`}
-                disabled={line.quantity >= Math.min(line.stock, 99)}
-                onClick={() => change(line, line.quantity + 1)}
-                className={step}
-              >
-                +
-              </button>
-            </div>
-            <span className="text-end font-semibold tabular-nums">
-              {money(line.priceCents * line.quantity)}
-            </span>
-            <button
-              type="button"
-              aria-label={`Remove ${line.name}`}
-              onClick={() => change(line, 0)}
-              className="cursor-pointer text-sm font-medium text-accent-text hover:underline"
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+      <ul aria-label="Cart">{shown.map((line) => cartLine(line, change))}</ul>
       <div className="flex items-baseline justify-between text-xl">
         <p className="text-muted">Subtotal</p>
         <span className="font-semibold tabular-nums">{money(subtotal)}</span>
       </div>
       <p className="text-muted">Checkout opens soon. Your cart keeps until then.</p>
     </>
+  )
+}
+
+function cartLine(line: CartLine, change: (line: CartLine, quantity: number) => void) {
+  return (
+    <li
+      key={line.id}
+      className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line py-2.5 md:grid-cols-[4.5rem_minmax(0,1fr)_auto_5.5rem_auto]"
+    >
+      <ProductArt name={line.name} />
+      <div>
+        <Link href={`/p/${line.slug}`}>{line.name}</Link>
+        <p className="text-muted">{money(line.priceCents)} each</p>
+      </div>
+      <div className="inline-flex items-center gap-1 tabular-nums">
+        <button
+          type="button"
+          aria-label={`One fewer ${line.name}`}
+          onClick={() => change(line, line.quantity - 1)}
+          className={step}
+        >
+          −
+        </button>
+        <span aria-label={`Quantity of ${line.name}`}>{line.quantity}</span>
+        <button
+          type="button"
+          aria-label={`One more ${line.name}`}
+          disabled={line.quantity >= Math.min(line.stock, 99)}
+          onClick={() => change(line, line.quantity + 1)}
+          className={step}
+        >
+          +
+        </button>
+      </div>
+      <span className="text-end font-semibold tabular-nums">
+        {money(line.priceCents * line.quantity)}
+      </span>
+      <button
+        type="button"
+        aria-label={`Remove ${line.name}`}
+        onClick={() => change(line, 0)}
+        className="cursor-pointer text-sm font-medium text-accent-text hover:underline"
+      >
+        Remove
+      </button>
+    </li>
   )
 }

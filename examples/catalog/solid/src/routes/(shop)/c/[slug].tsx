@@ -1,6 +1,6 @@
 import { Title } from '@solidjs/meta'
 import { createAsync, useParams, useSearchParams, type RouteDefinition } from '@solidjs/router'
-import { createMemo, For, Show } from 'solid-js'
+import { createMemo, For, Show, type Accessor } from 'solid-js'
 
 import { field, heading, quiet, textLink } from '~/components/button'
 import { grid, ProductCard } from '~/components/product-card'
@@ -30,102 +30,109 @@ export default function Category() {
           </>
         }
       >
-        {(c) => {
-          const pages = () => Math.max(1, Math.ceil(c().total / pageSize))
-          const href = (page: number) => searchHref(params.slug!, search(), page)
-          const filtered = () =>
-            search().min !== undefined || search().max !== undefined || search().stock
-          return (
-            <div class="mx-auto flex max-w-360 flex-col gap-5 px-8 pt-12 pb-8">
-              <Title>{`${c().name} · Mendwell`}</Title>
-              <div class="flex flex-col gap-1">
-                <a href="/" class="text-sm text-muted">
-                  All aisles
-                </a>
-                <h1 class={`${heading} text-3xl`}>{c().name}</h1>
-              </div>
-              <nav aria-label="Aisles" class="flex gap-1 overflow-x-auto">
-                <For each={c().categories}>
-                  {(a) => (
-                    <a
-                      href={`/c/${a.slug}`}
-                      aria-current={a.slug === params.slug ? 'page' : undefined}
-                      class="flex-none rounded-full border border-line px-2.5 py-1 aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-page"
-                    >
-                      {a.name}
-                    </a>
-                  )}
-                </For>
-              </nav>
-              <div class="grid gap-12 md:grid-cols-[16rem_minmax(0,1fr)]">
-                <Filters search={search()} />
-                <div class="flex flex-col gap-5">
-                  <p
-                    aria-live="polite"
-                    class="text-muted"
-                  >{`${c().total.toLocaleString('en-US')} ${c().total === 1 ? 'piece' : 'pieces'}, lowest price first`}</p>
-                  <Show
-                    when={c().rows.length}
-                    fallback={
-                      <div class="flex flex-col items-start gap-1 py-12">
-                        <h2 class={`${heading} text-xl`}>
-                          {filtered()
-                            ? 'Nothing fits those filters'
-                            : 'This aisle is empty for now'}
-                        </h2>
-                        <p class="text-muted">
-                          {filtered()
-                            ? "Widen the price range, or include what's sold out."
-                            : "New pieces land here as soon as they're made."}
-                        </p>
-                        <Show when={filtered()}>
-                          <a href={`/c/${params.slug}`} class={textLink}>
-                            Clear the filters
-                          </a>
-                        </Show>
-                      </div>
-                    }
-                  >
-                    <ul class={grid}>
-                      <For each={c().rows}>{(p) => <ProductCard product={p} />}</For>
-                    </ul>
-                  </Show>
-                  <Show when={pages() > 1}>
-                    <nav aria-label="Pages" class="flex items-center justify-between gap-2.5">
-                      <Show
-                        when={search().page > 1}
-                        fallback={
-                          <span aria-disabled="true" class="text-muted">
-                            Previous
-                          </span>
-                        }
-                      >
-                        <a href={href(search().page - 1)} rel="prev" class={textLink}>
-                          Previous
-                        </a>
-                      </Show>
-                      <p class="text-muted">{`Page ${search().page} of ${pages()}`}</p>
-                      <Show
-                        when={search().page < pages()}
-                        fallback={
-                          <span aria-disabled="true" class="text-muted">
-                            Next
-                          </span>
-                        }
-                      >
-                        <a href={href(search().page + 1)} rel="next" class={textLink}>
-                          Next
-                        </a>
-                      </Show>
-                    </nav>
-                  </Show>
-                </div>
-              </div>
-            </div>
-          )
-        }}
+        {(c) => categoryContent(c, params, search)}
       </Show>
     </Show>
+  )
+}
+
+function categoryContent(
+  c: Accessor<NonNullable<Awaited<ReturnType<typeof getCategory>>>>,
+  params: ReturnType<typeof useParams>,
+  search: Accessor<ProductSearch>,
+) {
+  const pages = () => Math.max(1, Math.ceil(c().total / pageSize))
+  const href = (page: number) => searchHref(params.slug!, search(), page)
+  const filtered = () => search().min !== undefined || search().max !== undefined || search().stock
+  const pagination = () => (
+    <Show when={pages() > 1}>
+      <nav aria-label="Pages" class="flex items-center justify-between gap-2.5">
+        <Show
+          when={search().page > 1}
+          fallback={
+            <span aria-disabled="true" class="text-muted">
+              Previous
+            </span>
+          }
+        >
+          <a href={href(search().page - 1)} rel="prev" class={textLink}>
+            Previous
+          </a>
+        </Show>
+        <p class="text-muted">{`Page ${search().page} of ${pages()}`}</p>
+        <Show
+          when={search().page < pages()}
+          fallback={
+            <span aria-disabled="true" class="text-muted">
+              Next
+            </span>
+          }
+        >
+          <a href={href(search().page + 1)} rel="next" class={textLink}>
+            Next
+          </a>
+        </Show>
+      </nav>
+    </Show>
+  )
+  return (
+    <div class="mx-auto flex max-w-360 flex-col gap-5 px-8 pt-12 pb-8">
+      <Title>{`${c().name} · Mendwell`}</Title>
+      <div class="flex flex-col gap-1">
+        <a href="/" class="text-sm text-muted">
+          All aisles
+        </a>
+        <h1 class={`${heading} text-3xl`}>{c().name}</h1>
+      </div>
+      <nav aria-label="Aisles" class="flex gap-1 overflow-x-auto">
+        <For each={c().categories}>
+          {(a) => (
+            <a
+              href={`/c/${a.slug}`}
+              aria-current={a.slug === params.slug ? 'page' : undefined}
+              class="flex-none rounded-full border border-line px-2.5 py-1 aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-page"
+            >
+              {a.name}
+            </a>
+          )}
+        </For>
+      </nav>
+      <div class="grid gap-12 md:grid-cols-[16rem_minmax(0,1fr)]">
+        <Filters search={search()} />
+        <div class="flex flex-col gap-5">
+          <p
+            aria-live="polite"
+            class="text-muted"
+          >{`${c().total.toLocaleString('en-US')} ${c().total === 1 ? 'piece' : 'pieces'}, lowest price first`}</p>
+          <Show when={c().rows.length} fallback={emptyResults(filtered, params)}>
+            <ul class={grid}>
+              <For each={c().rows}>{(p) => <ProductCard product={p} />}</For>
+            </ul>
+          </Show>
+          {pagination()}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function emptyResults(filtered: () => boolean, params: ReturnType<typeof useParams>) {
+  return (
+    <div class="flex flex-col items-start gap-1 py-12">
+      <h2 class={`${heading} text-xl`}>
+        {filtered() ? 'Nothing fits those filters' : 'This aisle is empty for now'}
+      </h2>
+      <p class="text-muted">
+        {filtered()
+          ? "Widen the price range, or include what's sold out."
+          : "New pieces land here as soon as they're made."}
+      </p>
+      <Show when={filtered()}>
+        <a href={`/c/${params.slug}`} class={textLink}>
+          Clear the filters
+        </a>
+      </Show>
+    </div>
   )
 }
 
