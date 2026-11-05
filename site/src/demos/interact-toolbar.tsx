@@ -10,7 +10,10 @@ function Toolbar(props: {
   const { onPlay, onUpload } = props
   return (
     <p>
-      <Button size="sm" onClick={onPlay}>
+      <Button
+        size="sm"
+        onClick={onPlay}
+      >
         Play movie
       </Button>
       <Button

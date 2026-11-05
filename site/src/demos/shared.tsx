@@ -21,7 +21,10 @@ export default function Shared() {
   return (
     <div data-part="panes">
       {['Ana', 'Ben'].map((who) => (
-        <Card key={who} title={who}>
+        <Card
+          key={who}
+          title={who}
+        >
           {todos.value.map((t) => (
             <Checkbox
               key={t.id}
