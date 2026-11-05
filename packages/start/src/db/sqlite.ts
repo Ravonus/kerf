@@ -58,6 +58,26 @@ export async function open(path: string): Promise<Conn> {
   return conn
 }
 
+async function migrateSqlite(connect: () => Promise<Conn>, list: Migration[]) {
+  const c = await connect()
+  c.exec('create table if not exists __weft_migrations (tag text primary key, at integer not null)')
+  const done = new Set(
+    (c.query('select tag from __weft_migrations', [], 'values') as string[][]).map((r) => r[0]),
+  )
+  for (const m of list) {
+    if (done.has(m.tag)) continue
+    c.exec('begin')
+    try {
+      for (const s of statements(m.sql)) c.exec(s)
+      c.query('insert into __weft_migrations values (?, ?)', [m.tag, Date.now()], 'run')
+      c.exec('commit')
+    } catch (e) {
+      c.exec('rollback')
+      throw e
+    }
+  }
+}
+
 /** `createDb` on SQLite: the schema, the file, and whether to migrate on first use. */
 export interface SqliteOptions<S extends Record<string, unknown>> {
   schema: S
@@ -96,27 +116,7 @@ export function createDb<S extends Record<string, unknown>>({
   const handle: DbHandle = {
     dialect: 'sqlite',
     exempt: new Set(),
-    async migrate(list: Migration[]) {
-      const c = await connect()
-      c.exec(
-        'create table if not exists __weft_migrations (tag text primary key, at integer not null)',
-      )
-      const done = new Set(
-        (c.query('select tag from __weft_migrations', [], 'values') as string[][]).map((r) => r[0]),
-      )
-      for (const m of list) {
-        if (done.has(m.tag)) continue
-        c.exec('begin')
-        try {
-          for (const s of statements(m.sql)) c.exec(s)
-          c.query('insert into __weft_migrations values (?, ?)', [m.tag, Date.now()], 'run')
-          c.exec('commit')
-        } catch (e) {
-          c.exec('rollback')
-          throw e
-        }
-      }
-    },
+    migrate: (list) => migrateSqlite(connect, list),
     changes: (tables, o) =>
       import('./changes-sqlite').then((m) => m.sqliteChanges({ ...o, path, open, tables })),
   }

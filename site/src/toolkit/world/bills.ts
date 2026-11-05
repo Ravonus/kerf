@@ -1,0 +1,68 @@
+import type { Invoice } from '@weft-js/warp'
+
+export const BILLS: Invoice[] = [
+  {
+    id: '10',
+    date: 'Oct 1',
+    number: 'INV-2026-10',
+    status: 'paid',
+    amount: 8560,
+    pdf: '/samples/invoice.pdf',
+  },
+  {
+    id: '09',
+    date: 'Sep 1',
+    number: 'INV-2026-09',
+    status: 'paid',
+    amount: 8230,
+    pdf: '/samples/invoice.pdf',
+  },
+  {
+    id: '08',
+    date: 'Aug 1',
+    number: 'INV-2026-08',
+    status: 'paid',
+    amount: 8010,
+    pdf: '/samples/invoice.pdf',
+  },
+  {
+    id: '07',
+    date: 'Jul 1',
+    number: 'INV-2026-07',
+    status: 'paid',
+    amount: 7620,
+    pdf: '/samples/invoice.pdf',
+  },
+  {
+    id: '06',
+    date: 'Jun 1',
+    number: 'INV-2026-06',
+    status: 'paid',
+    amount: 7690,
+    pdf: '/samples/invoice.pdf',
+  },
+  {
+    id: '05',
+    date: 'May 1',
+    number: 'INV-2026-05',
+    status: 'paid',
+    amount: 7380,
+    pdf: '/samples/invoice.pdf',
+  },
+  {
+    id: '04',
+    date: 'Apr 1',
+    number: 'INV-2026-04',
+    status: 'paid',
+    amount: 7240,
+    pdf: '/samples/invoice.pdf',
+  },
+  {
+    id: '03',
+    date: 'Mar 1',
+    number: 'INV-2026-03',
+    status: 'paid',
+    amount: 6710,
+    pdf: '/samples/invoice.pdf',
+  },
+]

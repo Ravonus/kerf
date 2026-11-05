@@ -1,0 +1,12 @@
+import { LockIndicator } from '@weft-js/warp'
+
+import { JUN, LENA } from '../../world'
+
+import { wait as _Shared0 } from './shared-wait'
+
+export const LockIndicatorPeople = () => (
+  <>
+    <LockIndicator peer={JUN} />
+    <LockIndicator peer={LENA} />
+  </>
+)

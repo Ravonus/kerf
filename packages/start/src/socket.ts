@@ -8,20 +8,16 @@
 //   shared state last writer wins by `(at, instance)`. Instances hold the value; a new listener asks on the bus.
 
 import type { PublishOptions } from './channel'
-import {
-  enter,
-  fns,
-  FnError,
-  isRedirect,
-  runtime,
-  stable,
-  StartError,
-  type Context,
-  type Fn,
-  type StandardSchemaV1,
-} from './data'
-import { createScope, type Scope, type ScopeOptions } from './exec'
-import { checkOrigins, hub, type Channel, type Ev, type Hub } from './hub'
+import { enter, fns, FnError, isRedirect, runtime, stable, StartError, type Context } from './data'
+import { createScope, type Scope } from './exec'
+import { hub, type Ev, type Hub } from './hub'
+import type { Join, Sock, Hubbed, Value } from './socket/types'
+import { room, leaveRoom, store, VALUE } from './socket/rooms'
+import { take, check, allowed, denied } from './socket/check'
+import { deliver } from './socket/deliver'
+import { sharedWriter } from './socket/shared'
+import { publish } from './socket/publish'
+import { socketRouteWith } from './socket/route'
 import { SHARE, shareChannel } from './share-server'
 
 /** A socket as this file needs it. `send` takes a whole frame. */
@@ -38,53 +34,8 @@ export interface Attached {
   recheck(): Promise<void>
 }
 
-interface Join {
-  n: number
-  fn: Fn
-  params: unknown
-  room?: Room
-  on?: (ev: Ev | null) => void
-  bucket: Bucket
-  gone?: boolean
-  chain: Promise<unknown>
-}
-interface Bucket {
-  tokens: number
-  at: number
-}
-interface Sock {
-  k: string
-  peer: Peer
-  request: Request
-  options: ScopeOptions
-  ctx: Context
-  user?: string | undefined
-  joins: Map<number, Join>
-  bucket: Bucket
-  last: number
-  timers: ReturnType<typeof setTimeout>[]
-}
-interface Room {
-  name: string
-  ch: Channel
-  refs: number
-  shared: boolean
-  on: (ev: Ev | null) => void
-}
-interface Value {
-  v: unknown
-  at: number
-  o: string
-}
-interface Hubbed {
-  socks: Set<Sock>
-  rooms: Map<string, Room>
-  values: Map<string, Value>
-}
-
 /** A hub's sockets: a new hub (a dev reload, a test) starts empty. */
 const states = new WeakMap<Hub, Hubbed>()
-const VALUES = 10_000
 
 function stateOf(h: Hub): Hubbed {
   const s = states.get(h)
@@ -105,36 +56,7 @@ function stateOf(h: Hub): Hubbed {
 
 const unref = <T>(t: T) => ((t as { unref?(): void } | null | undefined)?.unref?.(), t)
 const roomName = (id: string, params: unknown) => `weft:c:${id}:${stable(params)}`
-const SET = '$set',
-  VALUE = '$v',
-  ASK = '$?'
-
-function take(b: Bucket, perSecond: number, burst: number) {
-  const now = Date.now()
-  b.tokens = Math.min(burst, b.tokens + ((now - b.at) * perSecond) / 1000)
-  b.at = now
-  if (b.tokens < 1) return false
-  b.tokens--
-  return true
-}
-
-async function check(schema: StandardSchemaV1 | undefined, value: unknown, what: string) {
-  if (!schema) return value
-  const r = await schema['~standard'].validate(value)
-  if (!r.issues) return r.value
-  throw new StartError(
-    'Q002',
-    `${what} was refused: ${r.issues.map((i) => i.message).join('; ')}`,
-    'send what the schema accepts',
-    {
-      status: 400,
-      issues: r.issues.map((i) => ({
-        message: i.message,
-        path: i.path?.map((p) => (typeof p === 'object' ? p.key : p)),
-      })),
-    },
-  )
-}
+const SET = '$set'
 
 const send = (c: Sock, out: unknown[]) => {
   c.peer.send(JSON.stringify(out))
@@ -143,75 +65,6 @@ const send = (c: Sock, out: unknown[]) => {
 
 const refuse = (c: Sock, n: number, e: { code?: string | undefined; message: string }) =>
   send(c, ['e', n, { code: e.code, message: e.message }])
-
-type Authorize = ((args: { ctx: Context; params: unknown }) => unknown) &
-  Record<'read' | 'write', (args: { ctx: Context; key: unknown }) => unknown>
-const allowed = async (
-  fn: Fn,
-  ctx: Context,
-  params: unknown,
-  write?: boolean,
-): Promise<boolean> => {
-  const a = fn.def.authorize as Authorize
-  return !!(await (fn.kind === 'shared'
-    ? a[write ? 'write' : 'read']({ ctx, key: params })
-    : a({ ctx, params })))
-}
-
-const denied = (fn: Fn) =>
-  new StartError(
-    'R011',
-    `\`${fn.$id}\`: \`authorize\` refused this client`,
-    'sign in, or check `authorize`',
-  )
-
-/** Fan-out of a room's messages to one join. */
-function deliver(c: Sock, j: Join, h: Hub, ev: Ev) {
-  const m = (ev.p ??= JSON.parse(ev.raw)) as {
-    f?: string
-    x?: 1
-    t?: string
-    n: string
-    m: unknown
-  }
-  if (m.n === ASK || (m.x && m.f === c.k) || (m.t && m.t !== c.k)) return
-  send(c, ['m', j.n, h.cursorOf(ev.seq), m.n, m.m])
-}
-
-function room(h: Hub, st: Hubbed, name: string, shared: boolean): Room {
-  let r = st.rooms.get(name)
-  if (r) return (r.refs++, r)
-  const ch = h.channel(name)
-  const on = (ev: Ev | null) => {
-    if (!ev || !shared) return
-    const m = (ev.p ??= JSON.parse(ev.raw)) as { n: string; m: never }
-    if (m.n === VALUE) store(st, name, m.m)
-    else if (m.n === ASK) {
-      const v = st.values.get(name)
-      if (v) void h.bus.publish(name, JSON.stringify({ n: VALUE, m: v }))
-    }
-  }
-  ch.listeners.add(on)
-  r = { name, ch, refs: 1, shared, on }
-  st.rooms.set(name, r)
-  if (shared && !st.values.has(name))
-    void ch.ready.then(() => h.bus.publish(name, JSON.stringify({ n: ASK })))
-  return r
-}
-
-function leaveRoom(h: Hub, st: Hubbed, r: Room) {
-  if (--r.refs) return
-  st.rooms.delete(r.name)
-  h.unlisten(r.ch, r.on)
-}
-
-function store(st: Hubbed, name: string, v: Value) {
-  const had = st.values.get(name)
-  if (had && (had.at > v.at || (had.at === v.at && had.o >= v.o))) return
-  st.values.delete(name) // last in the map: the oldest key goes first
-  st.values.set(name, v)
-  if (st.values.size > VALUES) st.values.delete(st.values.keys().next().value!)
-}
 
 async function join(h: Hub, c: Sock, n: number, id: string, params: unknown, cursor?: string) {
   const st = stateOf(h)
@@ -261,7 +114,7 @@ async function join(h: Hub, c: Sock, n: number, id: string, params: unknown, cur
   // Listen, then replay: a message published in between can't be lost (R006's rule).
   j.on = (ev) => {
     if (!ev) return live ? send(c, ['r', n, h.position()]) : void (lost = true)
-    if (live) deliver(c, j, h, ev)
+    if (live) deliver(c, j, h, ev, send)
     else pending.push(ev)
   }
   r.ch.listeners.add(j.on)
@@ -282,7 +135,7 @@ async function join(h: Hub, c: Sock, n: number, id: string, params: unknown, cur
     for (const ev of [...back, ...pending.filter((e) => !seen.has(e.seq))].sort(
       (a, b) => a.seq - b.seq,
     ))
-      deliver(c, j, h, ev)
+      deliver(c, j, h, ev, send)
   }
   live = true
   const v = st.values.get(name)
@@ -520,80 +373,12 @@ export async function attach(
   }
 }
 
-/** `room.publish` and `room.in(params).publish`. */
-export async function publish(
-  fn: Fn,
-  params: unknown,
-  name: string,
-  message: unknown,
-  o: PublishOptions & { from?: string } = {},
-) {
-  const h = hub()
-  const valid = await check(
-    fn.kind === 'shared' ? fn.def.key : fn.def.params,
-    params,
-    `\`${fn.$id}\`'s params`,
-  )
-  if (h.dev) {
-    const schema = Object.hasOwn(fn.def.server ?? {}, name) ? fn.def.server![name] : undefined
-    if (!schema)
-      throw new StartError(
-        'C002',
-        `\`${fn.$id}\` has no server message \`${name}\``,
-        'add it to `server`',
-        { status: 500 },
-      )
-    const r = await schema['~standard'].validate(message)
-    if (r.issues)
-      throw new StartError(
-        'C002',
-        `\`${fn.$id}.${name}\` was published with a message its schema rejects: ${r.issues.map((i) => i.message).join('; ')}`,
-        'fix the message, or the schema',
-        { status: 500 },
-      )
-  }
-  // `v` first: the hub reads it off the front of the string, to leave the ring alone.
-  const raw = JSON.stringify({
-    ...(o.volatile && { v: 1 }),
-    ...(o.from && { f: o.from }),
-    ...(o.exceptSelf && { x: 1 }),
-    ...(o.to && { t: o.to }),
-    n: name,
-    m: message,
-  })
-  if (raw.length > h.limits.message)
-    throw new StartError(
-      'R008',
-      `a \`${fn.$id}\` message is ${raw.length} bytes; a message may be ${h.limits.message}`,
-      'publish less, or an id subscribers fetch',
-    )
-  await h.bus.publish(roomName(fn.$id, valid), raw)
-}
+export { publish } from './socket/publish'
 
 /** A shared value written by the server: `deckSlide.in(key).set(3)`. */
-export async function setShared(fn: Fn, key: unknown, value: unknown) {
-  const h = hub()
-  const valid = await check(fn.def.key, key, `\`${fn.$id}\`'s key`)
-  const v = await check(fn.def.value, value, `\`${fn.$id}\`'s value`)
-  const st = stateOf(h),
-    name = roomName(fn.$id, valid)
-  const stamp: Value = {
-    v,
-    at: Math.max(Date.now(), (st.values.get(name)?.at ?? 0) + 1),
-    o: h.epoch,
-  }
-  store(st, name, stamp)
-  await h.bus.publish(name, JSON.stringify({ n: VALUE, m: stamp }))
-}
+export const setShared = sharedWriter(stateOf)
 
 runtime.channels = { publish, set: setShared }
-
-interface WsPeer {
-  id: string
-  send(text: string): unknown
-  close(code?: number, reason?: string): unknown
-  websocket?: { bufferedAmount?: number }
-}
 
 /** Nitro reads `crossws` off the response (research 32 §1). A refusal is a hook that throws, so no socket opens. */
 export function socketRoute(
@@ -601,64 +386,5 @@ export function socketRoute(
   scope: Scope,
   origins: string[] = [],
 ): Promise<Response> {
-  const hooks = (crossws: object) =>
-    Promise.resolve(Object.assign(new Response('Upgrade required', { status: 426 }), { crossws }))
-  const turnAway = (code: string, message: string, status: number) => {
-    scope.options.onDiagnostic?.({ code, severity: 'error', message })
-    // oxlint-disable only-throw-error -- crossws answers an upgrade with the Response its hook throws
-    return hooks({
-      upgrade() {
-        throw new Response(message, { status }) /* oxlint-enable only-throw-error */
-      },
-    })
-  }
-  if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket')
-    return Promise.resolve(
-      new Response('Upgrade required', { status: 426, headers: { 'cache-control': 'no-store' } }),
-    )
-  try {
-    checkOrigins(origins)
-  } catch (e) {
-    return turnAway('R004', (e as Error).message, 500)
-  }
-  const origin = request.headers.get('origin')
-  if (!origin || (origin !== new URL(request.url).origin && !origins.includes(origin)))
-    return turnAway(
-      'R010',
-      `R010: origin \`${origin ?? 'none'}\` may not open a socket: list it in \`realtime({ origins })\``,
-      403,
-    )
-  const peers = new Map<string, Promise<Pick<Attached, 'message' | 'close'>>>()
-  const mux = new URL(request.url).searchParams.has('mux')
-  return hooks({
-    open(peer: WsPeer) {
-      const p: Peer = {
-        send: (t) => void peer.send(t),
-        close: (code, reason) => peer.close(code, reason),
-        backlog: () => peer.websocket?.bufferedAmount ?? 0,
-      }
-      peers.set(
-        peer.id,
-        (mux
-          ? import('./mux').then((m) => m.muxed(p, request, scope))
-          : attach(p, request, scope)
-        ).catch((e) => {
-          scope.options.onDiagnostic?.({
-            code: 'E_RT',
-            severity: 'error',
-            message: `/_weft/ws: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-          })
-          peer.close(1011, 'context failed')
-          return { message() {}, close() {} }
-        }),
-      )
-    },
-    message(peer: WsPeer, m: { text(): string }) {
-      void peers.get(peer.id)?.then((a) => a.message(m.text()))
-    },
-    close(peer: WsPeer) {
-      void peers.get(peer.id)?.then((a) => a.close())
-      peers.delete(peer.id)
-    },
-  })
+  return socketRouteWith(request, scope, origins, attach)
 }

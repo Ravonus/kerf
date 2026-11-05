@@ -13,9 +13,25 @@
 // no path. A tab is a pure function of `tabs` and `clients`, and the socket a pure diff against them (`reconcile`), so a
 // new leader runs the code an old one ran.
 
+import { tabQueue } from './share/tab-queue'
+import { network, upstream as upstreamOf, wanted as wantedKeys } from './share/network'
+import { receiver } from './share/receive'
+import { render, renderAll, hear, dropClients } from './share/display'
 import { createRoot, effect, untrack } from '@weft-js/core'
-import { NONE, seams, type Counts, type ShareLine } from '@weft-js/core/interaction'
+import { seams, type ShareLine } from '@weft-js/core/interaction'
 import { connectBuiltIn, keepOpen, wakeSocket } from './channel'
+import {
+  lines,
+  shown,
+  tabs,
+  tabAt,
+  visible,
+  mine,
+  watched,
+  clients,
+  type Triple,
+  type Msg,
+} from './share/state'
 import { BEAT, campaign, freeTab, holdTab, probeLink, tab, whenGone, type Campaign } from './link'
 
 /** Ms between flushes to the other tabs. */
@@ -35,23 +51,6 @@ export const IDLE = 5000
 const WIRE = 1
 const CHANNEL = `weft:ui:${WIRE}`
 
-type Pair = [key: string, bits: number]
-type Triple = [id: string, key: string, bits: number]
-type Msg =
-  | { t: 'tab'; tab: string; keys: Pair[]; shown: boolean; k?: string | undefined }
-  | { t: 'bits'; tab: string; e: Pair[] }
-  | { t: 'shown'; tab: string; shown: boolean }
-  | { t: 'net'; s: Triple[] }
-  | { t: 'link'; up: boolean }
-  | { t: 'roll' }
-  | { t: 'bye'; tab: string }
-
-interface Client {
-  bits: number
-  at: number
-  stale?: boolean
-}
-
 /** What a test reads: `role`, and how much went where. */
 export const shareStats = {
   role: 'none' as 'none' | 'leader' | 'follower',
@@ -65,18 +64,6 @@ export const shareStats = {
 }
 
 const noLocks = () => typeof navigator === 'undefined' || !navigator.locks
-
-const lines = new Map<string, (c: Counts) => void>()
-const shown = new Map<string, Counts>()
-/** key → bits, per tab, mine included. */
-const tabs = new Map<string, Map<string, number>>()
-const tabAt = new Map<string, number>()
-const visible = new Map<string, boolean>()
-const mine = new Map<string, number>()
-const watched = new Set<string>()
-const siblings = new Set<string>()
-/** key → other clients. Everything the leader joined; a follower keeps what its own lines want. */
-const clients = new Map<string, Map<string, Client>>()
 
 const locks = () => !noLocks()
 const leading = () => shareStats.role === 'leader'
@@ -97,29 +84,6 @@ function post(m: Msg) {
 
 // ---- what a tab shows ------------------------------------------------------------------------------------------------
 
-function render(key: string) {
-  const heard = lines.get(key)
-  if (!heard) return
-  let hover = 0,
-    focus = 0,
-    pressed = 0
-  const add = (bits: number) => {
-    if (bits & 1) hover++
-    if (bits & 2) focus++
-    if (bits & 4) pressed++
-  }
-  for (const [t, keys] of tabs) if (t !== tab) add(keys.get(key) ?? 0)
-  for (const e of clients.get(key)?.values() ?? []) add(e.bits)
-  const was = shown.get(key) ?? NONE
-  if (was.hover === hover && was.focus === focus && was.pressed === pressed) return
-  const now = hover || focus || pressed ? { hover, focus, pressed } : NONE
-  shown.set(key, now)
-  heard(now)
-}
-const renderAll = () => {
-  for (const k of lines.keys()) render(k)
-}
-
 function dropTab(t: string) {
   visible.delete(t)
   if (!tabs.delete(t)) return
@@ -136,73 +100,12 @@ function watch(t: string) {
   whenGone(t, () => dropTab(t))
 }
 
-function hear(s: Triple[]) {
-  const at = Date.now(),
-    touched = new Set<string>()
-  for (const [id, key, bits] of s) {
-    if (siblings.has(id) || (!leading() && !lines.has(key))) continue
-    let held = clients.get(key)
-    if (bits) {
-      if (!held) clients.set(key, (held = new Map()))
-      held.set(id, { bits, at })
-    } else if (!held?.delete(id)) continue
-    touched.add(key)
-  }
-  for (const k of touched) render(k)
-}
-
-function dropClients(which: (e: Client, id: string) => boolean) {
-  for (const [key, held] of clients) {
-    let changed = false
-    for (const [id, e] of held) if (which(e, id)) changed = held.delete(id)
-    if (!held.size) clients.delete(key)
-    if (changed) render(key)
-  }
-}
-
 /** Down: what's held stands for GRACE, so a handover doesn't flash. Up: holders re-say, and what nobody re-says goes. */
 let settling: ReturnType<typeof setTimeout> | undefined
 function link(on: boolean) {
   clearTimeout(settling)
   if (on) for (const held of clients.values()) for (const e of held.values()) e.stale = true
   settling = setTimeout(() => dropClients((e) => !on || !!e.stale), GRACE)
-}
-
-function receive(m: Msg) {
-  if (m.t === 'tab') {
-    tabs.set(m.tab, new Map(m.keys))
-    tabAt.set(m.tab, Date.now())
-    visible.set(m.tab, m.shown)
-    if (m.k && !siblings.has(m.k)) {
-      siblings.add(m.k)
-      dropClients((_, id) => id === m.k)
-    }
-    watch(m.tab)
-    renderAll()
-    reconcile()
-    if (m.shown) wakeIfLeading()
-    // A tab that arrived late has what the socket already heard.
-    if (leading()) {
-      const s: Triple[] = []
-      for (const [key] of m.keys)
-        for (const [id, e] of clients.get(key) ?? []) s.push([id, key, e.bits])
-      if (s.length) post({ t: 'net', s })
-    }
-  } else if (m.t === 'bits') {
-    const keys = tabs.get(m.tab) ?? new Map<string, number>()
-    tabs.set(m.tab, keys)
-    tabAt.set(m.tab, Date.now())
-    for (const [key, bits] of m.e) keys.set(key, bits)
-    watch(m.tab)
-    for (const [key] of m.e) render(key)
-    reconcile()
-  } else if (m.t === 'shown') {
-    visible.set(m.tab, m.shown)
-    if (m.shown) wakeIfLeading()
-  } else if (m.t === 'roll') announce()
-  else if (m.t === 'bye') dropTab(m.tab)
-  else if (m.t === 'net') hear(m.s)
-  else if (m.t === 'link') link(m.up)
 }
 
 const wakeIfLeading = () => {
@@ -235,22 +138,7 @@ function changedKeys() {
 // ---- to the other tabs, once a frame ----------------------------------------------------------------------------------
 
 const dirtyTab = new Set<string>()
-let tabLast = 0
-let tabTimer: ReturnType<typeof setTimeout> | undefined
-function flushTab() {
-  tabTimer = undefined
-  tabLast = performance.now()
-  if (dirtyTab.size)
-    post({ t: 'bits', tab, e: [...dirtyTab].map((key) => [key, mine.get(key) ?? 0]) })
-  dirtyTab.clear()
-}
-function queueTab(key: string) {
-  dirtyTab.add(key)
-  if (tabTimer !== undefined) return
-  const wait = GAP_TAB - (performance.now() - tabLast)
-  if (wait <= 0) flushTab()
-  else tabTimer = setTimeout(flushTab, wait)
-}
+const queueTab = tabQueue(dirtyTab, mine, post, tab, GAP_TAB)
 
 // ---- the leader: the OR of every tab, on one join ---------------------------------------------------------------------
 
@@ -264,76 +152,25 @@ const refused = new Set<string>()
 const dirtyNet = new Set<string>()
 const toAdd = new Set<string>()
 const toDrop = new Set<string>()
-let netLast = 0
 let idle: ReturnType<typeof setTimeout> | undefined
-let netTimer: ReturnType<typeof setTimeout> | undefined
 
-const upstream = (key: string) => {
-  if (!locks()) return mine.get(key) ?? 0
-  let bits = 0
-  for (const keys of tabs.values()) bits |= keys.get(key) ?? 0
-  return bits
-}
+const upstream = (key: string) => upstreamOf(key, locks())
+const wanted = () => wantedKeys(locks())
 
-function wanted() {
-  if (!locks()) return new Set(mine.keys())
-  const out = new Set<string>()
-  for (const keys of tabs.values()) for (const k of keys.keys()) out.add(k)
-  return out
-}
-
-/** One frame per GAP_NET, `u` first: the bucket is 20 a second, and a frame carries every key that's waiting. */
-function netTick() {
-  netTimer = undefined
-  if (!conn || !open) return
-  let name: 'u' | 'set' | undefined,
-    msg: unknown,
-    size = 0
-  if (toAdd.size || toDrop.size) {
-    const add = [...toAdd].slice(0, BATCH),
-      drop = [...toDrop].slice(0, BATCH - add.length)
-    for (const k of add) toAdd.delete(k)
-    for (const k of drop) toDrop.delete(k)
-    name = 'u'
-    msg = { add, drop }
-    size = add.length + drop.length
-  } else {
-    const e: Pair[] = []
-    for (const key of dirtyNet) {
-      if (e.length === BATCH) break
-      dirtyNet.delete(key)
-      if (!sent.has(key) || refused.has(key)) continue
-      const bits = upstream(key)
-      // Off and on again inside the gap: nothing to say. The latest value is all that's kept.
-      if (bits !== sent.get(key)) {
-        sent.set(key, bits)
-        e.push([key, bits])
-      }
-    }
-    if (e.length) {
-      name = 'set'
-      msg = { e }
-      size = e.length
-    }
-  }
-  if (name) {
-    netLast = performance.now()
-    shareStats.frames++
-    shareStats.keysSent += size
-    conn.send(name as never, msg as never).catch(() => {}) // a dropped link re-says everything
-  }
-  if (toAdd.size || toDrop.size || dirtyNet.size) netSoon()
-}
-/** Not a timer when the gap has passed: the leader is often a hidden tab, where a timer waits a second or more. */
-function netSoon() {
-  const wait = GAP_NET - (performance.now() - netLast)
-  if (wait > 0) {
-    netTimer ??= setTimeout(netTick, wait)
-    return
-  }
-  clearTimeout(netTimer)
-  netTick()
-}
+const net = network(
+  () => conn,
+  () => open,
+  sent,
+  refused,
+  dirtyNet,
+  toAdd,
+  toDrop,
+  upstream,
+  shareStats,
+  GAP_NET,
+  BATCH,
+)
+const netSoon = net.netSoon
 
 /** Whatever changed in `tabs`, the socket follows. Nothing wanted for a while, no socket: a page left its rows behind. */
 function reconcile() {
@@ -378,8 +215,7 @@ function linked(live: boolean) {
     toDrop.clear()
     dirtyNet.clear()
     refused.clear()
-    clearTimeout(netTimer)
-    netTimer = undefined
+    net.clear()
   }
   link(live)
   post({ t: 'link', up: live })
@@ -391,7 +227,7 @@ function dial() {
   stopConn = createRoot((dispose) => {
     conn = connectBuiltIn('$share')
     conn.on('b', ({ s }: { s: Triple[] }) => {
-      hear(s)
+      hear(s, leading())
       if (locks()) post({ t: 'net', s })
     })
     conn.on('ok', (m: { id: string; no: string[] }) => {
@@ -403,7 +239,7 @@ function dial() {
         for (const id of clients.get(k)?.keys() ?? []) lost.push([id, k, 0])
       }
       if (lost.length) {
-        hear(lost)
+        hear(lost, leading())
         if (locks()) post({ t: 'net', s: lost })
       }
       if (!locks()) announce()
@@ -505,6 +341,18 @@ function halt() {
   watched.clear()
   clients.clear()
 }
+
+const receive = receiver(
+  dropClients,
+  watch,
+  reconcile,
+  wakeIfLeading,
+  leading,
+  post,
+  announce,
+  dropTab,
+  link,
+)
 
 if (typeof window !== 'undefined') {
   addEventListener('pagehide', halt)

@@ -20,41 +20,43 @@ interface Options {
 type Seq = number | string
 const said = (e: unknown) => (e as Error | null)?.message ?? String(e)
 
-export function mysqlChanges({ pool, tables, interval = 500 }: Options) {
-  async function probe(): Promise<Probe> {
-    try {
-      const [rows] = await pool.query(
-        `select event_object_table as t from information_schema.triggers where trigger_schema = database() and trigger_name like 'weft\\_changes\\_%\\_upd'`,
-      )
-      const have = (rows as { t: string }[]).map((r) => r.t)
-      const missing = tables.filter((t) => !have.includes(t))
-      if (!missing.length)
-        return {
-          mode: 'feed',
-          via: 'mysql-log',
-          why: `read every ${interval} ms: MySQL can't push`,
-        }
-      const [grants] = await pool.query('show grants').catch(() => [[]])
-      const may = (grants as Record<string, string>[]).some((g) =>
-        /ALL PRIVILEGES|\bTRIGGER\b/.test(Object.values(g)[0] ?? ''),
-      )
+async function probeMysql(pool: Pool, tables: string[], interval: number): Promise<Probe> {
+  try {
+    const [rows] = await pool.query(
+      `select event_object_table as t from information_schema.triggers where trigger_schema = database() and trigger_name like 'weft\\_changes\\_%\\_upd'`,
+    )
+    const have = (rows as { t: string }[]).map((r) => r.t)
+    const missing = tables.filter((t) => !have.includes(t))
+    if (!missing.length)
       return {
-        mode: 'off',
-        via: 'none',
-        why: `no trigger on ${missing.map((t) => `\`${t}\``).join(', ')}, and MySQL has no counter to fall back on`,
-        fix: may
-          ? 'run `weft db live`, then apply the migration'
-          : 'run `weft db live`, and apply the migration as a user with the TRIGGER privilege',
+        mode: 'feed',
+        via: 'mysql-log',
+        why: `read every ${interval} ms: MySQL can't push`,
       }
-    } catch (e) {
-      return {
-        mode: 'off',
-        via: 'none',
-        why: `the database didn't answer: ${said(e)}`,
-        fix: 'check `DATABASE_URL`',
-      }
+    const [grants] = await pool.query('show grants').catch(() => [[]])
+    const may = (grants as Record<string, string>[]).some((g) =>
+      /ALL PRIVILEGES|\bTRIGGER\b/.test(Object.values(g)[0] ?? ''),
+    )
+    return {
+      mode: 'off',
+      via: 'none',
+      why: `no trigger on ${missing.map((t) => `\`${t}\``).join(', ')}, and MySQL has no counter to fall back on`,
+      fix: may
+        ? 'run `weft db live`, then apply the migration'
+        : 'run `weft db live`, and apply the migration as a user with the TRIGGER privilege',
+    }
+  } catch (e) {
+    return {
+      mode: 'off',
+      via: 'none',
+      why: `the database didn't answer: ${said(e)}`,
+      fix: 'check `DATABASE_URL`',
     }
   }
+}
+
+export function mysqlChanges({ pool, tables, interval = 500 }: Options) {
+  const probe = () => probeMysql(pool, tables, interval)
 
   async function start(sink: Sink, how: Probe) {
     if (how.mode === 'off') return () => {}

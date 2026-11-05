@@ -5,100 +5,26 @@
 //
 // A poke is a local `cache.invalidate`: readers refetch through `query`, and the keyed list writes what changed.
 
-import {
-  DEV,
-  batch,
-  createRoot,
-  derived,
-  effect,
-  getOwner,
-  onCleanup,
-  state,
-  untrack,
-  type Derived,
-  type State,
-} from '@weft-js/core'
-import type {
-  AuthScope,
-  Context,
-  Fn,
-  LiveApi,
-  LiveMode,
-  LiveOptions,
-  LiveStatus,
-  Skip,
-  StandardSchemaV1,
-} from './data'
-import type { Body, SubEntry, Tracked } from './hub'
-import { HANDOVER, noSockets, openLine, type Line } from './link'
+import { DEV, batch, createRoot, state, untrack } from '@weft-js/core'
+import type { AuthScope, Fn, LiveMode, LiveOptions, LiveStatus, StandardSchemaV1 } from './data'
+import type { SubEntry } from './hub'
+import { noSockets } from './link'
+import { transports } from './live/transport'
+import { backoff, CAP } from './live/backoff'
 
-// `data.ts` hands these over (`use`). A static import would close a cycle with its `import('./live')`, and the bundler
-// would then keep this chunk, the hub and the split they force in apps that never read `.live`.
-let cache: LiveApi['cache'],
-  currentScope: LiveApi['currentScope'],
-  fns: LiveApi['fns'],
-  FnError: LiveApi['FnError'],
-  keyOf: LiveApi['keyOf'],
-  net: LiveApi['net'],
-  rt: LiveApi['rt'],
-  runtime: LiveApi['runtime'],
-  skip: LiveApi['skip'],
-  StartError: LiveApi['StartError'],
-  track: LiveApi['track']
-export const use = (api: LiveApi) =>
-  void ({ cache, currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track } =
-    api)
+import { cache, fns, FnError, keyOf, net, rt, runtime, track } from './live/api'
+
+import type { In, StreamDef, StreamFn, StreamOptions } from './live/types'
+import type { Sub } from './live/sub-types'
+import { read } from './live/read'
+import type { Link } from './live/transport'
+import { ack, update, type Row } from './live/frames'
+export { backoff } from './live/backoff'
+export { use } from './live/api'
+export type { StreamStatus, StreamDef, StreamOptions, Stream, StreamFn } from './live/types'
+export type { Link } from './live/transport'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
-
-type In<S> = S extends StandardSchemaV1<infer I, unknown> ? I : void
-type Out<S> = S extends StandardSchemaV1<unknown, infer O> ? O : undefined
-
-/** Where a stream stands; `done` is the end of a generator. */
-export type StreamStatus = LiveStatus | 'done'
-
-/** `stream()`: the input, the message schema and the generator. */
-export interface StreamDef<S, M, A = undefined> {
-  input?: S
-  /** Checked in dev and tests (C002), and the contract's `message`. */
-  message?: StandardSchemaV1<unknown, M>
-  auth?: A
-  /** `lastEventId`: the last `tracked` id the client saw, on a resume. Stop when `signal` aborts. */
-  run: (args: {
-    input: Out<S>
-    ctx: Context
-    signal: AbortSignal
-    lastEventId?: string
-  }) => AsyncIterable<M | Tracked<M>>
-  $id?: string
-}
-
-/** `.live()` on a stream: what the value starts as, and how messages fold into it. */
-export interface StreamOptions<M, T> extends LiveOptions {
-  /** Keep every message: `fold(acc, message)`. Its state lives in the cache, so a remount finds it. */
-  fold?: (acc: T, message: M) => T
-  initial?: T
-  /** Messages the server holds for a slow client. A fold defaults to 256; without one, the latest wins. */
-  buffer?: number
-}
-
-/** A stream as a page reads it. */
-export interface Stream<T> {
-  /** The latest message, or the fold. */
-  readonly value: T
-  readonly status: Derived<StreamStatus>
-  readonly error: unknown
-}
-
-/** What `stream()` returns. */
-export interface StreamFn<I, M> {
-  (input: Arg<I>): Stream<M | undefined>
-  <T>(input: Arg<I>, options: StreamOptions<M, T> & { initial: T }): Stream<T>
-  (input: Arg<I>, options: StreamOptions<M, M>): Stream<M | undefined>
-  readonly kind: 'stream'
-  readonly $id: string
-}
-type Arg<I> = I | (() => I | Skip)
 
 const FN = Symbol.for('weft.fn')
 let auto = 0
@@ -112,34 +38,13 @@ export function stream<
   const fn: Fn = { kind: 'stream', $id: id, def: def as unknown as Fn['def'] }
   fns.set(id, fn)
   return Object.assign(
-    (input: unknown, options?: StreamOptions<never, unknown>) => read(fn, input, options),
+    (input: unknown, options?: StreamOptions<never, unknown>) =>
+      read(fn, input, options, acquire, held),
     { kind: 'stream', $id: id, [FN]: fn },
   ) as unknown as StreamFn<In<S>, M>
 }
 
 // ---- subscriptions --------------------------------------------------------------------------------------------------
-
-interface View {
-  fold?: ((acc: never, m: never) => unknown) | undefined
-  initial: unknown
-  box: State<unknown>
-}
-interface Sub {
-  n: number
-  key: string
-  fn: Fn
-  input: unknown
-  refs: number
-  timer?: ReturnType<typeof setTimeout> | undefined
-  /** Stream: the last id, sent back on a resume. Query: its tags, from the ack. */
-  cursor?: string | undefined
-  tags: string[]
-  buffer?: number
-  acked: boolean
-  views: Map<string, View>
-  error: State<unknown>
-  done: State<boolean>
-}
 
 const subs = new Map<string, Sub>()
 const byN = new Map<number, Sub>()
@@ -213,143 +118,9 @@ export function hold(fn: Fn, input: unknown, options?: LiveOptions): () => void 
   return held(acquire(fn, input), options?.keep)
 }
 
-function read(fn: Fn, input: unknown, o: StreamOptions<never, unknown> = {}): Stream<unknown> {
-  if (!getOwner())
-    throw new StartError(
-      'W051',
-      DEV
-        ? `\`${fn.$id}()\` (a stream) was called outside a component or scope: nothing would close it`
-        : fn.$id,
-      DEV
-        ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`'
-        : undefined,
-    )
-  const scope = currentScope()
-  if (scope) {
-    scope.live = true // the server renders `initial`, and the client hydrates to the same
-    return { value: o.initial, status: rt.status, error: undefined }
-  }
-  const view = state<{ s: Sub; v: View } | undefined>(undefined)
-  const fold = o.fold ? String(o.fold) : ''
-  effect(
-    () => {
-      const arg = typeof input === 'function' ? (input as () => unknown)() : input
-      if (arg === skip) return undefined
-      return untrack(() => {
-        const s = acquire(fn, arg)
-        if (o.fold) s.buffer ??= o.buffer ?? 256
-        else if (o.buffer) s.buffer ??= o.buffer
-        let v = s.views.get(fold)
-        if (!v)
-          s.views.set(
-            fold,
-            (v = createRoot(
-              () => ({ fold: o.fold, initial: o.initial, box: state<unknown>(o.initial) }),
-              null,
-            )),
-          )
-        v.fold = o.fold
-        onCleanup(held(s, o.keep))
-        return { s, v }
-      })
-    },
-    (now) => {
-      view.value = now
-    },
-  )
-  const status = derived(() => (view.value?.s.done.value ? 'done' : rt.status.value))
-  return {
-    get value() {
-      const now = view.value
-      return now ? now.v.box.value : o.initial
-    },
-    status,
-    get error() {
-      return view.value?.s.error.value
-    },
-  }
-}
-
 // ---- the connection ---------------------------------------------------------------------------------------------------
 
-/** How the client reaches `/_weft/rt`: SSE, a shared socket, or a fake under test. */
-export interface Link {
-  /** Resolves when the connection ends. */
-  open(
-    body: Body,
-    frame: (event: string, data: unknown) => void,
-    signal: AbortSignal,
-    alive: () => void,
-  ): Promise<void>
-  change(body: Body): Promise<void>
-}
-
-const post = (body: Body, signal?: AbortSignal) =>
-  fetch('/_weft/rt', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-weft': '1' },
-    body: JSON.stringify(body),
-    ...(signal && { signal }),
-  })
-
-const http: Link = {
-  async open(body, heard, signal, alive) {
-    const res = await post(body, signal)
-    if (!res.ok) {
-      const { e } = await res.json().catch(() => ({ e: {} }))
-      throw new FnError(e, res.status)
-    }
-    const reader = res.body!.getReader()
-    const decoder = new TextDecoder()
-    let buf = ''
-    for (;;) {
-      const { done, value } = await reader.read()
-      if (done) return
-      alive()
-      buf += decoder.decode(value, { stream: true })
-      for (let i; (i = buf.indexOf('\n\n')) >= 0; buf = buf.slice(i + 2)) {
-        if (buf[0] === ':') continue
-        const line = buf.indexOf('\n')
-        heard(buf.slice(7, line), JSON.parse(buf.slice(line + 7, i)))
-      }
-    }
-  },
-  async change(body) {
-    const res = await post(body)
-    if (!res.ok) throw new FnError({}, res.status)
-  },
-}
-
-/** A line on the browser's one socket (link.ts): the same events, and `/_weft/rt`'s SSE is for a host with no sockets. */
-let line: Line | undefined
-const socket: Link = {
-  open(body, heard, signal, alive) {
-    return new Promise<void>((done, fail) => {
-      const l = (line = openLine(
-        'r',
-        JSON.stringify(body),
-        (text) => {
-          alive()
-          const at = text.indexOf(':'),
-            event = text.slice(0, at)
-          if (event !== 'ping') heard(event, JSON.parse(text.slice(at + 1)))
-        },
-        (code, reason) => {
-          if (line === l) line = undefined
-          if (code === HANDOVER) retry = 0
-          if (code === 4000 && reason) fail(new FnError(JSON.parse(reason), 429))
-          else done()
-        },
-      ))
-      signal.addEventListener('abort', () => l.close())
-    })
-  },
-  change(body) {
-    if (!line) return Promise.reject(new FnError({}, 503))
-    line.send(JSON.stringify(body))
-    return Promise.resolve()
-  },
-}
+const { http, socket } = transports(() => (retry = 0))
 
 /**
  * @weft-js/core/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
@@ -378,14 +149,8 @@ const link = (): Link => (DEV && net() ? fake : noSockets() ? http : socket)
 let via: Link = socket
 let closeHub: (() => unknown) | undefined
 
-const BASE = 500,
-  CAP = 30_000,
-  DEAD = 45_000,
+const DEAD = 45_000,
   HIDDEN = 300_000
-
-/** Full jitter: anywhere from 0 to 0.5 s, 1 s, 2 s … 30 s. */
-export const backoff = (attempt: number, random = Math.random) =>
-  random() * Math.min(CAP, BASE * 2 ** attempt)
 
 interface Live {
   ac: AbortController
@@ -429,9 +194,6 @@ interface Linked {
   m: LiveMode
   d?: 1
 }
-/** What's positional in a frame: `[subscription, ...]`. What the rest of the fields mean goes by the event. */
-type Row = { 0: number; 1: never; 2: unknown }
-
 /** The connection is up: how live that is depends on the server's feed. */
 function linked(l?: Linked) {
   rt.mode.value = l?.m ?? 'app'
@@ -466,17 +228,7 @@ function frame(event: string, data: unknown) {
       linked(d.l)
       sync() // what changed while connecting
     } else if (event === 'a') {
-      const s = byN.get(d[0])
-      if (!s) return
-      s.tags = d[1]
-      s.error.value = undefined
-      if (DEV && !s.tags.length)
-        console.warn(
-          `weft: W053 \`${s.fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it.\n  fix: add \`tags\` to the query`,
-        )
-      // Data older than the subscription may have missed a write. A page's first connect is covered by its cursor.
-      if (!s.acked && !seeded && s.tags.length) void cache.invalidate(...s.tags)
-      s.acked = true
+      ack(d, byN, () => seeded)
     } else if (event === 'p') {
       cursor = d.c
       for (const t of d.t) pokes.add(t)
@@ -485,25 +237,8 @@ function frame(event: string, data: unknown) {
     } else if (event === 'R') {
       cursor = d.c
       void cache.invalidate(...[...subs.values()].flatMap((s) => s.tags))
-    } else if (event === 'm') {
-      const s = byN.get(d[0])
-      if (!s) return
-      if (d[1] !== null) s.cursor = d[1]
-      s.error.value = undefined
-      for (const v of s.views.values())
-        v.box.value = v.fold ? v.fold(v.box.value as never, d[2] as never) : d[2]
-    } else if (event === 'r') {
-      const s = byN.get(d[0])
-      if (!s) return
-      s.cursor = undefined
-      for (const v of s.views.values()) v.box.value = v.initial
-    } else if (event === 'f') {
-      const s = byN.get(d[0])
-      if (s) s.done.value = true
-    } else if (event === 'e') {
-      const s = byN.get(d[0])
-      if (s)
-        s.error.value = new FnError(d[1], (d[1] as { code?: string }).code === 'A002' ? 401 : 500)
+    } else if (event === 'm' || event === 'r' || event === 'f' || event === 'e') {
+      update(event, d, byN)
     } else if (event === 'L') linked(d as unknown as Linked)
     else if (event === 'b') retry = d.retry
   })

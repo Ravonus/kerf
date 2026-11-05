@@ -12,171 +12,38 @@
 //
 // Without Web Locks every tab leads itself: its own socket, which is what every tab used to have.
 
-/** Bump when a message here changes shape: tabs of two shapes share nothing, and each is its own client. */
-const WIRE = 1
-const NAME = `weft:link:${WIRE}`
+import {
+  NAME,
+  campaign,
+  freeTab,
+  holdTab,
+  shareable,
+  tab,
+  whenGone,
+  type Campaign,
+} from './link/election'
+import { arrive, end, endAll, lines, type Mine } from './link/lines'
+export {
+  BEAT,
+  campaign,
+  freeTab,
+  holdTab,
+  shareable,
+  tab,
+  whenGone,
+  type Campaign,
+} from './link/election'
+
 const PING = 20_000,
   DEAD = 45_000,
   BASE = 200,
   CAP = 30_000,
   IDLE = 1000
-export const BEAT = 5000
-const PONG = 1500
 /** The line went because the leader did: not the network's fault, so reopen at once. */
 export const HANDOVER = 4900
 
-// getRandomValues, not randomUUID: a page on plain http (a LAN address) has no randomUUID, and this runs on import.
-export const tab =
-  typeof crypto === 'undefined' ? '' : crypto.getRandomValues(new Uint32Array(1))[0]!.toString(36)
-const locks = (): LockManager | undefined =>
-  typeof navigator !== 'undefined' ? navigator.locks : undefined
-export const shareable = () => !!locks() && typeof BroadcastChannel !== 'undefined'
-
 /** What a test reads. */
 export const linkStats = { role: 'none' as 'none' | 'leader' | 'follower', steals: 0, dials: 0 }
-
-// ---- a lock, a queue and a ping ---------------------------------------------------------------------------------------
-
-export interface Campaign {
-  probe(): void
-  stop(): void
-  leading(): boolean
-  pinged?: () => void
-}
-
-/** `lead` when this tab takes the lock; `lose` when another tab takes it from under this one. */
-export function campaign(
-  name: string,
-  won: () => void,
-  lose: () => void,
-  stolen?: () => void,
-): Campaign {
-  const l = locks()
-  const lockName = `${name}:leader`
-  let on = true,
-    leads = false
-  let release: (() => void) | undefined
-  let abort: AbortController | undefined
-  let waiting: ReturnType<typeof setTimeout> | undefined
-  let pongAt = 0
-  const hold = () => {
-    leads = true
-    clearTimeout(waiting) // a ping that went out before there was anyone to answer it
-    waiting = undefined
-    won()
-  }
-  if (!l || typeof BroadcastChannel === 'undefined') {
-    queueMicrotask(() => {
-      if (on) hold()
-    })
-    return {
-      probe() {},
-      leading: () => leads,
-      stop() {
-        on = leads = false
-      },
-    }
-  }
-  const bc = new BroadcastChannel(`${name}:e`)
-  const me: Campaign = {
-    leading: () => leads,
-    probe() {
-      // Each hover asks, so a recent answer has to do: one message a second, not one a move.
-      if (leads || waiting !== undefined || !on || Date.now() - pongAt < 1000) return
-      bc.postMessage({ ping: tab })
-      const asked = Date.now()
-      waiting = setTimeout(() => {
-        waiting = undefined
-        // Late means this tab was the frozen one, and the answer is queued behind this timer: ask again.
-        if (Date.now() - asked > PONG * 1.5) return me.probe()
-        stolen?.()
-        const queued = abort
-        elect(true)
-        queued?.abort()
-      }, PONG)
-    },
-    stop() {
-      on = false
-      leads = false
-      clearTimeout(waiting)
-      clearInterval(timer)
-      abort?.abort()
-      release?.()
-      bc.close()
-    },
-  }
-  bc.onmessage = ({ data }) => {
-    if (data.ping && leads) {
-      bc.postMessage({ pong: data.ping })
-      me.pinged?.()
-    } else if (data.pong === tab) {
-      pongAt = Date.now()
-      clearTimeout(waiting)
-      waiting = undefined
-    }
-  }
-  function elect(steal = false) {
-    const ctl = new AbortController()
-    abort = ctl
-    l!
-      .request(
-        lockName,
-        steal ? { steal: true } : { signal: ctl.signal },
-        () =>
-          new Promise<void>((ok) => {
-            release = ok
-            hold()
-          }),
-      )
-      .catch(() => {
-        if (!on || abort !== ctl) return // this tab left the queue on purpose
-        if (leads) {
-          leads = false
-          lose()
-        }
-        elect()
-      })
-  }
-  const timer = setInterval(() => me.probe(), BEAT)
-  elect()
-  return me
-}
-
-// ---- this tab's own lock ----------------------------------------------------------------------------------------------
-
-let tabHeld = false
-let tabFree: (() => void) | undefined
-const whenHeld: (() => void)[] = []
-
-/** Held before the tab says anything, so a sibling that queues on it can't read a live tab as dead. */
-export function holdTab(then: () => void) {
-  if (tabHeld || !locks()) return then()
-  whenHeld.push(then)
-  if (whenHeld.length > 1) return
-  locks()!
-    .request(
-      `${NAME}:tab:${tab}`,
-      () =>
-        new Promise<void>((ok) => {
-          tabFree = ok
-          tabHeld = true
-          for (const f of whenHeld.splice(0)) f()
-        }),
-    )
-    .catch(() => {})
-}
-
-/** Comes through when that tab is gone, crash included. */
-export function freeTab() {
-  tabHeld = false
-  tabFree?.()
-  tabFree = undefined
-}
-
-export const whenGone = (t: string, fn: () => void) =>
-  void locks()
-    ?.request(`${NAME}:tab:${t}`, () => fn())
-    .catch(() => {})
 
 // ---- lines, as a tab sees them ----------------------------------------------------------------------------------------
 
@@ -184,14 +51,7 @@ export interface Line {
   send(text: string): void
   close(): void
 }
-interface Mine {
-  id: string
-  hello: string
-  frame(text: string): void
-  closed(code: number, reason?: string): void
-}
 
-const lines = new Map<string, Mine>()
 let nth = 0
 
 declare const __WEFT_SOCKETS__: boolean | undefined
@@ -208,25 +68,6 @@ export const noSockets = () => {
   return none
 }
 export const probeLink = () => election?.probe()
-
-function end(l: Mine, code: number, reason?: string) {
-  lines.delete(l.id)
-  l.closed(code, reason)
-}
-const endAll = (code: number) => {
-  for (const l of Array.from(lines.values())) end(l, code)
-}
-
-function arrive(text: string) {
-  const at = text.indexOf(':', 2)
-  const l = lines.get(text.slice(2, at))
-  if (!l) return
-  if (text[0] === 'x') {
-    const split = text.indexOf(':', at + 1)
-    return end(l, +text.slice(at + 1, split), text.slice(split + 1))
-  }
-  l.frame(text.slice(at + 1))
-}
 
 /** `c`: a socket's frames (socket.ts). `r`: realtime events, opened with a `/_weft/rt` body (hub.ts). */
 export function openLine(
