@@ -29,16 +29,7 @@ export function sweep(root) {
   }
 }
 
-export function startAgent({
-  box,
-  model,
-  effort,
-  budgetUsd,
-  wallMs,
-  transcript,
-  extraEnv,
-  tools = TOOLS,
-}) {
+function spawnAgent({ box, model, effort, budgetUsd, extraEnv, tools }) {
   const args = [
     '-p',
     '--input-format',
@@ -62,12 +53,25 @@ export function startAgent({
     '--disable-slash-commands',
   ]
   const [cmd, argv] = boxed(box, claudeBin, args)
-  const child = spawn(cmd, argv, {
+  return spawn(cmd, argv, {
     cwd: box.app,
     env: env(box, extraEnv),
     stdio: ['pipe', 'pipe', 'pipe'],
     detached: true,
   })
+}
+
+export function startAgent({
+  box,
+  model,
+  effort,
+  budgetUsd,
+  wallMs,
+  transcript,
+  extraEnv,
+  tools = TOOLS,
+}) {
+  const child = spawnAgent({ box, model, effort, budgetUsd, extraEnv, tools })
   const groupKill = () => {
     try {
       process.kill(-child.pid, 'SIGKILL')

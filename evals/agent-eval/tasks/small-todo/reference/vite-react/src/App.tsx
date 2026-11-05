@@ -8,7 +8,7 @@ const load = <T,>(key: string, d: T): T => {
     return d
   }
 }
-export default function App() {
+function useTodos() {
   const [todos, setTodos] = useState<Todo[]>(() => load('todos', []))
   const [filter, setFilter] = useState<Filter>(() => load('filter', 'All'))
   const [text, setText] = useState('')
@@ -25,6 +25,68 @@ export default function App() {
     )
     setEditing(null)
   }
+  return {
+    todos,
+    setTodos,
+    filter,
+    setFilter,
+    text,
+    setText,
+    editing,
+    setEditing,
+    draft,
+    setDraft,
+    left,
+    shown,
+    save,
+  }
+}
+
+function todoRow(
+  t: Todo,
+  { editing, draft, setDraft, setTodos, setEditing, todos, save }: ReturnType<typeof useTodos>,
+) {
+  return (
+    <li key={t.id}>
+      {editing === t.id ? (
+        <input
+          aria-label="Edit todo"
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save(t.id)
+            if (e.key === 'Escape') setEditing(null)
+          }}
+        />
+      ) : (
+        <label>
+          <input
+            type="checkbox"
+            checked={t.done}
+            onChange={() =>
+              setTodos(todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)))
+            }
+          />
+          {t.text}
+        </label>
+      )}
+      <button
+        onClick={() => {
+          setEditing(t.id)
+          setDraft(t.text)
+        }}
+      >
+        Edit {t.text}
+      </button>
+      <button onClick={() => setTodos(todos.filter((x) => x.id !== t.id))}>Delete {t.text}</button>
+    </li>
+  )
+}
+
+export default function App() {
+  const model = useTodos()
+  const { todos, setTodos, filter, setFilter, text, setText, left, shown } = model
   return (
     <main>
       <h1>Todos</h1>
@@ -49,46 +111,7 @@ export default function App() {
           Mark all as complete
         </label>
       )}
-      <ul aria-label="Todos">
-        {shown.map((t) => (
-          <li key={t.id}>
-            {editing === t.id ? (
-              <input
-                aria-label="Edit todo"
-                autoFocus
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') save(t.id)
-                  if (e.key === 'Escape') setEditing(null)
-                }}
-              />
-            ) : (
-              <label>
-                <input
-                  type="checkbox"
-                  checked={t.done}
-                  onChange={() =>
-                    setTodos(todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)))
-                  }
-                />
-                {t.text}
-              </label>
-            )}
-            <button
-              onClick={() => {
-                setEditing(t.id)
-                setDraft(t.text)
-              }}
-            >
-              Edit {t.text}
-            </button>
-            <button onClick={() => setTodos(todos.filter((x) => x.id !== t.id))}>
-              Delete {t.text}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <ul aria-label="Todos">{shown.map((t) => todoRow(t, model))}</ul>
       {(['All', 'Active', 'Completed'] as Filter[]).map((f) => (
         <button key={f} aria-pressed={filter === f} onClick={() => setFilter(f)}>
           {f}
