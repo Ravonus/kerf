@@ -103,6 +103,10 @@ describe('the plugin lock', () => {
     expect(r.ok).toBe(false)
   })
 
+  registerLockIntegrityTests()
+})
+
+function registerLockIntegrityTests() {
   it('P110: a lock that cannot be read blocks rather than reading as empty, and approve refuses it', async () => {
     const dir = app(body())
     await approve(dir)
@@ -154,7 +158,7 @@ describe('the plugin lock', () => {
     await approve(dir)
     expect(readFileSync(join(dir, lockFile), 'utf8')).toBe(text)
   })
-})
+}
 
 describe('weft plugins approve', () => {
   it('shows what is waiting and writes nothing without a name or --all', async () => {
