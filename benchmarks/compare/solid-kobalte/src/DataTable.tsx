@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, on, onCleanup, Show } from 'solid-js'
+import { createEffect, createSignal, For, on, onCleanup, Show, type Setter } from 'solid-js'
 import { Checkbox } from '@kobalte/core/checkbox'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import {
@@ -81,10 +81,91 @@ const Box = (p: { label: string; checked: boolean; onChange: (v: boolean) => voi
   </Checkbox>
 )
 
-export function DataTable(props: { label: string; columns: any }) {
-  const [data, setData] = createSignal(projects)
+function tableHead(table: ReturnType<typeof createTable>) {
+  return (
+    <thead>
+      <tr>
+        <th class="narrow">
+          <Box
+            label="Select all"
+            checked={table.getIsAllPageRowsSelected()}
+            onChange={(v) => table.toggleAllPageRowsSelected(v)}
+          />
+        </th>
+        <th class="narrow" />
+        <For each={table.getVisibleLeafColumns()}>
+          {(c: any) => (
+            <th
+              aria-sort={
+                c.getIsSorted() === 'asc'
+                  ? 'ascending'
+                  : c.getIsSorted() === 'desc'
+                    ? 'descending'
+                    : 'none'
+              }
+            >
+              <button class="sort" onClick={c.getToggleSortingHandler()}>
+                {String(c.columnDef.header)}
+              </button>
+            </th>
+          )}
+        </For>
+      </tr>
+    </thead>
+  )
+}
+
+function tableBody(table: ReturnType<typeof createTable>) {
+  return (
+    <tbody>
+      <For each={table.getRowModel().rows}>
+        {(row: any) => (
+          <>
+            <tr data-selected={row.getIsSelected() ? '' : undefined}>
+              <td>
+                <Box
+                  label={`Select ${row.original.name}`}
+                  checked={row.getIsSelected()}
+                  onChange={(v) => row.toggleSelected(v)}
+                />
+              </td>
+              <td>
+                <button
+                  aria-label={`Details for ${row.original.name}`}
+                  aria-expanded={row.getIsExpanded()}
+                  onClick={() => row.toggleExpanded()}
+                >
+                  {row.getIsExpanded() ? '▾' : '▸'}
+                </button>
+              </td>
+              <For each={row.getVisibleCells()}>
+                {(cell: any) => (
+                  <td data-label={String(cell.column.columnDef.header)}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                )}
+              </For>
+            </tr>
+            <Detail
+              row={row.original}
+              open={row.getIsExpanded()}
+              span={table.getVisibleLeafColumns().length + 2}
+            />
+          </>
+        )}
+      </For>
+    </tbody>
+  )
+}
+
+function exposeTick(setData: Setter<Project[]>) {
   ;(window as any).__tick = () =>
     setData((d) => d.map((r) => (r.id === 'p0' ? { ...r, budget: r.budget + 1 } : r)))
+}
+
+export function DataTable(props: { label: string; columns: any }) {
+  const [data, setData] = createSignal(projects)
+  exposeTick(setData)
   const table = createTable({
     features,
     columns: props.columns,
@@ -139,73 +220,8 @@ export function DataTable(props: { label: string; columns: any }) {
       <div class="frame">
         <table class="grid">
           <caption class="sr">{props.label}</caption>
-          <thead>
-            <tr>
-              <th class="narrow">
-                <Box
-                  label="Select all"
-                  checked={table.getIsAllPageRowsSelected()}
-                  onChange={(v) => table.toggleAllPageRowsSelected(v)}
-                />
-              </th>
-              <th class="narrow" />
-              <For each={table.getVisibleLeafColumns()}>
-                {(c: any) => (
-                  <th
-                    aria-sort={
-                      c.getIsSorted() === 'asc'
-                        ? 'ascending'
-                        : c.getIsSorted() === 'desc'
-                          ? 'descending'
-                          : 'none'
-                    }
-                  >
-                    <button class="sort" onClick={c.getToggleSortingHandler()}>
-                      {String(c.columnDef.header)}
-                    </button>
-                  </th>
-                )}
-              </For>
-            </tr>
-          </thead>
-          <tbody>
-            <For each={table.getRowModel().rows}>
-              {(row: any) => (
-                <>
-                  <tr data-selected={row.getIsSelected() ? '' : undefined}>
-                    <td>
-                      <Box
-                        label={`Select ${row.original.name}`}
-                        checked={row.getIsSelected()}
-                        onChange={(v) => row.toggleSelected(v)}
-                      />
-                    </td>
-                    <td>
-                      <button
-                        aria-label={`Details for ${row.original.name}`}
-                        aria-expanded={row.getIsExpanded()}
-                        onClick={() => row.toggleExpanded()}
-                      >
-                        {row.getIsExpanded() ? '▾' : '▸'}
-                      </button>
-                    </td>
-                    <For each={row.getVisibleCells()}>
-                      {(cell: any) => (
-                        <td data-label={String(cell.column.columnDef.header)}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      )}
-                    </For>
-                  </tr>
-                  <Detail
-                    row={row.original}
-                    open={row.getIsExpanded()}
-                    span={table.getVisibleLeafColumns().length + 2}
-                  />
-                </>
-              )}
-            </For>
-          </tbody>
+          {tableHead(table)}
+          {tableBody(table)}
         </table>
       </div>
       <div class="pager">

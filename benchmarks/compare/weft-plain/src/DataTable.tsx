@@ -65,7 +65,7 @@ function Row({ row, ctx }: { row: Project; ctx: Ctx }) {
   )
 }
 
-export function DataTable({ label, columns }: { label: string; columns: Column[] }) {
+function tableState(columns: () => Column[]) {
   const data = state(projects)
   ;(window as any).__tick = () =>
     (data.value = data.value.map((r) => (r.id === 'p0' ? { ...r, budget: r.budget + 1 } : r)))
@@ -78,7 +78,7 @@ export function DataTable({ label, columns }: { label: string; columns: Column[]
   const found = derived(() => {
     const q = typed.value.toLowerCase()
     return q
-      ? data.value.filter((r) => columns.some((c) => String(r[c.id]).toLowerCase().includes(q)))
+      ? data.value.filter((r) => columns().some((c) => String(r[c.id]).toLowerCase().includes(q)))
       : data.value
   })
   const sorted = derived(() => {
@@ -89,7 +89,7 @@ export function DataTable({ label, columns }: { label: string; columns: Column[]
     )
   })
   const shown = derived(() => sorted.value.slice(at.value * pageSize, (at.value + 1) * pageSize))
-  const cols = derived(() => columns.filter((c) => !hidden.value[c.id]))
+  const cols = derived(() => columns().filter((c) => !hidden.value[c.id]))
   const picked = derived(() => Object.values(sel.value).filter(Boolean).length)
   const all = derived(() => shown.value.every((r) => sel.get(r.id)))
   const pages = derived(() => Math.ceil(found.value.length / pageSize))
@@ -105,6 +105,79 @@ export function DataTable({ label, columns }: { label: string; columns: Column[]
     for (const r of shown.value) next[r.id] = on
     sel.value = next
   }
+  const onFilter = (e: any) => {
+    typed.value = e.currentTarget.value
+    at.value = 0
+  }
+  return {
+    data,
+    hidden,
+    typed,
+    at,
+    order,
+    found,
+    shown,
+    cols,
+    picked,
+    all,
+    pages,
+    ctx,
+    flip,
+    pickAll,
+    onFilter,
+  }
+}
+
+function columnItems(columns: Column[], hidden: Flags) {
+  return columns.map((c) => (
+    <label key={c.id} class="item">
+      <input
+        type="checkbox"
+        checked={!hidden.get(c.id)}
+        onChange={() => (hidden.value = { ...hidden.value, [c.id]: !hidden.value[c.id] })}
+      />
+      {c.header}
+    </label>
+  ))
+}
+
+function columnHeaders(
+  cols: ReturnType<typeof tableState>['cols'],
+  order: ReturnType<typeof tableState>['order'],
+  flip: ReturnType<typeof tableState>['flip'],
+) {
+  return cols.value.map((c) => (
+    <th
+      key={c.id}
+      aria-sort={
+        order.value?.id === c.id ? (order.value.dir === 1 ? 'ascending' : 'descending') : 'none'
+      }
+    >
+      <button class="sort" onClick={() => flip(c.id)}>
+        {c.header}
+      </button>
+    </th>
+  ))
+}
+
+export function DataTable({ label, columns }: { label: string; columns: Column[] }) {
+  const {
+    data,
+    hidden,
+    typed,
+    at,
+    order,
+    found,
+    shown,
+    cols,
+    picked,
+    all,
+    pages,
+    ctx,
+    flip,
+    pickAll,
+    onFilter,
+  } = tableState(() => columns)
   return (
     <>
       <div class="tools">
@@ -113,10 +186,7 @@ export function DataTable({ label, columns }: { label: string; columns: Column[]
           aria-label="Filter projects"
           placeholder="Filter projects"
           value={typed.value}
-          onInput={(e: any) => {
-            typed.value = e.currentTarget.value
-            at.value = 0
-          }}
+          onInput={onFilter}
         />
         <span role="status">
           {found.value.length} of {data.value.length}
@@ -126,16 +196,7 @@ export function DataTable({ label, columns }: { label: string; columns: Column[]
           Columns
         </button>
         <div popover id="columns" class="pop">
-          {columns.map((c) => (
-            <label key={c.id} class="item">
-              <input
-                type="checkbox"
-                checked={!hidden.get(c.id)}
-                onChange={() => (hidden.value = { ...hidden.value, [c.id]: !hidden.value[c.id] })}
-              />
-              {c.header}
-            </label>
-          ))}
+          {columnItems(columns, hidden)}
         </div>
       </div>
       <div class="frame">
@@ -153,22 +214,7 @@ export function DataTable({ label, columns }: { label: string; columns: Column[]
                 />
               </th>
               <th class="narrow"></th>
-              {cols.value.map((c) => (
-                <th
-                  key={c.id}
-                  aria-sort={
-                    order.value?.id === c.id
-                      ? order.value.dir === 1
-                        ? 'ascending'
-                        : 'descending'
-                      : 'none'
-                  }
-                >
-                  <button class="sort" onClick={() => flip(c.id)}>
-                    {c.header}
-                  </button>
-                </th>
-              ))}
+              {columnHeaders(cols, order, flip)}
             </tr>
           </thead>
           <tbody>
