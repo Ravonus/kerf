@@ -67,45 +67,59 @@ fn main() {
         .collect();
 
     if let Some(n) = bench {
-        let mut runs = Vec::new();
-        let mut diagnostics = 0;
-        for _ in 0..n {
-            let t = Instant::now();
-            for (filename, source) in &sources {
-                let out = compile(
-                    source,
-                    &Options {
-                        filename: filename.clone(),
-                        check_only: check,
-                        ..Default::default()
-                    },
-                );
-                diagnostics += out.diagnostics.len();
-                std::hint::black_box(out);
-            }
-            runs.push(t.elapsed().as_secs_f64() * 1000.0);
-        }
-        runs.sort_by(f64::total_cmp);
-        let (min, median, max) = match runs.as_slice() {
-            [] => (0.0, 0.0, 0.0),
-            r => (r[0], r[r.len() / 2], r[r.len() - 1]),
-        };
-        let bytes: usize = sources.iter().map(|(_, s)| s.len()).sum();
-        println!(
-            "{{\"files\":{},\"bytes\":{},\"runs\":{},\"minMs\":{:.2},\"medianMs\":{:.2},\"maxMs\":{:.2},\"diagnostics\":{}}}",
-            sources.len(),
-            bytes,
-            n,
-            min,
-            median,
-            max,
-            diagnostics / n.max(1)
-        );
+        benchmark(&sources, n, check);
         return;
     }
+    let failed = print_results(&sources, json, check, dev, explain);
+    std::process::exit(i32::from(failed));
+}
 
+fn benchmark(sources: &[(String, String)], n: usize, check: bool) {
+    let mut runs = Vec::new();
+    let mut diagnostics = 0;
+    for _ in 0..n {
+        let t = Instant::now();
+        for (filename, source) in sources {
+            let out = compile(
+                source,
+                &Options {
+                    filename: filename.clone(),
+                    check_only: check,
+                    ..Default::default()
+                },
+            );
+            diagnostics += out.diagnostics.len();
+            std::hint::black_box(out);
+        }
+        runs.push(t.elapsed().as_secs_f64() * 1000.0);
+    }
+    runs.sort_by(f64::total_cmp);
+    let (min, median, max) = match runs.as_slice() {
+        [] => (0.0, 0.0, 0.0),
+        r => (r[0], r[r.len() / 2], r[r.len() - 1]),
+    };
+    let bytes: usize = sources.iter().map(|(_, s)| s.len()).sum();
+    println!(
+        "{{\"files\":{},\"bytes\":{},\"runs\":{},\"minMs\":{:.2},\"medianMs\":{:.2},\"maxMs\":{:.2},\"diagnostics\":{}}}",
+        sources.len(),
+        bytes,
+        n,
+        min,
+        median,
+        max,
+        diagnostics / n.max(1)
+    );
+}
+
+fn print_results(
+    sources: &[(String, String)],
+    json: bool,
+    check: bool,
+    dev: bool,
+    explain: Option<u32>,
+) -> bool {
     let mut failed = false;
-    for (filename, source) in &sources {
+    for (filename, source) in sources {
         let out = compile(
             source,
             &Options {
@@ -158,5 +172,5 @@ fn main() {
             println!("// {filename}\n{code}");
         }
     }
-    std::process::exit(i32::from(failed));
+    failed
 }

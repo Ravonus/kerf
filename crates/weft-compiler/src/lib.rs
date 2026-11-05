@@ -31,8 +31,9 @@ pub use diag::{Diagnostic, Edit, Fix, Severity};
 pub use project::Facts;
 
 use oxc_allocator::Allocator;
+use oxc_ast::ast::Program;
 use oxc_parser::Parser;
-use oxc_semantic::SemanticBuilder;
+use oxc_semantic::{Scoping, SemanticBuilder};
 use oxc_span::SourceType;
 use serde::{Deserialize, Serialize};
 
@@ -160,32 +161,15 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     let semantic = SemanticBuilder::new().build(&program).semantic;
     let plan = analyze::analyze(&program, semantic.scoping(), source);
     let scoping = semantic.into_scoping();
-    let mut diagnostics = plan.diagnostics.clone();
-    let hydration_facts = hydration::facts(&program, &scoping, source);
-    // @weft-js/core/browser checks; W054 needs to know whether this file is server-rendered (`None`: only checking).
-    let ssr = if options.generate == "ssr" || options.hydratable {
-        Some(true)
-    } else if options.check_only {
-        None
-    } else {
-        Some(false)
-    };
-    diagnostics.extend(browser::check(&program, &scoping, source, ssr));
-    // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
-    let (groups, group_uses) = style::apply(
+    let (diagnostics, mut facts) = program_facts(
         &allocator,
         &mut program,
         &scoping,
+        &plan,
         source,
+        authored,
         options,
-        &mut diagnostics,
     );
-    diagnostics.retain(|d| (d.start as usize) <= authored);
-    diagnostics.sort_by_key(|d| d.start);
-    let mut facts = plan.facts.clone();
-    facts.hydration = hydration_facts;
-    facts.groups = groups;
-    facts.group_uses = group_uses;
     if options.check_only {
         facts.shapes = shape::exports(&program);
         return Output {
@@ -197,11 +181,40 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
         };
     }
 
-    // Before the pre-pass, which rewrites the params and lists the variants copy. Appended after printing.
-    let shapes = shape::apply(
+    let (shapes_code, footer) = prepare_program(
         &allocator,
         &mut program,
         &scoping,
+        &plan,
+        source,
+        options,
+        &mut facts,
+    );
+    finish_output(
+        &program,
+        source,
+        options,
+        &shapes_code,
+        footer.as_deref(),
+        diagnostics,
+        facts,
+    )
+}
+
+fn prepare_program<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+    scoping: &Scoping,
+    plan: &analyze::Plan,
+    source: &str,
+    options: &Options,
+    facts: &mut Facts,
+) -> (String, Option<String>) {
+    // Before the pre-pass, which rewrites the params and lists the variants copy. Appended after printing.
+    let shapes = shape::apply(
+        allocator,
+        program,
+        scoping,
         source,
         &options.filename,
         options.shapes.as_ref(),
@@ -212,27 +225,78 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
         && options.hydratable
         && let Some(islands) = &options.islands
     {
-        hydration::mark(&allocator, &mut program, &scoping, islands);
+        hydration::mark(allocator, program, scoping, islands);
     }
-    transform::apply(&allocator, &mut program, &scoping, &plan);
+    transform::apply(allocator, program, scoping, plan);
 
     let ssr = options.generate == "ssr";
     let footer = (options.hmr && options.dev && !ssr)
-        .then(|| hmr::apply(&allocator, &mut program, source, &options.filename))
+        .then(|| hmr::apply(allocator, program, source, &options.filename))
         .flatten();
     // Dev DOM output names its boxes and derived values for the graph (`weft browser`, the overlay).
     let names = (options.dev && !ssr)
-        .then(|| hmr::names(&allocator, &mut program, &options.filename))
+        .then(|| hmr::names(allocator, program, &options.filename))
         .flatten();
     let footer = match (footer, names) {
         (Some(a), Some(b)) => Some(a + &b),
         (a, b) => a.or(b),
     };
+    (shapes.code, footer)
+}
+
+fn program_facts<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+    scoping: &Scoping,
+    plan: &analyze::Plan,
+    source: &str,
+    authored: usize,
+    options: &Options,
+) -> (Vec<Diagnostic>, Facts) {
+    let mut diagnostics = plan.diagnostics.clone();
+    let hydration_facts = hydration::facts(program, scoping, source);
+    // @weft-js/core/browser checks; W054 needs to know whether this file is server-rendered (`None`: only checking).
+    let ssr = if options.generate == "ssr" || options.hydratable {
+        Some(true)
+    } else if options.check_only {
+        None
+    } else {
+        Some(false)
+    };
+    diagnostics.extend(browser::check(program, scoping, source, ssr));
+    // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
+    let (groups, group_uses) = style::apply(
+        allocator,
+        program,
+        scoping,
+        source,
+        options,
+        &mut diagnostics,
+    );
+    diagnostics.retain(|d| (d.start as usize) <= authored);
+    diagnostics.sort_by_key(|d| d.start);
+    let mut facts = plan.facts.clone();
+    facts.hydration = hydration_facts;
+    facts.groups = groups;
+    facts.group_uses = group_uses;
+    (diagnostics, facts)
+}
+
+fn finish_output(
+    program: &Program<'_>,
+    source: &str,
+    options: &Options,
+    shapes_code: &str,
+    footer: Option<&str>,
+    mut diagnostics: Vec<Diagnostic>,
+    facts: Facts,
+) -> Output {
+    let ssr = options.generate == "ssr";
     // Print the pre-pass's AST and lower its JSX from that text (spans index it). Codegen's map of the printed text
     // goes through the emitter to the authored file. Each JSX node's authored line goes along by order
     // (`JsxOrder`), for dev comments and `explain`. Nodes the pre-pass made have no span.
     let mut order = emit::JsxOrder::default();
-    oxc_ast_visit::Visit::visit_program(&mut order, &program);
+    oxc_ast_visit::Visit::visit_program(&mut order, program);
     let origins = order
         .spans
         .iter()
@@ -244,8 +308,8 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     };
     let built = oxc_codegen::Codegen::new()
         .with_options(opts)
-        .build(&program);
-    let printed = built.code + &shapes.code;
+        .build(program);
+    let printed = built.code + shapes_code;
     let points = built.map.as_ref().map(|m| srcmap::points(&printed, m));
     let module = if ssr && options.module_name == "@weft-js/core/dom" {
         "@weft-js/core/ssr"
@@ -265,7 +329,7 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     };
     match emit::emit(&printed, &o) {
         Ok(out) => Output {
-            code: Some(out.code + footer.as_deref().unwrap_or("")),
+            code: Some(out.code + footer.unwrap_or("")),
             map: out.map,
             diagnostics,
             facts,
