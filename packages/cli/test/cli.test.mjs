@@ -10,6 +10,65 @@ const weft = (...args) => {
 }
 
 describe('weft (bin)', () => {
+  registerBinRouteTests()
+  registerBinCommandTests()
+})
+
+describe('live data on a deploy target', () => {
+  const app = join(import.meta.dirname, '../../start/test/fixtures/live-db')
+  const codes = (out) => JSON.parse(out).diagnostics.map((d) => d.code)
+
+  // The fixture has its own package.json, so `@weft-js/start` isn't a self-import and a checkout has nothing to find.
+  beforeAll(() => {
+    const start = join(app, 'node_modules/@weft-js/start')
+    mkdirSync(join(app, 'node_modules/@weft-js'), { recursive: true })
+    rmSync(start, { recursive: true, force: true })
+    symlinkSync(join(import.meta.dirname, '../../start'), start)
+  })
+
+  it.each([
+    'vercel',
+    'netlify',
+    'aws_lambda',
+    'azure_functions',
+    'firebase',
+    'cloudflare_module',
+    'deno_deploy',
+  ])(
+    '%s: a required query fails check, doctor and build, naming the query',
+    (preset) => {
+      const check = weft('check', '--json', '--root', app, '--preset', preset)
+      expect(check.code).toBe(1)
+      expect(codes(check.stdout)).toContain('R013')
+      expect(check.stdout).toMatch(/`myNotes` requires a live feed/)
+      expect(check.stdout).toContain(preset)
+      const doctor = weft('doctor', '--root', app, '--preset', preset)
+      expect(doctor.code).toBe(1)
+      expect(doctor.stderr).toMatch(/weft db listen/)
+    },
+    60_000,
+  )
+
+  it.each(['node_server', 'bun', 'deno_server'])(
+    '%s: the feed is fine',
+    (preset) => {
+      const check = weft('check', '--json', '--root', app, '--preset', preset)
+      expect(codes(check.stdout)).not.toContain('R013')
+      expect(check.code).toBe(0)
+    },
+    60_000,
+  )
+
+  it('`weft build` refuses before it builds', () => {
+    const r = weft('build', '--root', app, '--preset', 'vercel')
+    expect(r.code).toBe(1)
+    expect(r.stderr).toMatch(/R013.*myNotes/)
+    expect(r.stderr).not.toMatch(/usage:|Building/)
+    expect(r.stderr).toContain('--unsafe-allow R013')
+  }, 180_000)
+})
+
+function registerBinRouteTests() {
   it('routes and routes --meta read an app with src/routes (@weft-js/start from the workspace)', () => {
     const app = startApp()
     const list = JSON.parse(weft('routes', '--json', '--root', app).stdout)
@@ -62,7 +121,9 @@ describe('weft (bin)', () => {
     const { diagnostics } = JSON.parse(weft('check', '--json', '--root', app, 'src/db.ts').stdout)
     expect(diagnostics.filter((d) => /^H0(0[1-8]|1[1-6])$/.test(d.code))).toEqual([])
   }, 60_000)
+}
 
+function registerBinCommandTests() {
   it('check --json: JSON on stdout, human text on stderr, exit 0 on the reference', () => {
     const r = weft('check', '--json', '--root', fixture)
     expect(r.code).toBe(0)
@@ -128,58 +189,4 @@ describe('weft (bin)', () => {
     })
     expect(weft('check', '--wat').code).toBe(2)
   })
-})
-
-describe('live data on a deploy target', () => {
-  const app = join(import.meta.dirname, '../../start/test/fixtures/live-db')
-  const codes = (out) => JSON.parse(out).diagnostics.map((d) => d.code)
-
-  // The fixture has its own package.json, so `@weft-js/start` isn't a self-import and a checkout has nothing to find.
-  beforeAll(() => {
-    const start = join(app, 'node_modules/@weft-js/start')
-    mkdirSync(join(app, 'node_modules/@weft-js'), { recursive: true })
-    rmSync(start, { recursive: true, force: true })
-    symlinkSync(join(import.meta.dirname, '../../start'), start)
-  })
-
-  it.each([
-    'vercel',
-    'netlify',
-    'aws_lambda',
-    'azure_functions',
-    'firebase',
-    'cloudflare_module',
-    'deno_deploy',
-  ])(
-    '%s: a required query fails check, doctor and build, naming the query',
-    (preset) => {
-      const check = weft('check', '--json', '--root', app, '--preset', preset)
-      expect(check.code).toBe(1)
-      expect(codes(check.stdout)).toContain('R013')
-      expect(check.stdout).toMatch(/`myNotes` requires a live feed/)
-      expect(check.stdout).toContain(preset)
-      const doctor = weft('doctor', '--root', app, '--preset', preset)
-      expect(doctor.code).toBe(1)
-      expect(doctor.stderr).toMatch(/weft db listen/)
-    },
-    60_000,
-  )
-
-  it.each(['node_server', 'bun', 'deno_server'])(
-    '%s: the feed is fine',
-    (preset) => {
-      const check = weft('check', '--json', '--root', app, '--preset', preset)
-      expect(codes(check.stdout)).not.toContain('R013')
-      expect(check.code).toBe(0)
-    },
-    60_000,
-  )
-
-  it('`weft build` refuses before it builds', () => {
-    const r = weft('build', '--root', app, '--preset', 'vercel')
-    expect(r.code).toBe(1)
-    expect(r.stderr).toMatch(/R013.*myNotes/)
-    expect(r.stderr).not.toMatch(/usage:|Building/)
-    expect(r.stderr).toContain('--unsafe-allow R013')
-  }, 180_000)
-})
+}

@@ -87,6 +87,75 @@ describe('weft add rust', () => {
 })
 
 describe('weft add', () => {
+  registerAddConfigTests()
+  registerAddUpdatesTests()
+  registerAddAuthTests()
+})
+
+describe('weft add tailwind', () => {
+  const app = (deps = {}, extra = {}) =>
+    project({
+      'package.json': JSON.stringify({ dependencies: deps }),
+      'src/routes/_layout.tsx': "import { Link } from '@weft-js/start'\n",
+      ...extra,
+    })
+  const addTw = (dir, o = {}) => addCommand(dir, 'tailwind', { install: false, ...o })
+
+  it('leaves the reset out of a warp app, whose components it would override', async () => {
+    const dir = app({ '@weft-js/warp': '0.0.0' })
+    await addTw(dir)
+    const css = read(dir, 'src/app.css')
+    expect(css).toContain('@layer warp, theme, base, components, utilities;')
+    expect(css).toContain('@import "@weft-js/warp/tailwind.css"')
+    expect(css).not.toContain('@import "tailwindcss";')
+    expect(read(dir, 'src/routes/_layout.tsx').startsWith("import '../app.css'\n")).toBe(true)
+    expect(read(dir, 'vite.config.ts')).toContain('tailwindcss()')
+  })
+
+  it('keeps the CSS an app has, under the imports', async () => {
+    const dir = app(
+      {},
+      { 'src/app.css': 'nav { color: red; }\n', 'src/routes/_layout.tsx': "import '../app.css'\n" },
+    )
+    await addTw(dir)
+    expect(read(dir, 'src/app.css')).toBe('@import "tailwindcss";\n\nnav { color: red; }\n')
+    expect(read(dir, 'src/routes/_layout.tsx')).toBe("import '../app.css'\n")
+  })
+
+  it("adds to a Vite config, and stops at one it can't place the plugin in", async () => {
+    const dir = app({}, { 'vite.config.ts': 'export default { plugins: [other()] }\n' })
+    await addTw(dir)
+    expect(read(dir, 'vite.config.ts')).toContain('plugins: [tailwindcss(), other()]')
+
+    const odd = app({}, { 'vite.config.ts': 'export default make()\n' })
+    await expect(addTw(odd)).rejects.toMatchObject({ code: 'E_ADD' })
+    expect(read(odd, 'vite.config.ts')).toBe('export default make()\n')
+  })
+
+  it('dry run changes nothing, and a second run does nothing', async () => {
+    const dir = app()
+    const planned = await addTw(dir, { dryRun: true })
+    expect(planned.dryRun).toBe(true)
+    expect(() => read(dir, 'src/app.css')).toThrow()
+
+    const done = app({ tailwindcss: '4.3.3' }, { 'src/app.css': '@import "tailwindcss";\n' })
+    expect(await addTw(done)).toMatchObject({ already: true })
+  })
+})
+
+describe('weft add db', () => {
+  const app = (extra = {}) =>
+    project({
+      'package.json': JSON.stringify({ name: 'shop' }),
+      'src/routes/index.tsx': 'export default () => null\n',
+      ...extra,
+    })
+  const addDb = (dir, o = {}) => addCommand(dir, 'db', { install: false, ...o })
+  registerDbWiringTests(app, addDb)
+  registerDbPluginTests()
+})
+
+function registerAddConfigTests() {
   it("leaves a scaffold's own AGENTS.md alone, and regenerates a generated one", async () => {
     const own = "# AGENTS.md\n\nThe app's own notes.\n"
     const dir = project({ ...acme, 'weft.config.ts': 'export default {}\n', 'AGENTS.md': own })
@@ -140,7 +209,9 @@ describe('weft add', () => {
     expect(read(dir, 'weft.config.ts')).toContain("import { acme } from 'acme/plugin'")
     expect(await names(dir)).toEqual(['acme'])
   })
+}
 
+function registerAddUpdatesTests() {
   it('appends to a list, keeping what is there', async () => {
     const dir = project({ ...acme, 'weft.config.yaml': '# ours\nsite: { name: A }\n' })
     await add(dir)
@@ -209,7 +280,9 @@ describe('weft add', () => {
     expect(await names(dir)).toEqual(['acme'])
     expect((await addCommand(dir, 'acme', { install: false })).already).toBe(true)
   })
+}
 
+function registerAddAuthTests() {
   it('auth needs a database, and stops rather than replace a provider', async () => {
     const bare = project({ 'weft.config.ts': 'export default {}\n' })
     await expect(add(bare, 'auth')).rejects.toThrow('weft add db')
@@ -268,68 +341,9 @@ describe('weft add', () => {
     }
     expect(named.filter((n) => !DB_COMMANDS.includes(n.split(' ')[0]))).toEqual([])
   })
-})
+}
 
-describe('weft add tailwind', () => {
-  const app = (deps = {}, extra = {}) =>
-    project({
-      'package.json': JSON.stringify({ dependencies: deps }),
-      'src/routes/_layout.tsx': "import { Link } from '@weft-js/start'\n",
-      ...extra,
-    })
-  const addTw = (dir, o = {}) => addCommand(dir, 'tailwind', { install: false, ...o })
-
-  it('leaves the reset out of a warp app, whose components it would override', async () => {
-    const dir = app({ '@weft-js/warp': '0.0.0' })
-    await addTw(dir)
-    const css = read(dir, 'src/app.css')
-    expect(css).toContain('@layer warp, theme, base, components, utilities;')
-    expect(css).toContain('@import "@weft-js/warp/tailwind.css"')
-    expect(css).not.toContain('@import "tailwindcss";')
-    expect(read(dir, 'src/routes/_layout.tsx').startsWith("import '../app.css'\n")).toBe(true)
-    expect(read(dir, 'vite.config.ts')).toContain('tailwindcss()')
-  })
-
-  it('keeps the CSS an app has, under the imports', async () => {
-    const dir = app(
-      {},
-      { 'src/app.css': 'nav { color: red; }\n', 'src/routes/_layout.tsx': "import '../app.css'\n" },
-    )
-    await addTw(dir)
-    expect(read(dir, 'src/app.css')).toBe('@import "tailwindcss";\n\nnav { color: red; }\n')
-    expect(read(dir, 'src/routes/_layout.tsx')).toBe("import '../app.css'\n")
-  })
-
-  it("adds to a Vite config, and stops at one it can't place the plugin in", async () => {
-    const dir = app({}, { 'vite.config.ts': 'export default { plugins: [other()] }\n' })
-    await addTw(dir)
-    expect(read(dir, 'vite.config.ts')).toContain('plugins: [tailwindcss(), other()]')
-
-    const odd = app({}, { 'vite.config.ts': 'export default make()\n' })
-    await expect(addTw(odd)).rejects.toMatchObject({ code: 'E_ADD' })
-    expect(read(odd, 'vite.config.ts')).toBe('export default make()\n')
-  })
-
-  it('dry run changes nothing, and a second run does nothing', async () => {
-    const dir = app()
-    const planned = await addTw(dir, { dryRun: true })
-    expect(planned.dryRun).toBe(true)
-    expect(() => read(dir, 'src/app.css')).toThrow()
-
-    const done = app({ tailwindcss: '4.3.3' }, { 'src/app.css': '@import "tailwindcss";\n' })
-    expect(await addTw(done)).toMatchObject({ already: true })
-  })
-})
-
-describe('weft add db', () => {
-  const app = (extra = {}) =>
-    project({
-      'package.json': JSON.stringify({ name: 'shop' }),
-      'src/routes/index.tsx': 'export default () => null\n',
-      ...extra,
-    })
-  const addDb = (dir, o = {}) => addCommand(dir, 'db', { install: false, ...o })
-
+function registerDbWiringTests(app, addDb) {
   it('writes the wiring and no todo app; a layer brings its plugin', async () => {
     const dir = app({
       'weft.config.ts': 'export default {}\n',
@@ -376,7 +390,9 @@ describe('weft add db', () => {
       '@weft-js/warp': 'file:/x/warp.tgz',
     })
   })
+}
 
+function registerDbPluginTests() {
   describe('a plugin with `setup`', () => {
     const source = `import { definePlugin } from '@weft-js/core/plugin'\nconst setup = { needs: ['db'], with: ['helper'], run: ({ engine, read }) => ({ files: { 'src/kit.server.ts': \`// \${engine}\\n\` }, edits: { 'src/env.server.ts': read('src/env.server.ts') + '// kit\\n' }, env: { KIT_KEY: 'placeholder' }, next: ['\`weft kit\`'] }) }\nexport default definePlugin({ name: 'kit', contribute: () => ({ setup }) })\n`
     const pkg = (name, text) => ({
@@ -434,4 +450,4 @@ describe('weft add db', () => {
       expect(existsSync(join(dir, 'src/kit.server.ts'))).toBe(false)
     })
   })
-})
+}
