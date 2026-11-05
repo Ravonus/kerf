@@ -136,6 +136,31 @@ export interface TypeToConfirmProps {
   onConfirm: () => Promise<void> | void
 }
 
+function confirmActions(
+  open: () => State<boolean>,
+  ok: { readonly value: boolean },
+  busy: State<boolean>,
+  confirm: () => Promise<void> | void,
+) {
+  const go = async () => {
+    if (!ok.value || busy.value) return
+    busy.value = true
+    try {
+      await confirm()
+      open().value = false
+    } catch {
+      failed(go)
+    } finally {
+      busy.value = false
+    }
+  }
+  const submit = (e: Event) => {
+    e.preventDefault()
+    void go()
+  }
+  return { go, submit }
+}
+
 /**
  * Type-to-confirm (09 §4.4): an AlertDialog whose field sweeps critical. Deviation from 05: focus goes to the field,
  * not Cancel. The confirm stays disabled until the text matches exactly, and Enter submits only then.
@@ -160,22 +185,12 @@ export function TypeToConfirm({
       if (on) typed.value = ''
     },
   )
-  const go = async () => {
-    if (!ok.value || busy.value) return
-    busy.value = true
-    try {
-      await onConfirm()
-      open.value = false
-    } catch {
-      failed(go)
-    } finally {
-      busy.value = false
-    }
-  }
-  const submit = (e: Event) => {
-    e.preventDefault()
-    void go()
-  }
+  const { go, submit } = confirmActions(
+    () => open,
+    ok,
+    busy,
+    () => onConfirm(),
+  )
   return (
     <>
       {armed.value && (
