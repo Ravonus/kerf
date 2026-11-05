@@ -24,6 +24,7 @@ import {
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { dispatch } from './run/dispatch.mjs'
+import { taskReadiness } from './run/readiness.mjs'
 import { golden, pack } from './run/prepare.mjs'
 import { probe } from './run/probe.mjs'
 import { canary } from './run/canary.mjs'
@@ -166,7 +167,7 @@ function ready() {
   const { tasks } = JSON.parse(readFileSync(join(here, 'matrix.json'), 'utf8'))
   const problems = ['S5: Codex auth, MCP isolation and source-read evidence are not verified']
   for (const task of tasks) {
-    if (!taskOf(task).gradeable) problems.push(`${task}: grader is incomplete`)
+    problems.push(...taskReadiness(task, taskOf(task)))
     const file = join(state, `reference-${task}.json`),
       dir = join(here, 'tasks', task)
     if (!existsSync(join(dir, 'hidden.mjs'))) {

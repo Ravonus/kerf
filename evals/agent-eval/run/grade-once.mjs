@@ -2,9 +2,13 @@
 import { join } from 'node:path'
 import { build, cloneForGrading, hidden, quality, serve } from '../lib/grade.mjs'
 import { goldens } from '../lib/paths.mjs'
+import { taskReadiness } from './readiness.mjs'
 
 export async function gradeOnce(box, stackName, task, n, withQuality, options) {
-  if (!options.gradeable && !options.calibration) throw new Error(`${task}: grader is incomplete`)
+  if (!options.calibration) {
+    const problems = taskReadiness(task, { gradeable: options.gradeable })
+    if (problems.length) throw new Error(problems[0])
+  }
   const copy = await cloneForGrading(box, n)
   const built = await build(copy, options.stack)
   if (!built.ok)

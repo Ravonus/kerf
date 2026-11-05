@@ -1,0 +1,21 @@
+{
+  "candidate": "9f5436f431cfd6c0bd439fca33ab7b1d5afaf5be",
+  "candidateTaskTree": "1f07f5854475d92dc1b314fa64f1694b74f2f621",
+  "receiptSha256": "198528f4b58663c6f1c2880f474f2add1c69db6e0b3b02a34721d9d7ffa966a0",
+  "receiptSource": "M4 verification update",
+  "referenceChecks": 12,
+  "mutantsCaught": 45,
+  "files": {
+    "SPEC.md": "9db4340d086e840d7ecb9d86a67e4cde0b70d281",
+    "cart-checks.mjs": "a96af8fc78c7fa64491d05ab94c88799acb36ca6",
+    "checkout-checks.mjs": "a6ce56dbb21d750e69184b51e3a9af7a424fa560",
+    "coverage.json": "f25bfbd46c599b40e9e5da6a245b6333fa68afbe",
+    "hidden.mjs": "451dee9dbe6b5283a7e535d399812e94b5f926f6",
+    "mutants.json": "04b5674756ab024a518c50d985e3ce2081e3ab04",
+    "products-checks.mjs": "93d2292bb1373dfaa7b9efa99efbed1b75fae3f7",
+    "reference/weft-warp/src/routes/cart.tsx": "837d61ad168500e432721a066d1a52eda0a12b22",
+    "reference/weft-warp/src/routes/index.tsx": "a557a2e39a86297f8590bb8888f0b1fc56160b69",
+    "reference/weft-warp/src/routes/products.tsx": "41fd76953e882222734be4f0a950ddd6ca677dff",
+    "reference/weft-warp/src/routes/shop-state.ts": "144b1243235d104e79e5d5040660e9df465c02f3"
+  }
+}
