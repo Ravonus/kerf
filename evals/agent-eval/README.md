@@ -17,8 +17,9 @@ weft docs and MCP, and a reliable way to record framework-source reads. The
 entrypoint dispatches to Codex and the weft scaffold path uses pnpm with a
 standalone age policy. Both paths have mock integration tests; neither has
 been proven against a real scaffold or model. The execution guard remains in
-place. Four substantive tasks have no hidden grader or reference, and the
-Codex sandbox and authentication path still need isolation verification.
+place. Four substantive tasks have partial hidden checks but no complete grader or
+reference. The Codex sandbox and authentication path still need isolation
+verification.
 
 After those gaps are resolved, build artifacts from the merged candidate, run
 sandbox and request-leak controls, and prove reference and mutant coverage for

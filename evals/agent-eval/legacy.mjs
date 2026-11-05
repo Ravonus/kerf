@@ -94,6 +94,7 @@ const cleanup = (box) => {
 
 // ---- grading
 async function gradeOnce(box, stackName, task, n, withQuality) {
+  if (!taskOf(task).gradeable) throw new Error(`${task}: grader is incomplete`)
   const stack = stacks[stackName]
   const copy = await cloneForGrading(box, n)
   const built = await build(copy, stack)
@@ -190,6 +191,7 @@ function ready() {
   const { tasks } = JSON.parse(readFileSync(join(here, 'matrix.json'), 'utf8'))
   const problems = ['S5: Codex auth, MCP isolation and source-read evidence are not verified']
   for (const task of tasks) {
+    if (!taskOf(task).gradeable) problems.push(`${task}: grader is incomplete`)
     const file = join(state, `reference-${task}.json`),
       dir = join(here, 'tasks', task)
     if (!existsSync(join(dir, 'hidden.mjs'))) {
