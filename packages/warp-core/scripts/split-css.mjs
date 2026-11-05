@@ -21,6 +21,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { body, scopesOf } from './split-css/parse.mjs'
 import { split } from './split-css/sections.mjs'
+import { choices } from './split-css/choices.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const spec = join(root, '../../docs/design/warp/tokens')
@@ -174,6 +175,8 @@ export function build() {
     rich: split(spec, 'warp-inputs-rich.css', 'rich'),
   }
   for (const p of Object.values(parts)) for (const [k, v] of render(p)) files.set(k, v)
+  const choiceFiles = choices(parts.inputs.files.get('choice'))
+  for (const [k, v] of render({ ...parts.inputs, files: choiceFiles, shared: [] })) files.set(k, v)
   const routed = {
     data: route('warp-data.css', 'data'),
     layout: route('warp-layout.css', 'layout'),

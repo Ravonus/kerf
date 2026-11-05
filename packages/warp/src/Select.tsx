@@ -12,7 +12,7 @@ import { Field, type FieldProps } from './Field'
 import { use } from '@weft-js/warp-core/weft'
 import './fields'
 import '@weft-js/warp-core/styles/components/listbox.css'
-import '@weft-js/warp-core/styles/inputs/choice.css' // the select and the field's chevron
+import '@weft-js/warp-core/styles/inputs/choice-select.css' // the select and the field's chevron
 
 /** One Select choice. */
 export type Option = {

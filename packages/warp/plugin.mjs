@@ -1,15 +1,7 @@
-// warp() for weft.config.ts: warp's config, tokens, catalog and AGENTS section (PLAN §7c, research 13 §2.13).
-// Components stay ordinary imports; this only contributes data.
-//
-// - seed: the brand's hue family, and optionally the neutral's. The spec tokens (warp-core/styles/warp.css) derive every colour from
-//   --warp-seed-accent-h/-c, so a seed is those two values. It is checked with the spec's own contrast checker
-//   (warp-core/scripts/contrast-check.mjs: every sys pair, both themes, every dial stop). A hue that fails is fitted (see
-//   fitted()), so every hue passes; what can still fail is a token override, which is D010.
-// - fields: 'classic' makes classic fields the default with no attribute in the app: the spec's classic rules
-//   (keyed on [data-fields="classic"]) are copied, re-scoped to :root unless an ancestor says data-fields="floating".
-// - dials: the app's default expression, density, flair and theme, the same way. Markup still wins: a data-* on <html>
-//   turns the default off, and any element can set its own scope.
-// - radius, fonts, tokens: spec tokens set once for every scope. Each one goes through the contrast check with the seed.
+// warp() contributes configuration, tokens, component discovery and agent instructions.
+// Seed hues are contrast-checked and fitted against the canonical warp-core stylesheet.
+// Classic fields and dial defaults re-scope canonical rules; explicit markup still wins.
+// Radius, fonts and token overrides apply at every scope and pass the same contrast checks.
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -272,7 +264,10 @@ function rescoped(key, scope) {
   const files = [
     new URL('styles/warp.css', core),
     ...['inputs', 'components'].flatMap((dir) =>
-      readdirSync(new URL(`styles/${dir}/`, core)).map((f) => new URL(`styles/${dir}/${f}`, core)),
+      // Selective choice mirrors already occur in choice.css; defaults copy each rule once.
+      readdirSync(new URL(`styles/${dir}/`, core))
+        .filter((f) => !f.startsWith('choice-'))
+        .map((f) => new URL(`styles/${dir}/${f}`, core)),
     ),
   ]
   let out = ''
