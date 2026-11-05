@@ -235,37 +235,7 @@ function Demo() {
   return (
     <>
       <h1>warp live</h1>
-      <h2>App bar</h2>
-      <div data-part="app-bar">
-        <b>Loom</b>
-        <span data-part="spacer"></span>
-        <ConnectionPill state={conn} />
-        <Bell
-          count={unread}
-          inbox={(open) => (
-            <Inbox
-              variant="popover"
-              items={items}
-              open={open.value}
-              onRead={read}
-              onReadAll={() => (items.value = items.value.map((n) => ({ ...n, read: true })))}
-              onDismiss={(id) => (items.value = items.value.filter((n) => n.id !== id))}
-              onRestore={(n) => (items.value = [n, ...items.value])}
-              viewAll="/notifications"
-            />
-          )}
-        />
-      </div>
-      <ConnectionBanner state={conn} onRetry={() => (conn.value = 'reconnecting')} />
-      <Button
-        emphasis="outline"
-        tone="neutral"
-        size="sm"
-        data-go-offline=""
-        onClick={() => (conn.value = conn.value === 'offline' ? 'live' : 'offline')}
-      >
-        Toggle connection
-      </Button>
+      <LiveConnection items={items} conn={conn} read={read} unread={unread} />
       <h2>Inbox as a page</h2>
       <div class="inbox-box">
         <Inbox
@@ -327,3 +297,51 @@ function Demo() {
   )
 }
 export const Part = () => <Demo />
+
+function LiveConnection({
+  items,
+  conn,
+  read,
+  unread,
+}: {
+  items: ReturnType<typeof state<Note[]>>
+  conn: ReturnType<typeof state<'live' | 'reconnecting' | 'offline'>>
+  read: (id: string) => void
+  unread: () => number
+}) {
+  return (
+    <>
+      <h2>App bar</h2>
+      <div data-part="app-bar">
+        <b>Loom</b>
+        <span data-part="spacer"></span>
+        <ConnectionPill state={conn} />
+        <Bell
+          count={unread}
+          inbox={(open) => (
+            <Inbox
+              variant="popover"
+              items={items}
+              open={open.value}
+              onRead={read}
+              onReadAll={() => (items.value = items.value.map((n) => ({ ...n, read: true })))}
+              onDismiss={(id) => (items.value = items.value.filter((n) => n.id !== id))}
+              onRestore={(n) => (items.value = [n, ...items.value])}
+              viewAll="/notifications"
+            />
+          )}
+        />
+      </div>
+      <ConnectionBanner state={conn} onRetry={() => (conn.value = 'reconnecting')} />
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        size="sm"
+        data-go-offline=""
+        onClick={() => (conn.value = conn.value === 'offline' ? 'live' : 'offline')}
+      >
+        Toggle connection
+      </Button>
+    </>
+  )
+}
