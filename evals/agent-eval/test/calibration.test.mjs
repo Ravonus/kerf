@@ -7,12 +7,27 @@ import { calibrationTarget } from '../run/calibration-target.mjs'
 const entry = fileURLToPath(new URL('../run.mjs', import.meta.url))
 
 test('calibration accepts only the fixed reference and named mutants', () => {
-  assert.equal(calibrationTarget(['reference']), null)
+  assert.deepEqual(calibrationTarget(['medium-shop', 'reference']), {
+    task: 'medium-shop',
+    mutant: null,
+  })
+  assert.deepEqual(calibrationTarget(['reference']), { task: 'medium-shop', mutant: null })
+  assert.deepEqual(calibrationTarget(['edit-shop', 'reference']), {
+    task: 'edit-shop',
+    mutant: null,
+  })
   assert.equal(
-    calibrationTarget(['mutant', 'wrong stock']).mustFail,
+    calibrationTarget(['medium-shop', 'mutant', 'wrong stock']).mutant.mustFail,
     'products show names, prices, stock and default order',
   )
-  for (const args of [[], ['reference', '/tmp/app'], ['mutant', '../other'], ['run'], ['mutant']])
+  for (const args of [
+    [],
+    ['reference', '/tmp/app'],
+    ['mutant', '../other'],
+    ['run'],
+    ['mutant'],
+    ['../other', 'reference'],
+  ])
     assert.throws(() => calibrationTarget(args))
 })
 

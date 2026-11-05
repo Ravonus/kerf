@@ -8,13 +8,19 @@ import { fileURLToPath } from 'node:url'
 
 const runner = fileURLToPath(new URL('../evidence/T06/run-calibrations.mjs', import.meta.url))
 
-function fixture(referencePass, breakFirst = false) {
+function fixture(
+  referencePass,
+  breakFirst = false,
+  taskName = 'medium-shop',
+  count = 45,
+  receiptTask = taskName,
+) {
   const root = mkdtempSync(join(tmpdir(), 'weft-calibration-runner-'))
-  const task = join(root, 'evals/agent-eval/tasks/medium-shop')
+  const task = join(root, 'evals/agent-eval/tasks', taskName)
   const receipts = join(root, 'receipts')
   mkdirSync(join(root, 'projects'))
   mkdirSync(task, { recursive: true })
-  const mutants = Array.from({ length: 45 }, (_, i) => ({
+  const mutants = Array.from({ length: count }, (_, i) => ({
     name: `m${i}`,
     mustFail: 'expected check',
   }))
@@ -23,23 +29,26 @@ function fixture(referencePass, breakFirst = false) {
   writeFileSync(
     join(root, 'evals/agent-eval/run.mjs'),
     `
-    const name = process.argv[4]
-    const reference = process.argv[3] === 'reference'
+    const name = process.argv[5]
+    const reference = process.argv[4] === 'reference'
     const ok = reference && ${referencePass}
     const broken = !reference && name === 'm0' && ${breakFirst}
-    console.log(JSON.stringify({target: reference ? 'reference' : name, passed: ok,
+    console.log(JSON.stringify({task: ${JSON.stringify(receiptTask)}, target: reference ? 'reference' : name, passed: ok,
       caught: !reference && !broken, grade: {built: {ok: !broken}, total: broken ? null : 1,
         failed: reference ? [] : [{title: 'expected check', failure: 'full failure detail'}]}}))
     if (!ok) process.exitCode = 1
   `,
   )
-  return { root, receipts }
+  return { root, receipts, taskName }
 }
 
 function runFixture(item, extra = {}) {
   const env = { ...process.env, WEFT_T06_JOB: item.root, ...extra }
   delete env.NODE_TEST_CONTEXT
-  return spawnSync(process.execPath, [runner, item.root, item.receipts], { encoding: 'utf8', env })
+  return spawnSync(process.execPath, [runner, item.root, item.receipts, item.taskName], {
+    encoding: 'utf8',
+    env,
+  })
 }
 
 test('failed reference retains its log and stops before any mutant', () => {
@@ -106,6 +115,41 @@ test('low disk space stops before reference execution', () => {
     assert.notEqual(child.status, 0)
     assert.match(child.stderr, /free space below 10 GiB/)
     assert.deepEqual(readdirSync(item.receipts), [])
+  } finally {
+    rmSync(item.root, { recursive: true, force: true })
+  }
+})
+
+test('runner rejects a receipt from another task', () => {
+  const item = fixture(true, false, 'edit-shop', 18)
+  const wrong = fixture(true, false, 'edit-shop', 18, 'medium-shop')
+  try {
+    const child = runFixture(item)
+    assert.equal(child.status, 0, child.stderr)
+    assert.deepEqual(JSON.parse(readFileSync(join(item.receipts, 'outcome.json'))), {
+      mutants: 18,
+      unexpected: 0,
+    })
+    assert.equal(JSON.parse(readFileSync(join(item.receipts, 'reference.json'))).task, 'edit-shop')
+    const mismatched = runFixture(wrong)
+    assert.notEqual(mismatched.status, 0)
+    assert.match(mismatched.stderr, /reference failed/)
+    assert.equal(
+      readdirSync(wrong.receipts).some((name) => name.startsWith('mutant-')),
+      false,
+    )
+  } finally {
+    rmSync(item.root, { recursive: true, force: true })
+    rmSync(wrong.root, { recursive: true, force: true })
+  }
+})
+
+test('runner rejects a shortened edit mutant set before grading', () => {
+  const item = fixture(true, false, 'edit-shop', 2)
+  try {
+    const child = runFixture(item)
+    assert.notEqual(child.status, 0)
+    assert.match(child.stderr, /invalid named mutant set/)
   } finally {
     rmSync(item.root, { recursive: true, force: true })
   }

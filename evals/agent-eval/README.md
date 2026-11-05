@@ -15,11 +15,12 @@ hypotheses unchanged and do not claim a comparison from these results.
 The S5 run waits for S4 PASS and merge, verified isolation with AGENTS.md,
 weft docs and MCP, and a reliable way to record framework-source reads. The
 entrypoint dispatches to Codex and the weft scaffold path uses pnpm with a
-standalone age policy. Both paths have mock integration tests; neither has
-been proven against a real scaffold or model. The execution guard remains in
-place. Four substantive tasks have partial hidden checks but no complete grader or
-reference. The Codex sandbox and authentication path still need isolation
-verification.
+standalone age policy. M4 verified the packed-current medium-shop reference and
+45 mutants on candidate `9f5436f4`; its source hashes are recorded in
+`tasks/medium-shop/verification.json`. The edit-shop reference and mutants
+are prepared but not browser-calibrated. Bugfix and large-live remain partial.
+The execution guard remains in place: the Codex sandbox, authentication and
+source isolation still need verification.
 
 After those gaps are resolved, build artifacts from the merged candidate, run
 sandbox and request-leak controls, and prove reference and mutant coverage for
@@ -35,17 +36,16 @@ node --test evals/agent-eval/test/*.test.mjs
 The archived raw transcripts and boxes live under `/private/tmp`; they are not
 safe to publish without review and sanitization.
 
-## Medium-shop calibration
+## Task calibration
 
-`node evals/agent-eval/run.mjs calibrate reference` grades only the checked-in
-medium-shop reference. `node evals/agent-eval/run.mjs calibrate mutant 'wrong
+`node evals/agent-eval/run.mjs calibrate medium-shop reference` grades the
+checked-in medium-shop reference. Use `edit-shop reference` for the edit task. `node evals/agent-eval/run.mjs calibrate mutant 'wrong
 stock'` applies that named checked-in mutant and exits 1 only when its named
 check fails; exit 2 means it was not caught or calibration could not run. No agent is launched. The
 command requires a policy-safe, owned golden at
 `/private/tmp/aeval/golden/weft-warp/app` and local harness dependencies.
-The golden setup is not yet verified: Corepack may fetch its own pnpm version
-before pnpm applies `minimumReleaseAge`. Do not infer calibration success from
-fixture tests or use the current unverified setup for an evaluation.
+Do not infer calibration success from fixture tests or use calibration results
+as an agent evaluation.
 
 For the combined S5 checkout, M4 can run the prepared manager script after
 checking Node 26, the cached pnpm entry, compiler stamps, available disk and
@@ -55,6 +55,9 @@ Chromium. Set `WEFT_T06_PNPM_ENTRY` to the cached pnpm 12.15.0 `bin/pnpm.mjs`:
 WEFT_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
   bash "$HOME/work/weft-S5-verify/repo/evals/agent-eval/evidence/T06/yuna-calibrate.sh"
 ```
+
+Set `WEFT_T06_TASK=edit-shop` for the edit reference and its named mutants.
+The default remains medium-shop for existing callers.
 
 The script prints its receipt directory and writes progress to `setup.log`.
 It packs the combined checkout into an owned staging directory, checks installed

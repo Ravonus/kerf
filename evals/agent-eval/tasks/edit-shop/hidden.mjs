@@ -1,16 +1,7 @@
-// A persistence check; live prices and the remaining shop spec still need coverage.
-import { same } from '../helpers.mjs'
+// Every medium-shop behavior remains required after the extension.
+import { productTests, stockTests } from '../medium-shop/products-checks.mjs'
+import { cartTests } from '../medium-shop/cart-checks.mjs'
+import { checkoutTests } from '../medium-shop/checkout-checks.mjs'
+import { editTests } from './checks.mjs'
 
-export const tests = [
-  {
-    title: 'favourite state survives reload',
-    run: async ({ page, base }) => {
-      await page.goto(base)
-      const fav = page.getByRole('button', { name: 'Favourite Apple', exact: true })
-      await fav.click()
-      same(await fav.getAttribute('aria-pressed'), 'true', 'favourite selected')
-      await page.reload()
-      same(await fav.getAttribute('aria-pressed'), 'true', 'favourite persisted')
-    },
-  },
-]
+export const tests = [...productTests, ...stockTests, ...cartTests, ...checkoutTests, ...editTests]
