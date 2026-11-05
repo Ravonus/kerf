@@ -35,80 +35,11 @@ describe('DataGrid tree', () => {
   }
   const big: Node_ = { id: 'big', deploys: 0, cost: 0, kids: [leaf('b1', 5, 1), leaf('b2', 9, 2)] }
 
-  test("a header sorts branches by what they roll up, and each branch's children", async () => {
-    const { container: c } = render(() => (
-      <DataGrid
-        caption="Spend"
-        rows={[small, big]}
-        columns={COLUMNS}
-        tree={{}}
-        exportName={false}
-      />
-    ))
-    await settle()
-    press(button(c, 'Expand all'))
-    await settle()
-    expect(shown(c)).toEqual(['small', 's1', 's2', 'big', 'b1', 'b2'])
-    press(header(c, 'deploys').querySelector('button')!)
-    await settle()
-    expect(header(c, 'deploys').getAttribute('aria-sort')).toBe('ascending')
-    expect(shown(c)).toEqual(['small', 's2', 's1', 'big', 'b1', 'b2'])
-    press(header(c, 'deploys').querySelector('button')!)
-    await settle()
-    expect(header(c, 'deploys').getAttribute('aria-sort')).toBe('descending')
-    expect(shown(c)).toEqual(['big', 'b2', 'b1', 'small', 's1', 's2'])
-    expect(c.querySelector('tr[data-row="b2"]')!.getAttribute('aria-posinset')).toBe('1')
-  })
+  treeRollupSort(small, big)
 
-  test('a lazy tree sorts what it loaded, and a branch not loaded yet by its own number', async () => {
-    const rows: Node_[] = [
-      { id: 'a', deploys: 1, cost: 0, hasChildren: true },
-      { id: 'b', deploys: 7, cost: 0, hasChildren: true },
-    ]
-    const tree: GridTree<Node_> = {
-      branch: (r) => !!r.hasChildren,
-      load: (r) => Promise.resolve([leaf(`${r.id}1`, 1, 0), leaf(`${r.id}2`, 2, 0)]),
-    }
-    const { container: c } = render(() => (
-      <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />
-    ))
-    await settle()
-    press(header(c, 'deploys').querySelector('button')!)
-    press(header(c, 'deploys').querySelector('button')!)
-    await settle()
-    expect(shown(c)).toEqual(['b', 'a'])
-  })
+  treeLazySort()
 
-  const lazy = () => {
-    const calls: string[] = []
-    const held: (() => void)[] = []
-    const deep: Record<string, Node_[]> = {
-      a: [{ id: 'a1', deploys: 1, cost: 0, hasChildren: true }, leaf('a2', 1, 0)],
-      b: [leaf('b1', 1, 0)],
-      a1: [leaf('a11', 1, 0)],
-    }
-    const tree: GridTree<Node_> = {
-      branch: (r) => !!r.hasChildren,
-      load: (r) =>
-        new Promise((done) => {
-          calls.push(r.id)
-          held.push(() => done(deep[r.id]!))
-        }),
-    }
-    return {
-      calls,
-      held,
-      tree,
-      rows: [
-        { id: 'a', deploys: 1, cost: 0, hasChildren: true },
-        { id: 'b', deploys: 1, cost: 0, hasChildren: true },
-      ] as Node_[],
-      release: async () => {
-        for (const f of held.splice(0)) f()
-        await settle()
-      },
-    }
-  }
+  const lazy = () => createLazyTree()
 
   test('Expand all loads every branch that has not loaded, however deep, and opens it', async () => {
     const t = lazy()
@@ -133,19 +64,7 @@ describe('DataGrid tree', () => {
     expect(shown(c)).toEqual(['a', 'a1', 'a11', 'a2', 'b', 'b1'])
   })
 
-  test('Collapse all during Expand all stops it going deeper', async () => {
-    const t = lazy()
-    const { container: c } = render(() => (
-      <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />
-    ))
-    await settle()
-    press(button(c, 'Expand all'))
-    await settle()
-    press(button(c, 'Collapse all'))
-    await t.release()
-    expect(t.calls).toEqual(['a', 'b'])
-    expect(shown(c)).toEqual(['a', 'b'])
-  })
+  treeCollapseDuringExpand(lazy)
 
   test('a second Expand all during the first joins its loads and still goes deeper', async () => {
     const t = lazy()
@@ -220,3 +139,98 @@ describe('DataGrid tree: the site example', () => {
     expect(costs()[0]).toBe('$3,920')
   }, 30_000) // the first import of the site example compiles all of warp: seconds on a busy machine, not this test's subject
 })
+
+function treeRollupSort(small: Node_, big: Node_) {
+  test("a header sorts branches by what they roll up, and each branch's children", async () => {
+    const { container: c } = render(() => (
+      <DataGrid
+        caption="Spend"
+        rows={[small, big]}
+        columns={COLUMNS}
+        tree={{}}
+        exportName={false}
+      />
+    ))
+    await settle()
+    press(button(c, 'Expand all'))
+    await settle()
+    expect(shown(c)).toEqual(['small', 's1', 's2', 'big', 'b1', 'b2'])
+    press(header(c, 'deploys').querySelector('button')!)
+    await settle()
+    expect(header(c, 'deploys').getAttribute('aria-sort')).toBe('ascending')
+    expect(shown(c)).toEqual(['small', 's2', 's1', 'big', 'b1', 'b2'])
+    press(header(c, 'deploys').querySelector('button')!)
+    await settle()
+    expect(header(c, 'deploys').getAttribute('aria-sort')).toBe('descending')
+    expect(shown(c)).toEqual(['big', 'b2', 'b1', 'small', 's1', 's2'])
+    expect(c.querySelector('tr[data-row="b2"]')!.getAttribute('aria-posinset')).toBe('1')
+  })
+}
+
+function treeLazySort() {
+  test('a lazy tree sorts what it loaded, and a branch not loaded yet by its own number', async () => {
+    const rows: Node_[] = [
+      { id: 'a', deploys: 1, cost: 0, hasChildren: true },
+      { id: 'b', deploys: 7, cost: 0, hasChildren: true },
+    ]
+    const tree: GridTree<Node_> = {
+      branch: (r) => !!r.hasChildren,
+      load: (r) => Promise.resolve([leaf(`${r.id}1`, 1, 0), leaf(`${r.id}2`, 2, 0)]),
+    }
+    const { container: c } = render(() => (
+      <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />
+    ))
+    await settle()
+    press(header(c, 'deploys').querySelector('button')!)
+    press(header(c, 'deploys').querySelector('button')!)
+    await settle()
+    expect(shown(c)).toEqual(['b', 'a'])
+  })
+}
+
+function createLazyTree() {
+  const calls: string[] = []
+  const held: (() => void)[] = []
+  const deep: Record<string, Node_[]> = {
+    a: [{ id: 'a1', deploys: 1, cost: 0, hasChildren: true }, leaf('a2', 1, 0)],
+    b: [leaf('b1', 1, 0)],
+    a1: [leaf('a11', 1, 0)],
+  }
+  const tree: GridTree<Node_> = {
+    branch: (r) => !!r.hasChildren,
+    load: (r) =>
+      new Promise((done) => {
+        calls.push(r.id)
+        held.push(() => done(deep[r.id]!))
+      }),
+  }
+  return {
+    calls,
+    held,
+    tree,
+    rows: [
+      { id: 'a', deploys: 1, cost: 0, hasChildren: true },
+      { id: 'b', deploys: 1, cost: 0, hasChildren: true },
+    ] as Node_[],
+    release: async () => {
+      for (const f of held.splice(0)) f()
+      await settle()
+    },
+  }
+}
+
+function treeCollapseDuringExpand(lazy: () => ReturnType<typeof createLazyTree>) {
+  test('Collapse all during Expand all stops it going deeper', async () => {
+    const t = lazy()
+    const { container: c } = render(() => (
+      <DataGrid caption="Spend" rows={t.rows} columns={COLUMNS} tree={t.tree} exportName={false} />
+    ))
+    await settle()
+    press(button(c, 'Expand all'))
+    await settle()
+    press(button(c, 'Collapse all'))
+    await t.release()
+    expect(t.calls).toEqual(['a', 'b'])
+    expect(shown(c)).toEqual(['a', 'b'])
+  })
+}
