@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { bin, fixture, project, spreadBug, startApp } from './helpers.mjs'
 
-const weft = (...args) => {
+const weft = (...args: string[]) => {
   const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
   return { code: r.status, stdout: r.stdout, stderr: r.stderr }
 }
@@ -16,7 +16,7 @@ describe('weft (bin)', () => {
 
 describe('live data on a deploy target', () => {
   const app = join(import.meta.dirname, '../../start/test/fixtures/live-db')
-  const codes = (out) => JSON.parse(out).diagnostics.map((d) => d.code)
+  const codes = (out: string) => JSON.parse(out).diagnostics.map((d: { code: string }) => d.code)
 
   // The fixture has its own package.json, so `@weft-js/start` isn't a self-import and a checkout has nothing to find.
   beforeAll(() => {
@@ -72,12 +72,14 @@ function registerBinRouteTests() {
   it('routes and routes --meta read an app with src/routes (@weft-js/start from the workspace)', () => {
     const app = startApp()
     const list = JSON.parse(weft('routes', '--json', '--root', app).stdout)
-    expect(list.routes.map((r) => r.path)).toContain('/users/[id]')
+    expect(list.routes.map((r: { path: string }) => r.path)).toContain('/users/[id]')
     const r = weft('routes', '--meta', '--json', '--root', app)
     expect(r.code).toBe(1) // the fixture's /deferred-meta route is an H007 on purpose
     const meta = JSON.parse(r.stdout)
-    expect(meta.routes.find((x) => x.path === '/about').meta.title).toBe('About · Acme')
-    expect(meta.diagnostics.filter((d) => d.code === 'H007')).toMatchObject([
+    expect(meta.routes.find((x: { path: string }) => x.path === '/about').meta.title).toBe(
+      'About · Acme',
+    )
+    expect(meta.diagnostics.filter((d: { code: string }) => d.code === 'H007')).toMatchObject([
       {
         code: 'H007',
         file: 'src/routes/deferred-meta.tsx',
@@ -91,7 +93,7 @@ function registerBinRouteTests() {
   it('routes --meta prints a table: each page, its text, its image and where they came from', () => {
     const app = startApp()
     const { stdout, stderr } = weft('routes', '--meta', '--root', app)
-    const line = (name) => (stdout + stderr).split('\n').find((l) => l.startsWith(name))
+    const line = (name: string) => (stdout + stderr).split('\n').find((l) => l.startsWith(name))
     expect(line('/meta/plain')).toMatch(
       /Harvest & storage notes · Acme\s+Harvest when 5 < 7.*\/_weft\/og\/meta\/plain\.png\s+auto\/auto\/auto/,
     )
@@ -104,7 +106,9 @@ function registerBinRouteTests() {
     const { diagnostics } = JSON.parse(
       weft('check', '--json', '--root', app, 'src/routes/meta/plain.tsx').stdout,
     )
-    const d = diagnostics.find((x) => x.code === 'H011' && x.route === '/meta/plain')
+    const d = diagnostics.find(
+      (x: { code: string; route: string }) => x.code === 'H011' && x.route === '/meta/plain',
+    )
     expect(d).toMatchObject({
       severity: 'warning',
       file: 'src/routes/meta/plain.tsx',
@@ -113,13 +117,17 @@ function registerBinRouteTests() {
     expect(d.fix.edits[0].text).toMatch(
       /^export const meta: Meta = \{ title: "Harvest & storage notes"/,
     )
-    expect(diagnostics.map((x) => x.code)).toEqual(expect.arrayContaining(['H007', 'H012', 'H013']))
+    expect(diagnostics.map((x: { code: string }) => x.code)).toEqual(
+      expect.arrayContaining(['H007', 'H012', 'H013']),
+    )
   }, 60_000)
 
   it('check leaves the routes alone when told to, and when no route is among the files', () => {
     const app = startApp()
     const { diagnostics } = JSON.parse(weft('check', '--json', '--root', app, 'src/db.ts').stdout)
-    expect(diagnostics.filter((d) => /^H0(0[1-8]|1[1-6])$/.test(d.code))).toEqual([])
+    expect(diagnostics.filter((d: { code: string }) => /^H0(0[1-8]|1[1-6])$/.test(d.code))).toEqual(
+      [],
+    )
   }, 60_000)
 }
 
