@@ -92,6 +92,7 @@ function PaywallView({
   close: () => void
   deliver: (id: string) => void
 }) {
+  const checkoutLabel = "The rail's hosted checkout page"
   return (
     <Card title="Pro, one plan">
       <p>
@@ -104,14 +105,12 @@ function PaywallView({
         <Button onClick={checkout}>Go Pro</Button>
       )}
       {step.value === 'hosted' && (
-        <section
-          aria-label="The rail's hosted checkout page"
-        >
+        <section aria-label={checkoutLabel}>
           <p>
-            The provider’s checkout page (simulated)
+            {'The provider’s checkout page (simulated)'}
           </p>
           <Button onClick={pay}>
-            Pay with a test card
+            {'Pay with a test card'}
           </Button>{' '}
           <Button
             emphasis="ghost"
@@ -124,7 +123,7 @@ function PaywallView({
       )}
       {step.value === 'waiting' && (
         <p>
-          Back on your site, waiting for the webhook…
+          {'Back on your site, waiting for the webhook…'}
         </p>
       )}
       {pro.value && (
