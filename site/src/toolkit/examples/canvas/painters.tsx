@@ -1,19 +1,12 @@
-import type { Scene, StagePiece, StagePainter } from '@weft-js/warp'
-import type { Style } from './paint-primitives'
+import type { StagePainter } from '@weft-js/warp'
+import type { Style, PaintColor, PaintRing, PaintLift, PaintBody } from './paint-primitives'
 import { stroke, paint, outline, seedOf, rng } from './paint-primitives'
 
-export function painters2(
+export function fieldPainters(
   st: Style,
-  c: (s: Scene, name: string) => string,
-  lift: (p: StagePiece, s: Scene, depth: number) => void,
-  body: (
-    p: StagePiece,
-    s: Scene,
-    fill: string,
-    line: string,
-    width?: number,
-    solid?: boolean,
-  ) => void,
+  c: PaintColor,
+  lift: PaintLift,
+  body: PaintBody,
 ): Record<string, StagePainter> {
   return {
     bar(p, s) {
@@ -60,18 +53,11 @@ export function painters2(
   }
 }
 
-export function painters3(
+export function checkPainters(
   st: Style,
-  c: (s: Scene, name: string) => string,
-  ring: (p: StagePiece, s: Scene) => void,
-  body: (
-    p: StagePiece,
-    s: Scene,
-    fill: string,
-    line: string,
-    width?: number,
-    solid?: boolean,
-  ) => void,
+  c: PaintColor,
+  ring: PaintRing,
+  body: PaintBody,
 ): Record<string, StagePainter> {
   return {
     check(p, s) {
@@ -103,6 +89,16 @@ export function painters3(
       }
       ring({ ...p, r: round }, s)
     },
+  }
+}
+
+export function switchPainters(
+  st: Style,
+  c: PaintColor,
+  ring: PaintRing,
+  body: PaintBody,
+): Record<string, StagePainter> {
+  return {
     switch(p, s) {
       const ctx = s.ctx,
         d = p.h - 6,
@@ -124,18 +120,11 @@ export function painters3(
   }
 }
 
-export function painters4(
+export function rangeMeterPainters(
   st: Style,
-  c: (s: Scene, name: string) => string,
-  ring: (p: StagePiece, s: Scene) => void,
-  body: (
-    p: StagePiece,
-    s: Scene,
-    fill: string,
-    line: string,
-    width?: number,
-    solid?: boolean,
-  ) => void,
+  c: PaintColor,
+  ring: PaintRing,
+  body: PaintBody,
 ): Record<string, StagePainter> {
   return {
     range(p, s) {
@@ -163,6 +152,16 @@ export function painters4(
       outline(ctx, p.x, p.y, Math.max(p.h, p.w * p.value), p.h, p.h / 2, st, seedOf(p.el) + 5)
       paint(ctx, c(s, st.accent), st, [p.x, p.y, p.w * p.value, p.h])
     },
+  }
+}
+
+export function chipRulePainters(
+  st: Style,
+  c: PaintColor,
+  ring: PaintRing,
+  body: PaintBody,
+): Record<string, StagePainter> {
+  return {
     chip(p, s) {
       body(
         { ...p, r: p.h / 2 },
@@ -185,10 +184,7 @@ export function painters4(
   }
 }
 
-export function painters5(
-  st: Style,
-  c: (s: Scene, name: string) => string,
-): Record<string, StagePainter> {
+export function detailPainters(st: Style, c: PaintColor): Record<string, StagePainter> {
   return {
     clear(p, s) {
       const ctx = s.ctx

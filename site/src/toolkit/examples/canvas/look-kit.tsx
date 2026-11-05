@@ -1,11 +1,17 @@
 import type { Scene, StagePiece, StagePainter } from '@weft-js/warp'
-import type { Style } from './paint-primitives'
-import { outline, seedOf, stroke, paint, painters1, rng } from './paint-primitives'
-import { painters2, painters3, painters4, painters5 } from './painters'
+import type { Style, PaintColor } from './paint-primitives'
+import { outline, seedOf, stroke, paint, surfacePainters, rng } from './paint-primitives'
+import {
+  fieldPainters,
+  checkPainters,
+  switchPainters,
+  rangeMeterPainters,
+  chipRulePainters,
+  detailPainters,
+} from './painters'
 
-export function lookKit(st: Style) {
-  const c = (s: Scene, name: string) => s.color(name)
-  const ring = (p: StagePiece, s: Scene) => {
+function makeFocusRing(st: Style, c: PaintColor) {
+  return (p: StagePiece, s: Scene) => {
     if (p.focus < 0.5) return
     const ctx = s.ctx
     ctx.setLineDash([6, 5])
@@ -14,7 +20,10 @@ export function lookKit(st: Style) {
     stroke(ctx, c(s, st.accent), 2, st)
     ctx.setLineDash([])
   }
-  const lift = (p: StagePiece, s: Scene, depth: number) => {
+}
+
+function makeSurfaceLift(st: Style, c: PaintColor) {
+  return (p: StagePiece, s: Scene, depth: number) => {
     const ctx = s.ctx
     if (st.shadow === 'soft') {
       ctx.shadowColor = 'rgb(0 0 0 / 0.2)'
@@ -30,29 +39,20 @@ export function lookKit(st: Style) {
       paint(ctx, c(s, st.soft), st, [p.x + depth, p.y + depth, p.w, p.h], 0.7)
     }
   }
-  // `solid` keeps a surface's paper whole: a panel or a list floats over the page, and a field's words need clean ground.
-  const body = (
-    p: StagePiece,
-    s: Scene,
-    fill: string,
-    line: string,
-    width = 1.5,
-    solid = false,
-  ) => {
+}
+
+function makeSurfaceBody(st: Style) {
+  return (p: StagePiece, s: Scene, fill: string, line: string, width = 1.5, solid = false) => {
     const ctx = s.ctx
     outline(ctx, p.x, p.y, p.w, p.h, p.r, st, seedOf(p.el))
     paint(ctx, fill, solid ? { ...st, hatch: false } : st, [p.x, p.y, p.w, p.h])
     outline(ctx, p.x, p.y, p.w, p.h, p.r, st, seedOf(p.el))
     stroke(ctx, line, width, st)
   }
-  const painters: Record<string, StagePainter> = {
-    ...painters1(st, c, ring, lift, body),
-    ...painters2(st, c, lift, body),
-    ...painters3(st, c, ring, body),
-    ...painters4(st, c, ring, body),
-    ...painters5(st, c),
-  }
-  const overlay = (s: Scene) => {
+}
+
+function makeOverlay(st: Style, c: PaintColor) {
+  return (s: Scene) => {
     const ctx = s.ctx
     for (const press of s.presses) {
       ctx.globalAlpha = 1 - press.age
@@ -68,17 +68,43 @@ export function lookKit(st: Style) {
       ctx.fill()
     }
   }
-  const plain = (s: Scene) => {
+}
+
+function makePlain(st: Style, c: PaintColor) {
+  return (s: Scene) => {
     s.ctx.fillStyle = c(s, st.paper)
     s.ctx.fillRect(0, 0, s.width, s.height)
   }
-  // A modal's stage covers the page with a wash that fades in each time it opens.
-  const veil = (s: Scene) => {
+}
+
+function makeVeil() {
+  return (s: Scene) => {
     s.ctx.globalAlpha = Math.min(1, s.live ? s.shown / 0.2 : 1) * 0.5
     s.ctx.fillStyle = '#000'
     s.ctx.fillRect(0, 0, s.width, s.height)
     s.ctx.globalAlpha = 1
   }
+}
+
+export function lookKit(st: Style) {
+  const c = (s: Scene, name: string) => s.color(name)
+  const ring = makeFocusRing(st, c)
+  const lift = makeSurfaceLift(st, c)
+  // `solid` keeps a surface's paper whole: a panel or a list floats over the page, and a field's words need clean ground.
+  const body = makeSurfaceBody(st)
+  const painters: Record<string, StagePainter> = {
+    ...surfacePainters(st, c, ring, lift, body),
+    ...fieldPainters(st, c, lift, body),
+    ...checkPainters(st, c, ring, body),
+    ...switchPainters(st, c, ring, body),
+    ...rangeMeterPainters(st, c, ring, body),
+    ...chipRulePainters(st, c, ring, body),
+    ...detailPainters(st, c),
+  }
+  const overlay = makeOverlay(st, c)
+  const plain = makePlain(st, c)
+  // A modal's stage covers the page with a wash that fades in each time it opens.
+  const veil = makeVeil()
   return { stage: { painters, overlay, background: st.ground }, plain, veil, style: st }
 }
 

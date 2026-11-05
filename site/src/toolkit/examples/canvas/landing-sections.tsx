@@ -127,64 +127,102 @@ export function landingControls(name: Look, open: () => void, minutes: State<num
             is drawn round whatever has it.
           </p>
         </Stack>
-        <form
-          data-skin="card"
-          style="--stage-gap-card:1rem"
-          onSubmit={(e: Event) => {
-            e.preventDefault()
-            open()
-          }}
-        >
-          <label data-part="label">
-            Project name
-            <input data-skin="field" required value="storefront" />
-          </label>
-          <label data-part="label">
-            Region
-            <StageSelect name="region" options={['eu-west', 'us-east', 'ap-south']} />
-          </label>
-          <fieldset style="border:0;padding:0;margin:0;display:flex;gap:18px;flex-wrap:wrap">
-            <legend style="font-size:14px;font-weight:600;margin-block-end:8px">Runtime</legend>
-            <label data-part="option">
-              <input type="radio" name={`land-${name}`} data-skin="check" checked />
-              Node
-            </label>
-            <label data-part="option">
-              <input type="radio" name={`land-${name}`} data-skin="check" />
-              Bun
-            </label>
-            <label data-part="option">
-              <input type="radio" name={`land-${name}`} data-skin="check" />
-              Deno
-            </label>
-          </fieldset>
-          <label data-part="option">
-            <input type="checkbox" data-skin="check" checked />
-            Preview every pull request
-          </label>
-          <label data-part="option">
-            <input type="checkbox" role="switch" data-skin="switch" checked />
-            Deploy on push to main
-          </label>
-          <label data-part="label">
-            Build minutes: {minutes.value.toLocaleString('en')}
-            <input
-              type="range"
-              data-skin="range"
-              min="0"
-              max="6000"
-              step="100"
-              value={minutes.value}
-              onInput={(e: Event) => (minutes.value = +(e.currentTarget as HTMLInputElement).value)}
-            />
-          </label>
-          <label data-part="label">
-            Of the Team plan's 6,000
-            <meter data-skin="meter" min="0" max="6000" value={minutes.value}></meter>
-          </label>
-          <button data-skin="button">Create project</button>
-        </form>
+        {controlsForm(name, open, minutes)}
       </Split>
     </section>
+  )
+}
+
+function controlsForm(name: Look, open: () => void, minutes: State<number>) {
+  return (
+    <form
+      data-skin="card"
+      style="--stage-gap-card:1rem"
+      onSubmit={(e: Event) => {
+        e.preventDefault()
+        open()
+      }}
+    >
+      {controlsFields(name, minutes)}
+    </form>
+  )
+}
+
+function controlsFields(name: Look, minutes: State<number>) {
+  return (
+    <>
+      {identityFields(name)}
+      {optionFields()}
+      {minuteFields(minutes)}
+    </>
+  )
+}
+
+function identityFields(name: Look) {
+  return (
+    <>
+      <label data-part="label">
+        Project name
+        <input data-skin="field" required value="storefront" />
+      </label>
+      <label data-part="label">
+        Region
+        <StageSelect name="region" options={['eu-west', 'us-east', 'ap-south']} />
+      </label>
+      <fieldset style="border:0;padding:0;margin:0;display:flex;gap:18px;flex-wrap:wrap">
+        <legend style="font-size:14px;font-weight:600;margin-block-end:8px">Runtime</legend>
+        <label data-part="option">
+          <input type="radio" name={`land-${name}`} data-skin="check" checked />
+          Node
+        </label>
+        <label data-part="option">
+          <input type="radio" name={`land-${name}`} data-skin="check" />
+          Bun
+        </label>
+        <label data-part="option">
+          <input type="radio" name={`land-${name}`} data-skin="check" />
+          Deno
+        </label>
+      </fieldset>
+    </>
+  )
+}
+
+function optionFields() {
+  return (
+    <>
+      <label data-part="option">
+        <input type="checkbox" data-skin="check" checked />
+        Preview every pull request
+      </label>
+      <label data-part="option">
+        <input type="checkbox" role="switch" data-skin="switch" checked />
+        Deploy on push to main
+      </label>
+    </>
+  )
+}
+
+function minuteFields(minutes: State<number>) {
+  return (
+    <>
+      <label data-part="label">
+        Build minutes: {minutes.value.toLocaleString('en')}
+        <input
+          type="range"
+          data-skin="range"
+          min="0"
+          max="6000"
+          step="100"
+          value={minutes.value}
+          onInput={(e: Event) => (minutes.value = +(e.currentTarget as HTMLInputElement).value)}
+        />
+      </label>
+      <label data-part="label">
+        Of the Team plan's 6,000
+        <meter data-skin="meter" min="0" max="6000" value={minutes.value}></meter>
+      </label>
+      <button data-skin="button">Create project</button>
+    </>
   )
 }

@@ -170,33 +170,7 @@ export function LookStage({
 }) {
   const name = untrack(() => look),
     part = untrack(() => role)
-  if (name === 'dither') {
-    if (part === 'page')
-      return (
-        <DitherStage
-          {...rest}
-          layout="scroll"
-          rail
-          kind="weave"
-          ground={0.42}
-          drift={0.4}
-          style="block-size:720px"
-        >
-          {children}
-        </DitherStage>
-      )
-    if (part === 'header')
-      return (
-        <DitherStage {...rest} ground={0} style="background:var(--warp-color-surface)">
-          {children}
-        </DitherStage>
-      )
-    return (
-      <DitherStage {...rest} layout="page" veil={0.5} ground={0}>
-        {children}
-      </DitherStage>
-    )
-  }
+  if (name === 'dither') return ditherStage(part, () => children, rest)
   const kit = LOOKS[name],
     page = lookStyle(name, 'block-size:720px'),
     plain = lookStyle(name)
@@ -223,5 +197,37 @@ export function LookStage({
     <CanvasStage {...rest} {...kit.stage} layout="page" veil background={kit.veil} style={plain}>
       {children}
     </CanvasStage>
+  )
+}
+
+function ditherStage(
+  part: 'page' | 'header' | 'modal',
+  children: () => unknown,
+  rest: Record<string, unknown>,
+) {
+  if (part === 'page')
+    return (
+      <DitherStage
+        {...rest}
+        layout="scroll"
+        rail
+        kind="weave"
+        ground={0.42}
+        drift={0.4}
+        style="block-size:720px"
+      >
+        {children()}
+      </DitherStage>
+    )
+  if (part === 'header')
+    return (
+      <DitherStage {...rest} ground={0} style="background:var(--warp-color-surface)">
+        {children()}
+      </DitherStage>
+    )
+  return (
+    <DitherStage {...rest} layout="page" veil={0.5} ground={0}>
+      {children()}
+    </DitherStage>
   )
 }

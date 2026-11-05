@@ -145,31 +145,7 @@ export function landingDialog(
                 Done. Your first preview builds as soon as you push.
               </p>
             ) : (
-              <>
-                <label data-part="label">
-                  Email
-                  <input
-                    type="email"
-                    required
-                    autofocus
-                    placeholder="you@company.com"
-                    data-skin="field"
-                  />
-                </label>
-                <label data-part="label">
-                  Plan
-                  <StageSelect
-                    name="plan"
-                    options={LAND_PLANS.map((p) => p.name)}
-                    value={plan.value}
-                    onChange={(v: string) => (plan.value = v)}
-                  />
-                </label>
-                <label data-part="option">
-                  <input type="checkbox" data-skin="check" checked />
-                  Send me the changelog
-                </label>
-              </>
+              signupFields(plan)
             )}
             <Row gap="related" justify="end">
               <button type="button" data-skin="button" data-look="outline" onClick={() => close()}>
@@ -181,6 +157,30 @@ export function landingDialog(
         </form>
       </LookStage>
     </dialog>
+  )
+}
+
+function signupFields(plan: State<string>) {
+  return (
+    <>
+      <label data-part="label">
+        Email
+        <input type="email" required autofocus placeholder="you@company.com" data-skin="field" />
+      </label>
+      <label data-part="label">
+        Plan
+        <StageSelect
+          name="plan"
+          options={LAND_PLANS.map((p) => p.name)}
+          value={plan.value}
+          onChange={(v: string) => (plan.value = v)}
+        />
+      </label>
+      <label data-part="option">
+        <input type="checkbox" data-skin="check" checked />
+        Send me the changelog
+      </label>
+    </>
   )
 }
 
