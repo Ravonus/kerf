@@ -1,6 +1,12 @@
 import { state } from '@weft-js/core'
 
-import { AutoTrack, Heading, Segmented, Stack, Text } from '@weft-js/warp'
+import {
+  AutoTrack,
+  Heading,
+  Segmented,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 import { JUN } from '../../world'
 
@@ -17,26 +23,35 @@ export function AutoTrackPresenter() {
         options={PARTS}
         onChange={(v) => (section.value = v)}
       />
-      <AutoTrack presenter={JUN} section={section.value} label="Rollback runbook" height={180}>
+      <AutoTrack
+        presenter={JUN}
+        section={section.value}
+        label="Rollback runbook"
+        height={180}
+      >
         <Stack gap="section">
           <section data-section="detect">
             <Heading level={4}>Detect</Heading>
             <Text subtle>
-              A failed health check pages the person on call within a minute. The deploy stops on
-              its own and nothing else ships until someone looks.
+              A failed health check pages the person on
+              call within a minute. The deploy stops on
+              its own and nothing else ships until someone
+              looks.
             </Text>
           </section>
           <section data-section="roll">
             <Heading level={4}>Roll back</Heading>
             <Text subtle>
-              One press puts the last good deploy back. It takes about thirty seconds to reach every
+              One press puts the last good deploy back. It
+              takes about thirty seconds to reach every
               region, and the edge cache follows.
             </Text>
           </section>
           <section data-section="tell">
             <Heading level={4}>Tell people</Heading>
             <Text subtle>
-              Post in #incidents, then tell support what customers saw and when it ended. Write the
+              Post in #incidents, then tell support what
+              customers saw and when it ended. Write the
               timeline while it is fresh.
             </Text>
           </section>

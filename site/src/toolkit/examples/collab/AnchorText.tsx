@@ -12,12 +12,19 @@ export function CommentAnchorText() {
     <Stack gap="related">
       <Text>
         The cache keeps a page for{' '}
-        <CommentAnchor thread="c-timeouts" active={active}>
+        <CommentAnchor
+          thread="c-timeouts"
+          active={active}
+        >
           60 seconds
         </CommentAnchor>{' '}
         after a deploy.
       </Text>
-      <Text subtle>{active.value ? 'The thread is active.' : 'Press the highlighted words.'}</Text>
+      <Text subtle>
+        {active.value
+          ? 'The thread is active.'
+          : 'Press the highlighted words.'}
+      </Text>
     </Stack>
   )
 }

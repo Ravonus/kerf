@@ -1,6 +1,12 @@
 import { onCleanup, state } from '@weft-js/core'
 
-import { Row, Stack, SyncIndicator, Text, Textarea } from '@weft-js/warp'
+import {
+  Row,
+  Stack,
+  SyncIndicator,
+  Text,
+  Textarea,
+} from '@weft-js/warp'
 
 import type { SyncState } from '@weft-js/warp'
 
@@ -10,6 +16,7 @@ import { REGIONS as _REGIONS } from '../../world'
 
 export function SyncIndicatorTitle() {
   const sync = state<SyncState>('saved')
+  const notes = 'Roll back first, then read the logs.'
   let timer: ReturnType<typeof setTimeout> | undefined
   const edit = () => {
     sync.value = 'saving'
@@ -23,7 +30,11 @@ export function SyncIndicatorTitle() {
         <Text role="label">Rollback runbook</Text>
         <SyncIndicator state={sync.value} />
       </Row>
-      <Textarea label="Notes" defaultValue="Roll back first, then read the logs." onInput={edit} />
+      <Textarea
+        label="Notes"
+        defaultValue={notes}
+        onInput={edit}
+      />
     </Stack>
   )
 }

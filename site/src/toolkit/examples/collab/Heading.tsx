@@ -1,4 +1,9 @@
-import { Heading, Row, SectionPeers, Stack } from '@weft-js/warp'
+import {
+  Heading,
+  Row,
+  SectionPeers,
+  Stack,
+} from '@weft-js/warp'
 
 import { IN_CHANNEL, ONE_READER } from './shared-wait'
 

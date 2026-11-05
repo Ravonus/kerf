@@ -1,6 +1,11 @@
 import { state } from '@weft-js/core'
 
-import { Button, ConflictAlert, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  ConflictAlert,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 import { JUN } from '../../world'
 
@@ -11,9 +16,17 @@ export function ConflictAlertReviewDate() {
   return (
     <>
       {picked.value ? (
-        <Stack gap="related" align="center">
+        <Stack
+          gap="related"
+          align="center"
+        >
           <Text>Review date: {picked.value}</Text>
-          <Button size="sm" emphasis="ghost" tone="neutral" onClick={() => (picked.value = null)}>
+          <Button
+            size="sm"
+            emphasis="ghost"
+            tone="neutral"
+            onClick={() => (picked.value = null)}
+          >
             Show the conflict again
           </Button>
         </Stack>
