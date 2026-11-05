@@ -1,8 +1,8 @@
 import { SearchIcon } from '@weft-js/warp-icons'
 import { field, formInvalid, formReset, labelChars, uid } from '@weft-js/warp-core'
-import { derived, state, untrack } from '@weft-js/core'
+import { derived, state, untrack, omit } from '@weft-js/core'
 import type { IconRef } from './Icon'
-import { FieldView } from './Field/view'
+import { fieldView } from './Field/view'
 import { use } from '@weft-js/warp-core/weft'
 import './fields'
 import '@weft-js/warp-core/styles/inputs/text.css'
@@ -63,106 +63,62 @@ export const letters = (s: string) =>
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
  * after mount warp-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
-export function Field({
-  label,
-  hint,
-  error,
-  icon,
-  prefix,
-  suffix,
-  variant,
-  appearance,
-  size,
-  clearable,
-  counter,
-  id: given,
-  control,
-  end,
-  filled,
-  attrs,
-  group,
-  labelled,
-  hold,
-  wrap,
-  reset,
-  ...rest
-}: FieldProps & {
-  control: Control
-  end?: unknown
-  filled?: boolean
-  attrs?: Record<string, unknown>
-  group?: boolean
-  /** The control takes its name from `aria-labelledby`, not `for`: a press on the label must not click a button. */ labelled?: boolean
-  hold?: boolean
-  wrap?: boolean
-  /** Puts held state back when the field's form resets. */ reset?: () => void
-}) {
-  const { id, problem, glyph, message, msg, chars, live, shell, setRoot } = setupField(
-    () => given,
-    () => error,
-    () => icon,
-    () => hint,
-    () => counter,
-    () => label,
-    () => rest,
-    () => reset,
-  )
-  return (
-    <FieldView
-      label={label}
-      hint={hint}
-      variant={variant}
-      appearance={appearance}
-      size={size}
-      clearable={clearable}
-      counter={counter}
-      prefix={prefix}
-      suffix={suffix}
-      end={end}
-      attrs={attrs}
-      group={group}
-      labelled={labelled}
-      filled={filled}
-      hold={hold}
-      wrap={wrap}
-      id={id}
-      shell={shell}
-      live={live}
-      control={control}
-      problem={problem}
-      glyph={glyph}
-      message={message}
-      msg={msg}
-      chars={chars}
-      setRoot={setRoot}
-    />
-  )
+export function Field(
+  props: FieldProps & {
+    control: Control
+    end?: unknown
+    filled?: boolean
+    attrs?: Record<string, unknown>
+    group?: boolean
+    /** The control takes its name from `aria-labelledby`, not `for`: a press on the label must not click a button. */ labelled?: boolean
+    hold?: boolean
+    wrap?: boolean
+    /** Puts held state back when the field's form resets. */ reset?: () => void
+  },
+) {
+  return setupField(untrack(() => props))
 }
 
-function setupField(
-  given: () => string | undefined,
-  error: () => unknown,
-  icon: () => IconRef | undefined,
-  hint: () => unknown,
-  counter: () => number | undefined,
-  label: () => string,
-  rest: () => Record<string, unknown>,
-  reset: () => (() => void) | undefined,
-) {
-  const id = untrack(given) ?? uid('field')
+const OWN = [
+  'label',
+  'hint',
+  'error',
+  'icon',
+  'prefix',
+  'suffix',
+  'variant',
+  'appearance',
+  'size',
+  'clearable',
+  'counter',
+  'id',
+  'control',
+  'end',
+  'filled',
+  'attrs',
+  'group',
+  'labelled',
+  'hold',
+  'wrap',
+  'reset',
+]
+
+function setupField(p: Parameters<typeof Field>[0]) {
+  const rest: Record<string, unknown> = omit(p, OWN)
+  const id = untrack(() => p.id) ?? uid('field')
   // the browser's message for a constraint that failed (03 §1.3): `error` wins over it
   const missing = state<string | undefined>(undefined)
-  const problem = derived(() => error() ?? missing.value)
-  const glyph = derived(icon)
+  const problem = derived(() => p.error ?? missing.value)
+  const glyph = derived(() => p.icon)
   // an error can arrive long after mount, so the block and what points at it follow it
-  const message = derived(() => hint() !== undefined || !!problem.value || counter() !== undefined)
+  const message = derived(() => p.hint !== undefined || !!problem.value || p.counter !== undefined)
   const msg = derived(() => (message.value ? `${id}-msg` : undefined))
   // keyed by position: a label repeats letters
   const chars = derived(() =>
-    letters(String((label() as string | number | undefined) ?? '')).map((c, at) => ({ c, at })),
+    letters(String((p.label as string | number | undefined) ?? '')).map((c, at) => ({ c, at })),
   )
-  // one omit() for every read: the compiler expands `rest` afresh at each use (the proxy reads stay live)
-  const live = untrack(rest)
+  // The control keeps one rest view whose prop reads stay live.
+  const live = untrack(() => rest)
   let root: HTMLDivElement | undefined
   const shell = {
     id,
@@ -177,20 +133,21 @@ function setupField(
   use(
     field,
     () => root,
-    () => [live.value, label()] as const,
+    () => [live.value, p.label] as const,
   )
   use(
     formInvalid,
     () => root,
     () => (m: string | undefined) => (missing.value = m),
   )
-  if (untrack(reset))
+  if (untrack(() => p.reset))
     use(
       formReset,
       () => root,
-      () => () => reset()!(),
+      () => () => p.reset!(),
     )
-  return {
+  return fieldView(
+    p,
     id,
     problem,
     glyph,
@@ -199,8 +156,8 @@ function setupField(
     chars,
     live,
     shell,
-    setRoot: (n: HTMLDivElement) => (root = n),
-  }
+    (n: HTMLDivElement) => (root = n),
+  )
 }
 
 /** A text field. Every native input attribute passes through (type, autocomplete, inputmode, onInput…). */
