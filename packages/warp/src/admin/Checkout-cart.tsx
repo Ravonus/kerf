@@ -6,6 +6,20 @@ import type { CheckoutModel } from './Checkout-view'
 export function checkoutCart(model: CheckoutModel) {
   const { id, step, outOfStock, lines } = model.s
   const { input } = model
+  const live = {
+    get cart() {
+      return input.cart()
+    },
+    get currency() {
+      return input.currency()
+    },
+    get locale() {
+      return input.locale()
+    },
+    get onContinueShopping() {
+      return input.onContinueShopping()
+    },
+  }
   const { count } = model
   const { go } = model.nav
   return (
@@ -34,9 +48,9 @@ export function checkoutCart(model: CheckoutModel) {
             <LineItem
               key={l.id}
               line={l}
-              cart={input.cart()}
-              currency={input.currency()}
-              locale={input.locale()}
+              cart={live.cart}
+              currency={live.currency}
+              locale={live.locale}
               problem={l.id === outOfStock.value ? 'Out of stock' : undefined}
             />
           ))
@@ -44,8 +58,8 @@ export function checkoutCart(model: CheckoutModel) {
           <span class="muted">Your cart is empty.</span>
         )}
         <div data-part="nav">
-          {input.onContinueShopping() ? (
-            <Button emphasis="link" onClick={input.onContinueShopping()}>
+          {live.onContinueShopping ? (
+            <Button emphasis="link" onClick={live.onContinueShopping}>
               Continue shopping
             </Button>
           ) : (

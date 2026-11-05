@@ -4,6 +4,11 @@ import type { CheckoutModel } from './Checkout-view'
 export function checkoutDone(model: CheckoutModel) {
   const { id, step, email, placed, option } = model.s
   const { input } = model
+  const live = {
+    get onContinueShopping() {
+      return input.onContinueShopping()
+    },
+  }
   return (
     <section
       data-part="step"
@@ -18,7 +23,7 @@ export function checkoutDone(model: CheckoutModel) {
           email={email.value}
           stage={placed.value.stage}
           note={`${option.value?.name ?? ''} delivery. ${option.value?.eta ?? ''}.`}
-          onContinue={input.onContinueShopping()}
+          onContinue={live.onContinueShopping}
         />
       )}
     </section>

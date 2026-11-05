@@ -10,38 +10,72 @@ type Model = ReturnType<typeof timeModel>
 
 /** Render the time field using its per-instance model. */
 export function timeView(m: Model) {
-  const { input, value, pop, started, dst } = m
+  const live = liveProps(m.input)
+  const { input, env, value, pop, started, dst, sheet, text, options, refs } = m
   return (
     <Composite
       {...input.rest()}
-      label={input.label()}
-      hint={dst.value ?? input.hint()}
-      error={input.error()}
-      disabled={input.disabled()}
-      readonly={input.readonly()}
+      label={live.label}
+      hint={dst.value ?? live.hint}
+      error={live.error}
+      disabled={live.disabled}
+      readonly={live.readonly}
       bound={value}
       onReset={() => (started.value = false)}
       filled={value.value !== null || started.value}
       hold={pop.value}
       control={() => timeControls(m)}
-      end={timePanel(m)}
+      end={
+        <Panel
+          label={text.value.chooseTime}
+          open={pop}
+          trigger={() => refs.trigger!}
+          presentation={live.presentation}
+          align="end"
+        >
+          {() =>
+            sheet.value ? (
+              <Wheels
+                value={value.value}
+                locale={env.locale.value}
+                hourCycle={live.hourCycle}
+                onChange={(x) => value.set(x, 'pointer')}
+              />
+            ) : (
+              <Slots
+                slots={options.value}
+                selected={value.value}
+                locale={env.locale.value}
+                hourCycle={live.hourCycle}
+                label={text.value.chooseTime}
+                meta
+                onPick={(x, r) => {
+                  value.set(x as IsoTime, r)
+                  pop.set(false)
+                }}
+              />
+            )
+          }
+        </Panel>
+      }
     />
   )
 }
 
 function timeControls(m: Model) {
+  const live = liveProps(m.input)
   const { input, env, value, pop, text, onEdit, open, refs } = m
   return (
     <>
       <Segments
         required={input.rest().required}
         kind="time"
-        options={{ hourCycle: input.hourCycle(), seconds: input.seconds() }}
+        options={{ hourCycle: live.hourCycle, seconds: input.seconds() }}
         locale={env.locale.value}
         value={value.value}
         today={env.today.value}
-        disabled={input.disabled()}
-        readonly={input.readonly()}
+        disabled={live.disabled}
+        readonly={live.readonly}
         onEdit={onEdit}
       />
       <Trigger
@@ -49,50 +83,42 @@ function timeControls(m: Model) {
         icon={ClockIcon}
         label={
           text.value.chooseTime +
-          (value.value ? `, ${fmtTime(value.value, env.locale.value, input.hourCycle())}` : '')
+          (value.value ? `, ${fmtTime(value.value, env.locale.value, live.hourCycle)}` : '')
         }
         open={pop.value}
-        disabled={input.disabled()}
+        disabled={live.disabled}
         onToggle={() => (pop.value ? pop.set(false) : open())}
       />
-      <Hidden name={input.name()} value={() => value.value ?? ''} />
+      <Hidden name={live.name} value={() => value.value ?? ''} />
     </>
   )
 }
 
-function timePanel(m: Model) {
-  const { input, env, value, pop, sheet, text, options, refs } = m
-  return (
-    <Panel
-      label={text.value.chooseTime}
-      open={pop}
-      trigger={() => refs.trigger!}
-      presentation={input.presentation()}
-      align="end"
-    >
-      {() =>
-        sheet.value ? (
-          <Wheels
-            value={value.value}
-            locale={env.locale.value}
-            hourCycle={input.hourCycle()}
-            onChange={(x) => value.set(x, 'pointer')}
-          />
-        ) : (
-          <Slots
-            slots={options.value}
-            selected={value.value}
-            locale={env.locale.value}
-            hourCycle={input.hourCycle()}
-            label={text.value.chooseTime}
-            meta
-            onPick={(x, r) => {
-              value.set(x as IsoTime, r)
-              pop.set(false)
-            }}
-          />
-        )
-      }
-    </Panel>
-  )
+function liveProps(input: Model['input']) {
+  return {
+    get label() {
+      return input.label()
+    },
+    get hint() {
+      return input.hint()
+    },
+    get error() {
+      return input.error()
+    },
+    get disabled() {
+      return input.disabled()
+    },
+    get readonly() {
+      return input.readonly()
+    },
+    get name() {
+      return input.name()
+    },
+    get presentation() {
+      return input.presentation()
+    },
+    get hourCycle() {
+      return input.hourCycle()
+    },
+  }
 }
