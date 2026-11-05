@@ -5,8 +5,15 @@ export const TooltipPlay = (p: {
   side: 'top' | 'bottom' | 'left' | 'right'
   kbd: string
 }) => (
-  <Tooltip content={p.content} side={p.side} kbd={p.kbd}>
-    <Button emphasis="outline" tone="neutral">
+  <Tooltip
+    content={p.content}
+    side={p.side}
+    kbd={p.kbd}
+  >
+    <Button
+      emphasis="outline"
+      tone="neutral"
+    >
       Hover or focus me
     </Button>
   </Tooltip>

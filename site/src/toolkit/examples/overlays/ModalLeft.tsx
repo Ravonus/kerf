@@ -5,7 +5,11 @@ export function ModalLeft() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
         Left
       </Button>
       <Modal
@@ -14,7 +18,9 @@ export function ModalLeft() {
         title="Project menu"
         footer={<Button data-close="">Done</Button>}
       >
-        <Text subtle>Fills the left side, for navigation.</Text>
+        <Text subtle>
+          Fills the left side, for navigation.
+        </Text>
       </Modal>
     </>
   )

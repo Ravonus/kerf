@@ -1,5 +1,11 @@
 import { state } from '@weft-js/core'
-import { Button, Input, Modal, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  Input,
+  Modal,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 export function ModalRename() {
   const open = state(false)
@@ -9,9 +15,17 @@ export function ModalRename() {
     open.value = false
   }
   return (
-    <Stack gap="related" align="center">
+    <Stack
+      gap="related"
+      align="center"
+    >
       <Text role="heading">{name.value}</Text>
-      <Button emphasis="outline" tone="neutral" icon="pencil" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        icon="pencil"
+        onClick={() => (open.value = true)}
+      >
         Rename
       </Button>
       <Modal
@@ -20,7 +34,11 @@ export function ModalRename() {
         title="Rename project"
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" data-close="">
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              data-close=""
+            >
               Cancel
             </Button>
             <Button onClick={save}>Save</Button>
@@ -31,7 +49,11 @@ export function ModalRename() {
           label="Project name"
           autofocus
           value={name.value}
-          onInput={(e: Event) => (name.value = (e.target as HTMLInputElement).value)}
+          onInput={(e: Event) =>
+            (name.value = (
+              e.target as HTMLInputElement
+            ).value)
+          }
         />
       </Modal>
     </Stack>

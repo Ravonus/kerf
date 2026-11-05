@@ -5,7 +5,11 @@ export function ModalFull() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
         Full
       </Button>
       <Modal
@@ -14,7 +18,9 @@ export function ModalFull() {
         title="Compare two deploys"
         footer={<Button data-close="">Done</Button>}
       >
-        <Text subtle>Covers the whole window, for wide work.</Text>
+        <Text subtle>
+          Covers the whole window, for wide work.
+        </Text>
       </Modal>
     </>
   )

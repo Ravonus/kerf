@@ -4,6 +4,10 @@ export const ROLES = [
   { value: 'Viewer', label: 'Viewer' },
 ]
 
-export const FILTER_REGIONS = ['eu-west', 'us-east', 'ap-south']
+export const FILTER_REGIONS = [
+  'eu-west',
+  'us-east',
+  'ap-south',
+]
 
 export const STATUSES = ['Live', 'Building', 'Failed']

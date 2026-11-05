@@ -5,7 +5,9 @@ import { STATUSES } from './shared'
 export function PopoverFilter() {
   const on = state(['Failed'])
   const flip = (s: string) =>
-    (on.value = on.value.includes(s) ? on.value.filter((x) => x !== s) : [...on.value, s])
+    (on.value = on.value.includes(s)
+      ? on.value.filter((x) => x !== s)
+      : [...on.value, s])
   return (
     <Row gap="related">
       <Popover
@@ -15,13 +17,19 @@ export function PopoverFilter() {
       >
         <Row gap="tight">
           {STATUSES.map((s) => (
-            <Chip key={s} pressed={on.value.includes(s)} onClick={() => flip(s)}>
+            <Chip
+              key={s}
+              pressed={on.value.includes(s)}
+              onClick={() => flip(s)}
+            >
               {s}
             </Chip>
           ))}
         </Row>
       </Popover>
-      <Text subtle>{on.value.join(', ') || 'Everything'}</Text>
+      <Text subtle>
+        {on.value.join(', ') || 'Everything'}
+      </Text>
     </Row>
   )
 }

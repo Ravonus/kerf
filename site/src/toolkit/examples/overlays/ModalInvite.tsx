@@ -1,5 +1,12 @@
 import { state } from '@weft-js/core'
-import { Button, Input, Modal, Select, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  Input,
+  Modal,
+  Select,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 import { ROLES } from './shared'
 
 export function ModalInvite() {
@@ -8,13 +15,20 @@ export function ModalInvite() {
   const role = state('Member')
   const sent = state('')
   const send = () => {
-    sent.value = `Invited ${email.value} as ${role.value}.`
+    sent.value =
+      `Invited ${email.value} as ` + `${role.value}.`
     email.value = ''
     open.value = false
   }
   return (
-    <Stack gap="related" align="center">
-      <Button icon="user" onClick={() => (open.value = true)}>
+    <Stack
+      gap="related"
+      align="center"
+    >
+      <Button
+        icon="user"
+        onClick={() => (open.value = true)}
+      >
         Invite a teammate
       </Button>
       <Text subtle>{sent.value}</Text>
@@ -22,13 +36,23 @@ export function ModalInvite() {
         open={open}
         size="sm"
         title="Invite a teammate"
-        description="They get an email with a link to join weft."
+        description={
+          'They get an email' +
+          ' with a link to join weft.'
+        }
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" data-close="">
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              data-close=""
+            >
               Cancel
             </Button>
-            <Button disabled={!email.value.includes('@')} onClick={send}>
+            <Button
+              disabled={!email.value.includes('@')}
+              onClick={send}
+            >
               Send invite
             </Button>
           </>
@@ -41,9 +65,17 @@ export function ModalInvite() {
             placeholder="noor@weft.dev"
             autofocus
             value={email.value}
-            onInput={(e: Event) => (email.value = (e.target as HTMLInputElement).value)}
+            onInput={(e: Event) =>
+              (email.value = (
+                e.target as HTMLInputElement
+              ).value)
+            }
           />
-          <Select label="Role" value={role} options={ROLES} />
+          <Select
+            label="Role"
+            value={role}
+            options={ROLES}
+          />
         </Stack>
       </Modal>
     </Stack>

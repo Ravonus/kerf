@@ -5,7 +5,11 @@ export function ModalRight() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
         Right
       </Button>
       <Modal
@@ -14,7 +18,9 @@ export function ModalRight() {
         title="Deploy details"
         footer={<Button data-close="">Done</Button>}
       >
-        <Text subtle>Fills the right side, for details.</Text>
+        <Text subtle>
+          Fills the right side, for details.
+        </Text>
       </Modal>
     </>
   )
