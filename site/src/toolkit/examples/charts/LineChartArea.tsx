@@ -8,12 +8,13 @@ import {
   COST_LINE,
 } from './shared-dollars'
 
+const description =
+  'Filled to zero, so the height means something'
+
 export const LineChartArea = () => (
   <LineChart
     title="Monthly bill"
-    description={
-      'Filled to zero, so the height ' + 'means something'
-    }
+    description={description}
     data={TRAFFIC}
     x="month"
     xName="Month"

@@ -1,3 +1,9 @@
+import * as scatterProjects from './ScatterChartProjects'
+import * as bubbleProjects from './BubbleChartProjects'
+import * as latency from './CandlestickChartLatency'
+import * as candlestickOhlc from './CandlestickChartOhlc'
+import * as waterfallSeats from './WaterfallChartSeats'
+
 export { BarChartPlay } from './BarChartPlay'
 export { BarChartDeploys } from './BarChartDeploys'
 export { BarChartStacked } from './BarChartStacked'
@@ -15,10 +21,8 @@ export { RadialChartGoals } from './RadialChartGoals'
 export { GaugeChartBudget } from './GaugeChartBudget'
 export { GaugeChartUptime } from './GaugeChartUptime'
 export { FunnelChartSignup } from './FunnelChartSignup'
-import * as scatterProjects from './ScatterChartProjects'
 export const ScatterChartProjects =
   scatterProjects.ScatterChartProjects
-import * as bubbleProjects from './BubbleChartProjects'
 export const BubbleChartProjects =
   bubbleProjects.BubbleChartProjects
 export { HistogramLatency } from './HistogramLatency'
@@ -28,13 +32,10 @@ export { RadarChartHealth } from './RadarChartHealth'
 export { TreemapCost } from './TreemapCost'
 export { SunburstSpend } from './SunburstSpend'
 export { SankeyChartBuilds } from './SankeyChartBuilds'
-import * as latency from './CandlestickChartLatency'
 export const CandlestickChartLatency =
   latency.CandlestickChartLatency
-import * as candlestickOhlc from './CandlestickChartOhlc'
 export const CandlestickChartOhlc =
   candlestickOhlc.CandlestickChartOhlc
-import * as waterfallSeats from './WaterfallChartSeats'
 export const WaterfallChartSeats =
   waterfallSeats.WaterfallChartSeats
 export { BrushChartSignups } from './BrushChartSignups'
