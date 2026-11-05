@@ -51,7 +51,7 @@ export function SignIn(p: SignInProps) {
     }),
   )
   const hasSso = derived(() => !!(p.onPasskey || p.providers?.length))
-  const ask = magicLink(ctl, () => p.onMagicLink)
+  const ask = magicLink(ctl, (email) => p.onMagicLink?.(email))
   return (
     <StepFrame ctl={ctl} embedded={!!p.form} labelledby={`${id}-t`}>
       {(p.logo !== undefined || p.name !== undefined) && (
@@ -122,13 +122,13 @@ export function SignIn(p: SignInProps) {
 
 function magicLink(
   ctl: ReturnType<typeof useStepForm<SignInValues>>,
-  onMagicLink: () => SignInProps['onMagicLink'],
+  onMagicLink: (email: string) => void,
 ) {
   return (e: MouseEvent) => {
     const scope = (e.currentTarget as HTMLElement).closest('form, [role="group"]')
     const email = scope?.querySelector<HTMLInputElement>('input[name="email"]')?.value ?? ''
     const bad = email ? emailError(email) : "Enter your email first; we'll send the link there."
     ctl.flag('email', bad)
-    if (!bad) onMagicLink()?.(email)
+    if (!bad) onMagicLink(email)
   }
 }
