@@ -29,7 +29,7 @@ export function report(dir) {
     .filter((r) => !r.final.pass || r.infra)
     .map(
       (r) =>
-        `- ${r.id} ${r.task} ${r.stack} ${r.model}: ${r.infra ? `infra: ${r.infra}` : `${r.status}; ${(r.final.hidden?.failed ?? []).join('; ')}`}`,
+        `- ${r.id} ${r.task} ${r.stack} ${r.model}: ${r.infra ? `infra: ${r.infra}` : `${r.status}; ${(r.final.hidden?.failed ?? []).map((f) => typeof f === 'string' ? f : `${f.title}: ${f.failure}`).join('; ')}`}`,
     )
   const diag = {},
     docs = {}

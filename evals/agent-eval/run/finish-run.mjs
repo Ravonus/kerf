@@ -13,7 +13,7 @@ export function firstRunGrade(rec, grade, passedAll) {
     rec.first.hidden = {
       passed: grade.passed,
       total: grade.total,
-      failed: grade.failed?.map((f) => f.title),
+      failed: grade.failed,
       flaky: grade.flaky ?? 0,
       buildMs: grade.built.ms,
     }
@@ -44,7 +44,7 @@ export async function finishRun({
     hidden: finalGrade && {
       passed: finalGrade.passed,
       total: finalGrade.total,
-      failed: finalGrade.failed?.map((f) => f.title),
+      failed: finalGrade.failed,
       flaky: finalGrade.flaky ?? 0,
     },
     pass: finalGrade ? passedAll(finalGrade) : false,
@@ -54,6 +54,9 @@ export async function finishRun({
         : finalGrade.total - finalGrade.passed
       : null,
   }
+  rec.passAt1 = rec.first.pass
+  // Unknown until the Codex transcript classifier and its negative controls exist.
+  rec.hadToReadSource = null
   rec.quality = finalGrade?.quality
   rec.wallMs = Date.now() - startedAt
   rec.loadAfter = load()

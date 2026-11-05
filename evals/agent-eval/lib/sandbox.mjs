@@ -56,7 +56,6 @@ export function env(box, extra = {}) {
     PATH: [nodeBin, '/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':'),
     NO_COLOR: '1',
     CI: '1',
-    npm_config_min_release_age: '0',
     NPM_CONFIG_REGISTRY: `http://localhost:${registryPort}/`,
     NEXT_TELEMETRY_DISABLED: '1',
     DISABLE_AUTOUPDATER: '1',

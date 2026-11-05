@@ -159,6 +159,8 @@ export async function runOne({ task, stackName, model, effort, name, force, budg
     startedAt: new Date(startedAt).toISOString(),
     loadBefore,
     claude: m.claude,
+    node: m.node,
+    versions: m.stacks[stackName].versions,
     golden: m.stacks[stackName].tree,
     promptSha: createHash('sha256').update(prompt).digest('hex').slice(0, 16),
     web: true,
@@ -226,7 +228,9 @@ function plan() {
 /** Everything that must be true before the owner's usage is spent on the matrix. */
 function ready() {
   const { tasks } = JSON.parse(readFileSync(join(here, 'matrix.json'), 'utf8'))
-  const problems = []
+  const problems = [
+    'S5: Codex gpt-6-luna runner, MCP isolation and source-read evidence are not implemented',
+  ]
   for (const task of tasks) {
     const file = join(state, `reference-${task}.json`),
       dir = join(here, 'tasks', task)
@@ -283,6 +287,13 @@ function ready() {
     )
   return problems
 }
+
+// The archived runner uses npm for child installs and Claude for inference. Keep it
+// unavailable until the S5 pnpm policy and Codex isolation work is complete.
+if (['pack', 'golden', 'probe', 'canary', 'reference', 'mutants', 'run', 'matrix'].includes(command))
+  throw new Error(
+    'S5 runner is not ready: migrate child installs to pnpm and implement Codex isolation',
+  )
 
 if (command === 'pack') await pack({ packagesCommit, say })
 else if (command === 'golden')

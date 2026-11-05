@@ -84,7 +84,7 @@ export async function mutants({ stackNames, boxFor, opt, gradeOnce, say, cleanup
         caught,
         passed: g.passed,
         total: g.total,
-        failed: g.failed.map((f) => f.title),
+        failed: g.failed,
       })
       say(`${name} / ${m.name}: ${caught ? 'caught' : 'MISSED'} (${g.passed}/${g.total})`)
       cleanup(box)
