@@ -137,93 +137,15 @@ function track(fn: (e: PointerEvent) => void) {
   }
 }
 
-/** Attach to a `<canvas>`. It fills its parent, and its parent's size is what it tracks. */
-export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Surface {
-  let o = options
-  const box = canvas.parentElement ?? canvas
-  const ctx = canvas.getContext('2d', o.context)
-  let sized = false,
-    dirty = true,
-    seen = true,
-    still = reducedMotion(canvas),
-    kept = false
-  let w = 0,
-    h = 0,
-    dpr = 1,
-    time = 0,
-    last = 0,
-    shown = 0,
-    unit = 1,
-    dials: Tier | undefined,
-    untrack: (() => void) | undefined
-  const pointer: Pointer = { x: 0, y: 0, down: false, in: false }
-
-  const dial = () => (dials ??= tier(box))
-  const moves = () => !!o.animate && !still && dial().speed > 0
-  const running = () => moves() || kept
-  const visible = () => seen && !document.hidden
-  const wake = () => {
-    if (visible() && (dirty || running())) enqueue(run)
-  }
-  const invalidate = () => {
-    dirty = true
-    wake()
-  }
-
-  function measure() {
-    const dw = box.clientWidth,
-      dh = box.clientHeight
-    dpr = Math.min(devicePixelRatio || 1, o.maxDpr ?? 2)
-    unit = 1
-    if (!dw || !dh) return false
-    let bw: number, bh: number
-    if (o.cell) {
-      const d = Math.max(1, Math.round(o.cell * dpr)),
-        css = (unit = d / dpr)
-      bw = w = Math.ceil(dw / css)
-      bh = h = Math.ceil(dh / css)
-      canvas.style.width = `${bw * css}px`
-      canvas.style.height = `${bh * css}px`
-      canvas.style.imageRendering = 'pixelated'
-    } else {
-      w = dw
-      h = dh
-      bw = Math.round(dw * dpr)
-      bh = Math.round(dh * dpr)
-    }
-    if (canvas.width !== bw) canvas.width = bw
-    if (canvas.height !== bh) canvas.height = bh
-    if (!o.cell) ctx?.setTransform(dpr, 0, 0, dpr, 0, 0)
-    return true
-  }
-
-  const run: Run = (now) => {
-    if (!visible() || !ctx) return void queue.delete(run)
-    if (!dirty && o.fps && now - shown < 1000 / o.fps - 2) return
-    if (!sized && !(sized = measure())) return void queue.delete(run)
-    const dt = last ? Math.min((now - last) / 1000, 0.1) : 0
-    last = now
-    shown = now
-    if (running()) time += dt
-    dirty = false
-    kept =
-      o.draw({
-        ctx,
-        width: w,
-        height: h,
-        dpr,
-        time,
-        dt,
-        still: !moves(),
-        tier: dial(),
-        pointer,
-      }) === true
-    if (!running()) {
-      queue.delete(run)
-      last = 0
-    }
-  }
-
+function surfacePointer(
+  box: HTMLElement,
+  pointer: Pointer,
+  visible: () => boolean,
+  invalidate: () => void,
+  unit: () => number,
+  enabled: () => boolean,
+) {
+  let untrack: (() => void) | undefined
   const follow = (e: PointerEvent) => {
     if (!visible()) return
     const r = box.getBoundingClientRect(),
@@ -232,25 +154,123 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
     const over = x >= 0 && y >= 0 && x < r.width && y < r.height,
       down = e.type === 'pointerdown' ? over : e.type === 'pointermove' ? pointer.down : false
     if (!over && !pointer.in && down === pointer.down) return
-    pointer.x = x / unit
-    pointer.y = y / unit
+    pointer.x = x / unit()
+    pointer.y = y / unit()
     pointer.in = over
     pointer.down = down
     invalidate()
   }
   const listen = () => {
-    if (o.pointer && !untrack) untrack = track(follow)
-    else if (!o.pointer && untrack) {
+    if (enabled() && !untrack) untrack = track(follow)
+    else if (!enabled() && untrack) {
       untrack()
       untrack = undefined
     }
   }
 
+  return { listen, destroy: () => untrack?.() }
+}
+
+type SurfaceState = {
+  o: SurfaceOptions
+  sized: boolean
+  dirty: boolean
+  seen: boolean
+  still: boolean
+  kept: boolean
+  w: number
+  h: number
+  dpr: number
+  time: number
+  last: number
+  shown: number
+  unit: number
+  dials: Tier | undefined
+}
+
+function measureSurface(
+  v: SurfaceState,
+  canvas: HTMLCanvasElement,
+  box: HTMLElement,
+  ctx: CanvasRenderingContext2D | null,
+) {
+  const dw = box.clientWidth,
+    dh = box.clientHeight
+  v.dpr = Math.min(devicePixelRatio || 1, v.o.maxDpr ?? 2)
+  v.unit = 1
+  if (!dw || !dh) return false
+  let bw: number, bh: number
+  if (v.o.cell) {
+    const d = Math.max(1, Math.round(v.o.cell * v.dpr)),
+      css = (v.unit = d / v.dpr)
+    bw = v.w = Math.ceil(dw / css)
+    bh = v.h = Math.ceil(dh / css)
+    canvas.style.width = `${bw * css}px`
+    canvas.style.height = `${bh * css}px`
+    canvas.style.imageRendering = 'pixelated'
+  } else {
+    v.w = dw
+    v.h = dh
+    bw = Math.round(dw * v.dpr)
+    bh = Math.round(dh * v.dpr)
+  }
+  if (canvas.width !== bw) canvas.width = bw
+  if (canvas.height !== bh) canvas.height = bh
+  if (!v.o.cell) ctx?.setTransform(v.dpr, 0, 0, v.dpr, 0, 0)
+  return true
+}
+
+function runSurface(
+  now: number,
+  v: SurfaceState,
+  canvas: HTMLCanvasElement,
+  box: HTMLElement,
+  ctx: CanvasRenderingContext2D | null,
+  pointer: Pointer,
+  run: Run,
+  visible: () => boolean,
+  running: () => boolean,
+  moves: () => boolean,
+  dial: () => Tier,
+) {
+  if (!visible() || !ctx) return void queue.delete(run)
+  if (!v.dirty && v.o.fps && now - v.shown < 1000 / v.o.fps - 2) return
+  if (!v.sized && !(v.sized = measureSurface(v, canvas, box, ctx))) return void queue.delete(run)
+  const dt = v.last ? Math.min((now - v.last) / 1000, 0.1) : 0
+  v.last = now
+  v.shown = now
+  if (running()) v.time += dt
+  v.dirty = false
+  v.kept =
+    v.o.draw({
+      ctx,
+      width: v.w,
+      height: v.h,
+      dpr: v.dpr,
+      time: v.time,
+      dt,
+      still: !moves(),
+      tier: dial(),
+      pointer,
+    }) === true
+  if (!running()) {
+    queue.delete(run)
+    v.last = 0
+  }
+}
+
+function observeSurface(
+  v: SurfaceState,
+  canvas: HTMLCanvasElement,
+  box: HTMLElement,
+  invalidate: () => void,
+  wake: () => void,
+) {
   const size =
     typeof ResizeObserver === 'undefined'
       ? undefined
       : new ResizeObserver(() => {
-          sized = false
+          v.sized = false
           invalidate()
         })
   size?.observe(box)
@@ -259,51 +279,104 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
       ? undefined
       : new IntersectionObserver(
           ([e]) => {
-            seen = e!.isIntersecting
-            box.toggleAttribute('data-fx-offscreen', !seen)
-            last = 0
+            v.seen = e!.isIntersecting
+            box.toggleAttribute('data-fx-offscreen', !v.seen)
+            v.last = 0
             wake()
           },
           { rootMargin: '48px' },
         )
   seer?.observe(canvas)
   const shown$ = () => {
-    last = 0
+    v.last = 0
     wake()
   }
   const rescale = () => {
-    sized = false
+    v.sized = false
     invalidate()
   }
   document.addEventListener('visibilitychange', shown$)
   addEventListener('resize', rescale)
   const stop = hear((target) => {
     if (!target.contains(canvas)) return
-    still = reducedMotion(canvas)
-    dials = undefined
-    o.onTheme?.()
+    v.still = reducedMotion(canvas)
+    v.dials = undefined
+    v.o.onTheme?.()
     invalidate()
   })
-  listen()
+  return () => {
+    size?.disconnect()
+    seer?.disconnect()
+    stop()
+    document.removeEventListener('visibilitychange', shown$)
+    removeEventListener('resize', rescale)
+  }
+}
+
+/** Attach to a `<canvas>`. It fills its parent, and its parent's size is what it tracks. */
+export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Surface {
+  const box = canvas.parentElement ?? canvas
+  const ctx = canvas.getContext('2d', options.context)
+  const v: SurfaceState = {
+    o: options,
+    sized: false,
+    dirty: true,
+    seen: true,
+    still: reducedMotion(canvas),
+    kept: false,
+    w: 0,
+    h: 0,
+    dpr: 1,
+    time: 0,
+    last: 0,
+    shown: 0,
+    unit: 1,
+    dials: undefined,
+  }
+
+  const pointer: Pointer = { x: 0, y: 0, down: false, in: false }
+
+  const dial = () => (v.dials ??= tier(box))
+  const moves = () => !!v.o.animate && !v.still && dial().speed > 0
+  const running = () => moves() || v.kept
+  const visible = () => v.seen && !document.hidden
+  const wake = () => {
+    if (visible() && (v.dirty || running())) enqueue(run)
+  }
+  const invalidate = () => {
+    v.dirty = true
+    wake()
+  }
+
+  const run: Run = (now) =>
+    runSurface(now, v, canvas, box, ctx, pointer, run, visible, running, moves, dial)
+
+  const tracking = surfacePointer(
+    box,
+    pointer,
+    visible,
+    invalidate,
+    () => v.unit,
+    () => !!v.o.pointer,
+  )
+
+  const stop = observeSurface(v, canvas, box, invalidate, wake)
+  tracking.listen()
   wake()
 
   return {
     invalidate,
     visible,
     update(next) {
-      if (next.cell !== o.cell || next.maxDpr !== o.maxDpr) sized = false
-      o = next
-      listen()
+      if (next.cell !== v.o.cell || next.maxDpr !== v.o.maxDpr) v.sized = false
+      v.o = next
+      tracking.listen()
       invalidate()
     },
     destroy() {
       queue.delete(run)
-      untrack?.()
-      size?.disconnect()
-      seer?.disconnect()
+      tracking.destroy()
       stop()
-      document.removeEventListener('visibilitychange', shown$)
-      removeEventListener('resize', rescale)
     },
   }
 }
