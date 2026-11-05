@@ -30,18 +30,17 @@ Apply `upstream.patch` to a clean checkout of the pinned upstream revision:
 git apply /absolute/path/to/benchmarks/js-framework-benchmark/upstream.patch
 ```
 
-Upstream's server discovers only directories with `package-lock.json` and
-reads the weft version from it. `discovery-lock.mjs` writes the minimal
-metadata for a pnpm-based local harness. It is not a complete npm lockfile
-and must not be submitted as one or used with npm ci. A complete npm lockfile
-and the upstream npm-based rebuild remain submission requirements.
+The committed npm v3 `package-lock.json` is derived from the pinned pnpm
+lock with lockgraph 0.8.1, then given the manifest root and registry URLs.
+The converter flattens pnpm peer contexts into npm's layout. Check all 105
+nodes, integrity values and dependency edges with `node check-lock.mjs` from
+this directory. The unmodified upstream npm rebuild remains untested here.
 
 The upstream rebuild command runs npm ci and npm scripts internally. Run the
 same focused driver directly with pnpm to respect this repository's policy.
 In an isolated checkout of the pinned revision, after applying the patch:
 
 ```sh
-node /absolute/path/to/benchmarks/js-framework-benchmark/discovery-lock.mjs frameworks/keyed/weft
 pnpm --dir frameworks/keyed/weft install --frozen-lockfile --ignore-scripts
 pnpm --dir frameworks/keyed/weft build-prod
 ```
@@ -66,9 +65,8 @@ PORT=19387 pnpm --dir webdriver-ts bench --runner playwright --headless true --s
 ```
 
 These commands exercised the pinned upstream driver on macOS with local Chrome.
-The metadata fixture is not an upstream submission lockfile. The upstream
-maintainer still needs a complete npm lockfile and the unmodified rebuild-ci
-check; do not submit until those and review are complete.
+The upstream maintainer can run the unmodified rebuild-ci with npm after review.
+It has not been run in this repository.
 
 This is an upstream workload, not a comparative result. Any speed or size
 claim needs the full comparison in `benchmarks/compare` across all stacks.
