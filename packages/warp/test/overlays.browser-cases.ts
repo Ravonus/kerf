@@ -1,90 +1,10 @@
-// @vitest-environment node
-// What jsdom can't see, in all three engines and warp's real CSS: where a panel lands, what scrolls, who Escape closes.
-// Built with the production CSS purge, so a rule the purge would drop (the scroll lock) fails here rather than in an app.
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { createServer } from 'node:http'
-import { tmpdir } from 'node:os'
-import { extname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { build } from 'vite'
-import weft from '@weft-js/core/vite'
+import type { OverlayTools } from './overlays.browser.test'
 
-const pw = createRequire(import.meta.url)('playwright-core')
-vi.setConfig({ testTimeout: 60_000, hookTimeout: 180_000 })
-
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
-let dist, server, url
-
-beforeAll(async () => {
-  dist = mkdtempSync(join(tmpdir(), 'warp-overlays-'))
-  await build({
-    root: fileURLToPath(new URL('./overlays', import.meta.url)),
-    base: './',
-    logLevel: 'silent',
-    plugins: [weft()],
-    build: { outDir: dist, emptyOutDir: true },
-  })
-  server = createServer((q, r) => {
-    let p = join(dist, q.url.split('?')[0])
-    if (p.endsWith('/')) p += 'index.html'
-    if (!existsSync(p)) {
-      r.statusCode = 404
-      return r.end()
-    }
-    r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
-    r.end(readFileSync(p))
-  }).listen(0)
-  await new Promise((r) => {
-    server.once('listening', r)
-  })
-  url = `http://localhost:${server.address().port}/`
-})
-afterAll(() => {
-  server?.close()
-  rmSync(dist, { recursive: true, force: true })
-})
-
-function toastTools() {
-  const region = '[data-scope="toast"][data-part="region"]'
-  const where = (page) =>
-    page.evaluate((r) => {
-      const el = document.querySelector(r),
-        d = el.closest('dialog')
-      return {
-        dialog: d ? (d.querySelector('[data-part="title"]')?.textContent ?? d.dataset.scope) : null,
-        popover: el.hasAttribute('popover'),
-        top: el.matches(':popover-open'),
-      }
-    }, region)
-  // what the pointer would hit at the middle of Undo, and that it works
-  const undo = async (page) => {
-    const button = page.getByRole('button', { name: 'Undo' }).first()
-    const box = await button.boundingBox()
-    expect(box.x + box.width).toBeLessThanOrEqual(1100)
-    expect(box.y + box.height).toBeLessThanOrEqual(700)
-    const hit = await page.evaluate(
-      ({ x, y }) => !!document.elementFromPoint(x, y)?.closest('[data-act]'),
-      { x: box.x + box.width / 2, y: box.y + box.height / 2 },
-    )
-    expect(hit).toBe(true)
-    const was = await page.evaluate(() => window.api.undone)
-    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-    await page.waitForTimeout(100)
-    expect(await page.evaluate(() => window.api.undone)).toBe(was + 1)
-  }
-  const raise = (page, opts) => page.evaluate((o) => window.api.raise(o), opts)
-  const set = (page, field, to) =>
-    page.evaluate(
-      ([n, v]) => {
-        window.api[n].value = v
-      },
-      [field, to],
-    )
-  return { region, where, undo, raise, set }
-}
-
-function overlayAMenuLowOnThe({ fresh, opened, boxes }) {
+function overlayAMenuLowOnThe({
+  fresh,
+  opened,
+  boxes,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'boxes'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'LowMenu')
@@ -97,7 +17,11 @@ function overlayAMenuLowOnThe({ fresh, opened, boxes }) {
   }
 }
 
-function overlayAMenuAtTheRight({ fresh, opened, boxes }) {
+function overlayAMenuAtTheRight({
+  fresh,
+  opened,
+  boxes,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'boxes'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'EdgeMenu')
@@ -107,7 +31,11 @@ function overlayAMenuAtTheRight({ fresh, opened, boxes }) {
   }
 }
 
-function overlayAlignEndLinesUpThe({ fresh, opened, boxes }) {
+function overlayAlignEndLinesUpThe({
+  fresh,
+  opened,
+  boxes,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'boxes'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'EndMenu')
@@ -122,7 +50,11 @@ function overlayAlignEndLinesUpThe({ fresh, opened, boxes }) {
   }
 }
 
-function overlayInRTLAlignStartLines({ fresh, opened, boxes }) {
+function overlayInRTLAlignStartLines({
+  fresh,
+  opened,
+  boxes,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'boxes'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'RtlMenu')
@@ -132,7 +64,7 @@ function overlayInRTLAlignStartLines({ fresh, opened, boxes }) {
   }
 }
 
-function overlayASliderArrowInRTL({ fresh }) {
+function overlayASliderArrowInRTL({ fresh }: Pick<OverlayTools, 'fresh'>) {
   return async () => {
     const page = await fresh()
     await page.locator('#rtl [data-part="thumb"]').focus()
@@ -143,7 +75,11 @@ function overlayASliderArrowInRTL({ fresh }) {
   }
 }
 
-function overlayAMenuFollowsItsTrigger({ fresh, opened, boxes }) {
+function overlayAMenuFollowsItsTrigger({
+  fresh,
+  opened,
+  boxes,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'boxes'>) {
   return async () => {
     const page = await fresh()
     await page.getByRole('button', { name: 'ScrollMenu' }).scrollIntoViewIfNeeded()
@@ -158,18 +94,18 @@ function overlayAMenuFollowsItsTrigger({ fresh, opened, boxes }) {
   }
 }
 
-function overlayTheLastRowOfA({ fresh, opened }) {
+function overlayTheLastRowOfA({ fresh, opened }: Pick<OverlayTools, 'fresh' | 'opened'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'TallMenu')
     await page.keyboard.press('End')
     await page.waitForTimeout(150)
     const r = await page.evaluate(() => {
-      const m = document.querySelector('#tall [role="menu"]'),
-        a = document.activeElement.getBoundingClientRect(),
+      const m = document.querySelector('#tall [role="menu"]')!,
+        a = document.activeElement!.getBoundingClientRect(),
         b = m.getBoundingClientRect()
       return {
-        text: document.activeElement.textContent,
+        text: document.activeElement!.textContent,
         top: a.top,
         bottom: a.bottom,
         boxTop: b.top,
@@ -186,7 +122,7 @@ function overlayTheLastRowOfA({ fresh, opened }) {
   }
 }
 
-function overlayAMenuItemWithHref({ fresh, opened }) {
+function overlayAMenuItemWithHref({ fresh, opened }: Pick<OverlayTools, 'fresh' | 'opened'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'LinkMenu')
@@ -197,8 +133,8 @@ function overlayAMenuItemWithHref({ fresh, opened }) {
   }
 }
 
-function overlayThePageBehindAS({ fresh, opened }) {
-  return async (_, label) => {
+function overlayThePageBehindAS({ fresh, opened }: Pick<OverlayTools, 'fresh' | 'opened'>) {
+  return async (_: unknown, label: string) => {
     const page = await fresh()
     await opened(page, label)
     await page.mouse.move(20, 300)
@@ -214,7 +150,7 @@ function overlayThePageBehindAS({ fresh, opened }) {
   }
 }
 
-function overlayTheLockKeepsTheScroll({ fresh }) {
+function overlayTheLockKeepsTheScroll({ fresh }: Pick<OverlayTools, 'fresh'>) {
   return async () => {
     const page = await fresh()
     await page.evaluate(() => scrollTo(0, 300))
@@ -227,7 +163,7 @@ function overlayTheLockKeepsTheScroll({ fresh }) {
   }
 }
 
-function overlayEscapeInAComboboxInside({ fresh, opened }) {
+function overlayEscapeInAComboboxInside({ fresh, opened }: Pick<OverlayTools, 'fresh' | 'opened'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'Open modal')
@@ -238,8 +174,8 @@ function overlayEscapeInAComboboxInside({ fresh, opened }) {
     const after = () =>
       page.evaluate(() => ({
         list: !!document.querySelector('[data-kind="combo"]:popover-open'),
-        modal: document.querySelector('dialog[data-scope="dialog"]').open,
-        text: document.querySelector('[role="combobox"]').value,
+        modal: document.querySelector<HTMLDialogElement>('dialog[data-scope="dialog"]')!.open,
+        text: document.querySelector<HTMLInputElement>('[role="combobox"]')!.value,
       }))
     expect(await after()).toEqual({ list: false, modal: true, text: 'a' })
     await page.keyboard.press('Escape')
@@ -249,7 +185,7 @@ function overlayEscapeInAComboboxInside({ fresh, opened }) {
   }
 }
 
-function overlayAClickOutsideClosesThe({ fresh, opened }) {
+function overlayAClickOutsideClosesThe({ fresh, opened }: Pick<OverlayTools, 'fresh' | 'opened'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'Open modal')
@@ -260,18 +196,18 @@ function overlayAClickOutsideClosesThe({ fresh, opened }) {
     expect(
       await page.evaluate(() => [
         !!document.querySelector('[data-kind="combo"]:popover-open'),
-        document.querySelector('dialog[data-scope="dialog"]').open,
+        document.querySelector<HTMLDialogElement>('dialog[data-scope="dialog"]')!.open,
       ]),
     ).toEqual([false, true])
     await page.close()
   }
 }
 
-function overlayASliderClickInRTL({ fresh }) {
+function overlayASliderClickInRTL({ fresh }: Pick<OverlayTools, 'fresh'>) {
   return async () => {
     const page = await fresh()
     const t = await page.evaluate(() => {
-      const r = document.querySelector('#rtl [data-part="track"]')
+      const r = document.querySelector('#rtl [data-part="track"]')!
       r.scrollIntoView({ block: 'center' })
       const b = r.getBoundingClientRect()
       return { l: b.left, w: b.width, y: b.top + b.height / 2 }
@@ -279,7 +215,7 @@ function overlayASliderClickInRTL({ fresh }) {
     await page.mouse.click(t.l + t.w * 0.1, t.y)
     await page.waitForTimeout(100)
     const r = await page.evaluate(() => {
-      const th = document.querySelector('#rtl [data-part="thumb"]'),
+      const th = document.querySelector('#rtl [data-part="thumb"]')!,
         b = th.getBoundingClientRect()
       return { now: th.getAttribute('aria-valuenow'), at: b.left + b.width / 2 }
     })
@@ -289,7 +225,13 @@ function overlayASliderClickInRTL({ fresh }) {
   }
 }
 
-function overlayUndoWorksWhenTheToast({ fresh, opened, where, undo, raise }) {
+function overlayUndoWorksWhenTheToast({
+  fresh,
+  opened,
+  where,
+  undo,
+  raise,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'where' | 'undo' | 'raise'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'Open modal')
@@ -298,13 +240,20 @@ function overlayUndoWorksWhenTheToast({ fresh, opened, where, undo, raise }) {
     expect(await where(page)).toEqual({ dialog: 'One', popover: true, top: true })
     await undo(page)
     expect(
-      await page.evaluate(() => document.querySelector('dialog[data-scope="dialog"]').open),
+      await page.evaluate(
+        () => document.querySelector<HTMLDialogElement>('dialog[data-scope="dialog"]')!.open,
+      ),
     ).toBe(true)
     await page.close()
   }
 }
 
-function overlayTheToastSitsAtThe({ fresh, opened, region, raise }) {
+function overlayTheToastSitsAtThe({
+  fresh,
+  opened,
+  region,
+  raise,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'region' | 'raise'>) {
   return async () => {
     const page = await fresh()
     const settle = () =>
@@ -324,7 +273,7 @@ function overlayTheToastSitsAtThe({ fresh, opened, region, raise }) {
     const rect = () =>
       page.evaluate(() => {
         const r = document
-          .querySelector('[data-scope="toast"][data-part="root"]')
+          .querySelector('[data-scope="toast"][data-part="root"]')!
           .getBoundingClientRect()
         return [Math.round(r.right), Math.round(r.bottom)]
       })
@@ -336,20 +285,25 @@ function overlayTheToastSitsAtThe({ fresh, opened, region, raise }) {
   }
 }
 
-function overlayOneAlreadyShowingMovesIn({ fresh, where, undo, raise }) {
+function overlayOneAlreadyShowingMovesIn({
+  fresh,
+  where,
+  undo,
+  raise,
+}: Pick<OverlayTools, 'fresh' | 'where' | 'undo' | 'raise'>) {
   return async () => {
     const page = await fresh()
     await raise(page, { duration: 60000 })
     await page.waitForTimeout(500)
     const time = () =>
       page.evaluate(
-        () => document.querySelector('[data-part="progress"]').getAnimations()[0]?.currentTime,
+        () => document.querySelector('[data-part="progress"]')!.getAnimations()[0]?.currentTime,
       )
-    const t0 = await time()
+    const t0 = (await time()) as number
     await page.evaluate(() => {
       window.api.modal.value = true
       window.seen = []
-      const root = document.querySelector('[data-scope="toast"][data-part="root"]')
+      const root = document.querySelector('[data-scope="toast"][data-part="root"]')!
       const look = () => {
         window.seen.push(
           new DOMMatrix(
@@ -377,7 +331,14 @@ function overlayOneAlreadyShowingMovesIn({ fresh, where, undo, raise }) {
   }
 }
 
-function overlayStackedModalsTheTopOne({ fresh, opened, where, undo, raise, set }) {
+function overlayStackedModalsTheTopOne({
+  fresh,
+  opened,
+  where,
+  undo,
+  raise,
+  set,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'where' | 'undo' | 'raise' | 'set'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'Open modal')
@@ -400,8 +361,14 @@ function overlayStackedModalsTheTopOne({ fresh, opened, where, undo, raise, set 
   }
 }
 
-function overlayWorksOverAS({ fresh, where, undo, raise, set }) {
-  return async (kind) => {
+function overlayWorksOverAS({
+  fresh,
+  where,
+  undo,
+  raise,
+  set,
+}: Pick<OverlayTools, 'fresh' | 'where' | 'undo' | 'raise' | 'set'>) {
+  return async (kind: string) => {
     const page = await fresh()
     await set(page, kind, true)
     await page.waitForTimeout(350)
@@ -413,7 +380,11 @@ function overlayWorksOverAS({ fresh, where, undo, raise, set }) {
   }
 }
 
-function overlayATimerEndsInsideThe({ fresh, opened, raise }) {
+function overlayATimerEndsInsideThe({
+  fresh,
+  opened,
+  raise,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'raise'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'Open modal')
@@ -421,10 +392,10 @@ function overlayATimerEndsInsideThe({ fresh, opened, raise }) {
     await page.waitForTimeout(300)
     const state = () =>
       page.evaluate(
-        () => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState,
+        () => document.querySelector('[data-part="progress"]')!.getAnimations()[0]?.playState,
       )
     expect(await state()).toBe('running')
-    const box = await page.getByRole('button', { name: 'Undo' }).first().boundingBox()
+    const box = (await page.getByRole('button', { name: 'Undo' }).first().boundingBox())!
     await page.mouse.move(box.x + 2, box.y + 2)
     await page.waitForTimeout(150)
     expect(await state()).toBe('paused')
@@ -441,17 +412,21 @@ function overlayATimerEndsInsideThe({ fresh, opened, raise }) {
   }
 }
 
-function overlayAPausedToastStaysPaused({ fresh, raise, set }) {
+function overlayAPausedToastStaysPaused({
+  fresh,
+  raise,
+  set,
+}: Pick<OverlayTools, 'fresh' | 'raise' | 'set'>) {
   return async () => {
     const page = await fresh()
     await raise(page, { duration: 60000 })
     await page.waitForTimeout(300)
-    const box = await page.getByRole('button', { name: 'Undo' }).first().boundingBox()
+    const box = (await page.getByRole('button', { name: 'Undo' }).first().boundingBox())!
     await page.mouse.move(box.x + 2, box.y + 2)
     await page.waitForTimeout(150)
     const state = () =>
       page.evaluate(
-        () => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState,
+        () => document.querySelector('[data-part="progress"]')!.getAnimations()[0]?.playState,
       )
     expect(await state()).toBe('paused')
     await set(page, 'modal', true)
@@ -463,7 +438,7 @@ function overlayAPausedToastStaysPaused({ fresh, raise, set }) {
             end = performance.now() + 1000
           const look = () => {
             states.add(
-              document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState,
+              document.querySelector('[data-part="progress"]')!.getAnimations()[0]?.playState,
             )
             if (performance.now() < end) requestAnimationFrame(look)
             else done([...states])
@@ -481,35 +456,44 @@ function overlayAPausedToastStaysPaused({ fresh, raise, set }) {
   }
 }
 
-function overlayFocusStaysPutOnThe({ fresh, opened, raise, set }) {
+function overlayFocusStaysPutOnThe({
+  fresh,
+  opened,
+  raise,
+  set,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'raise' | 'set'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'Open modal')
-    const before = await page.evaluate(() => document.activeElement.outerHTML)
+    const before = await page.evaluate(() => document.activeElement!.outerHTML)
     await raise(page, { duration: 60000 })
     await page.waitForTimeout(200)
-    expect(await page.evaluate(() => document.activeElement.outerHTML)).toBe(before)
+    expect(await page.evaluate(() => document.activeElement!.outerHTML)).toBe(before)
     await page.keyboard.press('F8')
     expect(
-      await page.evaluate(() => !!document.activeElement.closest('[data-scope="toast"]')),
+      await page.evaluate(() => !!document.activeElement!.closest('[data-scope="toast"]')),
     ).toBe(true)
     await set(page, 'modal2', true)
     await page.waitForTimeout(300)
-    await page.evaluate(() => document.querySelector('[data-act]').focus())
+    await page.evaluate(() => document.querySelector<HTMLElement>('[data-act]')!.focus())
     await set(page, 'modal2', false)
     await page.waitForTimeout(300)
     expect(
       await page.evaluate(
         () =>
-          !!document.activeElement.closest('[data-scope="toast"]') ||
-          document.activeElement.tagName,
+          !!document.activeElement!.closest('[data-scope="toast"]') ||
+          document.activeElement!.tagName,
       ),
     ).not.toBe('BODY')
     await page.close()
   }
 }
 
-function overlayTheLiveRegionsGoWith({ fresh, opened, raise }) {
+function overlayTheLiveRegionsGoWith({
+  fresh,
+  opened,
+  raise,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'raise'>) {
   return async () => {
     const page = await fresh()
     await opened(page, 'Open modal')
@@ -539,14 +523,14 @@ function overlayTheLiveRegionsGoWith({ fresh, opened, raise }) {
   }
 }
 
-function overlayARequiredDateFieldStopsThe({ fresh }) {
+function overlayARequiredDateFieldStopsThe({ fresh }: Pick<OverlayTools, 'fresh'>) {
   return async () => {
     const page = await fresh()
     await page.click('#send')
     await page.waitForTimeout(150)
     expect(await page.evaluate(() => window.api.submitted.value)).toBe(0)
     expect(await page.locator('#form [data-part="error"]').textContent()).not.toBe('')
-    expect(await page.evaluate(() => document.activeElement.getAttribute('role'))).toBe(
+    expect(await page.evaluate(() => document.activeElement!.getAttribute('role'))).toBe(
       'spinbutton',
     )
     await page.keyboard.type('02032026')
@@ -559,42 +543,11 @@ function overlayARequiredDateFieldStopsThe({ fresh }) {
   }
 }
 
-function overlayHarness(getBrowser) {
-  async function fresh() {
-    const page = await getBrowser().newPage({ viewport: { width: 1100, height: 700 } })
-    await page.goto(url)
-    await page.waitForFunction(() => window.api)
-    await page.waitForTimeout(100)
-    return page
-  }
-  const opened = async (page, label) => {
-    await page.getByRole('button', { name: label }).click()
-    await page.waitForTimeout(300)
-  }
-  const boxes = (page, id) =>
-    page.evaluate((host) => {
-      const m = document.querySelector(`#${host} [role="menu"]`)
-      const r = m.getBoundingClientRect(),
-        t = document.querySelector(`#${host} button`).getBoundingClientRect()
-      return {
-        left: r.left,
-        right: r.right,
-        top: r.top,
-        bottom: r.bottom,
-        tLeft: t.left,
-        tRight: t.right,
-        tTop: t.top,
-        tBottom: t.bottom,
-        vw: innerWidth,
-        vh: innerHeight,
-        side: m.dataset.side,
-        origin: m.style.getPropertyValue('--warp-origin'),
-      }
-    }, id)
-  return { fresh, opened, boxes }
-}
-
-function overlayCases({ fresh, opened, boxes }) {
+export function overlayCases({
+  fresh,
+  opened,
+  boxes,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'boxes'>) {
   return {
     get low() {
       return overlayAMenuLowOnThe({ fresh, opened, boxes })
@@ -641,7 +594,15 @@ function overlayCases({ fresh, opened, boxes }) {
   }
 }
 
-function toastCasesFor({ fresh, opened, region, where, undo, raise, set }) {
+export function toastCasesFor({
+  fresh,
+  opened,
+  region,
+  where,
+  undo,
+  raise,
+  set,
+}: Pick<OverlayTools, 'fresh' | 'opened' | 'region' | 'where' | 'undo' | 'raise' | 'set'>) {
   return {
     get undo() {
       return overlayUndoWorksWhenTheToast({ fresh, opened, where, undo, raise })
@@ -672,99 +633,3 @@ function toastCasesFor({ fresh, opened, region, where, undo, raise, set }) {
     },
   }
 }
-
-describe.each(['chromium', 'webkit', 'firefox'])('%s', (name) => {
-  let browser
-  beforeAll(async () => {
-    browser = await pw[name].launch()
-  })
-  afterAll(async () => {
-    await browser?.close()
-  })
-
-  const { fresh, opened, boxes } = overlayHarness(() => browser)
-  const cases = overlayCases({ fresh, opened, boxes })
-  test('a menu low on the screen flips above its trigger, on-screen', cases.low)
-
-  test('a menu at the right edge stays on-screen', cases.edge)
-
-  test('align="end" lines up the ends, align="center" the middles', cases.align)
-
-  test('in RTL align="start" lines up the right edges', cases.rtlMenu)
-
-  test('a slider arrow in RTL goes the way it points', cases.rtlKeys)
-
-  test('a menu follows its trigger through a scroll', cases.scroll)
-
-  test('the last row of a long menu is reachable by keyboard, inside the panel', cases.keyboard)
-
-  test('a menu item with href navigates, by click and by Enter', cases.link)
-
-  test.each([
-    ['modal', 'Open modal'],
-    ['drawer', 'Open drawer'],
-  ])('the page behind a %s stays put, then scrolls again', cases.pageLock)
-
-  test('the lock keeps the scroll position', cases.lockPosition)
-
-  test(
-    'Escape in a combobox inside a modal closes the list, keeps the text, keeps the modal',
-    cases.escape,
-  )
-
-  test('a click outside closes the combobox list only', cases.outside)
-
-  test('a slider click in RTL lands where the pointer is', cases.rtlSlider)
-
-  describe('toasts and modals', () => {
-    const { region, where, undo, raise, set } = toastTools()
-    const toastCases = toastCasesFor({ fresh, opened, region, where, undo, raise, set })
-
-    test('Undo works when the toast is raised during a modal, and the modal stays', toastCases.undo)
-
-    test('the toast sits at the viewport corner, not in the dialog box', toastCases.corner)
-
-    test(
-      'one already showing moves in without replaying, its timer running; back out on close',
-      toastCases.move,
-    )
-
-    test('stacked modals: the top one holds it, closing returns it to the next', toastCases.stack)
-
-    test.each([['drawer'], ['sheet']])('works over a %s', toastCases.surfaces)
-
-    test('a timer ends inside the modal; hover still pauses it', toastCases.timer)
-
-    test('a paused toast stays paused through the move', toastCases.pause)
-
-    test(
-      'focus stays put: on the modal when a toast arrives, on the toast through a stacked close',
-      toastCases.focus,
-    )
-
-    test(
-      'the live regions go with it and get the text (DOM only: no screen reader in this)',
-      toastCases.live,
-    )
-  })
-
-  test(
-    'a required DateField stops the submit, says why, and lets it through once filled',
-    cases.date,
-  )
-})
-
-test('a classic scrollbar keeps its room when a modal opens (Chromium)', async () => {
-  const browser = await pw.chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] })
-  const page = await browser.newPage({ viewport: { width: 1100, height: 700 } })
-  await page.goto(url)
-  await page.waitForFunction(() => window.api)
-  const width = () => page.evaluate(() => document.body.offsetWidth) // clientWidth reports the gutter's room as its own
-  const before = await width()
-  await page.evaluate(() => {
-    window.api.modal.value = true
-  })
-  await page.waitForTimeout(300)
-  expect(await width()).toBe(before)
-  await browser.close()
-})
