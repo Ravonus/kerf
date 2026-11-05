@@ -63,24 +63,23 @@ function published(pkg) {
   }
 }
 
+function manifest(dir, file) {
+  const tar = gunzipSync(readFileSync(join(dir, file)))
+  return {
+    file,
+    tar,
+    pkg: published(
+      JSON.parse([...entries(tar)].find((e) => e.name === 'package/package.json').body.toString()),
+    ),
+  }
+}
+
 /** Serve `dir`'s tarballs. Returns `{ url, close }`. */
 export function serveRegistry(dir, port = 0) {
   const packages = new Map()
-  const manifest = (file) => {
-    const tar = gunzipSync(readFileSync(join(dir, file)))
-    return {
-      file,
-      tar,
-      pkg: published(
-        JSON.parse(
-          [...entries(tar)].find((e) => e.name === 'package/package.json').body.toString(),
-        ),
-      ),
-    }
-  }
   const manifests = readdirSync(dir)
     .filter((f) => f.endsWith('.tgz') && !f.startsWith('._'))
-    .map(manifest)
+    .map((file) => manifest(dir, file))
   const here = new Set(manifests.map((m) => m.pkg.name))
   for (const { file, tar, pkg } of manifests) {
     // Addons for platforms not packed here: Deno fails an install on any optional dependency it can't find.
@@ -100,7 +99,7 @@ export function serveRegistry(dir, port = 0) {
     const [name, { data }] = Object.entries(attached)[0]
     const file = name.replace('@', '').replace('/', '-')
     writeFileSync(join(dir, file), Buffer.from(data, 'base64'))
-    const { tar, pkg } = manifest(file)
+    const { tar, pkg } = manifest(dir, file)
     packages.set(pkg.name, { file, pkg, tgz: withManifest(tar, pkg) })
   }
   const answer = async (req, res) => {
