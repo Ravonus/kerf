@@ -1,7 +1,7 @@
 # Same dashboard, every stack
 
 One screen: a shell (sidebar, account menu, phone drawer) and a 200-row table (sort, filter, selection with a bulk action,
-paging, column picker, inline details, a live cell). One data set, latest stable versions, plain `vite build`.
+paging, column picker, inline details, a live cell). One data set and plain `vite build`, with dependencies pinned by the lockfile.
 
 | Stack | Table | Overlays | CSS |
 |---|---|---|---|
@@ -21,6 +21,31 @@ stacks are the fair framework test; warp and MUI each bring a design system, so 
 
 `results.json` holds the latest numbers, `../../evals/results/compare-history.jsonl` gets a line per run, and
 `../../evals/results/compare.html` is rewritten from both. A stack is a folder here with a `stack.json`; `chart.html` is the page.
+
+## Measurement and reproduction
+
+Use Node 26 and pnpm. From the repository root, run `pnpm run setup`, verify
+that the compiler binary has the matching source stamp, then run
+`pnpm --filter @weft-js/text run build`. From this directory run `pnpm install`
+and `node measure.mjs`. Record the machine, OS, Chromium version, source revision
+and dirty state, compiler binary and source stamp, Node and pnpm versions, and
+dependency lockfile with the results. History records a commit and package dirty
+state; it does not replace the rest of those pins.
+
+Dashboard size sums Brotli quality 11 compressed JS and CSS assets; gzip level 9
+is also recorded. Load uses five fresh Chromium contexts at 1280 x 800 with CDP
+4x CPU throttling. Each waits for `Apollo 0`, then 300 ms. The result is the
+median of each metric separately: script, style, layout and task duration, heap,
+node count and first contentful paint. Fresh contexts do not make the browser
+process or OS caches cold. These measurements do not establish device performance.
+
+The parity script exercises dashboard interactions and checks their visible
+results. Scale uses 20, 100 and 200 rows; the screen sweep builds 1, 10, 50 and
+200 screens. The long-list and design audits below cover different scenarios.
+Scoped S5 local candidate measurements are not the combined Yuna canonical run
+or proof of runtime speed. See the [keyed benchmark](../js-framework-benchmark/README.md)
+for its pinned upstream workload and validation limits; it is not a submitted
+upstream comparison result.
 
 ## The long list
 
