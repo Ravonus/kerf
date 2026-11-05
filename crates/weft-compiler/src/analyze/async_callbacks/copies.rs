@@ -31,7 +31,10 @@ enum Value {
 
 enum Shape {
     Source(SymbolId),
-    Copy { target: SymbolId, values: HashSet<Value> },
+    Copy {
+        target: SymbolId,
+        values: HashSet<Value>,
+    },
 }
 
 struct Body<'i, 's> {
@@ -63,7 +66,10 @@ impl<'i, 's> Body<'i, 's> {
     fn value(&self, expression: &Expression<'_>) -> Option<Value> {
         let object = match expression.get_inner_expression() {
             Expression::Identifier(id) => {
-                return self.locals.get(&symbol_of(self.index.a.scoping, id)?).copied();
+                return self
+                    .locals
+                    .get(&symbol_of(self.index.a.scoping, id)?)
+                    .copied();
             }
             Expression::StaticMemberExpression(member) if member.property.name == "value" => {
                 &member.object
@@ -147,7 +153,10 @@ impl<'i, 's> Body<'i, 's> {
         }
         if returned
             && let Some(Value::Box(source)) = self.value(expression)
-            && self.locals.values().all(|&value| value == Value::Box(source))
+            && self
+                .locals
+                .values()
+                .all(|&value| value == Value::Box(source))
         {
             return Some(Shape::Source(source));
         }
@@ -247,9 +256,9 @@ pub(super) fn diagnostics(
             let source = *sources.get(&key(span))?;
             if source == target
                 || !shapes.states.contains(&target)
-                || !values.iter().all(|&value| {
-                    value == Value::Parameter || value == Value::Box(source)
-                })
+                || !values
+                    .iter()
+                    .all(|&value| value == Value::Parameter || value == Value::Box(source))
             {
                 return None;
             }
@@ -266,8 +275,10 @@ fn diagnostic(index: &Index<'_>, span: Span, target: SymbolId) -> Diagnostic {
         Severity::Warning,
         (span.start, span.end),
         format!("This `watch` only copies its source value into `{target}.value`."),
-        format!("Replace the mirrored `{target}` state with `derived(sourceGetter)`, using this \
+        format!(
+            "Replace the mirrored `{target}` state with `derived(sourceGetter)`, using this \
                  watch's first argument as the getter. Remove this watch and read the derived box's \
-                 `.value`. Keep state if independent writes are intended."),
+                 `.value`. Keep state if independent writes are intended."
+        ),
     )
 }

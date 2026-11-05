@@ -268,7 +268,11 @@ impl<'a> Visit<'a> for Flow<'_, '_> {
             self.visit_expression(init);
             if let BindingPattern::ObjectPattern(object) = &it.id {
                 for property in &object.properties {
-                    if property.key.static_name().is_some_and(|name| name == "value") {
+                    if property
+                        .key
+                        .static_name()
+                        .is_some_and(|name| name == "value")
+                    {
                         self.watch_read(init);
                     }
                     if self.reference(init, true)

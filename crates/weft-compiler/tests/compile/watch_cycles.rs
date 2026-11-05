@@ -20,7 +20,10 @@ fn w003_is_an_error_with_derived_and_pure_source_advice_without_a_fix() {
     assert_eq!(error.severity, Severity::Error);
     assert!(error.message.contains("n.value") && error.message.contains("own source"));
     assert!(error.help.contains("derived(() =>") && error.help.contains("source pure"));
-    assert!(error.fix.is_none(), "changing a watch can change when it runs");
+    assert!(
+        error.fix.is_none(),
+        "changing a watch can change when it runs"
+    );
 }
 
 #[test]
@@ -209,13 +212,21 @@ fn w003_deferred_callbacks_and_unreachable_accesses_stay_quiet() {
 #[test]
 fn w003_async_sources_only_track_reads_before_suspension() {
     for (read, write, count) in [
-        ("() => n.value", "async () => { await wait(); n.value++ }", 1),
+        (
+            "() => n.value",
+            "async () => { await wait(); n.value++ }",
+            1,
+        ),
         (
             "async () => { const value = n.value; await wait(); return value }",
             "() => n.value++",
             1,
         ),
-        ("async () => { await wait(); return n.value }", "() => n.value++", 0),
+        (
+            "async () => { await wait(); return n.value }",
+            "() => n.value++",
+            0,
+        ),
     ] {
         let source = format!(
             "import {{ state, watch }} from '@weft-js/core'; \

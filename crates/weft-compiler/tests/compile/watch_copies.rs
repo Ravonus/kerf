@@ -1,7 +1,10 @@
 // W004 proves the complete local getter/copy body and leaves effectful watches alone.
 
 fn copy_watch_errors(diagnostics: &[Diagnostic]) -> Vec<&Diagnostic> {
-    diagnostics.iter().filter(|diagnostic| diagnostic.code == "W004").collect()
+    diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "W004")
+        .collect()
 }
 
 fn copy_watch_body(callback: &str) -> String {
@@ -23,8 +26,13 @@ fn w004_warns_with_actionable_derived_advice_and_no_unsafe_fix() {
     assert!(
         warning.help.contains("derived(sourceGetter)") && warning.help.contains("first argument")
     );
-    assert!(warning.help.contains("Remove this watch") && warning.help.contains("independent writes"));
-    assert!(warning.fix.is_none(), "initialization and other writers need review");
+    assert!(
+        warning.help.contains("Remove this watch") && warning.help.contains("independent writes")
+    );
+    assert!(
+        warning.fix.is_none(),
+        "initialization and other writers need review"
+    );
 }
 
 #[test]

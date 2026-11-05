@@ -5,8 +5,14 @@ fn w003_assignment_patterns_read_the_same_box_but_not_an_independent_box() {
     for (body, count) in [
         ("let v; ({ value: v } = n); return v", 1),
         ("let v; ({ value: v } = other); return v", 0),
-        ("const alias = n; let v; ({ value: v } = alias); return v", 1),
-        ("const alias = other; let v; ({ value: v } = alias); return v", 0),
+        (
+            "const alias = n; let v; ({ value: v } = alias); return v",
+            1,
+        ),
+        (
+            "const alias = other; let v; ({ value: v } = alias); return v",
+            0,
+        ),
         ("let value; ({ value } = n); return value", 1),
         ("let value; ({ value } = other); return value", 0),
         ("let v; ({ ['value']: v } = n); return v", 1),
@@ -38,7 +44,10 @@ fn w003_nested_patterns_and_defaults_keep_local_box_identity() {
         ("let v; ({ item: { value: v } = other } = {}); return v", 0),
         ("let v; [{ value: v } = n] = []; return v", 1),
         ("let v; [{ value: v } = other] = []; return v", 0),
-        ("const alias = n; let v; [{ value: v } = alias] = []; return v", 1),
+        (
+            "const alias = n; let v; [{ value: v } = alias] = []; return v",
+            1,
+        ),
     ] {
         let source = watch_body(&format!("{{ {body} }}"), "n.value++");
         let (_, diagnostics) = run(&source);
@@ -55,16 +64,31 @@ fn w003_assignment_getters_follow_rhs_keys_and_target_references_before_defaults
     for (body, count) in [
         ("let v; ({ value: v = await load() } = n); return v", 1),
         ("let value; ({ value = await load() } = n); return value", 1),
-        ("let v; ({ value: { field: v } = await load() } = n); return v", 1),
+        (
+            "let v; ({ value: { field: v } = await load() } = n); return v",
+            1,
+        ),
         ("let v; ({ value: [v] = await load() } = n); return v", 1),
-        ("const target = {}; ({ value: target.field } = n); return 0", 1),
-        ("const target = {}; ({ value: target[await key()] } = n); return 0", 0),
-        ("const target = {}; ({ value: target[await key()] = 0 } = n); return 0", 0),
+        (
+            "const target = {}; ({ value: target.field } = n); return 0",
+            1,
+        ),
+        (
+            "const target = {}; ({ value: target[await key()] } = n); return 0",
+            0,
+        ),
+        (
+            "const target = {}; ({ value: target[await key()] = 0 } = n); return 0",
+            0,
+        ),
         ("let v; ({ [await key()]: v, value: v } = n); return v", 0),
         ("let v; ({ value: { [await key()]: v } } = n); return v", 1),
         ("let v; ({ value: v } = (await load(), n)); return v", 0),
         ("let v; await load(); ({ value: v } = n); return v", 0),
-        ("let v; ({ item: { value: v } = n } = await load()); return v", 0),
+        (
+            "let v; ({ item: { value: v } = n } = await load()); return v",
+            0,
+        ),
         ("let v; [{ value: v } = n] = await load(); return v", 0),
         ("let v; ({ [n.value]: v } = await load()); return v", 0),
         ("let v; ({ [n.value]: v } = {}); await load(); return v", 1),
@@ -116,7 +140,10 @@ fn w012_assignment_target_and_default_order_stays_the_same() {
         ("({ x: n.value.field } = await load()); return 0", 1),
         ("({ x: n.value.field = 0 } = await load()); return 0", 1),
         ("({ x: n.value.field = await load() } = {}); return 0", 0),
-        ("({ x: { y: n.value.field } = await load() } = {}); return 0", 1),
+        (
+            "({ x: { y: n.value.field } = await load() } = {}); return 0",
+            1,
+        ),
         ("({ [await key()]: n.value.field } = {}); return 0", 1),
         ("n.value.field = await load(); return 0", 0),
         ("n.value[await key()] = 0; return 0", 0),

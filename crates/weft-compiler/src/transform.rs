@@ -70,7 +70,10 @@ pub fn apply<'a>(
     if t.needs_memo {
         imports.push(("memo", "_$weftMemo"));
     }
-    for (module, names) in [("@weft-js/core", imports), ("@weft-js/core/internal", internal)] {
+    for (module, names) in [
+        ("@weft-js/core", imports),
+        ("@weft-js/core/internal", internal),
+    ] {
         if !names.is_empty() {
             program.body.insert(0, t.import(module, &names));
         }
