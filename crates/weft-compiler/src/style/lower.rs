@@ -12,7 +12,7 @@ use oxc_span::{GetSpan, SPAN, Span};
 use crate::diag::{Diagnostic, Severity};
 
 use super::values::{accent, did_you_mean, list, literals, not_static, resolves};
-use super::{ARIA, GroupUse, Lower, Meta, PSEUDO, state_attr};
+use super::{ARIA, Axes, GroupUse, Lower, Meta, PSEUDO, state_attr};
 
 impl<'a> Lower<'a, '_> {
     pub(super) fn attr(&self, name: &str, value: JSXAttributeValue<'a>) -> JSXAttributeItem<'a> {
@@ -161,7 +161,7 @@ impl<'a> Lower<'a, '_> {
         &mut self,
         p: &mut ObjectProperty<'a>,
         name: &str,
-        inputs: (&[(String, Vec<String>)], &[String], &[String]),
+        inputs: (&Axes, &[String], &[String]),
         use_: &mut GroupUse,
         out: &mut Vec<JSXAttributeItem<'a>>,
     ) {

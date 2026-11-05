@@ -84,9 +84,11 @@ const ARIA: &[&str] = &[
 ];
 const PSEUDO: &[&str] = &["hover", "focus", "active", "disabled"];
 
+type Axes = Vec<(String, Vec<String>)>;
+
 struct Meta {
     name: String,
-    axes: Vec<(String, Vec<String>)>,
+    axes: Axes,
     inherit: Vec<String>,
     states: Vec<String>,
     parts: Vec<String>,

@@ -195,7 +195,7 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
         source,
         options,
         &shapes_code,
-        footer,
+        footer.as_deref(),
         diagnostics,
         facts,
     )
@@ -287,7 +287,7 @@ fn finish_output(
     source: &str,
     options: &Options,
     shapes_code: &str,
-    footer: Option<String>,
+    footer: Option<&str>,
     mut diagnostics: Vec<Diagnostic>,
     facts: Facts,
 ) -> Output {
@@ -329,7 +329,7 @@ fn finish_output(
     };
     match emit::emit(&printed, &o) {
         Ok(out) => Output {
-            code: Some(out.code + footer.as_deref().unwrap_or("")),
+            code: Some(out.code + footer.unwrap_or("")),
             map: out.map,
             diagnostics,
             facts,
