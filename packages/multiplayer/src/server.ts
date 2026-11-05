@@ -145,29 +145,11 @@ export function multiplayer<P = unknown>(options: MultiplayerOptions<P>) {
     at: Date.now(),
   })
   const volatile = { volatile: true }
-  const relaySchema = schema((v) => {
-    if (!v || typeof v.kind !== 'string' || !Object.hasOwn(relay, v.kind) || !within(v.data, RELAY))
-      return no('that relay kind is not declared')
-    return { kind: v.kind, data: v.data }
-  })
+  const relaySchema = relayMessages(relay)
+  const { client, server } = messages(state, relaySchema)
   return {
-    client: {
-      'mp.hello': stateful(state),
-      'mp.state': stateful(state),
-      'mp.answer': answerSchema,
-      'mp.cursor': cursorSchema,
-      'mp.relay': relaySchema,
-      'mp.signal': signalSchema,
-    },
-    server: {
-      'mp.you': anything,
-      'mp.peer': anything,
-      'mp.gone': anything,
-      'mp.ask': anything,
-      'mp.cursor': anything,
-      'mp.relay': anything,
-      'mp.signal': anything,
-    },
+    client,
+    server,
     on: {
       /** A connection arrives, or comes back: it learns its id and everyone hears it. */
       'mp.hello': async ({ msg, id, ctx, params, room }: Arrived<{ state: unknown }>) => {
@@ -217,6 +199,39 @@ export function multiplayer<P = unknown>(options: MultiplayerOptions<P>) {
     left: async ({ id, room }: Pick<Arrived<unknown>, 'id' | 'room'>) => {
       people.delete(id)
       await room.publish('mp.gone', { id }, volatile)
+    },
+  }
+}
+
+function relayMessages(relay: Record<string, StandardSchemaV1>) {
+  return schema((v) => {
+    if (!v || typeof v.kind !== 'string' || !Object.hasOwn(relay, v.kind) || !within(v.data, RELAY))
+      return no('that relay kind is not declared')
+    return { kind: v.kind, data: v.data }
+  })
+}
+
+function messages(
+  state: number,
+  relaySchema: StandardSchemaV1<{ kind: string; data: unknown }, { kind: string; data: unknown }>,
+) {
+  return {
+    client: {
+      'mp.hello': stateful(state),
+      'mp.state': stateful(state),
+      'mp.answer': answerSchema,
+      'mp.cursor': cursorSchema,
+      'mp.relay': relaySchema,
+      'mp.signal': signalSchema,
+    },
+    server: {
+      'mp.you': anything,
+      'mp.peer': anything,
+      'mp.gone': anything,
+      'mp.ask': anything,
+      'mp.cursor': anything,
+      'mp.relay': anything,
+      'mp.signal': anything,
     },
   }
 }

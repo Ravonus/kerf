@@ -19,6 +19,7 @@ import {
   type StandardSchema,
 } from './index'
 import { keys } from './keys'
+import { valid } from './browser/validate'
 
 type Handler = (e: Event) => void
 type Handlers = Set<Handler> & { h?: Handler }
@@ -321,11 +322,6 @@ interface TabLine {
   fns: Set<(data: unknown) => void>
 }
 const lines = new Map<string, TabLine>()
-
-const valid = <T>(schema: StandardSchema<T>, v: unknown): { value: T } | undefined => {
-  const r = schema['~standard'].validate(v)
-  return r instanceof Promise || r.issues ? undefined : { value: r.value }
-}
 
 /**
  * `BroadcastChannel`, typed and validated (research 32 §1): one per name per document, removed with the owner. A

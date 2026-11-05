@@ -153,7 +153,57 @@ export function template(options = {}) {
   for (const [dep, wanted] of Object.entries(overlay?.dependencies ?? {}))
     deps[dep] = dep.startsWith('@weft-js/') ? version : wanted
 
-  const files = {
+  const files = baseFiles({
+    name,
+    version,
+    db,
+    layer,
+    ui,
+    config,
+    label,
+    runtime,
+    overlay,
+    stack,
+    deps,
+    auth,
+  })
+  Object.assign(files, pluginLock({ ui, layer }))
+  if (ui !== 'warp') files['src/app.css'] = css(ui)
+  if (ui === 'tailwind') files['vite.config.ts'] = TAILWIND_VITE
+  if (db !== 'none') {
+    Object.assign(files, stackFiles({ db, auth: auth === true, name, secret, layer }))
+    if (!overlay) files['src/routes/todos/index.tsx'] = todosPage(ui)
+    if (auth === true) files['src/routes/login.tsx'] = loginPage(ui)
+    if (auth === 'custom')
+      Object.assign(files, {
+        'src/auth.server.ts': customAuth,
+        'src/context.server.ts': context(true),
+      })
+  }
+  if (overlay) {
+    for (const path of Object.keys(files))
+      if (/^src\/(routes\/(about\.tsx|todos\/)|server\/todos\.ts)/.test(path)) delete files[path]
+    if (auth) files['src/db/auth.ts'] = sharedAuthTables()
+    Object.assign(files, overlay.files)
+  }
+  return files
+}
+
+function baseFiles({
+  name,
+  version,
+  db,
+  layer,
+  ui,
+  config,
+  label,
+  runtime,
+  overlay,
+  stack,
+  deps,
+  auth,
+}) {
+  return {
     'package.json': json({
       name,
       private: true,
@@ -202,26 +252,6 @@ export function template(options = {}) {
     'AGENTS.md': agentsFile({ ui, db, layer, shipped: overlay?.pages, auth }),
     'src/routes/about.tsx': `export const meta = { title: 'About', description: 'What this app is.' }\n\nexport default function About() {\n  return <h1>About</h1>\n}\n`,
   }
-  Object.assign(files, pluginLock({ ui, layer }))
-  if (ui !== 'warp') files['src/app.css'] = css(ui)
-  if (ui === 'tailwind') files['vite.config.ts'] = TAILWIND_VITE
-  if (db !== 'none') {
-    Object.assign(files, stackFiles({ db, auth: auth === true, name, secret, layer }))
-    if (!overlay) files['src/routes/todos/index.tsx'] = todosPage(ui)
-    if (auth === true) files['src/routes/login.tsx'] = loginPage(ui)
-    if (auth === 'custom')
-      Object.assign(files, {
-        'src/auth.server.ts': customAuth,
-        'src/context.server.ts': context(true),
-      })
-  }
-  if (overlay) {
-    for (const path of Object.keys(files))
-      if (/^src\/(routes\/(about\.tsx|todos\/)|server\/todos\.ts)/.test(path)) delete files[path]
-    if (auth) files['src/db/auth.ts'] = sharedAuthTables()
-    Object.assign(files, overlay.files)
-  }
-  return files
 }
 
 /** Write the app into `dir` (which must be missing or empty). */
