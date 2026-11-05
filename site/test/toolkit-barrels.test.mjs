@@ -220,3 +220,20 @@ await test('namespace object forwarding rejects a forwarding cycle', () =>
     writeFileSync(join(dir, 'examples/cycle.tsx'), "export { Alpha } from './index'\n")
     assert.throws(() => readExamples(root), /cycle/i)
   }))
+
+await test('a local helper may also reexport other names', () =>
+  fixture((dir) => {
+    writeFileSync(join(dir, 'root.tsx'), "export { Alpha } from './examples/alpha'\n")
+    writeFileSync(
+      join(dir, 'examples/alpha.tsx'),
+      "import { Text } from '@fixture/ui'\nexport { Beta } from './beta'\nexport function Alpha() { return <Text>alpha</Text> }\n",
+    )
+    const text = showExample(readExamples(join(dir, 'root.tsx')).get('Alpha'), 'Alpha')
+    assert.match(text, /function Alpha/)
+    assert.doesNotMatch(text, /Beta|from ['\"]\./)
+    assert.equal(
+      ts.createSourceFile('copy.tsx', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+        .parseDiagnostics.length,
+      0,
+    )
+  }))

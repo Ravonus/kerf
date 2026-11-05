@@ -140,14 +140,21 @@ function resolveLeaf(path, name, ts) {
     if (seen.has(path)) throw new Error(`Forwarding cycle for ${name} at ${path}`)
     seen.add(path)
     const sf = source(path, ts)
+    const found = sf.statements.some(
+      (n) =>
+        ts.canHaveModifiers(n) &&
+        ts.getModifiers(n)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) &&
+        declarations(n, ts).includes(name),
+    )
+    const namespace = sf.statements.some(
+      (n) =>
+        ts.isImportDeclaration(n) &&
+        n.importClause?.namedBindings &&
+        ts.isNamespaceImport(n.importClause.namedBindings),
+    )
+    if (found && !namespace) return path
     const forwards = forwarding(sf, path, ts)
     if (!forwards) {
-      const found = sf.statements.some(
-        (n) =>
-          ts.canHaveModifiers(n) &&
-          ts.getModifiers(n)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) &&
-          declarations(n, ts).includes(name),
-      )
       if (!found) throw new Error(`Missing ${name} from ${path}`)
       return path
     }
