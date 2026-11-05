@@ -1,5 +1,5 @@
 import { XIcon } from '@weft-js/warp-icons'
-import type { State } from '@weft-js/core'
+import { untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Segmented } from '../Choice'
 import type { bindable } from '../bind'
@@ -47,6 +47,7 @@ export function KeyValueRows({
   add,
   remove,
 }: Rows) {
+  const rows = untrack(() => held)
   return (
     <div ref={setBody}>
       <table>
@@ -65,8 +66,8 @@ export function KeyValueRows({
               <td>
                 <input
                   aria-label={`${keyLabel}, row ${at + 1}`}
-                  value={held.value[at]?.key ?? ''}
-                  data-duplicate={held.value[at] && dup(held.value, at) ? '' : undefined}
+                  value={rows.value[at]?.key ?? ''}
+                  data-duplicate={rows.value[at] && dup(rows.value, at) ? '' : undefined}
                   onInput={(e: Event) =>
                     edit(at, 'key', (e.currentTarget as HTMLInputElement).value)
                   }
@@ -75,7 +76,7 @@ export function KeyValueRows({
               <td>
                 <input
                   aria-label={`${valueLabel}, row ${at + 1}`}
-                  value={held.value[at]?.value ?? ''}
+                  value={rows.value[at]?.value ?? ''}
                   onInput={(e: Event) =>
                     edit(at, 'value', (e.currentTarget as HTMLInputElement).value)
                   }
