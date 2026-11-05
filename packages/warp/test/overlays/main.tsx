@@ -1,6 +1,6 @@
 // The page overlays.browser.test.mjs drives: overlays near the viewport's edges, and inside a Modal.
 import { render } from '@weft-js/core/dom'
-import { state } from '@weft-js/core'
+import { state, type State } from '@weft-js/core'
 import { Button, DateField, Drawer, Menu, Modal, Slider, Toaster, toast } from '../../src/index'
 import { ComboField } from '../../src/Combobox'
 
@@ -9,7 +9,7 @@ const rows = (n: number, name = 'Item') =>
   Array.from({ length: n }, (_, i) => ({ label: `${name} ${i}` }))
 const long = [{ label: 'A long enough menu item' }]
 
-function App() {
+function overlayState() {
   const modal = state(false),
     modal2 = state(false),
     drawer = state(false),
@@ -31,28 +31,39 @@ function App() {
     toast.show({ title: 'Saved', action: { label: 'Undo', onClick: () => api.undone++ }, ...o })
   api.raise = raise
   ;(window as unknown as { api: typeof api }).api = api
+  return { modal, modal2, drawer, sheet, text, v, submitted }
+}
+
+function modalFixture(modal: State<boolean>, modal2: State<boolean>, text: State<string>) {
+  return (
+    <Modal open={modal} title="One">
+      <Button onClick={() => (modal2.value = true)}>Open second</Button>
+      <Modal open={modal2} title="Two">
+        <p>nested</p>
+      </Modal>
+      <ComboField
+        label="Fruit"
+        text={() => text.value}
+        onText={(t) => (text.value = t)}
+        minChars={1}
+        find={(q) =>
+          Promise.resolve(fruits.filter((f) => f.toLowerCase().startsWith(q.toLowerCase())))
+        }
+        row={(f: string) => ({ main: f })}
+        onPick={(f: string) => (text.value = f)}
+      />
+    </Modal>
+  )
+}
+
+function App() {
+  const { modal, modal2, drawer, sheet, text, v, submitted } = overlayState()
   return (
     <div style="min-block-size:3000px;padding:20px">
       <Toaster />
       <Button onClick={() => (modal.value = true)}>Open modal</Button>
       <Button onClick={() => (drawer.value = true)}>Open drawer</Button>
-      <Modal open={modal} title="One">
-        <Button onClick={() => (modal2.value = true)}>Open second</Button>
-        <Modal open={modal2} title="Two">
-          <p>nested</p>
-        </Modal>
-        <ComboField
-          label="Fruit"
-          text={() => text.value}
-          onText={(t) => (text.value = t)}
-          minChars={1}
-          find={(q) =>
-            Promise.resolve(fruits.filter((f) => f.toLowerCase().startsWith(q.toLowerCase())))
-          }
-          row={(f: string) => ({ main: f })}
-          onPick={(f: string) => (text.value = f)}
-        />
-      </Modal>
+      {modalFixture(modal, modal2, text)}
       <Drawer open={drawer} title="Sheet" side="bottom">
         <p>hi</p>
       </Drawer>
