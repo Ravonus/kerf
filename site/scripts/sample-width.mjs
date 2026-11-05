@@ -1,8 +1,9 @@
-// Count wide source samples without importing the content generator or compiler.
+// Check displayed sample widths and patterns without importing the content generator.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { SHOWN } from './content/displayed.mjs'
+import { scanPatternSource } from './sample-patterns.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -20,13 +21,14 @@ const unquote = (text, limit = Infinity) => {
 }
 const columns = (line) => [...line].reduce((n, c) => (c === '\t' ? n + 4 - (n % 4) : n + 1), 0)
 
-/** Return the line numbers and widths of code inside Markdown fences that exceed the limit. */
-export function scanMarkdown(text, limit = 70) {
-  const violations = []
+/** Extract rendered lines from fenced code, preserving source line numbers. */
+export function markdownFences(text) {
+  const fences = []
   let fence = null
   for (const [index, raw] of text.split(/\r?\n/).entries()) {
     let quoted = unquote(raw, fence?.depth)
     if (fence && quoted.depth < fence.depth) {
+      fences.push(fence)
       fence = null
       quoted = unquote(raw)
     }
@@ -39,20 +41,33 @@ export function scanMarkdown(text, limit = 70) {
           length: match[2].length,
           indent: match[1].length,
           depth: quoted.depth,
+          language: match[3].trim().split(/\s+/)[0],
+          lines: [],
         }
       }
     } else {
       const closing = /^\s*(`+|~+)\s*$/.exec(line)
       if (closing && closing[1][0] === fence.char && closing[1].length >= fence.length) {
+        fences.push(fence)
         fence = null
         continue
       }
       const content = line.replace(new RegExp(`^ {0,${fence.indent}}`), '')
-      const width = columns(content)
-      if (width > limit) violations.push({ line: index + 1, width, limit })
+      fence.lines.push({ line: index + 1, content })
     }
   }
-  return violations
+  if (fence) fences.push(fence)
+  return fences
+}
+
+/** Return the line numbers and widths of code inside Markdown fences that exceed the limit. */
+export function scanMarkdown(text, limit = 70) {
+  return markdownFences(text).flatMap((fence) =>
+    fence.lines.flatMap(({ line, content }) => {
+      const width = columns(content)
+      return width > limit ? [{ line, width, limit }] : []
+    }),
+  )
 }
 
 /** Return the line numbers and widths of source lines that exceed the split-pane limit. */
@@ -80,7 +95,7 @@ function walk(dir, accept) {
 }
 
 /** Scan canonical Markdown and split-pane sources under a repository root. */
-export function scanSamples(repo = root) {
+export function sampleFiles(repo = root) {
   const markdown = [
     join(repo, 'README.md'),
     ...walk(join(repo, 'docs'), (n) => n.endsWith('.md')),
@@ -97,7 +112,12 @@ export function scanSamples(repo = root) {
     .filter(existsSync)
     .map((path) => [path, scanMarkdown])
     .concat(sources.map((path) => [path, scanSource]))
-  return files.flatMap(([path, scan]) =>
+  return files
+}
+
+/** Scan canonical Markdown and split-pane source widths. */
+export function scanSamples(repo = root) {
+  return sampleFiles(repo).flatMap(([path, scan]) =>
     scan(readFileSync(path, 'utf8')).map((v) => ({ file: relative(repo, path), ...v })),
   )
 }
@@ -105,11 +125,27 @@ export function scanSamples(repo = root) {
 /** Fail when any canonical code sample exceeds its width. */
 export function reportSampleWidths(repo = root) {
   const violations = scanSamples(repo)
-  if (violations.length) {
+  const patterns = sampleFiles(repo).flatMap(([path, scan]) => {
+    const text = readFileSync(path, 'utf8')
+    const file = relative(repo, path)
+    if (scan !== scanMarkdown) return scanPatternSource(text, file)
+    return markdownFences(text).flatMap((fence) => {
+      if (!/^(?:[jt]sx?|mjs)$/.test(fence.language)) return []
+      const lines = fence.lines
+      if (!lines.length) return []
+      return scanPatternSource(
+        lines.map((line) => line.content).join('\n'),
+        file,
+        lines[0].line - 1,
+      )
+    })
+  })
+  if (violations.length || patterns.length) {
     const details = violations.map(
       (v) => `${v.file}:${v.line}: ${v.width} columns (limit ${v.limit})`,
     )
-    throw new Error(`[sample-width] ${violations.length} violations:\n${details.join('\n')}`)
+    details.push(...patterns.map((v) => `${v.file}:${v.line}: ${v.rule}`))
+    throw new Error(`[sample-width] ${details.length} violations:\n${details.join('\n')}`)
   }
   console.log('[sample-width] 0 violations')
   return violations
