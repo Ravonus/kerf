@@ -63,6 +63,16 @@ describe('keyed reads: box.get(key)', () => {
 })
 
 describe('defineState', () => {
+  registerStateSetupTests()
+  registerStateHistoryTests()
+})
+
+describe('persist', () => {
+  registerStorageRoundTripTests()
+  registerStorageErrorTests()
+})
+
+function registerStateSetupTests() {
   test('setup runs once per app, lazily, and boxes get dev names', () => {
     let runs = 0
     const s = defineState('names', () => {
@@ -136,7 +146,9 @@ describe('defineState', () => {
     expect(b.$history.canUndo.value).toBe(false)
     expect(b.$history.canRedo.value).toBe(true)
   })
+}
 
+function registerStateHistoryTests() {
   test('writes outside actions group per microtask; the history limit holds', async () => {
     const form = defineState('form', () => ({ a: state(0), b: state(0) }), {
       history: { limit: 2 },
@@ -199,9 +211,9 @@ describe('defineState', () => {
     expect(err.mock.calls[0]![0]).toMatch(/^S004/)
     err.mockRestore()
   })
-})
+}
 
-describe('persist', () => {
+function registerStorageRoundTripTests() {
   test('round-trips through storage, coalesced to one write per microtask', async () => {
     const storage = memoryStorage()
     const set = vi.spyOn(storage, 'setItem')
@@ -265,7 +277,9 @@ describe('persist', () => {
     expect(err.mock.calls[0]![0]).toMatch(/^S003/)
     err.mockRestore()
   })
+}
 
+function registerStorageErrorTests() {
   test('S003: a stored version with no migration path', () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
     const storage = memoryStorage()
@@ -323,4 +337,4 @@ describe('persist', () => {
     await tick()
     expect(JSON.parse(storage.getItem('weft:app:resettable.n')!).data).toBe(1)
   })
-})
+}
