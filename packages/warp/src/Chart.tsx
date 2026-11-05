@@ -125,39 +125,7 @@ function Ready<C>(p: {
   )
   return (
     <>
-      {p.form.ramp !== undefined ? (
-        <ul data-scope="legend" aria-label="Scale">
-          <li style="display:flex;align-items:center;gap:6px;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle);padding-inline:6px">
-            Fewer{' '}
-            {[0, 1, 2, 3, 4, 5].slice(p.form.ramp).map((b) => (
-              <i
-                key={b}
-                style={`display:inline-block;inline-size:11px;block-size:11px;border-radius:2px;background:var(--warp-color-data-seq-${b})`}
-              ></i>
-            ))}{' '}
-            More
-          </li>
-        </ul>
-      ) : (
-        legend.value.length > 0 && (
-          <ul data-scope="legend" aria-label="Series">
-            {legend.value.map((s, i) => (
-              <li key={s.name}>
-                <button type="button" aria-pressed="true" data-si={i} style={`--_dc:${s.color}`}>
-                  <i data-shape={p.form.swatch ?? 'box'}></i>
-                  {s.name}
-                  {s.value !== undefined && (
-                    <>
-                      {' '}
-                      <b>{s.value}</b>
-                    </>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )
-      )}
+      {chartLegend(() => p.form, legend)}
       <div data-part="plot">
         <div data-scope="tooltip" data-part="chart-tip" aria-hidden="true"></div>
         <svg
@@ -185,6 +153,49 @@ function Ready<C>(p: {
       <p data-part="summary" id={`${id()}-s`}>
         {summary.value}
       </p>
+    </>
+  )
+}
+
+function chartLegend<C>(
+  form: () => Form<C>,
+  legend: { value: NonNullable<ReturnType<NonNullable<Form<C>['legend']>>> },
+) {
+  return (
+    <>
+      {form().ramp !== undefined ? (
+        <ul data-scope="legend" aria-label="Scale">
+          <li style="display:flex;align-items:center;gap:6px;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle);padding-inline:6px">
+            Fewer{' '}
+            {[0, 1, 2, 3, 4, 5].slice(form().ramp).map((b) => (
+              <i
+                key={b}
+                style={`display:inline-block;inline-size:11px;block-size:11px;border-radius:2px;background:var(--warp-color-data-seq-${b})`}
+              ></i>
+            ))}{' '}
+            More
+          </li>
+        </ul>
+      ) : (
+        legend.value.length > 0 && (
+          <ul data-scope="legend" aria-label="Series">
+            {legend.value.map((s, i) => (
+              <li key={s.name}>
+                <button type="button" aria-pressed="true" data-si={i} style={`--_dc:${s.color}`}>
+                  <i data-shape={form().swatch ?? 'box'}></i>
+                  {s.name}
+                  {s.value !== undefined && (
+                    <>
+                      {' '}
+                      <b>{s.value}</b>
+                    </>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )
+      )}
     </>
   )
 }

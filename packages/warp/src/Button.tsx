@@ -71,12 +71,7 @@ export function Button({
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
   // a loading or aria-disabled button swallows presses (components.html guard())
-  const press = (e: MouseEvent) => {
-    const el = e.currentTarget as HTMLElement
-    if (el.hasAttribute('data-loading') || el.getAttribute('aria-disabled') === 'true')
-      return e.preventDefault()
-    onClick?.(e)
-  }
+  const press = (e: MouseEvent) => pressButton(e, onClick)
   const content = () => (
     <>
       {glyph.value && <Icon name={glyph.value} />}
@@ -113,33 +108,7 @@ export function Button({
       }}
     >
       {emphasis === 'frame' ? (
-        <>
-          {fill && <span data-part="sweep-fill" aria-hidden="true"></span>}
-          <span data-part="frame-corners" aria-hidden="true">
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-          </span>
-          <span data-part="sweep-corners" aria-hidden="true">
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-          </span>
-          <span data-part="sweep-outline" aria-hidden="true">
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-          </span>
-          <span data-part="sweep-label">{content()}</span>
-          <span data-part="sweep-content" aria-hidden="true">
-            {content()}
-          </span>
-        </>
+        frameContent(() => fill, content)
       ) : canLoad.value ? (
         <span data-part="label">{content()}</span>
       ) : (
@@ -151,4 +120,43 @@ export function Button({
       )}
     </button>
   )
+}
+
+function frameContent(fill: () => boolean | undefined, content: () => unknown) {
+  return (
+    <>
+      {fill() && <span data-part="sweep-fill" aria-hidden="true"></span>}
+      <span data-part="frame-corners" aria-hidden="true">
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+      <span data-part="sweep-corners" aria-hidden="true">
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+      <span data-part="sweep-outline" aria-hidden="true">
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+      <span data-part="sweep-label">{content()}</span>
+      <span data-part="sweep-content" aria-hidden="true">
+        {content()}
+      </span>
+    </>
+  )
+}
+
+function pressButton(e: MouseEvent, onClick: ButtonProps['onClick']) {
+  const el = e.currentTarget as HTMLElement
+  if (el.hasAttribute('data-loading') || el.getAttribute('aria-disabled') === 'true')
+    return e.preventDefault()
+  onClick?.(e)
 }
