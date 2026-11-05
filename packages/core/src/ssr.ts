@@ -14,8 +14,13 @@ import { createRoot, memo, rt, type SsrData } from './index'
 import { keys, nextKey, under } from './keys'
 import { createApp, dehydrate, useApp, type AppOptions } from './scope'
 import { withHead, type HeadOptions } from './head'
-import { attrName, cssName, cssValue, WORDS } from './dom'
+import { attr, escape, resolveSelects } from './ssr/attrs'
+import { streamRender } from './ssr/stream'
 import { component } from './dom-next'
+
+export { SWAP } from './ssr/stream'
+
+export { attr, escape, ref, spread, spreads, merged, inner } from './ssr/attrs'
 
 export { memo }
 export { For, mergeProps } from './dom'
@@ -118,130 +123,12 @@ export interface Stream {
   hold(ms: number): Promise<void>
 }
 
-/**
- * The swap: the template before this script (or `t`) replaces the nodes between its key's markers. No key: drop every
- * marker. A Boundary the client already runs is in `$wh` with what to do instead: it gets the template, and claims its
- * content from that. `$wh` is 0 once the stream is over. An island that wakes on sight and starts with this fallback was
- * being watched by it: gone, it can't be seen, so the content wakes it.
- */
-export const SWAP = `$wb=function(k,t){var d=document,h=self.$wh,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k&&h&&h[k]){n=h[k];delete h[k];t=t||d.currentScript.previousElementSibling;t.remove();return n(t)}if(!k){self.$wh=0;for(n in h)h[n]()}if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();n=a.previousSibling;n=n&&n.data=='['?n.previousSibling:n;b.replaceWith(t.content);a.remove();t.remove();if(n&&/^wi:.*"v"]$/.test(n.data)&&self.__wq&&(n=n.nextElementSibling))__wq.w(n)}`
-
-/**
- * Render with streaming: `shell` now, then a chunk per Boundary whose resources resolve, re-rendering after each
- * settles (cached values, in-flight fetches reused, so nothing is fetched twice). Boundaries that are still pending
- * after `timeout` ms keep their fallbacks, and the client fetches them after hydrating.
- */
+/** Render with streaming, sending the shell before each resolved Boundary. */
 export function renderToStream(
   code: () => unknown,
-  options: RenderOptions & {
-    timeout?: number
-    passes?: number
-    /** Script run just before each chunk's swaps, in the same tag. */ landing?: () => string
-  } = {},
+  options: RenderOptions & { timeout?: number; passes?: number; landing?: () => string } = {},
 ): Stream {
-  const cache: SsrData['r'] = {}
-  const flight = new Map<string, Promise<unknown>>()
-  const html = new Map<string, string>()
-  let wait: Promise<unknown>[] = []
-  let top: Promise<unknown>[] = []
-  let last: SsrData | null = null
-  let got = 0
-  const run = () => {
-    html.clear()
-    wait = []
-    top = []
-    const out = pass(code, options, cache, wait, flight, html, top)
-    last = out.data
-    got = rt.got!
-    return out.html
-  }
-  const pending = () => Object.keys(last?.b ?? {}).filter((k) => last!.b[k] === 'p')
-  async function* chunks() {
-    const deadline = Date.now() + (options.timeout ?? 10_000)
-    const open = new Set(pending())
-    let defined = false
-    const way = headway(got)
-    for (let n = 1; open.size && wait.length && n < (options.passes ?? 50); n++) {
-      const left = deadline - Date.now()
-      if (left <= 0) break
-      let timer: ReturnType<typeof setTimeout> | undefined
-      const late = await Promise.race([
-        // Past a pass that got nowhere: what's left has to land too, so a runaway read isn't why a slow one is given up on.
-        (way.idle ? Promise.all(wait) : Promise.race(wait)).then(() => false),
-        new Promise<boolean>((ok) => {
-          timer = setTimeout(ok, left, true)
-        }),
-      ])
-      clearTimeout(timer)
-      if (late) break
-      await new Promise((ok) => {
-        setTimeout(ok, 0)
-      }) // fetches that settle together go out together
-      run()
-      const going = way.pass(got)
-      let out = ''
-      let first = true
-      for (const k of Array.from(open)) {
-        const content = html.get(k)
-        if (content === undefined) continue
-        open.delete(k)
-        const id = encodeURIComponent(k)
-        out += `<template>${content}</template><script>${defined ? '' : SWAP + ';'}${first ? (options.landing?.() ?? '') : ''}$wb(${JSON.stringify(id)})</script>`
-        defined = true
-        first = false
-      }
-      for (const k of pending()) open.add(k) // nested Boundaries inside content that just arrived
-      if (out) yield out
-      if (!going) {
-        options.stalled?.()
-        break
-      }
-    }
-    if (open.size)
-      yield `<script>${defined ? '' : SWAP + ';'}${options.landing?.() ?? ''}$wb()</script>` // what's left keeps its fallback
-  }
-  const stream: Stream = {
-    shell: run(),
-    chunks: chunks(),
-    data: () =>
-      last && (Object.keys(last.r).length || Object.keys(last.b).length || last.s) ? last : null,
-    async settle() {
-      const deadline = Date.now() + (options.timeout ?? 10_000)
-      const way = headway(got)
-      for (let n = 1; top.length && n < (options.passes ?? 50); n++) {
-        let timer: ReturnType<typeof setTimeout> | undefined
-        const late = await Promise.race([
-          Promise.all(top).then(() => false),
-          new Promise<boolean>((ok) => {
-            timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true)
-          }),
-        ])
-        clearTimeout(timer)
-        if (late) return
-        stream.shell = run()
-        if (!way.pass(got)) return options.stalled?.()
-      }
-    },
-    async hold(ms) {
-      if (ms <= 0) return
-      const deadline = Date.now() + ms
-      const way = headway(got)
-      for (let n = 1; wait.length && pending().length && n < (options.passes ?? 50); n++) {
-        let timer: ReturnType<typeof setTimeout> | undefined
-        const late = await Promise.race([
-          Promise.all(wait).then(() => false),
-          new Promise<boolean>((ok) => {
-            timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true)
-          }),
-        ])
-        clearTimeout(timer)
-        if (late) return
-        stream.shell = run()
-        if (!way.pass(got)) return
-      }
-    },
-  }
-  return stream
+  return streamRender(code, options, pass, headway)
 }
 
 function pass(
@@ -504,192 +391,8 @@ function append(list: unknown[], out: { html: string; lastText: boolean }) {
   }
 }
 
-// ---- escaping -------------------------------------------------------------------------------------------------
-
-const CONTENT = /[&<]/g
-const ATTR = /[&"<]/g
-const ENTITY: Record<string, string> = { '&': '&amp;', '<': '&lt;', '"': '&quot;' }
-
-/** Escape text (`&`, `<`) or an attribute value (`&`, `"`, `<`). */
-export function escape(s: string, quoted?: boolean): string {
-  const re = quoted ? ATTR : CONTENT
-  re.lastIndex = 0
-  return re.test(s) ? s.replace(re, (c) => ENTITY[c]!) : s
-}
-
-// ---- attributes -----------------------------------------------------------------------------------------------
-
-/**
- * ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. `WORDS`
- * attributes write booleans as the words (`aria-pressed="false"`), as @weft-js/core/dom does.
- */
-export function attr(name: string, value: unknown): string {
-  name = attribute(name)
-  if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
-  if (name === 'class') value = classes(value)
-  else if (name === 'style') value = styles(value)
-  if (value == null || value === false || (value === '' && (name === 'class' || name === 'style')))
-    return ''
-  if (value === true) return ` ${name}`
-  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
-  return ` ${name}="${escape(String(value), true)}"`
-}
-
-const NAMES_MAX = 2048
-const names = new Map<string, string>()
-
-/** `attrName`, remembered: a server sees the same few names on every request, and its regexes run on each. */
-function attribute(k: string) {
-  let name = names.get(k)
-  if (name === undefined) {
-    if (names.size >= NAMES_MAX) names.clear()
-    names.set(k, (name = attrName(k)))
-  }
-  return name
-}
-
-function classes(v: unknown): string {
-  if (v == null || v === false) return ''
-  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
-  if (typeof v !== 'object') return String(v)
-  return Object.keys(v)
-    .filter((k) => (v as Record<string, unknown>)[k])
-    .join(' ')
-}
-
-function styles(v: unknown): string {
-  if (v == null || typeof v !== 'object') return (v ?? '') as string
-  let out = ''
-  for (const k of Object.keys(v)) {
-    const name = cssName(k)
-    const value = cssValue(name, (v as Record<string, unknown>)[k])
-    if (value != null) out += `${out ? ';' : ''}${name}:${value as string}`
-  }
-  return out
-}
-
-/** `ref` beside a spread compiles the same for both targets; there is no element to hand over on the server. */
-export function ref(): void {}
-
 /** A `<select>`'s value: the render then marks the matching `<option selected>`. */
 export function select(value: unknown): string {
   selects = true
   return attr('value', value)
-}
-
-/** A spread's key that isn't an attribute: handlers, refs, children and what sets the content. */
-const skipped = (k: string) =>
-  k === 'children' ||
-  k === 'ref' ||
-  k === 'key' ||
-  k === 'innerHTML' ||
-  k === 'textContent' ||
-  k === 'dangerouslySetInnerHTML' ||
-  (k[0] === 'o' && /^on[A-Z]/.test(k))
-
-/** `<div {...props}>`: the merged props' attributes (handlers, refs and children aren't attributes). */
-export function spread(props: Record<string, unknown>): string {
-  let out = ''
-  for (const k of Reflect.ownKeys(props) as string[]) {
-    if (skipped(k)) continue
-    out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, props[k])
-  }
-  return out
-}
-
-/**
- * Each key of `sources` merged (`mergeProps`: a later source wins a key, which keeps its first place) with the source it
- * comes from. A source is an object or a getter for one. They're few, so asking them beats building a map.
- */
-function merge(sources: unknown[], each: (k: string, o: Record<string, unknown>) => void) {
-  const all = sources.map(
-    (s) => Object(typeof s === 'function' ? s() : s) as Record<string, unknown>,
-  )
-  for (let i = 0; i < all.length; i++) {
-    const own = all[i]!
-    for (const k of Reflect.ownKeys(own) as string[]) {
-      let seen = false
-      for (let j = 0; j < i && !seen; j++) seen = Object.hasOwn(all[j]!, k)
-      if (seen) continue
-      let o = own
-      for (let j = all.length - 1; j > i; j--)
-        if (Object.hasOwn(all[j]!, k)) {
-          o = all[j]!
-          break
-        }
-      each(k, o)
-    }
-  }
-}
-
-/**
- * `<div a={x} {...rest}>` with JSX children: `spread(mergeProps(...sources))` without the view, since the server reads
- * every key once.
- */
-export function spreads(...sources: unknown[]): string {
-  if (sources.length === 1)
-    return spread(Object(typeof sources[0] === 'function' ? sources[0]() : sources[0]))
-  let out = ''
-  merge(sources, (k, o) => {
-    if (!skipped(k))
-      out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, o[k])
-  })
-  return out
-}
-
-/**
- * `mergeProps(...sources)` for a spread element without JSX children, as a plain object: its attributes and what goes
- * inside are each read once, right away, so a view's traps would only cost. `children` stays a getter, read in its place.
- */
-export function merged(...sources: unknown[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  merge(sources, (k, o) => {
-    if (k === 'children')
-      Object.defineProperty(out, k, { get: () => o[k], enumerable: true, configurable: true })
-    else out[k] = o[k]
-  })
-  return out
-}
-
-/** What a spread element without JSX children holds: content its props set, or `children`. */
-export function inner(props: Record<string, unknown>, tag: string): unknown {
-  const raw =
-    (props.dangerouslySetInnerHTML as { __html?: unknown } | null | undefined)?.__html ??
-    props.innerHTML
-  // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
-  if (raw != null) return { t: String(raw) }
-  return (
-    props.textContent ??
-    (tag === 'textarea' ? (props.value ?? props.defaultValue) : undefined) ??
-    props.children
-  )
-}
-
-// ---- <select value> -------------------------------------------------------------------------------------------
-
-const decode = (s: string) =>
-  s
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&amp;/g, '&')
-
-/** `<select value="b">…<option value="b">` → the value attribute dropped and `selected` on the option. */
-function resolveSelects(html: string): string {
-  return html.replace(
-    /<select\b([^>]*?)\svalue="([^"]*)"([^>]*)>([\s\S]*?)<\/select>/g,
-    (_, pre, value, post, body) => {
-      const want = decode(value)
-      const options = body.replace(
-        /<option\b([^>]*)>([^<]*)/g,
-        (m: string, attrs: string, label: string) => {
-          if (/\sselected\b/.test(attrs)) return m
-          const v = /\svalue="([^"]*)"/.exec(attrs)
-          return (v ? decode(v[1]!) : decode(label).trim()) === want
-            ? `<option${attrs} selected>${label}`
-            : m
-        },
-      )
-      return `<select${pre}${post}>${options}</select>`
-    },
-  )
 }

@@ -12,6 +12,7 @@
     "styles",
     "bindings",
     "scripts/contrast-check.mjs",
+    "scripts/contrast-check-colors.mjs",
     "README.md",
     "LICENSE"
   ],

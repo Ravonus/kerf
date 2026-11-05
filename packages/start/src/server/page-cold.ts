@@ -1,6 +1,6 @@
 // Render first when no remembered head can be sent yet.
 import { pageStyles, type keptSheets } from '../inline.mjs'
-import { capture } from '../capture.mjs'
+import { capture } from '../capture'
 import { whole } from './compression'
 import { withHeaders } from './request'
 import { esc } from './text'

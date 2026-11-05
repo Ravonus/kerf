@@ -1,12 +1,16 @@
 // What a database-driven site adds to a sample: is the data live, what a request cost the database, and how flows feel from a real
 // click. Input goes through CDP (`Input.dispatchMouseEvent`), so it's trusted, unlike the `dispatchEvent` in measure.mjs.
 import { randomBytes } from 'node:crypto'
-import http from 'node:http'
-import { brotliCompressSync, constants } from 'node:zlib'
 import { freshness } from './app.mjs'
 import { raceOnce } from './race.mjs'
-import { SITE_METRICS, median, sleep, spread } from './stats.mjs'
+import { SITE_METRICS, sleep, spread } from './stats.mjs'
 import { benchUser } from '../shared/pg/env.mjs'
+import { ttfbPass, htmlPass } from './flow/http.mjs'
+import { tracker } from './flow/tracker.mjs'
+
+export { tracker } from './flow/tracker.mjs'
+
+export { ttfbPass, htmlPass, splitHtml } from './flow/http.mjs'
 
 export const cookieHeader = (cookies) =>
   cookies?.length ? cookies.map((c) => `${c.name}=${c.value}`).join('; ') : undefined
@@ -71,39 +75,6 @@ export async function signIn(browser, url, login, user = benchUser) {
   return cookies
 }
 
-/** Requests the page has open, and when it last finished one. Streams that never end aren't data. */
-export function tracker(page) {
-  const open = new Set(),
-    t = { sent: 0, last: 0 }
-  const counts = (r) =>
-    !['script', 'stylesheet', 'image', 'font', 'media', 'websocket', 'eventsource'].includes(
-      r.resourceType(),
-    )
-  page.on('request', (r) => {
-    if (counts(r)) {
-      open.add(r)
-      t.sent++
-    }
-  })
-  const done = (r) => {
-    if (open.delete(r)) t.last = Date.now()
-  }
-  page.on('requestfinished', done)
-  page.on('requestfailed', done)
-  /** Until nothing has been open for `ms`, at most `max`. */
-  t.quiet = async (ms = 400, max = 8000) => {
-    const end = Date.now() + max
-    let calm = Date.now()
-    while (Date.now() < end) {
-      if (open.size) calm = Date.now()
-      else if (Date.now() - calm >= ms) return true
-      await sleep(25)
-    }
-    return false
-  }
-  return t
-}
-
 /** Writes a value into a row the page shows, and the page has to show it, or it wasn't read for this sample. */
 export async function canaryPass(browser, url, canary, { db, cookies = [] }) {
   const value = randomValue()
@@ -126,91 +97,6 @@ export async function canaryPass(browser, url, canary, { db, cookies = [] }) {
     await ctx.close()
   }
   return true
-}
-
-/** Time to first byte and to the `</head>` byte, closed loop. Uncompressed: a compressed stream hides where the byte is. */
-export function ttfbPass(url, { connections = 10, seconds = 2, cookie } = {}) {
-  const agent = new http.Agent({ keepAlive: true, maxSockets: connections }),
-    { hostname, port, pathname, search } = new URL(url)
-  const first = [],
-    head = [],
-    end = performance.now() + seconds * 1000
-  let bad = 0
-  const one = () =>
-    new Promise((ok) => {
-      if (performance.now() > end) return ok()
-      const t = performance.now()
-      let tail = '',
-        seen = false
-      http
-        .get(
-          {
-            agent,
-            hostname,
-            port,
-            path: pathname + search,
-            headers: {
-              'accept-encoding': 'identity',
-              accept: 'text/html',
-              ...(cookie && { cookie }),
-            },
-          },
-          (r) => {
-            first.push(performance.now() - t)
-            r.setEncoding('latin1')
-            r.on('data', (d) => {
-              if (!seen && (tail + d).includes('</head>')) {
-                seen = true
-                head.push(performance.now() - t)
-              }
-              tail = d.slice(-6)
-            })
-            r.on('end', () => {
-              if (r.statusCode >= 400) bad++
-              ok(one())
-            })
-          },
-        )
-        .on('error', () => {
-          bad++
-          ok(one())
-        })
-    })
-  return Promise.all(Array.from({ length: connections }, one)).then(() => {
-    agent.destroy()
-    first.sort((a, b) => a - b)
-    const at = (p) => first[Math.min(first.length - 1, Math.floor(first.length * p))] ?? null
-    return {
-      p50: at(0.5),
-      p95: at(0.95),
-      p99: at(0.99),
-      head: head.length ? median(head) : null,
-      errors: bad,
-    }
-  })
-}
-
-const br = (s) =>
-  brotliCompressSync(Buffer.from(s), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
-
-/** A page's HTML in two: embedded data, being every inline script's body, and the markup around it. */
-export function splitHtml(html) {
-  let data = ''
-  const markup = html.replace(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi, (_, body) => {
-    data += body
-    return ''
-  })
-  return {
-    html: { raw: Buffer.byteLength(markup), br: br(markup) },
-    data: { raw: Buffer.byteLength(data), br: data ? br(data) : 0 },
-  }
-}
-
-export async function htmlPass(url, { cookie } = {}) {
-  const r = await fetch(url, {
-    headers: { 'accept-encoding': 'identity', ...(cookie && { cookie }) },
-  })
-  return splitHtml(await r.text())
 }
 
 // Installed in every document, so a hard navigation is timed the same as a soft one. Date.now because a hard one has a new clock.
@@ -402,64 +288,8 @@ export async function sitePass({ app, v, site, server, browser, samples, out, sa
   }
   const race = {}
   for (let i = 0; i < samples; i++) {
-    for (const p of app.pages) {
-      const url = server.url + p.path,
-        cookie = cookieHeader(site.cookies(p)),
-        get = () =>
-          fetch(url, { headers: { cookie: cookie ?? '' }, redirect: 'manual' }).then((r) =>
-            r.arrayBuffer(),
-          )
-      await get()
-      const n = await db.counted(async () => {
-        for (let j = 0; j < 3; j++) await get()
-      })
-      out.db.queries = n.source
-      push(p.path, 'db.queries', n.queries / 3)
-      if (n.rows !== null) push(p.path, 'db.rows', n.rows / 3)
-      const loaded = await ttfbPass(url, { cookie, seconds: 1 })
-      // One connection for the slope: at ten, queueing moves TTFB more than the RTT does.
-      const near = await ttfbPass(url, { cookie, seconds: 0.5, connections: 1 })
-      await db.rtt(high)
-      const far = await ttfbPass(url, { cookie, seconds: 0.5, connections: 1 })
-      await db.rtt(low)
-      for (const k of ['p50', 'p95', 'p99']) push(p.path, `server.ttfb.${k}`, loaded[k])
-      push(p.path, 'server.flush.head', loaded.head)
-      if (loaded.errors + near.errors + far.errors)
-        say(
-          `  ${v.name} ${p.path}: ${loaded.errors + near.errors + far.errors} failed requests timing first bytes`,
-        )
-      if (near.p50 !== null && far.p50 !== null)
-        push(p.path, 'db.roundTrips', (far.p50 - near.p50) / (high - low))
-      if (p.nav) {
-        const r = await navPass(browser, url, p.nav, { db, cookies: site.cookies() })
-        for (const visit of ['cold', 'second'])
-          for (const k of ['url', 'paint', 'data'])
-            push(p.path, `flow.nav.${k}.${visit}`, r[visit][k])
-      }
-      if (p.streaming)
-        push(
-          p.path,
-          'flow.interaction.streaming',
-          await streamingPass(browser, url, p.streaming, { cookies: site.cookies() }),
-        )
-      if (p.interact) {
-        const r = await interactionPass(browser, url, p.interact, { cookies: await fresh() })
-        push(p.path, 'flow.interaction.worst', r.worst)
-        push(p.path, 'flow.interaction.p75', r.p75)
-      }
-      if (p.mutate) {
-        const r = await mutatePass(browser, url, p.mutate, { cookies: await fresh() })
-        for (const k of ['optimistic', 'confirmed', 'requests'])
-          push(p.path, `flow.mutate.${k}`, r[k])
-      }
-      for (const [size, sql] of Object.entries(p.rows ?? {})) {
-        const cookies = await fresh()
-        await db.sql(sql)
-        const r = await htmlPass(url, { cookie: cookieHeader(cookies) })
-        for (const part of ['html', 'data'])
-          for (const c of ['raw', 'br']) push(p.path, `bytes.${part}.${size}.${c}`, r[part][c])
-      }
-    }
+    for (const p of app.pages)
+      await measureSitePage({ p, server, site, db, out, push, high, low, v, say, browser, fresh })
     if (app.race) {
       const r = await raceOnce({
         browser,
@@ -489,4 +319,74 @@ export async function sitePass({ app, v, site, server, browser, samples, out, sa
       Object.entries(race).map(([k, x]) => [k, { ...x, pass: x.passes === x.of }]),
     )
   out.db.peakConnections = (await db.proxy.stats()).peak
+}
+
+async function measureSitePage({
+  p,
+  server,
+  site,
+  db,
+  out,
+  push,
+  high,
+  low,
+  v,
+  say,
+  browser,
+  fresh,
+}) {
+  const url = server.url + p.path,
+    cookie = cookieHeader(site.cookies(p)),
+    get = () =>
+      fetch(url, { headers: { cookie: cookie ?? '' }, redirect: 'manual' }).then((r) =>
+        r.arrayBuffer(),
+      )
+  await get()
+  const n = await db.counted(async () => {
+    for (let j = 0; j < 3; j++) await get()
+  })
+  out.db.queries = n.source
+  push(p.path, 'db.queries', n.queries / 3)
+  if (n.rows !== null) push(p.path, 'db.rows', n.rows / 3)
+  const loaded = await ttfbPass(url, { cookie, seconds: 1 })
+  // One connection for the slope: at ten, queueing moves TTFB more than the RTT does.
+  const near = await ttfbPass(url, { cookie, seconds: 0.5, connections: 1 })
+  await db.rtt(high)
+  const far = await ttfbPass(url, { cookie, seconds: 0.5, connections: 1 })
+  await db.rtt(low)
+  for (const k of ['p50', 'p95', 'p99']) push(p.path, `server.ttfb.${k}`, loaded[k])
+  push(p.path, 'server.flush.head', loaded.head)
+  if (loaded.errors + near.errors + far.errors)
+    say(
+      `  ${v.name} ${p.path}: ${loaded.errors + near.errors + far.errors} failed requests timing first bytes`,
+    )
+  if (near.p50 !== null && far.p50 !== null)
+    push(p.path, 'db.roundTrips', (far.p50 - near.p50) / (high - low))
+  if (p.nav) {
+    const r = await navPass(browser, url, p.nav, { db, cookies: site.cookies() })
+    for (const visit of ['cold', 'second'])
+      for (const k of ['url', 'paint', 'data']) push(p.path, `flow.nav.${k}.${visit}`, r[visit][k])
+  }
+  if (p.streaming)
+    push(
+      p.path,
+      'flow.interaction.streaming',
+      await streamingPass(browser, url, p.streaming, { cookies: site.cookies() }),
+    )
+  if (p.interact) {
+    const r = await interactionPass(browser, url, p.interact, { cookies: await fresh() })
+    push(p.path, 'flow.interaction.worst', r.worst)
+    push(p.path, 'flow.interaction.p75', r.p75)
+  }
+  if (p.mutate) {
+    const r = await mutatePass(browser, url, p.mutate, { cookies: await fresh() })
+    for (const k of ['optimistic', 'confirmed', 'requests']) push(p.path, `flow.mutate.${k}`, r[k])
+  }
+  for (const [size, sql] of Object.entries(p.rows ?? {})) {
+    const cookies = await fresh()
+    await db.sql(sql)
+    const r = await htmlPass(url, { cookie: cookieHeader(cookies) })
+    for (const part of ['html', 'data'])
+      for (const c of ['raw', 'br']) push(p.path, `bytes.${part}.${size}.${c}`, r[part][c])
+  }
 }

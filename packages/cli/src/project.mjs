@@ -100,57 +100,59 @@ function componentsOf(sf) {
       }
     }
   }
-  for (const c of comps) {
-    const visit = (n) => {
-      if (
-        ts.isVariableDeclaration(n) &&
-        ts.isIdentifier(n.name) &&
-        n.initializer &&
-        ts.isCallExpression(n.initializer)
-      ) {
-        const callee = n.initializer.expression.getText()
-        if (callee === 'derived' || callee === 'state.linked')
-          c.derives.set(n.name.text, identifiersIn(n.initializer))
-      }
-      if (
-        ts.isCallExpression(n) &&
-        ts.isPropertyAccessExpression(n.expression) &&
-        n.expression.name.text === 'map' &&
-        isInJsx(n, c.fn)
-      ) {
-        const cb = n.arguments[0]
-        const root = chainRoot(n.expression.expression)
-        if (root && cb && (ts.isArrowFunction(cb) || ts.isFunctionExpression(cb)))
-          c.lists.push({ root, at: n.getStart() })
-      }
-      if (
-        (ts.isJsxSelfClosingElement(n) || ts.isJsxOpeningElement(n)) &&
-        ts.isIdentifier(n.tagName) &&
-        isComponentName(n.tagName.text)
-      ) {
-        for (const attr of n.attributes.properties) {
-          if (
-            !ts.isJsxAttribute(attr) ||
-            !attr.initializer ||
-            !ts.isJsxExpression(attr.initializer) ||
-            !attr.initializer.expression
-          )
-            continue
-          const root = chainRoot(attr.initializer.expression)
-          if (root)
-            c.edges.push({
-              tag: n.tagName.text,
-              prop: attr.name.getText(),
-              root,
-              at: attr.getStart(),
-            })
-        }
-      }
-      ts.forEachChild(n, visit)
-    }
-    visit(c.fn.body ?? c.fn)
-  }
+  for (const c of comps) analyzeComponent(c)
   return comps
+}
+
+function analyzeComponent(c) {
+  const visit = (n) => {
+    if (
+      ts.isVariableDeclaration(n) &&
+      ts.isIdentifier(n.name) &&
+      n.initializer &&
+      ts.isCallExpression(n.initializer)
+    ) {
+      const callee = n.initializer.expression.getText()
+      if (callee === 'derived' || callee === 'state.linked')
+        c.derives.set(n.name.text, identifiersIn(n.initializer))
+    }
+    if (
+      ts.isCallExpression(n) &&
+      ts.isPropertyAccessExpression(n.expression) &&
+      n.expression.name.text === 'map' &&
+      isInJsx(n, c.fn)
+    ) {
+      const cb = n.arguments[0]
+      const root = chainRoot(n.expression.expression)
+      if (root && cb && (ts.isArrowFunction(cb) || ts.isFunctionExpression(cb)))
+        c.lists.push({ root, at: n.getStart() })
+    }
+    if (
+      (ts.isJsxSelfClosingElement(n) || ts.isJsxOpeningElement(n)) &&
+      ts.isIdentifier(n.tagName) &&
+      isComponentName(n.tagName.text)
+    ) {
+      for (const attr of n.attributes.properties) {
+        if (
+          !ts.isJsxAttribute(attr) ||
+          !attr.initializer ||
+          !ts.isJsxExpression(attr.initializer) ||
+          !attr.initializer.expression
+        )
+          continue
+        const root = chainRoot(attr.initializer.expression)
+        if (root)
+          c.edges.push({
+            tag: n.tagName.text,
+            prop: attr.name.getText(),
+            root,
+            at: attr.getStart(),
+          })
+      }
+    }
+    ts.forEachChild(n, visit)
+  }
+  visit(c.fn.body ?? c.fn)
 }
 
 /**
@@ -162,30 +164,7 @@ export function projectView(files, pos) {
   if (!files.some((f) => f.diagnostics.some((d) => d.code === 'W014' && d.severity === 'warning')))
     return
   const byAbs = new Map(files.map((f) => [f.abs, f]))
-  for (const f of files) {
-    f.sf = ts.createSourceFile(f.abs, f.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
-    f.comps = componentsOf(f.sf)
-    f.imports = new Map()
-    for (const st of f.sf.statements) {
-      if (
-        !ts.isImportDeclaration(st) ||
-        !st.importClause ||
-        !ts.isStringLiteral(st.moduleSpecifier)
-      )
-        continue
-      const spec = st.moduleSpecifier.text
-      const base = local(f.abs, spec)
-      if (!base) continue
-      const target = exts.map((e) => base + e).find((p) => byAbs.has(p))
-      if (!target) continue
-      if (st.importClause.name)
-        f.imports.set(st.importClause.name.text, { file: target, name: 'default' })
-      const named = st.importClause.namedBindings
-      if (named && ts.isNamedImports(named))
-        for (const el of named.elements)
-          f.imports.set(el.name.text, { file: target, name: (el.propertyName ?? el.name).text })
-    }
-  }
+  parseProject(files, byAbs)
 
   const lookup = (file, tag) => {
     const own = file.comps.find((c) => c.name === tag)
@@ -235,6 +214,64 @@ export function projectView(files, pos) {
     )
   }
 
+  promoteFindings(files, pos, readsBox, lookup, reachesList)
+}
+
+/** The box a flagged `.map` call writes: `box.value = …map(…)` or `const box = …map(…)`. */
+function boxOf(sf, offset) {
+  let found
+  const visit = (n) => {
+    if (found) return
+    if (ts.isCallExpression(n) && n.getStart() === offset) found = n
+    else if (n.pos <= offset && offset < n.end) ts.forEachChild(n, visit)
+  }
+  visit(sf)
+  for (let n = found; n; n = n.parent) {
+    if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+      const left = n.left
+      if (
+        ts.isPropertyAccessExpression(left) &&
+        left.name.text === 'value' &&
+        ts.isIdentifier(left.expression)
+      )
+        return left.expression.text
+      return null
+    }
+    if (ts.isVariableDeclaration(n)) return ts.isIdentifier(n.name) ? n.name.text : null
+  }
+  return null
+}
+
+export const relPath = (root, abs) => relative(root, abs).split('\\').join('/')
+
+function parseProject(files, byAbs) {
+  for (const f of files) {
+    f.sf = ts.createSourceFile(f.abs, f.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+    f.comps = componentsOf(f.sf)
+    f.imports = new Map()
+    for (const st of f.sf.statements) {
+      if (
+        !ts.isImportDeclaration(st) ||
+        !st.importClause ||
+        !ts.isStringLiteral(st.moduleSpecifier)
+      )
+        continue
+      const spec = st.moduleSpecifier.text
+      const base = local(f.abs, spec)
+      if (!base) continue
+      const target = exts.map((e) => base + e).find((p) => byAbs.has(p))
+      if (!target) continue
+      if (st.importClause.name)
+        f.imports.set(st.importClause.name.text, { file: target, name: 'default' })
+      const named = st.importClause.namedBindings
+      if (named && ts.isNamedImports(named))
+        for (const el of named.elements)
+          f.imports.set(el.name.text, { file: target, name: (el.propertyName ?? el.name).text })
+    }
+  }
+}
+
+function promoteFindings(files, pos, readsBox, lookup, reachesList) {
   for (const f of files) {
     for (const d of f.diagnostics) {
       if (d.code !== 'W014' || d.severity !== 'warning' || !d.offset) continue
@@ -271,30 +308,3 @@ export function projectView(files, pos) {
     }
   }
 }
-
-/** The box a flagged `.map` call writes: `box.value = …map(…)` or `const box = …map(…)`. */
-function boxOf(sf, offset) {
-  let found
-  const visit = (n) => {
-    if (found) return
-    if (ts.isCallExpression(n) && n.getStart() === offset) found = n
-    else if (n.pos <= offset && offset < n.end) ts.forEachChild(n, visit)
-  }
-  visit(sf)
-  for (let n = found; n; n = n.parent) {
-    if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
-      const left = n.left
-      if (
-        ts.isPropertyAccessExpression(left) &&
-        left.name.text === 'value' &&
-        ts.isIdentifier(left.expression)
-      )
-        return left.expression.text
-      return null
-    }
-    if (ts.isVariableDeclaration(n)) return ts.isIdentifier(n.name) ? n.name.text : null
-  }
-  return null
-}
-
-export const relPath = (root, abs) => relative(root, abs).split('\\').join('/')

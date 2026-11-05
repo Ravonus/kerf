@@ -106,12 +106,11 @@ test('each file parses as CSS and keeps its layer', () => {
 })
 
 test('scripts/contrast-check.mjs is the spec checker, unchanged', () => {
-  expect(readFileSync(new URL('../scripts/contrast-check.mjs', import.meta.url), 'utf8')).toBe(
-    readFileSync(
-      new URL('../../../docs/design/warp/scripts/contrast-check.mjs', import.meta.url),
-      'utf8',
-    ),
-  )
+  for (const name of ['contrast-check.mjs', 'contrast-check-colors.mjs']) {
+    expect(readFileSync(new URL(`../scripts/${name}`, import.meta.url), 'utf8'), name).toBe(
+      readFileSync(new URL(`../../../docs/design/warp/scripts/${name}`, import.meta.url), 'utf8'),
+    )
+  }
 })
 
 test('the sweep has one switch: no stylesheet reads a phase, and every part draws from the two edges', () => {
