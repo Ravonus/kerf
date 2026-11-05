@@ -98,6 +98,8 @@ await test('repository scan includes canonical sources without generated copies 
     assert.ok(found.some((v) => v.file === 'site/src/toolkit/world.ts'))
     assert.ok(found.some((v) => v.file === 'site/src/toolkit/world/shared/a.ts'))
     assert.ok(!found.some((v) => /public|snapshots/.test(v.file)))
+    rmSync(join(root, 'benchmarks/arena/graph/main.tsx'))
+    assert.throws(() => scanSamples(root), /ENOENT/)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

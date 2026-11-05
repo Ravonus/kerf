@@ -92,11 +92,7 @@ export function scanSamples(repo = root) {
   )
   const world = join(repo, 'site/src/toolkit/world.ts')
   if (existsSync(world)) sources.push(world)
-  sources.push(
-    ...Object.values(SHOWN)
-      .map((path) => join(repo, path))
-      .filter(existsSync),
-  )
+  sources.push(...Object.values(SHOWN).map((path) => join(repo, path)))
   const files = [...new Set(markdown)]
     .filter(existsSync)
     .map((path) => [path, scanMarkdown])
