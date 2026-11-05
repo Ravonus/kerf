@@ -1,4 +1,13 @@
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import {
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+  type Accessor,
+  type Setter,
+} from 'solid-js'
 
 import { LemonAvatar, type LemonExpression } from '~/components/lemon'
 import { CoachBubble, cx } from '~/components/ui'
@@ -32,15 +41,11 @@ const SCRIPT: Line[] = [
 const BEAT_MS = 1700
 const TYPING_MS = 900
 
-/**
- * A mini chat that plays once when scrolled into view. Built in markup, no
- * screenshots. Under reduced motion it shows the whole exchange at once.
- */
-export function CoachDemo() {
-  const [shown, setShown] = createSignal(1)
-  const [typing, setTyping] = createSignal(false)
-  const [run, setRun] = createSignal(1)
-  let root!: HTMLDivElement
+function playback(
+  root: () => HTMLDivElement,
+  setShown: Setter<number>,
+  setTyping: Setter<boolean>,
+) {
   let stop = () => {}
 
   const arm = () => {
@@ -70,12 +75,26 @@ export function CoachDemo() {
       },
       { threshold: 0.45 },
     )
-    io.observe(root)
+    io.observe(root())
     stop = () => {
       io.disconnect()
       timers.forEach((t) => window.clearTimeout(t))
     }
   }
+
+  return { arm, stop: () => stop() }
+}
+
+/**
+ * A mini chat that plays once when scrolled into view. Built in markup, no
+ * screenshots. Under reduced motion it shows the whole exchange at once.
+ */
+export function CoachDemo() {
+  const [shown, setShown] = createSignal(1)
+  const [typing, setTyping] = createSignal(false)
+  const [run, setRun] = createSignal(1)
+  let root!: HTMLDivElement
+  const { arm, stop } = playback(() => root, setShown, setTyping)
 
   onMount(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setShown(SCRIPT.length)
@@ -123,56 +142,74 @@ export function CoachDemo() {
         aria-label="Example conversation between Lemon and a young founder"
         class="grain flex min-h-[25rem] flex-col justify-end gap-4 bg-lemon-soft/60 px-4 py-6 sm:px-6"
       >
-        {/* A replay rebuilds the lines, so each one pops in again. */}
-        <Show when={run()} keyed>
-          <For each={lines()}>
-            {(line) => (
-              <div class="animate-pop-in">
-                {line.from === 'coach' ? (
-                  <CoachBubble name="Lemon">{line.text}</CoachBubble>
-                ) : (
-                  <CoachBubble from="kid" name="Maya, 11">
-                    {line.text}
-                  </CoachBubble>
-                )}
-              </div>
-            )}
-          </For>
-        </Show>
-        <Show when={typing()}>
-          <div class="flex animate-pop-in" aria-hidden="true">
-            <span class="inline-flex gap-1 rounded-[1.1rem] rounded-bl-[4px] bg-surface px-4 py-3.5 ring-2 ring-navy">
-              <For each={[0, 1, 2]}>
-                {(d) => (
-                  <span
-                    class="size-1.5 animate-bounce rounded-full bg-navy/50"
-                    style={`animation-delay:${d * 120 - 240}ms`}
-                  />
-                )}
-              </For>
-            </span>
-          </div>
-        </Show>
+        <Conversation lines={lines} run={run} typing={typing} />
       </div>
-      <div
-        class="flex flex-wrap items-center gap-2 border-t border-line px-4 py-3.5 sm:px-6"
-        aria-hidden={!done()}
-      >
-        <span class="text-sm text-muted">Maya chooses:</span>
-        <For each={['Help me start', "I'll write them myself"]}>
-          {(chip, i) => (
-            <span
-              class={cx(
-                'rounded-pill px-3 py-1.5 text-sm font-semibold transition-opacity duration-500',
-                i() === 1 ? 'bg-navy text-white' : 'bg-gold-soft text-ink ring-1 ring-line',
-                done() ? 'opacity-100' : 'opacity-0',
+      <Choices done={done} />
+    </div>
+  )
+}
+
+function Choices(props: { done: () => boolean }) {
+  return (
+    <div
+      class="flex flex-wrap items-center gap-2 border-t border-line px-4 py-3.5 sm:px-6"
+      aria-hidden={!props.done()}
+    >
+      <span class="text-sm text-muted">Maya chooses:</span>
+      <For each={['Help me start', "I'll write them myself"]}>
+        {(chip, i) => (
+          <span
+            class={cx(
+              'rounded-pill px-3 py-1.5 text-sm font-semibold transition-opacity duration-500',
+              i() === 1 ? 'bg-navy text-white' : 'bg-gold-soft text-ink ring-1 ring-line',
+              props.done() ? 'opacity-100' : 'opacity-0',
+            )}
+          >
+            {chip}
+          </span>
+        )}
+      </For>
+    </div>
+  )
+}
+
+function Conversation(props: {
+  lines: Accessor<Line[]>
+  run: Accessor<number>
+  typing: Accessor<boolean>
+}) {
+  return (
+    <>
+      {/* A replay rebuilds the lines, so each one pops in again. */}
+      <Show when={props.run()} keyed>
+        <For each={props.lines()}>
+          {(line) => (
+            <div class="animate-pop-in">
+              {line.from === 'coach' ? (
+                <CoachBubble name="Lemon">{line.text}</CoachBubble>
+              ) : (
+                <CoachBubble from="kid" name="Maya, 11">
+                  {line.text}
+                </CoachBubble>
               )}
-            >
-              {chip}
-            </span>
+            </div>
           )}
         </For>
-      </div>
-    </div>
+      </Show>
+      <Show when={props.typing()}>
+        <div class="flex animate-pop-in" aria-hidden="true">
+          <span class="inline-flex gap-1 rounded-[1.1rem] rounded-bl-[4px] bg-surface px-4 py-3.5 ring-2 ring-navy">
+            <For each={[0, 1, 2]}>
+              {(d) => (
+                <span
+                  class="size-1.5 animate-bounce rounded-full bg-navy/50"
+                  style={`animation-delay:${d * 120 - 240}ms`}
+                />
+              )}
+            </For>
+          </span>
+        </div>
+      </Show>
+    </>
   )
 }
