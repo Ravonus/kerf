@@ -119,23 +119,10 @@ describe('compiled output', () => {
   })
 })
 
-describe('updates', () => {
-  const counter = (label: string, init = '0', name = 'count') => `
-    import { state } from '@weft-js/core'
-    export function Counter() {
-      const ${name} = state(${init})
-      return <button onClick={() => ${name}.value++}>${label} {${name}.value}</button>
-    }`
-
-  function app(counterFile: string) {
-    return load(
-      file('App.tsx'),
-      `
-      import { Counter } from ${JSON.stringify(counterFile)}
-      export function App() { return <main><h1>title</h1><Counter /></main> }`,
-    ).exports.App
-  }
-
+function registerCounterUpdates(
+  counter: (label: string, init?: string, name?: string) => string,
+  app: (counterFile: string) => unknown,
+) {
   test('a markup edit updates the DOM and keeps the count', () => {
     const f = file('Counter.tsx')
     load(f, counter('Count:'))
@@ -173,7 +160,9 @@ describe('updates', () => {
     flush()
     expect(button().textContent).toBe('Count: 10')
   })
+}
 
+function registerComponentUpdates() {
   test('an edit to a parent keeps the state of the children it re-creates', () => {
     const f = file('Page.tsx')
     const page = (title: string) => `
@@ -223,7 +212,9 @@ describe('updates', () => {
     flush()
     expect(el.textContent).toBe('two')
   })
+}
 
+function registerEffectAndErrorUpdates() {
   test('no duplicate listeners or leaked effects after many updates', () => {
     const f = file('Keys.tsx')
     const keys = (label: string) => `
@@ -277,7 +268,9 @@ describe('updates', () => {
     flush()
     expect(el.textContent).toBe('fixed')
   })
+}
 
+function registerScopeUpdates() {
   test('defineState scopes survive their module re-running', () => {
     const f = file('cart.tsx')
     const cart = (label: string) => `
@@ -296,6 +289,32 @@ describe('updates', () => {
     expect(second.cart).toBe(first.cart)
     expect(el.textContent).toBe('items 2')
   })
+}
+
+describe('updates', () => {
+  const counter = (label: string, init = '0', name = 'count') => `
+    import { state } from '@weft-js/core'
+    export function Counter() {
+      const ${name} = state(${init})
+      return <button onClick={() => ${name}.value++}>${label} {${name}.value}</button>
+    }`
+
+  function app(counterFile: string) {
+    return load(
+      file('App.tsx'),
+      `
+      import { Counter } from ${JSON.stringify(counterFile)}
+      export function App() { return <main><h1>title</h1><Counter /></main> }`,
+    ).exports.App
+  }
+
+  registerCounterUpdates(counter, app)
+
+  registerComponentUpdates()
+
+  registerEffectAndErrorUpdates()
+
+  registerScopeUpdates()
 })
 
 describe('gate: HMR with 1k mounted components (PLAN §3.7, ≤ 50 ms p95)', () => {
