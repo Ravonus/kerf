@@ -499,7 +499,7 @@ describe('availability', () => {
   })
 })
 
-describe('calendarDrag', () => {
+function calendarDragFixture() {
   const setup = (overrides: Partial<Parameters<typeof calendarDrag>[1]> = {}) => {
     const root = document.body.appendChild(document.createElement('div'))
     root.innerHTML = `<div data-part="col" data-date="2026-10-28"><div data-part="event" data-id="a"><span data-part="resize"></span></div></div><div data-part="col" data-date="2026-10-29"></div>`
@@ -557,6 +557,10 @@ describe('calendarDrag', () => {
     }
   }
 
+  return setup
+}
+
+function registerDragMoves(setup: ReturnType<typeof calendarDragFixture>) {
   test('under 4px is not a drag', () => {
     const { event, log, fire, root } = setup()
     fire(event, 'pointerdown', 10, 610)
@@ -601,6 +605,9 @@ describe('calendarDrag', () => {
     expect(log.at(-1)![1]).toMatchObject({ mode: 'resize', s: 600, e: 690 })
     root.remove()
   })
+}
+
+function registerDragSlots(setup: ReturnType<typeof calendarDragFixture>) {
   test('empty slots draw a draft', () => {
     const { b, log, fire, root } = setup()
     fire(b!, 'pointerdown', 150, 600)
@@ -632,6 +639,9 @@ describe('calendarDrag', () => {
     expect(log.some((l) => l[0] === 'press')).toBe(false)
     root.remove()
   })
+}
+
+function registerDragTouchAndCleanup(setup: ReturnType<typeof calendarDragFixture>) {
   test('a touch long-press lifts, a touch move cancels it, and a touch never drags', () => {
     vi.useFakeTimers()
     const { event, log, fire, root } = setup()
@@ -662,4 +672,11 @@ describe('calendarDrag', () => {
     expect(log).toEqual([])
     root.remove()
   })
+}
+
+describe('calendarDrag', () => {
+  const setup = calendarDragFixture()
+  registerDragMoves(setup)
+  registerDragSlots(setup)
+  registerDragTouchAndCleanup(setup)
 })
